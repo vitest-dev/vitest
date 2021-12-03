@@ -1,18 +1,17 @@
 import { createHook } from './utils/hook'
 import { File, Suite, Task } from './types'
-import { TaskResult } from '.'
 
-export const beforeHook = createHook()
-export const afterHook = createHook()
+export const beforeAllHook = createHook()
+export const afterAllHook = createHook()
 export const beforeEachHook = createHook<[Task]>()
-export const afterEachHook = createHook<[Task, TaskResult]>()
-export const beforeFileHook = createHook<[string]>()
+export const afterEachHook = createHook<[Task]>()
+export const beforeFileHook = createHook<[File]>()
 export const afterFileHook = createHook<[File]>()
 export const beforeSuiteHook = createHook<[Suite]>()
 export const afterSuiteHook = createHook<[Suite]>()
 
-export const before = beforeHook.on
-export const after = afterHook.on
+export const beforeAll = beforeAllHook.on
+export const afterAll = afterAllHook.on
 export const beforeEach = beforeEachHook.on
 export const afterEach = afterEachHook.on
 export const beforeFile = beforeFileHook.on

@@ -10,16 +10,16 @@ export interface Options extends UserOptions {
   updateSnapshot?: boolean
 }
 
+export interface TaskResult {
+  error?: unknown
+}
+
 export interface Task {
   name: string
   suite: Suite
   fn: () => Promise<void> | void
   file?: File
-}
-
-export interface TaskResult {
-  task: Task
-  error?: unknown
+  result?: TaskResult
 }
 
 export type SuiteMode = 'run' | 'skip' | 'only' | 'todo'

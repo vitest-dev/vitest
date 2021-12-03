@@ -5,23 +5,22 @@ import fg from 'fast-glob'
 import { clearContext, defaultSuite } from './suite'
 import { context } from './context'
 import { File, Options, Suite, Task, TaskResult } from './types'
-import { afterEachHook, afterFileHook, afterHook, afterSuiteHook, beforeEachHook, beforeFileHook, beforeHook, beforeSuiteHook } from './hooks'
+import { afterEachHook, afterFileHook, afterAllHook, afterSuiteHook, beforeEachHook, beforeFileHook, beforeAllHook, beforeSuiteHook } from './hooks'
 import { SnapshotPlugin } from './snapshot/index'
 
 export async function runTasks(tasks: Task[]) {
   const results: TaskResult[] = []
 
   for (const task of tasks) {
-    const result: TaskResult = { task }
     await beforeEachHook.fire(task)
+    task.result = {}
     try {
       await task.fn()
     }
     catch (e) {
-      result.error = e
+      task.result.error = e
     }
-    results.push(result)
-    await afterEachHook.fire(task, result)
+    await afterEachHook.fire(task)
   }
 
   return results
@@ -35,7 +34,6 @@ export async function collectFiles(files: string[]) {
 
   for (const filepath of files) {
     clearContext()
-    await beforeFileHook.fire(filepath)
     await import(filepath)
     const suites = [defaultSuite, ...context.suites]
     const collected: [Suite, Task[]][] = []
@@ -63,6 +61,7 @@ export async function collectFiles(files: string[]) {
 }
 
 export async function runFile(file: File) {
+  await beforeFileHook.fire(file)
   for (const [suite, tasks] of file.collected) {
     await beforeSuiteHook.fire(suite)
 
@@ -74,14 +73,14 @@ export async function runFile(file: File) {
 
     if (suite.mode === 'run' || suite.mode === 'only') {
       // TODO: If there is a task with 'only', skip all others
-      const result = await runTasks(tasks)
-      for (const r of result) {
-        if (r.error === undefined) {
-          log(`${' '.repeat(indent * 2)}${c.inverse(c.green(' PASS '))} ${c.green(r.task.name)}`)
+      await runTasks(tasks)
+      for (const t of tasks) {
+        if (t.result && t.result.error === undefined) {
+          log(`${' '.repeat(indent * 2)}${c.inverse(c.green(' PASS '))} ${c.green(t.name)}`)
         }
         else {
-          console.error(`${' '.repeat(indent * 2)}${c.inverse(c.red(' FAIL '))} ${c.red(r.task.name)}`)
-          console.error(' '.repeat((indent + 2) * 2) + c.red(String(r.error)))
+          console.error(`${' '.repeat(indent * 2)}${c.inverse(c.red(' FAIL '))} ${c.red(t.name)}`)
+          console.error(' '.repeat((indent + 2) * 2) + c.red(String(t.result!.error)))
           process.exitCode = 1
         }
       }
@@ -105,7 +104,7 @@ export async function runFile(file: File) {
 export async function run(options: Options = {}) {
   const { rootDir = process.cwd() } = options
 
-  chai.use(SnapshotPlugin({
+  chai.use(await SnapshotPlugin({
     rootDir,
     update: options.updateSnapshot,
   }))
@@ -125,14 +124,14 @@ export async function run(options: Options = {}) {
     return
   }
 
-  await beforeHook.fire()
   const files = await collectFiles(paths)
 
+  await beforeAllHook.fire()
   for (const file of files) {
     log(`${relative(process.cwd(), file.filepath)}`)
     await runFile(file)
     log()
   }
-  await afterHook.fire()
+  await afterAllHook.fire()
   log()
 }

@@ -1,6 +1,6 @@
 import { use as chaiUse } from 'chai'
 import Snap from 'jest-snapshot'
-import { after, before, beforeEach } from '../hooks'
+import { afterAll, beforeEach } from '../hooks'
 import { SnapshotManager } from './manager'
 
 const { addSerializer } = Snap
@@ -15,7 +15,7 @@ export interface SnapshotOptions {
   update?: boolean
 }
 
-export function SnapshotPlugin(options: SnapshotOptions): ChaiPlugin {
+export async function SnapshotPlugin(options: SnapshotOptions): Promise<ChaiPlugin> {
   const { rootDir } = options
 
   _manager = new SnapshotManager({
@@ -23,13 +23,12 @@ export function SnapshotPlugin(options: SnapshotOptions): ChaiPlugin {
     update: options.update,
   })
 
+  _manager.snapshotResolver = await Snap.buildSnapshotResolver({
+    transform: [],
+    rootDir,
+  } as any)
+
   return function(chai, utils) {
-    before(async() => {
-      _manager.snapshotResolver = await Snap.buildSnapshotResolver({
-        transform: [],
-        rootDir,
-      } as any)
-    })
     beforeEach((task) => {
       _manager.setContext({
         file: task.file?.filepath || task.name,
@@ -37,7 +36,7 @@ export function SnapshotPlugin(options: SnapshotOptions): ChaiPlugin {
         fullTitle: [task.suite.name, task.name].filter(Boolean).join(' > '),
       })
     })
-    after(() => {
+    afterAll(() => {
       _manager.saveSnap()
       _manager.report()
     })
