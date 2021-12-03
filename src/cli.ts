@@ -9,6 +9,7 @@ const argv = minimist(process.argv.slice(2), {
   alias: {
     u: 'update',
   },
+  string: ['root'],
   boolean: ['update'],
   unknown(name) {
     if (name[0] === '-') {
@@ -22,7 +23,7 @@ const argv = minimist(process.argv.slice(2), {
 
 // TODO: load config, CLI
 run({
-  rootDir: join(process.cwd(), 'test'),
+  rootDir: argv.root || join(process.cwd(), 'test'),
   updateSnapshot: argv.update,
 })
 

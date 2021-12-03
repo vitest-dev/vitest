@@ -6,7 +6,7 @@ import { clearContext, defaultSuite } from './suite'
 import { context } from './context'
 import { File, Options, Suite, Task, TaskResult } from './types'
 import { afterEachHook, afterFileHook, afterHook, afterSuiteHook, beforeEachHook, beforeFileHook, beforeHook, beforeSuiteHook } from './hooks'
-import { SnapshotPlugin } from './snapshot'
+import { SnapshotPlugin } from './snapshot/index'
 
 export async function runTasks(tasks: Task[]) {
   const results: TaskResult[] = []

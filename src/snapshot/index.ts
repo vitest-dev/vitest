@@ -54,7 +54,7 @@ export function SnapshotPlugin(options: SnapshotOptions): ChaiPlugin {
         },
       )
     }
-    chai.expect.addSnapshotSerializer = addSerializer
+    chai.expect.addSnapshotSerializer = addSerializer as any
   }
 }
 
@@ -66,7 +66,7 @@ declare global {
       matchSnapshot(message?: string): Assertion
     }
     interface ExpectStatic {
-      addSnapshotSerializer: typeof addSerializer
+      addSnapshotSerializer: import('pretty-format').Plugin
     }
   }
 }

@@ -15,27 +15,17 @@
   "funding": "https://github.com/sponsors/antfu",
   "license": "MIT",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
-  "sideEffects": false,
-  "exports": {
-    ".": {
-      "require": "./dist/index.cjs",
-      "import": "./dist/index.mjs",
-      "types": "./dist/index.d.ts"
-    }
-  },
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
   "files": [
-    "dist"
+    "src",
+    "bin"
   ],
+  "bin": {
+    "vitest": "./bin/vitest.mjs"
+  },
   "scripts": {
-    "build": "unbuild",
-    "dev": "unbuild --stub",
     "lint": "eslint \"{src,test}/**/*.ts\"",
     "prepublishOnly": "nr build",
     "release": "bumpp --commit --push --tag && pnpm publish",
-    "start": "esno src/index.ts",
     "test": "npx vite-node src/cli.ts --",
     "test:update": "nr test -u"
   },
@@ -50,7 +40,7 @@
     "eslint": "^8.3.0",
     "esno": "^0.12.1",
     "typescript": "^4.5.2",
-    "unbuild": "^0.6.2"
+    "vite": "^2.6.14"
   },
   "dependencies": {
     "@jest/test-result": "^27.4.2",
@@ -60,6 +50,6 @@
     "jest-util": "^27.4.2",
     "minimist": "^1.2.5",
     "picocolors": "^1.0.0",
-    "vite-node": "link:../vite-node"
+    "vite-node": "v0.1.3"
   }
 }

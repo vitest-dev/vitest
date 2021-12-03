@@ -1,4 +1,3 @@
-
 export function createHook<T extends any[]>() {
   const stacks: ((...args: T) => void | Promise<void>)[] = []
   return {

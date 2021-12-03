@@ -8,6 +8,11 @@
     "strict": true,
     "strictNullChecks": true,
     "resolveJsonModule": true,
-    "skipDefaultLibCheck": true
-  }
+    "skipDefaultLibCheck": true,
+    "outDir": "./dist",
+    "declaration": true
+  },
+  "include": [
+    "src/**/*.ts"
+  ],
 }
