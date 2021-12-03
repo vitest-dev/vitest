@@ -5,11 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 import path from 'path'
-import { Config } from '@jest/types'
 
 export const replaceRootDirInPath = (
-  rootDir: Config.Path,
-  filePath: Config.Path,
+  rootDir: string,
+  filePath: string,
 ): string => {
   if (!/^<rootDir>/.test(filePath))
     return filePath
@@ -20,7 +19,7 @@ export const replaceRootDirInPath = (
   )
 }
 
-export function replaceRootDirInObject<T>(rootDir: Config.Path, config: T): T {
+export function replaceRootDirInObject<T>(rootDir: string, config: T): T {
   const newConfig = {} as T
   for (const configKey of Object.keys(config) as (keyof T)[]) {
     newConfig[configKey]
@@ -31,7 +30,7 @@ export function replaceRootDirInObject<T>(rootDir: Config.Path, config: T): T {
   return newConfig
 }
 
-export function _replaceRootDirTags<T>(rootDir: Config.Path,
+export function _replaceRootDirTags<T>(rootDir: string,
   config: T): T {
   if (config == null)
     return config

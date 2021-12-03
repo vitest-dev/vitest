@@ -23,7 +23,7 @@ export interface Context {
   fullTitle?: string
 }
 
-class SnapshotManager {
+export class SnapshotManager {
   snapshotState: SnapshotStateType | null = null
   snapshotSummary: SnapshotSummary
   snapshotOptions: SnapshotStateOptions
@@ -114,5 +114,3 @@ class SnapshotManager {
       console.log(`\n${outputs.join('\n')}`)
   }
 }
-
-export default SnapshotManager

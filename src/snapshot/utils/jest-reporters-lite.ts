@@ -5,36 +5,35 @@
  * LICENSE file in the root directory of this source tree.
  */
 import path, { isAbsolute } from 'path'
-import { Config } from '@jest/types'
-import { SnapshotSummary } from '@jest/test-result'
+import type { SnapshotSummary } from '@jest/test-result'
 import { pluralize } from 'jest-util'
 import slash from 'slash'
-import chalk from 'chalk'
+import c from 'picocolors'
 
-const formatTestPath = (rootDir: Config.Path, testPath: Config.Path) => {
+const formatTestPath = (rootDir: string, testPath: string) => {
   if (isAbsolute(testPath))
     testPath = path.relative(rootDir, testPath)
 
   const dirname = path.dirname(testPath)
   const basename = path.basename(testPath)
-  return slash(chalk.dim(dirname + path.sep) + chalk.bold(basename))
+  return slash(c.dim(dirname + path.sep) + c.bold(basename))
 }
 
 const ARROW = ' \u203A '
 const DOWN_ARROW = ' \u21B3 '
 const DOT = ' \u2022 '
-const FAIL_COLOR = chalk.bold.red
-const OBSOLETE_COLOR = chalk.bold.yellow
-const SNAPSHOT_ADDED = chalk.bold.green
-const SNAPSHOT_NOTE = chalk.dim
-const SNAPSHOT_REMOVED = chalk.bold.green
-const SNAPSHOT_SUMMARY = chalk.bold
-const SNAPSHOT_UPDATED = chalk.bold.green
+const FAIL_COLOR = (v: any) => c.bold(c.red(v))
+const OBSOLETE_COLOR = (v: any) => c.bold(c.yellow(v))
+const SNAPSHOT_ADDED = (v: any) => c.bold(c.green(v))
+const SNAPSHOT_NOTE = c.dim
+const SNAPSHOT_REMOVED = (v: any) => c.bold(c.green(v))
+const SNAPSHOT_SUMMARY = c.bold
+const SNAPSHOT_UPDATED = (v: any) => c.bold(c.green(v))
 
 const updateCommand = 're-run mocha with `--update` to update them'
 
 export const getSnapshotSummaryOutput = (
-  rootDir: Config.Path,
+  rootDir: string,
   snapshots: SnapshotSummary,
 ): Array<string> => {
   const summary = []

@@ -1,22 +1,17 @@
 import { use as chaiUse } from 'chai'
 import Snap from 'jest-snapshot'
 import { after, before, beforeEach } from '../hooks'
+import { SnapshotManager } from './manager'
 
-import SnapshotManager from './manager'
-
-export {
+export const {
   addSerializer,
   getSerializers,
-} from 'jest-snapshot'
+} = Snap
 
 type FirstFunctionArgument<T> = T extends (arg: infer A) => unknown ? A : never
 type ChaiPlugin = FirstFunctionArgument<typeof chaiUse>
 
 let _manager: SnapshotManager
-
-export function _getSnapshotManager(): SnapshotManager {
-  return _manager
-}
 
 export interface SnapshotOptions {
   rootDir: string
@@ -40,7 +35,7 @@ export function SnapshotPlugin(options: SnapshotOptions): ChaiPlugin {
     })
     beforeEach((task) => {
       _manager.setContext({
-        file: task.name,
+        file: task.file?.filepath || task.name,
         title: task.name,
         fullTitle: [task.suite.name, task.name].filter(Boolean).join(' > '),
       })
@@ -59,11 +54,9 @@ export function SnapshotPlugin(options: SnapshotOptions): ChaiPlugin {
         },
       )
     }
-    // chai.expect.addSnapshotSerializer = addSerializer
+    chai.expect.addSnapshotSerializer = addSerializer
   }
 }
-
-// type SnapshotSerializerPlugin = import('pretty-format').Plugin
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -72,8 +65,8 @@ declare global {
       toMatchSnapshot(message?: string): Assertion
       matchSnapshot(message?: string): Assertion
     }
-    // interface ExpectStatic {
-    //   addSnapshotSerializer(serializer: SnapshotSerializerPlugin): void
-    // }
+    interface ExpectStatic {
+      addSnapshotSerializer: typeof addSerializer
+    }
   }
 }

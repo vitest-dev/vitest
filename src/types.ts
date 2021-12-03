@@ -11,6 +11,7 @@ export interface Task {
   name: string
   suite: Suite
   fn: () => Promise<void> | void
+  file?: File
 }
 
 export interface TaskResult {
@@ -28,7 +29,7 @@ export interface Suite {
 export interface File {
   filepath: string
   suites: Suite[]
-  tasks: Task[]
+  tasks: [Suite, Task[]][]
 }
 
 export interface GlobalContext {
