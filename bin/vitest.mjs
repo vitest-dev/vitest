@@ -7,16 +7,22 @@ import { run } from 'vite-node'
 import minimist from 'minimist'
 
 const argv = minimist(process.argv.slice(2), {
-  string: ['root'],
+  alias: {
+    c: 'config',
+  },
+  string: ['root', 'config'],
+  boolean: ['dev'],
 })
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
+const root = resolve(argv.root || process.cwd())
 
 await run({
-  root: resolve(argv.root || process.cwd()),
+  root,
   files: [
-    resolve(__dirname, '../dist/cli.js'),
+    resolve(__dirname, argv.dev ? '../src/cli.ts' : '../dist/cli.js'),
   ],
+  config: resolve(root, argv.config || 'vitest.config.ts'),
   defaultConfig: {
     optimizeDeps: {
       exclude: [

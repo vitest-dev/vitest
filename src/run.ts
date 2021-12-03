@@ -91,10 +91,14 @@ export async function run(options: Options = {}) {
     update: options.updateSnapshot,
   }))
 
-  const files = await fg(options.includes || ['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'], {
-    absolute: true,
-    cwd: options.rootDir,
-  })
+  const files = await fg(
+    options.includes || ['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    {
+      absolute: true,
+      cwd: options.rootDir,
+      ignore: options.excludes || ['/node_modules/', '/dist/'],
+    },
+  )
 
   if (!files.length) {
     console.error('No test files found')

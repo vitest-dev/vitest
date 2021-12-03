@@ -1,9 +1,12 @@
 /* eslint-disable no-use-before-define */
 
-export interface Options {
-  rootDir?: string
+export interface UserOptions {
   includes?: string[]
   excludes?: string[]
+}
+
+export interface Options extends UserOptions {
+  rootDir?: string
   updateSnapshot?: boolean
 }
 

@@ -38,7 +38,7 @@
     "lint": "eslint \"{src,test}/**/*.ts\"",
     "prepublishOnly": "nr build",
     "release": "bumpp --commit --push --tag && pnpm publish",
-    "test": "npx vite-node src/cli.ts --",
+    "test": "node bin/vitest.mjs --dev",
     "test:update": "nr test -u"
   },
   "devDependencies": {
@@ -61,6 +61,6 @@
     "jest-util": "^27.4.2",
     "minimist": "^1.2.5",
     "picocolors": "^1.0.0",
-    "vite-node": "v0.1.8"
+    "vite-node": "^0.1.9"
   }
 }
