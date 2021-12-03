@@ -1,10 +1,8 @@
-import { Task, Suite, GlobalContext } from './types'
+import { context } from './context'
+import { Task, Suite } from './types'
 
-export const context: GlobalContext = {
-  suites: [],
-}
 export const defaultSuite = suite('')
-export const test = defaultSuite.test
+export const test = (name: string, fn: () => Promise<void> | void) => defaultSuite.test(name, fn)
 
 export function clearContext() {
   context.suites.length = 0
@@ -15,10 +13,18 @@ export function suite(suiteName: string, factory?: (test: Suite['test']) => Prom
   const queue: Task[] = []
   const factoryQueue: Task[] = []
 
-  function test(name: string, run: () => Promise<void> | void) {
+  const suite: Suite = {
+    name: suiteName,
+    test,
+    collect,
+    clear,
+  }
+
+  function test(name: string, fn: () => Promise<void> | void) {
     const task: Task = {
+      suite,
       name,
-      run,
+      fn,
     }
     queue.push(task)
   }
@@ -35,13 +41,7 @@ export function suite(suiteName: string, factory?: (test: Suite['test']) => Prom
     return [...factoryQueue, ...queue]
   }
 
-  const suite: Suite = {
-    name: suiteName,
-    test,
-    collect,
-    clear,
-  }
-
+  context.currentSuite = suite
   context.suites.push(suite)
 
   return suite

@@ -1,6 +1,16 @@
+/* eslint-disable no-use-before-define */
+
+export interface Options {
+  rootDir?: string
+  includes?: string[]
+  excludes?: string[]
+  updateSnapshot?: boolean
+}
+
 export interface Task {
   name: string
-  run: () => Promise<void> | void
+  suite: Suite
+  fn: () => Promise<void> | void
 }
 
 export interface TaskResult {
@@ -15,6 +25,13 @@ export interface Suite {
   clear: () => void
 }
 
+export interface File {
+  filepath: string
+  suites: Suite[]
+  tasks: Task[]
+}
+
 export interface GlobalContext {
   suites: Suite[]
+  currentSuite: Suite | null
 }

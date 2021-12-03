@@ -1,4 +1,4 @@
-import { test, assert } from '../src'
+import { expect, test, assert } from '../src'
 
 test('Math.sqrt()', () => {
   assert.equal(Math.sqrt(4), 2)
@@ -14,6 +14,6 @@ test('JSON', () => {
 
   const output = JSON.stringify(input)
 
-  // assert.(output, '{"foo":"hello","bar":"world"}')
+  expect(output).eq('{"foo":"hello","bar":"world"}')
   assert.deepEqual(JSON.parse(output), input, 'matches original')
 })

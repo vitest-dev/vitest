@@ -1,17 +1,31 @@
-import { relative } from 'path'
-import fg from 'fast-glob'
-import { runFile } from './run'
+import { join } from 'path'
+import minimist from 'minimist'
+import c from 'picocolors'
+import { run } from './run'
 
 const { log } = console
 
-async function main() {
-  const cwd = process.cwd()
-  const files = await fg('test/**/*.test.ts', { absolute: true, cwd })
-  for (const file of files) {
-    log(`${relative(cwd, file)}`)
-    await runFile(file)
-    log()
-  }
-}
+const argv = minimist(process.argv.slice(2), {
+  alias: {
+    u: 'update',
+  },
+  boolean: ['update'],
+  unknown(name) {
+    if (name[0] === '-') {
+      console.error(c.red(`Unknown argument: ${name}`))
+      help()
+      process.exit(1)
+    }
+    return true
+  },
+})
 
-main()
+// TODO: load config, CLI
+run({
+  rootDir: join(process.cwd(), 'test'),
+  updateSnapshot: argv.update,
+})
+
+function help() {
+  log('Help: finish help')
+}
