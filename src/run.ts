@@ -36,6 +36,7 @@ export async function parseFile(filepath: string) {
   const suites = [defaultSuite, ...context.suites]
   const tasks = await Promise.all(suites.map(async(suite) => {
     await beforeSuiteHook.fire(suite)
+    context.currentSuite = suite
     return [suite, await suite.collect()] as [Suite, Task[]]
   }))
 

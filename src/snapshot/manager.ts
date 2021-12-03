@@ -7,12 +7,12 @@ import type {
 
 import type { SnapshotStateOptions } from 'jest-snapshot/build/State'
 import {
-  SnapshotSummary,
   packSnapshotState,
   addSnapshotResult,
   makeEmptySnapshotSummary,
 } from './utils/jest-test-result-helper'
 import { getSnapshotSummaryOutput } from './utils/jest-reporters-lite'
+import { SnapshotSummary } from './utils/types'
 
 const { expect } = chai
 const { SnapshotState } = Snap

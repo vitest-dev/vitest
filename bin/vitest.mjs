@@ -15,6 +15,6 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 await startAndRun({
   root: resolve(argv.root || process.cwd()),
   files: [
-    resolve(__dirname, '../src/cli.ts'),
+    resolve(__dirname, '../dist/cli.js'),
   ],
 })

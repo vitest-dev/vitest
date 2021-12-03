@@ -5,10 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 import path, { isAbsolute } from 'path'
-import type { SnapshotSummary } from '@jest/test-result'
 import { pluralize } from 'jest-util'
 import slash from 'slash'
 import c from 'picocolors'
+import { SnapshotSummary } from './types'
 
 const formatTestPath = (rootDir: string, testPath: string) => {
   if (isAbsolute(testPath))

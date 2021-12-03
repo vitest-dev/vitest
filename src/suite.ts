@@ -2,7 +2,7 @@ import { context } from './context'
 import { Task, Suite } from './types'
 
 export const defaultSuite = suite('')
-export const test = (name: string, fn: () => Promise<void> | void) => defaultSuite.test(name, fn)
+export const test = (name: string, fn: () => Promise<void> | void) => (context.currentSuite || defaultSuite).test(name, fn)
 
 export function clearContext() {
   context.suites.length = 0

@@ -1,13 +1,15 @@
-import { expect, assert, describe } from '../src'
+import { it, describe, expect, assert } from '../src'
 
-describe('suite name', (it) => {
+describe('suite name', () => {
   it('foo', () => {
     assert.equal(Math.sqrt(4), 2)
-    assert.equal(Math.sqrt(144), 12)
-    assert.equal(Math.sqrt(2), Math.SQRT2)
   })
 
   it('bar', () => {
-    expect(1).eq(1)
+    expect(1 + 1).eq(2)
+  })
+
+  it('snapshot', () => {
+    expect({ foo: 'bar' }).toMatchSnapshot()
   })
 })

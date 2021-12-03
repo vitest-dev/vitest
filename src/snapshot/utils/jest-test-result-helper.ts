@@ -4,17 +4,14 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import Test, { SnapshotSummary, TestResult } from '@jest/test-result'
+import Test from '@jest/test-result'
 import { SnapshotStateType } from 'jest-snapshot'
 import { SnapshotStateOptions } from 'jest-snapshot/build/State'
+import { SnapshotSummary, SnapshotResult } from './types'
 
 const {
   makeEmptyAggregatedTestResult,
 } = Test
-
-type SnapshotResult = TestResult['snapshot']
-
-export type { SnapshotSummary }
 
 export const makeEmptySnapshotSummary = (
   options: SnapshotStateOptions,
