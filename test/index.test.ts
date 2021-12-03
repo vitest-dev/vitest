@@ -1,5 +1,4 @@
-import { assert } from 'chai'
-import { test } from '../src/index'
+import { test, assert } from '../src'
 
 test('Math.sqrt()', () => {
   assert.equal(Math.sqrt(4), 2)

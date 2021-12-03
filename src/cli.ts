@@ -1,7 +1,8 @@
 import { relative } from 'path'
 import fg from 'fast-glob'
 import c from 'picocolors'
-import { context, run } from './index'
+import { run } from './run'
+import { context } from '.'
 
 const { log } = console
 
