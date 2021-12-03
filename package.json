@@ -17,14 +17,13 @@
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "exports": {
     ".": {
-      "require": "./dist/index.cjs",
-      "import": "./dist/index.mjs",
+      "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
     },
     "./*": "./*"
   },
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.mjs",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
@@ -62,6 +61,6 @@
     "jest-util": "^27.4.2",
     "minimist": "^1.2.5",
     "picocolors": "^1.0.0",
-    "vite-node": "v0.1.6"
+    "vite-node": "v0.1.7"
   }
 }
