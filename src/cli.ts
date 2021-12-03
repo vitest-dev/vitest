@@ -1,4 +1,3 @@
-import { join } from 'path'
 import minimist from 'minimist'
 import c from 'picocolors'
 import { ViteDevServer } from 'vite'

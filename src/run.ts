@@ -96,7 +96,7 @@ export async function run(options: Options = {}) {
     {
       absolute: true,
       cwd: options.rootDir,
-      ignore: options.excludes || ['/node_modules/', '/dist/'],
+      ignore: options.excludes || ['**/node_modules/**', '**/dist/**'],
     },
   )
 
