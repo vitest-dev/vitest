@@ -19,13 +19,17 @@ export interface TaskResult {
   error?: unknown
 }
 
+export type SuiteMode = 'run' | 'skip' | 'only' | 'todo'
+
 export interface Suite {
   name: string
+  mode: SuiteMode
   test: (name: string, fn: () => Promise<void> | void) => void
   collect: () => Promise<Task[]>
   clear: () => void
 }
 
+export type TestFactory = (test: Suite['test']) => Promise<void> | void
 export interface File {
   filepath: string
   suites: Suite[]

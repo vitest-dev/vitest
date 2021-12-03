@@ -63,16 +63,26 @@ export async function runFile(filepath: string) {
       indent += 1
     }
 
-    const result = await runTasks(tasks)
-    for (const r of result) {
-      if (r.error === undefined) {
-        log(`${' '.repeat(indent * 2)}${c.inverse(c.green(' PASS '))} ${c.green(r.task.name)}`)
+    if (suite.mode === 'run' || suite.mode === 'only') {
+      // TODO: If there is a task with 'only', skip all others
+      const result = await runTasks(tasks)
+      for (const r of result) {
+        if (r.error === undefined) {
+          log(`${' '.repeat(indent * 2)}${c.inverse(c.green(' PASS '))} ${c.green(r.task.name)}`)
+        }
+        else {
+          console.error(`${' '.repeat(indent * 2)}${c.inverse(c.red(' FAIL '))} ${c.red(r.task.name)}`)
+          console.error(' '.repeat((indent + 2) * 2) + c.red(String(r.error)))
+          process.exitCode = 1
+        }
       }
-      else {
-        console.error(`${' '.repeat(indent * 2)}${c.inverse(c.red(' FAIL '))} ${c.red(r.task.name)}`)
-        console.error(' '.repeat((indent + 2) * 2) + c.red(String(r.error)))
-        process.exitCode = 1
-      }
+    }
+    else if (suite.mode === 'skip') {
+      log(`${' '.repeat(indent * 2)}${c.inverse(c.gray(' SKIP '))}`)
+    }
+    else if (suite.mode === 'todo') {
+      // TODO: In Jest, these suites are collected and printed together at the end of the report
+      log(`${' '.repeat(indent * 2)}${c.inverse(c.gray(' TODO '))}`)
     }
 
     if (suite.name)
