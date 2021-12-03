@@ -37,7 +37,7 @@ export type TestFactory = (test: Suite['test']) => Promise<void> | void
 export interface File {
   filepath: string
   suites: Suite[]
-  tasks: [Suite, Task[]][]
+  collected: [Suite, Task[]][]
 }
 
 export interface GlobalContext {

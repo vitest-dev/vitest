@@ -30,33 +30,42 @@ export async function runTasks(tasks: Task[]) {
 // TODO: REPORTER
 const { log } = console
 
-export async function parseFile(filepath: string) {
-  clearContext()
-  await import(filepath)
-  const suites = [defaultSuite, ...context.suites]
-  const tasks = await Promise.all(suites.map(async(suite) => {
-    await beforeSuiteHook.fire(suite)
-    context.currentSuite = suite
-    return [suite, await suite.collect()] as [Suite, Task[]]
-  }))
+export async function collectFiles(files: string[]) {
+  const result: File[] = []
 
-  const file: File = {
-    filepath,
-    suites,
-    tasks,
+  for (const filepath of files) {
+    clearContext()
+    await beforeFileHook.fire(filepath)
+    await import(filepath)
+    const suites = [defaultSuite, ...context.suites]
+    const collected: [Suite, Task[]][] = []
+
+    for (const suite of suites) {
+      context.currentSuite = suite
+      const tasks = await suite.collect()
+      collected.push([suite, tasks])
+    }
+
+    const file: File = {
+      filepath,
+      suites,
+      collected,
+    }
+
+    file.collected.forEach(([, tasks]) =>
+      tasks.forEach(task => task.file = file),
+    )
+
+    result.push(file)
   }
 
-  file.tasks.forEach(([, tasks]) =>
-    tasks.forEach(task => task.file = file),
-  )
-
-  return file
+  return result
 }
 
-export async function runFile(filepath: string) {
-  await beforeFileHook.fire(filepath)
-  const file = await parseFile(filepath)
-  for (const [suite, tasks] of file.tasks) {
+export async function runFile(file: File) {
+  for (const [suite, tasks] of file.collected) {
+    await beforeSuiteHook.fire(suite)
+
     let indent = 1
     if (suite.name) {
       log(' '.repeat(indent * 2) + suite.name)
@@ -90,7 +99,7 @@ export async function runFile(filepath: string) {
 
     await afterSuiteHook.fire(suite)
   }
-  await afterFileHook.fire(filepath)
+  await afterFileHook.fire(file)
 }
 
 export async function run(options: Options = {}) {
@@ -101,7 +110,7 @@ export async function run(options: Options = {}) {
     update: options.updateSnapshot,
   }))
 
-  const files = await fg(
+  const paths = await fg(
     options.includes || ['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     {
       absolute: true,
@@ -110,15 +119,17 @@ export async function run(options: Options = {}) {
     },
   )
 
-  if (!files.length) {
+  if (!paths.length) {
     console.error('No test files found')
     process.exitCode = 1
     return
   }
 
   await beforeHook.fire()
+  const files = await collectFiles(paths)
+
   for (const file of files) {
-    log(`${relative(process.cwd(), file)}`)
+    log(`${relative(process.cwd(), file.filepath)}`)
     await runFile(file)
     log()
   }

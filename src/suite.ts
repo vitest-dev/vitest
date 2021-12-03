@@ -7,6 +7,7 @@ export const test = (name: string, fn: () => Promise<void> | void) => (context.c
 export function clearContext() {
   context.suites.length = 0
   defaultSuite.clear()
+  context.currentSuite = defaultSuite
 }
 
 function processSuite(mode: SuiteMode, suiteName: string, factory?: TestFactory) {
