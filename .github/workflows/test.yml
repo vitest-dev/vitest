@@ -33,14 +33,11 @@ jobs:
           node-version: ${{ matrix.node_version }}
           cache: "pnpm"
 
-      - name: Setup
-        run: pnpm i -g @antfu/ni
-
       - name: Install
-        run: nci
+        run: pnpm i
 
       # - name: Lint
-      #   run: nr lint --if-present
+      #   run: pnpm run lint --if-present
 
       - name: Test
-        run: nr test --if-present
+        run: pnpm run test
