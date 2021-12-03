@@ -22,7 +22,7 @@ const argv = minimist(process.argv.slice(2), {
 })
 
 // TODO: load config, CLI
-run({
+await run({
   rootDir: argv.root || join(process.cwd(), 'test'),
   updateSnapshot: argv.update,
 })
