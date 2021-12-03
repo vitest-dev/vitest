@@ -24,6 +24,7 @@ importers:
       vite-node: v0.1.8
     dependencies:
       '@jest/test-result': 27.4.2
+      '@types/chai': 4.2.22
       chai: 4.3.4
       fast-glob: 3.2.7
       jest-snapshot: 27.4.2
@@ -34,7 +35,6 @@ importers:
     devDependencies:
       '@antfu/eslint-config': 0.11.1_eslint@8.3.0+typescript@4.5.2
       '@antfu/ni': 0.11.0
-      '@types/chai': 4.2.22
       '@types/minimist': 1.2.2
       '@types/node': 16.11.11
       bumpp: 7.1.1
@@ -583,7 +583,7 @@ packages:
 
   /@types/chai/4.2.22:
     resolution: {integrity: sha512-tFfcE+DSTzWAgifkjik9AySNqIyNoYwmR+uecPwwD/XRNfvOjmC/FjCxpiUGDkDVDphPfCUecSQVFw+lN3M3kQ==}
-    dev: true
+    dev: false
 
   /@types/graceful-fs/4.1.5:
     resolution: {integrity: sha512-anKkLmZZ+xm4p8JWBf4hElkM4XR+EZeA2M9BAkkTldmcyDY4mbdIJnRghDJH3Ov5ooY7/UAoENtmdMSkaAd7Cw==}

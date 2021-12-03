@@ -44,7 +44,6 @@
   "devDependencies": {
     "@antfu/eslint-config": "^0.11.1",
     "@antfu/ni": "^0.11.0",
-    "@types/chai": "^4.2.22",
     "@types/minimist": "^1.2.2",
     "@types/node": "^16.11.11",
     "bumpp": "^7.1.1",
@@ -54,6 +53,7 @@
     "vite": "^2.6.14"
   },
   "dependencies": {
+    "@types/chai": "^4.2.22",
     "@jest/test-result": "^27.4.2",
     "chai": "^4.3.4",
     "fast-glob": "^3.2.7",
