@@ -1,5 +1,5 @@
 import { context } from './context'
-import { Task, Suite } from './types'
+import { Task, Suite, SuiteMode, TestFactory } from './types'
 
 export const defaultSuite = suite('')
 export const test = (name: string, fn: () => Promise<void> | void) => (context.currentSuite || defaultSuite).test(name, fn)
@@ -9,12 +9,13 @@ export function clearContext() {
   defaultSuite.clear()
 }
 
-export function suite(suiteName: string, factory?: (test: Suite['test']) => Promise<void> | void) {
+function processSuite(mode: SuiteMode, suiteName: string, factory?: TestFactory) {
   const queue: Task[] = []
   const factoryQueue: Task[] = []
 
   const suite: Suite = {
     name: suiteName,
+    mode,
     test,
     collect,
     clear,
@@ -45,6 +46,22 @@ export function suite(suiteName: string, factory?: (test: Suite['test']) => Prom
   context.suites.push(suite)
 
   return suite
+}
+
+export function suite(suiteName: string, factory?: TestFactory) {
+  return processSuite('run', suiteName, factory)
+}
+
+suite.skip = function skip(suiteName: string, factory?: TestFactory) {
+  return processSuite('skip', suiteName, factory)
+}
+
+suite.only = function skip(suiteName: string, factory?: TestFactory) {
+  return processSuite('only', suiteName, factory)
+}
+
+suite.todo = function skip(suiteName: string) {
+  return processSuite('todo', suiteName)
 }
 
 // alias
