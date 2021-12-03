@@ -21,7 +21,7 @@ importers:
       picocolors: ^1.0.0
       typescript: ^4.5.2
       vite: ^2.6.14
-      vite-node: v0.1.7
+      vite-node: v0.1.8
     dependencies:
       '@jest/test-result': 27.4.2
       chai: 4.3.4
@@ -30,7 +30,7 @@ importers:
       jest-util: 27.4.2
       minimist: 1.2.5
       picocolors: 1.0.0
-      vite-node: 0.1.7
+      vite-node: 0.1.8
     devDependencies:
       '@antfu/eslint-config': 0.11.1_eslint@8.3.0+typescript@4.5.2
       '@antfu/ni': 0.11.0
@@ -3189,8 +3189,8 @@ packages:
       spdx-expression-parse: 3.0.1
     dev: true
 
-  /vite-node/0.1.7:
-    resolution: {integrity: sha512-H6CP6HZHX7phzZ7ISMiYUbl5Op7QIUcU0X3gZuvY90qRWIFwjVhkL40dE16YPpeVWHjKcDfmmacXYbxB5d84gg==}
+  /vite-node/0.1.8:
+    resolution: {integrity: sha512-M9NgTOMFpBnoe9uD1NEYAEY7KPcNdxkXt5KdTWQK8nAv5V+gflaJoAb/pGgndobZuKnQ1HIE0/S6TgxVnbQzBg==}
     engines: {node: '>=14.0.0'}
     hasBin: true
     dependencies:

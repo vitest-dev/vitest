@@ -24,4 +24,10 @@ await run({
       ],
     },
   },
+  shouldExternalize(id) {
+    if (id.includes('/node_modules/vitest/'))
+      return false
+    else
+      return id.includes('/node_modules/')
+  },
 })

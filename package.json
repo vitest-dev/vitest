@@ -61,6 +61,6 @@
     "jest-util": "^27.4.2",
     "minimist": "^1.2.5",
     "picocolors": "^1.0.0",
-    "vite-node": "v0.1.7"
+    "vite-node": "v0.1.8"
   }
 }
