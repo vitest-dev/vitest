@@ -1,4 +1,5 @@
 import { relative } from 'path'
+import { performance } from 'perf_hooks'
 import c from 'picocolors'
 import chai from 'chai'
 import fg from 'fast-glob'
@@ -127,11 +128,23 @@ export async function run(options: Options = {}) {
   const files = await collectFiles(paths)
 
   await beforeAllHook.fire()
+  const start = performance.now()
   for (const file of files) {
     log(`${relative(process.cwd(), file.filepath)}`)
     await runFile(file)
     log()
   }
+  const end = performance.now()
   await afterAllHook.fire()
+
+  const tasks = files.reduce((acc, file) => acc.concat(file.collected.flatMap(([, tasks]) => tasks)), [] as Task[])
+  const passed = tasks.filter(i => !i.result?.error)
+  const failed = tasks.filter(i => i.result?.error)
+
+  log(`Passed   ${passed.length} / ${tasks.length}`)
+  if (failed.length)
+    log(`Failed   ${failed.length} / ${tasks.length}`)
+  log(`Time     ${(end - start).toFixed(2)}ms`)
+
   log()
 }
