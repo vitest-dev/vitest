@@ -30,6 +30,7 @@ export interface Suite {
 }
 
 export type TestFactory = (test: Suite['test']) => Promise<void> | void
+
 export interface File {
   filepath: string
   suites: Suite[]
