@@ -6,6 +6,11 @@ export const context: GlobalContext = {
 export const defaultSuite = suite('')
 export const test = defaultSuite.test
 
+export function clearContext() {
+  context.suites.length = 0
+  defaultSuite.clear()
+}
+
 export function suite(suiteName: string, factory?: (test: Suite['test']) => Promise<void> | void) {
   const queue: Task[] = []
   const factoryQueue: Task[] = []
@@ -16,6 +21,11 @@ export function suite(suiteName: string, factory?: (test: Suite['test']) => Prom
       run,
     }
     queue.push(task)
+  }
+
+  function clear() {
+    queue.length = 0
+    factoryQueue.length = 0
   }
 
   async function collect() {
@@ -29,6 +39,7 @@ export function suite(suiteName: string, factory?: (test: Suite['test']) => Prom
     name: suiteName,
     test,
     collect,
+    clear,
   }
 
   context.suites.push(suite)

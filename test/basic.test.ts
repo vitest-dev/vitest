@@ -15,5 +15,5 @@ test('JSON', () => {
   const output = JSON.stringify(input)
 
   // assert.(output, '{"foo":"hello","bar":"world"}')
-  assert.equal(JSON.parse(output), input, 'matches original')
+  assert.deepEqual(JSON.parse(output), input, 'matches original')
 })

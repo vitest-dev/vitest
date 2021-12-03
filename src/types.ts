@@ -12,6 +12,7 @@ export interface Suite {
   name: string
   test: (name: string, fn: () => Promise<void> | void) => void
   collect: () => Promise<Task[]>
+  clear: () => void
 }
 
 export interface GlobalContext {
