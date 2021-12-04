@@ -14,7 +14,8 @@ export async function runTask(task: Task, ctx: RunnerContext) {
   await reporter.onTaskBegin?.(task, ctx)
   await beforeEachHook.fire(task)
 
-  if (task.suite.mode === 'skip' || task.mode === 'skip') {
+  if (task.suite.mode === 'skip' || task.mode === 'skip'
+    || !(ctx.mode === 'only' && (task.suite.mode === 'only' || task.mode === 'only'))) {
     task.status = 'skip'
   }
   else if (task.suite.mode === 'todo' || task.mode === 'todo') {
