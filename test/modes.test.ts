@@ -9,7 +9,7 @@ describe.skip('skipped suite', () => {
 describe.todo('unimplemented suite')
 
 describe('task modes', () => {
-  it.skip('no fail as it task is skipped', () => {
+  it.skip('no fail as task is skipped', () => {
     assert.equal(Math.sqrt(4), 3)
   })
 

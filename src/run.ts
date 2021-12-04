@@ -8,7 +8,6 @@ import { afterEachHook, afterFileHook, afterAllHook, afterSuiteHook, beforeEachH
 import { SnapshotPlugin } from './snapshot'
 import { DefaultReporter } from './reporters/default'
 import { defaultIncludes, defaultExcludes } from './constants'
-import { RunMode } from '.'
 
 export async function runTask(task: Task, ctx: RunnerContext) {
   const { reporter } = ctx
@@ -65,12 +64,6 @@ export async function collectFiles(paths: string[]) {
   const allSuites = files.reduce((suites, file) => suites.concat(file.suites), [] as Suite[])
 
   interpretOnlyMode(allSuites)
-  allSuites.forEach((i) => {
-    if (i.mode === 'skip')
-      i.tasks.forEach(t => t.mode === 'run' && (t.state = 'skip'))
-    else
-      interpretOnlyMode(i.tasks)
-  })
 
   return files
 }
@@ -78,13 +71,24 @@ export async function collectFiles(paths: string[]) {
 /**
  * If any items been marked as `only`, mark all other items as `skip`.
  */
-function interpretOnlyMode(items: {mode: RunMode}[]) {
-  if (items.some(i => i.mode === 'only')) {
-    items.forEach((i) => {
-      if (i.mode === 'run')
-        i.mode = 'skip'
-      else if (i.mode === 'only')
-        i.mode = 'run'
+function interpretOnlyMode(suites: Suite[]) {
+  if (suites.some(i => i.mode === 'only' || i.tasks.find(t => t.mode === 'only'))) {
+    // Only mode, some suites or tasks are marked as 'only'
+    suites.forEach((suite) => {
+      if (suite.mode === 'run') {
+        // Convert t.mode === 'only' to t.mode === 'run', skip the rest
+        suite.tasks.forEach((t) => {
+          if (t.mode === 'run')
+            t.mode = t.state = 'skip'
+          else if (t.mode === 'only')
+            t.mode = 'run'
+        })
+      }
+      else if (suite.mode === 'only') {
+        // Mark this suite as runnable, run every task in it
+        suite.mode = 'run'
+        suite.tasks.forEach(t => t.mode === 'only' && (t.mode = 'run'))
+      }
     })
   }
 }
@@ -92,8 +96,8 @@ function interpretOnlyMode(items: {mode: RunMode}[]) {
 export async function runFile(file: File, ctx: RunnerContext) {
   const { reporter } = ctx
 
-  const runableSuites = file.suites.filter(i => i.mode === 'run')
-  if (runableSuites.length === 0)
+  const runnableSuites = file.suites.filter(i => i.mode === 'run')
+  if (runnableSuites.length === 0)
     return
 
   await reporter.onFileBegin?.(file, ctx)
