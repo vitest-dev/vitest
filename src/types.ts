@@ -54,6 +54,8 @@ export type TestFactory = (test: (name: string, fn: TestFunction) => void) => Aw
 export interface File {
   filepath: string
   suites: Suite[]
+  collected: boolean
+  error?: unknown
 }
 
 export interface RunnerContext {

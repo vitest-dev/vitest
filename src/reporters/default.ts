@@ -5,6 +5,8 @@ import ora from 'ora'
 import { File, Reporter, RunnerContext, Suite, Task } from '../types'
 
 const DOT = '· '
+const CHECK = '✔ '
+const CROSS = '⤫ '
 
 export class DefaultReporter implements Reporter {
   indent = 0
@@ -17,26 +19,6 @@ export class DefaultReporter implements Reporter {
 
   onCollected() {
     this.start = performance.now()
-  }
-
-  onFinished({ files }: RunnerContext) {
-    this.end = performance.now()
-    const tasks = files.reduce((acc, file) => acc.concat(file.suites.flatMap(i => i.tasks)), [] as Task[])
-    const passed = tasks.filter(i => i.status === 'pass')
-    const failed = tasks.filter(i => i.status === 'fail')
-    const skipped = tasks.filter(i => i.status === 'skip')
-    const todo = tasks.filter(i => i.status === 'todo')
-
-    this.indent = 0
-
-    this.log(c.green(`Passed   ${passed.length} / ${tasks.length}`))
-    if (skipped.length)
-      this.log(c.yellow(`Skipped  ${skipped.length}`))
-    if (todo.length)
-      this.log(c.dim(`Todo     ${todo.length}`))
-    if (failed.length)
-      this.log(c.red(`Failed   ${failed.length} / ${tasks.length}`))
-    this.log(`Time     ${(this.end - this.start).toFixed(2)}ms`)
   }
 
   onSuiteBegin(suite: Suite) {
@@ -76,7 +58,7 @@ export class DefaultReporter implements Reporter {
     task.__ora?.stop()
 
     if (task.status === 'pass') {
-      this.log(`${c.green(`✔ ${task.name}`)}`)
+      this.log(`${c.green(CHECK + task.name)}`)
     }
     else if (task.status === 'skip') {
       this.log(c.dim(c.yellow(`${DOT + task.name} (skipped)`)))
@@ -85,11 +67,49 @@ export class DefaultReporter implements Reporter {
       this.log(c.dim(`${DOT + task.name} (todo)`))
     }
     else {
-      this.error(`${c.red(`⤫ ${c.inverse(c.red(' FAIL '))} ${task.name}`)}`)
-      this.error(String(task.error), 1)
+      this.error(`${c.red(`${CROSS}${task.name}`)}`)
       process.exitCode = 1
     }
     this.indent -= 1
+  }
+
+  onFinished({ files }: RunnerContext) {
+    this.end = performance.now()
+    const failedFiles = files.filter(i => i.error)
+    const tasks = files.reduce((acc, file) => acc.concat(file.suites.flatMap(i => i.tasks)), [] as Task[])
+    const passed = tasks.filter(i => i.status === 'pass')
+    const failed = tasks.filter(i => i.status === 'fail')
+    const skipped = tasks.filter(i => i.status === 'skip')
+    const todo = tasks.filter(i => i.status === 'todo')
+
+    this.indent = 0
+
+    if (failedFiles.length) {
+      this.error(c.bold(`\nFailed to parse ${failedFiles.length} files:`))
+      failedFiles.forEach((i) => {
+        this.error(`\n- ${i.filepath}`)
+        console.error(i.error || 'Unknown error')
+        this.log()
+      })
+    }
+
+    if (failed.length) {
+      this.error(c.bold(`\nFailed Tests (${failed.length})`))
+      failed.forEach((task) => {
+        this.error(`\n${CROSS + c.inverse(c.red(' FAIL '))} ${[task.suite.name, task.name].filter(Boolean).join(' > ')} ${c.gray(`${task.file?.filepath}`)}`)
+        console.error(task.error || 'Unknown error')
+        this.log()
+      })
+    }
+
+    this.log(c.green(`Passed   ${passed.length} / ${tasks.length}`))
+    if (failed.length)
+      this.log(c.red(`Failed   ${failed.length} / ${tasks.length}`))
+    if (skipped.length)
+      this.log(c.yellow(`Skipped  ${skipped.length}`))
+    if (todo.length)
+      this.log(c.dim(`Todo     ${todo.length}`))
+    this.log(`Time     ${(this.end - this.start).toFixed(2)}ms`)
   }
 
   private getIndent(offest = 0) {

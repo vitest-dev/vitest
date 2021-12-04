@@ -3,7 +3,7 @@ import fg from 'fast-glob'
 import SinonChai from 'sinon-chai'
 import { clearContext, defaultSuite } from './suite'
 import { context } from './context'
-import { File, Options, Suite, Task, Reporter, RunnerContext } from './types'
+import { File, Options, Task, Reporter, RunnerContext } from './types'
 import { afterEachHook, afterFileHook, afterAllHook, afterSuiteHook, beforeEachHook, beforeFileHook, beforeAllHook, beforeSuiteHook } from './hooks'
 import { SnapshotPlugin } from './snapshot'
 import { DefaultReporter } from './reporters/default'
@@ -39,22 +39,29 @@ export async function collectFiles(files: string[]) {
   const result: File[] = []
 
   for (const filepath of files) {
-    clearContext()
-    await import(filepath)
-    const collectors = [defaultSuite, ...context.suites]
-    const suites: Suite[] = []
-
     const file: File = {
       filepath,
       suites: [],
+      collected: false,
     }
 
-    for (const c of collectors) {
-      context.currentSuite = c
-      suites.push(await c.collect(file))
-    }
+    clearContext()
+    try {
+      await import(filepath)
 
-    file.suites = suites
+      const collectors = [defaultSuite, ...context.suites]
+      for (const c of collectors) {
+        context.currentSuite = c
+        file.suites.push(await c.collect(file))
+      }
+
+      file.collected = true
+    }
+    catch (e) {
+      file.error = e
+      file.collected = false
+      process.exitCode = 1
+    }
 
     result.push(file)
   }
