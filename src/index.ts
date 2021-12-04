@@ -8,4 +8,4 @@ export * from './chai'
 export { beforeAll, afterAll, beforeEach, afterEach, beforeFile, afterFile, beforeSuite, afterSuite } from './hooks'
 
 export { sinon }
-export const { mock, spy } = sinon
+export const { mock, spy, stub } = sinon

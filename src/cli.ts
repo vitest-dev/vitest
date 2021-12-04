@@ -28,8 +28,10 @@ const testOptions = viteConfig.test || {}
 
 await run({
   ...testOptions,
+  server,
   updateSnapshot: argv.update,
   rootDir: argv.root || process.cwd(),
+  nameFilters: argv._,
 })
 
 function help() {

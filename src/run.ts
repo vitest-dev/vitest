@@ -3,7 +3,7 @@ import fg from 'fast-glob'
 import SinonChai from 'sinon-chai'
 import { clearContext, defaultSuite } from './suite'
 import { context } from './context'
-import { File, Options, Task, Reporter, RunnerContext } from './types'
+import { File, Config, Task, Reporter, RunnerContext } from './types'
 import { afterEachHook, afterFileHook, afterAllHook, afterSuiteHook, beforeEachHook, beforeFileHook, beforeAllHook, beforeSuiteHook } from './hooks'
 import { SnapshotPlugin } from './snapshot'
 import { DefaultReporter } from './reporters/default'
@@ -89,25 +89,28 @@ export async function runFile(file: File, ctx: RunnerContext) {
   await reporter.onFileEnd?.(file, ctx)
 }
 
-export async function run(options: Options = {}) {
-  const { rootDir = process.cwd() } = options
+export async function run(config: Config) {
+  const { rootDir = process.cwd() } = config
 
   // setup chai
   chai.use(await SnapshotPlugin({
     rootDir,
-    update: options.updateSnapshot,
+    update: config.updateSnapshot,
   }))
   chai.use(SinonChai)
 
   // collect files
-  const paths = await fg(
-    options.includes || defaultIncludes,
+  let paths = await fg(
+    config.includes || defaultIncludes,
     {
       absolute: true,
-      cwd: options.rootDir,
-      ignore: options.excludes || defaultExcludes,
+      cwd: config.rootDir,
+      ignore: config.excludes || defaultExcludes,
     },
   )
+
+  if (config.nameFilters?.length)
+    paths = paths.filter(i => config.nameFilters!.some(f => i.includes(f)))
 
   if (!paths.length) {
     console.error('No test files found')
@@ -117,14 +120,14 @@ export async function run(options: Options = {}) {
 
   const reporter: Reporter = new DefaultReporter()
 
-  await reporter.onStart?.(options)
+  await reporter.onStart?.(config)
 
   const files = await collectFiles(paths)
 
   const ctx: RunnerContext = {
     files,
     mode: isOnlyMode(files) ? 'only' : 'all',
-    userOptions: options,
+    config,
     reporter,
   }
 
