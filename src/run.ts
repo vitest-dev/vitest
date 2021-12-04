@@ -2,11 +2,10 @@ import chai from 'chai'
 import fg from 'fast-glob'
 import { clearContext, defaultSuite } from './suite'
 import { context } from './context'
-import { File, Options, Suite, Task } from './types'
+import { File, Options, Suite, Task, Reporter, RunnerContext } from './types'
 import { afterEachHook, afterFileHook, afterAllHook, afterSuiteHook, beforeEachHook, beforeFileHook, beforeAllHook, beforeSuiteHook } from './hooks'
-import { SnapshotPlugin } from './snapshot/index'
+import { SnapshotPlugin } from './snapshot'
 import { DefaultReporter } from './reporters/default'
-import { Reporter, RunnerContext } from '.'
 
 export async function runTask(task: Task, ctx: RunnerContext) {
   const { reporter } = ctx

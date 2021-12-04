@@ -41,7 +41,13 @@ export class DefaultReporter implements Reporter {
   onSuiteBegin(suite: Suite) {
     if (suite.name) {
       this.indent += 1
-      this.log(`${DOT + suite.name} (${suite.tasks.length})`)
+      const name = DOT + suite.name
+      if (suite.mode === 'skip')
+        this.log(c.dim(c.yellow(`${name} (skipped)`)))
+      else if (suite.mode === 'todo')
+        this.log(c.dim(`${name} (todo)`))
+      else
+        this.log(name)
     }
   }
 
@@ -51,7 +57,7 @@ export class DefaultReporter implements Reporter {
   }
 
   onFileBegin(file: File) {
-    this.log(`- ${relative(process.cwd(), file.filepath)}`)
+    this.log(`- ${relative(process.cwd(), file.filepath)} ${c.dim(`(${file.suites.flatMap(i => i.tasks).length} tests)`)}`)
   }
 
   onFileEnd() {
