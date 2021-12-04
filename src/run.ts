@@ -61,7 +61,11 @@ export async function collectFiles(files: string[]) {
   return result
 }
 
-export async function runFile(file: File) {
+interface RunOptions {
+  onlyMode?: boolean
+}
+
+export async function runFile(file: File, options: RunOptions = {}) {
   await beforeFileHook.fire(file)
   for (const [suite, tasks] of file.collected) {
     await beforeSuiteHook.fire(suite)
@@ -72,7 +76,7 @@ export async function runFile(file: File) {
       indent += 1
     }
 
-    if (suite.mode === 'run' || suite.mode === 'only') {
+    if ((suite.mode === 'run' && !options?.onlyMode) || suite.mode === 'only') {
       // TODO: If there is a task with 'only', skip all others
       await runTasks(tasks)
       for (const t of tasks) {
@@ -86,12 +90,13 @@ export async function runFile(file: File) {
         }
       }
     }
-    else if (suite.mode === 'skip') {
-      log(`${' '.repeat(indent * 2)}${c.inverse(c.gray(' SKIP '))}`)
-    }
     else if (suite.mode === 'todo') {
       // TODO: In Jest, these suites are collected and printed together at the end of the report
       log(`${' '.repeat(indent * 2)}${c.inverse(c.gray(' TODO '))}`)
+    }
+    else {
+      // suite.mode is 'skip' or 'run' in onlyMode
+      log(`${' '.repeat(indent * 2)}${c.inverse(c.gray(' SKIP '))}`)
     }
 
     if (suite.name)
@@ -127,13 +132,16 @@ export async function run(options: Options = {}) {
 
   const files = await collectFiles(paths)
 
+  const onlyMode = isOnlyMode(files)
+
   await beforeAllHook.fire()
   const start = performance.now()
   for (const file of files) {
     log(`${relative(process.cwd(), file.filepath)}`)
-    await runFile(file)
+    await runFile(file, { onlyMode })
     log()
   }
+
   const end = performance.now()
   await afterAllHook.fire()
 
@@ -147,4 +155,8 @@ export async function run(options: Options = {}) {
   log(`Time     ${(end - start).toFixed(2)}ms`)
 
   log()
+}
+
+function isOnlyMode(files: File[]) {
+  return !!files.find(file => file.suites.find(suite => suite.mode === 'only'))
 }
