@@ -17,3 +17,11 @@ test('JSON', () => {
   expect(output).eq('{"foo":"hello","bar":"world"}')
   assert.deepEqual(JSON.parse(output), input, 'matches original')
 })
+
+test('async', async() => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve()
+    }, 1000)
+  })
+})

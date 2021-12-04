@@ -91,16 +91,17 @@ Use `.todo` to stub suites and tests that should be implemented
 describe.todo('unimplemented suite')
 
 // An entry will be shown in the report for this task
-describe.suite('suite', () => {
+describe('suite', () => {
   it.todo('unimplemented task')
 })
 ```
 
 ## TODO
 
-- [ ] Reporter & Better output
+- [x] Reporter & Better output
+- [x] Task filter
+- [ ] Parallel Executing
 - [ ] CLI Help
-- [ ] Task filter
 - [ ] Mock
 - [ ] JSDom
 - [ ] Watch

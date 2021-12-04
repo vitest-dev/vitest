@@ -61,6 +61,7 @@
     "jest-snapshot": "^27.4.2",
     "jest-util": "^27.4.2",
     "minimist": "^1.2.5",
+    "ora": "^6.0.1",
     "picocolors": "^1.0.0",
     "vite-node": "^0.1.10"
   }

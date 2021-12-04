@@ -1,6 +1,7 @@
 import { relative } from 'path'
 import { performance } from 'perf_hooks'
 import c from 'picocolors'
+import ora from 'ora'
 import { File, Reporter, RunnerContext, Suite, Task } from '../types'
 
 const DOT = '· '
@@ -64,36 +65,45 @@ export class DefaultReporter implements Reporter {
     this.log()
   }
 
-  onTaskBegin() {
+  onTaskBegin(task: Task) {
     this.indent += 1
+    // @ts-expect-error
+    task.__ora = ora({ text: task.name, prefixText: this.getIndent().slice(1), spinner: 'arc' }).start()
   }
 
-  onTaskEnd(t: Task) {
-    if (t.status === 'pass') {
-      this.log(`${c.green(`✔ ${t.name}`)}`)
+  onTaskEnd(task: Task) {
+    // @ts-expect-error
+    task.__ora?.stop()
+
+    if (task.status === 'pass') {
+      this.log(`${c.green(`✔ ${task.name}`)}`)
     }
-    else if (t.status === 'skip') {
-      this.log(c.dim(c.yellow(`${DOT + t.name} (skipped)`)))
+    else if (task.status === 'skip') {
+      this.log(c.dim(c.yellow(`${DOT + task.name} (skipped)`)))
     }
-    else if (t.status === 'todo') {
-      this.log(c.dim(`${DOT + t.name} (todo)`))
+    else if (task.status === 'todo') {
+      this.log(c.dim(`${DOT + task.name} (todo)`))
     }
     else {
-      this.error(`${c.red(`⤫ ${c.inverse(c.red(' FAIL '))} ${t.name}`)}`)
-      this.error(String(t.error), 1)
+      this.error(`${c.red(`⤫ ${c.inverse(c.red(' FAIL '))} ${task.name}`)}`)
+      this.error(String(task.error), 1)
       process.exitCode = 1
     }
     this.indent -= 1
   }
 
-  log(msg = '', indentDelta = 0) {
-    // eslint-disable-next-line no-console
-    console.log(`${' '.repeat((this.indent + indentDelta) * 2)}${msg}`)
+  private getIndent(offest = 0) {
+    return ' '.repeat((this.indent + offest) * 2)
   }
 
-  error(msg = '', indentDelta = 0) {
+  private log(msg = '', indentOffset = 0) {
     // eslint-disable-next-line no-console
-    console.error(c.red(`${' '.repeat((this.indent + indentDelta) * 2)}${msg}`))
+    console.log(`${this.getIndent(indentOffset)}${msg}`)
+  }
+
+  private error(msg = '', indentOffset = 0) {
+    // eslint-disable-next-line no-console
+    console.error(c.red(`${this.getIndent(indentOffset)}${msg}`))
   }
 
   onSnapshotUpdate() {
