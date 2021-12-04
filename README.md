@@ -37,6 +37,27 @@ describe('suite name', () => {
 $ npx vitest
 ```
 
+## Configuration
+
+`vitest` will read your root `vite.config.ts` when it present to match with the plugins and setup as your Vite app. If you want to it to have a different configuration for testing, you could either:
+
+- Create `vitest.config.ts`, which will have the higher priority
+- Pass `--config` option to CLI, e.g. `vitest --config ./path/to/vitest.config.ts`
+- Use `process.env.VITEST` to conditionally apply differnet configuration in `vite.config.ts`
+
+To configure `vitest` itself, add `test` property in your Vite config
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  test: {
+    // ...
+  }
+})
+```
+
 ## Filtering
 
 ### Skipping suites and tasks
@@ -103,10 +124,12 @@ describe('suite', () => {
 - [x] Reporter & Better output
 - [x] Task filter
 - [x] Mock
+- [ ] Global Mode & Types
 - [ ] Parallel Executing
 - [ ] CLI Help
 - [ ] JSDom
 - [ ] Watch
+- [ ] Source Map
 - [ ] Coverage
 
 ## Sponsors

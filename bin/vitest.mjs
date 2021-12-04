@@ -7,6 +7,8 @@ import { run } from 'vite-node'
 import minimist from 'minimist'
 import { findUp } from 'find-up'
 
+process.env.VITEST = 'true'
+
 const argv = minimist(process.argv.slice(2), {
   alias: {
     c: 'config',
