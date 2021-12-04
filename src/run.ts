@@ -5,26 +5,20 @@ import chai from 'chai'
 import fg from 'fast-glob'
 import { clearContext, defaultSuite } from './suite'
 import { context } from './context'
-import { File, Options, Suite, Task, TaskResult } from './types'
+import { File, Options, Suite, Task } from './types'
 import { afterEachHook, afterFileHook, afterAllHook, afterSuiteHook, beforeEachHook, beforeFileHook, beforeAllHook, beforeSuiteHook } from './hooks'
 import { SnapshotPlugin } from './snapshot/index'
 
-export async function runTasks(tasks: Task[]) {
-  const results: TaskResult[] = []
-
-  for (const task of tasks) {
-    await beforeEachHook.fire(task)
-    task.result = {}
-    try {
-      await task.fn()
-    }
-    catch (e) {
-      task.result.error = e
-    }
-    await afterEachHook.fire(task)
+export async function runTask(task: Task) {
+  await beforeEachHook.fire(task)
+  task.result = {}
+  try {
+    await task.fn()
   }
-
-  return results
+  catch (e) {
+    task.result.error = e
+  }
+  await afterEachHook.fire(task)
 }
 
 // TODO: REPORTER
@@ -76,27 +70,34 @@ export async function runFile(file: File, options: RunOptions = {}) {
       indent += 1
     }
 
-    if ((suite.mode === 'run' && !options?.onlyMode) || suite.mode === 'only') {
-      // TODO: If there is a task with 'only', skip all others
-      await runTasks(tasks)
-      for (const t of tasks) {
-        if (t.result && t.result.error === undefined) {
-          log(`${' '.repeat(indent * 2)}${c.inverse(c.green(' PASS '))} ${c.green(t.name)}`)
-        }
-        else {
-          console.error(`${' '.repeat(indent * 2)}${c.inverse(c.red(' FAIL '))} ${c.red(t.name)}`)
-          console.error(' '.repeat((indent + 2) * 2) + c.red(String(t.result!.error)))
-          process.exitCode = 1
-        }
-      }
-    }
-    else if (suite.mode === 'todo') {
+    if (suite.mode === 'todo') {
       // TODO: In Jest, these suites are collected and printed together at the end of the report
       log(`${' '.repeat(indent * 2)}${c.inverse(c.gray(' TODO '))}`)
     }
     else {
-      // suite.mode is 'skip' or 'run' in onlyMode
-      log(`${' '.repeat(indent * 2)}${c.inverse(c.gray(' SKIP '))}`)
+      const runSuite = (suite.mode === 'run' && !options?.onlyMode) || suite.mode === 'only' || tasks.find(t => t.mode === 'only')
+
+      for (const t of tasks) {
+        if (runSuite && (((t.mode === 'run' && !options?.onlyMode) || t.mode === 'only') || suite.mode === 'only')) {
+          await runTask(t)
+
+          if (t.result && t.result.error === undefined) {
+            log(`${' '.repeat(indent * 2)}${c.inverse(c.green(' PASS '))} ${c.green(t.name)}`)
+          }
+          else {
+            console.error(`${' '.repeat(indent * 2)}${c.inverse(c.red(' FAIL '))} ${c.red(t.name)}`)
+            console.error(' '.repeat((indent + 2) * 2) + c.red(String(t.result!.error)))
+            process.exitCode = 1
+          }
+        }
+        else if (t.mode === 'todo') {
+          log(`${' '.repeat(indent * 2)}${c.inverse(c.gray(' TODO '))} ${c.green(t.name)}`)
+        }
+        else {
+          // Only mode or direct skip
+          log(`${' '.repeat(indent * 2)}${c.inverse(c.gray(' SKIP '))} ${c.green(t.name)}`)
+        }
+      }
     }
 
     if (suite.name)
@@ -158,5 +159,9 @@ export async function run(options: Options = {}) {
 }
 
 function isOnlyMode(files: File[]) {
-  return !!files.find(file => file.suites.find(suite => suite.mode === 'only'))
+  return !!files.find(
+    file => file.collected.find(
+      ([suite, tasks]) => suite.mode === 'only' || tasks.find(t => t.mode === 'only'),
+    ),
+  )
 }
