@@ -3,45 +3,38 @@ import fg from 'fast-glob'
 import SinonChai from 'sinon-chai'
 import { clearContext, defaultSuite } from './suite'
 import { context } from './context'
-import { File, Config, Task, Reporter, RunnerContext } from './types'
+import { File, Config, Task, Reporter, RunnerContext, Suite } from './types'
 import { afterEachHook, afterFileHook, afterAllHook, afterSuiteHook, beforeEachHook, beforeFileHook, beforeAllHook, beforeSuiteHook } from './hooks'
 import { SnapshotPlugin } from './snapshot'
 import { DefaultReporter } from './reporters/default'
 import { defaultIncludes, defaultExcludes } from './constants'
+import { RunMode } from '.'
 
 export async function runTask(task: Task, ctx: RunnerContext) {
   const { reporter } = ctx
 
-  task.status = 'run'
   await reporter.onTaskBegin?.(task, ctx)
-  await beforeEachHook.fire(task)
 
-  if (task.suite.mode === 'skip' || task.mode === 'skip'
-    || (ctx.mode === 'only' && (task.suite.mode !== 'only' || task.mode !== 'only'))) {
-    task.status = 'skip'
-  }
-  else if (task.suite.mode === 'todo' || task.mode === 'todo') {
-    task.status = 'todo'
-  }
-  else {
+  if (task.mode === 'run') {
+    await beforeEachHook.fire(task)
     try {
       await task.fn()
-      task.status = 'pass'
+      task.state = 'pass'
     }
     catch (e) {
-      task.status = 'fail'
+      task.state = 'fail'
       task.error = e
     }
+    await afterEachHook.fire(task)
   }
 
-  await afterEachHook.fire(task)
   await reporter.onTaskEnd?.(task, ctx)
 }
 
-export async function collectFiles(files: string[]) {
-  const result: File[] = []
+export async function collectFiles(paths: string[]) {
+  const files: File[] = []
 
-  for (const filepath of files) {
+  for (const filepath of paths) {
     const file: File = {
       filepath,
       suites: [],
@@ -66,10 +59,29 @@ export async function collectFiles(files: string[]) {
       process.exitCode = 1
     }
 
-    result.push(file)
+    files.push(file)
   }
 
-  return result
+  const allSuites = files.reduce((suites, file) => suites.concat(file.suites), [] as Suite[])
+
+  interpretOnlyMode(allSuites)
+  allSuites.forEach(i => interpretOnlyMode(i.tasks))
+
+  return files
+}
+
+/**
+ * If any items been marked as `only`, mark all other items as `skip`.
+ */
+function interpretOnlyMode(items: {mode: RunMode}[]) {
+  if (items.some(i => i.mode === 'only')) {
+    items.forEach((i) => {
+      if (i.mode === 'run')
+        i.mode = 'skip'
+      else if (i.mode === 'only')
+        i.mode = 'run'
+    })
+  }
 }
 
 export async function runFile(file: File, ctx: RunnerContext) {
@@ -81,8 +93,10 @@ export async function runFile(file: File, ctx: RunnerContext) {
     await reporter.onSuiteBegin?.(suite, ctx)
     await beforeSuiteHook.fire(suite)
 
-    for (const t of suite.tasks)
-      await runTask(t, ctx)
+    if (suite.mode === 'run') {
+      for (const t of suite.tasks)
+        await runTask(t, ctx)
+    }
 
     await afterSuiteHook.fire(suite)
     await reporter.onSuiteEnd?.(suite, ctx)
@@ -128,7 +142,6 @@ export async function run(config: Config) {
 
   const ctx: RunnerContext = {
     files,
-    mode: isOnlyMode(files) ? 'only' : 'all',
     config,
     reporter,
   }
@@ -141,8 +154,4 @@ export async function run(config: Config) {
 
   await afterAllHook.fire()
   await reporter.onFinished?.(ctx)
-}
-
-function isOnlyMode(files: File[]) {
-  return files.some(file => file.suites.some(suite => suite.mode === 'only'))
 }

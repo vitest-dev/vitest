@@ -57,13 +57,13 @@ export class DefaultReporter implements Reporter {
     // @ts-expect-error
     task.__ora?.stop()
 
-    if (task.status === 'pass') {
+    if (task.state === 'pass') {
       this.log(`${c.green(CHECK + task.name)}`)
     }
-    else if (task.status === 'skip') {
+    else if (task.state === 'skip') {
       this.log(c.dim(c.yellow(`${DOT + task.name} (skipped)`)))
     }
-    else if (task.status === 'todo') {
+    else if (task.state === 'todo') {
       this.log(c.dim(`${DOT + task.name} (todo)`))
     }
     else {
@@ -77,10 +77,10 @@ export class DefaultReporter implements Reporter {
     this.end = performance.now()
     const failedFiles = files.filter(i => i.error)
     const tasks = files.reduce((acc, file) => acc.concat(file.suites.flatMap(i => i.tasks)), [] as Task[])
-    const passed = tasks.filter(i => i.status === 'pass')
-    const failed = tasks.filter(i => i.status === 'fail')
-    const skipped = tasks.filter(i => i.status === 'skip')
-    const todo = tasks.filter(i => i.status === 'todo')
+    const passed = tasks.filter(i => i.state === 'pass')
+    const failed = tasks.filter(i => i.state === 'fail')
+    const skipped = tasks.filter(i => i.state === 'skip')
+    const todo = tasks.filter(i => i.state === 'todo')
 
     this.indent = 0
 
