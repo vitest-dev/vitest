@@ -14,25 +14,35 @@ export interface TaskResult {
   error?: unknown
 }
 
+export type RunMode = 'run' | 'skip' | 'only' | 'todo'
+
 export interface Task {
   name: string
+  mode: RunMode
   suite: Suite
   fn: () => Promise<void> | void
   file?: File
   result?: TaskResult
 }
 
-export type SuiteMode = 'run' | 'skip' | 'only' | 'todo'
+export type TestFunction = () => Promise<void> | void
+
+export interface Test {
+  (name: string, fn: TestFunction): void
+  only: (name: string, fn: TestFunction) => void
+  skip: (name: string, fn: TestFunction) => void
+  todo: (name: string) => void
+}
 
 export interface Suite {
   name: string
-  mode: SuiteMode
-  test: (name: string, fn: () => Promise<void> | void) => void
+  mode: RunMode
+  test: Test
   collect: () => Promise<Task[]>
   clear: () => void
 }
 
-export type TestFactory = (test: Suite['test']) => Promise<void> | void
+export type TestFactory = (test: (name: string, fn: TestFunction) => void) => Promise<void> | void
 
 export interface File {
   filepath: string
