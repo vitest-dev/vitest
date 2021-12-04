@@ -36,6 +36,7 @@ function createSuite(mode: RunMode, suiteName: string, factory?: TestFactory) {
       suite,
       mode,
       name,
+      status: 'init',
       fn,
     }
     queue.push(task)

@@ -1,6 +1,3 @@
-import { relative } from 'path'
-import { performance } from 'perf_hooks'
-import c from 'picocolors'
 import chai from 'chai'
 import fg from 'fast-glob'
 import { clearContext, defaultSuite } from './suite'
@@ -8,21 +5,34 @@ import { context } from './context'
 import { File, Options, Suite, Task } from './types'
 import { afterEachHook, afterFileHook, afterAllHook, afterSuiteHook, beforeEachHook, beforeFileHook, beforeAllHook, beforeSuiteHook } from './hooks'
 import { SnapshotPlugin } from './snapshot/index'
+import { DefaultReporter } from './reporters/default'
+import { Reporter, RunnerContext } from '.'
 
-export async function runTask(task: Task) {
+export async function runTask(task: Task, ctx: RunnerContext) {
+  const { reporter } = ctx
+  await reporter.onTaskBegin?.(task, ctx)
   await beforeEachHook.fire(task)
-  task.result = {}
-  try {
-    await task.fn()
-  }
-  catch (e) {
-    task.result.error = e
-  }
-  await afterEachHook.fire(task)
-}
 
-// TODO: REPORTER
-const { log } = console
+  if (task.suite.mode === 'skip' || task.mode === 'skip') {
+    task.status = 'skip'
+  }
+  else if (task.suite.mode === 'todo' || task.mode === 'todo') {
+    task.status = 'todo'
+  }
+  else {
+    try {
+      await task.fn()
+      task.status = 'pass'
+    }
+    catch (e) {
+      task.status = 'fail'
+      task.error = e
+    }
+  }
+
+  await afterEachHook.fire(task)
+  await reporter.onTaskEnd?.(task, ctx)
+}
 
 export async function collectFiles(files: string[]) {
   const result: File[] = []
@@ -55,57 +65,23 @@ export async function collectFiles(files: string[]) {
   return result
 }
 
-interface RunOptions {
-  onlyMode?: boolean
-}
+export async function runFile(file: File, ctx: RunnerContext) {
+  const { reporter } = ctx
 
-export async function runFile(file: File, options: RunOptions = {}) {
+  await reporter.onFileBegin?.(file, ctx)
   await beforeFileHook.fire(file)
   for (const [suite, tasks] of file.collected) {
+    await reporter.onSuiteBegin?.(suite, ctx)
     await beforeSuiteHook.fire(suite)
 
-    let indent = 1
-    if (suite.name) {
-      log(' '.repeat(indent * 2) + suite.name)
-      indent += 1
-    }
-
-    if (suite.mode === 'todo') {
-      // TODO: In Jest, these suites are collected and printed together at the end of the report
-      log(`${' '.repeat(indent * 2)}${c.inverse(c.gray(' TODO '))}`)
-    }
-    else {
-      const runSuite = (suite.mode === 'run' && !options?.onlyMode) || suite.mode === 'only' || tasks.find(t => t.mode === 'only')
-
-      for (const t of tasks) {
-        if (runSuite && (((t.mode === 'run' && !options?.onlyMode) || t.mode === 'only') || suite.mode === 'only')) {
-          await runTask(t)
-
-          if (t.result && t.result.error === undefined) {
-            log(`${' '.repeat(indent * 2)}${c.inverse(c.green(' PASS '))} ${c.green(t.name)}`)
-          }
-          else {
-            console.error(`${' '.repeat(indent * 2)}${c.inverse(c.red(' FAIL '))} ${c.red(t.name)}`)
-            console.error(' '.repeat((indent + 2) * 2) + c.red(String(t.result!.error)))
-            process.exitCode = 1
-          }
-        }
-        else if (t.mode === 'todo') {
-          log(`${' '.repeat(indent * 2)}${c.inverse(c.gray(' TODO '))} ${c.green(t.name)}`)
-        }
-        else {
-          // Only mode or direct skip
-          log(`${' '.repeat(indent * 2)}${c.inverse(c.gray(' SKIP '))} ${c.green(t.name)}`)
-        }
-      }
-    }
-
-    if (suite.name)
-      indent -= 1
+    for (const t of tasks)
+      await runTask(t, ctx)
 
     await afterSuiteHook.fire(suite)
+    await reporter.onSuiteEnd?.(suite, ctx)
   }
   await afterFileHook.fire(file)
+  await reporter.onFileEnd?.(file, ctx)
 }
 
 export async function run(options: Options = {}) {
@@ -131,31 +107,27 @@ export async function run(options: Options = {}) {
     return
   }
 
+  const reporter: Reporter = new DefaultReporter()
+
+  await reporter.onStart?.(options)
+
   const files = await collectFiles(paths)
 
-  const onlyMode = isOnlyMode(files)
-
-  await beforeAllHook.fire()
-  const start = performance.now()
-  for (const file of files) {
-    log(`${relative(process.cwd(), file.filepath)}`)
-    await runFile(file, { onlyMode })
-    log()
+  const ctx: RunnerContext = {
+    files,
+    mode: isOnlyMode(files) ? 'only' : 'all',
+    userOptions: options,
+    reporter,
   }
 
-  const end = performance.now()
+  await reporter.onCollected?.(ctx)
+  await beforeAllHook.fire()
+
+  for (const file of files)
+    await runFile(file, ctx)
+
   await afterAllHook.fire()
-
-  const tasks = files.reduce((acc, file) => acc.concat(file.collected.flatMap(([, tasks]) => tasks)), [] as Task[])
-  const passed = tasks.filter(i => !i.result?.error)
-  const failed = tasks.filter(i => i.result?.error)
-
-  log(`Passed   ${passed.length} / ${tasks.length}`)
-  if (failed.length)
-    log(`Failed   ${failed.length} / ${tasks.length}`)
-  log(`Time     ${(end - start).toFixed(2)}ms`)
-
-  log()
+  await reporter.onFinished?.(ctx)
 }
 
 function isOnlyMode(files: File[]) {
