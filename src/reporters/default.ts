@@ -20,25 +20,28 @@ export class DefaultReporter implements Reporter {
 
   onFinished({ files }: RunnerContext) {
     this.end = performance.now()
-    const tasks = files.reduce((acc, file) => acc.concat(file.collected.flatMap(([, tasks]) => tasks)), [] as Task[])
+    const tasks = files.reduce((acc, file) => acc.concat(file.suites.flatMap(i => i.tasks)), [] as Task[])
     const passed = tasks.filter(i => i.status === 'pass')
     const failed = tasks.filter(i => i.status === 'fail')
     const skipped = tasks.filter(i => i.status === 'skip')
+    const todo = tasks.filter(i => i.status === 'todo')
 
     this.indent = 0
 
-    this.log(`Passed   ${passed.length} / ${tasks.length}`)
+    this.log(c.green(`Passed   ${passed.length} / ${tasks.length}`))
     if (skipped.length)
-      this.log(`Skipped   ${skipped.length}`)
+      this.log(c.yellow(`Skipped  ${skipped.length}`))
+    if (todo.length)
+      this.log(c.dim(`Todo     ${todo.length}`))
     if (failed.length)
-      this.log(`Failed   ${failed.length} / ${tasks.length}`)
+      this.log(c.red(`Failed   ${failed.length} / ${tasks.length}`))
     this.log(`Time     ${(this.end - this.start).toFixed(2)}ms`)
   }
 
   onSuiteBegin(suite: Suite) {
     if (suite.name) {
       this.indent += 1
-      this.log(DOT + suite.name)
+      this.log(`${DOT + suite.name} (${suite.tasks.length})`)
     }
   }
 
@@ -61,7 +64,7 @@ export class DefaultReporter implements Reporter {
 
   onTaskEnd(t: Task) {
     if (t.status === 'pass') {
-      this.log(`${c.green(DOT + t.name)} ${c.inverse(c.green(' PASS '))}`)
+      this.log(`${c.green(`✔ ${t.name}`)}`)
     }
     else if (t.status === 'skip') {
       this.log(c.dim(c.yellow(`${DOT + t.name} (skipped)`)))
@@ -70,7 +73,7 @@ export class DefaultReporter implements Reporter {
       this.log(c.dim(`${DOT + t.name} (todo)`))
     }
     else {
-      this.error(`${c.red(DOT + t.name)} ${c.inverse(c.red(' FAIL '))}`)
+      this.error(`${c.red(`⤫ ${c.inverse(c.red(' FAIL '))} ${t.name}`)}`)
       this.error(String(t.error), 1)
       process.exitCode = 1
     }

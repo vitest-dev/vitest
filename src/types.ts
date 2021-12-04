@@ -27,7 +27,7 @@ export interface Task {
 
 export type TestFunction = () => Awaitable<void>
 
-export interface Test {
+export interface TestCollector {
   (name: string, fn: TestFunction): void
   only: (name: string, fn: TestFunction) => void
   skip: (name: string, fn: TestFunction) => void
@@ -37,8 +37,15 @@ export interface Test {
 export interface Suite {
   name: string
   mode: RunMode
-  test: Test
-  collect: () => Promise<Task[]>
+  tasks: Task[]
+  file?: File
+}
+
+export interface SuiteCollector {
+  name: string
+  mode: RunMode
+  test: TestCollector
+  collect: (file?: File) => Promise<Suite>
   clear: () => void
 }
 
@@ -47,7 +54,6 @@ export type TestFactory = (test: (name: string, fn: TestFunction) => void) => Aw
 export interface File {
   filepath: string
   suites: Suite[]
-  collected: [Suite, Task[]][]
 }
 
 export interface RunnerContext {
@@ -58,8 +64,8 @@ export interface RunnerContext {
 }
 
 export interface GlobalContext {
-  suites: Suite[]
-  currentSuite: Suite | null
+  suites: SuiteCollector[]
+  currentSuite: SuiteCollector | null
 }
 
 export interface Reporter {

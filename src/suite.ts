@@ -1,5 +1,5 @@
 import { context } from './context'
-import { Task, Suite, RunMode, TestFactory, TestFunction } from './types'
+import { Task, SuiteCollector, RunMode, TestFactory, TestFunction, File, Suite } from './types'
 
 export const defaultSuite = suite('')
 
@@ -12,11 +12,11 @@ test.skip = (name: string, fn: TestFunction) => getCurrentSuite().test.skip(name
 test.only = (name: string, fn: TestFunction) => getCurrentSuite().test.only(name, fn)
 test.todo = (name: string) => getCurrentSuite().test.todo(name)
 
-function createSuite(mode: RunMode, suiteName: string, factory?: TestFactory) {
+function createSuiteCollector(mode: RunMode, suiteName: string, factory?: TestFactory) {
   const queue: Task[] = []
   const factoryQueue: Task[] = []
 
-  const suite: Suite = {
+  const collector: SuiteCollector = {
     name: suiteName,
     mode,
     test,
@@ -26,9 +26,9 @@ function createSuite(mode: RunMode, suiteName: string, factory?: TestFactory) {
 
   function collectTask(name: string, fn: TestFunction, mode: RunMode) {
     queue.push({
-      suite,
-      mode,
       name,
+      mode,
+      suite: {} as Suite,
       status: 'init',
       fn,
     })
@@ -46,25 +46,41 @@ function createSuite(mode: RunMode, suiteName: string, factory?: TestFactory) {
     factoryQueue.length = 0
   }
 
-  async function collect() {
+  async function collect(file?: File) {
     factoryQueue.length = 0
     if (factory)
       await factory(test)
-    return [...factoryQueue, ...queue]
+
+    const tasks = [...factoryQueue, ...queue]
+
+    const suite: Suite = {
+      name: collector.name,
+      mode: collector.mode,
+      tasks,
+      file,
+    }
+
+    tasks.forEach((task) => {
+      task.suite = suite
+      if (file)
+        task.file = file
+    })
+
+    return suite
   }
 
-  context.currentSuite = suite
-  context.suites.push(suite)
+  context.currentSuite = collector
+  context.suites.push(collector)
 
-  return suite
+  return collector
 }
 
 export function suite(suiteName: string, factory?: TestFactory) {
-  return createSuite('run', suiteName, factory)
+  return createSuiteCollector('run', suiteName, factory)
 }
-suite.skip = (suiteName: string, factory?: TestFactory) => createSuite('skip', suiteName, factory)
-suite.only = (suiteName: string, factory?: TestFactory) => createSuite('only', suiteName, factory)
-suite.todo = (suiteName: string) => createSuite('todo', suiteName)
+suite.skip = (suiteName: string, factory?: TestFactory) => createSuiteCollector('skip', suiteName, factory)
+suite.only = (suiteName: string, factory?: TestFactory) => createSuiteCollector('only', suiteName, factory)
+suite.todo = (suiteName: string) => createSuiteCollector('todo', suiteName)
 
 // alias
 export const describe = suite

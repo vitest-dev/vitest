@@ -40,24 +40,20 @@ export async function collectFiles(files: string[]) {
   for (const filepath of files) {
     clearContext()
     await import(filepath)
-    const suites = [defaultSuite, ...context.suites]
-    const collected: [Suite, Task[]][] = []
-
-    for (const suite of suites) {
-      context.currentSuite = suite
-      const tasks = await suite.collect()
-      collected.push([suite, tasks])
-    }
+    const collectors = [defaultSuite, ...context.suites]
+    const suites: Suite[] = []
 
     const file: File = {
       filepath,
-      suites,
-      collected,
+      suites: [],
     }
 
-    file.collected.forEach(([, tasks]) =>
-      tasks.forEach(task => task.file = file),
-    )
+    for (const c of collectors) {
+      context.currentSuite = c
+      suites.push(await c.collect(file))
+    }
+
+    file.suites = suites
 
     result.push(file)
   }
@@ -70,11 +66,11 @@ export async function runFile(file: File, ctx: RunnerContext) {
 
   await reporter.onFileBegin?.(file, ctx)
   await beforeFileHook.fire(file)
-  for (const [suite, tasks] of file.collected) {
+  for (const suite of file.suites) {
     await reporter.onSuiteBegin?.(suite, ctx)
     await beforeSuiteHook.fire(suite)
 
-    for (const t of tasks)
+    for (const t of suite.tasks)
       await runTask(t, ctx)
 
     await afterSuiteHook.fire(suite)
@@ -132,8 +128,8 @@ export async function run(options: Options = {}) {
 
 function isOnlyMode(files: File[]) {
   return !!files.find(
-    file => file.collected.find(
-      ([suite, tasks]) => suite.mode === 'only' || tasks.find(t => t.mode === 'only'),
+    file => file.suites.find(
+      suite => suite.mode === 'only' || suite.tasks.find(t => t.mode === 'only'),
     ),
   )
 }
