@@ -77,6 +77,7 @@ export class DefaultReporter implements Reporter {
     this.end = performance.now()
     const failedFiles = files.filter(i => i.error)
     const tasks = files.reduce((acc, file) => acc.concat(file.suites.flatMap(i => i.tasks)), [] as Task[])
+    const runable = tasks.filter(i => i.state === 'pass' || i.state === 'fail')
     const passed = tasks.filter(i => i.state === 'pass')
     const failed = tasks.filter(i => i.state === 'fail')
     const skipped = tasks.filter(i => i.state === 'skip')
@@ -102,9 +103,9 @@ export class DefaultReporter implements Reporter {
       })
     }
 
-    this.log(c.green(`Passed   ${passed.length} / ${tasks.length}`))
+    this.log(c.green(`Passed   ${passed.length} / ${runable.length}`))
     if (failed.length)
-      this.log(c.red(`Failed   ${failed.length} / ${tasks.length}`))
+      this.log(c.red(`Failed   ${failed.length} / ${runable.length}`))
     if (skipped.length)
       this.log(c.yellow(`Skipped  ${skipped.length}`))
     if (todo.length)

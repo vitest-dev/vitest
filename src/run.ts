@@ -65,7 +65,12 @@ export async function collectFiles(paths: string[]) {
   const allSuites = files.reduce((suites, file) => suites.concat(file.suites), [] as Suite[])
 
   interpretOnlyMode(allSuites)
-  allSuites.forEach(i => interpretOnlyMode(i.tasks))
+  allSuites.forEach((i) => {
+    if (i.mode === 'skip')
+      i.tasks.forEach(t => t.mode === 'run' && (t.state = 'skip'))
+    else
+      interpretOnlyMode(i.tasks)
+  })
 
   return files
 }
@@ -87,16 +92,19 @@ function interpretOnlyMode(items: {mode: RunMode}[]) {
 export async function runFile(file: File, ctx: RunnerContext) {
   const { reporter } = ctx
 
+  const runableSuites = file.suites.filter(i => i.mode === 'run')
+  if (runableSuites.length === 0)
+    return
+
   await reporter.onFileBegin?.(file, ctx)
   await beforeFileHook.fire(file)
+
   for (const suite of file.suites) {
     await reporter.onSuiteBegin?.(suite, ctx)
     await beforeSuiteHook.fire(suite)
 
-    if (suite.mode === 'run') {
-      for (const t of suite.tasks)
-        await runTask(t, ctx)
-    }
+    for (const t of suite.tasks)
+      await runTask(t, ctx)
 
     await afterSuiteHook.fire(suite)
     await reporter.onSuiteEnd?.(suite, ctx)
