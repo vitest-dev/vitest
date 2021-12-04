@@ -11,6 +11,7 @@ importers:
       '@types/minimist': ^1.2.2
       '@types/node': ^16.11.11
       '@types/sinon': ^10.0.6
+      '@types/sinon-chai': ^3.2.6
       bumpp: ^7.1.1
       chai: ^4.3.4
       eslint: ^8.3.0
@@ -23,12 +24,14 @@ importers:
       ora: ^6.0.1
       picocolors: ^1.0.0
       sinon: ^12.0.1
+      sinon-chai: ^3.7.0
       typescript: ^4.5.2
       vite: ^2.6.14
       vite-node: ^0.1.10
     dependencies:
       '@jest/test-result': 27.4.2
       '@types/chai': 4.2.22
+      '@types/sinon-chai': 3.2.6
       chai: 4.3.4
       fast-glob: 3.2.7
       find-up: 6.2.0
@@ -38,6 +41,7 @@ importers:
       ora: 6.0.1
       picocolors: 1.0.0
       sinon: 12.0.1
+      sinon-chai: 3.7.0_chai@4.3.4+sinon@12.0.1
       vite-node: 0.1.10
     devDependencies:
       '@antfu/eslint-config': 0.11.1_eslint@8.3.0+typescript@4.5.2
@@ -666,11 +670,17 @@ packages:
     resolution: {integrity: sha512-DxZZbyMAM9GWEzXL+BMZROWz9oo6A9EilwwOMET2UVu2uZTqMWS5S69KVtuVKaRjCUpcrOXRalet86/OpG4kqw==}
     dev: false
 
+  /@types/sinon-chai/3.2.6:
+    resolution: {integrity: sha512-Z57LprQ+yOQNu9d6mWdHNvnmncPXzDWGSeLj+8L075/QahToapC4Q13zAFRVKV4clyBmdJ5gz4xBfVkOso5lXw==}
+    dependencies:
+      '@types/chai': 4.2.22
+      '@types/sinon': 10.0.6
+    dev: false
+
   /@types/sinon/10.0.6:
     resolution: {integrity: sha512-6EF+wzMWvBNeGrfP3Nx60hhx+FfwSg1JJBLAAP/IdIUq0EYkqCYf70VT3PhuhPX9eLD+Dp+lNdpb/ZeHG8Yezg==}
     dependencies:
       '@sinonjs/fake-timers': 7.1.2
-    dev: true
 
   /@types/stack-utils/2.0.0:
     resolution: {integrity: sha512-RJJrrySY7A8havqpGObOB4W92QXKJo63/jFLLgpvOtsGUqbQZ9Sbgl35KMm1DjC6j7AvmmU2bIno+3IyEaemaw==}
@@ -3165,6 +3175,16 @@ packages:
 
   /signal-exit/3.0.3:
     resolution: {integrity: sha512-VUJ49FC8U1OxwZLxIbTTrDvLnf/6TDgxZcK8wxR8zs13xpx7xbG60ndBlhNrFi2EMuFRoeDoJO7wthSLq42EjA==}
+    dev: false
+
+  /sinon-chai/3.7.0_chai@4.3.4+sinon@12.0.1:
+    resolution: {integrity: sha512-mf5NURdUaSdnatJx3uhoBOrY9dtL19fiOtAdT1Azxg3+lNJFiuN0uzaU3xX1LeAfL17kHQhTAJgpsfhbMJMY2g==}
+    peerDependencies:
+      chai: ^4.0.0
+      sinon: '>=4.0.0'
+    dependencies:
+      chai: 4.3.4
+      sinon: 12.0.1
     dev: false
 
   /sinon/12.0.1:

@@ -1,11 +1,13 @@
 import chai from 'chai'
 import fg from 'fast-glob'
+import SinonChai from 'sinon-chai'
 import { clearContext, defaultSuite } from './suite'
 import { context } from './context'
 import { File, Options, Suite, Task, Reporter, RunnerContext } from './types'
 import { afterEachHook, afterFileHook, afterAllHook, afterSuiteHook, beforeEachHook, beforeFileHook, beforeAllHook, beforeSuiteHook } from './hooks'
 import { SnapshotPlugin } from './snapshot'
 import { DefaultReporter } from './reporters/default'
+import { defaultIncludes, defaultExcludes } from './constants'
 
 export async function runTask(task: Task, ctx: RunnerContext) {
   const { reporter } = ctx
@@ -82,17 +84,20 @@ export async function runFile(file: File, ctx: RunnerContext) {
 export async function run(options: Options = {}) {
   const { rootDir = process.cwd() } = options
 
+  // setup chai
   chai.use(await SnapshotPlugin({
     rootDir,
     update: options.updateSnapshot,
   }))
+  chai.use(SinonChai)
 
+  // collect files
   const paths = await fg(
-    options.includes || ['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    options.includes || defaultIncludes,
     {
       absolute: true,
       cwd: options.rootDir,
-      ignore: options.excludes || ['**/node_modules/**', '**/dist/**'],
+      ignore: options.excludes || defaultExcludes,
     },
   )
 
