@@ -11,11 +11,13 @@ import { defaultIncludes, defaultExcludes } from './constants'
 
 export async function runTask(task: Task, ctx: RunnerContext) {
   const { reporter } = ctx
+
+  task.status = 'run'
   await reporter.onTaskBegin?.(task, ctx)
   await beforeEachHook.fire(task)
 
   if (task.suite.mode === 'skip' || task.mode === 'skip'
-    || !(ctx.mode === 'only' && (task.suite.mode === 'only' || task.mode === 'only'))) {
+    || (ctx.mode === 'only' && (task.suite.mode !== 'only' || task.mode !== 'only'))) {
     task.status = 'skip'
   }
   else if (task.suite.mode === 'todo' || task.mode === 'todo') {
@@ -142,9 +144,5 @@ export async function run(config: Config) {
 }
 
 function isOnlyMode(files: File[]) {
-  return !!files.find(
-    file => file.suites.find(
-      suite => suite.mode === 'only' || suite.tasks.find(t => t.mode === 'only'),
-    ),
-  )
+  return files.some(file => file.suites.some(suite => suite.mode === 'only'))
 }

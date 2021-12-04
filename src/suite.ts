@@ -29,7 +29,6 @@ function createSuiteCollector(mode: RunMode, suiteName: string, factory?: TestFa
       name,
       mode,
       suite: {} as Suite,
-      status: 'init',
       fn,
     })
   }

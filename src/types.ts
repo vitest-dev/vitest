@@ -21,7 +21,7 @@ export interface Config extends UserOptions {
 }
 
 export type RunMode = 'run' | 'skip' | 'only' | 'todo'
-export type TaskStatus = 'init' | 'pass' | 'fail' | 'skip' | 'todo'
+export type TaskStatus = 'run' | 'pass' | 'fail' | 'skip' | 'todo'
 
 export interface Task {
   name: string
@@ -29,7 +29,7 @@ export interface Task {
   suite: Suite
   fn: () => Awaitable<void>
   file?: File
-  status: TaskStatus
+  status?: TaskStatus
   error?: unknown
 }
 
