@@ -58,6 +58,34 @@ export default defineConfig({
 })
 ```
 
+## Global APIs
+
+By default, `vitest` does not provide global APIs for explicitness. If you prefer to use the APIs globally like Jest, you can pass the `--global` option to CLI or add `global: true` in the config.
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  test: {
+    global: true
+  }
+})
+```
+
+To get TypeScript working with the global APIs, add `vitest/global` to the `types` filed in your `tsconfig.json`
+
+```json
+// tsconfig.json
+{
+  "compilerOptions": {
+    "types": [
+      "vitest/global"
+    ]
+  }
+}
+```
+
 ## Filtering
 
 ### Skipping suites and tasks

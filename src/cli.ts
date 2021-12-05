@@ -10,7 +10,7 @@ const argv = minimist(process.argv.slice(2), {
     u: 'update',
   },
   string: ['root', 'config'],
-  boolean: ['update', 'dev'],
+  boolean: ['update', 'dev', 'global'],
   unknown(name) {
     if (name[0] === '-') {
       console.error(c.red(`Unknown argument: ${name}`))
@@ -29,6 +29,7 @@ const testOptions = viteConfig.test || {}
 await run({
   ...testOptions,
   server,
+  global: argv.global,
   updateSnapshot: argv.update,
   rootDir: argv.root || process.cwd(),
   nameFilters: argv._,

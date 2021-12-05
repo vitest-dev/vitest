@@ -3,12 +3,11 @@ import fg from 'fast-glob'
 import SinonChai from 'sinon-chai'
 import { clearContext, defaultSuite } from './suite'
 import { context } from './context'
-import { File, Config, Task, Reporter, RunnerContext, Suite } from './types'
+import { File, Config, Task, Reporter, RunnerContext, Suite, RunMode } from './types'
 import { afterEachHook, afterFileHook, afterAllHook, afterSuiteHook, beforeEachHook, beforeFileHook, beforeAllHook, beforeSuiteHook } from './hooks'
 import { SnapshotPlugin } from './snapshot'
 import { DefaultReporter } from './reporters/default'
 import { defaultIncludes, defaultExcludes } from './constants'
-import { RunMode } from '.'
 
 export async function runTask(task: Task, ctx: RunnerContext) {
   const { reporter } = ctx
@@ -145,6 +144,9 @@ export async function run(config: Config) {
   const reporter: Reporter = new DefaultReporter()
 
   await reporter.onStart?.(config)
+
+  if (config.global)
+    (await import('./global')).registerApiGlobally()
 
   const files = await collectFiles(paths)
 

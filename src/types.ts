@@ -6,6 +6,13 @@ export type Awaitable<T> = Promise<T> | T
 export interface UserOptions {
   includes?: string[]
   excludes?: string[]
+
+  /**
+   * Register apis globally
+   *
+   * @default false
+   */
+  global?: string
 }
 
 export interface Config extends UserOptions {

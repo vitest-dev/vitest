@@ -1,7 +1,6 @@
 {
   "name": "vitest",
   "version": "0.0.12",
-  "type": "module",
   "description": "",
   "keywords": [],
   "homepage": "https://github.com/antfu/vitest#readme",
@@ -15,6 +14,7 @@
   "funding": "https://github.com/sponsors/antfu",
   "license": "MIT",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
+  "type": "module",
   "exports": {
     ".": {
       "import": "./dist/index.js",
@@ -25,33 +25,23 @@
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": [
-    "dist",
-    "bin"
-  ],
   "bin": {
     "vitest": "./bin/vitest.mjs"
   },
+  "files": [
+    "dist",
+    "bin",
+    "*.d.ts"
+  ],
   "scripts": {
-    "build": "tsc",
-    "watch": "tsc --watch",
+    "prepare": "esmo scripts/generate-types.ts",
+    "build": "rimraf dist && tsc -p src/tsconfig.json",
     "lint": "eslint \"{src,test}/**/*.ts\"",
     "prepublishOnly": "nr build",
     "release": "bumpp --commit --push --tag && pnpm publish",
     "test": "node bin/vitest.mjs --dev",
-    "test:update": "nr test -u"
-  },
-  "devDependencies": {
-    "@antfu/eslint-config": "^0.11.1",
-    "@antfu/ni": "^0.11.0",
-    "@types/minimist": "^1.2.2",
-    "@types/node": "^16.11.11",
-    "@types/sinon": "^10.0.6",
-    "bumpp": "^7.1.1",
-    "eslint": "^8.3.0",
-    "esno": "^0.12.1",
-    "typescript": "^4.5.2",
-    "vite": "^2.6.14"
+    "test:update": "nr test -u",
+    "watch": "tsc -p src/tsconfig.json --watch"
   },
   "dependencies": {
     "@jest/test-result": "^27.4.2",
@@ -68,5 +58,18 @@
     "sinon": "^12.0.1",
     "sinon-chai": "^3.7.0",
     "vite-node": "^0.1.10"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "^0.11.1",
+    "@antfu/ni": "^0.11.0",
+    "@types/minimist": "^1.2.2",
+    "@types/node": "^16.11.11",
+    "@types/sinon": "^10.0.6",
+    "bumpp": "^7.1.1",
+    "eslint": "^8.3.0",
+    "esno": "^0.12.1",
+    "rimraf": "^3.0.2",
+    "typescript": "^4.5.2",
+    "vite": "^2.6.14"
   }
 }

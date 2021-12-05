@@ -10,9 +10,9 @@
     "resolveJsonModule": true,
     "skipDefaultLibCheck": true,
     "outDir": "./dist",
-    "declaration": true
-  },
-  "include": [
-    "src/**/*.ts"
-  ]
+    "declaration": true,
+    "paths": {
+      "vitest": ["./src/index.ts"]
+    }
+  }
 }
