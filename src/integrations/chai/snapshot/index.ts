@@ -42,17 +42,3 @@ export async function SnapshotPlugin(options: SnapshotOptions): Promise<ChaiPlug
     chai.expect.addSnapshotSerializer = addSerializer as any
   }
 }
-
-declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
-  namespace Chai {
-    interface Assertion {
-      // Snapshot
-      toMatchSnapshot(message?: string): Assertion
-      matchSnapshot(message?: string): Assertion
-    }
-    interface ExpectStatic {
-      addSnapshotSerializer: import('pretty-format').Plugin
-    }
-  }
-}
