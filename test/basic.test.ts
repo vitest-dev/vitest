@@ -1,4 +1,4 @@
-import { expect, test, assert } from '../src'
+import { expect, test, assert, suite } from '../src'
 
 test('Math.sqrt()', () => {
   assert.equal(Math.sqrt(4), 2)
@@ -24,4 +24,11 @@ test('async', async() => {
       resolve()
     }, 200)
   })
+})
+
+const hi = suite('suite')
+
+hi.test('expect truthy', () => {
+  expect({}).toBeTruthy()
+  expect(null).not.toBeTruthy()
 })
