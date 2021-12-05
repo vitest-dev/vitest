@@ -1,41 +1,42 @@
-import { fileURLToPath } from 'url'
-import { resolve, dirname } from 'path'
 import minimist from 'minimist'
-import { findUp } from 'find-up'
-import { run } from './node.js'
+import c from 'picocolors'
+import { ViteDevServer } from 'vite'
+import { run } from './run'
 
-process.env.VITEST = 'true'
+const { log } = console
 
 const argv = minimist(process.argv.slice(2), {
   alias: {
-    c: 'config',
+    u: 'update',
+    w: 'watch',
   },
   string: ['root', 'config'],
-  boolean: ['dev'],
+  boolean: ['update', 'dev', 'global', 'watch'],
+  unknown(name) {
+    if (name[0] === '-') {
+      console.error(c.red(`Unknown argument: ${name}`))
+      help()
+      process.exit(1)
+    }
+    return true
+  },
 })
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const root = resolve(argv.root || process.cwd())
-
-const configPath = argv.config ? resolve(root, argv.config) : await findUp(['vitest.config.ts', 'vitest.config.js', 'vitest.config.mjs', 'vite.config.ts', 'vite.config.js', 'vite.config.mjs'], { cwd: root })
+// @ts-expect-error
+const server = process?.__vite_node__?.server as ViteDevServer
+const viteConfig = server?.config || {}
+const testOptions = viteConfig.test || {}
 
 await run({
-  root,
-  files: [
-    resolve(__dirname, argv.dev ? '../src/cli-entry.ts' : './cli-entry.js'),
-  ],
-  config: configPath,
-  defaultConfig: {
-    optimizeDeps: {
-      exclude: [
-        'vitest',
-      ],
-    },
-  },
-  shouldExternalize(id: string) {
-    if (id.includes('/node_modules/vitest/'))
-      return false
-    else
-      return id.includes('/node_modules/')
-  },
+  global: argv.global,
+  watch: argv.watch,
+  ...testOptions,
+  server,
+  updateSnapshot: argv.update,
+  rootDir: argv.root || process.cwd(),
+  nameFilters: argv._,
 })
+
+function help() {
+  log('Help: finish help')
+}
