@@ -1,4 +1,5 @@
 import { JSDOM } from 'jsdom'
+import { KEYS } from './keys'
 
 export function setupJSDOM(global: any) {
   const dom = new JSDOM('<!DOCTYPE html>',
@@ -10,7 +11,7 @@ export function setupJSDOM(global: any) {
     },
   )
 
-  const keys = Object.getOwnPropertyNames(dom.window)
+  const keys = KEYS.concat(Object.getOwnPropertyNames(dom.window))
     .filter(k => !k.startsWith('_'))
     .filter(k => !(k in global))
 

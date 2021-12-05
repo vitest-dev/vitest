@@ -156,8 +156,8 @@ describe('suite', () => {
 - [x] Mock
 - [x] Global Mode & Types
 - [ ] Parallel Executing
-- [ ] CLI Help
-- [ ] JSDom
+- [ ] CLI Help (Use yargs)
+- [x] JSDom
 - [ ] Watch
 - [ ] Source Map
 - [ ] Coverage
