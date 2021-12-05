@@ -12,7 +12,7 @@ export function JestChaiExpect(): ChaiPlugin {
       return this.equal(expected)
     })
     utils.addMethod(proto, 'toBe', function(this: Chai.Assertion, expected: any) {
-      return this.be(expected)
+      return this.equal(expected)
     })
     utils.addMethod(proto, 'toContain', function(this: Chai.Assertion, item: any) {
       return this.contain(item)
@@ -46,6 +46,20 @@ export function JestChaiExpect(): ChaiPlugin {
     })
     utils.addMethod(proto, 'toBeDefined', function(this: Chai.Assertion) {
       return this.not.be.undefined
+    })
+    utils.addMethod(proto, 'toBeInstanceOf', function(this: Chai.Assertion, obj: any) {
+      return this.instanceOf(obj)
+    })
+
+    // mock
+    utils.addMethod(proto, 'toBeCalledTimes', function(this: Chai.Assertion, number: number) {
+      return this.callCount(number)
+    })
+    utils.addMethod(proto, 'toBeCalledOnce', function(this: Chai.Assertion) {
+      return this.callCount(1)
+    })
+    utils.addMethod(proto, 'toBeCalled', function(this: Chai.Assertion) {
+      return this.called
     })
   }
 }

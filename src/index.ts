@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-namespace */
 export * from './types'
 export * from './suite'
 export * from './config'
@@ -5,7 +6,6 @@ export * from './integrations/chai'
 export * from './integrations/sinon'
 
 declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Chai {
     interface Assertion {
       // Snapshot
@@ -23,6 +23,10 @@ declare global {
       toBeUndefined(): void
       toBeNull(): void
       toBeDefined(): void
+      toBeInstanceOf(c: any): void
+      toBeCalledTimes(n: number): void
+      toBeCalledOnce(): void
+      toBeCalled(): void
     }
     interface ExpectStatic {
       addSnapshotSerializer: import('pretty-format').Plugin
