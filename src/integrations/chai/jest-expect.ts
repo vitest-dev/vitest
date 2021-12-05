@@ -26,7 +26,7 @@ export function JestChaiExpect(): ChaiPlugin {
         obj,
       )
     })
-    utils.addMethod(proto, 'toFalsy', function(this: Chai.AssertionStatic) {
+    utils.addMethod(proto, 'toBeFalsy', function(this: Chai.AssertionStatic) {
       const obj = utils.flag(this, 'object')
       this.assert(
         !obj,
