@@ -191,7 +191,7 @@ export async function run(config: ResolvedConfig) {
 
   // setup envs
   if (config.global)
-    (await import('../global')).registerApiGlobally()
+    (await import('../integrations/global')).registerApiGlobally()
   if (config.jsdom)
     (await import('../integrations/jsdom')).setupJSDOM(globalThis)
 

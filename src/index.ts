@@ -1,9 +1,18 @@
-/* eslint-disable @typescript-eslint/no-namespace */
+import { UserOptions } from './types'
+
 export * from './types'
 export * from './suite'
-export * from './config'
 export * from './integrations/chai'
 export * from './integrations/sinon'
+
+declare module 'vite' {
+  interface UserConfig {
+    /**
+     * Options for Vitest
+     */
+    test?: UserOptions
+  }
+}
 
 declare global {
   namespace Chai {

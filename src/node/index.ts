@@ -8,7 +8,6 @@ import c from 'picocolors'
 const { red, dim, yellow } = c
 
 declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace NodeJS {
     interface Process {
       __vite_node__: {
