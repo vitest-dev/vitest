@@ -12,7 +12,14 @@ export interface UserOptions {
    *
    * @default false
    */
-  global?: string
+  global?: boolean
+
+  /**
+   * Use `js-dom` to mock browser APIs
+   *
+   * @default false
+   */
+  jsdom?: boolean
 }
 
 export interface Config extends UserOptions {

@@ -1,12 +1,9 @@
-import { use as chaiUse } from 'chai'
 import Snap from 'jest-snapshot'
-import { afterAll, beforeEach } from '../hooks'
+import { afterAll, beforeEach } from '../../../hooks'
+import { ChaiPlugin } from '../types'
 import { SnapshotManager } from './manager'
 
 const { addSerializer } = Snap
-
-type FirstFunctionArgument<T> = T extends (arg: infer A) => unknown ? A : never
-type ChaiPlugin = FirstFunctionArgument<typeof chaiUse>
 
 let _manager: SnapshotManager
 
@@ -51,5 +48,19 @@ export async function SnapshotPlugin(options: SnapshotOptions): Promise<ChaiPlug
       )
     }
     chai.expect.addSnapshotSerializer = addSerializer as any
+  }
+}
+
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace Chai {
+    interface Assertion {
+      // Snapshot
+      toMatchSnapshot(message?: string): Assertion
+      matchSnapshot(message?: string): Assertion
+    }
+    interface ExpectStatic {
+      addSnapshotSerializer: import('pretty-format').Plugin
+    }
   }
 }

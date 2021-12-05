@@ -1,18 +1,9 @@
-import chai from 'chai'
-import SinonChai from 'sinon-chai'
-import { Config } from 'vitest'
-import { SnapshotPlugin } from './snapshot'
+import { ChaiPlugin } from './types'
 
-export async function setupChai(config: Config) {
-  chai.use(SinonChai)
-  chai.use(await SnapshotPlugin({
-    rootDir: config.rootDir || process.cwd(),
-    update: config.updateSnapshot,
-  }))
-
-  // Jest Compact
-  // TODO: add more https://jestjs.io/docs/expect
-  chai.use((chai, utils) => {
+// Jest Expect Compact
+// TODO: add more https://jestjs.io/docs/expect
+export function JestChaiExpect(): ChaiPlugin {
+  return (chai, utils) => {
     const proto = chai.Assertion.prototype
     utils.addMethod(proto, 'toEqual', function(this: Chai.Assertion, expected: any) {
       return this.eql(expected)
@@ -56,18 +47,13 @@ export async function setupChai(config: Config) {
     utils.addMethod(proto, 'toBeDefined', function(this: Chai.Assertion) {
       return this.not.be.undefined
     })
-  })
+  }
 }
-
-export { assert, should, expect } from 'chai'
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Chai {
     interface Assertion {
-      // Snapshot
-      toMatchSnapshot(message?: string): Assertion
-      matchSnapshot(message?: string): Assertion
       // Jest compact
       toEqual(expected: any): void
       toStrictEqual(expected: any): void

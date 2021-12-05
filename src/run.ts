@@ -1,5 +1,5 @@
 import fg from 'fast-glob'
-import { setupChai } from './chai'
+import { setupChai } from './integrations/chai/setup'
 import { clearContext, defaultSuite } from './suite'
 import { context } from './context'
 import { File, Config, Task, Reporter, RunnerContext, Suite, RunMode } from './types'
