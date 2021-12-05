@@ -2,7 +2,7 @@ import { fileURLToPath } from 'url'
 import { resolve, dirname } from 'path'
 import minimist from 'minimist'
 import { findUp } from 'find-up'
-import { run } from './node.js'
+import { run } from './node/index.js'
 
 process.env.VITEST = 'true'
 

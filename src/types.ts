@@ -99,7 +99,10 @@ export interface File {
 }
 
 export interface RunnerContext {
+  filesMap: Record<string, File>
   files: File[]
+  suites: Suite[]
+  tasks: Task[]
   config: Config
   reporter: Reporter
 }
@@ -111,7 +114,7 @@ export interface GlobalContext {
 
 export interface Reporter {
   onStart?: (userOptions: Config) => Awaitable<void>
-  onCollected?: (ctx: RunnerContext) => Awaitable<void>
+  onCollected?: (files: File[], ctx: RunnerContext) => Awaitable<void>
   onFinished?: (ctx: RunnerContext) => Awaitable<void>
 
   onSuiteBegin?: (suite: Suite, ctx: RunnerContext) => Awaitable<void>

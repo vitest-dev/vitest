@@ -2,7 +2,7 @@ import { performance } from 'perf_hooks'
 import { relative } from 'path'
 import c from 'picocolors'
 import Listr from 'listr'
-import { Reporter, RunnerContext, Suite, Task } from '../types'
+import { File, Reporter, RunnerContext, Task } from '../types'
 
 const CROSS = '✖ '
 
@@ -25,12 +25,11 @@ export class DefaultReporter implements Reporter {
     this.indent = 0
   }
 
-  onCollected(ctx: RunnerContext) {
+  onCollected(files: File[]) {
     this.start = performance.now()
-
     this.taskMap = new Map()
 
-    const tasks = ctx.files.reduce((acc, file) => acc.concat(file.suites.flatMap(i => i.tasks)), [] as Task[])
+    const tasks = files.reduce((acc, file) => acc.concat(file.suites.flatMap(i => i.tasks)), [] as Task[])
 
     tasks.forEach((t) => {
       const obj = {} as TaskPromise
@@ -57,7 +56,7 @@ export class DefaultReporter implements Reporter {
       exitOnError: false,
     }
 
-    this.listr = new Listr(ctx.files.map((file) => {
+    this.listr = new Listr(files.map((file) => {
       return {
         title: relative(process.cwd(), file.filepath),
         task: () => {
@@ -85,14 +84,13 @@ export class DefaultReporter implements Reporter {
       this.taskMap.get(task)?.resolve()
   }
 
-  async onFinished({ files }: RunnerContext) {
+  async onFinished(ctx: RunnerContext) {
     await this.listrPromise
 
-    this.log()
-
     this.end = performance.now()
-    const suites = files.reduce((acc, file) => acc.concat(file.suites), [] as Suite[])
-    const tasks = files.reduce((acc, file) => acc.concat(file.suites.flatMap(i => i.tasks)), [] as Task[])
+
+    this.log()
+    const { tasks, suites, files } = ctx
     const failedFiles = files.filter(i => i.error)
     const failedSuites = suites.filter(i => i.error)
     const runable = tasks.filter(i => i.state === 'pass' || i.state === 'fail')

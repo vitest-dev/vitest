@@ -22,8 +22,10 @@ const argv = minimist(process.argv.slice(2), {
   },
 })
 
-// @ts-expect-error
-const server = process?.__vite_node__?.server as ViteDevServer
+if (!process.__vite_node__)
+  throw new Error('Vite can only run in Vite environment, please use the CLI to start the process')
+
+const server = process.__vite_node__.server as ViteDevServer
 const viteConfig = server?.config || {}
 const testOptions = viteConfig.test || {}
 

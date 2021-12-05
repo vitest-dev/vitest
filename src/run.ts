@@ -44,7 +44,7 @@ export async function runTask(task: Task, ctx: RunnerContext) {
 }
 
 export async function collectFiles(paths: string[]) {
-  const files: File[] = []
+  const files: Record<string, File> = {}
 
   for (const filepath of paths) {
     const file: File = {
@@ -71,10 +71,11 @@ export async function collectFiles(paths: string[]) {
       process.exitCode = 1
     }
 
-    files.push(file)
+    files[filepath] = file
   }
 
-  const allSuites = files.reduce((suites, file) => suites.concat(file.suites), [] as Suite[])
+  const allFiles = Object.values(files)
+  const allSuites = allFiles.reduce((suites, file) => suites.concat(file.suites), [] as Suite[])
 
   interpretOnlyMode(allSuites)
   allSuites.forEach((i) => {
@@ -151,12 +152,25 @@ export async function runFile(file: File, ctx: RunnerContext) {
   await reporter.onFileEnd?.(file, ctx)
 }
 
+export async function runFiles(filesMap: Record<string, File>, ctx: RunnerContext) {
+  const { reporter } = ctx
+
+  await reporter.onCollected?.(Object.values(filesMap), ctx)
+
+  for (const file of Object.values(filesMap))
+    await runFile(file, ctx)
+}
+
 export async function run(config: Config) {
+  // if watch, tell `vite-node` not to end the process
+  if (config.watch)
+    process.__vite_node__.watch = true
+
   // setup chai
   await setupChai(config)
 
   // collect files
-  let paths = await fg(
+  let testFilepaths = await fg(
     config.includes || defaultIncludes,
     {
       absolute: true,
@@ -165,41 +179,64 @@ export async function run(config: Config) {
     },
   )
 
+  // if name filters are provided by the CLI
   if (config.nameFilters?.length)
-    paths = paths.filter(i => config.nameFilters!.some(f => i.includes(f)))
+    testFilepaths = testFilepaths.filter(i => config.nameFilters!.some(f => i.includes(f)))
 
-  if (!paths.length) {
+  if (!testFilepaths.length) {
     console.error('No test files found')
     process.exitCode = 1
     return
   }
 
-  const reporter: Reporter = new DefaultReporter()
-
-  await reporter.onStart?.(config)
-
+  // setup envs
   if (config.global)
     (await import('./global')).registerApiGlobally()
-
   if (config.jsdom)
     (await import('./integrations/jsdom')).setupJSDOM(globalThis)
 
-  const files = await collectFiles(paths)
+  const reporter: Reporter = new DefaultReporter()
+  await reporter.onStart?.(config)
 
+  const filesMap = await collectFiles(testFilepaths)
   const ctx: RunnerContext = {
-    files,
+    filesMap,
+    get files() {
+      return Object.values(filesMap)
+    },
+    get suites() {
+      return Object.values(filesMap).reduce((suites, file) => suites.concat(file.suites), [] as Suite[])
+    },
+    get tasks() {
+      return this.suites.reduce((tasks, suite) => tasks.concat(suite.tasks), [] as Task[])
+    },
     config,
     reporter,
   }
 
-  await reporter.onCollected?.(ctx)
-
-  for (const file of files)
-    await runFile(file, ctx)
+  await runFiles(filesMap, ctx)
 
   const snapshot = getSnapshotManager()
   snapshot?.saveSnap()
   snapshot?.report()
 
   await reporter.onFinished?.(ctx)
+
+  if (config.watch) {
+    console.log('Watching for changes... [EXPERIMENTAL]')
+    const server = process.__vite_node__.server
+    server.watcher.on('change', async(id) => {
+      // TODO: better detection
+      if (testFilepaths.includes(id)) {
+        // TODO: better cache invalidation
+        process.__vite_node__.moduleCache.delete(id)
+        // TODO: debounce
+        setTimeout(async() => {
+          const files = await collectFiles([id])
+          Object.assign(ctx.filesMap, files)
+          runFiles(files, ctx)
+        }, 100)
+      }
+    })
+  }
 }

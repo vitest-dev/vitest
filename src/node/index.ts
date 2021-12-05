@@ -7,6 +7,21 @@ import c from 'picocolors'
 
 const { red, dim, yellow } = c
 
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace NodeJS {
+    interface Process {
+      __vite_node__: {
+        server: ViteDevServer
+        watch?: boolean
+        moduleCache: Map<string, Promise<any>>
+      }
+    }
+  }
+}
+
+const __pendingModules__ = new Map<string, Promise<any>>()
+
 export interface ViteNodeOptions {
   silent?: boolean
   root: string
@@ -36,9 +51,9 @@ export async function run(argv: ViteNodeOptions) {
   }))
   await server.pluginContainer.buildStart({})
 
-  // @ts-expect-error
   process.__vite_node__ = {
     server,
+    moduleCache: __pendingModules__,
   }
 
   try {
@@ -49,7 +64,8 @@ export async function run(argv: ViteNodeOptions) {
     throw e
   }
   finally {
-    await server.close()
+    if (!process.__vite_node__.watch)
+      await server.close()
   }
 }
 
@@ -78,8 +94,6 @@ function toFilePath(id: string, server: ViteDevServer): string {
 }
 
 async function execute(files: string[], server: ViteDevServer, options: ViteNodeOptions) {
-  const __pendingModules__ = new Map<string, Promise<any>>()
-
   const result = []
   for (const file of files)
     result.push(await cachedRequest(`/@fs/${slash(resolve(file))}`, []))
