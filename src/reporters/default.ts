@@ -89,7 +89,7 @@ export class DefaultReporter implements Reporter {
     const { tasks, suites, files } = ctx
     const failedFiles = files.filter(i => i.error)
     const failedSuites = suites.filter(i => i.error)
-    const runable = tasks.filter(i => i.state === 'pass' || i.state === 'fail')
+    const runnable = tasks.filter(i => i.state === 'pass' || i.state === 'fail')
     const passed = tasks.filter(i => i.state === 'pass')
     const failed = tasks.filter(i => i.state === 'fail')
     const skipped = tasks.filter(i => i.state === 'skip')
@@ -122,9 +122,9 @@ export class DefaultReporter implements Reporter {
       })
     }
 
-    console.log(c.bold(c.green(`Passed   ${passed.length} / ${runable.length}`)))
+    console.log(c.bold(c.green(`Passed   ${passed.length} / ${runnable.length}`)))
     if (failed.length)
-      console.log(c.bold(c.red(`Failed   ${failed.length} / ${runable.length}`)))
+      console.log(c.bold(c.red(`Failed   ${failed.length} / ${runnable.length}`)))
     if (skipped.length)
       console.log(c.yellow(`Skipped  ${skipped.length}`))
     if (todo.length)
