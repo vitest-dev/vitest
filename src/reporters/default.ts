@@ -2,7 +2,7 @@ import { performance } from 'perf_hooks'
 import { relative } from 'path'
 import c from 'picocolors'
 import Listr from 'listr'
-import { Reporter, RunnerContext, Task } from '../types'
+import { Reporter, RunnerContext, Suite, Task } from '../types'
 
 const CROSS = '✖ '
 
@@ -91,8 +91,10 @@ export class DefaultReporter implements Reporter {
     this.log()
 
     this.end = performance.now()
-    const failedFiles = files.filter(i => i.error)
+    const suites = files.reduce((acc, file) => acc.concat(file.suites), [] as Suite[])
     const tasks = files.reduce((acc, file) => acc.concat(file.suites.flatMap(i => i.tasks)), [] as Task[])
+    const failedFiles = files.filter(i => i.error)
+    const failedSuites = suites.filter(i => i.error)
     const runable = tasks.filter(i => i.state === 'pass' || i.state === 'fail')
     const passed = tasks.filter(i => i.state === 'pass')
     const failed = tasks.filter(i => i.state === 'fail')
@@ -105,6 +107,15 @@ export class DefaultReporter implements Reporter {
       this.error(c.bold(`\nFailed to parse ${failedFiles.length} files:`))
       failedFiles.forEach((i) => {
         this.error(`\n- ${i.filepath}`)
+        console.error(i.error || 'Unknown error')
+        this.log()
+      })
+    }
+
+    if (failedSuites.length) {
+      this.error(c.bold(`\nFailed to run ${failedSuites.length} suites:`))
+      failedSuites.forEach((i) => {
+        this.error(`\n- ${i.file?.filepath} > ${i.name}`)
         console.error(i.error || 'Unknown error')
         this.log()
       })

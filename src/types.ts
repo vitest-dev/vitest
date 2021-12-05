@@ -20,6 +20,13 @@ export interface UserOptions {
    * @default false
    */
   jsdom?: boolean
+
+  /**
+   * Run tests files in parallel
+   *
+   * @default false
+   */
+  parallel?: boolean
 }
 
 export interface Config extends UserOptions {
@@ -63,6 +70,8 @@ export interface Suite {
   mode: RunMode
   tasks: Task[]
   file?: File
+  error?: unknown
+  status?: TaskState
   hooks: {
     beforeAll: HookListener<[Suite]>[]
     afterAll: HookListener<[Suite]>[]

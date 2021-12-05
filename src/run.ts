@@ -20,16 +20,24 @@ export async function runTask(task: Task, ctx: RunnerContext) {
   await reporter.onTaskBegin?.(task, ctx)
 
   if (task.mode === 'run') {
-    await callHook(task.suite, 'afterEach', [task, task.suite])
     try {
+      await callHook(task.suite, 'beforeEach', [task, task.suite])
       await task.fn()
       task.state = 'pass'
     }
     catch (e) {
       task.state = 'fail'
       task.error = e
+      process.exitCode = 1
     }
-    await callHook(task.suite, 'afterEach', [task, task.suite])
+    try {
+      await callHook(task.suite, 'afterEach', [task, task.suite])
+    }
+    catch (e) {
+      task.state = 'fail'
+      task.error = e
+      process.exitCode = 1
+    }
   }
 
   await reporter.onTaskEnd?.(task, ctx)
@@ -93,6 +101,36 @@ function interpretOnlyMode(items: {mode: RunMode}[]) {
   }
 }
 
+export async function runSite(suite: Suite, ctx: RunnerContext) {
+  const { reporter } = ctx
+
+  await reporter.onSuiteBegin?.(suite, ctx)
+
+  if (suite.mode === 'skip') {
+    suite.status = 'skip'
+  }
+  else if (suite.mode === 'todo') {
+    suite.status = 'todo'
+  }
+  else {
+    try {
+      await callHook(suite, 'beforeAll', [suite])
+
+      await Promise.all(suite.tasks.map(i => runTask(i, ctx)))
+      // for (const t of suite.tasks)
+      //   await runTask(t, ctx)
+
+      await callHook(suite, 'afterAll', [suite])
+    }
+    catch (e) {
+      suite.error = e
+      suite.status = 'fail'
+      process.exitCode = 1
+    }
+  }
+  await reporter.onSuiteEnd?.(suite, ctx)
+}
+
 export async function runFile(file: File, ctx: RunnerContext) {
   const { reporter } = ctx
 
@@ -102,18 +140,13 @@ export async function runFile(file: File, ctx: RunnerContext) {
 
   await reporter.onFileBegin?.(file, ctx)
 
-  // TODO: support toggling parallel or serial
-  await Promise.all(file.suites.map(async(suite) => {
-    await reporter.onSuiteBegin?.(suite, ctx)
-    await callHook(suite, 'beforeAll', [suite])
-
-    await Promise.all(suite.tasks.map(i => runTask(i, ctx)))
-    // for (const t of suite.tasks)
-    //   await runTask(t, ctx)
-
-    await callHook(suite, 'afterAll', [suite])
-    await reporter.onSuiteEnd?.(suite, ctx)
-  }))
+  if (ctx.config.parallel) {
+    await Promise.all(file.suites.map(suite => runSite(suite, ctx)))
+  }
+  else {
+    for (const suite of file.suites)
+      await runSite(suite, ctx)
+  }
 
   await reporter.onFileEnd?.(file, ctx)
 }

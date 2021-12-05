@@ -27,6 +27,7 @@ declare global {
       toBeCalledTimes(n: number): void
       toBeCalledOnce(): void
       toBeCalled(): void
+      toHaveBeenCalled(): void
     }
     interface ExpectStatic {
       addSnapshotSerializer: import('pretty-format').Plugin
