@@ -92,17 +92,17 @@ export interface GlobalContext {
 }
 
 export interface Reporter {
-  onStart: (userOptions: Config) => Awaitable<void>
-  onCollected: (ctx: RunnerContext) => Awaitable<void>
-  onFinished: (ctx: RunnerContext) => Awaitable<void>
+  onStart?: (userOptions: Config) => Awaitable<void>
+  onCollected?: (ctx: RunnerContext) => Awaitable<void>
+  onFinished?: (ctx: RunnerContext) => Awaitable<void>
 
-  onSuiteBegin: (suite: Suite, ctx: RunnerContext) => Awaitable<void>
-  onSuiteEnd: (suite: Suite, ctx: RunnerContext) => Awaitable<void>
-  onFileBegin: (file: File, ctx: RunnerContext) => Awaitable<void>
-  onFileEnd: (file: File, ctx: RunnerContext) => Awaitable<void>
-  onTaskBegin: (task: Task, ctx: RunnerContext) => Awaitable<void>
-  onTaskEnd: (task: Task, ctx: RunnerContext) => Awaitable<void>
+  onSuiteBegin?: (suite: Suite, ctx: RunnerContext) => Awaitable<void>
+  onSuiteEnd?: (suite: Suite, ctx: RunnerContext) => Awaitable<void>
+  onFileBegin?: (file: File, ctx: RunnerContext) => Awaitable<void>
+  onFileEnd?: (file: File, ctx: RunnerContext) => Awaitable<void>
+  onTaskBegin?: (task: Task, ctx: RunnerContext) => Awaitable<void>
+  onTaskEnd?: (task: Task, ctx: RunnerContext) => Awaitable<void>
 
   // TODO:
-  onSnapshotUpdate: () => Awaitable<void>
+  onSnapshotUpdate?: () => Awaitable<void>
 }

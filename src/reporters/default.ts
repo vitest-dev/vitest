@@ -1,79 +1,95 @@
-import { relative } from 'path'
 import { performance } from 'perf_hooks'
+import { relative } from 'path'
 import c from 'picocolors'
-import ora from 'ora'
-import { File, Reporter, RunnerContext, Suite, Task } from '../types'
+import Listr from 'listr'
+import { Reporter, RunnerContext, Task } from '../types'
 
-const DOT = '· '
-const CHECK = '✔ '
-const CROSS = '⤫ '
+const CROSS = '✖ '
+
+interface TaskPromise {
+  promise: Promise<void>
+  resolve: () => void
+  reject: (e: unknown) => void
+}
 
 export class DefaultReporter implements Reporter {
   indent = 0
   start = 0
   end = 0
 
+  listr: Listr | null = null
+  listrPromise: Promise<void> | null = null
+  taskMap: Map<Task, TaskPromise> = new Map()
+
   onStart() {
     this.indent = 0
   }
 
-  onCollected() {
+  onCollected(ctx: RunnerContext) {
     this.start = performance.now()
-  }
 
-  onSuiteBegin(suite: Suite) {
-    if (suite.name) {
-      this.indent += 1
-      const name = DOT + suite.name
-      if (suite.mode === 'skip')
-        this.log(c.dim(c.yellow(`${name} (skipped)`)))
-      else if (suite.mode === 'todo')
-        this.log(c.dim(`${name} (todo)`))
-      else
-        this.log(name)
+    this.taskMap = new Map()
+
+    const tasks = ctx.files.reduce((acc, file) => acc.concat(file.suites.flatMap(i => i.tasks)), [] as Task[])
+
+    tasks.forEach((t) => {
+      const obj = {} as TaskPromise
+      obj.promise = new Promise<void>((resolve, reject) => {
+        obj.resolve = resolve
+        obj.reject = reject
+      })
+      this.taskMap.set(t, obj)
+    })
+
+    const createTasksListr = (tasks: Task[]): Listr.ListrTask[] => {
+      return tasks.map((task) => {
+        return {
+          title: task.name,
+          skip: () => task.mode === 'skip',
+          task: async() => {
+            return await this.taskMap.get(task)?.promise
+          },
+        }
+      })
     }
-  }
 
-  onSuiteEnd(suite: Suite) {
-    if (suite.name)
-      this.indent -= 1
-  }
+    const listrOptions: Listr.ListrOptions = {
+      exitOnError: false,
+    }
 
-  onFileBegin(file: File) {
-    this.log(`- ${relative(process.cwd(), file.filepath)} ${c.dim(`(${file.suites.flatMap(i => i.tasks).length} tests)`)}`)
-  }
+    this.listr = new Listr(ctx.files.map((file) => {
+      return {
+        title: relative(process.cwd(), file.filepath),
+        task: () => {
+          return new Listr(file.suites.flatMap((suite) => {
+            if (!suite.name)
+              return createTasksListr(suite.tasks)
 
-  onFileEnd() {
-    this.log()
-  }
+            return [{
+              title: suite.name,
+              skip: () => suite.mode !== 'run',
+              task: () => new Listr(createTasksListr(suite.tasks), listrOptions),
+            }]
+          }), listrOptions)
+        },
+      }
+    }), listrOptions)
 
-  onTaskBegin(task: Task) {
-    this.indent += 1
-    // @ts-expect-error
-    task.__ora = ora({ text: task.name, prefixText: this.getIndent().slice(1), spinner: 'arc' }).start()
+    this.listrPromise = this.listr.run().catch(() => {})
   }
 
   onTaskEnd(task: Task) {
-    // @ts-expect-error
-    task.__ora?.stop()
-
-    if (task.state === 'pass') {
-      this.log(`${c.green(CHECK + task.name)}`)
-    }
-    else if (task.state === 'skip') {
-      this.log(c.dim(c.yellow(`${DOT + task.name} (skipped)`)))
-    }
-    else if (task.state === 'todo') {
-      this.log(c.dim(`${DOT + task.name} (todo)`))
-    }
-    else {
-      this.error(`${c.red(`${CROSS}${task.name}`)}`)
-      process.exitCode = 1
-    }
-    this.indent -= 1
+    if (task.state === 'fail')
+      this.taskMap.get(task)?.reject(task.error)
+    else
+      this.taskMap.get(task)?.resolve()
   }
 
-  onFinished({ files }: RunnerContext) {
+  async onFinished({ files }: RunnerContext) {
+    await this.listrPromise
+
+    this.log()
+
     this.end = performance.now()
     const failedFiles = files.filter(i => i.error)
     const tasks = files.reduce((acc, file) => acc.concat(file.suites.flatMap(i => i.tasks)), [] as Task[])
@@ -97,15 +113,15 @@ export class DefaultReporter implements Reporter {
     if (failed.length) {
       this.error(c.bold(`\nFailed Tests (${failed.length})`))
       failed.forEach((task) => {
-        this.error(`\n${CROSS + c.inverse(c.red(' FAIL '))} ${[task.suite.name, task.name].filter(Boolean).join(' > ')} ${c.gray(`${task.file?.filepath}`)}`)
+        this.error(`\n${CROSS + c.inverse(c.red(' FAIL '))} ${[task.suite.name, task.name].filter(Boolean).join(' > ')} ${c.gray(c.dim(`${task.file?.filepath}`))}`)
         console.error(task.error || 'Unknown error')
         this.log()
       })
     }
 
-    this.log(c.green(`Passed   ${passed.length} / ${runable.length}`))
+    this.log(c.bold(c.green(`Passed   ${passed.length} / ${runable.length}`)))
     if (failed.length)
-      this.log(c.red(`Failed   ${failed.length} / ${runable.length}`))
+      this.log(c.bold(c.red(`Failed   ${failed.length} / ${runable.length}`)))
     if (skipped.length)
       this.log(c.yellow(`Skipped  ${skipped.length}`))
     if (todo.length)
