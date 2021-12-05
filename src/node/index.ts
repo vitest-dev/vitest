@@ -89,6 +89,8 @@ function toFilePath(id: string, server: ViteDevServer): string {
 
   if (absolute.startsWith('//'))
     absolute = absolute.slice(1)
+  if (!absolute.startsWith('/'))
+    absolute = `/${absolute}`
 
   return absolute
 }
