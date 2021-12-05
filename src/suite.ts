@@ -11,7 +11,7 @@ function createSuiteCollector(name: string, factory: TestFactory = () => {}, mod
   const queue: Task[] = []
   const factoryQueue: Task[] = []
 
-  const suiteBase: Pick<Suite, 'name' | 'mode' |'hooks'> = {
+  const suiteBase: Pick<Suite, 'name' | 'mode' | 'hooks'> = {
     name,
     mode,
     hooks: {
@@ -40,13 +40,13 @@ function createSuiteCollector(name: string, factory: TestFactory = () => {}, mod
       name,
       mode,
       suite: {} as Suite,
-      state: mode !== 'run' ? mode : undefined,
+      state: (mode !== 'run' && mode !== 'only') ? mode : undefined,
       fn,
     })
   }
 
   function test(name: string, fn: TestFunction) {
-    collectTask(name, fn, mode)
+    collectTask(name, fn, 'run')
   }
   test.skip = (name: string, fn: TestFunction) => collectTask(name, fn, 'skip')
   test.only = (name: string, fn: TestFunction) => collectTask(name, fn, 'only')

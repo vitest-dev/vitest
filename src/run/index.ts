@@ -80,9 +80,11 @@ export async function collectFiles(paths: string[]) {
   interpretOnlyMode(allSuites)
   allSuites.forEach((i) => {
     if (i.mode === 'skip')
-      i.tasks.forEach(t => t.mode === 'run' && (t.state = 'skip'))
+      i.tasks.forEach(t => t.mode === 'run' && (t.mode = 'skip'))
     else
       interpretOnlyMode(i.tasks)
+
+    i.tasks.forEach(t => t.mode === 'skip' && (t.state = 'skip'))
   })
 
   return files
@@ -102,7 +104,7 @@ function interpretOnlyMode(items: {mode: RunMode}[]) {
   }
 }
 
-export async function runSite(suite: Suite, ctx: RunnerContext) {
+export async function runSuite(suite: Suite, ctx: RunnerContext) {
   const { reporter } = ctx
 
   await reporter.onSuiteBegin?.(suite, ctx)
@@ -135,18 +137,18 @@ export async function runSite(suite: Suite, ctx: RunnerContext) {
 export async function runFile(file: File, ctx: RunnerContext) {
   const { reporter } = ctx
 
-  const runableSuites = file.suites.filter(i => i.mode === 'run')
-  if (runableSuites.length === 0)
+  const runnableSuites = file.suites.filter(i => i.mode === 'run')
+  if (runnableSuites.length === 0)
     return
 
   await reporter.onFileBegin?.(file, ctx)
 
   if (ctx.config.parallel) {
-    await Promise.all(file.suites.map(suite => runSite(suite, ctx)))
+    await Promise.all(file.suites.map(suite => runSuite(suite, ctx)))
   }
   else {
     for (const suite of file.suites)
-      await runSite(suite, ctx)
+      await runSuite(suite, ctx)
   }
 
   await reporter.onFileEnd?.(file, ctx)
@@ -247,13 +249,13 @@ export async function startWatcher(ctx: RunnerContext) {
     clearTimeout(timer)
     timer = setTimeout(async() => {
       const snapshot = getSnapshotManager()
-      const pathes = Array.from(changedTests)
+      const paths = Array.from(changedTests)
       changedTests.clear()
 
-      await ctx.reporter.onWatcherRerun?.(pathes, id, ctx)
-      pathes.forEach(i => moduleCache.delete(i))
+      await ctx.reporter.onWatcherRerun?.(paths, id, ctx)
+      paths.forEach(i => moduleCache.delete(i))
 
-      const files = await collectFiles(pathes)
+      const files = await collectFiles(paths)
       Object.assign(ctx.filesMap, files)
       await runFiles(files, ctx)
 
