@@ -1,8 +1,13 @@
 {
   "name": "vitest",
   "version": "0.0.22",
-  "description": "",
-  "keywords": [],
+  "description": "A blazing fast unit test framework powered by Vite",
+  "keywords": [
+    "vite",
+    "vite-node",
+    "test",
+    "jest"
+  ],
   "homepage": "https://github.com/antfu/vitest#readme",
   "bugs": {
     "url": "https://github.com/antfu/vitest/issues"
@@ -54,9 +59,8 @@
     "jest-util": "^27.4.2",
     "jsdom": "^19.0.0",
     "listr": "^0.14.3",
-    "minimist": "^1.2.5",
-    "ora": "^6.0.1",
     "picocolors": "^1.0.0",
+    "sade": "^1.7.4",
     "sinon": "^12.0.1",
     "sinon-chai": "^3.7.0"
   },
@@ -65,8 +69,8 @@
     "@antfu/ni": "^0.11.0",
     "@types/jsdom": "^16.2.13",
     "@types/listr": "^0.14.4",
-    "@types/minimist": "^1.2.2",
     "@types/node": "^16.11.11",
+    "@types/sade": "^1.7.3",
     "@types/sinon": "^10.0.6",
     "bumpp": "^7.1.1",
     "eslint": "^8.3.0",

@@ -3,7 +3,7 @@ import { HookListener } from 'vitest'
 import { setupChai } from '../integrations/chai/setup'
 import { clearContext, defaultSuite } from '../suite'
 import { context } from '../context'
-import { File, Config, Task, Reporter, RunnerContext, Suite, RunMode } from '../types'
+import { File, ResolvedConfig, Task, Reporter, RunnerContext, Suite, RunMode } from '../types'
 import { DefaultReporter } from '../reporters/default'
 import { defaultIncludes, defaultExcludes } from '../constants'
 import { getSnapshotManager } from '../integrations/chai/snapshot'
@@ -161,7 +161,7 @@ export async function runFiles(filesMap: Record<string, File>, ctx: RunnerContex
     await runFile(file, ctx)
 }
 
-export async function run(config: Config) {
+export async function run(config: ResolvedConfig) {
   // if watch, tell `vite-node` not to end the process
   if (config.watch)
     process.__vite_node__.watch = true
@@ -174,14 +174,14 @@ export async function run(config: Config) {
     config.includes || defaultIncludes,
     {
       absolute: true,
-      cwd: config.rootDir,
+      cwd: config.root,
       ignore: config.excludes || defaultExcludes,
     },
   )
 
   // if name filters are provided by the CLI
-  if (config.nameFilters?.length)
-    testFilepaths = testFilepaths.filter(i => config.nameFilters!.some(f => i.includes(f)))
+  if (config.filters?.length)
+    testFilepaths = testFilepaths.filter(i => config.filters!.some(f => i.includes(f)))
 
   if (!testFilepaths.length) {
     console.error('No test files found')

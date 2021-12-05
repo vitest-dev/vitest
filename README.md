@@ -2,7 +2,7 @@
 
 [![NPM version](https://img.shields.io/npm/v/vitest?color=a1b858&label=)](https://www.npmjs.com/package/vitest)
 
-A blazing fast test runner powered by Vite.
+A blazing fast unit test framework powered by Vite.
 
 ## Features
 
@@ -155,8 +155,8 @@ describe('suite', () => {
 - [x] Task filter
 - [x] Mock
 - [x] Global Mode & Types
-- [ ] Parallel Executing
-- [ ] CLI Help (Use yargs)
+- [ ] Concurrent Executing
+- [x] CLI Help
 - [x] JSDom
 - [x] Watch
 - [ ] Source Map

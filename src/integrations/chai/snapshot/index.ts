@@ -7,7 +7,7 @@ const { addSerializer } = Snap
 let _manager: SnapshotManager
 
 export interface SnapshotOptions {
-  rootDir: string
+  root: string
   update?: boolean
 }
 
@@ -16,7 +16,7 @@ export function getSnapshotManager(): SnapshotManager {
 }
 
 export async function SnapshotPlugin(options: SnapshotOptions): Promise<ChaiPlugin> {
-  const { rootDir } = options
+  const { root: rootDir } = options
 
   _manager = new SnapshotManager({
     rootDir,

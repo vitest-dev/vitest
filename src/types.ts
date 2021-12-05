@@ -1,6 +1,4 @@
 /* eslint-disable no-use-before-define */
-import { ViteDevServer } from 'vite'
-
 export type Awaitable<T> = Promise<T> | T
 
 export interface UserOptions {
@@ -27,18 +25,26 @@ export interface UserOptions {
    * @default false
    */
   parallel?: boolean
+
+  /**
+   * Update snapshot files
+   *
+   * @default false
+   */
+  update?: boolean
+
+  /**
+   * Watch mode
+   *
+   * @default false
+   */
+  watch?: boolean
+
+  root?: string
 }
 
-export interface Config extends UserOptions {
-  rootDir?: string
-  updateSnapshot?: boolean
-  nameFilters?: string[]
-
-  // Internal
-  server: ViteDevServer
-
-  // TODO:
-  watch?: boolean
+export interface ResolvedConfig extends Required<UserOptions> {
+  filters?: string[]
 }
 
 export type RunMode = 'run' | 'skip' | 'only' | 'todo'
@@ -103,7 +109,7 @@ export interface RunnerContext {
   files: File[]
   suites: Suite[]
   tasks: Task[]
-  config: Config
+  config: ResolvedConfig
   reporter: Reporter
 }
 
@@ -113,7 +119,7 @@ export interface GlobalContext {
 }
 
 export interface Reporter {
-  onStart?: (userOptions: Config) => Awaitable<void>
+  onStart?: (userOptions: ResolvedConfig) => Awaitable<void>
   onCollected?: (files: File[], ctx: RunnerContext) => Awaitable<void>
   onFinished?: (ctx: RunnerContext) => Awaitable<void>
 

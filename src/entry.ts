@@ -1,43 +1,12 @@
-import { fileURLToPath } from 'url'
-import { resolve, dirname } from 'path'
-import minimist from 'minimist'
-import { findUp } from 'find-up'
-import { run } from './node/index.js'
+import { run } from './run'
 
-process.env.VITEST = 'true'
+if (!process.__vite_node__ || !process.__vitest__)
+  throw new Error('Vite can only run in Vite environment, please use the CLI to start the process')
 
-const argv = minimist(process.argv.slice(2), {
-  alias: {
-    c: 'config',
-  },
-  string: ['root', 'config'],
-  boolean: ['dev'],
-})
-
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const root = resolve(argv.root || process.cwd())
-
-const configPath = argv.config
-  ? resolve(root, argv.config)
-  : await findUp(['vitest.config.ts', 'vitest.config.js', 'vitest.config.mjs', 'vite.config.ts', 'vite.config.js', 'vite.config.mjs'], { cwd: root })
+const inlineOptions = process.__vite_node__.server.config.test || {}
+const cliOptions = process.__vitest__.options || {}
 
 await run({
-  root,
-  files: [
-    resolve(__dirname, argv.dev ? '../src/cli.ts' : './cli.js'),
-  ],
-  config: configPath,
-  defaultConfig: {
-    optimizeDeps: {
-      exclude: [
-        'vitest',
-      ],
-    },
-  },
-  shouldExternalize(id: string) {
-    if (id.includes('/node_modules/vitest/'))
-      return false
-    else
-      return id.includes('/node_modules/')
-  },
+  ...inlineOptions,
+  ...cliOptions,
 })

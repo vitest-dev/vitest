@@ -1,43 +1,75 @@
-import minimist from 'minimist'
-import c from 'picocolors'
-import { ViteDevServer } from 'vite'
-import { run } from './run'
+import { fileURLToPath } from 'url'
+import { resolve, dirname } from 'path'
+import { findUp } from 'find-up'
+import sade from 'sade'
+import type { UserOptions } from './types'
+import { run as startViteNode } from './node/index.js'
 
-const { log } = console
+// TODO: use bundler
+const version = '0.0.0'
 
-const argv = minimist(process.argv.slice(2), {
-  alias: {
-    u: 'update',
-    w: 'watch',
-  },
-  string: ['root', 'config'],
-  boolean: ['update', 'dev', 'global', 'watch', 'jsdom'],
-  unknown(name) {
-    if (name[0] === '-') {
-      console.error(c.red(`Unknown argument: ${name}`))
-      help()
-      process.exit(1)
+sade('vitest [filter]', true)
+  .version(version)
+  .describe('A blazing fast unit test framework powered by Vite.')
+  .option('-r, --root', 'root path', process.cwd())
+  .option('-c, --config', 'path to config file')
+  .option('-w, --watch', 'watch mode', false)
+  .option('-u, --update', 'update snapshot', false)
+  .option('--global', 'inject apis globally', false)
+  .option('--dev', 'dev mode', false)
+  .option('--jsdom', 'mock browser api using JSDOM', false)
+  .action(async(filters, options) => {
+    process.env.VITEST = 'true'
+
+    const __dirname = dirname(fileURLToPath(import.meta.url))
+    const root = resolve(options.root || process.cwd())
+
+    const configPath = options.config
+      ? resolve(root, options.config)
+      : await findUp(['vitest.config.ts', 'vitest.config.js', 'vitest.config.mjs', 'vite.config.ts', 'vite.config.js', 'vite.config.mjs'], { cwd: root })
+
+    options.config = configPath
+    options.root = root
+    options.filters = filters
+      ? Array.isArray(filters)
+        ? filters
+        : [filters]
+      : undefined
+
+    process.__vitest__ = {
+      options,
     }
-    return true
-  },
-})
 
-if (!process.__vite_node__)
-  throw new Error('Vite can only run in Vite environment, please use the CLI to start the process')
+    await startViteNode({
+      root,
+      files: [
+        resolve(__dirname, options.dev ? '../src/entry.ts' : './entry.js'),
+      ],
+      config: configPath,
+      defaultConfig: {
+        optimizeDeps: {
+          exclude: [
+            'vitest',
+          ],
+        },
+      },
+      shouldExternalize(id: string) {
+        if (id.includes('/node_modules/vitest/'))
+          return false
+        else
+          return id.includes('/node_modules/')
+      },
+    })
+  })
+  .parse(process.argv)
 
-const server = process.__vite_node__.server as ViteDevServer
-const viteConfig = server?.config || {}
-const testOptions = viteConfig.test || {}
-
-await run({
-  ...argv,
-  ...testOptions,
-  server,
-  updateSnapshot: argv.update,
-  rootDir: argv.root || process.cwd(),
-  nameFilters: argv._,
-})
-
-function help() {
-  log('Help: finish help')
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace NodeJS {
+    interface Process {
+      __vitest__: {
+        options: Required<UserOptions>
+      }
+    }
+  }
 }
