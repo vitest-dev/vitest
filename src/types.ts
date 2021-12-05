@@ -56,19 +56,28 @@ export interface TestCollector {
   todo: (name: string) => void
 }
 
+export type HookListener<T extends any[]> = (...args: T) => Awaitable<void>
+
 export interface Suite {
   name: string
   mode: RunMode
   tasks: Task[]
   file?: File
+  hooks: {
+    beforeAll: HookListener<[Suite]>[]
+    afterAll: HookListener<[Suite]>[]
+    beforeEach: HookListener<[Task, Suite]>[]
+    afterEach: HookListener<[Task, Suite]>[]
+  }
 }
 
 export interface SuiteCollector {
-  name: string
-  mode: RunMode
+  readonly name: string
+  readonly mode: RunMode
   test: TestCollector
   collect: (file?: File) => Promise<Suite>
   clear: () => void
+  on: <T extends keyof Suite['hooks']>(name: T, ...fn: Suite['hooks'][T]) => void
 }
 
 export type TestFactory = (test: (name: string, fn: TestFunction) => void) => Awaitable<void>

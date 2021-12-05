@@ -1,5 +1,4 @@
 import Snap from 'jest-snapshot'
-import { afterAll, beforeEach } from '../../../hooks'
 import { ChaiPlugin } from '../types'
 import { SnapshotManager } from './manager'
 
@@ -10,6 +9,10 @@ let _manager: SnapshotManager
 export interface SnapshotOptions {
   rootDir: string
   update?: boolean
+}
+
+export function getSnapshotManager(): SnapshotManager {
+  return _manager!
 }
 
 export async function SnapshotPlugin(options: SnapshotOptions): Promise<ChaiPlugin> {
@@ -26,17 +29,6 @@ export async function SnapshotPlugin(options: SnapshotOptions): Promise<ChaiPlug
   } as any)
 
   return function(chai, utils) {
-    beforeEach((task) => {
-      _manager.setContext({
-        file: task.file?.filepath || task.name,
-        title: task.name,
-        fullTitle: [task.suite.name, task.name].filter(Boolean).join(' > '),
-      })
-    })
-    afterAll(() => {
-      _manager.saveSnap()
-      _manager.report()
-    })
     for (const key of ['matchSnapshot', 'toMatchSnapshot']) {
       utils.addMethod(
         chai.Assertion.prototype,

@@ -6,6 +6,7 @@ import type {
 } from 'jest-snapshot'
 
 import type { SnapshotStateOptions } from 'jest-snapshot/build/State'
+import { Task } from '../../../types'
 import {
   packSnapshotState,
   addSnapshotResult,
@@ -69,6 +70,14 @@ export class SnapshotManager {
       this.snapshotResolver!.resolveSnapshotPath(this.testFile),
       this.snapshotOptions,
     )
+  }
+
+  setTask(task: Task) {
+    this.setContext({
+      file: task.file?.filepath || task.name,
+      title: task.name,
+      fullTitle: [task.suite.name, task.name].filter(Boolean).join(' > '),
+    })
   }
 
   setContext(context: Context): void {

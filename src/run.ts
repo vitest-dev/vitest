@@ -1,19 +1,26 @@
 import fg from 'fast-glob'
+import { HookListener } from 'vitest'
 import { setupChai } from './integrations/chai/setup'
 import { clearContext, defaultSuite } from './suite'
 import { context } from './context'
 import { File, Config, Task, Reporter, RunnerContext, Suite, RunMode } from './types'
-import { afterEachHook, afterFileHook, afterAllHook, afterSuiteHook, beforeEachHook, beforeFileHook, beforeAllHook, beforeSuiteHook } from './hooks'
 import { DefaultReporter } from './reporters/default'
 import { defaultIncludes, defaultExcludes } from './constants'
+import { getSnapshotManager } from './integrations/chai/snapshot'
+
+async function callHook<T extends keyof Suite['hooks']>(suite: Suite, name: T, args: Suite['hooks'][T][0] extends HookListener<infer A> ? A : never) {
+  await Promise.all(suite.hooks[name].map(fn => fn(...(args as any))))
+}
 
 export async function runTask(task: Task, ctx: RunnerContext) {
   const { reporter } = ctx
 
+  getSnapshotManager()?.setTask(task)
+
   await reporter.onTaskBegin?.(task, ctx)
 
   if (task.mode === 'run') {
-    await beforeEachHook.fire(task)
+    await callHook(task.suite, 'afterEach', [task, task.suite])
     try {
       await task.fn()
       task.state = 'pass'
@@ -22,7 +29,7 @@ export async function runTask(task: Task, ctx: RunnerContext) {
       task.state = 'fail'
       task.error = e
     }
-    await afterEachHook.fire(task)
+    await callHook(task.suite, 'afterEach', [task, task.suite])
   }
 
   await reporter.onTaskEnd?.(task, ctx)
@@ -94,22 +101,20 @@ export async function runFile(file: File, ctx: RunnerContext) {
     return
 
   await reporter.onFileBegin?.(file, ctx)
-  await beforeFileHook.fire(file)
 
   // TODO: support toggling parallel or serial
   await Promise.all(file.suites.map(async(suite) => {
     await reporter.onSuiteBegin?.(suite, ctx)
-    await beforeSuiteHook.fire(suite)
+    await callHook(suite, 'beforeAll', [suite])
 
     await Promise.all(suite.tasks.map(i => runTask(i, ctx)))
     // for (const t of suite.tasks)
     //   await runTask(t, ctx)
 
-    await afterSuiteHook.fire(suite)
+    await callHook(suite, 'afterAll', [suite])
     await reporter.onSuiteEnd?.(suite, ctx)
   }))
 
-  await afterFileHook.fire(file)
   await reporter.onFileEnd?.(file, ctx)
 }
 
@@ -155,11 +160,13 @@ export async function run(config: Config) {
   }
 
   await reporter.onCollected?.(ctx)
-  await beforeAllHook.fire()
 
   for (const file of files)
     await runFile(file, ctx)
 
-  await afterAllHook.fire()
+  const snapshot = getSnapshotManager()
+  snapshot?.saveSnap()
+  snapshot?.report()
+
   await reporter.onFinished?.(ctx)
 }
