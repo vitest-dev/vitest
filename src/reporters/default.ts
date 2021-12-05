@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { performance } from 'perf_hooks'
 import { relative } from 'path'
 import c from 'picocolors'
@@ -13,17 +14,12 @@ interface TaskPromise {
 }
 
 export class DefaultReporter implements Reporter {
-  indent = 0
   start = 0
   end = 0
 
   listr: Listr | null = null
   listrPromise: Promise<void> | null = null
   taskMap: Map<Task, TaskPromise> = new Map()
-
-  onStart() {
-    this.indent = 0
-  }
 
   onCollected(files: File[]) {
     this.start = performance.now()
@@ -89,7 +85,7 @@ export class DefaultReporter implements Reporter {
 
     this.end = performance.now()
 
-    this.log()
+    console.log()
     const { tasks, suites, files } = ctx
     const failedFiles = files.filter(i => i.error)
     const failedSuites = suites.filter(i => i.error)
@@ -99,59 +95,60 @@ export class DefaultReporter implements Reporter {
     const skipped = tasks.filter(i => i.state === 'skip')
     const todo = tasks.filter(i => i.state === 'todo')
 
-    this.indent = 0
-
     if (failedFiles.length) {
-      this.error(c.bold(`\nFailed to parse ${failedFiles.length} files:`))
+      console.error(c.bold(`\nFailed to parse ${failedFiles.length} files:`))
       failedFiles.forEach((i) => {
-        this.error(`\n- ${i.filepath}`)
+        console.error(c.red(`\n- ${i.filepath}`))
         console.error(i.error || 'Unknown error')
-        this.log()
+        console.log()
       })
     }
 
     if (failedSuites.length) {
-      this.error(c.bold(`\nFailed to run ${failedSuites.length} suites:`))
+      console.error(c.bold(`\nFailed to run ${failedSuites.length} suites:`))
       failedSuites.forEach((i) => {
-        this.error(`\n- ${i.file?.filepath} > ${i.name}`)
+        console.error(c.red(`\n- ${i.file?.filepath} > ${i.name}`))
         console.error(i.error || 'Unknown error')
-        this.log()
+        console.log()
       })
     }
 
     if (failed.length) {
-      this.error(c.bold(`\nFailed Tests (${failed.length})`))
+      console.error(c.bold(`\nFailed Tests (${failed.length})`))
       failed.forEach((task) => {
-        this.error(`\n${CROSS + c.inverse(c.red(' FAIL '))} ${[task.suite.name, task.name].filter(Boolean).join(' > ')} ${c.gray(c.dim(`${task.file?.filepath}`))}`)
+        console.error(`\n${CROSS + c.inverse(c.red(' FAIL '))} ${[task.suite.name, task.name].filter(Boolean).join(' > ')} ${c.gray(c.dim(`${task.file?.filepath}`))}`)
         console.error(task.error || 'Unknown error')
-        this.log()
+        console.log()
       })
     }
 
-    this.log(c.bold(c.green(`Passed   ${passed.length} / ${runable.length}`)))
+    console.log(c.bold(c.green(`Passed   ${passed.length} / ${runable.length}`)))
     if (failed.length)
-      this.log(c.bold(c.red(`Failed   ${failed.length} / ${runable.length}`)))
+      console.log(c.bold(c.red(`Failed   ${failed.length} / ${runable.length}`)))
     if (skipped.length)
-      this.log(c.yellow(`Skipped  ${skipped.length}`))
+      console.log(c.yellow(`Skipped  ${skipped.length}`))
     if (todo.length)
-      this.log(c.dim(`Todo     ${todo.length}`))
-    this.log(`Time     ${(this.end - this.start).toFixed(2)}ms`)
+      console.log(c.dim(`Todo     ${todo.length}`))
+    console.log(`Time     ${(this.end - this.start).toFixed(2)}ms`)
   }
 
-  private getIndent(offest = 0) {
-    return ' '.repeat((this.indent + offest) * 2)
+  async onWatcherStart(ctx: RunnerContext) {
+    await this.listrPromise
+
+    const failed = ctx.tasks.some(i => i.state === 'fail')
+    if (failed)
+      console.log(c.red('\nTests failed. Watching for file changes...'))
+    else
+      console.log(c.green('\nWatching for file changes...'))
   }
 
-  private log(msg = '', indentOffset = 0) {
-    // eslint-disable-next-line no-console
-    console.log(`${this.getIndent(indentOffset)}${msg}`)
+  async onWatcherRerun(files: string[], trigger: string) {
+    await this.listrPromise
+
+    console.log(c.blue(`File ${relative(process.cwd(), trigger)} changed, re-running tests...`))
   }
 
-  private error(msg = '', indentOffset = 0) {
-    // eslint-disable-next-line no-console
-    console.error(c.red(`${this.getIndent(indentOffset)}${msg}`))
-  }
-
+  // TODO:
   onSnapshotUpdate() {
   }
 }

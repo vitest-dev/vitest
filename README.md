@@ -158,7 +158,7 @@ describe('suite', () => {
 - [ ] Parallel Executing
 - [ ] CLI Help (Use yargs)
 - [x] JSDom
-- [ ] Watch
+- [x] Watch
 - [ ] Source Map
 - [ ] Coverage
 

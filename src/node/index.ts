@@ -83,12 +83,12 @@ function toFilePath(id: string, server: ViteDevServer): string {
     ? id.slice(4)
     : id.startsWith(dirname(server.config.root))
       ? id
-      : slash(resolve(server.config.root, id.slice(1)))
+      : id.startsWith('/')
+        ? slash(resolve(server.config.root, id.slice(1)))
+        : id
 
   if (absolute.startsWith('//'))
     absolute = absolute.slice(1)
-  if (!absolute.startsWith('/'))
-    absolute = `/${absolute}`
 
   return absolute
 }
@@ -99,11 +99,8 @@ async function execute(files: string[], server: ViteDevServer, options: ViteNode
     result.push(await cachedRequest(`/@fs/${slash(resolve(file))}`, []))
   return result
 
-  async function directRequest(rawId: string, callstack: string[]) {
-    if (builtinModules.includes(rawId))
-      return import(rawId)
-
-    callstack = [...callstack, rawId]
+  async function directRequest(id: string, fsPath: string, callstack: string[]) {
+    callstack = [...callstack, id]
     const request = async(dep: string) => {
       if (callstack.includes(dep)) {
         throw new Error(`${red('Circular dependency detected')}\nStack:\n${[...callstack, dep].reverse().map((i) => {
@@ -114,23 +111,17 @@ async function execute(files: string[], server: ViteDevServer, options: ViteNode
       return cachedRequest(dep, callstack)
     }
 
-    const id = normalizeId(rawId)
-    const absolute = toFilePath(id, server)
-
-    if (options.shouldExternalize!(absolute))
-      return import(absolute)
-
     const result = await server.transformRequest(id, { ssr: true })
     if (!result)
       throw new Error(`failed to load ${id}`)
 
-    const url = pathToFileURL(absolute)
+    const url = pathToFileURL(fsPath)
     const exports = {}
 
     const context = {
       require: createRequire(url),
-      __filename: absolute,
-      __dirname: dirname(absolute),
+      __filename: fsPath,
+      __dirname: dirname(fsPath),
       __vite_ssr_import__: request,
       __vite_ssr_dynamic_import__: request,
       __vite_ssr_exports__: exports,
@@ -139,7 +130,7 @@ async function execute(files: string[], server: ViteDevServer, options: ViteNode
     }
 
     const fn = vm.runInThisContext(`async (${Object.keys(context).join(',')}) => { ${result.code} }`, {
-      filename: absolute,
+      filename: fsPath,
       lineOffset: 0,
     })
     await fn(...Object.values(context))
@@ -147,11 +138,20 @@ async function execute(files: string[], server: ViteDevServer, options: ViteNode
     return exports
   }
 
-  async function cachedRequest(id: string, callstack: string[]) {
-    if (__pendingModules__.has(id))
-      return __pendingModules__.get(id)
-    __pendingModules__.set(id, directRequest(id, callstack))
-    return await __pendingModules__.get(id)
+  async function cachedRequest(rawId: string, callstack: string[]) {
+    if (builtinModules.includes(rawId))
+      return import(rawId)
+
+    const id = normalizeId(rawId)
+    const fsPath = toFilePath(id, server)
+
+    if (options.shouldExternalize!(fsPath))
+      return import(fsPath)
+
+    if (__pendingModules__.has(fsPath))
+      return __pendingModules__.get(fsPath)
+    __pendingModules__.set(fsPath, directRequest(id, fsPath, callstack))
+    return await __pendingModules__.get(fsPath)
   }
 
   function exportAll(exports: any, sourceModule: any) {

@@ -124,6 +124,9 @@ export interface Reporter {
   onTaskBegin?: (task: Task, ctx: RunnerContext) => Awaitable<void>
   onTaskEnd?: (task: Task, ctx: RunnerContext) => Awaitable<void>
 
+  onWatcherStart?: (ctx: RunnerContext) => Awaitable<void>
+  onWatcherRerun?: (files: string[], trigger: string, ctx: RunnerContext) => Awaitable<void>
+
   // TODO:
   onSnapshotUpdate?: () => Awaitable<void>
 }
