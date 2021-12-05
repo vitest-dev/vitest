@@ -2,7 +2,17 @@
 export type Awaitable<T> = Promise<T> | T
 
 export interface UserOptions {
+  /**
+   * Include globs for test files
+   *
+   * @default ['**\/*.test.ts']
+   */
   includes?: string[]
+
+  /**
+   * Exclude globs for test files
+   * @default ['**\/node_modules\/**']
+   */
   excludes?: string[]
 
   /**

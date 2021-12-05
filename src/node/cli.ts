@@ -2,8 +2,8 @@ import { fileURLToPath } from 'url'
 import { resolve, dirname } from 'path'
 import { findUp } from 'find-up'
 import sade from 'sade'
-import type { UserOptions } from './types'
-import { run as startViteNode } from './node/index.js'
+import type { UserOptions } from '../types'
+import { run as startViteNode } from './node.js'
 
 // TODO: use bundler
 const version = '0.0.0'
@@ -43,7 +43,7 @@ sade('vitest [filter]', true)
     await startViteNode({
       root,
       files: [
-        resolve(__dirname, options.dev ? '../src/entry.ts' : './entry.js'),
+        resolve(__dirname, options.dev ? '../../src/node/entry.ts' : './entry.js'),
       ],
       config: configPath,
       defaultConfig: {
