@@ -96,16 +96,19 @@ export async function runFile(file: File, ctx: RunnerContext) {
   await reporter.onFileBegin?.(file, ctx)
   await beforeFileHook.fire(file)
 
-  for (const suite of file.suites) {
+  // TODO: support toggling parallel or serial
+  await Promise.all(file.suites.map(async(suite) => {
     await reporter.onSuiteBegin?.(suite, ctx)
     await beforeSuiteHook.fire(suite)
 
-    for (const t of suite.tasks)
-      await runTask(t, ctx)
+    await Promise.all(suite.tasks.map(i => runTask(i, ctx)))
+    // for (const t of suite.tasks)
+    //   await runTask(t, ctx)
 
     await afterSuiteHook.fire(suite)
     await reporter.onSuiteEnd?.(suite, ctx)
-  }
+  }))
+
   await afterFileHook.fire(file)
   await reporter.onFileEnd?.(file, ctx)
 }
