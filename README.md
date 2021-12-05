@@ -152,7 +152,7 @@ describe('suite', () => {
 - [x] Reporter & Better output
 - [x] Task filter
 - [x] Mock
-- [ ] Global Mode & Types
+- [x] Global Mode & Types
 - [ ] Parallel Executing
 - [ ] CLI Help
 - [ ] JSDom

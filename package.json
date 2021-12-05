@@ -56,8 +56,7 @@
     "ora": "^6.0.1",
     "picocolors": "^1.0.0",
     "sinon": "^12.0.1",
-    "sinon-chai": "^3.7.0",
-    "vite-node": "^0.1.10"
+    "sinon-chai": "^3.7.0"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^0.11.1",
