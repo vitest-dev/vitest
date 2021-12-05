@@ -11,7 +11,7 @@ const argv = minimist(process.argv.slice(2), {
     w: 'watch',
   },
   string: ['root', 'config'],
-  boolean: ['update', 'dev', 'global', 'watch'],
+  boolean: ['update', 'dev', 'global', 'watch', 'jsdom'],
   unknown(name) {
     if (name[0] === '-') {
       console.error(c.red(`Unknown argument: ${name}`))
@@ -28,8 +28,7 @@ const viteConfig = server?.config || {}
 const testOptions = viteConfig.test || {}
 
 await run({
-  global: argv.global,
-  watch: argv.watch,
+  ...argv,
   ...testOptions,
   server,
   updateSnapshot: argv.update,

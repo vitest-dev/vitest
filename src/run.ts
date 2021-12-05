@@ -140,6 +140,9 @@ export async function run(config: Config) {
   if (config.global)
     (await import('./global')).registerApiGlobally()
 
+  if (config.jsdom)
+    (await import('./integrations/jsdom')).setupJSDOM(globalThis)
+
   const files = await collectFiles(paths)
 
   const ctx: RunnerContext = {

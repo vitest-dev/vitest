@@ -62,6 +62,7 @@
   "devDependencies": {
     "@antfu/eslint-config": "^0.11.1",
     "@antfu/ni": "^0.11.0",
+    "@types/jsdom": "^16.2.13",
     "@types/minimist": "^1.2.2",
     "@types/node": "^16.11.11",
     "@types/sinon": "^10.0.6",

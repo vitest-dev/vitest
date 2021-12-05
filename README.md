@@ -6,10 +6,11 @@ A blazing fast test runner powered by Vite.
 
 ## Features
 
-- [Vite](https://vitejs.dev/)'s config, transformers, resolvers, and plugins. Powered by [vite-node](https://github.com/antfu/vite-node)
+- [Vite](https://vitejs.dev/)'s config, transformers, resolvers, and plugins.
 - [Jest Snapshot](https://jestjs.io/docs/snapshot-testing)
 - [Chai](https://www.chaijs.com/) for assertions
 - [Sinon](https://sinonjs.org/) for mocking
+- [JSDOM](https://github.com/jsdom/jsdom) for DOM mocking
 - Async suite / test, top level await
 - ESM friendly
 - Out-of-box TypeScript support
@@ -20,11 +21,12 @@ import { it, describe, expect, assert } from 'vitest'
 
 describe('suite name', () => {
   it('foo', () => {
-    assert.equal(Math.sqrt(4), 2)
+    expect(1 + 1).toEqual(2)
+    expect(true).to.be.true
   })
 
   it('bar', () => {
-    expect(1 + 1).eq(2)
+    assert.equal(Math.sqrt(4), 2)
   })
 
   it('snapshot', () => {
