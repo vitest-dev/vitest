@@ -50,7 +50,15 @@ export interface UserOptions {
    */
   watch?: boolean
 
+  /**
+   * Project root
+   */
   root?: string
+
+  /**
+   * Custom reporter for output
+   */
+  reporter?: Reporter
 }
 
 export interface ResolvedConfig extends Required<UserOptions> {

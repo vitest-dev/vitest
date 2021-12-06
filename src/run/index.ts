@@ -3,7 +3,7 @@ import { HookListener } from 'vitest'
 import { setupChai } from '../integrations/chai/setup'
 import { clearContext, defaultSuite } from '../suite'
 import { context } from '../context'
-import { File, ResolvedConfig, Task, Reporter, RunnerContext, Suite, RunMode } from '../types'
+import { File, ResolvedConfig, Task, RunnerContext, Suite, RunMode } from '../types'
 import { DefaultReporter } from '../reporters/default'
 import { defaultIncludes, defaultExcludes } from '../constants'
 import { getSnapshotManager } from '../integrations/chai/snapshot'
@@ -164,6 +164,9 @@ export async function runFiles(filesMap: Record<string, File>, ctx: RunnerContex
 }
 
 export async function run(config: ResolvedConfig) {
+  config.reporter = config.reporter || new DefaultReporter()
+  const { reporter } = config
+
   // if watch, tell `vite-node` not to end the process
   if (config.watch)
     process.__vite_node__.watch = true
@@ -197,7 +200,6 @@ export async function run(config: ResolvedConfig) {
   if (config.jsdom)
     (await import('../integrations/jsdom')).setupJSDOM(globalThis)
 
-  const reporter: Reporter = new DefaultReporter()
   await reporter.onStart?.(config)
 
   const filesMap = await collectFiles(testFilepaths)
@@ -215,7 +217,7 @@ export async function run(config: ResolvedConfig) {
         .reduce((tasks, suite) => tasks.concat(suite.tasks), [] as Task[])
     },
     config,
-    reporter,
+    reporter: config.reporter,
   }
 
   await runFiles(filesMap, ctx)
