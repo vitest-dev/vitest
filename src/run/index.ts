@@ -119,9 +119,8 @@ export async function runSuite(suite: Suite, ctx: RunnerContext) {
     try {
       await callHook(suite, 'beforeAll', [suite])
 
-      await Promise.all(suite.tasks.map(i => runTask(i, ctx)))
-      // for (const t of suite.tasks)
-      //   await runTask(t, ctx)
+      for (const t of suite.tasks)
+        await runTask(t, ctx)
 
       await callHook(suite, 'afterAll', [suite])
     }
