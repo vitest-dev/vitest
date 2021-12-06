@@ -7,6 +7,6 @@ const inlineOptions = process.__vite_node__.server.config.test || {}
 const cliOptions = process.__vitest__.options || {}
 
 await run({
-  ...inlineOptions,
   ...cliOptions,
+  ...inlineOptions,
 })
