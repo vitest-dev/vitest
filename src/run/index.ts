@@ -93,7 +93,7 @@ export async function collectFiles(paths: string[]) {
 /**
  * If any items been marked as `only`, mark all other items as `skip`.
  */
-function interpretOnlyMode(items: {mode: RunMode}[]) {
+function interpretOnlyMode(items: { mode: RunMode }[]) {
   if (items.some(i => i.mode === 'only')) {
     items.forEach((i) => {
       if (i.mode === 'run')
@@ -119,8 +119,15 @@ export async function runSuite(suite: Suite, ctx: RunnerContext) {
     try {
       await callHook(suite, 'beforeAll', [suite])
 
-      for (const t of suite.tasks)
-        await runTask(t, ctx)
+      for (const taskGroup of partitionTasks(suite.tasks)) {
+        if (taskGroup[0].concurrent) {
+          await Promise.all(taskGroup.map(t => runTask(t, ctx)))
+        }
+        else {
+          for (const t of taskGroup)
+            await runTask(t, ctx)
+        }
+      }
 
       await callHook(suite, 'afterAll', [suite])
     }
@@ -131,6 +138,27 @@ export async function runSuite(suite: Suite, ctx: RunnerContext) {
     }
   }
   await reporter.onSuiteEnd?.(suite, ctx)
+}
+
+/**
+ * Partition consecutive serial and concurrent tasks in groups
+ */
+function partitionTasks(tasks: Task[]) {
+  let taskGroup: Task[] = []
+  const groupedTasks: Task[][] = []
+  for (const task of tasks) {
+    if (taskGroup.length === 0 || !!task.concurrent === !!taskGroup[0].concurrent) {
+      taskGroup.push(task)
+    }
+    else {
+      groupedTasks.push(taskGroup)
+      taskGroup = [task]
+    }
+  }
+  if (taskGroup.length > 0)
+    groupedTasks.push(taskGroup)
+
+  return groupedTasks
 }
 
 export async function runFile(file: File, ctx: RunnerContext) {
@@ -239,7 +267,7 @@ export async function startWatcher(ctx: RunnerContext) {
   const changedTests = new Set<string>()
   const seen = new Set<string>()
   const { server, moduleCache } = process.__vite_node__
-  server.watcher.on('change', async(id) => {
+  server.watcher.on('change', async (id) => {
     getDependencyTests(id, ctx, changedTests, seen)
     seen.forEach(i => moduleCache.delete(i))
     seen.clear()
@@ -248,7 +276,7 @@ export async function startWatcher(ctx: RunnerContext) {
       return
 
     clearTimeout(timer)
-    timer = setTimeout(async() => {
+    timer = setTimeout(async () => {
       if (changedTests.size === 0)
         return
 
