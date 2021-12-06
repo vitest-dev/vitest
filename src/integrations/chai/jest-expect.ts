@@ -14,6 +14,16 @@ export function JestChaiExpect(): ChaiPlugin {
     utils.addMethod(proto, 'toBe', function(this: Chai.Assertion, expected: any) {
       return this.equal(expected)
     })
+    utils.addMethod(proto, 'toMatchObject', function(this: Chai.Assertion, expected: any) {
+      return this.containSubset(expected)
+    })
+    utils.addMethod(proto, 'toMatch', function(this: Chai.Assertion, expected: string | RegExp) {
+      if (typeof expected === 'string')
+        return this.include(expected)
+      else
+        return this.match(expected)
+    })
+
     utils.addMethod(proto, 'toContain', function(this: Chai.Assertion, item: any) {
       return this.contain(item)
     })
