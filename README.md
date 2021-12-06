@@ -93,6 +93,29 @@ To get TypeScript working with the global APIs, add `vitest/global` to the `type
 }
 ```
 
+## Browser Mocking
+
+Pass `--jsdom` option in CLI to enable browser mocking. Or the `jsdom` flag in the config.
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  test: {
+    jsdom: true
+  }
+})
+```
+
+## Watch Mode
+
+```bash
+$ vitest -w
+```
+
+Vitest will smartly search for the module graph to only rerun the related tests.
+
 ## Filtering
 
 ### Skipping suites and tasks
