@@ -56,7 +56,12 @@ export class DefaultReporter implements Reporter {
       return {
         title: relative(process.cwd(), file.filepath),
         task: () => {
-          return new Listr(file.suites.flatMap((suite) => {
+          if (file.error)
+            throw file.error
+          const suites = file.suites.filter(i => i.tasks.length)
+          if (!suites.length)
+            throw new Error('No tasks found')
+          return new Listr(suites.flatMap((suite) => {
             if (!suite.name)
               return createTasksListr(suite.tasks)
 
