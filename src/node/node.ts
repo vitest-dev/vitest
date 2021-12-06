@@ -26,7 +26,7 @@ export interface ViteNodeOptions {
   root: string
   files: string[]
   _?: string[]
-  shouldExternalize?: (file: string) => boolean
+  shouldExternalize?: (file: string, server: ViteDevServer) => boolean
   config?: string
   defaultConfig?: InlineConfig
 }
@@ -74,6 +74,8 @@ function normalizeId(id: string): string {
     id = `\0${id.slice('/@id/__x00__'.length)}`
   if (id && id.startsWith('/@id/'))
     id = id.slice('/@id/'.length)
+  if (id.startsWith('__vite-browser-external:'))
+    id = id.slice('__vite-browser-external:'.length)
   return id
 }
 
@@ -94,6 +96,31 @@ function toFilePath(id: string, server: ViteDevServer): string {
   return absolute
 }
 
+const stubRequests: Record<string, any> = {
+  '/@vite/client': {
+    injectQuery: (id: string) => id,
+    createHotContext() {
+      return {
+        accept: () => {},
+      }
+    },
+  },
+}
+
+async function transform(server: ViteDevServer, id: string) {
+  if (id.match(/\.(?:[cm]?[jt]sx?|json)$/)) {
+    return await server.transformRequest(id, { ssr: true })
+  }
+  else {
+    // for components like Vue, we want to use the client side
+    // plugins but then covert the code to be consumed by the server
+    const result = await server.transformRequest(id)
+    if (!result)
+      return undefined
+    return await server.ssrTransform(result.code, result.map, id)
+  }
+}
+
 async function execute(files: string[], server: ViteDevServer, options: ViteNodeOptions) {
   const result = []
   for (const file of files)
@@ -112,7 +139,10 @@ async function execute(files: string[], server: ViteDevServer, options: ViteNode
       return cachedRequest(dep, callstack)
     }
 
-    const result = await server.transformRequest(id, { ssr: true })
+    if (id in stubRequests)
+      return stubRequests[id]
+
+    const result = await transform(server, id)
     if (!result)
       throw new Error(`failed to load ${id}`)
 
@@ -140,13 +170,14 @@ async function execute(files: string[], server: ViteDevServer, options: ViteNode
   }
 
   async function cachedRequest(rawId: string, callstack: string[]) {
-    if (builtinModules.includes(rawId))
-      return import(rawId)
-
     const id = normalizeId(rawId)
+
+    if (builtinModules.includes(id))
+      return import(id)
+
     const fsPath = toFilePath(id, server)
 
-    if (options.shouldExternalize!(fsPath))
+    if (options.shouldExternalize!(fsPath, server))
       return import(fsPath)
 
     if (__pendingModules__.has(fsPath))
