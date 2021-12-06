@@ -105,7 +105,7 @@ export class DefaultReporter implements Reporter {
     }
 
     if (failedSuites.length) {
-      console.error(c.bold(`\nFailed to run ${failedSuites.length} suites:`))
+      console.error(c.bold(c.red(`\nFailed to run ${failedSuites.length} suites:`)))
       failedSuites.forEach((i) => {
         console.error(c.red(`\n- ${i.file?.filepath} > ${i.name}`))
         console.error(i.error || 'Unknown error')
@@ -114,7 +114,7 @@ export class DefaultReporter implements Reporter {
     }
 
     if (failed.length) {
-      console.error(c.bold(`\nFailed Tests (${failed.length})`))
+      console.error(c.bold(c.red(`\nFailed Tests (${failed.length})`)))
       failed.forEach((task) => {
         console.error(`\n${CROSS + c.inverse(c.red(' FAIL '))} ${[task.suite.name, task.name].filter(Boolean).join(' > ')} ${c.gray(c.dim(`${task.file?.filepath}`))}`)
         console.error(task.error || 'Unknown error')
@@ -135,17 +135,18 @@ export class DefaultReporter implements Reporter {
   async onWatcherStart(ctx: RunnerContext) {
     await this.listrPromise
 
-    const failed = ctx.tasks.some(i => i.state === 'fail')
-    if (failed)
-      console.log(c.red('\nTests failed. Watching for file changes...'))
+    const failed = ctx.tasks.filter(i => i.state === 'fail')
+    if (failed.length)
+      console.log(`\n${c.bold(c.inverse(c.red(' FAIL ')))}${c.red(` ${failed.length} tests failed. Watching for file changes...`)}`)
     else
-      console.log(c.green('\nWatching for file changes...'))
+      console.log(`\n${c.bold(c.inverse(c.green(' PASS ')))}${c.green(' Watching for file changes...')}`)
   }
 
   async onWatcherRerun(files: string[], trigger: string) {
     await this.listrPromise
 
-    console.log(c.blue(`File ${relative(process.cwd(), trigger)} changed, re-running tests...`))
+    console.clear()
+    console.log(c.blue('Re-running tests...') + c.dim(` [ ${relative(process.cwd(), trigger)} ]\n`))
   }
 
   // TODO:

@@ -250,6 +250,9 @@ export async function startWatcher(ctx: RunnerContext) {
 
     clearTimeout(timer)
     timer = setTimeout(async() => {
+      if (changedTests.size === 0)
+        return
+
       const snapshot = getSnapshotManager()
       const paths = Array.from(changedTests)
       changedTests.clear()
