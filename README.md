@@ -4,8 +4,10 @@
 
 A blazing fast unit test framework powered by Vite.
 
-> **This project is currently in closed beta exclusively for Sponsors.**
+> **This project is currently in closed beta exclusively for Sponsors.**<br>
 > Become a Sponsor of [@patak-js](https://github.com/sponsors/patak-js) or [@antfu](https://github.com/sponsors/antfu) to access the source code and issues tracker.
+
+> ⚠️ **DISCLAIMER**: Vitest is still in development and not stable yet. It's not recommended to use it in production.
 
 ## Features
 
@@ -172,6 +174,15 @@ describe('suite', () => {
     <img src='https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg'/>
   </a>
 </p>
+
+## Credits
+
+Thanks to:
+
+- [@patak-js](https://github.com/patak-js) for the awesome package name!
+- [The Vite team](https://github.com/vitejs/vite) for brainstorming the initial idea.
+- [@pi0](https://github.com/pi0) for the idea and implementation of using Vite to transform and bundle the server code.
+- [@lukeed](https://github.com/lukeed) for the work on [uvu](https://github.com/lukeed/uvu) where we are inspired a lot from.
 
 ## License
 
