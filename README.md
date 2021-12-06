@@ -4,6 +4,9 @@
 
 A blazing fast unit test framework powered by Vite.
 
+> **This project is currently in closed beta exclusively for Sponsors.**
+> Become a Sponsor of [@patak-js](https://github.com/sponsors/patak-js) or [@antfu](https://github.com/sponsors/antfu) to access the source code and issues tracker.
+
 ## Features
 
 - [Vite](https://vitejs.dev/)'s config, transformers, resolvers, and plugins.
@@ -155,7 +158,7 @@ describe('suite', () => {
 - [x] Task filter
 - [x] Mock
 - [x] Global Mode & Types
-- [ ] Concurrent Executing
+- [ ] Parallel Executing
 - [x] CLI Help
 - [x] JSDom
 - [x] Watch

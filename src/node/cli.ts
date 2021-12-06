@@ -1,9 +1,14 @@
+/* eslint-disable no-console */
 import { fileURLToPath } from 'url'
 import { resolve, dirname } from 'path'
 import { findUp } from 'find-up'
 import sade from 'sade'
+import c from 'picocolors'
 import type { UserOptions } from '../types'
 import { run as startViteNode } from './node.js'
+
+console.log(c.yellow(c.bold('\nVitest is currently in closed beta exclusively for Sponsors')))
+console.log(c.magenta(`Become a Sponsor of ${c.underline('https://github.com/sponsors/patak-js')} or ${c.underline('https://github.com/sponsors/antfu')} \nto access the source code and issues tracker 💖\n`))
 
 // TODO: use bundler
 const version = '0.0.0'

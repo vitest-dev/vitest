@@ -43,7 +43,7 @@
     "build": "rimraf dist && tsc -p src/tsconfig.json",
     "lint": "eslint \"{src,test}/**/*.ts\"",
     "prepublishOnly": "nr build",
-    "release": "bumpp --commit --push --tag && pnpm publish",
+    "release": "bumpp --commit --push --tag && esmo scripts/publish.ts",
     "test": "node bin/vitest.mjs --dev",
     "test:update": "nr test -u",
     "watch": "tsc -p src/tsconfig.json --watch"
