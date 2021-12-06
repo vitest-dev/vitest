@@ -1,4 +1,4 @@
-import { it, describe, assert, beforeAll, afterAll, beforeEach, afterEach } from '../src'
+import { it, describe, assert, beforeAll, afterAll, beforeEach, afterEach } from 'vitest'
 
 describe('before and after hooks', () => {
   let eachState = 'start'

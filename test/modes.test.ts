@@ -1,4 +1,4 @@
-import { it, describe, assert } from '../src'
+import { it, describe, assert } from 'vitest'
 
 describe.skip('skipped suite', () => {
   it('no fail as suite is skipped', () => {

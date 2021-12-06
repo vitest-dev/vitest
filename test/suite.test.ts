@@ -1,4 +1,4 @@
-import { it, describe, expect, assert } from '../src'
+import { it, describe, expect, assert } from 'vitest'
 
 describe('suite name', () => {
   it('foo', () => {

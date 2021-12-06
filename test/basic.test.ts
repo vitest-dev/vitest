@@ -1,4 +1,4 @@
-import { expect, test, assert, suite } from '../src'
+import { expect, test, assert, suite } from 'vitest'
 import { two } from './submodule'
 
 test('Math.sqrt()', () => {

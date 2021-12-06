@@ -1,4 +1,4 @@
-import { expect, test } from '../src'
+import { expect, test } from 'vitest'
 
 test('snapshot', () => {
   expect({
