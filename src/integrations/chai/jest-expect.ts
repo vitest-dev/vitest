@@ -62,17 +62,20 @@ export function JestChaiExpect(): ChaiPlugin {
     })
 
     // mock
-    utils.addMethod(proto, 'toBeCalledTimes', function(this: Chai.Assertion, number: number) {
+    utils.addMethod(proto, 'toHaveBeenCalledTimes', function(this: Chai.Assertion, number: number) {
       return this.callCount(number)
     })
-    utils.addMethod(proto, 'toBeCalledOnce', function(this: Chai.Assertion) {
+    utils.addMethod(proto, 'toHaveBeenCalledOnce', function(this: Chai.Assertion) {
       return this.callCount(1)
     })
-    utils.addMethod(proto, 'toBeCalled', function(this: Chai.Assertion) {
+    utils.addMethod(proto, 'toHaveBeenCalled', function(this: Chai.Assertion) {
       return this.called
     })
     utils.addMethod(proto, 'toHaveBeenCalled', function(this: Chai.Assertion) {
       return this.called
+    })
+    utils.addMethod(proto, 'toHaveBeenCalledWith', function(this: Chai.Assertion, ...args: any[]) {
+      return this.calledWith(...args)
     })
   }
 }

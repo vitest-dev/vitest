@@ -35,10 +35,10 @@ declare global {
       toBeNull(): void
       toBeDefined(): void
       toBeInstanceOf(c: any): void
-      toBeCalledTimes(n: number): void
-      toBeCalledOnce(): void
-      toBeCalled(): void
+      toHaveBeenCalledTimes(n: number): void
+      toHaveBeenCalledOnce(): void
       toHaveBeenCalled(): void
+      toHaveBeenCalledWith(...args: any[]): void
     }
     interface ExpectStatic {
       addSnapshotSerializer: import('pretty-format').Plugin

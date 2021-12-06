@@ -9,15 +9,17 @@ describe('mock', () => {
     fn()
 
     expect(fn).toHaveBeenCalled()
-    expect(fn).toBeCalledOnce()
-    expect(fn).toBeCalledTimes(1)
+    expect(fn).toHaveBeenCalledOnce()
+    expect(fn).toHaveBeenCalledTimes(1)
 
     fn.resetHistory()
 
     expect(fn).not.toHaveBeenCalled()
 
-    fn('Hi')
+    fn('Hi', 1)
 
-    expect(fn.lastCall.args).toEqual(['Hi'])
+    expect(fn.lastCall.args).toEqual(['Hi', 1])
+
+    expect(fn).toHaveBeenCalledWith('Hi', 1)
   })
 })
