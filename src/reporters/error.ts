@@ -18,12 +18,15 @@ export async function printError(error: unknown) {
     return
   }
 
+  const { modulesTransformResult } = process.__vite_node__
+
   const e = error as ErrorWithDiff
 
   let codeFramePrinted = false
-  const nearest = parseStack(e.stack || '')[0]
+  const stacks = parseStack(e.stack || '')
+  const nearest = stacks.find(stack => modulesTransformResult.has(stack.file))
   if (nearest) {
-    const transformResult = process.__vite_node__.modulesTransformResult.get(nearest.file)
+    const transformResult = modulesTransformResult.get(nearest.file)
     const pos = await getOriginalPos(transformResult?.map, nearest)
     if (pos && existsSync(nearest.file)) {
       const sourceCode = await fs.readFile(nearest.file, 'utf-8')
@@ -38,7 +41,7 @@ export async function printError(error: unknown) {
     console.error(e)
 
   if (e.showDiff)
-    console.error(generateDiff(stringify(e.actual), stringify(e.expected)))
+    console.error(c.gray(generateDiff(stringify(e.actual), stringify(e.expected))))
 }
 
 interface Poisition {

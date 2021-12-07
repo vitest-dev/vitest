@@ -202,6 +202,7 @@ export async function run(config: ResolvedConfig) {
   await reporter.onStart?.(config)
 
   const filesMap = await collectFiles(testFilepaths)
+  const snapshotManager = getSnapshotManager()
   const ctx: RunnerContext = {
     filesMap,
     get files() {
@@ -216,14 +217,13 @@ export async function run(config: ResolvedConfig) {
         .reduce((tasks, suite) => tasks.concat(suite.tasks), [] as Task[])
     },
     config,
-    reporter: config.reporter,
+    reporter,
+    snapshotManager,
   }
 
   await runFiles(filesMap, ctx)
 
-  const snapshot = getSnapshotManager()
-  snapshot?.saveSnap()
-  snapshot?.report()
+  snapshotManager.saveSnap()
 
   await reporter.onFinished?.(ctx)
 
@@ -232,7 +232,8 @@ export async function run(config: ResolvedConfig) {
 }
 
 export async function startWatcher(ctx: RunnerContext) {
-  await ctx.reporter.onWatcherStart?.(ctx)
+  const { reporter, snapshotManager, filesMap } = ctx
+  await reporter.onWatcherStart?.(ctx)
 
   let timer: any
 
@@ -252,22 +253,21 @@ export async function startWatcher(ctx: RunnerContext) {
       if (changedTests.size === 0)
         return
 
-      const snapshot = getSnapshotManager()
+      snapshotManager.clear()
       const paths = Array.from(changedTests)
       changedTests.clear()
 
-      await ctx.reporter.onWatcherRerun?.(paths, id, ctx)
+      await reporter.onWatcherRerun?.(paths, id, ctx)
       paths.forEach(i => moduleCache.delete(i))
 
-      const files = await collectFiles(paths)
-      Object.assign(ctx.filesMap, files)
-      await runFiles(files, ctx)
+      const newFilesMap = await collectFiles(paths)
+      Object.assign(filesMap, newFilesMap)
+      await runFiles(newFilesMap, ctx)
 
-      // TODO: clear snapshot state
-      snapshot?.saveSnap()
-      snapshot?.report()
+      snapshotManager.saveSnap()
 
-      await ctx.reporter.onWatcherStart?.(ctx)
+      await reporter.onFinished?.(ctx, Object.values(newFilesMap))
+      await reporter.onWatcherStart?.(ctx)
     }, 100)
   })
 }

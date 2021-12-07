@@ -96,13 +96,20 @@ export class DefaultReporter implements Reporter {
       this.taskMap.get(task)?.resolve()
   }
 
-  async onFinished(ctx: RunnerContext) {
+  async onFinished(ctx: RunnerContext, files = ctx.files) {
     await this.listrPromise
 
     this.end = performance.now()
 
     console.log()
-    const { tasks, suites, files } = ctx
+
+    const snapshot = ctx.snapshotManager.report()
+    if (snapshot)
+      console.log(snapshot.join('\n'))
+
+    const suites = files.flatMap(i => i.suites)
+    const tasks = suites.flatMap(i => i.tasks)
+
     const failedFiles = files.filter(i => i.error)
     const failedSuites = suites.filter(i => i.error)
     const runnable = tasks.filter(i => i.state === 'pass' || i.state === 'fail')
