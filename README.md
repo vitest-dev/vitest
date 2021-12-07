@@ -11,16 +11,19 @@ A blazing fast unit test framework powered by Vite.
 
 > Vitest requires Vite v2.7.0 or above
 
+[**Join the Discord!**](https://discord.com/invite/2zYZNngd7y)
+
 ## Features
 
 - [Vite](https://vitejs.dev/)'s config, transformers, resolvers, and plugins.
 - [Jest Snapshot](https://jestjs.io/docs/snapshot-testing)
-- [Chai](https://www.chaijs.com/) for assertions
-- [Sinon](https://sinonjs.org/) for mocking
-- [JSDOM](https://github.com/jsdom/jsdom) for DOM mocking
+- [Chai](https://www.chaijs.com/) built-in for assertions, with [jest-expect](https://jestjs.io/docs/expect) compatible APIs.
+- [Sinon](https://sinonjs.org/) built-in for mocking
+- [JSDOM](https://github.com/jsdom/jsdom) built-in built-in for DOM mocking
+- Components testing ([Vue example](./test/vue), [React example](./test/react))
 - Async suite / test, top level await
 - ESM friendly
-- Out-of-box TypeScript support
+- Out-of-box TypeScript / JSX support
 - Suite and Test filtering (skip, only, todo)
 - [Test coverage](#coverage)
 
