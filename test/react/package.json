@@ -1,7 +1,9 @@
 {
-  "name": "@vitest/test-vue",
+  "name": "@vitest/test-react",
+  "private": true,
   "scripts": {
-    "test": "vitest"
+    "test": "vitest",
+    "coverage": "vitest --coverage"
   },
   "devDependencies": {
     "@types/react": "^17.0.37",

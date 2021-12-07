@@ -91,7 +91,7 @@ export default defineConfig({
 
 To get TypeScript working with the global APIs, add `vitest/global` to the `types` filed in your `tsconfig.json`
 
-```json
+```jsonc
 // tsconfig.json
 {
   "compilerOptions": {
@@ -127,11 +127,10 @@ Vitest smartly searches the module graph and only rerun the related tests (just 
 
 ## Coverage
 
-Vitest does not ship a built-in coverage reporter, but it works perfectly with [c8](https://github.com/bcoe/c8).
+Vitest works perfectly with [c8](https://github.com/bcoe/c8)
 
 ```bash
-$ npm i -D c8
-$ npx c8 vitest
+$ c8 vitest
 ```
 
 ```json
@@ -143,7 +142,13 @@ $ npx c8 vitest
 }
 ```
 
-For more configuration, please refer to [c8](https://github.com/bcoe/c8)'s documentation.
+For convenience, we also provide a shorthand for passing `--coverage` option to CLI, which will wrap the process with `c8` for you. Note when using the shorthand, you will lose the ability to pass additional options to `c8`.
+
+```bash
+$ vitest --coverage
+```
+
+For more configuration avaliable, please refer to [c8](https://github.com/bcoe/c8)'s documentation.
 
 ## Filtering
 

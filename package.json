@@ -48,6 +48,7 @@
     "test:core": "node bin/vitest.mjs --dev -r test/core",
     "test:vue": "node bin/vitest.mjs --dev -r test/vue",
     "test:react": "node bin/vitest.mjs --dev -r test/react",
+    "coverage": "node bin/vitest.mjs --dev -r test/core --coverage",
     "watch": "tsc -p src/tsconfig.json --watch"
   },
   "dependencies": {
@@ -55,6 +56,7 @@
     "@jest/test-result": "^27.4.2",
     "@types/chai": "^4.2.22",
     "@types/sinon-chai": "^3.2.6",
+    "c8": "^7.10.0",
     "chai": "^4.3.4",
     "chai-subset": "^1.6.0",
     "diff": "^5.0.0",
