@@ -29,6 +29,7 @@ sade('vitest [filter]', true)
     const defaultInline = [
       'vue',
       '@vue',
+      'diff',
     ]
 
     const __dirname = dirname(fileURLToPath(import.meta.url))
