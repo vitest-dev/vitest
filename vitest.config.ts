@@ -7,8 +7,4 @@ export default defineConfig({
       vitest: resolve(__dirname, './src/index.ts'),
     },
   },
-  test: {
-    includes: ['test/**/*.test.ts'],
-    excludes: ['**/node_modules/**', '**/fixtures/**'],
-  },
 })

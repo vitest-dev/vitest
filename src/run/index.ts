@@ -230,6 +230,7 @@ export async function run(config: ResolvedConfig) {
   await reporter.onStart?.(config)
 
   const filesMap = await collectFiles(testFilepaths)
+  const snapshotManager = getSnapshotManager()
   const ctx: RunnerContext = {
     filesMap,
     get files() {
@@ -244,30 +245,31 @@ export async function run(config: ResolvedConfig) {
         .reduce((tasks, suite) => tasks.concat(suite.tasks), [] as Task[])
     },
     config,
-    reporter: config.reporter,
+    reporter,
+    snapshotManager,
   }
 
   await runFiles(filesMap, ctx)
 
-  const snapshot = getSnapshotManager()
-  snapshot?.saveSnap()
-  snapshot?.report()
+  snapshotManager.saveSnap()
 
   await reporter.onFinished?.(ctx)
 
   if (config.watch)
-    startWatcher(ctx)
+    await startWatcher(ctx)
 }
 
 export async function startWatcher(ctx: RunnerContext) {
-  await ctx.reporter.onWatcherStart?.(ctx)
+  const { reporter, snapshotManager, filesMap } = ctx
+  await reporter.onWatcherStart?.(ctx)
 
   let timer: any
 
   const changedTests = new Set<string>()
   const seen = new Set<string>()
   const { server, moduleCache } = process.__vite_node__
-  server.watcher.on('change', async (id) => {
+  server.watcher.on('change', async(id) => {
+    id = normalizePath(id)
     getDependencyTests(id, ctx, changedTests, seen)
     seen.forEach(i => moduleCache.delete(i))
     seen.clear()
@@ -280,24 +282,33 @@ export async function startWatcher(ctx: RunnerContext) {
       if (changedTests.size === 0)
         return
 
-      const snapshot = getSnapshotManager()
+      snapshotManager.clear()
       const paths = Array.from(changedTests)
       changedTests.clear()
 
-      await ctx.reporter.onWatcherRerun?.(paths, id, ctx)
+      await reporter.onWatcherRerun?.(paths, id, ctx)
       paths.forEach(i => moduleCache.delete(i))
 
-      const files = await collectFiles(paths)
-      Object.assign(ctx.filesMap, files)
-      await runFiles(files, ctx)
+      const newFilesMap = await collectFiles(paths)
+      Object.assign(filesMap, newFilesMap)
+      await runFiles(newFilesMap, ctx)
 
-      // TODO: clear snapshot state
-      snapshot?.saveSnap()
-      snapshot?.report()
+      snapshotManager.saveSnap()
 
-      await ctx.reporter.onWatcherStart?.(ctx)
+      await reporter.onFinished?.(ctx, Object.values(newFilesMap))
+      await reporter.onWatcherStart?.(ctx)
     }, 100)
   })
+
+  // add an empty promise so it never resolves
+  await new Promise(() => {})
+}
+
+function normalizePath(path: string) {
+  const normalized = path.replace(/\\/g, '/')
+  if (normalized.startsWith('/'))
+    return normalized
+  return `/${normalized}`
 }
 
 function getDependencyTests(id: string, ctx: RunnerContext, set = new Set<string>(), seen = new Set<string>()): Set<string> {

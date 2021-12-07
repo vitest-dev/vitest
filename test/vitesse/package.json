@@ -1,0 +1,18 @@
+{
+  "name": "@vitest/test-vue",
+  "private": true,
+  "scripts": {
+    "test": "vitest",
+    "coverage": "vitest --coverage"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^1.10.1",
+    "@vue/test-utils": "^2.0.0-rc.17",
+    "unplugin-auto-import": "^0.5.1",
+    "unplugin-vue-components": "^0.17.6",
+    "vitest": "workspace:*"
+  },
+  "dependencies": {
+    "vue": "^3.2.24"
+  }
+}

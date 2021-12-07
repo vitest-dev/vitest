@@ -3,7 +3,8 @@ import { performance } from 'perf_hooks'
 import { relative } from 'path'
 import c from 'picocolors'
 import Listr from 'listr'
-import { File, Reporter, RunnerContext, Task } from '../types'
+import { File, Reporter, RunnerContext, Task, ResolvedConfig } from '../types'
+import { printError } from './error'
 
 const CROSS = '✖ '
 
@@ -20,6 +21,16 @@ export class DefaultReporter implements Reporter {
   listr: Listr | null = null
   listrPromise: Promise<void> | null = null
   taskMap: Map<Task, TaskPromise> = new Map()
+  cwd = process.cwd()
+
+  relative(path: string) {
+    return relative(this.cwd, path)
+  }
+
+  onStart(config: ResolvedConfig) {
+    this.cwd = config.root
+    console.log(c.green(`Running tests under ${c.gray(this.cwd)}\n`))
+  }
 
   onCollected(files: File[]) {
     this.start = performance.now()
@@ -54,9 +65,14 @@ export class DefaultReporter implements Reporter {
 
     this.listr = new Listr(files.map((file) => {
       return {
-        title: relative(process.cwd(), file.filepath),
+        title: this.relative(file.filepath),
         task: () => {
-          return new Listr(file.suites.flatMap((suite) => {
+          if (file.error)
+            throw file.error
+          const suites = file.suites.filter(i => i.tasks.length)
+          if (!suites.length)
+            throw new Error('No tasks found')
+          return new Listr(suites.flatMap((suite) => {
             if (!suite.name)
               return createTasksListr(suite.tasks)
 
@@ -80,13 +96,20 @@ export class DefaultReporter implements Reporter {
       this.taskMap.get(task)?.resolve()
   }
 
-  async onFinished(ctx: RunnerContext) {
+  async onFinished(ctx: RunnerContext, files = ctx.files) {
     await this.listrPromise
 
     this.end = performance.now()
 
     console.log()
-    const { tasks, suites, files } = ctx
+
+    const snapshot = ctx.snapshotManager.report()
+    if (snapshot)
+      console.log(snapshot.join('\n'))
+
+    const suites = files.flatMap(i => i.suites)
+    const tasks = suites.flatMap(i => i.tasks)
+
     const failedFiles = files.filter(i => i.error)
     const failedSuites = suites.filter(i => i.error)
     const runnable = tasks.filter(i => i.state === 'pass' || i.state === 'fail')
@@ -96,30 +119,33 @@ export class DefaultReporter implements Reporter {
     const todo = tasks.filter(i => i.state === 'todo')
 
     if (failedFiles.length) {
-      console.error(c.bold(`\nFailed to parse ${failedFiles.length} files:`))
-      failedFiles.forEach((i) => {
-        console.error(c.red(`\n- ${i.filepath}`))
-        console.error(i.error || 'Unknown error')
+      console.error(c.red(c.bold(`\nFailed to parse ${failedFiles.length} files:`)))
+      for (const file of failedFiles)
+        console.error(c.red(`- ${file.filepath}`))
+      console.log()
+
+      for (const file of failedFiles) {
+        await printError(file.error)
         console.log()
-      })
+      }
     }
 
     if (failedSuites.length) {
       console.error(c.bold(c.red(`\nFailed to run ${failedSuites.length} suites:`)))
-      failedSuites.forEach((i) => {
-        console.error(c.red(`\n- ${i.file?.filepath} > ${i.name}`))
-        console.error(i.error || 'Unknown error')
+      for (const suite of failedSuites) {
+        console.error(c.red(`\n- ${suite.file?.filepath} > ${suite.name}`))
+        await printError(suite.error)
         console.log()
-      })
+      }
     }
 
     if (failed.length) {
       console.error(c.bold(c.red(`\nFailed Tests (${failed.length})`)))
-      failed.forEach((task) => {
-        console.error(`\n${CROSS + c.inverse(c.red(' FAIL '))} ${[task.suite.name, task.name].filter(Boolean).join(' > ')} ${c.gray(c.dim(`${task.file?.filepath}`))}`)
-        console.error(task.error || 'Unknown error')
+      for (const task of failed) {
+        console.error(`${c.red(`\n${CROSS + c.inverse(' FAIL ')}`)} ${[task.suite.name, task.name].filter(Boolean).join(' > ')}`)
+        await printError(task.error)
         console.log()
-      })
+      }
     }
 
     console.log(c.bold(c.green(`Passed   ${passed.length} / ${runnable.length}`)))
@@ -146,7 +172,7 @@ export class DefaultReporter implements Reporter {
     await this.listrPromise
 
     console.clear()
-    console.log(c.blue('Re-running tests...') + c.dim(` [ ${relative(process.cwd(), trigger)} ]\n`))
+    console.log(c.blue('Re-running tests...') + c.dim(` [ ${this.relative(trigger)} ]\n`))
   }
 
   // TODO:

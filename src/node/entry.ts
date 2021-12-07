@@ -1,3 +1,4 @@
+import { ResolvedConfig } from '../types'
 import { run } from '../run'
 
 if (!process.__vite_node__ || !process.__vitest__)
@@ -6,7 +7,15 @@ if (!process.__vite_node__ || !process.__vitest__)
 const inlineOptions = process.__vite_node__.server.config.test || {}
 const cliOptions = process.__vitest__.options || {}
 
-await run({
+const options: ResolvedConfig = {
   ...cliOptions,
   ...inlineOptions,
-})
+}
+
+await run(options)
+
+const timer = setTimeout(() => {
+  // TODO: warn user and maybe error out
+  process.exit()
+}, 500)
+timer.unref()

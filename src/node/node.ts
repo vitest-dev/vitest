@@ -2,7 +2,7 @@ import { builtinModules, createRequire } from 'module'
 import { pathToFileURL } from 'url'
 import { dirname, resolve, relative } from 'path'
 import vm from 'vm'
-import { createServer, mergeConfig, InlineConfig, ViteDevServer } from 'vite'
+import { createServer, mergeConfig, InlineConfig, ViteDevServer, TransformResult } from 'vite'
 import c from 'picocolors'
 
 const { red, dim, yellow } = c
@@ -14,19 +14,21 @@ declare global {
         server: ViteDevServer
         watch?: boolean
         moduleCache: Map<string, Promise<any>>
+        modulesTransformResult: Map<string, TransformResult>
       }
     }
   }
 }
 
-const __pendingModules__ = new Map<string, Promise<any>>()
+const moduleCache = new Map<string, Promise<any>>()
+const modulesTransformResult = new Map<string, TransformResult>()
 
 export interface ViteNodeOptions {
   silent?: boolean
   root: string
   files: string[]
   _?: string[]
-  shouldExternalize?: (file: string) => boolean
+  shouldExternalize?: (file: string, server: ViteDevServer) => boolean
   config?: string
   defaultConfig?: InlineConfig
 }
@@ -52,7 +54,8 @@ export async function run(argv: ViteNodeOptions) {
 
   process.__vite_node__ = {
     server,
-    moduleCache: __pendingModules__,
+    moduleCache,
+    modulesTransformResult,
   }
 
   try {
@@ -74,6 +77,8 @@ function normalizeId(id: string): string {
     id = `\0${id.slice('/@id/__x00__'.length)}`
   if (id && id.startsWith('/@id/'))
     id = id.slice('/@id/'.length)
+  if (id.startsWith('__vite-browser-external:'))
+    id = id.slice('__vite-browser-external:'.length)
   return id
 }
 
@@ -94,6 +99,33 @@ function toFilePath(id: string, server: ViteDevServer): string {
   return absolute
 }
 
+const stubRequests: Record<string, any> = {
+  '/@vite/client': {
+    injectQuery: (id: string) => id,
+    createHotContext() {
+      return {
+        accept: () => {},
+        prune: () => {},
+      }
+    },
+    updateStyle() {},
+  },
+}
+
+async function transform(server: ViteDevServer, id: string) {
+  if (id.match(/\.(?:[cm]?[jt]sx?|json)$/)) {
+    return await server.transformRequest(id, { ssr: true })
+  }
+  else {
+    // for components like Vue, we want to use the client side
+    // plugins but then covert the code to be consumed by the server
+    const result = await server.transformRequest(id)
+    if (!result)
+      return undefined
+    return await server.ssrTransform(result.code, result.map, id)
+  }
+}
+
 async function execute(files: string[], server: ViteDevServer, options: ViteNodeOptions) {
   const result = []
   for (const file of files)
@@ -112,9 +144,14 @@ async function execute(files: string[], server: ViteDevServer, options: ViteNode
       return cachedRequest(dep, callstack)
     }
 
-    const result = await server.transformRequest(id, { ssr: true })
+    if (id in stubRequests)
+      return stubRequests[id]
+
+    const result = await transform(server, id)
     if (!result)
       throw new Error(`failed to load ${id}`)
+
+    modulesTransformResult.set(id, result)
 
     const url = pathToFileURL(fsPath)
     const exports = {}
@@ -140,19 +177,20 @@ async function execute(files: string[], server: ViteDevServer, options: ViteNode
   }
 
   async function cachedRequest(rawId: string, callstack: string[]) {
-    if (builtinModules.includes(rawId))
-      return import(rawId)
-
     const id = normalizeId(rawId)
+
+    if (builtinModules.includes(id))
+      return import(id)
+
     const fsPath = toFilePath(id, server)
 
-    if (options.shouldExternalize!(fsPath))
+    if (options.shouldExternalize!(fsPath, server))
       return import(fsPath)
 
-    if (__pendingModules__.has(fsPath))
-      return __pendingModules__.get(fsPath)
-    __pendingModules__.set(fsPath, directRequest(id, fsPath, callstack))
-    return await __pendingModules__.get(fsPath)
+    if (moduleCache.has(fsPath))
+      return moduleCache.get(fsPath)
+    moduleCache.set(fsPath, directRequest(id, fsPath, callstack))
+    return await moduleCache.get(fsPath)
   }
 
   function exportAll(exports: any, sourceModule: any) {

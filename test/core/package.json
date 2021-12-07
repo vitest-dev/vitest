@@ -1,0 +1,11 @@
+{
+  "name": "@vitest/test-core",
+  "private": true,
+  "scripts": {
+    "test": "vitest",
+    "coverage": "vitest --coverage"
+  },
+  "devDependencies": {
+    "vitest": "workspace:*"
+  }
+}

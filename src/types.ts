@@ -1,3 +1,5 @@
+import { SnapshotManager } from './integrations/chai/snapshot/manager'
+
 /* eslint-disable no-use-before-define */
 export type Awaitable<T> = Promise<T> | T
 
@@ -14,6 +16,14 @@ export interface UserOptions {
    * @default ['**\/node_modules\/**']
    */
   excludes?: string[]
+
+  /**
+   * Handling for dependencies inlining or externalizing
+   */
+  deps?: {
+    external?: (string | RegExp)[]
+    inline?: (string | RegExp)[]
+  }
 
   /**
    * Register apis globally
@@ -63,6 +73,7 @@ export interface UserOptions {
 
 export interface ResolvedConfig extends Required<UserOptions> {
   filters?: string[]
+  config?: string
 }
 
 export type RunMode = 'run' | 'skip' | 'only' | 'todo'
@@ -156,6 +167,7 @@ export interface RunnerContext {
   tasks: Task[]
   config: ResolvedConfig
   reporter: Reporter
+  snapshotManager: SnapshotManager
 }
 
 export interface GlobalContext {
@@ -164,9 +176,9 @@ export interface GlobalContext {
 }
 
 export interface Reporter {
-  onStart?: (userOptions: ResolvedConfig) => Awaitable<void>
+  onStart?: (config: ResolvedConfig) => Awaitable<void>
   onCollected?: (files: File[], ctx: RunnerContext) => Awaitable<void>
-  onFinished?: (ctx: RunnerContext) => Awaitable<void>
+  onFinished?: (ctx: RunnerContext, files?: File[]) => Awaitable<void>
 
   onSuiteBegin?: (suite: Suite, ctx: RunnerContext) => Awaitable<void>
   onSuiteEnd?: (suite: Suite, ctx: RunnerContext) => Awaitable<void>
@@ -177,7 +189,4 @@ export interface Reporter {
 
   onWatcherStart?: (ctx: RunnerContext) => Awaitable<void>
   onWatcherRerun?: (files: string[], trigger: string, ctx: RunnerContext) => Awaitable<void>
-
-  // TODO:
-  onSnapshotUpdate?: () => Awaitable<void>
 }

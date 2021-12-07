@@ -103,6 +103,10 @@ export class SnapshotManager {
     }
   }
 
+  clear() {
+    this.snapshotSummary = makeEmptySnapshotSummary(this.snapshotOptions)
+  }
+
   saveSnap(): void {
     if (!this.testFile || !this.snapshotState) return
 
@@ -113,13 +117,12 @@ export class SnapshotManager {
     this.snapshotState = null
   }
 
-  report(): void {
+  report() {
     const outputs = getSnapshotSummaryOutput(
       this.rootDir,
       this.snapshotSummary,
     )
     if (outputs.length > 1)
-      // eslint-disable-next-line no-console
-      console.log(`\n${outputs.join('\n')}`)
+      return outputs
   }
 }

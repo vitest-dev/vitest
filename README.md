@@ -4,21 +4,28 @@
 
 A blazing fast unit test framework powered by Vite.
 
-> **This project is currently in closed beta exclusively for Sponsors.**<br>
+> 💖 **This project is currently in closed beta exclusively for Sponsors.**<br>
 > Become a Sponsor of [@patak-js](https://github.com/sponsors/patak-js) or [@antfu](https://github.com/sponsors/antfu) to access the source code and issues tracker.
 
 > ⚠️ **DISCLAIMER**: Vitest is still in development and not stable yet. It's not recommended to use it in production.
 
+> Vitest requires Vite v2.7.0 or above
+
+[**Join the Discord!**](https://discord.com/invite/2zYZNngd7y)
+
 ## Features
 
-- [Vite](https://vitejs.dev/)'s config, transformers, resolvers, and plugins.
+- [Vite](https://vitejs.dev/)'s config, transformers, resolvers, and plugins. Use the same setup from your app!
 - [Jest Snapshot](https://jestjs.io/docs/snapshot-testing)
-- [Chai](https://www.chaijs.com/) for assertions
-- [Sinon](https://sinonjs.org/) for mocking
-- [JSDOM](https://github.com/jsdom/jsdom) for DOM mocking
+- [Chai](https://www.chaijs.com/) built-in for assertions, with [jest-expect](https://jestjs.io/docs/expect) compatible APIs.
+- [Smart watch mode](#watch-mode), just like HMR for tests!
+- [Code coverage](#coverage)
+- [Sinon](https://sinonjs.org/) built-in for mocking
+- [JSDOM](https://github.com/jsdom/jsdom) built-in for DOM and browser API mocking
+- Components testing ([Vue example](./test/vue), [React example](./test/react))
 - Async suite / test, top level await
 - ESM friendly
-- Out-of-box TypeScript support
+- Out-of-box TypeScript / JSX support
 - Suite and Test filtering (skip, only, todo)
 
 ```ts
@@ -43,6 +50,12 @@ describe('suite name', () => {
 ```bash
 $ npx vitest
 ```
+
+## Examples
+
+- [Unit Testing](./test/core)
+- [Vue Component Testing](./test/vue)
+- [React Component Testing](./test/react)
 
 ## Configuration
 
@@ -82,7 +95,7 @@ export default defineConfig({
 
 To get TypeScript working with the global APIs, add `vitest/global` to the `types` filed in your `tsconfig.json`
 
-```json
+```jsonc
 // tsconfig.json
 {
   "compilerOptions": {
@@ -114,9 +127,49 @@ export default defineConfig({
 $ vitest -w
 ```
 
-Vitest will smartly search for the module graph to only rerun the related tests.
+Vitest smartly searches the module graph and only rerun the related tests (just like how HMR works in Vite!).
+
+## Coverage
+
+Vitest works perfectly with [c8](https://github.com/bcoe/c8)
+
+```bash
+$ c8 vitest
+```
+
+```json
+{
+  "scripts": {
+    "test": "vitest",
+    "coverage": "c8 vitest"
+  }
+}
+```
+
+For convenience, we also provide a shorthand for passing `--coverage` option to CLI, which will wrap the process with `c8` for you. Note when using the shorthand, you will lose the ability to pass additional options to `c8`.
+
+```bash
+$ vitest --coverage
+```
+
+For more configuration avaliable, please refer to [c8](https://github.com/bcoe/c8)'s documentation.
 
 ## Filtering
+
+### CLI
+
+You can use CLI to filter test files my name:
+
+```bash
+$ vitest basic
+```
+
+Will only execute test files that contain `basic`, e.g.
+
+```
+basic.test.ts
+basic-foo.test.ts
+```
 
 ### Skipping suites and tasks
 
@@ -176,19 +229,6 @@ describe('suite', () => {
   it.todo('unimplemented task')
 })
 ```
-
-## TODO
-
-- [x] Reporter & Better output
-- [x] Task filter
-- [x] Mock
-- [x] Global Mode & Types
-- [ ] Parallel Executing
-- [x] CLI Help
-- [x] JSDom
-- [x] Watch
-- [ ] Source Map
-- [ ] Coverage
 
 ## Sponsors
 
