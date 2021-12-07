@@ -13,3 +13,9 @@ const options: ResolvedConfig = {
 }
 
 await run(options)
+
+const timer = setTimeout(() => {
+  // TODO: warn user and maybe error out
+  process.exit()
+}, 500)
+timer.unref()

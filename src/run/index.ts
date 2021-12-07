@@ -228,7 +228,7 @@ export async function run(config: ResolvedConfig) {
   await reporter.onFinished?.(ctx)
 
   if (config.watch)
-    startWatcher(ctx)
+    await startWatcher(ctx)
 }
 
 export async function startWatcher(ctx: RunnerContext) {
@@ -241,6 +241,7 @@ export async function startWatcher(ctx: RunnerContext) {
   const seen = new Set<string>()
   const { server, moduleCache } = process.__vite_node__
   server.watcher.on('change', async(id) => {
+    id = normalizePath(id)
     getDependencyTests(id, ctx, changedTests, seen)
     seen.forEach(i => moduleCache.delete(i))
     seen.clear()
@@ -270,6 +271,16 @@ export async function startWatcher(ctx: RunnerContext) {
       await reporter.onWatcherStart?.(ctx)
     }, 100)
   })
+
+  // add an empty promise so it never resolves
+  await new Promise(() => {})
+}
+
+function normalizePath(path: string) {
+  const normalized = path.replace(/\\/g, '/')
+  if (normalized.startsWith('/'))
+    return normalized
+  return `/${normalized}`
 }
 
 function getDependencyTests(id: string, ctx: RunnerContext, set = new Set<string>(), seen = new Set<string>()): Set<string> {

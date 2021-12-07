@@ -22,6 +22,7 @@ A blazing fast unit test framework powered by Vite.
 - ESM friendly
 - Out-of-box TypeScript support
 - Suite and Test filtering (skip, only, todo)
+- [Test coverage](#coverage)
 
 ```ts
 import { it, describe, expect, assert } from 'vitest'
@@ -45,6 +46,12 @@ describe('suite name', () => {
 ```bash
 $ npx vitest
 ```
+
+## Examples
+
+- [Unit Testing](./test/core)
+- [Vue Component Testing](./test/vue)
+- [React Component Testing](./test/react)
 
 ## Configuration
 
@@ -84,7 +91,7 @@ export default defineConfig({
 
 To get TypeScript working with the global APIs, add `vitest/global` to the `types` filed in your `tsconfig.json`
 
-```json
+```jsonc
 // tsconfig.json
 {
   "compilerOptions": {
@@ -117,6 +124,31 @@ $ vitest -w
 ```
 
 Vitest smartly searches the module graph and only rerun the related tests (just like how HMR works in Vite!).
+
+## Coverage
+
+Vitest works perfectly with [c8](https://github.com/bcoe/c8)
+
+```bash
+$ c8 vitest
+```
+
+```json
+{
+  "scripts": {
+    "test": "vitest",
+    "coverage": "c8 vitest"
+  }
+}
+```
+
+For convenience, we also provide a shorthand for passing `--coverage` option to CLI, which will wrap the process with `c8` for you. Note when using the shorthand, you will lose the ability to pass additional options to `c8`.
+
+```bash
+$ vitest --coverage
+```
+
+For more configuration avaliable, please refer to [c8](https://github.com/bcoe/c8)'s documentation.
 
 ## Filtering
 
@@ -193,19 +225,6 @@ describe('suite', () => {
   it.todo('unimplemented task')
 })
 ```
-
-## TODO
-
-- [x] Reporter & Better output
-- [x] Task filter
-- [x] Mock
-- [x] Global Mode & Types
-- [ ] Parallel Executing
-- [x] CLI Help
-- [x] JSDom
-- [x] Watch
-- [ ] Source Map
-- [ ] Coverage
 
 ## Sponsors
 
