@@ -1,5 +1,5 @@
 <p align="center">
-<img src="https://user-images.githubusercontent.com/11247099/145111547-db79cf70-dcfd-45ce-8f18-5684edc56828.png" height="200">
+<img src="https://user-images.githubusercontent.com/11247099/145112184-a9ff6727-661c-439d-9ada-963124a281f7.png" height="200">
 </p>
 
 <h1 align="center">
@@ -9,7 +9,7 @@ Vitest
 A blazing fast unit test framework powered by Vite.
 <p>
 <p align="center">
-  <a herf="https://www.npmjs.com/package/vitest"><img src="https://img.shields.io/npm/v/vitest?color=a1b858&label="></a>
+  <a href="https://www.npmjs.com/package/vitest"><img src="https://img.shields.io/npm/v/vitest?color=a1b858&label="></a>
 <p>
 
 > 💖 **This project is currently in closed beta exclusively for Sponsors.**<br>
