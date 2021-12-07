@@ -115,11 +115,39 @@ function createTestCollector(collectTask: (name: string, fn: TestFunction, mode:
 }
 
 // apis
-export const test = (name: string, fn: TestFunction) => getCurrentSuite().test(name, fn)
-test.concurrent = (name: string, fn: TestFunction, timeout?: number) => getCurrentSuite().test.concurrent(name, fn, timeout)
-test.skip = (name: string, fn: TestFunction) => getCurrentSuite().test.skip(name, fn)
-test.only = (name: string, fn: TestFunction) => getCurrentSuite().test.only(name, fn)
-test.todo = (name: string) => getCurrentSuite().test.todo(name)
+
+export const test = (function() {
+  function test(name: string, fn: TestFunction) {
+    return getCurrentSuite().test(name, fn)
+  }
+  function concurrent(name: string, fn: TestFunction, timeout?: number) {
+    return getCurrentSuite().test.concurrent(name, fn, timeout)
+  }
+
+  concurrent.skip = (name: string, fn: TestFunction, timeout?: number) => getCurrentSuite().test.concurrent.skip(name, fn, timeout)
+  concurrent.only = (name: string, fn: TestFunction, timeout?: number) => getCurrentSuite().test.concurrent.only(name, fn, timeout)
+  concurrent.todo = (name: string) => getCurrentSuite().test.concurrent.todo(name)
+
+  function skip(name: string, fn: TestFunction) {
+    return getCurrentSuite().test.skip(name, fn)
+  }
+  skip.concurrent = (name: string, fn: TestFunction, timeout?: number) => getCurrentSuite().test.skip.concurrent(name, fn, timeout)
+  function only(name: string, fn: TestFunction) {
+    return getCurrentSuite().test.only(name, fn)
+  }
+  only.concurrent = (name: string, fn: TestFunction, timeout?: number) => getCurrentSuite().test.only.concurrent(name, fn, timeout)
+  function todo(name: string) {
+    return getCurrentSuite().test.todo(name)
+  }
+  todo.concurrent = (name: string) => getCurrentSuite().test.todo.concurrent(name)
+
+  test.concurrent = concurrent
+  test.skip = skip
+  test.only = only
+  test.todo = todo
+
+  return test
+})()
 
 export function suite(suiteName: string, factory?: TestFactory) {
   return createSuiteCollector(suiteName, factory, 'run')
