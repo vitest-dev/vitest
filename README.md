@@ -22,6 +22,7 @@ A blazing fast unit test framework powered by Vite.
 - ESM friendly
 - Out-of-box TypeScript support
 - Suite and Test filtering (skip, only, todo)
+- [Test coverage](#coverage)
 
 ```ts
 import { it, describe, expect, assert } from 'vitest'
@@ -124,6 +125,26 @@ $ vitest -w
 
 Vitest smartly searches the module graph and only rerun the related tests (just like how HMR works in Vite!).
 
+## Coverage
+
+Vitest does not ship a built-in coverage reporter, but it works perfectly with [c8](https://github.com/bcoe/c8).
+
+```bash
+$ npm i -D c8
+$ npx c8 vitest
+```
+
+```json
+{
+  "scripts": {
+    "test": "vitest",
+    "coverage": "c8 vitest"
+  }
+}
+```
+
+For more configuration, please refer to [c8](https://github.com/bcoe/c8)'s documentation.
+
 ## Filtering
 
 ### CLI
@@ -199,19 +220,6 @@ describe('suite', () => {
   it.todo('unimplemented task')
 })
 ```
-
-## TODO
-
-- [x] Reporter & Better output
-- [x] Task filter
-- [x] Mock
-- [x] Global Mode & Types
-- [ ] Parallel Executing
-- [x] CLI Help
-- [x] JSDom
-- [x] Watch
-- [ ] Source Map
-- [ ] Coverage
 
 ## Sponsors
 
