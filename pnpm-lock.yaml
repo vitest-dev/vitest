@@ -6,9 +6,11 @@ importers:
     specifiers:
       '@antfu/eslint-config': ^0.12.1
       '@antfu/ni': ^0.11.0
+      '@antfu/utils': ^0.3.0
       '@jest/test-result': ^27.4.2
       '@types/chai': ^4.2.22
       '@types/chai-subset': ^1.3.3
+      '@types/diff': ^5.0.1
       '@types/jsdom': ^16.2.13
       '@types/listr': ^0.14.4
       '@types/node': ^16.11.11
@@ -19,6 +21,7 @@ importers:
       bumpp: ^7.1.1
       chai: ^4.3.4
       chai-subset: ^1.6.0
+      diff: ^5.0.0
       eslint: ^8.4.0
       esno: ^0.12.1
       fast-glob: ^3.2.7
@@ -33,15 +36,18 @@ importers:
       sade: ^1.7.4
       sinon: ^12.0.1
       sinon-chai: ^3.7.0
+      source-map: ^0.7.3
       typescript: ^4.5.2
       vite: ^2.7.0
       vue: ^3.2.24
     dependencies:
+      '@antfu/utils': 0.3.0
       '@jest/test-result': 27.4.2
       '@types/chai': 4.2.22
       '@types/sinon-chai': 3.2.6
       chai: 4.3.4
       chai-subset: 1.6.0
+      diff: 5.0.0
       fast-glob: 3.2.7
       find-up: 6.2.0
       jest-snapshot: 27.4.2
@@ -52,10 +58,12 @@ importers:
       sade: 1.7.4
       sinon: 12.0.1
       sinon-chai: 3.7.0_chai@4.3.4+sinon@12.0.1
+      source-map: 0.7.3
     devDependencies:
       '@antfu/eslint-config': 0.12.1_eslint@8.4.0+typescript@4.5.2
       '@antfu/ni': 0.11.0
       '@types/chai-subset': 1.3.3
+      '@types/diff': 5.0.1
       '@types/jsdom': 16.2.13
       '@types/listr': 0.14.4
       '@types/node': 16.11.11
@@ -166,6 +174,12 @@ packages:
     resolution: {integrity: sha512-+Iep4kXORK9tTr+ZYWln2H1LO3YHRgHKnafiWxXokLV5nE6U7hY1NyVjBVyhYU7TJIAskE4sZmvgZznzuHo2lg==}
     hasBin: true
     dev: true
+
+  /@antfu/utils/0.3.0:
+    resolution: {integrity: sha512-UU8TLr/EoXdg7OjMp0h9oDoIAVr+Z/oW9cpOxQQyrsz6Qzd2ms/1CdWx8fl2OQdFpxGmq5Vc4TwfLHId6nAZjA==}
+    dependencies:
+      '@types/throttle-debounce': 2.1.0
+    dev: false
 
   /@babel/code-frame/7.12.13:
     resolution: {integrity: sha512-HV1Cm0Q3ZrpCR93tkWOYiuYIgLxZXZFVG2VgK+MBWjUqZTundupbfx2aXarXuw5Ko5aMcjtJgbSs4vUGBS5v6g==}
@@ -671,6 +685,10 @@ packages:
   /@types/chai/4.2.22:
     resolution: {integrity: sha512-tFfcE+DSTzWAgifkjik9AySNqIyNoYwmR+uecPwwD/XRNfvOjmC/FjCxpiUGDkDVDphPfCUecSQVFw+lN3M3kQ==}
 
+  /@types/diff/5.0.1:
+    resolution: {integrity: sha512-XIpxU6Qdvp1ZE6Kr3yrkv1qgUab0fyf4mHYvW8N3Bx3PCsbN6or1q9/q72cv5jIFWolaGH08U9XyYoLLIykyKQ==}
+    dev: true
+
   /@types/graceful-fs/4.1.5:
     resolution: {integrity: sha512-anKkLmZZ+xm4p8JWBf4hElkM4XR+EZeA2M9BAkkTldmcyDY4mbdIJnRghDJH3Ov5ooY7/UAoENtmdMSkaAd7Cw==}
     dependencies:
@@ -755,6 +773,10 @@ packages:
 
   /@types/stack-utils/2.0.0:
     resolution: {integrity: sha512-RJJrrySY7A8havqpGObOB4W92QXKJo63/jFLLgpvOtsGUqbQZ9Sbgl35KMm1DjC6j7AvmmU2bIno+3IyEaemaw==}
+    dev: false
+
+  /@types/throttle-debounce/2.1.0:
+    resolution: {integrity: sha512-5eQEtSCoESnh2FsiLTxE121IiE60hnMqcb435fShf4bpLRjEu1Eoekht23y6zXS9Ts3l+Szu3TARnTsA0GkOkQ==}
     dev: false
 
   /@types/tough-cookie/4.0.1:
@@ -3861,6 +3883,11 @@ packages:
   /source-map/0.6.1:
     resolution: {integrity: sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g==}
     engines: {node: '>=0.10.0'}
+
+  /source-map/0.7.3:
+    resolution: {integrity: sha512-CkCj6giN3S+n9qrYiBTX5gystlENnRW5jZeNLHpe6aue+SrHcG5VYwujhW9s4dY31mEGsxBDrHR6oI69fTXsaQ==}
+    engines: {node: '>= 8'}
+    dev: false
 
   /sourcemap-codec/1.4.8:
     resolution: {integrity: sha512-9NykojV5Uih4lgo5So5dtw+f0JgJX30KCNI8gwhz2J9A15wD0Ml6tjHKwf6fTSa6fAdVBdZeNOs9eJ71qCk8vA==}

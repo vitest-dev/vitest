@@ -2,7 +2,7 @@ import { builtinModules, createRequire } from 'module'
 import { pathToFileURL } from 'url'
 import { dirname, resolve, relative } from 'path'
 import vm from 'vm'
-import { createServer, mergeConfig, InlineConfig, ViteDevServer } from 'vite'
+import { createServer, mergeConfig, InlineConfig, ViteDevServer, TransformResult } from 'vite'
 import c from 'picocolors'
 
 const { red, dim, yellow } = c
@@ -14,12 +14,14 @@ declare global {
         server: ViteDevServer
         watch?: boolean
         moduleCache: Map<string, Promise<any>>
+        modulesTransformResult: Map<string, TransformResult>
       }
     }
   }
 }
 
-const __pendingModules__ = new Map<string, Promise<any>>()
+const moduleCache = new Map<string, Promise<any>>()
+const modulesTransformResult = new Map<string, TransformResult>()
 
 export interface ViteNodeOptions {
   silent?: boolean
@@ -52,7 +54,8 @@ export async function run(argv: ViteNodeOptions) {
 
   process.__vite_node__ = {
     server,
-    moduleCache: __pendingModules__,
+    moduleCache,
+    modulesTransformResult,
   }
 
   try {
@@ -146,6 +149,8 @@ async function execute(files: string[], server: ViteDevServer, options: ViteNode
     if (!result)
       throw new Error(`failed to load ${id}`)
 
+    modulesTransformResult.set(id, result)
+
     const url = pathToFileURL(fsPath)
     const exports = {}
 
@@ -180,10 +185,10 @@ async function execute(files: string[], server: ViteDevServer, options: ViteNode
     if (options.shouldExternalize!(fsPath, server))
       return import(fsPath)
 
-    if (__pendingModules__.has(fsPath))
-      return __pendingModules__.get(fsPath)
-    __pendingModules__.set(fsPath, directRequest(id, fsPath, callstack))
-    return await __pendingModules__.get(fsPath)
+    if (moduleCache.has(fsPath))
+      return moduleCache.get(fsPath)
+    moduleCache.set(fsPath, directRequest(id, fsPath, callstack))
+    return await moduleCache.get(fsPath)
   }
 
   function exportAll(exports: any, sourceModule: any) {
