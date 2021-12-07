@@ -1,0 +1,16 @@
+{
+  "name": "@vitest/test-vue",
+  "scripts": {
+    "test": "vitest"
+  },
+  "devDependencies": {
+    "@types/react": "^17.0.37",
+    "@types/react-test-renderer": "^17.0.1",
+    "@vitejs/plugin-react": "1.1.1",
+    "react-test-renderer": "17.0.2",
+    "vitest": "workspace:*"
+  },
+  "dependencies": {
+    "react": "^17.0.2"
+  }
+}

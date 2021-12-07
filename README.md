@@ -46,6 +46,12 @@ describe('suite name', () => {
 $ npx vitest
 ```
 
+## Examples
+
+- [Unit Testing](./test/core)
+- [Vue Component Testing](./test/vue)
+- [React Component Testing](./test/react)
+
 ## Configuration
 
 `vitest` will read your root `vite.config.ts` when it present to match with the plugins and setup as your Vite app. If you want to it to have a different configuration for testing, you could either:

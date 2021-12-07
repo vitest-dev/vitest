@@ -11,6 +11,7 @@
     "skipDefaultLibCheck": true,
     "skipLibCheck": true,
     "outDir": "./dist",
+    "jsx": "react",
     "declaration": true,
     "paths": {
       "vitest": ["./src/index.ts"]
