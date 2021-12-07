@@ -105,8 +105,10 @@ const stubRequests: Record<string, any> = {
     createHotContext() {
       return {
         accept: () => {},
+        prune: () => {},
       }
     },
+    updateStyle() {},
   },
 }
 

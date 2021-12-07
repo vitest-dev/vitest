@@ -1,5 +1,5 @@
 import { expect, test, assert, suite } from 'vitest'
-import { two } from './submodule'
+import { two } from '../test/submodule'
 
 test('Math.sqrt()', () => {
   assert.equal(Math.sqrt(4), two)
