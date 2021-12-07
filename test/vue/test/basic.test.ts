@@ -1,22 +1,23 @@
-import { createApp } from 'vue'
+import { mount } from '@vue/test-utils'
 import Hello from '../components/Hello.vue'
-
-function mount(Comp: any, props: any) {
-  const root = window.document.createElement('div')
-  const app = createApp(Comp, props)
-  const instance = app.mount(root)
-  return {
-    root,
-    app,
-    instance,
-  }
-}
 
 test('mount component', async() => {
   expect(Hello).toBeTruthy()
 
-  const { root } = mount(Hello, { count: 4 })
+  const wrapper = mount(Hello, {
+    props: {
+      count: 4,
+    },
+  })
 
-  expect(root.textContent).toContain('4 x 2 = 8')
-  expect(root.innerHTML).toMatchSnapshot()
+  expect(wrapper.text()).toContain('4 x 2 = 8')
+  expect(wrapper.html()).toMatchSnapshot()
+
+  await wrapper.get('button').trigger('click')
+
+  expect(wrapper.text()).toContain('4 x 3 = 12')
+
+  await wrapper.get('button').trigger('click')
+
+  expect(wrapper.text()).toContain('4 x 4 = 16')
 })
