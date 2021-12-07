@@ -4,7 +4,7 @@
 
 A blazing fast unit test framework powered by Vite.
 
-> **This project is currently in closed beta exclusively for Sponsors.**<br>
+> 💖 **This project is currently in closed beta exclusively for Sponsors.**<br>
 > Become a Sponsor of [@patak-js](https://github.com/sponsors/patak-js) or [@antfu](https://github.com/sponsors/antfu) to access the source code and issues tracker.
 
 > ⚠️ **DISCLAIMER**: Vitest is still in development and not stable yet. It's not recommended to use it in production.
@@ -19,7 +19,7 @@ A blazing fast unit test framework powered by Vite.
 - [Jest Snapshot](https://jestjs.io/docs/snapshot-testing)
 - [Chai](https://www.chaijs.com/) built-in for assertions, with [jest-expect](https://jestjs.io/docs/expect) compatible APIs.
 - [Sinon](https://sinonjs.org/) built-in for mocking
-- [JSDOM](https://github.com/jsdom/jsdom) built-in built-in for DOM mocking
+- [JSDOM](https://github.com/jsdom/jsdom) built-in for DOM and browser API mocking
 - Components testing ([Vue example](./test/vue), [React example](./test/react))
 - Async suite / test, top level await
 - ESM friendly
