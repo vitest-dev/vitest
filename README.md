@@ -114,9 +114,24 @@ export default defineConfig({
 $ vitest -w
 ```
 
-Vitest will smartly search for the module graph to only rerun the related tests.
+Vitest smartly searches the module graph and only rerun the related tests (just like how HMR works in Vite!).
 
 ## Filtering
+
+### CLI
+
+You can use CLI to filter test files my name:
+
+```bash
+$ vitest basic
+```
+
+Will only execute test files that contain `basic`, e.g.
+
+```
+basic.test.ts
+basic-foo.test.ts
+```
 
 ### Skipping suites and tasks
 
