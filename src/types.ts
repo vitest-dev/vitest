@@ -146,7 +146,7 @@ export interface GlobalContext {
 }
 
 export interface Reporter {
-  onStart?: (userOptions: ResolvedConfig) => Awaitable<void>
+  onStart?: (config: ResolvedConfig) => Awaitable<void>
   onCollected?: (files: File[], ctx: RunnerContext) => Awaitable<void>
   onFinished?: (ctx: RunnerContext) => Awaitable<void>
 

@@ -17,5 +17,6 @@ test('mount component', async() => {
 
   const { root } = mount(Hello, { count: 4 })
 
-  expect(root.innerHTML).toContain('<div>4 x 2 = 8</div>')
+  expect(root.textContent).toContain('4 x 2 = 8')
+  expect(root.innerHTML).toMatchSnapshot()
 })

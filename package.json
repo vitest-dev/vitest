@@ -44,7 +44,8 @@
     "lint": "eslint \"{src,test}/**/*.ts\"",
     "prepublishOnly": "nr build",
     "release": "bumpp --commit --push --tag && esmo scripts/publish.ts",
-    "test": "node bin/vitest.mjs --dev -r test/core",
+    "test": "run-s test:*",
+    "test:core": "node bin/vitest.mjs --dev -r test/core",
     "test:vue": "node bin/vitest.mjs --dev -r test/vue",
     "watch": "tsc -p src/tsconfig.json --watch"
   },
@@ -65,6 +66,9 @@
     "sinon": "^12.0.1",
     "sinon-chai": "^3.7.0"
   },
+  "peerDependencies": {
+    "vite": "^2.7.0"
+  },
   "devDependencies": {
     "@antfu/eslint-config": "^0.12.1",
     "@antfu/ni": "^0.11.0",
@@ -78,6 +82,7 @@
     "bumpp": "^7.1.1",
     "eslint": "^8.4.0",
     "esno": "^0.12.1",
+    "npm-run-all": "^4.1.5",
     "rimraf": "^3.0.2",
     "typescript": "^4.5.2",
     "vite": "^2.7.0",

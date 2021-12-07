@@ -3,7 +3,7 @@ import { performance } from 'perf_hooks'
 import { relative } from 'path'
 import c from 'picocolors'
 import Listr from 'listr'
-import { File, Reporter, RunnerContext, Task } from '../types'
+import { File, Reporter, RunnerContext, Task, ResolvedConfig } from '../types'
 
 const CROSS = '✖ '
 
@@ -20,6 +20,16 @@ export class DefaultReporter implements Reporter {
   listr: Listr | null = null
   listrPromise: Promise<void> | null = null
   taskMap: Map<Task, TaskPromise> = new Map()
+  cwd = process.cwd()
+
+  relative(path: string) {
+    return relative(this.cwd, path)
+  }
+
+  onStart(config: ResolvedConfig) {
+    this.cwd = config.root
+    console.log(c.green(`Running tests under ${c.gray(this.cwd)}\n`))
+  }
 
   onCollected(files: File[]) {
     this.start = performance.now()
@@ -54,7 +64,7 @@ export class DefaultReporter implements Reporter {
 
     this.listr = new Listr(files.map((file) => {
       return {
-        title: relative(process.cwd(), file.filepath),
+        title: this.relative(file.filepath),
         task: () => {
           if (file.error)
             throw file.error
@@ -151,7 +161,7 @@ export class DefaultReporter implements Reporter {
     await this.listrPromise
 
     console.clear()
-    console.log(c.blue('Re-running tests...') + c.dim(` [ ${relative(process.cwd(), trigger)} ]\n`))
+    console.log(c.blue('Re-running tests...') + c.dim(` [ ${this.relative(trigger)} ]\n`))
   }
 
   // TODO:
