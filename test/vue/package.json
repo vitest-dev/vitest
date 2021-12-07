@@ -1,0 +1,12 @@
+{
+  "name": "@vitest/test-vue",
+  "scripts": {
+    "test": "vitest"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^1.10.1",
+    "@vue/test-utils": "^2.0.0-rc.17",
+    "vue": "^3.2.24",
+    "vitest": "workspace:*"
+  }
+}
