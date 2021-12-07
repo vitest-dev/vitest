@@ -16,6 +16,14 @@ export interface UserOptions {
   excludes?: string[]
 
   /**
+   * Handling for dependencies inlining or externalizing
+   */
+  deps?: {
+    external?: (string | RegExp)[]
+    inline?: (string | RegExp)[]
+  }
+
+  /**
    * Register apis globally
    *
    * @default false
@@ -63,6 +71,7 @@ export interface UserOptions {
 
 export interface ResolvedConfig extends Required<UserOptions> {
   filters?: string[]
+  config?: string
 }
 
 export type RunMode = 'run' | 'skip' | 'only' | 'todo'

@@ -45,7 +45,7 @@
     "prepublishOnly": "nr build",
     "release": "bumpp --commit --push --tag && esmo scripts/publish.ts",
     "test": "node bin/vitest.mjs --dev -r test/core",
-    "test:update": "nr test -u",
+    "test:vue": "node bin/vitest.mjs --dev -r test/vue",
     "watch": "tsc -p src/tsconfig.json --watch"
   },
   "dependencies": {
@@ -74,11 +74,13 @@
     "@types/node": "^16.11.11",
     "@types/sade": "^1.7.3",
     "@types/sinon": "^10.0.6",
+    "@vitejs/plugin-vue": "^1.10.1",
     "bumpp": "^7.1.1",
     "eslint": "^8.4.0",
     "esno": "^0.12.1",
     "rimraf": "^3.0.2",
     "typescript": "^4.5.2",
-    "vite": "^2.6.14"
+    "vite": "^2.7.0",
+    "vue": "^3.2.24"
   }
 }

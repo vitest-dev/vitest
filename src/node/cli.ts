@@ -4,7 +4,7 @@ import { resolve, dirname } from 'path'
 import { findUp } from 'find-up'
 import sade from 'sade'
 import c from 'picocolors'
-import type { UserOptions } from '../types'
+import type { ResolvedConfig, UserOptions } from '../types'
 import { run as startViteNode } from './node.js'
 
 console.log(c.yellow(c.bold('\nVitest is currently in closed beta exclusively for Sponsors')))
@@ -23,15 +23,21 @@ sade('vitest [filter]', true)
   .option('--global', 'inject apis globally', false)
   .option('--dev', 'dev mode', false)
   .option('--jsdom', 'mock browser api using JSDOM', false)
-  .action(async(filters, options) => {
+  .action(async(filters, argv) => {
     process.env.VITEST = 'true'
 
-    const __dirname = dirname(fileURLToPath(import.meta.url))
-    const root = resolve(options.root || process.cwd())
+    const defaultInline = [
+      'vue',
+      '@vue',
+    ]
 
-    const configPath = options.config
-      ? resolve(root, options.config)
+    const __dirname = dirname(fileURLToPath(import.meta.url))
+    const root = resolve(argv.root || process.cwd())
+    const configPath = argv.config
+      ? resolve(root, argv.config)
       : await findUp(['vitest.config.ts', 'vitest.config.js', 'vitest.config.mjs', 'vite.config.ts', 'vite.config.js', 'vite.config.mjs'], { cwd: root })
+
+    const options = argv as ResolvedConfig
 
     options.config = configPath
     options.root = root
@@ -48,7 +54,7 @@ sade('vitest [filter]', true)
     await startViteNode({
       root,
       files: [
-        resolve(__dirname, options.dev ? '../../src/node/entry.ts' : './entry.js'),
+        resolve(__dirname, argv.dev ? '../../src/node/entry.ts' : './entry.js'),
       ],
       config: configPath,
       defaultConfig: {
@@ -58,11 +64,31 @@ sade('vitest [filter]', true)
           ],
         },
       },
-      shouldExternalize(id: string) {
-        if (id.includes('/node_modules/vitest/'))
-          return false
-        else
-          return id.includes('/node_modules/')
+      shouldExternalize(id, server) {
+        const inline = ['vitest', ...defaultInline, ...server.config.test?.deps?.inline || []]
+        const external = server.config.test?.deps?.external || []
+        for (const ex of inline) {
+          if (typeof ex === 'string') {
+            if (id.includes(`/node_modules/${ex}/`))
+              return false
+          }
+          else {
+            if (ex.test(id))
+              return false
+          }
+        }
+        for (const ex of external) {
+          if (typeof ex === 'string') {
+            if (id.includes(`/node_modules/${ex}/`))
+              return true
+          }
+          else {
+            if (ex.test(id))
+              return true
+          }
+        }
+
+        return id.includes('/node_modules/')
       },
     })
   })
