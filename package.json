@@ -80,12 +80,7 @@
     "esno": "^0.12.1",
     "rimraf": "^3.0.2",
     "typescript": "^4.5.2",
-    "vite": "^2.6.14",
+    "vite": "^2.7.0",
     "vue": "^3.2.24"
-  },
-  "pnpm": {
-    "overrides": {
-      "vite": "../vite/packages/vite"
-    }
   }
 }

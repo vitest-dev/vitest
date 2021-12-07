@@ -1,8 +1,5 @@
 lockfileVersion: 5.3
 
-overrides:
-  vite: ../vite/packages/vite
-
 importers:
 
   .:
@@ -19,7 +16,6 @@ importers:
       '@types/sinon': ^10.0.6
       '@types/sinon-chai': ^3.2.6
       '@vitejs/plugin-vue': ^1.10.1
-      '@vue/test-utils': ^2.0.0-rc.17
       bumpp: ^7.1.1
       chai: ^4.3.4
       chai-subset: ^1.6.0
@@ -37,7 +33,7 @@ importers:
       sinon: ^12.0.1
       sinon-chai: ^3.7.0
       typescript: ^4.5.2
-      vite: ../vite/packages/vite
+      vite: ^2.7.0
       vue: ^3.2.24
     dependencies:
       '@jest/test-result': 27.4.2
@@ -64,14 +60,13 @@ importers:
       '@types/node': 16.11.11
       '@types/sade': 1.7.3
       '@types/sinon': 10.0.6
-      '@vitejs/plugin-vue': 1.10.1
-      '@vue/test-utils': 2.0.0-rc.17_vue@3.2.24
+      '@vitejs/plugin-vue': 1.10.1_vite@2.7.0
       bumpp: 7.1.1
       eslint: 8.4.0
       esno: 0.12.1_typescript@4.5.2
       rimraf: 3.0.2
       typescript: 4.5.2
-      vite: link:../vite/packages/vite
+      vite: 2.7.0
       vue: 3.2.24
 
 packages:
@@ -880,11 +875,13 @@ packages:
       eslint-visitor-keys: 3.1.0
     dev: true
 
-  /@vitejs/plugin-vue/1.10.1:
+  /@vitejs/plugin-vue/1.10.1_vite@2.7.0:
     resolution: {integrity: sha512-oL76QETMSpVE9jIScirGB2bYJEVU/+r+g+K7oG+sXPs9TZljqveoVRsmLyXlMZTjpQkLL8gz527cW80NMGVKJg==}
     engines: {node: '>=12.0.0'}
     peerDependencies:
       vite: ^2.5.10
+    dependencies:
+      vite: 2.7.0
     dev: true
 
   /@vue/compiler-core/3.2.24:
@@ -968,14 +965,6 @@ packages:
 
   /@vue/shared/3.2.24:
     resolution: {integrity: sha512-BUgRiZCkCrqDps5aQ9av05xcge3rn092ztKIh17tHkeEFgP4zfXMQWBA2zfdoCdCEdBL26xtOv+FZYiOp9RUDA==}
-    dev: true
-
-  /@vue/test-utils/2.0.0-rc.17_vue@3.2.24:
-    resolution: {integrity: sha512-7LHZKsFRV/HqDoMVY+cJamFzgHgsrmQFalROHC5FMWrzPzd+utG5e11krj1tVsnxYufGA2ABShX4nlcHXED+zQ==}
-    peerDependencies:
-      vue: ^3.0.1
-    dependencies:
-      vue: 3.2.24
     dev: true
 
   /abab/2.0.5:
@@ -2309,7 +2298,6 @@ packages:
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
     os: [darwin]
     requiresBuild: true
-    dev: false
     optional: true
 
   /function-bind/1.1.1:
@@ -3635,6 +3623,14 @@ packages:
       glob: 7.1.6
     dev: true
 
+  /rollup/2.60.2:
+    resolution: {integrity: sha512-1Bgjpq61sPjgoZzuiDSGvbI1tD91giZABgjCQBKM5aYLnzjq52GoDuWVwT/cm/MCxCMPU8gqQvkj8doQ5C8Oqw==}
+    engines: {node: '>=10.0.0'}
+    hasBin: true
+    optionalDependencies:
+      fsevents: 2.3.2
+    dev: true
+
   /run-parallel/1.2.0:
     resolution: {integrity: sha512-5l4VyZR86LZ/lDxZTR6jqL8AFE2S0IFLMP26AbjsLVADxHdhB/c0GUsH+y39UfCi3dzz8OlQuPmnaJOMoDHQBA==}
     dependencies:
@@ -4060,6 +4056,30 @@ packages:
     dependencies:
       spdx-correct: 3.1.1
       spdx-expression-parse: 3.0.1
+    dev: true
+
+  /vite/2.7.0:
+    resolution: {integrity: sha512-ZM629j9n6f1Gcr2KsfpLhJ0FRkift4SsTLSvExmNpGJYzyi1JyLOFybz85ShqFP5f4oCfJSblWAma9X8lZg/vA==}
+    engines: {node: '>=12.2.0'}
+    hasBin: true
+    peerDependencies:
+      less: '*'
+      sass: '*'
+      stylus: '*'
+    peerDependenciesMeta:
+      less:
+        optional: true
+      sass:
+        optional: true
+      stylus:
+        optional: true
+    dependencies:
+      esbuild: 0.13.15
+      postcss: 8.4.4
+      resolve: 1.20.0
+      rollup: 2.60.2
+    optionalDependencies:
+      fsevents: 2.3.2
     dev: true
 
   /vue-eslint-parser/8.0.1_eslint@8.4.0:
