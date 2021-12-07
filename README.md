@@ -15,9 +15,11 @@ A blazing fast unit test framework powered by Vite.
 
 ## Features
 
-- [Vite](https://vitejs.dev/)'s config, transformers, resolvers, and plugins.
+- [Vite](https://vitejs.dev/)'s config, transformers, resolvers, and plugins. Use the same setup from your app!
 - [Jest Snapshot](https://jestjs.io/docs/snapshot-testing)
 - [Chai](https://www.chaijs.com/) built-in for assertions, with [jest-expect](https://jestjs.io/docs/expect) compatible APIs.
+- [Smart watch mode](#watch-mode), just like HMR for tests!
+- [Code coverage](#coverage)
 - [Sinon](https://sinonjs.org/) built-in for mocking
 - [JSDOM](https://github.com/jsdom/jsdom) built-in for DOM and browser API mocking
 - Components testing ([Vue example](./test/vue), [React example](./test/react))
@@ -25,7 +27,6 @@ A blazing fast unit test framework powered by Vite.
 - ESM friendly
 - Out-of-box TypeScript / JSX support
 - Suite and Test filtering (skip, only, todo)
-- [Test coverage](#coverage)
 
 ```ts
 import { it, describe, expect, assert } from 'vitest'
