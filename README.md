@@ -27,6 +27,7 @@ A blazing fast unit test framework powered by Vite.
 - ESM friendly
 - Out-of-box TypeScript / JSX support
 - Suite and Test filtering (skip, only, todo)
+- Concurrent Tests
 
 ```ts
 import { it, describe, expect, assert } from 'vitest'
@@ -228,6 +229,39 @@ describe.todo('unimplemented suite')
 describe('suite', () => {
   it.todo('unimplemented task')
 })
+```
+
+### Running tests concurrently
+
+Use `.concurrent` in consecutive tests to run them in parallel
+
+```ts
+// The two tasks marked with concurrent will be run in parallel
+describe('suite', () => {
+  it('serial task', () => {
+    assert.equal(Math.sqrt(4), 3)
+  })
+  it.concurrent('concurrent task 1', () => {
+    assert.equal(Math.sqrt(4), 3)
+  })
+  it.concurrent('concurrent task 2', () => {
+    assert.equal(Math.sqrt(4), 3)
+  })
+})
+```
+
+You can also use `.skip`, `.only`, and `.todo` with concurrent tasks. All the following combinations are valid:
+```js
+it.concurrent(...)
+
+it.skip.concurrent(...)
+it.concurrent.skip(...)
+
+it.only.concurrent(...)
+it.concurrent.only(...)
+
+it.todo.concurrent(...)
+it.concurrent.todo(...)
 ```
 
 ## Sponsors
