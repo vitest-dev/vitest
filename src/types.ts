@@ -1,7 +1,6 @@
-import { SnapshotManager } from './integrations/chai/snapshot/manager'
-
 /* eslint-disable no-use-before-define */
-export type Awaitable<T> = Promise<T> | T
+import { Awaitable } from '@antfu/utils'
+import { SnapshotManager } from './integrations/chai/snapshot/manager'
 
 export interface UserOptions {
   /**
@@ -82,6 +81,7 @@ export type TaskState = RunMode | 'pass' | 'fail'
 export interface ConcurrentOptions {
   timeout: number
 }
+
 export interface Task {
   name: string
   mode: RunMode

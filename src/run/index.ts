@@ -1,5 +1,6 @@
 import fg from 'fast-glob'
 import { HookListener } from 'vitest'
+import { slash } from '@antfu/utils'
 import { setupChai } from '../integrations/chai/setup'
 import { clearContext, defaultSuite } from '../suite'
 import { context } from '../context'
@@ -271,7 +272,7 @@ export async function startWatcher(ctx: RunnerContext) {
   const seen = new Set<string>()
   const { server, moduleCache } = process.__vite_node__
   server.watcher.on('change', async(id) => {
-    id = normalizePath(id)
+    id = slash(id)
     getDependencyTests(id, ctx, changedTests, seen)
     seen.forEach(i => moduleCache.delete(i))
     seen.clear()
@@ -304,10 +305,6 @@ export async function startWatcher(ctx: RunnerContext) {
 
   // add an empty promise so it never resolves
   await new Promise(() => {})
-}
-
-function normalizePath(path: string) {
-  return path.replace(/\\/g, '/')
 }
 
 function getDependencyTests(id: string, ctx: RunnerContext, set = new Set<string>(), seen = new Set<string>()): Set<string> {

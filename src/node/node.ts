@@ -4,6 +4,7 @@ import { dirname, resolve, relative } from 'path'
 import vm from 'vm'
 import { createServer, mergeConfig, InlineConfig, ViteDevServer, TransformResult } from 'vite'
 import c from 'picocolors'
+import { slash } from '@antfu/utils'
 
 const { red, dim, yellow } = c
 
@@ -221,8 +222,4 @@ async function execute(files: string[], server: ViteDevServer, options: ViteNode
       }
     }
   }
-}
-
-function slash(path: string) {
-  return path.replace(/\\/g, '/')
 }
