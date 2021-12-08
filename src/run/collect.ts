@@ -1,6 +1,6 @@
-import { clearContext, defaultSuite } from '../suite'
+import { clearContext, createSuiteHooks } from '../suite'
 import { context } from '../context'
-import { File, Suite } from '../types'
+import { File, Suite, Task } from '../types'
 import { interpretOnlyMode } from './index'
 
 export async function collectTests(paths: string[]) {
@@ -8,19 +8,28 @@ export async function collectTests(paths: string[]) {
 
   for (const filepath of paths) {
     const file: File = {
+      name: '',
+      type: 'suite',
+      mode: 'run',
+      computeMode: 'serial',
       filepath,
-      suites: [],
+      children: [],
       collected: false,
+      hooks: createSuiteHooks(),
     }
 
     clearContext()
     try {
       await import(filepath)
 
-      const collectors = [defaultSuite, ...context.suites]
-      for (const c of collectors) {
-        context.currentSuite = c
-        file.suites.push(await c.collect(file))
+      for (const c of context.children) {
+        if (c.type === 'task') {
+          file.children.push(c)
+        }
+        else {
+          context.currentSuite = c
+          file.children.push(await c.collect(file))
+        }
       }
 
       file.collected = true
@@ -35,18 +44,25 @@ export async function collectTests(paths: string[]) {
   }
 
   const allFiles = Object.values(files)
-  const allSuites = allFiles.reduce((suites, file) => suites.concat(file.suites), [] as Suite[])
+  const allChildren = allFiles.reduce((children, file) => children.concat(file.children), [] as (Suite | Task)[])
 
-  interpretOnlyMode(allSuites)
-  allSuites.forEach((i) => {
-    if (i.mode === 'skip')
-      i.tasks.forEach(t => t.mode === 'run' && (t.mode = 'skip'))
-
-    else
-      interpretOnlyMode(i.tasks)
-
-    i.tasks.forEach(t => t.mode === 'skip' && (t.state = 'skip'))
+  interpretOnlyMode(allChildren)
+  allChildren.forEach((i) => {
+    if (i.type === 'suite') {
+      if (i.mode === 'skip')
+        i.children.forEach(c => c.mode === 'run' && (c.mode = 'skip'))
+      else
+        interpretOnlyMode(i.children)
+    }
+    updateSkipState(i)
   })
 
   return files
+}
+
+function updateSkipState(c: Suite | Task) {
+  if (c.mode === 'skip')
+    c.state = 'skip'
+  if (c.type === 'suite')
+    c.children.forEach(updateSkipState)
 }

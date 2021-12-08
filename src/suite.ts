@@ -9,19 +9,23 @@ function getCurrentSuite() {
   return context.currentSuite || defaultSuite
 }
 
-function createSuiteCollector(name: string, factory: TestFactory = () => {}, mode: RunMode, suiteComputeMode?: ComputeMode) {
+export function createSuiteHooks() {
+  return {
+    beforeAll: [],
+    afterAll: [],
+    beforeEach: [],
+    afterEach: [],
+  }
+}
+
+function createSuiteCollector(name: string, factory: TestFactory = () => { }, mode: RunMode, suiteComputeMode?: ComputeMode) {
   const queue: Task[] = []
   const factoryQueue: Task[] = []
 
   const suiteBase: Pick<Suite, 'name' | 'mode' | 'hooks'> = {
     name,
     mode,
-    hooks: {
-      beforeAll: [],
-      afterAll: [],
-      beforeEach: [],
-      afterEach: [],
-    },
+    hooks: createSuiteHooks(),
   }
 
   const test = createTestCollector((name: string, fn: TestFunction, mode: RunMode, computeMode?: ComputeMode) => {
@@ -113,7 +117,7 @@ function createTestCollector(collectTask: (name: string, fn: TestFunction, mode:
 
 // apis
 
-export const test = (function() {
+export const test = (function () {
   function test(name: string, fn: TestFunction) {
     return getCurrentSuite().test(name, fn)
   }
@@ -194,4 +198,15 @@ export function clearContext() {
   context.suites.length = 0
   defaultSuite.clear()
   context.currentSuite = defaultSuite
+}
+
+export function getSuiteTasks(suite: Suite): Task[] {
+  return suite.children.reduce((acc: Task[], c: (Suite | Task)) => {
+    c.type === 'task' ? acc.push(c) : acc.concat(getSuiteTasks(c as Suite))
+    return acc
+  }, [])
+}
+
+export function suiteHasTasks(suite: Suite): boolean {
+  return suite.children.some(c => c.type === 'task' || suiteHasTasks(c as Suite))
 }
