@@ -124,8 +124,11 @@ export async function executeInViteNode({ moduleCache, root, files, fetch, inlin
 
     const fsPath = toFilePath(id, root)
 
-    if (shouldExternalize(fsPath))
+    if (shouldExternalize(fsPath)) {
+      if (fsPath.match(/^\w:\//))
+        return import(`/${fsPath}`)
       return import(fsPath)
+    }
 
     if (moduleCache.get(fsPath)?.promise)
       return moduleCache.get(fsPath)?.promise

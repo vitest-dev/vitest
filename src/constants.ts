@@ -22,5 +22,3 @@ export const globalApis = [
   'beforeEach',
   'afterEach',
 ]
-
-export const defaultConcurrentTimeout = 5000
