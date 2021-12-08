@@ -5,13 +5,8 @@ import { findUp } from 'find-up'
 import sade from 'sade'
 import c from 'picocolors'
 import type { ResolvedConfig, UserOptions } from '../types'
+import { version } from '../../package.json'
 import { run as startViteNode } from './node'
-
-console.log(c.yellow(c.bold('\nVitest is currently in closed beta exclusively for Sponsors')))
-console.log(c.magenta(`Become a Sponsor of ${c.underline('https://github.com/sponsors/patak-js')} or ${c.underline('https://github.com/sponsors/antfu')} \nto access the source code and issues tracker 💖\n`))
-
-// TODO: use bundler
-const version = '0.0.0'
 
 sade('vitest [filter]', true)
   .version(version)
@@ -25,6 +20,9 @@ sade('vitest [filter]', true)
   .option('--dom', 'mock browser api using jsdom or happy-dom', '')
   .action(async(filters, argv) => {
     process.env.VITEST = 'true'
+
+    console.log(c.yellow(c.bold('\nVitest is currently in closed beta exclusively for Sponsors')))
+    console.log(c.magenta(`Become a Sponsor of ${c.underline('https://github.com/sponsors/patak-js')} or ${c.underline('https://github.com/sponsors/antfu')} \nto access the source code and issues tracker 💖\n`))
 
     const defaultInline = [
       'vue',
