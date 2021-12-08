@@ -113,7 +113,7 @@ function createTestCollector(collectTask: (name: string, fn: TestFunction, mode:
 
 // apis
 
-export const test = (function () {
+export const test = (function() {
   function test(name: string, fn: TestFunction) {
     return getCurrentSuite().test(name, fn)
   }
