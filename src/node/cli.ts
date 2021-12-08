@@ -22,7 +22,7 @@ sade('vitest [filter]', true)
   .option('-u, --update', 'update snapshot', false)
   .option('--global', 'inject apis globally', false)
   .option('--dev', 'dev mode', false)
-  .option('--jsdom', 'mock browser api using JSDOM', false)
+  .option('--dom', 'mock browser api using jsdom or happy-dom', '')
   .action(async(filters, argv) => {
     process.env.VITEST = 'true'
 

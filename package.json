@@ -62,6 +62,7 @@
     "diff": "^5.0.0",
     "fast-glob": "^3.2.7",
     "find-up": "^6.2.0",
+    "happy-dom": "^2.24.4",
     "jest-snapshot": "^27.4.2",
     "jest-util": "^27.4.2",
     "jsdom": "^19.0.0",

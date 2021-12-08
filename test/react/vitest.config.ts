@@ -6,7 +6,7 @@ export default mergeConfig(
   defineConfig({
     test: {
       global: true,
-      jsdom: true,
+      dom: 'happy-dom',
     },
   }),
 )

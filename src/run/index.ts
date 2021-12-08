@@ -224,8 +224,10 @@ export async function run(config: ResolvedConfig) {
   // setup envs
   if (config.global)
     (await import('../integrations/global')).registerApiGlobally()
-  if (config.jsdom)
-    (await import('../integrations/jsdom')).setupJSDOM(globalThis)
+  if (config.dom === 'happy-dom')
+    (await import('../integrations/dom/happy-dom')).setupHappyDOM(globalThis)
+  else if (config.dom)
+    (await import('../integrations/dom/jsdom')).setupJSDOM(globalThis)
 
   await reporter.onStart?.(config)
 
@@ -278,7 +280,7 @@ export async function startWatcher(ctx: RunnerContext) {
       return
 
     clearTimeout(timer)
-    timer = setTimeout(async () => {
+    timer = setTimeout(async() => {
       if (changedTests.size === 0)
         return
 

@@ -117,7 +117,7 @@ To get TypeScript working with the global APIs, add `vitest/global` to the `type
 
 ## Browser Mocking
 
-Pass `--jsdom` option in CLI to enable browser mocking. Or the `jsdom` flag in the config.
+Pass `--dom` option in CLI to enable browser mocking. Or the `dom` flag in the config.
 
 ```ts
 // vite.config.ts
@@ -125,7 +125,20 @@ import { defineConfig } from 'vite'
 
 export default defineConfig({
   test: {
-    jsdom: true
+    dom: true
+  }
+})
+```
+
+Vitest by default uses [jsdom](https://github.com/jsdom/jsdom) for mocking, but it also support [happy-dom](https://github.com/capricorn86/happy-dom), a faster alternative to jsdom. You can configure it with:
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  test: {
+    dom: 'happy-dom'
   }
 })
 ```

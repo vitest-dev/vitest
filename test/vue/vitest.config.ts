@@ -10,7 +10,7 @@ export default mergeConfig(
     ],
     test: {
       global: true,
-      jsdom: true,
+      dom: 'jsdom',
     },
   }),
 )

@@ -21,7 +21,7 @@ export default mergeConfig(
     ],
     test: {
       global: true,
-      jsdom: true,
+      dom: 'happy-dom',
     },
   }),
 )

@@ -33,11 +33,11 @@ export interface UserOptions {
   global?: boolean
 
   /**
-   * Use `js-dom` to mock browser APIs
+   * Use `jsdom` or `happy-dom` to mock browser APIs
    *
    * @default false
    */
-  jsdom?: boolean
+  dom?: boolean | 'jsdom' | 'happy-dom'
 
   /**
    * Run tests files in parallel
