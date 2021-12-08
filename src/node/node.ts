@@ -1,5 +1,5 @@
 import { builtinModules, createRequire } from 'module'
-import { pathToFileURL } from 'url'
+import { fileURLToPath, pathToFileURL } from 'url'
 import { dirname, resolve, relative } from 'path'
 import vm from 'vm'
 import { createServer, mergeConfig, InlineConfig, ViteDevServer, TransformResult } from 'vite'
@@ -169,10 +169,11 @@ async function execute(files: string[], server: ViteDevServer, options: ViteNode
 
     setCache(id, { transformResult: result, exports })
 
+    const __filename = fileURLToPath(url)
     const context = {
       require: createRequire(url),
-      __filename: fsPath,
-      __dirname: dirname(fsPath),
+      __filename,
+      __dirname: dirname(__filename),
       __vite_ssr_import__: request,
       __vite_ssr_dynamic_import__: request,
       __vite_ssr_exports__: exports,

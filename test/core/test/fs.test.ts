@@ -1,4 +1,4 @@
-import { resolve, dirname } from 'path'
+import { resolve } from 'path'
 import fs from 'fs/promises'
 import { fileURLToPath } from 'url'
 import { describe, it, expect } from 'vitest'
