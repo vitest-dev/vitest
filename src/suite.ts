@@ -1,5 +1,6 @@
 import { context } from './context'
-import { Task, SuiteCollector, RunMode, TestFactory, TestFunction, File, Suite } from './types'
+import { Task, SuiteCollector, TestCollector, RunMode, ConcurrentOptions, TestFactory, TestFunction, File, Suite } from './types'
+import { defaultConcurrentTimeout } from './constants'
 
 export const defaultSuite = suite('')
 
@@ -22,6 +23,17 @@ function createSuiteCollector(name: string, factory: TestFactory = () => {}, mod
     },
   }
 
+  const test = createTestCollector((name: string, fn: TestFunction, mode: RunMode, concurrent?: ConcurrentOptions) => {
+    queue.push({
+      name,
+      mode,
+      concurrent,
+      suite: {} as Suite,
+      state: (mode !== 'run' && mode !== 'only') ? mode : undefined,
+      fn,
+    })
+  })
+
   const collector: SuiteCollector = {
     name,
     mode,
@@ -34,23 +46,6 @@ function createSuiteCollector(name: string, factory: TestFactory = () => {}, mod
   function addHook<T extends keyof Suite['hooks']>(name: T, ...fn: Suite['hooks'][T]) {
     suiteBase.hooks[name].push(...fn as any)
   }
-
-  function collectTask(name: string, fn: TestFunction, mode: RunMode) {
-    queue.push({
-      name,
-      mode,
-      suite: {} as Suite,
-      state: (mode !== 'run' && mode !== 'only') ? mode : undefined,
-      fn,
-    })
-  }
-
-  function test(name: string, fn: TestFunction) {
-    collectTask(name, fn, 'run')
-  }
-  test.skip = (name: string, fn: TestFunction) => collectTask(name, fn, 'skip')
-  test.only = (name: string, fn: TestFunction) => collectTask(name, fn, 'only')
-  test.todo = (name: string) => collectTask(name, () => { }, 'todo')
 
   function clear() {
     queue.length = 0
@@ -85,11 +80,74 @@ function createSuiteCollector(name: string, factory: TestFactory = () => {}, mod
   return collector
 }
 
+function createConcurrentOptions(timeout?: number) {
+  return { timeout: timeout ?? defaultConcurrentTimeout }
+}
+
+function createTestCollector(collectTask: (name: string, fn: TestFunction, mode: RunMode, concurrent?: ConcurrentOptions) => void): TestCollector {
+  function test(name: string, fn: TestFunction) {
+    collectTask(name, fn, 'run')
+  }
+  test.concurrent = concurrent
+  test.skip = skip
+  test.only = only
+  test.todo = todo
+  function concurrent(name: string, fn: TestFunction, timeout?: number) {
+    collectTask(name, fn, 'run', createConcurrentOptions(timeout))
+  }
+  concurrent.skip = (name: string, fn: TestFunction, timeout?: number) => collectTask(name, fn, 'skip', createConcurrentOptions(timeout))
+  concurrent.only = (name: string, fn: TestFunction, timeout?: number) => collectTask(name, fn, 'only', createConcurrentOptions(timeout))
+  concurrent.todo = todo
+  function skip(name: string, fn: TestFunction) {
+    collectTask(name, fn, 'skip')
+  }
+  skip.concurrent = concurrent.skip
+  function only(name: string, fn: TestFunction) {
+    collectTask(name, fn, 'only')
+  }
+  only.concurrent = concurrent.only
+  function todo(name: string) {
+    collectTask(name, () => { }, 'todo')
+  }
+  todo.concurrent = todo
+
+  return test
+}
+
 // apis
-export const test = (name: string, fn: TestFunction) => getCurrentSuite().test(name, fn)
-test.skip = (name: string, fn: TestFunction) => getCurrentSuite().test.skip(name, fn)
-test.only = (name: string, fn: TestFunction) => getCurrentSuite().test.only(name, fn)
-test.todo = (name: string) => getCurrentSuite().test.todo(name)
+
+export const test = (function() {
+  function test(name: string, fn: TestFunction) {
+    return getCurrentSuite().test(name, fn)
+  }
+  function concurrent(name: string, fn: TestFunction, timeout?: number) {
+    return getCurrentSuite().test.concurrent(name, fn, timeout)
+  }
+
+  concurrent.skip = (name: string, fn: TestFunction, timeout?: number) => getCurrentSuite().test.concurrent.skip(name, fn, timeout)
+  concurrent.only = (name: string, fn: TestFunction, timeout?: number) => getCurrentSuite().test.concurrent.only(name, fn, timeout)
+  concurrent.todo = (name: string) => getCurrentSuite().test.concurrent.todo(name)
+
+  function skip(name: string, fn: TestFunction) {
+    return getCurrentSuite().test.skip(name, fn)
+  }
+  skip.concurrent = (name: string, fn: TestFunction, timeout?: number) => getCurrentSuite().test.skip.concurrent(name, fn, timeout)
+  function only(name: string, fn: TestFunction) {
+    return getCurrentSuite().test.only(name, fn)
+  }
+  only.concurrent = (name: string, fn: TestFunction, timeout?: number) => getCurrentSuite().test.only.concurrent(name, fn, timeout)
+  function todo(name: string) {
+    return getCurrentSuite().test.todo(name)
+  }
+  todo.concurrent = (name: string) => getCurrentSuite().test.todo.concurrent(name)
+
+  test.concurrent = concurrent
+  test.skip = skip
+  test.only = only
+  test.todo = todo
+
+  return test
+})()
 
 export function suite(suiteName: string, factory?: TestFactory) {
   return createSuiteCollector(suiteName, factory, 'run')
