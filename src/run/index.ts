@@ -1,13 +1,10 @@
-import fg from 'fast-glob'
 import { HookListener } from 'vitest'
-import { slash } from '@antfu/utils'
-import { setupChai } from '../integrations/chai/setup'
-import { clearContext, defaultSuite } from '../suite'
-import { context } from '../context'
 import { File, ResolvedConfig, Task, RunnerContext, Suite, RunMode } from '../types'
-import { DefaultReporter } from '../reporters/default'
-import { defaultIncludes, defaultExcludes } from '../constants'
 import { getSnapshotManager } from '../integrations/chai/snapshot'
+import { startWatcher } from './watcher'
+import { collectTests } from './collect'
+import { setupRunner } from './setup'
+import { globTestFiles } from './glob'
 
 async function callHook<T extends keyof Suite['hooks']>(suite: Suite, name: T, args: Suite['hooks'][T][0] extends HookListener<infer A> ? A : never) {
   await Promise.all(suite.hooks[name].map(fn => fn(...(args as any))))
@@ -44,57 +41,10 @@ export async function runTask(task: Task, ctx: RunnerContext) {
   await reporter.onTaskEnd?.(task, ctx)
 }
 
-export async function collectFiles(paths: string[]) {
-  const files: Record<string, File> = {}
-
-  for (const filepath of paths) {
-    const file: File = {
-      filepath,
-      suites: [],
-      collected: false,
-    }
-
-    clearContext()
-    try {
-      await import(filepath)
-
-      const collectors = [defaultSuite, ...context.suites]
-      for (const c of collectors) {
-        context.currentSuite = c
-        file.suites.push(await c.collect(file))
-      }
-
-      file.collected = true
-    }
-    catch (e) {
-      file.error = e
-      file.collected = false
-      process.exitCode = 1
-    }
-
-    files[filepath] = file
-  }
-
-  const allFiles = Object.values(files)
-  const allSuites = allFiles.reduce((suites, file) => suites.concat(file.suites), [] as Suite[])
-
-  interpretOnlyMode(allSuites)
-  allSuites.forEach((i) => {
-    if (i.mode === 'skip')
-      i.tasks.forEach(t => t.mode === 'run' && (t.mode = 'skip'))
-    else
-      interpretOnlyMode(i.tasks)
-
-    i.tasks.forEach(t => t.mode === 'skip' && (t.state = 'skip'))
-  })
-
-  return files
-}
-
 /**
  * If any items been marked as `only`, mark all other items as `skip`.
  */
-function interpretOnlyMode(items: { mode: RunMode }[]) {
+export function interpretOnlyMode(items: { mode: RunMode }[]) {
   if (items.some(i => i.mode === 'only')) {
     items.forEach((i) => {
       if (i.mode === 'run')
@@ -192,30 +142,11 @@ export async function runFiles(filesMap: Record<string, File>, ctx: RunnerContex
 }
 
 export async function run(config: ResolvedConfig) {
-  config.reporter = config.reporter || new DefaultReporter()
-  const { reporter } = config
-
   // if watch, tell `vite-node` not to end the process
   if (config.watch)
     process.__vite_node__.watch = true
 
-  // setup chai
-  await setupChai(config)
-
-  // collect files
-  let testFilepaths = await fg(
-    config.includes || defaultIncludes,
-    {
-      absolute: true,
-      cwd: config.root,
-      ignore: config.excludes || defaultExcludes,
-    },
-  )
-
-  // if name filters are provided by the CLI
-  if (config.filters?.length)
-    testFilepaths = testFilepaths.filter(i => config.filters!.some(f => i.includes(f)))
-
+  const testFilepaths = await globTestFiles(config)
   if (!testFilepaths.length) {
     console.error('No test files found')
     process.exitCode = 1
@@ -223,34 +154,15 @@ export async function run(config: ResolvedConfig) {
   }
 
   // setup envs
-  if (config.global)
-    (await import('../integrations/global')).registerApiGlobally()
-  if (config.dom === 'happy-dom')
-    (await import('../integrations/dom/happy-dom')).setupHappyDOM(globalThis)
-  else if (config.dom)
-    (await import('../integrations/dom/jsdom')).setupJSDOM(globalThis)
+  const ctx = await setupRunner(config)
+
+  const { filesMap, snapshotManager, reporter } = ctx
 
   await reporter.onStart?.(config)
 
-  const filesMap = await collectFiles(testFilepaths)
-  const snapshotManager = getSnapshotManager()
-  const ctx: RunnerContext = {
-    filesMap,
-    get files() {
-      return Object.values(this.filesMap)
-    },
-    get suites() {
-      return Object.values(this.filesMap)
-        .reduce((suites, file) => suites.concat(file.suites), [] as Suite[])
-    },
-    get tasks() {
-      return this.suites
-        .reduce((tasks, suite) => tasks.concat(suite.tasks), [] as Task[])
-    },
-    config,
-    reporter,
-    snapshotManager,
-  }
+  const files = await collectTests(testFilepaths)
+
+  Object.assign(filesMap, files)
 
   await runFiles(filesMap, ctx)
 
@@ -260,71 +172,4 @@ export async function run(config: ResolvedConfig) {
 
   if (config.watch)
     await startWatcher(ctx)
-}
-
-export async function startWatcher(ctx: RunnerContext) {
-  const { reporter, snapshotManager, filesMap } = ctx
-  await reporter.onWatcherStart?.(ctx)
-
-  let timer: any
-
-  const changedTests = new Set<string>()
-  const seen = new Set<string>()
-  const { server, moduleCache } = process.__vite_node__
-  server.watcher.on('change', async(id) => {
-    id = slash(id)
-    getDependencyTests(id, ctx, changedTests, seen)
-    seen.forEach(i => moduleCache.delete(i))
-    seen.clear()
-
-    if (changedTests.size === 0)
-      return
-
-    clearTimeout(timer)
-    timer = setTimeout(async() => {
-      if (changedTests.size === 0)
-        return
-
-      snapshotManager.clear()
-      const paths = Array.from(changedTests)
-      changedTests.clear()
-
-      await reporter.onWatcherRerun?.(paths, id, ctx)
-      paths.forEach(i => moduleCache.delete(i))
-
-      const newFilesMap = await collectFiles(paths)
-      Object.assign(filesMap, newFilesMap)
-      await runFiles(newFilesMap, ctx)
-
-      snapshotManager.saveSnap()
-
-      await reporter.onFinished?.(ctx, Object.values(newFilesMap))
-      await reporter.onWatcherStart?.(ctx)
-    }, 100)
-  })
-
-  // add an empty promise so it never resolves
-  await new Promise(() => {})
-}
-
-function getDependencyTests(id: string, ctx: RunnerContext, set = new Set<string>(), seen = new Set<string>()): Set<string> {
-  if (seen.has(id) || set.has(id))
-    return set
-
-  seen.add(id)
-  if (id in ctx.filesMap) {
-    set.add(id)
-    return set
-  }
-
-  const mod = process.__vite_node__.server.moduleGraph.getModuleById(id)
-
-  if (mod) {
-    mod.importers.forEach((i) => {
-      if (i.id)
-        getDependencyTests(i.id, ctx, set, seen)
-    })
-  }
-
-  return set
 }
