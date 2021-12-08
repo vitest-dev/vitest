@@ -5,6 +5,7 @@ export default defineConfig({
     'src/index.ts',
     'src/node/cli.ts',
     'src/node/entry.ts',
+    'src/worker/runner/index.ts',
   ],
   format: ['esm'],
   clean: true,
