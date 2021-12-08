@@ -24,12 +24,6 @@ sade('vitest [filter]', true)
     console.log(c.yellow(c.bold('\nVitest is currently in closed beta exclusively for Sponsors')))
     console.log(c.magenta(`Become a Sponsor of ${c.underline('https://github.com/sponsors/patak-js')} or ${c.underline('https://github.com/sponsors/antfu')} \nto access the source code and issues tracker 💖\n`))
 
-    const defaultInline = [
-      'vue',
-      '@vue',
-      'diff',
-    ]
-
     const __dirname = dirname(fileURLToPath(import.meta.url))
     const root = resolve(argv.root || process.cwd())
     const configPath = argv.config
@@ -62,32 +56,6 @@ sade('vitest [filter]', true)
             'vitest',
           ],
         },
-      },
-      shouldExternalize(id, server) {
-        const inline = ['vitest', ...defaultInline, ...server.config.test?.deps?.inline || []]
-        const external = server.config.test?.deps?.external || []
-        for (const ex of inline) {
-          if (typeof ex === 'string') {
-            if (id.includes(`/node_modules/${ex}/`))
-              return false
-          }
-          else {
-            if (ex.test(id))
-              return false
-          }
-        }
-        for (const ex of external) {
-          if (typeof ex === 'string') {
-            if (id.includes(`/node_modules/${ex}/`))
-              return true
-          }
-          else {
-            if (ex.test(id))
-              return true
-          }
-        }
-
-        return id.includes('/node_modules/')
       },
     })
   })
