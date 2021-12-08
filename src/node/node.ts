@@ -50,6 +50,8 @@ export async function run(options: ViteNodeOptions) {
   }
 
   const defaultInline = [
+    'vitest/dist',
+    'vitest/src',
     'vue',
     '@vue',
     'diff',
@@ -59,7 +61,7 @@ export async function run(options: ViteNodeOptions) {
     root: server.config.root,
     files,
     fetch: id => transform(server, id),
-    inline: ['vitest', ...defaultInline, ...server.config.test?.deps?.inline || []],
+    inline: [...defaultInline, ...server.config.test?.deps?.inline || []],
     external: server.config.test?.deps?.external || [],
     moduleCache,
   }
