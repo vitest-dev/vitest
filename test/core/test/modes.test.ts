@@ -21,7 +21,7 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 describe('concurrent tasks', () => {
   let count = 0
 
-  const counterTest = (c: number) => async () => {
+  const counterTest = (c: number) => async() => {
     assert.equal(count, c)
     await delay(20)
     count++

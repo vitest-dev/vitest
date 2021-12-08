@@ -1,4 +1,6 @@
 {
   "extends": ["@antfu"],
-  "rules": {}
+  "rules": {
+    "import/no-named-as-default-member": "off"
+  }
 }
