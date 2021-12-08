@@ -1,7 +1,7 @@
 /* eslint-disable no-use-before-define */
 import { MessagePort } from 'worker_threads'
 import { Awaitable } from '@antfu/utils'
-import { SnapshotManager } from './integrations/chai/snapshot/manager'
+import { TransformResult } from 'vite'
 
 export interface UserOptions {
   /**
@@ -170,8 +170,8 @@ export interface RunnerContext {
   suites: Suite[]
   tasks: Task[]
   config: ResolvedConfig
-  reporter: Reporter
-  snapshotManager: SnapshotManager
+  // reporter: Reporter
+  // snapshotManager: SnapshotManager
 }
 
 export interface GlobalContext {
@@ -200,3 +200,22 @@ export interface WorkerContext {
   files: string[]
   config: ResolvedConfig
 }
+
+export interface RpcMap {
+  fetch: [[id: string], TransformResult | null | undefined]
+  onStart: [[], void]
+  onCollected: [[files: File[]], void]
+  onFinished: [[files: File[]], void]
+
+  onSuiteBegin: [[suite: Suite], void]
+  onSuiteEnd: [[suite: Suite], void]
+  onFileBegin: [[file: File], void]
+  onFileEnd: [[file: File], void]
+  onTaskBegin: [[task: Task], void]
+  onTaskEnd: [[task: Task], void]
+
+  onWatcherStart: [[], void]
+  onWatcherRerun: [[files: string[], trigger: string], void]
+}
+
+export type RpcFn = <T extends keyof RpcMap>(method: T, ...args: RpcMap[T][0]) => Promise<RpcMap[T][1]>

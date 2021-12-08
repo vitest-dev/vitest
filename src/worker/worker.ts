@@ -1,30 +1,34 @@
 import { resolve } from 'path/posix'
 import { nanoid } from 'nanoid'
+import { RpcFn } from 'vitest'
 import { executeInViteNode, ExecuteOptions } from '../node/execute'
 import { distDir } from '../constants'
 import { WorkerContext } from '../types'
 
-function rpc<T = any>(ctx: WorkerContext, method: string, ...args: any[]): Promise<T> {
-  return new Promise((resolve, reject) => {
-    const id = nanoid()
-    const fn = (data: any) => {
-      if (data.id === id) {
-        ctx.port.removeListener('message', fn)
-        if (data.error)
-          reject(data.error)
-        else
-          resolve(data.result)
-      }
-    }
-    ctx.port.postMessage({ method, args, id })
-    ctx.port.addListener('message', fn)
-  })
-}
-
 export default async(context: WorkerContext) => {
-  // process.stdout.write('\0')
-
   const { config } = context
+
+  const rpc: RpcFn = (method, ...args) => {
+    return new Promise((resolve, reject) => {
+      const id = nanoid()
+      const fn = (data: any) => {
+        if (data.id === id) {
+          context.port.removeListener('message', fn)
+          if (data.error)
+            reject(data.error)
+          else
+            resolve(data.result)
+        }
+      }
+      context.port.postMessage({ method, args, id })
+      context.port.addListener('message', fn)
+    })
+  }
+
+  process.__vitest_worker__ = {
+    context,
+    rpc,
+  }
 
   const moduleCache: ExecuteOptions['moduleCache'] = new Map()
 
@@ -34,7 +38,7 @@ export default async(context: WorkerContext) => {
       resolve(distDir, 'runtime/entry.js'),
     ],
     fetch(id) {
-      return rpc(context, 'fetch', id)
+      return rpc('fetch', id)
     },
     inline: config.depsInline,
     external: config.depsExternal,
@@ -42,4 +46,16 @@ export default async(context: WorkerContext) => {
   })
 
   await run(context)
+}
+
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace NodeJS {
+    interface Process {
+      __vitest_worker__?: {
+        context: WorkerContext
+        rpc: RpcFn
+      }
+    }
+  }
 }

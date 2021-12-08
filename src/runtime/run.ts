@@ -1,23 +1,17 @@
 import { HookListener } from 'vitest'
-import { File, ResolvedConfig, Task, RunnerContext, Suite } from '../types'
 import { getSnapshotManager } from '../integrations/chai/snapshot'
-import { DefaultReporter } from '../reporters/default'
-// import { createWorker } from '../worker/manager'
-// import { startWatcher } from './watcher'
-// import { collectTests } from './collect'
-// import { setupEnv } from './setup'
-// import { globTestFiles } from './glob'
+import { File, Task, Suite } from '../types'
+import { collectTests } from './collect'
+import { rpc } from './rpc'
 
 async function callHook<T extends keyof Suite['hooks']>(suite: Suite, name: T, args: Suite['hooks'][T][0] extends HookListener<infer A> ? A : never) {
   await Promise.all(suite.hooks[name].map(fn => fn(...(args as any))))
 }
 
-export async function runTask(task: Task, ctx: RunnerContext) {
-  const { reporter } = ctx
-
+export async function runTask(task: Task) {
   getSnapshotManager()?.setTask(task)
 
-  await reporter.onTaskBegin?.(task, ctx)
+  rpc('onTaskBegin', task)
 
   if (task.mode === 'run') {
     try {
@@ -40,13 +34,11 @@ export async function runTask(task: Task, ctx: RunnerContext) {
     }
   }
 
-  await reporter.onTaskEnd?.(task, ctx)
+  rpc('onTaskEnd', task)
 }
 
-export async function runSuite(suite: Suite, ctx: RunnerContext) {
-  const { reporter } = ctx
-
-  await reporter.onSuiteBegin?.(suite, ctx)
+export async function runSuite(suite: Suite) {
+  rpc('onSuiteBegin', suite)
 
   if (suite.mode === 'skip') {
     suite.status = 'skip'
@@ -62,10 +54,10 @@ export async function runSuite(suite: Suite, ctx: RunnerContext) {
         const computeMode = taskGroup[0].computeMode
         if (computeMode === 'serial') {
           for (const t of taskGroup)
-            await runTask(t, ctx)
+            await runTask(t)
         }
         else if (computeMode === 'concurrent') {
-          await Promise.all(taskGroup.map(t => runTask(t, ctx)))
+          await Promise.all(taskGroup.map(t => runTask(t)))
         }
       }
 
@@ -77,7 +69,7 @@ export async function runSuite(suite: Suite, ctx: RunnerContext) {
       process.exitCode = 1
     }
   }
-  await reporter.onSuiteEnd?.(suite, ctx)
+  rpc('onSuiteEnd', suite)
 }
 
 /**
@@ -101,77 +93,32 @@ function partitionTasks(tasks: Task[]) {
   return groupedTasks
 }
 
-export async function runFile(file: File, ctx: RunnerContext) {
-  const { reporter } = ctx
-
+export async function runFile(file: File) {
   const runnableSuites = file.suites.filter(i => i.mode === 'run')
   if (runnableSuites.length === 0)
     return
 
-  await reporter.onFileBegin?.(file, ctx)
+  rpc('onFileBegin', file)
 
-  if (ctx.config.parallel) {
-    await Promise.all(file.suites.map(suite => runSuite(suite, ctx)))
-  }
-  else {
-    for (const suite of file.suites)
-      await runSuite(suite, ctx)
-  }
+  for (const suite of file.suites)
+    await runSuite(suite)
 
-  await reporter.onFileEnd?.(file, ctx)
+  rpc('onFileEnd', file)
 }
 
-export async function runFiles(filesMap: Record<string, File>, ctx: RunnerContext) {
-  const { reporter } = ctx
-
-  await reporter.onCollected?.(Object.values(filesMap), ctx)
+export async function runFiles(filesMap: Record<string, File>) {
+  rpc('onCollected', Object.values(filesMap))
 
   for (const file of Object.values(filesMap))
-    await runFile(file, ctx)
+    await runFile(file)
 }
 
-/*
-export async function run(config: ResolvedConfig) {
-  await setupEnv(config)
-  const ctx = await createRunnerContext(config)
+export async function startTests(paths: string[]) {
+  rpc('onStart')
 
-  const { filesMap, snapshotManager, reporter } = ctx
+  const filesMap = await collectTests(paths)
 
-  await reporter.onStart?.(config)
+  await runFiles(filesMap)
 
-  const files: string[] = [] // await collectTests(testFilepaths)
-
-  Object.assign(filesMap, files)
-
-  await runFiles(filesMap, ctx)
-
-  snapshotManager.saveSnap()
-
-  await reporter.onFinished?.(ctx)
-
-  if (config.watch)
-    await startWatcher(ctx)
-}
-*/
-
-export async function createRunnerContext(config: ResolvedConfig) {
-  const ctx: RunnerContext = {
-    filesMap: {},
-    get files() {
-      return Object.values(this.filesMap)
-    },
-    get suites() {
-      return Object.values(this.filesMap)
-        .reduce((suites, file) => suites.concat(file.suites), [] as Suite[])
-    },
-    get tasks() {
-      return this.suites
-        .reduce((tasks, suite) => tasks.concat(suite.tasks), [] as Task[])
-    },
-    config,
-    reporter: config.reporter || new DefaultReporter(),
-    snapshotManager: getSnapshotManager(),
-  }
-
-  return ctx
+  rpc('onFinished', Object.values(filesMap))
 }

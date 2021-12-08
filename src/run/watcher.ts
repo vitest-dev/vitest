@@ -36,7 +36,7 @@ export async function startWatcher(ctx: RunnerContext) {
 
       const newFilesMap = await collectTests(paths)
       Object.assign(filesMap, newFilesMap)
-      await runFiles(newFilesMap, ctx)
+      await runFiles(newFilesMap)
 
       snapshotManager.saveSnap()
 
