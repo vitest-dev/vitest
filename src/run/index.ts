@@ -307,10 +307,7 @@ export async function startWatcher(ctx: RunnerContext) {
 }
 
 function normalizePath(path: string) {
-  const normalized = path.replace(/\\/g, '/')
-  if (normalized.startsWith('/'))
-    return normalized
-  return `/${normalized}`
+  return path.replace(/\\/g, '/')
 }
 
 function getDependencyTests(id: string, ctx: RunnerContext, set = new Set<string>(), seen = new Set<string>()): Set<string> {

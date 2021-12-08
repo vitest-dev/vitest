@@ -86,7 +86,7 @@ function normalizeId(id: string): string {
 }
 
 function toFilePath(id: string, server: ViteDevServer): string {
-  let absolute = id.startsWith('/@fs/')
+  let absolute = slash(id).startsWith('/@fs/')
     ? id.slice(4)
     : id.startsWith(dirname(server.config.root))
       ? id
@@ -96,8 +96,6 @@ function toFilePath(id: string, server: ViteDevServer): string {
 
   if (absolute.startsWith('//'))
     absolute = absolute.slice(1)
-  if (!absolute.startsWith('/'))
-    absolute = `/${absolute}`
 
   return absolute
 }
