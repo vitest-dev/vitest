@@ -28,7 +28,7 @@ export class SnapshotManager {
   snapshotState: SnapshotStateType | null = null
   snapshotSummary: SnapshotSummary
   snapshotOptions: SnapshotStateOptions
-  context: Context | null = null
+  ctx: Context | null = null
   testFile = ''
   snapshotResolver: SnapshotResolver | null
   rootDir: string
@@ -61,11 +61,11 @@ export class SnapshotManager {
   }
 
   onFileChanged(): void {
-    if (!this.context) return
+    if (!this.ctx) return
 
     if (this.snapshotState !== null) this.saveSnap()
 
-    this.testFile = this.context.file
+    this.testFile = this.ctx.file
     this.snapshotState = new SnapshotState(
       this.snapshotResolver!.resolveSnapshotPath(this.testFile),
       this.snapshotOptions,
@@ -83,15 +83,15 @@ export class SnapshotManager {
   setContext(context: Context): void {
     if (!context.title || !context.file) return
 
-    this.context = context
+    this.ctx = context
     if (this.testFile !== context.file) this.onFileChanged()
   }
 
   assert(received: unknown, message: string): void {
-    if (!this.snapshotState || !this.context) return
+    if (!this.snapshotState || !this.ctx) return
 
     const { actual, expected, key, pass } = this.snapshotState.match({
-      testName: this.context.fullTitle || this.context.title || this.context.file,
+      testName: this.ctx.fullTitle || this.ctx.title || this.ctx.file,
       received,
       isInline: false,
     })
