@@ -71,12 +71,13 @@ export async function runSuite(suite: Suite, ctx: RunnerContext) {
       await callHook(suite, 'beforeAll', [suite])
 
       for (const taskGroup of partitionTasks(suite.tasks)) {
-        if (taskGroup[0].concurrent) {
-          await Promise.all(taskGroup.map(t => runTask(t, ctx)))
-        }
-        else {
+        const computeMode = taskGroup[0].computeMode
+        if (computeMode === 'serial') {
           for (const t of taskGroup)
             await runTask(t, ctx)
+        }
+        else if (computeMode === 'concurrent') {
+          await Promise.all(taskGroup.map(t => runTask(t, ctx)))
         }
       }
 
@@ -92,13 +93,13 @@ export async function runSuite(suite: Suite, ctx: RunnerContext) {
 }
 
 /**
- * Partition consecutive serial and concurrent tasks in groups
+ * Partition in tasks groups by consecutive computeMode ('serial', 'concurrent')
  */
 function partitionTasks(tasks: Task[]) {
   let taskGroup: Task[] = []
   const groupedTasks: Task[][] = []
   for (const task of tasks) {
-    if (taskGroup.length === 0 || !!task.concurrent === !!taskGroup[0].concurrent) {
+    if (taskGroup.length === 0 || task.computeMode === taskGroup[0].computeMode) {
       taskGroup.push(task)
     }
     else {
