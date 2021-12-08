@@ -8,6 +8,9 @@
     "test",
     "jest"
   ],
+  "engines": {
+    "node": ">=16.0.0"
+  },
   "homepage": "https://github.com/antfu/vitest#readme",
   "bugs": {
     "url": "https://github.com/antfu/vitest/issues"
@@ -40,7 +43,8 @@
   ],
   "scripts": {
     "prepare": "esmo scripts/generate-types.ts",
-    "build": "rimraf dist && tsc -p src/tsconfig.json",
+    "build": "tsup --dts --minify",
+    "dev": "tsup --watch src",
     "lint": "eslint \"{src,test}/**/*.ts\"",
     "prepublishOnly": "nr build",
     "release": "bumpp --commit --push --tag && esmo scripts/publish.ts",
@@ -48,8 +52,7 @@
     "test:core": "node bin/vitest.mjs --dev -r test/core",
     "test:vue": "node bin/vitest.mjs --dev -r test/vue",
     "test:react": "node bin/vitest.mjs --dev -r test/react",
-    "coverage": "node bin/vitest.mjs --dev -r test/core --coverage",
-    "watch": "tsc -p src/tsconfig.json --watch"
+    "coverage": "node bin/vitest.mjs --dev -r test/core --coverage"
   },
   "dependencies": {
     "@antfu/utils": "^0.3.0",
@@ -91,6 +94,7 @@
     "esno": "^0.12.1",
     "npm-run-all": "^4.1.5",
     "rimraf": "^3.0.2",
+    "tsup": "^5.10.3",
     "typescript": "^4.5.2",
     "vite": "^2.7.1"
   }
