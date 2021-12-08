@@ -271,8 +271,36 @@ describe('suite', () => {
 })
 ```
 
-You can also use `.skip`, `.only`, and `.todo` with concurrent tasks. All the following combinations are valid:
+If you use `.concurrent` in a suite, every tasks in it will be run in parallel
+```ts
+// The two tasks marked with concurrent will be run in parallel
+describe.concurrent('suite', () => {
+  it('concurrent task 1', () => {
+    assert.equal(Math.sqrt(4), 3)
+  })
+  it('concurrent task 2', () => {
+    assert.equal(Math.sqrt(4), 3)
+  })
+  // No effect, same as not using .concurrent
+  it.concurrent('concurrent task 3', () => {
+    assert.equal(Math.sqrt(4), 3)
+  })
+})
+```
+
+You can also use `.skip`, `.only`, and `.todo` with concurrent suite and tasks. All the following combinations are valid:
 ```js
+describe.concurrent(...)
+
+describe.skip.concurrent(...)
+describe.concurrent.skip(...)
+
+describe.only.concurrent(...)
+describe.concurrent.only(...)
+
+describe.todo.concurrent(...)
+describe.concurrent.todo(...)
+
 it.concurrent(...)
 
 it.skip.concurrent(...)
@@ -284,6 +312,7 @@ it.concurrent.only(...)
 it.todo.concurrent(...)
 it.concurrent.todo(...)
 ```
+
 
 ## Sponsors
 

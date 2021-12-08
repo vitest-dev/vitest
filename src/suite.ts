@@ -1,6 +1,7 @@
 import { context } from './context'
-import { Task, SuiteCollector, TestCollector, RunMode, ConcurrentOptions, TestFactory, TestFunction, File, Suite } from './types'
-import { defaultConcurrentTimeout } from './constants'
+import { Task, SuiteCollector, TestCollector, RunMode, ComputeMode, TestFactory, TestFunction, File, Suite } from './types'
+
+export const suite = createSuite()
 
 export const defaultSuite = suite('')
 
@@ -8,7 +9,7 @@ function getCurrentSuite() {
   return context.currentSuite || defaultSuite
 }
 
-function createSuiteCollector(name: string, factory: TestFactory = () => {}, mode: RunMode) {
+function createSuiteCollector(name: string, factory: TestFactory = () => {}, mode: RunMode, suiteComputeMode?: ComputeMode) {
   const queue: Task[] = []
   const factoryQueue: Task[] = []
 
@@ -23,11 +24,11 @@ function createSuiteCollector(name: string, factory: TestFactory = () => {}, mod
     },
   }
 
-  const test = createTestCollector((name: string, fn: TestFunction, mode: RunMode, concurrent?: ConcurrentOptions) => {
+  const test = createTestCollector((name: string, fn: TestFunction, mode: RunMode, computeMode?: ComputeMode) => {
     queue.push({
       name,
       mode,
-      concurrent,
+      computeMode: computeMode ?? (suiteComputeMode ?? 'serial'),
       suite: {} as Suite,
       state: (mode !== 'run' && mode !== 'only') ? mode : undefined,
       fn,
@@ -80,11 +81,7 @@ function createSuiteCollector(name: string, factory: TestFactory = () => {}, mod
   return collector
 }
 
-function createConcurrentOptions(timeout?: number) {
-  return { timeout: timeout ?? defaultConcurrentTimeout }
-}
-
-function createTestCollector(collectTask: (name: string, fn: TestFunction, mode: RunMode, concurrent?: ConcurrentOptions) => void): TestCollector {
+function createTestCollector(collectTask: (name: string, fn: TestFunction, mode: RunMode, computeMode?: ComputeMode) => void): TestCollector {
   function test(name: string, fn: TestFunction) {
     collectTask(name, fn, 'run')
   }
@@ -92,11 +89,11 @@ function createTestCollector(collectTask: (name: string, fn: TestFunction, mode:
   test.skip = skip
   test.only = only
   test.todo = todo
-  function concurrent(name: string, fn: TestFunction, timeout?: number) {
-    collectTask(name, fn, 'run', createConcurrentOptions(timeout))
+  function concurrent(name: string, fn: TestFunction) {
+    collectTask(name, fn, 'run', 'concurrent')
   }
-  concurrent.skip = (name: string, fn: TestFunction, timeout?: number) => collectTask(name, fn, 'skip', createConcurrentOptions(timeout))
-  concurrent.only = (name: string, fn: TestFunction, timeout?: number) => collectTask(name, fn, 'only', createConcurrentOptions(timeout))
+  concurrent.skip = (name: string, fn: TestFunction) => collectTask(name, fn, 'skip', 'concurrent')
+  concurrent.only = (name: string, fn: TestFunction) => collectTask(name, fn, 'only', 'concurrent')
   concurrent.todo = todo
   function skip(name: string, fn: TestFunction) {
     collectTask(name, fn, 'skip')
@@ -116,26 +113,26 @@ function createTestCollector(collectTask: (name: string, fn: TestFunction, mode:
 
 // apis
 
-export const test = (function() {
+export const test = (function () {
   function test(name: string, fn: TestFunction) {
     return getCurrentSuite().test(name, fn)
   }
-  function concurrent(name: string, fn: TestFunction, timeout?: number) {
-    return getCurrentSuite().test.concurrent(name, fn, timeout)
+  function concurrent(name: string, fn: TestFunction) {
+    return getCurrentSuite().test.concurrent(name, fn)
   }
 
-  concurrent.skip = (name: string, fn: TestFunction, timeout?: number) => getCurrentSuite().test.concurrent.skip(name, fn, timeout)
-  concurrent.only = (name: string, fn: TestFunction, timeout?: number) => getCurrentSuite().test.concurrent.only(name, fn, timeout)
+  concurrent.skip = (name: string, fn: TestFunction) => getCurrentSuite().test.concurrent.skip(name, fn)
+  concurrent.only = (name: string, fn: TestFunction) => getCurrentSuite().test.concurrent.only(name, fn)
   concurrent.todo = (name: string) => getCurrentSuite().test.concurrent.todo(name)
 
   function skip(name: string, fn: TestFunction) {
     return getCurrentSuite().test.skip(name, fn)
   }
-  skip.concurrent = (name: string, fn: TestFunction, timeout?: number) => getCurrentSuite().test.skip.concurrent(name, fn, timeout)
+  skip.concurrent = (name: string, fn: TestFunction) => getCurrentSuite().test.skip.concurrent(name, fn)
   function only(name: string, fn: TestFunction) {
     return getCurrentSuite().test.only(name, fn)
   }
-  only.concurrent = (name: string, fn: TestFunction, timeout?: number) => getCurrentSuite().test.only.concurrent(name, fn, timeout)
+  only.concurrent = (name: string, fn: TestFunction) => getCurrentSuite().test.only.concurrent(name, fn)
   function todo(name: string) {
     return getCurrentSuite().test.todo(name)
   }
@@ -149,12 +146,38 @@ export const test = (function() {
   return test
 })()
 
-export function suite(suiteName: string, factory?: TestFactory) {
-  return createSuiteCollector(suiteName, factory, 'run')
+function createSuite() {
+  function suite(suiteName: string, factory?: TestFactory) {
+    return createSuiteCollector(suiteName, factory, 'run')
+  }
+  function concurrent(suiteName: string, factory?: TestFactory) {
+    return createSuiteCollector(suiteName, factory, 'run', 'concurrent')
+  }
+  concurrent.skip = (suiteName: string, factory?: TestFactory) => createSuiteCollector(suiteName, factory, 'skip', 'concurrent')
+  concurrent.only = (suiteName: string, factory?: TestFactory) => createSuiteCollector(suiteName, factory, 'only', 'concurrent')
+  concurrent.todo = (suiteName: string) => createSuiteCollector(suiteName, undefined, 'todo')
+
+  function skip(suiteName: string, factory?: TestFactory) {
+    return createSuiteCollector(suiteName, factory, 'skip')
+  }
+  skip.concurrent = concurrent.skip
+
+  function only(suiteName: string, factory?: TestFactory) {
+    return createSuiteCollector(suiteName, factory, 'only')
+  }
+  only.concurrent = concurrent.only
+
+  function todo(suiteName: string) {
+    return createSuiteCollector(suiteName, undefined, 'todo')
+  }
+  todo.concurrent = concurrent.todo
+
+  suite.concurrent = concurrent
+  suite.skip = skip
+  suite.only = only
+  suite.todo = todo
+  return suite
 }
-suite.skip = (suiteName: string, factory?: TestFactory) => createSuiteCollector(suiteName, factory, 'skip')
-suite.only = (suiteName: string, factory?: TestFactory) => createSuiteCollector(suiteName, factory, 'only')
-suite.todo = (suiteName: string) => createSuiteCollector(suiteName, undefined, 'todo')
 
 // alias
 export const describe = suite

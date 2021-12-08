@@ -77,15 +77,12 @@ export interface ResolvedConfig extends Required<UserOptions> {
 
 export type RunMode = 'run' | 'skip' | 'only' | 'todo'
 export type TaskState = RunMode | 'pass' | 'fail'
-
-export interface ConcurrentOptions {
-  timeout: number
-}
+export type ComputeMode = 'serial' | 'concurrent'
 
 export interface Task {
   name: string
   mode: RunMode
-  concurrent?: ConcurrentOptions
+  computeMode: ComputeMode
   suite: Suite
   fn: () => Awaitable<void>
   file?: File
@@ -96,20 +93,20 @@ export interface Task {
 export type TestFunction = () => Awaitable<void>
 
 interface ConcurrentCollector {
-  (name: string, fn: TestFunction, timeout?: number): void
-  only: (name: string, fn: TestFunction, timeout?: number) => void
-  skip: (name: string, fn: TestFunction, timeout?: number) => void
+  (name: string, fn: TestFunction): void
+  only: (name: string, fn: TestFunction) => void
+  skip: (name: string, fn: TestFunction) => void
   todo: (name: string) => void
 }
 
 interface OnlyCollector {
   (name: string, fn: TestFunction): void
-  concurrent: (name: string, fn: TestFunction, timeout?: number) => void
+  concurrent: (name: string, fn: TestFunction) => void
 }
 
 interface SkipCollector {
   (name: string, fn: TestFunction): void
-  concurrent: (name: string, fn: TestFunction, timeout?: number) => void
+  concurrent: (name: string, fn: TestFunction) => void
 }
 
 interface TodoCollector {
