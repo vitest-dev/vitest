@@ -1,9 +1,10 @@
 import { HookListener } from 'vitest'
 import { File, ResolvedConfig, Task, RunnerContext, Suite, RunMode } from '../types'
 import { getSnapshotManager } from '../integrations/chai/snapshot'
+import { DefaultReporter } from '../reporters/default'
 import { startWatcher } from './watcher'
 import { collectTests } from './collect'
-import { setupRunner } from './setup'
+import { setupEnv } from './setup'
 import { globTestFiles } from './glob'
 
 async function callHook<T extends keyof Suite['hooks']>(suite: Suite, name: T, args: Suite['hooks'][T][0] extends HookListener<infer A> ? A : never) {
@@ -154,8 +155,9 @@ export async function run(config: ResolvedConfig) {
     return
   }
 
-  // setup envs
-  const ctx = await setupRunner(config)
+  await setupEnv(config)
+
+  const ctx = await createRunnerContext(config)
 
   const { filesMap, snapshotManager, reporter } = ctx
 
@@ -173,4 +175,28 @@ export async function run(config: ResolvedConfig) {
 
   if (config.watch)
     await startWatcher(ctx)
+}
+
+export async function createRunnerContext(config: ResolvedConfig) {
+  await setupEnv(config)
+
+  const ctx: RunnerContext = {
+    filesMap: {},
+    get files() {
+      return Object.values(this.filesMap)
+    },
+    get suites() {
+      return Object.values(this.filesMap)
+        .reduce((suites, file) => suites.concat(file.suites), [] as Suite[])
+    },
+    get tasks() {
+      return this.suites
+        .reduce((tasks, suite) => tasks.concat(suite.tasks), [] as Task[])
+    },
+    config,
+    reporter: config.reporter || new DefaultReporter(),
+    snapshotManager: getSnapshotManager(),
+  }
+
+  return ctx
 }
