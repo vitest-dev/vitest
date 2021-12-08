@@ -7,21 +7,25 @@ import c from 'picocolors'
 
 const { red, dim, yellow } = c
 
+export interface ModuleCache {
+  promise?: Promise<any>
+  exports?: any
+  transformResult?: TransformResult
+}
+
 declare global {
   namespace NodeJS {
     interface Process {
       __vite_node__: {
         server: ViteDevServer
         watch?: boolean
-        moduleCache: Map<string, Promise<any>>
-        modulesTransformResult: Map<string, TransformResult>
+        moduleCache: Map<string, ModuleCache>
       }
     }
   }
 }
 
-const moduleCache = new Map<string, Promise<any>>()
-const modulesTransformResult = new Map<string, TransformResult>()
+const moduleCache = new Map<string, ModuleCache>()
 
 export interface ViteNodeOptions {
   silent?: boolean
@@ -55,7 +59,6 @@ export async function run(argv: ViteNodeOptions) {
   process.__vite_node__ = {
     server,
     moduleCache,
-    modulesTransformResult,
   }
 
   try {
@@ -126,6 +129,13 @@ async function transform(server: ViteDevServer, id: string) {
   }
 }
 
+function setCache(id: string, mod: Partial<ModuleCache>) {
+  if (!moduleCache.has(id))
+    moduleCache.set(id, mod)
+  else
+    Object.assign(moduleCache.get(id), mod)
+}
+
 async function execute(files: string[], server: ViteDevServer, options: ViteNodeOptions) {
   const result = []
   for (const file of files)
@@ -136,10 +146,13 @@ async function execute(files: string[], server: ViteDevServer, options: ViteNode
     callstack = [...callstack, id]
     const request = async(dep: string) => {
       if (callstack.includes(dep)) {
-        throw new Error(`${red('Circular dependency detected')}\nStack:\n${[...callstack, dep].reverse().map((i) => {
-          const path = relative(server.config.root, toFilePath(normalizeId(i), server))
-          return dim(' -> ') + (i === dep ? yellow(path) : path)
-        }).join('\n')}\n`)
+        if (!moduleCache.get(dep)) {
+          throw new Error(`${red('Circular dependency detected')}\nStack:\n${[...callstack, dep].reverse().map((i) => {
+            const path = relative(server.config.root, toFilePath(normalizeId(i), server))
+            return dim(' -> ') + (i === dep ? yellow(path) : path)
+          }).join('\n')}\n`)
+        }
+        return moduleCache.get(dep)!.exports
       }
       return cachedRequest(dep, callstack)
     }
@@ -151,10 +164,10 @@ async function execute(files: string[], server: ViteDevServer, options: ViteNode
     if (!result)
       throw new Error(`failed to load ${id}`)
 
-    modulesTransformResult.set(id, result)
-
     const url = pathToFileURL(fsPath)
     const exports = {}
+
+    setCache(id, { transformResult: result, exports })
 
     const context = {
       require: createRequire(url),
@@ -187,10 +200,11 @@ async function execute(files: string[], server: ViteDevServer, options: ViteNode
     if (options.shouldExternalize!(fsPath, server))
       return import(fsPath)
 
-    if (moduleCache.has(fsPath))
-      return moduleCache.get(fsPath)
-    moduleCache.set(fsPath, directRequest(id, fsPath, callstack))
-    return await moduleCache.get(fsPath)
+    if (moduleCache.get(fsPath)?.promise)
+      return moduleCache.get(fsPath)?.promise
+    const promise = directRequest(id, fsPath, callstack)
+    setCache(fsPath, { promise })
+    return await promise
   }
 
   function exportAll(exports: any, sourceModule: any) {

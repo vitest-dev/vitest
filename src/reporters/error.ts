@@ -18,15 +18,15 @@ export async function printError(error: unknown) {
     return
   }
 
-  const { modulesTransformResult } = process.__vite_node__
+  const { moduleCache } = process.__vite_node__
 
   const e = error as ErrorWithDiff
 
   let codeFramePrinted = false
   const stacks = parseStack(e.stack || '')
-  const nearest = stacks.find(stack => modulesTransformResult.has(stack.file))
+  const nearest = stacks.find(stack => moduleCache.has(stack.file))
   if (nearest) {
-    const transformResult = modulesTransformResult.get(nearest.file)
+    const transformResult = moduleCache.get(nearest.file)?.transformResult
     const pos = await getOriginalPos(transformResult?.map, nearest)
     if (pos && existsSync(nearest.file)) {
       const sourceCode = await fs.readFile(nearest.file, 'utf-8')
