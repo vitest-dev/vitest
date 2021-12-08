@@ -49,10 +49,10 @@
     "prepublishOnly": "nr build",
     "release": "bumpp --commit --push --tag && esmo scripts/publish.ts",
     "test": "run-s test:*",
-    "test:core": "node bin/vitest.mjs --dev -r test/core",
-    "test:vue": "node bin/vitest.mjs --dev -r test/vue",
-    "test:react": "node bin/vitest.mjs --dev -r test/react",
-    "coverage": "node bin/vitest.mjs --dev -r test/core --coverage"
+    "test:core": "node bin/vitest.mjs -r test/core",
+    "test:vue": "node bin/vitest.mjs -r test/vue",
+    "test:react": "node bin/vitest.mjs -r test/react",
+    "coverage": "node bin/vitest.mjs -r test/core --coverage"
   },
   "dependencies": {
     "@antfu/utils": "^0.3.0",
@@ -70,6 +70,7 @@
     "jest-util": "^27.4.2",
     "jsdom": "^19.0.0",
     "listr": "^0.14.3",
+    "nanoid": "^3.1.30",
     "picocolors": "^1.0.0",
     "piscina": "^3.1.0",
     "sade": "^1.7.4",

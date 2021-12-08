@@ -1,5 +1,5 @@
-import { context } from './context'
-import { Task, SuiteCollector, TestCollector, RunMode, ComputeMode, TestFactory, TestFunction, File, Suite } from './types'
+import { context } from '../context'
+import { Task, SuiteCollector, TestCollector, RunMode, ComputeMode, TestFactory, TestFunction, File, Suite } from '../types'
 
 export const suite = createSuite()
 

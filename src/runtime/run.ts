@@ -1,11 +1,12 @@
 import { HookListener } from 'vitest'
-import { File, ResolvedConfig, Task, RunnerContext, Suite, RunMode } from '../types'
+import { File, ResolvedConfig, Task, RunnerContext, Suite } from '../types'
 import { getSnapshotManager } from '../integrations/chai/snapshot'
 import { DefaultReporter } from '../reporters/default'
-import { startWatcher } from './watcher'
-import { collectTests } from './collect'
-import { setupEnv } from './setup'
-import { globTestFiles } from './glob'
+// import { createWorker } from '../worker/manager'
+// import { startWatcher } from './watcher'
+// import { collectTests } from './collect'
+// import { setupEnv } from './setup'
+// import { globTestFiles } from './glob'
 
 async function callHook<T extends keyof Suite['hooks']>(suite: Suite, name: T, args: Suite['hooks'][T][0] extends HookListener<infer A> ? A : never) {
   await Promise.all(suite.hooks[name].map(fn => fn(...(args as any))))
@@ -40,20 +41,6 @@ export async function runTask(task: Task, ctx: RunnerContext) {
   }
 
   await reporter.onTaskEnd?.(task, ctx)
-}
-
-/**
- * If any items been marked as `only`, mark all other items as `skip`.
- */
-export function interpretOnlyMode(items: { mode: RunMode }[]) {
-  if (items.some(i => i.mode === 'only')) {
-    items.forEach((i) => {
-      if (i.mode === 'run')
-        i.mode = 'skip'
-      else if (i.mode === 'only')
-        i.mode = 'run'
-    })
-  }
 }
 
 export async function runSuite(suite: Suite, ctx: RunnerContext) {
@@ -143,27 +130,16 @@ export async function runFiles(filesMap: Record<string, File>, ctx: RunnerContex
     await runFile(file, ctx)
 }
 
+/*
 export async function run(config: ResolvedConfig) {
-  // if watch, tell `vite-node` not to end the process
-  if (config.watch)
-    process.__vite_node__.watch = true
-
-  const testFilepaths = await globTestFiles(config)
-  if (!testFilepaths.length) {
-    console.error('No test files found')
-    process.exitCode = 1
-    return
-  }
-
   await setupEnv(config)
-
   const ctx = await createRunnerContext(config)
 
   const { filesMap, snapshotManager, reporter } = ctx
 
   await reporter.onStart?.(config)
 
-  const files = await collectTests(testFilepaths)
+  const files: string[] = [] // await collectTests(testFilepaths)
 
   Object.assign(filesMap, files)
 
@@ -176,10 +152,9 @@ export async function run(config: ResolvedConfig) {
   if (config.watch)
     await startWatcher(ctx)
 }
+*/
 
 export async function createRunnerContext(config: ResolvedConfig) {
-  await setupEnv(config)
-
   const ctx: RunnerContext = {
     filesMap: {},
     get files() {

@@ -1,4 +1,5 @@
 /* eslint-disable no-use-before-define */
+import { MessagePort } from 'worker_threads'
 import { Awaitable } from '@antfu/utils'
 import { SnapshotManager } from './integrations/chai/snapshot/manager'
 
@@ -68,11 +69,17 @@ export interface UserOptions {
    * Custom reporter for output
    */
   reporter?: Reporter
+
+  filters?: string[]
+  config?: string | undefined
 }
 
-export interface ResolvedConfig extends Required<UserOptions> {
-  filters?: string[]
+export interface ResolvedConfig extends Omit<Required<UserOptions>, 'config' | 'filters'> {
   config?: string
+  filters?: string[]
+
+  depsInline: (string | RegExp)[]
+  depsExternal: (string | RegExp)[]
 }
 
 export type RunMode = 'run' | 'skip' | 'only' | 'todo'
@@ -186,4 +193,10 @@ export interface Reporter {
 
   onWatcherStart?: (ctx: RunnerContext) => Awaitable<void>
   onWatcherRerun?: (files: string[], trigger: string, ctx: RunnerContext) => Awaitable<void>
+}
+
+export interface WorkerContext {
+  port: MessagePort
+  files: string[]
+  config: ResolvedConfig
 }

@@ -1,7 +1,6 @@
-import { clearContext, defaultSuite } from '../suite'
 import { context } from '../context'
-import { File, Suite } from '../types'
-import { interpretOnlyMode } from './index'
+import { File, RunMode, Suite } from '../types'
+import { clearContext, defaultSuite } from './suite'
 
 export async function collectTests(paths: string[]) {
   const files: Record<string, File> = {}
@@ -41,7 +40,6 @@ export async function collectTests(paths: string[]) {
   allSuites.forEach((i) => {
     if (i.mode === 'skip')
       i.tasks.forEach(t => t.mode === 'run' && (t.mode = 'skip'))
-
     else
       interpretOnlyMode(i.tasks)
 
@@ -49,4 +47,18 @@ export async function collectTests(paths: string[]) {
   })
 
   return files
+}
+
+/**
+ * If any items been marked as `only`, mark all other items as `skip`.
+ */
+export function interpretOnlyMode(items: { mode: RunMode }[]) {
+  if (items.some(i => i.mode === 'only')) {
+    items.forEach((i) => {
+      if (i.mode === 'run')
+        i.mode = 'skip'
+      else if (i.mode === 'only')
+        i.mode = 'run'
+    })
+  }
 }
