@@ -17,7 +17,7 @@ A blazing fast unit test framework powered by Vite.
 
 > ⚠️ **DISCLAIMER**: Vitest is still in development and not stable yet. It's not recommended to use it in production.
 
-> Vitest requires Vite v2.7.0 or above
+> Vitest requires Vite v2.7 and Node v16
 
 [**Join the Discord!**](https://discord.com/invite/2zYZNngd7y)
 
@@ -174,7 +174,7 @@ For convenience, we also provide a shorthand for passing `--coverage` option to 
 $ vitest --coverage
 ```
 
-For more configuration avaliable, please refer to [c8](https://github.com/bcoe/c8)'s documentation.
+For more configuration available, please refer to [c8](https://github.com/bcoe/c8)'s documentation.
 
 ## Filtering
 
