@@ -21,6 +21,8 @@ export interface ExecuteOptions {
   moduleCache: Map<string, ModuleCache>
 }
 
+const isWindows = process.platform === 'win32'
+
 export const stubRequests: Record<string, any> = {
   '/@vite/client': {
     injectQuery: (id: string) => id,
@@ -58,7 +60,8 @@ export async function executeInViteNode({ moduleCache, root, files, fetch, inlin
     if (!result)
       throw new Error(`failed to load ${id}`)
 
-    const url = pathToFileURL(fsPath)
+    // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
+    const url = pathToFileURL(fsPath).href
     const exports = {}
 
     setCache(id, { transformResult: result, exports })
@@ -177,7 +180,10 @@ export function toFilePath(id: string, root: string): string {
   if (absolute.startsWith('//'))
     absolute = absolute.slice(1)
 
-  return absolute
+  // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
+  return isWindows && absolute.startsWith('/')
+    ? pathToFileURL(absolute.slice(1)).href
+    : absolute
 }
 
 function slash(path: string) {
