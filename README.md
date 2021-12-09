@@ -115,6 +115,23 @@ To get TypeScript working with the global APIs, add `vitest/global` to the `type
 }
 ```
 
+If you are already using [`unplugin-auto-import`](https://github.com/antfu/unplugin-vue-components) in your project, you can also use it directly for auto importing those APIs.
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite'
+import AutoImport from 'unplugin-auto-import/vite'
+
+export default defineConfig({
+  plugins: [
+    AutoImport({
+      imports: ['vitest'],
+      dts: true // genreate TypeScript declaration
+    })
+  ]
+})
+```
+
 ## Browser Mocking
 
 Pass `--dom` option in CLI to enable browser mocking. Or the `dom` flag in the config.
