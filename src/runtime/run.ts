@@ -10,6 +10,9 @@ async function callHook<T extends keyof SuiteHooks>(suite: Suite, name: T, args:
 }
 
 export async function runTask(task: Task) {
+  if (task.mode !== 'run')
+    return
+
   getSnapshotManager()?.setTask(task)
 
   rpc('onTaskBegin', task)

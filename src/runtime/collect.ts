@@ -9,7 +9,6 @@ export async function collectTests(paths: string[]) {
     const file: File = {
       filepath,
       suites: [],
-      collected: false,
     }
 
     clearContext()
@@ -22,11 +21,13 @@ export async function collectTests(paths: string[]) {
         file.suites.push(await c.collect(file))
       }
 
-      file.collected = true
+      if (!file.suites.filter(i => i.tasks.length).length) {
+        file.error = new Error(`No tests found in ${filepath}`)
+        process.exitCode = 1
+      }
     }
     catch (e) {
       file.error = e
-      file.collected = false
       process.exitCode = 1
     }
 
@@ -42,7 +43,6 @@ export async function collectTests(paths: string[]) {
       i.tasks.forEach(t => t.mode === 'run' && (t.mode = 'skip'))
     else
       interpretOnlyMode(i.tasks)
-    // i.tasks.forEach(t => t.mode === 'skip' && (t.mode = 'skip'))
   })
 
   return files

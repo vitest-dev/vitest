@@ -49,7 +49,7 @@ export class DefaultReporter implements Reporter {
       return tasks.map((task) => {
         return {
           title: task.name,
-          skip: () => task.mode === 'skip',
+          skip: () => task.mode === 'skip' || task.mode === 'todo',
           task: async() => {
             return await this.taskMap.get(task.id)?.promise
           },
@@ -113,8 +113,8 @@ export class DefaultReporter implements Reporter {
     const runnable = tasks.filter(i => i.result?.state === 'pass' || i.result?.state === 'fail')
     const passed = tasks.filter(i => i.result?.state === 'pass')
     const failed = tasks.filter(i => i.result?.state === 'fail')
-    const skipped = tasks.filter(i => i.result?.state === 'skip')
-    const todo = tasks.filter(i => i.result?.state === 'todo')
+    const skipped = tasks.filter(i => i.mode === 'skip')
+    const todo = tasks.filter(i => i.mode === 'todo')
 
     if (failedFiles.length) {
       console.error(c.red(c.bold(`\nFailed to parse ${failedFiles.length} files:`)))
@@ -131,7 +131,7 @@ export class DefaultReporter implements Reporter {
     if (failedSuites.length) {
       console.error(c.bold(c.red(`\nFailed to run ${failedSuites.length} suites:`)))
       for (const suite of failedSuites) {
-        console.error(c.red(`\n- ${suite.file?.filepath} > ${suite.name}`))
+        console.error(c.red(`\n- ${suite.name}`))
         await printError(suite.error)
         console.log()
       }

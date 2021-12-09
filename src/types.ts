@@ -92,7 +92,6 @@ export interface Task {
   mode: RunMode
   computeMode: ComputeMode
   suite: Suite
-  file?: File
   result?: TaskResult
 }
 
@@ -148,7 +147,6 @@ export interface Suite {
   name: string
   mode: RunMode
   tasks: Task[]
-  file?: File
   error?: unknown
   status?: TaskState
 }
@@ -167,7 +165,6 @@ export type TestFactory = (test: (name: string, fn: TestFunction) => void) => Aw
 export interface File {
   filepath: string
   suites: Suite[]
-  collected: boolean
   error?: unknown
 }
 

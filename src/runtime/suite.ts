@@ -1,5 +1,5 @@
 import { nanoid } from 'nanoid'
-import { SuiteHooks, Task, SuiteCollector, TestCollector, RunMode, ComputeMode, TestFactory, TestFunction, File, Suite } from '../types'
+import { SuiteHooks, Task, SuiteCollector, TestCollector, RunMode, ComputeMode, TestFactory, TestFunction, Suite } from '../types'
 import { context } from './context'
 import { getHooks, setFn, setHooks } from './map'
 
@@ -58,7 +58,7 @@ function createSuiteCollector(name: string, factory: TestFactory = () => {}, mod
     factoryQueue.length = 0
   }
 
-  async function collect(file?: File) {
+  async function collect() {
     factoryQueue.length = 0
     if (factory)
       await factory(test)
@@ -66,13 +66,7 @@ function createSuiteCollector(name: string, factory: TestFactory = () => {}, mod
     const tasks = [...factoryQueue, ...queue]
 
     suite.tasks = tasks
-    suite.file = file
-
-    tasks.forEach((task) => {
-      task.suite = suite
-      if (file)
-        task.file = file
-    })
+    tasks.forEach(task => task.suite = suite)
 
     return suite
   }
