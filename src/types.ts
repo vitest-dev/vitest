@@ -79,24 +79,29 @@ export type TestState = RunMode | 'pass' | 'fail'
 export type SuiteState = RunMode | 'pass' | 'fail'
 export type ComputeMode = 'serial' | 'concurrent'
 
-export interface Test {
-  type: 'test'
+export type TaskType = 'test' | 'suite'
+
+export interface Task {
+  type: TaskType
   name: string
   mode: RunMode
   computeMode: ComputeMode
   suite: Suite
   file?: File
-  result?: TestResult
+  result?: TaskResult
 }
 
-export interface TestResult {
+export interface Test extends Task {
+  type: 'test'
+  result?: TaskResult
+}
+
+export interface TaskResult {
   state: TestState
   start: number
   end?: number
   error?: unknown
 }
-
-export type Task = Test | Suite
 
 export type TestFunction = () => Awaitable<void>
 
@@ -139,14 +144,10 @@ export interface SuiteHooks {
   afterEach: HookListener<[Test, Suite]>[]
 }
 
-export interface Suite {
+export interface Suite extends Task {
   type: 'suite'
-  name: string
-  mode: RunMode
-  computeMode: ComputeMode
   tasks: Task[]
-  file?: File
-  result?: TestResult
+  result?: TaskResult
 }
 
 export interface SuiteCollector {
