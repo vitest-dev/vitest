@@ -1,6 +1,6 @@
 {
   "name": "vitest",
-  "version": "0.0.39",
+  "version": "0.0.40",
   "description": "A blazing fast unit test framework powered by Vite",
   "keywords": [
     "vite",
@@ -48,11 +48,9 @@
     "lint": "eslint \"{src,test}/**/*.ts\"",
     "prepublishOnly": "nr build",
     "release": "bumpp --commit --push --tag && esmo scripts/publish.ts",
-    "test": "run-s test:*",
-    "test:core": "node bin/vitest.mjs --dev -r test/core",
-    "test:vue": "node bin/vitest.mjs --dev -r test/vue",
-    "test:react": "node bin/vitest.mjs --dev -r test/react",
-    "coverage": "node bin/vitest.mjs --dev -r test/core --coverage"
+    "test:all": "pnpm -r --stream --filter !vitest run test --",
+    "test": "node bin/vitest.mjs -r test/core",
+    "coverage": "node bin/vitest.mjs -r test/core --coverage"
   },
   "dependencies": {
     "@antfu/utils": "^0.3.0",

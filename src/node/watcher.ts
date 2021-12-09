@@ -1,7 +1,7 @@
 import { slash } from '@antfu/utils'
 import { RunnerContext } from '../types'
-import { collectTests } from './collect'
-import { runFiles } from './index'
+import { runSuites } from '../runtime/run'
+import { collectTests } from '../runtime/collect'
 
 export async function startWatcher(ctx: RunnerContext) {
   const { reporter, snapshotManager, filesMap } = ctx
@@ -11,7 +11,7 @@ export async function startWatcher(ctx: RunnerContext) {
 
   const changedTests = new Set<string>()
   const seen = new Set<string>()
-  const { server, moduleCache } = process.__vite_node__
+  const { server, moduleCache } = process.__vitest__
 
   server.watcher.on('change', async(id) => {
     id = slash(id)
@@ -36,7 +36,9 @@ export async function startWatcher(ctx: RunnerContext) {
 
       const newFilesMap = await collectTests(paths)
       Object.assign(filesMap, newFilesMap)
-      await runFiles(newFilesMap, ctx)
+      const files = Object.values(filesMap)
+      reporter.onCollected?.(files, ctx)
+      await runSuites(files, ctx)
 
       snapshotManager.saveSnap()
 
@@ -59,7 +61,7 @@ export function getDependencyTests(id: string, ctx: RunnerContext, set = new Set
     return set
   }
 
-  const mod = process.__vite_node__.server.moduleGraph.getModuleById(id)
+  const mod = process.__vitest__.server.moduleGraph.getModuleById(id)
 
   if (mod) {
     mod.importers.forEach((i) => {

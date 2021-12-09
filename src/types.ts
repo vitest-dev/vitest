@@ -39,13 +39,6 @@ export interface UserOptions {
   dom?: boolean | 'jsdom' | 'happy-dom'
 
   /**
-   * Run tests files in parallel
-   *
-   * @default false
-   */
-  parallel?: boolean
-
-  /**
    * Update snapshot files
    *
    * @default false
@@ -68,27 +61,42 @@ export interface UserOptions {
    * Custom reporter for output
    */
   reporter?: Reporter
+
+  filters?: string[]
+  config?: string | undefined
 }
 
-export interface ResolvedConfig extends Required<UserOptions> {
-  filters?: string[]
+export interface ResolvedConfig extends Omit<Required<UserOptions>, 'config' | 'filters'> {
   config?: string
+  filters?: string[]
+
+  depsInline: (string | RegExp)[]
+  depsExternal: (string | RegExp)[]
 }
 
 export type RunMode = 'run' | 'skip' | 'only' | 'todo'
 export type TaskState = RunMode | 'pass' | 'fail'
+export type SuiteState = RunMode | 'pass' | 'fail'
 export type ComputeMode = 'serial' | 'concurrent'
 
 export interface Task {
+  type: 'task'
   name: string
   mode: RunMode
   computeMode: ComputeMode
   suite: Suite
-  fn: () => Awaitable<void>
   file?: File
-  state?: TaskState
+  result?: TaskResult
+}
+
+export interface TaskResult {
+  state: TaskState
+  start: number
+  end?: number
   error?: unknown
 }
+
+export type TaskOrSuite = Task | Suite
 
 export type TestFunction = () => Awaitable<void>
 
@@ -124,43 +132,43 @@ export interface TestCollector {
 
 export type HookListener<T extends any[]> = (...args: T) => Awaitable<void>
 
+export interface SuiteHooks {
+  beforeAll: HookListener<[Suite]>[]
+  afterAll: HookListener<[Suite]>[]
+  beforeEach: HookListener<[Task, Suite]>[]
+  afterEach: HookListener<[Task, Suite]>[]
+}
+
 export interface Suite {
+  type: 'suite'
   name: string
   mode: RunMode
-  tasks: Task[]
+  computeMode: ComputeMode
+  children: TaskOrSuite[]
   file?: File
-  error?: unknown
-  status?: TaskState
-  hooks: {
-    beforeAll: HookListener<[Suite]>[]
-    afterAll: HookListener<[Suite]>[]
-    beforeEach: HookListener<[Task, Suite]>[]
-    afterEach: HookListener<[Task, Suite]>[]
-  }
+  result?: TaskResult
 }
 
 export interface SuiteCollector {
   readonly name: string
   readonly mode: RunMode
+  type: 'collector'
   test: TestCollector
+  children: (Suite | Task | SuiteCollector)[]
   collect: (file?: File) => Promise<Suite>
   clear: () => void
-  on: <T extends keyof Suite['hooks']>(name: T, ...fn: Suite['hooks'][T]) => void
+  on: <T extends keyof SuiteHooks>(name: T, ...fn: SuiteHooks[T]) => void
 }
 
 export type TestFactory = (test: (name: string, fn: TestFunction) => void) => Awaitable<void>
 
-export interface File {
+export interface File extends Suite {
   filepath: string
-  suites: Suite[]
-  collected: boolean
-  error?: unknown
 }
 
 export interface RunnerContext {
   filesMap: Record<string, File>
   files: File[]
-  suites: Suite[]
   tasks: Task[]
   config: ResolvedConfig
   reporter: Reporter
@@ -168,7 +176,7 @@ export interface RunnerContext {
 }
 
 export interface GlobalContext {
-  suites: SuiteCollector[]
+  children: (SuiteCollector | Task)[]
   currentSuite: SuiteCollector | null
 }
 
@@ -177,12 +185,10 @@ export interface Reporter {
   onCollected?: (files: File[], ctx: RunnerContext) => Awaitable<void>
   onFinished?: (ctx: RunnerContext, files?: File[]) => Awaitable<void>
 
-  onSuiteBegin?: (suite: Suite, ctx: RunnerContext) => Awaitable<void>
-  onSuiteEnd?: (suite: Suite, ctx: RunnerContext) => Awaitable<void>
-  onFileBegin?: (file: File, ctx: RunnerContext) => Awaitable<void>
-  onFileEnd?: (file: File, ctx: RunnerContext) => Awaitable<void>
   onTaskBegin?: (task: Task, ctx: RunnerContext) => Awaitable<void>
   onTaskEnd?: (task: Task, ctx: RunnerContext) => Awaitable<void>
+  onSuiteBegin?: (suite: Suite, ctx: RunnerContext) => Awaitable<void>
+  onSuiteEnd?: (suite: Suite, ctx: RunnerContext) => Awaitable<void>
 
   onWatcherStart?: (ctx: RunnerContext) => Awaitable<void>
   onWatcherRerun?: (files: string[], trigger: string, ctx: RunnerContext) => Awaitable<void>

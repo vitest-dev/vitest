@@ -18,7 +18,7 @@ export async function printError(error: unknown) {
     return
   }
 
-  const { moduleCache } = process.__vite_node__
+  const { moduleCache } = process.__vitest__
 
   const e = error as ErrorWithDiff
 
