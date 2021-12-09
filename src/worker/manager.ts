@@ -14,7 +14,7 @@ export async function createWorker(ctx: Omit<WorkerContext, 'port'>) {
   })
 
   const { port1: worker, port2: master } = new MessageChannel()
-  const server = process.__vitest__.server
+  const { server, state } = process.__vitest__
 
   master.on('message', async({ id, method, args = [] }: RpcMessage) => {
     async function send(fn: () => Awaitable<any>) {
@@ -24,6 +24,12 @@ export async function createWorker(ctx: Omit<WorkerContext, 'port'>) {
       catch (e) {
         master.postMessage({ id, error: e })
       }
+    }
+
+    if (method === 'onCollected') {
+      const files = args as RpcMap['onCollected'][0][0]
+      for (const file of files)
+        state.filesMap[file.filepath] = file
     }
 
     switch (method) {

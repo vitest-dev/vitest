@@ -105,7 +105,7 @@ export class DefaultReporter implements Reporter {
     // if (snapshot)
     //   console.log(snapshot.join('\n'))
 
-    const suites = files.flatMap(i => i.suites)
+    const suites = files.flatMap(i => i.suites).filter(Boolean)
     const tasks = suites.flatMap(i => i.tasks)
 
     const failedFiles = files.filter(i => i.error)

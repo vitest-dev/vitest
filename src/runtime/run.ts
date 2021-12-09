@@ -124,11 +124,6 @@ export async function runFiles(filesMap: Record<string, File>) {
 }
 
 export async function startTests(paths: string[]) {
-  await rpc('onStart')
-
   const filesMap = await collectTests(paths)
-
   await runFiles(filesMap)
-
-  await rpc('onFinished', Object.values(filesMap))
 }

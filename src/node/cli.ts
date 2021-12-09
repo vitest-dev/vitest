@@ -5,7 +5,7 @@ import { ViteDevServer } from 'vite'
 import type { ResolvedConfig } from '../types'
 import { version } from '../../package.json'
 import { initViteServer } from './server'
-import { start } from './start'
+import { start, TestState } from './start'
 import { ModuleCache } from './execute'
 
 sade('vitest [filter]', true)
@@ -29,6 +29,9 @@ sade('vitest [filter]', true)
       server,
       config,
       moduleCache: new Map<string, ModuleCache>(),
+      state: {
+        filesMap: {},
+      },
     }
 
     try {
@@ -42,12 +45,11 @@ sade('vitest [filter]', true)
       if (!config.watch)
         await server.close()
     }
-
-    const timer = setTimeout(() => {
-      // TODO: warn user and maybe error out
-      process.exit()
-    }, 500)
-    timer.unref()
+    // const timer = setTimeout(() => {
+    //   // TODO: warn user and maybe error out
+    //   process.exit()
+    // }, 500)
+    // timer.unref()
   })
   .parse(process.argv)
 
@@ -59,6 +61,7 @@ declare global {
         config: ResolvedConfig
         server: ViteDevServer
         moduleCache: Map<string, ModuleCache>
+        state: TestState
       }
     }
   }
