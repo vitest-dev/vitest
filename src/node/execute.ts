@@ -3,6 +3,7 @@ import { fileURLToPath, pathToFileURL } from 'url'
 import { dirname, resolve } from 'path'
 import vm from 'vm'
 import type { TransformResult } from 'vite'
+import { isExternal } from 'externality'
 
 export interface ModuleCache {
   promise?: Promise<any>
@@ -96,28 +97,23 @@ export async function executeInViteNode({ moduleCache, root, files, fetch, inlin
   }
 
   function shouldExternalize(id: string) {
-    for (const ex of inline) {
-      if (typeof ex === 'string') {
-        if (id.includes(`/node_modules/${ex}/`))
-          return false
-      }
-      else {
-        if (ex.test(id))
-          return false
-      }
-    }
-    for (const ex of external) {
-      if (typeof ex === 'string') {
-        if (id.includes(`/node_modules/${ex}/`))
-          return true
-      }
-      else {
-        if (ex.test(id))
-          return true
-      }
-    }
-
-    return id.includes('/node_modules/')
+    return isExternal(id, root, {
+      inline: [
+        /virtual:/,
+        /\.ts$/,
+        /\/esm\/.*\.js$/,
+        /\.(es|esm|esm-browser|esm-bundler|es6).js$/,
+        ...inline,
+      ],
+      external: [
+        ...external,
+        /node_modules/,
+      ],
+      resolve: {
+        type: 'module',
+        extensions: ['.ts', '.js', '.json', '.vue', '.mjs', '.jsx', '.tsx', '.wasm'],
+      },
+    })
   }
 
   async function cachedRequest(rawId: string, callstack: string[]) {
@@ -128,7 +124,7 @@ export async function executeInViteNode({ moduleCache, root, files, fetch, inlin
 
     const fsPath = toFilePath(id, root)
 
-    if (shouldExternalize(fsPath)) {
+    if (await shouldExternalize(fsPath)) {
       if (fsPath.match(/^\w:\//))
         return import(`/${fsPath}`)
       return import(fsPath)
