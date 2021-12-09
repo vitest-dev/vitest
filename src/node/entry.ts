@@ -1,18 +1,9 @@
-import { ResolvedConfig } from '../types'
-import { run } from '../run'
+import { run } from '../runtime/run'
 
-if (!process.__vite_node__ || !process.__vitest__)
+if (!process.__vitest__)
   throw new Error('Vitest can only run in vite-node environment, please use the CLI to start the process')
 
-const inlineOptions = process.__vite_node__.server.config.test || {}
-const cliOptions = process.__vitest__.options || {}
-
-const options: ResolvedConfig = {
-  ...cliOptions,
-  ...inlineOptions,
-}
-
-await run(options)
+await run(process.__vitest__.config)
 
 const timer = setTimeout(() => {
   // TODO: warn user and maybe error out

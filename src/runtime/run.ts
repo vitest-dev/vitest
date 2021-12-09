@@ -1,42 +1,50 @@
 import { HookListener } from 'vitest'
-import { File, ResolvedConfig, Task, RunnerContext, Suite, RunMode } from '../types'
+import { File, ResolvedConfig, Task, RunnerContext, Suite, RunMode, SuiteHooks } from '../types'
 import { getSnapshotManager } from '../integrations/chai/snapshot'
-import { startWatcher } from './watcher'
+import { startWatcher } from '../node/watcher'
+import { globTestFiles } from '../node/glob'
+import { getFn, getHooks } from './map'
 import { collectTests } from './collect'
 import { setupRunner } from './setup'
-import { globTestFiles } from './glob'
 
-async function callHook<T extends keyof Suite['hooks']>(suite: Suite, name: T, args: Suite['hooks'][T][0] extends HookListener<infer A> ? A : never) {
-  await Promise.all(suite.hooks[name].map(fn => fn(...(args as any))))
+async function callHook<T extends keyof SuiteHooks>(suite: Suite, name: T, args: SuiteHooks[T][0] extends HookListener<infer A> ? A : never) {
+  await Promise.all(getHooks(suite)[name].map(fn => fn(...(args as any))))
 }
 
 export async function runTask(task: Task, ctx: RunnerContext) {
+  if (task.mode !== 'run')
+    return
+
   const { reporter } = ctx
 
   getSnapshotManager()?.setTask(task)
 
   await reporter.onTaskBegin?.(task, ctx)
-
-  if (task.mode === 'run') {
-    try {
-      await callHook(task.suite, 'beforeEach', [task, task.suite])
-      await task.fn()
-      task.state = 'pass'
-    }
-    catch (e) {
-      task.state = 'fail'
-      task.error = e
-      process.exitCode = 1
-    }
-    try {
-      await callHook(task.suite, 'afterEach', [task, task.suite])
-    }
-    catch (e) {
-      task.state = 'fail'
-      task.error = e
-      process.exitCode = 1
-    }
+  task.result = {
+    start: performance.now(),
+    state: 'run',
   }
+
+  try {
+    await callHook(task.suite, 'beforeEach', [task, task.suite])
+    await getFn(task)()
+    task.result.state = 'pass'
+  }
+  catch (e) {
+    task.result.state = 'fail'
+    task.result.error = e
+    process.exitCode = 1
+  }
+  try {
+    await callHook(task.suite, 'afterEach', [task, task.suite])
+  }
+  catch (e) {
+    task.result.state = 'fail'
+    task.result.error = e
+    process.exitCode = 1
+  }
+
+  task.result.end = performance.now()
 
   await reporter.onTaskEnd?.(task, ctx)
 }
@@ -70,14 +78,14 @@ export async function runSuite(suite: Suite, ctx: RunnerContext) {
     try {
       await callHook(suite, 'beforeAll', [suite])
 
-      for (const taskGroup of partitionTasks(suite.tasks)) {
-        const computeMode = taskGroup[0].computeMode
+      for (const childrenGroup of partitionSuiteChildren(suite)) {
+        const computeMode = childrenGroup[0].computeMode
         if (computeMode === 'serial') {
-          for (const t of taskGroup)
-            await runTask(t, ctx)
+          for (const c of childrenGroup)
+            await runSuiteChild(c, ctx)
         }
         else if (computeMode === 'concurrent') {
-          await Promise.all(taskGroup.map(t => runTask(t, ctx)))
+          await Promise.all(childrenGroup.map(c => runSuiteChild(c, ctx)))
         }
       }
 
@@ -92,42 +100,46 @@ export async function runSuite(suite: Suite, ctx: RunnerContext) {
   await reporter.onSuiteEnd?.(suite, ctx)
 }
 
+async function runSuiteChild(c: (Task | Suite), ctx: RunnerContext) {
+  return c.type === 'task' ? runTask(c, ctx) : runSuite(c, ctx)
+}
+
 /**
  * Partition in tasks groups by consecutive computeMode ('serial', 'concurrent')
  */
-function partitionTasks(tasks: Task[]) {
-  let taskGroup: Task[] = []
-  const groupedTasks: Task[][] = []
-  for (const task of tasks) {
-    if (taskGroup.length === 0 || task.computeMode === taskGroup[0].computeMode) {
-      taskGroup.push(task)
+function partitionSuiteChildren(suite: Suite) {
+  let childrenGroup: (Task | Suite)[] = []
+  const childrenGroups: (Task | Suite)[][] = []
+  for (const c of suite.children) {
+    if (childrenGroup.length === 0 || c.computeMode === childrenGroup[0].computeMode) {
+      childrenGroup.push(c)
     }
     else {
-      groupedTasks.push(taskGroup)
-      taskGroup = [task]
+      childrenGroups.push(childrenGroup)
+      childrenGroup = [c]
     }
   }
-  if (taskGroup.length > 0)
-    groupedTasks.push(taskGroup)
+  if (childrenGroup.length > 0)
+    childrenGroups.push(childrenGroup)
 
-  return groupedTasks
+  return childrenGroups
 }
 
 export async function runFile(file: File, ctx: RunnerContext) {
   const { reporter } = ctx
 
-  const runnableSuites = file.suites.filter(i => i.mode === 'run')
-  if (runnableSuites.length === 0)
+  const runnable = file.children.filter(i => i.mode === 'run')
+  if (runnable.length === 0)
     return
 
   await reporter.onFileBegin?.(file, ctx)
 
   if (ctx.config.parallel) {
-    await Promise.all(file.suites.map(suite => runSuite(suite, ctx)))
+    await Promise.all(file.children.map(c => runSuiteChild(c, ctx)))
   }
   else {
-    for (const suite of file.suites)
-      await runSuite(suite, ctx)
+    for (const c of file.children)
+      await runSuiteChild(c, ctx)
   }
 
   await reporter.onFileEnd?.(file, ctx)
@@ -143,10 +155,6 @@ export async function runFiles(filesMap: Record<string, File>, ctx: RunnerContex
 }
 
 export async function run(config: ResolvedConfig) {
-  // if watch, tell `vite-node` not to end the process
-  if (config.watch)
-    process.__vite_node__.watch = true
-
   const testFilepaths = await globTestFiles(config)
   if (!testFilepaths.length) {
     console.error('No test files found')

@@ -1,7 +1,7 @@
 import { slash } from '@antfu/utils'
 import { RunnerContext } from '../types'
-import { collectTests } from './collect'
-import { runFiles } from './index'
+import { runFiles } from '../runtime/run'
+import { collectTests } from '../runtime/collect'
 
 export async function startWatcher(ctx: RunnerContext) {
   const { reporter, snapshotManager, filesMap } = ctx

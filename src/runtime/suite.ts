@@ -1,5 +1,6 @@
+import { Task, SuiteCollector, TestCollector, RunMode, ComputeMode, TestFactory, TestFunction, File, Suite, SuiteHooks } from '../types'
 import { context } from './context'
-import { Task, SuiteCollector, TestCollector, RunMode, ComputeMode, TestFactory, TestFunction, File, Suite } from './types'
+import { getHooks, setFn, setHooks } from './map'
 
 export const suite = createSuite()
 
@@ -9,74 +10,96 @@ function getCurrentSuite() {
   return context.currentSuite || defaultSuite
 }
 
-function createSuiteCollector(name: string, factory: TestFactory = () => {}, mode: RunMode, suiteComputeMode?: ComputeMode) {
-  const queue: Task[] = []
-  const factoryQueue: Task[] = []
-
-  const suiteBase: Pick<Suite, 'name' | 'mode' | 'hooks'> = {
-    name,
-    mode,
-    hooks: {
-      beforeAll: [],
-      afterAll: [],
-      beforeEach: [],
-      afterEach: [],
-    },
+export function createSuiteHooks() {
+  return {
+    beforeAll: [],
+    afterAll: [],
+    beforeEach: [],
+    afterEach: [],
   }
+}
+
+function createSuiteCollector(name: string, factory: TestFactory = () => { }, mode: RunMode, suiteComputeMode?: ComputeMode) {
+  const children: (Task | Suite | SuiteCollector)[] = []
+  const factoryQueue: (Task | Suite |SuiteCollector)[] = []
+
+  let suite: Suite
+
+  initSuite()
 
   const test = createTestCollector((name: string, fn: TestFunction, mode: RunMode, computeMode?: ComputeMode) => {
-    queue.push({
+    const task: Task = {
+      type: 'task',
       name,
       mode,
       computeMode: computeMode ?? (suiteComputeMode ?? 'serial'),
       suite: {} as Suite,
-      state: (mode !== 'run' && mode !== 'only') ? mode : undefined,
-      fn,
-    })
+    }
+    setFn(task, fn)
+    children.push(task)
   })
 
   const collector: SuiteCollector = {
+    type: 'collector',
     name,
     mode,
     test,
+    children,
     collect,
     clear,
     on: addHook,
   }
 
-  function addHook<T extends keyof Suite['hooks']>(name: T, ...fn: Suite['hooks'][T]) {
-    suiteBase.hooks[name].push(...fn as any)
+  function addHook<T extends keyof SuiteHooks>(name: T, ...fn: SuiteHooks[T]) {
+    getHooks(suite)[name].push(...fn as any)
+  }
+
+  function initSuite() {
+    suite = {
+      type: 'suite',
+      computeMode: 'serial',
+      name,
+      mode,
+      children: [],
+    }
+    setHooks(suite, createSuiteHooks())
   }
 
   function clear() {
-    queue.length = 0
+    children.length = 0
     factoryQueue.length = 0
+    initSuite()
   }
 
   async function collect(file?: File) {
     factoryQueue.length = 0
-    if (factory)
+    if (factory) {
+      const prev = context.currentSuite
+      context.currentSuite = collector
       await factory(test)
-
-    const tasks = [...factoryQueue, ...queue]
-
-    const suite: Suite = {
-      ...suiteBase,
-      tasks,
-      file,
+      context.currentSuite = prev
     }
 
-    tasks.forEach((task) => {
-      task.suite = suite
-      if (file)
-        task.file = file
+    const allChildren = await Promise.all(
+      [...factoryQueue, ...children]
+        .map(i => i.type === 'collector' ? i.collect(file) : i),
+    )
+
+    suite.file = file
+    suite.children = allChildren
+
+    allChildren.forEach((task) => {
+      if (task.type === 'task') {
+        task.suite = suite
+        if (file)
+          task.file = file
+      }
     })
 
     return suite
   }
 
-  context.currentSuite = collector
-  context.suites.push(collector)
+  context.currentSuite?.children.push(collector)
 
   return collector
 }
@@ -184,14 +207,22 @@ export const describe = suite
 export const it = test
 
 // hooks
-export const beforeAll = (fn: Suite['hooks']['beforeAll'][0]) => getCurrentSuite().on('beforeAll', fn)
-export const afterAll = (fn: Suite['hooks']['afterAll'][0]) => getCurrentSuite().on('afterAll', fn)
-export const beforeEach = (fn: Suite['hooks']['beforeEach'][0]) => getCurrentSuite().on('beforeEach', fn)
-export const afterEach = (fn: Suite['hooks']['afterEach'][0]) => getCurrentSuite().on('afterEach', fn)
+export const beforeAll = (fn: SuiteHooks['beforeAll'][0]) => getCurrentSuite().on('beforeAll', fn)
+export const afterAll = (fn: SuiteHooks['afterAll'][0]) => getCurrentSuite().on('afterAll', fn)
+export const beforeEach = (fn: SuiteHooks['beforeEach'][0]) => getCurrentSuite().on('beforeEach', fn)
+export const afterEach = (fn: SuiteHooks['afterEach'][0]) => getCurrentSuite().on('afterEach', fn)
 
 // utils
 export function clearContext() {
-  context.suites.length = 0
+  context.children.length = 0
   defaultSuite.clear()
   context.currentSuite = defaultSuite
+}
+
+export function getSuiteTasks(suite: Suite): Task[] {
+  return suite.children.flatMap(c => c.type === 'task' ? [c] : getSuiteTasks(c))
+}
+
+export function suiteHasTasks(suite: Suite): boolean {
+  return suite.children.some(c => c.type === 'task' || suiteHasTasks(c as Suite))
 }
