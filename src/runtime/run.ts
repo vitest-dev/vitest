@@ -1,8 +1,9 @@
 import { HookListener } from 'vitest'
-import { File, ResolvedConfig, Task, RunnerContext, Suite, RunMode, SuiteHooks } from '../types'
+import { File, ResolvedConfig, Task, RunnerContext, Suite, SuiteHooks, TaskOrSuite } from '../types'
 import { getSnapshotManager } from '../integrations/chai/snapshot'
 import { startWatcher } from '../node/watcher'
 import { globTestFiles } from '../node/glob'
+import { partitionSuiteChildren } from '../utils'
 import { getFn, getHooks } from './map'
 import { collectTests } from './collect'
 import { setupRunner } from './setup'
@@ -49,30 +50,21 @@ export async function runTask(task: Task, ctx: RunnerContext) {
   await reporter.onTaskEnd?.(task, ctx)
 }
 
-/**
- * If any items been marked as `only`, mark all other items as `skip`.
- */
-export function interpretOnlyMode(items: { mode: RunMode }[]) {
-  if (items.some(i => i.mode === 'only')) {
-    items.forEach((i) => {
-      if (i.mode === 'run')
-        i.mode = 'skip'
-      else if (i.mode === 'only')
-        i.mode = 'run'
-    })
-  }
-}
-
 export async function runSuite(suite: Suite, ctx: RunnerContext) {
   const { reporter } = ctx
 
   await reporter.onSuiteBegin?.(suite, ctx)
 
+  suite.result = {
+    start: performance.now(),
+    state: 'run',
+  }
+
   if (suite.mode === 'skip') {
-    suite.status = 'skip'
+    suite.result.state = 'skip'
   }
   else if (suite.mode === 'todo') {
-    suite.status = 'todo'
+    suite.result.state = 'todo'
   }
   else {
     try {
@@ -92,37 +84,20 @@ export async function runSuite(suite: Suite, ctx: RunnerContext) {
       await callHook(suite, 'afterAll', [suite])
     }
     catch (e) {
-      suite.error = e
-      suite.status = 'fail'
+      suite.result.error = e
+      suite.result.state = 'fail'
       process.exitCode = 1
     }
   }
+  suite.result.end = performance.now()
+
   await reporter.onSuiteEnd?.(suite, ctx)
 }
 
-async function runSuiteChild(c: (Task | Suite), ctx: RunnerContext) {
-  return c.type === 'task' ? runTask(c, ctx) : runSuite(c, ctx)
-}
-
-/**
- * Partition in tasks groups by consecutive computeMode ('serial', 'concurrent')
- */
-function partitionSuiteChildren(suite: Suite) {
-  let childrenGroup: (Task | Suite)[] = []
-  const childrenGroups: (Task | Suite)[][] = []
-  for (const c of suite.children) {
-    if (childrenGroup.length === 0 || c.computeMode === childrenGroup[0].computeMode) {
-      childrenGroup.push(c)
-    }
-    else {
-      childrenGroups.push(childrenGroup)
-      childrenGroup = [c]
-    }
-  }
-  if (childrenGroup.length > 0)
-    childrenGroups.push(childrenGroup)
-
-  return childrenGroups
+async function runSuiteChild(c: TaskOrSuite, ctx: RunnerContext) {
+  return c.type === 'task'
+    ? runTask(c, ctx)
+    : runSuite(c, ctx)
 }
 
 export async function runFile(file: File, ctx: RunnerContext) {

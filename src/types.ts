@@ -103,6 +103,8 @@ export interface TaskResult {
   error?: unknown
 }
 
+export type TaskOrSuite = Task | Suite
+
 export type TestFunction = () => Awaitable<void>
 
 interface ConcurrentCollector {
@@ -149,11 +151,9 @@ export interface Suite {
   name: string
   mode: RunMode
   computeMode: ComputeMode
-  children: (Task | Suite)[]
-  state?: SuiteState
+  children: TaskOrSuite[]
   file?: File
-  error?: unknown
-  status?: TaskState
+  result?: TaskResult
 }
 
 export interface SuiteCollector {
@@ -171,7 +171,6 @@ export type TestFactory = (test: (name: string, fn: TestFunction) => void) => Aw
 
 export interface File extends Suite {
   filepath: string
-  error?: unknown
 }
 
 export interface RunnerContext {

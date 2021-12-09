@@ -83,8 +83,8 @@ export class DefaultReporter implements Reporter {
       return {
         title: this.relative(file.filepath),
         task: () => {
-          if (file.error)
-            throw file.error
+          if (file.result?.error)
+            throw file.result?.error
 
           return createSuiteListr(file)
         },
@@ -116,8 +116,8 @@ export class DefaultReporter implements Reporter {
     const suites = files.flatMap(file => file.children.filter(c => c.type === 'suite')) as Suite[]
     const tasks = files.flatMap(getSuiteTasks)
 
-    const failedFiles = files.filter(i => i.error)
-    const failedSuites = suites.filter(i => i.error)
+    const failedFiles = files.filter(i => i.result?.error)
+    const failedSuites = suites.filter(i => i.result?.error)
 
     const runnable = tasks.filter(i => i.result?.state === 'pass' || i.result?.state === 'fail')
     const passed = tasks.filter(i => i.result?.state === 'pass')
@@ -132,7 +132,7 @@ export class DefaultReporter implements Reporter {
       console.log()
 
       for (const file of failedFiles) {
-        await printError(file.error)
+        await printError(file.result?.error)
         console.log()
       }
     }
@@ -141,7 +141,7 @@ export class DefaultReporter implements Reporter {
       console.error(c.bold(c.red(`\nFailed to run ${failedSuites.length} suites:`)))
       for (const suite of failedSuites) {
         console.error(c.red(`\n- ${suite.file?.filepath} > ${suite.name}`))
-        await printError(suite.error)
+        await printError(suite.result?.error)
         console.log()
       }
     }

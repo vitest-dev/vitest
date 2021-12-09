@@ -1,6 +1,6 @@
 import { File, Suite, Task } from '../types'
+import { interpretOnlyMode } from '../utils'
 import { clearContext, createSuiteHooks, defaultSuite } from './suite'
-import { interpretOnlyMode } from './run'
 import { context } from './context'
 import { setHooks } from './map'
 
@@ -35,7 +35,11 @@ export async function collectTests(paths: string[]) {
       }
     }
     catch (e) {
-      file.error = e
+      file.result = {
+        start: performance.now(),
+        state: 'fail',
+        error: e,
+      }
       process.exitCode = 1
     }
 
