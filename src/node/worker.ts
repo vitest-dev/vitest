@@ -1,41 +1,49 @@
 import { resolve } from 'path'
+import { MessagePort } from 'worker_threads'
 import { nanoid } from 'nanoid'
 import { RpcFn } from 'vitest'
 import { distDir } from '../constants'
-import { WorkerContext } from '../types'
+import { ResolvedConfig, WorkerContext } from '../types'
 import { executeInViteNode, ExecuteOptions } from './execute'
 
-export default async(context: WorkerContext) => {
-  const { config } = context
-
+export default async({ port, config }: WorkerContext) => {
   const promiseMap = new Map<string, { resolve: ((...args: any) => any); reject: (...args: any) => any }>()
-
-  context.port.addListener('message', (data) => {
-    const api = promiseMap.get(data.id)
-    if (api) {
-      if (data.error)
-        api.reject(data.error)
-      else
-        api.resolve(data.result)
-    }
-  })
 
   const rpc: RpcFn = (method, ...args) => {
     return new Promise((resolve, reject) => {
       const id = nanoid()
       promiseMap.set(id, { resolve, reject })
-      context.port.postMessage({ method, args, id })
+      port.postMessage({ method, args, id })
     })
   }
 
   process.__vitest_worker__ = {
-    context,
+    config,
+    port,
     rpc,
   }
 
   const moduleCache: ExecuteOptions['moduleCache'] = new Map()
 
-  const [{ run }] = await executeInViteNode({
+  let run: (files: string[], config: ResolvedConfig) => Promise<void>
+
+  port.addListener('message', async(data) => {
+    if (data.method === 'run') {
+      await run(data.files, config)
+      port.postMessage({ method: 'workerReady' })
+    }
+    else {
+      const api = promiseMap.get(data.id)
+      if (api) {
+        if (data.error)
+          api.reject(data.error)
+        else
+          api.resolve(data.result)
+      }
+    }
+  })
+
+  run = (await executeInViteNode({
     root: config.root,
     files: [
       resolve(distDir, 'runtime/entry.js'),
@@ -46,9 +54,9 @@ export default async(context: WorkerContext) => {
     inline: config.depsInline,
     external: config.depsExternal,
     moduleCache,
-  })
+  }))[0].run
 
-  await run(context)
+  port.postMessage({ method: 'workerReady' })
 }
 
 declare global {
@@ -56,7 +64,8 @@ declare global {
   namespace NodeJS {
     interface Process {
       __vitest_worker__?: {
-        context: WorkerContext
+        config: ResolvedConfig
+        port: MessagePort
         rpc: RpcFn
       }
     }

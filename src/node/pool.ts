@@ -1,37 +1,61 @@
-import { MessageChannel, MessagePort } from 'worker_threads'
+import { MessageChannel } from 'worker_threads'
 import { pathToFileURL } from 'url'
 import Piscina from 'piscina'
 import { Awaitable } from '@antfu/utils'
 import { RpcMap } from 'vitest'
+import { nanoid } from 'nanoid'
 import { distDir } from '../constants'
-import { WorkerContext, RpcMessage, VitestContext } from '../types'
+import { WorkerContext, RpcMessage, VitestContext, WorkerInstance } from '../types'
 import { transformRequest } from './transform'
 
-export async function createWorker(files: WorkerContext['files'], ctx: VitestContext) {
+export function createWorker(ctx: VitestContext) {
   const piscina = new Piscina({
     filename: new URL('./dist/node/worker.js', pathToFileURL(distDir)).href,
     useAtomics: false,
   })
 
-  const { port1: worker, port2: master } = new MessageChannel()
+  const channel = new MessageChannel()
+  const port = channel.port1
 
-  handleRPC(master, ctx)
+  const onReadyResolves: (() => void)[] = []
 
-  await piscina.run({ port: worker, files, config: ctx.config }, { transferList: [worker] })
-}
+  const instance: WorkerInstance = {
+    id: nanoid(),
+    state: 'init',
+    port,
+    async untilReady() {
+      if (this.state === 'idle')
+        return
+      return new Promise((resolve) => {
+        onReadyResolves.push(resolve)
+      })
+    },
+    async run(files: string[]) {
+      this.state = 'run'
+      port.postMessage({ method: 'run', files })
+      return this.untilReady()
+    },
+    close() {
+      return piscina.destroy()
+    },
+  }
 
-export function handleRPC(master: MessagePort, ctx: VitestContext) {
-  master.on('message', async({ id, method, args = [] }: RpcMessage) => {
+  port.on('message', async({ id, method, args = [] }: RpcMessage) => {
     async function send(fn: () => Awaitable<any>) {
       try {
-        master.postMessage({ id, result: await fn() })
+        port.postMessage({ id, result: await fn() })
       }
       catch (e) {
-        master.postMessage({ id, error: e })
+        port.postMessage({ id, error: e })
       }
     }
 
     switch (method) {
+      case 'workerReady':
+        instance.state = 'idle'
+        onReadyResolves.forEach(resolve => resolve())
+        onReadyResolves.length = 0
+        return
       case 'fetch':
         return send(() => transformRequest(ctx.server, ...args as RpcMap['fetch'][0]))
       case 'onCollected':
@@ -50,4 +74,9 @@ export function handleRPC(master: MessagePort, ctx: VitestContext) {
 
     console.error('Unhandled message', method, args)
   })
+
+  const meta: WorkerContext = { port: channel.port2, config: ctx.config }
+  piscina.run(meta, { transferList: [channel.port2] })
+
+  return instance
 }

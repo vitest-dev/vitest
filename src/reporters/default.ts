@@ -19,19 +19,24 @@ export class DefaultReporter implements Reporter {
   }
 
   onStart() {
+    this.start = performance.now()
     console.log(c.green(`Running tests under ${c.gray(this.ctx.config.root)}\n`))
   }
 
-  onCollected(files: File[]) {
-    this.start = performance.now()
-    this.renderer?.stop()
-    this.renderer = createRenderer(files).start()
+  onCollected() {
+    const files = this.ctx.state.getFiles()
+    if (!this.renderer)
+      this.renderer = createRenderer(files).start()
+    else
+      this.renderer.update(files)
   }
 
   async onFinished(files: File[] = this.ctx.state.getFiles()) {
-    this.renderer?.stop()
-
     this.end = performance.now()
+
+    await this.renderer?.stop()
+
+    await new Promise(resolve => setTimeout(resolve, 100))
 
     console.log()
 

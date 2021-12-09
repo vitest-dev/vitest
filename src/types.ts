@@ -193,11 +193,20 @@ export interface ModuleCache {
 
 export interface WorkerContext {
   port: MessagePort
-  files: string[]
   config: ResolvedConfig
 }
 
+export interface WorkerInstance {
+  id: string
+  state: 'init' | 'run' | 'idle'
+  port: MessagePort
+  untilReady: () => Promise<void>
+  run: (files: string[]) => Promise<void>
+  close: () => Promise<void>
+}
+
 export interface RpcMap {
+  workerReady: [[], void]
   fetch: [[id: string], TransformResult | null | undefined]
   onStart: [[], void]
   onCollected: [[files: File[]], void]

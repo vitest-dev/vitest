@@ -116,7 +116,7 @@ export const createRenderer = (_tasks: Task[]) => {
       update()
       return this
     },
-    stop() {
+    async stop() {
       if (timer) {
         clearInterval(timer)
         timer = undefined
@@ -124,7 +124,7 @@ export const createRenderer = (_tasks: Task[]) => {
       log.clear()
       // eslint-disable-next-line no-console
       console.log(renderTree(tasks))
-      return this
+      return new Promise(resolve => setTimeout(resolve, 10))
     },
   }
 }
