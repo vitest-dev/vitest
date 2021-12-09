@@ -1,16 +1,16 @@
 import { Awaitable } from '@antfu/utils'
 import { SuiteHooks } from 'vitest'
-import { Suite, Task } from '../types'
+import { Suite, Test } from '../types'
 
-// use WeakMap here to make the Task and Suite object serializable
+// use WeakMap here to make the Test and Suite object serializable
 const fnMap = new WeakMap()
 const hooksMap = new WeakMap()
 
-export function setFn(key: Task, fn: () => Awaitable<void>) {
+export function setFn(key: Test, fn: () => Awaitable<void>) {
   fnMap.set(key, fn)
 }
 
-export function getFn(key: Task): () => Awaitable<void> {
+export function getFn(key: Test): () => Awaitable<void> {
   return fnMap.get(key)
 }
 

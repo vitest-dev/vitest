@@ -3,11 +3,11 @@ import { performance } from 'perf_hooks'
 import { relative } from 'path'
 import c from 'picocolors'
 import Listr from 'listr'
-import { File, Suite, Reporter, RunnerContext, Task, ResolvedConfig } from '../types'
-import { getSuites, getTasks, hasTasks } from '../utils'
+import { File, Suite, Reporter, RunnerContext, Test, ResolvedConfig } from '../types'
+import { getSuites, getTests, hasTests } from '../utils'
 import { printError } from './error'
 
-interface TaskPromise {
+interface TestPromise {
   promise: Promise<void>
   resolve: () => void
   reject: (e: unknown) => void
@@ -19,7 +19,7 @@ export class DefaultReporter implements Reporter {
 
   listr: Listr | null = null
   listrPromise: Promise<void> | null = null
-  taskMap: Map<Task, TaskPromise> = new Map()
+  testMap: Map<Test, TestPromise> = new Map()
   cwd = process.cwd()
 
   relative(path: string) {
@@ -33,43 +33,31 @@ export class DefaultReporter implements Reporter {
 
   onCollected(files: File[]) {
     this.start = performance.now()
-    this.taskMap = new Map()
+    this.testMap = new Map()
 
-    const tasks = files.reduce((acc, file) => acc.concat(getTasks(file)), [] as Task[])
+    const tests = files.reduce((acc, file) => acc.concat(getTests(file)), [] as Test[])
 
-    tasks.forEach((t) => {
-      const obj = {} as TaskPromise
+    tests.forEach((t) => {
+      const obj = {} as TestPromise
       obj.promise = new Promise<void>((resolve, reject) => {
         obj.resolve = resolve
         obj.reject = reject
       })
-      this.taskMap.set(t, obj)
+      this.testMap.set(t, obj)
     })
 
     const listrOptions: Listr.ListrOptions = {
       exitOnError: false,
     }
 
-    const createListrTask = (task: Task): Listr.ListrTask => {
+    const createListrTestTask = (test: Test): Listr.ListrTask => {
       return {
-        title: task.name,
-        skip: () => task.mode === 'skip' || task.mode === 'todo',
+        title: test.name,
+        skip: () => test.mode === 'skip' || test.mode === 'todo',
         task: async() => {
-          return await this.taskMap.get(task)?.promise
+          return await this.testMap.get(test)?.promise
         },
       }
-    }
-
-    function createListrSuiteChildren(suite: Suite): Listr.ListrTask[] {
-      return suite.children.map(c => c.type === 'task' ? createListrTask(c) : createListrSuiteTask(c))
-    }
-
-    function createSuiteListr(suite: Suite): Listr {
-      if (suite.result?.error)
-        throw suite.result.error
-      if (!hasTasks(suite))
-        throw new Error('No tasks found')
-      return new Listr(createListrSuiteChildren(suite), listrOptions)
     }
 
     function createListrSuiteTask(suite: Suite): Listr.ListrContext {
@@ -78,6 +66,18 @@ export class DefaultReporter implements Reporter {
         skip: () => suite.mode !== 'run',
         task: () => createSuiteListr(suite),
       }
+    }
+
+    function createListrSuiteChildren(suite: Suite): Listr.ListrTask[] {
+      return suite.tasks.map(c => c.type === 'test' ? createListrTestTask(c) : createListrSuiteTask(c))
+    }
+
+    function createSuiteListr(suite: Suite): Listr {
+      if (suite.result?.error)
+        throw suite.result.error
+      if (!hasTests(suite))
+        throw new Error('No tests found')
+      return new Listr(createListrSuiteChildren(suite), listrOptions)
     }
 
     this.listr = new Listr(files.map((file) => {
@@ -95,11 +95,11 @@ export class DefaultReporter implements Reporter {
     this.listrPromise = this.listr.run().catch(() => { })
   }
 
-  onTaskEnd(task: Task) {
-    if (task.result?.state === 'fail')
-      this.taskMap.get(task)?.reject(task.result?.error)
+  onTestEnd(test: Test) {
+    if (test.result?.state === 'fail')
+      this.testMap.get(test)?.reject(test.result?.error)
     else
-      this.taskMap.get(task)?.resolve()
+      this.testMap.get(test)?.resolve()
   }
 
   async onFinished(ctx: RunnerContext, files = ctx.files) {
@@ -114,15 +114,15 @@ export class DefaultReporter implements Reporter {
       console.log(snapshot.join('\n'))
 
     const suites = getSuites(files)
-    const tasks = getTasks(files)
+    const tests = getTests(files)
 
     const failedSuites = suites.filter(i => i.result?.error)
 
-    const runnable = tasks.filter(i => i.result?.state === 'pass' || i.result?.state === 'fail')
-    const passed = tasks.filter(i => i.result?.state === 'pass')
-    const failed = tasks.filter(i => i.result?.state === 'fail')
-    const skipped = tasks.filter(i => i.mode === 'skip')
-    const todo = tasks.filter(i => i.mode === 'todo')
+    const runnable = tests.filter(i => i.result?.state === 'pass' || i.result?.state === 'fail')
+    const passed = tests.filter(i => i.result?.state === 'pass')
+    const failed = tests.filter(i => i.result?.state === 'fail')
+    const skipped = tests.filter(i => i.mode === 'skip')
+    const todo = tests.filter(i => i.mode === 'todo')
 
     if (failedSuites.length) {
       console.error(c.bold(c.red(`\nFailed to run ${failedSuites.length} suites:`)))
@@ -135,9 +135,9 @@ export class DefaultReporter implements Reporter {
 
     if (failed.length) {
       console.error(c.bold(c.red(`\nFailed Tests (${failed.length})`)))
-      for (const task of failed) {
-        console.error(`${c.red(`\n${c.inverse(' FAIL ')}`)} ${[task.suite.name, task.name].filter(Boolean).join(' > ')}`)
-        await printError(task.result?.error)
+      for (const test of failed) {
+        console.error(`${c.red(`\n${c.inverse(' FAIL ')}`)} ${[test.suite.name, test.name].filter(Boolean).join(' > ')}`)
+        await printError(test.result?.error)
         console.log()
       }
     }
@@ -155,7 +155,7 @@ export class DefaultReporter implements Reporter {
   async onWatcherStart(ctx: RunnerContext) {
     await this.listrPromise
 
-    const failed = ctx.tasks.filter(i => i.result?.state === 'fail')
+    const failed = ctx.tests.filter(i => i.result?.state === 'fail')
     if (failed.length)
       console.log(`\n${c.bold(c.inverse(c.red(' FAIL ')))}${c.red(` ${failed.length} tests failed. Watching for file changes...`)}`)
     else
