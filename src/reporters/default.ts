@@ -5,7 +5,7 @@ import c from 'picocolors'
 import { File, Reporter, RunnerContext, ResolvedConfig } from '../types'
 import { getSuites, getTests } from '../utils'
 import { printError } from './error'
-import { createRenderer } from './render'
+import { createRenderer } from './renderer'
 
 export class DefaultReporter implements Reporter {
   start = 0

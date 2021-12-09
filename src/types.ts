@@ -76,23 +76,14 @@ export interface ResolvedConfig extends Omit<Required<UserOptions>, 'config' | '
 
 export type RunMode = 'run' | 'skip' | 'only' | 'todo'
 export type TestState = RunMode | 'pass' | 'fail'
-export type SuiteState = RunMode | 'pass' | 'fail'
 export type ComputeMode = 'serial' | 'concurrent'
 
-export type TaskType = 'test' | 'suite'
-
-export interface Task {
-  type: TaskType
+export interface TaskBase {
   name: string
   mode: RunMode
   computeMode: ComputeMode
-  suite: Suite
+  suite?: Suite
   file?: File
-  result?: TaskResult
-}
-
-export interface Test extends Task {
-  type: 'test'
   result?: TaskResult
 }
 
@@ -102,6 +93,23 @@ export interface TaskResult {
   end?: number
   error?: unknown
 }
+
+export interface Suite extends TaskBase {
+  type: 'suite'
+  tasks: Task[]
+}
+
+export interface File extends Suite {
+  filepath: string
+}
+
+export interface Test extends TaskBase {
+  type: 'test'
+  suite: Suite
+  result?: TaskResult
+}
+
+export type Task = Test | Suite | File
 
 export type TestFunction = () => Awaitable<void>
 
@@ -144,12 +152,6 @@ export interface SuiteHooks {
   afterEach: HookListener<[Test, Suite]>[]
 }
 
-export interface Suite extends Task {
-  type: 'suite'
-  tasks: Task[]
-  result?: TaskResult
-}
-
 export interface SuiteCollector {
   readonly name: string
   readonly mode: RunMode
@@ -162,10 +164,6 @@ export interface SuiteCollector {
 }
 
 export type TestFactory = (test: (name: string, fn: TestFunction) => void) => Awaitable<void>
-
-export interface File extends Suite {
-  filepath: string
-}
 
 export interface RunnerContext {
   filesMap: Record<string, File>
