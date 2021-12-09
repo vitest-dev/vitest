@@ -39,13 +39,6 @@ export interface UserOptions {
   dom?: boolean | 'jsdom' | 'happy-dom'
 
   /**
-   * Run tests files in parallel
-   *
-   * @default false
-   */
-  parallel?: boolean
-
-  /**
    * Update snapshot files
    *
    * @default false
@@ -68,27 +61,55 @@ export interface UserOptions {
    * Custom reporter for output
    */
   reporter?: Reporter
+
+  filters?: string[]
+  config?: string | undefined
 }
 
-export interface ResolvedConfig extends Required<UserOptions> {
-  filters?: string[]
+export interface ResolvedConfig extends Omit<Required<UserOptions>, 'config' | 'filters'> {
   config?: string
+  filters?: string[]
+
+  depsInline: (string | RegExp)[]
+  depsExternal: (string | RegExp)[]
 }
 
 export type RunMode = 'run' | 'skip' | 'only' | 'todo'
-export type TaskState = RunMode | 'pass' | 'fail'
+export type TestState = RunMode | 'pass' | 'fail'
 export type ComputeMode = 'serial' | 'concurrent'
 
-export interface Task {
+export interface TaskBase {
   name: string
   mode: RunMode
   computeMode: ComputeMode
-  suite: Suite
-  fn: () => Awaitable<void>
+  suite?: Suite
   file?: File
-  state?: TaskState
+  result?: TaskResult
+}
+
+export interface TaskResult {
+  state: TestState
+  start: number
+  end?: number
   error?: unknown
 }
+
+export interface Suite extends TaskBase {
+  type: 'suite'
+  tasks: Task[]
+}
+
+export interface File extends Suite {
+  filepath: string
+}
+
+export interface Test extends TaskBase {
+  type: 'test'
+  suite: Suite
+  result?: TaskResult
+}
+
+export type Task = Test | Suite | File
 
 export type TestFunction = () => Awaitable<void>
 
@@ -124,51 +145,37 @@ export interface TestCollector {
 
 export type HookListener<T extends any[]> = (...args: T) => Awaitable<void>
 
-export interface Suite {
-  name: string
-  mode: RunMode
-  tasks: Task[]
-  file?: File
-  error?: unknown
-  status?: TaskState
-  hooks: {
-    beforeAll: HookListener<[Suite]>[]
-    afterAll: HookListener<[Suite]>[]
-    beforeEach: HookListener<[Task, Suite]>[]
-    afterEach: HookListener<[Task, Suite]>[]
-  }
+export interface SuiteHooks {
+  beforeAll: HookListener<[Suite]>[]
+  afterAll: HookListener<[Suite]>[]
+  beforeEach: HookListener<[Test, Suite]>[]
+  afterEach: HookListener<[Test, Suite]>[]
 }
 
 export interface SuiteCollector {
   readonly name: string
   readonly mode: RunMode
+  type: 'collector'
   test: TestCollector
+  tasks: (Suite | Test | SuiteCollector)[]
   collect: (file?: File) => Promise<Suite>
   clear: () => void
-  on: <T extends keyof Suite['hooks']>(name: T, ...fn: Suite['hooks'][T]) => void
+  on: <T extends keyof SuiteHooks>(name: T, ...fn: SuiteHooks[T]) => void
 }
 
 export type TestFactory = (test: (name: string, fn: TestFunction) => void) => Awaitable<void>
 
-export interface File {
-  filepath: string
-  suites: Suite[]
-  collected: boolean
-  error?: unknown
-}
-
 export interface RunnerContext {
   filesMap: Record<string, File>
   files: File[]
-  suites: Suite[]
-  tasks: Task[]
+  tests: Test[]
   config: ResolvedConfig
   reporter: Reporter
   snapshotManager: SnapshotManager
 }
 
 export interface GlobalContext {
-  suites: SuiteCollector[]
+  tasks: (SuiteCollector | Test)[]
   currentSuite: SuiteCollector | null
 }
 
@@ -177,12 +184,10 @@ export interface Reporter {
   onCollected?: (files: File[], ctx: RunnerContext) => Awaitable<void>
   onFinished?: (ctx: RunnerContext, files?: File[]) => Awaitable<void>
 
+  onTestBegin?: (test: Test, ctx: RunnerContext) => Awaitable<void>
+  onTestEnd?: (test: Test, ctx: RunnerContext) => Awaitable<void>
   onSuiteBegin?: (suite: Suite, ctx: RunnerContext) => Awaitable<void>
   onSuiteEnd?: (suite: Suite, ctx: RunnerContext) => Awaitable<void>
-  onFileBegin?: (file: File, ctx: RunnerContext) => Awaitable<void>
-  onFileEnd?: (file: File, ctx: RunnerContext) => Awaitable<void>
-  onTaskBegin?: (task: Task, ctx: RunnerContext) => Awaitable<void>
-  onTaskEnd?: (task: Task, ctx: RunnerContext) => Awaitable<void>
 
   onWatcherStart?: (ctx: RunnerContext) => Awaitable<void>
   onWatcherRerun?: (files: string[], trigger: string, ctx: RunnerContext) => Awaitable<void>

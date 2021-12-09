@@ -1,12 +1,14 @@
 /* eslint-disable no-console */
-import { fileURLToPath } from 'url'
-import { resolve, dirname } from 'path'
-import { findUp } from 'find-up'
+import { resolve } from 'path'
 import sade from 'sade'
 import c from 'picocolors'
+import type { ViteDevServer } from 'vite'
 import type { ResolvedConfig, UserOptions } from '../types'
 import { version } from '../../package.json'
-import { run as startViteNode } from './node'
+import { distDir } from '../constants'
+import { run } from './node'
+import { initViteServer } from './server'
+import { ModuleCache } from './execute'
 
 sade('vitest [filter]', true)
   .version(version)
@@ -16,48 +18,25 @@ sade('vitest [filter]', true)
   .option('-w, --watch', 'watch mode', false)
   .option('-u, --update', 'update snapshot', false)
   .option('--global', 'inject apis globally', false)
-  .option('--dev', 'dev mode', false)
   .option('--dom', 'mock browser api using jsdom or happy-dom', '')
-  .action(async(filters, argv) => {
+  .action(async(filters, argv: UserOptions) => {
     process.env.VITEST = 'true'
 
     console.log(c.yellow(c.bold('\nVitest is currently in closed beta exclusively for Sponsors')))
     console.log(c.magenta(`Become a Sponsor of ${c.underline('https://github.com/sponsors/patak-js')} or ${c.underline('https://github.com/sponsors/antfu')} \nto access the source code and issues tracker 💖\n`))
 
-    const __dirname = dirname(fileURLToPath(import.meta.url))
-    const root = resolve(argv.root || process.cwd())
-    const configPath = argv.config
-      ? resolve(root, argv.config)
-      : await findUp(['vitest.config.ts', 'vitest.config.js', 'vitest.config.mjs', 'vite.config.ts', 'vite.config.js', 'vite.config.mjs'], { cwd: root })
+    const { config, server } = await initViteServer({ ...argv, filters })
 
-    const options = argv as ResolvedConfig
-
-    options.config = configPath
-    options.root = root
-    options.filters = filters
-      ? Array.isArray(filters)
-        ? filters
-        : [filters]
-      : undefined
-
+    const moduleCache = new Map<string, ModuleCache>()
     process.__vitest__ = {
-      options,
+      server,
+      config,
+      moduleCache,
     }
 
-    await startViteNode({
-      root,
-      files: [
-        resolve(__dirname, argv.dev ? '../../src/node/entry.ts' : './entry.js'),
-      ],
-      config: configPath,
-      defaultConfig: {
-        optimizeDeps: {
-          exclude: [
-            'vitest',
-          ],
-        },
-      },
-    })
+    await run(server, config, moduleCache, [
+      resolve(distDir, './node/entry.js'),
+    ])
   })
   .parse(process.argv)
 
@@ -66,7 +45,9 @@ declare global {
   namespace NodeJS {
     interface Process {
       __vitest__: {
-        options: Required<UserOptions>
+        config: ResolvedConfig
+        server: ViteDevServer
+        moduleCache: Map<string, ModuleCache>
       }
     }
   }

@@ -18,7 +18,7 @@ export async function printError(error: unknown) {
     return
   }
 
-  const { moduleCache } = process.__vite_node__
+  const { moduleCache } = process.__vitest__
 
   const e = error as ErrorWithDiff
 
@@ -128,6 +128,11 @@ export function generateCodeFrame(
           }`,
         )
         const lineLength = lines[j].length
+
+        // to long, maybe it's a minified file, skip for codeframe
+        if (lineLength > 200)
+          return ''
+
         if (j === i) {
           // push underline
           const pad = start - (count - lineLength) + 1

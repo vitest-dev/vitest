@@ -115,6 +115,23 @@ To get TypeScript working with the global APIs, add `vitest/global` to the `type
 }
 ```
 
+If you are already using [`unplugin-auto-import`](https://github.com/antfu/unplugin-vue-components) in your project, you can also use it directly for auto importing those APIs.
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite'
+import AutoImport from 'unplugin-auto-import/vite'
+
+export default defineConfig({
+  plugins: [
+    AutoImport({
+      imports: ['vitest'],
+      dts: true // genreate TypeScript declaration
+    })
+  ]
+})
+```
+
 ## Browser Mocking
 
 Pass `--dom` option in CLI to enable browser mocking. Or the `dom` flag in the config.
@@ -193,21 +210,21 @@ basic.test.ts
 basic-foo.test.ts
 ```
 
-### Skipping suites and tasks
+### Skipping suites and tests
 
 Use `.skip` to avoid running certain suites or tests 
 
 ```ts
 describe.skip('skipped suite', () => {
-  it('task', () => {
+  it('test', () => {
     // Suite skipped, no error
     assert.equal(Math.sqrt(4), 3)
   })
 })
 
 describe('suite', () => {
-  it.skip('skipped task', () => {
-    // Task skipped, no error
+  it.skip('skipped test', () => {
+    // Test skipped, no error
     assert.equal(Math.sqrt(4), 3)
   })
 })
@@ -220,19 +237,19 @@ Use `.only` to only run certain suites or tests
 ```ts
 // Only this suite (and others marked with only) are run
 describe.only('suite', () => {
-  it('task', () => {
+  it('test', () => {
     assert.equal(Math.sqrt(4), 3) 
   })
 })
 
 describe('another suite', () => {
-  it('skipped task', () => {
-     // Task skipped, as tests are running in Only mode
+  it('skipped test', () => {
+     // Test skipped, as tests are running in Only mode
     assert.equal(Math.sqrt(4), 3)
   })
 
-  it.only('task', () => {
-     // Only this task (and others marked with only) are run
+  it.only('test', () => {
+     // Only this test (and others marked with only) are run
     assert.equal(Math.sqrt(4), 2)
   })
 })
@@ -246,9 +263,9 @@ Use `.todo` to stub suites and tests that should be implemented
  // An entry will be shown in the report for this suite
 describe.todo('unimplemented suite')
 
-// An entry will be shown in the report for this task
+// An entry will be shown in the report for this test
 describe('suite', () => {
-  it.todo('unimplemented task')
+  it.todo('unimplemented test')
 })
 ```
 
@@ -257,38 +274,38 @@ describe('suite', () => {
 Use `.concurrent` in consecutive tests to run them in parallel
 
 ```ts
-// The two tasks marked with concurrent will be run in parallel
+// The two tests marked with concurrent will be run in parallel
 describe('suite', () => {
-  it('serial task', () => {
+  it('serial test', () => {
     assert.equal(Math.sqrt(4), 3)
   })
-  it.concurrent('concurrent task 1', () => {
+  it.concurrent('concurrent test 1', () => {
     assert.equal(Math.sqrt(4), 3)
   })
-  it.concurrent('concurrent task 2', () => {
+  it.concurrent('concurrent test 2', () => {
     assert.equal(Math.sqrt(4), 3)
   })
 })
 ```
 
-If you use `.concurrent` in a suite, every tasks in it will be run in parallel
+If you use `.concurrent` in a suite, every tests in it will be run in parallel
 ```ts
-// The two tasks marked with concurrent will be run in parallel
+// The two tests marked with concurrent will be run in parallel
 describe.concurrent('suite', () => {
-  it('concurrent task 1', () => {
+  it('concurrent test 1', () => {
     assert.equal(Math.sqrt(4), 3)
   })
-  it('concurrent task 2', () => {
+  it('concurrent test 2', () => {
     assert.equal(Math.sqrt(4), 3)
   })
   // No effect, same as not using .concurrent
-  it.concurrent('concurrent task 3', () => {
+  it.concurrent('concurrent test 3', () => {
     assert.equal(Math.sqrt(4), 3)
   })
 })
 ```
 
-You can also use `.skip`, `.only`, and `.todo` with concurrent suite and tasks. All the following combinations are valid:
+You can also use `.skip`, `.only`, and `.todo` with concurrent suite and tests. All the following combinations are valid:
 ```js
 describe.concurrent(...)
 

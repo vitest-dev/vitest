@@ -1,5 +1,6 @@
+import { Test, SuiteCollector, TestCollector, RunMode, ComputeMode, TestFactory, TestFunction, File, Suite, SuiteHooks } from '../types'
 import { context } from './context'
-import { Task, SuiteCollector, TestCollector, RunMode, ComputeMode, TestFactory, TestFunction, File, Suite } from './types'
+import { getHooks, setFn, setHooks } from './map'
 
 export const suite = createSuite()
 
@@ -9,64 +10,86 @@ function getCurrentSuite() {
   return context.currentSuite || defaultSuite
 }
 
-function createSuiteCollector(name: string, factory: TestFactory = () => {}, mode: RunMode, suiteComputeMode?: ComputeMode) {
-  const queue: Task[] = []
-  const factoryQueue: Task[] = []
-
-  const suiteBase: Pick<Suite, 'name' | 'mode' | 'hooks'> = {
-    name,
-    mode,
-    hooks: {
-      beforeAll: [],
-      afterAll: [],
-      beforeEach: [],
-      afterEach: [],
-    },
+export function createSuiteHooks() {
+  return {
+    beforeAll: [],
+    afterAll: [],
+    beforeEach: [],
+    afterEach: [],
   }
+}
+
+function createSuiteCollector(name: string, factory: TestFactory = () => { }, mode: RunMode, suiteComputeMode?: ComputeMode) {
+  const tasks: (Test | Suite | SuiteCollector)[] = []
+  const factoryQueue: (Test | Suite | SuiteCollector)[] = []
+
+  let suite: Suite
+
+  initSuite()
 
   const test = createTestCollector((name: string, fn: TestFunction, mode: RunMode, computeMode?: ComputeMode) => {
-    queue.push({
+    const test: Test = {
+      type: 'test',
       name,
       mode,
       computeMode: computeMode ?? (suiteComputeMode ?? 'serial'),
       suite: {} as Suite,
-      state: (mode !== 'run' && mode !== 'only') ? mode : undefined,
-      fn,
-    })
+    }
+    setFn(test, fn)
+    tasks.push(test)
   })
 
   const collector: SuiteCollector = {
+    type: 'collector',
     name,
     mode,
     test,
+    tasks,
     collect,
     clear,
     on: addHook,
   }
 
-  function addHook<T extends keyof Suite['hooks']>(name: T, ...fn: Suite['hooks'][T]) {
-    suiteBase.hooks[name].push(...fn as any)
+  function addHook<T extends keyof SuiteHooks>(name: T, ...fn: SuiteHooks[T]) {
+    getHooks(suite)[name].push(...fn as any)
+  }
+
+  function initSuite() {
+    suite = {
+      type: 'suite',
+      computeMode: 'serial',
+      name,
+      mode,
+      tasks: [],
+      suite: {} as Suite,
+    }
+    setHooks(suite, createSuiteHooks())
   }
 
   function clear() {
-    queue.length = 0
+    tasks.length = 0
     factoryQueue.length = 0
+    initSuite()
   }
 
   async function collect(file?: File) {
     factoryQueue.length = 0
-    if (factory)
+    if (factory) {
+      const prev = context.currentSuite
+      context.currentSuite = collector
       await factory(test)
-
-    const tasks = [...factoryQueue, ...queue]
-
-    const suite: Suite = {
-      ...suiteBase,
-      tasks,
-      file,
+      context.currentSuite = prev
     }
 
-    tasks.forEach((task) => {
+    const allChildren = await Promise.all(
+      [...factoryQueue, ...tasks]
+        .map(i => i.type === 'collector' ? i.collect(file) : i),
+    )
+
+    suite.file = file
+    suite.tasks = allChildren
+
+    allChildren.forEach((task) => {
       task.suite = suite
       if (file)
         task.file = file
@@ -75,36 +98,35 @@ function createSuiteCollector(name: string, factory: TestFactory = () => {}, mod
     return suite
   }
 
-  context.currentSuite = collector
-  context.suites.push(collector)
+  context.currentSuite?.tasks.push(collector)
 
   return collector
 }
 
-function createTestCollector(collectTask: (name: string, fn: TestFunction, mode: RunMode, computeMode?: ComputeMode) => void): TestCollector {
+function createTestCollector(collectTest: (name: string, fn: TestFunction, mode: RunMode, computeMode?: ComputeMode) => void): TestCollector {
   function test(name: string, fn: TestFunction) {
-    collectTask(name, fn, 'run')
+    collectTest(name, fn, 'run')
   }
   test.concurrent = concurrent
   test.skip = skip
   test.only = only
   test.todo = todo
   function concurrent(name: string, fn: TestFunction) {
-    collectTask(name, fn, 'run', 'concurrent')
+    collectTest(name, fn, 'run', 'concurrent')
   }
-  concurrent.skip = (name: string, fn: TestFunction) => collectTask(name, fn, 'skip', 'concurrent')
-  concurrent.only = (name: string, fn: TestFunction) => collectTask(name, fn, 'only', 'concurrent')
+  concurrent.skip = (name: string, fn: TestFunction) => collectTest(name, fn, 'skip', 'concurrent')
+  concurrent.only = (name: string, fn: TestFunction) => collectTest(name, fn, 'only', 'concurrent')
   concurrent.todo = todo
   function skip(name: string, fn: TestFunction) {
-    collectTask(name, fn, 'skip')
+    collectTest(name, fn, 'skip')
   }
   skip.concurrent = concurrent.skip
   function only(name: string, fn: TestFunction) {
-    collectTask(name, fn, 'only')
+    collectTest(name, fn, 'only')
   }
   only.concurrent = concurrent.only
   function todo(name: string) {
-    collectTask(name, () => { }, 'todo')
+    collectTest(name, () => { }, 'todo')
   }
   todo.concurrent = todo
 
@@ -184,14 +206,14 @@ export const describe = suite
 export const it = test
 
 // hooks
-export const beforeAll = (fn: Suite['hooks']['beforeAll'][0]) => getCurrentSuite().on('beforeAll', fn)
-export const afterAll = (fn: Suite['hooks']['afterAll'][0]) => getCurrentSuite().on('afterAll', fn)
-export const beforeEach = (fn: Suite['hooks']['beforeEach'][0]) => getCurrentSuite().on('beforeEach', fn)
-export const afterEach = (fn: Suite['hooks']['afterEach'][0]) => getCurrentSuite().on('afterEach', fn)
+export const beforeAll = (fn: SuiteHooks['beforeAll'][0]) => getCurrentSuite().on('beforeAll', fn)
+export const afterAll = (fn: SuiteHooks['afterAll'][0]) => getCurrentSuite().on('afterAll', fn)
+export const beforeEach = (fn: SuiteHooks['beforeEach'][0]) => getCurrentSuite().on('beforeEach', fn)
+export const afterEach = (fn: SuiteHooks['afterEach'][0]) => getCurrentSuite().on('afterEach', fn)
 
 // utils
 export function clearContext() {
-  context.suites.length = 0
+  context.tasks.length = 0
   defaultSuite.clear()
   context.currentSuite = defaultSuite
 }

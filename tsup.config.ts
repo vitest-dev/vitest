@@ -9,4 +9,6 @@ export default defineConfig({
   format: ['esm'],
   clean: true,
   target: 'node16',
+  // TODO: enable source map when public
+  // sourcemap: 'external',
 })

@@ -8,17 +8,17 @@ describe.skip('skipped suite', () => {
 
 describe.todo('unimplemented suite')
 
-describe('task modes', () => {
-  it.skip('no fail as it task is skipped', () => {
+describe('test modes', () => {
+  it.skip('no fail as it test is skipped', () => {
     assert.equal(Math.sqrt(4), 3)
   })
 
-  it.todo('unimplemented task')
+  it.todo('unimplemented test')
 })
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
-describe('concurrent tasks', () => {
+describe('concurrent tests', () => {
   let count = 0
 
   const counterTest = (c: number) => async() => {
