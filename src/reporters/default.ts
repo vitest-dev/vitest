@@ -2,108 +2,34 @@
 import { performance } from 'perf_hooks'
 import { relative } from 'path'
 import c from 'picocolors'
-import Listr from 'listr'
-import { File, Suite, Reporter, RunnerContext, Test, ResolvedConfig } from '../types'
-import { getSuites, getTests, hasTests } from '../utils'
+import { File, Reporter, RunnerContext, ResolvedConfig } from '../types'
+import { getSuites, getTests } from '../utils'
 import { printError } from './error'
-
-interface TestPromise {
-  promise: Promise<void>
-  resolve: () => void
-  reject: (e: unknown) => void
-}
+import { createRenderer } from './render'
 
 export class DefaultReporter implements Reporter {
   start = 0
   end = 0
+  renderer: ReturnType<typeof createRenderer> = undefined!
 
-  listr: Listr | null = null
-  listrPromise: Promise<void> | null = null
-  testMap: Map<Test, TestPromise> = new Map()
-  cwd = process.cwd()
+  constructor(public config: ResolvedConfig) {}
 
   relative(path: string) {
-    return relative(this.cwd, path)
+    return relative(this.config.root, path)
   }
 
-  onStart(config: ResolvedConfig) {
-    this.cwd = config.root
-    console.log(c.green(`Running tests under ${c.gray(this.cwd)}\n`))
+  onStart() {
+    console.log(c.green(`Running tests under ${c.gray(this.config.root)}\n`))
   }
 
   onCollected(files: File[]) {
     this.start = performance.now()
-    this.testMap = new Map()
-
-    const tests = files.reduce((acc, file) => acc.concat(getTests(file)), [] as Test[])
-
-    tests.forEach((t) => {
-      const obj = {} as TestPromise
-      obj.promise = new Promise<void>((resolve, reject) => {
-        obj.resolve = resolve
-        obj.reject = reject
-      })
-      this.testMap.set(t, obj)
-    })
-
-    const listrOptions: Listr.ListrOptions = {
-      exitOnError: false,
-    }
-
-    const createListrTestTask = (test: Test): Listr.ListrTask => {
-      return {
-        title: test.name,
-        skip: () => test.mode === 'skip' || test.mode === 'todo',
-        task: async() => {
-          return await this.testMap.get(test)?.promise
-        },
-      }
-    }
-
-    function createListrSuiteTask(suite: Suite): Listr.ListrContext {
-      return {
-        title: suite.name,
-        skip: () => suite.mode !== 'run',
-        task: () => createSuiteListr(suite),
-      }
-    }
-
-    function createListrSuiteChildren(suite: Suite): Listr.ListrTask[] {
-      return suite.tasks.map(c => c.type === 'test' ? createListrTestTask(c) : createListrSuiteTask(c))
-    }
-
-    function createSuiteListr(suite: Suite): Listr {
-      if (suite.result?.error)
-        throw suite.result.error
-      if (!hasTests(suite))
-        throw new Error('No tests found')
-      return new Listr(createListrSuiteChildren(suite), listrOptions)
-    }
-
-    this.listr = new Listr(files.map((file) => {
-      return {
-        title: this.relative(file.filepath),
-        task: () => {
-          if (file.result?.error)
-            throw file.result?.error
-
-          return createSuiteListr(file)
-        },
-      }
-    }), listrOptions)
-
-    this.listrPromise = this.listr.run().catch(() => { })
-  }
-
-  onTestEnd(test: Test) {
-    if (test.result?.state === 'fail')
-      this.testMap.get(test)?.reject(test.result?.error)
-    else
-      this.testMap.get(test)?.resolve()
+    this.renderer?.stop()
+    this.renderer = createRenderer(files).start()
   }
 
   async onFinished(ctx: RunnerContext, files = ctx.files) {
-    await this.listrPromise
+    this.renderer?.stop()
 
     this.end = performance.now()
 
@@ -153,7 +79,8 @@ export class DefaultReporter implements Reporter {
   }
 
   async onWatcherStart(ctx: RunnerContext) {
-    await this.listrPromise
+    // await this.listrPromise
+    this.renderer?.stop()
 
     const failed = ctx.tests.filter(i => i.result?.state === 'fail')
     if (failed.length)
@@ -163,7 +90,7 @@ export class DefaultReporter implements Reporter {
   }
 
   async onWatcherRerun(files: string[], trigger: string) {
-    await this.listrPromise
+    this.renderer?.stop()
 
     console.clear()
     console.log(c.blue('Re-running tests...') + c.dim(` [ ${this.relative(trigger)} ]\n`))

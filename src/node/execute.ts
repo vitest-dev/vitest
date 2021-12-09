@@ -131,9 +131,11 @@ export async function executeInViteNode({ moduleCache, root, files, fetch, inlin
 
     if (externaled.has(fsPath) || await shouldExternalize(fsPath)) {
       externaled.add(fsPath)
+      // windows
       if (fsPath.match(/^\w:\//))
         return import(`/${fsPath}`)
-      return import(fsPath)
+      else
+        return import(fsPath)
     }
 
     if (moduleCache.get(fsPath)?.promise)
@@ -168,6 +170,8 @@ export function normalizeId(id: string): string {
     id = id.slice('/@id/'.length)
   if (id.startsWith('__vite-browser-external:'))
     id = id.slice('__vite-browser-external:'.length)
+  if (id.startsWith('node:'))
+    id = id.slice('node:'.length)
   return id
 }
 

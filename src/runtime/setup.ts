@@ -16,7 +16,7 @@ export async function setupRunner(config: ResolvedConfig) {
       return getTests(Object.values(this.filesMap))
     },
     config,
-    reporter: config.reporter || new DefaultReporter(),
+    reporter: config.reporter || new DefaultReporter(config),
     snapshotManager: getSnapshotManager(),
   }
 
