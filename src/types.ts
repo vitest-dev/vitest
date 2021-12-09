@@ -68,11 +68,17 @@ export interface UserOptions {
    * Custom reporter for output
    */
   reporter?: Reporter
+
+  filters?: string[]
+  config?: string | undefined
 }
 
-export interface ResolvedConfig extends Required<UserOptions> {
-  filters?: string[]
+export interface ResolvedConfig extends Omit<Required<UserOptions>, 'config' | 'filters'> {
   config?: string
+  filters?: string[]
+
+  depsInline: (string | RegExp)[]
+  depsExternal: (string | RegExp)[]
 }
 
 export type RunMode = 'run' | 'skip' | 'only' | 'todo'

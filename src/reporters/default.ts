@@ -122,8 +122,8 @@ export class DefaultReporter implements Reporter {
     const runnable = tasks.filter(i => i.result?.state === 'pass' || i.result?.state === 'fail')
     const passed = tasks.filter(i => i.result?.state === 'pass')
     const failed = tasks.filter(i => i.result?.state === 'fail')
-    const skipped = tasks.filter(i => i.result?.state === 'skip')
-    const todo = tasks.filter(i => i.result?.state === 'todo')
+    const skipped = tasks.filter(i => i.mode === 'skip')
+    const todo = tasks.filter(i => i.mode === 'todo')
 
     if (failedFiles.length) {
       console.error(c.red(c.bold(`\nFailed to parse ${failedFiles.length} files:`)))

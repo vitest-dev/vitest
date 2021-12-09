@@ -155,10 +155,6 @@ export async function runFiles(filesMap: Record<string, File>, ctx: RunnerContex
 }
 
 export async function run(config: ResolvedConfig) {
-  // if watch, tell `vite-node` not to end the process
-  if (config.watch)
-    process.__vite_node__.watch = true
-
   const testFilepaths = await globTestFiles(config)
   if (!testFilepaths.length) {
     console.error('No test files found')
