@@ -9,23 +9,28 @@ function getCurrentSuite() {
   return context.currentSuite || defaultSuite
 }
 
-function createSuiteCollector(name: string, factory: TestFactory = () => {}, mode: RunMode, suiteComputeMode?: ComputeMode) {
-  const queue: Task[] = []
-  const factoryQueue: Task[] = []
+export function createSuiteHooks() {
+  return {
+    beforeAll: [],
+    afterAll: [],
+    beforeEach: [],
+    afterEach: [],
+  }
+}
+
+function createSuiteCollector(name: string, factory: TestFactory = () => { }, mode: RunMode, suiteComputeMode?: ComputeMode) {
+  const children: (Task | Suite | SuiteCollector)[] = []
+  const factoryQueue: (Task | Suite |SuiteCollector)[] = []
 
   const suiteBase: Pick<Suite, 'name' | 'mode' | 'hooks'> = {
     name,
     mode,
-    hooks: {
-      beforeAll: [],
-      afterAll: [],
-      beforeEach: [],
-      afterEach: [],
-    },
+    hooks: createSuiteHooks(),
   }
 
   const test = createTestCollector((name: string, fn: TestFunction, mode: RunMode, computeMode?: ComputeMode) => {
-    queue.push({
+    children.push({
+      type: 'task',
       name,
       mode,
       computeMode: computeMode ?? (suiteComputeMode ?? 'serial'),
@@ -36,9 +41,11 @@ function createSuiteCollector(name: string, factory: TestFactory = () => {}, mod
   })
 
   const collector: SuiteCollector = {
+    type: 'collector',
     name,
     mode,
     test,
+    children,
     collect,
     clear,
     on: addHook,
@@ -49,34 +56,44 @@ function createSuiteCollector(name: string, factory: TestFactory = () => {}, mod
   }
 
   function clear() {
-    queue.length = 0
+    children.length = 0
     factoryQueue.length = 0
   }
 
   async function collect(file?: File) {
     factoryQueue.length = 0
-    if (factory)
+    if (factory) {
+      const prev = context.currentSuite
+      context.currentSuite = collector
       await factory(test)
+      context.currentSuite = prev
+    }
 
-    const tasks = [...factoryQueue, ...queue]
+    const allChildren = await Promise.all(
+      [...factoryQueue, ...children]
+        .map(i => i.type === 'collector' ? i.collect(file) : i),
+    )
 
     const suite: Suite = {
+      type: 'suite',
+      computeMode: 'serial',
       ...suiteBase,
-      tasks,
+      children: allChildren,
       file,
     }
 
-    tasks.forEach((task) => {
-      task.suite = suite
-      if (file)
-        task.file = file
+    allChildren.forEach((task) => {
+      if (task.type === 'task') {
+        task.suite = suite
+        if (file)
+          task.file = file
+      }
     })
 
     return suite
   }
 
-  context.currentSuite = collector
-  context.suites.push(collector)
+  context.currentSuite?.children.push(collector)
 
   return collector
 }
@@ -191,7 +208,15 @@ export const afterEach = (fn: Suite['hooks']['afterEach'][0]) => getCurrentSuite
 
 // utils
 export function clearContext() {
-  context.suites.length = 0
+  context.children.length = 0
   defaultSuite.clear()
   context.currentSuite = defaultSuite
+}
+
+export function getSuiteTasks(suite: Suite): Task[] {
+  return suite.children.flatMap(c => c.type === 'task' ? [c] : getSuiteTasks(c))
+}
+
+export function suiteHasTasks(suite: Suite): boolean {
+  return suite.children.some(c => c.type === 'task' || suiteHasTasks(c as Suite))
 }

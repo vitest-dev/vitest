@@ -1,7 +1,8 @@
 import { setupChai } from '../integrations/chai/setup'
-import { ResolvedConfig, Task, RunnerContext, Suite } from '../types'
+import { ResolvedConfig, Task, RunnerContext } from '../types'
 import { DefaultReporter } from '../reporters/default'
 import { getSnapshotManager } from '../integrations/chai/snapshot'
+import { getSuiteTasks } from '../suite'
 
 export async function setupRunner(config: ResolvedConfig) {
   // setup chai
@@ -19,13 +20,9 @@ export async function setupRunner(config: ResolvedConfig) {
     get files() {
       return Object.values(this.filesMap)
     },
-    get suites() {
-      return Object.values(this.filesMap)
-        .reduce((suites, file) => suites.concat(file.suites), [] as Suite[])
-    },
     get tasks() {
-      return this.suites
-        .reduce((tasks, suite) => tasks.concat(suite.tasks), [] as Task[])
+      return Object.values(this.filesMap)
+        .reduce((tasks, file) => tasks.concat(getSuiteTasks(file)), [] as Task[])
     },
     config,
     reporter: config.reporter || new DefaultReporter(),

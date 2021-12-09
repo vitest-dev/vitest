@@ -1,6 +1,6 @@
 import { GlobalContext } from './types'
 
 export const context: GlobalContext = {
-  suites: [],
+  children: [],
   currentSuite: null,
 }

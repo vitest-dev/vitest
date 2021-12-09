@@ -77,9 +77,11 @@ export interface ResolvedConfig extends Required<UserOptions> {
 
 export type RunMode = 'run' | 'skip' | 'only' | 'todo'
 export type TaskState = RunMode | 'pass' | 'fail'
+export type SuiteState = RunMode | 'pass' | 'fail'
 export type ComputeMode = 'serial' | 'concurrent'
 
 export interface Task {
+  type: 'task'
   name: string
   mode: RunMode
   computeMode: ComputeMode
@@ -125,9 +127,12 @@ export interface TestCollector {
 export type HookListener<T extends any[]> = (...args: T) => Awaitable<void>
 
 export interface Suite {
+  type: 'suite'
   name: string
   mode: RunMode
-  tasks: Task[]
+  computeMode: ComputeMode
+  children: (Task | Suite)[]
+  state?: SuiteState
   file?: File
   error?: unknown
   status?: TaskState
@@ -142,7 +147,9 @@ export interface Suite {
 export interface SuiteCollector {
   readonly name: string
   readonly mode: RunMode
+  type: 'collector'
   test: TestCollector
+  children: (Suite | Task | SuiteCollector)[]
   collect: (file?: File) => Promise<Suite>
   clear: () => void
   on: <T extends keyof Suite['hooks']>(name: T, ...fn: Suite['hooks'][T]) => void
@@ -150,17 +157,14 @@ export interface SuiteCollector {
 
 export type TestFactory = (test: (name: string, fn: TestFunction) => void) => Awaitable<void>
 
-export interface File {
+export interface File extends Suite {
   filepath: string
-  suites: Suite[]
-  collected: boolean
   error?: unknown
 }
 
 export interface RunnerContext {
   filesMap: Record<string, File>
   files: File[]
-  suites: Suite[]
   tasks: Task[]
   config: ResolvedConfig
   reporter: Reporter
@@ -168,7 +172,7 @@ export interface RunnerContext {
 }
 
 export interface GlobalContext {
-  suites: SuiteCollector[]
+  children: (SuiteCollector | Task)[]
   currentSuite: SuiteCollector | null
 }
 
