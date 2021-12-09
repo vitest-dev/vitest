@@ -1,5 +1,5 @@
 import { basename } from 'path'
-import { File, Suite, Task } from '../types'
+import { File, Suite, Test } from '../types'
 import { interpretOnlyMode } from '../utils'
 import { clearContext, createSuiteHooks, defaultSuite } from './suite'
 import { context } from './context'
@@ -25,7 +25,7 @@ export async function collectTests(paths: string[]) {
       await import(filepath)
 
       for (const c of [defaultSuite, ...context.children]) {
-        if (c.type === 'task') {
+        if (c.type === 'test') {
           file.children.push(c)
         }
         else {
@@ -48,7 +48,7 @@ export async function collectTests(paths: string[]) {
   }
 
   const allFiles = Object.values(files)
-  const allChildren = allFiles.reduce((children, file) => children.concat(file.children), [] as (Suite | Task)[])
+  const allChildren = allFiles.reduce((children, file) => children.concat(file.children), [] as (Suite | Test)[])
 
   interpretOnlyMode(allChildren)
   allChildren.forEach((i) => {

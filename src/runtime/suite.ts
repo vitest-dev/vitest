@@ -1,4 +1,4 @@
-import { Task, SuiteCollector, TestCollector, RunMode, ComputeMode, TestFactory, TestFunction, File, Suite, SuiteHooks } from '../types'
+import { Test, SuiteCollector, TestCollector, RunMode, ComputeMode, TestFactory, TestFunction, File, Suite, SuiteHooks } from '../types'
 import { context } from './context'
 import { getHooks, setFn, setHooks } from './map'
 
@@ -20,23 +20,23 @@ export function createSuiteHooks() {
 }
 
 function createSuiteCollector(name: string, factory: TestFactory = () => { }, mode: RunMode, suiteComputeMode?: ComputeMode) {
-  const children: (Task | Suite | SuiteCollector)[] = []
-  const factoryQueue: (Task | Suite |SuiteCollector)[] = []
+  const children: (Test | Suite | SuiteCollector)[] = []
+  const factoryQueue: (Test | Suite | SuiteCollector)[] = []
 
   let suite: Suite
 
   initSuite()
 
   const test = createTestCollector((name: string, fn: TestFunction, mode: RunMode, computeMode?: ComputeMode) => {
-    const task: Task = {
-      type: 'task',
+    const test: Test = {
+      type: 'test',
       name,
       mode,
       computeMode: computeMode ?? (suiteComputeMode ?? 'serial'),
       suite: {} as Suite,
     }
-    setFn(task, fn)
-    children.push(task)
+    setFn(test, fn)
+    children.push(test)
   })
 
   const collector: SuiteCollector = {
@@ -89,7 +89,7 @@ function createSuiteCollector(name: string, factory: TestFactory = () => { }, mo
     suite.children = allChildren
 
     allChildren.forEach((task) => {
-      if (task.type === 'task') {
+      if (task.type === 'test') {
         task.suite = suite
         if (file)
           task.file = file
@@ -104,30 +104,30 @@ function createSuiteCollector(name: string, factory: TestFactory = () => { }, mo
   return collector
 }
 
-function createTestCollector(collectTask: (name: string, fn: TestFunction, mode: RunMode, computeMode?: ComputeMode) => void): TestCollector {
+function createTestCollector(collectTest: (name: string, fn: TestFunction, mode: RunMode, computeMode?: ComputeMode) => void): TestCollector {
   function test(name: string, fn: TestFunction) {
-    collectTask(name, fn, 'run')
+    collectTest(name, fn, 'run')
   }
   test.concurrent = concurrent
   test.skip = skip
   test.only = only
   test.todo = todo
   function concurrent(name: string, fn: TestFunction) {
-    collectTask(name, fn, 'run', 'concurrent')
+    collectTest(name, fn, 'run', 'concurrent')
   }
-  concurrent.skip = (name: string, fn: TestFunction) => collectTask(name, fn, 'skip', 'concurrent')
-  concurrent.only = (name: string, fn: TestFunction) => collectTask(name, fn, 'only', 'concurrent')
+  concurrent.skip = (name: string, fn: TestFunction) => collectTest(name, fn, 'skip', 'concurrent')
+  concurrent.only = (name: string, fn: TestFunction) => collectTest(name, fn, 'only', 'concurrent')
   concurrent.todo = todo
   function skip(name: string, fn: TestFunction) {
-    collectTask(name, fn, 'skip')
+    collectTest(name, fn, 'skip')
   }
   skip.concurrent = concurrent.skip
   function only(name: string, fn: TestFunction) {
-    collectTask(name, fn, 'only')
+    collectTest(name, fn, 'only')
   }
   only.concurrent = concurrent.only
   function todo(name: string) {
-    collectTask(name, () => { }, 'todo')
+    collectTest(name, () => { }, 'todo')
   }
   todo.concurrent = todo
 

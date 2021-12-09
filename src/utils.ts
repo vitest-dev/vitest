@@ -1,5 +1,5 @@
 import { Arrayable, toArray } from '@antfu/utils'
-import { RunMode, Suite, Task, TaskOrSuite } from './types'
+import { RunMode, Suite, Test, TaskOrSuite } from './types'
 
 /**
  * Partition in tasks groups by consecutive computeMode ('serial', 'concurrent')
@@ -36,16 +36,16 @@ export function interpretOnlyMode(items: { mode: RunMode }[]) {
   }
 }
 
-export function getTasks(suite: Arrayable<Suite>): Task[] {
-  return toArray(suite).flatMap(s => s.children.flatMap(c => c.type === 'task' ? [c] : getTasks(c)))
+export function getTests(suite: Arrayable<Suite>): Test[] {
+  return toArray(suite).flatMap(s => s.children.flatMap(c => c.type === 'test' ? [c] : getTests(c)))
 }
 
 export function getSuites(suite: Arrayable<TaskOrSuite>): Suite[] {
   return toArray(suite).flatMap(s => s.type === 'suite' ? [s, ...getSuites(s.children)] : [])
 }
 
-export function hasTasks(suite: Arrayable<Suite>): boolean {
-  return toArray(suite).some(s => s.children.some(c => c.type === 'task' || hasTasks(c as Suite)))
+export function hasTests(suite: Arrayable<Suite>): boolean {
+  return toArray(suite).some(s => s.children.some(c => c.type === 'test' || hasTests(c as Suite)))
 }
 
 export function hasFailed(suite: Arrayable<Suite>): boolean {
