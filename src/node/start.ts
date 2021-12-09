@@ -18,11 +18,7 @@ export async function start(ctx: VitestContext) {
   // TODO: POOL
   await Promise.all(
     testFilepaths.map(async(path) => {
-      return await createWorker({
-        config,
-        files: [path],
-        reporter,
-      })
+      return await createWorker([path], ctx)
     }),
   )
 

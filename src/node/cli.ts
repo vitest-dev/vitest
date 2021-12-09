@@ -3,6 +3,7 @@ import sade from 'sade'
 import c from 'picocolors'
 import type { UserOptions, VitestContext } from '../types'
 import { version } from '../../package.json'
+import { DefaultReporter } from '../reporters/default'
 import { initViteServer } from './server'
 import { start } from './start'
 import { StateManager } from './state'
@@ -29,7 +30,10 @@ sade('vitest [filter]', true)
       config,
       moduleCache: new Map(),
       state: new StateManager(),
+      reporter: config.reporter,
     }
+
+    ctx.reporter ||= new DefaultReporter(ctx)
 
     try {
       await start(ctx)

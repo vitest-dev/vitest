@@ -58,6 +58,7 @@ function createSuiteCollector(name: string, factory: TestFactory = () => { }, mo
 
   function initSuite() {
     suite = {
+      id: nanoid(),
       type: 'suite',
       computeMode: 'serial',
       name,

@@ -195,7 +195,6 @@ export interface WorkerContext {
   port: MessagePort
   files: string[]
   config: ResolvedConfig
-  reporter: Reporter
 }
 
 export interface RpcMap {
@@ -218,4 +217,5 @@ export interface VitestContext {
   server: ViteDevServer
   moduleCache: Map<string, ModuleCache>
   state: StateManager
+  reporter: Reporter
 }
