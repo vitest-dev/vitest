@@ -8,20 +8,23 @@ import { executeInViteNode, ExecuteOptions } from './execute'
 export default async(context: WorkerContext) => {
   const { config } = context
 
+  const promiseMap = new Map<string, { resolve: ((...args: any) => any); reject: (...args: any) => any }>()
+
+  context.port.addListener('message', (data) => {
+    const api = promiseMap.get(data.id)
+    if (api) {
+      if (data.error)
+        api.reject(data.error)
+      else
+        api.resolve(data.result)
+    }
+  })
+
   const rpc: RpcFn = (method, ...args) => {
     return new Promise((resolve, reject) => {
       const id = nanoid()
-      const fn = (data: any) => {
-        if (data.id === id) {
-          context.port.removeListener('message', fn)
-          if (data.error)
-            reject(data.error)
-          else
-            resolve(data.result)
-        }
-      }
+      promiseMap.set(id, { resolve, reject })
       context.port.postMessage({ method, args, id })
-      context.port.addListener('message', fn)
     })
   }
 
