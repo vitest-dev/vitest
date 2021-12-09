@@ -1,5 +1,5 @@
-import { context } from '../context'
 import { File, RunMode, Suite } from '../types'
+import { context } from './context'
 import { clearContext, defaultSuite } from './suite'
 
 export async function collectTests(paths: string[]) {
@@ -42,8 +42,7 @@ export async function collectTests(paths: string[]) {
       i.tasks.forEach(t => t.mode === 'run' && (t.mode = 'skip'))
     else
       interpretOnlyMode(i.tasks)
-
-    i.tasks.forEach(t => t.mode === 'skip' && (t.state = 'skip'))
+    // i.tasks.forEach(t => t.mode === 'skip' && (t.mode = 'skip'))
   })
 
   return files

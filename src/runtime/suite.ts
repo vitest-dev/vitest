@@ -1,6 +1,6 @@
 import { nanoid } from 'nanoid'
 import { SuiteHooks, Task, SuiteCollector, TestCollector, RunMode, ComputeMode, TestFactory, TestFunction, File, Suite } from '../types'
-import { context } from '../context'
+import { context } from './context'
 import { getHooks, setFn, setHooks } from './map'
 
 export const suite = createSuite()
@@ -35,7 +35,6 @@ function createSuiteCollector(name: string, factory: TestFactory = () => {}, mod
       mode,
       computeMode: computeMode ?? (suiteComputeMode ?? 'serial'),
       suite: {} as Suite,
-      state: (mode !== 'run' && mode !== 'only') ? mode : undefined,
     }
     setFn(task, fn)
     queue.push(task)

@@ -1,4 +1,4 @@
-import { GlobalContext } from './types'
+import { GlobalContext } from '../types'
 
 export const context: GlobalContext = {
   suites: [],

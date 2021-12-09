@@ -1,9 +1,8 @@
 import { slash } from '@antfu/utils'
 import { collectTests } from '../runtime/collect'
-import { RunnerContext } from '../types'
 import { runFiles } from '../runtime/run'
 
-export async function startWatcher(ctx: RunnerContext) {
+export async function startWatcher(ctx: any) {
   const { reporter, snapshotManager, filesMap } = ctx
   await reporter.onWatcherStart?.(ctx)
 
@@ -49,7 +48,7 @@ export async function startWatcher(ctx: RunnerContext) {
   await new Promise(() => { })
 }
 
-export function getDependencyTests(id: string, ctx: RunnerContext, set = new Set<string>(), seen = new Set<string>()): Set<string> {
+export function getDependencyTests(id: string, ctx: any, set = new Set<string>(), seen = new Set<string>()): Set<string> {
   if (seen.has(id) || set.has(id))
     return set
 

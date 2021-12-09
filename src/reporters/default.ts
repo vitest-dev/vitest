@@ -88,8 +88,8 @@ export class DefaultReporter implements Reporter {
   }
 
   onTaskEnd(task: Task) {
-    if (task.state === 'fail')
-      this.taskMap.get(task.id)?.reject(task.error)
+    if (task.result?.state === 'fail')
+      this.taskMap.get(task.id)?.reject(task.result.error)
     else
       this.taskMap.get(task.id)?.resolve()
   }
@@ -110,11 +110,11 @@ export class DefaultReporter implements Reporter {
 
     const failedFiles = files.filter(i => i.error)
     const failedSuites = suites.filter(i => i.error)
-    const runnable = tasks.filter(i => i.state === 'pass' || i.state === 'fail')
-    const passed = tasks.filter(i => i.state === 'pass')
-    const failed = tasks.filter(i => i.state === 'fail')
-    const skipped = tasks.filter(i => i.state === 'skip')
-    const todo = tasks.filter(i => i.state === 'todo')
+    const runnable = tasks.filter(i => i.result?.state === 'pass' || i.result?.state === 'fail')
+    const passed = tasks.filter(i => i.result?.state === 'pass')
+    const failed = tasks.filter(i => i.result?.state === 'fail')
+    const skipped = tasks.filter(i => i.result?.state === 'skip')
+    const todo = tasks.filter(i => i.result?.state === 'todo')
 
     if (failedFiles.length) {
       console.error(c.red(c.bold(`\nFailed to parse ${failedFiles.length} files:`)))
@@ -141,7 +141,7 @@ export class DefaultReporter implements Reporter {
       console.error(c.bold(c.red(`\nFailed Tests (${failed.length})`)))
       for (const task of failed) {
         console.error(`${c.red(`\n${c.inverse(' FAIL ')}`)} ${[task.suite.name, task.name].filter(Boolean).join(' > ')}`)
-        await printError(task.error)
+        await printError(task.result?.error)
         console.log()
       }
     }

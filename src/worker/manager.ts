@@ -31,6 +31,7 @@ export async function createWorker(ctx: Omit<WorkerContext, 'port'>) {
         return send(() => transformRequest(server, ...args as RpcMap['fetch'][0]))
     }
 
+    // forward reporter
     if (method.startsWith('on'))
       // @ts-expect-error
       return send(() => ctx.reporter[method]?.(...args))
@@ -38,5 +39,5 @@ export async function createWorker(ctx: Omit<WorkerContext, 'port'>) {
     console.error('Unhandled message', method, args)
   })
 
-  piscina.run({ port: worker, ...ctx }, { transferList: [worker] })
+  await piscina.run({ port: worker, ...ctx }, { transferList: [worker] })
 }

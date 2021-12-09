@@ -93,8 +93,14 @@ export interface Task {
   computeMode: ComputeMode
   suite: Suite
   file?: File
-  state?: TaskState
+  result?: TaskResult
+}
+
+export interface TaskResult {
+  start?: number
+  state: TaskState
   error?: unknown
+  end?: number
 }
 
 export type TestFunction = () => Awaitable<void>
@@ -163,16 +169,6 @@ export interface File {
   suites: Suite[]
   collected: boolean
   error?: unknown
-}
-
-export interface RunnerContext {
-  filesMap: Record<string, File>
-  files: File[]
-  suites: Suite[]
-  tasks: Task[]
-  config: ResolvedConfig
-  // reporter: Reporter
-  // snapshotManager: SnapshotManager
 }
 
 export interface GlobalContext {

@@ -12,30 +12,36 @@ async function callHook<T extends keyof SuiteHooks>(suite: Suite, name: T, args:
 export async function runTask(task: Task) {
   getSnapshotManager()?.setTask(task)
 
-  await rpc('onTaskBegin', task)
+  rpc('onTaskBegin', task)
+
+  task.result = {
+    state: 'run',
+    start: performance.now(),
+  }
 
   if (task.mode === 'run') {
     try {
       await callHook(task.suite, 'beforeEach', [task, task.suite])
       await getFn(task)()
-      task.state = 'pass'
+      task.result.state = 'pass'
     }
     catch (e) {
-      task.state = 'fail'
-      task.error = e
+      task.result.state = 'fail'
+      task.result.error = e
       process.exitCode = 1
     }
     try {
       await callHook(task.suite, 'afterEach', [task, task.suite])
     }
     catch (e) {
-      task.state = 'fail'
-      task.error = e
+      task.result.state = 'fail'
+      task.result.error = e
       process.exitCode = 1
     }
   }
+  task.result.end = performance.now()
 
-  await rpc('onTaskEnd', task)
+  rpc('onTaskEnd', task)
 }
 
 export async function runSuite(suite: Suite) {

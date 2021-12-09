@@ -23,23 +23,23 @@ sade('vitest [filter]', true)
     console.log(c.yellow(c.bold('\nVitest is currently in closed beta exclusively for Sponsors')))
     console.log(c.magenta(`Become a Sponsor of ${c.underline('https://github.com/sponsors/patak-js')} or ${c.underline('https://github.com/sponsors/antfu')} \nto access the source code and issues tracker 💖\n`))
 
-    const { options, server } = await initViteServer({ ...argv, filters })
+    const { config, server } = await initViteServer({ ...argv, filters })
 
     process.__vitest__ = {
       server,
-      options,
+      config,
       moduleCache: new Map<string, ModuleCache>(),
     }
 
     try {
-      await start(options)
+      await start(config)
     }
     catch (e) {
       process.exitCode = 1
       throw e
     }
     finally {
-      if (!options.watch)
+      if (!config.watch)
         await server.close()
     }
 
@@ -56,7 +56,7 @@ declare global {
   namespace NodeJS {
     interface Process {
       __vitest__: {
-        options: ResolvedConfig
+        config: ResolvedConfig
         server: ViteDevServer
         moduleCache: Map<string, ModuleCache>
       }

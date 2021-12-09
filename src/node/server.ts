@@ -3,6 +3,15 @@ import { findUp } from 'find-up'
 import { createServer } from 'vite'
 import { ResolvedConfig, UserOptions } from '../types'
 
+const configFiles = [
+  'vitest.config.ts',
+  'vitest.config.js',
+  'vitest.config.mjs',
+  'vite.config.ts',
+  'vite.config.js',
+  'vite.config.mjs',
+]
+
 export async function initViteServer(options: UserOptions = {}) {
   const { filters } = options
 
@@ -11,7 +20,7 @@ export async function initViteServer(options: UserOptions = {}) {
 
   const configPath = options.config
     ? resolve(root, options.config)
-    : await findUp(['vitest.config.ts', 'vitest.config.js', 'vitest.config.mjs', 'vite.config.ts', 'vite.config.js', 'vite.config.mjs'], { cwd: root })
+    : await findUp(configFiles, { cwd: root })
 
   const resolved = { ...options } as ResolvedConfig
 
@@ -50,6 +59,6 @@ export async function initViteServer(options: UserOptions = {}) {
 
   return {
     server,
-    options: resolved,
+    config: resolved,
   }
 }
