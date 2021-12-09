@@ -46,6 +46,7 @@ sade('vitest [filter]', true)
       if (!config.watch)
         await server.close()
     }
+
     // const timer = setTimeout(() => {
     //   // TODO: warn user and maybe error out
     //   process.exit()

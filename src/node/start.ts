@@ -1,4 +1,3 @@
-import { DefaultReporter } from '../reporters/default'
 import { VitestContext } from '../types'
 import { createWorker } from './pool'
 import { globTestFiles } from './glob'
@@ -7,7 +6,6 @@ const MAX_WORKERS = 20
 
 export async function start(ctx: VitestContext) {
   const { config } = ctx
-  const reporter = config.reporter || new DefaultReporter(ctx)
   const testFilepaths = await globTestFiles(config)
   if (!testFilepaths.length) {
     console.error('No test files found')
@@ -15,7 +13,7 @@ export async function start(ctx: VitestContext) {
     return
   }
 
-  await reporter.onStart?.(config)
+  await ctx.reporter.onStart?.(config)
 
   const num = Math.min(testFilepaths.length, MAX_WORKERS)
   const workers = new Array(num).fill(0).map(() => createWorker(ctx))
@@ -31,9 +29,10 @@ export async function start(ctx: VitestContext) {
     }
   }))
 
-  await reporter.onFinished?.(ctx.state.getFiles())
+  await ctx.reporter.onFinished?.(ctx.state.getFiles())
 
   await Promise.all(workers.map(worker => worker.close()))
+
   // TODO: Watcher
   // TODO: terminate
 }

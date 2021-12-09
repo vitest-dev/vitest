@@ -36,6 +36,10 @@ export function createWorker(ctx: VitestContext) {
       return this.untilReady()
     },
     close() {
+      channel.port1.removeAllListeners()
+      channel.port2.removeAllListeners()
+      channel.port2.close()
+      channel.port1.close()
       return piscina.destroy()
     },
   }
