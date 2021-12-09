@@ -38,6 +38,7 @@ export const stubRequests: Record<string, any> = {
 }
 
 export async function executeInViteNode({ moduleCache, root, files, fetch, inline, external }: ExecuteOptions) {
+  const externaled = new Set<string>(builtinModules)
   const result = []
   for (const file of files)
     result.push(await cachedRequest(`/@fs/${slash(resolve(file))}`, []))
@@ -119,12 +120,13 @@ export async function executeInViteNode({ moduleCache, root, files, fetch, inlin
   async function cachedRequest(rawId: string, callstack: string[]) {
     const id = normalizeId(rawId)
 
-    if (builtinModules.includes(id))
+    if (externaled.has(id))
       return import(id)
 
     const fsPath = toFilePath(id, root)
 
-    if (await shouldExternalize(fsPath)) {
+    if (externaled.has(fsPath) || await shouldExternalize(fsPath)) {
+      externaled.add(fsPath)
       if (fsPath.match(/^\w:\//))
         return import(`/${fsPath}`)
       return import(fsPath)

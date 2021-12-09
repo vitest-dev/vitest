@@ -57,7 +57,10 @@ export async function initViteServer(options: UserOptions = {}) {
     'vue',
     ...server.config.test?.deps?.inline || [],
   ]
-  resolved.depsExternal = server.config.test?.deps?.external || []
+  resolved.depsExternal = [
+    'externality',
+    ...server.config.test?.deps?.external || [],
+  ]
 
   return {
     server,
