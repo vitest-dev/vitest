@@ -9,6 +9,8 @@ import logSymbols from 'log-symbols'
 import { Task } from '../types'
 import { getTests } from '../utils'
 
+const DURATION_LONG = 300
+
 const pointer = c.yellow(figures.pointer)
 const skipped = c.yellow(figures.arrowDown)
 
@@ -46,8 +48,6 @@ const getSymbol = (task: Task) => {
   return ' '
 }
 
-const TIME_LONG = 300
-
 const renderHelper = (tasks: Task[], level = 0) => {
   let output: string[] = []
 
@@ -60,7 +60,7 @@ const renderHelper = (tasks: Task[], level = 0) => {
 
     if (task.result?.end) {
       const duration = task.result.end - task.result.start
-      if (duration > TIME_LONG)
+      if (duration > DURATION_LONG)
         suffix += c.yellow(` ${Math.round(duration)}${c.dim('ms')}`)
     }
 
