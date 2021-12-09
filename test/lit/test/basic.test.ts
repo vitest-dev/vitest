@@ -2,9 +2,8 @@ import Sinon from 'sinon'
 
 import type { IWindow } from 'happy-dom'
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Nullable } from '@antfu/utils'
-import { html } from 'lit'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { MyButton } from '../src/my-button'
 
 declare global {
