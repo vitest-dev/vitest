@@ -19,11 +19,11 @@ export class DefaultReporter implements Reporter {
   }
 
   onStart() {
+    this.start = performance.now()
     console.log(c.green(`Running tests under ${c.gray(this.config.root)}\n`))
   }
 
   onCollected(files: File[]) {
-    this.start = performance.now()
     this.renderer?.stop()
     this.renderer = createRenderer(files).start()
   }
