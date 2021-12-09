@@ -37,6 +37,7 @@ export const stubRequests: Record<string, any> = {
 }
 
 export async function executeInViteNode({ moduleCache, root, files, fetch, inline, external }: ExecuteOptions) {
+  const externaled = new Set<string>(builtinModules)
   const result = []
   for (const file of files)
     result.push(await cachedRequest(`/@fs/${slash(resolve(file))}`, []))
@@ -46,9 +47,10 @@ export async function executeInViteNode({ moduleCache, root, files, fetch, inlin
     callstack = [...callstack, id]
     const request = async(dep: string) => {
       if (callstack.includes(dep)) {
-        if (!moduleCache.get(dep))
+        const cacheKey = toFilePath(dep, root)
+        if (!moduleCache.get(cacheKey)?.exports)
           throw new Error(`Circular dependency detected\nStack:\n${[...callstack, dep].reverse().map(p => `- ${p}`).join('\n')}`)
-        return moduleCache.get(dep)!.exports
+        return moduleCache.get(cacheKey)!.exports
       }
       return cachedRequest(dep, callstack)
     }
@@ -64,7 +66,7 @@ export async function executeInViteNode({ moduleCache, root, files, fetch, inlin
     const url = pathToFileURL(fsPath).href
     const exports = {}
 
-    setCache(id, { transformResult: result, exports })
+    setCache(fsPath, { transformResult: result, exports })
 
     const __filename = fileURLToPath(url)
     const context = {
@@ -94,7 +96,7 @@ export async function executeInViteNode({ moduleCache, root, files, fetch, inlin
       Object.assign(moduleCache.get(id), mod)
   }
 
-  function shouldExternalize(id: string) {
+  async function shouldExternalize(id: string) {
     for (const ex of inline) {
       if (typeof ex === 'string') {
         if (id.includes(`/node_modules/${ex}/`))
@@ -122,12 +124,13 @@ export async function executeInViteNode({ moduleCache, root, files, fetch, inlin
   async function cachedRequest(rawId: string, callstack: string[]) {
     const id = normalizeId(rawId)
 
-    if (builtinModules.includes(id))
+    if (externaled.has(id))
       return import(id)
 
     const fsPath = toFilePath(id, root)
 
-    if (shouldExternalize(fsPath)) {
+    if (externaled.has(fsPath) || await shouldExternalize(fsPath)) {
+      externaled.add(fsPath)
       if (fsPath.match(/^\w:\//))
         return import(`/${fsPath}`)
       return import(fsPath)
@@ -169,7 +172,8 @@ export function normalizeId(id: string): string {
 }
 
 export function toFilePath(id: string, root: string): string {
-  let absolute = slash(id).startsWith('/@fs/')
+  id = slash(id)
+  let absolute = id.startsWith('/@fs/')
     ? id.slice(4)
     : id.startsWith(dirname(root))
       ? id

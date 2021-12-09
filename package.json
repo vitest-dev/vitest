@@ -1,6 +1,6 @@
 {
   "name": "vitest",
-  "version": "0.0.39",
+  "version": "0.0.46",
   "description": "A blazing fast unit test framework powered by Vite",
   "keywords": [
     "vite",
@@ -43,16 +43,14 @@
   ],
   "scripts": {
     "prepare": "esmo scripts/generate-types.ts",
-    "build": "tsup --dts --minify",
+    "build": "tsup --dts --minify-whitespace --minify-syntax",
     "dev": "tsup --watch src",
     "lint": "eslint \"{src,test}/**/*.ts\"",
     "prepublishOnly": "nr build",
     "release": "bumpp --commit --push --tag && esmo scripts/publish.ts",
-    "test": "run-s test:*",
-    "test:core": "node bin/vitest.mjs --dev -r test/core",
-    "test:vue": "node bin/vitest.mjs --dev -r test/vue",
-    "test:react": "node bin/vitest.mjs --dev -r test/react",
-    "coverage": "node bin/vitest.mjs --dev -r test/core --coverage"
+    "test:all": "pnpm -r --stream --filter !vitest run test --",
+    "test": "node bin/vitest.mjs -r test/core",
+    "coverage": "node bin/vitest.mjs -r test/core --coverage"
   },
   "dependencies": {
     "@antfu/utils": "^0.3.0",
@@ -80,7 +78,8 @@
     "sinon": "^12.0.1",
     "sinon-chai": "^3.7.0",
     "source-map": "^0.7.3",
-    "strip-ansi": "^7.0.1"
+    "strip-ansi": "^7.0.1",
+    "source-map-support": "^0.5.21"
   },
   "peerDependencies": {
     "vite": "^2.7.1"

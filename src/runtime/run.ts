@@ -1,8 +1,10 @@
+import { performance } from 'perf_hooks'
 import { HookListener } from 'vitest'
-import { File, ResolvedConfig, Task, RunnerContext, Suite, RunMode, SuiteHooks } from '../types'
+import { ResolvedConfig, Test, RunnerContext, Suite, SuiteHooks, Task } from '../types'
 import { getSnapshotManager } from '../integrations/chai/snapshot'
 import { startWatcher } from '../node/watcher'
 import { globTestFiles } from '../node/glob'
+import { hasFailed, hasTests, partitionSuiteChildren } from '../utils'
 import { getFn, getHooks } from './map'
 import { collectTests } from './collect'
 import { setupRunner } from './setup'
@@ -11,56 +13,42 @@ async function callHook<T extends keyof SuiteHooks>(suite: Suite, name: T, args:
   await Promise.all(getHooks(suite)[name].map(fn => fn(...(args as any))))
 }
 
-export async function runTask(task: Task, ctx: RunnerContext) {
-  if (task.mode !== 'run')
+export async function runTest(test: Test, ctx: RunnerContext) {
+  if (test.mode !== 'run')
     return
 
   const { reporter } = ctx
 
-  getSnapshotManager()?.setTask(task)
+  getSnapshotManager()?.setTest(test)
 
-  await reporter.onTaskBegin?.(task, ctx)
-  task.result = {
+  await reporter.onTestBegin?.(test, ctx)
+  test.result = {
     start: performance.now(),
     state: 'run',
   }
 
   try {
-    await callHook(task.suite, 'beforeEach', [task, task.suite])
-    await getFn(task)()
-    task.result.state = 'pass'
+    await callHook(test.suite, 'beforeEach', [test, test.suite])
+    await getFn(test)()
+    test.result.state = 'pass'
   }
   catch (e) {
-    task.result.state = 'fail'
-    task.result.error = e
+    test.result.state = 'fail'
+    test.result.error = e
     process.exitCode = 1
   }
   try {
-    await callHook(task.suite, 'afterEach', [task, task.suite])
+    await callHook(test.suite, 'afterEach', [test, test.suite])
   }
   catch (e) {
-    task.result.state = 'fail'
-    task.result.error = e
+    test.result.state = 'fail'
+    test.result.error = e
     process.exitCode = 1
   }
 
-  task.result.end = performance.now()
+  test.result.end = performance.now()
 
-  await reporter.onTaskEnd?.(task, ctx)
-}
-
-/**
- * If any items been marked as `only`, mark all other items as `skip`.
- */
-export function interpretOnlyMode(items: { mode: RunMode }[]) {
-  if (items.some(i => i.mode === 'only')) {
-    items.forEach((i) => {
-      if (i.mode === 'run')
-        i.mode = 'skip'
-      else if (i.mode === 'only')
-        i.mode = 'run'
-    })
-  }
+  await reporter.onTestEnd?.(test, ctx)
 }
 
 export async function runSuite(suite: Suite, ctx: RunnerContext) {
@@ -68,90 +56,64 @@ export async function runSuite(suite: Suite, ctx: RunnerContext) {
 
   await reporter.onSuiteBegin?.(suite, ctx)
 
+  suite.result = {
+    start: performance.now(),
+    state: 'run',
+  }
+
   if (suite.mode === 'skip') {
-    suite.status = 'skip'
+    suite.result.state = 'skip'
   }
   else if (suite.mode === 'todo') {
-    suite.status = 'todo'
+    suite.result.state = 'todo'
   }
   else {
     try {
       await callHook(suite, 'beforeAll', [suite])
 
-      for (const childrenGroup of partitionSuiteChildren(suite)) {
-        const computeMode = childrenGroup[0].computeMode
+      for (const tasksGroup of partitionSuiteChildren(suite)) {
+        const computeMode = tasksGroup[0].computeMode
         if (computeMode === 'serial') {
-          for (const c of childrenGroup)
+          for (const c of tasksGroup)
             await runSuiteChild(c, ctx)
         }
         else if (computeMode === 'concurrent') {
-          await Promise.all(childrenGroup.map(c => runSuiteChild(c, ctx)))
+          await Promise.all(tasksGroup.map(c => runSuiteChild(c, ctx)))
         }
       }
 
       await callHook(suite, 'afterAll', [suite])
     }
     catch (e) {
-      suite.error = e
-      suite.status = 'fail'
+      suite.result.state = 'fail'
+      suite.result.error = e
       process.exitCode = 1
     }
   }
+  suite.result.end = performance.now()
+  if (suite.mode === 'run') {
+    if (!hasTests(suite)) {
+      suite.result.state = 'fail'
+      suite.result.error = new Error(`No tests found in suite ${suite.name}`)
+      process.exitCode = 1
+    }
+    else if (hasFailed(suite)) {
+      suite.result.state = 'fail'
+    }
+  }
+
   await reporter.onSuiteEnd?.(suite, ctx)
 }
 
-async function runSuiteChild(c: (Task | Suite), ctx: RunnerContext) {
-  return c.type === 'task' ? runTask(c, ctx) : runSuite(c, ctx)
+async function runSuiteChild(c: Task, ctx: RunnerContext) {
+  return c.type === 'test'
+    ? runTest(c, ctx)
+    : runSuite(c, ctx)
 }
 
-/**
- * Partition in tasks groups by consecutive computeMode ('serial', 'concurrent')
- */
-function partitionSuiteChildren(suite: Suite) {
-  let childrenGroup: (Task | Suite)[] = []
-  const childrenGroups: (Task | Suite)[][] = []
-  for (const c of suite.children) {
-    if (childrenGroup.length === 0 || c.computeMode === childrenGroup[0].computeMode) {
-      childrenGroup.push(c)
-    }
-    else {
-      childrenGroups.push(childrenGroup)
-      childrenGroup = [c]
-    }
-  }
-  if (childrenGroup.length > 0)
-    childrenGroups.push(childrenGroup)
-
-  return childrenGroups
-}
-
-export async function runFile(file: File, ctx: RunnerContext) {
-  const { reporter } = ctx
-
-  const runnable = file.children.filter(i => i.mode === 'run')
-  if (runnable.length === 0)
-    return
-
-  await reporter.onFileBegin?.(file, ctx)
-
-  if (ctx.config.parallel) {
-    await Promise.all(file.children.map(c => runSuiteChild(c, ctx)))
-  }
-  else {
-    for (const c of file.children)
-      await runSuiteChild(c, ctx)
-  }
-
-  await reporter.onFileEnd?.(file, ctx)
-}
-
-export async function runFiles(filesMap: Record<string, File>, ctx: RunnerContext) {
-  const { reporter } = ctx
-
-  await reporter.onCollected?.(Object.values(filesMap), ctx)
-
-  for (const file of Object.values(filesMap))
-    await runFile(file, ctx)
+export async function runSuites(suites: Suite[], ctx: RunnerContext) {
+  for (const suite of suites)
+    await runSuite(suite, ctx)
 }
 
 export async function run(config: ResolvedConfig) {
@@ -169,11 +131,13 @@ export async function run(config: ResolvedConfig) {
 
   await reporter.onStart?.(config)
 
-  const files = await collectTests(testFilepaths)
+  const newFileMap = await collectTests(testFilepaths)
 
-  Object.assign(filesMap, files)
+  Object.assign(filesMap, newFileMap)
+  const files = Object.values(filesMap)
 
-  await runFiles(filesMap, ctx)
+  await reporter.onCollected?.(files, ctx)
+  await runSuites(files, ctx)
 
   snapshotManager.saveSnap()
 

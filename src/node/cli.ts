@@ -2,9 +2,10 @@
 import { resolve } from 'path'
 import sade from 'sade'
 import c from 'picocolors'
-import { ViteDevServer } from 'vite'
-import type { ResolvedConfig } from '../types'
+import type { ViteDevServer } from 'vite'
+import type { ResolvedConfig, UserOptions } from '../types'
 import { version } from '../../package.json'
+import { distDir } from '../constants'
 import { run } from './node'
 import { initViteServer } from './server'
 import { ModuleCache } from './execute'
@@ -17,9 +18,8 @@ sade('vitest [filter]', true)
   .option('-w, --watch', 'watch mode', false)
   .option('-u, --update', 'update snapshot', false)
   .option('--global', 'inject apis globally', false)
-  .option('--dev', 'dev mode', false)
   .option('--dom', 'mock browser api using jsdom or happy-dom', '')
-  .action(async(filters, argv) => {
+  .action(async(filters, argv: UserOptions) => {
     process.env.VITEST = 'true'
 
     console.log(c.yellow(c.bold('\nVitest is currently in closed beta exclusively for Sponsors')))
@@ -35,7 +35,7 @@ sade('vitest [filter]', true)
     }
 
     await run(server, config, moduleCache, [
-      resolve(__dirname, argv.dev ? '../src/node/entry.ts' : './entry.js'),
+      resolve(distDir, './node/entry.js'),
     ])
   })
   .parse(process.argv)
