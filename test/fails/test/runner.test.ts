@@ -18,7 +18,12 @@ describe('should fails', async() => {
       }
 
       expect(error).toBeTruthy()
-      expect(String(error).split('\n').filter(Boolean).reverse().find(i => i.includes('Error: '))).toMatchSnapshot()
+      const msg = String(error)
+        .split(/\n/g)
+        .reverse()
+        .find(i => i.includes('Error: '))
+        ?.trim()
+      expect(msg).toMatchSnapshot()
     })
   }
 })
