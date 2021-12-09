@@ -149,6 +149,7 @@ export interface SuiteCollector {
   readonly mode: RunMode
   type: 'collector'
   test: TestCollector
+  children: (Suite | Task | SuiteCollector)[]
   collect: (file?: File) => Promise<Suite>
   clear: () => void
   on: <T extends keyof Suite['hooks']>(name: T, ...fn: Suite['hooks'][T]) => void

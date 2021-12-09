@@ -56,7 +56,7 @@ export class DefaultReporter implements Reporter {
       return {
         title: task.name,
         skip: () => task.mode === 'skip',
-        task: async () => {
+        task: async() => {
           return await this.taskMap.get(task)?.promise
         },
       }
@@ -120,6 +120,7 @@ export class DefaultReporter implements Reporter {
 
     const failedFiles = files.filter(i => i.error)
     const failedSuites = suites.filter(i => i.error)
+
     const runnable = tasks.filter(i => i.state === 'pass' || i.state === 'fail')
     const passed = tasks.filter(i => i.state === 'pass')
     const failed = tasks.filter(i => i.state === 'fail')

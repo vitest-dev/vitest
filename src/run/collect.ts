@@ -1,4 +1,4 @@
-import { clearContext, createSuiteHooks } from '../suite'
+import { clearContext, createSuiteHooks, defaultSuite } from '../suite'
 import { context } from '../context'
 import { File, Suite, Task } from '../types'
 import { interpretOnlyMode } from './index'
@@ -21,13 +21,14 @@ export async function collectTests(paths: string[]) {
     try {
       await import(filepath)
 
-      for (const c of context.children) {
+      for (const c of [defaultSuite, ...context.children]) {
         if (c.type === 'task') {
           file.children.push(c)
         }
         else {
-          context.currentSuite = c
-          file.children.push(await c.collect(file))
+          const suite = await c.collect(file)
+          if (suite.name || suite.children.length)
+            file.children.push(suite)
         }
       }
     }
