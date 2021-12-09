@@ -1,22 +1,23 @@
-import { HookListener } from 'vitest'
+import { HookListener, SuiteHooks } from 'vitest'
 import { getSnapshotManager } from '../integrations/chai/snapshot'
 import { File, Task, Suite } from '../types'
 import { collectTests } from './collect'
+import { getFn, getHooks } from './map'
 import { rpc } from './rpc'
 
-async function callHook<T extends keyof Suite['hooks']>(suite: Suite, name: T, args: Suite['hooks'][T][0] extends HookListener<infer A> ? A : never) {
-  await Promise.all(suite.hooks[name].map(fn => fn(...(args as any))))
+async function callHook<T extends keyof SuiteHooks>(suite: Suite, name: T, args: SuiteHooks[T][0] extends HookListener<infer A> ? A : never) {
+  await Promise.all(getHooks(suite)[name].map(fn => fn(...(args as any))))
 }
 
 export async function runTask(task: Task) {
   getSnapshotManager()?.setTask(task)
 
-  rpc('onTaskBegin', task)
+  await rpc('onTaskBegin', task)
 
   if (task.mode === 'run') {
     try {
       await callHook(task.suite, 'beforeEach', [task, task.suite])
-      await task.fn()
+      await getFn(task)()
       task.state = 'pass'
     }
     catch (e) {
@@ -34,11 +35,11 @@ export async function runTask(task: Task) {
     }
   }
 
-  rpc('onTaskEnd', task)
+  await rpc('onTaskEnd', task)
 }
 
 export async function runSuite(suite: Suite) {
-  rpc('onSuiteBegin', suite)
+  await rpc('onSuiteBegin', suite)
 
   if (suite.mode === 'skip') {
     suite.status = 'skip'
@@ -69,7 +70,7 @@ export async function runSuite(suite: Suite) {
       process.exitCode = 1
     }
   }
-  rpc('onSuiteEnd', suite)
+  await rpc('onSuiteEnd', suite)
 }
 
 /**
@@ -98,27 +99,27 @@ export async function runFile(file: File) {
   if (runnableSuites.length === 0)
     return
 
-  rpc('onFileBegin', file)
+  await rpc('onFileBegin', file)
 
   for (const suite of file.suites)
     await runSuite(suite)
 
-  rpc('onFileEnd', file)
+  await rpc('onFileEnd', file)
 }
 
 export async function runFiles(filesMap: Record<string, File>) {
-  rpc('onCollected', Object.values(filesMap))
+  await rpc('onCollected', Object.values(filesMap))
 
   for (const file of Object.values(filesMap))
     await runFile(file)
 }
 
 export async function startTests(paths: string[]) {
-  rpc('onStart')
+  await rpc('onStart')
 
   const filesMap = await collectTests(paths)
 
   await runFiles(filesMap)
 
-  rpc('onFinished', Object.values(filesMap))
+  await rpc('onFinished', Object.values(filesMap))
 }

@@ -1,3 +1,4 @@
+import { DefaultReporter } from '../reporters/default'
 import { ResolvedConfig } from '../types'
 import { createWorker } from '../worker/manager'
 import { globTestFiles } from './glob'
@@ -10,7 +11,11 @@ export async function start(config: ResolvedConfig) {
     return
   }
 
-  await createWorker({ config, files: testFilepaths })
+  await createWorker({
+    config,
+    files: testFilepaths,
+    reporter: config.reporter || new DefaultReporter(config),
+  })
 
   // TODO: terminate
 }

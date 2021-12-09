@@ -1,5 +1,7 @@
+import { SuiteHooks } from 'vitest'
 import { context } from '../context'
 import { Task, SuiteCollector, TestCollector, RunMode, ComputeMode, TestFactory, TestFunction, File, Suite } from '../types'
+import { getHooks, setFn, setHooks } from './map'
 
 export const suite = createSuite()
 
@@ -13,26 +15,29 @@ function createSuiteCollector(name: string, factory: TestFactory = () => {}, mod
   const queue: Task[] = []
   const factoryQueue: Task[] = []
 
-  const suiteBase: Pick<Suite, 'name' | 'mode' | 'hooks'> = {
+  const suite: Suite = {
     name,
     mode,
-    hooks: {
-      beforeAll: [],
-      afterAll: [],
-      beforeEach: [],
-      afterEach: [],
-    },
+    tasks: [],
   }
 
+  setHooks(suite, {
+    beforeAll: [],
+    afterAll: [],
+    beforeEach: [],
+    afterEach: [],
+  })
+
   const test = createTestCollector((name: string, fn: TestFunction, mode: RunMode, computeMode?: ComputeMode) => {
-    queue.push({
+    const task = {
       name,
       mode,
       computeMode: computeMode ?? (suiteComputeMode ?? 'serial'),
       suite: {} as Suite,
       state: (mode !== 'run' && mode !== 'only') ? mode : undefined,
-      fn,
-    })
+    }
+    setFn(task, fn)
+    queue.push(task)
   })
 
   const collector: SuiteCollector = {
@@ -44,8 +49,8 @@ function createSuiteCollector(name: string, factory: TestFactory = () => {}, mod
     on: addHook,
   }
 
-  function addHook<T extends keyof Suite['hooks']>(name: T, ...fn: Suite['hooks'][T]) {
-    suiteBase.hooks[name].push(...fn as any)
+  function addHook<T extends keyof SuiteHooks>(name: T, ...fn: SuiteHooks[T]) {
+    getHooks(suite)[name].push(...fn as any)
   }
 
   function clear() {
@@ -60,11 +65,8 @@ function createSuiteCollector(name: string, factory: TestFactory = () => {}, mod
 
     const tasks = [...factoryQueue, ...queue]
 
-    const suite: Suite = {
-      ...suiteBase,
-      tasks,
-      file,
-    }
+    suite.tasks = tasks
+    suite.file = file
 
     tasks.forEach((task) => {
       task.suite = suite
@@ -184,10 +186,10 @@ export const describe = suite
 export const it = test
 
 // hooks
-export const beforeAll = (fn: Suite['hooks']['beforeAll'][0]) => getCurrentSuite().on('beforeAll', fn)
-export const afterAll = (fn: Suite['hooks']['afterAll'][0]) => getCurrentSuite().on('afterAll', fn)
-export const beforeEach = (fn: Suite['hooks']['beforeEach'][0]) => getCurrentSuite().on('beforeEach', fn)
-export const afterEach = (fn: Suite['hooks']['afterEach'][0]) => getCurrentSuite().on('afterEach', fn)
+export const beforeAll = (fn: SuiteHooks['beforeAll'][0]) => getCurrentSuite().on('beforeAll', fn)
+export const afterAll = (fn: SuiteHooks['afterAll'][0]) => getCurrentSuite().on('afterAll', fn)
+export const beforeEach = (fn: SuiteHooks['beforeEach'][0]) => getCurrentSuite().on('beforeEach', fn)
+export const afterEach = (fn: SuiteHooks['afterEach'][0]) => getCurrentSuite().on('afterEach', fn)
 
 // utils
 export function clearContext() {

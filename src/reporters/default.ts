@@ -3,10 +3,8 @@ import { performance } from 'perf_hooks'
 import { relative } from 'path'
 import c from 'picocolors'
 import Listr from 'listr'
-import { File, Reporter, RunnerContext, Task, ResolvedConfig } from '../types'
+import { File, Reporter, Task, ResolvedConfig } from '../types'
 import { printError } from './error'
-
-const CROSS = '✖ '
 
 interface TaskPromise {
   promise: Promise<void>
@@ -21,15 +19,15 @@ export class DefaultReporter implements Reporter {
   listr: Listr | null = null
   listrPromise: Promise<void> | null = null
   taskMap: Map<Task, TaskPromise> = new Map()
-  cwd = process.cwd()
+
+  constructor(public config: ResolvedConfig) {}
 
   relative(path: string) {
-    return relative(this.cwd, path)
+    return relative(this.config.root, path)
   }
 
-  onStart(config: ResolvedConfig) {
-    this.cwd = config.root
-    console.log(c.green(`Running tests under ${c.gray(this.cwd)}\n`))
+  onStart() {
+    console.log(c.green(`Running tests under ${c.gray(this.config.root)}\n`))
   }
 
   onCollected(files: File[]) {
@@ -96,16 +94,18 @@ export class DefaultReporter implements Reporter {
       this.taskMap.get(task)?.resolve()
   }
 
-  async onFinished(ctx: RunnerContext, files = ctx.files) {
+  async onFinished(files: File[]) {
     await this.listrPromise
+
+    console.log('onFinished')
 
     this.end = performance.now()
 
     console.log()
 
-    const snapshot = ctx.snapshotManager.report()
-    if (snapshot)
-      console.log(snapshot.join('\n'))
+    // const snapshot = ctx.snapshotManager.report()
+    // if (snapshot)
+    //   console.log(snapshot.join('\n'))
 
     const suites = files.flatMap(i => i.suites)
     const tasks = suites.flatMap(i => i.tasks)
@@ -142,7 +142,7 @@ export class DefaultReporter implements Reporter {
     if (failed.length) {
       console.error(c.bold(c.red(`\nFailed Tests (${failed.length})`)))
       for (const task of failed) {
-        console.error(`${c.red(`\n${CROSS + c.inverse(' FAIL ')}`)} ${[task.suite.name, task.name].filter(Boolean).join(' > ')}`)
+        console.error(`${c.red(`\n${c.inverse(' FAIL ')}`)} ${[task.suite.name, task.name].filter(Boolean).join(' > ')}`)
         await printError(task.error)
         console.log()
       }
@@ -158,10 +158,10 @@ export class DefaultReporter implements Reporter {
     console.log(`Time     ${(this.end - this.start).toFixed(2)}ms`)
   }
 
-  async onWatcherStart(ctx: RunnerContext) {
+  async onWatcherStart() {
     await this.listrPromise
 
-    const failed = ctx.tasks.filter(i => i.state === 'fail')
+    const failed = [] // TODO: ctx.tasks.filter(i => i.state === 'fail')
     if (failed.length)
       console.log(`\n${c.bold(c.inverse(c.red(' FAIL ')))}${c.red(` ${failed.length} tests failed. Watching for file changes...`)}`)
     else
@@ -173,9 +173,5 @@ export class DefaultReporter implements Reporter {
 
     console.clear()
     console.log(c.blue('Re-running tests...') + c.dim(` [ ${this.relative(trigger)} ]\n`))
-  }
-
-  // TODO:
-  onSnapshotUpdate() {
   }
 }

@@ -87,11 +87,11 @@ export type TaskState = RunMode | 'pass' | 'fail'
 export type ComputeMode = 'serial' | 'concurrent'
 
 export interface Task {
+  id: string
   name: string
   mode: RunMode
   computeMode: ComputeMode
   suite: Suite
-  fn: () => Awaitable<void>
   file?: File
   state?: TaskState
   error?: unknown
@@ -131,6 +131,13 @@ export interface TestCollector {
 
 export type HookListener<T extends any[]> = (...args: T) => Awaitable<void>
 
+export interface SuiteHooks {
+  beforeAll: HookListener<[Suite]>[]
+  afterAll: HookListener<[Suite]>[]
+  beforeEach: HookListener<[Task, Suite]>[]
+  afterEach: HookListener<[Task, Suite]>[]
+}
+
 export interface Suite {
   name: string
   mode: RunMode
@@ -138,12 +145,6 @@ export interface Suite {
   file?: File
   error?: unknown
   status?: TaskState
-  hooks: {
-    beforeAll: HookListener<[Suite]>[]
-    afterAll: HookListener<[Suite]>[]
-    beforeEach: HookListener<[Task, Suite]>[]
-    afterEach: HookListener<[Task, Suite]>[]
-  }
 }
 
 export interface SuiteCollector {
@@ -152,7 +153,7 @@ export interface SuiteCollector {
   test: TestCollector
   collect: (file?: File) => Promise<Suite>
   clear: () => void
-  on: <T extends keyof Suite['hooks']>(name: T, ...fn: Suite['hooks'][T]) => void
+  on: <T extends keyof SuiteHooks>(name: T, ...fn: SuiteHooks[T]) => void
 }
 
 export type TestFactory = (test: (name: string, fn: TestFunction) => void) => Awaitable<void>
@@ -181,24 +182,25 @@ export interface GlobalContext {
 
 export interface Reporter {
   onStart?: (config: ResolvedConfig) => Awaitable<void>
-  onCollected?: (files: File[], ctx: RunnerContext) => Awaitable<void>
-  onFinished?: (ctx: RunnerContext, files?: File[]) => Awaitable<void>
+  onCollected?: (files: File[]) => Awaitable<void>
+  onFinished?: (files: File[]) => Awaitable<void>
 
-  onSuiteBegin?: (suite: Suite, ctx: RunnerContext) => Awaitable<void>
-  onSuiteEnd?: (suite: Suite, ctx: RunnerContext) => Awaitable<void>
-  onFileBegin?: (file: File, ctx: RunnerContext) => Awaitable<void>
-  onFileEnd?: (file: File, ctx: RunnerContext) => Awaitable<void>
-  onTaskBegin?: (task: Task, ctx: RunnerContext) => Awaitable<void>
-  onTaskEnd?: (task: Task, ctx: RunnerContext) => Awaitable<void>
+  onSuiteBegin?: (suite: Suite) => Awaitable<void>
+  onSuiteEnd?: (suite: Suite) => Awaitable<void>
+  onFileBegin?: (file: File) => Awaitable<void>
+  onFileEnd?: (file: File) => Awaitable<void>
+  onTaskBegin?: (task: Task) => Awaitable<void>
+  onTaskEnd?: (task: Task) => Awaitable<void>
 
-  onWatcherStart?: (ctx: RunnerContext) => Awaitable<void>
-  onWatcherRerun?: (files: string[], trigger: string, ctx: RunnerContext) => Awaitable<void>
+  onWatcherStart?: () => Awaitable<void>
+  onWatcherRerun?: (files: string[], trigger: string) => Awaitable<void>
 }
 
 export interface WorkerContext {
   port: MessagePort
   files: string[]
   config: ResolvedConfig
+  reporter: Reporter
 }
 
 export interface RpcMap {
@@ -219,3 +221,5 @@ export interface RpcMap {
 }
 
 export type RpcFn = <T extends keyof RpcMap>(method: T, ...args: RpcMap[T][0]) => Promise<RpcMap[T][1]>
+
+export type RpcMessage<T extends keyof RpcMap = keyof RpcMap> = { id: string; method: T; args: RpcMap[T][0] }
