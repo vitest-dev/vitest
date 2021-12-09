@@ -30,6 +30,7 @@ function createSuiteCollector(name: string, factory: TestFactory = () => { }, mo
 
   const test = createTestCollector((name: string, fn: TestFunction, mode: RunMode, computeMode?: ComputeMode) => {
     queue.push({
+      type: 'task',
       name,
       mode,
       computeMode: computeMode ?? (suiteComputeMode ?? 'serial'),
@@ -40,6 +41,7 @@ function createSuiteCollector(name: string, factory: TestFactory = () => { }, mo
   })
 
   const collector: SuiteCollector = {
+    type: 'collector',
     name,
     mode,
     test,
@@ -62,15 +64,17 @@ function createSuiteCollector(name: string, factory: TestFactory = () => { }, mo
     if (factory)
       await factory(test)
 
-    const tasks = [...factoryQueue, ...queue]
+    const children = [...factoryQueue, ...queue]
 
     const suite: Suite = {
+      type: 'suite',
+      computeMode: 'serial',
       ...suiteBase,
-      tasks,
+      children,
       file,
     }
 
-    tasks.forEach((task) => {
+    children.forEach((task) => {
       task.suite = suite
       if (file)
         task.file = file
@@ -80,7 +84,7 @@ function createSuiteCollector(name: string, factory: TestFactory = () => { }, mo
   }
 
   context.currentSuite = collector
-  context.suites.push(collector)
+  context.children.push(collector)
 
   return collector
 }
@@ -117,7 +121,7 @@ function createTestCollector(collectTask: (name: string, fn: TestFunction, mode:
 
 // apis
 
-export const test = (function () {
+export const test = (function() {
   function test(name: string, fn: TestFunction) {
     return getCurrentSuite().test(name, fn)
   }
@@ -195,7 +199,7 @@ export const afterEach = (fn: Suite['hooks']['afterEach'][0]) => getCurrentSuite
 
 // utils
 export function clearContext() {
-  context.suites.length = 0
+  context.children.length = 0
   defaultSuite.clear()
   context.currentSuite = defaultSuite
 }
