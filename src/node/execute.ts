@@ -96,8 +96,8 @@ export async function executeInViteNode({ moduleCache, root, files, fetch, inlin
       Object.assign(moduleCache.get(id), mod)
   }
 
-  function shouldExternalize(id: string) {
-    return isExternal(id, root, {
+  async function shouldExternalize(id: string) {
+    return (await isExternal(id, root, {
       inline: [
         /virtual:/,
         /\.ts$/,
@@ -113,7 +113,7 @@ export async function executeInViteNode({ moduleCache, root, files, fetch, inlin
         type: 'module',
         extensions: ['.ts', '.js', '.json', '.vue', '.mjs', '.jsx', '.tsx', '.wasm'],
       },
-    })
+    }))?.external ?? false
   }
 
   async function cachedRequest(rawId: string, callstack: string[]) {
