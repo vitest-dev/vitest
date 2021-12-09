@@ -3,7 +3,8 @@ import { performance } from 'perf_hooks'
 import { relative } from 'path'
 import c from 'picocolors'
 import Listr from 'listr'
-import { File, Reporter, Task, ResolvedConfig } from '../types'
+import { File, Suite, Reporter, Task, ResolvedConfig } from '../types'
+import { getSuiteTasks, suiteHasTasks } from '../runtime/suite'
 import { printError } from './error'
 
 interface TaskPromise {
@@ -34,7 +35,7 @@ export class DefaultReporter implements Reporter {
     this.start = performance.now()
     this.taskMap = new Map()
 
-    const tasks = files.reduce((acc, file) => acc.concat(file.suites.flatMap(i => i.tasks)), [] as Task[])
+    const tasks = files.reduce((acc, file) => acc.concat(getSuiteTasks(file)), [] as Task[])
 
     tasks.forEach((t) => {
       const obj = {} as TaskPromise
@@ -45,20 +46,37 @@ export class DefaultReporter implements Reporter {
       this.taskMap.set(t.id, obj)
     })
 
-    const createTasksListr = (tasks: Task[]): Listr.ListrTask[] => {
-      return tasks.map((task) => {
-        return {
-          title: task.name,
-          skip: () => task.mode === 'skip' || task.mode === 'todo',
-          task: async() => {
-            return await this.taskMap.get(task.id)?.promise
-          },
-        }
-      })
-    }
-
     const listrOptions: Listr.ListrOptions = {
       exitOnError: false,
+    }
+
+    const createListrTask = (task: Task): Listr.ListrTask => {
+      return {
+        title: task.name,
+        skip: () => task.mode === 'skip' || task.mode === 'todo',
+        task: async() => {
+          return await this.taskMap.get(task.id)?.promise
+        },
+      }
+    }
+
+    function createListrSuiteChildren(suite: Suite): Listr.ListrTask[] {
+      return suite.children.map(c => c.type === 'task' ? createListrTask(c) : createListrSuiteTask(c))
+    }
+
+    function createSuiteListr(suite: Suite): Listr {
+      if (!suiteHasTasks(suite))
+        throw new Error('No tasks found')
+
+      return new Listr(createListrSuiteChildren(suite), listrOptions)
+    }
+
+    function createListrSuiteTask(suite: Suite): Listr.ListrContext {
+      return {
+        title: suite.name,
+        skip: () => suite.mode !== 'run',
+        task: () => createSuiteListr(suite),
+      }
     }
 
     this.listr = new Listr(files.map((file) => {
@@ -67,24 +85,13 @@ export class DefaultReporter implements Reporter {
         task: () => {
           if (file.error)
             throw file.error
-          const suites = file.suites.filter(i => i.tasks.length)
-          if (!suites.length)
-            throw new Error('No tasks found')
-          return new Listr(suites.flatMap((suite) => {
-            if (!suite.name)
-              return createTasksListr(suite.tasks)
 
-            return [{
-              title: suite.name,
-              skip: () => suite.mode !== 'run',
-              task: () => new Listr(createTasksListr(suite.tasks), listrOptions),
-            }]
-          }), listrOptions)
+          return createSuiteListr(file)
         },
       }
     }), listrOptions)
 
-    this.listrPromise = this.listr.run().catch(() => {})
+    this.listrPromise = this.listr.run().catch(() => { })
   }
 
   onTaskEnd(task: Task) {
@@ -105,16 +112,18 @@ export class DefaultReporter implements Reporter {
     // if (snapshot)
     //   console.log(snapshot.join('\n'))
 
-    const suites = files.flatMap(i => i.suites).filter(Boolean)
-    const tasks = suites.flatMap(i => i.tasks)
+    // Only consider the first level suites for reporting
+    const suites = files.flatMap(file => file.children.filter(c => c.type === 'suite')) as Suite[]
+    const tasks = files.flatMap(getSuiteTasks)
 
     const failedFiles = files.filter(i => i.error)
     const failedSuites = suites.filter(i => i.error)
+
     const runnable = tasks.filter(i => i.result?.state === 'pass' || i.result?.state === 'fail')
     const passed = tasks.filter(i => i.result?.state === 'pass')
     const failed = tasks.filter(i => i.result?.state === 'fail')
-    const skipped = tasks.filter(i => i.mode === 'skip')
-    const todo = tasks.filter(i => i.mode === 'todo')
+    const skipped = tasks.filter(i => i.result?.state === 'skip')
+    const todo = tasks.filter(i => i.result?.state === 'todo')
 
     if (failedFiles.length) {
       console.error(c.red(c.bold(`\nFailed to parse ${failedFiles.length} files:`)))

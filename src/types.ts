@@ -84,22 +84,25 @@ export interface ResolvedConfig extends Omit<Required<UserOptions>, 'config' | '
 
 export type RunMode = 'run' | 'skip' | 'only' | 'todo'
 export type TaskState = RunMode | 'pass' | 'fail'
+export type SuiteState = RunMode | 'pass' | 'fail'
 export type ComputeMode = 'serial' | 'concurrent'
 
 export interface Task {
   id: string
+  type: 'task'
   name: string
   mode: RunMode
   computeMode: ComputeMode
   suite: Suite
+  file?: File
   result?: TaskResult
 }
 
 export interface TaskResult {
-  start?: number
   state: TaskState
-  error?: unknown
+  start: number
   end?: number
+  error?: unknown
 }
 
 export type TestFunction = () => Awaitable<void>
@@ -144,9 +147,13 @@ export interface SuiteHooks {
 }
 
 export interface Suite {
+  type: 'suite'
   name: string
   mode: RunMode
-  tasks: Task[]
+  computeMode: ComputeMode
+  children: (Task | Suite)[]
+  state?: SuiteState
+  file?: File
   error?: unknown
   status?: TaskState
 }
@@ -154,7 +161,9 @@ export interface Suite {
 export interface SuiteCollector {
   readonly name: string
   readonly mode: RunMode
+  type: 'collector'
   test: TestCollector
+  children: (Suite | Task | SuiteCollector)[]
   collect: (file?: File) => Promise<Suite>
   clear: () => void
   on: <T extends keyof SuiteHooks>(name: T, ...fn: SuiteHooks[T]) => void
@@ -162,14 +171,13 @@ export interface SuiteCollector {
 
 export type TestFactory = (test: (name: string, fn: TestFunction) => void) => Awaitable<void>
 
-export interface File {
+export interface File extends Suite {
   filepath: string
-  suites: Suite[]
   error?: unknown
 }
 
 export interface GlobalContext {
-  suites: SuiteCollector[]
+  children: (SuiteCollector | Task)[]
   currentSuite: SuiteCollector | null
 }
 

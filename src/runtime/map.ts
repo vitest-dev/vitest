@@ -2,6 +2,7 @@ import { Awaitable } from '@antfu/utils'
 import { SuiteHooks } from 'vitest'
 import { Suite, Task } from '../types'
 
+// use WeakMap here to make the Task and Suite object serializable
 const fnMap = new WeakMap()
 const hooksMap = new WeakMap()
 

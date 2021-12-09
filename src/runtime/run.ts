@@ -60,14 +60,14 @@ export async function runSuite(suite: Suite) {
     try {
       await callHook(suite, 'beforeAll', [suite])
 
-      for (const taskGroup of partitionTasks(suite.tasks)) {
-        const computeMode = taskGroup[0].computeMode
+      for (const childrenGroup of partitionSuiteChildren(suite)) {
+        const computeMode = childrenGroup[0].computeMode
         if (computeMode === 'serial') {
-          for (const t of taskGroup)
-            await runTask(t)
+          for (const c of childrenGroup)
+            await runSuiteChild(c)
         }
         else if (computeMode === 'concurrent') {
-          await Promise.all(taskGroup.map(t => runTask(t)))
+          await Promise.all(childrenGroup.map(c => runSuiteChild(c)))
         }
       }
 
@@ -82,36 +82,21 @@ export async function runSuite(suite: Suite) {
   await rpc('onSuiteEnd', suite)
 }
 
-/**
- * Partition in tasks groups by consecutive computeMode ('serial', 'concurrent')
- */
-function partitionTasks(tasks: Task[]) {
-  let taskGroup: Task[] = []
-  const groupedTasks: Task[][] = []
-  for (const task of tasks) {
-    if (taskGroup.length === 0 || task.computeMode === taskGroup[0].computeMode) {
-      taskGroup.push(task)
-    }
-    else {
-      groupedTasks.push(taskGroup)
-      taskGroup = [task]
-    }
-  }
-  if (taskGroup.length > 0)
-    groupedTasks.push(taskGroup)
-
-  return groupedTasks
+export async function runSuiteChild(c: (Task | Suite)) {
+  return c.type === 'task'
+    ? runTask(c)
+    : runSuite(c)
 }
 
 export async function runFile(file: File) {
-  const runnableSuites = file.suites.filter(i => i.mode === 'run')
-  if (runnableSuites.length === 0)
+  const runnable = file.children.filter(i => i.mode === 'run')
+  if (runnable.length === 0)
     return
 
   await rpc('onFileBegin', file)
 
-  for (const suite of file.suites)
-    await runSuite(suite)
+  for (const suite of file.children)
+    await runSuiteChild(suite)
 
   await rpc('onFileEnd', file)
 }
@@ -126,4 +111,25 @@ export async function runFiles(filesMap: Record<string, File>) {
 export async function startTests(paths: string[]) {
   const filesMap = await collectTests(paths)
   await runFiles(filesMap)
+}
+
+/**
+ * Partition in tasks groups by consecutive computeMode ('serial', 'concurrent')
+ */
+function partitionSuiteChildren(suite: Suite) {
+  let childrenGroup: (Task | Suite)[] = []
+  const childrenGroups: (Task | Suite)[][] = []
+  for (const c of suite.children) {
+    if (childrenGroup.length === 0 || c.computeMode === childrenGroup[0].computeMode) {
+      childrenGroup.push(c)
+    }
+    else {
+      childrenGroups.push(childrenGroup)
+      childrenGroup = [c]
+    }
+  }
+  if (childrenGroup.length > 0)
+    childrenGroups.push(childrenGroup)
+
+  return childrenGroups
 }
