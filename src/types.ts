@@ -113,21 +113,23 @@ export type Task = Test | Suite | File
 
 export type TestFunction = () => Awaitable<void>
 
+type TestCollectorFn = (name: string, fn: TestFunction, timeout?: number) => void
+
 interface ConcurrentCollector {
-  (name: string, fn: TestFunction): void
-  only: (name: string, fn: TestFunction) => void
-  skip: (name: string, fn: TestFunction) => void
+  (name: string, fn: TestFunction, timeout?: number): void
+  only: TestCollectorFn
+  skip: TestCollectorFn
   todo: (name: string) => void
 }
 
 interface OnlyCollector {
-  (name: string, fn: TestFunction): void
-  concurrent: (name: string, fn: TestFunction) => void
+  (name: string, fn: TestFunction, timeout?: number): void
+  concurrent: TestCollectorFn
 }
 
 interface SkipCollector {
-  (name: string, fn: TestFunction): void
-  concurrent: (name: string, fn: TestFunction) => void
+  (name: string, fn: TestFunction, timeout?: number): void
+  concurrent: TestCollectorFn
 }
 
 interface TodoCollector {
@@ -136,7 +138,7 @@ interface TodoCollector {
 }
 
 export interface TestCollector {
-  (name: string, fn: TestFunction): void
+  (name: string, fn: TestFunction, timeout?: number): void
   concurrent: ConcurrentCollector
   only: OnlyCollector
   skip: SkipCollector

@@ -1,4 +1,6 @@
+import { Awaitable } from '@antfu/utils'
 import { Test, SuiteCollector, TestCollector, RunMode, ComputeMode, TestFactory, TestFunction, File, Suite, SuiteHooks } from '../types'
+import { defaultTestTimeout, defaultHookTimeout } from '../constants'
 import { context } from './context'
 import { getHooks, setFn, setHooks } from './map'
 
@@ -104,25 +106,25 @@ function createSuiteCollector(name: string, factory: TestFactory = () => { }, mo
 }
 
 function createTestCollector(collectTest: (name: string, fn: TestFunction, mode: RunMode, computeMode?: ComputeMode) => void): TestCollector {
-  function test(name: string, fn: TestFunction) {
-    collectTest(name, fn, 'run')
+  function test(name: string, fn: TestFunction, timeout?: number) {
+    collectTest(name, fnWithTimeout(fn, timeout), 'run')
   }
   test.concurrent = concurrent
   test.skip = skip
   test.only = only
   test.todo = todo
-  function concurrent(name: string, fn: TestFunction) {
-    collectTest(name, fn, 'run', 'concurrent')
+  function concurrent(name: string, fn: TestFunction, timeout?: number) {
+    collectTest(name, fnWithTimeout(fn, timeout), 'run', 'concurrent')
   }
-  concurrent.skip = (name: string, fn: TestFunction) => collectTest(name, fn, 'skip', 'concurrent')
-  concurrent.only = (name: string, fn: TestFunction) => collectTest(name, fn, 'only', 'concurrent')
+  concurrent.skip = (name: string, fn: TestFunction, timeout?: number) => collectTest(name, fnWithTimeout(fn, timeout), 'skip', 'concurrent')
+  concurrent.only = (name: string, fn: TestFunction, timeout?: number) => collectTest(name, fnWithTimeout(fn, timeout), 'only', 'concurrent')
   concurrent.todo = todo
-  function skip(name: string, fn: TestFunction) {
-    collectTest(name, fn, 'skip')
+  function skip(name: string, fn: TestFunction, timeout?: number) {
+    collectTest(name, fnWithTimeout(fn, timeout), 'skip')
   }
   skip.concurrent = concurrent.skip
-  function only(name: string, fn: TestFunction) {
-    collectTest(name, fn, 'only')
+  function only(name: string, fn: TestFunction, timeout?: number) {
+    collectTest(name, fnWithTimeout(fn, timeout), 'only')
   }
   only.concurrent = concurrent.only
   function todo(name: string) {
@@ -136,25 +138,25 @@ function createTestCollector(collectTest: (name: string, fn: TestFunction, mode:
 // apis
 
 export const test = (function() {
-  function test(name: string, fn: TestFunction) {
-    return getCurrentSuite().test(name, fn)
+  function test(name: string, fn: TestFunction, timeout?: number) {
+    return getCurrentSuite().test(name, fn, timeout)
   }
-  function concurrent(name: string, fn: TestFunction) {
-    return getCurrentSuite().test.concurrent(name, fn)
+  function concurrent(name: string, fn: TestFunction, timeout?: number) {
+    return getCurrentSuite().test.concurrent(name, fn, timeout)
   }
 
-  concurrent.skip = (name: string, fn: TestFunction) => getCurrentSuite().test.concurrent.skip(name, fn)
-  concurrent.only = (name: string, fn: TestFunction) => getCurrentSuite().test.concurrent.only(name, fn)
+  concurrent.skip = (name: string, fn: TestFunction, timeout?: number) => getCurrentSuite().test.concurrent.skip(name, fn, timeout)
+  concurrent.only = (name: string, fn: TestFunction, timeout?: number) => getCurrentSuite().test.concurrent.only(name, fn, timeout)
   concurrent.todo = (name: string) => getCurrentSuite().test.concurrent.todo(name)
 
-  function skip(name: string, fn: TestFunction) {
-    return getCurrentSuite().test.skip(name, fn)
+  function skip(name: string, fn: TestFunction, timeout?: number) {
+    return getCurrentSuite().test.skip(name, fn, timeout)
   }
-  skip.concurrent = (name: string, fn: TestFunction) => getCurrentSuite().test.skip.concurrent(name, fn)
-  function only(name: string, fn: TestFunction) {
-    return getCurrentSuite().test.only(name, fn)
+  skip.concurrent = (name: string, fn: TestFunction, timeout?: number) => getCurrentSuite().test.skip.concurrent(name, fn, timeout)
+  function only(name: string, fn: TestFunction, timeout?: number) {
+    return getCurrentSuite().test.only(name, fn, timeout)
   }
-  only.concurrent = (name: string, fn: TestFunction) => getCurrentSuite().test.only.concurrent(name, fn)
+  only.concurrent = (name: string, fn: TestFunction, timeout?: number) => getCurrentSuite().test.only.concurrent(name, fn, timeout)
   function todo(name: string) {
     return getCurrentSuite().test.todo(name)
   }
@@ -206,14 +208,38 @@ export const describe = suite
 export const it = test
 
 // hooks
-export const beforeAll = (fn: SuiteHooks['beforeAll'][0]) => getCurrentSuite().on('beforeAll', fn)
-export const afterAll = (fn: SuiteHooks['afterAll'][0]) => getCurrentSuite().on('afterAll', fn)
-export const beforeEach = (fn: SuiteHooks['beforeEach'][0]) => getCurrentSuite().on('beforeEach', fn)
-export const afterEach = (fn: SuiteHooks['afterEach'][0]) => getCurrentSuite().on('afterEach', fn)
+export const beforeAll = (fn: SuiteHooks['beforeAll'][0], timeout?: number) => getCurrentSuite().on('beforeAll', hookWithTimeout<'beforeAll'>(fn, timeout))
+export const afterAll = (fn: SuiteHooks['afterAll'][0], timeout?: number) => getCurrentSuite().on('afterAll', hookWithTimeout<'afterAll'>(fn, timeout))
+export const beforeEach = (fn: SuiteHooks['beforeEach'][0], timeout?: number) => getCurrentSuite().on('beforeEach', hookWithTimeout<'beforeEach'>(fn, timeout))
+export const afterEach = (fn: SuiteHooks['afterEach'][0], timeout?: number) => getCurrentSuite().on('afterEach', hookWithTimeout<'afterEach'>(fn, timeout))
 
 // utils
 export function clearContext() {
   context.tasks.length = 0
   defaultSuite.clear()
   context.currentSuite = defaultSuite
+}
+
+function fnWithTimeout(fn: TestFunction, timeout = defaultTestTimeout): TestFunction {
+  return () => {
+    const timeoutPromise = new Promise((resolve, reject) => {
+      const id = setTimeout(() => {
+        clearTimeout(id)
+        reject(new Error(`Test timed out in ${timeout}ms.`))
+      }, timeout)
+    })
+    return Promise.race([fn(), timeoutPromise]) as Awaitable<void>
+  }
+}
+
+function hookWithTimeout<T extends keyof SuiteHooks>(fn: SuiteHooks[T][0], timeout = defaultHookTimeout): SuiteHooks[T][0] {
+  return (...args: any) => {
+    const timeoutPromise = new Promise((resolve, reject) => {
+      const id = setTimeout(() => {
+        clearTimeout(id)
+        reject(new Error(`Hook timed out in ${timeout}ms.`))
+      }, timeout)
+    })
+    return Promise.race([fn(...args), timeoutPromise]) as Awaitable<void>
+  }
 }

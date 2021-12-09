@@ -27,3 +27,6 @@ export const globalApis = [
   'beforeEach',
   'afterEach',
 ]
+
+export const defaultTestTimeout = 5000
+export const defaultHookTimeout = 5000
