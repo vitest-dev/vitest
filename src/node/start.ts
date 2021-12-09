@@ -3,6 +3,7 @@ import { createWorkerPool } from './pool'
 import { globTestFiles } from './glob'
 import { startWatcher } from './watcher'
 
+// TODO: make it configurable (and disablable)
 const MAX_WORKERS = 20
 
 export async function start(ctx: VitestContext) {

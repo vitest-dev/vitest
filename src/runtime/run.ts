@@ -92,7 +92,7 @@ export async function runSuite(suite: Suite) {
   if (suite.mode === 'run') {
     if (!hasTests(suite)) {
       suite.result.state = 'fail'
-      suite.result.error = new Error(`No tests found in suite ${suite.name}`)
+      suite.result.error = suite.result.error || new Error(`No tests found in suite ${suite.name}`)
       process.exitCode = 1
     }
     else if (hasFailed(suite)) {

@@ -13,6 +13,8 @@ export async function startWatcher(ctx: VitestContext, pool: WorkerPool) {
 
   server.watcher.on('change', async(id) => {
     id = slash(id)
+
+    // TODO: send this dependency tree to worker
     getAffectedTests(id, changedTests, seen)
     seen.forEach(i => moduleCache.delete(i))
     seen.clear()
