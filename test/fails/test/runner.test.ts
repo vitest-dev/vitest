@@ -10,19 +10,18 @@ describe('should fails', async() => {
   for (const file of files) {
     it(file, async() => {
       let error: any
-      let stderr: any
       try {
-        ({ stderr } = await execa('npx', ['vitest', file], { cwd: root }))
+        await execa('npx', ['vitest', file], { cwd: root, env: { NO_COLOR: 'true' } })
       }
       catch (e) {
         error = e
       }
 
       expect(error).toBeTruthy()
-      const msg = (`${String(error)}\n${stderr}`)
+      const msg = String(error)
         .split(/\n/g)
         .reverse()
-        .find(i => i.includes('Error'))
+        .find(i => i.includes('Error: '))
         ?.trim()
       expect(msg).toMatchSnapshot()
     })
