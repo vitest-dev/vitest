@@ -202,10 +202,8 @@ export interface RpcMap {
 
   onSuiteBegin: [[suite: Suite], void]
   onSuiteEnd: [[suite: Suite], void]
-  onFileBegin: [[file: File], void]
-  onFileEnd: [[file: File], void]
-  onTaskBegin: [[task: Task], void]
-  onTaskEnd: [[task: Task], void]
+  onTestBegin: [[task: Task], void]
+  onTestEnd: [[task: Task], void]
 
   onWatcherStart: [[], void]
   onWatcherRerun: [[files: string[], trigger: string], void]

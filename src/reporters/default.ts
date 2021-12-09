@@ -3,7 +3,7 @@ import { performance } from 'perf_hooks'
 import { relative } from 'path'
 import c from 'picocolors'
 import Listr from 'listr'
-import { File, Suite, Reporter, Task, ResolvedConfig, Test } from '../types'
+import { File, Suite, Reporter, ResolvedConfig, Test } from '../types'
 import { getSuites, getTests, hasTests } from '../utils'
 import { printError } from './error'
 

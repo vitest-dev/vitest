@@ -5,6 +5,7 @@ import { getSnapshotManager } from '../integrations/chai/snapshot'
 import { hasFailed, hasTests, partitionSuiteChildren } from '../utils'
 import { getFn, getHooks } from './map'
 import { rpc } from './rpc'
+import { collectTests } from './collect'
 
 async function callHook<T extends keyof SuiteHooks>(suite: Suite, name: T, args: SuiteHooks[T][0] extends HookListener<infer A> ? A : never) {
   await Promise.all(getHooks(suite)[name].map(fn => fn(...(args as any))))
@@ -107,4 +108,9 @@ async function runSuiteChild(c: Task) {
 export async function runSuites(suites: Suite[]) {
   for (const suite of suites)
     await runSuite(suite)
+}
+
+export async function startTests(paths: string[]) {
+  const filesMap = await collectTests(paths)
+  await runSuites(Object.values(filesMap))
 }
