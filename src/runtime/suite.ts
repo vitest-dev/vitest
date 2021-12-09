@@ -225,7 +225,7 @@ function fnWithTimeout(fn: TestFunction, timeout = defaultTestTimeout): TestFunc
     const timeoutPromise = new Promise((resolve, reject) => {
       const id = setTimeout(() => {
         clearTimeout(id)
-        reject(new Error(`Test timed out in ${timeout}ms.`))
+        Promise.resolve().then(() => reject(new Error(`Test timed out in ${timeout}ms.`)))
       }, timeout)
     })
     return Promise.race([fn(), timeoutPromise]) as Awaitable<void>
@@ -237,7 +237,7 @@ function hookWithTimeout<T extends keyof SuiteHooks>(fn: SuiteHooks[T][0], timeo
     const timeoutPromise = new Promise((resolve, reject) => {
       const id = setTimeout(() => {
         clearTimeout(id)
-        reject(new Error(`Hook timed out in ${timeout}ms.`))
+        Promise.resolve().then(() => reject(new Error(`Hook timed out in ${timeout}ms.`)))
       }, timeout)
     })
     return Promise.race([fn(...args), timeoutPromise]) as Awaitable<void>
