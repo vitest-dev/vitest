@@ -1,9 +1,9 @@
-import { resolve } from 'path/posix'
+import { resolve } from 'path'
 import { nanoid } from 'nanoid'
 import { RpcFn } from 'vitest'
-import { executeInViteNode, ExecuteOptions } from '../node/execute'
 import { distDir } from '../constants'
 import { WorkerContext } from '../types'
+import { executeInViteNode, ExecuteOptions } from './execute'
 
 export default async(context: WorkerContext) => {
   const { config } = context

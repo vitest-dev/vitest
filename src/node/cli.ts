@@ -1,12 +1,11 @@
 /* eslint-disable no-console */
 import sade from 'sade'
 import c from 'picocolors'
-import { ViteDevServer } from 'vite'
-import type { ResolvedConfig, UserOptions } from '../types'
+import type { UserOptions, VitestContext } from '../types'
 import { version } from '../../package.json'
 import { initViteServer } from './server'
-import { start, TestState } from './start'
-import { ModuleCache } from './execute'
+import { start } from './start'
+import { StateManager } from './state'
 
 sade('vitest [filter]', true)
   .version(version)
@@ -25,18 +24,15 @@ sade('vitest [filter]', true)
 
     const { config, server } = await initViteServer({ ...argv, filters })
 
-    const moduleCache = new Map<string, ModuleCache>()
-    process.__vitest__ = {
+    const ctx = process.__vitest__ = {
       server,
       config,
-      moduleCache,
-      state: {
-        filesMap: {},
-      },
+      moduleCache: new Map(),
+      state: new StateManager(),
     }
 
     try {
-      await start(config)
+      await start(ctx)
     }
     catch (e) {
       process.exitCode = 1
@@ -58,12 +54,7 @@ declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace NodeJS {
     interface Process {
-      __vitest__: {
-        config: ResolvedConfig
-        server: ViteDevServer
-        moduleCache: Map<string, ModuleCache>
-        state: TestState
-      }
+      __vitest__: VitestContext
     }
   }
 }

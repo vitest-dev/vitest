@@ -2,7 +2,7 @@
 import { performance } from 'perf_hooks'
 import { relative } from 'path'
 import c from 'picocolors'
-import { File, Reporter, ResolvedConfig } from '../types'
+import { File, Reporter, VitestContext } from '../types'
 import { getSuites, getTests } from '../utils'
 import { printError } from './error'
 import { createRenderer } from './renderer'
@@ -12,14 +12,14 @@ export class DefaultReporter implements Reporter {
   end = 0
   renderer: ReturnType<typeof createRenderer> = undefined!
 
-  constructor(public config: ResolvedConfig) {}
+  constructor(public ctx: VitestContext) {}
 
   relative(path: string) {
-    return relative(this.config.root, path)
+    return relative(this.ctx.config.root, path)
   }
 
   onStart() {
-    console.log(c.green(`Running tests under ${c.gray(this.config.root)}\n`))
+    console.log(c.green(`Running tests under ${c.gray(this.ctx.config.root)}\n`))
   }
 
   onCollected(files: File[]) {
@@ -28,7 +28,7 @@ export class DefaultReporter implements Reporter {
     this.renderer = createRenderer(files).start()
   }
 
-  async onFinished(ctx: RunnerContext, files = ctx.files) {
+  async onFinished(files: File[] = this.ctx.state.getFiles()) {
     this.renderer?.stop()
 
     this.end = performance.now()

@@ -1,7 +1,8 @@
 /* eslint-disable no-use-before-define */
 import { MessagePort } from 'worker_threads'
 import { Awaitable } from '@antfu/utils'
-import { TransformResult } from 'vite'
+import { TransformResult, ViteDevServer } from 'vite'
+import { StateManager } from './node/state'
 
 export interface UserOptions {
   /**
@@ -76,7 +77,7 @@ export interface ResolvedConfig extends Omit<Required<UserOptions>, 'config' | '
 }
 
 export type RunMode = 'run' | 'skip' | 'only' | 'todo'
-export type TestState = RunMode | 'pass' | 'fail'
+export type TaskState = RunMode | 'pass' | 'fail'
 export type ComputeMode = 'serial' | 'concurrent'
 
 export interface TaskBase {
@@ -90,11 +91,13 @@ export interface TaskBase {
 }
 
 export interface TaskResult {
-  state: TestState
+  state: TaskState
   start: number
   end?: number
   error?: unknown
 }
+
+export type TaskResultPack = [id: string, result: TaskResult | undefined]
 
 export interface Suite extends TaskBase {
   type: 'suite'
@@ -175,15 +178,17 @@ export interface GlobalContext {
 export interface Reporter {
   onStart?: (config: ResolvedConfig) => Awaitable<void>
   onCollected?: (files: File[]) => Awaitable<void>
-  onFinished?: (files: File[]) => Awaitable<void>
-
-  onTestBegin?: (test: Test) => Awaitable<void>
-  onTestEnd?: (test: Test) => Awaitable<void>
-  onSuiteBegin?: (suite: Suite) => Awaitable<void>
-  onSuiteEnd?: (suite: Suite) => Awaitable<void>
+  onFinished?: (files?: File[]) => Awaitable<void>
+  onTaskUpdate?: (pack: TaskResultPack) => Awaitable<void>
 
   onWatcherStart?: () => Awaitable<void>
   onWatcherRerun?: (files: string[], trigger: string) => Awaitable<void>
+}
+
+export interface ModuleCache {
+  promise?: Promise<any>
+  exports?: any
+  transformResult?: TransformResult
 }
 
 export interface WorkerContext {
@@ -197,12 +202,8 @@ export interface RpcMap {
   fetch: [[id: string], TransformResult | null | undefined]
   onStart: [[], void]
   onCollected: [[files: File[]], void]
-  onFinished: [[files: File[]], void]
-
-  onSuiteBegin: [[suite: Suite], void]
-  onSuiteEnd: [[suite: Suite], void]
-  onTestBegin: [[task: Task], void]
-  onTestEnd: [[task: Task], void]
+  onFinished: [[], void]
+  onTaskUpdate: [[pack: TaskResultPack], void]
 
   onWatcherStart: [[], void]
   onWatcherRerun: [[files: string[], trigger: string], void]
@@ -211,3 +212,10 @@ export interface RpcMap {
 export type RpcFn = <T extends keyof RpcMap>(method: T, ...args: RpcMap[T][0]) => Promise<RpcMap[T][1]>
 
 export type RpcMessage<T extends keyof RpcMap = keyof RpcMap> = { id: string; method: T; args: RpcMap[T][0] }
+
+export interface VitestContext {
+  config: ResolvedConfig
+  server: ViteDevServer
+  moduleCache: Map<string, ModuleCache>
+  state: StateManager
+}

@@ -3,12 +3,7 @@ import { fileURLToPath, pathToFileURL } from 'url'
 import { dirname, resolve } from 'path'
 import vm from 'vm'
 import type { TransformResult } from 'vite'
-
-export interface ModuleCache {
-  promise?: Promise<any>
-  exports?: any
-  transformResult?: TransformResult
-}
+import { ModuleCache } from '../types'
 
 export type FetchFunction = (id: string) => Promise<TransformResult | undefined | null>
 

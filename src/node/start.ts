@@ -1,14 +1,11 @@
 import { DefaultReporter } from '../reporters/default'
-import { ResolvedConfig, File } from '../types'
-import { createWorker } from '../worker/manager'
+import { VitestContext } from '../types'
+import { createWorker } from './pool'
 import { globTestFiles } from './glob'
 
-export interface TestState {
-  filesMap: Record<string, File>
-}
-
-export async function start(config: ResolvedConfig) {
-  const reporter = config.reporter || new DefaultReporter(config)
+export async function start(ctx: VitestContext) {
+  const { config } = ctx
+  const reporter = config.reporter || new DefaultReporter(ctx)
   const testFilepaths = await globTestFiles(config)
   if (!testFilepaths.length) {
     console.error('No test files found')

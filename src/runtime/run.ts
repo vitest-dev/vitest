@@ -11,17 +11,21 @@ async function callHook<T extends keyof SuiteHooks>(suite: Suite, name: T, args:
   await Promise.all(getHooks(suite)[name].map(fn => fn(...(args as any))))
 }
 
+function updateTask(task: Task) {
+  return rpc('onTaskUpdate', [task.id, task.result])
+}
+
 export async function runTest(test: Test) {
   if (test.mode !== 'run')
     return
 
   getSnapshotManager()?.setTest(test)
 
-  await rpc('onTestBegin', test)
   test.result = {
     start: performance.now(),
     state: 'run',
   }
+  updateTask(test)
 
   try {
     await callHook(test.suite, 'beforeEach', [test, test.suite])
@@ -44,16 +48,16 @@ export async function runTest(test: Test) {
 
   test.result.end = performance.now()
 
-  await rpc('onTestEnd', test)
+  updateTask(test)
 }
 
 export async function runSuite(suite: Suite) {
-  await rpc('onSuiteBegin', suite)
-
   suite.result = {
     start: performance.now(),
     state: 'run',
   }
+
+  updateTask(suite)
 
   if (suite.mode === 'skip') {
     suite.result.state = 'skip'
@@ -99,7 +103,7 @@ export async function runSuite(suite: Suite) {
     }
   }
 
-  await rpc('onSuiteEnd', suite)
+  updateTask(suite)
 }
 
 async function runSuiteChild(c: Task) {

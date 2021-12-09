@@ -4,7 +4,7 @@ import { collectTests } from '../runtime/collect'
 import { rpc } from '../runtime/rpc'
 
 export async function startWatcher(ctx: any) {
-  const { reporter, snapshotManager, filesMap } = ctx
+  const { reporter, snapshotManager } = ctx
   await rpc('onWatcherStart')
 
   let timer: any
@@ -31,18 +31,17 @@ export async function startWatcher(ctx: any) {
       const paths = Array.from(changedTests)
       changedTests.clear()
 
-      await reporter.onWatcherRerun?.(paths, id, ctx)
+      await reporter.onWatcherRerun?.(paths, id)
       paths.forEach(i => moduleCache.delete(i))
 
-      const newFilesMap = await collectTests(paths)
-      Object.assign(filesMap, newFilesMap)
-      const files = Object.values(filesMap)
+      // TODO: control worker to rerun
+      const files = await collectTests(paths)
       await rpc('onCollected', files)
       await runSuites(files)
 
       snapshotManager.saveSnap()
 
-      await reporter.onFinished?.(ctx, Object.values(newFilesMap))
+      await reporter.onFinished?.(ctx, files)
       await reporter.onWatcherStart?.(ctx)
     }, 100)
   })

@@ -1,5 +1,6 @@
 import { basename } from 'path'
 import { performance } from 'perf_hooks'
+import { nanoid } from 'nanoid'
 import { File, Suite, Test } from '../types'
 import { interpretOnlyMode } from '../utils'
 import { clearContext, createSuiteHooks, defaultSuite } from './suite'
@@ -7,10 +8,11 @@ import { context } from './context'
 import { setHooks } from './map'
 
 export async function collectTests(paths: string[]) {
-  const files: Record<string, File> = {}
+  const files: File[] = []
 
   for (const filepath of paths) {
     const file: File = {
+      id: nanoid(),
       name: basename(filepath),
       type: 'suite',
       mode: 'run',
@@ -46,14 +48,13 @@ export async function collectTests(paths: string[]) {
       process.exitCode = 1
     }
 
-    files[filepath] = file
+    files.push(file)
   }
 
-  const allFiles = Object.values(files)
-  const allChildren = allFiles.reduce((tasks, file) => tasks.concat(file.tasks), [] as (Suite | Test)[])
+  const tasks = files.reduce((tasks, file) => tasks.concat(file.tasks), [] as (Suite | Test)[])
 
-  interpretOnlyMode(allChildren)
-  allChildren.forEach((i) => {
+  interpretOnlyMode(tasks)
+  tasks.forEach((i) => {
     if (i.type === 'suite') {
       if (i.mode === 'skip')
         i.tasks.forEach(c => c.mode === 'run' && (c.mode = 'skip'))
