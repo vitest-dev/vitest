@@ -1,5 +1,6 @@
 import { context } from './context'
-import { Task, SuiteCollector, TestCollector, RunMode, ComputeMode, TestFactory, TestFunction, File, Suite } from './types'
+import { getHooks, setFn, setHooks } from './map'
+import { Task, SuiteCollector, TestCollector, RunMode, ComputeMode, TestFactory, TestFunction, File, Suite, SuiteHooks } from './types'
 
 export const suite = createSuite()
 
@@ -22,22 +23,21 @@ function createSuiteCollector(name: string, factory: TestFactory = () => { }, mo
   const children: (Task | Suite | SuiteCollector)[] = []
   const factoryQueue: (Task | Suite |SuiteCollector)[] = []
 
-  const suiteBase: Pick<Suite, 'name' | 'mode' | 'hooks'> = {
-    name,
-    mode,
-    hooks: createSuiteHooks(),
-  }
+  let suite: Suite
+
+  initSuite()
 
   const test = createTestCollector((name: string, fn: TestFunction, mode: RunMode, computeMode?: ComputeMode) => {
-    children.push({
+    const task: Task = {
       type: 'task',
       name,
       mode,
       computeMode: computeMode ?? (suiteComputeMode ?? 'serial'),
       suite: {} as Suite,
       state: (mode !== 'run' && mode !== 'only') ? mode : undefined,
-      fn,
-    })
+    }
+    setFn(task, fn)
+    children.push(task)
   })
 
   const collector: SuiteCollector = {
@@ -51,13 +51,25 @@ function createSuiteCollector(name: string, factory: TestFactory = () => { }, mo
     on: addHook,
   }
 
-  function addHook<T extends keyof Suite['hooks']>(name: T, ...fn: Suite['hooks'][T]) {
-    suiteBase.hooks[name].push(...fn as any)
+  function addHook<T extends keyof SuiteHooks>(name: T, ...fn: SuiteHooks[T]) {
+    getHooks(suite)[name].push(...fn as any)
+  }
+
+  function initSuite() {
+    suite = {
+      type: 'suite',
+      computeMode: 'serial',
+      name,
+      mode,
+      children: [],
+    }
+    setHooks(suite, createSuiteHooks())
   }
 
   function clear() {
     children.length = 0
     factoryQueue.length = 0
+    initSuite()
   }
 
   async function collect(file?: File) {
@@ -74,13 +86,8 @@ function createSuiteCollector(name: string, factory: TestFactory = () => { }, mo
         .map(i => i.type === 'collector' ? i.collect(file) : i),
     )
 
-    const suite: Suite = {
-      type: 'suite',
-      computeMode: 'serial',
-      ...suiteBase,
-      children: allChildren,
-      file,
-    }
+    suite.file = file
+    suite.children = allChildren
 
     allChildren.forEach((task) => {
       if (task.type === 'task') {
@@ -201,10 +208,10 @@ export const describe = suite
 export const it = test
 
 // hooks
-export const beforeAll = (fn: Suite['hooks']['beforeAll'][0]) => getCurrentSuite().on('beforeAll', fn)
-export const afterAll = (fn: Suite['hooks']['afterAll'][0]) => getCurrentSuite().on('afterAll', fn)
-export const beforeEach = (fn: Suite['hooks']['beforeEach'][0]) => getCurrentSuite().on('beforeEach', fn)
-export const afterEach = (fn: Suite['hooks']['afterEach'][0]) => getCurrentSuite().on('afterEach', fn)
+export const beforeAll = (fn: SuiteHooks['beforeAll'][0]) => getCurrentSuite().on('beforeAll', fn)
+export const afterAll = (fn: SuiteHooks['afterAll'][0]) => getCurrentSuite().on('afterAll', fn)
+export const beforeEach = (fn: SuiteHooks['beforeEach'][0]) => getCurrentSuite().on('beforeEach', fn)
+export const afterEach = (fn: SuiteHooks['afterEach'][0]) => getCurrentSuite().on('afterEach', fn)
 
 // utils
 export function clearContext() {

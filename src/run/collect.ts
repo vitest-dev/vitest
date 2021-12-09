@@ -1,6 +1,7 @@
 import { clearContext, createSuiteHooks, defaultSuite } from '../suite'
 import { context } from '../context'
 import { File, Suite, Task } from '../types'
+import { setHooks } from '../map'
 import { interpretOnlyMode } from './index'
 
 export async function collectTests(paths: string[]) {
@@ -14,8 +15,9 @@ export async function collectTests(paths: string[]) {
       computeMode: 'serial',
       filepath,
       children: [],
-      hooks: createSuiteHooks(),
     }
+
+    setHooks(file, createSuiteHooks())
 
     clearContext()
     try {

@@ -86,7 +86,6 @@ export interface Task {
   mode: RunMode
   computeMode: ComputeMode
   suite: Suite
-  fn: () => Awaitable<void>
   file?: File
   state?: TaskState
   error?: unknown
@@ -126,6 +125,13 @@ export interface TestCollector {
 
 export type HookListener<T extends any[]> = (...args: T) => Awaitable<void>
 
+export interface SuiteHooks {
+  beforeAll: HookListener<[Suite]>[]
+  afterAll: HookListener<[Suite]>[]
+  beforeEach: HookListener<[Task, Suite]>[]
+  afterEach: HookListener<[Task, Suite]>[]
+}
+
 export interface Suite {
   type: 'suite'
   name: string
@@ -136,12 +142,6 @@ export interface Suite {
   file?: File
   error?: unknown
   status?: TaskState
-  hooks: {
-    beforeAll: HookListener<[Suite]>[]
-    afterAll: HookListener<[Suite]>[]
-    beforeEach: HookListener<[Task, Suite]>[]
-    afterEach: HookListener<[Task, Suite]>[]
-  }
 }
 
 export interface SuiteCollector {
@@ -152,7 +152,7 @@ export interface SuiteCollector {
   children: (Suite | Task | SuiteCollector)[]
   collect: (file?: File) => Promise<Suite>
   clear: () => void
-  on: <T extends keyof Suite['hooks']>(name: T, ...fn: Suite['hooks'][T]) => void
+  on: <T extends keyof SuiteHooks>(name: T, ...fn: SuiteHooks[T]) => void
 }
 
 export type TestFactory = (test: (name: string, fn: TestFunction) => void) => Awaitable<void>

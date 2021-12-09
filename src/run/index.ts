@@ -1,13 +1,14 @@
 import { HookListener } from 'vitest'
-import { File, ResolvedConfig, Task, RunnerContext, Suite, RunMode } from '../types'
+import { File, ResolvedConfig, Task, RunnerContext, Suite, RunMode, SuiteHooks } from '../types'
 import { getSnapshotManager } from '../integrations/chai/snapshot'
+import { getFn, getHooks } from '../map'
 import { startWatcher } from './watcher'
 import { collectTests } from './collect'
 import { setupRunner } from './setup'
 import { globTestFiles } from './glob'
 
-async function callHook<T extends keyof Suite['hooks']>(suite: Suite, name: T, args: Suite['hooks'][T][0] extends HookListener<infer A> ? A : never) {
-  await Promise.all(suite.hooks[name].map(fn => fn(...(args as any))))
+async function callHook<T extends keyof SuiteHooks>(suite: Suite, name: T, args: SuiteHooks[T][0] extends HookListener<infer A> ? A : never) {
+  await Promise.all(getHooks(suite)[name].map(fn => fn(...(args as any))))
 }
 
 export async function runTask(task: Task, ctx: RunnerContext) {
@@ -20,7 +21,7 @@ export async function runTask(task: Task, ctx: RunnerContext) {
   if (task.mode === 'run') {
     try {
       await callHook(task.suite, 'beforeEach', [task, task.suite])
-      await task.fn()
+      await getFn(task)()
       task.state = 'pass'
     }
     catch (e) {
