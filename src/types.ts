@@ -158,7 +158,6 @@ export type TestFactory = (test: (name: string, fn: TestFunction) => void) => Aw
 
 export interface File extends Suite {
   filepath: string
-  collected: boolean
   error?: unknown
 }
 

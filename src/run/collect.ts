@@ -14,7 +14,6 @@ export async function collectTests(paths: string[]) {
       computeMode: 'serial',
       filepath,
       children: [],
-      collected: false,
       hooks: createSuiteHooks(),
     }
 
@@ -31,12 +30,9 @@ export async function collectTests(paths: string[]) {
           file.children.push(await c.collect(file))
         }
       }
-
-      file.collected = true
     }
     catch (e) {
       file.error = e
-      file.collected = false
       process.exitCode = 1
     }
 
