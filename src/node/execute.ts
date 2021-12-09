@@ -46,9 +46,10 @@ export async function executeInViteNode({ moduleCache, root, files, fetch, inlin
     callstack = [...callstack, id]
     const request = async(dep: string) => {
       if (callstack.includes(dep)) {
-        if (!moduleCache.get(dep))
+        const cacheKey = toFilePath(dep, root)
+        if (!moduleCache.get(cacheKey)?.exports)
           throw new Error(`Circular dependency detected\nStack:\n${[...callstack, dep].reverse().map(p => `- ${p}`).join('\n')}`)
-        return moduleCache.get(dep)!.exports
+        return moduleCache.get(cacheKey)!.exports
       }
       return cachedRequest(dep, callstack)
     }
@@ -64,7 +65,7 @@ export async function executeInViteNode({ moduleCache, root, files, fetch, inlin
     const url = pathToFileURL(fsPath).href
     const exports = {}
 
-    setCache(id, { transformResult: result, exports })
+    setCache(fsPath, { transformResult: result, exports })
 
     const __filename = fileURLToPath(url)
     const context = {
@@ -169,7 +170,8 @@ export function normalizeId(id: string): string {
 }
 
 export function toFilePath(id: string, root: string): string {
-  let absolute = slash(id).startsWith('/@fs/')
+  id = slash(id)
+  let absolute = id.startsWith('/@fs/')
     ? id.slice(4)
     : id.startsWith(dirname(root))
       ? id

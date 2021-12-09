@@ -15,7 +15,7 @@ export async function startWatcher(ctx: RunnerContext) {
 
   server.watcher.on('change', async(id) => {
     id = slash(id)
-    getDependencyTests(id, ctx, changedTests, seen)
+    getAffectedTests(id, ctx, changedTests, seen)
     seen.forEach(i => moduleCache.delete(i))
     seen.clear()
 
@@ -51,7 +51,7 @@ export async function startWatcher(ctx: RunnerContext) {
   await new Promise(() => { })
 }
 
-export function getDependencyTests(id: string, ctx: RunnerContext, set = new Set<string>(), seen = new Set<string>()): Set<string> {
+export function getAffectedTests(id: string, ctx: RunnerContext, set = new Set<string>(), seen = new Set<string>()): Set<string> {
   if (seen.has(id) || set.has(id))
     return set
 
@@ -66,7 +66,7 @@ export function getDependencyTests(id: string, ctx: RunnerContext, set = new Set
   if (mod) {
     mod.importers.forEach((i) => {
       if (i.id)
-        getDependencyTests(i.id, ctx, set, seen)
+        getAffectedTests(i.id, ctx, set, seen)
     })
   }
 
