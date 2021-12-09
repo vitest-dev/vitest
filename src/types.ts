@@ -39,13 +39,6 @@ export interface UserOptions {
   dom?: boolean | 'jsdom' | 'happy-dom'
 
   /**
-   * Run tests files in parallel
-   *
-   * @default false
-   */
-  parallel?: boolean
-
-  /**
    * Update snapshot files
    *
    * @default false
@@ -192,12 +185,10 @@ export interface Reporter {
   onCollected?: (files: File[], ctx: RunnerContext) => Awaitable<void>
   onFinished?: (ctx: RunnerContext, files?: File[]) => Awaitable<void>
 
-  onSuiteBegin?: (suite: Suite, ctx: RunnerContext) => Awaitable<void>
-  onSuiteEnd?: (suite: Suite, ctx: RunnerContext) => Awaitable<void>
-  onFileBegin?: (file: File, ctx: RunnerContext) => Awaitable<void>
-  onFileEnd?: (file: File, ctx: RunnerContext) => Awaitable<void>
   onTaskBegin?: (task: Task, ctx: RunnerContext) => Awaitable<void>
   onTaskEnd?: (task: Task, ctx: RunnerContext) => Awaitable<void>
+  onSuiteBegin?: (suite: Suite, ctx: RunnerContext) => Awaitable<void>
+  onSuiteEnd?: (suite: Suite, ctx: RunnerContext) => Awaitable<void>
 
   onWatcherStart?: (ctx: RunnerContext) => Awaitable<void>
   onWatcherRerun?: (files: string[], trigger: string, ctx: RunnerContext) => Awaitable<void>

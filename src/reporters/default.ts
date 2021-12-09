@@ -180,8 +180,4 @@ export class DefaultReporter implements Reporter {
     console.clear()
     console.log(c.blue('Re-running tests...') + c.dim(` [ ${this.relative(trigger)} ]\n`))
   }
-
-  // TODO:
-  onSnapshotUpdate() {
-  }
 }

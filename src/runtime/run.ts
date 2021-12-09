@@ -102,33 +102,13 @@ async function runSuiteChild(c: TaskOrSuite, ctx: RunnerContext) {
     : runSuite(c, ctx)
 }
 
-export async function runFile(file: File, ctx: RunnerContext) {
-  const { reporter } = ctx
-
-  const runnable = file.children.filter(i => i.mode === 'run')
-  if (runnable.length === 0)
-    return
-
-  await reporter.onFileBegin?.(file, ctx)
-
-  if (ctx.config.parallel) {
-    await Promise.all(file.children.map(c => runSuiteChild(c, ctx)))
-  }
-  else {
-    for (const c of file.children)
-      await runSuiteChild(c, ctx)
-  }
-
-  await reporter.onFileEnd?.(file, ctx)
-}
-
 export async function runFiles(filesMap: Record<string, File>, ctx: RunnerContext) {
   const { reporter } = ctx
 
   await reporter.onCollected?.(Object.values(filesMap), ctx)
 
   for (const file of Object.values(filesMap))
-    await runFile(file, ctx)
+    await runSuite(file, ctx)
 }
 
 export async function run(config: ResolvedConfig) {
