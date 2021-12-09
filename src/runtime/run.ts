@@ -118,6 +118,9 @@ export async function runSuites(suites: Suite[]) {
 }
 
 export async function startTests(paths: string[]) {
-  const filesMap = await collectTests(paths)
-  await runSuites(Object.values(filesMap))
+  const files = await collectTests(paths)
+
+  await rpc('onCollected', files)
+
+  await runSuites(files)
 }
