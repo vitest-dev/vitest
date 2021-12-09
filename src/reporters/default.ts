@@ -18,7 +18,7 @@ export class DefaultReporter implements Reporter {
 
   listr: Listr | null = null
   listrPromise: Promise<void> | null = null
-  taskMap: Map<Task, TaskPromise> = new Map()
+  taskMap: Map<string, TaskPromise> = new Map()
 
   constructor(public config: ResolvedConfig) {}
 
@@ -42,7 +42,7 @@ export class DefaultReporter implements Reporter {
         obj.resolve = resolve
         obj.reject = reject
       })
-      this.taskMap.set(t, obj)
+      this.taskMap.set(t.id, obj)
     })
 
     const createTasksListr = (tasks: Task[]): Listr.ListrTask[] => {
@@ -51,7 +51,7 @@ export class DefaultReporter implements Reporter {
           title: task.name,
           skip: () => task.mode === 'skip',
           task: async() => {
-            return await this.taskMap.get(task)?.promise
+            return await this.taskMap.get(task.id)?.promise
           },
         }
       })
@@ -89,15 +89,13 @@ export class DefaultReporter implements Reporter {
 
   onTaskEnd(task: Task) {
     if (task.state === 'fail')
-      this.taskMap.get(task)?.reject(task.error)
+      this.taskMap.get(task.id)?.reject(task.error)
     else
-      this.taskMap.get(task)?.resolve()
+      this.taskMap.get(task.id)?.resolve()
   }
 
   async onFinished(files: File[]) {
     await this.listrPromise
-
-    console.log('onFinished')
 
     this.end = performance.now()
 

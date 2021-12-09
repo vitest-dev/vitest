@@ -38,5 +38,5 @@ export async function createWorker(ctx: Omit<WorkerContext, 'port'>) {
     console.error('Unhandled message', method, args)
   })
 
-  return piscina.run({ port: worker, ...ctx }, { transferList: [worker] })
+  piscina.run({ port: worker, ...ctx }, { transferList: [worker] })
 }

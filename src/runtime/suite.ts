@@ -1,6 +1,6 @@
-import { SuiteHooks } from 'vitest'
+import { nanoid } from 'nanoid'
+import { SuiteHooks, Task, SuiteCollector, TestCollector, RunMode, ComputeMode, TestFactory, TestFunction, File, Suite } from '../types'
 import { context } from '../context'
-import { Task, SuiteCollector, TestCollector, RunMode, ComputeMode, TestFactory, TestFunction, File, Suite } from '../types'
 import { getHooks, setFn, setHooks } from './map'
 
 export const suite = createSuite()
@@ -29,7 +29,8 @@ function createSuiteCollector(name: string, factory: TestFactory = () => {}, mod
   })
 
   const test = createTestCollector((name: string, fn: TestFunction, mode: RunMode, computeMode?: ComputeMode) => {
-    const task = {
+    const task: Task = {
+      id: nanoid(),
       name,
       mode,
       computeMode: computeMode ?? (suiteComputeMode ?? 'serial'),

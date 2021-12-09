@@ -11,11 +11,13 @@ export async function start(config: ResolvedConfig) {
     return
   }
 
+  // TODO: POOL
   await createWorker({
     config,
     files: testFilepaths,
     reporter: config.reporter || new DefaultReporter(config),
   })
 
+  // TODO: Watcher
   // TODO: terminate
 }
