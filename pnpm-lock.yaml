@@ -38,6 +38,7 @@ importers:
       sinon: ^12.0.1
       sinon-chai: ^3.7.0
       source-map: ^0.7.3
+      source-map-support: ^0.5.21
       tsup: ^5.10.3
       typescript: ^4.5.2
       vite: ^2.7.1
@@ -62,6 +63,7 @@ importers:
       sinon: 12.0.1
       sinon-chai: 3.7.0_chai@4.3.4+sinon@12.0.1
       source-map: 0.7.3
+      source-map-support: 0.5.21
     devDependencies:
       '@antfu/eslint-config': 0.12.2_eslint@8.4.1+typescript@4.5.2
       '@antfu/ni': 0.11.0
@@ -82,12 +84,6 @@ importers:
       vite: 2.7.1
 
   test/core:
-    specifiers:
-      vitest: workspace:*
-    devDependencies:
-      vitest: link:../..
-
-  test/failed:
     specifiers:
       vitest: workspace:*
     devDependencies:
@@ -4794,6 +4790,13 @@ packages:
   /source-map-js/1.0.1:
     resolution: {integrity: sha512-4+TN2b3tqOCd/kaGRJ/sTYA0tR0mdXx26ipdolxcwtJVqEnqNYvlCAt1q3ypy4QMlYus+Zh34RNtYLoq2oQ4IA==}
     engines: {node: '>=0.10.0'}
+
+  /source-map-support/0.5.21:
+    resolution: {integrity: sha512-uBHU3L3czsIyYXKX88fdrGovxdSCoTGDRZ6SYXtSRxLZUzHg5P/66Ht6uoUlHu9EZod+inXhKo3qQgwXUT/y1w==}
+    dependencies:
+      buffer-from: 1.1.2
+      source-map: 0.6.1
+    dev: false
 
   /source-map/0.5.7:
     resolution: {integrity: sha1-igOdLRAh0i0eoUyA2OpGi6LvP8w=}

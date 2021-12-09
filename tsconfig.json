@@ -13,7 +13,6 @@
     "outDir": "./dist",
     "declaration": true,
     "inlineSourceMap": true,
-    "sourceMap": true,
     "paths": {
       "vitest": ["./src/index.ts"]
     }
