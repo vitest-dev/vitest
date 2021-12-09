@@ -10,6 +10,7 @@ import { Task } from '../types'
 import { getTests } from '../utils'
 
 const DURATION_LONG = 300
+const MAX_HEIGHT = 20
 
 const pointer = c.yellow(figures.pointer)
 const skipped = c.yellow(figures.arrowDown)
@@ -48,12 +49,13 @@ const getSymbol = (task: Task) => {
   return ' '
 }
 
-const renderHelper = (tasks: Task[], level = 0) => {
+function renderTree(tasks: Task[], level = 0) {
   let output: string[] = []
 
   for (const task of tasks) {
     let delta = 1
     let suffix = (task.mode === 'skip' || task.mode === 'todo') ? ` ${c.dim('[skipped]')}` : ''
+    const prefix = ` ${getSymbol(task)} `
 
     if (task.type === 'suite')
       suffix += c.dim(` (${getTests(task).length})`)
@@ -65,7 +67,7 @@ const renderHelper = (tasks: Task[], level = 0) => {
     }
 
     if (task.name)
-      output.push(indentString(` ${getSymbol(task)} ${task.name}${suffix}`, level, { indent: '  ' }))
+      output.push(indentString(prefix + task.name + suffix, level, { indent: '  ' }))
     else
       delta = 0
 
@@ -85,10 +87,11 @@ const renderHelper = (tasks: Task[], level = 0) => {
     }
 
     if ((task.result?.state === 'fail' || task.result?.state === 'run') && task.type === 'suite' && task.tasks.length > 0)
-      output = output.concat(renderHelper(task.tasks, level + delta))
+      output = output.concat(renderTree(task.tasks, level + delta))
   }
 
-  return output
+  // TODO: moving windows
+  return output.slice(0, MAX_HEIGHT).join('\n')
 }
 
 export const createRenderer = (_tasks: Task[]) => {
@@ -97,21 +100,20 @@ export const createRenderer = (_tasks: Task[]) => {
 
   const log = createLogUpdate(process.stdout)
 
-  function run() {
-    const content = renderHelper(tasks)
-    log(content.slice(0, 20).join('\n'))
+  function update() {
+    log(renderTree(tasks))
   }
 
   return {
     start() {
       if (timer)
         return this
-      timer = setInterval(run, 200)
+      timer = setInterval(update, 200)
       return this
     },
     update(_tasks: Task[]) {
       tasks = _tasks
-      run()
+      update()
       return this
     },
     stop() {
@@ -119,8 +121,9 @@ export const createRenderer = (_tasks: Task[]) => {
         clearInterval(timer)
         timer = undefined
       }
-      run()
-      log.done()
+      log.clear()
+      // eslint-disable-next-line no-console
+      console.log(renderTree(tasks))
       return this
     },
   }
