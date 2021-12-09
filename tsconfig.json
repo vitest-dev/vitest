@@ -12,6 +12,7 @@
     "skipLibCheck": true,
     "outDir": "./dist",
     "declaration": true,
+    "inlineSourceMap": true,
     "paths": {
       "vitest": ["./src/index.ts"]
     }

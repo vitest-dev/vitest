@@ -43,7 +43,7 @@
   ],
   "scripts": {
     "prepare": "esmo scripts/generate-types.ts",
-    "build": "tsup --dts --minify",
+    "build": "tsup --dts --minify-whitespace --minify-syntax",
     "dev": "tsup --watch src",
     "lint": "eslint \"{src,test}/**/*.ts\"",
     "prepublishOnly": "nr build",
@@ -72,7 +72,8 @@
     "sade": "^1.7.4",
     "sinon": "^12.0.1",
     "sinon-chai": "^3.7.0",
-    "source-map": "^0.7.3"
+    "source-map": "^0.7.3",
+    "source-map-support": "^0.5.21"
   },
   "peerDependencies": {
     "vite": "^2.7.1"
