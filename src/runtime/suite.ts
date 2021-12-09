@@ -1,6 +1,6 @@
+import { Task, SuiteCollector, TestCollector, RunMode, ComputeMode, TestFactory, TestFunction, File, Suite, SuiteHooks } from '../types'
 import { context } from './context'
 import { getHooks, setFn, setHooks } from './map'
-import { Task, SuiteCollector, TestCollector, RunMode, ComputeMode, TestFactory, TestFunction, File, Suite, SuiteHooks } from './types'
 
 export const suite = createSuite()
 

@@ -1,5 +1,5 @@
 import { ResolvedConfig } from '../types'
-import { run } from '../run'
+import { run } from '../runtime/run'
 
 if (!process.__vite_node__ || !process.__vitest__)
   throw new Error('Vitest can only run in vite-node environment, please use the CLI to start the process')

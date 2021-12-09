@@ -1,8 +1,8 @@
-import { clearContext, createSuiteHooks, defaultSuite } from '../suite'
-import { context } from '../context'
 import { File, Suite, Task } from '../types'
-import { setHooks } from '../map'
-import { interpretOnlyMode } from './index'
+import { clearContext, createSuiteHooks, defaultSuite } from './suite'
+import { interpretOnlyMode } from './run'
+import { context } from './context'
+import { setHooks } from './map'
 
 export async function collectTests(paths: string[]) {
   const files: Record<string, File> = {}

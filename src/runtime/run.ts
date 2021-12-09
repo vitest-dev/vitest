@@ -1,11 +1,11 @@
 import { HookListener } from 'vitest'
 import { File, ResolvedConfig, Task, RunnerContext, Suite, RunMode, SuiteHooks } from '../types'
 import { getSnapshotManager } from '../integrations/chai/snapshot'
-import { getFn, getHooks } from '../map'
-import { startWatcher } from './watcher'
+import { startWatcher } from '../node/watcher'
+import { globTestFiles } from '../node/glob'
+import { getFn, getHooks } from './map'
 import { collectTests } from './collect'
 import { setupRunner } from './setup'
-import { globTestFiles } from './glob'
 
 async function callHook<T extends keyof SuiteHooks>(suite: Suite, name: T, args: SuiteHooks[T][0] extends HookListener<infer A> ? A : never) {
   await Promise.all(getHooks(suite)[name].map(fn => fn(...(args as any))))

@@ -1,7 +1,7 @@
 import { UserOptions } from './types'
 
 export * from './types'
-export * from './suite'
+export * from './runtime/suite'
 export * from './integrations/chai'
 export * from './integrations/sinon'
 

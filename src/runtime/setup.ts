@@ -1,19 +1,11 @@
-import { setupChai } from '../integrations/chai/setup'
 import { ResolvedConfig, Task, RunnerContext } from '../types'
 import { DefaultReporter } from '../reporters/default'
 import { getSnapshotManager } from '../integrations/chai/snapshot'
-import { getSuiteTasks } from '../suite'
+import { getSuiteTasks } from '../runtime/suite'
+import { setupEnv } from './env'
 
 export async function setupRunner(config: ResolvedConfig) {
-  // setup chai
-  await setupChai(config)
-
-  if (config.global)
-    (await import('../integrations/global')).registerApiGlobally()
-  if (config.dom === 'happy-dom')
-    (await import('../integrations/dom/happy-dom')).setupHappyDOM(globalThis)
-  else if (config.dom)
-    (await import('../integrations/dom/jsdom')).setupJSDOM(globalThis)
+  await setupEnv(config)
 
   const ctx: RunnerContext = {
     filesMap: {},

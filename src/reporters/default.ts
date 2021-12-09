@@ -4,7 +4,7 @@ import { relative } from 'path'
 import c from 'picocolors'
 import Listr from 'listr'
 import { File, Suite, Reporter, RunnerContext, Task, ResolvedConfig } from '../types'
-import { getSuiteTasks, suiteHasTasks } from '../suite'
+import { getSuiteTasks, suiteHasTasks } from '../runtime/suite'
 import { printError } from './error'
 
 interface TaskPromise {
