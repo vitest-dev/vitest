@@ -1,12 +1,10 @@
-import { defineConfig, mergeConfig } from 'vite'
-import defaults from '../../vitest.config'
+/// <reference types="vitest" />
 
-export default mergeConfig(
-  defaults,
-  defineConfig({
-    test: {
-      global: true,
-      dom: 'happy-dom',
-    },
-  }),
-)
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  test: {
+    global: true,
+    dom: 'happy-dom',
+  },
+})

@@ -1,3 +1,8 @@
+import { resolve } from 'path'
+import { fileURLToPath } from 'url'
+
+export const distDir = resolve(fileURLToPath(import.meta.url), '../../dist')
+
 export const defaultIncludes = ['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']
 export const defaultExcludes = ['**/node_modules/**', '**/dist/**']
 
