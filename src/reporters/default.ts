@@ -4,7 +4,7 @@ import { relative } from 'path'
 import c from 'picocolors'
 import Listr from 'listr'
 import { File, Suite, Reporter, RunnerContext, Task, ResolvedConfig } from '../types'
-import { getSuiteTasks, suiteHasTasks } from '../runtime/suite'
+import { getTasks, hasTasks } from '../utils'
 import { printError } from './error'
 
 interface TaskPromise {
@@ -35,7 +35,7 @@ export class DefaultReporter implements Reporter {
     this.start = performance.now()
     this.taskMap = new Map()
 
-    const tasks = files.reduce((acc, file) => acc.concat(getSuiteTasks(file)), [] as Task[])
+    const tasks = files.reduce((acc, file) => acc.concat(getTasks(file)), [] as Task[])
 
     tasks.forEach((t) => {
       const obj = {} as TaskPromise
@@ -65,9 +65,8 @@ export class DefaultReporter implements Reporter {
     }
 
     function createSuiteListr(suite: Suite): Listr {
-      if (!suiteHasTasks(suite))
+      if (!hasTasks(suite))
         throw new Error('No tasks found')
-
       return new Listr(createListrSuiteChildren(suite), listrOptions)
     }
 
@@ -114,7 +113,7 @@ export class DefaultReporter implements Reporter {
 
     // Only consider the first level suites for reporting
     const suites = files.flatMap(file => file.children.filter(c => c.type === 'suite')) as Suite[]
-    const tasks = files.flatMap(getSuiteTasks)
+    const tasks = files.flatMap(getTasks)
 
     const failedFiles = files.filter(i => i.result?.error)
     const failedSuites = suites.filter(i => i.result?.error)

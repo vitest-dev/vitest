@@ -11,7 +11,7 @@ export async function startWatcher(ctx: RunnerContext) {
 
   const changedTests = new Set<string>()
   const seen = new Set<string>()
-  const { server, moduleCache } = process.__vite_node__
+  const { server, moduleCache } = process.__vitest__
 
   server.watcher.on('change', async(id) => {
     id = slash(id)
@@ -59,7 +59,7 @@ export function getDependencyTests(id: string, ctx: RunnerContext, set = new Set
     return set
   }
 
-  const mod = process.__vite_node__.server.moduleGraph.getModuleById(id)
+  const mod = process.__vitest__.server.moduleGraph.getModuleById(id)
 
   if (mod) {
     mod.importers.forEach((i) => {

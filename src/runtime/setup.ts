@@ -1,7 +1,7 @@
-import { ResolvedConfig, Task, RunnerContext } from '../types'
+import { ResolvedConfig, RunnerContext } from '../types'
 import { DefaultReporter } from '../reporters/default'
 import { getSnapshotManager } from '../integrations/chai/snapshot'
-import { getSuiteTasks } from '../runtime/suite'
+import { getTasks } from '../utils'
 import { setupEnv } from './env'
 
 export async function setupRunner(config: ResolvedConfig) {
@@ -13,8 +13,7 @@ export async function setupRunner(config: ResolvedConfig) {
       return Object.values(this.filesMap)
     },
     get tasks() {
-      return Object.values(this.filesMap)
-        .reduce((tasks, file) => tasks.concat(getSuiteTasks(file)), [] as Task[])
+      return getTasks(Object.values(this.filesMap))
     },
     config,
     reporter: config.reporter || new DefaultReporter(),

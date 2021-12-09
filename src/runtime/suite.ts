@@ -218,11 +218,3 @@ export function clearContext() {
   defaultSuite.clear()
   context.currentSuite = defaultSuite
 }
-
-export function getSuiteTasks(suite: Suite): Task[] {
-  return suite.children.flatMap(c => c.type === 'task' ? [c] : getSuiteTasks(c))
-}
-
-export function suiteHasTasks(suite: Suite): boolean {
-  return suite.children.some(c => c.type === 'task' || suiteHasTasks(c as Suite))
-}

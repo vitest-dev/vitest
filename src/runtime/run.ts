@@ -3,7 +3,7 @@ import { File, ResolvedConfig, Task, RunnerContext, Suite, SuiteHooks, TaskOrSui
 import { getSnapshotManager } from '../integrations/chai/snapshot'
 import { startWatcher } from '../node/watcher'
 import { globTestFiles } from '../node/glob'
-import { partitionSuiteChildren } from '../utils'
+import { hasFailed, partitionSuiteChildren } from '../utils'
 import { getFn, getHooks } from './map'
 import { collectTests } from './collect'
 import { setupRunner } from './setup'
@@ -90,6 +90,8 @@ export async function runSuite(suite: Suite, ctx: RunnerContext) {
     }
   }
   suite.result.end = performance.now()
+  if (hasFailed(suite))
+    suite.result.state = 'fail'
 
   await reporter.onSuiteEnd?.(suite, ctx)
 }
