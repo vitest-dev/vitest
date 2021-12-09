@@ -1,22 +1,11 @@
-import { defineConfig, mergeConfig } from 'vite'
-import defaults from '../../vitest.config'
+/// <reference types="vitest" />
+
+import { defineConfig } from 'vite'
 
 // https://vitejs.dev/config/
-export default mergeConfig(
-  defaults,
-  defineConfig({
-    build: {
-      lib: {
-        entry: 'src/my-element.ts',
-        formats: ['es'],
-      },
-      rollupOptions: {
-        external: /^lit/,
-      },
-    },
-    test: {
-      global: true,
-      dom: 'happy-dom',
-    },
-  }),
-)
+export default defineConfig({
+  test: {
+    global: true,
+    dom: 'happy-dom',
+  },
+})
