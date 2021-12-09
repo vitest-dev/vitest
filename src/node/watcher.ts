@@ -1,6 +1,6 @@
 import { slash } from '@antfu/utils'
 import { RunnerContext } from '../types'
-import { runFiles } from '../runtime/run'
+import { runSuites } from '../runtime/run'
 import { collectTests } from '../runtime/collect'
 
 export async function startWatcher(ctx: RunnerContext) {
@@ -36,7 +36,9 @@ export async function startWatcher(ctx: RunnerContext) {
 
       const newFilesMap = await collectTests(paths)
       Object.assign(filesMap, newFilesMap)
-      await runFiles(newFilesMap, ctx)
+      const files = Object.values(filesMap)
+      reporter.onCollected?.(files, ctx)
+      await runSuites(files, ctx)
 
       snapshotManager.saveSnap()
 

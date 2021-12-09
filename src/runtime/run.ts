@@ -1,9 +1,9 @@
 import { HookListener } from 'vitest'
-import { File, ResolvedConfig, Task, RunnerContext, Suite, SuiteHooks, TaskOrSuite } from '../types'
+import { ResolvedConfig, Task, RunnerContext, Suite, SuiteHooks, TaskOrSuite } from '../types'
 import { getSnapshotManager } from '../integrations/chai/snapshot'
 import { startWatcher } from '../node/watcher'
 import { globTestFiles } from '../node/glob'
-import { hasFailed, partitionSuiteChildren } from '../utils'
+import { hasFailed, hasTasks, partitionSuiteChildren } from '../utils'
 import { getFn, getHooks } from './map'
 import { collectTests } from './collect'
 import { setupRunner } from './setup'
@@ -90,8 +90,14 @@ export async function runSuite(suite: Suite, ctx: RunnerContext) {
     }
   }
   suite.result.end = performance.now()
-  if (hasFailed(suite))
+  if (!hasTasks(suite)) {
     suite.result.state = 'fail'
+    suite.result.error = new Error(`No tests found in suite ${suite.name}`)
+    process.exitCode = 1
+  }
+  else if (hasFailed(suite)) {
+    suite.result.state = 'fail'
+  }
 
   await reporter.onSuiteEnd?.(suite, ctx)
 }
@@ -102,13 +108,9 @@ async function runSuiteChild(c: TaskOrSuite, ctx: RunnerContext) {
     : runSuite(c, ctx)
 }
 
-export async function runFiles(filesMap: Record<string, File>, ctx: RunnerContext) {
-  const { reporter } = ctx
-
-  await reporter.onCollected?.(Object.values(filesMap), ctx)
-
-  for (const file of Object.values(filesMap))
-    await runSuite(file, ctx)
+export async function runSuites(suites: Suite[], ctx: RunnerContext) {
+  for (const suite of suites)
+    await runSuite(suite, ctx)
 }
 
 export async function run(config: ResolvedConfig) {
@@ -126,11 +128,13 @@ export async function run(config: ResolvedConfig) {
 
   await reporter.onStart?.(config)
 
-  const files = await collectTests(testFilepaths)
+  const newFileMap = await collectTests(testFilepaths)
 
-  Object.assign(filesMap, files)
+  Object.assign(filesMap, newFileMap)
+  const files = Object.values(filesMap)
 
-  await runFiles(filesMap, ctx)
+  await reporter.onCollected?.(files, ctx)
+  await runSuites(files, ctx)
 
   snapshotManager.saveSnap()
 

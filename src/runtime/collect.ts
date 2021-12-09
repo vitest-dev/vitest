@@ -1,3 +1,4 @@
+import { basename } from 'path'
 import { File, Suite, Task } from '../types'
 import { interpretOnlyMode } from '../utils'
 import { clearContext, createSuiteHooks, defaultSuite } from './suite'
@@ -9,7 +10,7 @@ export async function collectTests(paths: string[]) {
 
   for (const filepath of paths) {
     const file: File = {
-      name: '',
+      name: basename(filepath),
       type: 'suite',
       mode: 'run',
       computeMode: 'serial',
