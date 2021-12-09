@@ -2,7 +2,7 @@
 import sade from 'sade'
 import c from 'picocolors'
 import { ViteDevServer } from 'vite'
-import type { ResolvedConfig } from '../types'
+import type { ResolvedConfig, UserOptions } from '../types'
 import { version } from '../../package.json'
 import { initViteServer } from './server'
 import { start, TestState } from './start'
@@ -17,7 +17,7 @@ sade('vitest [filter]', true)
   .option('-u, --update', 'update snapshot', false)
   .option('--global', 'inject apis globally', false)
   .option('--dom', 'mock browser api using jsdom or happy-dom', '')
-  .action(async(filters, argv) => {
+  .action(async(filters, argv: UserOptions) => {
     process.env.VITEST = 'true'
 
     console.log(c.yellow(c.bold('\nVitest is currently in closed beta exclusively for Sponsors')))
@@ -25,10 +25,11 @@ sade('vitest [filter]', true)
 
     const { config, server } = await initViteServer({ ...argv, filters })
 
+    const moduleCache = new Map<string, ModuleCache>()
     process.__vitest__ = {
       server,
       config,
-      moduleCache: new Map<string, ModuleCache>(),
+      moduleCache,
       state: {
         filesMap: {},
       },

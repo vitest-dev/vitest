@@ -23,7 +23,7 @@ test('async', async() => {
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve()
-    }, 200)
+    }, 10)
   })
 })
 

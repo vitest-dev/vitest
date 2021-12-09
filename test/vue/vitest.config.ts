@@ -1,16 +1,12 @@
-import { defineConfig, mergeConfig } from 'vite'
+import { defineConfig } from 'vite'
 import Vue from '@vitejs/plugin-vue'
-import defaults from '../../vitest.config'
 
-export default mergeConfig(
-  defaults,
-  defineConfig({
-    plugins: [
-      Vue(),
-    ],
-    test: {
-      global: true,
-      dom: 'jsdom',
-    },
-  }),
-)
+export default defineConfig({
+  plugins: [
+    Vue(),
+  ],
+  test: {
+    global: true,
+    dom: 'jsdom',
+  },
+})

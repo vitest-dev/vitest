@@ -1,7 +1,8 @@
-import { HookListener, SuiteHooks } from 'vitest'
+import { performance } from 'perf_hooks'
+import { HookListener } from 'vitest'
+import { Test, Suite, SuiteHooks, Task } from '../types'
 import { getSnapshotManager } from '../integrations/chai/snapshot'
-import { File, Task, Suite } from '../types'
-import { collectTests } from './collect'
+import { hasFailed, hasTests, partitionSuiteChildren } from '../utils'
 import { getFn, getHooks } from './map'
 import { rpc } from './rpc'
 
@@ -9,127 +10,101 @@ async function callHook<T extends keyof SuiteHooks>(suite: Suite, name: T, args:
   await Promise.all(getHooks(suite)[name].map(fn => fn(...(args as any))))
 }
 
-export async function runTask(task: Task) {
-  if (task.mode !== 'run')
+export async function runTest(test: Test) {
+  if (test.mode !== 'run')
     return
 
-  getSnapshotManager()?.setTask(task)
+  getSnapshotManager()?.setTest(test)
 
-  rpc('onTaskBegin', task)
-
-  task.result = {
-    state: 'run',
+  await rpc('onTestBegin', test)
+  test.result = {
     start: performance.now(),
+    state: 'run',
   }
 
-  if (task.mode === 'run') {
-    try {
-      await callHook(task.suite, 'beforeEach', [task, task.suite])
-      await getFn(task)()
-      task.result.state = 'pass'
-    }
-    catch (e) {
-      task.result.state = 'fail'
-      task.result.error = e
-      process.exitCode = 1
-    }
-    try {
-      await callHook(task.suite, 'afterEach', [task, task.suite])
-    }
-    catch (e) {
-      task.result.state = 'fail'
-      task.result.error = e
-      process.exitCode = 1
-    }
+  try {
+    await callHook(test.suite, 'beforeEach', [test, test.suite])
+    await getFn(test)()
+    test.result.state = 'pass'
   }
-  task.result.end = performance.now()
+  catch (e) {
+    test.result.state = 'fail'
+    test.result.error = e
+    process.exitCode = 1
+  }
+  try {
+    await callHook(test.suite, 'afterEach', [test, test.suite])
+  }
+  catch (e) {
+    test.result.state = 'fail'
+    test.result.error = e
+    process.exitCode = 1
+  }
 
-  rpc('onTaskEnd', task)
+  test.result.end = performance.now()
+
+  await rpc('onTestEnd', test)
 }
 
 export async function runSuite(suite: Suite) {
   await rpc('onSuiteBegin', suite)
 
+  suite.result = {
+    start: performance.now(),
+    state: 'run',
+  }
+
   if (suite.mode === 'skip') {
-    suite.status = 'skip'
+    suite.result.state = 'skip'
   }
   else if (suite.mode === 'todo') {
-    suite.status = 'todo'
+    suite.result.state = 'todo'
   }
   else {
     try {
       await callHook(suite, 'beforeAll', [suite])
 
-      for (const childrenGroup of partitionSuiteChildren(suite)) {
-        const computeMode = childrenGroup[0].computeMode
+      for (const tasksGroup of partitionSuiteChildren(suite)) {
+        const computeMode = tasksGroup[0].computeMode
         if (computeMode === 'serial') {
-          for (const c of childrenGroup)
+          for (const c of tasksGroup)
             await runSuiteChild(c)
         }
         else if (computeMode === 'concurrent') {
-          await Promise.all(childrenGroup.map(c => runSuiteChild(c)))
+          await Promise.all(tasksGroup.map(c => runSuiteChild(c)))
         }
       }
 
       await callHook(suite, 'afterAll', [suite])
     }
     catch (e) {
-      suite.error = e
-      suite.status = 'fail'
+      suite.result.state = 'fail'
+      suite.result.error = e
       process.exitCode = 1
     }
   }
+  suite.result.end = performance.now()
+  if (suite.mode === 'run') {
+    if (!hasTests(suite)) {
+      suite.result.state = 'fail'
+      suite.result.error = new Error(`No tests found in suite ${suite.name}`)
+      process.exitCode = 1
+    }
+    else if (hasFailed(suite)) {
+      suite.result.state = 'fail'
+    }
+  }
+
   await rpc('onSuiteEnd', suite)
 }
 
-export async function runSuiteChild(c: (Task | Suite)) {
-  return c.type === 'task'
-    ? runTask(c)
+async function runSuiteChild(c: Task) {
+  return c.type === 'test'
+    ? runTest(c)
     : runSuite(c)
 }
 
-export async function runFile(file: File) {
-  const runnable = file.children.filter(i => i.mode === 'run')
-  if (runnable.length === 0)
-    return
-
-  await rpc('onFileBegin', file)
-
-  for (const suite of file.children)
-    await runSuiteChild(suite)
-
-  await rpc('onFileEnd', file)
-}
-
-export async function runFiles(filesMap: Record<string, File>) {
-  await rpc('onCollected', Object.values(filesMap))
-
-  for (const file of Object.values(filesMap))
-    await runFile(file)
-}
-
-export async function startTests(paths: string[]) {
-  const filesMap = await collectTests(paths)
-  await runFiles(filesMap)
-}
-
-/**
- * Partition in tasks groups by consecutive computeMode ('serial', 'concurrent')
- */
-function partitionSuiteChildren(suite: Suite) {
-  let childrenGroup: (Task | Suite)[] = []
-  const childrenGroups: (Task | Suite)[][] = []
-  for (const c of suite.children) {
-    if (childrenGroup.length === 0 || c.computeMode === childrenGroup[0].computeMode) {
-      childrenGroup.push(c)
-    }
-    else {
-      childrenGroups.push(childrenGroup)
-      childrenGroup = [c]
-    }
-  }
-  if (childrenGroup.length > 0)
-    childrenGroups.push(childrenGroup)
-
-  return childrenGroups
+export async function runSuites(suites: Suite[]) {
+  for (const suite of suites)
+    await runSuite(suite)
 }

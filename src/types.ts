@@ -40,13 +40,6 @@ export interface UserOptions {
   dom?: boolean | 'jsdom' | 'happy-dom'
 
   /**
-   * Run tests files in parallel
-   *
-   * @default false
-   */
-  parallel?: boolean
-
-  /**
    * Update snapshot files
    *
    * @default false
@@ -83,27 +76,29 @@ export interface ResolvedConfig extends Omit<Required<UserOptions>, 'config' | '
 }
 
 export type RunMode = 'run' | 'skip' | 'only' | 'todo'
-export type TaskState = RunMode | 'pass' | 'fail'
+export type TestState = RunMode | 'pass' | 'fail'
 export type SuiteState = RunMode | 'pass' | 'fail'
 export type ComputeMode = 'serial' | 'concurrent'
 
-export interface Task {
+export interface Test {
   id: string
-  type: 'task'
+  type: 'test'
   name: string
   mode: RunMode
   computeMode: ComputeMode
   suite: Suite
   file?: File
-  result?: TaskResult
+  result?: TestResult
 }
 
-export interface TaskResult {
-  state: TaskState
+export interface TestResult {
+  state: TestState
   start: number
   end?: number
   error?: unknown
 }
+
+export type Task = Test | Suite
 
 export type TestFunction = () => Awaitable<void>
 
@@ -142,8 +137,8 @@ export type HookListener<T extends any[]> = (...args: T) => Awaitable<void>
 export interface SuiteHooks {
   beforeAll: HookListener<[Suite]>[]
   afterAll: HookListener<[Suite]>[]
-  beforeEach: HookListener<[Task, Suite]>[]
-  afterEach: HookListener<[Task, Suite]>[]
+  beforeEach: HookListener<[Test, Suite]>[]
+  afterEach: HookListener<[Test, Suite]>[]
 }
 
 export interface Suite {
@@ -151,11 +146,9 @@ export interface Suite {
   name: string
   mode: RunMode
   computeMode: ComputeMode
-  children: (Task | Suite)[]
-  state?: SuiteState
+  tasks: Task[]
   file?: File
-  error?: unknown
-  status?: TaskState
+  result?: TestResult
 }
 
 export interface SuiteCollector {
@@ -163,7 +156,7 @@ export interface SuiteCollector {
   readonly mode: RunMode
   type: 'collector'
   test: TestCollector
-  children: (Suite | Task | SuiteCollector)[]
+  tasks: (Suite | Test | SuiteCollector)[]
   collect: (file?: File) => Promise<Suite>
   clear: () => void
   on: <T extends keyof SuiteHooks>(name: T, ...fn: SuiteHooks[T]) => void
@@ -173,11 +166,10 @@ export type TestFactory = (test: (name: string, fn: TestFunction) => void) => Aw
 
 export interface File extends Suite {
   filepath: string
-  error?: unknown
 }
 
 export interface GlobalContext {
-  children: (SuiteCollector | Task)[]
+  tasks: (SuiteCollector | Test)[]
   currentSuite: SuiteCollector | null
 }
 
@@ -186,12 +178,10 @@ export interface Reporter {
   onCollected?: (files: File[]) => Awaitable<void>
   onFinished?: (files: File[]) => Awaitable<void>
 
+  onTestBegin?: (test: Test) => Awaitable<void>
+  onTestEnd?: (test: Test) => Awaitable<void>
   onSuiteBegin?: (suite: Suite) => Awaitable<void>
   onSuiteEnd?: (suite: Suite) => Awaitable<void>
-  onFileBegin?: (file: File) => Awaitable<void>
-  onFileEnd?: (file: File) => Awaitable<void>
-  onTaskBegin?: (task: Task) => Awaitable<void>
-  onTaskEnd?: (task: Task) => Awaitable<void>
 
   onWatcherStart?: () => Awaitable<void>
   onWatcherRerun?: (files: string[], trigger: string) => Awaitable<void>

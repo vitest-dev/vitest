@@ -1,10 +1,11 @@
 import { slash } from '@antfu/utils'
-import { runFiles } from '../runtime/run'
+import { runSuites } from '../runtime/run'
 import { collectTests } from '../runtime/collect'
+import { rpc } from '../runtime/rpc'
 
 export async function startWatcher(ctx: any) {
   const { reporter, snapshotManager, filesMap } = ctx
-  await reporter.onWatcherStart?.(ctx)
+  await rpc('onWatcherStart')
 
   let timer: any
 
@@ -14,7 +15,7 @@ export async function startWatcher(ctx: any) {
 
   server.watcher.on('change', async(id) => {
     id = slash(id)
-    getDependencyTests(id, ctx, changedTests, seen)
+    getAffectedTests(id, changedTests, seen)
     seen.forEach(i => moduleCache.delete(i))
     seen.clear()
 
@@ -35,7 +36,9 @@ export async function startWatcher(ctx: any) {
 
       const newFilesMap = await collectTests(paths)
       Object.assign(filesMap, newFilesMap)
-      await runFiles(newFilesMap, ctx)
+      const files = Object.values(filesMap)
+      await rpc('onCollected', files)
+      await runSuites(files)
 
       snapshotManager.saveSnap()
 
@@ -48,22 +51,24 @@ export async function startWatcher(ctx: any) {
   await new Promise(() => { })
 }
 
-export function getDependencyTests(id: string, ctx: any, set = new Set<string>(), seen = new Set<string>()): Set<string> {
+export function getAffectedTests(id: string, set = new Set<string>(), seen = new Set<string>()): Set<string> {
   if (seen.has(id) || set.has(id))
     return set
 
+  const { server, state } = process.__vitest__
+
   seen.add(id)
-  if (id in ctx.filesMap) {
+  if (id in state.filesMap) {
     set.add(id)
     return set
   }
 
-  const mod = process.__vitest__.server.moduleGraph.getModuleById(id)
+  const mod = server.moduleGraph.getModuleById(id)
 
   if (mod) {
     mod.importers.forEach((i) => {
       if (i.id)
-        getDependencyTests(i.id, ctx, set, seen)
+        getAffectedTests(i.id, set, seen)
     })
   }
 
