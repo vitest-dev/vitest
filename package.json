@@ -61,7 +61,6 @@
     "chai": "^4.3.4",
     "chai-subset": "^1.6.0",
     "diff": "^5.0.0",
-    "externality": "^0.1.5",
     "fast-glob": "^3.2.7",
     "find-up": "^6.2.0",
     "happy-dom": "^2.24.4",
