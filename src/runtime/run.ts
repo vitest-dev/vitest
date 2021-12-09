@@ -84,19 +84,21 @@ export async function runSuite(suite: Suite, ctx: RunnerContext) {
       await callHook(suite, 'afterAll', [suite])
     }
     catch (e) {
-      suite.result.error = e
       suite.result.state = 'fail'
+      suite.result.error = e
       process.exitCode = 1
     }
   }
   suite.result.end = performance.now()
-  if (!hasTasks(suite)) {
-    suite.result.state = 'fail'
-    suite.result.error = new Error(`No tests found in suite ${suite.name}`)
-    process.exitCode = 1
-  }
-  else if (hasFailed(suite)) {
-    suite.result.state = 'fail'
+  if (suite.mode === 'run') {
+    if (!hasTasks(suite)) {
+      suite.result.state = 'fail'
+      suite.result.error = new Error(`No tests found in suite ${suite.name}`)
+      process.exitCode = 1
+    }
+    else if (hasFailed(suite)) {
+      suite.result.state = 'fail'
+    }
   }
 
   await reporter.onSuiteEnd?.(suite, ctx)

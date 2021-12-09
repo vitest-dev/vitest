@@ -4,7 +4,7 @@ import { relative } from 'path'
 import c from 'picocolors'
 import Listr from 'listr'
 import { File, Suite, Reporter, RunnerContext, Task, ResolvedConfig } from '../types'
-import { getTasks, hasTasks } from '../utils'
+import { getSuites, getTasks, hasTasks } from '../utils'
 import { printError } from './error'
 
 interface TaskPromise {
@@ -65,6 +65,8 @@ export class DefaultReporter implements Reporter {
     }
 
     function createSuiteListr(suite: Suite): Listr {
+      if (suite.result?.error)
+        throw suite.result.error
       if (!hasTasks(suite))
         throw new Error('No tasks found')
       return new Listr(createListrSuiteChildren(suite), listrOptions)
@@ -111,11 +113,9 @@ export class DefaultReporter implements Reporter {
     if (snapshot)
       console.log(snapshot.join('\n'))
 
-    // Only consider the first level suites for reporting
-    const suites = files.flatMap(file => file.children.filter(c => c.type === 'suite')) as Suite[]
-    const tasks = files.flatMap(getTasks)
+    const suites = getSuites(files)
+    const tasks = getTasks(files)
 
-    const failedFiles = files.filter(i => i.result?.error)
     const failedSuites = suites.filter(i => i.result?.error)
 
     const runnable = tasks.filter(i => i.result?.state === 'pass' || i.result?.state === 'fail')
@@ -123,18 +123,6 @@ export class DefaultReporter implements Reporter {
     const failed = tasks.filter(i => i.result?.state === 'fail')
     const skipped = tasks.filter(i => i.mode === 'skip')
     const todo = tasks.filter(i => i.mode === 'todo')
-
-    if (failedFiles.length) {
-      console.error(c.red(c.bold(`\nFailed to parse ${failedFiles.length} files:`)))
-      for (const file of failedFiles)
-        console.error(c.red(`- ${file.filepath}`))
-      console.log()
-
-      for (const file of failedFiles) {
-        await printError(file.result?.error)
-        console.log()
-      }
-    }
 
     if (failedSuites.length) {
       console.error(c.bold(c.red(`\nFailed to run ${failedSuites.length} suites:`)))

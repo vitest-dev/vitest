@@ -48,7 +48,7 @@
     "lint": "eslint \"{src,test}/**/*.ts\"",
     "prepublishOnly": "nr build",
     "release": "bumpp --commit --push --tag && esmo scripts/publish.ts",
-    "test:all": "pnpm -r --stream --filter !vitest run test",
+    "test:all": "pnpm -r --stream --filter !vitest run test --",
     "test": "node bin/vitest.mjs -r test/core",
     "coverage": "node bin/vitest.mjs -r test/core --coverage"
   },
