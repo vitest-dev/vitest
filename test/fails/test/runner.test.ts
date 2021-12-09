@@ -22,7 +22,7 @@ describe('should fails', async() => {
       const msg = (`${String(error)}\n${stderr}`)
         .split(/\n/g)
         .reverse()
-        .find(i => i.includes('Error: '))
+        .find(i => i.includes('Error'))
         ?.trim()
       expect(msg).toMatchSnapshot()
     })
