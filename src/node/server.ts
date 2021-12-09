@@ -50,9 +50,11 @@ export async function initViteServer(options: UserOptions = {}) {
   resolved.depsInline = [
     'vitest/dist',
     'vitest/src',
-    'vue',
     '@vue',
+    '@vueuse',
     'diff',
+    'vue-demi',
+    'vue',
     ...server.config.test?.deps?.inline || [],
   ]
   resolved.depsExternal = server.config.test?.deps?.external || []
