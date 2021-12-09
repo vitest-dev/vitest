@@ -15,7 +15,7 @@ export async function collectTests(paths: string[]) {
       mode: 'run',
       computeMode: 'serial',
       filepath,
-      children: [],
+      tasks: [],
     }
 
     setHooks(file, createSuiteHooks())
@@ -24,14 +24,14 @@ export async function collectTests(paths: string[]) {
     try {
       await import(filepath)
 
-      for (const c of [defaultSuite, ...context.children]) {
+      for (const c of [defaultSuite, ...context.tasks]) {
         if (c.type === 'test') {
-          file.children.push(c)
+          file.tasks.push(c)
         }
         else {
           const suite = await c.collect(file)
-          if (suite.name || suite.children.length)
-            file.children.push(suite)
+          if (suite.name || suite.tasks.length)
+            file.tasks.push(suite)
         }
       }
     }
@@ -48,15 +48,15 @@ export async function collectTests(paths: string[]) {
   }
 
   const allFiles = Object.values(files)
-  const allChildren = allFiles.reduce((children, file) => children.concat(file.children), [] as (Suite | Test)[])
+  const allChildren = allFiles.reduce((tasks, file) => tasks.concat(file.tasks), [] as (Suite | Test)[])
 
   interpretOnlyMode(allChildren)
   allChildren.forEach((i) => {
     if (i.type === 'suite') {
       if (i.mode === 'skip')
-        i.children.forEach(c => c.mode === 'run' && (c.mode = 'skip'))
+        i.tasks.forEach(c => c.mode === 'run' && (c.mode = 'skip'))
       else
-        interpretOnlyMode(i.children)
+        interpretOnlyMode(i.tasks)
     }
   })
 

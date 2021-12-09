@@ -69,7 +69,7 @@ export class DefaultReporter implements Reporter {
     }
 
     function createListrSuiteChildren(suite: Suite): Listr.ListrTask[] {
-      return suite.children.map(c => c.type === 'test' ? createListrTestTask(c) : createListrSuiteTask(c))
+      return suite.tasks.map(c => c.type === 'test' ? createListrTestTask(c) : createListrSuiteTask(c))
     }
 
     function createSuiteListr(suite: Suite): Listr {

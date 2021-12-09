@@ -20,7 +20,7 @@ export function createSuiteHooks() {
 }
 
 function createSuiteCollector(name: string, factory: TestFactory = () => { }, mode: RunMode, suiteComputeMode?: ComputeMode) {
-  const children: (Test | Suite | SuiteCollector)[] = []
+  const tasks: (Test | Suite | SuiteCollector)[] = []
   const factoryQueue: (Test | Suite | SuiteCollector)[] = []
 
   let suite: Suite
@@ -36,7 +36,7 @@ function createSuiteCollector(name: string, factory: TestFactory = () => { }, mo
       suite: {} as Suite,
     }
     setFn(test, fn)
-    children.push(test)
+    tasks.push(test)
   })
 
   const collector: SuiteCollector = {
@@ -44,7 +44,7 @@ function createSuiteCollector(name: string, factory: TestFactory = () => { }, mo
     name,
     mode,
     test,
-    children,
+    tasks,
     collect,
     clear,
     on: addHook,
@@ -60,13 +60,13 @@ function createSuiteCollector(name: string, factory: TestFactory = () => { }, mo
       computeMode: 'serial',
       name,
       mode,
-      children: [],
+      tasks: [],
     }
     setHooks(suite, createSuiteHooks())
   }
 
   function clear() {
-    children.length = 0
+    tasks.length = 0
     factoryQueue.length = 0
     initSuite()
   }
@@ -81,12 +81,12 @@ function createSuiteCollector(name: string, factory: TestFactory = () => { }, mo
     }
 
     const allChildren = await Promise.all(
-      [...factoryQueue, ...children]
+      [...factoryQueue, ...tasks]
         .map(i => i.type === 'collector' ? i.collect(file) : i),
     )
 
     suite.file = file
-    suite.children = allChildren
+    suite.tasks = allChildren
 
     allChildren.forEach((task) => {
       if (task.type === 'test') {
@@ -99,7 +99,7 @@ function createSuiteCollector(name: string, factory: TestFactory = () => { }, mo
     return suite
   }
 
-  context.currentSuite?.children.push(collector)
+  context.currentSuite?.tasks.push(collector)
 
   return collector
 }
@@ -214,7 +214,7 @@ export const afterEach = (fn: SuiteHooks['afterEach'][0]) => getCurrentSuite().o
 
 // utils
 export function clearContext() {
-  context.children.length = 0
+  context.tasks.length = 0
   defaultSuite.clear()
   context.currentSuite = defaultSuite
 }

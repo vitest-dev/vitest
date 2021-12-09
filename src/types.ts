@@ -96,7 +96,7 @@ export interface TestResult {
   error?: unknown
 }
 
-export type TaskOrSuite = Test | Suite
+export type Task = Test | Suite
 
 export type TestFunction = () => Awaitable<void>
 
@@ -144,7 +144,7 @@ export interface Suite {
   name: string
   mode: RunMode
   computeMode: ComputeMode
-  children: TaskOrSuite[]
+  tasks: Task[]
   file?: File
   result?: TestResult
 }
@@ -154,7 +154,7 @@ export interface SuiteCollector {
   readonly mode: RunMode
   type: 'collector'
   test: TestCollector
-  children: (Suite | Test | SuiteCollector)[]
+  tasks: (Suite | Test | SuiteCollector)[]
   collect: (file?: File) => Promise<Suite>
   clear: () => void
   on: <T extends keyof SuiteHooks>(name: T, ...fn: SuiteHooks[T]) => void
@@ -176,7 +176,7 @@ export interface RunnerContext {
 }
 
 export interface GlobalContext {
-  children: (SuiteCollector | Test)[]
+  tasks: (SuiteCollector | Test)[]
   currentSuite: SuiteCollector | null
 }
 

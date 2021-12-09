@@ -1,5 +1,5 @@
 import { HookListener } from 'vitest'
-import { ResolvedConfig, Test, RunnerContext, Suite, SuiteHooks, TaskOrSuite } from '../types'
+import { ResolvedConfig, Test, RunnerContext, Suite, SuiteHooks, Task } from '../types'
 import { getSnapshotManager } from '../integrations/chai/snapshot'
 import { startWatcher } from '../node/watcher'
 import { globTestFiles } from '../node/glob'
@@ -70,14 +70,14 @@ export async function runSuite(suite: Suite, ctx: RunnerContext) {
     try {
       await callHook(suite, 'beforeAll', [suite])
 
-      for (const childrenGroup of partitionSuiteChildren(suite)) {
-        const computeMode = childrenGroup[0].computeMode
+      for (const tasksGroup of partitionSuiteChildren(suite)) {
+        const computeMode = tasksGroup[0].computeMode
         if (computeMode === 'serial') {
-          for (const c of childrenGroup)
+          for (const c of tasksGroup)
             await runSuiteChild(c, ctx)
         }
         else if (computeMode === 'concurrent') {
-          await Promise.all(childrenGroup.map(c => runSuiteChild(c, ctx)))
+          await Promise.all(tasksGroup.map(c => runSuiteChild(c, ctx)))
         }
       }
 
@@ -104,7 +104,7 @@ export async function runSuite(suite: Suite, ctx: RunnerContext) {
   await reporter.onSuiteEnd?.(suite, ctx)
 }
 
-async function runSuiteChild(c: TaskOrSuite, ctx: RunnerContext) {
+async function runSuiteChild(c: Task, ctx: RunnerContext) {
   return c.type === 'test'
     ? runTest(c, ctx)
     : runSuite(c, ctx)

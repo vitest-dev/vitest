@@ -1,25 +1,25 @@
 import { Arrayable, toArray } from '@antfu/utils'
-import { RunMode, Suite, Test, TaskOrSuite } from './types'
+import { RunMode, Suite, Test, Task } from './types'
 
 /**
  * Partition in tasks groups by consecutive computeMode ('serial', 'concurrent')
  */
 export function partitionSuiteChildren(suite: Suite) {
-  let childrenGroup: TaskOrSuite[] = []
-  const childrenGroups: TaskOrSuite[][] = []
-  for (const c of suite.children) {
-    if (childrenGroup.length === 0 || c.computeMode === childrenGroup[0].computeMode) {
-      childrenGroup.push(c)
+  let tasksGroup: Task[] = []
+  const tasksGroups: Task[][] = []
+  for (const c of suite.tasks) {
+    if (tasksGroup.length === 0 || c.computeMode === tasksGroup[0].computeMode) {
+      tasksGroup.push(c)
     }
     else {
-      childrenGroups.push(childrenGroup)
-      childrenGroup = [c]
+      tasksGroups.push(tasksGroup)
+      tasksGroup = [c]
     }
   }
-  if (childrenGroup.length > 0)
-    childrenGroups.push(childrenGroup)
+  if (tasksGroup.length > 0)
+    tasksGroups.push(tasksGroup)
 
-  return childrenGroups
+  return tasksGroups
 }
 
 /**
@@ -37,17 +37,17 @@ export function interpretOnlyMode(items: { mode: RunMode }[]) {
 }
 
 export function getTests(suite: Arrayable<Suite>): Test[] {
-  return toArray(suite).flatMap(s => s.children.flatMap(c => c.type === 'test' ? [c] : getTests(c)))
+  return toArray(suite).flatMap(s => s.tasks.flatMap(c => c.type === 'test' ? [c] : getTests(c)))
 }
 
-export function getSuites(suite: Arrayable<TaskOrSuite>): Suite[] {
-  return toArray(suite).flatMap(s => s.type === 'suite' ? [s, ...getSuites(s.children)] : [])
+export function getSuites(suite: Arrayable<Task>): Suite[] {
+  return toArray(suite).flatMap(s => s.type === 'suite' ? [s, ...getSuites(s.tasks)] : [])
 }
 
 export function hasTests(suite: Arrayable<Suite>): boolean {
-  return toArray(suite).some(s => s.children.some(c => c.type === 'test' || hasTests(c as Suite)))
+  return toArray(suite).some(s => s.tasks.some(c => c.type === 'test' || hasTests(c as Suite)))
 }
 
 export function hasFailed(suite: Arrayable<Suite>): boolean {
-  return toArray(suite).some(s => s.children.some(c => c.result?.state === 'fail'))
+  return toArray(suite).some(s => s.tasks.some(c => c.result?.state === 'fail'))
 }
