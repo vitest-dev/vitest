@@ -3,6 +3,9 @@ import { setupEnv } from './env'
 import { startTests } from './run'
 
 export async function run(files: string[], config: ResolvedConfig): Promise<void> {
-  await setupEnv(config)
+  const restore = await setupEnv(config)
+
   await startTests(files)
+
+  restore?.()
 }

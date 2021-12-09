@@ -5,7 +5,9 @@ export class StateManager {
   idMap: Record<string, Task> = {}
   taskFileMap = new WeakMap<Task, File>()
 
-  getFiles() {
+  getFiles(keys?: string[]): File[] {
+    if (keys)
+      return keys.map(key => this.filesMap[key])
     return Object.values(this.filesMap)
   }
 

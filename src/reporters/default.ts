@@ -10,7 +10,7 @@ import { createRenderer } from './renderer'
 export class DefaultReporter implements Reporter {
   start = 0
   end = 0
-  renderer: ReturnType<typeof createRenderer> = undefined!
+  renderer: ReturnType<typeof createRenderer> | undefined
 
   constructor(public ctx: VitestContext) {}
 
@@ -84,10 +84,9 @@ export class DefaultReporter implements Reporter {
   }
 
   async onWatcherStart() {
-    // await this.listrPromise
-    this.renderer?.stop()
+    await this.stopList()
 
-    const failed = [] // TODO: ctx.tests.filter(i => i.result?.state === 'fail')
+    const failed = getTests(this.ctx.state.getFiles()).filter(i => i.result?.state === 'fail')
     if (failed.length)
       console.log(`\n${c.bold(c.inverse(c.red(' FAIL ')))}${c.red(` ${failed.length} tests failed. Watching for file changes...`)}`)
     else
@@ -95,9 +94,14 @@ export class DefaultReporter implements Reporter {
   }
 
   async onWatcherRerun(files: string[], trigger: string) {
-    this.renderer?.stop()
+    await this.stopList()
 
     console.clear()
     console.log(c.blue('Re-running tests...') + c.dim(` [ ${this.relative(trigger)} ]\n`))
+  }
+
+  async stopList() {
+    await this.renderer?.stop()
+    this.renderer = undefined
   }
 }

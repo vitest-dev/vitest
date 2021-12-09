@@ -8,6 +8,42 @@ import { distDir } from '../constants'
 import { WorkerContext, RpcMessage, VitestContext, WorkerInstance } from '../types'
 import { transformRequest } from './transform'
 
+export interface WorkerPool {
+  workers: WorkerInstance[]
+  runTestFiles: (files: string[]) => Promise<void>
+  close: () => Promise<void>
+}
+
+export function createWorkerPool(size: number, ctx: VitestContext): WorkerPool {
+  const workers = new Array(size).fill(0).map(() => createWorker(ctx))
+
+  async function runTestFiles(files: string[]) {
+    const _tasks = [...files]
+    await Promise.all(workers.map(async(worker) => {
+      await worker.untilReady()
+      while (_tasks.length) {
+        const i = _tasks.pop()
+        if (i)
+          await worker.run([i])
+        else
+          break
+      }
+    }))
+  }
+
+  async function close() {
+    await Promise.all(workers.map(async(worker) => {
+      await worker.close()
+    }))
+  }
+
+  return {
+    workers,
+    runTestFiles,
+    close,
+  }
+}
+
 export function createWorker(ctx: VitestContext) {
   const piscina = new Piscina({
     filename: new URL('./dist/node/worker.js', pathToFileURL(distDir)).href,

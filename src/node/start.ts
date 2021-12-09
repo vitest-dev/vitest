@@ -1,6 +1,7 @@
 import { VitestContext } from '../types'
-import { createWorker } from './pool'
+import { createWorkerPool } from './pool'
 import { globTestFiles } from './glob'
+import { startWatcher } from './watcher'
 
 const MAX_WORKERS = 20
 
@@ -15,24 +16,14 @@ export async function start(ctx: VitestContext) {
 
   await ctx.reporter.onStart?.(config)
 
-  const num = Math.min(testFilepaths.length, MAX_WORKERS)
-  const workers = new Array(num).fill(0).map(() => createWorker(ctx))
+  const pool = createWorkerPool(Math.min(testFilepaths.length, MAX_WORKERS), ctx)
 
-  await Promise.all(workers.map(async(worker) => {
-    await worker.untilReady()
-    while (testFilepaths.length) {
-      const task = testFilepaths.pop()
-      if (task)
-        await worker.run([task])
-      else
-        break
-    }
-  }))
+  await pool.runTestFiles(testFilepaths)
 
   await ctx.reporter.onFinished?.(ctx.state.getFiles())
 
-  await Promise.all(workers.map(worker => worker.close()))
-
-  // TODO: Watcher
-  // TODO: terminate
+  if (config.watch)
+    await startWatcher(ctx, pool)
+  else
+    await pool.close()
 }

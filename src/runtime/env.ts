@@ -8,7 +8,7 @@ export async function setupEnv(config: ResolvedConfig) {
     (await import('../integrations/global')).registerApiGlobally()
 
   if (config.dom === 'happy-dom')
-    (await import('../integrations/dom/happy-dom')).setupHappyDOM(globalThis)
+    return (await import('../integrations/dom/happy-dom')).setupHappyDOM(globalThis).restore
   else if (config.dom)
-    (await import('../integrations/dom/jsdom')).setupJSDOM(globalThis)
+    return (await import('../integrations/dom/jsdom')).setupJSDOM(globalThis).restore
 }

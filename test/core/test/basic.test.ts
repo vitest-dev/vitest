@@ -2,7 +2,7 @@ import { expect, test, assert, suite } from 'vitest'
 import { two } from '../src/submodule'
 
 test('Math.sqrt()', () => {
-  assert.equal(Math.sqrt(6), two)
+  assert.equal(Math.sqrt(4), two)
   assert.equal(Math.sqrt(2), Math.SQRT2)
   expect(Math.sqrt(144)).toStrictEqual(12)
 })

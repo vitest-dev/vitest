@@ -1,17 +1,15 @@
 import { slash } from '@antfu/utils'
-import { runSuites } from '../runtime/run'
-import { collectTests } from '../runtime/collect'
-import { rpc } from '../runtime/rpc'
+import { VitestContext } from '../types'
+import { WorkerPool } from './pool'
 
-export async function startWatcher(ctx: any) {
-  const { reporter, snapshotManager } = ctx
-  await rpc('onWatcherStart')
+export async function startWatcher(ctx: VitestContext, pool: WorkerPool) {
+  const { reporter, server, moduleCache } = ctx
+  reporter.onWatcherStart?.()
 
   let timer: any
 
   const changedTests = new Set<string>()
   const seen = new Set<string>()
-  const { server, moduleCache } = process.__vitest__
 
   server.watcher.on('change', async(id) => {
     id = slash(id)
@@ -27,22 +25,14 @@ export async function startWatcher(ctx: any) {
       if (changedTests.size === 0)
         return
 
-      snapshotManager.clear()
+      // snapshotManager.clear()
       const paths = Array.from(changedTests)
       changedTests.clear()
 
-      await reporter.onWatcherRerun?.(paths, id)
-      paths.forEach(i => moduleCache.delete(i))
+      await pool.runTestFiles(paths)
 
-      // TODO: control worker to rerun
-      const files = await collectTests(paths)
-      await rpc('onCollected', files)
-      await runSuites(files)
-
-      snapshotManager.saveSnap()
-
-      await reporter.onFinished?.(ctx, files)
-      await reporter.onWatcherStart?.(ctx)
+      await reporter.onFinished?.(ctx.state.getFiles(paths))
+      await reporter.onWatcherStart?.()
     }, 100)
   })
 
