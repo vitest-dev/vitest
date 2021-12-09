@@ -17,6 +17,7 @@ export async function collectTests(paths: string[]) {
       computeMode: 'serial',
       filepath,
       tasks: [],
+      suite: {} as Suite,
     }
 
     setHooks(file, createSuiteHooks())
