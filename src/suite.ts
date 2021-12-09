@@ -34,7 +34,6 @@ function createSuiteCollector(name: string, factory: TestFactory = () => { }, mo
       mode,
       computeMode: computeMode ?? (suiteComputeMode ?? 'serial'),
       suite: {} as Suite,
-      state: (mode !== 'run' && mode !== 'only') ? mode : undefined,
     }
     setFn(task, fn)
     children.push(task)

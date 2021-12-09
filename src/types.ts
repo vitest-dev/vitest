@@ -87,7 +87,13 @@ export interface Task {
   computeMode: ComputeMode
   suite: Suite
   file?: File
-  state?: TaskState
+  result?: TaskResult
+}
+
+export interface TaskResult {
+  state: TaskState
+  start: number
+  end?: number
   error?: unknown
 }
 

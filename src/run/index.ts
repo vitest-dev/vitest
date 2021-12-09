@@ -12,32 +12,39 @@ async function callHook<T extends keyof SuiteHooks>(suite: Suite, name: T, args:
 }
 
 export async function runTask(task: Task, ctx: RunnerContext) {
+  if (task.mode !== 'run')
+    return
+
   const { reporter } = ctx
 
   getSnapshotManager()?.setTask(task)
 
   await reporter.onTaskBegin?.(task, ctx)
-
-  if (task.mode === 'run') {
-    try {
-      await callHook(task.suite, 'beforeEach', [task, task.suite])
-      await getFn(task)()
-      task.state = 'pass'
-    }
-    catch (e) {
-      task.state = 'fail'
-      task.error = e
-      process.exitCode = 1
-    }
-    try {
-      await callHook(task.suite, 'afterEach', [task, task.suite])
-    }
-    catch (e) {
-      task.state = 'fail'
-      task.error = e
-      process.exitCode = 1
-    }
+  task.result = {
+    start: performance.now(),
+    state: 'run',
   }
+
+  try {
+    await callHook(task.suite, 'beforeEach', [task, task.suite])
+    await getFn(task)()
+    task.result.state = 'pass'
+  }
+  catch (e) {
+    task.result.state = 'fail'
+    task.result.error = e
+    process.exitCode = 1
+  }
+  try {
+    await callHook(task.suite, 'afterEach', [task, task.suite])
+  }
+  catch (e) {
+    task.result.state = 'fail'
+    task.result.error = e
+    process.exitCode = 1
+  }
+
+  task.result.end = performance.now()
 
   await reporter.onTaskEnd?.(task, ctx)
 }

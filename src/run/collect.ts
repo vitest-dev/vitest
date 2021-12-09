@@ -53,15 +53,7 @@ export async function collectTests(paths: string[]) {
       else
         interpretOnlyMode(i.children)
     }
-    updateSkipState(i)
   })
 
   return files
-}
-
-function updateSkipState(c: Suite | Task) {
-  if (c.mode === 'skip')
-    c.state = 'skip'
-  if (c.type === 'suite')
-    c.children.forEach(updateSkipState)
 }
