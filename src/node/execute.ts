@@ -3,7 +3,6 @@ import { fileURLToPath, pathToFileURL } from 'url'
 import { dirname, resolve } from 'path'
 import vm from 'vm'
 import type { TransformResult } from 'vite'
-import { isExternal } from 'externality'
 
 export interface ModuleCache {
   promise?: Promise<any>
@@ -38,6 +37,7 @@ export const stubRequests: Record<string, any> = {
 }
 
 export async function executeInViteNode({ moduleCache, root, files, fetch, inline, external }: ExecuteOptions) {
+  const externaled = new Set<string>(builtinModules)
   const result = []
   for (const file of files)
     result.push(await cachedRequest(`/@fs/${slash(resolve(file))}`, []))
@@ -97,37 +97,45 @@ export async function executeInViteNode({ moduleCache, root, files, fetch, inlin
   }
 
   async function shouldExternalize(id: string) {
-    return (await isExternal(id, root, {
-      inline: [
-        /virtual:/,
-        /\.ts$/,
-        /\/esm\/.*\.js$/,
-        /\.(es|esm|esm-browser|esm-bundler|es6).js$/,
-        ...inline,
-      ],
-      external: [
-        ...external,
-        /node_modules/,
-      ],
-      resolve: {
-        type: 'module',
-        extensions: ['.ts', '.js', '.json', '.vue', '.mjs', '.jsx', '.tsx', '.wasm'],
-      },
-    }))?.external ?? false
+    for (const ex of inline) {
+      if (typeof ex === 'string') {
+        if (id.includes(`/node_modules/${ex}/`))
+          return false
+      }
+      else {
+        if (ex.test(id))
+          return false
+      }
+    }
+    for (const ex of external) {
+      if (typeof ex === 'string') {
+        if (id.includes(`/node_modules/${ex}/`))
+          return true
+      }
+      else {
+        if (ex.test(id))
+          return true
+      }
+    }
+
+    return id.includes('/node_modules/')
   }
 
   async function cachedRequest(rawId: string, callstack: string[]) {
     const id = normalizeId(rawId)
 
-    if (builtinModules.includes(id))
+    if (externaled.has(id))
       return import(id)
 
     const fsPath = toFilePath(id, root)
 
-    if (await shouldExternalize(fsPath)) {
+    if (externaled.has(fsPath) || await shouldExternalize(fsPath)) {
+      externaled.add(fsPath)
+      // windows
       if (fsPath.match(/^\w:\//))
         return import(`/${fsPath}`)
-      return import(fsPath)
+      else
+        return import(fsPath)
     }
 
     if (moduleCache.get(fsPath)?.promise)
@@ -162,6 +170,8 @@ export function normalizeId(id: string): string {
     id = id.slice('/@id/'.length)
   if (id.startsWith('__vite-browser-external:'))
     id = id.slice('__vite-browser-external:'.length)
+  if (id.startsWith('node:'))
+    id = id.slice('node:'.length)
   return id
 }
 

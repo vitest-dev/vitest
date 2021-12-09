@@ -63,6 +63,7 @@ function createSuiteCollector(name: string, factory: TestFactory = () => { }, mo
       name,
       mode,
       tasks: [],
+      suite: {} as Suite,
     }
     setHooks(suite, createSuiteHooks())
   }
@@ -91,11 +92,9 @@ function createSuiteCollector(name: string, factory: TestFactory = () => { }, mo
     suite.tasks = allChildren
 
     allChildren.forEach((task) => {
-      if (task.type === 'test') {
-        task.suite = suite
-        if (file)
-          task.file = file
-      }
+      task.suite = suite
+      if (file)
+        task.file = file
     })
 
     return suite

@@ -52,12 +52,18 @@ export async function initViteServer(options: UserOptions = {}) {
     'vitest/src',
     '@vue',
     '@vueuse',
-    'diff',
     'vue-demi',
     'vue',
+    /virtual:/,
+    /\.ts$/,
+    /\/esm\/.*\.js$/,
+    /\.(es|esm|esm-browser|esm-bundler|es6).js$/,
     ...server.config.test?.deps?.inline || [],
   ]
-  resolved.depsExternal = server.config.test?.deps?.external || []
+  resolved.depsExternal = [
+    /node_modules/,
+    ...server.config.test?.deps?.external || [],
+  ]
 
   return {
     server,

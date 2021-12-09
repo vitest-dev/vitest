@@ -94,6 +94,9 @@ export async function runSuite(suite: Suite) {
     else if (hasFailed(suite)) {
       suite.result.state = 'fail'
     }
+    else {
+      suite.result.state = 'pass'
+    }
   }
 
   await rpc('onSuiteEnd', suite)
