@@ -1,3 +1,4 @@
+import { performance } from 'perf_hooks'
 import { HookListener } from 'vitest'
 import { ResolvedConfig, Test, RunnerContext, Suite, SuiteHooks, Task } from '../types'
 import { getSnapshotManager } from '../integrations/chai/snapshot'

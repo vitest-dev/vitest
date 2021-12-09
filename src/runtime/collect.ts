@@ -1,4 +1,5 @@
 import { basename } from 'path'
+import { performance } from 'perf_hooks'
 import { File, Suite, Test } from '../types'
 import { interpretOnlyMode } from '../utils'
 import { clearContext, createSuiteHooks, defaultSuite } from './suite'
