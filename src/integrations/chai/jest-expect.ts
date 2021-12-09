@@ -71,9 +71,6 @@ export function JestChaiExpect(): ChaiPlugin {
     utils.addMethod(proto, 'toHaveBeenCalled', function(this: Chai.Assertion) {
       return this.called
     })
-    utils.addMethod(proto, 'toHaveBeenCalled', function(this: Chai.Assertion) {
-      return this.called
-    })
     utils.addMethod(proto, 'toHaveBeenCalledWith', function(this: Chai.Assertion, ...args: any[]) {
       return this.calledWith(...args)
     })
