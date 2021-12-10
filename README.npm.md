@@ -6,3 +6,4 @@ A blazing fast unit test framework powered by Vite.
 
 > **This project is currently in closed beta exclusively for Sponsors.**<br>
 > Become a Sponsor of [@patak-js](https://github.com/sponsors/patak-js) or [@antfu](https://github.com/sponsors/antfu) to access the source code and issues tracker.
+> Learn more at [vitest.dev](https://vitest.dev)
