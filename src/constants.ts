@@ -3,6 +3,9 @@ import { fileURLToPath } from 'url'
 
 export const distDir = resolve(fileURLToPath(import.meta.url), '../../dist')
 
+export const defaultTestTimeout = 5000
+export const defaultHookTimeout = 5000
+
 export const defaultIncludes = ['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']
 export const defaultExcludes = ['**/node_modules/**', '**/dist/**']
 
@@ -27,6 +30,3 @@ export const globalApis = [
   'beforeEach',
   'afterEach',
 ]
-
-export const defaultTestTimeout = 5000
-export const defaultHookTimeout = 5000
