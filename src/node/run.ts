@@ -1,4 +1,5 @@
 import { VitestContext } from '../types'
+import { hasFailed } from '../utils'
 import { createWorkerPool } from './pool'
 import { globTestFiles } from './glob'
 import { startWatcher } from './watcher'
@@ -15,6 +16,9 @@ export async function start(ctx: VitestContext) {
   const pool = createWorkerPool(ctx)
 
   await pool.runTestFiles(testFilepaths)
+
+  if (hasFailed(ctx.state.getFiles()))
+    process.exitCode = 1
 
   await ctx.reporter.onFinished?.(ctx.state.getFiles())
 

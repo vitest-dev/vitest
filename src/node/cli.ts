@@ -6,8 +6,8 @@ import type { UserOptions, VitestContext } from '../types'
 import { version } from '../../package.json'
 import { DefaultReporter } from '../reporters/default'
 import { SnapshotManager } from '../integrations/snapshot/manager'
-import { initViteServer } from './server'
-import { start } from './start'
+import { initViteServer } from './init'
+import { start } from './run'
 import { StateManager } from './state'
 
 sade('vitest [filter]', true)

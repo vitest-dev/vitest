@@ -36,7 +36,6 @@ export async function runTest(test: Test) {
   catch (e) {
     test.result.state = 'fail'
     test.result.error = processError(e)
-    process.exitCode = 1
   }
   try {
     await callHook(test.suite, 'afterEach', [test, test.suite])
@@ -44,7 +43,6 @@ export async function runTest(test: Test) {
   catch (e) {
     test.result.state = 'fail'
     test.result.error = processError(e)
-    process.exitCode = 1
   }
 
   getSnapshotClient().clearTest()
@@ -91,7 +89,6 @@ export async function runSuite(suite: Suite) {
     catch (e) {
       suite.result.state = 'fail'
       suite.result.error = processError(e)
-      process.exitCode = 1
     }
   }
   suite.result.end = performance.now()
@@ -100,7 +97,6 @@ export async function runSuite(suite: Suite) {
       suite.result.state = 'fail'
       if (!suite.result.error)
         suite.result.error = new Error(`No tests found in suite ${suite.name}`)
-      process.exitCode = 1
     }
     else if (hasFailed(suite)) {
       suite.result.state = 'fail'

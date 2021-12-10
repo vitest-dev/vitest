@@ -46,7 +46,6 @@ export async function collectTests(paths: string[]) {
         state: 'fail',
         error: processError(e),
       }
-      process.exitCode = 1
     }
 
     files.push(file)
