@@ -70,7 +70,3 @@ export function createWorkerPool(ctx: VitestContext) {
     close: () => piscina.destroy(),
   }
 }
-
-function maxThreads(): number | void {
-  if()
-}
