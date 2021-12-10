@@ -29,7 +29,7 @@ A blazing fast unit test framework powered by Vite.
 - [Smart watch mode](#watch-mode), just like HMR for tests!
 - [Code coverage](#coverage)
 - [Sinon](https://sinonjs.org/) built-in for mocking
-- [JSDOM](https://github.com/jsdom/jsdom) built-in for DOM and browser API mocking
+- [JSDOM](https://github.com/jsdom/jsdom) AND [happy-dom](https://github.com/capricorn86/happy-dom) built-in for DOM and browser API mocking
 - Components testing ([Vue example](./test/vue), [React example](./test/react))
 - Async suite / test, top level await
 - ESM friendly
