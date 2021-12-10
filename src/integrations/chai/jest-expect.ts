@@ -103,6 +103,16 @@ export function JestChaiExpect(): ChaiPlugin {
     def(['toHaveBeenCalledWith', 'toBeCalledWith'], function(...args) {
       return this.calledWith(...args)
     })
+    def(['toThrow', 'toThrowError'], function() {
+      const negate = utils.flag(this, 'negate')
+      const obj = utils.flag(this, 'object')
+
+      if (negate) {
+        chai.expect(obj).not.throw()
+      } else {
+        chai.expect(obj).throw()
+      }
+    })
     def(['toHaveReturned', 'toReturn'], function() {
       const spy = utils.flag(this, 'object') as SinonSpy
       const calledAndNotThrew = spy.called && !spy.alwaysThrew()
