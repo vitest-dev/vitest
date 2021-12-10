@@ -11,6 +11,7 @@ export async function startWatcher(ctx: VitestContext, pool: WorkerPool) {
   const changedTests = new Set<string>()
   const seen = new Set<string>()
 
+  // TODO: on('add') hook and glob to detect newly added files
   server.watcher.on('change', async(id) => {
     id = slash(id)
 
@@ -27,9 +28,14 @@ export async function startWatcher(ctx: VitestContext, pool: WorkerPool) {
       if (changedTests.size === 0)
         return
 
-      // snapshotManager.clear()
+      // add previously failed files
+      ctx.state.getFiles().forEach((file) => {
+        if (file.result?.state === 'fail')
+          changedTests.add(file.filepath)
+      })
       const paths = Array.from(changedTests)
       changedTests.clear()
+      // TODO: snapshotManager.clear()
 
       await pool.runTestFiles(paths)
 

@@ -124,7 +124,7 @@ export const createRenderer = (_tasks: Task[]) => {
       log.clear()
       // eslint-disable-next-line no-console
       console.log(renderTree(tasks))
-      return new Promise(resolve => setTimeout(resolve, 10))
+      return this
     },
   }
 }

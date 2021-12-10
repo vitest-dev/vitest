@@ -19,8 +19,8 @@ export class DefaultReporter implements Reporter {
   }
 
   onStart() {
-    this.start = performance.now()
     console.log(c.green(`Running tests under ${c.gray(this.ctx.config.root)}\n`))
+    this.start = performance.now()
   }
 
   onCollected() {
@@ -31,12 +31,10 @@ export class DefaultReporter implements Reporter {
       this.renderer.update(files)
   }
 
-  async onFinished(files: File[] = this.ctx.state.getFiles()) {
+  async onFinished(files = this.ctx.state.getFiles()) {
     this.end = performance.now()
 
-    await this.renderer?.stop()
-
-    await new Promise(resolve => setTimeout(resolve, 100))
+    await this.stopListRender()
 
     console.log()
 
@@ -84,7 +82,7 @@ export class DefaultReporter implements Reporter {
   }
 
   async onWatcherStart() {
-    await this.stopList()
+    await this.stopListRender()
 
     const failed = getTests(this.ctx.state.getFiles()).filter(i => i.result?.state === 'fail')
     if (failed.length)
@@ -94,14 +92,15 @@ export class DefaultReporter implements Reporter {
   }
 
   async onWatcherRerun(files: string[], trigger: string) {
-    await this.stopList()
+    await this.stopListRender()
 
     console.clear()
     console.log(c.blue('Re-running tests...') + c.dim(` [ ${this.relative(trigger)} ]\n`))
   }
 
-  async stopList() {
-    await this.renderer?.stop()
+  async stopListRender() {
+    this.renderer?.stop()
     this.renderer = undefined
+    await new Promise(resolve => setTimeout(resolve, 100))
   }
 }

@@ -52,6 +52,9 @@ export async function runTest(test: Test) {
 }
 
 export async function runSuite(suite: Suite) {
+  if (suite.result?.state === 'fail')
+    return
+
   suite.result = {
     start: performance.now(),
     state: 'run',
@@ -92,7 +95,8 @@ export async function runSuite(suite: Suite) {
   if (suite.mode === 'run') {
     if (!hasTests(suite)) {
       suite.result.state = 'fail'
-      suite.result.error = suite.result.error || new Error(`No tests found in suite ${suite.name}`)
+      if (!suite.result.error)
+        suite.result.error = new Error(`No tests found in suite ${suite.name}`)
       process.exitCode = 1
     }
     else if (hasFailed(suite)) {
