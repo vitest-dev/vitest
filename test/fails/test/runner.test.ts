@@ -1,6 +1,7 @@
 import { resolve } from 'path'
 import { exec } from 'child_process'
 import fg from 'fast-glob'
+import { execa } from 'execa'
 import { describe, it, expect } from 'vitest'
 
 describe('should fails', async() => {
@@ -11,18 +12,16 @@ describe('should fails', async() => {
   for (const file of files) {
     it(file, async() => {
       let error: any
-      await new Promise<void>((resolve) => {
-        exec(`node '${cli}' ${file}`, {
-          env: {
-            ...process.env,
-            NO_COLOR: 'true',
-          },
-          cwd: root,
-        }, (e) => {
-          error = e
-          resolve()
-        })
+      await execa('node', [cli, file], {
+        cwd: root,
+        env: {
+          ...process.env,
+          NO_COLOR: 'true',
+        },
       })
+        .catch((e) => {
+          error = e
+        })
 
       expect(error).toBeTruthy()
       const msg = String(error)
