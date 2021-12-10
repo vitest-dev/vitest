@@ -119,7 +119,7 @@ export async function executeInViteNode({ moduleCache, root, files, fetch, inlin
       }
     }
 
-    return id.includes('/node_modules/') || await isValidNodeImport(id)
+    return id.includes('/node_modules/') && !await isValidNodeImport(id)
   }
 
   async function cachedRequest(rawId: string, callstack: string[]) {
