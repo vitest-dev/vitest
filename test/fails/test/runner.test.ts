@@ -7,16 +7,11 @@ describe('should fails', async() => {
   const root = resolve(__dirname, '../fixtures')
   const files = await fg('*.test.ts', { cwd: root })
 
-  const executions = files.reduce((acc, f) => {
-    acc.push([f, execa('npx', ['vitest', f], { cwd: root, env: { NO_COLOR: 'true' } })])
-    return acc
-  }, [] as Array<[string, Promise<any>]>)
-
-  for (const [file, execution] of executions) {
-    it(file, async() => {
+  for (const file of files) {
+    it.concurrent(file, async() => {
       let error: any
       try {
-        await execution
+        await execa('npx', ['vitest', file], { cwd: root, env: { NO_COLOR: 'true' } })
       }
       catch (e) {
         error = e
