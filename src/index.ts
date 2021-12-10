@@ -43,7 +43,8 @@ declare global {
       toBeCalled(): void
       toHaveBeenCalledWith(...args: any[]): void
       toBeCalledWith(...args: any[]): void
-
+      toThrow(): void
+      toThrowError(): void
       toReturn(): void
       toHaveReturned(): void
       toReturnTimes(times: number): void
