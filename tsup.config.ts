@@ -4,7 +4,8 @@ export default defineConfig({
   entryPoints: [
     'src/index.ts',
     'src/node/cli.ts',
-    'src/node/entry.ts',
+    'src/node/worker.ts',
+    'src/runtime/entry.ts',
   ],
   format: ['esm'],
   clean: true,

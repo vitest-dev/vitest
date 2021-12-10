@@ -1,4 +1,5 @@
 import { it, describe, assert } from 'vitest'
+import { timeout } from '../src/timeout'
 
 describe.skip('skipped suite', () => {
   it('no fail as suite is skipped', () => {
@@ -73,3 +74,5 @@ describe.concurrent('concurrent suite', () => {
   it.concurrent.todo('concurrent-todo')
   it.todo.concurrent('todo-concurrent')
 })
+
+it('timeout', () => new Promise(resolve => setTimeout(resolve, timeout)))

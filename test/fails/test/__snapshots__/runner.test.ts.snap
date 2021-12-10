@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`should fails > empty.test.ts 1`] = `"Error: No tests found in suite empty.test.ts"`;
-
 exports[`should fails > expect.test.ts 1`] = `"AssertionError: expected 2 to deeply equal 3"`;
 
 exports[`should fails > nested-suite.test.ts 1`] = `"AssertionError: expected true to equal false"`;
+
+exports[`should fails > timeout.test.ts 1`] = `"Error: Test timed out in 10ms."`;

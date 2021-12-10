@@ -1,5 +1,6 @@
-import { expect, test, assert, suite } from 'vitest'
+import { expect, test, assert, suite, it } from 'vitest'
 import { two } from '../src/submodule'
+import { timeout } from '../src/timeout'
 
 test('Math.sqrt()', () => {
   assert.equal(Math.sqrt(4), two)
@@ -19,17 +20,20 @@ test('JSON', () => {
   assert.deepEqual(JSON.parse(output), input, 'matches original')
 })
 
-test('async', async() => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve()
-    }, 100)
-  })
-})
-
 const hi = suite('suite')
 
 hi.test('expect truthy', () => {
   expect({}).toBeTruthy()
   expect(null).not.toBeTruthy()
 })
+
+// Remove .skip to test async fail by timeout
+test.skip('async with timeout', async() => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve()
+    }, 200)
+  })
+}, 100)
+
+it('timeout', () => new Promise(resolve => setTimeout(resolve, timeout)))

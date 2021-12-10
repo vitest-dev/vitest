@@ -1,3 +1,4 @@
+import { basename, dirname, isAbsolute, relative } from 'path'
 import { createLogUpdate } from 'log-update'
 import c from 'picocolors'
 import figures from 'figures'
@@ -6,8 +7,10 @@ import cliTruncate from 'cli-truncate'
 import stripAnsi from 'strip-ansi'
 import elegantSpinner from 'elegant-spinner'
 import logSymbols from 'log-symbols'
+import { slash } from '@antfu/utils'
 import { Task } from '../types'
-import { getTests } from '../utils'
+import { getNames, getTests } from '../utils'
+import { SnapshotSummary } from '../integrations/snapshot/utils/types'
 
 const DURATION_LONG = 300
 const MAX_HEIGHT = 20
@@ -18,7 +21,79 @@ const skipped = c.yellow(figures.arrowDown)
 const spinnerMap = new WeakMap<Task, () => string>()
 const outputMap = new WeakMap<Task, string>()
 
-const getSymbol = (task: Task) => {
+const DOWN_ARROW = c.gray('\u21B3 ')
+const DOT = c.gray('\u2022 ')
+
+export function formatTestPath(root: string, path: string) {
+  if (isAbsolute(path))
+    path = relative(root, path)
+
+  const dir = dirname(path)
+  const ext = path.match(/(\.(spec|test)\.[cm]?[tj]sx?)$/)?.[0] || ''
+  const base = basename(path, ext)
+
+  return slash(c.dim(`${dir}/`) + c.bold(base)) + c.dim(ext)
+}
+
+export function renderSnapshotSummary(rootDir: string, snapshots: SnapshotSummary) {
+  const summary: string[] = []
+
+  if (snapshots.added)
+    summary.push(c.bold(c.green(`${snapshots.added} written`)))
+  if (snapshots.unmatched)
+    summary.push(c.bold(c.red(`${snapshots.unmatched} failed`)))
+  if (snapshots.updated)
+    summary.push(c.bold(c.green(`${snapshots.updated} updated `)))
+
+  if (snapshots.filesRemoved) {
+    if (snapshots.didUpdate)
+      summary.push(c.bold(c.green(`${snapshots.filesRemoved} files removed `)))
+    else
+      summary.push(c.bold(c.yellow(`${snapshots.filesRemoved} files obsolete `)))
+  }
+
+  if (snapshots.filesRemovedList && snapshots.filesRemovedList.length) {
+    const [head, ...tail] = snapshots.filesRemovedList
+    summary.push(`${DOWN_ARROW}${formatTestPath(rootDir, head)}`)
+
+    tail.forEach((key) => {
+      summary.push(`  ${DOT}${formatTestPath(rootDir, key)}`)
+    })
+  }
+
+  if (snapshots.unchecked) {
+    if (snapshots.didUpdate)
+      summary.push(c.bold(c.green(`${snapshots.unchecked} removed`)))
+    else
+      summary.push(c.bold(c.yellow(`${snapshots.unchecked} obsolete`)))
+
+    snapshots.uncheckedKeysByFile.forEach((uncheckedFile) => {
+      summary.push(`${DOWN_ARROW}${formatTestPath(rootDir, uncheckedFile.filePath)}`)
+      uncheckedFile.keys.forEach(key => summary.push(`  ${DOT}${key}`))
+    })
+  }
+
+  return summary
+}
+
+export function getStateString(tasks: Task[], name = 'tests') {
+  if (tasks.length === 0)
+    return c.dim(`no ${name}`)
+
+  const passed = tasks.filter(i => i.result?.state === 'pass')
+  const failed = tasks.filter(i => i.result?.state === 'fail')
+  const skipped = tasks.filter(i => i.mode === 'skip')
+  const todo = tasks.filter(i => i.mode === 'todo')
+
+  return [
+    failed.length ? c.bold(c.red(`${failed.length} failed`)) : null,
+    passed.length ? c.bold(c.green(`${passed.length} passed`)) : null,
+    skipped.length ? c.yellow(`${skipped.length} skipped`) : null,
+    todo.length ? c.gray(`${todo.length} todo`) : null,
+  ].filter(Boolean).join(c.dim(' | ')) + c.gray(` (${tasks.length})`)
+}
+
+export function getStateSymbol(task: Task) {
   if (task.mode === 'skip' || task.mode === 'todo')
     return skipped
 
@@ -49,13 +124,13 @@ const getSymbol = (task: Task) => {
   return ' '
 }
 
-function renderTree(tasks: Task[], level = 0) {
+export function renderTree(tasks: Task[], level = 0) {
   let output: string[] = []
 
   for (const task of tasks) {
     let delta = 1
     let suffix = (task.mode === 'skip' || task.mode === 'todo') ? ` ${c.dim('[skipped]')}` : ''
-    const prefix = ` ${getSymbol(task)} `
+    const prefix = ` ${getStateSymbol(task)} `
 
     if (task.type === 'suite')
       suffix += c.dim(` (${getTests(task).length})`)
@@ -116,7 +191,7 @@ export const createRenderer = (_tasks: Task[]) => {
       update()
       return this
     },
-    stop() {
+    async stop() {
       if (timer) {
         clearInterval(timer)
         timer = undefined
@@ -127,4 +202,8 @@ export const createRenderer = (_tasks: Task[]) => {
       return this
     },
   }
+}
+
+export function getFullName(task: Task) {
+  return getNames(task).join(c.gray(' > '))
 }

@@ -1,31 +1,32 @@
 import { performance } from 'perf_hooks'
 import { HookListener } from 'vitest'
-import { ResolvedConfig, Test, RunnerContext, Suite, SuiteHooks, Task } from '../types'
-import { getSnapshotManager } from '../integrations/chai/snapshot'
-import { startWatcher } from '../node/watcher'
-import { globTestFiles } from '../node/glob'
+import { Test, Suite, SuiteHooks, Task } from '../types'
+import { getSnapshotClient } from '../integrations/snapshot/chai'
 import { hasFailed, hasTests, partitionSuiteChildren } from '../utils'
 import { getFn, getHooks } from './map'
+import { rpc, send } from './rpc'
 import { collectTests } from './collect'
-import { setupRunner } from './setup'
+import { processError } from './error'
 
 async function callHook<T extends keyof SuiteHooks>(suite: Suite, name: T, args: SuiteHooks[T][0] extends HookListener<infer A> ? A : never) {
   await Promise.all(getHooks(suite)[name].map(fn => fn(...(args as any))))
 }
 
-export async function runTest(test: Test, ctx: RunnerContext) {
+function updateTask(task: Task) {
+  return rpc('onTaskUpdate', [task.id, task.result])
+}
+
+export async function runTest(test: Test) {
   if (test.mode !== 'run')
     return
 
-  const { reporter } = ctx
-
-  getSnapshotManager()?.setTest(test)
-
-  await reporter.onTestBegin?.(test, ctx)
   test.result = {
     start: performance.now(),
     state: 'run',
   }
+  updateTask(test)
+
+  getSnapshotClient().setTest(test)
 
   try {
     await callHook(test.suite, 'beforeEach', [test, test.suite])
@@ -34,35 +35,33 @@ export async function runTest(test: Test, ctx: RunnerContext) {
   }
   catch (e) {
     test.result.state = 'fail'
-    test.result.error = e
-    process.exitCode = 1
+    test.result.error = processError(e)
   }
   try {
     await callHook(test.suite, 'afterEach', [test, test.suite])
   }
   catch (e) {
     test.result.state = 'fail'
-    test.result.error = e
-    process.exitCode = 1
+    test.result.error = processError(e)
   }
+
+  getSnapshotClient().clearTest()
 
   test.result.end = performance.now()
 
-  await reporter.onTestEnd?.(test, ctx)
+  updateTask(test)
 }
 
-export async function runSuite(suite: Suite, ctx: RunnerContext) {
+export async function runSuite(suite: Suite) {
   if (suite.result?.state === 'fail')
     return
-
-  const { reporter } = ctx
-
-  await reporter.onSuiteBegin?.(suite, ctx)
 
   suite.result = {
     start: performance.now(),
     state: 'run',
   }
+
+  updateTask(suite)
 
   if (suite.mode === 'skip') {
     suite.result.state = 'skip'
@@ -78,10 +77,10 @@ export async function runSuite(suite: Suite, ctx: RunnerContext) {
         const computeMode = tasksGroup[0].computeMode
         if (computeMode === 'serial') {
           for (const c of tasksGroup)
-            await runSuiteChild(c, ctx)
+            await runSuiteChild(c)
         }
         else if (computeMode === 'concurrent') {
-          await Promise.all(tasksGroup.map(c => runSuiteChild(c, ctx)))
+          await Promise.all(tasksGroup.map(c => runSuiteChild(c)))
         }
       }
 
@@ -89,8 +88,7 @@ export async function runSuite(suite: Suite, ctx: RunnerContext) {
     }
     catch (e) {
       suite.result.state = 'fail'
-      suite.result.error = e
-      process.exitCode = 1
+      suite.result.error = processError(e)
     }
   }
   suite.result.end = performance.now()
@@ -99,7 +97,6 @@ export async function runSuite(suite: Suite, ctx: RunnerContext) {
       suite.result.state = 'fail'
       if (!suite.result.error)
         suite.result.error = new Error(`No tests found in suite ${suite.name}`)
-      process.exitCode = 1
     }
     else if (hasFailed(suite)) {
       suite.result.state = 'fail'
@@ -109,47 +106,26 @@ export async function runSuite(suite: Suite, ctx: RunnerContext) {
     }
   }
 
-  await reporter.onSuiteEnd?.(suite, ctx)
+  updateTask(suite)
 }
 
-async function runSuiteChild(c: Task, ctx: RunnerContext) {
+async function runSuiteChild(c: Task) {
   return c.type === 'test'
-    ? runTest(c, ctx)
-    : runSuite(c, ctx)
+    ? runTest(c)
+    : runSuite(c)
 }
 
-export async function runSuites(suites: Suite[], ctx: RunnerContext) {
+export async function runSuites(suites: Suite[]) {
   for (const suite of suites)
-    await runSuite(suite, ctx)
+    await runSuite(suite)
 }
 
-export async function run(config: ResolvedConfig) {
-  const testFilepaths = await globTestFiles(config)
-  if (!testFilepaths.length) {
-    console.error('No test files found')
-    process.exitCode = 1
-    return
-  }
+export async function startTests(paths: string[]) {
+  const files = await collectTests(paths)
 
-  // setup envs
-  const ctx = await setupRunner(config)
+  send('onCollected', files)
 
-  const { filesMap, snapshotManager, reporter } = ctx
+  await runSuites(files)
 
-  await reporter.onStart?.(config)
-
-  const newFileMap = await collectTests(testFilepaths)
-
-  Object.assign(filesMap, newFileMap)
-  const files = Object.values(filesMap)
-
-  await reporter.onCollected?.(files, ctx)
-  await runSuites(files, ctx)
-
-  snapshotManager.saveSnap()
-
-  await reporter.onFinished?.(ctx)
-
-  if (config.watch)
-    await startWatcher(ctx)
+  await getSnapshotClient().saveSnap()
 }

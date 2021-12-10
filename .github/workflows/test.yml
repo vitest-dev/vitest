@@ -13,6 +13,8 @@ jobs:
   build:
     runs-on: ${{ matrix.os }}
 
+    timeout-minutes: 3
+
     strategy:
       matrix:
         node-version: [16.x] # 14

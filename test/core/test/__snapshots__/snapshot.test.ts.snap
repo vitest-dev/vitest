@@ -4,7 +4,7 @@ exports[`snapshot 1`] = `
 Object {
   "this": Object {
     "is": Set {
-      "of",
+      "of ",
       "snapshot",
     },
   },

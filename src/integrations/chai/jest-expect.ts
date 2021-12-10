@@ -1,33 +1,61 @@
+import { SinonSpy } from 'sinon'
 import { ChaiPlugin } from './types'
 
 // Jest Expect Compact
 // TODO: add more https://jestjs.io/docs/expect
 export function JestChaiExpect(): ChaiPlugin {
   return (chai, utils) => {
-    const proto = chai.Assertion.prototype
-    utils.addMethod(proto, 'toEqual', function(this: Chai.Assertion, expected: any) {
+    function def(name: keyof Chai.Assertion | (keyof Chai.Assertion)[], fn: ((this: Chai.AssertionStatic & Chai.Assertion, ...args: any[]) => any)) {
+      const addMethod = (n: keyof Chai.Assertion) => {
+        utils.addMethod(chai.Assertion.prototype, n, fn)
+      }
+
+      if (Array.isArray(name))
+        name.forEach(n => addMethod(n))
+
+      else
+        addMethod(name)
+    }
+
+    def('toEqual', function(expected) {
       return this.eql(expected)
     })
-    utils.addMethod(proto, 'toStrictEqual', function(this: Chai.Assertion, expected: any) {
+    def('toStrictEqual', function(expected) {
       return this.equal(expected)
     })
-    utils.addMethod(proto, 'toBe', function(this: Chai.Assertion, expected: any) {
+    def('toBe', function(expected) {
       return this.equal(expected)
     })
-    utils.addMethod(proto, 'toMatchObject', function(this: Chai.Assertion, expected: any) {
+    def('toMatchObject', function(expected) {
       return this.containSubset(expected)
     })
-    utils.addMethod(proto, 'toMatch', function(this: Chai.Assertion, expected: string | RegExp) {
+    def('toMatch', function(expected: string | RegExp) {
       if (typeof expected === 'string')
         return this.include(expected)
       else
         return this.match(expected)
     })
+    def('toContain', function(item) { return this.contain(item) })
+    def('toContainEqual', function(expected) {
+      const obj = utils.flag(this, 'object')
+      const index = Array.from(obj).findIndex((item) => {
+        try {
+          chai.assert.deepEqual(item, expected)
+        }
+        catch {
+          return false
+        }
+        return true
+      })
 
-    utils.addMethod(proto, 'toContain', function(this: Chai.Assertion, item: any) {
-      return this.contain(item)
+      this.assert(
+        index !== -1,
+        'expected #{this} to deep equally contain #{exp}',
+        'expected #{this} to not deep equally contain #{exp}',
+        expected,
+      )
     })
-    utils.addMethod(proto, 'toBeTruthy', function(this: Chai.AssertionStatic) {
+    def('toBeTruthy', function() {
       const obj = utils.flag(this, 'object')
       this.assert(
         Boolean(obj),
@@ -36,7 +64,7 @@ export function JestChaiExpect(): ChaiPlugin {
         obj,
       )
     })
-    utils.addMethod(proto, 'toBeFalsy', function(this: Chai.AssertionStatic) {
+    def('toBeFalsy', function() {
       const obj = utils.flag(this, 'object')
       this.assert(
         !obj,
@@ -45,34 +73,105 @@ export function JestChaiExpect(): ChaiPlugin {
         obj,
       )
     })
-    utils.addMethod(proto, 'toBeNaN', function(this: Chai.Assertion) {
+    def('toBeNaN', function() {
       return this.be.NaN
     })
-    utils.addMethod(proto, 'toBeUndefined', function(this: Chai.Assertion) {
+    def('toBeUndefined', function() {
       return this.be.undefined
     })
-    utils.addMethod(proto, 'toBeNull', function(this: Chai.Assertion) {
+    def('toBeNull', function() {
       return this.be.null
     })
-    utils.addMethod(proto, 'toBeDefined', function(this: Chai.Assertion) {
+    def('toBeDefined', function() {
       return this.not.be.undefined
     })
-    utils.addMethod(proto, 'toBeInstanceOf', function(this: Chai.Assertion, obj: any) {
+    def('toBeInstanceOf', function(obj: any) {
       return this.instanceOf(obj)
     })
 
     // mock
-    utils.addMethod(proto, 'toHaveBeenCalledTimes', function(this: Chai.Assertion, number: number) {
+    def(['toHaveBeenCalledTimes', 'toBeCalledTimes'], function(number: number) {
       return this.callCount(number)
     })
-    utils.addMethod(proto, 'toHaveBeenCalledOnce', function(this: Chai.Assertion) {
+    // TODO there is no such assertion in jest
+    def('toHaveBeenCalledOnce', function() {
       return this.callCount(1)
     })
-    utils.addMethod(proto, 'toHaveBeenCalled', function(this: Chai.Assertion) {
+    def(['toHaveBeenCalled', 'toBeCalled'], function() {
       return this.called
     })
-    utils.addMethod(proto, 'toHaveBeenCalledWith', function(this: Chai.Assertion, ...args: any[]) {
+    def(['toHaveBeenCalledWith', 'toBeCalledWith'], function(...args) {
       return this.calledWith(...args)
+    })
+    def(['toHaveReturned', 'toReturn'], function() {
+      const spy = utils.flag(this, 'object') as SinonSpy
+      const calledAndNotThrew = spy.called && !spy.alwaysThrew()
+      this.assert(
+        calledAndNotThrew,
+        'expected spy to be successfully called at least once',
+        'expected spy not to be successfully called',
+        calledAndNotThrew,
+        !calledAndNotThrew,
+      )
+    })
+    def(['toHaveReturnedTimes', 'toReturnTimes'], function(times: number) {
+      const spy = utils.flag(this, 'object') as SinonSpy
+      const successfullReturns = spy.getCalls().reduce((success, call) => call.threw() ? success : ++success, 0)
+      this.assert(
+        successfullReturns === times,
+        `expected spy to be successfully called ${times} times`,
+        `expected spy not to be successfully called ${times} times`,
+        `expected number of returns: ${times}`,
+        `recieved number of returns: ${successfullReturns}`,
+      )
+    })
+    def(['toHaveReturnedWith', 'toReturnWith'], function(value: any) {
+      return this.returned(value)
+    })
+    def(['toHaveLastReturnedWith', 'lastReturnedWith'], function(value: any) {
+      const spy = utils.flag(this, 'object') as SinonSpy
+      const lastReturn = spy.lastCall.returned(value)
+      this.assert(
+        lastReturn,
+        'expected last spy call to return #{exp}',
+        'expected last spy call not to return #{exp}',
+        value,
+        spy.lastCall.returnValue,
+      )
+    })
+    const ordinalOf = (i: number) => {
+      const j = i % 10
+      const k = i % 100
+
+      if (j === 1 && k !== 11)
+        return `${i}st`
+
+      if (j === 2 && k !== 12)
+        return `${i}nd`
+
+      if (j === 3 && k !== 13)
+        return `${i}rd`
+
+      return `${i}th`
+    }
+    def(['toHaveNthReturnedWith', 'nthReturnedWith'], function(nthCall: number, value: any) {
+      const spy = utils.flag(this, 'object') as SinonSpy
+      const isNot = utils.flag(this, 'negate') as boolean
+      const call = spy.getCall(nthCall - 1)
+      const ordinalCall = `${ordinalOf(nthCall)} call`
+
+      if (!isNot && call.threw())
+        chai.assert.fail(`expected ${ordinalCall} to return #{exp}, but instead it threw an error`)
+
+      const nthCallReturn = call.returned(value)
+
+      this.assert(
+        nthCallReturn,
+        `expected ${ordinalCall} spy call to return #{exp}`,
+        `expected ${ordinalCall} spy call not to return #{exp}`,
+        value,
+        call.returnValue,
+      )
     })
   }
 }

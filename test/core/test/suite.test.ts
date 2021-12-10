@@ -13,3 +13,5 @@ describe('suite name', () => {
     expect({ foo: 'bar' }).toMatchSnapshot()
   })
 })
+
+it('timeout', () => new Promise(resolve => setTimeout(resolve, 500)))
