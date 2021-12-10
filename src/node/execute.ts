@@ -3,6 +3,7 @@ import { fileURLToPath, pathToFileURL } from 'url'
 import { dirname, resolve } from 'path'
 import vm from 'vm'
 import type { TransformResult } from 'vite'
+import { isValidNodeImport } from 'mlly'
 
 export interface ModuleCache {
   promise?: Promise<any>
@@ -129,7 +130,7 @@ export async function executeInViteNode({ moduleCache, root, files, fetch, inlin
 
     const fsPath = toFilePath(id, root)
 
-    if (externaled.has(fsPath) || await shouldExternalize(fsPath)) {
+    if (externaled.has(fsPath) || await shouldExternalize(fsPath) || !isValidNodeImport(fsPath)) {
       externaled.add(fsPath)
       // windows
       if (fsPath.match(/^\w:\//))
