@@ -13,6 +13,7 @@ export async function startWatcher(ctx: RunnerContext) {
   const seen = new Set<string>()
   const { server, moduleCache } = process.__vitest__
 
+  // TODO: on('add') hook and glob to detect newly added files
   server.watcher.on('change', async(id) => {
     id = slash(id)
     getAffectedTests(id, ctx, changedTests, seen)
@@ -27,9 +28,14 @@ export async function startWatcher(ctx: RunnerContext) {
       if (changedTests.size === 0)
         return
 
-      snapshotManager.clear()
+      // add previously failed files
+      Object.values(filesMap).forEach((file) => {
+        if (file.result?.state === 'fail')
+          changedTests.add(file.filepath)
+      })
       const paths = Array.from(changedTests)
       changedTests.clear()
+      snapshotManager.clear()
 
       await reporter.onWatcherRerun?.(paths, id, ctx)
       paths.forEach(i => moduleCache.delete(i))
