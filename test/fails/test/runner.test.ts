@@ -1,7 +1,6 @@
 import { resolve } from 'path'
 import { exec } from 'child_process'
 import fg from 'fast-glob'
-import which from 'which'
 import { describe, it, expect } from 'vitest'
 
 describe('should fails', async() => {
