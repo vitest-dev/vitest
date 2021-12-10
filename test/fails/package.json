@@ -6,9 +6,6 @@
     "coverage": "vitest --coverage"
   },
   "devDependencies": {
-    "@types/which": "^2.0.1",
-    "execa": "^6.0.0",
-    "vitest": "workspace:*",
-    "which": "^2.0.2"
+    "vitest": "workspace:*"
   }
 }
