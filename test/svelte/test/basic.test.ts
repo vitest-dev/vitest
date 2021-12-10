@@ -3,7 +3,7 @@ import Hello from '../components/Hello.svelte'
 async function sleep(n: number) {
   return new Promise(resolve => setTimeout(resolve, n))
 }
-afterAll(async() => { document.body.innerHTML = '' }) // TODO remove when jsdom is cleaned up automatically
+
 test('mount component', async() => {
   const host = document.createElement('div')
   host.setAttribute('id', 'host')
