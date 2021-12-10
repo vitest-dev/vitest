@@ -79,6 +79,27 @@ export interface UserOptions {
    * Custom reporter for output
    */
   reporter?: Reporter
+
+  /**
+   * Enable multi-threading
+   *
+   * @default true
+   */
+  threads?: boolean
+
+  /**
+   * Maximum number of threads
+   *
+   * @default available CPUs
+   */
+  maxThreads?: number
+
+  /**
+   * Minimum number of threads
+   *
+   * @default available CPUs
+   */
+  minThreads?: number
 }
 
 export interface CliOptions extends UserOptions {

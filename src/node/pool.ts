@@ -15,7 +15,8 @@ export interface WorkerPool {
 export function createWorkerPool(ctx: VitestContext) {
   const piscina = new Piscina({
     filename: new URL('./dist/node/worker.js', pathToFileURL(distDir)).href,
-    maxThreads: process.env.VITEST_MAX_THREADS ? parseInt(process.env.VITEST_MAX_THREADS) : undefined
+    maxThreads: ctx.config.maxThreads,
+    minThreads: ctx.config.minThreads,
   })
 
   const runTestFiles: WorkerPool['runTestFiles'] = async(files, invalidates) => {
