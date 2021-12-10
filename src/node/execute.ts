@@ -119,7 +119,7 @@ export async function executeInViteNode({ moduleCache, root, files, fetch, inlin
       }
     }
 
-    return id.includes('/node_modules/')
+    return id.includes('/node_modules/') || await isValidNodeImport(id)
   }
 
   async function cachedRequest(rawId: string, callstack: string[]) {
@@ -130,7 +130,7 @@ export async function executeInViteNode({ moduleCache, root, files, fetch, inlin
 
     const fsPath = toFilePath(id, root)
 
-    if (externaled.has(fsPath) || await shouldExternalize(fsPath) || !isValidNodeImport(fsPath)) {
+    if (externaled.has(fsPath) || await shouldExternalize(fsPath)) {
       externaled.add(fsPath)
       // windows
       if (fsPath.match(/^\w:\//))
