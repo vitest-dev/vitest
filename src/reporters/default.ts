@@ -16,6 +16,7 @@ export class DefaultReporter implements Reporter {
 
   constructor(public ctx: VitestContext) {
     console.log(c.green(`Running tests under ${c.gray(this.ctx.config.root)}\n`))
+    this.start = performance.now()
   }
 
   relative(path: string) {
@@ -28,8 +29,6 @@ export class DefaultReporter implements Reporter {
       this.renderer = createRenderer(files).start()
     else
       this.renderer.update(files)
-
-    this.start = performance.now()
   }
 
   async onFinished(files = this.ctx.state.getFiles()) {
