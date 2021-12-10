@@ -16,6 +16,7 @@ importers:
       '@types/sade': ^1.7.3
       '@types/sinon': ^10.0.6
       '@types/sinon-chai': ^3.2.6
+      '@types/source-map-support': ^0.5.4
       bumpp: ^7.1.1
       c8: ^7.10.0
       chai: ^4.3.4
@@ -82,6 +83,7 @@ importers:
       '@types/node': 16.11.12
       '@types/sade': 1.7.3
       '@types/sinon': 10.0.6
+      '@types/source-map-support': 0.5.4
       bumpp: 7.1.1
       eslint: 8.4.1
       esno: 0.12.1_typescript@4.5.2
@@ -1139,6 +1141,12 @@ packages:
     resolution: {integrity: sha512-6EF+wzMWvBNeGrfP3Nx60hhx+FfwSg1JJBLAAP/IdIUq0EYkqCYf70VT3PhuhPX9eLD+Dp+lNdpb/ZeHG8Yezg==}
     dependencies:
       '@sinonjs/fake-timers': 7.1.2
+
+  /@types/source-map-support/0.5.4:
+    resolution: {integrity: sha512-9zGujX1sOPg32XLyfgEB/0G9ZnrjthL/Iv1ZfuAjj8LEilHZEpQSQs1scpRXPhHzGYgWiLz9ldF1cI8JhL+yMw==}
+    dependencies:
+      source-map: 0.6.1
+    dev: true
 
   /@types/stack-utils/2.0.0:
     resolution: {integrity: sha512-RJJrrySY7A8havqpGObOB4W92QXKJo63/jFLLgpvOtsGUqbQZ9Sbgl35KMm1DjC6j7AvmmU2bIno+3IyEaemaw==}

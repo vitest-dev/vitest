@@ -1,4 +1,5 @@
 import { ViteDevServer } from 'vite'
+import { install } from 'source-map-support'
 import { ResolvedConfig } from '../types'
 import { ExecuteOptions, executeInViteNode, ModuleCache } from './execute'
 import { transformRequest } from './transform'
@@ -12,6 +13,22 @@ export async function run(server: ViteDevServer, config: ResolvedConfig, moduleC
     external: config.depsExternal,
     moduleCache,
   }
+
+  install({
+    environment: 'node',
+    hookRequire: true,
+    handleUncaughtExceptions: true,
+    retrieveSourceMap: (id: string) => {
+      const map = moduleCache.get(id)?.transformResult?.map
+      if (map) {
+        return {
+          url: id,
+          map: map as any,
+        }
+      }
+      return null
+    },
+  })
 
   try {
     await executeInViteNode(executeOptions)
