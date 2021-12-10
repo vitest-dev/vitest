@@ -52,6 +52,6 @@ export function hasTests(suite: Arrayable<Suite>): boolean {
   return toArray(suite).some(s => s.tasks.some(c => c.type === 'test' || hasTests(c as Suite)))
 }
 
-export function hasFailed(suite: Arrayable<Suite>): boolean {
-  return toArray(suite).some(s => s.tasks.some(c => c.result?.state === 'fail'))
+export function hasFailed(suite: Arrayable<Task>): boolean {
+  return toArray(suite).some(s => s.result?.state === 'fail' || (s.type === 'suite' && hasFailed(s.tasks)))
 }

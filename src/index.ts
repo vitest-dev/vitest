@@ -41,8 +41,5 @@ declare global {
       toHaveBeenCalled(): void
       toHaveBeenCalledWith(...args: any[]): void
     }
-    interface ExpectStatic {
-      addSnapshotSerializer: import('pretty-format').Plugin
-    }
   }
 }

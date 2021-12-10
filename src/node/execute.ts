@@ -4,12 +4,7 @@ import { dirname, resolve } from 'path'
 import vm from 'vm'
 import type { TransformResult } from 'vite'
 import { isValidNodeImport } from 'mlly'
-
-export interface ModuleCache {
-  promise?: Promise<any>
-  exports?: any
-  transformResult?: TransformResult
-}
+import { ModuleCache } from '../types'
 
 export type FetchFunction = (id: string) => Promise<TransformResult | undefined | null>
 

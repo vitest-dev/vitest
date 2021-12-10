@@ -37,7 +37,7 @@ export const getSnapshotSummaryOutput = (
   snapshots: SnapshotSummary,
 ): Array<string> => {
   const summary = []
-  summary.push(SNAPSHOT_SUMMARY('Snapshot Summary'))
+
   if (snapshots.added) {
     summary.push(
       `${SNAPSHOT_ADDED(
@@ -142,6 +142,9 @@ export const getSnapshotSummaryOutput = (
       })
     })
   }
+
+  if (summary.length)
+    summary.unshift(SNAPSHOT_SUMMARY('Snapshot Summary'))
 
   return summary
 }

@@ -1,4 +1,5 @@
-import { Test, SuiteCollector, TestCollector, RunMode, ComputeMode, TestFactory, TestFunction, File, Suite, SuiteHooks } from '../types'
+import { nanoid } from 'nanoid'
+import { SuiteHooks, Test, SuiteCollector, TestCollector, RunMode, ComputeMode, TestFactory, TestFunction, File, Suite } from '../types'
 import { context } from './context'
 import { getHooks, setFn, setHooks } from './map'
 
@@ -29,6 +30,7 @@ function createSuiteCollector(name: string, factory: TestFactory = () => { }, mo
 
   const test = createTestCollector((name: string, fn: TestFunction, mode: RunMode, computeMode?: ComputeMode) => {
     const test: Test = {
+      id: nanoid(),
       type: 'test',
       name,
       mode,
@@ -56,6 +58,7 @@ function createSuiteCollector(name: string, factory: TestFactory = () => { }, mo
 
   function initSuite() {
     suite = {
+      id: nanoid(),
       type: 'suite',
       computeMode: 'serial',
       name,
