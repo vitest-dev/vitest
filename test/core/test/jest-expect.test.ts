@@ -17,6 +17,10 @@ describe('jest-expect', () => {
     expect(1).toBeGreaterThan(0)
     expect(1).toBeGreaterThanOrEqual(1)
     expect(1).toBeGreaterThanOrEqual(0)
+    expect(() => {
+      throw new Error('error')
+    }).toThrow()
+    expect(() => {}).not.toThrow()
   })
 
   it('object', () => {
