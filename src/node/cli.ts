@@ -51,7 +51,7 @@ sade('vitest [filter]', true)
       },
     })
 
-    ctx.reporter ||= new DefaultReporter(ctx)
+    ctx.reporter = ctx.reporter || new DefaultReporter(ctx)
 
     try {
       await start(ctx)

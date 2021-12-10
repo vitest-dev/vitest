@@ -15,6 +15,7 @@ export interface WorkerPool {
 export function createWorkerPool(ctx: VitestContext) {
   const piscina = new Piscina({
     filename: new URL('./dist/node/worker.js', pathToFileURL(distDir)).href,
+    maxQueue: 'auto',
   })
 
   const runTestFiles: WorkerPool['runTestFiles'] = async(files, invalidates) => {
