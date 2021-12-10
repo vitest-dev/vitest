@@ -220,7 +220,11 @@ export function clearContext() {
   context.currentSuite = defaultSuite
 }
 
+const disableTimeout = true
+
 function fnWithTimeout(fn: TestFunction, timeout = defaultTestTimeout): TestFunction {
+  if (disableTimeout)
+    return fn
   return () => {
     const timeoutPromise = new Promise((resolve, reject) => {
       const id = setTimeout(() => {
@@ -233,6 +237,8 @@ function fnWithTimeout(fn: TestFunction, timeout = defaultTestTimeout): TestFunc
 }
 
 function hookWithTimeout<T extends keyof SuiteHooks>(fn: SuiteHooks[T][0], timeout = defaultHookTimeout): SuiteHooks[T][0] {
+  if (disableTimeout)
+    return fn
   return (...args: any) => {
     const timeoutPromise = new Promise((resolve, reject) => {
       const id = setTimeout(() => {
