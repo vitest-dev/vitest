@@ -12,10 +12,8 @@ describe("jest-expect", () => {
     expect("Hello").toMatch("llo");
     expect("Hello").toContain("llo");
     expect(["Hello"]).toContain("Hello");
-    // expect([{ text: "Hello" }]).toContainEqual({ text: "Hello" });
-    // expect([{ text: "Hello 1" }]).toContainEqual({ text: "Hello" });
-    // expect([{ text: "Bye" }]).not.toContainEqual({ text: "Hello" });
-    expect([{ text: "Bye" }]).not.toContainEqual({ text: "Bye" });
+    expect([{ text: "Hello" }]).toContainEqual({ text: "Hello" });
+    expect([{ text: "Bye" }]).not.toContainEqual({ text: "Hello" });
   });
 
   it("object", () => {
