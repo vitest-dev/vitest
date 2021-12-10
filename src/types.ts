@@ -199,16 +199,8 @@ export interface ModuleCache {
 export interface WorkerContext {
   port: MessagePort
   config: ResolvedConfig
-}
-
-export interface WorkerInstance {
-  id: string
-  state: 'init' | 'run' | 'idle'
-  port: MessagePort
-  promise: Promise<any> | null
-  init: () => Promise<void>
-  run: (files: string[]) => Promise<void>
-  close: () => Promise<void>
+  files: string[]
+  invalidates?: string[]
 }
 
 export interface RpcMap {

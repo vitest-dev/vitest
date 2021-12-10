@@ -3,7 +3,7 @@ import { VitestContext } from '../types'
 import { WorkerPool } from './pool'
 
 export async function startWatcher(ctx: VitestContext, pool: WorkerPool) {
-  const { reporter, server, moduleCache } = ctx
+  const { reporter, server } = ctx
   reporter.onWatcherStart?.()
 
   let timer: any
@@ -15,10 +15,8 @@ export async function startWatcher(ctx: VitestContext, pool: WorkerPool) {
   server.watcher.on('change', async(id) => {
     id = slash(id)
 
-    // TODO: send this dependency tree to worker
-    getAffectedTests(id, changedTests, seen)
-    seen.forEach(i => moduleCache.delete(i))
-    seen.clear()
+    getAffectedTests(ctx, id, changedTests, seen)
+    const affectedModules = Array.from(seen)
 
     if (changedTests.size === 0)
       return
@@ -35,9 +33,8 @@ export async function startWatcher(ctx: VitestContext, pool: WorkerPool) {
       })
       const paths = Array.from(changedTests)
       changedTests.clear()
-      // TODO: snapshotManager.clear()
 
-      await pool.runTestFiles(paths)
+      await pool.runTestFiles(paths, affectedModules)
 
       await reporter.onFinished?.(ctx.state.getFiles(paths))
       await reporter.onWatcherStart?.()
@@ -48,24 +45,23 @@ export async function startWatcher(ctx: VitestContext, pool: WorkerPool) {
   await new Promise(() => { })
 }
 
-export function getAffectedTests(id: string, set = new Set<string>(), seen = new Set<string>()): Set<string> {
+export function getAffectedTests(ctx: VitestContext, id: string, set = new Set<string>(), seen = new Set<string>()): Set<string> {
   if (seen.has(id) || set.has(id))
     return set
 
-  const { server, state } = process.__vitest__
-
   seen.add(id)
-  if (id in state.filesMap) {
+
+  if (id in ctx.state.filesMap) {
     set.add(id)
     return set
   }
 
-  const mod = server.moduleGraph.getModuleById(id)
+  const mod = ctx.server.moduleGraph.getModuleById(id)
 
   if (mod) {
     mod.importers.forEach((i) => {
       if (i.id)
-        getAffectedTests(i.id, set, seen)
+        getAffectedTests(ctx, i.id, set, seen)
     })
   }
 

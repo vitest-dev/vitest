@@ -3,9 +3,6 @@ import { createWorkerPool } from './pool'
 import { globTestFiles } from './glob'
 import { startWatcher } from './watcher'
 
-// TODO: make it configurable (and disablable)
-const MAX_WORKERS = 20
-
 export async function start(ctx: VitestContext) {
   const { config } = ctx
   const testFilepaths = await globTestFiles(config)
@@ -17,7 +14,7 @@ export async function start(ctx: VitestContext) {
 
   await ctx.reporter.onStart?.(config)
 
-  const pool = createWorkerPool(Math.min(testFilepaths.length, MAX_WORKERS), ctx)
+  const pool = createWorkerPool(ctx)
 
   await pool.runTestFiles(testFilepaths)
 
