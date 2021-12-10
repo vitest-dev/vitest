@@ -6,7 +6,7 @@ import type {
 } from 'jest-snapshot'
 
 import type { SnapshotStateOptions } from 'jest-snapshot/build/State'
-import { Test } from '../../../types'
+import { Test } from '../../types'
 import {
   packSnapshotState,
   addSnapshotResult,

@@ -1,5 +1,5 @@
 import Snap from 'jest-snapshot'
-import { ChaiPlugin } from '../types'
+import { ChaiPlugin } from '../chai/types'
 import { SnapshotManager } from './manager'
 
 const { addSerializer } = Snap

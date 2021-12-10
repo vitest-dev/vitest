@@ -1,7 +1,7 @@
 import { performance } from 'perf_hooks'
 import { HookListener } from 'vitest'
 import { Test, Suite, SuiteHooks, Task } from '../types'
-import { getSnapshotManager } from '../integrations/chai/snapshot'
+import { getSnapshotManager } from '../integrations/snapshot'
 import { hasFailed, hasTests, partitionSuiteChildren } from '../utils'
 import { getFn, getHooks } from './map'
 import { rpc } from './rpc'
