@@ -1,7 +1,8 @@
-import { test, expect } from 'vitest'
+import { it, expect } from 'vitest'
 import { CalledB, circularA } from '../src/circularA'
+import { timeout } from '../src/timeout'
 
-test('circular', () => {
+it('circular', () => {
   CalledB.length = 0
 
   circularA()
@@ -13,3 +14,5 @@ test('circular', () => {
 
   expect(CalledB).toEqual([0, 1, 2])
 })
+
+it('timeout', () => new Promise(resolve => setTimeout(resolve, timeout)))

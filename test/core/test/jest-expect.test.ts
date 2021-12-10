@@ -33,3 +33,5 @@ describe('jest-expect', () => {
     expect(complex).toMatchObject({ bar: { bar: 100 } })
   })
 })
+
+it('timeout', () => new Promise(resolve => setTimeout(resolve, 500)))

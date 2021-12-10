@@ -2,11 +2,10 @@
 import { performance } from 'perf_hooks'
 import { relative } from 'path'
 import c from 'picocolors'
-import { Reporter, VitestContext } from '../types'
+import { Reporter, Task, VitestContext } from '../types'
 import { getSuites, getTests } from '../utils'
-import { getSnapshotSummaryOutput } from '../integrations/snapshot/utils/jest-reporters-lite'
 import { printError } from './error'
-import { createRenderer } from './renderer'
+import { createRenderer, renderSnapshotSummary } from './renderer'
 
 export class DefaultReporter implements Reporter {
   start = 0
@@ -15,7 +14,7 @@ export class DefaultReporter implements Reporter {
   filters?: string[]
 
   constructor(public ctx: VitestContext) {
-    console.log(c.green(`Running tests under ${c.gray(this.ctx.config.root)}\n`))
+    console.log(c.green(`Running tests at ${c.gray(this.ctx.config.root)}\n`))
     this.start = performance.now()
   }
 
@@ -42,12 +41,9 @@ export class DefaultReporter implements Reporter {
     const tests = getTests(files)
 
     const failedSuites = suites.filter(i => i.result?.error)
-
-    const runnable = tests.filter(i => i.result?.state === 'pass' || i.result?.state === 'fail')
-    const passed = tests.filter(i => i.result?.state === 'pass')
-    const failed = tests.filter(i => i.result?.state === 'fail')
-    const skipped = tests.filter(i => i.mode === 'skip')
-    const todo = tests.filter(i => i.mode === 'todo')
+    const failedTests = tests.filter(i => i.result?.state === 'fail')
+    const isFailed = failedSuites.length || failedTests.length
+    const color = isFailed ? c.red : c.green
 
     if (failedSuites.length) {
       console.error(c.bold(c.red(`\nFailed to run ${failedSuites.length} suites:`)))
@@ -58,27 +54,40 @@ export class DefaultReporter implements Reporter {
       }
     }
 
-    if (failed.length) {
-      console.error(c.bold(c.red(`\nFailed Tests (${failed.length})`)))
-      for (const test of failed) {
+    if (failedTests.length) {
+      console.error(c.bold(c.red(`\nFailed Tests (${failedTests.length})`)))
+      for (const test of failedTests) {
         console.error(`${c.red(`\n${c.inverse(' FAIL ')}`)} ${[test.suite.name, test.name].filter(Boolean).join(' > ')}`)
         await printError(test.result?.error)
         console.log()
       }
     }
 
-    const snapshotOutput = getSnapshotSummaryOutput(this.ctx.config.root, this.ctx.snapshot.summary)
-    if (snapshotOutput.length)
-      console.log(snapshotOutput.join('\n'))
+    const executionTime = this.end - this.start
+    const threadTime = tests.reduce((acc, test) => acc + (test.result?.end ? test.result.end - test.result.start : 0), 0)
 
-    console.log(c.bold(c.green(`Passed   ${passed.length} / ${runnable.length}`)))
-    if (failed.length)
-      console.log(c.bold(c.red(`Failed   ${failed.length} / ${runnable.length}`)))
-    if (skipped.length)
-      console.log(c.yellow(`Skipped  ${skipped.length}`))
-    if (todo.length)
-      console.log(c.dim(`Todo     ${todo.length}`))
-    console.log(`Time     ${(this.end - this.start).toFixed(2)}ms`)
+    const pad = (str: string) => str.padEnd(13)
+    const time = (time: number) => Math.round(time) + c.dim('ms')
+
+    const snapshotOutput = renderSnapshotSummary(this.ctx.config.root, this.ctx.snapshot.summary)
+    if (snapshotOutput.length) {
+      console.log(snapshotOutput.map((t, i) => i === 0
+        ? `${pad('Snapshots')} ${t}`
+        : `${pad('')} ${t}`,
+      ).join('\n'))
+      console.log()
+    }
+
+    console.log(c.bold(color(pad('Test Files'))), getStateString(files))
+    console.log(c.bold(color(pad('Tests'))), getStateString(tests))
+    if (this.filters) {
+      console.log(pad('Time'), time(threadTime))
+    }
+    else {
+      console.log(pad('Thread Time'), time(threadTime))
+      console.log(pad('Time'), time(executionTime) + c.gray(` (${(executionTime / threadTime * 100).toFixed(2)}%)`))
+    }
+    console.log()
   }
 
   async onWatcherStart() {
@@ -105,4 +114,21 @@ export class DefaultReporter implements Reporter {
     this.renderer = undefined
     await new Promise(resolve => setTimeout(resolve, 100))
   }
+}
+
+function getStateString(tasks: Task[], name = 'tests') {
+  if (tasks.length === 0)
+    return c.dim(`no ${name}`)
+
+  const passed = tasks.filter(i => i.result?.state === 'pass')
+  const failed = tasks.filter(i => i.result?.state === 'fail')
+  const skipped = tasks.filter(i => i.mode === 'skip')
+  const todo = tasks.filter(i => i.mode === 'todo')
+
+  return [
+    failed.length ? c.bold(c.red(`${failed.length} failed`)) : null,
+    passed.length ? c.bold(c.green(`${passed.length} passed`)) : null,
+    skipped.length ? c.yellow(`${skipped.length} skipped`) : null,
+    todo.length ? c.gray(`${todo.length} todo`) : null,
+  ].filter(Boolean).join(c.dim(' | ')) + c.gray(` (${tasks.length})`)
 }

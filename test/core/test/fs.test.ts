@@ -2,6 +2,7 @@ import { resolve } from 'path'
 import fs from 'fs/promises'
 import { fileURLToPath } from 'url'
 import { describe, it, expect } from 'vitest'
+import { timeout } from '../src/timeout'
 
 const content = 'Hello, World!'
 const filename = 'fixtures/hi.txt'
@@ -25,3 +26,5 @@ describe('fs', () => {
     expect(raw.trim()).toEqual(content)
   })
 })
+
+it('timeout', () => new Promise(resolve => setTimeout(resolve, timeout)))

@@ -22,8 +22,8 @@ sade('vitest [filter]', true)
   .action(async(filters, argv: UserOptions) => {
     process.env.VITEST = 'true'
 
-    console.log(c.yellow(c.bold('\nVitest is currently in closed beta exclusively for Sponsors')))
-    console.log(c.magenta(`Become a Sponsor of ${c.underline('https://github.com/sponsors/patak-js')} or ${c.underline('https://github.com/sponsors/antfu')} \nto access the source code and issues tracker 💖\n`))
+    console.log(c.magenta(c.bold('\nVitest is in closed beta exclusively for Sponsors')))
+    console.log(c.yellow('Learn more at https://vitest.dev\n'))
 
     const { config, server } = await initViteServer({ ...argv, filters })
 
