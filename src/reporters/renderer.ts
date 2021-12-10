@@ -116,7 +116,7 @@ export const createRenderer = (_tasks: Task[]) => {
       update()
       return this
     },
-    stop() {
+    async stop() {
       if (timer) {
         clearInterval(timer)
         timer = undefined

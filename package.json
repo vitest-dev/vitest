@@ -1,6 +1,6 @@
 {
   "name": "vitest",
-  "version": "0.0.48",
+  "version": "0.0.52",
   "description": "A blazing fast unit test framework powered by Vite",
   "keywords": [
     "vite",
@@ -67,9 +67,12 @@
     "jest-snapshot": "^27.4.2",
     "jest-util": "^27.4.2",
     "jsdom": "^19.0.0",
+    "nanoid": "^3.1.30",
     "log-symbols": "^4.1.0",
     "log-update": "^5.0.0",
+    "mlly": "^0.3.15",
     "picocolors": "^1.0.0",
+    "piscina": "^3.1.0",
     "sade": "^1.7.4",
     "sinon": "^12.0.1",
     "sinon-chai": "^3.7.0",
@@ -86,6 +89,7 @@
     "@types/node": "^16.11.12",
     "@types/sade": "^1.7.3",
     "@types/sinon": "^10.0.6",
+    "@types/source-map-support": "^0.5.4",
     "bumpp": "^7.1.1",
     "eslint": "^8.4.1",
     "esno": "^0.12.1",

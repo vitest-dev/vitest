@@ -3,12 +3,8 @@ import { fileURLToPath, pathToFileURL } from 'url'
 import { dirname, resolve } from 'path'
 import vm from 'vm'
 import type { TransformResult } from 'vite'
-
-export interface ModuleCache {
-  promise?: Promise<any>
-  exports?: any
-  transformResult?: TransformResult
-}
+import { isValidNodeImport } from 'mlly'
+import { ModuleCache } from '../types'
 
 export type FetchFunction = (id: string) => Promise<TransformResult | undefined | null>
 
@@ -118,7 +114,7 @@ export async function executeInViteNode({ moduleCache, root, files, fetch, inlin
       }
     }
 
-    return id.includes('/node_modules/')
+    return id.includes('/node_modules/') && !await isValidNodeImport(id)
   }
 
   async function cachedRequest(rawId: string, callstack: string[]) {

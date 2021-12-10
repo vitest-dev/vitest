@@ -1,14 +1,14 @@
 /* eslint-disable no-console */
-import { resolve } from 'path'
 import sade from 'sade'
 import c from 'picocolors'
-import type { ViteDevServer } from 'vite'
-import type { ResolvedConfig, UserOptions } from '../types'
+import { install as installSourceMapSupport } from 'source-map-support'
+import type { UserOptions, VitestContext } from '../types'
 import { version } from '../../package.json'
-import { distDir } from '../constants'
-import { run } from './node'
-import { initViteServer } from './server'
-import { ModuleCache } from './execute'
+import { DefaultReporter } from '../reporters/default'
+import { SnapshotManager } from '../integrations/snapshot/manager'
+import { initViteServer } from './init'
+import { start } from './run'
+import { StateManager } from './state'
 
 sade('vitest [filter]', true)
   .version(version)
@@ -27,16 +27,49 @@ sade('vitest [filter]', true)
 
     const { config, server } = await initViteServer({ ...argv, filters })
 
-    const moduleCache = new Map<string, ModuleCache>()
-    process.__vitest__ = {
+    const ctx = process.__vitest__ = {
       server,
       config,
-      moduleCache,
+      state: new StateManager(),
+      snapshot: new SnapshotManager(config),
+      reporter: config.reporter,
     }
 
-    await run(server, config, moduleCache, [
-      resolve(distDir, './node/entry.js'),
-    ])
+    installSourceMapSupport({
+      environment: 'node',
+      hookRequire: true,
+      handleUncaughtExceptions: true,
+      retrieveSourceMap: (id: string) => {
+        const map = ctx.server.moduleGraph.getModuleById(id)?.ssrTransformResult?.map
+        if (map) {
+          return {
+            url: id,
+            map: map as any,
+          }
+        }
+        return null
+      },
+    })
+
+    ctx.reporter ||= new DefaultReporter(ctx)
+
+    try {
+      await start(ctx)
+    }
+    catch (e) {
+      process.exitCode = 1
+      throw e
+    }
+    finally {
+      if (!config.watch)
+        await server.close()
+    }
+
+    // const timer = setTimeout(() => {
+    //   // TODO: warn user and maybe error out
+    //   process.exit()
+    // }, 500)
+    // timer.unref()
   })
   .parse(process.argv)
 
@@ -44,11 +77,7 @@ declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace NodeJS {
     interface Process {
-      __vitest__: {
-        config: ResolvedConfig
-        server: ViteDevServer
-        moduleCache: Map<string, ModuleCache>
-      }
+      __vitest__: VitestContext
     }
   }
 }

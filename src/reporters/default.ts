@@ -2,42 +2,41 @@
 import { performance } from 'perf_hooks'
 import { relative } from 'path'
 import c from 'picocolors'
-import { File, Reporter, RunnerContext, ResolvedConfig } from '../types'
+import { Reporter, VitestContext } from '../types'
 import { getSuites, getTests } from '../utils'
+import { getSnapshotSummaryOutput } from '../integrations/snapshot/utils/jest-reporters-lite'
 import { printError } from './error'
 import { createRenderer } from './renderer'
 
 export class DefaultReporter implements Reporter {
   start = 0
   end = 0
-  renderer: ReturnType<typeof createRenderer> = undefined!
+  renderer?: ReturnType<typeof createRenderer>
+  filters?: string[]
 
-  constructor(public config: ResolvedConfig) {}
+  constructor(public ctx: VitestContext) {
+    console.log(c.green(`Running tests under ${c.gray(this.ctx.config.root)}\n`))
+    this.start = performance.now()
+  }
 
   relative(path: string) {
-    return relative(this.config.root, path)
+    return relative(this.ctx.config.root, path)
   }
 
-  onStart() {
-    this.start = performance.now()
-    console.log(c.green(`Running tests under ${c.gray(this.config.root)}\n`))
+  onStart(onlyFiles = this.filters) {
+    const files = this.ctx.state.getFiles(onlyFiles)
+    if (!this.renderer)
+      this.renderer = createRenderer(files).start()
+    else
+      this.renderer.update(files)
   }
 
-  onCollected(files: File[]) {
-    this.renderer?.stop()
-    this.renderer = createRenderer(files).start()
-  }
-
-  async onFinished(ctx: RunnerContext, files = ctx.files) {
-    this.renderer?.stop()
-
+  async onFinished(files = this.ctx.state.getFiles()) {
     this.end = performance.now()
 
-    console.log()
+    await this.stopListRender()
 
-    const snapshot = ctx.snapshotManager.report()
-    if (snapshot)
-      console.log(snapshot.join('\n'))
+    console.log()
 
     const suites = getSuites(files)
     const tests = getTests(files)
@@ -68,6 +67,10 @@ export class DefaultReporter implements Reporter {
       }
     }
 
+    const snapshotOutput = getSnapshotSummaryOutput(this.ctx.config.root, this.ctx.snapshot.summary)
+    if (snapshotOutput.length)
+      console.log(snapshotOutput.join('\n'))
+
     console.log(c.bold(c.green(`Passed   ${passed.length} / ${runnable.length}`)))
     if (failed.length)
       console.log(c.bold(c.red(`Failed   ${failed.length} / ${runnable.length}`)))
@@ -78,11 +81,10 @@ export class DefaultReporter implements Reporter {
     console.log(`Time     ${(this.end - this.start).toFixed(2)}ms`)
   }
 
-  async onWatcherStart(ctx: RunnerContext) {
-    // await this.listrPromise
-    this.renderer?.stop()
+  async onWatcherStart() {
+    await this.stopListRender()
 
-    const failed = ctx.tests.filter(i => i.result?.state === 'fail')
+    const failed = getTests(this.ctx.state.getFiles()).filter(i => i.result?.state === 'fail')
     if (failed.length)
       console.log(`\n${c.bold(c.inverse(c.red(' FAIL ')))}${c.red(` ${failed.length} tests failed. Watching for file changes...`)}`)
     else
@@ -90,9 +92,17 @@ export class DefaultReporter implements Reporter {
   }
 
   async onWatcherRerun(files: string[], trigger: string) {
-    this.renderer?.stop()
+    await this.stopListRender()
+
+    this.filters = files
 
     console.clear()
     console.log(c.blue('Re-running tests...') + c.dim(` [ ${this.relative(trigger)} ]\n`))
+  }
+
+  async stopListRender() {
+    this.renderer?.stop()
+    this.renderer = undefined
+    await new Promise(resolve => setTimeout(resolve, 100))
   }
 }

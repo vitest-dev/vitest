@@ -1,6 +1,11 @@
 /* eslint-disable no-use-before-define */
-import { Awaitable } from '@antfu/utils'
-import { SnapshotManager } from './integrations/chai/snapshot/manager'
+import type { MessagePort } from 'worker_threads'
+import type { Awaitable } from '@antfu/utils'
+import type { TransformResult, ViteDevServer } from 'vite'
+import type { SnapshotStateOptions } from 'jest-snapshot/build/State'
+import type { StateManager } from './node/state'
+import type { SnapshotResult } from './integrations/snapshot/utils/types'
+import type { SnapshotManager } from './integrations/snapshot/manager'
 
 export interface UserOptions {
   /**
@@ -72,13 +77,16 @@ export interface ResolvedConfig extends Omit<Required<UserOptions>, 'config' | '
 
   depsInline: (string | RegExp)[]
   depsExternal: (string | RegExp)[]
+
+  snapshotOptions: SnapshotStateOptions
 }
 
 export type RunMode = 'run' | 'skip' | 'only' | 'todo'
-export type TestState = RunMode | 'pass' | 'fail'
+export type TaskState = RunMode | 'pass' | 'fail'
 export type ComputeMode = 'serial' | 'concurrent'
 
 export interface TaskBase {
+  id: string
   name: string
   mode: RunMode
   computeMode: ComputeMode
@@ -88,11 +96,13 @@ export interface TaskBase {
 }
 
 export interface TaskResult {
-  state: TestState
+  state: TaskState
   start: number
   end?: number
   error?: unknown
 }
+
+export type TaskResultPack = [id: string, result: TaskResult | undefined]
 
 export interface Suite extends TaskBase {
   type: 'suite'
@@ -167,30 +177,55 @@ export interface SuiteCollector {
 
 export type TestFactory = (test: (name: string, fn: TestFunction) => void) => Awaitable<void>
 
-export interface RunnerContext {
-  filesMap: Record<string, File>
-  files: File[]
-  tests: Test[]
-  config: ResolvedConfig
-  reporter: Reporter
-  snapshotManager: SnapshotManager
-}
-
 export interface GlobalContext {
   tasks: (SuiteCollector | Test)[]
   currentSuite: SuiteCollector | null
 }
 
 export interface Reporter {
-  onStart?: (config: ResolvedConfig) => Awaitable<void>
-  onCollected?: (files: File[], ctx: RunnerContext) => Awaitable<void>
-  onFinished?: (ctx: RunnerContext, files?: File[]) => Awaitable<void>
+  onStart?: (files?: string[]) => Awaitable<void>
+  onFinished?: (files?: File[]) => Awaitable<void>
+  onTaskUpdate?: (pack: TaskResultPack) => Awaitable<void>
 
-  onTestBegin?: (test: Test, ctx: RunnerContext) => Awaitable<void>
-  onTestEnd?: (test: Test, ctx: RunnerContext) => Awaitable<void>
-  onSuiteBegin?: (suite: Suite, ctx: RunnerContext) => Awaitable<void>
-  onSuiteEnd?: (suite: Suite, ctx: RunnerContext) => Awaitable<void>
+  onWatcherStart?: () => Awaitable<void>
+  onWatcherRerun?: (files: string[], trigger: string) => Awaitable<void>
+}
 
-  onWatcherStart?: (ctx: RunnerContext) => Awaitable<void>
-  onWatcherRerun?: (files: string[], trigger: string, ctx: RunnerContext) => Awaitable<void>
+export interface ModuleCache {
+  promise?: Promise<any>
+  exports?: any
+  transformResult?: TransformResult
+}
+
+export interface WorkerContext {
+  port: MessagePort
+  config: ResolvedConfig
+  files: string[]
+  invalidates?: string[]
+}
+
+export interface RpcMap {
+  workerReady: [[], void]
+  fetch: [[id: string], TransformResult | null | undefined]
+  onCollected: [[files: File[]], void]
+  onFinished: [[], void]
+  onTaskUpdate: [[pack: TaskResultPack], void]
+
+  onWatcherStart: [[], void]
+  onWatcherRerun: [[files: string[], trigger: string], void]
+
+  snapshotSaved: [[snapshot: SnapshotResult], void]
+}
+
+export type RpcCall = <T extends keyof RpcMap>(method: T, ...args: RpcMap[T][0]) => Promise<RpcMap[T][1]>
+export type RpcSend = <T extends keyof RpcMap>(method: T, ...args: RpcMap[T][0]) => void
+
+export type RpcPayload<T extends keyof RpcMap = keyof RpcMap> = { id: string; method: T; args: RpcMap[T][0] }
+
+export interface VitestContext {
+  config: ResolvedConfig
+  server: ViteDevServer
+  state: StateManager
+  snapshot: SnapshotManager
+  reporter: Reporter
 }
