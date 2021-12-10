@@ -1,12 +1,12 @@
 {
-  "name": "testing-lib-react",
-  "version": "0.0.0",
+  "name": "@vitest/test-testing-lib-react",
+  "private": true,
   "scripts": {
-    "dev": "vite",
     "build": "tsc && vite build",
+    "coverage": "vitest --coverage",
+    "dev": "vite",
     "preview": "vite preview",
-    "test": "vitest",
-    "coverage": "vitest --coverage"
+    "test": "vitest"
   },
   "dependencies": {
     "react": "^17.0.2",
