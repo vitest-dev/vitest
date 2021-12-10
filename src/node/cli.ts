@@ -2,7 +2,7 @@
 import sade from 'sade'
 import c from 'picocolors'
 import { install as installSourceMapSupport } from 'source-map-support'
-import type { UserOptions, VitestContext } from '../types'
+import type { CliOptions, VitestContext } from '../types'
 import { version } from '../../package.json'
 import { DefaultReporter } from '../reporters/default'
 import { SnapshotManager } from '../integrations/snapshot/manager'
@@ -19,13 +19,13 @@ sade('vitest [filter]', true)
   .option('-u, --update', 'update snapshot', false)
   .option('--global', 'inject apis globally', false)
   .option('--dom', 'mock browser api using jsdom or happy-dom', '')
-  .action(async(filters, argv: UserOptions) => {
+  .action(async(cliFilters, argv: CliOptions) => {
     process.env.VITEST = 'true'
 
     console.log(c.magenta(c.bold('\nVitest is in closed beta exclusively for Sponsors')))
     console.log(c.yellow('Learn more at https://vitest.dev\n'))
 
-    const { config, server } = await initViteServer({ ...argv, filters })
+    const { config, server } = await initViteServer({ ...argv, cliFilters })
 
     const ctx = process.__vitest__ = {
       server,

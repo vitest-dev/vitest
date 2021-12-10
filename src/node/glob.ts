@@ -13,8 +13,8 @@ export async function globTestFiles(config: ResolvedConfig) {
   )
 
   // if name filters are provided by the CLI
-  if (config.filters?.length)
-    testFilepaths = testFilepaths.filter(i => config.filters!.some(f => i.includes(f)))
+  if (config.cliFilters?.length)
+    testFilepaths = testFilepaths.filter(i => config.cliFilters!.some(f => i.includes(f)))
 
   return testFilepaths
 }

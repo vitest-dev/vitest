@@ -2,7 +2,8 @@ import { resolve } from 'path'
 import { findUp } from 'find-up'
 import { createServer } from 'vite'
 import { SnapshotStateOptions } from 'jest-snapshot/build/State'
-import { ResolvedConfig, UserOptions } from '../types'
+import { toArray } from '@antfu/utils'
+import { CliOptions, ResolvedConfig } from '../types'
 
 const configFiles = [
   'vitest.config.ts',
@@ -13,9 +14,7 @@ const configFiles = [
   'vite.config.mjs',
 ]
 
-export async function initViteServer(options: UserOptions = {}) {
-  const { filters } = options
-
+export async function initViteServer(options: CliOptions = {}) {
   const root = resolve(options.root || process.cwd())
   process.chdir(root)
 
@@ -27,11 +26,8 @@ export async function initViteServer(options: UserOptions = {}) {
 
   resolved.config = configPath
   resolved.root = root
-  resolved.filters = filters
-    ? Array.isArray(filters)
-      ? filters
-      : [filters]
-    : undefined
+  if (options.cliFilters)
+    resolved.cliFilters = toArray(options.cliFilters)
 
   const server = await createServer({
     root,

@@ -25,7 +25,20 @@ export interface UserOptions {
    * Handling for dependencies inlining or externalizing
    */
   deps?: {
+    /**
+     * Externalize means that Vite will bypass the package to native Node.
+     *
+     * Externaled dependencies will not be applied Vite's transformers and resolvers.
+     * And does not support HMR on reload.
+     *
+     * Typically, packages under `node_modules` are externalized.
+     */
     external?: (string | RegExp)[]
+    /**
+     * Vite will process inlined modules.
+     *
+     * This could be helpful to handle packages that ship `.js` in ESM format (that Node can't handle).
+     */
     inline?: (string | RegExp)[]
   }
 
@@ -66,12 +79,27 @@ export interface UserOptions {
    * Custom reporter for output
    */
   reporter?: Reporter
+}
 
-  filters?: string[]
+export interface CliOptions extends UserOptions {
+  /**
+   * Filters by name
+   */
+  cliFilters?: string[]
+
+  /**
+   * Path to the config file.
+   *
+   * Default resolving to one of:
+   * - `vitest.config.js`
+   * - `vitest.config.ts`
+   * - `vite.config.js`
+   * - `vite.config.ts`
+   */
   config?: string | undefined
 }
 
-export interface ResolvedConfig extends Omit<Required<UserOptions>, 'config' | 'filters'> {
+export interface ResolvedConfig extends Omit<Required<CliOptions>, 'config' | 'filters'> {
   config?: string
   filters?: string[]
 

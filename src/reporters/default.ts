@@ -14,7 +14,7 @@ export class DefaultReporter implements Reporter {
   start = 0
   end = 0
   renderer?: ReturnType<typeof createRenderer>
-  filters?: string[]
+  watchFilters?: string[]
 
   constructor(public ctx: VitestContext) {
     console.log(c.green(`Running tests at ${c.gray(this.ctx.config.root)}\n`))
@@ -27,7 +27,7 @@ export class DefaultReporter implements Reporter {
 
   onStart() {
     if (isTTY) {
-      const files = this.ctx.state.getFiles(this.filters)
+      const files = this.ctx.state.getFiles(this.watchFilters)
       if (!this.renderer)
         this.renderer = createRenderer(files).start()
       else
@@ -97,7 +97,7 @@ export class DefaultReporter implements Reporter {
 
     console.log(c.bold(color(pad('Test Files'))), getStateString(files))
     console.log(c.bold(color(pad('Tests'))), getStateString(tests))
-    if (this.filters) {
+    if (this.watchFilters) {
       console.log(pad('Time'), time(threadTime))
     }
     else {
@@ -120,7 +120,7 @@ export class DefaultReporter implements Reporter {
   async onWatcherRerun(files: string[], trigger: string) {
     await this.stopListRender()
 
-    this.filters = files
+    this.watchFilters = files
 
     console.clear()
     console.log(c.blue('Re-running tests...') + c.dim(` [ ${this.relative(trigger)} ]\n`))
