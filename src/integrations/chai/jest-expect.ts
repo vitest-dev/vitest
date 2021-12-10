@@ -23,10 +23,30 @@ export function JestChaiExpect(): ChaiPlugin {
       else
         return this.match(expected)
     })
-
     utils.addMethod(proto, 'toContain', function(this: Chai.Assertion, item: any) {
       return this.contain(item)
     })
+
+    utils.addMethod(proto, 'toContainEqual', function(this: Chai.AssertionStatic, expected: any) {
+      const obj = utils.flag(this, 'object')
+      const index = Array.from(obj).findIndex((item) => {
+        try {
+          chai.assert.deepEqual(item, expected)
+        }
+        catch {
+          return false
+        }
+        return true
+      })
+
+      this.assert(
+        index !== -1,
+        'expected #{this} to deep equally contain #{exp}',
+        'expected #{this} to not deep equally contain #{exp}',
+        expected,
+      )
+    },
+    )
     utils.addMethod(proto, 'toBeTruthy', function(this: Chai.AssertionStatic) {
       const obj = utils.flag(this, 'object')
       this.assert(

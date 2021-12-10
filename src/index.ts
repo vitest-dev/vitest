@@ -28,6 +28,7 @@ declare global {
       toMatch(expected: string | RegExp): void
       toMatchObject(expected: any): void
       toContain(item: any): void
+      toContainEqual(item: any): void
       toBeTruthy(): void
       toBeFalsy(): void
       toBeNaN(): void

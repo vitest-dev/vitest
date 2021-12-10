@@ -10,6 +10,10 @@ describe('jest-expect', () => {
     expect(0).toBeFalsy()
     expect('Hello').toMatch(/llo/)
     expect('Hello').toMatch('llo')
+    expect('Hello').toContain('llo')
+    expect(['Hello']).toContain('Hello')
+    expect([{ text: 'Hello' }]).toContainEqual({ text: 'Hello' })
+    expect([{ text: 'Bye' }]).not.toContainEqual({ text: 'Hello' })
   })
 
   it('object', () => {
