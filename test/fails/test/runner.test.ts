@@ -28,7 +28,7 @@ describe('should fails', async() => {
         .reverse()
         .find(i => i.includes('Error: '))
         ?.trim()
-      expect(msg).toMatchSnapshot()
-    })
+      expect(msg).toMatchSnapshot(file)
+    }, 10000)
   }
 })

@@ -33,3 +33,12 @@ hi.test('expect truthy', () => {
   expect({}).toBeTruthy()
   expect(null).not.toBeTruthy()
 })
+
+// Remove .skip to test async fail by timeout
+test.skip('async with timeout', async() => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve()
+    }, 200)
+  })
+}, 100)

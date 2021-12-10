@@ -34,6 +34,7 @@ A blazing fast unit test framework powered by Vite.
 - Async suite / test, top level await
 - ESM friendly
 - Out-of-box TypeScript / JSX support
+- Test and Hooks timeouts
 - Suite and Test filtering (skip, only, todo)
 - Concurrent Tests
 
@@ -135,7 +136,7 @@ export default defineConfig({
   plugins: [
     AutoImport({
       imports: ['vitest'],
-      dts: true // genreate TypeScript declaration
+      dts: true // generate TypeScript declaration
     })
   ]
 })
@@ -217,6 +218,20 @@ Will only execute test files that contain `basic`, e.g.
 ```
 basic.test.ts
 basic-foo.test.ts
+```
+
+### Specifying a Timeout
+
+You can optionally pass a timeout in milliseconds as third argument to tests. The default is 5 seconds.
+
+```ts
+test('name', async() => { ... }, 1000)
+```
+
+Hooks also can receive a timeout, with the same 5 seconds default.
+
+```ts
+beforeAll( async() => { ... }, 1000)
 ```
 
 ### Skipping suites and tests

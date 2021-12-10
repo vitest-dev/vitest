@@ -22,6 +22,22 @@ describe('before and after hooks', () => {
     eachCount++
   })
 
+  // Hooks accepting a timeout
+  beforeAll(async() => { }, 1000)
+  afterAll(async() => { }, 1000)
+  beforeEach(async() => { }, 1000)
+  afterEach(async() => { }, 1000)
+
+  /* uncomment to test hook fail due timeout
+  beforeAll(async () => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve()
+      }, 200)
+    })
+  }, 100)
+  */
+
   it('beforeEach works', () => {
     assert.equal(eachState, 'running')
   })
