@@ -107,11 +107,15 @@ importers:
 
   test/fails:
     specifiers:
+      '@types/which': ^2.0.1
       execa: ^6.0.0
       vitest: workspace:*
+      which: ^2.0.2
     devDependencies:
+      '@types/which': 2.0.1
       execa: 6.0.0
       vitest: link:../..
+      which: 2.0.2
 
   test/lit:
     specifiers:
@@ -1185,6 +1189,10 @@ packages:
   /@types/trusted-types/2.0.2:
     resolution: {integrity: sha512-F5DIZ36YVLE+PN+Zwws4kJogq47hNgX3Nx6WyDJ3kcplxyke3XIzB8uK5n/Lpm1HBsbGzd6nmGehL8cPekP+Tg==}
     dev: false
+
+  /@types/which/2.0.1:
+    resolution: {integrity: sha512-Jjakcv8Roqtio6w1gr0D7y6twbhx6gGgFGF5BLwajPpnOIOxFkakFhCq+LmyyeAz7BX6ULrjBOxdKaCDy+4+dQ==}
+    dev: true
 
   /@types/yargs-parser/20.2.0:
     resolution: {integrity: sha512-37RSHht+gzzgYeobbG+KWryeAW8J33Nhr69cjTqSYymXVZEN9NbRYWoYlRtDhHKPVT1FyNKwaTPC1NynKZpzRA==}
