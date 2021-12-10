@@ -1,6 +1,7 @@
 import { resolve } from 'path'
 import { findUp } from 'find-up'
 import { createServer } from 'vite'
+import { SnapshotStateOptions } from 'jest-snapshot/build/State'
 import { ResolvedConfig, UserOptions } from '../types'
 
 const configFiles = [
@@ -64,6 +65,18 @@ export async function initViteServer(options: UserOptions = {}) {
     /node_modules/,
     ...server.config.test?.deps?.external || [],
   ]
+
+  const env = process.env
+  const CI = !!env.CI
+  const UPDATE_SNAPSHOT = resolved.update || env.UPDATE_SNAPSHOT
+
+  resolved.snapshotOptions = {
+    updateSnapshot: CI && !UPDATE_SNAPSHOT
+      ? 'none'
+      : UPDATE_SNAPSHOT
+        ? 'all'
+        : 'new',
+  } as SnapshotStateOptions
 
   return {
     server,

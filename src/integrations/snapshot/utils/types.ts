@@ -1,4 +1,5 @@
 export interface SnapshotResult {
+  filepath: string
   added: number
   fileDeleted: boolean
   matched: number

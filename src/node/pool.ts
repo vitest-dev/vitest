@@ -98,6 +98,8 @@ export function createWorker(ctx: VitestContext) {
     }
 
     switch (method) {
+      case 'snapshotSaved':
+        return send(() => ctx.snapshot.add(args[0] as any))
       case 'fetch':
         return send(() => transformRequest(ctx.server, ...args as RpcMap['fetch'][0]))
       case 'onCollected':

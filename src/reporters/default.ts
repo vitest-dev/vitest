@@ -4,6 +4,7 @@ import { relative } from 'path'
 import c from 'picocolors'
 import { Reporter, VitestContext } from '../types'
 import { getSuites, getTests } from '../utils'
+import { getSnapshotSummaryOutput } from '../integrations/snapshot/utils/jest-reporters-lite'
 import { printError } from './error'
 import { createRenderer } from './renderer'
 
@@ -38,10 +39,6 @@ export class DefaultReporter implements Reporter {
 
     console.log()
 
-    // const snapshot = ctx.snapshotManager.report()
-    // if (snapshot)
-    //   console.log(snapshot.join('\n'))
-
     const suites = getSuites(files)
     const tests = getTests(files)
 
@@ -70,6 +67,10 @@ export class DefaultReporter implements Reporter {
         console.log()
       }
     }
+
+    const snapshotOutput = getSnapshotSummaryOutput(this.ctx.config.root, this.ctx.snapshot.summary)
+    if (snapshotOutput.length)
+      console.log(snapshotOutput.join('\n'))
 
     console.log(c.bold(c.green(`Passed   ${passed.length} / ${runnable.length}`)))
     if (failed.length)

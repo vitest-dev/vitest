@@ -14,7 +14,7 @@ const {
   makeEmptyAggregatedTestResult,
 } = Test
 
-export const makeEmptySnapshotSummary = (
+export const emptySummary = (
   options: SnapshotStateOptions,
 ): SnapshotSummary => {
   const summary = makeEmptyAggregatedTestResult().snapshot
@@ -23,9 +23,11 @@ export const makeEmptySnapshotSummary = (
 }
 
 export const packSnapshotState = (
+  filepath: string,
   snapshotState: SnapshotStateType,
 ): SnapshotResult => {
   const snapshot: SnapshotResult = {
+    filepath,
     added: 0,
     fileDeleted: false,
     matched: 0,
@@ -55,7 +57,6 @@ export const packSnapshotState = (
 export const addSnapshotResult = (
   snapshotSummary: SnapshotSummary,
   snapshotResult: SnapshotResult,
-  testFilePath: string,
 ): void => {
   // Snapshot data
   if (snapshotResult.added)
@@ -75,7 +76,7 @@ export const addSnapshotResult = (
   snapshotSummary.unchecked += snapshotResult.unchecked
   if (snapshotResult.uncheckedKeys && snapshotResult.uncheckedKeys.length > 0) {
     snapshotSummary.uncheckedKeysByFile.push({
-      filePath: testFilePath,
+      filePath: snapshotResult.filepath,
       keys: snapshotResult.uncheckedKeys,
     })
   }

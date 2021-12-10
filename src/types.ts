@@ -1,8 +1,11 @@
 /* eslint-disable no-use-before-define */
-import { MessagePort } from 'worker_threads'
-import { Awaitable } from '@antfu/utils'
-import { TransformResult, ViteDevServer } from 'vite'
-import { StateManager } from './node/state'
+import type { MessagePort } from 'worker_threads'
+import type { Awaitable } from '@antfu/utils'
+import type { TransformResult, ViteDevServer } from 'vite'
+import type { SnapshotStateOptions } from 'jest-snapshot/build/State'
+import type { StateManager } from './node/state'
+import type { SnapshotResult } from './integrations/snapshot/utils/types'
+import type { SnapshotManager } from './integrations/snapshot/manager'
 
 export interface UserOptions {
   /**
@@ -74,6 +77,8 @@ export interface ResolvedConfig extends Omit<Required<UserOptions>, 'config' | '
 
   depsInline: (string | RegExp)[]
   depsExternal: (string | RegExp)[]
+
+  snapshotOptions: SnapshotStateOptions
 }
 
 export type RunMode = 'run' | 'skip' | 'only' | 'todo'
@@ -216,6 +221,8 @@ export interface RpcMap {
 
   onWatcherStart: [[], void]
   onWatcherRerun: [[files: string[], trigger: string], void]
+
+  snapshotSaved: [[snapshot: SnapshotResult], void]
 }
 
 export type RpcFn = <T extends keyof RpcMap>(method: T, ...args: RpcMap[T][0]) => Promise<RpcMap[T][1]>
@@ -227,5 +234,6 @@ export interface VitestContext {
   server: ViteDevServer
   moduleCache: Map<string, ModuleCache>
   state: StateManager
+  snapshot: SnapshotManager
   reporter: Reporter
 }

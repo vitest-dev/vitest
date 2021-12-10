@@ -1,7 +1,7 @@
 import { performance } from 'perf_hooks'
 import { HookListener } from 'vitest'
 import { Test, Suite, SuiteHooks, Task } from '../types'
-import { getSnapshotManager } from '../integrations/snapshot'
+import { getSnapshotClient } from '../integrations/snapshot/chai'
 import { hasFailed, hasTests, partitionSuiteChildren } from '../utils'
 import { getFn, getHooks } from './map'
 import { rpc } from './rpc'
@@ -19,13 +19,13 @@ export async function runTest(test: Test) {
   if (test.mode !== 'run')
     return
 
-  getSnapshotManager()?.setTest(test)
-
   test.result = {
     start: performance.now(),
     state: 'run',
   }
   updateTask(test)
+
+  getSnapshotClient().setTest(test)
 
   try {
     await callHook(test.suite, 'beforeEach', [test, test.suite])
@@ -45,6 +45,8 @@ export async function runTest(test: Test) {
     test.result.error = e
     process.exitCode = 1
   }
+
+  getSnapshotClient().clearTest()
 
   test.result.end = performance.now()
 
@@ -127,4 +129,6 @@ export async function startTests(paths: string[]) {
   await rpc('onCollected', files)
 
   await runSuites(files)
+
+  await getSnapshotClient().saveSnap()
 }
