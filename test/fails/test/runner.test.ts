@@ -1,5 +1,4 @@
 import { resolve } from 'path'
-import { exec } from 'child_process'
 import fg from 'fast-glob'
 import { execa } from 'execa'
 import { describe, it, expect } from 'vitest'
