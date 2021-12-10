@@ -52,6 +52,9 @@ export async function runTest(test: Test, ctx: RunnerContext) {
 }
 
 export async function runSuite(suite: Suite, ctx: RunnerContext) {
+  if (suite.result?.state === 'fail')
+    return
+
   const { reporter } = ctx
 
   await reporter.onSuiteBegin?.(suite, ctx)
