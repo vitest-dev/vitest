@@ -31,6 +31,8 @@ declare global {
       toContainEqual(item: any): void
       toBeTruthy(): void
       toBeFalsy(): void
+      toBeGreaterThan(num: number): void
+      toBeGreaterThanOrEqual(num: number): void
       toBeNaN(): void
       toBeUndefined(): void
       toBeNull(): void

@@ -73,6 +73,12 @@ export function JestChaiExpect(): ChaiPlugin {
         obj,
       )
     })
+    def('toBeGreaterThan', function(expected: number) {
+      return this.to.greaterThan(expected)
+    })
+    def('toBeGreaterThanOrEqual', function(expected: number) {
+      return this.to.greaterThanOrEqual(expected)
+    })
     def('toBeNaN', function() {
       return this.be.NaN
     })
