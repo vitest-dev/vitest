@@ -6,7 +6,7 @@ const { click } = fireEvent
 describe('Hello.svelte', () => {
   // TODO @testing-library/svelte claims to add this automatically but it doesn't work without explicit afterEach
   afterEach(() => cleanup())
-  afterAll(async() => { document.body.innerHTML = '' }) // TODO remove when jsdom is cleaned up automatically
+
   it('mounts', async() => {
     const { container } = render(Hello, { count: 4 })
     expect(container).toBeTruthy()
