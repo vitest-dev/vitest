@@ -2,10 +2,13 @@
 import { performance } from 'perf_hooks'
 import { relative } from 'path'
 import c from 'picocolors'
-import { Reporter, Task, VitestContext } from '../types'
+import figures from 'figures'
+import { Reporter, TaskResultPack, VitestContext } from '../types'
 import { getSuites, getTests } from '../utils'
 import { printError } from './error'
-import { createRenderer, renderSnapshotSummary } from './renderer'
+import { createRenderer, getStateString, getStateSymbol, renderSnapshotSummary, getFullName } from './renderer'
+
+const isTTY = process.stdout.isTTY && !process.env.CI
 
 export class DefaultReporter implements Reporter {
   start = 0
@@ -22,12 +25,26 @@ export class DefaultReporter implements Reporter {
     return relative(this.ctx.config.root, path)
   }
 
-  onStart(onlyFiles = this.filters) {
-    const files = this.ctx.state.getFiles(onlyFiles)
-    if (!this.renderer)
-      this.renderer = createRenderer(files).start()
-    else
-      this.renderer.update(files)
+  onStart() {
+    if (isTTY) {
+      const files = this.ctx.state.getFiles(this.filters)
+      if (!this.renderer)
+        this.renderer = createRenderer(files).start()
+      else
+        this.renderer.update(files)
+    }
+  }
+
+  onTaskUpdate(pack: TaskResultPack) {
+    if (isTTY)
+      return
+
+    const task = this.ctx.state.idMap[pack[0]]
+    if (task.type === 'test' && task.result?.state && task.result?.state !== 'run') {
+      console.log(` ${getStateSymbol(task)} ${getFullName(task)}`)
+      if (task.result.state === 'fail')
+        console.log(c.red(`   ${figures.arrowRight} ${(task.result.error as any)?.message}`))
+    }
   }
 
   async onFinished(files = this.ctx.state.getFiles()) {
@@ -48,7 +65,7 @@ export class DefaultReporter implements Reporter {
     if (failedSuites.length) {
       console.error(c.bold(c.red(`\nFailed to run ${failedSuites.length} suites:`)))
       for (const suite of failedSuites) {
-        console.error(c.red(`\n- ${suite.file?.filepath} > ${suite.name}`))
+        console.error(c.red(`\n- ${getFullName(suite)}`))
         await printError(suite.result?.error)
         console.log()
       }
@@ -57,7 +74,7 @@ export class DefaultReporter implements Reporter {
     if (failedTests.length) {
       console.error(c.bold(c.red(`\nFailed Tests (${failedTests.length})`)))
       for (const test of failedTests) {
-        console.error(`${c.red(`\n${c.inverse(' FAIL ')}`)} ${[test.suite.name, test.name].filter(Boolean).join(' > ')}`)
+        console.error(`${c.red(`\n${c.inverse(' FAIL ')}`)} ${getFullName(test)}`)
         await printError(test.result?.error)
         console.log()
       }
@@ -114,21 +131,4 @@ export class DefaultReporter implements Reporter {
     this.renderer = undefined
     await new Promise(resolve => setTimeout(resolve, 100))
   }
-}
-
-function getStateString(tasks: Task[], name = 'tests') {
-  if (tasks.length === 0)
-    return c.dim(`no ${name}`)
-
-  const passed = tasks.filter(i => i.result?.state === 'pass')
-  const failed = tasks.filter(i => i.result?.state === 'fail')
-  const skipped = tasks.filter(i => i.mode === 'skip')
-  const todo = tasks.filter(i => i.mode === 'todo')
-
-  return [
-    failed.length ? c.bold(c.red(`${failed.length} failed`)) : null,
-    passed.length ? c.bold(c.green(`${passed.length} passed`)) : null,
-    skipped.length ? c.yellow(`${skipped.length} skipped`) : null,
-    todo.length ? c.gray(`${todo.length} todo`) : null,
-  ].filter(Boolean).join(c.dim(' | ')) + c.gray(` (${tasks.length})`)
 }

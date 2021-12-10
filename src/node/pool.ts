@@ -4,7 +4,7 @@ import Piscina from 'piscina'
 import { Awaitable } from '@antfu/utils'
 import { RpcMap } from 'vitest'
 import { distDir } from '../constants'
-import { WorkerContext, RpcPayload, VitestContext } from '../types'
+import { WorkerContext, RpcPayload, VitestContext, File } from '../types'
 import { transformRequest } from './transform'
 
 export interface WorkerPool {
@@ -40,7 +40,7 @@ export function createWorkerPool(ctx: VitestContext) {
             return send(() => transformRequest(ctx.server, ...args as RpcMap['fetch'][0]))
           case 'onCollected':
             ctx.state.collectFiles(args[0] as any)
-            ctx.reporter.onStart?.()
+            ctx.reporter.onStart?.((args[0] as any as File[]).map(i => i.filepath))
             return
           case 'onTaskUpdate':
             ctx.state.updateTasks([args[0] as any])

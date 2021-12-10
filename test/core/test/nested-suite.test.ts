@@ -14,6 +14,7 @@ describe('a', () => {
           it('very deep', () => {
             expect(true).toBe(true)
             visited = true
+            expect('hi').toMatchSnapshot('msg')
           })
         })
       })

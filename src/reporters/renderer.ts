@@ -9,7 +9,7 @@ import elegantSpinner from 'elegant-spinner'
 import logSymbols from 'log-symbols'
 import { slash } from '@antfu/utils'
 import { Task } from '../types'
-import { getTests } from '../utils'
+import { getNames, getTests } from '../utils'
 import { SnapshotSummary } from '../integrations/snapshot/utils/types'
 
 const DURATION_LONG = 300
@@ -76,7 +76,24 @@ export function renderSnapshotSummary(rootDir: string, snapshots: SnapshotSummar
   return summary
 }
 
-function getSymbol(task: Task) {
+export function getStateString(tasks: Task[], name = 'tests') {
+  if (tasks.length === 0)
+    return c.dim(`no ${name}`)
+
+  const passed = tasks.filter(i => i.result?.state === 'pass')
+  const failed = tasks.filter(i => i.result?.state === 'fail')
+  const skipped = tasks.filter(i => i.mode === 'skip')
+  const todo = tasks.filter(i => i.mode === 'todo')
+
+  return [
+    failed.length ? c.bold(c.red(`${failed.length} failed`)) : null,
+    passed.length ? c.bold(c.green(`${passed.length} passed`)) : null,
+    skipped.length ? c.yellow(`${skipped.length} skipped`) : null,
+    todo.length ? c.gray(`${todo.length} todo`) : null,
+  ].filter(Boolean).join(c.dim(' | ')) + c.gray(` (${tasks.length})`)
+}
+
+export function getStateSymbol(task: Task) {
   if (task.mode === 'skip' || task.mode === 'todo')
     return skipped
 
@@ -113,7 +130,7 @@ export function renderTree(tasks: Task[], level = 0) {
   for (const task of tasks) {
     let delta = 1
     let suffix = (task.mode === 'skip' || task.mode === 'todo') ? ` ${c.dim('[skipped]')}` : ''
-    const prefix = ` ${getSymbol(task)} `
+    const prefix = ` ${getStateSymbol(task)} `
 
     if (task.type === 'suite')
       suffix += c.dim(` (${getTests(task).length})`)
@@ -185,4 +202,8 @@ export const createRenderer = (_tasks: Task[]) => {
       return this
     },
   }
+}
+
+export function getFullName(task: Task) {
+  return getNames(task).join(c.gray(' > '))
 }

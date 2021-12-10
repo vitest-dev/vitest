@@ -3,6 +3,7 @@ import Snap, { SnapshotStateType } from 'jest-snapshot'
 import { expect } from 'chai'
 import { Test } from '../../types'
 import { rpc } from '../../runtime/rpc'
+import { getNames } from '../../utils'
 import { packSnapshotState } from './utils/jest-test-result-helper'
 
 const { SnapshotState } = Snap
@@ -28,39 +29,35 @@ const resolveSnapshotPath = (testPath: string) =>
 //   )
 
 export class SnapshotClient {
-  ctx: Context | undefined
+  test: Test | undefined
   testFile = ''
   snapshotState: SnapshotStateType | undefined
 
   setTest(test: Test) {
-    this.ctx = {
-      file: test.file?.filepath || test.name,
-      title: test.name,
-      fullTitle: [test.suite.name, test.name].filter(Boolean).join(' > '),
-    }
+    this.test = test
 
-    if (this.testFile !== this.ctx.file) {
+    if (this.testFile !== this.test!.file!.filepath) {
       if (this.snapshotState)
         this.saveSnap()
 
+      this.testFile = this.test!.file!.filepath
       this.snapshotState = new SnapshotState(
-        resolveSnapshotPath(this.ctx.file),
+        resolveSnapshotPath(this.testFile),
         process.__vitest_worker__!.config.snapshotOptions,
       )
-      this.testFile = this.ctx.file
     }
   }
 
   clearTest() {
-    this.ctx = undefined
+    this.test = undefined
   }
 
   assert(received: unknown, message: string): void {
-    if (!this.ctx)
+    if (!this.test)
       throw new Error('Snapshot can\'t not be used outside of test')
 
     const { actual, expected, key, pass } = this.snapshotState!.match({
-      testName: this.ctx.fullTitle || this.ctx.title || this.ctx.file,
+      testName: getNames(this.test).slice(1).join(' > '),
       received,
       isInline: false,
     })
