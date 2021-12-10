@@ -105,12 +105,11 @@ export function JestChaiExpect(): ChaiPlugin {
     })
     def(['toThrow', 'toThrowError'], function() {
       const negate = utils.flag(this, 'negate')
-      const obj = utils.flag(this, 'object')
 
       if (negate) {
-        chai.expect(obj).not.throw()
+        this.not.to.throw()
       } else {
-        chai.expect(obj).throw()
+        this.to.throw()
       }
     })
     def(['toHaveReturned', 'toReturn'], function() {
