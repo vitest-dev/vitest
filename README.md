@@ -25,18 +25,16 @@ A blazing fast unit test framework powered by Vite.
 
 - [Vite](https://vitejs.dev/)'s config, transformers, resolvers, and plugins. Use the same setup from your app!
 - [Jest Snapshot](https://jestjs.io/docs/snapshot-testing)
-- [Chai](https://www.chaijs.com/) built-in for assertions, with [jest-expect](https://jestjs.io/docs/expect) compatible APIs.
-- [Smart watch mode](#watch-mode), just like HMR for tests!
-- [Code coverage](#coverage)
-- [Sinon](https://sinonjs.org/) built-in for mocking
+- [Chai](https://www.chaijs.com/) built-in for assertions, with [Jest expect](https://jestjs.io/docs/expect) compatible APIs.
+- [Smart & instant watch mode](#watch-mode), like HMR for tests!
+- [Native code coverage](#coverage) via [c8](https://github.com/bcoe/c8)
+- [Sinon](https://sinonjs.org/) built-in for mocking, stubbing, and spies.
 - [JSDOM](https://github.com/jsdom/jsdom) and [happy-dom](https://github.com/capricorn86/happy-dom) built-in for DOM and browser API mocking
-- Components testing ([Vue example](./test/vue), [React example](./test/react), [Lit example](./test/lit), [Vitesse example](./test/vitesse))
-- Async suite / test, top level await
-- ESM friendly
+- Components testing ([Vue](./test/vue), [React](./test/react), [Lit](./test/lit), [Vitesse](./test/vitesse))
+- Workers multi-threading via [Piscina](https://github.com/piscinajs/piscina)
+- ESM first, top level await
 - Out-of-box TypeScript / JSX support
-- Test and Hooks timeouts
-- Suite and Test filtering (skip, only, todo)
-- Concurrent Tests
+- Filtering, timeouts, concurrent for suite and tests
 
 ```ts
 import { it, describe, expect, assert } from 'vitest'
