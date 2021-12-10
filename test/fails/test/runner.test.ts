@@ -8,7 +8,7 @@ describe('should fails', async() => {
   const files = await fg('*.test.ts', { cwd: root })
 
   for (const file of files) {
-    it.concurrent(file, async() => {
+    it(file, async() => {
       let error: any
       try {
         await execa('npx', ['vitest', file], { cwd: root, env: { NO_COLOR: 'true' } })
@@ -23,7 +23,7 @@ describe('should fails', async() => {
         .reverse()
         .find(i => i.includes('Error: '))
         ?.trim()
-      expect(msg).toMatchSnapshot()
+      expect(msg).toMatchSnapshot(file)
     })
   }
 })

@@ -3,6 +3,7 @@ import { fileURLToPath } from 'url'
 
 export const distDir = resolve(fileURLToPath(import.meta.url), '../../dist')
 
+// TODO: make then globally configureable in vitest.config.js
 export const defaultTestTimeout = 5000
 export const defaultHookTimeout = 5000
 
