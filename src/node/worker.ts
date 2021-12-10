@@ -6,7 +6,13 @@ import { distDir } from '../constants'
 import { ResolvedConfig, WorkerContext } from '../types'
 import { executeInViteNode, ExecuteOptions } from './execute'
 
-export default async({ port, config }: WorkerContext) => {
+let _ctx: WorkerContext
+let _run: (files: string[], config: ResolvedConfig) => Promise<void>
+
+export async function init(ctx: WorkerContext) {
+  _ctx = ctx
+  const { port, config } = ctx
+
   const promiseMap = new Map<string, { resolve: ((...args: any) => any); reject: (...args: any) => any }>()
 
   const rpc: RpcFn = (method, ...args) => {
@@ -25,25 +31,17 @@ export default async({ port, config }: WorkerContext) => {
 
   const moduleCache: ExecuteOptions['moduleCache'] = new Map()
 
-  let run: (files: string[], config: ResolvedConfig) => Promise<void>
-
   port.addListener('message', async(data) => {
-    if (data.method === 'run') {
-      await run(data.files, config)
-      port.postMessage({ method: 'workerReady' })
-    }
-    else {
-      const api = promiseMap.get(data.id)
-      if (api) {
-        if (data.error)
-          api.reject(data.error)
-        else
-          api.resolve(data.result)
-      }
+    const api = promiseMap.get(data.id)
+    if (api) {
+      if (data.error)
+        api.reject(data.error)
+      else
+        api.resolve(data.result)
     }
   })
 
-  run = (await executeInViteNode({
+  _run = (await executeInViteNode({
     root: config.root,
     files: [
       resolve(distDir, 'runtime/entry.js'),
@@ -55,8 +53,10 @@ export default async({ port, config }: WorkerContext) => {
     external: config.depsExternal,
     moduleCache,
   }))[0].run
+}
 
-  port.postMessage({ method: 'workerReady' })
+export function run(files: string[]) {
+  return _run(files, _ctx.config)
 }
 
 declare global {

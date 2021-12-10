@@ -200,7 +200,8 @@ export interface WorkerInstance {
   id: string
   state: 'init' | 'run' | 'idle'
   port: MessagePort
-  untilReady: () => Promise<void>
+  promise: Promise<any> | null
+  init: () => Promise<void>
   run: (files: string[]) => Promise<void>
   close: () => Promise<void>
 }

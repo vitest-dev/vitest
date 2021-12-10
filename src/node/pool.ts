@@ -20,7 +20,7 @@ export function createWorkerPool(size: number, ctx: VitestContext): WorkerPool {
   async function runTestFiles(files: string[]) {
     const _tasks = [...files]
     await Promise.all(workers.map(async(worker) => {
-      await worker.untilReady()
+      await worker.init()
       while (_tasks.length) {
         const i = _tasks.pop()
         if (i)
@@ -53,23 +53,30 @@ export function createWorker(ctx: VitestContext) {
   const channel = new MessageChannel()
   const port = channel.port1
 
-  const onReadyResolves: (() => void)[] = []
-
   const instance: WorkerInstance = {
     id: nanoid(),
     state: 'init',
     port,
-    async untilReady() {
-      if (this.state === 'idle')
+    promise: null,
+    async init() {
+      if (instance.state !== 'init')
         return
-      return new Promise((resolve) => {
-        onReadyResolves.push(resolve)
-      })
+      const meta: WorkerContext = { port: channel.port2, config: ctx.config }
+      await piscina.run(meta, { transferList: [channel.port2], name: 'init' })
+      this.state = 'idle'
     },
     async run(files: string[]) {
+      if (this.promise)
+        await this.promise
+
       this.state = 'run'
-      port.postMessage({ method: 'run', files })
-      return this.untilReady()
+      this.promise = piscina.run(files, { name: 'run' })
+        .then(() => {
+          this.promise = null
+          this.state = 'idle'
+        })
+
+      return await this.promise
     },
     close() {
       channel.port1.removeAllListeners()
@@ -91,11 +98,6 @@ export function createWorker(ctx: VitestContext) {
     }
 
     switch (method) {
-      case 'workerReady':
-        instance.state = 'idle'
-        onReadyResolves.forEach(resolve => resolve())
-        onReadyResolves.length = 0
-        return
       case 'fetch':
         return send(() => transformRequest(ctx.server, ...args as RpcMap['fetch'][0]))
       case 'onCollected':
@@ -114,9 +116,6 @@ export function createWorker(ctx: VitestContext) {
 
     console.error('Unhandled message', method, args)
   })
-
-  const meta: WorkerContext = { port: channel.port2, config: ctx.config }
-  piscina.run(meta, { transferList: [channel.port2] })
 
   return instance
 }
