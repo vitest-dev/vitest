@@ -3,14 +3,14 @@ import { performance } from 'perf_hooks'
 import { relative } from 'path'
 import c from 'picocolors'
 import { File, Reporter, RunnerContext, ResolvedConfig } from '../types'
-import { getSuites, getTests } from '../utils'
+import { getSuites, getTasks, getTests } from '../utils'
 import { printError } from './error'
 import { createRenderer } from './renderer'
 
 export class DefaultReporter implements Reporter {
   start = 0
   end = 0
-  renderer: ReturnType<typeof createRenderer> = undefined!
+  renderer: ReturnType<typeof createRenderer> | undefined
 
   constructor(public config: ResolvedConfig) {}
 
@@ -19,8 +19,8 @@ export class DefaultReporter implements Reporter {
   }
 
   onStart() {
-    this.start = performance.now()
     console.log(c.green(`Running tests under ${c.gray(this.config.root)}\n`))
+    this.start = performance.now()
   }
 
   onCollected(files: File[]) {
@@ -29,9 +29,9 @@ export class DefaultReporter implements Reporter {
   }
 
   async onFinished(ctx: RunnerContext, files = ctx.files) {
-    this.renderer?.stop()
-
     this.end = performance.now()
+
+    await this.stopListRender()
 
     console.log()
 
@@ -79,10 +79,9 @@ export class DefaultReporter implements Reporter {
   }
 
   async onWatcherStart(ctx: RunnerContext) {
-    // await this.listrPromise
-    this.renderer?.stop()
+    await this.stopListRender()
 
-    const failed = ctx.tests.filter(i => i.result?.state === 'fail')
+    const failed = getTasks(ctx.files).filter(i => i.result?.state === 'fail')
     if (failed.length)
       console.log(`\n${c.bold(c.inverse(c.red(' FAIL ')))}${c.red(` ${failed.length} tests failed. Watching for file changes...`)}`)
     else
@@ -90,9 +89,15 @@ export class DefaultReporter implements Reporter {
   }
 
   async onWatcherRerun(files: string[], trigger: string) {
-    this.renderer?.stop()
+    await this.stopListRender()
 
     console.clear()
     console.log(c.blue('Re-running tests...') + c.dim(` [ ${this.relative(trigger)} ]\n`))
+  }
+
+  async stopListRender() {
+    this.renderer?.stop()
+    this.renderer = undefined
+    await new Promise(resolve => setTimeout(resolve, 100))
   }
 }
