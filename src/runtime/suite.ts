@@ -228,23 +228,12 @@ function withTimeout<T extends((...args: any[]) => any)>(fn: T, timeout = defaul
     return fn
 
   return ((...args: (T extends ((...args: infer A) => any) ? A : never)) => {
-    const timeoutPromise = new Promise((resolve, reject) => {
+    return Promise.race([fn(...args), new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
         clearTimeout(timer)
         reject(new Error(`Test timed out in ${timeout}ms.`))
       }, timeout)
       timer.unref()
-    })
-    if (fn.constructor.name === 'AsyncFunction')
-      return Promise.race([fn(...args), timeoutPromise]) as Awaitable<void>
-
-    return Promise.race([new Promise((resolve, reject) => {
-      try {
-        resolve(fn(...args))
-      }
-      catch (e) {
-        reject(e)
-      }
-    }), timeoutPromise]) as Awaitable<void>
+    })]) as Awaitable<void>
   }) as T
 }
