@@ -33,6 +33,8 @@ declare global {
       toBeFalsy(): void
       toBeGreaterThan(num: number): void
       toBeGreaterThanOrEqual(num: number): void
+      toBeLessThan(num: number): void
+      toBeLessThanOrEqual(num: number): void
       toBeNaN(): void
       toBeUndefined(): void
       toBeNull(): void
