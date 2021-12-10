@@ -30,7 +30,6 @@ sade('vitest [filter]', true)
     const ctx = process.__vitest__ = {
       server,
       config,
-      moduleCache: new Map(),
       state: new StateManager(),
       snapshot: new SnapshotManager(config),
       reporter: config.reporter,
@@ -41,7 +40,7 @@ sade('vitest [filter]', true)
       hookRequire: true,
       handleUncaughtExceptions: true,
       retrieveSourceMap: (id: string) => {
-        const map = ctx.moduleCache.get(id)?.transformResult?.map
+        const map = ctx.server.moduleGraph.getModuleById(id)?.ssrTransformResult?.map
         if (map) {
           return {
             url: id,

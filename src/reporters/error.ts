@@ -6,6 +6,10 @@ import { notNullish } from '@antfu/utils'
 import { SourceMapConsumer, RawSourceMap } from 'source-map'
 
 interface ErrorWithDiff extends Error {
+  name: string
+  nameStr?: string
+  stack?: string
+  stackStr?: string
   showDiff?: boolean
   actual?: any
   expected?: any
@@ -13,24 +17,20 @@ interface ErrorWithDiff extends Error {
 }
 
 export async function printError(error: unknown) {
-  if (!(error instanceof Error)) {
-    console.error(error)
-    return
-  }
-
-  const { moduleCache } = process.__vitest__
+  const { server } = process.__vitest__
 
   const e = error as ErrorWithDiff
 
   let codeFramePrinted = false
-  const stacks = parseStack(e.stack || '')
-  const nearest = stacks.find(stack => moduleCache.has(stack.file))
+  const stacks = parseStack(e.stack || e.stackStr || '')
+  const nearest = stacks.find(stack => server.moduleGraph.getModuleById(stack.file))
   if (nearest) {
-    const transformResult = moduleCache.get(nearest.file)?.transformResult
+    const mod = server.moduleGraph.getModuleById(nearest.file)
+    const transformResult = mod?.ssrTransformResult
     const pos = await getOriginalPos(transformResult?.map, nearest)
     if (pos && existsSync(nearest.file)) {
       const sourceCode = await fs.readFile(nearest.file, 'utf-8')
-      console.error(`${c.red(`${c.bold(e.name)}: ${e.message}`)}`)
+      console.error(`${c.red(`${c.bold(e.name || e.nameStr || 'Unknown Error')}: ${e.message}`)}`)
       console.log(c.gray(`${nearest.file}:${pos.line}:${pos.column}`))
       console.log(c.yellow(generateCodeFrame(sourceCode, pos)))
       codeFramePrinted = true

@@ -6,6 +6,7 @@ import { interpretOnlyMode } from '../utils'
 import { clearContext, createSuiteHooks, defaultSuite } from './suite'
 import { context } from './context'
 import { setHooks } from './map'
+import { processError } from './error'
 
 export async function collectTests(paths: string[]) {
   const files: File[] = []
@@ -43,7 +44,7 @@ export async function collectTests(paths: string[]) {
       file.result = {
         start: performance.now(),
         state: 'fail',
-        error: e,
+        error: processError(e),
       }
       process.exitCode = 1
     }

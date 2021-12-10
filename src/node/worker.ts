@@ -1,8 +1,8 @@
 import { resolve } from 'path'
 import { nanoid } from 'nanoid'
-import { RpcFn } from 'vitest'
+import { RpcCall } from 'vitest'
 import { distDir } from '../constants'
-import { ResolvedConfig, WorkerContext } from '../types'
+import { ResolvedConfig, RpcSend, WorkerContext } from '../types'
 import { executeInViteNode, ExecuteOptions } from './execute'
 
 let _run: (files: string[], config: ResolvedConfig) => Promise<void>
@@ -43,6 +43,9 @@ export default async function run(ctx: WorkerContext) {
         port.postMessage({ method, args, id })
       })
     },
+    send(method, ...args) {
+      port.postMessage({ method, args })
+    },
   }
 
   port.addListener('message', async(data) => {
@@ -59,6 +62,7 @@ export default async function run(ctx: WorkerContext) {
 
   if (ctx.invalidates)
     ctx.invalidates.forEach(i => moduleCache.delete(i))
+  ctx.files.forEach(i => moduleCache.delete(i))
 
   return run(ctx.files, ctx.config)
 }
@@ -69,7 +73,8 @@ declare global {
     interface Process {
       __vitest_worker__: {
         config: ResolvedConfig
-        rpc: RpcFn
+        rpc: RpcCall
+        send: RpcSend
       }
     }
   }

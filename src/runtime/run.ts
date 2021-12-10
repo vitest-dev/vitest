@@ -4,8 +4,9 @@ import { Test, Suite, SuiteHooks, Task } from '../types'
 import { getSnapshotClient } from '../integrations/snapshot/chai'
 import { hasFailed, hasTests, partitionSuiteChildren } from '../utils'
 import { getFn, getHooks } from './map'
-import { rpc } from './rpc'
+import { rpc, send } from './rpc'
 import { collectTests } from './collect'
+import { processError } from './error'
 
 async function callHook<T extends keyof SuiteHooks>(suite: Suite, name: T, args: SuiteHooks[T][0] extends HookListener<infer A> ? A : never) {
   await Promise.all(getHooks(suite)[name].map(fn => fn(...(args as any))))
@@ -34,7 +35,7 @@ export async function runTest(test: Test) {
   }
   catch (e) {
     test.result.state = 'fail'
-    test.result.error = e
+    test.result.error = processError(e)
     process.exitCode = 1
   }
   try {
@@ -42,7 +43,7 @@ export async function runTest(test: Test) {
   }
   catch (e) {
     test.result.state = 'fail'
-    test.result.error = e
+    test.result.error = processError(e)
     process.exitCode = 1
   }
 
@@ -89,7 +90,7 @@ export async function runSuite(suite: Suite) {
     }
     catch (e) {
       suite.result.state = 'fail'
-      suite.result.error = e
+      suite.result.error = processError(e)
       process.exitCode = 1
     }
   }
@@ -126,7 +127,7 @@ export async function runSuites(suites: Suite[]) {
 export async function startTests(paths: string[]) {
   const files = await collectTests(paths)
 
-  await rpc('onCollected', files)
+  send('onCollected', files)
 
   await runSuites(files)
 

@@ -11,25 +11,25 @@ import { createRenderer } from './renderer'
 export class DefaultReporter implements Reporter {
   start = 0
   end = 0
-  renderer: ReturnType<typeof createRenderer> | undefined
+  renderer?: ReturnType<typeof createRenderer>
+  filters?: string[]
 
-  constructor(public ctx: VitestContext) {}
+  constructor(public ctx: VitestContext) {
+    console.log(c.green(`Running tests under ${c.gray(this.ctx.config.root)}\n`))
+  }
 
   relative(path: string) {
     return relative(this.ctx.config.root, path)
   }
 
-  onStart() {
-    console.log(c.green(`Running tests under ${c.gray(this.ctx.config.root)}\n`))
-    this.start = performance.now()
-  }
-
-  onCollected() {
-    const files = this.ctx.state.getFiles()
+  onStart(onlyFiles = this.filters) {
+    const files = this.ctx.state.getFiles(onlyFiles)
     if (!this.renderer)
       this.renderer = createRenderer(files).start()
     else
       this.renderer.update(files)
+
+    this.start = performance.now()
   }
 
   async onFinished(files = this.ctx.state.getFiles()) {
@@ -94,6 +94,8 @@ export class DefaultReporter implements Reporter {
 
   async onWatcherRerun(files: string[], trigger: string) {
     await this.stopListRender()
+
+    this.filters = files
 
     console.clear()
     console.log(c.blue('Re-running tests...') + c.dim(` [ ${this.relative(trigger)} ]\n`))

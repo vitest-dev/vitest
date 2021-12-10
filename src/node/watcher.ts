@@ -16,27 +16,34 @@ export async function startWatcher(ctx: VitestContext, pool: WorkerPool) {
     id = slash(id)
 
     getAffectedTests(ctx, id, changedTests, seen)
-    const affectedModules = Array.from(seen)
 
     if (changedTests.size === 0)
       return
 
+    // debounce
     clearTimeout(timer)
     timer = setTimeout(async() => {
-      if (changedTests.size === 0)
+      if (changedTests.size === 0) {
+        seen.clear()
         return
+      }
 
       // add previously failed files
       ctx.state.getFiles().forEach((file) => {
         if (file.result?.state === 'fail')
           changedTests.add(file.filepath)
       })
-      const paths = Array.from(changedTests)
+
+      const invalidates = Array.from(seen)
+      const tests = Array.from(changedTests)
       changedTests.clear()
+      seen.clear()
 
-      await pool.runTestFiles(paths, affectedModules)
+      await reporter.onWatcherRerun?.(tests, id)
 
-      await reporter.onFinished?.(ctx.state.getFiles(paths))
+      await pool.runTestFiles(tests, invalidates)
+
+      await reporter.onFinished?.(ctx.state.getFiles(tests))
       await reporter.onWatcherStart?.()
     }, 100)
   })
@@ -46,7 +53,7 @@ export async function startWatcher(ctx: VitestContext, pool: WorkerPool) {
 }
 
 export function getAffectedTests(ctx: VitestContext, id: string, set = new Set<string>(), seen = new Set<string>()): Set<string> {
-  if (seen.has(id) || set.has(id))
+  if (seen.has(id) || set.has(id) || id.includes('/node_modules/') || id.includes('/vitest/dist/'))
     return set
 
   seen.add(id)

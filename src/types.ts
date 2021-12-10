@@ -181,8 +181,7 @@ export interface GlobalContext {
 }
 
 export interface Reporter {
-  onStart?: (config: ResolvedConfig) => Awaitable<void>
-  onCollected?: (files: File[]) => Awaitable<void>
+  onStart?: (files?: string[]) => Awaitable<void>
   onFinished?: (files?: File[]) => Awaitable<void>
   onTaskUpdate?: (pack: TaskResultPack) => Awaitable<void>
 
@@ -206,7 +205,6 @@ export interface WorkerContext {
 export interface RpcMap {
   workerReady: [[], void]
   fetch: [[id: string], TransformResult | null | undefined]
-  onStart: [[], void]
   onCollected: [[files: File[]], void]
   onFinished: [[], void]
   onTaskUpdate: [[pack: TaskResultPack], void]
@@ -217,14 +215,14 @@ export interface RpcMap {
   snapshotSaved: [[snapshot: SnapshotResult], void]
 }
 
-export type RpcFn = <T extends keyof RpcMap>(method: T, ...args: RpcMap[T][0]) => Promise<RpcMap[T][1]>
+export type RpcCall = <T extends keyof RpcMap>(method: T, ...args: RpcMap[T][0]) => Promise<RpcMap[T][1]>
+export type RpcSend = <T extends keyof RpcMap>(method: T, ...args: RpcMap[T][0]) => void
 
-export type RpcMessage<T extends keyof RpcMap = keyof RpcMap> = { id: string; method: T; args: RpcMap[T][0] }
+export type RpcPayload<T extends keyof RpcMap = keyof RpcMap> = { id: string; method: T; args: RpcMap[T][0] }
 
 export interface VitestContext {
   config: ResolvedConfig
   server: ViteDevServer
-  moduleCache: Map<string, ModuleCache>
   state: StateManager
   snapshot: SnapshotManager
   reporter: Reporter

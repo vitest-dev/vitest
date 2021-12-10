@@ -11,7 +11,7 @@ export class StateManager {
     return Object.values(this.filesMap)
   }
 
-  onCollected(files: File[]) {
+  collectFiles(files: File[]) {
     files.forEach((file) => {
       this.filesMap[file.filepath] = file
       this.updateId(file)

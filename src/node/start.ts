@@ -12,8 +12,6 @@ export async function start(ctx: VitestContext) {
     return
   }
 
-  await ctx.reporter.onStart?.(config)
-
   const pool = createWorkerPool(ctx)
 
   await pool.runTestFiles(testFilepaths)

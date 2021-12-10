@@ -4,7 +4,7 @@ import Piscina from 'piscina'
 import { Awaitable } from '@antfu/utils'
 import { RpcMap } from 'vitest'
 import { distDir } from '../constants'
-import { WorkerContext, RpcMessage, VitestContext } from '../types'
+import { WorkerContext, RpcPayload, VitestContext } from '../types'
 import { transformRequest } from './transform'
 
 export interface WorkerPool {
@@ -25,7 +25,7 @@ export function createWorkerPool(ctx: VitestContext) {
       const port = channel.port2
       const workerPort = channel.port1
 
-      port.on('message', async({ id, method, args = [] }: RpcMessage) => {
+      port.on('message', async({ id, method, args = [] }: RpcPayload) => {
         async function send(fn: () => Awaitable<any>) {
           try {
             port.postMessage({ id, result: await fn() })
@@ -41,17 +41,13 @@ export function createWorkerPool(ctx: VitestContext) {
           case 'fetch':
             return send(() => transformRequest(ctx.server, ...args as RpcMap['fetch'][0]))
           case 'onCollected':
-            ctx.state.onCollected(args[0] as any)
-            break
+            ctx.state.collectFiles(args[0] as any)
+            ctx.reporter.onStart?.()
+            return
           case 'onTaskUpdate':
             ctx.state.updateTasks([args[0] as any])
-            break
-        }
-
-        if (method.startsWith('on')) {
-          // forward reporter
-          // @ts-expect-error
-          return send(() => ctx.reporter[method]?.(...args))
+            ctx.reporter.onTaskUpdate?.(args[0] as any)
+            return
         }
 
         console.error('Unhandled message', method, args)
@@ -63,6 +59,7 @@ export function createWorkerPool(ctx: VitestContext) {
         files: [file],
         invalidates,
       }
+
       await piscina.run(data, { transferList: [workerPort] })
       port.close()
       workerPort.close()
