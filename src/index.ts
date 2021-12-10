@@ -36,10 +36,24 @@ declare global {
       toBeNull(): void
       toBeDefined(): void
       toBeInstanceOf(c: any): void
+      toBeCalledTimes(n: number): void
       toHaveBeenCalledTimes(n: number): void
       toHaveBeenCalledOnce(): void
       toHaveBeenCalled(): void
+      toBeCalled(): void
       toHaveBeenCalledWith(...args: any[]): void
+      toBeCalledWith(...args: any[]): void
+
+      toReturn(): void
+      toHaveReturned(): void
+      toReturnTimes(times: number): void
+      toHaveReturnedTimes(times: number): void
+      toReturnWith(value: any): void
+      toHaveReturnedWith(value: any): void
+      toHaveLastReturnedWith(value: any): void
+      lastReturnedWith(value: any): void
+      toHaveNthReturnedWith(nthCall: number, value: any): void
+      nthReturnedWith(nthCall: number, value: any): void
     }
   }
 }
