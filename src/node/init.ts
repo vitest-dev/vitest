@@ -1,7 +1,6 @@
 import { resolve } from 'path'
 import { findUp } from 'find-up'
 import { createServer } from 'vite'
-import { SnapshotStateOptions } from 'jest-snapshot/build/State'
 import { toArray } from '@antfu/utils'
 import { CliOptions, ResolvedConfig } from '../types'
 
@@ -64,7 +63,7 @@ export async function initViteServer(options: CliOptions = {}) {
       : UPDATE_SNAPSHOT
         ? 'all'
         : 'new',
-  } as SnapshotStateOptions
+  }
 
   if (process.env.VITEST_MAX_THREADS)
     resolved.maxThreads = parseInt(process.env.VITEST_MAX_THREADS)

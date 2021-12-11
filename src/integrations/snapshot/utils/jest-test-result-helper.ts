@@ -4,15 +4,46 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-// @ts-ignore
-import Test from '@jest/test-result'
-import { SnapshotStateType } from 'jest-snapshot'
-import { SnapshotStateOptions } from 'jest-snapshot/build/State'
+
+// TODO: clean up this file
+
+import SnapshotState, { SnapshotStateOptions } from '../port/state'
 import { SnapshotSummary, SnapshotResult } from './types'
 
-const {
-  makeEmptyAggregatedTestResult,
-} = Test
+export const makeEmptyAggregatedTestResult = () => ({
+  numFailedTestSuites: 0,
+  numFailedTests: 0,
+  numPassedTestSuites: 0,
+  numPassedTests: 0,
+  numPendingTestSuites: 0,
+  numPendingTests: 0,
+  numRuntimeErrorTestSuites: 0,
+  numTodoTests: 0,
+  numTotalTestSuites: 0,
+  numTotalTests: 0,
+  openHandles: [],
+  snapshot: {
+    added: 0,
+    didUpdate: false, // is set only after the full run
+    failure: false,
+    filesAdded: 0,
+    // combines individual test results + removed files after the full run
+    filesRemoved: 0,
+    filesRemovedList: [],
+    filesUnmatched: 0,
+    filesUpdated: 0,
+    matched: 0,
+    total: 0,
+    unchecked: 0,
+    uncheckedKeysByFile: [],
+    unmatched: 0,
+    updated: 0,
+  },
+  startTime: 0,
+  success: true,
+  testResults: [],
+  wasInterrupted: false,
+})
 
 export const emptySummary = (
   options: SnapshotStateOptions,
@@ -24,7 +55,7 @@ export const emptySummary = (
 
 export const packSnapshotState = (
   filepath: string,
-  snapshotState: SnapshotStateType,
+  snapshotState: SnapshotState,
 ): SnapshotResult => {
   const snapshot: SnapshotResult = {
     filepath,

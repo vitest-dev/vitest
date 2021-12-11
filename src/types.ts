@@ -2,10 +2,10 @@
 import type { MessagePort } from 'worker_threads'
 import type { Awaitable } from '@antfu/utils'
 import type { TransformResult, ViteDevServer } from 'vite'
-import type { SnapshotStateOptions } from 'jest-snapshot/build/State'
 import type { StateManager } from './node/state'
 import type { SnapshotResult } from './integrations/snapshot/utils/types'
 import type { SnapshotManager } from './integrations/snapshot/manager'
+import { SnapshotStateOptions } from './integrations/snapshot/port/state'
 
 export interface UserOptions {
   /**
