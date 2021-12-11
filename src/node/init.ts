@@ -49,9 +49,10 @@ export async function initViteServer(options: CliOptions = {}) {
 
   Object.assign(resolved, server.config.test)
 
-  resolved.depsInline = server.config.test?.deps?.inline || []
-  resolved.depsExternal = server.config.test?.deps?.external || []
+  resolved.depsInline = resolved.deps?.inline || []
+  resolved.depsExternal = resolved.deps?.external || []
 
+  resolved.environment = resolved.environment || 'node'
   resolved.threads = resolved.threads ?? true
   resolved.interpretDefault = resolved.interpretDefault ?? true
 

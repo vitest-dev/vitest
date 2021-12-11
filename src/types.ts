@@ -50,11 +50,13 @@ export interface UserOptions {
   global?: boolean
 
   /**
-   * Use `jsdom` or `happy-dom` to mock browser APIs
+   * Running environment
    *
-   * @default false
+   * Supports 'node', 'jsdom', 'happy-dom'
+   *
+   * @default 'node'
    */
-  dom?: boolean | 'jsdom' | 'happy-dom'
+  environment?: 'node' | 'jsdom' | 'happy-dom'
 
   /**
    * Update snapshot files
@@ -253,11 +255,28 @@ export interface ModuleCache {
   transformResult?: TransformResult
 }
 
+export interface EnvironmentReturn {
+  teardown: (global: any) => Awaitable<void>
+}
+
+export interface Environment {
+  name: string
+  setup(global: any): Awaitable<EnvironmentReturn>
+}
+
 export interface WorkerContext {
   port: MessagePort
   config: ResolvedConfig
   files: string[]
   invalidates?: string[]
+}
+
+export interface VitestContext {
+  config: ResolvedConfig
+  server: ViteDevServer
+  state: StateManager
+  snapshot: SnapshotManager
+  reporter: Reporter
 }
 
 export interface RpcMap {
@@ -277,11 +296,3 @@ export type RpcCall = <T extends keyof RpcMap>(method: T, ...args: RpcMap[T][0])
 export type RpcSend = <T extends keyof RpcMap>(method: T, ...args: RpcMap[T][0]) => void
 
 export type RpcPayload<T extends keyof RpcMap = keyof RpcMap> = { id: string; method: T; args: RpcMap[T][0] }
-
-export interface VitestContext {
-  config: ResolvedConfig
-  server: ViteDevServer
-  state: StateManager
-  snapshot: SnapshotManager
-  reporter: Reporter
-}

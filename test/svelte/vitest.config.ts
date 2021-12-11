@@ -7,6 +7,6 @@ export default defineConfig({
   ],
   test: {
     global: true,
-    dom: 'jsdom',
+    environment: 'jsdom',
   },
 })
