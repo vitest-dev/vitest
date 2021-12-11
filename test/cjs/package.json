@@ -1,0 +1,12 @@
+{
+  "name": "@vitest/test-cjs",
+  "private": true,
+  "scripts": {
+    "test": "vitest",
+    "coverage": "vitest --coverage"
+  },
+  "devDependencies": {
+    "prettier": "^2.5.1",
+    "vitest": "workspace:*"
+  }
+}

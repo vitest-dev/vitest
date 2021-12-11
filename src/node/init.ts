@@ -14,6 +14,11 @@ const configFiles = [
   'vite.config.mjs',
 ]
 
+/**
+ * Initalized Vite server and resolving configs and fill the defaults
+ * They are together because we have configs in Vite config
+ * that need to be merged after server starts.
+ */
 export async function initViteServer(options: CliOptions = {}) {
   const root = resolve(options.root || process.cwd())
   process.chdir(root)
@@ -46,6 +51,8 @@ export async function initViteServer(options: CliOptions = {}) {
 
   resolved.depsInline = server.config.test?.deps?.inline || []
   resolved.depsExternal = server.config.test?.deps?.external || []
+
+  resolved.interpretDefault = resolved.interpretDefault || true
 
   const env = process.env
   const CI = !!env.CI
