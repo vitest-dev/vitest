@@ -1,3 +1,4 @@
+import { MatchersObject } from 'expect/build/types'
 import { UserOptions } from './types'
 
 export * from './types'
@@ -16,6 +17,10 @@ declare module 'vite' {
 
 declare global {
   namespace Chai {
+    interface ExpectStatic {
+      extend(expects: MatchersObject): void
+    }
+
     interface Assertion {
       // Snapshot
       toMatchSnapshot(message?: string): Assertion
