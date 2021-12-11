@@ -47,6 +47,10 @@ declare global {
       toBeCalled(): void
       toHaveBeenCalledWith(...args: any[]): void
       toBeCalledWith(...args: any[]): void
+      toHaveBeenNthCalledWith(n: number, ...args: any[]): void
+      nthCalledWith(n: number, ...args: any[]): void
+      toHaveBeenLastCalledWith(...args: any[]): void
+      lastCalledWith(...args: any[]): void
       toThrow(): void
       toThrowError(): void
       toReturn(): void
