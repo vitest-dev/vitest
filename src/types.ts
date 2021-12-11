@@ -2,10 +2,10 @@
 import type { MessagePort } from 'worker_threads'
 import type { Awaitable } from '@antfu/utils'
 import type { TransformResult, ViteDevServer } from 'vite'
+import type { OptionsReceived as PrettyFormatOptions } from 'pretty-format'
 import type { StateManager } from './node/state'
 import type { SnapshotResult } from './integrations/snapshot/utils/types'
 import type { SnapshotManager } from './integrations/snapshot/manager'
-import { SnapshotStateOptions } from './integrations/snapshot/port/state'
 
 export interface UserOptions {
   /**
@@ -253,6 +253,25 @@ export interface ModuleCache {
   promise?: Promise<any>
   exports?: any
   transformResult?: TransformResult
+}
+
+export type SnapshotData = Record<string, string>
+
+export type SnapshotUpdateState = 'all' | 'new' | 'none'
+
+export type SnapshotStateOptions = {
+  updateSnapshot: SnapshotUpdateState
+  expand?: boolean
+  snapshotFormat?: PrettyFormatOptions
+}
+
+export type SnapshotMatchOptions = {
+  testName: string
+  received: unknown
+  key?: string
+  inlineSnapshot?: string
+  isInline: boolean
+  error?: Error
 }
 
 export interface EnvironmentReturn {

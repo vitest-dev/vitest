@@ -12,78 +12,14 @@ import {
   OptionsReceived as PrettyFormatOptions,
   format as prettyFormat,
 } from 'pretty-format'
+import { SnapshotData, SnapshotUpdateState } from '../../../types'
 import { getSerializers } from './plugins'
 
 // TODO: rewrite and clean up
 
-export type SnapshotData = Record<string, string>
-
-export type SnapshotUpdateState = 'all' | 'new' | 'none'
-
-export type SnapshotStateOptions = {
-  updateSnapshot: SnapshotUpdateState
-  // prettierPath: string
-  expand?: boolean
-  snapshotFormat?: PrettyFormatOptions
-}
-
 export const SNAPSHOT_VERSION = '1'
-// const SNAPSHOT_VERSION_REGEXP = /^\/\/ Jest Snapshot v(.+),/
-// export const SNAPSHOT_VERSION_WARNING = c.yellow(
-//   `${c.bold('Warning')}: Before you upgrade snapshots, `
-//     + 'we recommend that you revert any local changes to tests or other code, '
-//     + 'to ensure that you do not store invalid state.',
-// )
 
-const writeSnapshotVersion = () =>
-  `// Vitest Snapshot v${SNAPSHOT_VERSION}`
-
-// const validateSnapshotVersion = (snapshotContents: string) => {
-//   const versionTest = SNAPSHOT_VERSION_REGEXP.exec(snapshotContents)
-//   const version = versionTest && versionTest[1]
-
-//   if (!version) {
-//     return new Error(
-//       c.red(
-//         `${c.bold('Outdated snapshot')}: No snapshot header found. `
-//           + 'Jest 19 introduced versioned snapshots to ensure all developers '
-//           + 'on a project are using the same version of Jest. '
-//           + 'Please update all snapshots during this upgrade of Jest.\n\n',
-//       ) + SNAPSHOT_VERSION_WARNING,
-//     )
-//   }
-
-//   if (version < SNAPSHOT_VERSION) {
-//     return new Error(
-//       `${c.red(
-//         `${c.red(c.bold('Outdated snapshot'))}: The version of the snapshot `
-//           + 'file associated with this test is outdated. The snapshot file '
-//           + 'version ensures that all developers on a project are using '
-//           + 'the same version of Jest. '
-//           + 'Please update all snapshots during this upgrade of Jest.\n\n',
-//       )
-//       }Expected: v${SNAPSHOT_VERSION}\n`
-//         + `Received: v${version}\n\n${
-//           SNAPSHOT_VERSION_WARNING}`,
-//     )
-//   }
-
-//   if (version > SNAPSHOT_VERSION) {
-//     return new Error(
-//       `${c.red(
-//         `${c.red(c.bold('Outdated Jest version'))}: The version of this `
-//           + 'snapshot file indicates that this project is meant to be used '
-//           + 'with a newer version of Jest. The snapshot file version ensures '
-//           + 'that all developers on a project are using the same version of '
-//           + 'Jest. Please update your version of Jest and re-run the tests.\n\n',
-//       )
-//       }Expected: v${SNAPSHOT_VERSION}\n`
-//         + `Received: v${version}`,
-//     )
-//   }
-
-//   return null
-// }
+const writeSnapshotVersion = () => `// Vitest Snapshot v${SNAPSHOT_VERSION}`
 
 export const testNameToKey = (testName: string, count: number): string =>
   `${testName} ${count}`

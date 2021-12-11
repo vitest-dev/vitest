@@ -10,27 +10,16 @@ import type { Config } from '@jest/types'
 // import { getStackTraceLines, getTopFrame } from 'jest-message-util'
 import type { OptionsReceived as PrettyFormatOptions } from 'pretty-format'
 // import { InlineSnapshot, saveInlineSnapshots } from './InlineSnapshots'
+import { SnapshotData, SnapshotMatchOptions, SnapshotStateOptions } from '../../../types'
 import {
   addExtraLineBreaks,
   getSnapshotData,
   keyToTestName,
   removeExtraLineBreaks,
-  // removeLinesBeforeExternalMatcherTrap,
   saveSnapshotFile,
   serialize,
-  SnapshotData,
-  SnapshotStateOptions,
   testNameToKey,
 } from './utils'
-
-export type SnapshotMatchOptions = {
-  testName: string
-  received: unknown
-  key?: string
-  inlineSnapshot?: string
-  isInline: boolean
-  error?: Error
-}
 
 type SnapshotReturnOptions = {
   actual: string
