@@ -59,11 +59,9 @@ function JestExtendPlugin(expects: MatchersObject): ChaiPlugin {
           c.expect.fail(message())
       }
 
-      if (isAsyncFunction(expectFn))
-        utils.addMethod(chai.Assertion.prototype, expectName, expectAsyncWrapper)
+      const expectWrapper = isAsyncFunction(expectFn) ? expectAsyncWrapper : expectSyncWrapper
 
-      else
-        utils.addMethod(chai.Assertion.prototype, expectName, expectSyncWrapper)
+      utils.addMethod(chai.Assertion.prototype, expectName, expectWrapper)
     })
   }
 }
