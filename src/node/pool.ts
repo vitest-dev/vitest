@@ -12,12 +12,30 @@ export interface WorkerPool {
   close: () => Promise<void>
 }
 
+// UPSTREAM: Piscina does not expose this type
+interface PiscinaOptions {
+  filename?: string | null
+  name?: string
+  minThreads?: number
+  maxThreads?: number
+  idleTimeout?: number
+  maxQueue?: number | 'auto'
+  concurrentTasksPerWorker?: number
+  useAtomics?: boolean
+}
+
 export function createWorkerPool(ctx: VitestContext) {
-  const piscina = new Piscina({
+  const options: PiscinaOptions = {
     filename: new URL('./dist/node/worker.js', pathToFileURL(distDir)).href,
-    maxThreads: ctx.config.maxThreads,
-    minThreads: ctx.config.minThreads,
-  })
+  }
+
+  // UPSTREAM: Piscina set defaults by the key existence
+  if (ctx.config.maxThreads != null)
+    options.maxThreads = ctx.config.maxThreads
+  if (ctx.config.minThreads != null)
+    options.minThreads = ctx.config.minThreads
+
+  const piscina = new Piscina(options)
 
   const runTestFiles: WorkerPool['runTestFiles'] = async(files, invalidates) => {
     await Promise.all(files.map(async(file) => {
