@@ -32,9 +32,9 @@ describe('before and after hooks', () => {
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve()
-      }, 200)
+      }, 100)
     })
-  }, 100)
+  }, 200)
 
   it('beforeEach works', () => {
     assert.equal(eachState, 'running')

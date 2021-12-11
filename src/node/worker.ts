@@ -31,6 +31,8 @@ export async function init(ctx: WorkerContext) {
 }
 
 export default async function run(ctx: WorkerContext) {
+  process.stdout.write('\0')
+
   const { config, port } = ctx
   const rpcPromiseMap = new Map<string, { resolve: ((...args: any) => any); reject: (...args: any) => any }>()
 
