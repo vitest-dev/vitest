@@ -16,5 +16,8 @@
     "paths": {
       "vitest": ["./src/index.ts"]
     }
-  }
+  },
+  "include": [
+    "./src/**/*.ts"
+  ],
 }

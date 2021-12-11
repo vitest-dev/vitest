@@ -14,6 +14,12 @@ describe('jest-expect', () => {
     expect(['Hello']).toContain('Hello')
     expect([{ text: 'Hello' }]).toContainEqual({ text: 'Hello' })
     expect([{ text: 'Bye' }]).not.toContainEqual({ text: 'Hello' })
+    expect(1).toBeGreaterThan(0)
+    expect(1).toBeGreaterThanOrEqual(1)
+    expect(1).toBeGreaterThanOrEqual(0)
+    expect(0).toBeLessThan(1)
+    expect(1).toBeLessThanOrEqual(1)
+    expect(0).toBeLessThanOrEqual(1)
     expect(() => {
       throw new Error('error')
     }).toThrow()
