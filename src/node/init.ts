@@ -52,7 +52,8 @@ export async function initViteServer(options: CliOptions = {}) {
   resolved.depsInline = server.config.test?.deps?.inline || []
   resolved.depsExternal = server.config.test?.deps?.external || []
 
-  resolved.interpretDefault = resolved.interpretDefault || true
+  resolved.threads = resolved.threads ?? true
+  resolved.interpretDefault = resolved.interpretDefault ?? true
 
   const CI = !!process.env.CI
   const UPDATE_SNAPSHOT = resolved.update || process.env.UPDATE_SNAPSHOT
