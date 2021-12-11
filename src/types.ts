@@ -81,6 +81,27 @@ export interface UserOptions {
   reporter?: Reporter
 
   /**
+   * Enable multi-threading
+   *
+   * @default true
+   */
+  threads?: boolean
+
+  /**
+   * Maximum number of threads
+   *
+   * @default available CPUs
+   */
+  maxThreads?: number
+
+  /**
+   * Minimum number of threads
+   *
+   * @default available CPUs
+   */
+  minThreads?: number
+
+  /*
    * Interpret CJS module's default as named exports
    *
    * @default true

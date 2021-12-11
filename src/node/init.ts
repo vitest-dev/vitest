@@ -54,10 +54,8 @@ export async function initViteServer(options: CliOptions = {}) {
 
   resolved.interpretDefault = resolved.interpretDefault || true
 
-  const env = process.env
-  const CI = !!env.CI
-  const UPDATE_SNAPSHOT = resolved.update || env.UPDATE_SNAPSHOT
-
+  const CI = !!process.env.CI
+  const UPDATE_SNAPSHOT = resolved.update || process.env.UPDATE_SNAPSHOT
   resolved.snapshotOptions = {
     updateSnapshot: CI && !UPDATE_SNAPSHOT
       ? 'none'
@@ -65,6 +63,12 @@ export async function initViteServer(options: CliOptions = {}) {
         ? 'all'
         : 'new',
   } as SnapshotStateOptions
+
+  if (process.env.VITEST_MAX_THREADS)
+    resolved.maxThreads = parseInt(process.env.VITEST_MAX_THREADS)
+
+  if (process.env.VITEST_MIN_THREADS)
+    resolved.minThreads = parseInt(process.env.VITEST_MIN_THREADS)
 
   return {
     server,
