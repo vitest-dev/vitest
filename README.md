@@ -81,7 +81,7 @@ $ npx vitest
 - Create `vitest.config.ts`, which will have the higher priority
 - Pass `--config` option to CLI, e.g. `vitest --config ./path/to/vitest.config.ts`
 - Use `process.env.VITEST` to conditionally apply differnet configuration in `vite.config.ts`
-
+- Use `process.env.VITEST_MAX_THREADS` to limit amount of worker threads
 To configure `vitest` itself, add `test` property in your Vite config
 
 ```ts
