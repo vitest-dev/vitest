@@ -8,9 +8,8 @@ import stripAnsi from 'strip-ansi'
 import elegantSpinner from 'elegant-spinner'
 import logSymbols from 'log-symbols'
 import { slash } from '@antfu/utils'
-import { Task } from '../types'
+import { SnapshotSummary, Task } from '../types'
 import { getNames, getTests } from '../utils'
-import { SnapshotSummary } from '../integrations/snapshot/utils/types'
 
 const DURATION_LONG = 300
 const MAX_HEIGHT = 20

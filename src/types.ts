@@ -4,7 +4,6 @@ import type { Awaitable } from '@antfu/utils'
 import type { TransformResult, ViteDevServer } from 'vite'
 import type { OptionsReceived as PrettyFormatOptions } from 'pretty-format'
 import type { StateManager } from './node/state'
-import type { SnapshotResult } from './integrations/snapshot/utils/types'
 import type { SnapshotManager } from './integrations/snapshot/manager'
 
 export interface UserOptions {
@@ -272,6 +271,39 @@ export type SnapshotMatchOptions = {
   inlineSnapshot?: string
   isInline: boolean
   error?: Error
+}
+
+export interface SnapshotResult {
+  filepath: string
+  added: number
+  fileDeleted: boolean
+  matched: number
+  unchecked: number
+  uncheckedKeys: Array<string>
+  unmatched: number
+  updated: number
+}
+
+export interface UncheckedSnapshot {
+  filePath: string
+  keys: Array<string>
+}
+
+export interface SnapshotSummary {
+  added: number
+  didUpdate: boolean
+  failure: boolean
+  filesAdded: number
+  filesRemoved: number
+  filesRemovedList: Array<string>
+  filesUnmatched: number
+  filesUpdated: number
+  matched: number
+  total: number
+  unchecked: number
+  uncheckedKeysByFile: Array<UncheckedSnapshot>
+  unmatched: number
+  updated: number
 }
 
 export interface EnvironmentReturn {
