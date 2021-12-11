@@ -49,7 +49,10 @@
     "release": "bumpp --commit --push --tag && esmo scripts/publish.ts",
     "test": "node bin/vitest.mjs -r test/core",
     "test:all": "pnpm -r --stream --filter !vitest run test --",
-    "test:ci": "pnpm -r --stream --filter !vitest --filter !@vitest/test-fails run test --"
+    "test:ci": "pnpm -r --stream --filter !vitest --filter !@vitest/test-fails run test --",
+    "docs": "vitepress dev docs",
+    "build-docs": "vitepress build docs",
+    "serve-docs": "vitepress serve docs"
   },
   "dependencies": {
     "@antfu/utils": "^0.3.0",
@@ -99,7 +102,8 @@
     "rimraf": "^3.0.2",
     "tsup": "^5.10.3",
     "typescript": "^4.5.2",
-    "vite": "^2.7.1"
+    "vite": "^2.7.1",
+    "vitepress": "^0.20.1"
   },
   "peerDependencies": {
     "vite": "^2.7.1"
