@@ -164,14 +164,16 @@ export const spyOn: JestMockCompatStatic = <TArgs extends any[], TReturns>(fnOrO
   })
   addMethod('mockReturnValue', (obj: any) => {
     assertAccessType('get')
-    implementation = () => obj
-    stub.returns(obj)
+    const fn = () => obj
+    implementation = fn
+    stub[accessType || 'callsFake'](fn)
     return stub
   })
   addMethod('mockReturnValueOnce', (obj: any) => {
     assertAccessType('get')
     mockMethodCalled++
-    stub.onCall(getOnceCall()).returns(obj)
+    const fn = () => obj
+    stub.onCall(getOnceCall())[accessType || 'callsFake'](fn)
     return stub
   })
   addMethod('mockResolvedValue', (obj: any) => {
