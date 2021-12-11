@@ -31,7 +31,7 @@ export function createPool(ctx: VitestContext): WorkerPool {
     return createFakePool(ctx)
 }
 
-const workerPath = new URL('./dist/node/worker.js', pathToFileURL(distDir)).href
+const workerPath = new URL('./dist/runtime/worker.js', pathToFileURL(distDir)).href
 
 export function createFakePool(ctx: VitestContext): WorkerPool {
   const runTestFiles: WorkerPool['runTestFiles'] = async(files, invalidates) => {
