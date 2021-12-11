@@ -58,7 +58,6 @@
     "@antfu/utils": "^0.3.0",
     "@types/chai": "^4.3.0",
     "@types/sinon-chai": "^3.2.6",
-    "c8": "^7.10.0",
     "chai": "^4.3.4",
     "chai-subset": "^1.6.0",
     "cli-truncate": "^3.1.0",
@@ -92,6 +91,7 @@
     "@types/sinon": "^10.0.6",
     "@types/source-map-support": "^0.5.4",
     "bumpp": "^7.1.1",
+    "c8": "^7.10.0",
     "eslint": "^8.4.1",
     "esno": "^0.12.1",
     "happy-dom": "^2.24.5",
@@ -103,6 +103,7 @@
     "vite": "^2.7.1"
   },
   "peerDependencies": {
+    "c8": "*",
     "happy-dom": "*",
     "jsdom": "*",
     "vite": "^2.7.1"
@@ -112,6 +113,9 @@
       "optional": true
     },
     "jsdom": {
+      "optional": true
+    },
+    "c8": {
       "optional": true
     }
   },

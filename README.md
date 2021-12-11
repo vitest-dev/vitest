@@ -144,10 +144,10 @@ export default defineConfig({
 
 Vitest supports both [happy-dom](https://github.com/capricorn86/happy-dom) or [jsdom](https://github.com/jsdom/jsdom) for mocking DOM and browser APIs. They don't come with Vitest, you might need to install them:
 
-```bah
-npm i -D happy-dom
+```bash
+$ npm i -D happy-dom
 # or
-npm i -D happy-dom
+$ npm i -D jsdom
 ```
 
 After that, change the `environment` option in your config file:
@@ -176,6 +176,7 @@ Vitest smartly searches the module graph and only rerun the related tests (just 
 Vitest works perfectly with [c8](https://github.com/bcoe/c8)
 
 ```bash
+$ npm i -D c8
 $ c8 vitest
 ```
 
