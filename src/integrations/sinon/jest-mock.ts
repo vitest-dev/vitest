@@ -69,6 +69,8 @@ export const spyOn: JestMockCompatStatic = <TArgs extends any[], TReturns>(fnOrO
   // @ts-expect-error
   const stub = typeof fnOrObj === 'function' ? sinon.stub({ fn: fnOrObj }, 'fn') : sinon.stub(fnOrObj, method) as SinonStub
 
+  // can use sinon.addBehavior, but we can't set mock or make a custom implementation
+  // also we are storing implementation
   const addMethod = (n: string, fn: (...args: any[]) => any) => {
     Object.defineProperty(stub, n, {
       value: fn,
@@ -114,9 +116,7 @@ export const spyOn: JestMockCompatStatic = <TArgs extends any[], TReturns>(fnOrO
       throw new TypeError(`no accessType for this method allowed, recieved ${accessType}`)
   }
 
-  addMethod('getMockName', () => {
-    return stub.name
-  })
+  addMethod('getMockName', () => stub.name)
   addMethod('mockName', (n: string) => {
     stub.named(n)
     return stub
@@ -134,9 +134,7 @@ export const spyOn: JestMockCompatStatic = <TArgs extends any[], TReturns>(fnOrO
     stub.restore()
     stub[accessType || 'callsFake'](stub.wrappedMethod)
   })
-  addMethod('getMockImplementation', () => {
-    return implementation
-  })
+  addMethod('getMockImplementation', () => implementation)
   addMethod('mockImplementation', (fn: (...args: TArgs) => TReturns) => {
     implementation = fn
 
