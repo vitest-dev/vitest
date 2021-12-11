@@ -33,7 +33,6 @@ importers:
       jsdom: ^19.0.0
       log-symbols: ^4.1.0
       log-update: ^5.0.0
-      mlly: ^0.3.15
       nanoid: ^3.1.30
       npm-run-all: ^4.1.5
       picocolors: ^1.0.0
@@ -49,7 +48,6 @@ importers:
       tsup: ^5.11.1
       typescript: ^4.5.3
       vite: ^2.7.1
-      vitepress: ^0.20.4
     dependencies:
       '@antfu/utils': 0.3.0
       '@types/chai': 4.3.0
@@ -65,7 +63,6 @@ importers:
       find-up: 6.2.0
       log-symbols: 4.1.0
       log-update: 5.0.0
-      mlly: 0.3.15
       nanoid: 3.1.30
       picocolors: 1.0.0
       piscina: 3.2.0
@@ -97,10 +94,12 @@ importers:
       tsup: 5.11.1_typescript@4.5.3
       typescript: 4.5.3
       vite: 2.7.1
-      vitepress: 0.20.4
 
   docs:
-    specifiers: {}
+    specifiers:
+      vitepress: ^0.20.4
+    devDependencies:
+      vitepress: 0.20.4
 
   test/cjs:
     specifiers:
@@ -3843,10 +3842,6 @@ packages:
     dependencies:
       import-meta-resolve: 1.1.1
     dev: true
-
-  /mlly/0.3.15:
-    resolution: {integrity: sha512-3btbOX6XaoIMXRhLu0T/D9jPRrjJXl4R7Dl+EbpN7BYcQwehmt5UAYrIa2m9D/ywcXIUvDM+OTCON+ShFggndg==}
-    dev: false
 
   /mri/1.2.0:
     resolution: {integrity: sha512-tzzskb3bG8LvYGFF/mDTpq3jpI6Q9wc3LEmBaghu+DdCssd1FakN7Bc0hVNmEyGq1bq3RgfkCb3cmQLpNPOroA==}
