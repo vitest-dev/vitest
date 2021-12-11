@@ -19,7 +19,14 @@ interface ErrorWithDiff extends Error {
 export async function printError(error: unknown) {
   const { server } = process.__vitest__
 
-  const e = error as ErrorWithDiff
+  let e = error as ErrorWithDiff
+
+  if (typeof error === 'string') {
+    e = {
+      message: error.split(/\n/g)[0],
+      stack: error,
+    } as any
+  }
 
   let codeFramePrinted = false
   const stacks = parseStack(e.stack || e.stackStr || '')

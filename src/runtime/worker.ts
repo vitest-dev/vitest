@@ -1,7 +1,6 @@
 import { resolve } from 'path'
 import { nanoid } from 'nanoid'
 import { RpcCall } from 'vitest'
-import { install as installSourceMapSupport } from 'source-map-support'
 import { distDir } from '../constants'
 import { ResolvedConfig, RpcSend, WorkerContext } from '../types'
 import { executeInViteNode, ExecuteOptions } from '../node/execute'
@@ -28,22 +27,6 @@ export async function init(ctx: WorkerContext) {
     interpretDefault: config.interpretDefault,
     moduleCache,
   }))[0].run
-
-  installSourceMapSupport({
-    environment: 'node',
-    hookRequire: true,
-    handleUncaughtExceptions: true,
-    retrieveSourceMap: (id: string) => {
-      const map = moduleCache.get(id)?.transformResult?.map
-      if (map) {
-        return {
-          url: id,
-          map: map as any,
-        }
-      }
-      return null
-    },
-  })
 
   return _run
 }
