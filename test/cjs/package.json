@@ -6,6 +6,7 @@
     "coverage": "vitest --coverage"
   },
   "devDependencies": {
+    "@prettier/plugin-pug": "^1.19.0",
     "prettier": "^2.5.1",
     "vitest": "workspace:*"
   }

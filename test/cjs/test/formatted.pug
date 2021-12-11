@@ -1,0 +1,43 @@
+.abc
+.abc
+
+- var classes = ["foo", "bar", "baz"]
+a(class=classes)
+|
+|
+//- the class attribute may also be repeated to merge arrays
+a.bang(class=classes, class=["bing"])
+|
+|
+- const currentUrl = "/about"
+a(class={ active: currentUrl === "/" }, href="/") Home
+|
+|
+a(class={ active: currentUrl === "/about" }, href="/about") About
+
+a#id.class(href="index.html") Text
+a#id.class(href="index.html") Text
+a#id(href="index.html") Text
+a.class(href="index.html") Text
+
+#id Text
+.class Text
+#id Text
+.class Text
+
+.bg-red-100.border-l-4.border-red-600.text-red-700.p-4.mb-4
+.bg-red-100.border-l-4.border-red-600.text-red-700.p-4.mb-4(data-other="other")
+.bg-red-100.border-l-4.border-red-6(data-other="other", data-another="another")
+.bg-red-10.border-l-2.border-red-600.text-red-700.mb-4.rounded-r-10.font-normal
+.bg-red-10.border-l-2.border-red-600.text-red-700.mb-4.rounded-r-10.font-normal(
+  data-other="other"
+)
+.bg-red-10.border-l-2.border-red-600.text-red-700.mb-4.rounded-r-10.font-normal.more
+
+.bg-red-100.border-l-4.border-red-600.text-red-700.p-4.mb-4
+.bg-red-100.border-l-4.border-red-600.text-red-700.p-4.mb-4(data-other="other")
+.bg-red-10.border-l-2.border-red-600.text-red-700.mb-4.rounded-r-10.font-normal
+.bg-red-10.border-l-2.border-red-600.text-red-700.mb-4.rounded-r-10.font-normal(
+  data-other="other"
+)
+.bg-red-10.border-l-2.border-red-600.text-red-700.mb-4.rounded-r-10.font-normal.more
