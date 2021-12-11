@@ -130,13 +130,10 @@ export async function executeInViteNode({ moduleCache, root, files, fetch, inlin
 
     const fsPath = toFilePath(id, root)
 
-    if (externaled.has(fsPath) || await shouldExternalize(fsPath)) {
-      externaled.add(fsPath)
-      // windows
-      if (fsPath.match(/^\w:\//))
-        return import(`/${fsPath}`)
-      else
-        return import(fsPath)
+    const importPath = patchWindowsImportPath(fsPath)
+    if (externaled.has(importPath) || await shouldExternalize(importPath)) {
+      externaled.add(importPath)
+      return import(importPath)
     }
 
     if (moduleCache.get(fsPath)?.promise)
@@ -211,4 +208,11 @@ function matchExternalizePattern(id: string, patterns: (string | RegExp)[]) {
     }
   }
   return false
+}
+
+function patchWindowsImportPath(path: string) {
+  if (path.match(/^\w:\//))
+    return `/${path}`
+  else
+    return path
 }
