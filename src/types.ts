@@ -100,6 +100,13 @@ export interface UserOptions {
    * @default available CPUs
    */
   minThreads?: number
+
+  /*
+   * Interpret CJS module's default as named exports
+   *
+   * @default true
+   */
+  interpretDefault?: boolean
 }
 
 export interface CliOptions extends UserOptions {
