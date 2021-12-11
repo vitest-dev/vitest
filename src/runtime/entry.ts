@@ -1,11 +1,9 @@
 import { ResolvedConfig } from '../types'
-import { setupEnv } from './env'
+import { setupGlobalEnv, withEnv } from './env'
 import { startTests } from './run'
 
 export async function run(files: string[], config: ResolvedConfig): Promise<void> {
-  const restore = await setupEnv(config)
+  await setupGlobalEnv(config)
 
-  await startTests(files)
-
-  restore?.()
+  await withEnv(config.environment, () => startTests(files))
 }

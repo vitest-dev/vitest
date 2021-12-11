@@ -18,13 +18,17 @@ sade('vitest [filter]', true)
   .option('-w, --watch', 'watch mode', false)
   .option('-u, --update', 'update snapshot', false)
   .option('--global', 'inject apis globally', false)
-  .option('--dom', 'mock browser api using jsdom or happy-dom', '')
+  .option('--dom', 'mock browser api happy-dom', false)
   .option('-o, --open', 'open Vitest UI', false)
-  .action(async(cliFilters, argv: CliOptions) => {
+  .option('--environment', 'runner environment', '')
+  .action(async(cliFilters, argv: CliOptions & { dom?: boolean }) => {
     process.env.VITEST = 'true'
 
     console.log(c.magenta(c.bold('\nVitest is in closed beta exclusively for Sponsors')))
     console.log(c.yellow('Learn more at https://vitest.dev\n'))
+
+    if (argv.dom)
+      argv.environment = 'happy-dom'
 
     const { config, server } = await initViteServer({ ...argv, cliFilters })
 

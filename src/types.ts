@@ -2,10 +2,10 @@
 import type { MessagePort } from 'worker_threads'
 import type { Awaitable } from '@antfu/utils'
 import type { TransformResult, ViteDevServer } from 'vite'
-import type { SnapshotStateOptions } from 'jest-snapshot/build/State'
 import type { StateManager } from './node/state'
 import type { SnapshotResult } from './integrations/snapshot/utils/types'
 import type { SnapshotManager } from './integrations/snapshot/manager'
+import { SnapshotStateOptions } from './integrations/snapshot/port/state'
 
 export interface UserOptions {
   /**
@@ -50,11 +50,13 @@ export interface UserOptions {
   global?: boolean
 
   /**
-   * Use `jsdom` or `happy-dom` to mock browser APIs
+   * Running environment
    *
-   * @default false
+   * Supports 'node', 'jsdom', 'happy-dom'
+   *
+   * @default 'node'
    */
-  dom?: boolean | 'jsdom' | 'happy-dom'
+  environment?: 'node' | 'jsdom' | 'happy-dom'
 
   /**
    * Update snapshot files
@@ -81,9 +83,32 @@ export interface UserOptions {
   reporter?: Reporter
 
   /**
-   * Open Vitest UI
+   * Enable multi-threading
+   *
+   * @default true
    */
-  open?: boolean
+  threads?: boolean
+
+  /**
+   * Maximum number of threads
+   *
+   * @default available CPUs
+   */
+  maxThreads?: number
+
+  /**
+   * Minimum number of threads
+   *
+   * @default available CPUs
+   */
+  minThreads?: number
+
+  /*
+   * Interpret CJS module's default as named exports
+   *
+   * @default true
+   */
+  interpretDefault?: boolean
 }
 
 export interface CliOptions extends UserOptions {
@@ -102,6 +127,11 @@ export interface CliOptions extends UserOptions {
    * - `vite.config.ts`
    */
   config?: string | undefined
+
+  /**
+   * Open Vitest UI
+   */
+  open?: boolean
 }
 
 export interface ResolvedConfig extends Omit<Required<CliOptions>, 'config' | 'filters'> {
@@ -230,11 +260,28 @@ export interface ModuleCache {
   transformResult?: TransformResult
 }
 
+export interface EnvironmentReturn {
+  teardown: (global: any) => Awaitable<void>
+}
+
+export interface Environment {
+  name: string
+  setup(global: any): Awaitable<EnvironmentReturn>
+}
+
 export interface WorkerContext {
   port: MessagePort
   config: ResolvedConfig
   files: string[]
   invalidates?: string[]
+}
+
+export interface VitestContext {
+  config: ResolvedConfig
+  server: ViteDevServer
+  state: StateManager
+  snapshot: SnapshotManager
+  reporter: Reporter
 }
 
 export interface RpcMap {
@@ -254,11 +301,3 @@ export type RpcCall = <T extends keyof RpcMap>(method: T, ...args: RpcMap[T][0])
 export type RpcSend = <T extends keyof RpcMap>(method: T, ...args: RpcMap[T][0]) => void
 
 export type RpcPayload<T extends keyof RpcMap = keyof RpcMap> = { id: string; method: T; args: RpcMap[T][0] }
-
-export interface VitestContext {
-  config: ResolvedConfig
-  server: ViteDevServer
-  state: StateManager
-  snapshot: SnapshotManager
-  reporter: Reporter
-}
