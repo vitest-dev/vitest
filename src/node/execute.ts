@@ -12,6 +12,7 @@ export interface ExecuteOptions {
   root: string
   files: string[]
   fetch: FetchFunction
+  interpretDefault: boolean
   inline: (string | RegExp)[]
   external: (string | RegExp)[]
   moduleCache: Map<string, ModuleCache>
@@ -46,6 +47,24 @@ export const stubRequests: Record<string, any> = {
     },
     updateStyle() {},
   },
+}
+
+export async function interpretedImport(path: string, interpretDefault: boolean) {
+  const mod = await import(path)
+
+  if (interpretDefault && '__esModule' in mod && 'default' in mod) {
+    const defaultExport = mod.default
+    if (!('default' in defaultExport)) {
+      Object.defineProperty(defaultExport, 'default', {
+        enumerable: true,
+        configurable: true,
+        get() { return defaultExport },
+      })
+    }
+    return defaultExport
+  }
+
+  return mod
 }
 
 export async function executeInViteNode(options: ExecuteOptions) {
@@ -114,14 +133,14 @@ export async function executeInViteNode(options: ExecuteOptions) {
     const id = normalizeId(rawId)
 
     if (externaled.has(id))
-      return import(id)
+      return interpretedImport(id, options.interpretDefault)
 
     const fsPath = toFilePath(id, root)
 
     const importPath = patchWindowsImportPath(fsPath)
     if (externaled.has(importPath) || await shouldExternalize(importPath, options)) {
       externaled.add(importPath)
-      return import(importPath)
+      return interpretedImport(importPath, options.interpretDefault)
     }
 
     if (moduleCache.get(fsPath)?.promise)
