@@ -24,6 +24,12 @@ describe('jest-expect', () => {
       throw new Error('error')
     }).toThrow()
     expect(() => {}).not.toThrow()
+    expect([1, 2, 3]).toHaveLength(3)
+    expect('abc').toHaveLength(3)
+    expect('').not.toHaveLength(5)
+    expect({ length: 3 }).toHaveLength(3)
+    expect(0.2 + 0.1).not.toBe(0.3)
+    expect(0.2 + 0.1).toBeCloseTo(0.3, 5)
   })
 
   it('object', () => {
