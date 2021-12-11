@@ -18,9 +18,9 @@ describe('plugin-pug', () => {
       parser: 'pug',
       plugins: [plugin],
       semi: false,
-    }).replace(/\r\n/g, '\n')
+    })
 
-    expect(actual).toBe(expected)
+    expect(actual.replace(/\r\n/g, '\n')).toBe(expected.replace(/\r\n/g, '\n'))
   })
 
   test('should handle slash token', () => {
@@ -35,8 +35,8 @@ describe('plugin-pug', () => {
     const actual: string = format(code, {
       parser: 'pug',
       plugins: [plugin],
-    }).replace(/\r\n/g, '\n')
+    })
 
-    expect(actual).toBe(expected)
+    expect(actual.replace(/\r\n/g, '\n')).toBe(expected.replace(/\r\n/g, '\n'))
   })
 })
