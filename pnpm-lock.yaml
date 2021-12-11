@@ -147,6 +147,12 @@ importers:
       react-test-renderer: 17.0.2_react@17.0.2
       vitest: link:../..
 
+  test/single-thread:
+    specifiers:
+      vitest: workspace:*
+    devDependencies:
+      vitest: link:../..
+
   test/svelte:
     specifiers:
       '@sveltejs/vite-plugin-svelte': ^1.0.0-next.31
