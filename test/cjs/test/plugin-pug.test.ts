@@ -18,7 +18,7 @@ describe('plugin-pug', () => {
       parser: 'pug',
       plugins: [plugin],
       semi: false,
-    }).replace(/\\r\\n/g, '\n')
+    }).replace(/\r\n/g, '\n')
 
     expect(actual).toBe(expected)
   })
@@ -35,7 +35,7 @@ describe('plugin-pug', () => {
     const actual: string = format(code, {
       parser: 'pug',
       plugins: [plugin],
-    }).replace(/\\r\\n/g, '\n')
+    }).replace(/\r\n/g, '\n')
 
     expect(actual).toBe(expected)
   })
