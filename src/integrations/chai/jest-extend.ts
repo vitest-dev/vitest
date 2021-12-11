@@ -1,14 +1,18 @@
 import chai, { util } from 'chai'
 
-import { MatcherState } from 'expect'
-import { MatchersObject, SyncExpectationResult } from 'expect/build/types'
+import * as matcherUtils from 'jest-matcher-utils'
 
 import {
   iterableEquality,
   subsetEquality,
-} from 'expect/build/utils'
-import * as matcherUtils from 'jest-matcher-utils'
-import { ChaiPlugin } from './types'
+  equals,
+} from './jest-utils'
+import {
+  ChaiPlugin,
+  MatcherState,
+  MatchersObject,
+  SyncExpectationResult,
+} from './types'
 
 const isAsyncFunction = (fn: unknown) =>
   typeof fn === 'function' && (fn as any)[Symbol.toStringTag] === 'AsyncFunction'
@@ -28,7 +32,7 @@ const getMatcherState = (assertion: Chai.AssertionStatic & Chai.Assertion) => {
     utils: jestUtils,
     assertionCalls: 0,
     promise: '',
-    equals: () => true,
+    equals,
     suppressedErrors: [],
   }
 

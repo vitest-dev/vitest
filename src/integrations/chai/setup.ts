@@ -2,8 +2,8 @@ import chai from 'chai'
 import SinonChai from 'sinon-chai'
 import Subset from 'chai-subset'
 import { SnapshotPlugin } from '../snapshot/chai'
-import { JestChaiExpect } from './jest-expect'
 import { JestExtend } from './jest-extend'
+import { JestChaiExpect } from './jest-expect'
 
 let installed = false
 export async function setupChai() {

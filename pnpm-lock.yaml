@@ -26,7 +26,6 @@ importers:
       elegant-spinner: ^3.0.0
       eslint: ^8.4.1
       esno: ^0.12.1
-      expect: ^27.4.2
       fast-glob: ^3.2.7
       figures: ^4.0.0
       find-up: ^6.2.0
@@ -63,7 +62,6 @@ importers:
       cli-truncate: 3.1.0
       diff: 5.0.0
       elegant-spinner: 3.0.0
-      expect: 27.4.2
       fast-glob: 3.2.7
       figures: 4.0.0
       find-up: 6.2.0
