@@ -143,6 +143,7 @@ export interface File extends Suite {
 
 export interface Test extends TaskBase {
   type: 'test'
+  suite: Suite
   result?: TaskResult
 }
 

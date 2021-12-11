@@ -42,6 +42,7 @@
     "build": "tsup --dts --minify-whitespace --minify-syntax",
     "coverage": "node bin/vitest.mjs -r test/core --coverage",
     "dev": "tsup --watch src",
+    "typecheck": "tsc --noEmit",
     "lint": "eslint \"{src,test}/**/*.ts\"",
     "prepare": "esmo scripts/generate-types.ts",
     "prepublishOnly": "nr build",
