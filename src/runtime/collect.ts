@@ -45,6 +45,8 @@ export async function collectTests(paths: string[]) {
         state: 'fail',
         error: processError(e),
       }
+      // not sure thy, this this line is needed to trigger the error
+      process.stdout.write('\0')
     }
 
     files.push(file)
