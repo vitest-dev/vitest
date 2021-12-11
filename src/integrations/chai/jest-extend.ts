@@ -3,7 +3,10 @@ import chai, { util } from 'chai'
 import { MatcherState } from 'expect'
 import { MatchersObject, SyncExpectationResult } from 'expect/build/types'
 
-import * as expectUtils from 'expect/build/utils'
+import {
+  iterableEquality,
+  subsetEquality,
+} from 'expect/build/utils'
 import * as matcherUtils from 'jest-matcher-utils'
 import { ChaiPlugin } from './types'
 
@@ -15,8 +18,8 @@ const getMatcherState = (assertion: Chai.AssertionStatic & Chai.Assertion) => {
   const isNot = util.flag(assertion, 'negate') as boolean
   const jestUtils = {
     ...matcherUtils,
-    iterableEquality: expectUtils.iterableEquality,
-    subsetEquality: expectUtils.subsetEquality,
+    iterableEquality,
+    subsetEquality,
   }
 
   // TODO add to ctx - { error, promise, equals, ...getState() }
