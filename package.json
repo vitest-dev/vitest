@@ -48,7 +48,8 @@
     "prepublishOnly": "nr build",
     "release": "bumpp --commit --push --tag && esmo scripts/publish.ts",
     "test": "node bin/vitest.mjs -r test/core",
-    "test:all": "pnpm -r --stream --filter !vitest run test --"
+    "test:all": "pnpm -r --stream --filter !vitest run test --",
+    "test:ci": "pnpm -r --stream --filter !vitest --filter !@vitest/test-fails run test --"
   },
   "dependencies": {
     "@antfu/utils": "^0.3.0",
