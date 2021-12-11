@@ -7,7 +7,6 @@
 
 import path from 'path'
 import fs from 'fs'
-import c from 'picocolors'
 import naturalCompare from 'natural-compare'
 import {
   OptionsReceived as PrettyFormatOptions,
