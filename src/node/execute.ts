@@ -17,6 +17,22 @@ export interface ExecuteOptions {
   moduleCache: Map<string, ModuleCache>
 }
 
+const defaultInline = [
+  'vitest/dist',
+  'vitest/src',
+  '@vue',
+  '@vueuse',
+  'vue-demi',
+  'vue',
+  /virtual:/,
+  /\.ts$/,
+  /\/esm\/.*\.js$/,
+  /\.(es|esm|esm-browser|esm-bundler|es6).js$/,
+]
+const depsExternal = [
+  /\.cjs.js$/,
+]
+
 const isWindows = process.platform === 'win32'
 
 export const stubRequests: Record<string, any> = {
@@ -93,28 +109,17 @@ export async function executeInViteNode({ moduleCache, root, files, fetch, inlin
   }
 
   async function shouldExternalize(id: string) {
-    for (const ex of inline) {
-      if (typeof ex === 'string') {
-        if (id.includes(`/node_modules/${ex}/`))
-          return false
-      }
-      else {
-        if (ex.test(id))
-          return false
-      }
-    }
-    for (const ex of external) {
-      if (typeof ex === 'string') {
-        if (id.includes(`/node_modules/${ex}/`))
-          return true
-      }
-      else {
-        if (ex.test(id))
-          return true
-      }
-    }
+    if (matchExternalizePattern(id, inline))
+      return false
+    if (matchExternalizePattern(id, external))
+      return true
 
-    return id.includes('/node_modules/') && !await isValidNodeImport(id)
+    if (matchExternalizePattern(id, depsExternal))
+      return true
+    if (matchExternalizePattern(id, defaultInline))
+      return false
+
+    return id.includes('/node_modules/') && await isValidNodeImport(id)
   }
 
   async function cachedRequest(rawId: string, callstack: string[]) {
@@ -192,4 +197,18 @@ export function toFilePath(id: string, root: string): string {
 
 function slash(path: string) {
   return path.replace(/\\/g, '/')
+}
+
+function matchExternalizePattern(id: string, patterns: (string | RegExp)[]) {
+  for (const ex of patterns) {
+    if (typeof ex === 'string') {
+      if (id.includes(`/node_modules/${ex}/`))
+        return true
+    }
+    else {
+      if (ex.test(id))
+        return true
+    }
+  }
+  return false
 }

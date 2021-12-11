@@ -44,23 +44,8 @@ export async function initViteServer(options: CliOptions = {}) {
 
   Object.assign(resolved, server.config.test)
 
-  resolved.depsInline = [
-    'vitest/dist',
-    'vitest/src',
-    '@vue',
-    '@vueuse',
-    'vue-demi',
-    'vue',
-    /virtual:/,
-    /\.ts$/,
-    /\/esm\/.*\.js$/,
-    /\.(es|esm|esm-browser|esm-bundler|es6).js$/,
-    ...server.config.test?.deps?.inline || [],
-  ]
-  resolved.depsExternal = [
-    /node_modules/,
-    ...server.config.test?.deps?.external || [],
-  ]
+  resolved.depsInline = server.config.test?.deps?.inline || []
+  resolved.depsExternal = server.config.test?.deps?.external || []
 
   const env = process.env
   const CI = !!env.CI
