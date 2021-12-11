@@ -18,7 +18,7 @@ describe('plugin-pug', () => {
       parser: 'pug',
       plugins: [plugin],
       semi: false,
-    })
+    }).replace(/\\r\\n/g, '\n')
 
     expect(actual).toBe(expected)
   })
@@ -32,7 +32,10 @@ describe('plugin-pug', () => {
       resolve(__dirname, 'slash-unformatted.pug'),
       'utf8',
     )
-    const actual: string = format(code, { parser: 'pug', plugins: [plugin] })
+    const actual: string = format(code, {
+      parser: 'pug',
+      plugins: [plugin],
+    }).replace(/\\r\\n/g, '\n')
 
     expect(actual).toBe(expected)
   })
