@@ -3,7 +3,7 @@ import { fileURLToPath, pathToFileURL } from 'url'
 import { dirname, resolve } from 'path'
 import vm from 'vm'
 import type { TransformResult } from 'vite'
-import { isValidNodeImport } from 'mlly'
+import { slash } from '@antfu/utils'
 import { ModuleCache } from '../types'
 
 export type FetchFunction = (id: string) => Promise<TransformResult | undefined | null>
@@ -48,7 +48,9 @@ export const stubRequests: Record<string, any> = {
   },
 }
 
-export async function executeInViteNode({ moduleCache, root, files, fetch, inline, external }: ExecuteOptions) {
+export async function executeInViteNode(options: ExecuteOptions) {
+  const { moduleCache, root, files, fetch } = options
+
   const externaled = new Set<string>(builtinModules)
   const result = []
   for (const file of files)
@@ -108,20 +110,6 @@ export async function executeInViteNode({ moduleCache, root, files, fetch, inlin
       Object.assign(moduleCache.get(id), mod)
   }
 
-  async function shouldExternalize(id: string) {
-    if (matchExternalizePattern(id, inline))
-      return false
-    if (matchExternalizePattern(id, external))
-      return true
-
-    if (matchExternalizePattern(id, depsExternal))
-      return true
-    if (matchExternalizePattern(id, defaultInline))
-      return false
-
-    return id.includes('/node_modules/') && await isValidNodeImport(id)
-  }
-
   async function cachedRequest(rawId: string, callstack: string[]) {
     const id = normalizeId(rawId)
 
@@ -131,7 +119,7 @@ export async function executeInViteNode({ moduleCache, root, files, fetch, inlin
     const fsPath = toFilePath(id, root)
 
     const importPath = patchWindowsImportPath(fsPath)
-    if (externaled.has(importPath) || await shouldExternalize(importPath)) {
+    if (externaled.has(importPath) || await shouldExternalize(importPath, options)) {
       externaled.add(importPath)
       return import(importPath)
     }
@@ -173,6 +161,20 @@ export function normalizeId(id: string): string {
   return id
 }
 
+export async function shouldExternalize(id: string, config: Pick<ExecuteOptions, 'inline' | 'external'>) {
+  if (matchExternalizePattern(id, config.inline))
+    return false
+  if (matchExternalizePattern(id, config.external))
+    return true
+
+  if (matchExternalizePattern(id, depsExternal))
+    return true
+  if (matchExternalizePattern(id, defaultInline))
+    return false
+
+  return id.includes('/node_modules/') // && await isValidNodeImport(id)
+}
+
 export function toFilePath(id: string, root: string): string {
   id = slash(id)
   let absolute = id.startsWith('/@fs/')
@@ -190,10 +192,6 @@ export function toFilePath(id: string, root: string): string {
   return isWindows && absolute.startsWith('/')
     ? pathToFileURL(absolute.slice(1)).href
     : absolute
-}
-
-function slash(path: string) {
-  return path.replace(/\\/g, '/')
 }
 
 function matchExternalizePattern(id: string, patterns: (string | RegExp)[]) {
