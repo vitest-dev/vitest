@@ -21,8 +21,8 @@ describe('jest-expect', () => {
     expect(1).toBeLessThanOrEqual(1)
     expect(0).toBeLessThanOrEqual(1)
     expect(() => {
-      throw new Error('error')
-    }).toThrow()
+      throw new Error('this is the error message')
+    }).toThrow('this is the error message')
     expect(() => {}).not.toThrow()
     expect([1, 2, 3]).toHaveLength(3)
     expect('abc').toHaveLength(3)

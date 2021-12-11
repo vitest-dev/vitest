@@ -24,6 +24,7 @@ export async function init(ctx: WorkerContext) {
     },
     inline: config.depsInline,
     external: config.depsExternal,
+    interpretDefault: config.interpretDefault,
     moduleCache,
   }))[0].run
 
