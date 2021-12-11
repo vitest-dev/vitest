@@ -28,15 +28,13 @@ describe('before and after hooks', () => {
   beforeEach(async() => { }, 1000)
   afterEach(async() => { }, 1000)
 
-  /* uncomment to test hook fail due timeout
-  beforeAll(async () => {
+  beforeAll(async() => {
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve()
       }, 200)
     })
   }, 100)
-  */
 
   it('beforeEach works', () => {
     assert.equal(eachState, 'running')
