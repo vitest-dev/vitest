@@ -1,0 +1,11 @@
+html,
+body {
+
+  height: 100%;
+  font-family: 'Readex Pro', sans-serif;
+}
+
+html.dark {
+  color: white;
+  background-color: #141414;
+}

@@ -3,6 +3,6 @@
 
 <template>
   <div>
-    Hello World
+    <Navigation />
   </div>
 </template>

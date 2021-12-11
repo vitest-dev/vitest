@@ -40,8 +40,7 @@ export async function initViteServer(options: CliOptions = {}) {
     clearScreen: false,
     configFile: resolved.config,
     plugins: [
-      VitestUIPlugin(),
-      // ...(options.open ? [VitestUIPlugin] : []),
+      ...(options.open ? [VitestUIPlugin()] : []),
     ],
     server: {
       open: true,
