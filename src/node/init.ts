@@ -4,6 +4,7 @@ import { createServer } from 'vite'
 import { SnapshotStateOptions } from 'jest-snapshot/build/State'
 import { toArray } from '@antfu/utils'
 import { CliOptions, ResolvedConfig } from '../types'
+import { VitestUIPlugin } from '../ui/node'
 
 const configFiles = [
   'vitest.config.ts',
@@ -34,6 +35,14 @@ export async function initViteServer(options: CliOptions = {}) {
     logLevel: 'error',
     clearScreen: false,
     configFile: resolved.config,
+    plugins: [
+      VitestUIPlugin(),
+      // ...(options.open ? [VitestUIPlugin] : []),
+    ],
+    server: {
+      open: true,
+      port: 3000,
+    },
     optimizeDeps: {
       exclude: [
         'vitest',
@@ -41,6 +50,9 @@ export async function initViteServer(options: CliOptions = {}) {
     },
   })
   await server.pluginContainer.buildStart({})
+
+  if (options.open)
+    server.listen(3000)
 
   Object.assign(resolved, server.config.test)
 

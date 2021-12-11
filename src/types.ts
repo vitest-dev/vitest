@@ -79,6 +79,11 @@ export interface UserOptions {
    * Custom reporter for output
    */
   reporter?: Reporter
+
+  /**
+   * Open Vitest UI
+   */
+  open?: boolean
 }
 
 export interface CliOptions extends UserOptions {
