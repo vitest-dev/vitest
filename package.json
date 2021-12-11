@@ -50,9 +50,9 @@
     "test": "node bin/vitest.mjs -r test/core",
     "test:all": "pnpm -r --stream --filter !vitest run test --",
     "test:ci": "pnpm -r --stream --filter !vitest --filter !@vitest/test-fails run test --",
-    "docs": "vitepress dev docs",
-    "build-docs": "vitepress build docs",
-    "serve-docs": "vitepress serve docs"
+    "docs": "npm -C docs run dev",
+    "docs:build": "npm -C docs run build",
+    "docs:serve": "npm -C docs run serve"
   },
   "dependencies": {
     "@antfu/utils": "^0.3.0",
