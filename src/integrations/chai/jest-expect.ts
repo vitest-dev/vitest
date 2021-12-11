@@ -100,6 +100,13 @@ export function JestChaiExpect(): ChaiPlugin {
     def('toBeInstanceOf', function(obj: any) {
       return this.instanceOf(obj)
     })
+    def('toHaveLength', function(length: number) {
+      return this.have.length(length)
+    })
+    def('toBeCloseTo', function(number: number, numDigits = 2) {
+      utils.expectTypes(this, ['number'])
+      return this.closeTo(number, numDigits)
+    })
 
     // mock
     function isSpy(putativeSpy: any) {

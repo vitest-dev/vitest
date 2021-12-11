@@ -41,6 +41,8 @@ declare global {
       toBeDefined(): void
       toBeInstanceOf(c: any): void
       toBeCalledTimes(n: number): void
+      toHaveLength(l: number): void
+      toBeCloseTo(number: number, numDigits?: number): void
       toHaveBeenCalledTimes(n: number): void
       toHaveBeenCalledOnce(): void
       toHaveBeenCalled(): void
