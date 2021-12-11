@@ -8,4 +8,5 @@ body {
 html.dark {
   color: white;
   background-color: #141414;
+  color-scheme: dark;
 }

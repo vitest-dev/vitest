@@ -1,5 +1,8 @@
 <script setup lang="ts">
+import TestSuite from './TestSuite.vue'
 import { isDark, toggleDark } from '~/composables'
+
+const { data, isFetching } = useFetch('/__vitest_api').json()
 </script>
 
 <template>
@@ -11,6 +14,8 @@ import { isDark, toggleDark } from '~/composables'
     border-r-1
     border-light-900
     dark:border-dark-200
+    flex
+    flex-col
   >
     <div
       grid="~ cols-[max-content,1fr,min-content]"
@@ -34,6 +39,23 @@ import { isDark, toggleDark } from '~/composables'
         }"
         @click="toggleDark"
       />
+    </div>
+
+    <div overflow-auto flex-1>
+      <div
+        flex
+        flex-row
+        items-center
+        text-lg
+        px-4
+        pt-4
+        text-light-900
+      >
+        <span>Test Suites</span>
+      </div>
+      <template v-if="data && data.suites">
+        <TestSuite v-for="suite in data.suites" :key="suite.id" v-bind="{...suite}" />
+      </template>
     </div>
   </nav>
 </template>

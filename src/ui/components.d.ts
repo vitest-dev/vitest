@@ -5,6 +5,7 @@
 declare module 'vue' {
   export interface GlobalComponents {
     Navigation: typeof import('./client/components/Navigation.vue')['default']
+    TestSuite: typeof import('./client/components/TestSuite.vue')['default']
   }
 }
 
