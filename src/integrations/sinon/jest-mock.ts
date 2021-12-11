@@ -35,12 +35,12 @@ export interface JestMockCompat<TArgs extends any[] = any[], TReturns = any> ext
   mockImplementation(fn: (...args: TArgs) => TReturns): this
   mockImplementationOnce(fn: (...args: TArgs) => TReturns): this
   mockReturnThis(): this
-  mockReturnValue(obj: any): this
-  mockReturnValueOnce(obj: any): this
-  mockResolvedValue(obj: any): this
-  mockResolvedValueOnce(obj: any): this
-  mockRejectedValueValue(obj: any): this
-  mockRejectedValueOnce(obj: any): this
+  mockReturnValue(obj: TReturns): this
+  mockReturnValueOnce(obj: TReturns): this
+  mockResolvedValue(obj: TReturns extends Promise<infer T> ? T : never): this
+  mockResolvedValueOnce(obj: TReturns extends Promise<infer T> ? T : never): this
+  mockRejectedValueValue(obj: TReturns extends Promise<any> ? any : never): this
+  mockRejectedValueOnce(obj: TReturns extends Promise<any> ? any : never): this
 }
 
 export interface JestMockCompatStatic {
@@ -64,12 +64,40 @@ export interface JestMockCompatStatic {
     : JestMockCompat
 }
 
-// TODO overload with accessType
-export const spyOn: JestMockCompatStatic = <TArgs extends any[], TReturns>(fnOrObj, method?: string, accessType?: 'get' | 'set'): JestMockCompat<TArgs, TReturns> => {
+export function spyOn<TArgs extends any[] = any[], R = any>(): JestMockCompat<TArgs, R>
+export function spyOn<TArgs extends any[] = any[], R = any>(
+  implementation: (...args: TArgs) => R
+): JestMockCompat<TArgs, R>
+export function spyOn<T, K extends keyof T>(
+  obj: T,
+  method: K,
+  accessType?: 'get' | 'set',
+): T[K] extends (...args: infer TArgs) => infer TReturnValue
+  ? JestMockCompat<TArgs, TReturnValue> : JestMockCompat
+export function spyOn<TArgs extends any[], TReturns>(
+  fnOrObj?: ((...args: TArgs) => TReturns) | object,
+  method?: string,
+  accessType?: 'get' | 'set',
+): JestMockCompat<TArgs, TReturns> {
+  const getDescriptor = () => {
+    if (!fnOrObj || typeof fnOrObj === 'function') return null
+
+    return Object.getOwnPropertyDescriptor(fnOrObj, method!)!
+  }
+
+  const getOriginalFn = () => {
+    if (!fnOrObj || typeof fnOrObj === 'function') return fnOrObj
+
+    return getDescriptor()![accessType || 'value']
+  }
+
+  const originalFn = getOriginalFn()
+  const descriptor = getDescriptor()
+
   // @ts-expect-error
   const stub = typeof fnOrObj === 'function' ? sinon.stub({ fn: fnOrObj }, 'fn') : sinon.stub(fnOrObj, method) as SinonStub
 
-  // can use sinon.addBehavior, but we can't set mock or make a custom implementation
+  // sinon.addBehavior can be used, but we can't set "mock" or make a custom implementation
   // also we are storing implementation
   const addMethod = (n: string, fn: (...args: any[]) => any) => {
     Object.defineProperty(stub, n, {
@@ -102,18 +130,24 @@ export const spyOn: JestMockCompatStatic = <TArgs extends any[], TReturns>(fnOrO
     },
   }
 
+  // this variable exists for chaining .*Once methods
+  // so thay can be called like `.mockImplementation(fn).mockImplementationOnce(fnOnce).mockImplementationOnce(fnOnceSecond)`
+  // spy(), spy(), spy() // called fnOnce, then fnOnceSecond and then fn
   let mockMethodCalled = 0
 
-  const getOnceCall = () => stub.callCount - 1 + mockMethodCalled
+  const getOnceCall = () => stub.callCount + mockMethodCalled
+  const willCallFake = (fn: (...args: TArgs) => TReturns) => {
+    return stub[accessType || 'callsFake'](fn)
+  }
 
   const assertAccessType = (type: 'get' | 'set') => {
     if (accessType && type !== accessType)
-      throw new TypeError(`invalid access type, ${type} expected, ${accessType} recieved`)
+      throw new TypeError(`invalid access type, '${type}' expected, '${accessType}' recieved`)
   }
 
-  const asseetNoAccessType = () => {
+  const assertNoAccessType = () => {
     if (accessType)
-      throw new TypeError(`no accessType for this method allowed, recieved ${accessType}`)
+      throw new TypeError(`no accessType for this method allowed, recieved '${accessType}'`)
   }
 
   addMethod('getMockName', () => stub.name)
@@ -131,26 +165,26 @@ export const spyOn: JestMockCompatStatic = <TArgs extends any[], TReturns>(fnOrO
   })
   addMethod('mockRestore', () => {
     implementation = undefined
+    mockMethodCalled = 0
+    stub.resetHistory()
     stub.restore()
-    stub[accessType || 'callsFake'](stub.wrappedMethod)
+    stub.resetBehavior()
   })
   addMethod('getMockImplementation', () => implementation)
   addMethod('mockImplementation', (fn: (...args: TArgs) => TReturns) => {
     implementation = fn
-
-    stub[accessType || 'callsFake'](fn)
-
+    willCallFake(fn)
     return stub
   })
   addMethod('mockImplementationOnce', (fn: (...args: TArgs) => TReturns) => {
-    mockMethodCalled++
     let callCount = 0
-    stub[accessType || 'callsFake'](function(this: any, ...args: TArgs) {
+    willCallFake(function(this: any, ...args: TArgs) {
       callCount++
       return callCount === 1
         ? fn.call(this, ...args)
-        : (implementation || stub.wrappedMethod).call(this, ...args)
+        : (implementation || originalFn).call(this, ...args)
     })
+    mockMethodCalled++
     return stub
   })
   addMethod('mockReturnThis', () => {
@@ -166,30 +200,30 @@ export const spyOn: JestMockCompatStatic = <TArgs extends any[], TReturns>(fnOrO
     assertAccessType('get')
     const fn = () => obj
     implementation = fn
-    stub[accessType || 'callsFake'](fn)
+    willCallFake(fn)
     return stub
   })
   addMethod('mockReturnValueOnce', (obj: any) => {
     assertAccessType('get')
-    mockMethodCalled++
     const fn = () => obj
     stub.onCall(getOnceCall())[accessType || 'callsFake'](fn)
+    mockMethodCalled++
     return stub
   })
   addMethod('mockResolvedValue', (obj: any) => {
-    asseetNoAccessType()
+    assertNoAccessType()
     implementation = async() => obj
     stub.resolves(obj)
     return stub
   })
   addMethod('mockResolvedValueOnce', (obj: any) => {
-    asseetNoAccessType()
-    mockMethodCalled++
+    assertNoAccessType()
     stub.onCall(getOnceCall()).resolves(obj)
+    mockMethodCalled++
     return stub
   })
   addMethod('mockRejectedValue', (obj: any) => {
-    asseetNoAccessType()
+    assertNoAccessType()
     implementation = async() => {
       throw obj
     }
@@ -197,15 +231,16 @@ export const spyOn: JestMockCompatStatic = <TArgs extends any[], TReturns>(fnOrO
     return stub
   })
   addMethod('mockRejectedValueOnce', (obj: any) => {
-    asseetNoAccessType()
-    mockMethodCalled++
+    assertNoAccessType()
     stub.onCall(getOnceCall()).rejects(obj)
+    mockMethodCalled++
     return stub
   })
 
   util.addProperty(stub, 'mock', () => mockContext)
 
-  stub.callsFake(stub.wrappedMethod)
+  if (!accessType)
+    stub.callsFake(originalFn)
 
   return stub as any
 }
