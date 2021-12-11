@@ -103,6 +103,14 @@ importers:
       typescript: 4.5.2
       vite: 2.7.1
 
+  test/cjs:
+    specifiers:
+      prettier: ^2.5.1
+      vitest: workspace:*
+    devDependencies:
+      prettier: 2.5.1
+      vitest: link:../..
+
   test/core:
     specifiers:
       vitest: workspace:*
@@ -4646,6 +4654,12 @@ packages:
   /prelude-ls/1.2.1:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
     engines: {node: '>= 0.8.0'}
+    dev: true
+
+  /prettier/2.5.1:
+    resolution: {integrity: sha512-vBZcPRUR5MZJwoyi3ZoyQlc1rXeEck8KgeC9AwwOn+exuxLxq5toTRDTSaVrXHxelDMHy9zlicw8u66yxoSUFg==}
+    engines: {node: '>=10.13.0'}
+    hasBin: true
     dev: true
 
   /pretty-format/26.6.2:
