@@ -3,7 +3,8 @@ import { promises as fs, existsSync } from 'fs'
 import c from 'picocolors'
 import * as diff from 'diff'
 import { notNullish } from '@antfu/utils'
-import { SourceMapConsumer, RawSourceMap } from 'source-map'
+import type { RawSourceMap } from 'source-map'
+import { SourceMapConsumer } from 'source-map'
 
 interface ErrorWithDiff extends Error {
   name: string

@@ -5,9 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {
+import type {
   Plugin as PrettyFormatPlugin,
   Plugins as PrettyFormatPlugins,
+} from 'pretty-format'
+import {
   plugins as prettyFormatPlugins,
 } from 'pretty-format'
 

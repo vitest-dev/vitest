@@ -1,7 +1,7 @@
-import { Awaitable } from '@antfu/utils'
+import type { Awaitable } from '@antfu/utils'
 import { nanoid } from 'nanoid'
 import { defaultTestTimeout, defaultHookTimeout } from '../constants'
-import { SuiteHooks, Test, SuiteCollector, TestCollector, RunMode, ComputeMode, TestFactory, TestFunction, File, Suite } from '../types'
+import type { SuiteHooks, Test, SuiteCollector, TestCollector, RunMode, ComputeMode, TestFactory, TestFunction, File, Suite } from '../types'
 import { context } from './context'
 import { getHooks, setFn, setHooks } from './map'
 

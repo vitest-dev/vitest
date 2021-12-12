@@ -1,5 +1,5 @@
 /* eslint-disable no-use-before-define */
-import { Awaitable } from '@antfu/utils'
+import type { Awaitable } from '@antfu/utils'
 
 export type RunMode = 'run' | 'skip' | 'only' | 'todo'
 export type TaskState = RunMode | 'pass' | 'fail'

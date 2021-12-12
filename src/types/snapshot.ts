@@ -1,4 +1,4 @@
-import { OptionsReceived as PrettyFormatOptions } from 'pretty-format'
+import type { OptionsReceived as PrettyFormatOptions } from 'pretty-format'
 
 export type SnapshotData = Record<string, string>
 

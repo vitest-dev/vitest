@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { SnapshotResult, SnapshotStateOptions, SnapshotSummary } from '../../../types'
-import SnapshotState from './state'
+import type { SnapshotResult, SnapshotStateOptions, SnapshotSummary } from '../../../types'
+import type SnapshotState from './state'
 
 export const emptySummary = (options: SnapshotStateOptions): SnapshotSummary => {
   const summary = {

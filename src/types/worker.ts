@@ -1,8 +1,8 @@
-import { MessagePort } from 'worker_threads'
-import { TransformResult } from 'vite'
-import { ResolvedConfig } from './options'
-import { File, TaskResultPack } from './tasks'
-import { SnapshotResult } from './snapshot'
+import type { MessagePort } from 'worker_threads'
+import type { TransformResult } from 'vite'
+import type { ResolvedConfig } from './options'
+import type { File, TaskResultPack } from './tasks'
+import type { SnapshotResult } from './snapshot'
 
 export interface WorkerContext {
   port: MessagePort

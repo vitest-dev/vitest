@@ -6,7 +6,7 @@ import cliTruncate from 'cli-truncate'
 import stripAnsi from 'strip-ansi'
 import elegantSpinner from 'elegant-spinner'
 import { slash } from '@antfu/utils'
-import { SnapshotSummary, Task } from '../types'
+import type { SnapshotSummary, Task } from '../types'
 import { getNames, getTests } from '../utils'
 import { F_CHECK, F_CROSS, F_DOT, F_DOWN, F_DOWN_RIGHT, F_POINTER, F_RIGHT } from './figures'
 

@@ -1,4 +1,4 @@
-import { Environment } from '../types'
+import type { Environment } from '../types'
 
 export default <Environment>({
   name: 'node',

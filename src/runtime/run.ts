@@ -1,6 +1,6 @@
 import { performance } from 'perf_hooks'
-import { HookListener } from 'vitest'
-import { Test, Suite, SuiteHooks, Task } from '../types'
+import type { HookListener } from 'vitest'
+import type { Test, Suite, SuiteHooks, Task } from '../types'
 import { getSnapshotClient } from '../integrations/snapshot/chai'
 import { hasFailed, hasTests, partitionSuiteChildren } from '../utils'
 import { getFn, getHooks } from './map'

@@ -2,7 +2,7 @@
 import { performance } from 'perf_hooks'
 import { relative } from 'path'
 import c from 'picocolors'
-import { Reporter, TaskResultPack, VitestContext } from '../types'
+import type { Reporter, TaskResultPack, VitestContext } from '../types'
 import { getSuites, getTests } from '../utils'
 import { printError } from './error'
 import { createRenderer, getStateString, getStateSymbol, renderSnapshotSummary, getFullName } from './renderer'

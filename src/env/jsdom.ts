@@ -1,4 +1,4 @@
-import { Environment } from '../types'
+import type { Environment } from '../types'
 import { KEYS } from './jsdom-keys'
 
 export default <Environment>({

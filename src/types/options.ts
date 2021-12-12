@@ -1,5 +1,5 @@
-import { Reporter } from './reporter'
-import { SnapshotStateOptions } from './snapshot'
+import type { Reporter } from './reporter'
+import type { SnapshotStateOptions } from './snapshot'
 
 export interface UserOptions {
   /**

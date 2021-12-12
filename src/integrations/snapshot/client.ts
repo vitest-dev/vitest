@@ -1,6 +1,6 @@
 import path from 'path'
 import { expect } from 'chai'
-import { Test } from '../../types'
+import type { Test } from '../../types'
 import { rpc } from '../../runtime/rpc'
 import { getNames } from '../../utils'
 import { packSnapshotState } from './port/jest-test-result-helper'

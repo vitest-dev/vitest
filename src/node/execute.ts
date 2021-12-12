@@ -4,7 +4,7 @@ import { dirname, resolve } from 'path'
 import vm from 'vm'
 import type { TransformResult } from 'vite'
 import { slash } from '@antfu/utils'
-import { ModuleCache } from '../types'
+import type { ModuleCache } from '../types'
 
 export type FetchFunction = (id: string) => Promise<TransformResult | undefined | null>
 

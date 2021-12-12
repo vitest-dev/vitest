@@ -1,10 +1,10 @@
 import { MessageChannel } from 'worker_threads'
 import { pathToFileURL } from 'url'
 import Piscina from 'piscina'
-import { Awaitable } from '@antfu/utils'
-import { RpcMap } from 'vitest'
+import type { Awaitable } from '@antfu/utils'
+import type { RpcMap } from 'vitest'
 import { distDir } from '../constants'
-import { WorkerContext, RpcPayload, VitestContext, File } from '../types'
+import type { WorkerContext, RpcPayload, VitestContext, File } from '../types'
 import { transformRequest } from './transform'
 
 export interface WorkerPool {

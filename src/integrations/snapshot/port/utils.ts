@@ -8,11 +8,11 @@
 import path from 'path'
 import fs from 'fs'
 import naturalCompare from 'natural-compare'
+import type { OptionsReceived as PrettyFormatOptions } from 'pretty-format'
 import {
-  OptionsReceived as PrettyFormatOptions,
   format as prettyFormat,
 } from 'pretty-format'
-import { SnapshotData, SnapshotUpdateState } from '../../../types'
+import type { SnapshotData, SnapshotUpdateState } from '../../../types'
 import { getSerializers } from './plugins'
 
 // TODO: rewrite and clean up

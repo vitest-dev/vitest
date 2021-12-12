@@ -1,4 +1,4 @@
-import { ResolvedConfig } from '../types'
+import type { ResolvedConfig } from '../types'
 import { setupGlobalEnv, withEnv } from './env'
 import { startTests } from './run'
 

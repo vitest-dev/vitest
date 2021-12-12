@@ -1,6 +1,6 @@
 import { environments } from '../env'
 import { setupChai } from '../integrations/chai/setup'
-import { ResolvedConfig } from '../types'
+import type { ResolvedConfig } from '../types'
 
 export async function setupGlobalEnv(config: ResolvedConfig) {
   await setupChai()

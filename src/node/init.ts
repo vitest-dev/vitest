@@ -2,7 +2,7 @@ import { resolve } from 'path'
 import { findUp } from 'find-up'
 import { createServer } from 'vite'
 import { toArray } from '@antfu/utils'
-import { CliOptions, ResolvedConfig } from '../types'
+import type { CliOptions, ResolvedConfig } from '../types'
 
 const configFiles = [
   'vitest.config.ts',

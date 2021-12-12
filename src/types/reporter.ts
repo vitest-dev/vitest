@@ -1,5 +1,5 @@
-import { Awaitable } from '@antfu/utils'
-import { File, TaskResultPack } from './tasks'
+import type { Awaitable } from '@antfu/utils'
+import type { File, TaskResultPack } from './tasks'
 
 export interface Reporter {
   onStart?: (files?: string[]) => Awaitable<void>

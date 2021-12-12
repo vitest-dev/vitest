@@ -1,9 +1,9 @@
-import { Awaitable } from '@antfu/utils'
-import { TransformResult, ViteDevServer } from 'vite'
-import { StateManager } from '../node/state'
-import { SnapshotManager } from '../integrations/snapshot/manager'
-import { ResolvedConfig } from './options'
-import { Reporter } from './reporter'
+import type { Awaitable } from '@antfu/utils'
+import type { TransformResult, ViteDevServer } from 'vite'
+import type { StateManager } from '../node/state'
+import type { SnapshotManager } from '../integrations/snapshot/manager'
+import type { ResolvedConfig } from './options'
+import type { Reporter } from './reporter'
 
 export interface ModuleCache {
   promise?: Promise<any>
