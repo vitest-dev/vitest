@@ -22,7 +22,7 @@ To develop and test `vitest` package:
 
 ## Debugger
 
-### VsCode
+### VS Code
 
 If you want to use break point and explore code execution you can use the ["Run and debug"](https://code.visualstudio.com/docs/editor/debugging) feature from vscode.
 
