@@ -2,11 +2,26 @@
   "name": "docs",
   "private": true,
   "scripts": {
-    "dev": "vitepress dev --open",
+    "dev": "vitepress --port 3333 --open",
     "build": "vitepress build",
-    "serve": "vitepress serve"
+    "serve": "vitepress serve",
+    "lint": "eslint . --ext=.ts,.vue"
+  },
+  "dependencies": {
+    "@vueuse/core": "^7.2.2",
+    "vue": "^3.2.24"
   },
   "devDependencies": {
+    "@antfu/eslint-config": "^0.12.2",
+    "@iconify-json/carbon": "^1.0.12",
+    "@types/node": "^16.11.12",
+    "@unocss/reset": "^0.16.0",
+    "@vitejs/plugin-vue": "^1.10.2",
+    "eslint": "^8.4.1",
+    "pnpm": "^6.23.6",
+    "typescript": "^4.5.3",
+    "unocss": "^0.16.0",
+    "unplugin-vue-components": "^0.17.8",
     "vitepress": "^0.20.4"
   }
 }
