@@ -1,6 +1,9 @@
 import { slash } from '@antfu/utils'
 import type { VitestContext } from '../types'
+import { isTargetFile } from './glob'
 import type { WorkerPool } from './pool'
+
+const WATCHER_DEBOUNCE = 50
 
 export async function startWatcher(ctx: VitestContext, pool: WorkerPool) {
   const { reporter, server } = ctx
@@ -11,16 +14,31 @@ export async function startWatcher(ctx: VitestContext, pool: WorkerPool) {
   const changedTests = new Set<string>()
   const seen = new Set<string>()
 
-  // TODO: on('add') hook and glob to detect newly added files
-  server.watcher.on('change', async(id) => {
+  server.watcher.on('change', (id) => {
     id = slash(id)
-
     getAffectedTests(ctx, id, changedTests, seen)
-
     if (changedTests.size === 0)
       return
+    rerunFile(id)
+  })
+  server.watcher.on('unlink', (id) => {
+    id = slash(id)
+    seen.add(id)
 
-    // debounce
+    if (id in ctx.state.filesMap) {
+      delete ctx.state.filesMap[id]
+      changedTests.delete(id)
+    }
+  })
+  server.watcher.on('add', async(id) => {
+    id = slash(id)
+    if (isTargetFile(id, ctx.config)) {
+      changedTests.add(id)
+      rerunFile(id)
+    }
+  })
+
+  function rerunFile(id: string) {
     clearTimeout(timer)
     timer = setTimeout(async() => {
       if (changedTests.size === 0) {
@@ -45,8 +63,8 @@ export async function startWatcher(ctx: VitestContext, pool: WorkerPool) {
 
       await reporter.onFinished?.(ctx.state.getFiles(tests))
       await reporter.onWatcherStart?.()
-    }, 100)
-  })
+    }, WATCHER_DEBOUNCE)
+  }
 
   // add an empty promise so it never resolves
   await new Promise(() => { })
