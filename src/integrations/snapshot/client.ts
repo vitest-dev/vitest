@@ -54,7 +54,7 @@ export class SnapshotClient {
       throw new Error('Snapshot cannot be used outside of test')
 
     const testName = getNames(this.test).slice(1).join(' > ')
-    const { actual, expected, key, pass, count } = this.snapshotState!.match({
+    const { actual, expected, key, pass } = this.snapshotState!.match({
       testName,
       received,
       isInline,
@@ -63,7 +63,6 @@ export class SnapshotClient {
         isInline: true,
       }),
     })
-    console.dir({ actual, expected, key, pass, count })
 
     if (!pass) {
       // improve log
@@ -76,9 +75,7 @@ export class SnapshotClient {
 
   async saveSnap() {
     if (!this.testFile || !this.snapshotState) return
-    console.dir(this.snapshotState)
     const result = packSnapshotState(this.testFile, this.snapshotState)
-    console.log({ result })
     await rpc('snapshotSaved', result)
 
     this.testFile = ''
