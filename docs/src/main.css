@@ -1,0 +1,61 @@
+:root {
+  --c-brand: #ca931c;
+  --font-family-base: "Readex Pro", ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont, sans-serif;
+  --bg-gradient: 255,255,255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --c-bg: rgb(20,20,20) !important;
+    --c-text: #fff !important;
+    --c-text-light: #fdd888 !important;
+    --c-brand: #fdd888 !important;
+    --bg-gradient: 20,20,20 !important;
+  }
+}
+
+.theme.no-navbar.no-sidebar ul > li {
+  opacity: 0.8;
+  transition: .1s ease;
+}
+.theme.no-navbar.no-sidebar ul > li:hover {
+  opacity: 1;
+}
+
+.theme.no-navbar.no-sidebar {
+  background-image: url("/bg.png");
+  background-repeat: repeat;
+  background-size: 50%;
+}
+
+@media screen and (max-width: 768px) {
+  .theme.no-navbar.no-sidebar {
+    background-size: 100%;
+  }
+}
+
+.theme.no-navbar.no-sidebar .page {
+  background:
+    radial-gradient(ellipse, rgba(var(--bg-gradient),1) 50%, rgba(var(--bg-gradient),0.4) 120%),
+    radial-gradient(ellipse at top, rgba(var(--bg-gradient),0.8) 20%, rgba(var(--bg-gradient),0) 100%),
+    radial-gradient(ellipse at left, rgba(var(--bg-gradient),0.6) 20%, rgba(var(--bg-gradient),0) 100%),
+    radial-gradient(ellipse at right, rgba(var(--bg-gradient),0.6) 20%, rgba(var(--bg-gradient),0) 100%);
+}
+
+.theme.no-navbar.no-sidebar li {
+  list-style: none;
+  display: flex;
+  gap: 0.4rem;
+}
+
+.theme.no-navbar.no-sidebar ul {
+  padding: 0;
+}
+
+.custom-block.tip {
+  background-color: rgba(255, 229, 100, 0.1)
+}
+
+.custom-block.warning {
+  color: inherit;
+}
