@@ -1,9 +1,8 @@
 import path from 'path'
 import { expect } from 'chai'
-import type { Test } from '../../types'
+import type { SnapshotResult, Test } from '../../types'
 import { rpc } from '../../runtime/rpc'
 import { getNames } from '../../utils'
-import { packSnapshotState } from './port/jest-test-result-helper'
 import SnapshotState from './port/state'
 
 export interface Context {
@@ -79,4 +78,32 @@ export class SnapshotClient {
     this.testFile = ''
     this.snapshotState = undefined
   }
+}
+
+export function packSnapshotState(filepath: string, state: SnapshotState): SnapshotResult {
+  const snapshot: SnapshotResult = {
+    filepath,
+    added: 0,
+    fileDeleted: false,
+    matched: 0,
+    unchecked: 0,
+    uncheckedKeys: [],
+    unmatched: 0,
+    updated: 0,
+  }
+  const uncheckedCount = state.getUncheckedCount()
+  const uncheckedKeys = state.getUncheckedKeys()
+  if (uncheckedCount)
+    state.removeUncheckedKeys()
+
+  const status = state.save()
+  snapshot.fileDeleted = status.deleted
+  snapshot.added = state.added
+  snapshot.matched = state.matched
+  snapshot.unmatched = state.unmatched
+  snapshot.updated = state.updated
+  snapshot.unchecked = !status.deleted ? uncheckedCount : 0
+  snapshot.uncheckedKeys = Array.from(uncheckedKeys)
+
+  return snapshot
 }

@@ -1,5 +1,5 @@
 import { nanoid } from 'nanoid/non-secure'
-import type { SuiteHooks, Test, SuiteCollector, TestCollector, RunMode, ComputeMode, TestFactory, TestFunction, File, Suite, Awaitable } from '../types'
+import type { SuiteHooks, Test, SuiteCollector, TestCollector, RunMode, ComputeMode, TestFactory, TestFunction, File, Suite, Awaitable, ResolvedConfig, RpcCall, RpcSend } from '../types'
 import { context } from './context'
 import { getHooks, setFn, setHooks } from './map'
 
@@ -242,4 +242,16 @@ function withTimeout<T extends((...args: any[]) => any)>(fn: T, _timeout?: numbe
       timer.unref()
     })]) as Awaitable<void>
   }) as T
+}
+
+declare global {
+  namespace NodeJS {
+    interface Process {
+      __vitest_worker__: {
+        config: ResolvedConfig
+        rpc: RpcCall
+        send: RpcSend
+      }
+    }
+  }
 }
