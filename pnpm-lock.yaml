@@ -23,7 +23,6 @@ importers:
       chai-subset: ^1.6.0
       cli-truncate: ^3.1.0
       diff: ^5.0.0
-      elegant-spinner: ^3.0.0
       eslint: ^8.4.1
       esno: ^0.12.1
       fast-glob: ^3.2.7
@@ -54,7 +53,6 @@ importers:
       chai-subset: 1.6.0
       cli-truncate: 3.1.0
       diff: 5.0.0
-      elegant-spinner: 3.0.0
       fast-glob: 3.2.7
       find-up: 6.2.0
       log-update: 5.0.0
@@ -2025,11 +2023,6 @@ packages:
   /electron-to-chromium/1.4.12:
     resolution: {integrity: sha512-zjfhG9Us/hIy8AlQ5OzfbR/C4aBv1Dg/ak4GX35CELYlJ4tDAtoEcQivXvyBdqdNQ+R6PhlgQqV8UNPJmhkJog==}
     dev: true
-
-  /elegant-spinner/3.0.0:
-    resolution: {integrity: sha512-nWUuor3FWTGYAch7SY0unb5qLzs7eAc24ic9PBh+eQctFNQ4IDWJqBpBgsL4SrrGHHN0mJoL7CpWZby5t2KjFg==}
-    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
-    dev: false
 
   /emoji-regex/8.0.0:
     resolution: {integrity: sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==}

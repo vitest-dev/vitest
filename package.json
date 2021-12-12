@@ -62,7 +62,6 @@
     "chai-subset": "^1.6.0",
     "cli-truncate": "^3.1.0",
     "diff": "^5.0.0",
-    "elegant-spinner": "^3.0.0",
     "fast-glob": "^3.2.7",
     "find-up": "^6.2.0",
     "log-update": "^5.0.0",

@@ -4,7 +4,6 @@ import c from 'picocolors'
 import indentString from 'indent-string'
 import cliTruncate from 'cli-truncate'
 import stripAnsi from 'strip-ansi'
-import elegantSpinner from 'elegant-spinner'
 import { slash } from '@antfu/utils'
 import type { SnapshotSummary, Task } from '../types'
 import { getNames, getTests } from '../utils'
@@ -201,4 +200,17 @@ export const createRenderer = (_tasks: Task[]) => {
 
 export function getFullName(task: Task) {
   return getNames(task).join(c.gray(' > '))
+}
+
+export const spinnerFrames = process.platform === 'win32'
+  ? ['-', '\\', '|', '/']
+  : ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
+
+export function elegantSpinner() {
+  let index = 0
+
+  return () => {
+    index = ++index % spinnerFrames.length
+    return spinnerFrames[index]
+  }
 }
