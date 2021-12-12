@@ -103,6 +103,10 @@ export function JestChaiExpect(): ChaiPlugin {
     def('toHaveLength', function(length: number) {
       return this.have.length(length)
     })
+    // destructuring, because it checks `arguments` inside, and value is passing as `undefined`
+    def('toHaveProperty', function(...args: [property: string, value?: any]) {
+      return this.have.deep.nested.property(...args)
+    })
     def('toBeCloseTo', function(number: number, numDigits = 2) {
       utils.expectTypes(this, ['number'])
       return this.closeTo(number, numDigits)
