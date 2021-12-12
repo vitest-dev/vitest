@@ -17,7 +17,6 @@ importers:
       '@types/sade': ^1.7.3
       '@types/sinon': ^10.0.6
       '@types/sinon-chai': ^3.2.6
-      '@vueuse/core': ^7.2.2
       bumpp: ^7.1.1
       c8: ^7.10.0
       chai: ^4.3.4
@@ -42,20 +41,14 @@ importers:
       sade: ^1.7.4
       sinon: ^12.0.1
       sinon-chai: ^3.7.0
-      sirv: ^1.0.19
       source-map: ^0.7.3
       strip-ansi: ^7.0.1
       tsup: ^5.11.1
       typescript: ^4.5.3
-      unocss: ^0.16.1
-      unplugin-auto-import: ^0.5.3
-      unplugin-vue-components: ^0.17.8
       vite: ^2.7.1
-      ws: ^8.3.0
     dependencies:
       '@types/chai': 4.3.0
       '@types/sinon-chai': 3.2.6
-      '@vueuse/core': 7.2.2
       chai: 4.3.4
       chai-subset: 1.6.0
       fast-glob: 3.2.7
@@ -66,9 +59,7 @@ importers:
       sade: 1.7.4
       sinon: 12.0.1
       sinon-chai: 3.7.0_chai@4.3.4+sinon@12.0.1
-      sirv: 1.0.19
       source-map: 0.7.3
-      ws: 8.3.0
     devDependencies:
       '@antfu/eslint-config': 0.13.1_eslint@8.4.1+typescript@4.5.3
       '@antfu/ni': 0.12.0
@@ -98,9 +89,6 @@ importers:
       strip-ansi: 7.0.1
       tsup: 5.11.1_typescript@4.5.3
       typescript: 4.5.3
-      unocss: 0.16.1
-      unplugin-auto-import: 0.5.3_@vueuse+core@7.2.2+vite@2.7.1
-      unplugin-vue-components: 0.17.8_vite@2.7.1
       vite: 2.7.1
 
   docs:
@@ -108,6 +96,23 @@ importers:
       vitepress: ^0.20.4
     devDependencies:
       vitepress: 0.20.4
+
+  packages/ui:
+    specifiers:
+      '@vueuse/core': ^7.2.2
+      sirv: ^1.0.19
+      unocss: ^0.16.1
+      unplugin-auto-import: ^0.5.3
+      unplugin-vue-components: ^0.17.8
+      ws: ^8.3.0
+    dependencies:
+      '@vueuse/core': 7.2.2
+      sirv: 1.0.19
+      ws: 8.3.0
+    devDependencies:
+      unocss: 0.16.1
+      unplugin-auto-import: 0.5.3_@vueuse+core@7.2.2+vite@2.7.1
+      unplugin-vue-components: 0.17.8_vite@2.7.1
 
   test/cjs:
     specifiers:
