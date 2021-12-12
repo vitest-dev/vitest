@@ -50,15 +50,6 @@ main.home {
     radial-gradient(ellipse at right, rgba(var(--bg-gradient),0.6) 20%, rgba(var(--bg-gradient),0) 100%);
 }
 
-main.home li {
-  list-style: none;
-  display: flex;
-  gap: 0.4rem;
-}
-
-main.home ul {
-  padding: 0;
-}
 
 .custom-block.tip {
   background-color: rgba(255, 229, 100, 0.1)

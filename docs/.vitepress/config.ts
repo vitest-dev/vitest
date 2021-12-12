@@ -42,7 +42,7 @@ export default defineConfig({
     nav: [
       { text: 'Guide', link: '/guide/' },
       { text: 'Config', link: '/config/' },
-      { text: 'Plugins', link: '/plugins/' },
+      // { text: 'Plugins', link: '/plugins/' },
       {
         text: 'Discord',
         link: 'https://discord.gg/2zYZNngd7y' // TODO 'https://chat.vitest.dev'
@@ -74,7 +74,7 @@ export default defineConfig({
 
     sidebar: {
       '/config/': 'auto',
-      '/plugins': 'auto',
+      // '/plugins': 'auto',
       // catch-all fallback
       '/': [
         {
