@@ -33,7 +33,7 @@ export class SnapshotClient {
   setTest(test: Test) {
     this.test = test
 
-    if (this.testFile !== this.test!.file!.filepath) {
+    if (this.testFile !== this.test.file!.filepath) {
       if (this.snapshotState)
         this.saveSnap()
 
@@ -49,14 +49,16 @@ export class SnapshotClient {
     this.test = undefined
   }
 
-  assert(received: unknown, message: string): void {
+  assert(received: unknown, message: string, inlineSnapshot?: string): void {
     if (!this.test)
-      throw new Error('Snapshot can\'t not be used outside of test')
+      throw new Error('Snapshot cannot be used outside of test')
 
+    const testName = getNames(this.test).slice(1).join(' > ')
     const { actual, expected, key, pass } = this.snapshotState!.match({
-      testName: getNames(this.test).slice(1).join(' > '),
+      testName,
       received,
-      isInline: false,
+      isInline: !!inlineSnapshot,
+      inlineSnapshot: inlineSnapshot?.trim(),
     })
 
     if (!pass) {
@@ -70,9 +72,7 @@ export class SnapshotClient {
 
   async saveSnap() {
     if (!this.testFile || !this.snapshotState) return
-
     const result = packSnapshotState(this.testFile, this.snapshotState)
-
     await rpc('snapshotSaved', result)
 
     this.testFile = ''

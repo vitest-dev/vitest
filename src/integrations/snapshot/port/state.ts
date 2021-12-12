@@ -187,11 +187,9 @@ export default class SnapshotState {
     if (!(isInline && this._snapshotData[key] !== undefined))
       this._uncheckedKeys.delete(key)
 
-    const receivedSerialized = addExtraLineBreaks(
-      serialize(received, undefined, this._snapshotFormat),
-    )
+    const receivedSerialized = addExtraLineBreaks(serialize(received, undefined, this._snapshotFormat))
     const expected = isInline ? inlineSnapshot : this._snapshotData[key]
-    const pass = expected === receivedSerialized
+    const pass = expected?.trim() === receivedSerialized?.trim()
     const hasSnapshot = expected !== undefined
     const snapshotIsPersisted = isInline || fs.existsSync(this._snapshotPath)
 
@@ -221,7 +219,6 @@ export default class SnapshotState {
         if (!pass) {
           if (hasSnapshot)
             this.updated++
-
           else
             this.added++
 
