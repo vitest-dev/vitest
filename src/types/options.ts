@@ -121,6 +121,8 @@ export interface CliOptions extends UserOptions {
    * - `vite.config.ts`
    */
   config?: string | undefined
+
+  dom?: boolean
 }
 
 export interface ResolvedConfig extends Omit<Required<CliOptions>, 'config' | 'filters'> {

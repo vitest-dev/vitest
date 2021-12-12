@@ -18,6 +18,7 @@ importers:
       '@types/sinon-chai': ^3.2.6
       bumpp: ^7.1.1
       c8: ^7.10.0
+      cac: ^6.7.12
       chai: ^4.3.4
       chai-subset: ^1.6.0
       cli-truncate: ^3.1.0
@@ -37,7 +38,6 @@ importers:
       piscina: ^3.2.0
       pretty-format: ^27.4.2
       rimraf: ^3.0.2
-      sade: ^1.7.4
       sinon: ^12.0.1
       sinon-chai: ^3.7.0
       source-map: ^0.7.3
@@ -55,7 +55,6 @@ importers:
       micromatch: 4.0.4
       picocolors: 1.0.0
       piscina: 3.2.0
-      sade: 1.7.4
       sinon: 12.0.1
       sinon-chai: 3.7.0_chai@4.3.4+sinon@12.0.1
       source-map: 0.7.3
@@ -72,6 +71,7 @@ importers:
       '@types/sinon': 10.0.6
       bumpp: 7.1.1
       c8: 7.10.0
+      cac: 6.7.12
       cli-truncate: 3.1.0
       diff: 5.0.0
       eslint: 8.4.1
@@ -3828,11 +3828,6 @@ packages:
       import-meta-resolve: 1.1.1
     dev: true
 
-  /mri/1.2.0:
-    resolution: {integrity: sha512-tzzskb3bG8LvYGFF/mDTpq3jpI6Q9wc3LEmBaghu+DdCssd1FakN7Bc0hVNmEyGq1bq3RgfkCb3cmQLpNPOroA==}
-    engines: {node: '>=4'}
-    dev: false
-
   /ms/2.0.0:
     resolution: {integrity: sha1-VgiurfwAvmwpAd9fmGF4jeDVl8g=}
     dev: true
@@ -4577,13 +4572,6 @@ packages:
     resolution: {integrity: sha512-5l4VyZR86LZ/lDxZTR6jqL8AFE2S0IFLMP26AbjsLVADxHdhB/c0GUsH+y39UfCi3dzz8OlQuPmnaJOMoDHQBA==}
     dependencies:
       queue-microtask: 1.2.2
-
-  /sade/1.7.4:
-    resolution: {integrity: sha512-y5yauMD93rX840MwUJr7C1ysLFBgMspsdTo4UVrDg3fXDvtwOyIqykhVAAm6fk/3au77773itJStObgK+LKaiA==}
-    engines: {node: '>= 6'}
-    dependencies:
-      mri: 1.2.0
-    dev: false
 
   /safe-buffer/5.1.2:
     resolution: {integrity: sha512-Gd2UZBJDkXlY7GbJxfsE8/nvKkUEU1G38c1siN6QP6a9PT9MmHB8GnpscSmMJSoF8LOIrt8ud/wPtojys4G6+g==}

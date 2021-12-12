@@ -6,6 +6,7 @@ import type { RawSourceMap } from 'source-map'
 import { SourceMapConsumer } from 'source-map'
 import cliTruncate from 'cli-truncate'
 import { notNullish } from '../utils'
+import type { VitestContext } from '../types'
 import { F_UP } from './figures'
 
 interface ErrorWithDiff extends Error {
@@ -22,6 +23,14 @@ interface ErrorWithDiff extends Error {
 interface Position {
   line: number
   column: number
+}
+
+declare global {
+  namespace NodeJS {
+    interface Process {
+      __vitest__: VitestContext
+    }
+  }
 }
 
 export async function printError(error: unknown) {

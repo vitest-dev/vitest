@@ -17,7 +17,8 @@ export class DefaultReporter implements Reporter {
   watchFilters?: string[]
 
   constructor(public ctx: VitestContext) {
-    console.log(c.green(`Running tests at ${c.gray(this.ctx.config.root)}\n`))
+    const mode = ctx.config.watch ? c.yellow(' DEV ') : c.cyan(' RUN ')
+    console.log(`${c.inverse(c.bold(mode))} ${c.gray(this.ctx.config.root)}\n`)
     this.start = performance.now()
   }
 
