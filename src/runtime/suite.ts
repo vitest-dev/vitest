@@ -1,6 +1,6 @@
 import { nanoid } from 'nanoid/non-secure'
-import { defaultTestTimeout, defaultHookTimeout } from '../constants'
 import type { SuiteHooks, Test, SuiteCollector, TestCollector, RunMode, ComputeMode, TestFactory, TestFunction, File, Suite, Awaitable } from '../types'
+import { getDefaultHookTimeout, getDefaultTestTimeout } from '../utils'
 import { context } from './context'
 import { getHooks, setFn, setHooks } from './map'
 
@@ -209,10 +209,10 @@ export const describe = suite
 export const it = test
 
 // hooks
-export const beforeAll = (fn: SuiteHooks['beforeAll'][0], timeout = defaultHookTimeout) => getCurrentSuite().on('beforeAll', withTimeout(fn, timeout))
-export const afterAll = (fn: SuiteHooks['afterAll'][0], timeout = defaultHookTimeout) => getCurrentSuite().on('afterAll', withTimeout(fn, timeout))
-export const beforeEach = (fn: SuiteHooks['beforeEach'][0], timeout = defaultHookTimeout) => getCurrentSuite().on('beforeEach', withTimeout(fn, timeout))
-export const afterEach = (fn: SuiteHooks['afterEach'][0], timeout = defaultHookTimeout) => getCurrentSuite().on('afterEach', withTimeout(fn, timeout))
+export const beforeAll = (fn: SuiteHooks['beforeAll'][0], timeout?: number) => getCurrentSuite().on('beforeAll', withTimeout(fn, timeout ?? getDefaultHookTimeout()))
+export const afterAll = (fn: SuiteHooks['afterAll'][0], timeout?: number) => getCurrentSuite().on('afterAll', withTimeout(fn, timeout ?? getDefaultHookTimeout()))
+export const beforeEach = (fn: SuiteHooks['beforeEach'][0], timeout?: number) => getCurrentSuite().on('beforeEach', withTimeout(fn, timeout ?? getDefaultHookTimeout()))
+export const afterEach = (fn: SuiteHooks['afterEach'][0], timeout?: number) => getCurrentSuite().on('afterEach', withTimeout(fn, timeout ?? getDefaultHookTimeout()))
 
 // utils
 export function clearContext() {
@@ -221,7 +221,8 @@ export function clearContext() {
   context.currentSuite = defaultSuite
 }
 
-function withTimeout<T extends((...args: any[]) => any)>(fn: T, timeout = defaultTestTimeout): T {
+function withTimeout<T extends((...args: any[]) => any)>(fn: T, _timeout?: number): T {
+  const timeout = _timeout ?? getDefaultTestTimeout()
   if (timeout <= 0 || timeout === Infinity)
     return fn
 
