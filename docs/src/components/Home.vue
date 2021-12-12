@@ -79,7 +79,7 @@ import '../main.css'
       <Avatar
         name="Anthony Fu"
         desc=""
-        avatar="http://antfu.me/avatar.png"
+        avatar="https://antfu.me/avatar.png"
         github="antfu"
         twitter="antfu7"
       >
