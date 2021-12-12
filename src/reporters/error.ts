@@ -17,6 +17,11 @@ interface ErrorWithDiff extends Error {
   operator?: string
 }
 
+interface Position {
+  line: number
+  column: number
+}
+
 export async function printError(error: unknown) {
   const { server } = process.__vitest__
 
@@ -38,9 +43,9 @@ export async function printError(error: unknown) {
     const pos = await getOriginalPos(transformResult?.map, nearest)
     if (pos && existsSync(nearest.file)) {
       const sourceCode = await fs.readFile(nearest.file, 'utf-8')
-      console.error(`${c.red(`${c.bold(e.name || e.nameStr || 'Unknown Error')}: ${e.message}`)}`)
-      console.log(c.gray(`${nearest.file}:${pos.line}:${pos.column}`))
-      console.log(c.yellow(generateCodeFrame(sourceCode, pos)))
+      displayErrorMessage(e)
+      displayFilePath(nearest.file, pos)
+      displayCodeFrame(sourceCode, pos)
       codeFramePrinted = true
     }
   }
@@ -49,15 +54,29 @@ export async function printError(error: unknown) {
     console.error(e)
 
   if (e.showDiff)
-    console.error(c.gray(generateDiff(stringify(e.actual), stringify(e.expected))))
+    displayDiff(e.actual, e.expected)
 }
 
-interface Poisition {
-  line: number
-  column: number
+// TODO: handle big object and big string diff
+function displayDiff(actual: string, expected: string) {
+  console.error(c.gray(generateDiff(stringify(actual), stringify(expected))))
 }
 
-function getOriginalPos(map: RawSourceMap | null | undefined, { line, column }: Poisition): Promise<Poisition | null> {
+function displayErrorMessage(error: ErrorWithDiff) {
+  const errorName = error.name || error.nameStr || 'Unknown Error'
+
+  console.error(`${c.red(`${c.bold(errorName)}: ${error.message}`)}`)
+}
+
+function displayFilePath(filePath: string, pos: Position) {
+  console.log(c.gray(`${filePath}:${pos.line}:${pos.column}`))
+}
+
+function displayCodeFrame(sourceCode: string, pos: Position) {
+  console.log(c.yellow(generateCodeFrame(sourceCode, pos)))
+}
+
+function getOriginalPos(map: RawSourceMap | null | undefined, { line, column }: Position): Promise<Position | null> {
   return new Promise((resolve) => {
     if (!map)
       return resolve(null)
@@ -65,7 +84,7 @@ function getOriginalPos(map: RawSourceMap | null | undefined, { line, column }: 
     SourceMapConsumer.with(map, null, (consumer) => {
       const pos = consumer.originalPositionFor({ line, column })
       if (pos.line != null && pos.column != null)
-        resolve(pos as Poisition)
+        resolve(pos as Position)
       else
         resolve(null)
     })
@@ -76,7 +95,7 @@ const splitRE = /\r?\n/
 
 export function posToNumber(
   source: string,
-  pos: number | Poisition,
+  pos: number | Position,
 ): number {
   if (typeof pos === 'number') return pos
   const lines = source.split(splitRE)
@@ -90,8 +109,8 @@ export function posToNumber(
 
 export function numberToPos(
   source: string,
-  offset: number | Poisition,
-): Poisition {
+  offset: number | Position,
+): Position {
   if (typeof offset !== 'number') return offset
   if (offset > source.length) {
     throw new Error(
@@ -115,7 +134,7 @@ export function numberToPos(
 
 export function generateCodeFrame(
   source: string,
-  start: number | Poisition = 0,
+  start: number | Position = 0,
   end?: number,
   range = 2,
 ): string {
