@@ -10,4 +10,24 @@ describe('extend works', () => {
 
     expect(div).toBeInTheDocument()
   })
+
+  it('toBeChecked', () => {
+    const input = document.createElement('input')
+    input.type = 'checkbox'
+    document.body.appendChild(input)
+
+    expect(input).not.toBeChecked()
+
+    input.checked = true
+
+    expect(input).toBeChecked()
+  })
+
+  it('toHaveStyle', () => {
+    const input = document.createElement('input')
+    input.style.background = 'black'
+    document.body.appendChild(input)
+
+    expect(input).toHaveStyle({ background: 'black' })
+  })
 })
