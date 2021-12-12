@@ -12,7 +12,7 @@ A blazing fast unit test framework powered by Vite.
   <a href="https://www.npmjs.com/package/vitest"><img src="https://img.shields.io/npm/v/vitest?color=a1b858&label="></a>
 <p>
 <h2 align="center">
-<a href=https://preview.vitest.dev">Open the Docs</a>
+<a href="https://preview.vitest.dev">Open the Docs</a>
 </h2>
 <h3 align="center">
 <a href=https://discord.com/invite/2zYZNngd7y"><i>Get involved!</i></a>
@@ -28,7 +28,7 @@ A blazing fast unit test framework powered by Vite.
 > Vitest requires Vite v2.7 and Node v16
 
 
-Switch to Vitest by following the [Getting Started Guide](https://preview.vitest.dev/guide]) or learn [why we are building a new test runner](https://preview.vitest.dev/guide]).
+Switch to Vitest by following the [Getting Started Guide](https://preview.vitest.dev/guide) or learn [why we are building a new test runner](https://preview.vitest.dev/guide).
 
 ## Features
 
