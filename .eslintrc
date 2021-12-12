@@ -1,7 +1,3 @@
 {
-  "extends": ["@antfu"],
-  "rules": {
-    "import/no-named-as-default-member": "off",
-    "@typescript-eslint/consistent-type-imports": ["error", { "prefer": "type-imports", "disallowTypeAnnotations": false }]
-  }
+  "extends": "@antfu"
 }

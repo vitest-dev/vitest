@@ -78,7 +78,6 @@ sade('vitest [filter]', true)
   .parse(process.argv)
 
 declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace NodeJS {
     interface Process {
       __vitest__: VitestContext

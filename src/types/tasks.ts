@@ -1,4 +1,3 @@
-/* eslint-disable no-use-before-define */
 import type { Awaitable } from '@antfu/utils'
 
 export type RunMode = 'run' | 'skip' | 'only' | 'todo'

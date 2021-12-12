@@ -72,7 +72,6 @@ export default async function run(ctx: WorkerContext) {
 }
 
 declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace NodeJS {
     interface Process {
       __vitest_worker__: {
