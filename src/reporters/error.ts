@@ -35,7 +35,7 @@ declare global {
 }
 
 export async function printError(error: unknown) {
-  const { server } = process.__vitest__
+  const ctx = process.__vitest__
 
   let e = error as ErrorWithDiff
 
@@ -49,14 +49,14 @@ export async function printError(error: unknown) {
   let codeFramePrinted = false
   const stackStr = e.stack || e.stackStr || ''
   const stacks = parseStack(stackStr)
-  const nearest = stacks.find(stack => !stack.file.includes('vitest/dist') && server.moduleGraph.getModuleById(stack.file))
+  const nearest = stacks.find(stack => !stack.file.includes('vitest/dist') && ctx.server.moduleGraph.getModuleById(stack.file))
   if (nearest) {
-    const pos = await getSourcePos(server, nearest)
+    const pos = await getSourcePos(ctx, nearest)
     if (pos && existsSync(nearest.file)) {
       const sourceCode = await fs.readFile(nearest.file, 'utf-8')
       printErrorMessage(e)
 
-      await printStack(server, stacks, nearest, (s) => {
+      await printStack(ctx, stacks, nearest, (s) => {
         if (s === nearest)
           console.log(c.yellow(generateCodeFrame(sourceCode, 4, pos)))
       })
@@ -72,8 +72,8 @@ export async function printError(error: unknown) {
     displayDiff(e.actual, e.expected)
 }
 
-async function getSourcePos(server: ViteDevServer, nearest: ParsedStack) {
-  const mod = server.moduleGraph.getModuleById(nearest.file)
+async function getSourcePos(ctx: VitestContext, nearest: ParsedStack) {
+  const mod = ctx.server.moduleGraph.getModuleById(nearest.file)
   const transformResult = mod?.ssrTransformResult
   const pos = await getOriginalPos(transformResult?.map, nearest)
   return pos
@@ -89,7 +89,8 @@ function printErrorMessage(error: ErrorWithDiff) {
   console.error(c.red(`${c.bold(errorName)}: ${error.message}`))
 }
 
-async function printStack(server: ViteDevServer,
+async function printStack(
+  ctx: VitestContext,
   stack: ParsedStack[],
   highlight?: ParsedStack,
   onStack?: ((stack: ParsedStack) => void),
@@ -98,10 +99,14 @@ async function printStack(server: ViteDevServer,
     return
 
   for (const frame of stack) {
-    const pos = await getSourcePos(server, frame) || frame
+    const pos = await getSourcePos(ctx, frame) || frame
     const color = frame === highlight ? c.yellow : c.gray
     console.log(color(` ${c.dim(F_POINTER)} ${[frame.method, c.dim(`${frame.file}:${pos.line}:${pos.column}`)].filter(Boolean).join(' ')}`))
     onStack?.(frame)
+
+    // reached at test file, skip the follow stack
+    if (frame.file in ctx.state.filesMap)
+      break
   }
   console.log()
 }
