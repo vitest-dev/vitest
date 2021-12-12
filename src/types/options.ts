@@ -103,6 +103,20 @@ export interface UserOptions {
    * @default true
    */
   interpretDefault?: boolean
+
+  /*
+   * Default timeout of a test in milliseconds
+   *
+   * @default 5000
+   */
+  testTimeout?: number
+
+  /*
+   * Default timeout of a hook in milliseconds
+   *
+   * @default 5000
+   */
+  hookTimeout?: number
 }
 
 export interface CliOptions extends UserOptions {
