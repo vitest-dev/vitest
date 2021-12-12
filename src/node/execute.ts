@@ -19,8 +19,6 @@ export interface ExecuteOptions {
 }
 
 const defaultInline = [
-  'vitest/dist',
-  'vitest/src',
   '@vue',
   '@vueuse',
   'vue-demi',

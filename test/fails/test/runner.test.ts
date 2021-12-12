@@ -5,16 +5,15 @@ import { describe, it, expect } from 'vitest'
 
 describe('should fails', async() => {
   const root = resolve(__dirname, '../fixtures')
-  const cli = resolve(__dirname, '../../../bin/vitest.mjs')
   const files = await fg('*.test.ts', { cwd: root })
 
   for (const file of files) {
     it(file, async() => {
       let error: any
-      await execa('node', [cli, file], {
+      await execa('npx', ['vitest', file], {
         cwd: root,
         env: {
-          ...process.env,
+          CI: 'true',
           NO_COLOR: 'true',
         },
       })
