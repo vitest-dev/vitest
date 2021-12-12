@@ -75,7 +75,11 @@ function displayDiff(actual: string, expected: string) {
 
 function displayErrorMessage(error: ErrorWithDiff) {
   const errorName = error.name || error.nameStr || 'Unknown Error'
-  console.error(c.red(`${c.bold(errorName)}: ${error.message}`))
+
+  if (error.showDiff)
+    console.error(c.red(`${c.bold(errorName)}`))
+  else
+    console.error(c.red(`${c.bold(errorName)}: ${error.message}`))
 }
 
 function displayFilePath(filePath: string, pos: Position) {
