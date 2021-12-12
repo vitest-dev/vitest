@@ -47,7 +47,7 @@ export async function printError(error: unknown) {
 
   let codeFramePrinted = false
   const stacks = parseStack(e.stack || e.stackStr || '')
-  const nearest = stacks.find(stack => server.moduleGraph.getModuleById(stack.file))
+  const nearest = stacks.find(stack => !stack.file.includes('vitest/dist') && server.moduleGraph.getModuleById(stack.file))
   if (nearest) {
     const mod = server.moduleGraph.getModuleById(nearest.file)
     const transformResult = mod?.ssrTransformResult
