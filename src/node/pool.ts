@@ -124,6 +124,9 @@ function createChannel(ctx: VitestContext) {
         ctx.state.updateTasks([args[0] as any])
         ctx.reporter.onTaskUpdate?.(args[0] as any)
         return
+      case 'log':
+        ctx.reporter.onUserConsoleLog?.(args[0] as any)
+        return
     }
 
     console.error('Unhandled message', method, args)

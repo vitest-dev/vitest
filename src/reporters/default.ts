@@ -2,7 +2,7 @@
 import { performance } from 'perf_hooks'
 import { relative } from 'path'
 import c from 'picocolors'
-import type { Reporter, TaskResultPack, VitestContext } from '../types'
+import type { Reporter, TaskResultPack, UserConsoleLog, VitestContext } from '../types'
 import { getSuites, getTests } from '../utils'
 import { printError } from './error'
 import { createRenderer, getStateString, getStateSymbol, renderSnapshotSummary, getFullName } from './renderer'
@@ -133,5 +133,12 @@ export class DefaultReporter implements Reporter {
     this.renderer?.stop()
     this.renderer = undefined
     await new Promise(resolve => setTimeout(resolve, 100))
+  }
+
+  onUserConsoleLog(log: UserConsoleLog) {
+    this.renderer?.clear()
+    const task = log.taskId ? this.ctx.state.idMap[log.taskId] : undefined
+    console.log(c.gray(`${log.type} | ${task ? c.dim(getFullName(task)) : 'unknown test'}`))
+    process[log.type].write(`${log.content}\n`)
   }
 }

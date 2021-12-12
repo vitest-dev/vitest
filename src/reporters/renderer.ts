@@ -191,6 +191,9 @@ export const createRenderer = (_tasks: Task[]) => {
       console.log(renderTree(tasks))
       return this
     },
+    clear() {
+      logUpdate.clear()
+    },
   }
 }
 

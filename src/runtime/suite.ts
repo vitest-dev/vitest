@@ -251,6 +251,7 @@ declare global {
         config: ResolvedConfig
         rpc: RpcCall
         send: RpcSend
+        current?: Test
       }
     }
   }

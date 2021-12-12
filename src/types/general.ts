@@ -30,3 +30,9 @@ export interface VitestContext {
   snapshot: SnapshotManager
   reporter: Reporter
 }
+
+export interface UserConsoleLog {
+  content: string
+  type: 'stdout' | 'stderr'
+  taskId?: string
+}

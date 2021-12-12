@@ -28,6 +28,8 @@ export async function runTest(test: Test) {
 
   getSnapshotClient().setTest(test)
 
+  process.__vitest_worker__.current = test
+
   try {
     await callHook(test.suite, 'beforeEach', [test, test.suite])
     await getFn(test)()
@@ -48,6 +50,8 @@ export async function runTest(test: Test) {
   getSnapshotClient().clearTest()
 
   test.result.end = performance.now()
+
+  process.__vitest_worker__.current = undefined
 
   updateTask(test)
 }
