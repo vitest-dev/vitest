@@ -5,7 +5,7 @@ import cliTruncate from 'cli-truncate'
 import stripAnsi from 'strip-ansi'
 import type { SnapshotSummary, Task } from '../types'
 import { getNames, getTests, slash } from '../utils'
-import { F_CHECK, F_CROSS, F_DOT, F_DOWN, F_DOWN_RIGHT, F_POINTER, F_RIGHT } from './figures'
+import { F_CHECK, F_CROSS, F_DOT, F_DOWN, F_DOWN_RIGHT, F_LONG_DASH, F_POINTER, F_RIGHT } from './figures'
 
 const DURATION_LONG = 300
 const MAX_HEIGHT = 20
@@ -15,6 +15,22 @@ const outputMap = new WeakMap<Task, string>()
 
 const pointer = c.yellow(F_POINTER)
 const skipped = c.yellow(F_DOWN)
+
+export function divider(text?: string, left?: number, right?: number) {
+  const length = process.stdout.columns || 10
+  if (text) {
+    const textLength = stripAnsi(text).length
+    if (left == null && right != null) {
+      left = length - textLength - right
+    }
+    else {
+      left = left ?? Math.floor((length - textLength) / 2)
+      right = length - textLength - left
+    }
+    return `${F_LONG_DASH.repeat(left)}${text}${F_LONG_DASH.repeat(right)}`
+  }
+  return F_LONG_DASH.repeat(length)
+}
 
 export function formatTestPath(root: string, path: string) {
   if (isAbsolute(path))
@@ -198,7 +214,7 @@ export const createRenderer = (_tasks: Task[]) => {
 }
 
 export function getFullName(task: Task) {
-  return getNames(task).join(c.gray(' > '))
+  return getNames(task).join(c.dim(' > '))
 }
 
 export const spinnerFrames = process.platform === 'win32'

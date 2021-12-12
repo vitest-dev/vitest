@@ -5,7 +5,7 @@ import c from 'picocolors'
 import type { Reporter, TaskResultPack, UserConsoleLog, VitestContext } from '../types'
 import { getSuites, getTests } from '../utils'
 import { printError } from './error'
-import { createRenderer, getStateString, getStateSymbol, renderSnapshotSummary, getFullName } from './renderer'
+import { createRenderer, getStateString, getStateSymbol, renderSnapshotSummary, getFullName, divider } from './renderer'
 import { F_RIGHT } from './figures'
 
 const isTTY = process.stdout.isTTY && !process.env.CI
@@ -60,22 +60,29 @@ export class DefaultReporter implements Reporter {
 
     const failedSuites = suites.filter(i => i.result?.error)
     const failedTests = tests.filter(i => i.result?.state === 'fail')
+    const failedTotal = failedSuites.length + failedTests.length
+
+    let current = 1
+
+    const errorDivider = () => console.error(`${c.red(c.dim(divider(`[${current++}/${failedTotal}]`, undefined, 1)))}\n`)
 
     if (failedSuites.length) {
-      console.error(c.bold(c.red(`\nFailed to run ${failedSuites.length} suites:`)))
+      console.error(c.red(divider(c.bold(c.inverse(` Failed Suites ${failedSuites.length} `)))))
+      console.error()
       for (const suite of failedSuites) {
         console.error(c.red(`\n- ${getFullName(suite)}`))
         await printError(suite.result?.error)
-        console.log()
+        errorDivider()
       }
     }
 
     if (failedTests.length) {
-      console.error(c.bold(c.red(`\nFailed Tests (${failedTests.length})`)))
+      console.error(c.red(divider(c.bold(c.inverse(` Failed Tests ${failedTests.length} `)))))
+      console.error()
       for (const test of failedTests) {
-        console.error(`${c.red(`\n${c.inverse(' FAIL ')}`)} ${getFullName(test)}`)
+        console.error(`${c.red(c.bold(c.inverse(' FAIL ')))} ${getFullName(test)}`)
         await printError(test.result?.error)
-        console.log()
+        errorDivider()
       }
     }
 
@@ -103,7 +110,6 @@ export class DefaultReporter implements Reporter {
     console.log(padTitle('Tests'), getStateString(tests))
     if (this.watchFilters)
       console.log(padTitle('Time'), time(threadTime))
-
     else
       console.log(padTitle('Time'), time(executionTime) + c.gray(` (in thread ${time(threadTime)}, ${(executionTime / threadTime * 100).toFixed(2)}%)`))
 
