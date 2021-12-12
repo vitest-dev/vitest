@@ -50,8 +50,8 @@
     "prepublishOnly": "nr build",
     "release": "bumpp --commit --push --tag && esmo scripts/publish.ts",
     "test": "node bin/vitest.mjs -r test/core",
-    "test:all": "pnpm -r --stream --filter !vitest run test --",
-    "test:ci": "pnpm -r --stream --filter !vitest --filter !@vitest/test-fails run test --",
+    "test:all": "cross-env CI=true pnpm -r --stream --filter !vitest run test --",
+    "test:ci": "cross-env CI=true pnpm -r --stream --filter !vitest --filter !@vitest/test-fails run test --",
     "typecheck": "tsc --noEmit && nr lint"
   },
   "dependencies": {
@@ -83,6 +83,7 @@
     "c8": "^7.10.0",
     "cac": "^6.7.12",
     "cli-truncate": "^3.1.0",
+    "cross-env": "^7.0.3",
     "diff": "^5.0.0",
     "eslint": "^8.4.1",
     "esno": "^0.12.1",
