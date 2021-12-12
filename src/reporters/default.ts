@@ -117,7 +117,7 @@ export class DefaultReporter implements Reporter {
     if (failed.length)
       console.log(`\n${c.bold(c.inverse(c.red(' FAIL ')))}${c.red(` ${failed.length} tests failed. Watching for file changes...`)}`)
     else
-      console.log(`\n${c.bold(c.inverse(c.green(' PASS ')))}${c.green(' Watching for file changes...')}`)
+      console.log(`\n${c.bold(c.inverse(c.green(' PASS ')))}${c.green(' Waiting for file changes...')}`)
   }
 
   async onWatcherRerun(files: string[], trigger: string) {
