@@ -2,7 +2,7 @@
 // if you need more, just ask
 
 import c from 'picocolors'
-import { Formatter } from 'picocolors/types'
+import type { Formatter } from 'picocolors/types'
 import { format as prettyFormat, plugins as prettyFormatPlugins } from 'pretty-format'
 import { generateDiff } from '../../reporters/error'
 

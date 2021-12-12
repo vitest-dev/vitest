@@ -1,4 +1,4 @@
-import { MatchersObject } from './integrations/chai/types'
+import type { MatchersObject } from './integrations/chai/types'
 import type { UserOptions } from './types'
 
 export * from './types'

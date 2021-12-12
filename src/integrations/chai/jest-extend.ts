@@ -7,7 +7,7 @@ import {
   subsetEquality,
   equals,
 } from './jest-utils'
-import {
+import type {
   ChaiPlugin,
   MatcherState,
   MatchersObject,
