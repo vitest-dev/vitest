@@ -25,7 +25,6 @@ export default [
     output: {
       dir: 'dist',
       format: 'esm',
-      sourcemap: true,
     },
     external,
     plugins: [

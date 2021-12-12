@@ -60,15 +60,15 @@
     "chai": "^4.3.4",
     "chai-subset": "^1.6.0",
     "fast-glob": "^3.2.7",
-    "log-update": "^5.0.0",
     "micromatch": "^4.0.4",
-    "picocolors": "^1.0.0",
     "piscina": "^3.2.0",
     "sinon": "^12.0.1",
     "sinon-chai": "^3.7.0",
     "source-map": "^0.7.3"
   },
   "devDependencies": {
+    "log-update": "^5.0.0",
+    "picocolors": "^1.0.0",
     "@antfu/eslint-config": "^0.13.1",
     "@antfu/ni": "^0.12.0",
     "@rollup/plugin-alias": "^3.1.8",
