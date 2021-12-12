@@ -87,3 +87,11 @@ export function getNames(task: Task) {
 
   return names
 }
+
+export const getDefaultTestTimeout = () => {
+  return process.__vitest_worker__?.config?.testTimeout ?? 5000
+}
+
+export const getDefaultHookTimeout = () => {
+  return process.__vitest_worker__?.config?.hookTimeout ?? 5000
+}
