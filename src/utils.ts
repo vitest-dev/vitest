@@ -87,4 +87,3 @@ export function getNames(task: Task) {
 
   return names
 }
-

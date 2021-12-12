@@ -11,6 +11,14 @@ function getCurrentSuite() {
   return context.currentSuite || defaultSuite
 }
 
+const getDefaultTestTimeout = () => {
+  return process.__vitest_worker__?.config?.testTimeout ?? 5000
+}
+
+const getDefaultHookTimeout = () => {
+  return process.__vitest_worker__?.config?.hookTimeout ?? 5000
+}
+
 export function createSuiteHooks() {
   return {
     beforeAll: [],
@@ -234,12 +242,4 @@ function withTimeout<T extends((...args: any[]) => any)>(fn: T, _timeout?: numbe
       timer.unref()
     })]) as Awaitable<void>
   }) as T
-}
-
-const getDefaultTestTimeout = () => {
-  return process.__vitest_worker__?.config?.testTimeout ?? 5000
-}
-
-const getDefaultHookTimeout = () => {
-  return process.__vitest_worker__?.config?.hookTimeout ?? 5000
 }
