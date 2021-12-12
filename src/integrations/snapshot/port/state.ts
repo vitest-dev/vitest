@@ -187,9 +187,11 @@ export default class SnapshotState {
     if (!(isInline && this._snapshotData[key] !== undefined))
       this._uncheckedKeys.delete(key)
 
-    const receivedSerialized = addExtraLineBreaks(
-      serialize(received, undefined, this._snapshotFormat),
-    )
+    const receivedSerialized = isInline
+      ? received
+      : addExtraLineBreaks(
+        serialize(received, undefined, this._snapshotFormat),
+      )
     const expected = isInline ? inlineSnapshot : this._snapshotData[key]
     const pass = expected === receivedSerialized
     const hasSnapshot = expected !== undefined

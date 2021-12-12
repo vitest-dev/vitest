@@ -49,7 +49,7 @@ export class SnapshotClient {
     this.test = undefined
   }
 
-  assert(received: unknown, message: string, isInline = false): void {
+  assert(received: unknown, message: string, inlineSnapshot?: string): void {
     if (!this.test)
       throw new Error('Snapshot cannot be used outside of test')
 
@@ -57,16 +57,13 @@ export class SnapshotClient {
     const { actual, expected, key, pass } = this.snapshotState!.match({
       testName,
       received,
-      isInline,
-      ...(isInline && {
-        inlineSnapshot: (received as string),
-        isInline: true,
-      }),
+      isInline: typeof inlineSnapshot === 'string',
+      inlineSnapshot,
     })
 
     if (!pass) {
       // improve log
-      expect(actual.trim().replaceAll('"', '')).equals(
+      expect(actual).equals(
         expected ? expected.trim() : '',
         message || `Snapshot name: \`${key}\``,
       )
