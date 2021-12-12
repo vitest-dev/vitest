@@ -3,7 +3,7 @@ import { two } from '../src/submodule'
 import { timeout } from '../src/timeout'
 
 test('Math.sqrt()', () => {
-  assert.equal(Math.sqrt(41), two)
+  assert.equal(Math.sqrt(4), two)
   assert.equal(Math.sqrt(2), Math.SQRT2)
   expect(Math.sqrt(144)).toStrictEqual(12)
   // console.log('hi')
@@ -20,7 +20,7 @@ test('Math.sqrt()', () => {
 
 test('JSON', () => {
   const input = {
-    foo: 'hello2',
+    foo: 'hello',
     bar: 'world',
   }
 
