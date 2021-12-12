@@ -1,4 +1,4 @@
-import { ResolvedConfig, SnapshotResult, SnapshotSummary } from '../../types'
+import { SnapshotResult, SnapshotSummary, ResolvedConfig } from '../../types'
 import { addSnapshotResult, emptySummary } from './port/jest-test-result-helper'
 
 export class SnapshotManager {

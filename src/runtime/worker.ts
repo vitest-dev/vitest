@@ -2,7 +2,7 @@ import { resolve } from 'path'
 import { nanoid } from 'nanoid'
 import { RpcCall } from 'vitest'
 import { distDir } from '../constants'
-import { ResolvedConfig, RpcSend, WorkerContext } from '../types'
+import { RpcSend, WorkerContext, ResolvedConfig } from '../types'
 import { executeInViteNode, ExecuteOptions } from '../node/execute'
 
 let _run: (files: string[], config: ResolvedConfig) => Promise<void>

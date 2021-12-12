@@ -2,7 +2,7 @@
 import sade from 'sade'
 import c from 'picocolors'
 import { install as installSourceMapSupport } from 'source-map-support'
-import type { CliOptions, VitestContext } from '../types'
+import type { VitestContext, CliOptions } from '../types'
 import { version } from '../../package.json'
 import { DefaultReporter } from '../reporters/default'
 import { SnapshotManager } from '../integrations/snapshot/manager'
