@@ -103,6 +103,11 @@ export interface UserOptions {
    * @default true
    */
   interpretDefault?: boolean
+
+  /**
+   * Open Vitest UI
+   */
+  open?: boolean
 }
 
 export interface CliOptions extends UserOptions {
