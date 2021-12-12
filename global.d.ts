@@ -3,7 +3,6 @@ declare global {
   const test: typeof import('vitest')['test']
   const describe: typeof import('vitest')['describe']
   const it: typeof import('vitest')['it']
-  const chai: typeof import('vitest')['chai']
   const expect: typeof import('vitest')['expect']
   const assert: typeof import('vitest')['assert']
   const sinon: typeof import('vitest')['sinon']

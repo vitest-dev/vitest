@@ -46,7 +46,6 @@
     "docs:build": "npm -C docs run build",
     "docs:serve": "npm -C docs run serve",
     "lint": "eslint \"{src,test}/**/*.ts\"",
-    "prepare": "esmo scripts/generate-types.ts",
     "prepublishOnly": "nr build",
     "release": "bumpp --commit --push --tag && esmo scripts/publish.ts",
     "test": "node bin/vitest.mjs -r test/core",
