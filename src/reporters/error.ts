@@ -5,6 +5,8 @@ import * as diff from 'diff'
 import { notNullish } from '@antfu/utils'
 import type { RawSourceMap } from 'source-map'
 import { SourceMapConsumer } from 'source-map'
+import cliTruncate from 'cli-truncate'
+import { F_UP } from './figures'
 
 interface ErrorWithDiff extends Error {
   name: string
@@ -65,7 +67,7 @@ function displayDiff(actual: string, expected: string) {
 function displayErrorMessage(error: ErrorWithDiff) {
   const errorName = error.name || error.nameStr || 'Unknown Error'
 
-  console.error(`${c.red(`${c.bold(errorName)}: ${error.message}`)}`)
+  console.error(c.red(cliTruncate(`${c.bold(errorName)}: ${error.message}`, process.stdout.columns)))
 }
 
 function displayFilePath(filePath: string, pos: Position) {
@@ -143,36 +145,36 @@ export function generateCodeFrame(
   const lines = source.split(splitRE)
   let count = 0
   const res: string[] = []
+
+  function lineNo(no: number | string = '') {
+    return c.gray(`${String(no).padStart(3, ' ')}| `)
+  }
+
   for (let i = 0; i < lines.length; i++) {
     count += lines[i].length + 1
     if (count >= start) {
       for (let j = i - range; j <= i + range || end > count; j++) {
-        if (j < 0 || j >= lines.length) continue
-        const line = j + 1
-        res.push(
-          `${c.gray(`${line}${' '.repeat(Math.max(3 - String(line).length, 0))}|`)}  ${
-            lines[j]
-          }`,
-        )
+        if (j < 0 || j >= lines.length)
+          continue
+
         const lineLength = lines[j].length
 
         // to long, maybe it's a minified file, skip for codeframe
         if (lineLength > 200)
           return ''
 
+        res.push(lineNo(j + 1) + cliTruncate(lines[j], process.stdout.columns - 5))
+
         if (j === i) {
           // push underline
-          const pad = start - (count - lineLength) + 1
-          const length = Math.max(
-            1,
-            end > count ? lineLength - pad : end - start,
-          )
-          res.push(`${c.gray('   |')}  ${' '.repeat(pad)}${'^'.repeat(length)}`)
+          const pad = start - (count - lineLength)
+          const length = Math.max(1, end > count ? lineLength - pad : end - start)
+          res.push(lineNo() + ' '.repeat(pad) + F_UP.repeat(length))
         }
         else if (j > i) {
           if (end > count) {
-            const length = Math.max(Math.min(end - count, lineLength), 1)
-            res.push(`${c.gray('   |')}  ${'^'.repeat(length)}`)
+            const length = Math.max(1, Math.min(end - count, lineLength))
+            res.push(lineNo() + F_UP.repeat(length))
           }
           count += lineLength + 1
         }
@@ -247,9 +249,9 @@ function unifiedDiff(actual: any, expected: any) {
   const indent = '  '
   function cleanUp(line: string) {
     if (line[0] === '+')
-      return indent + c.green(`${line[0]} ${line.slice(1)}`)
+      return indent + c.green(`${line[0]}${line.slice(1)}`)
     if (line[0] === '-')
-      return indent + c.red(`${line[0]} ${line.slice(1)}`)
+      return indent + c.red(`${line[0]}${line.slice(1)}`)
     if (line.match(/@@/))
       return '--'
     if (line.match(/\\ No newline/))
