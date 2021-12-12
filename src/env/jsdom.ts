@@ -1,10 +1,11 @@
+import { importModule } from 'local-pkg'
 import type { Environment } from '../types'
 import { KEYS } from './jsdom-keys'
 
 export default <Environment>({
   name: 'jsdom',
   async setup(global) {
-    const { JSDOM } = await import('jsdom')
+    const { JSDOM } = await importModule('jsdom') as typeof import('jsdom')
     const dom = new JSDOM('<!DOCTYPE html>',
       {
         pretendToBeVisual: true,
