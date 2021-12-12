@@ -14,6 +14,7 @@ export async function startWatcher(ctx: VitestContext, pool: WorkerPool) {
 
   const changedTests = new Set<string>()
   const seen = new Set<string>()
+  let isFirstRun = true
   let promise: Promise<void> | undefined
 
   server.watcher.on('change', (id) => {
@@ -49,6 +50,8 @@ export async function startWatcher(ctx: VitestContext, pool: WorkerPool) {
         return
       }
 
+      isFirstRun = false
+
       // add previously failed files
       ctx.state.getFiles().forEach((file) => {
         if (file.result?.state === 'fail')
@@ -61,6 +64,7 @@ export async function startWatcher(ctx: VitestContext, pool: WorkerPool) {
       seen.clear()
 
       promise = start(tests, id, invalidates)
+        .then(() => { promise = undefined })
       await promise
     }, WATCHER_DEBOUNCE)
   }
@@ -74,8 +78,26 @@ export async function startWatcher(ctx: VitestContext, pool: WorkerPool) {
     await reporter.onWatcherStart?.()
   }
 
-  if (process.stdin.isTTY)
-    listenToKeybard()
+  // listen to keyboard input
+  if (process.stdin.isTTY) {
+    readline.emitKeypressEvents(process.stdin)
+    process.stdin.setRawMode(true)
+    process.stdin.on('keypress', (str: string) => {
+      if (str === '\x03' || str === '\x1B') // ctrl-c or esc
+        process.exit()
+
+      // is running, ignore keypress
+      if (promise)
+        return
+
+      // press any key to exit on first run
+      if (isFirstRun)
+        process.exit()
+
+      // TODO: add more commands
+      // console.log(str, key)
+    })
+  }
 
   // add an empty promise so it never resolves
   await new Promise(() => { })
@@ -102,20 +124,4 @@ export function getAffectedTests(ctx: VitestContext, id: string, set = new Set<s
   }
 
   return set
-}
-
-function listenToKeybard() {
-  readline.emitKeypressEvents(process.stdin)
-  process.stdin.setRawMode(true)
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  process.stdin.on('keypress', (str: string, key: string) => {
-    if (str === '\x03' || str === '\x1B') // ctrl-c or esc
-      process.exit()
-    if (str === '\r') // enter
-      process.exit()
-
-    // TODO: add more commands
-    // console.log(str, key)
-  })
 }

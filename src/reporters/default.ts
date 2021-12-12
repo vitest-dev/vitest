@@ -116,6 +116,8 @@ export class DefaultReporter implements Reporter {
     console.log()
   }
 
+  isFirstWatchRun = true
+
   async onWatcherStart() {
     await this.stopListRender()
 
@@ -124,6 +126,11 @@ export class DefaultReporter implements Reporter {
       console.log(`\n${c.bold(c.inverse(c.red(' FAIL ')))}${c.red(` ${failed.length} tests failed. Watching for file changes...`)}`)
     else
       console.log(`\n${c.bold(c.inverse(c.green(' PASS ')))}${c.green(' Waiting for file changes...')}`)
+
+    if (this.isFirstWatchRun) {
+      this.isFirstWatchRun = false
+      console.log(c.gray('press any key to exit...'))
+    }
   }
 
   async onWatcherRerun(files: string[], trigger: string) {
@@ -138,7 +145,7 @@ export class DefaultReporter implements Reporter {
   async stopListRender() {
     this.renderer?.stop()
     this.renderer = undefined
-    await new Promise(resolve => setTimeout(resolve, 100))
+    await new Promise(resolve => setTimeout(resolve, 10))
   }
 
   onUserConsoleLog(log: UserConsoleLog) {

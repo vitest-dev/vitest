@@ -16,6 +16,9 @@ cli
   .option('-r, --root <path>', 'root path')
   .option('-c, --config <path>', 'path to config file')
   .option('-u, --update', 'update snapshot')
+  .option('-w, --watch', 'watch mode')
+  .option('--threads', 'enabled threads', { default: true })
+  .option('--silent', 'silent')
   .option('--global', 'inject apis globally')
   .option('--dom', 'mock browser api with happy-dom')
   .option('--environment <env>', 'runner environment', {
@@ -42,12 +45,14 @@ cli
 cli.parse()
 
 async function dev(cliFilters: string[], argv: CliOptions) {
-  argv.watch = !process.env.CI && !process.env.NODE_V8_COVERAGE
+  if (argv.watch == null)
+    argv.watch = !process.env.CI && !process.env.NODE_V8_COVERAGE
   await run(cliFilters, argv)
 }
 
 async function run(cliFilters: string[], argv: CliOptions) {
   process.env.VITEST = 'true'
+  process.env.NODE_ENV = 'test'
 
   console.log(c.magenta(c.bold('\nVitest is in closed beta exclusively for Sponsors')))
   console.log(c.yellow('Learn more at https://vitest.dev\n'))
