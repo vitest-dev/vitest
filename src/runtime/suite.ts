@@ -1,6 +1,5 @@
 import { nanoid } from 'nanoid/non-secure'
 import type { SuiteHooks, Test, SuiteCollector, TestCollector, RunMode, ComputeMode, TestFactory, TestFunction, File, Suite, Awaitable } from '../types'
-import { getDefaultHookTimeout, getDefaultTestTimeout } from '../utils'
 import { context } from './context'
 import { getHooks, setFn, setHooks } from './map'
 
@@ -235,4 +234,12 @@ function withTimeout<T extends((...args: any[]) => any)>(fn: T, _timeout?: numbe
       timer.unref()
     })]) as Awaitable<void>
   }) as T
+}
+
+const getDefaultTestTimeout = () => {
+  return process.__vitest_worker__?.config?.testTimeout ?? 5000
+}
+
+const getDefaultHookTimeout = () => {
+  return process.__vitest_worker__?.config?.hookTimeout ?? 5000
 }
