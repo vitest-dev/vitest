@@ -38,7 +38,7 @@ describe('jest-expect', () => {
     expect({}).not.toStrictEqual({})
 
     const foo = {}
-    const complex = { foo: 1, bar: { foo: 'foo', bar: 100 } }
+    const complex = { foo: 1, bar: { foo: 'foo', bar: 100, arr: ['first', { zoo: 'monkey' }] } }
 
     expect(foo).toBe(foo)
     expect(foo).toStrictEqual(foo)
@@ -47,6 +47,14 @@ describe('jest-expect', () => {
     expect([complex]).toMatchObject([{ foo: 1 }])
     expect(complex).not.toMatchObject({ foo: 2 })
     expect(complex).toMatchObject({ bar: { bar: 100 } })
+
+    expect(complex).toHaveProperty('foo')
+    expect(complex).toHaveProperty('foo', 1)
+    expect(complex).toHaveProperty('bar.foo', 'foo')
+    expect(complex).toHaveProperty('bar.arr[0]')
+    expect(complex).toHaveProperty('bar.arr[1].zoo', 'monkey')
+    expect(complex).toHaveProperty('bar.arr.0')
+    expect(complex).toHaveProperty('bar.arr.1.zoo', 'monkey')
   })
 })
 
