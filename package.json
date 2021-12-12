@@ -1,6 +1,6 @@
 {
   "name": "vitest",
-  "version": "0.0.71",
+  "version": "0.0.72",
   "description": "A blazing fast unit test framework powered by Vite",
   "keywords": [
     "vite",

@@ -1,5 +1,5 @@
 import { basename, dirname, isAbsolute, relative } from 'path'
-import { createLogUpdate } from 'log-update'
+import logUpdate from 'log-update'
 import c from 'picocolors'
 import cliTruncate from 'cli-truncate'
 import stripAnsi from 'strip-ansi'
@@ -165,10 +165,8 @@ export const createRenderer = (_tasks: Task[]) => {
   let tasks = _tasks
   let timer: any
 
-  const log = createLogUpdate(process.stdout)
-
   function update() {
-    log(renderTree(tasks))
+    logUpdate(renderTree(tasks))
   }
 
   return {
@@ -188,7 +186,7 @@ export const createRenderer = (_tasks: Task[]) => {
         clearInterval(timer)
         timer = undefined
       }
-      log.clear()
+      logUpdate.clear()
       // eslint-disable-next-line no-console
       console.log(renderTree(tasks))
       return this

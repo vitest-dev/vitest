@@ -42,7 +42,7 @@ cli
 cli.parse()
 
 async function dev(cliFilters: string[], argv: CliOptions) {
-  argv.watch = !process.env.CI
+  argv.watch = !process.env.CI && !process.env.NODE_V8_COVERAGE
   await run(cliFilters, argv)
 }
 

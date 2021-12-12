@@ -66,6 +66,21 @@ export async function interpretedImport(path: string, interpretDefault: boolean)
   return mod
 }
 
+let SOURCEMAPPING_URL = 'sourceMa'
+SOURCEMAPPING_URL += 'ppingURL'
+
+export async function withInlineSourcemap(result: TransformResult) {
+  const { code, map } = result
+
+  if (code.includes(`${SOURCEMAPPING_URL}=`))
+    return result
+
+  if (map)
+    result.code = `${code}\n\n//# ${SOURCEMAPPING_URL}=data:application/json;charset=utf-8;base64,${Buffer.from(JSON.stringify(map), 'utf-8').toString('base64')}`
+
+  return result
+}
+
 export async function executeInViteNode(options: ExecuteOptions) {
   const { moduleCache, root, files, fetch } = options
 
@@ -93,6 +108,9 @@ export async function executeInViteNode(options: ExecuteOptions) {
     const result = await fetch(id)
     if (!result)
       throw new Error(`failed to load ${id}`)
+
+    if (process.env.NODE_V8_COVERAGE)
+      withInlineSourcemap(result)
 
     // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
     const url = pathToFileURL(fsPath).href
