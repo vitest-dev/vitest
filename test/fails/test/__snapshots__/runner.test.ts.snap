@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1
 
 exports[`should fails > expect.test.ts 1`] = `"AssertionError: expected 2 to deeply equal 3"`;
 

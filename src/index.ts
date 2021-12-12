@@ -1,5 +1,5 @@
-import { MatchersObject } from 'expect/build/types'
-import { UserOptions } from './types'
+import { MatchersObject } from './integrations/chai/types'
+import type { UserOptions } from './types'
 
 export * from './types'
 export * from './runtime/suite'
@@ -58,8 +58,8 @@ declare global {
       nthCalledWith(n: number, ...args: any[]): void
       toHaveBeenLastCalledWith(...args: any[]): void
       lastCalledWith(...args: any[]): void
-      toThrow(): void
-      toThrowError(): void
+      toThrow(expected?: string | RegExp): void
+      toThrowError(expected?: string | RegExp): void
       toReturn(): void
       toHaveReturned(): void
       toReturnTimes(times: number): void

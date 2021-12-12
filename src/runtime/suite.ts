@@ -1,7 +1,5 @@
-import { Awaitable } from '@antfu/utils'
-import { nanoid } from 'nanoid'
-import { defaultTestTimeout, defaultHookTimeout } from '../constants'
-import { SuiteHooks, Test, SuiteCollector, TestCollector, RunMode, ComputeMode, TestFactory, TestFunction, File, Suite } from '../types'
+import { nanoid } from 'nanoid/non-secure'
+import type { SuiteHooks, Test, SuiteCollector, TestCollector, RunMode, ComputeMode, TestFactory, TestFunction, File, Suite, Awaitable, ResolvedConfig, RpcCall, RpcSend } from '../types'
 import { context } from './context'
 import { getHooks, setFn, setHooks } from './map'
 
@@ -11,6 +9,14 @@ export const defaultSuite = suite('')
 
 function getCurrentSuite() {
   return context.currentSuite || defaultSuite
+}
+
+const getDefaultTestTimeout = () => {
+  return process.__vitest_worker__?.config?.testTimeout ?? 5000
+}
+
+const getDefaultHookTimeout = () => {
+  return process.__vitest_worker__?.config?.hookTimeout ?? 5000
 }
 
 export function createSuiteHooks() {
@@ -210,10 +216,10 @@ export const describe = suite
 export const it = test
 
 // hooks
-export const beforeAll = (fn: SuiteHooks['beforeAll'][0], timeout = defaultHookTimeout) => getCurrentSuite().on('beforeAll', withTimeout(fn, timeout))
-export const afterAll = (fn: SuiteHooks['afterAll'][0], timeout = defaultHookTimeout) => getCurrentSuite().on('afterAll', withTimeout(fn, timeout))
-export const beforeEach = (fn: SuiteHooks['beforeEach'][0], timeout = defaultHookTimeout) => getCurrentSuite().on('beforeEach', withTimeout(fn, timeout))
-export const afterEach = (fn: SuiteHooks['afterEach'][0], timeout = defaultHookTimeout) => getCurrentSuite().on('afterEach', withTimeout(fn, timeout))
+export const beforeAll = (fn: SuiteHooks['beforeAll'][0], timeout?: number) => getCurrentSuite().on('beforeAll', withTimeout(fn, timeout ?? getDefaultHookTimeout()))
+export const afterAll = (fn: SuiteHooks['afterAll'][0], timeout?: number) => getCurrentSuite().on('afterAll', withTimeout(fn, timeout ?? getDefaultHookTimeout()))
+export const beforeEach = (fn: SuiteHooks['beforeEach'][0], timeout?: number) => getCurrentSuite().on('beforeEach', withTimeout(fn, timeout ?? getDefaultHookTimeout()))
+export const afterEach = (fn: SuiteHooks['afterEach'][0], timeout?: number) => getCurrentSuite().on('afterEach', withTimeout(fn, timeout ?? getDefaultHookTimeout()))
 
 // utils
 export function clearContext() {
@@ -222,7 +228,8 @@ export function clearContext() {
   context.currentSuite = defaultSuite
 }
 
-function withTimeout<T extends((...args: any[]) => any)>(fn: T, timeout = defaultTestTimeout): T {
+function withTimeout<T extends((...args: any[]) => any)>(fn: T, _timeout?: number): T {
+  const timeout = _timeout ?? getDefaultTestTimeout()
   if (timeout <= 0 || timeout === Infinity)
     return fn
 
@@ -235,4 +242,16 @@ function withTimeout<T extends((...args: any[]) => any)>(fn: T, timeout = defaul
       timer.unref()
     })]) as Awaitable<void>
   }) as T
+}
+
+declare global {
+  namespace NodeJS {
+    interface Process {
+      __vitest_worker__: {
+        config: ResolvedConfig
+        rpc: RpcCall
+        send: RpcSend
+      }
+    }
+  }
 }

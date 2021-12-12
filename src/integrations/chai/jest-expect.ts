@@ -1,5 +1,5 @@
-import { SinonSpy } from 'sinon'
-import { ChaiPlugin } from './types'
+import type { SinonSpy } from 'sinon'
+import type { ChaiPlugin } from './types'
 
 // Jest Expect Compact
 // TODO: add more https://jestjs.io/docs/expect
@@ -178,13 +178,13 @@ export function JestChaiExpect(): ChaiPlugin {
         lastCall.args,
       )
     })
-    def(['toThrow', 'toThrowError'], function() {
+    def(['toThrow', 'toThrowError'], function(expected: string | RegExp) {
       const negate = utils.flag(this, 'negate')
 
       if (negate)
-        this.not.to.throw()
+        this.not.to.throw(expected)
       else
-        this.to.throw()
+        this.to.throw(expected)
     })
     def(['toHaveReturned', 'toReturn'], function() {
       assertIsMock(this)

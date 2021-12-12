@@ -1,4 +1,4 @@
-import { ChaiPlugin } from '../chai/types'
+import type { ChaiPlugin } from '../chai/types'
 import { SnapshotClient } from './client'
 
 let _client: SnapshotClient

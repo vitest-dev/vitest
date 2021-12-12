@@ -1,4 +1,4 @@
-import { use as chaiUse } from 'chai'
+import type { use as chaiUse } from 'chai'
 
 /**
  * Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.

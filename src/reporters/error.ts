@@ -2,8 +2,12 @@
 import { promises as fs, existsSync } from 'fs'
 import c from 'picocolors'
 import * as diff from 'diff'
-import { notNullish } from '@antfu/utils'
-import { SourceMapConsumer, RawSourceMap } from 'source-map'
+import type { RawSourceMap } from 'source-map'
+import { SourceMapConsumer } from 'source-map'
+import cliTruncate from 'cli-truncate'
+import { notNullish } from '../utils'
+import type { VitestContext } from '../types'
+import { F_UP } from './figures'
 
 interface ErrorWithDiff extends Error {
   name: string
@@ -16,10 +20,30 @@ interface ErrorWithDiff extends Error {
   operator?: string
 }
 
+interface Position {
+  line: number
+  column: number
+}
+
+declare global {
+  namespace NodeJS {
+    interface Process {
+      __vitest__: VitestContext
+    }
+  }
+}
+
 export async function printError(error: unknown) {
   const { server } = process.__vitest__
 
-  const e = error as ErrorWithDiff
+  let e = error as ErrorWithDiff
+
+  if (typeof error === 'string') {
+    e = {
+      message: error.split(/\n/g)[0],
+      stack: error,
+    } as any
+  }
 
   let codeFramePrinted = false
   const stacks = parseStack(e.stack || e.stackStr || '')
@@ -30,9 +54,9 @@ export async function printError(error: unknown) {
     const pos = await getOriginalPos(transformResult?.map, nearest)
     if (pos && existsSync(nearest.file)) {
       const sourceCode = await fs.readFile(nearest.file, 'utf-8')
-      console.error(`${c.red(`${c.bold(e.name || e.nameStr || 'Unknown Error')}: ${e.message}`)}`)
-      console.log(c.gray(`${nearest.file}:${pos.line}:${pos.column}`))
-      console.log(c.yellow(generateCodeFrame(sourceCode, pos)))
+      displayErrorMessage(e)
+      displayFilePath(nearest.file, pos)
+      displayCodeFrame(sourceCode, pos)
       codeFramePrinted = true
     }
   }
@@ -41,15 +65,28 @@ export async function printError(error: unknown) {
     console.error(e)
 
   if (e.showDiff)
-    console.error(c.gray(generateDiff(stringify(e.actual), stringify(e.expected))))
+    displayDiff(e.actual, e.expected)
 }
 
-interface Poisition {
-  line: number
-  column: number
+// TODO: handle big object and big string diff
+function displayDiff(actual: string, expected: string) {
+  console.error(c.gray(generateDiff(stringify(actual), stringify(expected))))
 }
 
-function getOriginalPos(map: RawSourceMap | null | undefined, { line, column }: Poisition): Promise<Poisition | null> {
+function displayErrorMessage(error: ErrorWithDiff) {
+  const errorName = error.name || error.nameStr || 'Unknown Error'
+  console.error(c.red(`${c.bold(errorName)}: ${error.message}`))
+}
+
+function displayFilePath(filePath: string, pos: Position) {
+  console.log(c.gray(`${filePath}:${pos.line}:${pos.column}`))
+}
+
+function displayCodeFrame(sourceCode: string, pos: Position) {
+  console.log(c.yellow(generateCodeFrame(sourceCode, pos)))
+}
+
+function getOriginalPos(map: RawSourceMap | null | undefined, { line, column }: Position): Promise<Position | null> {
   return new Promise((resolve) => {
     if (!map)
       return resolve(null)
@@ -57,7 +94,7 @@ function getOriginalPos(map: RawSourceMap | null | undefined, { line, column }: 
     SourceMapConsumer.with(map, null, (consumer) => {
       const pos = consumer.originalPositionFor({ line, column })
       if (pos.line != null && pos.column != null)
-        resolve(pos as Poisition)
+        resolve(pos as Position)
       else
         resolve(null)
     })
@@ -68,7 +105,7 @@ const splitRE = /\r?\n/
 
 export function posToNumber(
   source: string,
-  pos: number | Poisition,
+  pos: number | Position,
 ): number {
   if (typeof pos === 'number') return pos
   const lines = source.split(splitRE)
@@ -82,8 +119,8 @@ export function posToNumber(
 
 export function numberToPos(
   source: string,
-  offset: number | Poisition,
-): Poisition {
+  offset: number | Position,
+): Position {
   if (typeof offset !== 'number') return offset
   if (offset > source.length) {
     throw new Error(
@@ -107,7 +144,7 @@ export function numberToPos(
 
 export function generateCodeFrame(
   source: string,
-  start: number | Poisition = 0,
+  start: number | Position = 0,
   end?: number,
   range = 2,
 ): string {
@@ -116,36 +153,36 @@ export function generateCodeFrame(
   const lines = source.split(splitRE)
   let count = 0
   const res: string[] = []
+
+  function lineNo(no: number | string = '') {
+    return c.gray(`${String(no).padStart(3, ' ')}| `)
+  }
+
   for (let i = 0; i < lines.length; i++) {
     count += lines[i].length + 1
     if (count >= start) {
       for (let j = i - range; j <= i + range || end > count; j++) {
-        if (j < 0 || j >= lines.length) continue
-        const line = j + 1
-        res.push(
-          `${c.gray(`${line}${' '.repeat(Math.max(3 - String(line).length, 0))}|`)}  ${
-            lines[j]
-          }`,
-        )
+        if (j < 0 || j >= lines.length)
+          continue
+
         const lineLength = lines[j].length
 
         // to long, maybe it's a minified file, skip for codeframe
         if (lineLength > 200)
           return ''
 
+        res.push(lineNo(j + 1) + cliTruncate(lines[j], process.stdout.columns - 5))
+
         if (j === i) {
           // push underline
-          const pad = start - (count - lineLength) + 1
-          const length = Math.max(
-            1,
-            end > count ? lineLength - pad : end - start,
-          )
-          res.push(`${c.gray('   |')}  ${' '.repeat(pad)}${'^'.repeat(length)}`)
+          const pad = start - (count - lineLength)
+          const length = Math.max(1, end > count ? lineLength - pad : end - start)
+          res.push(lineNo() + ' '.repeat(pad) + F_UP.repeat(length))
         }
         else if (j > i) {
           if (end > count) {
-            const length = Math.max(Math.min(end - count, lineLength), 1)
-            res.push(`${c.gray('   |')}  ${'^'.repeat(length)}`)
+            const length = Math.max(1, Math.min(end - count, lineLength))
+            res.push(lineNo() + F_UP.repeat(length))
           }
           count += lineLength + 1
         }
@@ -220,9 +257,9 @@ function unifiedDiff(actual: any, expected: any) {
   const indent = '  '
   function cleanUp(line: string) {
     if (line[0] === '+')
-      return indent + c.green(`${line[0]} ${line.slice(1)}`)
+      return indent + c.green(`${line[0]}${line.slice(1)}`)
     if (line[0] === '-')
-      return indent + c.red(`${line[0]} ${line.slice(1)}`)
+      return indent + c.red(`${line[0]}${line.slice(1)}`)
     if (line.match(/@@/))
       return '--'
     if (line.match(/\\ No newline/))
