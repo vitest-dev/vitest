@@ -1,4 +1,4 @@
-import type { Awaitable } from '@antfu/utils'
+import type { Awaitable } from './general'
 
 export type RunMode = 'run' | 'skip' | 'only' | 'todo'
 export type TaskState = RunMode | 'pass' | 'fail'

@@ -4,7 +4,6 @@ import Sinon from 'sinon'
 
 import type { IWindow } from 'happy-dom'
 
-import type { Nullable } from '@antfu/utils'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { MyButton } from '../src/my-button'
 
@@ -19,7 +18,7 @@ describe('Button with increment', async() => {
     await window.happyDOM.whenAsyncComplete()
   })
 
-  function getInsideButton(): Nullable<HTMLElement> {
+  function getInsideButton(): HTMLElement | null {
     return document.body.querySelector('my-button')?.shadowRoot?.querySelector('button')
   }
 

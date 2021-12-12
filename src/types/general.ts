@@ -1,9 +1,12 @@
-import type { Awaitable } from '@antfu/utils'
 import type { TransformResult, ViteDevServer } from 'vite'
 import type { StateManager } from '../node/state'
 import type { SnapshotManager } from '../integrations/snapshot/manager'
 import type { ResolvedConfig } from './options'
 import type { Reporter } from './reporter'
+
+export type Awaitable<T> = T | PromiseLike<T>
+export type Nullable<T> = T | null | undefined
+export type Arrayable<T> = T | Array<T>
 
 export interface ModuleCache {
   promise?: Promise<any>

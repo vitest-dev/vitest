@@ -2,10 +2,10 @@
 import { promises as fs, existsSync } from 'fs'
 import c from 'picocolors'
 import * as diff from 'diff'
-import { notNullish } from '@antfu/utils'
 import type { RawSourceMap } from 'source-map'
 import { SourceMapConsumer } from 'source-map'
 import cliTruncate from 'cli-truncate'
+import { notNullish } from '../utils'
 import { F_UP } from './figures'
 
 interface ErrorWithDiff extends Error {

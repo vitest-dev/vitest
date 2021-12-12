@@ -1,6 +1,6 @@
 import { basename } from 'path'
 import { performance } from 'perf_hooks'
-import { nanoid } from 'nanoid'
+import { nanoid } from 'nanoid/non-secure'
 import type { File, Suite, Test } from '../types'
 import { interpretOnlyMode } from '../utils'
 import { clearContext, createSuiteHooks, defaultSuite } from './suite'

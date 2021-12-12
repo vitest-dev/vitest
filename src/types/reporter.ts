@@ -1,4 +1,4 @@
-import type { Awaitable } from '@antfu/utils'
+import type { Awaitable } from './general'
 import type { File, TaskResultPack } from './tasks'
 
 export interface Reporter {

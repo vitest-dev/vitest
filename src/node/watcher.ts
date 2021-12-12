@@ -1,5 +1,5 @@
-import { slash } from '@antfu/utils'
 import type { VitestContext } from '../types'
+import { slash } from '../utils'
 import { isTargetFile } from './glob'
 import type { WorkerPool } from './pool'
 

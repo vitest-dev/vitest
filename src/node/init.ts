@@ -1,9 +1,9 @@
 import { resolve } from 'path'
 import { findUp } from 'find-up'
 import { createServer } from 'vite'
-import { toArray } from '@antfu/utils'
 import type { CliOptions, ResolvedConfig } from '../types'
 import { defaultExcludes, defaultIncludes } from '../constants'
+import { toArray } from '../utils'
 
 const configFiles = [
   'vitest.config.ts',

@@ -42,7 +42,9 @@
     "build": "tsup --dts --minify-whitespace --minify-syntax",
     "coverage": "node bin/vitest.mjs -r test/core --coverage",
     "dev": "tsup --watch src",
-    "typecheck": "tsc --noEmit",
+    "docs": "npm -C docs run dev",
+    "docs:build": "npm -C docs run build",
+    "docs:serve": "npm -C docs run serve",
     "lint": "eslint \"{src,test}/**/*.ts\"",
     "prepare": "esmo scripts/generate-types.ts",
     "prepublishOnly": "nr build",
@@ -50,32 +52,24 @@
     "test": "node bin/vitest.mjs -r test/core",
     "test:all": "pnpm -r --stream --filter !vitest run test --",
     "test:ci": "pnpm -r --stream --filter !vitest --filter !@vitest/test-fails run test --",
-    "docs": "npm -C docs run dev",
-    "docs:build": "npm -C docs run build",
-    "docs:serve": "npm -C docs run serve"
+    "typecheck": "tsc --noEmit && nr lint"
   },
   "dependencies": {
-    "@antfu/utils": "^0.3.0",
     "@types/chai": "^4.3.0",
     "@types/sinon-chai": "^3.2.6",
     "chai": "^4.3.4",
     "chai-subset": "^1.6.0",
-    "cli-truncate": "^3.1.0",
-    "diff": "^5.0.0",
     "fast-glob": "^3.2.7",
-    "find-up": "^6.2.0",
     "log-update": "^5.0.0",
     "micromatch": "^4.0.4",
-    "nanoid": "^3.1.30",
     "picocolors": "^1.0.0",
     "piscina": "^3.2.0",
-    "pretty-format": "^27.4.2",
     "sade": "^1.7.4",
+    "diff": "^5.0.0",
     "sinon": "^12.0.1",
     "sinon-chai": "^3.7.0",
     "source-map": "^0.7.3",
-    "source-map-support": "^0.5.21",
-    "strip-ansi": "^7.0.1"
+    "source-map-support": "^0.5.21"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^0.13.1",
@@ -91,12 +85,17 @@
     "@types/source-map-support": "^0.5.4",
     "bumpp": "^7.1.1",
     "c8": "^7.10.0",
+    "cli-truncate": "^3.1.0",
     "eslint": "^8.4.1",
     "esno": "^0.12.1",
+    "find-up": "^6.2.0",
     "happy-dom": "^2.24.5",
     "jsdom": "^19.0.0",
+    "nanoid": "^3.1.30",
     "npm-run-all": "^4.1.5",
+    "pretty-format": "^27.4.2",
     "rimraf": "^3.0.2",
+    "strip-ansi": "^7.0.1",
     "tsup": "^5.11.1",
     "typescript": "^4.5.3",
     "vite": "^2.7.1"
@@ -108,13 +107,13 @@
     "vite": "^2.7.1"
   },
   "peerDependenciesMeta": {
+    "c8": {
+      "optional": true
+    },
     "happy-dom": {
       "optional": true
     },
     "jsdom": {
-      "optional": true
-    },
-    "c8": {
       "optional": true
     }
   },

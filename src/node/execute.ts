@@ -3,8 +3,8 @@ import { fileURLToPath, pathToFileURL } from 'url'
 import { dirname, resolve } from 'path'
 import vm from 'vm'
 import type { TransformResult } from 'vite'
-import { slash } from '@antfu/utils'
 import type { ModuleCache } from '../types'
+import { slash } from '../utils'
 
 export type FetchFunction = (id: string) => Promise<TransformResult | undefined | null>
 

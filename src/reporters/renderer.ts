@@ -3,9 +3,8 @@ import { createLogUpdate } from 'log-update'
 import c from 'picocolors'
 import cliTruncate from 'cli-truncate'
 import stripAnsi from 'strip-ansi'
-import { slash } from '@antfu/utils'
 import type { SnapshotSummary, Task } from '../types'
-import { getNames, getTests } from '../utils'
+import { getNames, getTests, slash } from '../utils'
 import { F_CHECK, F_CROSS, F_DOT, F_DOWN, F_DOWN_RIGHT, F_POINTER, F_RIGHT } from './figures'
 
 const DURATION_LONG = 300

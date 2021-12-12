@@ -1,6 +1,24 @@
-import type { Arrayable } from '@antfu/utils'
-import { toArray } from '@antfu/utils'
-import type { RunMode, Suite, Test, Task } from './types'
+import type { RunMode, Suite, Test, Task, Arrayable, Nullable } from './types'
+
+/**
+ * Convert `Arrayable<T>` to `Array<T>`
+ *
+ * @category Array
+ */
+export function toArray<T>(array?: Nullable<Arrayable<T>>): Array<T> {
+  array = array || []
+  if (Array.isArray(array))
+    return array
+  return [array]
+}
+
+export function notNullish<T>(v: T | null | undefined): v is NonNullable<T> {
+  return v != null
+}
+
+export function slash(str: string) {
+  return str.replace(/\\/g, '/')
+}
 
 /**
  * Partition in tasks groups by consecutive computeMode ('serial', 'concurrent')

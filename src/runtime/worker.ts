@@ -1,5 +1,5 @@
 import { resolve } from 'path'
-import { nanoid } from 'nanoid'
+import { nanoid } from 'nanoid/non-secure'
 import type { RpcCall } from 'vitest'
 import { distDir } from '../constants'
 import type { RpcSend, WorkerContext, ResolvedConfig } from '../types'
