@@ -57,13 +57,13 @@ export class SnapshotClient {
     const { actual, expected, key, pass } = this.snapshotState!.match({
       testName,
       received,
-      isInline: typeof inlineSnapshot === 'string',
-      inlineSnapshot,
+      isInline: !!inlineSnapshot,
+      inlineSnapshot: inlineSnapshot?.trim(),
     })
 
     if (!pass) {
       // improve log
-      expect(actual).equals(
+      expect(actual.trim()).equals(
         expected ? expected.trim() : '',
         message || `Snapshot name: \`${key}\``,
       )
