@@ -60,6 +60,10 @@ export function createFakePool(ctx: VitestContext): WorkerPool {
 export function createWorkerPool(ctx: VitestContext): WorkerPool {
   const options: PiscinaOptions = {
     filename: workerPath,
+    // Disable this for now, for WebContainer capability
+    // https://github.com/antfu-sponsors/vitest/issues/93
+    // In future we could conditionally enable it based on the env
+    useAtomics: false,
   }
   // UPSTREAM: Piscina set defaults by the key existence
   if (ctx.config.maxThreads != null)
