@@ -15,30 +15,25 @@
 
 ## Browser Mocking
 
-Pass `--dom` option in CLI to enable browser mocking. Or the `dom` flag in the config.
+Vitest supports both [happy-dom](https://github.com/capricorn86/happy-dom) or [jsdom](https://github.com/jsdom/jsdom) for mocking DOM and browser APIs. They don't come with Vitest, you might need to install them:
 
-```ts
-// vite.config.ts
-import { defineConfig } from "vite";
-
-export default defineConfig({
-  test: {
-    dom: true,
-  },
-});
+```bash
+$ npm i -D happy-dom
+# or
+$ npm i -D jsdom
 ```
 
-Vitest by default uses [jsdom](https://github.com/jsdom/jsdom) for mocking, but it also support [happy-dom](https://github.com/capricorn86/happy-dom), a faster alternative to jsdom. You can configure it with:
+After that, change the `environment` option in your config file:
 
 ```ts
 // vite.config.ts
-import { defineConfig } from "vite";
+import { defineConfig } from 'vite'
 
 export default defineConfig({
   test: {
-    dom: "happy-dom",
-  },
-});
+    environment: 'happy-dom' // or 'jsdom', 'node'
+  }
+})
 ```
 
 ## Watch Mode
@@ -54,6 +49,7 @@ Vitest smartly searches the module graph and only rerun the related tests (just 
 Vitest works perfectly with [c8](https://github.com/bcoe/c8)
 
 ```bash
+$ npm i -D c8
 $ c8 vitest
 ```
 
