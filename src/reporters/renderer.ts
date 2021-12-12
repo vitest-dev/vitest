@@ -1,28 +1,23 @@
 import { basename, dirname, isAbsolute, relative } from 'path'
 import { createLogUpdate } from 'log-update'
 import c from 'picocolors'
-import figures from 'figures'
 import indentString from 'indent-string'
 import cliTruncate from 'cli-truncate'
 import stripAnsi from 'strip-ansi'
 import elegantSpinner from 'elegant-spinner'
-import logSymbols from 'log-symbols'
 import { slash } from '@antfu/utils'
-import { Task } from '../types'
+import type { SnapshotSummary, Task } from '../types'
 import { getNames, getTests } from '../utils'
-import { SnapshotSummary } from '../integrations/snapshot/utils/types'
+import { F_CHECK, F_CROSS, F_DOT, F_DOWN, F_DOWN_RIGHT, F_POINTER, F_RIGHT } from './figures'
 
 const DURATION_LONG = 300
 const MAX_HEIGHT = 20
 
-const pointer = c.yellow(figures.pointer)
-const skipped = c.yellow(figures.arrowDown)
-
 const spinnerMap = new WeakMap<Task, () => string>()
 const outputMap = new WeakMap<Task, string>()
 
-const DOWN_ARROW = c.gray('\u21B3 ')
-const DOT = c.gray('\u2022 ')
+const pointer = c.yellow(F_POINTER)
+const skipped = c.yellow(F_DOWN)
 
 export function formatTestPath(root: string, path: string) {
   if (isAbsolute(path))
@@ -54,10 +49,10 @@ export function renderSnapshotSummary(rootDir: string, snapshots: SnapshotSummar
 
   if (snapshots.filesRemovedList && snapshots.filesRemovedList.length) {
     const [head, ...tail] = snapshots.filesRemovedList
-    summary.push(`${DOWN_ARROW}${formatTestPath(rootDir, head)}`)
+    summary.push(`${c.gray(F_DOWN_RIGHT)}${formatTestPath(rootDir, head)}`)
 
     tail.forEach((key) => {
-      summary.push(`  ${DOT}${formatTestPath(rootDir, key)}`)
+      summary.push(`  ${c.gray(F_DOT)}${formatTestPath(rootDir, key)}`)
     })
   }
 
@@ -68,8 +63,8 @@ export function renderSnapshotSummary(rootDir: string, snapshots: SnapshotSummar
       summary.push(c.bold(c.yellow(`${snapshots.unchecked} obsolete`)))
 
     snapshots.uncheckedKeysByFile.forEach((uncheckedFile) => {
-      summary.push(`${DOWN_ARROW}${formatTestPath(rootDir, uncheckedFile.filePath)}`)
-      uncheckedFile.keys.forEach(key => summary.push(`  ${DOT}${key}`))
+      summary.push(`${c.gray(F_DOWN_RIGHT)}${formatTestPath(rootDir, uncheckedFile.filePath)}`)
+      uncheckedFile.keys.forEach(key => summary.push(`  ${c.gray(F_DOT)}${key}`))
     })
   }
 
@@ -113,12 +108,12 @@ export function getStateSymbol(task: Task) {
   }
 
   if (task.result.state === 'pass')
-    return logSymbols.success
+    return c.green(F_CHECK)
 
   if (task.result.state === 'fail') {
     return task.type === 'suite'
       ? pointer
-      : logSymbols.error
+      : c.red(F_CROSS)
   }
 
   return ' '
@@ -156,7 +151,7 @@ export function renderTree(tasks: Task[], level = 0) {
       }
 
       if (data != null) {
-        const out = indentString(`${figures.arrowRight} ${data}`, level, { indent: '  ' })
+        const out = indentString(`${F_RIGHT} ${data}`, level, { indent: '  ' })
         output.push(`   ${c.gray(cliTruncate(out, process.stdout.columns - 3))}`)
       }
     }

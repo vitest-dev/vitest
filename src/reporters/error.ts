@@ -3,7 +3,8 @@ import { promises as fs, existsSync } from 'fs'
 import c from 'picocolors'
 import * as diff from 'diff'
 import { notNullish } from '@antfu/utils'
-import { SourceMapConsumer, RawSourceMap } from 'source-map'
+import type { RawSourceMap } from 'source-map'
+import { SourceMapConsumer } from 'source-map'
 
 interface ErrorWithDiff extends Error {
   name: string
@@ -24,7 +25,14 @@ interface Position {
 export async function printError(error: unknown) {
   const { server } = process.__vitest__
 
-  const e = error as ErrorWithDiff
+  let e = error as ErrorWithDiff
+
+  if (typeof error === 'string') {
+    e = {
+      message: error.split(/\n/g)[0],
+      stack: error,
+    } as any
+  }
 
   let codeFramePrinted = false
   const stacks = parseStack(e.stack || e.stackStr || '')

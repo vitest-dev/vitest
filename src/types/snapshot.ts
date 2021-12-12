@@ -1,3 +1,24 @@
+import type { OptionsReceived as PrettyFormatOptions } from 'pretty-format'
+
+export type SnapshotData = Record<string, string>
+
+export type SnapshotUpdateState = 'all' | 'new' | 'none'
+
+export type SnapshotStateOptions = {
+  updateSnapshot: SnapshotUpdateState
+  expand?: boolean
+  snapshotFormat?: PrettyFormatOptions
+}
+
+export type SnapshotMatchOptions = {
+  testName: string
+  received: unknown
+  key?: string
+  inlineSnapshot?: string
+  isInline: boolean
+  error?: Error
+}
+
 export interface SnapshotResult {
   filepath: string
   added: number

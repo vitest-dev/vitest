@@ -1,0 +1,7 @@
+export const F_RIGHT = '→'
+export const F_DOWN = '↓'
+export const F_DOWN_RIGHT = '↳'
+export const F_POINTER = '❯'
+export const F_DOT = '·'
+export const F_CHECK = '√'
+export const F_CROSS = '×'

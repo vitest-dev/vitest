@@ -1,9 +1,5 @@
-import { ResolvedConfig } from '../../types'
-import {
-  addSnapshotResult,
-  emptySummary,
-} from './utils/jest-test-result-helper'
-import { SnapshotResult, SnapshotSummary } from './utils/types'
+import type { SnapshotResult, SnapshotSummary, ResolvedConfig } from '../../types'
+import { addSnapshotResult, emptySummary } from './port/jest-test-result-helper'
 
 export class SnapshotManager {
   summary: SnapshotSummary = undefined!

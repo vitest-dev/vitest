@@ -1,5 +1,5 @@
 import fg from 'fast-glob'
-import { ResolvedConfig } from '../types'
+import type { ResolvedConfig } from '../types'
 import { defaultIncludes, defaultExcludes } from '../constants'
 
 export async function globTestFiles(config: ResolvedConfig) {

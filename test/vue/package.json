@@ -5,10 +5,13 @@
     "test": "vitest",
     "coverage": "vitest --coverage"
   },
+  "dependencies": {
+    "vue": "^3.2.24"
+  },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^1.10.1",
+    "@vitejs/plugin-vue": "^1.10.2",
     "@vue/test-utils": "^2.0.0-rc.17",
-    "vue": "^3.2.24",
+    "happy-dom": "*",
     "vitest": "workspace:*"
   }
 }

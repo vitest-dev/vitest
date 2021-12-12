@@ -6,6 +6,6 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   test: {
     global: true,
-    dom: 'happy-dom',
+    environment: 'happy-dom',
   },
 })

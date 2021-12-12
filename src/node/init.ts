@@ -1,9 +1,8 @@
 import { resolve } from 'path'
 import { findUp } from 'find-up'
 import { createServer } from 'vite'
-import { SnapshotStateOptions } from 'jest-snapshot/build/State'
 import { toArray } from '@antfu/utils'
-import { CliOptions, ResolvedConfig } from '../types'
+import type { CliOptions, ResolvedConfig } from '../types'
 
 const configFiles = [
   'vitest.config.ts',
@@ -49,22 +48,28 @@ export async function initViteServer(options: CliOptions = {}) {
 
   Object.assign(resolved, server.config.test)
 
-  resolved.depsInline = server.config.test?.deps?.inline || []
-  resolved.depsExternal = server.config.test?.deps?.external || []
+  resolved.depsInline = resolved.deps?.inline || []
+  resolved.depsExternal = resolved.deps?.external || []
 
-  resolved.interpretDefault = resolved.interpretDefault || true
+  resolved.environment = resolved.environment || 'node'
+  resolved.threads = resolved.threads ?? true
+  resolved.interpretDefault = resolved.interpretDefault ?? true
 
-  const env = process.env
-  const CI = !!env.CI
-  const UPDATE_SNAPSHOT = resolved.update || env.UPDATE_SNAPSHOT
-
+  const CI = !!process.env.CI
+  const UPDATE_SNAPSHOT = resolved.update || process.env.UPDATE_SNAPSHOT
   resolved.snapshotOptions = {
     updateSnapshot: CI && !UPDATE_SNAPSHOT
       ? 'none'
       : UPDATE_SNAPSHOT
         ? 'all'
         : 'new',
-  } as SnapshotStateOptions
+  }
+
+  if (process.env.VITEST_MAX_THREADS)
+    resolved.maxThreads = parseInt(process.env.VITEST_MAX_THREADS)
+
+  if (process.env.VITEST_MIN_THREADS)
+    resolved.minThreads = parseInt(process.env.VITEST_MIN_THREADS)
 
   return {
     server,

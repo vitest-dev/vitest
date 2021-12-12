@@ -1,6 +1,6 @@
 import { slash } from '@antfu/utils'
-import { VitestContext } from '../types'
-import { WorkerPool } from './pool'
+import type { VitestContext } from '../types'
+import type { WorkerPool } from './pool'
 
 export async function startWatcher(ctx: VitestContext, pool: WorkerPool) {
   const { reporter, server } = ctx

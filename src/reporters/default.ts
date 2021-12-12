@@ -2,11 +2,11 @@
 import { performance } from 'perf_hooks'
 import { relative } from 'path'
 import c from 'picocolors'
-import figures from 'figures'
-import { Reporter, TaskResultPack, VitestContext } from '../types'
+import type { Reporter, TaskResultPack, VitestContext } from '../types'
 import { getSuites, getTests } from '../utils'
 import { printError } from './error'
 import { createRenderer, getStateString, getStateSymbol, renderSnapshotSummary, getFullName } from './renderer'
+import { F_RIGHT } from './figures'
 
 const isTTY = process.stdout.isTTY && !process.env.CI
 
@@ -43,7 +43,7 @@ export class DefaultReporter implements Reporter {
     if (task.type === 'test' && task.result?.state && task.result?.state !== 'run') {
       console.log(` ${getStateSymbol(task)} ${getFullName(task)}`)
       if (task.result.state === 'fail')
-        console.log(c.red(`   ${figures.arrowRight} ${(task.result.error as any)?.message}`))
+        console.log(c.red(`   ${F_RIGHT} ${(task.result.error as any)?.message}`))
     }
   }
 

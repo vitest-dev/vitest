@@ -1,5 +1,6 @@
-import { Arrayable, toArray } from '@antfu/utils'
-import { RunMode, Suite, Test, Task } from './types'
+import type { Arrayable } from '@antfu/utils'
+import { toArray } from '@antfu/utils'
+import type { RunMode, Suite, Test, Task } from './types'
 
 /**
  * Partition in tasks groups by consecutive computeMode ('serial', 'concurrent')

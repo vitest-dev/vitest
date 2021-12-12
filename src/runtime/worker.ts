@@ -1,9 +1,10 @@
 import { resolve } from 'path'
 import { nanoid } from 'nanoid'
-import { RpcCall } from 'vitest'
+import type { RpcCall } from 'vitest'
 import { distDir } from '../constants'
-import { ResolvedConfig, RpcSend, WorkerContext } from '../types'
-import { executeInViteNode, ExecuteOptions } from './execute'
+import type { RpcSend, WorkerContext, ResolvedConfig } from '../types'
+import type { ExecuteOptions } from '../node/execute'
+import { executeInViteNode } from '../node/execute'
 
 let _run: (files: string[], config: ResolvedConfig) => Promise<void>
 const moduleCache: ExecuteOptions['moduleCache'] = new Map()
@@ -71,7 +72,6 @@ export default async function run(ctx: WorkerContext) {
 }
 
 declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace NodeJS {
     interface Process {
       __vitest_worker__: {

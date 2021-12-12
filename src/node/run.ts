@@ -1,6 +1,6 @@
-import { VitestContext } from '../types'
+import type { VitestContext } from '../types'
 import { hasFailed } from '../utils'
-import { createWorkerPool } from './pool'
+import { createPool } from './pool'
 import { globTestFiles } from './glob'
 import { startWatcher } from './watcher'
 
@@ -13,7 +13,7 @@ export async function start(ctx: VitestContext) {
     return
   }
 
-  const pool = createWorkerPool(ctx)
+  const pool = createPool(ctx)
 
   await pool.runTestFiles(testFilepaths)
 

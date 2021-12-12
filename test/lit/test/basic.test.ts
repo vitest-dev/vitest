@@ -1,8 +1,10 @@
+/// <reference types="vitest/global.d.ts" />
+
 import Sinon from 'sinon'
 
 import type { IWindow } from 'happy-dom'
 
-import { Nullable } from '@antfu/utils'
+import type { Nullable } from '@antfu/utils'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { MyButton } from '../src/my-button'
 
@@ -10,7 +12,7 @@ declare global {
   interface Window extends IWindow {}
 }
 
-describe('Button with incrementation', async() => {
+describe('Button with increment', async() => {
   beforeEach(async() => {
     document.body.innerHTML = '<my-button name="World"></my-button>'
 

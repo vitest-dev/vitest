@@ -1,12 +1,10 @@
 import path from 'path'
-import Snap, { SnapshotStateType } from 'jest-snapshot'
 import { expect } from 'chai'
-import { Test } from '../../types'
+import type { Test } from '../../types'
 import { rpc } from '../../runtime/rpc'
 import { getNames } from '../../utils'
-import { packSnapshotState } from './utils/jest-test-result-helper'
-
-const { SnapshotState } = Snap
+import { packSnapshotState } from './port/jest-test-result-helper'
+import SnapshotState from './port/state'
 
 export interface Context {
   file: string
@@ -31,7 +29,7 @@ const resolveSnapshotPath = (testPath: string) =>
 export class SnapshotClient {
   test: Test | undefined
   testFile = ''
-  snapshotState: SnapshotStateType | undefined
+  snapshotState: SnapshotState | undefined
 
   setTest(test: Test) {
     this.test = test
