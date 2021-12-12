@@ -1,7 +1,6 @@
 import { basename, dirname, isAbsolute, relative } from 'path'
 import { createLogUpdate } from 'log-update'
 import c from 'picocolors'
-import indentString from 'indent-string'
 import cliTruncate from 'cli-truncate'
 import stripAnsi from 'strip-ansi'
 import { slash } from '@antfu/utils'
@@ -48,10 +47,10 @@ export function renderSnapshotSummary(rootDir: string, snapshots: SnapshotSummar
 
   if (snapshots.filesRemovedList && snapshots.filesRemovedList.length) {
     const [head, ...tail] = snapshots.filesRemovedList
-    summary.push(`${c.gray(F_DOWN_RIGHT)}${formatTestPath(rootDir, head)}`)
+    summary.push(`${c.gray(F_DOWN_RIGHT)} ${formatTestPath(rootDir, head)}`)
 
     tail.forEach((key) => {
-      summary.push(`  ${c.gray(F_DOT)}${formatTestPath(rootDir, key)}`)
+      summary.push(`  ${c.gray(F_DOT)} ${formatTestPath(rootDir, key)}`)
     })
   }
 
@@ -62,8 +61,8 @@ export function renderSnapshotSummary(rootDir: string, snapshots: SnapshotSummar
       summary.push(c.bold(c.yellow(`${snapshots.unchecked} obsolete`)))
 
     snapshots.uncheckedKeysByFile.forEach((uncheckedFile) => {
-      summary.push(`${c.gray(F_DOWN_RIGHT)}${formatTestPath(rootDir, uncheckedFile.filePath)}`)
-      uncheckedFile.keys.forEach(key => summary.push(`  ${c.gray(F_DOT)}${key}`))
+      summary.push(`${c.gray(F_DOWN_RIGHT)} ${formatTestPath(rootDir, uncheckedFile.filePath)}`)
+      uncheckedFile.keys.forEach(key => summary.push(`  ${c.gray(F_DOT)} ${key}`))
     })
   }
 
@@ -136,7 +135,7 @@ export function renderTree(tasks: Task[], level = 0) {
     }
 
     if (task.name)
-      output.push(indentString(prefix + task.name + suffix, level, { indent: '  ' }))
+      output.push('  '.repeat(level) + prefix + task.name + suffix)
     else
       delta = 0
 
@@ -150,7 +149,7 @@ export function renderTree(tasks: Task[], level = 0) {
       }
 
       if (data != null) {
-        const out = indentString(`${F_RIGHT} ${data}`, level, { indent: '  ' })
+        const out = `${'  '.repeat(level)}${F_RIGHT} ${data}`
         output.push(`   ${c.gray(cliTruncate(out, process.stdout.columns - 3))}`)
       }
     }
