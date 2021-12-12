@@ -1,3 +1,4 @@
+import readline from 'readline'
 import type { VitestContext } from '../types'
 import { slash } from '../utils'
 import { isTargetFile } from './glob'
@@ -73,6 +74,9 @@ export async function startWatcher(ctx: VitestContext, pool: WorkerPool) {
     await reporter.onWatcherStart?.()
   }
 
+  if (process.stdin.isTTY)
+    listenToKeybard()
+
   // add an empty promise so it never resolves
   await new Promise(() => { })
 }
@@ -98,4 +102,20 @@ export function getAffectedTests(ctx: VitestContext, id: string, set = new Set<s
   }
 
   return set
+}
+
+function listenToKeybard() {
+  readline.emitKeypressEvents(process.stdin)
+  process.stdin.setRawMode(true)
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  process.stdin.on('keypress', (str: string, key: string) => {
+    if (str === '\x03' || str === '\x1B') // ctrl-c or esc
+      process.exit()
+    if (str === '\r') // enter
+      process.exit()
+
+    // TODO: add more commands
+    // console.log(str, key)
+  })
 }
