@@ -1,4 +1,4 @@
-import { VitestContext } from '../types'
+import type { VitestContext } from '../types'
 import { hasFailed } from '../utils'
 import { createPool } from './pool'
 import { globTestFiles } from './glob'

@@ -1,4 +1,4 @@
-import { GlobalContext } from '../types'
+import type { GlobalContext } from '../types'
 
 export const context: GlobalContext = {
   tasks: [],

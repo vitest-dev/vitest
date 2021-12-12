@@ -1,6 +1,3 @@
 {
-  "extends": ["@antfu"],
-  "rules": {
-    "import/no-named-as-default-member": "off"
-  }
+  "extends": "@antfu"
 }

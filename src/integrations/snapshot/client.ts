@@ -1,9 +1,9 @@
 import path from 'path'
 import { expect } from 'chai'
-import { Test } from '../../types'
+import type { Test } from '../../types'
 import { rpc } from '../../runtime/rpc'
 import { getNames } from '../../utils'
-import { packSnapshotState } from './utils/jest-test-result-helper'
+import { packSnapshotState } from './port/jest-test-result-helper'
 import SnapshotState from './port/state'
 
 export interface Context {

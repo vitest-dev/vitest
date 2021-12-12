@@ -15,6 +15,7 @@ describe('should fails', async() => {
         cwd: root,
         env: {
           ...process.env,
+          CI: 'true',
           NO_COLOR: 'true',
         },
       })

@@ -3,8 +3,8 @@ import { fileURLToPath, pathToFileURL } from 'url'
 import { dirname, resolve } from 'path'
 import vm from 'vm'
 import type { TransformResult } from 'vite'
-import { slash } from '@antfu/utils'
-import { ModuleCache } from '../types'
+import type { ModuleCache } from '../types'
+import { slash } from '../utils'
 
 export type FetchFunction = (id: string) => Promise<TransformResult | undefined | null>
 
@@ -19,8 +19,6 @@ export interface ExecuteOptions {
 }
 
 const defaultInline = [
-  'vitest/dist',
-  'vitest/src',
   '@vue',
   '@vueuse',
   'vue-demi',
@@ -113,7 +111,7 @@ export async function executeInViteNode(options: ExecuteOptions) {
       __vite_ssr_import_meta__: { url },
     }
 
-    const fn = vm.runInThisContext(`async (${Object.keys(context).join(',')}) => { ${result.code} }`, {
+    const fn = vm.runInThisContext(`async (${Object.keys(context).join(',')})=>{${result.code}\n}`, {
       filename: fsPath,
       lineOffset: 0,
     })

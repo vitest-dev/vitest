@@ -1,8 +1,9 @@
 import { resolve } from 'path'
 import { findUp } from 'find-up'
 import { createServer } from 'vite'
-import { toArray } from '@antfu/utils'
-import { CliOptions, ResolvedConfig } from '../types'
+import type { CliOptions, ResolvedConfig } from '../types'
+import { defaultExcludes, defaultIncludes } from '../constants'
+import { toArray } from '../utils'
 import { VitestUIPlugin } from '../ui/node'
 
 const configFiles = [
@@ -65,6 +66,9 @@ export async function initViteServer(options: CliOptions = {}) {
   resolved.environment = resolved.environment || 'node'
   resolved.threads = resolved.threads ?? true
   resolved.interpretDefault = resolved.interpretDefault ?? true
+
+  resolved.includes = resolved.includes ?? defaultIncludes
+  resolved.excludes = resolved.excludes ?? defaultExcludes
 
   const CI = !!process.env.CI
   const UPDATE_SNAPSHOT = resolved.update || process.env.UPDATE_SNAPSHOT

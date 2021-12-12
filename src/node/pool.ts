@@ -1,10 +1,9 @@
 import { MessageChannel } from 'worker_threads'
 import { pathToFileURL } from 'url'
 import Piscina from 'piscina'
-import { Awaitable } from '@antfu/utils'
-import { RpcMap } from 'vitest'
+import type { RpcMap } from 'vitest'
 import { distDir } from '../constants'
-import { WorkerContext, RpcPayload, VitestContext, File } from '../types'
+import type { WorkerContext, RpcPayload, VitestContext, File, Awaitable } from '../types'
 import { transformRequest } from './transform'
 
 export interface WorkerPool {
@@ -31,7 +30,7 @@ export function createPool(ctx: VitestContext): WorkerPool {
     return createFakePool(ctx)
 }
 
-const workerPath = new URL('./dist/node/worker.js', pathToFileURL(distDir)).href
+const workerPath = new URL('./dist/runtime/worker.js', pathToFileURL(distDir)).href
 
 export function createFakePool(ctx: VitestContext): WorkerPool {
   const runTestFiles: WorkerPool['runTestFiles'] = async(files, invalidates) => {

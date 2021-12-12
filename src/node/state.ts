@@ -1,4 +1,4 @@
-import { File, Task, TaskResultPack } from '../types'
+import type { File, Task, TaskResultPack } from '../types'
 
 export class StateManager {
   filesMap: Record<string, File> = {}

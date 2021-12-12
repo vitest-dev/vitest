@@ -10,7 +10,7 @@ import type { Config } from '@jest/types'
 // import { getStackTraceLines, getTopFrame } from 'jest-message-util'
 import type { OptionsReceived as PrettyFormatOptions } from 'pretty-format'
 // import { InlineSnapshot, saveInlineSnapshots } from './InlineSnapshots'
-import { SnapshotData, SnapshotMatchOptions, SnapshotStateOptions } from '../../../types'
+import type { SnapshotData, SnapshotMatchOptions, SnapshotStateOptions } from '../../../types'
 import {
   addExtraLineBreaks,
   getSnapshotData,

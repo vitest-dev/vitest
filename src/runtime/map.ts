@@ -1,6 +1,5 @@
-import { Awaitable } from '@antfu/utils'
-import { SuiteHooks } from 'vitest'
-import { Suite, Test } from '../types'
+import type { SuiteHooks } from 'vitest'
+import type { Awaitable, Suite, Test } from '../types'
 
 // use WeakMap here to make the Test and Suite object serializable
 const fnMap = new WeakMap()
