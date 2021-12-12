@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import cac from 'cac'
 import c from 'picocolors'
 import type { CliOptions } from '../types'
@@ -54,8 +53,12 @@ async function run(cliFilters: string[], argv: CliOptions) {
   process.env.VITEST = 'true'
   process.env.NODE_ENV = 'test'
 
-  console.log(c.magenta(c.bold('\nVitest is in closed beta exclusively for Sponsors')))
-  console.log(c.yellow('Learn more at https://vitest.dev\n'))
+  if (!argv.silent) {
+    // eslint-disable-next-line no-console
+    console.log(c.magenta(c.bold('\nVitest is in closed beta exclusively for Sponsors')))
+    // eslint-disable-next-line no-console
+    console.log(c.yellow('Learn more at https://vitest.dev\n'))
+  }
 
   const { config, server } = await initViteServer({ ...argv, cliFilters })
 
@@ -65,6 +68,7 @@ async function run(cliFilters: string[], argv: CliOptions) {
     state: new StateManager(),
     snapshot: new SnapshotManager(config),
     reporter: config.reporter,
+    console: globalThis.console,
   }
 
   ctx.reporter = ctx.reporter || new DefaultReporter(ctx)

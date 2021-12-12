@@ -1,5 +1,5 @@
 import { basename, dirname, isAbsolute, relative } from 'path'
-import logUpdate from 'log-update'
+import { createLogUpdate } from 'log-update'
 import c from 'picocolors'
 import cliTruncate from 'cli-truncate'
 import stripAnsi from 'strip-ansi'
@@ -17,7 +17,10 @@ const pointer = c.yellow(F_POINTER)
 const skipped = c.yellow(F_DOWN)
 
 export function divider(text?: string, left?: number, right?: number) {
-  const length = process.stdout.columns || 10
+  let length = process.stdout.columns
+  if (!length || isNaN(length))
+    length = 10
+
   if (text) {
     const textLength = stripAnsi(text).length
     if (left == null && right != null) {
@@ -27,6 +30,8 @@ export function divider(text?: string, left?: number, right?: number) {
       left = left ?? Math.floor((length - textLength) / 2)
       right = length - textLength - left
     }
+    left = Math.max(0, left)
+    right = Math.max(0, right)
     return `${F_LONG_DASH.repeat(left)}${text}${F_LONG_DASH.repeat(right)}`
   }
   return F_LONG_DASH.repeat(length)
@@ -181,8 +186,12 @@ export const createRenderer = (_tasks: Task[]) => {
   let tasks = _tasks
   let timer: any
 
+  const stdout = process.stdout
+
+  const log = createLogUpdate(stdout)
+
   function update() {
-    logUpdate(renderTree(tasks))
+    log(renderTree(tasks))
   }
 
   return {
@@ -202,13 +211,13 @@ export const createRenderer = (_tasks: Task[]) => {
         clearInterval(timer)
         timer = undefined
       }
-      logUpdate.clear()
+      log.clear()
       // eslint-disable-next-line no-console
-      console.log(renderTree(tasks))
+      stdout.write(`${renderTree(tasks)}\n`)
       return this
     },
     clear() {
-      logUpdate.clear()
+      log.clear()
     },
   }
 }

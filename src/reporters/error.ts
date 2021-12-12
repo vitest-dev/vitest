@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { promises as fs, existsSync } from 'fs'
 import c from 'picocolors'
 import * as diff from 'diff'
@@ -57,7 +56,7 @@ export async function printError(error: unknown) {
 
       await printStack(ctx, stacks, nearest, (s) => {
         if (s === nearest)
-          console.log(c.yellow(generateCodeFrame(sourceCode, 4, pos)))
+          ctx.console.log(c.yellow(generateCodeFrame(sourceCode, 4, pos)))
       })
 
       codeFramePrinted = true
@@ -100,14 +99,14 @@ async function printStack(
   for (const frame of stack) {
     const pos = await getSourcePos(ctx, frame) || frame
     const color = frame === highlight ? c.yellow : c.gray
-    console.log(color(` ${c.dim(F_POINTER)} ${[frame.method, c.dim(`${frame.file}:${pos.line}:${pos.column}`)].filter(Boolean).join(' ')}`))
+    ctx.console.log(color(` ${c.dim(F_POINTER)} ${[frame.method, c.dim(`${frame.file}:${pos.line}:${pos.column}`)].filter(Boolean).join(' ')}`))
     onStack?.(frame)
 
     // reached at test file, skip the follow stack
     if (frame.file in ctx.state.filesMap)
       break
   }
-  console.log()
+  ctx.console.log()
 }
 
 function getOriginalPos(map: RawSourceMap | null | undefined, { line, column }: Position): Promise<Position | null> {
