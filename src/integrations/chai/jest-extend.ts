@@ -1,6 +1,6 @@
 import chai, { util } from 'chai'
 
-import * as matcherUtils from 'jest-matcher-utils'
+import * as matcherUtils from './jest-matcher-utils'
 
 import {
   iterableEquality,
@@ -26,13 +26,14 @@ const getMatcherState = (assertion: Chai.AssertionStatic & Chai.Assertion) => {
     subsetEquality,
   }
 
-  // TODO add to ctx - { error, promise, equals, ...getState() }
   const matcherState: MatcherState = {
     isNot,
     utils: jestUtils,
+    // global assertionCalls? needed for built-in jest function, but we don't use it
     assertionCalls: 0,
     promise: '',
     equals,
+    // needed for built-in jest-snapshots, but we don't use it
     suppressedErrors: [],
   }
 
@@ -49,7 +50,7 @@ function JestExtendPlugin(expects: MatchersObject): ChaiPlugin {
       function expectSyncWrapper(this: Chai.AssertionStatic & Chai.Assertion, ...args: any[]) {
         const { state, isNot, actual } = getMatcherState(this)
 
-        // @ts-expect-error
+        // @ts-expect-error args wanting tuple
         const { pass, message } = expectAssertion.call(state, actual, ...args) as SyncExpectationResult
 
         if ((pass && isNot) || (!pass && !isNot))
@@ -59,7 +60,7 @@ function JestExtendPlugin(expects: MatchersObject): ChaiPlugin {
       async function expectAsyncWrapper(this: Chai.AssertionStatic & Chai.Assertion, ...args: any[]) {
         const { state, isNot, actual } = getMatcherState(this)
 
-        // @ts-expect-error
+        // @ts-expect-error args wanting tuple
         const { pass, message } = await expectAssertion.call(state, actual, ...args) as SyncExpectationResult
 
         if ((pass && isNot) || (!pass && !isNot))

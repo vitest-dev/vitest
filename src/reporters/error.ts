@@ -234,7 +234,7 @@ function parseStack(stack: string) {
  * @param {string} expected
  * @return {string} Diff
  */
-function generateDiff(actual: any, expected: any) {
+export function generateDiff(actual: any, expected: any) {
   const diffSize = 2048
   if (actual.length > diffSize)
     actual = `${actual.substring(0, diffSize)} ... Lines skipped`
