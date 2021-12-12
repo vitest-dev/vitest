@@ -13,6 +13,7 @@ export async function startWatcher(ctx: VitestContext, pool: WorkerPool) {
 
   const changedTests = new Set<string>()
   const seen = new Set<string>()
+  let promise: Promise<void> | undefined
 
   server.watcher.on('change', (id) => {
     id = slash(id)
@@ -38,7 +39,8 @@ export async function startWatcher(ctx: VitestContext, pool: WorkerPool) {
     }
   })
 
-  function rerunFile(id: string) {
+  async function rerunFile(id: string) {
+    await promise
     clearTimeout(timer)
     timer = setTimeout(async() => {
       if (changedTests.size === 0) {
@@ -57,13 +59,18 @@ export async function startWatcher(ctx: VitestContext, pool: WorkerPool) {
       changedTests.clear()
       seen.clear()
 
-      await reporter.onWatcherRerun?.(tests, id)
-
-      await pool.runTestFiles(tests, invalidates)
-
-      await reporter.onFinished?.(ctx.state.getFiles(tests))
-      await reporter.onWatcherStart?.()
+      promise = start(tests, id, invalidates)
+      await promise
     }, WATCHER_DEBOUNCE)
+  }
+
+  async function start(tests: string[], id: string, invalidates: string[]) {
+    await reporter.onWatcherRerun?.(tests, id)
+
+    await pool.runTestFiles(tests, invalidates)
+
+    await reporter.onFinished?.(ctx.state.getFiles(tests))
+    await reporter.onWatcherStart?.()
   }
 
   // add an empty promise so it never resolves
