@@ -30,7 +30,7 @@ export function createPool(ctx: VitestContext): WorkerPool {
     return createFakePool(ctx)
 }
 
-const workerPath = new URL('./dist/runtime/worker.js', pathToFileURL(distDir)).href
+const workerPath = new URL('./dist/worker.js', pathToFileURL(distDir)).href
 
 export function createFakePool(ctx: VitestContext): WorkerPool {
   const runTestFiles: WorkerPool['runTestFiles'] = async(files, invalidates) => {
@@ -60,6 +60,10 @@ export function createFakePool(ctx: VitestContext): WorkerPool {
 export function createWorkerPool(ctx: VitestContext): WorkerPool {
   const options: PiscinaOptions = {
     filename: workerPath,
+    // Disable this for now, for WebContainer capability
+    // https://github.com/antfu-sponsors/vitest/issues/93
+    // In future we could conditionally enable it based on the env
+    useAtomics: false,
   }
   // UPSTREAM: Piscina set defaults by the key existence
   if (ctx.config.maxThreads != null)
@@ -119,6 +123,9 @@ function createChannel(ctx: VitestContext) {
       case 'onTaskUpdate':
         ctx.state.updateTasks([args[0] as any])
         ctx.reporter.onTaskUpdate?.(args[0] as any)
+        return
+      case 'log':
+        ctx.reporter.onUserConsoleLog?.(args[0] as any)
         return
     }
 

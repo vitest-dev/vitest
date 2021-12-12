@@ -105,6 +105,28 @@ export interface UserOptions {
   interpretDefault?: boolean
 
   /**
+   * Default timeout of a test in milliseconds
+   *
+   * @default 5000
+   */
+  testTimeout?: number
+
+  /**
+   * Default timeout of a hook in milliseconds
+   *
+   * @default 5000
+   */
+  hookTimeout?: number
+
+  /**
+   * Silent mode
+   * TODO: implement this
+   *
+   * @default false
+   */
+  silent?: boolean
+
+  /**
    * Open Vitest UI
    */
   open?: boolean
@@ -126,6 +148,8 @@ export interface CliOptions extends UserOptions {
    * - `vite.config.ts`
    */
   config?: string | undefined
+
+  dom?: boolean
 }
 
 export interface ResolvedConfig extends Omit<Required<CliOptions>, 'config' | 'filters'> {

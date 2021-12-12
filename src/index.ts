@@ -1,3 +1,4 @@
+import type { MatchersObject } from './integrations/chai/types'
 import type { UserOptions } from './types'
 
 export * from './types'
@@ -16,9 +17,14 @@ declare module 'vite' {
 
 declare global {
   namespace Chai {
+    interface ExpectStatic {
+      extend(expects: MatchersObject): void
+    }
+
     interface Assertion {
       // Snapshot
       toMatchSnapshot(message?: string): Assertion
+      toMatchInlineSnapshot(snapshot?: string, message?: string): Assertion
       matchSnapshot(message?: string): Assertion
 
       // Jest compact
@@ -42,6 +48,7 @@ declare global {
       toBeInstanceOf(c: any): void
       toBeCalledTimes(n: number): void
       toHaveLength(l: number): void
+      toHaveProperty(p: string, value?: any): void
       toBeCloseTo(number: number, numDigits?: number): void
       toHaveBeenCalledTimes(n: number): void
       toHaveBeenCalledOnce(): void

@@ -29,4 +29,11 @@ export interface VitestContext {
   state: StateManager
   snapshot: SnapshotManager
   reporter: Reporter
+  console: Console
+}
+
+export interface UserConsoleLog {
+  content: string
+  type: 'stdout' | 'stderr'
+  taskId?: string
 }

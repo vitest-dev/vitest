@@ -1,11 +1,10 @@
-/* eslint-disable no-console */
 import { performance } from 'perf_hooks'
 import { relative } from 'path'
 import c from 'picocolors'
-import type { Reporter, TaskResultPack, VitestContext } from '../types'
+import type { Reporter, TaskResultPack, UserConsoleLog, VitestContext } from '../types'
 import { getSuites, getTests } from '../utils'
 import { printError } from './error'
-import { createRenderer, getStateString, getStateSymbol, renderSnapshotSummary, getFullName } from './renderer'
+import { createRenderer, getStateString, getStateSymbol, renderSnapshotSummary, getFullName, divider } from './renderer'
 import { F_RIGHT } from './figures'
 
 const isTTY = process.stdout.isTTY && !process.env.CI
@@ -15,9 +14,23 @@ export class DefaultReporter implements Reporter {
   end = 0
   renderer?: ReturnType<typeof createRenderer>
   watchFilters?: string[]
+  console = globalThis.console
+
+  log(...args: any[]) {
+    if (this.ctx.config.silent)
+      return
+    this.console.log(...args)
+  }
+
+  error(...args: any[]) {
+    if (this.ctx.config.silent)
+      return
+    this.console.error(...args)
+  }
 
   constructor(public ctx: VitestContext) {
-    console.log(c.green(`Running tests at ${c.gray(this.ctx.config.root)}\n`))
+    const mode = ctx.config.watch ? c.yellow(' DEV ') : c.cyan(' RUN ')
+    this.log(`${c.inverse(c.bold(mode))} ${c.gray(this.ctx.config.root)}\n`)
     this.start = performance.now()
   }
 
@@ -41,9 +54,9 @@ export class DefaultReporter implements Reporter {
 
     const task = this.ctx.state.idMap[pack[0]]
     if (task.type === 'test' && task.result?.state && task.result?.state !== 'run') {
-      console.log(` ${getStateSymbol(task)} ${getFullName(task)}`)
+      this.log(` ${getStateSymbol(task)} ${getFullName(task)}`)
       if (task.result.state === 'fail')
-        console.log(c.red(`   ${F_RIGHT} ${(task.result.error as any)?.message}`))
+        this.log(c.red(`   ${F_RIGHT} ${(task.result.error as any)?.message}`))
     }
   }
 
@@ -52,29 +65,36 @@ export class DefaultReporter implements Reporter {
 
     await this.stopListRender()
 
-    console.log()
+    this.log()
 
     const suites = getSuites(files)
     const tests = getTests(files)
 
     const failedSuites = suites.filter(i => i.result?.error)
     const failedTests = tests.filter(i => i.result?.state === 'fail')
+    const failedTotal = failedSuites.length + failedTests.length
+
+    let current = 1
+
+    const errorDivider = () => this.error(`${c.red(c.dim(divider(`[${current++}/${failedTotal}]`, undefined, 1)))}\n`)
 
     if (failedSuites.length) {
-      console.error(c.bold(c.red(`\nFailed to run ${failedSuites.length} suites:`)))
+      this.error(c.red(divider(c.bold(c.inverse(` Failed Suites ${failedSuites.length} `)))))
+      this.error()
       for (const suite of failedSuites) {
-        console.error(c.red(`\n- ${getFullName(suite)}`))
+        this.error(c.red(`\n- ${getFullName(suite)}`))
         await printError(suite.result?.error)
-        console.log()
+        errorDivider()
       }
     }
 
     if (failedTests.length) {
-      console.error(c.bold(c.red(`\nFailed Tests (${failedTests.length})`)))
+      this.error(c.red(divider(c.bold(c.inverse(` Failed Tests ${failedTests.length} `)))))
+      this.error()
       for (const test of failedTests) {
-        console.error(`${c.red(`\n${c.inverse(' FAIL ')}`)} ${getFullName(test)}`)
+        this.error(`${c.red(c.bold(c.inverse(' FAIL ')))} ${getFullName(test)}`)
         await printError(test.result?.error)
-        console.log()
+        errorDivider()
       }
     }
 
@@ -90,33 +110,39 @@ export class DefaultReporter implements Reporter {
 
     const snapshotOutput = renderSnapshotSummary(this.ctx.config.root, this.ctx.snapshot.summary)
     if (snapshotOutput.length) {
-      console.log(snapshotOutput.map((t, i) => i === 0
+      this.log(snapshotOutput.map((t, i) => i === 0
         ? `${padTitle('Snapshots')} ${t}`
         : `${padTitle('')} ${t}`,
       ).join('\n'))
       if (snapshotOutput.length > 1)
-        console.log()
+        this.log()
     }
 
-    console.log(padTitle('Test Files'), getStateString(files))
-    console.log(padTitle('Tests'), getStateString(tests))
+    this.log(padTitle('Test Files'), getStateString(files))
+    this.log(padTitle('Tests'), getStateString(tests))
     if (this.watchFilters)
-      console.log(padTitle('Time'), time(threadTime))
-
+      this.log(padTitle('Time'), time(threadTime))
     else
-      console.log(padTitle('Time'), time(executionTime) + c.gray(` (in thread ${time(threadTime)}, ${(executionTime / threadTime * 100).toFixed(2)}%)`))
+      this.log(padTitle('Time'), time(executionTime) + c.gray(` (in thread ${time(threadTime)}, ${(executionTime / threadTime * 100).toFixed(2)}%)`))
 
-    console.log()
+    this.log()
   }
+
+  isFirstWatchRun = true
 
   async onWatcherStart() {
     await this.stopListRender()
 
     const failed = getTests(this.ctx.state.getFiles()).filter(i => i.result?.state === 'fail')
     if (failed.length)
-      console.log(`\n${c.bold(c.inverse(c.red(' FAIL ')))}${c.red(` ${failed.length} tests failed. Watching for file changes...`)}`)
+      this.log(`\n${c.bold(c.inverse(c.red(' FAIL ')))}${c.red(` ${failed.length} tests failed. Watching for file changes...`)}`)
     else
-      console.log(`\n${c.bold(c.inverse(c.green(' PASS ')))}${c.green(' Watching for file changes...')}`)
+      this.log(`\n${c.bold(c.inverse(c.green(' PASS ')))}${c.green(' Waiting for file changes...')}`)
+
+    if (this.isFirstWatchRun) {
+      this.isFirstWatchRun = false
+      this.log(c.gray('press any key to exit...'))
+    }
   }
 
   async onWatcherRerun(files: string[], trigger: string) {
@@ -124,13 +150,20 @@ export class DefaultReporter implements Reporter {
 
     this.watchFilters = files
 
-    console.clear()
-    console.log(c.blue('Re-running tests...') + c.dim(` [ ${this.relative(trigger)} ]\n`))
+    this.console.clear()
+    this.log(c.blue('Re-running tests...') + c.dim(` [ ${this.relative(trigger)} ]\n`))
   }
 
   async stopListRender() {
     this.renderer?.stop()
     this.renderer = undefined
-    await new Promise(resolve => setTimeout(resolve, 100))
+    await new Promise(resolve => setTimeout(resolve, 10))
+  }
+
+  onUserConsoleLog(log: UserConsoleLog) {
+    this.renderer?.clear()
+    const task = log.taskId ? this.ctx.state.idMap[log.taskId] : undefined
+    this.log(c.gray(log.type + c.dim(` | ${task ? getFullName(task) : 'unknown test'}`)))
+    process[log.type].write(`${log.content}\n`)
   }
 }

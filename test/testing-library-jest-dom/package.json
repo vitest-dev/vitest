@@ -1,0 +1,16 @@
+{
+  "name": "@vitest/test-testing-lib-jest-dom",
+  "private": true,
+  "scripts": {
+    "build": "tsc && vite build",
+    "coverage": "vitest --coverage",
+    "dev": "vite",
+    "preview": "vite preview",
+    "test": "vitest"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^5.16.1",
+    "happy-dom": "^2.24.5",
+    "vitest": "workspace:*"
+  }
+}

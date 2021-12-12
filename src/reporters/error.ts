@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { promises as fs, existsSync } from 'fs'
 import c from 'picocolors'
 import * as diff from 'diff'
@@ -6,7 +5,8 @@ import type { RawSourceMap } from 'source-map'
 import { SourceMapConsumer } from 'source-map'
 import cliTruncate from 'cli-truncate'
 import { notNullish } from '../utils'
-import { F_UP } from './figures'
+import type { VitestContext } from '../types'
+import { F_POINTER } from './figures'
 
 interface ErrorWithDiff extends Error {
   name: string
@@ -24,8 +24,16 @@ interface Position {
   column: number
 }
 
+declare global {
+  namespace NodeJS {
+    interface Process {
+      __vitest__: VitestContext
+    }
+  }
+}
+
 export async function printError(error: unknown) {
-  const { server } = process.__vitest__
+  const ctx = process.__vitest__
 
   let e = error as ErrorWithDiff
 
@@ -37,17 +45,20 @@ export async function printError(error: unknown) {
   }
 
   let codeFramePrinted = false
-  const stacks = parseStack(e.stack || e.stackStr || '')
-  const nearest = stacks.find(stack => server.moduleGraph.getModuleById(stack.file))
+  const stackStr = e.stack || e.stackStr || ''
+  const stacks = parseStack(stackStr)
+  const nearest = stacks.find(stack => !stack.file.includes('vitest/dist') && ctx.server.moduleGraph.getModuleById(stack.file))
   if (nearest) {
-    const mod = server.moduleGraph.getModuleById(nearest.file)
-    const transformResult = mod?.ssrTransformResult
-    const pos = await getOriginalPos(transformResult?.map, nearest)
+    const pos = await getSourcePos(ctx, nearest)
     if (pos && existsSync(nearest.file)) {
       const sourceCode = await fs.readFile(nearest.file, 'utf-8')
-      displayErrorMessage(e)
-      displayFilePath(nearest.file, pos)
-      displayCodeFrame(sourceCode, pos)
+      printErrorMessage(e)
+
+      await printStack(ctx, stacks, nearest, (s) => {
+        if (s === nearest)
+          ctx.console.log(c.yellow(generateCodeFrame(sourceCode, 4, pos)))
+      })
+
       codeFramePrinted = true
     }
   }
@@ -59,22 +70,43 @@ export async function printError(error: unknown) {
     displayDiff(e.actual, e.expected)
 }
 
+async function getSourcePos(ctx: VitestContext, nearest: ParsedStack) {
+  const mod = ctx.server.moduleGraph.getModuleById(nearest.file)
+  const transformResult = mod?.ssrTransformResult
+  const pos = await getOriginalPos(transformResult?.map, nearest)
+  return pos
+}
+
 // TODO: handle big object and big string diff
 function displayDiff(actual: string, expected: string) {
   console.error(c.gray(generateDiff(stringify(actual), stringify(expected))))
 }
 
-function displayErrorMessage(error: ErrorWithDiff) {
+function printErrorMessage(error: ErrorWithDiff) {
   const errorName = error.name || error.nameStr || 'Unknown Error'
   console.error(c.red(`${c.bold(errorName)}: ${error.message}`))
 }
 
-function displayFilePath(filePath: string, pos: Position) {
-  console.log(c.gray(`${filePath}:${pos.line}:${pos.column}`))
-}
+async function printStack(
+  ctx: VitestContext,
+  stack: ParsedStack[],
+  highlight?: ParsedStack,
+  onStack?: ((stack: ParsedStack) => void),
+) {
+  if (!stack.length)
+    return
 
-function displayCodeFrame(sourceCode: string, pos: Position) {
-  console.log(c.yellow(generateCodeFrame(sourceCode, pos)))
+  for (const frame of stack) {
+    const pos = await getSourcePos(ctx, frame) || frame
+    const color = frame === highlight ? c.yellow : c.gray
+    ctx.console.log(color(` ${c.dim(F_POINTER)} ${[frame.method, c.dim(`${frame.file}:${pos.line}:${pos.column}`)].filter(Boolean).join(' ')}`))
+    onStack?.(frame)
+
+    // reached at test file, skip the follow stack
+    if (frame.file in ctx.state.filesMap)
+      break
+  }
+  ctx.console.log()
 }
 
 function getOriginalPos(map: RawSourceMap | null | undefined, { line, column }: Position): Promise<Position | null> {
@@ -135,6 +167,7 @@ export function numberToPos(
 
 export function generateCodeFrame(
   source: string,
+  indent = 0,
   start: number | Position = 0,
   end?: number,
   range = 2,
@@ -143,7 +176,7 @@ export function generateCodeFrame(
   end = end || start
   const lines = source.split(splitRE)
   let count = 0
-  const res: string[] = []
+  let res: string[] = []
 
   function lineNo(no: number | string = '') {
     return c.gray(`${String(no).padStart(3, ' ')}| `)
@@ -162,18 +195,18 @@ export function generateCodeFrame(
         if (lineLength > 200)
           return ''
 
-        res.push(lineNo(j + 1) + cliTruncate(lines[j], process.stdout.columns - 5))
+        res.push(lineNo(j + 1) + cliTruncate(lines[j], process.stdout.columns - 5 - indent))
 
         if (j === i) {
           // push underline
           const pad = start - (count - lineLength)
           const length = Math.max(1, end > count ? lineLength - pad : end - start)
-          res.push(lineNo() + ' '.repeat(pad) + F_UP.repeat(length))
+          res.push(lineNo() + ' '.repeat(pad) + c.red('^'.repeat(length)))
         }
         else if (j > i) {
           if (end > count) {
             const length = Math.max(1, Math.min(end - count, lineLength))
-            res.push(lineNo() + F_UP.repeat(length))
+            res.push(lineNo() + c.red('^'.repeat(length)))
           }
           count += lineLength + 1
         }
@@ -181,6 +214,10 @@ export function generateCodeFrame(
       break
     }
   }
+
+  if (indent)
+    res = res.map(line => ' '.repeat(indent) + line)
+
   return res.join('\n')
 }
 
@@ -190,9 +227,16 @@ function stringify(obj: any) {
 }
 
 const stackFnCallRE = /at (.*) \((.+):(\d+):(\d+)\)$/
-const stackBarePathRE = /at ()(.+):(\d+):(\d+)$/
+const stackBarePathRE = /at ?(.*) (.+):(\d+):(\d+)$/
 
-function parseStack(stack: string) {
+interface ParsedStack {
+  method: string
+  file: string
+  line: number
+  column: number
+}
+
+function parseStack(stack: string): ParsedStack[] {
   const lines = stack.split('\n')
   const stackFrames = lines.map((raw) => {
     const line = raw.trim()
@@ -225,7 +269,7 @@ function parseStack(stack: string) {
  * @param {string} expected
  * @return {string} Diff
  */
-function generateDiff(actual: any, expected: any) {
+export function generateDiff(actual: any, expected: any) {
   const diffSize = 2048
   if (actual.length > diffSize)
     actual = `${actual.substring(0, diffSize)} ... Lines skipped`

@@ -13,6 +13,9 @@ export default defineConfig({
       imports: [
         'vue',
       ],
+      exclude: [
+        '**/dist/**',
+      ],
     }),
     Components({
       dts: 'src/components.d.ts',

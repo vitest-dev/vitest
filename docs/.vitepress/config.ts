@@ -42,26 +42,15 @@ export default defineConfig({
     nav: [
       { text: 'Guide', link: '/guide/' },
       { text: 'Config', link: '/config/' },
-      { text: 'Plugins', link: '/plugins/' },
+      // { text: 'Plugins', link: '/plugins/' },
       {
-        text: 'Links',
-        items: [
-          {
-            text: 'Twitter',
-            link: 'https://twitter.com/vitest_dev'
-          },
-          {
-            text: 'Discord Chat',
-            link: 'https://discord.gg/2zYZNngd7y' // TODO 'https://chat.vitest.dev'
-          },
-          /* TODO
-          {
-            text: 'Changelog',
-            link: 'https://github.com/vitest-dev/vitest/blob/main/CHANGELOG.md'
-          }
-          */
-        ]
-      }
+        text: 'Discord',
+        link: 'https://discord.gg/2zYZNngd7y' // TODO 'https://chat.vitest.dev'
+      },
+      {
+        text: 'Twitter',
+        link: 'https://twitter.com/vitest_dev'
+      },
       /* TODO
       {
         text: 'Languages',
@@ -85,7 +74,7 @@ export default defineConfig({
 
     sidebar: {
       '/config/': 'auto',
-      '/plugins': 'auto',
+      // '/plugins': 'auto',
       // catch-all fallback
       '/': [
         {

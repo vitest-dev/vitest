@@ -5,7 +5,7 @@ import cliTruncate from 'cli-truncate'
 import stripAnsi from 'strip-ansi'
 import type { SnapshotSummary, Task } from '../types'
 import { getNames, getTests, slash } from '../utils'
-import { F_CHECK, F_CROSS, F_DOT, F_DOWN, F_DOWN_RIGHT, F_POINTER, F_RIGHT } from './figures'
+import { F_CHECK, F_CROSS, F_DOT, F_DOWN, F_DOWN_RIGHT, F_LONG_DASH, F_POINTER, F_RIGHT } from './figures'
 
 const DURATION_LONG = 300
 const MAX_HEIGHT = 20
@@ -15,6 +15,27 @@ const outputMap = new WeakMap<Task, string>()
 
 const pointer = c.yellow(F_POINTER)
 const skipped = c.yellow(F_DOWN)
+
+export function divider(text?: string, left?: number, right?: number) {
+  let length = process.stdout.columns
+  if (!length || isNaN(length))
+    length = 10
+
+  if (text) {
+    const textLength = stripAnsi(text).length
+    if (left == null && right != null) {
+      left = length - textLength - right
+    }
+    else {
+      left = left ?? Math.floor((length - textLength) / 2)
+      right = length - textLength - left
+    }
+    left = Math.max(0, left)
+    right = Math.max(0, right)
+    return `${F_LONG_DASH.repeat(left)}${text}${F_LONG_DASH.repeat(right)}`
+  }
+  return F_LONG_DASH.repeat(length)
+}
 
 export function formatTestPath(root: string, path: string) {
   if (isAbsolute(path))
@@ -165,7 +186,9 @@ export const createRenderer = (_tasks: Task[]) => {
   let tasks = _tasks
   let timer: any
 
-  const log = createLogUpdate(process.stdout)
+  const stdout = process.stdout
+
+  const log = createLogUpdate(stdout)
 
   function update() {
     log(renderTree(tasks))
@@ -190,14 +213,17 @@ export const createRenderer = (_tasks: Task[]) => {
       }
       log.clear()
       // eslint-disable-next-line no-console
-      console.log(renderTree(tasks))
+      stdout.write(`${renderTree(tasks)}\n`)
       return this
+    },
+    clear() {
+      log.clear()
     },
   }
 }
 
 export function getFullName(task: Task) {
-  return getNames(task).join(c.gray(' > '))
+  return getNames(task).join(c.dim(' > '))
 }
 
 export const spinnerFrames = process.platform === 'win32'

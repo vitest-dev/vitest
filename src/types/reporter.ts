@@ -1,4 +1,4 @@
-import type { Awaitable } from './general'
+import type { Awaitable, UserConsoleLog } from './general'
 import type { File, TaskResultPack } from './tasks'
 
 export interface Reporter {
@@ -8,4 +8,6 @@ export interface Reporter {
 
   onWatcherStart?: () => Awaitable<void>
   onWatcherRerun?: (files: string[], trigger: string) => Awaitable<void>
+
+  onUserConsoleLog?: (log: UserConsoleLog) => Awaitable<void>
 }

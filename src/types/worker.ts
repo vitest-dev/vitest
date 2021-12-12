@@ -3,6 +3,7 @@ import type { TransformResult } from 'vite'
 import type { ResolvedConfig } from './options'
 import type { File, TaskResultPack } from './tasks'
 import type { SnapshotResult } from './snapshot'
+import type { UserConsoleLog } from './general'
 
 export interface WorkerContext {
   port: MessagePort
@@ -12,8 +13,10 @@ export interface WorkerContext {
 }
 
 export interface RpcMap {
-  workerReady: [[], void]
   fetch: [[id: string], TransformResult | null | undefined]
+
+  log: [[UserConsoleLog], void]
+
   onCollected: [[files: File[]], void]
   onFinished: [[], void]
   onTaskUpdate: [[pack: TaskResultPack], void]

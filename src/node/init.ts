@@ -24,6 +24,9 @@ export async function initViteServer(options: CliOptions = {}) {
   const root = resolve(options.root || process.cwd())
   process.chdir(root)
 
+  if (options.dom)
+    options.environment = 'happy-dom'
+
   const configPath = options.config
     ? resolve(root, options.config)
     : await findUp(configFiles, { cwd: root })

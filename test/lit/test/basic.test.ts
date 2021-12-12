@@ -24,7 +24,7 @@ describe('Button with increment', async() => {
 
   it('should increment the count on each click', () => {
     getInsideButton()?.click()
-    expect(getInsideButton()?.innerText).to.contain('1')
+    expect(getInsideButton()?.innerText).toContain('1')
   })
 
   it('should show name props', () => {
@@ -39,6 +39,6 @@ describe('Button with increment', async() => {
 
     getInsideButton()?.click()
 
-    expect(spyClick).to.be.toHaveBeenCalled()
+    expect(spyClick).toHaveBeenCalled()
   })
 })

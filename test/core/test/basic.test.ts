@@ -6,6 +6,16 @@ test('Math.sqrt()', () => {
   assert.equal(Math.sqrt(4), two)
   assert.equal(Math.sqrt(2), Math.SQRT2)
   expect(Math.sqrt(144)).toStrictEqual(12)
+  // console.log('hi')
+  // console.log('hi2')
+  // console.log({
+  //   red: {
+  //     foo: 'bar',
+  //   },
+  // })
+  // const t = { z: 1 }
+  // t.e = t
+  // console.log(t)
 })
 
 test('JSON', () => {

@@ -1,44 +1,28 @@
 # Features
 
-- [Vite](https://vitejs.dev/)'s config, transformers, resolvers, and plugins. Use the same setup from your app!
-- [Jest Snapshot](https://jestjs.io/docs/snapshot-testing)
-- [Chai](https://www.chaijs.com/) built-in for assertions, with [Jest expect](https://jestjs.io/docs/expect) compatible APIs.
-- [Smart & instant watch mode](#watch-mode), like HMR for tests!
-- [Native code coverage](#coverage) via [c8](https://github.com/bcoe/c8)
-- [Sinon](https://sinonjs.org/) built-in for mocking, stubbing, and spies.
-- [JSDOM](https://github.com/jsdom/jsdom) and [happy-dom](https://github.com/capricorn86/happy-dom) built-in for DOM and browser API mocking
-- Components testing ([Vue](https://github.com/antfu-sponsors/vitest/test/vue), [React](https://github.com/antfu-sponsors/vitest/test/react), [Lit](https://github.com/antfu-sponsors/vitest/test/lit), [Vitesse](https://github.com/antfu-sponsors/vitest/test/vitesse))
-- Workers multi-threading via [Piscina](https://github.com/piscinajs/piscina)
-- ESM first, top level await
-- Out-of-box TypeScript / JSX support
-- Filtering, timeouts, concurrent for suite and tests
+<FeaturesList class="!gap-1 text-lg" />
 
 ## Browser Mocking
 
-Pass `--dom` option in CLI to enable browser mocking. Or the `dom` flag in the config.
+Vitest supports both [happy-dom](https://github.com/capricorn86/happy-dom) or [jsdom](https://github.com/jsdom/jsdom) for mocking DOM and browser APIs. They don't come with Vitest, you might need to install them:
 
-```ts
-// vite.config.ts
-import { defineConfig } from "vite";
-
-export default defineConfig({
-  test: {
-    dom: true,
-  },
-});
+```bash
+$ npm i -D happy-dom
+# or
+$ npm i -D jsdom
 ```
 
-Vitest by default uses [jsdom](https://github.com/jsdom/jsdom) for mocking, but it also support [happy-dom](https://github.com/capricorn86/happy-dom), a faster alternative to jsdom. You can configure it with:
+After that, change the `environment` option in your config file:
 
 ```ts
 // vite.config.ts
-import { defineConfig } from "vite";
+import { defineConfig } from 'vite'
 
 export default defineConfig({
   test: {
-    dom: "happy-dom",
-  },
-});
+    environment: 'happy-dom' // or 'jsdom', 'node'
+  }
+})
 ```
 
 ## Watch Mode
@@ -54,6 +38,7 @@ Vitest smartly searches the module graph and only rerun the related tests (just 
 Vitest works perfectly with [c8](https://github.com/bcoe/c8)
 
 ```bash
+$ npm i -D c8
 $ c8 vitest
 ```
 
@@ -186,7 +171,7 @@ describe("suite", () => {
 If you use `.concurrent` in a suite, every tests in it will be run in parallel
 
 ```ts
-// The two tests marked with concurrent will be run in parallel
+// All tests within this suite will be run in parallel
 describe.concurrent("suite", () => {
   it("concurrent test 1", () => {
     assert.equal(Math.sqrt(4), 3);
