@@ -1,7 +1,6 @@
 /* eslint-disable no-console */
 import sade from 'sade'
 import c from 'picocolors'
-import { install as installSourceMapSupport } from 'source-map-support'
 import type { VitestContext, CliOptions } from '../types'
 import { version } from '../../package.json'
 import { DefaultReporter } from '../reporters/default'
@@ -38,22 +37,6 @@ sade('vitest [filter]', true)
       snapshot: new SnapshotManager(config),
       reporter: config.reporter,
     }
-
-    installSourceMapSupport({
-      environment: 'node',
-      hookRequire: true,
-      handleUncaughtExceptions: true,
-      retrieveSourceMap: (id: string) => {
-        const map = ctx.server.moduleGraph.getModuleById(id)?.ssrTransformResult?.map
-        if (map) {
-          return {
-            url: id,
-            map: map as any,
-          }
-        }
-        return null
-      },
-    })
 
     ctx.reporter = ctx.reporter || new DefaultReporter(ctx)
 
