@@ -1,8 +1,10 @@
 import { resolve, dirname } from 'path'
-import { fileURLToPath } from 'url'
+import { fileURLToPath, parse } from 'url'
 import { Plugin } from 'vite'
 import sirv from 'sirv'
+import { WebSocketServer } from 'ws'
 import { getSuites } from '../../utils'
+import { getSuitesAsJson } from './utils'
 
 const _dirname = typeof __dirname !== 'undefined'
   ? __dirname
@@ -13,6 +15,28 @@ export const VitestUIPlugin = (): Plugin => {
     name: 'vitest:ui',
     apply: 'serve',
     async configureServer(server) {
+      const vitest = process.__vitest__
+      const wss = new WebSocketServer({ noServer: true })
+
+      server.httpServer?.on('upgrade', (request, socket, head) => {
+        if (request.url) {
+          const { pathname } = parse(request.url)
+
+          if (pathname === '/__vitest_api') {
+            wss.handleUpgrade(request, socket, head, (ws) => {
+              wss.emit('connection', ws, request)
+
+              /**
+               * When user opens connection send inital list of tasks.
+               */
+              ws.on('message', (data) => {
+
+              })
+            })
+          }
+        }
+      })
+
       server.middlewares.use('/__vitest_api', async(req, res, next) => {
         const vitest = process.__vitest__
 
@@ -30,7 +54,7 @@ export const VitestUIPlugin = (): Plugin => {
         }
 
         res.setHeader('Content-Type', 'application/json')
-        res.write(JSON.stringify(info, null, 2))
+        res.write(getSuitesAsJson())
         res.end()
       })
 

@@ -82,7 +82,8 @@
     "sirv": "^1.0.19",
     "source-map": "^0.7.3",
     "source-map-support": "^0.5.21",
-    "strip-ansi": "^7.0.1"
+    "strip-ansi": "^7.0.1",
+    "ws": "^8.3.0"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^0.12.2",
@@ -96,6 +97,7 @@
     "@types/sade": "^1.7.3",
     "@types/sinon": "^10.0.6",
     "@types/source-map-support": "^0.5.4",
+    "@types/ws": "^8.2.2",
     "bumpp": "^7.1.1",
     "eslint": "^8.4.1",
     "esno": "^0.12.1",
