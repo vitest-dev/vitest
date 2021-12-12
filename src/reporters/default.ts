@@ -144,7 +144,7 @@ export class DefaultReporter implements Reporter {
   onUserConsoleLog(log: UserConsoleLog) {
     this.renderer?.clear()
     const task = log.taskId ? this.ctx.state.idMap[log.taskId] : undefined
-    console.log(c.gray(`${log.type} | ${task ? c.dim(getFullName(task)) : 'unknown test'}`))
+    console.log(c.gray(log.type + c.dim(` | ${task ? getFullName(task) : 'unknown test'}`)))
     process[log.type].write(`${log.content}\n`)
   }
 }
