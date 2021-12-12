@@ -33,7 +33,7 @@ export class SnapshotClient {
   setTest(test: Test) {
     this.test = test
 
-    if (this.testFile !== this.test!.file!.filepath) {
+    if (this.testFile !== this.test.file!.filepath) {
       if (this.snapshotState)
         this.saveSnap()
 
@@ -49,19 +49,25 @@ export class SnapshotClient {
     this.test = undefined
   }
 
-  assert(received: unknown, message: string): void {
+  assert(received: unknown, message: string, isInline = false): void {
     if (!this.test)
-      throw new Error('Snapshot can\'t not be used outside of test')
+      throw new Error('Snapshot cannot be used outside of test')
 
-    const { actual, expected, key, pass } = this.snapshotState!.match({
-      testName: getNames(this.test).slice(1).join(' > '),
+    const testName = getNames(this.test).slice(1).join(' > ')
+    const { actual, expected, key, pass, count } = this.snapshotState!.match({
+      testName,
       received,
-      isInline: false,
+      isInline,
+      ...(isInline && {
+        inlineSnapshot: (received as string),
+        isInline: true,
+      }),
     })
+    console.dir({ actual, expected, key, pass, count })
 
     if (!pass) {
       // improve log
-      expect(actual.trim()).equals(
+      expect(actual.trim().replaceAll('"', '')).equals(
         expected ? expected.trim() : '',
         message || `Snapshot name: \`${key}\``,
       )
@@ -70,9 +76,9 @@ export class SnapshotClient {
 
   async saveSnap() {
     if (!this.testFile || !this.snapshotState) return
-
+    console.dir(this.snapshotState)
     const result = packSnapshotState(this.testFile, this.snapshotState)
-
+    console.log({ result })
     await rpc('snapshotSaved', result)
 
     this.testFile = ''

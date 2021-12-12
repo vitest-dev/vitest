@@ -17,9 +17,17 @@ export function SnapshotPlugin(): ChaiPlugin {
         key,
         function(this: Record<string, unknown>, message: string) {
           const expected = utils.flag(this, 'object')
+          console.log({ expected })
           getSnapshotClient().assert(expected, message)
         },
       )
     }
+    utils.addMethod(
+      chai.Assertion.prototype,
+      'toMatchInlineSnapshot',
+      (expectSnapshot: unknown, message: string) => {
+        getSnapshotClient().assert(expectSnapshot, message, true)
+      },
+    )
   }
 }
