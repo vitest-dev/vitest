@@ -51,7 +51,8 @@
     "test": "node bin/vitest.mjs -r test/core",
     "test:all": "cross-env CI=true pnpm -r --stream --filter !vitest run test --",
     "test:ci": "cross-env CI=true pnpm -r --stream --filter !vitest --filter !@vitest/test-fails run test --",
-    "typecheck": "tsc --noEmit && nr lint"
+    "typecheck": "tsc --noEmit && nr lint",
+    "ci": "ni && nr typecheck && nr lint && nr build && nr test:all"
   },
   "dependencies": {
     "@types/chai": "^4.3.0",

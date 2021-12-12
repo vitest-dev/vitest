@@ -10,8 +10,6 @@
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^5.16.1",
-    "typescript": "^4.4.4",
-    "vite": "^2.7.0",
     "happy-dom": "^2.24.5",
     "vitest": "workspace:*"
   }
