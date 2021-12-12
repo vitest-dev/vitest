@@ -14,6 +14,9 @@ A blazing fast unit test framework powered by Vite.
 <h2 align="center">
 <a href=https://preview.vitest.dev">Open the Docs</a>
 </h2>
+<h3 align="center">
+<a href=https://discord.com/invite/2zYZNngd7y"><i>Get involved!</i></a>
+</h3>
 <br>
 <br>
 
@@ -24,7 +27,6 @@ A blazing fast unit test framework powered by Vite.
 
 > Vitest requires Vite v2.7 and Node v16
 
-[**Join the Discord!**](https://discord.com/invite/2zYZNngd7y)
 
 Switch to Vitest by following the [Getting Started Guide](https://preview.vitest.dev/guide]) or learn [why we are building a new test runner](https://preview.vitest.dev/guide]).
 
