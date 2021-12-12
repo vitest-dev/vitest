@@ -26,25 +26,14 @@ import '../main.css'
         mt-5
         children:my0
       >
-        <a class="btn bg-pink-500 hover:bg-pink-600" href="/guide/">
-          <span class="i-carbon-play-filled inline-block text-lg" />
+        <a class="btn bg-yellow-500 hover:bg-yellow-600 dark:bg-yellow-600 dark:hover:bg-yellow-700 saturate-80" href="/guide/">
+          <span class="i-carbon:page-last inline-block text-lg" />
           <span ma>Get Started</span>
         </a>
-        <a class="btn bg-green-600 hover:bg-green-700" href="/guide/why">
-          <span class="i-carbon-flash-filled inline-block text-lg" />
+        <a class="btn bg-lime-500 hover:bg-lime-600 dark:bg-lime-600 dark:hover:bg-lime-700 saturate-80" href="/guide/why">
+          <span class="i-carbon:list-checked inline-block text-lg" />
           <span ma>Learn More</span>
         </a>
-        <a class="btn bg-gray-500 dark:bg-white dark:text-black hover:bg-gray-700 dark:hover:bg-gray-200" href="https://github.com/antfu-sponsors/vitest">
-          <span class="i-carbon-logo-github inline-block text-lg" />
-          <span ma>GitHub</span>
-        </a>
-        <a class="btn bg-sky-600 hover:bg-sky-700" target="_blank" href="https://twitter.com/vitest_dev">
-          <span class="i-carbon-logo-twitter inline-block text-1.3em" />
-          <span>Twitter</span>
-        </a>
-      </div>
-      <div p-6 text-gray-500 text-center>
-        Follow our Twitter subscribing to the latest news! 👆
       </div>
     </div>
 
@@ -94,8 +83,9 @@ import '../main.css'
         A collaborative being.<br>Core team member of Vite.<br>Team member of Vue.
       </Avatar>
     </div>
-    <p op50 text-2xl max-w-150 text-center leading-7>
-      And the Vitest contributors. <a href="https://discord.com/invite/2zYZNngd7y">Join the community</a> and get involved!
+    <p op80 text-lg max-w-150 text-center leading-7>
+      ...and the Vitest <a href="https://github.com/antfu-sponsors/vitest/network/dependencies" target="_blank">contributors</a>.<br><br>
+      <a href="https://discord.com/invite/2zYZNngd7y">Join the community</a> and get involved!
     </p>
     <div mb-30 />
   </div>
