@@ -1,9 +1,9 @@
 import { resolve } from 'path'
-import { nanoid } from 'nanoid'
-import { RpcCall } from 'vitest'
+import { nanoid } from 'nanoid/non-secure'
+import type { WorkerContext, ResolvedConfig } from '../types'
 import { distDir } from '../constants'
-import { ResolvedConfig, RpcSend, WorkerContext } from '../types'
-import { executeInViteNode, ExecuteOptions } from './execute'
+import type { ExecuteOptions } from '../node/execute'
+import { executeInViteNode } from '../node/execute'
 
 let _run: (files: string[], config: ResolvedConfig) => Promise<void>
 const moduleCache: ExecuteOptions['moduleCache'] = new Map()
@@ -17,7 +17,7 @@ export async function init(ctx: WorkerContext) {
   _run = (await executeInViteNode({
     root: config.root,
     files: [
-      resolve(distDir, 'runtime/entry.js'),
+      resolve(distDir, 'entry.js'),
     ],
     fetch(id) {
       return process.__vitest_worker__.rpc('fetch', id)
@@ -68,17 +68,4 @@ export default async function run(ctx: WorkerContext) {
   ctx.files.forEach(i => moduleCache.delete(i))
 
   return run(ctx.files, ctx.config)
-}
-
-declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
-  namespace NodeJS {
-    interface Process {
-      __vitest_worker__: {
-        config: ResolvedConfig
-        rpc: RpcCall
-        send: RpcSend
-      }
-    }
-  }
 }

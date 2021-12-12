@@ -2,11 +2,11 @@
 import { performance } from 'perf_hooks'
 import { relative } from 'path'
 import c from 'picocolors'
-import figures from 'figures'
-import { Reporter, TaskResultPack, VitestContext } from '../types'
+import type { Reporter, TaskResultPack, VitestContext } from '../types'
 import { getSuites, getTests } from '../utils'
 import { printError } from './error'
 import { createRenderer, getStateString, getStateSymbol, renderSnapshotSummary, getFullName } from './renderer'
+import { F_RIGHT } from './figures'
 
 const isTTY = process.stdout.isTTY && !process.env.CI
 
@@ -17,7 +17,8 @@ export class DefaultReporter implements Reporter {
   watchFilters?: string[]
 
   constructor(public ctx: VitestContext) {
-    console.log(c.green(`Running tests at ${c.gray(this.ctx.config.root)}\n`))
+    const mode = ctx.config.watch ? c.yellow(' DEV ') : c.cyan(' RUN ')
+    console.log(`${c.inverse(c.bold(mode))} ${c.gray(this.ctx.config.root)}\n`)
     this.start = performance.now()
   }
 
@@ -43,7 +44,7 @@ export class DefaultReporter implements Reporter {
     if (task.type === 'test' && task.result?.state && task.result?.state !== 'run') {
       console.log(` ${getStateSymbol(task)} ${getFullName(task)}`)
       if (task.result.state === 'fail')
-        console.log(c.red(`   ${figures.arrowRight} ${(task.result.error as any)?.message}`))
+        console.log(c.red(`   ${F_RIGHT} ${(task.result.error as any)?.message}`))
     }
   }
 
@@ -59,8 +60,6 @@ export class DefaultReporter implements Reporter {
 
     const failedSuites = suites.filter(i => i.result?.error)
     const failedTests = tests.filter(i => i.result?.state === 'fail')
-    const isFailed = failedSuites.length || failedTests.length
-    const color = isFailed ? c.red : c.green
 
     if (failedSuites.length) {
       console.error(c.bold(c.red(`\nFailed to run ${failedSuites.length} suites:`)))
@@ -83,27 +82,31 @@ export class DefaultReporter implements Reporter {
     const executionTime = this.end - this.start
     const threadTime = tests.reduce((acc, test) => acc + (test.result?.end ? test.result.end - test.result.start : 0), 0)
 
-    const pad = (str: string) => str.padEnd(13)
-    const time = (time: number) => Math.round(time) + c.dim('ms')
+    const padTitle = (str: string) => c.dim(`${str.padStart(10)} `)
+    const time = (time: number) => {
+      if (time > 1000)
+        return `${(time / 1000).toFixed(2)}s`
+      return `${Math.round(time)}ms`
+    }
 
     const snapshotOutput = renderSnapshotSummary(this.ctx.config.root, this.ctx.snapshot.summary)
     if (snapshotOutput.length) {
       console.log(snapshotOutput.map((t, i) => i === 0
-        ? `${pad('Snapshots')} ${t}`
-        : `${pad('')} ${t}`,
+        ? `${padTitle('Snapshots')} ${t}`
+        : `${padTitle('')} ${t}`,
       ).join('\n'))
-      console.log()
+      if (snapshotOutput.length > 1)
+        console.log()
     }
 
-    console.log(c.bold(color(pad('Test Files'))), getStateString(files))
-    console.log(c.bold(color(pad('Tests'))), getStateString(tests))
-    if (this.watchFilters) {
-      console.log(pad('Time'), time(threadTime))
-    }
-    else {
-      console.log(pad('Thread Time'), time(threadTime))
-      console.log(pad('Time'), time(executionTime) + c.gray(` (${(executionTime / threadTime * 100).toFixed(2)}%)`))
-    }
+    console.log(padTitle('Test Files'), getStateString(files))
+    console.log(padTitle('Tests'), getStateString(tests))
+    if (this.watchFilters)
+      console.log(padTitle('Time'), time(threadTime))
+
+    else
+      console.log(padTitle('Time'), time(executionTime) + c.gray(` (in thread ${time(threadTime)}, ${(executionTime / threadTime * 100).toFixed(2)}%)`))
+
     console.log()
   }
 
@@ -114,7 +117,7 @@ export class DefaultReporter implements Reporter {
     if (failed.length)
       console.log(`\n${c.bold(c.inverse(c.red(' FAIL ')))}${c.red(` ${failed.length} tests failed. Watching for file changes...`)}`)
     else
-      console.log(`\n${c.bold(c.inverse(c.green(' PASS ')))}${c.green(' Watching for file changes...')}`)
+      console.log(`\n${c.bold(c.inverse(c.green(' PASS ')))}${c.green(' Waiting for file changes...')}`)
   }
 
   async onWatcherRerun(files: string[], trigger: string) {

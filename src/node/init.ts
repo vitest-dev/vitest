@@ -1,9 +1,9 @@
 import { resolve } from 'path'
 import { findUp } from 'find-up'
 import { createServer } from 'vite'
-import { SnapshotStateOptions } from 'jest-snapshot/build/State'
-import { toArray } from '@antfu/utils'
-import { CliOptions, ResolvedConfig } from '../types'
+import type { CliOptions, ResolvedConfig } from '../types'
+import { defaultExcludes, defaultIncludes } from '../constants'
+import { toArray } from '../utils'
 
 const configFiles = [
   'vitest.config.ts',
@@ -22,6 +22,9 @@ const configFiles = [
 export async function initViteServer(options: CliOptions = {}) {
   const root = resolve(options.root || process.cwd())
   process.chdir(root)
+
+  if (options.dom)
+    options.environment = 'happy-dom'
 
   const configPath = options.config
     ? resolve(root, options.config)
@@ -49,11 +52,15 @@ export async function initViteServer(options: CliOptions = {}) {
 
   Object.assign(resolved, server.config.test)
 
-  resolved.depsInline = server.config.test?.deps?.inline || []
-  resolved.depsExternal = server.config.test?.deps?.external || []
+  resolved.depsInline = resolved.deps?.inline || []
+  resolved.depsExternal = resolved.deps?.external || []
 
+  resolved.environment = resolved.environment || 'node'
   resolved.threads = resolved.threads ?? true
   resolved.interpretDefault = resolved.interpretDefault ?? true
+
+  resolved.includes = resolved.includes ?? defaultIncludes
+  resolved.excludes = resolved.excludes ?? defaultExcludes
 
   const CI = !!process.env.CI
   const UPDATE_SNAPSHOT = resolved.update || process.env.UPDATE_SNAPSHOT
@@ -63,7 +70,7 @@ export async function initViteServer(options: CliOptions = {}) {
       : UPDATE_SNAPSHOT
         ? 'all'
         : 'new',
-  } as SnapshotStateOptions
+  }
 
   if (process.env.VITEST_MAX_THREADS)
     resolved.maxThreads = parseInt(process.env.VITEST_MAX_THREADS)

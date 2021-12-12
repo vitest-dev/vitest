@@ -1,11 +1,9 @@
 import { MessageChannel } from 'worker_threads'
 import { pathToFileURL } from 'url'
-import { resolve } from 'path'
 import Piscina from 'piscina'
-import { Awaitable } from '@antfu/utils'
-import { RpcMap } from 'vitest'
+import type { RpcMap } from 'vitest'
 import { distDir } from '../constants'
-import { WorkerContext, RpcPayload, VitestContext, File } from '../types'
+import type { WorkerContext, RpcPayload, VitestContext, File, Awaitable } from '../types'
 import { transformRequest } from './transform'
 
 export interface WorkerPool {
@@ -32,9 +30,9 @@ export function createPool(ctx: VitestContext): WorkerPool {
     return createFakePool(ctx)
 }
 
-export function createFakePool(ctx: VitestContext): WorkerPool {
-  const workerPath = resolve(distDir, './node/worker.js')
+const workerPath = new URL('./dist/worker.js', pathToFileURL(distDir)).href
 
+export function createFakePool(ctx: VitestContext): WorkerPool {
   const runTestFiles: WorkerPool['runTestFiles'] = async(files, invalidates) => {
     const { default: run } = await import(workerPath)
 
@@ -61,7 +59,7 @@ export function createFakePool(ctx: VitestContext): WorkerPool {
 
 export function createWorkerPool(ctx: VitestContext): WorkerPool {
   const options: PiscinaOptions = {
-    filename: new URL('./dist/node/worker.js', pathToFileURL(distDir)).href,
+    filename: workerPath,
   }
   // UPSTREAM: Piscina set defaults by the key existence
   if (ctx.config.maxThreads != null)

@@ -29,7 +29,7 @@ A blazing fast unit test framework powered by Vite.
 - [Smart & instant watch mode](#watch-mode), like HMR for tests!
 - [Native code coverage](#coverage) via [c8](https://github.com/bcoe/c8)
 - [Sinon](https://sinonjs.org/) built-in for mocking, stubbing, and spies.
-- [JSDOM](https://github.com/jsdom/jsdom) and [happy-dom](https://github.com/capricorn86/happy-dom) built-in for DOM and browser API mocking
+- [JSDOM](https://github.com/jsdom/jsdom) and [happy-dom](https://github.com/capricorn86/happy-dom) for DOM and browser API mocking
 - Components testing ([Vue](./test/vue), [React](./test/react), [Lit](./test/lit), [Vitesse](./test/vitesse))
 - Workers multi-threading via [Piscina](https://github.com/piscinajs/piscina)
 - ESM first, top level await
@@ -80,8 +80,8 @@ $ npx vitest
 
 - Create `vitest.config.ts`, which will have the higher priority
 - Pass `--config` option to CLI, e.g. `vitest --config ./path/to/vitest.config.ts`
-- Use `process.env.VITEST` to conditionally apply differnet configuration in `vite.config.ts`
-- Use `process.env.VITEST_MAX_THREADS` to limit amount of worker threads
+- Use `process.env.VITEST` to conditionally apply different configuration in `vite.config.ts`
+
 To configure `vitest` itself, add `test` property in your Vite config
 
 ```ts
@@ -142,20 +142,15 @@ export default defineConfig({
 
 ## Browser Mocking
 
-Pass `--dom` option in CLI to enable browser mocking. Or the `dom` flag in the config.
+Vitest supports both [happy-dom](https://github.com/capricorn86/happy-dom) or [jsdom](https://github.com/jsdom/jsdom) for mocking DOM and browser APIs. They don't come with Vitest, you might need to install them:
 
-```ts
-// vite.config.ts
-import { defineConfig } from 'vite'
-
-export default defineConfig({
-  test: {
-    dom: true
-  }
-})
+```bash
+$ npm i -D happy-dom
+# or
+$ npm i -D jsdom
 ```
 
-Vitest by default uses [jsdom](https://github.com/jsdom/jsdom) for mocking, but it also support [happy-dom](https://github.com/capricorn86/happy-dom), a faster alternative to jsdom. You can configure it with:
+After that, change the `environment` option in your config file:
 
 ```ts
 // vite.config.ts
@@ -163,7 +158,7 @@ import { defineConfig } from 'vite'
 
 export default defineConfig({
   test: {
-    dom: 'happy-dom'
+    environment: 'happy-dom' // or 'jsdom', 'node'
   }
 })
 ```
@@ -181,6 +176,7 @@ Vitest smartly searches the module graph and only rerun the related tests (just 
 Vitest works perfectly with [c8](https://github.com/bcoe/c8)
 
 ```bash
+$ npm i -D c8
 $ c8 vitest
 ```
 

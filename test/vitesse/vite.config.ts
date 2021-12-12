@@ -13,6 +13,9 @@ export default defineConfig({
       imports: [
         'vue',
       ],
+      exclude: [
+        '**/dist/**',
+      ],
     }),
     Components({
       dts: 'src/components.d.ts',
@@ -20,6 +23,6 @@ export default defineConfig({
   ],
   test: {
     global: true,
-    dom: 'happy-dom',
+    environment: 'happy-dom',
   },
 })

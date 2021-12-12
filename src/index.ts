@@ -1,4 +1,4 @@
-import { UserOptions } from './types'
+import type { UserOptions } from './types'
 
 export * from './types'
 export * from './runtime/suite'

@@ -1,5 +1,5 @@
-import { SinonSpy } from 'sinon'
-import { ChaiPlugin } from './types'
+import type { SinonSpy } from 'sinon'
+import type { ChaiPlugin } from './types'
 
 // Jest Expect Compact
 // TODO: add more https://jestjs.io/docs/expect

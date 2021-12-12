@@ -9,6 +9,6 @@ export default defineConfig({
   plugins: [react()],
   test: {
     global: true,
-    dom: 'happy-dom',
+    environment: 'happy-dom',
   },
 })

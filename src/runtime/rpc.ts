@@ -1,4 +1,4 @@
-import { RpcCall, RpcSend } from '../types'
+import type { RpcCall, RpcSend } from '../types'
 
 export const rpc: RpcCall = async(method, ...args) => {
   return process.__vitest_worker__?.rpc(method, ...args)
