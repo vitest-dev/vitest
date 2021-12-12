@@ -182,7 +182,7 @@ describe("suite", () => {
 If you use `.concurrent` in a suite, every tests in it will be run in parallel
 
 ```ts
-// The two tests marked with concurrent will be run in parallel
+// All tests within this suite will be run in parallel
 describe.concurrent("suite", () => {
   it("concurrent test 1", () => {
     assert.equal(Math.sqrt(4), 3);
