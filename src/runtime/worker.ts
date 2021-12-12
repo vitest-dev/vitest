@@ -1,8 +1,7 @@
 import { resolve } from 'path'
 import { nanoid } from 'nanoid/non-secure'
-import type { RpcCall } from 'vitest'
+import type { WorkerContext, ResolvedConfig } from '../types'
 import { distDir } from '../constants'
-import type { RpcSend, WorkerContext, ResolvedConfig } from '../types'
 import type { ExecuteOptions } from '../node/execute'
 import { executeInViteNode } from '../node/execute'
 
@@ -18,7 +17,7 @@ export async function init(ctx: WorkerContext) {
   _run = (await executeInViteNode({
     root: config.root,
     files: [
-      resolve(distDir, 'runtime/entry.js'),
+      resolve(distDir, 'entry.js'),
     ],
     fetch(id) {
       return process.__vitest_worker__.rpc('fetch', id)
@@ -69,16 +68,4 @@ export default async function run(ctx: WorkerContext) {
   ctx.files.forEach(i => moduleCache.delete(i))
 
   return run(ctx.files, ctx.config)
-}
-
-declare global {
-  namespace NodeJS {
-    interface Process {
-      __vitest_worker__: {
-        config: ResolvedConfig
-        rpc: RpcCall
-        send: RpcSend
-      }
-    }
-  }
 }
