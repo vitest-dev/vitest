@@ -22,7 +22,7 @@ export interface UserOptions {
     /**
      * Externalize means that Vite will bypass the package to native Node.
      *
-     * Externaled dependencies will not be applied Vite's transformers and resolvers.
+     * Externalized dependencies will not be applied Vite's transformers and resolvers.
      * And does not support HMR on reload.
      *
      * Typically, packages under `node_modules` are externalized.
@@ -138,7 +138,7 @@ export interface UserOptions {
   /**
    * Listen to port and serve API
    *
-   * When set to try, the default port is 55555
+   * When set to true, the default port is 55555
    *
    * @default false
    */
