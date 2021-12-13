@@ -60,11 +60,16 @@ export class SnapshotClient {
     })
 
     if (!pass) {
-      // improve log
-      expect(actual.trim()).equals(
-        expected ? expected.trim() : '',
-        message || `Snapshot name: \`${key}\``,
-      )
+      try {
+        expect(actual.trim()).equals(
+          expected ? expected.trim() : '',
+          message || `Snapshot name: \`${key}\``,
+        )
+      }
+      catch (error: any) {
+        error.message = `Snapshot name: \`${key || 'unknown'}\``
+        throw error
+      }
     }
   }
 
