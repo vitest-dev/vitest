@@ -273,7 +273,7 @@ function parseStack(stack: string): ParsedStack[] {
  * @param {string} expected
  * @return {string} Diff
  */
-export function generateDiff(actual: any, expected: any) {
+export function generateDiff(actual: string, expected: string) {
   const diffSize = 2048
   if (actual.length > diffSize)
     actual = `${actual.substring(0, diffSize)} ... Lines skipped`
@@ -293,12 +293,26 @@ export function generateDiff(actual: any, expected: any) {
  * @return {string} The diff.
  */
 function unifiedDiff(actual: any, expected: any) {
-  const indent = '  '
+  const diffLimit = 10;
+  const indent = '  ';
+  let expectedLinesCount = 0;
+  let actualLinesCount = 0;
+
   function cleanUp(line: string) {
-    if (line[0] === '+')
-      return indent + c.green(`${line[0]}${line.slice(1)}`)
-    if (line[0] === '-')
-      return indent + c.red(`${line[0]}${line.slice(1)}`)
+    if (line[0] === '+') {
+      if (expectedLinesCount >= diffLimit) return
+      expectedLinesCount++
+
+      const isLastLine = expectedLinesCount === diffLimit
+      return indent + c.green(`${line[0]}${line.slice(1)} ${isLastLine ? renderTruncateMessage(indent) : ''}`)
+    }
+    if (line[0] === '-') {
+      if (actualLinesCount >= diffLimit) return
+      actualLinesCount++
+
+      const isLastLine = actualLinesCount === diffLimit
+      return indent + c.red(`${line[0]}${line.slice(1)} ${isLastLine ? renderTruncateMessage(indent) : ''}`)
+    }
     if (line.match(/@@/))
       return '--'
     if (line.match(/\\ No newline/))
@@ -311,6 +325,10 @@ function unifiedDiff(actual: any, expected: any) {
     `\n${indent}${c.red('- actual')}\n${indent}${c.green('+ expected')}\n\n${
       lines.map(cleanUp).filter(notBlank).join('\n')}`
   )
+}
+
+function renderTruncateMessage(indent: string) {
+  return `\n${indent}... truncated item`
 }
 
 function notBlank(line: any) {
