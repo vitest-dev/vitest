@@ -1,22 +1,20 @@
 import { nanoid } from 'nanoid/non-secure'
-import type { SuiteHooks, Test, SuiteCollector, TestCollector, RunMode, ComputeMode, TestFactory, TestFunction, File, Suite, Awaitable, ResolvedConfig, RpcCall, RpcSend } from '../types'
-import { context } from './context'
+import type { SuiteHooks, Test, SuiteCollector, TestCollector, RunMode, ComputeMode, TestFactory, TestFunction, File, Suite, ResolvedConfig, RpcCall, RpcSend, ModuleCache } from '../types'
+import { collectTask, context, runWithSuite, withTimeout } from './context'
 import { getHooks, setFn, setHooks } from './map'
 
 export const suite = createSuite()
 
 export const defaultSuite = suite('')
 
-function getCurrentSuite() {
+export function clearContext() {
+  context.tasks.length = 0
+  defaultSuite.clear()
+  context.currentSuite = defaultSuite
+}
+
+export function getCurrentSuite() {
   return context.currentSuite || defaultSuite
-}
-
-const getDefaultTestTimeout = () => {
-  return process.__vitest_worker__?.config?.testTimeout ?? 5000
-}
-
-const getDefaultHookTimeout = () => {
-  return process.__vitest_worker__?.config?.hookTimeout ?? 5000
 }
 
 export function createSuiteHooks() {
@@ -84,12 +82,8 @@ function createSuiteCollector(name: string, factory: TestFactory = () => { }, mo
 
   async function collect(file?: File) {
     factoryQueue.length = 0
-    if (factory) {
-      const prev = context.currentSuite
-      context.currentSuite = collector
-      await factory(test)
-      context.currentSuite = prev
-    }
+    if (factory)
+      await runWithSuite(collector, () => factory(test))
 
     const allChildren = await Promise.all(
       [...factoryQueue, ...tasks]
@@ -108,7 +102,7 @@ function createSuiteCollector(name: string, factory: TestFactory = () => { }, mo
     return suite
   }
 
-  context.currentSuite?.tasks.push(collector)
+  collectTask(collector)
 
   return collector
 }
@@ -144,7 +138,6 @@ function createTestCollector(collectTest: (name: string, fn: TestFunction, mode:
 }
 
 // apis
-
 export const test = (function() {
   function test(name: string, fn: TestFunction, timeout?: number) {
     return getCurrentSuite().test(name, fn, timeout)
@@ -215,35 +208,6 @@ function createSuite() {
 export const describe = suite
 export const it = test
 
-// hooks
-export const beforeAll = (fn: SuiteHooks['beforeAll'][0], timeout?: number) => getCurrentSuite().on('beforeAll', withTimeout(fn, timeout ?? getDefaultHookTimeout()))
-export const afterAll = (fn: SuiteHooks['afterAll'][0], timeout?: number) => getCurrentSuite().on('afterAll', withTimeout(fn, timeout ?? getDefaultHookTimeout()))
-export const beforeEach = (fn: SuiteHooks['beforeEach'][0], timeout?: number) => getCurrentSuite().on('beforeEach', withTimeout(fn, timeout ?? getDefaultHookTimeout()))
-export const afterEach = (fn: SuiteHooks['afterEach'][0], timeout?: number) => getCurrentSuite().on('afterEach', withTimeout(fn, timeout ?? getDefaultHookTimeout()))
-
-// utils
-export function clearContext() {
-  context.tasks.length = 0
-  defaultSuite.clear()
-  context.currentSuite = defaultSuite
-}
-
-function withTimeout<T extends((...args: any[]) => any)>(fn: T, _timeout?: number): T {
-  const timeout = _timeout ?? getDefaultTestTimeout()
-  if (timeout <= 0 || timeout === Infinity)
-    return fn
-
-  return ((...args: (T extends ((...args: infer A) => any) ? A : never)) => {
-    return Promise.race([fn(...args), new Promise((resolve, reject) => {
-      const timer = setTimeout(() => {
-        clearTimeout(timer)
-        reject(new Error(`Test timed out in ${timeout}ms.`))
-      }, timeout)
-      timer.unref()
-    })]) as Awaitable<void>
-  }) as T
-}
-
 declare global {
   namespace NodeJS {
     interface Process {
@@ -252,6 +216,7 @@ declare global {
         rpc: RpcCall
         send: RpcSend
         current?: Test
+        moduleCache: Map<string, ModuleCache>
       }
     }
   }

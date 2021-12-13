@@ -120,7 +120,6 @@ export interface UserOptions {
 
   /**
    * Silent mode
-   * TODO: implement this
    *
    * @default false
    */
@@ -130,6 +129,11 @@ export interface UserOptions {
    * Open Vitest UI
    */
   open?: boolean
+
+  /**
+   * Path to setup files
+   */
+  setupFiles?: string | string[]
 }
 
 export interface CliOptions extends UserOptions {

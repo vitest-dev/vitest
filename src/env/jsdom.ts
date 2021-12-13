@@ -19,8 +19,14 @@ export default <Environment>({
       .filter(k => !k.startsWith('_'))
       .filter(k => !(k in global))
 
-    for (const key of keys)
-      global[key] = dom.window[key]
+    for (const key of keys) {
+      Object.defineProperty(global, key, {
+        get() { return dom.window[key] },
+        configurable: true,
+      })
+    }
+
+    global.window = global
 
     return {
       teardown(global) {

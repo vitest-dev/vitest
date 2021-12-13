@@ -1,14 +1,15 @@
 import { basename } from 'path'
 import { performance } from 'perf_hooks'
 import { nanoid } from 'nanoid/non-secure'
-import type { File, Suite, Test } from '../types'
+import type { ResolvedConfig, File, Suite, Test } from '../types'
 import { interpretOnlyMode } from '../utils'
 import { clearContext, createSuiteHooks, defaultSuite } from './suite'
-import { context } from './context'
 import { setHooks } from './map'
 import { processError } from './error'
+import { context } from './context'
+import { runSetupFiles } from './setup'
 
-export async function collectTests(paths: string[]) {
+export async function collectTests(paths: string[], config: ResolvedConfig) {
   const files: File[] = []
 
   for (const filepath of paths) {
@@ -26,6 +27,7 @@ export async function collectTests(paths: string[]) {
 
     clearContext()
     try {
+      await runSetupFiles(config)
       await import(filepath)
 
       for (const c of [defaultSuite, ...context.tasks]) {

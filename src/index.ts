@@ -2,7 +2,8 @@ import type { MatchersObject } from './integrations/chai/types'
 import type { UserOptions } from './types'
 
 export * from './types'
-export * from './runtime/suite'
+export { suite, test, describe, it } from './runtime/suite'
+export * from './runtime/hooks'
 export * from './integrations/chai'
 export * from './integrations/sinon'
 

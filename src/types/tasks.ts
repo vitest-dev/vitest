@@ -91,7 +91,7 @@ export interface SuiteCollector {
 
 export type TestFactory = (test: (name: string, fn: TestFunction) => void) => Awaitable<void>
 
-export interface GlobalContext {
+export interface RuntimeContext {
   tasks: (SuiteCollector | Test)[]
   currentSuite: SuiteCollector | null
 }

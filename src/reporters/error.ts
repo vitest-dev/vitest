@@ -1,4 +1,5 @@
 import { promises as fs, existsSync } from 'fs'
+import { relative } from 'path'
 import c from 'picocolors'
 import * as diff from 'diff'
 import type { RawSourceMap } from 'source-map'
@@ -44,27 +45,27 @@ export async function printError(error: unknown) {
     } as any
   }
 
-  let codeFramePrinted = false
   const stackStr = e.stack || e.stackStr || ''
   const stacks = parseStack(stackStr)
-  const nearest = stacks.find(stack => !stack.file.includes('vitest/dist') && ctx.server.moduleGraph.getModuleById(stack.file))
-  if (nearest) {
-    const pos = await getSourcePos(ctx, nearest)
-    if (pos && existsSync(nearest.file)) {
-      const sourceCode = await fs.readFile(nearest.file, 'utf-8')
-      printErrorMessage(e)
 
-      await printStack(ctx, stacks, nearest, (s) => {
-        if (s === nearest)
-          ctx.console.log(c.yellow(generateCodeFrame(sourceCode, 4, pos)))
-      })
-
-      codeFramePrinted = true
-    }
-  }
-
-  if (!codeFramePrinted)
+  if (!stacks.length) {
     console.error(e)
+  }
+  else {
+    const nearest = stacks.find((stack) => {
+      return !stack.file.includes('vitest/dist')
+      && ctx.server.moduleGraph.getModuleById(stack.file)
+      && existsSync(stack.file)
+    })
+
+    printErrorMessage(e)
+    await printStack(ctx, stacks, nearest, async(s, pos) => {
+      if (s === nearest) {
+        const sourceCode = await fs.readFile(nearest.file, 'utf-8')
+        ctx.console.log(c.yellow(generateCodeFrame(sourceCode, 4, pos)))
+      }
+    })
+  }
 
   if (e.showDiff)
     displayDiff(e.actual, e.expected)
@@ -91,7 +92,7 @@ async function printStack(
   ctx: VitestContext,
   stack: ParsedStack[],
   highlight?: ParsedStack,
-  onStack?: ((stack: ParsedStack) => void),
+  onStack?: ((stack: ParsedStack, pos: Position) => void),
 ) {
   if (!stack.length)
     return
@@ -99,8 +100,10 @@ async function printStack(
   for (const frame of stack) {
     const pos = await getSourcePos(ctx, frame) || frame
     const color = frame === highlight ? c.yellow : c.gray
-    ctx.console.log(color(` ${c.dim(F_POINTER)} ${[frame.method, c.dim(`${frame.file}:${pos.line}:${pos.column}`)].filter(Boolean).join(' ')}`))
-    onStack?.(frame)
+    const path = relative(ctx.config.root, frame.file)
+
+    ctx.console.log(color(` ${c.dim(F_POINTER)} ${[frame.method, c.dim(`${path}:${pos.line}:${pos.column}`)].filter(Boolean).join(' ')}`))
+    onStack?.(frame, pos)
 
     // reached at test file, skip the follow stack
     if (frame.file in ctx.state.filesMap)

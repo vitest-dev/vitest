@@ -89,6 +89,9 @@ export async function initViteServer(options: CliOptions = {}) {
   if (process.env.VITEST_MIN_THREADS)
     resolved.minThreads = parseInt(process.env.VITEST_MIN_THREADS)
 
+  resolved.setupFiles = Array.from(resolved.setupFiles || [])
+    .map(i => resolve(root, i))
+
   return {
     server,
     config: resolved,
