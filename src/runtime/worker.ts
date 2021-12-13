@@ -1,12 +1,11 @@
 import { resolve } from 'path'
 import { nanoid } from 'nanoid/non-secure'
-import type { WorkerContext, ResolvedConfig } from '../types'
+import type { WorkerContext, ResolvedConfig, ModuleCache } from '../types'
 import { distDir } from '../constants'
-import type { ExecuteOptions } from '../node/execute'
 import { executeInViteNode } from '../node/execute'
 
 let _run: (files: string[], config: ResolvedConfig) => Promise<void>
-const moduleCache: ExecuteOptions['moduleCache'] = new Map()
+const moduleCache: Map<string, ModuleCache> = new Map()
 
 export async function init(ctx: WorkerContext) {
   if (_run)
@@ -38,6 +37,7 @@ export default async function run(ctx: WorkerContext) {
   const rpcPromiseMap = new Map<string, { resolve: ((...args: any) => any); reject: (...args: any) => any }>()
 
   process.__vitest_worker__ = {
+    moduleCache,
     config,
     rpc: (method, ...args) => {
       return new Promise((resolve, reject) => {

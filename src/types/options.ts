@@ -120,11 +120,15 @@ export interface UserOptions {
 
   /**
    * Silent mode
-   * TODO: implement this
    *
    * @default false
    */
   silent?: boolean
+
+  /**
+   * Path to setup files
+   */
+  setupFiles?: string | string[]
 }
 
 export interface CliOptions extends UserOptions {

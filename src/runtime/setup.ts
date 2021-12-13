@@ -3,6 +3,7 @@ import { Writable } from 'stream'
 import { environments } from '../env'
 import { setupChai } from '../integrations/chai/setup'
 import type { ResolvedConfig } from '../types'
+import { toArray } from '../utils'
 import { send } from './rpc'
 
 let globalSetup = false
@@ -58,4 +59,14 @@ export async function withEnv(name: ResolvedConfig['environment'], fn: () => Pro
   finally {
     await env.teardown(globalThis)
   }
+}
+
+export async function runSetupFiles(config: ResolvedConfig) {
+  const files = toArray(config.setupFiles)
+  await Promise.all(
+    files.map(async(file) => {
+      process.__vitest_worker__.moduleCache.delete(file)
+      await import(file)
+    }),
+  )
 }

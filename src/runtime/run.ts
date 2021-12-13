@@ -1,6 +1,6 @@
 import { performance } from 'perf_hooks'
 import type { HookListener } from 'vitest'
-import type { Test, Suite, SuiteHooks, Task } from '../types'
+import type { ResolvedConfig, Test, Suite, SuiteHooks, Task } from '../types'
 import { getSnapshotClient } from '../integrations/snapshot/chai'
 import { hasFailed, hasTests, partitionSuiteChildren } from '../utils'
 import { getFn, getHooks } from './map'
@@ -8,7 +8,7 @@ import { rpc, send } from './rpc'
 import { collectTests } from './collect'
 import { processError } from './error'
 
-async function callHook<T extends keyof SuiteHooks>(suite: Suite, name: T, args: SuiteHooks[T][0] extends HookListener<infer A> ? A : never) {
+export async function callSuiteHook<T extends keyof SuiteHooks>(suite: Suite, name: T, args: SuiteHooks[T][0] extends HookListener<infer A> ? A : never) {
   await Promise.all(getHooks(suite)[name].map(fn => fn(...(args as any))))
 }
 
@@ -31,7 +31,7 @@ export async function runTest(test: Test) {
   process.__vitest_worker__.current = test
 
   try {
-    await callHook(test.suite, 'beforeEach', [test, test.suite])
+    await callSuiteHook(test.suite, 'beforeEach', [test, test.suite])
     await getFn(test)()
     test.result.state = 'pass'
   }
@@ -40,7 +40,7 @@ export async function runTest(test: Test) {
     test.result.error = processError(e)
   }
   try {
-    await callHook(test.suite, 'afterEach', [test, test.suite])
+    await callSuiteHook(test.suite, 'afterEach', [test, test.suite])
   }
   catch (e) {
     test.result.state = 'fail'
@@ -75,7 +75,7 @@ export async function runSuite(suite: Suite) {
   }
   else {
     try {
-      await callHook(suite, 'beforeAll', [suite])
+      await callSuiteHook(suite, 'beforeAll', [suite])
 
       for (const tasksGroup of partitionSuiteChildren(suite)) {
         const computeMode = tasksGroup[0].computeMode
@@ -88,7 +88,7 @@ export async function runSuite(suite: Suite) {
         }
       }
 
-      await callHook(suite, 'afterAll', [suite])
+      await callSuiteHook(suite, 'afterAll', [suite])
     }
     catch (e) {
       suite.result.state = 'fail'
@@ -124,8 +124,8 @@ export async function runSuites(suites: Suite[]) {
     await runSuite(suite)
 }
 
-export async function startTests(paths: string[]) {
-  const files = await collectTests(paths)
+export async function startTests(paths: string[], config: ResolvedConfig) {
+  const files = await collectTests(paths, config)
 
   send('onCollected', files)
 
