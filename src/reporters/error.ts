@@ -87,10 +87,7 @@ function displayDiff(actual: string, expected: string) {
 function printErrorMessage(error: ErrorWithDiff) {
   const errorName = error.name || error.nameStr || 'Unknown Error'
 
-  if (error.showDiff)
-    console.error(c.red(`${c.bold(errorName)}`))
-  else
-    console.error(c.red(`${c.bold(errorName)}: ${error.message}`))
+  console.error(c.red(`${c.bold(errorName)}: ${error.message}`))
 }
 
 async function printStack(server: ViteDevServer,
