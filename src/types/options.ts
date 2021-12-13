@@ -126,6 +126,11 @@ export interface UserOptions {
   silent?: boolean
 
   /**
+   * Open Vitest UI
+   */
+  open?: boolean
+
+  /**
    * Path to setup files
    */
   setupFiles?: string | string[]

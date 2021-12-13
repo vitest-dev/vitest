@@ -4,6 +4,7 @@ import { createServer } from 'vite'
 import type { CliOptions, ResolvedConfig } from '../types'
 import { defaultExcludes, defaultIncludes } from '../constants'
 import { toArray } from '../utils'
+// import { VitestUIPlugin } from '../../packages/ui/node'
 
 const configFiles = [
   'vitest.config.ts',
@@ -42,6 +43,14 @@ export async function initViteServer(options: CliOptions = {}) {
     logLevel: 'error',
     clearScreen: false,
     configFile: resolved.config,
+    plugins: [
+      // TODO: UI
+      // ...(options.open ? [VitestUIPlugin()] : []),
+    ],
+    server: {
+      open: true,
+      port: 3000,
+    },
     optimizeDeps: {
       exclude: [
         'vitest',
@@ -49,6 +58,9 @@ export async function initViteServer(options: CliOptions = {}) {
     },
   })
   await server.pluginContainer.buildStart({})
+
+  if (options.open)
+    server.listen(3000)
 
   Object.assign(resolved, server.config.test)
 

@@ -16,6 +16,7 @@ cli
   .option('-c, --config <path>', 'path to config file')
   .option('-u, --update', 'update snapshot')
   .option('-w, --watch', 'watch mode')
+  .option('-o, --open', 'open Vitest UI')
   .option('--threads', 'enabled threads', { default: true })
   .option('--silent', 'silent')
   .option('--global', 'inject apis globally')
