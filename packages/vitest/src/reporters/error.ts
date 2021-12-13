@@ -85,6 +85,7 @@ function displayDiff(actual: string, expected: string) {
 
 function printErrorMessage(error: ErrorWithDiff) {
   const errorName = error.name || error.nameStr || 'Unknown Error'
+
   console.error(c.red(`${c.bold(errorName)}: ${error.message}`))
 }
 

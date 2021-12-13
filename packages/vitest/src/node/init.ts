@@ -1,18 +1,10 @@
 import { resolve } from 'path'
 import { findUp } from 'find-up'
+import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 import { createServer } from 'vite'
 import type { CliOptions, ResolvedConfig } from '../types'
-import { defaultExcludes, defaultIncludes } from '../constants'
-import { toArray } from '../utils'
-
-const configFiles = [
-  'vitest.config.ts',
-  'vitest.config.js',
-  'vitest.config.mjs',
-  'vite.config.ts',
-  'vite.config.js',
-  'vite.config.mjs',
-]
+import { configFiles, defaultExcludes, defaultIncludes, defaultPort } from '../constants'
+// import { VitestUIPlugin } from '../../packages/ui/node'
 
 /**
  * Initalized Vite server and resolving configs and fill the defaults
@@ -34,14 +26,30 @@ export async function initViteServer(options: CliOptions = {}) {
 
   resolved.config = configPath
   resolved.root = root
-  if (options.cliFilters)
-    resolved.cliFilters = toArray(options.cliFilters)
 
   const server = await createServer({
     root,
     logLevel: 'error',
     clearScreen: false,
     configFile: resolved.config,
+    plugins: [
+      {
+        name: 'vitest',
+        configResolved(viteConfig) {
+          resolveConfig(resolved, viteConfig)
+        },
+        async configureServer(server) {
+          if (resolved.api)
+            server.middlewares.use((await import('../api/middleware')).default())
+        },
+      },
+      // TODO: UI
+      // ...(options.open ? [VitestUIPlugin()] : []),
+    ],
+    server: {
+      open: options.open,
+      strictPort: true,
+    },
     optimizeDeps: {
       exclude: [
         'vitest',
@@ -50,7 +58,20 @@ export async function initViteServer(options: CliOptions = {}) {
   })
   await server.pluginContainer.buildStart({})
 
-  Object.assign(resolved, server.config.test)
+  if (typeof resolved.api === 'number')
+    await server.listen(resolved.api)
+
+  return {
+    server,
+    config: resolved,
+  }
+}
+
+function resolveConfig(
+  resolved: ResolvedConfig,
+  viteConfig: ResolvedViteConfig,
+) {
+  Object.assign(resolved, viteConfig.test)
 
   resolved.depsInline = resolved.deps?.inline || []
   resolved.depsExternal = resolved.deps?.external || []
@@ -79,10 +100,8 @@ export async function initViteServer(options: CliOptions = {}) {
     resolved.minThreads = parseInt(process.env.VITEST_MIN_THREADS)
 
   resolved.setupFiles = Array.from(resolved.setupFiles || [])
-    .map(i => resolve(root, i))
+    .map(i => resolve(resolved.root, i))
 
-  return {
-    server,
-    config: resolved,
-  }
+  if (resolved.api === true)
+    resolved.api = defaultPort
 }
