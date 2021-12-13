@@ -16,3 +16,9 @@ Object {
   },
 }`)
 })
+
+test('snapshot', () => {
+  expect({
+    this: { is: new Set(['one', new Array(300).fill({})]) },
+  }).toMatchSnapshot()
+})
