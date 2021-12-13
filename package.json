@@ -1,25 +1,24 @@
 {
   "name": "@vitest/monorepo",
-  "private": true,
   "version": "0.0.76",
+  "private": true,
   "description": "A blazing fast unit test framework powered by Vite",
   "type": "module",
-   "scripts": {
+  "scripts": {
     "build": "pnpm -r --filter {packages} run build",
+    "ci": "ni && nr typecheck && nr lint && nr build && nr test:all",
     "dev": "pnpm -r --parallel --filter {packages} run dev",
     "docs": "npm -C docs run dev",
     "docs:build": "npm -C docs run build",
     "docs:serve": "npm -C docs run serve",
-    "ui:build": "vite build packages/ui",
-    "ui:dev": "vite packages/ui",
     "lint": "eslint --ext .js,.vue .",
-    "prepublishOnly": "nr build",
-    "release": "bumpp --commit --push --tag && pnpm -r publish",
+    "release": "bumpp package.json packages/*/package.json --commit --push --tag && pnpm -r publish",
     "test": "vitest -r test/core",
     "test:all": "cross-env CI=true pnpm -r --stream --filter !vitest run test --",
     "test:ci": "cross-env CI=true pnpm -r --stream --filter !vitest --filter !@vitest/test-fails run test --",
     "typecheck": "pnpm -r --parallel run typecheck",
-    "ci": "ni && nr typecheck && nr lint && nr build && nr test:all"
+    "ui:build": "vite build packages/ui",
+    "ui:dev": "vite packages/ui"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^0.13.1",
