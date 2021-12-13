@@ -61,13 +61,10 @@ export class SnapshotClient {
 
     if (!pass) {
       try {
-        expect(actual.trim()).equals(
-          expected ? expected.trim() : '',
-          message || `Snapshot name: \`${key}\``,
-        )
+        expect(actual.trim()).equals(expected ? expected.trim() : '')
       }
       catch (error: any) {
-        error.message = `Snapshot name: \`${key || 'unknown'}\``
+        error.message = `Snapshot \`${key || 'unknown'}\` mismatched`
         throw error
       }
     }
