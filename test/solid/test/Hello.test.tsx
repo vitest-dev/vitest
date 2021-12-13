@@ -1,26 +1,19 @@
-import { afterEach, describe, expect, test } from 'vitest';
-import { render, fireEvent, cleanup } from 'solid-testing-library';
-import { Hello } from '../components/Hello';
+import { describe, expect, test } from 'vitest'
+import { render } from 'solid-js/web'
+import { Hello } from '../components/Hello'
 
 describe('Solid.js Hello.tsx', () => {
-  afterEach(cleanup);
+  test('mounts and unmounts', () => {
+    const container = document.createElement('main')
+    document.body.appendChild(container)
+    const unmount = render(() => <Hello count={4} />, container)
+    expect(container).toBeTruthy()
+    expect(container.innerHTML).toContain('4 x 2 = 8')
+    expect(container.innerHTML).toMatchSnapshot()
+    unmount()
+    expect(container.innerHTML).toBe('')
+    document.body.removeChild(container)
+  })
 
-  test('mounts', () => {
-    const { container } = render(() => <Hello count={4} />);
-    expect(container).toBeTruthy();
-    expect(container.innerHTML).toContain('4 x 2 = 8');
-    expect(container.innerHTML).toMatchSnapshot();
-  });
-
-  test('updates on button click', async () => {
-    const { getByText, getByRole } = render(() => <Hello count={4} />);
-    const btn = getByRole('button') as HTMLButtonElement;
-    const div = getByText('4 x 2 = 8') as HTMLDivElement;
-    fireEvent.click(btn);
-    await Promise.resolve();
-    expect(div.innerHTML).toBe('4 x 3 = 12');
-    fireEvent.click(btn);
-    await Promise.resolve();
-    expect(div.innerHTML).toBe('4 x 4 = 16');
-  });
+  test.todo('updates on button click')
 })
