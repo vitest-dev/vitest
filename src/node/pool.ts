@@ -75,6 +75,7 @@ export function createWorkerPool(ctx: VitestContext): WorkerPool {
 
   const runTestFiles: WorkerPool['runTestFiles'] = async(files, invalidates) => {
     await Promise.all(files.map(async(file) => {
+      console.log(file)
       const { workerPort, port } = createChannel(ctx)
 
       const data: WorkerContext = {

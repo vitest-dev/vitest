@@ -7,8 +7,14 @@ import { timeout } from '../src/timeout'
 const content = 'Hello, World!'
 const filename = 'fixtures/hi.txt'
 
+
+
 describe('fs', () => {
+  console.log('h')
+  process.exit(0)
+
   it('__dirname', async() => {
+  console.log('h 2')
     const raw = await fs.readFile(resolve(__dirname, filename), 'utf-8')
 
     expect(raw.trim()).toEqual(content)
