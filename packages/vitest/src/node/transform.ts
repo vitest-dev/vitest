@@ -1,7 +1,7 @@
 import type { ViteDevServer } from 'vite'
 
 export async function transformRequest(server: ViteDevServer, id: string) {
-  if (id.match(/\.(?:[cm]?[jt]s|json)$/)) {
+  if (id.match(/\.(?:[cm]?[jt]sx?|json)$/)) {
     return await server.transformRequest(id, { ssr: true })
   }
   else {
