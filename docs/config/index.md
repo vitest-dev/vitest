@@ -25,6 +25,40 @@ TODO: Mention [Config File Resolving](), [Config Intellisense]()
 
 ## Options
 
+### includes
+
+- **Type:** `string[]n`
+- **Default:** `['**\/*.test.ts']`
+
+Include globs for test files
+
+### excludes
+
+- **Type:** `string[]`
+- **Default:** `['**\/node_modules\/**']`
+
+Exclude globs for test files
+
+### deps
+
+- **Type:** `{ external?, inline? }`
+
+Handling for dependencies inlining or externalizing
+         
+#### deps.external
+
+- **Type:** `(string | RegExp)[]`
+- **Default:** `['**\/node_modules\/**']`
+
+Externalize means that Vite will bypass the package to native Node. Externalized dependencies will not be applied Vite's transformers and resolvers, so they do not support HMR on reload. Typically, packages under `node_modules` are externalized.
+
+#### deps.inline 
+
+- **Type:** `(string | RegExp)[]`
+- **Default:** `['**\/node_modules\/**']`
+
+Vite will process inlined modules. This could be helpful to handle packages that ship `.js` in ESM format (that Node can't handle).
+
 ### global
 
 - **Type:** `boolean`
@@ -70,3 +104,102 @@ export default defineConfig({
   ],
 });
 ```
+   
+### environment
+
+- **Type:** `'node' | 'jsdom' | 'happy-dom'`
+- **Default:** `'node'`
+
+Running environment
+
+### update
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Update snapshot files
+
+### watch
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Enable watch mode
+    
+### root
+
+- **Type:** `string`
+
+Project root
+
+### reporters
+
+- **Type:** `Reporter | Reporter[]`
+
+Custom reporter for output
+
+### threads
+
+- **Type:** `boolean`
+- **Default:** `true`
+
+Enable multi-threading using Piscina.js
+
+### maxThreads
+
+- **Type:** `number`
+- **Default:** _available CPUs_
+
+Maximum number of threads
+
+### minThreads
+
+- **Type:** `number`
+- **Default:** _available CPUs_
+
+Minimum number of threads
+
+### interpretDefault
+
+- **Type:** `boolean`
+
+### testTimeout
+
+- **Type:** `number`
+- **Default:** `5000`
+
+Default timeout of a test in milliseconds
+     
+### hookTimeout
+
+- **Type:** `number`
+- **Default:** `5000`
+     
+Default timeout of a hook in milliseconds
+     
+### silent
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Silent mode
+
+### open
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Open Vitest UI (WIP)
+
+### setupFiles
+
+- **Type:** `string | string[]`
+
+Path to setup files
+
+### api
+
+- **Type:** `boolean | number`
+- **Default:** `false`
+
+Listen to port and serve API. When set to true, the default port is 55555
