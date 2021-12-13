@@ -304,14 +304,14 @@ function unifiedDiff(actual: any, expected: any) {
       expectedLinesCount++
 
       const isLastLine = expectedLinesCount === diffLimit
-      return indent + c.green(`${line[0]}${line.slice(1)} ${isLastLine ? renderTruncateMessage(indent) : ''}`)
+      return indent + c.green(`${formatLine(line)} ${isLastLine ? renderTruncateMessage(indent) : ''}`)
     }
     if (line[0] === '-') {
       if (actualLinesCount >= diffLimit) return
       actualLinesCount++
 
       const isLastLine = actualLinesCount === diffLimit
-      return indent + c.red(`${line[0]}${line.slice(1)} ${isLastLine ? renderTruncateMessage(indent) : ''}`)
+      return indent + c.red(`${formatLine(line)} ${isLastLine ? renderTruncateMessage(indent) : ''}`)
     }
     if (line.match(/@@/))
       return '--'
@@ -325,6 +325,13 @@ function unifiedDiff(actual: any, expected: any) {
     `\n${indent}${c.red('- actual')}\n${indent}${c.green('+ expected')}\n\n${
       lines.map(cleanUp).filter(notBlank).join('\n')}`
   )
+}
+
+function formatLine(line: string) {
+  const lineLimitLength = 50;
+  if (line.length > lineLimitLength)
+    return `${line.slice(0, lineLimitLength)} ... truncated`
+  return line
 }
 
 function renderTruncateMessage(indent: string) {
