@@ -75,7 +75,6 @@ export function createWorkerPool(ctx: VitestContext): WorkerPool {
 
   const runTestFiles: WorkerPool['runTestFiles'] = async(files, invalidates) => {
     await Promise.all(files.map(async(file) => {
-      console.log(file)
       const { workerPort, port } = createChannel(ctx)
 
       const data: WorkerContext = {
@@ -113,6 +112,9 @@ function createChannel(ctx: VitestContext) {
     }
 
     switch (method) {
+      case 'processExit':
+        process.exit(args[0] as number || 1)
+        return
       case 'snapshotSaved':
         return send(() => ctx.snapshot.add(args[0] as any))
       case 'fetch':

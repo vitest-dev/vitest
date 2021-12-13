@@ -13,14 +13,7 @@ export async function start(ctx: VitestContext) {
     return
   }
 
-
   const pool = createPool(ctx)
-
-  process.on('beforeExit',async (code) => {
-    await pool.close()
-
-    console.log(`About to exit with code: ${code}`);
-  });
 
   await pool.runTestFiles(testFilepaths)
 

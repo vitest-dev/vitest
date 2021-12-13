@@ -3,6 +3,7 @@ import { nanoid } from 'nanoid/non-secure'
 import type { WorkerContext, ResolvedConfig, ModuleCache } from '../types'
 import { distDir } from '../constants'
 import { executeInViteNode } from '../node/execute'
+import { send } from './rpc'
 
 let _run: (files: string[], config: ResolvedConfig) => Promise<void>
 const moduleCache: Map<string, ModuleCache> = new Map()
@@ -10,6 +11,17 @@ const moduleCache: Map<string, ModuleCache> = new Map()
 export async function init(ctx: WorkerContext) {
   if (_run)
     return _run
+
+  const processExit = process.exit
+
+  process.on('beforeExit', (code) => {
+    send('processExit', code)
+  })
+
+  process.exit = (code = process.exitCode || 0): never => {
+    send('processExit', code)
+    return processExit(code)
+  }
 
   const { config } = ctx
 
@@ -32,8 +44,6 @@ export async function init(ctx: WorkerContext) {
 
 export default async function run(ctx: WorkerContext) {
   process.stdout.write('\0')
-
-  // process.exit(0)
 
   const { config, port } = ctx
   const rpcPromiseMap = new Map<string, { resolve: ((...args: any) => any); reject: (...args: any) => any }>()
