@@ -134,6 +134,15 @@ export interface UserOptions {
    * Path to setup files
    */
   setupFiles?: string | string[]
+
+  /**
+   * Listen to port and serve API
+   *
+   * When set to try, the default port is 55555
+   *
+   * @default false
+   */
+  api?: boolean | number
 }
 
 export interface CliOptions extends UserOptions {
