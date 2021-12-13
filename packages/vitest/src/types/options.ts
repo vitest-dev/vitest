@@ -74,7 +74,7 @@ export interface UserOptions {
   /**
    * Custom reporter for output
    */
-  reporter?: Reporter
+  reporters?: Reporter | Reporter[]
 
   /**
    * Enable multi-threading

@@ -28,7 +28,7 @@ export interface VitestContext {
   server: ViteDevServer
   state: StateManager
   snapshot: SnapshotManager
-  reporter: Reporter
+  reporters: Reporter[]
   console: Console
 }
 

@@ -30,8 +30,13 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
       await runSetupFiles(config)
       await import(filepath)
 
-      for (const c of [defaultSuite, ...context.tasks]) {
+      const defaultTasks = await defaultSuite.collect(file)
+
+      for (const c of [...defaultTasks.tasks, ...context.tasks]) {
         if (c.type === 'test') {
+          file.tasks.push(c)
+        }
+        else if (c.type === 'suite') {
           file.tasks.push(c)
         }
         else {

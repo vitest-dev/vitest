@@ -119,14 +119,14 @@ function createChannel(ctx: VitestContext) {
         return send(() => transformRequest(ctx.server, ...args as RpcMap['fetch'][0]))
       case 'onCollected':
         ctx.state.collectFiles(args[0] as any)
-        ctx.reporter.onStart?.((args[0] as any as File[]).map(i => i.filepath))
+        ctx.reporters.forEach(r => r.onStart?.((args[0] as any as File[]).map(i => i.filepath)))
         return
       case 'onTaskUpdate':
         ctx.state.updateTasks([args[0] as any])
-        ctx.reporter.onTaskUpdate?.(args[0] as any)
+        ctx.reporters.forEach(r => r.onTaskUpdate?.(args[0] as any))
         return
       case 'log':
-        ctx.reporter.onUserConsoleLog?.(args[0] as any)
+        ctx.reporters.forEach(r => r.onUserConsoleLog?.(args[0] as any))
         return
     }
 

@@ -9,7 +9,7 @@ import { F_RIGHT } from './figures'
 
 const isTTY = process.stdout.isTTY && !process.env.CI
 
-export class DefaultReporter implements Reporter {
+export class ConsoleReporter implements Reporter {
   start = 0
   end = 0
   renderer?: ReturnType<typeof createRenderer>

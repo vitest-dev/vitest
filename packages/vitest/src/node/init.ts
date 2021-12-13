@@ -4,6 +4,11 @@ import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 import { createServer } from 'vite'
 import type { CliOptions, ResolvedConfig } from '../types'
 import { configFiles, defaultExcludes, defaultIncludes, defaultPort } from '../constants'
+import type { VitestContext } from '../../dist'
+import { SnapshotManager } from '../integrations/snapshot/manager'
+import { ConsoleReporter } from '../reporters/console'
+import { toArray } from '../utils'
+import { StateManager } from './state'
 // import { VitestUIPlugin } from '../../packages/ui/node'
 
 /**
@@ -11,7 +16,7 @@ import { configFiles, defaultExcludes, defaultIncludes, defaultPort } from '../c
  * They are together because we have configs in Vite config
  * that need to be merged after server starts.
  */
-export async function initViteServer(options: CliOptions = {}) {
+export async function initVitest(options: CliOptions = {}) {
   const root = resolve(options.root || process.cwd())
   process.chdir(root)
 
@@ -61,10 +66,19 @@ export async function initViteServer(options: CliOptions = {}) {
   if (typeof resolved.api === 'number')
     await server.listen(resolved.api)
 
-  return {
+  const ctx: VitestContext = {
     server,
     config: resolved,
+    state: new StateManager(),
+    snapshot: new SnapshotManager(resolved),
+    reporters: toArray(resolved.reporters),
+    console: globalThis.console,
   }
+
+  if (!ctx.reporters.length)
+    ctx.reporters.push(new ConsoleReporter(ctx))
+
+  return ctx
 }
 
 function resolveConfig(

@@ -7,8 +7,8 @@ import type { WorkerPool } from './pool'
 const WATCHER_DEBOUNCE = 50
 
 export async function startWatcher(ctx: VitestContext, pool: WorkerPool) {
-  const { reporter, server } = ctx
-  reporter.onWatcherStart?.()
+  const { server } = ctx
+  ctx.reporters.forEach(r => r.onWatcherStart?.())
 
   let timer: any
 
@@ -70,12 +70,12 @@ export async function startWatcher(ctx: VitestContext, pool: WorkerPool) {
   }
 
   async function start(tests: string[], id: string, invalidates: string[]) {
-    await reporter.onWatcherRerun?.(tests, id)
+    await Promise.all(ctx.reporters.map(r => r.onWatcherRerun?.(tests, id)))
 
     await pool.runTestFiles(tests, invalidates)
 
-    await reporter.onFinished?.(ctx.state.getFiles(tests))
-    await reporter.onWatcherStart?.()
+    await Promise.all(ctx.reporters.map(r => r.onFinished?.(ctx.state.getFiles(tests))))
+    await Promise.all(ctx.reporters.map(r => r.onWatcherStart?.()))
   }
 
   // listen to keyboard input

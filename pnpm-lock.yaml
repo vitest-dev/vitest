@@ -111,6 +111,7 @@ importers:
       diff: ^5.0.0
       fast-glob: ^3.2.7
       find-up: ^6.2.0
+      flatted: ^3.2.4
       happy-dom: ^2.24.5
       jsdom: ^19.0.0
       local-pkg: ^0.4.0
@@ -133,6 +134,7 @@ importers:
       chai: 4.3.4
       chai-subset: 1.6.0
       fast-glob: 3.2.7
+      flatted: 3.2.4
       local-pkg: 0.4.0
       micromatch: 4.0.4
       piscina: 3.2.0
@@ -3283,6 +3285,10 @@ packages:
   /flatted/3.1.1:
     resolution: {integrity: sha512-zAoAQiudy+r5SvnSw3KJy5os/oRJYHzrzja/tBDqrZtNhUw8bt6y8OBzMWcjWr+8liV8Eb6yOhw8WZ7VFZ5ZzA==}
     dev: true
+
+  /flatted/3.2.4:
+    resolution: {integrity: sha512-8/sOawo8tJ4QOBX8YlQBMxL8+RLZfxMQOif9o0KUKTNTjMYElWPE0r/m5VNFxTRd0NSw8qSy8dajrwX4RYI1Hw==}
+    dev: false
 
   /foreground-child/2.0.0:
     resolution: {integrity: sha512-dCIq9FpEcyQyXKCkyzmlPTFNgrCzPudOe+mhvJU5zAtlBnGVy2yKxtfsxK2tQBThwq225jcvBjpw1Gr40uzZCA==}
