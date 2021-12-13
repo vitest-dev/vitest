@@ -14,8 +14,10 @@
     "declaration": true,
     "inlineSourceMap": true,
     "paths": {
-      "vitest": ["./packages/vitest/src/index.ts"],
-      "vitest/global.d.ts": ["./packages/vitest/global.d.ts"]
+      "vitest": ["./packages/vitest/src/index.ts"]
     }
-  }
+  },
+  "include": [
+    "./src/**/*.ts"
+  ],
 }
