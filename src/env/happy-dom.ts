@@ -12,8 +12,12 @@ export default <Environment>({
       .filter(k => !k.startsWith('_'))
       .filter(k => !(k in global))
 
-    for (const key of keys)
-      global[key] = win[key]
+    for (const key of keys) {
+      Object.defineProperty(global, key, {
+        get() { return win[key] },
+        configurable: true,
+      })
+    }
 
     global.window = global
 
