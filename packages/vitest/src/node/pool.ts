@@ -112,6 +112,9 @@ function createChannel(ctx: VitestContext) {
     }
 
     switch (method) {
+      case 'processExit':
+        process.exit(args[0] as number || 1)
+        return
       case 'snapshotSaved':
         return send(() => ctx.snapshot.add(args[0] as any))
       case 'fetch':

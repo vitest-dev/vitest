@@ -14,8 +14,8 @@ export interface WorkerContext {
 
 export interface RpcMap {
   fetch: [[id: string], TransformResult | null | undefined]
-
   log: [[UserConsoleLog], void]
+  processExit: [[code?: number], void]
 
   onCollected: [[files: File[]], void]
   onFinished: [[], void]
