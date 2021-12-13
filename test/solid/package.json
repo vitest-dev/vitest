@@ -1,0 +1,17 @@
+{
+    "name": "@vitest/test-solid",
+    "private": true,
+    "type": "module",
+    "scripts": {
+      "test": "vitest",
+      "coverage": "vitest --coverage"
+    },
+    "devDependencies": {
+      "vite-plugin-solid": "^2.1.4",
+      "solid-testing-library": "^0.2.1",
+      "solid-js": "^1.2.6",
+      "typescript": "^4.5.3",
+      "vitest": "workspace:*"
+    }
+  }
+  
