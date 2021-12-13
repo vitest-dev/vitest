@@ -5,7 +5,7 @@ export * from './types'
 export { suite, test, describe, it } from './runtime/suite'
 export * from './runtime/hooks'
 export * from './integrations/chai'
-export * from './integrations/sinon'
+export * from './integrations/tinymock'
 
 declare module 'vite' {
   interface UserConfig {

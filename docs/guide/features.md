@@ -160,7 +160,7 @@ You can also use `.skip`, `.only`, and `.todo` with concurrent suites and tests.
 
 ## Mocking
 
-[Sinon](https://sinonjs.org/) built-in for mocking
+[Tinyspy](https://github.com/Aslemammad/tinyspy) built-in for mocking
 
 Vitest supports both [happy-dom](https://github.com/capricorn86/happy-dom) or [jsdom](https://github.com/jsdom/jsdom) for mocking DOM and browser APIs. They don't come with Vitest, you might need to install them:
 

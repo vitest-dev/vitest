@@ -29,11 +29,10 @@ export const globalApis = [
   'chai',
   'expect',
   'assert',
-  // sinon
-  'sinon',
+  // tinyspy
   'spy',
-  'mock',
-  'stub',
+  'spyOn',
+  'vitest',
   // hooks
   'beforeAll',
   'afterAll',
