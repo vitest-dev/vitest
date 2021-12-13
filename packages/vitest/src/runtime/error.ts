@@ -1,5 +1,5 @@
 // https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm
-function unserialize(err: any): any {
+function serialize(err: any): any {
   if (typeof err !== 'object') return err
 
   Object.keys(err).forEach((key) => {
@@ -13,7 +13,7 @@ function unserialize(err: any): any {
     if (typeof Element !== 'undefined' && val instanceof Element)
       err[key] = val.tagName
 
-    unserialize(err[key])
+    serialize(err[key])
   })
 
   return err
@@ -29,5 +29,5 @@ export function processError(err: any) {
   if (err.name)
     err.nameStr = String(err.name)
 
-  return unserialize(err)
+  return serialize(err)
 }
