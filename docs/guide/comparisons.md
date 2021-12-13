@@ -2,12 +2,9 @@
 
 ## Jest
 
-[Jest](https://jestjs.io/) is...
+[Jest](https://jestjs.io/) took over the Testing Framework space by providing out-of-the-box support for most JavaScript projects, a comfortable API (`it` and `expect`), and the full pack of testing features that most setups would require (snapshots, mocks, coverage). It is possible to use Jest in Vite setups. [@sodatea](https://twitter.com/haoqunjiang) is building [vite-jest](https://github.com/sodatea/vite-jest#readme), which aims to provide first-class Vite integration for [Jest](https://jestjs.io/). The last [blockers in Jest](https://github.com/sodatea/vite-jest/blob/main/packages/vite-jest/README.md#vite-jest) have been solved so this is a valid option for your unit tests. However, in a world where we have [Vite](https://vitejs.dev) providing support for the most common web tooling (typescript, JSX, most popular UI Frameworks), Jest represents a duplication of complexity. If your app is powered by Vite, having two different pipelines to configure and maintain is not justifiable. With Vitest you get to define the configuration for your dev, build and test environments as a single pipeline, sharing the same plugins and the same vite.config.js. Even if your library is not using Vite (for example, if it is built with esbuild or rollup), Vitest is an interesting option as it gives you a faster run for your unit tests and a jump in DX thanks to the default watch mode using Vite instant Hot Module Reload (HMR). Vitest offers compatibility with most of the Jest API and ecosystem libraries, so in most projects, it should be a drop-in replacement for Jest.
 
 ## Cypress
 
-[Cypress](https://www.cypress.io/) is...
+[Cypress](https://www.cypress.io/) is an amazing option for E2E testing. But with [Cypress Component Testing](https://docs.cypress.io/guides/component-testing/introduction), they now offer a way to test your components in a real browser environment instead of relying on node DOM libraries. You also see the real rendered Component in the browser with their failed state instead of having a simple diff in the CLI. Cypress has been [integrating Vite in their products](https://www.youtube.com/watch?v=7S5cbY8iYLk): re-building their App UI using [Vitesse](#vitesse) and using Vite to drive your project's code processing while testing. But Cypress isn't a good option for unit testings in a headless environment. Using Cypress (for E2E and Component Testing) and Vitest (for units tests) together would cover your Web Apps testing needs.
 
-## peeky
-
-[peeky](https://peeky.dev/) is...
