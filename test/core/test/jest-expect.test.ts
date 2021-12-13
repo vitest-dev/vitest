@@ -10,8 +10,6 @@ describe('jest-expect', () => {
     expect(0).toBeFalsy()
     expect('Hello').toMatch(/llo/)
     expect('Hello').toMatch('llo')
-    expect("Yolo").stringContaining("lo");
-    expect("Yolo").not.stringContaining("Bye");
     expect('Hello').toContain('llo')
     expect(['Hello']).toContain('Hello')
     expect([{ text: 'Hello' }]).toContainEqual({ text: 'Hello' })
@@ -32,6 +30,10 @@ describe('jest-expect', () => {
     expect({ length: 3 }).toHaveLength(3)
     expect(0.2 + 0.1).not.toBe(0.3)
     expect(0.2 + 0.1).toBeCloseTo(0.3, 5)
+  })
+
+  it('asymmetric matchers', () => {
+    expect({ foo: 'bar' }).toEqual({ foo: expect.stringContaining("ba") })
   })
 
   it('object', () => {
