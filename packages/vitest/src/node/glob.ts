@@ -3,18 +3,18 @@ import mm from 'micromatch'
 import type { ResolvedConfig } from '../types'
 
 export function isTargetFile(id: string, config: ResolvedConfig): boolean {
-  if (mm.isMatch(id, config.excludes))
+  if (mm.isMatch(id, config.exclude))
     return false
-  return mm.isMatch(id, config.includes)
+  return mm.isMatch(id, config.include)
 }
 
 export async function globTestFiles(config: ResolvedConfig) {
   let testFilepaths = await fg(
-    config.includes,
+    config.include,
     {
       absolute: true,
       cwd: config.root,
-      ignore: config.excludes,
+      ignore: config.exclude,
     },
   )
 

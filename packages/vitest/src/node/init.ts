@@ -3,7 +3,7 @@ import { findUp } from 'find-up'
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 import { createServer } from 'vite'
 import type { CliOptions, ResolvedConfig } from '../types'
-import { configFiles, defaultExcludes, defaultIncludes, defaultPort } from '../constants'
+import { configFiles, defaultExclude, defaultInclude, defaultPort } from '../constants'
 import type { VitestContext } from '../../dist'
 import { SnapshotManager } from '../integrations/snapshot/manager'
 import { ConsoleReporter } from '../reporters/console'
@@ -94,8 +94,8 @@ function resolveConfig(
   resolved.threads = resolved.threads ?? true
   resolved.interpretDefault = resolved.interpretDefault ?? true
 
-  resolved.includes = resolved.includes ?? defaultIncludes
-  resolved.excludes = resolved.excludes ?? defaultExcludes
+  resolved.include = resolved.include ?? defaultInclude
+  resolved.exclude = resolved.exclude ?? defaultExclude
 
   const CI = !!process.env.CI
   const UPDATE_SNAPSHOT = resolved.update || process.env.UPDATE_SNAPSHOT

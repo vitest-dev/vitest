@@ -25,14 +25,14 @@ TODO: Mention [Config File Resolving](), [Config Intellisense]()
 
 ## Options
 
-### includes
+### include
 
 - **Type:** `string[]n`
 - **Default:** `['**\/*.test.ts']`
 
 Include globs for test files
 
-### excludes
+### exclude
 
 - **Type:** `string[]`
 - **Default:** `['**\/node_modules\/**']`
