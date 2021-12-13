@@ -330,12 +330,12 @@ function unifiedDiff(actual: any, expected: any) {
 function formatLine(line: string) {
   const lineLimitLength = 50;
   if (line.length > lineLimitLength)
-    return `${line.slice(0, lineLimitLength)} ... truncated`
+    return `${line.slice(0, lineLimitLength)} ${c.italic('... truncated')}`
   return line
 }
 
 function renderTruncateMessage(indent: string) {
-  return `\n${indent}... truncated item`
+  return `\n${indent}${c.italic('... truncated item')}`
 }
 
 function notBlank(line: any) {
