@@ -22,6 +22,8 @@ export default <Environment>({
     for (const key of keys)
       global[key] = dom.window[key]
 
+    global.window = global
+
     return {
       teardown(global) {
         keys.forEach(key => delete global[key])

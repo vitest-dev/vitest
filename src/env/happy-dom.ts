@@ -15,6 +15,8 @@ export default <Environment>({
     for (const key of keys)
       global[key] = win[key]
 
+    global.window = global
+
     return {
       teardown(global) {
         win.happyDOM.cancelAsync()
