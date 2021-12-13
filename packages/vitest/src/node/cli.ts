@@ -2,11 +2,8 @@ import cac from 'cac'
 import c from 'picocolors'
 import type { CliOptions } from '../types'
 import { version } from '../../package.json'
-import { DefaultReporter } from '../reporters/default'
-import { SnapshotManager } from '../integrations/snapshot/manager'
-import { initViteServer } from './init'
+import { initVitest } from './init'
 import { start } from './run'
-import { StateManager } from './state'
 
 const cli = cac('vitest')
 
@@ -62,18 +59,9 @@ async function run(cliFilters: string[], argv: CliOptions) {
     console.log(c.yellow('Learn more at https://vitest.dev\n'))
   }
 
-  const { config, server } = await initViteServer({ ...argv, cliFilters })
+  const ctx = await initVitest({ ...argv, cliFilters })
 
-  const ctx = process.__vitest__ = {
-    server,
-    config,
-    state: new StateManager(),
-    snapshot: new SnapshotManager(config),
-    reporter: config.reporter,
-    console: globalThis.console,
-  }
-
-  ctx.reporter = ctx.reporter || new DefaultReporter(ctx)
+  process.__vitest__ = ctx
 
   try {
     await start(ctx)
@@ -83,7 +71,7 @@ async function run(cliFilters: string[], argv: CliOptions) {
     throw e
   }
   finally {
-    if (!config.watch)
-      await server.close()
+    if (!ctx.config.watch)
+      await ctx.server.close()
   }
 }

@@ -20,7 +20,7 @@ export async function start(ctx: VitestContext) {
   if (hasFailed(ctx.state.getFiles()))
     process.exitCode = 1
 
-  await ctx.reporter.onFinished?.(ctx.state.getFiles())
+  await Promise.all(ctx.reporters.map(r => r.onFinished?.(ctx.state.getFiles())))
 
   if (config.watch)
     await startWatcher(ctx, pool)
