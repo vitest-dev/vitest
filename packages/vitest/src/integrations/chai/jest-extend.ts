@@ -80,6 +80,12 @@ export function JestExtend(): ChaiPlugin {
       chai.use(JestExtendPlugin(expects))
     })
 
-    utils.addMethod(chai.expect, 'stringContaining', (expected: string) => {})
+    utils.addMethod(
+      chai.expect,
+      'stringContaining',
+      function stringContaining(this: Record<string, unknown>, expected: string) {
+        
+      }
+    )
   }
 }
