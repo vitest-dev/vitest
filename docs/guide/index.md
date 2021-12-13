@@ -48,11 +48,12 @@ You can specify additional CLI options like `--port` or `--https`. For a full li
 
 ## Examples
 
-- [Unit Testing](https://github.com/antfu-sponsors/vitest/test/core)
-- [Vue Component Testing](https://github.com/antfu-sponsors/vitest/test/vue)
-- [React Component Testing](https://github.com/antfu-sponsors/vitest/test/react)
-- [Lit Component Testing](https://github.com/antfu-sponsors/vitest/test/lit)
-- [Vitesse Component Testing](https://github.com/antfu-sponsors/vitest/test/vitesse)
+- [Unit Testing](https://github.com/antfu-sponsors/vitest/tree/main/test/core)
+- [Vue Component Testing](https://github.com/antfu-sponsors/vitest/tree/main/test/vue)
+- [React Component Testing](https://github.com/antfu-sponsors/vitest/tree/main/test/react)
+- [Svelte Component Testing](https://github.com/antfu-sponsors/vitest/tree/main/test/svelte)
+- [Lit Component Testing](https://github.com/antfu-sponsors/vitest/tree/main/test/lit)
+- [Vitesse Component Testing](https://github.com/antfu-sponsors/vitest/tree/main/test/vitesse)
 
 ## Projects using Vitest
 
