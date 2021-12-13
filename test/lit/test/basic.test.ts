@@ -1,6 +1,6 @@
 /// <reference types="vitest/global.d.ts" />
 
-import Sinon from 'sinon'
+import { spy } from 'tinyspy'
 
 import type { IWindow } from 'happy-dom'
 
@@ -33,7 +33,7 @@ describe('Button with increment', async() => {
   })
 
   it('should dispatch count event on button click', () => {
-    const spyClick = Sinon.spy()
+    const spyClick = spy()
 
     document.querySelector('my-button').addEventListener('count', spyClick)
 
