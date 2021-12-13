@@ -41,6 +41,7 @@ export default defineConfig({
 
     nav: [
       { text: 'Guide', link: '/guide/' },
+      { text: 'API', link: '/api/' },
       { text: 'Config', link: '/config/' },
       // { text: 'Plugins', link: '/plugins/' },
       {
@@ -74,6 +75,7 @@ export default defineConfig({
 
     sidebar: {
       '/config/': 'auto',
+      '/api/': 'auto',
       // '/plugins': 'auto',
       // catch-all fallback
       '/': [
@@ -117,7 +119,7 @@ export default defineConfig({
               link: '/config/'
             }
           ]
-        }
+        },
         */
       ]
     }
