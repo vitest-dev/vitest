@@ -79,5 +79,7 @@ export function JestExtend(): ChaiPlugin {
     utils.addMethod(chai.expect, 'extend', (expects: MatchersObject) => {
       chai.use(JestExtendPlugin(expects))
     })
+
+    utils.addMethod(chai.expect, 'stringContaining', (expected: string) => {})
   }
 }

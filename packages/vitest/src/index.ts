@@ -20,6 +20,7 @@ declare global {
   namespace Chai {
     interface ExpectStatic {
       extend(expects: MatchersObject): void
+      stringContaining(expected: string): void
     }
 
     interface Assertion {
