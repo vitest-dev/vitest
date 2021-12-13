@@ -104,7 +104,7 @@ async function printStack(
     const path = relative(ctx.config.root, frame.file)
 
     ctx.console.log(color(` ${c.dim(F_POINTER)} ${[frame.method, c.dim(`${path}:${pos.line}:${pos.column}`)].filter(Boolean).join(' ')}`))
-    onStack?.(frame, pos)
+    await onStack?.(frame, pos)
 
     // reached at test file, skip the follow stack
     if (frame.file in ctx.state.filesMap)
