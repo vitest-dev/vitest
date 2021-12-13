@@ -183,6 +183,7 @@ const OTHER_KEYS = [
   'innerWidth',
   'length',
   'location',
+  'matchMedia',
   'moveBy',
   'moveTo',
   'name',
