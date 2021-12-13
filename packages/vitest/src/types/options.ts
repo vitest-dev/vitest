@@ -7,13 +7,13 @@ export interface UserOptions {
    *
    * @default ['**\/*.test.ts']
    */
-  includes?: string[]
+  include?: string[]
 
   /**
    * Exclude globs for test files
    * @default ['**\/node_modules\/**']
    */
-  excludes?: string[]
+  exclude?: string[]
 
   /**
    * Handling for dependencies inlining or externalizing
