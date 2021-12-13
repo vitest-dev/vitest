@@ -1,9 +1,8 @@
 import { resolve, dirname } from 'path'
-import { fileURLToPath, parse } from 'url'
-import { Plugin } from 'vite'
+import { fileURLToPath } from 'url'
+import type { Plugin } from 'vite'
 import sirv from 'sirv'
 import { WebSocketServer } from 'ws'
-import { getSuites } from '../../utils'
 import { getSuitesAsJson } from './utils'
 
 const _dirname = typeof __dirname !== 'undefined'
@@ -15,12 +14,12 @@ export const VitestUIPlugin = (): Plugin => {
     name: 'vitest:ui',
     apply: 'serve',
     async configureServer(server) {
-      const vitest = process.__vitest__
+      // const vitest = process.__vitest__
       const wss = new WebSocketServer({ noServer: true })
 
       server.httpServer?.on('upgrade', (request, socket, head) => {
         if (request.url) {
-          const { pathname } = parse(request.url)
+          const { pathname } = new URL(request.url)
 
           if (pathname === '/__vitest_api') {
             wss.handleUpgrade(request, socket, head, (ws) => {
@@ -38,20 +37,20 @@ export const VitestUIPlugin = (): Plugin => {
       })
 
       server.middlewares.use('/__vitest_api', async(req, res, next) => {
-        const vitest = process.__vitest__
+        // const vitest = process.__vitest__
 
-        const suites = getSuites(vitest.state.getFiles())
-          .map(suite => ({
-            id: suite.id,
-            name: suite.name,
-            type: suite.type,
-            mode: suite.mode,
-            result: suite.result,
-          }))
+        // const suites = getSuites(vitest.state.getFiles())
+        //   .map(suite => ({
+        //     id: suite.id,
+        //     name: suite.name,
+        //     type: suite.type,
+        //     mode: suite.mode,
+        //     result: suite.result,
+        //   }))
 
-        const info = {
-          suites,
-        }
+        // const info = {
+        //   suites,
+        // }
 
         res.setHeader('Content-Type', 'application/json')
         res.write(getSuitesAsJson())

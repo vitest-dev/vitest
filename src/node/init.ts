@@ -4,7 +4,7 @@ import { createServer } from 'vite'
 import type { CliOptions, ResolvedConfig } from '../types'
 import { defaultExcludes, defaultIncludes } from '../constants'
 import { toArray } from '../utils'
-import { VitestUIPlugin } from '../ui/node'
+// import { VitestUIPlugin } from '../../packages/ui/node'
 
 const configFiles = [
   'vitest.config.ts',
@@ -44,7 +44,8 @@ export async function initViteServer(options: CliOptions = {}) {
     clearScreen: false,
     configFile: resolved.config,
     plugins: [
-      ...(options.open ? [VitestUIPlugin()] : []),
+      // TODO: UI
+      // ...(options.open ? [VitestUIPlugin()] : []),
     ],
     server: {
       open: true,

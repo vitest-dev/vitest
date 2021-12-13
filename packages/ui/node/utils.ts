@@ -1,4 +1,4 @@
-import { getSuites } from '../../utils'
+import { getSuites } from '../../../src/utils'
 
 const getCircularReplacer = () => {
   const seen = new WeakSet()
