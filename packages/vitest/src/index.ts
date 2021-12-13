@@ -34,6 +34,7 @@ declare global {
       toBe(expected: any): void
       toMatch(expected: string | RegExp): void
       toMatchObject(expected: any): void
+      stringContaining(value: string): void
       toContain(item: any): void
       toContainEqual(item: any): void
       toBeTruthy(): void

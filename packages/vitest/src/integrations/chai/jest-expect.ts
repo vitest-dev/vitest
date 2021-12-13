@@ -35,6 +35,9 @@ export function JestChaiExpect(): ChaiPlugin {
       else
         return this.match(expected)
     })
+    def('stringContaining', function stringContaining(expected: string) {
+      return this.include(expected)
+    })
     def('toContain', function(item) { return this.contain(item) })
     def('toContainEqual', function(expected) {
       const obj = utils.flag(this, 'object')
