@@ -1,9 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import React from 'react'
-import { beforeEach, clearContext, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import App from './App'
-
-beforeEach(() => clearContext())
 
 describe('Simple working test', () => {
   it('the title is visible', async() => {
