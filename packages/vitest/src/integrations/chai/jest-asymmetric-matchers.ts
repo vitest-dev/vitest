@@ -6,6 +6,7 @@ import {
 } from './jest-utils'
 import type {
   MatcherState,
+  ChaiPlugin
 } from './types'
 
 export interface AsymmetricMatcherInterface {
@@ -56,5 +57,17 @@ export class StringContaining extends AsymmetricMatcher<string> {
 
   getExpectedType() {
     return 'string';
+  }
+}
+
+export function JestAsymmetricMatchers(): ChaiPlugin {
+  return (chai, utils) => {
+    utils.addMethod(
+      chai.expect,
+      'stringContaining',
+      function stringContaining(expected: string) {
+        return new StringContaining(expected);
+      }
+    )
   }
 }

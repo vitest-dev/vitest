@@ -7,7 +7,6 @@ import {
   subsetEquality,
   equals,
 } from './jest-utils'
-import { StringContaining } from "./jest-asymmetric-matchers"
 import type {
   ChaiPlugin,
   MatcherState,
@@ -80,13 +79,5 @@ export function JestExtend(): ChaiPlugin {
     utils.addMethod(chai.expect, 'extend', (expects: MatchersObject) => {
       chai.use(JestExtendPlugin(expects))
     })
-
-    utils.addMethod(
-      chai.expect,
-      'stringContaining',
-      function stringContaining(expected: string) {
-        return new StringContaining(expected);
-      }
-    )
   }
 }

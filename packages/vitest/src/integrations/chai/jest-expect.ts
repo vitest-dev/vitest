@@ -18,6 +18,7 @@ export function JestChaiExpect(): ChaiPlugin {
     }
 
     def('toEqual', function(expected) {
+      // TODO: use equals from jest-utils
       return this.eql(expected)
     })
     def('toStrictEqual', function(expected) {
