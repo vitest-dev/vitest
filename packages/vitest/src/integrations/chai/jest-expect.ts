@@ -20,8 +20,8 @@ export function JestChaiExpect(): ChaiPlugin {
     }
 
     def('toEqual', function(expected) {
-      const obj = utils.flag(this, 'object')
-      return equals(obj, expected)
+      const actual = utils.flag(this, 'object')
+      return equals(actual, expected)
     })
     def('toStrictEqual', function(expected) {
       return this.equal(expected)
