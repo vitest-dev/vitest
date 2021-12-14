@@ -37,7 +37,7 @@ export function createFakePool(ctx: Vitest): WorkerPool {
   const runTestFiles: WorkerPool['runTestFiles'] = async(files, invalidates) => {
     const { default: run } = await import(workerPath)
 
-    const { workerPort, port } = createChannel(ctx)
+    const { workerPort, port } = createChannel(ctx, '')
 
     const data: WorkerContext = {
       port: workerPort,
@@ -76,7 +76,7 @@ export function createWorkerPool(ctx: Vitest): WorkerPool {
 
   const runTestFiles: WorkerPool['runTestFiles'] = async(files, invalidates) => {
     await Promise.all(files.map(async(file) => {
-      const { workerPort, port } = createChannel(ctx)
+      const { workerPort, port } = createChannel(ctx, file)
 
       const data: WorkerContext = {
         port: workerPort,
@@ -97,7 +97,7 @@ export function createWorkerPool(ctx: Vitest): WorkerPool {
   }
 }
 
-function createChannel(ctx: Vitest) {
+function createChannel(ctx: Vitest, file: string) {
   const channel = new MessageChannel()
   const port = channel.port2
   const workerPort = channel.port1
@@ -119,7 +119,7 @@ function createChannel(ctx: Vitest) {
       case 'snapshotSaved':
         return send(() => ctx.snapshot.add(args[0] as any))
       case 'fetch':
-        return send(() => transformRequest(ctx.server, ...args as RpcMap['fetch'][0]))
+        return send(() => transformRequest(ctx.server, file, ...args as RpcMap['fetch'][0]))
       case 'onCollected':
         ctx.state.collectFiles(args[0] as any)
         ctx.reporters.forEach(r => r.onStart?.((args[0] as any as File[]).map(i => i.filepath)))

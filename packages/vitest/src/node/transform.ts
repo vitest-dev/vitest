@@ -1,7 +1,11 @@
 import type { ViteDevServer } from 'vite'
+import { SUITE_PATH_DELIMITER } from '../plugins/mocks'
 
-export async function transformRequest(server: ViteDevServer, id: string) {
+export async function transformRequest(server: ViteDevServer, suite: string, id: string) {
   if (id.match(/\.(?:[cm]?[jt]sx?|json)$/)) {
+    if (!id.includes('?suite'))
+      id += `?suite=${suite.replace(/\//g, SUITE_PATH_DELIMITER)}`
+
     return await server.transformRequest(id, { ssr: true })
   }
   else {

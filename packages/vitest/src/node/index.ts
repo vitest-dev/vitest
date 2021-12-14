@@ -7,6 +7,7 @@ import { SnapshotManager } from '../integrations/snapshot/manager'
 import { configFiles } from '../constants'
 import { toArray, hasFailed } from '../utils'
 import { ConsoleReporter } from '../reporters/console'
+import { MocksPlugin } from '../plugins/mocks'
 import type { WorkerPool } from './pool'
 import { StateManager } from './state'
 import { resolveConfig } from './config'
@@ -106,6 +107,7 @@ async function startServer(options: UserConfig, viteOverrides: ViteUserConfig = 
             server.middlewares.use((await import('../api/middleware')).default())
         },
       },
+      MocksPlugin(),
     ],
     server: {
       open: options.open,

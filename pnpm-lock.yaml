@@ -114,6 +114,7 @@ importers:
       jsdom: ^19.0.0
       local-pkg: ^0.4.0
       log-update: ^5.0.0
+      magic-string: ^0.25.7
       micromatch: ^4.0.4
       nanoid: ^3.1.30
       natural-compare: ^1.4.0
@@ -131,6 +132,7 @@ importers:
       fast-glob: 3.2.7
       flatted: 3.2.4
       local-pkg: 0.4.0
+      magic-string: 0.25.7
       micromatch: 4.0.4
       piscina: 3.2.0
       source-map: 0.7.3
