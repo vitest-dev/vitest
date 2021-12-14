@@ -1,8 +1,8 @@
-import { spy, describe, it, expect, assert } from 'vitest'
+import { describe, it, expect, assert, vitest } from 'vitest'
 
 describe('mock', () => {
   it('basic', () => {
-    const fn = spy()
+    const fn = vitest.fn()
 
     expect(fn).not.toHaveBeenCalled()
 
@@ -12,14 +12,14 @@ describe('mock', () => {
     expect(fn).toHaveBeenCalledOnce()
     expect(fn).toHaveBeenCalledTimes(1)
 
-    fn.resetHistory()
+    fn.reset()
 
     expect(fn).not.toHaveBeenCalled()
 
     fn('World', 2)
     fn('Hi', 1)
 
-    expect(fn.lastCall.args).toEqual(['Hi', 1])
+    expect(fn.calls.at(-1)).toEqual(['Hi', 1])
 
     expect(fn).toHaveBeenNthCalledWith(1, 'World', 2)
     expect(fn).toHaveBeenNthCalledWith(2, 'Hi', 1)
@@ -30,7 +30,7 @@ describe('mock', () => {
   it('returns', () => {
     let i = 0
 
-    const fn = spy(() => String(++i))
+    const fn = vitest.fn(() => String(++i))
 
     expect(fn).not.toHaveReturned()
 
@@ -51,7 +51,7 @@ describe('mock', () => {
   it('throws', () => {
     let i = 0
 
-    const fn = spy(() => {
+    const fn = vitest.fn(() => {
       if (i === 1) {
         ++i
         throw new Error('error')

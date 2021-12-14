@@ -1,12 +1,8 @@
 import cac from 'cac'
 import c from 'picocolors'
-import type { CliOptions } from '../types'
+import type { UserConfig } from '../types'
 import { version } from '../../package.json'
-import { DefaultReporter } from '../reporters/default'
-import { SnapshotManager } from '../integrations/snapshot/manager'
-import { initViteServer } from './init'
-import { start } from './run'
-import { StateManager } from './state'
+import { createVitest } from '.'
 
 const cli = cac('vitest')
 
@@ -45,45 +41,36 @@ cli
 
 cli.parse()
 
-async function dev(cliFilters: string[], argv: CliOptions) {
+async function dev(cliFilters: string[], argv: UserConfig) {
   if (argv.watch == null)
     argv.watch = !process.env.CI && !process.env.NODE_V8_COVERAGE
   await run(cliFilters, argv)
 }
 
-async function run(cliFilters: string[], argv: CliOptions) {
+async function run(cliFilters: string[], options: UserConfig) {
   process.env.VITEST = 'true'
   process.env.NODE_ENV = 'test'
 
-  if (!argv.silent) {
+  if (!options.silent) {
     // eslint-disable-next-line no-console
     console.log(c.magenta(c.bold('\nVitest is in closed beta exclusively for Sponsors')))
     // eslint-disable-next-line no-console
     console.log(c.yellow('Learn more at https://vitest.dev\n'))
   }
 
-  const { config, server } = await initViteServer({ ...argv, cliFilters })
+  const ctx = await createVitest(options)
 
-  const ctx = process.__vitest__ = {
-    server,
-    config,
-    state: new StateManager(),
-    snapshot: new SnapshotManager(config),
-    reporter: config.reporter,
-    console: globalThis.console,
-  }
-
-  ctx.reporter = ctx.reporter || new DefaultReporter(ctx)
+  process.__vitest__ = ctx
 
   try {
-    await start(ctx)
+    await ctx.run(cliFilters)
   }
   catch (e) {
     process.exitCode = 1
     throw e
   }
   finally {
-    if (!config.watch)
-      await server.close()
+    if (!ctx.config.watch)
+      await ctx.close()
   }
 }

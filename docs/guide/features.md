@@ -2,30 +2,13 @@
 
 <FeaturesList class="!gap-1 text-lg" />
 
-## Browser Mocking
+## Shared config between test, dev and build
 
-Vitest supports both [happy-dom](https://github.com/capricorn86/happy-dom) or [jsdom](https://github.com/jsdom/jsdom) for mocking DOM and browser APIs. They don't come with Vitest, you might need to install them:
-
-```bash
-$ npm i -D happy-dom
-# or
-$ npm i -D jsdom
-```
-
-After that, change the `environment` option in your config file:
-
-```ts
-// vite.config.ts
-import { defineConfig } from 'vite'
-
-export default defineConfig({
-  test: {
-    environment: 'happy-dom' // or 'jsdom', 'node'
-  }
-})
-```
+Vite's config, transformers, resolvers, and plugins. Use the same setup from your app to run the tests
 
 ## Watch Mode
+
+Smart & instant watch mode, [like HMR for tests!](https://twitter.com/antfu7/status/1468233216939245579)
 
 ```bash
 $ vitest -w
@@ -33,33 +16,25 @@ $ vitest -w
 
 Vitest smartly searches the module graph and only rerun the related tests (just like how HMR works in Vite!).
 
-## Coverage
+## Smooth integration with UI Frameworks
 
-Vitest works perfectly with [c8](https://github.com/bcoe/c8)
+Components testing for Vue, React, Lit and more
 
-```bash
-$ npm i -D c8
-$ c8 vitest
-```
+## Common web idioms out-of-the-box
 
-```json
-{
-  "scripts": {
-    "test": "vitest",
-    "coverage": "c8 vitest"
-  }
-}
-```
+Out-of-box TypeScript / JSX support / PostCSS
 
-For convenience, we also provide a shorthand for passing `--coverage` option to CLI, which will wrap the process with `c8` for you. Note when using the shorthand, you will lose the ability to pass additional options to `c8`.
+## ESM first
 
-```bash
-$ vitest --coverage
-```
+ESM first, top level await
 
-For more configuration available, please refer to [c8](https://github.com/bcoe/c8)'s documentation.
+## Threads
+
+Workers multi-threading via [Piscina](https://github.com/piscinajs/piscina)
 
 ## Filtering
+
+Filtering, timeouts, concurrent for suite and tests
 
 ### CLI
 
@@ -149,22 +124,16 @@ describe("suite", () => {
 });
 ```
 
-### Running tests concurrently
+## Running tests concurrently
 
 Use `.concurrent` in consecutive tests to run them in parallel
 
 ```ts
 // The two tests marked with concurrent will be run in parallel
 describe("suite", () => {
-  it("serial test", () => {
-    assert.equal(Math.sqrt(4), 3);
-  });
-  it.concurrent("concurrent test 1", () => {
-    assert.equal(Math.sqrt(4), 3);
-  });
-  it.concurrent("concurrent test 2", () => {
-    assert.equal(Math.sqrt(4), 3);
-  });
+  it("serial test", async() => { /* ... */ });
+  it.concurrent("concurrent test 1", async() => { /* ... */ });
+  it.concurrent("concurrent test 2", async() => { /* ... */ });
 });
 ```
 
@@ -173,41 +142,70 @@ If you use `.concurrent` in a suite, every tests in it will be run in parallel
 ```ts
 // All tests within this suite will be run in parallel
 describe.concurrent("suite", () => {
-  it("concurrent test 1", () => {
-    assert.equal(Math.sqrt(4), 3);
-  });
-  it("concurrent test 2", () => {
-    assert.equal(Math.sqrt(4), 3);
-  });
-  // No effect, same as not using .concurrent
-  it.concurrent("concurrent test 3", () => {
-    assert.equal(Math.sqrt(4), 3);
-  });
+  it("concurrent test 1", async() => { /* ... */ });
+  it("concurrent test 2", async() => { /* ... */ });
+  it.concurrent("concurrent test 3", async() => { /* ... */ });
 });
 ```
 
-You can also use `.skip`, `.only`, and `.todo` with concurrent suite and tests. All the following combinations are valid:
+You can also use `.skip`, `.only`, and `.todo` with concurrent suites and tests. Read more in the [API Reference](../api/#concurrent)
 
-```js
-describe.concurrent(...)
+## Snaphot
 
-describe.skip.concurrent(...)
-describe.concurrent.skip(...)
+[Jest Snapshot](https://jestjs.io/docs/snapshot-testing) support
 
-describe.only.concurrent(...)
-describe.concurrent.only(...)
+## Chai and Jest expect compatibility
 
-describe.todo.concurrent(...)
-describe.concurrent.todo(...)
+[Chai](https://www.chaijs.com/) built-in for assertions plus [Jest expect](https://jestjs.io/docs/expect) compatible APIs
 
-it.concurrent(...)
+## Mocking
 
-it.skip.concurrent(...)
-it.concurrent.skip(...)
+[Tinyspy](https://github.com/Aslemammad/tinyspy) built-in for mocking
 
-it.only.concurrent(...)
-it.concurrent.only(...)
+Vitest supports both [happy-dom](https://github.com/capricorn86/happy-dom) or [jsdom](https://github.com/jsdom/jsdom) for mocking DOM and browser APIs. They don't come with Vitest, you might need to install them:
 
-it.todo.concurrent(...)
-it.concurrent.todo(...)
+```bash
+$ npm i -D happy-dom
+# or
+$ npm i -D jsdom
 ```
+
+After that, change the `environment` option in your config file:
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  test: {
+    environment: 'happy-dom' // or 'jsdom', 'node'
+  }
+})
+```
+
+## Coverage
+
+Vitest supports Native code coverage via [c8](https://github.com/bcoe/c8)
+
+```bash
+$ npm i -D c8
+$ c8 vitest
+```
+
+```json
+{
+  "scripts": {
+    "test": "vitest",
+    "coverage": "c8 vitest"
+  }
+}
+```
+
+For convenience, we also provide a shorthand for passing `--coverage` option to CLI, which will wrap the process with `c8` for you. Note when using the shorthand, you will lose the ability to pass additional options to `c8`.
+
+```bash
+$ vitest --coverage
+```
+
+For more configuration available, please refer to [c8](https://github.com/bcoe/c8)'s documentation.
+

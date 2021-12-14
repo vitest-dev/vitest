@@ -1,6 +1,6 @@
 import { nanoid } from 'nanoid/non-secure'
-import type { SuiteHooks, Test, SuiteCollector, TestCollector, RunMode, ComputeMode, TestFactory, TestFunction, File, Suite, ResolvedConfig, RpcCall, RpcSend, ModuleCache } from '../types'
-import { collectTask, context, runWithSuite, withTimeout } from './context'
+import type { Awaitable, SuiteHooks, Test, SuiteCollector, TestCollector, RunMode, ComputeMode, TestFactory, TestFunction, File, Suite, ResolvedConfig, RpcCall, RpcSend, ModuleCache } from '../types'
+import { collectTask, context, runWithSuite, withTimeout, normalizeTest } from './context'
 import { getHooks, setFn, setHooks } from './map'
 
 export const suite = createSuite()
@@ -34,7 +34,7 @@ function createSuiteCollector(name: string, factory: TestFactory = () => { }, mo
 
   initSuite()
 
-  const test = createTestCollector((name: string, fn: TestFunction, mode: RunMode, computeMode?: ComputeMode) => {
+  const test = createTestCollector((name: string, fn: () => Awaitable<void>, mode: RunMode, computeMode?: ComputeMode) => {
     const test: Test = {
       id: nanoid(),
       type: 'test',
@@ -107,26 +107,26 @@ function createSuiteCollector(name: string, factory: TestFactory = () => { }, mo
   return collector
 }
 
-function createTestCollector(collectTest: (name: string, fn: TestFunction, mode: RunMode, computeMode?: ComputeMode) => void): TestCollector {
+function createTestCollector(collectTest: (name: string, fn: () => Awaitable<void>, mode: RunMode, computeMode?: ComputeMode) => void): TestCollector {
   function test(name: string, fn: TestFunction, timeout?: number) {
-    collectTest(name, withTimeout(fn, timeout), 'run')
+    collectTest(name, normalizeTest(fn, timeout), 'run')
   }
   test.concurrent = concurrent
   test.skip = skip
   test.only = only
   test.todo = todo
   function concurrent(name: string, fn: TestFunction, timeout?: number) {
-    collectTest(name, withTimeout(fn, timeout), 'run', 'concurrent')
+    collectTest(name, normalizeTest(fn, timeout), 'run', 'concurrent')
   }
-  concurrent.skip = (name: string, fn: TestFunction, timeout?: number) => collectTest(name, withTimeout(fn, timeout), 'skip', 'concurrent')
-  concurrent.only = (name: string, fn: TestFunction, timeout?: number) => collectTest(name, withTimeout(fn, timeout), 'only', 'concurrent')
+  concurrent.skip = (name: string, fn: TestFunction, timeout?: number) => collectTest(name, normalizeTest(fn, timeout), 'skip', 'concurrent')
+  concurrent.only = (name: string, fn: TestFunction, timeout?: number) => collectTest(name, normalizeTest(fn, timeout), 'only', 'concurrent')
   concurrent.todo = todo
   function skip(name: string, fn: TestFunction, timeout?: number) {
-    collectTest(name, withTimeout(fn, timeout), 'skip')
+    collectTest(name, normalizeTest(fn, timeout), 'skip')
   }
   skip.concurrent = concurrent.skip
   function only(name: string, fn: TestFunction, timeout?: number) {
-    collectTest(name, withTimeout(fn, timeout), 'only')
+    collectTest(name, normalizeTest(fn, timeout), 'only')
   }
   only.concurrent = concurrent.only
   function todo(name: string) {

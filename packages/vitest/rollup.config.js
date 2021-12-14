@@ -9,6 +9,7 @@ import pkg from './package.json'
 const entry = [
   'src/index.ts',
   'src/node/cli.ts',
+  'src/node.ts',
   'src/runtime/worker.ts',
   'src/runtime/entry.ts',
 ]

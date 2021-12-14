@@ -14,7 +14,7 @@
     <ListItem>Filtering, timeouts, concurrent for suite and tests</ListItem>
     <ListItem><a target="_blank" href="https://jestjs.io/docs/snapshot-testing" rel="nofollow">Jest Snapshot</a></ListItem>
     <ListItem><a target="_blank" href="https://www.chaijs.com/" rel="nofollow">Chai</a> built-in for assertions + <a href="https://jestjs.io/docs/expect" rel="nofollow">Jest expect</a> compatible APIs</ListItem>
-    <ListItem><a target="_blank" href="https://sinonjs.org/" rel="nofollow">Sinon</a> built-in for mocking</ListItem>
+    <ListItem><a target="_blank" href="https://github.com/Aslemammad/tinyspy" rel="nofollow">Tinyspy</a> built-in for mocking</ListItem>
     <ListItem><a target="_blank" href="https://github.com/jsdom/jsdom">jsdom</a> or <a target="_blank" href="https://github.com/capricorn86/happy-dom">happy-dom</a> for DOM mocking</ListItem>
     <ListItem>Native code coverage via <a target="_blank" href="https://github.com/bcoe/c8">c8</a></ListItem>
   </ul>

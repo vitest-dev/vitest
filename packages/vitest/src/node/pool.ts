@@ -3,8 +3,9 @@ import { pathToFileURL } from 'url'
 import Piscina from 'piscina'
 import type { RpcMap } from 'vitest'
 import { distDir } from '../constants'
-import type { WorkerContext, RpcPayload, VitestContext, File, Awaitable } from '../types'
+import type { WorkerContext, RpcPayload, File, Awaitable } from '../types'
 import { transformRequest } from './transform'
+import type { Vitest } from './index'
 
 export interface WorkerPool {
   runTestFiles: (files: string[], invalidates?: string[]) => Promise<void>
@@ -23,7 +24,7 @@ interface PiscinaOptions {
   useAtomics?: boolean
 }
 
-export function createPool(ctx: VitestContext): WorkerPool {
+export function createPool(ctx: Vitest): WorkerPool {
   if (ctx.config.threads)
     return createWorkerPool(ctx)
   else
@@ -32,7 +33,7 @@ export function createPool(ctx: VitestContext): WorkerPool {
 
 const workerPath = new URL('./dist/worker.js', pathToFileURL(distDir)).href
 
-export function createFakePool(ctx: VitestContext): WorkerPool {
+export function createFakePool(ctx: Vitest): WorkerPool {
   const runTestFiles: WorkerPool['runTestFiles'] = async(files, invalidates) => {
     const { default: run } = await import(workerPath)
 
@@ -57,7 +58,7 @@ export function createFakePool(ctx: VitestContext): WorkerPool {
   }
 }
 
-export function createWorkerPool(ctx: VitestContext): WorkerPool {
+export function createWorkerPool(ctx: Vitest): WorkerPool {
   const options: PiscinaOptions = {
     filename: workerPath,
     // Disable this for now, for WebContainer capability
@@ -96,7 +97,7 @@ export function createWorkerPool(ctx: VitestContext): WorkerPool {
   }
 }
 
-function createChannel(ctx: VitestContext) {
+function createChannel(ctx: Vitest) {
   const channel = new MessageChannel()
   const port = channel.port2
   const workerPort = channel.port1
@@ -112,20 +113,23 @@ function createChannel(ctx: VitestContext) {
     }
 
     switch (method) {
+      case 'processExit':
+        process.exit(args[0] as number || 1)
+        return
       case 'snapshotSaved':
         return send(() => ctx.snapshot.add(args[0] as any))
       case 'fetch':
         return send(() => transformRequest(ctx.server, ...args as RpcMap['fetch'][0]))
       case 'onCollected':
         ctx.state.collectFiles(args[0] as any)
-        ctx.reporter.onStart?.((args[0] as any as File[]).map(i => i.filepath))
+        ctx.reporters.forEach(r => r.onStart?.((args[0] as any as File[]).map(i => i.filepath)))
         return
       case 'onTaskUpdate':
         ctx.state.updateTasks([args[0] as any])
-        ctx.reporter.onTaskUpdate?.(args[0] as any)
+        ctx.reporters.forEach(r => r.onTaskUpdate?.(args[0] as any))
         return
       case 'log':
-        ctx.reporter.onUserConsoleLog?.(args[0] as any)
+        ctx.reporters.forEach(r => r.onUserConsoleLog?.(args[0] as any))
         return
     }
 
