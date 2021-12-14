@@ -1,6 +1,6 @@
 import type { MessagePort } from 'worker_threads'
 import type { TransformResult } from 'vite'
-import type { ResolvedConfig } from './options'
+import type { ResolvedConfig } from './config'
 import type { File, TaskResultPack } from './tasks'
 import type { SnapshotResult } from './snapshot'
 import type { UserConsoleLog } from './general'
@@ -14,8 +14,8 @@ export interface WorkerContext {
 
 export interface RpcMap {
   fetch: [[id: string], TransformResult | null | undefined]
-
   log: [[UserConsoleLog], void]
+  processExit: [[code?: number], void]
 
   onCollected: [[files: File[]], void]
   onFinished: [[], void]

@@ -1,14 +1,14 @@
 import readline from 'readline'
-import type { VitestContext } from '../types'
 import { slash } from '../utils'
 import { isTargetFile } from './glob'
-import type { WorkerPool } from './pool'
+import type { Vitest } from './index'
 
 const WATCHER_DEBOUNCE = 50
+const RERUN_FAILED = false
 
-export async function startWatcher(ctx: VitestContext, pool: WorkerPool) {
-  const { reporter, server } = ctx
-  reporter.onWatcherStart?.()
+export async function startWatcher(ctx: Vitest) {
+  const { server } = ctx
+  ctx.reporters.forEach(r => r.onWatcherStart?.())
 
   let timer: any
 
@@ -53,10 +53,12 @@ export async function startWatcher(ctx: VitestContext, pool: WorkerPool) {
       isFirstRun = false
 
       // add previously failed files
-      ctx.state.getFiles().forEach((file) => {
-        if (file.result?.state === 'fail')
-          changedTests.add(file.filepath)
-      })
+      if (RERUN_FAILED) {
+        ctx.state.getFiles().forEach((file) => {
+          if (file.result?.state === 'fail')
+            changedTests.add(file.filepath)
+        })
+      }
 
       const invalidates = Array.from(seen)
       const tests = Array.from(changedTests)
@@ -70,12 +72,12 @@ export async function startWatcher(ctx: VitestContext, pool: WorkerPool) {
   }
 
   async function start(tests: string[], id: string, invalidates: string[]) {
-    await reporter.onWatcherRerun?.(tests, id)
+    await ctx.report('onWatcherRerun', tests, id)
 
-    await pool.runTestFiles(tests, invalidates)
+    await ctx.pool?.runTestFiles(tests, invalidates)
 
-    await reporter.onFinished?.(ctx.state.getFiles(tests))
-    await reporter.onWatcherStart?.()
+    await ctx.report('onFinished', ctx.state.getFiles(tests))
+    await ctx.report('onWatcherStart')
   }
 
   // listen to keyboard input
@@ -103,7 +105,7 @@ export async function startWatcher(ctx: VitestContext, pool: WorkerPool) {
   await new Promise(() => { })
 }
 
-export function getAffectedTests(ctx: VitestContext, id: string, set = new Set<string>(), seen = new Set<string>()): Set<string> {
+export function getAffectedTests(ctx: Vitest, id: string, set = new Set<string>(), seen = new Set<string>()): Set<string> {
   if (seen.has(id) || set.has(id) || id.includes('/node_modules/') || id.includes('/vitest/dist/'))
     return set
 

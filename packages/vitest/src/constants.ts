@@ -3,8 +3,8 @@ import { fileURLToPath } from 'url'
 
 export const distDir = resolve(fileURLToPath(import.meta.url), '../../dist')
 
-export const defaultIncludes = ['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']
-export const defaultExcludes = ['**/node_modules/**', '**/dist/**']
+export const defaultInclude = ['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']
+export const defaultExclude = ['**/node_modules/**', '**/dist/**']
 
 export const defaultPort = 51204
 
@@ -29,11 +29,10 @@ export const globalApis = [
   'chai',
   'expect',
   'assert',
-  // sinon
-  'sinon',
+  // tinyspy
   'spy',
-  'mock',
-  'stub',
+  'spyOn',
+  'vitest',
   // hooks
   'beforeAll',
   'afterAll',

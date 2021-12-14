@@ -1,19 +1,19 @@
 import type { Reporter } from './reporter'
 import type { SnapshotStateOptions } from './snapshot'
 
-export interface UserOptions {
+export interface InlineConfig {
   /**
    * Include globs for test files
    *
    * @default ['**\/*.test.ts']
    */
-  includes?: string[]
+  include?: string[]
 
   /**
    * Exclude globs for test files
    * @default ['**\/node_modules\/**']
    */
-  excludes?: string[]
+  exclude?: string[]
 
   /**
    * Handling for dependencies inlining or externalizing
@@ -22,7 +22,7 @@ export interface UserOptions {
     /**
      * Externalize means that Vite will bypass the package to native Node.
      *
-     * Externaled dependencies will not be applied Vite's transformers and resolvers.
+     * Externalized dependencies will not be applied Vite's transformers and resolvers.
      * And does not support HMR on reload.
      *
      * Typically, packages under `node_modules` are externalized.
@@ -74,7 +74,7 @@ export interface UserOptions {
   /**
    * Custom reporter for output
    */
-  reporter?: Reporter
+  reporters?: Reporter | Reporter[]
 
   /**
    * Enable multi-threading
@@ -126,31 +126,28 @@ export interface UserOptions {
   silent?: boolean
 
   /**
-   * Open Vitest UI
-   */
-  open?: boolean
-
-  /**
    * Path to setup files
    */
   setupFiles?: string | string[]
 
   /**
+   * Open Vitest UI
+   * @internal WIP
+   */
+  open?: boolean
+
+  /**
    * Listen to port and serve API
    *
-   * When set to try, the default port is 55555
+   * When set to true, the default port is 55555
    *
+   * @internal WIP
    * @default false
    */
   api?: boolean | number
 }
 
-export interface CliOptions extends UserOptions {
-  /**
-   * Filters by name
-   */
-  cliFilters?: string[]
-
+export interface UserConfig extends InlineConfig {
   /**
    * Path to the config file.
    *
@@ -165,7 +162,7 @@ export interface CliOptions extends UserOptions {
   dom?: boolean
 }
 
-export interface ResolvedConfig extends Omit<Required<CliOptions>, 'config' | 'filters'> {
+export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters'> {
   config?: string
   filters?: string[]
 

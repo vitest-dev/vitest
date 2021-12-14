@@ -141,10 +141,11 @@ export function renderTree(tasks: Task[], level = 0) {
   let output: string[] = []
 
   for (const task of tasks) {
-    let delta = 1
-    let suffix = (task.mode === 'skip' || task.mode === 'todo') ? ` ${c.dim('[skipped]')}` : ''
+    let suffix = ''
     const prefix = ` ${getStateSymbol(task)} `
 
+    if (task.mode === 'skip' || task.mode === 'todo')
+      suffix += ` ${c.dim('[skipped]')}`
     if (task.type === 'suite')
       suffix += c.dim(` (${getTests(task).length})`)
 
@@ -154,10 +155,7 @@ export function renderTree(tasks: Task[], level = 0) {
         suffix += c.yellow(` ${Math.round(duration)}${c.dim('ms')}`)
     }
 
-    if (task.name)
-      output.push('  '.repeat(level) + prefix + task.name + suffix)
-    else
-      delta = 0
+    output.push('  '.repeat(level) + prefix + task.name + suffix)
 
     if ((task.result?.state !== 'pass') && outputMap.get(task) != null) {
       let data: string | undefined = outputMap.get(task)
@@ -175,7 +173,7 @@ export function renderTree(tasks: Task[], level = 0) {
     }
 
     if ((task.result?.state === 'fail' || task.result?.state === 'run') && task.type === 'suite' && task.tasks.length > 0)
-      output = output.concat(renderTree(task.tasks, level + delta))
+      output = output.concat(renderTree(task.tasks, level + 1))
   }
 
   // TODO: moving windows

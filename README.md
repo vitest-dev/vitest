@@ -37,7 +37,7 @@ Switch to Vitest by following the [Getting Started Guide](https://preview.vitest
 - [Chai](https://www.chaijs.com/) built-in for assertions, with [Jest expect](https://jestjs.io/docs/expect) compatible APIs.
 - [Smart & instant watch mode](#watch-mode), like HMR for tests!
 - [Native code coverage](#coverage) via [c8](https://github.com/bcoe/c8)
-- [Sinon](https://sinonjs.org/) built-in for mocking, stubbing, and spies.
+- [Tinyspy](https://github.com/Aslemammad/tinyspy) built-in for mocking, stubbing, and spies.
 - [JSDOM](https://github.com/jsdom/jsdom) and [happy-dom](https://github.com/capricorn86/happy-dom) for DOM and browser API mocking
 - Components testing ([Vue](./test/vue), [React](./test/react), [Lit](./test/lit), [Vitesse](./test/vitesse))
 - Workers multi-threading via [Piscina](https://github.com/piscinajs/piscina)

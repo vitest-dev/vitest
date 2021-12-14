@@ -20,7 +20,7 @@ Become a Sponsor of [@patak-dev](https://github.com/sponsors/patak-dev) or [@ant
 Vitest requires Vite v2.7 and Node v16
 :::
 
-## Trying Vite Online
+## Trying Vitest Online
 
 You can try Vitest online on [StackBlitz](https://stackblitz.com/edit/node-8hobg2?file=test%2Fbasic.test.ts&view=editor). It runs Vitest directly in the browser, and it is almost identical to the local setup but doesn't require installing anything on your machine.
 
