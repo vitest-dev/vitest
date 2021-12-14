@@ -22,6 +22,7 @@ export function JestChaiExpect(): ChaiPlugin {
     def('toEqual', function(expected) {
       const actual = utils.flag(this, 'object')
       const result = equals(actual, expected)
+      // TODO: improve message
       this.assert(
         result,
         'not match with #{this}',
