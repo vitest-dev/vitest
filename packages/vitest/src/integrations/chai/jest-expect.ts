@@ -1,6 +1,8 @@
 import type { SinonSpy } from 'sinon'
 import type { ChaiPlugin } from './types'
 
+import { equals } from './jest-utils'
+
 // Jest Expect Compact
 // TODO: add more https://jestjs.io/docs/expect
 export function JestChaiExpect(): ChaiPlugin {
@@ -18,8 +20,8 @@ export function JestChaiExpect(): ChaiPlugin {
     }
 
     def('toEqual', function(expected) {
-      // TODO: use equals from jest-utils
-      return this.eql(expected)
+      const obj = utils.flag(this, 'object')
+      return equals(obj, expected)
     })
     def('toStrictEqual', function(expected) {
       return this.equal(expected)
