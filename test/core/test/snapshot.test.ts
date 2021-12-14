@@ -19,12 +19,12 @@ Object {
 
 test('snapshot with big array', () => {
   expect({
-    this: { is: new Set(['one', new Array(300).fill({})]) },
+    this: { is: new Set(['one', new Array(30).fill({})]) },
   }).toMatchSnapshot()
 })
 
 test('snapshot with big string', () => {
   expect({
-    this: { is: new Set(['one', new Array(300).fill('zoo').join()]) },
+    this: { is: new Set(['one', new Array(30).fill('zoo').join()]) },
   }).toMatchSnapshot()
 })

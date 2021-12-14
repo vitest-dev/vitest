@@ -271,10 +271,10 @@ function parseStack(stack: string): ParsedStack[] {
  * @return {string} The diff.
  */
 export function unifiedDiff(actual: any, expected: any) {
-  const diffLimit = 10;
-  const indent = '  ';
-  let expectedLinesCount = 0;
-  let actualLinesCount = 0;
+  const diffLimit = 10
+  const indent = '  '
+  let expectedLinesCount = 0
+  let actualLinesCount = 0
 
   function cleanUp(line: string) {
     if (line[0] === '+') {
@@ -306,14 +306,14 @@ export function unifiedDiff(actual: any, expected: any) {
 }
 
 function formatLine(line: string) {
-  const lineLimitLength = 50;
+  const lineLimitLength = 50
   if (line.length > lineLimitLength)
-    return `${line.slice(0, lineLimitLength)} ${c.italic('⥅ truncated')}`
+    return `${line.slice(0, lineLimitLength)} ${c.dim('[...truncated]')}`
   return line
 }
 
 function renderTruncateMessage(indent: string) {
-  return `\n${indent}${c.italic('⥅ truncated item')}`
+  return `\n${indent}${c.dim('[...truncated]')}`
 }
 
 function notBlank(line: any) {
