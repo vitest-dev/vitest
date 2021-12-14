@@ -25,6 +25,13 @@
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
     },
+    "./node": {
+      "import": "./dist/node.js",
+      "types": "./dist/node.d.ts"
+    },
+    "./global": {
+      "types": "./global.d.ts"
+    },
     "./*": "./*"
   },
   "main": "./dist/index.js",

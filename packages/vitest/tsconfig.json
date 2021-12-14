@@ -1,26 +1,5 @@
 {
-  "compilerOptions": {
-    "target": "esnext",
-    "module": "esnext",
-    "lib": ["esnext", "dom"],
-    "moduleResolution": "node",
-    "esModuleInterop": true,
-    "strict": true,
-    "strictNullChecks": true,
-    "resolveJsonModule": true,
-    "skipDefaultLibCheck": true,
-    "skipLibCheck": true,
-    "outDir": "./dist",
-    "declaration": true,
-    "inlineSourceMap": true,
-    "paths": {
-      "vitest": ["./packages/vitest/src/index.ts"]
-    }
-  },
-  "include": [
-    "./src/**/*.ts"
-  ],
-  "exclude": [
-    "./dist"
-  ]
+  "extends": "../../tsconfig.json",
+  "include": ["./src/**/*.ts"],
+  "exclude": ["./dist"]
 }
