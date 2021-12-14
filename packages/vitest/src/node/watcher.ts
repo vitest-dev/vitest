@@ -4,6 +4,7 @@ import { isTargetFile } from './glob'
 import type { Vitest } from './index'
 
 const WATCHER_DEBOUNCE = 50
+const RERUN_FAILED = false
 
 export async function startWatcher(ctx: Vitest) {
   const { server } = ctx
@@ -52,10 +53,12 @@ export async function startWatcher(ctx: Vitest) {
       isFirstRun = false
 
       // add previously failed files
-      ctx.state.getFiles().forEach((file) => {
-        if (file.result?.state === 'fail')
-          changedTests.add(file.filepath)
-      })
+      if (RERUN_FAILED) {
+        ctx.state.getFiles().forEach((file) => {
+          if (file.result?.state === 'fail')
+            changedTests.add(file.filepath)
+        })
+      }
 
       const invalidates = Array.from(seen)
       const tests = Array.from(changedTests)

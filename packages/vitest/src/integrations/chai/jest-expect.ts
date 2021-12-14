@@ -227,7 +227,7 @@ export function JestChaiExpect(): ChaiPlugin {
         `expected spy to be successfully called ${times} times`,
         `expected spy to not be successfully called ${times} times`,
         `expected number of returns: ${times}`,
-        `recieved number of returns: ${successfullReturns}`,
+        `received number of returns: ${successfullReturns}`,
       )
     })
     def(['toHaveReturnedWith', 'toReturnWith'], function(value: any) {
