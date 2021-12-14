@@ -80,7 +80,7 @@ async function getSourcePos(ctx: VitestContext, nearest: ParsedStack) {
 
 // TODO: handle big object and big string diff
 function displayDiff(actual: string, expected: string) {
-  console.error(c.gray(generateDiff(stringify(actual), stringify(expected))))
+  console.error(c.gray(unifiedDiff(stringify(actual), stringify(expected))))
 }
 
 function printErrorMessage(error: ErrorWithDiff) {
@@ -263,28 +263,6 @@ function parseStack(stack: string): ParsedStack[] {
 }
 
 /**
- * Returns a diff between 2 strings with coloured ANSI output.
- *
- * @description
- * The diff will be either inline or unified dependent on the value
- * of `Base.inlineDiff`.
- *
- * @param {string} actual
- * @param {string} expected
- * @return {string} Diff
- */
-export function generateDiff(actual: string, expected: string) {
-  const diffSize = 2048
-  if (actual.length > diffSize)
-    actual = `${actual.substring(0, diffSize)} ... Lines skipped`
-
-  if (expected.length > diffSize)
-    expected = `${expected.substring(0, diffSize)} ... Lines skipped`
-
-  return unifiedDiff(actual, expected)
-}
-
-/**
  * Returns unified diff between two strings with coloured ANSI output.
  *
  * @private
@@ -292,7 +270,7 @@ export function generateDiff(actual: string, expected: string) {
  * @param {String} expected
  * @return {string} The diff.
  */
-function unifiedDiff(actual: any, expected: any) {
+export function unifiedDiff(actual: any, expected: any) {
   const diffLimit = 10;
   const indent = '  ';
   let expectedLinesCount = 0;
@@ -330,12 +308,12 @@ function unifiedDiff(actual: any, expected: any) {
 function formatLine(line: string) {
   const lineLimitLength = 50;
   if (line.length > lineLimitLength)
-    return `${line.slice(0, lineLimitLength)} ${c.italic('... truncated')}`
+    return `${line.slice(0, lineLimitLength)} ${c.italic('⥅ truncated')}`
   return line
 }
 
 function renderTruncateMessage(indent: string) {
-  return `\n${indent}${c.italic('... truncated item')}`
+  return `\n${indent}${c.italic('⥅ truncated item')}`
 }
 
 function notBlank(line: any) {
