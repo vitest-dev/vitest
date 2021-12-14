@@ -84,10 +84,10 @@ export function JestExtend(): ChaiPlugin {
       chai.expect,
       'stringContaining',
       function stringContaining(this: Record<string, unknown>, expected: string) {
-        return (actual: string) => {
-          if (!actual.includes(expected))
-            throw new Error('')
-        }
+        // return (actual: string) => {
+        //   if (!actual.includes(expected))
+        //     throw new Error('')
+        // }
       }
     )
   }
