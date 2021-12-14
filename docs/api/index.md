@@ -4,7 +4,6 @@ The following types are used in the type signatures below
 
 ```ts
 type Awaitable<T> = T | PromiseLike<T>
-
 type TestFunction = () => Awaitable<void> | (done: (error?: any)) => void
 ```
 
