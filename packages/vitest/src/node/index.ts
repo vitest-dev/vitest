@@ -1,15 +1,15 @@
 import { resolve } from 'path'
-import type { ViteDevServer } from 'vite'
-import { createServer } from 'vite'
+import type { ViteDevServer, InlineConfig as ViteInlineConfig, UserConfig as ViteUserConfig } from 'vite'
+import { mergeConfig, createServer } from 'vite'
 import { findUp } from 'find-up'
 import type { Reporter, UserConfig, ResolvedConfig, ArgumentsType } from '../types'
 import { SnapshotManager } from '../integrations/snapshot/manager'
 import { configFiles } from '../constants'
 import { toArray, hasFailed } from '../utils'
 import { ConsoleReporter } from '../reporters/console'
+import type { WorkerPool } from './pool'
 import { StateManager } from './state'
 import { resolveConfig } from './config'
-import type { WorkerPool } from './pool'
 import { createPool } from './pool'
 import { globTestFiles } from './glob'
 import { startWatcher } from './watcher'
@@ -79,21 +79,21 @@ class Vitest {
 
 export type { Vitest }
 
-export async function createVitest(options: UserConfig): Promise<Vitest> {
-  const server = await startServer(options)
+export async function createVitest(options: UserConfig, viteOverrides?: ViteUserConfig): Promise<Vitest> {
+  const server = await startServer(options, viteOverrides)
   const instance = new Vitest(options, server)
 
   return instance
 }
 
-async function startServer(options: UserConfig) {
+async function startServer(options: UserConfig, viteOverrides: ViteUserConfig = {}) {
   const root = resolve(options.root || process.cwd())
 
   const configPath = options.config
     ? resolve(root, options.config)
     : await findUp(configFiles, { cwd: root })
 
-  const server = await createServer({
+  const config: ViteInlineConfig = {
     root,
     logLevel: 'error',
     clearScreen: false,
@@ -116,7 +116,9 @@ async function startServer(options: UserConfig) {
         'vitest',
       ],
     },
-  })
+  }
+
+  const server = await createServer(mergeConfig(config, viteOverrides))
   await server.pluginContainer.buildStart({})
 
   if (typeof options.api === 'number')
