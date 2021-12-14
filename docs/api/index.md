@@ -4,8 +4,13 @@ The following types are used in the type signatures below
 
 ```ts
 type Awaitable<T> = T | PromiseLike<T>
-type TestFunction = () => Awaitable<void>
+
+type TestFunction = () => Awaitable<void> | (done: (error?: any)) => void
 ```
+
+When a test function returns a promise, the runner will await until it is resolved to collect async expectations. If the promise is rejected, the test will fail.
+
+For compatibility with Jest, `TestFunction` can also be of type `(done: (error?: any)) => void`. If this form is used, the test will not be concluded until `done` is called (with zero arguments or a falsy value for a succesful test, and with an thruthy error value as argument to trigger a fail). We don't recommend to use this form, as you can achieve the same using an `async` function.
 
 ## test
 
