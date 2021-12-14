@@ -9,7 +9,7 @@ test('Math.sqrt()', () => {
   assert.equal(Math.sqrt(4) + 1, two)
 })
 
-test('can mock timer', () => {
+test('can mock esm', () => {
   const spy = spyOn(mocked, 'mockedA')
 
   mockedB()
