@@ -24,9 +24,9 @@ export function JestChaiExpect(): ChaiPlugin {
       const result = equals(actual, expected)
       this.assert(
         result,
-        'expected #{this} to deep equally contain #{exp}',
-        'expected #{this} to not deep equally contain #{exp}',
-        true
+        'not match with #{this}',
+        'should not match with #{this}',
+        true,
       )
     })
     def('toStrictEqual', function(expected) {
