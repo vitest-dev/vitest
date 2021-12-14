@@ -40,7 +40,8 @@ export interface Test extends TaskBase {
 
 export type Task = Test | Suite | File
 
-export type TestFunction = () => Awaitable<void>
+export type DoneCallback = (error?: any) => void
+export type TestFunction = (done: DoneCallback) => Awaitable<void>
 type TestCollectorFn = (name: string, fn: TestFunction, timeout?: number) => void
 interface ConcurrentCollector {
   (name: string, fn: TestFunction, timeout?: number): void

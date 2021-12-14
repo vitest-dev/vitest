@@ -1,4 +1,4 @@
-import type { Awaitable, RuntimeContext, SuiteCollector } from '../types'
+import type { Awaitable, TestFunction, RuntimeContext, SuiteCollector } from '../types'
 
 export const context: RuntimeContext = {
   tasks: [],
@@ -38,4 +38,15 @@ export function withTimeout<T extends((...args: any[]) => any)>(fn: T, _timeout?
       timer.unref()
     })]) as Awaitable<void>
   }) as T
+}
+
+export function ensureAsyncTest(fn: TestFunction): () => Awaitable<void> {
+  return !fn.length ? fn as () => Awaitable<void> :
+    () => new Promise((resolve, reject) =>
+      fn((...args: any[]) => args.length ? reject(args[0]) : resolve())
+    )
+}
+
+export function normalizeTest(fn: TestFunction, timeout?: number): () => Awaitable<void> {
+  return withTimeout(ensureAsyncTest(fn), timeout)
 }
