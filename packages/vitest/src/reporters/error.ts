@@ -80,7 +80,7 @@ async function getSourcePos(ctx: Vitest, nearest: ParsedStack) {
 
 // TODO: handle big object and big string diff
 function displayDiff(actual: string, expected: string) {
-  console.error(c.gray(generateDiff(stringify(actual), stringify(expected))))
+  console.error(c.gray(unifiedDiff(stringify(actual), stringify(expected))))
 }
 
 function printErrorMessage(error: ErrorWithDiff) {
@@ -263,28 +263,6 @@ function parseStack(stack: string): ParsedStack[] {
 }
 
 /**
- * Returns a diff between 2 strings with coloured ANSI output.
- *
- * @description
- * The diff will be either inline or unified dependent on the value
- * of `Base.inlineDiff`.
- *
- * @param {string} actual
- * @param {string} expected
- * @return {string} Diff
- */
-export function generateDiff(actual: any, expected: any) {
-  const diffSize = 2048
-  if (actual.length > diffSize)
-    actual = `${actual.substring(0, diffSize)} ... Lines skipped`
-
-  if (expected.length > diffSize)
-    expected = `${expected.substring(0, diffSize)} ... Lines skipped`
-
-  return unifiedDiff(actual, expected)
-}
-
-/**
  * Returns unified diff between two strings with coloured ANSI output.
  *
  * @private
@@ -292,13 +270,27 @@ export function generateDiff(actual: any, expected: any) {
  * @param {String} expected
  * @return {string} The diff.
  */
-function unifiedDiff(actual: any, expected: any) {
+export function unifiedDiff(actual: any, expected: any) {
+  const diffLimit = 10
   const indent = '  '
+  let expectedLinesCount = 0
+  let actualLinesCount = 0
+
   function cleanUp(line: string) {
-    if (line[0] === '+')
-      return indent + c.green(`${line[0]}${line.slice(1)}`)
-    if (line[0] === '-')
-      return indent + c.red(`${line[0]}${line.slice(1)}`)
+    if (line[0] === '+') {
+      if (expectedLinesCount >= diffLimit) return
+      expectedLinesCount++
+
+      const isLastLine = expectedLinesCount === diffLimit
+      return indent + c.green(`${formatLine(line)} ${isLastLine ? renderTruncateMessage(indent) : ''}`)
+    }
+    if (line[0] === '-') {
+      if (actualLinesCount >= diffLimit) return
+      actualLinesCount++
+
+      const isLastLine = actualLinesCount === diffLimit
+      return indent + c.red(`${formatLine(line)} ${isLastLine ? renderTruncateMessage(indent) : ''}`)
+    }
     if (line.match(/@@/))
       return '--'
     if (line.match(/\\ No newline/))
@@ -311,6 +303,17 @@ function unifiedDiff(actual: any, expected: any) {
     `\n${indent}${c.red('- actual')}\n${indent}${c.green('+ expected')}\n\n${
       lines.map(cleanUp).filter(notBlank).join('\n')}`
   )
+}
+
+function formatLine(line: string) {
+  const lineLimitLength = 50
+  if (line.length > lineLimitLength)
+    return `${line.slice(0, lineLimitLength)} ${c.dim('[...truncated]')}`
+  return line
+}
+
+function renderTruncateMessage(indent: string) {
+  return `\n${indent}${c.dim('[...truncated]')}`
 }
 
 function notBlank(line: any) {
