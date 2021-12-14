@@ -1,9 +1,8 @@
-import { describe, it, expect, assert } from 'vitest'
-import { spy } from 'tinyspy'
+import { describe, it, expect, assert, vitest } from 'vitest'
 
 describe('mock', () => {
   it('basic', () => {
-    const fn = spy()
+    const fn = vitest.fn()
 
     expect(fn).not.toHaveBeenCalled()
 
@@ -31,7 +30,7 @@ describe('mock', () => {
   it('returns', () => {
     let i = 0
 
-    const fn = spy(() => String(++i))
+    const fn = vitest.fn(() => String(++i))
 
     expect(fn).not.toHaveReturned()
 
@@ -52,7 +51,7 @@ describe('mock', () => {
   it('throws', () => {
     let i = 0
 
-    const fn = spy(() => {
+    const fn = vitest.fn(() => {
       if (i === 1) {
         ++i
         throw new Error('error')
