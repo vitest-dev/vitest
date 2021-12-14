@@ -45,7 +45,7 @@ function ensureAsyncTest(fn: TestFunction): () => Awaitable<void> {
     return fn as () => Awaitable<void>
 
   return () => new Promise((resolve, reject) => {
-    const done: DoneCallback = (...args: any[]) => args[0] != null
+    const done: DoneCallback = (...args: any[]) => args[0] // rejest on truthy values
       ? reject(args[0])
       : resolve()
     fn(done)

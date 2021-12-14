@@ -48,16 +48,23 @@ test.skip('async with timeout', async() => {
 
 it('timeout', () => new Promise(resolve => setTimeout(resolve, timeout)))
 
-let callbackAwaited = false
+function callbackTest(name: string, doneValue: any) {
 
-it('callback setup', (done) => {
-  setTimeout(() => {
-    expect({}).toBeTruthy()
-    callbackAwaited = true
-    done()
-  }, 20)
-})
+  let callbackAwaited = false
 
-it('callback test', () => {
-  expect(callbackAwaited).toBe(true)
-})
+  it('callback setup ' + name, (done) => {
+    setTimeout(() => {
+      expect({}).toBeTruthy()
+      callbackAwaited = true
+      done(doneValue)
+    }, 20)
+  })
+
+  it('callback test ' + name, () => {
+    expect(callbackAwaited).toBe(true)
+  })
+}
+
+callbackTest('success ', undefined)
+
+callbackTest('success done(false)', false)
