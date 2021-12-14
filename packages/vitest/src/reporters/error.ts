@@ -75,8 +75,13 @@ export async function printError(error: unknown) {
     displayDiff(e.actual, e.expected)
 }
 
+const esmErrors = [
+  'Cannot use import statement outside a module',
+  'Unexpected token \'export\'',
+]
+
 function handleImportOutsideModuleError(stack: string, ctx: Vitest) {
-  if (!stack.includes('Cannot use import statement outside a module'))
+  if (!esmErrors.some(e => stack.includes(e)))
     return
 
   const path = stack.split('\n')[0].trim()
@@ -87,11 +92,11 @@ function handleImportOutsideModuleError(stack: string, ctx: Vitest) {
     name = name.split('/')[0]
 
   ctx.console.error(c.yellow(
-    `Module ${path} seem to be an ES Module but shipped in a CommonJS package. `
+    `Module ${path} seems to be an ES Module but shipped in a CommonJS package. `
 + `You might want to create an issue to the package ${c.bold(`"${name}"`)} asking `
 + 'them to ship the file in .mjs extension or add "type": "module" in their package.json.'
 + '\n\n'
-+ 'As an temporary workaround you can try to inline the package by updating your config:'
++ 'As a temporary workaround you can try to inline the package by updating your config:'
 + '\n\n'
 + c.gray(c.dim('// vitest.config.js'))
 + '\n'
