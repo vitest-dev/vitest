@@ -1,3 +1,5 @@
+/* eslint-disable prefer-template */
+/* eslint-disable no-template-curly-in-string */
 import { promises as fs, existsSync } from 'fs'
 import { relative } from 'path'
 import c from 'picocolors'
@@ -49,7 +51,7 @@ export async function printError(error: unknown) {
   const stacks = parseStack(stackStr)
 
   if (!stacks.length) {
-    console.error(e)
+    ctx.console.error(e)
   }
   else {
     const nearest = stacks.find((stack) => {
@@ -67,8 +69,41 @@ export async function printError(error: unknown) {
     })
   }
 
+  handleImportOutsideModuleError(stackStr, ctx)
+
   if (e.showDiff)
     displayDiff(e.actual, e.expected)
+}
+
+function handleImportOutsideModuleError(stack: string, ctx: Vitest) {
+  if (!stack.includes('Cannot use import statement outside a module'))
+    return
+
+  const path = stack.split('\n')[0].trim()
+  let name = path.split('/node_modules/').pop() || ''
+  if (name?.startsWith('@'))
+    name = name.split('/').slice(0, 2).join('/')
+  else
+    name = name.split('/')[0]
+
+  ctx.console.error(c.yellow(
+    `Module ${path} seem to be an ES Module but shipped in a CommonJS package. `
++ `You might want to create an issue to the package ${c.bold(`"${name}"`)} asking `
++ 'them to ship the file in .mjs extension or add "type": "module" in their package.json.'
++ '\n\n'
++ 'As an temporary workaround you can try to inline the package by updating your config:'
++ '\n\n'
++ c.gray(c.dim('// vitest.config.js'))
++ '\n'
++ c.green(`export default {
+  test: {
+    deps: {
+      inline: [
+        ${c.yellow(c.bold(`"${name}"`))}
+      ]
+    }
+  }
+}\n`)))
 }
 
 async function getSourcePos(ctx: Vitest, nearest: ParsedStack) {
