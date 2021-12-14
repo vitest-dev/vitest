@@ -21,7 +21,13 @@ export function JestChaiExpect(): ChaiPlugin {
 
     def('toEqual', function(expected) {
       const actual = utils.flag(this, 'object')
-      return equals(actual, expected)
+      const result = equals(actual, expected)
+      this.assert(
+        result,
+        'expected #{this} to deep equally contain #{exp}',
+        'expected #{this} to not deep equally contain #{exp}',
+        true
+      )
     })
     def('toStrictEqual', function(expected) {
       return this.equal(expected)
