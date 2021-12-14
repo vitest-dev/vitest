@@ -105,6 +105,22 @@ export async function executeInViteNode(options: ExecuteOptions) {
     if (id in stubRequests)
       return stubRequests[id]
 
+    // this doesnt work if disable trnsform plugin
+    // since it doesnt process inner files, I guess
+    // ->
+    //    ->
+    //       -> import {} from './mocked' is not returning __mocks__
+    //
+    // const dir = dirname(fsPath)
+    // const baseId = basename(fsPath)
+    // const mockFile = join(dir, '__mocks__', baseId)
+
+    // if (existsSync(mockFile)) {
+    //   const idDir = dirname(id)
+    //   fsPath = mockFile
+    //   id = join(idDir, '__mocks__', baseId)
+    // }
+
     const result = await fetch(id)
     if (!result)
       throw new Error(`failed to load ${id}`)
