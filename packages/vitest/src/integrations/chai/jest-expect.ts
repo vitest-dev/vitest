@@ -208,6 +208,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       'expected spy to be called with arguments: #{exp}',
       'expected spy to not be called with arguments: #{exp}',
       args,
+      spy.calls,
     )
   })
   const ordinalOf = (i: number) => {
