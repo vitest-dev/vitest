@@ -6,7 +6,7 @@ import type { RawSourceMap } from 'source-map'
 import { SourceMapConsumer } from 'source-map'
 import cliTruncate from 'cli-truncate'
 import { notNullish } from '../utils'
-import type { VitestContext } from '../types'
+import type { Vitest } from '../node'
 import { F_POINTER } from './figures'
 
 interface ErrorWithDiff extends Error {
@@ -28,7 +28,7 @@ interface Position {
 declare global {
   namespace NodeJS {
     interface Process {
-      __vitest__: VitestContext
+      __vitest__: Vitest
     }
   }
 }
@@ -71,7 +71,7 @@ export async function printError(error: unknown) {
     displayDiff(e.actual, e.expected)
 }
 
-async function getSourcePos(ctx: VitestContext, nearest: ParsedStack) {
+async function getSourcePos(ctx: Vitest, nearest: ParsedStack) {
   const mod = ctx.server.moduleGraph.getModuleById(nearest.file)
   const transformResult = mod?.ssrTransformResult
   const pos = await getOriginalPos(transformResult?.map, nearest)
@@ -90,7 +90,7 @@ function printErrorMessage(error: ErrorWithDiff) {
 }
 
 async function printStack(
-  ctx: VitestContext,
+  ctx: Vitest,
   stack: ParsedStack[],
   highlight?: ParsedStack,
   onStack?: ((stack: ParsedStack, pos: Position) => void),

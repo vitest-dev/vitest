@@ -1,8 +1,9 @@
 import { performance } from 'perf_hooks'
 import { relative } from 'path'
 import c from 'picocolors'
-import type { Reporter, TaskResultPack, UserConsoleLog, VitestContext } from '../types'
+import type { Reporter, TaskResultPack, UserConsoleLog } from '../types'
 import { getSuites, getTests } from '../utils'
+import type { Vitest } from '../node'
 import { printError } from './error'
 import { createRenderer, getStateString, getStateSymbol, renderSnapshotSummary, getFullName, divider } from './renderer'
 import { F_RIGHT } from './figures'
@@ -28,7 +29,7 @@ export class ConsoleReporter implements Reporter {
     this.console.error(...args)
   }
 
-  constructor(public ctx: VitestContext) {
+  constructor(public ctx: Vitest) {
     const mode = ctx.config.watch ? c.yellow(' DEV ') : c.cyan(' RUN ')
     this.log(`${c.inverse(c.bold(mode))} ${c.gray(this.ctx.config.root)}\n`)
     this.start = performance.now()

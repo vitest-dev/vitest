@@ -1,12 +1,11 @@
 import readline from 'readline'
-import type { VitestContext } from '../types'
 import { slash } from '../utils'
 import { isTargetFile } from './glob'
-import type { WorkerPool } from './pool'
+import type { Vitest } from './index'
 
 const WATCHER_DEBOUNCE = 50
 
-export async function startWatcher(ctx: VitestContext, pool: WorkerPool) {
+export async function startWatcher(ctx: Vitest) {
   const { server } = ctx
   ctx.reporters.forEach(r => r.onWatcherStart?.())
 
@@ -70,12 +69,12 @@ export async function startWatcher(ctx: VitestContext, pool: WorkerPool) {
   }
 
   async function start(tests: string[], id: string, invalidates: string[]) {
-    await Promise.all(ctx.reporters.map(r => r.onWatcherRerun?.(tests, id)))
+    await ctx.report('onWatcherRerun', tests, id)
 
-    await pool.runTestFiles(tests, invalidates)
+    await ctx.pool?.runTestFiles(tests, invalidates)
 
-    await Promise.all(ctx.reporters.map(r => r.onFinished?.(ctx.state.getFiles(tests))))
-    await Promise.all(ctx.reporters.map(r => r.onWatcherStart?.()))
+    await ctx.report('onFinished', ctx.state.getFiles(tests))
+    await ctx.report('onWatcherStart')
   }
 
   // listen to keyboard input
@@ -103,7 +102,7 @@ export async function startWatcher(ctx: VitestContext, pool: WorkerPool) {
   await new Promise(() => { })
 }
 
-export function getAffectedTests(ctx: VitestContext, id: string, set = new Set<string>(), seen = new Set<string>()): Set<string> {
+export function getAffectedTests(ctx: Vitest, id: string, set = new Set<string>(), seen = new Set<string>()): Set<string> {
   if (seen.has(id) || set.has(id) || id.includes('/node_modules/') || id.includes('/vitest/dist/'))
     return set
 

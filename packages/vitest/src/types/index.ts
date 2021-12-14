@@ -1,4 +1,4 @@
-export * from './options'
+export * from './config'
 export * from './tasks'
 export * from './reporter'
 export * from './snapshot'

@@ -1,12 +1,9 @@
-import type { TransformResult, ViteDevServer } from 'vite'
-import type { StateManager } from '../node/state'
-import type { SnapshotManager } from '../integrations/snapshot/manager'
-import type { ResolvedConfig } from './options'
-import type { Reporter } from './reporter'
+import type { TransformResult } from 'vite'
 
 export type Awaitable<T> = T | PromiseLike<T>
 export type Nullable<T> = T | null | undefined
 export type Arrayable<T> = T | Array<T>
+export type ArgumentsType<T> = T extends (...args: infer U) => any ? U : never
 
 export interface ModuleCache {
   promise?: Promise<any>
@@ -21,15 +18,6 @@ export interface EnvironmentReturn {
 export interface Environment {
   name: string
   setup(global: any): Awaitable<EnvironmentReturn>
-}
-
-export interface VitestContext {
-  config: ResolvedConfig
-  server: ViteDevServer
-  state: StateManager
-  snapshot: SnapshotManager
-  reporters: Reporter[]
-  console: Console
 }
 
 export interface UserConsoleLog {

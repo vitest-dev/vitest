@@ -17,5 +17,8 @@
       "vitest": ["./packages/vitest/src/index.ts"],
       "vitest/global.d.ts": ["./packages/vitest/global.d.ts"]
     }
-  }
+  },
+  "exclude": [
+    "**/dist/**"
+  ]
 }

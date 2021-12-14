@@ -1,8 +1,8 @@
 import type { MatchersObject } from './integrations/chai/types'
-import type { UserOptions } from './types'
+import type { InlineConfig } from './types'
 
-export * from './types'
 export { suite, test, describe, it } from './runtime/suite'
+export * from './types'
 export * from './runtime/hooks'
 export * from './integrations/chai'
 export * from './integrations/tinymock'
@@ -12,7 +12,7 @@ declare module 'vite' {
     /**
      * Options for Vitest
      */
-    test?: UserOptions
+    test?: InlineConfig
   }
 }
 

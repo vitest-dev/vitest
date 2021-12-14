@@ -9,7 +9,7 @@ export function isTargetFile(id: string, config: ResolvedConfig): boolean {
 }
 
 export async function globTestFiles(config: ResolvedConfig) {
-  let testFilepaths = await fg(
+  return await fg(
     config.include,
     {
       absolute: true,
@@ -17,10 +17,4 @@ export async function globTestFiles(config: ResolvedConfig) {
       ignore: config.exclude,
     },
   )
-
-  // if name filters are provided by the CLI
-  if (config.cliFilters?.length)
-    testFilepaths = testFilepaths.filter(i => config.cliFilters!.some(f => i.includes(f)))
-
-  return testFilepaths
 }

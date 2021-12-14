@@ -1,7 +1,7 @@
 import type { Reporter } from './reporter'
 import type { SnapshotStateOptions } from './snapshot'
 
-export interface UserOptions {
+export interface InlineConfig {
   /**
    * Include globs for test files
    *
@@ -126,31 +126,28 @@ export interface UserOptions {
   silent?: boolean
 
   /**
-   * Open Vitest UI
-   */
-  open?: boolean
-
-  /**
    * Path to setup files
    */
   setupFiles?: string | string[]
+
+  /**
+   * Open Vitest UI
+   * @internal WIP
+   */
+  open?: boolean
 
   /**
    * Listen to port and serve API
    *
    * When set to true, the default port is 55555
    *
+   * @internal WIP
    * @default false
    */
   api?: boolean | number
 }
 
-export interface CliOptions extends UserOptions {
-  /**
-   * Filters by name
-   */
-  cliFilters?: string[]
-
+export interface UserConfig extends InlineConfig {
   /**
    * Path to the config file.
    *
@@ -165,7 +162,7 @@ export interface CliOptions extends UserOptions {
   dom?: boolean
 }
 
-export interface ResolvedConfig extends Omit<Required<CliOptions>, 'config' | 'filters'> {
+export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters'> {
   config?: string
   filters?: string[]
 
