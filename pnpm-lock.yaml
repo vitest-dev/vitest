@@ -159,9 +159,11 @@ importers:
 
   test/cjs:
     specifiers:
+      history: ^5.1.0
       prettier: ^2.5.1
       vitest: workspace:*
     devDependencies:
+      history: 5.1.0
       prettier: 2.5.1
       vitest: link:../../packages/vitest
 
@@ -3448,6 +3450,12 @@ packages:
   /he/1.2.0:
     resolution: {integrity: sha512-F/1DnUGPopORZi0ni+CvrCgHQ5FyEAHRLSApuYWMmrbSwoN2Mn/7k+Gl38gJnR7yyDZk6WLXwiGod1JOWNDKGw==}
     hasBin: true
+    dev: true
+
+  /history/5.1.0:
+    resolution: {integrity: sha512-zPuQgPacm2vH2xdORvGGz1wQMuHSIB56yNAy5FnLuwOwgSYyPKptJtcMm6Ev+hRGeS+GzhbmRacHzvlESbFwDg==}
+    dependencies:
+      '@babel/runtime': 7.16.3
     dev: true
 
   /hosted-git-info/2.8.8:

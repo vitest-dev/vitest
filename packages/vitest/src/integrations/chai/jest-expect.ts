@@ -114,19 +114,18 @@ export function JestChaiExpect(): ChaiPlugin {
     })
 
     // mock
-    // TODO - currently published version doesnt have a way to determain this
-    // function isSpy(putativeSpy: any) {
-    //   return typeof putativeSpy === 'function'
-    //          && '__isSpy' in putativeSpy
-    //          && putativeSpy.__isSpy
-    // }
-    // const assertIsMock = (assertion: any) => {
-    //   if (!isSpy(assertion._obj))
-    //     throw new TypeError(`${utils.inspect(assertion._obj)} is not a spy or a call to a spy!`)
-    // }
+    function isSpy(putativeSpy: any) {
+      return typeof putativeSpy === 'function'
+             && '__isSpy' in putativeSpy
+             && putativeSpy.__isSpy
+    }
+    const assertIsMock = (assertion: any) => {
+      if (!isSpy(assertion._obj))
+        throw new TypeError(`${utils.inspect(assertion._obj)} is not a spy or a call to a spy!`)
+    }
     const getSpy = (assertion: any) => {
-      // assertIsMock(assertion)
-      return assertion._obj as Spy<any[], any>
+      assertIsMock(assertion)
+      return assertion._obj as Spy
     }
     def(['toHaveBeenCalledTimes', 'toBeCalledTimes'], function(number: number) {
       return this.assert(
@@ -228,7 +227,7 @@ export function JestChaiExpect(): ChaiPlugin {
         `expected spy to be successfully called ${times} times`,
         `expected spy to not be successfully called ${times} times`,
         `expected number of returns: ${times}`,
-        `recieved number of returns: ${successfullReturns}`,
+        `received number of returns: ${successfullReturns}`,
       )
     })
     def(['toHaveReturnedWith', 'toReturnWith'], function(value: any) {
