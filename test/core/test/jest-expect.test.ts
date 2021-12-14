@@ -34,6 +34,9 @@ describe('jest-expect', () => {
 
   it('asymmetric matchers', () => {
     expect({ foo: 'bar' }).toEqual({ foo: expect.stringContaining("ba") })
+    expect('bar').toEqual(expect.stringContaining("ba"))
+    expect(['bar']).toEqual([expect.stringContaining("ba")])
+    expect(new Set(['bar'])).toEqual(new Set([expect.stringContaining("ba")]))
   })
 
   it('object', () => {
