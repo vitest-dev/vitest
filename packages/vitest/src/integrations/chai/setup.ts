@@ -16,7 +16,6 @@ export async function setupChai() {
   chai.use(JestChaiExpect())
   chai.use(Subset)
   chai.use(SnapshotPlugin())
-  chai.use(SnapshotPlugin())
   chai.use(JestAsymmetricMatchers())
   installed = true
 }
