@@ -53,7 +53,9 @@ describe('jest-expect', () => {
   })
 
   it('asymmetric matchers (chai style)', () => {
+    expect({ foo: 'bar' }).equal({ foo: expect.stringContaining('ba') })
     expect('bar').equal(expect.stringContaining('ba'))
+    expect(['bar']).equal([expect.stringContaining('ba')])
   })
 
   it('object', () => {
