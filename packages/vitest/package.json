@@ -62,7 +62,7 @@
     "micromatch": "^4.0.4",
     "piscina": "^3.2.0",
     "source-map": "^0.7.3",
-    "tinyspy": "^0.0.13"
+    "tinyspy": "^0.1.0"
   },
   "devDependencies": {
     "@types/diff": "^5.0.1",

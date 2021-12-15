@@ -96,7 +96,7 @@ importers:
       rollup: ^2.61.1
       source-map: ^0.7.3
       strip-ansi: ^7.0.1
-      tinyspy: ^0.0.13
+      tinyspy: ^0.1.0
     dependencies:
       '@types/chai': 4.3.0
       '@types/chai-subset': 1.3.3
@@ -108,7 +108,7 @@ importers:
       micromatch: 4.0.4
       piscina: 3.2.0
       source-map: 0.7.3
-      tinyspy: 0.0.13
+      tinyspy: 0.1.0
     devDependencies:
       '@types/diff': 5.0.1
       '@types/jsdom': 16.2.13
@@ -4871,6 +4871,12 @@ packages:
   /tinyspy/0.0.13:
     resolution: {integrity: sha512-31GGJc7+mqL8mIP8BDJYve4WvwhXK/jAmEKhqQAv/mN660TlFIY+3seBANGsAFP9YFon46XlP94A+N2mPM063A==}
     engines: {node: '>=14.0.0'}
+    dev: true
+
+  /tinyspy/0.1.0:
+    resolution: {integrity: sha512-hxHEtyz3+QJ3wg4ZmUlqhpNgaH1Nxe0E4g8ThJgJbgkB0GQgCSKc7AtDm94VdVbfepgflcXshq81OwW83j9bbw==}
+    engines: {node: '>=14.0.0'}
+    dev: false
 
   /to-fast-properties/2.0.0:
     resolution: {integrity: sha1-3F5pjL0HkmW8c+A3doGk5Og/YW4=}
