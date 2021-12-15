@@ -178,6 +178,10 @@ export function posToNumber(
   const lines = source.split(splitRE)
   const { line, column } = pos
   let start = 0
+
+  if (line > lines.length)
+    return source.length
+
   for (let i = 0; i < line - 1; i++)
     start += lines[i].length + 1
 

@@ -94,7 +94,7 @@ export async function executeInViteNode(options: ExecuteOptions) {
       return stubRequests[id]
 
     const transformed = await fetch(id)
-    if (!transformed)
+    if (transformed == null)
       throw new Error(`failed to load ${id}`)
 
     // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
