@@ -207,8 +207,7 @@ export async function shouldExternalize(id: string, config: Pick<ExecuteOptions,
 }
 
 export function toFilePath(id: string, root: string): string {
-  id = slash(id)
-  let absolute = id.startsWith('/@fs/')
+  let absolute = slash(id).startsWith('/@fs/')
     ? id.slice(4)
     : id.startsWith(dirname(root))
       ? id
@@ -221,7 +220,7 @@ export function toFilePath(id: string, root: string): string {
 
   // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
   return isWindows && absolute.startsWith('/')
-    ? pathToFileURL(absolute.slice(1)).href
+    ? fileURLToPath(pathToFileURL(absolute.slice(1)).href)
     : absolute
 }
 
@@ -240,8 +239,8 @@ function matchExternalizePattern(id: string, patterns: (string | RegExp)[]) {
 }
 
 function patchWindowsImportPath(path: string) {
-  if (path.match(/^\w:\//))
-    return `/${path}`
+  if (path.match(/^\w:\\/))
+    return `file:///${slash(path)}`
   else
     return path
 }
