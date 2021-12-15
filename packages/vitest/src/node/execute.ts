@@ -2,6 +2,7 @@ import { builtinModules, createRequire } from 'module'
 import { fileURLToPath, pathToFileURL } from 'url'
 import { dirname, resolve } from 'path'
 import vm from 'vm'
+import { isValidNodeImport } from 'mlly'
 import type { ModuleCache } from '../types'
 import { slash } from '../utils'
 
@@ -69,7 +70,9 @@ export async function interpretedImport(path: string, interpretDefault: boolean)
 export async function executeInViteNode(options: ExecuteOptions) {
   const { moduleCache, root, files, fetch } = options
 
-  const externaled = new Set<string>(builtinModules)
+  const externalCache = new Map<string, boolean>()
+  builtinModules.forEach(m => externalCache.set(m, true))
+
   const result = []
   for (const file of files)
     result.push(await cachedRequest(`/@fs/${slash(resolve(file))}`, []))
@@ -144,16 +147,17 @@ export async function executeInViteNode(options: ExecuteOptions) {
   async function cachedRequest(rawId: string, callstack: string[]) {
     const id = normalizeId(rawId)
 
-    if (externaled.has(id))
+    if (externalCache.get(id))
       return interpretedImport(id, options.interpretDefault)
 
     const fsPath = toFilePath(id, root)
-
     const importPath = patchWindowsImportPath(fsPath)
-    if (externaled.has(importPath) || await shouldExternalize(importPath, options)) {
-      externaled.add(importPath)
+
+    if (!externalCache.has(importPath))
+      externalCache.set(importPath, await shouldExternalize(importPath, options))
+
+    if (externalCache.get(importPath))
       return interpretedImport(importPath, options.interpretDefault)
-    }
 
     if (moduleCache.get(fsPath)?.promise)
       return moduleCache.get(fsPath)?.promise
@@ -203,7 +207,7 @@ export async function shouldExternalize(id: string, config: Pick<ExecuteOptions,
   if (matchExternalizePattern(id, defaultInline))
     return false
 
-  return id.includes('/node_modules/') // && await isValidNodeImport(id)
+  return id.includes('/node_modules/') && await isValidNodeImport(id)
 }
 
 export function toFilePath(id: string, root: string): string {

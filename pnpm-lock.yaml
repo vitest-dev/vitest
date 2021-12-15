@@ -88,6 +88,7 @@ importers:
       local-pkg: ^0.4.0
       log-update: ^5.0.0
       micromatch: ^4.0.4
+      mlly: ^0.3.15
       nanoid: ^3.1.30
       natural-compare: ^1.4.0
       picocolors: ^1.0.0
@@ -123,6 +124,7 @@ importers:
       happy-dom: 2.24.5
       jsdom: 19.0.0
       log-update: 5.0.0
+      mlly: 0.3.15
       nanoid: 3.1.30
       natural-compare: 1.4.0
       picocolors: 1.0.0
@@ -132,10 +134,12 @@ importers:
 
   test/cjs:
     specifiers:
+      '@types/prettier': ^2.4.2
       history: ^5.1.0
       prettier: ^2.5.1
       vitest: workspace:*
     devDependencies:
+      '@types/prettier': 2.4.2
       history: 5.1.0
       prettier: 2.5.1
       vitest: link:../../packages/vitest
@@ -1068,6 +1072,10 @@ packages:
 
   /@types/parse5/6.0.3:
     resolution: {integrity: sha512-SuT16Q1K51EAVPz1K29DJ/sXjhSQ0zjvsypYJ6tlwVsRV9jwW5Adq2ch8Dq8kDBCkYnELS7N7VNCSB5nC56t/g==}
+    dev: true
+
+  /@types/prettier/2.4.2:
+    resolution: {integrity: sha512-ekoj4qOQYp7CvjX8ZDBgN86w3MqQhLE1hczEJbEIjgFEumDy+na/4AJAbLXfgEWFNB2pKadM5rPFtuSGMWK7xA==}
     dev: true
 
   /@types/prop-types/15.7.4:
@@ -3808,6 +3816,10 @@ packages:
     dependencies:
       import-meta-resolve: 1.1.1
 
+  /mlly/0.3.15:
+    resolution: {integrity: sha512-3btbOX6XaoIMXRhLu0T/D9jPRrjJXl4R7Dl+EbpN7BYcQwehmt5UAYrIa2m9D/ywcXIUvDM+OTCON+ShFggndg==}
+    dev: true
+
   /mrmime/1.0.0:
     resolution: {integrity: sha512-a70zx7zFfVO7XpnQ2IX1Myh9yY4UYvfld/dikWRnsXxbyvMcfz+u6UfgNAtH+k2QqtJuzVpv6eLTx1G2+WKZbQ==}
     engines: {node: '>=10'}
@@ -4661,6 +4673,7 @@ packages:
   /source-map/0.6.1:
     resolution: {integrity: sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g==}
     engines: {node: '>=0.10.0'}
+    requiresBuild: true
 
   /source-map/0.7.3:
     resolution: {integrity: sha512-CkCj6giN3S+n9qrYiBTX5gystlENnRW5jZeNLHpe6aue+SrHcG5VYwujhW9s4dY31mEGsxBDrHR6oI69fTXsaQ==}
