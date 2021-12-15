@@ -2,7 +2,7 @@ import { defineConfig } from 'vite'
 
 export default defineConfig({
   test: {
-    testTimeout: 1000,
+    testTimeout: 2000,
     // threads: false,
     setupFiles: [
       './test/setup.ts',

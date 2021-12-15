@@ -1,3 +1,5 @@
+import { createRequire } from 'module'
+import c from 'picocolors'
 import type { RunMode, Suite, Test, Task, Arrayable, Nullable } from './types'
 
 /**
@@ -87,3 +89,15 @@ export function getNames(task: Task) {
 
   return names
 }
+
+export function checkPeerDependency(dependency: string) {
+  const require = createRequire(import.meta.url)
+
+  try {
+    require.resolve(dependency)
+  } catch {
+    console.log(c.red(`${c.inverse(c.red(' MISSING DEP '))} Cound not find '${dependency}' peer dependency, please try installing it\n`))
+    process.exit(1)
+  }
+}
+

@@ -2,11 +2,11 @@ import { builtinModules, createRequire } from 'module'
 import { fileURLToPath, pathToFileURL } from 'url'
 import { dirname, resolve } from 'path'
 import vm from 'vm'
-import type { TransformResult } from 'vite'
 import type { ModuleCache } from '../types'
 import { slash } from '../utils'
+import { isValidNodeImport } from './mlly-port'
 
-export type FetchFunction = (id: string) => Promise<TransformResult | undefined | null>
+export type FetchFunction = (id: string) => Promise<string | undefined>
 
 export interface ExecuteOptions {
   root: string
@@ -20,10 +20,6 @@ export interface ExecuteOptions {
 
 const defaultInline = [
   'vitest/dist',
-  '@vue',
-  '@vueuse',
-  'vue-demi',
-  'vue',
   /virtual:/,
   /\.ts$/,
   /\/esm\/.*\.js$/,
@@ -31,6 +27,7 @@ const defaultInline = [
 ]
 const depsExternal = [
   /\.cjs.js$/,
+  /\.mjs$/,
 ]
 
 const isWindows = process.platform === 'win32'
@@ -66,25 +63,12 @@ export async function interpretedImport(path: string, interpretDefault: boolean)
   return mod
 }
 
-let SOURCEMAPPING_URL = 'sourceMa'
-SOURCEMAPPING_URL += 'ppingURL'
-
-export async function withInlineSourcemap(result: TransformResult) {
-  const { code, map } = result
-
-  if (code.includes(`${SOURCEMAPPING_URL}=`))
-    return result
-
-  if (map)
-    result.code = `${code}\n\n//# ${SOURCEMAPPING_URL}=data:application/json;charset=utf-8;base64,${Buffer.from(JSON.stringify(map), 'utf-8').toString('base64')}`
-
-  return result
-}
-
 export async function executeInViteNode(options: ExecuteOptions) {
   const { moduleCache, root, files, fetch } = options
 
-  const externaled = new Set<string>(builtinModules)
+  const externalCache = new Map<string, boolean>()
+  builtinModules.forEach(m => externalCache.set(m, true))
+
   const result = []
   for (const file of files)
     result.push(await cachedRequest(`/@fs/${slash(resolve(file))}`, []))
@@ -105,33 +89,42 @@ export async function executeInViteNode(options: ExecuteOptions) {
     if (id in stubRequests)
       return stubRequests[id]
 
-    const result = await fetch(id)
-    if (!result)
+    const transformed = await fetch(id)
+    if (transformed == null)
       throw new Error(`failed to load ${id}`)
-
-    if (process.env.NODE_V8_COVERAGE)
-      withInlineSourcemap(result)
 
     // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
     const url = pathToFileURL(fsPath).href
-    const exports = {}
+    const exports: any = {}
 
-    setCache(fsPath, { transformResult: result, exports })
+    setCache(fsPath, { code: transformed, exports })
 
     const __filename = fileURLToPath(url)
+    const moduleProxy = {
+      set exports(value) {
+        exportAll(exports, value)
+        exports.default = value
+      },
+      get exports() {
+        return exports.default
+      },
+    }
     const context = {
-      require: createRequire(url),
-      exports,
-      __filename,
-      __dirname: dirname(__filename),
+      // esm transformed by Vite
       __vite_ssr_import__: request,
       __vite_ssr_dynamic_import__: request,
       __vite_ssr_exports__: exports,
       __vite_ssr_exportAll__: (obj: any) => exportAll(exports, obj),
       __vite_ssr_import_meta__: { url },
+      // cjs compact
+      require: createRequire(url),
+      exports,
+      module: moduleProxy,
+      __filename,
+      __dirname: dirname(__filename),
     }
 
-    const fn = vm.runInThisContext(`async (${Object.keys(context).join(',')})=>{${result.code}\n}`, {
+    const fn = vm.runInThisContext(`async (${Object.keys(context).join(',')})=>{${transformed}\n}`, {
       filename: fsPath,
       lineOffset: 0,
     })
@@ -150,16 +143,17 @@ export async function executeInViteNode(options: ExecuteOptions) {
   async function cachedRequest(rawId: string, callstack: string[]) {
     const id = normalizeId(rawId)
 
-    if (externaled.has(id))
+    if (externalCache.get(id))
       return interpretedImport(id, options.interpretDefault)
 
     const fsPath = toFilePath(id, root)
-
     const importPath = patchWindowsImportPath(fsPath)
-    if (externaled.has(importPath) || await shouldExternalize(importPath, options)) {
-      externaled.add(importPath)
+
+    if (!externalCache.has(importPath))
+      externalCache.set(importPath, await shouldExternalize(importPath, options))
+
+    if (externalCache.get(importPath))
       return interpretedImport(importPath, options.interpretDefault)
-    }
 
     if (moduleCache.get(fsPath)?.promise)
       return moduleCache.get(fsPath)?.promise
@@ -209,7 +203,7 @@ export async function shouldExternalize(id: string, config: Pick<ExecuteOptions,
   if (matchExternalizePattern(id, defaultInline))
     return false
 
-  return id.includes('/node_modules/') // && await isValidNodeImport(id)
+  return id.includes('/node_modules/') && await isValidNodeImport(id)
 }
 
 export function toFilePath(id: string, root: string): string {
