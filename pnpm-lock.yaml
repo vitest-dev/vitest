@@ -17,6 +17,7 @@ importers:
       esno: ^0.12.1
       fast-glob: ^3.2.7
       npm-run-all: ^4.1.5
+      pnpm: ^6.24.0
       rimraf: ^3.0.2
       rollup-plugin-dts: ^4.0.1
       rollup-plugin-esbuild: ^4.7.2
@@ -38,6 +39,7 @@ importers:
       esno: 0.12.1_typescript@4.5.3
       fast-glob: 3.2.7
       npm-run-all: 4.1.5
+      pnpm: 6.24.0
       rimraf: 3.0.2
       rollup-plugin-dts: 4.0.1_typescript@4.5.3
       rollup-plugin-esbuild: 4.7.2
@@ -4833,6 +4835,12 @@ packages:
   /pluralize/8.0.0:
     resolution: {integrity: sha512-Nc3IT5yHzflTfbjgqWcCPpo7DaKy4FnpB0l/zCAW0Tc7jxAiuqSxHasntB3D7887LSrA93kDJ9IXovxJYxyLCA==}
     engines: {node: '>=4'}
+    dev: true
+
+  /pnpm/6.24.0:
+    resolution: {integrity: sha512-5JJk+25bRHmD9H1tMElIyh01hYTOZ8/khIY5VnFnj4mKsRyAJO34t6xekKts1loD21f465V0/UpAlhaEVAE9Ow==}
+    engines: {node: '>=12.17'}
+    hasBin: true
     dev: true
 
   /postcss-value-parser/3.3.1:
