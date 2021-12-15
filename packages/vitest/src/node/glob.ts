@@ -8,8 +8,8 @@ export function isTargetFile(id: string, config: ResolvedConfig): boolean {
   return mm.isMatch(id, config.include)
 }
 
-export async function globTestFiles(config: ResolvedConfig) {
-  return await fg(
+export async function globTestFiles(config: ResolvedConfig, filters?: string[]) {
+  let files = await fg(
     config.include,
     {
       absolute: true,
@@ -17,4 +17,9 @@ export async function globTestFiles(config: ResolvedConfig) {
       ignore: config.exclude,
     },
   )
+
+  if (filters?.length)
+    files = files.filter(i => filters.some(f => i.includes(f)))
+
+  return files
 }

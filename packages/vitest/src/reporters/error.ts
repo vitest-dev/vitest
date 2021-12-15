@@ -35,9 +35,7 @@ declare global {
   }
 }
 
-export async function printError(error: unknown) {
-  const ctx = process.__vitest__
-
+export async function printError(error: unknown, ctx: Vitest) {
   let e = error as ErrorWithDiff
 
   if (typeof error === 'string') {

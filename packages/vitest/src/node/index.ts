@@ -5,63 +5,167 @@ import { findUp } from 'find-up'
 import type { Reporter, UserConfig, ResolvedConfig, ArgumentsType } from '../types'
 import { SnapshotManager } from '../integrations/snapshot/manager'
 import { configFiles } from '../constants'
-import { toArray, hasFailed } from '../utils'
+import { toArray, hasFailed, slash } from '../utils'
 import { ConsoleReporter } from '../reporters/console'
 import type { WorkerPool } from './pool'
 import { StateManager } from './state'
 import { resolveConfig } from './config'
 import { createPool } from './pool'
-import { globTestFiles } from './glob'
-import { startWatcher } from './watcher'
+import { globTestFiles, isTargetFile } from './glob'
+
+const WATCHER_DEBOUNCE = 100
 
 class Vitest {
-  config: ResolvedConfig
-  server: ViteDevServer
-  state: StateManager
-  snapshot: SnapshotManager
-  reporters: Reporter[]
+  config: ResolvedConfig = undefined!
+  server: ViteDevServer = undefined!
+  state: StateManager = undefined!
+  snapshot: SnapshotManager = undefined!
+  reporters: Reporter[] = undefined!
   console: Console
   pool: WorkerPool | undefined
 
-  constructor(options: UserConfig, server: ViteDevServer) {
+  invalidates: Set<string> = new Set()
+  changedTests: Set<string> = new Set()
+  runningPromise?: Promise<void>
+  isFirstRun = true
+
+  constructor() {
+    this.console = globalThis.console
+  }
+
+  setServer(options: UserConfig, server: ViteDevServer) {
+    this.pool?.close()
+    this.pool = undefined
+
     const resolved = resolveConfig(options, server.config)
     this.server = server
     this.config = resolved
     this.state = new StateManager()
     this.snapshot = new SnapshotManager(resolved)
     this.reporters = toArray(resolved.reporters)
-    this.console = globalThis.console
 
     if (!this.reporters.length)
       this.reporters.push(new ConsoleReporter(this))
+
+    if (this.config.watch)
+      this.registerWatcher()
+
+    this.runningPromise = undefined
   }
 
-  async run(filters?: string[]) {
-    let testFilepaths = await globTestFiles(this.config)
+  async start(filters?: string[]) {
+    const files = await globTestFiles(this.config, filters)
 
-    if (filters?.length)
-      testFilepaths = testFilepaths.filter(i => filters.some(f => i.includes(f)))
-
-    if (!testFilepaths.length) {
+    if (!files.length) {
       console.error('No test files found')
       process.exitCode = 1
+    }
+
+    await this.runFiles(files)
+
+    if (this.config.watch) {
+      await this.report('onWatcherStart')
+      // never resolves to keep the process running
+      await new Promise(() => {})
+    }
+  }
+
+  async runFiles(files: string[]) {
+    await this.runningPromise
+
+    this.runningPromise = (async() => {
+      if (!this.pool)
+        this.pool = createPool(this)
+
+      const invalidates = Array.from(this.invalidates)
+      this.invalidates.clear()
+      await this.pool.runTests(files, invalidates)
+
+      if (hasFailed(this.state.getFiles()))
+        process.exitCode = 1
+
+      await this.report('onFinished', this.state.getFiles())
+    })()
+      .finally(() => {
+        this.runningPromise = undefined
+      })
+
+    return await this.runningPromise
+  }
+
+  private registerWatcher() {
+    let timer: any
+    const scheduleRerun = async(id: string) => {
+      await this.runningPromise
+      clearTimeout(timer)
+      timer = setTimeout(async() => {
+        if (this.changedTests.size === 0) {
+          this.invalidates.clear()
+          return
+        }
+
+        this.isFirstRun = false
+
+        // add previously failed files
+        // if (RERUN_FAILED) {
+        //   ctx.state.getFiles().forEach((file) => {
+        //     if (file.result?.state === 'fail')
+        //       changedTests.add(file.filepath)
+        //   })
+        // }
+        const files = Array.from(this.changedTests)
+
+        await this.report('onWatcherRerun', files, id)
+
+        await this.runFiles(files)
+
+        await this.report('onWatcherStart')
+      }, WATCHER_DEBOUNCE)
+    }
+
+    this.server.watcher.on('change', (id) => {
+      id = slash(id)
+      this.handleFileChanged(id)
+      if (this.changedTests.size)
+        scheduleRerun(id)
+    })
+    this.server.watcher.on('unlink', (id) => {
+      id = slash(id)
+      this.invalidates.add(id)
+
+      if (id in this.state.filesMap) {
+        delete this.state.filesMap[id]
+        this.changedTests.delete(id)
+      }
+    })
+    this.server.watcher.on('add', async(id) => {
+      id = slash(id)
+      if (isTargetFile(id, this.config)) {
+        this.changedTests.add(id)
+        scheduleRerun(id)
+      }
+    })
+  }
+
+  handleFileChanged(id: string) {
+    if (this.changedTests.has(id) || this.invalidates.has(id) || id.includes('/node_modules/') || id.includes('/vitest/dist/'))
+      return
+
+    this.invalidates.add(id)
+
+    if (id in this.state.filesMap) {
+      this.changedTests.add(id)
       return
     }
 
-    if (!this.pool)
-      this.pool = createPool(this)
+    const mod = this.server.moduleGraph.getModuleById(id)
 
-    await this.pool.runTests(testFilepaths)
-
-    if (hasFailed(this.state.getFiles()))
-      process.exitCode = 1
-
-    await this.report('onFinished', this.state.getFiles())
-
-    if (this.config.watch)
-      await startWatcher(this)
-    else
-      await this.pool.close()
+    if (mod) {
+      mod.importers.forEach((i) => {
+        if (i.id)
+          this.handleFileChanged(i.id)
+      })
+    }
   }
 
   async close() {
@@ -79,19 +183,16 @@ class Vitest {
 
 export type { Vitest }
 
-export async function createVitest(options: UserConfig, viteOverrides?: ViteUserConfig): Promise<Vitest> {
-  const server = await startServer(options, viteOverrides)
-  const instance = new Vitest(options, server)
+export async function createVitest(options: UserConfig, viteOverrides: ViteUserConfig = {}) {
+  const ctx = new Vitest()
 
-  return instance
-}
-
-async function startServer(options: UserConfig, viteOverrides: ViteUserConfig = {}) {
   const root = resolve(options.root || process.cwd())
 
   const configPath = options.config
     ? resolve(root, options.config)
     : await findUp(configFiles, { cwd: root })
+
+  let haveStarted = false
 
   const config: ViteInlineConfig = {
     root,
@@ -102,6 +203,10 @@ async function startServer(options: UserConfig, viteOverrides: ViteUserConfig = 
       {
         name: 'vitest',
         async configureServer(server) {
+          if (haveStarted)
+            await ctx.report('onServerRestart')
+          ctx.setServer(options, server)
+          haveStarted = true
           if (options.api)
             server.middlewares.use((await import('../api/middleware')).default())
         },
@@ -124,5 +229,5 @@ async function startServer(options: UserConfig, viteOverrides: ViteUserConfig = 
   if (typeof options.api === 'number')
     await server.listen(options.api)
 
-  return server
+  return ctx
 }
