@@ -128,27 +128,33 @@ export function JestChaiExpect(): ChaiPlugin {
       return assertion._obj as Spy
     }
     def(['toHaveBeenCalledTimes', 'toBeCalledTimes'], function(number: number) {
+      const spy = getSpy(this)
       return this.assert(
-        getSpy(this).callCount === number,
+        spy.callCount === number,
         'expected spy to be called #{exp} times',
         'expected spy to not be called #{exp} times',
         number,
+        spy.callCount,
       )
     })
     def('toHaveBeenCalledOnce', function() {
+      const spy = getSpy(this)
       return this.assert(
-        getSpy(this).callCount === 1,
+        spy.callCount === 1,
         'expected spy to be called once',
         'expected spy to not be called once',
         1,
+        spy.callCount,
       )
     })
     def(['toHaveBeenCalled', 'toBeCalled'], function() {
+      const spy = getSpy(this)
       return this.assert(
-        getSpy(this).called,
+        spy.called,
         'expected spy to be called at least once',
         'expected spy to not be called at all',
         true,
+        spy.called,
       )
     })
     def(['toHaveBeenCalledWith', 'toBeCalledWith'], function(...args) {
