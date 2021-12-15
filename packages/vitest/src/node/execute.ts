@@ -20,10 +20,6 @@ export interface ExecuteOptions {
 
 const defaultInline = [
   'vitest/dist',
-  '@vue',
-  '@vueuse',
-  'vue-demi',
-  'vue',
   /virtual:/,
   /\.ts$/,
   /\/esm\/.*\.js$/,
