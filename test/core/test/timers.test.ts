@@ -2,6 +2,44 @@
 
 import { vitest, test, expect } from 'vitest'
 
+test('timers order: i -> t', () => {
+  const res: string[] = []
+
+  vitest.useFakeTimers()
+
+  const interval = setInterval(() => {
+    res.push('interval')
+    clearInterval(interval)
+  })
+  setTimeout(() => {
+    res.push('timeout')
+  })
+
+  vitest.runOnlyPendingTimers()
+  vitest.useRealTimers()
+
+  expect(res).toEqual(['interval', 'timeout'])
+})
+
+test('timers order: t -> i', () => {
+  const res: string[] = []
+
+  vitest.useFakeTimers()
+
+  setTimeout(() => {
+    res.push('timeout')
+  })
+  const interval = setInterval(() => {
+    res.push('interval')
+    clearInterval(interval)
+  })
+
+  vitest.runOnlyPendingTimers()
+  vitest.useRealTimers()
+
+  expect(res).toEqual(['timeout', 'interval'])
+})
+
 test('timeout', async() => {
   const t = vitest.fn()
 

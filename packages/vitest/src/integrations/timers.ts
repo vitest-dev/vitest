@@ -233,9 +233,6 @@ export class FakeTimers {
         if (t1.type === QueueTaskType.Immediate && t2.type !== QueueTaskType.Immediate)
           return 1
 
-        if (t1.type === QueueTaskType.Interval && t2.type !== QueueTaskType.Interval)
-          return 1
-
         return 0
       }
 
