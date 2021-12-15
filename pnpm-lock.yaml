@@ -5973,6 +5973,12 @@ packages:
   /tinyspy/0.1.0:
     resolution: {integrity: sha512-hxHEtyz3+QJ3wg4ZmUlqhpNgaH1Nxe0E4g8ThJgJbgkB0GQgCSKc7AtDm94VdVbfepgflcXshq81OwW83j9bbw==}
     engines: {node: '>=14.0.0'}
+    dev: true
+
+  /tinyspy/0.1.0:
+    resolution: {integrity: sha512-hxHEtyz3+QJ3wg4ZmUlqhpNgaH1Nxe0E4g8ThJgJbgkB0GQgCSKc7AtDm94VdVbfepgflcXshq81OwW83j9bbw==}
+    engines: {node: '>=14.0.0'}
+    dev: false
 
   /to-fast-properties/2.0.0:
     resolution: {integrity: sha1-3F5pjL0HkmW8c+A3doGk5Og/YW4=}
