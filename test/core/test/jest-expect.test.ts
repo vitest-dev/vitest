@@ -56,6 +56,11 @@ describe('jest-expect', () => {
     expect({ foo: 'bar' }).equal({ foo: expect.stringContaining('ba') })
     expect('bar').equal(expect.stringContaining('ba'))
     expect(['bar']).equal([expect.stringContaining('ba')])
+    expect({ foo: 'bar', bar: 'foo', hi: 'hello' }).equal({
+      foo: expect.stringContaining('ba'),
+      bar: expect.stringContaining('fo'),
+      hi: 'hello',
+    })
 
     expect({ foo: 'bar' }).not.equal({ foo: expect.stringContaining('zoo') })
     expect('bar').not.equal(expect.stringContaining('zoo'))
