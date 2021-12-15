@@ -39,8 +39,23 @@ export function equals(
 
 const functionToString = Function.prototype.toString
 
-function isAsymmetric(obj: any) {
+export function isAsymmetric(obj: any) {
   return !!obj && isA('Function', obj.asymmetricMatch)
+}
+
+export function hasAsymmetric(obj: any, seen = new Set()): boolean {
+  if (seen.has(obj))
+    return false
+  seen.add(obj)
+  if (isAsymmetric(obj))
+    return true
+  if (Array.isArray(obj))
+    return obj.some(i => hasAsymmetric(i, seen))
+  if (obj instanceof Set)
+    return Array.from(obj).some(i => hasAsymmetric(i, seen))
+  if (isObject(obj))
+    return Object.values(obj).some(v => hasAsymmetric(v, seen))
+  return false
 }
 
 function asymmetricMatch(a: any, b: any) {

@@ -1,5 +1,5 @@
 import type { Spy } from 'tinyspy'
-import { equals } from './jest-utils'
+import { equals as asymmetricEquals, hasAsymmetric } from './jest-utils'
 import type { ChaiPlugin } from './types'
 
 // Jest Expect Compact
@@ -17,24 +17,51 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       addMethod(name)
   }
 
-  utils.addMethod(chai.Assertion.prototype, 'chaiEqual', function(this: Chai.AssertionStatic & Chai.Assertion) {
-    return this.equal
+  // we overrides the default `.equal`, keep original `.chaiEqual` in case need
+  // @ts-expect-error
+  const chaiEqual = chai.Assertion.prototype.equal
+  def('chaiEqual', function(...args: any[]) {
+    return chaiEqual.apply(this, args)
   })
 
-  def('equal', function(expected) {
-    const actual = utils.flag(this, 'object')
-    const result = equals(actual, expected)
-    // TODO: improve message
-    this.assert(
-      result,
-      'not match with #{this}',
-      'should not match with #{this}',
-      true,
-    )
+  // overrides `.equal` and `.eql` to provide custom assertion for asymmetric equality
+  utils.overwriteMethod(chai.Assertion.prototype, 'equal', (_super: any) => {
+    return function(this: Chai.Assertion & Chai.AssertionStatic, ...args: any[]) {
+      const expected = args[0]
+      const actual = utils.flag(this, 'object')
+      if (hasAsymmetric(expected)) {
+        this.assert(
+          asymmetricEquals(actual, expected, undefined, true),
+          'not match with #{this}',
+          'should not match with #{this}',
+          true,
+        )
+      }
+      else {
+        _super.apply(this, args)
+      }
+    }
+  })
+  utils.overwriteMethod(chai.Assertion.prototype, 'eql', (_super: any) => {
+    return function(this: Chai.Assertion & Chai.AssertionStatic, ...args: any[]) {
+      const expected = args[0]
+      const actual = utils.flag(this, 'object')
+      if (hasAsymmetric(expected)) {
+        this.assert(
+          asymmetricEquals(actual, expected),
+          'not match with #{this}',
+          'should not match with #{this}',
+          true,
+        )
+      }
+      else {
+        _super.apply(this, args)
+      }
+    }
   })
 
   def('toEqual', function(expected) {
-    this.equal(expected)
+    return this.eql(expected)
   })
 
   def('toStrictEqual', function(expected) {
@@ -175,7 +202,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   })
   def(['toHaveBeenCalledWith', 'toBeCalledWith'], function(...args) {
     const spy = getSpy(this)
-    const pass = spy.calls.some(callArg => equals(callArg, args))
+    const pass = spy.calls.some(callArg => asymmetricEquals(callArg, args))
     return this.assert(
       pass,
       'expected spy to be called with arguments: #{exp}',
@@ -203,7 +230,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const nthCall = spy.calls[times - 1]
 
     this.assert(
-      equals(nthCall, args),
+      asymmetricEquals(nthCall, args),
       `expected ${ordinalOf(times)} spy call to have been called with #{exp}`,
       `expected ${ordinalOf(times)} spy call to not have been called with #{exp}`,
       args,
@@ -215,7 +242,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const lastCall = spy.calls.at(-1)
 
     this.assert(
-      equals(lastCall, args),
+      asymmetricEquals(lastCall, args),
       'expected last spy call to have been called with #{exp}',
       'expected last spy call to not have been called with #{exp}',
       args,
@@ -254,7 +281,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   })
   def(['toHaveReturnedWith', 'toReturnWith'], function(value: any) {
     const spy = getSpy(this)
-    const pass = spy.results.some(([type, result]) => type === 'ok' && equals(value, result))
+    const pass = spy.results.some(([type, result]) => type === 'ok' && asymmetricEquals(value, result))
     this.assert(
       pass,
       'expected spy to be successfully called with #{exp}',
@@ -265,7 +292,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   def(['toHaveLastReturnedWith', 'lastReturnedWith'], function(value: any) {
     const spy = getSpy(this)
     const lastResult = spy.returns.at(-1)
-    const pass = equals(lastResult, value)
+    const pass = asymmetricEquals(lastResult, value)
     this.assert(
       pass,
       'expected last spy call to return #{exp}',
@@ -283,7 +310,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     if (!isNot && callType === 'error')
       chai.assert.fail(`expected ${ordinalCall} to return #{exp}, but instead it threw an error`)
 
-    const nthCallReturn = equals(callResult, value)
+    const nthCallReturn = asymmetricEquals(callResult, value)
 
     this.assert(
       nthCallReturn,
