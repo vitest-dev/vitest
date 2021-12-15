@@ -20,7 +20,7 @@ type MockResult<T> = MockResultReturn<T> | MockResultThrow | MockResultIncomplet
 export interface JestMockCompatContext<T, Y> {
   calls: Y[]
   instances: T[]
-  // TODO doesnt work
+  // TODO: doesn't work
   invocationCallOrder: number[]
   results: MockResult<T>[]
 }
@@ -38,8 +38,8 @@ export interface JestMockCompat<TArgs extends any[] = any[], TReturns = any> {
   mockReturnThis(): this
   mockReturnValue(obj: TReturns): this
   mockReturnValueOnce(obj: TReturns): this
-  mockResolvedValue(obj: Unpromisify<TReturns>): this
-  mockResolvedValueOnce(obj: Unpromisify<TReturns>): this
+  mockResolvedValue(obj: Awaited<TReturns>): this
+  mockResolvedValueOnce(obj: Awaited<TReturns>): this
   mockRejectedValue(obj: any): this
   mockRejectedValueOnce(obj: any): this
 }
@@ -65,7 +65,7 @@ export function spyOn<T, K extends keyof T>(
   return enhanceSpy(stub) as any
 }
 
-type Unpromisify<T> = T extends Promise<infer R> ? R : never
+type Awaited<T> = T extends Promise<infer R> ? R : never
 
 function enhanceSpy<TArgs extends any[], TReturns>(
   spy: SpyImpl<TArgs, TReturns>,
@@ -146,10 +146,10 @@ function enhanceSpy<TArgs extends any[], TReturns>(
   stub.mockReturnValue = (val: TReturns) => stub.mockImplementation(() => val)
   stub.mockReturnValueOnce = (val: TReturns) => stub.mockImplementationOnce(() => val)
 
-  stub.mockResolvedValue = (val: Unpromisify<TReturns>) =>
+  stub.mockResolvedValue = (val: Awaited<TReturns>) =>
     stub.mockImplementation(() => Promise.resolve(val as TReturns))
 
-  stub.mockResolvedValueOnce = (val: Unpromisify<TReturns>) =>
+  stub.mockResolvedValueOnce = (val: Awaited<TReturns>) =>
     stub.mockImplementationOnce(() => Promise.resolve(val as TReturns))
 
   stub.mockRejectedValue = (val: unknown) =>
