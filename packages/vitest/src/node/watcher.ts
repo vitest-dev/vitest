@@ -74,7 +74,7 @@ export async function startWatcher(ctx: Vitest) {
   async function start(tests: string[], id: string, invalidates: string[]) {
     await ctx.report('onWatcherRerun', tests, id)
 
-    await ctx.pool?.runTestFiles(tests, invalidates)
+    await ctx.pool?.runTests(tests, invalidates)
 
     await ctx.report('onFinished', ctx.state.getFiles(tests))
     await ctx.report('onWatcherStart')

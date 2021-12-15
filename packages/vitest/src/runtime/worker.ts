@@ -5,12 +5,15 @@ import { distDir } from '../constants'
 import { executeInViteNode } from '../node/execute'
 import { send } from './rpc'
 
-let _run: (files: string[], config: ResolvedConfig) => Promise<void>
+let _viteNode: {
+  run: (files: string[], config: ResolvedConfig) => Promise<void>
+  collect: (files: string[], config: ResolvedConfig) => Promise<void>
+}
 const moduleCache: Map<string, ModuleCache> = new Map()
 
-export async function init(ctx: WorkerContext) {
-  if (_run)
-    return _run
+async function startViteNode(ctx: WorkerContext) {
+  if (_viteNode)
+    return _viteNode
 
   const processExit = process.exit
 
@@ -25,7 +28,7 @@ export async function init(ctx: WorkerContext) {
 
   const { config } = ctx
 
-  _run = (await executeInViteNode({
+  const { run, collect } = (await executeInViteNode({
     root: config.root,
     files: [
       resolve(distDir, 'entry.js'),
@@ -37,12 +40,14 @@ export async function init(ctx: WorkerContext) {
     external: config.depsExternal,
     interpretDefault: config.interpretDefault,
     moduleCache,
-  }))[0].run
+  }))[0]
 
-  return _run
+  _viteNode = { run, collect }
+
+  return _viteNode
 }
 
-export default async function run(ctx: WorkerContext) {
+function init(ctx: WorkerContext) {
   process.stdout.write('\0')
 
   const { config, port } = ctx
@@ -73,11 +78,19 @@ export default async function run(ctx: WorkerContext) {
     }
   })
 
-  const run = await init(ctx)
-
   if (ctx.invalidates)
     ctx.invalidates.forEach(i => moduleCache.delete(i))
   ctx.files.forEach(i => moduleCache.delete(i))
+}
 
+export async function collect(ctx: WorkerContext) {
+  init(ctx)
+  const { collect } = await startViteNode(ctx)
+  return collect(ctx.files, ctx.config)
+}
+
+export async function run(ctx: WorkerContext) {
+  init(ctx)
+  const { run } = await startViteNode(ctx)
   return run(ctx.files, ctx.config)
 }

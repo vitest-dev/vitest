@@ -111,16 +111,18 @@ export async function executeInViteNode(options: ExecuteOptions) {
       },
     }
     const context = {
-      require: createRequire(url),
-      exports,
-      module: moduleProxy,
-      __filename,
-      __dirname: dirname(__filename),
+      // esm transformed by Vite
       __vite_ssr_import__: request,
       __vite_ssr_dynamic_import__: request,
       __vite_ssr_exports__: exports,
       __vite_ssr_exportAll__: (obj: any) => exportAll(exports, obj),
       __vite_ssr_import_meta__: { url },
+      // cjs compact
+      require: createRequire(url),
+      exports,
+      module: moduleProxy,
+      __filename,
+      __dirname: dirname(__filename),
     }
 
     const fn = vm.runInThisContext(`async (${Object.keys(context).join(',')})=>{${transformed}\n}`, {

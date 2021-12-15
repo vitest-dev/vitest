@@ -51,7 +51,7 @@ class Vitest {
     if (!this.pool)
       this.pool = createPool(this)
 
-    await this.pool.runTestFiles(testFilepaths)
+    await this.pool.runTests(testFilepaths)
 
     if (hasFailed(this.state.getFiles()))
       process.exitCode = 1
