@@ -165,7 +165,7 @@ export type DiffOptions = {
   compareKeys?: any
 }
 
-// TODO do something with options
+// TODO: do something with options
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function diff(a: any, b: any, options?: DiffOptions) {
   return unifiedDiff(stringify(a), stringify(b))

@@ -4,7 +4,7 @@ import Hello from '../components/Hello.svelte'
 const { click } = fireEvent
 
 describe('Hello.svelte', () => {
-  // TODO @testing-library/svelte claims to add this automatically but it doesn't work without explicit afterEach
+  // TODO: @testing-library/svelte claims to add this automatically but it doesn't work without explicit afterEach
   afterEach(() => cleanup())
 
   it('mounts', async() => {
