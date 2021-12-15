@@ -16,8 +16,8 @@ export function resolveConfig(
     root: viteConfig.root,
   } as ResolvedConfig
 
-  resolved.depsInline = resolved.deps?.inline || []
-  resolved.depsExternal = resolved.deps?.external || []
+  resolved.depsInline = [...resolved.deps?.inline || []]
+  resolved.depsExternal = [...resolved.deps?.external || []]
 
   resolved.environment = resolved.environment || 'node'
   resolved.threads = resolved.threads ?? true

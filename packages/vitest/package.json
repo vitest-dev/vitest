@@ -1,6 +1,6 @@
 {
   "name": "vitest",
-  "version": "0.0.84",
+  "version": "0.0.88",
   "description": "A blazing fast unit test framework powered by Vite",
   "keywords": [
     "vite",
@@ -78,9 +78,12 @@
     "happy-dom": "^2.24.5",
     "jsdom": "^19.0.0",
     "log-update": "^5.0.0",
+    "mlly": "^0.3.15",
     "nanoid": "^3.1.30",
     "natural-compare": "^1.4.0",
+    "pathe": "^0.2.0",
     "picocolors": "^1.0.0",
+    "pkg-types": "^0.3.2",
     "pretty-format": "^27.4.2",
     "rollup": "^2.61.1",
     "strip-ansi": "^7.0.1"

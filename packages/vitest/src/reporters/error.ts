@@ -35,9 +35,7 @@ declare global {
   }
 }
 
-export async function printError(error: unknown) {
-  const ctx = process.__vitest__
-
+export async function printError(error: unknown, ctx: Vitest) {
   let e = error as ErrorWithDiff
 
   if (typeof error === 'string') {
@@ -178,6 +176,10 @@ export function posToNumber(
   const lines = source.split(splitRE)
   const { line, column } = pos
   let start = 0
+
+  if (line > lines.length)
+    return source.length
+
   for (let i = 0; i < line - 1; i++)
     start += lines[i].length + 1
 
