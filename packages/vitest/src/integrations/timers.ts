@@ -1,9 +1,8 @@
 // TODO setImmediate, nextTick, requestAnimationFrame, cancelAnimationFrame
 // TODO async timers
 
+import { spyOn } from 'tinyspy'
 import type { Spy } from 'tinyspy'
-
-import { spyOn } from './tinymock'
 
 const originalSetTimeout = global.setTimeout
 const originalSetInterval = global.setInterval
