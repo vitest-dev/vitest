@@ -121,6 +121,7 @@ export async function executeInViteNode(options: ExecuteOptions) {
     const __filename = fileURLToPath(url)
     const context = {
       require: createRequire(url),
+      exports,
       __filename,
       __dirname: dirname(__filename),
       __vite_ssr_import__: request,
