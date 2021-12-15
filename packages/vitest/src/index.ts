@@ -24,6 +24,9 @@ declare global {
     }
 
     interface Assertion {
+      // Chai
+      chaiEqual(expected: any): void
+
       // Snapshot
       toMatchSnapshot(message?: string): Assertion
       toMatchInlineSnapshot(snapshot?: string, message?: string): Assertion

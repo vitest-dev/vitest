@@ -20,7 +20,11 @@ export function JestChaiExpect(): ChaiPlugin {
         addMethod(name)
     }
 
-    def('toEqual', function(expected) {
+    utils.addMethod(chai.Assertion.prototype, 'chaiEqual', function(this: Chai.AssertionStatic & Chai.Assertion) {
+      return this.equal
+    })
+
+    def('equal', function(expected) {
       const actual = utils.flag(this, 'object')
       const result = equals(actual, expected)
       // TODO: improve message
@@ -31,11 +35,16 @@ export function JestChaiExpect(): ChaiPlugin {
         true,
       )
     })
+
+    def('toEqual', function(expected) {
+      this.equal(expected)
+    })
+
     def('toStrictEqual', function(expected) {
-      return this.equal(expected)
+      return this.chaiEqual(expected)
     })
     def('toBe', function(expected) {
-      return this.equal(expected)
+      return this.chaiEqual(expected)
     })
     def('toMatchObject', function(expected) {
       return this.containSubset(expected)

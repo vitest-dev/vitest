@@ -32,7 +32,7 @@ describe('jest-expect', () => {
     expect(0.2 + 0.1).toBeCloseTo(0.3, 5)
   })
 
-  it('asymmetric matchers', () => {
+  it('asymmetric matchers (jest style)', () => {
     expect({ foo: 'bar' }).toEqual({ foo: expect.stringContaining('ba') })
     expect('bar').toEqual(expect.stringContaining('ba'))
     expect(['bar']).toEqual([expect.stringContaining('ba')])
@@ -50,6 +50,10 @@ describe('jest-expect', () => {
 
     // TODO: support set
     // expect(new Set(['bar'])).not.toEqual(new Set([expect.stringContaining('zoo')]))
+  })
+
+  it('asymmetric matchers (chai style)', () => {
+    expect('bar').equal(expect.stringContaining('ba'))
   })
 
   it('object', () => {
