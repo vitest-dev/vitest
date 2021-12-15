@@ -1,22 +1,22 @@
 // https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm
-function serialize(err: any): any {
-  if (typeof err !== 'object') return err
+export function serializeError(val: any): any {
+  if (!val)
+    return val
 
-  Object.keys(err).forEach((key) => {
-    const val = err[key]
+  if (typeof val === 'function')
+    return `Function<${val.name}>`
+  if (typeof val !== 'object')
+    return val
+  if (val instanceof Promise || 'then' in val)
+    return 'Promise'
+  if (typeof Element !== 'undefined' && val instanceof Element)
+    return val.tagName
 
-    if (typeof val === 'function')
-      err[key] = `Function<${val.name}>`
-    if (typeof val !== 'object') return
-    if ('then' in val)
-      err[key] = 'Promise'
-    if (typeof Element !== 'undefined' && val instanceof Element)
-      err[key] = val.tagName
-
-    serialize(err[key])
+  Object.keys(val).forEach((key) => {
+    val[key] = serializeError(val[key])
   })
 
-  return err
+  return val
 }
 
 export function processError(err: any) {
@@ -29,5 +29,5 @@ export function processError(err: any) {
   if (err.name)
     err.nameStr = String(err.name)
 
-  return serialize(err)
+  return serializeError(err)
 }
