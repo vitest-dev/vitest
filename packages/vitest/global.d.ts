@@ -5,8 +5,6 @@ declare global {
   const it: typeof import('vitest')['it']
   const expect: typeof import('vitest')['expect']
   const assert: typeof import('vitest')['assert']
-  const spy: typeof import('vitest')['spy']
-  const spyOn: typeof import('vitest')['spyOn']
   const vitest: typeof import('vitest')['vitest']
   const vi: typeof import('vitest')['vitest']
   const beforeAll: typeof import('vitest')['beforeAll']

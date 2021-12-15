@@ -29,10 +29,9 @@ export const globalApis = [
   'chai',
   'expect',
   'assert',
-  // tinyspy
-  'spy',
-  'spyOn',
+  // utils
   'vitest',
+  'vi',
   // hooks
   'beforeAll',
   'afterAll',
