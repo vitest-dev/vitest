@@ -2,8 +2,6 @@ import type { Spy } from 'tinyspy'
 import { equals } from './jest-utils'
 import type { ChaiPlugin } from './types'
 
-import { equals } from './jest-utils'
-
 // Jest Expect Compact
 // TODO: add more https://jestjs.io/docs/expect
 export function JestChaiExpect(): ChaiPlugin {
