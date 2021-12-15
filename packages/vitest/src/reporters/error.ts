@@ -311,6 +311,9 @@ function parseStack(stack: string): ParsedStack[] {
  * @return {string} The diff.
  */
 export function unifiedDiff(actual: any, expected: any) {
+  if (actual === expected)
+    return ''
+
   const diffLimit = 10
   const indent = '  '
   let expectedLinesCount = 0
