@@ -96,14 +96,24 @@ export async function executeInViteNode(options: ExecuteOptions) {
 
     // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
     const url = pathToFileURL(fsPath).href
-    const exports = {}
+    const exports: any = {}
 
     setCache(fsPath, { code: transformed, exports })
 
     const __filename = fileURLToPath(url)
+    const moduleProxy = {
+      set exports(value) {
+        exportAll(exports, value)
+        exports.default = value
+      },
+      get exports() {
+        return exports.default
+      },
+    }
     const context = {
       require: createRequire(url),
       exports,
+      module: moduleProxy,
       __filename,
       __dirname: dirname(__filename),
       __vite_ssr_import__: request,
