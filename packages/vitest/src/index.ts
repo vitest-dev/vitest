@@ -21,6 +21,7 @@ declare global {
     interface ExpectStatic {
       extend(expects: MatchersObject): void
       stringContaining(expected: string): void
+      anything(): any
     }
 
     interface Assertion {

@@ -59,10 +59,34 @@ export class StringContaining extends AsymmetricMatcher<string> {
   }
 }
 
+
+
 export const JestAsymmetricMatchers: ChaiPlugin = (chai, utils) => {
   utils.addMethod(
     chai.expect,
     'stringContaining',
     (expected: string) => new StringContaining(expected),
+  )
+
+  utils.addMethod(
+    chai.expect,
+    'anything',
+    () => {
+      class Anything {
+        asymmetricMatch(other: unknown) {
+          return other !== void 0 && other !== null;
+        }
+
+        toString() {
+          return 'Anything';
+        }
+
+        toAsymmetricMatcher() {
+          return 'Anything';
+        }
+      }
+
+      return new Anything
+    },
   )
 }

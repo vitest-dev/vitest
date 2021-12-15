@@ -47,6 +47,8 @@ describe('jest-expect', () => {
       bar: expect.stringContaining('fo'),
       hi: 'hello',
     })
+    console.log(expect)
+    expect(1).toBe(expect.anything())
 
     // TODO: support set
     // expect(new Set(['bar'])).not.toEqual(new Set([expect.stringContaining('zoo')]))
