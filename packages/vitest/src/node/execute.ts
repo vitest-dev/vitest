@@ -30,6 +30,7 @@ const defaultInline = [
 ]
 const depsExternal = [
   /\.cjs.js$/,
+  /\.mjs$/,
 ]
 
 const isWindows = process.platform === 'win32'
