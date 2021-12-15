@@ -55,5 +55,6 @@ class Vitest {
 }
 
 export const vitest = new Vitest()
+export const vi = vitest
 
 export { spy, spyOn } from 'tinyspy'

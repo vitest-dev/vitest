@@ -8,6 +8,7 @@ declare global {
   const spy: typeof import('vitest')['spy']
   const spyOn: typeof import('vitest')['spyOn']
   const vitest: typeof import('vitest')['vitest']
+  const vi: typeof import('vitest')['vitest']
   const beforeAll: typeof import('vitest')['beforeAll']
   const afterAll: typeof import('vitest')['afterAll']
   const beforeEach: typeof import('vitest')['beforeEach']
