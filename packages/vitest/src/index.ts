@@ -20,9 +20,13 @@ declare global {
   namespace Chai {
     interface ExpectStatic {
       extend(expects: MatchersObject): void
+      stringContaining(expected: string): void
     }
 
     interface Assertion {
+      // Chai
+      chaiEqual(expected: any): void
+
       // Snapshot
       toMatchSnapshot(message?: string): Assertion
       toMatchInlineSnapshot(snapshot?: string, message?: string): Assertion
