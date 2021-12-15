@@ -82,6 +82,7 @@
     "natural-compare": "^1.4.0",
     "picocolors": "^1.0.0",
     "pretty-format": "^27.4.2",
+    "rollup": "^2.61.1",
     "strip-ansi": "^7.0.1"
   },
   "peerDependencies": {

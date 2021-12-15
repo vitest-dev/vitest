@@ -6,7 +6,7 @@
     "coverage": "vitest --coverage"
   },
   "dependencies": {
-    "vue": "^2.6.14"
+    "vue": "2.6.14"
   },
   "devDependencies": {
     "@vue/composition-api": "^1.4.1",
@@ -14,7 +14,7 @@
     "happy-dom": "*",
     "unplugin-vue2-script-setup": "^0.8.2",
     "vite-plugin-vue2": "^1.9.0",
-    "vitest": "workspace:*",
-    "vue-template-compiler": "^2.6.14"
+    "vitest": "../../packages/vitest",
+    "vue-template-compiler": "2.6.14"
   }
 }

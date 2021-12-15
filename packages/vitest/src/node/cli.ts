@@ -62,6 +62,8 @@ async function run(cliFilters: string[], options: UserConfig) {
 
   process.__vitest__ = ctx
 
+  process.chdir(ctx.config.root)
+
   try {
     await ctx.run(cliFilters)
   }
