@@ -1,3 +1,5 @@
+/* eslint-disable prefer-template */
+/* eslint-disable no-template-curly-in-string */
 import { promises as fs, existsSync } from 'fs'
 import { relative } from 'path'
 import c from 'picocolors'
@@ -33,9 +35,7 @@ declare global {
   }
 }
 
-export async function printError(error: unknown) {
-  const ctx = process.__vitest__
-
+export async function printError(error: unknown, ctx: Vitest) {
   let e = error as ErrorWithDiff
 
   if (typeof error === 'string') {
@@ -49,7 +49,7 @@ export async function printError(error: unknown) {
   const stacks = parseStack(stackStr)
 
   if (!stacks.length) {
-    console.error(e)
+    ctx.console.error(e)
   }
   else {
     const nearest = stacks.find((stack) => {
@@ -67,8 +67,46 @@ export async function printError(error: unknown) {
     })
   }
 
+  handleImportOutsideModuleError(stackStr, ctx)
+
   if (e.showDiff)
     displayDiff(e.actual, e.expected)
+}
+
+const esmErrors = [
+  'Cannot use import statement outside a module',
+  'Unexpected token \'export\'',
+]
+
+function handleImportOutsideModuleError(stack: string, ctx: Vitest) {
+  if (!esmErrors.some(e => stack.includes(e)))
+    return
+
+  const path = stack.split('\n')[0].trim()
+  let name = path.split('/node_modules/').pop() || ''
+  if (name?.startsWith('@'))
+    name = name.split('/').slice(0, 2).join('/')
+  else
+    name = name.split('/')[0]
+
+  ctx.console.error(c.yellow(
+    `Module ${path} seems to be an ES Module but shipped in a CommonJS package. `
++ `You might want to create an issue to the package ${c.bold(`"${name}"`)} asking `
++ 'them to ship the file in .mjs extension or add "type": "module" in their package.json.'
++ '\n\n'
++ 'As a temporary workaround you can try to inline the package by updating your config:'
++ '\n\n'
++ c.gray(c.dim('// vitest.config.js'))
++ '\n'
++ c.green(`export default {
+  test: {
+    deps: {
+      inline: [
+        ${c.yellow(c.bold(`"${name}"`))}
+      ]
+    }
+  }
+}\n`)))
 }
 
 async function getSourcePos(ctx: Vitest, nearest: ParsedStack) {
@@ -138,6 +176,10 @@ export function posToNumber(
   const lines = source.split(splitRE)
   const { line, column } = pos
   let start = 0
+
+  if (line > lines.length)
+    return source.length
+
   for (let i = 0; i < line - 1; i++)
     start += lines[i].length + 1
 
@@ -271,6 +313,9 @@ function parseStack(stack: string): ParsedStack[] {
  * @return {string} The diff.
  */
 export function unifiedDiff(actual: any, expected: any) {
+  if (actual === expected)
+    return ''
+
   const diffLimit = 10
   const indent = '  '
   let expectedLinesCount = 0

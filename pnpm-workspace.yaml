@@ -1,3 +1,4 @@
-- packages
+packages:
   - packages/*
   - test/*
+  - '!test/vue2'

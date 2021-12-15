@@ -1,9 +1,8 @@
-import { spy, spyOn } from 'tinyspy'
-
+import { spyOn, fn } from './jest-mock'
 // TODO make jest compatible interface
 export const vitest = {
   spyOn,
-  fn: spy,
+  fn,
 }
 
 export { spy, spyOn } from 'tinyspy'
