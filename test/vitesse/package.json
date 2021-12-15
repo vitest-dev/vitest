@@ -9,11 +9,11 @@
     "vue": "^3.2.24"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^1.10.2",
+    "@vitejs/plugin-vue": "^2.0.1",
     "@vue/test-utils": "^2.0.0-rc.17",
     "happy-dom": "*",
     "unplugin-auto-import": "^0.5.3",
-    "unplugin-vue-components": "^0.17.8",
+    "unplugin-vue-components": "^0.17.9",
     "vitest": "workspace:*"
   }
 }

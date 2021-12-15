@@ -62,14 +62,14 @@
     "micromatch": "^4.0.4",
     "piscina": "^3.2.0",
     "source-map": "^0.7.3",
-    "tinyspy": "^0.0.13"
+    "tinyspy": "^0.1.0"
   },
   "devDependencies": {
     "@types/diff": "^5.0.1",
     "@types/jsdom": "^16.2.13",
     "@types/micromatch": "^4.0.2",
     "@types/natural-compare": "^1.4.1",
-    "@types/node": "^16.11.12",
+    "@types/node": "^16.11.13",
     "c8": "^7.10.0",
     "cac": "^6.7.12",
     "cli-truncate": "^3.1.0",

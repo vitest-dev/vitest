@@ -11,7 +11,7 @@
     "@emotion/react": "^11.7.1",
     "@emotion/styled": "^11.6.0",
     "@mui/lab": "*",
-    "@mui/material": "^5.2.3",
+    "@mui/material": "^5.2.4",
     "history": "^5.1.0",
     "notistack": "^2.0.3",
     "react": "^17.0.2",
