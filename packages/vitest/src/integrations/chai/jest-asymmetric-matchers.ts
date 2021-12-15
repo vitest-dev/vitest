@@ -59,6 +59,19 @@ export class StringContaining extends AsymmetricMatcher<string> {
   }
 }
 
+export class Anything extends AsymmetricMatcher<void>{
+  asymmetricMatch(other: unknown) {
+    return other !== void 0 && other !== null;
+  }
+
+  toString() {
+    return 'Anything';
+  }
+
+  toAsymmetricMatcher() {
+    return 'Anything';
+  }
+}
 
 
 export const JestAsymmetricMatchers: ChaiPlugin = (chai, utils) => {
@@ -72,21 +85,7 @@ export const JestAsymmetricMatchers: ChaiPlugin = (chai, utils) => {
     chai.expect,
     'anything',
     () => {
-      class Anything {
-        asymmetricMatch(other: unknown) {
-          return other !== void 0 && other !== null;
-        }
-
-        toString() {
-          return 'Anything';
-        }
-
-        toAsymmetricMatcher() {
-          return 'Anything';
-        }
-      }
-
-      return new Anything
+      return new Anything()
     },
   )
 }
