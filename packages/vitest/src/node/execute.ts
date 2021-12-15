@@ -2,11 +2,10 @@ import { builtinModules, createRequire } from 'module'
 import { fileURLToPath, pathToFileURL } from 'url'
 import { dirname, resolve } from 'path'
 import vm from 'vm'
-import type { TransformResult } from 'vite'
 import type { ModuleCache } from '../types'
 import { slash } from '../utils'
 
-export type FetchFunction = (id: string) => Promise<TransformResult | undefined | null>
+export type FetchFunction = (id: string) => Promise<string | undefined>
 
 export interface ExecuteOptions {
   root: string
@@ -66,21 +65,6 @@ export async function interpretedImport(path: string, interpretDefault: boolean)
   return mod
 }
 
-let SOURCEMAPPING_URL = 'sourceMa'
-SOURCEMAPPING_URL += 'ppingURL'
-
-export async function withInlineSourcemap(result: TransformResult) {
-  const { code, map } = result
-
-  if (code.includes(`${SOURCEMAPPING_URL}=`))
-    return result
-
-  if (map)
-    result.code = `${code}\n\n//# ${SOURCEMAPPING_URL}=data:application/json;charset=utf-8;base64,${Buffer.from(JSON.stringify(map), 'utf-8').toString('base64')}`
-
-  return result
-}
-
 export async function executeInViteNode(options: ExecuteOptions) {
   const { moduleCache, root, files, fetch } = options
 
@@ -105,18 +89,15 @@ export async function executeInViteNode(options: ExecuteOptions) {
     if (id in stubRequests)
       return stubRequests[id]
 
-    const result = await fetch(id)
-    if (!result)
+    const transformed = await fetch(id)
+    if (!transformed)
       throw new Error(`failed to load ${id}`)
-
-    if (process.env.NODE_V8_COVERAGE)
-      withInlineSourcemap(result)
 
     // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
     const url = pathToFileURL(fsPath).href
     const exports = {}
 
-    setCache(fsPath, { transformResult: result, exports })
+    setCache(fsPath, { code: transformed, exports })
 
     const __filename = fileURLToPath(url)
     const context = {
@@ -131,7 +112,7 @@ export async function executeInViteNode(options: ExecuteOptions) {
       __vite_ssr_import_meta__: { url },
     }
 
-    const fn = vm.runInThisContext(`async (${Object.keys(context).join(',')})=>{${result.code}\n}`, {
+    const fn = vm.runInThisContext(`async (${Object.keys(context).join(',')})=>{${transformed}\n}`, {
       filename: fsPath,
       lineOffset: 0,
     })

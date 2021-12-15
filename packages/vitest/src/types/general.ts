@@ -1,4 +1,3 @@
-import type { TransformResult } from 'vite'
 
 export type Awaitable<T> = T | PromiseLike<T>
 export type Nullable<T> = T | null | undefined
@@ -8,7 +7,7 @@ export type ArgumentsType<T> = T extends (...args: infer U) => any ? U : never
 export interface ModuleCache {
   promise?: Promise<any>
   exports?: any
-  transformResult?: TransformResult
+  code?: string
 }
 
 export interface EnvironmentReturn {
