@@ -1,5 +1,5 @@
 import type { MatchersObject } from './integrations/chai/types'
-import type { InlineConfig } from './types'
+import type { InlineConfig as VitestInlineConfig } from './types'
 
 export { suite, test, describe, it } from './runtime/suite'
 export * from './types'
@@ -12,7 +12,7 @@ declare module 'vite' {
     /**
      * Options for Vitest
      */
-    test?: InlineConfig
+    test?: VitestInlineConfig
   }
 }
 
