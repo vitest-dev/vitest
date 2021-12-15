@@ -91,7 +91,7 @@ test.todo("unimplemented test");
 
 ## describe
 
-When you use `test` in the top level of file, they are collected as part of the implicit suite for it. Using `describe` you can define defines a new suite in the current context, as a set of related tests and other nested suites. A suite lets you organize your tests so reports are more clear.
+When you use `test` in the top level of file, they are collected as part of the implicit suite for it. Using `describe` you can define a new suite in the current context, as a set of related tests and other nested suites. A suite lets you organize your tests so reports are more clear.
 
 ### describe.skip
 
