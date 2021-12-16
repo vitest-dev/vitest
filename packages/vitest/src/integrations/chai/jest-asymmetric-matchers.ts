@@ -74,6 +74,93 @@ export class Anything extends AsymmetricMatcher<void>{
 }
 
 
+export class Any extends AsymmetricMatcher<any> {
+  constructor(sample: unknown) {
+    if (typeof sample === 'undefined') {
+      throw new TypeError(
+        'any() expects to be passed a constructor function. ' +
+          'Please pass one or use anything() to match any object.',
+      );
+    }
+    super(sample);
+  }
+ fnNameFor(func: Function) {
+    if (func.name) {
+      return func.name;
+    }
+    const functionToString = Function.prototype.toString;
+
+    const matches = functionToString
+      .call(func)
+      .match(/^(?:async)?\s*function\s*\*?\s*([\w$]+)\s*\(/);
+    return matches ? matches[1] : '<anonymous>';
+  }
+
+  asymmetricMatch(other: unknown) {
+    if (this.sample == String) {
+      return typeof other == 'string' || other instanceof String;
+    }
+
+    if (this.sample == Number) {
+      return typeof other == 'number' || other instanceof Number;
+    }
+
+    if (this.sample == Function) {
+      return typeof other == 'function' || other instanceof Function;
+    }
+
+    if (this.sample == Boolean) {
+      return typeof other == 'boolean' || other instanceof Boolean;
+    }
+
+    if (this.sample == BigInt) {
+      return typeof other == 'bigint' || other instanceof BigInt;
+    }
+
+    if (this.sample == Symbol) {
+      return typeof other == 'symbol' || other instanceof Symbol;
+    }
+
+    if (this.sample == Object) {
+      return typeof other == 'object';
+    }
+
+    return other instanceof this.sample;
+  }
+
+  toString() {
+    return 'Any';
+  }
+
+  getExpectedType() {
+    if (this.sample == String) {
+      return 'string';
+    }
+
+    if (this.sample == Number) {
+      return 'number';
+    }
+
+    if (this.sample == Function) {
+      return 'function';
+    }
+
+    if (this.sample == Object) {
+      return 'object';
+    }
+
+    if (this.sample == Boolean) {
+      return 'boolean';
+    }
+
+    return this.fnNameFor(this.sample);
+  }
+
+  toAsymmetricMatcher() {
+    return 'Any<' + this.fnNameFor(this.sample) + '>';
+  }
+}
+
 export const JestAsymmetricMatchers: ChaiPlugin = (chai, utils) => {
   utils.addMethod(
     chai.expect,
@@ -88,4 +175,13 @@ export const JestAsymmetricMatchers: ChaiPlugin = (chai, utils) => {
       return new Anything()
     },
   )
+
+  utils.addMethod(
+    chai.expect,
+    'any',
+    (expected: unknown) => {
+      return new Any(expected)
+    },
+  )
+
 }
