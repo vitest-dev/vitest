@@ -1,4 +1,4 @@
-import { vitest, test, assert, spyOn, expect } from 'vitest'
+import { vitest, test, assert, vi, expect } from 'vitest'
 import { two } from '../src/submodule'
 import * as mocked from '../src/mockedA'
 import { mockedB } from '../src/mockedB'
@@ -9,9 +9,8 @@ test('submodule is mocked to return "two" as 3', () => {
   assert.equal(3, two)
 })
 
-// TODO - works with tinyspy
-test.skip('can mock esm', () => {
-  const spy = spyOn(mocked, 'mockedA')
+test('can mock esm', () => {
+  const spy = vi.spyOn(mocked, 'mockedA')
 
   mockedB()
 

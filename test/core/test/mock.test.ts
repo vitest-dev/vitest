@@ -12,14 +12,14 @@ describe('mock', () => {
     expect(fn).toHaveBeenCalledOnce()
     expect(fn).toHaveBeenCalledTimes(1)
 
-    fn.reset()
+    fn.mockReset()
 
     expect(fn).not.toHaveBeenCalled()
 
     fn('World', 2)
     fn('Hi', 1)
 
-    expect(fn.calls.at(-1)).toEqual(['Hi', 1])
+    expect(fn.mock.calls.at(-1)).toEqual(['Hi', 1])
 
     expect(fn).toHaveBeenNthCalledWith(1, 'World', 2)
     expect(fn).toHaveBeenNthCalledWith(2, 'Hi', 1)
