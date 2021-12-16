@@ -1,3 +1,4 @@
+import type { Anything } from './integrations/chai/jest-asymmetric-matchers'
 import type { MatchersObject } from './integrations/chai/types'
 import type { InlineConfig as VitestInlineConfig } from './types'
 
@@ -21,6 +22,7 @@ declare global {
     interface ExpectStatic {
       extend(expects: MatchersObject): void
       stringContaining(expected: string): void
+      anything(): Anything
     }
 
     interface Assertion {
