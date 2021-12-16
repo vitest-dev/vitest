@@ -22,6 +22,8 @@ export function slash(str: string) {
   return str.replace(/\\/g, '/')
 }
 
+export const noop = () => {}
+
 /**
  * Partition in tasks groups by consecutive computeMode ('serial', 'concurrent')
  */
