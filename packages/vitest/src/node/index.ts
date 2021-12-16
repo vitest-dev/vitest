@@ -6,8 +6,8 @@ import fg from 'fast-glob'
 import mm from 'micromatch'
 import type { Reporter, UserConfig, ArgumentsType, ResolvedConfig } from '../types'
 import { SnapshotManager } from '../integrations/snapshot/manager'
-import { configFiles } from '../constants'
-import { toArray, hasFailed, slash } from '../utils'
+import { configFiles, defaultPort } from '../constants'
+import { toArray, hasFailed, slash, noop } from '../utils'
 import { ConsoleReporter } from '../reporters/console'
 import type { WorkerPool } from './pool'
 import { StateManager } from './state'
@@ -39,6 +39,8 @@ class Vitest {
   }
 
   setServer(options: UserConfig, server: ViteDevServer) {
+    this.unregisterWatcher?.()
+    clearTimeout(this._rerunTimer)
     this.restartsCount += 1
     this.pool?.close()
     this.pool = undefined
@@ -98,52 +100,55 @@ class Vitest {
     return await this.runningPromise
   }
 
-  private registerWatcher() {
-    let timer: any
-    const scheduleRerun = async(id: string, count: number) => {
-      await this.runningPromise
-      clearTimeout(timer)
+  private _rerunTimer: any
+  private async scheduleRerun(triggerId: string) {
+    const currentCount = this.restartsCount
+    clearTimeout(this._rerunTimer)
+    await this.runningPromise
+    clearTimeout(this._rerunTimer)
+
+    // server restarted
+    if (this.restartsCount !== currentCount)
+      return
+
+    this._rerunTimer = setTimeout(async() => {
+      if (this.changedTests.size === 0) {
+        this.invalidates.clear()
+        return
+      }
 
       // server restarted
-      if (this.restartsCount !== count)
+      if (this.restartsCount !== currentCount)
         return
 
-      timer = setTimeout(async() => {
-        if (this.changedTests.size === 0) {
-          this.invalidates.clear()
-          return
-        }
+      this.isFirstRun = false
 
-        // server restarted
-        if (this.restartsCount !== count)
-          return
+      // add previously failed files
+      // if (RERUN_FAILED) {
+      //   ctx.state.getFiles().forEach((file) => {
+      //     if (file.result?.state === 'fail')
+      //       changedTests.add(file.filepath)
+      //   })
+      // }
+      const files = Array.from(this.changedTests)
 
-        this.isFirstRun = false
+      await this.report('onWatcherRerun', files, triggerId)
 
-        // add previously failed files
-        // if (RERUN_FAILED) {
-        //   ctx.state.getFiles().forEach((file) => {
-        //     if (file.result?.state === 'fail')
-        //       changedTests.add(file.filepath)
-        //   })
-        // }
-        const files = Array.from(this.changedTests)
+      await this.runFiles(files)
 
-        await this.report('onWatcherRerun', files, id)
+      await this.report('onWatcherStart')
+    }, WATCHER_DEBOUNCE)
+  }
 
-        await this.runFiles(files)
-
-        await this.report('onWatcherStart')
-      }, WATCHER_DEBOUNCE)
-    }
-
-    this.server.watcher.on('change', (id) => {
+  private unregisterWatcher = noop
+  private registerWatcher() {
+    const onChange = (id: string) => {
       id = slash(id)
       this.handleFileChanged(id)
       if (this.changedTests.size)
-        scheduleRerun(id, this.restartsCount)
-    })
-    this.server.watcher.on('unlink', (id) => {
+        this.scheduleRerun(id)
+    }
+    const onUnlink = (id: string) => {
       id = slash(id)
       this.invalidates.add(id)
 
@@ -151,17 +156,28 @@ class Vitest {
         delete this.state.filesMap[id]
         this.changedTests.delete(id)
       }
-    })
-    this.server.watcher.on('add', async(id) => {
+    }
+    const onAdd = (id: string) => {
       id = slash(id)
       if (this.isTargetFile(id)) {
         this.changedTests.add(id)
-        scheduleRerun(id, this.restartsCount)
+        this.scheduleRerun(id)
       }
-    })
+    }
+    const watcher = this.server.watcher
+    watcher.on('change', onChange)
+    watcher.on('unlink', onUnlink)
+    watcher.on('add', onAdd)
+
+    this.unregisterWatcher = () => {
+      watcher.off('change', onChange)
+      watcher.off('unlink', onUnlink)
+      watcher.off('add', onAdd)
+      this.unregisterWatcher = noop
+    }
   }
 
-  handleFileChanged(id: string) {
+  private handleFileChanged(id: string) {
     if (this.changedTests.has(id) || this.invalidates.has(id) || id.includes('/node_modules/') || id.includes('/vitest/dist/'))
       return
 
@@ -248,7 +264,7 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
           ctx.setServer(options, server)
           haveStarted = true
           if (options.api)
-            server.middlewares.use((await import('../api/middleware')).default())
+            server.middlewares.use((await import('../api/middleware')).default(ctx))
         },
       },
     ],
@@ -265,6 +281,9 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
 
   const server = await createServer(mergeConfig(config, viteOverrides))
   await server.pluginContainer.buildStart({})
+
+  if (options.api === true)
+    options.api = defaultPort
 
   if (typeof options.api === 'number')
     await server.listen(options.api)
