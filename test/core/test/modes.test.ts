@@ -76,3 +76,14 @@ describe.concurrent('concurrent suite', () => {
 })
 
 it('timeout', () => new Promise(resolve => setTimeout(resolve, timeout)))
+
+describe('test.only in nested described', () => {
+  describe('nested describe', () => {
+    it('skipped test', () => {
+      assert.equal(Math.sqrt(4), 3) // doesn't fails, as the next is it.only
+    })
+    it.only('focus test. Should fails', () => {
+      assert.equal(Math.sqrt(4), 2)
+    })
+  })
+})
