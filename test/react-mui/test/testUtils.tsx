@@ -2,7 +2,7 @@ import type { RenderOptions } from '@testing-library/react'
 import { render } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { LocalizationProvider } from '@mui/lab'
-import { ThemeProvider, useMediaQuery } from '@mui/material'
+import { ThemeProvider } from '@mui/material'
 import AdapterDateFns from '@mui/lab/AdapterDateFns'
 import type { InitialEntry, MemoryHistory } from 'history'
 import { createMemoryHistory } from 'history'
@@ -15,9 +15,7 @@ import { SWRConfig } from 'swr'
 export const cache = new Map()
 
 const ThemeModeProvider = ({ children }: any) => {
-  const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)')
-
-  return <ThemeProvider theme={prefersDarkMode ? 'dark' : 'light'}>{children}</ThemeProvider>
+  return <ThemeProvider theme={{}}>{children}</ThemeProvider>
 }
 
 export interface ProviderOptions extends RenderOptions {
