@@ -30,11 +30,16 @@ class Vitest {
   runningPromise?: Promise<void>
   isFirstRun = true
 
+  restartsCount = 0
+
+  private _onRestartListeners: Array<() => void> = []
+
   constructor() {
     this.console = globalThis.console
   }
 
   setServer(options: UserConfig, server: ViteDevServer) {
+    this.restartsCount += 1
     this.pool?.close()
     this.pool = undefined
 
@@ -52,6 +57,8 @@ class Vitest {
       this.registerWatcher()
 
     this.runningPromise = undefined
+
+    this._onRestartListeners.forEach(fn => fn())
   }
 
   async start(filters?: string[]) {
@@ -64,11 +71,8 @@ class Vitest {
 
     await this.runFiles(files)
 
-    if (this.config.watch) {
+    if (this.config.watch)
       await this.report('onWatcherStart')
-      // never resolves to keep the process running
-      await new Promise(() => {})
-    }
   }
 
   async runFiles(files: string[]) {
@@ -96,14 +100,23 @@ class Vitest {
 
   private registerWatcher() {
     let timer: any
-    const scheduleRerun = async(id: string) => {
+    const scheduleRerun = async(id: string, count: number) => {
       await this.runningPromise
       clearTimeout(timer)
+
+      // server restarted
+      if (this.restartsCount !== count)
+        return
+
       timer = setTimeout(async() => {
         if (this.changedTests.size === 0) {
           this.invalidates.clear()
           return
         }
+
+        // server restarted
+        if (this.restartsCount !== count)
+          return
 
         this.isFirstRun = false
 
@@ -128,7 +141,7 @@ class Vitest {
       id = slash(id)
       this.handleFileChanged(id)
       if (this.changedTests.size)
-        scheduleRerun(id)
+        scheduleRerun(id, this.restartsCount)
     })
     this.server.watcher.on('unlink', (id) => {
       id = slash(id)
@@ -143,7 +156,7 @@ class Vitest {
       id = slash(id)
       if (this.isTargetFile(id)) {
         this.changedTests.add(id)
-        scheduleRerun(id)
+        scheduleRerun(id, this.restartsCount)
       }
     })
   }
@@ -201,6 +214,10 @@ class Vitest {
     if (mm.isMatch(id, this.config.exclude))
       return false
     return mm.isMatch(id, this.config.include)
+  }
+
+  onServerRestarted(fn: () => void) {
+    this._onRestartListeners.push(fn)
   }
 }
 

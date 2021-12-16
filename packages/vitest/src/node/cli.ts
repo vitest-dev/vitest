@@ -74,8 +74,16 @@ async function run(cliFilters: string[], options: UserConfig) {
       process.exit(1)
   }
 
+  ctx.onServerRestarted(() => {
+    ctx.start(cliFilters)
+  })
+
   try {
     await ctx.start(cliFilters)
+
+    if (ctx.config.watch)
+      // never resolves to keep the process running
+      await new Promise(() => {})
   }
   catch (e) {
     process.exitCode = 1
