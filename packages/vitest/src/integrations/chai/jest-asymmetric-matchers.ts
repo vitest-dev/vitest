@@ -59,79 +59,182 @@ export class StringContaining extends AsymmetricMatcher<string> {
   }
 }
 
-export class Anything extends AsymmetricMatcher<void>{
+export class Anything extends AsymmetricMatcher<void> {
   asymmetricMatch(other: unknown) {
-    return other !== void 0 && other !== null;
+    return other != null
   }
 
   toString() {
-    return 'Anything';
+    return 'Anything'
   }
 
   toAsymmetricMatcher() {
-    return 'Anything';
+    return 'Anything'
   }
 }
 
 export class ObjectContaining extends AsymmetricMatcher<Record<string, unknown>> {
   constructor(sample: Record<string, unknown>, inverse = false) {
-    super(sample, inverse);
+    super(sample, inverse)
   }
 
   getPrototype(obj: object) {
-    if (Object.getPrototypeOf) {
-      return Object.getPrototypeOf(obj);
-    }
+    if (Object.getPrototypeOf)
+      return Object.getPrototypeOf(obj)
 
-    if (obj.constructor.prototype == obj) {
-      return null;
-    }
+    if (obj.constructor.prototype === obj)
+      return null
 
-    return obj.constructor.prototype;
+    return obj.constructor.prototype
   }
 
   hasProperty(obj: object | null, property: string): boolean {
-    if (!obj) {
-      return false;
-    }
+    if (!obj)
+      return false
 
-    if (Object.prototype.hasOwnProperty.call(obj, property)) {
-      return true;
-    }
+    if (Object.prototype.hasOwnProperty.call(obj, property))
+      return true
 
-    return this.hasProperty(this.getPrototype(obj), property);
+    return this.hasProperty(this.getPrototype(obj), property)
   }
 
   asymmetricMatch(other: any) {
     if (typeof this.sample !== 'object') {
-      throw new Error(
-        `You must provide an object to ${this.toString()}, not '` +
-          typeof this.sample +
-          "'.",
-      );
+      throw new TypeError(
+        `You must provide an object to ${this.toString()}, not '${
+          typeof this.sample
+        }'.`,
+      )
     }
 
-    let result = true;
+    let result = true
 
+    // eslint-disable-next-line no-restricted-syntax
     for (const property in this.sample) {
-      if (
-        !this.hasProperty(other, property) ||
-        !equals(this.sample[property], other[property])
-      ) {
-        result = false;
-        break;
+      if (!this.hasProperty(other, property) || !equals(this.sample[property], other[property])) {
+        result = false
+        break
       }
     }
 
-    return this.inverse ? !result : result;
+    return this.inverse ? !result : result
   }
 
   toString() {
-    return `Object${this.inverse ? 'Not' : ''}Containing`;
+    return `Object${this.inverse ? 'Not' : ''}Containing`
   }
 
   getExpectedType() {
-    return 'object';
+    return 'object'
+  }
+}
+
+export class ArrayContaining extends AsymmetricMatcher<Array<unknown>> {
+  constructor(sample: Array<unknown>, inverse = false) {
+    super(sample, inverse)
+  }
+
+  asymmetricMatch(other: Array<unknown>) {
+    if (!Array.isArray(this.sample)) {
+      throw new TypeError(
+        `You must provide an array to ${this.toString()}, not '${
+          typeof this.sample
+        }'.`,
+      )
+    }
+
+    const result
+      = this.sample.length === 0
+      || (Array.isArray(other)
+        && this.sample.every(item =>
+          other.some(another => equals(item, another)),
+        ))
+
+    return this.inverse ? !result : result
+  }
+
+  toString() {
+    return `Array${this.inverse ? 'Not' : ''}Containing`
+  }
+
+  getExpectedType() {
+    return 'array'
+  }
+}
+
+export class Any extends AsymmetricMatcher<any> {
+  constructor(sample: unknown) {
+    if (typeof sample === 'undefined') {
+      throw new TypeError(
+        'any() expects to be passed a constructor function. '
+          + 'Please pass one or use anything() to match any object.',
+      )
+    }
+    super(sample)
+  }
+
+  fnNameFor(func: Function) {
+    if (func.name)
+      return func.name
+
+    const functionToString = Function.prototype.toString
+
+    const matches = functionToString
+      .call(func)
+      .match(/^(?:async)?\s*function\s*\*?\s*([\w$]+)\s*\(/)
+    return matches ? matches[1] : '<anonymous>'
+  }
+
+  asymmetricMatch(other: unknown) {
+    if (this.sample === String)
+      return typeof other == 'string' || other instanceof String
+
+    if (this.sample === Number)
+      return typeof other == 'number' || other instanceof Number
+
+    if (this.sample === Function)
+      return typeof other == 'function' || other instanceof Function
+
+    if (this.sample === Boolean)
+      return typeof other == 'boolean' || other instanceof Boolean
+
+    if (this.sample === BigInt)
+      return typeof other == 'bigint' || other instanceof BigInt
+
+    if (this.sample === Symbol)
+      return typeof other == 'symbol' || other instanceof Symbol
+
+    if (this.sample === Object)
+      return typeof other == 'object'
+
+    return other instanceof this.sample
+  }
+
+  toString() {
+    return 'Any'
+  }
+
+  getExpectedType() {
+    if (this.sample === String)
+      return 'string'
+
+    if (this.sample === Number)
+      return 'number'
+
+    if (this.sample === Function)
+      return 'function'
+
+    if (this.sample === Object)
+      return 'object'
+
+    if (this.sample === Boolean)
+      return 'boolean'
+
+    return this.fnNameFor(this.sample)
+  }
+
+  toAsymmetricMatcher() {
+    return `Any<${this.fnNameFor(this.sample)}>`
   }
 }
 
@@ -158,4 +261,19 @@ export const JestAsymmetricMatchers: ChaiPlugin = (chai, utils) => {
     },
   )
 
+  utils.addMethod(
+    chai.expect,
+    'any',
+    (expected: unknown) => {
+      return new Any(expected)
+    },
+  )
+
+  utils.addMethod(
+    chai.expect,
+    'arrayContaining',
+    (expected: any) => {
+      return new ArrayContaining(expected)
+    },
+  )
 }

@@ -27,14 +27,6 @@ interface Position {
   column: number
 }
 
-declare global {
-  namespace NodeJS {
-    interface Process {
-      __vitest__: Vitest
-    }
-  }
-}
-
 export async function printError(error: unknown, ctx: Vitest) {
   let e = error as ErrorWithDiff
 
