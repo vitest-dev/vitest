@@ -14,7 +14,7 @@ type Arguments = [cb: (args: void) => void, ms?: number | undefined]
 const MAX_LOOPS = 10_000
 
 type FakeCall = {
-  cb: () => void
+  cb: () => any
   ms: number
   id: number
   nestedMs: number
@@ -84,7 +84,9 @@ export class FakeTimers {
     const spyFactory = (spyType: QueueTaskType, resultBuilder: (id: number, cb: (args: void) => void) => any) => {
       return (cb: (args: void) => void, ms = 0) => {
         const id = ++this._spyid
-        const nestedMs = ms + (this._nestedTime[this._scopeId] ?? 0)
+        // all timers up untill this point
+        const nestedTo = Object.entries(this._nestedTime).filter(([key]) => Number(key) <= this._scopeId)
+        const nestedMs = nestedTo.reduce((total, [, ms]) => total + ms, ms)
         const call: FakeCall = { id, cb, ms, nestedMs, scopeId: this._scopeId }
         const task = { type: spyType, call, nested: this._isNested }
 
@@ -121,31 +123,31 @@ export class FakeTimers {
     global.clearInterval = originalClearInterval
   }
 
-  public runOnlyPendingTimers() {
+  public runOnlyPendingTimers(): void | Promise<void> {
     this.assertMocked()
 
     this._isOnlyPending = true
     this.runQueue()
   }
 
-  public runAllTimers() {
+  public runAllTimers(): void | Promise<void> {
     this.assertMocked()
 
     this.runQueue()
   }
 
-  public advanceTimersByTime(ms: number) {
+  public advanceTimersByTime(ms: number): void | Promise<void> {
     this.assertMocked()
 
     this._advancedTime += ms
     this.runQueue()
   }
 
-  public advanceTimersToNextTimer() {
+  public advanceTimersToNextTimer(): void | Promise<void> {
     throw new Error('advanceTimersToNextTimer is not implemented')
   }
 
-  public runAllTicks() {
+  public runAllTicks(): void | Promise<void> {
     throw new Error('runAllTicks is not implemented')
   }
 

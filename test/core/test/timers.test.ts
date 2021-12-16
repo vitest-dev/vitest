@@ -201,3 +201,24 @@ test.only('advance interval', () => {
 
   vi.useRealTimers()
 })
+
+test('async timer', async() => {
+  const res: string[] = []
+
+  vi.useFakeTimers()
+
+  setTimeout(async() => {
+    await Promise.resolve()
+    res.push('item1')
+  }, 1000)
+
+  setTimeout(async() => {
+    await Promise.resolve()
+    res.push('item2')
+  }, 1000)
+
+  await vi.runAllTimers()
+  vi.useRealTimers()
+
+  expect(res).toEqual(['item1', 'item2'])
+})
