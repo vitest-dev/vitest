@@ -29,12 +29,14 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     return function(this: Chai.Assertion & Chai.AssertionStatic, ...args: any[]) {
       const expected = args[0]
       const actual = utils.flag(this, 'object')
+      // const negate = utils.flag(this, 'negate')
       if (hasAsymmetric(expected)) {
         this.assert(
           asymmetricEquals(actual, expected, undefined, true),
-          'not match with #{this}',
-          'should not match with #{this}',
-          true,
+          'not match with #{act}',
+          'should not match with #{act}',
+          actual,
+          expected,
         )
       }
       else {
@@ -49,9 +51,10 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       if (hasAsymmetric(expected)) {
         this.assert(
           asymmetricEquals(actual, expected),
-          'not match with #{this}',
-          'should not match with #{this}',
-          true,
+          'not match with #{exp}',
+          'should not match with #{exp}',
+          actual,
+          expected,
         )
       }
       else {
@@ -68,7 +71,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     return this.chaiEqual(expected)
   })
   def('toBe', function(expected) {
-    return this.chaiEqual(expected)
+    return this.equal(expected)
   })
   def('toMatchObject', function(expected) {
     return this.containSubset(expected)
