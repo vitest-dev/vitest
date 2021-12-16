@@ -6,7 +6,7 @@ import fg from 'fast-glob'
 import mm from 'micromatch'
 import type { Reporter, UserConfig, ArgumentsType, ResolvedConfig } from '../types'
 import { SnapshotManager } from '../integrations/snapshot/manager'
-import { configFiles } from '../constants'
+import { configFiles, defaultPort } from '../constants'
 import { toArray, hasFailed, slash, noop } from '../utils'
 import { ConsoleReporter } from '../reporters/console'
 import type { WorkerPool } from './pool'
@@ -103,6 +103,7 @@ class Vitest {
   private _rerunTimer: any
   private async scheduleRerun(triggerId: string) {
     const currentCount = this.restartsCount
+    clearTimeout(this._rerunTimer)
     await this.runningPromise
     clearTimeout(this._rerunTimer)
 
@@ -280,6 +281,9 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
 
   const server = await createServer(mergeConfig(config, viteOverrides))
   await server.pluginContainer.buildStart({})
+
+  if (options.api === true)
+    options.api = defaultPort
 
   if (typeof options.api === 'number')
     await server.listen(options.api)
