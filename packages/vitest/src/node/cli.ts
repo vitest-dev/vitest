@@ -63,8 +63,6 @@ async function run(cliFilters: string[], options: UserConfig) {
 
   const ctx = await createVitest(options)
 
-  process.__vitest__ = ctx
-
   process.chdir(ctx.config.root)
 
   registerConsoleShortcuts(ctx)

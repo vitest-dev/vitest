@@ -248,7 +248,7 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
           ctx.setServer(options, server)
           haveStarted = true
           if (options.api)
-            server.middlewares.use((await import('../api/middleware')).default())
+            server.middlewares.use((await import('../api/middleware')).default(ctx))
         },
       },
     ],
