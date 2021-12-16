@@ -112,7 +112,7 @@ export async function ensurePackageInstalled(dependency: string, promptInstall =
   const { install } = await prompts.prompt({
     type: 'confirm',
     name: 'install',
-    message: `Do you want to install ${c.green(dependency)}?`,
+    message: c.reset(`Do you want to install ${c.green(dependency)}?`),
   })
 
   if (install) {
