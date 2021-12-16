@@ -47,7 +47,6 @@ describe('jest-expect', () => {
       bar: expect.stringContaining('fo'),
       hi: 'hello',
     })
-    console.log(expect)
     expect(0).toEqual(expect.anything())
     expect({}).toEqual(expect.anything())
     expect('string').toEqual(expect.anything())
