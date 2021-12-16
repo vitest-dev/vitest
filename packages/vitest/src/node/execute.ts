@@ -185,7 +185,8 @@ export function normalizeId(id: string): string {
     .replace(/^\/@id\//, '')
     .replace(/^__vite-browser-external:/, '')
     .replace(/^node:/, '')
-    .replace(/\?.*$/, '') // remove query
+    .replace(/[?&]v=\w+/, '?') // remove ?v= query
+    .replace(/\?$/, '?') // remove end query mark
 }
 
 export async function shouldExternalize(id: string, config: Pick<ExecuteOptions, 'inline' | 'external'>) {
