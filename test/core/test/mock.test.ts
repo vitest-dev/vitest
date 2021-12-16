@@ -27,6 +27,14 @@ describe('mock', () => {
     expect(fn).toHaveBeenCalledWith('Hi', 1)
   })
 
+  it('toHaveBeenCalledWith', () => {
+    const fn = vitest.fn()
+
+    fn('Hi', 2)
+
+    expect(fn).toHaveBeenCalledWith('Hi', 2)
+  })
+
   it('returns', () => {
     let i = 0
 

@@ -31,7 +31,7 @@ export class ConsoleReporter implements Reporter {
 
   constructor(public ctx: Vitest) {
     const mode = ctx.config.watch ? c.yellow(' DEV ') : c.cyan(' RUN ')
-    this.log(`${c.inverse(c.bold(mode))} ${c.gray(this.ctx.config.root)}\n`)
+    this.log(`\n${c.inverse(c.bold(mode))} ${c.gray(this.ctx.config.root)}\n`)
     this.start = performance.now()
   }
 
@@ -169,7 +169,6 @@ export class ConsoleReporter implements Reporter {
   }
 
   onServerRestart() {
-    this.console.clear()
     this.log(c.cyan('Restarted due to config changes...'))
   }
 }
