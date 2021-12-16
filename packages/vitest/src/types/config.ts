@@ -1,6 +1,8 @@
 import type { Reporter } from './reporter'
 import type { SnapshotStateOptions } from './snapshot'
 
+export type BuiltinEnvironment = 'node' | 'jsdom' | 'happy-dom'
+
 export interface InlineConfig {
   /**
    * Include globs for test files
@@ -50,7 +52,7 @@ export interface InlineConfig {
    *
    * @default 'node'
    */
-  environment?: 'node' | 'jsdom' | 'happy-dom'
+  environment?: BuiltinEnvironment
 
   /**
    * Update snapshot files
