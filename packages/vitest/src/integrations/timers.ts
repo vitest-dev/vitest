@@ -13,7 +13,13 @@ type Arguments = [cb: (args: void) => void, ms?: number | undefined]
 
 const MAX_LOOPS = 10_000
 
-type FakeCall = { cb: () => void; ms: number; id: number; nestedMs: number }
+type FakeCall = {
+  cb: () => void
+  ms: number
+  id: number
+  nestedMs: number
+  scopeId: number
+}
 
 enum QueueTaskType {
   Interval = 'interval',
@@ -79,7 +85,7 @@ export class FakeTimers {
       return (cb: (args: void) => void, ms = 0) => {
         const id = ++this._spyid
         const nestedMs = ms + (this._nestedTime[this._scopeId] ?? 0)
-        const call = { id, cb, ms, nestedMs, scopeId: this._scopeId }
+        const call: FakeCall = { id, cb, ms, nestedMs, scopeId: this._scopeId }
         const task = { type: spyType, call, nested: this._isNested }
 
         this.pushTask(task)
