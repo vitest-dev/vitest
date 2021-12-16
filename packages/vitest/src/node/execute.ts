@@ -1,12 +1,21 @@
 import { builtinModules, createRequire } from 'module'
 import { fileURLToPath, pathToFileURL } from 'url'
-import { dirname, resolve } from 'path'
+import { basename, dirname, extname, join, resolve } from 'path'
 import vm from 'vm'
+import { readdirSync, existsSync } from 'fs'
 import type { ModuleCache } from '../types'
 import { slash } from '../utils'
+import { spyOn } from '../integrations/jest-mock'
 import { isValidNodeImport } from './mlly-port'
 
 export type FetchFunction = (id: string) => Promise<string | undefined>
+
+interface SuiteMocks {
+  [suitePath: string]: {
+    originalPath: string
+    mockPath: string | null
+  }[]
+}
 
 export interface ExecuteOptions {
   root: string
@@ -63,9 +72,43 @@ export async function interpretedImport(path: string, interpretDefault: boolean)
   return mod
 }
 
+// vi.mock('../src/submodule') -> need to resovle to .ts file
+// vi.mock('../src/submodule.ts') -> dont need to
+const resolveModulePath = (suitePath: string, mockPath: string) => {
+  // best case scenario
+  const path = join(dirname(suitePath), mockPath)
+  if (extname(path) !== '' && existsSync(path))
+    return path
+
+  const dir = dirname(path)
+  const files = readdirSync(dir)
+  const mockName = basename(mockPath)
+
+  for (const file of files) {
+    const [base] = file.split('.')
+    if (base === mockName)
+      return join(dir, file)
+  }
+  return null
+}
+
+const resolveMockPath = (mockPath: string) => {
+  const dir = dirname(mockPath)
+  const [baseId] = basename(mockPath).split('?')
+  const fullPath = join(dir, '__mocks__', baseId)
+  return existsSync(fullPath) ? fullPath : null
+}
+
+const getSuiteFromStack = (stack: string[]) => {
+  return stack.find(path => basename(path).match(/\.(test|spec)\./))
+}
+
+const mockRegexp = /(?:vitest|vi).mock\(["'\s](.*[@\w_-]+)["'\s]\)/mg
+
 export async function executeInViteNode(options: ExecuteOptions) {
   const { moduleCache, root, files, fetch } = options
 
+  const mockedPaths: SuiteMocks = {}
   const externalCache = new Map<string, boolean>()
   builtinModules.forEach(m => externalCache.set(m, true))
 
@@ -76,7 +119,15 @@ export async function executeInViteNode(options: ExecuteOptions) {
 
   async function directRequest(id: string, fsPath: string, callstack: string[]) {
     callstack = [...callstack, id]
+    const suite = getSuiteFromStack(callstack)
     const request = async(dep: string) => {
+      const mocks = suite ? mockedPaths[suite] : null
+      if (mocks) {
+        const mock = mocks.find(({ originalPath }) => originalPath === dep)
+        if (mock && mock.mockPath)
+          // to make it unique for every suite
+          dep = mock.mockPath
+      }
       if (callstack.includes(dep)) {
         const cacheKey = toFilePath(dep, root)
         if (!moduleCache.get(cacheKey)?.exports)
@@ -124,11 +175,38 @@ export async function executeInViteNode(options: ExecuteOptions) {
       __dirname: dirname(__filename),
     }
 
+    let match: RegExpExecArray | null
+
+    // eslint-disable-next-line no-cond-assign
+    while (match = mockRegexp.exec(transformed)) {
+      const originalPath = resolveModulePath(id, match[1])
+      if (originalPath) {
+        const mockPath = resolveMockPath(originalPath)
+        const mockInfo = {
+          originalPath: originalPath.replace(root, ''),
+          mockPath: mockPath?.replace(root, '') || null,
+        }
+        mockedPaths[id] ??= []
+        mockedPaths[id].push(mockInfo)
+      }
+    }
+
     const fn = vm.runInThisContext(`async (${Object.keys(context).join(',')})=>{${transformed}\n}`, {
       filename: fsPath,
       lineOffset: 0,
     })
     await fn(...Object.values(context))
+
+    const mocks = suite ? mockedPaths[suite] : null
+    if (mocks) {
+      const mock = mocks.find(({ originalPath }) => originalPath === id)
+      if (mock && !mock.mockPath) {
+        Object.entries(exports).forEach(([key, value]) => {
+          if (typeof value === 'function')
+            spyOn(exports, key)
+        })
+      }
+    }
 
     return exports
   }

@@ -106,7 +106,7 @@ export function createWorkerPool(ctx: Vitest): WorkerPool {
   }
 }
 
-function createChannel(ctx: Vitest, file: string) {
+function createChannel(ctx: Vitest) {
   const channel = new MessageChannel()
   const port = channel.port2
   const workerPort = channel.port1

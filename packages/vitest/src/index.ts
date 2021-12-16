@@ -6,7 +6,7 @@ export { suite, test, describe, it } from './runtime/suite'
 export * from './types'
 export * from './runtime/hooks'
 export * from './integrations/chai'
-export * from './integrations/tinymock'
+export * from './integrations/jest-mock'
 export * from './integrations/utils'
 
 declare module 'vite' {
