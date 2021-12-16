@@ -1,3 +1,5 @@
+import { format } from 'util'
+
 // https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm
 export function serializeError(val: any): any {
   if (!val)
@@ -11,6 +13,9 @@ export function serializeError(val: any): any {
     return 'Promise'
   if (typeof Element !== 'undefined' && val instanceof Element)
     return val.tagName
+
+  if (typeof val.asymmetricMatch === 'function')
+    return `${val.toString()} ${format(val.sample)}`
 
   Object.keys(val).forEach((key) => {
     val[key] = serializeError(val[key])

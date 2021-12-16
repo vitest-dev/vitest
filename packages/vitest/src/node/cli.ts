@@ -58,12 +58,10 @@ async function run(cliFilters: string[], options: UserConfig) {
     // eslint-disable-next-line no-console
     console.log(c.magenta(c.bold('\nVitest is in closed beta exclusively for Sponsors')))
     // eslint-disable-next-line no-console
-    console.log(c.yellow('Learn more at https://vitest.dev\n'))
+    console.log(c.yellow('Learn more at https://vitest.dev'))
   }
 
   const ctx = await createVitest(options)
-
-  process.__vitest__ = ctx
 
   process.chdir(ctx.config.root)
 
@@ -73,6 +71,11 @@ async function run(cliFilters: string[], options: UserConfig) {
     if (!await ensurePackageInstalled(ctx.config.environment))
       process.exit(1)
   }
+
+  ctx.onServerRestarted(() => {
+    // TODO: re-consider how to re-run the tests the server smartly
+    ctx.start(cliFilters)
+  })
 
   try {
     await ctx.start(cliFilters)
