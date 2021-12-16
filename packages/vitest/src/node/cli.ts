@@ -3,6 +3,7 @@ import cac from 'cac'
 import c from 'picocolors'
 import type { UserConfig } from '../types'
 import { version } from '../../package.json'
+import { ensurePackageInstalled } from '../utils'
 import type { Vitest } from './index'
 import { createVitest } from './index'
 
@@ -67,6 +68,11 @@ async function run(cliFilters: string[], options: UserConfig) {
   process.chdir(ctx.config.root)
 
   registerConsoleShortcuts(ctx)
+
+  if (ctx.config.environment && ctx.config.environment !== 'node') {
+    if (!await ensurePackageInstalled(ctx.config.environment))
+      process.exit(1)
+  }
 
   try {
     await ctx.start(cliFilters)
