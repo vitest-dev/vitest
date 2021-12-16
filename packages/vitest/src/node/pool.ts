@@ -7,8 +7,11 @@ import type { WorkerContext, RpcPayload, File, Awaitable } from '../types'
 import { transformRequest } from './transform'
 import type { Vitest } from './index'
 
+export type RunWithFiles = (files: string[], invalidates?: string[]) => Promise<void>
+
 export interface WorkerPool {
-  runTestFiles: (files: string[], invalidates?: string[]) => Promise<void>
+  runTests: RunWithFiles
+  collectTests: RunWithFiles
   close: () => Promise<void>
 }
 
@@ -34,26 +37,29 @@ export function createPool(ctx: Vitest): WorkerPool {
 const workerPath = new URL('./dist/worker.js', pathToFileURL(distDir)).href
 
 export function createFakePool(ctx: Vitest): WorkerPool {
-  const runTestFiles: WorkerPool['runTestFiles'] = async(files, invalidates) => {
-    const { default: run } = await import(workerPath)
+  const runWithFiles = (name: 'run' | 'collect'): RunWithFiles => {
+    return async(files, invalidates) => {
+      const worker = await import(workerPath)
 
-    const { workerPort, port } = createChannel(ctx, '')
+      const { workerPort, port } = createChannel(ctx)
 
-    const data: WorkerContext = {
-      port: workerPort,
-      config: ctx.config,
-      files,
-      invalidates,
+      const data: WorkerContext = {
+        port: workerPort,
+        config: ctx.config,
+        files,
+        invalidates,
+      }
+
+      await worker[name](data, { transferList: [workerPort] })
+
+      port.close()
+      workerPort.close()
     }
-
-    await run(data, { transferList: [workerPort] })
-
-    port.close()
-    workerPort.close()
   }
 
   return {
-    runTestFiles,
+    runTests: runWithFiles('run'),
+    collectTests: runWithFiles('collect'),
     close: async() => {},
   }
 }
@@ -74,25 +80,28 @@ export function createWorkerPool(ctx: Vitest): WorkerPool {
 
   const piscina = new Piscina(options)
 
-  const runTestFiles: WorkerPool['runTestFiles'] = async(files, invalidates) => {
-    await Promise.all(files.map(async(file) => {
-      const { workerPort, port } = createChannel(ctx, file)
+  const runWithFiles = (name: string): RunWithFiles => {
+    return async(files, invalidates) => {
+      await Promise.all(files.map(async(file) => {
+        const { workerPort, port } = createChannel(ctx)
 
-      const data: WorkerContext = {
-        port: workerPort,
-        config: ctx.config,
-        files: [file],
-        invalidates,
-      }
+        const data: WorkerContext = {
+          port: workerPort,
+          config: ctx.config,
+          files: [file],
+          invalidates,
+        }
 
-      await piscina.run(data, { transferList: [workerPort] })
-      port.close()
-      workerPort.close()
-    }))
+        await piscina.run(data, { transferList: [workerPort], name })
+        port.close()
+        workerPort.close()
+      }))
+    }
   }
 
   return {
-    runTestFiles,
+    runTests: runWithFiles('run'),
+    collectTests: runWithFiles('collect'),
     close: () => piscina.destroy(),
   }
 }
@@ -119,7 +128,7 @@ function createChannel(ctx: Vitest, file: string) {
       case 'snapshotSaved':
         return send(() => ctx.snapshot.add(args[0] as any))
       case 'fetch':
-        return send(() => transformRequest(ctx.server, file, ...args as RpcMap['fetch'][0]))
+        return send(() => transformRequest(ctx.server, ...args as RpcMap['fetch'][0]).then(r => r?.code))
       case 'onCollected':
         ctx.state.collectFiles(args[0] as any)
         ctx.reporters.forEach(r => r.onStart?.((args[0] as any as File[]).map(i => i.filepath)))

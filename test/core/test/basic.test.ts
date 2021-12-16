@@ -6,16 +6,6 @@ test('Math.sqrt()', () => {
   assert.equal(Math.sqrt(4), two)
   assert.equal(Math.sqrt(2), Math.SQRT2)
   expect(Math.sqrt(144)).toStrictEqual(12)
-  // console.log('hi')
-  // console.log('hi2')
-  // console.log({
-  //   red: {
-  //     foo: 'bar',
-  //   },
-  // })
-  // const t = { z: 1 }
-  // t.e = t
-  // console.log(t)
 })
 
 test('JSON', () => {
@@ -49,10 +39,9 @@ test.skip('async with timeout', async() => {
 it('timeout', () => new Promise(resolve => setTimeout(resolve, timeout)))
 
 function callbackTest(name: string, doneValue: any) {
-
   let callbackAwaited = false
 
-  it('callback setup ' + name, (done) => {
+  it(`callback setup ${name}`, (done) => {
     setTimeout(() => {
       expect({}).toBeTruthy()
       callbackAwaited = true
@@ -60,7 +49,7 @@ function callbackTest(name: string, doneValue: any) {
     }, 20)
   })
 
-  it('callback test ' + name, () => {
+  it(`callback test ${name}`, () => {
     expect(callbackAwaited).toBe(true)
   })
 }

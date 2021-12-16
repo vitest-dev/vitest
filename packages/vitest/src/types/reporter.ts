@@ -9,5 +9,7 @@ export interface Reporter {
   onWatcherStart?: () => Awaitable<void>
   onWatcherRerun?: (files: string[], trigger: string) => Awaitable<void>
 
+  onServerRestart?: () => Awaitable<void>
+
   onUserConsoleLog?: (log: UserConsoleLog) => Awaitable<void>
 }

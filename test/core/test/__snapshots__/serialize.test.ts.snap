@@ -1,0 +1,14 @@
+// Vitest Snapshot v1
+
+exports[`error serialize > works 1`] = `
+Object {
+  "fn": "Function<fn>",
+  "foo": "hi",
+  "nested": Object {
+    "class": "Function<class>",
+    "false": false,
+  },
+  "null": null,
+  "promise": "Promise",
+}
+`;

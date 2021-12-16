@@ -2,7 +2,7 @@
   "name": "@vitest/ui",
   "//": "TODO: when it's ready",
   "private": true,
-  "version": "0.0.82",
+  "version": "0.0.90",
   "description": "Vitest UI",
   "sideEffects": false,
   "exports": {
@@ -16,14 +16,14 @@
     "dist"
   ],
   "dependencies": {
-    "@vueuse/core": "^7.2.2",
+    "@vueuse/core": "^7.3.0",
     "sirv": "^1.0.19",
     "ws": "^8.3.0"
   },
   "devDependencies": {
     "@types/ws": "^8.2.2",
-    "unocss": "^0.16.1",
+    "unocss": "^0.16.3",
     "unplugin-auto-import": "^0.5.3",
-    "unplugin-vue-components": "^0.17.8"
+    "unplugin-vue-components": "^0.17.9"
   }
 }

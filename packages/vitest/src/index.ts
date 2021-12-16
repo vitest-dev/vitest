@@ -1,18 +1,20 @@
+import type { Anything } from './integrations/chai/jest-asymmetric-matchers'
 import type { MatchersObject } from './integrations/chai/types'
-import type { InlineConfig } from './types'
+import type { InlineConfig as VitestInlineConfig } from './types'
 
 export { suite, test, describe, it } from './runtime/suite'
 export * from './types'
 export * from './runtime/hooks'
 export * from './integrations/chai'
 export * from './integrations/tinymock'
+export * from './integrations/utils'
 
 declare module 'vite' {
   interface UserConfig {
     /**
      * Options for Vitest
      */
-    test?: InlineConfig
+    test?: VitestInlineConfig
   }
 }
 
@@ -20,9 +22,14 @@ declare global {
   namespace Chai {
     interface ExpectStatic {
       extend(expects: MatchersObject): void
+      stringContaining(expected: string): void
+      anything(): Anything
     }
 
     interface Assertion {
+      // Chai
+      chaiEqual(expected: any): void
+
       // Snapshot
       toMatchSnapshot(message?: string): Assertion
       toMatchInlineSnapshot(snapshot?: string, message?: string): Assertion

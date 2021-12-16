@@ -32,6 +32,46 @@ describe('jest-expect', () => {
     expect(0.2 + 0.1).toBeCloseTo(0.3, 5)
   })
 
+  it('asymmetric matchers (jest style)', () => {
+    expect({ foo: 'bar' }).toEqual({ foo: expect.stringContaining('ba') })
+    expect('bar').toEqual(expect.stringContaining('ba'))
+    expect(['bar']).toEqual([expect.stringContaining('ba')])
+    expect(new Set(['bar'])).toEqual(new Set([expect.stringContaining('ba')]))
+
+    expect({ foo: 'bar' }).not.toEqual({ foo: expect.stringContaining('zoo') })
+    expect('bar').not.toEqual(expect.stringContaining('zoo'))
+    expect(['bar']).not.toEqual([expect.stringContaining('zoo')])
+
+    expect({ foo: 'bar', bar: 'foo', hi: 'hello' }).toEqual({
+      foo: expect.stringContaining('ba'),
+      bar: expect.stringContaining('fo'),
+      hi: 'hello',
+    })
+    expect(0).toEqual(expect.anything())
+    expect({}).toEqual(expect.anything())
+    expect('string').toEqual(expect.anything())
+    expect(null).not.toEqual(expect.anything())
+    expect(undefined).not.toEqual(expect.anything())
+
+    // TODO: support set
+    // expect(new Set(['bar'])).not.toEqual(new Set([expect.stringContaining('zoo')]))
+  })
+
+  it('asymmetric matchers (chai style)', () => {
+    expect({ foo: 'bar' }).equal({ foo: expect.stringContaining('ba') })
+    expect('bar').equal(expect.stringContaining('ba'))
+    expect(['bar']).equal([expect.stringContaining('ba')])
+    expect({ foo: 'bar', bar: 'foo', hi: 'hello' }).equal({
+      foo: expect.stringContaining('ba'),
+      bar: expect.stringContaining('fo'),
+      hi: 'hello',
+    })
+
+    expect({ foo: 'bar' }).not.equal({ foo: expect.stringContaining('zoo') })
+    expect('bar').not.equal(expect.stringContaining('zoo'))
+    expect(['bar']).not.equal([expect.stringContaining('zoo')])
+  })
+
   it('object', () => {
     expect({}).toEqual({})
     expect({}).not.toBe({})

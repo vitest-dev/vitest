@@ -14,8 +14,8 @@
     "lit": "^2.0.2"
   },
   "devDependencies": {
-    "vitest": "workspace:*",
-    "vite": "^2.7.1",
-    "happy-dom": "*"
+    "happy-dom": "*",
+    "vite": "^2.7.2",
+    "vitest": "workspace:*"
   }
 }

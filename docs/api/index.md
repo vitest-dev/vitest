@@ -3,9 +3,14 @@
 The following types are used in the type signatures below
 
 ```ts
+type DoneCallback = (error?: any) => void
 type Awaitable<T> = T | PromiseLike<T>
-type TestFunction = () => Awaitable<void>
+type TestFunction = () => Awaitable<void> | (done: DoneCallback) => void
 ```
+
+When a test function returns a promise, the runner will await until it is resolved to collect async expectations. If the promise is rejected, the test will fail.
+
+For compatibility with Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If this form is used, the test will not be concluded until `done` is called (with zero arguments or a falsy value for a succesful test, and with an thruthy error value as argument to trigger a fail). We don't recommend to use this form, as you can achieve the same using an `async` function.
 
 ## test
 
@@ -86,7 +91,7 @@ test.todo("unimplemented test");
 
 ## describe
 
-Defines a new suite, as a set of related tests and nested suites. A suite lets you organize your tests so reports are more clear.
+When you use `test` in the top level of file, they are collected as part of the implicit suite for it. Using `describe` you can define a new suite in the current context, as a set of related tests and other nested suites. A suite lets you organize your tests so reports are more clear.
 
 ### describe.skip
 
@@ -152,5 +157,33 @@ Use `.todo` to stub suites to be implemented later
 // An entry will be shown in the report for this suite
 describe.todo("unimplemented suite");
 ```
+
+## Setup and Teardown
+
+These global functions allows you to hook into the life cycle of tests to avoid repeating setup and teardown code. They apply to the current context: the file if they are used at the top-level or the current suite if they are inside a `describe` block.
+
+### beforeEach 
+
+Register a callback to be called before each test in the current context.
+
+**Type:** `afterAll(fn: () => Awaitable<void>, timeout: number)`
+
+### afterEach
+
+Register a callback to be called after each test in the current context.
+
+**Type:** `afterEach(fn: () => Awaitable<void>, timeout: number)`
+
+### beforeAll
+
+Register a callback to be called once before starting to run all tests in the current context.
+
+**Type:** `beforeAll(fn: () => Awaitable<void>, timeout: number)`
+
+### afterAll
+
+Register a callback to be called once after all tests have run in the current context.
+
+**Type:** `afterAll(fn: () => Awaitable<void>, timeout: number)`
 
 
