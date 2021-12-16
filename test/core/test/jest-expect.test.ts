@@ -52,6 +52,8 @@ describe('jest-expect', () => {
     expect('string').toEqual(expect.anything())
     expect(null).not.toEqual(expect.anything())
     expect(undefined).not.toEqual(expect.anything())
+    expect({ a: 0, b: 0 }).toEqual(expect.objectContaining({ a: 0 }))
+    expect({ a: 0, b: 0 }).not.toEqual(expect.objectContaining({ z: 0 }))
 
     // TODO: support set
     // expect(new Set(['bar'])).not.toEqual(new Set([expect.stringContaining('zoo')]))
