@@ -1,10 +1,9 @@
-import { spy, spyOn } from 'tinyspy'
 import { FakeTimers } from './timers'
+import { spyOn, fn } from './jest-mock'
 
 class VitestUtils {
-  // TODO make jest compatible
   spyOn = spyOn
-  fn = spy
+  fn = fn
   mock = (path: string) => path
 
   private _timers: FakeTimers

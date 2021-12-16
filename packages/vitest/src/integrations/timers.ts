@@ -1,8 +1,8 @@
 // TODO setImmediate, nextTick, requestAnimationFrame, cancelAnimationFrame
 // TODO async timers
 
-import { spyOn } from 'tinyspy'
-import type { Spy } from 'tinyspy'
+import type { JestMockCompat } from './jest-mock'
+import { spyOn } from './jest-mock'
 
 const originalSetTimeout = global.setTimeout
 const originalSetInterval = global.setInterval
@@ -37,6 +37,7 @@ const assertMaxLoop = (times: number) => {
     throw new Error('setTimeout/setInterval called 10 000 times. It\'s possible it stuck in an infinite loop.')
 }
 
+// TODO should do what NodeJS.Timeout does on refresh
 const getNodeTimeout = (id: number): NodeJS.Timeout => {
   const timer = {
     ref: () => timer,
@@ -50,11 +51,11 @@ const getNodeTimeout = (id: number): NodeJS.Timeout => {
 }
 
 export class FakeTimers {
-  private _setTimeout!: Spy<Arguments, NodeJS.Timeout>
-  private _setInterval!: Spy<Arguments, NodeJS.Timeout>
+  private _setTimeout!: JestMockCompat<Arguments, NodeJS.Timeout>
+  private _setInterval!: JestMockCompat<Arguments, NodeJS.Timeout>
 
-  private _clearTimeout!: Spy<[number | NodeJS.Timeout | undefined], void>
-  private _clearInterval!: Spy<[number | NodeJS.Timeout | undefined], void>
+  private _clearTimeout!: JestMockCompat<[NodeJS.Timeout], void>
+  private _clearInterval!: JestMockCompat<[NodeJS.Timeout], void>
 
   private _advancedTime = 0
   private _nestedTime: Record<string, number> = {}
@@ -87,8 +88,8 @@ export class FakeTimers {
       }
     }
 
-    this._setTimeout = spyOn(global, 'setTimeout').willCall(spyFactory(QueueTaskType.Timeout, getNodeTimeout))
-    this._setInterval = spyOn(global, 'setInterval').willCall(spyFactory(QueueTaskType.Interval, getNodeTimeout))
+    this._setTimeout = spyOn(global, 'setTimeout').mockImplementation(spyFactory(QueueTaskType.Timeout, getNodeTimeout))
+    this._setInterval = spyOn(global, 'setInterval').mockImplementation(spyFactory(QueueTaskType.Interval, getNodeTimeout))
 
     const clearTimerFactory = (spyType: QueueTaskType) => (id: number | undefined | NodeJS.Timeout) => {
       if (id === undefined) return
@@ -99,8 +100,8 @@ export class FakeTimers {
         this._tasksQueue.splice(index, 1)
     }
 
-    this._clearTimeout = spyOn(global, 'clearTimeout', clearTimerFactory(QueueTaskType.Timeout))
-    this._clearInterval = spyOn(global, 'clearInterval', clearTimerFactory(QueueTaskType.Interval))
+    this._clearTimeout = spyOn(global, 'clearTimeout').mockImplementation(clearTimerFactory(QueueTaskType.Timeout))
+    this._clearInterval = spyOn(global, 'clearInterval').mockImplementation(clearTimerFactory(QueueTaskType.Interval))
   }
 
   public useRealTimers() {
@@ -166,10 +167,10 @@ export class FakeTimers {
     this._queueCount = 0
     this._tasksQueue = []
 
-    this.resetMock(this._clearInterval)
-    this.resetMock(this._clearTimeout)
-    this.resetMock(this._setInterval)
-    this.resetMock(this._setTimeout)
+    this._clearInterval?.mockRestore()
+    this._clearTimeout?.mockRestore()
+    this._setInterval?.mockRestore()
+    this._setTimeout?.mockRestore()
   }
 
   private runQueue() {
@@ -248,10 +249,5 @@ export class FakeTimers {
       this._clearTimeout,
       this._clearInterval,
     ], 'timers are not mocked. try calling "vitest.useFakeTimers()" first')
-  }
-
-  private resetMock(spy?: Spy) {
-    spy?.reset()
-    spy?.restore()
   }
 }
