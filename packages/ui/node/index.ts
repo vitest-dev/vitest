@@ -25,9 +25,9 @@ export const VitestUIPlugin = (): Plugin => {
               wss.emit('connection', ws, request)
 
               /**
-               * When user opens connection send inital list of tasks.
+               * When user opens connection send initial list of tasks.
                */
-              ws.on('message', (data) => {
+              ws.on('message', () => {
 
               })
             })
@@ -35,7 +35,7 @@ export const VitestUIPlugin = (): Plugin => {
         }
       })
 
-      server.middlewares.use('/__vitest_api', async(req, res, next) => {
+      server.middlewares.use('/__vitest_api', async(req, res) => {
         // const vitest = process.__vitest__
 
         // const suites = getSuites(vitest.state.getFiles())

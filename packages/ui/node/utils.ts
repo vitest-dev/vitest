@@ -1,17 +1,17 @@
-import { getSuites } from '../../../src/utils'
+// import { getSuites } from '../../../src/utils'
 
-const getCircularReplacer = () => {
-  const seen = new WeakSet()
-  return (key: any, value: any) => {
-    if (typeof value === 'object' && value !== null) {
-      if (seen.has(value))
-        return
+// const getCircularReplacer = () => {
+//   const seen = new WeakSet()
+//   return (key: any, value: any) => {
+//     if (typeof value === 'object' && value !== null) {
+//       if (seen.has(value))
+//         return
 
-      seen.add(value)
-    }
-    return value
-  }
-}
+//       seen.add(value)
+//     }
+//     return value
+//   }
+// }
 
 export const getSuitesAsJson = () => {
   // const vitest = process.__vitest__

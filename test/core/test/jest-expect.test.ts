@@ -56,8 +56,8 @@ describe('jest-expect', () => {
     expect('string').toEqual(expect.any(String))
     expect('string').not.toEqual(expect.any(Number))
 
-    expect(['Bob', 'Eve']).toEqual(expect.arrayContaining(['Bob']));
-    expect(['Bob', 'Eve']).not.toEqual(expect.arrayContaining(['Mohammad']));
+    expect(['Bob', 'Eve']).toEqual(expect.arrayContaining(['Bob']))
+    expect(['Bob', 'Eve']).not.toEqual(expect.arrayContaining(['Mohammad']))
 
     // TODO: support set
     // expect(new Set(['bar'])).not.toEqual(new Set([expect.stringContaining('zoo')]))

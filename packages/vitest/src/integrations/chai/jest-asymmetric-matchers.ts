@@ -59,138 +59,126 @@ export class StringContaining extends AsymmetricMatcher<string> {
   }
 }
 
-export class Anything extends AsymmetricMatcher<void>{
+export class Anything extends AsymmetricMatcher<void> {
   asymmetricMatch(other: unknown) {
-    return other !== void 0 && other !== null;
+    return other != null
   }
 
   toString() {
-    return 'Anything';
+    return 'Anything'
   }
 
   toAsymmetricMatcher() {
-    return 'Anything';
+    return 'Anything'
   }
 }
 
 export class ArrayContaining extends AsymmetricMatcher<Array<unknown>> {
   constructor(sample: Array<unknown>, inverse = false) {
-    super(sample, inverse);
+    super(sample, inverse)
   }
 
   asymmetricMatch(other: Array<unknown>) {
     if (!Array.isArray(this.sample)) {
-      throw new Error(
-        `You must provide an array to ${this.toString()}, not '` +
-          typeof this.sample +
-          "'.",
-      );
+      throw new TypeError(
+        `You must provide an array to ${this.toString()}, not '${
+          typeof this.sample
+        }'.`,
+      )
     }
 
-    const result =
-      this.sample.length === 0 ||
-      (Array.isArray(other) &&
-        this.sample.every(item =>
+    const result
+      = this.sample.length === 0
+      || (Array.isArray(other)
+        && this.sample.every(item =>
           other.some(another => equals(item, another)),
-        ));
+        ))
 
-    return this.inverse ? !result : result;
+    return this.inverse ? !result : result
   }
 
   toString() {
-    return `Array${this.inverse ? 'Not' : ''}Containing`;
+    return `Array${this.inverse ? 'Not' : ''}Containing`
   }
 
   getExpectedType() {
-    return 'array';
+    return 'array'
   }
 }
-
 
 export class Any extends AsymmetricMatcher<any> {
   constructor(sample: unknown) {
     if (typeof sample === 'undefined') {
       throw new TypeError(
-        'any() expects to be passed a constructor function. ' +
-          'Please pass one or use anything() to match any object.',
-      );
+        'any() expects to be passed a constructor function. '
+          + 'Please pass one or use anything() to match any object.',
+      )
     }
-    super(sample);
+    super(sample)
   }
- fnNameFor(func: Function) {
-    if (func.name) {
-      return func.name;
-    }
-    const functionToString = Function.prototype.toString;
+
+  fnNameFor(func: Function) {
+    if (func.name)
+      return func.name
+
+    const functionToString = Function.prototype.toString
 
     const matches = functionToString
       .call(func)
-      .match(/^(?:async)?\s*function\s*\*?\s*([\w$]+)\s*\(/);
-    return matches ? matches[1] : '<anonymous>';
+      .match(/^(?:async)?\s*function\s*\*?\s*([\w$]+)\s*\(/)
+    return matches ? matches[1] : '<anonymous>'
   }
 
   asymmetricMatch(other: unknown) {
-    if (this.sample == String) {
-      return typeof other == 'string' || other instanceof String;
-    }
+    if (this.sample === String)
+      return typeof other == 'string' || other instanceof String
 
-    if (this.sample == Number) {
-      return typeof other == 'number' || other instanceof Number;
-    }
+    if (this.sample === Number)
+      return typeof other == 'number' || other instanceof Number
 
-    if (this.sample == Function) {
-      return typeof other == 'function' || other instanceof Function;
-    }
+    if (this.sample === Function)
+      return typeof other == 'function' || other instanceof Function
 
-    if (this.sample == Boolean) {
-      return typeof other == 'boolean' || other instanceof Boolean;
-    }
+    if (this.sample === Boolean)
+      return typeof other == 'boolean' || other instanceof Boolean
 
-    if (this.sample == BigInt) {
-      return typeof other == 'bigint' || other instanceof BigInt;
-    }
+    if (this.sample === BigInt)
+      return typeof other == 'bigint' || other instanceof BigInt
 
-    if (this.sample == Symbol) {
-      return typeof other == 'symbol' || other instanceof Symbol;
-    }
+    if (this.sample === Symbol)
+      return typeof other == 'symbol' || other instanceof Symbol
 
-    if (this.sample == Object) {
-      return typeof other == 'object';
-    }
+    if (this.sample === Object)
+      return typeof other == 'object'
 
-    return other instanceof this.sample;
+    return other instanceof this.sample
   }
 
   toString() {
-    return 'Any';
+    return 'Any'
   }
 
   getExpectedType() {
-    if (this.sample == String) {
-      return 'string';
-    }
+    if (this.sample === String)
+      return 'string'
 
-    if (this.sample == Number) {
-      return 'number';
-    }
+    if (this.sample === Number)
+      return 'number'
 
-    if (this.sample == Function) {
-      return 'function';
-    }
+    if (this.sample === Function)
+      return 'function'
 
-    if (this.sample == Object) {
-      return 'object';
-    }
+    if (this.sample === Object)
+      return 'object'
 
-    if (this.sample == Boolean) {
-      return 'boolean';
-    }
+    if (this.sample === Boolean)
+      return 'boolean'
 
-    return this.fnNameFor(this.sample);
+    return this.fnNameFor(this.sample)
   }
 
   toAsymmetricMatcher() {
-    return 'Any<' + this.fnNameFor(this.sample) + '>';
+    return `Any<${this.fnNameFor(this.sample)}>`
   }
 }
 
@@ -214,7 +202,7 @@ export const JestAsymmetricMatchers: ChaiPlugin = (chai, utils) => {
     'any',
     (expected: unknown) => {
       return new Any(expected)
-    }
+    },
   )
 
   utils.addMethod(
@@ -224,5 +212,4 @@ export const JestAsymmetricMatchers: ChaiPlugin = (chai, utils) => {
       return new ArrayContaining(expected)
     },
   )
-
 }
