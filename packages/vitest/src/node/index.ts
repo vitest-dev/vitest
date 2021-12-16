@@ -2,7 +2,9 @@ import { resolve } from 'path'
 import type { ViteDevServer, InlineConfig as ViteInlineConfig, UserConfig as ViteUserConfig } from 'vite'
 import { mergeConfig, createServer } from 'vite'
 import { findUp } from 'find-up'
-import type { Reporter, UserConfig, ResolvedConfig, ArgumentsType } from '../types'
+import fg from 'fast-glob'
+import mm from 'micromatch'
+import type { Reporter, UserConfig, ArgumentsType, ResolvedConfig } from '../types'
 import { SnapshotManager } from '../integrations/snapshot/manager'
 import { configFiles } from '../constants'
 import { toArray, hasFailed, slash } from '../utils'
@@ -11,7 +13,6 @@ import type { WorkerPool } from './pool'
 import { StateManager } from './state'
 import { resolveConfig } from './config'
 import { createPool } from './pool'
-import { globTestFiles, isTargetFile } from './glob'
 
 const WATCHER_DEBOUNCE = 100
 
@@ -54,7 +55,7 @@ class Vitest {
   }
 
   async start(filters?: string[]) {
-    const files = await globTestFiles(this.config, filters)
+    const files = await this.globTestFiles(filters)
 
     if (!files.length) {
       console.error('No test files found')
@@ -140,7 +141,7 @@ class Vitest {
     })
     this.server.watcher.on('add', async(id) => {
       id = slash(id)
-      if (isTargetFile(id, this.config)) {
+      if (this.isTargetFile(id)) {
         this.changedTests.add(id)
         scheduleRerun(id)
       }
@@ -178,6 +179,28 @@ class Vitest {
       // @ts-expect-error
       ...args,
     )))
+  }
+
+  async globTestFiles(filters?: string[]) {
+    let files = await fg(
+      this.config.include,
+      {
+        absolute: true,
+        cwd: this.config.root,
+        ignore: this.config.exclude,
+      },
+    )
+
+    if (filters?.length)
+      files = files.filter(i => filters.some(f => i.includes(f)))
+
+    return files
+  }
+
+  isTargetFile(id: string): boolean {
+    if (mm.isMatch(id, this.config.exclude))
+      return false
+    return mm.isMatch(id, this.config.include)
   }
 }
 
