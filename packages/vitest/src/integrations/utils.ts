@@ -3,17 +3,13 @@ import { FakeTimers } from './timers'
 import { spyOn, fn } from './jest-mock'
 
 class VitestUtils {
-  spyOn = spyOn
-  fn = fn
-  mock = (path: string) => path
-
   private _timers: FakeTimers
 
   constructor() {
     this._timers = new FakeTimers()
   }
 
-  // mocks
+  // timers
 
   public useFakeTimers() {
     return this._timers.useFakeTimers()
@@ -54,6 +50,12 @@ class VitestUtils {
   public getTimerCount() {
     return this._timers.getTimerCount()
   }
+
+  // mocks
+
+  spyOn = spyOn
+  fn = fn
+  mock = (path: string) => path
 
   public isMockFunction(fn: any) {
     return typeof fn === 'function'
