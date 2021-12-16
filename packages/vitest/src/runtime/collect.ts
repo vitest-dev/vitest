@@ -62,14 +62,6 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
   const tasks = files.reduce((tasks, file) => tasks.concat(file.tasks), [] as (Suite | Test)[])
 
   interpretOnlyMode(tasks)
-  tasks.forEach((i) => {
-    if (i.type === 'suite') {
-      if (i.mode === 'skip')
-        i.tasks.forEach(c => c.mode === 'run' && (c.mode = 'skip'))
-      else
-        interpretOnlyMode(i.tasks)
-    }
-  })
 
   return files
 }
