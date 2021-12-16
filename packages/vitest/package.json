@@ -69,7 +69,7 @@
     "@types/jsdom": "^16.2.13",
     "@types/micromatch": "^4.0.2",
     "@types/natural-compare": "^1.4.1",
-    "@types/node": "^16.11.13",
+    "@types/node": "^17.0.0",
     "c8": "^7.10.0",
     "cac": "^6.7.12",
     "cli-truncate": "^3.1.0",
