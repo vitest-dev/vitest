@@ -1,6 +1,6 @@
 {
   "name": "@vitest/monorepo",
-  "version": "0.0.90",
+  "version": "0.0.91",
   "private": true,
   "description": "A blazing fast unit test framework powered by Vite",
   "type": "module",
