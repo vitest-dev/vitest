@@ -176,7 +176,7 @@ test('interval only pending', () => {
   expect(p).not.toBeCalled()
 })
 
-test.only('advance interval', () => {
+test('advance interval', () => {
   let count = 0
   const p = vi.fn()
   const i = vi.fn(() => {
