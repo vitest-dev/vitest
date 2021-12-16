@@ -12,9 +12,8 @@ export type FetchFunction = (id: string) => Promise<string | undefined>
 
 interface SuiteMocks {
   [suitePath: string]: {
-    originalPath: string
-    mockPath: string | null
-  }[]
+    [originalPath: string]: string | null
+  }
 }
 
 export interface ExecuteOptions {
@@ -121,13 +120,10 @@ export async function executeInViteNode(options: ExecuteOptions) {
     callstack = [...callstack, id]
     const suite = getSuiteFromStack(callstack)
     const request = async(dep: string) => {
-      const mocks = suite ? mockedPaths[suite] : null
-      if (mocks) {
-        const mock = mocks.find(({ originalPath }) => originalPath === dep)
-        if (mock && mock.mockPath)
-          // to make it unique for every suite
-          dep = mock.mockPath
-      }
+      const mocks = mockedPaths[suite || ''] || {}
+      const mock = mocks[dep]
+      if (mock)
+        dep = mock
       if (callstack.includes(dep)) {
         const cacheKey = toFilePath(dep, root)
         if (!moduleCache.get(cacheKey)?.exports)
@@ -186,8 +182,8 @@ export async function executeInViteNode(options: ExecuteOptions) {
           originalPath: originalPath.replace(root, ''),
           mockPath: mockPath?.replace(root, '') || null,
         }
-        mockedPaths[id] ??= []
-        mockedPaths[id].push(mockInfo)
+        mockedPaths[id] ??= {}
+        mockedPaths[id][mockInfo.originalPath] = mockInfo.mockPath
       }
     }
 
@@ -199,8 +195,8 @@ export async function executeInViteNode(options: ExecuteOptions) {
 
     const mocks = suite ? mockedPaths[suite] : null
     if (mocks) {
-      const mock = mocks.find(({ originalPath }) => originalPath === id)
-      if (mock && !mock.mockPath) {
+      const mock = mocks[id]
+      if (mock === null) {
         Object.entries(exports).forEach(([key, value]) => {
           if (typeof value === 'function')
             spyOn(exports, key)
