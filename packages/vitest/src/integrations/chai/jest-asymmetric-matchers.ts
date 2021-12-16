@@ -73,6 +73,39 @@ export class Anything extends AsymmetricMatcher<void>{
   }
 }
 
+export class ArrayContaining extends AsymmetricMatcher<Array<unknown>> {
+  constructor(sample: Array<unknown>, inverse = false) {
+    super(sample, inverse);
+  }
+
+  asymmetricMatch(other: Array<unknown>) {
+    if (!Array.isArray(this.sample)) {
+      throw new Error(
+        `You must provide an array to ${this.toString()}, not '` +
+          typeof this.sample +
+          "'.",
+      );
+    }
+
+    const result =
+      this.sample.length === 0 ||
+      (Array.isArray(other) &&
+        this.sample.every(item =>
+          other.some(another => equals(item, another)),
+        ));
+
+    return this.inverse ? !result : result;
+  }
+
+  toString() {
+    return `Array${this.inverse ? 'Not' : ''}Containing`;
+  }
+
+  getExpectedType() {
+    return 'array';
+  }
+}
+
 
 export class Any extends AsymmetricMatcher<any> {
   constructor(sample: unknown) {
@@ -181,6 +214,14 @@ export const JestAsymmetricMatchers: ChaiPlugin = (chai, utils) => {
     'any',
     (expected: unknown) => {
       return new Any(expected)
+    }
+  )
+
+  utils.addMethod(
+    chai.expect,
+    'arrayContaining',
+    (expected: any) => {
+      return new ArrayContaining(expected)
     },
   )
 

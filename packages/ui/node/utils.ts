@@ -14,8 +14,8 @@ const getCircularReplacer = () => {
 }
 
 export const getSuitesAsJson = () => {
-  const vitest = process.__vitest__
-  const suites = getSuites(vitest.state.getFiles()).filter(x => x)
+  // const vitest = process.__vitest__
+  // const suites = getSuites(vitest.state.getFiles()).filter(x => x)
 
-  return JSON.stringify(suites, getCircularReplacer())
+  // return JSON.stringify(suites, getCircularReplacer())
 }

@@ -22,6 +22,8 @@ export function slash(str: string) {
   return str.replace(/\\/g, '/')
 }
 
+export const noop = () => {}
+
 /**
  * Partition in tasks groups by consecutive computeMode ('serial', 'concurrent')
  */
@@ -112,7 +114,7 @@ export async function ensurePackageInstalled(dependency: string, promptInstall =
   const { install } = await prompts.prompt({
     type: 'confirm',
     name: 'install',
-    message: `Do you want to install ${c.green(dependency)}?`,
+    message: c.reset(`Do you want to install ${c.green(dependency)}?`),
   })
 
   if (install) {

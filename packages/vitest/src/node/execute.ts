@@ -180,16 +180,12 @@ export async function executeInViteNode(options: ExecuteOptions) {
 }
 
 export function normalizeId(id: string): string {
-  // Virtual modules start with `\0`
-  if (id && id.startsWith('/@id/__x00__'))
-    id = `\0${id.slice('/@id/__x00__'.length)}`
-  if (id && id.startsWith('/@id/'))
-    id = id.slice('/@id/'.length)
-  if (id.startsWith('__vite-browser-external:'))
-    id = id.slice('__vite-browser-external:'.length)
-  if (id.startsWith('node:'))
-    id = id.slice('node:'.length)
   return id
+    .replace(/^\/@id\/__x00__/, '\0') // virtual modules start with `\0`
+    .replace(/^\/@id\//, '')
+    .replace(/^__vite-browser-external:/, '')
+    .replace(/^node:/, '')
+    .replace(/\?.*$/, '') // remove query
 }
 
 export async function shouldExternalize(id: string, config: Pick<ExecuteOptions, 'inline' | 'external'>) {

@@ -1,4 +1,4 @@
-import type { Anything, Any } from './integrations/chai/jest-asymmetric-matchers'
+import type { Anything, Any, ArrayContaining } from './integrations/chai/jest-asymmetric-matchers'
 import type { MatchersObject } from './integrations/chai/types'
 import type { InlineConfig as VitestInlineConfig } from './types'
 
@@ -25,6 +25,7 @@ declare global {
       stringContaining(expected: string): void
       anything(): Anything
       any(constructor: unknown): Any
+      arrayContaining(expected: any): ArrayContaining
     }
 
     interface Assertion {

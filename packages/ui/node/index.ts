@@ -14,7 +14,6 @@ export const VitestUIPlugin = (): Plugin => {
     name: 'vitest:ui',
     apply: 'serve',
     async configureServer(server) {
-      // const vitest = process.__vitest__
       const wss = new WebSocketServer({ noServer: true })
 
       server.httpServer?.on('upgrade', (request, socket, head) => {
