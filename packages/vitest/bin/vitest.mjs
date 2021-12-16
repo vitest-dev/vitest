@@ -6,6 +6,9 @@ import { ensurePackageInstalled } from '../dist/utils.js'
 
 const argv = process.argv.slice(2)
 
+if (!await ensurePackageInstalled('vite'))
+  process.exit(1)
+
 if (argv.includes('--coverage')) {
   if (!await ensurePackageInstalled('c8'))
     process.exit(1)
