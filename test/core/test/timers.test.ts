@@ -176,7 +176,7 @@ test('interval only pending', () => {
   expect(p).not.toBeCalled()
 })
 
-test.only('advance interval', () => {
+test('advance interval', () => {
   let count = 0
   const p = vi.fn()
   const i = vi.fn(() => {
@@ -200,4 +200,25 @@ test.only('advance interval', () => {
   expect(p).toBeCalledTimes(8)
 
   vi.useRealTimers()
+})
+
+test('async timer', async() => {
+  const res: string[] = []
+
+  vi.useFakeTimers()
+
+  setTimeout(async() => {
+    await Promise.resolve()
+    res.push('item1')
+  }, 1000)
+
+  setTimeout(async() => {
+    await Promise.resolve()
+    res.push('item2')
+  }, 1000)
+
+  await vi.runAllTimers()
+  vi.useRealTimers()
+
+  expect(res).toEqual(['item1', 'item2'])
 })
