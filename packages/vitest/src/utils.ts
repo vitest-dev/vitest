@@ -1,5 +1,5 @@
-import { createRequire } from 'module'
 import c from 'picocolors'
+import { isPackageExists } from 'local-pkg'
 import type { Suite, Test, Task, Arrayable, Nullable } from './types'
 
 /**
@@ -98,14 +98,27 @@ export function getNames(task: Task) {
   return names
 }
 
-export function checkPeerDependency(dependency: string) {
-  const require = createRequire(import.meta.url)
+export async function ensurePackageInstalled(dependency: string, promptInstall = !process.env.CI) {
+  if (isPackageExists(dependency))
+    return true
 
-  try {
-    require.resolve(dependency)
-  } catch {
-    console.log(c.red(`${c.inverse(c.red(' MISSING DEP '))} Cound not find '${dependency}' peer dependency, please try installing it\n`))
-    process.exit(1)
+  // eslint-disable-next-line no-console
+  console.log(c.red(`${c.inverse(c.red(' MISSING DEP '))} Can not find dependency '${dependency}'\n`))
+
+  if (!promptInstall)
+    return false
+
+  const prompts = await import('prompts')
+  const { install } = await prompts.prompt({
+    type: 'confirm',
+    name: 'install',
+    message: `Do you want to install ${c.green(dependency)}?`,
+  })
+
+  if (install) {
+    await (await import('@antfu/install-pkg')).installPackage(dependency)
+    return true
   }
-}
 
+  return false
+}

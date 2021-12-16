@@ -35,7 +35,9 @@ export default [
           { find: /^node:(.+)$/, replacement: '$1' },
         ],
       }),
-      resolve(),
+      resolve({
+        preferBuiltins: true,
+      }),
       json(),
       commonjs(),
       esbuild({
