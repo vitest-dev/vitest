@@ -52,6 +52,8 @@ describe('jest-expect', () => {
     expect('string').toEqual(expect.anything())
     expect(null).not.toEqual(expect.anything())
     expect(undefined).not.toEqual(expect.anything())
+    expect({ a: 0, b: 0 }).toEqual(expect.objectContaining({ a: 0 }))
+    expect({ a: 0, b: 0 }).not.toEqual(expect.objectContaining({ z: 0 }))
     expect(0).toEqual(expect.any(Number))
     expect('string').toEqual(expect.any(String))
     expect('string').not.toEqual(expect.any(Number))

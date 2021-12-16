@@ -73,6 +73,62 @@ export class Anything extends AsymmetricMatcher<void> {
   }
 }
 
+export class ObjectContaining extends AsymmetricMatcher<Record<string, unknown>> {
+  constructor(sample: Record<string, unknown>, inverse = false) {
+    super(sample, inverse)
+  }
+
+  getPrototype(obj: object) {
+    if (Object.getPrototypeOf)
+      return Object.getPrototypeOf(obj)
+
+    if (obj.constructor.prototype === obj)
+      return null
+
+    return obj.constructor.prototype
+  }
+
+  hasProperty(obj: object | null, property: string): boolean {
+    if (!obj)
+      return false
+
+    if (Object.prototype.hasOwnProperty.call(obj, property))
+      return true
+
+    return this.hasProperty(this.getPrototype(obj), property)
+  }
+
+  asymmetricMatch(other: any) {
+    if (typeof this.sample !== 'object') {
+      throw new TypeError(
+        `You must provide an object to ${this.toString()}, not '${
+          typeof this.sample
+        }'.`,
+      )
+    }
+
+    let result = true
+
+    // eslint-disable-next-line no-restricted-syntax
+    for (const property in this.sample) {
+      if (!this.hasProperty(other, property) || !equals(this.sample[property], other[property])) {
+        result = false
+        break
+      }
+    }
+
+    return this.inverse ? !result : result
+  }
+
+  toString() {
+    return `Object${this.inverse ? 'Not' : ''}Containing`
+  }
+
+  getExpectedType() {
+    return 'object'
+  }
+}
+
 export class ArrayContaining extends AsymmetricMatcher<Array<unknown>> {
   constructor(sample: Array<unknown>, inverse = false) {
     super(sample, inverse)
@@ -194,6 +250,14 @@ export const JestAsymmetricMatchers: ChaiPlugin = (chai, utils) => {
     'anything',
     () => {
       return new Anything()
+    },
+  )
+
+  utils.addMethod(
+    chai.expect,
+    'objectContaining',
+    (expected: any) => {
+      return new ObjectContaining(expected)
     },
   )
 
