@@ -74,10 +74,8 @@ function JestExtendPlugin(expects: MatchersObject): ChaiPlugin {
   }
 }
 
-export function JestExtend(): ChaiPlugin {
-  return (chai, utils) => {
-    utils.addMethod(chai.expect, 'extend', (expects: MatchersObject) => {
-      chai.use(JestExtendPlugin(expects))
-    })
-  }
+export const JestExtend: ChaiPlugin = (chai, utils) => {
+  utils.addMethod(chai.expect, 'extend', (expects: MatchersObject) => {
+    chai.use(JestExtendPlugin(expects))
+  })
 }

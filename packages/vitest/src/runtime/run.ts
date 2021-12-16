@@ -9,7 +9,13 @@ import { collectTests } from './collect'
 import { processError } from './error'
 
 export async function callSuiteHook<T extends keyof SuiteHooks>(suite: Suite, name: T, args: SuiteHooks[T][0] extends HookListener<infer A> ? A : never) {
+  if (name === 'beforeEach' && suite.suite)
+    await callSuiteHook(suite.suite, name, args)
+
   await Promise.all(getHooks(suite)[name].map(fn => fn(...(args as any))))
+
+  if (name === 'afterEach' && suite.suite)
+    await callSuiteHook(suite.suite, name, args)
 }
 
 function updateTask(task: Task) {

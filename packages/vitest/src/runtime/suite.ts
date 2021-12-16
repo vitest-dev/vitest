@@ -1,6 +1,6 @@
 import { nanoid } from 'nanoid/non-secure'
 import type { Awaitable, SuiteHooks, Test, SuiteCollector, TestCollector, RunMode, ComputeMode, TestFactory, TestFunction, File, Suite, ResolvedConfig, RpcCall, RpcSend, ModuleCache } from '../types'
-import { collectTask, context, runWithSuite, withTimeout, normalizeTest } from './context'
+import { collectTask, context, runWithSuite, normalizeTest } from './context'
 import { getHooks, setFn, setHooks } from './map'
 
 export const suite = createSuite()
