@@ -2,6 +2,7 @@ import type { ServerResponse } from 'http'
 import type { Connect } from 'vite'
 import { stringify } from 'flatted'
 import { API_PATH } from '../constants'
+import type { Vitest } from '../node'
 
 export function sendFlatted(res: ServerResponse, data: any) {
   res.setHeader('Content-Type', 'application/json')
@@ -10,13 +11,12 @@ export function sendFlatted(res: ServerResponse, data: any) {
   res.end()
 }
 
-export default function middlewareAPI(): Connect.NextHandleFunction {
+export default function middlewareAPI(ctx: Vitest): Connect.NextHandleFunction {
   return (req, res, next) => {
     if (!req.url?.startsWith(API_PATH))
       return next()
 
     const url = req.url.slice(API_PATH.length)
-    const ctx = process.__vitest__
 
     if (url === '/') {
       return sendFlatted(res, {

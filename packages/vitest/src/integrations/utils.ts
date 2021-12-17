@@ -1,16 +1,15 @@
+import { spies } from 'tinyspy'
 import { FakeTimers } from './timers'
 import { spyOn, fn } from './jest-mock'
 
 class VitestUtils {
-  spyOn = spyOn
-  fn = fn
-  mock = (path: string) => path
-
   private _timers: FakeTimers
 
   constructor() {
     this._timers = new FakeTimers()
   }
+
+  // timers
 
   public useFakeTimers() {
     return this._timers.useFakeTimers()
@@ -50,6 +49,36 @@ class VitestUtils {
 
   public getTimerCount() {
     return this._timers.getTimerCount()
+  }
+
+  // mocks
+
+  spyOn = spyOn
+  fn = fn
+  mock = (path: string) => path
+
+  public isMockFunction(fn: any) {
+    return typeof fn === 'function'
+      && '__isSpy' in fn
+      && fn.__isSpy
+  }
+
+  public clearAllMocks() {
+    spies.forEach((spy) => {
+      spy.reset()
+    })
+  }
+
+  public resetAllMocks() {
+    spies.forEach((spy) => {
+      spy.reset()
+    })
+  }
+
+  public restoreAllMocks() {
+    spies.forEach((spy) => {
+      spy.restore()
+    })
   }
 }
 

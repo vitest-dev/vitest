@@ -1,5 +1,4 @@
 import { describe, it, expect, vitest } from 'vitest'
-// import { vitest } from 'vitest'
 
 describe('jest mock compat layer', () => {
   const returnFactory = (type: string) => (value: any) => ({ type, value })
@@ -53,7 +52,7 @@ describe('jest mock compat layer', () => {
     spy() // returns 'once'
     spy() // returns 'original'
 
-    expect(spy.getMockImplementation() === implOnce).toBe(false) // jest doesnt store Once implementations
+    expect(spy.getMockImplementation() === implOnce).toBe(false) // jest doesn't store Once implementations
 
     const impl = () => 'unlimited'
 

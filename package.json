@@ -1,6 +1,6 @@
 {
   "name": "@vitest/monorepo",
-  "version": "0.0.92",
+  "version": "0.0.94",
   "private": true,
   "description": "A blazing fast unit test framework powered by Vite",
   "type": "module",
@@ -12,7 +12,7 @@
     "docs:build": "npm -C docs run build",
     "docs:serve": "npm -C docs run serve",
     "postinstall": "cd test/vue2 && npx pnpm i",
-    "lint": "eslint --ext .js,.vue .",
+    "lint": "eslint --ext .js,.vue,.ts .",
     "release": "bumpp package.json packages/*/package.json --commit --push --tag && pnpm -r publish",
     "test": "vitest -r test/core",
     "test:all": "cross-env CI=true pnpm -r --stream --filter !vitest run test --",
@@ -41,7 +41,7 @@
     "rollup-plugin-esbuild": "^4.7.2",
     "tinyspy": "^0.1.2",
     "typescript": "^4.5.4",
-    "vite": "^2.7.2",
+    "vite": "^2.7.3",
     "vitepress": "^0.20.9",
     "vitest": "workspace:*"
   }
