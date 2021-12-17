@@ -3,10 +3,10 @@ import { fileURLToPath, pathToFileURL } from 'url'
 import { basename, dirname, resolve } from 'path'
 import vm from 'vm'
 import { existsSync, readdirSync } from 'fs'
+import { isValidNodeImport } from 'mlly'
 import type { ModuleCache } from '../types'
 import { slash } from '../utils'
 import { fn } from '../integrations/jest-mock'
-import { isValidNodeImport } from './mlly-port'
 
 export type FetchFunction = (id: string) => Promise<string | undefined>
 

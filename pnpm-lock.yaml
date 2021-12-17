@@ -95,7 +95,7 @@ importers:
       log-update: ^5.0.0
       magic-string: ^0.25.7
       micromatch: ^4.0.4
-      mlly: ^0.3.15
+      mlly: ^0.3.16
       nanoid: ^3.1.30
       natural-compare: ^1.4.0
       pathe: ^0.2.0
@@ -138,7 +138,7 @@ importers:
       jsdom: 19.0.0
       log-update: 5.0.0
       micromatch: 4.0.4
-      mlly: 0.3.15
+      mlly: 0.3.16
       nanoid: 3.1.30
       natural-compare: 1.4.0
       pathe: 0.2.0
@@ -4975,8 +4975,8 @@ packages:
     dependencies:
       import-meta-resolve: 1.1.1
 
-  /mlly/0.3.15:
-    resolution: {integrity: sha512-3btbOX6XaoIMXRhLu0T/D9jPRrjJXl4R7Dl+EbpN7BYcQwehmt5UAYrIa2m9D/ywcXIUvDM+OTCON+ShFggndg==}
+  /mlly/0.3.16:
+    resolution: {integrity: sha512-DVydmuR8fmiMetH39kp8VXYslN0XDh+OxULuU/ov8TMwVIxDGQ8PsJIrNi6cZZaHiIYL6wtO6+sjGpVc7msKUg==}
     dev: true
 
   /mrmime/1.0.0:
@@ -5433,7 +5433,7 @@ packages:
     resolution: {integrity: sha512-eBYzX/7NYsQEOR2alWY4rnQB49G62oHzFpoi9Som56aUr8vB8UGcmcIia9v8fpBeuhH3Ltentuk2OGpp4IQV3Q==}
     dependencies:
       jsonc-parser: 3.0.0
-      mlly: 0.3.15
+      mlly: 0.3.16
       pathe: 0.2.0
     dev: true
 
