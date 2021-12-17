@@ -81,7 +81,6 @@ export function createWorkerPool(ctx: Vitest): WorkerPool {
         }
 
         await pool.run(data, { transferList: [workerPort], name })
-        // await piscina.run(data, { transferList: [workerPort], name })
         port.close()
         workerPort.close()
       }))
@@ -91,7 +90,6 @@ export function createWorkerPool(ctx: Vitest): WorkerPool {
   return {
     runTests: runWithFiles('run'),
     collectTests: runWithFiles('collect'),
-    // close: () => piscina.destroy(),
     close: () => pool.destroy(),
   }
 }
