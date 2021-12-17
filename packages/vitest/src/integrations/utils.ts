@@ -1,5 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import { spies } from 'tinyspy'
 import { FakeTimers } from './timers'
+import type { MaybeMocked, MaybeMockedDeep } from './jest-mock'
 import { spyOn, fn } from './jest-mock'
 
 class VitestUtils {
@@ -55,7 +58,30 @@ class VitestUtils {
 
   spyOn = spyOn
   fn = fn
-  mock = (path: string) => path
+
+  // just hints for transformer to rewrite imports
+  public mock(path: string) {
+    return {}
+  }
+
+  public unmock(path: string) {
+    return {}
+  }
+
+  public async requireActual<T>(path: string): Promise<T> {
+    return {} as T
+  }
+
+  public async requireMock<T>(path: string): Promise<T> {
+    return {} as T
+  }
+
+  // the typings test helper
+  public mocked<T>(item: T, deep?: false): MaybeMocked<T>;
+  public mocked<T>(item: T, deep: true): MaybeMockedDeep<T>;
+  public mocked<T>(item: T, _deep = false): MaybeMocked<T> | MaybeMockedDeep<T> {
+    return item as any
+  }
 
   public isMockFunction(fn: any) {
     return typeof fn === 'function'
@@ -67,18 +93,21 @@ class VitestUtils {
     spies.forEach((spy) => {
       spy.reset()
     })
+    return this
   }
 
   public resetAllMocks() {
     spies.forEach((spy) => {
       spy.reset()
     })
+    return this
   }
 
   public restoreAllMocks() {
     spies.forEach((spy) => {
       spy.restore()
     })
+    return this
   }
 }
 

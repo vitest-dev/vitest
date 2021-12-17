@@ -9,6 +9,8 @@ export async function run(files: string[], config: ResolvedConfig): Promise<void
   for (const file of files) {
     const code = await fs.readFile(file, 'utf-8')
 
+    process.__vitest_worker__.suitepath = file
+
     const env = code.match(/@(?:vitest|jest)-environment\s+?([\w-]+)\b/)?.[1] || config.environment || 'node'
 
     if (!['node', 'jsdom', 'happy-dom'].includes(env))
@@ -17,5 +19,7 @@ export async function run(files: string[], config: ResolvedConfig): Promise<void
     await withEnv(env as BuiltinEnvironment, async() => {
       await startTests([file], config)
     })
+
+    process.__vitest_worker__.suitepath = undefined
   }
 }

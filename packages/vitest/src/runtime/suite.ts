@@ -216,6 +216,7 @@ declare global {
         rpc: RpcCall
         send: RpcSend
         current?: Test
+        suitepath?: string
         moduleCache: Map<string, ModuleCache>
       }
     }
