@@ -48,16 +48,21 @@ export const stubRequests: Record<string, any> = {
 export async function interpretedImport(path: string, interpretDefault: boolean) {
   const mod = await import(path)
 
-  if (interpretDefault && '__esModule' in mod && 'default' in mod) {
-    const defaultExport = mod.default
-    if (!('default' in defaultExport)) {
-      Object.defineProperty(defaultExport, 'default', {
-        enumerable: true,
-        configurable: true,
-        get() { return defaultExport },
-      })
-    }
-    return defaultExport
+  if (interpretDefault && 'default' in mod) {
+    return new Proxy(mod, {
+      get(target, key, receiver) {
+        return Reflect.get(target, key, receiver) || Reflect.get(target.default, key, receiver)
+      },
+      set(target, key, value, receiver) {
+        return Reflect.set(target, key, value, receiver) || Reflect.set(target.default, key, value, receiver)
+      },
+      has(target, key) {
+        return Reflect.has(target, key) || Reflect.has(target.default, key)
+      },
+      deleteProperty(target, key) {
+        return Reflect.deleteProperty(target, key) || Reflect.deleteProperty(target.default, key)
+      },
+    })
   }
 
   return mod
