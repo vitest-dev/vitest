@@ -17,7 +17,7 @@ describe('mock', () => {
     expect(fn).not.toHaveBeenCalled()
 
     fn('World', 2)
-    fn('Hi', 1) 
+    fn('Hi', 1)
 
     expect(fn.mock.calls[1]).toEqual(['Hi', 1])
 
