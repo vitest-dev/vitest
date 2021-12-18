@@ -1,6 +1,6 @@
 import { spies } from 'tinyspy'
 import { FakeTimers } from './timers'
-import { spyOn, fn } from './jest-mock'
+import { fn, spyOn } from './jest-mock'
 
 class VitestUtils {
   private _timers: FakeTimers

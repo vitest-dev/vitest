@@ -1,7 +1,7 @@
 import { resolve } from 'path'
 import fs from 'fs/promises'
 import { fileURLToPath } from 'url'
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { timeout } from '../src/timeout'
 
 const content = 'Hello, World!'

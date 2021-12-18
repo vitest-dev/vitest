@@ -4,7 +4,7 @@ import type { Options as TinypoolOptions } from 'tinypool'
 import { Tinypool } from 'tinypool'
 import type { RpcMap } from 'vitest'
 import { distDir } from '../constants'
-import type { WorkerContext, RpcPayload, File, Awaitable } from '../types'
+import type { Awaitable, File, RpcPayload, WorkerContext } from '../types'
 import { transformRequest } from './transform'
 import type { Vitest } from './index'
 

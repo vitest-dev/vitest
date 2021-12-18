@@ -76,7 +76,7 @@
     "diff": "^5.0.0",
     "find-up": "^6.2.0",
     "flatted": "^3.2.4",
-    "happy-dom": "^2.24.5",
+    "happy-dom": "^2.25.0",
     "jsdom": "^19.0.0",
     "log-update": "^5.0.0",
     "micromatch": "^4.0.4",

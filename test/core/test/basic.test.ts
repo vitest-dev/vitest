@@ -1,4 +1,4 @@
-import { expect, test, assert, suite, it } from 'vitest'
+import { assert, expect, it, suite, test } from 'vitest'
 import { two } from '../src/submodule'
 import { timeout } from '../src/timeout'
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, effectScope, onMounted, ref } from 'vue'
-import { useElementVisibility, until } from '@vueuse/core'
+import { until, useElementVisibility } from '@vueuse/core'
 
 const el = ref()
 const state = ref(0)

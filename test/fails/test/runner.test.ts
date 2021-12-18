@@ -1,7 +1,7 @@
 import { resolve } from 'path'
 import fg from 'fast-glob'
 import { execa } from 'execa'
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 describe('should fails', async() => {
   const root = resolve(__dirname, '../fixtures')

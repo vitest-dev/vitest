@@ -1,4 +1,4 @@
-import { describe, test, beforeAll, afterAll, expect } from 'vitest'
+import { afterAll, beforeAll, describe, expect, test } from 'vitest'
 import { preview } from 'vite'
 import type { PreviewServer } from 'vite'
 import puppeteer from 'puppeteer'

@@ -10,7 +10,7 @@
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^5.16.1",
-    "happy-dom": "^2.24.5",
+    "happy-dom": "^2.25.0",
     "vitest": "workspace:*"
   }
 }

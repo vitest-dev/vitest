@@ -1,6 +1,6 @@
 /* eslint-disable prefer-template */
 /* eslint-disable no-template-curly-in-string */
-import { promises as fs, existsSync } from 'fs'
+import { existsSync, promises as fs } from 'fs'
 import { relative } from 'path'
 import { format } from 'util'
 import c from 'picocolors'

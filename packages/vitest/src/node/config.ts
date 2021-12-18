@@ -1,6 +1,6 @@
 import { resolve } from 'path'
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
-import type { UserConfig, ResolvedConfig } from '../types'
+import type { ResolvedConfig, UserConfig } from '../types'
 import { defaultExclude, defaultInclude, defaultPort } from '../constants'
 
 export function resolveConfig(
