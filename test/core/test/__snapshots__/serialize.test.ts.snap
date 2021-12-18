@@ -1,10 +1,10 @@
 // Vitest Snapshot v1
 
 exports[`error serialize > works 1`] = `
-Object {
+{
   "fn": "Function<fn>",
   "foo": "hi",
-  "nested": Object {
+  "nested": {
     "class": "Function<class>",
     "false": false,
   },
