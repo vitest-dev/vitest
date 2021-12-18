@@ -2,3 +2,4 @@ dist
 node_modules
 packages/uvu/**/*
 *.svelte
+*.snap

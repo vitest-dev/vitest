@@ -14,7 +14,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     utils.addMethod(
       chai.Assertion.prototype,
       key,
-      function(this: Record<string, unknown>, message: string) {
+      function(this: Record<string, unknown>, message?: string) {
         const expected = utils.flag(this, 'object')
         getSnapshotClient().assert(expected, message)
       },
