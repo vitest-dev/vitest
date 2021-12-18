@@ -1,4 +1,5 @@
 packages:
+  - docs
   - packages/*
   - test/*
   - '!test/vue2'
