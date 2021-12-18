@@ -149,7 +149,7 @@ export async function executeInViteNode(options: ExecuteOptions) {
     const id = normalizeId(rawId)
 
     if (externalCache.get(id))
-      return interpretedImport(id, options.interpretDefault)
+      return interpretedImport(patchWindowsImportPath(id), options.interpretDefault)
 
     const fsPath = toFilePath(id, root)
     const importPath = patchWindowsImportPath(fsPath)
@@ -243,6 +243,8 @@ function matchExternalizePattern(id: string, patterns: (string | RegExp)[]) {
 function patchWindowsImportPath(path: string) {
   if (path.match(/^\w:\\/))
     return `file:///${slash(path)}`
+  else if (path.match(/^\w:\//))
+    return `file:///${path}`
   else
     return path
 }
