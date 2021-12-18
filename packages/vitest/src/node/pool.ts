@@ -1,6 +1,7 @@
 import { MessageChannel } from 'worker_threads'
 import { pathToFileURL } from 'url'
-import Tinypool, { Options as TinypoolOptions } from 'tinypool'
+import type { Options as TinypoolOptions } from 'tinypool'
+import { Tinypool } from 'tinypool'
 import type { RpcMap } from 'vitest'
 import { distDir } from '../constants'
 import type { WorkerContext, RpcPayload, File, Awaitable } from '../types'
