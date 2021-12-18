@@ -118,7 +118,7 @@ export async function ensurePackageInstalled(dependency: string, promptInstall =
   })
 
   if (install) {
-    await (await import('@antfu/install-pkg')).installPackage(dependency)
+    await (await import('@antfu/install-pkg')).installPackage(dependency, { dev: true })
     return true
   }
 
