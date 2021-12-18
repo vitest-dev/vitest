@@ -44,6 +44,8 @@ cli
 
 cli.parse()
 
+const PROCESS_EXIT_TIMEOUT = 5_000
+
 async function dev(cliFilters: string[], argv: UserConfig) {
   if (argv.watch == null)
     argv.watch = !process.env.CI && !process.env.NODE_V8_COVERAGE
@@ -87,6 +89,14 @@ async function run(cliFilters: string[], options: UserConfig) {
   finally {
     if (!ctx.config.watch)
       await ctx.close()
+  }
+
+  if (!ctx.config.watch) {
+    const timer = setTimeout(() => {
+      console.error(c.red('Process hanging for 5 seconds after all tests are done. Exiting...'))
+      process.exit(1)
+    }, PROCESS_EXIT_TIMEOUT)
+    timer.unref()
   }
 }
 
