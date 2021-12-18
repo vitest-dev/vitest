@@ -15,18 +15,17 @@ export class ConsoleReporter implements Reporter {
   end = 0
   renderer?: ReturnType<typeof createRenderer>
   watchFilters?: string[]
-  console = globalThis.console
 
   log(...args: any[]) {
     if (this.ctx.config.silent)
       return
-    this.console.log(...args)
+    this.ctx.console.log(...args)
   }
 
   error(...args: any[]) {
     if (this.ctx.config.silent)
       return
-    this.console.error(...args)
+    this.ctx.console.error(...args)
   }
 
   constructor(public ctx: Vitest) {
@@ -151,8 +150,10 @@ export class ConsoleReporter implements Reporter {
 
     this.watchFilters = files
 
-    this.console.clear()
-    this.log(c.blue('Re-running tests...') + c.dim(` [ ${this.relative(trigger)} ]\n`))
+    if (!this.ctx.config.silent) {
+      this.ctx.console.clear()
+      this.log(c.blue('Re-running tests...') + c.dim(` [ ${this.relative(trigger)} ]\n`))
+    }
   }
 
   async stopListRender() {

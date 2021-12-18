@@ -134,14 +134,16 @@ async function printStack(
     const color = frame === highlight ? c.yellow : c.gray
     const path = relative(ctx.config.root, frame.file)
 
-    ctx.console.log(color(` ${c.dim(F_POINTER)} ${[frame.method, c.dim(`${path}:${pos.line}:${pos.column}`)].filter(Boolean).join(' ')}`))
+    if (!ctx.config.silent)
+      ctx.console.log(color(` ${c.dim(F_POINTER)} ${[frame.method, c.dim(`${path}:${pos.line}:${pos.column}`)].filter(Boolean).join(' ')}`))
     await onStack?.(frame, pos)
 
     // reached at test file, skip the follow stack
     if (frame.file in ctx.state.filesMap)
       break
   }
-  ctx.console.log()
+  if (!ctx.config.silent)
+    ctx.console.log()
 }
 
 function getOriginalPos(map: RawSourceMap | null | undefined, { line, column }: Position): Promise<Position | null> {
