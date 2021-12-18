@@ -124,7 +124,7 @@ export async function executeInViteNode(options: ExecuteOptions) {
       __dirname: dirname(__filename),
     }
 
-    const fn = vm.runInThisContext(`async (${Object.keys(context).join(',')})=>{${transformed}\n}`, {
+    const fn = vm.runInThisContext(`async (${Object.keys(context).join(',')})=>{{${transformed}\n}}`, {
       filename: fsPath,
       lineOffset: 0,
     })
