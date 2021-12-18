@@ -49,11 +49,14 @@ export class SnapshotClient {
     this.test = undefined
   }
 
-  assert(received: unknown, message: string, inlineSnapshot?: string): void {
+  assert(received: unknown, message?: string, inlineSnapshot?: string): void {
     if (!this.test)
       throw new Error('Snapshot cannot be used outside of test')
 
-    const testName = getNames(this.test).slice(1).join(' > ')
+    const testName = [
+      ...getNames(this.test).slice(1),
+      ...(message ? [message] : []),
+    ].join(' > ')
     const { actual, expected, key, pass } = this.snapshotState!.match({
       testName,
       received,
