@@ -1,14 +1,5 @@
 // Vitest Snapshot v1
 
-exports[`inline snapshot 2`] = `
-{
-  "foo": {
-    "map": Map {},
-    "type": "object",
-  },
-}
-`;
-
 exports[`snapshot 1`] = `
 {
   "this": {
