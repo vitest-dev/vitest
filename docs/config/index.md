@@ -110,7 +110,50 @@ export default defineConfig({
 - **Type:** `'node' | 'jsdom' | 'happy-dom'`
 - **Default:** `'node'`
 
-Running environment
+The environment that will be used for testing. The default environment in Vitest
+is a Node.js environment. If you are building a web application, you can use
+browser-like environment through either [`jsdom`](https://github.com/jsdom/jsdom)
+or [`happy-dom`](https://github.com/capricorn86/happy-dom) instead.
+
+By adding a `@vitest-environment` docblock or comment at the top of the file,
+you can specify another environment to be used for all tests in that file:
+
+Docblock style:
+
+```js
+/**
+ * @vitest-environment jsdom
+ */
+
+test('use jsdom in this test file', () => {
+  const element = document.createElement('div');
+  expect(element).not.toBeNull();
+});
+```
+
+Comment style:
+
+```js
+// @vitest-environment happy-dom
+
+test('use happy-dom in this test file', () => {
+  const element = document.createElement('div');
+  expect(element).not.toBeNull();
+});
+```
+
+For compatibility with Jest, there is also a `@jest-environment`:
+
+```js
+/**
+ * @jest-environment jsdom
+ */
+
+test('use jsdom in this test file', () => {
+  const element = document.createElement('div');
+  expect(element).not.toBeNull();
+});
+```
 
 ### update
 

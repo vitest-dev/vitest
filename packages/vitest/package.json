@@ -80,7 +80,7 @@
     "jsdom": "^19.0.0",
     "log-update": "^5.0.0",
     "micromatch": "^4.0.4",
-    "mlly": "^0.3.15",
+    "mlly": "^0.3.16",
     "nanoid": "^3.1.30",
     "natural-compare": "^1.4.0",
     "pathe": "^0.2.0",
