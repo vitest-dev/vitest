@@ -1,7 +1,7 @@
 import { builtinModules, createRequire } from 'module'
 import { fileURLToPath, pathToFileURL } from 'url'
-import { dirname, resolve } from 'path'
 import vm from 'vm'
+import { dirname, resolve } from 'pathe'
 import { isValidNodeImport } from 'mlly'
 import type { ModuleCache } from '../types'
 import { slash } from '../utils'

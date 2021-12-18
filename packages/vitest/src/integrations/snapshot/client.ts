@@ -1,4 +1,4 @@
-import path from 'path'
+import path from 'pathe'
 import { expect } from 'chai'
 import type { SnapshotResult, Test } from '../../types'
 import { rpc } from '../../runtime/rpc'

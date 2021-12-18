@@ -1,8 +1,8 @@
 /* eslint-disable prefer-template */
 /* eslint-disable no-template-curly-in-string */
 import { existsSync, promises as fs } from 'fs'
-import { relative } from 'path'
 import { format } from 'util'
+import { relative } from 'pathe'
 import c from 'picocolors'
 import * as diff from 'diff'
 import type { RawSourceMap } from 'source-map'

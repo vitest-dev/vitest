@@ -1,4 +1,4 @@
-import { resolve } from 'path'
+import { resolve } from 'pathe'
 import type { ViteDevServer, InlineConfig as ViteInlineConfig, UserConfig as ViteUserConfig } from 'vite'
 import { createServer, mergeConfig } from 'vite'
 import { findUp } from 'find-up'

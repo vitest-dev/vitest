@@ -1,6 +1,6 @@
-import { resolve } from 'path'
 import { MessageChannel } from 'worker_threads'
 import { pathToFileURL } from 'url'
+import { resolve } from 'pathe'
 import type { Options as TinypoolOptions } from 'tinypool'
 import { Tinypool } from 'tinypool'
 import type { RpcMap } from 'vitest'

@@ -1,6 +1,6 @@
-import { resolve } from 'path'
 import fs from 'fs/promises'
 import { fileURLToPath } from 'url'
+import { resolve } from 'pathe'
 import { describe, expect, it } from 'vitest'
 import { timeout } from '../src/timeout'
 

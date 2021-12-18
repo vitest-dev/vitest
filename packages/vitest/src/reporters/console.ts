@@ -1,5 +1,5 @@
 import { performance } from 'perf_hooks'
-import { relative } from 'path'
+import { relative } from 'pathe'
 import c from 'picocolors'
 import type { Reporter, TaskResultPack, UserConsoleLog } from '../types'
 import { getSuites, getTests } from '../utils'

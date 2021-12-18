@@ -1,4 +1,4 @@
-import { resolve } from 'path'
+import { resolve } from 'pathe'
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 import type { ResolvedConfig, UserConfig } from '../types'
 import { defaultExclude, defaultInclude, defaultPort } from '../constants'

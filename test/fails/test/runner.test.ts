@@ -1,4 +1,4 @@
-import { resolve } from 'path'
+import { resolve } from 'pathe'
 import fg from 'fast-glob'
 import { execa } from 'execa'
 import { describe, expect, it } from 'vitest'

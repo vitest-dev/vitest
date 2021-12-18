@@ -1,5 +1,5 @@
-import { basename } from 'path'
 import { performance } from 'perf_hooks'
+import { basename } from 'pathe'
 import { nanoid } from 'nanoid/non-secure'
 import type { File, ResolvedConfig, Suite, Test } from '../types'
 import { interpretOnlyMode } from '../utils'
