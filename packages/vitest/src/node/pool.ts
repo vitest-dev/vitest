@@ -1,6 +1,7 @@
 import { MessageChannel } from 'worker_threads'
 import { pathToFileURL } from 'url'
-import Piscina from 'piscina'
+import type { Options as TinypoolOptions } from 'tinypool'
+import { Tinypool } from 'tinypool'
 import type { RpcMap } from 'vitest'
 import { distDir } from '../constants'
 import type { WorkerContext, RpcPayload, File, Awaitable } from '../types'
@@ -13,18 +14,6 @@ export interface WorkerPool {
   runTests: RunWithFiles
   collectTests: RunWithFiles
   close: () => Promise<void>
-}
-
-// UPSTREAM: Piscina does not expose this type
-interface PiscinaOptions {
-  filename?: string | null
-  name?: string
-  minThreads?: number
-  maxThreads?: number
-  idleTimeout?: number
-  maxQueue?: number | 'auto'
-  concurrentTasksPerWorker?: number
-  useAtomics?: boolean
 }
 
 export function createPool(ctx: Vitest): WorkerPool {
@@ -65,20 +54,20 @@ export function createFakePool(ctx: Vitest): WorkerPool {
 }
 
 export function createWorkerPool(ctx: Vitest): WorkerPool {
-  const options: PiscinaOptions = {
+  const options: TinypoolOptions = {
     filename: workerPath,
     // Disable this for now, for WebContainer capability
     // https://github.com/antfu-sponsors/vitest/issues/93
     // In future we could conditionally enable it based on the env
     useAtomics: false,
   }
-  // UPSTREAM: Piscina set defaults by the key existence
+  // UPSTREAM: Tinypool set defaults by the key existence
   if (ctx.config.maxThreads != null)
     options.maxThreads = ctx.config.maxThreads
   if (ctx.config.minThreads != null)
     options.minThreads = ctx.config.minThreads
 
-  const piscina = new Piscina(options)
+  const pool = new Tinypool(options)
 
   const runWithFiles = (name: string): RunWithFiles => {
     return async(files, invalidates) => {
@@ -92,7 +81,7 @@ export function createWorkerPool(ctx: Vitest): WorkerPool {
           invalidates,
         }
 
-        await piscina.run(data, { transferList: [workerPort], name })
+        await pool.run(data, { transferList: [workerPort], name })
         port.close()
         workerPort.close()
       }))
@@ -102,7 +91,7 @@ export function createWorkerPool(ctx: Vitest): WorkerPool {
   return {
     runTests: runWithFiles('run'),
     collectTests: runWithFiles('collect'),
-    close: () => piscina.destroy(),
+    close: () => pool.destroy(),
   }
 }
 
