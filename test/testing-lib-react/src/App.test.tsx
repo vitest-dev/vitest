@@ -4,10 +4,13 @@ import { describe, expect, it } from 'vitest'
 import App from './App'
 
 describe('Simple working test', () => {
-  it('the title is visible', async() => {
+  it('the title is visible', async () => {
     await render(<App />)
     expect(screen.getByText(/Hello Vite \+ React!/i)).toBeTruthy()
+  })
 
+  it('should increment count on click', async () => {
+    await render(<App />)
     const button = screen.getByTestId('count-button')
     fireEvent.click(button)
     await waitFor(() => {
