@@ -1,4 +1,4 @@
-import { describe, it, expect, assert, vitest } from 'vitest'
+import { assert, describe, expect, it, vitest } from 'vitest'
 
 describe('mock', () => {
   it('basic', () => {
@@ -19,7 +19,7 @@ describe('mock', () => {
     fn('World', 2)
     fn('Hi', 1)
 
-    expect(fn.mock.calls.at(-1)).toEqual(['Hi', 1])
+    expect(fn.mock.calls[1]).toEqual(['Hi', 1])
 
     expect(fn).toHaveBeenNthCalledWith(1, 'World', 2)
     expect(fn).toHaveBeenNthCalledWith(2, 'Hi', 1)
