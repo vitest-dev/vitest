@@ -316,34 +316,51 @@ export function unifiedDiff(actual: any, expected: any) {
   let expectedLinesCount = 0
   let actualLinesCount = 0
 
-  function cleanUp(line: string) {
+  function preprocess(line: string) {
     if (line[0] === '+') {
       if (expectedLinesCount >= diffLimit) return
       expectedLinesCount++
+      return (compact?: boolean) => {
+        if (compact)
+          return c.red(formatLine(line.slice(1)))
 
-      line = line[0] + ' ' + line.slice(1)
-      const isLastLine = expectedLinesCount === diffLimit
-      return indent + c.red(`${formatLine(line)} ${isLastLine ? renderTruncateMessage(indent) : ''}`)
+        line = line[0] + ' ' + line.slice(1)
+        const isLastLine = expectedLinesCount === diffLimit
+        return indent + c.red(`${formatLine(line)} ${isLastLine ? renderTruncateMessage(indent) : ''}`)
+      }
     }
     if (line[0] === '-') {
       if (actualLinesCount >= diffLimit) return
       actualLinesCount++
+      return (compact?: boolean) => {
+        if (compact)
+          return c.green(formatLine(line.slice(1)))
 
-      line = line[0] + ' ' + line.slice(1)
-      const isLastLine = actualLinesCount === diffLimit
-      return indent + c.green(`${formatLine(line)} ${isLastLine ? renderTruncateMessage(indent) : ''}`)
+        line = line[0] + ' ' + line.slice(1)
+        const isLastLine = actualLinesCount === diffLimit
+        return indent + c.green(`${formatLine(line)} ${isLastLine ? renderTruncateMessage(indent) : ''}`)
+      }
     }
     if (line.match(/@@/))
-      return '--'
+      return () => '--'
     if (line.match(/\\ No newline/))
       return null
-    return indent + ' ' + line
+    return () => indent + ' ' + line
   }
   const msg = diff.createPatch('string', actual, expected)
   const lines = msg.split('\n').splice(5)
+  const cleanLines = lines.map(preprocess).filter(notBlank) as ((compact?: boolean) => string)[]
+
+  // Compact mode
+  if (expectedLinesCount === 1 && actualLinesCount === 1) {
+    return (
+      `\n${indent}${c.green('- expected')}   ${cleanLines[0](true)}\n${indent}${c.red('+ actual')}     ${cleanLines[1](true)}`
+    )
+  }
+
   return (
     `\n${indent}${c.green('- expected')}\n${indent}${c.red('+ actual')}\n\n${
-      lines.map(cleanUp).filter(notBlank).join('\n')}`
+      cleanLines.map(l => l()).join('\n')}`
   )
 }
 
