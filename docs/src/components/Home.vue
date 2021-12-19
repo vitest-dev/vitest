@@ -62,8 +62,8 @@
       </div>
       <div>
         <a text-lg href="https://github.com/sponsors/patak-dev">Patak's Sponsors</a>
-        <a href="https://patak.dev/images/sponsors/sponsors.svg" target="_blank">
-          <img src="https://patak.dev/images/sponsors/sponsors.svg">
+        <a href="https://patak.dev/sponsors.svg" target="_blank">
+          <img src="https://patak.dev/sponsors.svg">
         </a>
       </div>
     </div>
