@@ -79,7 +79,7 @@ export default defineConfig({
 
 To get TypeScript working with the global APIs, add `vitest/global` to the `types` filed in your `tsconfig.json`
 
-```jsonc
+```json5
 // tsconfig.json
 {
   "compilerOptions": {
@@ -186,7 +186,7 @@ Custom reporter for output
 - **Type:** `boolean`
 - **Default:** `true`
 
-Enable multi-threading using Piscina.js
+Enable multi-threading using [tinypool](https://github.com/Aslemammad/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina))
 
 ### maxThreads
 

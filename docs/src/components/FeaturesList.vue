@@ -10,7 +10,7 @@
     <ListItem>Components testing for Vue, React, Lit and more</ListItem>
     <ListItem>Out-of-box TypeScript / JSX support</ListItem>
     <ListItem>ESM first, top level await</ListItem>
-    <ListItem>Workers multi-threading via <a href="https://github.com/piscinajs/piscina" target="_blank">Piscina</a></ListItem>
+    <ListItem>Workers multi-threading via <a href="https://github.com/Aslemammad/tinypool" target="_blank">tinypool</a></ListItem>
     <ListItem>Filtering, timeouts, concurrent for suite and tests</ListItem>
     <ListItem><a target="_blank" href="https://jestjs.io/docs/snapshot-testing" rel="nofollow">Jest Snapshot</a></ListItem>
     <ListItem><a target="_blank" href="https://www.chaijs.com/" rel="nofollow">Chai</a> built-in for assertions + <a href="https://jestjs.io/docs/expect" rel="nofollow">Jest expect</a> compatible APIs</ListItem>
