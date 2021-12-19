@@ -39,25 +39,7 @@
     <h3 id="made-by" op50 font-normal pt-5 pb-2>
       Made by
     </h3>
-    <div grid="~ sm:cols-2 gap-x-10 gap-y-20" p-10>
-      <Avatar
-        name="Anthony Fu"
-        desc=""
-        avatar="https://antfu.me/avatar.png"
-        github="antfu"
-        twitter="antfu7"
-      >
-        A fanatical open sourceror.<br>Core team member of Vite & Vue.<br>Working at NuxtLabs.
-      </Avatar>
-      <Avatar
-        name="Patak"
-        avatar="https://patak.dev/images/patak.jpg"
-        github="patak-dev"
-        twitter="patak_dev"
-      >
-        A collaborative being.<br>Core team member of Vite.<br>Team member of Vue.
-      </Avatar>
-    </div>
+    <Collaborators />
     <p op80 text-lg max-w-150 text-center leading-7>
       ...and the Vitest <a href="https://github.com/antfu-sponsors/vitest/network/dependencies" target="_blank">contributors</a>.<br><br>
       <a href="https://discord.com/invite/2zYZNngd7y">Join the community</a> and get involved!
