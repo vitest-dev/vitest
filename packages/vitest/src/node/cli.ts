@@ -56,13 +56,6 @@ async function run(cliFilters: string[], options: UserConfig) {
   process.env.VITEST = 'true'
   process.env.NODE_ENV = 'test'
 
-  if (!options.silent) {
-    // eslint-disable-next-line no-console
-    console.log(c.magenta(c.bold('\nVitest is in closed beta exclusively for Sponsors')))
-    // eslint-disable-next-line no-console
-    console.log(c.yellow('Learn more at https://vitest.dev'))
-  }
-
   const ctx = await createVitest(options)
 
   process.chdir(ctx.config.root)
