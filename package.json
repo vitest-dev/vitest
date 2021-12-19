@@ -45,6 +45,7 @@
     "typescript": "^4.5.4",
     "vite": "^2.7.3",
     "vitepress": "^0.20.9",
-    "vitest": "workspace:*"
+    "vitest": "workspace:*",
+    "vue": "3.2.26"
   }
 }

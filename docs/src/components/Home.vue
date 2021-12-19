@@ -34,7 +34,14 @@
     <p text="1.4em center yellow-500" leading-7 font-normal tracking-wide>
       <span i-carbon-warning-alt inline-block /> Vitest is still in development
     </p>
-    <p text="1em center" m="-t-5" leading-7 op60 font-normal tracking-wide>
+    <p
+      text="1em center"
+      m="-t-5"
+      leading-7
+      op60
+      font-normal
+      tracking-wide
+    >
       It's not recommended to migrate your current testing setups yet<br>You can try it out in new projects if you are willing to get involved and help us
     </p>
 
@@ -50,13 +57,13 @@
       <div>
         <a text-lg href="https://github.com/sponsors/antfu">Anthony's Sponsors</a>
         <a href="https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg" target="_blank">
-          <img src='https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg'>
+          <img src="https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg">
         </a>
       </div>
       <div>
         <a text-lg href="https://github.com/sponsors/patak-dev">Patak's Sponsors</a>
         <a href="https://patak.dev/images/sponsors/sponsors.svg" target="_blank">
-          <img src='https://patak.dev/images/sponsors/sponsors.svg'>
+          <img src="https://patak.dev/images/sponsors/sponsors.svg">
         </a>
       </div>
     </div>
@@ -91,7 +98,7 @@
       >
         TODO: Add bio
       </Avatar>
-       <Avatar
+      <Avatar
         name="Vladimir"
         avatar="https://avatars.githubusercontent.com/u/16173870?v=4"
         github="sheremet-va"

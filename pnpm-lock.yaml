@@ -27,6 +27,7 @@ importers:
       vite: ^2.7.3
       vitepress: ^0.20.9
       vitest: workspace:*
+      vue: 3.2.26
     devDependencies:
       '@antfu/eslint-config': 0.14.0_eslint@8.5.0+typescript@4.5.4
       '@antfu/ni': 0.12.0
@@ -51,6 +52,7 @@ importers:
       vite: 2.7.3
       vitepress: 0.20.9
       vitest: link:packages/vitest
+      vue: 3.2.26
 
   docs:
     specifiers:
@@ -93,14 +95,14 @@ importers:
       unplugin-vue-components: ^0.17.9
       ws: ^8.3.0
     dependencies:
-      '@vueuse/core': 7.3.0
+      '@vueuse/core': 7.3.0_vue@3.2.26
       sirv: 1.0.19
       ws: 8.3.0
     devDependencies:
       '@types/ws': 8.2.2
       unocss: 0.16.4
       unplugin-auto-import: 0.5.3_@vueuse+core@7.3.0+vite@2.7.3
-      unplugin-vue-components: 0.17.9_vite@2.7.3
+      unplugin-vue-components: 0.17.9_vite@2.7.3+vue@3.2.26
 
   packages/vitest:
     specifiers:
@@ -2247,21 +2249,6 @@ packages:
       vue: 3.2.26
     dev: true
 
-  /@vueuse/core/7.3.0:
-    resolution: {integrity: sha512-gPJyMMAquva9Qwqz63qGQT122m5hWI8Kuy8kfPV/JLQU7m01CXooyv8FIrX9TV8OxVcHBTPXPJHY0oyUiFoNgw==}
-    peerDependencies:
-      '@vue/composition-api': ^1.1.0
-      vue: ^2.6.0 || ^3.2.0
-    peerDependenciesMeta:
-      '@vue/composition-api':
-        optional: true
-      vue:
-        optional: true
-    dependencies:
-      '@vueuse/shared': 7.3.0
-      vue-demi: 0.12.1
-    dev: false
-
   /@vueuse/core/7.3.0_vue@3.2.26:
     resolution: {integrity: sha512-gPJyMMAquva9Qwqz63qGQT122m5hWI8Kuy8kfPV/JLQU7m01CXooyv8FIrX9TV8OxVcHBTPXPJHY0oyUiFoNgw==}
     peerDependencies:
@@ -2276,20 +2263,6 @@ packages:
       '@vueuse/shared': 7.3.0_vue@3.2.26
       vue: 3.2.26
       vue-demi: 0.12.1_vue@3.2.26
-    dev: false
-
-  /@vueuse/shared/7.3.0:
-    resolution: {integrity: sha512-vOAeI84tIXKVkzm8s/Mxbrzhj0QN6NyVc/sC6LrW0AjVNdvpD8sB1dZiDn9yh8T77WJmloCEt4zZVIppeq7I+w==}
-    peerDependencies:
-      '@vue/composition-api': ^1.1.0
-      vue: ^2.6.0 || ^3.2.0
-    peerDependenciesMeta:
-      '@vue/composition-api':
-        optional: true
-      vue:
-        optional: true
-    dependencies:
-      vue-demi: 0.12.1
     dev: false
 
   /@vueuse/shared/7.3.0_vue@3.2.26:
@@ -6520,7 +6493,7 @@ packages:
     dependencies:
       '@antfu/utils': 0.3.0
       '@rollup/pluginutils': 4.1.1
-      '@vueuse/core': 7.3.0
+      '@vueuse/core': 7.3.0_vue@3.2.26
       local-pkg: 0.4.0
       magic-string: 0.25.7
       resolve: 1.20.0
@@ -6548,36 +6521,6 @@ packages:
       unplugin: 0.2.21_vite@2.7.3
     transitivePeerDependencies:
       - rollup
-      - vite
-      - webpack
-    dev: true
-
-  /unplugin-vue-components/0.17.9_vite@2.7.3:
-    resolution: {integrity: sha512-SZrK3T/uEoP2g2bH+8DwBznoqlS0dI7kQvCmHmL8HmTXdM78kh5P/9SN5IwuNpfbmXoGXWJPB8Pr8Ke8zsgpmA==}
-    engines: {node: '>=14'}
-    peerDependencies:
-      '@babel/parser': ^7.15.8
-      '@babel/traverse': ^7.15.4
-      vue: 2 || 3
-    peerDependenciesMeta:
-      '@babel/parser':
-        optional: true
-      '@babel/traverse':
-        optional: true
-    dependencies:
-      '@antfu/utils': 0.3.0
-      '@rollup/pluginutils': 4.1.1
-      chokidar: 3.5.2
-      debug: 4.3.3
-      fast-glob: 3.2.7
-      local-pkg: 0.4.0
-      magic-string: 0.25.7
-      minimatch: 3.0.4
-      resolve: 1.20.0
-      unplugin: 0.2.21_vite@2.7.3
-    transitivePeerDependencies:
-      - rollup
-      - supports-color
       - vite
       - webpack
     dev: true
@@ -6736,19 +6679,6 @@ packages:
       - sass
       - stylus
     dev: true
-
-  /vue-demi/0.12.1:
-    resolution: {integrity: sha512-QL3ny+wX8c6Xm1/EZylbgzdoDolye+VpCXRhI2hug9dJTP3OUJ3lmiKN3CsVV3mOJKwFi0nsstbgob0vG7aoIw==}
-    engines: {node: '>=12'}
-    hasBin: true
-    requiresBuild: true
-    peerDependencies:
-      '@vue/composition-api': ^1.0.0-rc.1
-      vue: ^3.0.0-0 || ^2.6.0
-    peerDependenciesMeta:
-      '@vue/composition-api':
-        optional: true
-    dev: false
 
   /vue-demi/0.12.1_vue@3.2.26:
     resolution: {integrity: sha512-QL3ny+wX8c6Xm1/EZylbgzdoDolye+VpCXRhI2hug9dJTP3OUJ3lmiKN3CsVV3mOJKwFi0nsstbgob0vG7aoIw==}
