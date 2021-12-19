@@ -2,6 +2,10 @@
 
 <FeaturesList class="!gap-1 text-lg" />
 
+:::warning
+**Vitest is still in development and it isn't stable.**<br>It's not recommended to migrate your current testing setups yet.<br>You can try it out in new projects if you are willing to [get involved and help us](https://discord.com/invite/2zYZNngd7y).
+:::
+
 ## Shared config between test, dev and build
 
 Vite's config, transformers, resolvers, and plugins. Use the same setup from your app to run the tests

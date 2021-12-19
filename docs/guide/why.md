@@ -1,13 +1,10 @@
 # Why Vitest
 
 :::tip NOTE
-
 This guide assumes that you are familiar with Vite. A good way to start learning more is to read the [Why Vite Guide](https://vitejs.dev/guide/why.html), and [Next generation frontend tooling with ViteJS](https://www.youtube.com/watch?v=UJypSr8IhKY), a stream where [Evan You](https://twitter.com/youyuxi) did a demo explaining the main concepts.
-
 :::
 
 ## The need for a Vite native test runner
-
 
 Vite's out-of-the-box support for common web patterns, features like glob imports and SSR primitives, and its many plugins and integrations are fostering a vibrant ecosystem. Its dev and build story are key to its success. For docs, there are several SSG-based alternatives powered by Vite. Vite's Unit Testing story hasn't been clear though. Existing options like [Jest](https://jestjs.io/) were created in a different context. There is a lot of duplication between Jest and Vite, forcing users to configure two different pipelines. 
 
@@ -16,6 +13,10 @@ Using Vite dev server to transform your files during testing, enables the creati
 Given Jest's massive adoption, Vitest provides a compatible API that allows you to use it as a drop-in replacement in most projects. It also includes the most common features required when setting up your unit tests (mocking, snapshots, coverage). Vitest cares a lot about performance and uses Worker threads to run as much as possible in parallel. Some ports have seen test running an order of magnitude faster. Watch mode is enabled by default, aligning itself with the way Vite pushes for a dev first experience. Even with all these improvements in DX, Vitest stays lightweight by carefully choosing its dependencies (or directly inlining needed pieces). 
 
 **Vitest aims to position itself as the Test Runner of choice for Vite projects, and as a solid alternative even for projects not using Vite.**
+
+:::warning
+**Vitest is still in development and it isn't stable.**<br>It's not recommended to migrate your current testing setups yet.<br>You can try it out in new projects if you are willing to [get involved and help us](https://discord.com/invite/2zYZNngd7y).
+:::
 
 Continue reading in the [Getting Started Guide](./index)
 

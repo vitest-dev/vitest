@@ -8,15 +8,11 @@ Vitest is a blazing fast unit test framework powered by Vite.
 
 You can learn more about the rationale behind the project in the [Why Vite](./why) section.
 
-:::tip
-💖 **This project is currently in closed beta exclusively for Sponsors.**<br>
-Become a Sponsor of [@patak-dev](https://github.com/sponsors/patak-dev) or [@antfu](https://github.com/sponsors/antfu) to access the source code and issues tracker.
-
+:::warning
+**Vitest is still in development and it isn't stable.**<br>It's not recommended to migrate your current testing setups yet.<br>You can try it out in new projects if you are willing to [get involved and help us](https://discord.com/invite/2zYZNngd7y).
 :::
 
-:::warning
-⚠️ **DISCLAIMER**: Vitest is still in development and not stable yet. It's not recommended to use it in production.
-
+:::tip
 Vitest requires Vite v2.7 and Node v16
 :::
 

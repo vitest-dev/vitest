@@ -31,6 +31,14 @@
       </div>
     </div>
 
+    <p text="1.4em center yellow-500" leading-7 op60 font-normal tracking-wide>
+      Vitest is still in development and it isn't stable
+    </p>
+
+    <p text="1em center" leading-7 op60 font-normal tracking-wide>
+      It's not recommended to migrate your current testing setups yet<br>You can try it out in new projects if you are willing to get involved and help us
+    </p>
+
     <h3 op50 font-normal pt-10>
       Features
     </h3>
