@@ -96,7 +96,7 @@
         github="Aslemammad"
         twitter="asleMammadam"
       >
-        TODO: Add bio
+        An open source developer<br>Team member of Poimandres and Vike
       </Avatar>
       <Avatar
         name="Vladimir"
