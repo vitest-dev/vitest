@@ -26,6 +26,8 @@ export function resolveConfig(
   resolved.include = resolved.include ?? defaultInclude
   resolved.exclude = resolved.exclude ?? defaultExclude
 
+  resolved.watchIgnore = resolved.watchIgnore ?? [/\/node_modules\//, /\/dist\//]
+
   const CI = !!process.env.CI
   const UPDATE_SNAPSHOT = resolved.update || process.env.UPDATE_SNAPSHOT
   resolved.snapshotOptions = {

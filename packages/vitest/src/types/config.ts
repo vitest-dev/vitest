@@ -133,6 +133,13 @@ export interface InlineConfig {
   setupFiles?: string | string[]
 
   /**
+   * Pattern of file paths to be ignore from triggering watch rerun
+   *
+   * @default ['**\/node_modules\/**', '**\/dist/**']
+   */
+  watchIgnore?: (string | RegExp)[]
+
+  /**
    * Open Vitest UI
    * @internal WIP
    */

@@ -178,7 +178,7 @@ class Vitest {
   }
 
   private handleFileChanged(id: string) {
-    if (this.changedTests.has(id) || this.invalidates.has(id) || id.includes('/node_modules/') || id.includes('/vitest/dist/'))
+    if (this.changedTests.has(id) || this.invalidates.has(id) || this.config.watchIgnore.some(i => id.match(i)))
       return
 
     this.invalidates.add(id)
