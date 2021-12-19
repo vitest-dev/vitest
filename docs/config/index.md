@@ -12,13 +12,13 @@ To configure `vitest` itself, add `test` property in your Vite config
 
 ```ts
 // vite.config.ts
-import { defineConfig } from "vite";
+import { defineConfig } from 'vite'
 
 export default defineConfig({
   test: {
     // ...
   },
-});
+})
 ```
 
 TODO: Mention [Config File Resolving](), [Config Intellisense]()
@@ -44,7 +44,7 @@ Exclude globs for test files
 - **Type:** `{ external?, inline? }`
 
 Handling for dependencies inlining or externalizing
-         
+
 #### deps.external
 
 - **Type:** `(string | RegExp)[]`
@@ -52,10 +52,10 @@ Handling for dependencies inlining or externalizing
 
 Externalize means that Vite will bypass the package to native Node. Externalized dependencies will not be applied Vite's transformers and resolvers, so they do not support HMR on reload. Typically, packages under `node_modules` are externalized.
 
-#### deps.inline 
+#### deps.inline
 
 - **Type:** `(string | RegExp)[]`
-- **Default:** `['**\/node_modules\/**']`
+- **Default:** `[]`
 
 Vite will process inlined modules. This could be helpful to handle packages that ship `.js` in ESM format (that Node can't handle).
 
@@ -68,18 +68,18 @@ By default, `vitest` does not provide global APIs for explicitness. If you prefe
 
 ```ts
 // vite.config.ts
-import { defineConfig } from "vite";
+import { defineConfig } from 'vite'
 
 export default defineConfig({
   test: {
     global: true,
   },
-});
+})
 ```
 
 To get TypeScript working with the global APIs, add `vitest/global` to the `types` filed in your `tsconfig.json`
 
-```json5
+```jsonc
 // tsconfig.json
 {
   "compilerOptions": {
@@ -92,19 +92,19 @@ If you are already using [`unplugin-auto-import`](https://github.com/antfu/unplu
 
 ```ts
 // vite.config.ts
-import { defineConfig } from "vite";
-import AutoImport from "unplugin-auto-import/vite";
+import { defineConfig } from 'vite'
+import AutoImport from 'unplugin-auto-import/vite'
 
 export default defineConfig({
   plugins: [
     AutoImport({
-      imports: ["vitest"],
+      imports: ['vitest'],
       dts: true, // generate TypeScript declaration
     }),
   ],
-});
+})
 ```
-   
+
 ### environment
 
 - **Type:** `'node' | 'jsdom' | 'happy-dom'`
@@ -126,9 +126,9 @@ Docblock style:
  */
 
 test('use jsdom in this test file', () => {
-  const element = document.createElement('div');
-  expect(element).not.toBeNull();
-});
+  const element = document.createElement('div')
+  expect(element).not.toBeNull()
+})
 ```
 
 Comment style:
@@ -137,9 +137,9 @@ Comment style:
 // @vitest-environment happy-dom
 
 test('use happy-dom in this test file', () => {
-  const element = document.createElement('div');
-  expect(element).not.toBeNull();
-});
+  const element = document.createElement('div')
+  expect(element).not.toBeNull()
+})
 ```
 
 For compatibility with Jest, there is also a `@jest-environment`:
@@ -150,9 +150,9 @@ For compatibility with Jest, there is also a `@jest-environment`:
  */
 
 test('use jsdom in this test file', () => {
-  const element = document.createElement('div');
-  expect(element).not.toBeNull();
-});
+  const element = document.createElement('div')
+  expect(element).not.toBeNull()
+})
 ```
 
 ### update
@@ -168,7 +168,7 @@ Update snapshot files
 - **Default:** `false`
 
 Enable watch mode
-    
+
 ### root
 
 - **Type:** `string`
@@ -212,14 +212,14 @@ Minimum number of threads
 - **Default:** `5000`
 
 Default timeout of a test in milliseconds
-     
+
 ### hookTimeout
 
 - **Type:** `number`
 - **Default:** `5000`
-     
+
 Default timeout of a hook in milliseconds
-     
+
 ### silent
 
 - **Type:** `boolean`

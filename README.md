@@ -11,24 +11,21 @@ A blazing fast unit test framework powered by Vite.
 <p align="center">
   <a href="https://www.npmjs.com/package/vitest"><img src="https://img.shields.io/npm/v/vitest?color=a1b858&label="></a>
 <p>
-<h2 align="center">
-<a href="https://preview.vitest.dev">Open the Docs</a>
-</h2>
 <h3 align="center">
 <a href=https://discord.com/invite/2zYZNngd7y"><i>Get involved!</i></a>
 </h3>
 <br>
 <br>
 
-> 💖 **This project is currently in closed beta exclusively for Sponsors.**<br>
-> Become a Sponsor of [@patak-dev](https://github.com/sponsors/patak-dev) or [@antfu](https://github.com/sponsors/antfu) to access the source code and issues tracker.
-
 > ⚠️ **DISCLAIMER**: Vitest is still in development and not stable yet. It's not recommended to use it in production.
 
 > Vitest requires Vite v2.7 and Node v16
 
+Following the [Getting Started Guide](https://preview.vitest.dev/guide) or learn [why we are building a new test runner](https://preview.vitest.dev/guide).
 
-Switch to Vitest by following the [Getting Started Guide](https://preview.vitest.dev/guide) or learn [why we are building a new test runner](https://preview.vitest.dev/guide).
+## Documentations
+
+Read the [documentations](https://preview.vitest.dev/docs).
 
 ## Features
 

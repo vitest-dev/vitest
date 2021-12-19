@@ -32,11 +32,10 @@
     </div>
 
     <p text="1.4em center yellow-500" leading-7 font-normal tracking-wide>
-      <span i-carbon-warning-alt inline-block /> Vitest is still in development
+      <span i-carbon-warning-alt inline-block align-mid /> Vitest is still in development
     </p>
     <p
       text="1em center"
-      m="-t-5"
       leading-7
       op60
       font-normal
@@ -49,24 +48,6 @@
       Features
     </h3>
     <FeaturesList class="max-w-140 text-lg" />
-
-    <h3 id="sponsored-by" op50 font-normal pt-5 pb-2>
-      Sponsored by
-    </h3>
-    <div grid="~ cols-1 lg:cols-2" w-screen text-center mt-10>
-      <div>
-        <a text-lg href="https://github.com/sponsors/antfu">Anthony's Sponsors</a>
-        <a href="https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg" target="_blank">
-          <img src="https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg">
-        </a>
-      </div>
-      <div>
-        <a text-lg href="https://github.com/sponsors/patak-dev">Patak's Sponsors</a>
-        <a href="https://patak.dev/sponsors.svg" target="_blank">
-          <img src="https://patak.dev/sponsors.svg">
-        </a>
-      </div>
-    </div>
 
     <h3 id="the-team" op50 font-normal pt-5 pb-2>
       The Team
@@ -113,6 +94,24 @@
       ...and the Vitest <a href="https://github.com/antfu-sponsors/vitest/network/dependencies" target="_blank">contributors</a>.<br><br>
       <a href="https://discord.com/invite/2zYZNngd7y">Join the community</a> and get involved!
     </p>
+
+    <h3 id="sponsored-by" op50 font-normal pt-5 pb-2>
+      Sponsored by
+    </h3>
+    <div grid="~ cols-1 lg:cols-2" w-screen text-center mt-10>
+      <div>
+        <a text-lg href="https://github.com/sponsors/antfu">Anthony's Sponsors</a>
+        <a href="https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg" target="_blank">
+          <img src="https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg">
+        </a>
+      </div>
+      <div>
+        <a text-lg href="https://github.com/sponsors/patak-dev">Patak's Sponsors</a>
+        <a href="https://patak.dev/sponsors.svg" target="_blank">
+          <img src="https://patak.dev/sponsors.svg">
+        </a>
+      </div>
+    </div>
     <div mb-30 />
   </div>
 </template>

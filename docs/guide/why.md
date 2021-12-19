@@ -14,10 +14,6 @@ Given Jest's massive adoption, Vitest provides a compatible API that allows you 
 
 **Vitest aims to position itself as the Test Runner of choice for Vite projects, and as a solid alternative even for projects not using Vite.**
 
-:::warning
-**Vitest is still in development and it isn't stable.**<br>It's not recommended to migrate your current testing setups yet.<br>You can try it out in new projects if you are willing to [get involved and help us](https://discord.com/invite/2zYZNngd7y).
-:::
-
 Continue reading in the [Getting Started Guide](./index)
 
 ## How is Vitest Different from X?
