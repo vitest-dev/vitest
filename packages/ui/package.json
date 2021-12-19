@@ -2,7 +2,7 @@
   "name": "@vitest/ui",
   "//": "TODO: when it's ready",
   "private": true,
-  "version": "0.0.97",
+  "version": "0.0.98",
   "description": "Vitest UI",
   "sideEffects": false,
   "exports": {
