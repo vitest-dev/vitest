@@ -1,6 +1,8 @@
 import type { Any, Anything, ArrayContaining, ObjectContaining } from './integrations/chai/jest-asymmetric-matchers'
 import type { MatchersObject } from './integrations/chai/types'
-import type { InlineConfig as VitestInlineConfig } from './types'
+import type { InlineConfig } from './types'
+
+type VitestInlineConfig = InlineConfig
 
 export { suite, test, describe, it } from './runtime/suite'
 export * from './types'

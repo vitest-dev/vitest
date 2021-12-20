@@ -52,7 +52,7 @@
     <h3 id="meet-the-team" op50 font-normal pt-5 pb-2>
       Meet The Team
     </h3>
-    <div grid="~ sm:cols-2 lg:cols-4 gap-x-8 gap-y-20 items-center" p-10>
+    <div grid="~ sm:cols-2 gap-x-8 gap-y-20 items-center" p-10>
       <Avatar
         name="Anthony Fu"
         avatar="https://antfu.me/avatar.png"
@@ -84,7 +84,7 @@
         avatar="https://avatars.githubusercontent.com/u/16173870?v=4"
         github="sheremet-va"
       >
-        TODO: Add bio
+        An open source fullstack developer
       </Avatar>
     </div>
     <h3 id="the-team" op50 font-normal pt-5 pb-2>
