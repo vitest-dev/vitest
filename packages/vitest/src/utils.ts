@@ -1,5 +1,6 @@
 import c from 'picocolors'
 import { isPackageExists } from 'local-pkg'
+import { resolve } from 'pathe'
 import type { Arrayable, Nullable, Suite, Task, Test } from './types'
 
 /**
@@ -124,3 +125,5 @@ export async function ensurePackageInstalled(dependency: string, promptInstall =
 
   return false
 }
+
+export { resolve as resolvePath }
