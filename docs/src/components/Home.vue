@@ -93,7 +93,7 @@
     <p op80 text-lg max-w-150 text-center leading-7>
       <Contributors />
       <br>
-      <a href="https://discord.com/invite/2zYZNngd7y">Join the community</a> and get involved!
+      <a href="https://chat.vitest.dev">Join the community</a> and get involved!
     </p>
 
     <h3 id="sponsored-by" op50 font-normal pt-5 pb-2>

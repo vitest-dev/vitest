@@ -8,7 +8,7 @@
       <br>It's not recommended to migrate your current testing setups yet.
       <br>You can try it out in new projects if you are willing to
       <a
-        href="https://discord.com/invite/2zYZNngd7y"
+        href="https://chat.vitest.dev"
         target="_blank"
         rel="noopener noreferrer"
       >get involved and help</a>.

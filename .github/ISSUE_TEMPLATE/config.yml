@@ -1,7 +1,7 @@
 blank_issues_enabled: false
 contact_links:
   - name: Discord Chat
-    url: https://discord.gg/2zYZNngd7y
+    url: https://chat.vitest.dev
     about: Ask questions and discuss with other Vitest users in real time.
   - name: Questions & Discussions
     url: https://github.com/vitest-dev/vitest/discussions
