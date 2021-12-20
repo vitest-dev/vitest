@@ -1,6 +1,7 @@
 import c from 'picocolors'
 import { isPackageExists } from 'local-pkg'
 import { spies } from 'tinyspy'
+import { resolve } from 'pathe'
 import type { Arrayable, Nullable, Suite, Task, Test } from './types'
 
 /**
@@ -132,3 +133,5 @@ export function clearModuleMocks() {
   if (clearMocks)
     spies.forEach(spy => spy.reset())
 }
+
+export { resolve as resolvePath }
