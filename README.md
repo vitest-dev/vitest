@@ -12,7 +12,7 @@ A blazing fast unit test framework powered by Vite.
   <a href="https://www.npmjs.com/package/vitest"><img src="https://img.shields.io/npm/v/vitest?color=a1b858&label="></a>
 <p>
 <h3 align="center">
-<a href=https://discord.com/invite/2zYZNngd7y"><i>Get involved!</i></a>
+<a href="https://chat.vitest.dev"><i>Get involved!</i></a>
 </h3>
 <br>
 <br>
@@ -82,9 +82,19 @@ $ npx vitest
 
 ## Sponsors
 
+### Anthony Fu Sponsors
+
 <p align="center">
   <a href="https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg">
     <img src='https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg'/>
+  </a>
+</p>
+
+### Patak Sponsors
+
+<p align="center">
+  <a href="https://patak.dev/sponsors.svg">
+    <img src='https://patak.dev/sponsors.svg'/>
   </a>
 </p>
 
@@ -92,11 +102,12 @@ $ npx vitest
 
 Thanks to:
 
-- [@patak-dev](https://github.com/patak-dev) for the awesome package name!
-- [The Vite team](https://github.com/vitejs/vite) for brainstorming the initial idea.
-- [@pi0](https://github.com/pi0) for the idea and implementation of using Vite to transform and bundle the server code.
+- [The Jest team and community](https://jestjs.io/) for creating a delightful testing API
 - [@lukeed](https://github.com/lukeed) for the work on [uvu](https://github.com/lukeed/uvu) where we are inspired a lot from.
+- [@pi0](https://github.com/pi0) for the idea and implementation of using Vite to transform and bundle the server code.
+- [The Vite team](https://github.com/vitejs/vite) for brainstorming the initial idea.
+- [@patak-dev](https://github.com/patak-dev) for the awesome package name!
 
 ## License
 
-[MIT](./LICENSE) License © 2021 [Anthony Fu](https://github.com/antfu)
+[MIT](./LICENSE) License © 2021-Present [Anthony Fu](https://github.com/antfu), [Matias Capeletto](https://github.com/patak-dev)
