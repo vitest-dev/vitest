@@ -10,7 +10,7 @@ declare global {
 describe('Button with increment', async() => {
   beforeEach(async() => {
     // TODO: remove this workaround after fix landed in happy-dom
-    // https://github.com/vitest-dev/vitest/pull/234
+    // https://github.com/capricorn86/happy-dom/pull/322
     Object.defineProperty(Element.prototype, 'localName', {
       get() {
         return this.tagName?.toLowerCase() ?? 'unknown'
