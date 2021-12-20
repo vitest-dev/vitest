@@ -27,7 +27,7 @@ TODO: Mention [Config File Resolving](), [Config Intellisense]()
 
 ### include
 
-- **Type:** `string[]n`
+- **Type:** `string[]`
 - **Default:** `['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']`
 
 Include globs for test files
