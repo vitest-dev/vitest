@@ -192,7 +192,7 @@ export async function executeInViteNode(options: ExecuteOptions) {
 
     // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
     const url = pathToFileURL(fsPath).href
-    let exports: any = {}
+    const exports: any = {}
 
     setCache(fsPath, { code: transformed, exports })
 
@@ -254,7 +254,7 @@ export async function executeInViteNode(options: ExecuteOptions) {
     const mocks = suite ? mockedPaths[suite] : null
     if (mocks) {
       if (mocks[id] === null)
-        exports = mockObject(exports)
+        exportAll(exports, mockObject(exports))
     }
 
     return exports
