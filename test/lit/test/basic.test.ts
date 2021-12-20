@@ -1,11 +1,7 @@
-/// <reference types="vitest/global.d.ts" />
-
-import { spy } from 'tinyspy'
-
 import type { IWindow } from 'happy-dom'
+import { beforeEach, describe, it, vi } from 'vitest'
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { MyButton } from '../src/my-button'
+import '../src/my-button'
 
 declare global {
   interface Window extends IWindow {}
@@ -13,9 +9,16 @@ declare global {
 
 describe('Button with increment', async() => {
   beforeEach(async() => {
+    document.body.innerHTML = ''
+
+    await window.happyDOM.whenAsyncComplete()
+    await new Promise(resolve => setTimeout(resolve, 0))
+
     document.body.innerHTML = '<my-button name="World"></my-button>'
 
     await window.happyDOM.whenAsyncComplete()
+
+    await new Promise(resolve => setTimeout(resolve, 0))
   })
 
   function getInsideButton(): HTMLElement | null | undefined {
@@ -33,7 +36,7 @@ describe('Button with increment', async() => {
   })
 
   it('should dispatch count event on button click', () => {
-    const spyClick = spy()
+    const spyClick = vi.fn()
 
     document.querySelector('my-button')!.addEventListener('count', spyClick)
 
