@@ -7,13 +7,13 @@ export interface InlineConfig {
   /**
    * Include globs for test files
    *
-   * @default ['**\/*.test.ts']
+   * @default ['**\/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']
    */
   include?: string[]
 
   /**
    * Exclude globs for test files
-   * @default ['**\/node_modules\/**']
+   * @default ['node_modules', 'dist', '.idea', '.git', '.cache']
    */
   exclude?: string[]
 
