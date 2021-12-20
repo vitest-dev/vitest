@@ -322,7 +322,9 @@ importers:
 
   test/testing-lib-react:
     specifiers:
+      '@testing-library/jest-dom': ^5.16.1
       '@testing-library/react': ^12.1.2
+      '@testing-library/user-event': ^13.5.0
       '@types/react': ^17.0.37
       '@types/react-dom': ^17.0.11
       '@vitejs/plugin-react': ^1.1.3
@@ -335,7 +337,9 @@ importers:
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
     devDependencies:
+      '@testing-library/jest-dom': 5.16.1
       '@testing-library/react': 12.1.2_react-dom@17.0.2+react@17.0.2
+      '@testing-library/user-event': 13.5.0
       '@types/react': 17.0.37
       '@types/react-dom': 17.0.11
       '@vitejs/plugin-react': 1.1.3
@@ -346,10 +350,12 @@ importers:
   test/testing-library-jest-dom:
     specifiers:
       '@testing-library/jest-dom': ^5.16.1
+      '@testing-library/user-event': ^13.5.0
       happy-dom: ^2.25.0
       vitest: workspace:*
     devDependencies:
       '@testing-library/jest-dom': 5.16.1
+      '@testing-library/user-event': 13.5.0
       happy-dom: 2.25.0
       vitest: link:../../packages/vitest
 
