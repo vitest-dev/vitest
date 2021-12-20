@@ -100,13 +100,16 @@ function resolveMockPath(mockPath: string, root: string, nmName: string | null) 
 
 // TODO https://jestjs.io/docs/jest-object#jestcreatemockfrommodulemodulename
 function mockObject(obj: any) {
+  const newObj = { ...obj }
   // eslint-disable-next-line no-restricted-syntax
   for (const k in obj) {
+    newObj[k] = obj[k]
+
     if (typeof obj[k] === 'function' && !obj[k].__isSpy)
-      spyOn(obj, k)
+      spyOn(newObj, k)
   }
 
-  return obj
+  return newObj
 }
 
 export async function executeInViteNode(options: ExecuteOptions) {
@@ -155,7 +158,7 @@ export async function executeInViteNode(options: ExecuteOptions) {
 
     // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
     const url = pathToFileURL(fsPath).href
-    const exports: any = {}
+    let exports: any = {}
 
     setCache(fsPath, { code: transformed, exports })
 
@@ -224,7 +227,7 @@ export async function executeInViteNode(options: ExecuteOptions) {
     const mocks = suite ? mockedPaths[suite] : null
     if (mocks) {
       if (mocks[id] === null)
-        mockObject(exports)
+        exports = mockObject(exports)
     }
 
     return exports

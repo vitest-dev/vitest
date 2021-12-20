@@ -6,6 +6,7 @@ test('mocked axios', async() => {
   await axios.get('string')
 
   expect(axios.get).toHaveBeenCalledWith('string')
+  expect(axios.post).toBeUndefined()
 })
 
 test('can get actual axios', async() => {
