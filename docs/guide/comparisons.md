@@ -8,7 +8,7 @@
 
 ## Cypress
 
-[Cypress](https://www.cypress.io/) is an amazing option for E2E testing. But with [Cypress Component Testing](https://docs.cypress.io/guides/component-testing/introduction), they now offer a way to test your components in a real browser environment instead of relying on node DOM libraries. You also see the real rendered Component in the browser with their failed state instead of having a simple diff in the CLI. Cypress has been [integrating Vite in their products](https://www.youtube.com/watch?v=7S5cbY8iYLk): re-building their App UI using [Vitesse](#vitesse) and using Vite to drive your project's code processing while testing. But Cypress isn't a good option for unit testings in a headless environment. Using Cypress (for E2E and Component Testing) and Vitest (for units tests) together would cover your Web Apps testing needs.
+[Cypress](https://www.cypress.io/) is an amazing option for E2E testing. But with [Cypress Component Testing](https://docs.cypress.io/guides/component-testing/introduction), they now offer a way to test your components in a real browser environment instead of relying on node DOM libraries. You also see the real rendered Component in the browser with their failed state instead of having a simple diff in the CLI. Cypress has been [integrating Vite in their products](https://www.youtube.com/watch?v=7S5cbY8iYLk): re-building their App UI using [Vitesse](https://github.com/antfu/vitesse) and using Vite to drive your project's code processing while testing. But Cypress isn't a good option for unit testings in a headless environment. Using Cypress (for E2E and Component Testing) and Vitest (for units tests) together would cover your Web Apps testing needs.
 
 ## Web Test Runner
 
