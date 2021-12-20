@@ -37,6 +37,7 @@ export interface Test extends TaskBase {
   type: 'test'
   suite: Suite
   result?: TaskResult
+  fails?: boolean
 }
 
 export type Task = Test | Suite | File
@@ -45,7 +46,7 @@ export type DoneCallback = (error?: any) => void
 export type TestFunction = (done: DoneCallback) => Awaitable<void>
 
 export type TestCollector = ChainableFunction<
-'concurrent' | 'only' | 'skip'| 'todo',
+'concurrent' | 'only' | 'skip' | 'todo' | 'fails',
 [name: string, fn?: TestFunction, timeout?: number],
 void
 >

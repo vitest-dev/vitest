@@ -8,7 +8,7 @@ import { getHooks, setFn, setHooks } from './map'
 // apis
 export const suite = createSuite()
 export const test: TestCollector = createChainable(
-  ['concurrent', 'skip', 'only', 'todo'],
+  ['concurrent', 'skip', 'only', 'todo', 'fails'],
   function(name: string, fn?: TestFunction, timeout?: number) {
     // @ts-expect-error untyped internal prop
     getCurrentSuite().test.fn.call(this, name, fn, timeout)
@@ -50,7 +50,7 @@ function createSuiteCollector(name: string, factory: TestFactory = () => { }, mo
   initSuite()
 
   const test = createChainable(
-    ['concurrent', 'skip', 'only', 'todo'],
+    ['concurrent', 'skip', 'only', 'todo', 'fails'],
     function(name: string, fn?: TestFunction, timeout?: number) {
       const mode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run'
       const computeMode = this.concurrent ? 'concurrent' : undefined
@@ -62,6 +62,7 @@ function createSuiteCollector(name: string, factory: TestFactory = () => { }, mo
         mode,
         computeMode: computeMode ?? (suiteComputeMode ?? 'serial'),
         suite: undefined!,
+        fails: this.fails,
       }
       setFn(test, normalizeTest(fn || noop, timeout))
       tasks.push(test)
