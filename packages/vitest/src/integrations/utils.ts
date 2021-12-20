@@ -84,16 +84,22 @@ class VitestUtils {
   }
 
   public clearAllMocks() {
+    // @ts-expect-error clearing module mocks
+    __vitest__clearMocks__({ clearMocks: true })
     spies.forEach(spy => spy.mockClear())
     return this
   }
 
   public resetAllMocks() {
+    // @ts-expect-error reseting module mocks
+    __vitest__clearMocks__({ mockReset: true })
     spies.forEach(spy => spy.mockReset())
     return this
   }
 
   public restoreAllMocks() {
+    // @ts-expect-error restoring module mocks
+    __vitest__clearMocks__({ restoreMocks: true })
     spies.forEach(spy => spy.mockRestore())
     return this
   }
