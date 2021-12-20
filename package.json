@@ -17,7 +17,7 @@
     "release": "bumpp package.json packages/*/package.json --commit --push --tag && pnpm -r publish",
     "test": "vitest -r test/core",
     "test:all": "cross-env CI=true pnpm -r --stream --filter !vitest run test --",
-    "test:ci": "cross-env CI=true pnpm -r --stream --filter !vitest --filter !@vitest/test-fails run test --",
+    "test:ci": "cross-env CI=true pnpm -r --stream --filter !vitest --filter !@vitest/test-fails --filter !@vitest/test-lit run test --",
     "typecheck": "pnpm -r --parallel run typecheck",
     "ui:build": "vite build packages/ui",
     "ui:dev": "vite packages/ui"
