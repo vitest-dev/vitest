@@ -47,7 +47,7 @@ export default defineConfig({
       {
         text: 'Discord',
         // TODO: 'https://chat.vitest.dev'
-        link: 'https://discord.gg/2zYZNngd7y'
+        link: 'https://chat.vitest.dev'
       },
       {
         text: 'Twitter',
