@@ -1,7 +1,7 @@
 import type { Plugin } from 'vite'
 import MagicString from 'magic-string'
 
-const mockRegexp = /(?:vitest|vi).(mock|unmock|importActual|importMock)\(["`'\s](.*[@\w_-]+)["`'\s]\);?/mg
+const mockRegexp = /\b(?:vitest|vi)\s*.\s*(mock|unmock|importActual|importMock)\(["`'\s](.*[@\w_-]+)["`'\s]\);?/mg
 
 export const MocksPlugin = (): Plugin => {
   return {
