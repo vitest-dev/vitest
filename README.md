@@ -25,7 +25,7 @@ Follow the [Getting Started Guide](https://vitest.dev/guide) or learn [why we ar
 
 ## Documentation
 
-Read the [documentation](https://vitest.dev/docs).
+Read the [documentation](https://vitest.dev/).
 
 ## Features
 
