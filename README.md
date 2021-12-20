@@ -82,9 +82,19 @@ $ npx vitest
 
 ## Sponsors
 
+### Anthony Fu Sponsors
+
 <p align="center">
   <a href="https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg">
     <img src='https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg'/>
+  </a>
+</p>
+
+### Patak Sponsors
+
+<p align="center">
+  <a href="https://patak.dev/sponsors.svg">
+    <img src='https://patak.dev/sponsors.svg'/>
   </a>
 </p>
 
@@ -100,4 +110,4 @@ Thanks to:
 
 ## License
 
-[MIT](./LICENSE) License © 2021 [Anthony Fu](https://github.com/antfu)
+[MIT](./LICENSE) License © 2021-Present [Anthony Fu](https://github.com/antfu), [Matias Capeletto](https://github.com/patak-dev)
