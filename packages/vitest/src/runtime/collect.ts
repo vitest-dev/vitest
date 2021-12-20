@@ -3,8 +3,8 @@ import { basename } from 'pathe'
 import { nanoid } from 'nanoid/non-secure'
 import type { File, ResolvedConfig, Suite, Test } from '../types'
 import { interpretOnlyMode } from '../utils'
-import { clearContext, createSuiteHooks, defaultSuite } from './suite'
-import { setHooks } from './map'
+import { clearContext, defaultSuite } from './suite'
+import { getHooks, setHooks } from './map'
 import { processError } from './error'
 import { context } from './context'
 import { runSetupFiles } from './setup'
@@ -23,14 +23,14 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
       tasks: [],
     }
 
-    setHooks(file, createSuiteHooks())
-
     clearContext()
     try {
       await runSetupFiles(config)
       await import(filepath)
 
       const defaultTasks = await defaultSuite.collect(file)
+
+      setHooks(file, getHooks(defaultTasks))
 
       for (const c of [...defaultTasks.tasks, ...context.tasks]) {
         if (c.type === 'test') {

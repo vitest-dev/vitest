@@ -9,15 +9,18 @@ declare global {
 
 describe('Button with increment', async() => {
   beforeEach(async() => {
-    document.body.innerHTML = ''
-
-    await window.happyDOM.whenAsyncComplete()
-    await new Promise(resolve => setTimeout(resolve, 0))
+    // TODO: remove this workaround after fix landed in happy-dom
+    // https://github.com/capricorn86/happy-dom/pull/322
+    Object.defineProperty(Element.prototype, 'localName', {
+      get() {
+        return this.tagName?.toLowerCase() ?? 'unknown'
+      },
+      enumerable: false,
+      configurable: true,
+    })
 
     document.body.innerHTML = '<my-button name="World"></my-button>'
-
     await window.happyDOM.whenAsyncComplete()
-
     await new Promise(resolve => setTimeout(resolve, 0))
   })
 

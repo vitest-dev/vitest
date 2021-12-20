@@ -56,7 +56,7 @@ export default ({ watch }) => [
       console.error(message)
     },
   },
-  !watch && {
+  {
     input: [
       'src/index.ts',
     ],
@@ -69,7 +69,20 @@ export default ({ watch }) => [
       dts(),
     ],
   },
-].filter(Boolean)
+  {
+    input: [
+      'src/node.ts',
+    ],
+    output: {
+      file: 'dist/node.d.ts',
+      format: 'esm',
+    },
+    external,
+    plugins: [
+      dts(),
+    ],
+  },
+]
 
 function licensePlugin() {
   return license({
