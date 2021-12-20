@@ -172,6 +172,7 @@ importers:
       happy-dom: 2.25.0
       jsdom: 19.0.0
       log-update: 5.0.0
+      magic-string: 0.25.7
       micromatch: 4.0.4
       mlly: 0.3.16
       nanoid: 3.1.30
