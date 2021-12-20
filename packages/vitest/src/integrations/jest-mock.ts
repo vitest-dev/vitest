@@ -177,6 +177,7 @@ function enhanceSpy<TArgs extends any[], TReturns>(
 
   stub.mockRestore = () => {
     stub.mockReset()
+    implementation = undefined
     ;(stub as unknown as SpyImpl).restore()
     return stub
   }
