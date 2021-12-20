@@ -9,6 +9,15 @@ declare global {
 
 describe('Button with increment', async() => {
   beforeEach(async() => {
+    // todo@to-be-removed: https://github.com/vitest-dev/vitest/pull/234
+    Object.defineProperty(Element.prototype, 'localName', {
+      get() {
+        return this.tagName?.toLowerCase() ?? 'unknown'
+      },
+      enumerable: false,
+      configurable: true,
+    })
+
     document.body.innerHTML = ''
 
     await window.happyDOM.whenAsyncComplete()
