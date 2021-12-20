@@ -256,7 +256,7 @@ An array containing the call arguments of all calls that have been made to this 
 
 For example: A mock function `f` that has been called twice, with the arguments `f('arg1', 'arg2')`, and then with the arguments `f('arg3', 'arg4')`, would have a mock.calls array that looks like this:
 
-```json
+```js
 [
   ['arg1', 'arg2'],
   ['arg3', 'arg4'],
@@ -274,7 +274,7 @@ The `value` property contains the value that was thrown or returned.
 
 For example: A mock function `f` that has been called three times, returning `'result1'`, throwing an error, and then returning `'result2'`, would have a `mock.results` array that looks like this:
 
-```json
+```js
 [
   {
     type: 'return',
