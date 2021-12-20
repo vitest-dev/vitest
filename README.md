@@ -92,10 +92,11 @@ $ npx vitest
 
 Thanks to:
 
-- [@patak-dev](https://github.com/patak-dev) for the awesome package name!
-- [The Vite team](https://github.com/vitejs/vite) for brainstorming the initial idea.
-- [@pi0](https://github.com/pi0) for the idea and implementation of using Vite to transform and bundle the server code.
+- [The Jest team and community](https://jestjs.io/) for creating a delightful testing API
 - [@lukeed](https://github.com/lukeed) for the work on [uvu](https://github.com/lukeed/uvu) where we are inspired a lot from.
+- [@pi0](https://github.com/pi0) for the idea and implementation of using Vite to transform and bundle the server code.
+- [The Vite team](https://github.com/vitejs/vite) for brainstorming the initial idea.
+- [@patak-dev](https://github.com/patak-dev) for the awesome package name!
 
 ## License
 
