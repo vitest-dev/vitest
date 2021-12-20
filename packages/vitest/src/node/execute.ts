@@ -128,7 +128,7 @@ export async function executeInViteNode(options: ExecuteOptions) {
   }
 
   function getActualPath(path: string, nmName: string) {
-    return nmName ? `/@fs${path}` : path.replace(root, '')
+    return nmName ? `/@fs/${slash(resolve(path))}` : path.replace(root, '')
   }
 
   function unmock(path: string, nmName: string) {
