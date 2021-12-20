@@ -69,7 +69,7 @@ export default ({ watch }) => [
       dts(),
     ],
   },
-]
+].filter(Boolean)
 
 function licensePlugin() {
   return license({
