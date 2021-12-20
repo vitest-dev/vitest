@@ -50,6 +50,11 @@ export default ({ watch }) => [
       }),
       !watch && licensePlugin(),
     ],
+    onwarn(message) {
+      if (/Circular dependencies/.test(message))
+        return
+      console.error(message)
+    },
   },
   !watch && {
     input: [
