@@ -24,6 +24,7 @@ export interface ExecuteOptions {
   inline: (string | RegExp)[]
   external: (string | RegExp)[]
   moduleCache: Map<string, ModuleCache>
+  mockMap: SuiteMocks
 }
 
 const defaultInline = [
@@ -112,9 +113,8 @@ function mockObject(obj: any) {
 }
 
 export async function executeInViteNode(options: ExecuteOptions) {
-  const { moduleCache, root, files, fetch } = options
+  const { moduleCache, root, files, fetch, mockMap } = options
 
-  const mockedPaths: SuiteMocks = {}
   const externalCache = new Map<string, boolean>()
   builtinModules.forEach(m => externalCache.set(m, true))
 
@@ -131,24 +131,24 @@ export async function executeInViteNode(options: ExecuteOptions) {
     return nmName ? mergeSlashes(`/@fs/${path}`) : path.replace(root, '')
   }
 
-  function unmock(path: string, nmName: string) {
+  function unmockPath(path: string, nmName: string) {
     const suitefile = getSuiteFilepath()
 
     if (suitefile) {
       const fsPath = getActualPath(path, nmName)
-      mockedPaths[suitefile] ??= {}
-      delete mockedPaths[suitefile][fsPath]
+      mockMap[suitefile] ??= {}
+      delete mockMap[suitefile][fsPath]
     }
   }
 
-  function mock(path: string, nmName: string) {
+  function mockPath(path: string, nmName: string) {
     const suitefile = getSuiteFilepath()
 
     if (suitefile) {
       const mockPath = resolveMockPath(path, root, nmName)
       const fsPath = getActualPath(path, nmName)
-      mockedPaths[suitefile] ??= {}
-      mockedPaths[suitefile][fsPath] = mockPath
+      mockMap[suitefile] ??= {}
+      mockMap[suitefile][fsPath] = mockPath
     }
   }
 
@@ -170,7 +170,7 @@ export async function executeInViteNode(options: ExecuteOptions) {
     callstack = [...callstack, id]
     const suite = getSuiteFilepath()
     const request = async(dep: string, canMock = true) => {
-      const mocks = mockedPaths[suite || ''] || {}
+      const mocks = mockMap[suite || ''] || {}
       const mock = mocks[dep]
       if (mock && canMock)
         dep = mock
@@ -229,8 +229,8 @@ export async function executeInViteNode(options: ExecuteOptions) {
       __vite_ssr_import_meta__: { url },
 
       // vitest.mock API
-      __vitest__mock__: mock,
-      __vitest__unmock__: unmock,
+      __vitest__mock__: mockPath,
+      __vitest__unmock__: unmockPath,
       __vitest__importActual__: importActual,
       __vitest__importMock__: importMock,
       // spies from 'jest-mock' are different inside suites and execute,
@@ -251,7 +251,7 @@ export async function executeInViteNode(options: ExecuteOptions) {
     })
     await fn(...Object.values(context))
 
-    const mocks = suite ? mockedPaths[suite] : null
+    const mocks = suite ? mockMap[suite] : null
     if (mocks) {
       if (mocks[id] === null)
         exportAll(exports, mockObject(exports))
