@@ -5,8 +5,8 @@ import { format } from 'util'
 import { relative } from 'pathe'
 import c from 'picocolors'
 import * as diff from 'diff'
-import type { RawSourceMap } from 'source-map'
-import { SourceMapConsumer } from 'source-map'
+import type { RawSourceMap } from 'source-map-js'
+import { SourceMapConsumer } from 'source-map-js'
 import cliTruncate from 'cli-truncate'
 import { notNullish } from '../utils'
 import type { Vitest } from '../node'
@@ -151,13 +151,12 @@ function getOriginalPos(map: RawSourceMap | null | undefined, { line, column }: 
     if (!map)
       return resolve(null)
 
-    SourceMapConsumer.with(map, null, (consumer) => {
-      const pos = consumer.originalPositionFor({ line, column })
-      if (pos.line != null && pos.column != null)
-        resolve(pos as Position)
-      else
-        resolve(null)
-    })
+    const consumer = new SourceMapConsumer(map)
+    const pos = consumer.originalPositionFor({ line, column })
+    if (pos.line != null && pos.column != null)
+      resolve(pos as Position)
+    else
+      resolve(null)
   })
 }
 

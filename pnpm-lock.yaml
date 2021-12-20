@@ -140,7 +140,7 @@ importers:
       pretty-format: ^27.4.2
       prompts: ^2.4.2
       rollup: ^2.61.1
-      source-map: ^0.7.3
+      source-map-js: ^1.0.1
       strip-ansi: ^7.0.1
       tinypool: ^0.0.3
       tinyspy: ^0.1.2
@@ -152,7 +152,6 @@ importers:
       chai-subset: 1.6.0
       fast-glob: 3.2.7
       local-pkg: 0.4.0
-      source-map: 0.7.3
       tinypool: 0.0.3
       tinyspy: 0.1.2
     devDependencies:
@@ -182,6 +181,7 @@ importers:
       pretty-format: 27.4.2
       prompts: 2.4.2
       rollup: 2.61.1
+      source-map-js: 1.0.1
       strip-ansi: 7.0.1
       typescript: 4.5.4
 
@@ -6103,6 +6103,7 @@ packages:
   /source-map/0.7.3:
     resolution: {integrity: sha512-CkCj6giN3S+n9qrYiBTX5gystlENnRW5jZeNLHpe6aue+SrHcG5VYwujhW9s4dY31mEGsxBDrHR6oI69fTXsaQ==}
     engines: {node: '>= 8'}
+    dev: true
 
   /sourcemap-codec/1.4.8:
     resolution: {integrity: sha512-9NykojV5Uih4lgo5So5dtw+f0JgJX30KCNI8gwhz2J9A15wD0Ml6tjHKwf6fTSa6fAdVBdZeNOs9eJ71qCk8vA==}
