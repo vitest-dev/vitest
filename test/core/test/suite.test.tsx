@@ -1,4 +1,4 @@
-import { it, describe, expect, assert } from 'vitest'
+import { assert, describe, expect, it } from 'vitest'
 
 describe('suite name', () => {
   it('foo', () => {

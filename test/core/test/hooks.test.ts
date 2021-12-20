@@ -1,9 +1,9 @@
 import { beforeAll, beforeEach, expect, it, suite } from 'vitest'
 
-let count = 0
+let count = -1
 
 beforeAll(() => {
-  count = 0
+  count += 1
 })
 
 beforeEach(() => {
