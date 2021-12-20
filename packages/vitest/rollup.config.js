@@ -56,7 +56,7 @@ export default ({ watch }) => [
       console.error(message)
     },
   },
-  !watch && {
+  {
     input: [
       'src/index.ts',
     ],
@@ -69,7 +69,7 @@ export default ({ watch }) => [
       dts(),
     ],
   },
-].filter(Boolean)
+]
 
 function licensePlugin() {
   return license({
