@@ -1,5 +1,6 @@
 import c from 'picocolors'
 import { isPackageExists } from 'local-pkg'
+import { spies } from 'tinyspy'
 import type { Suite, Test, Task, Arrayable, Nullable } from './types'
 
 /**
@@ -123,4 +124,11 @@ export async function ensurePackageInstalled(dependency: string, promptInstall =
   }
 
   return false
+}
+
+export function clearModuleMocks() {
+  const { clearMocks } = process.__vitest_worker__.config
+
+  if (clearMocks)
+    spies.forEach(spy => spy.reset())
 }

@@ -40,7 +40,6 @@ async function startViteNode(ctx: WorkerContext) {
     external: config.depsExternal,
     interpretDefault: config.interpretDefault,
     moduleCache,
-    threads: config.threads,
   }))[0]
 
   _viteNode = { run, collect }

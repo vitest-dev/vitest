@@ -147,6 +147,12 @@ export interface InlineConfig {
    * @default false
    */
   api?: boolean | number
+
+  /**
+   * Will call `.mockReset()` on all spyies
+   * @default false
+   */
+  clearMocks?: boolean
 }
 
 export interface UserConfig extends InlineConfig {

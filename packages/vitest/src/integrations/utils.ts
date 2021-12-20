@@ -60,19 +60,14 @@ class VitestUtils {
   fn = fn
 
   // just hints for transformer to rewrite imports
-  public mock(path: string) {
-    return {}
-  }
+  public mock(path: string) {}
+  public unmock(path: string) {}
 
-  public unmock(path: string) {
-    return {}
-  }
-
-  public async requireActual<T>(path: string): Promise<T> {
+  public async importActual<T>(path: string): Promise<T> {
     return {} as T
   }
 
-  public async requireMock<T>(path: string): Promise<T> {
+  public async importMock<T>(path: string): Promise<T> {
     return {} as T
   }
 

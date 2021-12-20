@@ -2,7 +2,7 @@ import { performance } from 'perf_hooks'
 import type { HookListener } from 'vitest'
 import type { ResolvedConfig, Test, Suite, SuiteHooks, Task } from '../types'
 import { getSnapshotClient } from '../integrations/snapshot/chai'
-import { hasFailed, hasTests, partitionSuiteChildren } from '../utils'
+import { hasFailed, hasTests, partitionSuiteChildren, clearModuleMocks } from '../utils'
 import { getFn, getHooks } from './map'
 import { rpc, send } from './rpc'
 import { collectTests } from './collect'
@@ -52,6 +52,8 @@ export async function runTest(test: Test) {
     test.result.state = 'fail'
     test.result.error = processError(e)
   }
+
+  clearModuleMocks()
 
   getSnapshotClient().clearTest()
 

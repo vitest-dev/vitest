@@ -6,7 +6,7 @@ import { existsSync, readdirSync } from 'fs'
 import { isValidNodeImport } from 'mlly'
 import type { ModuleCache } from '../types'
 import { slash } from '../utils'
-import { fn } from '../integrations/jest-mock'
+import { spyOn } from '../integrations/jest-mock'
 
 export type FetchFunction = (id: string) => Promise<string | undefined>
 
@@ -24,7 +24,6 @@ export interface ExecuteOptions {
   inline: (string | RegExp)[]
   external: (string | RegExp)[]
   moduleCache: Map<string, ModuleCache>
-  threads: boolean
 }
 
 const defaultInline = [
@@ -89,37 +88,24 @@ function resolveMockPath(mockPath: string, root: string, nmName: string | null) 
   }
 
   const dir = dirname(mockPath)
-  const [baseId] = basename(mockPath).split('?')
+  const baseId = basename(mockPath)
   const fullPath = resolve(dir, '__mocks__', baseId)
   return existsSync(fullPath) ? fullPath.replace(root, '') : null
 }
 
-// function isClass(func: unknown) {
-//   return typeof func === 'function'
-//     && /^class\s/.test(Function.prototype.toString.call(func))
-// }
-
+// TODO https://jestjs.io/docs/jest-object#jestcreatemockfrommodulemodulename
 function mockObject(obj: any) {
-  if (typeof obj === 'function')
-    return fn(obj)
-
-  if (Array.isArray(obj))
-    return []
-
-  // primitive
-  if (typeof obj !== 'object')
-    return obj
-
-  const newObj: any = {}
   // eslint-disable-next-line no-restricted-syntax
-  for (const k in obj)
-    newObj[k] = mockObject(obj[k])
+  for (const k in obj) {
+    if (typeof obj[k] === 'function' && !obj[k].__isSpy)
+      spyOn(obj, k)
+  }
 
-  return newObj
+  return obj
 }
 
 export async function executeInViteNode(options: ExecuteOptions) {
-  const { moduleCache, root, files, fetch, threads } = options
+  const { moduleCache, root, files, fetch } = options
 
   const mockedPaths: SuiteMocks = {}
   const externalCache = new Map<string, boolean>()
@@ -131,10 +117,7 @@ export async function executeInViteNode(options: ExecuteOptions) {
   return result
 
   function getSuiteFilepath() {
-    // worker runs only one test file, so we don't need
-    // to check current suite, but
-    // `threads: false` runs all test files one after another
-    return threads ? 'worker' : process.__vitest_worker__?.suitepath
+    return process.__vitest_worker__?.suitepath
   }
 
   function getActualPath(path: string, nmName: string) {
@@ -214,10 +197,10 @@ export async function executeInViteNode(options: ExecuteOptions) {
           delete mockedPaths[suitefile][fsPath]
         }
       },
-      __vitest__requireActual__: (path: string, nmName: string) => {
+      __vitest__importActual__: (path: string, nmName: string) => {
         return request(getActualPath(path, nmName), false)
       },
-      __vitest__requireMock__: async(path: string, nmName: string) => {
+      __vitest__importMock__: async(path: string, nmName: string) => {
         const mockPath = resolveMockPath(path, root, nmName)
         if (mockPath === null) {
           const exports = await request(getActualPath(path, nmName), false)
@@ -235,8 +218,7 @@ export async function executeInViteNode(options: ExecuteOptions) {
 
     const mocks = suite ? mockedPaths[suite] : null
     if (mocks) {
-      const mock = mocks[id]
-      if (mock === null)
+      if (mocks[id] === null)
         mockObject(exports)
     }
 
