@@ -6,7 +6,7 @@ import { basename, dirname, resolve } from 'pathe'
 import { isValidNodeImport } from 'mlly'
 import type { ModuleCache } from '../types'
 import { slash } from '../utils'
-import { spyOn, spies } from '../integrations/jest-mock'
+import { spies, spyOn } from '../integrations/jest-mock'
 
 export type FetchFunction = (id: string) => Promise<string | undefined>
 
@@ -224,10 +224,10 @@ export async function executeInViteNode(options: ExecuteOptions) {
         spies.forEach((s) => {
           if (restoreMocks)
             s.mockRestore()
-          else if (clearMocks)
-            s.mockClear()
           else if (mockReset)
             s.mockReset()
+          else if (clearMocks)
+            s.mockClear()
         })
       },
     }
