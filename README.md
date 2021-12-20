@@ -12,7 +12,7 @@ A blazing fast unit test framework powered by Vite.
   <a href="https://www.npmjs.com/package/vitest"><img src="https://img.shields.io/npm/v/vitest?color=a1b858&label="></a>
 <p>
 <h3 align="center">
-<a href=https://chat.vitest.dev"><i>Get involved!</i></a>
+<a href="https://chat.vitest.dev"><i>Get involved!</i></a>
 </h3>
 <br>
 <br>
