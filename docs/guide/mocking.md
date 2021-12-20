@@ -248,6 +248,55 @@ test('async test', async () => {
 });
 ```
 
+## Mock properties
+
+### mock.calls
+
+An array containing the call arguments of all calls that have been made to this mock function. Each item in the array is an array of arguments that were passed during the call.
+
+For example: A mock function `f` that has been called twice, with the arguments `f('arg1', 'arg2')`, and then with the arguments `f('arg3', 'arg4')`, would have a mock.calls array that looks like this:
+
+```json
+[
+  ['arg1', 'arg2'],
+  ['arg3', 'arg4'],
+];
+```
+
+### mock.results
+
+An array containing the results of all calls that have been made to this mock function. Each entry in this array is an object containing a `type` property, and a `value` property. `type` will be one of the following:
+
+- `'return'` - Indicates that the call completed by returning normally.
+- `'throw'` - Indicates that the call completed by throwing a value.
+
+The `value` property contains the value that was thrown or returned.
+
+For example: A mock function `f` that has been called three times, returning `'result1'`, throwing an error, and then returning `'result2'`, would have a `mock.results` array that looks like this:
+
+```json
+[
+  {
+    type: 'return',
+    value: 'result1',
+  },
+  {
+    type: 'throw',
+    value: {
+      /* Error instance */
+    },
+  },
+  {
+    type: 'return',
+    value: 'result2',
+  },
+];
+```
+
+### mock.instances
+
+This property currently is not implemented.
+
 ## See also
 
 - [Jest's Mock Functions](https://jestjs.io/docs/mock-function-api)
