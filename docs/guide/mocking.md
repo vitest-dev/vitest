@@ -2,7 +2,7 @@
 
 ## Mocking functions
 
-Mock functions are also known as "spies", because they let you spy on the behavior of a function that is called indirectly by some other code, rather than only testing the output.
+Mock functions (or "spies") observe functions, that are invoked in some other code, allowing you to test it's arguments, output or even redeclare it's implementation.
 
 We use [Tinyspy](https://github.com/Aslemammad/tinyspy) as a base for mocking functions, but we have our own wrapper to make it `jest` compatible.
 
@@ -12,7 +12,7 @@ Both `vi.fn()` and `vi.spyOn()` share the same methods, but the return result of
 
 **Type:** `(fn: Function) => CallableMockInstance`
 
-Creates a spy on a function, though can be initiated without a function. Every time a function is invocked, it stores call arguments, returns and instances. Also you can manipulate it's behaviour with methods.
+Creates a spy on a function, though can be initiated without one. Every time a function is invocked, it stores it's call arguments, returns and instances. Also you can manipulate it's behaviour with [methods](#mockmethods).
 If no function is given, mock will return `undefined`, when invoked.
 
 ```ts
@@ -63,13 +63,13 @@ Sets internal mock name. Usefull to see what mock has failed the assertion.
 
 **Type:** `() => string`
 
-Use it to return the name, given to mock with method `.mockName(name)`.
+Use it to return the name given to mock with method `.mockName(name)`.
 
 ### mockClear
 
 **Type:** `() => MockInstance`
 
-Clears all information about every call. After calling it [`spy.mock.calls`](#mockcalls), [`spy.mock.returns`](#mockreturns) will return empty arrays. It is useful if you need to clean up spy between different assertions.
+Clears all information about every call. After calling it, [`spy.mock.calls`](#mockcalls), [`spy.mock.returns`](#mockreturns) will return empty arrays. It is useful if you need to clean up spy between different assertions.
 
 If you want this method to be called before each test automatically, you can enable [`clearMocks`](/config/#clearMocks) setting in config.
 
@@ -77,7 +77,7 @@ If you want this method to be called before each test automatically, you can ena
 
 **Type:** `() => MockInstance`
 
-Does what `mockClear` does and makes inner implementation as an epmty function, so it will always return `undefined`. This is useful when you want to completely reset a mock back to its initial state.
+Does what `mockClear` does and makes inner implementation as an epmty function (returning `undefined`, when invocked). This is useful when you want to completely reset a mock back to its initial state.
 
 If you want this method to be called before each test automatically, you can enable [`mockReset`](/config/#mockReset) setting in config.
 
@@ -87,9 +87,7 @@ If you want this method to be called before each test automatically, you can ena
 
 Does what `mockRestore` does and restores inner implementation to the original function.
 
-Note that restoring mock from `vi.fn()` call will set implementation to an empty function that returns `undefined`. Restoring a `vi.fn(impl)` will restore implementation to `impl`.
-
-This is useful when you want to mock functions in certain test cases and restore the original implementation in others.
+Note that restoring mock from `vi.fn()` will set implementation to an empty function that returns `undefined`. Restoring a `vi.fn(impl)` will restore implementation to `impl`.
 
 If you want this method to be called before each test automatically, you can enable [`restoreMocks`](/config/#restoreMocks) setting in config.
 
@@ -97,19 +95,19 @@ If you want this method to be called before each test automatically, you can ena
 
 **Type:** `(fn: Function) => MockInstance`
 
-Accepts a function that should be used as the implementation of the mock. The mock itself will still record all calls that go into and instances that come from itself – the only difference is that the implementation will also be executed when the mock is called.
+Accepts a function that will be used as an implementation of the mock.
 
 For example:
 
 ```ts
-const mockFn = jest.fn().mockImplementation(scalar => 42 + scalar);
-// or: jest.fn(scalar => 42 + scalar);
+const mockFn = jest.fn().mockImplementation(apples => apples + 1);
+// or: jest.fn(apples => apples + 1);
 
-const a = mockFn(0);
-const b = mockFn(1);
+const NelliesBucket = mockFn(0);
+const BobsBucket = mockFn(1);
 
-a === 42; // true
-b === 43; // true
+NelliesBucket === 1; // true
+BobsBucket === 2; // true
 
 mockFn.mock.calls[0][0] === 0; // true
 mockFn.mock.calls[1][0] === 1; // true
@@ -124,15 +122,14 @@ Accepts a function that will be used as an implementation of the mock for one ca
 ```ts
 const myMockFn = jest
   .fn()
-  .mockImplementationOnce(cb => cb(null, true))
-  .mockImplementationOnce(cb => cb(null, false));
+  .mockImplementationOnce(() => true)
+  .mockImplementationOnce(() => false);
 
-myMockFn((err, val) => console.log(val)); // true
-
-myMockFn((err, val) => console.log(val)); // false
+myMockFn(); // true
+myMockFn(); // false
 ```
 
-When the mocked function runs out of implementations defined with mockImplementationOnce, it will execute the default implementation set with `jest.fn(() => defaultValue)` or `.mockImplementation(() => defaultValue)` if they were called:
+When the mocked function runs out of implementations, it will invock the default implementation that was set with `jest.fn(() => defaultValue)` or `.mockImplementation(() => defaultValue)` if they were called:
 
 ```ts
 const myMockFn = jest
@@ -168,7 +165,7 @@ mock(); // 43
 
 **Type:** `(value: any) => MockInstance`
 
-Accepts a value that will be returned for one call to the mock function. Can be chained so that successive calls to the mock function return different values. When there are no more `mockReturnValueOnce` values to use, calls a function specified by `mockImplementation`.
+Accepts a value that will be returned whenever mock function is invocked. If chained, every consecutive call will return passed value. When there are no more `mockReturnValueOnce` values to use, calls a function specified by `mockImplementation` or other `mockReturn*` methods.
 
 ```ts
 const myMockFn = jest
@@ -185,7 +182,7 @@ console.log(myMockFn(), myMockFn(), myMockFn(), myMockFn());
 
 **Type:** `(value: any) => MockInstance`
 
-Accepts a value that will be resolved, when async function will be called. Useful to mock async functions in async tests:
+Accepts a value that will be resolved, when async function will be called.
 
 ```ts
 test('async test', async () => {
@@ -199,7 +196,7 @@ test('async test', async () => {
 
 **Type:** `(value: any) => MockInstance`
 
-Accepts a value that will be resolved for one call to the mock function. Can be chained so that successive calls to the mock function resolve different values.
+Accepts a value that will be resolved for one call to the mock function. If chained, every consecutive call will resolve passed value.
 
 ```ts
 test('async test', async () => {
@@ -234,7 +231,7 @@ test('async test', async () => {
 
 **Type:** `(value: any) => MockInstance`
 
-Accepts a value that will be rejected for one call to the mock function.
+Accepts a value that will be rejected for one call to the mock function. If chained, every consecutive call will reject passed value.
 
 ```ts
 test('async test', async () => {
