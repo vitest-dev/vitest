@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
 
 import { expect, test, vi } from 'vitest'
+import { timeout } from '../src/timeout'
 
 test('timers order: i -> t', () => {
   const res: string[] = []
@@ -116,7 +117,7 @@ test('doesnt trigger twice', () => {
 
   vi.useFakeTimers()
 
-  setTimeout(t, 1000)
+  setTimeout(t, timeout)
 
   vi.runOnlyPendingTimers()
   vi.runOnlyPendingTimers()
@@ -127,12 +128,12 @@ test('doesnt trigger twice', () => {
 
 test('timeout cyclic', async() => {
   const t = vi.fn(() => {
-    setTimeout(t, 1000)
+    setTimeout(t, timeout)
   })
 
   vi.useFakeTimers()
 
-  setTimeout(t, 1000)
+  setTimeout(t, timeout)
 
   expect(() => {
     vi.runAllTimers()

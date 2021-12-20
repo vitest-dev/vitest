@@ -1,3 +1,4 @@
+import type { ChainableFunction } from '../runtime/chain'
 import type { Awaitable } from './general'
 
 export type RunMode = 'run' | 'skip' | 'only' | 'todo'
@@ -43,33 +44,11 @@ export type Task = Test | Suite | File
 export type DoneCallback = (error?: any) => void
 export type TestFunction = (done: DoneCallback) => Awaitable<void>
 
-type TestCollectorFn = (name: string, fn: TestFunction, timeout?: number) => void
-interface ConcurrentCollector {
-  (name: string, fn: TestFunction, timeout?: number): void
-  only: TestCollectorFn
-  skip: TestCollectorFn
-  todo: (name: string) => void
-}
-interface OnlyCollector {
-  (name: string, fn: TestFunction, timeout?: number): void
-  concurrent: TestCollectorFn
-}
-interface SkipCollector {
-  (name: string, fn: TestFunction, timeout?: number): void
-  concurrent: TestCollectorFn
-}
-interface TodoCollector {
-  (name: string): void
-  concurrent: (name: string) => void
-}
-
-export interface TestCollector {
-  (name: string, fn: TestFunction, timeout?: number): void
-  concurrent: ConcurrentCollector
-  only: OnlyCollector
-  skip: SkipCollector
-  todo: TodoCollector
-}
+export type TestCollector = ChainableFunction<
+'concurrent' | 'only' | 'skip'| 'todo',
+[name: string, fn?: TestFunction, timeout?: number],
+void
+>
 
 export type HookListener<T extends any[]> = (...args: T) => Awaitable<void>
 
