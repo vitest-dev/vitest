@@ -2,7 +2,7 @@
 
 import { FakeTimers } from './timers'
 import type { MaybeMocked, MaybeMockedDeep } from './jest-mock'
-import { spyOn, fn, spies } from './jest-mock'
+import { fn, spies, spyOn } from './jest-mock'
 
 class VitestUtils {
   private _timers: FakeTimers

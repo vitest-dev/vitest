@@ -9,7 +9,10 @@ export const MocksPlugin = (): Plugin => {
     enforce: 'post',
     async transform(code, id) {
       let m: MagicString | undefined
-      const matchAll = code.matchAll(mockRegexp)
+      const matchAll = Array.from(code.matchAll(mockRegexp))
+
+      if (!matchAll.length)
+        return
 
       for (const match of matchAll) {
         const [line, method, modulePath] = match

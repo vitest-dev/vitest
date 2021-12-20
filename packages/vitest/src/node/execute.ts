@@ -108,7 +108,6 @@ function mockObject(obj: any) {
     if (typeof obj[k] === 'function' && !obj[k].__isSpy)
       spyOn(newObj, k)
   }
-
   return newObj
 }
 
@@ -130,6 +129,41 @@ export async function executeInViteNode(options: ExecuteOptions) {
 
   function getActualPath(path: string, nmName: string) {
     return nmName ? `/@fs${path}` : path.replace(root, '')
+  }
+
+  function unmock(path: string, nmName: string) {
+    const suitefile = getSuiteFilepath()
+
+    if (suitefile) {
+      const fsPath = getActualPath(path, nmName)
+      mockedPaths[suitefile] ??= {}
+      delete mockedPaths[suitefile][fsPath]
+    }
+  }
+
+  function mock(path: string, nmName: string) {
+    const suitefile = getSuiteFilepath()
+
+    if (suitefile) {
+      const mockPath = resolveMockPath(path, root, nmName)
+      const fsPath = getActualPath(path, nmName)
+      mockedPaths[suitefile] ??= {}
+      mockedPaths[suitefile][fsPath] = mockPath
+    }
+  }
+
+  function clearMocks({ clearMocks, mockReset, restoreMocks }: { clearMocks: boolean; mockReset: boolean; restoreMocks: boolean}) {
+    if (!clearMocks && !mockReset && !restoreMocks)
+      return
+
+    spies.forEach((s) => {
+      if (restoreMocks)
+        s.mockRestore()
+      else if (mockReset)
+        s.mockReset()
+      else if (clearMocks)
+        s.mockClear()
+    })
   }
 
   async function directRequest(id: string, fsPath: string, callstack: string[]) {
@@ -158,7 +192,7 @@ export async function executeInViteNode(options: ExecuteOptions) {
 
     // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
     const url = pathToFileURL(fsPath).href
-    let exports: any = {}
+    const exports: any = {}
 
     setCache(fsPath, { code: transformed, exports })
 
@@ -172,6 +206,20 @@ export async function executeInViteNode(options: ExecuteOptions) {
         return exports.default
       },
     }
+
+    const importActual = (path: string, nmName: string) => {
+      return request(getActualPath(path, nmName), false)
+    }
+
+    const importMock = async(path: string, nmName: string) => {
+      const mockPath = resolveMockPath(path, root, nmName)
+      if (mockPath === null) {
+        const exports = await request(getActualPath(path, nmName), false)
+        return mockObject(exports)
+      }
+      return request(mockPath, true)
+    }
+
     const context = {
       // esm transformed by Vite
       __vite_ssr_import__: request,
@@ -179,57 +227,22 @@ export async function executeInViteNode(options: ExecuteOptions) {
       __vite_ssr_exports__: exports,
       __vite_ssr_exportAll__: (obj: any) => exportAll(exports, obj),
       __vite_ssr_import_meta__: { url },
+
+      // vitest.mock API
+      __vitest__mock__: mock,
+      __vitest__unmock__: unmock,
+      __vitest__importActual__: importActual,
+      __vitest__importMock__: importMock,
+      // spies from 'jest-mock' are different inside suites and execute,
+      // so wee need to call this twice - inside suite and here
+      __vitest__clearMocks__: clearMocks,
+
       // cjs compact
       require: createRequire(url),
       exports,
       module: moduleProxy,
       __filename,
       __dirname: dirname(__filename),
-      // vitest.mock API
-      __vitest__mock__: (path: string, nmName: string) => {
-        const suitefile = getSuiteFilepath()
-
-        if (suitefile) {
-          const mockPath = resolveMockPath(path, root, nmName)
-          const fsPath = getActualPath(path, nmName)
-          mockedPaths[suitefile] ??= {}
-          mockedPaths[suitefile][fsPath] = mockPath
-        }
-      },
-      __vitest__unmock__: (path: string, nmName: string) => {
-        const suitefile = getSuiteFilepath()
-
-        if (suitefile) {
-          const fsPath = getActualPath(path, nmName)
-          mockedPaths[suitefile] ??= {}
-          delete mockedPaths[suitefile][fsPath]
-        }
-      },
-      __vitest__importActual__: (path: string, nmName: string) => {
-        return request(getActualPath(path, nmName), false)
-      },
-      __vitest__importMock__: async(path: string, nmName: string) => {
-        const mockPath = resolveMockPath(path, root, nmName)
-        if (mockPath === null) {
-          const exports = await request(getActualPath(path, nmName), false)
-          return mockObject(exports)
-        }
-        return request(mockPath, true)
-      },
-      // spies from 'jest-mock' are different inside suites and execute,
-      // so wee need to call this twice - inside suite and here
-      __vitest__clearMocks__({ clearMocks, mockReset, restoreMocks }: { clearMocks: boolean; mockReset: boolean; restoreMocks: boolean }) {
-        if (!clearMocks && !mockReset && !restoreMocks) return
-
-        spies.forEach((s) => {
-          if (restoreMocks)
-            s.mockRestore()
-          else if (mockReset)
-            s.mockReset()
-          else if (clearMocks)
-            s.mockClear()
-        })
-      },
     }
 
     const fn = vm.runInThisContext(`async (${Object.keys(context).join(',')})=>{{${transformed}\n}}`, {
@@ -241,7 +254,7 @@ export async function executeInViteNode(options: ExecuteOptions) {
     const mocks = suite ? mockedPaths[suite] : null
     if (mocks) {
       if (mocks[id] === null)
-        exports = mockObject(exports)
+        exportAll(exports, mockObject(exports))
     }
 
     return exports

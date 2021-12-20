@@ -1,4 +1,4 @@
-import { test, vi, expect } from 'vitest'
+import { expect, test, vi } from 'vitest'
 import { mockedA } from '../src/mockedA'
 
 vi.mock('../src/mockedA.ts')
