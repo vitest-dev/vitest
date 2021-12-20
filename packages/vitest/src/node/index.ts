@@ -130,7 +130,10 @@ class Vitest {
       //       changedTests.add(file.filepath)
       //   })
       // }
+
+      this.snapshot.clear()
       const files = Array.from(this.changedTests)
+      this.changedTests.clear()
 
       await this.report('onWatcherRerun', files, triggerId)
 
@@ -181,6 +184,10 @@ class Vitest {
     if (this.changedTests.has(id) || this.invalidates.has(id) || this.config.watchIgnore.some(i => id.match(i)))
       return
 
+    const mod = this.server.moduleGraph.getModuleById(id)
+    if (!mod)
+      return
+
     this.invalidates.add(id)
 
     if (id in this.state.filesMap) {
@@ -188,14 +195,10 @@ class Vitest {
       return
     }
 
-    const mod = this.server.moduleGraph.getModuleById(id)
-
-    if (mod) {
-      mod.importers.forEach((i) => {
-        if (i.id)
-          this.handleFileChanged(i.id)
-      })
-    }
+    mod.importers.forEach((i) => {
+      if (i.id)
+        this.handleFileChanged(i.id)
+    })
   }
 
   async close() {
