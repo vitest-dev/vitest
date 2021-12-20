@@ -105,7 +105,7 @@ function handleImportOutsideModuleError(stack: string, ctx: Vitest) {
 async function getSourcePos(ctx: Vitest, nearest: ParsedStack) {
   const mod = ctx.server.moduleGraph.getModuleById(nearest.file)
   const transformResult = mod?.ssrTransformResult
-  const pos = await getOriginalPos(transformResult?.map, nearest)
+  const pos = await getOriginalPos(transformResult?.map as RawSourceMap | undefined, nearest)
   return pos
 }
 
