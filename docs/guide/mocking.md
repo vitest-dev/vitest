@@ -2,7 +2,7 @@
 
 ## Mocking functions
 
-Mock functions (or "spies") observe functions, that are invoked in some other code, allowing you to test it's arguments, output or even redeclare it's implementation.
+Mock functions (or "spies") observe functions, that are invoked in some other code, allowing you to test its arguments, output or even redeclare its implementation.
 
 We use [Tinyspy](https://github.com/Aslemammad/tinyspy) as a base for mocking functions, but we have our own wrapper to make it `jest` compatible.
 
@@ -12,7 +12,7 @@ Both `vi.fn()` and `vi.spyOn()` share the same methods, but the return result of
 
 **Type:** `(fn: Function) => CallableMockInstance`
 
-Creates a spy on a function, though can be initiated without one. Every time a function is invocked, it stores it's call arguments, returns and instances. Also you can manipulate it's behaviour with [methods](#mockmethods).
+Creates a spy on a function, though can be initiated without one. Every time a function is invoked, it stores its call arguments, returns and instances. Also, you can manipulate its behavior with [methods](#mockmethods).
 If no function is given, mock will return `undefined`, when invoked.
 
 ```ts
@@ -57,7 +57,7 @@ expect(spy).toHaveReturnedWith(1)
 
 **Type:** `(name: string) => MockInstance`
 
-Sets internal mock name. Usefull to see what mock has failed the assertion.
+Sets internal mock name. Useful to see what mock has failed the assertion.
 
 ### getMockName
 
@@ -77,7 +77,7 @@ If you want this method to be called before each test automatically, you can ena
 
 **Type:** `() => MockInstance`
 
-Does what `mockClear` does and makes inner implementation as an epmty function (returning `undefined`, when invocked). This is useful when you want to completely reset a mock back to its initial state.
+Does what `mockClear` does and makes inner implementation as an empty function (returning `undefined`, when invoked). This is useful when you want to completely reset a mock back to its initial state.
 
 If you want this method to be called before each test automatically, you can enable [`mockReset`](/config/#mockReset) setting in config.
 
@@ -129,7 +129,7 @@ myMockFn(); // true
 myMockFn(); // false
 ```
 
-When the mocked function runs out of implementations, it will invock the default implementation that was set with `jest.fn(() => defaultValue)` or `.mockImplementation(() => defaultValue)` if they were called:
+When the mocked function runs out of implementations, it will invok the default implementation that was set with `jest.fn(() => defaultValue)` or `.mockImplementation(() => defaultValue)` if they were called:
 
 ```ts
 const myMockFn = jest
@@ -165,7 +165,7 @@ mock(); // 43
 
 **Type:** `(value: any) => MockInstance`
 
-Accepts a value that will be returned whenever mock function is invocked. If chained, every consecutive call will return passed value. When there are no more `mockReturnValueOnce` values to use, calls a function specified by `mockImplementation` or other `mockReturn*` methods.
+Accepts a value that will be returned whenever mock function is invoked. If chained, every consecutive call will return passed value. When there are no more `mockReturnValueOnce` values to use, calls a function specified by `mockImplementation` or other `mockReturn*` methods.
 
 ```ts
 const myMockFn = jest
@@ -249,9 +249,9 @@ test('async test', async () => {
 
 ### mock.calls
 
-An array containing the call arguments of all calls that have been made to this mock function. Each item in the array is an array of arguments that were passed during the call.
+This is an array containing all arguments for each call. One item of the array is arguments of that call.
 
-For example: A mock function `f` that has been called twice, with the arguments `f('arg1', 'arg2')`, and then with the arguments `f('arg3', 'arg4')`, would have a mock.calls array that looks like this:
+If a function was invoked twice with the following arguments `fn(arg1, arg2)`, `fn(arg3, arg4)` in that order, then `mock.calls` will be:
 
 ```js
 [
@@ -262,37 +262,31 @@ For example: A mock function `f` that has been called twice, with the arguments 
 
 ### mock.results
 
-An array containing the results of all calls that have been made to this mock function. Each entry in this array is an object containing a `type` property, and a `value` property. `type` will be one of the following:
+This is an array containing all values, that were `returned` from function. One item of the array is an object with properties `type` and `value`. Available types are:
 
-- `'return'` - Indicates that the call completed by returning normally.
-- `'throw'` - Indicates that the call completed by throwing a value.
+- `'return'` - function returned without throwing.
+- `'throw'` - function threw a value.
 
-The `value` property contains the value that was thrown or returned.
+The `value` property contains returned value or thrown error.
 
-For example: A mock function `f` that has been called three times, returning `'result1'`, throwing an error, and then returning `'result2'`, would have a `mock.results` array that looks like this:
+If function returned `'result1`, then threw and error, then `mock.results` will be:
 
 ```js
 [
   {
     type: 'return',
-    value: 'result1',
+    value: 'result',
   },
   {
     type: 'throw',
-    value: {
-      /* Error instance */
-    },
-  },
-  {
-    type: 'return',
-    value: 'result2',
+    value: Error,
   },
 ];
 ```
 
 ### mock.instances
 
-This property currently is not implemented.
+Currently, this property is not implemented.
 
 ## See also
 
