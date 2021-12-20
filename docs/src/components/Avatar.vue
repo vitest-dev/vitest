@@ -33,7 +33,7 @@ defineProps<{
     <br>
     <a
       v-if="sponsors"
-      class="btn mt-5 bg-pink-500 hover:bg-pink-600"
+      class="btn mt-1 bg-pink-500 hover:bg-pink-600"
       target="_blank"
       :href="`https://github.com/sponsors/${github}`"
     >
