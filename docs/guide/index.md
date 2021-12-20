@@ -19,7 +19,7 @@ $ npm install -D vitest
 ```
 
 :::tip
-Vitest requires Vite v2.7 and Node v16
+Vitest requires Vite v2.7 and Node v14
 :::
 
 ## Command Line Interface
