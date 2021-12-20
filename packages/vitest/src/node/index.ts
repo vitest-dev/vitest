@@ -52,7 +52,7 @@ class Vitest {
     this.snapshot = new SnapshotManager(resolved)
     this.reporters = toArray(resolved.reporters)
 
-    if (!this.reporters.length)
+    if (!this.reporters.length && !this.config.silent)
       this.reporters.push(new ConsoleReporter(this))
 
     if (this.config.watch)

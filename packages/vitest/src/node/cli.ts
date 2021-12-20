@@ -19,6 +19,7 @@ cli
   .option('--api', 'listen to port and serve API')
   .option('--threads', 'enabled threads', { default: true })
   .option('--silent', 'silent')
+  .option('--run', 'do not watch')
   .option('--global', 'inject apis globally')
   .option('--dom', 'mock browser api with happy-dom')
   .option('--environment <env>', 'runner environment', {
@@ -48,7 +49,7 @@ const PROCESS_EXIT_TIMEOUT = 5_000
 
 async function dev(cliFilters: string[], argv: UserConfig) {
   if (argv.watch == null)
-    argv.watch = !process.env.CI && !process.env.NODE_V8_COVERAGE
+    argv.watch = !process.env.CI && !process.env.NODE_V8_COVERAGE && !argv.silent && !argv.run
   await run(cliFilters, argv)
 }
 

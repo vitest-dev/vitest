@@ -168,7 +168,15 @@ export interface UserConfig extends InlineConfig {
    */
   config?: string | undefined
 
+  /**
+   * Use happy-dom
+   */
   dom?: boolean
+
+  /**
+   * Do not watch
+   */
+  run?: boolean
 }
 
 export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters'> {
