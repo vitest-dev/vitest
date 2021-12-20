@@ -101,7 +101,10 @@ export function getNames(task: Task) {
   return names
 }
 
-export async function ensurePackageInstalled(dependency: string, promptInstall = !process.env.CI) {
+export async function ensurePackageInstalled(
+  dependency: string,
+  promptInstall = !process.env.CI && process.stdout.isTTY,
+) {
   if (isPackageExists(dependency))
     return true
 

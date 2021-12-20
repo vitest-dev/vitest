@@ -55,7 +55,7 @@ export async function printError(error: unknown, ctx: Vitest) {
     await printStack(ctx, stacks, nearest, async(s, pos) => {
       if (s === nearest) {
         const sourceCode = await fs.readFile(nearest.file, 'utf-8')
-        ctx.console.log(c.yellow(generateCodeFrame(sourceCode, 4, pos)))
+        ctx.log(c.yellow(generateCodeFrame(sourceCode, 4, pos)))
       }
     })
   }
@@ -134,16 +134,14 @@ async function printStack(
     const color = frame === highlight ? c.yellow : c.gray
     const path = relative(ctx.config.root, frame.file)
 
-    if (!ctx.config.silent)
-      ctx.console.log(color(` ${c.dim(F_POINTER)} ${[frame.method, c.dim(`${path}:${pos.line}:${pos.column}`)].filter(Boolean).join(' ')}`))
+    ctx.log(color(` ${c.dim(F_POINTER)} ${[frame.method, c.dim(`${path}:${pos.line}:${pos.column}`)].filter(Boolean).join(' ')}`))
     await onStack?.(frame, pos)
 
     // reached at test file, skip the follow stack
     if (frame.file in ctx.state.filesMap)
       break
   }
-  if (!ctx.config.silent)
-    ctx.console.log()
+  ctx.log()
 }
 
 function getOriginalPos(map: RawSourceMap | null | undefined, { line, column }: Position): Promise<Position | null> {
