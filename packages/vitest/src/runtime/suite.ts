@@ -1,10 +1,25 @@
 import { nanoid } from 'nanoid/non-secure'
-import type { Awaitable, ComputeMode, File, ModuleCache, ResolvedConfig, RpcCall, RpcSend, RunMode, Suite, SuiteCollector, SuiteHooks, Test, TestCollector, TestFactory, TestFunction } from '../types'
+import type { ComputeMode, File, ModuleCache, ResolvedConfig, RpcCall, RpcSend, RunMode, Suite, SuiteCollector, SuiteHooks, Test, TestCollector, TestFactory, TestFunction } from '../types'
+import { noop } from '../utils'
+import { createChainable } from './chain'
 import { collectTask, context, normalizeTest, runWithSuite } from './context'
 import { getHooks, setFn, setHooks } from './map'
 
+// apis
 export const suite = createSuite()
+export const test: TestCollector = createChainable(
+  ['concurrent', 'skip', 'only', 'todo', 'fails'],
+  function(name: string, fn?: TestFunction, timeout?: number) {
+    // @ts-expect-error untyped internal prop
+    getCurrentSuite().test.fn.call(this, name, fn, timeout)
+  },
+)
 
+// alias
+export const describe = suite
+export const it = test
+
+// implementations
 export const defaultSuite = suite('')
 
 export function clearContext() {
@@ -34,18 +49,25 @@ function createSuiteCollector(name: string, factory: TestFactory = () => { }, mo
 
   initSuite()
 
-  const test = createTestCollector((name: string, fn: () => Awaitable<void>, mode: RunMode, computeMode?: ComputeMode) => {
-    const test: Test = {
-      id: nanoid(),
-      type: 'test',
-      name,
-      mode,
-      computeMode: computeMode ?? (suiteComputeMode ?? 'serial'),
-      suite: undefined!,
-    }
-    setFn(test, fn)
-    tasks.push(test)
-  })
+  const test = createChainable(
+    ['concurrent', 'skip', 'only', 'todo', 'fails'],
+    function(name: string, fn?: TestFunction, timeout?: number) {
+      const mode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run'
+      const computeMode = this.concurrent ? 'concurrent' : undefined
+
+      const test: Test = {
+        id: nanoid(),
+        type: 'test',
+        name,
+        mode,
+        computeMode: computeMode ?? (suiteComputeMode ?? 'serial'),
+        suite: undefined!,
+        fails: this.fails,
+      }
+      setFn(test, normalizeTest(fn || noop, timeout))
+      tasks.push(test)
+    },
+  )
 
   const collector: SuiteCollector = {
     type: 'collector',
@@ -107,106 +129,16 @@ function createSuiteCollector(name: string, factory: TestFactory = () => { }, mo
   return collector
 }
 
-function createTestCollector(collectTest: (name: string, fn: () => Awaitable<void>, mode: RunMode, computeMode?: ComputeMode) => void): TestCollector {
-  function test(name: string, fn: TestFunction, timeout?: number) {
-    collectTest(name, normalizeTest(fn, timeout), 'run')
-  }
-  test.concurrent = concurrent
-  test.skip = skip
-  test.only = only
-  test.todo = todo
-  function concurrent(name: string, fn: TestFunction, timeout?: number) {
-    collectTest(name, normalizeTest(fn, timeout), 'run', 'concurrent')
-  }
-  concurrent.skip = (name: string, fn: TestFunction, timeout?: number) => collectTest(name, normalizeTest(fn, timeout), 'skip', 'concurrent')
-  concurrent.only = (name: string, fn: TestFunction, timeout?: number) => collectTest(name, normalizeTest(fn, timeout), 'only', 'concurrent')
-  concurrent.todo = todo
-  function skip(name: string, fn: TestFunction, timeout?: number) {
-    collectTest(name, normalizeTest(fn, timeout), 'skip')
-  }
-  skip.concurrent = concurrent.skip
-  function only(name: string, fn: TestFunction, timeout?: number) {
-    collectTest(name, normalizeTest(fn, timeout), 'only')
-  }
-  only.concurrent = concurrent.only
-  function todo(name: string) {
-    collectTest(name, () => { }, 'todo')
-  }
-  todo.concurrent = todo
-
-  return test
-}
-
-// apis
-export const test = (function() {
-  function test(name: string, fn: TestFunction, timeout?: number) {
-    return getCurrentSuite().test(name, fn, timeout)
-  }
-  function concurrent(name: string, fn: TestFunction, timeout?: number) {
-    return getCurrentSuite().test.concurrent(name, fn, timeout)
-  }
-
-  concurrent.skip = (name: string, fn: TestFunction, timeout?: number) => getCurrentSuite().test.concurrent.skip(name, fn, timeout)
-  concurrent.only = (name: string, fn: TestFunction, timeout?: number) => getCurrentSuite().test.concurrent.only(name, fn, timeout)
-  concurrent.todo = (name: string) => getCurrentSuite().test.concurrent.todo(name)
-
-  function skip(name: string, fn: TestFunction, timeout?: number) {
-    return getCurrentSuite().test.skip(name, fn, timeout)
-  }
-  skip.concurrent = (name: string, fn: TestFunction, timeout?: number) => getCurrentSuite().test.skip.concurrent(name, fn, timeout)
-  function only(name: string, fn: TestFunction, timeout?: number) {
-    return getCurrentSuite().test.only(name, fn, timeout)
-  }
-  only.concurrent = (name: string, fn: TestFunction, timeout?: number) => getCurrentSuite().test.only.concurrent(name, fn, timeout)
-  function todo(name: string) {
-    return getCurrentSuite().test.todo(name)
-  }
-  todo.concurrent = (name: string) => getCurrentSuite().test.todo.concurrent(name)
-
-  test.concurrent = concurrent
-  test.skip = skip
-  test.only = only
-  test.todo = todo
-
-  return test
-})()
-
 function createSuite() {
-  function suite(suiteName: string, factory?: TestFactory) {
-    return createSuiteCollector(suiteName, factory, 'run')
-  }
-  function concurrent(suiteName: string, factory?: TestFactory) {
-    return createSuiteCollector(suiteName, factory, 'run', 'concurrent')
-  }
-  concurrent.skip = (suiteName: string, factory?: TestFactory) => createSuiteCollector(suiteName, factory, 'skip', 'concurrent')
-  concurrent.only = (suiteName: string, factory?: TestFactory) => createSuiteCollector(suiteName, factory, 'only', 'concurrent')
-  concurrent.todo = (suiteName: string) => createSuiteCollector(suiteName, undefined, 'todo')
-
-  function skip(suiteName: string, factory?: TestFactory) {
-    return createSuiteCollector(suiteName, factory, 'skip')
-  }
-  skip.concurrent = concurrent.skip
-
-  function only(suiteName: string, factory?: TestFactory) {
-    return createSuiteCollector(suiteName, factory, 'only')
-  }
-  only.concurrent = concurrent.only
-
-  function todo(suiteName: string) {
-    return createSuiteCollector(suiteName, undefined, 'todo')
-  }
-  todo.concurrent = concurrent.todo
-
-  suite.concurrent = concurrent
-  suite.skip = skip
-  suite.only = only
-  suite.todo = todo
-  return suite
+  return createChainable(
+    ['concurrent', 'skip', 'only', 'todo'],
+    function(name: string, factory?: TestFactory) {
+      const mode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run'
+      const computeMode = this.concurrent ? 'concurrent' : undefined
+      return createSuiteCollector(name, factory, mode, computeMode)
+    },
+  )
 }
-
-// alias
-export const describe = suite
-export const it = test
 
 declare global {
   namespace NodeJS {

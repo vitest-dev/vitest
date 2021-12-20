@@ -45,6 +45,7 @@ export async function runTest(test: Test) {
     test.result.state = 'fail'
     test.result.error = processError(e)
   }
+
   try {
     await callSuiteHook(test.suite, 'afterEach', [test, test.suite])
   }
@@ -53,13 +54,24 @@ export async function runTest(test: Test) {
     test.result.error = processError(e)
   }
 
-  clearModuleMocks()
+  // if test is marked to be failed, flip the result
+  if (test.fails) {
+    if (test.result.state === 'pass') {
+      test.result.state = 'fail'
+      test.result.error = processError(new Error('Expect test to fail'))
+    }
+    else {
+      test.result.state = 'pass'
+      test.result.error = undefined
+    }
+  }
 
   getSnapshotClient().clearTest()
 
   test.result.end = performance.now()
 
   process.__vitest_worker__.current = undefined
+  clearModuleMocks()
 
   updateTask(test)
 }
