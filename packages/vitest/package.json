@@ -38,12 +38,13 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
-    "vitest": "./bin/vitest.mjs"
+    "vitest": "./vitest.mjs"
   },
   "files": [
     "dist",
     "bin",
-    "*.d.ts"
+    "*.d.ts",
+    "*.mjs"
   ],
   "scripts": {
     "build": "rimraf dist && rollup -c",
