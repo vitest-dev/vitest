@@ -131,7 +131,7 @@ export function clearModuleMocks() {
   const { clearMocks, mockReset, restoreMocks } = process.__vitest_worker__.config
 
   // @ts-expect-error `execute.ts` function, so `vi.mock` functions will also be restored
-  __vitest__clear__({ clearMocks, mockReset, restoreMocks })
+  __vitest__clearMocks__({ clearMocks, mockReset, restoreMocks })
 
   // since each function calls another, we can just call one
   if (restoreMocks)
