@@ -1,5 +1,5 @@
 import { resolve } from 'pathe'
-import type { ViteDevServer, InlineConfig as ViteInlineConfig, UserConfig as ViteUserConfig } from 'vite'
+import type { ViteDevServer, InlineConfig as ViteInlineConfig, Plugin as VitePlugin, UserConfig as ViteUserConfig } from 'vite'
 import { createServer, mergeConfig } from 'vite'
 import { findUp } from 'find-up'
 import fg from 'fast-glob'
@@ -262,7 +262,7 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
 
   const configPath = options.config
     ? resolve(root, options.config)
-    : await findUp(configFiles, { cwd: root })
+    : await findUp(configFiles, { cwd: root } as any)
 
   let haveStarted = false
 
@@ -282,7 +282,7 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
           if (options.api)
             server.middlewares.use((await import('../api/middleware')).default(ctx))
         },
-      },
+      } as VitePlugin,
     ],
     server: {
       open: options.open,

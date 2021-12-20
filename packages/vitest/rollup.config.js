@@ -69,6 +69,19 @@ export default ({ watch }) => [
       dts(),
     ],
   },
+  {
+    input: [
+      'src/node.ts',
+    ],
+    output: {
+      file: 'dist/node.d.ts',
+      format: 'esm',
+    },
+    external,
+    plugins: [
+      dts(),
+    ],
+  },
 ]
 
 function licensePlugin() {
