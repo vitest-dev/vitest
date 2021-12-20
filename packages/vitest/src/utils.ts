@@ -24,6 +24,10 @@ export function slash(str: string) {
   return str.replace(/\\/g, '/')
 }
 
+export function mergeSlashes(str: string) {
+  return str.replace(/\/\//g, '/')
+}
+
 export const noop = () => {}
 
 /**

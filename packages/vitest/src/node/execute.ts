@@ -5,7 +5,7 @@ import vm from 'vm'
 import { basename, dirname, resolve } from 'pathe'
 import { isValidNodeImport } from 'mlly'
 import type { ModuleCache } from '../types'
-import { slash } from '../utils'
+import { mergeSlashes, slash } from '../utils'
 import { spies, spyOn } from '../integrations/jest-mock'
 
 export type FetchFunction = (id: string) => Promise<string | undefined>
@@ -128,7 +128,7 @@ export async function executeInViteNode(options: ExecuteOptions) {
   }
 
   function getActualPath(path: string, nmName: string) {
-    return nmName ? `/@fs/${slash(resolve(path))}` : path.replace(root, '')
+    return nmName ? mergeSlashes(`/@fs/${path}`) : path.replace(root, '')
   }
 
   function unmock(path: string, nmName: string) {
