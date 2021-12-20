@@ -160,7 +160,22 @@ You can also use `.skip`, `.only`, and `.todo` with concurrent suites and tests.
 
 ## Mocking
 
-[Tinyspy](https://github.com/Aslemammad/tinyspy) built-in for mocking
+[Tinyspy](https://github.com/Aslemammad/tinyspy) built-in for mocking with `jest` compatible APIs on global `vi` object.
+
+```ts
+const fn = vi.fn()
+
+fn('hello', 1)
+
+expect(vi.isMockFunction()).toBe(true)
+expect(fn.mock.calls[0]).toEqual(['hello', 1])
+
+fn.mockImplementation((arg) => arg)
+
+fn('world', 2)
+
+expect(fn.mock.returns[0]).toBe('world')
+```
 
 Vitest supports both [happy-dom](https://github.com/capricorn86/happy-dom) or [jsdom](https://github.com/jsdom/jsdom) for mocking DOM and browser APIs. They don't come with Vitest, you might need to install them:
 
