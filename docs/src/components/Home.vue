@@ -49,8 +49,8 @@
     </h3>
     <FeaturesList class="max-w-140 text-lg" />
 
-    <h3 id="the-team" op50 font-normal pt-5 pb-2>
-      The Team
+    <h3 id="meet-the-team" op50 font-normal pt-5 pb-2>
+      Meet The Team
     </h3>
     <div grid="~ sm:cols-2 lg:cols-4 gap-x-8 gap-y-20 items-center" p-10>
       <Avatar
@@ -91,7 +91,8 @@
       Contributors
     </h3>
     <p op80 text-lg max-w-150 text-center leading-7>
-      ...and the Vitest <a href="https://github.com/antfu-sponsors/vitest/network/dependencies" target="_blank">contributors</a>.<br><br>
+      <Contributors />
+      <br>
       <a href="https://discord.com/invite/2zYZNngd7y">Join the community</a> and get involved!
     </p>
 
