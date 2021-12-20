@@ -1,7 +1,7 @@
 import c from 'picocolors'
 import { isPackageExists } from 'local-pkg'
-import { spies } from 'tinyspy'
 import { resolve } from 'pathe'
+import { vi } from './integrations/utils'
 import type { Arrayable, Nullable, Suite, Task, Test } from './types'
 
 /**
@@ -128,10 +128,18 @@ export async function ensurePackageInstalled(dependency: string, promptInstall =
 }
 
 export function clearModuleMocks() {
-  const { clearMocks } = process.__vitest_worker__.config
+  const { clearMocks, mockReset, restoreMocks } = process.__vitest_worker__.config
 
-  if (clearMocks)
-    spies.forEach(spy => spy.reset())
+  // @ts-expect-error `execute.ts` function, so `vi.mock` functions will also be restored
+  __vitest__clear__({ clearMocks, mockReset, restoreMocks })
+
+  // since each function calls another, we can just call one
+  if (restoreMocks)
+    vi.restoreAllMocks()
+  else if (mockReset)
+    vi.resetAllMocks()
+  else if (clearMocks)
+    vi.clearAllMocks()
 }
 
 export { resolve as resolvePath }

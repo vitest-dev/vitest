@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { spies } from 'tinyspy'
 import { FakeTimers } from './timers'
 import type { MaybeMocked, MaybeMockedDeep } from './jest-mock'
-import { spyOn, fn } from './jest-mock'
+import { spyOn, fn, spies } from './jest-mock'
 
 class VitestUtils {
   private _timers: FakeTimers
@@ -85,23 +84,17 @@ class VitestUtils {
   }
 
   public clearAllMocks() {
-    spies.forEach((spy) => {
-      spy.reset()
-    })
+    spies.forEach(spy => spy.mockClear())
     return this
   }
 
   public resetAllMocks() {
-    spies.forEach((spy) => {
-      spy.reset()
-    })
+    spies.forEach(spy => spy.mockReset())
     return this
   }
 
   public restoreAllMocks() {
-    spies.forEach((spy) => {
-      spy.restore()
-    })
+    spies.forEach(spy => spy.mockRestore())
     return this
   }
 }

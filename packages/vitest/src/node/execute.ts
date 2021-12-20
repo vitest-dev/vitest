@@ -6,7 +6,7 @@ import { basename, dirname, resolve } from 'pathe'
 import { isValidNodeImport } from 'mlly'
 import type { ModuleCache } from '../types'
 import { slash } from '../utils'
-import { spyOn } from '../integrations/jest-mock'
+import { spyOn, spies } from '../integrations/jest-mock'
 
 export type FetchFunction = (id: string) => Promise<string | undefined>
 
@@ -125,7 +125,7 @@ export async function executeInViteNode(options: ExecuteOptions) {
   return result
 
   function getSuiteFilepath() {
-    return process.__vitest_worker__?.suitepath
+    return process.__vitest_worker__?.filepath
   }
 
   function getActualPath(path: string, nmName: string) {
@@ -215,6 +215,20 @@ export async function executeInViteNode(options: ExecuteOptions) {
           return mockObject(exports)
         }
         return request(mockPath, true)
+      },
+      // spies from 'jest-mock' are different inside suites and execute,
+      // so wee need to call this twice - inside suite and here
+      __vitest__clearMocks__({ clearMocks, mockReset, restoreMocks }: { clearMocks: boolean; mockReset: boolean; restoreMocks: boolean }) {
+        if (!clearMocks && !mockReset && !restoreMocks) return
+
+        spies.forEach((s) => {
+          if (restoreMocks)
+            s.mockRestore()
+          else if (clearMocks)
+            s.mockClear()
+          else if (mockReset)
+            s.mockReset()
+        })
       },
     }
 

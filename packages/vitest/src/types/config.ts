@@ -156,10 +156,22 @@ export interface InlineConfig {
   api?: boolean | number
 
   /**
-   * Will call `.mockReset()` on all spyies
+   * Will call `.mockClear()` on all spies before each test
    * @default false
    */
   clearMocks?: boolean
+
+  /**
+   * Will call `.mockReset()` on all spies before each test
+   * @default false
+   */
+  mockReset?: boolean
+
+  /**
+   * Will call `.mockRestore()` on all spies before each test
+   * @default false
+   */
+  restoreMocks?: boolean
 }
 
 export interface UserConfig extends InlineConfig {

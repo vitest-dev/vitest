@@ -32,6 +32,8 @@ export async function runTest(test: Test) {
   }
   updateTask(test)
 
+  clearModuleMocks()
+
   getSnapshotClient().setTest(test)
 
   process.__vitest_worker__.current = test
@@ -52,8 +54,6 @@ export async function runTest(test: Test) {
     test.result.state = 'fail'
     test.result.error = processError(e)
   }
-
-  clearModuleMocks()
 
   getSnapshotClient().clearTest()
 

@@ -100,6 +100,8 @@ export interface MockWithArgs<T extends MockableFunction>
   (...args: ArgumentsOf<T>): ReturnType<T>
 }
 
+export const spies = new Set<JestMockCompat>()
+
 export function spyOn<T, K extends keyof T>(
   obj: T,
   method: K,
@@ -217,6 +219,8 @@ function enhanceSpy<TArgs extends any[], TReturns>(
     const impl = onceImplementations.shift() || implementation || stub.getOriginal() || (() => {})
     return impl.apply(this, args)
   })
+
+  spies.add(stub)
 
   return stub as any
 }

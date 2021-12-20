@@ -9,7 +9,7 @@ export async function run(files: string[], config: ResolvedConfig): Promise<void
   for (const file of files) {
     const code = await fs.readFile(file, 'utf-8')
 
-    process.__vitest_worker__.suitepath = file
+    process.__vitest_worker__.filepath = file
 
     const env = code.match(/@(?:vitest|jest)-environment\s+?([\w-]+)\b/)?.[1] || config.environment || 'node'
 
@@ -20,6 +20,6 @@ export async function run(files: string[], config: ResolvedConfig): Promise<void
       await startTests([file], config)
     })
 
-    process.__vitest_worker__.suitepath = undefined
+    process.__vitest_worker__.filepath = undefined
   }
 }

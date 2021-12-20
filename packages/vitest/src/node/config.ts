@@ -23,6 +23,10 @@ export function resolveConfig(
   resolved.threads = resolved.threads ?? true
   resolved.interpretDefault = resolved.interpretDefault ?? true
 
+  resolved.clearMocks = resolved.clearMocks ?? false
+  resolved.restoreMocks = resolved.restoreMocks ?? false
+  resolved.mockReset = resolved.mockReset ?? false
+
   resolved.include = resolved.include ?? defaultInclude
   resolved.exclude = resolved.exclude ?? defaultExclude
 
