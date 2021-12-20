@@ -21,11 +21,11 @@ A blazing fast unit test framework powered by Vite.
 
 > Vitest requires Vite v2.7 and Node v14
 
-Following the [Getting Started Guide](https://preview.vitest.dev/guide) or learn [why we are building a new test runner](https://preview.vitest.dev/guide).
+Follow the [Getting Started Guide](https://preview.vitest.dev/guide) or learn [why we are building a new test runner](https://preview.vitest.dev/guide).
 
-## Documentations
+## Documentation
 
-Read the [documentations](https://preview.vitest.dev/docs).
+Read the [documentation](https://preview.vitest.dev/docs).
 
 ## Features
 
