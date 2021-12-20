@@ -4,8 +4,8 @@ import fetch from 'node-fetch'
 const { GITHUB_TOKEN: token } = process.env
 
 type Contributor = {
-  login: string;
-};
+  login: string
+}
 
 async function fetchContributors() {
   const collaborators: string[] = []
@@ -16,8 +16,8 @@ async function fetchContributors() {
       'content-type': 'application/json',
     },
   })
-  const data = await res.json() as Contributor[];
-  collaborators.push(...data.map((i) => i.login))
+  const data = await res.json() as Contributor[]
+  collaborators.push(...data.map(i => i.login))
   return collaborators
 }
 
