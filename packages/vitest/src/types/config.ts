@@ -133,6 +133,13 @@ export interface InlineConfig {
   setupFiles?: string | string[]
 
   /**
+   * Pattern of file paths to be ignore from triggering watch rerun
+   *
+   * @default ['**\/node_modules\/**', '**\/dist/**']
+   */
+  watchIgnore?: (string | RegExp)[]
+
+  /**
    * Open Vitest UI
    * @internal WIP
    */
@@ -167,7 +174,15 @@ export interface UserConfig extends InlineConfig {
    */
   config?: string | undefined
 
+  /**
+   * Use happy-dom
+   */
   dom?: boolean
+
+  /**
+   * Do not watch
+   */
+  run?: boolean
 }
 
 export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters'> {

@@ -5,8 +5,8 @@ import {
   isA,
 } from './jest-utils'
 import type {
-  MatcherState,
   ChaiPlugin,
+  MatcherState,
 } from './types'
 
 export interface AsymmetricMatcherInterface {

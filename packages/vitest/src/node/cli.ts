@@ -1,6 +1,5 @@
 import readline from 'readline'
 import cac from 'cac'
-import c from 'picocolors'
 import type { UserConfig } from '../types'
 import { version } from '../../package.json'
 import { ensurePackageInstalled } from '../utils'
@@ -19,6 +18,7 @@ cli
   .option('--api', 'listen to port and serve API')
   .option('--threads', 'enabled threads', { default: true })
   .option('--silent', 'silent')
+  .option('--run', 'do not watch')
   .option('--global', 'inject apis globally')
   .option('--dom', 'mock browser api with happy-dom')
   .option('--environment <env>', 'runner environment', {
@@ -46,20 +46,13 @@ cli.parse()
 
 async function dev(cliFilters: string[], argv: UserConfig) {
   if (argv.watch == null)
-    argv.watch = !process.env.CI && !process.env.NODE_V8_COVERAGE
+    argv.watch = !process.env.CI && !process.env.NODE_V8_COVERAGE && !argv.silent && !argv.run
   await run(cliFilters, argv)
 }
 
 async function run(cliFilters: string[], options: UserConfig) {
   process.env.VITEST = 'true'
   process.env.NODE_ENV = 'test'
-
-  if (!options.silent) {
-    // eslint-disable-next-line no-console
-    console.log(c.magenta(c.bold('\nVitest is in closed beta exclusively for Sponsors')))
-    // eslint-disable-next-line no-console
-    console.log(c.yellow('Learn more at https://vitest.dev'))
-  }
 
   const ctx = await createVitest(options)
 
@@ -88,6 +81,9 @@ async function run(cliFilters: string[], options: UserConfig) {
     if (!ctx.config.watch)
       await ctx.close()
   }
+
+  if (!ctx.config.watch)
+    process.exit()
 }
 
 function registerConsoleShortcuts(ctx: Vitest) {

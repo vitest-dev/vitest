@@ -1,13 +1,13 @@
-import { resolve } from 'path'
+import { resolve } from 'pathe'
 import type { ViteDevServer, InlineConfig as ViteInlineConfig, UserConfig as ViteUserConfig } from 'vite'
-import { mergeConfig, createServer } from 'vite'
+import { createServer, mergeConfig } from 'vite'
 import { findUp } from 'find-up'
 import fg from 'fast-glob'
 import mm from 'micromatch'
-import type { Reporter, UserConfig, ArgumentsType, ResolvedConfig } from '../types'
+import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig } from '../types'
 import { SnapshotManager } from '../integrations/snapshot/manager'
 import { configFiles, defaultPort } from '../constants'
-import { toArray, hasFailed, slash, noop } from '../utils'
+import { hasFailed, noop, slash, toArray } from '../utils'
 import { ConsoleReporter } from '../reporters/console'
 import { MocksPlugin } from '../plugins/mock'
 import type { WorkerPool } from './pool'
@@ -53,7 +53,7 @@ class Vitest {
     this.snapshot = new SnapshotManager(resolved)
     this.reporters = toArray(resolved.reporters)
 
-    if (!this.reporters.length)
+    if (!this.reporters.length && !this.config.silent)
       this.reporters.push(new ConsoleReporter(this))
 
     if (this.config.watch)
@@ -131,7 +131,10 @@ class Vitest {
       //       changedTests.add(file.filepath)
       //   })
       // }
+
+      this.snapshot.clear()
       const files = Array.from(this.changedTests)
+      this.changedTests.clear()
 
       await this.report('onWatcherRerun', files, triggerId)
 
@@ -179,7 +182,11 @@ class Vitest {
   }
 
   private handleFileChanged(id: string) {
-    if (this.changedTests.has(id) || this.invalidates.has(id) || id.includes('/node_modules/') || id.includes('/vitest/dist/'))
+    if (this.changedTests.has(id) || this.invalidates.has(id) || this.config.watchIgnore.some(i => id.match(i)))
+      return
+
+    const mod = this.server.moduleGraph.getModuleById(id)
+    if (!mod)
       return
 
     this.invalidates.add(id)
@@ -189,14 +196,10 @@ class Vitest {
       return
     }
 
-    const mod = this.server.moduleGraph.getModuleById(id)
-
-    if (mod) {
-      mod.importers.forEach((i) => {
-        if (i.id)
-          this.handleFileChanged(i.id)
-      })
-    }
+    mod.importers.forEach((i) => {
+      if (i.id)
+        this.handleFileChanged(i.id)
+    })
   }
 
   async close() {

@@ -3,9 +3,9 @@ import chai, { util } from 'chai'
 import * as matcherUtils from './jest-matcher-utils'
 
 import {
+  equals,
   iterableEquality,
   subsetEquality,
-  equals,
 } from './jest-utils'
 import type {
   ChaiPlugin,

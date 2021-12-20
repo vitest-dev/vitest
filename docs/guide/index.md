@@ -1,24 +1,12 @@
 # Getting Started
 
+<DevelopmentWarning/>
+
 ## Overview
 
 Vitest is a blazing fast unit test framework powered by Vite.
 
-[**Join the Discord!**](https://discord.com/invite/2zYZNngd7y)
-
 You can learn more about the rationale behind the project in the [Why Vite](./why) section.
-
-:::tip
-💖 **This project is currently in closed beta exclusively for Sponsors.**<br>
-Become a Sponsor of [@patak-dev](https://github.com/sponsors/patak-dev) or [@antfu](https://github.com/sponsors/antfu) to access the source code and issues tracker.
-
-:::
-
-:::warning
-⚠️ **DISCLAIMER**: Vitest is still in development and not stable yet. It's not recommended to use it in production.
-
-Vitest requires Vite v2.7 and Node v16
-:::
 
 ## Trying Vitest Online
 
@@ -27,8 +15,12 @@ You can try Vitest online on [StackBlitz](https://stackblitz.com/edit/node-8hobg
 ## Adding Vitest to your Project
 
 ```bash
-$ npm add vitest
+$ npm install -D vitest
 ```
+
+:::tip
+Vitest requires Vite v2.7 and Node v14
+:::
 
 ## Command Line Interface
 
@@ -70,12 +62,12 @@ If you can't wait for a new release to test the latest features, you will need t
 git clone https://github.com/antfu-sponsors/vitest.git
 cd vite
 pnpm install
-cd packages/vite
+cd packages/vitest
 pnpm run build
 pnpm link --global # you can use your preferred package manager for this step
 ```
 
-Then go to the project where you are using Vitest and run `pnpm link --global vite` (or the package manager that you used to link `vitest` globally).
+Then go to the project where you are using Vitest and run `pnpm link --global vitest` (or the package manager that you used to link `vitest` globally).
 
 ## Community
 

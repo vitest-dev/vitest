@@ -1,5 +1,5 @@
-import { resolve } from 'path'
 import { fileURLToPath } from 'url'
+import { resolve } from 'pathe'
 
 export const distDir = resolve(fileURLToPath(import.meta.url), '../../dist')
 

@@ -1,4 +1,4 @@
-import type { SnapshotResult, SnapshotSummary, ResolvedConfig, SnapshotStateOptions } from '../../types'
+import type { ResolvedConfig, SnapshotResult, SnapshotStateOptions, SnapshotSummary } from '../../types'
 
 export class SnapshotManager {
   summary: SnapshotSummary = undefined!

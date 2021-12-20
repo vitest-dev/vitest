@@ -1,8 +1,8 @@
 import { builtinModules, createRequire } from 'module'
 import { fileURLToPath, pathToFileURL } from 'url'
-import { basename, dirname, resolve } from 'path'
-import vm from 'vm'
 import { existsSync, readdirSync } from 'fs'
+import vm from 'vm'
+import { basename, dirname, resolve } from 'pathe'
 import { isValidNodeImport } from 'mlly'
 import type { ModuleCache } from '../types'
 import { slash } from '../utils'
@@ -56,16 +56,21 @@ export const stubRequests: Record<string, any> = {
 export async function interpretedImport(path: string, interpretDefault: boolean) {
   const mod = await import(path)
 
-  if (interpretDefault && '__esModule' in mod && 'default' in mod) {
-    const defaultExport = mod.default
-    if (!('default' in defaultExport)) {
-      Object.defineProperty(defaultExport, 'default', {
-        enumerable: true,
-        configurable: true,
-        get() { return defaultExport },
-      })
-    }
-    return defaultExport
+  if (interpretDefault && 'default' in mod) {
+    return new Proxy(mod, {
+      get(target, key, receiver) {
+        return Reflect.get(target, key, receiver) || Reflect.get(target.default, key, receiver)
+      },
+      set(target, key, value, receiver) {
+        return Reflect.set(target, key, value, receiver) || Reflect.set(target.default, key, value, receiver)
+      },
+      has(target, key) {
+        return Reflect.has(target, key) || Reflect.has(target.default, key)
+      },
+      deleteProperty(target, key) {
+        return Reflect.deleteProperty(target, key) || Reflect.deleteProperty(target.default, key)
+      },
+    })
   }
 
   return mod
@@ -210,7 +215,7 @@ export async function executeInViteNode(options: ExecuteOptions) {
       },
     }
 
-    const fn = vm.runInThisContext(`async (${Object.keys(context).join(',')})=>{${transformed}\n}`, {
+    const fn = vm.runInThisContext(`async (${Object.keys(context).join(',')})=>{{${transformed}\n}}`, {
       filename: fsPath,
       lineOffset: 0,
     })
@@ -236,7 +241,7 @@ export async function executeInViteNode(options: ExecuteOptions) {
     const id = normalizeId(rawId)
 
     if (externalCache.get(id))
-      return interpretedImport(id, options.interpretDefault)
+      return interpretedImport(patchWindowsImportPath(id), options.interpretDefault)
 
     const fsPath = toFilePath(id, root)
     const importPath = patchWindowsImportPath(fsPath)
@@ -330,6 +335,8 @@ function matchExternalizePattern(id: string, patterns: (string | RegExp)[]) {
 function patchWindowsImportPath(path: string) {
   if (path.match(/^\w:\\/))
     return `file:///${slash(path)}`
+  else if (path.match(/^\w:\//))
+    return `file:///${path}`
   else
     return path
 }

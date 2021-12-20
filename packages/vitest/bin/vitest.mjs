@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { fileURLToPath } from 'url'
-import { resolve } from 'path'
+import { resolve } from 'pathe'
 import { ensurePackageInstalled } from '../dist/utils.js'
 
 const argv = process.argv.slice(2)

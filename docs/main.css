@@ -1,5 +1,6 @@
 :root {
   --c-brand: #ca931c;
+  --c-accent: #729B1B;
   --font-family-base: "Readex Pro", ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont, sans-serif;
   --bg-gradient: 255,255,255;
 }
@@ -10,6 +11,7 @@
     --c-text: #fff !important;
     --c-text-light: #fdd888 !important;
     --c-brand: #fdd888 !important;
+    --c-accent: #90C321 !important;
     --bg-gradient: 20,20,20 !important;
   }
 }
@@ -62,4 +64,15 @@ main.home {
 .nav-bar-title .logo {
   height: 1.5em !important;
   margin-right: 0.5rem !important;
+}
+
+/* Overrides */
+
+.home-content {
+  max-width: 1800px !important;
+}
+
+.custom-block.tip {
+  border-color: var(--c-accent) !important;
+  background-color: #90C32130 !important;
 }

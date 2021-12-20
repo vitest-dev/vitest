@@ -9,8 +9,8 @@ test('snapshot', () => {
 test('inline snapshot', () => {
   expect('inline string').toMatchInlineSnapshot('"inline string"')
   expect({ foo: { type: 'object', map: new Map() } }).toMatchInlineSnapshot(`
-Object {
-  "foo": Object {
+{
+  "foo": {
     "map": Map {},
     "type": "object",
   },

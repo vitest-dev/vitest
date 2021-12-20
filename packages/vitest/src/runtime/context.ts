@@ -1,4 +1,4 @@
-import type { Awaitable, TestFunction, RuntimeContext, SuiteCollector, DoneCallback } from '../types'
+import type { Awaitable, DoneCallback, RuntimeContext, SuiteCollector, TestFunction } from '../types'
 
 export const context: RuntimeContext = {
   tasks: [],

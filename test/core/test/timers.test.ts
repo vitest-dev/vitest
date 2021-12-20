@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
 
-import { vi, test, expect } from 'vitest'
+import { expect, test, vi } from 'vitest'
 
 test('timers order: i -> t', () => {
   const res: string[] = []

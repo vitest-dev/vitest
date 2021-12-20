@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import path from 'path'
 import fs from 'fs'
+import path from 'pathe'
 import naturalCompare from 'natural-compare'
 import type { OptionsReceived as PrettyFormatOptions } from 'pretty-format'
 import {

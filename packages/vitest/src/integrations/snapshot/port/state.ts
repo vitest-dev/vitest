@@ -73,7 +73,10 @@ export default class SnapshotState {
     this.unmatched = 0
     this._updateSnapshot = options.updateSnapshot
     this.updated = 0
-    this._snapshotFormat = options.snapshotFormat || {}
+    this._snapshotFormat = {
+      printBasicPrototype: false,
+      ...options.snapshotFormat,
+    }
   }
 
   markSnapshotsAsCheckedForTest(testName: string): void {

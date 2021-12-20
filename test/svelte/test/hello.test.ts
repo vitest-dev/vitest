@@ -1,4 +1,4 @@
-import { render, fireEvent, cleanup } from '@testing-library/svelte'
+import { cleanup, fireEvent, render } from '@testing-library/svelte'
 import Hello from '../components/Hello.svelte'
 
 const { click } = fireEvent

@@ -1,9 +1,11 @@
 import { MessageChannel } from 'worker_threads'
 import { pathToFileURL } from 'url'
-import Piscina from 'piscina'
+import { resolve } from 'pathe'
+import type { Options as TinypoolOptions } from 'tinypool'
+import { Tinypool } from 'tinypool'
 import type { RpcMap } from 'vitest'
 import { distDir } from '../constants'
-import type { WorkerContext, RpcPayload, File, Awaitable } from '../types'
+import type { Awaitable, File, RpcPayload, WorkerContext } from '../types'
 import { transformRequest } from './transform'
 import type { Vitest } from './index'
 
@@ -15,18 +17,6 @@ export interface WorkerPool {
   close: () => Promise<void>
 }
 
-// UPSTREAM: Piscina does not expose this type
-interface PiscinaOptions {
-  filename?: string | null
-  name?: string
-  minThreads?: number
-  maxThreads?: number
-  idleTimeout?: number
-  maxQueue?: number | 'auto'
-  concurrentTasksPerWorker?: number
-  useAtomics?: boolean
-}
-
 export function createPool(ctx: Vitest): WorkerPool {
   if (ctx.config.threads)
     return createWorkerPool(ctx)
@@ -34,7 +24,7 @@ export function createPool(ctx: Vitest): WorkerPool {
     return createFakePool(ctx)
 }
 
-const workerPath = new URL('./dist/worker.js', pathToFileURL(distDir)).href
+const workerPath = pathToFileURL(resolve(distDir, './worker.js')).href
 
 export function createFakePool(ctx: Vitest): WorkerPool {
   const runWithFiles = (name: 'run' | 'collect'): RunWithFiles => {
@@ -65,20 +55,20 @@ export function createFakePool(ctx: Vitest): WorkerPool {
 }
 
 export function createWorkerPool(ctx: Vitest): WorkerPool {
-  const options: PiscinaOptions = {
+  const options: TinypoolOptions = {
     filename: workerPath,
     // Disable this for now, for WebContainer capability
     // https://github.com/antfu-sponsors/vitest/issues/93
     // In future we could conditionally enable it based on the env
     useAtomics: false,
   }
-  // UPSTREAM: Piscina set defaults by the key existence
+  // UPSTREAM: Tinypool set defaults by the key existence
   if (ctx.config.maxThreads != null)
     options.maxThreads = ctx.config.maxThreads
   if (ctx.config.minThreads != null)
     options.minThreads = ctx.config.minThreads
 
-  const piscina = new Piscina(options)
+  const pool = new Tinypool(options)
 
   const runWithFiles = (name: string): RunWithFiles => {
     return async(files, invalidates) => {
@@ -92,7 +82,7 @@ export function createWorkerPool(ctx: Vitest): WorkerPool {
           invalidates,
         }
 
-        await piscina.run(data, { transferList: [workerPort], name })
+        await pool.run(data, { transferList: [workerPort], name })
         port.close()
         workerPort.close()
       }))
@@ -102,7 +92,7 @@ export function createWorkerPool(ctx: Vitest): WorkerPool {
   return {
     runTests: runWithFiles('run'),
     collectTests: runWithFiles('collect'),
-    close: () => piscina.destroy(),
+    close: () => pool.destroy(),
   }
 }
 

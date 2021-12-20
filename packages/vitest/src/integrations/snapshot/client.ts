@@ -1,4 +1,4 @@
-import path from 'path'
+import path from 'pathe'
 import { expect } from 'chai'
 import type { SnapshotResult, Test } from '../../types'
 import { rpc } from '../../runtime/rpc'
@@ -49,11 +49,14 @@ export class SnapshotClient {
     this.test = undefined
   }
 
-  assert(received: unknown, message: string, inlineSnapshot?: string): void {
+  assert(received: unknown, message?: string, inlineSnapshot?: string): void {
     if (!this.test)
       throw new Error('Snapshot cannot be used outside of test')
 
-    const testName = getNames(this.test).slice(1).join(' > ')
+    const testName = [
+      ...getNames(this.test).slice(1),
+      ...(message ? [message] : []),
+    ].join(' > ')
     const { actual, expected, key, pass } = this.snapshotState!.match({
       testName,
       received,

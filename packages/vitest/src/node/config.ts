@@ -1,6 +1,6 @@
-import { resolve } from 'path'
+import { resolve } from 'pathe'
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
-import type { UserConfig, ResolvedConfig } from '../types'
+import type { ResolvedConfig, UserConfig } from '../types'
 import { defaultExclude, defaultInclude, defaultPort } from '../constants'
 
 export function resolveConfig(
@@ -25,6 +25,8 @@ export function resolveConfig(
 
   resolved.include = resolved.include ?? defaultInclude
   resolved.exclude = resolved.exclude ?? defaultExclude
+
+  resolved.watchIgnore = resolved.watchIgnore ?? [/\/node_modules\//, /\/dist\//]
 
   const CI = !!process.env.CI
   const UPDATE_SNAPSHOT = resolved.update || process.env.UPDATE_SNAPSHOT

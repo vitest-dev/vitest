@@ -1,4 +1,4 @@
-import { beforeEach, suite, it, expect, beforeAll } from 'vitest'
+import { beforeAll, beforeEach, expect, it, suite } from 'vitest'
 
 let count = 0
 

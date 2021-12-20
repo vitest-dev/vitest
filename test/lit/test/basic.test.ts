@@ -18,7 +18,7 @@ describe('Button with increment', async() => {
     await window.happyDOM.whenAsyncComplete()
   })
 
-  function getInsideButton(): HTMLElement | null {
+  function getInsideButton(): HTMLElement | null | undefined {
     return document.body.querySelector('my-button')?.shadowRoot?.querySelector('button')
   }
 
@@ -29,13 +29,13 @@ describe('Button with increment', async() => {
 
   it('should show name props', () => {
     getInsideButton()
-    expect(document.body.querySelector('my-button')?.shadowRoot?.innerHTML).to.contain('World')
+    expect(document.body.querySelector('my-button')?.shadowRoot?.innerHTML).toContain('World')
   })
 
   it('should dispatch count event on button click', () => {
     const spyClick = spy()
 
-    document.querySelector('my-button').addEventListener('count', spyClick)
+    document.querySelector('my-button')!.addEventListener('count', spyClick)
 
     getInsideButton()?.click()
 

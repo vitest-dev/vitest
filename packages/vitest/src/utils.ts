@@ -1,7 +1,7 @@
 import c from 'picocolors'
 import { isPackageExists } from 'local-pkg'
 import { spies } from 'tinyspy'
-import type { Suite, Test, Task, Arrayable, Nullable } from './types'
+import type { Arrayable, Nullable, Suite, Task, Test } from './types'
 
 /**
  * Convert `Arrayable<T>` to `Array<T>`
@@ -119,7 +119,7 @@ export async function ensurePackageInstalled(dependency: string, promptInstall =
   })
 
   if (install) {
-    await (await import('@antfu/install-pkg')).installPackage(dependency)
+    await (await import('@antfu/install-pkg')).installPackage(dependency, { dev: true })
     return true
   }
 

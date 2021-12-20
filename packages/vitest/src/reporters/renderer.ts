@@ -1,4 +1,4 @@
-import { basename, dirname, isAbsolute, relative } from 'path'
+import { basename, dirname, isAbsolute, relative } from 'pathe'
 import { createLogUpdate } from 'log-update'
 import c from 'picocolors'
 import cliTruncate from 'cli-truncate'

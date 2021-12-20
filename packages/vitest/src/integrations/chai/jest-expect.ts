@@ -243,7 +243,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   })
   def(['toHaveBeenLastCalledWith', 'lastCalledWith'], function(...args: any[]) {
     const spy = getSpy(this)
-    const lastCall = spy.calls.at(-1)
+    const lastCall = spy.calls[spy.calls.length - 1]
 
     this.assert(
       asymmetricEquals(lastCall, args),
@@ -295,7 +295,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   })
   def(['toHaveLastReturnedWith', 'lastReturnedWith'], function(value: any) {
     const spy = getSpy(this)
-    const lastResult = spy.returns.at(-1)
+    const lastResult = spy.returns[spy.returns.length - 1]
     const pass = asymmetricEquals(lastResult, value)
     this.assert(
       pass,

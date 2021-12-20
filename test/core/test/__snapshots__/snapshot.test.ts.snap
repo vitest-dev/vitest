@@ -1,8 +1,8 @@
 // Vitest Snapshot v1
 
 exports[`snapshot 1`] = `
-Object {
-  "this": Object {
+{
+  "this": {
     "is": Set {
       "of",
       "snapshot",
@@ -12,41 +12,41 @@ Object {
 `;
 
 exports[`snapshot with big array 1`] = `
-Object {
-  "this": Object {
+{
+  "this": {
     "is": Set {
       "one",
-      Array [
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
+      [
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
       ],
     },
   },
@@ -54,8 +54,8 @@ Object {
 `;
 
 exports[`snapshot with big string 1`] = `
-Object {
-  "this": Object {
+{
+  "this": {
     "is": Set {
       "one",
       "zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo",

@@ -1,5 +1,5 @@
-import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
+import { dirname, resolve } from 'pathe'
 import type { Plugin } from 'vite'
 import sirv from 'sirv'
 import { WebSocketServer } from 'ws'

@@ -30,7 +30,7 @@ ESM first, top level await
 
 ## Threads
 
-Workers multi-threading via [Piscina](https://github.com/piscinajs/piscina)
+Workers multi-threading via [tinypool](https://github.com/Aslemammad/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina))
 
 ## Filtering
 

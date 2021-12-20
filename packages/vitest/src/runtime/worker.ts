@@ -1,6 +1,6 @@
-import { resolve } from 'path'
+import { resolve } from 'pathe'
 import { nanoid } from 'nanoid/non-secure'
-import type { WorkerContext, ResolvedConfig, ModuleCache } from '../types'
+import type { ModuleCache, ResolvedConfig, WorkerContext } from '../types'
 import { distDir } from '../constants'
 import { executeInViteNode } from '../node/execute'
 import { send } from './rpc'

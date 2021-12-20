@@ -20,9 +20,6 @@ export interface RpcMap {
   onFinished: [[], void]
   onTaskUpdate: [[pack: TaskResultPack], void]
 
-  onWatcherStart: [[], void]
-  onWatcherRerun: [[files: string[], trigger: string], void]
-
   snapshotSaved: [[snapshot: SnapshotResult], void]
 }
 

@@ -1,12 +1,12 @@
 /* eslint-disable prefer-template */
 /* eslint-disable no-template-curly-in-string */
-import { promises as fs, existsSync } from 'fs'
-import { relative } from 'path'
+import { existsSync, promises as fs } from 'fs'
 import { format } from 'util'
+import { relative } from 'pathe'
 import c from 'picocolors'
 import * as diff from 'diff'
-import type { RawSourceMap } from 'source-map'
-import { SourceMapConsumer } from 'source-map'
+import type { RawSourceMap } from 'source-map-js'
+import { SourceMapConsumer } from 'source-map-js'
 import cliTruncate from 'cli-truncate'
 import { notNullish } from '../utils'
 import type { Vitest } from '../node'
@@ -105,7 +105,7 @@ function handleImportOutsideModuleError(stack: string, ctx: Vitest) {
 async function getSourcePos(ctx: Vitest, nearest: ParsedStack) {
   const mod = ctx.server.moduleGraph.getModuleById(nearest.file)
   const transformResult = mod?.ssrTransformResult
-  const pos = await getOriginalPos(transformResult?.map, nearest)
+  const pos = await getOriginalPos(transformResult?.map as RawSourceMap | undefined, nearest)
   return pos
 }
 
@@ -134,14 +134,16 @@ async function printStack(
     const color = frame === highlight ? c.yellow : c.gray
     const path = relative(ctx.config.root, frame.file)
 
-    ctx.console.log(color(` ${c.dim(F_POINTER)} ${[frame.method, c.dim(`${path}:${pos.line}:${pos.column}`)].filter(Boolean).join(' ')}`))
+    if (!ctx.config.silent)
+      ctx.console.log(color(` ${c.dim(F_POINTER)} ${[frame.method, c.dim(`${path}:${pos.line}:${pos.column}`)].filter(Boolean).join(' ')}`))
     await onStack?.(frame, pos)
 
     // reached at test file, skip the follow stack
     if (frame.file in ctx.state.filesMap)
       break
   }
-  ctx.console.log()
+  if (!ctx.config.silent)
+    ctx.console.log()
 }
 
 function getOriginalPos(map: RawSourceMap | null | undefined, { line, column }: Position): Promise<Position | null> {
@@ -149,13 +151,12 @@ function getOriginalPos(map: RawSourceMap | null | undefined, { line, column }: 
     if (!map)
       return resolve(null)
 
-    SourceMapConsumer.with(map, null, (consumer) => {
-      const pos = consumer.originalPositionFor({ line, column })
-      if (pos.line != null && pos.column != null)
-        resolve(pos as Position)
-      else
-        resolve(null)
-    })
+    const consumer = new SourceMapConsumer(map)
+    const pos = consumer.originalPositionFor({ line, column })
+    if (pos.line != null && pos.column != null)
+      resolve(pos as Position)
+    else
+      resolve(null)
   })
 }
 
@@ -314,34 +315,51 @@ export function unifiedDiff(actual: any, expected: any) {
   let expectedLinesCount = 0
   let actualLinesCount = 0
 
-  function cleanUp(line: string) {
+  function preprocess(line: string) {
     if (line[0] === '+') {
       if (expectedLinesCount >= diffLimit) return
       expectedLinesCount++
+      return (compact?: boolean) => {
+        if (compact)
+          return c.red(formatLine(line.slice(1)))
 
-      line = line[0] + ' ' + line.slice(1)
-      const isLastLine = expectedLinesCount === diffLimit
-      return indent + c.red(`${formatLine(line)} ${isLastLine ? renderTruncateMessage(indent) : ''}`)
+        line = line[0] + ' ' + line.slice(1)
+        const isLastLine = expectedLinesCount === diffLimit
+        return indent + c.red(`${formatLine(line)} ${isLastLine ? renderTruncateMessage(indent) : ''}`)
+      }
     }
     if (line[0] === '-') {
       if (actualLinesCount >= diffLimit) return
       actualLinesCount++
+      return (compact?: boolean) => {
+        if (compact)
+          return c.green(formatLine(line.slice(1)))
 
-      line = line[0] + ' ' + line.slice(1)
-      const isLastLine = actualLinesCount === diffLimit
-      return indent + c.green(`${formatLine(line)} ${isLastLine ? renderTruncateMessage(indent) : ''}`)
+        line = line[0] + ' ' + line.slice(1)
+        const isLastLine = actualLinesCount === diffLimit
+        return indent + c.green(`${formatLine(line)} ${isLastLine ? renderTruncateMessage(indent) : ''}`)
+      }
     }
     if (line.match(/@@/))
-      return '--'
+      return () => '--'
     if (line.match(/\\ No newline/))
       return null
-    return indent + ' ' + line
+    return () => indent + ' ' + line
   }
   const msg = diff.createPatch('string', actual, expected)
   const lines = msg.split('\n').splice(5)
+  const cleanLines = lines.map(preprocess).filter(notBlank) as ((compact?: boolean) => string)[]
+
+  // Compact mode
+  if (expectedLinesCount === 1 && actualLinesCount === 1) {
+    return (
+      `\n${indent}${c.green('- expected')}   ${cleanLines[0](true)}\n${indent}${c.red('+ actual')}     ${cleanLines[1](true)}`
+    )
+  }
+
   return (
     `\n${indent}${c.green('- expected')}\n${indent}${c.red('+ actual')}\n\n${
-      lines.map(cleanUp).filter(notBlank).join('\n')}`
+      cleanLines.map(l => l()).join('\n')}`
   )
 }
 
