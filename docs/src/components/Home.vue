@@ -84,7 +84,7 @@
         avatar="https://avatars.githubusercontent.com/u/16173870?v=4"
         github="sheremet-va"
       >
-        TODO: Add bio
+        An open source fullstack developer
       </Avatar>
     </div>
     <h3 id="the-team" op50 font-normal pt-5 pb-2>
