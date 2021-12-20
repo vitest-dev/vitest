@@ -26,6 +26,7 @@ main.home ul > li:hover {
 
 main.home {
   position: relative;
+  overflow-x: hidden;
 }
 
 main.home::before {
