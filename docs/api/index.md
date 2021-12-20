@@ -166,7 +166,7 @@ These global functions allows you to hook into the life cycle of tests to avoid 
 
 Register a callback to be called before each test in the current context.
 
-**Type:** `afterAll(fn: () => Awaitable<void>, timeout: number)`
+**Type:** `beforeEach(fn: () => Awaitable<void>, timeout: number)`
 
 ### afterEach
 
