@@ -210,7 +210,7 @@ function enhanceSpy<TArgs extends any[], TReturns>(
     stub.mockImplementation(() => Promise.reject(val))
 
   stub.mockRejectedValueOnce = (val: unknown) =>
-    stub.mockImplementation(() => Promise.reject(val))
+    stub.mockImplementationOnce(() => Promise.reject(val))
 
   util.addProperty(stub, 'mock', () => mockContext)
 
