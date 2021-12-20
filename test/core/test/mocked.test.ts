@@ -1,4 +1,4 @@
-import { vitest, test, assert, vi, expect } from 'vitest'
+import { assert, expect, test, vi, vitest } from 'vitest'
 import { two } from '../src/submodule'
 import * as mocked from '../src/mockedA'
 import { mockedB } from '../src/mockedB'
