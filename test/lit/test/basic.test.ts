@@ -9,6 +9,19 @@ declare global {
 
 describe('Button with increment', async() => {
   beforeEach(async() => {
+    Object.defineProperty(Element.prototype, 'localName', {
+      /**
+       * Local name.
+       *
+       * @returns Local name.
+       */
+      get() {
+        return this.tagName?.toLowerCase() ?? 'unknown'
+      },
+      enumerable: false,
+      configurable: true,
+    })
+
     document.body.innerHTML = ''
 
     await window.happyDOM.whenAsyncComplete()
