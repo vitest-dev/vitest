@@ -95,6 +95,10 @@ export default defineConfig({
               text: 'Features',
               link: '/guide/features'
             },
+            {
+              text: 'Mocking',
+              link: '/guide/mocking'
+            },
             /* TODO
             {
               text: 'Using Plugins',

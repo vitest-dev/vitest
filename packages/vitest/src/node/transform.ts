@@ -1,6 +1,23 @@
 import type { TransformResult, ViteDevServer } from 'vite'
 
+const promiseMap = new Map<string, Promise<TransformResult | null>>()
+
 export async function transformRequest(server: ViteDevServer, id: string) {
+  // reuse transform for concurrent requests
+  if (!promiseMap.has(id)) {
+    promiseMap.set(id,
+      _transformRequest(server, id)
+        .then((r) => {
+          promiseMap.delete(id)
+          return r
+        },
+        ),
+    )
+  }
+  return promiseMap.get(id)
+}
+
+async function _transformRequest(server: ViteDevServer, id: string) {
   let result: TransformResult | null = null
 
   if (id.match(/\.(?:[cm]?[jt]sx?|json)$/)) {

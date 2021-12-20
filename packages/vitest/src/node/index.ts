@@ -4,6 +4,7 @@ import { createServer, mergeConfig } from 'vite'
 import { findUp } from 'find-up'
 import fg from 'fast-glob'
 import mm from 'micromatch'
+import c from 'picocolors'
 import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig } from '../types'
 import { SnapshotManager } from '../integrations/snapshot/manager'
 import { configFiles, defaultPort } from '../constants'
@@ -68,8 +69,8 @@ class Vitest {
     const files = await this.globTestFiles(filters)
 
     if (!files.length) {
-      console.error('No test files found')
-      process.exitCode = 1
+      this.error(c.red('No test files found\n'))
+      process.exit(1)
     }
 
     await this.runFiles(files)
@@ -99,6 +100,18 @@ class Vitest {
       })
 
     return await this.runningPromise
+  }
+
+  log(...args: any[]) {
+    if (this.config.silent)
+      return
+    this.console.log(...args)
+  }
+
+  error(...args: any[]) {
+    if (this.config.silent)
+      return
+    this.console.error(...args)
   }
 
   private _rerunTimer: any

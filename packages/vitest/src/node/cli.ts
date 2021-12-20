@@ -104,7 +104,6 @@ function registerConsoleShortcuts(ctx: Vitest) {
         process.exit()
 
       // TODO: add more commands
-      // console.log(str, key)
     })
   }
 }

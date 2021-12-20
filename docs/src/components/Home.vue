@@ -113,6 +113,12 @@
         </a>
       </div>
     </div>
+
+    <p class="text-center opacity-75">
+      <a href="https://www.netlify.com">
+        <img src="/netlify.svg" alt="Deploys by Netlify">
+      </a>
+    </p>
     <div mb-30 />
   </div>
 </template>

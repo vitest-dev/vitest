@@ -6,15 +6,6 @@ export default defineConfig({
   plugins: [
     Vue2(),
     ScriptSetup(),
-    // {
-    //   transform(code, id) {
-    //     if (id.endsWith('.vue')) {
-    //       console.log({
-    //         code, id,
-    //       })
-    //     }
-    //   },
-    // },
   ],
   test: {
     global: true,

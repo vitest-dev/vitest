@@ -16,21 +16,9 @@ export class ConsoleReporter implements Reporter {
   renderer?: ReturnType<typeof createRenderer>
   watchFilters?: string[]
 
-  log(...args: any[]) {
-    if (this.ctx.config.silent)
-      return
-    this.ctx.console.log(...args)
-  }
-
-  error(...args: any[]) {
-    if (this.ctx.config.silent)
-      return
-    this.ctx.console.error(...args)
-  }
-
   constructor(public ctx: Vitest) {
     const mode = ctx.config.watch ? c.yellow(' DEV ') : c.cyan(' RUN ')
-    this.log(`\n${c.inverse(c.bold(mode))} ${c.gray(this.ctx.config.root)}\n`)
+    this.ctx.log(`\n${c.inverse(c.bold(mode))} ${c.gray(this.ctx.config.root)}\n`)
     this.start = performance.now()
   }
 
@@ -54,9 +42,9 @@ export class ConsoleReporter implements Reporter {
 
     const task = this.ctx.state.idMap[pack[0]]
     if (task.type === 'test' && task.result?.state && task.result?.state !== 'run') {
-      this.log(` ${getStateSymbol(task)} ${getFullName(task)}`)
+      this.ctx.log(` ${getStateSymbol(task)} ${getFullName(task)}`)
       if (task.result.state === 'fail')
-        this.log(c.red(`   ${F_RIGHT} ${(task.result.error as any)?.message}`))
+        this.ctx.log(c.red(`   ${F_RIGHT} ${(task.result.error as any)?.message}`))
     }
   }
 
@@ -65,7 +53,7 @@ export class ConsoleReporter implements Reporter {
 
     await this.stopListRender()
 
-    this.log()
+    this.ctx.log()
 
     const suites = getSuites(files)
     const tests = getTests(files)
@@ -76,23 +64,23 @@ export class ConsoleReporter implements Reporter {
 
     let current = 1
 
-    const errorDivider = () => this.error(`${c.red(c.dim(divider(`[${current++}/${failedTotal}]`, undefined, 1)))}\n`)
+    const errorDivider = () => this.ctx.error(`${c.red(c.dim(divider(`[${current++}/${failedTotal}]`, undefined, 1)))}\n`)
 
     if (failedSuites.length) {
-      this.error(c.red(divider(c.bold(c.inverse(` Failed Suites ${failedSuites.length} `)))))
-      this.error()
+      this.ctx.error(c.red(divider(c.bold(c.inverse(` Failed Suites ${failedSuites.length} `)))))
+      this.ctx.error()
       for (const suite of failedSuites) {
-        this.error(c.red(`\n- ${getFullName(suite)}`))
+        this.ctx.error(c.red(`\n- ${getFullName(suite)}`))
         await printError(suite.result?.error, this.ctx)
         errorDivider()
       }
     }
 
     if (failedTests.length) {
-      this.error(c.red(divider(c.bold(c.inverse(` Failed Tests ${failedTests.length} `)))))
-      this.error()
+      this.ctx.error(c.red(divider(c.bold(c.inverse(` Failed Tests ${failedTests.length} `)))))
+      this.ctx.error()
       for (const test of failedTests) {
-        this.error(`${c.red(c.bold(c.inverse(' FAIL ')))} ${getFullName(test)}`)
+        this.ctx.error(`${c.red(c.bold(c.inverse(' FAIL ')))} ${getFullName(test)}`)
         await printError(test.result?.error, this.ctx)
         errorDivider()
       }
@@ -110,22 +98,22 @@ export class ConsoleReporter implements Reporter {
 
     const snapshotOutput = renderSnapshotSummary(this.ctx.config.root, this.ctx.snapshot.summary)
     if (snapshotOutput.length) {
-      this.log(snapshotOutput.map((t, i) => i === 0
+      this.ctx.log(snapshotOutput.map((t, i) => i === 0
         ? `${padTitle('Snapshots')} ${t}`
         : `${padTitle('')} ${t}`,
       ).join('\n'))
       if (snapshotOutput.length > 1)
-        this.log()
+        this.ctx.log()
     }
 
-    this.log(padTitle('Test Files'), getStateString(files))
-    this.log(padTitle('Tests'), getStateString(tests))
+    this.ctx.log(padTitle('Test Files'), getStateString(files))
+    this.ctx.log(padTitle('Tests'), getStateString(tests))
     if (this.watchFilters)
-      this.log(padTitle('Time'), time(threadTime))
+      this.ctx.log(padTitle('Time'), time(threadTime))
     else
-      this.log(padTitle('Time'), time(executionTime) + c.gray(` (in thread ${time(threadTime)}, ${(executionTime / threadTime * 100).toFixed(2)}%)`))
+      this.ctx.log(padTitle('Time'), time(executionTime) + c.gray(` (in thread ${time(threadTime)}, ${(executionTime / threadTime * 100).toFixed(2)}%)`))
 
-    this.log()
+    this.ctx.log()
   }
 
   isFirstWatchRun = true
@@ -135,13 +123,13 @@ export class ConsoleReporter implements Reporter {
 
     const failed = getTests(this.ctx.state.getFiles()).filter(i => i.result?.state === 'fail')
     if (failed.length)
-      this.log(`\n${c.bold(c.inverse(c.red(' FAIL ')))}${c.red(` ${failed.length} tests failed. Watching for file changes...`)}`)
+      this.ctx.log(`\n${c.bold(c.inverse(c.red(' FAIL ')))}${c.red(` ${failed.length} tests failed. Watching for file changes...`)}`)
     else
-      this.log(`\n${c.bold(c.inverse(c.green(' PASS ')))}${c.green(' Waiting for file changes...')}`)
+      this.ctx.log(`\n${c.bold(c.inverse(c.green(' PASS ')))}${c.green(' Waiting for file changes...')}`)
 
     if (this.isFirstWatchRun) {
       this.isFirstWatchRun = false
-      this.log(c.gray('press any key to exit...'))
+      this.ctx.log(c.gray('press any key to exit...'))
     }
   }
 
@@ -152,7 +140,7 @@ export class ConsoleReporter implements Reporter {
 
     if (!this.ctx.config.silent) {
       this.ctx.console.clear()
-      this.log(c.blue('Re-running tests...') + c.dim(` [ ${this.relative(trigger)} ]\n`))
+      this.ctx.log(c.blue('Re-running tests...') + c.dim(` [ ${this.relative(trigger)} ]\n`))
     }
   }
 
@@ -165,11 +153,11 @@ export class ConsoleReporter implements Reporter {
   onUserConsoleLog(log: UserConsoleLog) {
     this.renderer?.clear()
     const task = log.taskId ? this.ctx.state.idMap[log.taskId] : undefined
-    this.log(c.gray(log.type + c.dim(` | ${task ? getFullName(task) : 'unknown test'}`)))
+    this.ctx.log(c.gray(log.type + c.dim(` | ${task ? getFullName(task) : 'unknown test'}`)))
     process[log.type].write(`${log.content}\n`)
   }
 
   onServerRestart() {
-    this.log(c.cyan('Restarted due to config changes...'))
+    this.ctx.log(c.cyan('Restarted due to config changes...'))
   }
 }
