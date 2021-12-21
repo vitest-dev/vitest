@@ -1,6 +1,7 @@
 import c from 'picocolors'
 import { isPackageExists } from 'local-pkg'
 import { resolve } from 'pathe'
+import { vi } from './integrations/utils'
 import type { Arrayable, Nullable, Suite, Task, Test } from './types'
 
 /**
@@ -21,6 +22,10 @@ export function notNullish<T>(v: T | null | undefined): v is NonNullable<T> {
 
 export function slash(str: string) {
   return str.replace(/\\/g, '/')
+}
+
+export function mergeSlashes(str: string) {
+  return str.replace(/\/\//g, '/')
 }
 
 export const noop = () => {}
@@ -127,6 +132,18 @@ export async function ensurePackageInstalled(
   }
 
   return false
+}
+
+export function clearModuleMocks() {
+  const { clearMocks, mockReset, restoreMocks } = process.__vitest_worker__.config
+
+  // since each function calls another, we can just call one
+  if (restoreMocks)
+    vi.restoreAllMocks()
+  else if (mockReset)
+    vi.resetAllMocks()
+  else if (clearMocks)
+    vi.clearAllMocks()
 }
 
 export { resolve as resolvePath }

@@ -48,6 +48,60 @@ export interface JestMockCompatFn<TArgs extends any[] = any, TReturns = any> ext
   (...args: TArgs): TReturns
 }
 
+export type MockableFunction = (...args: Array<any>) => any
+export type MethodKeysOf<T> = {
+  [K in keyof T]: T[K] extends MockableFunction ? K : never;
+}[keyof T]
+export type PropertyKeysOf<T> = {
+  [K in keyof T]: T[K] extends MockableFunction ? never : K;
+}[keyof T]
+
+export type ArgumentsOf<T> = T extends (...args: infer A) => any ? A : never
+
+export type ConstructorArgumentsOf<T> = T extends new (...args: infer A) => any
+  ? A
+  : never
+export type MaybeMockedConstructor<T> = T extends new (
+  ...args: Array<any>
+) => infer R
+  ? JestMockCompatFn<ConstructorArgumentsOf<T>, R>
+  : T
+export type MockedFunction<T extends MockableFunction> = MockWithArgs<T> & {
+  [K in keyof T]: T[K];
+}
+export type MockedFunctionDeep<T extends MockableFunction> = MockWithArgs<T> &
+MockedObjectDeep<T>
+export type MockedObject<T> = MaybeMockedConstructor<T> & {
+  [K in MethodKeysOf<T>]: T[K] extends MockableFunction
+    ? MockedFunction<T[K]>
+    : T[K];
+} & {[K in PropertyKeysOf<T>]: T[K]}
+export type MockedObjectDeep<T> = MaybeMockedConstructor<T> & {
+  [K in MethodKeysOf<T>]: T[K] extends MockableFunction
+    ? MockedFunctionDeep<T[K]>
+    : T[K];
+} & {[K in PropertyKeysOf<T>]: MaybeMockedDeep<T[K]>}
+
+export type MaybeMockedDeep<T> = T extends MockableFunction
+  ? MockedFunctionDeep<T>
+  : T extends object
+    ? MockedObjectDeep<T>
+    : T
+
+export type MaybeMocked<T> = T extends MockableFunction
+  ? MockedFunction<T>
+  : T extends object
+    ? MockedObject<T>
+    : T
+
+export interface MockWithArgs<T extends MockableFunction>
+  extends JestMockCompatFn<ArgumentsOf<T>, ReturnType<T>> {
+  new (...args: ConstructorArgumentsOf<T>): T
+  (...args: ArgumentsOf<T>): ReturnType<T>
+}
+
+export const spies = new Set<JestMockCompat>()
+
 export function spyOn<T, K extends keyof T>(
   obj: T,
   method: K,
@@ -116,14 +170,14 @@ function enhanceSpy<TArgs extends any[], TReturns>(
 
   stub.mockReset = () => {
     stub.reset()
+    implementation = () => undefined as unknown as TReturns
+    onceImplementations = []
     return stub
   }
 
   stub.mockRestore = () => {
+    stub.mockReset()
     implementation = undefined
-    onceImplementations = []
-    stub.reset()
-    ;(stub as unknown as SpyImpl).restore()
     return stub
   }
 
@@ -156,7 +210,7 @@ function enhanceSpy<TArgs extends any[], TReturns>(
     stub.mockImplementation(() => Promise.reject(val))
 
   stub.mockRejectedValueOnce = (val: unknown) =>
-    stub.mockImplementation(() => Promise.reject(val))
+    stub.mockImplementationOnce(() => Promise.reject(val))
 
   util.addProperty(stub, 'mock', () => mockContext)
 
@@ -165,6 +219,8 @@ function enhanceSpy<TArgs extends any[], TReturns>(
     const impl = onceImplementations.shift() || implementation || stub.getOriginal() || (() => {})
     return impl.apply(this, args)
   })
+
+  spies.add(stub)
 
   return stub as any
 }
