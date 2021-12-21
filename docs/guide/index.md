@@ -22,6 +22,29 @@ $ npm install -D vitest
 Vitest requires Vite v2.7 and Node v14
 :::
 
+## Configuring Vitest
+
+One of the main advantages of Vitest is its unified configuration with Vite. If present, `vitest` will read your root `vite.config.ts` to match with the plugins and setup as your Vite app. For example, your Vite [resolve.alias](https://vitejs.dev/config/#resolve-alias) and [plugins](https://vitejs.dev/guide/using-plugins.html) configuration will work out-of-the-box. If you want a different configuration during testing, you can:
+
+- Create `vitest.config.ts`, which will have the higher priority
+- Pass `--config` option to CLI, e.g. `vitest --config ./path/to/vitest.config.ts`
+- Use `process.env.VITEST` to conditionally apply different configuration in `vite.config.ts`
+
+To configure `vitest` itself, add `test` property in your Vite config
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  test: {
+    // ...
+  },
+})
+```
+
+See the list of config options in the [Config Reference](../config/)
+
 ## Command Line Interface
 
 In a project where Vitest is installed, you can use the `vitest` binary in your npm scripts, or run it directly with `npx vitest`. Here is the default npm scripts in a scaffolded Vite project:
