@@ -129,7 +129,7 @@ myMockFn(); // true
 myMockFn(); // false
 ```
 
-When the mocked function runs out of implementations, it will invok the default implementation that was set with `jest.fn(() => defaultValue)` or `.mockImplementation(() => defaultValue)` if they were called:
+When the mocked function runs out of implementations, it will invoke the default implementation that was set with `jest.fn(() => defaultValue)` or `.mockImplementation(() => defaultValue)` if they were called:
 
 ```ts
 const myMockFn = jest

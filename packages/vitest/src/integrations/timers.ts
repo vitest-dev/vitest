@@ -84,7 +84,7 @@ export class FakeTimers {
     const spyFactory = (spyType: QueueTaskType, resultBuilder: (id: number, cb: (args: void) => void) => any) => {
       return (cb: (args: void) => void, ms = 0) => {
         const id = ++this._spyid
-        // all timers up untill this point
+        // all timers up until this point
         const nestedTo = Object.entries(this._nestedTime).filter(([key]) => Number(key) <= this._scopeId)
         const nestedMs = nestedTo.reduce((total, [, ms]) => total + ms, ms)
         const call: FakeCall = { id, cb, ms, nestedMs, scopeId: this._scopeId }
