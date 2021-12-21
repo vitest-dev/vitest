@@ -12,7 +12,7 @@ if (argv.includes('--coverage')) {
   if (!await ensurePackageInstalled('c8'))
     process.exit(1)
   const filename = fileURLToPath(import.meta.url)
-  const entry = resolvePath(filename, '../../dist/cli.js')
+  const entry = resolvePath(filename, '../dist/cli.js')
   process.argv.splice(2, 0, process.argv[0], entry)
   await import('c8/bin/c8.js')
 }

@@ -18,6 +18,7 @@ cli
   .option('--api', 'listen to port and serve API')
   .option('--threads', 'enabled threads', { default: true })
   .option('--silent', 'silent')
+  .option('--coverage', 'use c8 for coverage')
   .option('--run', 'do not watch')
   .option('--global', 'inject apis globally')
   .option('--dom', 'mock browser api with happy-dom')
