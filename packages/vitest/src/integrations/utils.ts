@@ -35,18 +35,6 @@ class VitestUtils {
     return this._timers.advanceTimersToNextTimer()
   }
 
-  public runAllTicks() {
-    return this._timers.runAllTicks()
-  }
-
-  public setSystemTime(time?: number | Date) {
-    return this._timers.setSystemTime(time)
-  }
-
-  public getRealSystemTime() {
-    return this._timers.getRealSystemTime()
-  }
-
   public getTimerCount() {
     return this._timers.getTimerCount()
   }
