@@ -9,7 +9,7 @@ type Contributor = {
 
 async function fetchContributors() {
   const collaborators: string[] = []
-  const res = await fetch('https://api.github.com/repos/antfu-sponsors/vitest/contributors', {
+  const res = await fetch('https://api.github.com/repos/vitest-dev/vitest/contributors', {
     method: 'get',
     headers: {
       'authorization': `bearer ${token}`,

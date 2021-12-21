@@ -58,7 +58,7 @@ export function createWorkerPool(ctx: Vitest): WorkerPool {
   const options: TinypoolOptions = {
     filename: workerPath,
     // Disable this for now, for WebContainer capability
-    // https://github.com/antfu-sponsors/vitest/issues/93
+    // https://github.com/vitest-dev/vitest/issues/93
     // In future we could conditionally enable it based on the env
     useAtomics: false,
   }
