@@ -18,7 +18,6 @@ export async function run(files: string[], config: ResolvedConfig): Promise<void
     process.__vitest_worker__.filepath = file
 
     vi.resetAllMocks()
-    vi.restoreAllMocks()
 
     await withEnv(env as BuiltinEnvironment, async() => {
       await startTests([file], config)
