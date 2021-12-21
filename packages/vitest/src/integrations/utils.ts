@@ -7,11 +7,11 @@ import { fn, spies, spyOn } from './jest-mock'
 
 class VitestUtils {
   private _timers: FakeTimers
-  private _systemDate: string | number | Date | null
+  private _mockedDate: string | number | Date | null
 
   constructor() {
     this._timers = new FakeTimers()
-    this._systemDate = null
+    this._mockedDate = null
   }
 
   // timers
@@ -46,18 +46,18 @@ class VitestUtils {
 
   // date
 
-  public setSystemDate(date: string | number | Date) {
-    this._systemDate = date
+  public mockCurrentDate(date: string | number | Date) {
+    this._mockedDate = date
     mockdate.set(date)
   }
 
-  public resetSystemDate() {
-    this._systemDate = null
+  public restoreCurrentDate() {
+    this._mockedDate = null
     mockdate.reset()
   }
 
-  public getSystemDate() {
-    return this._systemDate || Date.now()
+  public getMockedDate() {
+    return this._mockedDate
   }
 
   // mocks
