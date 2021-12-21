@@ -16,9 +16,9 @@
     "dist"
   ],
   "dependencies": {
-    "@vueuse/core": "^7.3.0",
+    "@vueuse/core": "^7.4.0",
     "sirv": "^1.0.19",
-    "ws": "^8.3.0"
+    "ws": "^8.4.0"
   },
   "devDependencies": {
     "@types/ws": "^8.2.2",
