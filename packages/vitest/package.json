@@ -57,7 +57,7 @@
     "@types/chai-subset": "^1.3.3",
     "chai": "^4.3.4",
     "local-pkg": "^0.4.0",
-    "tinypool": "^0.0.4",
+    "tinypool": "^0.0.5",
     "tinyspy": "^0.2.4"
   },
   "devDependencies": {

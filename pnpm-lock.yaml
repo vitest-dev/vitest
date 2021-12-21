@@ -150,7 +150,7 @@ importers:
       rollup: ^2.61.1
       source-map-js: ^1.0.1
       strip-ansi: ^7.0.1
-      tinypool: ^0.0.4
+      tinypool: ^0.0.5
       tinyspy: ^0.2.4
       typescript: ^4.5.4
     dependencies:
@@ -158,7 +158,7 @@ importers:
       '@types/chai-subset': 1.3.3
       chai: 4.3.4
       local-pkg: 0.4.0
-      tinypool: 0.0.4
+      tinypool: 0.0.5
       tinyspy: 0.2.4
     devDependencies:
       '@antfu/install-pkg': 0.1.0
@@ -6511,8 +6511,8 @@ packages:
     resolution: {integrity: sha1-DdTJ/6q8NXlgsbckEV1+Doai4fU=}
     dev: true
 
-  /tinypool/0.0.4:
-    resolution: {integrity: sha512-TQkHhh1cCDsgB1S5DYZ86ljDLlSH+IQA8YkcsuFyD8J1KiQ5mQxL4JvMN7AuNN1Le94ykMdjHtRpcVHRCXonsQ==}
+  /tinypool/0.0.5:
+    resolution: {integrity: sha512-5fUjvd0Dcr2a4b3gSAtg58cE0bDX9tc4zsRWEVGxhHUSN1DhITtRK9myC9wFzaZ+a/pP3bJaGIHXBqlrj6XgZg==}
     engines: {node: '>=14.0.0'}
     dev: false
 
