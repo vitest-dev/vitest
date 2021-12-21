@@ -27,15 +27,15 @@ TODO: Mention [Config File Resolving](), [Config Intellisense]()
 
 ### include
 
-- **Type:** `string[]n`
-- **Default:** `['**\/*.test.ts']`
+- **Type:** `string[]`
+- **Default:** `['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']`
 
 Include globs for test files
 
 ### exclude
 
 - **Type:** `string[]`
-- **Default:** `['**\/node_modules\/**']`
+- **Default:** `['node_modules', 'dist', '.idea', '.git', '.cache']`
 
 Exclude globs for test files
 

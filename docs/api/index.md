@@ -47,7 +47,7 @@ Use `.only` to only run certain tests in a given suite
 **Type:** `(name: string, fn: TestFunction, timeout?: number) => void`
 
 ```ts
-it.only("test", () => {
+test.only("test", () => {
     // Only this test (and others marked with only) are run
     assert.equal(Math.sqrt(4), 2);
   });
@@ -166,7 +166,7 @@ These global functions allows you to hook into the life cycle of tests to avoid 
 
 Register a callback to be called before each test in the current context.
 
-**Type:** `afterAll(fn: () => Awaitable<void>, timeout: number)`
+**Type:** `beforeEach(fn: () => Awaitable<void>, timeout: number)`
 
 ### afterEach
 

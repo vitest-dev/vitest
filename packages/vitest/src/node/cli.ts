@@ -91,8 +91,8 @@ function registerConsoleShortcuts(ctx: Vitest) {
   if (process.stdin.isTTY) {
     readline.emitKeypressEvents(process.stdin)
     process.stdin.setRawMode(true)
-    process.stdin.on('keypress', (str: string) => {
-      if (str === '\x03' || str === '\x1B') // ctrl-c or esc
+    process.stdin.on('keypress', (str: string, key: any) => {
+      if (str === '\x03' || str === '\x1B' || (key && key.ctrl && key.name === 'c')) // ctrl-c or esc
         process.exit()
 
       // is running, ignore keypress
