@@ -246,3 +246,10 @@ Path to setup files
 - **Default:** `false`
 
 Listen to port and serve API. When set to true, the default port is 55555
+
+### passWithNoTests
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Exit with exit code of 0 when there are no tests
