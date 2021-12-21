@@ -96,8 +96,16 @@ export default defineConfig({
               link: '/guide/features'
             },
             {
-              text: 'Mocking',
+              text: 'Mocking Functions',
               link: '/guide/mocking'
+            },
+            {
+              text: 'Mocking Timers',
+              link: '/guide/mocking-timers'
+            },
+            {
+              text: 'Mocking Date',
+              link: '/guide/mocking-date'
             },
             /* TODO
             {

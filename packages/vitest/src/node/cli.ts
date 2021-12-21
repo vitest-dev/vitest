@@ -18,12 +18,12 @@ cli
   .option('--api', 'listen to port and serve API')
   .option('--threads', 'enabled threads', { default: true })
   .option('--silent', 'silent')
+  .option('--coverage', 'use c8 for coverage')
   .option('--run', 'do not watch')
   .option('--global', 'inject apis globally')
   .option('--dom', 'mock browser api with happy-dom')
-  .option('--environment <env>', 'runner environment', {
-    default: 'node',
-  })
+  .option('--environment <env>', 'runner environment', { default: 'node' })
+  .option('--passWithNoTests', 'pass when no tests found')
   .help()
 
 cli
@@ -91,8 +91,8 @@ function registerConsoleShortcuts(ctx: Vitest) {
   if (process.stdin.isTTY) {
     readline.emitKeypressEvents(process.stdin)
     process.stdin.setRawMode(true)
-    process.stdin.on('keypress', (str: string) => {
-      if (str === '\x03' || str === '\x1B') // ctrl-c or esc
+    process.stdin.on('keypress', (str: string, key: any) => {
+      if (str === '\x03' || str === '\x1B' || (key && key.ctrl && key.name === 'c')) // ctrl-c or esc
         process.exit()
 
       // is running, ignore keypress

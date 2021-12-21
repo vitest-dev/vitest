@@ -2,7 +2,7 @@
 
 ## Configuration
 
-`vitest` will read your root `vite.config.ts` when it is present to match with the plugins and setup as your Vite app. If you want to it to have a different configuration for testing, you could either:
+`vitest` will read your root `vite.config.ts` when it is present to match with the plugins and setup as your Vite app. If you want to have a different configuration for testing, you could either:
 
 - Create `vitest.config.ts`, which will have the higher priority
 - Pass `--config` option to CLI, e.g. `vitest --config ./path/to/vitest.config.ts`
@@ -27,15 +27,15 @@ TODO: Mention [Config File Resolving](), [Config Intellisense]()
 
 ### include
 
-- **Type:** `string[]n`
-- **Default:** `['**\/*.test.ts']`
+- **Type:** `string[]`
+- **Default:** `['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']`
 
 Include globs for test files
 
 ### exclude
 
 - **Type:** `string[]`
-- **Default:** `['**\/node_modules\/**']`
+- **Default:** `['node_modules', 'dist', '.idea', '.git', '.cache']`
 
 Exclude globs for test files
 
@@ -79,7 +79,7 @@ export default defineConfig({
 
 To get TypeScript working with the global APIs, add `vitest/global` to the `types` filed in your `tsconfig.json`
 
-```jsonc
+```json
 // tsconfig.json
 {
   "compilerOptions": {
@@ -246,3 +246,10 @@ Path to setup files
 - **Default:** `false`
 
 Listen to port and serve API. When set to true, the default port is 55555
+
+### passWithNoTests
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Exit with exit code of 0 when there are no tests

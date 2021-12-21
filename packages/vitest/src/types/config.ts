@@ -7,13 +7,13 @@ export interface InlineConfig {
   /**
    * Include globs for test files
    *
-   * @default ['**\/*.test.ts']
+   * @default ['**\/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']
    */
   include?: string[]
 
   /**
    * Exclude globs for test files
-   * @default ['**\/node_modules\/**']
+   * @default ['node_modules', 'dist', '.idea', '.git', '.cache']
    */
   exclude?: string[]
 
@@ -154,6 +154,24 @@ export interface InlineConfig {
    * @default false
    */
   api?: boolean | number
+
+  /**
+   * Will call `.mockClear()` on all spies before each test
+   * @default false
+   */
+  clearMocks?: boolean
+
+  /**
+   * Will call `.mockReset()` on all spies before each test
+   * @default false
+   */
+  mockReset?: boolean
+
+  /**
+   * Will call `.mockRestore()` on all spies before each test
+   * @default false
+   */
+  restoreMocks?: boolean
 }
 
 export interface UserConfig extends InlineConfig {
@@ -177,6 +195,11 @@ export interface UserConfig extends InlineConfig {
    * Do not watch
    */
   run?: boolean
+
+  /**
+   * Pass with no tests
+   */
+  passWithNoTests?: boolean
 }
 
 export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters'> {

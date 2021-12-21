@@ -1,12 +1,13 @@
-import type { TransformResult, ViteDevServer } from 'vite'
+import type { TransformResult } from 'vite'
+import type { Vitest } from './index'
 
-const promiseMap = new Map<string, Promise<TransformResult | null>>()
+const promiseMap = new Map<string, Promise<string | undefined>>()
 
-export async function transformRequest(server: ViteDevServer, id: string) {
+export async function transformRequest(ctx: Vitest, id: string) {
   // reuse transform for concurrent requests
   if (!promiseMap.has(id)) {
     promiseMap.set(id,
-      _transformRequest(server, id)
+      _transformRequest(ctx, id)
         .then((r) => {
           promiseMap.delete(id)
           return r
@@ -17,24 +18,24 @@ export async function transformRequest(server: ViteDevServer, id: string) {
   return promiseMap.get(id)
 }
 
-async function _transformRequest(server: ViteDevServer, id: string) {
+async function _transformRequest(ctx: Vitest, id: string) {
   let result: TransformResult | null = null
 
   if (id.match(/\.(?:[cm]?[jt]sx?|json)$/)) {
-    result = await server.transformRequest(id, { ssr: true })
+    result = await ctx.server.transformRequest(id, { ssr: true })
   }
   else {
     // for components like Vue, we want to use the client side
     // plugins but then covert the code to be consumed by the server
-    result = await server.transformRequest(id)
+    result = await ctx.server.transformRequest(id)
     if (result)
-      result = await server.ssrTransform(result.code, result.map, id)
+      result = await ctx.server.ssrTransform(result.code, result.map, id)
   }
 
   if (result && process.env.NODE_V8_COVERAGE)
     withInlineSourcemap(result)
 
-  return result
+  return result?.code
 }
 
 let SOURCEMAPPING_URL = 'sourceMa'

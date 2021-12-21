@@ -11,7 +11,7 @@
     "@emotion/react": "^11.7.1",
     "@emotion/styled": "^11.6.0",
     "@mui/lab": "*",
-    "@mui/material": "^5.2.4",
+    "@mui/material": "^5.2.5",
     "history": "^5.2.0",
     "notistack": "^2.0.3",
     "react": "^17.0.2",
@@ -26,7 +26,7 @@
     "@testing-library/user-event": "^13.5.0",
     "date-fns": "^2.27.0",
     "jsdom": "^19.0.0",
-    "vite": "^2.7.3",
+    "vite": "^2.7.4",
     "vitest": "workspace:*"
   }
 }

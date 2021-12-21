@@ -84,7 +84,7 @@ export class FakeTimers {
     const spyFactory = (spyType: QueueTaskType, resultBuilder: (id: number, cb: (args: void) => void) => any) => {
       return (cb: (args: void) => void, ms = 0) => {
         const id = ++this._spyid
-        // all timers up untill this point
+        // all timers up until this point
         const nestedTo = Object.entries(this._nestedTime).filter(([key]) => Number(key) <= this._scopeId)
         const nestedMs = nestedTo.reduce((total, [, ms]) => total + ms, ms)
         const call: FakeCall = { id, cb, ms, nestedMs, scopeId: this._scopeId }
@@ -144,20 +144,9 @@ export class FakeTimers {
   }
 
   public advanceTimersToNextTimer(): void | Promise<void> {
-    throw new Error('advanceTimersToNextTimer is not implemented')
-  }
+    this.assertMocked()
 
-  public runAllTicks(): void | Promise<void> {
-    throw new Error('runAllTicks is not implemented')
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public setSystemTime(now?: number | Date): void {
-    throw new Error('setSystemTime is not implemented')
-  }
-
-  public getRealSystemTime(): number {
-    return Date.now()
+    this.callQueueItem(0)
   }
 
   public getTimerCount(): number {
@@ -181,14 +170,42 @@ export class FakeTimers {
     this._setTimeout?.mockRestore()
   }
 
+  private callQueueItem(index: number) {
+    const task = this._tasksQueue[index]
+
+    if (!task) return
+
+    const { call, type } = task
+
+    this._scopeId = call.id
+    this._isNested = true
+
+    this._nestedTime[call.id] ??= 0
+    this._nestedTime[call.id] += call.ms
+
+    if (type === 'timeout') {
+      this.removeTask(index)
+    }
+    else if (type === 'interval') {
+      call.nestedMs += call.ms
+      const nestedMs = call.nestedMs
+      const closestTask = this._tasksQueue.findIndex(({ type, call }) => type === 'interval' && call.nestedMs < nestedMs)
+
+      if (closestTask !== -1 && closestTask !== index)
+        this.ensureQueueOrder()
+    }
+
+    call.cb()
+
+    this._queueCount++
+  }
+
   private runQueue() {
     let index = 0
     while (this._tasksQueue[index]) {
       assertMaxLoop(this._queueCount)
 
-      const task = this._tasksQueue[index]
-
-      const { call, nested, type } = task
+      const { call, nested } = this._tasksQueue[index]
 
       if (this._advancedTime && call.nestedMs > this._advancedTime)
         break
@@ -198,27 +215,7 @@ export class FakeTimers {
         continue
       }
 
-      this._scopeId = call.id
-      this._isNested = true
-
-      this._nestedTime[call.id] ??= 0
-      this._nestedTime[call.id] += call.ms
-
-      if (type === 'timeout') {
-        this.removeTask(index)
-      }
-      else if (type === 'interval') {
-        call.nestedMs += call.ms
-        const nestedMs = call.nestedMs
-        const closestTask = this._tasksQueue.findIndex(({ type, call }) => type === 'interval' && call.nestedMs < nestedMs)
-
-        if (closestTask !== -1 && closestTask !== index)
-          this.ensureQueueOrder()
-      }
-
-      call.cb()
-
-      this._queueCount++
+      this.callQueueItem(index)
     }
   }
 

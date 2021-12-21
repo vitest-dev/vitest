@@ -223,3 +223,28 @@ test('async timer', async() => {
 
   expect(res).toEqual(['item1', 'item2'])
 })
+
+test('advance timer', async() => {
+  const a1 = vi.fn()
+  const a2 = vi.fn()
+
+  vi.useFakeTimers()
+
+  setTimeout(a1)
+  setInterval(a2)
+
+  vi.advanceTimersToNextTimer()
+
+  expect(a1).toHaveBeenCalled()
+  expect(a2).not.toHaveBeenCalled()
+
+  vi.advanceTimersToNextTimer()
+
+  expect(a2).toHaveBeenCalled()
+
+  vi.advanceTimersToNextTimer()
+
+  expect(a2).toHaveBeenCalledTimes(2)
+
+  vi.useRealTimers()
+})

@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom'
-import { render, screen, userEvent } from './../utils/test-utils'
+import userEvent from '@testing-library/user-event'
+import { render, screen } from './../utils/test-utils'
 import { Input } from './Input'
 
 describe('Input', async() => {
@@ -29,7 +30,11 @@ describe('Input', async() => {
       />,
     )
 
-    const input = screen.getByLabelText('Email Address')
+    screen.logTestingPlaygroundURL()
+
+    const input = screen.getByRole('textbox', {
+      name: /email address/i,
+    })
     expect(input).toBeInTheDocument()
     userEvent.type(input, '1337')
     expect(input).toHaveValue('1337')
@@ -46,7 +51,6 @@ describe('Input', async() => {
       />,
     )
     const error = screen.getByRole('alert')
-    expect(error).toBeInTheDocument()
     expect(error).toHaveTextContent('Please enter your email')
   })
 })
