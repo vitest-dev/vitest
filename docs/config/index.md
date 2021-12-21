@@ -79,7 +79,7 @@ export default defineConfig({
 
 To get TypeScript working with the global APIs, add `vitest/global` to the `types` filed in your `tsconfig.json`
 
-```jsonc
+```json
 // tsconfig.json
 {
   "compilerOptions": {
