@@ -21,9 +21,8 @@ cli
   .option('--run', 'do not watch')
   .option('--global', 'inject apis globally')
   .option('--dom', 'mock browser api with happy-dom')
-  .option('--environment <env>', 'runner environment', {
-    default: 'node',
-  })
+  .option('--environment <env>', 'runner environment', { default: 'node' })
+  .option('--passWithNoTests', 'pass when no tests found')
   .help()
 
 cli
