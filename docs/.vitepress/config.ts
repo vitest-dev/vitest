@@ -103,6 +103,10 @@ export default defineConfig({
               text: 'Mocking Timers',
               link: '/guide/mocking-timers'
             },
+            {
+              text: 'Mocking Date',
+              link: '/guide/mocking-date'
+            },
             /* TODO
             {
               text: 'Using Plugins',
