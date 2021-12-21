@@ -2,10 +2,6 @@
 
 Hi! We are really excited that you are interested in contributing to `vitest`. Before submitting your contribution, please make sure to take a moment and read through the following guide:
 
-## Right access (temporary)
-
-Please, arise your hand with a comment in this [issue](https://github.com/antfu-sponsors/vitest/issues/24) to get the permission.
-
 ## Repo Setup
 
 The `vitest` repo is a monorepo using `pnpm` workspaces. The package manager used to install and link dependencies must be [pnpm](https://pnpm.io/).
