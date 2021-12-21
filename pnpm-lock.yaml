@@ -24,7 +24,7 @@ importers:
       rollup-plugin-dts: ^4.0.1
       rollup-plugin-esbuild: ^4.7.2
       rollup-plugin-license: ^2.6.0
-      tinyspy: ^0.2.1
+      tinyspy: ^0.2.4
       typescript: ^4.5.4
       vite: ^2.7.4
       vitepress: ^0.20.9
@@ -51,7 +51,7 @@ importers:
       rollup-plugin-dts: 4.0.1_typescript@4.5.4
       rollup-plugin-esbuild: 4.7.2
       rollup-plugin-license: 2.6.0
-      tinyspy: 0.2.1
+      tinyspy: 0.2.4
       typescript: 4.5.4
       vite: 2.7.4
       vitepress: 0.20.9
@@ -239,12 +239,12 @@ importers:
   test/mocks:
     specifiers:
       axios: ^0.24.0
-      tinyspy: ^0.1.2
+      tinyspy: ^0.2.4
       vite: ^2.7.2
       vitest: workspace:*
     dependencies:
       axios: 0.24.0
-      tinyspy: 0.1.2
+      tinyspy: 0.2.4
     devDependencies:
       vite: 2.7.3
       vitest: link:../../packages/vitest
@@ -1366,27 +1366,6 @@ packages:
       react: 17.0.2
     dev: false
 
-  /@mui/styled-engine/5.2.4_922a85da57e3646a57465b7970b0de85:
-    resolution: {integrity: sha512-tlilkVsAR+MeWIPILzj1uGjiy5tKONZgblXY49LECUNF7u7aTDszqmv0hRG+1IAZjNts+ox8XAlldPNfj+OKvA==}
-    engines: {node: '>=12.0.0'}
-    peerDependencies:
-      '@emotion/react': ^11.4.1
-      '@emotion/styled': ^11.3.0
-      react: ^17.0.2
-    peerDependenciesMeta:
-      '@emotion/react':
-        optional: true
-      '@emotion/styled':
-        optional: true
-    dependencies:
-      '@babel/runtime': 7.16.3
-      '@emotion/cache': 11.7.1
-      '@emotion/react': 11.7.1_react@17.0.2
-      '@emotion/styled': 11.6.0_79c1490562c3c65ef55eb132a37e39b4
-      prop-types: 15.7.2
-      react: 17.0.2
-    dev: false
-
   /@mui/styled-engine/5.2.5_922a85da57e3646a57465b7970b0de85:
     resolution: {integrity: sha512-vNEB2SXCetXKLeMZ49SZLWeiX8uQeLI/jk/dzqnYdGJx8Eq98hCfTucDfJwt2RUhSYGH/3BET2pZqT3w8aOTzQ==}
     engines: {node: '>=12.0.0'}
@@ -1428,7 +1407,7 @@ packages:
       '@emotion/react': 11.7.1_react@17.0.2
       '@emotion/styled': 11.6.0_79c1490562c3c65ef55eb132a37e39b4
       '@mui/private-theming': 5.2.3_react@17.0.2
-      '@mui/styled-engine': 5.2.4_922a85da57e3646a57465b7970b0de85
+      '@mui/styled-engine': 5.2.5_922a85da57e3646a57465b7970b0de85
       '@mui/types': 7.1.0
       '@mui/utils': 5.2.3_react@17.0.2
       clsx: 1.1.1
@@ -6588,15 +6567,9 @@ packages:
     engines: {node: '>=14.0.0'}
     dev: false
 
-  /tinyspy/0.2.1:
-    resolution: {integrity: sha512-5iI2IXXrXVm2vipLylJpQjBGUoA992ir3ZFnRb/pPYZX8AHXr4a3XevUO1+611Utiqr0/EYnxhGU3Fux5vwfJQ==}
-    engines: {node: '>=14.0.0'}
-    dev: true
-
   /tinyspy/0.2.4:
     resolution: {integrity: sha512-A6C0zYMhY2cECXJwJfgesG1jbEjz/d9Enuzx5cC1qiSrGp6eZDMtO8Dxl0Nrn47wR9abEtGr2ckQi52OoJ7eiQ==}
     engines: {node: '>=14.0.0'}
-    dev: false
 
   /to-fast-properties/2.0.0:
     resolution: {integrity: sha1-3F5pjL0HkmW8c+A3doGk5Og/YW4=}

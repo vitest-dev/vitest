@@ -12,7 +12,7 @@
     },
     "dependencies": {
         "axios": "^0.24.0",
-        "tinyspy": "^0.1.2"
+        "tinyspy": "^0.2.4"
     },
     "devDependencies": {
         "vite": "^2.7.2",
