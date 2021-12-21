@@ -1,13 +1,7 @@
 import * as matcherUtils from './jest-matcher-utils'
 
-import {
-  equals,
-  isA,
-} from './jest-utils'
-import type {
-  ChaiPlugin,
-  MatcherState,
-} from './types'
+import { equals, isA } from './jest-utils'
+import type { ChaiPlugin, MatcherState } from './types'
 
 export interface AsymmetricMatcherInterface {
   asymmetricMatch(other: unknown): boolean
@@ -238,6 +232,29 @@ export class Any extends AsymmetricMatcher<any> {
   }
 }
 
+export class StringMatching extends AsymmetricMatcher<RegExp> {
+  constructor(sample: string | RegExp, inverse = false) {
+    if (!isA('String', sample) && !isA('RegExp', sample))
+      throw new Error('Expected is not a String or a RegExp')
+
+    super(new RegExp(sample), inverse)
+  }
+
+  asymmetricMatch(other: string) {
+    const result = isA('String', other) && this.sample.test(other)
+
+    return this.inverse ? !result : result
+  }
+
+  toString() {
+    return `String${this.inverse ? 'Not' : ''}Matching`
+  }
+
+  getExpectedType() {
+    return 'string'
+  }
+}
+
 export const JestAsymmetricMatchers: ChaiPlugin = (chai, utils) => {
   utils.addMethod(
     chai.expect,
@@ -274,6 +291,14 @@ export const JestAsymmetricMatchers: ChaiPlugin = (chai, utils) => {
     'arrayContaining',
     (expected: any) => {
       return new ArrayContaining(expected)
+    },
+  )
+
+  utils.addMethod(
+    chai.expect,
+    'stringMatching',
+    (expected: any) => {
+      return new StringMatching(expected)
     },
   )
 }
