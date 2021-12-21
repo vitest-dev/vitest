@@ -177,6 +177,11 @@ export interface UserConfig extends InlineConfig {
    * Do not watch
    */
   run?: boolean
+
+  /**
+   * Pass with no tests
+   */
+  passWithNoTests?: boolean
 }
 
 export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters'> {

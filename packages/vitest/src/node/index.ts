@@ -68,8 +68,11 @@ class Vitest {
     const files = await this.globTestFiles(filters)
 
     if (!files.length) {
-      this.error(c.red('No test files found\n'))
-      process.exit(1)
+      if (this.config.passWithNoTests)
+        this.log('No test files found\n')
+      else
+        this.error(c.red('No test files found\n'))
+      process.exit(this.config.passWithNoTests ? 0 : 1)
     }
 
     await this.runFiles(files)
