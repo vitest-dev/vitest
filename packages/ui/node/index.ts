@@ -18,7 +18,7 @@ export const VitestUIPlugin = (): Plugin => {
 
       server.httpServer?.on('upgrade', (request, socket, head) => {
         if (request.url) {
-          const { pathname } = new URL(request.url)
+          const { pathname } = new URL(request.url, request.headers.origin)
 
           if (pathname === '/__vitest_api') {
             wss.handleUpgrade(request, socket, head, (ws) => {
