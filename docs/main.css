@@ -8,11 +8,12 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --c-bg: rgb(20,20,20) !important;
-    --c-text: #fff !important;
+    --c-text: rgb(255,255,255,87%) !important;
     --c-text-light: #fdd888 !important;
     --c-brand: #fdd888 !important;
     --c-accent: #90C321 !important;
     --bg-gradient: 20,20,20 !important;
+    --code-inline-bg-color: #282c34aa !important;
   }
 }
 
