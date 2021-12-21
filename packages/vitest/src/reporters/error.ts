@@ -111,7 +111,7 @@ async function getSourcePos(ctx: Vitest, nearest: ParsedStack) {
 
 // TODO: handle big object and big string diff
 function displayDiff(actual: string, expected: string) {
-  console.error(c.gray(unifiedDiff(stringify(actual), stringify(expected))))
+  console.error(c.gray(unifiedDiff(format(actual), format(expected))) + '\n')
 }
 
 function printErrorMessage(error: ErrorWithDiff) {
@@ -261,11 +261,6 @@ export function generateCodeFrame(
   return res.join('\n')
 }
 
-function stringify(obj: any) {
-  // TODO: handle more types
-  return format(obj)
-}
-
 const stackFnCallRE = /at (.*) \((.+):(\d+):(\d+)\)$/
 const stackBarePathRE = /at ?(.*) (.+):(\d+):(\d+)$/
 
@@ -306,7 +301,7 @@ function parseStack(stack: string): ParsedStack[] {
  * @param {String} expected
  * @return {string} The diff.
  */
-export function unifiedDiff(actual: any, expected: any) {
+export function unifiedDiff(actual: string, expected: string) {
   if (actual === expected)
     return ''
 
@@ -316,50 +311,44 @@ export function unifiedDiff(actual: any, expected: any) {
   let actualLinesCount = 0
 
   function preprocess(line: string) {
+    if (!line)
+      return
     if (line[0] === '+') {
-      if (expectedLinesCount >= diffLimit) return
+      if (expectedLinesCount >= diffLimit)
+        return
       expectedLinesCount++
-      return (compact?: boolean) => {
-        if (compact)
-          return c.red(formatLine(line.slice(1)))
-
-        line = line[0] + ' ' + line.slice(1)
-        const isLastLine = expectedLinesCount === diffLimit
-        return indent + c.red(`${formatLine(line)} ${isLastLine ? renderTruncateMessage(indent) : ''}`)
-      }
+      line = line[0] + ' ' + line.slice(1)
+      const isLastLine = expectedLinesCount === diffLimit
+      return indent + c.red(`${formatLine(line)} ${isLastLine ? renderTruncateMessage(indent) : ''}`)
     }
     if (line[0] === '-') {
-      if (actualLinesCount >= diffLimit) return
+      if (actualLinesCount >= diffLimit)
+        return
       actualLinesCount++
-      return (compact?: boolean) => {
-        if (compact)
-          return c.green(formatLine(line.slice(1)))
-
-        line = line[0] + ' ' + line.slice(1)
-        const isLastLine = actualLinesCount === diffLimit
-        return indent + c.green(`${formatLine(line)} ${isLastLine ? renderTruncateMessage(indent) : ''}`)
-      }
+      line = line[0] + ' ' + line.slice(1)
+      const isLastLine = actualLinesCount === diffLimit
+      return indent + c.green(`${formatLine(line)} ${isLastLine ? renderTruncateMessage(indent) : ''}`)
     }
     if (line.match(/@@/))
-      return () => '--'
+      return '--'
     if (line.match(/\\ No newline/))
       return null
-    return () => indent + ' ' + line
+    return indent + ' ' + line
   }
+
   const msg = diff.createPatch('string', actual, expected)
-  const lines = msg.split('\n').splice(5)
-  const cleanLines = lines.map(preprocess).filter(notBlank) as ((compact?: boolean) => string)[]
+  const lines = msg.split('\n').slice(5)
+  const cleanLines = lines.map(preprocess).filter(Boolean)
 
   // Compact mode
-  if (expectedLinesCount === 1 && actualLinesCount === 1) {
+  if (expectedLinesCount === 1 && actualLinesCount === 1 && lines.length === 2) {
     return (
-      `\n${indent}${c.green('- expected')}   ${cleanLines[0](true)}\n${indent}${c.red('+ actual')}     ${cleanLines[1](true)}`
+      `\n${indent}${c.green('- expected')}   ${cleanLines[0]}\n${indent}${c.red('+ actual')}     ${cleanLines[1]}`
     )
   }
 
   return (
-    `\n${indent}${c.green('- expected')}\n${indent}${c.red('+ actual')}\n\n${
-      cleanLines.map(l => l()).join('\n')}`
+    `\n${indent}${c.green('- expected')}\n${indent}${c.red('+ actual')}\n\n${cleanLines.join('\n')}`
   )
 }
 
@@ -369,8 +358,4 @@ function formatLine(line: string) {
 
 function renderTruncateMessage(indent: string) {
   return `\n${indent}${c.dim('[...truncated]')}`
-}
-
-function notBlank(line: any) {
-  return typeof line !== 'undefined' && line !== null
 }

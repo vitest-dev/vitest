@@ -93,7 +93,6 @@ export function matcherHint(
     hint += DIM_COLOR(`${dimString}(`) + expectedColor(expected)
     if (secondArgument)
       hint += DIM_COLOR(', ') + secondArgumentColor(secondArgument)
-
     dimString = ')'
   }
 
