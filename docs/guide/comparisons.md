@@ -8,7 +8,21 @@
 
 ## Cypress
 
-[Cypress](https://www.cypress.io/) is an amazing option for E2E testing. But with [Cypress Component Testing](https://docs.cypress.io/guides/component-testing/introduction), they now offer a way to test your components in a real browser environment instead of relying on node DOM libraries. You also see the real rendered Component in the browser with their failed state instead of having a simple diff in the CLI. Cypress has been [integrating Vite in their products](https://www.youtube.com/watch?v=7S5cbY8iYLk): re-building their App UI using [Vitesse](https://github.com/antfu/vitesse) and using Vite to drive your project's code processing while testing. But Cypress isn't a good option for unit testings in a headless environment. Using Cypress (for E2E and Component Testing) and Vitest (for units tests) together would cover your Web Apps testing needs.
+[Cypress](https://www.cypress.io/) is a browser-based test runner and a complimentary tool to Vitest. If you'd like to use Cypress, we suggest using Vitest for all headless logic in your application and Cypress for all browser-based logic.
+
+Cypress is known as an end-to-end testing tool, however their [new component test runner](https://on.cypress.io/component) has great support for testing Vite components and is an ideal choice to test anything that renders in a browser.
+
+Browser-based runners, like Cypress and Web Test, will catch issues that Vitest cannot because they use the real browser and real browser APIs.
+
+Cypress's test driver is focused on determining if elements are visible, accessible, and interactive. Cypress is purpose-built for UI development and testing and its DX is centered around test driving your visual components. You see your component rendered alongside the test reporter. Once the test is complete, the component remains interactive and you can debug any failures that occur using your browser devtools.
+
+In contrast, Vitest is focused on delivering the best DX possible for lightning fast, *headless* testing. Node-based runners like Vitest support various partially-implemented browser environments, like `jsdom`, which implement enough for you to quickly unit test any code that references browser APIs. The tradeoff is that these browser environments have limitations in what they can implement. For example, [jsdom is missing a number of features](https://github.com/jsdom/jsdom/issues?q=is%3Aissue+is%3Aopen+sort%3Acomments-desc) like `window.navigation` or a layout engine (`offsetTop`, etc).
+
+Lastly, in contrast to the Web Test Runner, the Cypress test runner is more like an IDE than a test runner because you also see the real rendered component in the browser, along with its test results and logs.
+
+Cypress has also been [integrating Vite in their products](https://www.youtube.com/watch?v=7S5cbY8iYLk): re-building their App's UI using [Vitesse](https://github.com/antfu/vitesse) and using Vite to test drive their project's development.
+
+We believe that Cypress isn't a good option for unit testing headless code, but that using Cypress (for E2E and Component Testing) and Vitest (for unit tests) would cover your app's testing needs.
 
 ## Web Test Runner
 
