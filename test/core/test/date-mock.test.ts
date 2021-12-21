@@ -26,8 +26,8 @@ describe('testing date mock functionality', () => {
 
     expect(Date.now()).toBe(time)
 
-    const timeStr = 'December 17, 1995 03:24:00'
-    const timeStrMs = 819159840000
+    const timeStr = 'Fri Feb 20 2015 19:29:31 GMT+0530'
+    const timeStrMs = 1424440771000
 
     vi.setSystemDate(timeStr)
 
