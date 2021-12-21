@@ -1,4 +1,4 @@
-import type { Any, Anything, ArrayContaining, ObjectContaining } from './integrations/chai/jest-asymmetric-matchers'
+import type { Any, Anything, ArrayContaining, ObjectContaining, StringMatching } from './integrations/chai/jest-asymmetric-matchers'
 import type { MatchersObject } from './integrations/chai/types'
 import type { InlineConfig } from './types'
 
@@ -29,6 +29,7 @@ declare global {
       objectContaining(expected: any): ObjectContaining
       any(constructor: unknown): Any
       arrayContaining(expected: any): ArrayContaining
+      stringMatching(expected: RegExp): StringMatching
     }
 
     interface Assertion {
