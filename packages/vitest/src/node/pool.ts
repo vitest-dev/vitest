@@ -118,7 +118,7 @@ function createChannel(ctx: Vitest) {
       case 'snapshotSaved':
         return send(() => ctx.snapshot.add(args[0] as any))
       case 'fetch':
-        return send(() => transformRequest(ctx.server, ...args as RpcMap['fetch'][0]).then(r => r?.code))
+        return send(() => transformRequest(ctx, ...args as RpcMap['fetch'][0]))
       case 'onCollected':
         ctx.state.collectFiles(args[0] as any)
         ctx.reporters.forEach(r => r.onStart?.((args[0] as any as File[]).map(i => i.filepath)))
