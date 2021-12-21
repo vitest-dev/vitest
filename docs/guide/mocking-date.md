@@ -10,7 +10,7 @@ All useful methods are located on `vi` object that you can import from `vitest` 
 
 Sets current date to the one that was passed. All `Date` calls will return this date.
 
-Useful if you need to test anything that depends on current date - for example `momentjs` calls inside your code.
+Useful if you need to test anything that depends on the current date - for example [luxon](https://github.com/moment/luxon/) calls inside your code.
 
 ```ts
 const date = new Date(1998, 11, 19)
