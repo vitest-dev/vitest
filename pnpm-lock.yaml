@@ -139,6 +139,7 @@ importers:
       magic-string: ^0.25.7
       micromatch: ^4.0.4
       mlly: ^0.3.16
+      mockdate: ^3.0.5
       nanoid: ^3.1.30
       natural-compare: ^1.4.0
       pathe: ^0.2.0
@@ -181,6 +182,7 @@ importers:
       magic-string: 0.25.7
       micromatch: 4.0.4
       mlly: 0.3.16
+      mockdate: 3.0.5
       nanoid: 3.1.30
       natural-compare: 1.4.0
       pathe: 0.2.0
@@ -5116,6 +5118,10 @@ packages:
 
   /mlly/0.3.16:
     resolution: {integrity: sha512-DVydmuR8fmiMetH39kp8VXYslN0XDh+OxULuU/ov8TMwVIxDGQ8PsJIrNi6cZZaHiIYL6wtO6+sjGpVc7msKUg==}
+    dev: true
+
+  /mockdate/3.0.5:
+    resolution: {integrity: sha512-iniQP4rj1FhBdBYS/+eQv7j1tadJ9lJtdzgOpvsOHng/GbcDh2Fhdeq+ZRldrPYdXvCyfFUmFeEwEGXZB5I/AQ==}
     dev: true
 
   /moment/2.29.1:

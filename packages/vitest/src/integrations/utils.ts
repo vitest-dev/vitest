@@ -1,14 +1,17 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
+import mockdate from 'mockdate'
 import { FakeTimers } from './timers'
 import type { MaybeMocked, MaybeMockedDeep } from './jest-mock'
 import { fn, spies, spyOn } from './jest-mock'
 
 class VitestUtils {
   private _timers: FakeTimers
+  private _systemDate: string | number | Date | null
 
   constructor() {
     this._timers = new FakeTimers()
+    this._systemDate = null
   }
 
   // timers
@@ -39,6 +42,22 @@ class VitestUtils {
 
   public getTimerCount() {
     return this._timers.getTimerCount()
+  }
+
+  // date
+
+  public setSystemDate(date: string | number | Date) {
+    this._systemDate = date
+    mockdate.set(date)
+  }
+
+  public resetSystemDate() {
+    this._systemDate = null
+    mockdate.reset()
+  }
+
+  public getSystemDate() {
+    return this._systemDate || Date.now()
   }
 
   // mocks
