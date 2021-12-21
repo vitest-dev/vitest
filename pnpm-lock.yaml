@@ -147,7 +147,7 @@ importers:
       source-map-js: ^1.0.1
       strip-ansi: ^7.0.1
       tinypool: ^0.0.3
-      tinyspy: ^0.1.2
+      tinyspy: ^0.2.4
       typescript: ^4.5.4
     dependencies:
       '@types/chai': 4.3.0
@@ -155,7 +155,7 @@ importers:
       chai: 4.3.4
       local-pkg: 0.4.0
       tinypool: 0.0.3
-      tinyspy: 0.1.2
+      tinyspy: 0.2.4
     devDependencies:
       '@antfu/install-pkg': 0.1.0
       '@types/diff': 5.0.1
@@ -6562,6 +6562,11 @@ packages:
     resolution: {integrity: sha512-5iI2IXXrXVm2vipLylJpQjBGUoA992ir3ZFnRb/pPYZX8AHXr4a3XevUO1+611Utiqr0/EYnxhGU3Fux5vwfJQ==}
     engines: {node: '>=14.0.0'}
     dev: true
+
+  /tinyspy/0.2.4:
+    resolution: {integrity: sha512-A6C0zYMhY2cECXJwJfgesG1jbEjz/d9Enuzx5cC1qiSrGp6eZDMtO8Dxl0Nrn47wR9abEtGr2ckQi52OoJ7eiQ==}
+    engines: {node: '>=14.0.0'}
+    dev: false
 
   /to-fast-properties/2.0.0:
     resolution: {integrity: sha1-3F5pjL0HkmW8c+A3doGk5Og/YW4=}
