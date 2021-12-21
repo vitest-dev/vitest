@@ -22,6 +22,29 @@ $ npm install -D vitest
 Vitest requires Vite v2.7 and Node v14
 :::
 
+## Configuring Vitest
+
+One of the main advantages of Vitest is its unified configuration with Vite. If present, `vitest` will read your root `vite.config.ts` to match with the plugins and setup as your Vite app. For example, your Vite [resolve.alias](https://vitejs.dev/config/#resolve-alias) and [plugins](https://vitejs.dev/guide/using-plugins.html) configuration will work out-of-the-box. If you want a different configuration during testing, you can:
+
+- Create `vitest.config.ts`, which will have the higher priority
+- Pass `--config` option to CLI, e.g. `vitest --config ./path/to/vitest.config.ts`
+- Use `process.env.VITEST` to conditionally apply different configuration in `vite.config.ts`
+
+To configure `vitest` itself, add `test` property in your Vite config
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  test: {
+    // ...
+  },
+})
+```
+
+See the list of config options in the [Config Reference](../config/)
+
 ## Command Line Interface
 
 In a project where Vitest is installed, you can use the `vitest` binary in your npm scripts, or run it directly with `npx vitest`. Here is the default npm scripts in a scaffolded Vite project:
@@ -40,12 +63,12 @@ You can specify additional CLI options like `--port` or `--https`. For a full li
 
 ## Examples
 
-- [Unit Testing](https://github.com/antfu-sponsors/vitest/tree/main/test/core)
-- [Vue Component Testing](https://github.com/antfu-sponsors/vitest/tree/main/test/vue)
-- [React Component Testing](https://github.com/antfu-sponsors/vitest/tree/main/test/react)
-- [Svelte Component Testing](https://github.com/antfu-sponsors/vitest/tree/main/test/svelte)
-- [Lit Component Testing](https://github.com/antfu-sponsors/vitest/tree/main/test/lit)
-- [Vitesse Component Testing](https://github.com/antfu-sponsors/vitest/tree/main/test/vitesse)
+- [Unit Testing](https://github.com/vitest-dev/vitest/tree/main/test/core)
+- [Vue Component Testing](https://github.com/vitest-dev/vitest/tree/main/test/vue)
+- [React Component Testing](https://github.com/vitest-dev/vitest/tree/main/test/react)
+- [Svelte Component Testing](https://github.com/vitest-dev/vitest/tree/main/test/svelte)
+- [Lit Component Testing](https://github.com/vitest-dev/vitest/tree/main/test/lit)
+- [Vitesse Component Testing](https://github.com/vitest-dev/vitest/tree/main/test/vitesse)
 
 ## Projects using Vitest
 
@@ -56,10 +79,10 @@ You can specify additional CLI options like `--port` or `--https`. For a full li
 
 ## Using Unreleased Commits
 
-If you can't wait for a new release to test the latest features, you will need to clone the [vitest repo](https://github.com/antfu-sponsors/vitest) to your local machine and then build and link it yourself ([pnpm](https://pnpm.io/) is required):
+If you can't wait for a new release to test the latest features, you will need to clone the [vitest repo](https://github.com/vitest-dev/vitest) to your local machine and then build and link it yourself ([pnpm](https://pnpm.io/) is required):
 
 ```bash
-git clone https://github.com/antfu-sponsors/vitest.git
+git clone https://github.com/vitest-dev/vitest.git
 cd vite
 pnpm install
 cd packages/vitest
@@ -71,4 +94,4 @@ Then go to the project where you are using Vitest and run `pnpm link --global vi
 
 ## Community
 
-If you have questions or need help, reach out to the community at [Discord](https://chat.vitest.dev) and [GitHub Discussions](https://github.com/antfu-sponsors/vitest/discussions).
+If you have questions or need help, reach out to the community at [Discord](https://chat.vitest.dev) and [GitHub Discussions](https://github.com/vitest-dev/vitest/discussions).
