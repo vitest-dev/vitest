@@ -148,6 +148,7 @@ declare global {
         rpc: RpcCall
         send: RpcSend
         current?: Test
+        filepath?: string
         moduleCache: Map<string, ModuleCache>
       }
     }

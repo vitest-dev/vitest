@@ -10,6 +10,7 @@ let _viteNode: {
   collect: (files: string[], config: ResolvedConfig) => Promise<void>
 }
 const moduleCache: Map<string, ModuleCache> = new Map()
+const mockMap = {}
 
 async function startViteNode(ctx: WorkerContext) {
   if (_viteNode)
@@ -40,6 +41,7 @@ async function startViteNode(ctx: WorkerContext) {
     external: config.depsExternal,
     interpretDefault: config.interpretDefault,
     moduleCache,
+    mockMap,
   }))[0]
 
   _viteNode = { run, collect }
