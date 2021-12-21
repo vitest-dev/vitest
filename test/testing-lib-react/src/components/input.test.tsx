@@ -1,6 +1,5 @@
 import '@testing-library/jest-dom'
-import userEvent from '@testing-library/user-event'
-import { render, screen } from './../utils/test-utils'
+import { render, screen, userEvent } from './../utils/test-utils'
 import { Input } from './Input'
 
 describe('Input', async() => {
@@ -15,8 +14,10 @@ describe('Input', async() => {
         aria-label="Email Address"
       />,
     )
-    expect(screen.getByText('Email Address')).toBeInTheDocument() // check for the human readable label
-    expect(screen.getByLabelText('Email Address')).toBeInTheDocument()
+    expect(screen.getByText('Email Address')).toBeInTheDocument()
+    expect(screen.getByRole('textbox', {
+      name: /email address/i,
+    })).toBeInTheDocument()
   })
   it('should change input value', () => {
     render(
@@ -50,7 +51,9 @@ describe('Input', async() => {
         error="Please enter your email"
       />,
     )
-    const error = screen.getByRole('alert')
-    expect(error).toHaveTextContent('Please enter your email')
+    expect(screen.getByRole('textbox', {
+      name: /email address/i,
+    })).toBeInTheDocument()
+    expect(screen.getByRole('alert')).toHaveTextContent('Please enter your email')
   })
 })
