@@ -216,6 +216,8 @@ export function generateCodeFrame(
   let count = 0
   let res: string[] = []
 
+  const columns = process.stdout.columns || 80
+
   function lineNo(no: number | string = '') {
     return c.gray(`${String(no).padStart(3, ' ')}| `)
   }
@@ -233,7 +235,7 @@ export function generateCodeFrame(
         if (lineLength > 200)
           return ''
 
-        res.push(lineNo(j + 1) + cliTruncate(lines[j], process.stdout.columns - 5 - indent))
+        res.push(lineNo(j + 1) + cliTruncate(lines[j], columns - 5 - indent))
 
         if (j === i) {
           // push underline
@@ -362,7 +364,7 @@ export function unifiedDiff(actual: any, expected: any) {
 }
 
 function formatLine(line: string) {
-  return cliTruncate(line, (process.stdout.columns || 40) - 1)
+  return cliTruncate(line, (process.stdout.columns || 80) - 1)
 }
 
 function renderTruncateMessage(indent: string) {
