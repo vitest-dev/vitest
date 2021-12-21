@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { isDark, toggleDark } from '~/composables'
+
+const onClickToggle = () => toggleDark()
+
 </script>
 
 <template>
@@ -38,7 +41,7 @@ import { isDark, toggleDark } from '~/composables'
           'i-carbon-moon': isDark,
           'i-carbon-sun': !isDark
         }"
-        @click="toggleDark"
+        @click="onClickToggle"
       />
     </div>
     <Suites />
