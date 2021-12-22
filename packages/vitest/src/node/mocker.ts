@@ -5,7 +5,7 @@ import { mergeSlashes } from '../utils'
 
 export interface SuiteMocks {
   [suitePath: string]: {
-    [originalPath: string]: string | null
+    [originalPath: string]: string | null | (() => any)
   }
 }
 
@@ -98,14 +98,13 @@ export function createMocker(root: string, mockMap: SuiteMocks) {
     }
   }
 
-  function mockPath(path: string, nmName: string) {
+  function mockPath(path: string, nmName: string, factory?: () => any) {
     const suitefile = getSuiteFilepath()
 
     if (suitefile) {
-      const mockPath = resolveMockPath(path, root, nmName)
       const fsPath = getActualPath(path, nmName)
       mockMap[suitefile] ??= {}
-      mockMap[suitefile][fsPath] = mockPath
+      mockMap[suitefile][fsPath] = factory || resolveMockPath(path, root, nmName)
     }
   }
 

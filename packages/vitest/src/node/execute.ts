@@ -92,14 +92,28 @@ export async function executeInViteNode(options: ExecuteOptions) {
     result.push(await cachedRequest(`/@fs/${slash(resolve(file))}`, []))
   return result
 
+  async function callFunctionMock(dep: string, mock: () => any) {
+    const name = `${dep}__mock`
+    const cached = moduleCache.get(name)?.exports
+    if (cached)
+      return cached
+    const exports = await mock()
+    setCache(name, { exports })
+    return exports
+  }
+
   async function directRequest(id: string, fsPath: string, callstack: string[]) {
     callstack = [...callstack, id]
     const suite = getSuiteFilepath()
     const request = async(dep: string, canMock = true) => {
-      const mocks = mockMap[suite || ''] || {}
-      const mock = mocks[dep]
-      if (mock && canMock)
-        dep = mock
+      if (canMock) {
+        const mocks = mockMap[suite || ''] || {}
+        const mock = mocks[dep]
+        if (typeof mock === 'function')
+          return callFunctionMock(dep, mock)
+        if (typeof mock === 'string')
+          dep = mock
+      }
       if (callstack.includes(dep)) {
         const cacheKey = toFilePath(dep, root)
         if (!moduleCache.get(cacheKey)?.exports)
@@ -138,12 +152,19 @@ export async function executeInViteNode(options: ExecuteOptions) {
     }
 
     const importMock = async(path: string, nmName: string) => {
-      const mockPath = resolveMockPath(path, root, nmName)
-      if (mockPath === null) {
-        const exports = await request(getActualPath(path, nmName), false)
-        return mockObject(exports)
+      if (!suite)
+        throw new Error('You can import mock only inside of a running test')
+
+      const mock = (mockMap[suite] || {})[path] || resolveMockPath(path, root, nmName)
+      if (mock === null) {
+        const fsPath = getActualPath(path, nmName)
+        const exports = mockObject(await request(fsPath, false))
+        setCache(fsPath, { exports })
+        return exports
       }
-      return request(mockPath, true)
+      if (typeof mock === 'function')
+        return callFunctionMock(path, mock)
+      return request(mock, true)
     }
 
     const context = {

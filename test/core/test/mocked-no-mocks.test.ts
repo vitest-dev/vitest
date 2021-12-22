@@ -11,6 +11,8 @@ test('testing mocking module without __mocks__', () => {
 })
 
 test('mocking several modules work', () => {
+  vi.mocked(mockedB).mockRestore()
+
   mockedB()
 
   expect(mockedA).toHaveBeenCalledTimes(2)
