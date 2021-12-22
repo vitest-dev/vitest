@@ -302,45 +302,58 @@ export function unifiedDiff(actual: string, expected: string) {
   if (actual === expected)
     return ''
 
-  // const diffLimit = 10
   const indent = '  '
+  const diffLimit = 15
 
   let expectedLinesCount = 0
   let actualLinesCount = 0
+  let previousState: '-' | '+' | null = null
+  let previousCount = 0
   function preprocess(line: string) {
     if (!line || line.match(/\\ No newline/))
       return
 
     if (line[0] === '-') {
-      // TODO: finish this
-      // if (expectedLinesCount >= diffLimit)
-      //   return
+      if (previousState !== '-') {
+        previousState = '-'
+        previousCount = 0
+      }
+      previousCount++
       expectedLinesCount++
+      if (previousCount === diffLimit)
+        return '- ' + c.dim('...')
+      else if (previousCount > diffLimit)
+        return
     }
-    if (line[0] === '+') {
-      // if (actualLinesCount >= diffLimit)
-      //   return
+    else if (line[0] === '+') {
+      if (previousState !== '+') {
+        previousState = '+'
+        previousCount = 0
+      }
+      previousCount++
       actualLinesCount++
+      if (previousCount === diffLimit)
+        return '+ ' + c.dim('...')
+      else if (previousCount > diffLimit)
+        return
     }
     return line
   }
 
   const msg = diff.createPatch('string', expected, actual)
-  const lines = msg.split('\n').slice(5)
-  const cleanLines = lines.map(preprocess).filter(Boolean) as string[]
+  const lines = msg.split('\n').slice(5).map(preprocess).filter(Boolean) as string[]
+  const isCompact = expectedLinesCount === 1 && actualLinesCount === 1 && lines.length === 2
 
-  const compact = expectedLinesCount === 1 && actualLinesCount === 1 && cleanLines.length === 2
-
-  let formattedLines = cleanLines.map((line: string) => {
+  let formattedLines = lines.map((line: string) => {
     if (line[0] === '-') {
       line = formatLine(line.slice(1))
-      if (compact)
+      if (isCompact)
         return c.green(line)
       return c.green(`- ${formatLine(line)}`)
     }
     if (line[0] === '+') {
       line = formatLine(line.slice(1))
-      if (compact)
+      if (isCompact)
         return c.red(line)
       return c.red(`+ ${formatLine(line)}`)
     }
@@ -350,7 +363,7 @@ export function unifiedDiff(actual: string, expected: string) {
   })
 
   // Compact mode
-  if (compact) {
+  if (isCompact) {
     formattedLines = [
       `${c.green('- Expected')}   ${formattedLines[0]}`,
       `${c.red('+ Received')}   ${formattedLines[1]}`,
@@ -368,9 +381,5 @@ export function unifiedDiff(actual: string, expected: string) {
 }
 
 function formatLine(line: string) {
-  return cliTruncate(line, (process.stdout.columns || 80) - 1)
+  return cliTruncate(line, (process.stdout.columns || 80) - 4)
 }
-
-// function renderTruncateMessage(indent: string) {
-//   return `\n${indent}${c.dim('[...truncated]')}`
-// }
