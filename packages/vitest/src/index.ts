@@ -30,6 +30,7 @@ declare global {
       any(constructor: unknown): Any
       arrayContaining(expected: any): ArrayContaining
       stringMatching(expected: RegExp): StringMatching
+      assertions(expected: number): void
     }
 
     interface Assertion {

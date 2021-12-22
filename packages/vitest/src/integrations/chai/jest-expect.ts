@@ -2,6 +2,34 @@ import type { Spy } from 'tinyspy'
 import { equals as asymmetricEquals, hasAsymmetric } from './jest-utils'
 import type { ChaiPlugin } from './types'
 
+type MatcherState = {
+  assertionCalls: number;
+  expectedAssertionsNumber?: number | null;
+  expectedAssertionsNumberError?: Error;
+};
+const MATCHERS_OBJECT = Symbol.for('matchers-object');
+
+if (!global.hasOwnProperty(MATCHERS_OBJECT)) {
+  const defaultState: Partial<MatcherState> = {
+    assertionCalls: 0,
+    expectedAssertionsNumber: null,
+  };
+  Object.defineProperty(global, MATCHERS_OBJECT, {
+    value: {
+      state: defaultState,
+    },
+  });
+}
+
+export const getState = <State extends MatcherState = MatcherState>(): State =>
+  (global as any)[MATCHERS_OBJECT].state;
+
+export const setState = <State extends MatcherState = MatcherState>(
+  state: Partial<State>,
+): void => {
+  Object.assign((global as any)[MATCHERS_OBJECT].state, state);
+};
+
 // Jest Expect Compact
 // TODO: add more https://jestjs.io/docs/expect
 export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
@@ -324,4 +352,20 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       callResult,
     )
   })
+
+  utils.addMethod(
+    chai.expect,
+    'assertions',
+    function assertions(expected: number) {
+      const error = new Error(`expected number of assertions to be ${expected}`);
+      if (Error.captureStackTrace) {
+        Error.captureStackTrace(error, assertions);
+      }
+
+      setState({
+        expectedAssertionsNumber: expected,
+        expectedAssertionsNumberError: error,
+      });
+    },
+  )
 }

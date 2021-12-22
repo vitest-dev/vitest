@@ -7,6 +7,7 @@ import { getFn, getHooks } from './map'
 import { rpc, send } from './rpc'
 import { collectTests } from './collect'
 import { processError } from './error'
+import { getState, setState } from '../integrations/chai/jest-expect'
 
 export async function callSuiteHook<T extends keyof SuiteHooks>(suite: Suite, name: T, args: SuiteHooks[T][0] extends HookListener<infer A> ? A : never) {
   if (name === 'beforeEach' && suite.suite)
@@ -40,7 +41,12 @@ export async function runTest(test: Test) {
 
   try {
     await callSuiteHook(test.suite, 'beforeEach', [test, test.suite])
+    setState({ assertionCalls: 0, expectedAssertionsNumber: 0,expectedAssertionsNumberError: undefined  })
     await getFn(test)()
+    const { assertionCalls, expectedAssertionsNumber, expectedAssertionsNumberError} = getState()
+    if (assertionCalls !== expectedAssertionsNumber) {
+      throw expectedAssertionsNumberError
+    }
     test.result.state = 'pass'
   }
   catch (e) {

@@ -107,6 +107,20 @@ describe('jest-expect', () => {
     expect(complex).toHaveProperty('bar.arr.0')
     expect(complex).toHaveProperty('bar.arr.1.zoo', 'monkey')
   })
+
+  it('assertions', () => {
+    expect(1).toBe(1)
+    expect(1).toBe(1)
+    expect(1).toBe(1)
+    expect.assertions(3)
+  })
+
+  it('assertions with different order', () => {
+    expect.assertions(3)
+    expect(1).toBe(1)
+    expect(1).toBe(1)
+    expect(1).toBe(1)
+  })
 })
 
 it('timeout', () => new Promise(resolve => setTimeout(resolve, 500)))
