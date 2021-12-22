@@ -9,7 +9,7 @@ export * from './types'
 export * from './runtime/hooks'
 export * from './integrations/chai'
 export * from './integrations/jest-mock'
-export * from './integrations/utils'
+export * from './integrations/vi'
 
 declare module 'vite' {
   interface UserConfig {
