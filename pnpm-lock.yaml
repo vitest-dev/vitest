@@ -366,16 +366,6 @@ importers:
       vite: 2.7.4
       vitest: link:../../packages/vitest
 
-  test/testing-library-jest-dom:
-    specifiers:
-      '@testing-library/jest-dom': ^5.16.1
-      happy-dom: ^2.25.1
-      vitest: workspace:*
-    devDependencies:
-      '@testing-library/jest-dom': 5.16.1
-      happy-dom: 2.25.1
-      vitest: link:../../packages/vitest
-
   test/vitesse:
     specifiers:
       '@vitejs/plugin-vue': ^2.0.1
