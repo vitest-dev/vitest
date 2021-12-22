@@ -3,13 +3,14 @@ import { dirname, resolve } from 'pathe'
 import type { Plugin } from 'vite'
 import sirv from 'sirv'
 import { WebSocketServer } from 'ws'
+import type { Vitest } from '../../vitest/src/node'
 import { getSuitesAsJson } from './utils'
 
 const _dirname = typeof __dirname !== 'undefined'
   ? __dirname
   : dirname(fileURLToPath(import.meta.url))
 
-export const VitestUIPlugin = (): Plugin => {
+export const VitestUIPlugin = (vitest: Vitest): Plugin => {
   return {
     name: 'vitest:ui',
     apply: 'serve',
@@ -30,30 +31,11 @@ export const VitestUIPlugin = (): Plugin => {
               ws.on('message', () => {
 
               })
+
+              ws.send(getSuitesAsJson(vitest))
             })
           }
         }
-      })
-
-      server.middlewares.use('/__vitest_api', async(req, res) => {
-        // const vitest = process.__vitest__
-
-        // const suites = getSuites(vitest.state.getFiles())
-        //   .map(suite => ({
-        //     id: suite.id,
-        //     name: suite.name,
-        //     type: suite.type,
-        //     mode: suite.mode,
-        //     result: suite.result,
-        //   }))
-
-        // const info = {
-        //   suites,
-        // }
-
-        res.setHeader('Content-Type', 'application/json')
-        res.write(getSuitesAsJson())
-        res.end()
       })
 
       server.middlewares.use('/', sirv(resolve(_dirname, '../dist/client'), {
