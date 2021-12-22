@@ -17,7 +17,7 @@ test('JSON', () => {
   const output = JSON.stringify(input)
 
   expect(input).toEqual({
-    foo: 'hello ',
+    foo: 'hello',
     bar: 'world',
   })
   expect(output).toEqual('{"foo":"hello","bar":"world"}')
