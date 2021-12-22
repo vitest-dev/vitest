@@ -307,48 +307,62 @@ export function unifiedDiff(actual: string, expected: string) {
 
   const diffLimit = 10
   const indent = '  '
+
   let expectedLinesCount = 0
   let actualLinesCount = 0
-
   function preprocess(line: string) {
-    if (!line)
+    if (!line || line.match(/\\ No newline/))
       return
+
     if (line[0] === '-') {
       if (expectedLinesCount >= diffLimit)
         return
       expectedLinesCount++
-      line = line[0] + ' ' + line.slice(1)
-      const isLastLine = expectedLinesCount === diffLimit
-      return indent + c.green(`${formatLine(line)} ${isLastLine ? renderTruncateMessage(indent) : ''}`)
     }
     if (line[0] === '+') {
       if (actualLinesCount >= diffLimit)
         return
       actualLinesCount++
-      line = line[0] + ' ' + line.slice(1)
-      const isLastLine = actualLinesCount === diffLimit
-      return indent + c.red(`${formatLine(line)} ${isLastLine ? renderTruncateMessage(indent) : ''}`)
     }
-    if (line.match(/@@/))
-      return '--'
-    if (line.match(/\\ No newline/))
-      return null
-    return indent + ' ' + line
+    return line
   }
 
   const msg = diff.createPatch('string', expected, actual)
   const lines = msg.split('\n').slice(5)
-  const cleanLines = lines.map(preprocess).filter(Boolean)
+  const cleanLines = lines.map(preprocess).filter(Boolean) as string[]
+
+  const compact = expectedLinesCount === 1 && actualLinesCount === 1 && cleanLines.length === 2
+
+  expectedLinesCount = actualLinesCount = 0
+  const formattedLines = cleanLines.map((line: string) => {
+    if (line[0] === '-') {
+      line = formatLine(line.slice(1))
+      if (compact)
+        return c.green(line)
+      const isLastLine = expectedLinesCount === diffLimit
+      return indent + c.green(`- ${formatLine(line)} ${isLastLine ? renderTruncateMessage(indent) : ''}`)
+    }
+    if (line[0] === '+') {
+      line = formatLine(line.slice(1))
+      if (compact)
+        return c.red(line)
+      const isLastLine = actualLinesCount === diffLimit
+      return indent + c.red(`+ ${formatLine(line)} ${isLastLine ? renderTruncateMessage(indent) : ''}`)
+    }
+    if (line.match(/@@/))
+      return '--'
+    return indent + ' ' + line
+  })
 
   // Compact mode
-  if (expectedLinesCount === 1 && actualLinesCount === 1 && cleanLines.length === 2) {
+  if (compact) {
     return (
-      `\n${indent}${c.green('- expected')}   ${cleanLines[0]}\n${indent}${c.red('+ actual')}     ${cleanLines[1]}`
+      `\n${indent}${c.green('- expected')}   ${formattedLines[0]}\n${indent}${c.red('+ actual')}     ${formattedLines[1]}`
     )
   }
 
   return (
-    `\n${indent}${c.green('- expected')}\n${indent}${c.red('+ actual')}\n\n${cleanLines.join('\n')}`
+    `\n${indent}${c.green('- expected')}\n${indent}${c.red('+ actual')}\n\n${formattedLines.join('\n')}`
   )
 }
 
