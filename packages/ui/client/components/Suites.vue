@@ -1,5 +1,7 @@
 <script setup lang="ts">
-const { status, data, send } = useWebSocket('ws://localhost:3000/__vitest_api')
+const { status, data, send } = useWebSocket('ws://localhost:51204/__vitest_api')
+
+const suites = computed(() => JSON.parse(data.value || '[]').filter((x: any) => x))
 </script>
 
 <template>
@@ -16,6 +18,11 @@ const { status, data, send } = useWebSocket('ws://localhost:3000/__vitest_api')
       <button i-carbon-play />
     </div>
     {{ status }}
-    {{ data }}
+
+    <test-suite
+      v-for="suite in suites"
+      v-bind="suite"
+      :key="suite.id"
+    />
   </div>
 </template>

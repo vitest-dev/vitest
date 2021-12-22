@@ -1,21 +1,23 @@
 // import { getSuites } from '../../../src/utils'
 
-// const getCircularReplacer = () => {
-//   const seen = new WeakSet()
-//   return (key: any, value: any) => {
-//     if (typeof value === 'object' && value !== null) {
-//       if (seen.has(value))
-//         return
+import { getSuites } from '../../vitest/src/utils'
+import type { Vitest } from '../../vitest/src/node'
 
-//       seen.add(value)
-//     }
-//     return value
-//   }
-// }
+const getCircularReplacer = () => {
+  const seen = new WeakSet()
+  return (key: any, value: any) => {
+    if (typeof value === 'object' && value !== null) {
+      if (seen.has(value))
+        return
 
-export const getSuitesAsJson = () => {
-  // const vitest = process.__vitest__
-  // const suites = getSuites(vitest.state.getFiles()).filter(x => x)
+      seen.add(value)
+    }
+    return value
+  }
+}
 
-  // return JSON.stringify(suites, getCircularReplacer())
+export const getSuitesAsJson = (vitest: Vitest) => {
+  const suites = getSuites(vitest.state.getFiles()).filter(x => x)
+
+  return JSON.stringify(suites, getCircularReplacer())
 }
