@@ -343,6 +343,7 @@ importers:
     specifiers:
       '@testing-library/jest-dom': ^5.16.1
       '@testing-library/react': ^12.1.2
+      '@testing-library/react-hooks': ^7.0.2
       '@testing-library/user-event': ^13.5.0
       '@types/react': ^17.0.37
       '@types/react-dom': ^17.0.11
@@ -358,6 +359,7 @@ importers:
     devDependencies:
       '@testing-library/jest-dom': 5.16.1
       '@testing-library/react': 12.1.2_react-dom@17.0.2+react@17.0.2
+      '@testing-library/react-hooks': 7.0.2_react-dom@17.0.2+react@17.0.2
       '@testing-library/user-event': 13.5.0
       '@types/react': 17.0.37
       '@types/react-dom': 17.0.11
@@ -1570,6 +1572,28 @@ packages:
       dom-accessibility-api: 0.5.10
       lodash: 4.17.21
       redent: 3.0.0
+    dev: true
+
+  /@testing-library/react-hooks/7.0.2_react-dom@17.0.2+react@17.0.2:
+    resolution: {integrity: sha512-dYxpz8u9m4q1TuzfcUApqi8iFfR6R0FaMbr2hjZJy1uC8z+bO/K4v8Gs9eogGKYQop7QsrBTFkv/BCF7MzD2Cg==}
+    engines: {node: '>=12'}
+    peerDependencies:
+      react: '>=16.9.0'
+      react-dom: '>=16.9.0'
+      react-test-renderer: '>=16.9.0'
+    peerDependenciesMeta:
+      react-dom:
+        optional: true
+      react-test-renderer:
+        optional: true
+    dependencies:
+      '@babel/runtime': 7.16.3
+      '@types/react': 17.0.37
+      '@types/react-dom': 17.0.11
+      '@types/react-test-renderer': 17.0.1
+      react: 17.0.2
+      react-dom: 17.0.2_react@17.0.2
+      react-error-boundary: 3.1.4_react@17.0.2
     dev: true
 
   /@testing-library/react/12.1.2_react-dom@17.0.2+react@17.0.2:
@@ -5742,6 +5766,16 @@ packages:
       react: 17.0.2
       scheduler: 0.20.2
     dev: false
+
+  /react-error-boundary/3.1.4_react@17.0.2:
+    resolution: {integrity: sha512-uM9uPzZJTF6wRQORmSrvOIgt4lJ9MC1sNgEOj2XGsDTRE4kmpWxg7ENK9EWNKJRMAOY9z0MuF4yIfl6gp4sotA==}
+    engines: {node: '>=10', npm: '>=6'}
+    peerDependencies:
+      react: '>=16.13.1'
+    dependencies:
+      '@babel/runtime': 7.16.3
+      react: 17.0.2
+    dev: true
 
   /react-is/16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
