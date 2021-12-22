@@ -119,7 +119,7 @@ export const stringify = (object: unknown, maxDepth = 10): string => {
   try {
     result = prettyFormat(object, {
       maxDepth,
-      min: true,
+      // min: true,
       plugins: PLUGINS,
     })
   }
@@ -127,7 +127,7 @@ export const stringify = (object: unknown, maxDepth = 10): string => {
     result = prettyFormat(object, {
       callToJSON: false,
       maxDepth,
-      min: true,
+      // min: true,
       plugins: PLUGINS,
     })
   }
