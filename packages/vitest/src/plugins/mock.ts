@@ -13,8 +13,6 @@ const isComment = (line: string) => {
 }
 
 interface MockCodeblock {
-  start: number
-  end: number
   code: string
   declaraton: string
   path: string
@@ -25,7 +23,6 @@ const parseMocks = (code: string) => {
 
   const mockCalls: Record<string, MockCodeblock> = {}
   let mockCall = 0
-
   let lineIndex = -1
 
   while (lineIndex < splitted.length) {
@@ -33,17 +30,12 @@ const parseMocks = (code: string) => {
 
     const line = splitted[lineIndex]
 
-    if (typeof line === 'undefined')
-      break
+    if (!line) break
 
     const mock = mockCalls[mockCall] || {
       code: '',
       declaraton: '',
       path: '',
-    }
-
-    const endCall = () => {
-      mockCall++
     }
 
     if (!mock.code) {
@@ -60,7 +52,7 @@ const parseMocks = (code: string) => {
       // end at the same line
       // we parse code after vite, so it contains semicolons
       if (line.includes(');')) {
-        endCall()
+        mockCall++
         continue
       }
 
@@ -83,7 +75,7 @@ const parseMocks = (code: string) => {
        * );
        */
       if (startNumber === endNumber || (startNumber === 0 && endNumber === 0))
-        endCall()
+        mockCall++
     }
   }
 

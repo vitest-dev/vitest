@@ -68,7 +68,7 @@ class VitestUtils {
   // just hints for transformer to rewrite imports
 
   /**
-   * Makes all `imports` to passed module mocked.
+   * Makes all `imports` to passed module to be mocked.
    * - If there is a factory, will return it's result. The call to `vi.mock` is hoisted to the top of the file,
    * so you don't have access to variables declared in the global file scope, if you didn't put them before imports!
    * - If `__mocks__` folder with file of the same name exist, all imports will
