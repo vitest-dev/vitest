@@ -305,35 +305,28 @@ export function unifiedDiff(actual: string, expected: string) {
   const indent = '  '
   const diffLimit = 15
 
-  let expectedLinesCount = 0
-  let actualLinesCount = 0
+  const counts = {
+    '+': 0,
+    '-': 0,
+  }
+  const expectedLinesCount = 0
+  const actualLinesCount = 0
   let previousState: '-' | '+' | null = null
   let previousCount = 0
   function preprocess(line: string) {
     if (!line || line.match(/\\ No newline/))
       return
 
-    if (line[0] === '-') {
-      if (previousState !== '-') {
-        previousState = '-'
+    const char = line[0] as '+' | '-'
+    if ('-+'.includes(char)) {
+      if (previousState !== char) {
+        previousState = char
         previousCount = 0
       }
       previousCount++
-      expectedLinesCount++
+      counts[char]++
       if (previousCount === diffLimit)
-        return '- ' + c.dim('...')
-      else if (previousCount > diffLimit)
-        return
-    }
-    else if (line[0] === '+') {
-      if (previousState !== '+') {
-        previousState = '+'
-        previousCount = 0
-      }
-      previousCount++
-      actualLinesCount++
-      if (previousCount === diffLimit)
-        return '+ ' + c.dim('...')
+        return c.dim(char + ' ...')
       else if (previousCount > diffLimit)
         return
     }
@@ -342,9 +335,9 @@ export function unifiedDiff(actual: string, expected: string) {
 
   const msg = diff.createPatch('string', expected, actual)
   const lines = msg.split('\n').slice(5).map(preprocess).filter(Boolean) as string[]
-  const isCompact = expectedLinesCount === 1 && actualLinesCount === 1 && lines.length === 2
+  const isCompact = counts['+'] === 1 && counts['-'] === 1 && lines.length === 2
 
-  let formattedLines = lines.map((line: string) => {
+  let formatted = lines.map((line: string) => {
     if (line[0] === '-') {
       line = formatLine(line.slice(1))
       if (isCompact)
@@ -364,20 +357,20 @@ export function unifiedDiff(actual: string, expected: string) {
 
   // Compact mode
   if (isCompact) {
-    formattedLines = [
-      `${c.green('- Expected')}   ${formattedLines[0]}`,
-      `${c.red('+ Received')}   ${formattedLines[1]}`,
+    formatted = [
+      `${c.green('- Expected')}   ${formatted[0]}`,
+      `${c.red('+ Received')}   ${formatted[1]}`,
     ]
   }
   else {
-    formattedLines.unshift(
+    formatted.unshift(
       c.green('- Expected  -' + expectedLinesCount),
       c.red('+ Received  +' + actualLinesCount),
       '',
     )
   }
 
-  return formattedLines.map(i => indent + i).join('\n')
+  return formatted.map(i => indent + i).join('\n')
 }
 
 function formatLine(line: string) {
