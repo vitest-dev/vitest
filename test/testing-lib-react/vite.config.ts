@@ -9,9 +9,9 @@ export default defineConfig({
   plugins: [react()],
   test: {
     global: true,
-    environment: 'happy-dom',
-    setupFiles: [
-      './test/setup.ts',
-    ],
+    environment: 'jsdom',
+    deps: {
+      inline: ['@testing-library/user-event'],
+    },
   },
 })

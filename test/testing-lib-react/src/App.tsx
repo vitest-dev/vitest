@@ -11,7 +11,6 @@ function App() {
         <p>
           <button
             type="button"
-            data-testid="count-button"
             onClick={() => setCount(count => count + 1)}
           >
             count is: {count}
