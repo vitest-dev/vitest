@@ -313,21 +313,21 @@ export function unifiedDiff(actual: string, expected: string) {
   function preprocess(line: string) {
     if (!line)
       return
-    if (line[0] === '+') {
+    if (line[0] === '-') {
       if (expectedLinesCount >= diffLimit)
         return
       expectedLinesCount++
       line = line[0] + ' ' + line.slice(1)
       const isLastLine = expectedLinesCount === diffLimit
-      return indent + c.red(`${formatLine(line)} ${isLastLine ? renderTruncateMessage(indent) : ''}`)
+      return indent + c.green(`${formatLine(line)} ${isLastLine ? renderTruncateMessage(indent) : ''}`)
     }
-    if (line[0] === '-') {
+    if (line[0] === '+') {
       if (actualLinesCount >= diffLimit)
         return
       actualLinesCount++
       line = line[0] + ' ' + line.slice(1)
       const isLastLine = actualLinesCount === diffLimit
-      return indent + c.green(`${formatLine(line)} ${isLastLine ? renderTruncateMessage(indent) : ''}`)
+      return indent + c.red(`${formatLine(line)} ${isLastLine ? renderTruncateMessage(indent) : ''}`)
     }
     if (line.match(/@@/))
       return '--'
@@ -336,12 +336,12 @@ export function unifiedDiff(actual: string, expected: string) {
     return indent + ' ' + line
   }
 
-  const msg = diff.createPatch('string', actual, expected)
+  const msg = diff.createPatch('string', expected, actual)
   const lines = msg.split('\n').slice(5)
   const cleanLines = lines.map(preprocess).filter(Boolean)
 
   // Compact mode
-  if (expectedLinesCount === 1 && actualLinesCount === 1 && lines.length === 2) {
+  if (expectedLinesCount === 1 && actualLinesCount === 1 && cleanLines.length === 2) {
     return (
       `\n${indent}${c.green('- expected')}   ${cleanLines[0]}\n${indent}${c.red('+ actual')}     ${cleanLines[1]}`
     )
