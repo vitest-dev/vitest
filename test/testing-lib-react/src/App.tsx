@@ -1,8 +1,8 @@
-import React, { useState } from 'react'
+import { useCounter } from './hooks/useCounter'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const { count, increment } = useCounter()
 
   return (
     <div className="App">
@@ -11,7 +11,7 @@ function App() {
         <p>
           <button
             type="button"
-            onClick={() => setCount(count => count + 1)}
+            onClick={increment}
           >
             count is: {count}
           </button>

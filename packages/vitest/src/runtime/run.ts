@@ -1,8 +1,9 @@
 import { performance } from 'perf_hooks'
 import type { HookListener } from 'vitest'
+import { vi } from '../integrations/vi'
 import type { ResolvedConfig, Suite, SuiteHooks, Task, Test } from '../types'
 import { getSnapshotClient } from '../integrations/snapshot/chai'
-import { clearModuleMocks, hasFailed, hasTests, partitionSuiteChildren } from '../utils'
+import { hasFailed, hasTests, partitionSuiteChildren } from '../utils'
 import { getFn, getHooks } from './map'
 import { rpc, send } from './rpc'
 import { collectTests } from './collect'
@@ -153,4 +154,16 @@ export async function startTests(paths: string[], config: ResolvedConfig) {
   await runSuites(files)
 
   await getSnapshotClient().saveSnap()
+}
+
+export function clearModuleMocks() {
+  const { clearMocks, mockReset, restoreMocks } = process.__vitest_worker__.config
+
+  // since each function calls another, we can just call one
+  if (restoreMocks)
+    vi.restoreAllMocks()
+  else if (mockReset)
+    vi.resetAllMocks()
+  else if (clearMocks)
+    vi.clearAllMocks()
 }

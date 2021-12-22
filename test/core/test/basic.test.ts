@@ -16,7 +16,11 @@ test('JSON', () => {
 
   const output = JSON.stringify(input)
 
-  expect(output).eq('{"foo":"hello","bar":"world"}')
+  expect(input).toEqual({
+    foo: 'hello',
+    bar: 'world',
+  })
+  expect(output).toEqual('{"foo":"hello","bar":"world"}')
   assert.deepEqual(JSON.parse(output), input, 'matches original')
 })
 

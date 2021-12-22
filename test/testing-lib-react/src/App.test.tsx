@@ -1,4 +1,3 @@
-import React from 'react'
 import { describe, expect, it } from 'vitest'
 import { fireEvent, render, screen } from './utils/test-utils'
 import App from './App'
