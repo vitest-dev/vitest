@@ -108,8 +108,8 @@ class VitestUtils {
    * @param path Path to the module. Can be aliased, if your config suppors it
    * @returns Fully mocked module
    */
-  public async importMock<T>(path: string): Promise<T> {
-    return {} as T
+  public async importMock<T>(path: string): Promise<MaybeMockedDeep<T>> {
+    return {} as MaybeMockedDeep<T>
   }
 
   /**
