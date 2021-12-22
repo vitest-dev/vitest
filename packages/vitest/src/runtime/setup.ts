@@ -1,10 +1,10 @@
-import {Console} from 'console'
-import {Writable} from 'stream'
-import {environments} from '../env'
-import {setupChai} from '../integrations/chai/setup'
-import type {ResolvedConfig} from '../types'
-import {toArray} from '../utils'
-import {send} from './rpc'
+import { Console } from 'console'
+import { Writable } from 'stream'
+import { environments } from '../env'
+import { setupChai } from '../integrations/chai/setup'
+import type { ResolvedConfig } from '../types'
+import { toArray } from '../utils'
+import { send } from './rpc'
 
 let globalSetup = false
 export async function setupGlobalEnv(config: ResolvedConfig) {
