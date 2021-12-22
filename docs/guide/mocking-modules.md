@@ -41,6 +41,25 @@ vi.mock('./example', async () => {
 
 Imports a module with all of its properties (including nested properties) mocked. Follows the same rules that [`vi.mock`](#mock) follows. For the rules applied, see [algorithm](#automockingalgorithm).
 
+### mocked
+
+**Type**: `<T>(obj: T, deep?: boolean) => MaybeMockedDeep<T>`
+
+Type helper for TypeScript. In reality just returns the object that was passed.
+
+```ts
+import example from './example'
+vi.mock('./example')
+
+test('1+1 equals 2' async () => {
+ vi.mocked(example.calc).mockRestore()
+
+ const res = example.calc(1, '+', 1)
+
+ expect(res).toBe(2)
+})
+```
+
 ## Automocking algorithm
 
 If your code is importing mocked module, but there are no `__mocks__` file for this module or a `factory`, Vitest will mock the module itself by invoking it and mocking every export.
