@@ -1,8 +1,9 @@
 import { format } from 'util'
+import { format as prettyFormat } from 'pretty-format'
 
 // https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm
 export function serializeError(val: any): any {
-  if (!val)
+  if (!val || typeof val === 'string')
     return val
 
   if (typeof val === 'function')
@@ -33,6 +34,11 @@ export function processError(err: any) {
     err.stackStr = String(err.stack)
   if (err.name)
     err.nameStr = String(err.name)
+
+  if (typeof err.expected !== 'string')
+    err.expected = prettyFormat(err.expected)
+  if (typeof err.actual !== 'string')
+    err.actual = prettyFormat(err.actual)
 
   return serializeError(err)
 }

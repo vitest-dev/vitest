@@ -1,7 +1,6 @@
 /* eslint-disable prefer-template */
 /* eslint-disable no-template-curly-in-string */
 import { existsSync, promises as fs } from 'fs'
-import { format } from 'util'
 import { relative } from 'pathe'
 import c from 'picocolors'
 import * as diff from 'diff'
@@ -109,14 +108,12 @@ async function getSourcePos(ctx: Vitest, nearest: ParsedStack) {
   return pos
 }
 
-// TODO: handle big object and big string diff
 function displayDiff(actual: string, expected: string) {
-  console.error(c.gray(unifiedDiff(format(actual), format(expected))) + '\n')
+  console.error(c.gray(unifiedDiff(actual, expected)) + '\n')
 }
 
 function printErrorMessage(error: ErrorWithDiff) {
   const errorName = error.name || error.nameStr || 'Unknown Error'
-
   console.error(c.red(`${c.bold(errorName)}: ${error.message}`))
 }
 
@@ -305,7 +302,7 @@ export function unifiedDiff(actual: string, expected: string) {
   if (actual === expected)
     return ''
 
-  const diffLimit = 10
+  // const diffLimit = 10
   const indent = '  '
 
   let expectedLinesCount = 0
@@ -315,13 +312,14 @@ export function unifiedDiff(actual: string, expected: string) {
       return
 
     if (line[0] === '-') {
-      if (expectedLinesCount >= diffLimit)
-        return
+      // TODO: finish this
+      // if (expectedLinesCount >= diffLimit)
+      //   return
       expectedLinesCount++
     }
     if (line[0] === '+') {
-      if (actualLinesCount >= diffLimit)
-        return
+      // if (actualLinesCount >= diffLimit)
+      //   return
       actualLinesCount++
     }
     return line
@@ -333,43 +331,46 @@ export function unifiedDiff(actual: string, expected: string) {
 
   const compact = expectedLinesCount === 1 && actualLinesCount === 1 && cleanLines.length === 2
 
-  expectedLinesCount = actualLinesCount = 0
-  const formattedLines = cleanLines.map((line: string) => {
+  let formattedLines = cleanLines.map((line: string) => {
     if (line[0] === '-') {
       line = formatLine(line.slice(1))
       if (compact)
         return c.green(line)
-      const isLastLine = expectedLinesCount === diffLimit
-      return indent + c.green(`- ${formatLine(line)} ${isLastLine ? renderTruncateMessage(indent) : ''}`)
+      return c.green(`- ${formatLine(line)}`)
     }
     if (line[0] === '+') {
       line = formatLine(line.slice(1))
       if (compact)
         return c.red(line)
-      const isLastLine = actualLinesCount === diffLimit
-      return indent + c.red(`+ ${formatLine(line)} ${isLastLine ? renderTruncateMessage(indent) : ''}`)
+      return c.red(`+ ${formatLine(line)}`)
     }
     if (line.match(/@@/))
       return '--'
-    return indent + ' ' + line
+    return ' ' + line
   })
 
   // Compact mode
   if (compact) {
-    return (
-      `\n${indent}${c.green('- expected')}   ${formattedLines[0]}\n${indent}${c.red('+ actual')}     ${formattedLines[1]}`
+    formattedLines = [
+      `${c.green('- Expected')}   ${formattedLines[0]}`,
+      `${c.red('+ Received')}   ${formattedLines[1]}`,
+    ]
+  }
+  else {
+    formattedLines.unshift(
+      c.green('- Expected  -' + expectedLinesCount),
+      c.red('+ Received  +' + actualLinesCount),
+      '',
     )
   }
 
-  return (
-    `\n${indent}${c.green('- expected')}\n${indent}${c.red('+ actual')}\n\n${formattedLines.join('\n')}`
-  )
+  return formattedLines.map(i => indent + i).join('\n')
 }
 
 function formatLine(line: string) {
   return cliTruncate(line, (process.stdout.columns || 80) - 1)
 }
 
-function renderTruncateMessage(indent: string) {
-  return `\n${indent}${c.dim('[...truncated]')}`
-}
+// function renderTruncateMessage(indent: string) {
+//   return `\n${indent}${c.dim('[...truncated]')}`
+// }
