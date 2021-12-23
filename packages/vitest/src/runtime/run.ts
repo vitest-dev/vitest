@@ -42,10 +42,10 @@ export async function runTest(test: Test) {
 
   try {
     await callSuiteHook(test.suite, 'beforeEach', [test, test.suite])
-    setState({ assertionCalls: 0, expectedAssertionsNumber: 0,expectedAssertionsNumberError: undefined  })
+    setState({ assertionCalls: 0, expectedAssertionsNumber: null, expectedAssertionsNumberError: null  })
     await getFn(test)()
     const { assertionCalls, expectedAssertionsNumber, expectedAssertionsNumberError} = getState()
-    if (assertionCalls !== expectedAssertionsNumber) {
+    if (expectedAssertionsNumber !== null && assertionCalls !== expectedAssertionsNumber) {
       throw expectedAssertionsNumberError
     }
     test.result.state = 'pass'

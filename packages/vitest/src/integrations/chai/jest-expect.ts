@@ -4,15 +4,16 @@ import type { ChaiPlugin } from './types'
 
 type MatcherState = {
   assertionCalls: number;
-  expectedAssertionsNumber?: number | null;
-  expectedAssertionsNumberError?: Error;
+  expectedAssertionsNumber: number | null;
+  expectedAssertionsNumberError: Error | null;
 };
 const MATCHERS_OBJECT = Symbol.for('matchers-object');
 
 if (!global.hasOwnProperty(MATCHERS_OBJECT)) {
   const defaultState: Partial<MatcherState> = {
     assertionCalls: 0,
-    expectedAssertionsNumber: null,
+    expectedAssertionsNumber: null, 
+    expectedAssertionsNumberError: null
   };
   Object.defineProperty(global, MATCHERS_OBJECT, {
     value: {
@@ -357,7 +358,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     chai.expect,
     'assertions',
     function assertions(expected: number) {
-      const error = new Error(`expected number of assertions to be ${expected}`);
+      const error = new Error(`expected number of assertions to be ${expected}, but got ${getState().assertionCalls}`);
       if (Error.captureStackTrace) {
         Error.captureStackTrace(error, assertions);
       }
