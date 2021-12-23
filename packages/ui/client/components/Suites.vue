@@ -19,9 +19,8 @@ const suites = computed(() => JSON.parse(data.value || '[]').filter((x: any) => 
       <span font-light text-sm flex-1>
         Test Suites
       </span>
-      <span v-if="status === 'OPEN'" i-carbon-checkmark text-green-300 />
-      <span v-else-if="status === 'CONNECTING'" i-carbon-pending text-blue-300 />
-      <span v-else i-carbon-warning text-red-300 />
+      <span v-if="status === 'CONNECTING'" i-carbon-wifi text-orange-300 />
+      <span v-else-if="status === 'CLOSED'" i-carbon-wifi-off text-red-300 />
       <button i-carbon-play />
     </div>
 
