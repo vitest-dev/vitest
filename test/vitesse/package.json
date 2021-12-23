@@ -10,9 +10,9 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^2.0.1",
-    "@vue/test-utils": "^2.0.0-rc.17",
+    "@vue/test-utils": "^2.0.0-rc.18",
     "happy-dom": "*",
-    "unplugin-auto-import": "^0.5.3",
+    "unplugin-auto-import": "^0.5.4",
     "unplugin-vue-components": "^0.17.9",
     "vitest": "workspace:*"
   }

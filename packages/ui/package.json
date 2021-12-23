@@ -35,12 +35,12 @@
   },
   "devDependencies": {
     "@types/ws": "^8.2.2",
-    "@unocss/reset": "^0.16.4",
+    "@unocss/reset": "^0.17.2",
     "@vitejs/plugin-vue": "^2.0.1",
-    "rollup": "^2.61.1",
     "picocolors": "^1.0.0",
-    "unocss": "^0.16.4",
-    "unplugin-auto-import": "^0.5.3",
+    "rollup": "^2.61.1",
+    "unocss": "^0.17.2",
+    "unplugin-auto-import": "^0.5.4",
     "unplugin-vue-components": "^0.17.9",
     "vitest": "workspace:*"
   }
