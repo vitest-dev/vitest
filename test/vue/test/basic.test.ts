@@ -1,5 +1,3 @@
-/// <reference types="vitest/global.d.ts" />
-
 import { mount } from '@vue/test-utils'
 import Hello from '../components/Hello.vue'
 
