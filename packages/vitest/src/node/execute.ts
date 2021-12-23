@@ -1,20 +1,14 @@
 import { builtinModules, createRequire } from 'module'
 import { fileURLToPath, pathToFileURL } from 'url'
-import { existsSync, readdirSync } from 'fs'
 import vm from 'vm'
-import { basename, dirname, resolve } from 'pathe'
+import { dirname, resolve } from 'pathe'
 import { isValidNodeImport } from 'mlly'
 import type { ModuleCache } from '../types'
-import { mergeSlashes, slash } from '../utils'
-import { spies, spyOn } from '../integrations/jest-mock'
+import { slash } from '../utils'
+import type { SuiteMocks } from './mocker'
+import { createMocker } from './mocker'
 
 export type FetchFunction = (id: string) => Promise<string | undefined>
-
-interface SuiteMocks {
-  [suitePath: string]: {
-    [originalPath: string]: string | null
-  }
-}
 
 export interface ExecuteOptions {
   root: string
@@ -77,103 +71,49 @@ export async function interpretedImport(path: string, interpretDefault: boolean)
   return mod
 }
 
-function resolveMockPath(mockPath: string, root: string, nmName: string | null) {
-  // it's a node_module alias
-  // all mocks should be inside <root>/__mocks__
-  if (nmName) {
-    const mockFolder = resolve(root, '__mocks__')
-    const files = readdirSync(mockFolder)
-
-    for (const file of files) {
-      const [basename] = file.split('.')
-      if (basename === nmName)
-        return resolve(mockFolder, file).replace(root, '')
-    }
-
-    return null
-  }
-
-  const dir = dirname(mockPath)
-  const baseId = basename(mockPath)
-  const fullPath = resolve(dir, '__mocks__', baseId)
-  return existsSync(fullPath) ? fullPath.replace(root, '') : null
-}
-
-// TODO https://jestjs.io/docs/jest-object#jestcreatemockfrommodulemodulename
-function mockObject(obj: any) {
-  const newObj = { ...obj }
-  // eslint-disable-next-line no-restricted-syntax
-  for (const k in obj) {
-    newObj[k] = obj[k]
-
-    if (typeof obj[k] === 'function' && !obj[k].__isSpy)
-      spyOn(newObj, k)
-  }
-  return newObj
-}
-
 export async function executeInViteNode(options: ExecuteOptions) {
   const { moduleCache, root, files, fetch, mockMap } = options
 
   const externalCache = new Map<string, boolean>()
   builtinModules.forEach(m => externalCache.set(m, true))
 
+  const {
+    getActualPath,
+    getSuiteFilepath,
+    mockObject,
+    mockPath,
+    clearMocks,
+    unmockPath,
+    resolveMockPath,
+  } = createMocker(root, mockMap)
+
   const result = []
   for (const file of files)
     result.push(await cachedRequest(`/@fs/${slash(resolve(file))}`, []))
   return result
 
-  function getSuiteFilepath() {
-    return process.__vitest_worker__?.filepath
-  }
-
-  function getActualPath(path: string, nmName: string) {
-    return nmName ? mergeSlashes(`/@fs/${path}`) : path.replace(root, '')
-  }
-
-  function unmockPath(path: string, nmName: string) {
-    const suitefile = getSuiteFilepath()
-
-    if (suitefile) {
-      const fsPath = getActualPath(path, nmName)
-      mockMap[suitefile] ??= {}
-      delete mockMap[suitefile][fsPath]
-    }
-  }
-
-  function mockPath(path: string, nmName: string) {
-    const suitefile = getSuiteFilepath()
-
-    if (suitefile) {
-      const mockPath = resolveMockPath(path, root, nmName)
-      const fsPath = getActualPath(path, nmName)
-      mockMap[suitefile] ??= {}
-      mockMap[suitefile][fsPath] = mockPath
-    }
-  }
-
-  function clearMocks({ clearMocks, mockReset, restoreMocks }: { clearMocks: boolean; mockReset: boolean; restoreMocks: boolean}) {
-    if (!clearMocks && !mockReset && !restoreMocks)
-      return
-
-    spies.forEach((s) => {
-      if (restoreMocks)
-        s.mockRestore()
-      else if (mockReset)
-        s.mockReset()
-      else if (clearMocks)
-        s.mockClear()
-    })
+  async function callFunctionMock(dep: string, mock: () => any) {
+    const name = `${dep}__mock`
+    const cached = moduleCache.get(name)?.exports
+    if (cached)
+      return cached
+    const exports = await mock()
+    setCache(name, { exports })
+    return exports
   }
 
   async function directRequest(id: string, fsPath: string, callstack: string[]) {
     callstack = [...callstack, id]
     const suite = getSuiteFilepath()
     const request = async(dep: string, canMock = true) => {
-      const mocks = mockMap[suite || ''] || {}
-      const mock = mocks[dep]
-      if (mock && canMock)
-        dep = mock
+      if (canMock) {
+        const mocks = mockMap[suite || ''] || {}
+        const mock = mocks[dep]
+        if (typeof mock === 'function')
+          return callFunctionMock(dep, mock)
+        if (typeof mock === 'string')
+          dep = mock
+      }
       if (callstack.includes(dep)) {
         const cacheKey = toFilePath(dep, root)
         if (!moduleCache.get(cacheKey)?.exports)
@@ -212,12 +152,19 @@ export async function executeInViteNode(options: ExecuteOptions) {
     }
 
     const importMock = async(path: string, nmName: string) => {
-      const mockPath = resolveMockPath(path, root, nmName)
-      if (mockPath === null) {
-        const exports = await request(getActualPath(path, nmName), false)
-        return mockObject(exports)
+      if (!suite)
+        throw new Error('You can import mock only inside of a running test')
+
+      const mock = (mockMap[suite] || {})[path] || resolveMockPath(path, root, nmName)
+      if (mock === null) {
+        const fsPath = getActualPath(path, nmName)
+        const exports = mockObject(await request(fsPath, false))
+        setCache(fsPath, { exports })
+        return exports
       }
-      return request(mockPath, true)
+      if (typeof mock === 'function')
+        return callFunctionMock(path, mock)
+      return request(mock, true)
     }
 
     const context = {

@@ -13,13 +13,13 @@ We recommend installing [ni](https://github.com/antfu/ni) to help switching betw
 
 To develop and test `vitest` package:
 
-1. Run `pnpm i` in `vitest`'s root folder
+1. Run `pnpm install` in `vitest`'s root folder
 
 2. Run `pnpm run dev` to build sources in watch mode
 
-3. Run 
-  - `pnpm run test` to run core tests
-  - `pnpm run test:all` to run all the suite
+3. Run
+   - `pnpm run test` to run core tests
+   - `pnpm run test:all` to run all the suite
 
 ## Debugging
 
@@ -31,11 +31,11 @@ If you want to use break point and explore code execution you can use the ["Run 
 
 2. Click on the "Run and Debug" icon in the activity bar of the editor.
 
-2. Click on the "Javascript Debug Terminal" button. 
+3. Click on the "Javascript Debug Terminal" button.
 
-3. It will open a terminal, then type the test command: `pnpm run test`
+4. It will open a terminal, then type the test command: `pnpm run test`
 
-4. The execution will stop and you'll use the [Debug toolbar](https://code.visualstudio.com/docs/editor/debugging#_debug-actions) to continue, step over, restart the process...
+5. The execution will stop and you'll use the [Debug toolbar](https://code.visualstudio.com/docs/editor/debugging#_debug-actions) to continue, step over, restart the process...
 
 ## Testing Vite against external packages
 
@@ -54,7 +54,7 @@ You may wish to test your locally-modified copy of Vitest against another packag
 }
 ```
 
-And re-run `pnpm i` to link the package.
+And re-run `pnpm install` to link the package.
 
 ## Pull Request Guidelines
 

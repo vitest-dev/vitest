@@ -22,10 +22,33 @@ defineProps<{
     h-12
     border-rounded
   >
-    <span text-green-500 i-carbon:checkmark-outline mr-4 block text-xl />
+    <span
+      v-if="result.state === 'pass'"
+      text-green-500
+      i-carbon:checkmark-outline
+      mr-4
+      block
+      text-xl
+    />
+    <span
+      v-else-if="result.state === 'fail'"
+      text-red-500
+      i-carbon:misuse-outline
+      mr-4
+      block
+      text-xl
+    />
     <div flex flex-col>
       <span text-sm>{{ name }}</span>
-      <span text-xs text-light-900 text-opacity-50>Took {{ Math.round(result.end - result.start) }}ms</span>
+      <span
+        text-xs
+        text-gray-500
+        dark:text-light-500
+        text-opacity-50
+        dark:text-opacity-50
+      >
+        Took {{ Math.round(result.end - result.start) }}ms
+      </span>
     </div>
   </div>
 </template>

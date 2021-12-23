@@ -1,4 +1,4 @@
-import type { Spy } from 'tinyspy'
+import type { Spy } from 'vitest'
 import { equals as asymmetricEquals, hasAsymmetric } from './jest-utils'
 import type { ChaiPlugin } from './types'
 

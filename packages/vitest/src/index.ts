@@ -11,6 +11,8 @@ export * from './integrations/chai'
 export * from './integrations/jest-mock'
 export * from './integrations/vi'
 
+export type { Spy, SpyFn } from 'tinyspy'
+
 declare module 'vite' {
   interface UserConfig {
     /**

@@ -151,11 +151,7 @@ function enhanceSpy<TArgs extends any[], TReturns>(
 
   let onceImplementations: ((...args: TArgs) => TReturns)[] = []
 
-  let name = ''
-
-  Object.defineProperty(stub, 'name', {
-    get: () => name,
-  })
+  let name: string = (stub as any).name
 
   stub.getMockName = () => name || 'vi.fn()'
   stub.mockName = (n) => {
