@@ -21,6 +21,7 @@
   "scripts": {
     "dev:node": "rollup -c --watch node",
     "dev:client": "vite",
+    "dev:ui": "run-p dev:node dev:client",
     "build:node": "rollup -c",
     "build:client": "vite build",
     "build": "rimraf dist && pnpm build:node && pnpm build:client"
