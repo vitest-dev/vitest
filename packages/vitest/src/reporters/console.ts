@@ -1,7 +1,7 @@
 import { performance } from 'perf_hooks'
 import { relative } from 'pathe'
 import c from 'picocolors'
-import type { Reporter, TaskResultPack, UserConsoleLog } from '../types'
+import type { File, Reporter, TaskResultPack, UserConsoleLog } from '../types'
 import { getSuites, getTests } from '../utils'
 import type { Vitest } from '../node'
 import { printError } from './diff'
@@ -70,7 +70,8 @@ export class ConsoleReporter implements Reporter {
       this.ctx.error(c.red(divider(c.bold(c.inverse(` Failed Suites ${failedSuites.length} `)))))
       this.ctx.error()
       for (const suite of failedSuites) {
-        this.ctx.error(c.red(`\n- ${getFullName(suite)}`))
+        const filepath = (suite as File)?.filepath || ''
+        this.ctx.error(c.red(`\n- ${getFullName(suite)} ${c.dim(`[ ${this.relative(filepath)} ]`)}`))
         await printError(suite.result?.error, this.ctx)
         errorDivider()
       }
