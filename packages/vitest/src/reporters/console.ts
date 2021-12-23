@@ -84,16 +84,15 @@ export class ConsoleReporter implements Reporter {
       this.ctx.error()
       for (const test of failedTests) {
         const error = test.result?.error as Error
-        if (errorMap.get(error.stack)) {
+        if (errorMap.get(error.stack))
           errorMap.get(error.stack)!.push(test)
-        } else {
+        else
           errorMap.set(error.stack, [test])
-        }
       }
       for (const [error, tests] of errorMap) {
-        for (const test of tests) {
+        for (const test of tests)
           this.ctx.error(`${c.red(c.bold(c.inverse(' FAIL ')))} ${getFullName(test)}`)
-        }
+
         await printError(error, this.ctx)
         errorDivider()
       }
