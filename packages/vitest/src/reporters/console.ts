@@ -77,7 +77,7 @@ export class ConsoleReporter implements Reporter {
       }
     }
 
-    const errorMap = new Map<string | undefined, Test[]>()
+    const errorMap = new Map<string | undefined, {error: unknown; tests: Test[]} >()
 
     if (failedTests.length) {
       this.ctx.error(c.red(divider(c.bold(c.inverse(` Failed Tests ${failedTests.length} `)))))
@@ -85,11 +85,11 @@ export class ConsoleReporter implements Reporter {
       for (const test of failedTests) {
         const error = test.result?.error as Error
         if (errorMap.get(error.stack))
-          errorMap.get(error.stack)!.push(test)
+          errorMap.get(error.stack)!.tests.push(test)
         else
-          errorMap.set(error.stack, [test])
+          errorMap.set(error.stack, { error, tests: [test] })
       }
-      for (const [error, tests] of errorMap) {
+      for (const [, { error, tests }] of errorMap) {
         for (const test of tests)
           this.ctx.error(`${c.red(c.bold(c.inverse(' FAIL ')))} ${getFullName(test)}`)
 
