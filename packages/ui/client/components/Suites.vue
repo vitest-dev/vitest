@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { computed } from '@vue/composition-api'
+
 const { status, data, send } = useWebSocket('ws://localhost:51204/__vitest_api')
 
 const suites = computed(() => JSON.parse(data.value || '[]').filter((x: any) => x))
