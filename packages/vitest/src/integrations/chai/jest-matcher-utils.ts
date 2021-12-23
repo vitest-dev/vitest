@@ -4,6 +4,7 @@
 import c from 'picocolors'
 import type { Formatter } from 'picocolors/types'
 import { format as prettyFormat, plugins as prettyFormatPlugins } from 'pretty-format'
+import { unifiedDiff } from '../../reporters/diff'
 
 export const EXPECTED_COLOR = c.green
 export const RECEIVED_COLOR = c.red
@@ -118,7 +119,7 @@ export const stringify = (object: unknown, maxDepth = 10): string => {
   try {
     result = prettyFormat(object, {
       maxDepth,
-      min: true,
+      // min: true,
       plugins: PLUGINS,
     })
   }
@@ -126,7 +127,7 @@ export const stringify = (object: unknown, maxDepth = 10): string => {
     result = prettyFormat(object, {
       callToJSON: false,
       maxDepth,
-      min: true,
+      // min: true,
       plugins: PLUGINS,
     })
   }
@@ -161,4 +162,10 @@ export type DiffOptions = {
   patchColor?: Formatter
   // pretty-format type
   compareKeys?: any
+}
+
+// TODO: do something with options
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function diff(a: any, b: any, options?: DiffOptions) {
+  return unifiedDiff(stringify(a), stringify(b))
 }

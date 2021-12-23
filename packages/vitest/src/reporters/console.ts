@@ -4,7 +4,7 @@ import c from 'picocolors'
 import type { Reporter, TaskResultPack, UserConsoleLog } from '../types'
 import { getSuites, getTests } from '../utils'
 import type { Vitest } from '../node'
-import { printError } from './error'
+import { printError } from './diff'
 import { createRenderer, divider, getFullName, getStateString, getStateSymbol, renderSnapshotSummary } from './renderer'
 import { F_RIGHT } from './figures'
 
