@@ -41,14 +41,12 @@ export function setupConsoleLogSpy() {
       callback()
     },
   })
-  const newConsole = new Console({
+  globalThis.console = new Console({
     stdout,
     stderr,
     colorMode: true,
     groupIndentation: 2,
   })
-
-  globalThis.console = newConsole
 }
 
 export async function withEnv(name: ResolvedConfig['environment'], fn: () => Promise<void>) {
