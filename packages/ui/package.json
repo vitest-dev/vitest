@@ -5,16 +5,29 @@
   "version": "0.0.108",
   "description": "Vitest UI",
   "sideEffects": false,
+  "type": "module",
   "exports": {
-    "import": "./dist/index.mjs",
-    "require": "./dist/index.cjs"
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
   },
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.mjs",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
     "dist"
   ],
+  "scripts": {
+    "dev:node": "rollup -c --watch node",
+    "dev:client": "vite",
+    "build:node": "rollup -c",
+    "build:client": "vite build",
+    "build": "rimraf dist && pnpm build:node && pnpm build:client"
+  },
+  "peerDependencies": {
+    "vitest": "workspace:*"
+  },
   "dependencies": {
     "@vueuse/core": "^7.4.0",
     "sirv": "^1.0.19",
@@ -24,8 +37,11 @@
     "@types/ws": "^8.2.2",
     "@unocss/reset": "^0.16.4",
     "@vitejs/plugin-vue": "^2.0.1",
+    "rollup": "^2.61.1",
+    "picocolors": "^1.0.0",
     "unocss": "^0.16.4",
     "unplugin-auto-import": "^0.5.3",
-    "unplugin-vue-components": "^0.17.9"
+    "unplugin-vue-components": "^0.17.9",
+    "vitest": "workspace:*"
   }
 }

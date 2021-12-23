@@ -1,7 +1,5 @@
-// import { getSuites } from '../../../src/utils'
-
+import type { Vitest } from 'vitest/node'
 import { getSuites } from '../../vitest/src/utils'
-import type { Vitest } from '../../vitest/src/node'
 
 const getCircularReplacer = () => {
   const seen = new WeakSet()
