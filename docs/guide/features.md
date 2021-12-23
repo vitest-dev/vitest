@@ -38,7 +38,7 @@ Filtering, timeouts, concurrent for suite and tests
 
 ### CLI
 
-You can use CLI to filter test files my name:
+You can use CLI to filter test files by name:
 
 ```bash
 $ vitest basic
