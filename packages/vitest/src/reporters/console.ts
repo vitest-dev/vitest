@@ -1,7 +1,7 @@
 import { performance } from 'perf_hooks'
 import { relative } from 'pathe'
 import c from 'picocolors'
-import type { File, Reporter, TaskResultPack, UserConsoleLog } from '../types'
+import type { File, Reporter, TaskResultPack, Test, UserConsoleLog } from '../types'
 import { getSuites, getTests } from '../utils'
 import type { Vitest } from '../node'
 import { printError } from './diff'
@@ -77,14 +77,27 @@ export class ConsoleReporter implements Reporter {
       }
     }
 
+    const errorMap = new Map<string | undefined, Test[]>()
+
     if (failedTests.length) {
       this.ctx.error(c.red(divider(c.bold(c.inverse(` Failed Tests ${failedTests.length} `)))))
       this.ctx.error()
       for (const test of failedTests) {
-        this.ctx.error(`${c.red(c.bold(c.inverse(' FAIL ')))} ${getFullName(test)}`)
-        await printError(test.result?.error, this.ctx)
+        const error = test.result?.error as Error
+        if (errorMap.get(error.stack)) {
+          errorMap.get(error.stack)!.push(test)
+        } else {
+          errorMap.set(error.stack, [test])
+        }
+      }
+      for (const [error, tests] of errorMap) {
+        for (const test of tests) {
+          this.ctx.error(`${c.red(c.bold(c.inverse(' FAIL ')))} ${getFullName(test)}`)
+        }
+        await printError(error, this.ctx)
         errorDivider()
       }
+      errorMap.clear()
     }
 
     const executionTime = this.end - this.start
