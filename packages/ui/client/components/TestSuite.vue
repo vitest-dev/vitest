@@ -22,7 +22,22 @@ defineProps<{
     h-12
     border-rounded
   >
-    <span text-green-500 i-carbon:checkmark-outline mr-4 block text-xl />
+    <span
+      v-if="result.state === 'pass'"
+      text-green-500
+      i-carbon:checkmark-outline
+      mr-4
+      block
+      text-xl
+    />
+    <span
+      v-else-if="result.state === 'fail'"
+      text-red-500
+      i-carbon:misuse-outline
+      mr-4
+      block
+      text-xl
+    />
     <div flex flex-col>
       <span text-sm>{{ name }}</span>
       <span
