@@ -1,9 +1,12 @@
+
 import { fileURLToPath } from 'url'
 import { dirname, resolve } from 'pathe'
-import type { Plugin } from 'vite'
 import sirv from 'sirv'
 import { WebSocketServer } from 'ws'
-import type { Vitest } from '../../vitest/src/node'
+
+import type { Plugin } from 'vite'
+import type { Vitest } from 'vitest/node'
+
 import { getSuitesAsJson } from './utils'
 
 const _dirname = typeof __dirname !== 'undefined'
@@ -38,10 +41,10 @@ export const VitestUIPlugin = (vitest: Vitest): Plugin => {
         }
       })
 
-      server.middlewares.use('/', sirv(resolve(_dirname, '../dist/client'), {
+      server.middlewares.use('/', sirv(resolve(_dirname, './client'), {
         single: true,
         dev: true,
       }))
     },
-  }
+  } as Plugin
 }

@@ -95,10 +95,13 @@ importers:
       '@unocss/reset': ^0.16.4
       '@vitejs/plugin-vue': ^2.0.1
       '@vueuse/core': ^7.4.0
+      picocolors: ^1.0.0
+      rollup: ^2.61.1
       sirv: ^1.0.19
       unocss: ^0.16.4
       unplugin-auto-import: ^0.5.3
       unplugin-vue-components: ^0.17.9
+      vitest: workspace:*
       ws: ^8.4.0
     dependencies:
       '@vueuse/core': 7.4.0_vue@3.2.26
@@ -108,9 +111,12 @@ importers:
       '@types/ws': 8.2.2
       '@unocss/reset': 0.16.4
       '@vitejs/plugin-vue': 2.0.1_vite@2.7.4+vue@3.2.26
+      picocolors: 1.0.0
+      rollup: 2.61.1
       unocss: 0.16.4
-      unplugin-auto-import: 0.5.3_@vueuse+core@7.4.0+vite@2.7.4
-      unplugin-vue-components: 0.17.9_vite@2.7.4+vue@3.2.26
+      unplugin-auto-import: 0.5.3_980cd09e27944b3d5b99ba962a161942
+      unplugin-vue-components: 0.17.9_d79d1585619353e2f635ea774a570969
+      vitest: link:../vitest
 
   packages/vitest:
     specifiers:
@@ -6706,7 +6712,7 @@ packages:
       '@unocss/vite': 0.16.4
     dev: true
 
-  /unplugin-auto-import/0.5.3_@vueuse+core@7.4.0+vite@2.7.4:
+  /unplugin-auto-import/0.5.3_980cd09e27944b3d5b99ba962a161942:
     resolution: {integrity: sha512-jXs0rnKTS+/TyXOild6RkVp73yz1DeLXVJWR6VRn+oageEsvHgW6zofvc2BmpAm/pTSANxZ48kLi12wOa/iwdw==}
     engines: {node: '>=14'}
     peerDependencies:
@@ -6721,7 +6727,7 @@ packages:
       local-pkg: 0.4.0
       magic-string: 0.25.7
       resolve: 1.20.0
-      unplugin: 0.2.21_vite@2.7.4
+      unplugin: 0.2.21_rollup@2.61.1+vite@2.7.4
     transitivePeerDependencies:
       - rollup
       - vite
@@ -6745,6 +6751,37 @@ packages:
       unplugin: 0.2.21_vite@2.7.4
     transitivePeerDependencies:
       - rollup
+      - vite
+      - webpack
+    dev: true
+
+  /unplugin-vue-components/0.17.9_d79d1585619353e2f635ea774a570969:
+    resolution: {integrity: sha512-SZrK3T/uEoP2g2bH+8DwBznoqlS0dI7kQvCmHmL8HmTXdM78kh5P/9SN5IwuNpfbmXoGXWJPB8Pr8Ke8zsgpmA==}
+    engines: {node: '>=14'}
+    peerDependencies:
+      '@babel/parser': ^7.15.8
+      '@babel/traverse': ^7.15.4
+      vue: 2 || 3
+    peerDependenciesMeta:
+      '@babel/parser':
+        optional: true
+      '@babel/traverse':
+        optional: true
+    dependencies:
+      '@antfu/utils': 0.3.0
+      '@rollup/pluginutils': 4.1.1
+      chokidar: 3.5.2
+      debug: 4.3.3
+      fast-glob: 3.2.7
+      local-pkg: 0.4.0
+      magic-string: 0.25.7
+      minimatch: 3.0.4
+      resolve: 1.20.0
+      unplugin: 0.2.21_rollup@2.61.1+vite@2.7.4
+      vue: 3.2.26
+    transitivePeerDependencies:
+      - rollup
+      - supports-color
       - vite
       - webpack
     dev: true
@@ -6809,6 +6846,25 @@ packages:
       - supports-color
       - vite
       - webpack
+    dev: true
+
+  /unplugin/0.2.21_rollup@2.61.1+vite@2.7.4:
+    resolution: {integrity: sha512-IJ15/L5XbhnV7J09Zjk0FT5HEkBjkXucWAXQWRsmEtUxmmxwh23yavrmDbCF6ZPxWiVB28+wnKIHePTRRpQPbQ==}
+    peerDependencies:
+      rollup: ^2.50.0
+      vite: ^2.3.0
+      webpack: 4 || 5
+    peerDependenciesMeta:
+      rollup:
+        optional: true
+      vite:
+        optional: true
+      webpack:
+        optional: true
+    dependencies:
+      rollup: 2.61.1
+      vite: 2.7.4
+      webpack-virtual-modules: 0.4.3
     dev: true
 
   /unplugin/0.2.21_vite@2.7.4:
