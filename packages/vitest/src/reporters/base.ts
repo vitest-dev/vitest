@@ -16,7 +16,7 @@ export abstract class BaseReporter implements Reporter {
   isTTY = process.stdout.isTTY && !process.env.CI
 
   constructor(public ctx: Vitest) {
-    const mode = ctx.config.watch ? c.yellow(' DEV ') : c.cyan(' RUN ')
+    const mode = ctx.config.watch ? c.blue(' WATCH ') : c.cyan(' RUN ')
     this.ctx.log(`\n${c.inverse(c.bold(mode))} ${c.gray(this.ctx.config.root)}\n`)
     this.start = performance.now()
   }
