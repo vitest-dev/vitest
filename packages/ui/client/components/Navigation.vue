@@ -1,5 +1,20 @@
 <script setup lang="ts">
 import { isDark, toggleDark } from '~/composables'
+const tasks = shallowRef<
+Array<{
+  id: string
+  name: string
+  type: string
+  mode: string
+  result: {
+    start: number
+    state: string
+    end: number
+  }
+}>
+>([])
+
+const setTasks = (ts: any[]) => tasks.value = ts
 
 const onClickToggle = () => toggleDark()
 
@@ -7,10 +22,6 @@ const onClickToggle = () => toggleDark()
 
 <template>
   <nav
-    top-0
-    left-0
-    bottom-0
-    fixed
     bg-light-300
     dark:bg-dark-600
     w-72
@@ -44,6 +55,6 @@ const onClickToggle = () => toggleDark()
         @click="onClickToggle"
       />
     </div>
-    <Suites />
+    <Files />
   </nav>
 </template>
