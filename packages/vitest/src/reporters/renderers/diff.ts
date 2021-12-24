@@ -7,8 +7,8 @@ import * as diff from 'diff'
 import type { RawSourceMap } from 'source-map-js'
 import { SourceMapConsumer } from 'source-map-js'
 import cliTruncate from 'cli-truncate'
-import { notNullish } from '../utils'
-import type { Vitest } from '../node'
+import { notNullish } from '../../utils'
+import type { Vitest } from '../../node'
 import { F_POINTER } from './figures'
 
 interface ErrorWithDiff extends Error {

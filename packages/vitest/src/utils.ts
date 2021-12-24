@@ -72,8 +72,8 @@ export function interpretOnlyMode(tasks: Task[]) {
   })
 }
 
-export function getTests(suite: Arrayable<Suite>): Test[] {
-  return toArray(suite).flatMap(s => s.tasks.flatMap(c => c.type === 'test' ? [c] : getTests(c)))
+export function getTests(suite: Arrayable<Task>): Test[] {
+  return toArray(suite).flatMap(s => s.type === 'test' ? [s] : s.tasks.flatMap(c => c.type === 'test' ? [c] : getTests(c)))
 }
 
 export function getTasks(tasks: Arrayable<Task>): Task[] {
@@ -103,6 +103,10 @@ export function getNames(task: Task) {
   }
 
   return names
+}
+
+export function getFullName(task: Task) {
+  return getNames(task).join(c.dim(' > '))
 }
 
 export async function ensurePackageInstalled(
