@@ -49,7 +49,7 @@ export class SnapshotClient {
     this.test = undefined
   }
 
-  assert(received: unknown, message?: string, inlineSnapshot?: string): void {
+  assert(received: unknown, message?: string, isInline = false, inlineSnapshot?: string): void {
     if (!this.test)
       throw new Error('Snapshot cannot be used outside of test')
 
@@ -57,10 +57,11 @@ export class SnapshotClient {
       ...getNames(this.test).slice(1),
       ...(message ? [message] : []),
     ].join(' > ')
+
     const { actual, expected, key, pass } = this.snapshotState!.match({
       testName,
       received,
-      isInline: !!inlineSnapshot,
+      isInline,
       inlineSnapshot: inlineSnapshot?.trim(),
     })
 
@@ -77,7 +78,7 @@ export class SnapshotClient {
 
   async saveSnap() {
     if (!this.testFile || !this.snapshotState) return
-    const result = packSnapshotState(this.testFile, this.snapshotState)
+    const result = await packSnapshotState(this.testFile, this.snapshotState)
     await rpc('snapshotSaved', result)
 
     this.testFile = ''
@@ -85,7 +86,7 @@ export class SnapshotClient {
   }
 }
 
-export function packSnapshotState(filepath: string, state: SnapshotState): SnapshotResult {
+export async function packSnapshotState(filepath: string, state: SnapshotState): Promise<SnapshotResult> {
   const snapshot: SnapshotResult = {
     filepath,
     added: 0,
@@ -101,7 +102,7 @@ export function packSnapshotState(filepath: string, state: SnapshotState): Snaps
   if (uncheckedCount)
     state.removeUncheckedKeys()
 
-  const status = state.save()
+  const status = await state.save()
   snapshot.fileDeleted = status.deleted
   snapshot.added = state.added
   snapshot.matched = state.matched

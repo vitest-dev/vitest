@@ -24,3 +24,15 @@ export interface UserConsoleLog {
   type: 'stdout' | 'stderr'
   taskId?: string
 }
+
+export interface Position {
+  line: number
+  column: number
+}
+
+export interface ParsedStack {
+  method: string
+  file: string
+  line: number
+  column: number
+}

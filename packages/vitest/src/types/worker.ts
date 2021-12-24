@@ -1,4 +1,5 @@
 import type { MessagePort } from 'worker_threads'
+import type { RawSourceMap } from 'source-map-js'
 import type { ResolvedConfig } from './config'
 import type { File, TaskResultPack } from './tasks'
 import type { SnapshotResult } from './snapshot'
@@ -13,6 +14,7 @@ export interface WorkerContext {
 
 export interface RpcMap {
   fetch: [[id: string], string | undefined]
+  getSourceMap: [[id: string], RawSourceMap | undefined]
   log: [[UserConsoleLog], void]
   processExit: [[code?: number], void]
 
