@@ -14,6 +14,9 @@ function resolveMockPath(mockPath: string, root: string, nmName: string | null) 
   // all mocks should be inside <root>/__mocks__
   if (nmName) {
     const mockFolder = resolve(root, '__mocks__')
+
+    if (!existsSync(mockFolder)) return null
+
     const files = readdirSync(mockFolder)
 
     for (const file of files) {
