@@ -1,9 +1,10 @@
 import { performance } from 'perf_hooks'
 import { relative } from 'pathe'
 import c from 'picocolors'
-import type { File, Reporter, TaskResultPack, UserConsoleLog } from '../types'
-import { getFullName, getSuites, getTests } from '../utils'
+import type { File, Reporter, Task, TaskResultPack, UserConsoleLog } from '../types'
+import { getFullName, getSuites, getTests, hasFailed } from '../utils'
 import type { Vitest } from '../node'
+import type { ErrorWithDiff } from './renderers/diff'
 import { printError } from './renderers/diff'
 import { F_RIGHT } from './renderers/figures'
 import { divider, getStateString, getStateSymbol, renderSnapshotSummary } from './renderers/utils'
@@ -43,9 +44,9 @@ export abstract class BaseReporter implements Reporter {
   isFirstWatchRun = true
 
   async onWatcherStart() {
-    const failed = getTests(this.ctx.state.getFiles()).filter(i => i.result?.state === 'fail')
-    if (failed.length)
-      this.ctx.log(`\n${c.bold(c.inverse(c.red(' FAIL ')))}${c.red(` ${failed.length} tests failed. Watching for file changes...`)}`)
+    const failed = hasFailed(this.ctx.state.getFiles())
+    if (failed)
+      this.ctx.log(`\n${c.bold(c.inverse(c.red(' FAIL ')))}${c.red(' Tests failed. Watching for file changes...')}`)
     else
       this.ctx.log(`\n${c.bold(c.inverse(c.green(' PASS ')))}${c.green(' Waiting for file changes...')}`)
 
@@ -89,22 +90,14 @@ export abstract class BaseReporter implements Reporter {
     if (failedSuites.length) {
       this.ctx.error(c.red(divider(c.bold(c.inverse(` Failed Suites ${failedSuites.length} `)))))
       this.ctx.error()
-      for (const suite of failedSuites) {
-        const filepath = (suite as File)?.filepath || ''
-        this.ctx.error(c.red(`\n- ${getFullName(suite)} ${c.dim(`[ ${this.relative(filepath)} ]`)}`))
-        await printError(suite.result?.error, this.ctx)
-        errorDivider()
-      }
+      await this.printTaskErrors(failedSuites, errorDivider)
     }
 
     if (failedTests.length) {
       this.ctx.error(c.red(divider(c.bold(c.inverse(` Failed Tests ${failedTests.length} `)))))
       this.ctx.error()
-      for (const test of failedTests) {
-        this.ctx.error(`${c.red(c.bold(c.inverse(' FAIL ')))} ${getFullName(test)}`)
-        await printError(test.result?.error, this.ctx)
-        errorDivider()
-      }
+
+      await this.printTaskErrors(failedTests, errorDivider)
     }
 
     const executionTime = this.end - this.start
@@ -136,5 +129,30 @@ export abstract class BaseReporter implements Reporter {
       this.ctx.log(padTitle('Time'), time(executionTime) + c.gray(` (in thread ${time(threadTime)}, ${(executionTime / threadTime * 100).toFixed(2)}%)`))
 
     this.ctx.log()
+  }
+
+  private async printTaskErrors(tasks: Task[], errorDivider: () => void) {
+    const errorsQueue: [error: ErrorWithDiff | undefined, tests: Task[]][] = []
+    for (const task of tasks) {
+      // merge identical errors
+      const error = task.result?.error as ErrorWithDiff | undefined
+      const errorItem = error?.stackStr && errorsQueue.find(i => i[0]?.stackStr === error.stackStr)
+      if (errorItem)
+        errorItem[1].push(task)
+      else
+        errorsQueue.push([error, [task]])
+    }
+    for (const [error, tasks] of errorsQueue) {
+      for (const task of tasks) {
+        const filepath = (task as File)?.filepath || ''
+        let name = getFullName(task)
+        if (filepath)
+          name = `${name} ${c.dim(`[ ${this.relative(filepath)} ]`)}`
+
+        this.ctx.error(`${c.red(c.bold(c.inverse(' FAIL ')))} ${name}`)
+      }
+      await printError(error, this.ctx)
+      errorDivider()
+    }
   }
 }
