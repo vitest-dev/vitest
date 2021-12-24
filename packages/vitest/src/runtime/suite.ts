@@ -1,5 +1,5 @@
 import { nanoid } from 'nanoid/non-secure'
-import type { ComputeMode, File, ModuleCache, ResolvedConfig, RpcCall, RpcSend, RunMode, Suite, SuiteCollector, SuiteHooks, Test, TestCollector, TestFactory, TestFunction } from '../types'
+import type { ComputeMode, File, RunMode, Suite, SuiteCollector, SuiteHooks, Test, TestCollector, TestFactory, TestFunction } from '../types'
 import { noop } from '../utils'
 import { createChainable } from './chain'
 import { collectTask, context, normalizeTest, runWithSuite } from './context'
@@ -138,19 +138,4 @@ function createSuite() {
       return createSuiteCollector(name, factory, mode, computeMode)
     },
   )
-}
-
-declare global {
-  namespace NodeJS {
-    interface Process {
-      __vitest_worker__: {
-        config: ResolvedConfig
-        rpc: RpcCall
-        send: RpcSend
-        current?: Test
-        filepath?: string
-        moduleCache: Map<string, ModuleCache>
-      }
-    }
-  }
 }

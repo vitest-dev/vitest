@@ -1,6 +1,6 @@
 import { resolve } from 'pathe'
 import { nanoid } from 'nanoid/non-secure'
-import type { ModuleCache, ResolvedConfig, WorkerContext } from '../types'
+import type { ModuleCache, ResolvedConfig, RpcCall, RpcSend, Test, WorkerContext } from '../types'
 import { distDir } from '../constants'
 import { executeInViteNode } from '../node/execute'
 import { send } from './rpc'
@@ -50,12 +50,16 @@ async function startViteNode(ctx: WorkerContext) {
 }
 
 function init(ctx: WorkerContext) {
+  if (process.__vitest_worker__ && ctx.config.threads)
+    throw new Error(`worker for ${ctx.files.join(',')} already initialized by ${process.__vitest_worker__.ctx.files.join(',')}. This is probably an internal bug of Vitest.`)
+
   process.stdout.write('\0')
 
   const { config, port } = ctx
   const rpcPromiseMap = new Map<string, { resolve: ((...args: any) => any); reject: (...args: any) => any }>()
 
   process.__vitest_worker__ = {
+    ctx,
     moduleCache,
     config,
     rpc: (method, ...args) => {
@@ -95,4 +99,20 @@ export async function run(ctx: WorkerContext) {
   init(ctx)
   const { run } = await startViteNode(ctx)
   return run(ctx.files, ctx.config)
+}
+
+declare global {
+  namespace NodeJS {
+    interface Process {
+      __vitest_worker__: {
+        ctx: WorkerContext
+        config: ResolvedConfig
+        rpc: RpcCall
+        send: RpcSend
+        current?: Test
+        filepath?: string
+        moduleCache: Map<string, ModuleCache>
+      }
+    }
+  }
 }
