@@ -1,20 +1,5 @@
 <script setup lang="ts">
 import { isDark, toggleDark } from '~/composables'
-const tasks = shallowRef<
-Array<{
-  id: string
-  name: string
-  type: string
-  mode: string
-  result: {
-    start: number
-    state: string
-    end: number
-  }
-}>
->([])
-
-const setTasks = (ts: any[]) => tasks.value = ts
 
 const onClickToggle = () => toggleDark()
 

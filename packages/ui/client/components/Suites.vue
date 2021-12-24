@@ -2,9 +2,6 @@
 import { tasksCtx } from '~/context'
 
 const file = inject(tasksCtx)
-watchEffect(() => {
-  console.log(file.value)
-})
 </script>
 
 <template>

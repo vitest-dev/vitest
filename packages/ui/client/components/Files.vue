@@ -18,7 +18,7 @@ const files = computed(() => (filesRef?.value ?? []).map(({
     type,
     mode,
     state: result!.state,
-    duration: Math.round(result!.end! - result!.start),
+    duration: (result && result.end) ? Math.round(result.end - result.start) : 0,
     onClick: () => {
       if (activeFileIdRef)
         activeFileIdRef.value = id
