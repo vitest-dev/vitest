@@ -15,7 +15,7 @@ export async function saveInlineSnapshots(
 ) {
   const MagicString = (await import('magic-string')).default
   const files = new Set(snapshots.map(i => i.file))
-  for (const file of files) {
+  await Promise.all(Array.from(files).map(async(file) => {
     const map = await rpc('getSourceMap', file, true)
     const snaps = snapshots.filter(i => i.file === file)
     const code = await fs.readFile(file, 'utf8')
@@ -27,8 +27,9 @@ export async function saveInlineSnapshots(
       replaceInlineSnap(code, s, index, snap.snapshot)
     }
 
+    // TODO: send to main process to not triggering watcher for this change
     await fs.writeFile(file, s.toString(), 'utf-8')
-  }
+  }))
 }
 
 const startRegex = /toMatchInlineSnapshot\s*\(\s*(['"`\)])/m
