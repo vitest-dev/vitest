@@ -16,7 +16,7 @@ export async function saveInlineSnapshots(
   const MagicString = (await import('magic-string')).default
   const files = new Set(snapshots.map(i => i.file))
   await Promise.all(Array.from(files).map(async(file) => {
-    const map = await rpc('getSourceMap', file, true)
+    const map = await rpc('getSourceMap', file)
     const snaps = snapshots.filter(i => i.file === file)
     const code = await fs.readFile(file, 'utf8')
     const s = new MagicString(code)
@@ -27,8 +27,9 @@ export async function saveInlineSnapshots(
       replaceInlineSnap(code, s, index, snap.snapshot)
     }
 
-    // TODO: send to main process to not triggering watcher for this change
-    await fs.writeFile(file, s.toString(), 'utf-8')
+    const transformed = s.toString()
+    if (transformed !== code)
+      await fs.writeFile(file, transformed, 'utf-8')
   }))
 }
 
