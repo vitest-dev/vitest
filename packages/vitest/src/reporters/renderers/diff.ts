@@ -11,7 +11,7 @@ import type { ParsedStack, Position } from '../../types/general'
 import { getOriginalPos, lineSplitRE, parseStack, posToNumber } from '../../utils/source-map'
 import { F_POINTER } from './figures'
 
-interface ErrorWithDiff extends Error {
+export interface ErrorWithDiff extends Error {
   name: string
   nameStr?: string
   stack?: string
