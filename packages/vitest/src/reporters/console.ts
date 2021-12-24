@@ -5,7 +5,7 @@ import type { File, Reporter, TaskResultPack, UserConsoleLog } from '../types'
 import { getSuites, getTests } from '../utils'
 import type { Vitest } from '../node'
 import { printError } from './diff'
-import { createRenderer, divider, getFullName, getStateString, getStateSymbol, renderSnapshotSummary } from './renderer'
+import { createRenderer, divider, getFullName, getStateString, getStateSymbol, renderSnapshotSummary } from './listRenderer'
 import { F_RIGHT } from './figures'
 
 const isTTY = process.stdout.isTTY && !process.env.CI

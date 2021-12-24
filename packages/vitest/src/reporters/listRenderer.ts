@@ -16,25 +16,30 @@ const outputMap = new WeakMap<Task, string>()
 const pointer = c.yellow(F_POINTER)
 const skipped = c.yellow(F_DOWN)
 
-export function divider(text?: string, left?: number, right?: number) {
+function getCols(delta = 0) {
   let length = process.stdout.columns
   if (!length || isNaN(length))
-    length = 10
+    length = 30
+  return Math.max(length + delta, 0)
+}
+
+export function divider(text?: string, left?: number, right?: number) {
+  const cols = getCols()
 
   if (text) {
     const textLength = stripAnsi(text).length
     if (left == null && right != null) {
-      left = length - textLength - right
+      left = cols - textLength - right
     }
     else {
-      left = left ?? Math.floor((length - textLength) / 2)
-      right = length - textLength - left
+      left = left ?? Math.floor((cols - textLength) / 2)
+      right = cols - textLength - left
     }
     left = Math.max(0, left)
     right = Math.max(0, right)
     return `${F_LONG_DASH.repeat(left)}${text}${F_LONG_DASH.repeat(right)}`
   }
-  return F_LONG_DASH.repeat(length)
+  return F_LONG_DASH.repeat(cols)
 }
 
 export function formatTestPath(root: string, path: string) {
@@ -137,6 +142,17 @@ export function getStateSymbol(task: Task) {
   return ' '
 }
 
+function formatFilepath(path: string) {
+  const lastSlash = Math.max(path.lastIndexOf('/') + 1, 0)
+  const basename = path.slice(lastSlash)
+  let firstDot = basename.indexOf('.')
+  if (firstDot < 0)
+    firstDot = basename.length
+  firstDot += lastSlash
+
+  return c.dim(path.slice(0, lastSlash)) + path.slice(lastSlash, firstDot) + c.dim(path.slice(firstDot))
+}
+
 export function renderTree(tasks: Task[], level = 0) {
   let output: string[] = []
 
@@ -155,7 +171,10 @@ export function renderTree(tasks: Task[], level = 0) {
         suffix += c.yellow(` ${Math.round(duration)}${c.dim('ms')}`)
     }
 
-    output.push('  '.repeat(level) + prefix + task.name + suffix)
+    let name = task.name
+    if (level === 0)
+      name = formatFilepath(name)
+    output.push('  '.repeat(level) + prefix + name + suffix)
 
     if ((task.result?.state !== 'pass') && outputMap.get(task) != null) {
       let data: string | undefined = outputMap.get(task)
@@ -168,7 +187,7 @@ export function renderTree(tasks: Task[], level = 0) {
 
       if (data != null) {
         const out = `${'  '.repeat(level)}${F_RIGHT} ${data}`
-        output.push(`   ${c.gray(cliTruncate(out, process.stdout.columns - 3))}`)
+        output.push(`   ${c.gray(cliTruncate(out, getCols(-3)))}`)
       }
     }
 
@@ -210,7 +229,6 @@ export const createRenderer = (_tasks: Task[]) => {
         timer = undefined
       }
       log.clear()
-      // eslint-disable-next-line no-console
       stdout.write(`${renderTree(tasks)}\n`)
       return this
     },
