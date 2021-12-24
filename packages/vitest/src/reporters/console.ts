@@ -77,26 +77,37 @@ export class ConsoleReporter implements Reporter {
       }
     }
 
-    const errorMap = new Map<string | undefined, {error: unknown; tests: Test[]} >()
+    type StackStr = string
+    const errorsQueue: [StackStr | undefined, {error: Error | string | undefined; tests: Test[] }][] = []
+    // const errorMap = new Map<string | undefined, {error: unknown; tests: Test[]} >()
 
     if (failedTests.length) {
       this.ctx.error(c.red(divider(c.bold(c.inverse(` Failed Tests ${failedTests.length} `)))))
       this.ctx.error()
       for (const test of failedTests) {
-        const error = test.result?.error as Error
-        if (errorMap.get(error.stack))
-          errorMap.get(error.stack)!.tests.push(test)
-        else
-          errorMap.set(error.stack, { error, tests: [test] })
+        const error = test.result?.error as Error | string | undefined
+        if (typeof error === 'undefined' || typeof error === 'string') {
+          errorsQueue.push([undefined, {error, tests: [test]}])
+        } else {
+          const stackStr: StackStr = String(error.stack)
+          const errorItem = errorsQueue.find(([itemStackStr]) => itemStackStr === stackStr)
+          if (errorItem) {
+            const [, testsError] = errorItem
+            testsError.tests.push(test)
+          } else {
+            const stackStr: StackStr = String(error.stack)
+            errorsQueue.push([stackStr, {error, tests: [test]}])
+          }
+        }
       }
-      for (const [, { error, tests }] of errorMap) {
+      for (const [, { error, tests }] of errorsQueue) {
         for (const test of tests)
           this.ctx.error(`${c.red(c.bold(c.inverse(' FAIL ')))} ${getFullName(test)}`)
 
         await printError(error, this.ctx)
         errorDivider()
       }
-      errorMap.clear()
+      errorsQueue.length = 0
     }
 
     const executionTime = this.end - this.start
