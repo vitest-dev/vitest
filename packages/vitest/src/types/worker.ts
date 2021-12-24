@@ -14,7 +14,7 @@ export interface WorkerContext {
 
 export interface RpcMap {
   fetch: [[id: string], string | undefined]
-  getSourceMap: [[id: string], RawSourceMap | undefined]
+  getSourceMap: [[id: string, force?: boolean], RawSourceMap | undefined]
   log: [[UserConsoleLog], void]
   processExit: [[code?: number], void]
 
