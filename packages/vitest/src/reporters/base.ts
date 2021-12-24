@@ -2,19 +2,17 @@ import { performance } from 'perf_hooks'
 import { relative } from 'pathe'
 import c from 'picocolors'
 import type { File, Reporter, TaskResultPack, Test, UserConsoleLog } from '../types'
-import { getSuites, getTests } from '../utils'
+import { getFullName, getSuites, getTests } from '../utils'
 import type { Vitest } from '../node'
-import { printError } from './diff'
-import { createRenderer, divider, getFullName, getStateString, getStateSymbol, renderSnapshotSummary } from './renderer'
-import { F_RIGHT } from './figures'
+import { printError } from './renderers/diff'
+import { F_RIGHT } from './renderers/figures'
+import { divider, getStateString, getStateSymbol, renderSnapshotSummary } from './renderers/utils'
 
-const isTTY = process.stdout.isTTY && !process.env.CI
-
-export class ConsoleReporter implements Reporter {
+export abstract class BaseReporter implements Reporter {
   start = 0
   end = 0
-  renderer?: ReturnType<typeof createRenderer>
   watchFilters?: string[]
+  isTTY = process.stdout.isTTY && !process.env.CI
 
   constructor(public ctx: Vitest) {
     const mode = ctx.config.watch ? c.yellow(' DEV ') : c.cyan(' RUN ')
@@ -26,20 +24,14 @@ export class ConsoleReporter implements Reporter {
     return relative(this.ctx.config.root, path)
   }
 
-  onStart() {
-    if (isTTY) {
-      const files = this.ctx.state.getFiles(this.watchFilters)
-      if (!this.renderer)
-        this.renderer = createRenderer(files).start()
-      else
-        this.renderer.update(files)
-    }
+  async onFinished(files = this.ctx.state.getFiles()) {
+    this.end = performance.now()
+    await this.reportSummary(files)
   }
 
   onTaskUpdate(pack: TaskResultPack) {
-    if (isTTY)
+    if (this.isTTY)
       return
-
     const task = this.ctx.state.idMap[pack[0]]
     if (task.type === 'test' && task.result?.state && task.result?.state !== 'run') {
       this.ctx.log(` ${getStateSymbol(task)} ${getFullName(task)}`)
@@ -48,13 +40,41 @@ export class ConsoleReporter implements Reporter {
     }
   }
 
-  async onFinished(files = this.ctx.state.getFiles()) {
-    this.end = performance.now()
+  isFirstWatchRun = true
 
-    await this.stopListRender()
+  async onWatcherStart() {
+    const failed = getTests(this.ctx.state.getFiles()).filter(i => i.result?.state === 'fail')
+    if (failed.length)
+      this.ctx.log(`\n${c.bold(c.inverse(c.red(' FAIL ')))}${c.red(` ${failed.length} tests failed. Watching for file changes...`)}`)
+    else
+      this.ctx.log(`\n${c.bold(c.inverse(c.green(' PASS ')))}${c.green(' Waiting for file changes...')}`)
 
-    this.ctx.log()
+    if (this.isFirstWatchRun) {
+      this.isFirstWatchRun = false
+      this.ctx.log(c.gray('press any key to exit...'))
+    }
+  }
 
+  async onWatcherRerun(files: string[], trigger: string) {
+    this.watchFilters = files
+
+    if (!this.ctx.config.silent) {
+      this.ctx.console.clear()
+      this.ctx.log(c.blue('Re-running tests...') + c.dim(` [ ${this.relative(trigger)} ]\n`))
+    }
+  }
+
+  onUserConsoleLog(log: UserConsoleLog) {
+    const task = log.taskId ? this.ctx.state.idMap[log.taskId] : undefined
+    this.ctx.log(c.gray(log.type + c.dim(` | ${task ? getFullName(task) : 'unknown test'}`)))
+    process[log.type].write(`${log.content}\n`)
+  }
+
+  onServerRestart() {
+    this.ctx.log(c.cyan('Restarted due to config changes...'))
+  }
+
+  async reportSummary(files: File[]) {
     const suites = getSuites(files)
     const tests = getTests(files)
 
@@ -135,54 +155,10 @@ export class ConsoleReporter implements Reporter {
     this.ctx.log(padTitle('Tests'), getStateString(tests))
     if (this.watchFilters)
       this.ctx.log(padTitle('Time'), time(threadTime))
+
     else
       this.ctx.log(padTitle('Time'), time(executionTime) + c.gray(` (in thread ${time(threadTime)}, ${(executionTime / threadTime * 100).toFixed(2)}%)`))
 
     this.ctx.log()
-  }
-
-  isFirstWatchRun = true
-
-  async onWatcherStart() {
-    await this.stopListRender()
-
-    const failed = getTests(this.ctx.state.getFiles()).filter(i => i.result?.state === 'fail')
-    if (failed.length)
-      this.ctx.log(`\n${c.bold(c.inverse(c.red(' FAIL ')))}${c.red(` ${failed.length} tests failed. Watching for file changes...`)}`)
-    else
-      this.ctx.log(`\n${c.bold(c.inverse(c.green(' PASS ')))}${c.green(' Waiting for file changes...')}`)
-
-    if (this.isFirstWatchRun) {
-      this.isFirstWatchRun = false
-      this.ctx.log(c.gray('press any key to exit...'))
-    }
-  }
-
-  async onWatcherRerun(files: string[], trigger: string) {
-    await this.stopListRender()
-
-    this.watchFilters = files
-
-    if (!this.ctx.config.silent) {
-      this.ctx.console.clear()
-      this.ctx.log(c.blue('Re-running tests...') + c.dim(` [ ${this.relative(trigger)} ]\n`))
-    }
-  }
-
-  async stopListRender() {
-    this.renderer?.stop()
-    this.renderer = undefined
-    await new Promise(resolve => setTimeout(resolve, 10))
-  }
-
-  onUserConsoleLog(log: UserConsoleLog) {
-    this.renderer?.clear()
-    const task = log.taskId ? this.ctx.state.idMap[log.taskId] : undefined
-    this.ctx.log(c.gray(log.type + c.dim(` | ${task ? getFullName(task) : 'unknown test'}`)))
-    process[log.type].write(`${log.content}\n`)
-  }
-
-  onServerRestart() {
-    this.ctx.log(c.cyan('Restarted due to config changes...'))
   }
 }

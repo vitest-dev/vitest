@@ -7,9 +7,9 @@ const onClickToggle = () => toggleDark()
 
 <template>
   <nav
-    top-4
-    left-4
-    bottom-4
+    top-0
+    left-0
+    bottom-0
     fixed
     bg-light-300
     dark:bg-dark-600

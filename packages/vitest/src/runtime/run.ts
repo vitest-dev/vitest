@@ -4,6 +4,7 @@ import { vi } from '../integrations/vi'
 import type { ResolvedConfig, Suite, SuiteHooks, Task, Test } from '../types'
 import { getSnapshotClient } from '../integrations/snapshot/chai'
 import { hasFailed, hasTests, partitionSuiteChildren } from '../utils'
+import { getState, setState } from '../integrations/chai/jest-expect'
 import { getFn, getHooks } from './map'
 import { rpc, send } from './rpc'
 import { collectTests } from './collect'
@@ -41,7 +42,12 @@ export async function runTest(test: Test) {
 
   try {
     await callSuiteHook(test.suite, 'beforeEach', [test, test.suite])
+    setState({ assertionCalls: 0, expectedAssertionsNumber: null, expectedAssertionsNumberError: null })
     await getFn(test)()
+    const { assertionCalls, expectedAssertionsNumber, expectedAssertionsNumberError } = getState()
+    if (expectedAssertionsNumber !== null && assertionCalls !== expectedAssertionsNumber)
+      throw expectedAssertionsNumberError
+
     test.result.state = 'pass'
   }
   catch (e) {

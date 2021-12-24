@@ -66,18 +66,68 @@ class VitestUtils {
   fn = fn
 
   // just hints for transformer to rewrite imports
-  public mock(path: string) {}
+
+  /**
+   * Makes all `imports` to passed module to be mocked.
+   * - If there is a factory, will return it's result. The call to `vi.mock` is hoisted to the top of the file,
+   * so you don't have access to variables declared in the global file scope, if you didn't put them before imports!
+   * - If `__mocks__` folder with file of the same name exist, all imports will
+   * return it.
+   * - If there is no `__mocks__` folder or a file with the same name inside, will call original
+   * module and mock it.
+   * @param path Path to the module. Can be aliased, if your config suppors it
+   * @param factory Factory for the mocked module. Has the highest priority.
+   */
+  public mock(path: string, factory?: () => any) {}
+  /**
+   * Removes module from mocked registry. All subsequent calls to import will
+   * return original module even if it was mocked.
+   * @param path Path to the module. Can be aliased, if your config suppors it
+   */
   public unmock(path: string) {}
 
+  /**
+   * Imports module, bypassing all checks if it should be mocked.
+   * Can be useful if you want to mock module partially.
+   * @example
+   * vi.mock('./example', async () => {
+   *  const axios = await vi.importActual('./example')
+   *
+   *  return { ...axios, get: vi.fn() }
+   * })
+   * @param path Path to the module. Can be aliased, if your config suppors it
+   * @returns Actual module without spies
+   */
   public async importActual<T>(path: string): Promise<T> {
     return {} as T
   }
 
-  public async importMock<T>(path: string): Promise<T> {
-    return {} as T
+  /**
+   * Imports a module with all of its properties and nested properties mocked.
+   * For the rules applied, see docs.
+   * @param path Path to the module. Can be aliased, if your config suppors it
+   * @returns Fully mocked module
+   */
+  public async importMock<T>(path: string): Promise<MaybeMockedDeep<T>> {
+    return {} as MaybeMockedDeep<T>
   }
 
-  // the typings test helper
+  /**
+   * Type helpers for TypeScript. In reality just returns the object that was passed.
+   * @example
+   * import example from './example'
+   * vi.mock('./example')
+   *
+   * test('1+1 equals 2' async () => {
+   *  vi.mocked(example.calc).mockRestore()
+   *
+   *  const res = example.calc(1, '+', 1)
+   *
+   *  expect(res).toBe(2)
+   * })
+   * @param item Anything that can be mocked
+   * @param deep If the object is deeply mocked
+   */
   public mocked<T>(item: T, deep?: false): MaybeMocked<T>;
   public mocked<T>(item: T, deep: true): MaybeMockedDeep<T>;
   public mocked<T>(item: T, _deep = false): MaybeMocked<T> | MaybeMockedDeep<T> {

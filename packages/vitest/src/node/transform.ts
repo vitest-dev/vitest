@@ -1,7 +1,7 @@
 import type { TransformResult } from 'vite'
 import type { Vitest } from './index'
 
-const promiseMap = new Map<string, Promise<string | undefined>>()
+const promiseMap = new Map<string, Promise<TransformResult | null | undefined>>()
 
 export async function transformRequest(ctx: Vitest, id: string) {
   // reuse transform for concurrent requests
@@ -11,8 +11,7 @@ export async function transformRequest(ctx: Vitest, id: string) {
         .then((r) => {
           promiseMap.delete(id)
           return r
-        },
-        ),
+        }),
     )
   }
   return promiseMap.get(id)
@@ -35,7 +34,7 @@ async function _transformRequest(ctx: Vitest, id: string) {
   if (result && process.env.NODE_V8_COVERAGE)
     withInlineSourcemap(result)
 
-  return result?.code
+  return result
 }
 
 let SOURCEMAPPING_URL = 'sourceMa'

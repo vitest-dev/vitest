@@ -4,7 +4,7 @@
 import c from 'picocolors'
 import type { Formatter } from 'picocolors/types'
 import { format as prettyFormat, plugins as prettyFormatPlugins } from 'pretty-format'
-import { unifiedDiff } from '../../reporters/diff'
+import { unifiedDiff } from '../../reporters/renderers/diff'
 
 export const EXPECTED_COLOR = c.green
 export const RECEIVED_COLOR = c.red

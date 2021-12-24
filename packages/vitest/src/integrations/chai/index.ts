@@ -1,5 +1,13 @@
 import chai from 'chai'
+import { getState, setState } from './jest-expect'
 
-export { assert, should, expect } from 'chai'
+export { assert, should } from 'chai'
 
-export { chai }
+const expect = ((value: any, message?: string): Chai.Assertion => {
+  const { assertionCalls } = getState()
+  setState({ assertionCalls: assertionCalls + 1 })
+  return chai.expect(value, message)
+}) as Chai.ExpectStatic
+Object.assign(expect, chai.expect)
+
+export { chai, expect }

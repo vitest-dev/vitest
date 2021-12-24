@@ -5,10 +5,10 @@ import { relative } from 'pathe'
 import c from 'picocolors'
 import * as diff from 'diff'
 import type { RawSourceMap } from 'source-map-js'
-import { SourceMapConsumer } from 'source-map-js'
 import cliTruncate from 'cli-truncate'
-import { notNullish } from '../utils'
-import type { Vitest } from '../node'
+import type { Vitest } from '../../node'
+import type { ParsedStack, Position } from '../../types/general'
+import { getOriginalPos, lineSplitRE, parseStack, posToNumber } from '../../utils/source-map'
 import { F_POINTER } from './figures'
 
 interface ErrorWithDiff extends Error {
@@ -20,11 +20,6 @@ interface ErrorWithDiff extends Error {
   actual?: any
   expected?: any
   operator?: string
-}
-
-interface Position {
-  line: number
-  column: number
 }
 
 export async function printError(error: unknown, ctx: Vitest) {
@@ -52,7 +47,7 @@ export async function printError(error: unknown, ctx: Vitest) {
 
     printErrorMessage(e)
     await printStack(ctx, stacks, nearest, async(s, pos) => {
-      if (s === nearest) {
+      if (s === nearest && nearest) {
         const sourceCode = await fs.readFile(nearest.file, 'utf-8')
         ctx.log(c.yellow(generateCodeFrame(sourceCode, 4, pos)))
       }
@@ -141,65 +136,6 @@ async function printStack(
   ctx.log()
 }
 
-function getOriginalPos(map: RawSourceMap | null | undefined, { line, column }: Position): Promise<Position | null> {
-  return new Promise((resolve) => {
-    if (!map)
-      return resolve(null)
-
-    const consumer = new SourceMapConsumer(map)
-    const pos = consumer.originalPositionFor({ line, column })
-    if (pos.line != null && pos.column != null)
-      resolve(pos as Position)
-    else
-      resolve(null)
-  })
-}
-
-const splitRE = /\r?\n/
-
-export function posToNumber(
-  source: string,
-  pos: number | Position,
-): number {
-  if (typeof pos === 'number') return pos
-  const lines = source.split(splitRE)
-  const { line, column } = pos
-  let start = 0
-
-  if (line > lines.length)
-    return source.length
-
-  for (let i = 0; i < line - 1; i++)
-    start += lines[i].length + 1
-
-  return start + column
-}
-
-export function numberToPos(
-  source: string,
-  offset: number | Position,
-): Position {
-  if (typeof offset !== 'number') return offset
-  if (offset > source.length) {
-    throw new Error(
-      `offset is longer than source length! offset ${offset} > length ${source.length}`,
-    )
-  }
-  const lines = source.split(splitRE)
-  let counted = 0
-  let line = 0
-  let column = 0
-  for (; line < lines.length; line++) {
-    const lineLength = lines[line].length + 1
-    if (counted + lineLength >= offset) {
-      column = offset - counted + 1
-      break
-    }
-    counted += lineLength
-  }
-  return { line: line + 1, column }
-}
-
 export function generateCodeFrame(
   source: string,
   indent = 0,
@@ -209,7 +145,7 @@ export function generateCodeFrame(
 ): string {
   start = posToNumber(source, start)
   end = end || start
-  const lines = source.split(splitRE)
+  const lines = source.split(lineSplitRE)
   let count = 0
   let res: string[] = []
 
@@ -256,38 +192,6 @@ export function generateCodeFrame(
     res = res.map(line => ' '.repeat(indent) + line)
 
   return res.join('\n')
-}
-
-const stackFnCallRE = /at (.*) \((.+):(\d+):(\d+)\)$/
-const stackBarePathRE = /at ?(.*) (.+):(\d+):(\d+)$/
-
-interface ParsedStack {
-  method: string
-  file: string
-  line: number
-  column: number
-}
-
-function parseStack(stack: string): ParsedStack[] {
-  const lines = stack.split('\n')
-  const stackFrames = lines.map((raw) => {
-    const line = raw.trim()
-    const match = line.match(stackFnCallRE) || line.match(stackBarePathRE)
-    if (!match)
-      return null
-
-    let file = match[2]
-    if (file.startsWith('file://'))
-      file = file.slice(7)
-
-    return {
-      method: match[1],
-      file: match[2],
-      line: parseInt(match[3]),
-      column: parseInt(match[4]),
-    }
-  })
-  return stackFrames.filter(notNullish)
 }
 
 /**

@@ -100,6 +100,10 @@ export default defineConfig({
               link: '/guide/mocking'
             },
             {
+              text: 'Mocking Modules',
+              link: '/guide/mocking-modules'
+            },
+            {
               text: 'Mocking Timers',
               link: '/guide/mocking-timers'
             },
