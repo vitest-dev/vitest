@@ -79,7 +79,6 @@ export class ConsoleReporter implements Reporter {
 
     type StackStr = string
     const errorsQueue: [StackStr | undefined, {error: Error | string | undefined; tests: Test[] }][] = []
-    // const errorMap = new Map<string | undefined, {error: unknown; tests: Test[]} >()
 
     if (failedTests.length) {
       this.ctx.error(c.red(divider(c.bold(c.inverse(` Failed Tests ${failedTests.length} `)))))
@@ -87,16 +86,18 @@ export class ConsoleReporter implements Reporter {
       for (const test of failedTests) {
         const error = test.result?.error as Error | string | undefined
         if (typeof error === 'undefined' || typeof error === 'string') {
-          errorsQueue.push([undefined, {error, tests: [test]}])
-        } else {
+          errorsQueue.push([undefined, { error, tests: [test] }])
+        }
+        else {
           const stackStr: StackStr = String(error.stack)
           const errorItem = errorsQueue.find(([itemStackStr]) => itemStackStr === stackStr)
           if (errorItem) {
             const [, testsError] = errorItem
             testsError.tests.push(test)
-          } else {
+          }
+          else {
             const stackStr: StackStr = String(error.stack)
-            errorsQueue.push([stackStr, {error, tests: [test]}])
+            errorsQueue.push([stackStr, { error, tests: [test] }])
           }
         }
       }
