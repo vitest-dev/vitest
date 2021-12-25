@@ -5,9 +5,9 @@ it('Should not mock empty object', () => {
   const mocker = createMocker('root', {})
   const objectToMock = {}
 
-  const item = mocker.mockObject(objectToMock)
+  const result = mocker.mockObject(objectToMock)
 
-  expect(item).toEqual({})
+  expect(result).toEqual({})
 })
 
 it('Should not mock object with primitive values', () => {
@@ -18,9 +18,9 @@ it('Should not mock object with primitive values', () => {
     aNumber: 1,
   }
 
-  const item = mocker.mockObject(objectToMock)
+  const result = mocker.mockObject(objectToMock)
 
-  expect(item).toEqual({
+  expect(result).toEqual({
     item: 'anItem',
     aBoolean: true,
     aNumber: 1,
@@ -33,12 +33,12 @@ it('Should mock attribute with a function', () => {
     myFn: () => {},
   }
 
-  const item = mocker.mockObject(objectToMock)
+  const result = mocker.mockObject(objectToMock)
 
-  expect(item).toEqual({
+  expect(result).toEqual({
     myFn: expect.any(Function),
   })
-  expect(item.myFn.mockClear).toBeDefined()
+  expect(result.myFn.mockClear).toBeDefined()
 })
 
 it('Should mock nested attribute with a function', () => {
@@ -49,14 +49,14 @@ it('Should mock nested attribute with a function', () => {
     },
   }
 
-  const item = mocker.mockObject(objectToMock)
+  const result = mocker.mockObject(objectToMock)
 
-  expect(item).toEqual({
+  expect(result).toEqual({
     myAttr: {
       myFn: expect.any(Function),
     },
   })
-  expect(item.myAttr.myFn.mockClear).toBeDefined()
+  expect(result.myAttr.myFn.mockClear).toBeDefined()
 })
 
 it('Should mock function exported as a default with functions attributes', () => {
@@ -70,10 +70,10 @@ it('Should mock function exported as a default with functions attributes', () =>
     default: fn,
   }
 
-  const item = mocker.mockObject(objectToMock)
+  const result = mocker.mockObject(objectToMock)
 
-  expect(item.default).toEqual(expect.any(Function))
-  expect(item.default.get.mockClear).toBeDefined()
+  expect(result.default).toEqual(expect.any(Function))
+  expect(result.default.get.mockClear).toBeDefined()
 })
 
 it('Should mock function exported as a default with functions attributes and circular references', () => {
@@ -93,8 +93,8 @@ it('Should mock function exported as a default with functions attributes and cir
     default: fn,
   }
 
-  const item = mocker.mockObject(objectToMock)
+  const result = mocker.mockObject(objectToMock)
 
-  expect(item.default).toEqual(expect.any(Function))
-  expect(item.default.get.mockClear).toBeDefined()
+  expect(result.default).toEqual(expect.any(Function))
+  expect(result.default.get.mockClear).toBeDefined()
 })
