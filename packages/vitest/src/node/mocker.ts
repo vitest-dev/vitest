@@ -56,7 +56,10 @@ function mockPrototype(proto: any) {
   return newProto
 }
 
-function mockObject(obj: any) {
+function mockObject(obj: any, seen = new WeakSet()) {
+  if (seen.has(obj))
+    return obj
+
   if (Array.isArray(obj))
     return []
 
@@ -64,6 +67,8 @@ function mockObject(obj: any) {
 
   if (objectType !== 'Object' && objectType !== 'Module' && objectType !== 'Function')
     return obj
+
+  seen.add(obj)
 
   const newObj = { ...obj }
 
@@ -83,7 +88,7 @@ function mockObject(obj: any) {
       const hasFunctionsAttr = Object.keys(objValue).length !== 0
 
       if (hasFunctionsAttr) {
-        newObj[objAttr] = mockObject(objValue)
+        newObj[objAttr] = mockObject(objValue, seen)
       }
       else if (!objValue.__isSpy) {
         spyOn(newObj, objAttr).mockImplementation(() => {})
@@ -91,7 +96,7 @@ function mockObject(obj: any) {
       }
     }
     else {
-      newObj[objAttr] = mockObject(objValue)
+      newObj[objAttr] = mockObject(objValue, seen)
     }
   }
 

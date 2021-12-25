@@ -75,3 +75,26 @@ it('Should mock function exported as a default with functions attributes', () =>
   expect(item.default).toBeDefined()
   expect(item.default.get.mockClear).toBeDefined()
 })
+
+it('Should mock function exported as a default with functions attributes and circular references', () => {
+  // Ex axios
+  /*
+    const obj = {
+      item: 'anItem',
+    }
+    // Circular references
+    obj.circular = obj
+  */
+  const mocker = createMocker('root', {})
+  const fn = () => {}
+  fn.get = () => {}
+  fn.default = fn
+  const objectToMock = {
+    default: fn,
+  }
+
+  const item = mocker.mockObject(objectToMock)
+
+  expect(item.default).toBeDefined()
+  expect(item.default.get.mockClear).toBeDefined()
+})
