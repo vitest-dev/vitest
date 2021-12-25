@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '../utils/test-utils'
+import { cleanup, fireEvent, render, screen } from '@testing-library/svelte'
 import Hello from '../components/Hello.svelte'
 
 describe('Hello.svelte', () => {
@@ -12,7 +12,7 @@ describe('Hello.svelte', () => {
     expect(container.innerHTML).toMatchSnapshot()
   })
 
-  it.only('updates on button click', async() => {
+  it('updates on button click', async() => {
     render(Hello, { count: 4 })
     const btn = screen.getByRole('button')
     const div = screen.getByText('4 x 2 = 8')
