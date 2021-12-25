@@ -88,6 +88,13 @@ function mockObject(obj: any, seen = new WeakSet()) {
       const hasFunctionsAttr = Object.keys(objValue).length !== 0
 
       if (hasFunctionsAttr) {
+        const internalFunctionsMocked = mockObject(objValue, seen)
+        const fn = newObj[objAttr]
+        // eslint-disable-next-line no-restricted-syntax
+        for (const internalFnKey in internalFunctionsMocked) {
+          if (Object.prototype.hasOwnProperty.call(internalFunctionsMocked, internalFnKey))
+            fn[internalFnKey] = internalFunctionsMocked[internalFnKey]
+        }
         newObj[objAttr] = mockObject(objValue, seen)
       }
       else if (!objValue.__isSpy) {

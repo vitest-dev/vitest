@@ -72,7 +72,7 @@ it('Should mock function exported as a default with functions attributes', () =>
 
   const item = mocker.mockObject(objectToMock)
 
-  expect(item.default).toBeDefined()
+  expect(item.default).toEqual(expect.any(Function))
   expect(item.default.get.mockClear).toBeDefined()
 })
 
@@ -95,6 +95,6 @@ it('Should mock function exported as a default with functions attributes and cir
 
   const item = mocker.mockObject(objectToMock)
 
-  expect(item.default).toBeDefined()
+  expect(item.default).toEqual(expect.any(Function))
   expect(item.default.get.mockClear).toBeDefined()
 })
