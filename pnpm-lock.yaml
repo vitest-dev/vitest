@@ -337,11 +337,13 @@ importers:
     specifiers:
       '@sveltejs/vite-plugin-svelte': ^1.0.0-next.32
       '@testing-library/svelte': ^3.0.3
+      '@testing-library/user-event': ^13.5.0
       svelte: ^3.44.3
       vitest: workspace:*
     devDependencies:
       '@sveltejs/vite-plugin-svelte': 1.0.0-next.32_svelte@3.44.3+vite@2.7.6
       '@testing-library/svelte': 3.0.3_svelte@3.44.3
+      '@testing-library/user-event': 13.5.0
       svelte: 3.44.3
       vitest: link:../../packages/vitest
 

@@ -8,5 +8,8 @@ export default defineConfig({
   test: {
     global: true,
     environment: 'jsdom',
+    deps: {
+      inline: ['@testing-library/user-event'],
+    },
   },
 })
