@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { fireEvent, render, screen } from './utils/test-utils'
+import { render, screen, userEvent } from './utils/test-utils'
 import App from './App'
 
 describe('Simple working test', () => {
@@ -10,7 +10,7 @@ describe('Simple working test', () => {
 
   it('should increment count on click', () => {
     render(<App />)
-    fireEvent.click(screen.getByRole('button'))
+    userEvent.click(screen.getByRole('button'))
     expect(screen.findByText(/count is: 1/i)).toBeDefined()
   })
 })
