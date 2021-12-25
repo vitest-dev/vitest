@@ -19,18 +19,18 @@ interface MockCodeblock {
 }
 
 const parseMocks = (code: string) => {
-  const splitted = code.split('\n')
-
+  const splitted = code.split('\n').filter(line => line !== '')
   const mockCalls: Record<string, MockCodeblock> = {}
   let mockCall = 0
   let lineIndex = -1
+  let hasCloasedMockLine = false
 
   while (lineIndex < splitted.length) {
     lineIndex++
 
     const line = splitted[lineIndex]
 
-    if (!line) break
+    if (!line) continue
 
     const mock = mockCalls[mockCall] || {
       code: '',
@@ -52,6 +52,7 @@ const parseMocks = (code: string) => {
       // end at the same line
       // we parse code after vite, so it contains semicolons
       if (line.includes(');')) {
+        hasCloasedMockLine = true
         mockCall++
         continue
       }
@@ -59,7 +60,7 @@ const parseMocks = (code: string) => {
       continue
     }
 
-    mock.code += `${line}\n`
+    if (!hasCloasedMockLine) mock.code += `${line}\n`
 
     mockCalls[mockCall] = mock
 
