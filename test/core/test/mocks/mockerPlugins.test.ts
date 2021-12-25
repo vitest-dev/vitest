@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { MocksPlugin } from '../../../packages/vitest/src/plugins/mock'
+import { MocksPlugin } from '../../../../packages/vitest/src/plugins/mock'
 
 describe('MocksPlugin', () => {
   let mocksPlugin: any

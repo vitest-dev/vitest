@@ -1,9 +1,9 @@
 import { expect, test, vi } from 'vitest'
-import { mockedA } from '../src/mockedA'
-import { mockedB } from '../src/mockedB'
+import { mockedA } from '../../src/mockedA'
+import { mockedB } from '../../src/mockedB'
 
-vi.mock('../src/mockedA.ts')
-vi.mock('../src/mockedB.ts')
+vi.mock('../../src/mockedA.ts')
+vi.mock('../../src/mockedB.ts')
 
 test('testing mocking module without __mocks__', () => {
   mockedA()

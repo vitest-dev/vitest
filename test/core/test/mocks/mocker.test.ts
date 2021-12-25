@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest'
-import { createMocker } from '../../../packages/ui/node_modules/vitest/src/node/mocker'
+import { createMocker } from '../../../../packages/ui/node_modules/vitest/src/node/mocker'
 
 it('Should not mock empty object', () => {
   const mocker = createMocker('root', {})
