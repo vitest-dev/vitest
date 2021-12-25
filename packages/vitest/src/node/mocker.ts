@@ -57,11 +57,12 @@ function mockPrototype(proto: any) {
 }
 
 function mockObject(obj: any) {
-  const type = getObjectType(obj)
-
   if (Array.isArray(obj))
     return []
-  else if (type !== 'Object' && type !== 'Module')
+
+  const objectType = getObjectType(obj)
+
+  if (objectType !== 'Object' && objectType !== 'Module' && objectType !== 'Function')
     return obj
 
   const newObj = { ...obj }
@@ -70,15 +71,30 @@ function mockObject(obj: any) {
   Object.setPrototypeOf(newObj, proto)
 
   // eslint-disable-next-line no-restricted-syntax
-  for (const k in obj) {
-    newObj[k] = mockObject(obj[k])
-    const type = getObjectType(obj[k])
+  for (const objAttr in obj) {
+    if (!Object.prototype.hasOwnProperty.call(obj, objAttr)) continue
 
-    if (type.includes('Function') && !obj[k].__isSpy) {
-      spyOn(newObj, k).mockImplementation(() => {})
-      Object.defineProperty(newObj[k], 'length', { value: 0 }) // tinyspy retains length, but jest doesnt
+    const objValue = obj[objAttr]
+    const nestedObjectType = getObjectType(objValue)
+
+    if (nestedObjectType === 'Function') {
+      // ex: function foo() {}
+      // foo.newFunction = () => {}
+      const hasFunctionsAttr = Object.keys(objValue).length !== 0
+
+      if (hasFunctionsAttr) {
+        newObj[objAttr] = mockObject(objValue)
+      }
+      else if (!objValue.__isSpy) {
+        spyOn(newObj, objAttr).mockImplementation(() => {})
+        Object.defineProperty(objValue, 'length', { value: 0 }) // tinyspy retains length, but jest doesnt
+      }
+    }
+    else {
+      newObj[objAttr] = mockObject(objValue)
     }
   }
+
   return newObj
 }
 
