@@ -216,11 +216,7 @@ export async function executeInViteNode(options: ExecuteOptions) {
     })
     await fn(...Object.values(context))
 
-    const mocks = suite ? mockMap[suite] : null
-    if (mocks) {
-      if (mocks[id] === null)
-        exportAll(exports, mockObject(exports))
-    }
+
 
     return exports
   }
