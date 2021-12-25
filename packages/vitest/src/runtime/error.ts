@@ -19,7 +19,7 @@ export function serializeError(val: any, seen = new WeakSet()): any {
   if (typeof val.asymmetricMatch === 'function')
     return `${val.toString()} ${format(val.sample)}`
 
-  if (!seen.has(val))
+  if (seen.has(val))
     return val
 
   seen.add(val)
