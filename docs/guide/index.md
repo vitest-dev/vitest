@@ -83,7 +83,7 @@ If you can't wait for a new release to test the latest features, you will need t
 
 ```bash
 git clone https://github.com/vitest-dev/vitest.git
-cd vite
+cd vitest
 pnpm install
 cd packages/vitest
 pnpm run build
