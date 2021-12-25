@@ -1,5 +1,5 @@
 import { performance } from 'perf_hooks'
-import { basename } from 'pathe'
+import { relative } from 'pathe'
 import { nanoid } from 'nanoid/non-secure'
 import type { File, ResolvedConfig, Suite, Test } from '../types'
 import { interpretOnlyMode } from '../utils'
@@ -15,7 +15,7 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
   for (const filepath of paths) {
     const file: File = {
       id: nanoid(),
-      name: basename(filepath),
+      name: relative(config.root, filepath),
       type: 'suite',
       mode: 'run',
       computeMode: 'serial',
