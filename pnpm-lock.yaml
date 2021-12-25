@@ -337,13 +337,11 @@ importers:
     specifiers:
       '@sveltejs/vite-plugin-svelte': ^1.0.0-next.32
       '@testing-library/svelte': ^3.0.3
-      '@testing-library/user-event': ^13.5.0
       svelte: ^3.44.3
       vitest: workspace:*
     devDependencies:
-      '@sveltejs/vite-plugin-svelte': 1.0.0-next.32_svelte@3.44.3+vite@2.7.6
+      '@sveltejs/vite-plugin-svelte': 1.0.0-next.32_svelte@3.44.3
       '@testing-library/svelte': 3.0.3_svelte@3.44.3
-      '@testing-library/user-event': 13.5.0
       svelte: 3.44.3
       vitest: link:../../packages/vitest
 
@@ -1524,7 +1522,7 @@ packages:
       picomatch: 2.3.0
     dev: true
 
-  /@sveltejs/vite-plugin-svelte/1.0.0-next.32_svelte@3.44.3+vite@2.7.6:
+  /@sveltejs/vite-plugin-svelte/1.0.0-next.32_svelte@3.44.3:
     resolution: {integrity: sha512-Lhf5BxVylosHIW6U2s6WDQA39ycd+bXivC8gHsXCJeLzxoHj7Pv7XAOk25xRSXT4wHg9DWFMBQh2DFU0DxHZ2g==}
     engines: {node: ^14.13.1 || >= 16}
     peerDependencies:
@@ -1542,7 +1540,6 @@ packages:
       require-relative: 0.8.7
       svelte: 3.44.3
       svelte-hmr: 0.14.7_svelte@3.44.3
-      vite: 2.7.6
     transitivePeerDependencies:
       - supports-color
     dev: true
