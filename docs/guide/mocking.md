@@ -100,8 +100,8 @@ Accepts a function that will be used as an implementation of the mock.
 For example:
 
 ```ts
-const mockFn = jest.fn().mockImplementation(apples => apples + 1);
-// or: jest.fn(apples => apples + 1);
+const mockFn = vi.fn().mockImplementation(apples => apples + 1);
+// or: vi.fn(apples => apples + 1);
 
 const NelliesBucket = mockFn(0);
 const BobsBucket = mockFn(1);
@@ -120,7 +120,7 @@ mockFn.mock.calls[1][0] === 1; // true
 Accepts a function that will be used as an implementation of the mock for one call to the mocked function. Can be chained so that multiple function calls produce different results.
 
 ```ts
-const myMockFn = jest
+const myMockFn = vi
   .fn()
   .mockImplementationOnce(() => true)
   .mockImplementationOnce(() => false);
@@ -129,10 +129,10 @@ myMockFn(); // true
 myMockFn(); // false
 ```
 
-When the mocked function runs out of implementations, it will invoke the default implementation that was set with `jest.fn(() => defaultValue)` or `.mockImplementation(() => defaultValue)` if they were called:
+When the mocked function runs out of implementations, it will invoke the default implementation that was set with `vi.fn(() => defaultValue)` or `.mockImplementation(() => defaultValue)` if they were called:
 
 ```ts
-const myMockFn = jest
+const myMockFn = vi
   .fn(() => 'default')
   .mockImplementationOnce(() => 'first call')
   .mockImplementationOnce(() => 'second call');
@@ -154,7 +154,7 @@ Sets inner implementation to return `this` context.
 Accepts a value that will be returned whenever the mock function is called.
 
 ```ts
-const mock = jest.fn();
+const mock = vi.fn();
 mock.mockReturnValue(42);
 mock(); // 42
 mock.mockReturnValue(43);
@@ -168,7 +168,7 @@ mock(); // 43
 Accepts a value that will be returned whenever mock function is invoked. If chained, every consecutive call will return passed value. When there are no more `mockReturnValueOnce` values to use, calls a function specified by `mockImplementation` or other `mockReturn*` methods.
 
 ```ts
-const myMockFn = jest
+const myMockFn = vi
   .fn()
   .mockReturnValue('default')
   .mockReturnValueOnce('first call')
@@ -186,7 +186,7 @@ Accepts a value that will be resolved, when async function will be called.
 
 ```ts
 test('async test', async () => {
-  const asyncMock = jest.fn().mockResolvedValue(43);
+  const asyncMock = vi.fn().mockResolvedValue(43);
 
   await asyncMock(); // 43
 });
@@ -200,7 +200,7 @@ Accepts a value that will be resolved for one call to the mock function. If chai
 
 ```ts
 test('async test', async () => {
-  const asyncMock = jest
+  const asyncMock = vi
     .fn()
     .mockResolvedValue('default')
     .mockResolvedValueOnce('first call')
@@ -221,7 +221,7 @@ Accepts an error that will be rejected, when async function will be called.
 
 ```ts
 test('async test', async () => {
-  const asyncMock = jest.fn().mockRejectedValue(new Error('Async error'));
+  const asyncMock = vi.fn().mockRejectedValue(new Error('Async error'));
 
   await asyncMock(); // throws "Async error"
 });
@@ -235,7 +235,7 @@ Accepts a value that will be rejected for one call to the mock function. If chai
 
 ```ts
 test('async test', async () => {
-  const asyncMock = jest
+  const asyncMock = vi
     .fn()
     .mockResolvedValueOnce('first call')
     .mockRejectedValueOnce(new Error('Async error'));
