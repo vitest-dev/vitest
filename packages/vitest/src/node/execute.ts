@@ -167,6 +167,15 @@ export async function executeInViteNode(options: ExecuteOptions) {
       return request(mock, true)
     }
 
+    const mockFile = (path: string, nmName: string, factory?: () => any) => {
+      if (!suite)
+        throw new Error('You can import mock only inside of a running test')
+
+      mockPath(path, nmName, factory)
+
+      return importMock(path, nmName)
+    }
+
     const context = {
       // esm transformed by Vite
       __vite_ssr_import__: request,
@@ -176,7 +185,7 @@ export async function executeInViteNode(options: ExecuteOptions) {
       __vite_ssr_import_meta__: { url },
 
       // vitest.mock API
-      __vitest__mock__: mockPath,
+      __vitest__mock__: mockFile,
       __vitest__unmock__: unmockPath,
       __vitest__importActual__: importActual,
       __vitest__importMock__: importMock,
