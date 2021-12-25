@@ -1,9 +1,9 @@
 import { expect, it } from 'vitest'
-import { customRender, screen, userEvent, waitForElementToBeRemoved } from './utils/test-utils'
+import { render, screen, userEvent, waitForElementToBeRemoved } from './utils/test-utils'
 import App from './App'
 
 it('Should return posts when clicking fetch button', async() => {
-  customRender(<App />)
+  render(<App />)
 
   expect(screen.getByRole('heading', { name: 'MSW Testing Library Example', level: 1 })).toBeDefined()
 
