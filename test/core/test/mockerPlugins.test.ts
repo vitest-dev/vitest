@@ -49,7 +49,7 @@ describe('MocksPlugin', () => {
     const mockedCode = await mocksPlugin.transform(code, 'aa')
     const actual = cleanText(mockedCode.code)
     const expected = cleanText(`
-     __vitest__mock__("/home/aa.ts", null);
+     await __vitest__mock__("/home/aa.ts", null);
 
       import aa from './aa';
       vi.mock('./aa');
@@ -74,7 +74,7 @@ describe('MocksPlugin', () => {
     const mockedCode = await mocksPlugin.transform(code, 'aa')
     const actual = cleanText(mockedCode.code)
     const expected = cleanText(`
-     __vitest__mock__("/home/aa.ts", null);
+     await __vitest__mock__("/home/aa.ts", null);
 
       import aa from './aa';
       vi.mock('./aa');
@@ -104,7 +104,7 @@ describe('MocksPlugin', () => {
     const mockedCode = await mocksPlugin.transform(code, 'aa')
     const actual = cleanText(mockedCode.code)
     const expected = cleanText(`
-      __vitest__mock__("/home/aa.ts", null, () => {
+      await __vitest__mock__("/home/aa.ts", null, () => {
         return {
           aa: () => {}
         };

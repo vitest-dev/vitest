@@ -88,7 +88,7 @@ const getMethodCall = (method: string, actualPath: string, importPath: string) =
   if (actualPath.includes('/node_modules/'))
     nodeModule = `"${importPath}"`
 
-  return `__vitest__${method}__("${actualPath}", ${nodeModule}`
+  return `await __vitest__${method}__("${actualPath}", ${nodeModule}`
 }
 
 export const MocksPlugin = (): Plugin => {

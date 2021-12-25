@@ -113,6 +113,8 @@ export async function executeInViteNode(options: ExecuteOptions) {
           return callFunctionMock(dep, mock)
         if (typeof mock === 'string')
           dep = mock
+        if (typeof mock === 'object')
+          return mock
       }
       if (callstack.includes(dep)) {
         const cacheKey = toFilePath(dep, root)
@@ -156,24 +158,31 @@ export async function executeInViteNode(options: ExecuteOptions) {
         throw new Error('You can import mock only inside of a running test')
 
       const mock = (mockMap[suite] || {})[path] || resolveMockPath(path, root, nmName)
+
       if (mock === null) {
         const fsPath = getActualPath(path, nmName)
         const exports = mockObject(await request(fsPath, false))
         setCache(fsPath, { exports })
         return exports
       }
+
       if (typeof mock === 'function')
         return callFunctionMock(path, mock)
+
       return request(mock, true)
     }
 
-    const mockFile = (path: string, nmName: string, factory?: () => any) => {
+    const mockFile = async(path: string, nmName: string, factory?: () => any) => {
       if (!suite)
         throw new Error('You can import mock only inside of a running test')
 
-      mockPath(path, nmName, factory)
-
-      return importMock(path, nmName)
+      if (!factory) {
+        const code = await importMock(path, nmName)
+        mockPath(path, nmName, code)
+      }
+      else {
+        mockPath(path, nmName, factory)
+      }
     }
 
     const context = {
