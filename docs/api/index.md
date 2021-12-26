@@ -10,7 +10,7 @@ type TestFunction = () => Awaitable<void> | (done: DoneCallback) => void
 
 When a test function returns a promise, the runner will await until it is resolved to collect async expectations. If the promise is rejected, the test will fail.
 
-For compatibility with Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If this form is used, the test will not be concluded until `done` is called (with zero arguments or a falsy value for a successful test, and with an truthy error value as argument to trigger a fail). We don't recommend to use this form, as you can achieve the same using an `async` function.
+For compatibility with Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If this form is used, the test will not be concluded until `done` is called (with zero arguments or a falsy value for a successful test, and with a truthy error value as argument to trigger a fail). We don't recommend to use this form, as you can achieve the same using an `async` function.
 
 ## test
 
@@ -42,7 +42,7 @@ test.skip("skipped test", () => {
 
 ### test.only
 
-Use `.only` to only run certain tests in a given suite 
+Use `.only` to only run certain tests in a given suite
 
 **Type:** `(name: string, fn: TestFunction, timeout?: number) => void`
 

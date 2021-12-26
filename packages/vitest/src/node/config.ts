@@ -33,6 +33,8 @@ export function resolveConfig(
   resolved.testTimeout = resolved.testTimeout ?? 5_000
   resolved.hookTimeout = resolved.hookTimeout ?? 10_000
 
+  resolved.isolate = resolved.isolate ?? true
+
   resolved.watchIgnore = resolved.watchIgnore ?? [/\/node_modules\//, /\/dist\//]
 
   const CI = !!process.env.CI

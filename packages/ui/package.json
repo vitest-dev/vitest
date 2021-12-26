@@ -2,7 +2,7 @@
   "name": "@vitest/ui",
   "//": "TODO: when it's ready",
   "private": true,
-  "version": "0.0.109",
+  "version": "0.0.113",
   "description": "Vitest UI",
   "sideEffects": false,
   "type": "module",
@@ -21,6 +21,7 @@
   "scripts": {
     "dev:node": "rollup -c --watch node",
     "dev:client": "vite",
+    "dev:ui": "run-p dev:node dev:client",
     "build:node": "rollup -c",
     "build:client": "vite build",
     "build": "rimraf dist && pnpm build:node && pnpm build:client"
@@ -29,19 +30,19 @@
     "vitest": "workspace:*"
   },
   "dependencies": {
-    "@vueuse/core": "^7.4.0",
+    "@vueuse/core": "^7.4.1",
     "sirv": "^1.0.19",
     "ws": "^8.4.0"
   },
   "devDependencies": {
     "@types/ws": "^8.2.2",
-    "@unocss/reset": "^0.17.2",
+    "@unocss/reset": "^0.18.1",
     "@vitejs/plugin-vue": "^2.0.1",
     "picocolors": "^1.0.0",
-    "rollup": "^2.61.1",
-    "unocss": "^0.17.2",
+    "rollup": "^2.62.0",
+    "unocss": "^0.18.1",
     "unplugin-auto-import": "^0.5.4",
-    "unplugin-vue-components": "^0.17.9",
+    "unplugin-vue-components": "^0.17.11",
     "vitest": "workspace:*"
   }
 }

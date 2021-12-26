@@ -1,5 +1,7 @@
+import type { BuiltinReporters } from '../reporters'
 import type { Reporter } from './reporter'
 import type { SnapshotStateOptions } from './snapshot'
+import type { Arrayable } from './general'
 
 export type BuiltinEnvironment = 'node' | 'jsdom' | 'happy-dom'
 
@@ -76,7 +78,7 @@ export interface InlineConfig {
   /**
    * Custom reporter for output
    */
-  reporters?: Reporter | Reporter[]
+  reporters?: Arrayable<BuiltinReporters | Reporter>
 
   /**
    * Enable multi-threading
@@ -138,6 +140,13 @@ export interface InlineConfig {
    * @default ['**\/node_modules\/**', '**\/dist/**']
    */
   watchIgnore?: (string | RegExp)[]
+
+  /**
+   * Isolate environment for each test file
+   *
+   * @default true
+   */
+  isolate?: boolean
 
   /**
    * Open Vitest UI

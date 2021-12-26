@@ -10,7 +10,7 @@ export function serializeError(val: any): any {
     return `Function<${val.name}>`
   if (typeof val !== 'object')
     return val
-  if (val instanceof Promise || 'then' in val)
+  if (val instanceof Promise || 'then' in val || (val.constructor && val.constructor.prototype === 'AsyncFunction'))
     return 'Promise'
   if (typeof Element !== 'undefined' && val instanceof Element)
     return val.tagName

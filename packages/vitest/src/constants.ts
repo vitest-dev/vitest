@@ -4,7 +4,7 @@ import { resolve } from 'pathe'
 export const distDir = resolve(fileURLToPath(import.meta.url), '../../dist')
 
 export const defaultInclude = ['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']
-export const defaultExclude = ['**/node_modules/**', '**/dist/**', '**/.{idea,git,cache,output,temp}/**']
+export const defaultExclude = ['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**']
 
 export const defaultPort = 51204
 

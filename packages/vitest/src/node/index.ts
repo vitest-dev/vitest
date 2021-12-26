@@ -9,8 +9,9 @@ import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig } from '../typ
 import { SnapshotManager } from '../integrations/snapshot/manager'
 import { configFiles, defaultPort } from '../constants'
 import { hasFailed, noop, slash, toArray } from '../utils'
-import { ConsoleReporter } from '../reporters/console'
 import { MocksPlugin } from '../plugins/mock'
+import { DefaultReporter } from '../reporters/default'
+import { ReportersMap } from '../reporters'
 import type { WorkerPool } from './pool'
 import { StateManager } from './state'
 import { resolveConfig } from './config'
@@ -52,10 +53,20 @@ class Vitest {
     this.config = resolved
     this.state = new StateManager()
     this.snapshot = new SnapshotManager(resolved)
-    this.reporters = toArray(resolved.reporters)
+    // @ts-expect-error cli type
+    this.reporters = toArray(resolved.reporters || resolved.reporter)
+      .map((i) => {
+        if (typeof i === 'string') {
+          const Reporter = ReportersMap[i]
+          if (!Reporter)
+            throw new Error(`Unknown reporter: ${i}`)
+          return new Reporter(this)
+        }
+        return i
+      })
 
-    if (!this.reporters.length && !this.config.silent)
-      this.reporters.push(new ConsoleReporter(this))
+    if (!this.reporters.length)
+      this.reporters.push(new DefaultReporter(this))
 
     if (this.config.watch)
       this.registerWatcher()
@@ -106,14 +117,10 @@ class Vitest {
   }
 
   log(...args: any[]) {
-    if (this.config.silent)
-      return
     this.console.log(...args)
   }
 
   error(...args: any[]) {
-    if (this.config.silent)
-      return
     this.console.error(...args)
   }
 
