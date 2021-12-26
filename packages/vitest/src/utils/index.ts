@@ -1,7 +1,10 @@
+import { fileURLToPath, pathToFileURL } from 'url'
 import c from 'picocolors'
 import { isPackageExists } from 'local-pkg'
-import { resolve } from 'pathe'
+import { dirname, resolve } from 'pathe'
 import type { Arrayable, Nullable, Suite, Task, Test } from '../types'
+
+export const isWindows = process.platform === 'win32'
 
 /**
  * Convert `Arrayable<T>` to `Array<T>`
@@ -135,6 +138,24 @@ export async function ensurePackageInstalled(
   }
 
   return false
+}
+
+export function toFilePath(id: string, root: string): string {
+  let absolute = slash(id).startsWith('/@fs/')
+    ? id.slice(4)
+    : id.startsWith(dirname(root))
+      ? id
+      : id.startsWith('/')
+        ? slash(resolve(root, id.slice(1)))
+        : id
+
+  if (absolute.startsWith('//'))
+    absolute = absolute.slice(1)
+
+  // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
+  return isWindows && absolute.startsWith('/')
+    ? fileURLToPath(pathToFileURL(absolute.slice(1)).href)
+    : absolute
 }
 
 export { resolve as resolvePath }

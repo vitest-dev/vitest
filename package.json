@@ -31,6 +31,7 @@
     "@rollup/plugin-node-resolve": "^13.1.1",
     "@types/node": "^17.0.4",
     "bumpp": "^7.1.1",
+    "c8": "^7.10.0",
     "cross-env": "^7.0.3",
     "eslint": "^8.5.0",
     "esno": "^0.13.0",

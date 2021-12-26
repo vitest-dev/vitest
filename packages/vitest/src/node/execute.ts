@@ -4,7 +4,7 @@ import vm from 'vm'
 import { dirname, resolve } from 'pathe'
 import { isValidNodeImport } from 'mlly'
 import type { ModuleCache } from '../types'
-import { slash } from '../utils'
+import { slash, toFilePath } from '../utils'
 import type { SuiteMocks } from './mocker'
 import { createMocker } from './mocker'
 
@@ -32,8 +32,6 @@ const depsExternal = [
   /\.cjs.js$/,
   /\.mjs$/,
 ]
-
-const isWindows = process.platform === 'win32'
 
 export const stubRequests: Record<string, any> = {
   '/@vite/client': {
@@ -275,24 +273,6 @@ export async function shouldExternalize(id: string, config: Pick<ExecuteOptions,
     return false
 
   return id.includes('/node_modules/') && await isValidNodeImport(id)
-}
-
-export function toFilePath(id: string, root: string): string {
-  let absolute = slash(id).startsWith('/@fs/')
-    ? id.slice(4)
-    : id.startsWith(dirname(root))
-      ? id
-      : id.startsWith('/')
-        ? slash(resolve(root, id.slice(1)))
-        : id
-
-  if (absolute.startsWith('//'))
-    absolute = absolute.slice(1)
-
-  // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
-  return isWindows && absolute.startsWith('/')
-    ? fileURLToPath(pathToFileURL(absolute.slice(1)).href)
-    : absolute
 }
 
 function matchExternalizePattern(id: string, patterns: (string | RegExp)[]) {

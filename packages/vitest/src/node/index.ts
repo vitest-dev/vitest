@@ -1,10 +1,13 @@
-import { resolve } from 'pathe'
+import { existsSync, promises as fs } from 'fs'
+import { pathToFileURL } from 'url'
+import { join, resolve } from 'pathe'
 import type { ViteDevServer, InlineConfig as ViteInlineConfig, Plugin as VitePlugin, UserConfig as ViteUserConfig } from 'vite'
 import { createServer, mergeConfig } from 'vite'
 import { findUp } from 'find-up'
 import fg from 'fast-glob'
 import mm from 'micromatch'
 import c from 'picocolors'
+import type { RawSourceMap } from 'source-map-js'
 import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig } from '../types'
 import { SnapshotManager } from '../integrations/snapshot/manager'
 import { configFiles, defaultPort } from '../constants'
@@ -30,6 +33,7 @@ class Vitest {
 
   invalidates: Set<string> = new Set()
   changedTests: Set<string> = new Set()
+  visitedFilesMap: Map<string, RawSourceMap> = new Map()
   runningPromise?: Promise<void>
   isFirstRun = true
 
@@ -91,6 +95,8 @@ class Vitest {
 
     if (this.config.watch)
       await this.report('onWatcherStart')
+
+    await this.writeC8Sourcemap()
   }
 
   async runFiles(files: string[]) {
@@ -251,6 +257,38 @@ class Vitest {
       files = files.filter(i => filters.some(f => i.includes(f)))
 
     return files
+  }
+
+  async writeC8Sourcemap() {
+    const coverageDir = process.env.NODE_V8_COVERAGE
+    if (!coverageDir)
+      return
+
+    const cache: Record<string, any> = {}
+
+    const files = Array.from(this.visitedFilesMap.entries()).filter(i => !i[0].includes('/node_modules/'))
+
+    files.forEach(([file, map]) => {
+      if (!existsSync(file))
+        return
+      const url = pathToFileURL(file).href
+      cache[url] = {
+        data: {
+          ...map,
+          sources: map.sources.map(i => pathToFileURL(i).href) || [url],
+        },
+      }
+    })
+
+    // write a fake coverage report with source map for c8 to consume
+    await fs.writeFile(
+      join(coverageDir, 'vitest-source-map.json'),
+      JSON.stringify({
+        'result': [],
+        'timestamp': performance.now(),
+        'source-map-cache': cache,
+      }), 'utf-8',
+    )
   }
 
   isTargetFile(id: string): boolean {
