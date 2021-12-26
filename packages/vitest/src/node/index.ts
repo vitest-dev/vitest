@@ -65,7 +65,7 @@ class Vitest {
         return i
       })
 
-    if (!this.reporters.length && !this.config.silent)
+    if (!this.reporters.length)
       this.reporters.push(new DefaultReporter(this))
 
     if (this.config.watch)
@@ -117,14 +117,10 @@ class Vitest {
   }
 
   log(...args: any[]) {
-    if (this.config.silent)
-      return
     this.console.log(...args)
   }
 
   error(...args: any[]) {
-    if (this.config.silent)
-      return
     this.console.error(...args)
   }
 

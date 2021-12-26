@@ -17,7 +17,7 @@ cli
   .option('-o, --open', 'open Vitest UI')
   .option('--api', 'listen to port and serve API')
   .option('--threads', 'enabled threads', { default: true })
-  .option('--silent', 'silent')
+  .option('--silent', 'silent console.log output from tests')
   .option('--reporter <name>', 'reporter')
   .option('--coverage', 'use c8 for coverage')
   .option('--run', 'do not watch')
@@ -47,7 +47,7 @@ cli.parse()
 
 async function dev(cliFilters: string[], argv: UserConfig) {
   if (argv.watch == null)
-    argv.watch = !process.env.CI && !process.env.NODE_V8_COVERAGE && !argv.silent && !argv.run
+    argv.watch = !process.env.CI && !process.env.NODE_V8_COVERAGE && !argv.run
   await run(cliFilters, argv)
 }
 

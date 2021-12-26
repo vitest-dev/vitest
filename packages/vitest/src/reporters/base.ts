@@ -59,13 +59,13 @@ export abstract class BaseReporter implements Reporter {
   async onWatcherRerun(files: string[], trigger: string) {
     this.watchFilters = files
 
-    if (!this.ctx.config.silent) {
-      this.ctx.console.clear()
-      this.ctx.log(c.blue('Re-running tests...') + c.dim(` [ ${this.relative(trigger)} ]\n`))
-    }
+    this.ctx.console.clear()
+    this.ctx.log(c.blue('Re-running tests...') + c.dim(` [ ${this.relative(trigger)} ]\n`))
   }
 
   onUserConsoleLog(log: UserConsoleLog) {
+    if (this.ctx.config.silent)
+      return
     const task = log.taskId ? this.ctx.state.idMap[log.taskId] : undefined
     this.ctx.log(c.gray(log.type + c.dim(` | ${task ? getFullName(task) : 'unknown test'}`)))
     process[log.type].write(`${log.content}\n`)
