@@ -2,7 +2,7 @@ import { existsSync, promises as fs } from 'fs'
 import { createRequire } from 'module'
 import { pathToFileURL } from 'url'
 import { resolve } from 'pathe'
-import type { Arrayable } from 'vitest'
+import type { Arrayable } from './types'
 import type { Vitest } from './node'
 import { toArray } from './utils'
 

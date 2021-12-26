@@ -12,6 +12,7 @@ const entry = [
 const external = [
   'ws',
   'birpc',
+  'worker_threads',
 ]
 
 export default () => [
