@@ -54,8 +54,6 @@ export const server = setupServer(...handlers)
 
 3. The last step is just to start the server! 
 
-PS. You can even using MSW during development, if for example the backend API is not ready yet!
-
 Starting and closing the server is done in a setup file which runs everytime before the tests.
 
 ```js
