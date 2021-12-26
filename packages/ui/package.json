@@ -30,6 +30,7 @@
     "vitest": "workspace:*"
   },
   "dependencies": {
+    "@vitest/ws-client": "workspace:*",
     "@vueuse/core": "^7.4.1",
     "sirv": "^1.0.19",
     "ws": "^8.4.0"

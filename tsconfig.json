@@ -15,7 +15,9 @@
     "inlineSourceMap": true,
     "paths": {
       "vitest": ["./packages/vitest/src/index.ts"],
-      "vitest/global.d.ts": ["./packages/vitest/global.d.ts"]
+      "vitest/node": ["./packages/vitest/src/node/index.ts"],
+      "vitest/global": ["./packages/vitest/global.d.ts"],
+      "@vitest/ws-client": ["./packages/ws-client/src/index.ts"],
     }
   },
   "exclude": [

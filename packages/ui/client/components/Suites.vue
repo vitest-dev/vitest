@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import { tasksCtx } from '~/context'
-
-const file = inject(tasksCtx)
+import { current } from '~/state'
 </script>
 
 <template>
-  <div v-if="file" overflow-auto w-72>
+  <div v-if="current" overflow-auto w-72>
     <div
       h-8
       px-4
@@ -17,15 +15,15 @@ const file = inject(tasksCtx)
       gap-4
     >
       <span font-light text-sm flex-1>
-        {{ file.name }}
+        {{ current.name }}
       </span>
       <button i-carbon-play />
     </div>
 
     <test-suite
-      v-for="suite in file.tasks"
-      v-bind="suite"
+      v-for="suite in current.tasks"
       :key="suite.id"
+      :task="suite"
     />
   </div>
 </template>

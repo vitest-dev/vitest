@@ -1,11 +1,7 @@
 <script setup lang="ts">
-import { activeFileId, connectionStatus, fileMetadata } from '~/context'
+import { activeFileIdRef, files, status } from '../state'
 
-const filesRef = inject(fileMetadata)
-const status = inject(connectionStatus)
-const activeFileIdRef = inject(activeFileId)
-
-const files = computed(() => (filesRef?.value ?? []).map(({
+const filtered = computed(() => (files?.value ?? []).map(({
   id,
   name,
   type,
@@ -49,7 +45,7 @@ const files = computed(() => (filesRef?.value ?? []).map(({
     </div>
 
     <test-file
-      v-for="file in files"
+      v-for="file in filtered"
       v-bind="file"
       :key="file.id"
     />

@@ -18,7 +18,7 @@ const defaultExcludes = [
   '**/.{eslint,mocha}rc.{js,cjs}',
 ]
 
-export type Reporter =
+export type CoverageReporter =
   | 'clover'
   | 'cobertura'
   | 'html-spa'
@@ -67,7 +67,7 @@ export interface C8Options {
    *
    * @default 'text'
    */
-  reporter?: Arrayable<Reporter>
+  reporter?: Arrayable<CoverageReporter>
   /**
    * Exclude coverage under /node_modules/
    *
