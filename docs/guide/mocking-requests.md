@@ -3,7 +3,7 @@
 
 When it comes to mocking network requests, we recommend you using [Mock Service Worker](https://mswjs.io/).
 
-You can mock both REST and GraphQL APIs using Mock Service Worker. It is also Framework agnostic!
+You can mock both REST and GraphQL APIs using Mock Service Worker. It is also framework agnostic!
 
 ## Why
 
