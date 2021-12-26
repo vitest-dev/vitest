@@ -4,6 +4,7 @@ import { pathToFileURL } from 'url'
 import { resolve } from 'pathe'
 import type { Arrayable } from 'vitest'
 import type { Vitest } from './node'
+import { toArray } from './utils'
 
 const defaultExcludes = [
   'coverage/**',
@@ -108,6 +109,7 @@ export function resolveC8Options(options: C8Options, root: string): ResolvedC8Op
     ...options as any,
   }
 
+  resolved.reporter = toArray(resolved.reporter)
   resolved.reportsDirectory = resolve(root, resolved.reportsDirectory)
   resolved.tempDirectory = process.env.NODE_V8_COVERAGE || resolve(resolved.reportsDirectory, 'tmp')
 
@@ -132,38 +134,25 @@ export async function prepareCoverage(options: ResolvedC8Options) {
 const require = createRequire(import.meta.url)
 
 export async function reportCoverage(ctx: Vitest) {
-  // await writeC8Sourcemap(ctx)
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const createReport = require('c8/lib/report')
   const report = createReport(ctx.config.coverage)
 
-  const files = Array.from(ctx.visitedFilesMap.entries()).filter(i => !i[0].includes('/node_modules/'))
-
-  files.forEach(([file, map]) => {
-    if (!existsSync(file))
-      return
-    const url = pathToFileURL(file).href
-    report.sourceMapCache[url] = {
-      data: {
-        ...map,
-        sources: map.sources.map(i => pathToFileURL(i).href) || [url],
-      },
-    }
-  })
+  // add source maps
+  Array
+    .from(ctx.visitedFilesMap.entries())
+    .filter(i => !i[0].includes('/node_modules/'))
+    .forEach(([file, map]) => {
+      if (!existsSync(file))
+        return
+      const url = pathToFileURL(file).href
+      report.sourceMapCache[url] = {
+        data: {
+          ...map,
+          sources: map.sources.map(i => pathToFileURL(i).href) || [url],
+        },
+      }
+    })
 
   await report.run()
 }
-
-// export async function writeC8Sourcemap(ctx: Vitest) {
-//   const cache: Record<string, any> = {}
-
-//   // write a fake coverage report with source map for c8 to consume
-//   await fs.writeFile(
-//     join(ctx.config.coverage.tempDirectory, 'vitest-source-map.json'),
-//     JSON.stringify({
-//       'result': [],
-//       'timestamp': performance.now(),
-//       'source-map-cache': cache,
-//     }), 'utf-8',
-//   )
-// }
