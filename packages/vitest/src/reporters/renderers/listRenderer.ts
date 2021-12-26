@@ -9,6 +9,7 @@ import { getCols, getStateSymbol } from './utils'
 
 export interface ListRendererOptions {
   renderSucceed?: boolean
+  outputStream: NodeJS.WritableStream
 }
 
 const DURATION_LONG = 300
@@ -74,13 +75,11 @@ export function renderTree(tasks: Task[], options: ListRendererOptions, level = 
   return output.slice(0, MAX_HEIGHT).join('\n')
 }
 
-export const createListRenderer = (_tasks: Task[], options: ListRendererOptions = {}) => {
+export const createListRenderer = (_tasks: Task[], options: ListRendererOptions) => {
   let tasks = _tasks
   let timer: any
 
-  const stdout = process.stdout
-
-  const log = createLogUpdate(stdout)
+  const log = createLogUpdate(options.outputStream)
 
   function update() {
     log(renderTree(tasks, options))
@@ -104,7 +103,7 @@ export const createListRenderer = (_tasks: Task[], options: ListRendererOptions 
         timer = undefined
       }
       log.clear()
-      stdout.write(`${renderTree(tasks, options)}\n`)
+      options.outputStream.write(`${renderTree(tasks, options)}\n`)
       return this
     },
     clear() {

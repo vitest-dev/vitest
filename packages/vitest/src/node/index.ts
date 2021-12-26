@@ -30,6 +30,9 @@ class Vitest {
   console: Console
   pool: WorkerPool | undefined
 
+  outputStream = process.stdout
+  errorStream = process.stderr
+
   invalidates: Set<string> = new Set()
   changedTests: Set<string> = new Set()
   visitedFilesMap: Map<string, RawSourceMap> = new Map()
@@ -70,7 +73,7 @@ class Vitest {
       })
 
     if (!this.reporters.length)
-      this.reporters.push(new DefaultReporter(this))
+      this.reporters.push(new DefaultReporter())
 
     if (this.config.watch)
       this.registerWatcher()
@@ -84,6 +87,8 @@ class Vitest {
   }
 
   async start(filters?: string[]) {
+    this.report('onInit', this)
+
     const files = await this.globTestFiles(filters)
 
     if (!files.length) {
