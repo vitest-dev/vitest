@@ -8,7 +8,7 @@ defineProps<{ delay: number }>()
   <Suspense>
     <AsyncComp :delay="delay" />
     <template #fallback>
-      Fallback
+      fallback
     </template>
   </Suspense>
 </template>

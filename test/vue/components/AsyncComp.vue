@@ -11,5 +11,5 @@ time.value = Date.now() - time.value
 </script>
 
 <template>
-  <div>{{ time }}</div>
+  <div>resolved: {{ time }}</div>
 </template>

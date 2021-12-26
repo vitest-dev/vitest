@@ -11,12 +11,12 @@ test('async component with suspense', async() => {
     },
   })
 
-  expect(wrapper.text()).toEqual('Fallback')
+  expect(wrapper.text()).toContain('fallback')
 
   await flushPromises()
   await new Promise(resolve => setTimeout(resolve, delay * 2))
 
   const text = wrapper.text()
-  expect(text.length).toBeGreaterThan(0)
-  expect(Math.abs(+text - delay)).toBeLessThan(delay)
+  expect(text).toMatch(/\d+/)
+  expect(text).toContain('resolved')
 })
