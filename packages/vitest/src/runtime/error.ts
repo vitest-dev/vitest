@@ -11,12 +11,10 @@ export function serializeError(val: any, seen = new WeakSet()): any {
   if (typeof val !== 'object')
     return val
 
-  if (val !== null) {
-    if (seen.has(val))
-      return val
+  if (seen.has(val))
+    return val
 
-    seen.add(val)
-  }
+  seen.add(val)
 
   if (val instanceof Promise || 'then' in val || (val.constructor && val.constructor.prototype === 'AsyncFunction'))
     return 'Promise'
