@@ -57,18 +57,19 @@ export function createFakePool(ctx: Vitest): WorkerPool {
 export function createWorkerPool(ctx: Vitest): WorkerPool {
   const options: TinypoolOptions = {
     filename: workerPath,
-    isolateWorkers: true,
-    concurrentTasksPerWorker: 1,
     // Disable this for now, for WebContainer capability
     // https://github.com/vitest-dev/vitest/issues/93
     // In future we could conditionally enable it based on the env
     useAtomics: false,
   }
-  // UPSTREAM: Tinypool set defaults by the key existence
   if (ctx.config.maxThreads != null)
     options.maxThreads = ctx.config.maxThreads
   if (ctx.config.minThreads != null)
     options.minThreads = ctx.config.minThreads
+  if (ctx.config.isolate) {
+    options.isolateWorkers = true
+    options.concurrentTasksPerWorker = 1
+  }
 
   const pool = new Tinypool(options)
 

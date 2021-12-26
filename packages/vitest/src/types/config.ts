@@ -142,6 +142,13 @@ export interface InlineConfig {
   watchIgnore?: (string | RegExp)[]
 
   /**
+   * Isolate environment for each test file
+   *
+   * @default true
+   */
+  isolate?: boolean
+
+  /**
    * Open Vitest UI
    * @internal WIP
    */
