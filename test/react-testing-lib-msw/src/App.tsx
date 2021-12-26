@@ -1,5 +1,5 @@
 import * as React from 'react'
-import fetch from 'node-fetch'
+import fetch from 'cross-fetch'
 
 type Post = {
   userId: number
