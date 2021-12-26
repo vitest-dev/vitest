@@ -4,7 +4,7 @@ import AsyncWrapper from '../components/AsyncWrapper.vue'
 test('async component with suspense', async() => {
   expect(AsyncWrapper).toBeTruthy()
 
-  const delay = 100
+  const delay = 50
   const wrapper = mount(AsyncWrapper, {
     props: {
       delay,
@@ -14,8 +14,9 @@ test('async component with suspense', async() => {
   expect(wrapper.text()).toEqual('Fallback')
 
   await flushPromises()
-  await new Promise(resolve => setTimeout(resolve, delay))
+  await new Promise(resolve => setTimeout(resolve, delay * 2))
 
   const text = wrapper.text()
-  expect(Math.abs(+text - delay)).toBeLessThan(delay / 2)
+  expect(text.length).toBeGreaterThan(0)
+  expect(Math.abs(+text - delay)).toBeLessThan(delay)
 })
