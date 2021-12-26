@@ -1,6 +1,7 @@
 import { expect, it } from 'vitest'
 import { render, screen, userEvent, waitForElementToBeRemoved } from './utils/test-utils'
 import App from './App'
+import { posts } from './mocks/handlers'
 
 it('Should return posts when clicking fetch button', async() => {
   render(<App />)
@@ -11,15 +12,8 @@ it('Should return posts when clicking fetch button', async() => {
 
   await waitForElementToBeRemoved(() => screen.queryByLabelText('loading'))
 
-  //   First post
-  expect(screen.getByRole('heading', { name: 'first post title', level: 2 })).toBeDefined()
-  expect(screen.getByText('first post body')).toBeDefined()
-
-  //   Second post
-  expect(screen.getByRole('heading', { name: 'second post title', level: 2 })).toBeDefined()
-  expect(screen.getByText('second post body')).toBeDefined()
-
-  //   First post
-  expect(screen.getByRole('heading', { name: 'third post title', level: 2 })).toBeDefined()
-  expect(screen.getByText('third post body')).toBeDefined()
+  posts.forEach((post) => {
+    expect(screen.getByRole('heading', { name: post.title, level: 2 })).toBeDefined()
+    expect(screen.getByText(post.body)).toBeDefined()
+  })
 })
