@@ -73,7 +73,7 @@ afterEach(() => server.resetHandlers())
 
 ## Example
 
-We have a full working example which uses MSW: [React Testing with MSW](../../test/react-testing-lib-msw/).
+We have a full working example which uses MSW: [React Testing with MSW](https://github.com/vitest-dev/vitest/tree/main/test/react-testing-lib-msw).
 
 ## More
 
