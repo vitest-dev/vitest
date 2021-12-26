@@ -24,7 +24,7 @@ export async function saveInlineSnapshots(
     for (const snap of snaps) {
       const pos = await getOriginalPos(map, snap)
       const index = posToNumber(code, pos!)
-      replaceInlineSnap(code, s, index, snap.snapshot, ' '.repeat(4))
+      replaceInlineSnap(code, s, index, snap.snapshot) // TODO: support indent: ' '.repeat(4))
     }
 
     const transformed = s.toString()
