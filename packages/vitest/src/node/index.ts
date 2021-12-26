@@ -67,7 +67,7 @@ class Vitest {
           const Reporter = ReportersMap[i]
           if (!Reporter)
             throw new Error(`Unknown reporter: ${i}`)
-          return new Reporter(this)
+          return new Reporter()
         }
         return i
       })

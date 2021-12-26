@@ -1,9 +1,8 @@
-import type { Vitest } from '../node'
 import { DefaultReporter } from './default'
 
 export class VerboseReporter extends DefaultReporter {
-  constructor(ctx: Vitest) {
-    super(ctx)
+  constructor() {
+    super()
     this.rendererOptions.renderSucceed = true
   }
 }
