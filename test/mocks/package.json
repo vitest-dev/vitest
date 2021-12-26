@@ -15,7 +15,7 @@
     "tinyspy": "^0.2.6"
   },
   "devDependencies": {
-    "vite": "^2.7.6",
+    "vite": "^2.7.7",
     "vitest": "workspace:*"
   }
 }

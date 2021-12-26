@@ -21,7 +21,7 @@
     "@types/react-dom": "^17.0.11",
     "@vitejs/plugin-react": "^1.1.3",
     "happy-dom": "*",
-    "vite": "^2.7.6",
+    "vite": "^2.7.7",
     "vitest": "workspace:*"
   }
 }
