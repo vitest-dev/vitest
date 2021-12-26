@@ -1,11 +1,11 @@
 <script setup lang="ts">
-const { status, data, send } = useWebSocket('ws://localhost:51204/__vitest_api')
+import { tasksCtx } from '~/context'
 
-const suites = computed(() => JSON.parse(data.value || '[]').filter((x: any) => x))
+const file = inject(tasksCtx)
 </script>
 
 <template>
-  <div overflow-auto flex-1>
+  <div v-if="file" overflow-auto w-72>
     <div
       h-8
       px-4
@@ -17,15 +17,13 @@ const suites = computed(() => JSON.parse(data.value || '[]').filter((x: any) => 
       gap-4
     >
       <span font-light text-sm flex-1>
-        Test Suites
+        {{ file.name }}
       </span>
-      <span v-if="status === 'CONNECTING'" i-carbon-wifi text-orange-300 />
-      <span v-else-if="status === 'CLOSED'" i-carbon-wifi-off text-red-300 />
       <button i-carbon-play />
     </div>
 
     <test-suite
-      v-for="suite in suites"
+      v-for="suite in file.tasks"
       v-bind="suite"
       :key="suite.id"
     />

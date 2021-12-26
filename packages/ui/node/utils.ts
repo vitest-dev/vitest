@@ -1,12 +1,11 @@
 import type { Vitest } from 'vitest/node'
-import { getSuites } from '../../vitest/src/utils'
 
 const getCircularReplacer = () => {
   const seen = new WeakSet()
   return (key: any, value: any) => {
     if (typeof value === 'object' && value !== null) {
       if (seen.has(value))
-        return
+        return value.id
 
       seen.add(value)
     }
@@ -15,7 +14,7 @@ const getCircularReplacer = () => {
 }
 
 export const getSuitesAsJson = (vitest: Vitest) => {
-  const suites = getSuites(vitest.state.getFiles()).filter(x => x)
+  const files = vitest.state.getFiles()
 
-  return JSON.stringify(suites, getCircularReplacer())
+  return JSON.stringify(files, getCircularReplacer())
 }
