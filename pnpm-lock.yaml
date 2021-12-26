@@ -129,6 +129,7 @@ importers:
       '@types/natural-compare': ^1.4.1
       '@types/node': ^17.0.4
       '@types/prompts': ^2.4.0
+      birpc: ^0.0.0
       c8: ^7.10.0
       cac: ^6.7.12
       chai: ^4.3.4
@@ -174,6 +175,7 @@ importers:
       '@types/natural-compare': 1.4.1
       '@types/node': 17.0.4
       '@types/prompts': 2.4.0
+      birpc: 0.0.0
       c8: 7.10.0
       cac: 6.7.12
       chai-subset: 1.6.0
@@ -2585,6 +2587,10 @@ packages:
   /binary-extensions/2.2.0:
     resolution: {integrity: sha512-jDctJ/IVQbZoJykoeHbhXpOlNBqGNcwXJKJog42E5HDPUwQTSdjCHdihjj0DlnheQ7blbT6dHOafNAiS8ooQKA==}
     engines: {node: '>=8'}
+    dev: true
+
+  /birpc/0.0.0:
+    resolution: {integrity: sha512-iwx9wNWpYW/eHpaeDxt8vO2Kl9EwXJB/V3oETMQvT/yrQ16Ab4LYCGxyHGitvVn6RPn1rhyXwnAlherlKsQoaw==}
     dev: true
 
   /bl/4.1.0:

@@ -3,9 +3,10 @@ import { pathToFileURL } from 'url'
 import { resolve } from 'pathe'
 import type { Options as TinypoolOptions } from 'tinypool'
 import { Tinypool } from 'tinypool'
-import type { RpcMap } from 'vitest'
+import type { RawSourceMap } from 'source-map-js'
+import { createBirpc } from 'birpc'
 import { distDir } from '../constants'
-import type { Awaitable, File, RpcPayload, WorkerContext } from '../types'
+import type { WorkerContext, WorkerRPC } from '../types'
 import { transformRequest } from './transform'
 import type { Vitest } from './index'
 
@@ -104,48 +105,43 @@ function createChannel(ctx: Vitest) {
   const port = channel.port2
   const workerPort = channel.port1
 
-  port.on('message', async({ id, method, args = [] }: RpcPayload) => {
-    async function send(fn: () => Awaitable<any>) {
-      try {
-        port.postMessage({ id, result: await fn() })
-      }
-      catch (e) {
-        port.postMessage({ id, error: e })
-      }
-    }
-
-    switch (method) {
-      case 'processExit':
-        process.exit(args[0] as number || 1)
-        return
-      case 'snapshotSaved':
-        return send(() => ctx.snapshot.add(args[0] as any))
-      case 'getSourceMap':
-        return send(() => {
-          const [id, force] = args as RpcMap['getSourceMap'][0]
-          if (force) {
-            const mod = ctx.server.moduleGraph.getModuleById(id)
-            if (mod)
-              ctx.server.moduleGraph.invalidateModule(mod)
-          }
-          return transformRequest(ctx, id).then(r => r?.map)
-        })
-      case 'fetch':
-        return send(() => transformRequest(ctx, ...args as RpcMap['fetch'][0]).then(r => r?.code))
-      case 'onCollected':
-        ctx.state.collectFiles(args[0] as any)
-        ctx.reporters.forEach(r => r.onStart?.((args[0] as any as File[]).map(i => i.filepath)))
-        return
-      case 'onTaskUpdate':
-        ctx.state.updateTasks([args[0] as any])
-        ctx.reporters.forEach(r => r.onTaskUpdate?.(args[0] as any))
-        return
-      case 'log':
-        ctx.reporters.forEach(r => r.onUserConsoleLog?.(args[0] as any))
-        return
-    }
-
-    console.error('Unhandled message', method, args)
+  createBirpc<WorkerRPC>({
+    functions: {
+      processExit(code) {
+        process.exit(code || 1)
+      },
+      snapshotSaved(snapshot) {
+        ctx.snapshot.add(snapshot)
+      },
+      getSourceMap(id, force) {
+        if (force) {
+          const mod = ctx.server.moduleGraph.getModuleById(id)
+          if (mod)
+            ctx.server.moduleGraph.invalidateModule(mod)
+        }
+        return transformRequest(ctx, id).then(r => r?.map as RawSourceMap | undefined)
+      },
+      fetch(id) {
+        return transformRequest(ctx, id).then(r => r?.code)
+      },
+      onCollected(files) {
+        ctx.state.collectFiles(files)
+        ctx.report('onStart', files.map(i => i.filepath))
+      },
+      onTaskUpdate(pack) {
+        ctx.state.updateTasks([pack])
+        ctx.report('onTaskUpdate', pack)
+      },
+      log(msg) {
+        ctx.report('onUserConsoleLog', msg)
+      },
+    },
+    post(v) {
+      port.postMessage(v)
+    },
+    on(fn) {
+      port.on('message', fn)
+    },
   })
 
   return { workerPort, port }
