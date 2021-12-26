@@ -140,6 +140,46 @@ export async function ensurePackageInstalled(
   return false
 }
 
+/**
+ * Deep merge :P
+ */
+export function deepMerge<T extends object = object>(target: T, ...sources: any[]): T {
+  if (!sources.length)
+    return target as any
+
+  const source = sources.shift()
+  if (source === undefined)
+    return target as any
+
+  if (isMergableObject(target) && isMergableObject(source)) {
+    Object.keys(source).forEach((key) => {
+      if (isMergableObject(source[key])) {
+        // @ts-expect-error
+        if (!target[key])
+          // @ts-expect-error
+          target[key] = {}
+
+        // @ts-expect-error
+        deepMerge(target[key], source[key])
+      }
+      else {
+        // @ts-expect-error
+        target[key] = source[key]
+      }
+    })
+  }
+
+  return deepMerge(target, ...sources)
+}
+
+function isMergableObject(item: any): item is Object {
+  return isObject(item) && !Array.isArray(item)
+}
+
+export function isObject(val: any): val is object {
+  return toString.call(val) === '[object Object]'
+}
+
 export function toFilePath(id: string, root: string): string {
   let absolute = slash(id).startsWith('/@fs/')
     ? id.slice(4)

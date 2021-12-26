@@ -204,25 +204,26 @@ export default defineConfig({
 
 Vitest supports Native code coverage via [c8](https://github.com/bcoe/c8)
 
-```bash
-$ npm i -D c8
-$ c8 vitest
-```
-
 ```json
 {
   "scripts": {
     "test": "vitest",
-    "coverage": "c8 vitest"
+    "coverage": "vitest --coverage"
   }
 }
 ```
 
-For convenience, we also provide a shorthand for passing `--coverage` option to CLI, which will wrap the process with `c8` for you. Note when using the shorthand, you will lose the ability to pass additional options to `c8`.
+To configure it, set `test.coverage` options in your config file:
 
-```bash
-$ vitest --coverage
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  test: {
+    coverage: {
+      reporter: ['text', 'json', 'html']
+    }
+  }
+})
 ```
-
-For more configuration available, please refer to [c8](https://github.com/bcoe/c8)'s documentation.
-

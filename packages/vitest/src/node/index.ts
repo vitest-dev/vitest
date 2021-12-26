@@ -1,6 +1,4 @@
-import { existsSync, promises as fs } from 'fs'
-import { pathToFileURL } from 'url'
-import { join, resolve } from 'pathe'
+import { resolve } from 'pathe'
 import type { ViteDevServer, InlineConfig as ViteInlineConfig, Plugin as VitePlugin, UserConfig as ViteUserConfig } from 'vite'
 import { createServer, mergeConfig } from 'vite'
 import { findUp } from 'find-up'
@@ -15,6 +13,7 @@ import { hasFailed, noop, slash, toArray } from '../utils'
 import { MocksPlugin } from '../plugins/mock'
 import { DefaultReporter } from '../reporters/default'
 import { ReportersMap } from '../reporters'
+import { cleanCoverage, prepareCoverage, reportCoverage } from '../coverage'
 import type { WorkerPool } from './pool'
 import { StateManager } from './state'
 import { resolveConfig } from './config'
@@ -45,7 +44,7 @@ class Vitest {
     this.console = globalThis.console
   }
 
-  setServer(options: UserConfig, server: ViteDevServer) {
+  async setServer(options: UserConfig, server: ViteDevServer) {
     this.unregisterWatcher?.()
     clearTimeout(this._rerunTimer)
     this.restartsCount += 1
@@ -53,6 +52,7 @@ class Vitest {
     this.pool = undefined
 
     const resolved = resolveConfig(options, server.config)
+
     this.server = server
     this.config = resolved
     this.state = new StateManager()
@@ -78,6 +78,9 @@ class Vitest {
     this.runningPromise = undefined
 
     this._onRestartListeners.forEach(fn => fn())
+
+    if (resolved.coverage.enabled)
+      await prepareCoverage(resolved.coverage)
   }
 
   async start(filters?: string[]) {
@@ -96,7 +99,8 @@ class Vitest {
     if (this.config.watch)
       await this.report('onWatcherStart')
 
-    await this.writeC8Sourcemap()
+    if (this.config.coverage.enabled)
+      await reportCoverage(this)
   }
 
   async runFiles(files: string[]) {
@@ -165,11 +169,18 @@ class Vitest {
       const files = Array.from(this.changedTests)
       this.changedTests.clear()
 
+      this.console.log('return')
+      if (this.config.coverage.enabled && this.config.coverage.cleanOnRerun)
+        await cleanCoverage(this.config.coverage)
+
       await this.report('onWatcherRerun', files, triggerId)
 
       await this.runFiles(files)
 
       await this.report('onWatcherStart')
+
+      if (this.config.coverage.enabled)
+        await reportCoverage(this)
     }, WATCHER_DEBOUNCE)
   }
 
@@ -259,38 +270,6 @@ class Vitest {
     return files
   }
 
-  async writeC8Sourcemap() {
-    const coverageDir = process.env.NODE_V8_COVERAGE
-    if (!coverageDir)
-      return
-
-    const cache: Record<string, any> = {}
-
-    const files = Array.from(this.visitedFilesMap.entries()).filter(i => !i[0].includes('/node_modules/'))
-
-    files.forEach(([file, map]) => {
-      if (!existsSync(file))
-        return
-      const url = pathToFileURL(file).href
-      cache[url] = {
-        data: {
-          ...map,
-          sources: map.sources.map(i => pathToFileURL(i).href) || [url],
-        },
-      }
-    })
-
-    // write a fake coverage report with source map for c8 to consume
-    await fs.writeFile(
-      join(coverageDir, 'vitest-source-map.json'),
-      JSON.stringify({
-        'result': [],
-        'timestamp': performance.now(),
-        'source-map-cache': cache,
-      }), 'utf-8',
-    )
-  }
-
   isTargetFile(id: string): boolean {
     if (mm.isMatch(id, this.config.exclude))
       return false
@@ -326,7 +305,7 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
         async configureServer(server) {
           if (haveStarted)
             await ctx.report('onServerRestart')
-          ctx.setServer(options, server)
+          await ctx.setServer(options, server)
           haveStarted = true
           if (options.api)
             server.middlewares.use((await import('../api/middleware')).default(ctx))

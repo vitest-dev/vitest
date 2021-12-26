@@ -1,5 +1,6 @@
 import readline from 'readline'
 import cac from 'cac'
+import { execa } from 'execa'
 import type { UserConfig } from '../types'
 import { version } from '../../package.json'
 import { ensurePackageInstalled } from '../utils'
@@ -47,7 +48,7 @@ cli.parse()
 
 async function dev(cliFilters: string[], argv: UserConfig) {
   if (argv.watch == null)
-    argv.watch = !process.env.CI && !process.env.NODE_V8_COVERAGE && !argv.run
+    argv.watch = !process.env.CI && !argv.run
   await run(cliFilters, argv)
 }
 
@@ -55,16 +56,34 @@ async function run(cliFilters: string[], options: UserConfig) {
   process.env.VITEST = 'true'
   process.env.NODE_ENV = 'test'
 
+  if (!await ensurePackageInstalled('vite'))
+    process.exit(1)
+
+  if (typeof options.coverage === 'boolean')
+    options.coverage = { enabled: options.coverage }
+
   const ctx = await createVitest(options)
 
-  process.chdir(ctx.config.root)
+  if (ctx.config.coverage.enabled) {
+    if (!await ensurePackageInstalled('c8'))
+      process.exit(1)
 
-  registerConsoleShortcuts(ctx)
+    if (!process.env.NODE_V8_COVERAGE) {
+      process.env.NODE_V8_COVERAGE = ctx.config.coverage.tempDirectory
+      const { exitCode } = await execa(process.argv0, process.argv.slice(1), { stdio: 'inherit' })
+      process.exit(exitCode)
+    }
+  }
 
   if (ctx.config.environment && ctx.config.environment !== 'node') {
     if (!await ensurePackageInstalled(ctx.config.environment))
       process.exit(1)
   }
+
+  if (process.stdin.isTTY && ctx.config.watch)
+    registerConsoleShortcuts(ctx)
+
+  process.chdir(ctx.config.root)
 
   ctx.onServerRestarted(() => {
     // TODO: re-consider how to re-run the tests the server smartly
@@ -88,23 +107,20 @@ async function run(cliFilters: string[], options: UserConfig) {
 }
 
 function registerConsoleShortcuts(ctx: Vitest) {
-  // listen to keyboard input
-  if (process.stdin.isTTY) {
-    readline.emitKeypressEvents(process.stdin)
-    process.stdin.setRawMode(true)
-    process.stdin.on('keypress', (str: string, key: any) => {
-      if (str === '\x03' || str === '\x1B' || (key && key.ctrl && key.name === 'c')) // ctrl-c or esc
-        process.exit()
+  readline.emitKeypressEvents(process.stdin)
+  process.stdin.setRawMode(true)
+  process.stdin.on('keypress', (str: string, key: any) => {
+    if (str === '\x03' || str === '\x1B' || (key && key.ctrl && key.name === 'c')) // ctrl-c or esc
+      process.exit()
 
-      // is running, ignore keypress
-      if (ctx.runningPromise)
-        return
+    // is running, ignore keypress
+    if (ctx.runningPromise)
+      return
 
-      // press any key to exit on first run
-      if (ctx.isFirstRun)
-        process.exit()
+    // press any key to exit on first run
+    if (ctx.isFirstRun)
+      process.exit()
 
-      // TODO: add more commands
-    })
-  }
+    // TODO: add more commands
+  })
 }
