@@ -4,7 +4,7 @@ import { environments } from '../env'
 import { setupChai } from '../integrations/chai/setup'
 import type { ResolvedConfig } from '../types'
 import { toArray } from '../utils'
-import { send } from './rpc'
+import { rpc } from './rpc'
 
 let globalSetup = false
 export async function setupGlobalEnv(config: ResolvedConfig) {
@@ -23,7 +23,7 @@ export async function setupGlobalEnv(config: ResolvedConfig) {
 export function setupConsoleLogSpy() {
   const stdout = new Writable({
     write(data, encoding, callback) {
-      send('log', {
+      rpc().onUserLog({
         type: 'stdout',
         content: String(data),
         taskId: process.__vitest_worker__.current?.id,
@@ -33,7 +33,7 @@ export function setupConsoleLogSpy() {
   })
   const stderr = new Writable({
     write(data, encoding, callback) {
-      send('log', {
+      rpc().onUserLog({
         type: 'stderr',
         content: String(data),
         taskId: process.__vitest_worker__.current?.id,

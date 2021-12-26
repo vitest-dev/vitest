@@ -79,7 +79,7 @@ export class SnapshotClient {
   async saveSnap() {
     if (!this.testFile || !this.snapshotState) return
     const result = await packSnapshotState(this.testFile, this.snapshotState)
-    await rpc('snapshotSaved', result)
+    await rpc().snapshotSaved(result)
 
     this.testFile = ''
     this.snapshotState = undefined

@@ -4,7 +4,7 @@ import { createBirpc } from 'birpc'
 import type { ModuleCache, ResolvedConfig, Test, WorkerContext, WorkerRPC } from '../types'
 import { distDir } from '../constants'
 import { executeInViteNode } from '../node/execute'
-import { send } from './rpc'
+import { rpc } from './rpc'
 
 let _viteNode: {
   run: (files: string[], config: ResolvedConfig) => Promise<void>
@@ -20,11 +20,11 @@ async function startViteNode(ctx: WorkerContext) {
   const processExit = process.exit
 
   process.on('beforeExit', (code) => {
-    send('processExit', code)
+    rpc().onWorkerExit(code)
   })
 
   process.exit = (code = process.exitCode || 0): never => {
-    send('processExit', code)
+    rpc().onWorkerExit(code)
     return processExit(code)
   }
 
@@ -36,7 +36,7 @@ async function startViteNode(ctx: WorkerContext) {
       resolve(distDir, 'entry.js'),
     ],
     fetch(id) {
-      return process.__vitest_worker__.rpc.call('fetch', id)
+      return rpc().fetch(id)
     },
     inline: config.depsInline,
     external: config.depsExternal,
@@ -64,6 +64,7 @@ function init(ctx: WorkerContext) {
     config,
     rpc: createBirpc<{}, WorkerRPC>({
       functions: {},
+      eventNames: ['onUserLog', 'onCollected', 'onTaskUpdate', 'onWorkerExit'],
       post(v) { port.postMessage(v) },
       on(fn) { port.addListener('message', fn) },
     }),

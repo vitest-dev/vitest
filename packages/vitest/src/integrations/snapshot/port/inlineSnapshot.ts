@@ -16,7 +16,7 @@ export async function saveInlineSnapshots(
   const MagicString = (await import('magic-string')).default
   const files = new Set(snapshots.map(i => i.file))
   await Promise.all(Array.from(files).map(async(file) => {
-    const map = await rpc('getSourceMap', file)
+    const map = await rpc().getSourceMap(file)
     const snaps = snapshots.filter(i => i.file === file)
     const code = await fs.readFile(file, 'utf8')
     const s = new MagicString(code)

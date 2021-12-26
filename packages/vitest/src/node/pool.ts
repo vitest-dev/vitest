@@ -107,22 +107,24 @@ function createChannel(ctx: Vitest) {
 
   createBirpc<WorkerRPC>({
     functions: {
-      processExit(code) {
+      onWorkerExit(code) {
         process.exit(code || 1)
       },
       snapshotSaved(snapshot) {
         ctx.snapshot.add(snapshot)
       },
-      getSourceMap(id, force) {
+      async getSourceMap(id, force) {
         if (force) {
           const mod = ctx.server.moduleGraph.getModuleById(id)
           if (mod)
             ctx.server.moduleGraph.invalidateModule(mod)
         }
-        return transformRequest(ctx, id).then(r => r?.map as RawSourceMap | undefined)
+        const r = await transformRequest(ctx, id)
+        return r?.map as RawSourceMap | undefined
       },
-      fetch(id) {
-        return transformRequest(ctx, id).then(r => r?.code)
+      async fetch(id) {
+        const r = await transformRequest(ctx, id)
+        return r?.code
       },
       onCollected(files) {
         ctx.state.collectFiles(files)
@@ -132,7 +134,7 @@ function createChannel(ctx: Vitest) {
         ctx.state.updateTasks([pack])
         ctx.report('onTaskUpdate', pack)
       },
-      log(msg) {
+      onUserLog(msg) {
         ctx.report('onUserConsoleLog', msg)
       },
     },

@@ -6,7 +6,7 @@ import { getSnapshotClient } from '../integrations/snapshot/chai'
 import { hasFailed, hasTests, partitionSuiteChildren } from '../utils'
 import { getState, setState } from '../integrations/chai/jest-expect'
 import { getFn, getHooks } from './map'
-import { rpc, send } from './rpc'
+import { rpc } from './rpc'
 import { collectTests } from './collect'
 import { processError } from './error'
 
@@ -21,7 +21,7 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(suite: Suite, na
 }
 
 function updateTask(task: Task) {
-  return rpc('onTaskUpdate', [task.id, task.result])
+  return rpc().onTaskUpdate([task.id, task.result])
 }
 
 export async function runTest(test: Test) {
@@ -155,7 +155,7 @@ export async function runSuites(suites: Suite[]) {
 export async function startTests(paths: string[], config: ResolvedConfig) {
   const files = await collectTests(paths, config)
 
-  send('onCollected', files)
+  rpc().onCollected(files)
 
   await runSuites(files)
 

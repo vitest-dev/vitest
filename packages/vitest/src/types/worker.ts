@@ -15,9 +15,9 @@ export interface WorkerContext {
 export interface WorkerRPC {
   fetch: (id: string) => Promise<string | undefined>
   getSourceMap: (id: string, force?: boolean) => Promise<RawSourceMap | undefined>
-  log: (log: UserConsoleLog) => void
-  processExit: (code?: number) => void
 
+  onWorkerExit: (code?: number) => void
+  onUserLog: (log: UserConsoleLog) => void
   onCollected: (files: File[]) => void
   onTaskUpdate: (pack: TaskResultPack) => void
 
