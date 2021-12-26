@@ -83,4 +83,4 @@ There is much more to MSW.
 
 We highly suggest you to read their documentation, it is both powerful and configurable: [Mock Service Worker](https://mswjs.io/).
 
-PS. You can even access cookies, query parameters, mock error responses and much more! Don't forget, with MSW we are making **real** requests in the browser after all.
+PS. You can even access cookies, query parameters, define mock error responses and much more! Don't forget, with MSW we are making **real** requests in the browser after all.
