@@ -70,7 +70,7 @@ $ npx vitest
 - [Unit Testing](./test/core)
 - [Vue Component Testing](./test/vue)
 - [React Component Testing](./test/react)
-- [React Mock Service Worker with Testing Library Testing](./test/react-testing-lib-msw)
+- [React Testing with MSW](./test/react-testing-lib-msw)
 - [Lit Component Testing](./test/lit)
 - [Vitesse Component Testing](./test/vitesse)
 
