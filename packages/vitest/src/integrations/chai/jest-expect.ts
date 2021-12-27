@@ -1,6 +1,6 @@
 import type { Spy } from 'tinyspy'
 import type { ChaiPlugin } from './types'
-import { equals as asymmetricEquals, hasAsymmetric, iterableEquality, typeEquality } from './jest-utils'
+import { arrayBufferEquality, equals as asymmetricEquals, hasAsymmetric, iterableEquality, sparseArrayEquality, typeEquality } from './jest-utils'
 
 type MatcherState = {
   assertionCalls: number
@@ -97,7 +97,12 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   })
 
   def('toStrictEqual', function(expected) {
-    return iterableEquality(this, expected) ?? typeEquality(this, expected)
+    return (
+      iterableEquality(this, expected)
+      ?? typeEquality(this, expected)
+      ?? sparseArrayEquality(this, expected)
+      ?? arrayBufferEquality(this, expected)
+    )
   })
   def('toBe', function(expected) {
     return this.equal(expected)
