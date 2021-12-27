@@ -176,8 +176,12 @@ Project root
 ### reporters
 
 - **Type:** `Reporter | Reporter[]`
+- **Default:** `'default'`
 
-Custom reporter for output
+Custom reporters for output. Reporters can be [a Reporter instance](https://github.com/vitest-dev/vitest/blob/main/packages/vitest/src/types/reporter.ts) or a string to select built in reporters: 
+  - `'default'` - collapse suites when they pass
+  - `'verbose'` - keep the full task tree visible
+  - `'dot'` -  show each task as a single dot
 
 ### threads
 
@@ -225,18 +229,39 @@ Default timeout of a hook in milliseconds
 
 Silent mode
 
+### setupFiles
+
+- **Type:** `string | string[]`
+
+Path to setup files
+
+### watchIgnore
+
+- **Type:** `(string | RegExp)[]`
+- **Default:** `['**\/node_modules\/**', '**\/dist/**']`
+
+Pattern of file paths to be ignore from triggering watch rerun
+
+### isolate
+
+- **Type:** `boolean`
+- **Default:** `true`
+
+Isolate environment for each test file
+
+### coverage
+
+- **Type:** `C8Options`
+- **Default:** `undefined`
+
+Coverage options
+  
 ### open
 
 - **Type:** `boolean`
 - **Default:** `false`
 
 Open Vitest UI (WIP)
-
-### setupFiles
-
-- **Type:** `string | string[]`
-
-Path to setup files
 
 ### api
 
@@ -245,9 +270,24 @@ Path to setup files
 
 Listen to port and serve API. When set to true, the default port is 55555
 
-### passWithNoTests
+### clearMocks
 
 - **Type:** `boolean`
 - **Default:** `false`
 
-Exit with exit code of 0 when there are no tests
+Will call `.mockClear()` on all spies before each test
+
+### mockReset
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Will call `.mockReset()` on all spies before each test
+
+### restoreMocks
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Will call `.mockRestore()` on all spies before each test
+
