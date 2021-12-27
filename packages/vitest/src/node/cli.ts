@@ -101,9 +101,6 @@ async function run(cliFilters: string[], options: UserConfig) {
     if (!ctx.config.watch)
       await ctx.close()
   }
-
-  if (!ctx.config.watch)
-    process.exit()
 }
 
 function registerConsoleShortcuts(ctx: Vitest) {
