@@ -8,6 +8,7 @@ export interface VitestClientOptions {
   handlers?: Partial<WebSocketEvents>
   autoReconnect?: boolean
   reconnectInterval?: number
+  reconnectTries?: number
   reactive?: <T>(v: T) => T
   ref?: <T>(v: T) => { value: T }
 }
@@ -24,7 +25,7 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
   const {
     handlers = {},
     autoReconnect = true,
-    reconnectInterval = 100,
+    reconnectInterval = 2000,
     reconnectTries = 10,
     reactive = v => v,
     // ref = v => ({ value: v }),

@@ -7,7 +7,7 @@ const color = computed(() => status.value === 'CONNECTING' ? 'bg-orange-400' : '
 <template>
   <template v-if="status!== 'OPEN'">
     <div
-      fixed left-0 bottom-0 right-0 p2
+      fixed left-0 bottom-0 right-0 p2 z-10
       :class="color"
       text="center sm white"
       @click="client.reconnect()"
