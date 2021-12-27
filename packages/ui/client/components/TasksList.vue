@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Task } from 'vitest'
-import { activeFileIdRef } from '~/composables/state'
+import { activeFileIdRef, status } from '~/composables/state'
 
 withDefaults(defineProps<{
   tasks: Task[]
@@ -52,7 +52,7 @@ export default {
       >
     </div>
 
-    <div overflow="auto">
+    <div overflow="auto" :class="status ==='OPEN' ? '' : 'op20'">
       <TaskTree
         v-for="task in tasks"
         :key="task.id"

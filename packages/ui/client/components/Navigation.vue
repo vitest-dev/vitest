@@ -28,6 +28,7 @@ function runAll() {
             v-if="status === 'CONNECTING'"
             icon="i-carbon-wifi"
             text-orange-300
+            animate-pulse
           />
           <IconButton
             v-else-if="status === 'CLOSED'"
