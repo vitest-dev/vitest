@@ -225,6 +225,7 @@ export interface UserConfig extends InlineConfig {
 export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage'> {
   config?: string
   filters?: string[]
+  testNamePatternRegex: RegExp
 
   depsInline: (string | RegExp)[]
   depsExternal: (string | RegExp)[]

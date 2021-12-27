@@ -66,7 +66,12 @@ export function interpretOnlyMode(tasks: Task[]) {
     })
   }
   tasks.forEach((t) => {
-    if (t.type === 'suite') {
+    if (t.type === 'test') {
+      const regex = process.__vitest_worker__.config.testNamePatternRegex
+      if (!regex.test(t.name))
+        t.mode = 'skip'
+    }
+    else if (t.type === 'suite') {
       if (t.mode === 'skip')
         t.tasks.forEach(c => c.mode === 'run' && (c.mode = 'skip'))
       else

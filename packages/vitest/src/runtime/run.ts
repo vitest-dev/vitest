@@ -27,20 +27,6 @@ export async function runTest(test: Test) {
   if (test.mode !== 'run')
     return
 
-  const regex = new RegExp(process.__vitest_worker__.ctx.config.testNamePattern)
-  if (!regex.test(test.name)) {
-    const startAndEnd = performance.now()
-    test.result = {
-      start: startAndEnd,
-      state: 'skip',
-      end: startAndEnd,
-    }
-
-    process.__vitest_worker__.current = undefined
-
-    return await updateTask(test)
-  }
-
   test.result = {
     start: performance.now(),
     state: 'run',
