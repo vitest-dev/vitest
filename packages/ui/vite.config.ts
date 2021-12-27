@@ -11,6 +11,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '~/': `${resolve(__dirname, 'client')}/`,
+      '@vitest/ws-client': `${resolve(__dirname, '../ws-client/src/index.ts')}`,
     },
   },
   plugins: [

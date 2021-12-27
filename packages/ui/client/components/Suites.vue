@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { current } from '~/state'
+import { current } from '~/composables/state'
 
 const name = computed(() => current.value?.name.split(/\//g).pop())
 </script>

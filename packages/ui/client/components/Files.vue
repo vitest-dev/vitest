@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { activeFileIdRef, files, status } from '../state'
+import { activeFileIdRef, files, status } from '~/composables/state'
 </script>
 
 <template>
