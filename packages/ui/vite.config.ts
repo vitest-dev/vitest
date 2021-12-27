@@ -11,6 +11,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '~/': `${resolve(__dirname, 'client')}/`,
+      '@vitest/ws-client': `${resolve(__dirname, '../ws-client/src/index.ts')}`,
     },
   },
   plugins: [
@@ -22,8 +23,8 @@ export default defineConfig({
         presetIcons(),
       ],
       shortcuts: {
-        'bg-panel': '',
-        'bg-active': 'bg-gray-500:3',
+        'bg-header': 'bg-gray-500:5',
+        'bg-active': 'bg-gray-500:8',
         'bg-hover': 'bg-gray-500:20',
         'border-base': 'border-gray-500:10',
       },

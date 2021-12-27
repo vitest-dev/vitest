@@ -8,6 +8,8 @@ export interface VitestClientOptions {
   handlers?: Partial<WebSocketEvents>
   autoReconnect?: boolean
   reconnectInterval?: number
+  reactive?: <T>(v: T) => T
+  ref?: <T>(v: T) => { value: T }
 }
 
 export interface VitestClient {
@@ -23,14 +25,19 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
     handlers = {},
     autoReconnect = true,
     reconnectInterval = 1000,
+    reactive = v => v,
+    // ref = v => ({ value: v }),
   } = options
 
-  const ctx = {
+  const ctx = reactive({
     ws: new WebSocket(url),
     state: new StateManager(),
     waitForConnection,
     reconnect,
-  } as VitestClient
+  }) as VitestClient
+
+  ctx.state.filesMap = reactive(ctx.state.filesMap)
+  ctx.state.idMap = reactive(ctx.state.idMap)
 
   let onMessage: Function
   ctx.rpc = createBirpc<WebSocketEvents, WebSocketHandlers>({

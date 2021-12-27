@@ -1,3 +1,4 @@
+import { promises as fs } from 'fs'
 import type { BirpcReturn } from 'birpc'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
@@ -32,6 +33,17 @@ export function setup(ctx: Vitest) {
       functions: {
         getFiles() {
           return ctx.state.getFiles()
+        },
+        getSourceCode(id) {
+          return fs.readFile(id, 'utf-8')
+        },
+        async rerun(files) {
+          await ctx.report('onWatcherRerun', files)
+          await ctx.runFiles(files)
+          await ctx.report('onWatcherStart')
+        },
+        getConfig() {
+          return ctx.config
         },
       },
       post(msg) {
