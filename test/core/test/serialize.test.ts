@@ -26,6 +26,7 @@ describe('error serialize', () => {
       },
     }
     error.whatever = error
+    error.whateverArray = [error, error]
 
     expect(serializeError(error)).toMatchSnapshot()
   })
