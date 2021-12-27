@@ -121,6 +121,45 @@ describe('jest-expect', () => {
     expect(1).toBe(1)
     expect(1).toBe(1)
   })
+
+  // https://jestjs.io/docs/expect#tostrictequalvalue
+
+  class LaCroix {
+    constructor(flavor) {
+      this.flavor = flavor
+    }
+  }
+
+  describe('the La Croix cans on my desk', () => {
+    it('are not semantically the same', () => {
+      expect(new LaCroix('lemon')).toEqual({ flavor: 'lemon' })
+      expect(new LaCroix('lemon')).not.toStrictEqual({ flavor: 'lemon' })
+    })
+  })
+
+  it('array', () => {
+    expect([]).toEqual([])
+    expect([]).not.toBe([])
+    expect([]).toStrictEqual([])
+
+    const foo = []
+
+    expect(foo).toBe(foo)
+    expect(foo).toStrictEqual(foo)
+
+    const complex = [
+      {
+        foo: 1,
+        bar: { foo: 'foo', bar: 100, arr: ['first', { zoo: 'monkey' }] },
+      },
+    ]
+    expect(complex).toStrictEqual([
+      {
+        foo: 1,
+        bar: { foo: 'foo', bar: 100, arr: ['first', { zoo: 'monkey' }] },
+      },
+    ])
+  })
 })
 
 it('timeout', () => new Promise(resolve => setTimeout(resolve, 500)))
