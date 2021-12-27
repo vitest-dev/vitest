@@ -128,11 +128,11 @@ function createChannel(ctx: Vitest) {
       },
       onCollected(files) {
         ctx.state.collectFiles(files)
-        ctx.report('onStart', files.map(i => i.filepath))
+        ctx.report('onCollected', files)
       },
-      onTaskUpdate(pack) {
-        ctx.state.updateTasks([pack])
-        ctx.report('onTaskUpdate', pack)
+      onTaskUpdate(packs) {
+        ctx.state.updateTasks(packs)
+        ctx.report('onTaskUpdate', packs)
       },
       onUserLog(msg) {
         ctx.report('onUserConsoleLog', msg)

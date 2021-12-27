@@ -1,12 +1,24 @@
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
 import type { WebSocketEvents, WebSocketHandlers } from '../../vitest/src/api/types'
+import { StateManager } from '../../vitest/src/node/state'
 
-export function createClient(url: string, fn: WebSocketEvents) {
+export function createClient(url: string, fn: Partial<WebSocketEvents> = {}) {
   const ws = new WebSocket(url)
 
+  const state = new StateManager()
+
   const rpc = createBirpc<WebSocketEvents, WebSocketHandlers>({
-    functions: fn,
+    functions: {
+      onCollected(files) {
+        state.collectFiles(files)
+        fn.onCollected?.(files)
+      },
+      onTaskUpdate(packs) {
+        state.updateTasks(packs)
+        fn.onTaskUpdate?.(packs)
+      },
+    },
     post(msg) {
       ws.send(msg)
     },
@@ -19,5 +31,5 @@ export function createClient(url: string, fn: WebSocketEvents) {
     deserialize: parse,
   })
 
-  return { ws, rpc }
+  return { ws, rpc, state }
 }
