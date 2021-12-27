@@ -464,3 +464,10 @@ export const subsetEquality = (
 
   return subsetEqualityWithContext()(object, subset)
 }
+
+export const typeEquality = (a: any, b: any): boolean | undefined => {
+  if (a == null || b == null || a.constructor === b.constructor)
+    return undefined
+
+  return false
+}
