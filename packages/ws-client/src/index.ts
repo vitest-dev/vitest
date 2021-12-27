@@ -1,7 +1,8 @@
 import type { BirpcReturn } from 'birpc'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
-import type { WebSocketEvents, WebSocketHandlers } from '../../vitest/src/api/types'
+// eslint-disable-next-line no-restricted-imports
+import type { WebSocketEvents, WebSocketHandlers } from 'vitest'
 import { StateManager } from '../../vitest/src/node/state'
 
 export interface VitestClientOptions {

@@ -1,7 +1,7 @@
 import { createClient } from '@vitest/ws-client'
 import type { WebSocketStatus } from '@vueuse/core'
-import type { ResolvedConfig } from 'vitest'
 import { reactive } from 'vue'
+import type { ResolvedConfig } from '#types'
 
 export const ENTRY_URL = 'ws://localhost:51204/__vitest_api__'
 

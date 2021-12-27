@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Task } from 'vitest'
+import type { Task } from '#types'
 import { activeFileIdRef } from '~/composables/state'
 
 withDefaults(defineProps<{

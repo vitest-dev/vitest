@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { Task } from 'vitest'
 import { mergeProps } from 'vue'
+import type { Task } from '#types'
 
 withDefaults(defineProps<{
   task: Task
