@@ -13,6 +13,7 @@ function open() {
   if (current.value?.filepath)
     fetch(`/__open-in-editor?file=${encodeURIComponent(current.value.filepath)}`)
 }
+const ext = computed(() => current.value?.filepath?.split(/\./g).pop() || 'js')
 </script>
 
 <template>
@@ -37,8 +38,13 @@ function open() {
         />
       </div>
     </div>
-    <div overflow="auto">
-      <pre v-if="current && code" op-50 p-2 text-sm v-text="code" />
+    <div>
+      <CodeMirror
+        v-model="code"
+        v-bind="{ lineNumbers: true }"
+        :read-only="true"
+        :mode="ext"
+      />
     </div>
   </div>
 </template>

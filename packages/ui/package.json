@@ -36,9 +36,12 @@
     "ws": "^8.4.0"
   },
   "devDependencies": {
+    "@types/codemirror": "^5.60.5",
     "@types/ws": "^8.2.2",
     "@unocss/reset": "^0.18.1",
     "@vitejs/plugin-vue": "^2.0.1",
+    "codemirror": "^5.65.0",
+    "codemirror-theme-vars": "^0.1.1",
     "picocolors": "^1.0.0",
     "rollup": "^2.62.0",
     "unocss": "^0.18.1",
