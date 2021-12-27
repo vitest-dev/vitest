@@ -37,6 +37,12 @@ export function setup(ctx: Vitest) {
         getSourceCode(id) {
           return fs.readFile(id, 'utf-8')
         },
+        rerun(files) {
+          return ctx.runFiles(files)
+        },
+        getConfig() {
+          return ctx.config
+        },
       },
       post(msg) {
         ws.send(msg)

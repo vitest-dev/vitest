@@ -1,7 +1,12 @@
 <script setup lang="ts">
-import { current } from '~/composables/state'
+import { client, current } from '~/composables/state'
 
 const name = computed(() => current.value?.name.split(/\//g).pop())
+
+function run() {
+  if (current.value?.filepath)
+    client.rpc.rerun([current.value.filepath])
+}
 </script>
 
 <template>
@@ -23,7 +28,7 @@ const name = computed(() => current.value?.name.split(/\//g).pop())
           {{ name }}
         </span>
         <div class="flex text-lg">
-          <IconButton icon="i-carbon-play" />
+          <IconButton icon="i-carbon-play" @click="run()" />
         </div>
       </template>
     </TasksList>

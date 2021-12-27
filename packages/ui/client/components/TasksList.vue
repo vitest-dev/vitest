@@ -47,6 +47,7 @@ export default {
         outline="none"
         bg="transparent"
         font="light"
+        text="sm"
         :op="search.length ? '100' : '50'"
       >
     </div>
