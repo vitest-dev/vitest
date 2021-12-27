@@ -6,6 +6,7 @@ withDefaults(defineProps<{
   tasks: Task[]
   indent?: number
   nested?: boolean
+  onItemClick?: (task: Task) => void
 }>(), {
   indent: 0,
   nested: false,
@@ -39,7 +40,7 @@ export default {
       bg-header
       border="b base"
     >
-      <div i-carbon:search />
+      <div i-carbon:search flex-shrink-0 />
       <input
         v-model="search"
         placeholder="Search..."
@@ -58,7 +59,7 @@ export default {
         :nested="nested"
         :search="search"
         :class="activeFileIdRef === task.id ? 'bg-active' : ''"
-        @click="activeFileIdRef = task.id"
+        :on-item-click="onItemClick"
       />
     </div>
   </div>

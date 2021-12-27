@@ -5,14 +5,21 @@ const name = computed(() => current.value?.name.split(/\//g).pop())
 </script>
 
 <template>
-  <div v-if="current" overflow-auto w-72 border="r base">
+  <div v-if="current" overflow-auto border="r base">
     <TasksList
       :tasks="current.tasks"
       :nested="true"
     >
       <template #header>
         <StatusIcon :task="current" />
-        <span font-light text-sm flex-1>
+        <span
+          font-light
+          text-sm
+          flex-auto
+          ws-nowrap
+          overflow-hidden
+          truncate
+        >
           {{ name }}
         </span>
         <div class="flex text-lg">

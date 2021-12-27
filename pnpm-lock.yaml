@@ -4,7 +4,7 @@ importers:
 
   .:
     specifiers:
-      '@antfu/eslint-config': ^0.14.0
+      '@antfu/eslint-config': ^0.14.1
       '@antfu/ni': ^0.12.0
       '@rollup/plugin-alias': ^3.1.8
       '@rollup/plugin-commonjs': ^21.0.1
@@ -32,7 +32,7 @@ importers:
       vitest: workspace:*
       vue: ^3.2.25
     devDependencies:
-      '@antfu/eslint-config': 0.14.0_eslint@8.5.0+typescript@4.5.4
+      '@antfu/eslint-config': 0.14.1_eslint@8.5.0+typescript@4.5.4
       '@antfu/ni': 0.12.0
       '@rollup/plugin-alias': 3.1.8
       '@rollup/plugin-commonjs': 21.0.1
@@ -630,6 +630,19 @@ packages:
       - typescript
     dev: true
 
+  /@antfu/eslint-config-vue/0.14.1_eslint@8.5.0+typescript@4.5.4:
+    resolution: {integrity: sha512-h8rHYGG6EjRxRM/DAM0IpjVub4tkC93XdQCiKBeWF4TkIv2BBKiGJp+tgiF3cTTh50LSyJMOh4X9uBUcpsaSAQ==}
+    peerDependencies:
+      eslint: '>=7.4.0'
+    dependencies:
+      '@antfu/eslint-config-ts': 0.14.0_eslint@8.5.0+typescript@4.5.4
+      eslint: 8.5.0
+      eslint-plugin-vue: 8.1.1_eslint@8.5.0
+    transitivePeerDependencies:
+      - supports-color
+      - typescript
+    dev: true
+
   /@antfu/eslint-config/0.14.0_eslint@8.5.0+typescript@4.5.4:
     resolution: {integrity: sha512-Q3/qs7ZGRz8+om0YuKziD0WyxutESc+hl9daDaZ9ubkwYu3FfrPN8v1tV9wXBn3DBWkeBDgnG++HPTs7i2O7fA==}
     peerDependencies:
@@ -637,6 +650,33 @@ packages:
     dependencies:
       '@antfu/eslint-config-react': 0.14.0_eslint@8.5.0+typescript@4.5.4
       '@antfu/eslint-config-vue': 0.14.0_eslint@8.5.0+typescript@4.5.4
+      '@typescript-eslint/eslint-plugin': 5.4.0_8b4df63d5a7c398f8debb7ff9e13f365
+      '@typescript-eslint/parser': 5.4.0_eslint@8.5.0+typescript@4.5.4
+      eslint: 8.5.0
+      eslint-config-standard: 16.0.3_cf57ce177ecd870ab6f2f91e60ef4a49
+      eslint-plugin-eslint-comments: 3.2.0_eslint@8.5.0
+      eslint-plugin-html: 6.2.0
+      eslint-plugin-import: 2.25.3_eslint@8.5.0
+      eslint-plugin-jsonc: 2.0.0_eslint@8.5.0
+      eslint-plugin-node: 11.1.0_eslint@8.5.0
+      eslint-plugin-promise: 5.1.1_eslint@8.5.0
+      eslint-plugin-unicorn: 39.0.0_eslint@8.5.0
+      eslint-plugin-vue: 8.1.1_eslint@8.5.0
+      eslint-plugin-yml: 0.12.0_eslint@8.5.0
+      jsonc-eslint-parser: 2.0.4_eslint@8.5.0
+      yaml-eslint-parser: 0.5.0
+    transitivePeerDependencies:
+      - supports-color
+      - typescript
+    dev: true
+
+  /@antfu/eslint-config/0.14.1_eslint@8.5.0+typescript@4.5.4:
+    resolution: {integrity: sha512-BPXIXyXwMYagxwpQXPxZKMXVEZ3xrGbM/8luBGqVFq/oFUvjQgqJcaSAY3b3ZAOUwzfp9LVVbPO1uQY05W6FRw==}
+    peerDependencies:
+      eslint: '>=7.4.0'
+    dependencies:
+      '@antfu/eslint-config-react': 0.14.0_eslint@8.5.0+typescript@4.5.4
+      '@antfu/eslint-config-vue': 0.14.1_eslint@8.5.0+typescript@4.5.4
       '@typescript-eslint/eslint-plugin': 5.4.0_8b4df63d5a7c398f8debb7ff9e13f365
       '@typescript-eslint/parser': 5.4.0_eslint@8.5.0+typescript@4.5.4
       eslint: 8.5.0

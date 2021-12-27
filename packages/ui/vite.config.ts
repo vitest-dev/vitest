@@ -24,7 +24,7 @@ export default defineConfig({
       ],
       shortcuts: {
         'bg-header': 'bg-gray-500:5',
-        'bg-active': 'bg-gray-500:10',
+        'bg-active': 'bg-gray-500:8',
         'bg-hover': 'bg-gray-500:20',
         'border-base': 'border-gray-500:10',
       },
