@@ -97,11 +97,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   })
 
   def('toStrictEqual', function(expected) {
-    const test1 = iterableEquality(this, expected)
-    if (typeof test1 === 'boolean') return test1
-    const test2 = typeEquality(this, expected)
-    if (typeof test2 === 'boolean') return test2
-    return this.toEqual(expected)
+    return iterableEquality(this, expected) ?? typeEquality(this, expected)
   })
   def('toBe', function(expected) {
     return this.equal(expected)
