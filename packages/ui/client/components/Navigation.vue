@@ -1,33 +1,26 @@
 <script setup lang="ts">
 import { isDark, toggleDark } from '~/composables'
+import { activeFileIdRef, files, status } from '~/composables/state'
 </script>
 
 <template>
-  <nav
-    bg-panel
-    w-72
-    flex
-    flex-col
-    border="r base"
-  >
-    <div
-      grid="~ cols-[max-content,1fr,min-content] gap-2"
-      items-center
-      px-4
-      h-14
-      border="b base"
-    >
-      <img w-6 h-6 src="/favicon.svg">
-      <span text-lg font-light>Vitest</span>
-      <button
-        text-xl
-        text-dark-100
-        dark:text-light-900
-        dark:i-carbon-moon
-        i-carbon-sun
-        @click="toggleDark()"
-      />
-    </div>
-    <Files />
+  <nav w-72 border="r base">
+    <TasksList :tasks="files">
+      <template #header>
+        <img w-6 h-6 mx-2 src="/favicon.svg">
+        <span font-light text-sm flex-1>
+          Vitest
+        </span>
+        <div class="flex text-lg">
+          <IconButton v-if="status === 'CONNECTING'" i-carbon-wifi text-orange-300 />
+          <IconButton v-else-if="status === 'CLOSED'" i-carbon-wifi-off text-red-300 />
+          <IconButton icon="i-carbon-play" />
+          <IconButton
+            icon="dark:i-carbon-moon i-carbon-sun"
+            @click="toggleDark()"
+          />
+        </div>
+      </template>
+    </TasksList>
   </nav>
 </template>
