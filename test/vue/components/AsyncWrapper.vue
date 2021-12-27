@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import AsyncComp from './AsyncComp.vue'
 
-defineProps<{ delay: number }>()
+defineProps<{ promise: Promise<void> }>()
 </script>
 
 <template>
   <Suspense>
-    <AsyncComp :delay="delay" />
+    <AsyncComp :promise="promise" />
     <template #fallback>
       fallback
     </template>

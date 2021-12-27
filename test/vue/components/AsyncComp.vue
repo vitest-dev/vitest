@@ -1,15 +1,11 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+const props = defineProps<{ promise: Promise<void> }>()
 
-const props = defineProps<{ delay: number }>()
+console.log(props.promise)
 
-const time = ref(Date.now())
-
-await new Promise(resolve => setTimeout(resolve, props.delay))
-
-time.value = Date.now() - time.value
+await props.promise
 </script>
 
 <template>
-  <div>resolved: {{ time }}</div>
+  <div>resolved</div>
 </template>
