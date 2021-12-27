@@ -16,7 +16,7 @@ cli
   .option('-u, --update', 'update snapshot')
   .option('-w, --watch', 'watch mode')
   .option('-o, --open', 'open UI', { default: false })
-  .option('--testNamePattern <pattern>', 'run test names with the specified pattern')
+  .option('-t, --testNamePattern <pattern>', 'run test names with the specified pattern')
   .option('--api', 'listen to port and serve API')
   .option('--threads', 'enabled threads', { default: true })
   .option('--silent', 'silent console output from tests')
