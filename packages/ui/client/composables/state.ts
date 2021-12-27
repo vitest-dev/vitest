@@ -3,6 +3,14 @@ import type { WebSocketStatus } from '@vueuse/core'
 import { reactive } from 'vue'
 import type { ResolvedConfig } from '#types'
 
+export const {
+  file: activeFileIdRef,
+} = toRefs(useUrlSearchParams<{ file: string }>('hash-params', {
+  initialValue: {
+    file: '',
+  },
+}))
+
 export const ENTRY_URL = 'ws://localhost:51204/__vitest_api__'
 
 export const client = createClient(ENTRY_URL, {
@@ -12,7 +20,6 @@ export const client = createClient(ENTRY_URL, {
 export const config = shallowRef<ResolvedConfig>({} as any)
 export const status = ref<WebSocketStatus>('CONNECTING')
 export const files = computed(() => client.state.getFiles())
-export const activeFileIdRef = ref('')
 export const current = computed(() => files.value.find(file => file.id === activeFileIdRef.value))
 
 export const isConnected = computed(() => status.value === 'OPEN')
