@@ -1,31 +1,28 @@
 <script setup lang="ts">
-import { tasksCtx } from '~/context'
+import { current } from '~/state'
 
-const file = inject(tasksCtx)
+const name = computed(() => current.value?.name.split(/\//g).pop())
 </script>
 
 <template>
-  <div v-if="file" overflow-auto w-72>
+  <div v-if="current" overflow-auto w-72 bg-panel border="r base">
     <div
-      h-8
-      px-4
-      flex
-      flex-row
+      p="x4 y2"
+      flex="~ gap-4"
       items-center
-      bg-gray-200
-      dark:bg-dark-300
-      gap-4
+      bg-active
+      border="b base"
     >
       <span font-light text-sm flex-1>
-        {{ file.name }}
+        {{ name }}
       </span>
       <button i-carbon-play />
     </div>
 
-    <test-suite
-      v-for="suite in file.tasks"
-      v-bind="suite"
+    <TestSuite
+      v-for="suite in current.tasks"
       :key="suite.id"
+      :task="suite"
     />
   </div>
 </template>

@@ -5,6 +5,7 @@ import { findUp } from 'find-up'
 import fg from 'fast-glob'
 import mm from 'micromatch'
 import c from 'picocolors'
+import type { RawSourceMap } from 'source-map-js'
 import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig } from '../types'
 import { SnapshotManager } from '../integrations/snapshot/manager'
 import { configFiles, defaultPort } from '../constants'
@@ -12,6 +13,7 @@ import { hasFailed, noop, slash, toArray } from '../utils'
 import { MocksPlugin } from '../plugins/mock'
 import { DefaultReporter } from '../reporters/default'
 import { ReportersMap } from '../reporters'
+import { cleanCoverage, prepareCoverage, reportCoverage } from '../coverage'
 import type { WorkerPool } from './pool'
 import { StateManager } from './state'
 import { resolveConfig } from './config'
@@ -28,8 +30,12 @@ class Vitest {
   console: Console
   pool: WorkerPool | undefined
 
+  outputStream = process.stdout
+  errorStream = process.stderr
+
   invalidates: Set<string> = new Set()
   changedTests: Set<string> = new Set()
+  visitedFilesMap: Map<string, RawSourceMap> = new Map()
   runningPromise?: Promise<void>
   isFirstRun = true
 
@@ -41,7 +47,7 @@ class Vitest {
     this.console = globalThis.console
   }
 
-  setServer(options: UserConfig, server: ViteDevServer) {
+  async setServer(options: UserConfig, server: ViteDevServer) {
     this.unregisterWatcher?.()
     clearTimeout(this._rerunTimer)
     this.restartsCount += 1
@@ -49,6 +55,7 @@ class Vitest {
     this.pool = undefined
 
     const resolved = resolveConfig(options, server.config)
+
     this.server = server
     this.config = resolved
     this.state = new StateManager()
@@ -60,13 +67,13 @@ class Vitest {
           const Reporter = ReportersMap[i]
           if (!Reporter)
             throw new Error(`Unknown reporter: ${i}`)
-          return new Reporter(this)
+          return new Reporter()
         }
         return i
       })
 
     if (!this.reporters.length)
-      this.reporters.push(new DefaultReporter(this))
+      this.reporters.push(new DefaultReporter())
 
     if (this.config.watch)
       this.registerWatcher()
@@ -74,9 +81,14 @@ class Vitest {
     this.runningPromise = undefined
 
     this._onRestartListeners.forEach(fn => fn())
+
+    if (resolved.coverage.enabled)
+      await prepareCoverage(resolved.coverage)
   }
 
   async start(filters?: string[]) {
+    this.report('onInit', this)
+
     const files = await this.globTestFiles(filters)
 
     if (!files.length) {
@@ -91,6 +103,9 @@ class Vitest {
 
     if (this.config.watch)
       await this.report('onWatcherStart')
+
+    if (this.config.coverage.enabled)
+      await reportCoverage(this)
   }
 
   async runFiles(files: string[]) {
@@ -159,11 +174,18 @@ class Vitest {
       const files = Array.from(this.changedTests)
       this.changedTests.clear()
 
+      this.log('return')
+      if (this.config.coverage.enabled && this.config.coverage.cleanOnRerun)
+        await cleanCoverage(this.config.coverage)
+
       await this.report('onWatcherRerun', files, triggerId)
 
       await this.runFiles(files)
 
       await this.report('onWatcherStart')
+
+      if (this.config.coverage.enabled)
+        await reportCoverage(this)
     }, WATCHER_DEBOUNCE)
   }
 
@@ -288,10 +310,10 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
         async configureServer(server) {
           if (haveStarted)
             await ctx.report('onServerRestart')
-          ctx.setServer(options, server)
+          await ctx.setServer(options, server)
           haveStarted = true
           if (options.api)
-            server.middlewares.use((await import('../api/middleware')).default(ctx))
+            (await import('../api/setup')).setup(ctx)
         },
       } as VitePlugin,
       MocksPlugin(),
@@ -311,6 +333,9 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
   await server.pluginContainer.buildStart({})
 
   if (options.api === true)
+    options.api = defaultPort
+
+  if (options.open && !options.api)
     options.api = defaultPort
 
   if (typeof options.api === 'number')

@@ -1,4 +1,5 @@
 import type { TransformResult } from 'vite'
+import { toFilePath } from '../utils'
 import type { Vitest } from './index'
 
 const promiseMap = new Map<string, Promise<TransformResult | null | undefined>>()
@@ -31,8 +32,11 @@ async function _transformRequest(ctx: Vitest, id: string) {
       result = await ctx.server.ssrTransform(result.code, result.map, id)
   }
 
-  if (result && process.env.NODE_V8_COVERAGE)
+  if (result && process.env.NODE_V8_COVERAGE) {
     withInlineSourcemap(result)
+    if (result.map)
+      ctx.visitedFilesMap.set(toFilePath(id, ctx.config.root), result.map as any)
+  }
 
   return result
 }

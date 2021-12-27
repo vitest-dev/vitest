@@ -5,10 +5,11 @@ import { createListRenderer } from './renderers/listRenderer'
 
 export class DefaultReporter extends BaseReporter {
   renderer?: ReturnType<typeof createListRenderer>
-  rendererOptions: ListRendererOptions = {}
+  rendererOptions: ListRendererOptions = {} as any
 
-  onStart() {
+  onCollected() {
     if (this.isTTY) {
+      this.rendererOptions.outputStream = this.ctx.outputStream
       const files = this.ctx.state.getFiles(this.watchFilters)
       if (!this.renderer)
         this.renderer = createListRenderer(files, this.rendererOptions).start()

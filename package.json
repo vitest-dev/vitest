@@ -1,6 +1,6 @@
 {
   "name": "@vitest/monorepo",
-  "version": "0.0.113",
+  "version": "0.0.115",
   "private": true,
   "description": "A blazing fast unit test framework powered by Vite",
   "type": "module",
@@ -18,7 +18,7 @@
     "test": "vitest -r test/core",
     "test:all": "cross-env CI=true pnpm -r --stream --filter !@vitest/monorepo run test --",
     "test:ci": "cross-env CI=true pnpm -r --stream --filter !@vitest/monorepo --filter !@vitest/test-fails run test --",
-    "typecheck": "pnpm -r --parallel run typecheck",
+    "typecheck": "tsc --noEmit",
     "ui:build": "vite build packages/ui",
     "ui:dev": "vite packages/ui"
   },
@@ -31,6 +31,7 @@
     "@rollup/plugin-node-resolve": "^13.1.1",
     "@types/node": "^17.0.4",
     "bumpp": "^7.1.1",
+    "c8": "^7.10.0",
     "cross-env": "^7.0.3",
     "eslint": "^8.5.0",
     "esno": "^0.13.0",
@@ -48,6 +49,6 @@
     "vite": "^2.7.7",
     "vitepress": "^0.20.10",
     "vitest": "workspace:*",
-    "vue": "3.2.26"
+    "vue": "^3.2.25"
   }
 }

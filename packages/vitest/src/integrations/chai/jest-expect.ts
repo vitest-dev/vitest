@@ -1,6 +1,6 @@
-import type { Spy } from 'vitest'
-import { equals as asymmetricEquals, hasAsymmetric } from './jest-utils'
+import type { Spy } from 'tinyspy'
 import type { ChaiPlugin } from './types'
+import { equals as asymmetricEquals, hasAsymmetric } from './jest-utils'
 
 type MatcherState = {
   assertionCalls: number

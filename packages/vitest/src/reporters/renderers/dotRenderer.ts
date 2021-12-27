@@ -3,6 +3,10 @@ import c from 'picocolors'
 import type { Task } from '../../types'
 import { getTests } from '../../utils'
 
+export interface DotRendererOptions {
+  outputStream: NodeJS.WritableStream
+}
+
 const check = c.green('·')
 const cross = c.red('x')
 const pending = c.yellow('*')
@@ -24,13 +28,11 @@ function render(tasks: Task[]) {
   }).join('')
 }
 
-export const createDotRenderer = (_tasks: Task[]) => {
+export const createDotRenderer = (_tasks: Task[], options: DotRendererOptions) => {
   let tasks = _tasks
   let timer: any
 
-  const stdout = process.stdout
-
-  const log = createLogUpdate(stdout)
+  const log = createLogUpdate(options.outputStream)
 
   function update() {
     log(render(tasks))
@@ -54,7 +56,7 @@ export const createDotRenderer = (_tasks: Task[]) => {
         timer = undefined
       }
       log.clear()
-      stdout.write(`${render(tasks)}\n`)
+      options.outputStream.write(`${render(tasks)}\n`)
       return this
     },
     clear() {

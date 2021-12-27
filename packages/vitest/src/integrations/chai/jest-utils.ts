@@ -22,9 +22,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 */
 
+import { isObject } from '../../utils'
 import type { Tester } from './types'
-
-export const isObject = (val: any): val is object => toString.call(val) === '[object Object]'
 
 // Extracted out of jasmine 2.5.2
 export function equals(

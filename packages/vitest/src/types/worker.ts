@@ -12,20 +12,14 @@ export interface WorkerContext {
   invalidates?: string[]
 }
 
-export interface RpcMap {
-  fetch: [[id: string], string | undefined]
-  getSourceMap: [[id: string, force?: boolean], RawSourceMap | undefined]
-  log: [[UserConsoleLog], void]
-  processExit: [[code?: number], void]
+export interface WorkerRPC {
+  fetch: (id: string) => Promise<string | undefined>
+  getSourceMap: (id: string, force?: boolean) => Promise<RawSourceMap | undefined>
 
-  onCollected: [[files: File[]], void]
-  onFinished: [[], void]
-  onTaskUpdate: [[pack: TaskResultPack], void]
+  onWorkerExit: (code?: number) => void
+  onUserLog: (log: UserConsoleLog) => void
+  onCollected: (files: File[]) => void
+  onTaskUpdate: (pack: TaskResultPack[]) => void
 
-  snapshotSaved: [[snapshot: SnapshotResult], void]
+  snapshotSaved: (snapshot: SnapshotResult) => void
 }
-
-export type RpcCall = <T extends keyof RpcMap>(method: T, ...args: RpcMap[T][0]) => Promise<RpcMap[T][1]>
-export type RpcSend = <T extends keyof RpcMap>(method: T, ...args: RpcMap[T][0]) => void
-
-export type RpcPayload<T extends keyof RpcMap = keyof RpcMap> = { id: string; method: T; args: RpcMap[T][0]}

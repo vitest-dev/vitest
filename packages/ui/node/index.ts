@@ -1,47 +1,18 @@
-
 import { fileURLToPath } from 'url'
-import { dirname, resolve } from 'pathe'
+import { resolve } from 'pathe'
 import sirv from 'sirv'
-import { WebSocketServer } from 'ws'
 
 import type { Plugin } from 'vite'
 import type { Vitest } from 'vitest/node'
 
-import { getSuitesAsJson } from './utils'
-
-const _dirname = typeof __dirname !== 'undefined'
-  ? __dirname
-  : dirname(fileURLToPath(import.meta.url))
-
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const VitestUIPlugin = (vitest: Vitest): Plugin => {
   return {
     name: 'vitest:ui',
     apply: 'serve',
     async configureServer(server) {
-      const wss = new WebSocketServer({ noServer: true })
-
-      server.httpServer?.on('upgrade', (request, socket, head) => {
-        if (request.url) {
-          const { pathname } = new URL(request.url, request.headers.origin)
-
-          if (pathname === '/__vitest_api') {
-            wss.handleUpgrade(request, socket, head, (ws) => {
-              wss.emit('connection', ws, request)
-
-              /**
-               * When user opens connection send initial list of tasks.
-               */
-              ws.on('message', () => {
-
-              })
-
-              ws.send(getSuitesAsJson(vitest))
-            })
-          }
-        }
-      })
-
-      server.middlewares.use('/', sirv(resolve(_dirname, './client'), {
+      const clientDist = resolve(fileURLToPath(import.meta.url), '../client')
+      server.middlewares.use('/', sirv(clientDist, {
         single: true,
         dev: true,
       }))

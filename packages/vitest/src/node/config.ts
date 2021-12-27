@@ -2,6 +2,8 @@ import { resolve } from 'pathe'
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 import type { ResolvedConfig, UserConfig } from '../types'
 import { defaultExclude, defaultInclude, defaultPort } from '../constants'
+import { resolveC8Options } from '../coverage'
+import { deepMerge } from '../utils'
 
 export function resolveConfig(
   options: UserConfig,
@@ -11,10 +13,11 @@ export function resolveConfig(
     options.environment = 'happy-dom'
 
   const resolved = {
-    ...options,
-    ...viteConfig.test,
+    ...deepMerge(options, viteConfig.test),
     root: viteConfig.root,
   } as ResolvedConfig
+
+  resolved.coverage = resolveC8Options(resolved.coverage, resolved.root)
 
   resolved.depsInline = [...resolved.deps?.inline || []]
   resolved.depsExternal = [...resolved.deps?.external || []]

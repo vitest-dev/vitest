@@ -1,4 +1,5 @@
 import type { BuiltinReporters } from '../reporters'
+import type { C8Options, ResolvedC8Options } from '../coverage'
 import type { Reporter } from './reporter'
 import type { SnapshotStateOptions } from './snapshot'
 import type { Arrayable } from './general'
@@ -149,6 +150,11 @@ export interface InlineConfig {
   isolate?: boolean
 
   /**
+   * Coverage options
+   */
+  coverage?: C8Options
+
+  /**
    * Open Vitest UI
    * @internal WIP
    */
@@ -211,12 +217,13 @@ export interface UserConfig extends InlineConfig {
   passWithNoTests?: boolean
 }
 
-export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters'> {
+export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage'> {
   config?: string
   filters?: string[]
 
   depsInline: (string | RegExp)[]
   depsExternal: (string | RegExp)[]
 
+  coverage: ResolvedC8Options
   snapshotOptions: SnapshotStateOptions
 }

@@ -4,5 +4,4 @@ import 'uno.css'
 import '@unocss/reset/tailwind.css'
 import './styles/main.css'
 
-createApp(App)
-  .mount('#app')
+createApp(App).mount('#app')

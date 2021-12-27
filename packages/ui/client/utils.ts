@@ -1,38 +1,4 @@
-import type { File, RunMode, Suite, Task, TaskState, Test } from 'vitest'
-
-type TaskMap = Map<string, Task>
-
-const buildMap = (task: Task, taskMap: TaskMap): void => {
-  if (task.id)
-    taskMap.set(task.id, task)
-
-  if (task.type === 'suite')
-    task.tasks.filter(x => typeof x === 'object').forEach(t => buildMap(t, taskMap))
-
-  if (task.suite)
-    buildMap(task.suite, taskMap)
-}
-
-const restoreTaskFromId = (task: Task, taskMap: TaskMap): void => {
-  if (task.type === 'suite') {
-    task.tasks = task.tasks.map((x) => {
-      if (typeof x === 'string')
-        return taskMap.get(x)
-
-      restoreTaskFromId(x, taskMap)
-      return x
-    }) as Task[]
-  }
-}
-
-export const restoreTestFileStructure = (file: File): File => {
-  const taskMap = new Map<string, Task>()
-  const output = { ...file }
-  buildMap(output, taskMap)
-  restoreTaskFromId(output, taskMap)
-
-  return output
-}
+import type { File, RunMode, Suite, TaskState, Test } from 'vitest'
 
 export type TaskUI = {
   id: string

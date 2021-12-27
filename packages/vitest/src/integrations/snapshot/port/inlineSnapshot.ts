@@ -16,7 +16,7 @@ export async function saveInlineSnapshots(
   const MagicString = (await import('magic-string')).default
   const files = new Set(snapshots.map(i => i.file))
   await Promise.all(Array.from(files).map(async(file) => {
-    const map = await rpc('getSourceMap', file)
+    const map = await rpc().getSourceMap(file)
     const snaps = snapshots.filter(i => i.file === file)
     const code = await fs.readFile(file, 'utf8')
     const s = new MagicString(code)
@@ -24,7 +24,7 @@ export async function saveInlineSnapshots(
     for (const snap of snaps) {
       const pos = await getOriginalPos(map, snap)
       const index = posToNumber(code, pos!)
-      replaceInlineSnap(code, s, index, snap.snapshot)
+      replaceInlineSnap(code, s, index, snap.snapshot) // TODO: support indent: ' '.repeat(4))
     }
 
     const transformed = s.toString()
@@ -34,15 +34,20 @@ export async function saveInlineSnapshots(
 }
 
 const startRegex = /toMatchInlineSnapshot\s*\(\s*(['"`\)])/m
-export function replaceInlineSnap(code: string, s: MagicString, index: number, newSnap: string) {
+export function replaceInlineSnap(code: string, s: MagicString, index: number, newSnap: string, indent = '') {
   const startMatch = startRegex.exec(code.slice(index))
   if (!startMatch)
     return false
 
   newSnap = newSnap.replace(/\\/g, '\\\\')
-  const snapString = newSnap.includes('\n')
-    ? `\`${newSnap.replace(/`/g, '\\`').trimEnd()}\``
-    : `'${newSnap.replace(/'/g, '\\\'')}'`
+    .split('\n')
+    .map(i => (indent + i).trimEnd())
+    .join('\n')
+
+  const isOneline = !newSnap.includes('\n')
+  const snapString = isOneline
+    ? `'${newSnap.replace(/'/g, '\\\'').trim()}'`
+    : `\`${newSnap.replace(/`/g, '\\`').trimEnd()}\``
 
   const quote = startMatch[1]
 

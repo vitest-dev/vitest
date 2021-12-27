@@ -14,9 +14,13 @@ export abstract class BaseReporter implements Reporter {
   end = 0
   watchFilters?: string[]
   isTTY = process.stdout.isTTY && !process.env.CI
+  ctx: Vitest = undefined!
 
-  constructor(public ctx: Vitest) {
-    const mode = ctx.config.watch ? c.blue(' WATCH ') : c.cyan(' RUN ')
+  onInit(ctx: Vitest) {
+    this.ctx = ctx
+    const mode = this.ctx.config.watch
+      ? c.blue(' WATCH ')
+      : c.cyan(' RUN ')
     this.ctx.log(`\n${c.inverse(c.bold(mode))} ${c.gray(this.ctx.config.root)}\n`)
     this.start = performance.now()
   }
@@ -30,14 +34,16 @@ export abstract class BaseReporter implements Reporter {
     await this.reportSummary(files)
   }
 
-  onTaskUpdate(pack: TaskResultPack) {
+  onTaskUpdate(packs: TaskResultPack[]) {
     if (this.isTTY)
       return
-    const task = this.ctx.state.idMap[pack[0]]
-    if (task.type === 'test' && task.result?.state && task.result?.state !== 'run') {
-      this.ctx.log(` ${getStateSymbol(task)} ${getFullName(task)}`)
-      if (task.result.state === 'fail')
-        this.ctx.log(c.red(`   ${F_RIGHT} ${(task.result.error as any)?.message}`))
+    for (const pack of packs) {
+      const task = this.ctx.state.idMap[pack[0]]
+      if (task.type === 'test' && task.result?.state && task.result?.state !== 'run') {
+        this.ctx.log(` ${getStateSymbol(task)} ${getFullName(task)}`)
+        if (task.result.state === 'fail')
+          this.ctx.log(c.red(`   ${F_RIGHT} ${(task.result.error as any)?.message}`))
+      }
     }
   }
 

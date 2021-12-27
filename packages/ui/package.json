@@ -2,7 +2,7 @@
   "name": "@vitest/ui",
   "//": "TODO: when it's ready",
   "private": true,
-  "version": "0.0.113",
+  "version": "0.0.115",
   "description": "Vitest UI",
   "sideEffects": false,
   "type": "module",
@@ -30,6 +30,7 @@
     "vitest": "workspace:*"
   },
   "dependencies": {
+    "@vitest/ws-client": "workspace:*",
     "@vueuse/core": "^7.4.1",
     "sirv": "^1.0.19",
     "ws": "^8.4.0"

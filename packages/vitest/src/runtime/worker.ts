@@ -1,9 +1,10 @@
 import { resolve } from 'pathe'
-import { nanoid } from 'nanoid/non-secure'
-import type { ModuleCache, ResolvedConfig, RpcCall, RpcSend, Test, WorkerContext } from '../types'
+import type { BirpcReturn } from 'birpc'
+import { createBirpc } from 'birpc'
+import type { ModuleCache, ResolvedConfig, Test, WorkerContext, WorkerRPC } from '../types'
 import { distDir } from '../constants'
 import { executeInViteNode } from '../node/execute'
-import { send } from './rpc'
+import { rpc } from './rpc'
 
 let _viteNode: {
   run: (files: string[], config: ResolvedConfig) => Promise<void>
@@ -19,11 +20,11 @@ async function startViteNode(ctx: WorkerContext) {
   const processExit = process.exit
 
   process.on('beforeExit', (code) => {
-    send('processExit', code)
+    rpc().onWorkerExit(code)
   })
 
   process.exit = (code = process.exitCode || 0): never => {
-    send('processExit', code)
+    rpc().onWorkerExit(code)
     return processExit(code)
   }
 
@@ -35,7 +36,7 @@ async function startViteNode(ctx: WorkerContext) {
       resolve(distDir, 'entry.js'),
     ],
     fetch(id) {
-      return process.__vitest_worker__.rpc('fetch', id)
+      return rpc().fetch(id)
     },
     inline: config.depsInline,
     external: config.depsExternal,
@@ -56,33 +57,18 @@ function init(ctx: WorkerContext) {
   process.stdout.write('\0')
 
   const { config, port } = ctx
-  const rpcPromiseMap = new Map<string, { resolve: ((...args: any) => any); reject: (...args: any) => any }>()
 
   process.__vitest_worker__ = {
     ctx,
     moduleCache,
     config,
-    rpc: (method, ...args) => {
-      return new Promise((resolve, reject) => {
-        const id = nanoid()
-        rpcPromiseMap.set(id, { resolve, reject })
-        port.postMessage({ method, args, id })
-      })
-    },
-    send(method, ...args) {
-      port.postMessage({ method, args })
-    },
+    rpc: createBirpc<{}, WorkerRPC>({
+      functions: {},
+      eventNames: ['onUserLog', 'onCollected', 'onWorkerExit'],
+      post(v) { port.postMessage(v) },
+      on(fn) { port.addListener('message', fn) },
+    }),
   }
-
-  port.addListener('message', async(data) => {
-    const api = rpcPromiseMap.get(data.id)
-    if (api) {
-      if (data.error)
-        api.reject(data.error)
-      else
-        api.resolve(data.result)
-    }
-  })
 
   if (ctx.invalidates)
     ctx.invalidates.forEach(i => moduleCache.delete(i))
@@ -107,8 +93,7 @@ declare global {
       __vitest_worker__: {
         ctx: WorkerContext
         config: ResolvedConfig
-        rpc: RpcCall
-        send: RpcSend
+        rpc: BirpcReturn<WorkerRPC>
         current?: Test
         filepath?: string
         moduleCache: Map<string, ModuleCache>

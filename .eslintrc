@@ -7,5 +7,18 @@
         "paths": ["path"]
       }
     ]
-  }
+  },
+  "overrides": [
+    {
+      "files": "packages/vitest/**/*.ts",
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": ["vitest"]
+          }
+        ]
+      }
+    }
+  ]
 }
