@@ -21,6 +21,12 @@ export default defineConfig({
         presetAttributify(),
         presetIcons(),
       ],
+      shortcuts: {
+        'bg-panel': '',
+        'bg-active': 'bg-gray-500:3',
+        'bg-hover': 'bg-gray-500:20',
+        'border-base': 'border-gray-500:10',
+      },
     }),
     Components({
       dirs: ['client/components'],

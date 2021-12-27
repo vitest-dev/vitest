@@ -5,7 +5,7 @@ body {
 }
 
 html.dark {
-  color: white;
+  color: #ddd;
   background-color: #141414;
   color-scheme: dark;
 }

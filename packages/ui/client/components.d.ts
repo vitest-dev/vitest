@@ -6,7 +6,9 @@ declare module 'vue' {
   export interface GlobalComponents {
     Files: typeof import('./components/Files.vue')['default']
     Navigation: typeof import('./components/Navigation.vue')['default']
+    StatusIcon: typeof import('./components/StatusIcon.vue')['default']
     Suites: typeof import('./components/Suites.vue')['default']
+    TaskItem: typeof import('./components/TaskItem.vue')['default']
     TestFile: typeof import('./components/TestFile.vue')['default']
     TestSuite: typeof import('./components/TestSuite.vue')['default']
   }
