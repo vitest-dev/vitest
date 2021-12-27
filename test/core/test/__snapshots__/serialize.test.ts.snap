@@ -4,6 +4,10 @@ exports[`error serialize > Should skip circular references to prevent hit the ca
 {
   "toString": "Function<toString>",
   "whatever": [Circular],
+  "whateverArray": [
+    [Circular],
+    [Circular],
+  ],
 }
 `;
 
