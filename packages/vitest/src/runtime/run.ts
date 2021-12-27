@@ -1,5 +1,5 @@
 import { performance } from 'perf_hooks'
-import type { HookListener, ResolvedConfig, Suite, SuiteHooks, Task, Test } from '../types'
+import type { HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResultPack, Test } from '../types'
 import { vi } from '../integrations/vi'
 import { getSnapshotClient } from '../integrations/snapshot/chai'
 import { hasFailed, hasTests, partitionSuiteChildren } from '../utils'
@@ -19,8 +19,27 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(suite: Suite, na
     await callSuiteHook(suite.suite, name, args)
 }
 
+const packs: TaskResultPack[] = []
+let updateTimer: any
+let previousUpdate: Promise<void>|undefined
+
 function updateTask(task: Task) {
-  return rpc().onTaskUpdate([task.id, task.result])
+  packs.push([task.id, task.result])
+
+  clearTimeout(updateTimer)
+  updateTimer = setTimeout(() => {
+    previousUpdate = sendTasksUpdate()
+  }, 10)
+}
+
+async function sendTasksUpdate() {
+  clearTimeout(updateTimer)
+  await previousUpdate
+  if (packs.length) {
+    const p = rpc().onTaskUpdate(packs)
+    packs.length = 0
+    return p
+  }
 }
 
 export async function runTest(test: Test) {
@@ -159,6 +178,8 @@ export async function startTests(paths: string[], config: ResolvedConfig) {
   await runSuites(files)
 
   await getSnapshotClient().saveSnap()
+
+  await sendTasksUpdate()
 }
 
 export function clearModuleMocks() {

@@ -6,7 +6,7 @@ import type { createListRenderer } from './renderers/listRenderer'
 export class DotReporter extends BaseReporter {
   renderer?: ReturnType<typeof createListRenderer>
 
-  onStart() {
+  onCollected() {
     if (this.isTTY) {
       const files = this.ctx.state.getFiles(this.watchFilters)
       if (!this.renderer)

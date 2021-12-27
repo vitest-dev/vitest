@@ -4,9 +4,9 @@ import type { File, TaskResultPack } from './tasks'
 
 export interface Reporter {
   onInit?(ctx: Vitest): void
-  onStart?: (files?: string[]) => Awaitable<void>
+  onCollected?: (files?: File[]) => Awaitable<void>
   onFinished?: (files?: File[]) => Awaitable<void>
-  onTaskUpdate?: (pack: TaskResultPack) => Awaitable<void>
+  onTaskUpdate?: (packs: TaskResultPack[]) => Awaitable<void>
 
   onWatcherStart?: () => Awaitable<void>
   onWatcherRerun?: (files: string[], trigger: string) => Awaitable<void>

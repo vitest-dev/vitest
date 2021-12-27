@@ -21,6 +21,8 @@
     }
   },
   "exclude": [
-    "**/dist/**"
+    "**/dist/**",
+    "./packages/ui/client/**",
+    "./test/**/*.*",
   ]
 }

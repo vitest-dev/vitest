@@ -4,28 +4,25 @@ import type { File } from 'vitest'
 import type { Ref } from 'vue'
 import { pickTasksFromFile } from './utils'
 
-export const client = createClient('ws://localhost:51204/__vitest_api__', {
-  onStart() {
-    // console.log('onStart', files)
-  },
-})
+export const client = createClient('ws://localhost:51204/__vitest_api__')
+client.state.filesMap = reactive(client.state.filesMap)
+client.state.idMap = reactive(client.state.idMap)
 
 export const files = ref([]) as Ref<File[]>
 
-export const activeFileIdRef = ref('')
-
-// TODO: reflect to really state
 export const status = ref<WebSocketStatus>('CONNECTING')
 
-client.ws.addEventListener('open', () => {
+client.waitForConnection().then(async() => {
   status.value = 'OPEN'
-  client.rpc.getFiles().then(i => files.value = i)
+  const rawFiles = await client.rpc.getFiles()
+  files.value = rawFiles
 })
 
 client.ws.addEventListener('close', () => {
   status.value = 'CLOSED'
 })
 
+export const activeFileIdRef = ref('')
 export const current = computed(() => files.value.find(file => file.id === activeFileIdRef.value))
 export const tasks = computed(() => {
   const file = current.value

@@ -7,7 +7,7 @@ export class DefaultReporter extends BaseReporter {
   renderer?: ReturnType<typeof createListRenderer>
   rendererOptions: ListRendererOptions = {} as any
 
-  onStart() {
+  onCollected() {
     if (this.isTTY) {
       this.rendererOptions.outputStream = this.ctx.outputStream
       const files = this.ctx.state.getFiles(this.watchFilters)
