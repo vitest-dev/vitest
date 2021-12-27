@@ -61,6 +61,7 @@
   },
   "devDependencies": {
     "@antfu/install-pkg": "^0.1.0",
+    "@types/convert-source-map": "^1.5.2",
     "@types/diff": "^5.0.2",
     "@types/jsdom": "^16.2.14",
     "@types/micromatch": "^4.0.2",
@@ -72,6 +73,7 @@
     "cac": "^6.7.12",
     "chai-subset": "^1.6.0",
     "cli-truncate": "^3.1.0",
+    "convert-source-map": "^1.8.0",
     "diff": "^5.0.0",
     "execa": "^6.0.0",
     "fast-glob": "^3.2.7",

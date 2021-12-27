@@ -1,3 +1,4 @@
+import * as convertSourceMap from 'convert-source-map'
 import { MessageChannel } from 'worker_threads'
 import { pathToFileURL } from 'url'
 import { resolve } from 'pathe'
@@ -124,7 +125,9 @@ function createChannel(ctx: Vitest) {
       },
       async fetch(id) {
         const r = await transformRequest(ctx, id)
-        return r?.code
+        if (r) {
+          return r.code + (r.map ? convertSourceMap.fromObject(r.map).toComment() : '')
+        }
       },
       onCollected(files) {
         ctx.state.collectFiles(files)
