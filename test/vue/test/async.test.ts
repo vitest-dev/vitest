@@ -14,11 +14,14 @@ test('async component with suspense', async() => {
     },
   })
 
+  await nextTick()
+
   expect(wrapper.text()).toContain('fallback')
 
   resolve()
 
   await flushPromises()
+  await nextTick()
   await nextTick()
 
   const text = wrapper.text()
