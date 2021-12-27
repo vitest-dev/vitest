@@ -17,7 +17,7 @@ export function serializeError(val: any, seen = new WeakSet()): any {
     return `${val.toString()} ${format(val.sample)}`
 
   if (seen.has(val))
-    return undefined
+    return val
   seen.add(val)
 
   Object.keys(val).forEach((key) => {
