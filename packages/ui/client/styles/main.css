@@ -22,7 +22,7 @@ html.dark {
 
 :root {
   --cm-foreground: #393a3480;
-  --cm-background: #fdfdfd;
+  --cm-background: transparent;
   --cm-comment: #a0ada0;
   --cm-string: #b56959;
   --cm-literal: #2f8a89;
@@ -46,7 +46,7 @@ html.dark {
 html.dark {
   --cm-scheme: dark;
   --cm-foreground: #d4cfbf80;
-  --cm-background: #111;
+  --cm-background: transparent;
   --cm-comment: #758575;
   --cm-string: #d48372;
   --cm-literal: #429988;

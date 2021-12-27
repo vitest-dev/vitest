@@ -4,7 +4,7 @@ importers:
 
   .:
     specifiers:
-      '@vue/composition-api': ^1.4.2
+      '@vue/composition-api': ^1.4.3
       '@vue/test-utils': ^1.3.0
       happy-dom: '*'
       unplugin-vue2-script-setup: ^0.8.3
@@ -16,7 +16,7 @@ importers:
     dependencies:
       vue: 2.6.14
     devDependencies:
-      '@vue/composition-api': 1.4.2_vue@2.6.14
+      '@vue/composition-api': 1.4.3_vue@2.6.14
       '@vue/test-utils': 1.3.0_9065e7474e033a8e4b95615fc8e6c36c
       happy-dom: 2.24.5
       unplugin-vue2-script-setup: 0.8.3_vite@2.7.7
@@ -527,8 +527,8 @@ packages:
       prettier: 2.5.1
     dev: true
 
-  /@vue/composition-api/1.4.2_vue@2.6.14:
-    resolution: {integrity: sha512-EqybqmMq835GISvlQXdDaV8dsbunpdmhClrnAqUJZLyxxV9pQXQYRtNDf+0e+fEwMfimLIsv7YmbKCbqxGRqXg==}
+  /@vue/composition-api/1.4.3_vue@2.6.14:
+    resolution: {integrity: sha512-Qp4rMbESO05/7/Imck027X5lPhbmMX/mtYSDvIMJ14PS4KHY/4GllnQbPEfsBEe1LECFE6HWx2k7HYgcuYNvpg==}
     peerDependencies:
       vue: '>= 2.5 < 3'
     dependencies:

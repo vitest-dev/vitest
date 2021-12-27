@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Task } from 'vitest'
 import { toggleDark } from '~/composables'
-import { activeFileIdRef, client, files, status } from '~/composables/state'
+import { activeFileIdRef, client, files } from '~/composables/state'
 
 function onItemClick(task: Task) {
   activeFileIdRef.value = task.id
@@ -24,16 +24,6 @@ function runAll() {
           Vitest
         </span>
         <div class="flex text-lg">
-          <IconButton
-            v-if="status === 'CONNECTING'"
-            icon="i-carbon-wifi"
-            text-orange-300
-          />
-          <IconButton
-            v-else-if="status === 'CLOSED'"
-            icon="i-carbon-wifi-off"
-            text-red-300
-          />
           <IconButton icon="i-carbon-play" @click="runAll()" />
           <IconButton
             icon="dark:i-carbon-moon i-carbon-sun"

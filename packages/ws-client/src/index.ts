@@ -8,6 +8,7 @@ export interface VitestClientOptions {
   handlers?: Partial<WebSocketEvents>
   autoReconnect?: boolean
   reconnectInterval?: number
+  reconnectTries?: number
   reactive?: <T>(v: T) => T
   ref?: <T>(v: T) => { value: T }
 }
@@ -24,11 +25,13 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
   const {
     handlers = {},
     autoReconnect = true,
-    reconnectInterval = 1000,
+    reconnectInterval = 2000,
+    reconnectTries = 10,
     reactive = v => v,
     // ref = v => ({ value: v }),
   } = options
 
+  let tries = reconnectTries
   const ctx = reactive({
     ws: new WebSocket(url),
     state: new StateManager(),
@@ -63,7 +66,9 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
 
   let openPromise: Promise<void>
 
-  function reconnect() {
+  function reconnect(reset = false) {
+    if (reset)
+      tries = reconnectTries
     ctx.ws = new WebSocket(url)
     registerWS()
   }
@@ -71,6 +76,7 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
   function registerWS() {
     openPromise = new Promise((resolve) => {
       ctx.ws.addEventListener('open', () => {
+        tries = reconnectTries
         resolve()
       })
     })
@@ -78,7 +84,8 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
       onMessage(v.data)
     })
     ctx.ws.addEventListener('close', () => {
-      if (autoReconnect)
+      tries -= 1
+      if (autoReconnect && tries > 0)
         setTimeout(reconnect, reconnectInterval)
     })
   }
