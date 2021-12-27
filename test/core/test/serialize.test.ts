@@ -18,4 +18,16 @@ describe('error serialize', () => {
       },
     })).toMatchSnapshot()
   })
+
+  it('Should skip circular references to prevent hit the call stack limit', () => {
+    const error: Record<string, any> = {
+      toString: () => {
+        return 'ops something went wrong'
+      },
+    }
+    error.whatever = error
+    error.whateverArray = [error, error]
+
+    expect(serializeError(error)).toMatchSnapshot()
+  })
 })

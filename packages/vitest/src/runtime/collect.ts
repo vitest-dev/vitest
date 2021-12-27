@@ -1,6 +1,6 @@
 import { performance } from 'perf_hooks'
+import { createHash } from 'crypto'
 import { relative } from 'pathe'
-import { nanoid } from 'nanoid/non-secure'
 import type { File, ResolvedConfig, Suite, Task, Test } from '../types'
 import { clearContext, defaultSuite } from './suite'
 import { getHooks, setHooks } from './map'
@@ -8,13 +8,21 @@ import { processError } from './error'
 import { context } from './context'
 import { runSetupFiles } from './setup'
 
+function hash(str: string, length = 10) {
+  return createHash('md5')
+    .update(str)
+    .digest('hex')
+    .slice(0, length)
+}
+
 export async function collectTests(paths: string[], config: ResolvedConfig) {
   const files: File[] = []
 
   for (const filepath of paths) {
+    const path = relative(config.root, filepath)
     const file: File = {
-      id: nanoid(),
-      name: relative(config.root, filepath),
+      id: hash(path),
+      name: path,
       type: 'suite',
       mode: 'run',
       computeMode: 'serial',
@@ -55,6 +63,7 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
       process.stdout.write('\0')
     }
 
+    calculateHash(file)
     files.push(file)
   }
 
@@ -68,7 +77,7 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
 /**
  * If any tasks been marked as `only`, mark all other tasks as `skip`.
  */
-export function interpretOnlyMode(tasks: Task[], namePattern?: string | RegExp) {
+function interpretOnlyMode(tasks: Task[], namePattern?: string | RegExp) {
   if (tasks.some(t => t.mode === 'only')) {
     tasks.forEach((t) => {
       if (t.mode === 'run')
@@ -88,5 +97,13 @@ export function interpretOnlyMode(tasks: Task[], namePattern?: string | RegExp) 
       else
         interpretOnlyMode(t.tasks)
     }
+  })
+}
+
+function calculateHash(parent: Suite) {
+  parent.tasks.forEach((t, idx) => {
+    t.id = `${parent.id}_${idx}`
+    if (t.type === 'suite')
+      calculateHash(t)
   })
 }

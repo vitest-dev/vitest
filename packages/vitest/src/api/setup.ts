@@ -1,3 +1,4 @@
+import { promises as fs } from 'fs'
 import type { BirpcReturn } from 'birpc'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
@@ -5,7 +6,7 @@ import type { WebSocket } from 'ws'
 import { WebSocketServer } from 'ws'
 import { API_PATH } from '../constants'
 import type { Vitest } from '../node'
-import type { Reporter } from '../types'
+import type { File, Reporter, TaskResultPack } from '../types'
 import type { WebSocketEvents, WebSocketHandlers } from './types'
 
 export function setup(ctx: Vitest) {
@@ -33,6 +34,17 @@ export function setup(ctx: Vitest) {
         getFiles() {
           return ctx.state.getFiles()
         },
+        getSourceCode(id) {
+          return fs.readFile(id, 'utf-8')
+        },
+        async rerun(files) {
+          await ctx.report('onWatcherRerun', files)
+          await ctx.runFiles(files)
+          await ctx.report('onWatcherStart')
+        },
+        getConfig() {
+          return ctx.config
+        },
       },
       post(msg) {
         ws.send(msg)
@@ -40,7 +52,7 @@ export function setup(ctx: Vitest) {
       on(fn) {
         ws.on('message', fn)
       },
-      eventNames: ['onStart'],
+      eventNames: ['onCollected'],
       serialize: stringify,
       deserialize: parse,
     })
@@ -62,9 +74,15 @@ class WebSocketReporter implements Reporter {
     public clients: Map<WebSocket, BirpcReturn<WebSocketEvents>>,
   ) {}
 
-  onStart(files?: string[]) {
+  onCollected(files?: File[]) {
     this.clients.forEach((client) => {
-      client.onStart(files)
+      client.onCollected?.(files)
+    })
+  }
+
+  onTaskUpdate(packs: TaskResultPack[]) {
+    this.clients.forEach((client) => {
+      client.onTaskUpdate?.(packs)
     })
   }
 }

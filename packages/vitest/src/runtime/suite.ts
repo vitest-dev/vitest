@@ -1,4 +1,3 @@
-import { nanoid } from 'nanoid/non-secure'
 import type { ComputeMode, File, RunMode, Suite, SuiteCollector, SuiteHooks, Test, TestCollector, TestFactory, TestFunction } from '../types'
 import { noop } from '../utils'
 import { createChainable } from './chain'
@@ -56,7 +55,7 @@ function createSuiteCollector(name: string, factory: TestFactory = () => { }, mo
       const computeMode = this.concurrent ? 'concurrent' : undefined
 
       const test: Test = {
-        id: nanoid(),
+        id: '',
         type: 'test',
         name,
         mode,
@@ -86,7 +85,7 @@ function createSuiteCollector(name: string, factory: TestFactory = () => { }, mo
 
   function initSuite() {
     suite = {
-      id: nanoid(),
+      id: '',
       type: 'suite',
       computeMode: 'serial',
       name,

@@ -19,7 +19,7 @@ export interface WorkerRPC {
   onWorkerExit: (code?: number) => void
   onUserLog: (log: UserConsoleLog) => void
   onCollected: (files: File[]) => void
-  onTaskUpdate: (pack: TaskResultPack) => void
+  onTaskUpdate: (pack: TaskResultPack[]) => void
 
   snapshotSaved: (snapshot: SnapshotResult) => void
 }

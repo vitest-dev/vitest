@@ -2,10 +2,9 @@ import { format } from 'util'
 import { stringify } from '../integrations/chai/jest-matcher-utils'
 
 // https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm
-export function serializeError(val: any): any {
+export function serializeError(val: any, seen = new WeakSet()): any {
   if (!val || typeof val === 'string')
     return val
-
   if (typeof val === 'function')
     return `Function<${val.name}>`
   if (typeof val !== 'object')
@@ -14,14 +13,23 @@ export function serializeError(val: any): any {
     return 'Promise'
   if (typeof Element !== 'undefined' && val instanceof Element)
     return val.tagName
-
   if (typeof val.asymmetricMatch === 'function')
     return `${val.toString()} ${format(val.sample)}`
 
-  Object.keys(val).forEach((key) => {
-    val[key] = serializeError(val[key])
-  })
+  if (seen.has(val))
+    return val
+  seen.add(val)
 
+  if (Array.isArray(val)) {
+    val = val.map((e) => {
+      return serializeError(e, seen)
+    })
+  }
+  else {
+    Object.keys(val).forEach((key) => {
+      val[key] = serializeError(val[key], seen)
+    })
+  }
   return val
 }
 

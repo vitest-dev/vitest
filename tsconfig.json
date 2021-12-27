@@ -14,13 +14,17 @@
     "declaration": true,
     "inlineSourceMap": true,
     "paths": {
-      "vitest": ["./packages/vitest/src/index.ts"],
-      "vitest/node": ["./packages/vitest/src/node/index.ts"],
-      "vitest/global": ["./packages/vitest/global.d.ts"],
       "@vitest/ws-client": ["./packages/ws-client/src/index.ts"],
+      "#types": ["./packages/vitest/src/index.ts"],
+      "~/*": ["./packages/ui/client/*"],
+      "vitest": ["./packages/vitest/src/index.ts"],
+      "vitest/global": ["./packages/vitest/global.d.ts"],
+      "vitest/node": ["./packages/vitest/src/node/index.ts"]
     }
   },
   "exclude": [
-    "**/dist/**"
+    "**/dist/**",
+    "./packages/ui/client/**",
+    "./test/**/*.*",
   ]
 }
