@@ -38,6 +38,12 @@ export function resolveConfig(
 
   resolved.isolate = resolved.isolate ?? true
 
+  resolved.testNamePattern = resolved.testNamePattern
+    ? resolved.testNamePattern instanceof RegExp
+      ? resolved.testNamePattern
+      : new RegExp(resolved.testNamePattern)
+    : undefined
+
   resolved.watchIgnore = resolved.watchIgnore ?? [/\/node_modules\//, /\/dist\//]
 
   const CI = !!process.env.CI

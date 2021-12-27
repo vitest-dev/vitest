@@ -1,8 +1,7 @@
 import { performance } from 'perf_hooks'
 import { relative } from 'pathe'
 import { nanoid } from 'nanoid/non-secure'
-import type { File, ResolvedConfig, Suite, Test } from '../types'
-import { interpretOnlyMode } from '../utils'
+import type { File, ResolvedConfig, Suite, Task, Test } from '../types'
 import { clearContext, defaultSuite } from './suite'
 import { getHooks, setHooks } from './map'
 import { processError } from './error'
@@ -61,7 +60,33 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
 
   const tasks = files.reduce((tasks, file) => tasks.concat(file.tasks), [] as (Suite | Test)[])
 
-  interpretOnlyMode(tasks)
+  interpretOnlyMode(tasks, config.testNamePattern)
 
   return files
+}
+
+/**
+ * If any tasks been marked as `only`, mark all other tasks as `skip`.
+ */
+export function interpretOnlyMode(tasks: Task[], namePattern?: string | RegExp) {
+  if (tasks.some(t => t.mode === 'only')) {
+    tasks.forEach((t) => {
+      if (t.mode === 'run')
+        t.mode = 'skip'
+      else if (t.mode === 'only')
+        t.mode = 'run'
+    })
+  }
+  tasks.forEach((t) => {
+    if (t.type === 'test') {
+      if (namePattern && !t.name.match(namePattern))
+        t.mode = 'skip'
+    }
+    else if (t.type === 'suite') {
+      if (t.mode === 'skip')
+        t.tasks.forEach(c => c.mode === 'run' && (c.mode = 'skip'))
+      else
+        interpretOnlyMode(t.tasks)
+    }
+  })
 }

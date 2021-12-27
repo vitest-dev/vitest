@@ -80,7 +80,6 @@ async function run(cliFilters: string[], options: UserConfig) {
     if (!await ensurePackageInstalled(ctx.config.environment))
       process.exit(1)
   }
-  ctx.config.testNamePatternRegex = new RegExp(ctx.config.testNamePattern)
 
   if (process.stdin.isTTY && ctx.config.watch)
     registerConsoleShortcuts(ctx)
