@@ -49,8 +49,7 @@
   "scripts": {
     "build": "rimraf dist && rollup -c",
     "dev": "rollup -c --watch src",
-    "prepublishOnly": "nr build",
-    "typecheck": "tsc --noEmit"
+    "prepublishOnly": "nr build"
   },
   "dependencies": {
     "@types/chai": "^4.3.0",

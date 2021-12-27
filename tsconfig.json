@@ -21,6 +21,9 @@
     }
   },
   "exclude": [
-    "**/dist/**"
+    "**/dist/**",
+    "./test/*/src/**",
+    "./test/**/*.jsx",
+    "./test/**/*.tsx",
   ]
 }

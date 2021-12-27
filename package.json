@@ -18,7 +18,7 @@
     "test": "vitest -r test/core",
     "test:all": "cross-env CI=true pnpm -r --stream --filter !@vitest/monorepo run test --",
     "test:ci": "cross-env CI=true pnpm -r --stream --filter !@vitest/monorepo --filter !@vitest/test-fails run test --",
-    "typecheck": "pnpm -r --parallel run typecheck",
+    "typecheck": "tsc --noEmit",
     "ui:build": "vite build packages/ui",
     "ui:dev": "vite packages/ui"
   },
@@ -49,6 +49,6 @@
     "vite": "^2.7.7",
     "vitepress": "^0.20.10",
     "vitest": "workspace:*",
-    "vue": "3.2.26"
+    "vue": "^3.2.25"
   }
 }
