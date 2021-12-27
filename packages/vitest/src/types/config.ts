@@ -161,6 +161,11 @@ export interface InlineConfig {
   open?: boolean
 
   /**
+   * run test names with the specified pattern
+   */
+  testNamePattern?: string
+
+  /**
    * Listen to port and serve API
    *
    * When set to true, the default port is 55555
