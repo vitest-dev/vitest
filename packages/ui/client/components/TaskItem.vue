@@ -22,7 +22,7 @@ const duration = computed(() => {
     hover="bg-active"
   >
     <StatusIcon :task="task" mr-2 flex-shrink-0 text-lg />
-    <div flex items-end gap-2>
+    <div flex items-end gap-2 :text="task?.result?.state === 'fail' ? 'red-500' : ''">
       <span text-sm truncate font-light>{{ task.name }}</span>
       <span v-if="task.result?.end" text="xs" op20>
         {{ duration }}ms

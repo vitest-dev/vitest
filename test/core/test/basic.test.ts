@@ -3,7 +3,7 @@ import { two } from '../src/submodule'
 import { timeout } from '../src/timeout'
 
 test('Math.sqrt()', async() => {
-  assert.equal(Math.sqrt(4), two)
+  assert.equal(Math.sqrt(5), two)
   assert.equal(Math.sqrt(2), Math.SQRT2)
   expect(Math.sqrt(144)).toStrictEqual(12)
   // await new Promise(resolve => setTimeout(resolve, 3000))

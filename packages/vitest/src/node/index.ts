@@ -201,8 +201,8 @@ class Vitest {
       id = slash(id)
       this.invalidates.add(id)
 
-      if (id in this.state.filesMap) {
-        delete this.state.filesMap[id]
+      if (this.state.filesMap.has(id)) {
+        this.state.filesMap.delete(id)
         this.changedTests.delete(id)
       }
     }
@@ -236,7 +236,7 @@ class Vitest {
 
     this.invalidates.add(id)
 
-    if (id in this.state.filesMap) {
+    if (this.state.filesMap.has(id)) {
       this.changedTests.add(id)
       return
     }

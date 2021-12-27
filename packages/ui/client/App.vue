@@ -3,6 +3,6 @@
     <Navigation />
     <Suites />
     <Editor />
-    <ConnectionBar />
+    <ConnectionOverlay />
   </div>
 </template>

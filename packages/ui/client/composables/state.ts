@@ -15,6 +15,10 @@ export const files = computed(() => client.state.getFiles())
 export const activeFileIdRef = ref('')
 export const current = computed(() => files.value.find(file => file.id === activeFileIdRef.value))
 
+export const isConnected = computed(() => status.value === 'OPEN')
+export const isConnecting = computed(() => status.value === 'CONNECTING')
+export const isDisconned = computed(() => status.value === 'CLOSED')
+
 watch(
   () => client.ws,
   (ws) => {
@@ -22,12 +26,16 @@ watch(
 
     ws.addEventListener('open', () => {
       status.value = 'OPEN'
+      client.state.filesMap.clear()
       client.rpc.getFiles().then(files => client.state.collectFiles(files))
       client.rpc.getConfig().then(_config => config.value = _config)
     })
 
     ws.addEventListener('close', () => {
-      status.value = 'CLOSED'
+      setTimeout(() => {
+        if (status.value === 'CONNECTING')
+          status.value = 'CLOSED'
+      }, 1000)
     })
   },
   { immediate: true },

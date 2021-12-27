@@ -23,6 +23,8 @@ export default defineConfig({
         presetIcons(),
       ],
       shortcuts: {
+        'bg-base': 'bg-white dark:bg-[#222]',
+        'bg-overlay': 'bg-white:2 dark:bg-[#222]:2',
         'bg-header': 'bg-gray-500:5',
         'bg-active': 'bg-gray-500:8',
         'bg-hover': 'bg-gray-500:20',
