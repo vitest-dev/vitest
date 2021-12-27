@@ -20,9 +20,16 @@ export function serializeError(val: any, seen = new WeakSet()): any {
     return val
   seen.add(val)
 
-  Object.keys(val).forEach((key) => {
-    val[key] = serializeError(val[key], seen)
-  })
+  if (Array.isArray(val)) {
+    val = val.map((e) => {
+      return serializeError(e, seen)
+    })
+  }
+  else {
+    Object.keys(val).forEach((key) => {
+      val[key] = serializeError(val[key], seen)
+    })
+  }
   return val
 }
 

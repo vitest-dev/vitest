@@ -102,8 +102,10 @@ async function run(cliFilters: string[], options: UserConfig) {
       await ctx.close()
   }
 
-  if (!ctx.config.watch)
-    process.exit()
+  if (!ctx.config.watch) {
+    // force process exit if it hangs
+    setTimeout(() => process.exit(), 1000).unref()
+  }
 }
 
 function registerConsoleShortcuts(ctx: Vitest) {
