@@ -118,7 +118,7 @@ export function resolveC8Options(options: C8Options, root: string): ResolvedC8Op
 
 export async function cleanCoverage(options: ResolvedC8Options, clean = true) {
   if (clean && existsSync(options.reportsDirectory))
-    await fs.rmdir(options.reportsDirectory, { recursive: true })
+    await fs.rm(options.reportsDirectory, { recursive: true, force: true })
 
   if (!existsSync(options.tempDirectory))
     await fs.mkdir(options.tempDirectory, { recursive: true })
