@@ -1,7 +1,7 @@
 import { performance } from 'perf_hooks'
 import { createHash } from 'crypto'
 import { relative } from 'pathe'
-import type { File, ResolvedConfig, Suite, Task, Test } from '../types'
+import type { File, ResolvedConfig, Suite, Task } from '../types'
 import { clearContext, defaultSuite } from './suite'
 import { getHooks, setHooks } from './map'
 import { processError } from './error'
@@ -67,9 +67,7 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
     files.push(file)
   }
 
-  const tasks = files.reduce((tasks, file) => tasks.concat(file.tasks), [] as (Suite | Test)[])
-
-  interpretOnlyMode(tasks, config.testNamePattern)
+  interpretTaskModes(files, config.testNamePattern)
 
   return files
 }
@@ -77,7 +75,7 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
 /**
  * If any tasks been marked as `only`, mark all other tasks as `skip`.
  */
-function interpretOnlyMode(tasks: Task[], namePattern?: string | RegExp) {
+function interpretTaskModes(tasks: Task[], namePattern?: string | RegExp) {
   if (tasks.some(t => t.mode === 'only')) {
     tasks.forEach((t) => {
       if (t.mode === 'run')
@@ -86,6 +84,7 @@ function interpretOnlyMode(tasks: Task[], namePattern?: string | RegExp) {
         t.mode = 'run'
     })
   }
+
   tasks.forEach((t) => {
     if (t.type === 'test') {
       if (namePattern && !t.name.match(namePattern))
@@ -94,8 +93,14 @@ function interpretOnlyMode(tasks: Task[], namePattern?: string | RegExp) {
     else if (t.type === 'suite') {
       if (t.mode === 'skip')
         t.tasks.forEach(c => c.mode === 'run' && (c.mode = 'skip'))
-      else
-        interpretOnlyMode(t.tasks)
+
+      interpretTaskModes(t.tasks, namePattern)
+
+      // if all subtasks are skipped, marked as skip
+      if (t.mode === 'run') {
+        if (t.tasks.every(i => i.mode !== 'run'))
+          t.mode = 'skip'
+      }
     }
   })
 }
