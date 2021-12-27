@@ -22,8 +22,7 @@
   },
   "exclude": [
     "**/dist/**",
-    "./test/*/src/**",
-    "./test/**/*.jsx",
-    "./test/**/*.tsx",
+    "./packages/ui/client/**",
+    "./test/**/*.*",
   ]
 }
