@@ -174,7 +174,7 @@ class Vitest {
       const files = Array.from(this.changedTests)
       this.changedTests.clear()
 
-      this.console.log('return')
+      this.log('return')
       if (this.config.coverage.enabled && this.config.coverage.cleanOnRerun)
         await cleanCoverage(this.config.coverage)
 
@@ -313,7 +313,7 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
           await ctx.setServer(options, server)
           haveStarted = true
           if (options.api)
-            server.middlewares.use((await import('../api/middleware')).default(ctx))
+            (await import('../api/setup')).setup(ctx)
         },
       } as VitePlugin,
       MocksPlugin(),
@@ -333,6 +333,9 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
   await server.pluginContainer.buildStart({})
 
   if (options.api === true)
+    options.api = defaultPort
+
+  if (options.open && !options.api)
     options.api = defaultPort
 
   if (typeof options.api === 'number')

@@ -64,7 +64,7 @@ function init(ctx: WorkerContext) {
     config,
     rpc: createBirpc<{}, WorkerRPC>({
       functions: {},
-      eventNames: ['onUserLog', 'onCollected', 'onTaskUpdate', 'onWorkerExit'],
+      eventNames: ['onUserLog', 'onCollected', 'onWorkerExit'],
       post(v) { port.postMessage(v) },
       on(fn) { port.addListener('message', fn) },
     }),

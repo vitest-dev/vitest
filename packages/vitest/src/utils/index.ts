@@ -119,8 +119,7 @@ export async function ensurePackageInstalled(
   if (isPackageExists(dependency))
     return true
 
-  // eslint-disable-next-line no-console
-  console.log(c.red(`${c.inverse(c.red(' MISSING DEP '))} Can not find dependency '${dependency}'\n`))
+  process.stderr.write(c.red(`${c.inverse(c.red(' MISSING DEP '))} Can not find dependency '${dependency}'\n\n`))
 
   if (!promptInstall)
     return false

@@ -34,14 +34,16 @@ export abstract class BaseReporter implements Reporter {
     await this.reportSummary(files)
   }
 
-  onTaskUpdate(pack: TaskResultPack) {
+  onTaskUpdate(packs: TaskResultPack[]) {
     if (this.isTTY)
       return
-    const task = this.ctx.state.idMap[pack[0]]
-    if (task.type === 'test' && task.result?.state && task.result?.state !== 'run') {
-      this.ctx.log(` ${getStateSymbol(task)} ${getFullName(task)}`)
-      if (task.result.state === 'fail')
-        this.ctx.log(c.red(`   ${F_RIGHT} ${(task.result.error as any)?.message}`))
+    for (const pack of packs) {
+      const task = this.ctx.state.idMap[pack[0]]
+      if (task.type === 'test' && task.result?.state && task.result?.state !== 'run') {
+        this.ctx.log(` ${getStateSymbol(task)} ${getFullName(task)}`)
+        if (task.result.state === 'fail')
+          this.ctx.log(c.red(`   ${F_RIGHT} ${(task.result.error as any)?.message}`))
+      }
     }
   }
 
@@ -60,11 +62,12 @@ export abstract class BaseReporter implements Reporter {
     }
   }
 
-  async onWatcherRerun(files: string[], trigger: string) {
+  async onWatcherRerun(files: string[], trigger?: string) {
     this.watchFilters = files
 
     this.ctx.console.clear()
-    this.ctx.log(c.blue('Re-running tests...') + c.dim(` [ ${this.relative(trigger)} ]\n`))
+    this.ctx.log(c.blue('Re-running tests...') + (trigger ? c.dim(` [ ${this.relative(trigger)} ]\n`) : ''))
+    this.start = performance.now()
   }
 
   onUserConsoleLog(log: UserConsoleLog) {

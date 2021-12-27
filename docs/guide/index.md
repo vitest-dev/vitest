@@ -19,7 +19,7 @@ $ npm install -D vitest
 ```
 
 :::tip
-Vitest requires Vite v2.7 and Node v14
+Vitest requires Vite >=v2.7 and Node >=v14
 :::
 
 ## Configuring Vitest
