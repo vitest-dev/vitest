@@ -37,8 +37,10 @@ export function setup(ctx: Vitest) {
         getSourceCode(id) {
           return fs.readFile(id, 'utf-8')
         },
-        rerun(files) {
-          return ctx.runFiles(files)
+        async rerun(files) {
+          await ctx.report('onWatcherRerun', files)
+          await ctx.runFiles(files)
+          await ctx.report('onWatcherStart')
         },
         getConfig() {
           return ctx.config
