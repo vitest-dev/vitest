@@ -1,5 +1,12 @@
 // Vitest Snapshot v1
 
+exports[`error serialize > Should skip circular references to prevent hit the call stack limit 1`] = `
+{
+  "toString": "Function<toString>",
+  "whatever": [Circular],
+}
+`;
+
 exports[`error serialize > works 1`] = `
 {
   "fn": "Function<fn>",
