@@ -13,7 +13,7 @@ import { hasFailed, noop, slash, toArray } from '../utils'
 import { MocksPlugin } from '../plugins/mock'
 import { DefaultReporter } from '../reporters/default'
 import { ReportersMap } from '../reporters'
-import { cleanCoverage, prepareCoverage, reportCoverage } from '../coverage'
+import { cleanCoverage, reportCoverage } from '../coverage'
 import type { WorkerPool } from './pool'
 import { StateManager } from './state'
 import { resolveConfig } from './config'
@@ -83,7 +83,7 @@ class Vitest {
     this._onRestartListeners.forEach(fn => fn())
 
     if (resolved.coverage.enabled)
-      await prepareCoverage(resolved.coverage)
+      await cleanCoverage(resolved.coverage, resolved.coverage.clean)
   }
 
   async start(filters?: string[]) {
@@ -321,6 +321,9 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
     server: {
       open: options.open,
       strictPort: true,
+    },
+    build: {
+      sourcemap: true,
     },
     optimizeDeps: {
       exclude: [
