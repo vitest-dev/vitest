@@ -3,8 +3,10 @@ import type { Task } from 'vitest'
 
 withDefaults(defineProps<{
   task: Task
-  indent: number
-}>(), { indent: 0 })
+  indent?: number
+}>(), {
+  indent: 0,
+})
 </script>
 
 <template>

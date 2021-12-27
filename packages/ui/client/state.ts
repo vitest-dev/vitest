@@ -12,9 +12,10 @@ export const files = ref([]) as Ref<File[]>
 
 export const status = ref<WebSocketStatus>('CONNECTING')
 
-client.ws.addEventListener('open', () => {
+client.waitForConnection().then(async() => {
   status.value = 'OPEN'
-  client.rpc.getFiles().then(i => files.value = i)
+  const rawFiles = await client.rpc.getFiles()
+  files.value = rawFiles
 })
 
 client.ws.addEventListener('close', () => {
