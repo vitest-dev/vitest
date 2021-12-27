@@ -96,7 +96,7 @@ export function createWorkerPool(ctx: Vitest): WorkerPool {
   return {
     runTests: runWithFiles('run'),
     collectTests: runWithFiles('collect'),
-    close: () => pool.destroy(),
+    close: async() => {},
   }
 }
 
