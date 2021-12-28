@@ -150,7 +150,7 @@ describe.concurrent("suite", () => {
 
 You can also use `.skip`, `.only`, and `.todo` with concurrent suites and tests. Read more in the [API Reference](../api/#concurrent)
 
-## Snaphot
+## Snapshot
 
 [Jest Snapshot](https://jestjs.io/docs/snapshot-testing) support
 
