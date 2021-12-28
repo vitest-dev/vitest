@@ -57,7 +57,6 @@ In a project where Vitest is installed, you can use the `vitest` binary in your 
     "coverage": "vitest --coverage"
   }
 }
-
 ```
 
 You can specify additional CLI options like `--port` or `--https`. For a full list of CLI options, run `npx vite --help` in your project.
