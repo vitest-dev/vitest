@@ -154,6 +154,8 @@ You can also use `.skip`, `.only`, and `.todo` with concurrent suites and tests.
 
 [Jest Snapshot](https://jestjs.io/docs/snapshot-testing) support
 
+> A shortcut is available on `toMatchInlineSnapshot`, you can use `toMatchInline` instead.
+
 ## Chai and Jest expect compatibility
 
 [Chai](https://www.chaijs.com/) built-in for assertions plus [Jest expect](https://jestjs.io/docs/expect) compatible APIs
