@@ -13,7 +13,9 @@ function resolveMockPath(mockPath: string, root: string, nmName: string | null) 
   // it's a node_module alias
   // all mocks should be inside <root>/__mocks__
   if (nmName) {
-    const mockFolder = resolve(root, '__mocks__')
+    const mockDirname = dirname(nmName) // for nested mocks: @vueuse/integration/useJwt
+    const baseFilename = basename(nmName)
+    const mockFolder = resolve(root, '__mocks__', mockDirname)
 
     if (!existsSync(mockFolder)) return null
 
@@ -21,7 +23,7 @@ function resolveMockPath(mockPath: string, root: string, nmName: string | null) 
 
     for (const file of files) {
       const [basename] = file.split('.')
-      if (basename === nmName)
+      if (basename === baseFilename)
         return resolve(mockFolder, file).replace(root, '')
     }
 
