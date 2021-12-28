@@ -47,7 +47,7 @@
         },
         "background": {
           "activeOnStart": true,
-          "beginsPattern": "vite",
+          "beginsPattern": "dev server running at",
           "endsPattern": "ready in"
         }
       }

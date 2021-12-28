@@ -14,7 +14,7 @@
     "postinstall": "cd test/vue2 && npx pnpm i",
     "lint": "eslint --ext .js,.vue,.ts .",
     "lint:fix": "eslint --ext .js,.vue,.ts . --fix",
-    "release": "bumpp package.json packages/*/package.json --commit --push --tag && pnpm -r publish",
+    "release": "bumpp package.json packages/*/package.json --commit --push --tag && pnpm -r publish --access public",
     "test": "vitest -r test/core --api",
     "test:all": "cross-env CI=true pnpm -r --stream --filter !@vitest/monorepo run test --",
     "test:ci": "cross-env CI=true pnpm -r --stream --filter !@vitest/monorepo --filter !@vitest/test-fails run test --",
@@ -23,7 +23,7 @@
     "ui:dev": "vite packages/ui"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^0.14.1",
+    "@antfu/eslint-config": "^0.14.2",
     "@antfu/ni": "^0.12.0",
     "@rollup/plugin-alias": "^3.1.8",
     "@rollup/plugin-commonjs": "^21.0.1",
