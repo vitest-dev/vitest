@@ -1,5 +1,5 @@
 import { existsSync, readdirSync } from 'fs'
-import { basename, dirname, resolve } from 'pathe'
+import { basename, dirname, join, resolve } from 'pathe'
 import { spies, spyOn } from '../integrations/jest-mock'
 import { mergeSlashes } from '../utils'
 
@@ -127,6 +127,14 @@ export function createMocker(root: string, mockMap: SuiteMocks) {
     })
   }
 
+  // npm resolves as /node_modules, but we store as /@fs/.../node_modules
+  function resolveDependency(dep: string) {
+    if (dep.startsWith('/node_modules/'))
+      return mergeSlashes(`/@fs/${join(root, dep)}`)
+
+    return dep
+  }
+
   return {
     mockPath,
     unmockPath,
@@ -136,5 +144,6 @@ export function createMocker(root: string, mockMap: SuiteMocks) {
     mockObject,
     getSuiteFilepath,
     resolveMockPath,
+    resolveDependency,
   }
 }

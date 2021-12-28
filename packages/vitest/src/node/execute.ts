@@ -83,6 +83,7 @@ export async function executeInViteNode(options: ExecuteOptions) {
     clearMocks,
     unmockPath,
     resolveMockPath,
+    resolveDependency,
   } = createMocker(root, mockMap)
 
   const result = []
@@ -106,7 +107,7 @@ export async function executeInViteNode(options: ExecuteOptions) {
     const request = async(dep: string, canMock = true) => {
       if (canMock) {
         const mocks = mockMap[suite || ''] || {}
-        const mock = mocks[dep]
+        const mock = mocks[resolveDependency(dep)]
         if (typeof mock === 'function')
           return callFunctionMock(dep, mock)
         if (typeof mock === 'string')
