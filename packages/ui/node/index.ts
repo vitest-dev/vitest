@@ -3,8 +3,8 @@ import { resolve } from 'pathe'
 import sirv from 'sirv'
 import type { Plugin } from 'vite'
 
-export default (): Plugin => {
-  return {
+export default () => {
+  return <Plugin>{
     name: 'vitest:ui',
     apply: 'serve',
     async configureServer(server) {
