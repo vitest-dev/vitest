@@ -128,8 +128,8 @@ class VitestUtils {
    * @param item Anything that can be mocked
    * @param deep If the object is deeply mocked
    */
-  public mocked<T>(item: T, deep?: false): MaybeMocked<T>;
-  public mocked<T>(item: T, deep: true): MaybeMockedDeep<T>;
+  public mocked<T>(item: T, deep?: false): MaybeMocked<T>
+  public mocked<T>(item: T, deep: true): MaybeMockedDeep<T>
   public mocked<T>(item: T, _deep = false): MaybeMocked<T> | MaybeMockedDeep<T> {
     return item as any
   }

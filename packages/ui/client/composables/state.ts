@@ -3,13 +3,13 @@ import type { WebSocketStatus } from '@vueuse/core'
 import { reactive } from 'vue'
 import type { ResolvedConfig } from '#types'
 
-export const {
-  file: activeFileIdRef,
-} = toRefs(useUrlSearchParams<{ file: string }>('hash-params', {
+export const params = useUrlSearchParams<{ file: string }>('hash-params', {
   initialValue: {
     file: '',
   },
-}))
+})
+
+export const activeFileIdRef = toRef(params, 'file')
 
 export const ENTRY_URL = 'ws://localhost:51204/__vitest_api__'
 
