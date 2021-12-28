@@ -10,7 +10,7 @@
   },
   "overrides": [
     {
-      "files": "packages/vitest/**/*.ts",
+      "files": "packages/**/*.*",
       "rules": {
         "no-restricted-imports": [
           "error",

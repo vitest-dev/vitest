@@ -38,8 +38,8 @@ export abstract class BaseReporter implements Reporter {
     if (this.isTTY)
       return
     for (const pack of packs) {
-      const task = this.ctx.state.idMap[pack[0]]
-      if (task.type === 'test' && task.result?.state && task.result?.state !== 'run') {
+      const task = this.ctx.state.idMap.get(pack[0])
+      if (task && task.type === 'test' && task.result?.state && task.result?.state !== 'run') {
         this.ctx.log(` ${getStateSymbol(task)} ${getFullName(task)}`)
         if (task.result.state === 'fail')
           this.ctx.log(c.red(`   ${F_RIGHT} ${(task.result.error as any)?.message}`))
@@ -73,7 +73,7 @@ export abstract class BaseReporter implements Reporter {
   onUserConsoleLog(log: UserConsoleLog) {
     if (this.ctx.config.silent)
       return
-    const task = log.taskId ? this.ctx.state.idMap[log.taskId] : undefined
+    const task = log.taskId ? this.ctx.state.idMap.get(log.taskId) : undefined
     this.ctx.log(c.gray(log.type + c.dim(` | ${task ? getFullName(task) : 'unknown test'}`)))
     process[log.type].write(`${log.content}\n`)
   }

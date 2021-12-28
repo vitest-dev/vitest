@@ -53,28 +53,6 @@ export function partitionSuiteChildren(suite: Suite) {
   return tasksGroups
 }
 
-/**
- * If any tasks been marked as `only`, mark all other tasks as `skip`.
- */
-export function interpretOnlyMode(tasks: Task[]) {
-  if (tasks.some(t => t.mode === 'only')) {
-    tasks.forEach((t) => {
-      if (t.mode === 'run')
-        t.mode = 'skip'
-      else if (t.mode === 'only')
-        t.mode = 'run'
-    })
-  }
-  tasks.forEach((t) => {
-    if (t.type === 'suite') {
-      if (t.mode === 'skip')
-        t.tasks.forEach(c => c.mode === 'run' && (c.mode = 'skip'))
-      else
-        interpretOnlyMode(t.tasks)
-    }
-  })
-}
-
 export function getTests(suite: Arrayable<Task>): Test[] {
   return toArray(suite).flatMap(s => s.type === 'test' ? [s] : s.tasks.flatMap(c => c.type === 'test' ? [c] : getTests(c)))
 }

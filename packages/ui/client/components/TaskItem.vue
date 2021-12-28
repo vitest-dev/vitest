@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Task } from 'vitest'
+import type { Task } from '#types'
 
 const props = defineProps<{
   task: Task
@@ -21,8 +21,8 @@ const duration = computed(() => {
     cursor-pointer
     hover="bg-active"
   >
-    <StatusIcon :task="task" mr-2 flex-shrink-0 text-lg />
-    <div flex items-end gap-2>
+    <StatusIcon :task="task" mr-2 />
+    <div flex items-end gap-2 :text="task?.result?.state === 'fail' ? 'red-500' : ''">
       <span text-sm truncate font-light>{{ task.name }}</span>
       <span v-if="task.result?.end" text="xs" op20>
         {{ duration }}ms

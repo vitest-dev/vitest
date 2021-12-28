@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Task } from 'vitest'
+import type { Task } from '#types'
 import { toggleDark } from '~/composables'
 import { activeFileIdRef, client, files } from '~/composables/state'
 

@@ -35,10 +35,11 @@ export function renderTree(tasks: Task[], options: ListRendererOptions, level = 
     let suffix = ''
     const prefix = ` ${getStateSymbol(task)} `
 
-    if (task.mode === 'skip' || task.mode === 'todo')
-      suffix += ` ${c.dim('[skipped]')}`
     if (task.type === 'suite')
       suffix += c.dim(` (${getTests(task).length})`)
+
+    if (task.mode === 'skip' || task.mode === 'todo')
+      suffix += ` ${c.dim(c.gray('[skipped]'))}`
 
     if (task.result?.end) {
       const duration = task.result.end - task.result.start

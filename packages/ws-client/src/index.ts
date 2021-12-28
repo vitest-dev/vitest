@@ -1,7 +1,8 @@
 import type { BirpcReturn } from 'birpc'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
-import type { WebSocketEvents, WebSocketHandlers } from '../../vitest/src/api/types'
+// eslint-disable-next-line no-restricted-imports
+import type { WebSocketEvents, WebSocketHandlers } from 'vitest'
 import { StateManager } from '../../vitest/src/node/state'
 
 export interface VitestClientOptions {
@@ -11,6 +12,7 @@ export interface VitestClientOptions {
   reconnectTries?: number
   reactive?: <T>(v: T) => T
   ref?: <T>(v: T) => { value: T }
+  WebSocketConstructor?: typeof WebSocket
 }
 
 export interface VitestClient {
@@ -28,12 +30,12 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
     reconnectInterval = 2000,
     reconnectTries = 10,
     reactive = v => v,
-    // ref = v => ({ value: v }),
+    WebSocketConstructor = globalThis.WebSocket,
   } = options
 
   let tries = reconnectTries
   const ctx = reactive({
-    ws: new WebSocket(url),
+    ws: new WebSocketConstructor(url),
     state: new StateManager(),
     waitForConnection,
     reconnect,

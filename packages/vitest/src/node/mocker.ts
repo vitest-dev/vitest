@@ -1,5 +1,5 @@
 import { existsSync, readdirSync } from 'fs'
-import { basename, dirname, resolve } from 'pathe'
+import { basename, dirname, join, resolve } from 'pathe'
 import { spies, spyOn } from '../integrations/jest-mock'
 import { mergeSlashes } from '../utils'
 
@@ -13,7 +13,9 @@ function resolveMockPath(mockPath: string, root: string, nmName: string | null) 
   // it's a node_module alias
   // all mocks should be inside <root>/__mocks__
   if (nmName) {
-    const mockFolder = resolve(root, '__mocks__')
+    const mockDirname = dirname(nmName) // for nested mocks: @vueuse/integration/useJwt
+    const baseFilename = basename(nmName)
+    const mockFolder = resolve(root, '__mocks__', mockDirname)
 
     if (!existsSync(mockFolder)) return null
 
@@ -21,7 +23,7 @@ function resolveMockPath(mockPath: string, root: string, nmName: string | null) 
 
     for (const file of files) {
       const [basename] = file.split('.')
-      if (basename === nmName)
+      if (basename === baseFilename)
         return resolve(mockFolder, file).replace(root, '')
     }
 
@@ -125,6 +127,14 @@ export function createMocker(root: string, mockMap: SuiteMocks) {
     })
   }
 
+  // npm resolves as /node_modules, but we store as /@fs/.../node_modules
+  function resolveDependency(dep: string) {
+    if (dep.startsWith('/node_modules/'))
+      return mergeSlashes(`/@fs/${join(root, dep)}`)
+
+    return dep
+  }
+
   return {
     mockPath,
     unmockPath,
@@ -134,5 +144,6 @@ export function createMocker(root: string, mockMap: SuiteMocks) {
     mockObject,
     getSuiteFilepath,
     resolveMockPath,
+    resolveDependency,
   }
 }
