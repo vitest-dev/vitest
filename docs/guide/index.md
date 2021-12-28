@@ -57,9 +57,122 @@ In a project where Vitest is installed, you can use the `vitest` binary in your 
     "coverage": "vitest --coverage"
   }
 }
+
 ```
 
-You can specify additional CLI options like `--port` or `--https`. For a full list of CLI options, run `npx vite --help` in your project.
+You can specify additional CLI options like `--port` or `--https`.
+
+### All avaible commands
+
+- [`run`](#run)
+- [`watch`](#watch)
+- [`dev`](#dev)
+
+#### run
+
+Run all test suites.
+
+#### watch
+
+run all test suites but watch for changes and rerun tests when they change.
+
+#### dev
+
+Run vites in development mode.
+
+### All available options
+
+
+- [`--api`](#api)
+- [`--threads`](#threads)
+- [`--port`](#port)
+- [`--reporter <name>`](#reporter)
+- [`--coverage`](#coverage)
+- [`--run`](#run)
+- [`--global`](#global)
+- [`--dom`](#--dom)
+- [`--environment`](#environment)
+- [`--passWithNoTests`](#passWithNoTests)
+- [`--help`](#help)
+- [`--version`](#version)
+- [`--root`](#root)
+- [`--config`](#config)
+- [`--update`](#update)
+- [`--watch`](#watch)
+- [`--open`](#open)
+
+
+#### `--api`
+
+listen to port and serve API
+
+#### `--threads`
+
+enabled threads (default: true)
+
+#### `--port`
+
+silent console.log output from tests.
+
+#### `--reporter <name>`
+
+reporter.
+
+#### `--coverage`
+
+use c8 for coverage.
+
+#### `--run`
+
+do not watch.
+
+#### `--global`
+
+inject apis globally.
+
+#### `--dom`
+
+mock browser api with happy-dom.
+
+#### `--environment`
+
+runner environment (default: node)
+
+#### `--passWithNoTests`
+
+pass when no tests found.
+
+#### `--help`
+
+display this message.
+
+#### `--version`
+
+display version number.
+
+#### `--root`
+
+use this `--root <path>`  for the project
+
+
+#### `--config`
+
+use `--config <path>  ` to specify the path to the test file you want to run
+
+#### `--update`
+
+update snapshot
+
+#### `--watch`
+
+Run tests in watch mode
+
+#### `--open`
+
+open Vitest UI
+
+
+
 
 ## Examples
 
