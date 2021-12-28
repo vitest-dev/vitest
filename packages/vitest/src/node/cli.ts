@@ -113,12 +113,17 @@ async function run(cliFilters: string[], options: UserConfig) {
 
 function closeServerAndExitProcess(ctx: Vitest) {
   const closePromise = ctx.close()
+  let timeout: NodeJS.Timeout
   const timeoutPromise = new Promise((resolve, reject) => {
-    setTimeout(() => reject(new Error(`close timed out after ${CLOSE_TIMEOUT}ms`)), CLOSE_TIMEOUT).unref()
+    timeout = setTimeout(() => reject(new Error(`close timed out after ${CLOSE_TIMEOUT}ms`)), CLOSE_TIMEOUT)
   })
   Promise.race([closePromise, timeoutPromise]).then(
-    () => process.exit(0),
+    () => {
+      clearTimeout(timeout)
+      process.exit(0)
+    },
     (err) => {
+      clearTimeout(timeout)
       console.error('error during close', err)
       process.exit(1)
     },
