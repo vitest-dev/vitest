@@ -59,7 +59,7 @@ In a project where Vitest is installed, you can use the `vitest` binary in your 
 }
 ```
 
-You can specify additional CLI options like `--port` or `--https`. For a full list of CLI options, run `npx vite --help` in your project.
+You can specify additional CLI options like `--port` or `--https`. For a full list of CLI options, run `npx vitest --help` in your project.
 
 ## Examples
 
