@@ -27,23 +27,55 @@
     {
       "type": "npm",
       "script": "ui:dev",
-      "problemMatcher": [],
       "label": "npm: ui",
       "isBackground": true,
-      "dependsOn": ["npm: dev"]
-    },
-    {
-      "type": "npm",
-      "script": "test",
+      "dependsOn": ["npm: test"],
       "group": {
         "kind": "build",
         "isDefault": true
       },
-      "problemMatcher": [],
+      "problemMatcher": {
+        "owner": "typescript",
+        "fileLocation": "relative",
+        "pattern": {
+          "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "message": 5
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "vite",
+          "endsPattern": "ready in"
+        }
+      }
+    },
+    {
+      "type": "npm",
+      "script": "test",
       "label": "npm: test",
       "isBackground": true,
       "dependsOn": ["npm: dev"],
-      "detail": "vitest -r test/core --api"
+      "detail": "vitest -r test/core --api",
+      "problemMatcher": {
+        "owner": "typescript",
+        "fileLocation": "relative",
+        "pattern": {
+          "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "message": 5
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "WATCH",
+          "endsPattern": "Waiting for"
+        }
+      }
     },
     {
       "type": "npm",
