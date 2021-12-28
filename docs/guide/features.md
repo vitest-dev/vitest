@@ -154,7 +154,9 @@ You can also use `.skip`, `.only`, and `.todo` with concurrent suites and tests.
 
 [Jest Snapshot](https://jestjs.io/docs/snapshot-testing) support
 
-> A shortcut is available on `toMatchInlineSnapshot`, you can use `toMatchInline` instead.
+:::tip
+Instead of `toMatchInlineSnapshot`, you can also use `toMatchInline`.
+:::
 
 ## Chai and Jest expect compatibility
 
