@@ -37,6 +37,8 @@ class Vitest {
   changedTests: Set<string> = new Set()
   visitedFilesMap: Map<string, RawSourceMap> = new Map()
   runningPromise?: Promise<void>
+  closingPromise?: Promise<void>
+
   isFirstRun = true
 
   restartsCount = 0
@@ -248,8 +250,17 @@ class Vitest {
   }
 
   async close() {
-    await this.pool?.close()
-    await this.server.close()
+    if (!this.closingPromise) {
+      this.closingPromise = Promise.allSettled([
+        this.pool?.close(),
+        this.server.close(),
+      ].filter(Boolean)).then((results) => {
+        results.filter(r => r.status === 'rejected').forEach((err) => {
+          this.error('error during close', (err as PromiseRejectedResult).reason)
+        })
+      })
+    }
+    return this.closingPromise
   }
 
   async report<T extends keyof Reporter>(name: T, ...args: ArgumentsType<Reporter[T]>) {
