@@ -44,6 +44,7 @@ declare global {
       // Snapshot
       toMatchSnapshot(message?: string): Assertion
       toMatchInlineSnapshot(snapshot?: string, message?: string): Assertion
+      toMatchInline(snapshot?: string, message?: string): Assertion
       matchSnapshot(message?: string): Assertion
 
       // Jest compact

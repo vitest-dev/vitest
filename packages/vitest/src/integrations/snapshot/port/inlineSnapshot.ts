@@ -33,7 +33,7 @@ export async function saveInlineSnapshots(
   }))
 }
 
-const startRegex = /toMatchInlineSnapshot\s*\(\s*(['"`\)])/m
+const startRegex = /toMatchInline(?:Snapshot)?\s*\(\s*(['"`\)])/m
 export function replaceInlineSnap(code: string, s: MagicString, index: number, newSnap: string, indent = '') {
   const startMatch = startRegex.exec(code.slice(index))
   if (!startMatch)
