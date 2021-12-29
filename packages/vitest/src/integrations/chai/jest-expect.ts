@@ -343,8 +343,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const pass = asymmetricEquals(lastResult, value)
     this.assert(
       pass,
-      `expected last "${spyName}" spy call to return #{exp}`,
-      `expected last "${spyName}" spy call to not return #{exp}`,
+      `expected last spy "${spyName}" call to return #{exp}`,
+      `expected last spy "${spyName}" call to not return #{exp}`,
       value,
       lastResult,
     )
