@@ -82,8 +82,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
           asymmetricEquals(actual, expected),
           'not match with #{exp}',
           'should not match with #{exp}',
-          actual,
           expected,
+          actual,
         )
       }
       else {
@@ -97,11 +97,25 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   })
 
   def('toStrictEqual', function(expected) {
-    return (
-      iterableEquality(this, expected)
-      ?? typeEquality(this, expected)
-      ?? sparseArrayEquality(this, expected)
-      ?? arrayBufferEquality(this, expected)
+    const obj = utils.flag(this, 'object')
+    const equal = asymmetricEquals(
+      obj,
+      expected,
+      [
+        iterableEquality,
+        typeEquality,
+        sparseArrayEquality,
+        arrayBufferEquality,
+      ],
+      true,
+    )
+
+    return this.assert(
+      equal,
+      'expected #{this} to strictly equal #{exp}',
+      'expected #{this} to not strictly equal #{exp}',
+      expected,
+      obj,
     )
   })
   def('toBe', function(expected) {

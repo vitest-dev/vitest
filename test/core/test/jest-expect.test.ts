@@ -87,8 +87,8 @@ describe('jest-expect', () => {
 
   it('object', () => {
     expect({}).toEqual({})
+    expect({}).toStrictEqual({})
     expect({}).not.toBe({})
-    expect({}).not.toStrictEqual({})
 
     const foo = {}
     const complex = { foo: 1, bar: { foo: 'foo', bar: 100, arr: ['first', { zoo: 'monkey' }] } }
