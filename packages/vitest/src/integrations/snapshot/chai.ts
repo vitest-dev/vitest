@@ -12,7 +12,6 @@ export function getSnapshotClient(): SnapshotClient {
 const getErrorString = (expected: () => void) => {
   try {
     expected()
-    throw new Error('snapshot function didn\'t threw')
   }
   catch (e) {
     if (e instanceof Error)
@@ -20,6 +19,8 @@ const getErrorString = (expected: () => void) => {
 
     return e
   }
+
+  throw new Error('snapshot function didn\'t threw')
 }
 
 export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
