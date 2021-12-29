@@ -1,9 +1,6 @@
-
 # Mocking Requests
 
-When it comes to mocking network requests, we recommend you using [Mock Service Worker](https://mswjs.io/).
-
-You can mock both REST and GraphQL APIs using Mock Service Worker. It is also framework agnostic!
+When it comes to mocking network requests, we recommend you using [Mock Service Worker](https://mswjs.io/). You can mock both REST and GraphQL APIs using Mock Service Worker. It is also framework agnostic!
 
 ## Why
 
@@ -52,7 +49,7 @@ import { handlers } from './handlers'
 export const server = setupServer(...handlers)
 ```
 
-3. The last step is just to start the server! 
+3. The last step is just to start the server!
 
 Starting and closing the server is done in a setup file which runs everytime before the tests.
 
