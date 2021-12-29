@@ -1,4 +1,5 @@
 import type { EnhancedSpy } from '../jest-mock'
+import { addSerializer } from '../snapshot/port/plugins'
 import type { ChaiPlugin } from './types'
 import { arrayBufferEquality, equals as asymmetricEquals, hasAsymmetric, iterableEquality, sparseArrayEquality, typeEquality } from './jest-utils'
 
@@ -477,5 +478,11 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         isExpectingAssertionsError: error,
       })
     },
+  )
+
+  utils.addMethod(
+    chai.expect,
+    'addSnapshotSerializer',
+    addSerializer,
   )
 }
