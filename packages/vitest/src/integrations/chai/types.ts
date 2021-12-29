@@ -30,7 +30,7 @@ export type MatcherState = {
   expectedAssertionsNumber?: number | null
   expectedAssertionsNumberError?: Error | null
   isExpectingAssertions?: boolean
-  isExpectingAssertionsError?: Error
+  isExpectingAssertionsError?: Error | null
   isNot: boolean
   promise: string
   suppressedErrors: Array<Error>
