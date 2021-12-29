@@ -80,6 +80,7 @@ $ npx vitest
 - [unplugin-auto-import](https://github.com/antfu/unplugin-auto-import)
 - [unplugin-vue-components](https://github.com/antfu/unplugin-vue-components)
 - [vitesse-lite](https://github.com/antfu/vitesse-lite)
+- [fluent-vue](https://github.com/demivan/fluent-vue)
 
 ## Sponsors
 

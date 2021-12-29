@@ -6,7 +6,7 @@ import type { createListRenderer } from './renderers/listRenderer'
 export class DotReporter extends BaseReporter {
   renderer?: ReturnType<typeof createListRenderer>
 
-  onStart() {
+  onCollected() {
     if (this.isTTY) {
       const files = this.ctx.state.getFiles(this.watchFilters)
       if (!this.renderer)
@@ -33,7 +33,7 @@ export class DotReporter extends BaseReporter {
     await new Promise(resolve => setTimeout(resolve, 10))
   }
 
-  async onWatcherRerun(files: string[], trigger: string) {
+  async onWatcherRerun(files: string[], trigger?: string) {
     await this.stopListRender()
     await super.onWatcherRerun(files, trigger)
   }

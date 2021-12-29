@@ -7,7 +7,7 @@ import { F_CHECK, F_CROSS, F_DOT, F_DOWN, F_DOWN_RIGHT, F_LONG_DASH, F_POINTER }
 
 export const spinnerMap = new WeakMap<Task, () => string>()
 export const pointer = c.yellow(F_POINTER)
-export const skipped = c.yellow(F_DOWN)
+export const skipped = c.dim(c.gray(F_DOWN))
 
 export function getCols(delta = 0) {
   let length = process.stdout.columns

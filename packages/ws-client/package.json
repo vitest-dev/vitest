@@ -1,6 +1,7 @@
 {
   "name": "@vitest/ws-client",
-  "private": true,
+  "version": "0.0.120",
+  "description": "WebSocket client wrapper for communicating with Vitest",
   "homepage": "https://github.com/antfu/vitest#readme",
   "bugs": {
     "url": "https://github.com/antfu/vitest/issues"

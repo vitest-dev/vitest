@@ -17,14 +17,6 @@ const resolveSnapshotPath = (testPath: string) =>
     `${path.basename(testPath)}.snap`,
   )
 
-// TODO: remove extra snapshot state
-// const resolveTestPath = (snapshotPath: string) =>
-//   path.resolve(
-//     path.dirname(snapshotPath),
-//     '..',
-//     path.basename(snapshotPath, '.snap'),
-//   )
-
 export class SnapshotClient {
   test: Test | undefined
   testFile = ''

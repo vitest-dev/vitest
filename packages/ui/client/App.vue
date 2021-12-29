@@ -1,6 +1,3 @@
 <template>
-  <div flex>
-    <Navigation />
-    <Suites />
-  </div>
+  <RouterView />
 </template>

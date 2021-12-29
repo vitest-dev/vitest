@@ -1,6 +1,6 @@
-import type { Spy } from 'tinyspy'
+import type { EnhancedSpy } from '../jest-mock'
 import type { ChaiPlugin } from './types'
-import { equals as asymmetricEquals, hasAsymmetric } from './jest-utils'
+import { arrayBufferEquality, equals as asymmetricEquals, hasAsymmetric, iterableEquality, sparseArrayEquality, typeEquality } from './jest-utils'
 
 type MatcherState = {
   assertionCalls: number
@@ -82,8 +82,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
           asymmetricEquals(actual, expected),
           'not match with #{exp}',
           'should not match with #{exp}',
-          actual,
           expected,
+          actual,
         )
       }
       else {
@@ -97,7 +97,26 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   })
 
   def('toStrictEqual', function(expected) {
-    return this.chaiEqual(expected)
+    const obj = utils.flag(this, 'object')
+    const equal = asymmetricEquals(
+      obj,
+      expected,
+      [
+        iterableEquality,
+        typeEquality,
+        sparseArrayEquality,
+        arrayBufferEquality,
+      ],
+      true,
+    )
+
+    return this.assert(
+      equal,
+      'expected #{this} to strictly equal #{exp}',
+      'expected #{this} to not strictly equal #{exp}',
+      expected,
+      obj,
+    )
   })
   def('toBe', function(expected) {
     return this.equal(expected)
@@ -200,45 +219,49 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   }
   const getSpy = (assertion: any) => {
     assertIsMock(assertion)
-    return assertion._obj as Spy
+    return assertion._obj as EnhancedSpy
   }
   def(['toHaveBeenCalledTimes', 'toBeCalledTimes'], function(number: number) {
     const spy = getSpy(this)
+    const spyName = spy.getMockName()
     return this.assert(
       spy.callCount === number,
-      'expected spy to be called #{exp} times',
-      'expected spy to not be called #{exp} times',
+      `expected "${spyName}" to be called #{exp} times`,
+      `expected "${spyName}" to not be called #{exp} times`,
       number,
       spy.callCount,
     )
   })
   def('toHaveBeenCalledOnce', function() {
     const spy = getSpy(this)
+    const spyName = spy.getMockName()
     return this.assert(
       spy.callCount === 1,
-      'expected spy to be called once',
-      'expected spy to not be called once',
+      `expected "${spyName}" to be called once`,
+      `expected "${spyName}" to not be called once`,
       1,
       spy.callCount,
     )
   })
   def(['toHaveBeenCalled', 'toBeCalled'], function() {
     const spy = getSpy(this)
+    const spyName = spy.getMockName()
     return this.assert(
       spy.called,
-      'expected spy to be called at least once',
-      'expected spy to not be called at all',
+      `expected "${spyName}" to be called at least once`,
+      `expected "${spyName}" to not be called at all`,
       true,
       spy.called,
     )
   })
   def(['toHaveBeenCalledWith', 'toBeCalledWith'], function(...args) {
     const spy = getSpy(this)
+    const spyName = spy.getMockName()
     const pass = spy.calls.some(callArg => asymmetricEquals(callArg, args))
     return this.assert(
       pass,
-      'expected spy to be called with arguments: #{exp}',
-      'expected spy to not be called with arguments: #{exp}',
+      `expected "${spyName}" to be called with arguments: #{exp}`,
+      `expected "${spyName}" to not be called with arguments: #{exp}`,
       args,
       spy.calls,
     )
@@ -260,24 +283,26 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   }
   def(['toHaveBeenNthCalledWith', 'nthCalledWith'], function(times: number, ...args: any[]) {
     const spy = getSpy(this)
+    const spyName = spy.getMockName()
     const nthCall = spy.calls[times - 1]
 
     this.assert(
       asymmetricEquals(nthCall, args),
-      `expected ${ordinalOf(times)} spy call to have been called with #{exp}`,
-      `expected ${ordinalOf(times)} spy call to not have been called with #{exp}`,
+      `expected ${ordinalOf(times)} "${spyName}" call to have been called with #{exp}`,
+      `expected ${ordinalOf(times)} "${spyName}" call to not have been called with #{exp}`,
       args,
       nthCall,
     )
   })
   def(['toHaveBeenLastCalledWith', 'lastCalledWith'], function(...args: any[]) {
     const spy = getSpy(this)
+    const spyName = spy.getMockName()
     const lastCall = spy.calls[spy.calls.length - 1]
 
     this.assert(
       asymmetricEquals(lastCall, args),
-      'expected last spy call to have been called with #{exp}',
-      'expected last spy call to not have been called with #{exp}',
+      `expected last "${spyName}" call to have been called with #{exp}`,
+      `expected last "${spyName}" call to not have been called with #{exp}`,
       args,
       lastCall,
     )
@@ -292,50 +317,55 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   })
   def(['toHaveReturned', 'toReturn'], function() {
     const spy = getSpy(this)
+    const spyName = spy.getMockName()
     const calledAndNotThrew = spy.called && !spy.results.some(([type]) => type === 'error')
     this.assert(
       calledAndNotThrew,
-      'expected spy to be successfully called at least once',
-      'expected spy to not be successfully called',
+      `expected "${spyName}" to be successfully called at least once`,
+      `expected "${spyName}" to not be successfully called`,
       calledAndNotThrew,
       !calledAndNotThrew,
     )
   })
   def(['toHaveReturnedTimes', 'toReturnTimes'], function(times: number) {
     const spy = getSpy(this)
+    const spyName = spy.getMockName()
     const successfullReturns = spy.results.reduce((success, [type]) => type === 'error' ? success : ++success, 0)
     this.assert(
       successfullReturns === times,
-      `expected spy to be successfully called ${times} times`,
-      `expected spy to not be successfully called ${times} times`,
+      `expected "${spyName}" to be successfully called ${times} times`,
+      `expected "${spyName}" to not be successfully called ${times} times`,
       `expected number of returns: ${times}`,
       `received number of returns: ${successfullReturns}`,
     )
   })
   def(['toHaveReturnedWith', 'toReturnWith'], function(value: any) {
     const spy = getSpy(this)
+    const spyName = spy.getMockName()
     const pass = spy.results.some(([type, result]) => type === 'ok' && asymmetricEquals(value, result))
     this.assert(
       pass,
-      'expected spy to be successfully called with #{exp}',
-      'expected spy to not be successfully called with #{exp}',
+      `expected "${spyName}" to be successfully called with #{exp}`,
+      `expected "${spyName}" to not be successfully called with #{exp}`,
       value,
     )
   })
   def(['toHaveLastReturnedWith', 'lastReturnedWith'], function(value: any) {
     const spy = getSpy(this)
+    const spyName = spy.getMockName()
     const lastResult = spy.returns[spy.returns.length - 1]
     const pass = asymmetricEquals(lastResult, value)
     this.assert(
       pass,
-      'expected last spy call to return #{exp}',
-      'expected last spy call to not return #{exp}',
+      `expected last "${spyName}" call to return #{exp}`,
+      `expected last "${spyName}" call to not return #{exp}`,
       value,
       lastResult,
     )
   })
   def(['toHaveNthReturnedWith', 'nthReturnedWith'], function(nthCall: number, value: any) {
     const spy = getSpy(this)
+    const spyName = spy.getMockName()
     const isNot = utils.flag(this, 'negate') as boolean
     const [callType, callResult] = spy.results[nthCall - 1]
     const ordinalCall = `${ordinalOf(nthCall)} call`
@@ -347,8 +377,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
 
     this.assert(
       nthCallReturn,
-      `expected ${ordinalCall} spy call to return #{exp}`,
-      `expected ${ordinalCall} spy call to not return #{exp}`,
+      `expected ${ordinalCall} "${spyName}" call to return #{exp}`,
+      `expected ${ordinalCall} "${spyName}" call to not return #{exp}`,
       value,
       callResult,
     )

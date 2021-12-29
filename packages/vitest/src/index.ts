@@ -5,11 +5,13 @@ import type { InlineConfig } from './types'
 type VitestInlineConfig = InlineConfig
 
 export { suite, test, describe, it } from './runtime/suite'
-export * from './types'
 export * from './runtime/hooks'
 export * from './integrations/chai'
 export * from './integrations/jest-mock'
 export * from './integrations/vi'
+
+export * from './types'
+export * from './api/types'
 
 export type { Spy, SpyFn } from 'tinyspy'
 

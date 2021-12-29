@@ -1,3 +1,5 @@
+/* eslint-disable comma-spacing */
+/* eslint-disable no-sparse-arrays */
 import { describe, expect, it } from 'vitest'
 
 describe('jest-expect', () => {
@@ -85,8 +87,8 @@ describe('jest-expect', () => {
 
   it('object', () => {
     expect({}).toEqual({})
+    expect({}).toStrictEqual({})
     expect({}).not.toBe({})
-    expect({}).not.toStrictEqual({})
 
     const foo = {}
     const complex = { foo: 1, bar: { foo: 'foo', bar: 100, arr: ['first', { zoo: 'monkey' }] } }
@@ -120,6 +122,141 @@ describe('jest-expect', () => {
     expect(1).toBe(1)
     expect(1).toBe(1)
     expect(1).toBe(1)
+  })
+
+  // https://jestjs.io/docs/expect#tostrictequalvalue
+
+  class LaCroix {
+    constructor(public flavor) {}
+  }
+
+  describe('the La Croix cans on my desk', () => {
+    it('are not semantically the same', () => {
+      expect(new LaCroix('lemon')).toEqual({ flavor: 'lemon' })
+      expect(new LaCroix('lemon')).not.toStrictEqual({ flavor: 'lemon' })
+    })
+  })
+
+  it('array', () => {
+    expect([]).toEqual([])
+    expect([]).not.toBe([])
+    expect([]).toStrictEqual([])
+
+    const foo = []
+
+    expect(foo).toBe(foo)
+    expect(foo).toStrictEqual(foo)
+
+    const complex = [
+      {
+        foo: 1,
+        bar: { foo: 'foo', bar: 100, arr: ['first', { zoo: 'monkey' }] },
+      },
+    ]
+    expect(complex).toStrictEqual([
+      {
+        foo: 1,
+        bar: { foo: 'foo', bar: 100, arr: ['first', { zoo: 'monkey' }] },
+      },
+    ])
+  })
+})
+
+describe('.toStrictEqual()', () => {
+  class TestClassA {
+    constructor(public a, public b) {}
+  }
+
+  class TestClassB {
+    constructor(public a, public b) {}
+  }
+
+  const TestClassC = class Child extends TestClassA {
+    constructor(a, b) {
+      super(a, b)
+    }
+  }
+
+  const TestClassD = class Child extends TestClassB {
+    constructor(a, b) {
+      super(a, b)
+    }
+  }
+
+  it('does not ignore keys with undefined values', () => {
+    expect({
+      a: undefined,
+      b: 2,
+    }).not.toStrictEqual({ b: 2 })
+  })
+
+  it('does not ignore keys with undefined values inside an array', () => {
+    expect([{ a: undefined }]).not.toStrictEqual([{}])
+  })
+
+  it('does not ignore keys with undefined values deep inside an object', () => {
+    expect([{ a: [{ a: undefined }] }]).not.toStrictEqual([{ a: [{}] }])
+  })
+
+  it('does not consider holes as undefined in sparse arrays', () => {
+    expect([, , , 1, , ,]).not.toStrictEqual([, , , 1, undefined, ,])
+  })
+
+  it('passes when comparing same type', () => {
+    expect({
+      test: new TestClassA(1, 2),
+    }).toStrictEqual({ test: new TestClassA(1, 2) })
+  })
+
+  it('does not pass for different types', () => {
+    expect({
+      test: new TestClassA(1, 2),
+    }).not.toStrictEqual({ test: new TestClassB(1, 2) })
+  })
+
+  it('does not simply compare constructor names', () => {
+    const c = new TestClassC(1, 2)
+    const d = new TestClassD(1, 2)
+    expect(c.constructor.name).toEqual(d.constructor.name)
+    expect({ test: c }).not.toStrictEqual({ test: d })
+  })
+
+  it('passes for matching sparse arrays', () => {
+    expect([, 1]).toStrictEqual([, 1])
+  })
+
+  it('does not pass when sparseness of arrays do not match', () => {
+    expect([, 1]).not.toStrictEqual([undefined, 1])
+    expect([undefined, 1]).not.toStrictEqual([, 1])
+    expect([, , , 1]).not.toStrictEqual([, 1])
+  })
+
+  it('does not pass when equally sparse arrays have different values', () => {
+    expect([, 1]).not.toStrictEqual([, 2])
+  })
+
+  it('does not pass when ArrayBuffers are not equal', () => {
+    expect(Uint8Array.from([1, 2]).buffer).not.toStrictEqual(
+      Uint8Array.from([0, 0]).buffer,
+    )
+    expect(Uint8Array.from([2, 1]).buffer).not.toStrictEqual(
+      Uint8Array.from([2, 2]).buffer,
+    )
+    expect(Uint8Array.from([]).buffer).not.toStrictEqual(
+      Uint8Array.from([1]).buffer,
+    )
+  })
+
+  it('passes for matching buffers', () => {
+    expect(Uint8Array.from([1]).buffer).toStrictEqual(
+      Uint8Array.from([1]).buffer,
+    )
+    expect(Uint8Array.from([]).buffer).toStrictEqual(
+      Uint8Array.from([]).buffer,
+    )
+    expect(Uint8Array.from([9, 3]).buffer).toStrictEqual(
+      Uint8Array.from([9, 3]).buffer,
+    )
   })
 })
 

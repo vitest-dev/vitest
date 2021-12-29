@@ -1,29 +1,36 @@
 <script setup lang="ts">
-import { current } from '~/state'
+import { client, current } from '~/composables/state'
+
+const name = computed(() => current.value?.name.split(/\//g).pop())
+
+function run() {
+  if (current.value?.filepath)
+    client.rpc.rerun([current.value.filepath])
+}
 </script>
 
 <template>
-  <div v-if="current" overflow-auto w-72>
-    <div
-      h-8
-      px-4
-      flex
-      flex-row
-      items-center
-      bg-gray-200
-      dark:bg-dark-300
-      gap-4
+  <div v-if="current" overflow-auto border="r base">
+    <TasksList
+      :tasks="current.tasks"
+      :nested="true"
     >
-      <span font-light text-sm flex-1>
-        {{ current.name }}
-      </span>
-      <button i-carbon-play />
-    </div>
-
-    <test-suite
-      v-for="suite in current.tasks"
-      :key="suite.id"
-      :task="suite"
-    />
+      <template #header>
+        <StatusIcon :task="current" />
+        <span
+          font-light
+          text-sm
+          flex-auto
+          ws-nowrap
+          overflow-hidden
+          truncate
+        >
+          {{ name }}
+        </span>
+        <div class="flex text-lg">
+          <IconButton icon="i-carbon-play" @click="run()" />
+        </div>
+      </template>
+    </TasksList>
   </div>
 </template>

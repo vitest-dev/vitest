@@ -104,7 +104,7 @@ export function resolveC8Options(options: C8Options, root: string): ResolvedC8Op
     reportsDirectory: './coverage',
     excludeNodeModules: true,
     exclude: defaultExcludes,
-    reporter: 'text',
+    reporter: ['text', 'html'],
     allowExternal: false,
     ...options as any,
   }
@@ -118,17 +118,10 @@ export function resolveC8Options(options: C8Options, root: string): ResolvedC8Op
 
 export async function cleanCoverage(options: ResolvedC8Options, clean = true) {
   if (clean && existsSync(options.reportsDirectory))
-    await fs.rmdir(options.reportsDirectory, { recursive: true })
+    await fs.rm(options.reportsDirectory, { recursive: true, force: true })
 
   if (!existsSync(options.tempDirectory))
     await fs.mkdir(options.tempDirectory, { recursive: true })
-}
-
-export async function prepareCoverage(options: ResolvedC8Options) {
-  if (options.enabled)
-    return false
-
-  await cleanCoverage(options, options.clean)
 }
 
 const require = createRequire(import.meta.url)
@@ -143,14 +136,12 @@ export async function reportCoverage(ctx: Vitest) {
     .from(ctx.visitedFilesMap.entries())
     .filter(i => !i[0].includes('/node_modules/'))
     .forEach(([file, map]) => {
-      if (!existsSync(file))
-        return
       const url = pathToFileURL(file).href
+      const sources = map.sources.length
+        ? map.sources.map(i => pathToFileURL(i).href)
+        : [url]
       report.sourceMapCache[url] = {
-        data: {
-          ...map,
-          sources: map.sources.map(i => pathToFileURL(i).href) || [url],
-        },
+        data: { ...map, sources },
       }
     })
 
