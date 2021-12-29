@@ -377,6 +377,61 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     )
   })
 
+  utils.addProperty(chai.Assertion.prototype, 'resolves', function(this: any) {
+    utils.flag(this, 'promise', 'resolves')
+    const obj = utils.flag(this, 'object')
+    const proxy: any = new Proxy(this, {
+      get: (target, key, reciever) => {
+        const result = Reflect.get(target, key, reciever)
+
+        if (typeof result !== 'function')
+          return result instanceof chai.Assertion ? proxy : result
+
+        return async(...args: any[]) => {
+          return obj.then(
+            (value: any) => {
+              utils.flag(this, 'object', value)
+              return result.call(this, ...args)
+            },
+            (err: any) => {
+              throw new Error(`promise rejected ${err} instead of resolving`)
+            },
+          )
+        }
+      },
+    })
+
+    return proxy
+  })
+
+  utils.addProperty(chai.Assertion.prototype, 'rejects', function(this: any) {
+    utils.flag(this, 'promise', 'rejects')
+    const obj = utils.flag(this, 'object')
+    const wrapper = typeof obj === 'function' ? obj() : obj
+    const proxy: any = new Proxy(this, {
+      get: (target, key, reciever) => {
+        const result = Reflect.get(target, key, reciever)
+
+        if (typeof result !== 'function')
+          return result instanceof chai.Assertion ? proxy : result
+
+        return async(...args: any[]) => {
+          return wrapper.then(
+            (value: any) => {
+              throw new Error(`promise resolved ${value} instead of rejecting`)
+            },
+            (err: any) => {
+              utils.flag(this, 'object', err)
+              return result.call(this, ...args)
+            },
+          )
+        }
+      },
+    })
+
+    return proxy
+  })
+
   utils.addMethod(
     chai.expect,
     'assertions',

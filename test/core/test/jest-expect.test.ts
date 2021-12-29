@@ -281,4 +281,31 @@ describe('.toStrictEqual()', () => {
   })
 })
 
+describe('async expect', () => {
+  it('resolves', async() => {
+    await expect((async() => 'true')()).resolves.toBe('true')
+    await expect((async() => 'true')()).resolves.not.toBe('true22')
+  })
+
+  it.fails('failed to resolve', async() => {
+    await expect((async() => {
+      throw new Error('err')
+    })()).resolves.toBe('true')
+  })
+
+  it('rejects', async() => {
+    await expect((async() => {
+      throw new Error('err')
+    })()).rejects.toStrictEqual(new Error('err'))
+
+    await expect((async() => {
+      throw new Error('err')
+    })()).rejects.not.toStrictEqual(new Error('fake err'))
+  })
+
+  it.fails('failed to reject', async() => {
+    await expect((async() => 'test')()).rejects.toBe('test')
+  })
+})
+
 it('timeout', () => new Promise(resolve => setTimeout(resolve, 500)))

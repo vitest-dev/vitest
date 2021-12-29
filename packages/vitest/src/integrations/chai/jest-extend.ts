@@ -21,6 +21,7 @@ const isAsyncFunction = (fn: unknown) =>
 const getMatcherState = (assertion: Chai.AssertionStatic & Chai.Assertion) => {
   const actual = assertion._obj
   const isNot = util.flag(assertion, 'negate') as boolean
+  const promise = util.flag(assertion, 'promise', 'resolves') || ''
   const jestUtils = {
     ...matcherUtils,
     iterableEquality,
@@ -30,7 +31,7 @@ const getMatcherState = (assertion: Chai.AssertionStatic & Chai.Assertion) => {
   const matcherState: MatcherState = {
     isNot,
     utils: jestUtils,
-    promise: '',
+    promise,
     equals,
     ...getState(),
     // needed for built-in jest-snapshots, but we don't use it
