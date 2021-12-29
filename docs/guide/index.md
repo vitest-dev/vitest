@@ -95,6 +95,7 @@ Run vitest in development mode.
 | `--run` | Do not watch |
 | `--global` | Inject APIs globally |
 | `--dom` | Mock browser api with happy-dom |
+| `--findRelatedTests <filepath>` | Run only tests that import specified file |
 | `--environment <env>` | Runner environment (default: node) |
 | `--passWithNoTests` | Pass when no tests found |
 | `-h, --help` | Display available CLI options |
