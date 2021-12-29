@@ -194,6 +194,12 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     return this.be.null
   })
   def('toBeDefined', function() {
+    const negate = utils.flag(this, 'negate')
+    utils.flag(this, 'negate', false)
+
+    if (negate)
+      return this.be.undefined
+
     return this.not.be.undefined
   })
   def('toBeInstanceOf', function(obj: any) {

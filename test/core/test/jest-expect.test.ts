@@ -6,7 +6,10 @@ describe('jest-expect', () => {
   it('basic', () => {
     expect(1).toBe(1)
     expect(null).toBeNull()
+    expect(1).not.toBeNull()
     expect(null).toBeDefined()
+    expect(undefined).not.toBeDefined()
+    expect(undefined).toBeUndefined()
     expect(null).not.toBeUndefined()
     expect([]).toBeTruthy()
     expect(0).toBeFalsy()
