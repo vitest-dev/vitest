@@ -297,7 +297,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const nthCall = spy.calls[times - 1]
 
     this.assert(
-      asymmetricEquals(nthCall, args),
+      asymmetricEquals(nthCall, args, [iterableEquality]),
       `expected ${ordinalOf(times)} "${spyName}" call to have been called with #{exp}`,
       `expected ${ordinalOf(times)} "${spyName}" call to not have been called with #{exp}`,
       args,
@@ -310,7 +310,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const lastCall = spy.calls[spy.calls.length - 1]
 
     this.assert(
-      asymmetricEquals(lastCall, args),
+      asymmetricEquals(lastCall, args, [iterableEquality]),
       `expected last "${spyName}" call to have been called with #{exp}`,
       `expected last "${spyName}" call to not have been called with #{exp}`,
       args,
