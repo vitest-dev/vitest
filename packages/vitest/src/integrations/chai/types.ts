@@ -28,7 +28,7 @@ export type MatcherState = {
   ) => boolean
   expand?: boolean
   expectedAssertionsNumber?: number | null
-  expectedAssertionsNumberError?: Error
+  expectedAssertionsNumberError?: Error | null
   isExpectingAssertions?: boolean
   isExpectingAssertionsError?: Error
   isNot: boolean

@@ -24,17 +24,21 @@ declare module 'vite' {
   }
 }
 
+interface AsymmetricMatchersContaining {
+  stringContaining(expected: string): void
+  objectContaining(expected: any): ObjectContaining
+  arrayContaining(expected: unknown[]): ArrayContaining
+  stringMatching(expected: string | RegExp): StringMatching
+}
+
 declare global {
   namespace Chai {
-    interface ExpectStatic {
+    interface ExpectStatic extends AsymmetricMatchersContaining {
       extend(expects: MatchersObject): void
-      stringContaining(expected: string): void
-      anything(): Anything
-      objectContaining(expected: any): ObjectContaining
-      any(constructor: unknown): Any
-      arrayContaining(expected: any): ArrayContaining
-      stringMatching(expected: RegExp): StringMatching
       assertions(expected: number): void
+      anything(): Anything
+      any(constructor: unknown): Any
+      not: AsymmetricMatchersContaining
     }
 
     interface Assertion {

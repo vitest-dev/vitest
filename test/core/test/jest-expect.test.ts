@@ -70,6 +70,13 @@ describe('jest-expect', () => {
     // expect(new Set(['bar'])).not.toEqual(new Set([expect.stringContaining('zoo')]))
   })
 
+  it('asymmetric matchers negate', () => {
+    expect('bar').toEqual(expect.not.stringContaining('zoo'))
+    expect('bar').toEqual(expect.not.stringMatching(/zoo/))
+    expect({ bar: 'zoo' }).toEqual(expect.not.objectContaining({ zoo: 'bar' }))
+    expect(['Bob', 'Eve']).toEqual(expect.not.arrayContaining(['Steve']))
+  })
+
   it('asymmetric matchers (chai style)', () => {
     expect({ foo: 'bar' }).equal({ foo: expect.stringContaining('ba') })
     expect('bar').equal(expect.stringContaining('ba'))
