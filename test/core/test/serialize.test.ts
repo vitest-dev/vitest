@@ -30,4 +30,24 @@ describe('error serialize', () => {
 
     expect(serializeError(error)).toMatchSnapshot()
   })
+
+  it('Should handle object with getter/setter correctly', () => {
+    const user = {
+      name: 'John',
+      surname: 'Smith',
+
+      get fullName() {
+        return `${this.name} ${this.surname}`
+      },
+      set fullName(value) {
+        [this.name, this.surname] = value.split(' ')
+      },
+    }
+
+    expect(serializeError(user)).toEqual({
+      name: 'John',
+      surname: 'Smith',
+      fullName: 'John Smith',
+    })
+  })
 })
