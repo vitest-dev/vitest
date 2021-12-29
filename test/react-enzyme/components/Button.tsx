@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react'
 
 const Button = ({ onClick, text }: any) => (
-    <button className={'some-className'} onClick={onClick}>
-        {text}
-    </button>
-);
+  <button className={'some-className'} onClick={onClick}>
+    {text}
+  </button>
+)
 
-export default Button;
+export default Button
