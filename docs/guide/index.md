@@ -59,7 +59,7 @@ In a project where Vitest is installed, you can use the `vitest` binary in your 
 }
 ```
 
-To run tests once without watching for file changes, pass `--run`.
+To run tests once without watching for file changes, use `vitest run`.
 You can specify additional CLI options like `--port` or `--https`. For a full list of CLI options, run `npx vitest --help` in your project.
 
 ## Examples
