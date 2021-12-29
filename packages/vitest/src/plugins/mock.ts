@@ -132,7 +132,7 @@ export const MocksPlugin = (): Plugin => {
       if (m) {
         return {
           code: m.toString(),
-          map: m.generateMap(),
+          map: m.generateMap({ hires: true }),
         }
       }
     },
