@@ -231,7 +231,7 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
   config?: string
   filters?: string[]
   testNamePattern?: RegExp
-  relatedFiles?: string[]
+  findRelatedTests?: string[]
 
   depsInline: (string | RegExp)[]
   depsExternal: (string | RegExp)[]
