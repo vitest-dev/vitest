@@ -1,3 +1,6 @@
+import type {
+  Plugin as PrettyFormatPlugin,
+} from 'pretty-format'
 import type { Any, Anything, ArrayContaining, ObjectContaining, StringMatching } from './integrations/chai/jest-asymmetric-matchers'
 import type { MatchersObject } from './integrations/chai/types'
 import type { InlineConfig } from './types'
@@ -24,27 +27,32 @@ declare module 'vite' {
   }
 }
 
+interface AsymmetricMatchersContaining {
+  stringContaining(expected: string): void
+  objectContaining(expected: any): ObjectContaining
+  arrayContaining(expected: unknown[]): ArrayContaining
+  stringMatching(expected: string | RegExp): StringMatching
+}
+
 declare global {
   namespace Chai {
-    interface ExpectStatic {
+    interface ExpectStatic extends AsymmetricMatchersContaining {
       extend(expects: MatchersObject): void
-      stringContaining(expected: string): void
-      anything(): Anything
-      objectContaining(expected: any): ObjectContaining
-      any(constructor: unknown): Any
-      arrayContaining(expected: any): ArrayContaining
-      stringMatching(expected: RegExp): StringMatching
       assertions(expected: number): void
+      hasAssertions(): void
+      anything(): Anything
+      any(constructor: unknown): Any
+      addSnapshotSerializer(plugin: PrettyFormatPlugin): void
+      not: AsymmetricMatchersContaining
     }
 
-    interface Assertion {
-      // Chai
-      chaiEqual(expected: any): void
-
+    interface JestAssertions {
       // Snapshot
-      toMatchSnapshot(message?: string): Assertion
-      toMatchInlineSnapshot(snapshot?: string, message?: string): Assertion
-      matchSnapshot(message?: string): Assertion
+      toMatchSnapshot(message?: string): void
+      toMatchInlineSnapshot(snapshot?: string, message?: string): void
+      toThrowErrorMatchingSnapshot(message?: string): void
+      toThrowErrorMatchingInlineSnapshot(snapshot?: string, message?: string): void
+      matchSnapshot(message?: string): void
 
       // Jest compact
       toEqual(expected: any): void
@@ -91,6 +99,22 @@ declare global {
       lastReturnedWith(value: any): void
       toHaveNthReturnedWith(nthCall: number, value: any): void
       nthReturnedWith(nthCall: number, value: any): void
+    }
+
+    type Promisify<O> = {
+      [K in keyof O]: O[K] extends (...args: infer A) => infer R
+        ? O extends R
+          ? Promisify<O[K]>
+          : (...args: A) => Promise<R>
+        : O[K]
+    }
+
+    interface Assertion extends JestAssertions {
+      resolves: Promisify<Assertion>
+      rejects: Promisify<Assertion>
+
+      // Chai
+      chaiEqual(expected: any): void
     }
   }
 }

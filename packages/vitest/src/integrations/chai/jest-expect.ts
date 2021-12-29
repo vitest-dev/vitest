@@ -1,9 +1,12 @@
 import type { EnhancedSpy } from '../jest-mock'
+import { addSerializer } from '../snapshot/port/plugins'
 import type { ChaiPlugin } from './types'
 import { arrayBufferEquality, equals as asymmetricEquals, hasAsymmetric, iterableEquality, sparseArrayEquality, typeEquality } from './jest-utils'
 
 type MatcherState = {
   assertionCalls: number
+  isExpectingAssertions: boolean
+  isExpectingAssertionsError: Error | null
   expectedAssertionsNumber: number | null
   expectedAssertionsNumberError: Error | null
 }
@@ -12,6 +15,8 @@ const MATCHERS_OBJECT = Symbol.for('matchers-object')
 if (!Object.prototype.hasOwnProperty.call(global, MATCHERS_OBJECT)) {
   const defaultState: Partial<MatcherState> = {
     assertionCalls: 0,
+    isExpectingAssertions: false,
+    isExpectingAssertionsError: null,
     expectedAssertionsNumber: null,
     expectedAssertionsNumberError: null,
   }
@@ -190,6 +195,12 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     return this.be.null
   })
   def('toBeDefined', function() {
+    const negate = utils.flag(this, 'negate')
+    utils.flag(this, 'negate', false)
+
+    if (negate)
+      return this.be.undefined
+
     return this.not.be.undefined
   })
   def('toBeInstanceOf', function(obj: any) {
@@ -257,7 +268,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   def(['toHaveBeenCalledWith', 'toBeCalledWith'], function(...args) {
     const spy = getSpy(this)
     const spyName = spy.getMockName()
-    const pass = spy.calls.some(callArg => asymmetricEquals(callArg, args))
+    const pass = spy.calls.some(callArg => asymmetricEquals(callArg, args, [iterableEquality]))
     return this.assert(
       pass,
       `expected "${spyName}" to be called with arguments: #{exp}`,
@@ -287,7 +298,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const nthCall = spy.calls[times - 1]
 
     this.assert(
-      asymmetricEquals(nthCall, args),
+      asymmetricEquals(nthCall, args, [iterableEquality]),
       `expected ${ordinalOf(times)} "${spyName}" call to have been called with #{exp}`,
       `expected ${ordinalOf(times)} "${spyName}" call to not have been called with #{exp}`,
       args,
@@ -300,7 +311,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const lastCall = spy.calls[spy.calls.length - 1]
 
     this.assert(
-      asymmetricEquals(lastCall, args),
+      asymmetricEquals(lastCall, args, [iterableEquality]),
       `expected last "${spyName}" call to have been called with #{exp}`,
       `expected last "${spyName}" call to not have been called with #{exp}`,
       args,
@@ -384,6 +395,61 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     )
   })
 
+  utils.addProperty(chai.Assertion.prototype, 'resolves', function(this: any) {
+    utils.flag(this, 'promise', 'resolves')
+    const obj = utils.flag(this, 'object')
+    const proxy: any = new Proxy(this, {
+      get: (target, key, reciever) => {
+        const result = Reflect.get(target, key, reciever)
+
+        if (typeof result !== 'function')
+          return result instanceof chai.Assertion ? proxy : result
+
+        return async(...args: any[]) => {
+          return obj.then(
+            (value: any) => {
+              utils.flag(this, 'object', value)
+              return result.call(this, ...args)
+            },
+            (err: any) => {
+              throw new Error(`promise rejected ${err} instead of resolving`)
+            },
+          )
+        }
+      },
+    })
+
+    return proxy
+  })
+
+  utils.addProperty(chai.Assertion.prototype, 'rejects', function(this: any) {
+    utils.flag(this, 'promise', 'rejects')
+    const obj = utils.flag(this, 'object')
+    const wrapper = typeof obj === 'function' ? obj() : obj
+    const proxy: any = new Proxy(this, {
+      get: (target, key, reciever) => {
+        const result = Reflect.get(target, key, reciever)
+
+        if (typeof result !== 'function')
+          return result instanceof chai.Assertion ? proxy : result
+
+        return async(...args: any[]) => {
+          return wrapper.then(
+            (value: any) => {
+              throw new Error(`promise resolved ${value} instead of rejecting`)
+            },
+            (err: any) => {
+              utils.flag(this, 'object', err)
+              return result.call(this, ...args)
+            },
+          )
+        }
+      },
+    })
+
+    return proxy
+  })
+
   utils.addMethod(
     chai.expect,
     'assertions',
@@ -397,5 +463,26 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         expectedAssertionsNumberError: error,
       })
     },
+  )
+
+  utils.addMethod(
+    chai.expect,
+    'hasAssertions',
+    function hasAssertions() {
+      const error = new Error('expected any number of assertion, but got none')
+      if (Error.captureStackTrace)
+        Error.captureStackTrace(error, hasAssertions)
+
+      setState({
+        isExpectingAssertions: true,
+        isExpectingAssertionsError: error,
+      })
+    },
+  )
+
+  utils.addMethod(
+    chai.expect,
+    'addSnapshotSerializer',
+    addSerializer,
   )
 }
