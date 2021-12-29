@@ -47,7 +47,7 @@ See the list of config options in the [Config Reference](../config/)
 
 ## Command Line Interface
 
-In a project where Vitest is installed, you can use the `vitest` binary in your npm scripts, or run it directly with `npx vitest`. Here are the default npm scripts in a scaffolded Vite project:
+In a project where Vitest is installed, you can use the `vitest` binary in your npm scripts, or run it directly with `npx vitest`. Here are the default npm scripts in a scaffolded Vitest project:
 
 <!-- prettier-ignore -->
 ```json5
