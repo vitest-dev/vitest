@@ -36,6 +36,7 @@ declare global {
     interface ExpectStatic extends AsymmetricMatchersContaining {
       extend(expects: MatchersObject): void
       assertions(expected: number): void
+      hasAssertions(): void
       anything(): Anything
       any(constructor: unknown): Any
       not: AsymmetricMatchersContaining
