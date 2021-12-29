@@ -23,6 +23,8 @@ export interface ExecuteOptions {
 
 const defaultInline = [
   'vitest/dist',
+  // yarn's .store folder
+  /vitest-virtual-\w+\/dist/,
   /virtual:/,
   /\.ts$/,
   /\/esm\/.*\.js$/,
