@@ -24,73 +24,87 @@ declare module 'vite' {
   }
 }
 
+interface AsymmetricMatchersContaining {
+  stringContaining(expected: string): void
+  objectContaining(expected: any): ObjectContaining
+  arrayContaining(expected: unknown[]): ArrayContaining
+  stringMatching(expected: string | RegExp): StringMatching
+}
+
 declare global {
   namespace Chai {
-    interface ExpectStatic {
+    interface ExpectStatic extends AsymmetricMatchersContaining {
       extend(expects: MatchersObject): void
-      stringContaining(expected: string): void
-      anything(): Anything
-      objectContaining(expected: any): ObjectContaining
-      any(constructor: unknown): Any
-      arrayContaining(expected: any): ArrayContaining
-      stringMatching(expected: RegExp): StringMatching
       assertions(expected: number): void
+      hasAssertions(): void
+      anything(): Anything
+      any(constructor: unknown): Any
+      not: AsymmetricMatchersContaining
     }
 
-    interface Assertion {
-      // Chai
-      chaiEqual(expected: any): void
-
+    interface JestAssertions<T = void> {
       // Snapshot
-      toMatchSnapshot(message?: string): Assertion
-      toMatchInlineSnapshot(snapshot?: string, message?: string): Assertion
-      matchSnapshot(message?: string): Assertion
+      toMatchSnapshot(message?: string): T
+      toMatchInlineSnapshot(snapshot?: string, message?: string): T
+      matchSnapshot(message?: string): T
 
       // Jest compact
-      toEqual(expected: any): void
-      toStrictEqual(expected: any): void
-      toBe(expected: any): void
-      toMatch(expected: string | RegExp): void
-      toMatchObject(expected: any): void
-      toContain(item: any): void
-      toContainEqual(item: any): void
-      toBeTruthy(): void
-      toBeFalsy(): void
-      toBeGreaterThan(num: number): void
-      toBeGreaterThanOrEqual(num: number): void
-      toBeLessThan(num: number): void
-      toBeLessThanOrEqual(num: number): void
-      toBeNaN(): void
-      toBeUndefined(): void
-      toBeNull(): void
-      toBeDefined(): void
-      toBeInstanceOf(c: any): void
-      toBeCalledTimes(n: number): void
-      toHaveLength(l: number): void
-      toHaveProperty(p: string, value?: any): void
-      toBeCloseTo(number: number, numDigits?: number): void
-      toHaveBeenCalledTimes(n: number): void
-      toHaveBeenCalledOnce(): void
-      toHaveBeenCalled(): void
-      toBeCalled(): void
-      toHaveBeenCalledWith(...args: any[]): void
-      toBeCalledWith(...args: any[]): void
-      toHaveBeenNthCalledWith(n: number, ...args: any[]): void
-      nthCalledWith(n: number, ...args: any[]): void
-      toHaveBeenLastCalledWith(...args: any[]): void
-      lastCalledWith(...args: any[]): void
-      toThrow(expected?: string | RegExp): void
-      toThrowError(expected?: string | RegExp): void
-      toReturn(): void
-      toHaveReturned(): void
-      toReturnTimes(times: number): void
-      toHaveReturnedTimes(times: number): void
-      toReturnWith(value: any): void
-      toHaveReturnedWith(value: any): void
-      toHaveLastReturnedWith(value: any): void
-      lastReturnedWith(value: any): void
-      toHaveNthReturnedWith(nthCall: number, value: any): void
-      nthReturnedWith(nthCall: number, value: any): void
+      toEqual(expected: any): T
+      toStrictEqual(expected: any): T
+      toBe(expected: any): T
+      toMatch(expected: string | RegExp): T
+      toMatchObject(expected: any): T
+      toContain(item: any): T
+      toContainEqual(item: any): T
+      toBeTruthy(): T
+      toBeFalsy(): T
+      toBeGreaterThan(num: number): T
+      toBeGreaterThanOrEqual(num: number): T
+      toBeLessThan(num: number): T
+      toBeLessThanOrEqual(num: number): T
+      toBeNaN(): T
+      toBeUndefined(): T
+      toBeNull(): T
+      toBeDefined(): T
+      toBeInstanceOf(c: any): T
+      toBeCalledTimes(n: number): T
+      toHaveLength(l: number): T
+      toHaveProperty(p: string, value?: any): T
+      toBeCloseTo(number: number, numDigits?: number): T
+      toHaveBeenCalledTimes(n: number): T
+      toHaveBeenCalledOnce(): T
+      toHaveBeenCalled(): T
+      toBeCalled(): T
+      toHaveBeenCalledWith(...args: any[]): T
+      toBeCalledWith(...args: any[]): T
+      toHaveBeenNthCalledWith(n: number, ...args: any[]): T
+      nthCalledWith(n: number, ...args: any[]): T
+      toHaveBeenLastCalledWith(...args: any[]): T
+      lastCalledWith(...args: any[]): T
+      toThrow(expected?: string | RegExp): T
+      toThrowError(expected?: string | RegExp): T
+      toReturn(): T
+      toHaveReturned(): T
+      toReturnTimes(times: number): T
+      toHaveReturnedTimes(times: number): T
+      toReturnWith(value: any): T
+      toHaveReturnedWith(value: any): T
+      toHaveLastReturnedWith(value: any): T
+      lastReturnedWith(value: any): T
+      toHaveNthReturnedWith(nthCall: number, value: any): T
+      nthReturnedWith(nthCall: number, value: any): T
+    }
+
+    type Promisify<O> = {
+      [K in keyof O]: O[K] extends (...args: infer A) => infer R ? O extends R ? Promisify<O[K]> : (...args: A) => Promise<R> : O[K]
+    }
+
+    interface Assertion extends JestAssertions {
+      resolves: Promisify<Assertion>
+      rejects: Promisify<Assertion>
+
+      // Chai
+      chaiEqual(expected: any): void
     }
   }
 }
