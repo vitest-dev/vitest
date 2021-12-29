@@ -94,6 +94,8 @@ export type MaybeMocked<T> = T extends MockableFunction
     ? MockedObject<T>
     : T
 
+export type EnhancedSpy<TArgs extends any[] = any[], TReturns = any> = JestMockCompat<TArgs, TReturns> & SpyImpl<TArgs, TReturns>
+
 export interface MockWithArgs<T extends MockableFunction>
   extends JestMockCompatFn<ArgumentsOf<T>, ReturnType<T>> {
   new (...args: ConstructorArgumentsOf<T>): T
@@ -124,7 +126,7 @@ type Awaited<T> = T extends Promise<infer R> ? R : never
 function enhanceSpy<TArgs extends any[], TReturns>(
   spy: SpyImpl<TArgs, TReturns>,
 ): JestMockCompat<TArgs, TReturns> {
-  const stub = spy as unknown as JestMockCompat<TArgs, TReturns> & SpyImpl<TArgs, TReturns>
+  const stub = spy as unknown as EnhancedSpy<TArgs, TReturns>
 
   let implementation: ((...args: TArgs) => TReturns) | undefined
 
