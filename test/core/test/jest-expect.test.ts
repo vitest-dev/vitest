@@ -131,6 +131,20 @@ describe('jest-expect', () => {
     expect(1).toBe(1)
   })
 
+  it.fails('has assertions', () => {
+    expect.hasAssertions()
+  })
+
+  it('has assertions', () => {
+    expect(1).toBe(1)
+    expect.hasAssertions()
+  })
+
+  it('has assertions with different order', () => {
+    expect.hasAssertions()
+    expect(1).toBe(1)
+  })
+
   // https://jestjs.io/docs/expect#tostrictequalvalue
 
   class LaCroix {

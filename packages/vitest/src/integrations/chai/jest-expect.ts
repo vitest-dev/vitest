@@ -4,6 +4,8 @@ import { arrayBufferEquality, equals as asymmetricEquals, hasAsymmetric, iterabl
 
 type MatcherState = {
   assertionCalls: number
+  isExpectingAssertions: boolean
+  isExpectingAssertionsError: Error | null
   expectedAssertionsNumber: number | null
   expectedAssertionsNumberError: Error | null
 }
@@ -12,6 +14,8 @@ const MATCHERS_OBJECT = Symbol.for('matchers-object')
 if (!Object.prototype.hasOwnProperty.call(global, MATCHERS_OBJECT)) {
   const defaultState: Partial<MatcherState> = {
     assertionCalls: 0,
+    isExpectingAssertions: false,
+    isExpectingAssertionsError: null,
     expectedAssertionsNumber: null,
     expectedAssertionsNumberError: null,
   }
@@ -384,6 +388,21 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       setState({
         expectedAssertionsNumber: expected,
         expectedAssertionsNumberError: error,
+      })
+    },
+  )
+
+  utils.addMethod(
+    chai.expect,
+    'hasAssertions',
+    function hasAssertions() {
+      const error = new Error('expected any number of assertion, but got none')
+      if (Error.captureStackTrace)
+        Error.captureStackTrace(error, hasAssertions)
+
+      setState({
+        isExpectingAssertions: true,
+        isExpectingAssertionsError: error,
       })
     },
   )
