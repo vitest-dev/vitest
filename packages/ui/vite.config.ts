@@ -4,6 +4,7 @@ import Vue from '@vitejs/plugin-vue'
 import Components from 'unplugin-vue-components/vite'
 import AutoImport from 'unplugin-auto-import/vite'
 import Unocss from 'unocss/vite'
+import Pages from 'vite-plugin-pages'
 import { presetAttributify, presetIcons, presetUno } from 'unocss'
 
 export default defineConfig({
@@ -35,10 +36,14 @@ export default defineConfig({
       dirs: ['client/components'],
       dts: resolve(__dirname, './client/components.d.ts'),
     }),
+    Pages({
+      dirs: ['client/pages'],
+    }),
     AutoImport({
       dts: resolve(__dirname, './client/auto-imports.d.ts'),
       imports: [
         'vue',
+        'vue-router',
         '@vueuse/core',
       ],
     }),
