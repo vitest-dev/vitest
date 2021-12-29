@@ -3,7 +3,7 @@ import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 import type { ResolvedConfig, UserConfig } from '../types'
 import { defaultExclude, defaultInclude, defaultPort } from '../constants'
 import { resolveC8Options } from '../coverage'
-import { deepMerge } from '../utils'
+import { deepMerge, toArray } from '../utils'
 
 export function resolveConfig(
   options: UserConfig,
@@ -67,6 +67,9 @@ export function resolveConfig(
 
   if (resolved.api === true)
     resolved.api = defaultPort
+
+  if (options.findRelatedTests)
+    resolved.findRelatedTests = toArray(options.findRelatedTests).map(file => resolve(resolved.root, file))
 
   return resolved
 }

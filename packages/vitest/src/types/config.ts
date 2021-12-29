@@ -220,12 +220,18 @@ export interface UserConfig extends InlineConfig {
    * Pass with no tests
    */
   passWithNoTests?: boolean
+
+  /**
+   * Run tests that cover a list of source files
+   */
+  findRelatedTests?: string[] | string
 }
 
-export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern'> {
+export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'findRelatedTests'> {
   config?: string
   filters?: string[]
   testNamePattern?: RegExp
+  findRelatedTests?: string[]
 
   depsInline: (string | RegExp)[]
   depsExternal: (string | RegExp)[]
