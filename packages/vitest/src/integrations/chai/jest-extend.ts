@@ -21,7 +21,7 @@ const isAsyncFunction = (fn: unknown) =>
 const getMatcherState = (assertion: Chai.AssertionStatic & Chai.Assertion) => {
   const actual = assertion._obj
   const isNot = util.flag(assertion, 'negate') as boolean
-  const promise = util.flag(assertion, 'promise', 'resolves') || ''
+  const promise = util.flag(assertion, 'promise') || ''
   const jestUtils = {
     ...matcherUtils,
     iterableEquality,
