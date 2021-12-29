@@ -260,47 +260,44 @@ export class StringMatching extends AsymmetricMatcher<RegExp> {
 export const JestAsymmetricMatchers: ChaiPlugin = (chai, utils) => {
   utils.addMethod(
     chai.expect,
+    'anything',
+    () => new Anything(),
+  )
+
+  utils.addMethod(
+    chai.expect,
+    'any',
+    (expected: unknown) => new Any(expected),
+  )
+
+  utils.addMethod(
+    chai.expect,
     'stringContaining',
     (expected: string) => new StringContaining(expected),
   )
 
   utils.addMethod(
     chai.expect,
-    'anything',
-    () => {
-      return new Anything()
-    },
-  )
-
-  utils.addMethod(
-    chai.expect,
     'objectContaining',
-    (expected: any) => {
-      return new ObjectContaining(expected)
-    },
-  )
-
-  utils.addMethod(
-    chai.expect,
-    'any',
-    (expected: unknown) => {
-      return new Any(expected)
-    },
+    (expected: any) => new ObjectContaining(expected),
   )
 
   utils.addMethod(
     chai.expect,
     'arrayContaining',
-    (expected: any) => {
-      return new ArrayContaining(expected)
-    },
+    (expected: any) => new ArrayContaining(expected),
   )
 
   utils.addMethod(
     chai.expect,
     'stringMatching',
-    (expected: any) => {
-      return new StringMatching(expected)
-    },
+    (expected: any) => new StringMatching(expected),
   )
+
+  chai.expect.not = {
+    stringContaining: (expected: string) => new StringContaining(expected, true),
+    objectContaining: (expected: any) => new ObjectContaining(expected, true),
+    arrayContaining: (expected: unknown[]) => new ArrayContaining(expected, true),
+    stringMatching: (expected: string | RegExp) => new StringMatching(expected, true),
+  }
 }

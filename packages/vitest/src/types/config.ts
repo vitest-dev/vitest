@@ -161,6 +161,11 @@ export interface InlineConfig {
   open?: boolean
 
   /**
+   * run test names with the specified pattern
+   */
+  testNamePattern?: string | RegExp
+
+  /**
    * Listen to port and serve API
    *
    * When set to true, the default port is 55555
@@ -215,11 +220,18 @@ export interface UserConfig extends InlineConfig {
    * Pass with no tests
    */
   passWithNoTests?: boolean
+
+  /**
+   * Run tests that cover a list of source files
+   */
+  findRelatedTests?: string[] | string
 }
 
-export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage'> {
+export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'findRelatedTests'> {
   config?: string
   filters?: string[]
+  testNamePattern?: RegExp
+  findRelatedTests?: string[]
 
   depsInline: (string | RegExp)[]
   depsExternal: (string | RegExp)[]

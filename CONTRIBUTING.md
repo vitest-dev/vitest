@@ -21,6 +21,8 @@ To develop and test `vitest` package:
    - `pnpm run test` to run core tests
    - `pnpm run test:all` to run all the suite
 
+> 💡 If you use VS Code, you can hit `⇧ ⌘ B` or `Ctrl + Shift + B` to launch all the necessary dev tasks.
+
 ## Debugging
 
 ### VS Code

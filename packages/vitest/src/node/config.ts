@@ -3,7 +3,7 @@ import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 import type { ResolvedConfig, UserConfig } from '../types'
 import { defaultExclude, defaultInclude, defaultPort } from '../constants'
 import { resolveC8Options } from '../coverage'
-import { deepMerge } from '../utils'
+import { deepMerge, toArray } from '../utils'
 
 export function resolveConfig(
   options: UserConfig,
@@ -38,6 +38,12 @@ export function resolveConfig(
 
   resolved.isolate = resolved.isolate ?? true
 
+  resolved.testNamePattern = resolved.testNamePattern
+    ? resolved.testNamePattern instanceof RegExp
+      ? resolved.testNamePattern
+      : new RegExp(resolved.testNamePattern)
+    : undefined
+
   resolved.watchIgnore = resolved.watchIgnore ?? [/\/node_modules\//, /\/dist\//]
 
   const CI = !!process.env.CI
@@ -61,6 +67,9 @@ export function resolveConfig(
 
   if (resolved.api === true)
     resolved.api = defaultPort
+
+  if (options.findRelatedTests)
+    resolved.findRelatedTests = toArray(options.findRelatedTests).map(file => resolve(resolved.root, file))
 
   return resolved
 }

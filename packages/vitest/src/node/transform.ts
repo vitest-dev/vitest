@@ -32,12 +32,13 @@ async function _transformRequest(ctx: Vitest, id: string) {
       result = await ctx.server.ssrTransform(result.code, result.map, id)
   }
 
-  if (result && process.env.NODE_V8_COVERAGE) {
+  if (result)
     withInlineSourcemap(result)
-    if (result.map)
-      ctx.visitedFilesMap.set(toFilePath(id, ctx.config.root), result.map as any)
-  }
 
+  if (result?.map && process.env.NODE_V8_COVERAGE)
+    ctx.visitedFilesMap.set(toFilePath(id, ctx.config.root), result.map as any)
+
+  // TODO: cache this result based on Vite's module graph
   return result
 }
 
@@ -49,7 +50,6 @@ export async function withInlineSourcemap(result: TransformResult) {
 
   if (code.includes(`${SOURCEMAPPING_URL}=`))
     return result
-
   if (map)
     result.code = `${code}\n\n//# ${SOURCEMAPPING_URL}=data:application/json;charset=utf-8;base64,${Buffer.from(JSON.stringify(map), 'utf-8').toString('base64')}`
 

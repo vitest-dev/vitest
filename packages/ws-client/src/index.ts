@@ -1,15 +1,18 @@
 import type { BirpcReturn } from 'birpc'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
-import type { WebSocketEvents, WebSocketHandlers } from '../../vitest/src/api/types'
+// eslint-disable-next-line no-restricted-imports
+import type { WebSocketEvents, WebSocketHandlers } from 'vitest'
 import { StateManager } from '../../vitest/src/node/state'
 
 export interface VitestClientOptions {
   handlers?: Partial<WebSocketEvents>
   autoReconnect?: boolean
   reconnectInterval?: number
+  reconnectTries?: number
   reactive?: <T>(v: T) => T
   ref?: <T>(v: T) => { value: T }
+  WebSocketConstructor?: typeof WebSocket
 }
 
 export interface VitestClient {
@@ -24,13 +27,15 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
   const {
     handlers = {},
     autoReconnect = true,
-    reconnectInterval = 1000,
+    reconnectInterval = 2000,
+    reconnectTries = 10,
     reactive = v => v,
-    // ref = v => ({ value: v }),
+    WebSocketConstructor = globalThis.WebSocket,
   } = options
 
+  let tries = reconnectTries
   const ctx = reactive({
-    ws: new WebSocket(url),
+    ws: new WebSocketConstructor(url),
     state: new StateManager(),
     waitForConnection,
     reconnect,
@@ -63,7 +68,9 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
 
   let openPromise: Promise<void>
 
-  function reconnect() {
+  function reconnect(reset = false) {
+    if (reset)
+      tries = reconnectTries
     ctx.ws = new WebSocket(url)
     registerWS()
   }
@@ -71,6 +78,7 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
   function registerWS() {
     openPromise = new Promise((resolve) => {
       ctx.ws.addEventListener('open', () => {
+        tries = reconnectTries
         resolve()
       })
     })
@@ -78,7 +86,8 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
       onMessage(v.data)
     })
     ctx.ws.addEventListener('close', () => {
-      if (autoReconnect)
+      tries -= 1
+      if (autoReconnect && tries > 0)
         setTimeout(reconnect, reconnectInterval)
     })
   }

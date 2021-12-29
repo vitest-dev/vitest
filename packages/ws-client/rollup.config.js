@@ -13,6 +13,7 @@ const external = [
   'ws',
   'birpc',
   'worker_threads',
+  'vitest',
 ]
 
 export default () => [

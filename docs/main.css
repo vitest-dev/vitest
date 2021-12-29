@@ -15,6 +15,13 @@
     --bg-gradient: 20,20,20 !important;
     --code-inline-bg-color: #282c34aa !important;
   }
+
+  tr:nth-child(2n) {
+    background-color: var(--c-bg) !important;
+  }
+  tr {
+    border-top: 1px solid var(--code-inline-bg-color) !important;
+  }
 }
 
 main.home ul > li {

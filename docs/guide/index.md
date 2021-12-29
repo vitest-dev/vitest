@@ -30,10 +30,10 @@ One of the main advantages of Vitest is its unified configuration with Vite. If 
 - Pass `--config` option to CLI, e.g. `vitest --config ./path/to/vitest.config.ts`
 - Use `process.env.VITEST` to conditionally apply different configuration in `vite.config.ts`
 
-To configure `vitest` itself, add `test` property in your Vite config
+To configure `vitest` itself, add `test` property in your Vite config. You'll also need to add a reference to Vitest types using a [triple slash command](https://www.typescriptlang.org/docs/handbook/triple-slash-directives.html#-reference-types-) at the top of your config file.
 
 ```ts
-// vite.config.ts
+/// <reference types="vitest" />
 import { defineConfig } from 'vite'
 
 export default defineConfig({
@@ -47,7 +47,7 @@ See the list of config options in the [Config Reference](../config/)
 
 ## Command Line Interface
 
-In a project where Vitest is installed, you can use the `vitest` binary in your npm scripts, or run it directly with `npx vitest`. Here is the default npm scripts in a scaffolded Vite project:
+In a project where Vitest is installed, you can use the `vitest` binary in your npm scripts, or run it directly with `npx vitest`. Here are the default npm scripts in a scaffolded Vitest project:
 
 <!-- prettier-ignore -->
 ```json5
@@ -59,7 +59,46 @@ In a project where Vitest is installed, you can use the `vitest` binary in your 
 }
 ```
 
-You can specify additional CLI options like `--port` or `--https`. For a full list of CLI options, run `npx vite --help` in your project.
+To run tests once without watching for file changes, use `vitest run`.
+You can specify additional CLI options like `--port` or `--https`. For a full list of CLI options, run `npx vitest --help` in your project.
+
+### CLI Commands
+
+### `vitest watch`
+
+Run all test suites but watch for changes and rerun tests when they change. Same as calling `vitest` without a command. In CI environments this command will fallback to `vitest run`
+
+### `vitest run`
+
+Perform a single run without watch mode.
+
+### `vitest dev`
+
+Run vitest in development mode.
+
+### CLI Options
+
+| Options       |               |
+| ------------- | ------------- |
+| `-v, --version` | Display version number |
+| `-r, --root <path>` | Define the project root |
+| `-c, --config <path>` | Path to config file |
+| `-u, --update` | Update snapshots |
+| `-w, --watch` | Watch mode |
+| `-o, --open` | Open UI (default: false) |
+| `-t, --testNamePattern <pattern>` | Run tests with names matching the pattern |
+| `--api` | Listen to port and serve API |
+| `--threads` | Enable Threads (default: true) |
+| `--silent` | Silent console output from tests |
+| `--reporter <name>` | Select reporter: `default`, `verbose`, or `dot` |
+| `--coverage` | Use c8 for coverage |
+| `--run` | Do not watch |
+| `--global` | Inject APIs globally |
+| `--dom` | Mock browser api with happy-dom |
+| `--findRelatedTests <filepath>` | Run only tests that import specified file |
+| `--environment <env>` | Runner environment (default: node) |
+| `--passWithNoTests` | Pass when no tests found |
+| `-h, --help` | Display available CLI options |
 
 ## Examples
 

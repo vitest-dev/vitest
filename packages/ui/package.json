@@ -1,9 +1,7 @@
 {
   "name": "@vitest/ui",
-  "//": "TODO: when it's ready",
-  "private": true,
-  "version": "0.0.116",
-  "description": "Vitest UI",
+  "version": "0.0.122",
+  "description": "UI for Vitest",
   "sideEffects": false,
   "type": "module",
   "exports": {
@@ -19,34 +17,36 @@
     "dist"
   ],
   "scripts": {
-    "dev:node": "rollup -c --watch node",
-    "dev:client": "vite",
-    "dev:ui": "run-p dev:node dev:client",
-    "build:node": "rollup -c",
+    "build": "rimraf dist && pnpm build:node && pnpm build:client",
     "build:client": "vite build",
-    "build": "rimraf dist && pnpm build:node && pnpm build:client"
-  },
-  "peerDependencies": {
-    "vitest": "workspace:*"
+    "build:node": "rollup -c",
+    "dev:client": "vite",
+    "dev:node": "rollup -c --watch node",
+    "dev:ui": "run-p dev:node dev:client"
   },
   "dependencies": {
-    "@vitest/ws-client": "workspace:*",
-    "@vueuse/core": "^7.4.1",
-    "sirv": "^1.0.19",
-    "ws": "^8.4.0"
+    "sirv": "^1.0.19"
   },
   "devDependencies": {
     "@types/codemirror": "^5.60.5",
     "@types/ws": "^8.2.2",
-    "@unocss/reset": "^0.18.1",
+    "@unocss/reset": "^0.20.0",
     "@vitejs/plugin-vue": "^2.0.1",
+    "@vitest/ws-client": "workspace:*",
+    "@vueuse/core": "^7.4.1",
     "codemirror": "^5.65.0",
     "codemirror-theme-vars": "^0.1.1",
     "picocolors": "^1.0.0",
     "rollup": "^2.62.0",
-    "unocss": "^0.18.1",
-    "unplugin-auto-import": "^0.5.4",
+    "unocss": "^0.20.0",
+    "unplugin-auto-import": "^0.5.5",
     "unplugin-vue-components": "^0.17.11",
+    "vite-plugin-pages": "^0.19.8",
+    "vitest": "workspace:*",
+    "vue": "^3.2.25",
+    "vue-router": "^4.0.12"
+  },
+  "peerDependencies": {
     "vitest": "workspace:*"
   }
 }

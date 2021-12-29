@@ -13,7 +13,7 @@ import { hasFailed, noop, slash, toArray } from '../utils'
 import { MocksPlugin } from '../plugins/mock'
 import { DefaultReporter } from '../reporters/default'
 import { ReportersMap } from '../reporters'
-import { cleanCoverage, prepareCoverage, reportCoverage } from '../coverage'
+import { cleanCoverage, reportCoverage } from '../coverage'
 import type { WorkerPool } from './pool'
 import { StateManager } from './state'
 import { resolveConfig } from './config'
@@ -37,6 +37,8 @@ class Vitest {
   changedTests: Set<string> = new Set()
   visitedFilesMap: Map<string, RawSourceMap> = new Map()
   runningPromise?: Promise<void>
+  closingPromise?: Promise<void>
+
   isFirstRun = true
 
   restartsCount = 0
@@ -83,7 +85,7 @@ class Vitest {
     this._onRestartListeners.forEach(fn => fn())
 
     if (resolved.coverage.enabled)
-      await prepareCoverage(resolved.coverage)
+      await cleanCoverage(resolved.coverage, resolved.coverage.clean)
   }
 
   async start(filters?: string[]) {
@@ -201,8 +203,8 @@ class Vitest {
       id = slash(id)
       this.invalidates.add(id)
 
-      if (id in this.state.filesMap) {
-        delete this.state.filesMap[id]
+      if (this.state.filesMap.has(id)) {
+        this.state.filesMap.delete(id)
         this.changedTests.delete(id)
       }
     }
@@ -236,7 +238,7 @@ class Vitest {
 
     this.invalidates.add(id)
 
-    if (id in this.state.filesMap) {
+    if (this.state.filesMap.has(id)) {
       this.changedTests.add(id)
       return
     }
@@ -248,8 +250,17 @@ class Vitest {
   }
 
   async close() {
-    await this.pool?.close()
-    await this.server.close()
+    if (!this.closingPromise) {
+      this.closingPromise = Promise.allSettled([
+        this.pool?.close(),
+        this.server.close(),
+      ].filter(Boolean)).then((results) => {
+        results.filter(r => r.status === 'rejected').forEach((err) => {
+          this.error('error during close', (err as PromiseRejectedResult).reason)
+        })
+      })
+    }
+    return this.closingPromise
   }
 
   async report<T extends keyof Reporter>(name: T, ...args: ArgumentsType<Reporter[T]>) {
@@ -321,6 +332,9 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
     server: {
       open: options.open,
       strictPort: true,
+    },
+    build: {
+      sourcemap: true,
     },
     optimizeDeps: {
       exclude: [

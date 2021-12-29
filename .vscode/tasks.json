@@ -1,0 +1,87 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "npm",
+      "script": "dev",
+      "label": "npm: dev",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "typescript",
+        "fileLocation": "relative",
+        "pattern": {
+          "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "message": 5
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "bundes",
+          "endsPattern": "created"
+        }
+      }
+    },
+    {
+      "type": "npm",
+      "script": "ui:dev",
+      "label": "npm: ui",
+      "isBackground": true,
+      "dependsOn": ["npm: test"],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": {
+        "owner": "typescript",
+        "fileLocation": "relative",
+        "pattern": {
+          "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "message": 5
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "dev server running at",
+          "endsPattern": "ready in"
+        }
+      }
+    },
+    {
+      "type": "npm",
+      "script": "test",
+      "label": "npm: test",
+      "isBackground": true,
+      "dependsOn": ["npm: dev"],
+      "detail": "vitest -r test/core --api",
+      "problemMatcher": {
+        "owner": "typescript",
+        "fileLocation": "relative",
+        "pattern": {
+          "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "message": 5
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "WATCH",
+          "endsPattern": "Waiting for"
+        }
+      }
+    },
+    {
+      "type": "npm",
+      "script": "ci",
+      "problemMatcher": [],
+      "label": "npm: ci"
+    }
+  ]
+}
