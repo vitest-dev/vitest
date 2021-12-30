@@ -21,7 +21,6 @@ export const ImportsPlugin = (): Plugin => {
     async transform(code, id) {
       if (!isBareImports(id))
         return
-      const imports: string[] = []
       const deps = new Set()
 
       const addImports = async(code: string, filepath: string, pattern: RegExp) => {
@@ -30,8 +29,6 @@ export const ImportsPlugin = (): Plugin => {
         while (match = pattern.exec(code)) {
           const path = await this.resolve(match[2], filepath)
           if (path && !isExternalImport(path.id) && !deps.has(path.id)) {
-            imports.push(path.id)
-
             const depCode = files[path.id] || (files[path.id] = await readFile(path.id, 'utf-8'))
 
             await addImports(depCode, path.id, importRegexp)
@@ -45,7 +42,7 @@ export const ImportsPlugin = (): Plugin => {
       await addImports(code, id, importRegexp)
       await addImports(code, id, dynamicImportRegexp)
 
-      return imports.map(path => `import "${path}"`).join('\n')
+      return Array.from(deps).map(path => `import "${path}"`).join('\n')
     },
   }
 }
