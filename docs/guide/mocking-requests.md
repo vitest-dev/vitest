@@ -38,6 +38,7 @@ export const server = setupServer(...handlers)
 Add the following to your (test) setup file
 
 ```js
+import { beforeAll, afterAll, afterEach } from 'vitest';
 import { server } from './mocks/server'
 
 // Start server before all tests
