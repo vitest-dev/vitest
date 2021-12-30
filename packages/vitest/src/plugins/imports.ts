@@ -13,9 +13,7 @@ export const ImportsPlugin = (): Plugin => {
     name: 'vitest:imports',
     enforce: 'pre',
     resolveId(id, importer) {
-      if (!isExternalImport(id) || !importer) return
-
-      if (isBareImports(id))
+      if (isBareImports(id) && isExternalImport(id))
         return this.resolve(id.replace(/(\?|&)imports/, ''), importer, { skipSelf: true })
     },
     async transform(code, id) {
