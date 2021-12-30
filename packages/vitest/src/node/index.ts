@@ -1,3 +1,4 @@
+import { readFile } from 'fs/promises'
 import { resolve } from 'pathe'
 import type { ViteDevServer, InlineConfig as ViteInlineConfig, Plugin as VitePlugin, UserConfig as ViteUserConfig } from 'vite'
 import { createServer, mergeConfig } from 'vite'
@@ -14,7 +15,6 @@ import { MocksPlugin } from '../plugins/mock'
 import { DefaultReporter } from '../reporters/default'
 import { ReportersMap } from '../reporters'
 import { cleanCoverage, reportCoverage } from '../coverage'
-import { RelatedImportsPlugin } from '../plugins/imports'
 import type { WorkerPool } from './pool'
 import { StateManager } from './state'
 import { resolveConfig } from './config'
@@ -39,6 +39,8 @@ class Vitest {
   visitedFilesMap: Map<string, RawSourceMap> = new Map()
   runningPromise?: Promise<void>
   closingPromise?: Promise<void>
+
+  nestedCode = new Map<string, string>()
 
   isFirstRun = true
 
@@ -113,9 +115,46 @@ class Vitest {
       await reportCoverage(this)
   }
 
+  private async getFileContent(path: string) {
+    if (!this.nestedCode.get(path))
+      this.nestedCode.set(path, await readFile(path, 'utf-8'))
+
+    return this.nestedCode.get(path)!
+  }
+
   private async getTestDependencies(filepath: string) {
-    const result = await this.server.transformRequest(`${filepath}?imports`, { ssr: true })
-    return result?.deps || []
+    const importRegexp = /import(?:["'\s]*([\w*${}\n\r\t, ]+)from\s*)?["'\s]["'\s](.*[@\w_-]+)["'\s]$/mg
+    const dynamicImportRegexp = /import\((?:["'\s]*([\w*{}\n\r\t, ]+)\s*)?["'\s](.*([@\w_-]+))["'\s]\)$/mg
+
+    const isExternalImport = (id: string) => {
+      return (!id.startsWith('/') && !id.startsWith('.')) || id.startsWith('/@fs/') || id.includes('node_modules')
+    }
+
+    const deps = new Set<string>()
+
+    const addImports = async(code: string, filepath: string, pattern: RegExp) => {
+      const matches = code.matchAll(pattern)
+      for (const match of matches) {
+        const path = await this.server.pluginContainer.resolveId(match[2], filepath)
+        if (path && !isExternalImport(path.id) && !deps.has(path.id)) {
+          deps.add(path.id)
+
+          const depCode = await this.getFileContent(path.id)
+          await processImports(depCode, path.id)
+        }
+      }
+    }
+
+    function processImports(code: string, id: string) {
+      return Promise.all([
+        addImports(code, id, importRegexp),
+        addImports(code, id, dynamicImportRegexp),
+      ])
+    }
+
+    await processImports(await this.getFileContent(filepath), filepath)
+
+    return Array.from(deps).map(dep => dep.replace(this.config.root, ''))
   }
 
   async filterTestsBySource(tests: string[]) {
@@ -136,6 +175,8 @@ class Vitest {
       if (deps.length && sources.some(path => deps.some(dep => dep.startsWith(path))))
         runningTests.push(filepath)
     }
+
+    this.nestedCode.clear()
 
     return runningTests
   }
@@ -354,7 +395,6 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
     clearScreen: false,
     configFile: configPath,
     plugins: [
-      RelatedImportsPlugin(),
       {
         name: 'vitest',
         async configureServer(server) {
