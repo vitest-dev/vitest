@@ -68,8 +68,8 @@ export function resolveConfig(
   if (resolved.api === true)
     resolved.api = defaultPort
 
-  if (options.findRelatedTests)
-    resolved.findRelatedTests = toArray(options.findRelatedTests).map(file => resolve(resolved.root, file))
+  if (options.relatedSources)
+    resolved.relatedSources = toArray(options.relatedSources).map(file => resolve(resolved.root, file))
 
   return resolved
 }

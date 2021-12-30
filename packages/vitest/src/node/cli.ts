@@ -27,7 +27,6 @@ cli
   .option('--run', 'do not watch')
   .option('--global', 'inject apis globally')
   .option('--dom', 'mock browser api with happy-dom')
-  .option('--findRelatedTests <filepath>', 'run only tests that import specified file')
   .option('--environment <env>', 'runner environment', { default: 'node' })
   .option('--passWithNoTests', 'pass when no tests found')
   .help()
@@ -35,6 +34,10 @@ cli
 cli
   .command('run [...filters]')
   .action(run)
+
+cli
+  .command('source [...filters]')
+  .action(runRelated)
 
 cli
   .command('watch [...filters]')
@@ -49,6 +52,11 @@ cli
   .action(dev)
 
 cli.parse()
+
+async function runRelated(relatedFiles: string[] | string, argv: UserConfig) {
+  argv.relatedSources = relatedFiles
+  await run([], argv)
+}
 
 async function dev(cliFilters: string[], argv: UserConfig) {
   if (argv.watch == null)

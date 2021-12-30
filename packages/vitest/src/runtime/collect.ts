@@ -39,7 +39,7 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
       await runSetupFiles(config)
       await import(filepath)
 
-      if (config.findRelatedTests && !inModuleGraph(config.findRelatedTests))
+      if (config.relatedSources && !inModuleGraph(config.relatedSources))
         continue
 
       const defaultTasks = await defaultSuite.collect(file)
