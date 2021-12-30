@@ -113,21 +113,27 @@ class Vitest {
       await reportCoverage(this)
   }
 
+  private async getTestDependencies(filepath: string) {
+    const result = await this.server.transformRequest(`${filepath}?imports`, { ssr: true })
+    return result?.deps || []
+  }
+
   async filterTestsBySource(tests: string[]) {
     const sources = this.config.relatedSources
     if (!sources?.length)
       return tests
 
-    const runningTests = []
-
-    const deps = await Promise.all(
+    const testDeps = await Promise.all(
       tests.map(async(filepath) => {
-        return [filepath, await this.server.transformRequest(`${filepath}?imports`, { ssr: true })] as const
+        const deps = await this.getTestDependencies(filepath)
+        return [filepath, deps] as const
       }),
     )
 
-    for (const [filepath, result] of deps) {
-      if (result && sources.some(path => result.deps?.some(dep => dep.startsWith(path))))
+    const runningTests = []
+
+    for (const [filepath, deps] of testDeps) {
+      if (deps.length && sources.some(path => deps.some(dep => dep.startsWith(path))))
         runningTests.push(filepath)
     }
 
