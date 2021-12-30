@@ -4,7 +4,6 @@ Because Vitest runs in Node, mocking network requests is tricky; web APIs are no
 
 Mock Service Worker (MSW) works by intercepting the requests your tests make, allowing you to use it without changing any of your application code. In-browser, this uses the [Service Worker API](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API). In Node.js, and for Vitest, it uses [node-request-interceptor](https://mswjs.io/docs/api/setup-server#operation). To learn more about MSW, read their [introduction](https://mswjs.io/docs/)
 
-To read more about MSW, read their [introduction](https://mswjs.io/docs/).
 
 ## Configuration
 
