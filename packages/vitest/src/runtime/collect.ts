@@ -28,7 +28,6 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
       name: path,
       type: 'suite',
       mode: 'run',
-      computeMode: 'serial',
       filepath,
       tasks: [],
     }
