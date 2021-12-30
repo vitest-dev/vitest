@@ -13,7 +13,15 @@ import { beforeAll, afterAll, afterEach } from 'vitest'
 import { setupServer } from 'msw/node'
 import { graphql, rest } from 'msw'
 
-import { posts } from './src/mocks/posts'
+const posts = [
+  {
+    userId: 1,
+    id: 1,
+    title: 'first post title',
+    body: 'first post body',
+  },
+  ...
+]
 
 export const restHandlers = [
   rest.get('https://rest-endpoint.example/path/to/posts', (req, res, ctx) => {
