@@ -108,7 +108,7 @@ export abstract class BaseReporter implements Reporter {
     }
 
     const executionTime = this.end - this.start
-    const threadTime = tests.reduce((acc, test) => acc + (test.result?.end ? test.result.end - test.result.start : 0), 0)
+    const threadTime = files.reduce((acc, test) => acc + (test.result?.duration || 0) + (test.collectDuration || 0), 0)
 
     const padTitle = (str: string) => c.dim(`${str.padStart(10)} `)
     const time = (time: number) => {

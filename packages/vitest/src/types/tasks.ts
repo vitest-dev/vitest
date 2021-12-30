@@ -17,8 +17,7 @@ export interface TaskBase {
 
 export interface TaskResult {
   state: TaskState
-  start: number
-  end?: number
+  duration?: number
   error?: unknown
 }
 
@@ -31,6 +30,7 @@ export interface Suite extends TaskBase {
 
 export interface File extends Suite {
   filepath: string
+  collectDuration?: number
 }
 
 export interface Test extends TaskBase {

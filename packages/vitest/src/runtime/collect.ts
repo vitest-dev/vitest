@@ -1,4 +1,3 @@
-import { performance } from 'perf_hooks'
 import { createHash } from 'crypto'
 import { relative } from 'pathe'
 import type { File, ResolvedConfig, Suite } from '../types'
@@ -54,7 +53,9 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
           file.tasks.push(c)
         }
         else {
+          const start = performance.now()
           const suite = await c.collect(file)
+          file.collectDuration = performance.now() - start
           if (suite.name || suite.tasks.length)
             file.tasks.push(suite)
         }
@@ -62,7 +63,6 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
     }
     catch (e) {
       file.result = {
-        start: performance.now(),
         state: 'fail',
         error: processError(e),
       }
