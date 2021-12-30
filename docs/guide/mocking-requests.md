@@ -1,6 +1,6 @@
 # Mocking Requests
 
-When it comes to mocking network requests, our recommendation is to use [Mock Service Worker](https://mswjs.io/). It handles various types of network requests (like `REST` or `GraphQL`) and is completely framework agnostic.
+We recommend [Mock Service Worker](https://mswjs.io/) to mock network requests. It handles various types of network requests (like `REST` or `GraphQL`) and is framework agnostic.
 
 ## Why
 
