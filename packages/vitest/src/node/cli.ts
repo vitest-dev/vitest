@@ -36,7 +36,7 @@ cli
   .action(run)
 
 cli
-  .command('source [...filters]')
+  .command('related [...filters]')
   .action(runRelated)
 
 cli
@@ -55,7 +55,7 @@ cli.parse()
 
 async function runRelated(relatedFiles: string[] | string, argv: UserConfig) {
   argv.relatedSources = relatedFiles
-  await run([], argv)
+  await dev([], argv)
 }
 
 async function dev(cliFilters: string[], argv: UserConfig) {
