@@ -22,6 +22,7 @@ cli
   .option('--api', 'listen to port and serve API')
   .option('--threads', 'enabled threads', { default: true })
   .option('--silent', 'silent console output from tests')
+  .option('--isolate', 'isolate environment for each test file', { default: true })
   .option('--reporter <name>', 'reporter')
   .option('--coverage', 'use c8 for coverage')
   .option('--run', 'do not watch')
