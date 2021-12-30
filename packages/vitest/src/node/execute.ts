@@ -2,7 +2,7 @@ import { builtinModules, createRequire } from 'module'
 import { fileURLToPath, pathToFileURL } from 'url'
 import vm from 'vm'
 import { dirname, resolve } from 'pathe'
-import type { ModuleCache } from '../types'
+import type { ModuleCache, ResolvedConfig } from '../types'
 import { slash, toFilePath } from '../utils'
 import { shouldExternalize } from '../utils/externalize'
 import type { SuiteMocks } from './mocker'
@@ -10,13 +10,11 @@ import { createMocker } from './mocker'
 
 export type FetchFunction = (id: string) => Promise<string | undefined>
 
-export interface ExecuteOptions {
+export interface ExecuteOptions extends Pick<ResolvedConfig, 'depsInline' | 'depsExternal' | 'fallbackCJS'> {
   root: string
   files: string[]
   fetch: FetchFunction
   interpretDefault: boolean
-  inline: (string | RegExp)[]
-  external: (string | RegExp)[]
   moduleCache: Map<string, ModuleCache>
   mockMap: SuiteMocks
 }
@@ -66,8 +64,8 @@ export async function interpretedImport(path: string, interpretDefault: boolean)
 export async function executeInViteNode(options: ExecuteOptions) {
   const { moduleCache, root, files, fetch, mockMap } = options
 
-  const externalCache = new Map<string, boolean>()
-  builtinModules.forEach(m => externalCache.set(m, true))
+  const externalCache = new Map<string, false | string>()
+  builtinModules.forEach(m => externalCache.set(m, m))
 
   const {
     getActualPath,
@@ -219,8 +217,9 @@ export async function executeInViteNode(options: ExecuteOptions) {
     if (!externalCache.has(importPath))
       externalCache.set(importPath, await shouldExternalize(importPath, options))
 
-    if (externalCache.get(importPath))
-      return interpretedImport(importPath, options.interpretDefault)
+    const externalId = externalCache.get(importPath)
+    if (externalId)
+      return interpretedImport(externalId, options.interpretDefault)
 
     if (moduleCache.get(fsPath)?.promise)
       return moduleCache.get(fsPath)?.promise

@@ -50,7 +50,7 @@ export function setup(ctx: Vitest) {
         async getModuleGraph(id: string) {
           const graph: Record<string, string[]> = {}
           function clearId(id?: string | null) {
-            return id?.replace(/\?v=\d+$/, '') || ''
+            return id?.replace(/\?v=\w+$/, '') || ''
           }
           function get(mod?: ModuleNode, seen = new Set<any>()) {
             if (!mod || !mod.id || seen.has(mod))
@@ -61,18 +61,19 @@ export function setup(ctx: Vitest) {
             mods.forEach(m => get(m, seen))
           }
           get(ctx.server.moduleGraph.getModuleById(id))
-          const options = {
-            inline: ctx.config.depsInline,
-            external: ctx.config.depsExternal,
-          }
           const externalized: string[] = []
+          const inlined: string[] = []
           await Promise.all(Object.keys(graph).map(async(i) => {
-            if (await shouldExternalize(i, options))
-              externalized.push(i)
+            const rewrote = await shouldExternalize(i, ctx.config)
+            if (rewrote)
+              externalized.push(rewrote)
+            else
+              inlined.push(i)
           }))
           return {
             graph,
             externalized,
+            inlined,
           }
         },
       },
