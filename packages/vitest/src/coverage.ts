@@ -131,19 +131,17 @@ export async function reportCoverage(ctx: Vitest) {
   const createReport = require('c8/lib/report')
   const report = createReport(ctx.config.coverage)
 
-  await report.getCoverageMapFromAllCoverageFiles()
-
   // add source maps
   Array
     .from(ctx.visitedFilesMap.entries())
     .filter(i => !i[0].includes('/node_modules/'))
     .forEach(([file, map]) => {
       const url = pathToFileURL(file).href
+      const sources = map.sources.length
+        ? map.sources.map(i => pathToFileURL(i).href)
+        : [url]
       report.sourceMapCache[url] = {
-        data: {
-          ...map,
-          sources: map.sources.map(i => pathToFileURL(i).href) || [url],
-        },
+        data: { ...map, sources },
       }
     })
 

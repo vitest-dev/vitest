@@ -15,7 +15,7 @@
   },
   "devDependencies": {
     "happy-dom": "*",
-    "vite": "^2.7.8",
+    "vite": "^2.7.9",
     "vitest": "workspace:*"
   }
 }

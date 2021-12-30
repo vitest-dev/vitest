@@ -21,7 +21,7 @@ import { client, isConnected, isConnecting } from '~/composables/state'
       >
         <div
           text="5xl"
-          :class="isConnecting ? 'i-carbon:renew animate-spin' : 'i-carbon-wifi-off'"
+          :class="isConnecting ? 'i-carbon:renew animate-spin animate-reverse' : 'i-carbon-wifi-off'"
         />
         <div text-2xl>
           {{ isConnecting ? 'Connecting...' : 'Disconnected' }}

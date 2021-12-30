@@ -6,7 +6,10 @@ describe('jest-expect', () => {
   it('basic', () => {
     expect(1).toBe(1)
     expect(null).toBeNull()
+    expect(1).not.toBeNull()
     expect(null).toBeDefined()
+    expect(undefined).not.toBeDefined()
+    expect(undefined).toBeUndefined()
     expect(null).not.toBeUndefined()
     expect([]).toBeTruthy()
     expect(0).toBeFalsy()
@@ -70,6 +73,13 @@ describe('jest-expect', () => {
     // expect(new Set(['bar'])).not.toEqual(new Set([expect.stringContaining('zoo')]))
   })
 
+  it('asymmetric matchers negate', () => {
+    expect('bar').toEqual(expect.not.stringContaining('zoo'))
+    expect('bar').toEqual(expect.not.stringMatching(/zoo/))
+    expect({ bar: 'zoo' }).toEqual(expect.not.objectContaining({ zoo: 'bar' }))
+    expect(['Bob', 'Eve']).toEqual(expect.not.arrayContaining(['Steve']))
+  })
+
   it('asymmetric matchers (chai style)', () => {
     expect({ foo: 'bar' }).equal({ foo: expect.stringContaining('ba') })
     expect('bar').equal(expect.stringContaining('ba'))
@@ -87,8 +97,8 @@ describe('jest-expect', () => {
 
   it('object', () => {
     expect({}).toEqual({})
+    expect({}).toStrictEqual({})
     expect({}).not.toBe({})
-    expect({}).not.toStrictEqual({})
 
     const foo = {}
     const complex = { foo: 1, bar: { foo: 'foo', bar: 100, arr: ['first', { zoo: 'monkey' }] } }
@@ -121,6 +131,20 @@ describe('jest-expect', () => {
     expect.assertions(3)
     expect(1).toBe(1)
     expect(1).toBe(1)
+    expect(1).toBe(1)
+  })
+
+  it.fails('has assertions', () => {
+    expect.hasAssertions()
+  })
+
+  it('has assertions', () => {
+    expect(1).toBe(1)
+    expect.hasAssertions()
+  })
+
+  it('has assertions with different order', () => {
+    expect.hasAssertions()
     expect(1).toBe(1)
   })
 
@@ -257,6 +281,33 @@ describe('.toStrictEqual()', () => {
     expect(Uint8Array.from([9, 3]).buffer).toStrictEqual(
       Uint8Array.from([9, 3]).buffer,
     )
+  })
+})
+
+describe('async expect', () => {
+  it('resolves', async() => {
+    await expect((async() => 'true')()).resolves.toBe('true')
+    await expect((async() => 'true')()).resolves.not.toBe('true22')
+  })
+
+  it.fails('failed to resolve', async() => {
+    await expect((async() => {
+      throw new Error('err')
+    })()).resolves.toBe('true')
+  })
+
+  it('rejects', async() => {
+    await expect((async() => {
+      throw new Error('err')
+    })()).rejects.toStrictEqual(new Error('err'))
+
+    await expect((async() => {
+      throw new Error('err')
+    })()).rejects.not.toStrictEqual(new Error('fake err'))
+  })
+
+  it.fails('failed to reject', async() => {
+    await expect((async() => 'test')()).rejects.toBe('test')
   })
 })
 

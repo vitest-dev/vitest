@@ -63,3 +63,13 @@ exports[`snapshot with big string 1`] = `
   },
 }
 `;
+
+exports[`throwing snapshots 1`] = `"omega"`;
+
+exports[`throwing snapshots 2`] = `"omega"`;
+
+exports[`throwing snapshots 3`] = `
+{
+  "error": "omega",
+}
+`;

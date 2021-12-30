@@ -23,6 +23,8 @@ export interface ExecuteOptions {
 
 const defaultInline = [
   'vitest/dist',
+  // yarn's .store folder
+  /vitest-virtual-\w+\/dist/,
   /virtual:/,
   /\.ts$/,
   /\/esm\/.*\.js$/,
@@ -46,23 +48,29 @@ export const stubRequests: Record<string, any> = {
   },
 }
 
+function hasNestedDefault(target: any) {
+  return '__esModule' in target && target.__esModule && 'default' in target.default
+}
+
+function proxyMethod(name: 'get' | 'set' | 'has' | 'deleteProperty', isNested: boolean) {
+  return function(target: any, key: string | symbol, ...args: [any?, any?]) {
+    const result = Reflect[name](target, key, ...args)
+    if ((isNested && key === 'default') || !result)
+      return Reflect[name](target.default, key, ...args)
+    return result
+  }
+}
+
 export async function interpretedImport(path: string, interpretDefault: boolean) {
   const mod = await import(path)
 
   if (interpretDefault && 'default' in mod) {
+    const isNested = hasNestedDefault(mod)
     return new Proxy(mod, {
-      get(target, key, receiver) {
-        return Reflect.get(target, key, receiver) || Reflect.get(target.default, key, receiver)
-      },
-      set(target, key, value, receiver) {
-        return Reflect.set(target, key, value, receiver) || Reflect.set(target.default, key, value, receiver)
-      },
-      has(target, key) {
-        return Reflect.has(target, key) || Reflect.has(target.default, key)
-      },
-      deleteProperty(target, key) {
-        return Reflect.deleteProperty(target, key) || Reflect.deleteProperty(target.default, key)
-      },
+      get: proxyMethod('get', isNested),
+      set: proxyMethod('set', isNested),
+      has: proxyMethod('has', isNested),
+      deleteProperty: proxyMethod('deleteProperty', isNested),
     })
   }
 

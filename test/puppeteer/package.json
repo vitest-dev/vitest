@@ -8,7 +8,7 @@
   },
   "devDependencies": {
     "puppeteer": "^13.0.0",
-    "vite": "^2.7.8",
+    "vite": "^2.7.9",
     "vitest": "workspace:*"
   }
 }

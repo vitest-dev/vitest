@@ -1,6 +1,6 @@
 {
   "name": "@vitest/ui",
-  "version": "0.0.118",
+  "version": "0.0.122",
   "description": "UI for Vitest",
   "sideEffects": false,
   "type": "module",
@@ -41,7 +41,10 @@
     "unocss": "^0.20.0",
     "unplugin-auto-import": "^0.5.5",
     "unplugin-vue-components": "^0.17.11",
-    "vitest": "workspace:*"
+    "vite-plugin-pages": "^0.19.8",
+    "vitest": "workspace:*",
+    "vue": "^3.2.25",
+    "vue-router": "^4.0.12"
   },
   "peerDependencies": {
     "vitest": "workspace:*"
