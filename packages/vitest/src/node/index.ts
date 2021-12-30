@@ -127,7 +127,8 @@ class Vitest {
     )
 
     for (const [filepath, result] of deps) {
-      if (result && sources.some(path => result.deps?.includes(path)))
+      // path may contain ?css&imports or just be ?imports
+      if (result && sources.some(path => result.deps?.some(dep => dep.startsWith(path))))
         runningTests.push(filepath)
     }
 
