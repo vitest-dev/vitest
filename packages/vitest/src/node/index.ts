@@ -14,7 +14,7 @@ import { MocksPlugin } from '../plugins/mock'
 import { DefaultReporter } from '../reporters/default'
 import { ReportersMap } from '../reporters'
 import { cleanCoverage, reportCoverage } from '../coverage'
-import { ImportsPlugin } from '../plugins/imports'
+import { RelatedImportsPlugin } from '../plugins/imports'
 import type { WorkerPool } from './pool'
 import { StateManager } from './state'
 import { resolveConfig } from './config'
@@ -348,7 +348,7 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
     clearScreen: false,
     configFile: configPath,
     plugins: [
-      ImportsPlugin(),
+      RelatedImportsPlugin(),
       {
         name: 'vitest',
         async configureServer(server) {

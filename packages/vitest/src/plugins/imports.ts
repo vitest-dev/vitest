@@ -13,7 +13,7 @@ const isExternalImport = (id: string) => {
  * Keeps only imports inside a file to analize dependency graph
  * without actually calling real code and/or creating side effects
  */
-export const ImportsPlugin = (): Plugin => {
+export const RelatedImportsPlugin = (): Plugin => {
   const files: Record<string, string> = {}
   return {
     name: 'vitest:imports',
@@ -29,18 +29,22 @@ export const ImportsPlugin = (): Plugin => {
         while (match = pattern.exec(code)) {
           const path = await this.resolve(match[2], filepath)
           if (path && !isExternalImport(path.id) && !deps.has(path.id)) {
-            const depCode = files[path.id] || (files[path.id] = await readFile(path.id, 'utf-8'))
+            const depCode = files[path.id] ?? (files[path.id] = await readFile(path.id, 'utf-8'))
 
-            await addImports(depCode, path.id, importRegexp)
-            await addImports(depCode, path.id, dynamicImportRegexp)
-
+            await processImports(depCode, path.id)
             deps.add(path.id)
           }
         }
       }
 
-      await addImports(code, id, importRegexp)
-      await addImports(code, id, dynamicImportRegexp)
+      function processImports(code: string, id: string) {
+        return Promise.all([
+          addImports(code, id, importRegexp),
+          addImports(code, id, dynamicImportRegexp),
+        ])
+      }
+
+      await processImports(code, id)
 
       return Array.from(deps).map(path => `import "${path}"`).join('\n')
     },
