@@ -6,6 +6,10 @@
     "test": "vitest"
   },
   "dependencies": {
+    "@emotion/react": "^11.7.1",
+    "@emotion/styled": "^11.6.0",
+    "@mui/lab": "5.0.0-alpha.60",
+    "@mui/material": "^5.2.4",
     "react": "^17.0.2"
   },
   "devDependencies": {
