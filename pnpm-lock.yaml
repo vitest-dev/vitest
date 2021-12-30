@@ -147,6 +147,7 @@ importers:
       '@types/natural-compare': ^1.4.1
       '@types/node': ^17.0.5
       '@types/prompts': ^2.4.0
+      '@vitest/ui': workspace:*
       birpc: ^0.0.2
       c8: ^7.10.0
       cac: ^6.7.12
@@ -194,6 +195,7 @@ importers:
       '@types/natural-compare': 1.4.1
       '@types/node': 17.0.5
       '@types/prompts': 2.4.0
+      '@vitest/ui': link:../ui
       birpc: 0.0.2
       c8: 7.10.0
       cac: 6.7.12
