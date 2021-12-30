@@ -83,7 +83,7 @@ Run only tests that cover a list of source files. Doesn't work with lazy imports
 Useful to run with [`lint-staged`](https://github.com/okonet/lint-staged) or with your CI setup.
 
 ```bash
-vitest source src/index.ts src/hello-world.js
+vitest source /src/index.ts /src/hello-world.js
 ```
 
 ### CLI Options
