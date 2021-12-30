@@ -5,7 +5,7 @@ const dynamicImportRegexp = /import\((?:["'\s]*([\w*{}\n\r\t, ]+)\s*)?["'\s](.*(
 
 const isBareImports = (id: string) => /(\?|&)imports$/.test(id)
 const isExternalImport = (id: string) => {
-  return (!id.startsWith('/') && !id.startsWith('.')) || id.startsWith('/@fs/')
+  return (!id.startsWith('/') && !id.startsWith('.')) || id.startsWith('/@fs/') || id.includes('node_modules')
 }
 
 /**
@@ -30,8 +30,8 @@ export const ImportsPlugin = (): Plugin => {
         // eslint-disable-next-line no-cond-assign
         while (match = pattern.exec(code)) {
           const path = await this.resolve(match[index], id)
-          if (path && !path.id.includes('node_modules') && path.id.startsWith('/'))
-            imports.push(path.id)
+          if (!path || !isExternalImport(path.id))
+            imports.push(match[index])
         }
       }
 
