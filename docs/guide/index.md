@@ -78,7 +78,7 @@ Run vitest in development mode.
 
 ### `vitest source`
 
-Run only tests that cover a list of source files. Works with static lazy imports, but not the dynamic once. All files should be relative to root folder.
+Run only tests that cover a list of source files. Works with static lazy imports, but not the dynamic ones. All files should be relative to root folder.
 
 Useful to run with [`lint-staged`](https://github.com/okonet/lint-staged) or with your CI setup.
 
