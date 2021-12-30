@@ -46,7 +46,7 @@ You may wish to test your locally-modified copy of Vitest against another packag
 ```json
 {
   "dependencies": {
-    "vite": "^2.0.0"
+    "vitest": "*"
   },
   "pnpm": {
     "overrides": {
