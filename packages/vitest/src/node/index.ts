@@ -11,6 +11,7 @@ import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig } from '../typ
 import { SnapshotManager } from '../integrations/snapshot/manager'
 import { configFiles } from '../constants'
 import { ensurePackageInstalled, hasFailed, noop, slash, toArray } from '../utils'
+import { GlobalSetupPlugin } from '../plugins/globalSetup'
 import { MocksPlugin } from '../plugins/mock'
 import { DefaultReporter, ReportersMap } from '../reporters'
 
@@ -396,6 +397,7 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
         },
       } as VitePlugin,
       MocksPlugin(),
+      GlobalSetupPlugin(),
       await UIPlugin(),
     ],
     server: {
