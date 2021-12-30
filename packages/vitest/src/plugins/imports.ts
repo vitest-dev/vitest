@@ -8,6 +8,10 @@ const isExternalImport = (id: string) => {
   return (!id.startsWith('/') && !id.startsWith('.')) || id.startsWith('/@fs/')
 }
 
+/**
+ * Keeps only imports inside a file to analize dependency graph
+ * without actually calling real code and/or creating side effects
+ */
 export const ImportsPlugin = (): Plugin => {
   return {
     name: 'vitest:imports',
