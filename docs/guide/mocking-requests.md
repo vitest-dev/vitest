@@ -10,7 +10,7 @@ To read more about MSW, read their [introduction](https://mswjs.io/docs/).
 
 Add the following to your (test) setup file
 ```js
-import { beforeAll, afterAll, afterEach } from 'vitest';
+import { beforeAll, afterAll, afterEach } from 'vitest'
 import { setupServer } from 'msw/node'
 import { graphql, rest } from 'msw'
 
