@@ -9,7 +9,7 @@ import type { RawSourceMap } from 'source-map-js'
 import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig } from '../types'
 import { SnapshotManager } from '../integrations/snapshot/manager'
 import { configFiles, defaultPort } from '../constants'
-import { hasFailed, noop, slash, toArray } from '../utils'
+import { ensurePackageInstalled, hasFailed, noop, slash, toArray } from '../utils'
 import { MocksPlugin } from '../plugins/mock'
 import { DefaultReporter } from '../reporters/default'
 import { ReportersMap } from '../reporters'
@@ -310,6 +310,14 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
 
   let haveStarted = false
 
+  async function UIPlugin() {
+    if (!options.open)
+      return
+
+    await ensurePackageInstalled('@vitest/ui')
+    return (await import('@vitest/ui')).default()
+  }
+
   const config: ViteInlineConfig = {
     root,
     logLevel: 'error',
@@ -328,18 +336,15 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
         },
       } as VitePlugin,
       MocksPlugin(),
+      await UIPlugin(),
     ],
     server: {
-      open: options.open,
+      open: options.open ? '/__vitest__/' : undefined,
       strictPort: true,
+      preTransformRequests: false,
     },
     build: {
       sourcemap: true,
-    },
-    optimizeDeps: {
-      exclude: [
-        'vitest',
-      ],
     },
   }
 
@@ -348,10 +353,8 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
 
   if (options.api === true)
     options.api = defaultPort
-
-  if (options.open && !options.api)
+  if (options.open && typeof options.api !== 'number')
     options.api = defaultPort
-
   if (typeof options.api === 'number')
     await server.listen(options.api)
 

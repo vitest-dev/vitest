@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { client, isConnected, isConnecting } from '~/composables/state'
+import { client, isConnected, isConnecting } from '~/composables/client'
 </script>
 
 <template>

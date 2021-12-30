@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Task } from '#types'
-import { activeFileIdRef } from '~/composables/state'
+import { activeFileIdRef } from '~/composables/client'
 
 withDefaults(defineProps<{
   tasks: Task[]

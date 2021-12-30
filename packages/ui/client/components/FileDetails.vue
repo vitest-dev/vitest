@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { client, current } from '~/composables/state'
+import { current } from '~/composables/client'
 
 function open() {
   if (current.value?.filepath)

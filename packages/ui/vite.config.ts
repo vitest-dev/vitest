@@ -9,6 +9,7 @@ import { presetAttributify, presetIcons, presetUno } from 'unocss'
 
 export default defineConfig({
   root: __dirname,
+  base: '/__vitest__/',
   resolve: {
     alias: {
       '~/': `${resolve(__dirname, 'client')}/`,

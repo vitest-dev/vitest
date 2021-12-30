@@ -46,8 +46,9 @@ export async function runTest(test: Test) {
   if (test.mode !== 'run')
     return
 
+  const start = performance.now()
+
   test.result = {
-    start: performance.now(),
     state: 'run',
   }
   updateTask(test)
@@ -103,7 +104,7 @@ export async function runTest(test: Test) {
 
   getSnapshotClient().clearTest()
 
-  test.result.end = performance.now()
+  test.result.duration = performance.now() - start
 
   process.__vitest_worker__.current = undefined
 
@@ -114,8 +115,9 @@ export async function runSuite(suite: Suite) {
   if (suite.result?.state === 'fail')
     return
 
+  const start = performance.now()
+
   suite.result = {
-    start: performance.now(),
     state: 'run',
   }
 
@@ -132,13 +134,12 @@ export async function runSuite(suite: Suite) {
       await callSuiteHook(suite, 'beforeAll', [suite])
 
       for (const tasksGroup of partitionSuiteChildren(suite)) {
-        const computeMode = tasksGroup[0].computeMode
-        if (computeMode === 'serial') {
+        if (tasksGroup[0].concurrent === true) {
+          await Promise.all(tasksGroup.map(c => runSuiteChild(c)))
+        }
+        else {
           for (const c of tasksGroup)
             await runSuiteChild(c)
-        }
-        else if (computeMode === 'concurrent') {
-          await Promise.all(tasksGroup.map(c => runSuiteChild(c)))
         }
       }
 
@@ -149,7 +150,8 @@ export async function runSuite(suite: Suite) {
       suite.result.error = processError(e)
     }
   }
-  suite.result.end = performance.now()
+  suite.result.duration = performance.now() - start
+
   if (suite.mode === 'run') {
     if (!hasTests(suite)) {
       suite.result.state = 'fail'
