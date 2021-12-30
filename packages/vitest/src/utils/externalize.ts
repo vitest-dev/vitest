@@ -20,21 +20,6 @@ const depsExternal = [
   /\.mjs$/,
 ]
 
-export function replaceLast(str: string, matcher: string | RegExp, replacement: string) {
-  if (typeof matcher === 'string') {
-    const index = str.lastIndexOf(matcher)
-    if (index < 0)
-      return str
-    return str.slice(0, index) + replacement + str.slice(index + matcher.length)
-  }
-  const matches = Array.from(str.matchAll(matcher))
-  if (!matches.length)
-    return str
-  const match = matches[matches.length - 1]!
-  const index = match.index!
-  return str.slice(0, index) + match[0].replace(matcher, replacement) + str.slice(index + match[0].length)
-}
-
 export function guessCJSversion(id: string): string | undefined {
   if (id.match(ESM_EXT_RE)) {
     for (const i of [
