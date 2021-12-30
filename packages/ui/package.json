@@ -23,9 +23,10 @@
     "build:node": "rollup -c",
     "dev:client": "vite",
     "dev": "rollup -c --watch node",
-    "dev:ui": "run-p dev:node dev:client"
+    "dev:ui": "run-p dev dev:client"
   },
   "dependencies": {
+    "d3-graph-controller": "^1.8.1",
     "sirv": "^1.0.19"
   },
   "devDependencies": {
