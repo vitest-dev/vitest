@@ -1,14 +1,10 @@
 <script setup lang="ts">
 import type { Task } from '#types'
 import { toggleDark } from '~/composables'
-import { activeFileIdRef, client, files } from '~/composables/client'
+import { activeFileIdRef, files, runAll } from '~/composables/client'
 
 function onItemClick(task: Task) {
   activeFileIdRef.value = task.id
-}
-
-function runAll() {
-  client.rpc.rerun(client.state.getFiles().map(i => i.filepath))
 }
 </script>
 
