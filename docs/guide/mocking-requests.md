@@ -7,7 +7,7 @@ Mock Service Worker (MSW) works by intercepting the requests your tests make, al
 
 ## Configuration
 
-Add the following to your (test) setup file
+Add the following to your test [setup file](/config/#setupfiles)
 ```js
 import { beforeAll, afterAll, afterEach } from 'vitest'
 import { setupServer } from 'msw/node'
