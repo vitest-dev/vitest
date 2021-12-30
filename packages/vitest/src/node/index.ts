@@ -126,15 +126,8 @@ class Vitest {
       }),
     )
 
-    const dependsOnSource = (deps: string[] | undefined) => {
-      if (!deps) return false
-
-      // path may contain ?css&imports or just be ?imports
-      return sources.some(path => deps.some(dep => dep.startsWith(path)))
-    }
-
     for (const [filepath, result] of deps) {
-      if (result && (dependsOnSource(result.deps) || dependsOnSource(result.dynamicDeps)))
+      if (result && sources.some(path => result.deps?.some(dep => dep.startsWith(path))))
         runningTests.push(filepath)
     }
 
