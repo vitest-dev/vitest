@@ -1,12 +1,6 @@
 # Mocking Requests
 
-We write tests in order to be able to ship with confidence. The more underlying behavior we mock, the less confidence we get since the system is less closer to real usage.
-
-Mocking network requests is one of those tricky aspects of running tests in a non-browser environment. Web API's are not available so now we need to mock or install something that mocks this behavior.
-
-There are various tools for this job, but which one do you choose?
-
-We recommend [Mock Service Worker](https://mswjs.io/) to mock network requests. It handles both `REST` and `GraphQL` type of network requests and is framework agnostic.
+Because Vitest runs in Node, mocking network requests is tricky; web APIs are not available ,so we need something that will mimic network behavior for us. We recommend [Mock Service Worker](https://mswjs.io/) to accomplish this. It will let you mock both `REST` and `GraphQL` network requests, and is framework agnostic.
 
 Mock Service Worker (or MSW in short) uses [Service Worker API](https://developers.google.com/web/fundamentals/primers/service-workers) to intercept requests. It has a variety of use cases but also offers functionality specifically for `node`. It won't magically make `service workers API` available for non-browser environments, but instead relies on [node-request-interceptor](https://mswjs.io/docs/api/setup-server#operation).
 
