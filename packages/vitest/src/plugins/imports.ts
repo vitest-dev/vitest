@@ -1,3 +1,4 @@
+import { readFile } from 'fs/promises'
 import type { Plugin } from 'vite'
 
 const importRegexp = /import(?:["'\s]*([\w*${}\n\r\t, ]+)from\s*)?["'\s]["'\s](.*[@\w_-]+)["'\s]$/mg
@@ -13,35 +14,38 @@ const isExternalImport = (id: string) => {
  * without actually calling real code and/or creating side effects
  */
 export const ImportsPlugin = (): Plugin => {
+  const files: Record<string, string> = {}
   return {
     name: 'vitest:imports',
     enforce: 'pre',
-    resolveId(id, importer) {
-      if (isBareImports(id) && isExternalImport(id))
-        return this.resolve(id.replace(/(\?|&)imports/, ''), importer, { skipSelf: true })
-    },
     async transform(code, id) {
-      const imports: string[] = []
       if (!isBareImports(id))
         return
+      const imports: string[] = []
+      const deps = new Set()
 
-      const addImports = async(pattern: RegExp, index: number) => {
+      const addImports = async(code: string, filepath: string, pattern: RegExp) => {
         let match: RegExpExecArray | null
         // eslint-disable-next-line no-cond-assign
         while (match = pattern.exec(code)) {
-          const path = await this.resolve(match[index], id)
-          if (!path || !isExternalImport(path.id))
-            imports.push(match[index])
+          const path = await this.resolve(match[2], filepath)
+          if (path && !isExternalImport(path.id) && !deps.has(path.id)) {
+            imports.push(path.id)
+
+            const depCode = files[path.id] || (files[path.id] = await readFile(path.id, 'utf-8'))
+
+            await addImports(depCode, path.id, importRegexp)
+            await addImports(depCode, path.id, dynamicImportRegexp)
+
+            deps.add(path.id)
+          }
         }
       }
 
-      await addImports(importRegexp, 2)
-      await addImports(dynamicImportRegexp, 2)
+      await addImports(code, id, importRegexp)
+      await addImports(code, id, dynamicImportRegexp)
 
-      return imports.map((path) => {
-        const delimeter = path.includes('?') ? '&' : '?'
-        return `import "${path}${delimeter}imports"`
-      }).join('\n')
+      return imports.map(path => `import "${path}"`).join('\n')
     },
   }
 }

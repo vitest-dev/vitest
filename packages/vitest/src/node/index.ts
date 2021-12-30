@@ -11,10 +11,10 @@ import { SnapshotManager } from '../integrations/snapshot/manager'
 import { configFiles, defaultPort } from '../constants'
 import { ensurePackageInstalled, hasFailed, noop, slash, toArray } from '../utils'
 import { MocksPlugin } from '../plugins/mock'
-import { ImportsPlugin } from '../plugins/imports'
 import { DefaultReporter } from '../reporters/default'
 import { ReportersMap } from '../reporters'
 import { cleanCoverage, reportCoverage } from '../coverage'
+import { ImportsPlugin } from '../plugins/imports'
 import type { WorkerPool } from './pool'
 import { StateManager } from './state'
 import { resolveConfig } from './config'
@@ -126,9 +126,15 @@ class Vitest {
       }),
     )
 
-    for (const [filepath, result] of deps) {
+    const dependsOnSource = (deps: string[] | undefined) => {
+      if (!deps) return false
+
       // path may contain ?css&imports or just be ?imports
-      if (result && sources.some(path => result.deps?.some(dep => dep.startsWith(path))))
+      return sources.some(path => deps.some(dep => dep.startsWith(path)))
+    }
+
+    for (const [filepath, result] of deps) {
+      if (result && (dependsOnSource(result.deps) || dependsOnSource(result.dynamicDeps)))
         runningTests.push(filepath)
     }
 
