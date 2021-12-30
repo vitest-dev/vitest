@@ -12,27 +12,26 @@ To read more about why to choose Mock Service Worker: [Introduction to MSW](http
 
 ## Configuration
 
-Create a `handlers.ts` file to specify the requests that need intercepting
-
+Create a file that includes the requests that need to be intercepted and sets up the server.
 ```js
-import { rest } from 'msw'
+import { graphql, rest } from 'msw'
+import { setupServer } from 'msw/node'
+
 import { posts } from './src/mocks/posts'
 
-export const handlers = [
-  rest.get('url-to-be-captured', (req, res, ctx) => {
+export const restHandlers = [
+  rest.get('https://url.to/be/captured', (req, res, ctx) => {
     return res(ctx.status(200), ctx.json(posts))
   }),
 ]
-```
 
-Create a `server.ts` file to add the handlers to a MSW server
+export const graphqlHandlers = [
+  graphql.query('posts', (req, res, ctx) => {
+    return res(ctx.data(posts))
+  }),
+]
 
-```js
-import { setupServer } from 'msw/node'
-import { handlers } from './handlers'
-
-// add handlers to the MSW server
-export const server = setupServer(...handlers)
+export const server = setupServer(...restHandlers, ...graphqlHandlers)
 ```
 
 Add the following to your (test) setup file
@@ -50,7 +49,8 @@ afterAll(() => server.close())
 // Reset handlers after each test `important for test isolation`
 afterEach(() => server.resetHandlers())
 ```
-You can find more information on the the `onUnhandledRequest` option [here](https://mswjs.io/docs/recipes/debugging-uncaught-requests)
+
+> Configuring the server with `onUnhandleRequest: 'error'` ensures that an error is thrown whenever there is a request that does not have a corresponding request handler.
 
 ## Example
 
