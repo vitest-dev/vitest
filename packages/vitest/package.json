@@ -57,7 +57,8 @@
     "chai": "^4.3.4",
     "local-pkg": "^0.4.0",
     "tinypool": "^0.0.6",
-    "tinyspy": "^0.2.6"
+    "tinyspy": "^0.2.6",
+    "vite": ">=2.7.10"
   },
   "devDependencies": {
     "@antfu/install-pkg": "^0.1.0",
@@ -94,13 +95,14 @@
     "source-map-js": "^1.0.1",
     "strip-ansi": "^7.0.1",
     "typescript": "^4.5.4",
-    "ws": "^8.4.0"
+    "ws": "^8.4.0",
+    "@vitest/ui": "workspace:*"
   },
   "peerDependencies": {
     "c8": "*",
     "happy-dom": "*",
     "jsdom": "*",
-    "vite": "^2.7.1"
+    "@vitest/ui": "*"
   },
   "peerDependenciesMeta": {
     "c8": {
@@ -110,6 +112,9 @@
       "optional": true
     },
     "jsdom": {
+      "optional": true
+    },
+    "@vitest/ui": {
       "optional": true
     }
   },

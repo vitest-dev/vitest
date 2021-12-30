@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { client, current } from '~/composables/state'
+import { client, current } from '~/composables/client'
 
 const code = ref('')
 watch(current, async() => {

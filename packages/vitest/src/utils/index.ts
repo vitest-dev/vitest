@@ -33,13 +33,13 @@ export function mergeSlashes(str: string) {
 export const noop = () => {}
 
 /**
- * Partition in tasks groups by consecutive computeMode ('serial', 'concurrent')
+ * Partition in tasks groups by consecutive concurrent
  */
 export function partitionSuiteChildren(suite: Suite) {
   let tasksGroup: Task[] = []
   const tasksGroups: Task[][] = []
   for (const c of suite.tasks) {
-    if (tasksGroup.length === 0 || c.computeMode === tasksGroup[0].computeMode) {
+    if (tasksGroup.length === 0 || c.concurrent === tasksGroup[0].concurrent) {
       tasksGroup.push(c)
     }
     else {

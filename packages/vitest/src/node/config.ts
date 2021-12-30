@@ -21,10 +21,11 @@ export function resolveConfig(
 
   resolved.depsInline = [...resolved.deps?.inline || []]
   resolved.depsExternal = [...resolved.deps?.external || []]
+  resolved.fallbackCJS = resolved.deps?.fallbackCJS ?? true
+  resolved.interpretDefault = resolved.deps?.interpretDefault ?? true
 
   resolved.environment = resolved.environment || 'node'
   resolved.threads = resolved.threads ?? true
-  resolved.interpretDefault = resolved.interpretDefault ?? true
 
   resolved.clearMocks = resolved.clearMocks ?? false
   resolved.restoreMocks = resolved.restoreMocks ?? false

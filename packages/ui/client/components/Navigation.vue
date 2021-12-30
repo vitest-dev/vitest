@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Task } from '#types'
 import { toggleDark } from '~/composables'
-import { activeFileIdRef, client, files } from '~/composables/state'
+import { activeFileIdRef, client, files } from '~/composables/client'
 
 function onItemClick(task: Task) {
   activeFileIdRef.value = task.id

@@ -39,6 +39,22 @@ export interface InlineConfig {
      * This could be helpful to handle packages that ship `.js` in ESM format (that Node can't handle).
      */
     inline?: (string | RegExp)[]
+
+    /**
+     * Interpret CJS module's default as named exports
+     *
+     * @default true
+     */
+    interpretDefault?: boolean
+
+    /**
+     * When a dependency is a valid ESM package, try to guess the cjs version based on the path.
+     * This will significantly improve the performance in huge repo, but might potentially
+     * cause some misalignment if a package have different logic in ESM and CJS mode.
+     *
+     * @default true
+     */
+    fallbackCJS?: boolean
   }
 
   /**
@@ -101,13 +117,6 @@ export interface InlineConfig {
    * @default available CPUs
    */
   minThreads?: number
-
-  /*
-   * Interpret CJS module's default as named exports
-   *
-   * @default true
-   */
-  interpretDefault?: boolean
 
   /**
    * Default timeout of a test in milliseconds
@@ -235,6 +244,8 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
 
   depsInline: (string | RegExp)[]
   depsExternal: (string | RegExp)[]
+  fallbackCJS: boolean
+  interpretDefault: boolean
 
   coverage: ResolvedC8Options
   snapshotOptions: SnapshotStateOptions

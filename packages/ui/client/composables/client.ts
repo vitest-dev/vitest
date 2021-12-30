@@ -11,7 +11,9 @@ export const params = useUrlSearchParams<{ file: string }>('hash-params', {
 
 export const activeFileIdRef = toRef(params, 'file')
 
-export const ENTRY_URL = 'ws://localhost:51204/__vitest_api__'
+export const PORT = import.meta.hot ? '51204' : location.port
+export const HOST = [location.hostname, PORT].filter(Boolean).join(':')
+export const ENTRY_URL = `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${HOST}/__vitest_api__`
 
 export const client = createClient(ENTRY_URL, {
   reactive: reactive as any,

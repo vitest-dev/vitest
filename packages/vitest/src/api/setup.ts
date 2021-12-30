@@ -4,9 +4,11 @@ import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
 import type { WebSocket } from 'ws'
 import { WebSocketServer } from 'ws'
+import type { ModuleNode } from 'vite'
 import { API_PATH } from '../constants'
 import type { Vitest } from '../node'
 import type { File, Reporter, TaskResultPack } from '../types'
+import { shouldExternalize } from '../utils/externalize'
 import type { WebSocketEvents, WebSocketHandlers } from './types'
 
 export function setup(ctx: Vitest) {
@@ -44,6 +46,35 @@ export function setup(ctx: Vitest) {
         },
         getConfig() {
           return ctx.config
+        },
+        async getModuleGraph(id: string) {
+          const graph: Record<string, string[]> = {}
+          function clearId(id?: string | null) {
+            return id?.replace(/\?v=\w+$/, '') || ''
+          }
+          function get(mod?: ModuleNode, seen = new Set<any>()) {
+            if (!mod || !mod.id || seen.has(mod))
+              return
+            seen.add(mod)
+            const mods = Array.from(mod.importedModules).filter(i => i.id && !i.id.includes('/vitest/dist/'))
+            graph[clearId(mod.id)] = mods.map(i => clearId(i.id)) as string[]
+            mods.forEach(m => get(m, seen))
+          }
+          get(ctx.server.moduleGraph.getModuleById(id))
+          const externalized: string[] = []
+          const inlined: string[] = []
+          await Promise.all(Object.keys(graph).map(async(i) => {
+            const rewrote = await shouldExternalize(i, ctx.config)
+            if (rewrote)
+              externalized.push(rewrote)
+            else
+              inlined.push(i)
+          }))
+          return {
+            graph,
+            externalized,
+            inlined,
+          }
         },
       },
       post(msg) {
