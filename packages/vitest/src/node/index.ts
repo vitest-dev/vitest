@@ -346,11 +346,6 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
     build: {
       sourcemap: true,
     },
-    optimizeDeps: {
-      exclude: [
-        'vitest',
-      ],
-    },
   }
 
   const server = await createServer(mergeConfig(config, viteOverrides))
@@ -358,10 +353,8 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
 
   if (options.api === true)
     options.api = defaultPort
-
-  if (options.open && !options.api)
+  if (options.open && typeof options.api !== 'number')
     options.api = defaultPort
-
   if (typeof options.api === 'number')
     await server.listen(options.api)
 
