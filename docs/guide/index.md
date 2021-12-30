@@ -78,7 +78,13 @@ Run vitest in development mode.
 
 ### `vitest source`
 
-Run only tests that cover a list of source files. Doesn't work with lazy imports. Useful to run with [`lint-staged`](https://github.com/okonet/lint-staged) or with your CI setup.
+Run only tests that cover a list of source files. Doesn't work with lazy imports. All files should be relative to root folder.
+
+Useful to run with [`lint-staged`](https://github.com/okonet/lint-staged) or with your CI setup.
+
+```bash
+vitest source src/index.ts src/hello-world.js
+```
 
 ### CLI Options
 
