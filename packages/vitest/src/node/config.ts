@@ -68,8 +68,12 @@ export function resolveConfig(
   if (resolved.api === true)
     resolved.api = defaultPort
 
-  if (options.relatedSources)
-    resolved.relatedSources = toArray(options.relatedSources).map(file => resolve(resolved.root, file))
+  if (options.relatedSources) {
+    resolved.relatedSources = toArray(options.relatedSources).map((file) => {
+      const delimeter = file.includes('?') ? '&' : '?'
+      return `${file}${delimeter}imports`
+    })
+  }
 
   return resolved
 }

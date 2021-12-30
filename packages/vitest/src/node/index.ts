@@ -11,6 +11,7 @@ import { SnapshotManager } from '../integrations/snapshot/manager'
 import { configFiles, defaultPort } from '../constants'
 import { hasFailed, noop, slash, toArray } from '../utils'
 import { MocksPlugin } from '../plugins/mock'
+import { ImportsPlugin } from '../plugins/imports'
 import { DefaultReporter } from '../reporters/default'
 import { ReportersMap } from '../reporters'
 import { cleanCoverage, reportCoverage } from '../coverage'
@@ -91,7 +92,9 @@ class Vitest {
   async start(filters?: string[]) {
     this.report('onInit', this)
 
-    const files = await this.globTestFiles(filters)
+    const files = await this.filterTestsBySource(
+      await this.globTestFiles(filters),
+    )
 
     if (!files.length) {
       if (this.config.passWithNoTests)
@@ -108,6 +111,27 @@ class Vitest {
 
     if (this.config.coverage.enabled)
       await reportCoverage(this)
+  }
+
+  async filterTestsBySource(tests: string[]) {
+    const sources = this.config.relatedSources
+    if (!sources?.length)
+      return tests
+
+    const runningTests = []
+
+    const deps = await Promise.all(
+      tests.map(async(filepath) => {
+        return [filepath, await this.server.transformRequest(`${filepath}?imports`, { ssr: true })] as const
+      }),
+    )
+
+    for (const [filepath, result] of deps) {
+      if (result && sources.some(path => result.deps?.includes(path)))
+        runningTests.push(filepath)
+    }
+
+    return runningTests
   }
 
   async runFiles(files: string[]) {
@@ -316,6 +340,7 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
     clearScreen: false,
     configFile: configPath,
     plugins: [
+      ImportsPlugin(),
       {
         name: 'vitest',
         async configureServer(server) {
