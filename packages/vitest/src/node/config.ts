@@ -70,8 +70,9 @@ export function resolveConfig(
 
   if (options.relatedSources) {
     resolved.relatedSources = toArray(options.relatedSources).map((file) => {
+      const slash = file.startsWith('/') ? '' : '/'
       const delimeter = file.includes('?') ? '&' : '?'
-      return `${file}${delimeter}imports`
+      return `${slash}${file}${delimeter}imports`
     })
   }
 
