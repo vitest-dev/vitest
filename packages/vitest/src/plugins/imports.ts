@@ -24,7 +24,8 @@ export const RelatedImportsPlugin = (): Plugin => {
       const deps = new Set()
 
       const addImports = async(code: string, filepath: string, pattern: RegExp) => {
-        for (const match of code.matchAll(pattern)) {
+        const matches = code.matchAll(pattern)
+        for (const match of matches) {
           const path = await this.resolve(match[2], filepath)
           if (path && !isExternalImport(path.id) && !deps.has(path.id)) {
             deps.add(path.id)
