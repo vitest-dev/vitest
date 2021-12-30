@@ -58,4 +58,4 @@ We have a full working example which uses MSW: [React Testing with MSW](https://
 
 ## More
 
-There is much more to MSW. You can go access cookies, query parameters, define mock error responses and much more! We highly recommend to read [their documentation](https://mswjs.io/docs/recipes) to dive in further, as it is a very extensive and powerfull tool. MSW is as close as you are going to get to "mock" **real** networks requests in your test environment.
+There is much more to MSW. You can access cookies and query parameters, define mock error responses, and much more! To see all you can do with MSW, read [their documentation](https://mswjs.io/docs/recipes).
