@@ -11,3 +11,7 @@
   to = "/index.html"
   status = 200
 
+[[redirects]]
+  from = "/new"
+  to = "https://stackblitz.com/fork/node-8hobg2?file=test%2Fbasic.test.ts&view=editor"
+  status = 302
