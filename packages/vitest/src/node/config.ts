@@ -69,12 +69,8 @@ export function resolveConfig(
   if (resolved.api === true)
     resolved.api = defaultPort
 
-  if (options.relatedSources) {
-    resolved.relatedSources = toArray(options.relatedSources).map((file) => {
-      const slash = file.startsWith('/') ? '' : '/'
-      return `${slash}${file}`
-    })
-  }
+  if (options.related)
+    resolved.related = toArray(options.related).map(file => resolve(resolved.root, file))
 
   return resolved
 }

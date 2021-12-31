@@ -54,7 +54,7 @@ cli
 cli.parse()
 
 async function runRelated(relatedFiles: string[] | string, argv: UserConfig) {
-  argv.relatedSources = relatedFiles
+  argv.related = relatedFiles
   await dev([], argv)
 }
 

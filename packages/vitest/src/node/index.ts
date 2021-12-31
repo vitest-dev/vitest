@@ -1,4 +1,4 @@
-import { readFile } from 'fs/promises'
+import { promises } from 'fs'
 import { resolve } from 'pathe'
 import type { ViteDevServer, InlineConfig as ViteInlineConfig, Plugin as VitePlugin, UserConfig as ViteUserConfig } from 'vite'
 import { createServer, mergeConfig } from 'vite'
@@ -117,7 +117,7 @@ class Vitest {
 
   private async getFileContent(path: string) {
     if (!this.nestedCode.get(path))
-      this.nestedCode.set(path, await readFile(path, 'utf-8'))
+      this.nestedCode.set(path, await promises.readFile(path, 'utf-8'))
 
     return this.nestedCode.get(path)!
   }
@@ -136,11 +136,12 @@ class Vitest {
       const matches = code.matchAll(pattern)
       for (const match of matches) {
         const path = await this.server.pluginContainer.resolveId(match[2], filepath)
-        if (path && !isExternalImport(path.id) && !deps.has(path.id)) {
-          deps.add(path.id)
+        const fsPath = path && path.id.split('?')[0]
+        if (fsPath && !isExternalImport(fsPath) && !deps.has(fsPath)) {
+          deps.add(fsPath)
 
-          const depCode = await this.getFileContent(path.id)
-          await processImports(depCode, path.id)
+          const depCode = await this.getFileContent(fsPath)
+          await processImports(depCode, fsPath)
         }
       }
     }
@@ -154,12 +155,12 @@ class Vitest {
 
     await processImports(await this.getFileContent(filepath), filepath)
 
-    return Array.from(deps).map(dep => dep.replace(this.config.root, ''))
+    return deps
   }
 
   async filterTestsBySource(tests: string[]) {
-    const sources = this.config.relatedSources
-    if (!sources?.length)
+    const related = this.config.related
+    if (!related?.length)
       return tests
 
     const testDeps = await Promise.all(
@@ -172,7 +173,7 @@ class Vitest {
     const runningTests = []
 
     for (const [filepath, deps] of testDeps) {
-      if (deps.length && sources.some(path => deps.some(dep => dep.startsWith(path))))
+      if (deps.size && related.some(path => deps.has(path)))
         runningTests.push(filepath)
     }
 

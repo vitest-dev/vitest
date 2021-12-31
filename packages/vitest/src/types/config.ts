@@ -233,14 +233,14 @@ export interface UserConfig extends InlineConfig {
   /**
    * Run tests that cover a list of source files
    */
-  relatedSources?: string[] | string
+  related?: string[] | string
 }
 
-export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'relatedSources'> {
+export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related'> {
   config?: string
   filters?: string[]
   testNamePattern?: RegExp
-  relatedSources?: string[]
+  related?: string[]
 
   depsInline: (string | RegExp)[]
   depsExternal: (string | RegExp)[]
