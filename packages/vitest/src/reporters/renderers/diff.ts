@@ -20,11 +20,7 @@ export async function printError(error: unknown, ctx: Vitest) {
     } as any
   }
 
-  const stacks = parseStacktrace(e).filter(i =>
-    !i.file.includes('/vitest/dist/')
-    && !i.file.includes('/node_modules/tinypool/')
-    && !i.file.includes('/node_modules/tinyspy/'),
-  )
+  const stacks = parseStacktrace(e)
 
   if (!stacks.length) {
     ctx.console.error(e)

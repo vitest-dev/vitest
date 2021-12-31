@@ -1,5 +1,6 @@
 import type { ChainableFunction } from '../runtime/chain'
 import type { Awaitable } from './general'
+import type { ErrorWithDiff } from '.'
 
 export type RunMode = 'run' | 'skip' | 'only' | 'todo'
 export type TaskState = RunMode | 'pass' | 'fail'
@@ -17,7 +18,7 @@ export interface TaskBase {
 export interface TaskResult {
   state: TaskState
   duration?: number
-  error?: unknown
+  error?: ErrorWithDiff
 }
 
 export type TaskResultPack = [id: string, result: TaskResult | undefined]

@@ -37,6 +37,12 @@ export async function interpretSourcePos(stackFrames: ParsedStack[], ctx: Vitest
   return stackFrames
 }
 
+const stackIgnorePatterns = [
+  '/vitest/dist/',
+  '/node_modules/tinypool/',
+  '/node_modules/tinyspy/',
+]
+
 export function parseStacktrace(e: ErrorWithDiff): ParsedStack[] {
   if (e.stacks)
     return e.stacks
@@ -53,6 +59,9 @@ export function parseStacktrace(e: ErrorWithDiff): ParsedStack[] {
       let file = match[2]
       if (file.startsWith('file://'))
         file = file.slice(7)
+
+      if (stackIgnorePatterns.some(p => file.includes(p)))
+        return null
 
       return {
         method: match[1],

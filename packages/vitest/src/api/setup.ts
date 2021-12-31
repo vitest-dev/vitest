@@ -9,6 +9,7 @@ import { API_PATH } from '../constants'
 import type { Vitest } from '../node'
 import type { File, Reporter, TaskResultPack } from '../types'
 import { shouldExternalize } from '../utils/externalize'
+import { interpretSourcePos, parseStacktrace } from '../utils/source-map'
 import type { WebSocketEvents, WebSocketHandlers } from './types'
 
 export function setup(ctx: Vitest) {
@@ -36,8 +37,11 @@ export function setup(ctx: Vitest) {
         getFiles() {
           return ctx.state.getFiles()
         },
-        getSourceCode(id) {
+        readFile(id) {
           return fs.readFile(id, 'utf-8')
+        },
+        writeFile(id, content) {
+          return fs.writeFile(id, content, 'utf-8')
         },
         async rerun(files) {
           await ctx.report('onWatcherRerun', files)
@@ -106,12 +110,22 @@ class WebSocketReporter implements Reporter {
   ) {}
 
   onCollected(files?: File[]) {
+    if (this.clients.size === 0)
+      return
     this.clients.forEach((client) => {
       client.onCollected?.(files)
     })
   }
 
-  onTaskUpdate(packs: TaskResultPack[]) {
+  async onTaskUpdate(packs: TaskResultPack[]) {
+    if (this.clients.size === 0)
+      return
+
+    await Promise.all(packs.map(async(i) => {
+      if (i[1]?.error)
+        await interpretSourcePos(parseStacktrace(i[1].error as any), this.ctx)
+    }))
+
     this.clients.forEach((client) => {
       client.onTaskUpdate?.(packs)
     })
