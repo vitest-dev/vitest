@@ -1,3 +1,4 @@
+import { existsSync, promises as fs } from 'fs'
 import { resolve } from 'pathe'
 import type { ViteDevServer, InlineConfig as ViteInlineConfig, Plugin as VitePlugin, UserConfig as ViteUserConfig } from 'vite'
 import { createServer, mergeConfig } from 'vite'
@@ -38,6 +39,8 @@ class Vitest {
   visitedFilesMap: Map<string, RawSourceMap> = new Map()
   runningPromise?: Promise<void>
   closingPromise?: Promise<void>
+
+  nestedCode = new Map<string, string>()
 
   isFirstRun = true
 
@@ -91,7 +94,9 @@ class Vitest {
   async start(filters?: string[]) {
     this.report('onInit', this)
 
-    const files = await this.globTestFiles(filters)
+    const files = await this.filterTestsBySource(
+      await this.globTestFiles(filters),
+    )
 
     if (!files.length) {
       if (this.config.passWithNoTests)
@@ -108,6 +113,69 @@ class Vitest {
 
     if (this.config.coverage.enabled)
       await reportCoverage(this)
+  }
+
+  private async getFileContent(path: string) {
+    if (!this.nestedCode.get(path))
+      this.nestedCode.set(path, await fs.readFile(path, 'utf-8'))
+
+    return this.nestedCode.get(path)!
+  }
+
+  private async getTestDependencies(filepath: string) {
+    const importRegexp = /import(?:["'\s]*([\w*${}\n\r\t, ]+)from\s*)?["'\s]["'\s](.*[@\w_-]+)["'\s]$/mg
+    const dynamicImportRegexp = /import\((?:["'\s]*([\w*{}\n\r\t, ]+)\s*)?["'\s](.*([@\w_-]+))["'\s]\)$/mg
+
+    const deps = new Set<string>()
+
+    const addImports = async(code: string, filepath: string, pattern: RegExp) => {
+      const matches = code.matchAll(pattern)
+      for (const match of matches) {
+        const path = await this.server.pluginContainer.resolveId(match[2], filepath)
+        const fsPath = path && path.id.split('?')[0]
+        if (fsPath && !fsPath.includes('node_modules') && !deps.has(fsPath) && existsSync(fsPath)) {
+          deps.add(fsPath)
+
+          const depCode = await this.getFileContent(fsPath)
+          await processImports(depCode, fsPath)
+        }
+      }
+    }
+
+    function processImports(code: string, id: string) {
+      return Promise.all([
+        addImports(code, id, importRegexp),
+        addImports(code, id, dynamicImportRegexp),
+      ])
+    }
+
+    await processImports(await this.getFileContent(filepath), filepath)
+
+    return deps
+  }
+
+  async filterTestsBySource(tests: string[]) {
+    const related = this.config.related
+    if (!related?.length)
+      return tests
+
+    const testDeps = await Promise.all(
+      tests.map(async(filepath) => {
+        const deps = await this.getTestDependencies(filepath)
+        return [filepath, deps] as const
+      }),
+    )
+
+    const runningTests = []
+
+    for (const [filepath, deps] of testDeps) {
+      if (deps.size && related.some(path => deps.has(path)))
+        runningTests.push(filepath)
+    }
+
+    this.nestedCode.clear()
+
+    return runningTests
   }
 
   async runFiles(files: string[]) {

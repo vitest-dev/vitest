@@ -76,6 +76,16 @@ Perform a single run without watch mode.
 
 Run vitest in development mode.
 
+### `vitest related`
+
+Run only tests that cover a list of source files. Works with static lazy imports, but not the dynamic ones. All files should be relative to root folder.
+
+Useful to run with [`lint-staged`](https://github.com/okonet/lint-staged) or with your CI setup.
+
+```bash
+vitest related /src/index.ts /src/hello-world.js
+```
+
 ### CLI Options
 
 | Options       |               |
@@ -95,7 +105,6 @@ Run vitest in development mode.
 | `--run` | Do not watch |
 | `--global` | Inject APIs globally |
 | `--dom` | Mock browser api with happy-dom |
-| `--findRelatedTests <filepath>` | Run only tests that import specified file |
 | `--environment <env>` | Runner environment (default: node) |
 | `--passWithNoTests` | Pass when no tests found |
 | `-h, --help` | Display available CLI options |
