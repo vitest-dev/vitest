@@ -209,7 +209,7 @@ Register a callback to be called once before starting to run all tests in the cu
 ```ts
 import { beforeAll } from 'vitest'
 
-let state = 'start'
+let allState = 'start'
 
 beforeAll(() => {
   allState = 'running'
@@ -228,7 +228,7 @@ Register a callback to be called once after all tests have run in the current co
 ```ts
 import { afterAll } from 'vitest'
 
-let state = 'start'
+let allState = 'start'
 
 afterAll(() => {
   allState = 'done'
