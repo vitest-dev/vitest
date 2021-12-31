@@ -10,7 +10,7 @@ function onItemClick(task: Task) {
 </script>
 
 <template>
-  <nav border="r base">
+  <nav border="r base" overflow-y-auto>
     <TasksList
       :tasks="files"
       :on-item-click="onItemClick"
