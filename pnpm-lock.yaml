@@ -455,6 +455,12 @@ importers:
       vite: 2.7.10
       vitest: link:../../packages/vitest
 
+  test/related:
+    specifiers:
+      vitest: workspace:*
+    devDependencies:
+      vitest: link:../../packages/vitest
+
   test/single-thread:
     specifiers:
       vitest: workspace:*
