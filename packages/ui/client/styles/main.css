@@ -85,6 +85,7 @@ html.dark {
 .splitpanes__splitter {
   position: relative;
   background-color: rgba(125,125,125,0.1);
+  z-index: 10;
 }
 
 .splitpanes__splitter:before {

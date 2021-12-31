@@ -1,7 +1,8 @@
 import { SourceMapConsumer } from 'source-map-js'
 import type { RawSourceMap } from 'source-map-js'
-import type { ParsedStack, Position } from '../types/general'
-import { notNullish } from './index'
+import type { Vitest } from 'vitest/node'
+import type { ErrorWithDiff, ParsedStack, Position } from '../types/general'
+import { notNullish } from './tasks'
 
 export const lineSplitRE = /\r?\n/
 
@@ -23,26 +24,47 @@ export function getOriginalPos(map: RawSourceMap | null | undefined, { line, col
 const stackFnCallRE = /at (.*) \((.+):(\d+):(\d+)\)$/
 const stackBarePathRE = /at ?(.*) (.+):(\d+):(\d+)$/
 
-export function parseStack(stack: string): ParsedStack[] {
-  const lines = stack.split('\n')
-  const stackFrames = lines.map((raw) => {
-    const line = raw.trim()
-    const match = line.match(stackFnCallRE) || line.match(stackBarePathRE)
-    if (!match)
-      return null
+export async function interpretSourcePos(stackFrames: ParsedStack[], ctx: Vitest): Promise<ParsedStack[]> {
+  for (const frame of stackFrames) {
+    const transformResult = ctx.server.moduleGraph.getModuleById(frame.file)?.ssrTransformResult
+    if (!transformResult)
+      continue
+    const sourcePos = await getOriginalPos(transformResult.map as any as RawSourceMap | undefined, frame)
+    if (sourcePos)
+      frame.sourcePos = sourcePos
+  }
 
-    let file = match[2]
-    if (file.startsWith('file://'))
-      file = file.slice(7)
+  return stackFrames
+}
 
-    return {
-      method: match[1],
-      file: match[2],
-      line: parseInt(match[3]),
-      column: parseInt(match[4]),
-    }
-  })
-  return stackFrames.filter(notNullish)
+export function parseStacktrace(e: ErrorWithDiff): ParsedStack[] {
+  if (e.stacks)
+    return e.stacks
+
+  const stackStr = e.stack || e.stackStr || ''
+  const stackFrames = stackStr
+    .split('\n')
+    .map((raw): ParsedStack | null => {
+      const line = raw.trim()
+      const match = line.match(stackFnCallRE) || line.match(stackBarePathRE)
+      if (!match)
+        return null
+
+      let file = match[2]
+      if (file.startsWith('file://'))
+        file = file.slice(7)
+
+      return {
+        method: match[1],
+        file: match[2],
+        line: parseInt(match[3]),
+        column: parseInt(match[4]),
+      }
+    })
+    .filter(notNullish)
+
+  e.stacks = stackFrames
+  return stackFrames
 }
 
 export function posToNumber(
