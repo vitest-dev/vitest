@@ -1,4 +1,4 @@
-import { promises } from 'fs'
+import { existsSync, promises as fs } from 'fs'
 import { resolve } from 'pathe'
 import type { ViteDevServer, InlineConfig as ViteInlineConfig, Plugin as VitePlugin, UserConfig as ViteUserConfig } from 'vite'
 import { createServer, mergeConfig } from 'vite'
@@ -117,7 +117,7 @@ class Vitest {
 
   private async getFileContent(path: string) {
     if (!this.nestedCode.get(path))
-      this.nestedCode.set(path, await promises.readFile(path, 'utf-8'))
+      this.nestedCode.set(path, await fs.readFile(path, 'utf-8'))
 
     return this.nestedCode.get(path)!
   }
@@ -126,10 +126,6 @@ class Vitest {
     const importRegexp = /import(?:["'\s]*([\w*${}\n\r\t, ]+)from\s*)?["'\s]["'\s](.*[@\w_-]+)["'\s]$/mg
     const dynamicImportRegexp = /import\((?:["'\s]*([\w*{}\n\r\t, ]+)\s*)?["'\s](.*([@\w_-]+))["'\s]\)$/mg
 
-    const isExternalImport = (id: string) => {
-      return (!id.startsWith('/') && !id.startsWith('.')) || id.startsWith('/@fs/') || id.includes('node_modules')
-    }
-
     const deps = new Set<string>()
 
     const addImports = async(code: string, filepath: string, pattern: RegExp) => {
@@ -137,7 +133,7 @@ class Vitest {
       for (const match of matches) {
         const path = await this.server.pluginContainer.resolveId(match[2], filepath)
         const fsPath = path && path.id.split('?')[0]
-        if (fsPath && !isExternalImport(fsPath) && !deps.has(fsPath)) {
+        if (fsPath && !fsPath.includes('node_modules') && !deps.has(fsPath) && existsSync(fsPath)) {
           deps.add(fsPath)
 
           const depCode = await this.getFileContent(fsPath)
