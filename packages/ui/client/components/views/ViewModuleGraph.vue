@@ -1,5 +1,5 @@
 <template>
-  <div h-full overflow="hidden">
+  <div class="scrolls">
     <div border="r base">
       <div flex items-center gap-4 px-3 py-2>
         <div v-for="node of controller?.nodeTypes.sort()" :key="node" flex="~ gap-1" items-center select-none>
@@ -125,6 +125,11 @@ html.dark {
   --color-text: #fff;
   --color-node-external: #857a40;
   --color-node-inline: #468b60;
+}
+
+.graph > svg {
+  height: auto;
+  width: auto;
 }
 
 .graph .node {

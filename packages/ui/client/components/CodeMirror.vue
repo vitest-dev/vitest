@@ -37,8 +37,8 @@ onMounted(async() => {
   <div
     relative
     font-mono
-    overflow-auto
     text-sm
+    class="scrolls"
   >
     <textarea ref="el" />
   </div>

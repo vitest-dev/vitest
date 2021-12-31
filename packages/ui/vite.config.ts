@@ -34,6 +34,9 @@ export default defineConfig({
 
         'tab-button': 'font-light op50 hover:op80 h-full px-4',
         'tab-button-active': 'op100 bg-gray-500:10',
+
+        'scroll-headers': 'position-sticky z-1 h-77px',
+        'module-graph-scroll-header': 'position-sticky top-0 right-0 left-0 z-1 h-39px',
       },
     }),
     Components({
