@@ -1,13 +1,13 @@
 <template>
   <div h-screen w-screen overflow="hidden">
     <Splitpanes class="default-theme">
-      <Pane min-size="20">
+      <Pane size="15">
         <Navigation />
       </Pane>
-      <Pane min-size="20">
+      <Pane size="15">
         <Suites />
       </Pane>
-      <Pane min-size="20">
+      <Pane>
         <FileDetails />
       </Pane>
     </Splitpanes>
