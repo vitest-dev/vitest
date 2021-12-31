@@ -1,17 +1,13 @@
 import { createClient } from '@vitest/ws-client'
 import type { WebSocketStatus } from '@vueuse/core'
 import { reactive } from 'vue'
-import type { ResolvedConfig } from '#types'
+import { getTasks } from '../../../vitest/src/utils/tasks'
+import { activeFileId } from './params'
+import type { File, ResolvedConfig } from '#types'
 
-export const params = useUrlSearchParams<{ file: string }>('hash-params', {
-  initialValue: {
-    file: '',
-  },
-})
-
-export const activeFileIdRef = toRef(params, 'file')
-
-export const ENTRY_URL = 'ws://localhost:51204/__vitest_api__'
+export const PORT = import.meta.hot ? '51204' : location.port
+export const HOST = [location.hostname, PORT].filter(Boolean).join(':')
+export const ENTRY_URL = `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${HOST}/__vitest_api__`
 
 export const client = createClient(ENTRY_URL, {
   reactive: reactive as any,
@@ -20,11 +16,28 @@ export const client = createClient(ENTRY_URL, {
 export const config = shallowRef<ResolvedConfig>({} as any)
 export const status = ref<WebSocketStatus>('CONNECTING')
 export const files = computed(() => client.state.getFiles())
-export const current = computed(() => files.value.find(file => file.id === activeFileIdRef.value))
+export const current = computed(() => files.value.find(file => file.id === activeFileId.value))
 
 export const isConnected = computed(() => status.value === 'OPEN')
 export const isConnecting = computed(() => status.value === 'CONNECTING')
 export const isDisconned = computed(() => status.value === 'CLOSED')
+
+export function runAll() {
+  return runFiles(client.state.getFiles())
+}
+
+export function runFiles(files: File[]) {
+  files.forEach((f) => {
+    delete f.result
+    getTasks(f).forEach(i => delete i.result)
+  })
+  return client.rpc.rerun(files.map(i => i.filepath))
+}
+
+export function runCurrent() {
+  if (current.value)
+    return runFiles([current.value])
+}
 
 watch(
   () => client.ws,

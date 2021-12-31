@@ -3,13 +3,12 @@ import type { Awaitable } from './general'
 
 export type RunMode = 'run' | 'skip' | 'only' | 'todo'
 export type TaskState = RunMode | 'pass' | 'fail'
-export type ComputeMode = 'serial' | 'concurrent'
 
 export interface TaskBase {
   id: string
   name: string
   mode: RunMode
-  computeMode: ComputeMode
+  concurrent?: boolean
   suite?: Suite
   file?: File
   result?: TaskResult
@@ -17,8 +16,7 @@ export interface TaskBase {
 
 export interface TaskResult {
   state: TaskState
-  start: number
-  end?: number
+  duration?: number
   error?: unknown
 }
 
@@ -31,6 +29,7 @@ export interface Suite extends TaskBase {
 
 export interface File extends Suite {
   filepath: string
+  collectDuration?: number
 }
 
 export interface Test extends TaskBase {
