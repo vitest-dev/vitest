@@ -166,24 +166,78 @@ These global functions allows you to hook into the life cycle of tests to avoid 
 
 Register a callback to be called before each test in the current context.
 
-**Type:** `beforeEach(fn: () => Awaitable<void>, timeout: number)`
+**Type:** `beforeEach(fn: () => Awaitable<void>, timeout?: number)`
+
+```ts
+import { beforeEach } from 'vitest'
+
+let count = 0
+
+beforeEach(() => {
+  count += 1
+})
+
+// Hooks accepting a timeout
+beforeEach(async () => { }, 1000)
+```
 
 ### afterEach
 
 Register a callback to be called after each test in the current context.
 
-**Type:** `afterEach(fn: () => Awaitable<void>, timeout: number)`
+**Type:** `afterEach(fn: () => Awaitable<void>, timeout?: number)`
+
+```ts
+import { afterEach } from 'vitest'
+
+let state = 'start'
+
+afterEach(() => {
+  state = 'done'
+})
+
+// Hook accepting a timeout
+afterEach(async () => { }, 1000)
+```
 
 ### beforeAll
 
 Register a callback to be called once before starting to run all tests in the current context.
 
-**Type:** `beforeAll(fn: () => Awaitable<void>, timeout: number)`
+**Type:** `beforeAll(fn: () => Awaitable<void>, timeout?: number)`
+
+```ts
+import { beforeAll } from 'vitest'
+
+let state = 'start'
+
+beforeAll(() => {
+  allState = 'running'
+})
+
+// Hook accepting a timeout
+beforeAll(async () => { }, 1000)
+```
 
 ### afterAll
 
 Register a callback to be called once after all tests have run in the current context.
 
-**Type:** `afterAll(fn: () => Awaitable<void>, timeout: number)`
+**Type:** `afterAll(fn: () => Awaitable<void>, timeout?: number)`
+
+```ts
+import { afterAll } from 'vitest'
+
+let state = 'start'
+
+afterAll(() => {
+  allState = 'done'
+})
+
+// Hook accepting a timeout
+afterAll(async () => { }, 1000)
+```
+
+
 
 
