@@ -1,6 +1,6 @@
 <template>
   <div h-full overflow="hidden">
-    <div border="r base">
+    <div>
       <div flex items-center gap-4 px-3 py-2>
         <div v-for="node of controller?.nodeTypes.sort()" :key="node" flex="~ gap-1" items-center select-none>
           <input
