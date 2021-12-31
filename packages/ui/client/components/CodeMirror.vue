@@ -1,8 +1,12 @@
 <script setup lang="ts">
+import type CodeMirror from 'codemirror'
 import { useCodeMirror } from '../composables/codemirror'
 
 const attrs = useAttrs()
-const emit = defineEmits<{ (input: any): void }>()
+const emit = defineEmits<{
+  (event: 'update:modelValue', value: string): void
+  (event: 'save', content: string): void
+}>()
 const props = defineProps<{
   modelValue: string
   mode?: string
@@ -22,14 +26,26 @@ const modeMap: Record<string, string> = {
 const el = ref<HTMLTextAreaElement>()
 const input = useVModel(props, 'modelValue', emit, { passive: true })
 
+const cm = shallowRef<CodeMirror.EditorFromTextArea>()
+
+defineExpose({ cm })
+
 onMounted(async() => {
-  const cm = useCodeMirror(el, input, {
+  cm.value = useCodeMirror(el, input, {
     ...props,
     ...attrs,
     mode: modeMap[props.mode || ''] || props.mode,
+    extraKeys: {
+      'Cmd-S': function(cm) {
+        emit('save', cm.getValue())
+      },
+      'Ctrl-S': function(cm) {
+        emit('save', cm.getValue())
+      },
+    },
   })
-  cm.setSize('100%', '100%')
-  setTimeout(() => cm.refresh(), 100)
+  cm.value.setSize('100%', '100%')
+  setTimeout(() => cm.value!.refresh(), 100)
 })
 </script>
 

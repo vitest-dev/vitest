@@ -43,5 +43,5 @@ export function useCodeMirror(
     { immediate: true },
   )
 
-  return cm
+  return markRaw(cm)
 }
