@@ -1,11 +1,21 @@
 <script setup lang="ts">
-import { current } from '~/composables/client'
+import { client, current } from '~/composables/client'
 import { viewMode } from '~/composables/params'
+import { useModuleGraph } from '~/composables/module-graph'
 
 function open() {
   if (current.value?.filepath)
     fetch(`/__open-in-editor?file=${encodeURIComponent(current.value.filepath)}`)
 }
+
+const data = asyncComputed(async() => {
+  const filepath = current.value?.filepath
+  return filepath
+    ? await client.rpc.getModuleGraph(filepath)
+    : { externalized: [], graph: {}, inlined: [] }
+})
+
+const graph = useModuleGraph(data)
 </script>
 
 <template>
@@ -30,7 +40,7 @@ function open() {
         Code
       </button>
     </div>
-    <ViewModuleGraph v-if="viewMode === 'graph'" :file="current" />
+    <ViewModuleGraph v-if="viewMode === 'graph'" :graph="graph" />
     <ViewEditor v-else-if="viewMode === 'editor'" :file="current" />
     <ViewReport v-else :file="current" />
   </div>
