@@ -3,15 +3,10 @@ import { PositionInitializers, defineGraphConfig, defineLink, defineNode } from 
 import type { Ref } from 'vue'
 
 export type ModuleType = 'external' | 'inline'
-
 export type ModuleNode = GraphNode<ModuleType>
-
 export type ModuleLink = GraphLink<ModuleType, ModuleNode>
-
 export type ModuleGraph = Graph<ModuleType, ModuleNode, ModuleLink>
-
 export type ModuleGraphController = GraphController<ModuleType, ModuleNode, ModuleLink>
-
 export type ModuleGraphConfig = GraphConfig<ModuleType, ModuleNode, ModuleLink>
 
 function makeLabel(module: string): string {
@@ -58,14 +53,16 @@ export function useModuleGraph(data: Ref<{
     const inlinedNodes = data.value.inlined.map(module => defineInlineModuleNode(module)) ?? []
     const nodes = [...externalizedNodes, ...inlinedNodes]
     const nodeMap = Object.fromEntries(nodes.map(node => [node.id, node]))
-    const links = Object.entries(data.value.graph).flatMap(([module, deps]) => deps.map(dep => defineLink({
-      source: nodeMap[module],
-      target: nodeMap[dep],
-      color: 'var(--color-link)',
-      label: '',
-      labelColor: 'var(--color-link-label)',
-      showLabel: false,
-    })))
+    const links = Object
+      .entries(data.value.graph)
+      .flatMap(([module, deps]) => deps.map(dep => defineLink({
+        source: nodeMap[module],
+        target: nodeMap[dep],
+        color: 'var(--color-link)',
+        label: '',
+        labelColor: 'var(--color-link-label)',
+        showLabel: false,
+      })))
     return { nodes, links }
   })
 }
@@ -83,7 +80,9 @@ export function useModuleGraphConfig(graph: Ref<ModuleGraph>): Ref<ModuleGraphCo
           radiusMultiplier: 2,
         },
       },
-      positionInitializer: graph.value.nodes.length > 1 ? PositionInitializers.Randomized : PositionInitializers.Centered,
+      positionInitializer: graph.value.nodes.length > 1
+        ? PositionInitializers.Randomized
+        : PositionInitializers.Centered,
     })
   })
 }

@@ -117,7 +117,6 @@ importers:
       vue: ^3.2.25
       vue-router: ^4.0.12
     dependencies:
-      d3-graph-controller: 1.8.1
       sirv: 1.0.19
     devDependencies:
       '@types/codemirror': 5.60.5
@@ -128,6 +127,7 @@ importers:
       '@vueuse/core': 7.4.1_vue@3.2.26
       codemirror: 5.65.0
       codemirror-theme-vars: 0.1.1
+      d3-graph-controller: 1.8.1
       picocolors: 1.0.0
       rollup: 2.62.0
       unocss: 0.20.0
@@ -3356,12 +3356,11 @@ packages:
 
   /d3-color/2.0.0:
     resolution: {integrity: sha512-SPXi0TSKPD4g9tw0NMZFnR95XVgUZiBH+uUTqQuDu1OsE2zomHU7ho0FISciaPvosimixwHFl3WHLGabv6dDgQ==}
-    dev: false
 
   /d3-dispatch/3.0.1:
     resolution: {integrity: sha512-rzUyPU/S7rwUflMyLc1ETDeBj0NRuHKKAcvukozwhshr6g6c5d8zh4c2gQjY2bZ0dXeGLWc1PF174P2tVvKhfg==}
     engines: {node: '>=12'}
-    dev: false
+    dev: true
 
   /d3-drag/3.0.0:
     resolution: {integrity: sha512-pWbUJLdETVA8lQNJecMxoXfH6x+mO2UQo8rSmZ+QqxcbyA3hfeprFgIT//HW2nlHChWeIIMwS2Fq+gEARkhTkg==}
@@ -3369,12 +3368,12 @@ packages:
     dependencies:
       d3-dispatch: 3.0.1
       d3-selection: 3.0.0
-    dev: false
+    dev: true
 
   /d3-ease/3.0.1:
     resolution: {integrity: sha512-wR/XK3D3XcLIZwpbvQwQ5fK+8Ykds1ip7A2Txe0yxncXSdq1L9skcG7blcedkOX+ZcgxGAmLX1FrRGbADwzi0w==}
     engines: {node: '>=12'}
-    dev: false
+    dev: true
 
   /d3-force/3.0.0:
     resolution: {integrity: sha512-zxV/SsA+U4yte8051P4ECydjD/S+qeYtnaIyAs9tgHCqfguma/aAQDjo85A9Z6EKhBirHRJHXIgJUlffT4wdLg==}
@@ -3383,7 +3382,7 @@ packages:
       d3-dispatch: 3.0.1
       d3-quadtree: 3.0.1
       d3-timer: 3.0.1
-    dev: false
+    dev: true
 
   /d3-format/2.0.0:
     resolution: {integrity: sha512-Ab3S6XuE/Q+flY96HXT0jOXcM4EAClYFnRGY5zsjRGNy6qCYrQsMffs7cV5Q9xejb35zxW5hf/guKw34kvIKsA==}
@@ -3398,13 +3397,12 @@ packages:
       d3-zoom: 3.0.0
       ts-deepmerge: 1.1.0
       vecti: 1.0.2
-    dev: false
+    dev: true
 
   /d3-interpolate/2.0.1:
     resolution: {integrity: sha512-c5UhwwTs/yybcmTpAVqwSFl6vrQ8JZJoT5F7xNFK9pymv5C0Ymcc9/LIJHtYIggg/yS9YHw8i8O8tgb9pupjeQ==}
     dependencies:
       d3-color: 2.0.0
-    dev: false
 
   /d3-path/2.0.0:
     resolution: {integrity: sha512-ZwZQxKhBnv9yHaiWd6ZU4x5BtCQ7pXszEV9CU6kRgwIQVQGLMv1oiL4M+MK/n79sYzsj+gcgpPQSctJUsLN7fA==}
@@ -3413,7 +3411,7 @@ packages:
   /d3-quadtree/3.0.1:
     resolution: {integrity: sha512-04xDrxQTDTCFwP5H6hRhsRcb9xxv2RzkcsygFzmkSIOJy3PeRJP7sNk3VRIbKXcog561P9oU0/rVH6vDROAgUw==}
     engines: {node: '>=12'}
-    dev: false
+    dev: true
 
   /d3-scale/3.3.0:
     resolution: {integrity: sha512-1JGp44NQCt5d1g+Yy+GeOnZP7xHo0ii8zsQp6PGzd+C1/dl0KGsp9A7Mxwp+1D1o4unbTTxVdU/ZOIEBoeZPbQ==}
@@ -3428,7 +3426,7 @@ packages:
   /d3-selection/3.0.0:
     resolution: {integrity: sha512-fmTRWbNMmsmWq6xJV8D19U/gw/bwrHfNXxrIN+HfZgnzqTHp9jOmKMhsTUjXOJnZOdZY9Q28y4yebKzqDKlxlQ==}
     engines: {node: '>=12'}
-    dev: false
+    dev: true
 
   /d3-shape/2.1.0:
     resolution: {integrity: sha512-PnjUqfM2PpskbSLTJvAzp2Wv4CZsnAgTfcVRTwW03QR3MkXF8Uo7B1y/lWkAsmbKwuecto++4NlsYcvYpXpTHA==}
@@ -3451,7 +3449,7 @@ packages:
   /d3-timer/3.0.1:
     resolution: {integrity: sha512-ndfJ/JxxMd3nw31uyKoY2naivF+r29V+Lc0svZxe1JvvIRmi8hUsrMvdOwgS1o6uBHmiz91geQ0ylPP0aj1VUA==}
     engines: {node: '>=12'}
-    dev: false
+    dev: true
 
   /d3-transition/3.0.1_d3-selection@3.0.0:
     resolution: {integrity: sha512-ApKvfjsSR6tg06xrL434C0WydLr7JewBB3V+/39RMHsaXTOG0zmt/OAXeng5M5LBm0ojmxJrpomQVZ1aPvBL4w==}
@@ -3465,7 +3463,7 @@ packages:
       d3-interpolate: 2.0.1
       d3-selection: 3.0.0
       d3-timer: 3.0.1
-    dev: false
+    dev: true
 
   /d3-zoom/3.0.0:
     resolution: {integrity: sha512-b8AmV3kfQaqWAuacbPuNbL6vahnOJflOhexLzMMNLga62+/nh0JzvJ0aO/5a5MVgUFGS7Hu1P9P03o3fJkDCyw==}
@@ -3476,7 +3474,7 @@ packages:
       d3-interpolate: 2.0.1
       d3-selection: 3.0.0
       d3-transition: 3.0.1_d3-selection@3.0.0
-    dev: false
+    dev: true
 
   /data-uri-to-buffer/4.0.0:
     resolution: {integrity: sha512-Vr3mLBA8qWmcuschSLAOogKgQ/Jwxulv3RNE4FXnYWRGujzrRWQI4m12fQqRkwX06C0KanhLr4hK+GydchZsaA==}
@@ -7619,7 +7617,7 @@ packages:
 
   /ts-deepmerge/1.1.0:
     resolution: {integrity: sha512-VvwaV/6RyYMwT9d8dClmfHIsG2PCdm6WY430QKOIbPRR50Y/1Q2ilp4i2XEZeHFcNqfaYnAQzpyUC6XA0AqqBg==}
-    dev: false
+    dev: true
 
   /tsconfig-paths/3.11.0:
     resolution: {integrity: sha512-7ecdYDnIdmv639mmDwslG6KQg1Z9STTz1j7Gcz0xa+nshh/gKDAHcPxRbWOsA3SPp0tXP2leTcY9Kw+NAkfZzA==}
@@ -7922,7 +7920,7 @@ packages:
 
   /vecti/1.0.2:
     resolution: {integrity: sha512-z8b4JoCMwMMzcPTPqVbNgJrquMp1WA7FCffq9/5naN/ei9ho39aVKVcFkQrKRUPe2lJTF0fjWL4Y48DIXslSDg==}
-    dev: false
+    dev: true
 
   /vite-plugin-pages/0.19.8_vite@2.7.10:
     resolution: {integrity: sha512-KwUYl5zFzLKc4eCEDp4xvbH5plqmkWN5i1JYgLIksCp5NK3FiXEaWmtQ8hSKgFo4pzV9BJ8hwWf0xYxEQzAbmQ==}

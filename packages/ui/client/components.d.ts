@@ -6,16 +6,17 @@ declare module 'vue' {
   export interface GlobalComponents {
     CodeMirror: typeof import('./components/CodeMirror.vue')['default']
     ConnectionOverlay: typeof import('./components/ConnectionOverlay.vue')['default']
-    Editor: typeof import('./components/Editor.vue')['default']
     FileDetails: typeof import('./components/FileDetails.vue')['default']
     IconButton: typeof import('./components/IconButton.vue')['default']
-    ModuleGraph: typeof import('./components/ModuleGraph.vue')['default']
     Navigation: typeof import('./components/Navigation.vue')['default']
     StatusIcon: typeof import('./components/StatusIcon.vue')['default']
     Suites: typeof import('./components/Suites.vue')['default']
     TaskItem: typeof import('./components/TaskItem.vue')['default']
     TasksList: typeof import('./components/TasksList.vue')['default']
     TaskTree: typeof import('./components/TaskTree.vue')['default']
+    ViewEditor: typeof import('./components/views/ViewEditor.vue')['default']
+    ViewModuleGraph: typeof import('./components/views/ViewModuleGraph.vue')['default']
+    ViewReport: typeof import('./components/views/ViewReport.vue')['default']
   }
 }
 
