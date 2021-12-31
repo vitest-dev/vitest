@@ -15,7 +15,14 @@ You can try Vitest online on [StackBlitz](https://vitest.dev/new). It runs Vites
 ## Adding Vitest to your Project
 
 ```bash
+// with npm
 $ npm install -D vitest
+
+// or with yarn
+$ yarn add -D vitest
+
+// or with pnpm
+$ pnpm add -D vitest
 ```
 
 :::tip
@@ -128,7 +135,7 @@ vitest related /src/index.ts /src/hello-world.js
 - [vitesse-lite](https://github.com/antfu/vitesse-lite)
 - [fluent-vue](https://github.com/demivan/fluent-vue)
 - [vueuse](https://github.com/vueuse/vueuse)
-- [milkdown](https://github.com/Saul-Mirone/milkdown
+- [milkdown](https://github.com/Saul-Mirone/milkdown)
 
 ## Using Unreleased Commits
 
