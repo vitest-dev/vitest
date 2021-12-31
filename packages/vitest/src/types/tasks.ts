@@ -1,6 +1,5 @@
 import type { ChainableFunction } from '../runtime/chain'
-import type { Awaitable } from './general'
-import type { ErrorWithDiff } from '.'
+import type { Awaitable, ErrorWithDiff } from './general'
 
 export type RunMode = 'run' | 'skip' | 'only' | 'todo'
 export type TaskState = RunMode | 'pass' | 'fail'
