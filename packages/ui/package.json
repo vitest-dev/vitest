@@ -23,12 +23,13 @@
     "build:node": "rollup -c",
     "dev:client": "vite",
     "dev": "rollup -c --watch node",
-    "dev:ui": "run-p dev:node dev:client"
+    "dev:ui": "run-p dev dev:client"
   },
   "dependencies": {
     "sirv": "^1.0.19"
   },
   "devDependencies": {
+    "d3-graph-controller": "^1.8.1",
     "@types/codemirror": "^5.60.5",
     "@types/ws": "^8.2.2",
     "@unocss/reset": "^0.20.0",
