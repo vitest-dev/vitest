@@ -171,10 +171,11 @@ Register a callback to be called before each test in the current context.
 ```ts
 import { beforeEach } from 'vitest'
 
-let count = 0 // total number of tests.
-
 beforeEach(() => {
-  count += 1 // Increment count before each test
+  // Clear mocks and add some testing data after before each test run
+  return stopMocking().then(() => {
+    return addUser({ name: 'Patak '})
+  })
 })
 
 // Hooks accepting a timeout
@@ -190,10 +191,8 @@ Register a callback to be called after each test in the current context.
 ```ts
 import { afterEach } from 'vitest'
 
-let count = 0 // total number of tests
-
 afterEach(() => {
-  count += 1 // increment count after each test
+  return clearTestingData() // clear testing data after each test run
 })
 
 // Hook accepting a timeout
@@ -210,7 +209,7 @@ Register a callback to be called once before starting to run all tests in the cu
 import { beforeAll } from 'vitest'
 
 beforeAll(() => {
-  return startMocking() // called once before all tests run.
+  return startMocking() // called once before all tests run
 })
 
 // Hook accepting a timeout
