@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Task } from '#types'
-import { activeFileIdRef } from '~/composables/client'
+import { activeFileId } from '~/composables/params'
 
 withDefaults(defineProps<{
   tasks: Task[]
@@ -59,7 +59,7 @@ export default {
         :task="task"
         :nested="nested"
         :search="search"
-        :class="activeFileIdRef === task.id ? 'bg-active' : ''"
+        :class="activeFileId === task.id ? 'bg-active' : ''"
         :on-item-click="onItemClick"
       />
     </div>
