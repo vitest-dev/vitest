@@ -57,9 +57,9 @@ const graph = useModuleGraph(data)
 const config = useModuleGraphConfig(graph)
 const controller = ref<ModuleGraphController | undefined>()
 
-useResizeObserver(el, () => {
+useResizeObserver(el, debounce(() => {
   controller.value?.resize()
-})
+}))
 
 onMounted(() => {
   resetGraphController()
@@ -83,6 +83,15 @@ function resetGraphController() {
       graph.value,
       config.value,
     )
+  }
+}
+
+// Without debouncing the resize method, resizing the component will result in flickering.
+function debounce(cb: () => void) {
+  let h = 0
+  return () => {
+    window.clearTimeout(h)
+    h = window.setTimeout(() => cb())
   }
 }
 </script>
