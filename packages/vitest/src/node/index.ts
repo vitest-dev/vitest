@@ -1,4 +1,4 @@
-import { existsSync, promises as fs } from 'fs'
+import { existsSync } from 'fs'
 import { resolve } from 'pathe'
 import type { ViteDevServer, InlineConfig as ViteInlineConfig, Plugin as VitePlugin, UserConfig as ViteUserConfig } from 'vite'
 import { createServer, mergeConfig } from 'vite'
@@ -39,8 +39,6 @@ class Vitest {
   visitedFilesMap: Map<string, RawSourceMap> = new Map()
   runningPromise?: Promise<void>
   closingPromise?: Promise<void>
-
-  nestedCode = new Map<string, string>()
 
   isFirstRun = true
 
@@ -115,41 +113,25 @@ class Vitest {
       await reportCoverage(this)
   }
 
-  private async getFileContent(path: string) {
-    if (!this.nestedCode.get(path))
-      this.nestedCode.set(path, await fs.readFile(path, 'utf-8'))
-
-    return this.nestedCode.get(path)!
-  }
-
   private async getTestDependencies(filepath: string) {
-    const importRegexp = /import(?:["'\s]*([\w*${}\n\r\t, ]+)from\s*)?["'\s]["'\s](.*[@\w_-]+)["'\s]$/mg
-    const dynamicImportRegexp = /import\((?:["'\s]*([\w*{}\n\r\t, ]+)\s*)?["'\s](.*([@\w_-]+))["'\s]\)$/mg
-
     const deps = new Set<string>()
 
-    const addImports = async(code: string, filepath: string, pattern: RegExp) => {
-      const matches = code.matchAll(pattern)
-      for (const match of matches) {
-        const path = await this.server.pluginContainer.resolveId(match[2], filepath)
-        const fsPath = path && path.id.split('?')[0]
+    const addImports = async(filepath: string) => {
+      const transformed = await this.server.transformRequest(filepath, { ssr: true })
+      if (!transformed) return
+      const dependencies = [...transformed.deps || [], ...transformed.dynamicDeps || []]
+      for (const dep of dependencies) {
+        const path = await this.server.pluginContainer.resolveId(dep, filepath, { ssr: true })
+        const fsPath = path && !path.external && path.id.split('?')[0]
         if (fsPath && !fsPath.includes('node_modules') && !deps.has(fsPath) && existsSync(fsPath)) {
           deps.add(fsPath)
 
-          const depCode = await this.getFileContent(fsPath)
-          await processImports(depCode, fsPath)
+          await addImports(fsPath)
         }
       }
     }
 
-    function processImports(code: string, id: string) {
-      return Promise.all([
-        addImports(code, id, importRegexp),
-        addImports(code, id, dynamicImportRegexp),
-      ])
-    }
-
-    await processImports(await this.getFileContent(filepath), filepath)
+    await addImports(filepath)
 
     return deps
   }
@@ -172,8 +154,6 @@ class Vitest {
       if (deps.size && related.some(path => deps.has(path)))
         runningTests.push(filepath)
     }
-
-    this.nestedCode.clear()
 
     return runningTests
   }
