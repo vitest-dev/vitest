@@ -126,7 +126,7 @@ async function printStack(
     const color = frame === highlight ? c.yellow : c.gray
     const path = relative(ctx.config.root, frame.file)
 
-    ctx.log(color(` ${c.dim(F_POINTER)} ${[frame.method, c.dim(`${path}:${pos.line}:${pos.column}`)].filter(Boolean).join(' ')}`))
+    ctx.log(color(` ${c.dim(F_POINTER)} ${[frame.method, c.italic(`${path}:${pos.line}:${pos.column}`)].filter(Boolean).join(' ')}`))
     await onStack?.(frame, pos)
 
     // reached at test file, skip the follow stack
