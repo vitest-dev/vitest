@@ -9,7 +9,7 @@ export default () => {
     apply: 'serve',
     async configureServer(server) {
       const clientDist = resolve(fileURLToPath(import.meta.url), '../client')
-      server.middlewares.use('/', sirv(clientDist, {
+      server.middlewares.use('/__vitest__', sirv(clientDist, {
         single: true,
         dev: true,
       }))

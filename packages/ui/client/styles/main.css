@@ -4,8 +4,16 @@ body {
   font-family: 'Readex Pro', sans-serif;
 }
 
+:root {
+  --color-text-light: #000;
+  --color-text-dark: #ddd;
+  --color-text: var(--color-text-light);
+}
+
+
 html.dark {
-  color: #ddd;
+  --color-text: var(--color-text-dark);
+  color: var(--color-text);
   background-color: #141414;
   color-scheme: dark;
 }

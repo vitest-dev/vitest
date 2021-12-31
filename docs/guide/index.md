@@ -10,7 +10,7 @@ You can learn more about the rationale behind the project in the [Why Vite](./wh
 
 ## Trying Vitest Online
 
-You can try Vitest online on [StackBlitz](https://stackblitz.com/fork/node-8hobg2?file=test%2Fbasic.test.ts&view=editor). It runs Vitest directly in the browser, and it is almost identical to the local setup but doesn't require installing anything on your machine.
+You can try Vitest online on [StackBlitz](https://vitest.dev/new). It runs Vitest directly in the browser, and it is almost identical to the local setup but doesn't require installing anything on your machine.
 
 ## Adding Vitest to your Project
 
@@ -19,7 +19,7 @@ $ npm install -D vitest
 ```
 
 :::tip
-Vitest requires Vite >=v2.7 and Node >=v14
+Vitest requires Vite >=v2.7.10 and Node >=v14
 :::
 
 ## Configuring Vitest
@@ -108,13 +108,18 @@ Run vitest in development mode.
 - [Svelte Component Testing](https://github.com/vitest-dev/vitest/tree/main/test/svelte)
 - [Lit Component Testing](https://github.com/vitest-dev/vitest/tree/main/test/lit)
 - [Vitesse Component Testing](https://github.com/vitest-dev/vitest/tree/main/test/vitesse)
+- [All examples](https://github.com/antfu-sponsors/vitest/blob/bad88e49dce396ac73e1029abec47ccb227959e3/test)
 
 ## Projects using Vitest
 
 - [unocss](https://github.com/antfu/unocss)
 - [unplugin-auto-import](https://github.com/antfu/unplugin-auto-import)
 - [unplugin-vue-components](https://github.com/antfu/unplugin-vue-components)
+- [vitesse](https://github.com/antfu/vitesse)
 - [vitesse-lite](https://github.com/antfu/vitesse-lite)
+- [fluent-vue](https://github.com/demivan/fluent-vue)
+- [vueuse](https://github.com/vueuse/vueuse)
+- [milkdown](https://github.com/Saul-Mirone/milkdown
 
 ## Using Unreleased Commits
 
