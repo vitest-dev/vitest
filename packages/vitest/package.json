@@ -8,13 +8,13 @@
     "test",
     "jest"
   ],
-  "homepage": "https://github.com/antfu/vitest#readme",
+  "homepage": "https://github.com/vitest-dev/vitest#readme",
   "bugs": {
-    "url": "https://github.com/antfu/vitest/issues"
+    "url": "https://github.com/vitest-dev/vitest/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/antfu/vitest.git"
+    "url": "git+https://github.com/vitest-dev/vitest.git"
   },
   "funding": "https://github.com/sponsors/antfu",
   "license": "MIT",
