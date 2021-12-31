@@ -1,40 +1,3 @@
-<template>
-  <div class="scrolls">
-    <div border="r base">
-      <div flex items-center gap-4 px-3 py-2>
-        <div v-for="node of controller?.nodeTypes.sort()" :key="node" flex="~ gap-1" items-center select-none>
-          <input
-            :id="`type-${node}`"
-            type="checkbox"
-            :checked="controller?.nodeTypeFilter.includes(node)"
-            @change="setFilter(node, ($event as any).target.checked)"
-          >
-          <label
-            font-light
-            text-sm
-            ws-nowrap
-            overflow-hidden
-            capitalize
-            truncate :for="`type-${node}`"
-            border-b-2
-            :style="{ 'border-color': `var(--color-node-${node})`}"
-          >
-            {{ node }} Modules
-          </label>
-        </div>
-        <div flex-auto />
-        <div>
-          <IconButton
-            icon="i-carbon-reset"
-            :onclick="resetGraphController"
-          />
-        </div>
-      </div>
-    </div>
-    <div ref="el" class="graph" />
-  </div>
-</template>
-
 <script setup lang="ts">
 import { GraphController } from 'd3-graph-controller'
 import type { ModuleGraph, ModuleGraphController, ModuleType } from '~/composables/module-graph'
@@ -89,6 +52,43 @@ function debounce(cb: () => void) {
   }
 }
 </script>
+
+<template>
+  <div h-full overflow="hidden">
+    <div>
+      <div flex items-center gap-4 px-3 py-2>
+        <div v-for="node of controller?.nodeTypes.sort()" :key="node" flex="~ gap-1" items-center select-none>
+          <input
+            :id="`type-${node}`"
+            type="checkbox"
+            :checked="controller?.nodeTypeFilter.includes(node)"
+            @change="setFilter(node, ($event as any).target.checked)"
+          >
+          <label
+            font-light
+            text-sm
+            ws-nowrap
+            overflow-hidden
+            capitalize
+            truncate :for="`type-${node}`"
+            border-b-2
+            :style="{ 'border-color': `var(--color-node-${node})`}"
+          >
+            {{ node }} Modules
+          </label>
+        </div>
+        <div flex-auto />
+        <div>
+          <IconButton
+            icon="i-carbon-reset"
+            :onclick="resetGraphController"
+          />
+        </div>
+      </div>
+    </div>
+    <div ref="el" class="graph" />
+  </div>
+</template>
 
 <style>
 :root {

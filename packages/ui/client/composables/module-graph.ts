@@ -88,7 +88,7 @@ export function useModuleGraphConfig(graph: Ref<ModuleGraph>): Ref<ModuleGraphCo
         },
       },
       initial: {
-        includeUnlinked: false,
+        includeUnlinked: true,
       },
       positionInitializer: graph.value.nodes.length > 1
         ? PositionInitializers.Randomized
