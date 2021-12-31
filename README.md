@@ -82,6 +82,7 @@ $ npx vitest
 - [vitesse-lite](https://github.com/antfu/vitesse-lite)
 - [fluent-vue](https://github.com/demivan/fluent-vue)
 - [vueuse](https://github.com/vueuse/vueuse)
+
 ## Sponsors
 
 ### Anthony Fu Sponsors
