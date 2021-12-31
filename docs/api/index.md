@@ -231,7 +231,7 @@ import { afterAll } from 'vitest'
 let allState = 'start'
 
 afterAll(() => {
-  allState = 'done'
+  allState = 'done' // this hook is called after all test suites is completed
 })
 
 // Hook accepting a timeout
