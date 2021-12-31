@@ -37,23 +37,17 @@
 
 <script setup lang="ts">
 import { GraphController } from 'd3-graph-controller'
-import type { File } from '#types'
-import { client } from '~/composables/client'
-import type { ModuleGraphController, ModuleType } from '~/composables/module-graph'
-import { useModuleGraph, useModuleGraphConfig } from '~/composables/module-graph'
+import type { ModuleGraph, ModuleGraphController, ModuleType } from '~/composables/module-graph'
+import { useModuleGraphConfig } from '~/composables/module-graph'
 
 const props = defineProps<{
-  file?: File
+  graph: ModuleGraph
 }>()
 
-const data = asyncComputed(async() => {
-  return props.file?.filepath
-    ? await client.rpc.getModuleGraph(props.file.filepath)
-    : { externalized: [], graph: {}, inlined: [] }
-})
+const { graph } = toRefs(props)
 
 const el = ref<HTMLDivElement>()
-const graph = useModuleGraph(data)
+
 const config = useModuleGraphConfig(graph)
 const controller = ref<ModuleGraphController | undefined>()
 
@@ -65,7 +59,7 @@ onMounted(() => {
   resetGraphController()
 })
 
-onMounted(() => {
+onUnmounted(() => {
   controller.value?.shutdown()
 })
 
@@ -95,21 +89,6 @@ function debounce(cb: () => void) {
   }
 }
 </script>
-
-<style scoped>
-.type-checkbox {
-  align-items: center;
-  display: flex;
-  gap: 0.25em;
-}
-
-.type-circle {
-  display: inline;
-  border-radius: 50%;
-  width: 0.75rem;
-  height: 0.75rem;
-}
-</style>
 
 <style>
 :root {
