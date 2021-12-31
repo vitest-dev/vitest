@@ -171,10 +171,10 @@ Register a callback to be called before each test in the current context.
 ```ts
 import { beforeEach } from 'vitest'
 
-let count = 0
+let count = 0 // total number of tests.
 
 beforeEach(() => {
-  count += 1
+  count += 1 // Increment count before each test
 })
 
 // Hooks accepting a timeout
@@ -190,10 +190,10 @@ Register a callback to be called after each test in the current context.
 ```ts
 import { afterEach } from 'vitest'
 
-let state = 'start'
+let count = 0 // total number of tests
 
 afterEach(() => {
-  state = 'done'
+  count += 1 // increment count after each test
 })
 
 // Hook accepting a timeout
@@ -209,10 +209,8 @@ Register a callback to be called once before starting to run all tests in the cu
 ```ts
 import { beforeAll } from 'vitest'
 
-let allState = 'start'
-
 beforeAll(() => {
-  allState = 'running'
+  return startMocking() // called once before all tests run.
 })
 
 // Hook accepting a timeout
@@ -228,10 +226,8 @@ Register a callback to be called once after all tests have run in the current co
 ```ts
 import { afterAll } from 'vitest'
 
-let allState = 'start'
-
 afterAll(() => {
-  allState = 'done' // this hook is called after all test suites is completed
+   return stopMocking() // this method is called after all tests run
 })
 
 // Hook accepting a timeout
