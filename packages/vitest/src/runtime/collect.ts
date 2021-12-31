@@ -14,10 +14,6 @@ function hash(str: string, length = 10) {
     .slice(0, length)
 }
 
-function inModuleGraph(files: string[]) {
-  return files.some(file => process.__vitest_worker__.moduleCache.has(file))
-}
-
 export async function collectTests(paths: string[], config: ResolvedConfig) {
   const files: File[] = []
 
@@ -36,9 +32,6 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
     try {
       await runSetupFiles(config)
       await import(filepath)
-
-      if (config.findRelatedTests && !inModuleGraph(config.findRelatedTests))
-        continue
 
       const defaultTasks = await defaultSuite.collect(file)
 

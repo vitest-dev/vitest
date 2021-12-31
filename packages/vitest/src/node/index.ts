@@ -1,3 +1,4 @@
+import { existsSync } from 'fs'
 import { resolve } from 'pathe'
 import type { ViteDevServer, InlineConfig as ViteInlineConfig, Plugin as VitePlugin, UserConfig as ViteUserConfig } from 'vite'
 import { createServer, mergeConfig } from 'vite'
@@ -91,7 +92,9 @@ class Vitest {
   async start(filters?: string[]) {
     this.report('onInit', this)
 
-    const files = await this.globTestFiles(filters)
+    const files = await this.filterTestsBySource(
+      await this.globTestFiles(filters),
+    )
 
     if (!files.length) {
       if (this.config.passWithNoTests)
@@ -108,6 +111,51 @@ class Vitest {
 
     if (this.config.coverage.enabled)
       await reportCoverage(this)
+  }
+
+  private async getTestDependencies(filepath: string) {
+    const deps = new Set<string>()
+
+    const addImports = async(filepath: string) => {
+      const transformed = await this.server.transformRequest(filepath, { ssr: true })
+      if (!transformed) return
+      const dependencies = [...transformed.deps || [], ...transformed.dynamicDeps || []]
+      for (const dep of dependencies) {
+        const path = await this.server.pluginContainer.resolveId(dep, filepath, { ssr: true })
+        const fsPath = path && !path.external && path.id.split('?')[0]
+        if (fsPath && !fsPath.includes('node_modules') && !deps.has(fsPath) && existsSync(fsPath)) {
+          deps.add(fsPath)
+
+          await addImports(fsPath)
+        }
+      }
+    }
+
+    await addImports(filepath)
+
+    return deps
+  }
+
+  async filterTestsBySource(tests: string[]) {
+    const related = this.config.related
+    if (!related?.length)
+      return tests
+
+    const testDeps = await Promise.all(
+      tests.map(async(filepath) => {
+        const deps = await this.getTestDependencies(filepath)
+        return [filepath, deps] as const
+      }),
+    )
+
+    const runningTests = []
+
+    for (const [filepath, deps] of testDeps) {
+      if (deps.size && related.some(path => deps.has(path)))
+        runningTests.push(filepath)
+    }
+
+    return runningTests
   }
 
   async runFiles(files: string[]) {
