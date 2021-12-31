@@ -1,11 +1,18 @@
 <script setup lang="ts">
 import type { File } from '#types'
+import { config } from '~/composables/client'
 
 const props = defineProps<{
   file?: File
 }>()
 
 const failed = computed(() => props.file?.tasks.filter(i => i.result?.state === 'fail') || [])
+
+function relative(p: string) {
+  if (p.startsWith(config.value.root))
+    return p.slice(config.value.root.length)
+  return p
+}
 </script>
 
 <template>
@@ -14,8 +21,11 @@ const failed = computed(() => props.file?.tasks.filter(i => i.result?.state === 
       <div v-for="task of failed" :key="task.id">
         <div bg="red-500/10" text="red-500 sm" p="x3 y2" m-2 rounded>
           {{ task.name }}
-          <!-- TODO: show diff and better stacktrace -->
-          <pre op80>{{ (task.result?.error as any).stackStr }}</pre>
+
+          <div v-if="task.result?.error">
+            <pre><b>{{ task.result.error.name || task.result.error.nameStr }}</b>: {{ task.result.error.message }}</pre>
+            <pre v-for="stack, i of task.result.error.stacks || []" :key="i" op80> - {{ relative(stack.file) }}:{{ stack.line }}:{{ stack.column }}</pre>
+          </div>
         </div>
       </div>
     </template>

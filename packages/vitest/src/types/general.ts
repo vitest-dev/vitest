@@ -35,4 +35,17 @@ export interface ParsedStack {
   file: string
   line: number
   column: number
+  sourcePos?: Position
+}
+
+export interface ErrorWithDiff extends Error {
+  name: string
+  nameStr?: string
+  stack?: string
+  stackStr?: string
+  stacks?: ParsedStack[]
+  showDiff?: boolean
+  actual?: any
+  expected?: any
+  operator?: string
 }

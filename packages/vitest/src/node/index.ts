@@ -138,8 +138,12 @@ class Vitest {
 
   async filterTestsBySource(tests: string[]) {
     const related = this.config.related
-    if (!related?.length)
+    if (!related)
       return tests
+
+    // dont run anything if no related sources are found
+    if (!related.length)
+      return []
 
     const testDeps = await Promise.all(
       tests.map(async(filepath) => {
