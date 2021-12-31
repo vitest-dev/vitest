@@ -109,6 +109,7 @@ importers:
       picocolors: ^1.0.0
       rollup: ^2.62.0
       sirv: ^1.0.19
+      splitpanes: ^3.0.6
       unocss: ^0.20.0
       unplugin-auto-import: ^0.5.5
       unplugin-vue-components: ^0.17.11
@@ -130,6 +131,7 @@ importers:
       d3-graph-controller: 1.8.1
       picocolors: 1.0.0
       rollup: 2.62.0
+      splitpanes: 3.0.6
       unocss: 0.20.0
       unplugin-auto-import: 0.5.5_59c90b04d73d3c8f46cd2a5a932f8e09
       unplugin-vue-components: 0.17.11_95e0d1fabfe6a3bc972c7b440477cc9b
@@ -7321,6 +7323,10 @@ packages:
       spdx-compare: 1.0.0
       spdx-expression-parse: 3.0.1
       spdx-ranges: 2.1.1
+    dev: true
+
+  /splitpanes/3.0.6:
+    resolution: {integrity: sha512-Ogxc+e2te4Tp5IpMwjOPO1ZvXUf2PsuEoyZhF9H5Hp6XOB0mLg/OnEZFaK2MxT7Q3O+WSEKE7CeOoTC+4zsQ6A==}
     dev: true
 
   /statuses/2.0.1:
