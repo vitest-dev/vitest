@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { client, current } from '~/composables/client'
+import type { Params } from '~/composables/params'
 import { viewMode } from '~/composables/params'
 import { useModuleGraph } from '~/composables/module-graph'
 
@@ -16,6 +17,9 @@ const data = asyncComputed(async() => {
 })
 
 const graph = useModuleGraph(data)
+const changeViewMode = (view: Params['view']) => {
+  viewMode.value = view
+}
 </script>
 
 <template>
@@ -31,13 +35,13 @@ const graph = useModuleGraph(data)
         </div>
       </div>
       <div flex="~" items-center bg-header border="b base" text-sm h-37px>
-        <button tab-button :class="{ 'tab-button-active': viewMode == null }" @click="viewMode = null">
+        <button tab-button :class="{ 'tab-button-active': viewMode == null }" @click="changeViewMode(null)">
           Report
         </button>
-        <button tab-button :class="{ 'tab-button-active': viewMode === 'graph' }" @click="viewMode = 'graph'">
+        <button tab-button :class="{ 'tab-button-active': viewMode === 'graph' }" @click="changeViewMode('graph')">
           Module Graph
         </button>
-        <button tab-button :class="{ 'tab-button-active': viewMode === 'editor' }" @click="viewMode = 'editor'">
+        <button tab-button :class="{ 'tab-button-active': viewMode === 'editor' }" @click="changeViewMode('editor')">
           Code
         </button>
       </div>
