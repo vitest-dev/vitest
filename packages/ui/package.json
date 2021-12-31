@@ -29,7 +29,6 @@
     "sirv": "^1.0.19"
   },
   "devDependencies": {
-    "d3-graph-controller": "^1.8.1",
     "@types/codemirror": "^5.60.5",
     "@types/ws": "^8.2.2",
     "@unocss/reset": "^0.20.0",
@@ -38,8 +37,10 @@
     "@vueuse/core": "^7.4.1",
     "codemirror": "^5.65.0",
     "codemirror-theme-vars": "^0.1.1",
+    "d3-graph-controller": "^1.8.1",
     "picocolors": "^1.0.0",
     "rollup": "^2.62.0",
+    "splitpanes": "^3.0.6",
     "unocss": "^0.20.0",
     "unplugin-auto-import": "^0.5.5",
     "unplugin-vue-components": "^0.17.11",
