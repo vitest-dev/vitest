@@ -56,6 +56,7 @@ cli.parse()
 
 async function runRelated(relatedFiles: string[] | string, argv: UserConfig) {
   argv.related = relatedFiles
+  argv.passWithNoTests ??= true
   await dev([], argv)
 }
 

@@ -104,6 +104,12 @@ export interface MockWithArgs<T extends MockableFunction>
 
 export const spies = new Set<JestMockCompat>()
 
+export function isMockFunction(fn: any): fn is EnhancedSpy {
+  return typeof fn === 'function'
+  && '__isSpy' in fn
+  && fn.__isSpy
+}
+
 export function spyOn<T, K extends keyof T>(
   obj: T,
   method: K,
