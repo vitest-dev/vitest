@@ -98,6 +98,7 @@ describe('jest-expect', () => {
 
   it('object', () => {
     expect({}).toEqual({})
+    expect({ apples: 13 }).toEqual({ apples: 13 })
     expect({}).toStrictEqual({})
     expect({}).not.toBe({})
 
