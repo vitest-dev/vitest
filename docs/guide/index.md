@@ -105,7 +105,7 @@ vitest related /src/index.ts /src/hello-world.js
 | `-o, --open`                      | Open UI (default: false) |
 | `-t, --testNamePattern <pattern>` | Run tests with names matching the pattern |
 | `--api`                           | Listen to port and serve API |
-| `--host <host>`                   | Specify which IP addresses the serve API should listen on. Set to 0.0.0.0 to listen on all addresses, including LAN and public addresses. |
+| `--host <host>`                   | Specify which IP address the serve API should listen on. Set to 0.0.0.0 to listen on all addresses, including LAN and public addresses. |
 | `--threads`                       | Enable Threads (default: true) |
 | `--silent`                        | Silent console output from tests |
 | `--reporter <name>`               | Select reporter: `default`, `verbose`, or `dot` |
