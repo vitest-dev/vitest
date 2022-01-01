@@ -1,3 +1,4 @@
+import type { CommonServerOptions } from 'vite'
 import type { BuiltinReporters } from '../reporters'
 import type { C8Options, ResolvedC8Options } from '../coverage'
 import type { Reporter } from './reporter'
@@ -5,6 +6,8 @@ import type { SnapshotStateOptions } from './snapshot'
 import type { Arrayable } from './general'
 
 export type BuiltinEnvironment = 'node' | 'jsdom' | 'happy-dom'
+
+export type ApiConfig = Pick<CommonServerOptions, 'port' | 'strictPort' | 'host'>
 
 export interface InlineConfig {
   /**
@@ -175,21 +178,14 @@ export interface InlineConfig {
   testNamePattern?: string | RegExp
 
   /**
-   * Listen to port and serve API
+   * Serve API options.
    *
-   * When set to true, the default port is 55555
+   * When set to true, the default port is 51204.
    *
    * @internal WIP
    * @default false
    */
-  api?: boolean | number
-
-  /**
-   * Specify which IP address the serve API should listen on. Set to 0.0.0.0 to listen on all addresses, including LAN and public addresses.
-   *
-   * @default false
-   */
-  host?: string
+  api?: boolean | ApiConfig
 
   /**
    * Will call `.mockClear()` on all spies before each test

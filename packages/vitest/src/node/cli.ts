@@ -1,7 +1,7 @@
 import readline from 'readline'
 import cac from 'cac'
 import { execa } from 'execa'
-import type { UserConfig } from '../types'
+import type { ApiConfig, UserConfig } from '../types'
 import { version } from '../../package.json'
 import { ensurePackageInstalled } from '../utils'
 import type { Vitest } from './index'
@@ -11,6 +11,32 @@ const CLOSE_TIMEOUT = 1_000
 
 const cli = cac('vitest')
 
+type DevCLIConfig = ApiConfig & UserConfig
+interface DevCLIOptions extends DevCLIConfig {}
+
+function buildDevOptions<Options extends DevCLIOptions>(
+  devOptions: Options,
+): Omit<Options, keyof ApiConfig> {
+  const options = { ...devOptions }
+  // @ts-ignore
+  delete options['--']
+  let api: boolean | ApiConfig | undefined
+  if (devOptions.api === true)
+    api = true
+
+  if (devOptions.port !== undefined)
+    api = { port: devOptions.port }
+
+  if (devOptions.strictPort !== undefined)
+    api = Object.assign(api || {}, { strictPort: devOptions.strictPort })
+
+  if (devOptions.host !== undefined)
+    api = Object.assign(api || {}, { host: devOptions.host })
+
+  options.api = api
+  return options
+}
+
 cli
   .version(version)
   .option('-r, --root <path>', 'root path')
@@ -19,7 +45,9 @@ cli
   .option('-w, --watch', 'watch mode')
   .option('-o, --open', 'open UI', { default: false })
   .option('-t, --testNamePattern <pattern>', 'run test names with the specified pattern')
-  .option('--api', 'listen to port and serve API')
+  .option('--api', 'listen to default port and serve API')
+  .option('--port', 'listen to port and serve API')
+  .option('--strictPort', 'exit if specified port is already in use for serve API')
   .option('--host <host>', 'listen local/public ip address for serve API')
   .option('--threads', 'enabled threads', { default: true })
   .option('--silent', 'silent console output from tests')
@@ -67,9 +95,11 @@ async function dev(cliFilters: string[], argv: UserConfig) {
   await run(cliFilters, argv)
 }
 
-async function run(cliFilters: string[], options: UserConfig) {
+async function run(cliFilters: string[], devOptions: DevCLIOptions) {
   process.env.VITEST = 'true'
   process.env.NODE_ENV = 'test'
+
+  const options = buildDevOptions(devOptions)
 
   if (!await ensurePackageInstalled('vite'))
     process.exit(1)

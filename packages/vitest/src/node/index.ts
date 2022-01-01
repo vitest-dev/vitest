@@ -9,7 +9,7 @@ import c from 'picocolors'
 import type { RawSourceMap } from 'source-map-js'
 import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig } from '../types'
 import { SnapshotManager } from '../integrations/snapshot/manager'
-import { configFiles, defaultPort } from '../constants'
+import { configFiles } from '../constants'
 import { ensurePackageInstalled, hasFailed, noop, slash, toArray } from '../utils'
 import { MocksPlugin } from '../plugins/mock'
 import { DefaultReporter } from '../reporters/default'
@@ -403,12 +403,8 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
   const server = await createServer(mergeConfig(config, viteOverrides))
   await server.pluginContainer.buildStart({})
 
-  if (options.api === true)
-    options.api = defaultPort
-  if (options.open && typeof options.api !== 'number')
-    options.api = defaultPort
-  if (typeof options.api === 'number')
-    await server.listen(options.api)
+  if (options.api)
+    await server.listen()
 
   return ctx
 }
