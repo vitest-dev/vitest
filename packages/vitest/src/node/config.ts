@@ -1,7 +1,7 @@
 import { resolve } from 'pathe'
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 import type { ResolvedConfig, UserConfig } from '../types'
-import { defaultExclude, defaultInclude, defaultPort } from '../constants'
+import { defaultExclude, defaultInclude } from '../constants'
 import { resolveC8Options } from '../coverage'
 import { deepMerge, toArray } from '../utils'
 
@@ -65,18 +65,6 @@ export function resolveConfig(
 
   resolved.setupFiles = Array.from(resolved.setupFiles || [])
     .map(i => resolve(resolved.root, i))
-
-  if (options.api === true)
-    options.api = { port: defaultPort }
-
-  if (typeof options.api === 'object') {
-    if (!options.api.port)
-      options.api.port = defaultPort
-
-    Object.entries(options.api).forEach(([k, v]) => {
-      (viteConfig.server as any)[k] = v
-    })
-  }
 
   if (options.related)
     resolved.related = toArray(options.related).map(file => resolve(resolved.root, file))

@@ -28,10 +28,10 @@ function buildDevOptions<Options extends DevCLIOptions>(
     api = { port: devOptions.port }
 
   if (devOptions.strictPort !== undefined)
-    api = Object.assign(api || {}, { strictPort: devOptions.strictPort })
+    api = Object.assign(typeof api === 'object' ? api : {}, { strictPort: devOptions.strictPort })
 
   if (devOptions.host !== undefined)
-    api = Object.assign(api || {}, { host: devOptions.host })
+    api = Object.assign(typeof api === 'object' ? api : {}, { host: devOptions.host })
 
   options.api = api
   return options
@@ -46,7 +46,7 @@ cli
   .option('-o, --open', 'open UI', { default: false })
   .option('-t, --testNamePattern <pattern>', 'run test names with the specified pattern')
   .option('--api', 'listen to default port and serve API')
-  .option('--port', 'listen to port and serve API')
+  .option('--port <port>', 'listen to port and serve API')
   .option('--strictPort', 'exit if specified port is already in use for serve API')
   .option('--host <host>', 'listen local/public ip address for serve API')
   .option('--threads', 'enabled threads', { default: true })
