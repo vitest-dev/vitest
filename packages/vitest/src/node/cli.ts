@@ -20,6 +20,7 @@ cli
   .option('-o, --open', 'open UI', { default: false })
   .option('-t, --testNamePattern <pattern>', 'run test names with the specified pattern')
   .option('--api', 'listen to port and serve API')
+  .option('--host <host>', 'listen local/public ip address for serve API')
   .option('--threads', 'enabled threads', { default: true })
   .option('--silent', 'silent console output from tests')
   .option('--isolate', 'isolate environment for each test file', { default: true })

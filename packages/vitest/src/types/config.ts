@@ -185,6 +185,13 @@ export interface InlineConfig {
   api?: boolean | number
 
   /**
+   * Specify which IP addresses the serve API should listen on. Set to 0.0.0.0 to listen on all addresses, including LAN and public addresses.
+   *
+   * @default false
+   */
+  host?: string
+
+  /**
    * Will call `.mockClear()` on all spies before each test
    * @default false
    */
