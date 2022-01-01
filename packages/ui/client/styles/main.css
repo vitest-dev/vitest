@@ -159,6 +159,3 @@ html.dark {
   padding-bottom: unset !important;
 }
 
-.module-graph-scroll-container + .scrolls {
-  height: calc(100vh - 117px);
-}

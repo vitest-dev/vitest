@@ -24,7 +24,7 @@ const changeViewMode = (view: Params['view']) => {
 
 <template>
   <div v-if="current" h-full>
-    <div scroll-header>
+    <div>
       <div p="2" h-10 flex="~ gap-2" items-center bg-header border="b base">
         <StatusIcon :task="current" />
         <div flex-1 font-light op-50 ws-nowrap truncate text-sm>

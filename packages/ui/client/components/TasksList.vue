@@ -23,7 +23,7 @@ export default {
 
 <template>
   <div h="full">
-    <div scroll-header>
+    <div>
       <div
         p="2"
         h-10
