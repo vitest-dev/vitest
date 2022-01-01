@@ -95,93 +95,29 @@ vitest related /src/index.ts /src/hello-world.js
 
 ### CLI Options
 
-
-#### Display version number
-
-`-v, --version`
-
-#### Define the project root
-
-`-r, --root <path>`
-
-#### Path to config file
-
-`-c, --config <path>`
-
-#### Update snapshots
-
-`-u, --update`
-
-#### Watch mode
-
-`-w, --watch`
-
-#### Open UI
-
-`-o, --open`: defaults to `false`
-
-#### Run tests with names matching the pattern
-
-`-t, --testNamePattern <pattern>`
-
-#### Serve API Configuration
-
-
-##### Listen to default port
-
-`--api`: default port is `51204`, can be omitted if any of `--port`, `--strictPort` and `--host` are specified
-
-##### Listen to port
-
-`--port <port>`
-
-##### Exit if specified port is already in use
-
-`--strictPort`
-
-##### Specify which IP addresses should listen on
-
-`--host <host>`: set to 0.0.0.0 to listen on all addresses, including LAN and public addresses
-
-#### Enable Threads
-
-`--threads`: default `true` 
-
-#### Silent console output from tests
-
-`--silent` 
-
-#### Select reporter
-
-`--reporter <name>`: `default`, `verbose` or `dot`
-
-#### Use c8 for coverage
-
-`--coverage`
-
-#### Do not watch
-
-`--run`
-
-#### Inject APIs globally
-
-`--global`
-
-#### Mock browser api with happy-dom
-
-`--dom`
-
-#### Runner environment
-
-`--environment <env>`: default `node`
-
-#### Pass when no tests found
-
-`--passWithNoTests`
-
-#### Display available CLI options
-
-`-h, --help`
+| Options                           |                                                                                                                                          |
+|-----------------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
+| `-v, --version`                   | Display version number                                                                                                                   |
+| `-r, --root <path>`               | Define the project root                                                                                                                  |
+| `-c, --config <path>`             | Path to config file                                                                                                                      |
+| `-u, --update`                    | Update snapshots                                                                                                                         |
+| `-w, --watch`                     | Watch mode                                                                                                                               |
+| `-o, --open`                      | Open UI (default: false)                                                                                                                 |
+| `-t, --testNamePattern <pattern>` | Run tests with names matching the pattern                                                                                                |
+| `--api`                           | Listen to default port and serve API (can be omitted if any of `--port`, `--strictPort` and `--host` are specified)                      |
+| `--port <port>`                   | Listen to port and serve API                                                                                                             |
+| `--strictPort`                    | Exit if specified port is already in use for serve API                                                                                   |
+| `--host <host>`                   | Specify which IP addresses the serve API should listen on, set to 0.0.0.0 to listen on all addresses, including LAN and public addresses |
+| `--threads`                       | Enable Threads (default: true)                                                                                                           |
+| `--silent`                        | Silent console output from tests                                                                                                         |
+| `--reporter <name>`               | Select reporter: `default`, `verbose`, or `dot`                                                                                          |
+| `--coverage`                      | Use c8 for coverage                                                                                                                      |
+| `--run`                           | Do not watch                                                                                                                             |
+| `--global`                        | Inject APIs globally                                                                                                                     |
+| `--dom`                           | Mock browser api with happy-dom                                                                                                          |
+| `--environment <env>`             | Runner environment (default: node)                                                                                                       |
+| `--passWithNoTests`               | Pass when no tests found                                                                                                                 |
+| `-h, --help`                      | Display available CLI options                                                                                                            |
 
 ## Examples
 
