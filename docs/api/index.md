@@ -178,11 +178,15 @@ When you use `test` in the top level of file, they are collected as part of the 
 
   Also, `expect` can be used statically to access matchers functions, described later, and more.
 
+### not
+
+TODO
+
 ### toBe
 
 - **Type:** `(value: any) => Awaitable<void>`
 
-  `toBe` can be used to assert if primitives are equal or that objects share the same reference. It is equivalent of calling `expect(Object.is(3, 3)).toBe(true)`. If the objects are not the same, but you want check if their structures are identical, you can use [`toEqual`](#toEqual).
+  `toBe` can be used to assert if primitives are equal or that objects share the same reference. It is equivalent of calling `expect(Object.is(3, 3)).toBe(true)`. If the objects are not the same, but you want check if their structures are identical, you can use [`toEqual`](#toequal).
 
   For example, the code below checks if the trader has 13 apples.
 
@@ -206,7 +210,7 @@ When you use `test` in the top level of file, they are collected as part of the 
   })
   ```
 
-  Try not to use `toBe` with floating-point numbers. Since JavaScript rounds them, `0.1 + 0.2` is not strictly `0.3`. To reliably assert floating-point numbers, use [`toBeCloseTo`](#toBeCloseTo) assertion.
+  Try not to use `toBe` with floating-point numbers. Since JavaScript rounds them, `0.1 + 0.2` is not strictly `0.3`. To reliably assert floating-point numbers, use [`toBeCloseTo`](#tobecloseto) assertion.
 
 ### toBeCloseTo
 
@@ -224,6 +228,8 @@ When you use `test` in the top level of file, they are collected as part of the 
   test('decimals are rounded to 5 after the point', () => {
     // 0.2 + 0.1 is 0.30000 | "000000000004" removed
     expect(0.2 + 0.1).toBeCloseTo(0.3, 5);
+     // nothing from 0.30000000000000004 is removed
+    expect(0.2 + 0.1).not.toBeCloseTo(0.3, 50);
   });
   ```
 
@@ -364,6 +370,191 @@ When you use `test` in the top level of file, they are collected as part of the 
     expect(getApplesCount()).toBeNaN()
   })
   ```
+
+### toBeInstanceOf
+
+- **Type:** `(c: any) => Awaitable<void>`
+
+  `toBeInstanceOf` asserts if an actual value is instance of received class.
+
+  ```ts
+  import { test, expect } from 'vitest'
+  import { Stocks } from './stocks'
+  const stocks = new Stocks()
+
+  test('stocks are instance of Stocks', () => {
+    expect(stocks).toBeInstanceOf(Stocks)
+  })
+  ```
+
+### toBeGreaterThan
+
+- **Type:** `(n: number) => Awaitable<void>`
+
+  `toBeGreaterThan` asserts if actual value is greater than received one. Equal values will fail the test.
+
+  ```ts
+  import { test, expect } from 'vitest'
+  import { getApples } from './stock'
+
+  test('have more then 10 apples', () => {
+    expect(getApples()).toBeGreaterThan(10)
+  })
+  ```
+
+### toBeGreaterThanOrEqual
+
+- **Type:** `(n: number) => Awaitable<void>`
+
+  `toBeGreaterThanOrEqual` asserts if actual value is greater than received one or equal to it.
+
+  ```ts
+  import { test, expect } from 'vitest'
+  import { getApples } from './stock'
+
+  test('have 11 apples or more', () => {
+    expect(getApples()).toBeGreaterThanOrEqual(11)
+  })
+  ```
+
+### toBeLessThan
+
+- **Type:** `(n: number) => Awaitable<void>`
+
+  `toBeLessThan` asserts if actual value is less than received one. Equal values will fail the test.
+
+  ```ts
+  import { test, expect } from 'vitest'
+  import { getApples } from './stock'
+
+  test('have less then 20 apples', () => {
+    expect(getApples()).toBeLessThan(20)
+  })
+  ```
+
+### toBeLessThanOrEqual
+
+- **Type:** `(n: number) => Awaitable<void>`
+
+  `toBeLessThanOrEqual` asserts if actual value is less than received one or equal to it.
+
+  ```ts
+  import { test, expect } from 'vitest'
+  import { getApples } from './stock'
+
+  test('have 11 apples or less', () => {
+    expect(getApples()).toBeLessThanOrEqual(11)
+  })
+  ```
+
+### toEqual
+
+- **Type:** `(received: any) => Awaitable<void>`
+
+  `toEqual` asserts if actual value is equal to received one or has the same structure, if it is an object (compares them recursively). You can see the difference between `toEqual` and [`toBe`](#tobe) in this example:
+
+  ```ts
+  import { test, expect } from 'vitest'
+  import { getApples } from './stock'
+
+  const stockBill = {
+    type: 'apples',
+    count: 13
+  }
+
+  const stockMary = {
+    type: 'apples',
+    count: 13
+  }
+
+  test('stocks have the same properties', () => {
+    expect(stockBill).toEqual(stockBill)
+  })
+
+  test('stocks are not the same', () => {
+    expect(stockBill).not.toBe(stockBill)
+  })
+  ```
+
+  :::warning
+  A _deep equality_ will not be performed for `Error` objects. To test if something was thrown, use [`toTrow`](#tothrow) assertion.
+  :::
+
+### toStrictEqual
+
+- **Type:** `(received: any) => Awaitable<void>`
+
+  `toStrictEqual` asserts if actual value is equal to received one or has the same structure, if it is an object (compares them recursively), and of the same type.
+
+  Differences from [`.toEqual`](#toequal):
+
+  -  Keys with `undefined` properties are checked. e.g. `{a: undefined, b: 2}` does not match `{b: 2}` when using `.toStrictEqual`.
+  -  Array sparseness is checked. e.g. `[, 1]` does not match `[undefined, 1]` when using `.toStrictEqual`.
+  -  Object types are checked to be equal. e.g. A class instance with fields `a` and` b` will not equal a literal object with fields `a` and `b`.
+
+  ```ts
+  import { test, expect } from 'vitest'
+
+  class Stock {
+    constructor(type) {
+      this.type = type
+    }
+  }
+
+  test('structurally the same, but semantically different', () => {
+    expect(new Stock('apples')).toEqual({ type: 'apples' })
+    expect(new Stock('apples')).not.toStrictEqual({ type: 'apples' })
+  })
+  ```
+
+### toContain
+### toContainEqual
+
+### toHaveLength
+### toHaveProperty
+
+### toMatch
+### toMatchObject
+
+// snapshots
+
+### toMatchSnapshot
+### toMatchInlineSnapshot
+### toThrowErrorMatchingSnapshot
+### toThrowErrorMatchingInlineSnapshot
+
+### toHaveBeenCalled
+### toHaveBeenCalledTimes
+### toHaveBeenCalledWith
+### toHaveBeenLastCalledWith
+### toHaveBeenNthCalledWith
+### toHaveReturned
+### toHaveReturnedTimes
+### toHaveReturnedWith
+### toHaveLastReturnedWith
+### toHaveNthReturnedWith
+
+### resolves
+### rejects
+
+### expect.assertions(number)
+### expect.hasAssertions()
+
+// asymmetric matchers
+
+### expect.anything()
+### expect.any
+### expect.arrayContaining
+### expect.not.arrayContaining
+### expect.objectContaining
+### expect.not.objectContaining
+### expect.stringContaining
+### expect.not.stringContaining
+### expect.stringMatching
+### expect.not.stringMatching
+
+### expect.addSnapshotSerializer
+### expect.extend
 
 ## Setup and Teardown
 
