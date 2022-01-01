@@ -40,8 +40,8 @@ const graph = useModuleGraph(data)
         Code
       </button>
     </div>
-    <ViewModuleGraph v-if="viewMode === 'graph'" :graph="graph" />
-    <ViewEditor v-else-if="viewMode === 'editor'" :file="current" />
+    <ViewModuleGraph v-show="viewMode === 'graph'" :graph="graph" />
+    <ViewEditor v-if="viewMode === 'editor'" :file="current" />
     <ViewReport v-else :file="current" />
   </div>
 </template>
