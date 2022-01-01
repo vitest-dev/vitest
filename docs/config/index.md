@@ -239,16 +239,14 @@ Path to setup files
 
 - **Type:** `string | string[]`
 
-Path to global setup files
-
-Like in jest, you can use `<rootDir>` to reference the project root
+Path to global setup files, relative to project root
 ```js
 {
-    globalSetup: '<rootDir>/vitest-global-setup.js'
+    globalSetup: './vitest-global-setup.js'
 }
 ```
 
-Files must be javascript and you can either export named functions
+Files can either export named functions
 ```js
 let server;
 export async function setup() {
@@ -258,8 +256,8 @@ export async function teardown() {
     await server.close()
 }
 ```
-or export a setup function as default that returns the teardown
 
+or a setup function as default that returns the teardown
 ```js
 export default async function() {
     const server = await startServer()

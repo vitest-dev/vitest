@@ -1,11 +1,5 @@
-import type { Plugin, ResolvedConfig } from 'vite'
+import type { Plugin, ViteDevServer } from 'vite'
 import { toArray } from '../utils'
-
-async function importGlobalSetupFiles(config: ResolvedConfig): Promise<GlobalSetupFile[]> {
-  const root = config.root
-  const globalSetup = config.test?.globalSetup
-  return Promise.all(toArray(globalSetup).map(f => f.replace('<rootDir>', root)).map(importGlobalSetup))
-}
 
 interface GlobalSetupFile {
   file: string
@@ -13,8 +7,13 @@ interface GlobalSetupFile {
   teardown?: Function
 }
 
-function importGlobalSetup(file: string): Promise<GlobalSetupFile> {
-  return import(file).then((m) => {
+async function loadGlobalSetupFiles(server: ViteDevServer): Promise<GlobalSetupFile[]> {
+  const globalSetupFiles = toArray(server.config.test?.globalSetup)
+  return Promise.all(globalSetupFiles.map(file => loadGlobalSetupFile(file, server)))
+}
+
+function loadGlobalSetupFile(file: string, server: ViteDevServer): Promise<GlobalSetupFile> {
+  return server.ssrLoadModule(file).then((m) => {
     if (m.default) {
       if (typeof m.default !== 'function')
         throw new Error(`invalid default export in globalSetup file ${file}. Must export a function`)
@@ -37,15 +36,18 @@ function importGlobalSetup(file: string): Promise<GlobalSetupFile> {
 }
 
 export const GlobalSetupPlugin = (): Plugin => {
+  let server: ViteDevServer
   let globalSetupFiles: GlobalSetupFile[]
   return {
     name: 'vitest:global-setup-plugin',
     enforce: 'pre',
 
-    async configResolved(config) {
-      globalSetupFiles = await importGlobalSetupFiles(config)
+    configureServer(_server) {
+      server = _server
     },
+
     async buildStart() {
+      globalSetupFiles = await loadGlobalSetupFiles(server)
       for (const globalSetupFile of globalSetupFiles) {
         const teardown = await globalSetupFile.setup?.()
         if (teardown == null || !!globalSetupFile.teardown)
@@ -55,6 +57,7 @@ export const GlobalSetupPlugin = (): Plugin => {
         globalSetupFile.teardown = teardown
       }
     },
+
     async buildEnd() {
       for (const globalSetupFile of globalSetupFiles.reverse()) {
         try {

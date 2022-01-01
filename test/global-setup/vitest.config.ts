@@ -6,8 +6,9 @@ export default defineConfig({
   test: {
     global: true,
     globalSetup: [
-      '<rootDir>/setupFiles/default-export.js',
-      '<rootDir>/setupFiles/named-exports.js',
+      './setupFiles/default-export.js',
+      './setupFiles/named-exports.js',
+      './setupFiles/ts-with-imports.ts',
     ],
   },
 })
