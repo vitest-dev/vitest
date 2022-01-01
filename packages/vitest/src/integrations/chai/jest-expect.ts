@@ -207,9 +207,30 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   def('toHaveProperty', function(...args: [property: string, value?: any]) {
     return this.have.deep.nested.property(...args)
   })
-  def('toBeCloseTo', function(number: number, numDigits = 2) {
-    utils.expectTypes(this, ['number'])
-    return this.closeTo(number, numDigits)
+  def('toBeCloseTo', function(received: number, precision = 2) {
+    const expected = this._obj
+    let pass = false
+    let expectedDiff = 0
+    let receivedDiff = 0
+
+    if (received === Infinity && expected === Infinity) {
+      pass = true
+    }
+    else if (received === -Infinity && expected === -Infinity) {
+      pass = true
+    }
+    else {
+      expectedDiff = Math.pow(10, -precision) / 2
+      receivedDiff = Math.abs(expected - received)
+      pass = receivedDiff < expectedDiff
+    }
+    return this.assert(
+      pass,
+      `expected #{this} to be close to #{exp}, recieved difference is ${receivedDiff}, but expected ${expectedDiff}`,
+      `expected #{this} to not be close to #{exp}, recieved difference is ${receivedDiff}, but expected ${expectedDiff}`,
+      received,
+      expected,
+    )
   })
 
   const assertIsMock = (assertion: any) => {
