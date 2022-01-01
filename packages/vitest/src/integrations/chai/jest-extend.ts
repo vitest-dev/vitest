@@ -29,11 +29,11 @@ const getMatcherState = (assertion: Chai.AssertionStatic & Chai.Assertion) => {
   }
 
   const matcherState: MatcherState = {
+    ...getState(),
     isNot,
     utils: jestUtils,
     promise,
     equals,
-    ...getState(),
     // needed for built-in jest-snapshots, but we don't use it
     suppressedErrors: [],
   }

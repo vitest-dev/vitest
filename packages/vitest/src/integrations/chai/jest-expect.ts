@@ -1,15 +1,9 @@
 import type { EnhancedSpy } from '../jest-mock'
+import { isMockFunction } from '../jest-mock'
 import { addSerializer } from '../snapshot/port/plugins'
-import type { ChaiPlugin } from './types'
+import type { ChaiPlugin, MatcherState } from './types'
 import { arrayBufferEquality, equals as asymmetricEquals, hasAsymmetric, iterableEquality, sparseArrayEquality, typeEquality } from './jest-utils'
 
-type MatcherState = {
-  assertionCalls: number
-  isExpectingAssertions: boolean
-  isExpectingAssertionsError: Error | null
-  expectedAssertionsNumber: number | null
-  expectedAssertionsNumberError: Error | null
-}
 const MATCHERS_OBJECT = Symbol.for('matchers-object')
 
 if (!Object.prototype.hasOwnProperty.call(global, MATCHERS_OBJECT)) {
@@ -37,7 +31,6 @@ export const setState = <State extends MatcherState = MatcherState>(
 }
 
 // Jest Expect Compact
-// TODO: add more https://jestjs.io/docs/expect
 export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   function def(name: keyof Chai.Assertion | (keyof Chai.Assertion)[], fn: ((this: Chai.AssertionStatic & Chai.Assertion, ...args: any[]) => any)) {
     const addMethod = (n: keyof Chai.Assertion) => {
@@ -63,7 +56,6 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     return function(this: Chai.Assertion & Chai.AssertionStatic, ...args: any[]) {
       const expected = args[0]
       const actual = utils.flag(this, 'object')
-      // const negate = utils.flag(this, 'negate')
       if (hasAsymmetric(expected)) {
         this.assert(
           asymmetricEquals(actual, expected, undefined, true),
@@ -135,7 +127,9 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     else
       return this.match(expected)
   })
-  def('toContain', function(item) { return this.contain(item) })
+  def('toContain', function(item) {
+    return this.contain(item)
+  })
   def('toContainEqual', function(expected) {
     const obj = utils.flag(this, 'object')
     const index = Array.from(obj).findIndex((item) => {
@@ -218,14 +212,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     return this.closeTo(number, numDigits)
   })
 
-  // mock
-  function isSpy(putativeSpy: any) {
-    return typeof putativeSpy === 'function'
-             && '__isSpy' in putativeSpy
-             && putativeSpy.__isSpy
-  }
   const assertIsMock = (assertion: any) => {
-    if (!isSpy(assertion._obj))
+    if (!isMockFunction(assertion._obj))
       throw new TypeError(`${utils.inspect(assertion._obj)} is not a spy or a call to a spy!`)
   }
   const getSpy = (assertion: any) => {

@@ -54,9 +54,6 @@ export type RawMatcherFn<T extends MatcherState = MatcherState> = {
   (this: T, received: any, expected: any, options?: any): ExpectationResult
 }
 
-export type ThrowingMatcherFn = (actual: any) => void
-export type PromiseMatcherFn = (actual: any) => Promise<void>
-
 export type MatchersObject<T extends MatcherState = MatcherState> = {
   [id: string]: RawMatcherFn<T>
 }
