@@ -20,6 +20,9 @@ function buildDevOptions<Options extends DevCLIOptions>(
   const options = { ...devOptions }
   // @ts-ignore
   delete options['--']
+  delete options.port
+  delete options.strictPort
+  delete options.host
   let api: boolean | ApiConfig | undefined
   if (devOptions.api === true)
     api = true
