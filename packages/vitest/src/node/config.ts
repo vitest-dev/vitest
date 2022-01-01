@@ -66,11 +66,11 @@ export function resolveConfig(
   resolved.setupFiles = Array.from(resolved.setupFiles || [])
     .map(i => resolve(resolved.root, i))
 
-  if (resolved.api === true)
+  if (resolved.api === true) {
     resolved.api = defaultPort
-
-  if (options.host)
-    viteConfig.server.host = options.host
+    if (options.host)
+      viteConfig.server.host = options.host
+  }
 
   if (options.related)
     resolved.related = toArray(options.related).map(file => resolve(resolved.root, file))

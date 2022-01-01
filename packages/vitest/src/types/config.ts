@@ -185,7 +185,7 @@ export interface InlineConfig {
   api?: boolean | number
 
   /**
-   * Specify which IP addresses the serve API should listen on. Set to 0.0.0.0 to listen on all addresses, including LAN and public addresses.
+   * Specify which IP address the serve API should listen on. Set to 0.0.0.0 to listen on all addresses, including LAN and public addresses.
    *
    * @default false
    */
