@@ -173,15 +173,11 @@ These functions allows you to hook into the life cycle of tests to avoid repeati
   ```ts
   import { beforeEach } from 'vitest'
 
-  beforeEach(() => {
+  beforeEach(async () => {
     // Clear mocks and add some testing data after before each test run
-    stopMocking().then(() => {
-      addUser({ name: 'Patak '})
-    })
+    await stopMocking()
+    await addUser({ name: 'John'})
   })
-
-  // Hook accepting a timeout
-  beforeEach(() => { }, 1000)
   ```
 
   Here, the `beforeEach` ensures that user is added for each test.
