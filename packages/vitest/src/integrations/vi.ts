@@ -2,8 +2,8 @@
 
 import mockdate from 'mockdate'
 import { FakeTimers } from './timers'
-import type { MaybeMocked, MaybeMockedDeep } from './jest-mock'
-import { fn, spies, spyOn } from './jest-mock'
+import type { EnhancedSpy, MaybeMocked, MaybeMockedDeep } from './jest-mock'
+import { fn, isMockFunction, spies, spyOn } from './jest-mock'
 
 class VitestUtils {
   private _timers: FakeTimers
@@ -134,10 +134,8 @@ class VitestUtils {
     return item as any
   }
 
-  public isMockFunction(fn: any) {
-    return typeof fn === 'function'
-      && '__isSpy' in fn
-      && fn.__isSpy
+  public isMockFunction(fn: any): fn is EnhancedSpy {
+    return isMockFunction(fn)
   }
 
   public clearAllMocks() {

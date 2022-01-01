@@ -55,14 +55,21 @@ export function useModuleGraph(data: Ref<{
     const nodeMap = Object.fromEntries(nodes.map(node => [node.id, node]))
     const links = Object
       .entries(data.value.graph)
-      .flatMap(([module, deps]) => deps.map(dep => defineLink({
-        source: nodeMap[module],
-        target: nodeMap[dep],
-        color: 'var(--color-link)',
-        label: '',
-        labelColor: 'var(--color-link-label)',
-        showLabel: false,
-      })))
+      .flatMap(([module, deps]) => deps.map((dep) => {
+        const source = nodeMap[module]
+        const target = nodeMap[dep]
+        if (source === undefined || target === undefined)
+          return undefined
+
+        return defineLink({
+          source,
+          target,
+          color: 'var(--color-link)',
+          label: '',
+          labelColor: 'var(--color-link-label)',
+          showLabel: false,
+        })
+      }).filter(link => link !== undefined) as ModuleLink[])
     return { nodes, links }
   })
 }
@@ -74,11 +81,14 @@ export function useModuleGraphConfig(graph: Ref<ModuleGraph>): Ref<ModuleGraphCo
       getNodeRadius: (node: ModuleNode) => node.label.length * 4.5,
       forces: {
         charge: {
-          strength: -100,
+          strength: -1,
         },
         collision: {
           radiusMultiplier: 2,
         },
+      },
+      initial: {
+        includeUnlinked: false,
       },
       positionInitializer: graph.value.nodes.length > 1
         ? PositionInitializers.Randomized

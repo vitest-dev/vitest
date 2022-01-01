@@ -1,10 +1,9 @@
 import { performance } from 'perf_hooks'
 import { relative } from 'pathe'
 import c from 'picocolors'
-import type { File, Reporter, Task, TaskResultPack, UserConsoleLog } from '../types'
+import type { ErrorWithDiff, File, Reporter, Task, TaskResultPack, UserConsoleLog } from '../types'
 import { getFullName, getSuites, getTests, hasFailed } from '../utils'
 import type { Vitest } from '../node'
-import type { ErrorWithDiff } from './renderers/diff'
 import { printError } from './renderers/diff'
 import { F_RIGHT } from './renderers/figures'
 import { divider, getStateString, getStateSymbol, renderSnapshotSummary } from './renderers/utils'
@@ -142,7 +141,7 @@ export abstract class BaseReporter implements Reporter {
     const errorsQueue: [error: ErrorWithDiff | undefined, tests: Task[]][] = []
     for (const task of tasks) {
       // merge identical errors
-      const error = task.result?.error as ErrorWithDiff | undefined
+      const error = task.result?.error
       const errorItem = error?.stackStr && errorsQueue.find(i => i[0]?.stackStr === error.stackStr)
       if (errorItem)
         errorItem[1].push(task)
