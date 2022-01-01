@@ -253,6 +253,6 @@ export class FakeTimers {
       this._setInterval,
       this._clearTimeout,
       this._clearInterval,
-    ], 'timers are not mocked. try calling "vitest.useFakeTimers()" first')
+    ], 'timers are not mocked. try calling "vi.useFakeTimers()" first')
   }
 }
