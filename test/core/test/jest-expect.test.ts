@@ -35,6 +35,7 @@ describe('jest-expect', () => {
     expect({ length: 3 }).toHaveLength(3)
     expect(0.2 + 0.1).not.toBe(0.3)
     expect(0.2 + 0.1).toBeCloseTo(0.3, 5)
+    expect(0.2 + 0.1).not.toBeCloseTo(0.3, 100) // expect.closeTo will fail in chai
   })
 
   it('asymmetric matchers (jest style)', () => {
