@@ -168,7 +168,7 @@ These functions allows you to hook into the life cycle of tests to avoid repeati
   Register a callback to be called before each of the tests in the current context runs.
   If the function returns a promise, Vitest waits until the promise resolve before running the test.
 
-  Optionally, you can a timeout (in milliseconds) for specifying how long to wait before terminating. The default is 5 seconds.
+  Optionally, you can pass a timeout (in milliseconds) defining how long to wait before terminating. The default is 5 seconds.
 
   ```ts
   import { beforeEach } from 'vitest'
