@@ -8,9 +8,9 @@ type Awaitable<T> = T | PromiseLike<T>
 type TestFunction = () => Awaitable<void> | (done: DoneCallback) => void
 ```
 
-When a test function returns a promise, the runner will await until it is resolved to collect async expectations. If the promise is rejected, the test will fail.
+When a test function returns a promise, the runner will wait until it is resolved to collect async expectations. If the promise is rejected, the test will fail.
 
-For compatibility with Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If this form is used, the test will not be concluded until `done` is called (with zero arguments or a falsy value for a successful test, and with a truthy error value as argument to trigger a fail). We don't recommend to use this form, as you can achieve the same using an `async` function.
+For compatibility with Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If this form is used, the test will not be concluded until `done` is called (with zero arguments or a falsy value for a successful test, and with a truthy error value as argument to trigger a fail). We don't recommend using this form, as you can achieve the same using an `async` function.
 
 ## test
 
@@ -155,6 +155,214 @@ When you use `test` in the top level of file, they are collected as part of the 
   ```ts
   // An entry will be shown in the report for this suite
   describe.todo("unimplemented suite");
+  ```
+
+## expect
+
+- **Type:** `ExpectStatic & (actual: any) => Assertions`
+
+  `expect` is used to create assertions. In this context `assertions` are functions that can be called to assert a statement. Vitest provides `chai` assertions by default and also `Jest` compatible assertions build on top of `chai`.
+
+  For example, this code asserts that an `input` value is equal to `2`. If it's not, assertion will throw an error, and the test will fail.
+
+  ```ts
+  import { expect } from 'vitest'
+
+  const input = Math.sqrt(4)
+
+  expect(input).to.equal(2) // chai API
+  expect(input).toBe(2) // jest API
+  ```
+
+  Technically this example doesn't use [`test`](#test) function, so in the console you will see Nodejs error instead of Vitest output. To learn more about `test`, please read [next chapter](#test).
+
+  Also, `expect` can be used statically to access matchers functions, described later, and more.
+
+### toBe
+
+- **Type:** `(value: any) => Awaitable<void>`
+
+  `toBe` can be used to assert if primitives are equal or that objects share the same reference. It is equivalent of calling `expect(Object.is(3, 3)).toBe(true)`. If the objects are not the same, but you want check if their structures are identical, you can use [`toEqual`](#toEqual).
+
+  For example, the code below checks if the trader has 13 apples.
+
+  ```ts
+  import { test, expect } from 'vitest'
+
+  const stock = {
+    type: 'apples',
+    count: 13
+  }
+
+  test('stock has 13 apples', () => {
+    expect(stock.type).toBe('apples')
+    expect(stock.count).toBe(13)
+  })
+
+  test('stocks are the same', () => {
+    const refStock = stock // same reference
+
+    expect(stock).toBe(refStock)
+  })
+  ```
+
+  Try not to use `toBe` with floating-point numbers. Since JavaScript rounds them, `0.1 + 0.2` is not strictly `0.3`. To reliably assert floating-point numbers, use [`toBeCloseTo`](#toBeCloseTo) assertion.
+
+### toBeCloseTo
+
+- **Type:** `(value: number, numDigits?: number) => Awaitable<void>`
+
+  Use `toBeCloseTo` to compare floating-point numbers. The optional `numDigits` argument limits the number of digits to check _after_ the decimal point. For example:
+
+  ```ts
+  import { test, expect } from 'vitest'
+
+  test.fails('decimals are not equal in javascript', () => {
+    expect(0.2 + 0.1).toBe(0.3); // 0.2 + 0.1 is 0.30000000000000004
+  });
+
+  test('decimals are rounded to 5 after the point', () => {
+    // 0.2 + 0.1 is 0.30000 | "000000000004" removed
+    expect(0.2 + 0.1).toBeCloseTo(0.3, 5);
+  });
+  ```
+
+### toBeDefined
+
+- **Type:** `() => Awaitable<void>`
+
+  `toBeDefined` asserts that the value is not equal to `undefined`. Useful use case would be to check if function _returned_ anything.
+
+  ```ts
+  import { test, expect } from 'vitest'
+
+  const getApples = () => 3
+
+  test('function returned something', () => {
+    expect(getApples()).toBeDefined()
+  })
+  ```
+
+### toBeUndefined
+
+- **Type:** `() => Awaitable<void>`
+
+  Opposite of `toBeDefined`, `toBeUndefined` asserts that the value _is_ equal to `undefined`. Useful use case would be to check if function hasn't _returned_ anything.
+
+  ```ts
+  import { test, expect } from 'vitest'
+
+  function getApplesFromStock(stock) {
+    if(stock === 'Bill') return 13
+  }
+
+  test('mary doesnt have a stock', () => {
+    expect(getApplesFromStock('Mary')).toBeUndefined()
+  })
+  ```
+
+### toBeTruthy
+
+- **Type:** `() => Awaitable<void>`
+
+  `toBeTruthy` asserts that the value is true, when converted to boolean. Useful if you don't care for the value, but just want to know it can be converted to `true`.
+
+  For example having this code you don't care for the return value of `stocks.getInfo` - it maybe complex object, a string or anything else. The code will still work.
+
+  ```ts
+  import { Stocks } from './stocks'
+  const stocks = new Stocks()
+  stocks.sync('Bill')
+  if(stocks.getInfo('Bill')) {
+    stocks.sell('apples', 'Bill')
+  }
+  ```
+
+  So if you want to test that `stocks.getInfo` will be truthy, you could write:
+
+  ```ts
+  import { test, expect } from 'vitest'
+  import { Stocks } from './stocks'
+  const stocks = new Stocks()
+
+  test('if we know Bill stock, sell apples to him', () => {
+    stocks.sync('Bill')
+    expect(stocks.getInfo('Bill')).toBeTruthy()
+  })
+  ```
+
+  Everything in JavaScript is truthy, except `false`, `0`, `''`, `null`, `undefined`, and `NaN`.
+
+### toBeFalsy
+
+- **Type:** `() => Awaitable<void>`
+
+  `toBeFalsy` asserts that the value is false, when converted to boolean. Useful if you don't care for the value, but just want to know it can be converted to `false`.
+
+  For example having this code you don't care for the return value of `stocks.stockFailed` - it may return any falsy value, but the code will still work.
+
+  ```ts
+  import { Stocks } from './stocks'
+  const stocks = new Stocks()
+  stocks.sync('Bill')
+  if(!stocks.stockFailed('Bill')) {
+    stocks.sell('apples', 'Bill')
+  }
+  ```
+
+  So if you want to test that `stocks.stockFailed` will be falsy, you could write:
+
+  ```ts
+  import { test, expect } from 'vitest'
+  import { Stocks } from './stocks'
+  const stocks = new Stocks()
+
+  test('if Bill stock hasnt failed, sell apples to him', () => {
+    stocks.syncStocks('Bill')
+    expect(stocks.stockFailed('Bill')).toBeFalsy()
+  })
+  ```
+
+  Everything in JavaScript is truthy, except `false`, `0`, `''`, `null`, `undefined`, and `NaN`.
+
+### toBeNull
+
+- **Type:** `() => Awaitable<void>`
+
+  `toBeNull` simply asserts if something is `null`. Alias for `.toBe(null)`.
+
+  ```ts
+  import { test, expect } from 'vitest'
+
+  function apples() {
+    return null
+  }
+
+  test('we dont have apples', () => {
+    expect(apples()).toBeNull()
+  })
+  ```
+
+### toBeNaN
+
+- **Type:** `() => Awaitable<void>`
+
+  `toBeNaN` simply asserts if something is `NaN`. Alias for `.toBe(NaN)`.
+
+  ```ts
+  import { test, expect } from 'vitest'
+
+  let i = 0
+
+  function getApplesCount() {
+    i++
+    return i > 1 ? NaN : i
+  }
+
+  test('getApplesCount has some unusual side effects...', () => {
+    expect(getApplesCount()).not.toBeNaN()
+    expect(getApplesCount()).toBeNaN()
+  })
   ```
 
 ## Setup and Teardown
