@@ -79,6 +79,10 @@ export function useModuleGraphConfig(graph: Ref<ModuleGraph>): Ref<ModuleGraphCo
     return defineGraphConfig<ModuleType, ModuleNode, ModuleLink>({
       getLinkLength: () => 256,
       getNodeRadius: (node: ModuleNode) => node.label.length * 4.5,
+      alphas: {
+        initialize: graph.value.nodes.some(node => node.x === undefined || node.y === undefined) ? 1 : 0,
+        resize: 0,
+      },
       forces: {
         charge: {
           strength: -1,
@@ -86,9 +90,6 @@ export function useModuleGraphConfig(graph: Ref<ModuleGraph>): Ref<ModuleGraphCo
         collision: {
           radiusMultiplier: 2,
         },
-      },
-      initial: {
-        includeUnlinked: false,
       },
       positionInitializer: graph.value.nodes.length > 1
         ? PositionInitializers.Randomized

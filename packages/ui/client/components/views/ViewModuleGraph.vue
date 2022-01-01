@@ -63,7 +63,7 @@ onUnmounted(() => {
   controller.value?.shutdown()
 })
 
-watch(graph, resetGraphController, { immediate: true })
+watch(graph, resetGraphController)
 
 function setFilter(name: ModuleType, value: boolean) {
   controller.value?.filterNodesByType(value, name)
