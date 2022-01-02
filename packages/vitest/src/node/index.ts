@@ -370,7 +370,7 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
     return (await import('@vitest/ui')).default()
   }
 
-  options.api = resolveApiConfig(false, options, viteOverrides)
+  options.api = resolveApiConfig(options, viteOverrides)
 
   const config: ViteInlineConfig = {
     root,

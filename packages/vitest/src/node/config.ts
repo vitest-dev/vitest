@@ -7,7 +7,6 @@ import { resolveC8Options } from '../coverage'
 import { deepMerge, toArray } from '../utils'
 
 export function resolveApiConfig<Options extends ApiConfig & UserConfig>(
-  fromCli: boolean,
   options: Options,
   viteOverrides?: ViteUserConfig,
 ): ApiConfig | undefined {
@@ -17,19 +16,7 @@ export function resolveApiConfig<Options extends ApiConfig & UserConfig>(
   else if (typeof options.api === 'number')
     api = { port: options.api }
 
-  if (fromCli) {
-    if (api) {
-      if (options.port)
-        api.port = options.port
-
-      if (options.strictPort)
-        api.strictPort = options.strictPort
-
-      if (options.host)
-        api.host = options.host
-    }
-  }
-  else if (typeof options.api === 'object') {
+  if (typeof options.api === 'object') {
     if (api) {
       if (options.api.port)
         api.port = options.api.port
@@ -118,7 +105,7 @@ export function resolveConfig(
     .map(i => resolve(resolved.root, i))
 
   // the server has been created, we don't need to override vite.server options
-  resolved.api = resolveApiConfig(false, options)
+  resolved.api = resolveApiConfig(options)
 
   if (options.related)
     resolved.related = toArray(options.related).map(file => resolve(resolved.root, file))

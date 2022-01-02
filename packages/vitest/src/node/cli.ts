@@ -4,7 +4,6 @@ import { execa } from 'execa'
 import type { ApiConfig, UserConfig } from '../types'
 import { version } from '../../package.json'
 import { ensurePackageInstalled } from '../utils'
-import { resolveApiConfig } from './config'
 import type { Vitest } from './index'
 import { createVitest } from './index'
 
@@ -18,11 +17,8 @@ interface DevCLIOptions extends DevCLIConfig {}
 function buildDevOptions<Options extends DevCLIOptions>(
   devOptions: Options,
 ): Omit<Options, keyof ApiConfig> {
-  const options = Object.assign(
-    {},
-    { ...devOptions },
-    { api: resolveApiConfig(true, devOptions) },
-  )
+  const options = { ...devOptions, api: interpretCliApiConfig(devOptions) }
+
   // @ts-ignore
   delete options['--']
   delete options.port
@@ -42,7 +38,7 @@ cli
   .option('--api', 'listen to default port and serve API')
   .option('--port <port>', 'listen on custom port: --api required')
   .option('--strictPort', 'exit if specified port is already in use for serve API: --api required')
-  .option('--host <host>', 'listen local/public ip address for serve API: --api required')
+  .option('--host', 'listen local/public ip address for serve API: --api required')
   .option('--threads', 'enabled threads', { default: true })
   .option('--silent', 'silent console output from tests')
   .option('--isolate', 'isolate environment for each test file', { default: true })
@@ -185,4 +181,24 @@ function registerConsoleShortcuts(ctx: Vitest) {
 
     // TODO: add more commands
   })
+}
+
+export function interpretCliApiConfig<Options extends ApiConfig & UserConfig>(
+  options: Options,
+): ApiConfig | undefined {
+  let api: ApiConfig | undefined
+  if (options.api === true)
+    api = { }
+  else if (typeof options.api === 'number')
+    api = { port: options.api }
+
+  if (api) {
+    if (options.port)
+      api.port = options.port
+    if (options.strictPort)
+      api.strictPort = options.strictPort
+    if (options.host)
+      api.host = options.host
+  }
+  return api
 }
