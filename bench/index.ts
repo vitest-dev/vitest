@@ -9,7 +9,7 @@ import { execa } from 'execa'
 // eslint-disable-next-line no-console
 const log = console.log
 
-const fileCount = 10
+const fileCount = 1
 
 // To not polute the repo with a lot of tests, copy basic tests multiple times
 function copyTestFiles() {
