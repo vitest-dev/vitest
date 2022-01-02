@@ -1,4 +1,4 @@
-import path from 'path'
+import { resolve } from 'pathe'
 import { defineConfig } from 'vite'
 import Vue from '@vitejs/plugin-vue'
 
@@ -8,7 +8,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@': path.resolve('.'),
+      '@': resolve('.'),
     },
   },
   test: {
