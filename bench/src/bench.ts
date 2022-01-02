@@ -42,7 +42,6 @@ bench.on('cycle', (event: Event) => {
 
 const vueTest: Options = {
   cwd: 'test/vue',
-  stdio: 'inherit',
 }
 bench.add('jest', {
   defer: true,

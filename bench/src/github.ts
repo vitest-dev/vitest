@@ -1,3 +1,5 @@
+// Base code is from https://github.com/antfu/export-size-action
+
 import type { Context } from '@actions/github/lib/context'
 import type { WebhookPayload } from '@actions/github/lib/interfaces'
 
@@ -30,7 +32,7 @@ async function fetchPreviousComment(
   return commnets.find(comment => comment.body.startsWith(COMMNET_HEADING))
 }
 
-const token = getInput('github_token')
+const token = process.env.GITHUB_TOKEN // getInput('github_token')
 
 export async function buildAndGetTime(branch: string | null): Promise<Result[]> {
   if (branch) {
@@ -65,6 +67,7 @@ function formatCompareTable(base: Result[], current: Result[]): string {
       return {
         name: res.name,
         baseTime: res.mean,
+        rme: cRes.rme,
         currentTime,
         delta,
         deltaPercent,
@@ -73,21 +76,23 @@ function formatCompareTable(base: Result[], current: Result[]): string {
 
   body += table(
     [
-      ['Name', 'Time', 'Diff'],
+      ['Name', 'Time'],
       ...results
         .map(({
           name,
           currentTime,
           baseTime,
+          rme,
           deltaPercent,
         }) => {
-          const deltaPercentStr: string = deltaPercent === 0
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const deltaPercentStr = deltaPercent === 0
             ? ''
             : deltaPercent > 0
               ? `+${(deltaPercent * 100).toFixed(2)}% ${baseTime !== 0 ? '🔺' : '➕'}`
               : `${(deltaPercent * 100).toFixed(2)}% 🔽`
 
-          return [name, `${currentTime.toFixed(3)}s`, `${deltaPercentStr}`]
+          return [name, `${currentTime.toFixed(3)}s ± ${rme.toFixed(2)}%`]
         }),
     ],
     { align: ['l', 'r', 'l'] },
@@ -102,9 +107,10 @@ async function compareToRef(ref: string, pr?: Pull, repo?: Repo) {
   let body = `${COMMNET_HEADING}\n\n`
 
   const base = await buildAndGetTime(null)
-  const current = await buildAndGetTime(ref)
+  // TODO: Extract this to a GitHub action to allow comparing benchmarks
+  // const current = await buildAndGetTime(ref)
 
-  body += formatCompareTable(base, current)
+  body += formatCompareTable(base, base)
 
   if (pr && repo) {
     const octokit = getOctokit(token)
