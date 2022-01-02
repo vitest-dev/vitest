@@ -2,7 +2,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "bench": "esmo index.ts"
+    "bench": "esmo src/index.ts",
+    "bench:ci": "esmo src/github.ts"
   },
   "devDependencies": {
     "@types/benchmark": "^2.1.1",

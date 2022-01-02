@@ -35,32 +35,6 @@ copyTestFiles()
 
 const bench = new Benchmark.Suite()
 
-bench.on('complete', () => {
-  const results = bench
-    .map((run: Target) => ({
-      name: run.name,
-      ...run.stats,
-    }))
-    .sort((a, b) => { return a.mean - b.mean })
-
-  const displayData = results
-    .map(r => ({
-      name: r.name,
-      time: `${r.mean.toFixed(3)}s ± ${r.rme.toFixed(2)}%`,
-    }))
-    .reduce((res, r) => {
-      res[r.name] = {
-        time: r.time,
-      }
-      return res
-    }, {} as Record<string, { time: string }>)
-
-  // eslint-disable-next-line no-console
-  console.table(displayData)
-
-  removeTestFiles()
-})
-
 bench.on('cycle', (event: Event) => {
   const benchmark = event.target
   log(benchmark?.toString())
@@ -79,4 +53,31 @@ bench.add('vitest', {
   fn: (deferred: Deferred) => execa('pnpm', ['test:vitest'], vueTest).on('exit', () => deferred.resolve()),
 })
 
-bench.run()
+export function runBench(callback: (data: Record<string, { time: string }>) => void) {
+  bench.on('complete', () => {
+    const results = bench
+      .map((run: Target) => ({
+        name: run.name,
+        ...run.stats,
+      }))
+      .sort((a, b) => { return a.mean - b.mean })
+
+    const displayData = results
+      .map(r => ({
+        name: r.name,
+        time: `${r.mean.toFixed(3)}s ± ${r.rme.toFixed(2)}%`,
+      }))
+      .reduce((res, r) => {
+        res[r.name] = {
+          time: r.time,
+        }
+        return res
+      }, {} as Record<string, { time: string }>)
+
+    callback(displayData)
+
+    removeTestFiles()
+  })
+
+  bench.run()
+}
