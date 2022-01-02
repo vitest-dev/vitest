@@ -587,7 +587,7 @@ TODO
   }
 
   test('buyApples returns new stock id', async () => {
-    // toEqual returns a promise now, so you HAVE to await it
+    // toThrow returns a promise now, so you HAVE to await it
     await expect(buyApples()).rejects.toThrow('no id')
   })
   ```
