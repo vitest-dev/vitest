@@ -35,7 +35,7 @@ cli
   .option('-w, --watch', 'watch mode')
   .option('-o, --open', 'open UI', { default: false })
   .option('-t, --testNamePattern <pattern>', 'run test names with the specified pattern')
-  .option('--api [port]', 'listen to default port and serve API')
+  .option('--api [api]', 'listen to default port and serve API')
   .option('--port <port>', 'listen on custom port: --api required')
   .option('--strictPort', 'exit if specified port is already in use for serve API: --api required')
   .option('--host [host]', 'listen local/public ip address for serve API: --api required')
@@ -200,5 +200,9 @@ export function interpretCliApiConfig<Options extends ApiConfig & UserConfig>(
     if (options.host)
       api.host = options.host
   }
+  else if (typeof options.api === 'object') {
+    api = { ...options.api }
+  }
+
   return api
 }
