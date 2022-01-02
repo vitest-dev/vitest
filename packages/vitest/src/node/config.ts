@@ -12,8 +12,6 @@ export function resolveApiConfig<Options extends ApiConfig & UserConfig>(
   viteOverrides?: ViteUserConfig,
 ): ApiConfig | undefined {
   let api: ApiConfig | undefined
-  // eslint-disable-next-line no-console
-  console.log(options)
   if (options.api === true)
     api = { port: defaultPort }
   else if (typeof options.api === 'number')
@@ -55,10 +53,6 @@ export function resolveApiConfig<Options extends ApiConfig & UserConfig>(
       viteOverrides.server = Object.assign(viteOverrides.server || {}, api)
   }
 
-  // eslint-disable-next-line no-console
-  console.log(api)
-  // eslint-disable-next-line no-console
-  console.log(viteOverrides?.server)
   return api
 }
 
