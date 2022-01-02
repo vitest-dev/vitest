@@ -1,7 +1,7 @@
 name: Benchmark
 
 on:
-  workflow_dispatch
+  workflow_dispatch:
 
 jobs:
   bench:
