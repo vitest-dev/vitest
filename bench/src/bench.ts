@@ -43,14 +43,19 @@ bench.on('cycle', (event: Event) => {
 
 const vueTest: Options = {
   cwd: 'test/vue',
+  stdio: 'inherit',
 }
 bench.add('jest', {
   defer: true,
-  fn: (deferred: Deferred) => execa('pnpm', ['test:jest'], vueTest).on('exit', () => deferred.resolve()),
+  fn: (deferred: Deferred) => execa('pnpm', ['test:jest'], vueTest)
+    .on('exit', () => deferred.resolve())
+    .on('error', () => process.exit(1)),
 })
 bench.add('vitest', {
   defer: true,
-  fn: (deferred: Deferred) => execa('pnpm', ['test:vitest'], vueTest).on('exit', () => deferred.resolve()),
+  fn: (deferred: Deferred) => execa('pnpm', ['test:vitest'], vueTest)
+    .on('exit', () => deferred.resolve())
+    .on('error', () => process.exit(1)),
 })
 
 export type Result = Benchmark.Stats & {
