@@ -119,7 +119,8 @@ async function compareToRef(ref: string, pr?: Pull, repo?: Repo) {
   if (pr && repo) {
     const octokit = getOctokit(token)
 
-    const comment = await fetchPreviousComment(octokit, repo, pr)
+    let comment = await fetchPreviousComment(octokit, repo, pr)
+    comment = null
 
     try {
       if (!comment) {
