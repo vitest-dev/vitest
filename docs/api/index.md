@@ -212,12 +212,9 @@ These functions allows you to hook into the life cycle of tests to avoid repeati
   ```ts
   import { beforeAll } from 'vitest'
 
-  beforeAll(() => {
-    startMocking() // called once before all tests run
+  beforeAll(async () => {
+    await startMocking() // called once before all tests run
   })
-
-  // Hook accepting a timeout
-  beforeAll(() => { }, 1000)
   ```
 
   Here the `beforeAll` ensures that the mock data is set up before tests run
