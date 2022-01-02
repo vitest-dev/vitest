@@ -90,7 +90,7 @@ class Vitest {
   }
 
   async start(filters?: string[]) {
-    this.report('onInit', this)
+    await this.report('onInit', this)
 
     const files = await this.filterTestsBySource(
       await this.globTestFiles(filters),
