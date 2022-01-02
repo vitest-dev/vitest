@@ -30,25 +30,13 @@ ESM first, top level await
 
 ## Threads
 
-Workers multi-threading via [tinypool](https://github.com/Aslemammad/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina)). Multi-threading helps us run tests simultaneously so Vitest does not let heavy tests block us from running other tests.
-
-```bash
-$ vitest --threads
-```
-
-Multi-threading is enabled by default, but it is also possible to disable this feature, where sometimes it can result in better performance.
+Workers multi-threading via [tinypool](https://github.com/Aslemammad/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina)), allowing tests to run simultaneously. Threads are enabled by default Vitest, and can be disabled passing `--no-threads` in the CLI.
 
  ```bash
 $ vitest --no-threads
 ```
 
-By default, Vitest isolates the environment for each file so we can do environment mutations safely. 
-
- ```bash
-$ vitest --isolate
-```
-
-Disabling isolation would skip the environment isolation. That also sets the tinypool `isolateWorkers` option to false in multi-threading which makes the tests run so much faster.  
+Vitest also isolates each file's environment so env mutations in one file don't affect others. Isolation can be disabled by passing `--no-isolate` to the CLI (trading of correctness for run performance).
 
  ```bash
 $ vitest --no-isolate
