@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { serializeError } from '../../../packages/vitest/src/runtime/error'
+import { processError, serializeError } from '../../../packages/vitest/src/runtime/error'
 
 describe('error serialize', () => {
   it('works', () => {
@@ -49,5 +49,16 @@ describe('error serialize', () => {
       surname: 'Smith',
       fullName: 'John Smith',
     })
+  })
+})
+
+describe('Process Error', () => {
+  it('Do not add expected/actual attributes in a object when any of both attributes does not exists', () => {
+    const error = new Error('Ops something went wrong')
+
+    const result = processError(error)
+
+    expect(result.expected).not.toBeDefined()
+    expect(result.actual).not.toBeDefined()
   })
 })
