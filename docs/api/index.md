@@ -231,12 +231,9 @@ These functions allows you to hook into the life cycle of tests to avoid repeati
   ```ts
   import { afterAll } from 'vitest'
 
-  afterAll(() => {
-    stopMocking() // this method is called after all tests run
+  afterAll(async () => {
+    await stopMocking() // this method is called after all tests run
   })
-
-  // Hook accepting a timeout
-  afterAll(() => { }, 1000)
   ```
 
   Here the `afterAll` ensures that `stopMocking` method is called after all tests run.
