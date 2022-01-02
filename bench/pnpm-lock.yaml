@@ -5,17 +5,15 @@ importers:
   .:
     specifiers:
       '@types/benchmark': ^2.1.1
-      '@types/cross-spawn': ^6.0.2
       benchmark: ^2.1.4
-      cross-spawn: ^7.0.3
       esmo: ^0.13.0
+      execa: ^6.0.0
       microtime: ^3.0.0
     devDependencies:
       '@types/benchmark': 2.1.1
-      '@types/cross-spawn': 6.0.2
       benchmark: 2.1.4
-      cross-spawn: 7.0.3
       esmo: 0.13.0
+      execa: 6.0.0
       microtime: 3.0.0
 
   ../packages/ui:
@@ -1682,12 +1680,6 @@ packages:
 
   /@types/concat-stream/1.6.1:
     resolution: {integrity: sha512-eHE4cQPoj6ngxBZMvVf6Hw7Mh4jMW4U9lpGmS5GBPB9RYxlFg+CHaVN7ErNY4W9XfLIEn20b4VDYaIrbq0q4uA==}
-    dependencies:
-      '@types/node': 17.0.6
-    dev: true
-
-  /@types/cross-spawn/6.0.2:
-    resolution: {integrity: sha512-KuwNhp3eza+Rhu8IFI5HUXRP0LIhqH5cAjubUvGXXthh4YYBuP2ntwEX+Cz8GJoZUHlKo247wPWOfA9LYEq4cw==}
     dependencies:
       '@types/node': 17.0.6
     dev: true

@@ -6,10 +6,9 @@
   },
   "devDependencies": {
     "@types/benchmark": "^2.1.1",
-    "@types/cross-spawn": "^6.0.2",
     "benchmark": "^2.1.4",
-    "cross-spawn": "^7.0.3",
     "esmo": "^0.13.0",
+    "execa": "^6.0.0",
     "microtime": "^3.0.0"
   }
 }

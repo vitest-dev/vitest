@@ -1,10 +1,10 @@
 import { copyFileSync, existsSync, mkdirSync, readdirSync, rmSync } from 'fs'
 
-import type { SpawnOptions } from 'child_process'
+import type { Options } from 'execa'
 import type { Deferred, Event, Target } from 'benchmark'
 
 import Benchmark from 'benchmark'
-import spawn from 'cross-spawn'
+import { execa } from 'execa'
 
 // eslint-disable-next-line no-console
 const log = console.log
@@ -66,18 +66,17 @@ bench.on('cycle', (event: Event) => {
   log(benchmark?.toString())
 })
 
-const vueTest: SpawnOptions = { cwd: 'test/vue', stdio: 'inherit' }
-bench.add('vitest (vue)', {
+const vueTest: Options = {
+  cwd: 'test/vue',
+  stdio: 'inherit',
+}
+bench.add('vitest', {
   defer: true,
-  fn: (deferred: Deferred) => spawn('pnpm', ['test:vitest'], vueTest).on('exit', () => deferred.resolve()),
+  fn: (deferred: Deferred) => execa('pnpm', ['test:vitest'], vueTest).on('exit', () => deferred.resolve()),
 })
-bench.add('vitest (vue) no-isolate', {
+bench.add('jest', {
   defer: true,
-  fn: (deferred: Deferred) => spawn('pnpm', ['test:vitest:no-isolate'], vueTest).on('exit', () => deferred.resolve()),
-})
-bench.add('jest (vue)', {
-  defer: true,
-  fn: (deferred: Deferred) => spawn('pnpm', ['test:jest'], vueTest).on('exit', () => deferred.resolve()),
+  fn: (deferred: Deferred) => execa('pnpm', ['test:jest'], vueTest).on('exit', () => deferred.resolve()),
 })
 
 bench.run()
