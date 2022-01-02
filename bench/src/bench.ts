@@ -53,28 +53,20 @@ bench.add('vitest', {
   fn: (deferred: Deferred) => execa('pnpm', ['test:vitest'], vueTest).on('exit', () => deferred.resolve()),
 })
 
-export function runBench(callback: (data: Record<string, { time: string }>) => void) {
+export type Result = Benchmark.Stats & {
+  name: string
+}
+
+export function runBench(callback: (data: Result[]) => void) {
   bench.on('complete', () => {
     const results = bench
-      .map((run: Target) => ({
+      .map((run: Target): Result => ({
         name: run.name,
         ...run.stats,
       }))
       .sort((a, b) => { return a.mean - b.mean })
 
-    const displayData = results
-      .map(r => ({
-        name: r.name,
-        time: `${r.mean.toFixed(3)}s ± ${r.rme.toFixed(2)}%`,
-      }))
-      .reduce((res, r) => {
-        res[r.name] = {
-          time: r.time,
-        }
-        return res
-      }, {} as Record<string, { time: string }>)
-
-    callback(displayData)
+    callback(results)
 
     removeTestFiles()
   })
