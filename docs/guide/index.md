@@ -104,7 +104,7 @@ vitest related /src/index.ts /src/hello-world.js
 | `-w, --watch` | Watch mode |
 | `-o, --open` | Open UI (default: false) |
 | `-t, --testNamePattern <pattern>` | Run tests with names matching the pattern |
-| `--api <api>` | Serve API, available dot-nested options: --api.port <port>, --api.host [host] and --api.strictPort |
+| `--api <api>` | Serve API, available options: `--api.port <port>`, `--api.host [host]` and `--api.strictPort` |
 | `--threads` | Enable Threads (default: true) |
 | `--silent` | Silent console output from tests |
 | `--reporter <name>` | Select reporter: `default`, `verbose`, or `dot` |
