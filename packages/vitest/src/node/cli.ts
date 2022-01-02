@@ -1,7 +1,7 @@
 import readline from 'readline'
 import cac from 'cac'
 import { execa } from 'execa'
-import type { ApiConfig, UserConfig } from '../types'
+import type { UserConfig } from '../types'
 import { version } from '../../package.json'
 import { ensurePackageInstalled } from '../utils'
 import type { Vitest } from './index'
@@ -10,18 +10,6 @@ import { createVitest } from './index'
 const CLOSE_TIMEOUT = 1_000
 
 const cli = cac('vitest')
-
-type DevCLIConfig = ApiConfig & UserConfig
-interface DevCLIOptions extends DevCLIConfig {}
-
-function buildDevOptions<Options extends DevCLIOptions>(
-  devOptions: Options,
-): Omit<Options, keyof ApiConfig> {
-  const options = { ...devOptions }
-  // @ts-ignore
-  delete options['--']
-  return options
-}
 
 cli
   .version(version)
@@ -78,11 +66,9 @@ async function dev(cliFilters: string[], argv: UserConfig) {
   await run(cliFilters, argv)
 }
 
-async function run(cliFilters: string[], devOptions: DevCLIOptions) {
+async function run(cliFilters: string[], options: UserConfig) {
   process.env.VITEST = 'true'
   process.env.NODE_ENV = 'test'
-
-  const options = buildDevOptions(devOptions)
 
   if (!await ensurePackageInstalled('vite'))
     process.exit(1)
