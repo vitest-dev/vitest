@@ -391,7 +391,6 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
       await UIPlugin(),
     ],
     server: {
-      hmr: false,
       open: options.open ? '/__vitest__/' : undefined,
       strictPort: true,
       preTransformRequests: false,
