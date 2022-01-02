@@ -178,6 +178,10 @@ When you use `test` in the top level of file, they are collected as part of the 
 
   Also, `expect` can be used statically to access matchers functions, described later, and more.
 
+  :::warning
+  To provide compatibility with [asymmetric matchers](#expectany), Vitest wraps `.eql` and `.equals` chai assertions, so if you need to use chai equality, you can use `.chaiEqual` matcher.
+  :::
+
 ### not
 
 TODO
@@ -468,11 +472,11 @@ TODO
   }
 
   test('stocks have the same properties', () => {
-    expect(stockBill).toEqual(stockBill)
+    expect(stockBill).toEqual(stockMary)
   })
 
   test('stocks are not the same', () => {
-    expect(stockBill).not.toBe(stockBill)
+    expect(stockBill).not.toBe(stockMary)
   })
   ```
 
@@ -516,6 +520,8 @@ TODO
 ### toMatch
 ### toMatchObject
 
+### toThrowError
+
 // snapshots
 
 ### toMatchSnapshot
@@ -535,14 +541,67 @@ TODO
 ### toHaveNthReturnedWith
 
 ### resolves
+
+- **Type:** `Promisify<Assertions>`
+
+  `resolves` is intended to remove boilerplate when asserting asynchronous code. Use it to unwrap value from pending promise and assert its value with usual assertions. If promise rejects, the assertion will fail.
+
+  It returns the same `Assertions` object, but all matchers are now return `Promise`, so you would need to `await` it. Also works with `chai` assertions.
+
+  For example, if you have a function, that makes an API call and returns some data, you may use this code to assert its return value:
+
+  ```ts
+  import { test, expect } from 'vitest'
+
+  function buyApples() {
+    return fetch('/buy/apples').then(r => r.json())
+  }
+
+  test('buyApples returns new stock id', async () => {
+    // toEqual returns a promise now, so you HAVE to await it
+    await expect(buyApples()).resolves.toEqual({ id: 1 })
+  })
+  ```
+
+  :::warning
+  If the code is not awaited, then you will have a false-positive test that will pass every time. To make sure that assertions are actually happened, you may use [`expect.assertions(number)`](#expect-assertions).
+  :::
+
 ### rejects
 
-### expect.assertions(number)
-### expect.hasAssertions()
+- **Type:** `Promisify<Assertions>`
+
+  `rejects` is intended to remove boilerplate when asserting asynchronous code. Use it to unwrap reason why promise was rejected, and assert its value with usual assertions. If promise successfully resolves, the assertion will fail.
+
+  It returns the same `Assertions` object, but all matchers are now return `Promise`, so you would need to `await` it. Also works with `chai` assertions.
+
+  For example, if you have a function that fails when you call it, you may use this code to assert the reason:
+
+  ```ts
+  import { test, expect } from 'vitest'
+
+  function buyApples(id) {
+    if(!id) {
+      throw new Error('no id')
+    }
+  }
+
+  test('buyApples returns new stock id', async () => {
+    // toEqual returns a promise now, so you HAVE to await it
+    await expect(buyApples()).rejects.toThrow('no id')
+  })
+  ```
+
+  :::warning
+  If the code is not awaited, then you will have a false-positive test that will pass every time. To make sure that assertions are actually happened, you may use [`expect.assertions(number)`](#expect-assertions).
+  :::
+
+### expect.assertions
+### expect.hasAssertions
 
 // asymmetric matchers
 
-### expect.anything()
+### expect.anything
 ### expect.any
 ### expect.arrayContaining
 ### expect.not.arrayContaining
