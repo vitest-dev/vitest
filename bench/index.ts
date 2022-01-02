@@ -66,7 +66,7 @@ bench.on('cycle', (event: Event) => {
   log(benchmark?.toString())
 })
 
-const vueTest: SpawnOptions = { cwd: 'test/vue' }
+const vueTest: SpawnOptions = { cwd: 'test/vue', stdio: 'inherit' }
 bench.add('vitest (vue)', {
   defer: true,
   fn: (deferred: Deferred) => spawn('pnpm', ['test:vitest'], vueTest).on('exit', () => deferred.resolve()),
