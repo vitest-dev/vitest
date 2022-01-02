@@ -53,7 +53,7 @@ describe('error serialize', () => {
 })
 
 describe('Process Error', () => {
-  it('Do not add expected/actual attributes in a object when both attributes does not exists', () => {
+  it('Do not add expected/actual attributes in a object when any of both attributes does not exists', () => {
     const error = new Error('Ops something went wrong')
 
     const result = processError(error)
