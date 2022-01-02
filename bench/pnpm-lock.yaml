@@ -32,7 +32,7 @@ importers:
       '@vueuse/core': ^7.4.1
       codemirror: ^5.65.0
       codemirror-theme-vars: ^0.1.1
-      d3-graph-controller: ^1.8.1
+      d3-graph-controller: ^1.10.0
       picocolors: ^1.0.0
       rollup: ^2.62.0
       sirv: ^1.0.19
