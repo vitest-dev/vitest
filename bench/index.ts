@@ -43,10 +43,20 @@ bench.on('complete', () => {
     }))
     .sort((a, b) => { return a.mean - b.mean })
 
-  log('Name\t\t\t\tTime (in seconds)')
+  const displayData = results
+    .map(r => ({
+      name: r.name,
+      time: `${r.mean.toFixed(3)}s ± ${r.rme.toFixed(2)}%`,
+    }))
+    .reduce((res, r) => {
+      res[r.name] = {
+        time: r.time,
+      }
+      return res
+    }, {} as Record<string, { time: string }>)
 
-  for (const r of results)
-    log(`${r.name}\t\t${r.mean.toFixed(3)} ± ${r.rme.toFixed(2)}%`)
+  // eslint-disable-next-line no-console
+  console.table(displayData)
 
   removeTestFiles()
 })
