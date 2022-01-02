@@ -15,7 +15,7 @@ type GitHub = ReturnType<typeof getOctokit>
 type Repo = Context['repo']
 type Pull = WebhookPayload['pull_request']
 
-const COMMNET_HEADING = '## [Benchmark]'
+const COMMNET_HEADING = '## Benchmark'
 
 async function fetchPreviousComment(
   octokit: GitHub,

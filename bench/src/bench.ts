@@ -9,7 +9,8 @@ import { execa } from 'execa'
 // eslint-disable-next-line no-console
 const log = console.log
 
-const fileCount = 1
+// BUG: For some reason adding more files break GitHub actions. Workflow just hangs.
+const fileCount = 2
 
 // To not polute the repo with a lot of tests, copy basic tests multiple times
 function copyTestFiles() {
@@ -20,7 +21,7 @@ function copyTestFiles() {
   }
 
   const files = readdirSync('test/vue/test')
-  for (const file of files.filter(f => f.endsWith('.ts'))) {
+  for (const file of files.filter(p => p.endsWith('.ts') || p.endsWith('.vue'))) {
     for (let i = 0; i < fileCount; i++)
       copyFileSync(`test/vue/test/${file}`, `test/vue/test/${i}/${file}`)
   }
