@@ -23,15 +23,9 @@ jobs:
           cache: "pnpm"
 
       - name: Install
-        run: pnpm i
-
-      - name: Build
-        run: pnpm build
-
-      - name: Install
         working-directory: ./bench
         run: pnpm i
 
       - name: Run benchmark
         working-directory: ./bench
-        run: pnpm bench
+        run: pnpm bench:ci
