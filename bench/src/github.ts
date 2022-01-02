@@ -148,10 +148,7 @@ async function compareToRef(ref: string, pr?: Pull, repo?: Repo) {
 }
 
 async function run() {
-  const pr = context.payload.pull_request
-
-  // eslint-disable-next-line no-console
-  console.log(context.payload)
+  const pr = context.payload?.issue?.pull_request
 
   try {
     if (pr)
