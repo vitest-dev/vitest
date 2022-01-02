@@ -36,7 +36,7 @@ Workers multi-threading via [tinypool](https://github.com/Aslemammad/tinypool) (
 $ vitest --threads
 ```
 
-Mutli-threading is enabled by default, but it is also possible to disable this feature, where sometimes it can result in better performance.
+Multi-threading is enabled by default, but it is also possible to disable this feature, where sometimes it can result in better performance.
 
  ```bash
 $ vitest --no-threads
