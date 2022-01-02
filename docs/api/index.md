@@ -159,30 +159,83 @@ When you use `test` in the top level of file, they are collected as part of the 
 
 ## Setup and Teardown
 
-These global functions allows you to hook into the life cycle of tests to avoid repeating setup and teardown code. They apply to the current context: the file if they are used at the top-level or the current suite if they are inside a `describe` block.
+These functions allows you to hook into the life cycle of tests to avoid repeating setup and teardown code. They apply to the current context: the file if they are used at the top-level or the current suite if they are inside a `describe` block.
 
 ### beforeEach
 
-- **Type:** `beforeEach(fn: () => Awaitable<void>, timeout: number)`
+- **Type:** `beforeEach(fn: () => Awaitable<void>, timeout?: number)`
 
-  Register a callback to be called before each test in the current context.
+  Register a callback to be called before each of the tests in the current context runs.
+  If the function returns a promise, Vitest waits until the promise resolve before running the test.
+
+  Optionally, you can pass a timeout (in milliseconds) defining how long to wait before terminating. The default is 5 seconds.
+
+  ```ts
+  import { beforeEach } from 'vitest'
+
+  beforeEach(async () => {
+    // Clear mocks and add some testing data after before each test run
+    await stopMocking()
+    await addUser({ name: 'John'})
+  })
+  ```
+
+  Here, the `beforeEach` ensures that user is added for each test.
 
 ### afterEach
 
-- **Type:** `afterEach(fn: () => Awaitable<void>, timeout: number)`
+- **Type:** `afterEach(fn: () => Awaitable<void>, timeout?: number)`
 
-  Register a callback to be called after each test in the current context.
+  Register a callback to be called after each one of the tests in the current context completes. 
+  If the function returns a promise, Vitest waits until the promise resolve before continuing.
+
+  Optionally, you can a timeout (in milliseconds) for specifying how long to wait before terminating. The default is 5 seconds.
+
+  ```ts
+  import { afterEach } from 'vitest'
+
+  afterEach(async () => {
+    await clearTestingData() // clear testing data after each test run
+  })
+  ```
+  Here, the `afterEach` ensures that testing data is cleared after each test runs.
 
 ### beforeAll
 
-- **Type:** `beforeAll(fn: () => Awaitable<void>, timeout: number)`
+- **Type:** `beforeAll(fn: () => Awaitable<void>, timeout?: number)`
 
-  Register a callback to be called once before starting to run all tests in the current context.
+  Register a callback to be called once before starting to run all tests in the current context. 
+  If the function returns a promise, Vitest waits until the promise resolve before running tests.
+
+  Optionally, you can provide a timeout (in milliseconds) for specifying how long to wait before terminating. The default is 5 seconds.
+
+  ```ts
+  import { beforeAll } from 'vitest'
+
+  beforeAll(async () => {
+    await startMocking() // called once before all tests run
+  })
+  ```
+
+  Here the `beforeAll` ensures that the mock data is set up before tests run
 
 ### afterAll
 
-- **Type:** `afterAll(fn: () => Awaitable<void>, timeout: number)`
+- **Type:** `afterAll(fn: () => Awaitable<void>, timeout?: number)`
 
   Register a callback to be called once after all tests have run in the current context.
+  If the function returns a promise, Vitest waits until the promise resolve before continuing.
+
+  Optionally, you can provide a timeout (in milliseconds) for specifying how long to wait before terminating. The default is 5 seconds.
+
+  ```ts
+  import { afterAll } from 'vitest'
+
+  afterAll(async () => {
+    await stopMocking() // this method is called after all tests run
+  })
+  ```
+
+  Here the `afterAll` ensures that `stopMocking` method is called after all tests run.
 
 
