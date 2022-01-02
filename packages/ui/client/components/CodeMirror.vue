@@ -55,6 +55,7 @@ onMounted(async() => {
     font-mono
     overflow-auto
     text-sm
+    h-full
   >
     <textarea ref="el" />
   </div>
