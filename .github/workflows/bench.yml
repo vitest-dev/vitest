@@ -1,12 +1,14 @@
 name: Benchmark
 
 on:
-  pull_request:
-  workflow_dispatch:
+  issue_comment:
+    types:
+    - created
 
 jobs:
   bench:
     runs-on: ubuntu-latest
+    if: ${{ github.event.issue.pull_request && (github.event.comment.body == '/bench' || github.event.comment.body == '/benchmark') }}
 
     steps:
       - uses: actions/checkout@v2
