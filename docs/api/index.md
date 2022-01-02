@@ -632,6 +632,8 @@ TODO
 
   After the test has passed or failed verifies that at least one assertion was called during a test. Useful case would be to check if an asynchronous code was called.
 
+  For example, if you have a code that calls a callback, we can make an assertion inside a callback, but the test will always pass, if we don't check if an assertion was called.
+
   ```ts
   import { test, expect } from 'vitest'
   import { db } from './db'
