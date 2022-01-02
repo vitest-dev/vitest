@@ -2,4 +2,6 @@ packages:
   - docs
   - packages/*
   - test/*
+  - bench/*
+  - bench/test/*
   - '!test/vue2'
