@@ -8,11 +8,20 @@ exports[`error serialize > Should skip circular references to prevent hit the ca
     [Circular],
     [Circular],
   ],
+  "whateverArrayClone": [
+    [Circular],
+    [Circular],
+  ],
 }
 `;
 
 exports[`error serialize > works 1`] = `
 {
+  "array": [
+    1,
+    ,
+    3,
+  ],
   "fn": "Function<fn>",
   "foo": "hi",
   "nested": {

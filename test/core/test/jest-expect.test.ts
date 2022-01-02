@@ -302,6 +302,9 @@ describe('async expect', () => {
     await expect((async() => {
       throw new Error('err')
     })()).rejects.toStrictEqual(new Error('err'))
+    await expect((async() => {
+      throw new Error('err')
+    })()).rejects.toThrow('err')
 
     await expect((async() => {
       throw new Error('err')
