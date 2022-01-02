@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils'
-import Hello from '../components/Hello.vue'
+import Hello from '@/components/Hello.vue'
 
 test('mount component', async() => {
   expect(Hello).toBeTruthy()
@@ -11,9 +11,6 @@ test('mount component', async() => {
   })
 
   expect(wrapper.text()).toContain('4 x 2 = 8')
-  expect(wrapper.html()).toMatchInlineSnapshot(`
-"<div>4 x 2 = 8</div>
-<button> x1 </button>"`)
 
   await wrapper.get('button').trigger('click')
 
@@ -34,9 +31,6 @@ test('mount component 2', async() => {
   })
 
   expect(wrapper.text()).toContain('4 x 2 = 8')
-  expect(wrapper.html()).toMatchInlineSnapshot(`
-"<div>4 x 2 = 8</div>
-<button> x1 </button>"`)
 
   await wrapper.get('button').trigger('click')
 
@@ -57,9 +51,6 @@ test('mount component 3', async() => {
   })
 
   expect(wrapper.text()).toContain('4 x 2 = 8')
-  expect(wrapper.html()).toMatchInlineSnapshot(`
-"<div>4 x 2 = 8</div>
-<button> x1 </button>"`)
 
   await wrapper.get('button').trigger('click')
 
@@ -80,9 +71,6 @@ test('mount component 4', async() => {
   })
 
   expect(wrapper.text()).toContain('4 x 2 = 8')
-  expect(wrapper.html()).toMatchInlineSnapshot(`
-"<div>4 x 2 = 8</div>
-<button> x1 </button>"`)
 
   await wrapper.get('button').trigger('click')
 
@@ -103,9 +91,6 @@ test('mount component 5', async() => {
   })
 
   expect(wrapper.text()).toContain('4 x 2 = 8')
-  expect(wrapper.html()).toMatchInlineSnapshot(`
-"<div>4 x 2 = 8</div>
-<button> x1 </button>"`)
 
   await wrapper.get('button').trigger('click')
 
