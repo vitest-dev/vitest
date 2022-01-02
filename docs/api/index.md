@@ -586,7 +586,7 @@ TODO
     }
   }
 
-  test('buyApples returns new stock id', async () => {
+  test('buyApples throws an error when no id provided', async () => {
     // toThrow returns a promise now, so you HAVE to await it
     await expect(buyApples()).rejects.toThrow('no id')
   })
