@@ -48,7 +48,7 @@ export async function buildAndGetTime(branch: string | null): Promise<Result[]> 
 
   await exec('npx -p @antfu/ni nci', [], { cwd: '..' })
 
-  await exec('npx -p @antfu/ni build', [], { cwd: '..' })
+  await exec('npx -p @antfu/ni nr build', [], { cwd: '..' })
 
   await exec('npx -p @antfu/ni nci', [])
 
