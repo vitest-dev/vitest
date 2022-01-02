@@ -9,7 +9,7 @@ import { execa } from 'execa'
 // eslint-disable-next-line no-console
 const log = console.log
 
-const fileCount = 1
+const fileCount = 10
 
 // To not polute the repo with a lot of tests, copy basic tests multiple times
 function copyTestFiles() {
@@ -70,13 +70,13 @@ const vueTest: Options = {
   cwd: 'test/vue',
   stdio: 'inherit',
 }
-bench.add('vitest', {
-  defer: true,
-  fn: (deferred: Deferred) => execa('pnpm', ['test:vitest'], vueTest).on('exit', () => deferred.resolve()),
-})
 bench.add('jest', {
   defer: true,
   fn: (deferred: Deferred) => execa('pnpm', ['test:jest'], vueTest).on('exit', () => deferred.resolve()),
+})
+bench.add('vitest', {
+  defer: true,
+  fn: (deferred: Deferred) => execa('pnpm', ['test:vitest'], vueTest).on('exit', () => deferred.resolve()),
 })
 
 bench.run()
