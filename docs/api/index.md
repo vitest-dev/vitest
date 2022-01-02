@@ -564,7 +564,7 @@ TODO
   ```
 
   :::warning
-  If the code is not awaited, then you will have a false-positive test that will pass every time. To make sure that assertions are actually happened, you may use [`expect.assertions(number)`](#expect-assertions).
+  If the assertion is not awaited, then you will have a false-positive test that will pass every time. To make sure that assertions are actually happened, you may use [`expect.assertions(number)`](#expect-assertions).
   :::
 
 ### rejects
@@ -593,11 +593,75 @@ TODO
   ```
 
   :::warning
-  If the code is not awaited, then you will have a false-positive test that will pass every time. To make sure that assertions are actually happened, you may use [`expect.assertions(number)`](#expect-assertions).
+  If the assertion is not awaited, then you will have a false-positive test that will pass every time. To make sure that assertions are actually happened, you may use [`expect.assertions(number)`](#expect-assertions).
   :::
 
 ### expect.assertions
+
+- **Type:** `(count: number) => void`
+
+  After the test has passed or failed verifies that curtain number of assertions was called during a test. Useful case would be to check if an asynchronous code was called.
+
+  For examples, if we have a function than asynchronously calls two matchers, we can assert that they were actually called.
+
+  ```ts
+  import { test, expect } from 'vitest'
+
+  async function doAsync(...cbs) {
+    await Promise.all(
+      cbs.map((cb, index) => cb({ index }))
+    )
+  }
+
+  test('all assertions are called', async () => {
+    expect.assertions(2);
+    function callback1(data) {
+      expect(data).toBeTruthy();
+    }
+    function callback2(data) {
+      expect(data).toBeTruthy();
+    }
+
+    await doAsync(callback1, callback2);
+  })
+  ```
+
 ### expect.hasAssertions
+
+- **Type:** `(count: number) => void`
+
+  After the test has passed or failed verifies that at least one assertion was called during a test. Useful case would be to check if an asynchronous code was called.
+
+  ```ts
+  import { test, expect } from 'vitest'
+  import { db } from './db'
+
+  const cbs = []
+
+  function onSelect(cb) {
+    cbs.push(cb)
+  }
+
+  // after selecting from db, we call all callbacks
+  function select(id) {
+    return db.select({ id }).then(data => {
+      return Promise.all(
+        cbs.map(cb => cb(data))
+      )
+    })
+  }
+
+  test('callback was called', async () => {
+    expect.hasAssertions()
+    onSelect((data) => {
+      // should be called on select
+      expect(data).toBeTruthy();
+    })
+    // if not awated, test will fail
+    // if you dont have expect.hasAssertions(), test will pass
+    await select(3)
+  })
+  ```
 
 // asymmetric matchers
 
