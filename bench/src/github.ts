@@ -150,6 +150,9 @@ async function compareToRef(ref: string, pr?: Pull, repo?: Repo) {
 async function run() {
   const pr = context.payload.pull_request
 
+  // eslint-disable-next-line no-console
+  console.log(context.payload)
+
   try {
     if (pr)
       await compareToRef(pr.base.ref as string, pr, context.repo)
