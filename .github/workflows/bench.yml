@@ -1,0 +1,33 @@
+name: Benchmark
+
+on:
+  workflow_dispatch
+
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2.0.1
+        with:
+          version: 6.23.5
+
+      - name: Set node version to ${{ matrix.node_version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node_version }}
+          cache: "pnpm"
+
+      - name: Install
+        run: pnpm i
+
+      - name: Install
+        working-directory: ./bench
+        run: pnpm i
+
+      - name: Run benchmark
+        working-directory: ./bench
+        run: pnpm bench
