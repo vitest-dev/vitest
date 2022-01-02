@@ -1,9 +1,66 @@
 import { resolve } from 'pathe'
-import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
-import type { ResolvedConfig, UserConfig } from '../types'
-import { defaultExclude, defaultInclude } from '../constants'
+import type { ResolvedConfig as ResolvedViteConfig, UserConfig as ViteUserConfig } from 'vite'
+
+import type { ApiConfig, ResolvedConfig, UserConfig } from '../types'
+import { defaultExclude, defaultInclude, defaultPort } from '../constants'
 import { resolveC8Options } from '../coverage'
 import { deepMerge, toArray } from '../utils'
+
+export function resolveApiConfig<Options extends ApiConfig & UserConfig>(
+  fromCli: boolean,
+  options: Options,
+  viteOverrides?: ViteUserConfig,
+): ApiConfig | undefined {
+  let api: ApiConfig | undefined
+  // eslint-disable-next-line no-console
+  console.log(options)
+  if (options.api === true)
+    api = { port: defaultPort }
+  else if (typeof options.api === 'number')
+    api = { port: options.api }
+
+  if (fromCli) {
+    if (api) {
+      if (options.port)
+        api.port = options.port
+
+      if (options.strictPort)
+        api.strictPort = options.strictPort
+
+      if (options.host)
+        api.host = options.host
+    }
+  }
+  else if (typeof options.api === 'object') {
+    if (api) {
+      if (options.api.port)
+        api.port = options.api.port
+
+      if (options.api.strictPort)
+        api.strictPort = options.api.strictPort
+
+      if (options.api.host)
+        api.host = options.api.host
+    }
+    else {
+      api = { ...options.api }
+    }
+  }
+
+  if (api) {
+    if (!api.port)
+      api.port = defaultPort
+
+    if (viteOverrides)
+      viteOverrides.server = Object.assign(viteOverrides.server || {}, api)
+  }
+
+  // eslint-disable-next-line no-console
+  console.log(api)
+  // eslint-disable-next-line no-console
+  console.log(viteOverrides?.server)
+  return api
+}
 
 export function resolveConfig(
   options: UserConfig,
@@ -65,6 +122,9 @@ export function resolveConfig(
 
   resolved.setupFiles = Array.from(resolved.setupFiles || [])
     .map(i => resolve(resolved.root, i))
+
+  // the server has been created, we don't need to override vite.server options
+  resolved.api = resolveApiConfig(false, options)
 
   if (options.related)
     resolved.related = toArray(options.related).map(file => resolve(resolved.root, file))

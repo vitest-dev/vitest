@@ -4,6 +4,7 @@ import { execa } from 'execa'
 import type { ApiConfig, UserConfig } from '../types'
 import { version } from '../../package.json'
 import { ensurePackageInstalled } from '../utils'
+import { resolveApiConfig } from './config'
 import type { Vitest } from './index'
 import { createVitest } from './index'
 
@@ -17,26 +18,16 @@ interface DevCLIOptions extends DevCLIConfig {}
 function buildDevOptions<Options extends DevCLIOptions>(
   devOptions: Options,
 ): Omit<Options, keyof ApiConfig> {
-  const options = { ...devOptions }
+  const options = Object.assign(
+    {},
+    { ...devOptions },
+    { api: resolveApiConfig(true, devOptions) },
+  )
   // @ts-ignore
   delete options['--']
   delete options.port
   delete options.strictPort
   delete options.host
-  let api: boolean | ApiConfig | undefined
-  if (devOptions.api === true)
-    api = true
-
-  if (devOptions.port !== undefined)
-    api = { port: devOptions.port }
-
-  if (devOptions.strictPort !== undefined)
-    api = Object.assign(typeof api === 'object' ? api : {}, { strictPort: devOptions.strictPort })
-
-  if (devOptions.host !== undefined)
-    api = Object.assign(typeof api === 'object' ? api : {}, { host: devOptions.host })
-
-  options.api = api
   return options
 }
 

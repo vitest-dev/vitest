@@ -9,7 +9,7 @@ import c from 'picocolors'
 import type { RawSourceMap } from 'source-map-js'
 import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig } from '../types'
 import { SnapshotManager } from '../integrations/snapshot/manager'
-import { configFiles, defaultPort } from '../constants'
+import { configFiles } from '../constants'
 import { ensurePackageInstalled, hasFailed, noop, slash, toArray } from '../utils'
 import { MocksPlugin } from '../plugins/mock'
 import { DefaultReporter, ReportersMap } from '../reporters'
@@ -17,7 +17,7 @@ import { DefaultReporter, ReportersMap } from '../reporters'
 import { cleanCoverage, reportCoverage } from '../coverage'
 import type { WorkerPool } from './pool'
 import { StateManager } from './state'
-import { resolveConfig } from './config'
+import { resolveApiConfig, resolveConfig } from './config'
 import { createPool } from './pool'
 
 const WATCHER_DEBOUNCE = 100
@@ -370,15 +370,7 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
     return (await import('@vitest/ui')).default()
   }
 
-  if (options.api === true)
-    options.api = { port: defaultPort }
-
-  if (typeof options.api === 'object') {
-    if (!options.api.port)
-      options.api.port = defaultPort
-
-    viteOverrides.server = Object.assign(viteOverrides.server || {}, options.api)
-  }
+  options.api = resolveApiConfig(false, options, viteOverrides)
 
   const config: ViteInlineConfig = {
     root,

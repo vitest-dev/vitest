@@ -185,7 +185,7 @@ export interface InlineConfig {
    * @internal WIP
    * @default false
    */
-  api?: boolean | ApiConfig
+  api?: boolean | number | ApiConfig
 
   /**
    * Will call `.mockClear()` on all spies before each test
@@ -239,7 +239,7 @@ export interface UserConfig extends InlineConfig {
   related?: string[] | string
 }
 
-export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related'> {
+export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api'> {
   config?: string
   filters?: string[]
   testNamePattern?: RegExp
@@ -252,4 +252,6 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
 
   coverage: ResolvedC8Options
   snapshotOptions: SnapshotStateOptions
+
+  api?: ApiConfig
 }
