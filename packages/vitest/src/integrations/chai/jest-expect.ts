@@ -133,13 +133,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   def('toContainEqual', function(expected) {
     const obj = utils.flag(this, 'object')
     const index = Array.from(obj).findIndex((item) => {
-      try {
-        chai.assert.deepEqual(item, expected)
-      }
-      catch {
-        return false
-      }
-      return true
+      return asymmetricEquals(item, expected)
     })
 
     this.assert(

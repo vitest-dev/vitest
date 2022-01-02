@@ -13,7 +13,6 @@ export interface ListRendererOptions {
 }
 
 const DURATION_LONG = 300
-const MAX_HEIGHT = 20
 
 const outputMap = new WeakMap<Task, string>()
 
@@ -72,7 +71,7 @@ export function renderTree(tasks: Task[], options: ListRendererOptions, level = 
   }
 
   // TODO: moving windows
-  return output.slice(0, MAX_HEIGHT).join('\n')
+  return output.join('\n')
 }
 
 export const createListRenderer = (_tasks: Task[], options: ListRendererOptions) => {
