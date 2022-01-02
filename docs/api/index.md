@@ -194,12 +194,9 @@ These functions allows you to hook into the life cycle of tests to avoid repeati
   ```ts
   import { afterEach } from 'vitest'
 
-  afterEach(() => {
-    clearTestingData() // clear testing data after each test run
+  afterEach(async () => {
+    await clearTestingData() // clear testing data after each test run
   })
-
-  // Hook accepting a timeout
-  afterEach(() => { }, 1000)
   ```
   Here, the `afterEach` ensures that testing data is cleared after each test runs.
 
