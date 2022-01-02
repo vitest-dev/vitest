@@ -107,7 +107,7 @@ function formatCompareTable(base: Result[], current: Result[]): string {
   return `${body}`
 }
 
-async function compareToRef(ref: string, pr?: Pull, repo?: Repo) {
+async function compareToRef(ref: string, pr?: Pull, repo?: Repo, octokit?: GitHub) {
   let body = `${COMMNET_HEADING}\n\n`
 
   const base = await buildAndGetTime(null)
@@ -117,8 +117,6 @@ async function compareToRef(ref: string, pr?: Pull, repo?: Repo) {
   body += formatCompareTable(base, base)
 
   if (pr && repo) {
-    const octokit = getOctokit(token)
-
     let comment = await fetchPreviousComment(octokit, repo, pr)
     comment = null
 
@@ -148,13 +146,22 @@ async function compareToRef(ref: string, pr?: Pull, repo?: Repo) {
 }
 
 async function run() {
-  const pr = context.payload?.issue?.pull_request
+  const isPr = context.payload?.issue?.pull_request != null
 
   try {
-    if (pr)
-      await compareToRef(pr.base.ref as string, pr, context.repo)
-    else
+    if (isPr) {
+      const octokit = getOctokit(token)
+      const repo = context.repo
+      const pr = await octokit.rest.pulls.get({
+        ...repo,
+        pull_number: context.payload.issue.number,
+      })
+
+      await compareToRef(pr.data.base.ref, pr.data, context.repo, octokit)
+    }
+    else {
       await compareToRef('HEAD^')
+    }
   }
   catch (error) {
     console.error(error)
