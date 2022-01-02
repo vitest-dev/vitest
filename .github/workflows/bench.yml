@@ -25,6 +25,9 @@ jobs:
       - name: Install
         run: pnpm i
 
+      - name: Build
+        run: pnpm build
+
       - name: Install
         working-directory: ./bench
         run: pnpm i
