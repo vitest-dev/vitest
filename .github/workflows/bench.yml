@@ -29,3 +29,5 @@ jobs:
       - name: Run benchmark
         working-directory: ./bench
         run: pnpm bench:ci
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -4,7 +4,7 @@ import type { Context } from '@actions/github/lib/context'
 import type { WebhookPayload } from '@actions/github/lib/interfaces'
 
 import { markdownTable as table } from 'markdown-table'
-import { getInput, setFailed } from '@actions/core'
+import { setFailed } from '@actions/core'
 import { context, getOctokit } from '@actions/github'
 import { exec } from '@actions/exec'
 
@@ -40,6 +40,7 @@ export async function buildAndGetTime(branch: string | null): Promise<Result[]> 
       await exec(`git fetch origin ${branch} --depth=1`)
     }
     catch (error) {
+      // eslint-disable-next-line no-console
       console.log('Fetch failed', error.message)
     }
 
@@ -100,6 +101,7 @@ function formatCompareTable(base: Result[], current: Result[]): string {
     { align: ['l', 'r', 'l'] },
   )
 
+  // eslint-disable-next-line no-console
   console.log(body)
 
   return `${body}`
