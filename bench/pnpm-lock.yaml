@@ -183,7 +183,6 @@ importers:
       '@vue/vue3-jest': ^27.0.0-alpha.4
       babel-jest: ^27.4.5
       jest: ^27.4.5
-      jest-simple-dot-reporter: ^1.0.5
       jsdom: ^19.0.0
       ts-jest: ^27.1.2
       vitest: workspace:*
@@ -197,7 +196,6 @@ importers:
       '@vue/vue3-jest': 27.0.0-alpha.4_70328590dd4a0943a9915ed4a095a473
       babel-jest: 27.4.5_@babel+core@7.16.7
       jest: 27.4.5
-      jest-simple-dot-reporter: 1.0.5
       jsdom: 19.0.0
       ts-jest: 27.1.2_403ec22a8454677f11f5bedd3b141440
       vitest: link:../../../packages/vitest
@@ -4523,10 +4521,6 @@ packages:
     dependencies:
       '@types/node': 17.0.6
       graceful-fs: 4.2.8
-    dev: true
-
-  /jest-simple-dot-reporter/1.0.5:
-    resolution: {integrity: sha512-cZLFG/C7k0+WYoIGGuGXKm0vmJiXlWG/m3uCZ4RaMPYxt8lxjdXMLHYkxXaQ7gVWaSPe7uAPCEUcRxthC5xskg==}
     dev: true
 
   /jest-snapshot/27.4.5:

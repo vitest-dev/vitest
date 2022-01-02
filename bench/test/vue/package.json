@@ -2,8 +2,7 @@
   "name": "bench-vue",
   "private": true,
   "scripts": {
-    "test:vitest": "vitest run --reporter dot",
-    "test:vitest:no-isolate": "vitest run --no-isolate --reporter dot",
+    "test:vitest": "vitest run",
     "test:jest": "jest"
   },
   "devDependencies": {
@@ -15,7 +14,6 @@
     "@vue/vue3-jest": "^27.0.0-alpha.4",
     "babel-jest": "^27.4.5",
     "jest": "^27.4.5",
-    "jest-simple-dot-reporter": "^1.0.5",
     "jsdom": "^19.0.0",
     "ts-jest": "^27.1.2",
     "vitest": "workspace:*",

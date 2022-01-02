@@ -11,7 +11,4 @@ module.exports = {
   },
   testEnvironment: 'jsdom',
   verbose: false,
-  reporters: [
-    ['jest-simple-dot-reporter', { color: true }],
-  ],
 }
