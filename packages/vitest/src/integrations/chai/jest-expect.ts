@@ -51,6 +51,21 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     return chaiEqual.apply(this, args)
   })
 
+  ;(['throw', 'throws', 'Throw'] as const).forEach((m) => {
+    utils.overwriteMethod(chai.Assertion.prototype, m, (_super: any) => {
+      return function(this: Chai.Assertion & Chai.AssertionStatic, ...args: any[]) {
+        const promise = utils.flag(this, 'promise')
+        const object = utils.flag(this, 'object')
+        if (promise === 'rejects') {
+          utils.flag(this, 'object', () => {
+            throw object
+          })
+        }
+        _super.apply(this, args)
+      }
+    })
+  })
+
   // overrides `.equal` and `.eql` to provide custom assertion for asymmetric equality
   utils.overwriteMethod(chai.Assertion.prototype, 'equal', (_super: any) => {
     return function(this: Chai.Assertion & Chai.AssertionStatic, ...args: any[]) {
@@ -413,7 +428,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
               return result.call(this, ...args)
             },
             (err: any) => {
-              throw new Error(`promise rejected ${err} instead of resolving`)
+              throw new Error(`promise rejected "${err}" instead of resolving`)
             },
           )
         }
@@ -437,7 +452,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         return async(...args: any[]) => {
           return wrapper.then(
             (value: any) => {
-              throw new Error(`promise resolved ${value} instead of rejecting`)
+              throw new Error(`promise resolved "${value}" instead of rejecting`)
             },
             (err: any) => {
               utils.flag(this, 'object', err)
