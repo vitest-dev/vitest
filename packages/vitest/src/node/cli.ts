@@ -17,13 +17,9 @@ interface DevCLIOptions extends DevCLIConfig {}
 function buildDevOptions<Options extends DevCLIOptions>(
   devOptions: Options,
 ): Omit<Options, keyof ApiConfig> {
-  const options = { ...devOptions, api: interpretCliApiConfig(devOptions) }
-
+  const options = { ...devOptions }
   // @ts-ignore
   delete options['--']
-  delete options.port
-  delete options.strictPort
-  delete options.host
   return options
 }
 
@@ -35,10 +31,7 @@ cli
   .option('-w, --watch', 'watch mode')
   .option('-o, --open', 'open UI', { default: false })
   .option('-t, --testNamePattern <pattern>', 'run test names with the specified pattern')
-  .option('--api [api]', 'listen to default port and serve API')
-  .option('--port <port>', 'listen on custom port: --api required')
-  .option('--strictPort', 'exit if specified port is already in use for serve API: --api required')
-  .option('--host [host]', 'listen local/public ip address for serve API: --api required')
+  .option('--api <api>', 'Serve API, available dot-nested options: --api.port <port>, --api.strictPort and --api.host [host]')
   .option('--threads', 'enabled threads', { default: true })
   .option('--silent', 'silent console output from tests')
   .option('--isolate', 'isolate environment for each test file', { default: true })
@@ -181,28 +174,4 @@ function registerConsoleShortcuts(ctx: Vitest) {
 
     // TODO: add more commands
   })
-}
-
-export function interpretCliApiConfig<Options extends ApiConfig & UserConfig>(
-  options: Options,
-): ApiConfig | undefined {
-  let api: ApiConfig | undefined
-  if (options.api === true)
-    api = { }
-  else if (typeof options.api === 'number')
-    api = { port: options.api }
-
-  if (api) {
-    if (options.port)
-      api.port = options.port
-    if (options.strictPort)
-      api.strictPort = options.strictPort
-    if (options.host)
-      api.host = options.host
-  }
-  else if (typeof options.api === 'object') {
-    api = { ...options.api }
-  }
-
-  return api
 }
