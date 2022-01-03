@@ -37,6 +37,7 @@ export default ({ watch }) => [
     output: {
       dir: 'dist',
       format: 'esm',
+      sourcemap: 'inline',
     },
     external,
     plugins: [
