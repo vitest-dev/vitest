@@ -9,14 +9,20 @@ import alias from '@rollup/plugin-alias'
 import license from 'rollup-plugin-license'
 import c from 'picocolors'
 import fg from 'fast-glob'
+
 import pkg from './package.json'
 
-const entry = [
+const entries = [
   'src/index.ts',
   'src/node/cli.ts',
   'src/node.ts',
   'src/runtime/worker.ts',
   'src/runtime/entry.ts',
+]
+
+const dtsEntries = [
+  'src/index.ts',
+  'src/node.ts',
 ]
 
 const external = [
@@ -27,7 +33,7 @@ const external = [
 
 export default ({ watch }) => [
   {
-    input: entry,
+    input: entries,
     output: {
       dir: 'dist',
       format: 'esm',
@@ -55,32 +61,17 @@ export default ({ watch }) => [
       console.error(message)
     },
   },
-  {
-    input: [
-      'src/index.ts',
-    ],
+  ...dtsEntries.map(input => ({
+    input,
     output: {
-      file: 'dist/index.d.ts',
+      file: input.replace('src/', 'dist/').replace('.ts', '.d.ts'),
       format: 'esm',
     },
     external,
     plugins: [
-      dts(),
+      dts({ respectExternal: true }),
     ],
-  },
-  {
-    input: [
-      'src/node.ts',
-    ],
-    output: {
-      file: 'dist/node.d.ts',
-      format: 'esm',
-    },
-    external,
-    plugins: [
-      dts(),
-    ],
-  },
+  })),
 ]
 
 function licensePlugin() {
