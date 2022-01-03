@@ -387,7 +387,7 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
             (await import('../api/setup')).setup(ctx)
 
           if (!options.watch)
-            server.watcher.close()
+            await server.watcher.close()
         },
       } as VitePlugin,
       MocksPlugin(),
