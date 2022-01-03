@@ -19,13 +19,15 @@ A blazing fast unit test framework powered by Vite.
 
 > ⚠️ **DISCLAIMER**: Vitest is still in development and not stable yet. It's not recommended to use it in production.
 
-> Vitest requires Vite v2.7 and Node v14
+> Vitest requires Vite >=v2.7.10 and Node >=v14
 
 Follow the [Getting Started Guide](https://vitest.dev/guide) or learn [why we are building a new test runner](https://vitest.dev/guide/why).
 
 ## Documentation
 
 Read the [documentation](https://vitest.dev/).
+
+[Examples](https://vitest.dev/guide/#examples) | [Projects using Vitest](https://vitest.dev/guide/#projects-using-vitest)
 
 ## Features
 
@@ -64,22 +66,6 @@ describe('suite name', () => {
 ```bash
 $ npx vitest
 ```
-
-## Examples
-
-- [Unit Testing](./test/core)
-- [Vue Component Testing](./test/vue)
-- [React Component Testing](./test/react)
-- [React Testing with MSW](./test/react-testing-lib-msw)
-- [Lit Component Testing](./test/lit)
-- [Vitesse Component Testing](./test/vitesse)
-
-## Projects using Vitest
-
-- [unocss](https://github.com/antfu/unocss)
-- [unplugin-auto-import](https://github.com/antfu/unplugin-auto-import)
-- [unplugin-vue-components](https://github.com/antfu/unplugin-vue-components)
-- [vitesse-lite](https://github.com/antfu/vitesse-lite)
 
 ## Sponsors
 

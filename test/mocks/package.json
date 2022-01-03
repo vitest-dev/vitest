@@ -11,11 +11,12 @@
     "test": "vitest"
   },
   "dependencies": {
+    "@vueuse/integrations": "^7.4.1",
     "axios": "^0.24.0",
     "tinyspy": "^0.2.6"
   },
   "devDependencies": {
-    "vite": "^2.7.7",
+    "vite": "^2.7.10",
     "vitest": "workspace:*"
   }
 }

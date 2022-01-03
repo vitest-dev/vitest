@@ -1,33 +1,33 @@
 <script setup lang="ts">
-import { isDark, toggleDark } from '~/composables'
+import type { Task } from '#types'
+import { toggleDark } from '~/composables'
+import { files, runAll } from '~/composables/client'
+import { activeFileId } from '~/composables/params'
+
+function onItemClick(task: Task) {
+  activeFileId.value = task.id
+}
 </script>
 
 <template>
-  <nav
-    bg-panel
-    w-72
-    flex
-    flex-col
-    border="r base"
-  >
-    <div
-      grid="~ cols-[max-content,1fr,min-content] gap-2"
-      items-center
-      px-4
-      h-14
-      border="b base"
+  <nav border="r base">
+    <TasksList
+      :tasks="files"
+      :on-item-click="onItemClick"
     >
-      <img w-6 h-6 src="/favicon.svg">
-      <span text-lg font-light>Vitest</span>
-      <button
-        text-xl
-        text-dark-100
-        dark:text-light-900
-        dark:i-carbon-moon
-        i-carbon-sun
-        @click="toggleDark()"
-      />
-    </div>
-    <Files />
+      <template #header>
+        <img w-6 h-6 mx-2 src="/favicon.svg">
+        <span font-light text-sm flex-1>
+          Vitest
+        </span>
+        <div class="flex text-lg">
+          <IconButton icon="i-carbon-play" @click="runAll()" />
+          <IconButton
+            icon="dark:i-carbon-moon i-carbon-sun"
+            @click="toggleDark()"
+          />
+        </div>
+      </template>
+    </TasksList>
   </nav>
 </template>

@@ -30,12 +30,11 @@ export class DefaultReporter extends BaseReporter {
   }
 
   async stopListRender() {
-    this.renderer?.stop()
+    await this.renderer?.stop()
     this.renderer = undefined
-    await new Promise(resolve => setTimeout(resolve, 10))
   }
 
-  async onWatcherRerun(files: string[], trigger: string) {
+  async onWatcherRerun(files: string[], trigger?: string) {
     await this.stopListRender()
     await super.onWatcherRerun(files, trigger)
   }

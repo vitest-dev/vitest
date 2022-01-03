@@ -28,9 +28,9 @@ export type MatcherState = {
   ) => boolean
   expand?: boolean
   expectedAssertionsNumber?: number | null
-  expectedAssertionsNumberError?: Error
+  expectedAssertionsNumberError?: Error | null
   isExpectingAssertions?: boolean
-  isExpectingAssertionsError?: Error
+  isExpectingAssertionsError?: Error | null
   isNot: boolean
   promise: string
   suppressedErrors: Array<Error>
@@ -53,9 +53,6 @@ export type ExpectationResult = SyncExpectationResult | AsyncExpectationResult
 export type RawMatcherFn<T extends MatcherState = MatcherState> = {
   (this: T, received: any, expected: any, options?: any): ExpectationResult
 }
-
-export type ThrowingMatcherFn = (actual: any) => void
-export type PromiseMatcherFn = (actual: any) => Promise<void>
 
 export type MatchersObject<T extends MatcherState = MatcherState> = {
   [id: string]: RawMatcherFn<T>

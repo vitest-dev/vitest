@@ -28,3 +28,39 @@ test('snapshot with big string', () => {
     this: { is: new Set(['one', new Array(30).fill('zoo').join()]) },
   }).toMatchSnapshot()
 })
+
+test('throwing snapshots', () => {
+  expect(() => {
+    throw new Error('omega')
+  }).toThrowErrorMatchingSnapshot()
+
+  expect(() => {
+    // eslint-disable-next-line no-throw-literal
+    throw 'omega'
+  }).toThrowErrorMatchingSnapshot()
+
+  expect(() => {
+    // eslint-disable-next-line no-throw-literal
+    throw { error: 'omega' }
+  }).toThrowErrorMatchingSnapshot()
+})
+
+test('throwing inline snapshots', () => {
+  expect(() => {
+    throw new Error('omega')
+  }).toThrowErrorMatchingInlineSnapshot('"omega"')
+
+  expect(() => {
+    // eslint-disable-next-line no-throw-literal
+    throw 'omega'
+  }).toThrowErrorMatchingInlineSnapshot('"omega"')
+
+  expect(() => {
+    // eslint-disable-next-line no-throw-literal
+    throw { error: 'omega' }
+  }).toThrowErrorMatchingInlineSnapshot(`
+{
+  "error": "omega",
+}
+`)
+})

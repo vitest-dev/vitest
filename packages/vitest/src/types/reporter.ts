@@ -9,7 +9,7 @@ export interface Reporter {
   onTaskUpdate?: (packs: TaskResultPack[]) => Awaitable<void>
 
   onWatcherStart?: () => Awaitable<void>
-  onWatcherRerun?: (files: string[], trigger: string) => Awaitable<void>
+  onWatcherRerun?: (files: string[], trigger?: string) => Awaitable<void>
 
   onServerRestart?: () => Awaitable<void>
 

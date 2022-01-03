@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom'
-import { render, screen, userEvent } from './../utils/test-utils'
+import { render, screen, userEvent } from '../utils/test-utils'
 import { Input } from './Input'
 
 describe('Input', async() => {

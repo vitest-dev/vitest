@@ -21,6 +21,8 @@ To develop and test `vitest` package:
    - `pnpm run test` to run core tests
    - `pnpm run test:all` to run all the suite
 
+> 💡 If you use VS Code, you can hit `⇧ ⌘ B` or `Ctrl + Shift + B` to launch all the necessary dev tasks.
+
 ## Debugging
 
 ### VS Code
@@ -44,7 +46,7 @@ You may wish to test your locally-modified copy of Vitest against another packag
 ```json
 {
   "dependencies": {
-    "vite": "^2.0.0"
+    "vitest": "*"
   },
   "pnpm": {
     "overrides": {

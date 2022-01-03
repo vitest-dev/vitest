@@ -1,4 +1,5 @@
 import chai, { util } from 'chai'
+import { getState } from './jest-expect'
 
 import * as matcherUtils from './jest-matcher-utils'
 
@@ -20,6 +21,7 @@ const isAsyncFunction = (fn: unknown) =>
 const getMatcherState = (assertion: Chai.AssertionStatic & Chai.Assertion) => {
   const actual = assertion._obj
   const isNot = util.flag(assertion, 'negate') as boolean
+  const promise = util.flag(assertion, 'promise') || ''
   const jestUtils = {
     ...matcherUtils,
     iterableEquality,
@@ -27,11 +29,10 @@ const getMatcherState = (assertion: Chai.AssertionStatic & Chai.Assertion) => {
   }
 
   const matcherState: MatcherState = {
+    ...getState(),
     isNot,
     utils: jestUtils,
-    // global assertionCalls? needed for built-in jest function, but we don't use it
-    assertionCalls: 0,
-    promise: '',
+    promise,
     equals,
     // needed for built-in jest-snapshots, but we don't use it
     suppressedErrors: [],

@@ -31,18 +31,19 @@ async function startViteNode(ctx: WorkerContext) {
   const { config } = ctx
 
   const { run, collect } = (await executeInViteNode({
-    root: config.root,
     files: [
       resolve(distDir, 'entry.js'),
     ],
     fetch(id) {
       return rpc().fetch(id)
     },
-    inline: config.depsInline,
-    external: config.depsExternal,
-    interpretDefault: config.interpretDefault,
     moduleCache,
     mockMap,
+    root: config.root,
+    depsInline: config.depsInline,
+    depsExternal: config.depsExternal,
+    fallbackCJS: config.fallbackCJS,
+    interpretDefault: config.interpretDefault,
   }))[0]
 
   _viteNode = { run, collect }
@@ -51,7 +52,7 @@ async function startViteNode(ctx: WorkerContext) {
 }
 
 function init(ctx: WorkerContext) {
-  if (process.__vitest_worker__ && ctx.config.threads)
+  if (process.__vitest_worker__ && ctx.config.threads && ctx.config.isolate)
     throw new Error(`worker for ${ctx.files.join(',')} already initialized by ${process.__vitest_worker__.ctx.files.join(',')}. This is probably an internal bug of Vitest.`)
 
   process.stdout.write('\0')

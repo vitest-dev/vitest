@@ -11,7 +11,7 @@ import type { Config } from '@jest/types'
 import type { OptionsReceived as PrettyFormatOptions } from 'pretty-format'
 import type { SnapshotData, SnapshotMatchOptions, SnapshotStateOptions } from '../../../types'
 import { slash } from '../../../utils'
-import { parseStack } from '../../../utils/source-map'
+import { parseStacktrace } from '../../../utils/source-map'
 import type { InlineSnapshot } from './inlineSnapshot'
 import { saveInlineSnapshots } from './inlineSnapshot'
 
@@ -41,7 +41,6 @@ type SaveStatus = {
 export default class SnapshotState {
   private _counters: Map<string, number>
   private _dirty: boolean
-  private _index: number
   private _updateSnapshot: Config.SnapshotUpdateState
   private _snapshotData: SnapshotData
   private _initialData: SnapshotData
@@ -68,7 +67,6 @@ export default class SnapshotState {
     this._inlineSnapshots = []
     this._uncheckedKeys = new Set(Object.keys(this._snapshotData))
     this._counters = new Map()
-    this._index = 0
     this.expand = options.expand || false
     this.added = 0
     this.matched = 0
@@ -96,7 +94,7 @@ export default class SnapshotState {
     this._dirty = true
     if (options.isInline) {
       const error = options.error || new Error('Unknown error')
-      const stacks = parseStack(error.stack || '')
+      const stacks = parseStacktrace(error)
       stacks.forEach(i => i.file = slash(i.file))
       const stack = stacks.find(i => process.__vitest_worker__.ctx.files.includes(i.file))
       if (!stack) {
@@ -118,7 +116,6 @@ export default class SnapshotState {
     this._snapshotData = this._initialData
     // this._inlineSnapshots = []
     this._counters = new Map()
-    this._index = 0
     this.added = 0
     this.matched = 0
     this.unmatched = 0

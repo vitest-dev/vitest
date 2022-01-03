@@ -1,10 +1,9 @@
 import { performance } from 'perf_hooks'
 import { relative } from 'pathe'
 import c from 'picocolors'
-import type { File, Reporter, Task, TaskResultPack, UserConsoleLog } from '../types'
+import type { ErrorWithDiff, File, Reporter, Task, TaskResultPack, UserConsoleLog } from '../types'
 import { getFullName, getSuites, getTests, hasFailed } from '../utils'
 import type { Vitest } from '../node'
-import type { ErrorWithDiff } from './renderers/diff'
 import { printError } from './renderers/diff'
 import { F_RIGHT } from './renderers/figures'
 import { divider, getStateString, getStateSymbol, renderSnapshotSummary } from './renderers/utils'
@@ -38,8 +37,8 @@ export abstract class BaseReporter implements Reporter {
     if (this.isTTY)
       return
     for (const pack of packs) {
-      const task = this.ctx.state.idMap[pack[0]]
-      if (task.type === 'test' && task.result?.state && task.result?.state !== 'run') {
+      const task = this.ctx.state.idMap.get(pack[0])
+      if (task && task.type === 'test' && task.result?.state && task.result?.state !== 'run') {
         this.ctx.log(` ${getStateSymbol(task)} ${getFullName(task)}`)
         if (task.result.state === 'fail')
           this.ctx.log(c.red(`   ${F_RIGHT} ${(task.result.error as any)?.message}`))
@@ -62,17 +61,18 @@ export abstract class BaseReporter implements Reporter {
     }
   }
 
-  async onWatcherRerun(files: string[], trigger: string) {
+  async onWatcherRerun(files: string[], trigger?: string) {
     this.watchFilters = files
 
     this.ctx.console.clear()
-    this.ctx.log(c.blue('Re-running tests...') + c.dim(` [ ${this.relative(trigger)} ]\n`))
+    this.ctx.log(c.blue('Re-running tests...') + (trigger ? c.dim(` [ ${this.relative(trigger)} ]\n`) : ''))
+    this.start = performance.now()
   }
 
   onUserConsoleLog(log: UserConsoleLog) {
     if (this.ctx.config.silent)
       return
-    const task = log.taskId ? this.ctx.state.idMap[log.taskId] : undefined
+    const task = log.taskId ? this.ctx.state.idMap.get(log.taskId) : undefined
     this.ctx.log(c.gray(log.type + c.dim(` | ${task ? getFullName(task) : 'unknown test'}`)))
     process[log.type].write(`${log.content}\n`)
   }
@@ -107,7 +107,7 @@ export abstract class BaseReporter implements Reporter {
     }
 
     const executionTime = this.end - this.start
-    const threadTime = tests.reduce((acc, test) => acc + (test.result?.end ? test.result.end - test.result.start : 0), 0)
+    const threadTime = files.reduce((acc, test) => acc + (test.result?.duration || 0) + (test.collectDuration || 0), 0)
 
     const padTitle = (str: string) => c.dim(`${str.padStart(10)} `)
     const time = (time: number) => {
@@ -141,7 +141,7 @@ export abstract class BaseReporter implements Reporter {
     const errorsQueue: [error: ErrorWithDiff | undefined, tests: Task[]][] = []
     for (const task of tasks) {
       // merge identical errors
-      const error = task.result?.error as ErrorWithDiff | undefined
+      const error = task.result?.error
       const errorItem = error?.stackStr && errorsQueue.find(i => i[0]?.stackStr === error.stackStr)
       if (errorItem)
         errorItem[1].push(task)

@@ -1,8 +1,6 @@
-import { performance } from 'perf_hooks'
 import { createHash } from 'crypto'
 import { relative } from 'pathe'
-import type { File, ResolvedConfig, Suite, Test } from '../types'
-import { interpretOnlyMode } from '../utils'
+import type { File, ResolvedConfig, Suite } from '../types'
 import { clearContext, defaultSuite } from './suite'
 import { getHooks, setHooks } from './map'
 import { processError } from './error'
@@ -26,7 +24,6 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
       name: path,
       type: 'suite',
       mode: 'run',
-      computeMode: 'serial',
       filepath,
       tasks: [],
     }
@@ -48,7 +45,9 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
           file.tasks.push(c)
         }
         else {
+          const start = performance.now()
           const suite = await c.collect(file)
+          file.collectDuration = performance.now() - start
           if (suite.name || suite.tasks.length)
             file.tasks.push(suite)
         }
@@ -56,7 +55,6 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
     }
     catch (e) {
       file.result = {
-        start: performance.now(),
         state: 'fail',
         error: processError(e),
       }
@@ -65,14 +63,62 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
     }
 
     calculateHash(file)
+
+    interpretTaskModes(file, config.testNamePattern)
+
     files.push(file)
   }
 
-  const tasks = files.reduce((tasks, file) => tasks.concat(file.tasks), [] as (Suite | Test)[])
-
-  interpretOnlyMode(tasks)
-
   return files
+}
+
+/**
+ * If any tasks been marked as `only`, mark all other tasks as `skip`.
+ */
+function interpretTaskModes(suite: Suite, namePattern?: string | RegExp, onlyMode?: boolean) {
+  if (onlyMode === undefined)
+    onlyMode = someTasksAreOnly(suite)
+
+  suite.tasks.forEach((t) => {
+    if (onlyMode) {
+      if (t.type === 'suite' && someTasksAreOnly(t)) {
+        // Don't skip this suite
+        if (t.mode === 'only')
+          t.mode = 'run'
+        interpretTaskModes(t, namePattern, onlyMode)
+      }
+      else if (t.mode === 'run') { t.mode = 'skip' }
+      else if (t.mode === 'only') { t.mode = 'run' }
+    }
+    if (t.type === 'test') {
+      if (namePattern && !t.name.match(namePattern))
+        t.mode = 'skip'
+    }
+    else if (t.type === 'suite') {
+      if (t.mode === 'skip')
+        skipAllTasks(t)
+
+      // if all subtasks are skipped, marked as skip
+      if (t.mode === 'run') {
+        if (t.tasks.every(i => i.mode !== 'run'))
+          t.mode = 'skip'
+      }
+    }
+  })
+}
+
+function someTasksAreOnly(suite: Suite): boolean {
+  return suite.tasks.some(t => t.mode === 'only' || (t.type === 'suite' && someTasksAreOnly(t)))
+}
+
+function skipAllTasks(suite: Suite) {
+  suite.tasks.forEach((t) => {
+    if (t.mode === 'run') {
+      t.mode = 'skip'
+      if (t.type === 'suite')
+        skipAllTasks(t)
+    }
+  })
 }
 
 function calculateHash(parent: Suite) {

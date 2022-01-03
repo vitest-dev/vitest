@@ -17,7 +17,6 @@ const entry = [
   'src/node.ts',
   'src/runtime/worker.ts',
   'src/runtime/entry.ts',
-  'src/utils.ts',
 ]
 
 const external = [

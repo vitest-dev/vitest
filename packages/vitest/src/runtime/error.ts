@@ -1,11 +1,12 @@
 import { format } from 'util'
 import { stringify } from '../integrations/chai/jest-matcher-utils'
 
+const OBJECT_PROTO = Object.getPrototypeOf({})
+
 // https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm
-export function serializeError(val: any): any {
+export function serializeError(val: any, seen = new WeakMap()): any {
   if (!val || typeof val === 'string')
     return val
-
   if (typeof val === 'function')
     return `Function<${val.name}>`
   if (typeof val !== 'object')
@@ -14,15 +15,36 @@ export function serializeError(val: any): any {
     return 'Promise'
   if (typeof Element !== 'undefined' && val instanceof Element)
     return val.tagName
-
   if (typeof val.asymmetricMatch === 'function')
     return `${val.toString()} ${format(val.sample)}`
 
-  Object.keys(val).forEach((key) => {
-    val[key] = serializeError(val[key])
-  })
+  if (seen.has(val))
+    return seen.get(val)
 
-  return val
+  if (Array.isArray(val)) {
+    const clone: any[] = new Array(val.length)
+    seen.set(val, clone)
+    val.forEach((e, i) => {
+      clone[i] = serializeError(e, seen)
+    })
+    return clone
+  }
+  else {
+    // Objects with `Error` constructors appear to cause problems during worker communication
+    // using `MessagePort`, so the serialized error object is being recreated as plain object.
+    const clone = Object.create(null)
+    seen.set(val, clone)
+
+    let obj = val
+    while (obj && obj !== OBJECT_PROTO) {
+      Object.getOwnPropertyNames(obj).forEach((key) => {
+        if (!(key in clone))
+          clone[key] = serializeError(obj[key], seen)
+      })
+      obj = Object.getPrototypeOf(obj)
+    }
+    return clone
+  }
 }
 
 export function processError(err: any) {

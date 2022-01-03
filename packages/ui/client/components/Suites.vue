@@ -1,28 +1,31 @@
 <script setup lang="ts">
-import { current } from '~/state'
+import { current, runCurrent } from '~/composables/client'
 
 const name = computed(() => current.value?.name.split(/\//g).pop())
 </script>
 
 <template>
-  <div v-if="current" overflow-auto w-72 bg-panel border="r base">
-    <div
-      p="x4 y2"
-      flex="~ gap-4"
-      items-center
-      bg-active
-      border="b base"
+  <div v-if="current" border="r base">
+    <TasksList
+      :tasks="current.tasks"
+      :nested="true"
     >
-      <span font-light text-sm flex-1>
-        {{ name }}
-      </span>
-      <button i-carbon-play />
-    </div>
-
-    <TestSuite
-      v-for="suite in current.tasks"
-      :key="suite.id"
-      :task="suite"
-    />
+      <template #header>
+        <StatusIcon :task="current" />
+        <span
+          font-light
+          text-sm
+          flex-auto
+          ws-nowrap
+          overflow-hidden
+          truncate
+        >
+          {{ name }}
+        </span>
+        <div class="flex text-lg">
+          <IconButton icon="i-carbon-play" @click="runCurrent()" />
+        </div>
+      </template>
+    </TasksList>
   </div>
 </template>

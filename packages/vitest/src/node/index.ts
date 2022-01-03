@@ -1,3 +1,4 @@
+import { existsSync } from 'fs'
 import { resolve } from 'pathe'
 import type { ViteDevServer, InlineConfig as ViteInlineConfig, Plugin as VitePlugin, UserConfig as ViteUserConfig } from 'vite'
 import { createServer, mergeConfig } from 'vite'
@@ -8,15 +9,15 @@ import c from 'picocolors'
 import type { RawSourceMap } from 'source-map-js'
 import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig } from '../types'
 import { SnapshotManager } from '../integrations/snapshot/manager'
-import { configFiles, defaultPort } from '../constants'
-import { hasFailed, noop, slash, toArray } from '../utils'
+import { configFiles } from '../constants'
+import { ensurePackageInstalled, hasFailed, noop, slash, toArray } from '../utils'
 import { MocksPlugin } from '../plugins/mock'
-import { DefaultReporter } from '../reporters/default'
-import { ReportersMap } from '../reporters'
-import { cleanCoverage, prepareCoverage, reportCoverage } from '../coverage'
+import { DefaultReporter, ReportersMap } from '../reporters'
+
+import { cleanCoverage, reportCoverage } from '../coverage'
 import type { WorkerPool } from './pool'
 import { StateManager } from './state'
-import { resolveConfig } from './config'
+import { resolveApiConfig, resolveConfig } from './config'
 import { createPool } from './pool'
 
 const WATCHER_DEBOUNCE = 100
@@ -37,6 +38,8 @@ class Vitest {
   changedTests: Set<string> = new Set()
   visitedFilesMap: Map<string, RawSourceMap> = new Map()
   runningPromise?: Promise<void>
+  closingPromise?: Promise<void>
+
   isFirstRun = true
 
   restartsCount = 0
@@ -83,13 +86,15 @@ class Vitest {
     this._onRestartListeners.forEach(fn => fn())
 
     if (resolved.coverage.enabled)
-      await prepareCoverage(resolved.coverage)
+      await cleanCoverage(resolved.coverage, resolved.coverage.clean)
   }
 
   async start(filters?: string[]) {
     this.report('onInit', this)
 
-    const files = await this.globTestFiles(filters)
+    const files = await this.filterTestsBySource(
+      await this.globTestFiles(filters),
+    )
 
     if (!files.length) {
       if (this.config.passWithNoTests)
@@ -106,6 +111,55 @@ class Vitest {
 
     if (this.config.coverage.enabled)
       await reportCoverage(this)
+  }
+
+  private async getTestDependencies(filepath: string) {
+    const deps = new Set<string>()
+
+    const addImports = async(filepath: string) => {
+      const transformed = await this.server.transformRequest(filepath, { ssr: true })
+      if (!transformed) return
+      const dependencies = [...transformed.deps || [], ...transformed.dynamicDeps || []]
+      for (const dep of dependencies) {
+        const path = await this.server.pluginContainer.resolveId(dep, filepath, { ssr: true })
+        const fsPath = path && !path.external && path.id.split('?')[0]
+        if (fsPath && !fsPath.includes('node_modules') && !deps.has(fsPath) && existsSync(fsPath)) {
+          deps.add(fsPath)
+
+          await addImports(fsPath)
+        }
+      }
+    }
+
+    await addImports(filepath)
+
+    return deps
+  }
+
+  async filterTestsBySource(tests: string[]) {
+    const related = this.config.related
+    if (!related)
+      return tests
+
+    // dont run anything if no related sources are found
+    if (!related.length)
+      return []
+
+    const testDeps = await Promise.all(
+      tests.map(async(filepath) => {
+        const deps = await this.getTestDependencies(filepath)
+        return [filepath, deps] as const
+      }),
+    )
+
+    const runningTests = []
+
+    for (const [filepath, deps] of testDeps) {
+      if (deps.size && related.some(path => deps.has(path)))
+        runningTests.push(filepath)
+    }
+
+    return runningTests
   }
 
   async runFiles(files: string[]) {
@@ -201,8 +255,8 @@ class Vitest {
       id = slash(id)
       this.invalidates.add(id)
 
-      if (id in this.state.filesMap) {
-        delete this.state.filesMap[id]
+      if (this.state.filesMap.has(id)) {
+        this.state.filesMap.delete(id)
         this.changedTests.delete(id)
       }
     }
@@ -236,7 +290,7 @@ class Vitest {
 
     this.invalidates.add(id)
 
-    if (id in this.state.filesMap) {
+    if (this.state.filesMap.has(id)) {
       this.changedTests.add(id)
       return
     }
@@ -248,8 +302,17 @@ class Vitest {
   }
 
   async close() {
-    await this.pool?.close()
-    await this.server.close()
+    if (!this.closingPromise) {
+      this.closingPromise = Promise.allSettled([
+        this.pool?.close(),
+        this.server.close(),
+      ].filter(Boolean)).then((results) => {
+        results.filter(r => r.status === 'rejected').forEach((err) => {
+          this.error('error during close', (err as PromiseRejectedResult).reason)
+        })
+      })
+    }
+    return this.closingPromise
   }
 
   async report<T extends keyof Reporter>(name: T, ...args: ArgumentsType<Reporter[T]>) {
@@ -299,6 +362,16 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
 
   let haveStarted = false
 
+  async function UIPlugin() {
+    if (!options.open)
+      return
+
+    await ensurePackageInstalled('@vitest/ui')
+    return (await import('@vitest/ui')).default()
+  }
+
+  options.api = resolveApiConfig(options, viteOverrides)
+
   const config: ViteInlineConfig = {
     root,
     logLevel: 'error',
@@ -307,6 +380,7 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
     plugins: [
       {
         name: 'vitest',
+        enforce: 'pre',
         async configureServer(server) {
           if (haveStarted)
             await ctx.report('onServerRestart')
@@ -314,32 +388,30 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
           haveStarted = true
           if (options.api)
             (await import('../api/setup')).setup(ctx)
+
+          // #415, in run mode we don't need the watcher, close it would improve the performance
+          if (!options.watch)
+            await server.watcher.close()
         },
       } as VitePlugin,
       MocksPlugin(),
+      await UIPlugin(),
     ],
     server: {
-      open: options.open,
-      strictPort: true,
+      ...options.api,
+      open: options.open ? '/__vitest__/' : undefined,
+      preTransformRequests: false,
     },
-    optimizeDeps: {
-      exclude: [
-        'vitest',
-      ],
+    build: {
+      sourcemap: true,
     },
   }
 
   const server = await createServer(mergeConfig(config, viteOverrides))
   await server.pluginContainer.buildStart({})
 
-  if (options.api === true)
-    options.api = defaultPort
-
-  if (options.open && !options.api)
-    options.api = defaultPort
-
-  if (typeof options.api === 'number')
-    await server.listen(options.api)
+  if (options.api?.port)
+    await server.listen()
 
   return ctx
 }
