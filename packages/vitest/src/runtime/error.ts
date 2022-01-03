@@ -57,9 +57,9 @@ export function processError(err: any) {
   if (err.name)
     err.nameStr = String(err.name)
 
-  if (err.expected !== undefined && err.expected !== null && typeof err.expected !== 'string')
+  if (typeof err.expected !== 'string')
     err.expected = stringify(err.expected)
-  if (err.actual !== undefined && err.actual !== null && typeof err.actual !== 'string')
+  if (typeof err.actual !== 'string')
     err.actual = stringify(err.actual)
 
   return serializeError(err)

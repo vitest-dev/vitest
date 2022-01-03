@@ -1,0 +1,22 @@
+{
+  "name": "bench-vue",
+  "private": true,
+  "scripts": {
+    "test:vitest": "vitest run",
+    "test:jest": "jest"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.16.7",
+    "@babel/preset-env": "^7.16.7",
+    "@babel/preset-typescript": "^7.16.7",
+    "@vitejs/plugin-vue": "^2.0.1",
+    "@vue/test-utils": "^2.0.0-rc.18",
+    "@vue/vue3-jest": "^27.0.0-alpha.4",
+    "babel-jest": "^27.4.5",
+    "jest": "^27.4.5",
+    "jsdom": "^19.0.0",
+    "ts-jest": "^27.1.2",
+    "vitest": "workspace:*",
+    "vue": "^3.2.25"
+  }
+}
