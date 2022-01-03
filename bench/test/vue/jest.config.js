@@ -9,6 +9,6 @@ module.exports = {
     '.*\\.(vue)$': '@vue/vue3-jest',
     '.*\\.(ts)$': 'babel-jest',
   },
-  testEnvironment: 'jsdom',
+  testEnvironment: '@happy-dom/jest-environment',
   verbose: false,
 }

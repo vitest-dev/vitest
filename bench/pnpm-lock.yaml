@@ -7,6 +7,7 @@ importers:
       '@actions/core': ^1.6.0
       '@actions/exec': ^1.1.0
       '@actions/github': ^5.0.0
+      '@happy-dom/jest-environment': ^2.25.1
       '@types/benchmark': ^2.1.1
       benchmark: ^2.1.4
       esmo: ^0.13.0
@@ -17,6 +18,7 @@ importers:
       '@actions/core': 1.6.0
       '@actions/exec': 1.1.0
       '@actions/github': 5.0.0
+      '@happy-dom/jest-environment': 2.25.1
       '@types/benchmark': 2.1.1
       benchmark: 2.1.4
       esmo: 0.13.0
@@ -1430,6 +1432,17 @@ packages:
 
   /@bcoe/v8-coverage/0.2.3:
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
+    dev: true
+
+  /@happy-dom/jest-environment/2.25.1:
+    resolution: {integrity: sha512-Z6qbDjcIrHpsiMf7nJDNbksO4ltMnUK7kVZ/k7iPp6FkJSWPva8IoA5A8dKAkaxxj7yC+lKvOAJ7NbngdzlWGA==}
+    dependencies:
+      '@jest/environment': 27.4.4
+      '@jest/fake-timers': 27.4.2
+      '@jest/types': 27.4.2
+      happy-dom: 2.25.1
+      jest-mock: 27.4.2
+      jest-util: 27.4.2
     dev: true
 
   /@iconify/types/1.0.12:
