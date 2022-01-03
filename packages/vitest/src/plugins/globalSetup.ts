@@ -12,27 +12,28 @@ async function loadGlobalSetupFiles(server: ViteDevServer): Promise<GlobalSetupF
   return Promise.all(globalSetupFiles.map(file => loadGlobalSetupFile(file, server)))
 }
 
-function loadGlobalSetupFile(file: string, server: ViteDevServer): Promise<GlobalSetupFile> {
-  return server.ssrLoadModule(file).then((m) => {
-    if (m.default) {
-      if (typeof m.default !== 'function')
-        throw new Error(`invalid default export in globalSetup file ${file}. Must export a function`)
-      return {
-        file,
-        setup: m.default,
-      }
+async function loadGlobalSetupFile(file: string, server: ViteDevServer): Promise<GlobalSetupFile> {
+  const m = await server.ssrLoadModule(file)
+  for (const exp of ['default', 'setup', 'teardown']) {
+    if (m[exp] != null && typeof m[exp] !== 'function')
+      throw new Error(`invalid export in globalSetup file ${file}: ${exp} must be a function`)
+  }
+  if (m.default) {
+    return {
+      file,
+      setup: m.default,
     }
-    else if (m.setup || m.teardown) {
-      return {
-        file,
-        setup: m.setup,
-        teardown: m.teardown,
-      }
+  }
+  else if (m.setup || m.teardown) {
+    return {
+      file,
+      setup: m.setup,
+      teardown: m.teardown,
     }
-    else {
-      throw new Error(`invalid globalSetup file ${file}. Must export setup, teardown or have a default export`)
-    }
-  })
+  }
+  else {
+    throw new Error(`invalid globalSetup file ${file}. Must export setup, teardown or have a default export`)
+  }
 }
 
 export const GlobalSetupPlugin = (): Plugin => {
@@ -41,6 +42,17 @@ export const GlobalSetupPlugin = (): Plugin => {
   return {
     name: 'vitest:global-setup-plugin',
     enforce: 'pre',
+
+    // @ts-expect-error ssr is still flagged as alpha
+    config(config) {
+      if (config.test?.globalSetup) {
+        return {
+          ssr: {
+            noExternal: true, // needed so ssrLoadModule call doesn't initialize server._ssrExternals
+          },
+        }
+      }
+    },
 
     configureServer(_server) {
       server = _server
