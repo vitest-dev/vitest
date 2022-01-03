@@ -1,5 +1,3 @@
-/// <reference path="vitest" />
-
 import { defineConfig } from 'vite'
 import Vue from '@vitejs/plugin-vue'
 
@@ -11,5 +9,5 @@ export default defineConfig({
     global: true,
     isolate: false,
     environment: 'happy-dom', // jsdom fails when there are more test files
-   },
+  },
 })
