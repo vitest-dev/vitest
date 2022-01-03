@@ -385,6 +385,9 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
           haveStarted = true
           if (options.api)
             (await import('../api/setup')).setup(ctx)
+
+          if (!options.watch)
+            server.watcher.close()
         },
       } as VitePlugin,
       MocksPlugin(),
@@ -394,7 +397,6 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
       open: options.open ? '/__vitest__/' : undefined,
       strictPort: true,
       preTransformRequests: false,
-      watch: { ignored: ['**'] },
     },
     build: {
       sourcemap: true,
