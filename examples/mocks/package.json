@@ -11,7 +11,7 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@vueuse/integrations": "^7.4.1",
+    "@vueuse/integrations": "^7.5.1",
     "axios": "^0.24.0",
     "tinyspy": "^0.2.6"
   },
