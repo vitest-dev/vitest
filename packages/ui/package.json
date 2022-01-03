@@ -45,7 +45,6 @@
     "unplugin-auto-import": "^0.5.5",
     "unplugin-vue-components": "^0.17.11",
     "vite-plugin-pages": "^0.19.8",
-    "vitest": "workspace:*",
     "vue": "^3.2.25",
     "vue-router": "^4.0.12"
   },
