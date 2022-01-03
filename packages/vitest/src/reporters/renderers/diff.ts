@@ -22,30 +22,25 @@ export async function printError(error: unknown, ctx: Vitest) {
 
   const stacks = parseStacktrace(e)
 
-  if (!stacks.length) {
-    ctx.console.error(e)
-  }
-  else {
-    await interpretSourcePos(stacks, ctx)
+  await interpretSourcePos(stacks, ctx)
 
-    const nearest = stacks.find(stack =>
-      ctx.server.moduleGraph.getModuleById(stack.file)
+  const nearest = stacks.find(stack =>
+    ctx.server.moduleGraph.getModuleById(stack.file)
       && existsSync(stack.file),
-    )
+  )
 
-    printErrorMessage(e)
-    await printStack(ctx, stacks, nearest, async(s, pos) => {
-      if (s === nearest && nearest) {
-        const sourceCode = await fs.readFile(nearest.file, 'utf-8')
-        ctx.log(c.yellow(generateCodeFrame(sourceCode, 4, pos)))
-      }
-    })
-  }
+  printErrorMessage(e, ctx.console)
+  await printStack(ctx, stacks, nearest, async(s, pos) => {
+    if (s === nearest && nearest) {
+      const sourceCode = await fs.readFile(nearest.file, 'utf-8')
+      ctx.log(c.yellow(generateCodeFrame(sourceCode, 4, pos)))
+    }
+  })
 
   handleImportOutsideModuleError(e.stack || e.stackStr || '', ctx)
 
   if (e.showDiff)
-    displayDiff(e.actual, e.expected)
+    displayDiff(e.actual, e.expected, ctx.console)
 }
 
 const esmErrors = [
@@ -84,11 +79,11 @@ function handleImportOutsideModuleError(stack: string, ctx: Vitest) {
 }\n`)))
 }
 
-function displayDiff(actual: string, expected: string) {
+function displayDiff(actual: string, expected: string, console: Console) {
   console.error(c.gray(unifiedDiff(actual, expected)) + '\n')
 }
 
-function printErrorMessage(error: ErrorWithDiff) {
+function printErrorMessage(error: ErrorWithDiff, console: Console) {
   const errorName = error.name || error.nameStr || 'Unknown Error'
   console.error(c.red(`${c.bold(errorName)}: ${error.message}`))
 }
