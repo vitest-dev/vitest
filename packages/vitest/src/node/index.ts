@@ -9,15 +9,15 @@ import c from 'picocolors'
 import type { RawSourceMap } from 'source-map-js'
 import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig } from '../types'
 import { SnapshotManager } from '../integrations/snapshot/manager'
-import { configFiles, defaultPort } from '../constants'
+import { configFiles } from '../constants'
 import { ensurePackageInstalled, hasFailed, noop, slash, toArray } from '../utils'
 import { MocksPlugin } from '../plugins/mock'
-import { DefaultReporter } from '../reporters/default'
-import { ReportersMap } from '../reporters'
+import { DefaultReporter, ReportersMap } from '../reporters'
+
 import { cleanCoverage, reportCoverage } from '../coverage'
 import type { WorkerPool } from './pool'
 import { StateManager } from './state'
-import { resolveConfig } from './config'
+import { resolveApiConfig, resolveConfig } from './config'
 import { createPool } from './pool'
 
 const WATCHER_DEBOUNCE = 100
@@ -370,6 +370,8 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
     return (await import('@vitest/ui')).default()
   }
 
+  options.api = resolveApiConfig(options, viteOverrides)
+
   const config: ViteInlineConfig = {
     root,
     logLevel: 'error',
@@ -396,8 +398,8 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
       await UIPlugin(),
     ],
     server: {
+      ...options.api,
       open: options.open ? '/__vitest__/' : undefined,
-      strictPort: true,
       preTransformRequests: false,
     },
     build: {
@@ -408,12 +410,8 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
   const server = await createServer(mergeConfig(config, viteOverrides))
   await server.pluginContainer.buildStart({})
 
-  if (options.api === true)
-    options.api = defaultPort
-  if (options.open && typeof options.api !== 'number')
-    options.api = defaultPort
-  if (typeof options.api === 'number')
-    await server.listen(options.api)
+  if (options.api?.port)
+    await server.listen()
 
   return ctx
 }
