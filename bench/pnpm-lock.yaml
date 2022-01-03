@@ -15,6 +15,7 @@ importers:
       fs-extra: ^10.0.0
       markdown-table: ^3.0.2
       microtime: ^3.0.0
+      vitest: ../packages/vitest
     devDependencies:
       '@actions/core': 1.6.0
       '@actions/exec': 1.1.0
@@ -27,6 +28,7 @@ importers:
       fs-extra: 10.0.0
       markdown-table: 3.0.2
       microtime: 3.0.0
+      vitest: link:../packages/vitest
 
   ../packages/ui:
     specifiers:
@@ -47,7 +49,6 @@ importers:
       unplugin-auto-import: ^0.5.5
       unplugin-vue-components: ^0.17.11
       vite-plugin-pages: ^0.19.8
-      vitest: workspace:*
       vue: ^3.2.25
       vue-router: ^4.0.12
     dependencies:
@@ -69,7 +70,6 @@ importers:
       unplugin-auto-import: 0.5.5_@vueuse+core@7.5.1+rollup@2.62.0
       unplugin-vue-components: 0.17.11_rollup@2.62.0+vue@3.2.26
       vite-plugin-pages: 0.19.8
-      vitest: link:../vitest
       vue: 3.2.26
       vue-router: 4.0.12_vue@3.2.26
 
@@ -189,7 +189,6 @@ importers:
       jest: ^27.4.5
       jsdom: ^19.0.0
       ts-jest: ^27.1.2
-      vitest: workspace:*
       vue: ^3.2.25
     devDependencies:
       '@babel/core': 7.16.7
@@ -202,7 +201,6 @@ importers:
       jest: 27.4.5
       jsdom: 19.0.0
       ts-jest: 27.1.2_403ec22a8454677f11f5bedd3b141440
-      vitest: link:../../../packages/vitest
       vue: 3.2.26
 
 packages:

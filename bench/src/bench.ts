@@ -12,7 +12,7 @@ const log = console.log
 
 const fileCount = 50
 
-const copyExclude = ['node_modules', 'package.json', 'vitest.config.ts']
+const copyExclude = ['node_modules', 'package.json', 'vitest.config.ts', 'tsconfig.json']
 
 // To not polute the repo with a lot of tests, copy basic tests multiple times
 function copyTestFiles(suite: string) {
@@ -22,10 +22,10 @@ function copyTestFiles(suite: string) {
       mkdirSync(path, { recursive: true })
   }
 
-  const files = readdirSync(`../test/${suite}/`)
+  const files = readdirSync(`../examples/${suite}/`)
   for (const file of files.filter(f => !copyExclude.includes(f))) {
     for (let i = 0; i < fileCount; i++)
-      copySync(`../test/${suite}/${file}`, `test/${suite}/test/${i}/${file}`)
+      copySync(`../examples/${suite}/${file}`, `test/${suite}/${i}/${file}`)
   }
 }
 
@@ -53,6 +53,10 @@ for (const suite of testSuites) {
   const execaOptions: Options = {
     cwd: `test/${suite}`,
     stdio: 'inherit',
+    env: {
+      CI: 'true',
+      NO_COLOR: 'true',
+    },
   }
 
   copyTestFiles(suite)
