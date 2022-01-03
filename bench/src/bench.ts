@@ -25,7 +25,7 @@ function copyTestFiles(suite: string) {
   const files = readdirSync(`../examples/${suite}/`)
   for (const file of files.filter(f => !copyExclude.includes(f))) {
     for (let i = 0; i < fileCount; i++)
-      copySync(`../examples/${suite}/${file}`, `test/${suite}/${i}/${file}`)
+      copySync(`../examples/${suite}/${file}`, `test/${suite}/test/${i}/${file}`)
   }
 }
 
