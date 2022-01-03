@@ -94,4 +94,3 @@ describe('error serialize', () => {
     })
   })
 })
-
