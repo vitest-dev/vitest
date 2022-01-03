@@ -1,3 +1,5 @@
+/// <reference path="vitest" />
+
 import { defineConfig } from 'vite'
 import Vue from '@vitejs/plugin-vue'
 
@@ -8,6 +10,6 @@ export default defineConfig({
   test: {
     global: true,
     isolate: false,
-    environment: 'jsdom', // to match Jest
-  },
+    environment: 'happy-dom', // jsdom fails when there are more test files
+   },
 })

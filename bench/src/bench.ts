@@ -9,8 +9,7 @@ import { execa } from 'execa'
 // eslint-disable-next-line no-console
 const log = console.log
 
-// BUG: For some reason adding more files break GitHub actions. Workflow just hangs.
-const fileCount = 2
+const fileCount = 50
 
 // To not polute the repo with a lot of tests, copy basic tests multiple times
 function copyTestFiles() {
@@ -32,6 +31,13 @@ function removeTestFiles() {
     rmSync(`test/vue/test/${i}`, { recursive: true })
 }
 
+function exit(exitCode: number) {
+  if (exitCode > 0) {
+    removeTestFiles()
+    process.exit(exitCode)
+  }
+}
+
 copyTestFiles()
 
 const bench = new Benchmark.Suite()
@@ -45,17 +51,25 @@ const vueTest: Options = {
   cwd: 'test/vue',
   stdio: 'inherit',
 }
-bench.add('jest', {
-  defer: true,
-  fn: (deferred: Deferred) => execa('pnpm', ['test:jest'], vueTest)
-    .on('exit', () => deferred.resolve())
-    .on('error', () => process.exit(1)),
-})
 bench.add('vitest', {
   defer: true,
   fn: (deferred: Deferred) => execa('pnpm', ['test:vitest'], vueTest)
-    .on('exit', () => deferred.resolve())
-    .on('error', () => process.exit(1)),
+    .on('exit', (code) => {
+      if (code > 0)
+        exit(code)
+      else
+        deferred.resolve()
+    }),
+})
+bench.add('jest', {
+  defer: true,
+  fn: (deferred: Deferred) => execa('pnpm', ['test:jest'], vueTest)
+    .on('exit', (code) => {
+      if (code > 0)
+        exit(code)
+      else
+        deferred.resolve()
+    }),
 })
 
 export type Result = Benchmark.Stats & {
