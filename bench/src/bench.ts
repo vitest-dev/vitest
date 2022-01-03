@@ -1,44 +1,44 @@
-import { copyFileSync, existsSync, mkdirSync, readdirSync, rmSync } from 'fs'
+import { existsSync, mkdirSync, readdirSync, rmSync } from 'fs'
 
 import type { Options } from 'execa'
 import type { Deferred, Event, Target } from 'benchmark'
 
 import Benchmark from 'benchmark'
 import { execa } from 'execa'
+import { copySync } from 'fs-extra'
 
 // eslint-disable-next-line no-console
 const log = console.log
 
 const fileCount = 50
 
+const copyExclude = ['node_modules', 'package.json', 'vitest.config.ts']
+
 // To not polute the repo with a lot of tests, copy basic tests multiple times
-function copyTestFiles() {
+function copyTestFiles(suite: string) {
   for (let i = 0; i < fileCount; i++) {
-    const path = `test/vue/test/${i}`
+    const path = `test/${suite}/test/${i}`
     if (!existsSync(path))
-      mkdirSync(path)
+      mkdirSync(path, { recursive: true })
   }
 
-  const files = readdirSync('test/vue/test')
-  for (const file of files.filter(p => p.endsWith('.ts') || p.endsWith('.vue'))) {
+  const files = readdirSync(`../test/${suite}/`)
+  for (const file of files.filter(f => !copyExclude.includes(f))) {
     for (let i = 0; i < fileCount; i++)
-      copyFileSync(`test/vue/test/${file}`, `test/vue/test/${i}/${file}`)
+      copySync(`../test/${suite}/${file}`, `test/${suite}/test/${i}/${file}`)
   }
 }
 
-function removeTestFiles() {
-  for (let i = 0; i < fileCount; i++)
-    rmSync(`test/vue/test/${i}`, { recursive: true })
+function removeTestFiles(suite: string) {
+  rmSync(`test/${suite}/test/`, { recursive: true })
 }
 
-function exit(exitCode: number) {
+function exit(suite: string, exitCode: number) {
   if (exitCode > 0) {
-    removeTestFiles()
+    removeTestFiles(suite)
     process.exit(exitCode)
   }
 }
-
-copyTestFiles()
 
 const bench = new Benchmark.Suite()
 
@@ -47,30 +47,38 @@ bench.on('cycle', (event: Event) => {
   log(benchmark?.toString())
 })
 
-const vueTest: Options = {
-  cwd: 'test/vue',
-  stdio: 'inherit',
+const testSuites = ['vue']
+
+for (const suite of testSuites) {
+  const execaOptions: Options = {
+    cwd: `test/${suite}`,
+    stdio: 'inherit',
+  }
+
+  copyTestFiles(suite)
+
+  bench.add(`vitest:${suite}`, {
+    defer: true,
+    fn: (deferred: Deferred) => execa('pnpm', ['test:vitest'], execaOptions)
+      .on('exit', (code) => {
+        if (code > 0)
+          exit(suite, code)
+        else
+          deferred.resolve()
+      }),
+  })
+
+  bench.add(`jest:${suite}`, {
+    defer: true,
+    fn: (deferred: Deferred) => execa('pnpm', ['test:jest'], execaOptions)
+      .on('exit', (code) => {
+        if (code > 0)
+          exit(suite, code)
+        else
+          deferred.resolve()
+      }),
+  })
 }
-bench.add('vitest', {
-  defer: true,
-  fn: (deferred: Deferred) => execa('pnpm', ['test:vitest'], vueTest)
-    .on('exit', (code) => {
-      if (code > 0)
-        exit(code)
-      else
-        deferred.resolve()
-    }),
-})
-bench.add('jest', {
-  defer: true,
-  fn: (deferred: Deferred) => execa('pnpm', ['test:jest'], vueTest)
-    .on('exit', (code) => {
-      if (code > 0)
-        exit(code)
-      else
-        deferred.resolve()
-    }),
-})
 
 export type Result = Benchmark.Stats & {
   name: string
@@ -87,7 +95,8 @@ export function runBench(callback: (data: Result[]) => void) {
 
     callback(results)
 
-    removeTestFiles()
+    for (const suite of testSuites)
+      removeTestFiles(suite)
   })
 
   bench.run()
