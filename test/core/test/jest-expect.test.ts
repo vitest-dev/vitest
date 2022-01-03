@@ -150,6 +150,11 @@ describe('jest-expect', () => {
     expect(1).toBe(1)
   })
 
+  it.fails('toBe with null/undefined values', () => {
+    expect(undefined).toBe(true)
+    expect(null).toBe(true)
+  })
+
   // https://jestjs.io/docs/expect#tostrictequalvalue
 
   class LaCroix {
