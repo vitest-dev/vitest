@@ -20,6 +20,7 @@ export default <Environment>({
           console ?? global.console,
         ),
         ...restOptions,
+        userAgent,
       },
     )
 
