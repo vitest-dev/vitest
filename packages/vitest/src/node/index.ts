@@ -378,6 +378,7 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
     plugins: [
       {
         name: 'vitest',
+        enforce: 'pre',
         async configureServer(server) {
           if (haveStarted)
             await ctx.report('onServerRestart')
@@ -386,6 +387,7 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
           if (options.api)
             (await import('../api/setup')).setup(ctx)
 
+          // #415, in run mode we don't need the watcher, close it would improve the performance
           if (!options.watch)
             await server.watcher.close()
         },
