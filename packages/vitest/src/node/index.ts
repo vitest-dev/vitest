@@ -393,8 +393,8 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
       await UIPlugin(),
     ],
     server: {
+      ...options.api,
       open: options.open ? '/__vitest__/' : undefined,
-      strictPort: true,
       preTransformRequests: false,
     },
     build: {
@@ -405,7 +405,7 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
   const server = await createServer(mergeConfig(config, viteOverrides))
   await server.pluginContainer.buildStart({})
 
-  if (options.api)
+  if (options.api?.port)
     await server.listen()
 
   return ctx

@@ -167,25 +167,9 @@ export interface InlineConfig {
   coverage?: C8Options
 
   /**
-   * Open Vitest UI
-   * @internal WIP
-   */
-  open?: boolean
-
-  /**
    * run test names with the specified pattern
    */
   testNamePattern?: string | RegExp
-
-  /**
-   * Serve API options.
-   *
-   * When set to true, the default port is 51204.
-   *
-   * @internal WIP
-   * @default false
-   */
-  api?: boolean | number | ApiConfig
 
   /**
    * Will call `.mockClear()` on all spies before each test
@@ -204,6 +188,21 @@ export interface InlineConfig {
    * @default false
    */
   restoreMocks?: boolean
+
+  /**
+   * Serve API options.
+   *
+   * When set to true, the default port is 51204.
+   *
+   * @default false
+   */
+  api?: boolean | number | ApiConfig
+
+  /**
+   * Open Vitest UI
+   * @internal WIP
+   */
+  open?: boolean
 }
 
 export interface UserConfig extends InlineConfig {
