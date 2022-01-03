@@ -74,6 +74,11 @@ export interface InlineConfig {
   environment?: BuiltinEnvironment
 
   /**
+   * The configuration for the environment.
+   */
+  environmentConfiguration?: Record<string, any>
+
+  /**
    * Update snapshot files
    *
    * @default false

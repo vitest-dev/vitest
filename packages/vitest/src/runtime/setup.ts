@@ -49,8 +49,12 @@ export function setupConsoleLogSpy() {
   })
 }
 
-export async function withEnv(name: ResolvedConfig['environment'], fn: () => Promise<void>) {
-  const env = await environments[name].setup(globalThis)
+export async function withEnv(
+  name: ResolvedConfig['environment'],
+  options: ResolvedConfig['environmentConfiguration'],
+  fn: () => Promise<void>,
+) {
+  const env = await environments[name].setup(globalThis, options)
   try {
     await fn()
   }

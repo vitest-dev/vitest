@@ -4,14 +4,23 @@ import { KEYS } from './jsdom-keys'
 
 export default <Environment>({
   name: 'jsdom',
-  async setup(global) {
-    const { JSDOM } = await importModule('jsdom') as typeof import('jsdom')
-    const dom = new JSDOM('<!DOCTYPE html>',
+  async setup(global, options) {
+    const { JSDOM, ResourceLoader, VirtualConsole } = await importModule('jsdom') as typeof import('jsdom')
+    const { html, userAgent, testURL, console, ...restOptions } = options
+    const dom = new JSDOM(
+      typeof html === 'string' ? html : '<!DOCTYPE html>'
+      ,
       {
         pretendToBeVisual: true,
+        resources: typeof userAgent === 'string'
+          ? new ResourceLoader({ userAgent })
+          : undefined,
         runScripts: 'dangerously',
-        // TODO: options
-        url: 'http://localhost:3000',
+        url: typeof testURL === 'string' ? testURL : 'http://localhost:3000',
+        virtualConsole: new VirtualConsole().sendTo(
+          console ?? global.console,
+        ),
+        ...restOptions,
       },
     )
 
@@ -31,6 +40,7 @@ export default <Environment>({
     return {
       teardown(global) {
         keys.forEach(key => delete global[key])
+        Object.defineProperty(global, 'document', { value: null })
       },
     }
   },
