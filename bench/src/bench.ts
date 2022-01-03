@@ -22,10 +22,10 @@ function copyTestFiles(suite: string) {
       mkdirSync(path, { recursive: true })
   }
 
-  const files = readdirSync(`../test/${suite}/`)
+  const files = readdirSync(`../examples/${suite}/`)
   for (const file of files.filter(f => !copyExclude.includes(f))) {
     for (let i = 0; i < fileCount; i++)
-      copySync(`../test/${suite}/${file}`, `test/${suite}/test/${i}/${file}`)
+      copySync(`../examples/${suite}/${file}`, `test/${suite}/test/${i}/${file}`)
   }
 }
 

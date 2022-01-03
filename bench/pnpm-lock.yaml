@@ -47,7 +47,6 @@ importers:
       unplugin-auto-import: ^0.5.5
       unplugin-vue-components: ^0.17.11
       vite-plugin-pages: ^0.19.8
-      vitest: workspace:*
       vue: ^3.2.25
       vue-router: ^4.0.12
     dependencies:
@@ -69,7 +68,6 @@ importers:
       unplugin-auto-import: 0.5.5_@vueuse+core@7.5.1+rollup@2.62.0
       unplugin-vue-components: 0.17.11_rollup@2.62.0+vue@3.2.26
       vite-plugin-pages: 0.19.8
-      vitest: link:../vitest
       vue: 3.2.26
       vue-router: 4.0.12_vue@3.2.26
 
