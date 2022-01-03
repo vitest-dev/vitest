@@ -394,6 +394,7 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
       open: options.open ? '/__vitest__/' : undefined,
       strictPort: true,
       preTransformRequests: false,
+      watch: { ignored: ['**'] },
     },
     build: {
       sourcemap: true,
