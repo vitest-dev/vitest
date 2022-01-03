@@ -47,8 +47,5 @@
     "vite-plugin-pages": "^0.19.8",
     "vue": "^3.2.25",
     "vue-router": "^4.0.12"
-  },
-  "peerDependencies": {
-    "vitest": "workspace:*"
   }
 }

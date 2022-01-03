@@ -15,7 +15,7 @@ importers:
       fs-extra: ^10.0.0
       markdown-table: ^3.0.2
       microtime: ^3.0.0
-      vitest: ../packages/vitest
+      vitest: link:../packages/vitest
     devDependencies:
       '@actions/core': 1.6.0
       '@actions/exec': 1.1.0
