@@ -8,8 +8,7 @@ export default <Environment>({
     const { JSDOM, ResourceLoader, VirtualConsole } = await importModule('jsdom') as typeof import('jsdom')
     const { html, userAgent, testURL, console, ...restOptions } = options
     const dom = new JSDOM(
-      typeof html === 'string' ? html : '<!DOCTYPE html>'
-      ,
+      typeof html === 'string' ? html : '<!DOCTYPE html>',
       {
         pretendToBeVisual: true,
         resources: typeof userAgent === 'string'
@@ -40,7 +39,6 @@ export default <Environment>({
     return {
       teardown(global) {
         keys.forEach(key => delete global[key])
-        Object.defineProperty(global, 'document', { value: null })
       },
     }
   },
