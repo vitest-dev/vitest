@@ -16,11 +16,14 @@ const props = defineProps<{
 const modeMap: Record<string, string> = {
   html: 'htmlmixed',
   vue: 'htmlmixed',
+  svelte: 'htmlmixed',
   js: 'javascript',
+  jsx: 'jsx',
   mjs: 'javascript',
   cjs: 'javascript',
-  ts: 'javascript',
-  mts: 'javascript',
+  ts: 'typescript',
+  tsx: 'jsx',
+  mts: 'typescript',
 }
 
 const el = ref<HTMLTextAreaElement>()

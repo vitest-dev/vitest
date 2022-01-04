@@ -14,7 +14,7 @@
     "happy-dom": "*",
     "unplugin-vue2-script-setup": "^0.8.3",
     "vite": "^2.7.10",
-    "vite-plugin-vue2": "^1.9.0",
+    "vite-plugin-vue2": "^1.9.2",
     "vitest": "../../packages/vitest",
     "vue-template-compiler": "2.6.14"
   }

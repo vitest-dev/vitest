@@ -2,8 +2,8 @@
   "name": "bench-vue",
   "private": true,
   "scripts": {
-    "test:vitest": "vitest run",
-    "test:jest": "jest"
+    "test:vitest": "vitest run --silent",
+    "test:jest": "jest --silent"
   },
   "devDependencies": {
     "@babel/core": "^7.16.7",
@@ -16,7 +16,6 @@
     "jest": "^27.4.5",
     "jsdom": "^19.0.0",
     "ts-jest": "^27.1.2",
-    "vitest": "workspace:*",
     "vue": "^3.2.25"
   }
 }

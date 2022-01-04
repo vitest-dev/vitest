@@ -32,7 +32,7 @@ async function _transformRequest(ctx: Vitest, id: string) {
       result = await ctx.server.ssrTransform(result.code, result.map, id)
   }
 
-  if (result)
+  if (result && !id.includes('node_modules'))
     withInlineSourcemap(result)
 
   if (result?.map && process.env.NODE_V8_COVERAGE)
@@ -51,7 +51,7 @@ export async function withInlineSourcemap(result: TransformResult) {
   if (code.includes(`${SOURCEMAPPING_URL}=`))
     return result
   if (map)
-    result.code = `${code}\n\n//# ${SOURCEMAPPING_URL}=data:application/json;charset=utf-8;base64,${Buffer.from(JSON.stringify(map), 'utf-8').toString('base64')}`
+    result.code = `${code}\n\n//# ${SOURCEMAPPING_URL}=data:application/json;charset=utf-8;base64,${Buffer.from(JSON.stringify(map), 'utf-8').toString('base64')}\n`
 
   return result
 }

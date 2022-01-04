@@ -10,7 +10,7 @@ describe('should fails', async() => {
   for (const file of files) {
     it(file, async() => {
       let error: any
-      await execa('npx', ['vitest', file], {
+      await execa('npx', ['vitest', 'run', file], {
         cwd: root,
         env: {
           ...process.env,
