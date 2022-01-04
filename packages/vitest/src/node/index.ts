@@ -19,6 +19,7 @@ import type { WorkerPool } from './pool'
 import { StateManager } from './state'
 import { resolveApiConfig, resolveConfig } from './config'
 import { createPool } from './pool'
+import { transformRequest } from './transform'
 
 const WATCHER_DEBOUNCE = 100
 
@@ -117,7 +118,7 @@ class Vitest {
     const deps = new Set<string>()
 
     const addImports = async(filepath: string) => {
-      const transformed = await this.server.transformRequest(filepath, { ssr: true })
+      const transformed = await transformRequest(this, filepath)
       if (!transformed) return
       const dependencies = [...transformed.deps || [], ...transformed.dynamicDeps || []]
       for (const dep of dependencies) {
@@ -141,7 +142,7 @@ class Vitest {
     if (!related)
       return tests
 
-    // dont run anything if no related sources are found
+    // don't run anything if no related sources are found
     if (!related.length)
       return []
 
