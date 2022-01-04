@@ -1,0 +1,23 @@
+{
+  "name": "vitest-test",
+  "private": true,
+  "main": "index.js",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "test": "vitest",
+    "test:run": "vitest run"
+  },
+  "dependencies": {
+    "@vitejs/plugin-vue": "^2.0.1",
+    "@vue/compiler-sfc": "^3.2.26",
+    "@vue/test-utils": "^2.0.0-rc.18",
+    "jsdom": "^19.0.0",
+    "vite-plugin-ruby": "^3.0.4",
+    "vue": "3.2.26",
+    "vue-loader": "^15.9.8"
+  },
+  "devDependencies": {
+    "vitest": "workspace:*"
+  }
+}
