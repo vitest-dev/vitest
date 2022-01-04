@@ -61,8 +61,7 @@ test('throwing inline snapshots', () => {
   }).toThrowErrorMatchingInlineSnapshot(`
 {
   "error": "omega",
-}
-`)
+}`)
 })
 
 test('properties snapshot', () => {

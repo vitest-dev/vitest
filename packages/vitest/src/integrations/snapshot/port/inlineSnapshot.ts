@@ -33,10 +33,10 @@ export async function saveInlineSnapshots(
   }))
 }
 
-const startObjectRegex = /toMatchInlineSnapshot\s*\(\s*({)/m
+const startObjectRegex = /(?:toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot)\s*\(\s*({)/m
 
 function getEndIndex(code: string) {
-  let charIndex = 0
+  let charIndex = -1
   let inString: string | null = null //
   let startedBracers = 0
   let endedBracers = 0
@@ -90,7 +90,7 @@ function prepareSnapString(snap: string, indent: string) {
     : `\`${snap.replace(/`/g, '\\`').trimEnd()}\``
 }
 
-const startRegex = /toMatchInlineSnapshot\s*\(\s*(['"`\)])/m
+const startRegex = /(?:toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot)\s*\(\s*(['"`\)])/m
 export function replaceInlineSnap(code: string, s: MagicString, index: number, newSnap: string, indent = '') {
   const startMatch = startRegex.exec(code.slice(index))
   if (!startMatch)
