@@ -44,6 +44,7 @@ async function startViteNode(ctx: WorkerContext) {
     depsExternal: config.depsExternal,
     fallbackCJS: config.fallbackCJS,
     interpretDefault: config.interpretDefault,
+    base: config.base,
   }))[0]
 
   _viteNode = { run, collect }

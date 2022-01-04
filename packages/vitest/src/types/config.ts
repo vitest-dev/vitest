@@ -251,6 +251,7 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
 
   coverage: ResolvedC8Options
   snapshotOptions: SnapshotStateOptions
+  base: string
 
   api?: ApiConfig
 }

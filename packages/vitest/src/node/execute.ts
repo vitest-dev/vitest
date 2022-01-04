@@ -10,7 +10,7 @@ import { createMocker } from './mocker'
 
 export type FetchFunction = (id: string) => Promise<string | undefined>
 
-export interface ExecuteOptions extends Pick<ResolvedConfig, 'depsInline' | 'depsExternal' | 'fallbackCJS'> {
+export interface ExecuteOptions extends Pick<ResolvedConfig, 'depsInline' | 'depsExternal' | 'fallbackCJS' | 'base'> {
   root: string
   files: string[]
   fetch: FetchFunction
@@ -62,7 +62,7 @@ export async function interpretedImport(path: string, interpretDefault: boolean)
 }
 
 export async function executeInViteNode(options: ExecuteOptions) {
-  const { moduleCache, root, files, fetch, mockMap } = options
+  const { moduleCache, root, files, fetch, mockMap, base } = options
 
   const externalCache = new Map<string, false | string>()
   builtinModules.forEach(m => externalCache.set(m, m))
@@ -206,6 +206,8 @@ export async function executeInViteNode(options: ExecuteOptions) {
   }
 
   async function cachedRequest(rawId: string, callstack: string[]) {
+    rawId = base !== '/' ? rawId.replace(base, '/') : ''
+
     const id = normalizeId(rawId)
 
     if (externalCache.get(id))
