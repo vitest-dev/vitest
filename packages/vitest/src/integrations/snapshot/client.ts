@@ -43,20 +43,20 @@ export class SnapshotClient {
     this.test = undefined
   }
 
-  assert(received: unknown, message?: string, isInline = false, inlineSnapshot?: string | object): void {
+  assert(received: unknown, message?: string, isInline = false, properties?: object, inlineSnapshot?: string): void {
     if (!this.test)
       throw new Error('Snapshot cannot be used outside of test')
 
-    if (typeof inlineSnapshot === 'object') {
+    if (typeof properties === 'object') {
       if (typeof received !== 'object' || !received)
         throw new Error('Received value must be an object when the matcher has properties')
 
       try {
-        const pass = equals(received, inlineSnapshot, [iterableEquality, subsetEquality])
+        const pass = equals(received, properties, [iterableEquality, subsetEquality])
         if (!pass)
-          expect(received).toBe(inlineSnapshot)
+          expect(received).toBe(properties)
         else
-          received = deepMerge(received, inlineSnapshot)
+          received = deepMerge(received, properties)
       }
       catch (err: any) {
         err.message = 'Snapshot mismatched'
@@ -73,7 +73,7 @@ export class SnapshotClient {
       testName,
       received,
       isInline,
-      inlineSnapshot: typeof inlineSnapshot === 'string' ? inlineSnapshot.trim() : undefined,
+      inlineSnapshot: inlineSnapshot?.trim(),
     })
 
     if (!pass) {
