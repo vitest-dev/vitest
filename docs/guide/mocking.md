@@ -1,6 +1,50 @@
 # Mocking
 
-## Mocking functions
+When writing tests it's only a matter of time before you need to create fake version of an internal- or external service. This is commonly referred to as **mocking**. With vitest we have some built-in utilities to help you out in the most common scenarios. For basic usage you can read [the mocking part in features section](https://vitest.dev/guide/features.html#mocking) (if you haven't already) but for more detailed explanation keep reading!
+
+
+<!-- DATE -->
+
+## Dates
+
+Vitest comes with [`mockdate`](https://www.npmjs.com/package/mockdate) package that lets you easily manipulate system date in your tests.
+
+All useful methods are located on `vi` object that you can import from `vitest` package or access globally, if you have [`global`](/config/#global) config enabled.
+
+### mockCurrentDate
+
+- **Type**: `(date: string | number | Date) => void`
+
+Sets current date to the one that was passed. All `Date` calls will return this date.
+
+Useful if you need to test anything that depends on the current date - for example [luxon](https://github.com/moment/luxon/) calls inside your code.
+
+```ts
+const date = new Date(1998, 11, 19)
+
+vi.mockCurrentDate(date)
+
+expect(Date.now()).toBe(date.valueOf())
+```
+
+### getMockedDate
+
+- **Type**: `() => string | number | Date`
+
+Returns mocked current date that was set using `mockCurrentDate`. If date is not mocked, will return `null`.
+
+### restoreCurrentDate
+
+- **Type**: `() => void`
+
+Restores `Date` back to its native implementation.
+
+
+-----------------------------------------------------------------------------------
+
+<!-- FUNCTIONS -->
+
+## Functions
 
 Mock functions (or "spies") observe functions, that are invoked in some other code, allowing you to test its arguments, output or even redeclare its implementation.
 
@@ -288,6 +332,223 @@ If function returned `'result1`, then threw and error, then `mock.results` will 
 
 Currently, this property is not implemented.
 
-## See also
+### See also
 
 - [Jest's Mock Functions](https://jestjs.io/docs/mock-function-api)
+
+
+-----------------------------------------------------------------------------------
+
+<!-- MODULES -->
+
+## Modules
+
+Vitest provides utility functions to mock modules. You can access them on `vi` object that you can import from `vitest` package or access globally, if you have [`global`](/config/#global) config enabled.
+
+### mock
+
+**Type**: `(path: string, factory?: () => any) => void`
+
+Makes all `imports` to passed module to be mocked. Inside a path you _can_ use configured Vite aliases.
+
+- If there is a `factory`, will return its result. The call to `vi.mock` is hoisted to the top of the file,
+so you don't have access to variables declared in the global file scope, if you didn't put them before imports!
+- If `__mocks__` folder with file of the same name exist, all imports will return its exports.
+- If there is no `__mocks__` folder or a file with the same name inside, will call original module and mock it.
+
+### unmock
+
+**Type**: `(path: string) => void`
+
+Removes module from mocked registry. All subsequent calls to import will return original module even if it was mocked.
+
+### importActual
+
+**Type**: `<T>(path: string) => Promise<T>`
+
+Imports module, bypassing all checks if it should be mocked. Can be useful if you want to mock module partially.
+
+```ts
+vi.mock('./example', async () => {
+  const axios = await vi.importActual('./example')
+
+  return { ...axios, get: vi.fn() }
+})
+ ```
+
+### importMock
+
+**Type**: `<T>(path: string) => Promise<MaybeMockedDeep<T>>`
+
+Imports a module with all of its properties (including nested properties) mocked. Follows the same rules that [`vi.mock`](#mock) follows. For the rules applied, see [algorithm](#automockingalgorithm).
+
+### mocked
+
+**Type**: `<T>(obj: T, deep?: boolean) => MaybeMockedDeep<T>`
+
+Type helper for TypeScript. In reality just returns the object that was passed.
+
+```ts
+import example from './example'
+vi.mock('./example')
+
+test('1+1 equals 2' async () => {
+ vi.mocked(example.calc).mockRestore()
+
+ const res = example.calc(1, '+', 1)
+
+ expect(res).toBe(2)
+})
+```
+
+### Automocking algorithm
+
+If your code is importing mocked module, but there are no `__mocks__` file for this module or a `factory`, Vitest will mock the module itself by invoking it and mocking every export.
+
+* All arrays will be emptied
+* All primitives and collections will stay the same
+* All objects will be deeply cloned
+* All instances of classes and their prototypes will be deeply cloned
+
+-----------------------------------------------------------------------------------
+
+<!-- REQUESTS -->
+
+## Requests
+
+Because Vitest runs in Node, mocking network requests is tricky; web APIs are not available, so we need something that will mimic network behavior for us. We recommend [Mock Service Worker](https://mswjs.io/) to accomplish this. It will let you mock both `REST` and `GraphQL` network requests, and is framework agnostic.
+
+Mock Service Worker (MSW) works by intercepting the requests your tests make, allowing you to use it without changing any of your application code. In-browser, this uses the [Service Worker API](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API). In Node.js, and for Vitest, it uses [node-request-interceptor](https://mswjs.io/docs/api/setup-server#operation). To learn more about MSW, read their [introduction](https://mswjs.io/docs/)
+
+
+### Configuration
+
+Add the following to your test [setup file](/config/#setupfiles)
+```js
+import { beforeAll, afterAll, afterEach } from 'vitest'
+import { setupServer } from 'msw/node'
+import { graphql, rest } from 'msw'
+
+const posts = [
+  {
+    userId: 1,
+    id: 1,
+    title: 'first post title',
+    body: 'first post body',
+  },
+  ...
+]
+
+export const restHandlers = [
+  rest.get('https://rest-endpoint.example/path/to/posts', (req, res, ctx) => {
+    return res(ctx.status(200), ctx.json(posts))
+  }),
+]
+
+const graphqlHandlers = [
+  graphql.query('https://graphql-endpoint.example/api/v1/posts', (req, res, ctx) => {
+    return res(ctx.data(posts))
+  }),
+]
+
+const server = setupServer(...restHandlers, ...graphqlHandlers)
+
+// Start server before all tests
+beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
+
+//  Close server after all tests
+afterAll(() => server.close())
+
+// Reset handlers after each test `important for test isolation`
+afterEach(() => server.resetHandlers())
+```
+
+> Configuring the server with `onUnhandleRequest: 'error'` ensures that an error is thrown whenever there is a request that does not have a corresponding request handler.
+
+### Example
+
+We have a full working example which uses MSW: [React Testing with MSW](https://github.com/vitest-dev/vitest/tree/main/test/react-testing-lib-msw).
+
+### More
+There is much more to MSW. You can access cookies and query parameters, define mock error responses, and much more! To see all you can do with MSW, read [their documentation](https://mswjs.io/docs/recipes).
+
+-----------------------------------------------------------------------------------
+
+<!-- TIMERS -->
+
+## Timers
+
+To make your tests faster, you can mock calls to `setTimeout` and `setInterval`. All methods to manipulate timers are located on `vi` object that you can import from `vitest` package or access globally, if you have [`global`](/config/#global) config enabled.
+
+###  useFakeTimers
+
+**Type:** `() => Vitest`
+
+To enable mocking timers, you need to call this method. It will wrap all further calls to timers, until [`vi.useRealTimers()`](#userealtimers) is called.
+
+### useRealTimers
+
+**Type:** `() => Vitest`
+
+When timers are run out, you may call this method to return mocked timers to its original implementations. All timers that were run before will not be restored.
+
+### runOnlyPendingTimers
+
+**Type:** `() => Vitest`
+
+This method will call every timer that was initiated after `vi.useFakeTimers()` call. It will not fire any timer that was initiated during its call. For example this will only log `1`:
+
+```ts
+let i = 0
+setInterval(() => console.log(++i), 50)
+
+vi.runOnlyPendingTimers()
+```
+
+### runAllTimers
+
+**Type:** `() => Vitest`
+
+This method will invoke every initiated timer until the timers queue is empty. It means that every timer called during `runAllTimers` will be fired. If you have an infinite interval,
+it will throw after 10 000 tries. For example this will log `1, 2, 3`:
+
+```ts
+let i = 0
+setTimeout(() => console.log(++i))
+let interval = setInterval(() => {
+    console.log(++i)
+    if (i === 2) {
+        clearInterval(interval)
+    }
+}, 50)
+
+vi.runAllTimers()
+```
+
+### advanceTimersByTime
+
+**Type:** `(ms: number) => Vitest`
+
+Works just like `runAllTimers`, but will end after passed milliseconds. For example this will log `1, 2, 3` and will not throw:
+
+```ts
+let i = 0
+setInterval(() => console.log(++i), 50)
+
+vi.advanceTimersByTime(150)
+```
+
+### advanceTimersToNextTimer
+
+**Type:** `() => Vitest`
+
+Will call next available timer. Useful to make assertions between each timer call. You can chain call it to manage timers by yourself.
+
+```ts
+let i = 0
+setInterval(() => console.log(++i), 50)
+
+vi.advanceTimersToNextTimer() // log 1
+  .advanceTimersToNextTimer() // log 2
+  .advanceTimersToNextTimer() // log 3
+```
