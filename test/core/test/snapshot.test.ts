@@ -102,5 +102,10 @@ test('properties inline snapshot', () => {
   expect(user).toMatchInlineSnapshot({
     createdAt: expect.any(Date),
     id: expect.any(Number),
-  })
+  }, `
+{
+  "createdAt": Any<Date>,
+  "id": Any<Number>,
+  "name": "LeBron James",
+}`)
 })
