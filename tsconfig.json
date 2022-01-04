@@ -27,5 +27,7 @@
     "**/dist/**",
     "./packages/ui/client/**",
     "./test/**/*.*",
+    "./examples/**/*.*",
+    "./bench/**"
   ]
 }

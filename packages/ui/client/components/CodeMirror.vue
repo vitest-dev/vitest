@@ -14,13 +14,16 @@ const props = defineProps<{
 }>()
 
 const modeMap: Record<string, string> = {
-  html: 'htmlmixed',
-  vue: 'htmlmixed',
+  // html: 'htmlmixed',
+  // vue: 'htmlmixed',
+  // svelte: 'htmlmixed',
   js: 'javascript',
+  jsx: 'jsx',
   mjs: 'javascript',
   cjs: 'javascript',
-  ts: 'javascript',
-  mts: 'javascript',
+  ts: 'typescript',
+  tsx: 'jsx',
+  mts: 'typescript',
 }
 
 const el = ref<HTMLTextAreaElement>()
@@ -53,9 +56,8 @@ onMounted(async() => {
   <div
     relative
     font-mono
-    overflow-auto
     text-sm
-    h-full
+    class="scrolls"
   >
     <textarea ref="el" />
   </div>

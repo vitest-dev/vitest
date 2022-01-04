@@ -44,6 +44,8 @@ export type MatcherState = {
 export type SyncExpectationResult = {
   pass: boolean
   message: () => string
+  actual?: any
+  expected?: any
 }
 
 export type AsyncExpectationResult = Promise<SyncExpectationResult>

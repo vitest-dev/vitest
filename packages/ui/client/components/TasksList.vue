@@ -22,37 +22,39 @@ export default {
 </script>
 
 <template>
-  <div flex="~ col" h="full" overflow="hidden">
-    <div
-      p="2"
-      h-10
-      flex="~ gap-2"
-      items-center
-      bg-header
-      border="b base"
-    >
-      <slot name="header" />
-    </div>
-    <div
-      p="x4 y2"
-      flex="~ gap-2"
-      items-center
-      bg-header
-      border="b base"
-    >
-      <div i-carbon:search flex-shrink-0 />
-      <input
-        v-model="search"
-        placeholder="Search..."
-        outline="none"
-        bg="transparent"
-        font="light"
-        text="sm"
-        :op="search.length ? '100' : '50'"
+  <div h="full">
+    <div>
+      <div
+        p="2"
+        h-10
+        flex="~ gap-2"
+        items-center
+        bg-header
+        border="b base"
       >
+        <slot name="header" />
+      </div>
+      <div
+        p="x4 y2"
+        flex="~ gap-2"
+        items-center
+        bg-header
+        border="b base"
+      >
+        <div i-carbon:search flex-shrink-0 />
+        <input
+          v-model="search"
+          placeholder="Search..."
+          outline="none"
+          bg="transparent"
+          font="light"
+          text="sm"
+          :op="search.length ? '100' : '50'"
+        >
+      </div>
     </div>
 
-    <div overflow="auto">
+    <div class="scrolls">
       <TaskTree
         v-for="task in tasks"
         :key="task.id"

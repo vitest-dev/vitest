@@ -131,19 +131,27 @@ export async function reportCoverage(ctx: Vitest) {
   const createReport = require('c8/lib/report')
   const report = createReport(ctx.config.coverage)
 
-  // add source maps
-  Array
-    .from(ctx.visitedFilesMap.entries())
-    .filter(i => !i[0].includes('/node_modules/'))
-    .forEach(([file, map]) => {
-      const url = pathToFileURL(file).href
-      const sources = map.sources.length
-        ? map.sources.map(i => pathToFileURL(i).href)
-        : [url]
-      report.sourceMapCache[url] = {
-        data: { ...map, sources },
-      }
-    })
+  const original = report._getMergedProcessCov
+
+  report._getMergedProcessCov = () => {
+    const r = original.call(report)
+
+    // add source maps
+    Array
+      .from(ctx.visitedFilesMap.entries())
+      .filter(i => !i[0].includes('/node_modules/'))
+      .forEach(([file, map]) => {
+        const url = pathToFileURL(file).href
+        const sources = map.sources.length
+          ? map.sources.map(i => pathToFileURL(i).href)
+          : [url]
+        report.sourceMapCache[url] = {
+          data: { ...map, sources },
+        }
+      })
+
+    return r
+  }
 
   await report.run()
 }
