@@ -206,10 +206,7 @@ export async function executeInViteNode(options: ExecuteOptions) {
   }
 
   async function cachedRequest(rawId: string, callstack: string[]) {
-    if (base !== '/')
-      rawId = rawId.replace(base, '/')
-
-    const id = normalizeId(rawId)
+    const id = normalizeId(rawId, base)
 
     if (externalCache.get(id))
       return interpretedImport(patchWindowsImportPath(id), options.interpretDefault)
@@ -248,7 +245,10 @@ export async function executeInViteNode(options: ExecuteOptions) {
   }
 }
 
-export function normalizeId(id: string): string {
+export function normalizeId(id: string, base?: string): string {
+  if (base && id.startsWith(base))
+    id = `/${id.slice(base.length)}`
+
   return id
     .replace(/^\/@id\/__x00__/, '\0') // virtual modules start with `\0`
     .replace(/^\/@id\//, '')

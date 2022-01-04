@@ -55,7 +55,8 @@ export function resolveConfig(
     root: viteConfig.root,
   } as ResolvedConfig
 
-  resolved.base = viteConfig.base
+  if (viteConfig.base !== '/')
+    resolved.base = viteConfig.base
 
   resolved.coverage = resolveC8Options(resolved.coverage, resolved.root)
 
