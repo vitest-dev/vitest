@@ -51,7 +51,7 @@ export function resolveConfig(
     options.environment = 'happy-dom'
 
   const resolved = {
-    ...deepMerge(options, viteConfig.test),
+    ...deepMerge(options, viteConfig.test || {}),
     root: viteConfig.root,
   } as ResolvedConfig
 

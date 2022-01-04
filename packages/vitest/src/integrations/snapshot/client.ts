@@ -2,10 +2,9 @@ import path from 'pathe'
 import { expect } from 'chai'
 import type { SnapshotResult, Test } from '../../types'
 import { rpc } from '../../runtime/rpc'
-import { getNames } from '../../utils'
+import { deepMerge, getNames } from '../../utils'
 import { equals, iterableEquality, subsetEquality } from '../chai/jest-utils'
 import SnapshotState from './port/state'
-import { deepMerge } from './port/utils'
 
 export interface Context {
   file: string
