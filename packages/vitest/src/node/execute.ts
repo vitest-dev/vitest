@@ -206,7 +206,8 @@ export async function executeInViteNode(options: ExecuteOptions) {
   }
 
   async function cachedRequest(rawId: string, callstack: string[]) {
-    rawId = base !== '/' ? rawId.replace(base, '/') : ''
+    if (base !== '/')
+      rawId = rawId.replace(base, '/')
 
     const id = normalizeId(rawId)
 
