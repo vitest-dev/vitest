@@ -1,5 +1,6 @@
 import { MessageChannel } from 'worker_threads'
 import { pathToFileURL } from 'url'
+import { cpus } from 'os'
 import { resolve } from 'pathe'
 import type { Options as TinypoolOptions } from 'tinypool'
 import { Tinypool } from 'tinypool'
@@ -63,14 +64,14 @@ export function createWorkerPool(ctx: Vitest): WorkerPool {
     // In future we could conditionally enable it based on the env
     useAtomics: false,
   }
-  if (ctx.config.maxThreads != null)
-    options.maxThreads = ctx.config.maxThreads
-  if (ctx.config.minThreads != null)
-    options.minThreads = ctx.config.minThreads
   if (ctx.config.isolate) {
     options.isolateWorkers = true
     options.concurrentTasksPerWorker = 1
   }
+
+  const cpuCount = cpus().length
+  options.minThreads = ctx.config.minThreads ?? Math.max(cpuCount / 2, 1)
+  options.maxThreads = ctx.config.maxThreads ?? cpuCount
 
   const pool = new Tinypool(options)
 
