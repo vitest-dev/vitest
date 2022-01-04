@@ -79,7 +79,7 @@ function formatCompareTable(base: Result[], current: Result[]): string {
 
   body += table(
     [
-      ['Name', 'Time'],
+      ['Name', 'Time', 'Delta'],
       ...results
         .map(({
           name,
@@ -88,14 +88,13 @@ function formatCompareTable(base: Result[], current: Result[]): string {
           rme,
           deltaPercent,
         }) => {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const deltaPercentStr = deltaPercent === 0
             ? ''
             : deltaPercent > 0
               ? `+${(deltaPercent * 100).toFixed(2)}% ${baseTime !== 0 ? '🔺' : '➕'}`
               : `${(deltaPercent * 100).toFixed(2)}% 🔽`
 
-          return [name, `${currentTime.toFixed(3)}s ± ${rme.toFixed(2)}%`]
+          return [name, `${currentTime.toFixed(3)}s ± ${rme.toFixed(2)}%`, deltaPercentStr]
         }),
     ],
     { align: ['l', 'r', 'l'] },
@@ -111,10 +110,9 @@ async function compareToRef(ref: string, pr?: Pull, repo?: Repo, octokit?: GitHu
   let body = `${COMMNET_HEADING}\n\n`
 
   const base = await buildAndGetTime(null)
-  // TODO: Extract this to a GitHub action to allow comparing benchmarks
-  // const current = await buildAndGetTime(ref)
+  const current = await buildAndGetTime(ref)
 
-  body += formatCompareTable(base, base)
+  body += formatCompareTable(base, current)
 
   if (pr && repo) {
     let comment = await fetchPreviousComment(octokit, repo, pr)
