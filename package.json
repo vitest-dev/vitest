@@ -15,7 +15,7 @@
     "lint": "eslint --ext .js,.vue,.ts .",
     "lint:fix": "eslint --ext .js,.vue,.ts . --fix",
     "release": "bumpp package.json packages/*/package.json --commit --push --tag && pnpm -r publish --access public",
-    "test": "vitest -r test/core --api",
+    "test": "vitest --api -r test/core",
     "test:all": "cross-env CI=true pnpm -r --stream --filter !@vitest/monorepo run test --",
     "test:ci": "cross-env CI=true pnpm -r --stream --filter !@vitest/monorepo --filter !@vitest/test-fails run test --",
     "typecheck": "tsc --noEmit",
