@@ -40,55 +40,55 @@ function exit(suite: string, exitCode: number) {
   }
 }
 
-const bench = new Benchmark.Suite()
-
-bench.on('cycle', (event: Event) => {
-  const benchmark = event.target
-  log(benchmark?.toString())
-})
-
 const testSuites = ['vue']
-
-for (const suite of testSuites) {
-  const execaOptions: Options = {
-    cwd: `test/${suite}`,
-    stdio: 'inherit',
-    env: {
-      CI: 'true',
-      NO_COLOR: 'true',
-    },
-  }
-
-  copyTestFiles(suite)
-
-  bench.add(`vitest:${suite}`, {
-    defer: true,
-    fn: (deferred: Deferred) => execa('pnpm', ['test:vitest'], execaOptions)
-      .on('exit', (code) => {
-        if (code > 0)
-          exit(suite, code)
-        else
-          deferred.resolve()
-      }),
-  })
-
-  bench.add(`jest:${suite}`, {
-    defer: true,
-    fn: (deferred: Deferred) => execa('pnpm', ['test:jest'], execaOptions)
-      .on('exit', (code) => {
-        if (code > 0)
-          exit(suite, code)
-        else
-          deferred.resolve()
-      }),
-  })
-}
 
 export type Result = Benchmark.Stats & {
   name: string
 }
 
 export function runBench(callback: (data: Result[]) => void) {
+  const bench = new Benchmark.Suite()
+
+  bench.on('cycle', (event: Event) => {
+    const benchmark = event.target
+    log(benchmark?.toString())
+  })
+
+  for (const suite of testSuites) {
+    copyTestFiles(suite)
+
+    const execaOptions: Options = {
+      cwd: `test/${suite}`,
+      stdio: 'inherit',
+      env: {
+        CI: 'true',
+        NO_COLOR: 'true',
+      },
+    }
+
+    bench.add(`vitest:${suite}`, {
+      defer: true,
+      fn: (deferred: Deferred) => execa('pnpm', ['test:vitest'], execaOptions)
+        .on('exit', (code) => {
+          if (code > 0)
+            exit(suite, code)
+          else
+            deferred.resolve()
+        }),
+    })
+
+    bench.add(`jest:${suite}`, {
+      defer: true,
+      fn: (deferred: Deferred) => execa('pnpm', ['test:jest'], execaOptions)
+        .on('exit', (code) => {
+          if (code > 0)
+            exit(suite, code)
+          else
+            deferred.resolve()
+        }),
+    })
+  }
+
   bench.on('complete', () => {
     const results = bench
       .map((run: Target): Result => ({
