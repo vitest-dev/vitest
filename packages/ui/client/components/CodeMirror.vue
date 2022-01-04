@@ -14,9 +14,9 @@ const props = defineProps<{
 }>()
 
 const modeMap: Record<string, string> = {
-  html: 'htmlmixed',
-  vue: 'htmlmixed',
-  svelte: 'htmlmixed',
+  // html: 'htmlmixed',
+  // vue: 'htmlmixed',
+  // svelte: 'htmlmixed',
   js: 'javascript',
   jsx: 'jsx',
   mjs: 'javascript',
