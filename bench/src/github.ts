@@ -64,7 +64,7 @@ function formatCompareTable(nowResults: Result[], wasResults: Result[]): string 
       const now = nowResults.find(i => i.name === was.name)
 
       const delta = now.mean - was.mean
-      const deltaPercent = delta / now.mean
+      const deltaPercent = delta / was.mean
 
       return {
         name: now.name,
