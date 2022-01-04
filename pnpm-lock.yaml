@@ -272,6 +272,22 @@ importers:
       vite: 2.7.10
       vitest: link:../../packages/vitest
 
+  examples/ruby:
+    specifiers:
+      '@vitejs/plugin-vue': ^2.0.1
+      '@vue/test-utils': ^2.0.0-rc.18
+      jsdom: ^19.0.0
+      vite-plugin-ruby: ^3.0.4
+      vitest: workspace:*
+      vue: 3.2.26
+    devDependencies:
+      '@vitejs/plugin-vue': 2.0.1_vite@2.7.10+vue@3.2.26
+      '@vue/test-utils': 2.0.0-rc.18_vue@3.2.26
+      jsdom: 19.0.0
+      vite-plugin-ruby: 3.0.5_vite@2.7.10
+      vitest: link:../../packages/vitest
+      vue: 3.2.26
+
   examples/svelte:
     specifiers:
       '@sveltejs/vite-plugin-svelte': ^1.0.0-next.33
@@ -8019,6 +8035,18 @@ packages:
       local-pkg: 0.4.1
       vite: 2.7.10
       yaml: 2.0.0-9
+    transitivePeerDependencies:
+      - supports-color
+    dev: true
+
+  /vite-plugin-ruby/3.0.5_vite@2.7.10:
+    resolution: {integrity: sha512-bFPnLxWxF1SyWtag24f48hYqLu0dydDs8tuIlvY60uHOY4yj6syCybZY21k3B9EgVtdGLve5twduj9bIoDuSug==}
+    peerDependencies:
+      vite: '>=2.5.0'
+    dependencies:
+      debug: 4.3.3
+      fast-glob: 3.2.7
+      vite: 2.7.10
     transitivePeerDependencies:
       - supports-color
     dev: true

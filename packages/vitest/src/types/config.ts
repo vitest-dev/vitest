@@ -239,6 +239,8 @@ export interface UserConfig extends InlineConfig {
 }
 
 export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api'> {
+  base?: string
+
   config?: string
   filters?: string[]
   testNamePattern?: RegExp
