@@ -1,10 +1,13 @@
 import type { BuiltinReporters } from '../reporters'
 import type { C8Options, ResolvedC8Options } from '../coverage'
+import type { JSDOMOptions } from './jsdom-options'
 import type { Reporter } from './reporter'
 import type { SnapshotStateOptions } from './snapshot'
 import type { Arrayable } from './general'
 
 export type BuiltinEnvironment = 'node' | 'jsdom' | 'happy-dom'
+
+export { JSDOMOptions }
 
 export interface InlineConfig {
   /**
@@ -74,9 +77,14 @@ export interface InlineConfig {
   environment?: BuiltinEnvironment
 
   /**
-   * The configuration for the environment.
+   * Environment options.
    */
-  environmentConfiguration?: Record<string, any>
+  environmentOptions?: {
+    /**
+     * jsdom options.
+     */
+    jsdom?: JSDOMOptions
+  }
 
   /**
    * Update snapshot files
