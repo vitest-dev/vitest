@@ -278,9 +278,8 @@ importers:
       '@vue/compiler-sfc': ^3.2.26
       '@vue/test-utils': ^2.0.0-rc.18
       jsdom: ^19.0.0
-      vite: ^2.7.4
       vite-plugin-ruby: ^3.0.4
-      vitest: ^0.0.131
+      vitest: workspace:*
       vue: 3.2.26
       vue-loader: ^15.9.8
     dependencies:
@@ -292,7 +291,6 @@ importers:
       vue: 3.2.26
       vue-loader: 15.9.8
     devDependencies:
-      vite: 2.7.10
       vitest: link:../../packages/vitest
 
   examples/svelte:
