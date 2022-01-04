@@ -56,22 +56,22 @@ export async function buildAndGetTime(branch: string | null): Promise<Result[]> 
   return new Promise(runBench)
 }
 
-function formatCompareTable(base: Result[], current: Result[]): string {
+function formatCompareTable(nowResults: Result[], wasResults: Result[]): string {
   let body = ''
 
-  const results = base
-    .map((res) => {
-      const cRes = current.find(i => i.name === res.name)
+  const results = wasResults
+    .map((was) => {
+      const now = nowResults.find(i => i.name === was.name)
 
-      const currentTime = cRes?.mean ?? 0
-      const delta = res.mean - currentTime
-      const deltaPercent = currentTime === 0 ? 1 : delta / currentTime
+      const delta = now.mean - was.mean
+      const deltaPercent = delta / was.mean
 
       return {
-        name: res.name,
-        baseTime: res.mean,
-        rme: cRes.rme,
-        currentTime,
+        name: now.name,
+        baseTime: was.mean,
+        baseRme: was.rme,
+        currentRme: now.rme,
+        currentTime: now.mean,
         delta,
         deltaPercent,
       }
@@ -79,26 +79,26 @@ function formatCompareTable(base: Result[], current: Result[]): string {
 
   body += table(
     [
-      ['Name', 'Time'],
+      ['Name', 'Previous', 'Time', 'Delta'],
       ...results
         .map(({
           name,
           currentTime,
+          currentRme,
           baseTime,
-          rme,
+          baseRme,
           deltaPercent,
         }) => {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const deltaPercentStr = deltaPercent === 0
             ? ''
             : deltaPercent > 0
               ? `+${(deltaPercent * 100).toFixed(2)}% ${baseTime !== 0 ? '🔺' : '➕'}`
               : `${(deltaPercent * 100).toFixed(2)}% 🔽`
 
-          return [name, `${currentTime.toFixed(3)}s ± ${rme.toFixed(2)}%`]
+          return [name, `${baseTime.toFixed(3)}s ± ${baseRme.toFixed(2)}%`, `${currentTime.toFixed(3)}s ± ${currentRme.toFixed(2)}%`, deltaPercentStr]
         }),
     ],
-    { align: ['l', 'r', 'l'] },
+    { align: ['l', 'r', 'r', 'l'] },
   )
 
   // eslint-disable-next-line no-console
@@ -110,11 +110,10 @@ function formatCompareTable(base: Result[], current: Result[]): string {
 async function compareToRef(ref: string, pr?: Pull, repo?: Repo, octokit?: GitHub) {
   let body = `${COMMNET_HEADING}\n\n`
 
-  const base = await buildAndGetTime(null)
-  // TODO: Extract this to a GitHub action to allow comparing benchmarks
-  // const current = await buildAndGetTime(ref)
+  const now = await buildAndGetTime(null)
+  const was = await buildAndGetTime(ref)
 
-  body += formatCompareTable(base, base)
+  body += formatCompareTable(now, was)
 
   if (pr && repo) {
     let comment = await fetchPreviousComment(octokit, repo, pr)
