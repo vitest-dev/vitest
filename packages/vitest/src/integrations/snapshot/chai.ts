@@ -28,16 +28,20 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     utils.addMethod(
       chai.Assertion.prototype,
       key,
-      function(this: Record<string, unknown>, message?: string) {
+      function(this: Record<string, unknown>, inlineSnapshot?: object, message?: string) {
         const expected = utils.flag(this, 'object')
-        getSnapshotClient().assert(expected, message)
+        if (typeof inlineSnapshot === 'string' && typeof message === 'undefined') {
+          message = inlineSnapshot
+          inlineSnapshot = undefined
+        }
+        getSnapshotClient().assert(expected, message, false, inlineSnapshot)
       },
     )
   }
   utils.addMethod(
     chai.Assertion.prototype,
     'toMatchInlineSnapshot',
-    function(this: Record<string, unknown>, inlineSnapshot: string, message: string) {
+    function(this: Record<string, unknown>, inlineSnapshot: string | object, message: string) {
       const expected = utils.flag(this, 'object')
       getSnapshotClient().assert(expected, message, true, inlineSnapshot)
     },

@@ -48,7 +48,9 @@ declare global {
 
     interface JestAssertions {
       // Snapshot
+      toMatchSnapshot(snapshot: object, message?: string): void
       toMatchSnapshot(message?: string): void
+      toMatchInlineSnapshot(snapshot: object, message?: string): void
       toMatchInlineSnapshot(snapshot?: string, message?: string): void
       toThrowErrorMatchingSnapshot(message?: string): void
       toThrowErrorMatchingInlineSnapshot(snapshot?: string, message?: string): void

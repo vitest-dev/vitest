@@ -3,7 +3,9 @@ import { expect } from 'chai'
 import type { SnapshotResult, Test } from '../../types'
 import { rpc } from '../../runtime/rpc'
 import { getNames } from '../../utils'
+import { equals, iterableEquality, subsetEquality } from '../chai/jest-utils'
 import SnapshotState from './port/state'
+import { deepMerge } from './port/utils'
 
 export interface Context {
   file: string
@@ -41,9 +43,26 @@ export class SnapshotClient {
     this.test = undefined
   }
 
-  assert(received: unknown, message?: string, isInline = false, inlineSnapshot?: string): void {
+  assert(received: unknown, message?: string, isInline = false, inlineSnapshot?: string | object): void {
     if (!this.test)
       throw new Error('Snapshot cannot be used outside of test')
+
+    if (typeof inlineSnapshot === 'object') {
+      if (typeof received !== 'object' || !received)
+        throw new Error('Received value must be an object when the matcher has properties')
+
+      try {
+        const pass = equals(received, inlineSnapshot, [iterableEquality, subsetEquality])
+        if (!pass)
+          expect(received).toBe(inlineSnapshot)
+        else
+          received = deepMerge(received, inlineSnapshot)
+      }
+      catch (err: any) {
+        err.message = 'Snapshot mismatched'
+        throw err
+      }
+    }
 
     const testName = [
       ...getNames(this.test).slice(1),
@@ -54,7 +73,7 @@ export class SnapshotClient {
       testName,
       received,
       isInline,
-      inlineSnapshot: inlineSnapshot?.trim(),
+      inlineSnapshot: typeof inlineSnapshot === 'string' ? inlineSnapshot.trim() : undefined,
     })
 
     if (!pass) {
