@@ -1,5 +1,6 @@
 import type { Vitest } from 'vitest/node'
 import type { Reporter, Task } from '../types'
+import { parseStacktrace } from '../utils/source-map'
 
 const IDENT = '    '
 
@@ -35,6 +36,25 @@ export class TapReporter implements Reporter {
           comment = ` # time=${task.result.duration.toFixed(2)}ms`
 
         this.ctx.log(`${currentIdent}${ok} - ${task.name}${comment}`)
+
+        if (task.result?.state === 'fail' && task.result.error) {
+          const error = task.result.error
+
+          const errorIdent = `${currentIdent}  `
+          this.ctx.log(`${errorIdent}---`)
+          this.ctx.log(`${errorIdent}message: ${error.message}`)
+          const stacks = parseStacktrace(error)
+          const stack = stacks[0]
+          if (stack)
+            this.ctx.log(`${errorIdent}stack: ${stack.file}:${stack.line}:${stack.column}`)
+
+          if (error.showDiff) {
+            this.ctx.log(`${errorIdent}actual: ${error.actual}`)
+            this.ctx.log(`${errorIdent}expected: ${error.expected}`)
+          }
+
+          this.ctx.log(`${errorIdent}...`)
+        }
       }
     }
   }
