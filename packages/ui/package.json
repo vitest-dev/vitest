@@ -38,7 +38,7 @@
     "@vueuse/core": "^7.5.1",
     "codemirror": "^5.65.0",
     "codemirror-theme-vars": "^0.1.1",
-    "d3-graph-controller": "^1.12.0",
+    "d3-graph-controller": "^1.13.1",
     "picocolors": "^1.0.0",
     "rollup": "^2.63.0",
     "splitpanes": "^3.0.6",

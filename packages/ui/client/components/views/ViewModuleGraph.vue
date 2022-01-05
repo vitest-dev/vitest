@@ -45,7 +45,12 @@ function resetGraphController() {
       getNodeRadius: () => 10,
       alphas: {
         initialize: graph.value.nodes.some(node => node.x === undefined || node.y === undefined) ? 1 : 0,
-        resize: 0.1,
+        resize: ({ newHeight, newWidth }: ResizeContext) => {
+          const willBeHidden = newHeight === 0 && newWidth === 0
+          if (willBeHidden)
+            return 0
+          return 0.25
+        },
       },
       forces: {
         charge: {
