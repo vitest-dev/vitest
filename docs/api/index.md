@@ -678,7 +678,7 @@ TODO
 
   `toThrowError` asserts if a function throws an error when it is called.
 
-  For example, if we want to test that getFruitStock('pineapples') throws, because pineapples is not good for people with diabetes, we could write:
+  For example, if we want to test that `getFruitStock('pineapples')` throws, because pineapples is not good for people with diabetes, we could write:
 
   You can provide an optional argument to test that a specific error is thrown:
 
