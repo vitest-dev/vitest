@@ -338,6 +338,7 @@ importers:
     specifiers:
       '@types/codemirror': ^5.60.5
       '@types/d3-force': ^3.0.3
+      '@types/d3-selection': ^3.0.2
       '@types/ws': ^8.2.2
       '@unocss/reset': ^0.21.0
       '@vitejs/plugin-vue': ^2.0.1
@@ -361,6 +362,7 @@ importers:
     devDependencies:
       '@types/codemirror': 5.60.5
       '@types/d3-force': 3.0.3
+      '@types/d3-selection': 3.0.2
       '@types/ws': 8.2.2
       '@unocss/reset': 0.21.0
       '@vitejs/plugin-vue': 2.0.1_vite@2.7.10+vue@3.2.26
@@ -2053,6 +2055,10 @@ packages:
     dependencies:
       '@types/d3-time': 2.1.1
     dev: false
+
+  /@types/d3-selection/3.0.2:
+    resolution: {integrity: sha512-d29EDd0iUBrRoKhPndhDY6U/PYxOWqgIZwKTooy2UkBfU7TNZNpRho0yLWPxlatQrFWk2mnTu71IZQ4+LRgKlQ==}
+    dev: true
 
   /@types/d3-shape/2.1.3:
     resolution: {integrity: sha512-HAhCel3wP93kh4/rq+7atLdybcESZ5bRHDEZUojClyZWsRuEMo3A52NGYJSh48SxfxEU6RZIVbZL2YFZ2OAlzQ==}
