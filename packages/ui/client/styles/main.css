@@ -146,6 +146,10 @@ html.dark {
   border-radius: 3px;
   border: 2px solid var(--cm-ttc-c-thumb);
 }
+.CodeMirror-scroll::-webkit-scrollbar-corner,
+.scrolls::-webkit-scrollbar-corner {
+  background-color: var(--cm-ttc-c-track);
+}
 .CodeMirror {
   overflow: unset !important;
 }

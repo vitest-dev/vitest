@@ -61,6 +61,50 @@ test('throwing inline snapshots', () => {
   }).toThrowErrorMatchingInlineSnapshot(`
 {
   "error": "omega",
-}
-`)
+}`)
+})
+
+test('properties snapshot', () => {
+  const user = {
+    createdAt: new Date(),
+    id: Math.floor(Math.random() * 20),
+    name: 'LeBron James',
+  }
+
+  expect(user).toMatchSnapshot({
+    createdAt: expect.any(Date),
+    id: expect.any(Number),
+    name: expect.stringContaining('LeBron'),
+  })
+})
+
+test.fails('properties snapshot fails', () => {
+  const user = {
+    createdAt: new Date(),
+    id: Math.floor(Math.random() * 20),
+    name: 'LeBron James',
+  }
+
+  expect(user).toMatchSnapshot({
+    createdAt: expect.any(Date),
+    id: expect.any(String),
+  })
+})
+
+test('properties inline snapshot', () => {
+  const user = {
+    createdAt: new Date(),
+    id: Math.floor(Math.random() * 20),
+    name: 'LeBron James',
+  }
+
+  expect(user).toMatchInlineSnapshot({
+    createdAt: expect.any(Date),
+    id: expect.any(Number),
+  }, `
+{
+  "createdAt": Any<Date>,
+  "id": Any<Number>,
+  "name": "LeBron James",
+}`)
 })

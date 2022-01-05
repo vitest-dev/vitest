@@ -13,7 +13,7 @@
   "dependencies": {
     "@vueuse/integrations": "^7.5.1",
     "axios": "^0.24.0",
-    "tinyspy": "^0.2.6"
+    "tinyspy": "^0.2.7"
   },
   "devDependencies": {
     "vite": "^2.7.10",
