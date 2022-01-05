@@ -81,7 +81,7 @@ export function useModuleGraphConfig(graph: Ref<ModuleGraph>): Ref<ModuleGraphCo
       getNodeRadius: (node: ModuleNode) => node.label.length * 4.5,
       alphas: {
         initialize: graph.value.nodes.some(node => node.x === undefined || node.y === undefined) ? 1 : 0,
-        resize: 0,
+        resize: 0.1,
       },
       forces: {
         charge: {

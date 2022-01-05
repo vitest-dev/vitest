@@ -4,7 +4,7 @@ import { Pane, Splitpanes } from 'splitpanes'
 import type { VueInstance } from '@vueuse/core'
 import { provideFileDetailsSize } from '../composables/inject'
 
-const file = ref <VueInstance | null>(null)
+const file = ref<VueInstance | null>(null)
 provideFileDetailsSize(file)
 </script>
 

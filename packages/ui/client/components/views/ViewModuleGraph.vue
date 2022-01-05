@@ -15,8 +15,7 @@ const fileDetailsSize = injectFileDetailsSize()
 const style = computed(() => {
   // eslint-disable-next-line no-console
   const size = fileDetailsSize.value
-  // TODO: we need to listen to size change, but only change the width
-  // TODO: I dont know why resize not working, only first time
+  // we need to listen to size change, but only change the width, th height changed from css
   if (size)
     return `--graph-w: ${size[0]}px`
 
