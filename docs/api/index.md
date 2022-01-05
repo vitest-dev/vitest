@@ -769,7 +769,7 @@ Vitest provides utility functions to help you out with (most of) these cases wit
 
 ### vi.advanceTimersByTime
 
-**Type:** `(ms: number) => Vitest`
+- **Type:** `(ms: number) => Vitest`
 
   Works just like `runAllTimers`, but will end after passed milliseconds. For example this will log `1, 2, 3` and will not throw:
 
@@ -782,7 +782,7 @@ Vitest provides utility functions to help you out with (most of) these cases wit
 
 ### vi.advanceTimersToNextTimer
 
-**Type:** `() => Vitest`
+- **Type:** `() => Vitest`
 
   Will call next available timer. Useful to make assertions between each timer call. You can chain call it to manage timers by yourself.
 
@@ -797,7 +797,7 @@ Vitest provides utility functions to help you out with (most of) these cases wit
 
 ### vi.fn
 
-**Type:** `(fn: Function) => CallableMockInstance`
+- **Type:** `(fn: Function) => CallableMockInstance`
 
   Creates a spy on a function, though can be initiated without one. Every time a function is invoked, it stores its call arguments, returns and instances. Also, you can manipulate its behavior with [methods](#mockmethods).
   If no function is given, mock will return `undefined`, when invoked.
@@ -852,7 +852,7 @@ Vitest provides utility functions to help you out with (most of) these cases wit
 
 ### vi.mocked
 
-**Type**: `<T>(obj: T, deep?: boolean) => MaybeMockedDeep<T>`
+- **Type**: `<T>(obj: T, deep?: boolean) => MaybeMockedDeep<T>`
 
   Type helper for TypeScript. In reality just returns the object that was passed.
 
@@ -871,7 +871,7 @@ Vitest provides utility functions to help you out with (most of) these cases wit
 
 ### vi.importActual
 
-**Type**: `<T>(path: string) => Promise<T>`
+- **Type**: `<T>(path: string) => Promise<T>`
 
   Imports module, bypassing all checks if it should be mocked. Can be useful if you want to mock module partially.
 
@@ -885,7 +885,7 @@ Vitest provides utility functions to help you out with (most of) these cases wit
 
 ### vi.importMock
 
-**Type**: `<T>(path: string) => Promise<MaybeMockedDeep<T>>`
+- **Type**: `<T>(path: string) => Promise<MaybeMockedDeep<T>>`
 
   Imports a module with all of its properties (including nested properties) mocked. Follows the same rules that [`vi.mock`](#mock) follows. For the rules applied, see [algorithm](#automockingalgorithm).
 
@@ -897,7 +897,7 @@ Vitest provides utility functions to help you out with (most of) these cases wit
 
 ### vi.runAllTimers
 
-**Type:** `() => Vitest`
+- **Type:** `() => Vitest`
 
   This method will invoke every initiated timer until the timers queue is empty. It means that every timer called during `runAllTimers` will be fired. If you have an infinite interval,
   it will throw after 10 000 tries. For example this will log `1, 2, 3`:
@@ -917,7 +917,7 @@ Vitest provides utility functions to help you out with (most of) these cases wit
 
 ### vi.runOnlyPendingTimers
 
-**Type:** `() => Vitest`
+- **Type:** `() => Vitest`
 
   This method will call every timer that was initiated after `vi.useFakeTimers()` call. It will not fire any timer that was initiated during its call. For example this will only log `1`:
 
@@ -930,7 +930,7 @@ Vitest provides utility functions to help you out with (most of) these cases wit
 
 ### vi.spyOn
 
-**Type:** `<T, K extends keyof T>(object: T, method: K, accessType?: 'get' | 'set') => MockInstance`
+- **Type:** `<T, K extends keyof T>(object: T, method: K, accessType?: 'get' | 'set') => MockInstance`
 
   Creates a spy on a method or getter/setter of an object.
 
@@ -956,13 +956,13 @@ Vitest provides utility functions to help you out with (most of) these cases wit
 
 ### vi.useFakeTimers
 
-**Type:** `() => Vitest`
+- **Type:** `() => Vitest`
 
   To enable mocking timers, you need to call this method. It will wrap all further calls to timers, until [`vi.useRealTimers()`](#userealtimers) is called.
 
 ### vi.useRealTimers
 
-**Type:** `() => Vitest`
+- **Type:** `() => Vitest`
 
   When timers are run out, you may call this method to return mocked timers to its original implementations. All timers that were run before will not be restored.
 
@@ -970,13 +970,13 @@ Vitest provides utility functions to help you out with (most of) these cases wit
 
 ### getMockName
 
-**Type:** `() => string`
+- **Type:** `() => string`
 
   Use it to return the name given to mock with method `.mockName(name)`.
 
 ### mockClear
 
-**Type:** `() => MockInstance`
+- **Type:** `() => MockInstance`
 
   Clears all information about every call. After calling it, [`spy.mock.calls`](#mockcalls), [`spy.mock.returns`](#mockreturns) will return empty arrays. It is useful if you need to clean up spy between different assertions.
 
@@ -985,13 +985,13 @@ Vitest provides utility functions to help you out with (most of) these cases wit
 
 ### mockName
 
-**Type:** `(name: string) => MockInstance`
+- **Type:** `(name: string) => MockInstance`
 
   Sets internal mock name. Useful to see what mock has failed the assertion.
 
 ### mockImplementation
 
-**Type:** `(fn: Function) => MockInstance`
+- **Type:** `(fn: Function) => MockInstance`
 
   Accepts a function that will be used as an implementation of the mock.
 
@@ -1013,7 +1013,7 @@ Vitest provides utility functions to help you out with (most of) these cases wit
 
 ### mockImplementationOnce
 
-**Type:** `(fn: Function) => MockInstance`
+- **Type:** `(fn: Function) => MockInstance`
 
   Accepts a function that will be used as an implementation of the mock for one call to the mocked function. Can be chained so that multiple function calls produce different results.
 
@@ -1041,7 +1041,7 @@ Vitest provides utility functions to help you out with (most of) these cases wit
 
 ### mockRejectedValue
 
-**Type:** `(value: any) => MockInstance`
+- **Type:** `(value: any) => MockInstance`
 
   Accepts an error that will be rejected, when async function will be called.
 
@@ -1055,7 +1055,7 @@ Vitest provides utility functions to help you out with (most of) these cases wit
 
 ### mockRejectedValueOnce
 
-**Type:** `(value: any) => MockInstance`
+- **Type:** `(value: any) => MockInstance`
 
   Accepts a value that will be rejected for one call to the mock function. If chained, every consecutive call will reject passed value.
 
@@ -1073,7 +1073,7 @@ Vitest provides utility functions to help you out with (most of) these cases wit
 
 ### mockReset
 
-**Type:** `() => MockInstance`
+- **Type:** `() => MockInstance`
 
   Does what `mockClear` does and makes inner implementation as an empty function (returning `undefined`, when invoked). This is useful when you want to completely reset a mock back to its initial state.
 
@@ -1081,7 +1081,7 @@ Vitest provides utility functions to help you out with (most of) these cases wit
 
 ### mockRestore
 
-**Type:** `() => MockInstance`
+- **Type:** `() => MockInstance`
 
   Does what `mockRestore` does and restores inner implementation to the original function.
 
@@ -1091,7 +1091,7 @@ Vitest provides utility functions to help you out with (most of) these cases wit
 
 ### mockResolvedValue
 
-**Type:** `(value: any) => MockInstance`
+- **Type:** `(value: any) => MockInstance`
 
   Accepts a value that will be resolved, when async function will be called.
 
@@ -1105,7 +1105,7 @@ Vitest provides utility functions to help you out with (most of) these cases wit
 
 ### mockResolvedValueOnce
 
-**Type:** `(value: any) => MockInstance`
+- **Type:** `(value: any) => MockInstance`
 
   Accepts a value that will be resolved for one call to the mock function. If chained, every consecutive call will resolve passed value.
 
@@ -1126,13 +1126,13 @@ Vitest provides utility functions to help you out with (most of) these cases wit
 
 ### mockReturnThis
 
-**Type:** `() => MockInstance`
+- **Type:** `() => MockInstance`
 
   Sets inner implementation to return `this` context.
 
 ### mockReturnValue
 
-**Type:** `(value: any) => MockInstance`
+- **Type:** `(value: any) => MockInstance`
 
   Accepts a value that will be returned whenever the mock function is called.
 
@@ -1146,7 +1146,7 @@ Vitest provides utility functions to help you out with (most of) these cases wit
 
 ### mockReturnValueOnce
 
-**Type:** `(value: any) => MockInstance`
+- **Type:** `(value: any) => MockInstance`
 
   Accepts a value that will be returned whenever mock function is invoked. If chained, every consecutive call will return passed value. When there are no more `mockReturnValueOnce` values to use, calls a function specified by `mockImplementation` or other `mockReturn*` methods.
 
