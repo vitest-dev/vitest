@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import type { ResizeContext } from 'd3-graph-controller'
 import { GraphController, PositionInitializers, defineGraphConfig } from 'd3-graph-controller'
+import type { Selection } from 'd3-selection'
 import type { ModuleGraph, ModuleGraphController, ModuleLink, ModuleNode, ModuleType } from '~/composables/module-graph'
 
 const props = defineProps<{
@@ -32,6 +34,11 @@ function setFilter(name: ModuleType, value: boolean) {
   controller.value?.filterNodesByType(value, name)
 }
 
+function setSelectedModule(id: string) {
+  selectedModule.value = id
+  modalShow.value = true
+}
+
 function resetGraphController() {
   controller.value?.shutdown()
   if (!graph.value || !el.value)
@@ -52,6 +59,11 @@ function resetGraphController() {
           return 0.25
         },
       },
+      callbacks: {
+        nodeClicked(node: ModuleNode) {
+          setSelectedModule(node.id)
+        },
+      },
       forces: {
         charge: {
           strength: -1,
@@ -60,15 +72,17 @@ function resetGraphController() {
           radiusMultiplier: 2,
         },
       },
+      // TODO: pointerup triggers when drag ends
+      // modifiers: {
+      //   node(selection: Selection<SVGCircleElement, ModuleNode, SVGGElement, undefined>) {
+      //     selection
+      //       .on('pointerdown', null)
+      //       .on('pointerup', (_: PointerEvent, node: ModuleNode) => setSelectedModule(node.id))
+      //   },
+      // },
       positionInitializer: graph.value.nodes.length > 1
         ? PositionInitializers.Randomized
         : PositionInitializers.Centered,
-      callbacks: {
-        nodeClicked(node: ModuleNode) {
-          selectedModule.value = node.id
-          modalShow.value = true
-        },
-      },
     }),
   )
 }
