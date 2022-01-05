@@ -95,10 +95,6 @@ export default defineConfig({
               text: 'Features',
               link: '/guide/features'
             },
-            {
-              text: 'Mocking',
-              link: '/guide/mocking',
-            },
             /* TODO
             {
               text: 'Using Plugins',
@@ -111,6 +107,31 @@ export default defineConfig({
             }
           ]
         },
+        {
+          text: 'Mocking',
+          children: [
+            {
+              text: 'Dates',
+              link: '/mocking/date',
+            },
+            {
+              text: 'Functions',
+              link: '/mocking/functions',
+            },
+            {
+              text: 'Modules',
+              link: '/mocking/modules',
+            },
+            {
+              text: 'Requests',
+              link: '/mocking/requests',
+            },
+            {
+              text: 'Timers',
+              link: '/mocking/timers',
+            },
+          ],
+        }
         /* TODO
         {
           text: 'APIs',
