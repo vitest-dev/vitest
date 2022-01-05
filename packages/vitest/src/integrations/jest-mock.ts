@@ -18,11 +18,11 @@ interface MockResultThrow {
 type MockResult<T> = MockResultReturn<T> | MockResultThrow | MockResultIncomplete
 
 export interface JestMockCompatContext<T, Y> {
-  calls: Y[]
-  instances: T[]
+  calls: T[]
+  instances: Y[]
   // TODO: doesn't work
   invocationCallOrder: number[]
-  results: MockResult<T>[]
+  results: MockResult<Y>[]
 }
 
 type Procedure = (...args: any[]) => any
