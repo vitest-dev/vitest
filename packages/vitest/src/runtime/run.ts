@@ -1,5 +1,5 @@
 import { performance } from 'perf_hooks'
-import type { HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResultPack, Test } from '../types'
+import type { HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, Test } from '../types'
 import { vi } from '../integrations/vi'
 import { getSnapshotClient } from '../integrations/snapshot/chai'
 import { hasFailed, hasTests, partitionSuiteChildren } from '../utils'
@@ -19,12 +19,12 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(suite: Suite, na
     await callSuiteHook(suite.suite, name, args)
 }
 
-const packs: TaskResultPack[] = []
+const packs = new Map<string, TaskResult|undefined>()
 let updateTimer: any
 let previousUpdate: Promise<void>|undefined
 
 function updateTask(task: Task) {
-  packs.push([task.id, task.result])
+  packs.set(task.id, task.result)
 
   clearTimeout(updateTimer)
   updateTimer = setTimeout(() => {
@@ -35,9 +35,10 @@ function updateTask(task: Task) {
 async function sendTasksUpdate() {
   clearTimeout(updateTimer)
   await previousUpdate
-  if (packs.length) {
-    const p = rpc().onTaskUpdate(packs)
-    packs.length = 0
+
+  if (packs.size) {
+    const p = rpc().onTaskUpdate(Array.from(packs))
+    packs.clear()
     return p
   }
 }
@@ -46,8 +47,9 @@ export async function runTest(test: Test) {
   if (test.mode !== 'run')
     return
 
+  const start = performance.now()
+
   test.result = {
-    start: performance.now(),
     state: 'run',
   }
   updateTask(test)
@@ -103,7 +105,7 @@ export async function runTest(test: Test) {
 
   getSnapshotClient().clearTest()
 
-  test.result.end = performance.now()
+  test.result.duration = performance.now() - start
 
   process.__vitest_worker__.current = undefined
 
@@ -114,8 +116,9 @@ export async function runSuite(suite: Suite) {
   if (suite.result?.state === 'fail')
     return
 
+  const start = performance.now()
+
   suite.result = {
-    start: performance.now(),
     state: 'run',
   }
 
@@ -132,13 +135,12 @@ export async function runSuite(suite: Suite) {
       await callSuiteHook(suite, 'beforeAll', [suite])
 
       for (const tasksGroup of partitionSuiteChildren(suite)) {
-        const computeMode = tasksGroup[0].computeMode
-        if (computeMode === 'serial') {
+        if (tasksGroup[0].concurrent === true) {
+          await Promise.all(tasksGroup.map(c => runSuiteChild(c)))
+        }
+        else {
           for (const c of tasksGroup)
             await runSuiteChild(c)
-        }
-        else if (computeMode === 'concurrent') {
-          await Promise.all(tasksGroup.map(c => runSuiteChild(c)))
         }
       }
 
@@ -149,7 +151,8 @@ export async function runSuite(suite: Suite) {
       suite.result.error = processError(e)
     }
   }
-  suite.result.end = performance.now()
+  suite.result.duration = performance.now() - start
+
   if (suite.mode === 'run') {
     if (!hasTests(suite)) {
       suite.result.state = 'fail'

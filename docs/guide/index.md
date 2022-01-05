@@ -10,16 +10,23 @@ You can learn more about the rationale behind the project in the [Why Vite](./wh
 
 ## Trying Vitest Online
 
-You can try Vitest online on [StackBlitz](https://stackblitz.com/fork/node-8hobg2?file=test%2Fbasic.test.ts&view=editor). It runs Vitest directly in the browser, and it is almost identical to the local setup but doesn't require installing anything on your machine.
+You can try Vitest online on [StackBlitz](https://vitest.dev/new). It runs Vitest directly in the browser, and it is almost identical to the local setup but doesn't require installing anything on your machine.
 
 ## Adding Vitest to your Project
 
 ```bash
+// with npm
 $ npm install -D vitest
+
+// or with yarn
+$ yarn add -D vitest
+
+// or with pnpm
+$ pnpm add -D vitest
 ```
 
 :::tip
-Vitest requires Vite >=v2.7 and Node >=v14
+Vitest requires Vite >=v2.7.10 and Node >=v14
 :::
 
 ## Configuring Vitest
@@ -76,6 +83,16 @@ Perform a single run without watch mode.
 
 Run vitest in development mode.
 
+### `vitest related`
+
+Run only tests that cover a list of source files. Works with static lazy imports, but not the dynamic ones. All files should be relative to root folder.
+
+Useful to run with [`lint-staged`](https://github.com/okonet/lint-staged) or with your CI setup.
+
+```bash
+vitest related /src/index.ts /src/hello-world.js
+```
+
 ### CLI Options
 
 | Options       |               |
@@ -87,7 +104,7 @@ Run vitest in development mode.
 | `-w, --watch` | Watch mode |
 | `-o, --open` | Open UI (default: false) |
 | `-t, --testNamePattern <pattern>` | Run tests with names matching the pattern |
-| `--api` | Listen to port and serve API |
+| `--api [api]` | Serve API, available options: `--api.port <port>`, `--api.host [host]` and `--api.strictPort` |
 | `--threads` | Enable Threads (default: true) |
 | `--silent` | Silent console output from tests |
 | `--reporter <name>` | Select reporter: `default`, `verbose`, or `dot` |
@@ -95,7 +112,6 @@ Run vitest in development mode.
 | `--run` | Do not watch |
 | `--global` | Inject APIs globally |
 | `--dom` | Mock browser api with happy-dom |
-| `--findRelatedTests <filepath>` | Run only tests that import specified file |
 | `--environment <env>` | Runner environment (default: node) |
 | `--passWithNoTests` | Pass when no tests found |
 | `-h, --help` | Display available CLI options |
@@ -103,18 +119,23 @@ Run vitest in development mode.
 ## Examples
 
 - [Unit Testing](https://github.com/vitest-dev/vitest/tree/main/test/core)
-- [Vue Component Testing](https://github.com/vitest-dev/vitest/tree/main/test/vue)
-- [React Component Testing](https://github.com/vitest-dev/vitest/tree/main/test/react)
-- [Svelte Component Testing](https://github.com/vitest-dev/vitest/tree/main/test/svelte)
-- [Lit Component Testing](https://github.com/vitest-dev/vitest/tree/main/test/lit)
-- [Vitesse Component Testing](https://github.com/vitest-dev/vitest/tree/main/test/vitesse)
+- [Vue Component Testing](https://github.com/vitest-dev/vitest/tree/main/examples/vue)
+- [React Component Testing](https://github.com/vitest-dev/vitest/tree/main/examples/react)
+- [Svelte Component Testing](https://github.com/vitest-dev/vitest/tree/main/examples/svelte)
+- [Lit Component Testing](https://github.com/vitest-dev/vitest/tree/main/examples/lit)
+- [Vitesse Component Testing](https://github.com/vitest-dev/vitest/tree/main/examples/vitesse)
+- [All examples](https://github.com/vitest-dev/vitest/tree/main/examples)
 
 ## Projects using Vitest
 
 - [unocss](https://github.com/antfu/unocss)
 - [unplugin-auto-import](https://github.com/antfu/unplugin-auto-import)
 - [unplugin-vue-components](https://github.com/antfu/unplugin-vue-components)
+- [vitesse](https://github.com/antfu/vitesse)
 - [vitesse-lite](https://github.com/antfu/vitesse-lite)
+- [fluent-vue](https://github.com/demivan/fluent-vue)
+- [vueuse](https://github.com/vueuse/vueuse)
+- [milkdown](https://github.com/Saul-Mirone/milkdown)
 
 ## Using Unreleased Commits
 

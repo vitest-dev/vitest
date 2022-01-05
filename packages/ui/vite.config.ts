@@ -9,6 +9,7 @@ import { presetAttributify, presetIcons, presetUno } from 'unocss'
 
 export default defineConfig({
   root: __dirname,
+  base: '/__vitest__/',
   resolve: {
     alias: {
       '~/': `${resolve(__dirname, 'client')}/`,
@@ -30,6 +31,9 @@ export default defineConfig({
         'bg-active': 'bg-gray-500:8',
         'bg-hover': 'bg-gray-500:20',
         'border-base': 'border-gray-500:10',
+
+        'tab-button': 'font-light op50 hover:op80 h-full px-4',
+        'tab-button-active': 'op100 bg-gray-500:10',
       },
     }),
     Components({

@@ -1,3 +1,4 @@
+import type { CommonServerOptions } from 'vite'
 import type { BuiltinReporters } from '../reporters'
 import type { C8Options, ResolvedC8Options } from '../coverage'
 import type { Reporter } from './reporter'
@@ -5,6 +6,8 @@ import type { SnapshotStateOptions } from './snapshot'
 import type { Arrayable } from './general'
 
 export type BuiltinEnvironment = 'node' | 'jsdom' | 'happy-dom'
+
+export type ApiConfig = Pick<CommonServerOptions, 'port' | 'strictPort' | 'host'>
 
 export interface InlineConfig {
   /**
@@ -39,6 +42,22 @@ export interface InlineConfig {
      * This could be helpful to handle packages that ship `.js` in ESM format (that Node can't handle).
      */
     inline?: (string | RegExp)[]
+
+    /**
+     * Interpret CJS module's default as named exports
+     *
+     * @default true
+     */
+    interpretDefault?: boolean
+
+    /**
+     * When a dependency is a valid ESM package, try to guess the cjs version based on the path.
+     * This will significantly improve the performance in huge repo, but might potentially
+     * cause some misalignment if a package have different logic in ESM and CJS mode.
+     *
+     * @default true
+     */
+    fallbackCJS?: boolean
   }
 
   /**
@@ -102,13 +121,6 @@ export interface InlineConfig {
    */
   minThreads?: number
 
-  /*
-   * Interpret CJS module's default as named exports
-   *
-   * @default true
-   */
-  interpretDefault?: boolean
-
   /**
    * Default timeout of a test in milliseconds
    *
@@ -155,25 +167,9 @@ export interface InlineConfig {
   coverage?: C8Options
 
   /**
-   * Open Vitest UI
-   * @internal WIP
-   */
-  open?: boolean
-
-  /**
    * run test names with the specified pattern
    */
   testNamePattern?: string | RegExp
-
-  /**
-   * Listen to port and serve API
-   *
-   * When set to true, the default port is 55555
-   *
-   * @internal WIP
-   * @default false
-   */
-  api?: boolean | number
 
   /**
    * Will call `.mockClear()` on all spies before each test
@@ -192,6 +188,21 @@ export interface InlineConfig {
    * @default false
    */
   restoreMocks?: boolean
+
+  /**
+   * Serve API options.
+   *
+   * When set to true, the default port is 51204.
+   *
+   * @default false
+   */
+  api?: boolean | number | ApiConfig
+
+  /**
+   * Open Vitest UI
+   * @internal WIP
+   */
+  open?: boolean
 }
 
 export interface UserConfig extends InlineConfig {
@@ -224,18 +235,24 @@ export interface UserConfig extends InlineConfig {
   /**
    * Run tests that cover a list of source files
    */
-  findRelatedTests?: string[] | string
+  related?: string[] | string
 }
 
-export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'findRelatedTests'> {
+export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api'> {
+  base?: string
+
   config?: string
   filters?: string[]
   testNamePattern?: RegExp
-  findRelatedTests?: string[]
+  related?: string[]
 
   depsInline: (string | RegExp)[]
   depsExternal: (string | RegExp)[]
+  fallbackCJS: boolean
+  interpretDefault: boolean
 
   coverage: ResolvedC8Options
   snapshotOptions: SnapshotStateOptions
+
+  api?: ApiConfig
 }

@@ -4,8 +4,16 @@ body {
   font-family: 'Readex Pro', sans-serif;
 }
 
+:root {
+  --color-text-light: #000;
+  --color-text-dark: #ddd;
+  --color-text: var(--color-text-light);
+}
+
+
 html.dark {
-  color: #ddd;
+  --color-text: var(--color-text-dark);
+  color: var(--color-text);
   background-color: #141414;
   color-scheme: dark;
 }
@@ -41,6 +49,9 @@ html.dark {
   --cm-regex: #ab5e3f;
   --cm-json-property: #698c96;
   --cm-line-number-gutter: #f8f8f8;
+  /* scrollbars colors */
+  --cm-ttc-c-thumb: #ddd;
+  --cm-ttc-c-track: white;
 }
 
 html.dark {
@@ -68,8 +79,87 @@ html.dark {
   --cm-line-number-gutter: #161616;
   --cm-line-highlight-background: #444444;
   --cm-selection-background: #44444450;
+  /* scrollbars colors */
+  --cm-ttc-c-thumb: #666;
+  --cm-ttc-c-track: black;
 }
 
-.highlighted {
-  border-bottom: 1px dashed currentColor;
+.splitpanes__pane {
+  background-color: unset !important;
 }
+
+.splitpanes__splitter {
+  position: relative;
+  background-color: rgba(125,125,125,0.1);
+  z-index: 10;
+}
+
+.splitpanes__splitter:before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  transition: opacity 0.4s;
+  background-color: rgba(125,125,125,0.1);
+  opacity: 0;
+  z-index: 1;
+}
+
+.splitpanes__splitter:hover:before {
+  opacity: 1;
+}
+
+.splitpanes--vertical > .splitpanes__splitter:before {
+  left: -10px;
+  right: -10px;
+  height: 100%;
+}
+
+.splitpanes--horizontal > .splitpanes__splitter:before {
+  top: -10px;
+  bottom: -10px;
+  width: 100%;
+}
+
+.splitpanes.loading .splitpanes__pane {
+  transition: none !important;
+}
+.CodeMirror-scroll::-webkit-scrollbar,
+.scrolls::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.CodeMirror-scroll,
+.scrolls {
+  overflow: auto !important;
+  height: calc(100vh - 78px) !important;
+  scrollbar-width: thin;
+  scrollbar-color: var(--cm-ttc-c-thumb) var(--cm-ttc-c-track);
+}
+.CodeMirror-scroll::-webkit-scrollbar-track,
+.scrolls::-webkit-scrollbar-track {
+  background: var(--cm-ttc-c-track);
+}
+.CodeMirror-scroll::-webkit-scrollbar-thumb,
+.scrolls::-webkit-scrollbar-thumb {
+  background-color: var(--cm-ttc-c-thumb);
+  border-radius: 3px;
+  border: 2px solid var(--cm-ttc-c-thumb);
+}
+.CodeMirror-scroll::-webkit-scrollbar-corner,
+.scrolls::-webkit-scrollbar-corner {
+  background-color: var(--cm-ttc-c-track);
+}
+.CodeMirror {
+  overflow: unset !important;
+}
+.CodeMirror-vscrollbar,
+.CodeMirror-hscrollbar {
+  display: none !important;
+}
+.CodeMirror-scroll {
+  margin-bottom: unset !important;
+  margin-right: unset !important;
+  padding-bottom: unset !important;
+}
+

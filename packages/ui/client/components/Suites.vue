@@ -1,16 +1,11 @@
 <script setup lang="ts">
-import { client, current } from '~/composables/state'
+import { current, runCurrent } from '~/composables/client'
 
 const name = computed(() => current.value?.name.split(/\//g).pop())
-
-function run() {
-  if (current.value?.filepath)
-    client.rpc.rerun([current.value.filepath])
-}
 </script>
 
 <template>
-  <div v-if="current" overflow-auto border="r base">
+  <div v-if="current" border="r base">
     <TasksList
       :tasks="current.tasks"
       :nested="true"
@@ -28,7 +23,7 @@ function run() {
           {{ name }}
         </span>
         <div class="flex text-lg">
-          <IconButton icon="i-carbon-play" @click="run()" />
+          <IconButton icon="i-carbon-play" @click="runCurrent()" />
         </div>
       </template>
     </TasksList>

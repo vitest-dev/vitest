@@ -4,23 +4,11 @@ import { existsSync, promises as fs } from 'fs'
 import { relative } from 'pathe'
 import c from 'picocolors'
 import * as diff from 'diff'
-import type { RawSourceMap } from 'source-map-js'
 import cliTruncate from 'cli-truncate'
 import type { Vitest } from '../../node'
-import type { ParsedStack, Position } from '../../types/general'
-import { getOriginalPos, lineSplitRE, parseStack, posToNumber } from '../../utils/source-map'
+import type { ErrorWithDiff, ParsedStack, Position } from '../../types/general'
+import { interpretSourcePos, lineSplitRE, parseStacktrace, posToNumber } from '../../utils/source-map'
 import { F_POINTER } from './figures'
-
-export interface ErrorWithDiff extends Error {
-  name: string
-  nameStr?: string
-  stack?: string
-  stackStr?: string
-  showDiff?: boolean
-  actual?: any
-  expected?: any
-  operator?: string
-}
 
 export async function printError(error: unknown, ctx: Vitest) {
   let e = error as ErrorWithDiff
@@ -32,32 +20,27 @@ export async function printError(error: unknown, ctx: Vitest) {
     } as any
   }
 
-  const stackStr = e.stack || e.stackStr || ''
-  const stacks = parseStack(stackStr)
+  const stacks = parseStacktrace(e)
 
-  if (!stacks.length) {
-    ctx.console.error(e)
-  }
-  else {
-    const nearest = stacks.find((stack) => {
-      return !stack.file.includes('vitest/dist')
-      && ctx.server.moduleGraph.getModuleById(stack.file)
-      && existsSync(stack.file)
-    })
+  await interpretSourcePos(stacks, ctx)
 
-    printErrorMessage(e)
-    await printStack(ctx, stacks, nearest, async(s, pos) => {
-      if (s === nearest && nearest) {
-        const sourceCode = await fs.readFile(nearest.file, 'utf-8')
-        ctx.log(c.yellow(generateCodeFrame(sourceCode, 4, pos)))
-      }
-    })
-  }
+  const nearest = stacks.find(stack =>
+    ctx.server.moduleGraph.getModuleById(stack.file)
+      && existsSync(stack.file),
+  )
 
-  handleImportOutsideModuleError(stackStr, ctx)
+  printErrorMessage(e, ctx.console)
+  await printStack(ctx, stacks, nearest, async(s, pos) => {
+    if (s === nearest && nearest) {
+      const sourceCode = await fs.readFile(nearest.file, 'utf-8')
+      ctx.log(c.yellow(generateCodeFrame(sourceCode, 4, pos)))
+    }
+  })
+
+  handleImportOutsideModuleError(e.stack || e.stackStr || '', ctx)
 
   if (e.showDiff)
-    displayDiff(e.actual, e.expected)
+    displayDiff(e.actual, e.expected, ctx.console)
 }
 
 const esmErrors = [
@@ -96,18 +79,11 @@ function handleImportOutsideModuleError(stack: string, ctx: Vitest) {
 }\n`)))
 }
 
-async function getSourcePos(ctx: Vitest, nearest: ParsedStack) {
-  const mod = ctx.server.moduleGraph.getModuleById(nearest.file)
-  const transformResult = mod?.ssrTransformResult
-  const pos = await getOriginalPos(transformResult?.map as RawSourceMap | undefined, nearest)
-  return pos
-}
-
-function displayDiff(actual: string, expected: string) {
+function displayDiff(actual: string, expected: string, console: Console) {
   console.error(c.gray(unifiedDiff(actual, expected)) + '\n')
 }
 
-function printErrorMessage(error: ErrorWithDiff) {
+function printErrorMessage(error: ErrorWithDiff, console: Console) {
   const errorName = error.name || error.nameStr || 'Unknown Error'
   console.error(c.red(`${c.bold(errorName)}: ${error.message}`))
 }
@@ -122,7 +98,7 @@ async function printStack(
     return
 
   for (const frame of stack) {
-    const pos = await getSourcePos(ctx, frame) || frame
+    const pos = frame.sourcePos || frame
     const color = frame === highlight ? c.yellow : c.gray
     const path = relative(ctx.config.root, frame.file)
 

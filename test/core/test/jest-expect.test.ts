@@ -35,6 +35,7 @@ describe('jest-expect', () => {
     expect({ length: 3 }).toHaveLength(3)
     expect(0.2 + 0.1).not.toBe(0.3)
     expect(0.2 + 0.1).toBeCloseTo(0.3, 5)
+    expect(0.2 + 0.1).not.toBeCloseTo(0.3, 100) // expect.closeTo will fail in chai
   })
 
   it('asymmetric matchers (jest style)', () => {
@@ -97,6 +98,7 @@ describe('jest-expect', () => {
 
   it('object', () => {
     expect({}).toEqual({})
+    expect({ apples: 13 }).toEqual({ apples: 13 })
     expect({}).toStrictEqual({})
     expect({}).not.toBe({})
 
@@ -146,6 +148,11 @@ describe('jest-expect', () => {
   it('has assertions with different order', () => {
     expect.hasAssertions()
     expect(1).toBe(1)
+  })
+
+  it.fails('toBe with null/undefined values', () => {
+    expect(undefined).toBe(true)
+    expect(null).toBe(true)
   })
 
   // https://jestjs.io/docs/expect#tostrictequalvalue
@@ -300,6 +307,9 @@ describe('async expect', () => {
     await expect((async() => {
       throw new Error('err')
     })()).rejects.toStrictEqual(new Error('err'))
+    await expect((async() => {
+      throw new Error('err')
+    })()).rejects.toThrow('err')
 
     await expect((async() => {
       throw new Error('err')

@@ -1,5 +1,13 @@
 // Vitest Snapshot v1
 
+exports[`properties snapshot 1`] = `
+{
+  "createdAt": Any<Date>,
+  "id": Any<Number>,
+  "name": StringContaining "LeBron",
+}
+`;
+
 exports[`snapshot 1`] = `
 {
   "this": {

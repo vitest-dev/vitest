@@ -1,14 +1,14 @@
 {
   "name": "@vitest/ws-client",
-  "version": "0.0.122",
+  "version": "0.0.133",
   "description": "WebSocket client wrapper for communicating with Vitest",
-  "homepage": "https://github.com/antfu/vitest#readme",
+  "homepage": "https://github.com/vitest-dev/vitest#readme",
   "bugs": {
-    "url": "https://github.com/antfu/vitest/issues"
+    "url": "https://github.com/vitest-dev/vitest/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/antfu/vitest.git"
+    "url": "git+https://github.com/vitest-dev/vitest.git"
   },
   "funding": "https://github.com/sponsors/antfu",
   "license": "MIT",
@@ -40,7 +40,7 @@
     "ws": "^8.4.0"
   },
   "devDependencies": {
-    "rollup": "^2.62.0"
+    "rollup": "^2.63.0"
   },
   "engines": {
     "node": ">=14.14.0"

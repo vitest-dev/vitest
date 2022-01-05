@@ -1,54 +1,56 @@
 <script setup lang="ts">
-import { client, current } from '~/composables/state'
+import { injectCurrentModule } from '../composables/navigation'
+import { client } from '~/composables/client'
+import type { Params } from '~/composables/params'
+import { viewMode } from '~/composables/params'
+import { useModuleGraph } from '~/composables/module-graph'
+
+const currentModule = injectCurrentModule()
 
 function open() {
-  if (current.value?.filepath)
-    fetch(`/__open-in-editor?file=${encodeURIComponent(current.value.filepath)}`)
+  const filePath = currentModule.value?.filepath
+  if (filePath)
+    fetch(`/__open-in-editor?file=${encodeURIComponent(filePath)}`)
 }
 
-const failed = computed(() => current.value?.tasks.filter(i => i.result?.state === 'fail') || [])
+const data = asyncComputed(async() => {
+  return currentModule.value
+    ? await client.rpc.getModuleGraph(currentModule.value.filepath)
+    : { externalized: [], graph: {}, inlined: [] }
+})
+
+const graph = useModuleGraph(data)
+const changeViewMode = (view: Params['view']) => {
+  viewMode.value = view
+}
 </script>
 
 <template>
-  <div v-if="current" h-full w-full overflow="hidden">
-    <div
-      p="2"
-      h-10
-      flex="~ gap-2"
-      items-center
-      bg-header
-      border="b base"
-    >
-      <StatusIcon :task="current" />
-      <div flex-1 font-light op-50 ws-nowrap tuncate text-sm>
-        {{ current?.filepath }}
-      </div>
-      <div class="flex text-lg">
-        <IconButton
-          icon="i-carbon-launch"
-          :disabled="!current?.filepath"
-          :onclick="open"
-        />
-      </div>
-    </div>
+  <div v-if="currentModule" h-full>
     <div>
-      <template v-if="failed.length">
-        <div v-for="task of failed" :key="task.id">
-          <div bg="red-500/10" text="red-500 sm" p="x3 y2" m-2 rounded>
-            {{ task.name }}
-            <!-- TODO: show diff and better stacktrace -->
-            <pre op80>{{ (task.result?.error as any).stackStr }}</pre>
-          </div>
+      <div p="2" h-10 flex="~ gap-2" items-center bg-header border="b base">
+        <StatusIcon :task="currentModule" />
+        <div flex-1 font-light op-50 ws-nowrap truncate text-sm>
+          {{ currentModule?.filepath }}
         </div>
-      </template>
-      <template v-else>
-        <div bg="green-500/10" text="green-500 sm" p="x4 y2" m-2 rounded>
-          All tests passed in this file
+        <div class="flex text-lg">
+          <IconButton icon="i-carbon-launch" :disabled="!currentModule?.filepath" :onclick="open" />
         </div>
-      </template>
+      </div>
+      <div flex="~" items-center bg-header border="b base" text-sm h-37px>
+        <button tab-button :class="{ 'tab-button-active': viewMode == null }" @click="changeViewMode(null)">
+          Report
+        </button>
+        <button tab-button :class="{ 'tab-button-active': viewMode === 'graph' }" @click="changeViewMode('graph')">
+          Module Graph
+        </button>
+        <button tab-button :class="{ 'tab-button-active': viewMode === 'editor' }" @click="changeViewMode('editor')">
+          Code
+        </button>
+      </div>
     </div>
-    <div overflow="auto">
-      <!-- <Editor /> -->
-    </div>
+    <ViewModuleGraph v-show="viewMode === 'graph'" :graph="graph" />
+    <ViewEditor v-if="viewMode === 'editor'" :file="currentModule" />
+    <ViewReport v-else-if="!viewMode" :file="currentModule" />
   </div>
 </template>

@@ -2,38 +2,22 @@ import { builtinModules, createRequire } from 'module'
 import { fileURLToPath, pathToFileURL } from 'url'
 import vm from 'vm'
 import { dirname, resolve } from 'pathe'
-import { isValidNodeImport } from 'mlly'
-import type { ModuleCache } from '../types'
+import type { ModuleCache, ResolvedConfig } from '../types'
 import { slash, toFilePath } from '../utils'
+import { shouldExternalize } from '../utils/externalize'
 import type { SuiteMocks } from './mocker'
 import { createMocker } from './mocker'
 
 export type FetchFunction = (id: string) => Promise<string | undefined>
 
-export interface ExecuteOptions {
+export interface ExecuteOptions extends Pick<ResolvedConfig, 'depsInline' | 'depsExternal' | 'fallbackCJS' | 'base'> {
   root: string
   files: string[]
   fetch: FetchFunction
   interpretDefault: boolean
-  inline: (string | RegExp)[]
-  external: (string | RegExp)[]
   moduleCache: Map<string, ModuleCache>
   mockMap: SuiteMocks
 }
-
-const defaultInline = [
-  'vitest/dist',
-  // yarn's .store folder
-  /vitest-virtual-\w+\/dist/,
-  /virtual:/,
-  /\.ts$/,
-  /\/esm\/.*\.js$/,
-  /\.(es|esm|esm-browser|esm-bundler|es6).js$/,
-]
-const depsExternal = [
-  /\.cjs.js$/,
-  /\.mjs$/,
-]
 
 export const stubRequests: Record<string, any> = {
   '/@vite/client': {
@@ -78,10 +62,10 @@ export async function interpretedImport(path: string, interpretDefault: boolean)
 }
 
 export async function executeInViteNode(options: ExecuteOptions) {
-  const { moduleCache, root, files, fetch, mockMap } = options
+  const { moduleCache, root, files, fetch, mockMap, base } = options
 
-  const externalCache = new Map<string, boolean>()
-  builtinModules.forEach(m => externalCache.set(m, true))
+  const externalCache = new Map<string, false | string>()
+  builtinModules.forEach(m => externalCache.set(m, m))
 
   const {
     getActualPath,
@@ -222,7 +206,7 @@ export async function executeInViteNode(options: ExecuteOptions) {
   }
 
   async function cachedRequest(rawId: string, callstack: string[]) {
-    const id = normalizeId(rawId)
+    const id = normalizeId(rawId, base)
 
     if (externalCache.get(id))
       return interpretedImport(patchWindowsImportPath(id), options.interpretDefault)
@@ -233,8 +217,9 @@ export async function executeInViteNode(options: ExecuteOptions) {
     if (!externalCache.has(importPath))
       externalCache.set(importPath, await shouldExternalize(importPath, options))
 
-    if (externalCache.get(importPath))
-      return interpretedImport(importPath, options.interpretDefault)
+    const externalId = externalCache.get(importPath)
+    if (externalId)
+      return interpretedImport(externalId, options.interpretDefault)
 
     if (moduleCache.get(fsPath)?.promise)
       return moduleCache.get(fsPath)?.promise
@@ -260,7 +245,10 @@ export async function executeInViteNode(options: ExecuteOptions) {
   }
 }
 
-export function normalizeId(id: string): string {
+export function normalizeId(id: string, base?: string): string {
+  if (base && id.startsWith(base))
+    id = `/${id.slice(base.length)}`
+
   return id
     .replace(/^\/@id\/__x00__/, '\0') // virtual modules start with `\0`
     .replace(/^\/@id\//, '')
@@ -268,34 +256,6 @@ export function normalizeId(id: string): string {
     .replace(/^node:/, '')
     .replace(/[?&]v=\w+/, '?') // remove ?v= query
     .replace(/\?$/, '') // remove end query mark
-}
-
-export async function shouldExternalize(id: string, config: Pick<ExecuteOptions, 'inline' | 'external'>) {
-  if (matchExternalizePattern(id, config.inline))
-    return false
-  if (matchExternalizePattern(id, config.external))
-    return true
-
-  if (matchExternalizePattern(id, depsExternal))
-    return true
-  if (matchExternalizePattern(id, defaultInline))
-    return false
-
-  return id.includes('/node_modules/') && await isValidNodeImport(id)
-}
-
-function matchExternalizePattern(id: string, patterns: (string | RegExp)[]) {
-  for (const ex of patterns) {
-    if (typeof ex === 'string') {
-      if (id.includes(`/node_modules/${ex}/`))
-        return true
-    }
-    else {
-      if (ex.test(id))
-        return true
-    }
-  }
-  return false
 }
 
 function patchWindowsImportPath(path: string) {

@@ -3,6 +3,7 @@ import MagicString from 'magic-string'
 
 const mockRegexp = /\b((?:vitest|vi)\s*.\s*mock\(["`'\s](.*[@\w_-]+)["`'\s])[),]{1}/
 const pathRegexp = /\b(?:vitest|vi)\s*.\s*(unmock|importActual|importMock)\(["`'\s](.*[@\w_-]+)["`'\s]\);?/mg
+const vitestRegexp = /import {[^}]*}.*(?=["'`]vitest["`']).*/gm
 
 const isComment = (line: string) => {
   const commentStarts = ['//', '/*', '*']
@@ -30,7 +31,7 @@ const parseMocks = (code: string) => {
 
     const line = splitted[lineIndex]
 
-    if (!line) break
+    if (line === undefined) break
 
     const mock = mockCalls[mockCall] || {
       code: '',
@@ -130,6 +131,14 @@ export const MocksPlugin = (): Plugin => {
       }
 
       if (m) {
+        // hoist vitest imports in case it was used inside vi.mock factory #425
+        const vitestImports = code.matchAll(vitestRegexp)
+        for (const match of vitestImports) {
+          const indexStart = match.index!
+          const indexEnd = match[0].length + indexStart
+          m.remove(indexStart, indexEnd)
+          m.prepend(`${match[0]}\n`)
+        }
         return {
           code: m.toString(),
           map: m.generateMap({ hires: true }),

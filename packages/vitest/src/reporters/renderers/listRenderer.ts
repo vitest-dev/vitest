@@ -13,7 +13,6 @@ export interface ListRendererOptions {
 }
 
 const DURATION_LONG = 300
-const MAX_HEIGHT = 20
 
 const outputMap = new WeakMap<Task, string>()
 
@@ -41,10 +40,9 @@ export function renderTree(tasks: Task[], options: ListRendererOptions, level = 
     if (task.mode === 'skip' || task.mode === 'todo')
       suffix += ` ${c.dim(c.gray('[skipped]'))}`
 
-    if (task.result?.end) {
-      const duration = task.result.end - task.result.start
-      if (duration > DURATION_LONG)
-        suffix += c.yellow(` ${Math.round(duration)}${c.dim('ms')}`)
+    if (task.result?.duration != null) {
+      if (task.result.duration > DURATION_LONG)
+        suffix += c.yellow(` ${Math.round(task.result.duration)}${c.dim('ms')}`)
     }
 
     let name = task.name
@@ -73,7 +71,7 @@ export function renderTree(tasks: Task[], options: ListRendererOptions, level = 
   }
 
   // TODO: moving windows
-  return output.slice(0, MAX_HEIGHT).join('\n')
+  return output.join('\n')
 }
 
 export const createListRenderer = (_tasks: Task[], options: ListRendererOptions) => {

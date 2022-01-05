@@ -1,0 +1,34 @@
+name: Benchmark
+
+on:
+  issue_comment:
+    types:
+    - created
+
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.issue.pull_request && (github.event.comment.body == '/bench' || github.event.comment.body == '/benchmark') }}
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2.0.1
+        with:
+          version: 6.23.5
+
+      - name: Install node
+        uses: actions/setup-node@v2
+        with:
+          cache: "pnpm"
+
+      - name: Install
+        working-directory: ./bench
+        run: pnpm i
+
+      - name: Run benchmark
+        working-directory: ./bench
+        run: pnpm bench:ci
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

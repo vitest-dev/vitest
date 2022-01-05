@@ -1,35 +1,55 @@
 <script setup lang="ts">
+import type CodeMirror from 'codemirror'
 import { useCodeMirror } from '../composables/codemirror'
 
 const attrs = useAttrs()
-const emit = defineEmits<{ (input: any): void }>()
+const emit = defineEmits<{
+  (event: 'update:modelValue', value: string): void
+  (event: 'save', content: string): void
+}>()
 const props = defineProps<{
   modelValue: string
   mode?: string
   readOnly?: boolean
 }>()
 
-const modeMap: Record<string, string> = {
-  html: 'htmlmixed',
-  vue: 'htmlmixed',
+const modeMap: Record<string, any> = {
+  // html: 'htmlmixed',
+  // vue: 'htmlmixed',
+  // svelte: 'htmlmixed',
   js: 'javascript',
   mjs: 'javascript',
   cjs: 'javascript',
-  ts: 'javascript',
-  mts: 'javascript',
+  ts: { name: 'javascript', typescript: true },
+  mts: { name: 'javascript', typescript: true },
+  cts: { name: 'javascript', typescript: true },
+  jsx: { name: 'javascript', jsx: true },
+  tsx: { name: 'javascript', typescript: true, jsx: true },
 }
 
 const el = ref<HTMLTextAreaElement>()
 const input = useVModel(props, 'modelValue', emit, { passive: true })
 
+const cm = shallowRef<CodeMirror.EditorFromTextArea>()
+
+defineExpose({ cm })
+
 onMounted(async() => {
-  const cm = useCodeMirror(el, input, {
+  cm.value = useCodeMirror(el, input, {
     ...props,
     ...attrs,
     mode: modeMap[props.mode || ''] || props.mode,
+    extraKeys: {
+      'Cmd-S': function(cm) {
+        emit('save', cm.getValue())
+      },
+      'Ctrl-S': function(cm) {
+        emit('save', cm.getValue())
+      },
+    },
   })
-  cm.setSize('100%', '100%')
-  setTimeout(() => cm.refresh(), 100)
+  cm.value.setSize('100%', '100%')
+  setTimeout(() => cm.value!.refresh(), 100)
 })
 </script>
 
@@ -37,8 +57,8 @@ onMounted(async() => {
   <div
     relative
     font-mono
-    overflow-auto
     text-sm
+    class="scrolls"
   >
     <textarea ref="el" />
   </div>

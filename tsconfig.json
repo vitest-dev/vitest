@@ -15,6 +15,7 @@
     "inlineSourceMap": true,
     "paths": {
       "@vitest/ws-client": ["./packages/ws-client/src/index.ts"],
+      "@vitest/ui": ["./packages/ui/node/index.ts"],
       "#types": ["./packages/vitest/src/index.ts"],
       "~/*": ["./packages/ui/client/*"],
       "vitest": ["./packages/vitest/src/index.ts"],
@@ -26,5 +27,7 @@
     "**/dist/**",
     "./packages/ui/client/**",
     "./test/**/*.*",
+    "./examples/**/*.*",
+    "./bench/**"
   ]
 }

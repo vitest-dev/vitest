@@ -2,44 +2,21 @@ import { fileURLToPath, pathToFileURL } from 'url'
 import c from 'picocolors'
 import { isPackageExists } from 'local-pkg'
 import { dirname, resolve } from 'pathe'
-import type { Arrayable, Nullable, Suite, Task, Test } from '../types'
+import type { Suite, Task } from '../types'
+import { getNames, slash } from './tasks'
+
+export * from './tasks'
 
 export const isWindows = process.platform === 'win32'
 
 /**
- * Convert `Arrayable<T>` to `Array<T>`
- *
- * @category Array
- */
-export function toArray<T>(array?: Nullable<Arrayable<T>>): Array<T> {
-  array = array || []
-  if (Array.isArray(array))
-    return array
-  return [array]
-}
-
-export function notNullish<T>(v: T | null | undefined): v is NonNullable<T> {
-  return v != null
-}
-
-export function slash(str: string) {
-  return str.replace(/\\/g, '/')
-}
-
-export function mergeSlashes(str: string) {
-  return str.replace(/\/\//g, '/')
-}
-
-export const noop = () => {}
-
-/**
- * Partition in tasks groups by consecutive computeMode ('serial', 'concurrent')
+ * Partition in tasks groups by consecutive concurrent
  */
 export function partitionSuiteChildren(suite: Suite) {
   let tasksGroup: Task[] = []
   const tasksGroups: Task[][] = []
   for (const c of suite.tasks) {
-    if (tasksGroup.length === 0 || c.computeMode === tasksGroup[0].computeMode) {
+    if (tasksGroup.length === 0 || c.concurrent === tasksGroup[0].concurrent) {
       tasksGroup.push(c)
     }
     else {
@@ -51,39 +28,6 @@ export function partitionSuiteChildren(suite: Suite) {
     tasksGroups.push(tasksGroup)
 
   return tasksGroups
-}
-
-export function getTests(suite: Arrayable<Task>): Test[] {
-  return toArray(suite).flatMap(s => s.type === 'test' ? [s] : s.tasks.flatMap(c => c.type === 'test' ? [c] : getTests(c)))
-}
-
-export function getTasks(tasks: Arrayable<Task>): Task[] {
-  return toArray(tasks).flatMap(s => s.type === 'test' ? [s] : [s, ...getTasks(s.tasks)])
-}
-
-export function getSuites(suite: Arrayable<Task>): Suite[] {
-  return toArray(suite).flatMap(s => s.type === 'suite' ? [s, ...getSuites(s.tasks)] : [])
-}
-
-export function hasTests(suite: Arrayable<Suite>): boolean {
-  return toArray(suite).some(s => s.tasks.some(c => c.type === 'test' || hasTests(c as Suite)))
-}
-
-export function hasFailed(suite: Arrayable<Task>): boolean {
-  return toArray(suite).some(s => s.result?.state === 'fail' || (s.type === 'suite' && hasFailed(s.tasks)))
-}
-
-export function getNames(task: Task) {
-  const names = [task.name]
-  let current: Task | undefined = task
-
-  while (current?.suite || current?.file) {
-    current = current.suite || current.file
-    if (current?.name)
-      names.unshift(current.name)
-  }
-
-  return names
 }
 
 export function getFullName(task: Task) {
@@ -117,44 +61,53 @@ export async function ensurePackageInstalled(
   return false
 }
 
-/**
- * Deep merge :P
- */
-export function deepMerge<T extends object = object>(target: T, ...sources: any[]): T {
-  if (!sources.length)
-    return target as any
+export function isObject(item: unknown): boolean {
+  return item != null && typeof item === 'object' && !Array.isArray(item)
+}
 
-  const source = sources.shift()
-  if (source === undefined)
-    return target as any
+function deepMergeArray(target: any[] = [], source: any[] = []) {
+  const mergedOutput = Array.from(target)
 
-  if (isMergableObject(target) && isMergableObject(source)) {
+  source.forEach((sourceElement, index) => {
+    const targetElement = mergedOutput[index]
+
+    if (Array.isArray(target[index])) {
+      mergedOutput[index] = deepMergeArray(target[index], sourceElement)
+    }
+    else if (isObject(targetElement)) {
+      mergedOutput[index] = deepMerge(target[index], sourceElement)
+    }
+    else {
+      // Source does not exist in target or target is primitive and cannot be deep merged
+      mergedOutput[index] = sourceElement
+    }
+  })
+
+  return mergedOutput
+}
+
+export function deepMerge(target: any, source: any): any {
+  if (isObject(target) && isObject(source)) {
+    const mergedOutput = { ...target }
     Object.keys(source).forEach((key) => {
-      if (isMergableObject(source[key])) {
-        // @ts-expect-error
-        if (!target[key])
-          // @ts-expect-error
-          target[key] = {}
-
-        // @ts-expect-error
-        deepMerge(target[key], source[key])
+      if (isObject(source[key]) && !source[key].$$typeof) {
+        if (!(key in target)) Object.assign(mergedOutput, { [key]: source[key] })
+        else mergedOutput[key] = deepMerge(target[key], source[key])
+      }
+      else if (Array.isArray(source[key])) {
+        mergedOutput[key] = deepMergeArray(target[key], source[key])
       }
       else {
-        // @ts-expect-error
-        target[key] = source[key]
+        Object.assign(mergedOutput, { [key]: source[key] })
       }
     })
+
+    return mergedOutput
   }
-
-  return deepMerge(target, ...sources)
-}
-
-function isMergableObject(item: any): item is Object {
-  return isObject(item) && !Array.isArray(item)
-}
-
-export function isObject(val: any): val is object {
-  return toString.call(val) === '[object Object]'
+  else if (Array.isArray(target) && Array.isArray(source)) {
+    return deepMergeArray(target, source)
+  }
+  return target
 }
 
 export function toFilePath(id: string, root: string): string {

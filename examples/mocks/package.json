@@ -1,0 +1,22 @@
+{
+  "name": "@vitest/test-lit",
+  "private": true,
+  "files": [
+    "dist",
+    "types"
+  ],
+  "scripts": {
+    "coverage": "vitest --coverage",
+    "dev": "vite",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@vueuse/integrations": "^7.5.1",
+    "axios": "^0.24.0",
+    "tinyspy": "^0.2.7"
+  },
+  "devDependencies": {
+    "vite": "^2.7.10",
+    "vitest": "workspace:*"
+  }
+}

@@ -1,14 +1,15 @@
 <script setup lang="ts">
+import { injectCurrentModule } from '../composables/navigation'
+import { findById } from '../composables/client'
 import type { Task } from '#types'
 import { toggleDark } from '~/composables'
-import { activeFileIdRef, client, files } from '~/composables/state'
+import { files, runAll } from '~/composables/client'
+import { activeFileId } from '~/composables/params'
 
+const currentModule = injectCurrentModule()
 function onItemClick(task: Task) {
-  activeFileIdRef.value = task.id
-}
-
-function runAll() {
-  client.rpc.rerun(client.state.getFiles().map(i => i.filepath))
+  activeFileId.value = task.id
+  currentModule.value = findById(task.id)
 }
 </script>
 

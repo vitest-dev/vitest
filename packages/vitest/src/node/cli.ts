@@ -19,15 +19,15 @@ cli
   .option('-w, --watch', 'watch mode')
   .option('-o, --open', 'open UI', { default: false })
   .option('-t, --testNamePattern <pattern>', 'run test names with the specified pattern')
-  .option('--api', 'listen to port and serve API')
+  .option('--api [api]', 'Serve API, available options: --api.port <port>, --api.host [host] and --api.strictPort')
   .option('--threads', 'enabled threads', { default: true })
   .option('--silent', 'silent console output from tests')
+  .option('--isolate', 'isolate environment for each test file', { default: true })
   .option('--reporter <name>', 'reporter')
   .option('--coverage', 'use c8 for coverage')
   .option('--run', 'do not watch')
   .option('--global', 'inject apis globally')
   .option('--dom', 'mock browser api with happy-dom')
-  .option('--findRelatedTests <filepath>', 'run only tests that import specified file')
   .option('--environment <env>', 'runner environment', { default: 'node' })
   .option('--passWithNoTests', 'pass when no tests found')
   .help()
@@ -35,6 +35,10 @@ cli
 cli
   .command('run [...filters]')
   .action(run)
+
+cli
+  .command('related [...filters]')
+  .action(runRelated)
 
 cli
   .command('watch [...filters]')
@@ -49,6 +53,12 @@ cli
   .action(dev)
 
 cli.parse()
+
+async function runRelated(relatedFiles: string[] | string, argv: UserConfig) {
+  argv.related = relatedFiles
+  argv.passWithNoTests ??= true
+  await dev([], argv)
+}
 
 async function dev(cliFilters: string[], argv: UserConfig) {
   if (argv.watch == null)

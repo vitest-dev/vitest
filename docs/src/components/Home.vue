@@ -83,6 +83,7 @@
         name="Vladimir"
         avatar="https://avatars.githubusercontent.com/u/16173870?v=4"
         github="sheremet-va"
+        twitter="sheremet_va"
       >
         An open source fullstack developer
       </Avatar>
