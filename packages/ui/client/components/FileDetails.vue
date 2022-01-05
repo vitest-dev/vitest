@@ -48,6 +48,6 @@ const changeViewMode = (view: Params['view']) => {
     </div>
     <ViewModuleGraph v-show="viewMode === 'graph'" :graph="graph" />
     <ViewEditor v-if="viewMode === 'editor'" :file="current" />
-    <ViewReport v-else :file="current" />
+    <ViewReport v-else-if="!viewMode" :file="current" />
   </div>
 </template>

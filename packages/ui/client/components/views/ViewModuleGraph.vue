@@ -10,6 +10,8 @@ const props = defineProps<{
 const { graph } = toRefs(props)
 
 const el = ref<HTMLDivElement>()
+const graphContainerRef = ref(null)
+const style = ref<string | null>(null)
 
 const config = useModuleGraphConfig(graph)
 const controller = ref<ModuleGraphController | undefined>()
@@ -17,6 +19,11 @@ const controller = ref<ModuleGraphController | undefined>()
 useResizeObserver(el, debounce(() => {
   controller.value?.resize()
 }))
+
+useResizeObserver(graphContainerRef, () => {
+  const clientWidth = unrefElement(graphContainerRef)?.clientWidth
+  style.value = clientWidth ? `--graph-w: ${clientWidth}` : null
+})
 
 onMounted(() => {
   resetGraphController()
@@ -54,7 +61,7 @@ function debounce(cb: () => void) {
 </script>
 
 <template>
-  <div h-full overflow="hidden">
+  <div ref="graphContainer" h-full w-full overflow="hidden">
     <div>
       <div flex items-center gap-4 px-3 py-2>
         <div v-for="node of controller?.nodeTypes.sort()" :key="node" flex="~ gap-1" items-center select-none>
@@ -98,6 +105,8 @@ function debounce(cb: () => void) {
   --color-node-inline: #8bc4a0;
   --color-node-label: var(--color-text);
   --color-node-stroke: var(--color-text);
+  --graph-h: calc(100vh - 78px - 39px);
+  --graph-w: 100%;
 }
 
 html.dark {
@@ -106,6 +115,14 @@ html.dark {
   --color-node-inline: #468b60;
 }
 
+.graph {
+  min-height: var(--graph-h) !important;
+  max-height: var(--graph-h) !important;
+  height: var(--graph-h) !important;
+  min-width: var(--graph-w) !important;
+  max-width: var(--graph-w) !important;
+  width: var(--graph-w) !important;
+}
 .graph .node {
   stroke-width: 2px;
   stroke-opacity: 0.5;
