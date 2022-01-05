@@ -1,11 +1,11 @@
-import type { File, Reporter, ResolvedConfig } from '../types'
+import type { File, ModuleGraphData, Reporter, ResolvedConfig } from '../types'
 
 export interface WebSocketHandlers {
   getFiles(): File[]
   getConfig(): ResolvedConfig
   readFile(id: string): Promise<string>
   writeFile(id: string, content: string): Promise<void>
-  getModuleGraph(id: string): Promise<{graph: Record<string, string[]>; externalized: string[]; inlined: string[]}>
+  getModuleGraph(id: string): Promise<ModuleGraphData>
   rerun(files: string[]): Promise<void>
 }
 

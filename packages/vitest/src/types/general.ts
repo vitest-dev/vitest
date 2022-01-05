@@ -49,3 +49,9 @@ export interface ErrorWithDiff extends Error {
   expected?: any
   operator?: string
 }
+
+export interface ModuleGraphData {
+  graph: Record<string, string[]>
+  externalized: string[]
+  inlined: string[]
+}

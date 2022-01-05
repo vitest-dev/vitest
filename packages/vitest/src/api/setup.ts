@@ -7,7 +7,7 @@ import { WebSocketServer } from 'ws'
 import type { ModuleNode } from 'vite'
 import { API_PATH } from '../constants'
 import type { Vitest } from '../node'
-import type { File, Reporter, TaskResultPack } from '../types'
+import type { File, ModuleGraphData, Reporter, TaskResultPack } from '../types'
 import { shouldExternalize } from '../utils/externalize'
 import { interpretSourcePos, parseStacktrace } from '../utils/source-map'
 import type { WebSocketEvents, WebSocketHandlers } from './types'
@@ -51,7 +51,7 @@ export function setup(ctx: Vitest) {
         getConfig() {
           return ctx.config
         },
-        async getModuleGraph(id: string) {
+        async getModuleGraph(id: string): Promise<ModuleGraphData> {
           const graph: Record<string, string[]> = {}
           function clearId(id?: string | null) {
             return id?.replace(/\?v=\w+$/, '') || ''
@@ -67,12 +67,21 @@ export function setup(ctx: Vitest) {
           get(ctx.server.moduleGraph.getModuleById(id))
           const externalized: string[] = []
           const inlined: string[] = []
-          await Promise.all(Object.keys(graph).map(async(i) => {
+          const modules = [...new Set(Object.entries(graph).flatMap(([module, deps]) => [module, ...deps]))]
+          await Promise.all(modules.map(async(i) => {
             const rewrote = await shouldExternalize(i, ctx.config)
-            if (rewrote)
+            if (rewrote) {
+              // We also need to rewrite the edges of our graph
+              graph[rewrote] = graph[i]
+              delete graph[i]
+              Object.keys(graph).forEach((module) => {
+                graph[module] = graph[module].map(dep => dep === i ? rewrote : dep)
+              })
               externalized.push(rewrote)
-            else
+            }
+            else {
               inlined.push(i)
+            }
           }))
           return {
             graph,
