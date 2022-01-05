@@ -1,6 +1,8 @@
 <script setup lang="ts">
 // @ts-expect-error
 import { Pane, Splitpanes } from 'splitpanes'
+import { provideCurrentModule } from '../composables/navigation'
+provideCurrentModule()
 </script>
 
 <template>

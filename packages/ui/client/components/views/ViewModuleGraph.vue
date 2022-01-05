@@ -98,6 +98,7 @@ function debounce(cb: () => void) {
   --color-node-inline: #8bc4a0;
   --color-node-label: var(--color-text);
   --color-node-stroke: var(--color-text);
+  --graph-h: calc(100vh - 78px - 39px);
 }
 
 html.dark {
@@ -106,6 +107,11 @@ html.dark {
   --color-node-inline: #468b60;
 }
 
+.graph {
+  min-height: var(--graph-h) !important;
+  max-height: var(--graph-h) !important;
+  height: var(--graph-h) !important;
+}
 .graph .node {
   stroke-width: 2px;
   stroke-opacity: 0.5;
