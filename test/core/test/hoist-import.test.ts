@@ -1,13 +1,17 @@
-import { expect, test, vi } from 'vitest'
+import { assert, expect, test, vi } from 'vitest'
 // @ts-expect-error timeout doesn't have fn, mock factory adds it
 import { fn, timeout } from '../src/timeout'
 
-vi.mock('../src/timeout.ts', () => ({
-  timeout: 10_000,
-  fn: vi.fn(),
-}))
+vi.mock('../src/timeout.ts', () => {
+  assert.isEmpty([])
 
-test('"vi" can be used inside factory', () => {
+  return {
+    timeout: 10_000,
+    fn: vi.fn(),
+  }
+})
+
+test('"vi" can be used inside factory with empty lines', () => {
   expect(globalThis.vi).toBeUndefined()
   expect(timeout).toBe(10_000)
   expect(vi.isMockFunction(fn)).toBe(true)
