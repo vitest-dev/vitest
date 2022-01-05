@@ -1,5 +1,5 @@
 import type { Graph, GraphConfig, GraphController, GraphLink, GraphNode } from 'd3-graph-controller'
-import { PositionInitializers, defineGraphConfig, defineLink, defineNode } from 'd3-graph-controller'
+import { defineLink, defineNode } from 'd3-graph-controller'
 import type { Ref } from 'vue'
 
 export type ModuleType = 'external' | 'inline'
@@ -74,29 +74,5 @@ export function useModuleGraph(data: Ref<{
         })
       }))
     return { nodes, links }
-  })
-}
-
-export function useModuleGraphConfig(graph: Ref<ModuleGraph>): Ref<ModuleGraphConfig> {
-  return computed(() => {
-    return defineGraphConfig<ModuleType, ModuleNode, ModuleLink>({
-      getLinkLength: () => 120,
-      getNodeRadius: () => 10,
-      alphas: {
-        initialize: graph.value.nodes.some(node => node.x === undefined || node.y === undefined) ? 1 : 0,
-        resize: 0.1,
-      },
-      forces: {
-        charge: {
-          strength: -1,
-        },
-        collision: {
-          radiusMultiplier: 2,
-        },
-      },
-      positionInitializer: graph.value.nodes.length > 1
-        ? PositionInitializers.Randomized
-        : PositionInitializers.Centered,
-    })
   })
 }

@@ -10,7 +10,8 @@ import type { Vitest } from '../node'
 import type { File, ModuleGraphData, Reporter, TaskResultPack } from '../types'
 import { shouldExternalize } from '../utils/externalize'
 import { interpretSourcePos, parseStacktrace } from '../utils/source-map'
-import type { WebSocketEvents, WebSocketHandlers } from './types'
+import { transformRequest } from '../node/transform'
+import type { TransformResultWithSource, WebSocketEvents, WebSocketHandlers } from './types'
 
 export function setup(ctx: Vitest) {
   const wss = new WebSocketServer({ noServer: true })
@@ -50,6 +51,16 @@ export function setup(ctx: Vitest) {
         },
         getConfig() {
           return ctx.config
+        },
+        async getTransformResult(id) {
+          const result: TransformResultWithSource | null | undefined = await transformRequest(ctx, id)
+          if (result) {
+            try {
+              result.source = result.source || (await fs.readFile(id, 'utf-8'))
+            }
+            catch {}
+            return result
+          }
         },
         async getModuleGraph(id: string): Promise<ModuleGraphData> {
           const graph: Record<string, string[]> = {}

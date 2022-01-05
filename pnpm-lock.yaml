@@ -337,6 +337,7 @@ importers:
   packages/ui:
     specifiers:
       '@types/codemirror': ^5.60.5
+      '@types/d3-force': ^3.0.3
       '@types/ws': ^8.2.2
       '@unocss/reset': ^0.21.0
       '@vitejs/plugin-vue': ^2.0.1
@@ -344,7 +345,7 @@ importers:
       '@vueuse/core': ^7.5.1
       codemirror: ^5.65.0
       codemirror-theme-vars: ^0.1.1
-      d3-graph-controller: ^1.10.1
+      d3-graph-controller: ^1.12.0
       picocolors: ^1.0.0
       rollup: ^2.63.0
       sirv: ^2.0.0
@@ -359,6 +360,7 @@ importers:
       sirv: 2.0.0
     devDependencies:
       '@types/codemirror': 5.60.5
+      '@types/d3-force': 3.0.3
       '@types/ws': 8.2.2
       '@unocss/reset': 0.21.0
       '@vitejs/plugin-vue': 2.0.1_vite@2.7.10+vue@3.2.26
@@ -366,7 +368,7 @@ importers:
       '@vueuse/core': 7.5.1_vue@3.2.26
       codemirror: 5.65.0
       codemirror-theme-vars: 0.1.1
-      d3-graph-controller: 1.10.1
+      d3-graph-controller: 1.12.0
       picocolors: 1.0.0
       rollup: 2.63.0
       splitpanes: 3.0.6
@@ -760,6 +762,7 @@ packages:
   /@babel/code-frame/7.16.7:
     resolution: {integrity: sha512-iAXqUn8IIeBTNd72xsFlgaXHkMBMt6y4HJp1tIaK465CWLT/fG1aqB7ykr95gHHmlBdGbFeWWfyB4NJJ0nmeIg==}
     engines: {node: '>=6.9.0'}
+    requiresBuild: true
     dependencies:
       '@babel/highlight': 7.16.7
     dev: true
@@ -2030,6 +2033,10 @@ packages:
   /@types/d3-color/2.0.3:
     resolution: {integrity: sha512-+0EtEjBfKEDtH9Rk3u3kLOUXM5F+iZK+WvASPb0MhIZl8J8NUvGeZRwKCXl+P3HkYx5TdU4YtcibpqHkSR9n7w==}
     dev: false
+
+  /@types/d3-force/3.0.3:
+    resolution: {integrity: sha512-z8GteGVfkWJMKsx6hwC3SiTSLspL98VNpmvLpEFJQpZPq6xpA1I8HNBDNSpukfK0Vb0l64zGFhzunLgEAcBWSA==}
+    dev: true
 
   /@types/d3-interpolate/2.0.2:
     resolution: {integrity: sha512-lElyqlUfIPyWG/cD475vl6msPL4aMU7eJvx1//Q177L8mdXoVPFl1djIESF2FKnc0NyaHvQlJpWwKJYwAhUoCw==}
@@ -3505,8 +3512,8 @@ packages:
     resolution: {integrity: sha512-Ab3S6XuE/Q+flY96HXT0jOXcM4EAClYFnRGY5zsjRGNy6qCYrQsMffs7cV5Q9xejb35zxW5hf/guKw34kvIKsA==}
     dev: false
 
-  /d3-graph-controller/1.10.1:
-    resolution: {integrity: sha512-xp198eY5FnNl3exFK+Fr1CJjdOArBPON0eplRF07vJ8/7N/3MNUc/BVnnr2MGDoJYZUuCYi2eYA0PWuAb3bHPg==}
+  /d3-graph-controller/1.12.0:
+    resolution: {integrity: sha512-YLq4ZGB6GZ12Pf07UVi2O1tkojO08eGwH33vG1kRm3wl2kJ3seuDRcRVmNAm2TeoAV94JVhFfGV6itmxSglxvw==}
     dependencies:
       d3-drag: 3.0.0
       d3-force: 3.0.0
@@ -7168,7 +7175,7 @@ packages:
       rollup: 2.63.0
       typescript: 4.5.4
     optionalDependencies:
-      '@babel/code-frame': 7.16.0
+      '@babel/code-frame': 7.16.7
     dev: true
 
   /rollup-plugin-esbuild/4.8.2_esbuild@0.13.15+rollup@2.63.0:
