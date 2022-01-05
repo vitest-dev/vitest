@@ -1,6 +1,6 @@
 {
   "name": "@vitest/ui",
-  "version": "0.0.133",
+  "version": "0.0.134",
   "description": "UI for Vitest",
   "sideEffects": false,
   "type": "module",
