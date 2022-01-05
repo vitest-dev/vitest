@@ -28,18 +28,27 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     utils.addMethod(
       chai.Assertion.prototype,
       key,
-      function(this: Record<string, unknown>, message?: string) {
+      function(this: Record<string, unknown>, properties?: object, message?: string) {
         const expected = utils.flag(this, 'object')
-        getSnapshotClient().assert(expected, message)
+        if (typeof properties === 'string' && typeof message === 'undefined') {
+          message = properties
+          properties = undefined
+        }
+        getSnapshotClient().assert(expected, message, false, properties)
       },
     )
   }
   utils.addMethod(
     chai.Assertion.prototype,
     'toMatchInlineSnapshot',
-    function(this: Record<string, unknown>, inlineSnapshot: string, message: string) {
+    function(this: Record<string, unknown>, properties?: object, inlineSnapshot?: string, message?: string) {
       const expected = utils.flag(this, 'object')
-      getSnapshotClient().assert(expected, message, true, inlineSnapshot)
+      if (typeof properties === 'string') {
+        message = inlineSnapshot
+        inlineSnapshot = properties
+        properties = undefined
+      }
+      getSnapshotClient().assert(expected, message, true, properties, inlineSnapshot)
     },
   )
   utils.addMethod(
@@ -55,7 +64,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     'toThrowErrorMatchingInlineSnapshot',
     function(this: Record<string, unknown>, inlineSnapshot: string, message: string) {
       const expected = utils.flag(this, 'object')
-      getSnapshotClient().assert(getErrorString(expected), message, true, inlineSnapshot)
+      getSnapshotClient().assert(getErrorString(expected), message, true, undefined, inlineSnapshot)
     },
   )
 }

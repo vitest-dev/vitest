@@ -51,9 +51,12 @@ export function resolveConfig(
     options.environment = 'happy-dom'
 
   const resolved = {
-    ...deepMerge(options, viteConfig.test),
+    ...deepMerge(options, viteConfig.test || {}),
     root: viteConfig.root,
   } as ResolvedConfig
+
+  if (viteConfig.base !== '/')
+    resolved.base = viteConfig.base
 
   resolved.coverage = resolveC8Options(resolved.coverage, resolved.root)
 
