@@ -24,7 +24,7 @@ export const findById = (id: string) => {
 
 export const isConnected = computed(() => status.value === 'OPEN')
 export const isConnecting = computed(() => status.value === 'CONNECTING')
-export const isDisconned = computed(() => status.value === 'CLOSED')
+export const isDisconnected = computed(() => status.value === 'CLOSED')
 
 export function runAll() {
   return runFiles(client.state.getFiles())

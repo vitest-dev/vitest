@@ -58,8 +58,6 @@ export function useModuleGraph(data: Ref<{
       .flatMap(([module, deps]) => deps.map((dep) => {
         const source = nodeMap[module]
         const target = nodeMap[dep]
-        if (source === undefined || target === undefined)
-          return undefined
 
         return defineLink({
           source,
@@ -69,7 +67,7 @@ export function useModuleGraph(data: Ref<{
           labelColor: 'var(--color-link-label)',
           showLabel: false,
         })
-      }).filter(link => link !== undefined) as ModuleLink[])
+      }))
     return { nodes, links }
   })
 }
