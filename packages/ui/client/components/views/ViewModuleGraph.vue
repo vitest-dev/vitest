@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { GraphController } from 'd3-graph-controller'
-import { injectFileDetailsSize } from '../../composables/inject'
 import type { ModuleGraph, ModuleGraphController, ModuleType } from '~/composables/module-graph'
 import { useModuleGraphConfig } from '~/composables/module-graph'
 
@@ -10,30 +9,14 @@ const props = defineProps<{
 
 const { graph } = toRefs(props)
 
-const fileDetailsSize = injectFileDetailsSize()
-
-const style = computed(() => {
-  // eslint-disable-next-line no-console
-  const size = fileDetailsSize.value
-  // we need to listen to size change, but only change the width, th height changed from css
-  if (size)
-    return `--graph-w: ${size[0]}px`
-
-  return null
-})
-
 const el = ref<HTMLDivElement>()
 
 const config = useModuleGraphConfig(graph)
 const controller = ref<ModuleGraphController | undefined>()
 
-const resizeGraph = debounce(() => {
+useResizeObserver(el, debounce(() => {
   controller.value?.resize()
-})
-
-watch(style, resizeGraph, { immediate: true, flush: 'post' })
-
-useResizeObserver(el, resizeGraph)
+}))
 
 onMounted(() => {
   resetGraphController()
@@ -103,7 +86,7 @@ function debounce(cb: () => void) {
         </div>
       </div>
     </div>
-    <div ref="el" class="graph" :style="style" />
+    <div ref="el" class="graph" />
   </div>
 </template>
 
@@ -116,7 +99,6 @@ function debounce(cb: () => void) {
   --color-node-label: var(--color-text);
   --color-node-stroke: var(--color-text);
   --graph-h: calc(100vh - 78px - 39px);
-  --graph-w: 100%;
 }
 
 html.dark {
@@ -129,9 +111,6 @@ html.dark {
   min-height: var(--graph-h) !important;
   max-height: var(--graph-h) !important;
   height: var(--graph-h) !important;
-  min-width: var(--graph-w) !important;
-  max-width: var(--graph-w) !important;
-  width: var(--graph-w) !important;
 }
 .graph .node {
   stroke-width: 2px;
