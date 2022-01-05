@@ -4,6 +4,16 @@ import { parseStacktrace } from '../utils/source-map'
 
 const IDENT = '    '
 
+function yamlString(str: string): string {
+  return `"${str.replace('"', '\\"')}"`
+}
+
+function tapString(str: string): string {
+  // Test name cannot contain #
+  // Test name cannot start with number
+  return str.replace('#', '?').replace(/^[0-9]+/, '?')
+}
+
 export class TapReporter implements Reporter {
   private ctx!: Vitest
 
@@ -20,7 +30,7 @@ export class TapReporter implements Reporter {
       const ok = skip || (state != null && (state === 'pass' || state === 'skip')) ? 'ok' : 'not ok'
 
       if (task.type === 'suite') {
-        this.ctx.log(`${currentIdent}${ok} - ${task.name} {`)
+        this.ctx.log(`${currentIdent}${ok} - ${tapString(task.name)} {`)
 
         this.logTasks(task.tasks, `${currentIdent}${IDENT}`)
 
@@ -35,25 +45,28 @@ export class TapReporter implements Reporter {
         else if (task.result?.duration != null)
           comment = ` # time=${task.result.duration.toFixed(2)}ms`
 
-        this.ctx.log(`${currentIdent}${ok} - ${task.name}${comment}`)
+        this.ctx.log(`${currentIdent}${ok} - ${tapString(task.name)}${comment}`)
 
         if (task.result?.state === 'fail' && task.result.error) {
           const error = task.result.error
 
-          const errorIdent = `${currentIdent}  `
-          this.ctx.log(`${errorIdent}---`)
-          this.ctx.log(`${errorIdent}message: ${error.message}`)
+          const baseErrorIdent = `${currentIdent}  `
+          const errorIdent = `${currentIdent}    `
+          this.ctx.log(`${baseErrorIdent}---`)
+          this.ctx.log(`${baseErrorIdent}error:`)
+          this.ctx.log(`${errorIdent}name: ${yamlString(error.name)}`)
+          this.ctx.log(`${errorIdent}message: ${yamlString(error.message)}`)
           const stacks = parseStacktrace(error)
           const stack = stacks[0]
           if (stack)
-            this.ctx.log(`${errorIdent}stack: ${stack.file}:${stack.line}:${stack.column}`)
+            this.ctx.log(`${errorIdent}stack: ${yamlString(`${stack.file}:${stack.line}:${stack.column}`)}`)
 
           if (error.showDiff) {
-            this.ctx.log(`${errorIdent}actual: ${error.actual}`)
-            this.ctx.log(`${errorIdent}expected: ${error.expected}`)
+            this.ctx.log(`${baseErrorIdent}found: ${yamlString(error.actual)}`)
+            this.ctx.log(`${baseErrorIdent}wanted: ${yamlString(error.expected)}`)
           }
 
-          this.ctx.log(`${errorIdent}...`)
+          this.ctx.log(`${baseErrorIdent}...`)
         }
       }
     }
