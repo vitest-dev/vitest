@@ -48,10 +48,10 @@ function resetGraphController() {
     el.value!,
     graph.value,
     defineGraphConfig<ModuleType, ModuleNode, ModuleLink>({
-      getLinkLength: () => 120,
+      getLinkLength: () => 240,
       getNodeRadius: () => 10,
       alphas: {
-        initialize: graph.value.nodes.some(node => node.x === undefined || node.y === undefined) ? 1 : 0,
+        initialize: 1,
         resize: ({ newHeight, newWidth }: ResizeContext) => {
           const willBeHidden = newHeight === 0 && newWidth === 0
           if (willBeHidden)
@@ -69,7 +69,7 @@ function resetGraphController() {
           strength: -1,
         },
         collision: {
-          radiusMultiplier: 2,
+          radiusMultiplier: 10,
         },
       },
       // TODO: pointerup triggers when drag ends
