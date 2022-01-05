@@ -763,9 +763,7 @@ These functions allows you to hook into the life cycle of tests to avoid repeati
   Here the `afterAll` ensures that `stopMocking` method is called after all tests run.
 
 ## Creating Mocks
-When writing tests it's only a matter of time before you need to create fake version of an internal- or external service. This is commonly referred to as **mocking**. Vitest provides utility functions to help you out with (most of) these cases with it's `vi` helper. You can import `vi` from vitest or access globally (if global config is enabled and configured).
-
-Vitest provides utility functions to help you out with (most of) these cases with it's `vi` helper.
+Vitest provides utility functions to help you out with (most of) these cases with it's `vi` helper. You can import `vi` from vitest or access globally (if global config is enabled and configured).
 
 ### vi.advanceTimersByTime
 
