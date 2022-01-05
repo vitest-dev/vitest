@@ -26,8 +26,7 @@ export class TapReporter implements Reporter {
 
     for (const task of tasks) {
       const state = task.result?.state
-      const skip = task.mode === 'skip' || task.mode === 'todo'
-      const ok = skip || (state != null && (state === 'pass' || state === 'skip')) ? 'ok' : 'not ok'
+      const ok = state != null && (state === 'pass' || state === 'skip') ? 'ok' : 'not ok'
 
       let comment = ''
       if (task.mode === 'skip')
