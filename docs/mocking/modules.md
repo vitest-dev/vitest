@@ -1,4 +1,4 @@
-****# Modules
+# Modules
 
 Vitest provides utility functions to mock modules. You can access them on `vi` object that you can import from `vitest` package or access globally, if you have [`global`](/config/#global) config enabled.
 
