@@ -111,6 +111,10 @@ export default defineConfig({
           text: 'Mocking',
           children: [
             {
+              text: 'Basics',
+              link: '/mocking/basics'
+            },
+            {
               text: 'Dates',
               link: '/mocking/date',
             },
