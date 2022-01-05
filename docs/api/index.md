@@ -514,7 +514,7 @@ TODO
 
 - **Type:** `(received: string) => Awaitable<void>`
 
-  `toContain` asserts if actual value is in an array. `toContain` can also check whether a string is a substring of another string
+  `toContain` asserts if actual value is in an array. `toContain` can also check whether a string is a substring of another string.
 
   ```ts
   import { expect, test } from 'vitest'
