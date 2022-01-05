@@ -600,6 +600,8 @@ TODO
 
     // Deep referencing using an array containing the key
     expect(invoice).toHaveProperty('items[0].type', 'apples')
+    expect(invoice).toHaveProperty('items.0.type', 'apples') // dot notation also works
+
   })
   ```
 
