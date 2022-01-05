@@ -93,9 +93,10 @@ function debounce(cb: () => void) {
 <style>
 :root {
   --color-link-label: var(--color-text);
-  --color-link: #888;
+  --color-link: #ddd;
   --color-node-external: #c0ad79;
   --color-node-inline: #8bc4a0;
+  --color-node-root: #6e9aa5;
   --color-node-label: var(--color-text);
   --color-node-stroke: var(--color-text);
   --graph-h: calc(100vh - 78px - 39px);
@@ -103,8 +104,10 @@ function debounce(cb: () => void) {
 
 html.dark {
   --color-text: #fff;
+  --color-link: #333;
   --color-node-external: #857a40;
   --color-node-inline: #468b60;
+  --color-node-root: #467d8b;
 }
 
 .graph {
@@ -116,8 +119,21 @@ html.dark {
   stroke-width: 2px;
   stroke-opacity: 0.5;
 }
+.graph .link {
+  stroke-width: 2px;
+}
 
-.node:hover:not(.focused) {
+.graph .node:hover:not(.focused) {
   filter: none !important;
+}
+
+.graph .node__label {
+  transform: translateY(20px);
+  font-weight: 100;
+  filter: brightness(0.5);
+}
+
+html.dark .graph .node__label {
+  filter: brightness(1.2);
 }
 </style>

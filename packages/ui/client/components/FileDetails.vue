@@ -19,7 +19,7 @@ const data = asyncComputed(async() => {
     : { externalized: [], graph: {}, inlined: [] }
 })
 
-const graph = useModuleGraph(data)
+const graph = useModuleGraph(data, computed(() => currentModule.value?.filepath))
 const changeViewMode = (view: Params['view']) => {
   viewMode.value = view
 }
