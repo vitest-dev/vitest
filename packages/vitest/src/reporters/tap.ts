@@ -29,22 +29,22 @@ export class TapReporter implements Reporter {
       const skip = task.mode === 'skip' || task.mode === 'todo'
       const ok = skip || (state != null && (state === 'pass' || state === 'skip')) ? 'ok' : 'not ok'
 
+      let comment = ''
+      if (task.mode === 'skip')
+        comment = ' # SKIP'
+      else if (task.mode === 'todo')
+        comment = ' # TODO'
+      else if (task.result?.duration != null)
+        comment = ` # time=${task.result.duration.toFixed(2)}ms`
+
       if (task.type === 'suite') {
-        this.ctx.log(`${currentIdent}${ok} - ${tapString(task.name)} {`)
+        this.ctx.log(`${currentIdent}${ok} - ${tapString(task.name)}${comment} {`)
 
         this.logTasks(task.tasks, `${currentIdent}${IDENT}`)
 
         this.ctx.log(`${currentIdent}}`)
       }
       else {
-        let comment = ''
-        if (task.mode === 'skip')
-          comment = ' # SKIP'
-        else if (task.mode === 'todo')
-          comment = ' # TODO'
-        else if (task.result?.duration != null)
-          comment = ` # time=${task.result.duration.toFixed(2)}ms`
-
         this.ctx.log(`${currentIdent}${ok} - ${tapString(task.name)}${comment}`)
 
         if (task.result?.state === 'fail' && task.result.error) {
