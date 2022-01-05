@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { GraphController } from 'd3-graph-controller'
+import { injectFileDetailsSize } from '../../composables/inject'
 import type { ModuleGraph, ModuleGraphController, ModuleType } from '~/composables/module-graph'
 import { useModuleGraphConfig } from '~/composables/module-graph'
 
@@ -9,21 +10,31 @@ const props = defineProps<{
 
 const { graph } = toRefs(props)
 
+const fileDetailsSize = injectFileDetailsSize()
+
+const style = computed(() => {
+  // eslint-disable-next-line no-console
+  const size = fileDetailsSize.value
+  // TODO: we need to listen to size change, but only change the width
+  // TODO: I dont know why resize not working, only first time
+  if (size)
+    return `--graph-w: ${size[0]}px`
+
+  return null
+})
+
 const el = ref<HTMLDivElement>()
-const graphContainerRef = ref(null)
-const style = ref<string | null>(null)
 
 const config = useModuleGraphConfig(graph)
 const controller = ref<ModuleGraphController | undefined>()
 
-useResizeObserver(el, debounce(() => {
+const resizeGraph = debounce(() => {
   controller.value?.resize()
-}))
-
-useResizeObserver(graphContainerRef, () => {
-  const clientWidth = unrefElement(graphContainerRef)?.clientWidth
-  style.value = clientWidth ? `--graph-w: ${clientWidth}` : null
 })
+
+watch(style, resizeGraph, { immediate: true, flush: 'post' })
+
+useResizeObserver(el, resizeGraph)
 
 onMounted(() => {
   resetGraphController()
@@ -61,7 +72,7 @@ function debounce(cb: () => void) {
 </script>
 
 <template>
-  <div ref="graphContainer" h-full w-full overflow="hidden">
+  <div h-full overflow="hidden">
     <div>
       <div flex items-center gap-4 px-3 py-2>
         <div v-for="node of controller?.nodeTypes.sort()" :key="node" flex="~ gap-1" items-center select-none>
@@ -93,7 +104,7 @@ function debounce(cb: () => void) {
         </div>
       </div>
     </div>
-    <div ref="el" class="graph" />
+    <div ref="el" class="graph" :style="style" />
   </div>
 </template>
 
