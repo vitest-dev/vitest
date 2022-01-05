@@ -53,40 +53,37 @@ export function setup(ctx: Vitest) {
         },
         async getModuleGraph(id: string): Promise<ModuleGraphData> {
           const graph: Record<string, string[]> = {}
+          const externalized = new Set<string>()
+          const inlined = new Set<string>()
+
           function clearId(id?: string | null) {
             return id?.replace(/\?v=\w+$/, '') || ''
           }
-          function get(mod?: ModuleNode, seen = new Set<any>()) {
-            if (!mod || !mod.id || seen.has(mod))
+          async function get(mod?: ModuleNode, seen = new Map<ModuleNode, string>()) {
+            if (!mod || !mod.id)
               return
-            seen.add(mod)
-            const mods = Array.from(mod.importedModules).filter(i => i.id && !i.id.includes('/vitest/dist/'))
-            graph[clearId(mod.id)] = mods.map(i => clearId(i.id)) as string[]
-            mods.forEach(m => get(m, seen))
-          }
-          get(ctx.server.moduleGraph.getModuleById(id))
-          const externalized: string[] = []
-          const inlined: string[] = []
-          const modules = [...new Set(Object.entries(graph).flatMap(([module, deps]) => [module, ...deps]))]
-          await Promise.all(modules.map(async(i) => {
-            const rewrote = await shouldExternalize(i, ctx.config)
+            if (seen.has(mod))
+              return seen.get(mod)
+            let id = clearId(mod.id)
+            seen.set(mod, id)
+            const rewrote = await shouldExternalize(id, ctx.config)
             if (rewrote) {
-              // We also need to rewrite the edges of our graph
-              graph[rewrote] = graph[i]
-              delete graph[i]
-              Object.keys(graph).forEach((module) => {
-                graph[module] = graph[module].map(dep => dep === i ? rewrote : dep)
-              })
-              externalized.push(rewrote)
+              id = rewrote
+              externalized.add(id)
+              seen.set(mod, id)
             }
             else {
-              inlined.push(i)
+              inlined.add(id)
             }
-          }))
+            const mods = Array.from(mod.importedModules).filter(i => i.id && !i.id.includes('/vitest/dist/'))
+            graph[id] = (await Promise.all(mods.map(m => get(m, seen)))).filter(Boolean) as string[]
+            return id
+          }
+          await get(ctx.server.moduleGraph.getModuleById(id))
           return {
             graph,
-            externalized,
-            inlined,
+            externalized: Array.from(externalized),
+            inlined: Array.from(inlined),
           }
         },
       },
