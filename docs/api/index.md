@@ -682,9 +682,8 @@ TODO
 
   You can provide an optional argument to test that a specific error is thrown:
 
-  regular expression: error message matches the pattern
-
-  string: error message includes the substring
+  - regular expression: error message matches the pattern
+  - string: error message includes the substring
 
   :::tip
     You must wrap the code in a function, otherwise the error will not be caught and the assertion will fail.
