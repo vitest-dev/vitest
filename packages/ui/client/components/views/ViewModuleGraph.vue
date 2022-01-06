@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { GraphController } from 'd3-graph-controller'
-import type { ModuleGraph, ModuleGraphController, ModuleType } from '~/composables/module-graph'
-import { useModuleGraphConfig } from '~/composables/module-graph'
+import { GraphController, PositionInitializers, defineGraphConfig } from 'd3-graph-controller'
+import type { ModuleGraph, ModuleGraphController, ModuleLink, ModuleNode, ModuleType } from '~/composables/module-graph'
 
 const props = defineProps<{
   graph: ModuleGraph
@@ -11,7 +10,8 @@ const { graph } = toRefs(props)
 
 const el = ref<HTMLDivElement>()
 
-const config = useModuleGraphConfig(graph)
+const modalShow = ref(false)
+const selectedModule = ref<string | null>()
 const controller = ref<ModuleGraphController | undefined>()
 
 useResizeObserver(el, debounce(() => {
@@ -34,13 +34,38 @@ function setFilter(name: ModuleType, value: boolean) {
 
 function resetGraphController() {
   controller.value?.shutdown()
-  if (graph.value && el.value) {
-    controller.value = new GraphController(
-      el.value!,
-      graph.value,
-      config.value,
-    )
-  }
+  if (!graph.value || !el.value)
+    return
+
+  controller.value = new GraphController(
+    el.value!,
+    graph.value,
+    defineGraphConfig<ModuleType, ModuleNode, ModuleLink>({
+      getLinkLength: () => 120,
+      getNodeRadius: () => 10,
+      alphas: {
+        initialize: graph.value.nodes.some(node => node.x === undefined || node.y === undefined) ? 1 : 0,
+        resize: 0.1,
+      },
+      forces: {
+        charge: {
+          strength: -1,
+        },
+        collision: {
+          radiusMultiplier: 2,
+        },
+      },
+      positionInitializer: graph.value.nodes.length > 1
+        ? PositionInitializers.Randomized
+        : PositionInitializers.Centered,
+      callbacks: {
+        nodeClicked(node: ModuleNode) {
+          selectedModule.value = node.id
+          modalShow.value = true
+        },
+      },
+    }),
+  )
 }
 
 // Without debouncing the resize method, resizing the component will result in flickering.
@@ -87,31 +112,60 @@ function debounce(cb: () => void) {
       </div>
     </div>
     <div ref="el" class="graph" />
+    <Modal v-model="modalShow" direction="right">
+      <template v-if="selectedModule">
+        <Suspense>
+          <ModuleTransformResultView :id="selectedModule" @close="modalShow=false" />
+        </Suspense>
+      </template>
+    </Modal>
   </div>
 </template>
 
 <style>
 :root {
   --color-link-label: var(--color-text);
-  --color-link: #888;
+  --color-link: #ddd;
   --color-node-external: #c0ad79;
   --color-node-inline: #8bc4a0;
+  --color-node-root: #6e9aa5;
   --color-node-label: var(--color-text);
   --color-node-stroke: var(--color-text);
+  --graph-h: calc(100vh - 78px - 39px);
 }
 
 html.dark {
   --color-text: #fff;
+  --color-link: #333;
   --color-node-external: #857a40;
   --color-node-inline: #468b60;
+  --color-node-root: #467d8b;
 }
 
+.graph {
+  min-height: var(--graph-h) !important;
+  max-height: var(--graph-h) !important;
+  height: var(--graph-h) !important;
+}
 .graph .node {
   stroke-width: 2px;
   stroke-opacity: 0.5;
 }
+.graph .link {
+  stroke-width: 2px;
+}
 
-.node:hover:not(.focused) {
+.graph .node:hover:not(.focused) {
   filter: none !important;
+}
+
+.graph .node__label {
+  transform: translateY(20px);
+  font-weight: 100;
+  filter: brightness(0.5);
+}
+
+html.dark .graph .node__label {
+  filter: brightness(1.2);
 }
 </style>
