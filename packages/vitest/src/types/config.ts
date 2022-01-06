@@ -219,7 +219,14 @@ export interface InlineConfig {
    * Open Vitest UI
    * @internal WIP
    */
-  open?: boolean
+  ui?: boolean
+
+  /**
+   * Base url for the UI
+   *
+   * @default '/__vitest__/'
+   */
+  uiBase?: string
 }
 
 export interface UserConfig extends InlineConfig {
