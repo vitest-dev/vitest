@@ -16,6 +16,9 @@ $ vitest -w
 
 Vitest smartly searches the module graph and only rerun the related tests (just like how HMR works in Vite!).
 
+`vitest`, `vitest dev` and `vitest watch` are aliases and they all start vitest in watch mode by default. They also depend on the `CI` environment variable, which if it appears to be defined, Vitest is going to run the tests only one time and not in watch mode, like `vitest run`.
+
+
 ## Smooth integration with UI Frameworks
 
 Components testing for Vue, React, Lit and more
