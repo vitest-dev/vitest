@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import type { ResizeContext } from 'd3-graph-controller'
-import { GraphController, PositionInitializers, defineGraphConfig } from 'd3-graph-controller'
+import { GraphController, Markers, PositionInitializers, defineGraphConfig } from 'd3-graph-controller'
 import type { Selection } from 'd3-selection'
-import type { ModuleGraph, ModuleGraphController, ModuleLink, ModuleNode, ModuleType } from '~/composables/module-graph'
+import type { ModuleGraph, ModuleGraphConfig, ModuleGraphController, ModuleLink, ModuleNode, ModuleType } from '~/composables/module-graph'
 
 const props = defineProps<{
   graph: ModuleGraph
@@ -83,6 +83,7 @@ function resetGraphController() {
       positionInitializer: graph.value.nodes.length > 1
         ? PositionInitializers.Randomized
         : PositionInitializers.Centered,
+      marker: Markers.Arrow(2),
     }),
   )
 }
