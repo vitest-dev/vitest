@@ -81,19 +81,22 @@ function resetGraphController() {
 }
 
 function bindOnClick(selection: Selection<SVGCircleElement, ModuleNode, SVGGElement, undefined>) {
+  // Only trigger on left-click and primary touch
+  const isValidClick = (event: PointerEvent) => event.button === 0
+
   let px = 0
   let py = 0
   let pt = 0
   selection
-    .on('pointerdown', (_, node) => {
-      if (!node.x || !node.y)
+    .on('pointerdown', (event: PointerEvent, node) => {
+      if (!node.x || !node.y || !isValidClick(event))
         return
       px = node.x
       py = node.y
       pt = Date.now()
     })
-    .on('pointerup', (_, node: ModuleNode) => {
-      if (!node.x || !node.y)
+    .on('pointerup', (event: PointerEvent, node: ModuleNode) => {
+      if (!node.x || !node.y || !isValidClick(event))
         return
       if (Date.now() - pt > 500)
         return
