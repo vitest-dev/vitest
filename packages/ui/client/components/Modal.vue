@@ -6,7 +6,7 @@
     <div
       class="bg-base inset-0 absolute transition-opacity duration-500 ease-out"
       :class="modelValue ? 'opacity-50': 'opacity-0'"
-      @click="emit('update:modelValue', false)"
+      @click="$emit('update:modelValue', false)"
     />
     <div
       class="bg-base border-base absolute transition-all duration-200 ease-out"
@@ -19,9 +19,6 @@
 </template>
 
 <script setup lang='ts'>
-const emit = defineEmits<{
-  (e: 'update:modelValue', value: boolean): void
-}>()
 const props = withDefaults(defineProps<{
   modelValue?: boolean
   direction?: string
