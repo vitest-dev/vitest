@@ -1,4 +1,5 @@
 import { existsSync, readdirSync } from 'fs'
+import { isNodeBuiltin } from 'mlly'
 import { basename, dirname, join, resolve } from 'pathe'
 import { spies, spyOn } from '../integrations/jest-mock'
 import { mergeSlashes } from '../utils'
@@ -9,12 +10,12 @@ export interface SuiteMocks {
   }
 }
 
-function resolveMockPath(mockPath: string, root: string, nmName: string | null) {
+function resolveMockPath(mockPath: string, root: string, external: string | null) {
   // it's a node_module alias
   // all mocks should be inside <root>/__mocks__
-  if (nmName) {
-    const mockDirname = dirname(nmName) // for nested mocks: @vueuse/integration/useJwt
-    const baseFilename = basename(nmName)
+  if (external || isNodeBuiltin(mockPath)) {
+    const mockDirname = dirname(external || mockPath) // for nested mocks: @vueuse/integration/useJwt
+    const baseFilename = basename(external || mockPath)
     const mockFolder = resolve(root, '__mocks__', mockDirname)
 
     if (!existsSync(mockFolder)) return null
