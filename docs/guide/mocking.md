@@ -1,51 +1,54 @@
 # Mocking
-When writing tests it's only a matter of time before you need to create 'fake' version of an internal- or external service. This is commonly referred to as **mocking**. Vitest provides utility functions to help you out through it's **vi** helper. You can `import { vi } from 'vitest'` or access it **globally** (when [global configuration](/config/#global) is **enabled**).
-
-Following are some example implementations of common test cases that require mocking. If you wanna dive in head first, check out the [API section](/api/#creating-mocks) otherwise keep reading to take a deeper dive into the world of mocking.
+When writing tests it's only a matter of time before you need to create 'fake' version of an internal- or external service. This is commonly referred to as **mocking**. Vitest provides utility functions to help you out through it's **vi** helper. You can `import { vi } from 'vitest'` or access it **globally** (when [global configuration](../config/#global) is **enabled**).
 
 > Always remember to clear or restore mocks before or after each test run to save head scratching along the line!
 
+If you wanna dive in head first, check out the [API section](../api/#creating-mocks) otherwise keep reading to take a deeper dive into the world of mocking.
+
 ## Dates
 
-Sometimes you need to be in control of the date's to allow for consistency when testing. Vitest comes with [`mockdate`](https://www.npmjs.com/package/mockdate) package baked-in to let you easily manipulate the system date in your tests.
+Sometimes you need to be in control of the date's to allow for consistency when testing. Vitest comes with [`mockdate`](https://www.npmjs.com/package/mockdate) package baked-in to let you easily manipulate the system date in your tests. You can find more about the specific API in detail [here](../api/#vi-mockcurrentdate).
 
 ### Example
 
 ```js
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
-describe('testing date mock functionality', () => {
+const businessHours = [9, 17];
+
+const purchase = () => {
+  const currentHour = new Date().getHours()
+  const [open, close] = businessHours
+
+  if (currentHour > open && currentHour < close) {
+    return { message: 'Success' }
+  }
+
+  return { message: 'Error' }
+};
+
+describe('purchasing flow', () => {
   afterEach(() => {
+    // restoring date after each test run
     vi.restoreCurrentDate()
-  })
+  });
 
-  test('seting time in the past', () => {
-    const date = new Date(2000, 1, 1)
-
+  it('allows purchases within business hours', () => {
+    // set hour within business hours
+    const date = new Date(2000, 1, 1, 13)
     vi.mockCurrentDate(date)
 
-    expect(Date.now()).toBe(date.valueOf())
-    expect(vi.getMockedDate()).toBe(date)
-
-    vi.restoreCurrentDate()
-
-    expect(Date.now()).not.toBe(date.valueOf())
-    expect(vi.getMockedDate()).not.toBe(date)
+    // access Date.now() will result in the date set above
+    expect(purchase()).toEqual({ message: 'Success' })
   })
 
-  test('setting time in different types', () => {
-    const time = 1234567890
+  it('disallows purchases outside of business hours', () => {
+    // set hour outside business hours
+    const date = new Date(2000, 1, 1, 19)
+    vi.mockCurrentDate(date)
 
-    vi.mockCurrentDate(time)
-
-    expect(Date.now()).toBe(time)
-
-    const timeStr = 'Fri Feb 20 2015 19:29:31 GMT+0530'
-    const timeStrMs = 1424440771000
-
-    vi.mockCurrentDate(timeStr)
-
-    expect(Date.now()).toBe(timeStrMs)
+    // access Date.now() will result in the date set above
+    expect(purchase()).toEqual({ message: 'Error' })
   })
 })
 ```
