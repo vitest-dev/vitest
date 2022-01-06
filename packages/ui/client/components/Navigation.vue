@@ -7,6 +7,7 @@ import { files, runAll } from '~/composables/client'
 import { activeFileId } from '~/composables/params'
 
 const currentModule = injectCurrentModule()
+
 function onItemClick(task: Task) {
   activeFileId.value = task.id
   currentModule.value = findById(task.id)
