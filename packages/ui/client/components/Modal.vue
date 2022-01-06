@@ -26,7 +26,9 @@ const props = withDefaults(defineProps<{
   modelValue: false,
   direction: 'bottom',
 })
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: boolean): void
+}>()
 
 const positionClass = computed(() => {
   switch (props.direction) {
