@@ -84,8 +84,11 @@ function bindOnClick(selection: Selection<SVGCircleElement, ModuleNode, SVGGElem
   let px = 0
   let py = 0
   let pt = 0
+
   selection
     .on('pointerdown', (_, node) => {
+      if (node.type === 'external')
+        return
       if (!node.x || !node.y)
         return
       px = node.x
@@ -93,6 +96,8 @@ function bindOnClick(selection: Selection<SVGCircleElement, ModuleNode, SVGGElem
       pt = Date.now()
     })
     .on('pointerup', (_, node: ModuleNode) => {
+      if (node.type === 'external')
+        return
       if (!node.x || !node.y)
         return
       if (Date.now() - pt > 500)

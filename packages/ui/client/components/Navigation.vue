@@ -1,16 +1,11 @@
 <script setup lang="ts">
-import { injectCurrentModule } from '../composables/navigation'
-import { findById } from '../composables/client'
 import type { Task } from '#types'
 import { toggleDark } from '~/composables'
 import { files, runAll } from '~/composables/client'
 import { activeFileId } from '~/composables/params'
 
-const currentModule = injectCurrentModule()
-
 function onItemClick(task: Task) {
   activeFileId.value = task.id
-  currentModule.value = findById(task.id)
 }
 </script>
 

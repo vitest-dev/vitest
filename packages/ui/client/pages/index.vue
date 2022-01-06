@@ -1,8 +1,6 @@
 <script setup lang="ts">
 // @ts-expect-error
 import { Pane, Splitpanes } from 'splitpanes'
-import { provideCurrentModule } from '../composables/navigation'
-provideCurrentModule()
 
 const sizes = reactive([33, 33, 34])
 

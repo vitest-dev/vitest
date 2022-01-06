@@ -1,40 +1,37 @@
 <script setup lang="ts">
-import { injectCurrentModule } from '../composables/navigation'
-import { client } from '~/composables/client'
+import { client, current } from '~/composables/client'
 import type { Params } from '~/composables/params'
 import { viewMode } from '~/composables/params'
 import { useModuleGraph } from '~/composables/module-graph'
 
-const currentModule = injectCurrentModule()
-
 function open() {
-  const filePath = currentModule.value?.filepath
+  const filePath = current.value?.filepath
   if (filePath)
     fetch(`/__open-in-editor?file=${encodeURIComponent(filePath)}`)
 }
 
 const data = asyncComputed(async() => {
-  return currentModule.value
-    ? await client.rpc.getModuleGraph(currentModule.value.filepath)
+  return current.value
+    ? await client.rpc.getModuleGraph(current.value.filepath)
     : { externalized: [], graph: {}, inlined: [] }
 })
 
-const graph = useModuleGraph(data, computed(() => currentModule.value?.filepath))
+const graph = useModuleGraph(data, computed(() => current.value?.filepath))
 const changeViewMode = (view: Params['view']) => {
   viewMode.value = view
 }
 </script>
 
 <template>
-  <div v-if="currentModule" h-full>
+  <div v-if="current" h-full>
     <div>
       <div p="2" h-10 flex="~ gap-2" items-center bg-header border="b base">
-        <StatusIcon :task="currentModule" />
+        <StatusIcon :task="current" />
         <div flex-1 font-light op-50 ws-nowrap truncate text-sm>
-          {{ currentModule?.filepath }}
+          {{ current?.filepath }}
         </div>
         <div class="flex text-lg">
-          <IconButton icon="i-carbon-launch" :disabled="!currentModule?.filepath" :onclick="open" />
+          <IconButton icon="i-carbon-launch" :disabled="!current?.filepath" :onclick="open" />
         </div>
       </div>
       <div flex="~" items-center bg-header border="b base" text-sm h-37px>
@@ -50,7 +47,7 @@ const changeViewMode = (view: Params['view']) => {
       </div>
     </div>
     <ViewModuleGraph v-show="viewMode === 'graph'" :graph="graph" />
-    <ViewEditor v-if="viewMode === 'editor'" :file="currentModule" />
-    <ViewReport v-else-if="!viewMode" :file="currentModule" />
+    <ViewEditor v-if="viewMode === 'editor'" :file="current" />
+    <ViewReport v-else-if="!viewMode" :file="current" />
   </div>
 </template>

@@ -3,11 +3,11 @@ import { client } from '~/composables/client'
 const props = defineProps<{ id: string }>()
 defineEmits<{ (e: 'close'): void }>()
 
-const result = await client.rpc.getTransformResult(props.id)
+const result = asyncComputed(() => client.rpc.getTransformResult(props.id))
 const ext = computed(() => props.id?.split(/\./g).pop() || 'js')
 
-const source = computed(() => result?.source?.trim() || '')
-const code = computed(() => result?.code?.replace(/\/\/# sourceMappingURL=.*\n/, '').trim() || '')
+const source = computed(() => result.value?.source?.trim() || '')
+const code = computed(() => result.value?.code?.replace(/\/\/# sourceMappingURL=.*\n/, '').trim() || '')
 // TODO: sourcemap https://evanw.github.io/source-map-visualization/
 </script>
 
