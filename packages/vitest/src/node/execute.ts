@@ -89,7 +89,7 @@ export async function executeInViteNode(options: ExecuteOptions) {
     if (cached)
       return cached
     const exports = await mock()
-    setCache(name, { exports, mocked: true })
+    setCache(name, { exports })
     return exports
   }
 
@@ -103,12 +103,12 @@ export async function executeInViteNode(options: ExecuteOptions) {
         if (mock === null) {
           const mockedKey = `${dep}__mock`
           const cache = moduleCache.get(mockedKey)
-          if (cache?.exports && cache.mocked)
+          if (cache?.exports)
             return cache.exports
           const cacheKey = toFilePath(dep, root)
           const mod = moduleCache.get(cacheKey)?.exports || await cachedRequest(dep, callstack)
           const exports = mockObject(mod)
-          setCache(mockedKey, { exports, mocked: true })
+          setCache(mockedKey, { exports })
           return exports
         }
         if (typeof mock === 'function')
