@@ -19,7 +19,7 @@ export async function run(files: string[], config: ResolvedConfig): Promise<void
 
     vi.restoreAllMocks()
 
-    await withEnv(env as BuiltinEnvironment, async() => {
+    await withEnv(env as BuiltinEnvironment, config.environmentOptions || {}, async() => {
       await startTests([file], config)
     })
 

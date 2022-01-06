@@ -8,6 +8,9 @@ const expect = ((value: any, message?: string): Chai.Assertion => {
   setState({ assertionCalls: assertionCalls + 1 })
   return chai.expect(value, message)
 }) as Chai.ExpectStatic
+expect.getState = getState
+expect.setState = setState
+
 Object.assign(expect, chai.expect)
 
 export { chai, expect }

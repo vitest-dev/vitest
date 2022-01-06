@@ -1,6 +1,6 @@
 {
   "name": "@vitest/ws-client",
-  "version": "0.0.133",
+  "version": "0.0.135",
   "description": "WebSocket client wrapper for communicating with Vitest",
   "homepage": "https://github.com/vitest-dev/vitest#readme",
   "bugs": {
@@ -30,7 +30,7 @@
   ],
   "scripts": {
     "build": "rimraf dist && rollup -c",
-    "dev": "rollup -c --watch src",
+    "dev": "rollup -c --watch --watch.include=src/**",
     "prepublishOnly": "nr build",
     "typecheck": "tsc --noEmit"
   },
