@@ -111,35 +111,6 @@ export default defineConfig({
             }
           ]
         },
-        {
-          text: 'Mocking',
-          children: [
-            {
-              text: 'Basics',
-              link: '/mocking/basics'
-            },
-            {
-              text: 'Dates',
-              link: '/mocking/date',
-            },
-            {
-              text: 'Functions',
-              link: '/mocking/functions',
-            },
-            {
-              text: 'Modules',
-              link: '/mocking/modules',
-            },
-            {
-              text: 'Requests',
-              link: '/mocking/requests',
-            },
-            {
-              text: 'Timers',
-              link: '/mocking/timers',
-            },
-          ],
-        }
         /* TODO
         {
           text: 'APIs',

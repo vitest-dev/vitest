@@ -1,13 +1,23 @@
 # Mocking
-When writing tests it's only a matter of time before you need to create 'fake' version of an internal- or external service. This is commonly referred to as **mocking**. Vitest provides utility functions to help you out in the form it's `vi` helper. You can `import { vi } from 'vitest'` or accessed globally (when global configuration is enabled).
+When writing tests it's only a matter of time before you need to create 'fake' version of an internal- or external service. This is commonly referred to as **mocking**. Vitest provides utility functions to help you out through it's **vi** helper. You can `import { vi } from 'vitest'` or access it **globally** (when [global configuration](/config/#global) is **enabled**).
 
-Following are some example implementations of common test cases that require mocking. If you want to dive in head first visit the [vi API section](https://vitest.dev/guide/api.html#vi) otherwise keep reading to take it step by step.
+Following are some example implementations of common test cases that require mocking. If you wanna dive in head first, check out the [API section](/api/#creating-mocks) otherwise keep reading to take a deeper dive into the world of mocking.
+
+> Always remember to clear or restore **all** mocks before or after a test run to save head scratching along the line!
 
 ## Dates
 
 Vitest comes with [`mockdate`](https://www.npmjs.com/package/mockdate) package that lets you easily manipulate system date in your tests.
 
 ### Example
+
+```ts
+const date = new Date(1998, 11, 19)
+
+vi.mockCurrentDate(date)
+
+expect(Date.now()).toBe(date.valueOf())
+```
 
 ## Functions
 
@@ -19,7 +29,6 @@ Both `vi.fn()` and `vi.spyOn()` share the same methods, but the return result of
 
 ### Example
 
-
 ### More
 
 - [Jest's Mock Functions](https://jestjs.io/docs/mock-function-api)
@@ -27,8 +36,6 @@ Both `vi.fn()` and `vi.spyOn()` share the same methods, but the return result of
 ## Modules
 
 Vitest provides utility functions to mock modules. You can access them on `vi` object that you can import from `vitest` package or access globally, if you have [`global`](/config/#global) config enabled.
-
-### Example
 
 ### Automocking algorithm
 
@@ -39,7 +46,7 @@ If your code is importing mocked module, but there are no `__mocks__` file for t
 * All objects will be deeply cloned
 * All instances of classes and their prototypes will be deeply cloned
 
-### More
+### Example
 
 ## Requests
 
@@ -103,10 +110,5 @@ There is much more to MSW. You can access cookies and query parameters, define m
 
 To make your tests faster, you can mock calls to `setTimeout` and `setInterval`. All methods to manipulate timers are located on `vi` object that you can import from `vitest` package or access globally, if you have [`global`](/config/#global) config enabled.
 
-### Configuration
-All useful methods are located on `vi` object that you can import from `vitest` package or access globally, if you have [`global`](/config/#global) config enabled.
-
 ### Example
 
-
-### More
