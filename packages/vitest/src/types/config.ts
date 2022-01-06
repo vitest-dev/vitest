@@ -12,6 +12,13 @@ export type ApiConfig = Pick<CommonServerOptions, 'port' | 'strictPort' | 'host'
 
 export { JSDOMOptions }
 
+export interface EnvironmentOptions {
+  /**
+   * jsdom options.
+   */
+  jsdom?: JSDOMOptions
+}
+
 export interface InlineConfig {
   /**
    * Include globs for test files
@@ -82,15 +89,10 @@ export interface InlineConfig {
   /**
    * Environment options.
    */
-  environmentOptions?: {
-    /**
-     * jsdom options.
-     */
-    jsdom?: JSDOMOptions
-  }
+  environmentOptions?: EnvironmentOptions
 
   /**
-   * Update snapshot files
+   * Update snapshot
    *
    * @default false
    */
@@ -105,6 +107,8 @@ export interface InlineConfig {
 
   /**
    * Project root
+   *
+   * @default process.cwd()
    */
   root?: string
 
