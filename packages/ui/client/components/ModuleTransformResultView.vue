@@ -1,5 +1,8 @@
-<script setup lang="ts">import { client } from '~/composables/client'
+<script setup lang="ts">
+import { client } from '~/composables/client'
 const props = defineProps<{ id: string }>()
+defineEmits<{ (e: 'close'): void }>()
+
 const result = await client.rpc.getTransformResult(props.id)
 const ext = computed(() => props.id?.split(/\./g).pop() || 'js')
 
