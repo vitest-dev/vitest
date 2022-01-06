@@ -1,14 +1,14 @@
-import type { Awaitable } from './general'
+import type { ChainableFunction } from '../runtime/chain'
+import type { Awaitable, ErrorWithDiff } from './general'
 
 export type RunMode = 'run' | 'skip' | 'only' | 'todo'
 export type TaskState = RunMode | 'pass' | 'fail'
-export type ComputeMode = 'serial' | 'concurrent'
 
 export interface TaskBase {
   id: string
   name: string
   mode: RunMode
-  computeMode: ComputeMode
+  concurrent?: boolean
   suite?: Suite
   file?: File
   result?: TaskResult
@@ -16,9 +16,8 @@ export interface TaskBase {
 
 export interface TaskResult {
   state: TaskState
-  start: number
-  end?: number
-  error?: unknown
+  duration?: number
+  error?: ErrorWithDiff
 }
 
 export type TaskResultPack = [id: string, result: TaskResult | undefined]
@@ -30,12 +29,14 @@ export interface Suite extends TaskBase {
 
 export interface File extends Suite {
   filepath: string
+  collectDuration?: number
 }
 
 export interface Test extends TaskBase {
   type: 'test'
   suite: Suite
   result?: TaskResult
+  fails?: boolean
 }
 
 export type Task = Test | Suite | File
@@ -43,33 +44,11 @@ export type Task = Test | Suite | File
 export type DoneCallback = (error?: any) => void
 export type TestFunction = (done: DoneCallback) => Awaitable<void>
 
-type TestCollectorFn = (name: string, fn: TestFunction, timeout?: number) => void
-interface ConcurrentCollector {
-  (name: string, fn: TestFunction, timeout?: number): void
-  only: TestCollectorFn
-  skip: TestCollectorFn
-  todo: (name: string) => void
-}
-interface OnlyCollector {
-  (name: string, fn: TestFunction, timeout?: number): void
-  concurrent: TestCollectorFn
-}
-interface SkipCollector {
-  (name: string, fn: TestFunction, timeout?: number): void
-  concurrent: TestCollectorFn
-}
-interface TodoCollector {
-  (name: string): void
-  concurrent: (name: string) => void
-}
-
-export interface TestCollector {
-  (name: string, fn: TestFunction, timeout?: number): void
-  concurrent: ConcurrentCollector
-  only: OnlyCollector
-  skip: SkipCollector
-  todo: TodoCollector
-}
+export type TestCollector = ChainableFunction<
+'concurrent' | 'only' | 'skip' | 'todo' | 'fails',
+[name: string, fn?: TestFunction, timeout?: number],
+void
+>
 
 export type HookListener<T extends any[]> = (...args: T) => Awaitable<void>
 

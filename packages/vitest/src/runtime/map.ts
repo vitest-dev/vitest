@@ -1,5 +1,4 @@
-import type { SuiteHooks } from 'vitest'
-import type { Awaitable, Suite, Test } from '../types'
+import type { Awaitable, Suite, SuiteHooks, Test } from '../types'
 
 // use WeakMap here to make the Test and Suite object serializable
 const fnMap = new WeakMap()

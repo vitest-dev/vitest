@@ -1,21 +1,31 @@
 <script setup lang="ts">
-const { status, data, send } = useWebSocket('ws://localhost:3000/__vitest_api')
+import { current, runCurrent } from '~/composables/client'
+
+const name = computed(() => current.value?.name.split(/\//g).pop())
 </script>
 
 <template>
-  <div overflow-auto flex-1>
-    <div
-      h-8
-      px-4
-      flex
-      flex-row
-      items-center
-      bg-dark-300
+  <div v-if="current" border="r base">
+    <TasksList
+      :tasks="current.tasks"
+      :nested="true"
     >
-      <span font-light text-sm flex-1>Test Suites</span>
-      <button i-carbon-play />
-    </div>
-    {{ status }}
-    {{ data }}
+      <template #header>
+        <StatusIcon :task="current" />
+        <span
+          font-light
+          text-sm
+          flex-auto
+          ws-nowrap
+          overflow-hidden
+          truncate
+        >
+          {{ name }}
+        </span>
+        <div class="flex text-lg">
+          <IconButton icon="i-carbon-play" @click="runCurrent()" />
+        </div>
+      </template>
+    </TasksList>
   </div>
 </template>

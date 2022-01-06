@@ -11,24 +11,23 @@ A blazing fast unit test framework powered by Vite.
 <p align="center">
   <a href="https://www.npmjs.com/package/vitest"><img src="https://img.shields.io/npm/v/vitest?color=a1b858&label="></a>
 <p>
-<h2 align="center">
-<a href="https://preview.vitest.dev">Open the Docs</a>
-</h2>
 <h3 align="center">
-<a href=https://discord.com/invite/2zYZNngd7y"><i>Get involved!</i></a>
+<a href="https://chat.vitest.dev"><i>Get involved!</i></a>
 </h3>
 <br>
 <br>
 
-> 💖 **This project is currently in closed beta exclusively for Sponsors.**<br>
-> Become a Sponsor of [@patak-dev](https://github.com/sponsors/patak-dev) or [@antfu](https://github.com/sponsors/antfu) to access the source code and issues tracker.
-
 > ⚠️ **DISCLAIMER**: Vitest is still in development and not stable yet. It's not recommended to use it in production.
 
-> Vitest requires Vite v2.7 and Node v16
+> Vitest requires Vite >=v2.7.10 and Node >=v14
 
+Follow the [Getting Started Guide](https://vitest.dev/guide) or learn [why we are building a new test runner](https://vitest.dev/guide/why).
 
-Switch to Vitest by following the [Getting Started Guide](https://preview.vitest.dev/guide) or learn [why we are building a new test runner](https://preview.vitest.dev/guide).
+## Documentation
+
+Read the [documentation](https://vitest.dev/).
+
+[Examples](https://vitest.dev/guide/#examples) | [Projects using Vitest](https://vitest.dev/guide/#projects-using-vitest)
 
 ## Features
 
@@ -39,8 +38,8 @@ Switch to Vitest by following the [Getting Started Guide](https://preview.vitest
 - [Native code coverage](#coverage) via [c8](https://github.com/bcoe/c8)
 - [Tinyspy](https://github.com/Aslemammad/tinyspy) built-in for mocking, stubbing, and spies.
 - [JSDOM](https://github.com/jsdom/jsdom) and [happy-dom](https://github.com/capricorn86/happy-dom) for DOM and browser API mocking
-- Components testing ([Vue](./test/vue), [React](./test/react), [Lit](./test/lit), [Vitesse](./test/vitesse))
-- Workers multi-threading via [Piscina](https://github.com/piscinajs/piscina)
+- Components testing ([Vue](./examples/vue), [React](./examples/react), [Svelte](./examples/svelte), [Lit](./examples/lit), [Vitesse](./examples/vitesse))
+- Workers multi-threading via [tinypool](https://github.com/Aslemammad/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina))
 - ESM first, top level await
 - Out-of-box TypeScript / JSX support
 - Filtering, timeouts, concurrent for suite and tests
@@ -68,22 +67,9 @@ describe('suite name', () => {
 $ npx vitest
 ```
 
-## Examples
-
-- [Unit Testing](./test/core)
-- [Vue Component Testing](./test/vue)
-- [React Component Testing](./test/react)
-- [Lit Component Testing](./test/lit)
-- [Vitesse Component Testing](./test/vitesse)
-
-## Projects using Vitest
-
-- [unocss](https://github.com/antfu/unocss)
-- [unplugin-auto-import](https://github.com/antfu/unplugin-auto-import)
-- [unplugin-vue-components](https://github.com/antfu/unplugin-vue-components)
-- [vitesse-lite](https://github.com/antfu/vitesse-lite)
-
 ## Sponsors
+
+### Anthony Fu Sponsors
 
 <p align="center">
   <a href="https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg">
@@ -91,15 +77,24 @@ $ npx vitest
   </a>
 </p>
 
+### Patak Sponsors
+
+<p align="center">
+  <a href="https://patak.dev/sponsors.svg">
+    <img src='https://patak.dev/sponsors.svg'/>
+  </a>
+</p>
+
 ## Credits
 
 Thanks to:
 
-- [@patak-dev](https://github.com/patak-dev) for the awesome package name!
-- [The Vite team](https://github.com/vitejs/vite) for brainstorming the initial idea.
-- [@pi0](https://github.com/pi0) for the idea and implementation of using Vite to transform and bundle the server code.
+- [The Jest team and community](https://jestjs.io/) for creating a delightful testing API
 - [@lukeed](https://github.com/lukeed) for the work on [uvu](https://github.com/lukeed/uvu) where we are inspired a lot from.
+- [@pi0](https://github.com/pi0) for the idea and implementation of using Vite to transform and bundle the server code.
+- [The Vite team](https://github.com/vitejs/vite) for brainstorming the initial idea.
+- [@patak-dev](https://github.com/patak-dev) for the awesome package name!
 
 ## License
 
-[MIT](./LICENSE) License © 2021 [Anthony Fu](https://github.com/antfu)
+[MIT](./LICENSE) License © 2021-Present [Anthony Fu](https://github.com/antfu), [Matias Capeletto](https://github.com/patak-dev)

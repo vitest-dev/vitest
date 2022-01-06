@@ -4,7 +4,7 @@
 import c from 'picocolors'
 import type { Formatter } from 'picocolors/types'
 import { format as prettyFormat, plugins as prettyFormatPlugins } from 'pretty-format'
-import { unifiedDiff } from '../../reporters/error'
+import { unifiedDiff } from '../../reporters/renderers/diff'
 
 export const EXPECTED_COLOR = c.green
 export const RECEIVED_COLOR = c.red
@@ -93,7 +93,6 @@ export function matcherHint(
     hint += DIM_COLOR(`${dimString}(`) + expectedColor(expected)
     if (secondArgument)
       hint += DIM_COLOR(', ') + secondArgumentColor(secondArgument)
-
     dimString = ')'
   }
 
@@ -120,7 +119,7 @@ export const stringify = (object: unknown, maxDepth = 10): string => {
   try {
     result = prettyFormat(object, {
       maxDepth,
-      min: true,
+      // min: true,
       plugins: PLUGINS,
     })
   }
@@ -128,7 +127,7 @@ export const stringify = (object: unknown, maxDepth = 10): string => {
     result = prettyFormat(object, {
       callToJSON: false,
       maxDepth,
-      min: true,
+      // min: true,
       plugins: PLUGINS,
     })
   }

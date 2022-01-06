@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
 
-import { vi, test, expect } from 'vitest'
+import { expect, test, vi } from 'vitest'
+import { timeout } from '../src/timeout'
 
 test('timers order: i -> t', () => {
   const res: string[] = []
@@ -45,8 +46,8 @@ test('timeout', async() => {
 
   vi.useFakeTimers()
 
-  setTimeout(t, 1000)
-  const timeout = setTimeout(t, 1000)
+  setTimeout(t, 50)
+  const timeout = setTimeout(t, 50)
   clearTimeout(timeout)
 
   vi.runOnlyPendingTimers()
@@ -60,13 +61,13 @@ test('advance timeout', () => {
 
   vi.useFakeTimers()
 
-  setTimeout(t, 1000)
+  setTimeout(t, 50)
 
-  vi.advanceTimersByTime(500)
+  vi.advanceTimersByTime(25)
 
   expect(t).not.toBeCalled()
 
-  vi.advanceTimersByTime(500)
+  vi.advanceTimersByTime(25)
 
   expect(t).toBeCalledTimes(1)
 
@@ -74,41 +75,41 @@ test('advance timeout', () => {
 })
 
 test('advance nested timeout', () => {
-  const t600 = vi.fn()
-  const t100 = vi.fn(() => {
-    setTimeout(t600, 600)
+  const t60 = vi.fn()
+  const t10 = vi.fn(() => {
+    setTimeout(t60, 60)
   })
-  const t50 = vi.fn(() => {
-    setTimeout(t100, 100)
+  const t5 = vi.fn(() => {
+    setTimeout(t10, 10)
   })
   const t = vi.fn(() => {
-    setTimeout(t50, 50)
+    setTimeout(t5, 5)
   })
 
   vi.useFakeTimers()
 
   setTimeout(t, 0)
 
-  vi.advanceTimersByTime(30)
+  vi.advanceTimersByTime(3)
 
   expect(t).toBeCalled()
-  expect(t50).not.toBeCalled()
+  expect(t5).not.toBeCalled()
 
-  vi.advanceTimersByTime(200)
+  vi.advanceTimersByTime(20)
 
   expect(t).toBeCalledTimes(1)
-  expect(t50).toBeCalledTimes(1)
-  expect(t100).toBeCalledTimes(1)
+  expect(t5).toBeCalledTimes(1)
+  expect(t10).toBeCalledTimes(1)
 
-  expect(t600).not.toBeCalled()
+  expect(t60).not.toBeCalled()
 
-  vi.advanceTimersByTime(519)
+  vi.advanceTimersByTime(51)
 
-  expect(t600).not.toBeCalled()
+  expect(t60).not.toBeCalled()
 
   vi.advanceTimersByTime(1)
 
-  expect(t600).toBeCalledTimes(1)
+  expect(t60).toBeCalledTimes(1)
 })
 
 test('doesnt trigger twice', () => {
@@ -116,7 +117,7 @@ test('doesnt trigger twice', () => {
 
   vi.useFakeTimers()
 
-  setTimeout(t, 1000)
+  setTimeout(t, timeout)
 
   vi.runOnlyPendingTimers()
   vi.runOnlyPendingTimers()
@@ -125,14 +126,14 @@ test('doesnt trigger twice', () => {
   expect(t).toBeCalledTimes(1)
 })
 
-test('timeout cyclic', async() => {
+test.skip('timeout cyclic', async() => {
   const t = vi.fn(() => {
-    setTimeout(t, 1000)
+    setTimeout(t, timeout)
   })
 
   vi.useFakeTimers()
 
-  setTimeout(t, 1000)
+  setTimeout(t, timeout)
 
   expect(() => {
     vi.runAllTimers()
@@ -210,15 +211,40 @@ test('async timer', async() => {
   setTimeout(async() => {
     await Promise.resolve()
     res.push('item1')
-  }, 1000)
+  }, 100)
 
   setTimeout(async() => {
     await Promise.resolve()
     res.push('item2')
-  }, 1000)
+  }, 100)
 
   await vi.runAllTimers()
   vi.useRealTimers()
 
   expect(res).toEqual(['item1', 'item2'])
+})
+
+test('advance timer', async() => {
+  const a1 = vi.fn()
+  const a2 = vi.fn()
+
+  vi.useFakeTimers()
+
+  setTimeout(a1)
+  setInterval(a2)
+
+  vi.advanceTimersToNextTimer()
+
+  expect(a1).toHaveBeenCalled()
+  expect(a2).not.toHaveBeenCalled()
+
+  vi.advanceTimersToNextTimer()
+
+  expect(a2).toHaveBeenCalled()
+
+  vi.advanceTimersToNextTimer()
+
+  expect(a2).toHaveBeenCalledTimes(2)
+
+  vi.useRealTimers()
 })

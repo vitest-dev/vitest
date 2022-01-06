@@ -1,11 +1,12 @@
-import { expect, test, assert, suite, it } from 'vitest'
+import { assert, expect, it, suite, test } from 'vitest'
 import { two } from '../src/submodule'
 import { timeout } from '../src/timeout'
 
-test('Math.sqrt()', () => {
+test('Math.sqrt()', async() => {
   assert.equal(Math.sqrt(4), two)
   assert.equal(Math.sqrt(2), Math.SQRT2)
   expect(Math.sqrt(144)).toStrictEqual(12)
+  // await new Promise(resolve => setTimeout(resolve, 3000))
 })
 
 test('JSON', () => {
@@ -16,7 +17,11 @@ test('JSON', () => {
 
   const output = JSON.stringify(input)
 
-  expect(output).eq('{"foo":"hello","bar":"world"}')
+  expect(input).toEqual({
+    foo: 'hello',
+    bar: 'world',
+  })
+  expect(output).toEqual('{"foo":"hello","bar":"world"}')
   assert.deepEqual(JSON.parse(output), input, 'matches original')
 })
 

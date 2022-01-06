@@ -1,10 +1,15 @@
-import { describe, it, expect } from 'vitest'
+/* eslint-disable comma-spacing */
+/* eslint-disable no-sparse-arrays */
+import { describe, expect, it } from 'vitest'
 
 describe('jest-expect', () => {
   it('basic', () => {
     expect(1).toBe(1)
     expect(null).toBeNull()
+    expect(1).not.toBeNull()
     expect(null).toBeDefined()
+    expect(undefined).not.toBeDefined()
+    expect(undefined).toBeUndefined()
     expect(null).not.toBeUndefined()
     expect([]).toBeTruthy()
     expect(0).toBeFalsy()
@@ -30,6 +35,7 @@ describe('jest-expect', () => {
     expect({ length: 3 }).toHaveLength(3)
     expect(0.2 + 0.1).not.toBe(0.3)
     expect(0.2 + 0.1).toBeCloseTo(0.3, 5)
+    expect(0.2 + 0.1).not.toBeCloseTo(0.3, 100) // expect.closeTo will fail in chai
   })
 
   it('asymmetric matchers (jest style)', () => {
@@ -61,8 +67,18 @@ describe('jest-expect', () => {
     expect(['Bob', 'Eve']).toEqual(expect.arrayContaining(['Bob']))
     expect(['Bob', 'Eve']).not.toEqual(expect.arrayContaining(['Mohammad']))
 
+    expect('Mohammad').toEqual(expect.stringMatching(/Moh/))
+    expect('Mohammad').not.toEqual(expect.stringMatching(/jack/))
+
     // TODO: support set
     // expect(new Set(['bar'])).not.toEqual(new Set([expect.stringContaining('zoo')]))
+  })
+
+  it('asymmetric matchers negate', () => {
+    expect('bar').toEqual(expect.not.stringContaining('zoo'))
+    expect('bar').toEqual(expect.not.stringMatching(/zoo/))
+    expect({ bar: 'zoo' }).toEqual(expect.not.objectContaining({ zoo: 'bar' }))
+    expect(['Bob', 'Eve']).toEqual(expect.not.arrayContaining(['Steve']))
   })
 
   it('asymmetric matchers (chai style)', () => {
@@ -82,8 +98,9 @@ describe('jest-expect', () => {
 
   it('object', () => {
     expect({}).toEqual({})
+    expect({ apples: 13 }).toEqual({ apples: 13 })
+    expect({}).toStrictEqual({})
     expect({}).not.toBe({})
-    expect({}).not.toStrictEqual({})
 
     const foo = {}
     const complex = { foo: 1, bar: { foo: 'foo', bar: 100, arr: ['first', { zoo: 'monkey' }] } }
@@ -103,6 +120,204 @@ describe('jest-expect', () => {
     expect(complex).toHaveProperty('bar.arr[1].zoo', 'monkey')
     expect(complex).toHaveProperty('bar.arr.0')
     expect(complex).toHaveProperty('bar.arr.1.zoo', 'monkey')
+  })
+
+  it('assertions', () => {
+    expect(1).toBe(1)
+    expect(1).toBe(1)
+    expect(1).toBe(1)
+    expect.assertions(3)
+  })
+
+  it('assertions with different order', () => {
+    expect.assertions(3)
+    expect(1).toBe(1)
+    expect(1).toBe(1)
+    expect(1).toBe(1)
+  })
+
+  it.fails('has assertions', () => {
+    expect.hasAssertions()
+  })
+
+  it('has assertions', () => {
+    expect(1).toBe(1)
+    expect.hasAssertions()
+  })
+
+  it('has assertions with different order', () => {
+    expect.hasAssertions()
+    expect(1).toBe(1)
+  })
+
+  it.fails('toBe with null/undefined values', () => {
+    expect(undefined).toBe(true)
+    expect(null).toBe(true)
+  })
+
+  // https://jestjs.io/docs/expect#tostrictequalvalue
+
+  class LaCroix {
+    constructor(public flavor) {}
+  }
+
+  describe('the La Croix cans on my desk', () => {
+    it('are not semantically the same', () => {
+      expect(new LaCroix('lemon')).toEqual({ flavor: 'lemon' })
+      expect(new LaCroix('lemon')).not.toStrictEqual({ flavor: 'lemon' })
+    })
+  })
+
+  it('array', () => {
+    expect([]).toEqual([])
+    expect([]).not.toBe([])
+    expect([]).toStrictEqual([])
+
+    const foo = []
+
+    expect(foo).toBe(foo)
+    expect(foo).toStrictEqual(foo)
+
+    const complex = [
+      {
+        foo: 1,
+        bar: { foo: 'foo', bar: 100, arr: ['first', { zoo: 'monkey' }] },
+      },
+    ]
+    expect(complex).toStrictEqual([
+      {
+        foo: 1,
+        bar: { foo: 'foo', bar: 100, arr: ['first', { zoo: 'monkey' }] },
+      },
+    ])
+  })
+})
+
+describe('.toStrictEqual()', () => {
+  class TestClassA {
+    constructor(public a, public b) {}
+  }
+
+  class TestClassB {
+    constructor(public a, public b) {}
+  }
+
+  const TestClassC = class Child extends TestClassA {
+    constructor(a, b) {
+      super(a, b)
+    }
+  }
+
+  const TestClassD = class Child extends TestClassB {
+    constructor(a, b) {
+      super(a, b)
+    }
+  }
+
+  it('does not ignore keys with undefined values', () => {
+    expect({
+      a: undefined,
+      b: 2,
+    }).not.toStrictEqual({ b: 2 })
+  })
+
+  it('does not ignore keys with undefined values inside an array', () => {
+    expect([{ a: undefined }]).not.toStrictEqual([{}])
+  })
+
+  it('does not ignore keys with undefined values deep inside an object', () => {
+    expect([{ a: [{ a: undefined }] }]).not.toStrictEqual([{ a: [{}] }])
+  })
+
+  it('does not consider holes as undefined in sparse arrays', () => {
+    expect([, , , 1, , ,]).not.toStrictEqual([, , , 1, undefined, ,])
+  })
+
+  it('passes when comparing same type', () => {
+    expect({
+      test: new TestClassA(1, 2),
+    }).toStrictEqual({ test: new TestClassA(1, 2) })
+  })
+
+  it('does not pass for different types', () => {
+    expect({
+      test: new TestClassA(1, 2),
+    }).not.toStrictEqual({ test: new TestClassB(1, 2) })
+  })
+
+  it('does not simply compare constructor names', () => {
+    const c = new TestClassC(1, 2)
+    const d = new TestClassD(1, 2)
+    expect(c.constructor.name).toEqual(d.constructor.name)
+    expect({ test: c }).not.toStrictEqual({ test: d })
+  })
+
+  it('passes for matching sparse arrays', () => {
+    expect([, 1]).toStrictEqual([, 1])
+  })
+
+  it('does not pass when sparseness of arrays do not match', () => {
+    expect([, 1]).not.toStrictEqual([undefined, 1])
+    expect([undefined, 1]).not.toStrictEqual([, 1])
+    expect([, , , 1]).not.toStrictEqual([, 1])
+  })
+
+  it('does not pass when equally sparse arrays have different values', () => {
+    expect([, 1]).not.toStrictEqual([, 2])
+  })
+
+  it('does not pass when ArrayBuffers are not equal', () => {
+    expect(Uint8Array.from([1, 2]).buffer).not.toStrictEqual(
+      Uint8Array.from([0, 0]).buffer,
+    )
+    expect(Uint8Array.from([2, 1]).buffer).not.toStrictEqual(
+      Uint8Array.from([2, 2]).buffer,
+    )
+    expect(Uint8Array.from([]).buffer).not.toStrictEqual(
+      Uint8Array.from([1]).buffer,
+    )
+  })
+
+  it('passes for matching buffers', () => {
+    expect(Uint8Array.from([1]).buffer).toStrictEqual(
+      Uint8Array.from([1]).buffer,
+    )
+    expect(Uint8Array.from([]).buffer).toStrictEqual(
+      Uint8Array.from([]).buffer,
+    )
+    expect(Uint8Array.from([9, 3]).buffer).toStrictEqual(
+      Uint8Array.from([9, 3]).buffer,
+    )
+  })
+})
+
+describe('async expect', () => {
+  it('resolves', async() => {
+    await expect((async() => 'true')()).resolves.toBe('true')
+    await expect((async() => 'true')()).resolves.not.toBe('true22')
+  })
+
+  it.fails('failed to resolve', async() => {
+    await expect((async() => {
+      throw new Error('err')
+    })()).resolves.toBe('true')
+  })
+
+  it('rejects', async() => {
+    await expect((async() => {
+      throw new Error('err')
+    })()).rejects.toStrictEqual(new Error('err'))
+    await expect((async() => {
+      throw new Error('err')
+    })()).rejects.toThrow('err')
+
+    await expect((async() => {
+      throw new Error('err')
+    })()).rejects.not.toStrictEqual(new Error('fake err'))
+  })
+
+  it.fails('failed to reject', async() => {
+    await expect((async() => 'test')()).rejects.toBe('test')
   })
 })
 

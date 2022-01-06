@@ -1,0 +1,19 @@
+{
+  "name": "vitest-test",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "vitest",
+    "test:run": "vitest run"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^2.0.1",
+    "@vue/test-utils": "^2.0.0-rc.18",
+    "jsdom": "^19.0.0",
+    "vite-plugin-ruby": "^3.0.4",
+    "vitest": "workspace:*",
+    "vue": "3.2.26"
+  }
+}

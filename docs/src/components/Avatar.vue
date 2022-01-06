@@ -3,14 +3,15 @@ defineProps<{
   avatar: string
   name: string
   github: string
-  twitter: string
+  twitter?: string
+  sponsors?: boolean
 }>()
 </script>
 
 <template>
   <div text-center>
-    <img :src="avatar" rounded-full h-30 w-30>
-    <div text-2xl mt-1 mb-1>
+    <img :src="avatar" rounded-full h-25 w-25>
+    <div text-xl mt-1 mb-1>
       {{ name }}
     </div>
     <div op60>
@@ -23,6 +24,7 @@ defineProps<{
         target="_blank"
       />
       <a
+        v-if="twitter"
         class="i-carbon-logo-twitter inline-block text-1.3em mya text-current op30 hover:op100 transition duration-200"
         :href="`https://twitter.com/${twitter}`"
         target="_blank"
@@ -30,7 +32,8 @@ defineProps<{
     </div>
     <br>
     <a
-      class="btn mt-5 bg-pink-500 hover:bg-pink-600"
+      v-if="sponsors"
+      class="btn mt-1 bg-pink-500 hover:bg-pink-600"
       target="_blank"
       :href="`https://github.com/sponsors/${github}`"
     >

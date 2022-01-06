@@ -1,7 +1,7 @@
-import { resolve } from 'path'
+import { resolve } from 'pathe'
 import fg from 'fast-glob'
 import { execa } from 'execa'
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 describe('should fails', async() => {
   const root = resolve(__dirname, '../fixtures')
@@ -10,7 +10,7 @@ describe('should fails', async() => {
   for (const file of files) {
     it(file, async() => {
       let error: any
-      await execa('npx', ['vitest', file], {
+      await execa('npx', ['vitest', 'run', file], {
         cwd: root,
         env: {
           ...process.env,

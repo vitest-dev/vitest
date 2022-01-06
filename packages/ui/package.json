@@ -1,29 +1,52 @@
 {
   "name": "@vitest/ui",
-  "//": "TODO: when it's ready",
-  "private": true,
-  "version": "0.0.94",
-  "description": "Vitest UI",
+  "version": "0.0.134",
+  "description": "UI for Vitest",
   "sideEffects": false,
+  "type": "module",
   "exports": {
-    "import": "./dist/index.mjs",
-    "require": "./dist/index.cjs"
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./*": "./*"
   },
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.mjs",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
     "dist"
   ],
+  "scripts": {
+    "build": "rimraf dist && pnpm build:node && pnpm build:client",
+    "build:client": "vite build",
+    "build:node": "rollup -c",
+    "dev:client": "vite",
+    "dev": "rollup -c --watch --watch.include=node/**",
+    "dev:ui": "run-p dev dev:client"
+  },
   "dependencies": {
-    "@vueuse/core": "^7.3.0",
-    "sirv": "^1.0.19",
-    "ws": "^8.3.0"
+    "sirv": "^2.0.0"
   },
   "devDependencies": {
+    "@types/codemirror": "^5.60.5",
+    "@types/d3-force": "^3.0.3",
     "@types/ws": "^8.2.2",
-    "unocss": "^0.16.4",
-    "unplugin-auto-import": "^0.5.3",
-    "unplugin-vue-components": "^0.17.9"
+    "@unocss/reset": "^0.21.0",
+    "@vitejs/plugin-vue": "^2.0.1",
+    "@vitest/ws-client": "workspace:*",
+    "@vueuse/core": "^7.5.1",
+    "codemirror": "^5.65.0",
+    "codemirror-theme-vars": "^0.1.1",
+    "d3-graph-controller": "^1.12.0",
+    "picocolors": "^1.0.0",
+    "rollup": "^2.63.0",
+    "splitpanes": "^3.0.6",
+    "unocss": "^0.21.0",
+    "unplugin-auto-import": "^0.5.5",
+    "unplugin-vue-components": "^0.17.11",
+    "vite-plugin-pages": "^0.19.9",
+    "vue": "^3.2.25",
+    "vue-router": "^4.0.12"
   }
 }

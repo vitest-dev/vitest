@@ -1,4 +1,4 @@
-import { it, describe, assert } from 'vitest'
+import { assert, describe, expect, it } from 'vitest'
 import { timeout } from '../src/timeout'
 
 describe.skip('skipped suite', () => {
@@ -86,4 +86,8 @@ describe('test.only in nested described', () => {
       assert.equal(Math.sqrt(4), 2)
     })
   })
+})
+
+it.fails('should fails', () => {
+  expect(1).toBe(2)
 })

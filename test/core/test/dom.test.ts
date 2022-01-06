@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { it, expect } from 'vitest'
+import { expect, it } from 'vitest'
 
 it('jsdom', () => {
   expect(window).toBeDefined()

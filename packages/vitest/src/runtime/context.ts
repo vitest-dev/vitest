@@ -1,4 +1,4 @@
-import type { Awaitable, TestFunction, RuntimeContext, SuiteCollector, DoneCallback } from '../types'
+import type { Awaitable, DoneCallback, RuntimeContext, SuiteCollector, TestFunction } from '../types'
 
 export const context: RuntimeContext = {
   tasks: [],
@@ -17,11 +17,11 @@ export async function runWithSuite(suite: SuiteCollector, fn: (() => Awaitable<v
 }
 
 export function getDefaultTestTimeout() {
-  return process.__vitest_worker__?.config?.testTimeout ?? 5000
+  return process.__vitest_worker__!.config!.testTimeout
 }
 
 export function getDefaultHookTimeout() {
-  return process.__vitest_worker__?.config?.hookTimeout ?? 5000
+  return process.__vitest_worker__!.config!.hookTimeout
 }
 
 export function withTimeout<T extends((...args: any[]) => any)>(fn: T, _timeout?: number): T {
@@ -45,7 +45,7 @@ function ensureAsyncTest(fn: TestFunction): () => Awaitable<void> {
     return fn as () => Awaitable<void>
 
   return () => new Promise((resolve, reject) => {
-    const done: DoneCallback = (...args: any[]) => args[0] // rejest on truthy values
+    const done: DoneCallback = (...args: any[]) => args[0] // reject on truthy values
       ? reject(args[0])
       : resolve()
     fn(done)

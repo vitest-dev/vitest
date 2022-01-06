@@ -1,46 +1,37 @@
 <script setup lang="ts">
-import { isDark, toggleDark } from '~/composables'
+import { injectCurrentModule } from '../composables/navigation'
+import { findById } from '../composables/client'
+import type { Task } from '#types'
+import { toggleDark } from '~/composables'
+import { files, runAll } from '~/composables/client'
+import { activeFileId } from '~/composables/params'
+
+const currentModule = injectCurrentModule()
+function onItemClick(task: Task) {
+  activeFileId.value = task.id
+  currentModule.value = findById(task.id)
+}
 </script>
 
 <template>
-  <nav
-    top-4
-    left-4
-    bottom-4
-    fixed
-    bg-light-300
-    dark:bg-dark-600
-    w-72
-    border-1
-    border-rounded
-    border-light-900
-    dark:border-dark-200
-    flex
-    flex-col
-  >
-    <div
-      grid="~ cols-[max-content,1fr,min-content]"
-      gap-2
-      items-center
-      px-4
-      h-14
-      border-b-1
-      border-light-900
-      dark:border-dark-200
+  <nav border="r base">
+    <TasksList
+      :tasks="files"
+      :on-item-click="onItemClick"
     >
-      <img w-6 h-6 src="/favicon.svg">
-      <span text-lg font-light>Vitest</span>
-      <button
-        text-xl
-        text-dark-100
-        dark:text-light-900
-        :class="{
-          'i-carbon-moon': isDark,
-          'i-carbon-sun': !isDark
-        }"
-        @click="toggleDark"
-      />
-    </div>
-    <Suites />
+      <template #header>
+        <img w-6 h-6 mx-2 src="/favicon.svg">
+        <span font-light text-sm flex-1>
+          Vitest
+        </span>
+        <div class="flex text-lg">
+          <IconButton icon="i-carbon-play" @click="runAll()" />
+          <IconButton
+            icon="dark:i-carbon-moon i-carbon-sun"
+            @click="toggleDark()"
+          />
+        </div>
+      </template>
+    </TasksList>
   </nav>
 </template>

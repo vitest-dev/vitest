@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import path from 'path'
-import fs from 'fs'
+import fs, { promises as fsp } from 'fs'
+import path from 'pathe'
 import naturalCompare from 'natural-compare'
 import type { OptionsReceived as PrettyFormatOptions } from 'pretty-format'
 import {
@@ -140,8 +140,10 @@ function normalizeNewlines(string: string) {
   return string.replace(/\r\n|\r/g, '\n')
 }
 
-export function saveSnapshotFile(snapshotData: SnapshotData,
-  snapshotPath: string): void {
+export async function saveSnapshotFile(
+  snapshotData: SnapshotData,
+  snapshotPath: string,
+) {
   const snapshots = Object.keys(snapshotData)
     .sort(naturalCompare)
     .map(
@@ -149,8 +151,9 @@ export function saveSnapshotFile(snapshotData: SnapshotData,
     )
 
   ensureDirectoryExists(snapshotPath)
-  fs.writeFileSync(
+  await fsp.writeFile(
     snapshotPath,
     `${writeSnapshotVersion()}\n\n${snapshots.join('\n\n')}\n`,
+    'utf-8',
   )
 }

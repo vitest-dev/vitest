@@ -1,5 +1,7 @@
 {
   "cSpell.words": [
-    "Listr"
-  ]
+    "Birpc",
+    "unmock"
+  ],
+  "editor.formatOnSave": false
 }

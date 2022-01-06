@@ -24,3 +24,34 @@ export interface UserConsoleLog {
   type: 'stdout' | 'stderr'
   taskId?: string
 }
+
+export interface Position {
+  line: number
+  column: number
+}
+
+export interface ParsedStack {
+  method: string
+  file: string
+  line: number
+  column: number
+  sourcePos?: Position
+}
+
+export interface ErrorWithDiff extends Error {
+  name: string
+  nameStr?: string
+  stack?: string
+  stackStr?: string
+  stacks?: ParsedStack[]
+  showDiff?: boolean
+  actual?: any
+  expected?: any
+  operator?: string
+}
+
+export interface ModuleGraphData {
+  graph: Record<string, string[]>
+  externalized: string[]
+  inlined: string[]
+}

@@ -1,3 +1,24 @@
 {
-  "extends": "@antfu"
+  "extends": "@antfu",
+  "rules": {
+    "no-restricted-imports": [
+      "error",
+      {
+        "paths": ["path"]
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": "packages/**/*.*",
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": ["vitest"]
+          }
+        ]
+      }
+    }
+  ]
 }

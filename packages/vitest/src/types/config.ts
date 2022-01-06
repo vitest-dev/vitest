@@ -1,19 +1,25 @@
+import type { CommonServerOptions } from 'vite'
+import type { BuiltinReporters } from '../reporters'
+import type { C8Options, ResolvedC8Options } from '../coverage'
 import type { Reporter } from './reporter'
 import type { SnapshotStateOptions } from './snapshot'
+import type { Arrayable } from './general'
 
 export type BuiltinEnvironment = 'node' | 'jsdom' | 'happy-dom'
+
+export type ApiConfig = Pick<CommonServerOptions, 'port' | 'strictPort' | 'host'>
 
 export interface InlineConfig {
   /**
    * Include globs for test files
    *
-   * @default ['**\/*.test.ts']
+   * @default ['**\/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']
    */
   include?: string[]
 
   /**
    * Exclude globs for test files
-   * @default ['**\/node_modules\/**']
+   * @default ['node_modules', 'dist', '.idea', '.git', '.cache']
    */
   exclude?: string[]
 
@@ -36,6 +42,22 @@ export interface InlineConfig {
      * This could be helpful to handle packages that ship `.js` in ESM format (that Node can't handle).
      */
     inline?: (string | RegExp)[]
+
+    /**
+     * Interpret CJS module's default as named exports
+     *
+     * @default true
+     */
+    interpretDefault?: boolean
+
+    /**
+     * When a dependency is a valid ESM package, try to guess the cjs version based on the path.
+     * This will significantly improve the performance in huge repo, but might potentially
+     * cause some misalignment if a package have different logic in ESM and CJS mode.
+     *
+     * @default true
+     */
+    fallbackCJS?: boolean
   }
 
   /**
@@ -76,7 +98,7 @@ export interface InlineConfig {
   /**
    * Custom reporter for output
    */
-  reporters?: Reporter | Reporter[]
+  reporters?: Arrayable<BuiltinReporters | Reporter>
 
   /**
    * Enable multi-threading
@@ -98,13 +120,6 @@ export interface InlineConfig {
    * @default available CPUs
    */
   minThreads?: number
-
-  /*
-   * Interpret CJS module's default as named exports
-   *
-   * @default true
-   */
-  interpretDefault?: boolean
 
   /**
    * Default timeout of a test in milliseconds
@@ -133,20 +148,61 @@ export interface InlineConfig {
   setupFiles?: string | string[]
 
   /**
+   * Pattern of file paths to be ignore from triggering watch rerun
+   *
+   * @default ['**\/node_modules\/**', '**\/dist/**']
+   */
+  watchIgnore?: (string | RegExp)[]
+
+  /**
+   * Isolate environment for each test file
+   *
+   * @default true
+   */
+  isolate?: boolean
+
+  /**
+   * Coverage options
+   */
+  coverage?: C8Options
+
+  /**
+   * run test names with the specified pattern
+   */
+  testNamePattern?: string | RegExp
+
+  /**
+   * Will call `.mockClear()` on all spies before each test
+   * @default false
+   */
+  clearMocks?: boolean
+
+  /**
+   * Will call `.mockReset()` on all spies before each test
+   * @default false
+   */
+  mockReset?: boolean
+
+  /**
+   * Will call `.mockRestore()` on all spies before each test
+   * @default false
+   */
+  restoreMocks?: boolean
+
+  /**
+   * Serve API options.
+   *
+   * When set to true, the default port is 51204.
+   *
+   * @default false
+   */
+  api?: boolean | number | ApiConfig
+
+  /**
    * Open Vitest UI
    * @internal WIP
    */
   open?: boolean
-
-  /**
-   * Listen to port and serve API
-   *
-   * When set to true, the default port is 55555
-   *
-   * @internal WIP
-   * @default false
-   */
-  api?: boolean | number
 }
 
 export interface UserConfig extends InlineConfig {
@@ -161,15 +217,42 @@ export interface UserConfig extends InlineConfig {
    */
   config?: string | undefined
 
+  /**
+   * Use happy-dom
+   */
   dom?: boolean
+
+  /**
+   * Do not watch
+   */
+  run?: boolean
+
+  /**
+   * Pass with no tests
+   */
+  passWithNoTests?: boolean
+
+  /**
+   * Run tests that cover a list of source files
+   */
+  related?: string[] | string
 }
 
-export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters'> {
+export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api'> {
+  base?: string
+
   config?: string
   filters?: string[]
+  testNamePattern?: RegExp
+  related?: string[]
 
   depsInline: (string | RegExp)[]
   depsExternal: (string | RegExp)[]
+  fallbackCJS: boolean
+  interpretDefault: boolean
 
+  coverage: ResolvedC8Options
   snapshotOptions: SnapshotStateOptions
+
+  api?: ApiConfig
 }

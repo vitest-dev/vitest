@@ -1,7 +1,9 @@
 // Vitest Snapshot v1
 
-exports[`should fails > expect.test.ts 1`] = `"AssertionError: expected 2 to deeply equal 3"`;
+exports[`should fails > expect.test.ts > expect.test.ts 1`] = `"AssertionError: expected 2 to deeply equal 3"`;
 
-exports[`should fails > nested-suite.test.ts 1`] = `"AssertionError: expected true to equal false"`;
+exports[`should fails > nested-suite.test.ts > nested-suite.test.ts 1`] = `"AssertionError: expected true to equal false"`;
 
-exports[`should fails > timeout.test.ts 1`] = `"Error: Test timed out in 10ms."`;
+exports[`should fails > stall.test.ts > stall.test.ts 1`] = `"TypeError: failure"`;
+
+exports[`should fails > timeout.test.ts > timeout.test.ts 1`] = `"Error: Test timed out in 10ms."`;

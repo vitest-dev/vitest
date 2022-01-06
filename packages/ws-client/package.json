@@ -1,0 +1,48 @@
+{
+  "name": "@vitest/ws-client",
+  "version": "0.0.134",
+  "description": "WebSocket client wrapper for communicating with Vitest",
+  "homepage": "https://github.com/vitest-dev/vitest#readme",
+  "bugs": {
+    "url": "https://github.com/vitest-dev/vitest/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vitest-dev/vitest.git"
+  },
+  "funding": "https://github.com/sponsors/antfu",
+  "license": "MIT",
+  "author": "Anthony Fu <anthonyfu117@hotmail.com>",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "*.d.ts",
+    "*.mjs"
+  ],
+  "scripts": {
+    "build": "rimraf dist && rollup -c",
+    "dev": "rollup -c --watch --watch.include=src/**",
+    "prepublishOnly": "nr build",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "birpc": "^0.0.2",
+    "flatted": "^3.2.4",
+    "ws": "^8.4.0"
+  },
+  "devDependencies": {
+    "rollup": "^2.63.0"
+  },
+  "engines": {
+    "node": ">=14.14.0"
+  }
+}

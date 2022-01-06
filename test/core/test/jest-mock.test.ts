@@ -1,4 +1,4 @@
-import { describe, it, expect, vitest } from 'vitest'
+import { describe, expect, it, vitest } from 'vitest'
 
 describe('jest mock compat layer', () => {
   const returnFactory = (type: string) => (value: any) => ({ type, value })

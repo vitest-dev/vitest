@@ -30,7 +30,9 @@ ESM first, top level await
 
 ## Threads
 
-Workers multi-threading via [Piscina](https://github.com/piscinajs/piscina)
+Workers multi-threading via [tinypool](https://github.com/Aslemammad/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina)), allowing tests to run simultaneously. Threads are enabled by default Vitest, and can be disabled passing `--no-threads` in the CLI.
+
+Vitest also isolates each file's environment so env mutations in one file don't affect others. Isolation can be disabled by passing `--no-isolate` to the CLI (trading of correctness for run performance).
 
 ## Filtering
 
@@ -38,7 +40,7 @@ Filtering, timeouts, concurrent for suite and tests
 
 ### CLI
 
-You can use CLI to filter test files my name:
+You can use CLI to filter test files by name:
 
 ```bash
 $ vitest basic
@@ -150,7 +152,7 @@ describe.concurrent("suite", () => {
 
 You can also use `.skip`, `.only`, and `.todo` with concurrent suites and tests. Read more in the [API Reference](../api/#concurrent)
 
-## Snaphot
+## Snapshot
 
 [Jest Snapshot](https://jestjs.io/docs/snapshot-testing) support
 
@@ -160,7 +162,24 @@ You can also use `.skip`, `.only`, and `.todo` with concurrent suites and tests.
 
 ## Mocking
 
-[Tinyspy](https://github.com/Aslemammad/tinyspy) built-in for mocking
+[Tinyspy](https://github.com/Aslemammad/tinyspy) built-in for mocking with `jest` compatible APIs on `vi` object.
+
+```ts
+import { vi } from 'vitest'
+
+const fn = vi.fn()
+
+fn('hello', 1)
+
+expect(vi.isMockFunction(fn)).toBe(true)
+expect(fn.mock.calls[0]).toEqual(['hello', 1])
+
+fn.mockImplementation((arg) => arg)
+
+fn('world', 2)
+
+expect(fn.mock.returns[1]).toBe('world')
+```
 
 Vitest supports both [happy-dom](https://github.com/capricorn86/happy-dom) or [jsdom](https://github.com/jsdom/jsdom) for mocking DOM and browser APIs. They don't come with Vitest, you might need to install them:
 
@@ -187,25 +206,26 @@ export default defineConfig({
 
 Vitest supports Native code coverage via [c8](https://github.com/bcoe/c8)
 
-```bash
-$ npm i -D c8
-$ c8 vitest
-```
-
 ```json
 {
   "scripts": {
     "test": "vitest",
-    "coverage": "c8 vitest"
+    "coverage": "vitest --coverage"
   }
 }
 ```
 
-For convenience, we also provide a shorthand for passing `--coverage` option to CLI, which will wrap the process with `c8` for you. Note when using the shorthand, you will lose the ability to pass additional options to `c8`.
+To configure it, set `test.coverage` options in your config file:
 
-```bash
-$ vitest --coverage
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  test: {
+    coverage: {
+      reporter: ['text', 'json', 'html']
+    }
+  }
+})
 ```
-
-For more configuration available, please refer to [c8](https://github.com/bcoe/c8)'s documentation.
-

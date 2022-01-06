@@ -1,9 +1,12 @@
 import { MessageChannel } from 'worker_threads'
 import { pathToFileURL } from 'url'
-import Piscina from 'piscina'
-import type { RpcMap } from 'vitest'
+import { resolve } from 'pathe'
+import type { Options as TinypoolOptions } from 'tinypool'
+import { Tinypool } from 'tinypool'
+import type { RawSourceMap } from 'source-map-js'
+import { createBirpc } from 'birpc'
 import { distDir } from '../constants'
-import type { WorkerContext, RpcPayload, File, Awaitable } from '../types'
+import type { WorkerContext, WorkerRPC } from '../types'
 import { transformRequest } from './transform'
 import type { Vitest } from './index'
 
@@ -15,18 +18,6 @@ export interface WorkerPool {
   close: () => Promise<void>
 }
 
-// UPSTREAM: Piscina does not expose this type
-interface PiscinaOptions {
-  filename?: string | null
-  name?: string
-  minThreads?: number
-  maxThreads?: number
-  idleTimeout?: number
-  maxQueue?: number | 'auto'
-  concurrentTasksPerWorker?: number
-  useAtomics?: boolean
-}
-
 export function createPool(ctx: Vitest): WorkerPool {
   if (ctx.config.threads)
     return createWorkerPool(ctx)
@@ -34,7 +25,7 @@ export function createPool(ctx: Vitest): WorkerPool {
     return createFakePool(ctx)
 }
 
-const workerPath = new URL('./dist/worker.js', pathToFileURL(distDir)).href
+const workerPath = pathToFileURL(resolve(distDir, './worker.js')).href
 
 export function createFakePool(ctx: Vitest): WorkerPool {
   const runWithFiles = (name: 'run' | 'collect'): RunWithFiles => {
@@ -65,20 +56,23 @@ export function createFakePool(ctx: Vitest): WorkerPool {
 }
 
 export function createWorkerPool(ctx: Vitest): WorkerPool {
-  const options: PiscinaOptions = {
+  const options: TinypoolOptions = {
     filename: workerPath,
     // Disable this for now, for WebContainer capability
-    // https://github.com/antfu-sponsors/vitest/issues/93
+    // https://github.com/vitest-dev/vitest/issues/93
     // In future we could conditionally enable it based on the env
     useAtomics: false,
   }
-  // UPSTREAM: Piscina set defaults by the key existence
   if (ctx.config.maxThreads != null)
     options.maxThreads = ctx.config.maxThreads
   if (ctx.config.minThreads != null)
     options.minThreads = ctx.config.minThreads
+  if (ctx.config.isolate) {
+    options.isolateWorkers = true
+    options.concurrentTasksPerWorker = 1
+  }
 
-  const piscina = new Piscina(options)
+  const pool = new Tinypool(options)
 
   const runWithFiles = (name: string): RunWithFiles => {
     return async(files, invalidates) => {
@@ -92,7 +86,7 @@ export function createWorkerPool(ctx: Vitest): WorkerPool {
           invalidates,
         }
 
-        await piscina.run(data, { transferList: [workerPort], name })
+        await pool.run(data, { transferList: [workerPort], name })
         port.close()
         workerPort.close()
       }))
@@ -102,7 +96,7 @@ export function createWorkerPool(ctx: Vitest): WorkerPool {
   return {
     runTests: runWithFiles('run'),
     collectTests: runWithFiles('collect'),
-    close: () => piscina.destroy(),
+    close: async() => {}, // TODO: not sure why this will cause Node crash: pool.destroy(),
   }
 }
 
@@ -111,38 +105,45 @@ function createChannel(ctx: Vitest) {
   const port = channel.port2
   const workerPort = channel.port1
 
-  port.on('message', async({ id, method, args = [] }: RpcPayload) => {
-    async function send(fn: () => Awaitable<any>) {
-      try {
-        port.postMessage({ id, result: await fn() })
-      }
-      catch (e) {
-        port.postMessage({ id, error: e })
-      }
-    }
-
-    switch (method) {
-      case 'processExit':
-        process.exit(args[0] as number || 1)
-        return
-      case 'snapshotSaved':
-        return send(() => ctx.snapshot.add(args[0] as any))
-      case 'fetch':
-        return send(() => transformRequest(ctx.server, ...args as RpcMap['fetch'][0]).then(r => r?.code))
-      case 'onCollected':
-        ctx.state.collectFiles(args[0] as any)
-        ctx.reporters.forEach(r => r.onStart?.((args[0] as any as File[]).map(i => i.filepath)))
-        return
-      case 'onTaskUpdate':
-        ctx.state.updateTasks([args[0] as any])
-        ctx.reporters.forEach(r => r.onTaskUpdate?.(args[0] as any))
-        return
-      case 'log':
-        ctx.reporters.forEach(r => r.onUserConsoleLog?.(args[0] as any))
-        return
-    }
-
-    console.error('Unhandled message', method, args)
+  createBirpc<WorkerRPC>({
+    functions: {
+      onWorkerExit(code) {
+        process.exit(code || 1)
+      },
+      snapshotSaved(snapshot) {
+        ctx.snapshot.add(snapshot)
+      },
+      async getSourceMap(id, force) {
+        if (force) {
+          const mod = ctx.server.moduleGraph.getModuleById(id)
+          if (mod)
+            ctx.server.moduleGraph.invalidateModule(mod)
+        }
+        const r = await transformRequest(ctx, id)
+        return r?.map as RawSourceMap | undefined
+      },
+      async fetch(id) {
+        const r = await transformRequest(ctx, id)
+        return r?.code
+      },
+      onCollected(files) {
+        ctx.state.collectFiles(files)
+        ctx.report('onCollected', files)
+      },
+      onTaskUpdate(packs) {
+        ctx.state.updateTasks(packs)
+        ctx.report('onTaskUpdate', packs)
+      },
+      onUserLog(msg) {
+        ctx.report('onUserConsoleLog', msg)
+      },
+    },
+    post(v) {
+      port.postMessage(v)
+    },
+    on(fn) {
+      port.on('message', fn)
+    },
   })
 
   return { workerPort, port }

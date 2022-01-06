@@ -1,8 +1,16 @@
 // Vitest Snapshot v1
 
+exports[`properties snapshot 1`] = `
+{
+  "createdAt": Any<Date>,
+  "id": Any<Number>,
+  "name": StringContaining "LeBron",
+}
+`;
+
 exports[`snapshot 1`] = `
-Object {
-  "this": Object {
+{
+  "this": {
     "is": Set {
       "of",
       "snapshot",
@@ -12,41 +20,41 @@ Object {
 `;
 
 exports[`snapshot with big array 1`] = `
-Object {
-  "this": Object {
+{
+  "this": {
     "is": Set {
       "one",
-      Array [
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
-        Object {},
+      [
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
       ],
     },
   },
@@ -54,12 +62,22 @@ Object {
 `;
 
 exports[`snapshot with big string 1`] = `
-Object {
-  "this": Object {
+{
+  "this": {
     "is": Set {
       "one",
       "zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo",
     },
   },
+}
+`;
+
+exports[`throwing snapshots 1`] = `"omega"`;
+
+exports[`throwing snapshots 2`] = `"omega"`;
+
+exports[`throwing snapshots 3`] = `
+{
+  "error": "omega",
 }
 `;

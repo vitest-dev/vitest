@@ -47,7 +47,7 @@ export default defineConfig({
       {
         text: 'Discord',
         // TODO: 'https://chat.vitest.dev'
-        link: 'https://discord.gg/2zYZNngd7y'
+        link: 'https://chat.vitest.dev'
       },
       {
         text: 'Twitter',
@@ -94,6 +94,26 @@ export default defineConfig({
             {
               text: 'Features',
               link: '/guide/features'
+            },
+            {
+              text: 'Mocking Functions',
+              link: '/guide/mocking'
+            },
+            {
+              text: 'Mocking Modules',
+              link: '/guide/mocking-modules'
+            },
+            {
+              text: 'Mocking Timers',
+              link: '/guide/mocking-timers'
+            },
+            {
+              text: 'Mocking Date',
+              link: '/guide/mocking-date'
+            },
+            {
+              text: 'Mocking Requests',
+              link: '/guide/mocking-requests'
             },
             /* TODO
             {
