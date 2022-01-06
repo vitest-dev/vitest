@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { client } from '~/composables/client'
 const props = defineProps<{ id: string }>()
+const { id } = toRefs(props)
 defineEmits<{ (e: 'close'): void }>()
 
-const result = await client.rpc.getTransformResult(props.id)
-const ext = computed(() => props.id?.split(/\./g).pop() || 'js')
+const result = asyncComputed(async() => await client.rpc.getTransformResult(id.value))
+const ext = computed(() => id.value?.split(/\./g).pop() || 'js')
 
-const source = computed(() => result?.source?.trim() || '')
-const code = computed(() => result?.code?.replace(/\/\/# sourceMappingURL=.*\n/, '').trim() || '')
+const source = computed(() => result.value?.source?.trim() || '')
+const code = computed(() => result.value?.code?.replace(/\/\/# sourceMappingURL=.*\n/, '').trim() || '')
 // TODO: sourcemap https://evanw.github.io/source-map-visualization/
 </script>
 
