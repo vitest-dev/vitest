@@ -90,7 +90,7 @@
     "pathe": "^0.2.0",
     "picocolors": "^1.0.0",
     "pkg-types": "^0.3.2",
-    "pretty-format": "^27.4.2",
+    "pretty-format": "^27.4.6",
     "prompts": "^2.4.2",
     "rollup": "^2.63.0",
     "source-map-js": "^1.0.1",

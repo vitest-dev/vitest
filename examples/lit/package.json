@@ -11,7 +11,7 @@
     "test": "vitest"
   },
   "dependencies": {
-    "lit": "^2.0.2"
+    "lit": "^2.1.0"
   },
   "devDependencies": {
     "happy-dom": "*",
