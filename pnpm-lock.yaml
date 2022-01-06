@@ -338,6 +338,7 @@ importers:
     specifiers:
       '@types/codemirror': ^5.60.5
       '@types/d3-force': ^3.0.3
+      '@types/d3-selection': ^3.0.2
       '@types/ws': ^8.2.2
       '@unocss/reset': ^0.21.0
       '@vitejs/plugin-vue': ^2.0.1
@@ -345,7 +346,7 @@ importers:
       '@vueuse/core': ^7.5.1
       codemirror: ^5.65.0
       codemirror-theme-vars: ^0.1.1
-      d3-graph-controller: ^1.12.0
+      d3-graph-controller: ^1.13.3
       picocolors: ^1.0.0
       rollup: ^2.63.0
       sirv: ^2.0.0
@@ -361,6 +362,7 @@ importers:
     devDependencies:
       '@types/codemirror': 5.60.5
       '@types/d3-force': 3.0.3
+      '@types/d3-selection': 3.0.2
       '@types/ws': 8.2.2
       '@unocss/reset': 0.21.0
       '@vitejs/plugin-vue': 2.0.1_vite@2.7.10+vue@3.2.26
@@ -368,7 +370,7 @@ importers:
       '@vueuse/core': 7.5.1_vue@3.2.26
       codemirror: 5.65.0
       codemirror-theme-vars: 0.1.1
-      d3-graph-controller: 1.12.0
+      d3-graph-controller: 1.13.3
       picocolors: 1.0.0
       rollup: 2.63.0
       splitpanes: 3.0.6
@@ -2054,6 +2056,10 @@ packages:
       '@types/d3-time': 2.1.1
     dev: false
 
+  /@types/d3-selection/3.0.2:
+    resolution: {integrity: sha512-d29EDd0iUBrRoKhPndhDY6U/PYxOWqgIZwKTooy2UkBfU7TNZNpRho0yLWPxlatQrFWk2mnTu71IZQ4+LRgKlQ==}
+    dev: true
+
   /@types/d3-shape/2.1.3:
     resolution: {integrity: sha512-HAhCel3wP93kh4/rq+7atLdybcESZ5bRHDEZUojClyZWsRuEMo3A52NGYJSh48SxfxEU6RZIVbZL2YFZ2OAlzQ==}
     dependencies:
@@ -3512,8 +3518,8 @@ packages:
     resolution: {integrity: sha512-Ab3S6XuE/Q+flY96HXT0jOXcM4EAClYFnRGY5zsjRGNy6qCYrQsMffs7cV5Q9xejb35zxW5hf/guKw34kvIKsA==}
     dev: false
 
-  /d3-graph-controller/1.12.0:
-    resolution: {integrity: sha512-YLq4ZGB6GZ12Pf07UVi2O1tkojO08eGwH33vG1kRm3wl2kJ3seuDRcRVmNAm2TeoAV94JVhFfGV6itmxSglxvw==}
+  /d3-graph-controller/1.13.3:
+    resolution: {integrity: sha512-8Tu8TkL++RzJhIRhzcFepe3fAOM+YjWlT4Xy92OuH7NSBhs/ziUkkWMCUJrFfOMeSJEvT41y3G55Uxld8tgQIw==}
     dependencies:
       d3-drag: 3.0.0
       d3-force: 3.0.0

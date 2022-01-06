@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { GraphController, PositionInitializers, defineGraphConfig } from 'd3-graph-controller'
+import type { ResizeContext } from 'd3-graph-controller'
+import { GraphController, Markers, PositionInitializers, defineGraphConfig } from 'd3-graph-controller'
+import type { Selection } from 'd3-selection'
 import type { ModuleGraph, ModuleGraphController, ModuleLink, ModuleNode, ModuleType } from '~/composables/module-graph'
 
 const props = defineProps<{
@@ -32,6 +34,11 @@ function setFilter(name: ModuleType, value: boolean) {
   controller.value?.filterNodesByType(value, name)
 }
 
+function setSelectedModule(id: string) {
+  selectedModule.value = id
+  modalShow.value = true
+}
+
 function resetGraphController() {
   controller.value?.shutdown()
   if (!graph.value || !el.value)
@@ -41,31 +48,60 @@ function resetGraphController() {
     el.value!,
     graph.value,
     defineGraphConfig<ModuleType, ModuleNode, ModuleLink>({
-      getLinkLength: () => 120,
+      getLinkLength: () => 240,
       getNodeRadius: () => 10,
       alphas: {
-        initialize: graph.value.nodes.some(node => node.x === undefined || node.y === undefined) ? 1 : 0,
-        resize: 0.1,
+        initialize: 1,
+        resize: ({ newHeight, newWidth }: ResizeContext) => {
+          const willBeHidden = newHeight === 0 && newWidth === 0
+          if (willBeHidden)
+            return 0
+          return 0.25
+        },
       },
       forces: {
         charge: {
           strength: -1,
         },
         collision: {
-          radiusMultiplier: 2,
+          radiusMultiplier: 10,
+        },
+      },
+      modifiers: {
+        node(selection: Selection<SVGCircleElement, ModuleNode, SVGGElement, undefined>) {
+          bindOnClick(selection)
         },
       },
       positionInitializer: graph.value.nodes.length > 1
         ? PositionInitializers.Randomized
         : PositionInitializers.Centered,
-      callbacks: {
-        nodeClicked(node: ModuleNode) {
-          selectedModule.value = node.id
-          modalShow.value = true
-        },
-      },
+      marker: Markers.Arrow(2),
     }),
   )
+}
+
+function bindOnClick(selection: Selection<SVGCircleElement, ModuleNode, SVGGElement, undefined>) {
+  let px = 0
+  let py = 0
+  let pt = 0
+  selection
+    .on('pointerdown', (_, node) => {
+      if (!node.x || !node.y)
+        return
+      px = node.x
+      py = node.y
+      pt = Date.now()
+    })
+    .on('pointerup', (_, node: ModuleNode) => {
+      if (!node.x || !node.y)
+        return
+      if (Date.now() - pt > 500)
+        return
+      const dx = node.x - px
+      const dy = node.y - py
+      if (dx ** 2 + dy ** 2 < 100)
+        setSelectedModule(node.id)
+    })
 }
 
 // Without debouncing the resize method, resizing the component will result in flickering.
@@ -131,7 +167,6 @@ function debounce(cb: () => void) {
   --color-node-root: #6e9aa5;
   --color-node-label: var(--color-text);
   --color-node-stroke: var(--color-text);
-  --graph-h: calc(100vh - 78px - 39px);
 }
 
 html.dark {
@@ -142,15 +177,11 @@ html.dark {
   --color-node-root: #467d8b;
 }
 
-.graph {
-  min-height: var(--graph-h) !important;
-  max-height: var(--graph-h) !important;
-  height: var(--graph-h) !important;
-}
 .graph .node {
   stroke-width: 2px;
   stroke-opacity: 0.5;
 }
+
 .graph .link {
   stroke-width: 2px;
 }
