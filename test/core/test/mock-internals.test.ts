@@ -17,6 +17,6 @@ test('node internal is mocked', () => {
   expect(childProcess.exec).toHaveBeenCalledWith('default')
 })
 
-test('built int is mocked with __mocks__ folder', () => {
+test('builtin is mocked with __mocks__ folder', () => {
   expect(timers.clearInterval()).toBe('foo')
 })
