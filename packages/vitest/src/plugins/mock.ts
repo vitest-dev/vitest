@@ -118,11 +118,9 @@ export const MocksPlugin = (): Plugin => {
         for (const mock of mocks) {
           const filepath = await this.resolve(mock.path, id)
 
-          if (!filepath) continue
-
           m ??= new MagicString(code)
 
-          const overwrite = getMethodCall('mock', filepath.id, mock.path)
+          const overwrite = getMethodCall('mock', filepath?.id || mock.path, mock.path)
 
           m.prepend(mock.code.replace(mock.declaraton, overwrite))
         }
