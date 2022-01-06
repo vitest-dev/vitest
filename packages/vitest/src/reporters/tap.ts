@@ -25,7 +25,7 @@ export class TapReporter implements Reporter {
     this.ctx.log(`${currentIdent}1..${tasks.length}`)
 
     for (const task of tasks) {
-      const ok = task.result?.state === 'pass' ? 'ok' : 'not ok'
+      const ok = task.result?.state === 'pass' || task.mode === 'skip' || task.mode === 'todo' ? 'ok' : 'not ok'
 
       let comment = ''
       if (task.mode === 'skip')
