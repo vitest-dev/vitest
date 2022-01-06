@@ -2,7 +2,7 @@
 import type { ResizeContext } from 'd3-graph-controller'
 import { GraphController, Markers, PositionInitializers, defineGraphConfig } from 'd3-graph-controller'
 import type { Selection } from 'd3-selection'
-import type { ModuleGraph, ModuleGraphConfig, ModuleGraphController, ModuleLink, ModuleNode, ModuleType } from '~/composables/module-graph'
+import type { ModuleGraph, ModuleGraphController, ModuleLink, ModuleNode, ModuleType } from '~/composables/module-graph'
 
 const props = defineProps<{
   graph: ModuleGraph
@@ -59,11 +59,6 @@ function resetGraphController() {
           return 0.25
         },
       },
-      callbacks: {
-        nodeClicked(node: ModuleNode) {
-          setSelectedModule(node.id)
-        },
-      },
       forces: {
         charge: {
           strength: -1,
@@ -72,20 +67,41 @@ function resetGraphController() {
           radiusMultiplier: 10,
         },
       },
-      // TODO: pointerup triggers when drag ends
-      // modifiers: {
-      //   node(selection: Selection<SVGCircleElement, ModuleNode, SVGGElement, undefined>) {
-      //     selection
-      //       .on('pointerdown', null)
-      //       .on('pointerup', (_: PointerEvent, node: ModuleNode) => setSelectedModule(node.id))
-      //   },
-      // },
+      modifiers: {
+        node(selection: Selection<SVGCircleElement, ModuleNode, SVGGElement, undefined>) {
+          bindOnClick(selection)
+        },
+      },
       positionInitializer: graph.value.nodes.length > 1
         ? PositionInitializers.Randomized
         : PositionInitializers.Centered,
       marker: Markers.Arrow(2),
     }),
   )
+}
+
+function bindOnClick(selection: Selection<SVGCircleElement, ModuleNode, SVGGElement, undefined>) {
+  let px = 0
+  let py = 0
+  let pt = 0
+  selection
+    .on('pointerdown', (_, node) => {
+      if (!node.x || !node.y)
+        return
+      px = node.x
+      py = node.y
+      pt = Date.now()
+    })
+    .on('pointerup', (_, node: ModuleNode) => {
+      if (!node.x || !node.y)
+        return
+      if (Date.now() - pt > 500)
+        return
+      const dx = node.x - px
+      const dy = node.y - py
+      if (dx ** 2 + dy ** 2 < 100)
+        setSelectedModule(node.id)
+    })
 }
 
 // Without debouncing the resize method, resizing the component will result in flickering.
