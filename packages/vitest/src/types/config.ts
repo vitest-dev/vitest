@@ -1,6 +1,7 @@
 import type { CommonServerOptions } from 'vite'
 import type { BuiltinReporters } from '../reporters'
 import type { C8Options, ResolvedC8Options } from '../coverage'
+import type { JSDOMOptions } from './jsdom-options'
 import type { Reporter } from './reporter'
 import type { SnapshotStateOptions } from './snapshot'
 import type { Arrayable } from './general'
@@ -8,6 +9,15 @@ import type { Arrayable } from './general'
 export type BuiltinEnvironment = 'node' | 'jsdom' | 'happy-dom'
 
 export type ApiConfig = Pick<CommonServerOptions, 'port' | 'strictPort' | 'host'>
+
+export { JSDOMOptions }
+
+export interface EnvironmentOptions {
+  /**
+   * jsdom options.
+   */
+  jsdom?: JSDOMOptions
+}
 
 export interface InlineConfig {
   /**
@@ -77,7 +87,12 @@ export interface InlineConfig {
   environment?: BuiltinEnvironment
 
   /**
-   * Update snapshot files
+   * Environment options.
+   */
+  environmentOptions?: EnvironmentOptions
+
+  /**
+   * Update snapshot
    *
    * @default false
    */
@@ -92,6 +107,8 @@ export interface InlineConfig {
 
   /**
    * Project root
+   *
+   * @default process.cwd()
    */
   root?: string
 
