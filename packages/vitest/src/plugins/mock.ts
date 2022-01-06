@@ -102,15 +102,13 @@ export const MocksPlugin = (): Plugin => {
       for (const match of matchAll) {
         const [line, method, modulePath] = match
         const filepath = await this.resolve(modulePath, id)
-        if (filepath) {
-          m ??= new MagicString(code)
-          const start = match.index || 0
-          const end = start + line.length
+        m ??= new MagicString(code)
+        const start = match.index || 0
+        const end = start + line.length
 
-          const overwrite = `${getMethodCall(method, filepath.id, modulePath)});`
+        const overwrite = `${getMethodCall(method, filepath?.id || modulePath, modulePath)});`
 
-          m.overwrite(start, end, overwrite)
-        }
+        m.overwrite(start, end, overwrite)
       }
 
       if (mockRegexp.exec(code)) {
