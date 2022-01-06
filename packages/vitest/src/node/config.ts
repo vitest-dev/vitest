@@ -104,8 +104,7 @@ export function resolveConfig(
   if (process.env.VITEST_MIN_THREADS)
     resolved.minThreads = parseInt(process.env.VITEST_MIN_THREADS)
 
-  const setupFilesArray = typeof resolved.setupFiles === 'string' ? [resolved.setupFiles] : Array.from(resolved.setupFiles || [])
-  resolved.setupFiles = setupFilesArray.map(i => resolve(resolved.root, i))
+  resolved.setupFiles = toArray(resolved.setupFiles || []).map(file => resolve(resolved.root, file))
 
   // the server has been created, we don't need to override vite.server options
   resolved.api = resolveApiConfig(options)
