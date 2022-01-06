@@ -3,20 +3,51 @@ When writing tests it's only a matter of time before you need to create 'fake' v
 
 Following are some example implementations of common test cases that require mocking. If you wanna dive in head first, check out the [API section](/api/#creating-mocks) otherwise keep reading to take a deeper dive into the world of mocking.
 
-> Always remember to clear or restore **all** mocks before or after a test run to save head scratching along the line!
+> Always remember to clear or restore mocks before or after each test run to save head scratching along the line!
 
 ## Dates
 
-Vitest comes with [`mockdate`](https://www.npmjs.com/package/mockdate) package that lets you easily manipulate system date in your tests.
+Sometimes you need to be in control of the date's to allow for consistency when testing. Vitest comes with [`mockdate`](https://www.npmjs.com/package/mockdate) package baked-in to let you easily manipulate the system date in your tests.
 
 ### Example
 
-```ts
-const date = new Date(1998, 11, 19)
+```js
+import { afterEach, describe, expect, test, vi } from 'vitest'
 
-vi.mockCurrentDate(date)
+describe('testing date mock functionality', () => {
+  afterEach(() => {
+    vi.restoreCurrentDate()
+  })
 
-expect(Date.now()).toBe(date.valueOf())
+  test('seting time in the past', () => {
+    const date = new Date(2000, 1, 1)
+
+    vi.mockCurrentDate(date)
+
+    expect(Date.now()).toBe(date.valueOf())
+    expect(vi.getMockedDate()).toBe(date)
+
+    vi.restoreCurrentDate()
+
+    expect(Date.now()).not.toBe(date.valueOf())
+    expect(vi.getMockedDate()).not.toBe(date)
+  })
+
+  test('setting time in different types', () => {
+    const time = 1234567890
+
+    vi.mockCurrentDate(time)
+
+    expect(Date.now()).toBe(time)
+
+    const timeStr = 'Fri Feb 20 2015 19:29:31 GMT+0530'
+    const timeStrMs = 1424440771000
+
+    vi.mockCurrentDate(timeStr)
+
+    expect(Date.now()).toBe(timeStrMs)
+  })
+})
 ```
 
 ## Functions
@@ -47,6 +78,45 @@ If your code is importing mocked module, but there are no `__mocks__` file for t
 * All instances of classes and their prototypes will be deeply cloned
 
 ### Example
+
+```js
+import { afterEach, describe, expect, test, vi } from 'vitest'
+
+describe('testing date mock functionality', () => {
+  afterEach(() => {
+    vi.restoreCurrentDate()
+  })
+
+  test('seting time in the past', () => {
+    const date = new Date(2000, 1, 1)
+
+    vi.mockCurrentDate(date)
+
+    expect(Date.now()).toBe(date.valueOf())
+    expect(vi.getMockedDate()).toBe(date)
+
+    vi.restoreCurrentDate()
+
+    expect(Date.now()).not.toBe(date.valueOf())
+    expect(vi.getMockedDate()).not.toBe(date)
+  })
+
+  test('setting time in different types', () => {
+    const time = 1234567890
+
+    vi.mockCurrentDate(time)
+
+    expect(Date.now()).toBe(time)
+
+    const timeStr = 'Fri Feb 20 2015 19:29:31 GMT+0530'
+    const timeStrMs = 1424440771000
+
+    vi.mockCurrentDate(timeStr)
+
+    expect(Date.now()).toBe(timeStrMs)
+  })
+})
+```
 
 ## Requests
 
@@ -112,3 +182,128 @@ To make your tests faster, you can mock calls to `setTimeout` and `setInterval`.
 
 ### Example
 
+```js
+import { expect, test, vi } from 'vitest'
+import { timeout } from '../src/timeout'
+
+test('timeout', async() => {
+  const t = vi.fn()
+
+  vi.useFakeTimers()
+
+  setTimeout(t, 50)
+  const timeout = setTimeout(t, 50)
+  clearTimeout(timeout)
+
+  vi.runOnlyPendingTimers()
+  vi.useRealTimers()
+
+  expect(t).toBeCalledTimes(1)
+})
+
+test('advance timeout', () => {
+  const t = vi.fn()
+
+  vi.useFakeTimers()
+
+  setTimeout(t, 50)
+
+  vi.advanceTimersByTime(25)
+
+  expect(t).not.toBeCalled()
+
+  vi.advanceTimersByTime(25)
+
+  expect(t).toBeCalledTimes(1)
+
+  vi.useRealTimers()
+})
+
+test('interval', () => {
+  let count = 0
+  const i = vi.fn(() => {
+    if (count === 20) clearInterval(interval)
+    count++
+  })
+
+  vi.useFakeTimers()
+
+  let interval = setInterval(i, 30)
+
+  vi.runAllTimers()
+
+  expect(i).toBeCalledTimes(21)
+})
+
+test('advance interval', () => {
+  let count = 0
+  const p = vi.fn()
+  const i = vi.fn(() => {
+    setInterval(p, 50)
+    if (count === 3) clearInterval(interval)
+    count++
+  })
+
+  vi.useFakeTimers()
+
+  let interval = setInterval(i, 30)
+
+  vi.advanceTimersByTime(100)
+
+  expect(i).toBeCalledTimes(3)
+  expect(p).toBeCalledTimes(1)
+
+  vi.advanceTimersByTime(100)
+
+  expect(i).toBeCalledTimes(4)
+  expect(p).toBeCalledTimes(8)
+
+  vi.useRealTimers()
+})
+
+test('async timer', async() => {
+  const res: string[] = []
+
+  vi.useFakeTimers()
+
+  setTimeout(async() => {
+    await Promise.resolve()
+    res.push('item1')
+  }, 100)
+
+  setTimeout(async() => {
+    await Promise.resolve()
+    res.push('item2')
+  }, 100)
+
+  await vi.runAllTimers()
+  vi.useRealTimers()
+
+  expect(res).toEqual(['item1', 'item2'])
+})
+
+test('advance timer', async() => {
+  const a1 = vi.fn()
+  const a2 = vi.fn()
+
+  vi.useFakeTimers()
+
+  setTimeout(a1)
+  setInterval(a2)
+
+  vi.advanceTimersToNextTimer()
+
+  expect(a1).toHaveBeenCalled()
+  expect(a2).not.toHaveBeenCalled()
+
+  vi.advanceTimersToNextTimer()
+
+  expect(a2).toHaveBeenCalled()
+
+  vi.advanceTimersToNextTimer()
+
+  expect(a2).toHaveBeenCalledTimes(2)
+
+  vi.useRealTimers()
+})
+```
