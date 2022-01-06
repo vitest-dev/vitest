@@ -89,7 +89,7 @@ export async function executeInViteNode(options: ExecuteOptions) {
     if (cached)
       return cached
     const exports = await mock()
-    setCache(name, { exports })
+    setCache(name, { exports, mocked: true })
     return exports
   }
 
@@ -100,6 +100,17 @@ export async function executeInViteNode(options: ExecuteOptions) {
       if (canMock) {
         const mocks = mockMap[suite || ''] || {}
         const mock = mocks[resolveDependency(dep)]
+        if (mock === null) {
+          const mockedKey = `${dep}__mock`
+          const cache = moduleCache.get(mockedKey)
+          if (cache?.exports && cache.mocked)
+            return cache.exports
+          const cacheKey = toFilePath(dep, root)
+          const mod = moduleCache.get(cacheKey)?.exports || await cachedRequest(dep, callstack)
+          const exports = mockObject(mod)
+          setCache(mockedKey, { exports, mocked: true })
+          return exports
+        }
         if (typeof mock === 'function')
           return callFunctionMock(dep, mock)
         if (typeof mock === 'string')
@@ -142,16 +153,15 @@ export async function executeInViteNode(options: ExecuteOptions) {
       return request(getActualPath(path, nmName), false)
     }
 
-    const importMock = async(path: string, nmName: string) => {
+    async function importMock(path: string, nmName: string): Promise<any> {
       if (!suite)
         throw new Error('You can import mock only inside of a running test')
 
       const mock = (mockMap[suite] || {})[path] || resolveMockPath(path, root, nmName)
       if (mock === null) {
         const fsPath = getActualPath(path, nmName)
-        const exports = mockObject(await request(fsPath, false))
-        setCache(fsPath, { exports })
-        return exports
+        const mod = await request(fsPath, false)
+        return mockObject(mod)
       }
       if (typeof mock === 'function')
         return callFunctionMock(path, mock)
@@ -188,12 +198,6 @@ export async function executeInViteNode(options: ExecuteOptions) {
       lineOffset: 0,
     })
     await fn(...Object.values(context))
-
-    const mocks = suite ? mockMap[suite] : null
-    if (mocks) {
-      if (mocks[id] === null)
-        exportAll(exports, mockObject(exports))
-    }
 
     return exports
   }

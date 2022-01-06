@@ -8,6 +8,7 @@ export interface ModuleCache {
   promise?: Promise<any>
   exports?: any
   code?: string
+  mocked?: boolean
 }
 
 export interface EnvironmentReturn {
