@@ -19,6 +19,9 @@
 </template>
 
 <script setup lang='ts'>
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: boolean): void
+}>()
 const props = withDefaults(defineProps<{
   modelValue?: boolean
   direction?: string
@@ -26,9 +29,6 @@ const props = withDefaults(defineProps<{
   modelValue: false,
   direction: 'bottom',
 })
-const emit = defineEmits<{
-  (e: 'update:modelValue', value: boolean): void
-}>()
 
 const positionClass = computed(() => {
   switch (props.direction) {
