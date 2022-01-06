@@ -9,18 +9,20 @@ export type ModuleGraph = Graph<ModuleType, ModuleNode, ModuleLink>
 export type ModuleGraphController = GraphController<ModuleType, ModuleNode, ModuleLink>
 export type ModuleGraphConfig = GraphConfig<ModuleType, ModuleNode, ModuleLink>
 
-function makeLabel(module: string): string {
-  return module.substring(module.lastIndexOf('/') + 1)
-}
-
 function defineExternalModuleNode(module: string): ModuleNode {
+  let label = module
+  if (label.includes('/node_modules/'))
+    label = label.split(/\/node_modules\//g).pop()!.split(/\//g).shift()!
+  else
+    label = label.split(/\//g).pop()!
+
   return defineNode<ModuleType, ModuleNode>({
     color: 'var(--color-node-external)',
     labelColor: 'var(--color-node-external)',
     fontSize: '0.875rem',
     isFocused: false,
     id: module,
-    label: makeLabel(module),
+    label,
     type: 'external',
   })
 }
@@ -32,7 +34,7 @@ function defineInlineModuleNode(module: string): ModuleNode {
     fontSize: '0.875rem',
     isFocused: false,
     id: module,
-    label: makeLabel(module),
+    label: module.split(/\//g).pop()!,
     type: 'inline',
   })
 }
