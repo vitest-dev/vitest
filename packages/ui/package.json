@@ -22,7 +22,7 @@
     "build:client": "vite build",
     "build:node": "rollup -c",
     "dev:client": "vite",
-    "dev": "rollup -c --watch node",
+    "dev": "rollup -c --watch --watch.include=node/**",
     "dev:ui": "run-p dev dev:client"
   },
   "dependencies": {
