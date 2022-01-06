@@ -24,7 +24,9 @@ export class TapReporter implements Reporter {
   logTasks(tasks: Task[], currentIdent: string) {
     this.ctx.log(`${currentIdent}1..${tasks.length}`)
 
-    for (const task of tasks) {
+    for (const [i, task] of tasks.entries()) {
+      const id = i + 1
+
       const ok = task.result?.state === 'pass' || task.mode === 'skip' || task.mode === 'todo' ? 'ok' : 'not ok'
 
       let comment = ''
@@ -36,14 +38,14 @@ export class TapReporter implements Reporter {
         comment = ` # time=${task.result.duration.toFixed(2)}ms`
 
       if (task.type === 'suite') {
-        this.ctx.log(`${currentIdent}${ok} - ${tapString(task.name)}${comment} {`)
+        this.ctx.log(`${currentIdent}${ok} ${id} - ${tapString(task.name)}${comment} {`)
 
         this.logTasks(task.tasks, `${currentIdent}${IDENT}`)
 
         this.ctx.log(`${currentIdent}}`)
       }
       else {
-        this.ctx.log(`${currentIdent}${ok} - ${tapString(task.name)}${comment}`)
+        this.ctx.log(`${currentIdent}${ok} ${id} - ${tapString(task.name)}${comment}`)
 
         if (task.result?.state === 'fail' && task.result.error) {
           const error = task.result.error
