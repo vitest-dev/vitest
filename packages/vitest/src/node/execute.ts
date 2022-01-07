@@ -3,14 +3,14 @@ import { fileURLToPath, pathToFileURL } from 'url'
 import vm from 'vm'
 import { dirname, resolve } from 'pathe'
 import type { ModuleCache, ResolvedConfig } from '../types'
-import { slash, toFilePath } from '../utils'
+import { normalizeId, slash, toFilePath } from '../utils'
 import { shouldExternalize } from '../utils/externalize'
 import type { SuiteMocks } from './mocker'
 import { createMocker } from './mocker'
 
 export type FetchFunction = (id: string) => Promise<string | undefined>
 
-export interface ExecuteOptions extends Pick<ResolvedConfig, 'depsInline' | 'depsExternal' | 'fallbackCJS'> {
+export interface ExecuteOptions extends Pick<ResolvedConfig, 'depsInline' | 'depsExternal' | 'fallbackCJS' | 'base'> {
   root: string
   files: string[]
   fetch: FetchFunction
@@ -62,7 +62,7 @@ export async function interpretedImport(path: string, interpretDefault: boolean)
 }
 
 export async function executeInViteNode(options: ExecuteOptions) {
-  const { moduleCache, root, files, fetch, mockMap } = options
+  const { moduleCache, root, files, fetch, mockMap, base } = options
 
   const externalCache = new Map<string, false | string>()
   builtinModules.forEach(m => externalCache.set(m, m))
@@ -100,6 +100,17 @@ export async function executeInViteNode(options: ExecuteOptions) {
       if (canMock) {
         const mocks = mockMap[suite || ''] || {}
         const mock = mocks[resolveDependency(dep)]
+        if (mock === null) {
+          const mockedKey = `${dep}__mock`
+          const cache = moduleCache.get(mockedKey)
+          if (cache?.exports)
+            return cache.exports
+          const cacheKey = toFilePath(dep, root)
+          const mod = moduleCache.get(cacheKey)?.exports || await cachedRequest(dep, callstack)
+          const exports = mockObject(mod)
+          setCache(mockedKey, { exports })
+          return exports
+        }
         if (typeof mock === 'function')
           return callFunctionMock(dep, mock)
         if (typeof mock === 'string')
@@ -142,16 +153,15 @@ export async function executeInViteNode(options: ExecuteOptions) {
       return request(getActualPath(path, nmName), false)
     }
 
-    const importMock = async(path: string, nmName: string) => {
+    async function importMock(path: string, nmName: string): Promise<any> {
       if (!suite)
         throw new Error('You can import mock only inside of a running test')
 
       const mock = (mockMap[suite] || {})[path] || resolveMockPath(path, root, nmName)
       if (mock === null) {
         const fsPath = getActualPath(path, nmName)
-        const exports = mockObject(await request(fsPath, false))
-        setCache(fsPath, { exports })
-        return exports
+        const mod = await request(fsPath, false)
+        return mockObject(mod)
       }
       if (typeof mock === 'function')
         return callFunctionMock(path, mock)
@@ -189,12 +199,6 @@ export async function executeInViteNode(options: ExecuteOptions) {
     })
     await fn(...Object.values(context))
 
-    const mocks = suite ? mockMap[suite] : null
-    if (mocks) {
-      if (mocks[id] === null)
-        exportAll(exports, mockObject(exports))
-    }
-
     return exports
   }
 
@@ -206,7 +210,7 @@ export async function executeInViteNode(options: ExecuteOptions) {
   }
 
   async function cachedRequest(rawId: string, callstack: string[]) {
-    const id = normalizeId(rawId)
+    const id = normalizeId(rawId, base)
 
     if (externalCache.get(id))
       return interpretedImport(patchWindowsImportPath(id), options.interpretDefault)
@@ -243,16 +247,6 @@ export async function executeInViteNode(options: ExecuteOptions) {
       }
     }
   }
-}
-
-export function normalizeId(id: string): string {
-  return id
-    .replace(/^\/@id\/__x00__/, '\0') // virtual modules start with `\0`
-    .replace(/^\/@id\//, '')
-    .replace(/^__vite-browser-external:/, '')
-    .replace(/^node:/, '')
-    .replace(/[?&]v=\w+/, '?') // remove ?v= query
-    .replace(/\?$/, '') // remove end query mark
 }
 
 function patchWindowsImportPath(path: string) {

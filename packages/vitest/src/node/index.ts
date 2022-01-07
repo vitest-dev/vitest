@@ -9,16 +9,17 @@ import c from 'picocolors'
 import type { RawSourceMap } from 'source-map-js'
 import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig } from '../types'
 import { SnapshotManager } from '../integrations/snapshot/manager'
-import { configFiles, defaultPort } from '../constants'
+import { configFiles } from '../constants'
 import { ensurePackageInstalled, hasFailed, noop, slash, toArray } from '../utils'
 import { MocksPlugin } from '../plugins/mock'
-import { DefaultReporter } from '../reporters/default'
-import { ReportersMap } from '../reporters'
+import { DefaultReporter, ReportersMap } from '../reporters'
+
 import { cleanCoverage, reportCoverage } from '../coverage'
 import type { WorkerPool } from './pool'
 import { StateManager } from './state'
-import { resolveConfig } from './config'
+import { resolveApiConfig, resolveConfig } from './config'
 import { createPool } from './pool'
+import { transformRequest } from './transform'
 
 const WATCHER_DEBOUNCE = 100
 
@@ -90,7 +91,7 @@ class Vitest {
   }
 
   async start(filters?: string[]) {
-    this.report('onInit', this)
+    await this.report('onInit', this)
 
     const files = await this.filterTestsBySource(
       await this.globTestFiles(filters),
@@ -117,7 +118,7 @@ class Vitest {
     const deps = new Set<string>()
 
     const addImports = async(filepath: string) => {
-      const transformed = await this.server.transformRequest(filepath, { ssr: true })
+      const transformed = await transformRequest(this, filepath)
       if (!transformed) return
       const dependencies = [...transformed.deps || [], ...transformed.dynamicDeps || []]
       for (const dep of dependencies) {
@@ -141,7 +142,7 @@ class Vitest {
     if (!related)
       return tests
 
-    // dont run anything if no related sources are found
+    // don't run anything if no related sources are found
     if (!related.length)
       return []
 
@@ -362,12 +363,11 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
 
   let haveStarted = false
 
-  async function UIPlugin() {
-    if (!options.open)
-      return
+  options.api = resolveApiConfig(options, viteOverrides)
 
+  async function UIPlugin() {
     await ensurePackageInstalled('@vitest/ui')
-    return (await import('@vitest/ui')).default()
+    return (await import('@vitest/ui')).default(options.uiBase)
   }
 
   const config: ViteInlineConfig = {
@@ -393,11 +393,15 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
         },
       } as VitePlugin,
       MocksPlugin(),
-      await UIPlugin(),
+      options.ui
+        ? await UIPlugin()
+        : null,
     ],
     server: {
-      open: options.open ? '/__vitest__/' : undefined,
-      strictPort: true,
+      ...options.api,
+      open: options.ui
+        ? options.uiBase ?? '/__vitest__/'
+        : undefined,
       preTransformRequests: false,
     },
     build: {
@@ -408,12 +412,8 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
   const server = await createServer(mergeConfig(config, viteOverrides))
   await server.pluginContainer.buildStart({})
 
-  if (options.api === true)
-    options.api = defaultPort
-  if (options.open && typeof options.api !== 'number')
-    options.api = defaultPort
-  if (typeof options.api === 'number')
-    await server.listen(options.api)
+  if (options.api?.port)
+    await server.listen()
 
   return ctx
 }

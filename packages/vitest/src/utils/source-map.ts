@@ -38,7 +38,9 @@ export async function interpretSourcePos(stackFrames: ParsedStack[], ctx: Vitest
 }
 
 const stackIgnorePatterns = [
+  'node:internal',
   '/vitest/dist/',
+  '/node_modules/chai/',
   '/node_modules/tinypool/',
   '/node_modules/tinyspy/',
 ]

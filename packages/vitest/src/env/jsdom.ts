@@ -1,17 +1,42 @@
 import { importModule } from 'local-pkg'
-import type { Environment } from '../types'
+import type { Environment, JSDOMOptions } from '../types'
 import { KEYS } from './jsdom-keys'
 
 export default <Environment>({
   name: 'jsdom',
-  async setup(global) {
-    const { JSDOM } = await importModule('jsdom') as typeof import('jsdom')
-    const dom = new JSDOM('<!DOCTYPE html>',
+  async setup(global, { jsdom = {} }) {
+    const {
+      CookieJar,
+      JSDOM,
+      ResourceLoader,
+      VirtualConsole,
+    } = await importModule('jsdom') as typeof import('jsdom')
+    const {
+      html = '<!DOCTYPE html>',
+      userAgent,
+      url = 'http://localhost:3000',
+      contentType = 'text/html',
+      pretendToBeVisual = true,
+      includeNodeLocations = false,
+      runScripts = 'dangerously',
+      resources,
+      console = false,
+      cookieJar = false,
+      ...restOptions
+    } = jsdom as JSDOMOptions
+    const dom = new JSDOM(
+      html,
       {
-        pretendToBeVisual: true,
-        runScripts: 'dangerously',
-        // TODO: options
-        url: 'http://localhost:3000',
+        pretendToBeVisual,
+        resources: resources ?? (userAgent ? new ResourceLoader({ userAgent }) : undefined),
+        runScripts,
+        url,
+        virtualConsole: console && global.console ? new VirtualConsole().sendTo(global.console) : undefined,
+        cookieJar: cookieJar ? new CookieJar() : undefined,
+        includeNodeLocations,
+        contentType,
+        userAgent,
+        ...restOptions,
       },
     )
 

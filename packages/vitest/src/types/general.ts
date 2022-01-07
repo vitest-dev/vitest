@@ -1,4 +1,3 @@
-
 export type Awaitable<T> = T | PromiseLike<T>
 export type Nullable<T> = T | null | undefined
 export type Arrayable<T> = T | Array<T>
@@ -16,7 +15,7 @@ export interface EnvironmentReturn {
 
 export interface Environment {
   name: string
-  setup(global: any): Awaitable<EnvironmentReturn>
+  setup(global: any, options: Record<string, any>): Awaitable<EnvironmentReturn>
 }
 
 export interface UserConsoleLog {
@@ -48,4 +47,10 @@ export interface ErrorWithDiff extends Error {
   actual?: any
   expected?: any
   operator?: string
+}
+
+export interface ModuleGraphData {
+  graph: Record<string, string[]>
+  externalized: string[]
+  inlined: string[]
 }

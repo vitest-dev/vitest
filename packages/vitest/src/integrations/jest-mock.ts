@@ -17,13 +17,25 @@ interface MockResultThrow {
 
 type MockResult<T> = MockResultReturn<T> | MockResultThrow | MockResultIncomplete
 
-export interface JestMockCompatContext<T, Y> {
-  calls: Y[]
-  instances: T[]
+export interface JestMockCompatContext<TArgs, TReturns> {
+  calls: TArgs[]
+  instances: TReturns[]
   // TODO: doesn't work
   invocationCallOrder: number[]
-  results: MockResult<T>[]
+  results: MockResult<TReturns>[]
 }
+
+type Procedure = (...args: any[]) => any
+
+type Methods<T> = {
+  [K in keyof T]: T[K] extends Procedure ? K : never
+}[keyof T] & string
+type Properties<T> = {
+  [K in keyof T]: T[K] extends Procedure ? never : K
+}[keyof T] & string
+type Classes<T> = {
+  [K in keyof T]: T[K] extends new (...args: any[]) => any ? K : never
+}[keyof T] & string
 
 export interface JestMockCompat<TArgs extends any[] = any[], TReturns = any> {
   getMockName(): string
@@ -48,47 +60,33 @@ export interface JestMockCompatFn<TArgs extends any[] = any, TReturns = any> ext
   (...args: TArgs): TReturns
 }
 
-export type MockableFunction = (...args: Array<any>) => any
-export type MethodKeysOf<T> = {
-  [K in keyof T]: T[K] extends MockableFunction ? K : never;
-}[keyof T]
-export type PropertyKeysOf<T> = {
-  [K in keyof T]: T[K] extends MockableFunction ? never : K;
-}[keyof T]
-
-export type ArgumentsOf<T> = T extends (...args: infer A) => any ? A : never
-
-export type ConstructorArgumentsOf<T> = T extends new (...args: infer A) => any
-  ? A
-  : never
 export type MaybeMockedConstructor<T> = T extends new (
   ...args: Array<any>
 ) => infer R
-  ? JestMockCompatFn<ConstructorArgumentsOf<T>, R>
+  ? JestMockCompatFn<ConstructorParameters<T>, R>
   : T
-export type MockedFunction<T extends MockableFunction> = MockWithArgs<T> & {
+export type MockedFunction<T extends Procedure> = MockWithArgs<T> & {
   [K in keyof T]: T[K];
 }
-export type MockedFunctionDeep<T extends MockableFunction> = MockWithArgs<T> &
-MockedObjectDeep<T>
+export type MockedFunctionDeep<T extends Procedure> = MockWithArgs<T> & MockedObjectDeep<T>
 export type MockedObject<T> = MaybeMockedConstructor<T> & {
-  [K in MethodKeysOf<T>]: T[K] extends MockableFunction
+  [K in Methods<T>]: T[K] extends Procedure
     ? MockedFunction<T[K]>
     : T[K];
-} & {[K in PropertyKeysOf<T>]: T[K]}
+} & {[K in Properties<T>]: T[K]}
 export type MockedObjectDeep<T> = MaybeMockedConstructor<T> & {
-  [K in MethodKeysOf<T>]: T[K] extends MockableFunction
+  [K in Methods<T>]: T[K] extends Procedure
     ? MockedFunctionDeep<T[K]>
     : T[K];
-} & {[K in PropertyKeysOf<T>]: MaybeMockedDeep<T[K]>}
+} & {[K in Properties<T>]: MaybeMockedDeep<T[K]>}
 
-export type MaybeMockedDeep<T> = T extends MockableFunction
+export type MaybeMockedDeep<T> = T extends Procedure
   ? MockedFunctionDeep<T>
   : T extends object
     ? MockedObjectDeep<T>
     : T
 
-export type MaybeMocked<T> = T extends MockableFunction
+export type MaybeMocked<T> = T extends Procedure
   ? MockedFunction<T>
   : T extends object
     ? MockedObject<T>
@@ -96,10 +94,10 @@ export type MaybeMocked<T> = T extends MockableFunction
 
 export type EnhancedSpy<TArgs extends any[] = any[], TReturns = any> = JestMockCompat<TArgs, TReturns> & SpyImpl<TArgs, TReturns>
 
-export interface MockWithArgs<T extends MockableFunction>
-  extends JestMockCompatFn<ArgumentsOf<T>, ReturnType<T>> {
-  new (...args: ConstructorArgumentsOf<T>): T
-  (...args: ArgumentsOf<T>): ReturnType<T>
+export interface MockWithArgs<T extends Procedure>
+  extends JestMockCompatFn<Parameters<T>, ReturnType<T>> {
+  new (...args: T extends new (...args: any) => any ? ConstructorParameters<T> : never): T
+  (...args: Parameters<T>): ReturnType<T>
 }
 
 export const spies = new Set<JestMockCompat>()
@@ -110,12 +108,32 @@ export function isMockFunction(fn: any): fn is EnhancedSpy {
   && fn.__isSpy
 }
 
+export function spyOn<T, S extends Properties<Required<T>>>(
+  obj: T,
+  methodName: S,
+  accesType: 'get',
+): JestMockCompat<[T[S]], void>
+export function spyOn<T, G extends Properties<Required<T>>>(
+  obj: T,
+  methodName: G,
+  accesType: 'set',
+): JestMockCompat<[], T[G]>
+export function spyOn<T, M extends Classes<Required<T>>>(
+  object: T,
+  method: M
+): Required<T>[M] extends new (...args: infer A) => infer R
+  ? JestMockCompat<A, R>
+  : never
+export function spyOn<T, M extends Methods<Required<T>>>(
+  obj: T,
+  methodName: M,
+  mock?: T[M]
+): Required<T>[M] extends (...args: infer A) => infer R ? JestMockCompat<A, R> : never
 export function spyOn<T, K extends keyof T>(
   obj: T,
   method: K,
   accessType?: 'get' | 'set',
-): T[K] extends (...args: infer TArgs) => infer TReturnValue
-    ? JestMockCompat<TArgs, TReturnValue> : JestMockCompat {
+): JestMockCompat {
   const dictionary = {
     get: 'getter',
     set: 'setter',
@@ -124,10 +142,8 @@ export function spyOn<T, K extends keyof T>(
 
   const stub = tinyspy.spyOn(obj, objMethod as any)
 
-  return enhanceSpy(stub) as any
+  return enhanceSpy(stub) as JestMockCompat
 }
-
-type Awaited<T> = T extends Promise<infer R> ? R : never
 
 function enhanceSpy<TArgs extends any[], TReturns>(
   spy: SpyImpl<TArgs, TReturns>,

@@ -1,10 +1,23 @@
+import type { CommonServerOptions } from 'vite'
 import type { BuiltinReporters } from '../reporters'
 import type { C8Options, ResolvedC8Options } from '../coverage'
+import type { JSDOMOptions } from './jsdom-options'
 import type { Reporter } from './reporter'
 import type { SnapshotStateOptions } from './snapshot'
 import type { Arrayable } from './general'
 
 export type BuiltinEnvironment = 'node' | 'jsdom' | 'happy-dom'
+
+export type ApiConfig = Pick<CommonServerOptions, 'port' | 'strictPort' | 'host'>
+
+export { JSDOMOptions }
+
+export interface EnvironmentOptions {
+  /**
+   * jsdom options.
+   */
+  jsdom?: JSDOMOptions
+}
 
 export interface InlineConfig {
   /**
@@ -74,7 +87,12 @@ export interface InlineConfig {
   environment?: BuiltinEnvironment
 
   /**
-   * Update snapshot files
+   * Environment options.
+   */
+  environmentOptions?: EnvironmentOptions
+
+  /**
+   * Update snapshot
    *
    * @default false
    */
@@ -89,6 +107,8 @@ export interface InlineConfig {
 
   /**
    * Project root
+   *
+   * @default process.cwd()
    */
   root?: string
 
@@ -164,25 +184,9 @@ export interface InlineConfig {
   coverage?: C8Options
 
   /**
-   * Open Vitest UI
-   * @internal WIP
-   */
-  open?: boolean
-
-  /**
    * run test names with the specified pattern
    */
   testNamePattern?: string | RegExp
-
-  /**
-   * Listen to port and serve API
-   *
-   * When set to true, the default port is 55555
-   *
-   * @internal WIP
-   * @default false
-   */
-  api?: boolean | number
 
   /**
    * Will call `.mockClear()` on all spies before each test
@@ -201,6 +205,28 @@ export interface InlineConfig {
    * @default false
    */
   restoreMocks?: boolean
+
+  /**
+   * Serve API options.
+   *
+   * When set to true, the default port is 51204.
+   *
+   * @default false
+   */
+  api?: boolean | number | ApiConfig
+
+  /**
+   * Open Vitest UI
+   * @internal WIP
+   */
+  ui?: boolean
+
+  /**
+   * Base url for the UI
+   *
+   * @default '/__vitest__/'
+   */
+  uiBase?: string
 }
 
 export interface UserConfig extends InlineConfig {
@@ -236,7 +262,9 @@ export interface UserConfig extends InlineConfig {
   related?: string[] | string
 }
 
-export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related'> {
+export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api'> {
+  base?: string
+
   config?: string
   filters?: string[]
   testNamePattern?: RegExp
@@ -249,4 +277,6 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
 
   coverage: ResolvedC8Options
   snapshotOptions: SnapshotStateOptions
+
+  api?: ApiConfig
 }

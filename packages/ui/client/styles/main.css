@@ -50,7 +50,7 @@ html.dark {
   --cm-json-property: #698c96;
   --cm-line-number-gutter: #f8f8f8;
   /* scrollbars colors */
-  --cm-ttc-c-thumb: #ddd;
+  --cm-ttc-c-thumb: #eee;
   --cm-ttc-c-track: white;
 }
 
@@ -80,8 +80,8 @@ html.dark {
   --cm-line-highlight-background: #444444;
   --cm-selection-background: #44444450;
   /* scrollbars colors */
-  --cm-ttc-c-thumb: #666;
-  --cm-ttc-c-track: black;
+  --cm-ttc-c-thumb: #222;
+  --cm-ttc-c-track: #111;
 }
 
 .splitpanes__pane {
@@ -145,6 +145,10 @@ html.dark {
   background-color: var(--cm-ttc-c-thumb);
   border-radius: 3px;
   border: 2px solid var(--cm-ttc-c-thumb);
+}
+.CodeMirror-scroll::-webkit-scrollbar-corner,
+.scrolls::-webkit-scrollbar-corner {
+  background-color: var(--cm-ttc-c-track);
 }
 .CodeMirror {
   overflow: unset !important;

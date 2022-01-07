@@ -102,9 +102,9 @@ vitest related /src/index.ts /src/hello-world.js
 | `-c, --config <path>` | Path to config file |
 | `-u, --update` | Update snapshots |
 | `-w, --watch` | Watch mode |
-| `-o, --open` | Open UI (default: false) |
 | `-t, --testNamePattern <pattern>` | Run tests with names matching the pattern |
-| `--api` | Listen to port and serve API |
+| `--ui` | Open UI |
+| `--api [api]` | Serve API, available options: `--api.port <port>`, `--api.host [host]` and `--api.strictPort` |
 | `--threads` | Enable Threads (default: true) |
 | `--silent` | Silent console output from tests |
 | `--reporter <name>` | Select reporter: `default`, `verbose`, or `dot` |
@@ -119,12 +119,12 @@ vitest related /src/index.ts /src/hello-world.js
 ## Examples
 
 - [Unit Testing](https://github.com/vitest-dev/vitest/tree/main/test/core)
-- [Vue Component Testing](https://github.com/vitest-dev/vitest/tree/main/test/vue)
-- [React Component Testing](https://github.com/vitest-dev/vitest/tree/main/test/react)
-- [Svelte Component Testing](https://github.com/vitest-dev/vitest/tree/main/test/svelte)
-- [Lit Component Testing](https://github.com/vitest-dev/vitest/tree/main/test/lit)
-- [Vitesse Component Testing](https://github.com/vitest-dev/vitest/tree/main/test/vitesse)
-- [All examples](https://github.com/antfu-sponsors/vitest/blob/bad88e49dce396ac73e1029abec47ccb227959e3/test)
+- [Vue Component Testing](https://github.com/vitest-dev/vitest/tree/main/examples/vue)
+- [React Component Testing](https://github.com/vitest-dev/vitest/tree/main/examples/react)
+- [Svelte Component Testing](https://github.com/vitest-dev/vitest/tree/main/examples/svelte)
+- [Lit Component Testing](https://github.com/vitest-dev/vitest/tree/main/examples/lit)
+- [Vitesse Component Testing](https://github.com/vitest-dev/vitest/tree/main/examples/vitesse)
+- [All examples](https://github.com/vitest-dev/vitest/tree/main/examples)
 
 ## Projects using Vitest
 

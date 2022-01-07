@@ -1,0 +1,19 @@
+{
+  "name": "@vitest/test-react",
+  "private": true,
+  "scripts": {
+    "coverage": "vitest --coverage",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "react": "^17.0.2"
+  },
+  "devDependencies": {
+    "@types/react": "^17.0.38",
+    "@types/react-test-renderer": "^17.0.1",
+    "@vitejs/plugin-react": "1.1.4",
+    "jsdom": "*",
+    "react-test-renderer": "17.0.2",
+    "vitest": "workspace:*"
+  }
+}

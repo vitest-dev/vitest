@@ -13,14 +13,18 @@ const props = defineProps<{
   readOnly?: boolean
 }>()
 
-const modeMap: Record<string, string> = {
-  html: 'htmlmixed',
-  vue: 'htmlmixed',
+const modeMap: Record<string, any> = {
+  // html: 'htmlmixed',
+  // vue: 'htmlmixed',
+  // svelte: 'htmlmixed',
   js: 'javascript',
   mjs: 'javascript',
   cjs: 'javascript',
-  ts: 'javascript',
-  mts: 'javascript',
+  ts: { name: 'javascript', typescript: true },
+  mts: { name: 'javascript', typescript: true },
+  cts: { name: 'javascript', typescript: true },
+  jsx: { name: 'javascript', jsx: true },
+  tsx: { name: 'javascript', typescript: true, jsx: true },
 }
 
 const el = ref<HTMLTextAreaElement>()
