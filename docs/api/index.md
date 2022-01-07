@@ -34,7 +34,7 @@ For compatibility with Jest, `TestFunction` can also be of type `(done: DoneCall
 - **Type:** `(name: string, fn: TestFunction, timeout?: number) => void`
 - **Alias:** `it.skip`
 
-  If you want to skip running some certain tests, but you don't want to delete the code due to any reason, you can use `test.skip` to avoid running them.
+  If you want to skip running certain tests, but you don't want to delete the code due to any reason, you can use `test.skip` to avoid running them.
 
   ```ts
   import { test, assert } from 'vitest'
