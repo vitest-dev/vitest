@@ -2,13 +2,10 @@ import { builtinModules, createRequire } from 'module'
 import { fileURLToPath, pathToFileURL } from 'url'
 import vm from 'vm'
 import { dirname, resolve } from 'pathe'
-import type { ModuleCache, ResolvedConfig } from '../types'
+import type { FetchFunction, ModuleCache, ResolvedConfig } from '../types'
 import { normalizeId, slash, toFilePath } from '../utils'
-import { shouldExternalize } from '../utils/externalize'
 import type { SuiteMocks } from './mocker'
 import { createMocker } from './mocker'
-
-export type FetchFunction = (id: string) => Promise<string | undefined>
 
 export interface ExecuteOptions extends Pick<ResolvedConfig, 'depsInline' | 'depsExternal' | 'fallbackCJS' | 'base'> {
   root: string
@@ -128,7 +125,13 @@ export async function executeInViteNode(options: ExecuteOptions) {
     if (id in stubRequests)
       return stubRequests[id]
 
-    const transformed = await fetch(id)
+    const { code: transformed, externalize } = await fetch(id)
+    if (externalize) {
+      const mod = await interpretedImport(externalize, options.interpretDefault)
+      setCache(fsPath, { exports: mod })
+      return mod
+    }
+
     if (transformed == null)
       throw new Error(`failed to load ${id}`)
 
@@ -213,19 +216,12 @@ export async function executeInViteNode(options: ExecuteOptions) {
     const id = normalizeId(rawId, base)
     const fsPath = toFilePath(id, root)
 
-    if (!externalCache.has(fsPath)) {
-      const promise = shouldExternalize(fsPath, options)
-      externalCache.set(fsPath, promise)
-    }
-
-    const externalId = await externalCache.get(fsPath)
-    if (externalId)
-      return interpretedImport(externalId, options.interpretDefault)
-
     if (moduleCache.get(fsPath)?.promise)
       return moduleCache.get(fsPath)?.promise
+
     const promise = directRequest(id, fsPath, callstack)
     setCache(fsPath, { promise })
+
     return await promise
   }
 

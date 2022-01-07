@@ -1,5 +1,5 @@
 import { existsSync } from 'fs'
-import { isValidNodeImport } from 'mlly'
+import { isNodeBuiltin, isValidNodeImport } from 'mlly'
 import type { ResolvedConfig } from '../types'
 import { slash } from '../utils'
 
@@ -45,7 +45,23 @@ export function guessCJSversion(id: string): string | undefined {
   }
 }
 
-export async function shouldExternalize(id: string, config: Pick<ResolvedConfig, 'depsInline' | 'depsExternal' | 'fallbackCJS'>) {
+export async function shouldExternalize(
+  id: string,
+  config: Pick<ResolvedConfig, 'depsInline' | 'depsExternal' | 'fallbackCJS'>,
+  cache = new Map<string, Promise<string | false>>(),
+) {
+  if (!cache.has(id))
+    cache.set(id, _shouldExternalize(id, config))
+  return cache.get(id)!
+}
+
+async function _shouldExternalize(
+  id: string,
+  config: Pick<ResolvedConfig, 'depsInline' | 'depsExternal' | 'fallbackCJS'>,
+): Promise<string | false> {
+  if (isNodeBuiltin(id))
+    return id
+
   id = patchWindowsImportPath(id)
 
   if (matchExternalizePattern(id, config.depsInline))

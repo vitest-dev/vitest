@@ -15,6 +15,7 @@ import { MocksPlugin } from '../plugins/mock'
 import { DefaultReporter, ReportersMap } from '../reporters'
 
 import { cleanCoverage, reportCoverage } from '../coverage'
+import { shouldExternalize } from '../utils/externalize'
 import type { WorkerPool } from './pool'
 import { StateManager } from './state'
 import { resolveApiConfig, resolveConfig } from './config'
@@ -40,6 +41,7 @@ class Vitest {
   visitedFilesMap: Map<string, RawSourceMap> = new Map()
   runningPromise?: Promise<void>
   closingPromise?: Promise<void>
+  externalizeCache = new Map<string, Promise<string | false>>()
 
   isFirstRun = true
 
@@ -57,6 +59,7 @@ class Vitest {
     this.restartsCount += 1
     this.pool?.close()
     this.pool = undefined
+    this.externalizeCache.clear()
 
     const resolved = resolveConfig(options, server.config)
 
@@ -343,6 +346,10 @@ class Vitest {
     if (mm.isMatch(id, this.config.exclude))
       return false
     return mm.isMatch(id, this.config.include)
+  }
+
+  shouldExternalize(id: string) {
+    return shouldExternalize(id, this.config, this.externalizeCache)
   }
 
   onServerRestarted(fn: () => void) {
