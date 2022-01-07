@@ -291,10 +291,38 @@ Will call `.mockReset()` on all spies before each test
 
 Will call `.mockRestore()` on all spies before each test
 
-### ssrTransformInclude
+### transformMode
+
+- **Type:** `{ web?, ssr? }`
+
+Determine the transform method of modules
+
+#### transformMode.ssr
 
 - **Type:** `RegExp[]`
+- **Default:** `[/\.([cm]?[jt]sx?|json)$/]`
 
-What files have specific SSR behaviour.
+Use SSR transform pipeline for the specified files.<br>
+Vite plugins will receive `ssr: true` flag when processing those files.
 
-`Vitest` tries to use `Vite` to just transform files into a format Node understands, but sometimes for components like Vue or Vue-Jsx, we want to use the client side plugins but then covert the code to be consumed by the server.
+#### transformMode.web
+
+- **Type:** `RegExp[]`
+- **Default:** *modules other than those specified in `transformMode.ssr`*
+
+First do a normal transform pipeline (targeting browser), then then do a SSR rewrite to run the code in Node.<br>
+Vite plugins will receive `ssr: false` flag when processing those files.
+
+When you use JSX as component models other than React (e.g. Vue JSX or SolidJS), you might want to config as following to make `.tsx` / `.jsx` transformed as client-side components:
+
+```ts
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  test: {
+    transformMode: {
+      web: [/\.[jt]sx$/],
+    },
+  },
+})
+```

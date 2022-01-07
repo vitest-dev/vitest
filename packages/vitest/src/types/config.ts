@@ -229,9 +229,25 @@ export interface InlineConfig {
   uiBase?: string
 
   /**
-   * What files have specific SSR behaviour
+   * Determine the transform method of modules
    */
-  ssrTransformInclude?: RegExp[]
+  transformMode?: {
+    /**
+     * Use SSR transform pipeline for the specified files.
+     * Vite plugins will receive `ssr: true` flag when processing those files.
+     *
+     * @default [/\.([cm]?[jt]sx?|json)$/]
+     */
+    ssr?: RegExp[]
+    /**
+     * First do a normal transform pipeline (targeting browser),
+     * then then do a SSR rewrite to run the code in Node.
+     * Vite plugins will receive `ssr: false` flag when processing those files.
+     *
+     * @default other than `ssr`
+     */
+    web?: RegExp[]
+  }
 }
 
 export interface UserConfig extends InlineConfig {
@@ -267,7 +283,7 @@ export interface UserConfig extends InlineConfig {
   related?: string[] | string
 }
 
-export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'ssrTransformInclude'> {
+export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api'> {
   base?: string
 
   config?: string
@@ -284,5 +300,4 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
   snapshotOptions: SnapshotStateOptions
 
   api?: ApiConfig
-  ssrTransformInclude?: RegExp[]
 }
