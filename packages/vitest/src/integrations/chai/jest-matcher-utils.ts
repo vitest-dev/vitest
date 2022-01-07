@@ -30,7 +30,7 @@ const PLUGINS = [
   AsymmetricMatcher,
 ]
 
-export type MatcherHintOptions = {
+export interface MatcherHintOptions {
   comment?: string
   expectedColor?: Formatter
   isDirectExpectCall?: boolean
@@ -142,7 +142,7 @@ export const printReceived = (object: unknown): string =>
 export const printExpected = (value: unknown): string =>
   EXPECTED_COLOR(replaceTrailingSpaces(stringify(value)))
 
-export type DiffOptions = {
+export interface DiffOptions {
   aAnnotation?: string
   aColor?: Formatter
   aIndicator?: string

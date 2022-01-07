@@ -1,10 +1,10 @@
 <script setup lang="ts">
-// @ts-expect-error
+// @ts-expect-error missing types
 import { Pane, Splitpanes } from 'splitpanes'
 
 const sizes = reactive([33, 33, 34])
 
-function onResize(event: {size: number}[]) {
+function onResize(event: { size: number }[]) {
   event.forEach((e, i) => {
     sizes[i] = e.size
   })

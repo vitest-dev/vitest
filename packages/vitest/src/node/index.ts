@@ -321,7 +321,7 @@ class Vitest {
 
   async report<T extends keyof Reporter>(name: T, ...args: ArgumentsType<Reporter[T]>) {
     await Promise.all(this.reporters.map(r => r[name]?.(
-      // @ts-expect-error
+      // @ts-expect-error let me go
       ...args,
     )))
   }

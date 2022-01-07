@@ -45,7 +45,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   }
 
   // we overrides the default `.equal`, keep original `.chaiEqual` in case need
-  // @ts-expect-error
+  // @ts-expect-error prototype
   const chaiEqual = chai.Assertion.prototype.equal
   def('chaiEqual', function(...args: any[]) {
     return chaiEqual.apply(this, args)

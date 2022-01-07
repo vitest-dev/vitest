@@ -73,12 +73,12 @@ export type MockedObject<T> = MaybeMockedConstructor<T> & {
   [K in Methods<T>]: T[K] extends Procedure
     ? MockedFunction<T[K]>
     : T[K];
-} & {[K in Properties<T>]: T[K]}
+} & { [K in Properties<T>]: T[K] }
 export type MockedObjectDeep<T> = MaybeMockedConstructor<T> & {
   [K in Methods<T>]: T[K] extends Procedure
     ? MockedFunctionDeep<T[K]>
     : T[K];
-} & {[K in Properties<T>]: MaybeMockedDeep<T[K]>}
+} & { [K in Properties<T>]: MaybeMockedDeep<T[K]> }
 
 export type MaybeMockedDeep<T> = T extends Procedure
   ? MockedFunctionDeep<T>
