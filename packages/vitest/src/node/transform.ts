@@ -21,7 +21,8 @@ export async function transformRequest(ctx: Vitest, id: string) {
 async function _transformRequest(ctx: Vitest, id: string) {
   let result: TransformResult | null = null
 
-  if (id.match(/\.(?:[cm]?[jt]sx?|json)$/) && !ctx.config.ssrTransformInclude?.some(r => r.test(id))) {
+  // Vue plugin can generate this url: "?vue&type=template&lang.js", so wee need to also check for ?
+  if (!id.includes('?') && id.match(/\.(?:[cm]?[jt]sx?|json)$/) && !ctx.config.ssrTransformInclude?.some(r => r.test(id))) {
     result = await ctx.server.transformRequest(id, { ssr: true })
   }
   else {
