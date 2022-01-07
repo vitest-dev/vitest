@@ -21,7 +21,7 @@ export async function transformRequest(ctx: Vitest, id: string) {
 async function _transformRequest(ctx: Vitest, id: string) {
   let result: TransformResult | null = null
 
-  if (id.match(/\.(?:[cm]?[jt]sx?|json)$/) && !ctx.config.ssrTransform?.test(id)) {
+  if (id.match(/\.(?:[cm]?[jt]sx?|json)$/) && !ctx.config.ssrTransformInclude?.test(id)) {
     result = await ctx.server.transformRequest(id, { ssr: true })
   }
   else {

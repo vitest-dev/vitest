@@ -291,7 +291,7 @@ Will call `.mockReset()` on all spies before each test
 
 Will call `.mockRestore()` on all spies before each test
 
-### ssrTransform
+### ssrTransformInclude
 
 - **Type:** `RegExp`
 
