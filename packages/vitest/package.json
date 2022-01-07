@@ -57,7 +57,7 @@
     "chai": "^4.3.4",
     "local-pkg": "^0.4.1",
     "tinypool": "^0.1.1",
-    "tinyspy": "^0.2.7",
+    "tinyspy": "^0.2.8",
     "vite": ">=2.7.10"
   },
   "devDependencies": {
