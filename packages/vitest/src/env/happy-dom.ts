@@ -8,14 +8,21 @@ export default <Environment>({
     const { Window } = await importModule('happy-dom') as typeof import('happy-dom')
     const win: any = new Window()
 
-    const keys = KEYS.concat(Object.getOwnPropertyNames(win))
-      .filter(k => !k.startsWith('_') && !(k in global))
+    const keys = new Set(KEYS.concat(Object.getOwnPropertyNames(win))
+      .filter(k => !k.startsWith('_') && !(k in global)))
 
+    const overrideObject: Record<string, any> = {}
     for (const key of keys) {
       Object.defineProperty(global, key, {
-        get() { return win[key] },
+        get() {
+          if (key in overrideObject)
+            return overrideObject[key]
+          return win[key]
+        },
+        set(v) {
+          overrideObject[key] = v
+        },
         configurable: true,
-        writable: true,
       })
     }
 
