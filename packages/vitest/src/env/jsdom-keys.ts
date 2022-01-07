@@ -159,6 +159,9 @@ const LIVING_KEYS = [
   'Headers',
   'AbortController',
   'AbortSignal',
+
+  // not specified in docs, but is available
+  'Image',
 ]
 
 const OTHER_KEYS = [

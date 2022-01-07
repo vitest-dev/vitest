@@ -41,8 +41,7 @@ export default <Environment>({
     )
 
     const keys = KEYS.concat(Object.getOwnPropertyNames(dom.window))
-      .filter(k => !k.startsWith('_'))
-      .filter(k => !(k in global))
+      .filter(k => !k.startsWith('_') && !(k in global))
 
     for (const key of keys) {
       Object.defineProperty(global, key, {

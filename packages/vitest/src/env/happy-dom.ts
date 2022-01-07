@@ -9,8 +9,7 @@ export default <Environment>({
     const win: any = new Window()
 
     const keys = KEYS.concat(Object.getOwnPropertyNames(win))
-      .filter(k => !k.startsWith('_'))
-      .filter(k => !(k in global))
+      .filter(k => !k.startsWith('_') && !(k in global))
 
     for (const key of keys) {
       Object.defineProperty(global, key, {
