@@ -47,6 +47,7 @@ export default <Environment>({
       Object.defineProperty(global, key, {
         get() { return dom.window[key] },
         configurable: true,
+        writable: true,
       })
     }
 

@@ -15,6 +15,7 @@ export default <Environment>({
       Object.defineProperty(global, key, {
         get() { return win[key] },
         configurable: true,
+        writable: true,
       })
     }
 
