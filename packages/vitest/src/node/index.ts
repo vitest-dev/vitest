@@ -363,15 +363,12 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
 
   let haveStarted = false
 
-  async function UIPlugin() {
-    if (!options.open)
-      return
-
-    await ensurePackageInstalled('@vitest/ui')
-    return (await import('@vitest/ui')).default()
-  }
-
   options.api = resolveApiConfig(options, viteOverrides)
+
+  async function UIPlugin() {
+    await ensurePackageInstalled('@vitest/ui')
+    return (await import('@vitest/ui')).default(options.uiBase)
+  }
 
   const config: ViteInlineConfig = {
     root,
@@ -396,11 +393,15 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
         },
       } as VitePlugin,
       MocksPlugin(),
-      await UIPlugin(),
+      options.ui
+        ? await UIPlugin()
+        : null,
     ],
     server: {
       ...options.api,
-      open: options.open ? '/__vitest__/' : undefined,
+      open: options.ui
+        ? options.uiBase ?? '/__vitest__/'
+        : undefined,
       preTransformRequests: false,
     },
     build: {

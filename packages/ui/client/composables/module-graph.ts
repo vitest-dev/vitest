@@ -9,18 +9,20 @@ export type ModuleGraph = Graph<ModuleType, ModuleNode, ModuleLink>
 export type ModuleGraphController = GraphController<ModuleType, ModuleNode, ModuleLink>
 export type ModuleGraphConfig = GraphConfig<ModuleType, ModuleNode, ModuleLink>
 
-function makeLabel(module: string): string {
-  return module.substring(module.lastIndexOf('/') + 1)
-}
-
 function defineExternalModuleNode(module: string): ModuleNode {
+  let label = module
+  if (label.includes('/node_modules/'))
+    label = label.split(/\/node_modules\//g).pop()!.split(/\//g).shift()!
+  else
+    label = label.split(/\//g).pop()!
+
   return defineNode<ModuleType, ModuleNode>({
     color: 'var(--color-node-external)',
     labelColor: 'var(--color-node-external)',
     fontSize: '0.875rem',
     isFocused: false,
     id: module,
-    label: makeLabel(module),
+    label,
     type: 'external',
   })
 }
@@ -32,7 +34,7 @@ function defineInlineModuleNode(module: string): ModuleNode {
     fontSize: '0.875rem',
     isFocused: false,
     id: module,
-    label: makeLabel(module),
+    label: module.split(/\//g).pop()!,
     type: 'inline',
   })
 }
@@ -63,6 +65,8 @@ export function useModuleGraph(data: Ref<{
       .flatMap(([module, deps]) => deps.map((dep) => {
         const source = nodeMap[module]
         const target = nodeMap[dep]
+        if (source === undefined || target === undefined)
+          return undefined
 
         return defineLink({
           source,
@@ -72,7 +76,7 @@ export function useModuleGraph(data: Ref<{
           labelColor: 'var(--color-link-label)',
           showLabel: false,
         })
-      }))
+      }).filter(link => link !== undefined) as ModuleLink[])
     return { nodes, links }
   })
 }
