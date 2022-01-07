@@ -6,11 +6,19 @@ import type { ModuleGraph } from '~/composables/module-graph'
 import { getModuleGraph } from '~/composables/module-graph'
 import type { ModuleGraphData } from '#types'
 
+const header = ref(null)
+const headerSize = ref<number>(0)
+
 function open() {
   const filePath = current.value?.filepath
   if (filePath)
     fetch(`/__open-in-editor?file=${encodeURIComponent(filePath)}`)
 }
+
+useResizeObserver(header, () => {
+  const clientHeight = unrefElement(header)?.clientHeight
+  headerSize.value = clientHeight ?? 0
+})
 
 const data = ref<ModuleGraphData>({ externalized: [], graph: {}, inlined: [] })
 const graph = ref<ModuleGraph>({ nodes: [], links: [] })
@@ -33,7 +41,7 @@ const changeViewMode = (view: Params['view']) => {
 
 <template>
   <div v-if="current" h-full>
-    <div>
+    <div ref="header">
       <div p="2" h-10 flex="~ gap-2" items-center bg-header border="b base">
         <StatusIcon :task="current" />
         <div flex-1 font-light op-50 ws-nowrap truncate text-sm>
@@ -55,15 +63,8 @@ const changeViewMode = (view: Params['view']) => {
         </button>
       </div>
     </div>
-    <ViewModuleGraph v-show="viewMode === 'graph'" :graph="graph" class="file-details-graph" />
+    <ViewModuleGraph v-show="viewMode === 'graph'" :graph="graph" :header-size="headerSize" />
     <ViewEditor v-if="viewMode === 'editor'" :file="current" />
     <ViewReport v-else-if="!viewMode" :file="current" />
   </div>
 </template>
-
-<style scoped>
-.file-details-graph {
-  /* The graph container is offset in its parent. Thus we can't use the default 100% height and have to subtract the offset. */
-  --graph-height: calc(100% - 78px - 39px);
-}
-</style>

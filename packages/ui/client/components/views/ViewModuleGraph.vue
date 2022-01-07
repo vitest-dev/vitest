@@ -6,9 +6,23 @@ import type { ModuleGraph, ModuleGraphController, ModuleLink, ModuleNode, Module
 
 const props = defineProps<{
   graph: ModuleGraph
+  headerSize: number
 }>()
 
-const { graph } = toRefs(props)
+const header = ref(null)
+const thisHeaderSize = ref<number>(0)
+
+const { graph, headerSize } = toRefs(props)
+
+useResizeObserver(header, () => {
+  const clientHeight = unrefElement(header)?.clientHeight
+  thisHeaderSize.value = clientHeight ?? 0
+})
+
+const style = computed(() => {
+  const size = headerSize.value + thisHeaderSize.value
+  return `--graph-height: calc(100vh - ${size}px)`
+})
 
 const el = ref<HTMLDivElement>()
 
@@ -116,7 +130,7 @@ function bindOnClick(selection: Selection<SVGCircleElement, ModuleNode, SVGGElem
 
 <template>
   <div h-full overflow="hidden">
-    <div>
+    <div ref="header">
       <div flex items-center gap-4 px-3 py-2>
         <div v-for="node of controller?.nodeTypes.sort()" :key="node" flex="~ gap-1" items-center select-none>
           <input
@@ -147,7 +161,7 @@ function bindOnClick(selection: Selection<SVGCircleElement, ModuleNode, SVGGElem
         </div>
       </div>
     </div>
-    <div ref="el" class="graph" />
+    <div ref="el" class="graph" :style="style" />
     <Modal v-model="modalShow" direction="right">
       <template v-if="selectedModule">
         <Suspense>
