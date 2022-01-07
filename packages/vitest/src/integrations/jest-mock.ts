@@ -152,7 +152,7 @@ function enhanceSpy<TArgs extends any[], TReturns>(
 
   let implementation: ((...args: TArgs) => TReturns) | undefined
 
-  const instances: any[] = []
+  let instances: any[] = []
 
   const mockContext = {
     get calls() {
@@ -185,11 +185,12 @@ function enhanceSpy<TArgs extends any[], TReturns>(
 
   stub.mockClear = () => {
     stub.reset()
+    instances = []
     return stub
   }
 
   stub.mockReset = () => {
-    stub.reset()
+    stub.mockClear()
     implementation = () => undefined as unknown as TReturns
     onceImplementations = []
     return stub

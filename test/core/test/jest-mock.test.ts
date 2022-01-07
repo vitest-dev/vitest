@@ -21,12 +21,25 @@ describe('jest mock compat layer', () => {
     expect(spy.mock.calls[0]).toEqual(['hello'])
 
     spy('world')
-
     expect(spy.mock.calls).toEqual([['hello'], ['world']])
 
     spy.mockReset() // same as mockClear()
 
     expect(spy.mock.calls).toEqual([])
+  })
+
+  it('clearing instances', () => {
+    const Spy = vitest.fn(() => {})
+
+    expect(Spy.mock.instances).toHaveLength(0)
+    // @ts-expect-error In TypeScript you should use `new` only on classes
+    // eslint-disable-next-line no-new
+    new Spy()
+    expect(Spy.mock.instances).toHaveLength(1)
+
+    Spy.mockReset() // same as mockClear()
+
+    expect(Spy.mock.instances).toHaveLength(0)
   })
 
   it('implementation sync fn', () => {
