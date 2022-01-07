@@ -2,7 +2,7 @@ import { existsSync } from 'fs'
 import { isValidNodeImport } from 'mlly'
 import type { ResolvedConfig } from '../types'
 
-const ESM_EXT_RE = /\.(es|esm|esm-browser|esm-bundler|es6)\.js$/
+const ESM_EXT_RE = /\.(es|esm|esm-browser|esm-bundler|es6|module)\.js$/
 const ESM_FOLDER_RE = /\/esm\/(.*\.js)$/
 
 const defaultInline = [
