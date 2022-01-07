@@ -52,6 +52,7 @@ html.dark {
   /* scrollbars colors */
   --cm-ttc-c-thumb: #eee;
   --cm-ttc-c-track: white;
+  --cm-scrolls-mod-info: calc(100vh - 78px);
 }
 
 html.dark {
@@ -132,10 +133,12 @@ html.dark {
 .CodeMirror-scroll,
 .scrolls {
   overflow: auto !important;
-  height: calc(100vh - 78px) !important;
+  height: var(--cm-scrolls-mod-info) !important;
   scrollbar-width: thin;
   scrollbar-color: var(--cm-ttc-c-thumb) var(--cm-ttc-c-track);
 }
+
+
 .CodeMirror-scroll::-webkit-scrollbar-track,
 .scrolls::-webkit-scrollbar-track {
   background: var(--cm-ttc-c-track);

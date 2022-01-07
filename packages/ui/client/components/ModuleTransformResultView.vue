@@ -9,11 +9,28 @@ const ext = computed(() => props.id?.split(/\./g).pop() || 'js')
 const source = computed(() => result.value?.source?.trim() || '')
 const code = computed(() => result.value?.code?.replace(/\/\/# sourceMappingURL=.*\n/, '').trim() || '')
 // TODO: sourcemap https://evanw.github.io/source-map-visualization/
+
+const header = ref(null)
+const header2 = ref(null)
+const headerSize = ref(0)
+const header2Size = ref(0)
+useResizeObserver(header, () => {
+  const clientHeight = unrefElement(header)?.clientHeight
+  headerSize.value = clientHeight ?? 0
+})
+useResizeObserver(header2, () => {
+  const clientHeight = unrefElement(header2)?.clientHeight
+  header2Size.value = clientHeight ?? 0
+})
+const style = computed(() => {
+  const size = headerSize.value + header2Size.value
+  return size > 0 ? `--cm-scrolls-mod-info: calc(100vh - ${size + 3}px)` : null
+})
 </script>
 
 <template>
   <div w-350 max-w-screen>
-    <div p-4 relative>
+    <div ref="header" p-4 relative>
       <p>Module Info</p>
       <p op50 font-mono text-sm>
         {{ id }}
@@ -28,14 +45,14 @@ const code = computed(() => result.value?.code?.replace(/\/\/# sourceMappingURL=
         <div p="x3 y-1" bg-overlay border="base b t r">
           Source
         </div>
-        <div p="x3 y-1" bg-overlay border="base b t">
+        <div ref="header2" p="x3 y-1" bg-overlay border="base b t">
           Transformed
         </div>
         <div>
-          <CodeMirror :model-value="source" v-bind="{ lineNumbers:true }" :mode="ext" />
+          <CodeMirror :model-value="source" v-bind="{ lineNumbers:true }" :mode="ext" :style="style" />
         </div>
         <div>
-          <CodeMirror :model-value="code" v-bind="{ lineNumbers:true }" :mode="ext" />
+          <CodeMirror :model-value="code" v-bind="{ lineNumbers:true }" :mode="ext" :style="style" />
         </div>
       </div>
       <pre>{{ result }}</pre>
