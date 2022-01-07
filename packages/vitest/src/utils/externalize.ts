@@ -1,6 +1,7 @@
 import { existsSync } from 'fs'
 import { isValidNodeImport } from 'mlly'
 import type { ResolvedConfig } from '../types'
+import { slash } from '../utils'
 
 const ESM_EXT_RE = /\.(es|esm|esm-browser|esm-bundler|es6|module)\.js$/
 const ESM_FOLDER_RE = /\/esm\/(.*\.js)$/
@@ -45,6 +46,8 @@ export function guessCJSversion(id: string): string | undefined {
 }
 
 export async function shouldExternalize(id: string, config: Pick<ResolvedConfig, 'depsInline' | 'depsExternal' | 'fallbackCJS'>) {
+  id = patchWindowsImportPath(id)
+
   if (matchExternalizePattern(id, config.depsInline))
     return false
   if (matchExternalizePattern(id, config.depsExternal))
@@ -77,4 +80,13 @@ function matchExternalizePattern(id: string, patterns: (string | RegExp)[]) {
     }
   }
   return false
+}
+
+export function patchWindowsImportPath(path: string) {
+  if (path.match(/^\w:\\/))
+    return `file:///${slash(path)}`
+  else if (path.match(/^\w:\//))
+    return `file:///${path}`
+  else
+    return path
 }

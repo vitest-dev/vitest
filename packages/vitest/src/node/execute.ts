@@ -64,7 +64,7 @@ export async function interpretedImport(path: string, interpretDefault: boolean)
 export async function executeInViteNode(options: ExecuteOptions) {
   const { moduleCache, root, files, fetch, mockMap, base } = options
 
-  const externalCache = new Map<string, false | string>()
+  const externalCache = new Map<string, string | Promise<false | string>>()
   builtinModules.forEach(m => externalCache.set(m, m))
 
   const {
@@ -211,17 +211,14 @@ export async function executeInViteNode(options: ExecuteOptions) {
 
   async function cachedRequest(rawId: string, callstack: string[]) {
     const id = normalizeId(rawId, base)
-
-    if (externalCache.get(id))
-      return interpretedImport(patchWindowsImportPath(id), options.interpretDefault)
-
     const fsPath = toFilePath(id, root)
-    const importPath = patchWindowsImportPath(fsPath)
 
-    if (!externalCache.has(importPath))
-      externalCache.set(importPath, await shouldExternalize(importPath, options))
+    if (!externalCache.has(fsPath)) {
+      const promise = shouldExternalize(fsPath, options)
+      externalCache.set(fsPath, promise)
+    }
 
-    const externalId = externalCache.get(importPath)
+    const externalId = await externalCache.get(fsPath)
     if (externalId)
       return interpretedImport(externalId, options.interpretDefault)
 
@@ -247,13 +244,4 @@ export async function executeInViteNode(options: ExecuteOptions) {
       }
     }
   }
-}
-
-function patchWindowsImportPath(path: string) {
-  if (path.match(/^\w:\\/))
-    return `file:///${slash(path)}`
-  else if (path.match(/^\w:\//))
-    return `file:///${path}`
-  else
-    return path
 }
