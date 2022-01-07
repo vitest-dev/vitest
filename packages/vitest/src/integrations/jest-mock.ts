@@ -185,11 +185,12 @@ function enhanceSpy<TArgs extends any[], TReturns>(
 
   stub.mockClear = () => {
     stub.reset()
+    instances.length = []
     return stub
   }
 
   stub.mockReset = () => {
-    stub.reset()
+    stub.mockClear()
     implementation = () => undefined as unknown as TReturns
     onceImplementations = []
     return stub
