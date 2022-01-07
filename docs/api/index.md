@@ -36,8 +36,6 @@ For compatibility with Jest, `TestFunction` can also be of type `(done: DoneCall
 
   If you want to skip running some certain tests, but you don't want to delete the code due to any reason, you can use `test.skip` to avoid running them.
 
-  Optionally, you can provide a timeout (in milliseconds) for specifying how long to wait before terminating. The default is 5 seconds,and can be configured globally with [testTimeout](../config/#testtimeout).
-
   ```ts
   import { test, assert } from 'vitest'
 
