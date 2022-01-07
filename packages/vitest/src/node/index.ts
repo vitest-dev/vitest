@@ -10,11 +10,12 @@ import type { RawSourceMap } from 'source-map-js'
 import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig } from '../types'
 import { SnapshotManager } from '../integrations/snapshot/manager'
 import { configFiles } from '../constants'
-import { ensurePackageInstalled, hasFailed, noop, slash, toArray } from '../utils'
+import { deepMerge, ensurePackageInstalled, hasFailed, noop, slash, toArray } from '../utils'
 import { MocksPlugin } from '../plugins/mock'
 import { DefaultReporter, ReportersMap } from '../reporters'
 
 import { cleanCoverage, reportCoverage } from '../coverage'
+import { shouldExternalize } from '../utils/externalize'
 import type { WorkerPool } from './pool'
 import { StateManager } from './state'
 import { resolveApiConfig, resolveConfig } from './config'
@@ -40,6 +41,7 @@ class Vitest {
   visitedFilesMap: Map<string, RawSourceMap> = new Map()
   runningPromise?: Promise<void>
   closingPromise?: Promise<void>
+  externalizeCache = new Map<string, Promise<string | false>>()
 
   isFirstRun = true
 
@@ -57,6 +59,7 @@ class Vitest {
     this.restartsCount += 1
     this.pool?.close()
     this.pool = undefined
+    this.externalizeCache.clear()
 
     const resolved = resolveConfig(options, server.config)
 
@@ -345,6 +348,10 @@ class Vitest {
     return mm.isMatch(id, this.config.include)
   }
 
+  shouldExternalize(id: string) {
+    return shouldExternalize(id, this.config, this.externalizeCache)
+  }
+
   onServerRestarted(fn: () => void) {
     this._onRestartListeners.push(fn)
   }
@@ -352,67 +359,79 @@ class Vitest {
 
 export type { Vitest }
 
-export async function createVitest(options: UserConfig, viteOverrides: ViteUserConfig = {}) {
-  const ctx = new Vitest()
-
-  const root = resolve(options.root || process.cwd())
-
-  const configPath = options.config
-    ? resolve(root, options.config)
-    : await findUp(configFiles, { cwd: root } as any)
-
+export async function VitestPlugin(options: UserConfig = {}, viteOverrides: ViteUserConfig = {}, ctx = new Vitest()) {
   let haveStarted = false
-
-  options.api = resolveApiConfig(options, viteOverrides)
 
   async function UIPlugin() {
     await ensurePackageInstalled('@vitest/ui')
     return (await import('@vitest/ui')).default(options.uiBase)
   }
 
+  return [
+    {
+      name: 'vitest',
+      enforce: 'pre',
+      config(viteConfig) {
+        options = deepMerge(options, viteConfig.test || {})
+        options.api = resolveApiConfig(options, viteOverrides)
+        return {
+          clearScreen: false,
+          resolve: {
+          // by default Vite resolves `module` field, which not always a native ESM module
+          // setting this option can bypass that and fallback to cjs version
+            mainFields: [],
+          },
+          server: {
+            ...options.api,
+            open: options.ui
+              ? options.uiBase ?? '/__vitest__/'
+              : undefined,
+            preTransformRequests: false,
+          },
+          build: {
+            sourcemap: true,
+          },
+        }
+      },
+      async configureServer(server) {
+        if (haveStarted)
+          await ctx.report('onServerRestart')
+        await ctx.setServer(options, server)
+        haveStarted = true
+        if (options.api)
+          (await import('../api/setup')).setup(ctx)
+
+        // #415, in run mode we don't need the watcher, close it would improve the performance
+        if (!options.watch)
+          await server.watcher.close()
+      },
+    } as VitePlugin,
+    MocksPlugin(),
+    options.ui
+      ? await UIPlugin()
+      : null,
+  ]
+}
+
+export async function createVitest(options: UserConfig, viteOverrides: ViteUserConfig = {}) {
+  const ctx = new Vitest()
+  const root = resolve(options.root || process.cwd())
+
+  const configPath = options.config
+    ? resolve(root, options.config)
+    : await findUp(configFiles, { cwd: root } as any)
+
   const config: ViteInlineConfig = {
     root,
     logLevel: 'error',
-    clearScreen: false,
     configFile: configPath,
-    plugins: [
-      {
-        name: 'vitest',
-        enforce: 'pre',
-        async configureServer(server) {
-          if (haveStarted)
-            await ctx.report('onServerRestart')
-          await ctx.setServer(options, server)
-          haveStarted = true
-          if (options.api)
-            (await import('../api/setup')).setup(ctx)
-
-          // #415, in run mode we don't need the watcher, close it would improve the performance
-          if (!options.watch)
-            await server.watcher.close()
-        },
-      } as VitePlugin,
-      MocksPlugin(),
-      options.ui
-        ? await UIPlugin()
-        : null,
-    ],
-    server: {
-      ...options.api,
-      open: options.ui
-        ? options.uiBase ?? '/__vitest__/'
-        : undefined,
-      preTransformRequests: false,
-    },
-    build: {
-      sourcemap: true,
-    },
+    plugins: await VitestPlugin(options, viteOverrides, ctx),
   }
 
   const server = await createServer(mergeConfig(config, viteOverrides))
   await server.pluginContainer.buildStart({})
 
-  if (options.api?.port)
+  if (typeof options.api === 'object' && options.api?.port)
     await server.listen()
 
   return ctx

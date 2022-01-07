@@ -6,11 +6,6 @@ export default defineConfig(() => {
       jsxInject: 'import React from \'react\'',
     },
     test: {
-      deps: {
-        inline: [
-
-        ],
-      },
       environment: 'jsdom',
       global: true,
     },
