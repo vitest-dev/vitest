@@ -10,7 +10,7 @@ import type { RawSourceMap } from 'source-map-js'
 import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig } from '../types'
 import { SnapshotManager } from '../integrations/snapshot/manager'
 import { configFiles } from '../constants'
-import { deepMerge, ensurePackageInstalled, hasFailed, noop, slash, toArray } from '../utils'
+import { deepMerge, ensurePackageInstalled, hasFailed, noop, notNullish, slash, toArray } from '../utils'
 import { MocksPlugin } from '../plugins/mock'
 import { DefaultReporter, ReportersMap } from '../reporters'
 
@@ -359,7 +359,7 @@ class Vitest {
 
 export type { Vitest }
 
-export async function VitestPlugin(options: UserConfig = {}, viteOverrides: ViteUserConfig = {}, ctx = new Vitest()) {
+export async function VitestPlugin(options: UserConfig = {}, viteOverrides: ViteUserConfig = {}, ctx = new Vitest()): Promise<VitePlugin[]> {
   let haveStarted = false
 
   async function UIPlugin() {
@@ -368,10 +368,10 @@ export async function VitestPlugin(options: UserConfig = {}, viteOverrides: Vite
   }
 
   return [
-    {
+    <VitePlugin>{
       name: 'vitest',
       enforce: 'pre',
-      config(viteConfig) {
+      config(viteConfig: any) {
         options = deepMerge(options, viteConfig.test || {})
         options.api = resolveApiConfig(options, viteOverrides)
         return {
@@ -405,12 +405,13 @@ export async function VitestPlugin(options: UserConfig = {}, viteOverrides: Vite
         if (!options.watch)
           await server.watcher.close()
       },
-    } as VitePlugin,
+    },
     MocksPlugin(),
     options.ui
       ? await UIPlugin()
       : null,
   ]
+    .filter(notNullish)
 }
 
 export async function createVitest(options: UserConfig, viteOverrides: ViteUserConfig = {}) {
