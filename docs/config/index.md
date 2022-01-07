@@ -293,7 +293,7 @@ Will call `.mockRestore()` on all spies before each test
 
 ### ssrTransformInclude
 
-- **Type:** `RegExp`
+- **Type:** `RegExp[]`
 
 What files have specific SSR behaviour.
 
