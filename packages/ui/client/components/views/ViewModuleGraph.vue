@@ -181,6 +181,7 @@ function bindOnClick(selection: Selection<SVGCircleElement, ModuleNode, SVGGElem
   --color-node-root: #6e9aa5;
   --color-node-label: var(--color-text);
   --color-node-stroke: var(--color-text);
+  --graph-height: 100%;
 }
 
 html.dark {
@@ -192,7 +193,7 @@ html.dark {
 }
 
 .graph {
-  height: var(--graph-height, 100%) !important;
+  height: var(--graph-height) !important;
 }
 
 .graph .node {
