@@ -1,6 +1,6 @@
 import type { Graph, GraphConfig, GraphController, GraphLink, GraphNode } from 'd3-graph-controller'
 import { defineLink, defineNode } from 'd3-graph-controller'
-import type { Ref } from 'vue'
+import type { ModuleGraphData } from '../../../vitest/src/types'
 
 export type ModuleType = 'external' | 'inline'
 export type ModuleNode = GraphNode<ModuleType>
@@ -39,44 +39,38 @@ function defineInlineModuleNode(module: string): ModuleNode {
   })
 }
 
-export function useModuleGraph(data: Ref<{
-  graph: Record<string, string[]>
-  externalized: string[]
-  inlined: string[]
-}>, rootPath: Ref<string | undefined>): Ref<ModuleGraph> {
-  return computed(() => {
-    if (!data.value) {
-      return {
-        nodes: [],
-        links: [],
-      }
+export function getModuleGraph(data: ModuleGraphData, rootPath: string | undefined): ModuleGraph {
+  if (!data) {
+    return {
+      nodes: [],
+      links: [],
     }
-    const externalizedNodes = data.value.externalized.map(module => defineExternalModuleNode(module)) ?? []
-    const inlinedNodes = data.value.inlined.map(module => defineInlineModuleNode(module)) ?? []
-    const nodes = [...externalizedNodes, ...inlinedNodes]
-    const rootNode = nodes.find(i => i.id === rootPath.value)
-    if (rootNode) {
-      rootNode.color = 'var(--color-node-root)'
-      rootNode.labelColor = 'var(--color-node-root)'
-    }
-    const nodeMap = Object.fromEntries(nodes.map(node => [node.id, node]))
-    const links = Object
-      .entries(data.value.graph)
-      .flatMap(([module, deps]) => deps.map((dep) => {
-        const source = nodeMap[module]
-        const target = nodeMap[dep]
-        if (source === undefined || target === undefined)
-          return undefined
+  }
+  const externalizedNodes = data.externalized.map(module => defineExternalModuleNode(module)) ?? []
+  const inlinedNodes = data.inlined.map(module => defineInlineModuleNode(module)) ?? []
+  const nodes = [...externalizedNodes, ...inlinedNodes]
+  const rootNode = nodes.find(i => i.id === rootPath)
+  if (rootNode) {
+    rootNode.color = 'var(--color-node-root)'
+    rootNode.labelColor = 'var(--color-node-root)'
+  }
+  const nodeMap = Object.fromEntries(nodes.map(node => [node.id, node]))
+  const links = Object
+    .entries(data.graph)
+    .flatMap(([module, deps]) => deps.map((dep) => {
+      const source = nodeMap[module]
+      const target = nodeMap[dep]
+      if (source === undefined || target === undefined)
+        return undefined
 
-        return defineLink({
-          source,
-          target,
-          color: 'var(--color-link)',
-          label: '',
-          labelColor: 'var(--color-link-label)',
-          showLabel: false,
-        })
-      }).filter(link => link !== undefined) as ModuleLink[])
-    return { nodes, links }
-  })
+      return defineLink({
+        source,
+        target,
+        color: 'var(--color-link)',
+        label: '',
+        labelColor: 'var(--color-link-label)',
+        showLabel: false,
+      })
+    }).filter(link => link !== undefined) as ModuleLink[])
+  return { nodes, links }
 }
