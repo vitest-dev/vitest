@@ -40,18 +40,23 @@ export default <Environment>({
       },
     )
 
-    const keys = KEYS.concat(Object.getOwnPropertyNames(dom.window))
-      .filter(k => !k.startsWith('_'))
-      .filter(k => !(k in global))
+    const keys = new Set(KEYS.concat(Object.getOwnPropertyNames(dom.window))
+      .filter(k => !k.startsWith('_') && !(k in global)))
 
+    const overrideObject = new Map<string, any>()
     for (const key of keys) {
       Object.defineProperty(global, key, {
-        get() { return dom.window[key] },
+        get() {
+          if (overrideObject.has(key))
+            return overrideObject.get(key)
+          return dom.window[key]
+        },
+        set(v) {
+          overrideObject.set(key, v)
+        },
         configurable: true,
       })
     }
-
-    global.window = global
 
     return {
       teardown(global) {

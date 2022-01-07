@@ -1,6 +1,6 @@
 {
   "name": "vitest",
-  "version": "0.0.135",
+  "version": "0.0.139",
   "description": "A blazing fast unit test framework powered by Vite",
   "keywords": [
     "vite",
@@ -57,7 +57,7 @@
     "chai": "^4.3.4",
     "local-pkg": "^0.4.1",
     "tinypool": "^0.1.1",
-    "tinyspy": "^0.2.7",
+    "tinyspy": "^0.2.8",
     "vite": ">=2.7.10"
   },
   "devDependencies": {
@@ -76,7 +76,7 @@
     "cli-truncate": "^3.1.0",
     "diff": "^5.0.0",
     "execa": "^6.0.0",
-    "fast-glob": "^3.2.7",
+    "fast-glob": "^3.2.8",
     "find-up": "^6.2.0",
     "flatted": "^3.2.4",
     "happy-dom": "^2.25.1",
@@ -84,7 +84,7 @@
     "log-update": "^5.0.0",
     "magic-string": "^0.25.7",
     "micromatch": "^4.0.4",
-    "mlly": "^0.3.16",
+    "mlly": "^0.3.17",
     "mockdate": "^3.0.5",
     "natural-compare": "^1.4.0",
     "pathe": "^0.2.0",

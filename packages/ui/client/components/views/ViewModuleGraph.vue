@@ -16,10 +16,6 @@ const modalShow = ref(false)
 const selectedModule = ref<string | null>()
 const controller = ref<ModuleGraphController | undefined>()
 
-useResizeObserver(el, debounce(() => {
-  controller.value?.resize()
-}))
-
 onMounted(() => {
   resetGraphController()
 })
@@ -59,6 +55,7 @@ function resetGraphController() {
           return 0.25
         },
       },
+      autoResize: true,
       forces: {
         charge: {
           strength: -1,
@@ -67,6 +64,7 @@ function resetGraphController() {
           radiusMultiplier: 10,
         },
       },
+      marker: Markers.Arrow(2),
       modifiers: {
         node(selection: Selection<SVGCircleElement, ModuleNode, SVGGElement, undefined>) {
           bindOnClick(selection)
@@ -75,25 +73,36 @@ function resetGraphController() {
       positionInitializer: graph.value.nodes.length > 1
         ? PositionInitializers.Randomized
         : PositionInitializers.Centered,
-      marker: Markers.Arrow(2),
+      zoom: {
+        min: 0.5,
+        max: 2,
+      },
     }),
   )
 }
 
 function bindOnClick(selection: Selection<SVGCircleElement, ModuleNode, SVGGElement, undefined>) {
+  // Only trigger on left-click and primary touch
+  const isValidClick = (event: PointerEvent) => event.button === 0
+
   let px = 0
   let py = 0
   let pt = 0
+
   selection
-    .on('pointerdown', (_, node) => {
-      if (!node.x || !node.y)
+    .on('pointerdown', (event: PointerEvent, node) => {
+      if (node.type === 'external')
+        return
+      if (!node.x || !node.y || !isValidClick(event))
         return
       px = node.x
       py = node.y
       pt = Date.now()
     })
-    .on('pointerup', (_, node: ModuleNode) => {
-      if (!node.x || !node.y)
+    .on('pointerup', (event: PointerEvent, node: ModuleNode) => {
+      if (node.type === 'external')
+        return
+      if (!node.x || !node.y || !isValidClick(event))
         return
       if (Date.now() - pt > 500)
         return
@@ -102,15 +111,6 @@ function bindOnClick(selection: Selection<SVGCircleElement, ModuleNode, SVGGElem
       if (dx ** 2 + dy ** 2 < 100)
         setSelectedModule(node.id)
     })
-}
-
-// Without debouncing the resize method, resizing the component will result in flickering.
-function debounce(cb: () => void) {
-  let h = 0
-  return () => {
-    window.clearTimeout(h)
-    h = window.setTimeout(() => cb())
-  }
 }
 </script>
 
@@ -175,6 +175,10 @@ html.dark {
   --color-node-external: #857a40;
   --color-node-inline: #468b60;
   --color-node-root: #467d8b;
+}
+
+.graph {
+  height: var(--graph-height, 100%) !important;
 }
 
 .graph .node {

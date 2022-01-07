@@ -73,12 +73,12 @@ export type MockedObject<T> = MaybeMockedConstructor<T> & {
   [K in Methods<T>]: T[K] extends Procedure
     ? MockedFunction<T[K]>
     : T[K];
-} & {[K in Properties<T>]: T[K]}
+} & { [K in Properties<T>]: T[K] }
 export type MockedObjectDeep<T> = MaybeMockedConstructor<T> & {
   [K in Methods<T>]: T[K] extends Procedure
     ? MockedFunctionDeep<T[K]>
     : T[K];
-} & {[K in Properties<T>]: MaybeMockedDeep<T[K]>}
+} & { [K in Properties<T>]: MaybeMockedDeep<T[K]> }
 
 export type MaybeMockedDeep<T> = T extends Procedure
   ? MockedFunctionDeep<T>
@@ -152,7 +152,7 @@ function enhanceSpy<TArgs extends any[], TReturns>(
 
   let implementation: ((...args: TArgs) => TReturns) | undefined
 
-  const instances: any[] = []
+  let instances: any[] = []
 
   const mockContext = {
     get calls() {
@@ -185,11 +185,12 @@ function enhanceSpy<TArgs extends any[], TReturns>(
 
   stub.mockClear = () => {
     stub.reset()
+    instances = []
     return stub
   }
 
   stub.mockReset = () => {
-    stub.reset()
+    stub.mockClear()
     implementation = () => undefined as unknown as TReturns
     onceImplementations = []
     return stub

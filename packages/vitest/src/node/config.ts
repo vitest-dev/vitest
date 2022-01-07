@@ -11,7 +11,10 @@ export function resolveApiConfig<Options extends ApiConfig & UserConfig>(
   viteOverrides?: ViteUserConfig,
 ): ApiConfig | undefined {
   let api: ApiConfig | undefined
-  if (options.api === true)
+
+  if (options.ui && !options.api)
+    api = { port: defaultPort }
+  else if (options.api === true)
     api = { port: defaultPort }
   else if (typeof options.api === 'number')
     api = { port: options.api }

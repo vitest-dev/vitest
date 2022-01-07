@@ -2,13 +2,10 @@ import { builtinModules, createRequire } from 'module'
 import { fileURLToPath, pathToFileURL } from 'url'
 import vm from 'vm'
 import { dirname, resolve } from 'pathe'
-import type { ModuleCache, ResolvedConfig } from '../types'
-import { slash, toFilePath } from '../utils'
-import { shouldExternalize } from '../utils/externalize'
+import type { FetchFunction, ModuleCache, ResolvedConfig } from '../types'
+import { normalizeId, slash, toFilePath } from '../utils'
 import type { SuiteMocks } from './mocker'
 import { createMocker } from './mocker'
-
-export type FetchFunction = (id: string) => Promise<string | undefined>
 
 export interface ExecuteOptions extends Pick<ResolvedConfig, 'depsInline' | 'depsExternal' | 'fallbackCJS' | 'base'> {
   root: string
@@ -64,7 +61,7 @@ export async function interpretedImport(path: string, interpretDefault: boolean)
 export async function executeInViteNode(options: ExecuteOptions) {
   const { moduleCache, root, files, fetch, mockMap, base } = options
 
-  const externalCache = new Map<string, false | string>()
+  const externalCache = new Map<string, string | Promise<false | string>>()
   builtinModules.forEach(m => externalCache.set(m, m))
 
   const {
@@ -128,7 +125,13 @@ export async function executeInViteNode(options: ExecuteOptions) {
     if (id in stubRequests)
       return stubRequests[id]
 
-    const transformed = await fetch(id)
+    const { code: transformed, externalize } = await fetch(id)
+    if (externalize) {
+      const mod = await interpretedImport(externalize, options.interpretDefault)
+      setCache(fsPath, { exports: mod })
+      return mod
+    }
+
     if (transformed == null)
       throw new Error(`failed to load ${id}`)
 
@@ -211,24 +214,14 @@ export async function executeInViteNode(options: ExecuteOptions) {
 
   async function cachedRequest(rawId: string, callstack: string[]) {
     const id = normalizeId(rawId, base)
-
-    if (externalCache.get(id))
-      return interpretedImport(patchWindowsImportPath(id), options.interpretDefault)
-
     const fsPath = toFilePath(id, root)
-    const importPath = patchWindowsImportPath(fsPath)
-
-    if (!externalCache.has(importPath))
-      externalCache.set(importPath, await shouldExternalize(importPath, options))
-
-    const externalId = externalCache.get(importPath)
-    if (externalId)
-      return interpretedImport(externalId, options.interpretDefault)
 
     if (moduleCache.get(fsPath)?.promise)
       return moduleCache.get(fsPath)?.promise
+
     const promise = directRequest(id, fsPath, callstack)
     setCache(fsPath, { promise })
+
     return await promise
   }
 
@@ -247,26 +240,4 @@ export async function executeInViteNode(options: ExecuteOptions) {
       }
     }
   }
-}
-
-export function normalizeId(id: string, base?: string): string {
-  if (base && id.startsWith(base))
-    id = `/${id.slice(base.length)}`
-
-  return id
-    .replace(/^\/@id\/__x00__/, '\0') // virtual modules start with `\0`
-    .replace(/^\/@id\//, '')
-    .replace(/^__vite-browser-external:/, '')
-    .replace(/^node:/, '')
-    .replace(/[?&]v=\w+/, '?') // remove ?v= query
-    .replace(/\?$/, '') // remove end query mark
-}
-
-function patchWindowsImportPath(path: string) {
-  if (path.match(/^\w:\\/))
-    return `file:///${slash(path)}`
-  else if (path.match(/^\w:\//))
-    return `file:///${path}`
-  else
-    return path
 }
