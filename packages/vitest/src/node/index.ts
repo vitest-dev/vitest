@@ -382,6 +382,11 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
     logLevel: 'error',
     clearScreen: false,
     configFile: configPath,
+    resolve: {
+      // by default Vite resolves `module` field, which not always a native ESM module
+      // setting this option can bypass that and fallback to cjs version
+      mainFields: [],
+    },
     plugins: [
       {
         name: 'vitest',
