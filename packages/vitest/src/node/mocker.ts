@@ -4,11 +4,7 @@ import { basename, dirname, join, resolve } from 'pathe'
 import { spies, spyOn } from '../integrations/jest-mock'
 import { mergeSlashes, normalizeId } from '../utils'
 
-export interface SuiteMocks {
-  [suitePath: string]: {
-    [originalPath: string]: string | null | (() => any)
-  }
-}
+export type SuiteMocks = Record<string, Record<string, string | null | (() => any)>>
 
 function resolveMockPath(mockPath: string, root: string, external: string | null) {
   const path = normalizeId(external || mockPath)
@@ -119,7 +115,7 @@ export function createMocker(root: string, mockMap: SuiteMocks) {
     }
   }
 
-  function clearMocks({ clearMocks, mockReset, restoreMocks }: { clearMocks: boolean; mockReset: boolean; restoreMocks: boolean}) {
+  function clearMocks({ clearMocks, mockReset, restoreMocks }: { clearMocks: boolean; mockReset: boolean; restoreMocks: boolean }) {
     if (!clearMocks && !mockReset && !restoreMocks)
       return
 

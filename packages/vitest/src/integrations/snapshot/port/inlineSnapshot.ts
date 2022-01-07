@@ -3,7 +3,7 @@ import type MagicString from 'magic-string'
 import { rpc } from '../../../runtime/rpc'
 import { getOriginalPos, posToNumber } from '../../../utils/source-map'
 
-export type InlineSnapshot = {
+export interface InlineSnapshot {
   snapshot: string
   file: string
   line: number

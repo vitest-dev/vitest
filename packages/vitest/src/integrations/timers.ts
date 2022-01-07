@@ -13,7 +13,7 @@ type Arguments = [cb: (args: void) => void, ms?: number | undefined]
 
 const MAX_LOOPS = 10_000
 
-type FakeCall = {
+interface FakeCall {
   cb: () => any
   ms: number
   id: number
@@ -24,7 +24,7 @@ type FakeCall = {
 enum QueueTaskType {
   Interval = 'interval',
   Timeout = 'timeout',
-  Immediate = 'immediate'
+  Immediate = 'immediate',
 }
 
 interface QueueTask {

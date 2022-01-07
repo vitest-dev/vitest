@@ -25,7 +25,7 @@ import {
   testNameToKey,
 } from './utils'
 
-type SnapshotReturnOptions = {
+interface SnapshotReturnOptions {
   actual: string
   count: number
   expected?: string
@@ -33,7 +33,7 @@ type SnapshotReturnOptions = {
   pass: boolean
 }
 
-type SaveStatus = {
+interface SaveStatus {
   deleted: boolean
   saved: boolean
 }
@@ -89,7 +89,7 @@ export default class SnapshotState {
   private _addSnapshot(
     key: string,
     receivedSerialized: string,
-    options: {isInline: boolean; error?: Error},
+    options: { isInline: boolean; error?: Error },
   ): void {
     this._dirty = true
     if (options.isInline) {
