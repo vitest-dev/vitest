@@ -7,7 +7,7 @@ import fg from 'fast-glob'
 import mm from 'micromatch'
 import c from 'picocolors'
 import type { RawSourceMap } from 'source-map-js'
-import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig } from '../types'
+import type { ApiConfig, ArgumentsType, Reporter, ResolvedConfig, UserConfig } from '../types'
 import { SnapshotManager } from '../integrations/snapshot/manager'
 import { configFiles } from '../constants'
 import { deepMerge, ensurePackageInstalled, hasFailed, noop, notNullish, slash, toArray } from '../utils'
@@ -432,7 +432,7 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
   const server = await createServer(mergeConfig(config, viteOverrides))
   await server.pluginContainer.buildStart({})
 
-  if (typeof options.api === 'object' && options.api?.port)
+  if (ctx.config.api?.port)
     await server.listen()
 
   return ctx

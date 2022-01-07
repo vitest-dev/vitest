@@ -2,7 +2,9 @@
 import { client, current } from '~/composables/client'
 import type { Params } from '~/composables/params'
 import { viewMode } from '~/composables/params'
-import { useModuleGraph } from '~/composables/module-graph'
+import type { ModuleGraph } from '~/composables/module-graph'
+import { getModuleGraph } from '~/composables/module-graph'
+import type { ModuleGraphData } from '#types'
 
 function open() {
   const filePath = current.value?.filepath
@@ -10,13 +12,20 @@ function open() {
     fetch(`/__open-in-editor?file=${encodeURIComponent(filePath)}`)
 }
 
-const data = asyncComputed(async() => {
-  return current.value
-    ? await client.rpc.getModuleGraph(current.value.filepath)
-    : { externalized: [], graph: {}, inlined: [] }
-})
+const data = ref<ModuleGraphData>({ externalized: [], graph: {}, inlined: [] })
+const graph = ref<ModuleGraph>({ nodes: [], links: [] })
 
-const graph = useModuleGraph(data, computed(() => current.value?.filepath))
+debouncedWatch(
+  current,
+  async(c, o) => {
+    if (c && c.filepath !== o?.filepath) {
+      data.value = await client.rpc.getModuleGraph(c.filepath)
+      graph.value = getModuleGraph(data.value, c.filepath)
+    }
+  },
+  { debounce: 100 },
+)
+
 const changeViewMode = (view: Params['view']) => {
   viewMode.value = view
 }
