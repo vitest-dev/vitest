@@ -185,6 +185,10 @@ html.dark {
   --color-node-root: #467d8b;
 }
 
+.graph {
+  height: var(--graph-height, 100%) !important;
+}
+
 .graph .node {
   stroke-width: 2px;
   stroke-opacity: 0.5;
