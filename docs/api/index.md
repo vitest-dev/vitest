@@ -52,7 +52,7 @@ For compatibility with Jest, `TestFunction` can also be of type `(done: DoneCall
 
   Use `test.only` to only run certain tests in a given suite. This is useful when debugging.
 
-  Optionally, you can provide a timeout (in milliseconds) for specifying how long to wait before terminating. The default is 5 seconds,and can be configured globally with [testTimeout](../config/#testtimeout).
+  Optionally, you can provide a timeout (in milliseconds) for specifying how long to wait before terminating. The default is 5 seconds, and can be configured globally with [testTimeout](../config/#testtimeout).
 
   ```ts
   import { test, assert } from 'vitest'
@@ -139,8 +139,7 @@ When you use `test` in the top level of file, they are collected as part of the 
         throw new Error(`Value must be a number`);
     }
 
-    return value.toFixed(2).toString()
-            .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return value.toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   }
   
   describe('numberToCurrency', () => {
