@@ -16,10 +16,6 @@ const modalShow = ref(false)
 const selectedModule = ref<string | null>()
 const controller = ref<ModuleGraphController | undefined>()
 
-useResizeObserver(el, debounce(() => {
-  controller.value?.resize()
-}))
-
 onMounted(() => {
   resetGraphController()
 })
@@ -59,6 +55,7 @@ function resetGraphController() {
           return 0.25
         },
       },
+      autoResize: true,
       forces: {
         charge: {
           strength: -1,
@@ -67,6 +64,7 @@ function resetGraphController() {
           radiusMultiplier: 10,
         },
       },
+      marker: Markers.Arrow(2),
       modifiers: {
         node(selection: Selection<SVGCircleElement, ModuleNode, SVGGElement, undefined>) {
           bindOnClick(selection)
@@ -75,7 +73,10 @@ function resetGraphController() {
       positionInitializer: graph.value.nodes.length > 1
         ? PositionInitializers.Randomized
         : PositionInitializers.Centered,
-      marker: Markers.Arrow(2),
+      zoom: {
+        min: 0.5,
+        max: 2,
+      },
     }),
   )
 }
@@ -110,15 +111,6 @@ function bindOnClick(selection: Selection<SVGCircleElement, ModuleNode, SVGGElem
       if (dx ** 2 + dy ** 2 < 100)
         setSelectedModule(node.id)
     })
-}
-
-// Without debouncing the resize method, resizing the component will result in flickering.
-function debounce(cb: () => void) {
-  let h = 0
-  return () => {
-    window.clearTimeout(h)
-    h = window.setTimeout(() => cb())
-  }
 }
 </script>
 
@@ -183,6 +175,10 @@ html.dark {
   --color-node-external: #857a40;
   --color-node-inline: #468b60;
   --color-node-root: #467d8b;
+}
+
+.graph {
+  height: var(--graph-height, 100%) !important;
 }
 
 .graph .node {
