@@ -227,6 +227,11 @@ export interface InlineConfig {
    * @default '/__vitest__/'
    */
   uiBase?: string
+
+  /**
+   * What files have specific SSR behaviour
+   */
+  ssrTransform?: RegExp
 }
 
 export interface UserConfig extends InlineConfig {
@@ -262,7 +267,7 @@ export interface UserConfig extends InlineConfig {
   related?: string[] | string
 }
 
-export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api'> {
+export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'ssrTransform'> {
   base?: string
 
   config?: string
@@ -279,4 +284,5 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
   snapshotOptions: SnapshotStateOptions
 
   api?: ApiConfig
+  ssrTransform?: RegExp
 }

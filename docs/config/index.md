@@ -291,3 +291,10 @@ Will call `.mockReset()` on all spies before each test
 
 Will call `.mockRestore()` on all spies before each test
 
+### ssrTransform
+
+- **Type:** `RegExp`
+
+What files have specific SSR behaviour.
+
+`Vitest` tries to use `Vite` to just transform files into a format Node understands, but sometimes for components like Vue or Vue-Jsx, we want to use the client side plugins but then covert the code to be consumed by the server.
