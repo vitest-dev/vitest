@@ -55,14 +55,14 @@ const changeViewMode = (view: Params['view']) => {
         </button>
       </div>
     </div>
-    <ViewModuleGraph v-show="viewMode === 'graph'" :graph="graph" />
+    <ViewModuleGraph v-show="viewMode === 'graph'" :graph="graph" class="file-details-graph" />
     <ViewEditor v-if="viewMode === 'editor'" :file="current" />
     <ViewReport v-else-if="!viewMode" :file="current" />
   </div>
 </template>
 
-<style>
-:root {
+<style scoped>
+.file-details-graph {
   /* The graph container is offset in its parent. Thus we can't use the default 100% height and have to subtract the offset. */
   --graph-height: calc(100% - 78px - 39px);
 }
