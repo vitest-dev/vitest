@@ -21,7 +21,7 @@ useResizeObserver(header, () => {
 
 const style = computed(() => {
   const size = headerSize.value + thisHeaderSize.value
-  return `--graph-height: calc(100vh - ${size}px)`
+  return size > 0 ? `--graph-height: calc(100vh - ${size}px)` : null
 })
 
 const el = ref<HTMLDivElement>()
