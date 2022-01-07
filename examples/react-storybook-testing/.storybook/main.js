@@ -1,22 +1,22 @@
 module.exports = {
-  addons: ["@storybook/addon-essentials"],
-  stories: ["../src/**/*.stories.@(js|jsx|ts|tsx)"],
-  staticDirs: ["../public"],
+  addons: ['@storybook/addon-essentials'],
+  stories: ['../src/**/*.stories.@(js|jsx|ts|tsx)'],
+  staticDirs: ['../public'],
   features: {
     storyStoreV7: true,
   },
-  framework: "@storybook/react",
+  framework: '@storybook/react',
   core: {
-    builder: "storybook-builder-vite",
+    builder: 'storybook-builder-vite',
   },
   async viteFinal(config, { configType }) {
     config.optimizeDeps = {
       ...(config.optimizeDeps || {}),
       include: [
         ...(config?.optimizeDeps?.include || []),
-        "msw-storybook-addon",
+        'msw-storybook-addon',
       ],
-    };
-    return config;
+    }
+    return config
   },
-};
+}
