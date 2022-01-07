@@ -2,7 +2,7 @@ import { existsSync, readdirSync } from 'fs'
 import { isNodeBuiltin } from 'mlly'
 import { basename, dirname, join, resolve } from 'pathe'
 import { spies, spyOn } from '../integrations/jest-mock'
-import { mergeSlashes } from '../utils'
+import { mergeSlashes, normalizeId } from '../utils'
 
 export interface SuiteMocks {
   [suitePath: string]: {
@@ -11,11 +11,13 @@ export interface SuiteMocks {
 }
 
 function resolveMockPath(mockPath: string, root: string, external: string | null) {
+  const path = normalizeId(external || mockPath)
+
   // it's a node_module alias
   // all mocks should be inside <root>/__mocks__
   if (external || isNodeBuiltin(mockPath)) {
-    const mockDirname = dirname(external || mockPath) // for nested mocks: @vueuse/integration/useJwt
-    const baseFilename = basename(external || mockPath)
+    const mockDirname = dirname(path) // for nested mocks: @vueuse/integration/useJwt
+    const baseFilename = basename(path)
     const mockFolder = resolve(root, '__mocks__', mockDirname)
 
     if (!existsSync(mockFolder)) return null
@@ -31,8 +33,8 @@ function resolveMockPath(mockPath: string, root: string, external: string | null
     return null
   }
 
-  const dir = dirname(mockPath)
-  const baseId = basename(mockPath)
+  const dir = dirname(path)
+  const baseId = basename(path)
   const fullPath = resolve(dir, '__mocks__', baseId)
   return existsSync(fullPath) ? fullPath.replace(root, '') : null
 }
@@ -90,8 +92,11 @@ export function createMocker(root: string, mockMap: SuiteMocks) {
     return process.__vitest_worker__?.filepath
   }
 
-  function getActualPath(path: string, nmName: string) {
-    return nmName ? mergeSlashes(`/@fs/${path}`) : path.replace(root, '')
+  function getActualPath(path: string, external: string) {
+    if (external)
+      return mergeSlashes(`/@fs/${path}`)
+
+    return normalizeId(path.replace(root, ''))
   }
 
   function unmockPath(path: string, nmName: string) {
@@ -133,7 +138,7 @@ export function createMocker(root: string, mockMap: SuiteMocks) {
     if (dep.startsWith('/node_modules/'))
       return mergeSlashes(`/@fs/${join(root, dep)}`)
 
-    return dep
+    return normalizeId(dep)
   }
 
   return {
