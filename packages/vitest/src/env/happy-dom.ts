@@ -11,22 +11,20 @@ export default <Environment>({
     const keys = new Set(KEYS.concat(Object.getOwnPropertyNames(win))
       .filter(k => !k.startsWith('_') && !(k in global)))
 
-    const overrideObject: Record<string, any> = {}
+    const overrideObject = new Map<string, any>()
     for (const key of keys) {
       Object.defineProperty(global, key, {
         get() {
-          if (key in overrideObject)
-            return overrideObject[key]
+          if (overrideObject.has(key))
+            return overrideObject.get(key)
           return win[key]
         },
         set(v) {
-          overrideObject[key] = v
+          overrideObject.set(key, v)
         },
         configurable: true,
       })
     }
-
-    global.window = global
 
     return {
       teardown(global) {
