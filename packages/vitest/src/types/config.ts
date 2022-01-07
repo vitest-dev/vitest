@@ -231,7 +231,7 @@ export interface InlineConfig {
   /**
    * What files have specific SSR behaviour
    */
-  ssrTransformInclude?: RegExp
+  ssrTransformInclude?: RegExp[]
 }
 
 export interface UserConfig extends InlineConfig {
@@ -284,5 +284,5 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
   snapshotOptions: SnapshotStateOptions
 
   api?: ApiConfig
-  ssrTransformInclude?: RegExp
+  ssrTransformInclude?: RegExp[]
 }

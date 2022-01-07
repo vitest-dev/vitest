@@ -7,6 +7,6 @@ export default defineConfig({
   test: {
     global: true,
     environment: 'happy-dom',
-    ssrTransformInclude: /.[tj]sx$/,
+    ssrTransformInclude: [/.[tj]sx$/],
   },
 })
