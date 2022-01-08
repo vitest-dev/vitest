@@ -157,3 +157,21 @@ export async function saveSnapshotFile(
     'utf-8',
   )
 }
+
+export function prepareExpected(expected?: string) {
+  function findStartIndent() {
+    const match = /^( +)}\s+$/m.exec(expected || '')
+    return match?.[1]?.length || 0
+  }
+
+  const startIdent = findStartIndent()
+
+  let expectedTrimmed = expected?.trim()
+
+  if (startIdent) {
+    expectedTrimmed = expectedTrimmed
+      ?.replace(new RegExp(`^${' '.repeat(startIdent)}`, 'gm'), '').replace(/ +}$/, '}')
+  }
+
+  return expectedTrimmed
+}

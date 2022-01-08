@@ -33,10 +33,12 @@ function hasNestedDefault(target: any) {
   return '__esModule' in target && target.__esModule && 'default' in target.default
 }
 
-function proxyMethod(name: 'get' | 'set' | 'has' | 'deleteProperty', isNested: boolean) {
+function proxyMethod(name: 'get' | 'set' | 'has' | 'deleteProperty', tryDefault: boolean) {
   return function(target: any, key: string | symbol, ...args: [any?, any?]) {
     const result = Reflect[name](target, key, ...args)
-    if ((isNested && key === 'default') || !result)
+    if (typeof target.default !== 'object')
+      return result
+    if ((tryDefault && key === 'default') || typeof result === 'undefined')
       return Reflect[name](target.default, key, ...args)
     return result
   }
@@ -46,12 +48,12 @@ export async function interpretedImport(path: string, interpretDefault: boolean)
   const mod = await import(path)
 
   if (interpretDefault && 'default' in mod) {
-    const isNested = hasNestedDefault(mod)
+    const tryDefault = hasNestedDefault(mod)
     return new Proxy(mod, {
-      get: proxyMethod('get', isNested),
-      set: proxyMethod('set', isNested),
-      has: proxyMethod('has', isNested),
-      deleteProperty: proxyMethod('deleteProperty', isNested),
+      get: proxyMethod('get', tryDefault),
+      set: proxyMethod('set', tryDefault),
+      has: proxyMethod('has', tryDefault),
+      deleteProperty: proxyMethod('deleteProperty', tryDefault),
     })
   }
 
