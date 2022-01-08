@@ -24,7 +24,7 @@ useResizeObserver(header2, () => {
 })
 const style = computed(() => {
   const size = headerSize.value + header2Size.value
-  return size > 0 ? `--cm-scrolls-mod-info: calc(100vh - ${size + 3}px)` : null
+  return size > 0 ? `--cm-scrolls-height: calc(100vh - ${size + 3}px)` : null
 })
 </script>
 
