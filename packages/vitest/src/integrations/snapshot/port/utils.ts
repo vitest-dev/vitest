@@ -170,7 +170,7 @@ export function prepareExpected(expected?: string) {
 
   if (startIdent) {
     expectedTrimmed = expectedTrimmed
-      ?.replaceAll(new RegExp(`^${' '.repeat(startIdent)}`, 'gm'), '').replace(/ +}$/, '}')
+      ?.replace(new RegExp(`^${' '.repeat(startIdent)}`, 'gm'), '').replace(/ +}$/, '}')
   }
 
   return expectedTrimmed
