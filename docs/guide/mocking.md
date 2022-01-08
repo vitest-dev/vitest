@@ -125,8 +125,9 @@ See the [`vi.mock()` api section](../api/#vi-fn) for a more in depth detailed AP
 
 ### Automocking algorithm
 
-If your code is importing mocked module, but there are no `__mocks__` file for this module or a `factory`, Vitest will mock the module itself by invoking it and mocking every export.
+If your code is importing mocked module, without any associated `__mocks__` file or `factory` for this module, Vitest will mock the module itself by invoking it and mocking every export.
 
+The following principles apply
 * All arrays will be emptied
 * All primitives and collections will stay the same
 * All objects will be deeply cloned
@@ -137,7 +138,34 @@ If your code is importing mocked module, but there are no `__mocks__` file for t
 ```js
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
-// module mocking example
+import { afterEach, expect, vi, it, describe } from 'vitest';
+
+import * as utils from './../utils';
+
+// util file
+// export const moduleA = () => {
+// fancy code here
+// };
+
+describe('Mocking modules', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+  it('should return a mocked version', () => {
+    vi.mock('./../utils', () => {
+      return {
+        moduleA: () => {
+          return 'mocked module';
+        },
+      };
+    });
+
+    console.log(utils.moduleA());
+
+    expect(utils.moduleA()).toEqual('mocked module');
+  });
+});
+
 
 ```
 
