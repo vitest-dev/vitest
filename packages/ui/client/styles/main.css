@@ -52,7 +52,7 @@ html.dark {
   /* scrollbars colors */
   --cm-ttc-c-thumb: #eee;
   --cm-ttc-c-track: white;
-  --cm-scrolls-mod-info: calc(100vh - 78px);
+  --cm-scrolls-height: calc(100vh - 78px);
 }
 
 html.dark {
@@ -111,7 +111,8 @@ html.dark {
 }
 
 .splitpanes--vertical > .splitpanes__splitter:before {
-  left: -10px;
+  /* make vertical scroll usable */
+  /*left: -10px;*/
   right: -10px;
   height: 100%;
 }
@@ -133,7 +134,7 @@ html.dark {
 .CodeMirror-scroll,
 .scrolls {
   overflow: auto !important;
-  height: var(--cm-scrolls-mod-info) !important;
+  height: var(--cm-scrolls-height) !important;
   scrollbar-width: thin;
   scrollbar-color: var(--cm-ttc-c-thumb) var(--cm-ttc-c-track);
 }
