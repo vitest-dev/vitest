@@ -32,7 +32,7 @@ const changeViewMode = (view: Params['view']) => {
 </script>
 
 <template>
-  <div v-if="current" h-full>
+  <div v-if="current" h-full relative>
     <div>
       <div p="2" h-10 flex="~ gap-2" items-center bg-header border="b base">
         <StatusIcon :task="current" />
@@ -58,6 +58,7 @@ const changeViewMode = (view: Params['view']) => {
     <ViewModuleGraph v-show="viewMode === 'graph'" :graph="graph" class="file-details-graph" />
     <ViewEditor v-if="viewMode === 'editor'" :file="current" />
     <ViewReport v-else-if="!viewMode" :file="current" />
+    <ConsoleOutput :file="current" />
   </div>
 </template>
 
