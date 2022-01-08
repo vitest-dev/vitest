@@ -14,7 +14,7 @@ Sometimes you need to be in control of the date's to allow for consistency when 
 ```js
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-const businessHours = [9, 17];
+const businessHours = [9, 17]
 
 const purchase = () => {
   const currentHour = new Date().getHours()
@@ -63,9 +63,9 @@ Check out the [`vi.fn()`](../api/#vi-fn) or [`vi.spyOn()`](../api/#vi-spyon) api
 ### Example
 
 ```js
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
-const getLatest = (index = messages.items.length - 1) => messages.items[index];
+const getLatest = (index = messages.items.length - 1) => messages.items[index]
 
 const messages = {
   items: [
@@ -73,44 +73,44 @@ const messages = {
     // ...
   ],
   getLatest, // can also be a `getter or setter if supported`
-};
+}
 
 describe('reading messages', () => {
   afterEach(() => {
-    vi.restoreAllMocks();
-  });
+    vi.restoreAllMocks()
+  })
 
   it('should get the latest message with a spy', () => {
-    const spy = vi.spyOn(messages, 'getLatest');
-    expect(spy.getMockName(), 'getLatest');
+    const spy = vi.spyOn(messages, 'getLatest')
+    expect(spy.getMockName()).toEqual('getLatest')
 
     expect(messages.getLatest()).toEqual(
       messages.items[messages.items.length - 1]
     );
 
-    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledTimes(1)
 
-    spy.mockImplementationOnce(() => 'access-restricted');
-    expect(messages.getLatest()).toEqual('access-restricted');
+    spy.mockImplementationOnce(() => 'access-restricted')
+    expect(messages.getLatest()).toEqual('access-restricted')
 
-    expect(spy).toHaveBeenCalledTimes(2);
+    expect(spy).toHaveBeenCalledTimes(2)
   });
 
   it('should get with a mock', () => {
-    const mock = vi.fn().mockImplementation(getLatest);
+    const mock = vi.fn().mockImplementation(getLatest)
 
-    expect(mock()).toEqual(messages.items[messages.items.length - 1]);
-    expect(mock).toHaveBeenCalledTimes(1);
+    expect(mock()).toEqual(messages.items[messages.items.length - 1])
+    expect(mock).toHaveBeenCalledTimes(1)
 
-    mock.mockImplementationOnce(() => 'access-restricted');
-    expect(mock()).toEqual('access-restricted');
+    mock.mockImplementationOnce(() => 'access-restricted')
+    expect(mock()).toEqual('access-restricted')
 
-    expect(mock).toHaveBeenCalledTimes(2);
+    expect(mock).toHaveBeenCalledTimes(2)
 
-    expect(mock()).toEqual(messages.items[messages.items.length - 1]);
-    expect(mock).toHaveBeenCalledTimes(3);
-  });
-});
+    expect(mock()).toEqual(messages.items[messages.items.length - 1])
+    expect(mock).toHaveBeenCalledTimes(3)
+  })
+})
 ```
 
 ### More
@@ -136,33 +136,29 @@ The following principles apply
 ### Example
 
 ```js
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { afterEach, expect, vi, it, describe } from 'vitest'
 
-import { afterEach, expect, vi, it, describe } from 'vitest';
+import * as utils from './../utils'
 
-import * as utils from './../utils';
-
-// util file
+// util file or third party module
 // export const moduleA = () => {
-// fancy code here
+//   fancy code here
 // };
 
 describe('Mocking modules', () => {
   afterEach(() => {
-    vi.restoreAllMocks();
+    vi.restoreAllMocks()
   });
   it('should return a mocked version', () => {
     vi.mock('./../utils', () => {
       return {
         moduleA: () => {
-          return 'mocked module';
+          return 'mocked module'
         },
       };
-    });
+    })
 
-    console.log(utils.moduleA());
-
-    expect(utils.moduleA()).toEqual('mocked module');
+    expect(utils.moduleA()).toEqual('mocked module')
   });
 });
 
@@ -240,18 +236,18 @@ import { describe, it, beforeEach, afterEach, expect, vi } from 'vitest'
 
 const executeAfterTwoHours = (func) => {
   setTimeout(func, 1000 * 60 * 60 * 2) // 2 hours
-};
+}
 
 const executeEveryMinute = (func) => {
   setInterval(func, 1000 * 60); // 1 minute
-};
+}
 
 const mock = vi.fn(() => console.log('executed'));
 
 describe('delayed execution', () => {
   beforeEach(() => {
     vi.useFakeTimers()
-  });
+  })
   afterEach(()=> {
     vi.restoreAllMocks()
   })
@@ -259,20 +255,20 @@ describe('delayed execution', () => {
     executeAfterTwoHours(mock);
     vi.runAllTimers();
     expect(mock).toHaveBeenCalledTimes(1);
-  });
+  })
   it('should not execute the function', () => {
     executeAfterTwoHours(mock);
     // advancing by 2ms won't trigger the func
     vi.advanceTimersByTime(2);
     expect(mock).not.toHaveBeenCalled();
-  });
+  })
   it('should execute every minute', () => {
     executeEveryMinute(mock);
-    vi.advanceTimersToNextTimer(); // ?
+    vi.advanceTimersToNextTimer();
     vi.advanceTimersToNextTimer();
     expect(mock).toHaveBeenCalledTimes(1);
     vi.advanceTimersToNextTimer();
     expect(mock).toHaveBeenCalledTimes(2);
-  });
-});
+  })
+})
 ```
