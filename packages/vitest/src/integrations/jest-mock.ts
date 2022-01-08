@@ -17,12 +17,12 @@ interface MockResultThrow {
 
 type MockResult<T> = MockResultReturn<T> | MockResultThrow | MockResultIncomplete
 
-export interface JestMockCompatContext<T, Y> {
-  calls: Y[]
-  instances: T[]
+export interface JestMockCompatContext<TArgs, TReturns> {
+  calls: TArgs[]
+  instances: TReturns[]
   // TODO: doesn't work
   invocationCallOrder: number[]
-  results: MockResult<T>[]
+  results: MockResult<TReturns>[]
 }
 
 type Procedure = (...args: any[]) => any
@@ -73,12 +73,12 @@ export type MockedObject<T> = MaybeMockedConstructor<T> & {
   [K in Methods<T>]: T[K] extends Procedure
     ? MockedFunction<T[K]>
     : T[K];
-} & {[K in Properties<T>]: T[K]}
+} & { [K in Properties<T>]: T[K] }
 export type MockedObjectDeep<T> = MaybeMockedConstructor<T> & {
   [K in Methods<T>]: T[K] extends Procedure
     ? MockedFunctionDeep<T[K]>
     : T[K];
-} & {[K in Properties<T>]: MaybeMockedDeep<T[K]>}
+} & { [K in Properties<T>]: MaybeMockedDeep<T[K]> }
 
 export type MaybeMockedDeep<T> = T extends Procedure
   ? MockedFunctionDeep<T>
@@ -152,7 +152,7 @@ function enhanceSpy<TArgs extends any[], TReturns>(
 
   let implementation: ((...args: TArgs) => TReturns) | undefined
 
-  const instances: any[] = []
+  let instances: any[] = []
 
   const mockContext = {
     get calls() {
@@ -185,11 +185,12 @@ function enhanceSpy<TArgs extends any[], TReturns>(
 
   stub.mockClear = () => {
     stub.reset()
+    instances = []
     return stub
   }
 
   stub.mockReset = () => {
-    stub.reset()
+    stub.mockClear()
     implementation = () => undefined as unknown as TReturns
     onceImplementations = []
     return stub

@@ -21,7 +21,6 @@ describe('fs', () => {
   })
 
   it('import.meta.url', async() => {
-    // @ts-ignore
     const raw = await fs.readFile(resolve(fileURLToPath(import.meta.url), '..', filename), 'utf-8')
 
     expect(raw.trim()).toEqual(content)

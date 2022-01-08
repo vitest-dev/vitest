@@ -1,6 +1,6 @@
 {
   "name": "vitest",
-  "version": "0.0.133",
+  "version": "0.0.139",
   "description": "A blazing fast unit test framework powered by Vite",
   "keywords": [
     "vite",
@@ -48,7 +48,7 @@
   ],
   "scripts": {
     "build": "rimraf dist && rollup -c",
-    "dev": "rollup -c --watch src",
+    "dev": "rollup -c --watch --watch.include=src/**",
     "prepublishOnly": "nr build"
   },
   "dependencies": {
@@ -57,7 +57,7 @@
     "chai": "^4.3.4",
     "local-pkg": "^0.4.1",
     "tinypool": "^0.1.1",
-    "tinyspy": "^0.2.7",
+    "tinyspy": "^0.2.8",
     "vite": ">=2.7.10"
   },
   "devDependencies": {
@@ -74,9 +74,10 @@
     "cac": "^6.7.12",
     "chai-subset": "^1.6.0",
     "cli-truncate": "^3.1.0",
+    "detect-indent": "^7.0.0",
     "diff": "^5.0.0",
     "execa": "^6.0.0",
-    "fast-glob": "^3.2.7",
+    "fast-glob": "^3.2.8",
     "find-up": "^6.2.0",
     "flatted": "^3.2.4",
     "happy-dom": "^2.25.1",
@@ -84,13 +85,13 @@
     "log-update": "^5.0.0",
     "magic-string": "^0.25.7",
     "micromatch": "^4.0.4",
-    "mlly": "^0.3.16",
+    "mlly": "^0.3.17",
     "mockdate": "^3.0.5",
     "natural-compare": "^1.4.0",
     "pathe": "^0.2.0",
     "picocolors": "^1.0.0",
     "pkg-types": "^0.3.2",
-    "pretty-format": "^27.4.2",
+    "pretty-format": "^27.4.6",
     "prompts": "^2.4.2",
     "rollup": "^2.63.0",
     "source-map-js": "^1.0.1",
@@ -99,10 +100,10 @@
     "ws": "^8.4.0"
   },
   "peerDependencies": {
+    "@vitest/ui": "*",
     "c8": "*",
     "happy-dom": "*",
-    "jsdom": "*",
-    "@vitest/ui": "*"
+    "jsdom": "*"
   },
   "peerDependenciesMeta": {
     "c8": {

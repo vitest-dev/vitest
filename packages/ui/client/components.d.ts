@@ -8,6 +8,8 @@ declare module 'vue' {
     ConnectionOverlay: typeof import('./components/ConnectionOverlay.vue')['default']
     FileDetails: typeof import('./components/FileDetails.vue')['default']
     IconButton: typeof import('./components/IconButton.vue')['default']
+    Modal: typeof import('./components/Modal.vue')['default']
+    ModuleTransformResultView: typeof import('./components/ModuleTransformResultView.vue')['default']
     Navigation: typeof import('./components/Navigation.vue')['default']
     StatusIcon: typeof import('./components/StatusIcon.vue')['default']
     Suites: typeof import('./components/Suites.vue')['default']

@@ -2,7 +2,7 @@ import type {
   Plugin as PrettyFormatPlugin,
 } from 'pretty-format'
 import type { Any, Anything, ArrayContaining, ObjectContaining, StringMatching } from './integrations/chai/jest-asymmetric-matchers'
-import type { MatchersObject } from './integrations/chai/types'
+import type { MatcherState, MatchersObject } from './integrations/chai/types'
 import type { InlineConfig } from './types'
 
 type VitestInlineConfig = InlineConfig
@@ -43,6 +43,8 @@ declare global {
       anything(): Anything
       any(constructor: unknown): Any
       addSnapshotSerializer(plugin: PrettyFormatPlugin): void
+      getState(): MatcherState
+      setState(state: Partial<MatcherState>): void
       not: AsymmetricMatchersContaining
     }
 

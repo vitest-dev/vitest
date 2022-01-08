@@ -9,12 +9,13 @@ test('snapshot', () => {
 test('inline snapshot', () => {
   expect('inline string').toMatchInlineSnapshot('"inline string"')
   expect({ foo: { type: 'object', map: new Map() } }).toMatchInlineSnapshot(`
-{
-  "foo": {
-    "map": Map {},
-    "type": "object",
-  },
-}`)
+    {
+      "foo": {
+        "map": Map {},
+        "type": "object",
+      },
+    }
+    `)
 })
 
 test('snapshot with big array', () => {
@@ -59,9 +60,10 @@ test('throwing inline snapshots', () => {
     // eslint-disable-next-line no-throw-literal
     throw { error: 'omega' }
   }).toThrowErrorMatchingInlineSnapshot(`
-{
-  "error": "omega",
-}`)
+    {
+      "error": "omega",
+    }
+    `)
 })
 
 test('properties snapshot', () => {
@@ -102,9 +104,10 @@ test('properties inline snapshot', () => {
     createdAt: expect.any(Date),
     id: expect.any(Number),
   }, `
-{
-  "createdAt": Any<Date>,
-  "id": Any<Number>,
-  "name": "LeBron James",
-}`)
+    {
+      "createdAt": Any<Date>,
+      "id": Any<Number>,
+      "name": "LeBron James",
+    }
+    `)
 })

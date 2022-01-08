@@ -19,13 +19,14 @@ import {
   addExtraLineBreaks,
   getSnapshotData,
   keyToTestName,
+  prepareExpected,
   removeExtraLineBreaks,
   saveSnapshotFile,
   serialize,
   testNameToKey,
 } from './utils'
 
-type SnapshotReturnOptions = {
+interface SnapshotReturnOptions {
   actual: string
   count: number
   expected?: string
@@ -33,7 +34,7 @@ type SnapshotReturnOptions = {
   pass: boolean
 }
 
-type SaveStatus = {
+interface SaveStatus {
   deleted: boolean
   saved: boolean
 }
@@ -89,7 +90,7 @@ export default class SnapshotState {
   private _addSnapshot(
     key: string,
     receivedSerialized: string,
-    options: {isInline: boolean; error?: Error},
+    options: { isInline: boolean; error?: Error },
   ): void {
     this._dirty = true
     if (options.isInline) {
@@ -188,7 +189,8 @@ export default class SnapshotState {
 
     const receivedSerialized = addExtraLineBreaks(serialize(received, undefined, this._snapshotFormat))
     const expected = isInline ? inlineSnapshot : this._snapshotData[key]
-    const pass = expected?.trim() === receivedSerialized?.trim()
+    const expectedTrimmed = prepareExpected(expected)
+    const pass = expectedTrimmed === receivedSerialized?.trim()
     const hasSnapshot = expected !== undefined
     const snapshotIsPersisted = isInline || fs.existsSync(this._snapshotPath)
 
@@ -247,9 +249,9 @@ export default class SnapshotState {
           actual: removeExtraLineBreaks(receivedSerialized),
           count,
           expected:
-             expected !== undefined
-               ? removeExtraLineBreaks(expected)
-               : undefined,
+          expectedTrimmed !== undefined
+            ? removeExtraLineBreaks(expectedTrimmed)
+            : undefined,
           key,
           pass: false,
         }

@@ -12,8 +12,8 @@
     "@vitejs/plugin-vue": "^2.0.1",
     "@vue/test-utils": "^2.0.0-rc.18",
     "@vue/vue3-jest": "^27.0.0-alpha.4",
-    "babel-jest": "^27.4.5",
-    "jest": "^27.4.5",
+    "babel-jest": "^27.4.6",
+    "jest": "^27.4.7",
     "jsdom": "^19.0.0",
     "ts-jest": "^27.1.2",
     "vue": "^3.2.25"

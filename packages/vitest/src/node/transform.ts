@@ -18,18 +18,32 @@ export async function transformRequest(ctx: Vitest, id: string) {
   return promiseMap.get(id)
 }
 
+function getTransformMode(ctx: Vitest, id: string) {
+  const withoutQuery = id.split('?')[0]
+
+  if (ctx.config.transformMode?.web?.some(r => withoutQuery.match(r)))
+    return 'web'
+  if (ctx.config.transformMode?.ssr?.some(r => withoutQuery.match(r)))
+    return 'ssr'
+
+  if (withoutQuery.match(/\.([cm]?[jt]sx?|json)$/))
+    return 'ssr'
+  return 'web'
+}
+
 async function _transformRequest(ctx: Vitest, id: string) {
   let result: TransformResult | null = null
 
-  if (id.match(/\.(?:[cm]?[jt]sx?|json)$/)) {
-    result = await ctx.server.transformRequest(id, { ssr: true })
-  }
-  else {
+  const mode = getTransformMode(ctx, id)
+  if (mode === 'web') {
     // for components like Vue, we want to use the client side
     // plugins but then covert the code to be consumed by the server
     result = await ctx.server.transformRequest(id)
     if (result)
       result = await ctx.server.ssrTransform(result.code, result.map, id)
+  }
+  else {
+    result = await ctx.server.transformRequest(id, { ssr: true })
   }
 
   if (result && !id.includes('node_modules'))
@@ -38,7 +52,6 @@ async function _transformRequest(ctx: Vitest, id: string) {
   if (result?.map && process.env.NODE_V8_COVERAGE)
     ctx.visitedFilesMap.set(toFilePath(id, ctx.config.root), result.map as any)
 
-  // TODO: cache this result based on Vite's module graph
   return result
 }
 
