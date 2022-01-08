@@ -70,11 +70,12 @@ function replaceObjectSnap(code: string, s: MagicString, index: number, newSnap:
   if (!startMatch)
     return false
 
+  code = code.slice(startMatch.index)
   const charIndex = getEndIndex(code)
   if (charIndex === null)
     return false
 
-  s.appendLeft(index + charIndex, `, ${prepareSnapString(newSnap, indent)}`)
+  s.appendLeft(index + startMatch.index + charIndex, `, ${prepareSnapString(newSnap, indent)}`)
 
   return true
 }
