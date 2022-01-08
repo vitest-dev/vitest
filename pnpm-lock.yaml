@@ -407,6 +407,7 @@ importers:
       chai: ^4.3.4
       chai-subset: ^1.6.0
       cli-truncate: ^3.1.0
+      detect-indent: ^7.0.0
       diff: ^5.0.0
       execa: ^6.0.0
       fast-glob: ^3.2.8
@@ -456,6 +457,7 @@ importers:
       cac: 6.7.12
       chai-subset: 1.6.0
       cli-truncate: 3.1.0
+      detect-indent: 7.0.0
       diff: 5.0.0
       execa: 6.0.0
       fast-glob: 3.2.8
@@ -3695,6 +3697,11 @@ packages:
   /delayed-stream/1.0.0:
     resolution: {integrity: sha1-3zrhmayt+31ECqrgsp4icrJOxhk=}
     engines: {node: '>=0.4.0'}
+    dev: true
+
+  /detect-indent/7.0.0:
+    resolution: {integrity: sha512-/6kJlmVv6RDFPqaHC/ZDcU8bblYcoph2dUQ3kB47QqhkUEqXe3VZPELK9BaEMrC73qu+wn0AQ7iSteceN+yuMw==}
+    engines: {node: '>=12.20'}
     dev: true
 
   /devtools-protocol/0.0.937139:
