@@ -5,6 +5,7 @@ import type { File } from '#types'
 
 const props = defineProps<{
   file?: File
+  headerSize: number
 }>()
 
 const code = ref('')
@@ -23,6 +24,11 @@ const editor = ref<any>()
 
 const cm = computed<CodeMirror.EditorFromTextArea | undefined>(() => editor.value?.cm)
 const failed = computed(() => props.file?.tasks.filter(i => i.result?.state === 'fail') || [])
+
+const style = computed(() => {
+  const size = props.headerSize
+  return size > 0 ? `--cm-scrolls-height: calc(100vh - ${size}px - 1px)` : null
+})
 
 const widgets: CodeMirror.LineWidget[] = []
 const handles: CodeMirror.LineHandle[] = []
@@ -63,6 +69,7 @@ watch([cm, failed], () => {
     v-model="code"
     v-bind="{ lineNumbers: true }"
     :mode="ext"
+    :style="style"
     @save="onSave"
   />
 </template>

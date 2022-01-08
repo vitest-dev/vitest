@@ -2,6 +2,14 @@
 import type { Task } from '#types'
 import { activeFileId } from '~/composables/params'
 
+const header = ref(null)
+const headerSize = ref<number>(0)
+
+const style = computed(() => {
+  const size = headerSize.value
+  return size > 0 ? `--cm-scrolls-height: calc(100vh - ${size}px - 1px)` : null
+})
+
 withDefaults(defineProps<{
   tasks: Task[]
   indent?: number
@@ -23,7 +31,7 @@ export default {
 
 <template>
   <div h="full">
-    <div>
+    <div ref="header">
       <div
         p="2"
         h-10
