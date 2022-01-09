@@ -354,7 +354,7 @@ importers:
       '@vueuse/core': ^7.5.3
       codemirror: ^5.65.0
       codemirror-theme-vars: ^0.1.1
-      d3-graph-controller: ^1.15.0
+      d3-graph-controller: ^2.1.0
       picocolors: ^1.0.0
       rollup: ^2.63.0
       sirv: ^2.0.0
@@ -378,7 +378,7 @@ importers:
       '@vueuse/core': 7.5.3_vue@3.2.26
       codemirror: 5.65.0
       codemirror-theme-vars: 0.1.1
-      d3-graph-controller: 1.15.0
+      d3-graph-controller: 2.1.0
       picocolors: 1.0.0
       rollup: 2.63.0
       splitpanes: 3.0.6
@@ -3479,8 +3479,8 @@ packages:
     resolution: {integrity: sha512-Ab3S6XuE/Q+flY96HXT0jOXcM4EAClYFnRGY5zsjRGNy6qCYrQsMffs7cV5Q9xejb35zxW5hf/guKw34kvIKsA==}
     dev: false
 
-  /d3-graph-controller/1.15.0:
-    resolution: {integrity: sha512-cwoAjvyYZ++b20oJo1eCp74hhDRnUMVFDZgHV1nF9ZUyroH3NavVOyFK6al7qvCdVOnuHUJKIH81CARKkUKzxA==}
+  /d3-graph-controller/2.1.0:
+    resolution: {integrity: sha512-bA5BS44F/Ka0ynflXJGACblOsM/3xvY2rAg6aos4JvIdRrQS67cAobiP0PSSoeY3BNJRrtURzajYNVNeMR5sZg==}
     dependencies:
       d3-drag: 3.0.0
       d3-force: 3.0.0
