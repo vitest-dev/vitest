@@ -1,5 +1,5 @@
 import type { Graph, GraphConfig, GraphController, GraphLink, GraphNode } from 'd3-graph-controller'
-import { defineLink, defineNode } from 'd3-graph-controller'
+import { defineGraph, defineLink, defineNode } from 'd3-graph-controller'
 import type { ModuleGraphData } from '../../../vitest/src/types'
 
 export type ModuleType = 'external' | 'inline'
@@ -18,42 +18,38 @@ function defineExternalModuleNode(module: string): ModuleNode {
 
   return defineNode<ModuleType, ModuleNode>({
     color: 'var(--color-node-external)',
-    labelColor: 'var(--color-node-external)',
-    fontSize: '0.875rem',
+    label: {
+      color: 'var(--color-node-external)',
+      fontSize: '0.875rem',
+      text: label,
+    },
     isFocused: false,
     id: module,
-    label,
     type: 'external',
   })
 }
 
-function defineInlineModuleNode(module: string): ModuleNode {
+function defineInlineModuleNode(module: string, isRoot: boolean): ModuleNode {
   return defineNode<ModuleType, ModuleNode>({
-    color: 'var(--color-node-inline)',
-    labelColor: 'var(--color-node-inline)',
-    fontSize: '0.875rem',
+    color: isRoot ? 'var(--color-node-root)' : 'var(--color-node-inline)',
+    label: {
+      color: isRoot ? 'var(--color-node-root)' : 'var(--color-node-inline)',
+      fontSize: '0.875rem',
+      text: module.split(/\//g).pop()!,
+    },
     isFocused: false,
     id: module,
-    label: module.split(/\//g).pop()!,
     type: 'inline',
   })
 }
 
 export function getModuleGraph(data: ModuleGraphData, rootPath: string | undefined): ModuleGraph {
-  if (!data) {
-    return {
-      nodes: [],
-      links: [],
-    }
-  }
+  if (!data)
+    return defineGraph({})
+
   const externalizedNodes = data.externalized.map(module => defineExternalModuleNode(module)) ?? []
-  const inlinedNodes = data.inlined.map(module => defineInlineModuleNode(module)) ?? []
+  const inlinedNodes = data.inlined.map(module => defineInlineModuleNode(module, module === rootPath)) ?? []
   const nodes = [...externalizedNodes, ...inlinedNodes]
-  const rootNode = nodes.find(i => i.id === rootPath)
-  if (rootNode) {
-    rootNode.color = 'var(--color-node-root)'
-    rootNode.labelColor = 'var(--color-node-root)'
-  }
   const nodeMap = Object.fromEntries(nodes.map(node => [node.id, node]))
   const links = Object
     .entries(data.graph)
@@ -67,10 +63,8 @@ export function getModuleGraph(data: ModuleGraphData, rootPath: string | undefin
         source,
         target,
         color: 'var(--color-link)',
-        label: '',
-        labelColor: 'var(--color-link-label)',
-        showLabel: false,
+        label: false,
       })
     }).filter(link => link !== undefined) as ModuleLink[])
-  return { nodes, links }
+  return defineGraph({ nodes, links })
 }
