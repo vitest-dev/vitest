@@ -115,7 +115,7 @@ function bindOnClick(selection: Selection<SVGCircleElement, ModuleNode, SVGGElem
 </script>
 
 <template>
-  <div h-full overflow="hidden">
+  <div h-full min-h-75 flex-1 overflow="hidden">
     <div>
       <div flex items-center gap-4 px-3 py-2>
         <div v-for="node of controller?.nodeTypes.sort()" :key="node" flex="~ gap-1" items-center select-none>
@@ -178,7 +178,8 @@ html.dark {
 }
 
 .graph {
-  height: var(--graph-height, 100%) !important;
+    /* The graph container is offset in its parent. Thus we can't use the default 100% height and have to subtract the offset. */
+  height: calc(100% - 39px) !important;
 }
 
 .graph .node {
