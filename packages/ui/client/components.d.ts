@@ -7,6 +7,7 @@ declare module 'vue' {
     CodeMirror: typeof import('./components/CodeMirror.vue')['default']
     ConnectionOverlay: typeof import('./components/ConnectionOverlay.vue')['default']
     ConsoleOutput: typeof import('./components/ConsoleOutput.vue')['default']
+    DetailsPanel: typeof import('./components/DetailsPanel.vue')['default']
     FileDetails: typeof import('./components/FileDetails.vue')['default']
     IconButton: typeof import('./components/IconButton.vue')['default']
     Modal: typeof import('./components/Modal.vue')['default']

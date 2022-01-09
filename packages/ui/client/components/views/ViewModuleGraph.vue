@@ -115,7 +115,7 @@ function bindOnClick(selection: Selection<SVGCircleElement, ModuleNode, SVGGElem
 </script>
 
 <template>
-  <div h-full flex-1 overflow="hidden">
+  <div h-full min-h-75 flex-1 overflow="hidden">
     <div>
       <div flex items-center gap-4 px-3 py-2>
         <div v-for="node of controller?.nodeTypes.sort()" :key="node" flex="~ gap-1" items-center select-none>
