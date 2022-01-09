@@ -19,7 +19,7 @@ const widthPending = computed(() => {
 
 <template>
   <div h-8 line-height-1 px-0 grid="~ auto-cols-max" justify-items-center>
-    <div h-1rem relative max-w-350px min-w-350px w-350px overflow-hidden class="px-0">
+    <div h-1rem relative max-w-300px min-w-300px w-300px overflow-hidden class="px-0">
       <div
         absolute
         left-0
@@ -73,7 +73,7 @@ const widthPending = computed(() => {
         </template>
       </div>
     </div>
-    <div text-center>
+    <div text-center text-xs>
       <slot />
     </div>
   </div>

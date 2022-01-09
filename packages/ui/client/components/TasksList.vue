@@ -155,5 +155,8 @@ export default {
         />
       </template>
     </div>
+    <footer v-if="$slots.footer">
+      <slot name="footer" />
+    </footer>
   </div>
 </template>
