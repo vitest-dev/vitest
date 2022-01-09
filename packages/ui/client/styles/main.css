@@ -8,9 +8,6 @@ body {
   --color-text-light: #000;
   --color-text-dark: #ddd;
   --color-text: var(--color-text-light);
-  --color-pass: #22c55e;
-  --color-failed: #ef4444;
-  --color-pending: gray;
 }
 
 
@@ -166,22 +163,5 @@ html.dark {
   margin-right: unset !important;
   padding-bottom: unset !important;
 }
-.test-c-pass {
-  color: var(--color-pass);
-}
-.test-c-failed {
-  color: var(--color-failed);
-}
-.test-c-pending {
-  color: var(--color-pending);
-}
-.test-bg-pass {
-  background-color: var(--color-pass);
-}
-.test-bg-failed {
-  background-color: var(--color-failed);
-}
-.test-bg-pending {
-  background-color: var(--color-pending);
-}
+
 

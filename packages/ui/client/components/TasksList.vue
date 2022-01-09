@@ -2,17 +2,6 @@
 import type { Task } from '#types'
 import { activeFileId } from '~/composables/params'
 
-const header = ref(null)
-const headerSize = ref<number>(0)
-const style = computed(() => {
-  const size = headerSize.value
-  return size > 0 ? `height: calc(100vh - ${size}px - 1px)` : null
-})
-useResizeObserver(header, () => {
-  const clientHeight = unrefElement(header)?.clientHeight
-  headerSize.value = clientHeight ?? 0
-})
-
 const props = withDefaults(defineProps<{
   tasks: Task[]
   indent?: number

@@ -18,7 +18,7 @@ const widthPending = computed(() => {
 </script>
 
 <template>
-  <div h-8 line-height-1 w-350px px-0grid="~ auto-cols-max">
+  <div h-8 line-height-1 px-0 grid="~ auto-cols-max">
     <div h-1rem relative max-w-350px min-w-350px w-350px overflow-hidden class="px-0 vm-progress-bar__outer">
       <div
         absolute
@@ -27,7 +27,7 @@ const widthPending = computed(() => {
         h-full
         line-height-1
         text-right
-        class="test-bg-failed"
+        bg-red5
         :class="[{'in-progress': props.inProgress}]"
         :style="`width: ${widthFailed}px;`"
       >
@@ -44,7 +44,7 @@ const widthPending = computed(() => {
         h-full
         line-height-1
         text-right
-        class="test-bg-pass"
+        bg-green5
         :class="[{'in-progress': props.inProgress}]"
         :style="`left: ${widthFailed}px; width: ${widthPass}px;`"
       >
@@ -61,7 +61,7 @@ const widthPending = computed(() => {
         h-full
         line-height-1
         text-right
-        op-75
+        bg-yellow5
         class="test-bg-pending"
         :class="[{'in-progress': props.inProgress}]"
         :style="`left: ${widthPass + widthFailed}px; width: ${widthPending}px;`"
