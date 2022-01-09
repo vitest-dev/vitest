@@ -12,6 +12,7 @@ function open() {
     fetch(`/__open-in-editor?file=${encodeURIComponent(filePath)}`)
 }
 
+const showOutput = ref(false)
 const data = ref<ModuleGraphData>({ externalized: [], graph: {}, inlined: [] })
 const graph = ref<ModuleGraph>({ nodes: [], links: [] })
 
@@ -59,7 +60,7 @@ const changeViewMode = (view: Params['view']) => {
       <ViewModuleGraph v-if="viewMode === 'graph'" :graph="graph" class="file-details-graph" />
       <ViewEditor v-if="viewMode === 'editor'" :file="current" />
       <ViewReport v-else-if="!viewMode" :file="current" />
-      <ConsoleOutput :file="current" />
+      <ConsoleOutput v-model="showOutput" :file="current" />
     </div>
   </div>
 </template>

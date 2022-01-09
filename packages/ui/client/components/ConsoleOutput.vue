@@ -1,27 +1,34 @@
+
 <script setup lang="ts">
 import type { File } from '#types'
 
 const props = withDefaults(defineProps<{
+  modelValue?: boolean
   file?: File
-  showConsoleOutput?: boolean
 }>(), {
-  showConsoleOutput: true
+  modelValue: false,
+  file: undefined,
 })
 
-const consoleOutput = computed(() => props.file?.tasks?.map(i => i?.logs || []).flat() || []);
+defineEmits<{
+  (e: 'update:modelValue', modelValue: boolean): void }
+>()
+
+const consoleOutput = computed(() => props.file?.tasks?.map(i => i?.logs || []).flat() || [])
 </script>
 
 <template>
   <div w-full>
-    <div flex justify-between cursor-pointer p="x4 y2" bg-header h-auto all:transition-400 @click="showConsoleOutput = !showConsoleOutput">
-      <p>
-        Console output ({{ consoleOutput?.length || 0 }})
-      </p>
-      <IconButton icon="i-carbon-caret-down" :class="showConsoleOutput ? 'rotate-180' : 'rotate-0'" :disabled="!ctx?.length"  />
+    <div
+      flex justify-between cursor-pointer bg-header h-auto all:transition-400 p="x4 y2"
+      @click="$emit('update:modelValue', !modelValue)"
+    >
+      <p> Console output ({{ consoleOutput?.length || 0 }}) </p>
+      <IconButton icon="i-carbon-caret-down" :class="!modelValue ? 'rotate-180' : 'rotate-0'" :disabled="!logs?.length" />
     </div>
-    <template v-if="!showConsoleOutput">
+    <template v-if="modelValue">
       <div p="x4 y6">
-        <div v-for="log of consoleOutput">
+        <div v-for="log of consoleOutput" my-2>
           {{ log.content }}
         </div>
       </div>
