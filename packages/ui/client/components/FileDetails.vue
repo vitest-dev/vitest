@@ -60,9 +60,9 @@ const changeViewMode = (view: Params['view']) => {
         </div>
       </div>
       <div flex flex-col flex-1 overflow="hidden">
-        <ViewModuleGraph v-if="viewMode === 'graph'" :graph="graph" class="file-details-graph" />
+        <ViewModuleGraph v-show="viewMode === 'graph'" :graph="graph" class="file-details-graph" />
         <ViewEditor v-if="viewMode === 'editor'" :file="currentModule" />
-        <ViewReport v-else :file="currentModule" />
+        <ViewReport v-else-if="!viewMode" :file="currentModule" />
       </div>
     </template>
     <ReportSummary v-else />
