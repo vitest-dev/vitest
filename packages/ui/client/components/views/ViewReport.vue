@@ -16,7 +16,7 @@ function relative(p: string) {
 </script>
 
 <template>
-  <div class="scrolls">
+  <div class="scrolls" flex-1>
     <template v-if="failed.length">
       <div v-for="task of failed" :key="task.id">
         <div bg="red-500/10" text="red-500 sm" p="x3 y2" m-2 rounded>
