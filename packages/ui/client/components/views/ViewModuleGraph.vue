@@ -43,32 +43,32 @@ function resetGraphController() {
   controller.value = new GraphController(
     el.value!,
     graph.value,
+    // See https://graph-controller.yeger.eu/config/ for more options
     defineGraphConfig<ModuleType, ModuleNode, ModuleLink>({
-      getLinkLength: () => 240,
-      getNodeRadius: () => 10,
-      alphas: {
-        initialize: 1,
-        resize: ({ newHeight, newWidth }: ResizeContext) => {
-          const willBeHidden = newHeight === 0 && newWidth === 0
-          if (willBeHidden)
-            return 0
-          return 0.25
-        },
-      },
+      nodeRadius: 10,
       autoResize: true,
-      forces: {
-        charge: {
-          strength: -1,
+      simulation: {
+        alphas: {
+          initialize: 1,
+          resize: ({ newHeight, newWidth }: ResizeContext) => {
+            const willBeHidden = newHeight === 0 && newWidth === 0
+            if (willBeHidden)
+              return 0
+            return 0.25
+          },
         },
-        collision: {
-          radiusMultiplier: 10,
+        forces: {
+          collision: {
+            radiusMultiplier: 10,
+          },
+          link: {
+            length: 240,
+          },
         },
       },
       marker: Markers.Arrow(2),
       modifiers: {
-        node(selection: Selection<SVGCircleElement, ModuleNode, SVGGElement, undefined>) {
-          bindOnClick(selection)
-        },
+        node: bindOnClick,
       },
       positionInitializer: graph.value.nodes.length > 1
         ? PositionInitializers.Randomized
@@ -115,7 +115,7 @@ function bindOnClick(selection: Selection<SVGCircleElement, ModuleNode, SVGGElem
 </script>
 
 <template>
-  <div h-full overflow="hidden">
+  <div h-full min-h-75 flex-1 overflow="hidden">
     <div>
       <div flex items-center gap-4 px-3 py-2>
         <div v-for="node of controller?.nodeTypes.sort()" :key="node" flex="~ gap-1" items-center select-none>
@@ -147,7 +147,7 @@ function bindOnClick(selection: Selection<SVGCircleElement, ModuleNode, SVGGElem
         </div>
       </div>
     </div>
-    <div ref="el" class="graph" />
+    <div ref="el" />
     <Modal v-model="modalShow" direction="right">
       <template v-if="selectedModule">
         <Suspense>
@@ -178,7 +178,8 @@ html.dark {
 }
 
 .graph {
-  height: var(--graph-height, 100%) !important;
+    /* The graph container is offset in its parent. Thus we can't use the default 100% height and have to subtract the offset. */
+  height: calc(100% - 39px) !important;
 }
 
 .graph .node {
