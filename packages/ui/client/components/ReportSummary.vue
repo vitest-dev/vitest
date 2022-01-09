@@ -49,7 +49,7 @@ const totalTests = computed(() => {
       Test Files <span text-red5>{{ failed.length }} failed</span> | <span text-green5>{{ success.length }} passed</span> | <span text-yellow5>{{ running.length }} running</span> <span c-gray op-75>({{ files.length }})</span>
     </ProgressBar>
     <ProgressBar :total="totalTests" :failed="testsFailed.length" :pass="testsSuccess.length" :in-progress="!finished">
-      Tests <span text-red5>{{ testsFailed.length }} failed</span> | <span text-green5>{{ testsSuccess.length }} passed</span> | <span text-purple5>{{ testsSkipped.length }} skipped</span> | <span c-gray op-75>{{ testsTodo.length }} todo</span> <span c-gray op-75>({{ tests.length }})</span>
+      Tests <span text-red5>{{ testsFailed.length }} failed</span> | <span text-green5>{{ testsSuccess.length }} passed</span> | <span text-yellow5>{{ testsSkipped.length }} skipped</span> | <span c-gray op-75>{{ testsTodo.length }} todo</span> <span c-gray op-75>({{ tests.length }})</span>
     </ProgressBar>
     <div>Time: </div>
   </div>
