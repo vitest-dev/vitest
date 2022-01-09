@@ -1,13 +1,15 @@
 # Mocking
-When writing tests it's only a matter of time before you need to create 'fake' version of an internal- or external service. This is commonly referred to as **mocking**. Vitest provides utility functions to help you out through it's **vi** helper. You can `import { vi } from 'vitest'` or access it **globally** (when [global configuration](../config/#global) is **enabled**).
+When writing tests it's only a matter of time before you need to create "fake" version of an internal—or external—service. This is commonly referred to as **mocking**. Vitest provides utility functions to help you out through its **vi** helper. You can `import { vi } from 'vitest'` or access it **globally** (when [global configuration](../config/#global) is **enabled**).
 
-> Always remember to clear or restore mocks before or after each test run to save head scratching along the line! See [](../config/#mockreset)
+::: warning
+Always remember to clear or restore mocks before or after each test run to undo mock state changes between runs! See [`mockReset`](/api/#mockreset) docs for more info.
+:::
 
-If you wanna dive in head first, check out the [API section](../api/#creating-mocks) otherwise keep reading to take a deeper dive into the world of mocking.
+If you wanna dive in head first, check out the [API section](/api/#vi) otherwise keep reading to take a deeper dive into the world of mocking.
 
 ## Dates
 
-Sometimes you need to be in control of the date's to allow for consistency when testing. Vitest comes with [`mockdate`](https://www.npmjs.com/package/mockdate) package baked-in to let you easily manipulate the system date in your tests. You can find more about the specific API in detail [here](../api/#vi-mockcurrentdate).
+Sometimes you need to be in control of the date to ensure consistency when testing. Vitest comes with the [`mockdate`](https://www.npmjs.com/package/mockdate) package built-in to let you manipulate the system date in your tests. You can find more about the specific API in detail [here](/api/#vi-mockcurrentdate).
 
 ### Example
 
@@ -225,7 +227,7 @@ There is much more to MSW. You can access cookies and query parameters, define m
 
 ## Timers
 
-Whenever we test code that involves timeOuts or intervals, instead of having our tests it wait out or time-out. We can speed up our tests by using 'fake timers'. You can mock calls to `setTimeout` and `setInterval` easily to
+Whenever we test code that involves `timeOut`s or intervals, instead of having our tests it wait out or time-out. We can speed up our tests by using "fake" timers by mocking calls to `setTimeout` and `setInterval`, too.
 
 See the [`vi.mock()` api section](../api/#vi-usefaketimer) for a more in depth detailed API description.
 
