@@ -61,6 +61,7 @@ watch([cm, failed], () => {
   <CodeMirror
     ref="editor"
     v-model="code"
+    min-h-75
     v-bind="{ lineNumbers: true }"
     :mode="ext"
     @save="onSave"

@@ -189,8 +189,6 @@ export function unifiedDiff(actual: string, expected: string) {
     '+': 0,
     '-': 0,
   }
-  const expectedLinesCount = 0
-  const actualLinesCount = 0
   let previousState: '-' | '+' | null = null
   let previousCount = 0
   function preprocess(line: string) {
@@ -244,8 +242,8 @@ export function unifiedDiff(actual: string, expected: string) {
   }
   else {
     formatted.unshift(
-      c.green('- Expected  -' + expectedLinesCount),
-      c.red('+ Received  +' + actualLinesCount),
+      c.green('- Expected  - ' + counts['-']),
+      c.red('+ Received  + ' + counts['+']),
       '',
     )
   }

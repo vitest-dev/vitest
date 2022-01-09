@@ -2,7 +2,9 @@
 import { client, current } from '~/composables/client'
 import type { Params } from '~/composables/params'
 import { viewMode } from '~/composables/params'
-import { useModuleGraph } from '~/composables/module-graph'
+import type { ModuleGraph } from '~/composables/module-graph'
+import { getModuleGraph } from '~/composables/module-graph'
+import type { ModuleGraphData } from '#types'
 
 function open() {
   const filePath = current.value?.filepath
@@ -10,20 +12,27 @@ function open() {
     fetch(`/__open-in-editor?file=${encodeURIComponent(filePath)}`)
 }
 
-const data = asyncComputed(async() => {
-  return current.value
-    ? await client.rpc.getModuleGraph(current.value.filepath)
-    : { externalized: [], graph: {}, inlined: [] }
-})
+const data = ref<ModuleGraphData>({ externalized: [], graph: {}, inlined: [] })
+const graph = ref<ModuleGraph>({ nodes: [], links: [] })
 
-const graph = useModuleGraph(data, computed(() => current.value?.filepath))
+debouncedWatch(
+  current,
+  async(c, o) => {
+    if (c && c.filepath !== o?.filepath) {
+      data.value = await client.rpc.getModuleGraph(c.filepath)
+      graph.value = getModuleGraph(data.value, c.filepath)
+    }
+  },
+  { debounce: 100 },
+)
+
 const changeViewMode = (view: Params['view']) => {
   viewMode.value = view
 }
 </script>
 
 <template>
-  <div v-if="current" h-full>
+  <div v-if="current" flex flex-col h-full max-h-full>
     <div>
       <div p="2" h-10 flex="~ gap-2" items-center bg-header border="b base">
         <StatusIcon :task="current" />
@@ -46,8 +55,10 @@ const changeViewMode = (view: Params['view']) => {
         </button>
       </div>
     </div>
-    <ViewModuleGraph v-show="viewMode === 'graph'" :graph="graph" />
-    <ViewEditor v-if="viewMode === 'editor'" :file="current" />
-    <ViewReport v-else-if="!viewMode" :file="current" />
+    <div flex flex-col flex-1 overflow="hidden">
+      <ViewModuleGraph v-if="viewMode === 'graph'" :graph="graph" class="file-details-graph" />
+      <ViewEditor v-if="viewMode === 'editor'" :file="current" />
+      <ViewReport v-else-if="!viewMode" :file="current" />
+    </div>
   </div>
 </template>

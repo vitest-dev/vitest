@@ -1,6 +1,6 @@
 {
   "name": "vitest",
-  "version": "0.0.136",
+  "version": "0.0.139",
   "description": "A blazing fast unit test framework powered by Vite",
   "keywords": [
     "vite",
@@ -74,9 +74,10 @@
     "cac": "^6.7.12",
     "chai-subset": "^1.6.0",
     "cli-truncate": "^3.1.0",
+    "detect-indent": "^7.0.0",
     "diff": "^5.0.0",
     "execa": "^6.0.0",
-    "fast-glob": "^3.2.7",
+    "fast-glob": "^3.2.8",
     "find-up": "^6.2.0",
     "flatted": "^3.2.4",
     "happy-dom": "^2.25.1",
@@ -84,7 +85,7 @@
     "log-update": "^5.0.0",
     "magic-string": "^0.25.7",
     "micromatch": "^4.0.4",
-    "mlly": "^0.3.16",
+    "mlly": "^0.3.17",
     "mockdate": "^3.0.5",
     "natural-compare": "^1.4.0",
     "pathe": "^0.2.0",
@@ -99,10 +100,10 @@
     "ws": "^8.4.0"
   },
   "peerDependencies": {
+    "@vitest/ui": "*",
     "c8": "*",
     "happy-dom": "*",
-    "jsdom": "*",
-    "@vitest/ui": "*"
+    "jsdom": "*"
   },
   "peerDependenciesMeta": {
     "c8": {

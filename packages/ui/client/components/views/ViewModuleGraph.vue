@@ -16,10 +16,6 @@ const modalShow = ref(false)
 const selectedModule = ref<string | null>()
 const controller = ref<ModuleGraphController | undefined>()
 
-useResizeObserver(el, debounce(() => {
-  controller.value?.resize()
-}))
-
 onMounted(() => {
   resetGraphController()
 })
@@ -47,35 +43,40 @@ function resetGraphController() {
   controller.value = new GraphController(
     el.value!,
     graph.value,
+    // See https://graph-controller.yeger.eu/config/ for more options
     defineGraphConfig<ModuleType, ModuleNode, ModuleLink>({
-      getLinkLength: () => 240,
-      getNodeRadius: () => 10,
-      alphas: {
-        initialize: 1,
-        resize: ({ newHeight, newWidth }: ResizeContext) => {
-          const willBeHidden = newHeight === 0 && newWidth === 0
-          if (willBeHidden)
-            return 0
-          return 0.25
+      nodeRadius: 10,
+      autoResize: true,
+      simulation: {
+        alphas: {
+          initialize: 1,
+          resize: ({ newHeight, newWidth }: ResizeContext) => {
+            const willBeHidden = newHeight === 0 && newWidth === 0
+            if (willBeHidden)
+              return 0
+            return 0.25
+          },
+        },
+        forces: {
+          collision: {
+            radiusMultiplier: 10,
+          },
+          link: {
+            length: 240,
+          },
         },
       },
-      forces: {
-        charge: {
-          strength: -1,
-        },
-        collision: {
-          radiusMultiplier: 10,
-        },
-      },
+      marker: Markers.Arrow(2),
       modifiers: {
-        node(selection: Selection<SVGCircleElement, ModuleNode, SVGGElement, undefined>) {
-          bindOnClick(selection)
-        },
+        node: bindOnClick,
       },
       positionInitializer: graph.value.nodes.length > 1
         ? PositionInitializers.Randomized
         : PositionInitializers.Centered,
-      marker: Markers.Arrow(2),
+      zoom: {
+        min: 0.5,
+        max: 2,
+      },
     }),
   )
 }
@@ -111,19 +112,10 @@ function bindOnClick(selection: Selection<SVGCircleElement, ModuleNode, SVGGElem
         setSelectedModule(node.id)
     })
 }
-
-// Without debouncing the resize method, resizing the component will result in flickering.
-function debounce(cb: () => void) {
-  let h = 0
-  return () => {
-    window.clearTimeout(h)
-    h = window.setTimeout(() => cb())
-  }
-}
 </script>
 
 <template>
-  <div h-full overflow="hidden">
+  <div h-full min-h-75 flex-1 overflow="hidden">
     <div>
       <div flex items-center gap-4 px-3 py-2>
         <div v-for="node of controller?.nodeTypes.sort()" :key="node" flex="~ gap-1" items-center select-none>
@@ -155,7 +147,7 @@ function debounce(cb: () => void) {
         </div>
       </div>
     </div>
-    <div ref="el" class="graph" />
+    <div ref="el" />
     <Modal v-model="modalShow" direction="right">
       <template v-if="selectedModule">
         <Suspense>
@@ -183,6 +175,11 @@ html.dark {
   --color-node-external: #857a40;
   --color-node-inline: #468b60;
   --color-node-root: #467d8b;
+}
+
+.graph {
+    /* The graph container is offset in its parent. Thus we can't use the default 100% height and have to subtract the offset. */
+  height: calc(100% - 39px) !important;
 }
 
 .graph .node {

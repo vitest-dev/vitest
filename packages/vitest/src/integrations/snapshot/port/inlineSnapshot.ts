@@ -1,9 +1,10 @@
 import { promises as fs } from 'fs'
 import type MagicString from 'magic-string'
+import detectIndent from 'detect-indent'
 import { rpc } from '../../../runtime/rpc'
 import { getOriginalPos, posToNumber } from '../../../utils/source-map'
 
-export type InlineSnapshot = {
+export interface InlineSnapshot {
   snapshot: string
   file: string
   line: number
@@ -24,7 +25,8 @@ export async function saveInlineSnapshots(
     for (const snap of snaps) {
       const pos = await getOriginalPos(map, snap)
       const index = posToNumber(code, pos!)
-      replaceInlineSnap(code, s, index, snap.snapshot) // TODO: support indent: ' '.repeat(4))
+      const { indent } = detectIndent(code.slice(index - pos!.column))
+      replaceInlineSnap(code, s, index, snap.snapshot, indent)
     }
 
     const transformed = s.toString()
@@ -70,11 +72,12 @@ function replaceObjectSnap(code: string, s: MagicString, index: number, newSnap:
   if (!startMatch)
     return false
 
+  code = code.slice(startMatch.index)
   const charIndex = getEndIndex(code)
   if (charIndex === null)
     return false
 
-  s.appendLeft(index + charIndex, `, ${prepareSnapString(newSnap, indent)}`)
+  s.appendLeft(index + startMatch.index + charIndex, `, ${prepareSnapString(newSnap, indent)}`)
 
   return true
 }
@@ -87,7 +90,7 @@ function prepareSnapString(snap: string, indent: string) {
   const isOneline = !snap.includes('\n')
   return isOneline
     ? `'${snap.replace(/'/g, '\\\'').trim()}'`
-    : `\`${snap.replace(/`/g, '\\`').trimEnd()}\``
+    : `\`${snap.replace(/`/g, '\\`').trimEnd()}\n${indent}\``
 }
 
 const startRegex = /(?:toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot)\s*\(\s*(['"`\)])/m

@@ -4,13 +4,13 @@ export type SnapshotData = Record<string, string>
 
 export type SnapshotUpdateState = 'all' | 'new' | 'none'
 
-export type SnapshotStateOptions = {
+export interface SnapshotStateOptions {
   updateSnapshot: SnapshotUpdateState
   expand?: boolean
   snapshotFormat?: PrettyFormatOptions
 }
 
-export type SnapshotMatchOptions = {
+export interface SnapshotMatchOptions {
   testName: string
   received: unknown
   key?: string
