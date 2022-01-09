@@ -35,6 +35,19 @@ const testsTodo = computed(() => testsIgnore.value.filter(f => f.mode === 'todo'
 const totalTests = computed(() => {
   return testsFailed.value.length + testsSuccess.value.length
 })
+const time = computed(() => {
+  const t = getTests(files.value).reduce((acc, t) => {
+    if (t.result?.duration)
+      acc += t.result.duration
+
+    return acc
+  }, 0)
+
+  if (t > 1000)
+    return `${(t / 1000).toFixed(2)}s`
+
+  return `${Math.round(t)}ms`
+})
 
 function toArray<T>(array?: Nullable<Arrayable<T>>): Array<T> {
   array = array || []
@@ -55,6 +68,8 @@ function getTests(suite: Arrayable<Task>): Test[] {
     <ProgressBar :total="totalTests" :failed="testsFailed.length" :pass="testsSuccess.length" :in-progress="!finished">
       Tests <span text-red5>{{ testsFailed.length }} failed</span> | <span text-green5>{{ testsSuccess.length }} passed</span> | <span text-yellow5>{{ testsSkipped.length }} skipped</span> | <span c-gray op-75>{{ testsTodo.length }} todo</span> <span c-gray op-75>({{ tests.length }})</span>
     </ProgressBar>
-    <div>Time: </div>
+    <div text-center text-xs>
+      Time: {{ time }}
+    </div>
   </div>
 </template>
