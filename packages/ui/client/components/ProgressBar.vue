@@ -1,19 +1,26 @@
 <script setup lang="ts">
-const props = defineProps<{ total: number; failed: number; pass: number; inProgress: boolean }>()
+const props = defineProps<{
+  total: number
+  failed: number
+  pass: number
+  inProgress: boolean
+}>()
+
+const { total, failed, pass, inProgress } = toRefs(props)
+
+const t = unref(total)
+
 const widthPass = computed(() => {
-  const total = props.total
-  return total > 0 ? (300 * props.pass / total) : 0
+  return t > 0 ? (300 * pass.value / t) : 0
 })
 const widthFailed = computed(() => {
-  const total = props.total
-  return total > 0 ? (300 * props.failed / total) : 0
+  return t > 0 ? (300 * failed.value / t) : 0
 })
 const pending = computed(() => {
-  return props.total - props.failed - props.pass
+  return t - failed.value - pass.value
 })
 const widthPending = computed(() => {
-  const total = props.total
-  return total > 0 ? (300 * pending.value / total) : 0
+  return t > 0 ? (300 * pending.value / t) : 0
 })
 </script>
 
@@ -28,12 +35,12 @@ const widthPending = computed(() => {
         line-height-1
         text-right
         bg-red5
-        :class="[{'in-progress': props.inProgress}]"
+        :class="[{'in-progress': inProgress}]"
         :style="`width: ${widthFailed}px;`"
       >
         <template v-if="!inProgress">
           <div vertical-align-middle c-white text-xs m="y-0 x-5px" ws-nowrap>
-            {{ props.failed }}
+            {{ failed }}
           </div>
         </template>
       </div>
@@ -45,12 +52,12 @@ const widthPending = computed(() => {
         line-height-1
         text-right
         bg-green5
-        :class="[{'in-progress': props.inProgress}]"
+        :class="[{'in-progress': inProgress}]"
         :style="`left: ${widthFailed}px; width: ${widthPass}px;`"
       >
         <template v-if="!inProgress">
           <div vertical-align-middle c-white text-xs m="y-0 x-5px" ws-nowrap>
-            {{ props.pass }}
+            {{ pass }}
           </div>
         </template>
       </div>
@@ -62,8 +69,7 @@ const widthPending = computed(() => {
         line-height-1
         text-right
         bg-yellow5
-        class="test-bg-pending"
-        :class="[{'in-progress': props.inProgress}]"
+        :class="[{'in-progress': inProgress}]"
         :style="`left: ${widthPass + widthFailed}px; width: ${widthPending}px;`"
       >
         <template v-if="!inProgress">

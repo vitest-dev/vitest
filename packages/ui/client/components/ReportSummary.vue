@@ -2,6 +2,10 @@
 import type { Task, Test } from 'vitest/src'
 import { files, isConnected } from '~/composables/client'
 
+type Nullable<T> = T | null | undefined
+type Arrayable<T> = T | Array<T>
+
+// files
 const failed = computed(() => files.value.filter(f => f.result?.state === 'fail'))
 const success = computed(() => files.value.filter(f => f.result?.state === 'pass'))
 const ignore = computed(() => files.value.filter(f => f.mode === 'skip' || f.mode === 'todo'))
@@ -15,17 +19,7 @@ const todo = computed(() => ignore.value.filter(f => f.mode === 'todo'))
 const finished = computed(() => {
   return running.value.length === 0
 })
-type Nullable<T> = T | null | undefined
-type Arrayable<T> = T | Array<T>
-function toArray<T>(array?: Nullable<Arrayable<T>>): Array<T> {
-  array = array || []
-  if (Array.isArray(array))
-    return array
-  return [array]
-}
-function getTests(suite: Arrayable<Task>): Test[] {
-  return toArray(suite).flatMap(s => s.type === 'test' ? [s] : s.tasks.flatMap(c => c.type === 'test' ? [c] : getTests(c)))
-}
+// tests
 const tests = computed(() => {
   return getTests(files.value)
 })
@@ -41,6 +35,16 @@ const testsTodo = computed(() => testsIgnore.value.filter(f => f.mode === 'todo'
 const totalTests = computed(() => {
   return testsFailed.value.length + testsSuccess.value.length
 })
+
+function toArray<T>(array?: Nullable<Arrayable<T>>): Array<T> {
+  array = array || []
+  if (Array.isArray(array))
+    return array
+  return [array]
+}
+function getTests(suite: Arrayable<Task>): Test[] {
+  return toArray(suite).flatMap(s => s.type === 'test' ? [s] : s.tasks.flatMap(c => c.type === 'test' ? [c] : getTests(c)))
+}
 </script>
 
 <template>
