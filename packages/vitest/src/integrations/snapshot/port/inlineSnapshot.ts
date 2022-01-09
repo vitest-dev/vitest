@@ -26,7 +26,7 @@ export async function saveInlineSnapshots(
       const pos = await getOriginalPos(map, snap)
       const index = posToNumber(code, pos!)
       const { indent } = detectIndent(code.slice(index - pos!.column))
-      replaceInlineSnap(code, s, index, snap.snapshot, indent + indent)
+      replaceInlineSnap(code, s, index, snap.snapshot, indent)
     }
 
     const transformed = s.toString()

@@ -20,24 +20,24 @@ function runAllAndShowSummary() {
 </script>
 
 <template>
-  <nav border="r base">
-    <TasksList
-      :tasks="files"
-      :on-item-click="onItemClick"
-    >
-      <template #header>
-        <img cursor-pointer w-6 h-6 mx-2 src="/favicon.svg" @click="showSummary">
-        <span font-light text-sm flex-1>
-          Vitest
-        </span>
-        <div class="flex text-lg">
-          <IconButton icon="i-carbon-play" @click="runAllAndShowSummary()" />
-          <IconButton
-            icon="dark:i-carbon-moon i-carbon-sun"
-            @click="toggleDark()"
-          />
-        </div>
-      </template>
-    </TasksList>
-  </nav>
+  <TasksList
+    border="r base"
+    :tasks="files"
+    :on-item-click="onItemClick"
+    :group-by-type="true"
+  >
+    <template #header>
+      <img cursor-pointer w-6 h-6 mx-2 src="/favicon.svg" @click="showSummary">
+      <span font-light text-sm flex-1>
+        Vitest
+      </span>
+      <div class="flex text-lg">
+        <IconButton icon="i-carbon-play" @click="runAllAndShowSummary()" />
+        <IconButton
+          icon="dark:i-carbon-moon i-carbon-sun"
+          @click="toggleDark()"
+        />
+      </div>
+    </template>
+  </TasksList>
 </template>

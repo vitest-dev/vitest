@@ -1,9 +1,14 @@
 import { expect, test } from 'vitest'
+import { testOutsideInlineSnapshot } from './snapshots-outside'
 
 test('snapshot', () => {
   expect({
     this: { is: new Set(['of', 'snapshot']) },
   }).toMatchSnapshot()
+})
+
+test('outside snapshot', () => {
+  testOutsideInlineSnapshot()
 })
 
 test('inline snapshot', () => {

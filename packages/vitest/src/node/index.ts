@@ -377,8 +377,8 @@ export async function VitestPlugin(options: UserConfig = {}, viteOverrides: Vite
         return {
           clearScreen: false,
           resolve: {
-          // by default Vite resolves `module` field, which not always a native ESM module
-          // setting this option can bypass that and fallback to cjs version
+            // by default Vite resolves `module` field, which not always a native ESM module
+            // setting this option can bypass that and fallback to cjs version
             mainFields: [],
           },
           server: {
