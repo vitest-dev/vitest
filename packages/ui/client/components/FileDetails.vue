@@ -7,7 +7,7 @@ import { getModuleGraph } from '~/composables/module-graph'
 import type { ModuleGraphData } from '#types'
 
 function open() {
-  const filePath = currentModule.value?.filepath
+  const filePath = current.value?.filepath
   if (filePath)
     fetch(`/__open-in-editor?file=${encodeURIComponent(filePath)}`)
 }
