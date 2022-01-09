@@ -123,6 +123,7 @@ html.dark {
 
 .splitpanes.loading .splitpanes__pane {
   transition: none !important;
+  height: 100%;
 }
 .CodeMirror-scroll::-webkit-scrollbar,
 .scrolls::-webkit-scrollbar {

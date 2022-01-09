@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { mergeProps } from 'vue'
 import type { Task } from '#types'
 
 withDefaults(defineProps<{
