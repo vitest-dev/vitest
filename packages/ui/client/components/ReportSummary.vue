@@ -1,25 +1,56 @@
 <script setup lang="ts">
+import type { Task, Test } from 'vitest/src'
 import { files, isConnected } from '~/composables/client'
 
-const failed = computed(() => files.value.filter(task => task.result?.state === 'fail'))
-const success = computed(() => files.value.filter(task => task.result?.state === 'pass'))
-const skipped = computed(() => files.value.filter(task => task.mode === 'skip' || task.mode === 'todo'))
-const running = computed(() => files.value.filter(task =>
-  !failed.value.includes(task)
-    && !success.value.includes(task)
-    && !skipped.value.includes(task),
+const failed = computed(() => files.value.filter(f => f.result?.state === 'fail'))
+const success = computed(() => files.value.filter(f => f.result?.state === 'pass'))
+const ignore = computed(() => files.value.filter(f => f.mode === 'skip' || f.mode === 'todo'))
+const running = computed(() => files.value.filter(f =>
+  !failed.value.includes(f)
+    && !success.value.includes(f)
+    && !ignore.value.includes(f),
 ))
+const skipped = computed(() => ignore.value.filter(f => f.mode === 'skip'))
+const todo = computed(() => ignore.value.filter(f => f.mode === 'todo'))
 const finished = computed(() => {
   return running.value.length === 0
+})
+type Nullable<T> = T | null | undefined
+type Arrayable<T> = T | Array<T>
+function toArray<T>(array?: Nullable<Arrayable<T>>): Array<T> {
+  array = array || []
+  if (Array.isArray(array))
+    return array
+  return [array]
+}
+function getTests(suite: Arrayable<Task>): Test[] {
+  return toArray(suite).flatMap(s => s.type === 'test' ? [s] : s.tasks.flatMap(c => c.type === 'test' ? [c] : getTests(c)))
+}
+const tests = computed(() => {
+  return getTests(files.value)
+})
+const testsFailed = computed(() => {
+  return tests.value.filter(f => f.result?.state === 'fail')
+})
+const testsSuccess = computed(() => {
+  return tests.value.filter(f => f.result?.state === 'pass')
+})
+const testsIgnore = computed(() => tests.value.filter(f => f.mode === 'skip' || f.mode === 'todo'))
+const testsSkipped = computed(() => testsIgnore.value.filter(f => f.mode === 'skip'))
+const testsTodo = computed(() => testsIgnore.value.filter(f => f.mode === 'todo'))
+const totalTests = computed(() => {
+  return testsFailed.value.length + testsSuccess.value.length
 })
 </script>
 
 <template>
-  <div v-if="isConnected" h-full flex="~ col gap-2" items-center justify-center>
+  <div v-if="isConnected" h-full flex="~ col gap-2" items-center justify-center gap-y-4>
     <ProgressBar :total="files.length" :failed="failed.length" :pass="success.length" :in-progress="!finished">
-      <div text-center>
-        Test Files <span text-red5>{{ failed.length }} failed</span> | <span text-green5>{{ success.length }} passed</span> | <span text-yellow5>{{ running.length }} running</span> <span c-gray op-75>({{ files.length }})</span>
-      </div>
+      Test Files <span text-red5>{{ failed.length }} failed</span> | <span text-green5>{{ success.length }} passed</span> | <span text-yellow5>{{ running.length }} running</span> <span c-gray op-75>({{ files.length }})</span>
     </ProgressBar>
+    <ProgressBar :total="totalTests" :failed="testsFailed.length" :pass="testsSuccess.length" :in-progress="!finished">
+      Tests <span text-red5>{{ testsFailed.length }} failed</span> | <span text-green5>{{ testsSuccess.length }} passed</span> | <span text-purple5>{{ testsSkipped.length }} skipped</span> | <span c-gray op-75>{{ testsTodo.length }} todo</span> <span c-gray op-75>({{ tests.length }})</span>
+    </ProgressBar>
+    <div>Time: </div>
   </div>
 </template>
