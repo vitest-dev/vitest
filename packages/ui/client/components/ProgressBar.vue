@@ -2,18 +2,18 @@
 const props = defineProps<{ total: number; failed: number; pass: number; inProgress: boolean }>()
 const widthPass = computed(() => {
   const total = props.total
-  return total > 0 ? (350 * props.pass / total) : 0
+  return total > 0 ? (300 * props.pass / total) : 0
 })
 const widthFailed = computed(() => {
   const total = props.total
-  return total > 0 ? (350 * props.failed / total) : 0
+  return total > 0 ? (300 * props.failed / total) : 0
 })
 const pending = computed(() => {
   return props.total - props.failed - props.pass
 })
 const widthPending = computed(() => {
   const total = props.total
-  return total > 0 ? (350 * pending.value / total) : 0
+  return total > 0 ? (300 * pending.value / total) : 0
 })
 </script>
 
