@@ -28,7 +28,7 @@ const consoleOutput = computed(() => props.file?.tasks?.map(i => i?.logs || []).
     </div>
     <template v-if="modelValue">
       <div p="x4 y6">
-        <div v-for="log of consoleOutput" my-2>
+        <div v-for="log of consoleOutput" :key="log" my-2>
           {{ log.content }}
         </div>
       </div>
