@@ -63,10 +63,3 @@ const changeViewMode = (view: Params['view']) => {
     </div>
   </div>
 </template>
-
-<style scoped>
-.file-details-graph {
-  /* The graph container is offset in its parent. Thus we can't use the default 100% height and have to subtract the offset. */
-  --graph-height: calc(100% - 78px - 39px);
-}
-</style>
