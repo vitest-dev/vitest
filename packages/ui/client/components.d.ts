@@ -11,6 +11,7 @@ declare module 'vue' {
     Modal: typeof import('./components/Modal.vue')['default']
     ModuleTransformResultView: typeof import('./components/ModuleTransformResultView.vue')['default']
     Navigation: typeof import('./components/Navigation.vue')['default']
+    Progressbar: typeof import('./components/Progressbar.vue')['default']
     StatusIcon: typeof import('./components/StatusIcon.vue')['default']
     Suites: typeof import('./components/Suites.vue')['default']
     TaskItem: typeof import('./components/TaskItem.vue')['default']
