@@ -8,18 +8,20 @@ const props = defineProps<{
 
 const { total, failed, pass, inProgress } = toRefs(props)
 
-const t = unref(total)
-
 const widthPass = computed(() => {
+  const t = unref(total)
   return t > 0 ? (300 * pass.value / t) : 0
 })
 const widthFailed = computed(() => {
+  const t = unref(total)
   return t > 0 ? (300 * failed.value / t) : 0
 })
 const pending = computed(() => {
+  const t = unref(total)
   return t - failed.value - pass.value
 })
 const widthPending = computed(() => {
+  const t = unref(total)
   return t > 0 ? (300 * pending.value / t) : 0
 })
 </script>
