@@ -36,7 +36,7 @@ const totalTests = computed(() => {
   return testsFailed.value.length + testsSuccess.value.length
 })
 const time = computed(() => {
-  const t = getTests(files.value).reduce((acc, t) => {
+  const t = getTests(tests.value).reduce((acc, t) => {
     if (t.result?.duration)
       acc += t.result.duration
 
