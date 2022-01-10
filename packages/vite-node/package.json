@@ -1,0 +1,55 @@
+{
+  "name": "vite-node",
+  "version": "0.0.139",
+  "description": "Vite as Node.js runtime",
+  "homepage": "https://github.com/vitest-dev/vitest#readme",
+  "bugs": {
+    "url": "https://github.com/vitest-dev/vitest/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vitest-dev/vitest.git",
+    "directory": "packages/vite-node"
+  },
+  "funding": "https://github.com/sponsors/antfu",
+  "license": "MIT",
+  "author": "Anthony Fu <anthonyfu117@hotmail.com>",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./server": {
+      "import": "./dist/server.js",
+      "types": "./dist/server.d.ts"
+    },
+    "./client": {
+      "import": "./dist/client.js",
+      "types": "./dist/client.d.ts"
+    }
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "*.d.ts",
+    "*.mjs"
+  ],
+  "scripts": {
+    "build": "rimraf dist && rollup -c",
+    "dev": "rollup -c --watch --watch.include=src/**",
+    "prepublishOnly": "nr build",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "birpc": "^0.0.2"
+  },
+  "devDependencies": {
+    "rollup": "^2.63.0"
+  },
+  "engines": {
+    "node": ">=14.14.0"
+  }
+}

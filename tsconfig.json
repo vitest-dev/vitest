@@ -20,7 +20,10 @@
       "~/*": ["./packages/ui/client/*"],
       "vitest": ["./packages/vitest/src/index.ts"],
       "vitest/global": ["./packages/vitest/global.d.ts"],
-      "vitest/node": ["./packages/vitest/src/node/index.ts"]
+      "vitest/node": ["./packages/vitest/src/node/index.ts"],
+      "vite-node": ["./packages/vite-node/src/index.ts"],
+      "vite-node/client": ["./packages/vite-node/src/client.ts"],
+      "vite-node/server": ["./packages/vite-node/src/server.ts"]
     }
   },
   "exclude": [

@@ -389,6 +389,15 @@ importers:
       vue: 3.2.26
       vue-router: 4.0.12_vue@3.2.26
 
+  packages/vite-node:
+    specifiers:
+      birpc: ^0.0.2
+      rollup: ^2.63.0
+    dependencies:
+      birpc: 0.0.2
+    devDependencies:
+      rollup: 2.63.0
+
   packages/vitest:
     specifiers:
       '@antfu/install-pkg': ^0.1.0
@@ -434,6 +443,7 @@ importers:
       tinyspy: ^0.2.8
       typescript: ^4.5.4
       vite: '>=2.7.10'
+      vite-node: workspace:*
       ws: ^8.4.0
     dependencies:
       '@types/chai': 4.3.0
@@ -480,6 +490,7 @@ importers:
       source-map-js: 1.0.1
       strip-ansi: 7.0.1
       typescript: 4.5.4
+      vite-node: link:../vite-node
       ws: 8.4.0
 
   packages/ws-client:
