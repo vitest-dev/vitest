@@ -392,7 +392,6 @@ importers:
   packages/vite-node:
     specifiers:
       '@types/minimist': ^1.2.2
-      birpc: ^0.0.2
       kolorist: ^1.5.1
       minimist: ^1.2.5
       mlly: ^0.3.17
@@ -400,7 +399,6 @@ importers:
       rollup: ^2.63.0
       vite: ^2.7.10
     dependencies:
-      birpc: 0.0.2
       kolorist: 1.5.1
       minimist: 1.2.5
       mlly: 0.3.17

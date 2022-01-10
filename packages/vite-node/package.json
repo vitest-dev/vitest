@@ -51,7 +51,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "birpc": "^0.0.2",
     "kolorist": "^1.5.1",
     "minimist": "^1.2.5",
     "mlly": "^0.3.17",
