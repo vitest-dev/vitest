@@ -17,12 +17,12 @@ importers:
       esbuild: '0.13'
       eslint: ^8.6.0
       esno: ^0.13.0
-      fast-glob: ^3.2.8
+      fast-glob: ^3.2.10
       magic-string: ^0.25.7
       node-fetch: ^3.1.0
       npm-run-all: ^4.1.5
       pathe: ^0.2.0
-      pnpm: ^6.25.0
+      pnpm: ^6.25.1
       rimraf: ^3.0.2
       rollup: ^2.63.0
       rollup-plugin-dts: ^4.1.0
@@ -47,12 +47,12 @@ importers:
       esbuild: 0.13.15
       eslint: 8.6.0
       esno: 0.13.0_typescript@4.5.4
-      fast-glob: 3.2.8
+      fast-glob: 3.2.10
       magic-string: 0.25.7
       node-fetch: 3.1.0
       npm-run-all: 4.1.5
       pathe: 0.2.0
-      pnpm: 6.25.0
+      pnpm: 6.25.1
       rimraf: 3.0.2
       rollup: 2.63.0
       rollup-plugin-dts: 4.1.0_rollup@2.63.0+typescript@4.5.4
@@ -354,7 +354,7 @@ importers:
       '@vueuse/core': ^7.5.3
       codemirror: ^5.65.0
       codemirror-theme-vars: ^0.1.1
-      d3-graph-controller: ^2.1.0
+      d3-graph-controller: ^2.2.0
       picocolors: ^1.0.0
       rollup: ^2.63.0
       sirv: ^2.0.0
@@ -378,7 +378,7 @@ importers:
       '@vueuse/core': 7.5.3_vue@3.2.26
       codemirror: 5.65.0
       codemirror-theme-vars: 0.1.1
-      d3-graph-controller: 2.1.0
+      d3-graph-controller: 2.2.0
       picocolors: 1.0.0
       rollup: 2.63.0
       splitpanes: 3.0.6
@@ -429,7 +429,7 @@ importers:
       detect-indent: ^7.0.0
       diff: ^5.0.0
       execa: ^6.0.0
-      fast-glob: ^3.2.8
+      fast-glob: ^3.2.10
       find-up: ^6.2.0
       flatted: ^3.2.4
       happy-dom: ^2.25.1
@@ -480,7 +480,7 @@ importers:
       detect-indent: 7.0.0
       diff: 5.0.0
       execa: 6.0.0
-      fast-glob: 3.2.8
+      fast-glob: 3.2.10
       find-up: 6.2.0
       flatted: 3.2.4
       happy-dom: 2.25.1
@@ -3510,8 +3510,8 @@ packages:
     resolution: {integrity: sha512-Ab3S6XuE/Q+flY96HXT0jOXcM4EAClYFnRGY5zsjRGNy6qCYrQsMffs7cV5Q9xejb35zxW5hf/guKw34kvIKsA==}
     dev: false
 
-  /d3-graph-controller/2.1.0:
-    resolution: {integrity: sha512-bA5BS44F/Ka0ynflXJGACblOsM/3xvY2rAg6aos4JvIdRrQS67cAobiP0PSSoeY3BNJRrtURzajYNVNeMR5sZg==}
+  /d3-graph-controller/2.2.0:
+    resolution: {integrity: sha512-alVrJ0uxs78/k4h52loLWQvGyfWMsSYz85RtzMHA48egK12fLAMZCgA8lgA+2O/5erg2/ABuwLJgugGIlwJEhw==}
     dependencies:
       d3-drag: 3.0.0
       d3-force: 3.0.0
@@ -4785,6 +4785,17 @@ packages:
     resolution: {integrity: sha512-caj/ZmjHljPrZtbzJ3kfH5ia/k4mTJe/qSiXAGzxZWRZgsgDV0cvNaQULqUX8t0/JVlzzEdYOwCN5DmzTxoD4w==}
     dev: false
 
+  /fast-glob/3.2.10:
+    resolution: {integrity: sha512-s9nFhFnvR63wls6/kM88kQqDhMu0AfdjqouE2l5GVQPbqLgyFjjU5ry/r2yKsJxpb9Py1EYNqieFrmMaX4v++A==}
+    engines: {node: '>=8.6.0'}
+    dependencies:
+      '@nodelib/fs.stat': 2.0.4
+      '@nodelib/fs.walk': 1.2.6
+      glob-parent: 5.1.2
+      merge2: 1.4.1
+      micromatch: 4.0.4
+    dev: true
+
   /fast-glob/3.2.7:
     resolution: {integrity: sha512-rYGMRwip6lUMvYD3BTScMwT1HtAs2d71SMv66Vrxs0IekGZEjhM0pcMfjQPnknBt2zeCwQMEupiN02ZP4DiT1Q==}
     engines: {node: '>=8'}
@@ -5117,7 +5128,7 @@ packages:
     dependencies:
       array-union: 2.1.0
       dir-glob: 3.0.1
-      fast-glob: 3.2.8
+      fast-glob: 3.2.10
       ignore: 5.1.8
       merge2: 1.4.1
       slash: 3.0.0
@@ -6582,8 +6593,8 @@ packages:
     dev: false
     optional: true
 
-  /pnpm/6.25.0:
-    resolution: {integrity: sha512-Hlck6S8j7obFkkfQCnDJXIEBRNK4wIanMzDfpRE5TNbLsJnxbWXGbMV5ZhDf8Q8xy6RkBWdoKAmliL0nLmzxHQ==}
+  /pnpm/6.25.1:
+    resolution: {integrity: sha512-/jvwDU8XJ3ntw1fJ5pYGN+nMqxHuXoarajc/95CrAB9+lVfjTJooiOc5BmxT7GrZzcEwdpJKMCdN3yR1ItGFMw==}
     engines: {node: '>=12.17'}
     hasBin: true
     dev: true
