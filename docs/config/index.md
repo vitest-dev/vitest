@@ -235,6 +235,19 @@ Silent mode
 
 Path to setup files
 
+### globalSetup
+
+- **Type:** `string | string[]`
+
+Path to global setup files, relative to project root
+
+A global setup file can either export named functions `setup` and `teardown` or a `default` function that returns a teardown function ([example](https://github.com/vitest-dev/vitest/blob/main/test/global-setup/vitest.config.ts)).
+
+::: info
+Multiple globalSetup files are possible. setup and teardown are executed sequentially with teardown in reverse order.
+:::
+
+
 ### watchIgnore
 
 - **Type:** `(string | RegExp)[]`
