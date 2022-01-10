@@ -168,6 +168,7 @@ export interface InlineConfig {
    * Path to global setup files
    */
   globalSetup?: string | string[]
+
   /**
    * Pattern of file paths to be ignore from triggering watch rerun
    *

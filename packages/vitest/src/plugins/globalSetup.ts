@@ -59,6 +59,9 @@ export const GlobalSetupPlugin = (): Plugin => {
     },
 
     async buildStart() {
+      if (!server.config.test?.globalSetup)
+        return
+
       globalSetupFiles = await loadGlobalSetupFiles(server)
       for (const globalSetupFile of globalSetupFiles) {
         const teardown = await globalSetupFile.setup?.()

@@ -1,5 +1,5 @@
 {
-  "name": "@vitest/test-globalSetup",
+  "name": "@vitest/test-global-setup",
   "private": true,
   "type": "module",
   "scripts": {
