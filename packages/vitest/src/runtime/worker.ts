@@ -61,12 +61,14 @@ function init(ctx: WorkerContext) {
     ctx,
     moduleCache,
     config,
-    rpc: createBirpc<{}, WorkerRPC>({
-      functions: {},
-      eventNames: ['onUserLog', 'onCollected', 'onWorkerExit'],
-      post(v) { port.postMessage(v) },
-      on(fn) { port.addListener('message', fn) },
-    }),
+    rpc: createBirpc<WorkerRPC>(
+      {},
+      {
+        eventNames: ['onUserLog', 'onCollected', 'onWorkerExit'],
+        post(v) { port.postMessage(v) },
+        on(fn) { port.addListener('message', fn) },
+      },
+    ),
   }
 
   if (ctx.invalidates)

@@ -31,8 +31,8 @@ export function setup(ctx: Vitest) {
   })
 
   function setupClient(ws: WebSocket) {
-    const rpc = createBirpc<WebSocketHandlers, WebSocketEvents>({
-      functions: {
+    const rpc = createBirpc<WebSocketEvents, WebSocketHandlers>(
+      {
         getFiles() {
           return ctx.state.getFiles()
         },
@@ -96,16 +96,15 @@ export function setup(ctx: Vitest) {
           }
         },
       },
-      post(msg) {
-        ws.send(msg)
+      {
+
+        post: msg => ws.send(msg),
+        on: fn => ws.on('message', fn),
+        eventNames: ['onCollected'],
+        serialize: stringify,
+        deserialize: parse,
       },
-      on(fn) {
-        ws.on('message', fn)
-      },
-      eventNames: ['onCollected'],
-      serialize: stringify,
-      deserialize: parse,
-    })
+    )
 
     clients.set(ws, rpc)
 

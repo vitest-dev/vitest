@@ -420,7 +420,7 @@ importers:
       '@types/node': ^17.0.8
       '@types/prompts': ^2.4.0
       '@vitest/ui': workspace:*
-      birpc: ^0.0.2
+      birpc: ^0.1.0
       c8: ^7.11.0
       cac: ^6.7.12
       chai: ^4.3.4
@@ -472,7 +472,7 @@ importers:
       '@types/node': 17.0.8
       '@types/prompts': 2.4.0
       '@vitest/ui': link:../ui
-      birpc: 0.0.2
+      birpc: 0.1.0
       c8: 7.11.0
       cac: 6.7.12
       chai-subset: 1.6.0
@@ -505,12 +505,12 @@ importers:
 
   packages/ws-client:
     specifiers:
-      birpc: ^0.0.2
+      birpc: ^0.1.0
       flatted: ^3.2.4
       rollup: ^2.63.0
       ws: ^8.4.0
     dependencies:
-      birpc: 0.0.2
+      birpc: 0.1.0
       flatted: 3.2.4
       ws: 8.4.0
     devDependencies:
@@ -2964,8 +2964,8 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
-  /birpc/0.0.2:
-    resolution: {integrity: sha512-D5D88rjfiXpaGJ9j0MWZrihp1NsBER1v5lyXp6/W23bQIvwWCH8z+Pk1XSnwkIqSnD4s2EjLJq5VmW5u6X9Cgg==}
+  /birpc/0.1.0:
+    resolution: {integrity: sha512-nQ5QDTH0JITjPxAdL1PRLp3f//1FOu5nHwYQYxxabE78Jp+V/mrskcWmHBhHCrKN+eErj3lVLKrv66tMGf5MSg==}
 
   /bl/4.1.0:
     resolution: {integrity: sha512-1W07cM9gS6DcLperZfFSj+bWLtaPGSOHWhPiGzXmvVJbRLdG82sH/Kn8EtW1VqWVA54AKf2h5k5BbnIbwF3h6w==}

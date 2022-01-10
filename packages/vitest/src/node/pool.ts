@@ -104,8 +104,8 @@ function createChannel(ctx: Vitest) {
   const port = channel.port2
   const workerPort = channel.port1
 
-  createBirpc<WorkerRPC>({
-    functions: {
+  createBirpc<{}, WorkerRPC>(
+    {
       onWorkerExit(code) {
         process.exit(code || 1)
       },
@@ -136,13 +136,15 @@ function createChannel(ctx: Vitest) {
         ctx.report('onUserConsoleLog', msg)
       },
     },
-    post(v) {
-      port.postMessage(v)
+    {
+      post(v) {
+        port.postMessage(v)
+      },
+      on(fn) {
+        port.on('message', fn)
+      },
     },
-    on(fn) {
-      port.on('message', fn)
-    },
-  })
+  )
 
   return { workerPort, port }
 }

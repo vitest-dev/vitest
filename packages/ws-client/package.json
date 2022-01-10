@@ -35,7 +35,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "birpc": "^0.0.2",
+    "birpc": "^0.1.0",
     "flatted": "^3.2.4",
     "ws": "^8.4.0"
   },
