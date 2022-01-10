@@ -22,7 +22,6 @@ export interface ViteNodeRunnerOptions {
 }
 
 export interface ViteNodeServerOptions {
-  root: string
   deps?: ExternalizeOptions
   transformMode?: {
     ssr?: RegExp[]

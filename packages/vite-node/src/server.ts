@@ -13,7 +13,7 @@ export class ViteNodeServer {
 
   constructor(
     public server: ViteDevServer,
-    public options: ViteNodeServerOptions,
+    public options: ViteNodeServerOptions = {},
   ) {}
 
   shouldExternalize(id: string) {
@@ -21,7 +21,7 @@ export class ViteNodeServer {
   }
 
   async fetchModule(id: string) {
-    const externalize = await this.shouldExternalize(toFilePath(id, this.options.root))
+    const externalize = await this.shouldExternalize(toFilePath(id, this.server.config.root))
     if (externalize)
       return { externalize }
     const r = await this.transformRequest(id)

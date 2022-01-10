@@ -64,23 +64,20 @@ export interface CliOptions {
 }
 
 async function run(options: CliOptions = {}) {
-  const root = options.root || process.cwd()
   const files = options.files || options._ || []
 
   const server = await createServer({
     logLevel: 'error',
     clearScreen: false,
     configFile: options.config,
-    root,
+    root: options.root,
   })
   await server.pluginContainer.buildStart({})
 
-  const node = new ViteNodeServer(server, {
-    root,
-  })
+  const node = new ViteNodeServer(server)
 
   const runner = new ViteNodeRunner({
-    root,
+    root: server.config.root,
     base: server.config.base,
     fetchModule(id) {
       return node.fetchModule(id)
