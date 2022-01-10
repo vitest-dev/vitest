@@ -2,31 +2,26 @@ import { builtinModules, createRequire } from 'module'
 import { fileURLToPath, pathToFileURL } from 'url'
 import vm from 'vm'
 import { dirname, resolve } from 'pathe'
-import type { FetchFunction, ModuleCache, ResolvedConfig } from '../types'
+import type { FetchFunction, ModuleCache } from '../types'
 import { normalizeId, slash, toFilePath } from '../utils'
 import type { SuiteMocks } from './mocker'
 import { createMocker } from './mocker'
 
-export interface ExecuteOptions extends Pick<ResolvedConfig, 'depsInline' | 'depsExternal' | 'fallbackCJS' | 'base'> {
+export interface ViteNodeOptions {
   root: string
-  files: string[]
+  base: string
   fetch: FetchFunction
-  interpretDefault: boolean
   moduleCache: Map<string, ModuleCache>
-  mockMap: SuiteMocks
+  depsInline: (string | RegExp)[]
+  depsExternal: (string | RegExp)[]
+  fallbackCJS: boolean
+  interpretDefault: boolean
+  requestStubs?: Record<string, any>
 }
 
-export const stubRequests: Record<string, any> = {
-  '/@vite/client': {
-    injectQuery: (id: string) => id,
-    createHotContext() {
-      return {
-        accept: () => {},
-        prune: () => {},
-      }
-    },
-    updateStyle() {},
-  },
+export interface ExecuteOptions extends ViteNodeOptions {
+  files: string[]
+  mockMap: SuiteMocks
 }
 
 function hasNestedDefault(target: any) {
@@ -88,13 +83,13 @@ export async function executeInViteNode(options: ExecuteOptions) {
 
 export class ViteNodeRunner {
   root: string
-  mocker: ReturnType<typeof createMocker>
+
   externalCache: Map<string, string | Promise<false | string>>
   moduleCache: Map<string, ModuleCache>
 
-  constructor(public options: ExecuteOptions) {
+  constructor(public options: ViteNodeOptions) {
     this.root = options.root || process.cwd()
-    this.mocker = createMocker(this.root, options.mockMap)
+
     this.moduleCache = options.moduleCache || new Map()
     this.externalCache = new Map<string, string | Promise<false | string>>()
     builtinModules.forEach(m => this.externalCache.set(m, m))
@@ -129,8 +124,8 @@ export class ViteNodeRunner {
       return this.cachedRequest(dep, callstack)
     }
 
-    if (id in stubRequests)
-      return stubRequests[id]
+    if (this.options.requestStubs && id in this.options.requestStubs)
+      return this.options.requestStubs[id]
 
     const { code: transformed, externalize } = await this.options.fetch(id)
     if (externalize) {
@@ -159,7 +154,7 @@ export class ViteNodeRunner {
       },
     }
 
-    const context = {
+    const context = this.prepareContext({
       // esm transformed by Vite
       __vite_ssr_import__: request,
       __vite_ssr_dynamic_import__: request,
@@ -173,9 +168,7 @@ export class ViteNodeRunner {
       module: moduleProxy,
       __filename,
       __dirname: dirname(__filename),
-    }
-
-    this.setupMockContext(context)
+    })
 
     const fn = vm.runInThisContext(`async (${Object.keys(context).join(',')})=>{{${transformed}\n}}`, {
       filename: fsPath,
@@ -186,7 +179,41 @@ export class ViteNodeRunner {
     return exports
   }
 
-  private setupMockContext(context: Record<string, any>) {
+  prepareContext(context: Record<string, any>) {
+    return context
+  }
+
+  setCache(id: string, mod: Partial<ModuleCache>) {
+    if (!this.moduleCache.has(id))
+      this.moduleCache.set(id, mod)
+    else
+      Object.assign(this.moduleCache.get(id), mod)
+  }
+}
+
+export class VitestRunner extends ViteNodeRunner {
+  mocker: ReturnType<typeof createMocker>
+
+  constructor(public options: ExecuteOptions) {
+    super(options)
+
+    options.requestStubs = options.requestStubs || {
+      '/@vite/client': {
+        injectQuery: (id: string) => id,
+        createHotContext() {
+          return {
+            accept: () => {},
+            prune: () => {},
+          }
+        },
+        updateStyle() {},
+      },
+    }
+
+    this.mocker = createMocker(this.root, options.mockMap)
+  }
+
+  prepareContext(context: Record<string, any>) {
     const suite = this.mocker.getSuiteFilepath()
     const mockMap = this.options.mockMap
     const request = context.__vite_ssr_import__
@@ -238,7 +265,8 @@ export class ViteNodeRunner {
         return callFunctionMock(path, mock)
       return requestWithMock(mock)
     }
-    Object.assign(context, {
+
+    return Object.assign(context, {
       __vite_ssr_import__: requestWithMock,
       __vite_ssr_dynamic_import__: requestWithMock,
 
@@ -251,12 +279,5 @@ export class ViteNodeRunner {
       // so wee need to call this twice - inside suite and here
       __vitest__clearMocks__: this.mocker.clearMocks,
     })
-  }
-
-  setCache(id: string, mod: Partial<ModuleCache>) {
-    if (!this.moduleCache.has(id))
-      this.moduleCache.set(id, mod)
-    else
-      Object.assign(this.moduleCache.get(id), mod)
   }
 }
