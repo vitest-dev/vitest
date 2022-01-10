@@ -41,7 +41,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
   utils.addMethod(
     chai.Assertion.prototype,
     'toMatchInlineSnapshot',
-    function(this: Record<string, unknown>, properties?: object, inlineSnapshot?: string, message?: string) {
+    function __VITEST_INLINE_SNAPSHOT__(this: Record<string, unknown>, properties?: object, inlineSnapshot?: string, message?: string) {
       const expected = utils.flag(this, 'object')
       if (typeof properties === 'string') {
         message = inlineSnapshot
@@ -62,7 +62,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
   utils.addMethod(
     chai.Assertion.prototype,
     'toThrowErrorMatchingInlineSnapshot',
-    function(this: Record<string, unknown>, inlineSnapshot: string, message: string) {
+    function __VITEST_INLINE_SNAPSHOT__(this: Record<string, unknown>, inlineSnapshot: string, message: string) {
       const expected = utils.flag(this, 'object')
       getSnapshotClient().assert(getErrorString(expected), message, true, undefined, inlineSnapshot)
     },

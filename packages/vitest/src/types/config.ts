@@ -165,6 +165,11 @@ export interface InlineConfig {
   setupFiles?: string | string[]
 
   /**
+   * Path to global setup files
+   */
+  globalSetup?: string | string[]
+
+  /**
    * Pattern of file paths to be ignore from triggering watch rerun
    *
    * @default ['**\/node_modules\/**', '**\/dist/**']
@@ -290,11 +295,6 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
   filters?: string[]
   testNamePattern?: RegExp
   related?: string[]
-
-  depsInline: (string | RegExp)[]
-  depsExternal: (string | RegExp)[]
-  fallbackCJS: boolean
-  interpretDefault: boolean
 
   coverage: ResolvedC8Options
   snapshotOptions: SnapshotStateOptions

@@ -63,10 +63,7 @@ export function resolveConfig(
 
   resolved.coverage = resolveC8Options(resolved.coverage, resolved.root)
 
-  resolved.depsInline = [...resolved.deps?.inline || []]
-  resolved.depsExternal = [...resolved.deps?.external || []]
-  resolved.fallbackCJS = resolved.deps?.fallbackCJS ?? true
-  resolved.interpretDefault = resolved.deps?.interpretDefault ?? true
+  resolved.deps = resolved.deps || {}
 
   resolved.environment = resolved.environment || 'node'
   resolved.threads = resolved.threads ?? true
