@@ -11,6 +11,7 @@ const entry = [
   'src/server.ts',
   'src/client.ts',
   'src/utils.ts',
+  'src/cli.ts',
 ]
 
 const external = [

@@ -5,7 +5,6 @@ import type { Options as TinypoolOptions } from 'tinypool'
 import { Tinypool } from 'tinypool'
 import type { RawSourceMap } from 'source-map-js'
 import { createBirpc } from 'birpc'
-import { toFilePath } from 'vite-node/utils'
 import { distDir } from '../constants'
 import type { WorkerContext, WorkerRPC } from '../types'
 import type { Vitest } from './index'
@@ -122,12 +121,8 @@ function createChannel(ctx: Vitest) {
         const r = await ctx.vitenode.transformRequest(id)
         return r?.map as RawSourceMap | undefined
       },
-      async fetch(id) {
-        const externalize = await ctx.vitenode.shouldExternalize(toFilePath(id, ctx.config.root))
-        if (externalize)
-          return { externalize }
-        const r = await ctx.vitenode.transformRequest(id)
-        return { code: r?.code }
+      fetch(id) {
+        return ctx.vitenode.fetchModule(id)
       },
       onCollected(files) {
         ctx.state.collectFiles(files)

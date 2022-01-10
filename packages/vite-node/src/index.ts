@@ -1,1 +1,1 @@
-export const hi = 'hi'
+export * from './types'

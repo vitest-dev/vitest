@@ -1,10 +1,10 @@
 import { ViteNodeRunner } from 'vite-node/client'
 import { toFilePath } from 'vite-node/utils'
-import type { ViteNodeOptions } from 'vite-node/client'
+import type { ViteNodeRunnerOptions } from 'vite-node'
 import type { SuiteMocks } from './mocker'
 import { createMocker } from './mocker'
 
-export interface ExecuteOptions extends ViteNodeOptions {
+export interface ExecuteOptions extends ViteNodeRunnerOptions {
   files: string[]
   mockMap: SuiteMocks
 }

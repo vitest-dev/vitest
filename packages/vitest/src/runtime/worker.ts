@@ -34,7 +34,7 @@ async function startViteNode(ctx: WorkerContext) {
     files: [
       resolve(distDir, 'entry.js'),
     ],
-    fetch(id) {
+    fetchModule(id) {
       return rpc().fetch(id)
     },
     moduleCache,

@@ -3,70 +3,7 @@ import { fileURLToPath, pathToFileURL } from 'url'
 import vm from 'vm'
 import { dirname, resolve } from 'pathe'
 import { normalizeId, slash, toFilePath } from './utils'
-
-export type FetchFunction = (id: string) => Promise<{ code?: string; externalize?: string }>
-
-export interface ModuleCache {
-  promise?: Promise<any>
-  exports?: any
-  code?: string
-}
-
-export interface ViteNodeOptions {
-  root: string
-  base?: string
-  fetch: FetchFunction
-  moduleCache: Map<string, ModuleCache>
-  interpretDefault: boolean
-  requestStubs?: Record<string, any>
-}
-
-function hasNestedDefault(target: any) {
-  return '__esModule' in target && target.__esModule && 'default' in target.default
-}
-
-function proxyMethod(name: 'get' | 'set' | 'has' | 'deleteProperty', tryDefault: boolean) {
-  return function(target: any, key: string | symbol, ...args: [any?, any?]) {
-    const result = Reflect[name](target, key, ...args)
-    if (typeof target.default !== 'object')
-      return result
-    if ((tryDefault && key === 'default') || typeof result === 'undefined')
-      return Reflect[name](target.default, key, ...args)
-    return result
-  }
-}
-
-export async function interpretedImport(path: string, interpretDefault: boolean) {
-  const mod = await import(path)
-
-  if (interpretDefault && 'default' in mod) {
-    const tryDefault = hasNestedDefault(mod)
-    return new Proxy(mod, {
-      get: proxyMethod('get', tryDefault),
-      set: proxyMethod('set', tryDefault),
-      has: proxyMethod('has', tryDefault),
-      deleteProperty: proxyMethod('deleteProperty', tryDefault),
-    })
-  }
-
-  return mod
-}
-
-function exportAll(exports: any, sourceModule: any) {
-  // eslint-disable-next-line no-restricted-syntax
-  for (const key in sourceModule) {
-    if (key !== 'default') {
-      try {
-        Object.defineProperty(exports, key, {
-          enumerable: true,
-          configurable: true,
-          get() { return sourceModule[key] },
-        })
-      }
-      catch (_err) { }
-    }
-  }
-}
+import type { ModuleCache, ViteNodeRunnerOptions } from './types'
 
 export class ViteNodeRunner {
   root: string
@@ -74,9 +11,8 @@ export class ViteNodeRunner {
   externalCache: Map<string, string | Promise<false | string>>
   moduleCache: Map<string, ModuleCache>
 
-  constructor(public options: ViteNodeOptions) {
+  constructor(public options: ViteNodeRunnerOptions) {
     this.root = options.root || process.cwd()
-
     this.moduleCache = options.moduleCache || new Map()
     this.externalCache = new Map<string, string | Promise<false | string>>()
     builtinModules.forEach(m => this.externalCache.set(m, m))
@@ -114,7 +50,7 @@ export class ViteNodeRunner {
     if (this.options.requestStubs && id in this.options.requestStubs)
       return this.options.requestStubs[id]
 
-    const { code: transformed, externalize } = await this.options.fetch(id)
+    const { code: transformed, externalize } = await this.options.fetchModule(id)
     if (externalize) {
       const mod = await interpretedImport(externalize, this.options.interpretDefault ?? true)
       this.setCache(fsPath, { exports: mod })
@@ -176,5 +112,52 @@ export class ViteNodeRunner {
       this.moduleCache.set(id, mod)
     else
       Object.assign(this.moduleCache.get(id), mod)
+  }
+}
+
+function hasNestedDefault(target: any) {
+  return '__esModule' in target && target.__esModule && 'default' in target.default
+}
+
+function proxyMethod(name: 'get' | 'set' | 'has' | 'deleteProperty', tryDefault: boolean) {
+  return function(target: any, key: string | symbol, ...args: [any?, any?]) {
+    const result = Reflect[name](target, key, ...args)
+    if (typeof target.default !== 'object')
+      return result
+    if ((tryDefault && key === 'default') || typeof result === 'undefined')
+      return Reflect[name](target.default, key, ...args)
+    return result
+  }
+}
+
+async function interpretedImport(path: string, interpretDefault: boolean) {
+  const mod = await import(path)
+
+  if (interpretDefault && 'default' in mod) {
+    const tryDefault = hasNestedDefault(mod)
+    return new Proxy(mod, {
+      get: proxyMethod('get', tryDefault),
+      set: proxyMethod('set', tryDefault),
+      has: proxyMethod('has', tryDefault),
+      deleteProperty: proxyMethod('deleteProperty', tryDefault),
+    })
+  }
+
+  return mod
+}
+
+function exportAll(exports: any, sourceModule: any) {
+  // eslint-disable-next-line no-restricted-syntax
+  for (const key in sourceModule) {
+    if (key !== 'default') {
+      try {
+        Object.defineProperty(exports, key, {
+          enumerable: true,
+          configurable: true,
+          get() { return sourceModule[key] },
+        })
+      }
+      catch (_err) { }
+    }
   }
 }
