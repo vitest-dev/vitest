@@ -9,7 +9,7 @@ import { createMocker } from './mocker'
 
 export interface ViteNodeOptions {
   root: string
-  base: string
+  base?: string
   fetch: FetchFunction
   moduleCache: Map<string, ModuleCache>
   depsInline: (string | RegExp)[]
@@ -72,7 +72,7 @@ function exportAll(exports: any, sourceModule: any) {
 }
 
 export async function executeInViteNode(options: ExecuteOptions) {
-  const runner = new ViteNodeRunner(options)
+  const runner = new VitestRunner(options)
 
   const result: any[] = []
   for (const file of options.files)

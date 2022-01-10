@@ -74,12 +74,14 @@ export const GlobalSetupPlugin = (): Plugin => {
     },
 
     async buildEnd() {
-      for (const globalSetupFile of globalSetupFiles.reverse()) {
-        try {
-          await globalSetupFile.teardown?.()
-        }
-        catch (error) {
-          console.error(`error during global teardown of ${globalSetupFile.file}`, error)
+      if (globalSetupFiles?.length) {
+        for (const globalSetupFile of globalSetupFiles.reverse()) {
+          try {
+            await globalSetupFile.teardown?.()
+          }
+          catch (error) {
+            console.error(`error during global teardown of ${globalSetupFile.file}`, error)
+          }
         }
       }
     },
