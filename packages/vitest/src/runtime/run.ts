@@ -2,7 +2,7 @@ import { performance } from 'perf_hooks'
 import type { HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, Test } from '../types'
 import { vi } from '../integrations/vi'
 import { getSnapshotClient } from '../integrations/snapshot/chai'
-import { hasFailed, hasTests, partitionSuiteChildren } from '../utils'
+import { getFullName, hasFailed, hasTests, partitionSuiteChildren } from '../utils'
 import { getState, setState } from '../integrations/chai/jest-expect'
 import { getFn, getHooks } from './map'
 import { rpc } from './rpc'
@@ -68,6 +68,8 @@ export async function runTest(test: Test) {
       isExpectingAssertionsError: null,
       expectedAssertionsNumber: null,
       expectedAssertionsNumberError: null,
+      testPath: test.suite.file?.filepath,
+      currentTestName: getFullName(test),
     })
     await getFn(test)()
     const { assertionCalls, expectedAssertionsNumber, expectedAssertionsNumberError, isExpectingAssertions, isExpectingAssertionsError } = getState()

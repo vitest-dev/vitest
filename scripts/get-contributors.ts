@@ -3,7 +3,7 @@ import fetch from 'node-fetch'
 
 const { GITHUB_TOKEN: token } = process.env
 
-type Contributor = {
+interface Contributor {
   login: string
 }
 

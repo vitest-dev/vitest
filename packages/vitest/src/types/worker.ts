@@ -12,8 +12,10 @@ export interface WorkerContext {
   invalidates?: string[]
 }
 
+export type FetchFunction = (id: string) => Promise<{ code?: string; externalize?: string }>
+
 export interface WorkerRPC {
-  fetch: (id: string) => Promise<string | undefined>
+  fetch: FetchFunction
   getSourceMap: (id: string, force?: boolean) => Promise<RawSourceMap | undefined>
 
   onWorkerExit: (code?: number) => void

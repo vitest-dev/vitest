@@ -19,13 +19,14 @@ import {
   addExtraLineBreaks,
   getSnapshotData,
   keyToTestName,
+  prepareExpected,
   removeExtraLineBreaks,
   saveSnapshotFile,
   serialize,
   testNameToKey,
 } from './utils'
 
-type SnapshotReturnOptions = {
+interface SnapshotReturnOptions {
   actual: string
   count: number
   expected?: string
@@ -33,7 +34,7 @@ type SnapshotReturnOptions = {
   pass: boolean
 }
 
-type SaveStatus = {
+interface SaveStatus {
   deleted: boolean
   saved: boolean
 }
@@ -89,14 +90,15 @@ export default class SnapshotState {
   private _addSnapshot(
     key: string,
     receivedSerialized: string,
-    options: {isInline: boolean; error?: Error},
+    options: { isInline: boolean; error?: Error },
   ): void {
     this._dirty = true
     if (options.isInline) {
       const error = options.error || new Error('Unknown error')
       const stacks = parseStacktrace(error)
       stacks.forEach(i => i.file = slash(i.file))
-      const stack = stacks.find(i => process.__vitest_worker__.ctx.files.includes(i.file))
+      const stackIndex = stacks.findIndex(i => i.method === 'Proxy.methodWrapper')
+      const stack = stackIndex !== -1 ? stacks[stackIndex + 1] : null
       if (!stack) {
         throw new Error(
           'Vitest: Couldn\'t infer stack frame for inline snapshot.',
@@ -188,7 +190,8 @@ export default class SnapshotState {
 
     const receivedSerialized = addExtraLineBreaks(serialize(received, undefined, this._snapshotFormat))
     const expected = isInline ? inlineSnapshot : this._snapshotData[key]
-    const pass = expected?.trim() === receivedSerialized?.trim()
+    const expectedTrimmed = prepareExpected(expected)
+    const pass = expectedTrimmed === receivedSerialized?.trim()
     const hasSnapshot = expected !== undefined
     const snapshotIsPersisted = isInline || fs.existsSync(this._snapshotPath)
 
@@ -247,9 +250,9 @@ export default class SnapshotState {
           actual: removeExtraLineBreaks(receivedSerialized),
           count,
           expected:
-             expected !== undefined
-               ? removeExtraLineBreaks(expected)
-               : undefined,
+          expectedTrimmed !== undefined
+            ? removeExtraLineBreaks(expectedTrimmed)
+            : undefined,
           key,
           pass: false,
         }

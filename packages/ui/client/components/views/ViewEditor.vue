@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import { fail } from 'assert'
 import type CodeMirror from 'codemirror'
-import type { ComputedRef } from 'vue'
 import { client } from '~/composables/client'
 import type { File } from '#types'
 
@@ -21,7 +19,6 @@ watch(() => props.file,
   { immediate: true },
 )
 const ext = computed(() => props.file?.filepath?.split(/\./g).pop() || 'js')
-
 const editor = ref<any>()
 
 const cm = computed<CodeMirror.EditorFromTextArea | undefined>(() => editor.value?.cm)
@@ -64,6 +61,7 @@ watch([cm, failed], () => {
   <CodeMirror
     ref="editor"
     v-model="code"
+    min-h-75
     v-bind="{ lineNumbers: true }"
     :mode="ext"
     @save="onSave"

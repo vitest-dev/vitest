@@ -50,7 +50,7 @@ html.dark {
   --cm-json-property: #698c96;
   --cm-line-number-gutter: #f8f8f8;
   /* scrollbars colors */
-  --cm-ttc-c-thumb: #ddd;
+  --cm-ttc-c-thumb: #eee;
   --cm-ttc-c-track: white;
 }
 
@@ -80,8 +80,8 @@ html.dark {
   --cm-line-highlight-background: #444444;
   --cm-selection-background: #44444450;
   /* scrollbars colors */
-  --cm-ttc-c-thumb: #666;
-  --cm-ttc-c-track: black;
+  --cm-ttc-c-thumb: #222;
+  --cm-ttc-c-track: #111;
 }
 
 .splitpanes__pane {
@@ -123,6 +123,7 @@ html.dark {
 
 .splitpanes.loading .splitpanes__pane {
   transition: none !important;
+  height: 100%;
 }
 .CodeMirror-scroll::-webkit-scrollbar,
 .scrolls::-webkit-scrollbar {
@@ -132,7 +133,6 @@ html.dark {
 .CodeMirror-scroll,
 .scrolls {
   overflow: auto !important;
-  height: calc(100vh - 78px) !important;
   scrollbar-width: thin;
   scrollbar-color: var(--cm-ttc-c-thumb) var(--cm-ttc-c-track);
 }

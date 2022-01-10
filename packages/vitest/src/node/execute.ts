@@ -2,13 +2,10 @@ import { builtinModules, createRequire } from 'module'
 import { fileURLToPath, pathToFileURL } from 'url'
 import vm from 'vm'
 import { dirname, resolve } from 'pathe'
-import type { ModuleCache, ResolvedConfig } from '../types'
-import { slash, toFilePath } from '../utils'
-import { shouldExternalize } from '../utils/externalize'
+import type { FetchFunction, ModuleCache, ResolvedConfig } from '../types'
+import { normalizeId, slash, toFilePath } from '../utils'
 import type { SuiteMocks } from './mocker'
 import { createMocker } from './mocker'
-
-export type FetchFunction = (id: string) => Promise<string | undefined>
 
 export interface ExecuteOptions extends Pick<ResolvedConfig, 'depsInline' | 'depsExternal' | 'fallbackCJS' | 'base'> {
   root: string
@@ -36,10 +33,12 @@ function hasNestedDefault(target: any) {
   return '__esModule' in target && target.__esModule && 'default' in target.default
 }
 
-function proxyMethod(name: 'get' | 'set' | 'has' | 'deleteProperty', isNested: boolean) {
+function proxyMethod(name: 'get' | 'set' | 'has' | 'deleteProperty', tryDefault: boolean) {
   return function(target: any, key: string | symbol, ...args: [any?, any?]) {
     const result = Reflect[name](target, key, ...args)
-    if ((isNested && key === 'default') || !result)
+    if (typeof target.default !== 'object')
+      return result
+    if ((tryDefault && key === 'default') || typeof result === 'undefined')
       return Reflect[name](target.default, key, ...args)
     return result
   }
@@ -49,12 +48,12 @@ export async function interpretedImport(path: string, interpretDefault: boolean)
   const mod = await import(path)
 
   if (interpretDefault && 'default' in mod) {
-    const isNested = hasNestedDefault(mod)
+    const tryDefault = hasNestedDefault(mod)
     return new Proxy(mod, {
-      get: proxyMethod('get', isNested),
-      set: proxyMethod('set', isNested),
-      has: proxyMethod('has', isNested),
-      deleteProperty: proxyMethod('deleteProperty', isNested),
+      get: proxyMethod('get', tryDefault),
+      set: proxyMethod('set', tryDefault),
+      has: proxyMethod('has', tryDefault),
+      deleteProperty: proxyMethod('deleteProperty', tryDefault),
     })
   }
 
@@ -64,7 +63,7 @@ export async function interpretedImport(path: string, interpretDefault: boolean)
 export async function executeInViteNode(options: ExecuteOptions) {
   const { moduleCache, root, files, fetch, mockMap, base } = options
 
-  const externalCache = new Map<string, false | string>()
+  const externalCache = new Map<string, string | Promise<false | string>>()
   builtinModules.forEach(m => externalCache.set(m, m))
 
   const {
@@ -100,6 +99,17 @@ export async function executeInViteNode(options: ExecuteOptions) {
       if (canMock) {
         const mocks = mockMap[suite || ''] || {}
         const mock = mocks[resolveDependency(dep)]
+        if (mock === null) {
+          const mockedKey = `${dep}__mock`
+          const cache = moduleCache.get(mockedKey)
+          if (cache?.exports)
+            return cache.exports
+          const cacheKey = toFilePath(dep, root)
+          const mod = moduleCache.get(cacheKey)?.exports || await cachedRequest(dep, callstack)
+          const exports = mockObject(mod)
+          setCache(mockedKey, { exports })
+          return exports
+        }
         if (typeof mock === 'function')
           return callFunctionMock(dep, mock)
         if (typeof mock === 'string')
@@ -117,7 +127,13 @@ export async function executeInViteNode(options: ExecuteOptions) {
     if (id in stubRequests)
       return stubRequests[id]
 
-    const transformed = await fetch(id)
+    const { code: transformed, externalize } = await fetch(id)
+    if (externalize) {
+      const mod = await interpretedImport(externalize, options.interpretDefault)
+      setCache(fsPath, { exports: mod })
+      return mod
+    }
+
     if (transformed == null)
       throw new Error(`failed to load ${id}`)
 
@@ -142,16 +158,15 @@ export async function executeInViteNode(options: ExecuteOptions) {
       return request(getActualPath(path, nmName), false)
     }
 
-    const importMock = async(path: string, nmName: string) => {
+    async function importMock(path: string, nmName: string): Promise<any> {
       if (!suite)
         throw new Error('You can import mock only inside of a running test')
 
       const mock = (mockMap[suite] || {})[path] || resolveMockPath(path, root, nmName)
       if (mock === null) {
         const fsPath = getActualPath(path, nmName)
-        const exports = mockObject(await request(fsPath, false))
-        setCache(fsPath, { exports })
-        return exports
+        const mod = await request(fsPath, false)
+        return mockObject(mod)
       }
       if (typeof mock === 'function')
         return callFunctionMock(path, mock)
@@ -189,12 +204,6 @@ export async function executeInViteNode(options: ExecuteOptions) {
     })
     await fn(...Object.values(context))
 
-    const mocks = suite ? mockMap[suite] : null
-    if (mocks) {
-      if (mocks[id] === null)
-        exportAll(exports, mockObject(exports))
-    }
-
     return exports
   }
 
@@ -207,24 +216,14 @@ export async function executeInViteNode(options: ExecuteOptions) {
 
   async function cachedRequest(rawId: string, callstack: string[]) {
     const id = normalizeId(rawId, base)
-
-    if (externalCache.get(id))
-      return interpretedImport(patchWindowsImportPath(id), options.interpretDefault)
-
     const fsPath = toFilePath(id, root)
-    const importPath = patchWindowsImportPath(fsPath)
-
-    if (!externalCache.has(importPath))
-      externalCache.set(importPath, await shouldExternalize(importPath, options))
-
-    const externalId = externalCache.get(importPath)
-    if (externalId)
-      return interpretedImport(externalId, options.interpretDefault)
 
     if (moduleCache.get(fsPath)?.promise)
       return moduleCache.get(fsPath)?.promise
+
     const promise = directRequest(id, fsPath, callstack)
     setCache(fsPath, { promise })
+
     return await promise
   }
 
@@ -243,26 +242,4 @@ export async function executeInViteNode(options: ExecuteOptions) {
       }
     }
   }
-}
-
-export function normalizeId(id: string, base?: string): string {
-  if (base && id.startsWith(base))
-    id = `/${id.slice(base.length)}`
-
-  return id
-    .replace(/^\/@id\/__x00__/, '\0') // virtual modules start with `\0`
-    .replace(/^\/@id\//, '')
-    .replace(/^__vite-browser-external:/, '')
-    .replace(/^node:/, '')
-    .replace(/[?&]v=\w+/, '?') // remove ?v= query
-    .replace(/\?$/, '') // remove end query mark
-}
-
-function patchWindowsImportPath(path: string) {
-  if (path.match(/^\w:\\/))
-    return `file:///${slash(path)}`
-  else if (path.match(/^\w:\//))
-    return `file:///${path}`
-  else
-    return path
 }

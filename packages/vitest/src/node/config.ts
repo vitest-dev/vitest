@@ -11,7 +11,10 @@ export function resolveApiConfig<Options extends ApiConfig & UserConfig>(
   viteOverrides?: ViteUserConfig,
 ): ApiConfig | undefined {
   let api: ApiConfig | undefined
-  if (options.api === true)
+
+  if (options.ui && !options.api)
+    api = { port: defaultPort }
+  else if (options.api === true)
     api = { port: defaultPort }
   else if (typeof options.api === 'number')
     api = { port: options.api }
@@ -104,8 +107,7 @@ export function resolveConfig(
   if (process.env.VITEST_MIN_THREADS)
     resolved.minThreads = parseInt(process.env.VITEST_MIN_THREADS)
 
-  resolved.setupFiles = Array.from(resolved.setupFiles || [])
-    .map(i => resolve(resolved.root, i))
+  resolved.setupFiles = toArray(resolved.setupFiles || []).map(file => resolve(resolved.root, file))
 
   // the server has been created, we don't need to override vite.server options
   resolved.api = resolveApiConfig(options)

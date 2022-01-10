@@ -68,3 +68,5 @@ If your code is importing mocked module, but there are no `__mocks__` file for t
 * All primitives and collections will stay the same
 * All objects will be deeply cloned
 * All instances of classes and their prototypes will be deeply cloned
+
+Additionally, unlike Jest, mocked modules in `__mocks__` are not loaded unless `vi.mock()` is called.

@@ -12,7 +12,7 @@
     "@vitejs/plugin-vue": "^2.0.1",
     "@vue/test-utils": "^2.0.0-rc.18",
     "jsdom": "^19.0.0",
-    "vite-plugin-ruby": "^3.0.4",
+    "vite-plugin-ruby": "^3.0.6",
     "vitest": "workspace:*",
     "vue": "3.2.26"
   }

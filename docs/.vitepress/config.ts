@@ -115,6 +115,10 @@ export default defineConfig({
               text: 'Mocking Requests',
               link: '/guide/mocking-requests'
             },
+            {
+              text: 'Debugging',
+              link: '/guide/debugging'
+            },
             /* TODO
             {
               text: 'Using Plugins',

@@ -7,6 +7,7 @@ import type { RawSourceMap } from 'source-map-js'
 import { createBirpc } from 'birpc'
 import { distDir } from '../constants'
 import type { WorkerContext, WorkerRPC } from '../types'
+import { toFilePath } from '../utils'
 import { transformRequest } from './transform'
 import type { Vitest } from './index'
 
@@ -123,8 +124,11 @@ function createChannel(ctx: Vitest) {
         return r?.map as RawSourceMap | undefined
       },
       async fetch(id) {
+        const externalize = await ctx.shouldExternalize(toFilePath(id, ctx.config.root))
+        if (externalize)
+          return { externalize }
         const r = await transformRequest(ctx, id)
-        return r?.code
+        return { code: r?.code }
       },
       onCollected(files) {
         ctx.state.collectFiles(files)

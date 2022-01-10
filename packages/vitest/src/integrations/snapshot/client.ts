@@ -72,7 +72,7 @@ export class SnapshotClient {
       testName,
       received,
       isInline,
-      inlineSnapshot: inlineSnapshot?.trim(),
+      inlineSnapshot,
     })
 
     if (!pass) {
