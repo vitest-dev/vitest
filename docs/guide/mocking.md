@@ -56,11 +56,14 @@ describe('purchasing flow', () => {
 ```
 
 ## Functions
-Mock functions (or "spies") observe functions, that are invoked in some other code, allowing you to test its arguments, output or even redeclare its implementation.
+
+Mocking functions can be split up into two different categories; *spying & mocking*.
+
+Sometimes all you need is to validate wether or not a specific function has been called (and possibly which arguments were passed). In these cases a spy would be all we need which you can use directly with `vi.spyOn()` ([read more here](/api/#vi-spyon)).
+
+However spies can only help you **spy** on functions, they are not able to alter the implementation of those functions. In the case where we do need to create a fake (or mocked) version of a function we can  use `vi.fn()` ([read more here](/api/#vi-fn)).
 
 We use [Tinyspy](https://github.com/Aslemammad/tinyspy) as a base for mocking functions, but we have our own wrapper to make it `jest` compatible. Both `vi.fn()` and `vi.spyOn()` share the same methods, however only the return result of `vi.fn()` is callable.
-
-Check out the [`vi.fn()`](../api/#vi-fn) or [`vi.spyOn()`](../api/#vi-spyon) api sections for more specifics.
 
 ### Example
 
@@ -163,8 +166,6 @@ describe('Mocking modules', () => {
     expect(utils.moduleA()).toEqual('mocked module')
   });
 });
-
-
 ```
 
 ## Requests
