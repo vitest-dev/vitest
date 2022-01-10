@@ -4,15 +4,20 @@ import resolve from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import alias from '@rollup/plugin-alias'
+import pkg from './package.json'
 
 const entry = [
   'src/index.ts',
   'src/server.ts',
   'src/client.ts',
+  'src/utils.ts',
 ]
 
 const external = [
+  ...Object.keys(pkg.dependencies || {}),
+  ...Object.keys(pkg.peerDependencies || {}),
   'birpc',
+  'vite',
 ]
 
 export default () => [

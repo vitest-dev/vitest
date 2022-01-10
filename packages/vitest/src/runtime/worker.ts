@@ -39,11 +39,8 @@ async function startViteNode(ctx: WorkerContext) {
     },
     moduleCache,
     mockMap,
+    interpretDefault: config.deps.interpretDefault ?? true,
     root: config.root,
-    depsInline: config.depsInline,
-    depsExternal: config.depsExternal,
-    fallbackCJS: config.fallbackCJS,
-    interpretDefault: config.interpretDefault,
     base: config.base,
   }))[0]
 

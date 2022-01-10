@@ -1,6 +1,6 @@
 import { ViteNodeRunner } from 'vite-node/client'
+import { toFilePath } from 'vite-node/utils'
 import type { ViteNodeOptions } from 'vite-node/client'
-import { toFilePath } from '../utils'
 import type { SuiteMocks } from './mocker'
 import { createMocker } from './mocker'
 

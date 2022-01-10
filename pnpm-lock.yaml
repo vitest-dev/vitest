@@ -392,11 +392,15 @@ importers:
   packages/vite-node:
     specifiers:
       birpc: ^0.0.2
+      mlly: ^0.3.17
       rollup: ^2.63.0
+      vite: ^2.7.10
     dependencies:
       birpc: 0.0.2
+      mlly: 0.3.17
     devDependencies:
       rollup: 2.63.0
+      vite: 2.7.10
 
   packages/vitest:
     specifiers:
@@ -6009,7 +6013,6 @@ packages:
 
   /mlly/0.3.17:
     resolution: {integrity: sha512-C3v8eHB9KqmS1ewOB5DUgljX13C3xuoaXZd5bOLtwpxk9pBZhA+wyVgYXPuP4aukQ9bKYWjy+YQVC+DmniIsgA==}
-    dev: true
 
   /mockdate/3.0.5:
     resolution: {integrity: sha512-iniQP4rj1FhBdBYS/+eQv7j1tadJ9lJtdzgOpvsOHng/GbcDh2Fhdeq+ZRldrPYdXvCyfFUmFeEwEGXZB5I/AQ==}

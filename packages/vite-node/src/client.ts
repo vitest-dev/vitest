@@ -2,7 +2,7 @@ import { builtinModules, createRequire } from 'module'
 import { fileURLToPath, pathToFileURL } from 'url'
 import vm from 'vm'
 import { dirname, resolve } from 'pathe'
-import { normalizeId, slash, toFilePath } from '../../vitest/src/utils'
+import { normalizeId, slash, toFilePath } from './utils'
 
 export type FetchFunction = (id: string) => Promise<{ code?: string; externalize?: string }>
 
@@ -14,12 +14,9 @@ export interface ModuleCache {
 
 export interface ViteNodeOptions {
   root: string
-  base: string
+  base?: string
   fetch: FetchFunction
-  depsInline: (string | RegExp)[]
   moduleCache: Map<string, ModuleCache>
-  depsExternal: (string | RegExp)[]
-  fallbackCJS: boolean
   interpretDefault: boolean
   requestStubs?: Record<string, any>
 }
@@ -119,7 +116,7 @@ export class ViteNodeRunner {
 
     const { code: transformed, externalize } = await this.options.fetch(id)
     if (externalize) {
-      const mod = await interpretedImport(externalize, this.options.interpretDefault)
+      const mod = await interpretedImport(externalize, this.options.interpretDefault ?? true)
       this.setCache(fsPath, { exports: mod })
       return mod
     }
