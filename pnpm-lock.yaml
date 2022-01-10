@@ -389,6 +389,25 @@ importers:
       vue: 3.2.26
       vue-router: 4.0.12_vue@3.2.26
 
+  packages/vite-node:
+    specifiers:
+      '@types/minimist': ^1.2.2
+      kolorist: ^1.5.1
+      minimist: ^1.2.5
+      mlly: ^0.3.17
+      pathe: ^0.2.0
+      rollup: ^2.63.0
+      vite: ^2.7.10
+    dependencies:
+      kolorist: 1.5.1
+      minimist: 1.2.5
+      mlly: 0.3.17
+      pathe: 0.2.0
+      vite: 2.7.10
+    devDependencies:
+      '@types/minimist': 1.2.2
+      rollup: 2.63.0
+
   packages/vitest:
     specifiers:
       '@antfu/install-pkg': ^0.1.0
@@ -434,6 +453,7 @@ importers:
       tinyspy: ^0.2.8
       typescript: ^4.5.4
       vite: '>=2.7.10'
+      vite-node: workspace:*
       ws: ^8.4.0
     dependencies:
       '@types/chai': 4.3.0
@@ -480,6 +500,7 @@ importers:
       source-map-js: 1.0.1
       strip-ansi: 7.0.1
       typescript: 4.5.4
+      vite-node: link:../vite-node
       ws: 8.4.0
 
   packages/ws-client:
@@ -2062,6 +2083,10 @@ packages:
     resolution: {integrity: sha512-oqXqVb0ci19GtH0vOA/U2TmHTcRY9kuZl4mqUxe0QmJAlIW13kzhuK5pi1i9+ngav8FjpSb9FVS/GE00GLX1VA==}
     dependencies:
       '@types/braces': 3.0.1
+    dev: true
+
+  /@types/minimist/1.2.2:
+    resolution: {integrity: sha512-jhuKLIRrhvCPLqwPcx6INqmKeiA5EWrsCOPhrlFSrbrmU4ZMPjj5Ul/oLCMDO98XRUIwVm78xICz4EPCektzeQ==}
     dev: true
 
   /@types/natural-compare/1.4.1:
@@ -5759,6 +5784,10 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
+  /kolorist/1.5.1:
+    resolution: {integrity: sha512-lxpCM3HTvquGxKGzHeknB/sUjuVoUElLlfYnXZT73K8geR9jQbroGlSCFBax9/0mpGoD3kzcMLnOlGQPJJNyqQ==}
+    dev: false
+
   /levn/0.3.0:
     resolution: {integrity: sha1-OwmSTt+fCDwEkP3UwLxEIeBHZO4=}
     engines: {node: '>= 0.8.0'}
@@ -5984,7 +6013,6 @@ packages:
 
   /minimist/1.2.5:
     resolution: {integrity: sha512-FM9nNUYrRBAELZQT3xeZQ7fmMOBg6nWNmJKTcgsJeaLstP/UODVpGsr5OhXhhXg6f+qtJ8uiZ+PUxkDWcgIXLw==}
-    dev: true
 
   /mkdirp-classic/0.5.3:
     resolution: {integrity: sha512-gKLcREMhtuZRwRAfqP3RFW+TK4JqApVBtOIftVgjuABpAtpxhPGaDcfvbhNvD0B8iD1oUr/txX35NjcaY6Ns/A==}
@@ -6004,7 +6032,6 @@ packages:
 
   /mlly/0.3.17:
     resolution: {integrity: sha512-C3v8eHB9KqmS1ewOB5DUgljX13C3xuoaXZd5bOLtwpxk9pBZhA+wyVgYXPuP4aukQ9bKYWjy+YQVC+DmniIsgA==}
-    dev: true
 
   /mockdate/3.0.5:
     resolution: {integrity: sha512-iniQP4rj1FhBdBYS/+eQv7j1tadJ9lJtdzgOpvsOHng/GbcDh2Fhdeq+ZRldrPYdXvCyfFUmFeEwEGXZB5I/AQ==}
@@ -6493,7 +6520,6 @@ packages:
 
   /pathe/0.2.0:
     resolution: {integrity: sha512-sTitTPYnn23esFR3RlqYBWn4c45WGeLcsKzQiUpXJAyfcWkolvlYpV8FLo7JishK946oQwMFUCHXQ9AjGPKExw==}
-    dev: true
 
   /pathval/1.1.1:
     resolution: {integrity: sha512-Dp6zGqpTdETdR63lehJYPeIOqpiNBNtc7BpWSLrOje7UaIsE5aY92r/AunQA7rsXvet3lrJ3JnZX29UPTKXyKQ==}

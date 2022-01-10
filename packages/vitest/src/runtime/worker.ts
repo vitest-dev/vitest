@@ -34,16 +34,13 @@ async function startViteNode(ctx: WorkerContext) {
     files: [
       resolve(distDir, 'entry.js'),
     ],
-    fetch(id) {
+    fetchModule(id) {
       return rpc().fetch(id)
     },
     moduleCache,
     mockMap,
+    interpretDefault: config.deps.interpretDefault ?? true,
     root: config.root,
-    depsInline: config.depsInline,
-    depsExternal: config.depsExternal,
-    fallbackCJS: config.fallbackCJS,
-    interpretDefault: config.interpretDefault,
     base: config.base,
   }))[0]
 

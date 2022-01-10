@@ -1,9 +1,8 @@
-import { fileURLToPath, pathToFileURL } from 'url'
 import c from 'picocolors'
 import { isPackageExists } from 'local-pkg'
-import { dirname, resolve } from 'pathe'
+import { resolve } from 'pathe'
 import type { Suite, Task } from '../types'
-import { getNames, slash } from './tasks'
+import { getNames } from './tasks'
 
 export * from './tasks'
 export * from './path'
@@ -109,24 +108,6 @@ export function deepMerge(target: any, source: any): any {
     return deepMergeArray(target, source)
   }
   return target
-}
-
-export function toFilePath(id: string, root: string): string {
-  let absolute = slash(id).startsWith('/@fs/')
-    ? id.slice(4)
-    : id.startsWith(dirname(root))
-      ? id
-      : id.startsWith('/')
-        ? slash(resolve(root, id.slice(1)))
-        : id
-
-  if (absolute.startsWith('//'))
-    absolute = absolute.slice(1)
-
-  // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
-  return isWindows && absolute.startsWith('/')
-    ? fileURLToPath(pathToFileURL(absolute.slice(1)).href)
-    : absolute
 }
 
 export { resolve as resolvePath }

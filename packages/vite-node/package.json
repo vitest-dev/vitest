@@ -1,0 +1,67 @@
+{
+  "name": "vite-node",
+  "version": "0.0.139",
+  "description": "Vite as Node.js runtime",
+  "homepage": "https://github.com/vitest-dev/vitest#readme",
+  "bugs": {
+    "url": "https://github.com/vitest-dev/vitest/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vitest-dev/vitest.git",
+    "directory": "packages/vite-node"
+  },
+  "funding": "https://github.com/sponsors/antfu",
+  "license": "MIT",
+  "author": "Anthony Fu <anthonyfu117@hotmail.com>",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./client": {
+      "import": "./dist/client.js",
+      "types": "./dist/client.d.ts"
+    },
+    "./server": {
+      "import": "./dist/server.js",
+      "types": "./dist/server.d.ts"
+    },
+    "./utils": {
+      "import": "./dist/utils.js",
+      "types": "./dist/utils.d.ts"
+    }
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "vite-node": "./vite-node.js"
+  },
+  "files": [
+    "dist",
+    "*.d.ts",
+    "*.mjs"
+  ],
+  "scripts": {
+    "build": "rimraf dist && rollup -c",
+    "dev": "rollup -c --watch --watch.include=src/**",
+    "prepublishOnly": "nr build",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "kolorist": "^1.5.1",
+    "minimist": "^1.2.5",
+    "mlly": "^0.3.17",
+    "pathe": "^0.2.0",
+    "vite": "^2.7.10"
+  },
+  "devDependencies": {
+    "@types/minimist": "^1.2.2",
+    "rollup": "^2.63.0"
+  },
+  "engines": {
+    "node": ">=14.14.0"
+  }
+}

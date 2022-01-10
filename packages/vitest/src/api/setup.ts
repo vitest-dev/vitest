@@ -9,7 +9,6 @@ import { API_PATH } from '../constants'
 import type { Vitest } from '../node'
 import type { File, ModuleGraphData, Reporter, TaskResultPack } from '../types'
 import { interpretSourcePos, parseStacktrace } from '../utils/source-map'
-import { transformRequest } from '../node/transform'
 import type { TransformResultWithSource, WebSocketEvents, WebSocketHandlers } from './types'
 
 export function setup(ctx: Vitest) {
@@ -52,7 +51,7 @@ export function setup(ctx: Vitest) {
           return ctx.config
         },
         async getTransformResult(id) {
-          const result: TransformResultWithSource | null | undefined = await transformRequest(ctx, id)
+          const result: TransformResultWithSource | null | undefined = await ctx.vitenode.transformRequest(id)
           if (result) {
             try {
               result.source = result.source || (await fs.readFile(id, 'utf-8'))
@@ -76,7 +75,7 @@ export function setup(ctx: Vitest) {
               return seen.get(mod)
             let id = clearId(mod.id)
             seen.set(mod, id)
-            const rewrote = await ctx.shouldExternalize(id)
+            const rewrote = await ctx.vitenode.shouldExternalize(id)
             if (rewrote) {
               id = rewrote
               externalized.add(id)
