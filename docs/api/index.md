@@ -18,8 +18,8 @@ For compatibility with Jest, `TestFunction` can also be of type `(done: DoneCall
 - **Alias:** `it`
 
   `test` defines a set of related expectations. It receives the test name and a function that holds the expectations to test.
-  
-  Optionally, you can provide a timeout (in milliseconds) for specifying how long to wait before terminating. The default is 5 seconds, and can be configured globally with [testTimeout](../config/#testtimeout)
+
+  Optionally, you can provide a timeout (in milliseconds) for specifying how long to wait before terminating. The default is 5 seconds, and can be configured globally with [testTimeout](/config/#testtimeout)
 
   ```ts
   import { test, expect } from 'vitest'
@@ -52,7 +52,7 @@ For compatibility with Jest, `TestFunction` can also be of type `(done: DoneCall
 
   Use `test.only` to only run certain tests in a given suite. This is useful when debugging.
 
-  Optionally, you can provide a timeout (in milliseconds) for specifying how long to wait before terminating. The default is 5 seconds, and can be configured globally with [testTimeout](../config/#testtimeout).
+  Optionally, you can provide a timeout (in milliseconds) for specifying how long to wait before terminating. The default is 5 seconds, and can be configured globally with [testTimeout](/config/#testtimeout).
 
   ```ts
   import { test, assert } from 'vitest'
@@ -141,14 +141,14 @@ When you use `test` in the top level of file, they are collected as part of the 
 
     return value.toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   }
-  
+
   describe('numberToCurrency', () => {
     describe('given an invalid number', () => {
       test('composed of non-numbers to throw error', () => {
         expect(() => numberToCurrency('abc')).toThrow();
       });
     });
-  
+
     describe('given a valid number', () => {
       test('returns the correct currency format', () => {
         expect(numberToCurrency(10000)).toBe('10,000.00');
@@ -834,7 +834,7 @@ These functions allows you to hook into the life cycle of tests to avoid repeati
   Here the `afterAll` ensures that `stopMocking` method is called after all tests run.
 
 ## Vi
-Vitest provides utility functions to help you out through it's **vi** helper. You can `import { vi } from 'vitest'` or access it **globally** (when [global configuration](../config/#global) is **enabled**).
+Vitest provides utility functions to help you out through it's **vi** helper. You can `import { vi } from 'vitest'` or access it **globally** (when [global configuration](/config/#global) is **enabled**).
 
 ### vi.advanceTimersByTime
 
