@@ -1,5 +1,5 @@
 # Mocking
-When writing tests it's only a matter of time before you need to create "fake" version of an internal—or external—service. This is commonly referred to as **mocking**. Vitest provides utility functions to help you out through its **vi** helper. You can `import { vi } from 'vitest'` or access it **globally** (when [global configuration](../config/#global) is **enabled**).
+When writing tests it's only a matter of time before you need to create "fake" version of an internal—or external—service. This is commonly referred to as **mocking**. Vitest provides utility functions to help you out through its **vi** helper. You can `import { vi } from 'vitest'` or access it **globally** (when [global configuration](/config/#global) is **enabled**).
 
 ::: warning
 Always remember to clear or restore mocks before or after each test run to undo mock state changes between runs! See [`mockReset`](/api/#mockreset) docs for more info.
@@ -126,7 +126,7 @@ describe('reading messages', () => {
 
 Mock modules observe third-party-libraries, that are invoked in some other code, allowing you to test arguments, output or even redeclare its implementation.
 
-See the [`vi.mock()` api section](../api/#vi-fn) for a more in depth detailed API description.
+See the [`vi.mock()` api section](/api/#vi-fn) for a more in depth detailed API description.
 
 ### Automocking algorithm
 
@@ -230,7 +230,7 @@ There is much more to MSW. You can access cookies and query parameters, define m
 
 Whenever we test code that involves `timeOut`s or intervals, instead of having our tests it wait out or time-out. We can speed up our tests by using "fake" timers by mocking calls to `setTimeout` and `setInterval`, too.
 
-See the [`vi.mock()` api section](../api/#vi-usefaketimer) for a more in depth detailed API description.
+See the [`vi.mock()` api section](/api/#vi-usefaketimer) for a more in depth detailed API description.
 
 ### Example
 
