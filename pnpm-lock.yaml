@@ -558,6 +558,12 @@ importers:
       execa: 6.0.0
       vitest: link:../../packages/vitest
 
+  test/global-setup:
+    specifiers:
+      vitest: workspace:*
+    devDependencies:
+      vitest: link:../../packages/vitest
+
   test/related:
     specifiers:
       vitest: workspace:*

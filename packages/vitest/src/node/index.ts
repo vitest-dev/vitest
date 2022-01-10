@@ -12,6 +12,7 @@ import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig } from '../typ
 import { SnapshotManager } from '../integrations/snapshot/manager'
 import { configFiles } from '../constants'
 import { deepMerge, ensurePackageInstalled, hasFailed, noop, notNullish, slash, toArray } from '../utils'
+import { GlobalSetupPlugin } from '../plugins/globalSetup'
 import { MocksPlugin } from '../plugins/mock'
 import { DefaultReporter, ReportersMap } from '../reporters'
 import { cleanCoverage, reportCoverage } from '../coverage'
@@ -402,6 +403,7 @@ export async function VitestPlugin(options: UserConfig = {}, viteOverrides: Vite
       },
     },
     MocksPlugin(),
+    GlobalSetupPlugin(),
     options.ui
       ? await UIPlugin()
       : null,
