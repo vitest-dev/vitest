@@ -110,4 +110,41 @@ export function deepMerge(target: any, source: any): any {
   return target
 }
 
+/**
+ * If code starts with a function call, will return its arguments and body.
+ * This will return 25 - last ending character of toMatch ")"
+ * ```
+ * toMatch({ test: '123' });
+ * toBeAliased('123')
+ * ```
+ */
+export function getCallLastIndex(code: string) {
+  let charIndex = -1
+  let inString: string | null = null //
+  let startedBracers = 0
+  let endedBracers = 0
+  let beforeChar: string | null = null
+  while (charIndex <= code.length) {
+    beforeChar = code[charIndex]
+    charIndex++
+    const char = code[charIndex]
+
+    const isCharString = char === '"' || char === '\'' || char === '`'
+
+    if (isCharString && beforeChar !== '\\')
+      inString = inString === char ? null : char
+
+    if (!inString) {
+      if (char === '(')
+        startedBracers++
+      if (char === ')')
+        endedBracers++
+    }
+
+    if (startedBracers && endedBracers && startedBracers === endedBracers)
+      return charIndex
+  }
+  return null
+}
+
 export { resolve as resolvePath }
