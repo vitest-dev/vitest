@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { injectCurrentModule } from '../composables/navigation'
+import { currentModule } from '../composables/navigation'
 import { client } from '~/composables/client'
 import type { Params } from '~/composables/params'
 import { viewMode } from '~/composables/params'
@@ -9,7 +9,6 @@ import type { ModuleGraphData } from '#types'
 
 const data = ref<ModuleGraphData>({ externalized: [], graph: {}, inlined: [] })
 const graph = ref<ModuleGraph>({ nodes: [], links: [] })
-const currentModule = injectCurrentModule()
 
 debouncedWatch(
   currentModule,

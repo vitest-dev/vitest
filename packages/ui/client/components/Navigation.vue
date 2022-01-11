@@ -1,14 +1,10 @@
 <script setup lang="ts">
-import { injectCurrentModule, injectShowSummary, injectSummaryVisible } from '../composables/navigation'
+import { currentModule, showSummary, summaryVisible } from '../composables/navigation'
 import { findById } from '../composables/client'
 import type { Task } from '#types'
 import { toggleDark } from '~/composables'
 import { files, runAll } from '~/composables/client'
 import { activeFileId } from '~/composables/params'
-
-const summaryVisible = injectSummaryVisible()
-const showSummary = injectShowSummary()
-const currentModule = injectCurrentModule()
 
 function onItemClick(task: Task) {
   activeFileId.value = task.id
