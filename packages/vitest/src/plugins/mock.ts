@@ -1,86 +1,16 @@
 import type { Plugin } from 'vite'
 import MagicString from 'magic-string'
+import { getCallLastIndex, getRangeStatus } from '../utils'
 
-const mockRegexp = /\b((?:vitest|vi)\s*.\s*mock\(["`'\s](.*[@\w_-]+)["`'\s])[),]{1}/
+const mockRegexp = /^ *\b((?:vitest|vi)\s*.\s*mock\(["`'\s]+(.*[@\w_-]+)["`'\s]+)[),]{1};?/gm
 const pathRegexp = /\b(?:vitest|vi)\s*.\s*(unmock|importActual|importMock)\(["`'\s](.*[@\w_-]+)["`'\s]\);?/mg
 const vitestRegexp = /import {[^}]*}.*(?=["'`]vitest["`']).*/gm
 
-const isComment = (line: string) => {
-  const commentStarts = ['//', '/*', '*']
-
-  line = line.trim()
-
-  return commentStarts.some(cmt => line.startsWith(cmt))
-}
-
-interface MockCodeblock {
-  code: string
-  declaraton: string
-  path: string
-}
-
-const parseMocks = (code: string) => {
-  const splitted = code.split('\n')
-
-  const mockCalls: Record<string, MockCodeblock> = {}
-  let mockCall = 0
-  let lineIndex = -1
-
-  while (lineIndex < splitted.length) {
-    lineIndex++
-
-    const line = splitted[lineIndex]
-
-    if (line === undefined) break
-
-    const mock = mockCalls[mockCall] || {
-      code: '',
-      declaraton: '',
-      path: '',
-    }
-
-    if (!mock.code) {
-      const started = mockRegexp.exec(line)
-
-      if (!started || isComment(line)) continue
-
-      mock.code += `${line}\n`
-      mock.declaraton = started[1]
-      mock.path = started[2]
-
-      mockCalls[mockCall] = mock
-
-      // end at the same line
-      // we parse code after vite, so it contains semicolons
-      if (line.includes(');')) {
-        mockCall++
-        continue
-      }
-
-      continue
-    }
-
-    mock.code += `${line}\n`
-
-    mockCalls[mockCall] = mock
-
-    const startNumber = (mock.code.match(/{/g) || []).length
-    const endNumber = (mock.code.match(/}/g) || []).length
-
-    // we parse code after vite, so it contains semicolons
-    if (line.includes(');')) {
-      /**
-       * Check if number of {} is equal or this:
-       * vi.mock('path', () =>
-       *  loadStore()
-       * );
-       */
-      if (startNumber === endNumber || (startNumber === 0 && endNumber === 0))
-        mockCall++
-    }
-  }
-
-  return Object.values(mockCalls)
+const getMockLastIndex = (code: string): number | null => {
+  const index = getCallLastIndex(code)
+  if (index === null)
+    return null
+  return code[index + 1] === ';' ? index + 2 : index + 1
 }
 
 const getMethodCall = (method: string, actualPath: string, importPath: string) => {
@@ -111,19 +41,36 @@ export const MocksPlugin = (): Plugin => {
         m.overwrite(start, end, overwrite)
       }
 
-      if (mockRegexp.exec(code)) {
+      const mocks = code.matchAll(mockRegexp)
+
+      let previousIndex = 0
+
+      for (const mockResult of mocks) {
         // we need to parse parsed string because factory may contain importActual
-        const mocks = parseMocks(m?.toString() || code)
+        const lastIndex = getMockLastIndex(code.slice(mockResult.index!))
+        const [, declaration, path] = mockResult
 
-        for (const mock of mocks) {
-          const filepath = await this.resolve(mock.path, id)
+        if (lastIndex === null) continue
 
-          m ??= new MagicString(code)
+        const startIndex = mockResult.index!
 
-          const overwrite = getMethodCall('mock', filepath?.id || mock.path, mock.path)
+        const { insideComment, insideString } = getRangeStatus(code, previousIndex, startIndex)
 
-          m.prepend(mock.code.replace(mock.declaraton, overwrite))
-        }
+        if (insideComment || insideString)
+          continue
+
+        previousIndex = startIndex
+        const endIndex = startIndex + lastIndex
+
+        const filepath = await this.resolve(path, id)
+
+        m ??= new MagicString(code)
+
+        const overwrite = getMethodCall('mock', filepath?.id || path, path)
+
+        m.overwrite(startIndex, startIndex + declaration.length, overwrite)
+        m.prepend(`${m.slice(startIndex, endIndex)}\n`)
+        m.remove(startIndex, endIndex)
       }
 
       if (m) {
