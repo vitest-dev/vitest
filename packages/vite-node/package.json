@@ -18,24 +18,24 @@
   "exports": {
     ".": {
       "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./index.d.ts"
     },
     "./client": {
       "import": "./dist/client.js",
-      "types": "./dist/client.d.ts"
+      "types": "./client.d.ts"
     },
     "./server": {
       "import": "./dist/server.js",
-      "types": "./dist/server.d.ts"
+      "types": "./server.d.ts"
     },
     "./utils": {
       "import": "./dist/utils.js",
-      "types": "./dist/utils.d.ts"
+      "types": "./utils.d.ts"
     }
   },
   "main": "./dist/index.js",
   "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "types": "./index.d.ts",
   "bin": {
     "vite-node": "./vite-node.js"
   },

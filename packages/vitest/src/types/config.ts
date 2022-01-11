@@ -1,4 +1,5 @@
 import type { CommonServerOptions } from 'vite'
+import type { PrettyFormatOptions } from 'pretty-format'
 import type { BuiltinReporters } from '../reporters'
 import type { C8Options, ResolvedC8Options } from '../coverage'
 import type { JSDOMOptions } from './jsdom-options'
@@ -253,6 +254,11 @@ export interface InlineConfig {
      */
     web?: RegExp[]
   }
+
+  /**
+   * Format options for snapshot testing.
+   */
+  snapshotFormat?: PrettyFormatOptions
 }
 
 export interface UserConfig extends InlineConfig {

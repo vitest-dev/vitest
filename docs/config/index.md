@@ -339,3 +339,9 @@ export default defineConfig({
   },
 })
 ```
+
+### snapshotFormat
+
+- **Type:** `PrettyFormatOptions`
+
+Format options for snapshot testing.
