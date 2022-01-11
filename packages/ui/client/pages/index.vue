@@ -1,7 +1,6 @@
 <script setup lang="ts">
 // @ts-expect-error missing types
 import { Pane, Splitpanes } from 'splitpanes'
-import type { VueInstance } from '@vueuse/core'
 import { initializeNavigation } from '../composables/navigation'
 
 const summaryVisible = initializeNavigation()
@@ -22,11 +21,12 @@ const onModuleResized = useDebounceFn((event: { size: number }[]) => {
 function resizeMain() {
   const width = window.innerWidth
   const panelWidth = Math.min(width / 3, 300)
+  const navW = width - panelWidth
   const w = (100 * panelWidth) / width
   mainSizes[0] = w
   mainSizes[1] = 100 - w
-  detailSizes[0] = w
-  detailSizes[1] = 100 - w
+  detailSizes[0] = (100 * panelWidth) / navW
+  detailSizes[1] = 100 - detailSizes[0]
 }
 </script>
 
