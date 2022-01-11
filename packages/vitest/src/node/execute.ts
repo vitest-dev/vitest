@@ -1,245 +1,111 @@
-import { builtinModules, createRequire } from 'module'
-import { fileURLToPath, pathToFileURL } from 'url'
-import vm from 'vm'
-import { dirname, resolve } from 'pathe'
-import type { FetchFunction, ModuleCache, ResolvedConfig } from '../types'
-import { normalizeId, slash, toFilePath } from '../utils'
+import { ViteNodeRunner } from 'vite-node/client'
+import { toFilePath } from 'vite-node/utils'
+import type { ViteNodeRunnerOptions } from 'vite-node'
 import type { SuiteMocks } from './mocker'
 import { createMocker } from './mocker'
 
-export interface ExecuteOptions extends Pick<ResolvedConfig, 'depsInline' | 'depsExternal' | 'fallbackCJS' | 'base'> {
-  root: string
+export interface ExecuteOptions extends ViteNodeRunnerOptions {
   files: string[]
-  fetch: FetchFunction
-  interpretDefault: boolean
-  moduleCache: Map<string, ModuleCache>
   mockMap: SuiteMocks
 }
 
-export const stubRequests: Record<string, any> = {
-  '/@vite/client': {
-    injectQuery: (id: string) => id,
-    createHotContext() {
-      return {
-        accept: () => {},
-        prune: () => {},
-      }
-    },
-    updateStyle() {},
-  },
-}
-
-function hasNestedDefault(target: any) {
-  return '__esModule' in target && target.__esModule && 'default' in target.default
-}
-
-function proxyMethod(name: 'get' | 'set' | 'has' | 'deleteProperty', tryDefault: boolean) {
-  return function(target: any, key: string | symbol, ...args: [any?, any?]) {
-    const result = Reflect[name](target, key, ...args)
-    if (typeof target.default !== 'object')
-      return result
-    if ((tryDefault && key === 'default') || typeof result === 'undefined')
-      return Reflect[name](target.default, key, ...args)
-    return result
-  }
-}
-
-export async function interpretedImport(path: string, interpretDefault: boolean) {
-  const mod = await import(path)
-
-  if (interpretDefault && 'default' in mod) {
-    const tryDefault = hasNestedDefault(mod)
-    return new Proxy(mod, {
-      get: proxyMethod('get', tryDefault),
-      set: proxyMethod('set', tryDefault),
-      has: proxyMethod('has', tryDefault),
-      deleteProperty: proxyMethod('deleteProperty', tryDefault),
-    })
-  }
-
-  return mod
-}
-
 export async function executeInViteNode(options: ExecuteOptions) {
-  const { moduleCache, root, files, fetch, mockMap, base } = options
+  const runner = new VitestRunner(options)
 
-  const externalCache = new Map<string, string | Promise<false | string>>()
-  builtinModules.forEach(m => externalCache.set(m, m))
+  const result: any[] = []
+  for (const file of options.files)
+    result.push(await runner.run(file))
 
-  const {
-    getActualPath,
-    getSuiteFilepath,
-    mockObject,
-    mockPath,
-    clearMocks,
-    unmockPath,
-    resolveMockPath,
-    resolveDependency,
-  } = createMocker(root, mockMap)
-
-  const result = []
-  for (const file of files)
-    result.push(await cachedRequest(`/@fs/${slash(resolve(file))}`, []))
   return result
+}
 
-  async function callFunctionMock(dep: string, mock: () => any) {
-    const name = `${dep}__mock`
-    const cached = moduleCache.get(name)?.exports
-    if (cached)
-      return cached
-    const exports = await mock()
-    setCache(name, { exports })
-    return exports
+export class VitestRunner extends ViteNodeRunner {
+  mocker: ReturnType<typeof createMocker>
+
+  constructor(public options: ExecuteOptions) {
+    super(options)
+
+    options.requestStubs = options.requestStubs || {
+      '/@vite/client': {
+        injectQuery: (id: string) => id,
+        createHotContext() {
+          return {
+            accept: () => {},
+            prune: () => {},
+          }
+        },
+        updateStyle() {},
+      },
+    }
+
+    this.mocker = createMocker(this.root, options.mockMap)
   }
 
-  async function directRequest(id: string, fsPath: string, callstack: string[]) {
-    callstack = [...callstack, id]
-    const suite = getSuiteFilepath()
-    const request = async(dep: string, canMock = true) => {
-      if (canMock) {
-        const mocks = mockMap[suite || ''] || {}
-        const mock = mocks[resolveDependency(dep)]
-        if (mock === null) {
-          const mockedKey = `${dep}__mock`
-          const cache = moduleCache.get(mockedKey)
-          if (cache?.exports)
-            return cache.exports
-          const cacheKey = toFilePath(dep, root)
-          const mod = moduleCache.get(cacheKey)?.exports || await cachedRequest(dep, callstack)
-          const exports = mockObject(mod)
-          setCache(mockedKey, { exports })
-          return exports
-        }
-        if (typeof mock === 'function')
-          return callFunctionMock(dep, mock)
-        if (typeof mock === 'string')
-          dep = mock
+  prepareContext(context: Record<string, any>) {
+    const suite = this.mocker.getSuiteFilepath()
+    const mockMap = this.options.mockMap
+    const request = context.__vite_ssr_import__
+
+    const callFunctionMock = async(dep: string, mock: () => any) => {
+      const name = `${dep}__mock`
+      const cached = this.moduleCache.get(name)?.exports
+      if (cached)
+        return cached
+      const exports = await mock()
+      this.setCache(name, { exports })
+      return exports
+    }
+
+    const requestWithMock = async(dep: string) => {
+      const mocks = mockMap[suite || ''] || {}
+      const mock = mocks[this.mocker.resolveDependency(dep)]
+      if (mock === null) {
+        const mockedKey = `${dep}__mock`
+        const cache = this.moduleCache.get(mockedKey)
+        if (cache?.exports)
+          return cache.exports
+        const cacheKey = toFilePath(dep, this.root)
+        const mod = this.moduleCache.get(cacheKey)?.exports || await request(dep)
+        const exports = this.mocker.mockObject(mod)
+        this.setCache(mockedKey, { exports })
+        return exports
       }
-      if (callstack.includes(dep)) {
-        const cacheKey = toFilePath(dep, root)
-        if (!moduleCache.get(cacheKey)?.exports)
-          throw new Error(`Circular dependency detected\nStack:\n${[...callstack, dep].reverse().map(p => `- ${p}`).join('\n')}`)
-        return moduleCache.get(cacheKey)!.exports
-      }
-      return cachedRequest(dep, callstack)
+      if (typeof mock === 'function')
+        return callFunctionMock(dep, mock)
+      if (typeof mock === 'string')
+        dep = mock
+      return request(dep)
     }
-
-    if (id in stubRequests)
-      return stubRequests[id]
-
-    const { code: transformed, externalize } = await fetch(id)
-    if (externalize) {
-      const mod = await interpretedImport(externalize, options.interpretDefault)
-      setCache(fsPath, { exports: mod })
-      return mod
-    }
-
-    if (transformed == null)
-      throw new Error(`failed to load ${id}`)
-
-    // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
-    const url = pathToFileURL(fsPath).href
-    const exports: any = {}
-
-    setCache(fsPath, { code: transformed, exports })
-
-    const __filename = fileURLToPath(url)
-    const moduleProxy = {
-      set exports(value) {
-        exportAll(exports, value)
-        exports.default = value
-      },
-      get exports() {
-        return exports.default
-      },
-    }
-
     const importActual = (path: string, nmName: string) => {
-      return request(getActualPath(path, nmName), false)
+      return request(this.mocker.getActualPath(path, nmName))
     }
-
-    async function importMock(path: string, nmName: string): Promise<any> {
+    const importMock = async(path: string, nmName: string): Promise<any> => {
       if (!suite)
         throw new Error('You can import mock only inside of a running test')
 
-      const mock = (mockMap[suite] || {})[path] || resolveMockPath(path, root, nmName)
+      const mock = (mockMap[suite] || {})[path] || this.mocker.resolveMockPath(path, this.root, nmName)
       if (mock === null) {
-        const fsPath = getActualPath(path, nmName)
-        const mod = await request(fsPath, false)
-        return mockObject(mod)
+        const fsPath = this.mocker.getActualPath(path, nmName)
+        const mod = await request(fsPath)
+        return this.mocker.mockObject(mod)
       }
       if (typeof mock === 'function')
         return callFunctionMock(path, mock)
-      return request(mock, true)
+      return requestWithMock(mock)
     }
 
-    const context = {
-      // esm transformed by Vite
-      __vite_ssr_import__: request,
-      __vite_ssr_dynamic_import__: request,
-      __vite_ssr_exports__: exports,
-      __vite_ssr_exportAll__: (obj: any) => exportAll(exports, obj),
-      __vite_ssr_import_meta__: { url },
+    return Object.assign(context, {
+      __vite_ssr_import__: requestWithMock,
+      __vite_ssr_dynamic_import__: requestWithMock,
 
       // vitest.mock API
-      __vitest__mock__: mockPath,
-      __vitest__unmock__: unmockPath,
+      __vitest__mock__: this.mocker.mockPath,
+      __vitest__unmock__: this.mocker.unmockPath,
       __vitest__importActual__: importActual,
       __vitest__importMock__: importMock,
       // spies from 'jest-mock' are different inside suites and execute,
       // so wee need to call this twice - inside suite and here
-      __vitest__clearMocks__: clearMocks,
-
-      // cjs compact
-      require: createRequire(url),
-      exports,
-      module: moduleProxy,
-      __filename,
-      __dirname: dirname(__filename),
-    }
-
-    const fn = vm.runInThisContext(`async (${Object.keys(context).join(',')})=>{{${transformed}\n}}`, {
-      filename: fsPath,
-      lineOffset: 0,
+      __vitest__clearMocks__: this.mocker.clearMocks,
     })
-    await fn(...Object.values(context))
-
-    return exports
-  }
-
-  function setCache(id: string, mod: Partial<ModuleCache>) {
-    if (!moduleCache.has(id))
-      moduleCache.set(id, mod)
-    else
-      Object.assign(moduleCache.get(id), mod)
-  }
-
-  async function cachedRequest(rawId: string, callstack: string[]) {
-    const id = normalizeId(rawId, base)
-    const fsPath = toFilePath(id, root)
-
-    if (moduleCache.get(fsPath)?.promise)
-      return moduleCache.get(fsPath)?.promise
-
-    const promise = directRequest(id, fsPath, callstack)
-    setCache(fsPath, { promise })
-
-    return await promise
-  }
-
-  function exportAll(exports: any, sourceModule: any) {
-    // eslint-disable-next-line no-restricted-syntax
-    for (const key in sourceModule) {
-      if (key !== 'default') {
-        try {
-          Object.defineProperty(exports, key, {
-            enumerable: true,
-            configurable: true,
-            get() { return sourceModule[key] },
-          })
-        }
-        catch (_err) { }
-      }
-    }
   }
 }

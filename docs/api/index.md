@@ -530,7 +530,6 @@ TODO
 
   ```ts
   import { test, expect } from 'vitest'
-  import { getApples } from './stock'
 
   const stockBill = {
     type: 'apples',
@@ -552,7 +551,7 @@ TODO
   ```
 
   :::warning
-  A _deep equality_ will not be performed for `Error` objects. To test if something was thrown, use [`toTrow`](#tothrow) assertion.
+  A _deep equality_ will not be performed for `Error` objects. To test if something was thrown, use [`toThrow`](#tothrow) assertion.
   :::
 
 ### toStrictEqual
@@ -583,15 +582,208 @@ TODO
   ```
 
 ### toContain
+
+- **Type:** `(received: string) => Awaitable<void>`
+
+  `toContain` asserts if actual value is in an array. `toContain` can also check whether a string is a substring of another string.
+
+  ```ts
+  import { expect, test } from 'vitest'
+  import { getAllFruits } from './stock'
+
+  test('the fruit list contains orange', () => {
+    expect(getAllFruits()).toContain('orange');
+  })
+  ```
+
 ### toContainEqual
 
+- **Type:** `(received: any) => Awaitable<void>`
+
+  `toContainEqual` asserts if an item with a specific structure and values is contained in an array. 
+  It works like [`toEqual`](#toequal) inside for each element.
+
+  ```ts
+  import { test, expect } from 'vitest'
+  import { getFruitStock } from './stock'
+
+  test("apple available", () => {
+    expect(getFruitStock()).toContainEqual({ fruit: 'apple', count: 5 })
+  })
+  ```
+
 ### toHaveLength
+
+- **Type:** `(received: number) => Awaitable<void>`
+
+  `toHaveLength` asserts if an object has a `.length` property and it is set to a certain numeric value.
+
+  ```ts
+  import { test, expect } from 'vitest'
+
+  test('toHaveLength', () => {
+    expect('abc').toHaveLength(3);
+    expect([1, 2, 3]).toHaveLength(3);
+
+    expect('').not.toHaveLength(3); // doesn't have .length of 3
+    expect({ length: 3 }).toHaveLength(3)
+  })
+  ```
+
 ### toHaveProperty
 
+- **Type:** `(key: any, received?: any) => Awaitable<void>`
+
+  `toHaveProperty` asserts if a property at provided reference `key` exists for an object.
+
+  You can provide an optional value argument also known as deep equality, like the `toEqual` matcher to compare the received property value.
+
+  ```ts
+  import { test, expect } from 'vitest'
+
+  const invoice = {
+    isActive: true,
+    customer: {
+      first_name: 'John',
+      last_name: 'Doe',
+      location: 'China',
+    },
+    total_amount: 5000,
+    items: [
+      {
+        type: 'apples',
+        quantity: 10,
+      },
+      {
+        type: 'oranges',
+        quantity: 5,
+      },
+    ]
+  }
+
+  test('John Doe Invoice', () => {
+    expect(invoice).toHaveProperty('isActive') // assert that the key exists
+    expect(invoice).toHaveProperty('total_amount', 5000) //assert that the key exists and the value is equal
+
+    expect(invoice).not.toHaveProperty('account') //assert that this key does not exist
+
+    // Deep referencing using dot notation
+    expect(invoice).toHaveProperty('customer.first_name')
+    expect(invoice).toHaveProperty('customer.last_name', 'Doe')
+    expect(invoice).not.toHaveProperty('customer.location', 'India')
+
+    // Deep referencing using an array containing the key
+    expect(invoice).toHaveProperty('items[0].type', 'apples')
+    expect(invoice).toHaveProperty('items.0.type', 'apples') // dot notation also works
+
+  })
+  ```
+
 ### toMatch
+
+- **Type:** `(received: string | regexp) => Awaitable<void>`
+
+  `toMatch` asserts if a string matches a regular expression or a string.
+
+  ```ts
+  import { expect, test } from 'vitest'
+
+  test('top fruits', () => {
+    expect('top fruits include apple, orange and grape').toMatch(/apple/)
+    expect('applefruits').toMatch('fruit') // toMatch also accepts a string
+  })
+  ```
+
 ### toMatchObject
 
+- **Type:** `(received: object | array) => Awaitable<void>`
+
+  `toMatchObject` asserts if an object matches a subset of the properties of an object.
+
+  You can also pass an array of objects. This is useful if you want to check that two arrays match in their number of elements, as opposed to `arrayContaining`, which allows for extra elements in the received array.
+
+  ```ts
+  import { test, expect } from 'vitest'
+
+  const johnInvoice = {
+    isActive: true,
+    customer: {
+      first_name: 'John',
+      last_name: 'Doe',
+      location: 'China',
+    },
+    total_amount: 5000,
+    items: [
+      {
+        type: 'apples',
+        quantity: 10,
+      },
+      {
+        type: 'oranges',
+        quantity: 5,
+      }
+    ]
+  }
+
+  const johnDetails = {
+    customer: {
+      first_name: 'John',
+      last_name: 'Doe',
+      location: 'China',
+    }
+  }
+
+  test('invoice has john personal details', () => {
+    expect(johnInvoice).toMatchObject(johnDetails)
+  })
+
+  test('the number of elements must match exactly', () => {
+    // Assert that an array of object matches
+    expect([{ foo: 'bar' }, { baz: 1 }]).toMatchObject([
+      { foo: 'bar' },
+      { baz: 1 },
+    ])
+  })
+  ```
+
 ### toThrowError
+
+- **Type:** `(received: any) => Awaitable<void>`
+
+  `toThrowError` asserts if a function throws an error when it is called.
+
+  For example, if we want to test that `getFruitStock('pineapples')` throws, because pineapples is not good for people with diabetes, we could write:
+
+  You can provide an optional argument to test that a specific error is thrown:
+
+  - regular expression: error message matches the pattern
+  - string: error message includes the substring
+
+  :::tip
+    You must wrap the code in a function, otherwise the error will not be caught and the assertion will fail.
+  :::
+
+  ```ts
+  import { test, expect } from 'vitest'
+  
+  function getFruitStock(type) {
+    if (type === 'pineapples') {
+      throw new DiabetesError('Pineapples is not good for people with diabetes')
+    }
+    // Do some other stuff
+  }
+
+  test('throws on pineapples', () => {
+    // Test that the error message says "diabetes" somewhere: these are equivalent
+    expect(() => getFruitStock('pineapples')).toThrowError(/diabetes/)
+    expect(() => getFruitStock('pineapples')).toThrowError('diabetes')
+
+    // Test the exact error message
+    expect(() => getFruitStock('pineapples')).toThrowError(
+      /^Pineapples is not good for people with diabetes$/,
+    )
+  })
+  ```
 
 // snapshots
 
@@ -730,7 +922,7 @@ TODO
       // should be called on select
       expect(data).toBeTruthy();
     })
-    // if not awated, test will fail
+    // if not awaited, test will fail
     // if you dont have expect.hasAssertions(), test will pass
     await select(3)
   })
