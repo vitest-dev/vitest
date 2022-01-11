@@ -111,8 +111,9 @@ export function deepMerge(target: any, source: any): any {
 }
 
 /**
- * If code starts with a function call, will return its arguments and body.
+ * If code starts with a function call, will return its last index, respecting arguments.
  * This will return 25 - last ending character of toMatch ")"
+ * Also works with callbacks
  * ```
  * toMatch({ test: '123' });
  * toBeAliased('123')
@@ -120,7 +121,7 @@ export function deepMerge(target: any, source: any): any {
  */
 export function getCallLastIndex(code: string) {
   let charIndex = -1
-  let inString: string | null = null //
+  let inString: string | null = null
   let startedBracers = 0
   let endedBracers = 0
   let beforeChar: string | null = null
