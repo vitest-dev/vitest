@@ -72,13 +72,14 @@ const changeViewMode = (view: Params['view']) => {
         </button>
       </div>
     </div>
-    <Splitpanes :push-other-panes="false" horizontal @resize="onResize">
-      <Pane>
+
+    <Splitpanes :push-other-panes="false" horizontal overflow-hidden max-h-full @resize="paneSize = $event[0].size">
+      <Pane :min-size="40" :size="showOutput ? 60 : 80">
         <ViewModuleGraph v-show="viewMode === 'graph'" :graph="graph" />
         <ViewEditor v-if="viewMode === 'editor'" :file="current" />
         <ViewReport v-else-if="!viewMode" :file="current" />
       </Pane>
-      <Pane>
+      <Pane :min-size="20" :size="showOutput ? 40 : 20">
         <ConsoleOutput v-model="showOutput" :file="current" />
       </Pane>
     </Splitpanes>
