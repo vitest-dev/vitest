@@ -61,15 +61,43 @@ function getTests(suite: Arrayable<Task>): Test[] {
 </script>
 
 <template>
-  <div v-if="isConnected" h-full flex="~ col" items-center justify-center gap-y-1 p-y-2 border="t base">
-    <ProgressBar :total="files.length" :failed="failed.length" :pass="success.length" :in-progress="!finished">
-      Test Files <span text-red5>{{ failed.length }} failed</span> | <span text-green5>{{ success.length }} passed</span> | <span text-yellow5>{{ running.length }} running</span> <span c-gray op-75>({{ files.length }})</span>
-    </ProgressBar>
-    <ProgressBar :total="totalTests" :failed="testsFailed.length" :pass="testsSuccess.length" :in-progress="!finished">
-      Tests <span text-red5>{{ testsFailed.length }} failed</span> | <span text-green5>{{ testsSuccess.length }} passed</span> | <span text-yellow5>{{ testsSkipped.length }} skipped</span> | <span c-gray op-75>{{ testsTodo.length }} todo</span> <span c-gray op-75>({{ tests.length }})</span>
-    </ProgressBar>
-    <div text-center text-xs>
-      Time: {{ time }}
+  <div v-if="isConnected" h="full" flex="~ col">
+    <div
+      p="2"
+      h-10
+      flex="~ gap-2"
+      items-center
+      bg-header
+      border="b base"
+    >
+      <div class="i-carbon-dashboard" />
+      <span
+        font-light
+        text-sm
+        flex-auto
+        ws-nowrap
+        overflow-hidden
+        truncate
+      >Summary</span>
+      <!-- TODO: add search for entries -->
+    </div>
+    <div class="scrolls" flex-auto py-1>
+      <div grid="~ auto-rows">
+        <div>
+          <ProgressBar :total="files.length" :failed="failed.length" :pass="success.length" :in-progress="!finished">
+            Test Files <span text-red5>{{ failed.length }} failed</span> | <span text-green5>{{ success.length }} passed</span> | <span text-yellow5>{{ running.length }} running</span> <span c-gray op-75>({{ files.length }})</span>
+          </ProgressBar>
+          <ProgressBar :total="totalTests" :failed="testsFailed.length" :pass="testsSuccess.length" :in-progress="!finished">
+            Tests <span text-red5>{{ testsFailed.length }} failed</span> | <span text-green5>{{ testsSuccess.length }} passed</span> | <span text-yellow5>{{ testsSkipped.length }} skipped</span> | <span c-gray op-75>{{ testsTodo.length }} todo</span> <span c-gray op-75>({{ tests.length }})</span>
+          </ProgressBar>
+          <div text-center text-xs>
+            Time: {{ time }}
+          </div>
+        </div>
+        <div>TODO: Group chart files</div>
+        <div>TODO: Group chart tests</div>
+        <div>TODO: Coverage chart?</div>
+      </div>
     </div>
   </div>
 </template>

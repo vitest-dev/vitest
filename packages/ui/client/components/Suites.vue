@@ -23,7 +23,7 @@ const name = computed(() => current.value?.name.split(/\//g).pop())
           {{ name }}
         </span>
         <div class="flex text-lg">
-          <IconButton icon="i-carbon-play" @click="runCurrent()" />
+          <IconButton title="Run current test" icon="i-carbon-play" @click="runCurrent()" />
         </div>
       </template>
     </TasksList>
