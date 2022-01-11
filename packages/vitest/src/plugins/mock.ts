@@ -51,6 +51,7 @@ export const MocksPlugin = (): Plugin => {
         if (lastIndex === null) continue
 
         const startIndex = mockResult.index!
+        const endIndex = startIndex + lastIndex
 
         const filepath = await this.resolve(path, id)
 
@@ -59,8 +60,8 @@ export const MocksPlugin = (): Plugin => {
         const overwrite = getMethodCall('mock', filepath?.id || path, path)
 
         m.overwrite(startIndex, startIndex + declaration.length, overwrite)
-        m.prepend(m.slice(startIndex, startIndex + lastIndex))
-        m.remove(startIndex, startIndex + lastIndex)
+        m.prepend(m.slice(startIndex, endIndex))
+        m.remove(startIndex, endIndex)
       }
 
       if (m) {
