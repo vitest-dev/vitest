@@ -5,7 +5,7 @@ const name = computed(() => current.value?.name.split(/\//g).pop())
 </script>
 
 <template>
-  <div v-if="current" border="r base">
+  <div v-if="current" h-full border="r base">
     <TasksList
       :tasks="current.tasks"
       :nested="true"
