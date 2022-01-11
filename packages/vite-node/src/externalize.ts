@@ -1,8 +1,9 @@
 import { existsSync } from 'fs'
-import { isValidNodeImport } from 'mlly'
-import type { ResolvedConfig } from '../types'
+import { isNodeBuiltin, isValidNodeImport } from 'mlly'
+import type { ExternalizeOptions } from './types'
+import { slash } from './utils'
 
-const ESM_EXT_RE = /\.(es|esm|esm-browser|esm-bundler|es6)\.js$/
+const ESM_EXT_RE = /\.(es|esm|esm-browser|esm-bundler|es6|module)\.js$/
 const ESM_FOLDER_RE = /\/esm\/(.*\.js)$/
 
 const defaultInline = [
@@ -44,10 +45,28 @@ export function guessCJSversion(id: string): string | undefined {
   }
 }
 
-export async function shouldExternalize(id: string, config: Pick<ResolvedConfig, 'depsInline' | 'depsExternal' | 'fallbackCJS'>) {
-  if (matchExternalizePattern(id, config.depsInline))
+export async function shouldExternalize(
+  id: string,
+  config?: ExternalizeOptions,
+  cache = new Map<string, Promise<string | false>>(),
+) {
+  if (!cache.has(id))
+    cache.set(id, _shouldExternalize(id, config))
+  return cache.get(id)!
+}
+
+async function _shouldExternalize(
+  id: string,
+  config?: ExternalizeOptions,
+): Promise<string | false> {
+  if (isNodeBuiltin(id))
+    return id
+
+  id = patchWindowsImportPath(id)
+
+  if (matchExternalizePattern(id, config?.inline))
     return false
-  if (matchExternalizePattern(id, config.depsExternal))
+  if (matchExternalizePattern(id, config?.external))
     return id
 
   const isNodeModule = id.includes('/node_modules/')
@@ -65,7 +84,9 @@ export async function shouldExternalize(id: string, config: Pick<ResolvedConfig,
   return false
 }
 
-function matchExternalizePattern(id: string, patterns: (string | RegExp)[]) {
+function matchExternalizePattern(id: string, patterns?: (string | RegExp)[]) {
+  if (!patterns)
+    return false
   for (const ex of patterns) {
     if (typeof ex === 'string') {
       if (id.includes(`/node_modules/${ex}/`))
@@ -77,4 +98,13 @@ function matchExternalizePattern(id: string, patterns: (string | RegExp)[]) {
     }
   }
   return false
+}
+
+function patchWindowsImportPath(path: string) {
+  if (path.match(/^\w:\\/))
+    return `file:///${slash(path)}`
+  else if (path.match(/^\w:\//))
+    return `file:///${path}`
+  else
+    return path
 }

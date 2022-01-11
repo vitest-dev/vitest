@@ -7,10 +7,9 @@ import { WebSocketServer } from 'ws'
 import type { ModuleNode } from 'vite'
 import { API_PATH } from '../constants'
 import type { Vitest } from '../node'
-import type { File, Reporter, TaskResultPack } from '../types'
-import { shouldExternalize } from '../utils/externalize'
+import type { File, ModuleGraphData, Reporter, TaskResultPack } from '../types'
 import { interpretSourcePos, parseStacktrace } from '../utils/source-map'
-import type { WebSocketEvents, WebSocketHandlers } from './types'
+import type { TransformResultWithSource, WebSocketEvents, WebSocketHandlers } from './types'
 
 export function setup(ctx: Vitest) {
   const wss = new WebSocketServer({ noServer: true })
@@ -32,8 +31,8 @@ export function setup(ctx: Vitest) {
   })
 
   function setupClient(ws: WebSocket) {
-    const rpc = createBirpc<WebSocketHandlers, WebSocketEvents>({
-      functions: {
+    const rpc = createBirpc<WebSocketEvents, WebSocketHandlers>(
+      {
         getFiles() {
           return ctx.state.getFiles()
         },
@@ -51,46 +50,61 @@ export function setup(ctx: Vitest) {
         getConfig() {
           return ctx.config
         },
-        async getModuleGraph(id: string) {
+        async getTransformResult(id) {
+          const result: TransformResultWithSource | null | undefined = await ctx.vitenode.transformRequest(id)
+          if (result) {
+            try {
+              result.source = result.source || (await fs.readFile(id, 'utf-8'))
+            }
+            catch {}
+            return result
+          }
+        },
+        async getModuleGraph(id: string): Promise<ModuleGraphData> {
           const graph: Record<string, string[]> = {}
+          const externalized = new Set<string>()
+          const inlined = new Set<string>()
+
           function clearId(id?: string | null) {
             return id?.replace(/\?v=\w+$/, '') || ''
           }
-          function get(mod?: ModuleNode, seen = new Set<any>()) {
-            if (!mod || !mod.id || seen.has(mod))
+          async function get(mod?: ModuleNode, seen = new Map<ModuleNode, string>()) {
+            if (!mod || !mod.id)
               return
-            seen.add(mod)
+            if (seen.has(mod))
+              return seen.get(mod)
+            let id = clearId(mod.id)
+            seen.set(mod, id)
+            const rewrote = await ctx.vitenode.shouldExternalize(id)
+            if (rewrote) {
+              id = rewrote
+              externalized.add(id)
+              seen.set(mod, id)
+            }
+            else {
+              inlined.add(id)
+            }
             const mods = Array.from(mod.importedModules).filter(i => i.id && !i.id.includes('/vitest/dist/'))
-            graph[clearId(mod.id)] = mods.map(i => clearId(i.id)) as string[]
-            mods.forEach(m => get(m, seen))
+            graph[id] = (await Promise.all(mods.map(m => get(m, seen)))).filter(Boolean) as string[]
+            return id
           }
-          get(ctx.server.moduleGraph.getModuleById(id))
-          const externalized: string[] = []
-          const inlined: string[] = []
-          await Promise.all(Object.keys(graph).map(async(i) => {
-            const rewrote = await shouldExternalize(i, ctx.config)
-            if (rewrote)
-              externalized.push(rewrote)
-            else
-              inlined.push(i)
-          }))
+          await get(ctx.server.moduleGraph.getModuleById(id))
           return {
             graph,
-            externalized,
-            inlined,
+            externalized: Array.from(externalized),
+            inlined: Array.from(inlined),
           }
         },
       },
-      post(msg) {
-        ws.send(msg)
+      {
+
+        post: msg => ws.send(msg),
+        on: fn => ws.on('message', fn),
+        eventNames: ['onCollected'],
+        serialize: stringify,
+        deserialize: parse,
       },
-      on(fn) {
-        ws.on('message', fn)
-      },
-      eventNames: ['onCollected'],
-      serialize: stringify,
-      deserialize: parse,
-    })
+    )
 
     clients.set(ws, rpc)
 

@@ -235,6 +235,19 @@ Silent mode
 
 Path to setup files
 
+### globalSetup
+
+- **Type:** `string | string[]`
+
+Path to global setup files, relative to project root
+
+A global setup file can either export named functions `setup` and `teardown` or a `default` function that returns a teardown function ([example](https://github.com/vitest-dev/vitest/blob/main/test/global-setup/vitest.config.ts)).
+
+::: info
+Multiple globalSetup files are possible. setup and teardown are executed sequentially with teardown in reverse order.
+:::
+
+
 ### watchIgnore
 
 - **Type:** `(string | RegExp)[]`
@@ -291,3 +304,44 @@ Will call `.mockReset()` on all spies before each test
 
 Will call `.mockRestore()` on all spies before each test
 
+### transformMode
+
+- **Type:** `{ web?, ssr? }`
+
+Determine the transform method of modules
+
+#### transformMode.ssr
+
+- **Type:** `RegExp[]`
+- **Default:** `[/\.([cm]?[jt]sx?|json)$/]`
+
+Use SSR transform pipeline for the specified files.<br>
+Vite plugins will receive `ssr: true` flag when processing those files.
+
+#### transformMode.web
+
+- **Type:** `RegExp[]`
+- **Default:** *modules other than those specified in `transformMode.ssr`*
+
+First do a normal transform pipeline (targeting browser), then then do a SSR rewrite to run the code in Node.<br>
+Vite plugins will receive `ssr: false` flag when processing those files.
+
+When you use JSX as component models other than React (e.g. Vue JSX or SolidJS), you might want to config as following to make `.tsx` / `.jsx` transformed as client-side components:
+
+```ts
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  test: {
+    transformMode: {
+      web: [/\.[jt]sx$/],
+    },
+  },
+})
+```
+
+### snapshotFormat
+
+- **Type:** `PrettyFormatOptions`
+
+Format options for snapshot testing.

@@ -20,7 +20,7 @@ export const current = computed(() => files.value.find(file => file.id === activ
 
 export const isConnected = computed(() => status.value === 'OPEN')
 export const isConnecting = computed(() => status.value === 'CONNECTING')
-export const isDisconned = computed(() => status.value === 'CLOSED')
+export const isDisconnected = computed(() => status.value === 'CLOSED')
 
 export function runAll() {
   return runFiles(client.state.getFiles())
@@ -60,3 +60,22 @@ watch(
   },
   { immediate: true },
 )
+
+// display the first file on init
+if (!activeFileId.value) {
+  const stop = watch(
+    () => client.state.getFiles(),
+    (files) => {
+      if (activeFileId.value) {
+        stop()
+        return
+      }
+
+      if (files.length && files[0].id) {
+        activeFileId.value = files[0].id
+        stop()
+      }
+    },
+    { immediate: true },
+  )
+}

@@ -17,7 +17,9 @@ For compatibility with Jest, `TestFunction` can also be of type `(done: DoneCall
 - **Type:** `(name: string, fn: TestFunction, timeout?: number) => void`
 - **Alias:** `it`
 
-  `test` defines a set of related expectations. Default timeout for tests is 5 seconds, and can be configured globally with [testTimeout](../config/#testtimeout).
+  `test` defines a set of related expectations. It receives the test name and a function that holds the expectations to test.
+  
+  Optionally, you can provide a timeout (in milliseconds) for specifying how long to wait before terminating. The default is 5 seconds, and can be configured globally with [testTimeout](../config/#testtimeout)
 
   ```ts
   import { test, expect } from 'vitest'
@@ -30,10 +32,13 @@ For compatibility with Jest, `TestFunction` can also be of type `(done: DoneCall
 ### test.skip
 
 - **Type:** `(name: string, fn: TestFunction, timeout?: number) => void`
+- **Alias:** `it.skip`
 
-  Use `.skip` to avoid running certain tests
+  If you want to skip running certain tests, but you don't want to delete the code due to any reason, you can use `test.skip` to avoid running them.
 
   ```ts
+  import { test, assert } from 'vitest'
+
   test.skip("skipped test", () => {
     // Test skipped, no error
     assert.equal(Math.sqrt(4), 3);
@@ -43,10 +48,15 @@ For compatibility with Jest, `TestFunction` can also be of type `(done: DoneCall
 ### test.only
 
 - **Type:** `(name: string, fn: TestFunction, timeout?: number) => void`
+- **Alias:** `it.only`
 
-  Use `.only` to only run certain tests in a given suite
+  Use `test.only` to only run certain tests in a given suite. This is useful when debugging.
+
+  Optionally, you can provide a timeout (in milliseconds) for specifying how long to wait before terminating. The default is 5 seconds, and can be configured globally with [testTimeout](../config/#testtimeout).
 
   ```ts
+  import { test, assert } from 'vitest'
+
   test.only("test", () => {
     // Only this test (and others marked with only) are run
     assert.equal(Math.sqrt(4), 2);
@@ -56,10 +66,13 @@ For compatibility with Jest, `TestFunction` can also be of type `(done: DoneCall
 ### test.concurrent
 
 - **Type:** `(name: string, fn: TestFunction, timeout?: number) => void`
+- **Alias:** `it.concurrent`
 
-  `.concurrent` marks consecutive tests to be run them in parallel. It receives the test name, an async function with the tests to collect, and an optional timeout (in milliseconds).
+  `test.concurrent` marks consecutive tests to be run them in parallel. It receives the test name, an async function with the tests to collect, and an optional timeout (in milliseconds).
 
   ```ts
+  import { describe, test } from 'vitest'
+
   // The two tests marked with concurrent will be run in parallel
   describe("suite", () => {
     test("serial test", async() => { /* ... */ });
@@ -68,7 +81,7 @@ For compatibility with Jest, `TestFunction` can also be of type `(done: DoneCall
   });
   ```
 
-  `.skip`, `.only`, and `.todo` works with concurrent tests. All the following combinations are valid:
+  `test.skip`, `test.only`, and `test.todo` works with concurrent tests. All the following combinations are valid:
 
   ```ts
   test.concurrent(...)
@@ -80,8 +93,9 @@ For compatibility with Jest, `TestFunction` can also be of type `(done: DoneCall
 ### test.todo
 
 - **Type:** `(name: string) => void`
+- **Alias:** `it.todo`
 
-  Use `.todo` to stub tests to be implemented later
+  Use `test.todo` to stub tests to be implemented later. An entry will be shown in the report for the tests so you know how many tests you still need to implement.
 
   ```ts
   // An entry will be shown in the report for this test
@@ -92,13 +106,66 @@ For compatibility with Jest, `TestFunction` can also be of type `(done: DoneCall
 
 When you use `test` in the top level of file, they are collected as part of the implicit suite for it. Using `describe` you can define a new suite in the current context, as a set of related tests and other nested suites. A suite lets you organize your tests so reports are more clear.
 
-### describe.skip
+  ```ts
+  import { describe, test } from 'vitest'
 
-- **Type:** `(name: string, fn: TestFunction, timeout?: number) => void`
+  const person = {
+    isActive: true,
+    age: 32,
+  };
 
-  Use `.skip` in a suite to avoid running it
+  describe('person', () => {
+    test('person is defined', () => {
+      expect(person).toBeDefined()
+    });
+
+    test('is active', () => {
+      expect(person.isActive).toBeTruthy();
+    });
+
+    test('age limit', () => {
+      expect(person.age).toBeLessThanOrEqual(32);
+    });
+  });
+  ```
+
+  You can also nest describe blocks if you have a hierarchy of tests:
 
   ```ts
+  import { describe, test, expect } from 'vitest'
+
+  const numberToCurrency = (value) => {
+    if (typeof value !== 'number') {
+        throw new Error(`Value must be a number`);
+    }
+
+    return value.toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  }
+  
+  describe('numberToCurrency', () => {
+    describe('given an invalid number', () => {
+      test('composed of non-numbers to throw error', () => {
+        expect(() => numberToCurrency('abc')).toThrow();
+      });
+    });
+  
+    describe('given a valid number', () => {
+      test('returns the correct currency format', () => {
+        expect(numberToCurrency(10000)).toBe('10,000.00');
+      });
+    });
+  });
+  ```
+
+### describe.skip
+
+- **Type:** `(name: string, fn: TestFunction) => void`
+
+  Use `describe.skip` in a suite to avoid running a particular describe block.
+
+  ```ts
+  import { describe, test } from 'vitest'
+
   describe.skip("skipped suite", () => {
     test("sqrt", () => {
       // Suite skipped, no error
@@ -109,9 +176,9 @@ When you use `test` in the top level of file, they are collected as part of the 
 
 ### describe.only
 
-- **Type:** `(name: string, fn: TestFunction, timeout?: number) => void`
+- **Type:** `(name: string, fn: TestFunction) => void`
 
-  Use `.only` to only run certain suites
+  Use `describe.only` to only run certain suites
 
   ```ts
   // Only this suite (and others marked with only) are run
@@ -120,13 +187,17 @@ When you use `test` in the top level of file, they are collected as part of the 
       assert.equal(Math.sqrt(4), 3);
     });
   });
+
+  describe('other suite', () => {
+    // ... will be skipped
+  });
   ```
 
 ### describe.concurrent
 
 - **Type:** `(name: string, fn: TestFunction, timeout?: number) => void`
 
-  `.concurrent` in a suite marks every tests as concurrent
+  `describe.concurrent` in a suite marks every tests as concurrent
 
   ```ts
   // All tests within this suite will be run in parallel
@@ -150,7 +221,7 @@ When you use `test` in the top level of file, they are collected as part of the 
 
 - **Type:** `(name: string) => void`
 
-  Use `.todo` to stub suites to be implemented later
+  Use `describe.todo` to stub suites to be implemented later. An entry will be shown in the report for the tests so you know how many tests you still need to implement.
 
   ```ts
   // An entry will be shown in the report for this suite

@@ -1,4 +1,5 @@
 import { expect, test } from 'vitest'
+import { testOutsideInlineSnapshot } from './snapshots-outside'
 
 test('snapshot', () => {
   expect({
@@ -6,15 +7,20 @@ test('snapshot', () => {
   }).toMatchSnapshot()
 })
 
+test('outside snapshot', () => {
+  testOutsideInlineSnapshot()
+})
+
 test('inline snapshot', () => {
   expect('inline string').toMatchInlineSnapshot('"inline string"')
   expect({ foo: { type: 'object', map: new Map() } }).toMatchInlineSnapshot(`
-{
-  "foo": {
-    "map": Map {},
-    "type": "object",
-  },
-}`)
+    {
+      "foo": {
+        "map": Map {},
+        "type": "object",
+      },
+    }
+    `)
 })
 
 test('snapshot with big array', () => {
@@ -59,8 +65,54 @@ test('throwing inline snapshots', () => {
     // eslint-disable-next-line no-throw-literal
     throw { error: 'omega' }
   }).toThrowErrorMatchingInlineSnapshot(`
-{
-  "error": "omega",
-}
-`)
+    {
+      "error": "omega",
+    }
+    `)
+})
+
+test('properties snapshot', () => {
+  const user = {
+    createdAt: new Date(),
+    id: Math.floor(Math.random() * 20),
+    name: 'LeBron James',
+  }
+
+  expect(user).toMatchSnapshot({
+    createdAt: expect.any(Date),
+    id: expect.any(Number),
+    name: expect.stringContaining('LeBron'),
+  })
+})
+
+test.fails('properties snapshot fails', () => {
+  const user = {
+    createdAt: new Date(),
+    id: Math.floor(Math.random() * 20),
+    name: 'LeBron James',
+  }
+
+  expect(user).toMatchSnapshot({
+    createdAt: expect.any(Date),
+    id: expect.any(String),
+  })
+})
+
+test('properties inline snapshot', () => {
+  const user = {
+    createdAt: new Date(),
+    id: Math.floor(Math.random() * 20),
+    name: 'LeBron James',
+  }
+
+  expect(user).toMatchInlineSnapshot({
+    createdAt: expect.any(Date),
+    id: expect.any(Number),
+  }, `
+    {
+      "createdAt": Any<Date>,
+      "id": Any<Number>,
+      "name": "LeBron James",
+    }
+    `)
 })

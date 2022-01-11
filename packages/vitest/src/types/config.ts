@@ -1,6 +1,8 @@
 import type { CommonServerOptions } from 'vite'
+import type { PrettyFormatOptions } from 'pretty-format'
 import type { BuiltinReporters } from '../reporters'
 import type { C8Options, ResolvedC8Options } from '../coverage'
+import type { JSDOMOptions } from './jsdom-options'
 import type { Reporter } from './reporter'
 import type { SnapshotStateOptions } from './snapshot'
 import type { Arrayable } from './general'
@@ -8,6 +10,15 @@ import type { Arrayable } from './general'
 export type BuiltinEnvironment = 'node' | 'jsdom' | 'happy-dom'
 
 export type ApiConfig = Pick<CommonServerOptions, 'port' | 'strictPort' | 'host'>
+
+export { JSDOMOptions }
+
+export interface EnvironmentOptions {
+  /**
+   * jsdom options.
+   */
+  jsdom?: JSDOMOptions
+}
 
 export interface InlineConfig {
   /**
@@ -77,7 +88,12 @@ export interface InlineConfig {
   environment?: BuiltinEnvironment
 
   /**
-   * Update snapshot files
+   * Environment options.
+   */
+  environmentOptions?: EnvironmentOptions
+
+  /**
+   * Update snapshot
    *
    * @default false
    */
@@ -92,6 +108,8 @@ export interface InlineConfig {
 
   /**
    * Project root
+   *
+   * @default process.cwd()
    */
   root?: string
 
@@ -148,6 +166,11 @@ export interface InlineConfig {
   setupFiles?: string | string[]
 
   /**
+   * Path to global setup files
+   */
+  globalSetup?: string | string[]
+
+  /**
    * Pattern of file paths to be ignore from triggering watch rerun
    *
    * @default ['**\/node_modules\/**', '**\/dist/**']
@@ -202,7 +225,40 @@ export interface InlineConfig {
    * Open Vitest UI
    * @internal WIP
    */
-  open?: boolean
+  ui?: boolean
+
+  /**
+   * Base url for the UI
+   *
+   * @default '/__vitest__/'
+   */
+  uiBase?: string
+
+  /**
+   * Determine the transform method of modules
+   */
+  transformMode?: {
+    /**
+     * Use SSR transform pipeline for the specified files.
+     * Vite plugins will receive `ssr: true` flag when processing those files.
+     *
+     * @default [/\.([cm]?[jt]sx?|json)$/]
+     */
+    ssr?: RegExp[]
+    /**
+     * First do a normal transform pipeline (targeting browser),
+     * then then do a SSR rewrite to run the code in Node.
+     * Vite plugins will receive `ssr: false` flag when processing those files.
+     *
+     * @default other than `ssr`
+     */
+    web?: RegExp[]
+  }
+
+  /**
+   * Format options for snapshot testing.
+   */
+  snapshotFormat?: PrettyFormatOptions
 }
 
 export interface UserConfig extends InlineConfig {
@@ -239,15 +295,12 @@ export interface UserConfig extends InlineConfig {
 }
 
 export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api'> {
+  base?: string
+
   config?: string
   filters?: string[]
   testNamePattern?: RegExp
   related?: string[]
-
-  depsInline: (string | RegExp)[]
-  depsExternal: (string | RegExp)[]
-  fallbackCJS: boolean
-  interpretDefault: boolean
 
   coverage: ResolvedC8Options
   snapshotOptions: SnapshotStateOptions

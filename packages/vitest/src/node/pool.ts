@@ -7,7 +7,6 @@ import type { RawSourceMap } from 'source-map-js'
 import { createBirpc } from 'birpc'
 import { distDir } from '../constants'
 import type { WorkerContext, WorkerRPC } from '../types'
-import { transformRequest } from './transform'
 import type { Vitest } from './index'
 
 export type RunWithFiles = (files: string[], invalidates?: string[]) => Promise<void>
@@ -105,8 +104,8 @@ function createChannel(ctx: Vitest) {
   const port = channel.port2
   const workerPort = channel.port1
 
-  createBirpc<WorkerRPC>({
-    functions: {
+  createBirpc<{}, WorkerRPC>(
+    {
       onWorkerExit(code) {
         process.exit(code || 1)
       },
@@ -119,12 +118,11 @@ function createChannel(ctx: Vitest) {
           if (mod)
             ctx.server.moduleGraph.invalidateModule(mod)
         }
-        const r = await transformRequest(ctx, id)
+        const r = await ctx.vitenode.transformRequest(id)
         return r?.map as RawSourceMap | undefined
       },
-      async fetch(id) {
-        const r = await transformRequest(ctx, id)
-        return r?.code
+      fetch(id) {
+        return ctx.vitenode.fetchModule(id)
       },
       onCollected(files) {
         ctx.state.collectFiles(files)
@@ -138,13 +136,15 @@ function createChannel(ctx: Vitest) {
         ctx.report('onUserConsoleLog', msg)
       },
     },
-    post(v) {
-      port.postMessage(v)
+    {
+      post(v) {
+        port.postMessage(v)
+      },
+      on(fn) {
+        port.on('message', fn)
+      },
     },
-    on(fn) {
-      port.on('message', fn)
-    },
-  })
+  )
 
   return { workerPort, port }
 }

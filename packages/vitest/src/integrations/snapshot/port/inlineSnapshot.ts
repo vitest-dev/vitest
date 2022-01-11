@@ -1,9 +1,10 @@
 import { promises as fs } from 'fs'
 import type MagicString from 'magic-string'
+import detectIndent from 'detect-indent'
 import { rpc } from '../../../runtime/rpc'
 import { getOriginalPos, posToNumber } from '../../../utils/source-map'
 
-export type InlineSnapshot = {
+export interface InlineSnapshot {
   snapshot: string
   file: string
   line: number
@@ -24,7 +25,8 @@ export async function saveInlineSnapshots(
     for (const snap of snaps) {
       const pos = await getOriginalPos(map, snap)
       const index = posToNumber(code, pos!)
-      replaceInlineSnap(code, s, index, snap.snapshot) // TODO: support indent: ' '.repeat(4))
+      const { indent } = detectIndent(code.slice(index - pos!.column))
+      replaceInlineSnap(code, s, index, snap.snapshot, indent)
     }
 
     const transformed = s.toString()
@@ -33,21 +35,71 @@ export async function saveInlineSnapshots(
   }))
 }
 
-const startRegex = /toMatchInlineSnapshot\s*\(\s*(['"`\)])/m
-export function replaceInlineSnap(code: string, s: MagicString, index: number, newSnap: string, indent = '') {
-  const startMatch = startRegex.exec(code.slice(index))
+const startObjectRegex = /(?:toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot)\s*\(\s*({)/m
+
+function getEndIndex(code: string) {
+  let charIndex = -1
+  let inString: string | null = null //
+  let startedBracers = 0
+  let endedBracers = 0
+  let beforeChar: string | null = null
+  while (charIndex <= code.length) {
+    beforeChar = code[charIndex]
+    charIndex++
+    const char = code[charIndex]
+
+    const isCharString = char === '"' || char === '\'' || char === '`'
+
+    if (isCharString && beforeChar !== '\\')
+      inString = inString === char ? null : char
+
+    if (!inString) {
+      if (char === '(')
+        startedBracers++
+      if (char === ')')
+        endedBracers++
+    }
+
+    if (startedBracers && endedBracers && startedBracers === endedBracers)
+      return charIndex
+  }
+  return null
+}
+
+function replaceObjectSnap(code: string, s: MagicString, index: number, newSnap: string, indent = '') {
+  code = code.slice(index)
+  const startMatch = startObjectRegex.exec(code)
   if (!startMatch)
     return false
 
-  newSnap = newSnap.replace(/\\/g, '\\\\')
+  code = code.slice(startMatch.index)
+  const charIndex = getEndIndex(code)
+  if (charIndex === null)
+    return false
+
+  s.appendLeft(index + startMatch.index + charIndex, `, ${prepareSnapString(newSnap, indent)}`)
+
+  return true
+}
+
+function prepareSnapString(snap: string, indent: string) {
+  snap = snap.replace(/\\/g, '\\\\')
     .split('\n')
     .map(i => (indent + i).trimEnd())
     .join('\n')
+  const isOneline = !snap.includes('\n')
+  return isOneline
+    ? `'${snap.replace(/'/g, '\\\'').trim()}'`
+    : `\`${snap.replace(/`/g, '\\`').trimEnd()}\n${indent}\``
+}
 
-  const isOneline = !newSnap.includes('\n')
-  const snapString = isOneline
-    ? `'${newSnap.replace(/'/g, '\\\'').trim()}'`
-    : `\`${newSnap.replace(/`/g, '\\`').trimEnd()}\``
+const startRegex = /(?:toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot)\s*\(\s*(['"`\)])/m
+export function replaceInlineSnap(code: string, s: MagicString, index: number, newSnap: string, indent = '') {
+  const startMatch = startRegex.exec(code.slice(index))
+  if (!startMatch)
+    return replaceObjectSnap(code, s, index, newSnap, indent)
+
+  const snapString = prepareSnapString(newSnap, indent)
 
   const quote = startMatch[1]
 

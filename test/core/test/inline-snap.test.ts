@@ -17,7 +17,8 @@ expect('foo').toMatchInlineSnapshot(\`{
 "
 expect('foo').toMatchInlineSnapshot('\\"bar\\"')
 expect('foo').toMatchInlineSnapshot(\`\\"bar
-foo\\"\`)
+foo\\"
+\`)
 "`)
   })
 })
