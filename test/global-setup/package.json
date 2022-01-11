@@ -1,0 +1,12 @@
+{
+  "name": "@vitest/test-global-setup",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest",
+    "coverage": "vitest --coverage"
+  },
+  "devDependencies": {
+    "vitest": "workspace:*"
+  }
+}

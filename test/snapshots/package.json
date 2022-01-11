@@ -1,0 +1,9 @@
+{
+  "name": "@vitest/snapshots",
+  "private": true,
+  "scripts": {
+    "test": "vitest",
+    "testu": "vitest -u",
+    "coverage": "vitest --coverage"
+  }
+}

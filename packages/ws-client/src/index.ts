@@ -45,8 +45,8 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
   ctx.state.idMap = reactive(ctx.state.idMap)
 
   let onMessage: Function
-  ctx.rpc = createBirpc<WebSocketEvents, WebSocketHandlers>({
-    functions: {
+  ctx.rpc = createBirpc<WebSocketHandlers, WebSocketEvents>(
+    {
       onCollected(files) {
         ctx.state.collectFiles(files)
         handlers.onCollected?.(files)
@@ -56,15 +56,13 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
         handlers.onTaskUpdate?.(packs)
       },
     },
-    post(msg) {
-      ctx.ws.send(msg)
+    {
+      post: msg => ctx.ws.send(msg),
+      on: fn => onMessage = fn,
+      serialize: stringify,
+      deserialize: parse,
     },
-    on(fn) {
-      onMessage = fn
-    },
-    serialize: stringify,
-    deserialize: parse,
-  })
+  )
 
   let openPromise: Promise<void>
 
