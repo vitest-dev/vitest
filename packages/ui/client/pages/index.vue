@@ -21,11 +21,10 @@ const onModuleResized = useDebounceFn((event: { size: number }[]) => {
 function resizeMain() {
   const width = window.innerWidth
   const panelWidth = Math.min(width / 3, 300)
-  const navW = width - panelWidth
-  const w = (100 * panelWidth) / width
-  mainSizes[0] = w
-  mainSizes[1] = 100 - w
-  detailSizes[0] = (100 * panelWidth) / navW
+  mainSizes[0] = (100 * panelWidth) / width
+  mainSizes[1] = 100 - mainSizes[0]
+  // initialize suite width with the same navigation panel width in pixels (adjust % inside detail's split pane)
+  detailSizes[0] = (100 * panelWidth) / (width - panelWidth)
   detailSizes[1] = 100 - detailSizes[0]
 }
 </script>
