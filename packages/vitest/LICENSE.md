@@ -1870,6 +1870,13 @@ Repository: micromatch/to-regex-range
 
 ---------------------------------------
 
+## vite-node
+License: MIT
+By: Anthony Fu
+Repository: git+https://github.com/vitest-dev/vitest.git
+
+---------------------------------------
+
 ## which
 License: ISC
 By: Isaac Z. Schlueter

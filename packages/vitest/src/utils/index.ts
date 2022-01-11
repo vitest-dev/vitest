@@ -1,9 +1,8 @@
-import { fileURLToPath, pathToFileURL } from 'url'
 import c from 'picocolors'
 import { isPackageExists } from 'local-pkg'
-import { dirname, resolve } from 'pathe'
+import { resolve } from 'pathe'
 import type { Suite, Task } from '../types'
-import { getNames, slash } from './tasks'
+import { getNames } from './tasks'
 
 export * from './tasks'
 export * from './path'
@@ -111,22 +110,87 @@ export function deepMerge(target: any, source: any): any {
   return target
 }
 
-export function toFilePath(id: string, root: string): string {
-  let absolute = slash(id).startsWith('/@fs/')
-    ? id.slice(4)
-    : id.startsWith(dirname(root))
-      ? id
-      : id.startsWith('/')
-        ? slash(resolve(root, id.slice(1)))
-        : id
+/**
+ * If code starts with a function call, will return its last index, respecting arguments.
+ * This will return 25 - last ending character of toMatch ")"
+ * Also works with callbacks
+ * ```
+ * toMatch({ test: '123' });
+ * toBeAliased('123')
+ * ```
+ */
+export function getCallLastIndex(code: string) {
+  let charIndex = -1
+  let inString: string | null = null
+  let startedBracers = 0
+  let endedBracers = 0
+  let beforeChar: string | null = null
+  while (charIndex <= code.length) {
+    beforeChar = code[charIndex]
+    charIndex++
+    const char = code[charIndex]
 
-  if (absolute.startsWith('//'))
-    absolute = absolute.slice(1)
+    const isCharString = char === '"' || char === '\'' || char === '`'
 
-  // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
-  return isWindows && absolute.startsWith('/')
-    ? fileURLToPath(pathToFileURL(absolute.slice(1)).href)
-    : absolute
+    if (isCharString && beforeChar !== '\\') {
+      if (inString === char)
+        inString = null
+      else if (!inString)
+        inString = char
+    }
+
+    if (!inString) {
+      if (char === '(')
+        startedBracers++
+      if (char === ')')
+        endedBracers++
+    }
+
+    if (startedBracers && endedBracers && startedBracers === endedBracers)
+      return charIndex
+  }
+  return null
+}
+
+export const getRangeStatus = (code: string, from: number, to: number) => {
+  let index = 0
+  let started = false
+  let ended = true
+  let inString: string | null = null
+  let beforeChar: string | null = null
+
+  while (index <= to) {
+    const char = code[index]
+    const sub = code[index] + code[index + 1]
+
+    const isCharString = char === '"' || char === '\'' || char === '`'
+
+    if (isCharString && beforeChar !== '\\') {
+      if (inString === char)
+        inString = null
+      else if (!inString)
+        inString = char
+    }
+
+    if (!inString && index >= from) {
+      if (sub === '/*') {
+        started = true
+        ended = false
+      }
+      if (sub === '*/' && started) {
+        started = false
+        ended = true
+      }
+    }
+
+    beforeChar = code[index]
+    index++
+  }
+
+  return {
+    insideComment: !ended,
+    insideString: inString !== null,
+  }
 }
 
 export { resolve as resolvePath }

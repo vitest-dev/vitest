@@ -1,7 +1,7 @@
 import { existsSync } from 'fs'
 import { isNodeBuiltin, isValidNodeImport } from 'mlly'
-import type { ResolvedConfig } from '../types'
-import { slash } from '../utils'
+import type { ExternalizeOptions } from './types'
+import { slash } from './utils'
 
 const ESM_EXT_RE = /\.(es|esm|esm-browser|esm-bundler|es6|module)\.js$/
 const ESM_FOLDER_RE = /\/esm\/(.*\.js)$/
@@ -47,7 +47,7 @@ export function guessCJSversion(id: string): string | undefined {
 
 export async function shouldExternalize(
   id: string,
-  config: Pick<ResolvedConfig, 'depsInline' | 'depsExternal' | 'fallbackCJS'>,
+  config?: ExternalizeOptions,
   cache = new Map<string, Promise<string | false>>(),
 ) {
   if (!cache.has(id))
@@ -57,16 +57,16 @@ export async function shouldExternalize(
 
 async function _shouldExternalize(
   id: string,
-  config: Pick<ResolvedConfig, 'depsInline' | 'depsExternal' | 'fallbackCJS'>,
+  config?: ExternalizeOptions,
 ): Promise<string | false> {
   if (isNodeBuiltin(id))
     return id
 
   id = patchWindowsImportPath(id)
 
-  if (matchExternalizePattern(id, config.depsInline))
+  if (matchExternalizePattern(id, config?.inline))
     return false
-  if (matchExternalizePattern(id, config.depsExternal))
+  if (matchExternalizePattern(id, config?.external))
     return id
 
   const isNodeModule = id.includes('/node_modules/')
@@ -84,7 +84,9 @@ async function _shouldExternalize(
   return false
 }
 
-function matchExternalizePattern(id: string, patterns: (string | RegExp)[]) {
+function matchExternalizePattern(id: string, patterns?: (string | RegExp)[]) {
+  if (!patterns)
+    return false
   for (const ex of patterns) {
     if (typeof ex === 'string') {
       if (id.includes(`/node_modules/${ex}/`))
@@ -98,7 +100,7 @@ function matchExternalizePattern(id: string, patterns: (string | RegExp)[]) {
   return false
 }
 
-export function patchWindowsImportPath(path: string) {
+function patchWindowsImportPath(path: string) {
   if (path.match(/^\w:\\/))
     return `file:///${slash(path)}`
   else if (path.match(/^\w:\//))

@@ -3,6 +3,7 @@ import type MagicString from 'magic-string'
 import detectIndent from 'detect-indent'
 import { rpc } from '../../../runtime/rpc'
 import { getOriginalPos, posToNumber } from '../../../utils/source-map'
+import { getCallLastIndex } from '../../../utils'
 
 export interface InlineSnapshot {
   snapshot: string
@@ -37,35 +38,6 @@ export async function saveInlineSnapshots(
 
 const startObjectRegex = /(?:toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot)\s*\(\s*({)/m
 
-function getEndIndex(code: string) {
-  let charIndex = -1
-  let inString: string | null = null //
-  let startedBracers = 0
-  let endedBracers = 0
-  let beforeChar: string | null = null
-  while (charIndex <= code.length) {
-    beforeChar = code[charIndex]
-    charIndex++
-    const char = code[charIndex]
-
-    const isCharString = char === '"' || char === '\'' || char === '`'
-
-    if (isCharString && beforeChar !== '\\')
-      inString = inString === char ? null : char
-
-    if (!inString) {
-      if (char === '(')
-        startedBracers++
-      if (char === ')')
-        endedBracers++
-    }
-
-    if (startedBracers && endedBracers && startedBracers === endedBracers)
-      return charIndex
-  }
-  return null
-}
-
 function replaceObjectSnap(code: string, s: MagicString, index: number, newSnap: string, indent = '') {
   code = code.slice(index)
   const startMatch = startObjectRegex.exec(code)
@@ -73,7 +45,7 @@ function replaceObjectSnap(code: string, s: MagicString, index: number, newSnap:
     return false
 
   code = code.slice(startMatch.index)
-  const charIndex = getEndIndex(code)
+  const charIndex = getCallLastIndex(code)
   if (charIndex === null)
     return false
 
