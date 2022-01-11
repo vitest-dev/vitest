@@ -30,7 +30,15 @@ function onItemClick(task: Task) {
         Vitest
       </span>
       <div class="flex text-lg">
-        <IconButton v-if="!summaryVisible" icon="i-carbon-dashboard" @click="showSummary(true)" />
+        <transition enter-active-class="animate-roll-in" leave-active-class="animate-slide-out-up">
+          <IconButton
+            v-show="!summaryVisible"
+            :class="summaryVisible ? '!animate-0.1s' : '!animate-0.3s'"
+            animate-count-1
+            icon="i-carbon-dashboard"
+            @click="showSummary(true)"
+          />
+        </transition>
         <IconButton icon="i-carbon-play" @click="runAll()" />
         <IconButton
           icon="dark:i-carbon-moon i-carbon-sun"
