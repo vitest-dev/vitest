@@ -17,12 +17,12 @@ importers:
       esbuild: '0.13'
       eslint: ^8.6.0
       esno: ^0.13.0
-      fast-glob: ^3.2.8
+      fast-glob: ^3.2.10
       magic-string: ^0.25.7
       node-fetch: ^3.1.0
       npm-run-all: ^4.1.5
       pathe: ^0.2.0
-      pnpm: ^6.25.0
+      pnpm: ^6.25.1
       rimraf: ^3.0.2
       rollup: ^2.63.0
       rollup-plugin-dts: ^4.1.0
@@ -47,12 +47,12 @@ importers:
       esbuild: 0.13.15
       eslint: 8.6.0
       esno: 0.13.0_typescript@4.5.4
-      fast-glob: 3.2.8
+      fast-glob: 3.2.10
       magic-string: 0.25.7
       node-fetch: 3.1.0
       npm-run-all: 4.1.5
       pathe: 0.2.0
-      pnpm: 6.25.0
+      pnpm: 6.25.1
       rimraf: 3.0.2
       rollup: 2.63.0
       rollup-plugin-dts: 4.1.0_rollup@2.63.0+typescript@4.5.4
@@ -354,7 +354,7 @@ importers:
       '@vueuse/core': ^7.5.3
       codemirror: ^5.65.0
       codemirror-theme-vars: ^0.1.1
-      d3-graph-controller: ^2.1.0
+      d3-graph-controller: ^2.2.0
       picocolors: ^1.0.0
       rollup: ^2.63.0
       sirv: ^2.0.0
@@ -378,7 +378,7 @@ importers:
       '@vueuse/core': 7.5.3_vue@3.2.26
       codemirror: 5.65.0
       codemirror-theme-vars: 0.1.1
-      d3-graph-controller: 2.1.0
+      d3-graph-controller: 2.2.0
       picocolors: 1.0.0
       rollup: 2.63.0
       splitpanes: 3.0.6
@@ -388,6 +388,25 @@ importers:
       vite-plugin-pages: 0.19.9_vite@2.7.10
       vue: 3.2.26
       vue-router: 4.0.12_vue@3.2.26
+
+  packages/vite-node:
+    specifiers:
+      '@types/minimist': ^1.2.2
+      kolorist: ^1.5.1
+      minimist: ^1.2.5
+      mlly: ^0.3.17
+      pathe: ^0.2.0
+      rollup: ^2.63.0
+      vite: ^2.7.10
+    dependencies:
+      kolorist: 1.5.1
+      minimist: 1.2.5
+      mlly: 0.3.17
+      pathe: 0.2.0
+      vite: 2.7.10
+    devDependencies:
+      '@types/minimist': 1.2.2
+      rollup: 2.63.0
 
   packages/vitest:
     specifiers:
@@ -401,7 +420,7 @@ importers:
       '@types/node': ^17.0.8
       '@types/prompts': ^2.4.0
       '@vitest/ui': workspace:*
-      birpc: ^0.0.2
+      birpc: ^0.1.0
       c8: ^7.11.0
       cac: ^6.7.12
       chai: ^4.3.4
@@ -410,7 +429,7 @@ importers:
       detect-indent: ^7.0.0
       diff: ^5.0.0
       execa: ^6.0.0
-      fast-glob: ^3.2.8
+      fast-glob: ^3.2.10
       find-up: ^6.2.0
       flatted: ^3.2.4
       happy-dom: ^2.25.1
@@ -434,6 +453,7 @@ importers:
       tinyspy: ^0.2.8
       typescript: ^4.5.4
       vite: '>=2.7.10'
+      vite-node: workspace:*
       ws: ^8.4.0
     dependencies:
       '@types/chai': 4.3.0
@@ -452,7 +472,7 @@ importers:
       '@types/node': 17.0.8
       '@types/prompts': 2.4.0
       '@vitest/ui': link:../ui
-      birpc: 0.0.2
+      birpc: 0.1.0
       c8: 7.11.0
       cac: 6.7.12
       chai-subset: 1.6.0
@@ -460,7 +480,7 @@ importers:
       detect-indent: 7.0.0
       diff: 5.0.0
       execa: 6.0.0
-      fast-glob: 3.2.8
+      fast-glob: 3.2.10
       find-up: 6.2.0
       flatted: 3.2.4
       happy-dom: 2.25.1
@@ -480,16 +500,17 @@ importers:
       source-map-js: 1.0.1
       strip-ansi: 7.0.1
       typescript: 4.5.4
+      vite-node: link:../vite-node
       ws: 8.4.0
 
   packages/ws-client:
     specifiers:
-      birpc: ^0.0.2
+      birpc: ^0.1.0
       flatted: ^3.2.4
       rollup: ^2.63.0
       ws: ^8.4.0
     dependencies:
-      birpc: 0.0.2
+      birpc: 0.1.0
       flatted: 3.2.4
       ws: 8.4.0
     devDependencies:
@@ -533,6 +554,12 @@ importers:
       vitest: workspace:*
     devDependencies:
       execa: 6.0.0
+      vitest: link:../../packages/vitest
+
+  test/global-setup:
+    specifiers:
+      vitest: workspace:*
+    devDependencies:
       vitest: link:../../packages/vitest
 
   test/related:
@@ -2058,6 +2085,10 @@ packages:
       '@types/braces': 3.0.1
     dev: true
 
+  /@types/minimist/1.2.2:
+    resolution: {integrity: sha512-jhuKLIRrhvCPLqwPcx6INqmKeiA5EWrsCOPhrlFSrbrmU4ZMPjj5Ul/oLCMDO98XRUIwVm78xICz4EPCektzeQ==}
+    dev: true
+
   /@types/natural-compare/1.4.1:
     resolution: {integrity: sha512-9dr4UakpvN0QUvwNefk9+o14Sr1pPPIDWkgCxPkHcg3kyjtc9eKK1ng6dZ23vRwByloCqXYtZ1T5nJxkk3Ib3A==}
     dev: true
@@ -2933,8 +2964,8 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
-  /birpc/0.0.2:
-    resolution: {integrity: sha512-D5D88rjfiXpaGJ9j0MWZrihp1NsBER1v5lyXp6/W23bQIvwWCH8z+Pk1XSnwkIqSnD4s2EjLJq5VmW5u6X9Cgg==}
+  /birpc/0.1.0:
+    resolution: {integrity: sha512-nQ5QDTH0JITjPxAdL1PRLp3f//1FOu5nHwYQYxxabE78Jp+V/mrskcWmHBhHCrKN+eErj3lVLKrv66tMGf5MSg==}
 
   /bl/4.1.0:
     resolution: {integrity: sha512-1W07cM9gS6DcLperZfFSj+bWLtaPGSOHWhPiGzXmvVJbRLdG82sH/Kn8EtW1VqWVA54AKf2h5k5BbnIbwF3h6w==}
@@ -3479,8 +3510,8 @@ packages:
     resolution: {integrity: sha512-Ab3S6XuE/Q+flY96HXT0jOXcM4EAClYFnRGY5zsjRGNy6qCYrQsMffs7cV5Q9xejb35zxW5hf/guKw34kvIKsA==}
     dev: false
 
-  /d3-graph-controller/2.1.0:
-    resolution: {integrity: sha512-bA5BS44F/Ka0ynflXJGACblOsM/3xvY2rAg6aos4JvIdRrQS67cAobiP0PSSoeY3BNJRrtURzajYNVNeMR5sZg==}
+  /d3-graph-controller/2.2.0:
+    resolution: {integrity: sha512-alVrJ0uxs78/k4h52loLWQvGyfWMsSYz85RtzMHA48egK12fLAMZCgA8lgA+2O/5erg2/ABuwLJgugGIlwJEhw==}
     dependencies:
       d3-drag: 3.0.0
       d3-force: 3.0.0
@@ -4754,6 +4785,17 @@ packages:
     resolution: {integrity: sha512-caj/ZmjHljPrZtbzJ3kfH5ia/k4mTJe/qSiXAGzxZWRZgsgDV0cvNaQULqUX8t0/JVlzzEdYOwCN5DmzTxoD4w==}
     dev: false
 
+  /fast-glob/3.2.10:
+    resolution: {integrity: sha512-s9nFhFnvR63wls6/kM88kQqDhMu0AfdjqouE2l5GVQPbqLgyFjjU5ry/r2yKsJxpb9Py1EYNqieFrmMaX4v++A==}
+    engines: {node: '>=8.6.0'}
+    dependencies:
+      '@nodelib/fs.stat': 2.0.4
+      '@nodelib/fs.walk': 1.2.6
+      glob-parent: 5.1.2
+      merge2: 1.4.1
+      micromatch: 4.0.4
+    dev: true
+
   /fast-glob/3.2.7:
     resolution: {integrity: sha512-rYGMRwip6lUMvYD3BTScMwT1HtAs2d71SMv66Vrxs0IekGZEjhM0pcMfjQPnknBt2zeCwQMEupiN02ZP4DiT1Q==}
     engines: {node: '>=8'}
@@ -5086,7 +5128,7 @@ packages:
     dependencies:
       array-union: 2.1.0
       dir-glob: 3.0.1
-      fast-glob: 3.2.8
+      fast-glob: 3.2.10
       ignore: 5.1.8
       merge2: 1.4.1
       slash: 3.0.0
@@ -5753,6 +5795,10 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
+  /kolorist/1.5.1:
+    resolution: {integrity: sha512-lxpCM3HTvquGxKGzHeknB/sUjuVoUElLlfYnXZT73K8geR9jQbroGlSCFBax9/0mpGoD3kzcMLnOlGQPJJNyqQ==}
+    dev: false
+
   /levn/0.3.0:
     resolution: {integrity: sha1-OwmSTt+fCDwEkP3UwLxEIeBHZO4=}
     engines: {node: '>= 0.8.0'}
@@ -5978,7 +6024,6 @@ packages:
 
   /minimist/1.2.5:
     resolution: {integrity: sha512-FM9nNUYrRBAELZQT3xeZQ7fmMOBg6nWNmJKTcgsJeaLstP/UODVpGsr5OhXhhXg6f+qtJ8uiZ+PUxkDWcgIXLw==}
-    dev: true
 
   /mkdirp-classic/0.5.3:
     resolution: {integrity: sha512-gKLcREMhtuZRwRAfqP3RFW+TK4JqApVBtOIftVgjuABpAtpxhPGaDcfvbhNvD0B8iD1oUr/txX35NjcaY6Ns/A==}
@@ -5998,7 +6043,6 @@ packages:
 
   /mlly/0.3.17:
     resolution: {integrity: sha512-C3v8eHB9KqmS1ewOB5DUgljX13C3xuoaXZd5bOLtwpxk9pBZhA+wyVgYXPuP4aukQ9bKYWjy+YQVC+DmniIsgA==}
-    dev: true
 
   /mockdate/3.0.5:
     resolution: {integrity: sha512-iniQP4rj1FhBdBYS/+eQv7j1tadJ9lJtdzgOpvsOHng/GbcDh2Fhdeq+ZRldrPYdXvCyfFUmFeEwEGXZB5I/AQ==}
@@ -6487,7 +6531,6 @@ packages:
 
   /pathe/0.2.0:
     resolution: {integrity: sha512-sTitTPYnn23esFR3RlqYBWn4c45WGeLcsKzQiUpXJAyfcWkolvlYpV8FLo7JishK946oQwMFUCHXQ9AjGPKExw==}
-    dev: true
 
   /pathval/1.1.1:
     resolution: {integrity: sha512-Dp6zGqpTdETdR63lehJYPeIOqpiNBNtc7BpWSLrOje7UaIsE5aY92r/AunQA7rsXvet3lrJ3JnZX29UPTKXyKQ==}
@@ -6550,8 +6593,8 @@ packages:
     dev: false
     optional: true
 
-  /pnpm/6.25.0:
-    resolution: {integrity: sha512-Hlck6S8j7obFkkfQCnDJXIEBRNK4wIanMzDfpRE5TNbLsJnxbWXGbMV5ZhDf8Q8xy6RkBWdoKAmliL0nLmzxHQ==}
+  /pnpm/6.25.1:
+    resolution: {integrity: sha512-/jvwDU8XJ3ntw1fJ5pYGN+nMqxHuXoarajc/95CrAB9+lVfjTJooiOc5BmxT7GrZzcEwdpJKMCdN3yR1ItGFMw==}
     engines: {node: '>=12.17'}
     hasBin: true
     dev: true

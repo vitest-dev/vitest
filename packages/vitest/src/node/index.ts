@@ -7,20 +7,19 @@ import fg from 'fast-glob'
 import mm from 'micromatch'
 import c from 'picocolors'
 import type { RawSourceMap } from 'source-map-js'
+import { ViteNodeServer } from 'vite-node/server'
 import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig } from '../types'
 import { SnapshotManager } from '../integrations/snapshot/manager'
 import { configFiles } from '../constants'
 import { deepMerge, ensurePackageInstalled, hasFailed, noop, notNullish, slash, toArray } from '../utils'
+import { GlobalSetupPlugin } from '../plugins/globalSetup'
 import { MocksPlugin } from '../plugins/mock'
 import { DefaultReporter, ReportersMap } from '../reporters'
-
 import { cleanCoverage, reportCoverage } from '../coverage'
-import { shouldExternalize } from '../utils/externalize'
 import type { WorkerPool } from './pool'
 import { StateManager } from './state'
 import { resolveApiConfig, resolveConfig } from './config'
 import { createPool } from './pool'
-import { transformRequest } from './transform'
 
 const WATCHER_DEBOUNCE = 100
 
@@ -36,15 +35,15 @@ class Vitest {
   outputStream = process.stdout
   errorStream = process.stderr
 
+  vitenode: ViteNodeServer = undefined!
+
   invalidates: Set<string> = new Set()
   changedTests: Set<string> = new Set()
   visitedFilesMap: Map<string, RawSourceMap> = new Map()
   runningPromise?: Promise<void>
   closingPromise?: Promise<void>
-  externalizeCache = new Map<string, Promise<string | false>>()
 
   isFirstRun = true
-
   restartsCount = 0
 
   private _onRestartListeners: Array<() => void> = []
@@ -59,7 +58,6 @@ class Vitest {
     this.restartsCount += 1
     this.pool?.close()
     this.pool = undefined
-    this.externalizeCache.clear()
 
     const resolved = resolveConfig(options, server.config)
 
@@ -84,6 +82,8 @@ class Vitest {
 
     if (this.config.watch)
       this.registerWatcher()
+
+    this.vitenode = new ViteNodeServer(server, this.config)
 
     this.runningPromise = undefined
 
@@ -121,7 +121,7 @@ class Vitest {
     const deps = new Set<string>()
 
     const addImports = async(filepath: string) => {
-      const transformed = await transformRequest(this, filepath)
+      const transformed = await this.vitenode.transformRequest(filepath)
       if (!transformed) return
       const dependencies = [...transformed.deps || [], ...transformed.dynamicDeps || []]
       for (const dep of dependencies) {
@@ -348,10 +348,6 @@ class Vitest {
     return mm.isMatch(id, this.config.include)
   }
 
-  shouldExternalize(id: string) {
-    return shouldExternalize(id, this.config, this.externalizeCache)
-  }
-
   onServerRestarted(fn: () => void) {
     this._onRestartListeners.push(fn)
   }
@@ -407,6 +403,7 @@ export async function VitestPlugin(options: UserConfig = {}, viteOverrides: Vite
       },
     },
     MocksPlugin(),
+    GlobalSetupPlugin(),
     options.ui
       ? await UIPlugin()
       : null,
