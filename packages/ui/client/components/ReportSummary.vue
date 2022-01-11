@@ -61,7 +61,7 @@ function getTests(suite: Arrayable<Task>): Test[] {
 </script>
 
 <template>
-  <div v-if="isConnected" flex="~ col" items-center justify-center gap-y-1 p-y-2 border="t base">
+  <div v-if="isConnected" h-full flex="~ col" items-center justify-center gap-y-1 p-y-2 border="t base">
     <ProgressBar :total="files.length" :failed="failed.length" :pass="success.length" :in-progress="!finished">
       Test Files <span text-red5>{{ failed.length }} failed</span> | <span text-green5>{{ success.length }} passed</span> | <span text-yellow5>{{ running.length }} running</span> <span c-gray op-75>({{ files.length }})</span>
     </ProgressBar>
