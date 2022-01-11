@@ -46,7 +46,7 @@ const pending = computed(() => {
       {{ todo }}
     </template>
   </DashboardEntry>
-  <DashboardEntry classes="font-light">
+  <DashboardEntry classes="min-width-150px">
     <template #header>
       Total Tests
     </template>

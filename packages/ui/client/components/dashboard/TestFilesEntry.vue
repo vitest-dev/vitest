@@ -45,7 +45,7 @@ const pending = computed(() => {
       {{ total }}
     </template>
   </DashboardEntry>
-  <DashboardEntry>
+  <DashboardEntry classes="min-width-150px">
     <template #header>
       Time
     </template>
