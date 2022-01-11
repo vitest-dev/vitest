@@ -1,20 +1,20 @@
 <script setup lang="ts">
-const props = defineProps<{
-  total: number
-  failed: number
-  pass: number
-  inProgress: boolean
-}>()
+import { files } from '../composables/client'
+import { filesFailed, filesSuccess, finished } from '../composables/summary'
 
-const { total, failed, pass, inProgress } = toRefs(props)
+const { width } = useWindowSize()
+const height = computed(() => finished.value ? 'h-0 slide-out-down' : 'h-3px slide-in-up')
+const total = computed(() => files.value.length)
+const pass = computed(() => filesSuccess.value.length)
+const failed = computed(() => filesFailed.value.length)
 
 const widthPass = computed(() => {
   const t = unref(total)
-  return t > 0 ? (300 * pass.value / t) : 0
+  return t > 0 ? (width.value * pass.value / t) : 0
 })
 const widthFailed = computed(() => {
   const t = unref(total)
-  return t > 0 ? (300 * failed.value / t) : 0
+  return t > 0 ? (width.value * failed.value / t) : 0
 })
 const pending = computed(() => {
   const t = unref(total)
@@ -22,67 +22,58 @@ const pending = computed(() => {
 })
 const widthPending = computed(() => {
   const t = unref(total)
-  return t > 0 ? (300 * pending.value / t) : 0
+  return t > 0 ? (width.value * pending.value / t) : 0
 })
 </script>
 
 <template>
-  <div h-8 line-height-1 px-0 grid="~ auto-cols-max" justify-items-center>
-    <div h-1rem relative max-w-300px min-w-300px w-300px overflow-hidden class="px-0">
+  <div
+    absolute
+    t-0
+    l-0
+    r-0
+    z-index-1031
+    pointer-events-none
+    p-0
+    grid="~ auto-cols-max"
+    justify-items-center
+    w-screen
+    :class="height"
+  >
+    <div :class="height" relative overflow-hidden class="px-0" w-screen>
       <div
         absolute
-        left-0
-        top-0
-        h-full
-        line-height-1
-        text-right
+        l-0
+        t-0
         bg-red5
-        :class="[{'in-progress': inProgress}]"
+        class="in-progress"
+        :class="height"
         :style="`width: ${widthFailed}px;`"
       >
-        <template v-if="!inProgress">
-          <div vertical-align-middle c-white text-xs m="y-0 x-5px" ws-nowrap>
-            {{ failed }}
-          </div>
-        </template>
+        &#160;
       </div>
       <div
         absolute
-        left-0
-        top-0
-        h-full
-        line-height-1
-        text-right
+        l-0
+        t-0
         bg-green5
-        :class="[{'in-progress': inProgress}]"
+        class="in-progress"
+        :class="height"
         :style="`left: ${widthFailed}px; width: ${widthPass}px;`"
       >
-        <template v-if="!inProgress">
-          <div vertical-align-middle c-white text-xs m="y-0 x-5px" ws-nowrap>
-            {{ pass }}
-          </div>
-        </template>
+        &#160;
       </div>
       <div
         absolute
-        left-0
-        top-0
-        h-full
-        line-height-1
-        text-right
+        l-0
+        t-0
         bg-yellow5
-        :class="[{'in-progress': inProgress}]"
+        class="in-progress"
+        :class="height"
         :style="`left: ${widthPass + widthFailed}px; width: ${widthPending}px;`"
       >
-        <template v-if="!inProgress">
-          <div vertical-align-middle c-white font-size-12px m="y-0 x-5px" ws-nowrap>
-            &#160;
-          </div>
-        </template>
+        &#160;
       </div>
-    </div>
-    <div text-center text-xs>
-      <slot />
     </div>
   </div>
 </template>

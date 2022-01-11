@@ -30,6 +30,7 @@ function resizeMain() {
 </script>
 
 <template>
+  <ProgressBar />
   <div h-screen w-screen overflow="hidden">
     <Splitpanes @resized="onMainResized" @ready="resizeMain">
       <Pane :size="mainSizes[0]">
@@ -37,7 +38,7 @@ function resizeMain() {
       </Pane>
       <Pane :size="mainSizes[1]">
         <transition>
-          <ReportSummary v-if="summaryVisible" key="summary" />
+          <Dashboard v-if="summaryVisible" key="summary" />
           <Splitpanes v-else key="detail" @resized="onModuleResized">
             <Pane :size="detailSizes[0]">
               <Suites />
