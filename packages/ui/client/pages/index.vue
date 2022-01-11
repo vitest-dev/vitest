@@ -12,7 +12,7 @@ watch(() => sizes[0], (s) => {
 }, { immediate: true })
 
 const onResized = useDebounceFn((event: { size: number }[]) => {
-  if (summaryVisible.value) {
+  if (event.length === 2) {
     sizes[0] = event[0].size
   }
   else {
@@ -20,7 +20,7 @@ const onResized = useDebounceFn((event: { size: number }[]) => {
       sizes[i] = e.size
     })
   }
-}, 256)
+}, 0)
 
 onMounted(() => {
   const width = window.innerWidth
@@ -41,10 +41,10 @@ onMounted(() => {
       <Pane v-if="summaryVisible" :size="summarySize">
         <ReportSummary />
       </Pane>
-      <Pane v-if="!summaryVisible" :size="sizes[1]">
+      <Pane v-if="!summaryVisible" key="suites" :size="sizes[1]">
         <Suites />
       </Pane>
-      <Pane v-if="!summaryVisible" :size="sizes[2]">
+      <Pane v-if="!summaryVisible" key="file-details" :size="sizes[2]">
         <FileDetails />
       </Pane>
     </Splitpanes>
