@@ -5,7 +5,6 @@ import type { VueInstance } from '@vueuse/core'
 import { initializeNavigation } from '../composables/navigation'
 
 const summaryVisible = initializeNavigation()
-const split = ref<VueInstance | null>(null)
 const mainSizes = reactive([33, 67])
 const detailSizes = reactive([33, 67])
 
@@ -33,7 +32,7 @@ function resizeMain() {
 
 <template>
   <div h-screen w-screen overflow="hidden">
-    <Splitpanes ref="split" @resized="onMainResized" @ready="resizeMain">
+    <Splitpanes @resized="onMainResized" @ready="resizeMain">
       <Pane :size="mainSizes[0]">
         <Navigation />
       </Pane>
