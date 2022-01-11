@@ -585,7 +585,7 @@ TODO
 
 - **Type:** `(received: string) => Awaitable<void>`
 
-  `toContain` asserts if actual value is in an array. `toContain` can also check whether a string is a substring of another string
+  `toContain` asserts if actual value is in an array. `toContain` can also check whether a string is a substring of another string.
 
   ```ts
   import { expect, test } from 'vitest'
@@ -674,6 +674,8 @@ TODO
 
     // Deep referencing using an array containing the key
     expect(invoice).toHaveProperty('items[0].type', 'apples')
+    expect(invoice).toHaveProperty('items.0.type', 'apples') // dot notation also works
+
   })
   ```
 
@@ -750,13 +752,12 @@ TODO
 
   `toThrowError` asserts if a function throws an error when it is called.
 
-  For example, if we want to test that getFruitStock('pineapples') throws, because pineapples is not good for people with diabetes, we could write:
+  For example, if we want to test that `getFruitStock('pineapples')` throws, because pineapples is not good for people with diabetes, we could write:
 
   You can provide an optional argument to test that a specific error is thrown:
 
-  regular expression: error message matches the pattern
-
-  string: error message includes the substring
+  - regular expression: error message matches the pattern
+  - string: error message includes the substring
 
   :::tip
     You must wrap the code in a function, otherwise the error will not be caught and the assertion will fail.
