@@ -1,6 +1,6 @@
 import type { Plugin } from 'vite'
 import MagicString from 'magic-string'
-import { getCallLastIndex } from '../utils'
+import { getCallLastIndex, getRangeStatus } from '../utils'
 
 const mockRegexp = /^ *\b((?:vitest|vi)\s*.\s*mock\(["`'\s]+(.*[@\w_-]+)["`'\s]+)[),]{1};?/gm
 const pathRegexp = /\b(?:vitest|vi)\s*.\s*(unmock|importActual|importMock)\(["`'\s](.*[@\w_-]+)["`'\s]\);?/mg
@@ -43,6 +43,8 @@ export const MocksPlugin = (): Plugin => {
 
       const mocks = code.matchAll(mockRegexp)
 
+      let previousIndex = 0
+
       for (const mockResult of mocks) {
         // we need to parse parsed string because factory may contain importActual
         const lastIndex = getMockLastIndex(code.slice(mockResult.index!))
@@ -51,6 +53,13 @@ export const MocksPlugin = (): Plugin => {
         if (lastIndex === null) continue
 
         const startIndex = mockResult.index!
+
+        const { insideComment, insideString } = getRangeStatus(code, previousIndex, startIndex)
+
+        if (insideComment || insideString)
+          continue
+
+        previousIndex = startIndex
         const endIndex = startIndex + lastIndex
 
         const filepath = await this.resolve(path, id)
@@ -60,7 +69,7 @@ export const MocksPlugin = (): Plugin => {
         const overwrite = getMethodCall('mock', filepath?.id || path, path)
 
         m.overwrite(startIndex, startIndex + declaration.length, overwrite)
-        m.prepend(m.slice(startIndex, endIndex))
+        m.prepend(`${m.slice(startIndex, endIndex)}\n`)
         m.remove(startIndex, endIndex)
       }
 
