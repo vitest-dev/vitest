@@ -1,7 +1,7 @@
 import * as React from 'react'
 import fetch from 'cross-fetch'
 
-type Post = {
+interface Post {
   userId: number
   id: number
   title: string
