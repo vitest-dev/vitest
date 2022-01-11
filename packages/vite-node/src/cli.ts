@@ -85,7 +85,7 @@ async function run(options: CliOptions = {}) {
   })
 
   for (const file of files)
-    await runner.run(file)
+    await runner.executeFile(file)
 
   await server.close()
 }
