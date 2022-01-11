@@ -1,11 +1,18 @@
 <script setup lang="ts">
+import { injectCurrentModule, injectShowSummary } from '../composables/navigation'
+import { findById } from '../composables/client'
 import type { Task } from '#types'
 import { toggleDark } from '~/composables'
 import { files, runAll } from '~/composables/client'
 import { activeFileId } from '~/composables/params'
 
+const showSummary = injectShowSummary()
+const currentModule = injectCurrentModule()
+
 function onItemClick(task: Task) {
   activeFileId.value = task.id
+  currentModule.value = findById(task.id)
+  showSummary(false)
 }
 </script>
 
@@ -17,7 +24,7 @@ function onItemClick(task: Task) {
     :group-by-type="true"
   >
     <template #header>
-      <img w-6 h-6 mx-2 src="/favicon.svg">
+      <img cursor-pointer w-6 h-6 mx-2 src="/favicon.svg" @click="showSummary(true)">
       <span font-light text-sm flex-1>
         Vitest
       </span>
@@ -28,9 +35,6 @@ function onItemClick(task: Task) {
           @click="toggleDark()"
         />
       </div>
-    </template>
-    <template #footer>
-      <ReportSummary />
     </template>
   </TasksList>
 </template>

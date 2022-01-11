@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { injectCurrentModule } from '../composables/navigation'
 import { client, current } from '~/composables/client'
 import type { Params } from '~/composables/params'
 import { viewMode } from '~/composables/params'
@@ -6,17 +7,12 @@ import type { ModuleGraph } from '~/composables/module-graph'
 import { getModuleGraph } from '~/composables/module-graph'
 import type { ModuleGraphData } from '#types'
 
-function open() {
-  const filePath = currentModule.value?.filepath
-  if (filePath)
-    fetch(`/__open-in-editor?file=${encodeURIComponent(filePath)}`)
-}
-
 const data = ref<ModuleGraphData>({ externalized: [], graph: {}, inlined: [] })
 const graph = ref<ModuleGraph>({ nodes: [], links: [] })
+const currentModule = injectCurrentModule()
 
 debouncedWatch(
-  current,
+  currentModule,
   async(c, o) => {
     if (c && c.filepath !== o?.filepath) {
       data.value = await client.rpc.getModuleGraph(c.filepath)
@@ -26,21 +22,27 @@ debouncedWatch(
   { debounce: 100 },
 )
 
+const open = () => {
+  const filePath = currentModule.value?.filepath
+  if (filePath)
+    fetch(`/__open-in-editor?file=${encodeURIComponent(filePath)}`)
+}
+
 const changeViewMode = (view: Params['view']) => {
   viewMode.value = view
 }
 </script>
 
 <template>
-  <div v-if="current" flex flex-col h-full max-h-full>
+  <div v-if="currentModule" flex flex-col h-full max-h-full>
     <div>
       <div p="2" h-10 flex="~ gap-2" items-center bg-header border="b base">
-        <StatusIcon :task="current" />
+        <StatusIcon :task="currentModule" />
         <div flex-1 font-light op-50 ws-nowrap truncate text-sm>
-          {{ current?.filepath }}
+          {{ currentModule?.filepath }}
         </div>
         <div class="flex text-lg">
-          <IconButton icon="i-carbon-launch" :disabled="!current?.filepath" :onclick="open" />
+          <IconButton icon="i-carbon-launch" :disabled="!currentModule?.filepath" :onclick="open" />
         </div>
       </div>
       <div flex="~" items-center bg-header border="b base" text-sm h-37px>
@@ -57,8 +59,8 @@ const changeViewMode = (view: Params['view']) => {
     </div>
     <div flex flex-col flex-1 overflow="hidden">
       <ViewModuleGraph v-show="viewMode === 'graph'" :graph="graph" class="file-details-graph" />
-      <ViewEditor v-if="viewMode === 'editor'" :file="current" />
-      <ViewReport v-else-if="!viewMode" :file="current" />
+      <ViewEditor v-if="viewMode === 'editor'" :file="currentModule" />
+      <ViewReport v-else-if="!viewMode" :file="currentModule" />
     </div>
   </div>
 </template>
