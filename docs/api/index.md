@@ -600,7 +600,8 @@ TODO
 
 - **Type:** `(received: any) => Awaitable<void>`
 
-  `toContainEqual` asserts if an item with a specific structure and values is contained in an array.
+  `toContainEqual` asserts if an item with a specific structure and values is contained in an array. 
+  It works like [`toEqual`](#toequal) inside for each element.
 
   ```ts
   import { test, expect } from 'vitest'
@@ -621,9 +622,11 @@ TODO
   import { test, expect } from 'vitest'
 
   test('toHaveLength', () => {
-  expect('abc').toHaveLength(3);
-  expect([1, 2, 3]).toHaveLength(3);
-  expect('').not.toHaveLength(3); // doesn't have .length property
+    expect('abc').toHaveLength(3);
+    expect([1, 2, 3]).toHaveLength(3);
+
+    expect('').not.toHaveLength(3); // doesn't have .length of 3
+    expect({ length: 3 }).toHaveLength(3)
   })
   ```
 
@@ -648,12 +651,12 @@ TODO
     total_amount: 5000,
     items: [
       {
-      type: 'apples',
-      quantity: 10,
+        type: 'apples',
+        quantity: 10,
       },
       {
-      type: 'oranges',
-      quantity: 5,
+        type: 'oranges',
+        quantity: 5,
       },
     ]
   }
@@ -710,12 +713,12 @@ TODO
     total_amount: 5000,
     items: [
       {
-      type: 'apples',
-      quantity: 10,
+        type: 'apples',
+        quantity: 10,
       },
       {
-      type: 'oranges',
-      quantity: 5,
+        type: 'oranges',
+        quantity: 5,
       }
     ]
   }
