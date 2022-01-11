@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { currentModule, showSummary, summaryVisible } from '../composables/navigation'
+import { currentModule, dashboardVisible, showDashboard } from '../composables/navigation'
 import { findById } from '../composables/client'
 import type { Task } from '#types'
 import { toggleDark } from '~/composables'
@@ -9,7 +9,7 @@ import { activeFileId } from '~/composables/params'
 function onItemClick(task: Task) {
   activeFileId.value = task.id
   currentModule.value = findById(task.id)
-  showSummary(false)
+  showDashboard(false)
 }
 </script>
 
@@ -28,12 +28,12 @@ function onItemClick(task: Task) {
       <div class="flex text-lg">
         <transition enter-active-class="animate-fade-in" leave-from-class="animate-fade-out">
           <IconButton
-            v-show="!summaryVisible"
-            title="Show summary"
+            v-show="!dashboardVisible"
+            title="Show dashboard"
             class="!animate-100ms"
             animate-count-1
             icon="i-carbon-dashboard"
-            @click="showSummary(true)"
+            @click="showDashboard(true)"
           />
         </transition>
         <IconButton title="Run all tests" icon="i-carbon-play" @click="runAll()" />

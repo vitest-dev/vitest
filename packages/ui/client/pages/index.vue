@@ -3,7 +3,7 @@
 import { Pane, Splitpanes } from 'splitpanes'
 import { initializeNavigation } from '../composables/navigation'
 
-const summaryVisible = initializeNavigation()
+const dashboardVisible = initializeNavigation()
 const mainSizes = reactive([33, 67])
 const detailSizes = reactive([33, 67])
 
@@ -38,7 +38,7 @@ function resizeMain() {
       </Pane>
       <Pane :size="mainSizes[1]">
         <transition>
-          <Dashboard v-if="summaryVisible" key="summary" />
+          <Dashboard v-if="dashboardVisible" key="summary" />
           <Splitpanes v-else key="detail" @resized="onModuleResized">
             <Pane :size="detailSizes[0]">
               <Suites />

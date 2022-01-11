@@ -3,7 +3,7 @@ import { activeFileId } from './params'
 import type { File } from '#types'
 
 export const currentModule = ref<File | undefined>(undefined)
-export const summaryVisible = ref(true)
+export const dashboardVisible = ref(true)
 
 export function initializeNavigation() {
   const file = activeFileId.value
@@ -11,24 +11,24 @@ export function initializeNavigation() {
     const current = findById(file)
     if (current) {
       currentModule.value = current
-      summaryVisible.value = false
+      dashboardVisible.value = false
     }
     else {
       watchOnce(
         () => client.state.getFiles(),
         () => {
           currentModule.value = findById(file)
-          summaryVisible.value = false
+          dashboardVisible.value = false
         },
       )
     }
   }
 
-  return summaryVisible
+  return dashboardVisible
 }
 
-export function showSummary(show: boolean) {
-  summaryVisible.value = show
+export function showDashboard(show: boolean) {
+  dashboardVisible.value = show
   if (show) {
     currentModule.value = undefined
     activeFileId.value = ''

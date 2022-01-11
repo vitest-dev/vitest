@@ -16,11 +16,10 @@
         ws-nowrap
         overflow-hidden
         truncate
-      >Summary</span>
+      >Dashboard</span>
     </div>
     <div class="scrolls" flex-auto py-1>
-      <TestEntry />
-      <TestFilesEntry />
+      <TestsFilesContainer />
     </div>
   </div>
 </template>
