@@ -1,6 +1,6 @@
 <template>
   <div grid="~ cols-[1fr_1fr]" gap-1>
-    <section aria-labelledby="tests" bg-header rd-4 m="y-4 l-2">
+    <section aria-labelledby="tests" bg-header rd-4 m="y-4 l-2" class="dark:bg-[#333]">
       <h2 id="tests" m="x-4 t-2 b-2" pt-2 text="center 2xl">
         Tests
       </h2>
@@ -8,7 +8,7 @@
         <TestsEntry />
       </div>
     </section>
-    <section aria-labelledby="files" bg-header rd-4 m="y-4 l-2 r-2">
+    <section aria-labelledby="files" bg-header rd-4 m="y-4 l-2 r-2" class="dark:bg-[#333]">
       <h2 id="files" m="x-4 t-2 b-2" pt-2 text="center 2xl">
         Files
       </h2>
