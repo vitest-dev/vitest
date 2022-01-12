@@ -9,48 +9,38 @@ const pending = computed(() => {
   const t = unref(total)
   return t - failed.value - pass.value
 })
-
 </script>
 
 <template>
-  <DashboardEntry classes="text-red5">
-    <template #header>
-      Fail
-    </template>
-    <template #body>
-      {{ failed }}
-    </template>
-  </DashboardEntry>
-  <DashboardEntry classes="text-green5">
-    <template #header>
-      Pass
-    </template>
-    <template #body>
-      {{ pass }}
-    </template>
-  </DashboardEntry>
-  <DashboardEntry classes="text-yellow5">
-    <template #header>
-      Running
-    </template>
-    <template #body>
-      {{ pending }}
-    </template>
-  </DashboardEntry>
-  <DashboardEntry classes="font-light">
-    <template #header>
-      Total Files
-    </template>
-    <template #body>
-      {{ total }}
-    </template>
-  </DashboardEntry>
-  <DashboardEntry classes="min-width-150px">
-    <template #header>
-      Time
-    </template>
-    <template #body>
-      {{ time }}
-    </template>
-  </DashboardEntry>
+  <div flex="~ col" items-center>
+    <div flex="~ wrap" justify-evenly gap-2 p="x-4" relative>
+      <DashboardEntry text-green5>
+        <template #header>
+          Files Passed
+        </template>
+        <template #body>
+          {{ pass }}
+        </template>
+      </DashboardEntry>
+      <DashboardEntry v-if="failed" text-red5>
+        <template #header>
+          Files Failed
+        </template>
+        <template #body>
+          {{ failed }}
+        </template>
+      </DashboardEntry>
+      <DashboardEntry min-width-150px>
+        <template #header>
+          Time
+        </template>
+        <template #body>
+          {{ time }}
+        </template>
+      </DashboardEntry>
+    </div>
+    <div op80>
+      of total <span text-xl>{{ total }}</span> files
+    </div>
+  </div>
 </template>
