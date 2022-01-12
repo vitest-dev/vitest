@@ -18,8 +18,12 @@ export class ViteNodeRunner {
     builtinModules.forEach(m => this.externalCache.set(m, m))
   }
 
-  async run(file: string) {
+  async executeFile(file: string) {
     return await this.cachedRequest(`/@fs/${slash(resolve(file))}`, [])
+  }
+
+  async executeId(id: string) {
+    return await this.cachedRequest(id, [])
   }
 
   async cachedRequest(rawId: string, callstack: string[]) {

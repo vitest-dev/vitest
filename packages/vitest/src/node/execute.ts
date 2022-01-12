@@ -14,7 +14,7 @@ export async function executeInViteNode(options: ExecuteOptions) {
 
   const result: any[] = []
   for (const file of options.files)
-    result.push(await runner.run(file))
+    result.push(await runner.executeFile(file))
 
   return result
 }

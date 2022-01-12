@@ -107,7 +107,7 @@ vitest related /src/index.ts /src/hello-world.js
 | `--api [api]` | Serve API, available options: `--api.port <port>`, `--api.host [host]` and `--api.strictPort` |
 | `--threads` | Enable Threads (default: true) |
 | `--silent` | Silent console output from tests |
-| `--reporter <name>` | Select reporter: `default`, `verbose`, or `dot` |
+| `--reporter <name>` | Select reporter: `default`, `verbose`, `dot` or `json` |
 | `--coverage` | Use c8 for coverage |
 | `--run` | Do not watch |
 | `--global` | Inject APIs globally |
