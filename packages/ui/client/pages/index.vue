@@ -18,12 +18,12 @@ const onModuleResized = useDebounceFn((event: { size: number }[]) => {
   })
 }, 0)
 
-function resizeMain() {
+const resizeMain = () => {
   const width = window.innerWidth
   const panelWidth = Math.min(width / 3, 300)
   mainSizes[0] = (100 * panelWidth) / width
   mainSizes[1] = 100 - mainSizes[0]
-  // initialize suite width with the same navigation panel width in pixels (adjust % inside detail's split pane)
+  // initialize suite width with the same navigation panel width in pixels (adjust its % inside detail's split pane)
   detailSizes[0] = (100 * panelWidth) / (width - panelWidth)
   detailSizes[1] = 100 - detailSizes[0]
 }
@@ -32,7 +32,7 @@ function resizeMain() {
 <template>
   <ProgressBar />
   <div h-screen w-screen overflow="hidden">
-    <Splitpanes @resized="onMainResized" @ready="resizeMain">
+    <Splitpanes class="pt-4px" @resized="onMainResized" @ready="resizeMain">
       <Pane :size="mainSizes[0]">
         <Navigation />
       </Pane>

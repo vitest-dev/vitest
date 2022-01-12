@@ -3,7 +3,15 @@ import { files } from '../composables/client'
 import { filesFailed, filesSuccess, finished } from '../composables/summary'
 
 const { width } = useWindowSize()
-const height = computed(() => finished.value ? 'h-0 slide-out-down' : 'h-3px slide-in-up')
+const classes = computed(() => {
+  // if there is no files, then in progress and gray
+  if (files.value.length === 0)
+    return '!bg-gray-4 !dark:bg-gray-7 in-progress'
+  else if (!finished.value)
+    return 'in-progress'
+
+  return null
+})
 const total = computed(() => files.value.length)
 const pass = computed(() => filesSuccess.value.length)
 const failed = computed(() => filesFailed.value.length)
@@ -35,19 +43,20 @@ const widthPending = computed(() => {
     z-index-1031
     pointer-events-none
     p-0
+    h-3px
     grid="~ auto-cols-max"
     justify-items-center
     w-screen
-    :class="height"
+    :class="classes"
   >
-    <div :class="height" relative overflow-hidden class="px-0" w-screen>
+    <div h-3px relative overflow-hidden class="px-0" w-screen>
       <div
         absolute
         l-0
         t-0
         bg-red5
-        class="in-progress"
-        :class="height"
+        h-3px
+        :class="classes"
         :style="`width: ${widthFailed}px;`"
       >
         &#160;
@@ -57,8 +66,8 @@ const widthPending = computed(() => {
         l-0
         t-0
         bg-green5
-        class="in-progress"
-        :class="height"
+        h-3px
+        :class="classes"
         :style="`left: ${widthFailed}px; width: ${widthPass}px;`"
       >
         &#160;
@@ -68,8 +77,8 @@ const widthPending = computed(() => {
         l-0
         t-0
         bg-yellow5
-        class="in-progress"
-        :class="height"
+        h-3px
+        :class="classes"
         :style="`left: ${widthPass + widthFailed}px; width: ${widthPending}px;`"
       >
         &#160;
