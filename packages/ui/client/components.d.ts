@@ -23,6 +23,7 @@ declare module 'vue' {
     TestFilesEntry: typeof import('./components/dashboard/TestFilesEntry.vue')['default']
     TestsEntry: typeof import('./components/dashboard/TestsEntry.vue')['default']
     TestsFilesContainer: typeof import('./components/dashboard/TestsFilesContainer.vue')['default']
+    ViewConsoleOutput: typeof import('./components/views/ViewConsoleOutput.vue')['default']
     ViewEditor: typeof import('./components/views/ViewEditor.vue')['default']
     ViewModuleGraph: typeof import('./components/views/ViewModuleGraph.vue')['default']
     ViewReport: typeof import('./components/views/ViewReport.vue')['default']

@@ -15,5 +15,5 @@ export interface WebSocketHandlers {
   rerun(files: string[]): Promise<void>
 }
 
-export interface WebSocketEvents extends Pick<Reporter, 'onCollected' | 'onTaskUpdate'> {
+export interface WebSocketEvents extends Pick<Reporter, 'onCollected' | 'onTaskUpdate' | 'onUserConsoleLog'> {
 }

@@ -57,7 +57,7 @@ const runner = new ViteNodeRunner({
 })
 
 // execute the file
-await runner.run('./example.ts')
+await runner.executeFile('./example.ts')
 
 // close the vite server
 await server.close()

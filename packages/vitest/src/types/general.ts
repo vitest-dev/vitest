@@ -22,6 +22,7 @@ export interface UserConsoleLog {
   content: string
   type: 'stdout' | 'stderr'
   taskId?: string
+  time: number
 }
 
 export interface Position {

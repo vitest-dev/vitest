@@ -2,7 +2,7 @@ import { builtinModules, createRequire } from 'module'
 import { fileURLToPath, pathToFileURL } from 'url'
 import vm from 'vm'
 import { dirname, resolve } from 'pathe'
-import { normalizeId, slash, toFilePath } from './utils'
+import { isPrimitive, normalizeId, slash, toFilePath } from './utils'
 import type { ModuleCache, ViteNodeRunnerOptions } from './types'
 
 export class ViteNodeRunner {
@@ -18,8 +18,12 @@ export class ViteNodeRunner {
     builtinModules.forEach(m => this.externalCache.set(m, m))
   }
 
-  async run(file: string) {
+  async executeFile(file: string) {
     return await this.cachedRequest(`/@fs/${slash(resolve(file))}`, [])
+  }
+
+  async executeId(id: string) {
+    return await this.cachedRequest(id, [])
   }
 
   async cachedRequest(rawId: string, callstack: string[]) {
@@ -122,7 +126,7 @@ function hasNestedDefault(target: any) {
 function proxyMethod(name: 'get' | 'set' | 'has' | 'deleteProperty', tryDefault: boolean) {
   return function(target: any, key: string | symbol, ...args: [any?, any?]) {
     const result = Reflect[name](target, key, ...args)
-    if (typeof target.default !== 'object')
+    if (isPrimitive(target.default))
       return result
     if ((tryDefault && key === 'default') || typeof result === 'undefined')
       return Reflect[name](target.default, key, ...args)

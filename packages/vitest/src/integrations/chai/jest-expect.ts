@@ -235,8 +235,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     }
     return this.assert(
       pass,
-      `expected #{this} to be close to #{exp}, recieved difference is ${receivedDiff}, but expected ${expectedDiff}`,
-      `expected #{this} to not be close to #{exp}, recieved difference is ${receivedDiff}, but expected ${expectedDiff}`,
+      `expected #{this} to be close to #{exp}, received difference is ${receivedDiff}, but expected ${expectedDiff}`,
+      `expected #{this} to not be close to #{exp}, received difference is ${receivedDiff}, but expected ${expectedDiff}`,
       received,
       expected,
     )

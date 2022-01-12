@@ -1,9 +1,9 @@
 import type { ChainableFunction } from '../runtime/chain'
 import type { Awaitable, ErrorWithDiff } from './general'
+import type { UserConsoleLog } from '.'
 
 export type RunMode = 'run' | 'skip' | 'only' | 'todo'
 export type TaskState = RunMode | 'pass' | 'fail'
-
 export interface TaskBase {
   id: string
   name: string
@@ -12,6 +12,7 @@ export interface TaskBase {
   suite?: Suite
   file?: File
   result?: TaskResult
+  logs?: UserConsoleLog[]
 }
 
 export interface TaskResult {
