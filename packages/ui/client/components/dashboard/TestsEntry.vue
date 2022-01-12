@@ -13,43 +13,46 @@ const pending = computed(() => {
 </script>
 
 <template>
-  <div flex="~ col" items-center>
-    <div flex="~ wrap" justify-evenly gap-2 p="x-4" relative>
-      <DashboardEntry text-green5>
-        <template #header>
-          Tests Passed
-        </template>
-        <template #body>
-          {{ pass }}
-        </template>
-      </DashboardEntry>
-      <DashboardEntry v-if="failed" text-red5>
-        <template #header>
-          Tests Failed
-        </template>
-        <template #body>
-          {{ failed }}
-        </template>
-      </DashboardEntry>
-      <DashboardEntry v-if="skipped" op40>
-        <template #header>
-          Tests Skipped
-        </template>
-        <template #body>
-          {{ skipped }}
-        </template>
-      </DashboardEntry>
-      <DashboardEntry v-if="todo" op40>
-        <template #header>
-          Tests Todo
-        </template>
-        <template #body>
-          {{ todo }}
-        </template>
-      </DashboardEntry>
-    </div>
-    <div op80>
-      of total <span text-xl>{{ total }}</span> tests
-    </div>
+  <div flex="~ wrap" justify-evenly gap-2 p="x-4" relative>
+    <DashboardEntry text-green5>
+      <template #header>
+        Pass
+      </template>
+      <template #body>
+        {{ pass }}
+      </template>
+    </DashboardEntry>
+    <DashboardEntry :class="{ 'text-red5': failed, 'op50': !failed }">
+      <template #header>
+        Fail
+      </template>
+      <template #body>
+        {{ failed }}
+      </template>
+    </DashboardEntry>
+    <DashboardEntry v-if="skipped" op50>
+      <template #header>
+        Skip
+      </template>
+      <template #body>
+        {{ skipped }}
+      </template>
+    </DashboardEntry>
+    <DashboardEntry v-if="todo" op50>
+      <template #header>
+        Todo
+      </template>
+      <template #body>
+        {{ todo }}
+      </template>
+    </DashboardEntry>
+    <DashboardEntry :tail="true">
+      <template #header>
+        Total
+      </template>
+      <template #body>
+        {{ total }}
+      </template>
+    </DashboardEntry>
   </div>
 </template>
