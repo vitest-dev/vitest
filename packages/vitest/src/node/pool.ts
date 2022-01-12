@@ -132,8 +132,9 @@ function createChannel(ctx: Vitest) {
         ctx.state.updateTasks(packs)
         ctx.report('onTaskUpdate', packs)
       },
-      onUserLog(msg) {
-        ctx.report('onUserConsoleLog', msg)
+      onUserConsoleLog(log) {
+        ctx.state.updateUserLog(log)
+        ctx.report('onUserConsoleLog', log)
       },
     },
     {

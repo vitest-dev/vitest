@@ -19,7 +19,7 @@ export interface WorkerRPC {
   getSourceMap: (id: string, force?: boolean) => Promise<RawSourceMap | undefined>
 
   onWorkerExit: (code?: number) => void
-  onUserLog: (log: UserConsoleLog) => void
+  onUserConsoleLog: (log: UserConsoleLog) => void
   onCollected: (files: File[]) => void
   onTaskUpdate: (pack: TaskResultPack[]) => void
 

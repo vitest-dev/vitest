@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { Pane, Splitpanes } from 'splitpanes'
-import { client, current } from '~/composables/client'
+import { client, current, currentLogs } from '~/composables/client'
 import type { Params } from '~/composables/params'
 import { viewMode } from '~/composables/params'
 import type { ModuleGraph } from '~/composables/module-graph'
@@ -8,12 +7,6 @@ import { getModuleGraph } from '~/composables/module-graph'
 import type { ModuleGraphData } from '#types'
 
 const sizes = reactive([95, 5])
-
-function onResize(event: { size: number }[]) {
-  event.forEach((e, i) => {
-    sizes[i] = e.size
-  })
-}
 
 onMounted(() => {
   const bottomPanelPercent = 42 / window.innerHeight * 100
@@ -28,7 +21,6 @@ function open() {
     fetch(`/__open-in-editor?file=${encodeURIComponent(filePath)}`)
 }
 
-const showOutput = ref(false)
 const data = ref<ModuleGraphData>({ externalized: [], graph: {}, inlined: [] })
 const graph = ref<ModuleGraph>({ nodes: [], links: [] })
 
@@ -70,18 +62,15 @@ const changeViewMode = (view: Params['view']) => {
         <button tab-button :class="{ 'tab-button-active': viewMode === 'editor' }" @click="changeViewMode('editor')">
           Code
         </button>
+        <button tab-button :class="{ 'tab-button-active': viewMode === 'console' }" @click="changeViewMode('console')">
+          Console ({{ currentLogs?.length || 0 }})
+        </button>
       </div>
     </div>
 
-    <Splitpanes :push-other-panes="false" horizontal overflow-hidden max-h-full @resize="paneSize = $event[0].size">
-      <Pane :min-size="40" :size="showOutput ? 60 : 80">
-        <ViewModuleGraph v-show="viewMode === 'graph'" :graph="graph" />
-        <ViewEditor v-if="viewMode === 'editor'" :file="current" />
-        <ViewReport v-else-if="!viewMode" :file="current" />
-      </Pane>
-      <Pane :min-size="20" :size="showOutput ? 40 : 20">
-        <ConsoleOutput v-model="showOutput" :file="current" />
-      </Pane>
-    </Splitpanes>
+    <ViewModuleGraph v-show="viewMode === 'graph'" :graph="graph" />
+    <ViewEditor v-if="viewMode === 'editor'" :file="current" />
+    <ViewConsoleOutput v-else-if="viewMode === 'console'" :file="current" />
+    <ViewReport v-else-if="!viewMode" :file="current" />
   </div>
 </template>

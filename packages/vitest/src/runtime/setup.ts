@@ -23,20 +23,22 @@ export async function setupGlobalEnv(config: ResolvedConfig) {
 export function setupConsoleLogSpy() {
   const stdout = new Writable({
     write(data, encoding, callback) {
-      rpc().onUserLog({
+      rpc().onUserConsoleLog({
         type: 'stdout',
         content: String(data),
         taskId: process.__vitest_worker__.current?.id,
+        time: Date.now(),
       })
       callback()
     },
   })
   const stderr = new Writable({
     write(data, encoding, callback) {
-      rpc().onUserLog({
+      rpc().onUserConsoleLog({
         type: 'stderr',
         content: String(data),
         taskId: process.__vitest_worker__.current?.id,
+        time: Date.now(),
       })
       callback()
     },

@@ -1,7 +1,6 @@
-import { createClient } from '@vitest/ws-client'
+import { createClient, getTasks } from '@vitest/ws-client'
 import type { WebSocketStatus } from '@vueuse/core'
 import { reactive } from 'vue'
-import { getTasks } from '../../../vitest/src/utils/tasks'
 import { activeFileId } from './params'
 import type { File, ResolvedConfig } from '#types'
 
@@ -17,6 +16,7 @@ export const config = shallowRef<ResolvedConfig>({} as any)
 export const status = ref<WebSocketStatus>('CONNECTING')
 export const files = computed(() => client.state.getFiles())
 export const current = computed(() => files.value.find(file => file.id === activeFileId.value))
+export const currentLogs = computed(() => getTasks(current.value).map(i => i?.logs || []).flat() || [])
 
 export const isConnected = computed(() => status.value === 'OPEN')
 export const isConnecting = computed(() => status.value === 'CONNECTING')

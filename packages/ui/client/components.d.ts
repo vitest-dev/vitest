@@ -6,7 +6,6 @@ declare module 'vue' {
   export interface GlobalComponents {
     CodeMirror: typeof import('./components/CodeMirror.vue')['default']
     ConnectionOverlay: typeof import('./components/ConnectionOverlay.vue')['default']
-    ConsoleOutput: typeof import('./components/ConsoleOutput.vue')['default']
     DetailsPanel: typeof import('./components/DetailsPanel.vue')['default']
     FileDetails: typeof import('./components/FileDetails.vue')['default']
     IconButton: typeof import('./components/IconButton.vue')['default']
@@ -18,6 +17,7 @@ declare module 'vue' {
     TaskItem: typeof import('./components/TaskItem.vue')['default']
     TasksList: typeof import('./components/TasksList.vue')['default']
     TaskTree: typeof import('./components/TaskTree.vue')['default']
+    ViewConsoleOutput: typeof import('./components/views/ViewConsoleOutput.vue')['default']
     ViewEditor: typeof import('./components/views/ViewEditor.vue')['default']
     ViewModuleGraph: typeof import('./components/views/ViewModuleGraph.vue')['default']
     ViewReport: typeof import('./components/views/ViewReport.vue')['default']

@@ -30,7 +30,7 @@ export function getTests(suite: Arrayable<Task>): Test[] {
   return toArray(suite).flatMap(s => s.type === 'test' ? [s] : s.tasks.flatMap(c => c.type === 'test' ? [c] : getTests(c)))
 }
 
-export function getTasks(tasks: Arrayable<Task>): Task[] {
+export function getTasks(tasks: Arrayable<Task> = []): Task[] {
   return toArray(tasks).flatMap(s => s.type === 'test' ? [s] : [s, ...getTasks(s.tasks)])
 }
 

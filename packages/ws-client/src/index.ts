@@ -5,6 +5,8 @@ import { parse, stringify } from 'flatted'
 import type { WebSocketEvents, WebSocketHandlers } from 'vitest'
 import { StateManager } from '../../vitest/src/node/state'
 
+export * from '../../vitest/src/utils/tasks'
+
 export interface VitestClientOptions {
   handlers?: Partial<WebSocketEvents>
   autoReconnect?: boolean
@@ -54,6 +56,9 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
       onTaskUpdate(packs) {
         ctx.state.updateTasks(packs)
         handlers.onTaskUpdate?.(packs)
+      },
+      onUserConsoleLog(log) {
+        ctx.state.updateUserLog(log)
       },
     },
     {

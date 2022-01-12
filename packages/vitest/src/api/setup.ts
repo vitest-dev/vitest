@@ -7,7 +7,7 @@ import { WebSocketServer } from 'ws'
 import type { ModuleNode } from 'vite'
 import { API_PATH } from '../constants'
 import type { Vitest } from '../node'
-import type { File, ModuleGraphData, Reporter, TaskResultPack } from '../types'
+import type { File, ModuleGraphData, Reporter, TaskResultPack, UserConsoleLog } from '../types'
 import { interpretSourcePos, parseStacktrace } from '../utils/source-map'
 import type { TransformResultWithSource, WebSocketEvents, WebSocketHandlers } from './types'
 
@@ -97,10 +97,9 @@ export function setup(ctx: Vitest) {
         },
       },
       {
-
         post: msg => ws.send(msg),
         on: fn => ws.on('message', fn),
-        eventNames: ['onCollected'],
+        eventNames: ['onCollected', 'onUserConsoleLog', 'onTaskUpdate'],
         serialize: stringify,
         deserialize: parse,
       },
@@ -142,6 +141,12 @@ class WebSocketReporter implements Reporter {
 
     this.clients.forEach((client) => {
       client.onTaskUpdate?.(packs)
+    })
+  }
+
+  onUserConsoleLog(log: UserConsoleLog) {
+    this.clients.forEach((client) => {
+      client.onUserConsoleLog?.(log)
     })
   }
 }
