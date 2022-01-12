@@ -20,6 +20,10 @@ export function normalizeId(id: string, base?: string): string {
     .replace(/\?$/, '') // remove end query mark
 }
 
+export function isPrimitive(v: any) {
+  return v !== Object(v)
+}
+
 export function toFilePath(id: string, root: string): string {
   let absolute = slash(id).startsWith('/@fs/')
     ? id.slice(4)
