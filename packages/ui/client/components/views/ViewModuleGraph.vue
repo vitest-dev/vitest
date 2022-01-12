@@ -178,7 +178,7 @@ html.dark {
 }
 
 .graph {
-    /* The graph container is offset in its parent. Thus we can't use the default 100% height and have to subtract the offset. */
+  /* The graph container is offset in its parent. Thus we can't use the default 100% height and have to subtract the offset. */
   height: calc(100% - 39px) !important;
 }
 
