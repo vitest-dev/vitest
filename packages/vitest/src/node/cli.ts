@@ -4,8 +4,8 @@ import { execa } from 'execa'
 import type { UserConfig } from '../types'
 import { version } from '../../package.json'
 import { ensurePackageInstalled } from '../utils'
-import type { Vitest } from './index'
-import { createVitest } from './index'
+import type { Vitest } from './core'
+import { createVitest } from './create'
 
 const CLOSE_TIMEOUT = 1_000
 

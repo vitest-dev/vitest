@@ -7,7 +7,7 @@ import type { RawSourceMap } from 'source-map-js'
 import { createBirpc } from 'birpc'
 import { distDir } from '../constants'
 import type { WorkerContext, WorkerRPC } from '../types'
-import type { Vitest } from './index'
+import type { Vitest } from './core'
 
 export type RunWithFiles = (files: string[], invalidates?: string[]) => Promise<void>
 
