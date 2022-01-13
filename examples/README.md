@@ -1,5 +1,6 @@
 | Example | Source | Playground |
 |---|---|---|
+| `basic` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/basic) | [Play Online](https://stackblitz.com/github/vitest-dev/vitest/tree/main/examples/basic?terminal=test) |
 | `lit` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/lit) | [Play Online](https://stackblitz.com/github/vitest-dev/vitest/tree/main/examples/lit?terminal=test) |
 | `mocks` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/mocks) | [Play Online](https://stackblitz.com/github/vitest-dev/vitest/tree/main/examples/mocks?terminal=test) |
 | `puppeteer` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/puppeteer) | [Play Online](https://stackblitz.com/github/vitest-dev/vitest/tree/main/examples/puppeteer?terminal=test) |
