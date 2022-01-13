@@ -4,9 +4,11 @@
   "scripts": {
     "build": "vite build",
     "coverage": "vitest --coverage",
-    "test": "vite build && vitest"
+    "test": "vite build && vitest",
+    "test:ui": "vite build && vitest --ui"
   },
   "devDependencies": {
+    "@vitest/ui": "latest",
     "puppeteer": "^13.0.0",
     "vite": "^2.7.10",
     "vitest": "latest"
