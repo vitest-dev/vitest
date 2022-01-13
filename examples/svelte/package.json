@@ -4,11 +4,13 @@
   "type": "module",
   "scripts": {
     "test": "vitest",
+    "test:ui": "vitest --ui",
     "coverage": "vitest --coverage"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^1.0.0-next.34",
     "@testing-library/svelte": "^3.0.3",
+    "@vitest/ui": "latest",
     "jsdom": "^19.0.0",
     "svelte": "^3.45.0",
     "vitest": "latest"
