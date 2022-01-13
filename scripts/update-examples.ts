@@ -3,8 +3,6 @@ import { promises as fs } from 'fs'
 import { resolve } from 'pathe'
 import { notNullish } from '../packages/vitest/src/utils'
 
-const noUI = ['ruby', 'vitesse', 'vue', 'vue2', 'vue-jsx']
-
 async function run() {
   const examplesRoot = resolve(fileURLToPath(import.meta.url), '../../examples')
 
@@ -16,8 +14,7 @@ async function run() {
       return
 
     const github = `https://github.com/vitest-dev/vitest/tree/main/examples/${name}`
-    const test = noUI.includes(name) ? '' : ':ui'
-    const stackblitz = `https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/${name}?terminal=test${test}`
+    const stackblitz = `https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/${name}`
     return {
       name,
       path,
