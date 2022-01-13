@@ -22,7 +22,8 @@ function getTaskName(id?: string) {
     <div v-for="log of logs" :key="log.taskId" font-mono>
       <div border="b base" p-4>
         <div
-          text-xs mb-1
+          text-xs
+          mb-1
           :class="log.type === 'stderr' ? 'text-red-600 dark:text-red-300': 'op30'"
         >
           {{ formatTime(log.time) }} | {{ getTaskName(log.taskId) }} | {{ log.type }}

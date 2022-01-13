@@ -5,7 +5,10 @@ import { client, isConnected, isConnecting } from '~/composables/client'
 <template>
   <template v-if="!isConnected">
     <div
-      fixed inset-0 p2 z-10
+      fixed
+      inset-0
+      p2
+      z-10
       select-none
       text="center sm"
       bg="overlay"
@@ -16,7 +19,8 @@ import { client, isConnected, isConnecting } from '~/composables/client'
         h-full
 
         flex="~ col gap-2"
-        items-center justify-center
+        items-center
+        justify-center
         :class="isConnecting ? 'animate-pulse': ''"
       >
         <div

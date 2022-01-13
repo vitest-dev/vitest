@@ -18,7 +18,14 @@ const code = computed(() => result.value?.code?.replace(/\/\/# sourceMappingURL=
       <p op50 font-mono text-sm>
         {{ id }}
       </p>
-      <IconButton absolute top-5px right-5px icon="i-carbon-close" text-2xl @click="$emit('close')" />
+      <IconButton
+        absolute
+        top-5px
+        right-5px
+        icon="i-carbon-close"
+        text-2xl
+        @click="$emit('close')"
+      />
     </div>
     <div v-if="!result" p-5>
       No transform result found for this module.

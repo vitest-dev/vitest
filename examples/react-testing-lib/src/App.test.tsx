@@ -8,9 +8,9 @@ describe('Simple working test', () => {
     expect(screen.getByText(/Hello Vite \+ React!/i)).toBeInTheDocument()
   })
 
-  it('should increment count on click', async () => {
+  it('should increment count on click', async() => {
     await render(<App />)
-    let btn = await screen.findByRole('button')
+    const btn = await screen.findByRole('button')
     expect(screen.getByText(/count is: 0/i))
     userEvent.click(btn)
     await waitFor(() => {

@@ -54,5 +54,8 @@
     "vitepress": "^0.21.4",
     "vitest": "workspace:*",
     "vue": "^3.2.25"
+  },
+  "dependencies": {
+    "test": "^0.6.0"
   }
 }

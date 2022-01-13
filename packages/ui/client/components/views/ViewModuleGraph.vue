@@ -131,7 +131,8 @@ function bindOnClick(selection: Selection<SVGCircleElement, ModuleNode, SVGGElem
             ws-nowrap
             overflow-hidden
             capitalize
-            truncate :for="`type-${node}`"
+            truncate
+            :for="`type-${node}`"
             border-b-2
             :style="{ 'border-color': `var(--color-node-${node})`}"
           >

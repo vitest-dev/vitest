@@ -41,18 +41,46 @@ const changeViewMode = (view: Params['view']) => {
 </script>
 
 <template>
-  <div v-if="current" flex flex-col h-full max-h-full overflow-hidden>
+  <div
+    v-if="current"
+    flex
+    flex-col
+    h-full
+    max-h-full
+    overflow-hidden
+  >
     <div>
-      <div p="2" h-10 flex="~ gap-2" items-center bg-header border="b base">
+      <div
+        p="2"
+        h-10
+        flex="~ gap-2"
+        items-center
+        bg-header
+        border="b base"
+      >
         <StatusIcon :task="current" />
-        <div flex-1 font-light op-50 ws-nowrap truncate text-sm>
+        <div
+          flex-1
+          font-light
+          op-50
+          ws-nowrap
+          truncate
+          text-sm
+        >
           {{ current?.filepath }}
         </div>
         <div class="flex text-lg">
           <IconButton icon="i-carbon-launch" :disabled="!current?.filepath" :onclick="open" />
         </div>
       </div>
-      <div flex="~" items-center bg-header border="b base" text-sm h-37px>
+      <div
+        flex="~"
+        items-center
+        bg-header
+        border="b base"
+        text-sm
+        h-37px
+      >
         <button tab-button :class="{ 'tab-button-active': viewMode == null }" @click="changeViewMode(null)">
           Report
         </button>
