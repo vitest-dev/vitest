@@ -14,7 +14,7 @@ async function run() {
       return
 
     const github = `https://github.com/vitest-dev/vitest/tree/main/examples/${name}`
-    const stackblitz = `https://stackblitz.com/github/vitest-dev/vitest/tree/main/examples/${name}?terminal=test`
+    const stackblitz = `https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/${name}?terminal=test`
     return {
       name,
       path,
