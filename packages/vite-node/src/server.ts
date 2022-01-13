@@ -29,13 +29,12 @@ export class ViteNodeServer {
   }
 
   async transformRequest(id: string) {
-  // reuse transform for concurrent requests
+    // reuse transform for concurrent requests
     if (!this.promiseMap.has(id)) {
       this.promiseMap.set(id,
         this._transformRequest(id)
-          .then((r) => {
+          .finally(() => {
             this.promiseMap.delete(id)
-            return r
           }),
       )
     }
