@@ -25,7 +25,7 @@ async function run() {
 
   const table = `| Example | Source | Playground |\n|---|---|---|\n${data.filter(notNullish).map(i => `| \`${i.name}\` | [GitHub](${i.github}) | [Play Online](${i.stackblitz}) |`).join('\n')}`
 
-  await fs.writeFile(resolve(examplesRoot, 'README.md'), `# Examples\n\n${table}\n`, 'utf-8')
+  await fs.writeFile(resolve(examplesRoot, 'README.md'), `${table}\n`, 'utf-8')
 }
 
 run()

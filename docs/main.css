@@ -85,3 +85,7 @@ main.home {
   border-color: var(--c-accent) !important;
   background-color: #90C32130 !important;
 }
+
+th, td {
+  border: 1px solid #8885;
+}
