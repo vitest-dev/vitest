@@ -1,3 +1,5 @@
+import { promises as fs } from 'fs'
+import { resolve } from 'pathe'
 import type { Vitest } from '../node'
 import type { File, Reporter } from '../types'
 import { getSuites, getTests } from '../utils'
@@ -35,7 +37,7 @@ export class JsonReporter implements Reporter {
     this.start = performance.now()
   }
 
-  protected logTasks(files: File[]) {
+  protected async logTasks(files: File[]) {
     const suites = getSuites(files)
     const numTotalTestSuites = suites.length
     const tests = getTests(files)
@@ -61,10 +63,26 @@ export class JsonReporter implements Reporter {
 
     const result: AggregatedResult = { numTotalTestSuites, numPassedTestSuites, numFailedTestSuites, numPendingTestSuites, numTotalTests, numPassedTests, numFailedTests, numPendingTests, numTodoTests, startTime: this.start, success, testResults }
 
-    this.ctx.log(JSON.stringify(result))
+    await this.writeReport(JSON.stringify(result))
   }
 
   async onFinished(files = this.ctx.state.getFiles()) {
-    this.logTasks(files)
+    await this.logTasks(files)
+  }
+
+  /**
+   * Writes the report to an output file if specified in the config,
+   * or logs it to the console otherwise.
+   * @param report
+   */
+  async writeReport(report: string) {
+    if (this.ctx.config.outputFile) {
+      const reportFile = resolve(this.ctx.config.root, this.ctx.config.outputFile)
+      await fs.writeFile(reportFile, report, 'utf-8')
+      this.ctx.log(`JSON report written to ${reportFile}`)
+    }
+    else {
+      this.ctx.log(report)
+    }
   }
 }

@@ -119,6 +119,11 @@ export interface InlineConfig {
   reporters?: Arrayable<BuiltinReporters | Reporter>
 
   /**
+   * Write test results to a file when the --reporter=json option is also specified
+   */
+  outputFile?: string
+
+  /**
    * Enable multi-threading
    *
    * @default true
