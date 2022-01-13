@@ -80,7 +80,7 @@
     "fast-glob": "^3.2.10",
     "find-up": "^6.2.0",
     "flatted": "^3.2.4",
-    "happy-dom": "^2.25.1",
+    "happy-dom": "^2.25.2",
     "jsdom": "^19.0.0",
     "log-update": "^5.0.0",
     "magic-string": "^0.25.7",
