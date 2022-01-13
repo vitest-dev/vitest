@@ -1,16 +1,20 @@
-import { describe, expect, it } from 'vitest'
-import { render, screen, userEvent } from './utils/test-utils'
+import '@testing-library/jest-dom'
 import App from './App'
+import { render, screen, userEvent, waitFor } from './utils/test-utils'
 
 describe('Simple working test', () => {
   it('the title is visible', () => {
     render(<App />)
-    expect(screen.getByText(/Hello Vite \+ React!/i)).toBeDefined()
+    expect(screen.getByText(/Hello Vite \+ React!/i)).toBeInTheDocument()
   })
 
-  it('should increment count on click', () => {
-    render(<App />)
-    userEvent.click(screen.getByRole('button'))
-    expect(screen.findByText(/count is: 1/i)).toBeDefined()
+  it('should increment count on click', async () => {
+    await render(<App />)
+    let btn = await screen.findByRole('button')
+    expect(screen.getByText(/count is: 0/i))
+    userEvent.click(btn)
+    await waitFor(() => {
+      expect(screen.getByText(/count is: 1/i))
+    })
   })
 })
