@@ -66,6 +66,10 @@ main.home {
   background-color: rgba(255, 229, 100, 0.1)
 }
 
+.custom-block.info {
+  color: var(--c-text-light-2);
+}
+
 .custom-block.warning {
   color: inherit;
 }
