@@ -77,6 +77,7 @@ export interface C8Options {
   exclude?: string[]
   include?: string[]
   skipFull?: boolean
+  extension?: string | string[]
 
   // c8 options, not sure if we should expose them
   /**
