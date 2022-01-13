@@ -485,7 +485,7 @@ importers:
       fast-glob: ^3.2.10
       find-up: ^6.2.0
       flatted: ^3.2.4
-      happy-dom: ^2.25.1
+      happy-dom: ^2.25.2
       jsdom: ^19.0.0
       local-pkg: ^0.4.1
       log-update: ^5.0.0
@@ -536,7 +536,7 @@ importers:
       fast-glob: 3.2.10
       find-up: 6.2.0
       flatted: 3.2.4
-      happy-dom: 2.25.1
+      happy-dom: 2.25.2
       jsdom: 19.0.0
       log-update: 5.0.0
       magic-string: 0.25.7
@@ -628,6 +628,9 @@ importers:
       vitest: workspace:*
     devDependencies:
       vitest: link:../../packages/vitest
+
+  test/snapshots:
+    specifiers: {}
 
 packages:
 
@@ -10599,6 +10602,17 @@ packages:
 
   /happy-dom/2.25.1:
     resolution: {integrity: sha512-HGNjJ0rROjpRvGUaZ9exj9hbR2rTeKJyhswmr+YhRr/jQuYmXdokq0oHVUkqo2AkJRnF/8FEWDENdrLorib8lA==}
+    dependencies:
+      he: 1.2.0
+      node-fetch: 2.6.6
+      sync-request: 6.1.0
+      webidl-conversions: 7.0.0
+      whatwg-encoding: 1.0.5
+      whatwg-mimetype: 2.3.0
+    dev: true
+
+  /happy-dom/2.25.2:
+    resolution: {integrity: sha512-PEKxqE7v04J3t6hESxmWwbeimJSNpw+10OyG2dqA8uUsm35xqM2fL0KoppQHC2BRuPKy43rmH+ZHEXMuGz3XEQ==}
     dependencies:
       he: 1.2.0
       node-fetch: 2.6.6
