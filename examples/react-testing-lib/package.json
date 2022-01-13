@@ -22,6 +22,6 @@
     "@vitejs/plugin-react": "^1.1.4",
     "happy-dom": "*",
     "vite": "^2.7.10",
-    "vitest": "workspace:*"
+    "vitest": "latest"
   }
 }

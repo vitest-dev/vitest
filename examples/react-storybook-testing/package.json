@@ -34,7 +34,7 @@
     "storybook-builder-vite": "^0.1.13",
     "typescript": "^4.4.4",
     "vite": "^2.7.10",
-    "vitest": "workspace:*"
+    "vitest": "latest"
   },
   "msw": {
     "workerDirectory": "public"

@@ -12,6 +12,6 @@
     "@vitejs/plugin-vue": "^2.0.1",
     "@vue/test-utils": "^2.0.0-rc.18",
     "happy-dom": "*",
-    "vitest": "workspace:*"
+    "vitest": "latest"
   }
 }

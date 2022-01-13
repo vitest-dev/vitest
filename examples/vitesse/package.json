@@ -14,6 +14,6 @@
     "happy-dom": "*",
     "unplugin-auto-import": "^0.5.5",
     "unplugin-vue-components": "^0.17.11",
-    "vitest": "workspace:*"
+    "vitest": "latest"
   }
 }

@@ -12,6 +12,6 @@
     "happy-dom": "*",
     "vite": "^2.7.10",
     "vue": "^3.2.26",
-    "vitest": "workspace:*"
+    "vitest": "latest"
   }
 }
