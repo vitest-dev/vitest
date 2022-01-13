@@ -8,17 +8,7 @@ const open = ref(true)
 
 <template>
   <div :open="open" class="details-panel" @toggle="open = $event.target.open">
-    <div
-      p="y1"
-      text-sm
-      items-center
-      gap-2
-      :class="color"
-      w-full
-      flex
-      select-none
-      cursor-pointer
-    >
+    <div p="y1" text-sm items-center gap-2 :class="color" w-full flex select-none cursor-pointer>
       <div flex-1 h-1px border="base b" op80 />
       <slot name="summary" :open="open" />
       <div flex-1 h-1px border="base b" op80 />
