@@ -12,6 +12,7 @@
     "@types/react": "^17.0.38",
     "@types/react-test-renderer": "^17.0.1",
     "@vitejs/plugin-react": "1.1.4",
+    "happy-dom": "^2.25.2",
     "jsdom": "*",
     "react-test-renderer": "17.0.2",
     "vitest": "latest"

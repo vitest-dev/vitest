@@ -128,6 +128,7 @@ importers:
       '@types/react': ^17.0.38
       '@types/react-test-renderer': ^17.0.1
       '@vitejs/plugin-react': 1.1.4
+      happy-dom: ^2.25.2
       jsdom: '*'
       react: ^17.0.2
       react-test-renderer: 17.0.2
@@ -138,6 +139,7 @@ importers:
       '@types/react': 17.0.38
       '@types/react-test-renderer': 17.0.1
       '@vitejs/plugin-react': 1.1.4
+      happy-dom: 2.25.2
       jsdom: 19.0.0
       react-test-renderer: 17.0.2_react@17.0.2
       vitest: link:../../packages/vitest
