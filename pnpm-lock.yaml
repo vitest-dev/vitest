@@ -85,6 +85,16 @@ importers:
       unplugin-vue-components: 0.17.11_5f0e46dd90b19e6d0d01b34ab1022632
       vitepress: 0.21.4
 
+  examples/basic:
+    specifiers:
+      '@vitest/ui': latest
+      vite: ^2.7.10
+      vitest: latest
+    devDependencies:
+      '@vitest/ui': link:../../packages/ui
+      vite: 2.7.10
+      vitest: link:../../packages/vitest
+
   examples/lit:
     specifiers:
       happy-dom: '*'

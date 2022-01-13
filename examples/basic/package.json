@@ -1,0 +1,16 @@
+{
+  "name": "vitest-test",
+  "private": true,
+  "main": "index.js",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "test": "vitest --ui",
+    "test:run": "vitest run"
+  },
+  "devDependencies": {
+    "@vitest/ui": "latest",
+    "vite": "^2.7.10",
+    "vitest": "latest"
+  }
+}
