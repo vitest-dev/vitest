@@ -28,14 +28,11 @@ importers:
       rollup-plugin-dts: ^4.1.0
       rollup-plugin-esbuild: ^4.8.2
       rollup-plugin-license: ^2.6.1
-      test: ^0.6.0
       typescript: ^4.5.4
       vite: ^2.7.10
       vitepress: ^0.21.4
       vitest: workspace:*
       vue: ^3.2.25
-    dependencies:
-      test: 0.6.0
     devDependencies:
       '@antfu/eslint-config': 0.15.0_eslint@8.6.0+typescript@4.5.4
       '@antfu/ni': 0.12.0
@@ -6367,11 +6364,6 @@ packages:
     dependencies:
       type-fest: 1.4.0
     dev: true
-
-  /ansi-font/0.0.2:
-    resolution: {integrity: sha1-iQMBvVhBRi/TnAt3Ca/R9SUUMzE=}
-    engines: {node: '>=0.4.x'}
-    dev: false
 
   /ansi-html-community/0.0.8:
     resolution: {integrity: sha512-1APHAyr3+PCamwNw3bXCPp4HFLONZt/yIH0sZp0/469KWNTEy+qN5jQ3GVX6DMZ1UXAi34yVwtTeaG/HpBuuzw==}
@@ -15700,12 +15692,6 @@ packages:
       glob: 7.2.0
       minimatch: 3.0.4
     dev: true
-
-  /test/0.6.0:
-    resolution: {integrity: sha1-WYasRF7Bd1QyJRLRBLoyyKY+k44=}
-    dependencies:
-      ansi-font: 0.0.2
-    dev: false
 
   /text-table/0.2.0:
     resolution: {integrity: sha1-f17oI66AUgfACvLfSoTsP8+lcLQ=}
