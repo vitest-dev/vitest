@@ -280,7 +280,7 @@ importers:
       '@types/react': ^17.0.38
       '@types/react-dom': ^17.0.11
       '@vitejs/plugin-react': ^1.1.4
-      happy-dom: '*'
+      jsdom: ^19.0.0
       react: ^17.0.2
       react-dom: ^17.0.2
       vite: ^2.7.10
@@ -296,7 +296,7 @@ importers:
       '@types/react': 17.0.38
       '@types/react-dom': 17.0.11
       '@vitejs/plugin-react': 1.1.4
-      happy-dom: 2.25.1
+      jsdom: 19.0.0
       vite: 2.7.10
       vitest: link:../../packages/vitest
 
@@ -308,6 +308,7 @@ importers:
       '@types/react-dom': ^17.0.11
       '@vitejs/plugin-react': ^1.1.4
       cross-fetch: ^3.1.4
+      jsdom: ^19.0.0
       msw: ^0.36.3
       react: ^17.0.2
       react-dom: ^17.0.2
@@ -323,6 +324,7 @@ importers:
       '@types/react-dom': 17.0.11
       '@vitejs/plugin-react': 1.1.4
       cross-fetch: 3.1.4
+      jsdom: 19.0.0
       msw: 0.36.3
       vite: 2.7.10
       vitest: link:../../packages/vitest
@@ -347,11 +349,13 @@ importers:
     specifiers:
       '@sveltejs/vite-plugin-svelte': ^1.0.0-next.34
       '@testing-library/svelte': ^3.0.3
+      jsdom: ^19.0.0
       svelte: ^3.45.0
       vitest: latest
     devDependencies:
       '@sveltejs/vite-plugin-svelte': 1.0.0-next.34_svelte@3.45.0+vite@2.7.10
       '@testing-library/svelte': 3.0.3_svelte@3.45.0
+      jsdom: 19.0.0
       svelte: 3.45.0
       vitest: link:../../packages/vitest
 
