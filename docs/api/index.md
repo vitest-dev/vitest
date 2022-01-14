@@ -1084,7 +1084,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 
   Returns mocked current date that was set using `mockCurrentDate`. If date is not mocked, will return `null`.
 
-  ### vi.mock
+### vi.mock
 
   **Type**: `(path: string, factory?: () => any) => void`
 
@@ -1095,6 +1095,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
   - If `__mocks__` folder with file of the same name exist, all imports will return its exports.
   - If there is no `__mocks__` folder or a file with the same name inside, will call original module and mock it.
 
+Additionally, unlike Jest, mocked modules in `__mocks__` are not loaded unless `vi.mock()` is called.
 ### vi.mockCurrentDate
 
 - **Type**: `(date: string | number | Date) => void`
