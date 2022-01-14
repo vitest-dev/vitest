@@ -184,6 +184,12 @@ Custom reporters for output. Reporters can be [a Reporter instance](https://gith
   - `'dot'` -  show each task as a single dot
   - `'json'` -  give a simple JSON summary
 
+### outputFile
+
+- **Type:** `string`
+
+Write test results to a file when the `--reporter=json` option is also specified.
+
 ### threads
 
 - **Type:** `boolean`
