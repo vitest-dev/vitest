@@ -150,6 +150,7 @@ export class JUnitReporter implements Reporter {
 
         return {
           ...file,
+          tasks,
           stats,
         }
       })
