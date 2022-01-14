@@ -1,3 +1,6 @@
+// this file should not be converted to js
+// so it won't be transformed by esbuild
+
 import { assert, test, vi } from 'vitest'
 import { two } from '../src/submodule'
 import { timeout } from '../src/timeout'
@@ -5,6 +8,8 @@ import { timeout } from '../src/timeout'
 /*
     vi.mock('../src/timeout', () => ({ timeout: 0 }))
  /* */
+
+// vi.mock('../src/timeout', () => ({ timeout: 0 }))
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const text = `

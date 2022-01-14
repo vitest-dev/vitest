@@ -32,7 +32,7 @@ export default defineConfig({
         facetFilters: ['tags:en']
       }
     },
-    
+
     carbonAds: {
       carbon: '...',
       placement: 'vitest'
@@ -46,7 +46,6 @@ export default defineConfig({
       // { text: 'Plugins', link: '/plugins/' },
       {
         text: 'Discord',
-        // TODO: 'https://chat.vitest.dev'
         link: 'https://chat.vitest.dev'
       },
       {
@@ -85,7 +84,8 @@ export default defineConfig({
           children: [
             {
               text: 'Why Vitest',
-              link: '/guide/why'
+              link: '/guide/why',
+
             },
             {
               text: 'Getting Started',
@@ -96,24 +96,8 @@ export default defineConfig({
               link: '/guide/features'
             },
             {
-              text: 'Mocking Functions',
+              text: 'Mocking',
               link: '/guide/mocking'
-            },
-            {
-              text: 'Mocking Modules',
-              link: '/guide/mocking-modules'
-            },
-            {
-              text: 'Mocking Timers',
-              link: '/guide/mocking-timers'
-            },
-            {
-              text: 'Mocking Date',
-              link: '/guide/mocking-date'
-            },
-            {
-              text: 'Mocking Requests',
-              link: '/guide/mocking-requests'
             },
             {
               text: 'Debugging',

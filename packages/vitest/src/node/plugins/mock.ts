@@ -28,8 +28,6 @@ export const MocksPlugin = (): Plugin => {
 
       const mocks = code.matchAll(mockRegexp)
 
-      let previousIndex = 0
-
       for (const mockResult of mocks) {
         // we need to parse parsed string because factory may contain importActual
         const lastIndex = getMockLastIndex(code.slice(mockResult.index!))
@@ -39,12 +37,11 @@ export const MocksPlugin = (): Plugin => {
 
         const startIndex = mockResult.index!
 
-        const { insideComment, insideString } = getRangeStatus(code, previousIndex, startIndex)
+        const { insideComment, insideString } = getIndexStatus(code, startIndex)
 
         if (insideComment || insideString)
           continue
 
-        previousIndex = startIndex
         const endIndex = startIndex + lastIndex
 
         const filepath = await this.resolve(path, id)
@@ -91,34 +88,46 @@ function getMethodCall(method: string, actualPath: string, importPath: string) {
   return `__vitest__${method}__("${actualPath}", ${nodeModule}`
 }
 
-function getRangeStatus(code: string, from: number, to: number) {
+function getIndexStatus(code: string, from: number) {
   let index = 0
-  let started = false
-  let ended = true
+  let commentStarted = false
+  let commentEnded = true
+  let multilineCommentStarted = false
+  let multilineCommentEnded = true
   let inString: string | null = null
   let beforeChar: string | null = null
 
-  while (index <= to) {
+  while (index <= from) {
     const char = code[index]
     const sub = code[index] + code[index + 1]
 
-    const isCharString = char === '"' || char === '\'' || char === '`'
-
-    if (isCharString && beforeChar !== '\\') {
-      if (inString === char)
-        inString = null
-      else if (!inString)
-        inString = char
+    if (!inString) {
+      if (sub === '/*') {
+        multilineCommentStarted = true
+        multilineCommentEnded = false
+      }
+      if (sub === '*/' && multilineCommentStarted) {
+        multilineCommentStarted = false
+        multilineCommentEnded = true
+      }
+      if (sub === '//') {
+        commentStarted = true
+        commentEnded = false
+      }
+      if ((char === '\n' || sub === '\r\n') && commentStarted) {
+        commentStarted = false
+        commentEnded = true
+      }
     }
 
-    if (!inString && index >= from) {
-      if (sub === '/*') {
-        started = true
-        ended = false
-      }
-      if (sub === '*/' && started) {
-        started = false
-        ended = true
+    if (!multilineCommentStarted && !commentStarted) {
+      const isCharString = char === '"' || char === '\'' || char === '`'
+
+      if (isCharString && beforeChar !== '\\') {
+        if (inString === char)
+          inString = null
+        else if (!inString)
+          inString = char
       }
     }
 
@@ -127,7 +136,7 @@ function getRangeStatus(code: string, from: number, to: number) {
   }
 
   return {
-    insideComment: !ended,
+    insideComment: !multilineCommentEnded || !commentEnded,
     insideString: inString !== null,
   }
 }
