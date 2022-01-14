@@ -146,10 +146,9 @@ function registerConsoleShortcuts(ctx: Vitest) {
   readline.emitKeypressEvents(process.stdin)
   process.stdin.setRawMode(true)
   process.stdin.on('keypress', (str: string, key: any) => {
-    if (str === '\x03' || str === '\x1B' || (key && key.ctrl && key.name === 'c')) { // ctrl-c or esc
-      closeServerAndExitProcess(ctx)
-      return
-    }
+    // ctrl-c or esc
+    if (str === '\x03' || str === '\x1B' || (key && key.ctrl && key.name === 'c'))
+      return closeServerAndExitProcess(ctx)
 
     // is running, ignore keypress
     if (ctx.runningPromise)
@@ -157,7 +156,7 @@ function registerConsoleShortcuts(ctx: Vitest) {
 
     // press any key to exit on first run
     if (ctx.isFirstRun)
-      closeServerAndExitProcess(ctx)
+      return closeServerAndExitProcess(ctx)
 
     // TODO: add more commands
   })

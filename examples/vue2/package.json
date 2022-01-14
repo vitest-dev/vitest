@@ -11,9 +11,9 @@
   "devDependencies": {
     "@vue/composition-api": "^1.4.3",
     "@vue/test-utils": "^1.3.0",
-    "happy-dom": "*",
-    "unplugin-vue2-script-setup": "^0.8.3",
-    "vite": "^2.7.10",
+    "happy-dom": "latest",
+    "unplugin-vue2-script-setup": "^0.9.0",
+    "vite": "latest",
     "vite-plugin-vue2": "^1.9.2",
     "vitest": "latest",
     "vue-template-compiler": "2.6.14"

@@ -58,7 +58,7 @@
     "local-pkg": "^0.4.1",
     "tinypool": "^0.1.1",
     "tinyspy": "^0.2.8",
-    "vite": ">=2.7.10"
+    "vite": ">=2.7.12"
   },
   "devDependencies": {
     "@antfu/install-pkg": "^0.1.0",
@@ -98,7 +98,7 @@
     "strip-ansi": "^7.0.1",
     "typescript": "^4.5.4",
     "vite-node": "workspace:*",
-    "ws": "^8.4.0"
+    "ws": "^8.4.1"
   },
   "peerDependencies": {
     "@vitest/ui": "*",

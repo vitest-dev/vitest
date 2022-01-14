@@ -11,8 +11,8 @@
     "@sveltejs/vite-plugin-svelte": "^1.0.0-next.34",
     "@testing-library/svelte": "^3.0.3",
     "@vitest/ui": "latest",
-    "jsdom": "^19.0.0",
-    "svelte": "^3.45.0",
+    "jsdom": "latest",
+    "svelte": "^3.46.1",
     "vitest": "latest"
   }
 }

@@ -13,9 +13,9 @@
   },
   "devDependencies": {
     "@iconify-json/carbon": "^1.0.12",
-    "@unocss/reset": "^0.22.0",
+    "@unocss/reset": "^0.22.2",
     "@vitejs/plugin-vue": "^2.0.1",
-    "unocss": "^0.22.0",
+    "unocss": "^0.22.2",
     "unplugin-vue-components": "^0.17.11",
     "vitepress": "^0.21.4"
   }

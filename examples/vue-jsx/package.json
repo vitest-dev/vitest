@@ -9,9 +9,9 @@
     "@vitejs/plugin-vue": "^2.0.1",
     "@vitejs/plugin-vue-jsx": "^1.3.3",
     "@vue/test-utils": "^2.0.0-rc.18",
-    "happy-dom": "*",
-    "vite": "^2.7.10",
-    "vue": "^3.2.26",
-    "vitest": "latest"
+    "happy-dom": "latest",
+    "vite": "latest",
+    "vitest": "latest",
+    "vue": "^3.2.26"
   }
 }
