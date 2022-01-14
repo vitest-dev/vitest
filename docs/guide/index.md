@@ -108,6 +108,7 @@ vitest related /src/index.ts /src/hello-world.js
 | `--threads` | Enable Threads (default: true) |
 | `--silent` | Silent console output from tests |
 | `--reporter <name>` | Select reporter: `default`, `verbose`, `dot` or `json` |
+| `--outputFile <filename>` | Write test results to a file when the `--reporter=json` option is also specified |
 | `--coverage` | Use c8 for coverage |
 | `--run` | Do not watch |
 | `--global` | Inject APIs globally |
