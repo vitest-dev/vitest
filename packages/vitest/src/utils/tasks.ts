@@ -21,6 +21,13 @@ export function hasFailed(suite: Arrayable<Task>): boolean {
   return toArray(suite).some(s => s.result?.state === 'fail' || (s.type === 'suite' && hasFailed(s.tasks)))
 }
 
+export function hasFailedSnapshot(suite: Arrayable<Task>): boolean {
+  return getTests(suite).some((s) => {
+    const message = s.result?.error?.message
+    return message?.match(/Snapshot .* mismatched/)
+  })
+}
+
 export function getNames(task: Task) {
   const names = [task.name]
   let current: Task | undefined = task

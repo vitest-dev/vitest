@@ -11,6 +11,16 @@ export class StateManager {
     return Array.from(this.filesMap.values())
   }
 
+  getFilepaths(): string[] {
+    return Array.from(this.filesMap.keys())
+  }
+
+  getFailedFilepaths() {
+    return this.getFiles()
+      .filter(i => i.result?.state === 'fail')
+      .map(i => i.filepath)
+  }
+
   collectFiles(files: File[] = []) {
     files.forEach((file) => {
       this.filesMap.set(file.filepath, file)

@@ -194,7 +194,20 @@ export class Vitest {
     return await this.runningPromise
   }
 
-  async updateSnapshot(files: string[] = Array.from(this.state.filesMap.keys())) {
+  async rerunFiles(files: string[] = this.state.getFilepaths(), trigger?: string) {
+    await this.report('onWatcherRerun', files, trigger)
+    await this.runFiles(files)
+    await this.report('onWatcherStart')
+  }
+
+  async returnFailed() {
+    await this.rerunFiles(this.state.getFailedFilepaths(), 'rerun failed')
+  }
+
+  async updateSnapshot(files?: string[]) {
+    // default to failed files
+    files = files || this.state.getFailedFilepaths()
+
     this.configOverride = {
       snapshotOptions: {
         updateSnapshot: 'all',
@@ -202,10 +215,7 @@ export class Vitest {
     }
 
     try {
-      await this.runFiles(files)
-
-      if (this.config.watch)
-        await this.report('onWatcherStart')
+      await this.rerunFiles(files, 'update snapshot')
     }
     finally {
       this.configOverride = undefined

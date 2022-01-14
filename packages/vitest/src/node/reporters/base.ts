@@ -2,11 +2,19 @@ import { performance } from 'perf_hooks'
 import { relative } from 'pathe'
 import c from 'picocolors'
 import type { ErrorWithDiff, File, Reporter, Task, TaskResultPack, UserConsoleLog } from '../../types'
-import { getFullName, getSuites, getTests, hasFailed } from '../../utils'
+import { getFullName, getSuites, getTests, hasFailed, hasFailedSnapshot } from '../../utils'
 import type { Vitest } from '../../node'
 import { printError } from './renderers/diff'
 import { F_RIGHT } from './renderers/figures'
 import { divider, getStateString, getStateSymbol, renderSnapshotSummary } from './renderers/utils'
+
+const BADGE_PADDING = '       '
+const HELP_HINT = `${c.dim('press ')}h${c.dim(' to show help')}`
+const HELP_UPDATE_SNAP = c.dim('press ') + c.bold(c.yellow('u')) + c.dim(' to update snapshot')
+const HELP_QUITE = `${c.dim('press ')}q${c.dim(' to quit')}`
+
+const WAIT_FOR_CHANGE_PASS = `\n${c.bold(c.inverse(c.green(' PASS ')))}${c.green(' Waiting for file changes...')}`
+const WAIT_FOR_CHANGE_FAIL = `\n${c.bold(c.inverse(c.red(' FAIL ')))}${c.red(' Tests failed. Watching for file changes...')}`
 
 export abstract class BaseReporter implements Reporter {
   start = 0
@@ -46,19 +54,22 @@ export abstract class BaseReporter implements Reporter {
     }
   }
 
-  isFirstWatchRun = true
-
   async onWatcherStart() {
-    const failed = hasFailed(this.ctx.state.getFiles())
+    const files = this.ctx.state.getFiles()
+    const failed = hasFailed(files)
+    const failedSnap = hasFailedSnapshot(files)
     if (failed)
-      this.ctx.log(`\n${c.bold(c.inverse(c.red(' FAIL ')))}${c.red(' Tests failed. Watching for file changes...')}`)
+      this.ctx.log(WAIT_FOR_CHANGE_FAIL)
     else
-      this.ctx.log(`\n${c.bold(c.inverse(c.green(' PASS ')))}${c.green(' Waiting for file changes...')}`)
+      this.ctx.log(WAIT_FOR_CHANGE_PASS)
 
-    if (this.isFirstWatchRun) {
-      this.isFirstWatchRun = false
-      this.ctx.log(c.gray('press any key to exit...'))
-    }
+    const hints = [HELP_HINT]
+    if (failedSnap)
+      hints.unshift(HELP_UPDATE_SNAP)
+    else
+      hints.push(HELP_QUITE)
+
+    this.ctx.log(BADGE_PADDING + hints.join(c.dim(', ')))
   }
 
   async onWatcherRerun(files: string[], trigger?: string) {

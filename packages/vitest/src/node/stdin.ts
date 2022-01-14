@@ -1,8 +1,21 @@
 import readline from 'readline'
+import c from 'picocolors'
 import type { Vitest } from './core'
 
-export function printShortcutsHelp() {
+const keys = [
+  ['a', 'rerun all tests'],
+  ['f', 'rerun only failed tests'],
+  ['u', 'update snapshot'],
+  ['q', 'quit'],
+]
 
+export function printShortcutsHelp() {
+  process.stdout.write(
+    `
+${c.bold('Watch Usage')}
+${keys.map(i => c.dim('  press ') + c.reset(i[0]) + c.dim(` to ${i[1]}`)).join('\n')}
+`,
+  )
 }
 
 export function registerConsoleShortcuts(ctx: Vitest) {
@@ -25,9 +38,11 @@ export function registerConsoleShortcuts(ctx: Vitest) {
     // update snapshot
     if (name === 'u')
       return ctx.updateSnapshot()
-
-    // press any key to exit on first run
-    if (ctx.isFirstRun)
+    // rerun all tests
+    if (name === 'a' || name === 'return')
+      return ctx.rerunFiles(undefined, 'rerun all')
+    // quit
+    if (name === 'q')
       return ctx.exit()
 
     // TODO: add more commands

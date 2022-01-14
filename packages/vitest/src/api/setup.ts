@@ -43,9 +43,7 @@ export function setup(ctx: Vitest) {
           return fs.writeFile(id, content, 'utf-8')
         },
         async rerun(files) {
-          await ctx.report('onWatcherRerun', files)
-          await ctx.runFiles(files)
-          await ctx.report('onWatcherStart')
+          await ctx.rerunFiles(files)
         },
         getConfig() {
           return ctx.config
