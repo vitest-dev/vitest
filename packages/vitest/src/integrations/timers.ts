@@ -18,6 +18,7 @@ export class FakeTimers {
   private _fakingTime: boolean
   private _fakeTimers: FakeTimerWithContext
   private _maxLoops: number
+  private _now = Date.now
 
   constructor({
     global,
@@ -112,7 +113,7 @@ export class FakeTimers {
   }
 
   getRealSystemTime(): number {
-    return Date.now()
+    return this._now()
   }
 
   getTimerCount(): number {

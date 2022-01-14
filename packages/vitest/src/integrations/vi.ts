@@ -65,7 +65,7 @@ class VitestUtils {
     return this
   }
 
-  public getMockedDate() {
+  public getMockedSystemTime() {
     return this._mockedDate
   }
 
