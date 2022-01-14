@@ -6,6 +6,7 @@ import { getNames } from './tasks'
 
 export * from './tasks'
 export * from './path'
+export * from './base'
 
 export const isWindows = process.platform === 'win32'
 
@@ -59,55 +60,6 @@ export async function ensurePackageInstalled(
   }
 
   return false
-}
-
-export function isObject(item: unknown): boolean {
-  return item != null && typeof item === 'object' && !Array.isArray(item)
-}
-
-function deepMergeArray(target: any[] = [], source: any[] = []) {
-  const mergedOutput = Array.from(target)
-
-  source.forEach((sourceElement, index) => {
-    const targetElement = mergedOutput[index]
-
-    if (Array.isArray(target[index])) {
-      mergedOutput[index] = deepMergeArray(target[index], sourceElement)
-    }
-    else if (isObject(targetElement)) {
-      mergedOutput[index] = deepMerge(target[index], sourceElement)
-    }
-    else {
-      // Source does not exist in target or target is primitive and cannot be deep merged
-      mergedOutput[index] = sourceElement
-    }
-  })
-
-  return mergedOutput
-}
-
-export function deepMerge(target: any, source: any): any {
-  if (isObject(target) && isObject(source)) {
-    const mergedOutput = { ...target }
-    Object.keys(source).forEach((key) => {
-      if (isObject(source[key]) && !source[key].$$typeof) {
-        if (!(key in target)) Object.assign(mergedOutput, { [key]: source[key] })
-        else mergedOutput[key] = deepMerge(target[key], source[key])
-      }
-      else if (Array.isArray(source[key])) {
-        mergedOutput[key] = deepMergeArray(target[key], source[key])
-      }
-      else {
-        Object.assign(mergedOutput, { [key]: source[key] })
-      }
-    })
-
-    return mergedOutput
-  }
-  else if (Array.isArray(target) && Array.isArray(source)) {
-    return deepMergeArray(target, source)
-  }
-  return target
 }
 
 /**

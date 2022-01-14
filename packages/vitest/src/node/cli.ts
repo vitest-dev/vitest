@@ -1,13 +1,10 @@
-import readline from 'readline'
 import cac from 'cac'
 import { execa } from 'execa'
 import type { UserConfig } from '../types'
 import { version } from '../../package.json'
 import { ensurePackageInstalled } from '../utils'
-import type { Vitest } from './core'
 import { createVitest } from './create'
-
-const CLOSE_TIMEOUT = 1_000
+import { registerConsoleShortcuts } from './stdin'
 
 const cli = cac('vitest')
 
@@ -117,47 +114,6 @@ async function run(cliFilters: string[], options: UserConfig) {
       await ctx.close()
   }
 
-  if (!ctx.config.watch) {
-    // force process exit if it hangs
-    setTimeout(() => process.exit(), CLOSE_TIMEOUT).unref()
-  }
-}
-
-function closeServerAndExitProcess(ctx: Vitest) {
-  const closePromise = ctx.close()
-  let timeout: NodeJS.Timeout
-  const timeoutPromise = new Promise((resolve, reject) => {
-    timeout = setTimeout(() => reject(new Error(`close timed out after ${CLOSE_TIMEOUT}ms`)), CLOSE_TIMEOUT)
-  })
-  Promise.race([closePromise, timeoutPromise]).then(
-    () => {
-      clearTimeout(timeout)
-      process.exit(0)
-    },
-    (err) => {
-      clearTimeout(timeout)
-      console.error('error during close', err)
-      process.exit(1)
-    },
-  )
-}
-
-function registerConsoleShortcuts(ctx: Vitest) {
-  readline.emitKeypressEvents(process.stdin)
-  process.stdin.setRawMode(true)
-  process.stdin.on('keypress', (str: string, key: any) => {
-    // ctrl-c or esc
-    if (str === '\x03' || str === '\x1B' || (key && key.ctrl && key.name === 'c'))
-      return closeServerAndExitProcess(ctx)
-
-    // is running, ignore keypress
-    if (ctx.runningPromise)
-      return
-
-    // press any key to exit on first run
-    if (ctx.isFirstRun)
-      return closeServerAndExitProcess(ctx)
-
-    // TODO: add more commands
-  })
+  if (!ctx.config.watch)
+    await ctx.exit()
 }

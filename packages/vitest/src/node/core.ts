@@ -7,7 +7,7 @@ import type { RawSourceMap } from 'source-map-js'
 import { ViteNodeServer } from 'vite-node/server'
 import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig } from '../types'
 import { SnapshotManager } from '../integrations/snapshot/manager'
-import { hasFailed, noop, slash, toArray } from '../utils'
+import { clone, deepMerge, hasFailed, noop, slash, toArray } from '../utils'
 import { cleanCoverage, reportCoverage } from '../coverage'
 import { DefaultReporter, ReportersMap } from './reporters'
 import { createPool } from './pool'
@@ -15,10 +15,13 @@ import type { WorkerPool } from './pool'
 import { StateManager } from './state'
 import { resolveConfig } from './config'
 
-export const WATCHER_DEBOUNCE = 100
+const WATCHER_DEBOUNCE = 100
+const CLOSE_TIMEOUT = 1_000
 
 export class Vitest {
   config: ResolvedConfig = undefined!
+  configOverride: Partial<ResolvedConfig> | undefined
+
   server: ViteDevServer = undefined!
   state: StateManager = undefined!
   snapshot: SnapshotManager = undefined!
@@ -85,6 +88,12 @@ export class Vitest {
 
     if (resolved.coverage.enabled)
       await cleanCoverage(resolved.coverage, resolved.coverage.clean)
+  }
+
+  getConfig() {
+    if (this.configOverride)
+      return deepMerge(clone(this.config), this.configOverride)
+    return this.config
   }
 
   async start(filters?: string[]) {
@@ -312,6 +321,25 @@ export class Vitest {
       })
     }
     return this.closingPromise
+  }
+
+  async exit() {
+    const closePromise = this.close()
+    let timeout: NodeJS.Timeout
+    const timeoutPromise = new Promise((resolve, reject) => {
+      timeout = setTimeout(() => reject(new Error(`close timed out after ${CLOSE_TIMEOUT}ms`)), CLOSE_TIMEOUT).unref()
+    })
+    Promise.race([closePromise, timeoutPromise]).then(
+      () => {
+        clearTimeout(timeout)
+        process.exit(0)
+      },
+      (err) => {
+        clearTimeout(timeout)
+        console.error('error during close', err)
+        process.exit(1)
+      },
+    )
   }
 
   async report<T extends keyof Reporter>(name: T, ...args: ArgumentsType<Reporter[T]>) {
