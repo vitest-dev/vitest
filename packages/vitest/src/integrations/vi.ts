@@ -1,63 +1,81 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import mockdate from 'mockdate'
 import { FakeTimers } from './timers'
 import type { EnhancedSpy, MaybeMocked, MaybeMockedDeep } from './jest-mock'
 import { fn, isMockFunction, spies, spyOn } from './jest-mock'
 
 class VitestUtils {
   private _timers: FakeTimers
-  private _mockedDate: string | number | Date | null
+  private _mockedDate: Date | null
 
   constructor() {
-    this._timers = new FakeTimers()
+    this._timers = new FakeTimers({
+      global: globalThis,
+      maxLoops: 10_000,
+    })
     this._mockedDate = null
   }
 
   // timers
 
   public useFakeTimers() {
-    return this._timers.useFakeTimers()
+    this._timers.useFakeTimers()
+    return this
   }
 
   public useRealTimers() {
-    return this._timers.useRealTimers()
+    this._timers.useRealTimers()
+    this._mockedDate = null
+    return this
   }
 
   public runOnlyPendingTimers() {
-    return this._timers.runOnlyPendingTimers()
+    this._timers.runOnlyPendingTimers()
+    return this
   }
 
   public runAllTimers() {
-    return this._timers.runAllTimers()
+    this._timers.runAllTimers()
+    return this
+  }
+
+  public runAllTicks() {
+    this._timers.runAllTicks()
+    return this
   }
 
   public advanceTimersByTime(ms: number) {
-    return this._timers.advanceTimersByTime(ms)
+    this._timers.advanceTimersByTime(ms)
+    return this
   }
 
   public advanceTimersToNextTimer() {
-    return this._timers.advanceTimersToNextTimer()
+    this._timers.advanceTimersToNextTimer()
+    return this
   }
 
   public getTimerCount() {
     return this._timers.getTimerCount()
   }
 
-  // date
-
-  public mockCurrentDate(date: string | number | Date) {
+  public setSystemTime(time: number | string | Date) {
+    const date = time instanceof Date ? time : new Date(time)
     this._mockedDate = date
-    mockdate.set(date)
-  }
-
-  public restoreCurrentDate() {
-    this._mockedDate = null
-    mockdate.reset()
+    this._timers.setSystemTime(date)
+    return this
   }
 
   public getMockedDate() {
     return this._mockedDate
+  }
+
+  public getRealSystemTime() {
+    return this._timers.getRealSystemTime()
+  }
+
+  public clearAllTimers() {
+    this._timers.clearAllTimers()
+    return this
   }
 
   // mocks

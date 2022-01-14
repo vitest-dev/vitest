@@ -500,6 +500,7 @@ importers:
   packages/vitest:
     specifiers:
       '@antfu/install-pkg': ^0.1.0
+      '@sinonjs/fake-timers': ^8.0.1
       '@types/chai': ^4.3.0
       '@types/chai-subset': ^1.3.3
       '@types/diff': ^5.0.2
@@ -508,6 +509,7 @@ importers:
       '@types/natural-compare': ^1.4.1
       '@types/node': ^17.0.8
       '@types/prompts': ^2.4.0
+      '@types/sinonjs__fake-timers': ^8.1.1
       '@vitest/ui': workspace:*
       birpc: ^0.1.0
       c8: ^7.11.0
@@ -528,7 +530,6 @@ importers:
       magic-string: ^0.25.7
       micromatch: ^4.0.4
       mlly: ^0.3.17
-      mockdate: ^3.0.5
       natural-compare: ^1.4.0
       pathe: ^0.2.0
       picocolors: ^1.0.0
@@ -554,12 +555,14 @@ importers:
       vite: 2.7.12
     devDependencies:
       '@antfu/install-pkg': 0.1.0
+      '@sinonjs/fake-timers': 8.1.0
       '@types/diff': 5.0.2
       '@types/jsdom': 16.2.14
       '@types/micromatch': 4.0.2
       '@types/natural-compare': 1.4.1
       '@types/node': 17.0.8
       '@types/prompts': 2.4.0
+      '@types/sinonjs__fake-timers': 8.1.1
       '@vitest/ui': link:../ui
       birpc: 0.1.0
       c8: 7.11.0
@@ -578,7 +581,6 @@ importers:
       magic-string: 0.25.7
       micromatch: 4.0.4
       mlly: 0.3.17
-      mockdate: 3.0.5
       natural-compare: 1.4.0
       pathe: 0.2.0
       picocolors: 1.0.0
@@ -3308,6 +3310,18 @@ packages:
       picomatch: 2.3.0
     dev: true
 
+  /@sinonjs/commons/1.8.3:
+    resolution: {integrity: sha512-xkNcLAn/wZaX14RPlwizcKicDk9G3F8m2nU3L7Ukm5zBgTwiT0wsoFAHx9Jq56fJA1z/7uKGtCRu16sOUCLIHQ==}
+    dependencies:
+      type-detect: 4.0.8
+    dev: true
+
+  /@sinonjs/fake-timers/8.1.0:
+    resolution: {integrity: sha512-OAPJUAtgeINhh/TAlUID4QTs53Njm7xzddaVlEs/SXwgtiD1tW22zAB/W1wdqfrpmikgaWQ9Fw6Ws+hsiRm5Vg==}
+    dependencies:
+      '@sinonjs/commons': 1.8.3
+    dev: true
+
   /@storybook/addon-actions/6.4.12_b3482aaf5744fc7c2aeb7941b0e0a78f:
     resolution: {integrity: sha512-R3Ia2dvaPiwJmXcPra8e/gmpU84YovROBdpDttUzZEXMNEbfwHj00aRjZvH9nTKqHUSzrx8ZzGEDDqCMTqVcTg==}
     peerDependencies:
@@ -5607,6 +5621,10 @@ packages:
     resolution: {integrity: sha512-fBZgytwhYAUkj/jC/FAV4RQ5EerRup1YQsXQCh8rZfiHkc4UahC192oH0smGwsXol3cL3A5oETuAHeQHmhXM4w==}
     dependencies:
       '@types/node': 17.0.8
+    dev: true
+
+  /@types/sinonjs__fake-timers/8.1.1:
+    resolution: {integrity: sha512-0kSuKjAS0TrGLJ0M/+8MaFkGsQhZpB6pxOmvS3K8FYI72K//YmdfoW9X2qPsAKh1mkwxGD5zib9s1FIFed6E8g==}
     dev: true
 
   /@types/source-list-map/0.1.2:
@@ -12573,10 +12591,6 @@ packages:
   /mlly/0.3.17:
     resolution: {integrity: sha512-C3v8eHB9KqmS1ewOB5DUgljX13C3xuoaXZd5bOLtwpxk9pBZhA+wyVgYXPuP4aukQ9bKYWjy+YQVC+DmniIsgA==}
 
-  /mockdate/3.0.5:
-    resolution: {integrity: sha512-iniQP4rj1FhBdBYS/+eQv7j1tadJ9lJtdzgOpvsOHng/GbcDh2Fhdeq+ZRldrPYdXvCyfFUmFeEwEGXZB5I/AQ==}
-    dev: true
-
   /moment/2.29.1:
     resolution: {integrity: sha512-kHmoybcPV8Sqy59DwNDY3Jefr64lK/by/da0ViFcuA4DH0vQg5Q6Ze5VimxkfQNSC+Mls/Kx53s7TjP1RhFEDQ==}
     dev: true
@@ -13390,7 +13404,6 @@ packages:
 
   /path-parse/1.0.7:
     resolution: {integrity: sha512-LDJzPVEEEPR+y48z93A0Ed0yXb8pAByGWo/k5YYdYgpY2/2EsOsksJrq7lOHxryrVOn1ejG6oAp8ahvOIQD8sw==}
-    dev: true
 
   /path-to-regexp/0.1.7:
     resolution: {integrity: sha1-32BBeABfUi8V60SQ5yR6G/qmf4w=}
@@ -14691,7 +14704,6 @@ packages:
       is-core-module: 2.8.0
       path-parse: 1.0.7
       supports-preserve-symlinks-flag: 1.0.0
-    dev: true
 
   /resolve/2.0.0-next.3:
     resolution: {integrity: sha512-W8LucSynKUIDu9ylraa7ueVZ7hc0uAgJBxVsQSKOXOyle8a93qXhcz+XAXZ8bIq2d6i4Ehddn6Evt+0/UwKk6Q==}
@@ -15570,7 +15582,6 @@ packages:
   /supports-preserve-symlinks-flag/1.0.0:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
-    dev: true
 
   /svelte-hmr/0.14.9_svelte@3.46.1:
     resolution: {integrity: sha512-bKE9+4qb4sAnA+TKHiYurUl970rjA0XmlP9TEP7K/ncyWz3m81kA4HOgmlZK/7irGK7gzZlaPDI3cmf8fp/+tg==}
@@ -16668,7 +16679,7 @@ packages:
     dependencies:
       esbuild: 0.13.15
       postcss: 8.4.5
-      resolve: 1.20.0
+      resolve: 1.21.0
       rollup: 2.63.0
     optionalDependencies:
       fsevents: 2.3.2
