@@ -1,85 +1,120 @@
 import type { Vitest } from '../../node'
-import type { Reporter, Task } from '../../types'
+import type { ParsedStack, Reporter, Task } from '../../types'
 import { parseStacktrace } from '../../utils/source-map'
 
-const IDENT = '    '
-
 function yamlString(str: string): string {
-  return `"${str.replace('"', '\\"')}"`
+  return `"${str.replaceAll('"', '\\"')}"`
 }
 
 function tapString(str: string): string {
   // Test name cannot contain #
   // Test name cannot start with number
-  return str.replace('#', '?').replace(/^[0-9]+/, '?')
+  return str.replaceAll('#', '?').replace(/^[0-9]+/, '?')
+}
+
+class IndentedLogger {
+  private currentIndent = ''
+
+  constructor(private baseLog: (text: string) => void) {
+  }
+
+  indent() {
+    this.currentIndent += '    '
+  }
+
+  unindent() {
+    this.currentIndent = this.currentIndent.substring(0, this.currentIndent.length - 4)
+  }
+
+  log(text: string) {
+    this.baseLog(this.currentIndent + text)
+  }
 }
 
 export class TapReporter implements Reporter {
   protected ctx!: Vitest
+  private logger!: IndentedLogger
 
   onInit(ctx: Vitest): void {
     this.ctx = ctx
+    this.logger = new IndentedLogger(this.ctx.log.bind(this.ctx))
   }
 
-  protected logTasks(tasks: Task[], currentIdent: string) {
-    this.ctx.log(`${currentIdent}1..${tasks.length}`)
+  static getComment(task: Task): string {
+    if (task.mode === 'skip')
+      return ' # SKIP'
+    else if (task.mode === 'todo')
+      return ' # TODO'
+    else if (task.result?.duration != null)
+      return ` # time=${task.result.duration.toFixed(2)}ms`
+    else
+      return ''
+  }
+
+  private logErrorDetails(error: Error, stack?: ParsedStack) {
+    this.logger.log(`name: ${yamlString(error.name)}`)
+    this.logger.log(`message: ${yamlString(error.message)}`)
+
+    if (stack) {
+      // For compatibility with tap-mocha-repoter
+      this.logger.log(`stack: ${yamlString(`${stack.file}:${stack.line}:${stack.column}`)}`)
+    }
+  }
+
+  protected logTasks(tasks: Task[]) {
+    this.logger.log(`1..${tasks.length}`)
 
     for (const [i, task] of tasks.entries()) {
       const id = i + 1
 
       const ok = task.result?.state === 'pass' || task.mode === 'skip' || task.mode === 'todo' ? 'ok' : 'not ok'
 
-      let comment = ''
-      if (task.mode === 'skip')
-        comment = ' # SKIP'
-      else if (task.mode === 'todo')
-        comment = ' # TODO'
-      else if (task.result?.duration != null)
-        comment = ` # time=${task.result.duration.toFixed(2)}ms`
+      const comment = TapReporter.getComment(task)
 
       if (task.type === 'suite' && task.tasks.length > 0) {
-        this.ctx.log(`${currentIdent}${ok} ${id} - ${tapString(task.name)}${comment} {`)
+        this.logger.log(`${ok} ${id} - ${tapString(task.name)}${comment} {`)
 
-        this.logTasks(task.tasks, `${currentIdent}${IDENT}`)
+        this.logger.indent()
+        this.logTasks(task.tasks)
+        this.logger.unindent()
 
-        this.ctx.log(`${currentIdent}}`)
+        this.logger.log('}')
       }
       else {
-        this.ctx.log(`${currentIdent}${ok} ${id} - ${tapString(task.name)}${comment}`)
+        this.logger.log(`${ok} ${id} - ${tapString(task.name)}${comment}`)
 
         if (task.result?.state === 'fail' && task.result.error) {
+          this.logger.indent()
+
           const error = task.result.error
-
-          const baseErrorIdent = `${currentIdent}  `
-          const errorIdent = `${currentIdent}    `
-          this.ctx.log(`${baseErrorIdent}---`)
-          this.ctx.log(`${baseErrorIdent}error:`)
-          this.ctx.log(`${errorIdent}name: ${yamlString(error.name)}`)
-          this.ctx.log(`${errorIdent}message: ${yamlString(error.message)}`)
-
           const stacks = parseStacktrace(error)
           const stack = stacks[0]
-          if (stack) {
-            // For compatibility with tap-mocha-repoter
-            this.ctx.log(`${errorIdent}stack: ${yamlString(`${stack.file}:${stack.line}:${stack.column}`)}`)
 
-            this.ctx.log(`${baseErrorIdent}at: ${yamlString(`${stack.file}:${stack.line}:${stack.column}`)}`)
-          }
+          this.logger.log('---')
+          this.logger.log('error:')
+
+          this.logger.indent()
+          this.logErrorDetails(error)
+          this.logger.unindent()
+
+          if (stack)
+            this.logger.log(`at: ${yamlString(`${stack.file}:${stack.line}:${stack.column}`)}`)
 
           if (error.showDiff) {
-            this.ctx.log(`${baseErrorIdent}actual: ${yamlString(error.actual)}`)
-            this.ctx.log(`${baseErrorIdent}expected: ${yamlString(error.expected)}`)
+            this.logger.log(`actual: ${yamlString(error.actual)}`)
+            this.logger.log(`expected: ${yamlString(error.expected)}`)
           }
 
-          this.ctx.log(`${baseErrorIdent}...`)
+          this.logger.log('...')
+          this.logger.unindent()
         }
       }
     }
   }
 
   async onFinished(files = this.ctx.state.getFiles()) {
-    this.ctx.log('TAP version 13')
+    this.logger.log('TAP version 13')
 
-    this.logTasks(files, '')
+    this.logTasks(files)
   }
 }

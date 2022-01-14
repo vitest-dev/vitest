@@ -27,6 +27,6 @@ export class TapFlatReporter extends TapReporter {
     const flatTasks = files
       .flatMap(task => flattenTasks(task))
 
-    this.logTasks(flatTasks, '')
+    this.logTasks(flatTasks)
   }
 }
