@@ -543,7 +543,7 @@ importers:
       typescript: ^4.5.4
       vite: '>=2.7.12'
       vite-node: workspace:*
-      ws: ^8.4.2
+      ws: 8.4.0
     dependencies:
       '@types/chai': 4.3.0
       '@types/chai-subset': 1.3.3
@@ -590,18 +590,18 @@ importers:
       strip-ansi: 7.0.1
       typescript: 4.5.4
       vite-node: link:../vite-node
-      ws: 8.4.2
+      ws: 8.4.0
 
   packages/ws-client:
     specifiers:
       birpc: ^0.1.0
       flatted: ^3.2.4
       rollup: ^2.63.0
-      ws: ^8.4.2
+      ws: 8.4.0
     dependencies:
       birpc: 0.1.0
       flatted: 3.2.4
-      ws: 8.4.2
+      ws: 8.4.0
     devDependencies:
       rollup: 2.63.0
 
@@ -17090,6 +17090,18 @@ packages:
         optional: true
     dev: true
 
+  /ws/8.4.0:
+    resolution: {integrity: sha512-IHVsKe2pjajSUIl4KYMQOdlyliovpEPquKkqbwswulszzI7r0SfQrxnXdWAEqOlDCLrVSJzo+O1hAwdog2sKSQ==}
+    engines: {node: '>=10.0.0'}
+    peerDependencies:
+      bufferutil: ^4.0.1
+      utf-8-validate: ^5.0.2
+    peerDependenciesMeta:
+      bufferutil:
+        optional: true
+      utf-8-validate:
+        optional: true
+
   /ws/8.4.1:
     resolution: {integrity: sha512-6eqQ4yN2y2xv8b+BgbkUzPPyfo/PDl3VOWb06ZE0jIFYwuHMsMQN6F7o84yxJYCblfCRAxzpU59We4Rr4w0Luw==}
     engines: {node: '>=10.0.0'}
@@ -17114,6 +17126,7 @@ packages:
         optional: true
       utf-8-validate:
         optional: true
+    dev: true
 
   /xml-name-validator/4.0.0:
     resolution: {integrity: sha512-ICP2e+jsHvAj2E2lIHxa5tjXRlKDJo4IdvPvCXbXQGdzSfmSpNVyIKMvoZHjDY9DP0zV17iI85o90vRFXNccRw==}

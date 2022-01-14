@@ -37,7 +37,7 @@
   "dependencies": {
     "birpc": "^0.1.0",
     "flatted": "^3.2.4",
-    "ws": "^8.4.2"
+    "ws": "8.4.0"
   },
   "devDependencies": {
     "rollup": "^2.63.0"
