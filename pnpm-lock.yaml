@@ -543,7 +543,7 @@ importers:
       typescript: ^4.5.4
       vite: '>=2.7.12'
       vite-node: workspace:*
-      ws: ^8.4.1
+      ws: ^8.4.2
     dependencies:
       '@types/chai': 4.3.0
       '@types/chai-subset': 1.3.3
@@ -590,18 +590,18 @@ importers:
       strip-ansi: 7.0.1
       typescript: 4.5.4
       vite-node: link:../vite-node
-      ws: 8.4.1
+      ws: 8.4.2
 
   packages/ws-client:
     specifiers:
       birpc: ^0.1.0
       flatted: ^3.2.4
       rollup: ^2.63.0
-      ws: ^8.4.1
+      ws: ^8.4.2
     dependencies:
       birpc: 0.1.0
       flatted: 3.2.4
-      ws: 8.4.1
+      ws: 8.4.2
     devDependencies:
       rollup: 2.63.0
 
@@ -11847,7 +11847,7 @@ packages:
       whatwg-encoding: 2.0.0
       whatwg-mimetype: 3.0.0
       whatwg-url: 10.0.0
-      ws: 8.4.0
+      ws: 8.4.2
       xml-name-validator: 4.0.0
     transitivePeerDependencies:
       - bufferutil
@@ -13390,7 +13390,6 @@ packages:
 
   /path-parse/1.0.7:
     resolution: {integrity: sha512-LDJzPVEEEPR+y48z93A0Ed0yXb8pAByGWo/k5YYdYgpY2/2EsOsksJrq7lOHxryrVOn1ejG6oAp8ahvOIQD8sw==}
-    dev: true
 
   /path-to-regexp/0.1.7:
     resolution: {integrity: sha1-32BBeABfUi8V60SQ5yR6G/qmf4w=}
@@ -14691,7 +14690,6 @@ packages:
       is-core-module: 2.8.0
       path-parse: 1.0.7
       supports-preserve-symlinks-flag: 1.0.0
-    dev: true
 
   /resolve/2.0.0-next.3:
     resolution: {integrity: sha512-W8LucSynKUIDu9ylraa7ueVZ7hc0uAgJBxVsQSKOXOyle8a93qXhcz+XAXZ8bIq2d6i4Ehddn6Evt+0/UwKk6Q==}
@@ -15570,7 +15568,6 @@ packages:
   /supports-preserve-symlinks-flag/1.0.0:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
-    dev: true
 
   /svelte-hmr/0.14.9_svelte@3.46.1:
     resolution: {integrity: sha512-bKE9+4qb4sAnA+TKHiYurUl970rjA0XmlP9TEP7K/ncyWz3m81kA4HOgmlZK/7irGK7gzZlaPDI3cmf8fp/+tg==}
@@ -16668,7 +16665,7 @@ packages:
     dependencies:
       esbuild: 0.13.15
       postcss: 8.4.5
-      resolve: 1.20.0
+      resolve: 1.21.0
       rollup: 2.63.0
     optionalDependencies:
       fsevents: 2.3.2
@@ -17093,8 +17090,8 @@ packages:
         optional: true
     dev: true
 
-  /ws/8.4.0:
-    resolution: {integrity: sha512-IHVsKe2pjajSUIl4KYMQOdlyliovpEPquKkqbwswulszzI7r0SfQrxnXdWAEqOlDCLrVSJzo+O1hAwdog2sKSQ==}
+  /ws/8.4.1:
+    resolution: {integrity: sha512-6eqQ4yN2y2xv8b+BgbkUzPPyfo/PDl3VOWb06ZE0jIFYwuHMsMQN6F7o84yxJYCblfCRAxzpU59We4Rr4w0Luw==}
     engines: {node: '>=10.0.0'}
     peerDependencies:
       bufferutil: ^4.0.1
@@ -17106,8 +17103,8 @@ packages:
         optional: true
     dev: true
 
-  /ws/8.4.1:
-    resolution: {integrity: sha512-6eqQ4yN2y2xv8b+BgbkUzPPyfo/PDl3VOWb06ZE0jIFYwuHMsMQN6F7o84yxJYCblfCRAxzpU59We4Rr4w0Luw==}
+  /ws/8.4.2:
+    resolution: {integrity: sha512-Kbk4Nxyq7/ZWqr/tarI9yIt/+iNNFOjBXEWgTb4ydaNHBNGgvf2QHbS9fdfsndfjFlFwEd4Al+mw83YkaD10ZA==}
     engines: {node: '>=10.0.0'}
     peerDependencies:
       bufferutil: ^4.0.1

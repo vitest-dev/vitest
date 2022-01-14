@@ -98,7 +98,7 @@
     "strip-ansi": "^7.0.1",
     "typescript": "^4.5.4",
     "vite-node": "workspace:*",
-    "ws": "^8.4.1"
+    "ws": "^8.4.2"
   },
   "peerDependencies": {
     "@vitest/ui": "*",
