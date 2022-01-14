@@ -5,9 +5,9 @@ import { relative } from 'pathe'
 import c from 'picocolors'
 import * as diff from 'diff'
 import cliTruncate from 'cli-truncate'
-import type { Vitest } from '../../node'
-import type { ErrorWithDiff, ParsedStack, Position } from '../../types/general'
-import { interpretSourcePos, lineSplitRE, parseStacktrace, posToNumber } from '../../utils/source-map'
+import type { Vitest } from '../../../node'
+import type { ErrorWithDiff, ParsedStack, Position } from '../../../types/general'
+import { interpretSourcePos, lineSplitRE, parseStacktrace, posToNumber } from '../../../utils/source-map'
 import { F_POINTER } from './figures'
 
 export async function printError(error: unknown, ctx: Vitest) {

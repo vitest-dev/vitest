@@ -1,3 +1,3 @@
 export type { Vitest } from './core'
 export { createVitest } from './create'
-export { VitestPlugin } from './vite-plugin'
+export { VitestPlugin } from './plugins'

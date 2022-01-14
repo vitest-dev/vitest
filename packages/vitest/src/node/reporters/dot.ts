@@ -1,4 +1,4 @@
-import type { UserConsoleLog } from '../types'
+import type { UserConsoleLog } from '../../types'
 import { BaseReporter } from './base'
 import { createDotRenderer } from './renderers/dotRenderer'
 import type { createListRenderer } from './renderers/listRenderer'

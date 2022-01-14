@@ -1,8 +1,8 @@
 import { promises as fs } from 'fs'
 import { resolve } from 'pathe'
-import type { Vitest } from '../node'
-import type { File, Reporter } from '../types'
-import { getSuites, getTests } from '../utils'
+import type { Vitest } from '../../node'
+import type { File, Reporter } from '../../types'
+import { getSuites, getTests } from '../../utils'
 
 // for compatibility reasons, the reporter produces a JSON similar to the one produced by the Jest JSON reporter
 // the following types are extracted from the Jest repository (and simplified)

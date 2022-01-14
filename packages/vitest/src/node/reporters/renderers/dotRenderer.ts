@@ -1,7 +1,7 @@
 import { createLogUpdate } from 'log-update'
 import c from 'picocolors'
-import type { Task } from '../../types'
-import { getTests } from '../../utils'
+import type { Task } from '../../../types'
+import { getTests } from '../../../utils'
 
 export interface DotRendererOptions {
   outputStream: NodeJS.WritableStream

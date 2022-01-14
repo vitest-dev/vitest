@@ -1,10 +1,10 @@
 import type { Plugin as VitePlugin, UserConfig as ViteUserConfig } from 'vite'
-import type { UserConfig } from '../types'
-import { deepMerge, ensurePackageInstalled, notNullish } from '../utils'
-import { GlobalSetupPlugin } from '../plugins/globalSetup'
-import { MocksPlugin } from '../plugins/mock'
-import { resolveApiConfig } from './config'
-import { Vitest } from './core'
+import type { UserConfig } from '../../types'
+import { deepMerge, ensurePackageInstalled, notNullish } from '../../utils'
+import { resolveApiConfig } from '../config'
+import { Vitest } from '../core'
+import { GlobalSetupPlugin } from './globalSetup'
+import { MocksPlugin } from './mock'
 
 export async function VitestPlugin(options: UserConfig = {}, viteOverrides: ViteUserConfig = {}, ctx = new Vitest()): Promise<VitePlugin[]> {
   let haveStarted = false
@@ -46,7 +46,7 @@ export async function VitestPlugin(options: UserConfig = {}, viteOverrides: Vite
         await ctx.setServer(options, server)
         haveStarted = true
         if (options.api)
-          (await import('../api/setup')).setup(ctx)
+          (await import('../../api/setup')).setup(ctx)
 
         // #415, in run mode we don't need the watcher, close it would improve the performance
         if (!options.watch)

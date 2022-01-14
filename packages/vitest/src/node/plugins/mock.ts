@@ -1,6 +1,6 @@
 import type { Plugin } from 'vite'
 import MagicString from 'magic-string'
-import { getCallLastIndex, getRangeStatus } from '../utils'
+import { getCallLastIndex, getRangeStatus } from '../../utils'
 
 const mockRegexp = /^ *\b((?:vitest|vi)\s*.\s*mock\(["`'\s]+(.*[@\w_-]+)["`'\s]+)[),]{1};?/gm
 const pathRegexp = /\b(?:vitest|vi)\s*.\s*(unmock|importActual|importMock)\(["`'\s](.*[@\w_-]+)["`'\s]\);?/mg

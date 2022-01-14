@@ -1,5 +1,5 @@
 import type { Plugin, ViteDevServer } from 'vite'
-import { toArray } from '../utils'
+import { toArray } from '../../utils'
 
 interface GlobalSetupFile {
   file: string

@@ -1,6 +1,6 @@
-import type { Vitest } from '../node'
-import type { Reporter, Task } from '../types'
-import { parseStacktrace } from '../utils/source-map'
+import type { Vitest } from '../../node'
+import type { Reporter, Task } from '../../types'
+import { parseStacktrace } from '../../utils/source-map'
 
 const IDENT = '    '
 

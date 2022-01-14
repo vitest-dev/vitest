@@ -1,8 +1,8 @@
 import { basename, dirname, isAbsolute, relative } from 'pathe'
 import c from 'picocolors'
 import stripAnsi from 'strip-ansi'
-import type { SnapshotSummary, Task } from '../../types'
-import { slash } from '../../utils'
+import type { SnapshotSummary, Task } from '../../../types'
+import { slash } from '../../../utils'
 import { F_CHECK, F_CROSS, F_DOT, F_DOWN, F_DOWN_RIGHT, F_LONG_DASH, F_POINTER } from './figures'
 
 export const spinnerMap = new WeakMap<Task, () => string>()

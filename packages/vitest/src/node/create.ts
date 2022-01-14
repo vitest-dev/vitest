@@ -5,7 +5,7 @@ import { findUp } from 'find-up'
 import type { UserConfig } from '../types'
 import { configFiles } from '../constants'
 import { Vitest } from './core'
-import { VitestPlugin } from './vite-plugin'
+import { VitestPlugin } from './plugins'
 
 export async function createVitest(options: UserConfig, viteOverrides: ViteUserConfig = {}) {
   const ctx = new Vitest()
