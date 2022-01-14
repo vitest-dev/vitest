@@ -48,6 +48,10 @@ declare global {
       not: AsymmetricMatchersContaining
     }
 
+    type DeepPartial<T> = T extends object ? {
+      [K in keyof T]?: DeepPartial<T[K]>;
+    } : T;
+
     interface JestAssertions {
       // Snapshot
       toMatchSnapshot(snapshot: object, message?: string): void
@@ -63,7 +67,7 @@ declare global {
       toStrictEqual(expected: any): void
       toBe(expected: any): void
       toMatch(expected: string | RegExp): void
-      toMatchObject(expected: any): void
+      toMatchObject<T extends object>(expected: DeepPartial<T>): void
       toContain(item: any): void
       toContainEqual(item: any): void
       toBeTruthy(): void
