@@ -104,45 +104,4 @@ export function getCallLastIndex(code: string) {
   return null
 }
 
-export const getRangeStatus = (code: string, from: number, to: number) => {
-  let index = 0
-  let started = false
-  let ended = true
-  let inString: string | null = null
-  let beforeChar: string | null = null
-
-  while (index <= to) {
-    const char = code[index]
-    const sub = code[index] + code[index + 1]
-
-    const isCharString = char === '"' || char === '\'' || char === '`'
-
-    if (isCharString && beforeChar !== '\\') {
-      if (inString === char)
-        inString = null
-      else if (!inString)
-        inString = char
-    }
-
-    if (!inString && index >= from) {
-      if (sub === '/*') {
-        started = true
-        ended = false
-      }
-      if (sub === '*/' && started) {
-        started = false
-        ended = true
-      }
-    }
-
-    beforeChar = code[index]
-    index++
-  }
-
-  return {
-    insideComment: !ended,
-    insideString: inString !== null,
-  }
-}
-
 export { resolve as resolvePath }

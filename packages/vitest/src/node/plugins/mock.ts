@@ -1,25 +1,10 @@
 import type { Plugin } from 'vite'
 import MagicString from 'magic-string'
-import { getCallLastIndex, getRangeStatus } from '../../utils'
+import { getCallLastIndex } from '../../utils'
 
 const mockRegexp = /^ *\b((?:vitest|vi)\s*.\s*mock\(["`'\s]+(.*[@\w_-]+)["`'\s]+)[),]{1};?/gm
 const pathRegexp = /\b(?:vitest|vi)\s*.\s*(unmock|importActual|importMock)\(["`'\s](.*[@\w_-]+)["`'\s]\);?/mg
 const vitestRegexp = /import {[^}]*}.*(?=["'`]vitest["`']).*/gm
-
-const getMockLastIndex = (code: string): number | null => {
-  const index = getCallLastIndex(code)
-  if (index === null)
-    return null
-  return code[index + 1] === ';' ? index + 2 : index + 1
-}
-
-const getMethodCall = (method: string, actualPath: string, importPath: string) => {
-  let nodeModule = 'null'
-  if (actualPath.includes('/node_modules/'))
-    nodeModule = `"${importPath}"`
-
-  return `__vitest__${method}__("${actualPath}", ${nodeModule}`
-}
 
 export const MocksPlugin = (): Plugin => {
   return {
@@ -88,5 +73,61 @@ export const MocksPlugin = (): Plugin => {
         }
       }
     },
+  }
+}
+
+function getMockLastIndex(code: string): number | null {
+  const index = getCallLastIndex(code)
+  if (index === null)
+    return null
+  return code[index + 1] === ';' ? index + 2 : index + 1
+}
+
+function getMethodCall(method: string, actualPath: string, importPath: string) {
+  let nodeModule = 'null'
+  if (actualPath.includes('/node_modules/'))
+    nodeModule = `"${importPath}"`
+
+  return `__vitest__${method}__("${actualPath}", ${nodeModule}`
+}
+
+function getRangeStatus(code: string, from: number, to: number) {
+  let index = 0
+  let started = false
+  let ended = true
+  let inString: string | null = null
+  let beforeChar: string | null = null
+
+  while (index <= to) {
+    const char = code[index]
+    const sub = code[index] + code[index + 1]
+
+    const isCharString = char === '"' || char === '\'' || char === '`'
+
+    if (isCharString && beforeChar !== '\\') {
+      if (inString === char)
+        inString = null
+      else if (!inString)
+        inString = char
+    }
+
+    if (!inString && index >= from) {
+      if (sub === '/*') {
+        started = true
+        ended = false
+      }
+      if (sub === '*/' && started) {
+        started = false
+        ended = true
+      }
+    }
+
+    beforeChar = code[index]
+    index++
+  }
+
+  return {
+    insideComment: !ended,
+    insideString: inString !== null,
   }
 }
