@@ -53,6 +53,7 @@ watch([cm, failed], () => {
         widgets.push(cm.value!.addLineWidget(pos.line - 1, el))
       }
     })
+    cm.value?.clearHistory() // Prevent getting access to initial state
   }, 100)
 }, { flush: 'post' })
 </script>
