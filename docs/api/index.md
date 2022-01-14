@@ -1241,7 +1241,7 @@ Additionally, unlike Jest, mocked modules in `__mocks__` are not loaded unless `
 
   To enable mocking timers, you need to call this method. It will wrap all further calls to timers (such as `setTimeout`, `setInterval`, `clearTimeout`, `clearInterval`, `nextTick`, `setImmediate`, `clearImmediate`, and `Date`), until [`vi.useRealTimers()`](#userealtimers) is called.
 
-  The implementation is based internally on [`@sinonjs/fake-timers`](https://github.com/sinonjs/fake-timers)
+  The implementation is based internally on [`@sinonjs/fake-timers`](https://github.com/sinonjs/fake-timers).
 
 ### vi.useRealTimers
 

@@ -9,7 +9,7 @@ If you wanna dive in head first, check out the [API section](/api/#vi) otherwise
 
 ## Dates
 
-Sometimes you need to be in control of the date to ensure consistency when testing. Vitest comes with the [`mockdate`](https://www.npmjs.com/package/mockdate) package built-in to let you manipulate the system date in your tests. You can find more about the specific API in detail [here](/api/#vi-mockcurrentdate).
+Sometimes you need to be in control of the date to ensure consistency when testing. Vitest uses [`@sinonjs/fake-timers`](https://github.com/sinonjs/fake-timers) package for manipulating timers, as well as system date. You can find more about the specific API in detail [here](/api/#vi-setsystemtime).
 
 ### Example
 
@@ -30,15 +30,20 @@ const purchase = () => {
 };
 
 describe('purchasing flow', () => {
+  beforeEach(() => {
+    // tell vitest we use mocked time
+    vi.useFakeTimers()
+  });
+
   afterEach(() => {
     // restoring date after each test run
-    vi.restoreCurrentDate()
+    vi.useRealTimers()
   });
 
   it('allows purchases within business hours', () => {
     // set hour within business hours
     const date = new Date(2000, 1, 1, 13)
-    vi.mockCurrentDate(date)
+    vi.setSystemTime(date)
 
     // access Date.now() will result in the date set above
     expect(purchase()).toEqual({ message: 'Success' })
@@ -47,7 +52,7 @@ describe('purchasing flow', () => {
   it('disallows purchases outside of business hours', () => {
     // set hour outside business hours
     const date = new Date(2000, 1, 1, 19)
-    vi.mockCurrentDate(date)
+    vi.setSystemTime(date)
 
     // access Date.now() will result in the date set above
     expect(purchase()).toEqual({ message: 'Error' })
