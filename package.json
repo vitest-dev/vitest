@@ -12,6 +12,7 @@
     "docs:build": "npm -C docs run build",
     "docs:serve": "npm -C docs run serve",
     "docs:examples": "esmo scripts/update-examples.ts",
+    "docs:contributors": "esmo scripts/update-contributors.ts",
     "postinstall": "pnpm -C examples/vue2 i",
     "lint": "eslint --ext .js,.vue,.ts,.tsx .",
     "lint:fix": "eslint --ext .js,.vue,.ts,.tsx . --fix",

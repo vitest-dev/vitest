@@ -16,7 +16,7 @@ async function fetchContributors() {
       'content-type': 'application/json',
     },
   })
-  const data = await res.json() as Contributor[]
+  const data = await res.json() as Contributor[] || []
   collaborators.push(...data.map(i => i.login))
   return collaborators
 }
