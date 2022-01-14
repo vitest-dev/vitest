@@ -9,6 +9,20 @@ export function getTasks(tasks: Arrayable<Task> = []): Task[] {
   return toArray(tasks).flatMap(s => s.type === 'test' ? [s] : [s, ...getTasks(s.tasks)])
 }
 
+export function flattenTasks(task: Task, baseName = ''): Task[] {
+  const base = baseName ? `${baseName} > ` : ''
+
+  if (task.type === 'suite' && task.tasks.length > 0) {
+    return task.tasks.flatMap(child => flattenTasks(child, `${base}${task.name}`))
+  }
+  else {
+    return [{
+      ...task,
+      name: `${base}${task.name}`,
+    }]
+  }
+}
+
 export function getSuites(suite: Arrayable<Task>): Suite[] {
   return toArray(suite).flatMap(s => s.type === 'suite' ? [s, ...getSuites(s.tasks)] : [])
 }
