@@ -1,4 +1,4 @@
-import { describe, expect, it, vitest } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 describe('jest mock compat layer', () => {
   const returnFactory = (type: string) => (value: any) => ({ type, value })
@@ -7,13 +7,13 @@ describe('jest mock compat layer', () => {
   const e = returnFactory('throw')
 
   it('works with name', () => {
-    const spy = vitest.fn()
+    const spy = vi.fn()
     spy.mockName('spy test name')
     expect(spy.getMockName()).toBe('spy test name')
   })
 
   it('clearing', () => {
-    const spy = vitest.fn()
+    const spy = vi.fn()
 
     spy('hello')
 
@@ -29,10 +29,9 @@ describe('jest mock compat layer', () => {
   })
 
   it('clearing instances', () => {
-    const Spy = vitest.fn(() => {})
+    const Spy = vi.fn(() => {})
 
     expect(Spy.mock.instances).toHaveLength(0)
-    // @ts-expect-error In TypeScript you should use `new` only on classes
     // eslint-disable-next-line no-new
     new Spy()
     expect(Spy.mock.instances).toHaveLength(1)
@@ -46,7 +45,7 @@ describe('jest mock compat layer', () => {
     const originalFn = function() {
       return 'original'
     }
-    const spy = vitest.fn(originalFn)
+    const spy = vi.fn(originalFn)
 
     spy() // returns 'original'
 
@@ -107,7 +106,7 @@ describe('jest mock compat layer', () => {
     const originalFn = async function() {
       return 'original'
     }
-    const spy = vitest.fn(originalFn)
+    const spy = vi.fn(originalFn)
 
     await spy() // returns 'original'
 
@@ -130,6 +129,16 @@ describe('jest mock compat layer', () => {
     ])
   })
 
+  it('invocationOrder', () => {
+    const a = vi.fn()
+    const b = vi.fn()
+
+    a()
+    b()
+
+    expect(a.mock.invocationCallOrder[0]).toBeLessThan(b.mock.invocationCallOrder[0])
+  })
+
   it('getter spyOn', () => {
     const obj = {
       get getter() {
@@ -137,7 +146,7 @@ describe('jest mock compat layer', () => {
       },
     }
 
-    const spy = vitest.spyOn(obj, 'getter', 'get')
+    const spy = vi.spyOn(obj, 'getter', 'get')
 
     expect(obj.getter).toBe('original')
 
@@ -171,7 +180,7 @@ describe('jest mock compat layer', () => {
       },
     }
 
-    const spy = vitest.spyOn(obj, 'setter', 'set')
+    const spy = vi.spyOn(obj, 'setter', 'set')
 
     obj.setter = 'first'
 
@@ -202,7 +211,7 @@ describe('jest mock compat layer', () => {
   })
 
   it('throwing', async() => {
-    const fn = vitest.fn(() => {
+    const fn = vi.fn(() => {
       // eslint-disable-next-line no-throw-literal
       throw 'error'
     })

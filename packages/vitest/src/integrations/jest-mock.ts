@@ -20,7 +20,6 @@ type MockResult<T> = MockResultReturn<T> | MockResultThrow | MockResultIncomplet
 export interface JestMockCompatContext<TArgs, TReturns> {
   calls: TArgs[]
   instances: TReturns[]
-  // TODO: doesn't work
   invocationCallOrder: number[]
   results: MockResult<TReturns>[]
 }
@@ -112,12 +111,12 @@ export function spyOn<T, S extends Properties<Required<T>>>(
   obj: T,
   methodName: S,
   accesType: 'get',
-): JestMockCompat<[T[S]], void>
+): JestMockCompat<[], T[S]>
 export function spyOn<T, G extends Properties<Required<T>>>(
   obj: T,
   methodName: G,
   accesType: 'set',
-): JestMockCompat<[], T[G]>
+): JestMockCompat<[T[G]], void>
 export function spyOn<T, M extends Classes<Required<T>>>(
   object: T,
   method: M
@@ -145,6 +144,8 @@ export function spyOn<T, K extends keyof T>(
   return enhanceSpy(stub) as JestMockCompat
 }
 
+let callOrder = 0
+
 function enhanceSpy<TArgs extends any[], TReturns>(
   spy: SpyImpl<TArgs, TReturns>,
 ): JestMockCompat<TArgs, TReturns> {
@@ -153,6 +154,7 @@ function enhanceSpy<TArgs extends any[], TReturns>(
   let implementation: ((...args: TArgs) => TReturns) | undefined
 
   let instances: any[] = []
+  let invocations: number[] = []
 
   const mockContext = {
     get calls() {
@@ -161,9 +163,8 @@ function enhanceSpy<TArgs extends any[], TReturns>(
     get instances() {
       return instances
     },
-    // not supported
     get invocationCallOrder() {
-      return []
+      return invocations
     },
     get results() {
       return stub.results.map(([callType, value]) => {
@@ -186,6 +187,7 @@ function enhanceSpy<TArgs extends any[], TReturns>(
   stub.mockClear = () => {
     stub.reset()
     instances = []
+    invocations = []
     return stub
   }
 
@@ -237,6 +239,7 @@ function enhanceSpy<TArgs extends any[], TReturns>(
 
   stub.willCall(function(this: unknown, ...args) {
     instances.push(this)
+    invocations.push(++callOrder)
     const impl = onceImplementations.shift() || implementation || stub.getOriginal() || (() => {})
     return impl.apply(this, args)
   })
