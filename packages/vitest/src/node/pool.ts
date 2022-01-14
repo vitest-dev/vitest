@@ -35,7 +35,7 @@ export function createFakePool(ctx: Vitest): WorkerPool {
 
       const data: WorkerContext = {
         port: workerPort,
-        config: ctx.config,
+        config: ctx.getConfig(),
         files,
         invalidates,
       }
@@ -80,7 +80,7 @@ export function createWorkerPool(ctx: Vitest): WorkerPool {
 
         const data: WorkerContext = {
           port: workerPort,
-          config: ctx.config,
+          config: ctx.getConfig(),
           files: [file],
           invalidates,
         }

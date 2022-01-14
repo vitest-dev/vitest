@@ -194,6 +194,24 @@ export class Vitest {
     return await this.runningPromise
   }
 
+  async updateSnapshot(files: string[] = Array.from(this.state.filesMap.keys())) {
+    this.configOverride = {
+      snapshotOptions: {
+        updateSnapshot: 'all',
+      },
+    }
+
+    try {
+      await this.runFiles(files)
+
+      if (this.config.watch)
+        await this.report('onWatcherStart')
+    }
+    finally {
+      this.configOverride = undefined
+    }
+  }
+
   log(...args: any[]) {
     this.console.log(...args)
   }

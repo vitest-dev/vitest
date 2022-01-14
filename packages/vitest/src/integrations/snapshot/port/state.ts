@@ -95,15 +95,15 @@ export default class SnapshotState {
     this._dirty = true
     if (options.isInline) {
       const error = options.error || new Error('Unknown error')
-      const stacks = parseStacktrace(error)
+      const stacks = parseStacktrace(error, true)
       stacks.forEach(i => i.file = slash(i.file))
       // inline snapshot function is called __VITEST_INLINE_SNAPSHOT__
       // in integrations/snapshot/chai.ts
-      const stackIndex = stacks.findIndex(i => i.method === 'Proxy.__VITEST_INLINE_SNAPSHOT__')
+      const stackIndex = stacks.findIndex(i => i.method.includes('__VITEST_INLINE_SNAPSHOT__'))
       const stack = stackIndex !== -1 ? stacks[stackIndex + 2] : null
       if (!stack) {
         throw new Error(
-          'Vitest: Couldn\'t infer stack frame for inline snapshot.',
+          `Vitest: Couldn't infer stack frame for inline snapshot.\n${JSON.stringify(stacks)}`,
         )
       }
       this._inlineSnapshots.push({

@@ -19,12 +19,12 @@ export function registerConsoleShortcuts(ctx: Vitest) {
 
     const name = key?.name
 
-    if (name === 'h') {
-      printShortcutsHelp()
-      return
-    }
+    // help
+    if (name === 'h')
+      return printShortcutsHelp()
+    // update snapshot
     if (name === 'u')
-      return
+      return ctx.updateSnapshot()
 
     // press any key to exit on first run
     if (ctx.isFirstRun)

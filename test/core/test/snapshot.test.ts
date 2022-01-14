@@ -14,13 +14,13 @@ test('outside snapshot', () => {
 test('inline snapshot', () => {
   expect('inline string').toMatchInlineSnapshot('"inline string"')
   expect({ foo: { type: 'object', map: new Map() } }).toMatchInlineSnapshot(`
-    {
-      "foo": {
-        "map": Map {},
-        "type": "object",
-      },
-    }
-    `)
+  {
+    "foo": {
+      "map": Map {},
+      "type": "object",
+    },
+  }
+  `)
 })
 
 test('snapshot with big array', () => {
