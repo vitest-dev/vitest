@@ -49,6 +49,7 @@ onMounted(async() => {
     },
   })
   cm.value.setSize('100%', '100%')
+  cm.value.clearHistory()
   setTimeout(() => cm.value!.refresh(), 100)
 })
 </script>
