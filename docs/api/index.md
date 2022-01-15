@@ -1120,9 +1120,10 @@ Additionally, unlike Jest, mocked modules in `__mocks__` are not loaded unless `
 
   vi.useFakeTimers()
   vi.setSystemTime(date)
-  vi.useRealTimers()
 
   expect(Date.now()).toBe(date.valueOf())
+
+  vi.useRealTimers()
   ```
 
 ### vi.mocked
