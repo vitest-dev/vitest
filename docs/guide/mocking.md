@@ -1,293 +1,341 @@
 # Mocking
+When writing tests it's only a matter of time before you need to create "fake" version of an internal—or external—service. This is commonly referred to as **mocking**. Vitest provides utility functions to help you out through its **vi** helper. You can `import { vi } from 'vitest'` or access it **globally** (when [global configuration](/config/#global) is **enabled**).
 
-## Mocking functions
+::: warning
+Always remember to clear or restore mocks before or after each test run to undo mock state changes between runs! See [`mockReset`](/api/#mockreset) docs for more info.
+:::
 
-Mock functions (or "spies") observe functions, that are invoked in some other code, allowing you to test its arguments, output or even redeclare its implementation.
+If you wanna dive in head first, check out the [API section](/api/#vi) otherwise keep reading to take a deeper dive into the world of mocking.
 
-We use [Tinyspy](https://github.com/Aslemammad/tinyspy) as a base for mocking functions, but we have our own wrapper to make it `jest` compatible.
+## Dates
 
-Both `vi.fn()` and `vi.spyOn()` share the same methods, but the return result of `vi.fn()` is callable.
+Sometimes you need to be in control of the date to ensure consistency when testing. Vitest comes with the [`mockdate`](https://www.npmjs.com/package/mockdate) package built-in to let you manipulate the system date in your tests. You can find more about the specific API in detail [here](/api/#vi-mockcurrentdate).
 
-### vi.fn
+### Example
 
-**Type:** `(fn: Function) => CallableMockInstance`
+```js
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
-Creates a spy on a function, though can be initiated without one. Every time a function is invoked, it stores its call arguments, returns and instances. Also, you can manipulate its behavior with [methods](#mockmethods).
-If no function is given, mock will return `undefined`, when invoked.
+const businessHours = [9, 17]
 
-```ts
-const getApples = vi.fn(() => 0)
+const purchase = () => {
+  const currentHour = new Date().getHours()
+  const [open, close] = businessHours
 
-getApples()
+  if (currentHour > open && currentHour < close) {
+    return { message: 'Success' }
+  }
 
-expect(getApples).toHaveBeenCalled()
-expect(getApples).toHaveReturnedWith(0)
+  return { message: 'Error' }
+};
 
-getApples.mockReturnOnce(5)
+describe('purchasing flow', () => {
+  afterEach(() => {
+    // restoring date after each test run
+    vi.restoreCurrentDate()
+  });
 
-const res = getApples()
-expect(res).toBe(5)
-expect(getApples).toHaveReturnedNthTimeWith(1, 5)
+  it('allows purchases within business hours', () => {
+    // set hour within business hours
+    const date = new Date(2000, 1, 1, 13)
+    vi.mockCurrentDate(date)
+
+    // access Date.now() will result in the date set above
+    expect(purchase()).toEqual({ message: 'Success' })
+  })
+
+  it('disallows purchases outside of business hours', () => {
+    // set hour outside business hours
+    const date = new Date(2000, 1, 1, 19)
+    vi.mockCurrentDate(date)
+
+    // access Date.now() will result in the date set above
+    expect(purchase()).toEqual({ message: 'Error' })
+  })
+})
 ```
 
-### vi.spyOn
+## Functions
 
-**Type:** `<T, K extends keyof T>(object: T, method: K, accessType?: 'get' | 'set') => MockInstance`
+Mocking functions can be split up into two different categories; *spying & mocking*.
 
-Creates a spy on a method or getter/setter of an object.
+Sometimes all you need is to validate wether or not a specific function has been called (and possibly which arguments were passed). In these cases a spy would be all we need which you can use directly with `vi.spyOn()` ([read more here](/api/#vi-spyon)).
 
-```ts
-let apples = 0
-const obj = {
-  getApples: () => 13,
+However spies can only help you **spy** on functions, they are not able to alter the implementation of those functions. In the case where we do need to create a fake (or mocked) version of a function we can  use `vi.fn()` ([read more here](/api/#vi-fn)).
+
+We use [Tinyspy](https://github.com/Aslemammad/tinyspy) as a base for mocking functions, but we have our own wrapper to make it `jest` compatible. Both `vi.fn()` and `vi.spyOn()` share the same methods, however only the return result of `vi.fn()` is callable.
+
+### Example
+
+```js
+import { afterEach, describe, expect, it, vi } from 'vitest'
+
+const getLatest = (index = messages.items.length - 1) => messages.items[index]
+
+const messages = {
+  items: [
+    { message: 'Simple test message', from: 'Testman' },
+    // ...
+  ],
+  getLatest, // can also be a `getter or setter if supported`
 }
 
-const spy = vi.spyOn(obj, 'getApples').mockImplementation(() => apples)
-apples = 1
+describe('reading messages', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
 
-expect(obj.getApples()).toBe(1)
+  it('should get the latest message with a spy', () => {
+    const spy = vi.spyOn(messages, 'getLatest')
+    expect(spy.getMockName()).toEqual('getLatest')
 
-expect(spy).toHaveBeenCalled()
-expect(spy).toHaveReturnedWith(1)
+    expect(messages.getLatest()).toEqual(
+      messages.items[messages.items.length - 1]
+    );
+
+    expect(spy).toHaveBeenCalledTimes(1)
+
+    spy.mockImplementationOnce(() => 'access-restricted')
+    expect(messages.getLatest()).toEqual('access-restricted')
+
+    expect(spy).toHaveBeenCalledTimes(2)
+  });
+
+  it('should get with a mock', () => {
+    const mock = vi.fn().mockImplementation(getLatest)
+
+    expect(mock()).toEqual(messages.items[messages.items.length - 1])
+    expect(mock).toHaveBeenCalledTimes(1)
+
+    mock.mockImplementationOnce(() => 'access-restricted')
+    expect(mock()).toEqual('access-restricted')
+
+    expect(mock).toHaveBeenCalledTimes(2)
+
+    expect(mock()).toEqual(messages.items[messages.items.length - 1])
+    expect(mock).toHaveBeenCalledTimes(3)
+  })
+})
 ```
 
-## Mock methods
-
-### mockName
-
-**Type:** `(name: string) => MockInstance`
-
-Sets internal mock name. Useful to see what mock has failed the assertion.
-
-### getMockName
-
-**Type:** `() => string`
-
-Use it to return the name given to mock with method `.mockName(name)`.
-
-### mockClear
-
-**Type:** `() => MockInstance`
-
-Clears all information about every call. After calling it, [`spy.mock.calls`](#mockcalls), [`spy.mock.returns`](#mockreturns) will return empty arrays. It is useful if you need to clean up spy between different assertions.
-
-If you want this method to be called before each test automatically, you can enable [`clearMocks`](/config/#clearMocks) setting in config.
-
-### mockReset
-
-**Type:** `() => MockInstance`
-
-Does what `mockClear` does and makes inner implementation as an empty function (returning `undefined`, when invoked). This is useful when you want to completely reset a mock back to its initial state.
-
-If you want this method to be called before each test automatically, you can enable [`mockReset`](/config/#mockReset) setting in config.
-
-### mockRestore
-
-**Type:** `() => MockInstance`
-
-Does what `mockRestore` does and restores inner implementation to the original function.
-
-Note that restoring mock from `vi.fn()` will set implementation to an empty function that returns `undefined`. Restoring a `vi.fn(impl)` will restore implementation to `impl`.
-
-If you want this method to be called before each test automatically, you can enable [`restoreMocks`](/config/#restoreMocks) setting in config.
-
-### mockImplementation
-
-**Type:** `(fn: Function) => MockInstance`
-
-Accepts a function that will be used as an implementation of the mock.
-
-For example:
-
-```ts
-const mockFn = vi.fn().mockImplementation(apples => apples + 1);
-// or: vi.fn(apples => apples + 1);
-
-const NelliesBucket = mockFn(0);
-const BobsBucket = mockFn(1);
-
-NelliesBucket === 1; // true
-BobsBucket === 2; // true
-
-mockFn.mock.calls[0][0] === 0; // true
-mockFn.mock.calls[1][0] === 1; // true
-```
-
-### mockImplementationOnce
-
-**Type:** `(fn: Function) => MockInstance`
-
-Accepts a function that will be used as an implementation of the mock for one call to the mocked function. Can be chained so that multiple function calls produce different results.
-
-```ts
-const myMockFn = vi
-  .fn()
-  .mockImplementationOnce(() => true)
-  .mockImplementationOnce(() => false);
-
-myMockFn(); // true
-myMockFn(); // false
-```
-
-When the mocked function runs out of implementations, it will invoke the default implementation that was set with `vi.fn(() => defaultValue)` or `.mockImplementation(() => defaultValue)` if they were called:
-
-```ts
-const myMockFn = vi
-  .fn(() => 'default')
-  .mockImplementationOnce(() => 'first call')
-  .mockImplementationOnce(() => 'second call');
-
-// 'first call', 'second call', 'default', 'default'
-console.log(myMockFn(), myMockFn(), myMockFn(), myMockFn());
-```
-
-### mockReturnThis
-
-**Type:** `() => MockInstance`
-
-Sets inner implementation to return `this` context.
-
-### mockReturnValue
-
-**Type:** `(value: any) => MockInstance`
-
-Accepts a value that will be returned whenever the mock function is called.
-
-```ts
-const mock = vi.fn();
-mock.mockReturnValue(42);
-mock(); // 42
-mock.mockReturnValue(43);
-mock(); // 43
-```
-
-### mockReturnValueOnce
-
-**Type:** `(value: any) => MockInstance`
-
-Accepts a value that will be returned whenever mock function is invoked. If chained, every consecutive call will return passed value. When there are no more `mockReturnValueOnce` values to use, calls a function specified by `mockImplementation` or other `mockReturn*` methods.
-
-```ts
-const myMockFn = vi
-  .fn()
-  .mockReturnValue('default')
-  .mockReturnValueOnce('first call')
-  .mockReturnValueOnce('second call');
-
-// 'first call', 'second call', 'default', 'default'
-console.log(myMockFn(), myMockFn(), myMockFn(), myMockFn());
-```
-
-### mockResolvedValue
-
-**Type:** `(value: any) => MockInstance`
-
-Accepts a value that will be resolved, when async function will be called.
-
-```ts
-test('async test', async () => {
-  const asyncMock = vi.fn().mockResolvedValue(43);
-
-  await asyncMock(); // 43
-});
-```
-
-### mockResolvedValueOnce
-
-**Type:** `(value: any) => MockInstance`
-
-Accepts a value that will be resolved for one call to the mock function. If chained, every consecutive call will resolve passed value.
-
-```ts
-test('async test', async () => {
-  const asyncMock = vi
-    .fn()
-    .mockResolvedValue('default')
-    .mockResolvedValueOnce('first call')
-    .mockResolvedValueOnce('second call');
-
-  await asyncMock(); // first call
-  await asyncMock(); // second call
-  await asyncMock(); // default
-  await asyncMock(); // default
-});
-```
-
-### mockRejectedValue
-
-**Type:** `(value: any) => MockInstance`
-
-Accepts an error that will be rejected, when async function will be called.
-
-```ts
-test('async test', async () => {
-  const asyncMock = vi.fn().mockRejectedValue(new Error('Async error'));
-
-  await asyncMock(); // throws "Async error"
-});
-```
-
-### mockRejectedValueOnce
-
-**Type:** `(value: any) => MockInstance`
-
-Accepts a value that will be rejected for one call to the mock function. If chained, every consecutive call will reject passed value.
-
-```ts
-test('async test', async () => {
-  const asyncMock = vi
-    .fn()
-    .mockResolvedValueOnce('first call')
-    .mockRejectedValueOnce(new Error('Async error'));
-
-  await asyncMock(); // first call
-  await asyncMock(); // throws "Async error"
-});
-```
-
-## Mock properties
-
-### mock.calls
-
-This is an array containing all arguments for each call. One item of the array is arguments of that call.
-
-If a function was invoked twice with the following arguments `fn(arg1, arg2)`, `fn(arg3, arg4)` in that order, then `mock.calls` will be:
-
-```js
-[
-  ['arg1', 'arg2'],
-  ['arg3', 'arg4'],
-];
-```
-
-### mock.results
-
-This is an array containing all values, that were `returned` from function. One item of the array is an object with properties `type` and `value`. Available types are:
-
-- `'return'` - function returned without throwing.
-- `'throw'` - function threw a value.
-
-The `value` property contains returned value or thrown error.
-
-If function returned `'result1`, then threw and error, then `mock.results` will be:
-
-```js
-[
-  {
-    type: 'return',
-    value: 'result',
-  },
-  {
-    type: 'throw',
-    value: Error,
-  },
-];
-```
-
-### mock.instances
-
-Currently, this property is not implemented.
-
-## See also
+### More
 
 - [Jest's Mock Functions](https://jestjs.io/docs/mock-function-api)
+
+## Modules
+
+Mock modules observe third-party-libraries, that are invoked in some other code, allowing you to test arguments, output or even redeclare its implementation.
+
+See the [`vi.mock()` api section](/api/#vi-fn) for a more in depth detailed API description.
+
+### Automocking algorithm
+
+If your code is importing mocked module, without any associated `__mocks__` file or `factory` for this module, Vitest will mock the module itself by invoking it and mocking every export.
+
+The following principles apply
+* All arrays will be emptied
+* All primitives and collections will stay the same
+* All objects will be deeply cloned
+* All instances of classes and their prototypes will be deeply cloned
+
+### Example
+
+```js
+import { vi, beforeEach, afterEach, describe, it } from 'vitest';
+import { Client } from 'pg';
+
+// handlers
+export function success(data) {}
+export function failure(data) {}
+// get todos
+export const getTodos = async (event, context) => {
+  const client = new Client({
+    // ...clientOptions
+  });
+
+  await client.connect()
+
+  try {
+    const result = await client.query(`SELECT * FROM todos;`)
+
+    client.end()
+
+    return success({
+      message: `${result.rowCount} item(s) returned`,
+      data: result.rows,
+      status: true,
+    })
+  } catch (e) {
+    console.error(e.stack)
+
+    client.end()
+
+    return failure({ message: e, status: false })
+  }
+};
+
+vi.mock('pg', () => {
+  return {
+    Client: vi.fn(() => ({
+      connect: vi.fn(),
+      query: vi.fn(),
+      end: vi.fn(),
+    })),
+  };
+});
+
+vi.mock('./handler.js', () => {
+  return {
+    success: vi.fn(),
+    failure: vi.fn(),
+  };
+});
+
+describe('get a list of todo items', () => {
+  let client;
+
+  beforeEach(() => {
+    client = new Client()
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks()
+  });
+
+  it('should return items successfully', async () => {
+    client.query.mockResolvedValueOnce({ rows: [], rowCount: 0 })
+
+    await getTodos()
+
+    expect(client.connect).toBeCalledTimes(1)
+    expect(client.query).toBeCalledWith('SELECT * FROM todos;')
+    expect(client.end).toBeCalledTimes(1)
+
+    expect(success).toBeCalledWith({
+      message: '0 item(s) returned',
+      data: [],
+      status: true,
+    })
+  })
+
+  it('should throw an error', async () => {
+    const mError = new Error('Unable to retrieve rows')
+    client.query.mockRejectedValueOnce(mError)
+
+    await getTodos()
+
+    expect(client.connect).toBeCalledTimes(1)
+    expect(client.query).toBeCalledWith('SELECT * FROM todos;')
+    expect(client.end).toBeCalledTimes(1)
+    expect(failure).toBeCalledWith({ message: mError, status: false })
+  })
+})
+```
+
+## Requests
+
+Because Vitest runs in Node, mocking network requests is tricky; web APIs are not available, so we need something that will mimic network behavior for us. We recommend [Mock Service Worker](https://mswjs.io/) to accomplish this. It will let you mock both `REST` and `GraphQL` network requests, and is framework agnostic.
+
+Mock Service Worker (MSW) works by intercepting the requests your tests make, allowing you to use it without changing any of your application code. In-browser, this uses the [Service Worker API](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API). In Node.js, and for Vitest, it uses [node-request-interceptor](https://mswjs.io/docs/api/setup-server#operation). To learn more about MSW, read their [introduction](https://mswjs.io/docs/)
+
+
+### Configuration
+
+Add the following to your test [setup file](/config/#setupfiles)
+```js
+import { beforeAll, afterAll, afterEach } from 'vitest'
+import { setupServer } from 'msw/node'
+import { graphql, rest } from 'msw'
+
+const posts = [
+  {
+    userId: 1,
+    id: 1,
+    title: 'first post title',
+    body: 'first post body',
+  },
+  ...
+]
+
+export const restHandlers = [
+  rest.get('https://rest-endpoint.example/path/to/posts', (req, res, ctx) => {
+    return res(ctx.status(200), ctx.json(posts))
+  }),
+]
+
+const graphqlHandlers = [
+  graphql.query('https://graphql-endpoint.example/api/v1/posts', (req, res, ctx) => {
+    return res(ctx.data(posts))
+  }),
+]
+
+const server = setupServer(...restHandlers, ...graphqlHandlers)
+
+// Start server before all tests
+beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
+
+//  Close server after all tests
+afterAll(() => server.close())
+
+// Reset handlers after each test `important for test isolation`
+afterEach(() => server.resetHandlers())
+```
+
+> Configuring the server with `onUnhandleRequest: 'error'` ensures that an error is thrown whenever there is a request that does not have a corresponding request handler.
+
+### Example
+
+We have a full working example which uses MSW: [React Testing with MSW](https://github.com/vitest-dev/vitest/tree/main/examples/react-testing-lib-msw).
+
+### More
+There is much more to MSW. You can access cookies and query parameters, define mock error responses, and much more! To see all you can do with MSW, read [their documentation](https://mswjs.io/docs/recipes).
+
+## Timers
+
+Whenever we test code that involves `timeOut`s or intervals, instead of having our tests it wait out or time-out. We can speed up our tests by using "fake" timers by mocking calls to `setTimeout` and `setInterval`, too.
+
+See the [`vi.mock()` api section](/api/#vi-usefaketimer) for a more in depth detailed API description.
+
+### Example
+
+```js
+import { describe, it, beforeEach, afterEach, expect, vi } from 'vitest'
+
+const executeAfterTwoHours = (func) => {
+  setTimeout(func, 1000 * 60 * 60 * 2) // 2 hours
+}
+
+const executeEveryMinute = (func) => {
+  setInterval(func, 1000 * 60); // 1 minute
+}
+
+const mock = vi.fn(() => console.log('executed'));
+
+describe('delayed execution', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
+  afterEach(()=> {
+    vi.restoreAllMocks()
+  })
+  it('should execute the function', () => {
+    executeAfterTwoHours(mock);
+    vi.runAllTimers();
+    expect(mock).toHaveBeenCalledTimes(1);
+  })
+  it('should not execute the function', () => {
+    executeAfterTwoHours(mock);
+    // advancing by 2ms won't trigger the func
+    vi.advanceTimersByTime(2);
+    expect(mock).not.toHaveBeenCalled();
+  })
+  it('should execute every minute', () => {
+    executeEveryMinute(mock);
+    vi.advanceTimersToNextTimer();
+    vi.advanceTimersToNextTimer();
+    expect(mock).toHaveBeenCalledTimes(1);
+    vi.advanceTimersToNextTimer();
+    expect(mock).toHaveBeenCalledTimes(2);
+  })
+})
+```
