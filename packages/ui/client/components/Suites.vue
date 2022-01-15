@@ -1,7 +1,11 @@
 <script setup lang="ts">
-import { current, runCurrent } from '~/composables/client'
+import { hasFailedSnapshot } from '@vitest/ws-client'
+import { client, current, runCurrent } from '~/composables/client'
 
 const name = computed(() => current.value?.name.split(/\//g).pop())
+
+const failedSnapshot = computed(() => current.value?.tasks && hasFailedSnapshot(current.value?.tasks))
+const updateSnapshot = () => current.value && client.rpc.updateSnapshot(current.value)
 </script>
 
 <template>
@@ -23,6 +27,7 @@ const name = computed(() => current.value?.name.split(/\//g).pop())
           {{ name }}
         </span>
         <div class="flex text-lg">
+          <IconButton v-if="failedSnapshot" icon="i-carbon-result-new" @click="updateSnapshot()" />
           <IconButton icon="i-carbon-play" @click="runCurrent()" />
         </div>
       </template>
