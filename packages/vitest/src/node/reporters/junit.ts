@@ -4,10 +4,23 @@ import { relative, resolve } from 'pathe'
 
 import type { Vitest } from '../../node'
 import type { ErrorWithDiff, Reporter, Task } from '../../types'
-import { flattenTasks } from '../../utils'
 import { parseStacktrace } from '../../utils/source-map'
 import { F_POINTER } from './renderers/figures'
 import { IndentedLogger } from './utils/indented-logger'
+
+function flattenTasks(task: Task, baseName = ''): Task[] {
+  const base = baseName ? `${baseName} > ` : ''
+
+  if (task.type === 'suite' && task.tasks.length > 0) {
+    return task.tasks.flatMap(child => flattenTasks(child, `${base}${task.name}`))
+  }
+  else {
+    return [{
+      ...task,
+      name: `${base}${task.name}`,
+    }]
+  }
+}
 
 function escapeXML(value: any): string {
   return String(value)
@@ -150,7 +163,6 @@ export class JUnitReporter implements Reporter {
 
         return {
           ...file,
-          tasks,
           stats,
         }
       })
