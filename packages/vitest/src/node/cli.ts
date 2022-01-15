@@ -11,7 +11,7 @@ const cli = cac('vitest')
 cli
   .version(version)
   .option('-r, --root <path>', 'root path')
-  .option('-c, --config <path>', 'rath to config file')
+  .option('-c, --config <path>', 'path to config file')
   .option('-u, --update', 'update snapshot')
   .option('-w, --watch', 'watch mode')
   .option('-t, --testNamePattern <pattern>', 'run test names with the specified pattern')
