@@ -27,7 +27,7 @@ export function isPrimitive(v: any) {
 export function toFilePath(id: string, root: string): string {
   let absolute = slash(id).startsWith('/@fs/')
     ? id.slice(4)
-    : id.startsWith(dirname(root))
+    : id.startsWith(dirname(root)) && dirname(root) !== '/'
       ? id
       : id.startsWith('/')
         ? slash(resolve(root, id.slice(1)))
