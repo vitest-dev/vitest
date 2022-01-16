@@ -49,7 +49,7 @@ const changeViewMode = (view: Params['view']) => {
           {{ current?.filepath }}
         </div>
         <div class="flex text-lg">
-          <IconButton icon="i-carbon-launch" :disabled="!current?.filepath" @click="open" />
+          <IconButton v-tooltip.bottom="'Open in editor'" icon="i-carbon-launch" :disabled="!current?.filepath" @click="open" />
         </div>
       </div>
       <div flex="~" items-center bg-header border="b base" text-sm h-37px>
