@@ -1,6 +1,7 @@
 import type { Vitest } from '../../node'
 import type { ParsedStack, Reporter, Task } from '../../types'
 import { parseStacktrace } from '../../utils/source-map'
+import { IndentedLogger } from './utils/indented-logger'
 
 function yamlString(str: string): string {
   return `"${str.replaceAll('"', '\\"')}"`
@@ -10,25 +11,6 @@ function tapString(str: string): string {
   // Test name cannot contain #
   // Test name cannot start with number
   return str.replaceAll('#', '?').replace(/^[0-9]+/, '?')
-}
-
-class IndentedLogger {
-  private currentIndent = ''
-
-  constructor(private baseLog: (text: string) => void) {
-  }
-
-  indent() {
-    this.currentIndent += '    '
-  }
-
-  unindent() {
-    this.currentIndent = this.currentIndent.substring(0, this.currentIndent.length - 4)
-  }
-
-  log(text: string) {
-    this.baseLog(this.currentIndent + text)
-  }
 }
 
 export class TapReporter implements Reporter {
