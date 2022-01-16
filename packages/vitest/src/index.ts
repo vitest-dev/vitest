@@ -1,9 +1,9 @@
 import type {
   Plugin as PrettyFormatPlugin,
 } from 'pretty-format'
-import type { Any, Anything, ArrayContaining, ObjectContaining, StringMatching } from './integrations/chai/jest-asymmetric-matchers'
+import type { Any, Anything } from './integrations/chai/jest-asymmetric-matchers'
 import type { MatcherState, MatchersObject } from './integrations/chai/types'
-import type { InlineConfig } from './types'
+import type { Constructable, InlineConfig } from './types'
 
 type VitestInlineConfig = InlineConfig
 
@@ -28,10 +28,18 @@ declare module 'vite' {
 }
 
 interface AsymmetricMatchersContaining {
-  stringContaining(expected: string): void
-  objectContaining(expected: any): ObjectContaining
-  arrayContaining(expected: unknown[]): ArrayContaining
-  stringMatching(expected: string | RegExp): StringMatching
+  stringContaining(expected: string): any
+  objectContaining(expected: any): any
+  arrayContaining(expected: unknown[]): any
+  stringMatching(expected: string | RegExp): any
+}
+
+type Promisify<O> = {
+  [K in keyof O]: O[K] extends (...args: infer A) => infer R
+    ? O extends R
+      ? Promisify<O[K]>
+      : (...args: A) => Promise<R>
+    : O[K]
 }
 
 declare global {
@@ -66,7 +74,7 @@ declare global {
       toStrictEqual<E>(expected: E): void
       toBe<E>(expected: E): void
       toMatch(expected: string | RegExp): void
-      toMatchObject<E>(expected: E): void
+      toMatchObject<E extends {} | any[]>(expected: E): void
       toContain<E>(item: E): void
       toContainEqual<E>(item: E): void
       toBeTruthy(): void
@@ -94,8 +102,8 @@ declare global {
       nthCalledWith<E extends any[]>(nthCall: number, ...args: E): void
       toHaveBeenLastCalledWith<E extends any[]>(...args: E): void
       lastCalledWith<E extends any[]>(...args: E): void
-      toThrow(expected?: string | RegExp): void
-      toThrowError(expected?: string | RegExp): void
+      toThrow(expected?: string | Constructable | RegExp | Error): void
+      toThrowError(expected?: string | Constructable | RegExp | Error): void
       toReturn(): void
       toHaveReturned(): void
       toReturnTimes(times: number): void
@@ -108,15 +116,15 @@ declare global {
       nthReturnedWith<E>(nthCall: number, value: E): void
     }
 
-    type Promisify<O> = {
-      [K in keyof O]: O[K] extends (...args: infer A) => infer R
-        ? O extends R
-          ? Promisify<O[K]>
-          : (...args: A) => Promise<R>
-        : O[K]
+    type VitestifyAssertion<A> = {
+      [K in keyof A]: A[K] extends Assertion
+        ? VitestAssertion<any>
+        : A[K] extends (...args: any[]) => any
+          ? A[K] // not converting function since they may contain overload
+          : VitestifyAssertion<A[K]>
     }
 
-    interface VitestAssertion<T = any> extends Assertion, JestAssertion<T> {
+    interface VitestAssertion<T = any> extends VitestifyAssertion<Assertion>, JestAssertion<T> {
       resolves: Promisify<VitestAssertion<T>>
       rejects: Promisify<VitestAssertion<T>>
 
