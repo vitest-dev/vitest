@@ -37,6 +37,8 @@ interface AsymmetricMatchersContaining {
 declare global {
   namespace Chai {
     interface ExpectStatic extends AsymmetricMatchersContaining {
+      <T>(actual: T, message?: string): VitestAssertion<T>
+
       extend(expects: MatchersObject): void
       assertions(expected: number): void
       hasAssertions(): void
@@ -48,24 +50,25 @@ declare global {
       not: AsymmetricMatchersContaining
     }
 
-    interface JestAssertions {
+    interface JestAssertion<T = any> {
       // Snapshot
-      toMatchSnapshot(snapshot: object, message?: string): void
+      toMatchSnapshot<U extends { [P in keyof T]: any }>(snapshot: Partial<U>, message?: string): void
       toMatchSnapshot(message?: string): void
-      toMatchInlineSnapshot(properties: object, snapshot?: string, message?: string): void
+      matchSnapshot<U extends { [P in keyof T]: any }>(snapshot: Partial<U>, message?: string): void
+      matchSnapshot(message?: string): void
+      toMatchInlineSnapshot<U extends { [P in keyof T]: any }>(properties: Partial<U>, snapshot?: string, message?: string): void
       toMatchInlineSnapshot(snapshot?: string, message?: string): void
       toThrowErrorMatchingSnapshot(message?: string): void
       toThrowErrorMatchingInlineSnapshot(snapshot?: string, message?: string): void
-      matchSnapshot(message?: string): void
 
       // Jest compact
-      toEqual(expected: any): void
-      toStrictEqual(expected: any): void
-      toBe(expected: any): void
+      toEqual<E>(expected: E): void
+      toStrictEqual<E>(expected: E): void
+      toBe<E>(expected: E): void
       toMatch(expected: string | RegExp): void
-      toMatchObject(expected: any): void
-      toContain(item: any): void
-      toContainEqual(item: any): void
+      toMatchObject<E>(expected: E): void
+      toContain<E>(item: E): void
+      toContainEqual<E>(item: E): void
       toBeTruthy(): void
       toBeFalsy(): void
       toBeGreaterThan(num: number): void
@@ -76,33 +79,33 @@ declare global {
       toBeUndefined(): void
       toBeNull(): void
       toBeDefined(): void
-      toBeInstanceOf(c: any): void
-      toBeCalledTimes(n: number): void
-      toHaveLength(l: number): void
-      toHaveProperty(p: string, value?: any): void
+      toBeInstanceOf<E>(expected: E): void
+      toBeCalledTimes(times: number): void
+      toHaveLength(length: number): void
+      toHaveProperty<E>(property: string, value?: E): void
       toBeCloseTo(number: number, numDigits?: number): void
-      toHaveBeenCalledTimes(n: number): void
+      toHaveBeenCalledTimes(times: number): void
       toHaveBeenCalledOnce(): void
       toHaveBeenCalled(): void
       toBeCalled(): void
-      toHaveBeenCalledWith(...args: any[]): void
-      toBeCalledWith(...args: any[]): void
-      toHaveBeenNthCalledWith(n: number, ...args: any[]): void
-      nthCalledWith(n: number, ...args: any[]): void
-      toHaveBeenLastCalledWith(...args: any[]): void
-      lastCalledWith(...args: any[]): void
+      toHaveBeenCalledWith<E extends any[]>(...args: E): void
+      toBeCalledWith<E extends any[]>(...args: E): void
+      toHaveBeenNthCalledWith<E extends any[]>(n: number, ...args: E): void
+      nthCalledWith<E extends any[]>(nthCall: number, ...args: E): void
+      toHaveBeenLastCalledWith<E extends any[]>(...args: E): void
+      lastCalledWith<E extends any[]>(...args: E): void
       toThrow(expected?: string | RegExp): void
       toThrowError(expected?: string | RegExp): void
       toReturn(): void
       toHaveReturned(): void
       toReturnTimes(times: number): void
       toHaveReturnedTimes(times: number): void
-      toReturnWith(value: any): void
-      toHaveReturnedWith(value: any): void
-      toHaveLastReturnedWith(value: any): void
-      lastReturnedWith(value: any): void
-      toHaveNthReturnedWith(nthCall: number, value: any): void
-      nthReturnedWith(nthCall: number, value: any): void
+      toReturnWith<E>(value: E): void
+      toHaveReturnedWith<E>(value: E): void
+      toHaveLastReturnedWith<E>(value: E): void
+      lastReturnedWith<E>(value: E): void
+      toHaveNthReturnedWith<E>(nthCall: number, value: E): void
+      nthReturnedWith<E>(nthCall: number, value: E): void
     }
 
     type Promisify<O> = {
@@ -113,12 +116,11 @@ declare global {
         : O[K]
     }
 
-    interface Assertion extends JestAssertions {
-      resolves: Promisify<Assertion>
-      rejects: Promisify<Assertion>
+    interface VitestAssertion<T = any> extends Assertion, JestAssertion<T> {
+      resolves: Promisify<VitestAssertion<T>>
+      rejects: Promisify<VitestAssertion<T>>
 
-      // Chai
-      chaiEqual(expected: any): void
+      chaiEqual<E>(expected: E): void
     }
   }
 }
