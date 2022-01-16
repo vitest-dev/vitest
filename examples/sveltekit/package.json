@@ -1,0 +1,21 @@
+{
+  "name": "sveltekit",
+  "version": "0.0.1",
+  "scripts": {
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "coverage": "vitest --coverage"
+  },
+  "devDependencies": {
+    "@sveltejs/kit": "next",
+    "@testing-library/svelte": "^3.0.3",
+    "@vitest/ui": "latest",
+    "jsdom": "^19.0.0",
+    "svelte": "^3.44.0",
+    "svelte-preprocess": "^4.9.4",
+    "typescript": "^4.4.3",
+    "vitest": "latest",
+    "vitest-svelte-kit": "^0.0.5"
+  },
+  "type": "module"
+}

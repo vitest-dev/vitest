@@ -1,0 +1,3 @@
+// Vitest Snapshot v1
+
+exports[`Hello.svelte > mounts 1`] = `"<div><div>4 x 2 = 8</div> <button>x1</button></div>"`;
