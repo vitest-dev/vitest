@@ -7,7 +7,7 @@ import { activeFileId } from '~/composables/params'
 function onItemClick(task: Task) {
   activeFileId.value = task.id
 }
-const toggleMode = isDark.value ? 'light' : 'dark'
+const toggleMode = computed(() => isDark.value ? 'light' : 'dark')
 </script>
 
 <template>
