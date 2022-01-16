@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { hasFailedSnapshot } from '@vitest/ws-client'
 import type { Task } from '#types'
 
 defineProps<{ task: Task }>()
@@ -6,6 +7,7 @@ defineProps<{ task: Task }>()
 
 <template>
   <div v-if="task.result?.state === 'pass'" title="Passed" text-green-500 flex-shrink-0 i-carbon:checkmark />
+  <div v-else-if="hasFailedSnapshot(task)" title="Failed snapshot" text-red-500 flex-shrink-0 i-carbon:compare />
   <div v-else-if="task.result?.state === 'fail'" title="Failed" text-red-500 flex-shrink-0 i-carbon:close />
   <div v-else-if="task.mode === 'todo'" title="Todo" text-gray-500 flex-shrink-0 i-carbon:document-blank />
   <div v-else-if="task.mode === 'skip'" title="Skipped" text-gray-500 flex-shrink-0 i-carbon:redo rotate-90 />
