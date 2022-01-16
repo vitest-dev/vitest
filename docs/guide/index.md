@@ -131,6 +131,7 @@ You can specify additional CLI options like `--port` or `--https`. For a full li
 - [fluent-vue](https://github.com/demivan/fluent-vue)
 - [vueuse](https://github.com/vueuse/vueuse)
 - [milkdown](https://github.com/Saul-Mirone/milkdown)
+- [gridjs-svelte](https://github.com/iamyuu/gridjs-svelte)
 
 ## Using Unreleased Commits
 
