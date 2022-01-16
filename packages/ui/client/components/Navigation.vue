@@ -7,6 +7,7 @@ import { activeFileId } from '~/composables/params'
 function onItemClick(task: Task) {
   activeFileId.value = task.id
 }
+const toggleMode = isDark.value ? 'light' : 'dark'
 </script>
 
 <template>
@@ -15,9 +16,9 @@ function onItemClick(task: Task) {
       <img w-6 h-6 mx-2 src="/favicon.svg">
       <span font-light text-sm flex-1>Vitest</span>
       <div class="flex text-lg">
-        <IconButton v-tooltip.bottom="'Rerun all'" icon="i-carbon-play" @click="runAll()" />
+        <IconButton v-tooltip.bottom="'Rerun all'" icon="i-carbon-play" @click="runAll" />
         <IconButton
-          v-tooltip.bottom="`Toggle to ${isDark ? 'light' : 'dark'} mode`"
+          v-tooltip.bottom="`Toggle to ${toggleMode} mode`"
           icon="dark:i-carbon-moon i-carbon-sun"
           @click="toggleDark()"
         />
