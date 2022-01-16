@@ -1,6 +1,6 @@
+import tippy from 'tippy.js'
 import type { Directive } from 'vue'
 import type { Placement } from 'tippy.js'
-import tippy from 'tippy.js'
 
 const tooltip: Directive = (el, { value, modifiers }) => {
   tippy(el, {
