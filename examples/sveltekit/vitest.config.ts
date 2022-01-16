@@ -1,3 +1,3 @@
-import { extractFromSvelteConfig } from "vitest-svelte-kit"
+import { extractFromSvelteConfig } from 'vitest-svelte-kit'
 
 export default extractFromSvelteConfig()
