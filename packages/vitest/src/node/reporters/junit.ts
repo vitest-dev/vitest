@@ -11,7 +11,7 @@ import { IndentedLogger } from './utils/indented-logger'
 function flattenTasks(task: Task, baseName = ''): Task[] {
   const base = baseName ? `${baseName} > ` : ''
 
-  if (task.type === 'suite' && task.tasks.length > 0) {
+  if (task.type === 'suite') {
     return task.tasks.flatMap(child => flattenTasks(child, `${base}${task.name}`))
   }
   else {
@@ -29,20 +29,6 @@ function escapeXML(value: any): string {
     .replaceAll('\'', '&apos;')
     .replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;')
-}
-
-function openTag(name: string, attrs: Record<string, any>) {
-  const pairs = []
-
-  for (const key in attrs) {
-    const attr = attrs[key]
-    if (attr === undefined)
-      continue
-
-    pairs.push(`${key}="${escapeXML(attr)}"`)
-  }
-
-  return `<${name}${pairs.length ? ` ${pairs.join(' ')}` : ''}>`
 }
 
 function getDuration(task: Task): string | undefined {
@@ -71,7 +57,25 @@ export class JUnitReporter implements Reporter {
     this.logger = new IndentedLogger(this.baseLog)
   }
 
-  async logError(error: ErrorWithDiff): Promise<void> {
+  async writeElement(name: string, attrs: Record<string, any>, children: () => Promise<void>) {
+    const pairs = []
+    for (const key in attrs) {
+      const attr = attrs[key]
+      if (attr === undefined)
+        continue
+
+      pairs.push(`${key}="${escapeXML(attr)}"`)
+    }
+
+    await this.logger.log(`<${name}${pairs.length ? ` ${pairs.join(' ')}` : ''}>`)
+    this.logger.indent()
+    await children.call(this)
+    this.logger.unindent()
+
+    await this.logger.log(`</${name}>`)
+  }
+
+  async writeErrorDetails(error: ErrorWithDiff): Promise<void> {
     const errorName = error.name ?? error.nameStr ?? 'Unknown Error'
     await this.baseLog(`${errorName}: ${error.message}`)
 
@@ -90,54 +94,49 @@ export class JUnitReporter implements Reporter {
     }
   }
 
-  async logLogs(task: Task, type: 'err' | 'out'): Promise<void> {
+  async writeLogs(task: Task, type: 'err' | 'out'): Promise<void> {
     if (task.logs == null || task.logs.length === 0)
       return
 
     const logType = type === 'err' ? 'stderr' : 'stdout'
     const logs = task.logs.filter(log => log.type === logType)
 
-    if (logs.length > 0) {
-      await this.logger.log(`<system-${type}>`)
+    if (logs.length === 0)
+      return
+
+    await this.writeElement(`system-${type}`, {}, async() => {
       for (const log of logs)
         await this.baseLog(escapeXML(log.content))
-      await this.logger.log(`</system-${type}>`)
-    }
+    })
   }
 
   async writeTasks(tasks: Task[], filename: string): Promise<void> {
     for (const task of tasks) {
-      await this.logger.log(openTag('testcase', {
+      await this.writeElement('testcase', {
         classname: filename,
         name: task.name,
         time: getDuration(task),
-      }))
+      }, async() => {
+        await this.writeLogs(task, 'out')
+        await this.writeLogs(task, 'err')
 
-      this.logger.indent()
+        if (task.mode === 'skip' || task.mode === 'todo')
+          this.logger.log('<skipped/>')
 
-      await this.logLogs(task, 'out')
-      await this.logLogs(task, 'err')
+        if (task.result?.state === 'fail') {
+          const error = task.result.error
 
-      if (task.mode === 'skip' || task.mode === 'todo')
-        this.logger.log('<skipped/>')
+          await this.writeElement('failure', {
+            message: error?.message,
+            type: error?.name ?? error?.nameStr,
+          }, async() => {
+            if (!error)
+              return
 
-      if (task.result?.state === 'fail') {
-        const error = task.result.error
-
-        await this.logger.log(openTag('failure', {
-          message: error?.message,
-          type: error?.name ?? error?.nameStr,
-        }))
-
-        if (error)
-          await this.logError(error)
-
-        await this.logger.log('</failure>')
-      }
-
-      this.logger.unindent()
-
-      await this.logger.log('</testcase>')
+            await this.writeErrorDetails(error)
+          })
+        }
+      })
     }
   }
 
@@ -163,34 +162,27 @@ export class JUnitReporter implements Reporter {
 
         return {
           ...file,
+          tasks,
           stats,
         }
       })
 
-    await this.logger.log('<testsuites>')
-    this.logger.indent()
-
-    for (const file of transformed) {
-      await this.logger.log(openTag('testsuite', {
-        name: file.name,
-        timestamp: (new Date()).toISOString(),
-        hostname: hostname(),
-        tests: file.tasks.length,
-        failures: file.stats.failures,
-        errors: 0, // An errored test is one that had an unanticipated problem. We cannot detect those.
-        skipped: file.stats.skipped,
-        time: getDuration(file),
-      }))
-
-      this.logger.indent()
-      await this.writeTasks(file.tasks, file.name)
-      this.logger.unindent()
-
-      await this.logger.log('</testsuite>')
-    }
-
-    this.logger.unindent()
-    await this.logger.log('</testsuites>')
+    await this.writeElement('testsuites', {}, async() => {
+      for (const file of transformed) {
+        await this.writeElement('testsuite', {
+          name: file.name,
+          timestamp: (new Date()).toISOString(),
+          hostname: hostname(),
+          tests: file.tasks.length,
+          failures: file.stats.failures,
+          errors: 0, // An errored test is one that had an unanticipated problem. We cannot detect those.
+          skipped: file.stats.skipped,
+          time: getDuration(file),
+        }, async() => {
+          await this.writeTasks(file.tasks, file.name)
+        })
+      }
+    })
 
     if (this.reportFile)
       this.ctx.log(`JUNIT report written to ${this.reportFile}`)
