@@ -3,6 +3,10 @@ export type Nullable<T> = T | null | undefined
 export type Arrayable<T> = T | Array<T>
 export type ArgumentsType<T> = T extends (...args: infer U) => any ? U : never
 
+export interface Constructable {
+  new (...args: any[]): any
+}
+
 export interface ModuleCache {
   promise?: Promise<any>
   exports?: any
