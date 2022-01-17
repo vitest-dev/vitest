@@ -124,6 +124,9 @@ function createChannel(ctx: Vitest) {
       fetch(id) {
         return ctx.vitenode.fetchModule(id)
       },
+      resolveId(id, importer) {
+        return ctx.vitenode.resolveId(id, importer)
+      },
       onCollected(files) {
         ctx.state.collectFiles(files)
         ctx.report('onCollected', files)
