@@ -360,7 +360,7 @@ export class Vitest {
     Promise.race([closePromise, timeoutPromise]).then(
       () => {
         clearTimeout(timeout)
-        process.exit(0)
+        process.exit()
       },
       (err) => {
         clearTimeout(timeout)
