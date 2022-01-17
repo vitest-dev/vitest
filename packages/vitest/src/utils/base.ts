@@ -86,6 +86,9 @@ function deepMergeArray(target: any[] = [], source: any[] = []) {
 
 export function deepMerge(target: any, source: any): any {
   if (isObject(target) && isObject(source)) {
+    if (target instanceof RegExp || source instanceof RegExp)
+      return target
+
     const mergedOutput = { ...target }
     Object.keys(source).forEach((key) => {
       if (isObject(source[key]) && !source[key].$$typeof) {
