@@ -1,6 +1,10 @@
-export interface ExternalizeOptions {
+export interface DepsHandlingOptions {
   external?: (string | RegExp)[]
   inline?: (string | RegExp)[]
+  /**
+   * Try to guess the CJS version of a package when it's invalid ESM
+   * @default true
+   */
   fallbackCJS?: boolean
 }
 
@@ -32,7 +36,18 @@ export interface ViteNodeResolveId {
 }
 
 export interface ViteNodeServerOptions {
-  deps?: ExternalizeOptions
+  /**
+   * Inject inline sourcemap to modules
+   * @default true
+   */
+  sourcemap?: boolean
+  /**
+   * Deps handling
+   */
+  deps?: DepsHandlingOptions
+  /**
+   * Tranform method for modules
+   */
   transformMode?: {
     ssr?: RegExp[]
     web?: RegExp[]

@@ -73,7 +73,7 @@ export class ViteNodeServer {
       result = await this.server.transformRequest(id, { ssr: true })
     }
 
-    if (result && !id.includes('node_modules'))
+    if (this.options.sourcemap !== false && result && !id.includes('node_modules'))
       withInlineSourcemap(result)
 
     // if (result?.map && process.env.NODE_V8_COVERAGE)

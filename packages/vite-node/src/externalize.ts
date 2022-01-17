@@ -1,6 +1,6 @@
 import { existsSync } from 'fs'
 import { isNodeBuiltin, isValidNodeImport } from 'mlly'
-import type { ExternalizeOptions } from './types'
+import type { DepsHandlingOptions } from './types'
 import { slash } from './utils'
 
 const ESM_EXT_RE = /\.(es|esm|esm-browser|esm-bundler|es6|module)\.js$/
@@ -47,26 +47,26 @@ export function guessCJSversion(id: string): string | undefined {
 
 export async function shouldExternalize(
   id: string,
-  config?: ExternalizeOptions,
+  options?: DepsHandlingOptions,
   cache = new Map<string, Promise<string | false>>(),
 ) {
   if (!cache.has(id))
-    cache.set(id, _shouldExternalize(id, config))
+    cache.set(id, _shouldExternalize(id, options))
   return cache.get(id)!
 }
 
 async function _shouldExternalize(
   id: string,
-  config?: ExternalizeOptions,
+  options?: DepsHandlingOptions,
 ): Promise<string | false> {
   if (isNodeBuiltin(id))
     return id
 
   id = patchWindowsImportPath(id)
 
-  if (matchExternalizePattern(id, config?.inline))
+  if (matchExternalizePattern(id, options?.inline))
     return false
-  if (matchExternalizePattern(id, config?.external))
+  if (matchExternalizePattern(id, options?.external))
     return id
 
   const isNodeModule = id.includes('/node_modules/')
