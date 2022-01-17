@@ -4,7 +4,7 @@ import { basename, dirname, join, resolve } from 'pathe'
 import { spies, spyOn } from '../integrations/jest-mock'
 import { mergeSlashes, normalizeId } from '../utils'
 
-export type SuiteMocks = Record<string, Record<string, string | null | (() => any)>>
+export type SuiteMocks = Record<string, Record<string, string | null | (() => unknown)>>
 
 function resolveMockPath(mockPath: string, root: string, external: string | null) {
   const path = normalizeId(external || mockPath)
@@ -85,34 +85,45 @@ function mockObject(obj: any) {
 
 export function createMocker(root: string, mockMap: SuiteMocks) {
   function getSuiteFilepath() {
-    return process.__vitest_worker__?.filepath
+    return process.__vitest_worker__?.filepath || 'global'
   }
 
-  function getActualPath(path: string, external: string) {
+  function getMocks() {
+    const suite = getSuiteFilepath()
+    const suiteMocks = mockMap[suite || '']
+    const globalMocks = mockMap.global
+
+    return {
+      ...suiteMocks,
+      ...globalMocks,
+    }
+  }
+
+  function getDependencyMock(dep: string) {
+    return getMocks()[resolveDependency(dep)]
+  }
+
+  function getActualPath(path: string, external: string | null) {
     if (external)
       return mergeSlashes(`/@fs/${path}`)
 
     return normalizeId(path.replace(root, ''))
   }
 
-  function unmockPath(path: string, nmName: string) {
+  function unmockPath(path: string, external: string | null) {
     const suitefile = getSuiteFilepath()
 
-    if (suitefile) {
-      const fsPath = getActualPath(path, nmName)
-      mockMap[suitefile] ??= {}
-      delete mockMap[suitefile][fsPath]
-    }
+    const fsPath = getActualPath(path, external)
+    mockMap[suitefile] ??= {}
+    delete mockMap[suitefile][fsPath]
   }
 
-  function mockPath(path: string, nmName: string, factory?: () => any) {
+  function mockPath(path: string, external: string | null, factory?: () => any) {
     const suitefile = getSuiteFilepath()
 
-    if (suitefile) {
-      const fsPath = getActualPath(path, nmName)
-      mockMap[suitefile] ??= {}
-      mockMap[suitefile][fsPath] = factory || resolveMockPath(path, root, nmName)
-    }
+    const fsPath = getActualPath(path, external)
+    mockMap[suitefile] ??= {}
+    mockMap[suitefile][fsPath] = factory || resolveMockPath(path, root, external)
   }
 
   function clearMocks({ clearMocks, mockReset, restoreMocks }: { clearMocks: boolean; mockReset: boolean; restoreMocks: boolean }) {
@@ -142,10 +153,11 @@ export function createMocker(root: string, mockMap: SuiteMocks) {
     unmockPath,
     clearMocks,
     getActualPath,
+    getMocks,
+    getDependencyMock,
 
     mockObject,
     getSuiteFilepath,
     resolveMockPath,
-    resolveDependency,
   }
 }
