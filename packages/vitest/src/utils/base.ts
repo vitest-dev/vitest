@@ -1,4 +1,4 @@
-import type { Arrayable, Nullable } from '../types'
+import type { Arrayable, DeepMerge, Nullable } from '../types'
 
 export function notNullish<T>(v: T | null | undefined): v is NonNullable<T> {
   return v != null
@@ -59,54 +59,43 @@ export function toArray<T>(array?: Nullable<Arrayable<T>>): Array<T> {
   return [array]
 }
 
+export const toString = (v: any) => Object.prototype.toString.call(v)
+export const isPlainObject = (val: any): val is object => toString(val) === '[object Object]'
+
 export function isObject(item: unknown): boolean {
   return item != null && typeof item === 'object' && !Array.isArray(item)
 }
 
-function deepMergeArray(target: any[] = [], source: any[] = []) {
-  const mergedOutput = Array.from(target)
+/**
+ * Deep merge :P
+ *
+ * Will merge objects only if they are plain
+ */
+export function deepMerge<T extends object = object, S extends object = T>(target: T, ...sources: S[]): DeepMerge<T, S> {
+  if (!sources.length)
+    return target as any
 
-  source.forEach((sourceElement, index) => {
-    const targetElement = mergedOutput[index]
+  const source = sources.shift()
+  if (source === undefined)
+    return target as any
 
-    if (Array.isArray(target[index])) {
-      mergedOutput[index] = deepMergeArray(target[index], sourceElement)
-    }
-    else if (isObject(targetElement)) {
-      mergedOutput[index] = deepMerge(target[index], sourceElement)
-    }
-    else {
-      // Source does not exist in target or target is primitive and cannot be deep merged
-      mergedOutput[index] = sourceElement
-    }
-  })
+  if (isMergableObject(target) && isMergableObject(source)) {
+    (Object.keys(source) as (keyof S & keyof T)[]).forEach((key) => {
+      if (isMergableObject(source[key])) {
+        if (!target[key])
+          target[key] = {} as any
 
-  return mergedOutput
-}
-
-export function deepMerge(target: any, source: any): any {
-  if (isObject(target) && isObject(source)) {
-    if (target instanceof RegExp || source instanceof RegExp)
-      return target
-
-    const mergedOutput = { ...target }
-    Object.keys(source).forEach((key) => {
-      if (isObject(source[key]) && !source[key].$$typeof) {
-        if (!(key in target)) Object.assign(mergedOutput, { [key]: source[key] })
-        else mergedOutput[key] = deepMerge(target[key], source[key])
-      }
-      else if (Array.isArray(source[key])) {
-        mergedOutput[key] = deepMergeArray(target[key], source[key])
+        deepMerge(target[key] as any, source[key] as any)
       }
       else {
-        Object.assign(mergedOutput, { [key]: source[key] })
+        target[key] = source[key] as any
       }
     })
+  }
 
-    return mergedOutput
-  }
-  else if (Array.isArray(target) && Array.isArray(source)) {
-    return deepMergeArray(target, source)
-  }
-  return target
+  return deepMerge(target, ...sources)
+}
+
+function isMergableObject(item: any): item is Object {
+  return isPlainObject(item) && !Array.isArray(item)
 }
