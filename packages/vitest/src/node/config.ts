@@ -53,9 +53,13 @@ export function resolveConfig(
   if (options.dom)
     options.environment = 'happy-dom'
 
+  const globals = options?.global ?? options.globals
+
   const resolved = {
     ...deepMerge(options, viteConfig.test || {}),
     root: viteConfig.root,
+    globals,
+    global: globals,
   } as ResolvedConfig
 
   if (viteConfig.base !== '/')

@@ -57,12 +57,12 @@ Externalize means that Vite will bypass the package to native Node. Externalized
 
 Vite will process inlined modules. This could be helpful to handle packages that ship `.js` in ESM format (that Node can't handle).
 
-### global
+### globals
 
 - **Type:** `boolean`
 - **Default:** `false`
 
-By default, `vitest` does not provide global APIs for explicitness. If you prefer to use the APIs globally like Jest, you can pass the `--global` option to CLI or add `global: true` in the config.
+By default, `vitest` does not provide global APIs for explicitness. If you prefer to use the APIs globally like Jest, you can pass the `--globals` option to CLI or add `globals: true` in the config.
 
 ```ts
 // vite.config.ts
@@ -70,18 +70,18 @@ import { defineConfig } from 'vite'
 
 export default defineConfig({
   test: {
-    global: true,
+    globals: true,
   },
 })
 ```
 
-To get TypeScript working with the global APIs, add `vitest/global` to the `types` filed in your `tsconfig.json`
+To get TypeScript working with the global APIs, add `vitest/globals` to the `types` filed in your `tsconfig.json`
 
 ```json
 // tsconfig.json
 {
   "compilerOptions": {
-    "types": ["vitest/global"]
+    "types": ["vitest/globals"]
   }
 }
 ```

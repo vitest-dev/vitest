@@ -27,7 +27,10 @@
     },
     "./*": "./*",
     "./global": {
-      "types": "./global.d.ts"
+      "types": "./globals.d.ts"
+    },
+    "./globals": {
+      "types": "./globals.d.ts"
     },
     "./node": {
       "import": "./dist/node.js",

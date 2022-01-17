@@ -22,7 +22,7 @@ export default defineConfig({
     }),
   ],
   test: {
-    global: true,
+    globals: true,
     environment: 'happy-dom',
   },
 })

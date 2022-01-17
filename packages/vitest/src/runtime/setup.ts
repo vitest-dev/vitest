@@ -16,8 +16,8 @@ export async function setupGlobalEnv(config: ResolvedConfig) {
   setupConsoleLogSpy()
   await setupChai()
 
-  if (config.global)
-    (await import('../integrations/global')).registerApiGlobally()
+  if (config.globals)
+    (await import('../integrations/globals')).registerApiGlobally()
 }
 
 export function setupConsoleLogSpy() {
