@@ -90,17 +90,23 @@ function mockObject(obj: any) {
   return newObj
 }
 
-export function createMocker(root: string, mockMap: SuiteMocks) {
-  const pendingIds: PendingSuiteMock[] = []
+export class VitestMocker {
+  public pendingIds: PendingSuiteMock[] = []
 
-  function getSuiteFilepath() {
+  // avoid recursion when calling `importActual` inside mock factory
+  // when there is a nested export of the same library
+  public processingDep: string | null = null
+
+  constructor(private root: string, private mockMap: SuiteMocks) {}
+
+  public getSuiteFilepath() {
     return process.__vitest_worker__?.filepath || 'global'
   }
 
-  function getMocks() {
-    const suite = getSuiteFilepath()
-    const suiteMocks = mockMap[suite || '']
-    const globalMocks = mockMap.global
+  public getMocks() {
+    const suite = this.getSuiteFilepath()
+    const suiteMocks = this.mockMap[suite || '']
+    const globalMocks = this.mockMap.global
 
     return {
       ...suiteMocks,
@@ -108,34 +114,99 @@ export function createMocker(root: string, mockMap: SuiteMocks) {
     }
   }
 
-  function getDependencyMock(dep: string) {
-    return getMocks()[resolveDependency(dep)]
+  public getDependencyMock(dep: string) {
+    return this.getMocks()[this.resolveDependency(dep)]
   }
 
-  function getActualPath(path: string, external: string | null) {
+  // npm resolves as /node_modules, but we store as /@fs/.../node_modules
+  public resolveDependency(dep: string) {
+    if (dep.startsWith('/node_modules/'))
+      return mergeSlashes(`/@fs/${join(this.root, dep)}`)
+
+    return normalizeId(dep)
+  }
+
+  public getActualPath(path: string, external: string | null) {
     if (external)
       return mergeSlashes(`/@fs/${path}`)
 
-    return normalizeId(path.replace(root, ''))
+    return normalizeId(path.replace(this.root, ''))
   }
 
-  function unmockPath(path: string, external: string | null) {
-    const suitefile = getSuiteFilepath()
+  public resolveMockPath(mockPath: string, external: string | null) {
+    const path = normalizeId(external || mockPath)
 
-    const fsPath = getActualPath(path, external)
-    mockMap[suitefile] ??= {}
-    delete mockMap[suitefile][fsPath]
+    // it's a node_module alias
+    // all mocks should be inside <root>/__mocks__
+    if (external || isNodeBuiltin(mockPath)) {
+      const mockDirname = dirname(path) // for nested mocks: @vueuse/integration/useJwt
+      const baseFilename = basename(path)
+      const mockFolder = resolve(this.root, '__mocks__', mockDirname)
+
+      if (!existsSync(mockFolder)) return null
+
+      const files = readdirSync(mockFolder)
+
+      for (const file of files) {
+        const [basename] = file.split('.')
+        if (basename === baseFilename)
+          return resolve(mockFolder, file).replace(this.root, '')
+      }
+
+      return null
+    }
+
+    const dir = dirname(path)
+    const baseId = basename(path)
+    const fullPath = resolve(dir, '__mocks__', baseId)
+    return existsSync(fullPath) ? fullPath.replace(this.root, '') : null
   }
 
-  function mockPath(path: string, external: string | null, factory?: () => any) {
-    const suitefile = getSuiteFilepath()
+  public mockObject(obj: any) {
+    const type = getObjectType(obj)
 
-    const fsPath = getActualPath(path, external)
-    mockMap[suitefile] ??= {}
-    mockMap[suitefile][fsPath] = factory || resolveMockPath(path, root, external)
+    if (Array.isArray(obj))
+      return []
+    else if (type !== 'Object' && type !== 'Module')
+      return obj
+
+    const newObj = { ...obj }
+
+    const proto = mockPrototype(Object.getPrototypeOf(obj))
+    Object.setPrototypeOf(newObj, proto)
+
+    // eslint-disable-next-line no-restricted-syntax
+    for (const k in obj) {
+      newObj[k] = mockObject(obj[k])
+      const type = getObjectType(obj[k])
+
+      if (type.includes('Function') && !obj[k].__isSpy) {
+        spyOn(newObj, k).mockImplementation(() => {})
+        Object.defineProperty(newObj[k], 'length', { value: 0 }) // tinyspy retains length, but jest doesnt
+      }
+    }
+    return newObj
   }
 
-  function clearMocks({ clearMocks, mockReset, restoreMocks }: { clearMocks: boolean; mockReset: boolean; restoreMocks: boolean }) {
+  public unmockPath(path: string, external: string | null) {
+    const suitefile = this.getSuiteFilepath()
+
+    const fsPath = this.getActualPath(path, external)
+
+    if (this.mockMap[suitefile]?.[fsPath])
+      delete this.mockMap[suitefile][fsPath]
+  }
+
+  public mockPath(path: string, external: string | null, factory?: () => any) {
+    const suitefile = this.getSuiteFilepath()
+
+    const fsPath = this.getActualPath(path, external)
+
+    this.mockMap[suitefile] ??= {}
+    this.mockMap[suitefile][fsPath] = factory || resolveMockPath(path, this.root, external)
+  }
+
+  public clearMocks({ clearMocks, mockReset, restoreMocks }: { clearMocks: boolean; mockReset: boolean; restoreMocks: boolean }) {
     if (!clearMocks && !mockReset && !restoreMocks)
       return
 
@@ -149,40 +220,11 @@ export function createMocker(root: string, mockMap: SuiteMocks) {
     })
   }
 
-  // npm resolves as /node_modules, but we store as /@fs/.../node_modules
-  function resolveDependency(dep: string) {
-    if (dep.startsWith('/node_modules/'))
-      return mergeSlashes(`/@fs/${join(root, dep)}`)
-
-    return normalizeId(dep)
+  public queueMock(id: string, importer: string, factory?: () => unknown) {
+    this.pendingIds.push({ type: 'mock', id, importer, factory })
   }
 
-  function queueMock(id: string, importer: string, factory?: () => unknown) {
-    pendingIds.push({ type: 'mock', id, importer, factory })
-  }
-
-  function queueUnmock(id: string, importer: string) {
-    pendingIds.push({ type: 'unmock', id, importer })
-  }
-
-  function clearPendingIds() {
-    pendingIds.length = 0
-  }
-
-  return {
-    mockPath,
-    unmockPath,
-    clearMocks,
-    getActualPath,
-    getMocks,
-    getDependencyMock,
-    queueMock,
-    queueUnmock,
-    pendingIds,
-    clearPendingIds,
-
-    mockObject,
-    getSuiteFilepath,
-    resolveMockPath,
+  public queueUnmock(id: string, importer: string) {
+    this.pendingIds.push({ type: 'unmock', id, importer })
   }
 }
