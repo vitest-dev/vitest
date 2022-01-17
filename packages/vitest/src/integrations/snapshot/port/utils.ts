@@ -204,15 +204,14 @@ function deepMergeArray(target: any[] = [], source: any[] = []) {
  * Compatible with Jest's snapshot matcher.
  *
  * @example
+ * ```ts
  * toMatchSnapshot({
  *   name: expect.stringContaining('text')
  * })
+ * ```
  */
 export function deepMergeSnapshot(target: any, source: any): any {
   if (isObject(target) && isObject(source)) {
-    if (target instanceof RegExp || source instanceof RegExp)
-      return target
-
     const mergedOutput = { ...target }
     Object.keys(source).forEach((key) => {
       if (isObject(source[key]) && !source[key].$$typeof) {
