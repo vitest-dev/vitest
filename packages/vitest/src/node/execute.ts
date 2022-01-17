@@ -102,7 +102,10 @@ export class VitestRunner extends ViteNodeRunner {
     const importActual = async(id: string, importer: string) => {
       const { path, external } = await resolvePath(id, importer)
       const fsPath = this.mocker.getActualPath(path, external)
-      return request(fsPath)
+      this.mocker.processingDep = fsPath
+      const result = await request(fsPath)
+      this.mocker.processingDep = null
+      return result
     }
     const importMock = async(id: string, importer: string): Promise<any> => {
       const { path, external } = await resolvePath(id, importer)
