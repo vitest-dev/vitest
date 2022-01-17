@@ -1,6 +1,5 @@
 import { importModule } from 'local-pkg'
 import type { Environment, JSDOMOptions } from '../../types'
-import { KEYS } from './jsdom-keys'
 
 export default <Environment>({
   name: 'jsdom',
@@ -40,27 +39,13 @@ export default <Environment>({
       },
     )
 
-    const keys = new Set(KEYS.concat(Object.getOwnPropertyNames(dom.window))
-      .filter(k => !k.startsWith('_') && !(k in global)))
+    const glob = global.global
 
-    const overrideObject = new Map<string, any>()
-    for (const key of keys) {
-      Object.defineProperty(global, key, {
-        get() {
-          if (overrideObject.has(key))
-            return overrideObject.get(key)
-          return dom.window[key]
-        },
-        set(v) {
-          overrideObject.set(key, v)
-        },
-        configurable: true,
-      })
-    }
+    global.global = dom.window as any
 
     return {
       teardown(global) {
-        keys.forEach(key => delete global[key])
+        global.global = glob
       },
     }
   },
