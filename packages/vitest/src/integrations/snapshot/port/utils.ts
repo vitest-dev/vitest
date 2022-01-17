@@ -201,7 +201,7 @@ function deepMergeArray(target: any[] = [], source: any[] = []) {
 /**
  * Deep merge, but considers asymmetric matchers. Unlike base util's deep merge,
  * will merge any object-like instance.
- * Compatible with Jest's snapshot matcher.
+ * Compatible with Jest's snapshot matcher. Should not be used outside of snapshot.
  *
  * @example
  * ```ts

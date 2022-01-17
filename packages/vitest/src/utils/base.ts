@@ -87,6 +87,12 @@ export function deepMerge<T extends object = object, S extends object = T>(targe
 
         deepMerge(target[key] as any, source[key] as any)
       }
+      else if (Array.isArray(source[key])) {
+        if (!target[key])
+          target[key] = [] as any
+
+        (target[key] as any).push(...source[key] as any)
+      }
       else {
         target[key] = source[key] as any
       }
