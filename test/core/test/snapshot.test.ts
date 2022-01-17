@@ -21,6 +21,21 @@ test('inline snapshot', () => {
     },
   }
   `)
+  const indent = `
+()=>
+  array
+    .map(fn)
+    .filter(fn)
+`
+  expect(indent)
+    .toMatchInlineSnapshot(`
+"
+()=>
+  array
+    .map(fn)
+    .filter(fn)
+"
+  `)
 })
 
 test('snapshot with big array', () => {
