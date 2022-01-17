@@ -44,6 +44,26 @@ export class VitestRunner extends ViteNodeRunner {
   prepareContext(context: Record<string, any>) {
     const request = context.__vite_ssr_import__
 
+    const resolvePath = async(id: string, importer: string) => {
+      const path = await this.options.resolveId(id, importer)
+      return {
+        path: path?.id || id,
+        external: path?.id.includes('/node_modules/') ? id : null,
+      }
+    }
+
+    const resolveMocks = async() => {
+      await Promise.all(this.mocker.pendingIds.map(async(mock) => {
+        const { path, external } = await resolvePath(mock.id, mock.importer)
+        if (mock.type === 'unmock')
+          this.mocker.unmockPath(path, external)
+        if (mock.type === 'mock')
+          this.mocker.mockPath(path, external, mock.factory)
+      }))
+
+      this.mocker.clearPendingIds()
+    }
+
     const callFunctionMock = async(dep: string, mock: () => any) => {
       const cacheName = `${dep}__mock`
       const cached = this.moduleCache.get(cacheName)?.exports
@@ -55,6 +75,8 @@ export class VitestRunner extends ViteNodeRunner {
     }
 
     const requestWithMock = async(dep: string) => {
+      await resolveMocks()
+
       const mock = this.mocker.getDependencyMock(dep)
       if (mock === null) {
         const cacheName = `${dep}__mock`
@@ -73,10 +95,14 @@ export class VitestRunner extends ViteNodeRunner {
         dep = mock
       return request(dep)
     }
-    const importActual = (path: string, external: string | null) => {
-      return request(this.mocker.getActualPath(path, external))
+    const importActual = async(id: string, importer: string) => {
+      const { path, external } = await resolvePath(id, importer)
+      const fsPath = this.mocker.getActualPath(path, external)
+      return request(fsPath)
     }
-    const importMock = async(path: string, external: string | null): Promise<any> => {
+    const importMock = async(id: string, importer: string): Promise<any> => {
+      const { path, external } = await resolvePath(id, importer)
+
       let mock = this.mocker.getDependencyMock(path)
 
       if (mock === undefined)
@@ -97,13 +123,13 @@ export class VitestRunner extends ViteNodeRunner {
       __vite_ssr_dynamic_import__: requestWithMock,
 
       // vitest.mock API
-      __vitest__mock__: this.mocker.mockPath,
-      __vitest__unmock__: this.mocker.unmockPath,
-      __vitest__importActual__: importActual,
-      __vitest__importMock__: importMock,
+      __vitest_mock__: this.mocker.queueMock,
+      __vitest_unmock__: this.mocker.queueUnmock,
+      __vitest_importActual__: importActual,
+      __vitest_importMock__: importMock,
       // spies from 'jest-mock' are different inside suites and execute,
       // so wee need to call this twice - inside suite and here
-      __vitest__clearMocks__: this.mocker.clearMocks,
+      __vitest_clearMocks__: this.mocker.clearMocks,
     })
   }
 }

@@ -6,6 +6,13 @@ import { mergeSlashes, normalizeId } from '../utils'
 
 export type SuiteMocks = Record<string, Record<string, string | null | (() => unknown)>>
 
+interface PendingSuiteMock {
+  id: string
+  importer: string
+  type: 'mock' | 'unmock'
+  factory?: () => unknown
+}
+
 function resolveMockPath(mockPath: string, root: string, external: string | null) {
   const path = normalizeId(external || mockPath)
 
@@ -84,6 +91,8 @@ function mockObject(obj: any) {
 }
 
 export function createMocker(root: string, mockMap: SuiteMocks) {
+  const pendingIds: PendingSuiteMock[] = []
+
   function getSuiteFilepath() {
     return process.__vitest_worker__?.filepath || 'global'
   }
@@ -148,6 +157,18 @@ export function createMocker(root: string, mockMap: SuiteMocks) {
     return normalizeId(dep)
   }
 
+  function queueMock(id: string, importer: string, factory?: () => unknown) {
+    pendingIds.push({ type: 'mock', id, importer, factory })
+  }
+
+  function queueUnmock(id: string, importer: string) {
+    pendingIds.push({ type: 'unmock', id, importer })
+  }
+
+  function clearPendingIds() {
+    pendingIds.length = 0
+  }
+
   return {
     mockPath,
     unmockPath,
@@ -155,6 +176,10 @@ export function createMocker(root: string, mockMap: SuiteMocks) {
     getActualPath,
     getMocks,
     getDependencyMock,
+    queueMock,
+    queueUnmock,
+    pendingIds,
+    clearPendingIds,
 
     mockObject,
     getSuiteFilepath,

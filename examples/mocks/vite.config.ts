@@ -7,5 +7,8 @@ export default defineConfig({
   test: {
     global: true,
     environment: 'node',
+    deps: {
+      external: [/src\/external\.mjs/],
+    },
   },
 })

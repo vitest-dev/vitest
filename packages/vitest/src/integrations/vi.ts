@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import mockdate from 'mockdate'
+import { parseStacktrace } from '../utils/source-map'
 import { FakeTimers } from './timers'
 import type { EnhancedSpy, MaybeMocked, MaybeMockedDeep } from './jest-mock'
 import { fn, isMockFunction, spies, spyOn } from './jest-mock'
@@ -65,7 +66,11 @@ class VitestUtils {
   spyOn = spyOn
   fn = fn
 
-  // just hints for transformer to rewrite imports
+  private getImporter() {
+    const err = new Error('mock')
+    const [,, importer] = parseStacktrace(err, true)
+    return importer.file
+  }
 
   /**
    * Makes all `imports` to passed module to be mocked.
@@ -78,13 +83,30 @@ class VitestUtils {
    * @param path Path to the module. Can be aliased, if your config suppors it
    * @param factory Factory for the mocked module. Has the highest priority.
    */
-  public mock(path: string, factory?: () => any) {}
+  public mock(path: string, factory?: () => any) {
+    // @ts-expect-error injected by vite-node
+    __vitest_mock__(path, this.getImporter(), factory)
+  }
+
   /**
    * Removes module from mocked registry. All subsequent calls to import will
    * return original module even if it was mocked.
    * @param path Path to the module. Can be aliased, if your config suppors it
    */
-  public unmock(path: string) {}
+  public unmock(path: string) {
+    // @ts-expect-error injected by vite-node
+    __vitest_unmock__(path, this.getImporter())
+  }
+
+  public doMock(path: string, factory?: () => any) {
+    // @ts-expect-error injected by vite-node
+    __vitest_mock__(path, this.getImporter(), factory)
+  }
+
+  public doUnmock(path: string) {
+    // @ts-expect-error injected by vite-node
+    __vitest_unmock__(path, this.getImporter())
+  }
 
   /**
    * Imports module, bypassing all checks if it should be mocked.
@@ -99,7 +121,8 @@ class VitestUtils {
    * @returns Actual module without spies
    */
   public async importActual<T>(path: string): Promise<T> {
-    return {} as T
+    // @ts-expect-error injected by vite-node
+    return __vitest_importActual__(path, this.getImporter()) as T
   }
 
   /**
@@ -109,7 +132,8 @@ class VitestUtils {
    * @returns Fully mocked module
    */
   public async importMock<T>(path: string): Promise<MaybeMockedDeep<T>> {
-    return {} as MaybeMockedDeep<T>
+    // @ts-expect-error injected by vite-node
+    return __vitest_importMock__(path, this.getImporter()) as MaybeMockedDeep<T>
   }
 
   /**
@@ -139,22 +163,22 @@ class VitestUtils {
   }
 
   public clearAllMocks() {
-    // @ts-expect-error clearing module mocks
-    __vitest__clearMocks__({ clearMocks: true })
+    // @ts-expect-error injected by vite-node
+    __vitest_clearMocks__({ clearMocks: true })
     spies.forEach(spy => spy.mockClear())
     return this
   }
 
   public resetAllMocks() {
-    // @ts-expect-error resetting module mocks
-    __vitest__clearMocks__({ mockReset: true })
+    // @ts-expect-error injected by vite-node
+    __vitest_clearMocks__({ mockReset: true })
     spies.forEach(spy => spy.mockReset())
     return this
   }
 
   public restoreAllMocks() {
-    // @ts-expect-error restoring module mocks
-    __vitest__clearMocks__({ restoreMocks: true })
+    // @ts-expect-error injected by vite-node
+    __vitest_clearMocks__({ restoreMocks: true })
     spies.forEach(spy => spy.mockRestore())
     return this
   }
