@@ -121,7 +121,7 @@ export class VitestMocker {
   // npm resolves as /node_modules, but we store as /@fs/.../node_modules
   public resolveDependency(dep: string) {
     if (dep.startsWith('/node_modules/'))
-      return mergeSlashes(`/@fs/${join(this.root, dep)}`)
+      dep = mergeSlashes(`/@fs/${join(this.root, dep)}`)
 
     return normalizeId(dep)
   }

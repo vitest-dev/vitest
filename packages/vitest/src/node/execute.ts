@@ -1,5 +1,5 @@
 import { ViteNodeRunner } from 'vite-node/client'
-import { toFilePath } from 'vite-node/utils'
+import { normalizeId, toFilePath } from 'vite-node/utils'
 import type { ViteNodeRunnerOptions } from 'vite-node'
 import type { SuiteMocks } from './mocker'
 import { VitestMocker } from './mocker'
@@ -47,7 +47,7 @@ export class VitestRunner extends ViteNodeRunner {
     const resolvePath = async(id: string, importer: string) => {
       const path = await this.options.resolveId(id, importer)
       return {
-        path: path?.id || id,
+        path: normalizeId(path?.id || id),
         external: path?.id.includes('/node_modules/') ? id : null,
       }
     }
