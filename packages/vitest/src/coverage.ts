@@ -79,6 +79,8 @@ export interface C8Options {
   skipFull?: boolean
   extension?: string | string[]
 
+  all?: boolean
+
   // c8 options, not sure if we should expose them
   /**
    * Directory to store V8 coverage reports
@@ -89,7 +91,6 @@ export interface C8Options {
   // omitRelative?: any
   // wrapperLength?: any
   // resolve?: any
-  // all?: any
   // src?: any
 }
 
