@@ -42,32 +42,29 @@ export class VitestRunner extends ViteNodeRunner {
   }
 
   prepareContext(context: Record<string, any>) {
-    const suite = this.mocker.getSuiteFilepath()
-    const mockMap = this.options.mockMap
     const request = context.__vite_ssr_import__
 
     const callFunctionMock = async(dep: string, mock: () => any) => {
-      const name = `${dep}__mock`
-      const cached = this.moduleCache.get(name)?.exports
+      const cacheName = `${dep}__mock`
+      const cached = this.moduleCache.get(cacheName)?.exports
       if (cached)
         return cached
       const exports = await mock()
-      this.setCache(name, { exports })
+      this.setCache(cacheName, { exports })
       return exports
     }
 
     const requestWithMock = async(dep: string) => {
-      const mocks = mockMap[suite || ''] || {}
-      const mock = mocks[this.mocker.resolveDependency(dep)]
+      const mock = this.mocker.getDependencyMock(dep)
       if (mock === null) {
-        const mockedKey = `${dep}__mock`
-        const cache = this.moduleCache.get(mockedKey)
+        const cacheName = `${dep}__mock`
+        const cache = this.moduleCache.get(cacheName)
         if (cache?.exports)
           return cache.exports
         const cacheKey = toFilePath(dep, this.root)
         const mod = this.moduleCache.get(cacheKey)?.exports || await request(dep)
         const exports = this.mocker.mockObject(mod)
-        this.setCache(mockedKey, { exports })
+        this.setCache(cacheName, { exports })
         return exports
       }
       if (typeof mock === 'function')
@@ -76,16 +73,17 @@ export class VitestRunner extends ViteNodeRunner {
         dep = mock
       return request(dep)
     }
-    const importActual = (path: string, nmName: string) => {
-      return request(this.mocker.getActualPath(path, nmName))
+    const importActual = (path: string, external: string | null) => {
+      return request(this.mocker.getActualPath(path, external))
     }
-    const importMock = async(path: string, nmName: string): Promise<any> => {
-      if (!suite)
-        throw new Error('You can import mock only inside of a running test')
+    const importMock = async(path: string, external: string | null): Promise<any> => {
+      let mock = this.mocker.getDependencyMock(path)
 
-      const mock = (mockMap[suite] || {})[path] || this.mocker.resolveMockPath(path, this.root, nmName)
+      if (mock === undefined)
+        mock = this.mocker.resolveMockPath(path, this.root, external)
+
       if (mock === null) {
-        const fsPath = this.mocker.getActualPath(path, nmName)
+        const fsPath = this.mocker.getActualPath(path, external)
         const mod = await request(fsPath)
         return this.mocker.mockObject(mod)
       }

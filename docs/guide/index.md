@@ -108,6 +108,7 @@ You can specify additional CLI options like `--port` or `--https`. For a full li
 | `--threads` | Enable Threads (default: true) |
 | `--silent` | Silent console output from tests |
 | `--reporter <name>` | Select reporter: `default`, `verbose`, `dot` or `json` |
+| `--outputFile <filename>` | Write test results to a file when the `--reporter=json` option is also specified |
 | `--coverage` | Use c8 for coverage |
 | `--run` | Do not watch |
 | `--global` | Inject APIs globally |
@@ -130,6 +131,7 @@ You can specify additional CLI options like `--port` or `--https`. For a full li
 - [fluent-vue](https://github.com/demivan/fluent-vue)
 - [vueuse](https://github.com/vueuse/vueuse)
 - [milkdown](https://github.com/Saul-Mirone/milkdown)
+- [gridjs-svelte](https://github.com/iamyuu/gridjs-svelte)
 
 ## Using Unreleased Commits
 

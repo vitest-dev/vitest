@@ -82,6 +82,9 @@ async function run(options: CliOptions = {}) {
     fetchModule(id) {
       return node.fetchModule(id)
     },
+    resolveId(id, importer) {
+      return node.resolveId(id, importer)
+    },
   })
 
   for (const file of files)

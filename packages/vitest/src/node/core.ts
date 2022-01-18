@@ -92,7 +92,7 @@ export class Vitest {
 
   getConfig() {
     if (this.configOverride)
-      return deepMerge(clone(this.config), this.configOverride)
+      return deepMerge(clone(this.config), this.configOverride) as ResolvedConfig
     return this.config
   }
 
@@ -360,7 +360,7 @@ export class Vitest {
     Promise.race([closePromise, timeoutPromise]).then(
       () => {
         clearTimeout(timeout)
-        process.exit(0)
+        process.exit()
       },
       (err) => {
         clearTimeout(timeout)

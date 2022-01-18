@@ -1,6 +1,5 @@
 import { promises as fs } from 'fs'
 import type MagicString from 'magic-string'
-import detectIndent from 'detect-indent'
 import { rpc } from '../../../runtime/rpc'
 import { getOriginalPos, posToNumber } from '../../../utils/source-map'
 import { getCallLastIndex } from '../../../utils'
@@ -26,8 +25,7 @@ export async function saveInlineSnapshots(
     for (const snap of snaps) {
       const pos = await getOriginalPos(map, snap)
       const index = posToNumber(code, pos!)
-      const { indent } = detectIndent(code.slice(index - pos!.column))
-      replaceInlineSnap(code, s, index, snap.snapshot, indent)
+      replaceInlineSnap(code, s, index, snap.snapshot)
     }
 
     const transformed = s.toString()
@@ -38,7 +36,7 @@ export async function saveInlineSnapshots(
 
 const startObjectRegex = /(?:toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot)\s*\(\s*({)/m
 
-function replaceObjectSnap(code: string, s: MagicString, index: number, newSnap: string, indent = '') {
+function replaceObjectSnap(code: string, s: MagicString, index: number, newSnap: string) {
   code = code.slice(index)
   const startMatch = startObjectRegex.exec(code)
   if (!startMatch)
@@ -49,30 +47,29 @@ function replaceObjectSnap(code: string, s: MagicString, index: number, newSnap:
   if (charIndex === null)
     return false
 
-  s.appendLeft(index + startMatch.index + charIndex, `, ${prepareSnapString(newSnap, indent)}`)
+  s.appendLeft(index + startMatch.index + charIndex, `, ${prepareSnapString(newSnap)}`)
 
   return true
 }
 
-function prepareSnapString(snap: string, indent: string) {
+function prepareSnapString(snap: string) {
   snap = snap.replace(/\\/g, '\\\\')
     .split('\n')
-    .map(i => (indent + i).trimEnd())
+    .map(i => i.trimEnd())
     .join('\n')
   const isOneline = !snap.includes('\n')
   return isOneline
     ? `'${snap.replace(/'/g, '\\\'').trim()}'`
-    : `\`${snap.replace(/`/g, '\\`').trimEnd()}\n${indent}\``
+    : `\`${snap.replace(/`/g, '\\`').trimEnd()}\n\``
 }
 
 const startRegex = /(?:toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot)\s*\(\s*(['"`\)])/m
-export function replaceInlineSnap(code: string, s: MagicString, index: number, newSnap: string, indent = '') {
+export function replaceInlineSnap(code: string, s: MagicString, index: number, newSnap: string) {
   const startMatch = startRegex.exec(code.slice(index))
   if (!startMatch)
-    return replaceObjectSnap(code, s, index, newSnap, indent)
+    return replaceObjectSnap(code, s, index, newSnap)
 
-  const snapString = prepareSnapString(newSnap, indent)
-
+  const snapString = prepareSnapString(newSnap)
   const quote = startMatch[1]
 
   const startIndex = index + startMatch.index! + startMatch[0].length

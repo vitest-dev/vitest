@@ -6,7 +6,7 @@ export default defineConfig({
     svelte({ hot: !process.env.VITEST }),
   ],
   test: {
-    global: true,
+    globals: true,
     environment: 'jsdom',
   },
 })

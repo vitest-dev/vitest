@@ -6,7 +6,7 @@ export default defineConfig({
     Vue(),
   ],
   test: {
-    global: true,
+    globals: true,
     isolate: false,
     environment: 'happy-dom', // jsdom fails when there are more test files
   },
