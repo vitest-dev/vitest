@@ -9,7 +9,7 @@ const updateSnapshot = () => current.value && client.rpc.updateSnapshot(current.
 </script>
 
 <template>
-  <div v-if="current" border="r base">
+  <div v-if="current" h-full border="r base">
     <TasksList :tasks="current.tasks" :nested="true">
       <template #header>
         <StatusIcon :task="current" />
@@ -19,9 +19,13 @@ const updateSnapshot = () => current.value && client.rpc.updateSnapshot(current.
             v-if="failedSnapshot"
             v-tooltip.bottom="'Update failed snapshots'"
             icon="i-carbon-result-old"
-            @click="updateSnapshot"
+            @click="updateSnapshot()"
           />
-          <IconButton v-tooltip.bottom="'Rerun file'" icon="i-carbon-play" @click="runCurrent" />
+          <IconButton
+            v-tooltip.bottom="'Rerun file'"
+            icon="i-carbon-play"
+            @click="runCurrent()"
+          />
         </div>
       </template>
     </TasksList>

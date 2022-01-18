@@ -65,6 +65,7 @@ export default {
           bg="transparent"
           font="light"
           text="sm"
+          flex-1
           :op="search.length ? '100' : '50'"
         >
       </div>

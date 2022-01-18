@@ -110,7 +110,8 @@ html.dark {
 }
 
 .splitpanes--vertical > .splitpanes__splitter:before {
-  left: -10px;
+  /* make vertical scroll usable */
+  /*left: -10px;*/
   right: -10px;
   height: 100%;
 }
@@ -162,4 +163,5 @@ html.dark {
   margin-right: unset !important;
   padding-bottom: unset !important;
 }
+
 

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { currentModule, dashboardVisible, showDashboard } from '../composables/navigation'
+import { findById } from '../composables/client'
 import type { Task } from '#types'
 import { isDark, toggleDark } from '~/composables'
 import { files, runAll } from '~/composables/client'
@@ -6,6 +8,8 @@ import { activeFileId } from '~/composables/params'
 
 function onItemClick(task: Task) {
   activeFileId.value = task.id
+  currentModule.value = findById(task.id)
+  showDashboard(false)
 }
 const toggleMode = computed(() => isDark.value ? 'light' : 'dark')
 </script>
@@ -16,6 +20,15 @@ const toggleMode = computed(() => isDark.value ? 'light' : 'dark')
       <img w-6 h-6 mx-2 src="/favicon.svg">
       <span font-light text-sm flex-1>Vitest</span>
       <div class="flex text-lg">
+        <IconButton
+          v-show="!dashboardVisible"
+          v-tooltip.bottom="'Dashboard'"
+          title="Show dashboard"
+          class="!animate-100ms"
+          animate-count-1
+          icon="i-carbon-dashboard"
+          @click="showDashboard(true)"
+        />
         <IconButton v-tooltip.bottom="'Rerun all'" icon="i-carbon-play" @click="runAll" />
         <IconButton
           v-tooltip.bottom="`Toggle to ${toggleMode} mode`"
