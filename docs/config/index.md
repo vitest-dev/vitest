@@ -33,7 +33,7 @@ Include globs for test files
 ### exclude
 
 - **Type:** `string[]`
-- **Default:** `['node_modules', 'dist', '.idea', '.git', '.cache']`
+- **Default:** `['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**']`
 
 Exclude globs for test files
 
