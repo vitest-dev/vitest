@@ -61,20 +61,26 @@ basic-foo.test.ts
 You can optionally pass a timeout in milliseconds as third argument to tests. The default is 5 seconds.
 
 ```ts
-test('name', async() => { ... }, 1000)
+import { test } from 'vitest'
+
+test('name', async () => { ... }, 1000)
 ```
 
 Hooks also can receive a timeout, with the same 5 seconds default.
 
 ```ts
-beforeAll( async() => { ... }, 1000)
+import { beforeAll } from 'vitest'
+
+beforeAll(async () => { ... }, 1000)
 ```
 
 ### Skipping suites and tests
 
-Use `.skip` to avoid running certain suites or tests
+Use `.skip` alias `it` to avoid running certain suites or tests
 
 ```ts
+import { describe, assert } from 'vitest';
+
 describe.skip("skipped suite", () => {
   it("test", () => {
     // Suite skipped, no error
@@ -95,6 +101,8 @@ describe("suite", () => {
 Use `.only` to only run certain suites or tests
 
 ```ts
+import { describe, assert } from 'vitest'
+
 // Only this suite (and others marked with only) are run
 describe.only("suite", () => {
   it("test", () => {
@@ -120,6 +128,8 @@ describe("another suite", () => {
 Use `.todo` to stub suites and tests that should be implemented
 
 ```ts
+import { describe } from 'vitest'
+
 // An entry will be shown in the report for this suite
 describe.todo("unimplemented suite");
 
@@ -134,11 +144,13 @@ describe("suite", () => {
 Use `.concurrent` in consecutive tests to run them in parallel
 
 ```ts
+import { describe } from 'vitest'
+
 // The two tests marked with concurrent will be run in parallel
 describe("suite", () => {
-  it("serial test", async() => { /* ... */ });
-  it.concurrent("concurrent test 1", async() => { /* ... */ });
-  it.concurrent("concurrent test 2", async() => { /* ... */ });
+  it("serial test", async () => { /* ... */ });
+  it.concurrent("concurrent test 1", async () => { /* ... */ });
+  it.concurrent("concurrent test 2", async () => { /* ... */ });
 });
 ```
 
@@ -147,9 +159,9 @@ If you use `.concurrent` in a suite, every tests in it will be run in parallel
 ```ts
 // All tests within this suite will be run in parallel
 describe.concurrent("suite", () => {
-  it("concurrent test 1", async() => { /* ... */ });
-  it("concurrent test 2", async() => { /* ... */ });
-  it.concurrent("concurrent test 3", async() => { /* ... */ });
+  it("concurrent test 1", async () => { /* ... */ });
+  it("concurrent test 2", async () => { /* ... */ });
+  it.concurrent("concurrent test 3", async () => { /* ... */ });
 });
 ```
 
@@ -168,7 +180,7 @@ You can also use `.skip`, `.only`, and `.todo` with concurrent suites and tests.
 [Tinyspy](https://github.com/Aslemammad/tinyspy) built-in for mocking with `jest` compatible APIs on `vi` object.
 
 ```ts
-import { vi } from 'vitest'
+import { vi, expect } from 'vitest'
 
 const fn = vi.fn()
 
