@@ -1,10 +1,10 @@
-#[build.environment]
-#  NPM_FLAGS = "--prefix=/dev/null"
-#  NODE_VERSION = "14"
+[build.environment]
+  NPM_FLAGS = "--prefix=/dev/null"
+  NODE_VERSION = "16"
 
-#[build]
-#  publish = "dist"
-#  command = "npx pnpm i --store=node_modules/.pnpm-store && npx pnpm run build"
+[build]
+  publish = "docs/.vitepress/dist"
+  command = "npx pnpm i --store=node_modules/.pnpm-store && npm run docs:build"
 
 [[redirects]]
   from = "/*"
