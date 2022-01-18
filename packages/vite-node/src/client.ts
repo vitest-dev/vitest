@@ -56,7 +56,7 @@ export class ViteNodeRunner {
 
     const { code: transformed, externalize } = await this.options.fetchModule(id)
     if (externalize) {
-      const mod = await interpretedImport(externalize, this.options.interpretDefault ?? true)
+      const mod = await this.interopedImport(externalize)
       this.setCache(fsPath, { exports: mod })
       return mod
     }
@@ -117,10 +117,41 @@ export class ViteNodeRunner {
     else
       Object.assign(this.moduleCache.get(id), mod)
   }
-}
 
-function hasNestedDefault(target: any) {
-  return '__esModule' in target && target.__esModule && 'default' in target.default
+  /**
+   * Define if a module should be interop-ed
+   * This function mostly for the ability to override by subclass
+   */
+  shouldInterop(path: string, mod: any) {
+    if (this.options.interpretDefault === false)
+      return false
+    // never interop ESM modules
+    // TODO: should also skip for `.js` with `type="module"`
+    return !path.endsWith('.mjs') && 'default' in mod
+  }
+
+  /**
+   * Import a module and interop it
+   */
+  async interopedImport(path: string) {
+    const mod = await import(path)
+
+    if (this.shouldInterop(path, mod)) {
+      const tryDefault = this.hasNestedDefault(mod)
+      return new Proxy(mod, {
+        get: proxyMethod('get', tryDefault),
+        set: proxyMethod('set', tryDefault),
+        has: proxyMethod('has', tryDefault),
+        deleteProperty: proxyMethod('deleteProperty', tryDefault),
+      })
+    }
+
+    return mod
+  }
+
+  hasNestedDefault(target: any) {
+    return '__esModule' in target && target.__esModule && 'default' in target.default
+  }
 }
 
 function proxyMethod(name: 'get' | 'set' | 'has' | 'deleteProperty', tryDefault: boolean) {
@@ -132,22 +163,6 @@ function proxyMethod(name: 'get' | 'set' | 'has' | 'deleteProperty', tryDefault:
       return Reflect[name](target.default, key, ...args)
     return result
   }
-}
-
-async function interpretedImport(path: string, interpretDefault: boolean) {
-  const mod = await import(path)
-
-  if (interpretDefault && 'default' in mod) {
-    const tryDefault = hasNestedDefault(mod)
-    return new Proxy(mod, {
-      get: proxyMethod('get', tryDefault),
-      set: proxyMethod('set', tryDefault),
-      has: proxyMethod('has', tryDefault),
-      deleteProperty: proxyMethod('deleteProperty', tryDefault),
-    })
-  }
-
-  return mod
 }
 
 function exportAll(exports: any, sourceModule: any) {
