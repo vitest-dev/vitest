@@ -32,10 +32,10 @@ const code = computed(() => result.value?.code?.replace(/\/\/# sourceMappingURL=
           Transformed
         </div>
         <div>
-          <CodeMirror :model-value="source" v-bind="{ lineNumbers:true }" :mode="ext" />
+          <CodeMirror :model-value="source" read-only v-bind="{ lineNumbers:true }" :mode="ext" />
         </div>
         <div>
-          <CodeMirror :model-value="code" v-bind="{ lineNumbers:true }" :mode="ext" />
+          <CodeMirror :model-value="code" read-only v-bind="{ lineNumbers:true }" :mode="ext" />
         </div>
       </div>
       <pre>{{ result }}</pre>
