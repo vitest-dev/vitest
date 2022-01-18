@@ -5,6 +5,7 @@ import Components from 'unplugin-vue-components/vite'
 import Unocss from 'unocss/vite'
 import { presetAttributify, presetIcons, presetUno } from 'unocss'
 import { resolve } from 'pathe'
+import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
   plugins: [
@@ -27,6 +28,91 @@ export default defineConfig({
       ],
     }),
     IncludesPlugin(),
+    VitePWA({
+      outDir: '.vitepress/dist',
+      // TODO: to add prompt strategy we should change to custom theme or switch to @vue/theme
+      registerType: 'autoUpdate',
+      includeAssets: [
+        'favicon.svg',
+        'apple-touch-icon.png',
+        'robots.txt',
+        'bg.png',
+        'og.png',
+        'netlify.svg',
+      ],
+      manifest: {
+        id: '/',
+        name: 'Vitest',
+        short_name: 'Vitest',
+        description: 'Vitest - A blazing fast unit test framework powered by Vite',
+        theme_color: '#ffffff',
+        icons: [
+          {
+            src: 'pwa-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+          },
+          {
+            src: 'pwa-512x512.svg',
+            sizes: '512x512',
+            type: 'image/png',
+          },
+          {
+            src: 'logo.svg',
+            sizes: '165x165',
+            type: 'image/svg',
+            purpose: 'any maskable',
+          },
+        ],
+      },
+      workbox: {
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-cache',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 365, // <== 365 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          {
+            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'gstatic-fonts-cache',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 365, // <== 365 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          {
+            urlPattern: /^https:\/\/(antfu.me|patak.dev|cdn.jsdelivr.net|github.com|avatars.githubusercontent.com)\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'images-cache',
+              expiration: {
+                maxEntries: 1000,
+                maxAgeSeconds: 60 * 60 * 24 * 365, // <== 365 days
+              },
+              cacheableResponse: {
+                // github.com/{user}.png will redirect to avatars.githubusercontent.com
+                statuses: [0, 200, 302],
+              },
+            },
+          },
+        ],
+      },
+    }),
   ],
 
   optimizeDeps: {

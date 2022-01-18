@@ -5,8 +5,12 @@ export default defineConfig({
   title: 'Vitest',
   description: 'A blazing fast unit test framework powered by Vite',
   head: [
+    ['meta', { name: 'theme-color', content: '#ffffff' }],
+    ['meta', { name: 'author', content: 'Anthony Fu, Patak, Aslemammad, Vladimir' }],
+    // TODO: review this
+    ['meta', { name: 'keywords', content: 'vitest, vite, react, vue, preact, svelte, solid, lit, ruby, puppeteer, jsdom, happy-dom, node' }],
     ['meta', { property: 'og:title', content: 'Vitest' }],
-    ['meta', { property: 'og:description', content: 'A blazing fast unit test framework powered by Vite' }],
+    ['meta', { property: 'og:description', content: 'A blazing fast unit tets framework powered by Vite' }],
     ['meta', { property: 'og:url', content: 'https://vitest.dev/' }],
     ['meta', { property: 'og:image', content: 'https://vitest.dev/og.png' }],
     ['meta', { name: 'twitter:title', content: 'Vitest' }],
@@ -15,6 +19,8 @@ export default defineConfig({
     ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
     ['link', { rel: 'icon', href: '/logo.svg', type: 'image/svg+xml' }],
     ['link', { href: 'https://fonts.googleapis.com/css2?family=Readex+Pro:wght@200;400;600&display=swap', rel: 'stylesheet' }],
+    ['link', { rel: 'mask-icon', href: '/logo.svg', color: '#ffffff' }],
+    ['link', { rel: 'apple-touch-icon', href: '/apple-touch-icon.png', sizes: "180x180" }],
   ],
   themeConfig: {
     repo: 'vitest-dev/vitest',

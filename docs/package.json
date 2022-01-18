@@ -3,8 +3,9 @@
   "private": true,
   "scripts": {
     "dev": "vitepress --port 3333 --open",
-    "build": "vitepress build",
+    "build": "vitepress build && esno scripts/build-pwa.ts",
     "serve": "vitepress serve",
+    "preview-https": "pnpm run build && serve .vitepress/dist",
     "lint": "eslint . --ext=.ts,.vue"
   },
   "dependencies": {
@@ -13,12 +14,16 @@
   },
   "devDependencies": {
     "@iconify-json/carbon": "^1.0.12",
+    "@types/node": "^17.0.8",
     "@unocss/reset": "^0.22.2",
     "@vitejs/plugin-vue": "^2.0.1",
     "esno": "^0.14.0",
+    "fast-glob": "^3.2.10",
+    "https-localhost": "^4.7.0",
     "unocss": "^0.22.2",
     "unplugin-vue-components": "^0.17.11",
     "vite-plugin-pwa": "^0.11.13",
-    "vitepress": "^0.21.4"
+    "vitepress": "^0.21.4",
+    "workbox-window": "^6.4.2"
   }
 }

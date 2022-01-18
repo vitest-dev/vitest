@@ -3,6 +3,8 @@ defineProps<{
   avatar: string
   name: string
   github: string
+  width: number
+  height: number
   twitter?: string
   sponsors?: boolean
 }>()
@@ -10,7 +12,7 @@ defineProps<{
 
 <template>
   <div text-center>
-    <img :src="avatar" rounded-full width="100" height="100" h-25 w-25 :alt="`${name}'s avatar`">
+    <img :src="avatar" rounded-full :width="width" :height="height" h-25 w-25 :alt="`${name}'s avatar`">
     <div text-xl mt-1 mb-1>
       {{ name }}
     </div>
@@ -22,6 +24,7 @@ defineProps<{
         class="i-carbon-logo-github inline-block text-current op30 hover:op100 mya transition duration-200"
         :href="`https://github.com/${github}`"
         target="_blank"
+        rel="noopener noreferrer"
         :aria-label="`${name} on GitHub`"
       />
       <a
@@ -29,6 +32,7 @@ defineProps<{
         class="i-carbon-logo-twitter inline-block text-1.3em mya text-current op30 hover:op100 transition duration-200"
         :href="`https://twitter.com/${twitter}`"
         target="_blank"
+        rel="noopener noreferrer"
         :aria-label="`${name} on Twitter`"
       />
     </div>
@@ -37,6 +41,7 @@ defineProps<{
       v-if="sponsors"
       class="btn mt-1 bg-pink-500 hover:bg-pink-600"
       target="_blank"
+      rel="noopener noreferrer"
       :href="`https://github.com/sponsors/${github}`"
     >
       <span class="i-carbon-favorite-filled inline-block" />

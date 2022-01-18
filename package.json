@@ -11,6 +11,7 @@
     "docs": "npm -C docs run dev",
     "docs:build": "npm -C docs run build",
     "docs:serve": "npm -C docs run serve",
+    "docs:https": "npm -C docs run preview-https",
     "docs:examples": "esmo scripts/update-examples.ts",
     "docs:contributors": "esmo scripts/update-contributors.ts",
     "postinstall": "pnpm -C examples/vue2 i",

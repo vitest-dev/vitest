@@ -93,3 +93,7 @@ main.home {
 th, td {
   border: 1px solid #8885;
 }
+img.resizable-img {
+  width: unset;
+  height: unset;
+}
