@@ -8,6 +8,10 @@ const ext = computed(() => props.id?.split(/\./g).pop() || 'js')
 
 const source = computed(() => result.value?.source?.trim() || '')
 const code = computed(() => result.value?.code?.replace(/\/\/# sourceMappingURL=.*\n/, '').trim() || '')
+const sourceMap = computed(() => ({
+  mappings: result.value?.map?.mappings ?? '',
+  version: result.value?.map?.version,
+}))
 
 onKeyStroke('Escape', () => {
   emit('close')
@@ -42,7 +46,17 @@ onKeyStroke('Escape', () => {
           <CodeMirror :model-value="code" read-only v-bind="{ lineNumbers: true }" :mode="ext" />
         </div>
       </div>
-      <pre>{{ result }}</pre>
+      <template v-if="sourceMap.mappings !== ''">
+        <div p="x3 y-1" bg-overlay border="base b t">
+          Source map (v{{ sourceMap.version }})
+        </div>
+        <CodeMirror
+          :model-value="sourceMap.mappings"
+          read-only
+          v-bind="{ lineNumbers: true }"
+          :mode="ext"
+        />
+      </template>
     </template>
   </div>
 </template>
