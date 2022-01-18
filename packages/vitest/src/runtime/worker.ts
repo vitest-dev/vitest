@@ -37,6 +37,9 @@ async function startViteNode(ctx: WorkerContext) {
     fetchModule(id) {
       return rpc().fetch(id)
     },
+    resolveId(id, importer) {
+      return rpc().resolveId(id, importer)
+    },
     moduleCache,
     mockMap,
     interpretDefault: config.deps.interpretDefault ?? true,

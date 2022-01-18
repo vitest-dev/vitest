@@ -8,7 +8,8 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   plugins: [react()],
   test: {
-    global: true,
+    globals: true,
     environment: 'jsdom',
+    setupFiles: './src/test/setup.ts',
   },
 })

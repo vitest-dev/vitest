@@ -6,21 +6,6 @@ import type { ModuleGraph } from '~/composables/module-graph'
 import { getModuleGraph } from '~/composables/module-graph'
 import type { ModuleGraphData } from '#types'
 
-const sizes = reactive([95, 5])
-
-onMounted(() => {
-  const bottomPanelPercent = 42 / window.innerHeight * 100
-
-  sizes[0] = 100 - bottomPanelPercent
-  sizes[1] = bottomPanelPercent
-})
-
-function open() {
-  const filePath = current.value?.filepath
-  if (filePath)
-    fetch(`/__open-in-editor?file=${encodeURIComponent(filePath)}`)
-}
-
 const data = ref<ModuleGraphData>({ externalized: [], graph: {}, inlined: [] })
 const graph = ref<ModuleGraph>({ nodes: [], links: [] })
 
@@ -34,6 +19,12 @@ debouncedWatch(
   },
   { debounce: 100 },
 )
+
+const open = () => {
+  const filePath = current.value?.filepath
+  if (filePath)
+    fetch(`/__open-in-editor?file=${encodeURIComponent(filePath)}`)
+}
 
 const changeViewMode = (view: Params['view']) => {
   viewMode.value = view
@@ -49,7 +40,7 @@ const changeViewMode = (view: Params['view']) => {
           {{ current?.filepath }}
         </div>
         <div class="flex text-lg">
-          <IconButton icon="i-carbon-launch" :disabled="!current?.filepath" :onclick="open" />
+          <IconButton v-tooltip.bottom="'Open in editor'" icon="i-carbon-launch" :disabled="!current?.filepath" @click="open" />
         </div>
       </div>
       <div flex="~" items-center bg-header border="b base" text-sm h-37px>
@@ -68,9 +59,11 @@ const changeViewMode = (view: Params['view']) => {
       </div>
     </div>
 
-    <ViewModuleGraph v-show="viewMode === 'graph'" :graph="graph" />
-    <ViewEditor v-if="viewMode === 'editor'" :file="current" />
-    <ViewConsoleOutput v-else-if="viewMode === 'console'" :file="current" />
-    <ViewReport v-else-if="!viewMode" :file="current" />
+    <div flex flex-col flex-1 overflow="hidden">
+      <ViewModuleGraph v-show="viewMode === 'graph'" :graph="graph" />
+      <ViewEditor v-if="viewMode === 'editor'" :file="current" />
+      <ViewConsoleOutput v-else-if="viewMode === 'console'" :file="current" />
+      <ViewReport v-else-if="!viewMode" :file="current" />
+    </div>
   </div>
 </template>

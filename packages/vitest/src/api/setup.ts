@@ -93,6 +93,9 @@ export function setup(ctx: Vitest) {
             inlined: Array.from(inlined),
           }
         },
+        updateSnapshot(file: File) {
+          return ctx.updateSnapshot([file.filepath])
+        },
       },
       {
         post: msg => ws.send(msg),

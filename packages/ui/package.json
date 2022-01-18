@@ -1,6 +1,6 @@
 {
   "name": "@vitest/ui",
-  "version": "0.1.13",
+  "version": "0.1.20",
   "description": "UI for Vitest",
   "sideEffects": false,
   "type": "module",
@@ -43,6 +43,7 @@
     "picocolors": "^1.0.0",
     "rollup": "^2.63.0",
     "splitpanes": "^3.0.6",
+    "tippy.js": "^6.3.7",
     "unocss": "^0.22.2",
     "unplugin-auto-import": "^0.5.10",
     "unplugin-vue-components": "^0.17.11",

@@ -142,7 +142,7 @@ function bindOnClick(selection: Selection<SVGCircleElement, ModuleNode, SVGGElem
         <div>
           <IconButton
             icon="i-carbon-reset"
-            :onclick="resetGraphController"
+            @click="resetGraphController"
           />
         </div>
       </div>

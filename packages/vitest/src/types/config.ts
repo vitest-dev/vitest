@@ -72,9 +72,14 @@ export interface InlineConfig {
   }
 
   /**
-   * Register apis globally
-   *
-   * @default false
+  * Register apis globally
+  *
+  * @default false
+  */
+  globals?: boolean
+
+  /**
+   * @deprecated
    */
   global?: boolean
 

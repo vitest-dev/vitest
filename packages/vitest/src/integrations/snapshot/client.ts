@@ -2,8 +2,9 @@ import path from 'pathe'
 import { expect } from 'chai'
 import type { SnapshotResult, Test } from '../../types'
 import { rpc } from '../../runtime/rpc'
-import { deepMerge, getNames } from '../../utils'
+import { getNames } from '../../utils'
 import { equals, iterableEquality, subsetEquality } from '../chai/jest-utils'
+import { deepMergeSnapshot } from './port/utils'
 import SnapshotState from './port/state'
 
 export interface Context {
@@ -55,7 +56,7 @@ export class SnapshotClient {
         if (!pass)
           expect(received).toBe(properties)
         else
-          received = deepMerge(received, properties)
+          received = deepMergeSnapshot(received, properties)
       }
       catch (err: any) {
         err.message = 'Snapshot mismatched'
