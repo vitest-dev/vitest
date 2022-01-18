@@ -2,7 +2,7 @@ import { defineConfig } from 'vite'
 
 export default defineConfig({
   test: {
-    global: true,
+    globals: true,
     snapshotFormat: {
       printBasicPrototype: true,
     },
