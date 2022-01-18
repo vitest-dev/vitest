@@ -450,6 +450,7 @@ importers:
       rollup: ^2.63.0
       sirv: ^2.0.0
       splitpanes: ^3.0.6
+      tippy.js: ^6.3.7
       unocss: ^0.22.2
       unplugin-auto-import: ^0.5.10
       unplugin-vue-components: ^0.17.11
@@ -473,6 +474,7 @@ importers:
       picocolors: 1.0.0
       rollup: 2.63.0
       splitpanes: 3.0.6
+      tippy.js: 6.3.7
       unocss: 0.22.2
       unplugin-auto-import: 0.5.10_784e594a3d7d9a86a7352de0adb04879
       unplugin-vue-components: 0.17.11_6f1ce779de61071345b33b07c8cc5178
@@ -16044,6 +16046,12 @@ packages:
     resolution: {integrity: sha512-4VXqQzzh9gC5uOLk77cLr9R3wqJq07xJlgM9IUdCNJCet139r+046ETKbU1x7mGs7B0k7eopyH5U6yflbBXNyA==}
     engines: {node: '>=14.0.0'}
     dev: false
+
+  /tippy.js/6.3.7:
+    resolution: {integrity: sha512-E1d3oP2emgJ9dRQZdf3Kkn0qJgI6ZLpyS5z6ZkY1DF3kaQaBsGZsndEpHwx+eC+tYM41HaSNvNtLx8tU57FzTQ==}
+    dependencies:
+      '@popperjs/core': 2.11.0
+    dev: true
 
   /tmp/0.0.33:
     resolution: {integrity: sha512-jRCJlojKnZ3addtTOjdIqoRuPEKBvNXcGYqzO6zWZX8KfKEpnGY5jfggJQ3EjKuu8D4bJRr0y+cYJFmYbImXGw==}
