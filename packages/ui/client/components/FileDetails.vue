@@ -40,20 +40,41 @@ const changeViewMode = (view: Params['view']) => {
           {{ current?.filepath }}
         </div>
         <div class="flex text-lg">
-          <IconButton v-tooltip.bottom="'Open in editor'" icon="i-carbon-launch" :disabled="!current?.filepath" @click="open" />
+          <IconButton
+            v-tooltip.bottom="'Open in editor'"
+            icon="i-carbon-launch"
+            :disabled="!current?.filepath"
+            @click="open"
+          />
         </div>
       </div>
       <div flex="~" items-center bg-header border="b base" text-sm h-37px>
-        <button tab-button :class="{ 'tab-button-active': viewMode == null }" @click="changeViewMode(null)">
+        <button
+          tab-button
+          :class="{ 'tab-button-active': viewMode == null }"
+          @click="changeViewMode(null)"
+        >
           Report
         </button>
-        <button tab-button :class="{ 'tab-button-active': viewMode === 'graph' }" @click="changeViewMode('graph')">
+        <button
+          tab-button
+          :class="{ 'tab-button-active': viewMode === 'graph' }"
+          @click="changeViewMode('graph')"
+        >
           Module Graph
         </button>
-        <button tab-button :class="{ 'tab-button-active': viewMode === 'editor' }" @click="changeViewMode('editor')">
+        <button
+          tab-button
+          :class="{ 'tab-button-active': viewMode === 'editor' }"
+          @click="changeViewMode('editor')"
+        >
           Code
         </button>
-        <button tab-button :class="{ 'tab-button-active': viewMode === 'console' }" @click="changeViewMode('console')">
+        <button
+          tab-button
+          :class="{ 'tab-button-active': viewMode === 'console', 'op20': viewMode !== 'console' && currentLogs?.length === 0 }"
+          @click="changeViewMode('console')"
+        >
           Console ({{ currentLogs?.length || 0 }})
         </button>
       </div>
