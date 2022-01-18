@@ -1,7 +1,7 @@
 <template>
   <div flex flex-col items-center>
     <div flex flex-col items-center p="t-10 md:t-20 b-10">
-      <img src="/logo.svg" h="40 md:60">
+      <img src="/logo.svg" h="40 md:60" alt="Vitest logo">
       <h1 text-3em md:text-4em font-light>
         Vitest
       </h1>
@@ -44,14 +44,14 @@
       It's not recommended to migrate your current testing setups yet<br>You can try it out in new projects if you are willing to get involved and help us
     </p>
 
-    <h3 op50 font-normal pt-10>
+    <h2 op50 font-normal pt-10>
       Features
-    </h3>
+    </h2>
     <FeaturesList class="max-w-140 text-lg" />
 
-    <h3 id="meet-the-team" op50 font-normal pt-5 pb-2>
+    <h2 id="meet-the-team" op50 font-normal pt-5 pb-2>
       Meet The Team
-    </h3>
+    </h2>
     <div grid="~ sm:cols-2 gap-x-8 gap-y-20 items-center" p-10>
       <Avatar
         name="Anthony Fu"
@@ -88,29 +88,29 @@
         An open source fullstack developer
       </Avatar>
     </div>
-    <h3 id="the-team" op50 font-normal pt-5 pb-2>
+    <h2 id="the-team" op50 font-normal pt-5 pb-2>
       Contributors
-    </h3>
+    </h2>
     <p op80 text-lg max-w-150 text-center leading-7>
       <Contributors />
       <br>
       <a href="https://chat.vitest.dev">Join the community</a> and get involved!
     </p>
 
-    <h3 id="sponsored-by" op50 font-normal pt-5 pb-2>
+    <h2 id="sponsored-by" op50 font-normal pt-5 pb-2>
       Sponsored by
-    </h3>
+    </h2>
     <div grid="~ cols-1 lg:cols-2" w-screen text-center mt-10>
       <div class="flex flex-col">
         <a text-lg href="https://github.com/sponsors/antfu">Anthony's Sponsors</a>
         <a href="https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg" target="_blank">
-          <img src="https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg">
+          <img src="https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg" width="768" height="1464" alt="Anthony Fu's sponsors">
         </a>
       </div>
       <div class="flex flex-col">
         <a text-lg href="https://github.com/sponsors/patak-dev">Patak's Sponsors</a>
         <a href="https://patak.dev/sponsors.svg" target="_blank">
-          <img src="https://patak.dev/sponsors.svg">
+          <img src="https://patak.dev/sponsors.svg" width="768" height="722" alt="Patak's sponsors">
         </a>
       </div>
     </div>

@@ -10,7 +10,7 @@ defineProps<{
 
 <template>
   <div text-center>
-    <img :src="avatar" rounded-full h-25 w-25>
+    <img :src="avatar" rounded-full width="100" height="100" h-25 w-25 :alt="`${name}'s avatar`">
     <div text-xl mt-1 mb-1>
       {{ name }}
     </div>
@@ -22,12 +22,14 @@ defineProps<{
         class="i-carbon-logo-github inline-block text-current op30 hover:op100 mya transition duration-200"
         :href="`https://github.com/${github}`"
         target="_blank"
+        :aria-label="`${name} on GitHub`"
       />
       <a
         v-if="twitter"
         class="i-carbon-logo-twitter inline-block text-1.3em mya text-current op30 hover:op100 transition duration-200"
         :href="`https://twitter.com/${twitter}`"
         target="_blank"
+        :aria-label="`${name} on Twitter`"
       />
     </div>
     <br>
