@@ -24,20 +24,6 @@ export class VitestRunner extends ViteNodeRunner {
 
   constructor(public options: ExecuteOptions) {
     super(options)
-
-    options.requestStubs = options.requestStubs || {
-      '/@vite/client': {
-        injectQuery: (id: string) => id,
-        createHotContext() {
-          return {
-            accept: () => {},
-            prune: () => {},
-          }
-        },
-        updateStyle() {},
-      },
-    }
-
     this.mocker = createMocker(this.root, options.mockMap)
   }
 

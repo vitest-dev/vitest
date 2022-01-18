@@ -5,6 +5,19 @@ import { dirname, resolve } from 'pathe'
 import { isPrimitive, normalizeId, slash, toFilePath } from './utils'
 import type { ModuleCache, ViteNodeRunnerOptions } from './types'
 
+export const DEFAULT_REQUEST_STUBS = {
+  '/@vite/client': {
+    injectQuery: (id: string) => id,
+    createHotContext() {
+      return {
+        accept: () => {},
+        prune: () => {},
+      }
+    },
+    updateStyle() {},
+  },
+}
+
 export class ViteNodeRunner {
   root: string
 
@@ -51,8 +64,9 @@ export class ViteNodeRunner {
       return this.cachedRequest(dep, callstack)
     }
 
-    if (this.options.requestStubs && id in this.options.requestStubs)
-      return this.options.requestStubs[id]
+    const requestStubs = this.options.requestStubs || DEFAULT_REQUEST_STUBS
+    if (id in requestStubs)
+      return requestStubs[id]
 
     const { code: transformed, externalize } = await this.options.fetchModule(id)
     if (externalize) {
