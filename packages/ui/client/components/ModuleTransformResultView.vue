@@ -1,13 +1,17 @@
 <script setup lang="ts">
 import { client } from '~/composables/client'
 const props = defineProps<{ id: string }>()
-defineEmits<{ (e: 'close'): void }>()
+const emit = defineEmits<{ (e: 'close'): void }>()
 
 const result = asyncComputed(() => client.rpc.getTransformResult(props.id))
 const ext = computed(() => props.id?.split(/\./g).pop() || 'js')
 
 const source = computed(() => result.value?.source?.trim() || '')
 const code = computed(() => result.value?.code?.replace(/\/\/# sourceMappingURL=.*\n/, '').trim() || '')
+
+onKeyStroke('Escape', () => {
+  emit('close')
+})
 // TODO: sourcemap https://evanw.github.io/source-map-visualization/
 </script>
 
@@ -18,7 +22,7 @@ const code = computed(() => result.value?.code?.replace(/\/\/# sourceMappingURL=
       <p op50 font-mono text-sm>
         {{ id }}
       </p>
-      <IconButton absolute top-5px right-5px icon="i-carbon-close" text-2xl @click="$emit('close')" />
+      <IconButton icon="i-carbon-close" absolute top-5px right-5px text-2xl @click="emit('close')" />
     </div>
     <div v-if="!result" p-5>
       No transform result found for this module.
@@ -32,10 +36,10 @@ const code = computed(() => result.value?.code?.replace(/\/\/# sourceMappingURL=
           Transformed
         </div>
         <div>
-          <CodeMirror :model-value="source" read-only v-bind="{ lineNumbers:true }" :mode="ext" />
+          <CodeMirror :model-value="source" read-only v-bind="{ lineNumbers: true }" :mode="ext" />
         </div>
         <div>
-          <CodeMirror :model-value="code" read-only v-bind="{ lineNumbers:true }" :mode="ext" />
+          <CodeMirror :model-value="code" read-only v-bind="{ lineNumbers: true }" :mode="ext" />
         </div>
       </div>
       <pre>{{ result }}</pre>
