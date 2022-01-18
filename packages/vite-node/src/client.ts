@@ -123,7 +123,7 @@ export class ViteNodeRunner {
    * This function mostly for the ability to override by subclass
    */
   shouldInterop(path: string, mod: any) {
-    if (this.options.interpretDefault === false)
+    if (this.options.interopDefault === false)
       return false
     // never interop ESM modules
     // TODO: should also skip for `.js` with `type="module"`

@@ -59,7 +59,7 @@ export interface InlineConfig {
      *
      * @default true
      */
-    interpretDefault?: boolean
+    interopDefault?: boolean
 
     /**
      * When a dependency is a valid ESM package, try to guess the cjs version based on the path.
