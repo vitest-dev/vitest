@@ -1,6 +1,6 @@
 {
   "name": "vitest",
-  "version": "0.0.141",
+  "version": "0.1.19",
   "description": "A blazing fast unit test framework powered by Vite",
   "keywords": [
     "vite",
@@ -27,7 +27,10 @@
     },
     "./*": "./*",
     "./global": {
-      "types": "./global.d.ts"
+      "types": "./globals.d.ts"
+    },
+    "./globals": {
+      "types": "./globals.d.ts"
     },
     "./node": {
       "import": "./dist/node.js",
@@ -58,7 +61,7 @@
     "local-pkg": "^0.4.1",
     "tinypool": "^0.1.1",
     "tinyspy": "^0.2.8",
-    "vite": ">=2.7.10"
+    "vite": ">=2.7.12"
   },
   "devDependencies": {
     "@antfu/install-pkg": "^0.1.0",
@@ -80,7 +83,7 @@
     "fast-glob": "^3.2.10",
     "find-up": "^6.2.0",
     "flatted": "^3.2.4",
-    "happy-dom": "^2.25.1",
+    "happy-dom": "^2.25.2",
     "jsdom": "^19.0.0",
     "log-update": "^5.0.0",
     "magic-string": "^0.25.7",
@@ -98,7 +101,7 @@
     "strip-ansi": "^7.0.1",
     "typescript": "^4.5.4",
     "vite-node": "workspace:*",
-    "ws": "^8.4.0"
+    "ws": "8.4.0"
   },
   "peerDependencies": {
     "@vitest/ui": "*",

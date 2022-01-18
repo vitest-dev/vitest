@@ -8,14 +8,16 @@
   "scripts": {
     "coverage": "vitest --coverage",
     "dev": "vite",
-    "test": "vitest"
+    "test": "vitest",
+    "test:ui": "vitest --ui"
   },
   "dependencies": {
     "lit": "^2.1.1"
   },
   "devDependencies": {
-    "happy-dom": "*",
-    "vite": "^2.7.10",
-    "vitest": "workspace:*"
+    "@vitest/ui": "latest",
+    "happy-dom": "latest",
+    "vite": "latest",
+    "vitest": "latest"
   }
 }

@@ -1,8 +1,8 @@
 import { SourceMapConsumer } from 'source-map-js'
 import type { RawSourceMap } from 'source-map-js'
-import type { Vitest } from 'vitest/node'
+import type { Vitest } from '../node'
 import type { ErrorWithDiff, ParsedStack, Position } from '../types/general'
-import { notNullish } from './tasks'
+import { notNullish } from './base'
 
 export const lineSplitRE = /\r?\n/
 
@@ -45,7 +45,7 @@ const stackIgnorePatterns = [
   '/node_modules/tinyspy/',
 ]
 
-export function parseStacktrace(e: ErrorWithDiff): ParsedStack[] {
+export function parseStacktrace(e: ErrorWithDiff, full = false): ParsedStack[] {
   if (e.stacks)
     return e.stacks
 
@@ -62,7 +62,7 @@ export function parseStacktrace(e: ErrorWithDiff): ParsedStack[] {
       if (file.startsWith('file://'))
         file = file.slice(7)
 
-      if (stackIgnorePatterns.some(p => file.includes(p)))
+      if (!full && stackIgnorePatterns.some(p => file.includes(p)))
         return null
 
       return {

@@ -3,7 +3,8 @@
   "private": true,
   "scripts": {
     "coverage": "vitest --coverage",
-    "test": "vitest"
+    "test": "vitest",
+    "test:ui": "vitest --ui"
   },
   "dependencies": {
     "react": "^17.0.2"
@@ -12,8 +13,10 @@
     "@types/react": "^17.0.38",
     "@types/react-test-renderer": "^17.0.1",
     "@vitejs/plugin-react": "1.1.4",
-    "jsdom": "*",
+    "@vitest/ui": "latest",
+    "happy-dom": "^2.25.2",
+    "jsdom": "latest",
     "react-test-renderer": "17.0.2",
-    "vitest": "workspace:*"
+    "vitest": "latest"
   }
 }

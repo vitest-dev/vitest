@@ -6,9 +6,11 @@
     "coverage": "vitest --coverage",
     "dev": "vite",
     "preview": "vite preview",
-    "test": "vitest"
+    "test": "vitest",
+    "test:ui": "vitest --ui"
   },
   "dependencies": {
+    "@apollo/client": "^3.5.7",
     "react": "^17.0.2",
     "react-dom": "^17.0.2"
   },
@@ -18,9 +20,11 @@
     "@types/react": "^17.0.38",
     "@types/react-dom": "^17.0.11",
     "@vitejs/plugin-react": "^1.1.4",
+    "@vitest/ui": "latest",
     "cross-fetch": "^3.1.4",
-    "msw": "^0.36.3",
-    "vite": "^2.7.10",
-    "vitest": "workspace:*"
+    "jsdom": "latest",
+    "msw": "^0.36.4",
+    "vite": "latest",
+    "vitest": "latest"
   }
 }

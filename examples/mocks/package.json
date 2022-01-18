@@ -8,7 +8,8 @@
   "scripts": {
     "coverage": "vitest --coverage",
     "dev": "vite",
-    "test": "vitest"
+    "test": "vitest",
+    "test:ui": "vitest --ui"
   },
   "dependencies": {
     "@vueuse/integrations": "^7.5.3",
@@ -16,7 +17,8 @@
     "tinyspy": "^0.2.8"
   },
   "devDependencies": {
-    "vite": "^2.7.10",
-    "vitest": "workspace:*"
+    "@vitest/ui": "latest",
+    "vite": "latest",
+    "vitest": "latest"
   }
 }

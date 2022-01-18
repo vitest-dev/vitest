@@ -1,30 +1,5 @@
-import type { Arrayable, Nullable, Suite, Task, Test } from '../types'
-
-export function notNullish<T>(v: T | null | undefined): v is NonNullable<T> {
-  return v != null
-}
-
-export function slash(str: string) {
-  return str.replace(/\\/g, '/')
-}
-
-export function mergeSlashes(str: string) {
-  return str.replace(/\/\//g, '/')
-}
-
-export const noop = () => {}
-
-/**
- * Convert `Arrayable<T>` to `Array<T>`
- *
- * @category Array
- */
-export function toArray<T>(array?: Nullable<Arrayable<T>>): Array<T> {
-  array = array || []
-  if (Array.isArray(array))
-    return array
-  return [array]
-}
+import type { Arrayable, Suite, Task, Test } from '../types'
+import { toArray } from './base'
 
 export function getTests(suite: Arrayable<Task>): Test[] {
   return toArray(suite).flatMap(s => s.type === 'test' ? [s] : s.tasks.flatMap(c => c.type === 'test' ? [c] : getTests(c)))
@@ -44,6 +19,13 @@ export function hasTests(suite: Arrayable<Suite>): boolean {
 
 export function hasFailed(suite: Arrayable<Task>): boolean {
   return toArray(suite).some(s => s.result?.state === 'fail' || (s.type === 'suite' && hasFailed(s.tasks)))
+}
+
+export function hasFailedSnapshot(suite: Arrayable<Task>): boolean {
+  return getTests(suite).some((s) => {
+    const message = s.result?.error?.message
+    return message?.match(/Snapshot .* mismatched/)
+  })
 }
 
 export function getNames(task: Task) {

@@ -2,6 +2,8 @@
 /* eslint-disable no-sparse-arrays */
 import { describe, expect, it } from 'vitest'
 
+class TestError extends Error {}
+
 describe('jest-expect', () => {
   it('basic', () => {
     expect(1).toBe(1)
@@ -29,6 +31,18 @@ describe('jest-expect', () => {
       throw new Error('this is the error message')
     }).toThrow('this is the error message')
     expect(() => {}).not.toThrow()
+    expect(() => {
+      throw new TestError('error')
+    }).toThrow(TestError)
+    const err = new Error('hello world')
+    expect(() => {
+      throw err
+    }).toThrow(err)
+    expect(() => {
+      throw new Error('message')
+    }).toThrow(expect.objectContaining({
+      message: expect.stringContaining('mes'),
+    }))
     expect([1, 2, 3]).toHaveLength(3)
     expect('abc').toHaveLength(3)
     expect('').not.toHaveLength(5)
@@ -310,6 +324,18 @@ describe('async expect', () => {
     await expect((async() => {
       throw new Error('err')
     })()).rejects.toThrow('err')
+    expect((async() => {
+      throw new TestError('error')
+    })()).rejects.toThrow(TestError)
+    const err = new Error('hello world')
+    expect((async() => {
+      throw err
+    })()).rejects.toThrow(err)
+    expect((async() => {
+      throw new Error('message')
+    })()).rejects.toThrow(expect.objectContaining({
+      message: expect.stringContaining('mes'),
+    }))
 
     await expect((async() => {
       throw new Error('err')

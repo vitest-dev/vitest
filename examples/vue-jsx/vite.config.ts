@@ -5,7 +5,7 @@ import Jsx from '@vitejs/plugin-vue-jsx'
 export default defineConfig({
   plugins: [Vue(), Jsx()],
   test: {
-    global: true,
+    globals: true,
     environment: 'happy-dom',
     transformMode: {
       web: [/.[tj]sx$/],

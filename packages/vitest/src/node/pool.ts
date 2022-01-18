@@ -7,7 +7,7 @@ import type { RawSourceMap } from 'source-map-js'
 import { createBirpc } from 'birpc'
 import { distDir } from '../constants'
 import type { WorkerContext, WorkerRPC } from '../types'
-import type { Vitest } from './index'
+import type { Vitest } from './core'
 
 export type RunWithFiles = (files: string[], invalidates?: string[]) => Promise<void>
 
@@ -35,7 +35,7 @@ export function createFakePool(ctx: Vitest): WorkerPool {
 
       const data: WorkerContext = {
         port: workerPort,
-        config: ctx.config,
+        config: ctx.getConfig(),
         files,
         invalidates,
       }
@@ -80,7 +80,7 @@ export function createWorkerPool(ctx: Vitest): WorkerPool {
 
         const data: WorkerContext = {
           port: workerPort,
-          config: ctx.config,
+          config: ctx.getConfig(),
           files: [file],
           invalidates,
         }
@@ -123,6 +123,9 @@ function createChannel(ctx: Vitest) {
       },
       fetch(id) {
         return ctx.vitenode.fetchModule(id)
+      },
+      resolveId(id, importer) {
+        return ctx.vitenode.resolveId(id, importer)
       },
       onCollected(files) {
         ctx.state.collectFiles(files)

@@ -6,7 +6,7 @@ import json from '@rollup/plugin-json'
 import alias from '@rollup/plugin-alias'
 import pkg from './package.json'
 
-const entry = [
+const entries = [
   'src/index.ts',
   'src/server.ts',
   'src/client.ts',
@@ -21,31 +21,39 @@ const external = [
   'vite',
 ]
 
-export default () => [
-  {
-    input: entry,
-    output: {
-      dir: 'dist',
-      format: 'esm',
-    },
-    external,
-    plugins: [
-      alias({
-        entries: [
-          { find: /^node:(.+)$/, replacement: '$1' },
-        ],
-      }),
-      resolve({
-        preferBuiltins: true,
-      }),
-      json(),
-      commonjs(),
-      esbuild({
-        target: 'node14',
-      }),
+const plugins = [
+  alias({
+    entries: [
+      { find: /^node:(.+)$/, replacement: '$1' },
     ],
-  },
-  ...entry.map(input => ({
+  }),
+  resolve({
+    preferBuiltins: true,
+  }),
+  json(),
+  commonjs(),
+  esbuild({
+    target: 'node14',
+  }),
+]
+
+export default () => [
+  ...entries.map(input => ({
+    input,
+    output: [
+      {
+        file: input.replace('src/', 'dist/').replace('.ts', '.js'),
+        format: 'esm',
+      },
+      {
+        file: input.replace('src/', 'dist/').replace('.ts', '.cjs'),
+        format: 'cjs',
+      },
+    ],
+    external,
+    plugins,
+  })),
+  ...entries.map(input => ({
     input,
     output: {
       file: input.replace('src/', '').replace('.ts', '.d.ts'),

@@ -1,6 +1,6 @@
 import { Console } from 'console'
 import { Writable } from 'stream'
-import { environments } from '../env'
+import { environments } from '../integrations/env'
 import { setupChai } from '../integrations/chai/setup'
 import type { ResolvedConfig } from '../types'
 import { toArray } from '../utils'
@@ -16,8 +16,8 @@ export async function setupGlobalEnv(config: ResolvedConfig) {
   setupConsoleLogSpy()
   await setupChai()
 
-  if (config.global)
-    (await import('../integrations/global')).registerApiGlobally()
+  if (config.globals)
+    (await import('../integrations/globals')).registerApiGlobally()
 }
 
 export function setupConsoleLogSpy() {

@@ -66,6 +66,10 @@ main.home {
   background-color: rgba(255, 229, 100, 0.1)
 }
 
+.custom-block.info {
+  color: var(--c-text-light-2);
+}
+
 .custom-block.warning {
   color: inherit;
 }
@@ -84,4 +88,8 @@ main.home {
 .custom-block.tip {
   border-color: var(--c-accent) !important;
   background-color: #90C32130 !important;
+}
+
+th, td {
+  border: 1px solid #8885;
 }

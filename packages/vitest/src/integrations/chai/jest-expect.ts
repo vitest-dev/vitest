@@ -1,8 +1,10 @@
 import type { EnhancedSpy } from '../jest-mock'
 import { isMockFunction } from '../jest-mock'
 import { addSerializer } from '../snapshot/port/plugins'
+import type { Constructable } from '../../types'
 import type { ChaiPlugin, MatcherState } from './types'
 import { arrayBufferEquality, equals as asymmetricEquals, hasAsymmetric, iterableEquality, sparseArrayEquality, typeEquality } from './jest-utils'
+import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
 
 const MATCHERS_OBJECT = Symbol.for('matchers-object')
 
@@ -32,8 +34,8 @@ export const setState = <State extends MatcherState = MatcherState>(
 
 // Jest Expect Compact
 export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
-  function def(name: keyof Chai.Assertion | (keyof Chai.Assertion)[], fn: ((this: Chai.AssertionStatic & Chai.Assertion, ...args: any[]) => any)) {
-    const addMethod = (n: keyof Chai.Assertion) => {
+  function def(name: keyof Chai.VitestAssertion | (keyof Chai.VitestAssertion)[], fn: ((this: Chai.AssertionStatic & Chai.VitestAssertion, ...args: any[]) => any)) {
+    const addMethod = (n: keyof Chai.VitestAssertion) => {
       utils.addMethod(chai.Assertion.prototype, n, fn)
     }
 
@@ -339,8 +341,56 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       lastCall,
     )
   })
-  def(['toThrow', 'toThrowError'], function(expected: string | RegExp) {
-    return this.to.throw(expected)
+  def(['toThrow', 'toThrowError'], function(expected?: string | Constructable | RegExp | Error) {
+    const obj = this._obj
+    const promise = utils.flag(this, 'promise')
+    let thrown: any = null
+
+    if (promise) {
+      thrown = obj
+    }
+    else {
+      try {
+        obj()
+      }
+      catch (err) {
+        thrown = err
+      }
+    }
+
+    if (typeof expected === 'function') {
+      const name = expected.name || expected.prototype.constructor.name
+      return this.assert(
+        thrown && thrown instanceof expected,
+        `expected error to be instance of ${name}`,
+        `expected error not to be instance of ${name}`,
+        expected,
+        thrown,
+      )
+    }
+
+    if (expected && expected instanceof Error) {
+      return this.assert(
+        thrown && expected.message === thrown.message,
+        `expected error to have message: ${expected.message}`,
+        `expected error not to have message: ${expected.message}`,
+        expected.message,
+        thrown && thrown.message,
+      )
+    }
+
+    if (expected && typeof (expected as any).asymmetricMatch === 'function') {
+      const matcher = expected as any as AsymmetricMatcher<any>
+      return this.assert(
+        thrown && matcher.asymmetricMatch(thrown),
+        'expected error to match asymmetric matcher',
+        'expected error not to match asymmetric matcher',
+        matcher.toString(),
+        thrown,
+      )
+    }
+
+    return this.to.throws(expected)
   })
   def(['toHaveReturned', 'toReturn'], function() {
     const spy = getSpy(this)

@@ -1,13 +1,10 @@
-import readline from 'readline'
 import cac from 'cac'
 import { execa } from 'execa'
 import type { UserConfig } from '../types'
 import { version } from '../../package.json'
 import { ensurePackageInstalled } from '../utils'
-import type { Vitest } from './index'
-import { createVitest } from './index'
-
-const CLOSE_TIMEOUT = 1_000
+import { createVitest } from './create'
+import { registerConsoleShortcuts } from './stdin'
 
 const cli = cac('vitest')
 
@@ -19,14 +16,16 @@ cli
   .option('-w, --watch', 'watch mode')
   .option('-t, --testNamePattern <pattern>', 'run test names with the specified pattern')
   .option('--ui', 'open UI')
-  .option('--api [api]', 'Serve API, available options: --api.port <port>, --api.host [host] and --api.strictPort')
+  .option('--api [api]', 'serve API, available options: --api.port <port>, --api.host [host] and --api.strictPort')
   .option('--threads', 'enabled threads', { default: true })
   .option('--silent', 'silent console output from tests')
   .option('--isolate', 'isolate environment for each test file', { default: true })
   .option('--reporter <name>', 'reporter')
+  .option('--outputFile <filename>', 'write test results to a file when the --reporter=json option is also specified')
   .option('--coverage', 'use c8 for coverage')
   .option('--run', 'do not watch')
-  .option('--global', 'inject apis globally')
+  .option('--globals', 'inject apis globally')
+  .option('--global', 'deprecated, use --globals')
   .option('--dom', 'mock browser api with happy-dom')
   .option('--environment <env>', 'runner environment', { default: 'node' })
   .option('--passWithNoTests', 'pass when no tests found')
@@ -116,48 +115,6 @@ async function run(cliFilters: string[], options: UserConfig) {
       await ctx.close()
   }
 
-  if (!ctx.config.watch) {
-    // force process exit if it hangs
-    setTimeout(() => process.exit(), CLOSE_TIMEOUT).unref()
-  }
-}
-
-function closeServerAndExitProcess(ctx: Vitest) {
-  const closePromise = ctx.close()
-  let timeout: NodeJS.Timeout
-  const timeoutPromise = new Promise((resolve, reject) => {
-    timeout = setTimeout(() => reject(new Error(`close timed out after ${CLOSE_TIMEOUT}ms`)), CLOSE_TIMEOUT)
-  })
-  Promise.race([closePromise, timeoutPromise]).then(
-    () => {
-      clearTimeout(timeout)
-      process.exit(0)
-    },
-    (err) => {
-      clearTimeout(timeout)
-      console.error('error during close', err)
-      process.exit(1)
-    },
-  )
-}
-
-function registerConsoleShortcuts(ctx: Vitest) {
-  readline.emitKeypressEvents(process.stdin)
-  process.stdin.setRawMode(true)
-  process.stdin.on('keypress', (str: string, key: any) => {
-    if (str === '\x03' || str === '\x1B' || (key && key.ctrl && key.name === 'c')) { // ctrl-c or esc
-      closeServerAndExitProcess(ctx)
-      return
-    }
-
-    // is running, ignore keypress
-    if (ctx.runningPromise)
-      return
-
-    // press any key to exit on first run
-    if (ctx.isFirstRun)
-      closeServerAndExitProcess(ctx)
-
-    // TODO: add more commands
-  })
+  if (!ctx.config.watch)
+    await ctx.exit()
 }

@@ -77,6 +77,9 @@ export interface C8Options {
   exclude?: string[]
   include?: string[]
   skipFull?: boolean
+  extension?: string | string[]
+
+  all?: boolean
 
   // c8 options, not sure if we should expose them
   /**
@@ -88,7 +91,6 @@ export interface C8Options {
   // omitRelative?: any
   // wrapperLength?: any
   // resolve?: any
-  // all?: any
   // src?: any
 }
 
@@ -106,6 +108,9 @@ export function resolveC8Options(options: C8Options, root: string): ResolvedC8Op
     exclude: defaultExcludes,
     reporter: ['text', 'html'],
     allowExternal: false,
+    // default extensions used by c8, plus '.vue' and '.svelte'
+    // see https://github.com/istanbuljs/schema/blob/master/default-extension.js
+    extension: ['.js', '.cjs', '.mjs', '.ts', '.tsx', '.jsx', '.vue', 'svelte'],
     ...options as any,
   }
 

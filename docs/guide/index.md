@@ -69,31 +69,31 @@ In a project where Vitest is installed, you can use the `vitest` binary in your 
 To run tests once without watching for file changes, use `vitest run`.
 You can specify additional CLI options like `--port` or `--https`. For a full list of CLI options, run `npx vitest --help` in your project.
 
-### CLI Commands
+### Commands
 
-### `vitest watch`
+* `vitest watch`
 
-Run all test suites but watch for changes and rerun tests when they change. Same as calling `vitest` without a command. In CI environments this command will fallback to `vitest run`
+  Run all test suites but watch for changes and rerun tests when they change. Same as calling `vitest` without a command. In CI environments this command will fallback to `vitest run`
 
-### `vitest run`
+* `vitest run`
 
-Perform a single run without watch mode.
+  Perform a single run without watch mode.
 
-### `vitest dev`
+* `vitest dev`
 
-Run vitest in development mode.
+  Run vitest in development mode.
 
-### `vitest related`
+* `vitest related`
 
-Run only tests that cover a list of source files. Works with static lazy imports, but not the dynamic ones. All files should be relative to root folder.
+  Run only tests that cover a list of source files. Works with static lazy imports, but not the dynamic ones. All files should be relative to root folder.
 
-Useful to run with [`lint-staged`](https://github.com/okonet/lint-staged) or with your CI setup.
+  Useful to run with [`lint-staged`](https://github.com/okonet/lint-staged) or with your CI setup.
 
-```bash
-vitest related /src/index.ts /src/hello-world.js
-```
+  ```bash
+  vitest related /src/index.ts /src/hello-world.js
+  ```
 
-### CLI Options
+### Options
 
 | Options       |               |
 | ------------- | ------------- |
@@ -108,6 +108,7 @@ vitest related /src/index.ts /src/hello-world.js
 | `--threads` | Enable Threads (default: true) |
 | `--silent` | Silent console output from tests |
 | `--reporter <name>` | Select reporter: `default`, `verbose`, `dot` or `json` |
+| `--outputFile <filename>` | Write test results to a file when the `--reporter=json` option is also specified |
 | `--coverage` | Use c8 for coverage |
 | `--run` | Do not watch |
 | `--global` | Inject APIs globally |
@@ -118,13 +119,7 @@ vitest related /src/index.ts /src/hello-world.js
 
 ## Examples
 
-- [Unit Testing](https://github.com/vitest-dev/vitest/tree/main/test/core)
-- [Vue Component Testing](https://github.com/vitest-dev/vitest/tree/main/examples/vue)
-- [React Component Testing](https://github.com/vitest-dev/vitest/tree/main/examples/react)
-- [Svelte Component Testing](https://github.com/vitest-dev/vitest/tree/main/examples/svelte)
-- [Lit Component Testing](https://github.com/vitest-dev/vitest/tree/main/examples/lit)
-- [Vitesse Component Testing](https://github.com/vitest-dev/vitest/tree/main/examples/vitesse)
-- [All examples](https://github.com/vitest-dev/vitest/tree/main/examples)
+[@@include](../../../examples/README.md)
 
 ## Projects using Vitest
 
@@ -136,6 +131,7 @@ vitest related /src/index.ts /src/hello-world.js
 - [fluent-vue](https://github.com/demivan/fluent-vue)
 - [vueuse](https://github.com/vueuse/vueuse)
 - [milkdown](https://github.com/Saul-Mirone/milkdown)
+- [gridjs-svelte](https://github.com/iamyuu/gridjs-svelte)
 
 ## Using Unreleased Commits
 

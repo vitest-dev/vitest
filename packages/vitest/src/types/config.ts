@@ -1,6 +1,6 @@
 import type { CommonServerOptions } from 'vite'
 import type { PrettyFormatOptions } from 'pretty-format'
-import type { BuiltinReporters } from '../reporters'
+import type { BuiltinReporters } from '../node/reporters'
 import type { C8Options, ResolvedC8Options } from '../coverage'
 import type { JSDOMOptions } from './jsdom-options'
 import type { Reporter } from './reporter'
@@ -72,9 +72,14 @@ export interface InlineConfig {
   }
 
   /**
-   * Register apis globally
-   *
-   * @default false
+  * Register apis globally
+  *
+  * @default false
+  */
+  globals?: boolean
+
+  /**
+   * @deprecated
    */
   global?: boolean
 
@@ -117,6 +122,11 @@ export interface InlineConfig {
    * Custom reporter for output
    */
   reporters?: Arrayable<BuiltinReporters | Reporter>
+
+  /**
+   * Write test results to a file when the --reporter=json option is also specified
+   */
+  outputFile?: string
 
   /**
    * Enable multi-threading
