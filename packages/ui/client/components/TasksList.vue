@@ -16,6 +16,10 @@ const props = withDefaults(defineProps<{
   nested: false,
 })
 
+const emit = defineEmits<{
+  (event: 'run', files?: File[]): void
+}>()
+
 const search = ref('')
 const isFiltered = computed(() => search.value.trim() !== '')
 
@@ -59,6 +63,8 @@ export default {
           text="sm"
           flex-1
           :op="search.length ? '100' : '50'"
+          @keydown.esc="search = ''"
+          @keydown.enter="emit('run', isFiltered ? filteredTests : undefined)"
         >
       </div>
     </div>
@@ -152,7 +158,7 @@ export default {
         <div flex="~ row" center justify="left" p="x-2 y-5" text="gray 0.9rem">
           <span i-carbon:fade text-2xl flex-shrink-0 />
           <p px-4 w-full>
-            No test matched search
+            No test match
           </p>
           <button @click="search = ''">
             Clear
