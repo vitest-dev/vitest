@@ -6,6 +6,8 @@ declare module 'vue' {
   export interface GlobalComponents {
     Avatar: typeof import('./src/components/Avatar.vue')['default']
     Contributors: typeof import('./src/components/Contributors.vue')['default']
+    CustomNavBar: typeof import('./src/components/CustomNavBar.vue')['default']
+    CustomNavBarTitle: typeof import('./src/components/CustomNavBarTitle.vue')['default']
     DevelopmentWarning: typeof import('./src/components/DevelopmentWarning.vue')['default']
     FeaturesList: typeof import('./src/components/FeaturesList.vue')['default']
     Home: typeof import('./src/components/Home.vue')['default']
