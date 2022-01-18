@@ -1,4 +1,5 @@
 import { defineConfig } from 'vitepress'
+import { version } from '../../package.json'
 
 export default defineConfig({
   title: 'Vitest',
@@ -44,6 +45,20 @@ export default defineConfig({
       { text: 'API', link: '/api/' },
       { text: 'Config', link: '/config/' },
       // { text: 'Plugins', link: '/plugins/' },
+      {
+        text: `v${version}`,
+        items: [
+          {
+            text: 'Release Notes ',
+            link: 'https://github.com/vitest-dev/vitest/releases',
+          },
+          {
+            text: 'Contributing ',
+            link: 'https://github.com/vitest-dev/vitest/blob/main/CONTRIBUTING.md',
+          },
+        ],
+
+      },
       {
         text: 'Discord',
         link: 'https://chat.vitest.dev'

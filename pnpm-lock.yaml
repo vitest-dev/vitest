@@ -80,9 +80,9 @@ importers:
     devDependencies:
       '@iconify-json/carbon': 1.0.12
       '@unocss/reset': 0.22.2
-      '@vitejs/plugin-vue': 2.0.1_vite@2.7.12+vue@3.2.26
+      '@vitejs/plugin-vue': 2.0.1_vue@3.2.26
       unocss: 0.22.2
-      unplugin-vue-components: 0.17.11_6f1ce779de61071345b33b07c8cc5178
+      unplugin-vue-components: 0.17.11_vue@3.2.26
       vitepress: 0.21.4
 
   examples/basic:
@@ -2597,7 +2597,7 @@ packages:
     dependencies:
       '@babel/helper-module-imports': 7.16.0
       '@babel/plugin-syntax-jsx': 7.16.0
-      '@babel/runtime': 7.16.3
+      '@babel/runtime': 7.16.7
       '@emotion/hash': 0.8.0
       '@emotion/memoize': 0.7.5
       '@emotion/serialize': 1.0.2
@@ -3010,9 +3010,9 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@babel/runtime': 7.16.3
+      '@babel/runtime': 7.16.7
       '@emotion/is-prop-valid': 1.1.1
-      '@mui/utils': 5.2.3_react@17.0.2
+      '@mui/utils': 5.3.0_react@17.0.2
       '@popperjs/core': 2.11.0
       clsx: 1.1.1
       prop-types: 15.7.2
@@ -3124,22 +3124,6 @@ packages:
       react-transition-group: 4.4.2_react-dom@17.0.2+react@17.0.2
     dev: false
 
-  /@mui/private-theming/5.2.3_react@17.0.2:
-    resolution: {integrity: sha512-Lc1Cmu8lSsYZiXADi9PBb17Ho82ZbseHQujUFAcp6bCJ5x/d+87JYCIpCBMagPu/isRlFCwbziuXPmz7WOzJPQ==}
-    engines: {node: '>=12.0.0'}
-    peerDependencies:
-      '@types/react': ^16.8.6 || ^17.0.0
-      react: ^17.0.2
-    peerDependenciesMeta:
-      '@types/react':
-        optional: true
-    dependencies:
-      '@babel/runtime': 7.16.7
-      '@mui/utils': 5.3.0_react@17.0.2
-      prop-types: 15.7.2
-      react: 17.0.2
-    dev: false
-
   /@mui/private-theming/5.3.0_react@17.0.2:
     resolution: {integrity: sha512-EBobUEyM9fMnteKrVPp8pTMUh81xXakyfdpkoh7Y19q9JpD2eh7QGAQVJVj0JBFlcUJD60NIE4K8rdokrRmLwg==}
     engines: {node: '>=12.0.0'}
@@ -3152,27 +3136,6 @@ packages:
     dependencies:
       '@babel/runtime': 7.16.7
       '@mui/utils': 5.3.0_react@17.0.2
-      prop-types: 15.7.2
-      react: 17.0.2
-    dev: false
-
-  /@mui/styled-engine/5.2.6_922a85da57e3646a57465b7970b0de85:
-    resolution: {integrity: sha512-bqAhli8eGS6v2qxivy2/4K0Ag8o//jsu1G2G6QcieFiT6y7oIF/nd/6Tvw6OSm3roOTifVQWNKwkt1yFWhGS+w==}
-    engines: {node: '>=12.0.0'}
-    peerDependencies:
-      '@emotion/react': ^11.4.1
-      '@emotion/styled': ^11.3.0
-      react: ^17.0.2
-    peerDependenciesMeta:
-      '@emotion/react':
-        optional: true
-      '@emotion/styled':
-        optional: true
-    dependencies:
-      '@babel/runtime': 7.16.7
-      '@emotion/cache': 11.7.1
-      '@emotion/react': 11.7.1_react@17.0.2
-      '@emotion/styled': 11.6.0_79c1490562c3c65ef55eb132a37e39b4
       prop-types: 15.7.2
       react: 17.0.2
     dev: false
@@ -3214,13 +3177,13 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@babel/runtime': 7.16.3
+      '@babel/runtime': 7.16.7
       '@emotion/react': 11.7.1_react@17.0.2
       '@emotion/styled': 11.6.0_79c1490562c3c65ef55eb132a37e39b4
-      '@mui/private-theming': 5.2.3_react@17.0.2
-      '@mui/styled-engine': 5.2.6_922a85da57e3646a57465b7970b0de85
+      '@mui/private-theming': 5.3.0_react@17.0.2
+      '@mui/styled-engine': 5.3.0_922a85da57e3646a57465b7970b0de85
       '@mui/types': 7.1.0
-      '@mui/utils': 5.2.3_react@17.0.2
+      '@mui/utils': 5.3.0_react@17.0.2
       clsx: 1.1.1
       csstype: 3.0.10
       prop-types: 15.7.2
@@ -3271,7 +3234,7 @@ packages:
     peerDependencies:
       react: ^17.0.2
     dependencies:
-      '@babel/runtime': 7.16.3
+      '@babel/runtime': 7.16.7
       '@types/prop-types': 15.7.4
       '@types/react-is': 17.0.3
       prop-types: 15.7.2
@@ -6127,6 +6090,16 @@ packages:
       vue: ^3.2.25
     dependencies:
       vite: 2.7.12
+      vue: 3.2.26
+    dev: true
+
+  /@vitejs/plugin-vue/2.0.1_vue@3.2.26:
+    resolution: {integrity: sha512-wtdMnGVvys9K8tg+DxowU1ytTrdVveXr3LzdhaKakysgGXyrsfaeds2cDywtvujEASjWOwWL/OgWM+qoeM8Plg==}
+    engines: {node: '>=12.0.0'}
+    peerDependencies:
+      vite: ^2.5.10
+      vue: ^3.2.25
+    dependencies:
       vue: 3.2.26
     dev: true
 
@@ -14524,7 +14497,7 @@ packages:
       react: '>=16.6.0'
       react-dom: '>=16.6.0'
     dependencies:
-      '@babel/runtime': 7.16.3
+      '@babel/runtime': 7.16.7
       dom-helpers: 5.2.1
       loose-envify: 1.4.0
       prop-types: 15.7.2
@@ -16563,6 +16536,54 @@ packages:
       - supports-color
       - vite
       - webpack
+    dev: true
+
+  /unplugin-vue-components/0.17.11_vue@3.2.26:
+    resolution: {integrity: sha512-u5MQ0TbikszRelCt6EA/HskGtGkGLDxi7tQ4/4tcEPWkH3yXSZRJCOeLF5MSdxN1SiGjaJ0I9zeHjoZFC3FvRw==}
+    engines: {node: '>=14'}
+    peerDependencies:
+      '@babel/parser': ^7.15.8
+      '@babel/traverse': ^7.15.4
+      vue: 2 || 3
+    peerDependenciesMeta:
+      '@babel/parser':
+        optional: true
+      '@babel/traverse':
+        optional: true
+    dependencies:
+      '@antfu/utils': 0.3.0
+      '@rollup/pluginutils': 4.1.2
+      chokidar: 3.5.2
+      debug: 4.3.3
+      fast-glob: 3.2.7
+      local-pkg: 0.4.0
+      magic-string: 0.25.7
+      minimatch: 3.0.4
+      resolve: 1.20.0
+      unplugin: 0.2.21
+      vue: 3.2.26
+    transitivePeerDependencies:
+      - rollup
+      - supports-color
+      - vite
+      - webpack
+    dev: true
+
+  /unplugin/0.2.21:
+    resolution: {integrity: sha512-IJ15/L5XbhnV7J09Zjk0FT5HEkBjkXucWAXQWRsmEtUxmmxwh23yavrmDbCF6ZPxWiVB28+wnKIHePTRRpQPbQ==}
+    peerDependencies:
+      rollup: ^2.50.0
+      vite: ^2.3.0
+      webpack: 4 || 5
+    peerDependenciesMeta:
+      rollup:
+        optional: true
+      vite:
+        optional: true
+      webpack:
+        optional: true
+    dependencies:
+      webpack-virtual-modules: 0.4.3
     dev: true
 
   /unplugin/0.2.21_rollup@2.63.0+vite@2.7.12:
