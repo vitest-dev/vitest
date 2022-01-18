@@ -2,6 +2,7 @@
 
 import mockdate from 'mockdate'
 import { parseStacktrace } from '../utils/source-map'
+import type { VitestMocker } from '../node/mocker'
 import { FakeTimers } from './timers'
 import type { EnhancedSpy, MaybeMocked, MaybeMockedDeep } from './jest-mock'
 import { fn, isMockFunction, spies, spyOn } from './jest-mock'
@@ -9,10 +10,16 @@ import { fn, isMockFunction, spies, spyOn } from './jest-mock'
 class VitestUtils {
   private _timers: FakeTimers
   private _mockedDate: string | number | Date | null
+  private _mocker: VitestMocker
 
   constructor() {
     this._timers = new FakeTimers()
+    // @ts-expect-error injected by vite-nide
+    this._mocker = typeof __vitest_mocker__ !== 'undefined' ? __vitest_mocker__ : null
     this._mockedDate = null
+
+    if (!this._mocker)
+      throw new Error('Vitest was initialised with native Node instead of Vite Node')
   }
 
   // timers
@@ -84,8 +91,7 @@ class VitestUtils {
    * @param factory Factory for the mocked module. Has the highest priority.
    */
   public mock(path: string, factory?: () => any) {
-    // @ts-expect-error injected by vite-node
-    __vitest_mock__(path, this.getImporter(), factory)
+    this._mocker.queueMock(path, this.getImporter(), factory)
   }
 
   /**
@@ -94,18 +100,15 @@ class VitestUtils {
    * @param path Path to the module. Can be aliased, if your config suppors it
    */
   public unmock(path: string) {
-    // @ts-expect-error injected by vite-node
-    __vitest_unmock__(path, this.getImporter())
+    this._mocker.queueUnmock(path, this.getImporter())
   }
 
   public doMock(path: string, factory?: () => any) {
-    // @ts-expect-error injected by vite-node
-    __vitest_mock__(path, this.getImporter(), factory)
+    this._mocker.queueMock(path, this.getImporter(), factory)
   }
 
   public doUnmock(path: string) {
-    // @ts-expect-error injected by vite-node
-    __vitest_unmock__(path, this.getImporter())
+    this._mocker.queueUnmock(path, this.getImporter())
   }
 
   /**
@@ -121,8 +124,7 @@ class VitestUtils {
    * @returns Actual module without spies
    */
   public async importActual<T>(path: string): Promise<T> {
-    // @ts-expect-error injected by vite-node
-    return __vitest_importActual__(path, this.getImporter()) as T
+    return this._mocker.importActual<T>(path, this.getImporter())
   }
 
   /**
@@ -132,8 +134,7 @@ class VitestUtils {
    * @returns Fully mocked module
    */
   public async importMock<T>(path: string): Promise<MaybeMockedDeep<T>> {
-    // @ts-expect-error injected by vite-node
-    return __vitest_importMock__(path, this.getImporter()) as MaybeMockedDeep<T>
+    return this._mocker.importMock(path, this.getImporter())
   }
 
   /**
@@ -163,22 +164,19 @@ class VitestUtils {
   }
 
   public clearAllMocks() {
-    // @ts-expect-error injected by vite-node
-    __vitest_clearMocks__({ clearMocks: true })
+    this._mocker.clearMocks({ clearMocks: true })
     spies.forEach(spy => spy.mockClear())
     return this
   }
 
   public resetAllMocks() {
-    // @ts-expect-error injected by vite-node
-    __vitest_clearMocks__({ mockReset: true })
+    this._mocker.clearMocks({ mockReset: true })
     spies.forEach(spy => spy.mockReset())
     return this
   }
 
   public restoreAllMocks() {
-    // @ts-expect-error injected by vite-node
-    __vitest_clearMocks__({ restoreMocks: true })
+    this._mocker.clearMocks({ restoreMocks: true })
     spies.forEach(spy => spy.mockRestore())
     return this
   }
