@@ -16,6 +16,11 @@ const modalShow = ref(false)
 const selectedModule = ref<string | null>()
 const controller = ref<ModuleGraphController | undefined>()
 
+watchEffect(() => {
+  if (modalShow.value === false)
+    setTimeout(() => selectedModule.value = undefined, 300)
+}, { flush: 'post' })
+
 onMounted(() => {
   resetGraphController()
 })
@@ -118,7 +123,13 @@ function bindOnClick(selection: Selection<SVGCircleElement, ModuleNode, SVGGElem
   <div h-full min-h-75 flex-1 overflow="hidden">
     <div>
       <div flex items-center gap-4 px-3 py-2>
-        <div v-for="node of controller?.nodeTypes.sort()" :key="node" flex="~ gap-1" items-center select-none>
+        <div
+          v-for="node of controller?.nodeTypes.sort()"
+          :key="node"
+          flex="~ gap-1"
+          items-center
+          select-none
+        >
           <input
             :id="`type-${node}`"
             type="checkbox"
@@ -131,19 +142,15 @@ function bindOnClick(selection: Selection<SVGCircleElement, ModuleNode, SVGGElem
             ws-nowrap
             overflow-hidden
             capitalize
-            truncate :for="`type-${node}`"
+            truncate
+            :for="`type-${node}`"
             border-b-2
-            :style="{ 'border-color': `var(--color-node-${node})`}"
-          >
-            {{ node }} Modules
-          </label>
+            :style="{ 'border-color': `var(--color-node-${node})` }"
+          >{{ node }} Modules</label>
         </div>
         <div flex-auto />
         <div>
-          <IconButton
-            icon="i-carbon-reset"
-            @click="resetGraphController"
-          />
+          <IconButton v-tooltip.bottom="'Reset'" icon="i-carbon-reset" @click="resetGraphController" />
         </div>
       </div>
     </div>
@@ -151,7 +158,7 @@ function bindOnClick(selection: Selection<SVGCircleElement, ModuleNode, SVGGElem
     <Modal v-model="modalShow" direction="right">
       <template v-if="selectedModule">
         <Suspense>
-          <ModuleTransformResultView :id="selectedModule" @close="modalShow=false" />
+          <ModuleTransformResultView :id="selectedModule" @close="modalShow = false" />
         </Suspense>
       </template>
     </Modal>

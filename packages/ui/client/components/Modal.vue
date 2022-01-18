@@ -10,7 +10,7 @@
     />
     <div
       class="bg-base border-base absolute transition-all duration-200 ease-out"
-      :class="positionClass"
+      :class="[positionClass, 'scrolls']"
       :style="modelValue ? {}: {transform}"
     >
       <slot />
