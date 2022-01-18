@@ -10,7 +10,7 @@ export default defineConfig({
     // TODO: review this
     ['meta', { name: 'keywords', content: 'vitest, vite, react, vue, preact, svelte, solid, lit, ruby, puppeteer, jsdom, happy-dom, test-runner, jest, typescript, esm, tinypool, tinyspy, c8, node' }],
     ['meta', { property: 'og:title', content: 'Vitest' }],
-    ['meta', { property: 'og:description', content: 'A blazing fast unit tets framework powered by Vite' }],
+    ['meta', { property: 'og:description', content: 'A blazing fast unit test framework powered by Vite' }],
     ['meta', { property: 'og:url', content: 'https://vitest.dev/' }],
     ['meta', { property: 'og:image', content: 'https://vitest.dev/og.png' }],
     ['meta', { name: 'twitter:title', content: 'Vitest' }],
