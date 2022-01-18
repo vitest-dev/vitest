@@ -16,7 +16,7 @@ const toggleMode = computed(() => isDark.value ? 'light' : 'dark')
 
 <template>
   <TasksList border="r base" :tasks="files" :on-item-click="onItemClick" :group-by-type="true">
-    <template #header>
+    <template #header="{ filteredTests }">
       <img w-6 h-6 mx-2 src="/favicon.svg">
       <span font-light text-sm flex-1>Vitest</span>
       <div class="flex text-lg">
@@ -29,7 +29,12 @@ const toggleMode = computed(() => isDark.value ? 'light' : 'dark')
           icon="i-carbon-dashboard"
           @click="showDashboard(true)"
         />
-        <IconButton v-tooltip.bottom="'Rerun all'" icon="i-carbon-play" @click="runAll" />
+        <IconButton
+          v-tooltip.bottom="filteredTests ? (filteredTests.length === 0 ? 'No test to run' : 'Rerun filtered') : 'Rerun all'"
+          :disabled="filteredTests?.length === 0"
+          icon="i-carbon-play"
+          @click="runAll(filteredTests)"
+        />
         <IconButton
           v-tooltip.bottom="`Toggle to ${toggleMode} mode`"
           icon="dark:i-carbon-moon i-carbon-sun"

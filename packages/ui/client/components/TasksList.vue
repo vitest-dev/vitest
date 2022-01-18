@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import type { Task } from '#types'
+import type { ComputedRef } from 'vue'
+import type { File, Task } from '#types'
+import { findById } from '~/composables/client'
 import { activeFileId } from '~/composables/params'
 
 const props = withDefaults(defineProps<{
@@ -15,12 +17,15 @@ const props = withDefaults(defineProps<{
 })
 
 const search = ref('')
+const isFiltered = computed(() => search.value.trim() !== '')
 
 const filtered = computed(() => {
-  if (!search.value)
+  if (!search.value.trim())
     return props.tasks
   return props.tasks.filter(task => task.name.match(search.value))
 })
+const filteredTests: ComputedRef<File[]> = computed(() => isFiltered.value ? filtered.value.map(task => findById(task.id)!).filter(Boolean) : [])
+
 const failed = computed(() => filtered.value.filter(task => task.result?.state === 'fail'))
 const success = computed(() => filtered.value.filter(task => task.result?.state === 'pass'))
 const skipped = computed(() => filtered.value.filter(task => task.mode === 'skip' || task.mode === 'todo'))
@@ -40,23 +45,10 @@ export default {
 <template>
   <div h="full" flex="~ col">
     <div>
-      <div
-        p="2"
-        h-10
-        flex="~ gap-2"
-        items-center
-        bg-header
-        border="b base"
-      >
-        <slot name="header" />
+      <div p="2" h-10 flex="~ gap-2" items-center bg-header border="b base">
+        <slot name="header" :filteredTests="isFiltered ? filteredTests : undefined" />
       </div>
-      <div
-        p="x4 y2"
-        flex="~ gap-2"
-        items-center
-        bg-header
-        border="b base"
-      >
+      <div p="x4 y2" flex="~ gap-2" items-center bg-header border="b base">
         <div i-carbon:search flex-shrink-0 />
         <input
           v-model="search"
@@ -154,6 +146,19 @@ export default {
           :class="activeFileId === task.id ? 'bg-active' : ''"
           :on-item-click="onItemClick"
         />
+      </template>
+      <!--empty-state-->
+      <template v-if="isFiltered && filtered.length === 0">
+        <div flex="~ row" center justify="left" p="x-2 y-5" text="gray 0.9rem">
+          <span i-carbon:fade text-2xl flex-shrink-0 />
+          <p px-4 w-full>
+            No test matched search
+          </p>
+          <button @click="search = ''">
+            Clear
+            <span i-carbon:filter-reset />
+          </button>
+        </div>
       </template>
     </div>
   </div>

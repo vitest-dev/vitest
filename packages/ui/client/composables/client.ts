@@ -26,8 +26,8 @@ export const isConnected = computed(() => status.value === 'OPEN')
 export const isConnecting = computed(() => status.value === 'CONNECTING')
 export const isDisconnected = computed(() => status.value === 'CLOSED')
 
-export function runAll() {
-  return runFiles(client.state.getFiles())
+export function runAll(files = client.state.getFiles()) {
+  return runFiles(files)
 }
 
 export function runFiles(files: File[]) {
