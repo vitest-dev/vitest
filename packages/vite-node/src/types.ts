@@ -23,7 +23,7 @@ export interface ViteNodeRunnerOptions {
   root: string
   base?: string
   moduleCache?: Map<string, ModuleCache>
-  interpretDefault?: boolean
+  interopDefault?: boolean
   requestStubs?: Record<string, any>
 }
 

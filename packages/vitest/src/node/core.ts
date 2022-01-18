@@ -92,7 +92,7 @@ export class Vitest {
 
   getConfig() {
     if (this.configOverride)
-      return deepMerge(clone(this.config), this.configOverride)
+      return deepMerge(clone(this.config), this.configOverride) as ResolvedConfig
     return this.config
   }
 

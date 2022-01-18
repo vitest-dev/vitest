@@ -4,13 +4,13 @@ import { parseStacktrace } from '../../utils/source-map'
 import { IndentedLogger } from './utils/indented-logger'
 
 function yamlString(str: string): string {
-  return `"${str.replaceAll('"', '\\"')}"`
+  return `"${str.replace(/"/g, '\\"')}"`
 }
 
 function tapString(str: string): string {
   // Test name cannot contain #
   // Test name cannot start with number
-  return str.replaceAll('#', '?').replace(/^[0-9]+/, '?')
+  return str.replace(/#/g, '?').replace(/^[0-9]+/, '?')
 }
 
 export class TapReporter implements Reporter {

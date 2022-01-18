@@ -24,11 +24,11 @@ function flattenTasks(task: Task, baseName = ''): Task[] {
 
 function escapeXML(value: any): string {
   return String(value)
-    .replaceAll('&', '&amp;')
-    .replaceAll('"', '&quot;')
-    .replaceAll('\'', '&apos;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
 }
 
 function getDuration(task: Task): string | undefined {
