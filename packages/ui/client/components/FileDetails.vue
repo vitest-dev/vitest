@@ -82,7 +82,7 @@ const changeViewMode = (view: Params['view']) => {
 
     <div flex flex-col flex-1 overflow="hidden">
       <ViewModuleGraph v-show="viewMode === 'graph'" :graph="graph" />
-      <ViewEditor v-if="viewMode === 'editor'" :file="current" />
+      <ViewEditor v-if="viewMode === 'editor'" :key="current.filepath" :file="current" />
       <ViewConsoleOutput v-else-if="viewMode === 'console'" :file="current" />
       <ViewReport v-else-if="!viewMode" :file="current" />
     </div>
