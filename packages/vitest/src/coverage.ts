@@ -1,7 +1,7 @@
 import { existsSync, promises as fs } from 'fs'
 import { createRequire } from 'module'
 import { pathToFileURL } from 'url'
-import { join, resolve } from 'pathe'
+import { resolve } from 'pathe'
 import type { Arrayable } from './types'
 import type { Vitest } from './node'
 import { toArray } from './utils'
@@ -95,7 +95,6 @@ export interface C8Options {
 }
 
 export interface ResolvedC8Options extends Required<C8Options> {
-  tempDirectory: string
 }
 
 export function resolveC8Options(options: C8Options, root: string): ResolvedC8Options {
@@ -116,7 +115,6 @@ export function resolveC8Options(options: C8Options, root: string): ResolvedC8Op
 
   resolved.reporter = toArray(resolved.reporter)
   resolved.reportsDirectory = resolve(root, resolved.reportsDirectory)
-  resolved.tempDirectory = process.env.NODE_V8_COVERAGE || resolve(resolved.reportsDirectory, 'tmp')
 
   return resolved as ResolvedC8Options
 }
@@ -124,25 +122,16 @@ export function resolveC8Options(options: C8Options, root: string): ResolvedC8Op
 export async function cleanCoverage(options: ResolvedC8Options, clean = true) {
   if (clean && existsSync(options.reportsDirectory))
     await fs.rm(options.reportsDirectory, { recursive: true, force: true })
-
-  if (!existsSync(options.tempDirectory))
-    await fs.mkdir(options.tempDirectory, { recursive: true })
 }
 
 const require = createRequire(import.meta.url)
 
 export async function reportCoverage(ctx: Vitest) {
-  // TODO: Would be nice if we could run c8 without writing files to disk
-  for (let i = 0; i < ctx.coverage.length; i++) {
-    const coverage = ctx.coverage[i]
-    const file = join(ctx.config.coverage.tempDirectory, `coverage-${i}.json`)
-
-    await fs.writeFile(file, JSON.stringify(coverage))
-  }
-
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const createReport = require('c8/lib/report')
   const report = createReport(ctx.config.coverage)
+
+  report._loadReports = () => ctx.coverage
 
   const original = report._getMergedProcessCov
 
