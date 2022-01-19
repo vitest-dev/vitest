@@ -1,4 +1,4 @@
-import { builtinModules, createRequire } from 'module'
+import { createRequire } from 'module'
 import { fileURLToPath, pathToFileURL } from 'url'
 import vm from 'vm'
 import { dirname, resolve } from 'pathe'
@@ -54,7 +54,7 @@ export class ViteNodeRunner {
     const request = async(dep: string) => {
       if (callstack.includes(dep)) {
         if (!this.moduleCache.get(dep)?.exports)
-          throw new Error(`Circular dependency detected\nStack:\n${[...callstack, dep].reverse().map(p => `- ${p}`).join('\n')}`)
+          throw new Error(`[vite-node] Circular dependency detected\nStack:\n${[...callstack, dep].reverse().map(p => `- ${p}`).join('\n')}`)
         return this.moduleCache.get(dep)!.exports
       }
       return this.cachedRequest(dep, callstack)
@@ -72,7 +72,7 @@ export class ViteNodeRunner {
     }
 
     if (transformed == null)
-      throw new Error(`Failed to load ${id}`)
+      throw new Error(`[vite-node] Failed to load ${id}`)
 
     // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
     const url = pathToFileURL(fsPath).href
