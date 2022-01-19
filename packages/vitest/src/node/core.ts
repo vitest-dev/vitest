@@ -353,7 +353,7 @@ export class Vitest {
   async exit() {
     setTimeout(() => {
       console.warn(`close timed out after ${CLOSE_TIMEOUT}ms`)
-      process.exit()
+      process.exit(1)
     }, CLOSE_TIMEOUT).unref()
 
     await this.close()
