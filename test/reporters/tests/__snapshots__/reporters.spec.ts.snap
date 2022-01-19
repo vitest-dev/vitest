@@ -1,5 +1,35 @@
 // Vitest Snapshot v1
 
+exports[`JUnit reporter 1`] = `
+"<?xml version=\\"1.0\\" encoding=\\"UTF-8\\" ?>
+<testsuites>
+    <testsuite name=\\"test/core/test/basic.test.ts\\" timestamp=\\"2022-01-19T10:10:01.759Z\\" hostname=\\"hostname\\" tests=\\"8\\" failures=\\"1\\" errors=\\"0\\" skipped=\\"1\\" time=\\"0.1459928420\\">
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; inner suite &gt; Math.sqrt()\\" time=\\"0.0014422860\\">
+            <failure message=\\"expected 2.23606797749979 to equal 2\\" type=\\"AssertionError\\">
+AssertionError: expected 2.23606797749979 to equal 2
+ ❯ ../../../../../../vitest/test/core/test/basic.test.ts:8:32
+            </failure>
+        </testcase>
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; JSON\\" time=\\"0.0010237110\\">
+        </testcase>
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; async with timeout\\">
+            <skipped/>
+        </testcase>
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; timeout\\" time=\\"0.1005059841\\">
+        </testcase>
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback setup success \\" time=\\"0.0201848750\\">
+        </testcase>
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback test success \\" time=\\"0.0003324542\\">
+        </testcase>
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback setup success done(false)\\" time=\\"0.0197386060\\">
+        </testcase>
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback test success done(false)\\" time=\\"0.0001923509\\">
+        </testcase>
+    </testsuite>
+</testsuites>
+"
+`;
+
 exports[`json reporter 1`] = `
 "{
   \\"numTotalTestSuites\\": 3,

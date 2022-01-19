@@ -1,6 +1,6 @@
 import { Vitest } from '../../../packages/vitest/src/node'
 import { StateManager } from '../../../packages/vitest/src/node/state'
-import { ResolvedConfig } from '../../../packages/vitest/src/types'
+import { File, ResolvedConfig } from '../../../packages/vitest/src/types'
 
 interface Context {
   vitest: Vitest,
@@ -16,7 +16,7 @@ export function getContext(): Context {
   }
 
   const state: Partial<StateManager> = {
-
+    filesMap: new Map<string, File>()
   }
 
   const context: Partial<Vitest> = {

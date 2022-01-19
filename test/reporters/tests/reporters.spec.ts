@@ -1,4 +1,5 @@
 import { JsonReporter } from '../../../packages/vitest/src/node/reporters/json'
+import { JUnitReporter } from '../../../packages/vitest/src/node/reporters/junit'
 import { TapReporter } from '../../../packages/vitest/src/node/reporters/tap'
 import { TapFlatReporter } from '../../../packages/vitest/src/node/reporters/tap-flat'
 import { getContext } from '../src/context'
@@ -23,6 +24,25 @@ test('tap-flat reporter', async () => {
   // Arrange
   const reporter = new TapFlatReporter()
   const context = getContext()
+
+  // Act
+  reporter.onInit(context.vitest)
+  await reporter.onFinished(files)
+
+  // Assert
+  expect(context.output).toMatchSnapshot()
+})
+
+test('JUnit reporter', async () => {
+  // Arrange
+  const reporter = new JUnitReporter()
+  const context = getContext()
+
+  vi.mock('os', () => ({
+    hostname: () => 'hostname'
+  }))
+
+  vi.mockCurrentDate(1642587001759)
 
   // Act
   reporter.onInit(context.vitest)
