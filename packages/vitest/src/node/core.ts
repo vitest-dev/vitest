@@ -358,7 +358,7 @@ export class Vitest {
       resolveClose = () => resolve(true)
       this.close().then(resolve, reject)
     })
-    // make sure all premises are resolved before exiting process
+    // make sure all promises are resolved before exiting process
     // https://github.com/nodejs/node/blob/master/src/node_file-inl.h#L160
     const cleanup = () => {
       clearTimeout(timeout)
