@@ -661,6 +661,12 @@ importers:
     devDependencies:
       vitest: link:../../packages/vitest
 
+  test/reporters:
+    specifiers:
+      vitest: workspace:*
+    devDependencies:
+      vitest: link:../../packages/vitest
+
   test/single-thread:
     specifiers:
       vitest: workspace:*
