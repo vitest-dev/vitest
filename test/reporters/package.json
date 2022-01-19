@@ -1,0 +1,10 @@
+{
+  "name": "@vitest/test-reporters",
+  "private": true,
+  "scripts": {
+    "test": "vitest --global"
+  },
+  "devDependencies": {
+    "vitest": "workspace:*"
+  }
+}
