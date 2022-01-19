@@ -4,6 +4,8 @@ import { TapFlatReporter } from '../../../packages/vitest/src/node/reporters/tap
 import { getContext } from '../src/context'
 import { files } from '../src/data'
 
+import { test, expect, vi } from 'vitest'
+
 test('tap reporter', async () => {
   // Arrange
   const reporter = new TapReporter()
