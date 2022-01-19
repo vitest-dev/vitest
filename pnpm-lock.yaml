@@ -519,7 +519,6 @@ importers:
       chai: ^4.3.4
       chai-subset: ^1.6.0
       cli-truncate: ^3.1.0
-      detect-indent: ^7.0.0
       diff: ^5.0.0
       execa: ^6.0.0
       fast-glob: ^3.2.10
@@ -570,7 +569,6 @@ importers:
       cac: 6.7.12
       chai-subset: 1.6.0
       cli-truncate: 3.1.0
-      detect-indent: 7.0.0
       diff: 5.0.0
       execa: 6.0.0
       fast-glob: 3.2.10
@@ -8570,11 +8568,6 @@ packages:
     resolution: {integrity: sha512-8zdsQA5bIkoRECvCrNKPla84lyoR7DSAyf7p0YgXzBO9PDJx8KntPUay7NS6yp+KdxdVtiE5SpHKtbp2ZQyA9g==}
     dependencies:
       repeat-string: 1.6.1
-    dev: true
-
-  /detect-indent/7.0.0:
-    resolution: {integrity: sha512-/6kJlmVv6RDFPqaHC/ZDcU8bblYcoph2dUQ3kB47QqhkUEqXe3VZPELK9BaEMrC73qu+wn0AQ7iSteceN+yuMw==}
-    engines: {node: '>=12.20'}
     dev: true
 
   /detect-node/2.1.0:
