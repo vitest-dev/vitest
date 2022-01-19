@@ -7,7 +7,7 @@ exports[`JUnit reporter 1`] = `
         <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; inner suite &gt; Math.sqrt()\\" time=\\"0.0014422860\\">
             <failure message=\\"expected 2.23606797749979 to equal 2\\" type=\\"AssertionError\\">
 AssertionError: expected 2.23606797749979 to equal 2
- ❯ ../../../../../../vitest/test/core/test/basic.test.ts:8:32
+ ❯ vitest/test/core/test/basic.test.ts:8:32
             </failure>
         </testcase>
         <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; JSON\\" time=\\"0.0010237110\\">

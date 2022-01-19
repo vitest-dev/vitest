@@ -12,7 +12,7 @@ export function getContext(): Context {
   const log = (text: string) => output += `${text}\n`
 
   const config: Partial<ResolvedConfig> = {
-
+    root: '/'
   }
 
   const state: Partial<StateManager> = {
