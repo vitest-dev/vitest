@@ -24,7 +24,7 @@
     "typecheck": "tsc --noEmit",
     "ui:build": "vite build packages/ui",
     "ui:dev": "vite packages/ui",
-    "ui:test": "npm -C packages/ui test"
+    "ui:test": "npm -C packages/ui test:run"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^0.16.0",

@@ -24,7 +24,7 @@
     "dev:client": "vite",
     "dev": "rollup -c --watch --watch.include=node/**",
     "dev:ui": "run-p dev dev:client",
-    "test": "cypress run-ct",
+    "test:run": "cypress run-ct",
     "test:open": "cypress open-ct"
   },
   "dependencies": {
