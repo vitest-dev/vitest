@@ -6,6 +6,8 @@ export default defineConfig({
   description: 'A blazing fast unit test framework powered by Vite',
   head: [
     ['meta', { name: 'theme-color', content: '#ffffff' }],
+    ['link', { rel: 'icon', href: '/logo.svg', type: 'image/svg+xml' }],
+    ['link', { rel: 'alternate icon', href: '/favicon.ico', type: 'image/png', sizes: '16x16' }],
     ['meta', { name: 'author', content: 'Anthony Fu, Patak, Aslemammad, Vladimir' }],
     // TODO: review this
     ['meta', { name: 'keywords', content: 'vitest, vite, react, vue, preact, svelte, solid, lit, ruby, puppeteer, jsdom, happy-dom, test-runner, jest, typescript, esm, tinypool, tinyspy, c8, node' }],
@@ -17,7 +19,6 @@ export default defineConfig({
     ['meta', { name: 'twitter:description', content: 'A blazing fast unit test framework powered by Vite' }],
     ['meta', { name: 'twitter:image', content: 'https://vitest.dev/og.png' }],
     ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
-    ['link', { rel: 'icon', href: '/logo.svg', type: 'image/svg+xml' }],
     ['link', { href: 'https://fonts.googleapis.com/css2?family=Readex+Pro:wght@200;400;600&display=swap', rel: 'stylesheet' }],
     ['link', { rel: 'mask-icon', href: '/logo.svg', color: '#ffffff' }],
     ['link', { rel: 'apple-touch-icon', href: '/apple-touch-icon.png', sizes: "180x180" }],
