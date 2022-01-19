@@ -1,4 +1,5 @@
 import { existsSync } from 'fs'
+import type { Profiler } from 'inspector'
 import type { ViteDevServer } from 'vite'
 import fg from 'fast-glob'
 import mm from 'micromatch'
@@ -24,6 +25,7 @@ export class Vitest {
   server: ViteDevServer = undefined!
   state: StateManager = undefined!
   snapshot: SnapshotManager = undefined!
+  coverage: Profiler.TakePreciseCoverageReturnType[] = []
   reporters: Reporter[] = undefined!
   console: Console
   pool: WorkerPool | undefined
@@ -260,6 +262,7 @@ export class Vitest {
       //   })
       // }
       this.snapshot.clear()
+      this.coverage = []
       const files = Array.from(this.changedTests)
       this.changedTests.clear()
 

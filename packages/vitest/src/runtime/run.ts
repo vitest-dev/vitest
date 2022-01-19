@@ -1,4 +1,5 @@
 import { performance } from 'perf_hooks'
+import inspector from 'inspector'
 import type { HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, Test } from '../types'
 import { vi } from '../integrations/vi'
 import { getSnapshotClient } from '../integrations/snapshot/chai'
@@ -188,7 +189,30 @@ export async function startTests(paths: string[], config: ResolvedConfig) {
 
   rpc().onCollected(files)
 
+  let session!: inspector.Session
+  if (config.coverage) {
+    inspector.open()
+    session = new inspector.Session()
+    session.connect()
+  
+    session.post('Profiler.enable')
+    session.post('Profiler.startPreciseCoverage')
+  }
+
   await runSuites(files)
+
+  if (config.coverage) {
+    session.post('Profiler.takePreciseCoverage', (_, coverage) => {
+      rpc().coverageCollected(coverage)
+    })
+
+    session.disconnect()
+    try {
+      inspector.close()
+    } catch {
+      // Fails inside workers for some reason
+    }
+  }
 
   await getSnapshotClient().saveSnap()
 
