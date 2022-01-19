@@ -33,6 +33,7 @@ export default defineConfig({
       // TODO: to add prompt strategy we should change to custom theme or switch to @vue/theme
       registerType: 'autoUpdate',
       includeAssets: [
+        'favicon.ico',
         'favicon.svg',
         'apple-touch-icon.png',
         'robots.txt',
@@ -53,7 +54,7 @@ export default defineConfig({
             type: 'image/png',
           },
           {
-            src: 'pwa-512x512.svg',
+            src: 'pwa-512x512.png',
             sizes: '512x512',
             type: 'image/png',
           },
