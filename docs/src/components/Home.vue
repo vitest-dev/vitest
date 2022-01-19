@@ -7,7 +7,7 @@
       </h1>
       <p text="1.2em center" leading-7 op60 font-normal tracking-wide>
         A blazing fast unit-test framework<br>powered by
-        <a aria-label="Vite" href="https://vitejs.dev" target="_blank" rel="noopener noreferrer" font="bold">Vite ⚡️</a>
+        <a href="https://vitejs.dev" target="_blank" rel="noopener noreferrer" font="bold">Vite ⚡️</a>
       </p>
       <div
         text-center
