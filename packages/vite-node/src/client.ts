@@ -21,14 +21,11 @@ export const DEFAULT_REQUEST_STUBS = {
 export class ViteNodeRunner {
   root: string
 
-  externalCache: Map<string, string | Promise<false | string>>
   moduleCache: Map<string, ModuleCache>
 
   constructor(public options: ViteNodeRunnerOptions) {
     this.root = options.root || process.cwd()
     this.moduleCache = options.moduleCache || new Map()
-    this.externalCache = new Map<string, string | Promise<false | string>>()
-    builtinModules.forEach(m => this.externalCache.set(m, m))
   }
 
   async executeFile(file: string) {
@@ -41,13 +38,13 @@ export class ViteNodeRunner {
 
   async cachedRequest(rawId: string, callstack: string[]) {
     const id = normalizeId(rawId, this.options.base)
+
+    if (this.moduleCache.get(id)?.promise)
+      return this.moduleCache.get(id)?.promise
+
     const fsPath = toFilePath(id, this.root)
-
-    if (this.moduleCache.get(fsPath)?.promise)
-      return this.moduleCache.get(fsPath)?.promise
-
     const promise = this.directRequest(id, fsPath, callstack)
-    this.setCache(fsPath, { promise })
+    this.setCache(id, { promise })
 
     return await promise
   }
@@ -56,10 +53,9 @@ export class ViteNodeRunner {
     callstack = [...callstack, id]
     const request = async(dep: string) => {
       if (callstack.includes(dep)) {
-        const cacheKey = toFilePath(dep, this.root)
-        if (!this.moduleCache.get(cacheKey)?.exports)
+        if (!this.moduleCache.get(dep)?.exports)
           throw new Error(`Circular dependency detected\nStack:\n${[...callstack, dep].reverse().map(p => `- ${p}`).join('\n')}`)
-        return this.moduleCache.get(cacheKey)!.exports
+        return this.moduleCache.get(dep)!.exports
       }
       return this.cachedRequest(dep, callstack)
     }
@@ -71,18 +67,18 @@ export class ViteNodeRunner {
     const { code: transformed, externalize } = await this.options.fetchModule(id)
     if (externalize) {
       const mod = await this.interopedImport(externalize)
-      this.setCache(fsPath, { exports: mod })
+      this.setCache(id, { exports: mod })
       return mod
     }
 
     if (transformed == null)
-      throw new Error(`failed to load ${id}`)
+      throw new Error(`Failed to load ${id}`)
 
     // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
     const url = pathToFileURL(fsPath).href
     const exports: any = {}
 
-    this.setCache(fsPath, { code: transformed, exports })
+    this.setCache(id, { code: transformed, exports })
 
     const __filename = fileURLToPath(url)
     const moduleProxy = {
