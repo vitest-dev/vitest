@@ -1,7 +1,6 @@
+import { AssertionError } from 'assert'
 import type { ErrorWithDiff } from '../../../packages/vitest/dist'
 import type { File, Suite, Task } from '../../../packages/vitest/src/types'
-
-import { AssertionError } from 'assert'
 
 const file: File = {
   id: '1223128da3',
@@ -10,7 +9,7 @@ const file: File = {
   mode: 'run',
   filepath: '/vitest/test/core/test/basic.test.ts',
   result: { state: 'fail', duration: 145.99284195899963 },
-  tasks: []
+  tasks: [],
 }
 
 const suite: Suite = {
@@ -20,7 +19,7 @@ const suite: Suite = {
   mode: 'run',
   file,
   result: { state: 'pass', duration: 1.90183687210083 },
-  tasks: []
+  tasks: [],
 }
 
 const innerSuite: Suite = {
@@ -31,27 +30,27 @@ const innerSuite: Suite = {
   file,
   suite,
   result: { state: 'pass', duration: 1.90183687210083 },
-  tasks: []
+  tasks: [],
 }
 
 const error: ErrorWithDiff = new AssertionError({
   message: 'expected 2.23606797749979 to equal 2',
   actual: '2.23606797749979',
   expected: '2',
-  operator: 'strictEqual'
+  operator: 'strictEqual',
 })
 error.showDiff = true
-error.stack = 'AssertionError: expected 2.23606797749979 to equal 2\n' +
-  '    at /vitest/test/core/test/basic.test.ts:8:32\n' +
-  '    at /vitest/packages/vitest/dist/vi-ac0504aa.js:73:26\n' +
-  '    at runTest (/vitest/packages/vitest/dist/entry.js:1689:40)\n' +
-  '    at async runSuite (/vitest/packages/vitest/dist/entry.js:1741:13)\n' +
-  '    at async runSuites (/vitest/packages/vitest/dist/entry.js:1769:5)\n' +
-  '    at async startTests (/vitest/packages/vitest/dist/entry.js:1774:3)\n' +
-  '    at async /vitest/packages/vitest/dist/entry.js:1798:7\n' +
-  '    at async withEnv (/vitest/packages/vitest/dist/entry.js:1481:5)\n' +
-  '    at async run (/vitest/packages/vitest/dist/entry.js:1797:5)\n' +
-  '    at async file:///vitest/node_modules/.pnpm/tinypool@0.1.1/node_modules/tinypool/dist/esm/worker.js:96:20'
+error.stack = 'AssertionError: expected 2.23606797749979 to equal 2\n'
+  + '    at /vitest/test/core/test/basic.test.ts:8:32\n'
+  + '    at /vitest/packages/vitest/dist/vi-ac0504aa.js:73:26\n'
+  + '    at runTest (/vitest/packages/vitest/dist/entry.js:1689:40)\n'
+  + '    at async runSuite (/vitest/packages/vitest/dist/entry.js:1741:13)\n'
+  + '    at async runSuites (/vitest/packages/vitest/dist/entry.js:1769:5)\n'
+  + '    at async startTests (/vitest/packages/vitest/dist/entry.js:1774:3)\n'
+  + '    at async /vitest/packages/vitest/dist/entry.js:1798:7\n'
+  + '    at async withEnv (/vitest/packages/vitest/dist/entry.js:1481:5)\n'
+  + '    at async run (/vitest/packages/vitest/dist/entry.js:1797:5)\n'
+  + '    at async file:///vitest/node_modules/.pnpm/tinypool@0.1.1/node_modules/tinypool/dist/esm/worker.js:96:20'
 
 const innerTasks: Task[] = [
   {
@@ -65,9 +64,9 @@ const innerTasks: Task[] = [
     result: {
       state: 'fail',
       error,
-      duration: 1.4422860145568848
-    }
-  }
+      duration: 1.4422860145568848,
+    },
+  },
 ]
 
 innerSuite.tasks = innerTasks
@@ -82,7 +81,7 @@ const tasks: Task[] = [
     suite,
     fails: undefined,
     file,
-    result: { state: 'pass', duration: 1.0237109661102295 }
+    result: { state: 'pass', duration: 1.0237109661102295 },
   },
   {
     id: '1223128da3_3',
@@ -92,7 +91,7 @@ const tasks: Task[] = [
     suite,
     fails: undefined,
     file,
-    result: undefined
+    result: undefined,
   },
   {
     id: '1223128da3_4',
@@ -102,7 +101,7 @@ const tasks: Task[] = [
     suite,
     fails: undefined,
     file,
-    result: { state: 'pass', duration: 100.50598406791687 }
+    result: { state: 'pass', duration: 100.50598406791687 },
   },
   {
     id: '1223128da3_5',
@@ -112,7 +111,7 @@ const tasks: Task[] = [
     suite,
     fails: undefined,
     file,
-    result: { state: 'pass', duration: 20.184875011444092 }
+    result: { state: 'pass', duration: 20.184875011444092 },
   },
   {
     id: '1223128da3_6',
@@ -122,7 +121,7 @@ const tasks: Task[] = [
     suite,
     fails: undefined,
     file,
-    result: { state: 'pass', duration: 0.33245420455932617 }
+    result: { state: 'pass', duration: 0.33245420455932617 },
   },
   {
     id: '1223128da3_7',
@@ -132,7 +131,7 @@ const tasks: Task[] = [
     suite,
     fails: undefined,
     file,
-    result: { state: 'pass', duration: 19.738605976104736 }
+    result: { state: 'pass', duration: 19.738605976104736 },
   },
   {
     id: '1223128da3_8',
@@ -142,8 +141,8 @@ const tasks: Task[] = [
     suite,
     fails: undefined,
     file,
-    result: { state: 'pass', duration: 0.1923508644104004 }
-  }
+    result: { state: 'pass', duration: 0.1923508644104004 },
+  },
 ]
 
 file.tasks = [suite]

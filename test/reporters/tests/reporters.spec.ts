@@ -1,3 +1,4 @@
+import { expect, test, vi } from 'vitest'
 import { JsonReporter } from '../../../packages/vitest/src/node/reporters/json'
 import { JUnitReporter } from '../../../packages/vitest/src/node/reporters/junit'
 import { TapReporter } from '../../../packages/vitest/src/node/reporters/tap'
@@ -5,9 +6,7 @@ import { TapFlatReporter } from '../../../packages/vitest/src/node/reporters/tap
 import { getContext } from '../src/context'
 import { files } from '../src/data'
 
-import { test, expect, vi } from 'vitest'
-
-test('tap reporter', async () => {
+test('tap reporter', async() => {
   // Arrange
   const reporter = new TapReporter()
   const context = getContext()
@@ -20,7 +19,7 @@ test('tap reporter', async () => {
   expect(context.output).toMatchSnapshot()
 })
 
-test('tap-flat reporter', async () => {
+test('tap-flat reporter', async() => {
   // Arrange
   const reporter = new TapFlatReporter()
   const context = getContext()
@@ -33,13 +32,13 @@ test('tap-flat reporter', async () => {
   expect(context.output).toMatchSnapshot()
 })
 
-test('JUnit reporter', async () => {
+test('JUnit reporter', async() => {
   // Arrange
   const reporter = new JUnitReporter()
   const context = getContext()
 
   vi.mock('os', () => ({
-    hostname: () => 'hostname'
+    hostname: () => 'hostname',
   }))
 
   vi.mockCurrentDate(1642587001759)
@@ -52,7 +51,7 @@ test('JUnit reporter', async () => {
   expect(context.output).toMatchSnapshot()
 })
 
-test('json reporter', async () => {
+test('json reporter', async() => {
   // Arrange
   const reporter = new JsonReporter()
   const context = getContext()
