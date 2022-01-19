@@ -35,6 +35,8 @@ test('json reporter', async () => {
   const reporter = new JsonReporter()
   const context = getContext()
 
+  vi.mockCurrentDate(1642587001759)
+
   // Act
   reporter.onInit(context.vitest)
   await reporter.onFinished(files)

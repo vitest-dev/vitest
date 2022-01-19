@@ -11,7 +11,7 @@ exports[`json reporter 1`] = `
   \\"numFailedTests\\": 1,
   \\"numPendingTests\\": 0,
   \\"numTodoTests\\": 0,
-  \\"startTime\\": 231813.9812309742,
+  \\"startTime\\": 1642587001759,
   \\"success\\": false,
   \\"testResults\\": [
     {
