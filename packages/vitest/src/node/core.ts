@@ -351,18 +351,31 @@ export class Vitest {
   }
 
   async exit() {
-    const closePromise = this.close()
     let timeout: NodeJS.Timeout
+    let resolveClose: () => void
+    let resolveTimeout: () => void
+    const closePromise = new Promise((resolve, reject) => {
+      resolveClose = () => resolve(true)
+      this.close().then(resolve, reject)
+    })
+    // make sure all premises are resolved before exiting process
+    // https://github.com/nodejs/node/blob/master/src/node_file-inl.h#L160
+    const cleanup = () => {
+      clearTimeout(timeout)
+      resolveTimeout?.()
+      resolveClose?.()
+    }
     const timeoutPromise = new Promise((resolve, reject) => {
+      resolveTimeout = () => resolve(true)
       timeout = setTimeout(() => reject(new Error(`close timed out after ${CLOSE_TIMEOUT}ms`)), CLOSE_TIMEOUT).unref()
     })
     Promise.race([closePromise, timeoutPromise]).then(
       () => {
-        clearTimeout(timeout)
+        cleanup()
         process.exit()
       },
       (err) => {
-        clearTimeout(timeout)
+        cleanup()
         console.error('error during close', err)
         process.exit(1)
       },
