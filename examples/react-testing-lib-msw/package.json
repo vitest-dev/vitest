@@ -23,7 +23,7 @@
     "@vitest/ui": "latest",
     "cross-fetch": "^3.1.4",
     "jsdom": "latest",
-    "msw": "^0.36.4",
+    "msw": "^0.36.5",
     "vite": "latest",
     "vitest": "latest"
   }

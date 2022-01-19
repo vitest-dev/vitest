@@ -212,7 +212,7 @@ Maximum number of threads
 
 Minimum number of threads
 
-### interpretDefault
+### interopDefault
 
 - **Type:** `boolean`
 

@@ -17,7 +17,6 @@ const tooltip: Directive = (el: Element, { value, oldValue, modifiers }) => {
     instance === undefined // mount if instance not yet created, else update content
       ? tippy(el, {
         delay: 200,
-        hideOnClick: false,
         ...config,
       })
       : value !== oldValue && instance.setProps(config)

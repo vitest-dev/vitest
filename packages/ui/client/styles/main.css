@@ -163,5 +163,7 @@ html.dark {
   margin-right: unset !important;
   padding-bottom: unset !important;
 }
-
+.CodeMirror-sizer {
+  border-right: none;
+}
 

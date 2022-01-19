@@ -1,7 +1,6 @@
 import { SourceMapConsumer } from 'source-map-js'
-import type { RawSourceMap } from 'source-map-js'
+import type { ErrorWithDiff, ParsedStack, Position, RawSourceMap } from '../types'
 import type { Vitest } from '../node'
-import type { ErrorWithDiff, ParsedStack, Position } from '../types/general'
 import { notNullish } from './base'
 
 export const lineSplitRE = /\r?\n/

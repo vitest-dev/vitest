@@ -15,13 +15,13 @@ test('outside snapshot', () => {
 test('inline snapshot', () => {
   expect('inline string').toMatchInlineSnapshot('"inline string"')
   expect({ foo: { type: 'object', map: new Map() } }).toMatchInlineSnapshot(`
-{
-  "foo": {
-    "map": Map {},
-    "type": "object",
-  },
-}
-`)
+    {
+      "foo": {
+        "map": Map {},
+        "type": "object",
+      },
+    }
+  `)
   const indent = `
 ()=>
   array
@@ -30,13 +30,13 @@ test('inline snapshot', () => {
 `
   expect(indent)
     .toMatchInlineSnapshot(`
-"
-()=>
-  array
-    .map(fn)
-    .filter(fn)
-"
-  `)
+      "
+      ()=>
+        array
+          .map(fn)
+          .filter(fn)
+      "
+    `)
 })
 
 test('snapshot with big array', () => {

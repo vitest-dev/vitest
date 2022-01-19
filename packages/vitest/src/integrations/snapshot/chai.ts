@@ -1,5 +1,6 @@
 import type { ChaiPlugin } from '../chai/types'
 import { SnapshotClient } from './client'
+import { stripSnapshotIndentation } from './port/inlineSnapshot'
 
 let _client: SnapshotClient
 
@@ -48,6 +49,8 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
         inlineSnapshot = properties
         properties = undefined
       }
+      if (inlineSnapshot)
+        inlineSnapshot = stripSnapshotIndentation(inlineSnapshot)
       getSnapshotClient().assert(expected, message, true, properties, inlineSnapshot)
     },
   )

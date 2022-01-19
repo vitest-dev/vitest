@@ -3,10 +3,9 @@ import { pathToFileURL } from 'url'
 import { resolve } from 'pathe'
 import type { Options as TinypoolOptions } from 'tinypool'
 import { Tinypool } from 'tinypool'
-import type { RawSourceMap } from 'source-map-js'
 import { createBirpc } from 'birpc'
+import type { RawSourceMap, WorkerContext, WorkerRPC } from '../types'
 import { distDir } from '../constants'
-import type { WorkerContext, WorkerRPC } from '../types'
 import type { Vitest } from './core'
 
 export type RunWithFiles = (files: string[], invalidates?: string[]) => Promise<void>
