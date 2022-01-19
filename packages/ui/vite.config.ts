@@ -59,5 +59,9 @@ export default defineConfig({
     include: [
       'vue',
     ],
+    // FIXME: Cypress won't start without that exclude. But tests won't work on running
+    // exclude: [
+    //   'vue-template-compiler',
+    // ],
   },
 })

@@ -23,7 +23,8 @@
     "test:ci": "cross-env CI=true pnpm -r --stream --filter !@vitest/monorepo --filter !@vitest/test-fails run test --",
     "typecheck": "tsc --noEmit",
     "ui:build": "vite build packages/ui",
-    "ui:dev": "vite packages/ui"
+    "ui:dev": "vite packages/ui",
+    "ui:test": "npm -C packages/ui test"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^0.16.0",

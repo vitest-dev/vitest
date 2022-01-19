@@ -44,6 +44,9 @@ jobs:
       - name: Test
         run: pnpm run test:ci
 
+      - name: Test UI
+        run: pnpm run ui:test
+
       - name: Lint
         run: pnpm run lint --if-present
 

@@ -23,12 +23,16 @@
     "build:node": "rollup -c",
     "dev:client": "vite",
     "dev": "rollup -c --watch --watch.include=node/**",
-    "dev:ui": "run-p dev dev:client"
+    "dev:ui": "run-p dev dev:client",
+    "test": "cypress run-ct",
+    "test:open": "cypress open-ct"
   },
   "dependencies": {
     "sirv": "^2.0.2"
   },
   "devDependencies": {
+    "@cypress/vite-dev-server": "^2.2.2",
+    "@cypress/vue": "^2.2.3",
     "@types/codemirror": "^5.60.5",
     "@types/d3-force": "^3.0.3",
     "@types/d3-selection": "^3.0.2",
@@ -39,6 +43,7 @@
     "@vueuse/core": "^7.5.3",
     "codemirror": "^5.65.0",
     "codemirror-theme-vars": "^0.1.1",
+    "cypress": "^9.3.0",
     "d3-graph-controller": "^2.2.1",
     "picocolors": "^1.0.0",
     "rollup": "^2.64.0",

@@ -1,0 +1,4 @@
+{
+    "testFiles": "**/*.ui.spec.{js,ts}",
+    "componentFolder": "client"
+  }
