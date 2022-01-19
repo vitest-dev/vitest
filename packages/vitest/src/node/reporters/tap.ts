@@ -3,8 +3,8 @@ import type { ParsedStack, Reporter, Task } from '../../types'
 import { parseStacktrace } from '../../utils/source-map'
 import { IndentedLogger } from './utils/indented-logger'
 
-function yamlString(str: string | number): string {
-  return `"${String(str).replace(/"/g, '\\"')}"`
+function yamlString(str: string): string {
+  return `"${str.replace(/"/g, '\\"')}"`
 }
 
 function tapString(str: string): string {

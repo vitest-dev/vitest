@@ -36,8 +36,8 @@ const innerSuite: Suite = {
 
 const error: ErrorWithDiff = new AssertionError({
   message: 'expected 2.23606797749979 to equal 2',
-  actual: 2.23606797749979,
-  expected: 2,
+  actual: '2.23606797749979',
+  expected: '2',
   operator: 'strictEqual'
 })
 error.showDiff = true
