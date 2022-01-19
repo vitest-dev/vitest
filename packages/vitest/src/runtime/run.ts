@@ -191,7 +191,7 @@ export async function startTests(paths: string[], config: ResolvedConfig) {
 
   let session!: inspector.Session
   if (config.coverage) {
-    inspector.open()
+    inspector.open(0)
     session = new inspector.Session()
     session.connect()
   
