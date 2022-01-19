@@ -34,7 +34,7 @@ export class JsonReporter implements Reporter {
 
   onInit(ctx: Vitest): void {
     this.ctx = ctx
-    this.start = performance.now()
+    this.start = Date.now()
   }
 
   protected async logTasks(files: File[]) {
