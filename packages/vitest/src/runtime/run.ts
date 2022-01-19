@@ -194,7 +194,7 @@ export async function startTests(paths: string[], config: ResolvedConfig) {
     inspector.open(0)
     session = new inspector.Session()
     session.connect()
-  
+
     session.post('Profiler.enable')
     session.post('Profiler.startPreciseCoverage')
   }
@@ -209,7 +209,8 @@ export async function startTests(paths: string[], config: ResolvedConfig) {
     session.disconnect()
     try {
       inspector.close()
-    } catch {
+    }
+    catch {
       // Fails inside workers for some reason
     }
   }
