@@ -9,7 +9,7 @@ const updateSnapshot = () => current.value && client.rpc.updateSnapshot(current.
 </script>
 
 <template>
-  <div v-if="current" h-full border="r base">
+  <div v-if="current" h-full>
     <TasksList :tasks="current.tasks" :nested="true">
       <template #header>
         <StatusIcon :task="current" />

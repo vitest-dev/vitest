@@ -111,7 +111,7 @@ html.dark {
 
 .splitpanes--vertical > .splitpanes__splitter:before {
   /* make vertical scroll usable */
-  /*left: -10px;*/
+  left: -10px;
   right: -10px;
   height: 100%;
 }

@@ -155,14 +155,19 @@ export default {
       </template>
       <!--empty-state-->
       <template v-if="isFiltered && filtered.length === 0">
-        <div flex="~ row" center justify="left" p="x-2 y-5" text="gray 0.9rem">
-          <span i-carbon:fade text-2xl flex-shrink-0 />
-          <p px-4 w-full>
-            No test match
-          </p>
-          <button @click="search = ''">
+        <div flex="~ col" items-center p="x4 y4" font-light>
+          <div op30>
+            No matched test
+          </div>
+          <button
+            font-light op="50 hover:100"
+            text-sm
+            border="~ gray-400/50 rounded"
+            p="x2 y0.5"
+            m="t2"
+            @click="search = ''"
+          >
             Clear
-            <span i-carbon:filter-reset />
           </button>
         </div>
       </template>
