@@ -17,7 +17,7 @@ const updateSnapshot = () => current.value && client.rpc.updateSnapshot(current.
         <div class="flex text-lg">
           <IconButton
             v-if="failedSnapshot"
-            v-tooltip.bottom="'Update failed snapshots'"
+            v-tooltip.bottom="`Update failed snapshot(s) of ${current.name}`"
             icon="i-carbon-result-old"
             @click="updateSnapshot()"
           />

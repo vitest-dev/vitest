@@ -93,7 +93,8 @@ export function setup(ctx: Vitest) {
             inlined: Array.from(inlined),
           }
         },
-        updateSnapshot(file: File) {
+        updateSnapshot(file?: File) {
+          if (!file) return ctx.updateSnapshot()
           return ctx.updateSnapshot([file.filepath])
         },
       },

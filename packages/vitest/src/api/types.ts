@@ -13,7 +13,7 @@ export interface WebSocketHandlers {
   readFile(id: string): Promise<string>
   writeFile(id: string, content: string): Promise<void>
   rerun(files: string[]): Promise<void>
-  updateSnapshot(file: File): Promise<void>
+  updateSnapshot(file?: File): Promise<void>
 }
 
 export interface WebSocketEvents extends Pick<Reporter, 'onCollected' | 'onTaskUpdate' | 'onUserConsoleLog'> {
