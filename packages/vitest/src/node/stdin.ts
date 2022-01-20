@@ -24,7 +24,7 @@ export function registerConsoleShortcuts(ctx: Vitest) {
   process.stdin.on('keypress', (str: string, key: any) => {
     // ctrl-c or esc
     if (str === '\x03' || str === '\x1B' || (key && key.ctrl && key.name === 'c'))
-      return ctx.exit()
+      return ctx.exit(true)
 
     // is running, ignore keypress
     if (ctx.runningPromise)
@@ -43,7 +43,7 @@ export function registerConsoleShortcuts(ctx: Vitest) {
       return ctx.rerunFiles(undefined, 'rerun all')
     // quit
     if (name === 'q')
-      return ctx.exit()
+      return ctx.exit(true)
 
     // TODO: add more commands
   })

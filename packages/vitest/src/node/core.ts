@@ -350,13 +350,15 @@ export class Vitest {
     return this.closingPromise
   }
 
-  async exit() {
+  async exit(force = false) {
     setTimeout(() => {
       console.warn(`close timed out after ${CLOSE_TIMEOUT}ms`)
       process.exit()
     }, CLOSE_TIMEOUT).unref()
 
     await this.close()
+    if (force)
+      process.exit()
   }
 
   async report<T extends keyof Reporter>(name: T, ...args: ArgumentsType<Reporter[T]>) {
