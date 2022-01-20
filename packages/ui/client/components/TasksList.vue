@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import type { Task } from '#types'
+import type { ComputedRef } from 'vue'
+import type { File, Task } from '#types'
+import { findById } from '~/composables/client'
 import { activeFileId } from '~/composables/params'
 
 const props = withDefaults(defineProps<{
@@ -14,13 +16,20 @@ const props = withDefaults(defineProps<{
   nested: false,
 })
 
+const emit = defineEmits<{
+  (event: 'run', files?: File[]): void
+}>()
+
 const search = ref('')
+const isFiltered = computed(() => search.value.trim() !== '')
 
 const filtered = computed(() => {
-  if (!search.value)
+  if (!search.value.trim())
     return props.tasks
   return props.tasks.filter(task => task.name.match(search.value))
 })
+const filteredTests: ComputedRef<File[]> = computed(() => isFiltered.value ? filtered.value.map(task => findById(task.id)!).filter(Boolean) : [])
+
 const failed = computed(() => filtered.value.filter(task => task.result?.state === 'fail'))
 const success = computed(() => filtered.value.filter(task => task.result?.state === 'pass'))
 const skipped = computed(() => filtered.value.filter(task => task.mode === 'skip' || task.mode === 'todo'))
@@ -40,23 +49,10 @@ export default {
 <template>
   <div h="full" flex="~ col">
     <div>
-      <div
-        p="2"
-        h-10
-        flex="~ gap-2"
-        items-center
-        bg-header
-        border="b base"
-      >
-        <slot name="header" />
+      <div p="2" h-10 flex="~ gap-2" items-center bg-header border="b base">
+        <slot name="header" :filteredTests="isFiltered ? filteredTests : undefined" />
       </div>
-      <div
-        p="x4 y2"
-        flex="~ gap-2"
-        items-center
-        bg-header
-        border="b base"
-      >
+      <div p="x4 y2" flex="~ gap-2" items-center bg-header border="b base">
         <div i-carbon:search flex-shrink-0 />
         <input
           v-model="search"
@@ -67,6 +63,8 @@ export default {
           text="sm"
           flex-1
           :op="search.length ? '100' : '50'"
+          @keydown.esc="search = ''"
+          @keydown.enter="emit('run', isFiltered ? filteredTests : undefined)"
         >
       </div>
     </div>
@@ -154,6 +152,24 @@ export default {
           :class="activeFileId === task.id ? 'bg-active' : ''"
           :on-item-click="onItemClick"
         />
+      </template>
+      <!--empty-state-->
+      <template v-if="isFiltered && filtered.length === 0">
+        <div flex="~ col" items-center p="x4 y4" font-light>
+          <div op30>
+            No matched test
+          </div>
+          <button
+            font-light op="50 hover:100"
+            text-sm
+            border="~ gray-400/50 rounded"
+            p="x2 y0.5"
+            m="t2"
+            @click="search = ''"
+          >
+            Clear
+          </button>
+        </div>
       </template>
     </div>
   </div>
