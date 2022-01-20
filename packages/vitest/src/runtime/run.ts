@@ -196,7 +196,7 @@ export async function startTests(paths: string[], config: ResolvedConfig) {
     session.connect()
 
     session.post('Profiler.enable')
-    session.post('Profiler.startPreciseCoverage')
+    session.post('Profiler.startPreciseCoverage', { detailed: true })
   }
 
   await runSuites(files)
