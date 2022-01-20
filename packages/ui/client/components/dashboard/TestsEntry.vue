@@ -14,7 +14,7 @@ const pending = computed(() => {
 
 <template>
   <div flex="~ wrap" justify-evenly gap-2 p="x-4" relative>
-    <DashboardEntry text-green5>
+    <DashboardEntry text-green5 data-testid="pass-entry">
       <template #header>
         Pass
       </template>
@@ -22,7 +22,7 @@ const pending = computed(() => {
         {{ pass }}
       </template>
     </DashboardEntry>
-    <DashboardEntry :class="{ 'text-red5': failed, 'op50': !failed }">
+    <DashboardEntry :class="{ 'text-red5': failed, 'op50': !failed }" data-testid="fail-entry">
       <template #header>
         Fail
       </template>
@@ -30,7 +30,7 @@ const pending = computed(() => {
         {{ failed }}
       </template>
     </DashboardEntry>
-    <DashboardEntry v-if="skipped" op50>
+    <DashboardEntry v-if="skipped" op50 data-testid="skipped-entry">
       <template #header>
         Skip
       </template>
@@ -38,7 +38,7 @@ const pending = computed(() => {
         {{ skipped }}
       </template>
     </DashboardEntry>
-    <DashboardEntry v-if="todo" op50>
+    <DashboardEntry v-if="todo" op50 data-testid="todo-entry">
       <template #header>
         Todo
       </template>
@@ -46,7 +46,7 @@ const pending = computed(() => {
         {{ todo }}
       </template>
     </DashboardEntry>
-    <DashboardEntry :tail="true">
+    <DashboardEntry :tail="true" data-testid="total-entry">
       <template #header>
         Total
       </template>

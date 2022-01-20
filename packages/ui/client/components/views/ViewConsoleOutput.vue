@@ -18,7 +18,7 @@ function getTaskName(id?: string) {
 </script>
 
 <template>
-  <div v-if="logs?.length" h-full class="scrolls" flex flex-col>
+  <div v-if="logs?.length" h-full class="scrolls" flex flex-col data-testid="logs">
     <div v-for="log of logs" :key="log.taskId" font-mono>
       <div border="b base" p-4>
         <div

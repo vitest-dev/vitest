@@ -1,4 +1,5 @@
 import { resolve } from 'pathe'
+import type { UserConfig } from 'vite'
 import { defineConfig } from 'vite'
 import Vue from '@vitejs/plugin-vue'
 import Components from 'unplugin-vue-components/vite'
@@ -7,7 +8,7 @@ import Unocss from 'unocss/vite'
 import Pages from 'vite-plugin-pages'
 import { presetAttributify, presetIcons, presetUno } from 'unocss'
 
-export default defineConfig({
+export const config: UserConfig = {
   root: __dirname,
   base: '/__vitest__/',
   resolve: {
@@ -59,9 +60,7 @@ export default defineConfig({
     include: [
       'vue',
     ],
-    // FIXME: Cypress won't start without that exclude. But tests won't work on running
-    // exclude: [
-    //   'vue-template-compiler',
-    // ],
   },
-})
+}
+
+export default defineConfig(config)

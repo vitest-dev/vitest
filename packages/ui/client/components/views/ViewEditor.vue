@@ -67,6 +67,7 @@ watch([cm, failed], () => {
     h-full
     v-bind="{ lineNumbers: true }"
     :mode="ext"
+    data-testid="code-mirror"
     @save="onSave"
   />
 </template>
