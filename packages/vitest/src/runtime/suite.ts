@@ -1,5 +1,4 @@
-import { nanoid } from 'nanoid/non-secure'
-import type { ComputeMode, File, ModuleCache, ResolvedConfig, RpcCall, RpcSend, RunMode, Suite, SuiteCollector, SuiteHooks, Test, TestCollector, TestFactory, TestFunction } from '../types'
+import type { File, RunMode, Suite, SuiteCollector, SuiteHooks, Test, TestCollector, TestFactory, TestFunction } from '../types'
 import { noop } from '../utils'
 import { createChainable } from './chain'
 import { collectTask, context, normalizeTest, runWithSuite } from './context'
@@ -41,7 +40,7 @@ export function createSuiteHooks() {
   }
 }
 
-function createSuiteCollector(name: string, factory: TestFactory = () => { }, mode: RunMode, suiteComputeMode?: ComputeMode) {
+function createSuiteCollector(name: string, factory: TestFactory = () => { }, mode: RunMode, concurrent?: boolean) {
   const tasks: (Test | Suite | SuiteCollector)[] = []
   const factoryQueue: (Test | Suite | SuiteCollector)[] = []
 
@@ -53,17 +52,18 @@ function createSuiteCollector(name: string, factory: TestFactory = () => { }, mo
     ['concurrent', 'skip', 'only', 'todo', 'fails'],
     function(name: string, fn?: TestFunction, timeout?: number) {
       const mode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run'
-      const computeMode = this.concurrent ? 'concurrent' : undefined
 
       const test: Test = {
-        id: nanoid(),
+        id: '',
         type: 'test',
         name,
         mode,
-        computeMode: computeMode ?? (suiteComputeMode ?? 'serial'),
         suite: undefined!,
         fails: this.fails,
       }
+      if (this.concurrent || concurrent)
+        test.concurrent = true
+
       setFn(test, normalizeTest(fn || noop, timeout))
       tasks.push(test)
     },
@@ -86,9 +86,8 @@ function createSuiteCollector(name: string, factory: TestFactory = () => { }, mo
 
   function initSuite() {
     suite = {
-      id: nanoid(),
+      id: '',
       type: 'suite',
-      computeMode: 'serial',
       name,
       mode,
       tasks: [],
@@ -134,22 +133,7 @@ function createSuite() {
     ['concurrent', 'skip', 'only', 'todo'],
     function(name: string, factory?: TestFactory) {
       const mode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run'
-      const computeMode = this.concurrent ? 'concurrent' : undefined
-      return createSuiteCollector(name, factory, mode, computeMode)
+      return createSuiteCollector(name, factory, mode, this.concurrent)
     },
   )
-}
-
-declare global {
-  namespace NodeJS {
-    interface Process {
-      __vitest_worker__: {
-        config: ResolvedConfig
-        rpc: RpcCall
-        send: RpcSend
-        current?: Test
-        moduleCache: Map<string, ModuleCache>
-      }
-    }
-  }
 }

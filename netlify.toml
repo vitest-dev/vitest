@@ -7,7 +7,11 @@
   command = "npx pnpm i --store=node_modules/.pnpm-store && npm run docs:build"
 
 [[redirects]]
+  from = "/new"
+  to = "https://stackblitz.com/fork/node-8hobg2?file=test%2Fbasic.test.ts&view=editor"
+  status = 302
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
-

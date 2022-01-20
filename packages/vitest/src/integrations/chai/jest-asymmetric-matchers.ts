@@ -1,13 +1,7 @@
 import * as matcherUtils from './jest-matcher-utils'
 
-import {
-  equals,
-  isA,
-} from './jest-utils'
-import type {
-  ChaiPlugin,
-  MatcherState,
-} from './types'
+import { equals, isA } from './jest-utils'
+import type { ChaiPlugin, MatcherState } from './types'
 
 export interface AsymmetricMatcherInterface {
   asymmetricMatch(other: unknown): boolean
@@ -20,6 +14,8 @@ export abstract class AsymmetricMatcher<
   T,
   State extends MatcherState = MatcherState,
 > implements AsymmetricMatcherInterface {
+  $$typeof = Symbol.for('jest.asymmetricMatcher')
+
   constructor(protected sample: T, protected inverse = false) {}
 
   protected getMatcherContext(): State {
@@ -238,7 +234,42 @@ export class Any extends AsymmetricMatcher<any> {
   }
 }
 
+export class StringMatching extends AsymmetricMatcher<RegExp> {
+  constructor(sample: string | RegExp, inverse = false) {
+    if (!isA('String', sample) && !isA('RegExp', sample))
+      throw new Error('Expected is not a String or a RegExp')
+
+    super(new RegExp(sample), inverse)
+  }
+
+  asymmetricMatch(other: string) {
+    const result = isA('String', other) && this.sample.test(other)
+
+    return this.inverse ? !result : result
+  }
+
+  toString() {
+    return `String${this.inverse ? 'Not' : ''}Matching`
+  }
+
+  getExpectedType() {
+    return 'string'
+  }
+}
+
 export const JestAsymmetricMatchers: ChaiPlugin = (chai, utils) => {
+  utils.addMethod(
+    chai.expect,
+    'anything',
+    () => new Anything(),
+  )
+
+  utils.addMethod(
+    chai.expect,
+    'any',
+    (expected: unknown) => new Any(expected),
+  )
+
   utils.addMethod(
     chai.expect,
     'stringContaining',
@@ -247,33 +278,26 @@ export const JestAsymmetricMatchers: ChaiPlugin = (chai, utils) => {
 
   utils.addMethod(
     chai.expect,
-    'anything',
-    () => {
-      return new Anything()
-    },
-  )
-
-  utils.addMethod(
-    chai.expect,
     'objectContaining',
-    (expected: any) => {
-      return new ObjectContaining(expected)
-    },
-  )
-
-  utils.addMethod(
-    chai.expect,
-    'any',
-    (expected: unknown) => {
-      return new Any(expected)
-    },
+    (expected: any) => new ObjectContaining(expected),
   )
 
   utils.addMethod(
     chai.expect,
     'arrayContaining',
-    (expected: any) => {
-      return new ArrayContaining(expected)
-    },
+    (expected: any) => new ArrayContaining(expected),
   )
+
+  utils.addMethod(
+    chai.expect,
+    'stringMatching',
+    (expected: any) => new StringMatching(expected),
+  )
+
+  chai.expect.not = {
+    stringContaining: (expected: string) => new StringContaining(expected, true),
+    objectContaining: (expected: any) => new ObjectContaining(expected, true),
+    arrayContaining: (expected: unknown[]) => new ArrayContaining(expected, true),
+    stringMatching: (expected: string | RegExp) => new StringMatching(expected, true),
+  }
 }

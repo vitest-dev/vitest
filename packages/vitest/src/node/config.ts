@@ -1,7 +1,50 @@
 import { resolve } from 'pathe'
-import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
-import type { ResolvedConfig, UserConfig } from '../types'
+import type { ResolvedConfig as ResolvedViteConfig, UserConfig as ViteUserConfig } from 'vite'
+
+import type { ApiConfig, ResolvedConfig, UserConfig } from '../types'
 import { defaultExclude, defaultInclude, defaultPort } from '../constants'
+import { resolveC8Options } from '../coverage'
+import { deepMerge, toArray } from '../utils'
+
+export function resolveApiConfig<Options extends ApiConfig & UserConfig>(
+  options: Options,
+  viteOverrides?: ViteUserConfig,
+): ApiConfig | undefined {
+  let api: ApiConfig | undefined
+
+  if (options.ui && !options.api)
+    api = { port: defaultPort }
+  else if (options.api === true)
+    api = { port: defaultPort }
+  else if (typeof options.api === 'number')
+    api = { port: options.api }
+
+  if (typeof options.api === 'object') {
+    if (api) {
+      if (options.api.port)
+        api.port = options.api.port
+
+      if (options.api.strictPort)
+        api.strictPort = options.api.strictPort
+
+      if (options.api.host)
+        api.host = options.api.host
+    }
+    else {
+      api = { ...options.api }
+    }
+  }
+
+  if (api) {
+    if (!api.port)
+      api.port = defaultPort
+
+    if (viteOverrides)
+      viteOverrides.server = Object.assign(viteOverrides.server || {}, api)
+  }
+
+  return api
+}
 
 export function resolveConfig(
   options: UserConfig,
@@ -10,18 +53,28 @@ export function resolveConfig(
   if (options.dom)
     options.environment = 'happy-dom'
 
+  const globals = options?.global ?? options.globals
+
   const resolved = {
-    ...options,
-    ...viteConfig.test,
+    ...deepMerge(options, viteConfig.test || {}),
     root: viteConfig.root,
+    globals,
+    global: globals,
   } as ResolvedConfig
 
-  resolved.depsInline = [...resolved.deps?.inline || []]
-  resolved.depsExternal = [...resolved.deps?.external || []]
+  if (viteConfig.base !== '/')
+    resolved.base = viteConfig.base
+
+  resolved.coverage = resolveC8Options(resolved.coverage, resolved.root)
+
+  resolved.deps = resolved.deps || {}
 
   resolved.environment = resolved.environment || 'node'
   resolved.threads = resolved.threads ?? true
-  resolved.interpretDefault = resolved.interpretDefault ?? true
+
+  resolved.clearMocks = resolved.clearMocks ?? false
+  resolved.restoreMocks = resolved.restoreMocks ?? false
+  resolved.mockReset = resolved.mockReset ?? false
 
   resolved.include = resolved.include ?? defaultInclude
   resolved.exclude = resolved.exclude ?? defaultExclude
@@ -29,11 +82,20 @@ export function resolveConfig(
   resolved.testTimeout = resolved.testTimeout ?? 5_000
   resolved.hookTimeout = resolved.hookTimeout ?? 10_000
 
+  resolved.isolate = resolved.isolate ?? true
+
+  resolved.testNamePattern = resolved.testNamePattern
+    ? resolved.testNamePattern instanceof RegExp
+      ? resolved.testNamePattern
+      : new RegExp(resolved.testNamePattern)
+    : undefined
+
   resolved.watchIgnore = resolved.watchIgnore ?? [/\/node_modules\//, /\/dist\//]
 
   const CI = !!process.env.CI
   const UPDATE_SNAPSHOT = resolved.update || process.env.UPDATE_SNAPSHOT
   resolved.snapshotOptions = {
+    snapshotFormat: resolved.snapshotFormat || {},
     updateSnapshot: CI && !UPDATE_SNAPSHOT
       ? 'none'
       : UPDATE_SNAPSHOT
@@ -47,11 +109,13 @@ export function resolveConfig(
   if (process.env.VITEST_MIN_THREADS)
     resolved.minThreads = parseInt(process.env.VITEST_MIN_THREADS)
 
-  resolved.setupFiles = Array.from(resolved.setupFiles || [])
-    .map(i => resolve(resolved.root, i))
+  resolved.setupFiles = toArray(resolved.setupFiles || []).map(file => resolve(resolved.root, file))
 
-  if (resolved.api === true)
-    resolved.api = defaultPort
+  // the server has been created, we don't need to override vite.server options
+  resolved.api = resolveApiConfig(options)
+
+  if (options.related)
+    resolved.related = toArray(options.related).map(file => resolve(resolved.root, file))
 
   return resolved
 }

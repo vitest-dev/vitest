@@ -4,9 +4,29 @@
 
 declare module 'vue' {
   export interface GlobalComponents {
+    CodeMirror: typeof import('./components/CodeMirror.vue')['default']
+    ConnectionOverlay: typeof import('./components/ConnectionOverlay.vue')['default']
+    Dashboard: typeof import('./components/Dashboard.vue')['default']
+    DashboardEntry: typeof import('./components/dashboard/DashboardEntry.vue')['default']
+    DetailsPanel: typeof import('./components/DetailsPanel.vue')['default']
+    FileDetails: typeof import('./components/FileDetails.vue')['default']
+    IconButton: typeof import('./components/IconButton.vue')['default']
+    Modal: typeof import('./components/Modal.vue')['default']
+    ModuleTransformResultView: typeof import('./components/ModuleTransformResultView.vue')['default']
     Navigation: typeof import('./components/Navigation.vue')['default']
+    ProgressBar: typeof import('./components/ProgressBar.vue')['default']
+    StatusIcon: typeof import('./components/StatusIcon.vue')['default']
     Suites: typeof import('./components/Suites.vue')['default']
-    TestSuite: typeof import('./components/TestSuite.vue')['default']
+    TaskItem: typeof import('./components/TaskItem.vue')['default']
+    TasksList: typeof import('./components/TasksList.vue')['default']
+    TaskTree: typeof import('./components/TaskTree.vue')['default']
+    TestFilesEntry: typeof import('./components/dashboard/TestFilesEntry.vue')['default']
+    TestsEntry: typeof import('./components/dashboard/TestsEntry.vue')['default']
+    TestsFilesContainer: typeof import('./components/dashboard/TestsFilesContainer.vue')['default']
+    ViewConsoleOutput: typeof import('./components/views/ViewConsoleOutput.vue')['default']
+    ViewEditor: typeof import('./components/views/ViewEditor.vue')['default']
+    ViewModuleGraph: typeof import('./components/views/ViewModuleGraph.vue')['default']
+    ViewReport: typeof import('./components/views/ViewReport.vue')['default']
   }
 }
 

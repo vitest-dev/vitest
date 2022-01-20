@@ -1,21 +1,33 @@
 <script setup lang="ts">
-const { status, data, send } = useWebSocket('ws://localhost:3000/__vitest_api')
+import { hasFailedSnapshot } from '@vitest/ws-client'
+import { client, current, runCurrent } from '~/composables/client'
+
+const name = computed(() => current.value?.name.split(/\//g).pop())
+
+const failedSnapshot = computed(() => current.value?.tasks && hasFailedSnapshot(current.value?.tasks))
+const updateSnapshot = () => current.value && client.rpc.updateSnapshot(current.value)
 </script>
 
 <template>
-  <div overflow-auto flex-1>
-    <div
-      h-8
-      px-4
-      flex
-      flex-row
-      items-center
-      bg-dark-300
-    >
-      <span font-light text-sm flex-1>Test Suites</span>
-      <button i-carbon-play />
-    </div>
-    {{ status }}
-    {{ data }}
+  <div v-if="current" h-full border="r base">
+    <TasksList :tasks="current.tasks" :nested="true">
+      <template #header>
+        <StatusIcon :task="current" />
+        <span font-light text-sm flex-auto ws-nowrap overflow-hidden truncate>{{ name }}</span>
+        <div class="flex text-lg">
+          <IconButton
+            v-if="failedSnapshot"
+            v-tooltip.bottom="'Update failed snapshots'"
+            icon="i-carbon-result-old"
+            @click="updateSnapshot()"
+          />
+          <IconButton
+            v-tooltip.bottom="'Rerun file'"
+            icon="i-carbon-play"
+            @click="runCurrent()"
+          />
+        </div>
+      </template>
+    </TasksList>
   </div>
 </template>

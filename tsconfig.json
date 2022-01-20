@@ -14,11 +14,25 @@
     "declaration": true,
     "inlineSourceMap": true,
     "paths": {
+      "@vitest/ws-client": ["./packages/ws-client/src/index.ts"],
+      "@vitest/ui": ["./packages/ui/node/index.ts"],
+      "#types": ["./packages/vitest/src/index.ts"],
+      "~/*": ["./packages/ui/client/*"],
       "vitest": ["./packages/vitest/src/index.ts"],
-      "vitest/global.d.ts": ["./packages/vitest/global.d.ts"]
+      "vitest/global": ["./packages/vitest/global.d.ts"],
+      "vitest/globals": ["./packages/vitest/globals.d.ts"],
+      "vitest/node": ["./packages/vitest/src/node/index.ts"],
+      "vite-node": ["./packages/vite-node/src/index.ts"],
+      "vite-node/client": ["./packages/vite-node/src/client.ts"],
+      "vite-node/server": ["./packages/vite-node/src/server.ts"],
+      "vite-node/utils": ["./packages/vite-node/src/utils.ts"]
     }
   },
   "exclude": [
-    "**/dist/**"
+    "**/dist/**",
+    "./packages/ui/client/**",
+    "./test/**/*.*",
+    "./examples/**/*.*",
+    "./bench/**"
   ]
 }

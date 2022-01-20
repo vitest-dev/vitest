@@ -19,13 +19,15 @@ A blazing fast unit test framework powered by Vite.
 
 > ⚠️ **DISCLAIMER**: Vitest is still in development and not stable yet. It's not recommended to use it in production.
 
-> Vitest requires Vite v2.7 and Node v14
+> Vitest requires Vite >=v2.7.10 and Node >=v14
 
 Follow the [Getting Started Guide](https://vitest.dev/guide) or learn [why we are building a new test runner](https://vitest.dev/guide/why).
 
 ## Documentation
 
 Read the [documentation](https://vitest.dev/).
+
+[Examples](https://vitest.dev/guide/#examples) | [Projects using Vitest](https://vitest.dev/guide/#projects-using-vitest)
 
 ## Features
 
@@ -36,7 +38,7 @@ Read the [documentation](https://vitest.dev/).
 - [Native code coverage](#coverage) via [c8](https://github.com/bcoe/c8)
 - [Tinyspy](https://github.com/Aslemammad/tinyspy) built-in for mocking, stubbing, and spies.
 - [JSDOM](https://github.com/jsdom/jsdom) and [happy-dom](https://github.com/capricorn86/happy-dom) for DOM and browser API mocking
-- Components testing ([Vue](./test/vue), [React](./test/react), [Lit](./test/lit), [Vitesse](./test/vitesse))
+- Components testing ([Vue](./examples/vue), [React](./examples/react), [Svelte](./examples/svelte), [Lit](./examples/lit), [Vitesse](./examples/vitesse))
 - Workers multi-threading via [tinypool](https://github.com/Aslemammad/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina))
 - ESM first, top level await
 - Out-of-box TypeScript / JSX support
@@ -64,21 +66,6 @@ describe('suite name', () => {
 ```bash
 $ npx vitest
 ```
-
-## Examples
-
-- [Unit Testing](./test/core)
-- [Vue Component Testing](./test/vue)
-- [React Component Testing](./test/react)
-- [Lit Component Testing](./test/lit)
-- [Vitesse Component Testing](./test/vitesse)
-
-## Projects using Vitest
-
-- [unocss](https://github.com/antfu/unocss)
-- [unplugin-auto-import](https://github.com/antfu/unplugin-auto-import)
-- [unplugin-vue-components](https://github.com/antfu/unplugin-vue-components)
-- [vitesse-lite](https://github.com/antfu/vitesse-lite)
 
 ## Sponsors
 

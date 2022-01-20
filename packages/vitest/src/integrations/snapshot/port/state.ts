@@ -9,19 +9,24 @@ import fs from 'fs'
 import type { Config } from '@jest/types'
 // import { getStackTraceLines, getTopFrame } from 'jest-message-util'
 import type { OptionsReceived as PrettyFormatOptions } from 'pretty-format'
-// import { InlineSnapshot, saveInlineSnapshots } from './InlineSnapshots'
 import type { SnapshotData, SnapshotMatchOptions, SnapshotStateOptions } from '../../../types'
+import { slash } from '../../../utils'
+import { parseStacktrace } from '../../../utils/source-map'
+import type { InlineSnapshot } from './inlineSnapshot'
+import { saveInlineSnapshots } from './inlineSnapshot'
+
 import {
   addExtraLineBreaks,
   getSnapshotData,
   keyToTestName,
+  prepareExpected,
   removeExtraLineBreaks,
   saveSnapshotFile,
   serialize,
   testNameToKey,
 } from './utils'
 
-type SnapshotReturnOptions = {
+interface SnapshotReturnOptions {
   actual: string
   count: number
   expected?: string
@@ -29,7 +34,7 @@ type SnapshotReturnOptions = {
   pass: boolean
 }
 
-type SaveStatus = {
+interface SaveStatus {
   deleted: boolean
   saved: boolean
 }
@@ -37,14 +42,12 @@ type SaveStatus = {
 export default class SnapshotState {
   private _counters: Map<string, number>
   private _dirty: boolean
-  private _index: number
   private _updateSnapshot: Config.SnapshotUpdateState
   private _snapshotData: SnapshotData
   private _initialData: SnapshotData
   private _snapshotPath: string
-  // private _inlineSnapshots: Array<InlineSnapshot>
+  private _inlineSnapshots: Array<InlineSnapshot>
   private _uncheckedKeys: Set<string>
-  // private _prettierPath: string
   private _snapshotFormat: PrettyFormatOptions
 
   added: number
@@ -62,11 +65,9 @@ export default class SnapshotState {
     this._initialData = data
     this._snapshotData = data
     this._dirty = dirty
-    // this._prettierPath = options.prettierPath
-    // this._inlineSnapshots = []
+    this._inlineSnapshots = []
     this._uncheckedKeys = new Set(Object.keys(this._snapshotData))
     this._counters = new Map()
-    this._index = 0
     this.expand = options.expand || false
     this.added = 0
     this.matched = 0
@@ -89,46 +90,46 @@ export default class SnapshotState {
   private _addSnapshot(
     key: string,
     receivedSerialized: string,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    options: {isInline: boolean; error?: Error},
+    options: { isInline: boolean; error?: Error },
   ): void {
     this._dirty = true
-    // if (options.isInline) {
-    //   const error = options.error || new Error('Unknown error')
-    //   const lines = getStackTraceLines(
-    //     removeLinesBeforeExternalMatcherTrap(error.stack || ''),
-    //   )
-    //   const frame = getTopFrame(lines)
-    //   if (!frame) {
-    //     throw new Error(
-    //       'Jest: Couldn\'t infer stack frame for inline snapshot.',
-    //     )
-    //   }
-    //   // this._inlineSnapshots.push({
-    //   //   frame,
-    //   //   snapshot: receivedSerialized,
-    //   // })
-    // }
-    // else {
-    this._snapshotData[key] = receivedSerialized
-    // }
+    if (options.isInline) {
+      const error = options.error || new Error('Unknown error')
+      const stacks = parseStacktrace(error, true)
+      stacks.forEach(i => i.file = slash(i.file))
+      // inline snapshot function is called __VITEST_INLINE_SNAPSHOT__
+      // in integrations/snapshot/chai.ts
+      const stackIndex = stacks.findIndex(i => i.method.includes('__VITEST_INLINE_SNAPSHOT__'))
+      const stack = stackIndex !== -1 ? stacks[stackIndex + 2] : null
+      if (!stack) {
+        throw new Error(
+          `Vitest: Couldn't infer stack frame for inline snapshot.\n${JSON.stringify(stacks)}`,
+        )
+      }
+      this._inlineSnapshots.push({
+        snapshot: receivedSerialized,
+        ...stack,
+      })
+    }
+    else {
+      this._snapshotData[key] = receivedSerialized
+    }
   }
 
   clear(): void {
     this._snapshotData = this._initialData
     // this._inlineSnapshots = []
     this._counters = new Map()
-    this._index = 0
     this.added = 0
     this.matched = 0
     this.unmatched = 0
     this.updated = 0
   }
 
-  save(): SaveStatus {
+  async save(): Promise<SaveStatus> {
     const hasExternalSnapshots = Object.keys(this._snapshotData).length
-    // const hasInlineSnapshots = this._inlineSnapshots.length
-    const isEmpty = !hasExternalSnapshots// && !hasInlineSnapshots
+    const hasInlineSnapshots = this._inlineSnapshots.length
+    const isEmpty = !hasExternalSnapshots && !hasInlineSnapshots
 
     const status: SaveStatus = {
       deleted: false,
@@ -137,10 +138,9 @@ export default class SnapshotState {
 
     if ((this._dirty || this._uncheckedKeys.size) && !isEmpty) {
       if (hasExternalSnapshots)
-        saveSnapshotFile(this._snapshotData, this._snapshotPath)
-
-      // if (hasInlineSnapshots)
-      //   saveInlineSnapshots(this._inlineSnapshots, this._prettierPath)
+        await saveSnapshotFile(this._snapshotData, this._snapshotPath)
+      if (hasInlineSnapshots)
+        await saveInlineSnapshots(this._inlineSnapshots)
 
       status.saved = true
     }
@@ -192,7 +192,8 @@ export default class SnapshotState {
 
     const receivedSerialized = addExtraLineBreaks(serialize(received, undefined, this._snapshotFormat))
     const expected = isInline ? inlineSnapshot : this._snapshotData[key]
-    const pass = expected?.trim() === receivedSerialized?.trim()
+    const expectedTrimmed = prepareExpected(expected)
+    const pass = expectedTrimmed === receivedSerialized?.trim()
     const hasSnapshot = expected !== undefined
     const snapshotIsPersisted = isInline || fs.existsSync(this._snapshotPath)
 
@@ -209,7 +210,7 @@ export default class SnapshotState {
     // These are the conditions on when to write snapshots:
     //  * There's no snapshot file in a non-CI environment.
     //  * There is a snapshot file and we decided to update the snapshot.
-    //  * There is a snapshot file, but it doesn't have this snaphsot.
+    //  * There is a snapshot file, but it doesn't have this snapshot.
     // These are the conditions on when not to write snapshots:
     //  * The update flag is set to 'none'.
     //  * There's no snapshot file or a file without this snapshot on a CI environment.
@@ -251,9 +252,9 @@ export default class SnapshotState {
           actual: removeExtraLineBreaks(receivedSerialized),
           count,
           expected:
-             expected !== undefined
-               ? removeExtraLineBreaks(expected)
-               : undefined,
+          expectedTrimmed !== undefined
+            ? removeExtraLineBreaks(expectedTrimmed)
+            : undefined,
           key,
           pass: false,
         }
@@ -269,17 +270,5 @@ export default class SnapshotState {
         }
       }
     }
-  }
-
-  fail(testName: string, _received: unknown, key?: string): string {
-    this._counters.set(testName, (this._counters.get(testName) || 0) + 1)
-    const count = Number(this._counters.get(testName))
-
-    if (!key)
-      key = testNameToKey(testName, count)
-
-    this._uncheckedKeys.delete(key)
-    this.unmatched++
-    return key
   }
 }

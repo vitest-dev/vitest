@@ -1,4 +1,5 @@
 import chai, { util } from 'chai'
+import { getState } from './jest-expect'
 
 import * as matcherUtils from './jest-matcher-utils'
 
@@ -18,8 +19,9 @@ const isAsyncFunction = (fn: unknown) =>
   typeof fn === 'function' && (fn as any)[Symbol.toStringTag] === 'AsyncFunction'
 
 const getMatcherState = (assertion: Chai.AssertionStatic & Chai.Assertion) => {
-  const actual = assertion._obj
+  const obj = assertion._obj
   const isNot = util.flag(assertion, 'negate') as boolean
+  const promise = util.flag(assertion, 'promise') || ''
   const jestUtils = {
     ...matcherUtils,
     iterableEquality,
@@ -27,11 +29,10 @@ const getMatcherState = (assertion: Chai.AssertionStatic & Chai.Assertion) => {
   }
 
   const matcherState: MatcherState = {
+    ...getState(),
     isNot,
     utils: jestUtils,
-    // global assertionCalls? needed for built-in jest function, but we don't use it
-    assertionCalls: 0,
-    promise: '',
+    promise,
     equals,
     // needed for built-in jest-snapshots, but we don't use it
     suppressedErrors: [],
@@ -40,7 +41,13 @@ const getMatcherState = (assertion: Chai.AssertionStatic & Chai.Assertion) => {
   return {
     state: matcherState,
     isNot,
-    actual,
+    obj,
+  }
+}
+
+class JestExtendError extends Error {
+  constructor(message: string, public actual?: any, public expected?: any) {
+    super(message)
   }
 }
 
@@ -48,23 +55,23 @@ function JestExtendPlugin(expects: MatchersObject): ChaiPlugin {
   return (c, utils) => {
     Object.entries(expects).forEach(([expectAssertionName, expectAssertion]) => {
       function expectSyncWrapper(this: Chai.AssertionStatic & Chai.Assertion, ...args: any[]) {
-        const { state, isNot, actual } = getMatcherState(this)
+        const { state, isNot, obj } = getMatcherState(this)
 
         // @ts-expect-error args wanting tuple
-        const { pass, message } = expectAssertion.call(state, actual, ...args) as SyncExpectationResult
+        const { pass, message, actual, expected } = expectAssertion.call(state, obj, ...args) as SyncExpectationResult
 
         if ((pass && isNot) || (!pass && !isNot))
-          c.expect.fail(message())
+          throw new JestExtendError(message(), actual, expected)
       }
 
       async function expectAsyncWrapper(this: Chai.AssertionStatic & Chai.Assertion, ...args: any[]) {
-        const { state, isNot, actual } = getMatcherState(this)
+        const { state, isNot, obj } = getMatcherState(this)
 
         // @ts-expect-error args wanting tuple
-        const { pass, message } = await expectAssertion.call(state, actual, ...args) as SyncExpectationResult
+        const { pass, message, actual, expected } = await expectAssertion.call(state, obj, ...args) as SyncExpectationResult
 
         if ((pass && isNot) || (!pass && !isNot))
-          c.expect.fail(message())
+          throw new JestExtendError(message(), actual, expected)
       }
 
       const expectAssertionWrapper = isAsyncFunction(expectAssertion) ? expectAsyncWrapper : expectSyncWrapper

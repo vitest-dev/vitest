@@ -1,4 +1,5 @@
 import { defineConfig } from 'vitepress'
+import { version } from '../../package.json'
 
 export default defineConfig({
   title: 'Vitest',
@@ -32,7 +33,7 @@ export default defineConfig({
         facetFilters: ['tags:en']
       }
     },
-    
+
     carbonAds: {
       carbon: '...',
       placement: 'vitest'
@@ -45,8 +46,21 @@ export default defineConfig({
       { text: 'Config', link: '/config/' },
       // { text: 'Plugins', link: '/plugins/' },
       {
+        text: `v${version}`,
+        items: [
+          {
+            text: 'Release Notes ',
+            link: 'https://github.com/vitest-dev/vitest/releases',
+          },
+          {
+            text: 'Contributing ',
+            link: 'https://github.com/vitest-dev/vitest/blob/main/CONTRIBUTING.md',
+          },
+        ],
+
+      },
+      {
         text: 'Discord',
-        // TODO: 'https://chat.vitest.dev'
         link: 'https://chat.vitest.dev'
       },
       {
@@ -85,7 +99,8 @@ export default defineConfig({
           children: [
             {
               text: 'Why Vitest',
-              link: '/guide/why'
+              link: '/guide/why',
+
             },
             {
               text: 'Getting Started',
@@ -98,6 +113,10 @@ export default defineConfig({
             {
               text: 'Mocking',
               link: '/guide/mocking'
+            },
+            {
+              text: 'Debugging',
+              link: '/guide/debugging'
             },
             /* TODO
             {

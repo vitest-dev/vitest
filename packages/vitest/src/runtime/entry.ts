@@ -14,8 +14,12 @@ export async function run(files: string[], config: ResolvedConfig): Promise<void
     if (!['node', 'jsdom', 'happy-dom'].includes(env))
       throw new Error(`Unsupported environment: ${env}`)
 
-    await withEnv(env as BuiltinEnvironment, async() => {
+    process.__vitest_worker__.filepath = file
+
+    await withEnv(env as BuiltinEnvironment, config.environmentOptions || {}, async() => {
       await startTests([file], config)
     })
+
+    process.__vitest_worker__.filepath = undefined
   }
 }

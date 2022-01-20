@@ -15,7 +15,7 @@ export type ChaiPlugin = FirstFunctionArgument<typeof chaiUse>
 
 export type Tester = (a: any, b: any) => boolean | undefined
 
-export type MatcherState = {
+export interface MatcherState {
   assertionCalls: number
   currentTestName?: string
   dontThrow?: () => void
@@ -28,9 +28,9 @@ export type MatcherState = {
   ) => boolean
   expand?: boolean
   expectedAssertionsNumber?: number | null
-  expectedAssertionsNumberError?: Error
+  expectedAssertionsNumberError?: Error | null
   isExpectingAssertions?: boolean
-  isExpectingAssertionsError?: Error
+  isExpectingAssertionsError?: Error | null
   isNot: boolean
   promise: string
   suppressedErrors: Array<Error>
@@ -41,22 +41,19 @@ export type MatcherState = {
   }
 }
 
-export type SyncExpectationResult = {
+export interface SyncExpectationResult {
   pass: boolean
   message: () => string
+  actual?: any
+  expected?: any
 }
 
 export type AsyncExpectationResult = Promise<SyncExpectationResult>
 
 export type ExpectationResult = SyncExpectationResult | AsyncExpectationResult
 
-export type RawMatcherFn<T extends MatcherState = MatcherState> = {
+export interface RawMatcherFn<T extends MatcherState = MatcherState> {
   (this: T, received: any, expected: any, options?: any): ExpectationResult
 }
 
-export type ThrowingMatcherFn = (actual: any) => void
-export type PromiseMatcherFn = (actual: any) => Promise<void>
-
-export type MatchersObject<T extends MatcherState = MatcherState> = {
-  [id: string]: RawMatcherFn<T>
-}
+export type MatchersObject<T extends MatcherState = MatcherState> = Record<string, RawMatcherFn<T>>

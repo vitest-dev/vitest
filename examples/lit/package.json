@@ -1,0 +1,23 @@
+{
+  "name": "@vitest/test-lit",
+  "private": true,
+  "files": [
+    "dist",
+    "types"
+  ],
+  "scripts": {
+    "coverage": "vitest --coverage",
+    "dev": "vite",
+    "test": "vitest",
+    "test:ui": "vitest --ui"
+  },
+  "dependencies": {
+    "lit": "^2.1.1"
+  },
+  "devDependencies": {
+    "@vitest/ui": "latest",
+    "happy-dom": "latest",
+    "vite": "latest",
+    "vitest": "latest"
+  }
+}

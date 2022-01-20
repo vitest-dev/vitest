@@ -1,10 +1,10 @@
-import readline from 'readline'
 import cac from 'cac'
+import { execa } from 'execa'
 import type { UserConfig } from '../types'
 import { version } from '../../package.json'
 import { ensurePackageInstalled } from '../utils'
-import type { Vitest } from './index'
-import { createVitest } from './index'
+import { createVitest } from './create'
+import { registerConsoleShortcuts } from './stdin'
 
 const cli = cac('vitest')
 
@@ -14,21 +14,30 @@ cli
   .option('-c, --config <path>', 'path to config file')
   .option('-u, --update', 'update snapshot')
   .option('-w, --watch', 'watch mode')
-  .option('-o, --open', 'open Vitest UI')
-  .option('--api', 'listen to port and serve API')
+  .option('-t, --testNamePattern <pattern>', 'run test names with the specified pattern')
+  .option('--ui', 'open UI')
+  .option('--api [api]', 'serve API, available options: --api.port <port>, --api.host [host] and --api.strictPort')
   .option('--threads', 'enabled threads', { default: true })
-  .option('--silent', 'silent')
+  .option('--silent', 'silent console output from tests')
+  .option('--isolate', 'isolate environment for each test file', { default: true })
+  .option('--reporter <name>', 'reporter')
+  .option('--outputFile <filename>', 'write test results to a file when the --reporter=json option is also specified')
+  .option('--coverage', 'use c8 for coverage')
   .option('--run', 'do not watch')
-  .option('--global', 'inject apis globally')
+  .option('--globals', 'inject apis globally')
+  .option('--global', 'deprecated, use --globals')
   .option('--dom', 'mock browser api with happy-dom')
-  .option('--environment <env>', 'runner environment', {
-    default: 'node',
-  })
+  .option('--environment <env>', 'runner environment', { default: 'node' })
+  .option('--passWithNoTests', 'pass when no tests found')
   .help()
 
 cli
   .command('run [...filters]')
   .action(run)
+
+cli
+  .command('related [...filters]')
+  .action(runRelated)
 
 cli
   .command('watch [...filters]')
@@ -44,9 +53,15 @@ cli
 
 cli.parse()
 
+async function runRelated(relatedFiles: string[] | string, argv: UserConfig) {
+  argv.related = relatedFiles
+  argv.passWithNoTests ??= true
+  await dev([], argv)
+}
+
 async function dev(cliFilters: string[], argv: UserConfig) {
   if (argv.watch == null)
-    argv.watch = !process.env.CI && !process.env.NODE_V8_COVERAGE && !argv.silent && !argv.run
+    argv.watch = !process.env.CI && !argv.run
   await run(cliFilters, argv)
 }
 
@@ -54,16 +69,34 @@ async function run(cliFilters: string[], options: UserConfig) {
   process.env.VITEST = 'true'
   process.env.NODE_ENV = 'test'
 
+  if (!await ensurePackageInstalled('vite'))
+    process.exit(1)
+
+  if (typeof options.coverage === 'boolean')
+    options.coverage = { enabled: options.coverage }
+
   const ctx = await createVitest(options)
 
-  process.chdir(ctx.config.root)
+  if (ctx.config.coverage.enabled) {
+    if (!await ensurePackageInstalled('c8'))
+      process.exit(1)
 
-  registerConsoleShortcuts(ctx)
+    if (!process.env.NODE_V8_COVERAGE) {
+      process.env.NODE_V8_COVERAGE = ctx.config.coverage.tempDirectory
+      const { exitCode } = await execa(process.argv0, process.argv.slice(1), { stdio: 'inherit' })
+      process.exit(exitCode)
+    }
+  }
 
   if (ctx.config.environment && ctx.config.environment !== 'node') {
     if (!await ensurePackageInstalled(ctx.config.environment))
       process.exit(1)
   }
+
+  if (process.stdin.isTTY && ctx.config.watch)
+    registerConsoleShortcuts(ctx)
+
+  process.chdir(ctx.config.root)
 
   ctx.onServerRestarted(() => {
     // TODO: re-consider how to re-run the tests the server smartly
@@ -79,31 +112,6 @@ async function run(cliFilters: string[], options: UserConfig) {
   }
   finally {
     if (!ctx.config.watch)
-      await ctx.close()
-  }
-
-  if (!ctx.config.watch)
-    process.exit()
-}
-
-function registerConsoleShortcuts(ctx: Vitest) {
-  // listen to keyboard input
-  if (process.stdin.isTTY) {
-    readline.emitKeypressEvents(process.stdin)
-    process.stdin.setRawMode(true)
-    process.stdin.on('keypress', (str: string, key: any) => {
-      if (str === '\x03' || str === '\x1B' || (key && key.ctrl && key.name === 'c')) // ctrl-c or esc
-        process.exit()
-
-      // is running, ignore keypress
-      if (ctx.runningPromise)
-        return
-
-      // press any key to exit on first run
-      if (ctx.isFirstRun)
-        process.exit()
-
-      // TODO: add more commands
-    })
+      await ctx.exit()
   }
 }

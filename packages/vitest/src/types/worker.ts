@@ -1,4 +1,6 @@
 import type { MessagePort } from 'worker_threads'
+import type { ViteNodeResolveId } from 'vite-node'
+import type { RawSourceMap } from '../types'
 import type { ResolvedConfig } from './config'
 import type { File, TaskResultPack } from './tasks'
 import type { SnapshotResult } from './snapshot'
@@ -11,19 +13,18 @@ export interface WorkerContext {
   invalidates?: string[]
 }
 
-export interface RpcMap {
-  fetch: [[id: string], string | undefined]
-  log: [[UserConsoleLog], void]
-  processExit: [[code?: number], void]
+export type FetchFunction = (id: string) => Promise<{ code?: string; externalize?: string }>
+export type ResolveIdFunction = (id: string, importer?: string) => Promise<ViteNodeResolveId | null>
 
-  onCollected: [[files: File[]], void]
-  onFinished: [[], void]
-  onTaskUpdate: [[pack: TaskResultPack], void]
+export interface WorkerRPC {
+  fetch: FetchFunction
+  resolveId: ResolveIdFunction
+  getSourceMap: (id: string, force?: boolean) => Promise<RawSourceMap | undefined>
 
-  snapshotSaved: [[snapshot: SnapshotResult], void]
+  onWorkerExit: (code?: number) => void
+  onUserConsoleLog: (log: UserConsoleLog) => void
+  onCollected: (files: File[]) => void
+  onTaskUpdate: (pack: TaskResultPack[]) => void
+
+  snapshotSaved: (snapshot: SnapshotResult) => void
 }
-
-export type RpcCall = <T extends keyof RpcMap>(method: T, ...args: RpcMap[T][0]) => Promise<RpcMap[T][1]>
-export type RpcSend = <T extends keyof RpcMap>(method: T, ...args: RpcMap[T][0]) => void
-
-export type RpcPayload<T extends keyof RpcMap = keyof RpcMap> = { id: string; method: T; args: RpcMap[T][0]}

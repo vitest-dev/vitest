@@ -1,0 +1,6 @@
+// Vitest Snapshot v1
+
+exports[`mount component 1`] = `
+"<div>4 x 2 = 8</div>
+<button> x1 </button>"
+`;

@@ -3,11 +3,10 @@ import { pathToFileURL } from 'url'
 import { resolve } from 'pathe'
 import type { Options as TinypoolOptions } from 'tinypool'
 import { Tinypool } from 'tinypool'
-import type { RpcMap } from 'vitest'
+import { createBirpc } from 'birpc'
+import type { RawSourceMap, WorkerContext, WorkerRPC } from '../types'
 import { distDir } from '../constants'
-import type { Awaitable, File, RpcPayload, WorkerContext } from '../types'
-import { transformRequest } from './transform'
-import type { Vitest } from './index'
+import type { Vitest } from './core'
 
 export type RunWithFiles = (files: string[], invalidates?: string[]) => Promise<void>
 
@@ -35,7 +34,7 @@ export function createFakePool(ctx: Vitest): WorkerPool {
 
       const data: WorkerContext = {
         port: workerPort,
-        config: ctx.config,
+        config: ctx.getConfig(),
         files,
         invalidates,
       }
@@ -58,15 +57,18 @@ export function createWorkerPool(ctx: Vitest): WorkerPool {
   const options: TinypoolOptions = {
     filename: workerPath,
     // Disable this for now, for WebContainer capability
-    // https://github.com/antfu-sponsors/vitest/issues/93
+    // https://github.com/vitest-dev/vitest/issues/93
     // In future we could conditionally enable it based on the env
     useAtomics: false,
   }
-  // UPSTREAM: Tinypool set defaults by the key existence
   if (ctx.config.maxThreads != null)
     options.maxThreads = ctx.config.maxThreads
   if (ctx.config.minThreads != null)
     options.minThreads = ctx.config.minThreads
+  if (ctx.config.isolate) {
+    options.isolateWorkers = true
+    options.concurrentTasksPerWorker = 1
+  }
 
   const pool = new Tinypool(options)
 
@@ -77,7 +79,7 @@ export function createWorkerPool(ctx: Vitest): WorkerPool {
 
         const data: WorkerContext = {
           port: workerPort,
-          config: ctx.config,
+          config: ctx.getConfig(),
           files: [file],
           invalidates,
         }
@@ -92,7 +94,7 @@ export function createWorkerPool(ctx: Vitest): WorkerPool {
   return {
     runTests: runWithFiles('run'),
     collectTests: runWithFiles('collect'),
-    close: () => pool.destroy(),
+    close: async() => {}, // TODO: not sure why this will cause Node crash: pool.destroy(),
   }
 }
 
@@ -101,39 +103,51 @@ function createChannel(ctx: Vitest) {
   const port = channel.port2
   const workerPort = channel.port1
 
-  port.on('message', async({ id, method, args = [] }: RpcPayload) => {
-    async function send(fn: () => Awaitable<any>) {
-      try {
-        port.postMessage({ id, result: await fn() })
-      }
-      catch (e) {
-        port.postMessage({ id, error: e })
-      }
-    }
-
-    switch (method) {
-      case 'processExit':
-        process.exit(args[0] as number || 1)
-        return
-      case 'snapshotSaved':
-        return send(() => ctx.snapshot.add(args[0] as any))
-      case 'fetch':
-        return send(() => transformRequest(ctx.server, ...args as RpcMap['fetch'][0]).then(r => r?.code))
-      case 'onCollected':
-        ctx.state.collectFiles(args[0] as any)
-        ctx.reporters.forEach(r => r.onStart?.((args[0] as any as File[]).map(i => i.filepath)))
-        return
-      case 'onTaskUpdate':
-        ctx.state.updateTasks([args[0] as any])
-        ctx.reporters.forEach(r => r.onTaskUpdate?.(args[0] as any))
-        return
-      case 'log':
-        ctx.reporters.forEach(r => r.onUserConsoleLog?.(args[0] as any))
-        return
-    }
-
-    console.error('Unhandled message', method, args)
-  })
+  createBirpc<{}, WorkerRPC>(
+    {
+      onWorkerExit(code) {
+        process.exit(code || 1)
+      },
+      snapshotSaved(snapshot) {
+        ctx.snapshot.add(snapshot)
+      },
+      async getSourceMap(id, force) {
+        if (force) {
+          const mod = ctx.server.moduleGraph.getModuleById(id)
+          if (mod)
+            ctx.server.moduleGraph.invalidateModule(mod)
+        }
+        const r = await ctx.vitenode.transformRequest(id)
+        return r?.map as RawSourceMap | undefined
+      },
+      fetch(id) {
+        return ctx.vitenode.fetchModule(id)
+      },
+      resolveId(id, importer) {
+        return ctx.vitenode.resolveId(id, importer)
+      },
+      onCollected(files) {
+        ctx.state.collectFiles(files)
+        ctx.report('onCollected', files)
+      },
+      onTaskUpdate(packs) {
+        ctx.state.updateTasks(packs)
+        ctx.report('onTaskUpdate', packs)
+      },
+      onUserConsoleLog(log) {
+        ctx.state.updateUserLog(log)
+        ctx.report('onUserConsoleLog', log)
+      },
+    },
+    {
+      post(v) {
+        port.postMessage(v)
+      },
+      on(fn) {
+        port.on('message', fn)
+      },
+    },
+  )
 
   return { workerPort, port }
 }

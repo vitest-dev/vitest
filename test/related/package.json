@@ -1,0 +1,10 @@
+{
+  "name": "@vitest/test-related",
+  "private": true,
+  "scripts": {
+    "test": "vitest related src/sourceA.ts --global"
+  },
+  "devDependencies": {
+    "vitest": "workspace:*"
+  }
+}

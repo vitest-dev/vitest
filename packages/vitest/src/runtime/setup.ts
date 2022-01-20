@@ -1,10 +1,10 @@
 import { Console } from 'console'
 import { Writable } from 'stream'
-import { environments } from '../env'
+import { environments } from '../integrations/env'
 import { setupChai } from '../integrations/chai/setup'
 import type { ResolvedConfig } from '../types'
 import { toArray } from '../utils'
-import { send } from './rpc'
+import { rpc } from './rpc'
 
 let globalSetup = false
 export async function setupGlobalEnv(config: ResolvedConfig) {
@@ -16,43 +16,47 @@ export async function setupGlobalEnv(config: ResolvedConfig) {
   setupConsoleLogSpy()
   await setupChai()
 
-  if (config.global)
-    (await import('../integrations/global')).registerApiGlobally()
+  if (config.globals)
+    (await import('../integrations/globals')).registerApiGlobally()
 }
 
 export function setupConsoleLogSpy() {
   const stdout = new Writable({
     write(data, encoding, callback) {
-      send('log', {
+      rpc().onUserConsoleLog({
         type: 'stdout',
         content: String(data),
         taskId: process.__vitest_worker__.current?.id,
+        time: Date.now(),
       })
       callback()
     },
   })
   const stderr = new Writable({
     write(data, encoding, callback) {
-      send('log', {
+      rpc().onUserConsoleLog({
         type: 'stderr',
         content: String(data),
         taskId: process.__vitest_worker__.current?.id,
+        time: Date.now(),
       })
       callback()
     },
   })
-  const newConsole = new Console({
+  globalThis.console = new Console({
     stdout,
     stderr,
     colorMode: true,
     groupIndentation: 2,
   })
-
-  globalThis.console = newConsole
 }
 
-export async function withEnv(name: ResolvedConfig['environment'], fn: () => Promise<void>) {
-  const env = await environments[name].setup(globalThis)
+export async function withEnv(
+  name: ResolvedConfig['environment'],
+  options: ResolvedConfig['environmentOptions'],
+  fn: () => Promise<void>,
+) {
+  const env = await environments[name].setup(globalThis, options)
   try {
     await fn()
   }

@@ -1,0 +1,22 @@
+{
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "bench": "esmo src/index.ts",
+    "bench:ci": "esmo src/github.ts"
+  },
+  "devDependencies": {
+    "@actions/core": "^1.6.0",
+    "@actions/exec": "^1.1.0",
+    "@actions/github": "^5.0.0",
+    "@happy-dom/jest-environment": "^2.27.0",
+    "@types/benchmark": "^2.1.1",
+    "benchmark": "^2.1.4",
+    "esmo": "^0.14.0",
+    "execa": "^6.0.0",
+    "fs-extra": "^10.0.0",
+    "markdown-table": "^3.0.2",
+    "microtime": "^3.0.0",
+    "vitest": "link:../packages/vitest"
+  }
+}

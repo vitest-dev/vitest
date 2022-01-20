@@ -1,10 +1,11 @@
 import { performance } from 'perf_hooks'
-import type { HookListener } from 'vitest'
-import type { ResolvedConfig, Suite, SuiteHooks, Task, Test } from '../types'
+import type { HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, Test } from '../types'
+import { vi } from '../integrations/vi'
 import { getSnapshotClient } from '../integrations/snapshot/chai'
-import { hasFailed, hasTests, partitionSuiteChildren } from '../utils'
+import { getFullName, hasFailed, hasTests, partitionSuiteChildren } from '../utils'
+import { getState, setState } from '../integrations/chai/jest-expect'
 import { getFn, getHooks } from './map'
-import { rpc, send } from './rpc'
+import { rpc } from './rpc'
 import { collectTests } from './collect'
 import { processError } from './error'
 
@@ -18,19 +19,42 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(suite: Suite, na
     await callSuiteHook(suite.suite, name, args)
 }
 
+const packs = new Map<string, TaskResult|undefined>()
+let updateTimer: any
+let previousUpdate: Promise<void>|undefined
+
 function updateTask(task: Task) {
-  return rpc('onTaskUpdate', [task.id, task.result])
+  packs.set(task.id, task.result)
+
+  clearTimeout(updateTimer)
+  updateTimer = setTimeout(() => {
+    previousUpdate = sendTasksUpdate()
+  }, 10)
+}
+
+async function sendTasksUpdate() {
+  clearTimeout(updateTimer)
+  await previousUpdate
+
+  if (packs.size) {
+    const p = rpc().onTaskUpdate(Array.from(packs))
+    packs.clear()
+    return p
+  }
 }
 
 export async function runTest(test: Test) {
   if (test.mode !== 'run')
     return
 
+  const start = performance.now()
+
   test.result = {
-    start: performance.now(),
     state: 'run',
   }
   updateTask(test)
+
+  clearModuleMocks()
 
   getSnapshotClient().setTest(test)
 
@@ -38,7 +62,22 @@ export async function runTest(test: Test) {
 
   try {
     await callSuiteHook(test.suite, 'beforeEach', [test, test.suite])
+    setState({
+      assertionCalls: 0,
+      isExpectingAssertions: false,
+      isExpectingAssertionsError: null,
+      expectedAssertionsNumber: null,
+      expectedAssertionsNumberError: null,
+      testPath: test.suite.file?.filepath,
+      currentTestName: getFullName(test),
+    })
     await getFn(test)()
+    const { assertionCalls, expectedAssertionsNumber, expectedAssertionsNumberError, isExpectingAssertions, isExpectingAssertionsError } = getState()
+    if (expectedAssertionsNumber !== null && assertionCalls !== expectedAssertionsNumber)
+      throw expectedAssertionsNumberError
+    if (isExpectingAssertions === true && assertionCalls === 0)
+      throw isExpectingAssertionsError
+
     test.result.state = 'pass'
   }
   catch (e) {
@@ -68,7 +107,7 @@ export async function runTest(test: Test) {
 
   getSnapshotClient().clearTest()
 
-  test.result.end = performance.now()
+  test.result.duration = performance.now() - start
 
   process.__vitest_worker__.current = undefined
 
@@ -79,8 +118,9 @@ export async function runSuite(suite: Suite) {
   if (suite.result?.state === 'fail')
     return
 
+  const start = performance.now()
+
   suite.result = {
-    start: performance.now(),
     state: 'run',
   }
 
@@ -97,13 +137,12 @@ export async function runSuite(suite: Suite) {
       await callSuiteHook(suite, 'beforeAll', [suite])
 
       for (const tasksGroup of partitionSuiteChildren(suite)) {
-        const computeMode = tasksGroup[0].computeMode
-        if (computeMode === 'serial') {
+        if (tasksGroup[0].concurrent === true) {
+          await Promise.all(tasksGroup.map(c => runSuiteChild(c)))
+        }
+        else {
           for (const c of tasksGroup)
             await runSuiteChild(c)
-        }
-        else if (computeMode === 'concurrent') {
-          await Promise.all(tasksGroup.map(c => runSuiteChild(c)))
         }
       }
 
@@ -114,7 +153,8 @@ export async function runSuite(suite: Suite) {
       suite.result.error = processError(e)
     }
   }
-  suite.result.end = performance.now()
+  suite.result.duration = performance.now() - start
+
   if (suite.mode === 'run') {
     if (!hasTests(suite)) {
       suite.result.state = 'fail'
@@ -146,9 +186,23 @@ export async function runSuites(suites: Suite[]) {
 export async function startTests(paths: string[], config: ResolvedConfig) {
   const files = await collectTests(paths, config)
 
-  send('onCollected', files)
+  rpc().onCollected(files)
 
   await runSuites(files)
 
   await getSnapshotClient().saveSnap()
+
+  await sendTasksUpdate()
+}
+
+export function clearModuleMocks() {
+  const { clearMocks, mockReset, restoreMocks } = process.__vitest_worker__.config
+
+  // since each function calls another, we can just call one
+  if (restoreMocks)
+    vi.restoreAllMocks()
+  else if (mockReset)
+    vi.resetAllMocks()
+  else if (clearMocks)
+    vi.clearAllMocks()
 }

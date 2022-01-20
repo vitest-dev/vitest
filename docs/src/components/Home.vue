@@ -83,6 +83,7 @@
         name="Vladimir"
         avatar="https://avatars.githubusercontent.com/u/16173870?v=4"
         github="sheremet-va"
+        twitter="sheremet_va"
       >
         An open source fullstack developer
       </Avatar>
@@ -100,13 +101,13 @@
       Sponsored by
     </h3>
     <div grid="~ cols-1 lg:cols-2" w-screen text-center mt-10>
-      <div>
+      <div class="flex flex-col">
         <a text-lg href="https://github.com/sponsors/antfu">Anthony's Sponsors</a>
         <a href="https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg" target="_blank">
           <img src="https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg">
         </a>
       </div>
-      <div>
+      <div class="flex flex-col">
         <a text-lg href="https://github.com/sponsors/patak-dev">Patak's Sponsors</a>
         <a href="https://patak.dev/sponsors.svg" target="_blank">
           <img src="https://patak.dev/sponsors.svg">

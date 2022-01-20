@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import fs from 'fs'
+import fs, { promises as fsp } from 'fs'
 import path from 'pathe'
 import naturalCompare from 'natural-compare'
 import type { OptionsReceived as PrettyFormatOptions } from 'pretty-format'
@@ -13,6 +13,7 @@ import {
   format as prettyFormat,
 } from 'pretty-format'
 import type { SnapshotData, SnapshotUpdateState } from '../../../types'
+import { isObject } from '../../../utils'
 import { getSerializers } from './plugins'
 
 // TODO: rewrite and clean up
@@ -140,8 +141,10 @@ function normalizeNewlines(string: string) {
   return string.replace(/\r\n|\r/g, '\n')
 }
 
-export function saveSnapshotFile(snapshotData: SnapshotData,
-  snapshotPath: string): void {
+export async function saveSnapshotFile(
+  snapshotData: SnapshotData,
+  snapshotPath: string,
+) {
   const snapshots = Object.keys(snapshotData)
     .sort(naturalCompare)
     .map(
@@ -149,8 +152,84 @@ export function saveSnapshotFile(snapshotData: SnapshotData,
     )
 
   ensureDirectoryExists(snapshotPath)
-  fs.writeFileSync(
+  await fsp.writeFile(
     snapshotPath,
     `${writeSnapshotVersion()}\n\n${snapshots.join('\n\n')}\n`,
+    'utf-8',
   )
+}
+
+export function prepareExpected(expected?: string) {
+  function findStartIndent() {
+    const match = /^( +)}\s+$/m.exec(expected || '')
+    return match?.[1]?.length || 0
+  }
+
+  const startIdent = findStartIndent()
+
+  let expectedTrimmed = expected?.trim()
+
+  if (startIdent) {
+    expectedTrimmed = expectedTrimmed
+      ?.replace(new RegExp(`^${' '.repeat(startIdent)}`, 'gm'), '').replace(/ +}$/, '}')
+  }
+
+  return expectedTrimmed
+}
+
+function deepMergeArray(target: any[] = [], source: any[] = []) {
+  const mergedOutput = Array.from(target)
+
+  source.forEach((sourceElement, index) => {
+    const targetElement = mergedOutput[index]
+
+    if (Array.isArray(target[index])) {
+      mergedOutput[index] = deepMergeArray(target[index], sourceElement)
+    }
+    else if (isObject(targetElement)) {
+      mergedOutput[index] = deepMergeSnapshot(target[index], sourceElement)
+    }
+    else {
+      // Source does not exist in target or target is primitive and cannot be deep merged
+      mergedOutput[index] = sourceElement
+    }
+  })
+
+  return mergedOutput
+}
+
+/**
+ * Deep merge, but considers asymmetric matchers. Unlike base util's deep merge,
+ * will merge any object-like instance.
+ * Compatible with Jest's snapshot matcher. Should not be used outside of snapshot.
+ *
+ * @example
+ * ```ts
+ * toMatchSnapshot({
+ *   name: expect.stringContaining('text')
+ * })
+ * ```
+ */
+export function deepMergeSnapshot(target: any, source: any): any {
+  if (isObject(target) && isObject(source)) {
+    const mergedOutput = { ...target }
+    Object.keys(source).forEach((key) => {
+      if (isObject(source[key]) && !source[key].$$typeof) {
+        if (!(key in target)) Object.assign(mergedOutput, { [key]: source[key] })
+        else mergedOutput[key] = deepMergeSnapshot(target[key], source[key])
+      }
+      else if (Array.isArray(source[key])) {
+        mergedOutput[key] = deepMergeArray(target[key], source[key])
+      }
+      else {
+        Object.assign(mergedOutput, { [key]: source[key] })
+      }
+    })
+
+    return mergedOutput
+  }
+  else if (Array.isArray(target) && Array.isArray(source)) {
+    return deepMergeArray(target, source)
+  }
+  return target
 }

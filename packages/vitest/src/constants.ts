@@ -4,8 +4,9 @@ import { resolve } from 'pathe'
 export const distDir = resolve(fileURLToPath(import.meta.url), '../../dist')
 
 export const defaultInclude = ['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']
-export const defaultExclude = ['node_modules', 'dist', '.idea', '.git', '.cache']
+export const defaultExclude = ['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**']
 
+// if changed, update also jsdocs and docs
 export const defaultPort = 51204
 
 export const API_PATH = '/__vitest_api__'

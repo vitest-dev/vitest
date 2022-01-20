@@ -7,5 +7,18 @@
         "paths": ["path"]
       }
     ]
-  }
+  },
+  "overrides": [
+    {
+      "files": "packages/**/*.*",
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": ["vitest"]
+          }
+        ]
+      }
+    }
+  ]
 }

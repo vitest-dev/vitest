@@ -1,5 +1,6 @@
 dist
 node_modules
-packages/uvu/**/*
 *.svelte
 *.snap
+*.d.ts
+coverage
