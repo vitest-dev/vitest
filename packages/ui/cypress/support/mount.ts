@@ -1,15 +1,7 @@
 import { mount } from '@cypress/vue'
 import type { Component } from 'vue'
-import { createRouter, createWebHistory } from 'vue-router'
-import routes from 'virtual:generated-pages'
-import tooltip from '../../client/directives/tooltip'
+import { directives, plugins } from '../../client/global-setup'
 
-const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
-  routes,
-})
-
-const plugins = [() => router]
 export const registerMount = () => Cypress.Commands.add(
   'mount',
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -18,7 +10,7 @@ export const registerMount = () => Cypress.Commands.add(
     options.global.stubs = options.global.stubs || {}
     options.global.stubs.transition = false
     options.global.plugins = options.global.plugins || []
-    options.global.directives = { tooltip }
+    options.global.directives = directives
     plugins?.forEach((pluginFn: () => any) => {
       options?.global?.plugins?.push(pluginFn())
     })
