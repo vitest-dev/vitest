@@ -112,9 +112,6 @@ async function run(cliFilters: string[], options: UserConfig) {
   }
   finally {
     if (!ctx.config.watch)
-      await ctx.close()
+      await ctx.exit()
   }
-
-  if (!ctx.config.watch)
-    await ctx.exit()
 }

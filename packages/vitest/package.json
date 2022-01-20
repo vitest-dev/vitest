@@ -1,6 +1,6 @@
 {
   "name": "vitest",
-  "version": "0.1.23",
+  "version": "0.1.24",
   "description": "A blazing fast unit test framework powered by Vite",
   "keywords": [
     "vite",
@@ -100,7 +100,7 @@
     "strip-ansi": "^7.0.1",
     "typescript": "^4.5.4",
     "vite-node": "workspace:*",
-    "ws": "8.4.2"
+    "ws": "8.4.0"
   },
   "peerDependencies": {
     "@vitest/ui": "*",
