@@ -1,0 +1,151 @@
+// Vitest Snapshot v1
+
+exports[`JUnit reporter 1`] = `
+"<?xml version=\\"1.0\\" encoding=\\"UTF-8\\" ?>
+<testsuites>
+    <testsuite name=\\"test/core/test/basic.test.ts\\" timestamp=\\"2022-01-19T10:10:01.759Z\\" hostname=\\"hostname\\" tests=\\"8\\" failures=\\"1\\" errors=\\"0\\" skipped=\\"1\\" time=\\"0.1459928420\\">
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; inner suite &gt; Math.sqrt()\\" time=\\"0.0014422860\\">
+            <failure message=\\"expected 2.23606797749979 to equal 2\\" type=\\"AssertionError\\">
+AssertionError: expected 2.23606797749979 to equal 2
+ ❯ vitest/test/core/test/basic.test.ts:8:32
+            </failure>
+        </testcase>
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; JSON\\" time=\\"0.0010237110\\">
+        </testcase>
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; async with timeout\\">
+            <skipped/>
+        </testcase>
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; timeout\\" time=\\"0.1005059841\\">
+        </testcase>
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback setup success \\" time=\\"0.0201848750\\">
+        </testcase>
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback test success \\" time=\\"0.0003324542\\">
+        </testcase>
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback setup success done(false)\\" time=\\"0.0197386060\\">
+        </testcase>
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback test success done(false)\\" time=\\"0.0001923509\\">
+        </testcase>
+    </testsuite>
+</testsuites>
+"
+`;
+
+exports[`json reporter 1`] = `
+"{
+  \\"numTotalTestSuites\\": 3,
+  \\"numPassedTestSuites\\": 3,
+  \\"numFailedTestSuites\\": 0,
+  \\"numPendingTestSuites\\": 0,
+  \\"numTotalTests\\": 8,
+  \\"numPassedTests\\": 7,
+  \\"numFailedTests\\": 1,
+  \\"numPendingTests\\": 0,
+  \\"numTodoTests\\": 0,
+  \\"startTime\\": 1642587001759,
+  \\"success\\": false,
+  \\"testResults\\": [
+    {
+      \\"displayName\\": \\"Math.sqrt()\\",
+      \\"failureMessage\\": \\"expected 2.23606797749979 to equal 2\\",
+      \\"skipped\\": false,
+      \\"status\\": \\"fail\\",
+      \\"testFilePath\\": \\"/vitest/test/core/test/basic.test.ts\\"
+    },
+    {
+      \\"displayName\\": \\"JSON\\",
+      \\"skipped\\": false,
+      \\"status\\": \\"pass\\",
+      \\"testFilePath\\": \\"/vitest/test/core/test/basic.test.ts\\"
+    },
+    {
+      \\"displayName\\": \\"async with timeout\\",
+      \\"skipped\\": false,
+      \\"testFilePath\\": \\"/vitest/test/core/test/basic.test.ts\\"
+    },
+    {
+      \\"displayName\\": \\"timeout\\",
+      \\"skipped\\": false,
+      \\"status\\": \\"pass\\",
+      \\"testFilePath\\": \\"/vitest/test/core/test/basic.test.ts\\"
+    },
+    {
+      \\"displayName\\": \\"callback setup success \\",
+      \\"skipped\\": false,
+      \\"status\\": \\"pass\\",
+      \\"testFilePath\\": \\"/vitest/test/core/test/basic.test.ts\\"
+    },
+    {
+      \\"displayName\\": \\"callback test success \\",
+      \\"skipped\\": false,
+      \\"status\\": \\"pass\\",
+      \\"testFilePath\\": \\"/vitest/test/core/test/basic.test.ts\\"
+    },
+    {
+      \\"displayName\\": \\"callback setup success done(false)\\",
+      \\"skipped\\": false,
+      \\"status\\": \\"pass\\",
+      \\"testFilePath\\": \\"/vitest/test/core/test/basic.test.ts\\"
+    },
+    {
+      \\"displayName\\": \\"callback test success done(false)\\",
+      \\"skipped\\": false,
+      \\"status\\": \\"pass\\",
+      \\"testFilePath\\": \\"/vitest/test/core/test/basic.test.ts\\"
+    }
+  ]
+}
+"
+`;
+
+exports[`tap reporter 1`] = `
+"TAP version 13
+1..1
+not ok 1 - test/core/test/basic.test.ts # time=145.99ms {
+    1..1
+    ok 1 - suite # time=1.90ms {
+        1..8
+        ok 1 - inner suite # time=1.90ms {
+            1..1
+            not ok 1 - Math.sqrt() # time=1.44ms
+                ---
+                error:
+                    name: \\"AssertionError\\"
+                    message: \\"expected 2.23606797749979 to equal 2\\"
+                at: \\"/vitest/test/core/test/basic.test.ts:8:32\\"
+                actual: \\"2.23606797749979\\"
+                expected: \\"2\\"
+                ...
+        }
+        ok 2 - JSON # time=1.02ms
+        ok 3 - async with timeout # SKIP
+        ok 4 - timeout # time=100.51ms
+        ok 5 - callback setup success  # time=20.18ms
+        ok 6 - callback test success  # time=0.33ms
+        ok 7 - callback setup success done(false) # time=19.74ms
+        ok 8 - callback test success done(false) # time=0.19ms
+    }
+}
+"
+`;
+
+exports[`tap-flat reporter 1`] = `
+"TAP version 13
+1..8
+not ok 1 - test/core/test/basic.test.ts > suite > inner suite > Math.sqrt() # time=1.44ms
+    ---
+    error:
+        name: \\"AssertionError\\"
+        message: \\"expected 2.23606797749979 to equal 2\\"
+    at: \\"/vitest/test/core/test/basic.test.ts:8:32\\"
+    actual: \\"2.23606797749979\\"
+    expected: \\"2\\"
+    ...
+ok 2 - test/core/test/basic.test.ts > suite > JSON # time=1.02ms
+ok 3 - test/core/test/basic.test.ts > suite > async with timeout # SKIP
+ok 4 - test/core/test/basic.test.ts > suite > timeout # time=100.51ms
+ok 5 - test/core/test/basic.test.ts > suite > callback setup success  # time=20.18ms
+ok 6 - test/core/test/basic.test.ts > suite > callback test success  # time=0.33ms
+ok 7 - test/core/test/basic.test.ts > suite > callback setup success done(false) # time=19.74ms
+ok 8 - test/core/test/basic.test.ts > suite > callback test success done(false) # time=0.19ms
+"
+`;

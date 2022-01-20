@@ -3,9 +3,8 @@ import type { ViteDevServer } from 'vite'
 import fg from 'fast-glob'
 import mm from 'micromatch'
 import c from 'picocolors'
-import type { RawSourceMap } from 'source-map-js'
 import { ViteNodeServer } from 'vite-node/server'
-import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig } from '../types'
+import type { ArgumentsType, RawSourceMap, Reporter, ResolvedConfig, UserConfig } from '../types'
 import { SnapshotManager } from '../integrations/snapshot/manager'
 import { clone, deepMerge, hasFailed, noop, slash, toArray } from '../utils'
 import { cleanCoverage, reportCoverage } from '../coverage'
@@ -351,23 +350,15 @@ export class Vitest {
     return this.closingPromise
   }
 
-  async exit() {
-    const closePromise = this.close()
-    let timeout: NodeJS.Timeout
-    const timeoutPromise = new Promise((resolve, reject) => {
-      timeout = setTimeout(() => reject(new Error(`close timed out after ${CLOSE_TIMEOUT}ms`)), CLOSE_TIMEOUT).unref()
-    })
-    Promise.race([closePromise, timeoutPromise]).then(
-      () => {
-        clearTimeout(timeout)
-        process.exit()
-      },
-      (err) => {
-        clearTimeout(timeout)
-        console.error('error during close', err)
-        process.exit(1)
-      },
-    )
+  async exit(force = false) {
+    setTimeout(() => {
+      console.warn(`close timed out after ${CLOSE_TIMEOUT}ms`)
+      process.exit()
+    }, CLOSE_TIMEOUT).unref()
+
+    await this.close()
+    if (force)
+      process.exit()
   }
 
   async report<T extends keyof Reporter>(name: T, ...args: ArgumentsType<Reporter[T]>) {

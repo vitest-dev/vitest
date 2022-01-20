@@ -12,11 +12,11 @@
     "vue": "^3.2.24"
   },
   "devDependencies": {
-    "@iconify-json/carbon": "^1.0.12",
-    "@unocss/reset": "^0.22.2",
+    "@iconify-json/carbon": "^1.0.14",
+    "@unocss/reset": "^0.22.4",
     "@vitejs/plugin-vue": "^2.0.1",
-    "unocss": "^0.22.2",
-    "unplugin-vue-components": "^0.17.11",
-    "vitepress": "^0.21.4"
+    "unocss": "^0.22.4",
+    "unplugin-vue-components": "^0.17.13",
+    "vitepress": "^0.21.6"
   }
 }

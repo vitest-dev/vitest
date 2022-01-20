@@ -1,6 +1,6 @@
 import type { MessagePort } from 'worker_threads'
-import type { RawSourceMap } from 'source-map-js'
 import type { ViteNodeResolveId } from 'vite-node'
+import type { RawSourceMap } from '../types'
 import type { ResolvedConfig } from './config'
 import type { File, TaskResultPack } from './tasks'
 import type { SnapshotResult } from './snapshot'

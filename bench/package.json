@@ -9,7 +9,7 @@
     "@actions/core": "^1.6.0",
     "@actions/exec": "^1.1.0",
     "@actions/github": "^5.0.0",
-    "@happy-dom/jest-environment": "^2.25.2",
+    "@happy-dom/jest-environment": "^2.27.0",
     "@types/benchmark": "^2.1.1",
     "benchmark": "^2.1.4",
     "esmo": "^0.14.0",

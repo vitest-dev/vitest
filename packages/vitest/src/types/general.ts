@@ -74,3 +74,16 @@ export interface ModuleGraphData {
   externalized: string[]
   inlined: string[]
 }
+
+export interface StartOfSourceMap {
+  file?: string
+  sourceRoot?: string
+}
+
+export interface RawSourceMap extends StartOfSourceMap {
+  version: string
+  sources: string[]
+  names: string[]
+  sourcesContent?: string[]
+  mappings: string
+}
