@@ -13,7 +13,7 @@ const updateSnapshot = () => current.value && client.rpc.updateSnapshot(current.
     <TasksList :tasks="current.tasks" :nested="true">
       <template #header>
         <StatusIcon :task="current" />
-        <span font-light text-sm flex-auto ws-nowrap overflow-hidden truncate>{{ name }}</span>
+        <span font-bold text-sm flex-auto ws-nowrap overflow-hidden truncate>{{ name }}</span>
         <div class="flex text-lg">
           <IconButton
             v-if="failedSnapshot"

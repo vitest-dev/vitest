@@ -52,7 +52,14 @@ export default {
       <div p="2" h-10 flex="~ gap-2" items-center bg-header border="b base">
         <slot name="header" :filteredTests="isFiltered ? filteredTests : undefined" />
       </div>
-      <div p="x4 y2" flex="~ gap-2" items-center bg-header border="b base">
+      <div
+        p="x4 y2"
+        :class="groupByType ? 'p-l1.4rem' : 'p-l2'"
+        flex="~ gap-2"
+        items-center
+        bg-header
+        border="b base"
+      >
         <div i-carbon:search flex-shrink-0 />
         <input
           v-model="search"
@@ -62,6 +69,7 @@ export default {
           font="light"
           text="sm"
           flex-1
+          :class="{ 'p-l3': groupByType }"
           :op="search.length ? '100' : '50'"
           @keydown.esc="search = ''"
           @keydown.enter="emit('run', isFiltered ? filteredTests : undefined)"
@@ -160,7 +168,8 @@ export default {
             No matched test
           </div>
           <button
-            font-light op="50 hover:100"
+            font-light
+            op="50 hover:100"
             text-sm
             border="~ gray-400/50 rounded"
             p="x2 y0.5"
