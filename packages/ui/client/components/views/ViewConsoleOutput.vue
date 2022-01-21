@@ -31,4 +31,7 @@ function getTaskName(id?: string) {
       </div>
     </div>
   </div>
+  <p v-else p6>
+    Log something in your test and it would print here. (e.g. <pre inline>console.log(foo)</pre>)
+  </p>
 </template>

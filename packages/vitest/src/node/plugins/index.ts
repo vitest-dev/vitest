@@ -38,6 +38,7 @@ export async function VitestPlugin(options: UserConfig = {}, viteOverrides: Vite
           build: {
             sourcemap: true,
           },
+          optimizeDeps: false,
         }
       },
       async configureServer(server) {

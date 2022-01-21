@@ -8,7 +8,7 @@ export default defineConfig({
     ScriptSetup(),
   ],
   test: {
-    global: true,
+    globals: true,
     environment: 'happy-dom',
     setupFiles: [
       'vitest.setup.ts',

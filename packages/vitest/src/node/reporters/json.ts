@@ -34,7 +34,7 @@ export class JsonReporter implements Reporter {
 
   onInit(ctx: Vitest): void {
     this.ctx = ctx
-    this.start = performance.now()
+    this.start = Date.now()
   }
 
   protected async logTasks(files: File[]) {
@@ -63,7 +63,7 @@ export class JsonReporter implements Reporter {
 
     const result: AggregatedResult = { numTotalTestSuites, numPassedTestSuites, numFailedTestSuites, numPendingTestSuites, numTotalTests, numPassedTests, numFailedTests, numPendingTests, numTodoTests, startTime: this.start, success, testResults }
 
-    await this.writeReport(JSON.stringify(result))
+    await this.writeReport(JSON.stringify(result, null, 2))
   }
 
   async onFinished(files = this.ctx.state.getFiles()) {

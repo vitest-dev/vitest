@@ -1,6 +1,6 @@
 import type { TransformResult, ViteDevServer } from 'vite'
 import { shouldExternalize } from './externalize'
-import type { ViteNodeServerOptions } from './types'
+import type { ViteNodeResolveId, ViteNodeServerOptions } from './types'
 import { toFilePath } from './utils'
 
 export * from './externalize'
@@ -26,6 +26,10 @@ export class ViteNodeServer {
       return { externalize }
     const r = await this.transformRequest(id)
     return { code: r?.code }
+  }
+
+  async resolveId(id: string, importer?: string): Promise<ViteNodeResolveId | null> {
+    return this.server.pluginContainer.resolveId(id, importer, { ssr: true })
   }
 
   async transformRequest(id: string) {
@@ -59,8 +63,8 @@ export class ViteNodeServer {
 
     const mode = this.getTransformMode(id)
     if (mode === 'web') {
-    // for components like Vue, we want to use the client side
-    // plugins but then covert the code to be consumed by the server
+      // for components like Vue, we want to use the client side
+      // plugins but then covert the code to be consumed by the server
       result = await this.server.transformRequest(id)
       if (result)
         result = await this.server.ssrTransform(result.code, result.map, id)
@@ -69,7 +73,7 @@ export class ViteNodeServer {
       result = await this.server.transformRequest(id, { ssr: true })
     }
 
-    if (result && !id.includes('node_modules'))
+    if (this.options.sourcemap !== false && result && !id.includes('node_modules'))
       withInlineSourcemap(result)
 
     // if (result?.map && process.env.NODE_V8_COVERAGE)

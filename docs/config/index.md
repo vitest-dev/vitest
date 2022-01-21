@@ -33,7 +33,7 @@ Include globs for test files
 ### exclude
 
 - **Type:** `string[]`
-- **Default:** `['node_modules', 'dist', '.idea', '.git', '.cache']`
+- **Default:** `['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**']`
 
 Exclude globs for test files
 
@@ -57,12 +57,12 @@ Externalize means that Vite will bypass the package to native Node. Externalized
 
 Vite will process inlined modules. This could be helpful to handle packages that ship `.js` in ESM format (that Node can't handle).
 
-### global
+### globals
 
 - **Type:** `boolean`
 - **Default:** `false`
 
-By default, `vitest` does not provide global APIs for explicitness. If you prefer to use the APIs globally like Jest, you can pass the `--global` option to CLI or add `global: true` in the config.
+By default, `vitest` does not provide global APIs for explicitness. If you prefer to use the APIs globally like Jest, you can pass the `--globals` option to CLI or add `globals: true` in the config.
 
 ```ts
 // vite.config.ts
@@ -70,18 +70,18 @@ import { defineConfig } from 'vite'
 
 export default defineConfig({
   test: {
-    global: true,
+    globals: true,
   },
 })
 ```
 
-To get TypeScript working with the global APIs, add `vitest/global` to the `types` filed in your `tsconfig.json`
+To get TypeScript working with the global APIs, add `vitest/globals` to the `types` filed in your `tsconfig.json`
 
 ```json
 // tsconfig.json
 {
   "compilerOptions": {
-    "types": ["vitest/global"]
+    "types": ["vitest/globals"]
   }
 }
 ```
@@ -182,13 +182,14 @@ Custom reporters for output. Reporters can be [a Reporter instance](https://gith
   - `'default'` - collapse suites when they pass
   - `'verbose'` - keep the full task tree visible
   - `'dot'` -  show each task as a single dot
+  - `'junit'` - JUnit XML reporter
   - `'json'` -  give a simple JSON summary
 
 ### outputFile
 
 - **Type:** `string`
 
-Write test results to a file when the `--reporter=json` option is also specified.
+Write test results to a file when the `--reporter=json` or `--reporter=junit` option is also specified.
 
 ### threads
 
@@ -211,7 +212,7 @@ Maximum number of threads
 
 Minimum number of threads
 
-### interpretDefault
+### interopDefault
 
 - **Type:** `boolean`
 

@@ -18,12 +18,16 @@ export const files = computed(() => client.state.getFiles())
 export const current = computed(() => files.value.find(file => file.id === activeFileId.value))
 export const currentLogs = computed(() => getTasks(current.value).map(i => i?.logs || []).flat() || [])
 
+export const findById = (id: string) => {
+  return files.value.find(file => file.id === id)
+}
+
 export const isConnected = computed(() => status.value === 'OPEN')
 export const isConnecting = computed(() => status.value === 'CONNECTING')
 export const isDisconnected = computed(() => status.value === 'CLOSED')
 
-export function runAll() {
-  return runFiles(client.state.getFiles())
+export function runAll(files = client.state.getFiles()) {
+  return runFiles(files)
 }
 
 export function runFiles(files: File[]) {
@@ -62,20 +66,20 @@ watch(
 )
 
 // display the first file on init
-if (!activeFileId.value) {
-  const stop = watch(
-    () => client.state.getFiles(),
-    (files) => {
-      if (activeFileId.value) {
-        stop()
-        return
-      }
-
-      if (files.length && files[0].id) {
-        activeFileId.value = files[0].id
-        stop()
-      }
-    },
-    { immediate: true },
-  )
-}
+// if (!activeFileId.value) {
+//   const stop = watch(
+//     () => client.state.getFiles(),
+//     (files) => {
+//       if (activeFileId.value) {
+//         stop()
+//         return
+//       }
+//
+//       if (files.length && files[0].id) {
+//         activeFileId.value = files[0].id
+//         stop()
+//       }
+//     },
+//     { immediate: true },
+//   )
+// }

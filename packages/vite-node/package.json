@@ -1,6 +1,6 @@
 {
   "name": "vite-node",
-  "version": "0.1.13",
+  "version": "0.1.26",
   "description": "Vite as Node.js runtime",
   "homepage": "https://github.com/vitest-dev/vitest#readme",
   "bugs": {
@@ -18,18 +18,22 @@
   "exports": {
     ".": {
       "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
       "types": "./index.d.ts"
     },
     "./client": {
       "import": "./dist/client.js",
+      "require": "./dist/client.cjs",
       "types": "./client.d.ts"
     },
     "./server": {
       "import": "./dist/server.js",
+      "require": "./dist/server.cjs",
       "types": "./server.d.ts"
     },
     "./utils": {
       "import": "./dist/utils.js",
+      "require": "./dist/utils.cjs",
       "types": "./utils.d.ts"
     }
   },
@@ -37,7 +41,7 @@
   "module": "./dist/index.js",
   "types": "./index.d.ts",
   "bin": {
-    "vite-node": "./vite-node.js"
+    "vite-node": "./vite-node.mjs"
   },
   "files": [
     "dist",
@@ -53,13 +57,13 @@
   "dependencies": {
     "kolorist": "^1.5.1",
     "minimist": "^1.2.5",
-    "mlly": "^0.3.17",
+    "mlly": "^0.3.19",
     "pathe": "^0.2.0",
-    "vite": "^2.7.12"
+    "vite": "^2.7.13"
   },
   "devDependencies": {
     "@types/minimist": "^1.2.2",
-    "rollup": "^2.63.0"
+    "rollup": "^2.64.0"
   },
   "engines": {
     "node": ">=14.14.0"

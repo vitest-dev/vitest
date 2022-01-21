@@ -1,19 +1,27 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
+import { parseStacktrace } from '../utils/source-map'
+import type { VitestMocker } from '../node/mocker'
 import { FakeTimers } from './timers'
 import type { EnhancedSpy, MaybeMocked, MaybeMockedDeep } from './jest-mock'
 import { fn, isMockFunction, spies, spyOn } from './jest-mock'
 
 class VitestUtils {
   private _timers: FakeTimers
-  private _mockedDate: Date | null
+  private _mockedDate: string | number | Date | null
+  private _mocker: VitestMocker
 
   constructor() {
     this._timers = new FakeTimers({
       global: globalThis,
       maxLoops: 10_000,
     })
+    // @ts-expect-error injected by vite-nide
+    this._mocker = typeof __vitest_mocker__ !== 'undefined' ? __vitest_mocker__ : null
     this._mockedDate = null
+
+    if (!this._mocker)
+      throw new Error('Vitest was initialised with native Node instead of Vite Node')
   }
 
   // timers
@@ -83,7 +91,11 @@ class VitestUtils {
   spyOn = spyOn
   fn = fn
 
-  // just hints for transformer to rewrite imports
+  private getImporter() {
+    const err = new Error('mock')
+    const [,, importer] = parseStacktrace(err, true)
+    return importer.file
+  }
 
   /**
    * Makes all `imports` to passed module to be mocked.
@@ -96,13 +108,26 @@ class VitestUtils {
    * @param path Path to the module. Can be aliased, if your config suppors it
    * @param factory Factory for the mocked module. Has the highest priority.
    */
-  public mock(path: string, factory?: () => any) {}
+  public mock(path: string, factory?: () => any) {
+    this._mocker.queueMock(path, this.getImporter(), factory)
+  }
+
   /**
    * Removes module from mocked registry. All subsequent calls to import will
    * return original module even if it was mocked.
    * @param path Path to the module. Can be aliased, if your config suppors it
    */
-  public unmock(path: string) {}
+  public unmock(path: string) {
+    this._mocker.queueUnmock(path, this.getImporter())
+  }
+
+  public doMock(path: string, factory?: () => any) {
+    this._mocker.queueMock(path, this.getImporter(), factory)
+  }
+
+  public doUnmock(path: string) {
+    this._mocker.queueUnmock(path, this.getImporter())
+  }
 
   /**
    * Imports module, bypassing all checks if it should be mocked.
@@ -117,7 +142,7 @@ class VitestUtils {
    * @returns Actual module without spies
    */
   public async importActual<T>(path: string): Promise<T> {
-    return {} as T
+    return this._mocker.importActual<T>(path, this.getImporter())
   }
 
   /**
@@ -127,7 +152,7 @@ class VitestUtils {
    * @returns Fully mocked module
    */
   public async importMock<T>(path: string): Promise<MaybeMockedDeep<T>> {
-    return {} as MaybeMockedDeep<T>
+    return this._mocker.importMock(path, this.getImporter())
   }
 
   /**
@@ -157,22 +182,19 @@ class VitestUtils {
   }
 
   public clearAllMocks() {
-    // @ts-expect-error clearing module mocks
-    __vitest__clearMocks__({ clearMocks: true })
+    this._mocker.clearMocks({ clearMocks: true })
     spies.forEach(spy => spy.mockClear())
     return this
   }
 
   public resetAllMocks() {
-    // @ts-expect-error resetting module mocks
-    __vitest__clearMocks__({ mockReset: true })
+    this._mocker.clearMocks({ mockReset: true })
     spies.forEach(spy => spy.mockReset())
     return this
   }
 
   public restoreAllMocks() {
-    // @ts-expect-error restoring module mocks
-    __vitest__clearMocks__({ restoreMocks: true })
+    this._mocker.clearMocks({ restoreMocks: true })
     spies.forEach(spy => spy.mockRestore())
     return this
   }

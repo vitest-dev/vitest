@@ -1,21 +1,31 @@
-import { builtinModules, createRequire } from 'module'
+import { createRequire } from 'module'
 import { fileURLToPath, pathToFileURL } from 'url'
 import vm from 'vm'
 import { dirname, resolve } from 'pathe'
 import { isPrimitive, normalizeId, slash, toFilePath } from './utils'
 import type { ModuleCache, ViteNodeRunnerOptions } from './types'
 
+export const DEFAULT_REQUEST_STUBS = {
+  '/@vite/client': {
+    injectQuery: (id: string) => id,
+    createHotContext() {
+      return {
+        accept: () => {},
+        prune: () => {},
+      }
+    },
+    updateStyle() {},
+  },
+}
+
 export class ViteNodeRunner {
   root: string
 
-  externalCache: Map<string, string | Promise<false | string>>
   moduleCache: Map<string, ModuleCache>
 
   constructor(public options: ViteNodeRunnerOptions) {
     this.root = options.root || process.cwd()
     this.moduleCache = options.moduleCache || new Map()
-    this.externalCache = new Map<string, string | Promise<false | string>>()
-    builtinModules.forEach(m => this.externalCache.set(m, m))
   }
 
   async executeFile(file: string) {
@@ -28,13 +38,13 @@ export class ViteNodeRunner {
 
   async cachedRequest(rawId: string, callstack: string[]) {
     const id = normalizeId(rawId, this.options.base)
+
+    if (this.moduleCache.get(id)?.promise)
+      return this.moduleCache.get(id)?.promise
+
     const fsPath = toFilePath(id, this.root)
-
-    if (this.moduleCache.get(fsPath)?.promise)
-      return this.moduleCache.get(fsPath)?.promise
-
     const promise = this.directRequest(id, fsPath, callstack)
-    this.setCache(fsPath, { promise })
+    this.setCache(id, { promise })
 
     return await promise
   }
@@ -43,32 +53,32 @@ export class ViteNodeRunner {
     callstack = [...callstack, id]
     const request = async(dep: string) => {
       if (callstack.includes(dep)) {
-        const cacheKey = toFilePath(dep, this.root)
-        if (!this.moduleCache.get(cacheKey)?.exports)
-          throw new Error(`Circular dependency detected\nStack:\n${[...callstack, dep].reverse().map(p => `- ${p}`).join('\n')}`)
-        return this.moduleCache.get(cacheKey)!.exports
+        if (!this.moduleCache.get(dep)?.exports)
+          throw new Error(`[vite-node] Circular dependency detected\nStack:\n${[...callstack, dep].reverse().map(p => `- ${p}`).join('\n')}`)
+        return this.moduleCache.get(dep)!.exports
       }
       return this.cachedRequest(dep, callstack)
     }
 
-    if (this.options.requestStubs && id in this.options.requestStubs)
-      return this.options.requestStubs[id]
+    const requestStubs = this.options.requestStubs || DEFAULT_REQUEST_STUBS
+    if (id in requestStubs)
+      return requestStubs[id]
 
     const { code: transformed, externalize } = await this.options.fetchModule(id)
     if (externalize) {
-      const mod = await interpretedImport(externalize, this.options.interpretDefault ?? true)
-      this.setCache(fsPath, { exports: mod })
+      const mod = await this.interopedImport(externalize)
+      this.setCache(id, { exports: mod })
       return mod
     }
 
     if (transformed == null)
-      throw new Error(`failed to load ${id}`)
+      throw new Error(`[vite-node] Failed to load ${id}`)
 
     // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
     const url = pathToFileURL(fsPath).href
     const exports: any = {}
 
-    this.setCache(fsPath, { code: transformed, exports })
+    this.setCache(id, { code: transformed, exports })
 
     const __filename = fileURLToPath(url)
     const moduleProxy = {
@@ -117,10 +127,41 @@ export class ViteNodeRunner {
     else
       Object.assign(this.moduleCache.get(id), mod)
   }
-}
 
-function hasNestedDefault(target: any) {
-  return '__esModule' in target && target.__esModule && 'default' in target.default
+  /**
+   * Define if a module should be interop-ed
+   * This function mostly for the ability to override by subclass
+   */
+  shouldInterop(path: string, mod: any) {
+    if (this.options.interopDefault === false)
+      return false
+    // never interop ESM modules
+    // TODO: should also skip for `.js` with `type="module"`
+    return !path.endsWith('.mjs') && 'default' in mod
+  }
+
+  /**
+   * Import a module and interop it
+   */
+  async interopedImport(path: string) {
+    const mod = await import(path)
+
+    if (this.shouldInterop(path, mod)) {
+      const tryDefault = this.hasNestedDefault(mod)
+      return new Proxy(mod, {
+        get: proxyMethod('get', tryDefault),
+        set: proxyMethod('set', tryDefault),
+        has: proxyMethod('has', tryDefault),
+        deleteProperty: proxyMethod('deleteProperty', tryDefault),
+      })
+    }
+
+    return mod
+  }
+
+  hasNestedDefault(target: any) {
+    return '__esModule' in target && target.__esModule && 'default' in target.default
+  }
 }
 
 function proxyMethod(name: 'get' | 'set' | 'has' | 'deleteProperty', tryDefault: boolean) {
@@ -132,22 +173,6 @@ function proxyMethod(name: 'get' | 'set' | 'has' | 'deleteProperty', tryDefault:
       return Reflect[name](target.default, key, ...args)
     return result
   }
-}
-
-async function interpretedImport(path: string, interpretDefault: boolean) {
-  const mod = await import(path)
-
-  if (interpretDefault && 'default' in mod) {
-    const tryDefault = hasNestedDefault(mod)
-    return new Proxy(mod, {
-      get: proxyMethod('get', tryDefault),
-      set: proxyMethod('set', tryDefault),
-      has: proxyMethod('has', tryDefault),
-      deleteProperty: proxyMethod('deleteProperty', tryDefault),
-    })
-  }
-
-  return mod
 }
 
 function exportAll(exports: any, sourceModule: any) {

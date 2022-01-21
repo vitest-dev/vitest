@@ -1,6 +1,6 @@
 {
   "name": "@vitest/ws-client",
-  "version": "0.1.13",
+  "version": "0.1.26",
   "description": "WebSocket client wrapper for communicating with Vitest",
   "homepage": "https://github.com/vitest-dev/vitest#readme",
   "bugs": {
@@ -37,10 +37,10 @@
   "dependencies": {
     "birpc": "^0.1.0",
     "flatted": "^3.2.4",
-    "ws": "^8.4.1"
+    "ws": "8.4.0"
   },
   "devDependencies": {
-    "rollup": "^2.63.0"
+    "rollup": "^2.64.0"
   },
   "engines": {
     "node": ">=14.14.0"

@@ -4,10 +4,10 @@ importers:
 
   .:
     specifiers:
-      '@vue/composition-api': ^1.4.3
+      '@vue/composition-api': ^1.4.4
       '@vue/test-utils': ^1.3.0
       happy-dom: latest
-      unplugin-vue2-script-setup: ^0.9.0
+      unplugin-vue2-script-setup: ^0.9.1
       vite: latest
       vite-plugin-vue2: ^1.9.2
       vitest: latest
@@ -16,13 +16,13 @@ importers:
     dependencies:
       vue: 2.6.14
     devDependencies:
-      '@vue/composition-api': 1.4.3_vue@2.6.14
+      '@vue/composition-api': 1.4.4_vue@2.6.14
       '@vue/test-utils': 1.3.0_9065e7474e033a8e4b95615fc8e6c36c
-      happy-dom: 2.25.2
-      unplugin-vue2-script-setup: 0.9.0_vite@2.7.12
-      vite: 2.7.12
-      vite-plugin-vue2: 1.9.2_12de4b4b1ad5d1d484b4a93dbd918b05
-      vitest: 0.1.12_happy-dom@2.25.2
+      happy-dom: 2.27.0
+      unplugin-vue2-script-setup: 0.9.1_bc23550b332c7a7ecd7ebf3cd96b8869
+      vite: 2.7.13
+      vite-plugin-vue2: 1.9.2_e3c37c0cfaae1b9f72ab6085139b0afb
+      vitest: 0.1.21_happy-dom@2.27.0
       vue-template-compiler: 2.6.14
 
 packages:
@@ -570,8 +570,8 @@ packages:
       prettier: 2.5.1
     dev: true
 
-  /@vue/composition-api/1.4.3_vue@2.6.14:
-    resolution: {integrity: sha512-Qp4rMbESO05/7/Imck027X5lPhbmMX/mtYSDvIMJ14PS4KHY/4GllnQbPEfsBEe1LECFE6HWx2k7HYgcuYNvpg==}
+  /@vue/composition-api/1.4.4_vue@2.6.14:
+    resolution: {integrity: sha512-0AMpkSy28NG1BUqTPXLfQzJUnjSp+qUa4jaG7A2FBRSKHJOl1g10/xvNb44+OW5Jg9f79zKOb7PYhFhJG2vLyQ==}
     peerDependencies:
       vue: '>= 2.5 < 3'
     dependencies:
@@ -1591,8 +1591,8 @@ packages:
     resolution: {integrity: sha512-qkIilPUYcNhJpd33n0GBXTB1MMPp14TxEsEs0pTrsSVucApsYzW5V+Q8Qxhik6KU3evy+qkAAowTByymK0avdg==}
     dev: true
 
-  /happy-dom/2.25.2:
-    resolution: {integrity: sha512-PEKxqE7v04J3t6hESxmWwbeimJSNpw+10OyG2dqA8uUsm35xqM2fL0KoppQHC2BRuPKy43rmH+ZHEXMuGz3XEQ==}
+  /happy-dom/2.27.0:
+    resolution: {integrity: sha512-VucqmIeKeeVtxrTVGfrLR6dskVIk0F3/ZlHE3vL1C7Owaqodfxz+qNzpsGY0EBtTjsb4xhcS8wjp5X8/prI+2g==}
     dependencies:
       he: 1.2.0
       node-fetch: 2.6.6
@@ -2208,9 +2208,11 @@ packages:
     engines: {node: '>= 10.0.0'}
     dev: true
 
-  /unplugin-vue2-script-setup/0.9.0_vite@2.7.12:
-    resolution: {integrity: sha512-BvQV0mBwKoYioppCMJr6HPowrv7m4IHdXjYZYwGxXh03b2JWbuX8g//OSy119TB8cgb+vWmLG+K+OTmk+ybUCg==}
+  /unplugin-vue2-script-setup/0.9.1_bc23550b332c7a7ecd7ebf3cd96b8869:
+    resolution: {integrity: sha512-1+I300JJ8SBajD3EYQI4Ee7RReLvPS3cL5Rio12e54Vv6e4cd8rPwTNogpskHtt5DNdYA31Cr+DGAf2MmPpsFw==}
     peerDependencies:
+      '@vue/composition-api': ^1.4.3
+      '@vue/runtime-dom': ^3.2.26
       pug: ^3.0.2
     peerDependenciesMeta:
       pug:
@@ -2225,13 +2227,14 @@ packages:
       '@rollup/pluginutils': 4.1.2
       '@vue/compiler-core': 3.2.26
       '@vue/compiler-dom': 3.2.26
+      '@vue/composition-api': 1.4.4_vue@2.6.14
       '@vue/reactivity-transform': 3.2.26
       '@vue/shared': 3.2.26
       defu: 5.0.0
       htmlparser2: 5.0.1
       magic-string: 0.25.7
       tslib: 2.3.1
-      unplugin: 0.3.0_vite@2.7.12
+      unplugin: 0.3.0_vite@2.7.13
     transitivePeerDependencies:
       - esbuild
       - rollup
@@ -2240,7 +2243,7 @@ packages:
       - webpack
     dev: true
 
-  /unplugin/0.3.0_vite@2.7.12:
+  /unplugin/0.3.0_vite@2.7.13:
     resolution: {integrity: sha512-9yLlOo+XC4NdIRgpkDSHOAHkQDq2x4mbuVNO/eKVa3C8WTn5wWGfzEFfRJFL8euqnX3Gf7hEur0AhXxy+WSwkg==}
     peerDependencies:
       esbuild: '>=0.13'
@@ -2257,7 +2260,7 @@ packages:
       webpack:
         optional: true
     dependencies:
-      vite: 2.7.12
+      vite: 2.7.13
       webpack-virtual-modules: 0.4.3
     dev: true
 
@@ -2265,7 +2268,7 @@ packages:
     resolution: {integrity: sha1-RQ1Nyfpw3nMnYvvS1KKJgUGaDM8=}
     dev: true
 
-  /vite-plugin-vue2/1.9.2_12de4b4b1ad5d1d484b4a93dbd918b05:
+  /vite-plugin-vue2/1.9.2_e3c37c0cfaae1b9f72ab6085139b0afb:
     resolution: {integrity: sha512-y6a7tlqXe2OtwD0N7mNvlrZaQu2aeqGXzwk+MjEacUsOd70t/K1Qno1eNqH3+7evC/Klbou9VdYc/Pu0Sp7PfA==}
     peerDependencies:
       vite: ^2.0.0-beta.23
@@ -2291,15 +2294,15 @@ packages:
       rollup: 2.61.1
       slash: 3.0.0
       source-map: 0.7.3
-      vite: 2.7.12
+      vite: 2.7.13
       vue-template-compiler: 2.6.14
       vue-template-es2015-compiler: 1.9.1
     transitivePeerDependencies:
       - supports-color
     dev: true
 
-  /vite/2.7.12:
-    resolution: {integrity: sha512-KvPYToRQWhRfBeVkyhkZ5hASuHQkqZUUdUcE3xyYtq5oYEPIJ0h9LWiWTO6v990glmSac2cEPeYeXzpX5Z6qKQ==}
+  /vite/2.7.13:
+    resolution: {integrity: sha512-Mq8et7f3aK0SgSxjDNfOAimZGW9XryfHRa/uV0jseQSilg+KhYDSoNb9h1rknOy6SuMkvNDLKCYAYYUMCE+IgQ==}
     engines: {node: '>=12.2.0'}
     hasBin: true
     peerDependencies:
@@ -2322,8 +2325,8 @@ packages:
       fsevents: 2.3.2
     dev: true
 
-  /vitest/0.1.12_happy-dom@2.25.2:
-    resolution: {integrity: sha512-uiGDO1aKX2rUWtkR7iNedbtN3ij/qr4l1DwAbX5cIADUD7VBuFimaUrL8KyFw3eSxdA56xJyl8JpvSAsvvpN7w==}
+  /vitest/0.1.21_happy-dom@2.27.0:
+    resolution: {integrity: sha512-dtVFqZS0LJ30hD4KgGVYUAm/gHjE1sURI/EgUFVLjTAH1DZqFWPwz6OPAXM1lOppf1JwoGJ8TGkdEXgjsYSZkw==}
     engines: {node: '>=14.14.0'}
     hasBin: true
     peerDependencies:
@@ -2344,11 +2347,11 @@ packages:
       '@types/chai': 4.3.0
       '@types/chai-subset': 1.3.3
       chai: 4.3.4
-      happy-dom: 2.25.2
+      happy-dom: 2.27.0
       local-pkg: 0.4.1
       tinypool: 0.1.1
       tinyspy: 0.2.8
-      vite: 2.7.12
+      vite: 2.7.13
     transitivePeerDependencies:
       - less
       - sass

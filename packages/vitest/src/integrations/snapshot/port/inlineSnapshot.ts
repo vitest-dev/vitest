@@ -1,8 +1,7 @@
 import { promises as fs } from 'fs'
 import type MagicString from 'magic-string'
-import detectIndent from 'detect-indent'
 import { rpc } from '../../../runtime/rpc'
-import { getOriginalPos, posToNumber } from '../../../utils/source-map'
+import { getOriginalPos, lineSplitRE, numberToPos, posToNumber } from '../../../utils/source-map'
 import { getCallLastIndex } from '../../../utils'
 
 export interface InlineSnapshot {
@@ -26,8 +25,7 @@ export async function saveInlineSnapshots(
     for (const snap of snaps) {
       const pos = await getOriginalPos(map, snap)
       const index = posToNumber(code, pos!)
-      const { indent } = detectIndent(code.slice(index - pos!.column))
-      replaceInlineSnap(code, s, index, snap.snapshot, indent)
+      replaceInlineSnap(code, s, index, snap.snapshot)
     }
 
     const transformed = s.toString()
@@ -38,7 +36,7 @@ export async function saveInlineSnapshots(
 
 const startObjectRegex = /(?:toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot)\s*\(\s*({)/m
 
-function replaceObjectSnap(code: string, s: MagicString, index: number, newSnap: string, indent = '') {
+function replaceObjectSnap(code: string, s: MagicString, index: number, newSnap: string) {
   code = code.slice(index)
   const startMatch = startObjectRegex.exec(code)
   if (!startMatch)
@@ -49,33 +47,39 @@ function replaceObjectSnap(code: string, s: MagicString, index: number, newSnap:
   if (charIndex === null)
     return false
 
-  s.appendLeft(index + startMatch.index + charIndex, `, ${prepareSnapString(newSnap, indent)}`)
+  s.appendLeft(index + startMatch.index + charIndex, `, ${prepareSnapString(newSnap, code, index)}`)
 
   return true
 }
 
-function prepareSnapString(snap: string, indent: string) {
-  snap = snap.replace(/\\/g, '\\\\')
-    .split('\n')
-    .map(i => (indent + i).trimEnd())
-    .join('\n')
-  const isOneline = !snap.includes('\n')
+function prepareSnapString(snap: string, source: string, index: number) {
+  const lineIndex = numberToPos(source, index).line
+  const line = source.split(lineSplitRE)[lineIndex - 1]
+  const indent = line.match(/^\s*/)![0] || ''
+  const indentNext = indent.includes('\t') ? `${indent}\t` : `${indent}  `
+
+  const lines = snap
+    .trim()
+    .replace(/\\/g, '\\\\')
+    .split(/\n/g)
+    .map(i => i.trimEnd())
+
+  const isOneline = lines.length <= 1
+  const quote = isOneline ? '\'' : '`'
   return isOneline
-    ? `'${snap.replace(/'/g, '\\\'').trim()}'`
-    : `\`${snap.replace(/`/g, '\\`').trimEnd()}\n${indent}\``
+    ? `'${lines.join('\n').replace(/'/g, '\\\'')}'`
+    : `${quote}\n${lines.map(i => indentNext + i).join('\n').replace(/`/g, '\\`')}\n${indent}${quote}`
 }
 
 const startRegex = /(?:toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot)\s*\(\s*(['"`\)])/m
-export function replaceInlineSnap(code: string, s: MagicString, index: number, newSnap: string, indent = '') {
+export function replaceInlineSnap(code: string, s: MagicString, index: number, newSnap: string) {
   const startMatch = startRegex.exec(code.slice(index))
   if (!startMatch)
-    return replaceObjectSnap(code, s, index, newSnap, indent)
-
-  const snapString = prepareSnapString(newSnap, indent)
+    return replaceObjectSnap(code, s, index, newSnap)
 
   const quote = startMatch[1]
-
   const startIndex = index + startMatch.index! + startMatch[0].length
+  const snapString = prepareSnapString(newSnap, code, index)
 
   if (quote === ')') {
     s.appendRight(startIndex - 1, snapString)
@@ -90,4 +94,47 @@ export function replaceInlineSnap(code: string, s: MagicString, index: number, n
   s.overwrite(startIndex - 1, endIndex, snapString)
 
   return true
+}
+
+const INDENTATION_REGEX = /^([^\S\n]*)\S/m
+export function stripSnapshotIndentation(inlineSnapshot: string) {
+  // Find indentation if exists.
+  const match = inlineSnapshot.match(INDENTATION_REGEX)
+  if (!match || !match[1]) {
+    // No indentation.
+    return inlineSnapshot
+  }
+
+  const indentation = match[1]
+  const lines = inlineSnapshot.split(/\n/g)
+  if (lines.length <= 2) {
+    // Must be at least 3 lines.
+    return inlineSnapshot
+  }
+
+  if (lines[0].trim() !== '' || lines[lines.length - 1].trim() !== '') {
+    // If not blank first and last lines, abort.
+    return inlineSnapshot
+  }
+
+  for (let i = 1; i < lines.length - 1; i++) {
+    if (lines[i] !== '') {
+      if (lines[i].indexOf(indentation) !== 0) {
+        // All lines except first and last should either be blank or have the same
+        // indent as the first line (or more). If this isn't the case we don't
+        // want to touch the snapshot at all.
+        return inlineSnapshot
+      }
+
+      lines[i] = lines[i].substring(indentation.length)
+    }
+  }
+
+  // Last line is a special case because it won't have the same indent as others
+  // but may still have been given some indent to line up.
+  lines[lines.length - 1] = ''
+
+  // Return inline snapshot, now at indent 0.
+  inlineSnapshot = lines.join('\n')
+  return inlineSnapshot
 }
