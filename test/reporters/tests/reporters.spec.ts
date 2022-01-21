@@ -6,6 +6,14 @@ import { TapFlatReporter } from '../../../packages/vitest/src/node/reporters/tap
 import { getContext } from '../src/context'
 import { files } from '../src/data'
 
+beforeEach(() => {
+  vi.useFakeTimers()
+})
+
+afterEach(() => {
+  vi.useRealTimers()
+})
+
 test('tap reporter', async() => {
   // Arrange
   const reporter = new TapReporter()
@@ -41,7 +49,7 @@ test('JUnit reporter', async() => {
     hostname: () => 'hostname',
   }))
 
-  vi.mockCurrentDate(1642587001759)
+  vi.setSystemTime(1642587001759)
 
   // Act
   reporter.onInit(context.vitest)
@@ -56,7 +64,7 @@ test('json reporter', async() => {
   const reporter = new JsonReporter()
   const context = getContext()
 
-  vi.mockCurrentDate(1642587001759)
+  vi.setSystemTime(1642587001759)
 
   // Act
   reporter.onInit(context.vitest)
