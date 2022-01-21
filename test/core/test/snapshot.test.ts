@@ -8,6 +8,13 @@ test('snapshot', () => {
   }).toMatchSnapshot()
 })
 
+test('snapshot with spaces', () => {
+  expect(`
+  Hello
+    World
+`).toMatchSnapshot()
+})
+
 test('outside snapshot', () => {
   testOutsideInlineSnapshot()
 })

@@ -72,6 +72,13 @@ exports[`snapshot with big string 1`] = `
 }
 `;
 
+exports[`snapshot with spaces 1`] = `
+"
+  Hello
+    World
+"
+`;
+
 exports[`throwing snapshots 1`] = `"omega"`;
 
 exports[`throwing snapshots 2`] = `"omega"`;
