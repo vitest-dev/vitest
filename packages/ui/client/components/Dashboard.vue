@@ -1,7 +1,7 @@
 <template>
   <div h="full" flex="~ col">
     <div
-      p="4"
+      p="3"
       h-10
       flex="~ gap-2"
       items-center
@@ -10,7 +10,8 @@
     >
       <div class="i-carbon-dashboard" />
       <span
-        font-light
+        pl-1
+        font-bold
         text-sm
         flex-auto
         ws-nowrap
