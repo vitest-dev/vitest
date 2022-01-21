@@ -61,6 +61,7 @@ function prepareSnapString(snap: string, source: string, index: number) {
   const lines = snap
     .trim()
     .replace(/\\/g, '\\\\')
+    .replace(/\$/g, '\\$')
     .split(/\n/g)
     .map(i => i.trimEnd())
 

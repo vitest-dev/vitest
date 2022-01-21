@@ -37,6 +37,15 @@ test('inline snapshot', () => {
           .filter(fn)
       "
     `)
+  const literal = `
+  Hello \${world}
+`
+  expect(literal)
+    .toMatchInlineSnapshot(`
+      "
+        Hello \${world}
+      "
+    `)
 })
 
 test('snapshot with big array', () => {
