@@ -8,13 +8,15 @@ body {
   --color-text-light: #000;
   --color-text-dark: #ddd;
   --color-text: var(--color-text-light);
+  --background-color: #e4e4e4;
 }
 
 
 html.dark {
   --color-text: var(--color-text-dark);
+  --background-color: #141414;
   color: var(--color-text);
-  background-color: #141414;
+  background-color: var(--background-color);
   color-scheme: dark;
 }
 
@@ -167,3 +169,14 @@ html.dark {
   border-right: none;
 }
 
+.v-popper__popper .v-popper__inner {
+  font-size: 12px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  background-color: var(--background-color);
+  color: var(--color-text);
+}
+
+.v-popper__popper .v-popper__arrow-outer {
+  border-color: var(--background-color);
+}

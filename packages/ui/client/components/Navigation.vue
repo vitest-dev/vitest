@@ -17,7 +17,7 @@ const toggleMode = computed(() => isDark.value ? 'light' : 'dark')
 <template>
   <TasksList border="r base" :tasks="files" :on-item-click="onItemClick" :group-by-type="true" @run="runAll">
     <template #header="{ filteredTests }">
-      <img w-6 h-6 mx-2 src="/favicon.svg">
+      <img w-6 h-6 src="/favicon.svg">
       <span font-light text-sm flex-1>Vitest</span>
       <div class="flex text-lg">
         <IconButton

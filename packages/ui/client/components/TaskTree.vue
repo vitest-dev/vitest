@@ -24,7 +24,7 @@ export default {
     v-if="!search || task.name.match(search)"
     v-bind="$attrs"
     :task="task"
-    :style="{ paddingLeft: `${indent * 0.75 + 0.5}rem`}"
+    :style="{ paddingLeft: `${indent * 0.75 + 1}rem`}"
     @click="onItemClick && onItemClick(task)"
   />
   <div v-if="nested && task.type === 'suite' && task.tasks.length">
