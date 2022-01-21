@@ -79,7 +79,7 @@ beforeAll(async () => { ... }, 1000)
 Use `.skip` alias `it` to avoid running certain suites or tests
 
 ```ts
-import { describe, assert } from 'vitest';
+import { describe, assert, it } from 'vitest';
 
 describe.skip("skipped suite", () => {
   it("test", () => {
@@ -101,7 +101,7 @@ describe("suite", () => {
 Use `.only` to only run certain suites or tests
 
 ```ts
-import { describe, assert } from 'vitest'
+import { describe, assert, it } from 'vitest'
 
 // Only this suite (and others marked with only) are run
 describe.only("suite", () => {
@@ -128,7 +128,7 @@ describe("another suite", () => {
 Use `.todo` to stub suites and tests that should be implemented
 
 ```ts
-import { describe } from 'vitest'
+import { describe, it } from 'vitest'
 
 // An entry will be shown in the report for this suite
 describe.todo("unimplemented suite");
@@ -144,7 +144,7 @@ describe("suite", () => {
 Use `.concurrent` in consecutive tests to run them in parallel
 
 ```ts
-import { describe } from 'vitest'
+import { describe, it } from 'vitest'
 
 // The two tests marked with concurrent will be run in parallel
 describe("suite", () => {
@@ -157,6 +157,8 @@ describe("suite", () => {
 If you use `.concurrent` in a suite, every tests in it will be run in parallel
 
 ```ts
+import { describe, it } from 'vitest'
+
 // All tests within this suite will be run in parallel
 describe.concurrent("suite", () => {
   it("concurrent test 1", async () => { /* ... */ });
