@@ -15,12 +15,12 @@ describe('testing date mock functionality', () => {
     vi.setSystemTime(date)
 
     expect(Date.now()).toBe(date.valueOf())
-    expect(vi.getMockedDate()).toBe(date)
+    expect(vi.getMockedSystemTime()).toBe(date)
 
     vi.useRealTimers()
 
     expect(Date.now()).not.toBe(date.valueOf())
-    expect(vi.getMockedDate()).not.toBe(date)
+    expect(vi.getMockedSystemTime()).not.toBe(date)
   })
 
   test('setting time in different types', () => {

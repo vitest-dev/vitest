@@ -1119,9 +1119,10 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 
   vi.useFakeTimers()
   vi.setSystemTime(date)
-  vi.useRealTimers()
 
   expect(Date.now()).toBe(date.valueOf())
+
+  vi.useRealTimers()
   ```
 
 ### vi.mocked
