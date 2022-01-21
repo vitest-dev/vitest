@@ -14,7 +14,7 @@ defineProps<{ task: Task }>()
   />
   <div
     v-else-if="hasFailedSnapshot(task)"
-    v-tooltip.right="'Including failed snapshot'"
+    v-tooltip.right="'Contains failed snapshot'"
     text-red-500
     flex-shrink-0
     i-carbon:compare
