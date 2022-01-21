@@ -54,7 +54,6 @@ export default {
       </div>
       <div
         p="x4 y2"
-        :class="groupByType ? 'p-l1.4rem' : 'p-l2'"
         flex="~ gap-2"
         items-center
         bg-header
@@ -69,7 +68,7 @@ export default {
           font="light"
           text="sm"
           flex-1
-          :class="{ 'p-l3': groupByType }"
+          pl-3
           :op="search.length ? '100' : '50'"
           @keydown.esc="search = ''"
           @keydown.enter="emit('run', isFiltered ? filteredTests : undefined)"
