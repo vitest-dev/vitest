@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { ComputedRef } from 'vue'
 import type { File, Task } from '#types'
-import { findById } from '~/composables/client'
+import { findById, testRunState } from '~/composables/client'
 import { activeFileId } from '~/composables/params'
 
 const props = withDefaults(defineProps<{
@@ -38,6 +38,7 @@ const running = computed(() => filtered.value.filter(task =>
   && !success.value.includes(task)
   && !skipped.value.includes(task),
 ))
+const throttledRunning = useThrottle(running, 250)
 </script>
 
 <script lang="ts">
@@ -94,14 +95,14 @@ export default {
             :on-item-click="onItemClick"
           />
         </DetailsPanel>
-        <DetailsPanel v-if="running.length">
+        <DetailsPanel v-if="running.length || testRunState === 'running'">
           <template #summary>
             <div text-yellow5>
-              RUNNING ({{ running.length }})
+              RUNNING ({{ throttledRunning.length }})
             </div>
           </template>
           <TaskTree
-            v-for="task in running"
+            v-for="task in throttledRunning"
             :key="task.id"
             :task="task"
             :nested="nested"

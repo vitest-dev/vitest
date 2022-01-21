@@ -9,3 +9,5 @@ export interface WSMessage {
    */
   data: any
 }
+
+export type RunState = 'idle' | 'running'
