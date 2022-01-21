@@ -1,14 +1,13 @@
 // Vitest Snapshot v1
 
-exports[`properties snapshot 1`] = `
-{
-  "createdAt": Any<Date>,
-  "id": Any<Number>,
-  "name": StringContaining "LeBron",
-}
+exports[`multiline 1`] = `
+"
+  Hello
+    World
+"
 `;
 
-exports[`snapshot 1`] = `
+exports[`object 1`] = `
 {
   "this": {
     "is": Set {
@@ -19,7 +18,25 @@ exports[`snapshot 1`] = `
 }
 `;
 
-exports[`snapshot with big array 1`] = `
+exports[`properties snapshot 1`] = `
+{
+  "createdAt": Any<Date>,
+  "id": Any<Number>,
+  "name": StringContaining "LeBron",
+}
+`;
+
+exports[`throwing 1`] = `"omega"`;
+
+exports[`throwing 2`] = `"omega"`;
+
+exports[`throwing 3`] = `
+{
+  "error": "omega",
+}
+`;
+
+exports[`with big array 1`] = `
 {
   "this": {
     "is": Set {
@@ -61,7 +78,7 @@ exports[`snapshot with big array 1`] = `
 }
 `;
 
-exports[`snapshot with big string 1`] = `
+exports[`with big string 1`] = `
 {
   "this": {
     "is": Set {
@@ -69,22 +86,5 @@ exports[`snapshot with big string 1`] = `
       "zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo",
     },
   },
-}
-`;
-
-exports[`snapshot with spaces 1`] = `
-"
-  Hello
-    World
-"
-`;
-
-exports[`throwing snapshots 1`] = `"omega"`;
-
-exports[`throwing snapshots 2`] = `"omega"`;
-
-exports[`throwing snapshots 3`] = `
-{
-  "error": "omega",
 }
 `;
