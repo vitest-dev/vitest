@@ -1,7 +1,7 @@
 <template>
   <div h="full" flex="~ col">
     <div
-      p="2"
+      p="4"
       h-10
       flex="~ gap-2"
       items-center

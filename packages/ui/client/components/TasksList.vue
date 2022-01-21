@@ -57,7 +57,7 @@ export default {
         flex="~ gap-2"
         items-center
         bg-header
-        border="b base"
+        border="b-2 base"
       >
         <div i-carbon:search flex-shrink-0 />
         <input
@@ -68,7 +68,7 @@ export default {
           font="light"
           text="sm"
           flex-1
-          pl-3
+          pl-1
           :op="search.length ? '100' : '50'"
           @keydown.esc="search = ''"
           @keydown.enter="emit('run', isFiltered ? filteredTests : undefined)"
