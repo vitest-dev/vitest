@@ -53,7 +53,7 @@ export default {
         <slot name="header" :filteredTests="isFiltered ? filteredTests : undefined" />
       </div>
       <div
-        p="x4 y2"
+        p="x3 y2"
         flex="~ gap-2"
         items-center
         bg-header
@@ -90,7 +90,6 @@ export default {
             :task="task"
             :nested="nested"
             :search="search"
-            :indent="1"
             :class="activeFileId === task.id ? 'bg-active' : ''"
             :on-item-click="onItemClick"
           />
@@ -107,7 +106,6 @@ export default {
             :task="task"
             :nested="nested"
             :search="search"
-            :indent="1"
             :class="activeFileId === task.id ? 'bg-active' : ''"
             :on-item-click="onItemClick"
           />
@@ -124,7 +122,6 @@ export default {
             :task="task"
             :nested="nested"
             :search="search"
-            :indent="1"
             :class="activeFileId === task.id ? 'bg-active' : ''"
             :on-item-click="onItemClick"
           />
@@ -141,7 +138,6 @@ export default {
             :task="task"
             :nested="nested"
             :search="search"
-            :indent="1"
             :class="activeFileId === task.id ? 'bg-active' : ''"
             :on-item-click="onItemClick"
           />
