@@ -16,5 +16,5 @@ export interface WebSocketHandlers {
   updateSnapshot(file?: File): Promise<void>
 }
 
-export interface WebSocketEvents extends Pick<Reporter, 'onCollected' | 'onTaskUpdate' | 'onUserConsoleLog'> {
+export interface WebSocketEvents extends Pick<Reporter, 'onCollected' | 'onFinished' | 'onTaskUpdate' | 'onUserConsoleLog'> {
 }

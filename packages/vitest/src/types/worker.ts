@@ -21,6 +21,7 @@ export interface WorkerRPC {
   resolveId: ResolveIdFunction
   getSourceMap: (id: string, force?: boolean) => Promise<RawSourceMap | undefined>
 
+  onFinished: (files: File[]) => void
   onWorkerExit: (code?: number) => void
   onUserConsoleLog: (log: UserConsoleLog) => void
   onCollected: (files: File[]) => void
