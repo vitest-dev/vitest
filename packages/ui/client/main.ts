@@ -19,7 +19,9 @@ const router = createRouter({
   routes,
 })
 app.use(router)
-app.directive('tooltip', VTooltip)
-app.mount('#app')
 
+app.directive('tooltip', VTooltip)
 FloatingVue.options.instantMove = true
+FloatingVue.options.distance = 10
+
+app.mount('#app')
