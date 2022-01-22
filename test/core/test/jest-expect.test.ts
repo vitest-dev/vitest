@@ -126,6 +126,7 @@ describe('jest-expect', () => {
     expect([complex]).toMatchObject([{ foo: 1 }])
     expect(complex).not.toMatchObject({ foo: 2 })
     expect(complex).toMatchObject({ bar: { bar: 100 } })
+    expect(complex).toMatchObject({ foo: expect.any(Number) })
 
     expect(complex).toHaveProperty('foo')
     expect(complex).toHaveProperty('foo', 1)

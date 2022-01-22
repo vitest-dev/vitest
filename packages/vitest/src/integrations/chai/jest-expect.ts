@@ -3,7 +3,7 @@ import { isMockFunction } from '../jest-mock'
 import { addSerializer } from '../snapshot/port/plugins'
 import type { Constructable } from '../../types'
 import type { ChaiPlugin, MatcherState } from './types'
-import { arrayBufferEquality, equals as asymmetricEquals, hasAsymmetric, iterableEquality, sparseArrayEquality, typeEquality } from './jest-utils'
+import { arrayBufferEquality, equals as asymmetricEquals, hasAsymmetric, iterableEquality, sparseArrayEquality, subsetEquality, typeEquality } from './jest-utils'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
 
 const MATCHERS_OBJECT = Symbol.for('matchers-object')
@@ -136,7 +136,14 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     return this.equal(expected)
   })
   def('toMatchObject', function(expected) {
-    return this.containSubset(expected)
+    const actual = this._obj
+    return this.assert(
+      asymmetricEquals(actual, expected, [iterableEquality, subsetEquality]),
+      'expected #{this} to match object #{exp}',
+      'expected #{this} to not match object #{exp}',
+      expected,
+      actual,
+    )
   })
   def('toMatch', function(expected: string | RegExp) {
     if (typeof expected === 'string')
