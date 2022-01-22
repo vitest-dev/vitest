@@ -127,8 +127,6 @@ declare global {
     interface VitestAssertion<T = any> extends VitestifyAssertion<Assertion>, JestAssertion<T> {
       resolves: Promisify<VitestAssertion<T>>
       rejects: Promisify<VitestAssertion<T>>
-
-      chaiEqual<E>(expected: E): void
     }
   }
 }
