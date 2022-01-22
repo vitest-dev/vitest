@@ -3,7 +3,7 @@ import { isMockFunction } from '../jest-mock'
 import { addSerializer } from '../snapshot/port/plugins'
 import type { Constructable } from '../../types'
 import type { ChaiPlugin, MatcherState } from './types'
-import { arrayBufferEquality, equals as asymmetricEquals, hasAsymmetric, iterableEquality, sparseArrayEquality, subsetEquality, typeEquality } from './jest-utils'
+import { arrayBufferEquality, equals as asymmetricEquals, iterableEquality, sparseArrayEquality, subsetEquality, typeEquality } from './jest-utils'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
 
 const MATCHERS_OBJECT = Symbol.for('matchers-object')
@@ -69,40 +69,30 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   })
 
   // overrides `.equal` and `.eql` to provide custom assertion for asymmetric equality
-  utils.overwriteMethod(chai.Assertion.prototype, 'equal', (_super: any) => {
+  utils.overwriteMethod(chai.Assertion.prototype, 'equal', () => {
     return function(this: Chai.Assertion & Chai.AssertionStatic, ...args: any[]) {
       const expected = args[0]
       const actual = utils.flag(this, 'object')
-      if (hasAsymmetric(expected)) {
-        this.assert(
-          asymmetricEquals(actual, expected, undefined, true),
-          'not match with #{act}',
-          'should not match with #{act}',
-          actual,
-          expected,
-        )
-      }
-      else {
-        _super.apply(this, args)
-      }
+      this.assert(
+        asymmetricEquals(actual, expected, undefined, true),
+        'not match with #{act}',
+        'should not match with #{act}',
+        actual,
+        expected,
+      )
     }
   })
-  utils.overwriteMethod(chai.Assertion.prototype, 'eql', (_super: any) => {
+  utils.overwriteMethod(chai.Assertion.prototype, 'eql', () => {
     return function(this: Chai.Assertion & Chai.AssertionStatic, ...args: any[]) {
       const expected = args[0]
       const actual = utils.flag(this, 'object')
-      if (hasAsymmetric(expected)) {
-        this.assert(
-          asymmetricEquals(actual, expected),
-          'not match with #{exp}',
-          'should not match with #{exp}',
-          expected,
-          actual,
-        )
-      }
-      else {
-        _super.apply(this, args)
-      }
+      this.assert(
+        asymmetricEquals(actual, expected),
+        'not match with #{exp}',
+        'should not match with #{exp}',
+        expected,
+        actual,
+      )
     }
   })
 
