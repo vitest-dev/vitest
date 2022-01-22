@@ -282,8 +282,8 @@ export class Vitest {
   private registerWatcher() {
     const onChange = (id: string) => {
       id = slash(id)
-      this.handleFileChanged(id)
-      if (this.changedTests.size)
+      const needsRerun = this.handleFileChanged(id)
+      if (needsRerun)
         this.scheduleRerun(id)
     }
     const onUnlink = (id: string) => {
@@ -315,25 +315,35 @@ export class Vitest {
     }
   }
 
-  private handleFileChanged(id: string) {
+  /**
+   * @returns A value indicating whether rerun is needed (changedTests was mutated)
+   */
+  private handleFileChanged(id: string): boolean {
     if (this.changedTests.has(id) || this.invalidates.has(id) || this.config.watchIgnore.some(i => id.match(i)))
-      return
+      return false
 
     const mod = this.server.moduleGraph.getModuleById(id)
     if (!mod)
-      return
+      return false
 
     this.invalidates.add(id)
 
     if (this.state.filesMap.has(id)) {
       this.changedTests.add(id)
-      return
+      return true
     }
 
+    let rerun = false
     mod.importers.forEach((i) => {
-      if (i.id)
-        this.handleFileChanged(i.id)
+      if (!i.id)
+        return
+
+      const heedsRerun = this.handleFileChanged(i.id)
+      if (heedsRerun)
+        rerun = true
     })
+
+    return rerun
   }
 
   async close() {
@@ -350,13 +360,15 @@ export class Vitest {
     return this.closingPromise
   }
 
-  async exit() {
+  async exit(force = false) {
     setTimeout(() => {
       console.warn(`close timed out after ${CLOSE_TIMEOUT}ms`)
       process.exit()
     }, CLOSE_TIMEOUT).unref()
 
     await this.close()
+    if (force)
+      process.exit()
   }
 
   async report<T extends keyof Reporter>(name: T, ...args: ArgumentsType<Reporter[T]>) {

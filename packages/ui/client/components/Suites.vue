@@ -9,15 +9,15 @@ const updateSnapshot = () => current.value && client.rpc.updateSnapshot(current.
 </script>
 
 <template>
-  <div v-if="current" h-full border="r base">
+  <div v-if="current" h-full>
     <TasksList :tasks="current.tasks" :nested="true">
       <template #header>
-        <StatusIcon :task="current" />
-        <span font-light text-sm flex-auto ws-nowrap overflow-hidden truncate>{{ name }}</span>
+        <StatusIcon mx-1 :task="current" />
+        <span font-bold text-sm flex-auto ws-nowrap overflow-hidden truncate>{{ name }}</span>
         <div class="flex text-lg">
           <IconButton
             v-if="failedSnapshot"
-            v-tooltip.bottom="'Update failed snapshots'"
+            v-tooltip.bottom="`Update failed snapshot(s) of ${current.name}`"
             icon="i-carbon-result-old"
             @click="updateSnapshot()"
           />

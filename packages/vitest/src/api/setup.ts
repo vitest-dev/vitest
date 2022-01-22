@@ -93,7 +93,8 @@ export function setup(ctx: Vitest) {
             inlined: Array.from(inlined),
           }
         },
-        updateSnapshot(file: File) {
+        updateSnapshot(file?: File) {
+          if (!file) return ctx.updateSnapshot()
           return ctx.updateSnapshot([file.filepath])
         },
       },
@@ -142,6 +143,12 @@ class WebSocketReporter implements Reporter {
 
     this.clients.forEach((client) => {
       client.onTaskUpdate?.(packs)
+    })
+  }
+
+  onFinished(files?: File[] | undefined) {
+    this.clients.forEach((client) => {
+      client.onFinished?.(files)
     })
   }
 

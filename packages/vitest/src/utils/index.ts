@@ -56,6 +56,9 @@ export async function ensurePackageInstalled(
 
   if (install) {
     await (await import('@antfu/install-pkg')).installPackage(dependency, { dev: true })
+    // TODO: somehow it fails to load the package after installation, remove this when it's fixed
+    process.stderr.write(c.yellow(`\nPackage ${dependency} installed, re-run the command to start.\n`))
+    process.exit(1)
     return true
   }
 

@@ -138,6 +138,9 @@ function createChannel(ctx: Vitest) {
         ctx.state.updateUserLog(log)
         ctx.report('onUserConsoleLog', log)
       },
+      onFinished(files) {
+        ctx.report('onFinished', files)
+      },
     },
     {
       post(v) {

@@ -34,8 +34,8 @@ export const setState = <State extends MatcherState = MatcherState>(
 
 // Jest Expect Compact
 export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
-  function def(name: keyof Chai.VitestAssertion | (keyof Chai.VitestAssertion)[], fn: ((this: Chai.AssertionStatic & Chai.VitestAssertion, ...args: any[]) => any)) {
-    const addMethod = (n: keyof Chai.VitestAssertion) => {
+  function def(name: keyof Vi.Assertion | (keyof Vi.Assertion)[], fn: ((this: Chai.AssertionStatic & Vi.Assertion, ...args: any[]) => any)) {
+    const addMethod = (n: keyof Vi.Assertion) => {
       utils.addMethod(chai.Assertion.prototype, n, fn)
     }
 

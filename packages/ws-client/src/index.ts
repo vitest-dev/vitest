@@ -60,6 +60,9 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
       onUserConsoleLog(log) {
         ctx.state.updateUserLog(log)
       },
+      onFinished(files) {
+        handlers.onFinished?.(files)
+      },
     },
     {
       post: msg => ctx.ws.send(msg),
