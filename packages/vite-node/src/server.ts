@@ -1,12 +1,9 @@
 import type { TransformResult, ViteDevServer } from 'vite'
 import { shouldExternalize } from './externalize'
 import type { ViteNodeResolveId, ViteNodeServerOptions } from './types'
-import { toFilePath } from './utils'
+import { toFilePath, withInlineSourcemap } from './utils'
 
 export * from './externalize'
-
-let SOURCEMAPPING_URL = 'sourceMa'
-SOURCEMAPPING_URL += 'ppingURL'
 
 export class ViteNodeServer {
   promiseMap = new Map<string, Promise<TransformResult | null | undefined>>()
@@ -83,13 +80,3 @@ export class ViteNodeServer {
   }
 }
 
-export async function withInlineSourcemap(result: TransformResult) {
-  const { code, map } = result
-
-  if (code.includes(`${SOURCEMAPPING_URL}=`))
-    return result
-  if (map)
-    result.code = `${code}\n\n//# ${SOURCEMAPPING_URL}=data:application/json;charset=utf-8;base64,${Buffer.from(JSON.stringify(map), 'utf-8').toString('base64')}\n`
-
-  return result
-}
