@@ -3,7 +3,7 @@ import { isMockFunction } from '../jest-mock'
 import { addSerializer } from '../snapshot/port/plugins'
 import type { Constructable } from '../../types'
 import type { ChaiPlugin, MatcherState } from './types'
-import { arrayBufferEquality, equals as asymmetricEquals, iterableEquality, sparseArrayEquality, subsetEquality, typeEquality } from './jest-utils'
+import { arrayBufferEquality, iterableEquality, equals as jestEquals, sparseArrayEquality, subsetEquality, typeEquality } from './jest-utils'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
 
 const MATCHERS_OBJECT = Symbol.for('matchers-object')
@@ -63,7 +63,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
 
   def('toEqual', function(expected) {
     const actual = utils.flag(this, 'object')
-    const equal = asymmetricEquals(
+    const equal = jestEquals(
       actual,
       expected,
       [iterableEquality],
@@ -80,7 +80,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
 
   def('toStrictEqual', function(expected) {
     const obj = utils.flag(this, 'object')
-    const equal = asymmetricEquals(
+    const equal = jestEquals(
       obj,
       expected,
       [
@@ -113,7 +113,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   def('toMatchObject', function(expected) {
     const actual = this._obj
     return this.assert(
-      asymmetricEquals(actual, expected, [iterableEquality, subsetEquality]),
+      jestEquals(actual, expected, [iterableEquality, subsetEquality]),
       'expected #{this} to match object #{exp}',
       'expected #{this} to not match object #{exp}',
       expected,
@@ -132,7 +132,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   def('toContainEqual', function(expected) {
     const obj = utils.flag(this, 'object')
     const index = Array.from(obj).findIndex((item) => {
-      return asymmetricEquals(item, expected)
+      return jestEquals(item, expected)
     })
 
     this.assert(
@@ -273,7 +273,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   def(['toHaveBeenCalledWith', 'toBeCalledWith'], function(...args) {
     const spy = getSpy(this)
     const spyName = spy.getMockName()
-    const pass = spy.mock.calls.some(callArg => asymmetricEquals(callArg, args, [iterableEquality]))
+    const pass = spy.mock.calls.some(callArg => jestEquals(callArg, args, [iterableEquality]))
     return this.assert(
       pass,
       `expected "${spyName}" to be called with arguments: #{exp}`,
@@ -303,7 +303,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const nthCall = spy.mock.calls[times - 1]
 
     this.assert(
-      asymmetricEquals(nthCall, args, [iterableEquality]),
+      jestEquals(nthCall, args, [iterableEquality]),
       `expected ${ordinalOf(times)} "${spyName}" call to have been called with #{exp}`,
       `expected ${ordinalOf(times)} "${spyName}" call to not have been called with #{exp}`,
       args,
@@ -316,7 +316,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const lastCall = spy.mock.calls[spy.calls.length - 1]
 
     this.assert(
-      asymmetricEquals(lastCall, args, [iterableEquality]),
+      jestEquals(lastCall, args, [iterableEquality]),
       `expected last "${spyName}" call to have been called with #{exp}`,
       `expected last "${spyName}" call to not have been called with #{exp}`,
       args,
@@ -401,7 +401,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   def(['toHaveReturnedWith', 'toReturnWith'], function(value: any) {
     const spy = getSpy(this)
     const spyName = spy.getMockName()
-    const pass = spy.mock.results.some(({ type, value: result }) => type === 'return' && asymmetricEquals(value, result))
+    const pass = spy.mock.results.some(({ type, value: result }) => type === 'return' && jestEquals(value, result))
     this.assert(
       pass,
       `expected "${spyName}" to be successfully called with #{exp}`,
@@ -413,7 +413,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const spy = getSpy(this)
     const spyName = spy.getMockName()
     const { value: lastResult } = spy.mock.results[spy.returns.length - 1]
-    const pass = asymmetricEquals(lastResult, value)
+    const pass = jestEquals(lastResult, value)
     this.assert(
       pass,
       `expected last "${spyName}" call to return #{exp}`,
@@ -432,7 +432,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     if (!isNot && callType === 'throw')
       chai.assert.fail(`expected ${ordinalCall} to return #{exp}, but instead it threw an error`)
 
-    const nthCallReturn = asymmetricEquals(callResult, value)
+    const nthCallReturn = jestEquals(callResult, value)
 
     this.assert(
       nthCallReturn,
