@@ -36,7 +36,7 @@ type Classes<T> = {
   [K in keyof T]: T[K] extends new (...args: any[]) => any ? K : never
 }[keyof T] & string
 
-export interface JestMockCompat<TArgs extends any[] = any[], TReturns = any> {
+export interface SpyInstance<TArgs extends any[] = any[], TReturns = any> {
   getMockName(): string
   mockName(n: string): this
   mock: JestMockCompatContext<TArgs, TReturns>
@@ -55,14 +55,14 @@ export interface JestMockCompat<TArgs extends any[] = any[], TReturns = any> {
   mockRejectedValueOnce(obj: any): this
 }
 
-export interface JestMockCompatFn<TArgs extends any[] = any, TReturns = any> extends JestMockCompat<TArgs, TReturns> {
+export interface SpyInstanceFn<TArgs extends any[] = any, TReturns = any> extends SpyInstance<TArgs, TReturns> {
   (...args: TArgs): TReturns
 }
 
 export type MaybeMockedConstructor<T> = T extends new (
   ...args: Array<any>
 ) => infer R
-  ? JestMockCompatFn<ConstructorParameters<T>, R>
+  ? SpyInstanceFn<ConstructorParameters<T>, R>
   : T
 export type MockedFunction<T extends Procedure> = MockWithArgs<T> & {
   [K in keyof T]: T[K];
@@ -91,15 +91,15 @@ export type MaybeMocked<T> = T extends Procedure
     ? MockedObject<T>
     : T
 
-export type EnhancedSpy<TArgs extends any[] = any[], TReturns = any> = JestMockCompat<TArgs, TReturns> & SpyImpl<TArgs, TReturns>
+export type EnhancedSpy<TArgs extends any[] = any[], TReturns = any> = SpyInstance<TArgs, TReturns> & SpyImpl<TArgs, TReturns>
 
 export interface MockWithArgs<T extends Procedure>
-  extends JestMockCompatFn<Parameters<T>, ReturnType<T>> {
+  extends SpyInstanceFn<Parameters<T>, ReturnType<T>> {
   new (...args: T extends new (...args: any) => any ? ConstructorParameters<T> : never): T
   (...args: Parameters<T>): ReturnType<T>
 }
 
-export const spies = new Set<JestMockCompat>()
+export const spies = new Set<SpyInstance>()
 
 export function isMockFunction(fn: any): fn is EnhancedSpy {
   return typeof fn === 'function'
@@ -111,28 +111,28 @@ export function spyOn<T, S extends Properties<Required<T>>>(
   obj: T,
   methodName: S,
   accesType: 'get',
-): JestMockCompat<[], T[S]>
+): SpyInstance<[], T[S]>
 export function spyOn<T, G extends Properties<Required<T>>>(
   obj: T,
   methodName: G,
   accesType: 'set',
-): JestMockCompat<[T[G]], void>
+): SpyInstance<[T[G]], void>
 export function spyOn<T, M extends Classes<Required<T>>>(
   object: T,
   method: M
 ): Required<T>[M] extends new (...args: infer A) => infer R
-  ? JestMockCompat<A, R>
+  ? SpyInstance<A, R>
   : never
 export function spyOn<T, M extends Methods<Required<T>>>(
   obj: T,
   methodName: M,
   mock?: T[M]
-): Required<T>[M] extends (...args: infer A) => infer R ? JestMockCompat<A, R> : never
+): Required<T>[M] extends (...args: infer A) => infer R ? SpyInstance<A, R> : never
 export function spyOn<T, K extends keyof T>(
   obj: T,
   method: K,
   accessType?: 'get' | 'set',
-): JestMockCompat {
+): SpyInstance {
   const dictionary = {
     get: 'getter',
     set: 'setter',
@@ -141,14 +141,14 @@ export function spyOn<T, K extends keyof T>(
 
   const stub = tinyspy.spyOn(obj, objMethod as any)
 
-  return enhanceSpy(stub) as JestMockCompat
+  return enhanceSpy(stub) as SpyInstance
 }
 
 let callOrder = 0
 
 function enhanceSpy<TArgs extends any[], TReturns>(
   spy: SpyImpl<TArgs, TReturns>,
-): JestMockCompat<TArgs, TReturns> {
+): SpyInstance<TArgs, TReturns> {
   const stub = spy as unknown as EnhancedSpy<TArgs, TReturns>
 
   let implementation: ((...args: TArgs) => TReturns) | undefined
@@ -249,12 +249,12 @@ function enhanceSpy<TArgs extends any[], TReturns>(
   return stub as any
 }
 
-export function fn<TArgs extends any[] = any[], R = any>(): JestMockCompatFn<TArgs, R>
+export function fn<TArgs extends any[] = any[], R = any>(): SpyInstanceFn<TArgs, R>
 export function fn<TArgs extends any[] = any[], R = any>(
   implementation: (...args: TArgs) => R
-): JestMockCompatFn<TArgs, R>
+): SpyInstanceFn<TArgs, R>
 export function fn<TArgs extends any[] = any[], R = any>(
   implementation?: (...args: TArgs) => R,
-): JestMockCompatFn<TArgs, R> {
-  return enhanceSpy(tinyspy.spyOn({ fn: implementation || (() => {}) }, 'fn')) as unknown as JestMockCompatFn
+): SpyInstanceFn<TArgs, R> {
+  return enhanceSpy(tinyspy.spyOn({ fn: implementation || (() => {}) }, 'fn')) as unknown as SpyInstanceFn
 }
