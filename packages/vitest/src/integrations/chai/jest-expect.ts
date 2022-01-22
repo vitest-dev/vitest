@@ -123,7 +123,14 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     )
   })
   def('toBe', function(expected) {
-    return this.equal(expected)
+    const actual = this._obj
+    return this.assert(
+      Object.is(actual, expected),
+      'expected #{this} to be #{exp} // Object.is equality',
+      'expected #{this} not to be #{exp} // Object.is equality',
+      expected,
+      actual,
+    )
   })
   def('toMatchObject', function(expected) {
     const actual = this._obj
