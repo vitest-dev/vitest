@@ -43,7 +43,6 @@ export function toFilePath(id: string, root: string): string {
     : absolute
 }
 
-
 let SOURCEMAPPING_URL = 'sourceMa'
 SOURCEMAPPING_URL += 'ppingURL'
 

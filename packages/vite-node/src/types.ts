@@ -8,7 +8,12 @@ export interface DepsHandlingOptions {
   fallbackCJS?: boolean
 }
 
-export type FetchFunction = (id: string) => Promise<{ code?: string; externalize?: string }>
+export interface FetchResult {
+  code?: string
+  externalize?: string
+}
+
+export type FetchFunction = (id: string) => Promise<FetchResult>
 export type ResolveIdFunction = (id: string, importer?: string) => Promise<ViteNodeResolveId | null>
 
 export interface ModuleCache {
