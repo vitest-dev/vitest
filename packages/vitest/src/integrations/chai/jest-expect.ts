@@ -46,14 +46,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       addMethod(name)
   }
 
-  // we overrides the default `.equal`, keep original `.chaiEqual` in case need
-  // @ts-expect-error prototype
-  const chaiEqual = chai.Assertion.prototype.equal
-  def('chaiEqual', function(...args: any[]) {
-    return chaiEqual.apply(this, args)
-  })
-
-  ;(['throw', 'throws', 'Throw'] as const).forEach((m) => {
+  (['throw', 'throws', 'Throw'] as const).forEach((m) => {
     utils.overwriteMethod(chai.Assertion.prototype, m, (_super: any) => {
       return function(this: Chai.Assertion & Chai.AssertionStatic, ...args: any[]) {
         const promise = utils.flag(this, 'promise')
@@ -66,34 +59,6 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         _super.apply(this, args)
       }
     })
-  })
-
-  // overrides `.equal` and `.eql` to provide custom assertion for asymmetric equality
-  utils.overwriteMethod(chai.Assertion.prototype, 'equal', () => {
-    return function(this: Chai.Assertion & Chai.AssertionStatic, ...args: any[]) {
-      const expected = args[0]
-      const actual = utils.flag(this, 'object')
-      this.assert(
-        asymmetricEquals(actual, expected, undefined, true),
-        'not match with #{act}',
-        'should not match with #{act}',
-        actual,
-        expected,
-      )
-    }
-  })
-  utils.overwriteMethod(chai.Assertion.prototype, 'eql', () => {
-    return function(this: Chai.Assertion & Chai.AssertionStatic, ...args: any[]) {
-      const expected = args[0]
-      const actual = utils.flag(this, 'object')
-      this.assert(
-        asymmetricEquals(actual, expected),
-        'not match with #{exp}',
-        'should not match with #{exp}',
-        expected,
-        actual,
-      )
-    }
   })
 
   def('toEqual', function(expected) {
