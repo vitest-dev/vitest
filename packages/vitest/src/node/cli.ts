@@ -1,5 +1,4 @@
 import cac from 'cac'
-import { execa } from 'execa'
 import type { UserConfig } from '../types'
 import { version } from '../../package.json'
 import { ensurePackageInstalled } from '../utils'
@@ -80,12 +79,6 @@ async function run(cliFilters: string[], options: UserConfig) {
   if (ctx.config.coverage.enabled) {
     if (!await ensurePackageInstalled('c8'))
       process.exit(1)
-
-    if (!process.env.NODE_V8_COVERAGE) {
-      process.env.NODE_V8_COVERAGE = ctx.config.coverage.tempDirectory
-      const { exitCode } = await execa(process.argv0, process.argv.slice(1), { stdio: 'inherit' })
-      process.exit(exitCode)
-    }
   }
 
   if (ctx.config.environment && ctx.config.environment !== 'node') {
