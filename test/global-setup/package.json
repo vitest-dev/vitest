@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "test": "vitest",
-    "coverage": "vitest --coverage"
+    "coverage": "vitest run --coverage"
   },
   "devDependencies": {
     "vitest": "workspace:*"

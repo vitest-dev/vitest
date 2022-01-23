@@ -6,7 +6,7 @@
     "types"
   ],
   "scripts": {
-    "coverage": "vitest --coverage",
+    "coverage": "vitest run --coverage",
     "dev": "vite",
     "test": "vitest",
     "test:ui": "vitest --ui"
