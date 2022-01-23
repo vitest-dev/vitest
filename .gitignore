@@ -12,3 +12,6 @@ dist
 .idea
 .DS_Store
 bench/test/*/*/
+cypress/videos
+cypress/downloads
+cypress/screenshots

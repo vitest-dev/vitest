@@ -7,11 +7,16 @@ const bodySelector = '[data-testid=body-content]'
 const headerSelector = '[data-testid=header-content]'
 const tailSelector = '[data-testid=tail]'
 
+// Used as a workaround until unocss HMR is compatible w Cy.
+it('initial', () => {
+  cy.mount(<DashboardEntry v-slots={{ body, header }}/>)
+})
+
 describe('DashboardEntry', () => {
-  it('tail is rendered by default', () => {
+  it('tail is rendered by default 2', () => {
     cy.mount(<DashboardEntry v-slots={{ body, header }}/>)
       .get(tailSelector)
-      .should('be.visible')
+      .should('exist')
   })
 
   it('tail is not shown when true', () => {
