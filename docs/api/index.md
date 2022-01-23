@@ -1052,6 +1052,10 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
     .advanceTimersToNextTimer() // log 3
   ```
 
+### vi.clearAllTimers
+
+  Removes all timers that are scheduled to run. These timers will never run in the future.
+
 ### vi.fn
 
 - **Type:** `(fn: Function) => CallableMockInstance`
@@ -1074,11 +1078,17 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
   expect(getApples).toHaveReturnedNthTimeWith(1, 5)
   ```
 
-### vi.getMockedDate
+### vi.getMockedSystemTime
 
-- **Type**: `() => string | number | Date`
+- **Type**: `() => Date | null`
 
-  Returns mocked current date that was set using `mockCurrentDate`. If date is not mocked, will return `null`.
+  Returns mocked current date that was set using `setSystemTime`. If date is not mocked, will return `null`.
+
+### vi.getRealSystemTime
+
+- **Type**: `() => number`
+
+  When using `vi.useFakeTimers`, `Date.now` calls are mocked. If you need to get real time in milliseconds, you can call this function.
 
 ### vi.mock
 
@@ -1092,7 +1102,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 
   Additionally, unlike Jest, mocked modules in `<root>/__mocks__` are not loaded unless `vi.mock()` is called. If you need them to be mocked in every test, like in Jest, you can mock them inside [`setupFiles`](/config/#setupfiles).
 
-### vi.mockCurrentDate
+### vi.setSystemTime
 
 - **Type**: `(date: string | number | Date) => void`
 
@@ -1103,9 +1113,12 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
   ```ts
   const date = new Date(1998, 11, 19)
 
-  vi.mockCurrentDate(date)
+  vi.useFakeTimers()
+  vi.setSystemTime(date)
 
   expect(Date.now()).toBe(date.valueOf())
+
+  vi.useRealTimers()
   ```
 
 ### vi.mocked
@@ -1152,6 +1165,12 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 - **Type**: `() => void`
 
   Restores `Date` back to its native implementation.
+
+### vi.runAllTicks
+
+- **Type:** `() => Vitest`
+
+  Calls every microtask. These are usually queued by `proccess.nextTick`. This will also run all microtasks scheduled by themselves.
 
 ### vi.runAllTimers
 
@@ -1216,7 +1235,9 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 
 - **Type:** `() => Vitest`
 
-  To enable mocking timers, you need to call this method. It will wrap all further calls to timers, until [`vi.useRealTimers()`](#userealtimers) is called.
+  To enable mocking timers, you need to call this method. It will wrap all further calls to timers (such as `setTimeout`, `setInterval`, `clearTimeout`, `clearInterval`, `nextTick`, `setImmediate`, `clearImmediate`, and `Date`), until [`vi.useRealTimers()`](#userealtimers) is called.
+
+  The implementation is based internally on [`@sinonjs/fake-timers`](https://github.com/sinonjs/fake-timers).
 
 ### vi.useRealTimers
 

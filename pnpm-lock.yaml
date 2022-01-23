@@ -504,6 +504,7 @@ importers:
   packages/vitest:
     specifiers:
       '@antfu/install-pkg': ^0.1.0
+      '@sinonjs/fake-timers': ^8.0.1
       '@types/chai': ^4.3.0
       '@types/chai-subset': ^1.3.3
       '@types/diff': ^5.0.2
@@ -512,6 +513,7 @@ importers:
       '@types/natural-compare': ^1.4.1
       '@types/node': ^17.0.10
       '@types/prompts': ^2.4.0
+      '@types/sinonjs__fake-timers': ^8.1.1
       '@vitest/ui': workspace:*
       birpc: ^0.1.0
       c8: ^7.11.0
@@ -531,7 +533,6 @@ importers:
       magic-string: ^0.25.7
       micromatch: ^4.0.4
       mlly: ^0.3.19
-      mockdate: ^3.0.5
       natural-compare: ^1.4.0
       pathe: ^0.2.0
       picocolors: ^1.0.0
@@ -557,12 +558,14 @@ importers:
       vite: 2.7.13
     devDependencies:
       '@antfu/install-pkg': 0.1.0
+      '@sinonjs/fake-timers': 8.1.0
       '@types/diff': 5.0.2
       '@types/jsdom': 16.2.14
       '@types/micromatch': 4.0.2
       '@types/natural-compare': 1.4.1
       '@types/node': 17.0.10
       '@types/prompts': 2.4.0
+      '@types/sinonjs__fake-timers': 8.1.1
       '@vitest/ui': link:../ui
       birpc: 0.1.0
       c8: 7.11.0
@@ -580,7 +583,6 @@ importers:
       magic-string: 0.25.7
       micromatch: 4.0.4
       mlly: 0.3.19
-      mockdate: 3.0.5
       natural-compare: 1.4.0
       pathe: 0.2.0
       picocolors: 1.0.0
@@ -3366,6 +3368,18 @@ packages:
       picomatch: 2.3.0
     dev: true
 
+  /@sinonjs/commons/1.8.3:
+    resolution: {integrity: sha512-xkNcLAn/wZaX14RPlwizcKicDk9G3F8m2nU3L7Ukm5zBgTwiT0wsoFAHx9Jq56fJA1z/7uKGtCRu16sOUCLIHQ==}
+    dependencies:
+      type-detect: 4.0.8
+    dev: true
+
+  /@sinonjs/fake-timers/8.1.0:
+    resolution: {integrity: sha512-OAPJUAtgeINhh/TAlUID4QTs53Njm7xzddaVlEs/SXwgtiD1tW22zAB/W1wdqfrpmikgaWQ9Fw6Ws+hsiRm5Vg==}
+    dependencies:
+      '@sinonjs/commons': 1.8.3
+    dev: true
+
   /@storybook/addon-actions/6.4.13_b3482aaf5744fc7c2aeb7941b0e0a78f:
     resolution: {integrity: sha512-Bf/M3Kdq60xj48oXnRCm7+qstWL9wT8rjFPFm7+A0NSfVSlox6pFU5SfPuOI4Za/6Ll2XDaYwsaF3QYHX0jQAA==}
     peerDependencies:
@@ -5554,6 +5568,10 @@ packages:
     resolution: {integrity: sha512-fBZgytwhYAUkj/jC/FAV4RQ5EerRup1YQsXQCh8rZfiHkc4UahC192oH0smGwsXol3cL3A5oETuAHeQHmhXM4w==}
     dependencies:
       '@types/node': 17.0.10
+    dev: true
+
+  /@types/sinonjs__fake-timers/8.1.1:
+    resolution: {integrity: sha512-0kSuKjAS0TrGLJ0M/+8MaFkGsQhZpB6pxOmvS3K8FYI72K//YmdfoW9X2qPsAKh1mkwxGD5zib9s1FIFed6E8g==}
     dev: true
 
   /@types/source-list-map/0.1.2:
@@ -12554,10 +12572,6 @@ packages:
 
   /mlly/0.3.19:
     resolution: {integrity: sha512-zMq5n3cOf4fOzA4WoeulxagbAgMChdev3MgP6K51k7M0u2whTXxupfIY4VVzws4vxkiWhwH1rVQcsw7zDGfRhA==}
-
-  /mockdate/3.0.5:
-    resolution: {integrity: sha512-iniQP4rj1FhBdBYS/+eQv7j1tadJ9lJtdzgOpvsOHng/GbcDh2Fhdeq+ZRldrPYdXvCyfFUmFeEwEGXZB5I/AQ==}
-    dev: true
 
   /moment/2.29.1:
     resolution: {integrity: sha512-kHmoybcPV8Sqy59DwNDY3Jefr64lK/by/da0ViFcuA4DH0vQg5Q6Ze5VimxkfQNSC+Mls/Kx53s7TjP1RhFEDQ==}
