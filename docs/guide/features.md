@@ -227,7 +227,7 @@ Vitest supports Native code coverage via [c8](https://github.com/bcoe/c8)
 {
   "scripts": {
     "test": "vitest",
-    "coverage": "vitest --coverage"
+    "coverage": "vitest run --coverage"
   }
 }
 ```

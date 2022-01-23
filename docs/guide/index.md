@@ -61,7 +61,7 @@ In a project where Vitest is installed, you can use the `vitest` binary in your 
 {
   "scripts": {
     "test": "vitest",
-    "coverage": "vitest --coverage"
+    "coverage": "vitest run --coverage"
   }
 }
 ```
