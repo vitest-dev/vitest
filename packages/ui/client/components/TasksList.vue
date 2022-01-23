@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ComputedRef } from 'vue'
+import { useVirtualList } from '@vueuse/core'
 import type { File, Task } from '#types'
 import { findById, testRunState } from '~/composables/client'
 import { activeFileId } from '~/composables/params'
@@ -29,6 +30,27 @@ const filtered = computed(() => {
   return props.tasks.filter(task => task.name.match(search.value))
 })
 const filteredTests: ComputedRef<File[]> = computed(() => isFiltered.value ? filtered.value.map(task => findById(task.id)!).filter(Boolean) : [])
+
+const { list, containerProps, wrapperProps } = useVirtualList(
+  filtered,
+  {
+    itemHeight: (i) => {
+      const task = filtered.value[i]
+      // Height of suite entry title
+      let height = 28
+      if (task.type === 'suite') {
+        // Height of each suite entry title
+        height += task.tasks.length * 28
+        // TODO @Shinigami92 2022-01-23: I assume we need to do this recursively?
+        height += task.tasks.reduce(
+          (acc, suite) => acc + (suite.type === 'suite' ? suite.tasks.length * 28 : 28),
+          0,
+        )
+      }
+      return height
+    },
+  },
+)
 
 const failed = computed(() => filtered.value.filter(task => task.result?.state === 'fail'))
 const success = computed(() => filtered.value.filter(task => task.result?.state === 'pass'))
@@ -147,15 +169,19 @@ export default {
 
       <!--flat-->
       <template v-else>
-        <TaskTree
-          v-for="task in filtered"
-          :key="task.id"
-          :task="task"
-          :nested="nested"
-          :search="search"
-          :class="activeFileId === task.id ? 'bg-active' : ''"
-          :on-item-click="onItemClick"
-        />
+        <div v-bind="containerProps" class="h-full">
+          <div v-bind="wrapperProps">
+            <TaskTree
+              v-for="{ data: task } in list"
+              :key="task.id"
+              :task="task"
+              :nested="nested"
+              :search="search"
+              :class="activeFileId === task.id ? 'bg-active' : ''"
+              :on-item-click="onItemClick"
+            />
+          </div>
+        </div>
       </template>
       <!--empty-state-->
       <template v-if="isFiltered && filtered.length === 0">
