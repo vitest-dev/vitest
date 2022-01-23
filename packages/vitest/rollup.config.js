@@ -44,6 +44,9 @@ export default ({ watch }) => [
       alias({
         entries: [
           { find: /^node:(.+)$/, replacement: '$1' },
+          { find: 'vite-node/server', replacement: path.resolve(__dirname, '../vite-node/src/server.ts') },
+          { find: 'vite-node/client', replacement: path.resolve(__dirname, '../vite-node/src/client.ts') },
+          { find: 'vite-node/utils', replacement: path.resolve(__dirname, '../vite-node/src/utils.ts') },
         ],
       }),
       resolve({

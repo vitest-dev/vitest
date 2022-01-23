@@ -51,7 +51,7 @@
   ],
   "scripts": {
     "build": "rimraf dist && rollup -c",
-    "dev": "rollup -c --watch --watch.include=src/**",
+    "dev": "rollup -c --watch",
     "prepublishOnly": "nr build"
   },
   "dependencies": {
