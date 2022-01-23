@@ -190,7 +190,7 @@ export async function startTests(paths: string[], config: ResolvedConfig) {
   rpc().onCollected(files)
 
   let session!: inspector.Session
-  if (config.coverage) {
+  if (config.coverage.enabled) {
     inspector.open(0)
     session = new inspector.Session()
     session.connect()
@@ -201,7 +201,7 @@ export async function startTests(paths: string[], config: ResolvedConfig) {
 
   await runSuites(files)
 
-  if (config.coverage) {
+  if (config.coverage.enabled) {
     session.post('Profiler.takePreciseCoverage', (_, coverage) => {
       rpc().coverageCollected(coverage)
     })
