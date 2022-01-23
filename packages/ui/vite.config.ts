@@ -7,6 +7,8 @@ import AutoImport from 'unplugin-auto-import/vite'
 import Unocss from 'unocss/vite'
 import Pages from 'vite-plugin-pages'
 import { presetAttributify, presetIcons, presetUno } from 'unocss'
+import OptimizationPersist from 'vite-plugin-optimize-persist'
+import PkgConfig from 'vite-plugin-package-config'
 
 export const config: UserConfig = {
   root: __dirname,
@@ -52,6 +54,10 @@ export const config: UserConfig = {
         '@vueuse/core',
       ],
     }),
+    // @ts-ignore
+    PkgConfig.default(),
+    // @ts-ignore
+    OptimizationPersist.default(),
   ],
   build: {
     outDir: './dist/client',

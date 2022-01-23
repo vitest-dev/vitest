@@ -447,10 +447,12 @@ importers:
       '@vitejs/plugin-vue-jsx': ^1.3.3
       '@vitest/ws-client': workspace:*
       '@vueuse/core': ^7.5.3
+      birpc: ^0.1.0
       codemirror: ^5.65.0
       codemirror-theme-vars: ^0.1.1
       cypress: ^9.3.0
       d3-graph-controller: ^2.2.1
+      flatted: ^3.2.4
       floating-vue: ^2.0.0-beta.3
       picocolors: ^1.0.0
       rollup: ^2.64.0
@@ -459,6 +461,8 @@ importers:
       unocss: ^0.22.4
       unplugin-auto-import: ^0.5.11
       unplugin-vue-components: ^0.17.13
+      vite-plugin-optimize-persist: ^0.1.2
+      vite-plugin-package-config: ^0.1.1
       vite-plugin-pages: ^0.20.0
       vue: ^3.2.25
       vue-router: ^4.0.12
@@ -477,10 +481,12 @@ importers:
       '@vitejs/plugin-vue-jsx': 1.3.3
       '@vitest/ws-client': link:../ws-client
       '@vueuse/core': 7.5.3_vue@3.2.26
+      birpc: 0.1.0
       codemirror: 5.65.0
       codemirror-theme-vars: 0.1.1
       cypress: 9.3.0
       d3-graph-controller: 2.2.1
+      flatted: 3.2.4
       floating-vue: 2.0.0-beta.3_vue@3.2.26
       picocolors: 1.0.0
       rollup: 2.64.0
@@ -488,6 +494,8 @@ importers:
       unocss: 0.22.4
       unplugin-auto-import: 0.5.11_420fb798aa2a20fbf563b9961b692a6d
       unplugin-vue-components: 0.17.13_19c514bd5e4e89f4f64a7d4f3f15a1ba
+      vite-plugin-optimize-persist: 0.1.2_e332eb06172b7009694b58948ff59ced
+      vite-plugin-package-config: 0.1.1_vite@2.7.13
       vite-plugin-pages: 0.20.0_vite@2.7.13
       vue: 3.2.26
       vue-router: 4.0.12_vue@3.2.26
@@ -17049,6 +17057,31 @@ packages:
       resolve: 1.21.0
       unified: 9.2.2
       vite: 2.7.13
+    dev: true
+
+  /vite-plugin-optimize-persist/0.1.2_e332eb06172b7009694b58948ff59ced:
+    resolution: {integrity: sha512-H/Ebn2kZO8PvwUF08SsT5K5xMJNCWKoGX71+e9/ER3yNj7GHiFjNQlvGg5ih/zEx09MZ9m7WCxOwmEKbeIVzww==}
+    peerDependencies:
+      vite: ^2.0.0
+      vite-plugin-package-config: ^0.1.0
+    dependencies:
+      debug: 4.3.3
+      fs-extra: 10.0.0
+      vite: 2.7.13
+      vite-plugin-package-config: 0.1.1_vite@2.7.13
+    transitivePeerDependencies:
+      - supports-color
+    dev: true
+
+  /vite-plugin-package-config/0.1.1_vite@2.7.13:
+    resolution: {integrity: sha512-w9B3I8ZnqoyhlbzimXjXNk85imrMZgvI9m8f6j3zonK5IVA5KXzpT+PZOHlDz8lqh1vqvoEI1uhy+ZDoLAiA/w==}
+    peerDependencies:
+      vite: ^2.0.0
+    dependencies:
+      debug: 4.3.3
+      vite: 2.7.13
+    transitivePeerDependencies:
+      - supports-color
     dev: true
 
   /vite-plugin-pages/0.20.0_vite@2.7.13:
