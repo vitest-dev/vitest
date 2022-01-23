@@ -54,9 +54,9 @@ export const config: UserConfig = {
         '@vueuse/core',
       ],
     }),
-    // @ts-ignore Unsure why this is not working -- it's what the documentation says to do
+    // @ts-expect-error Unsure why this is not working -- it's what the documentation says to do
     PkgConfig.default(),
-    // @ts-ignore Unsure why this is not working -- it's what the documentation says to do
+    // @ts-expect-error Unsure why this is not working -- it's what the documentation says to do
     OptimizationPersist.default(),
   ],
   build: {
