@@ -54,7 +54,7 @@ export class SnapshotClient {
       try {
         const pass = equals(received, properties, [iterableEquality, subsetEquality])
         if (!pass)
-          expect(received).toBe(properties)
+          expect(received).equals(properties)
         else
           received = deepMergeSnapshot(received, properties)
       }

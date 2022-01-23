@@ -1,7 +1,7 @@
 // TODO setImmediate, nextTick, requestAnimationFrame, cancelAnimationFrame
 // TODO async timers
 
-import type { JestMockCompat } from './jest-mock'
+import type { SpyInstance } from './jest-mock'
 import { spyOn } from './jest-mock'
 
 const originalSetTimeout = global.setTimeout
@@ -57,11 +57,11 @@ const getNodeTimeout = (id: number): NodeJS.Timeout => {
 }
 
 export class FakeTimers {
-  private _setTimeout!: JestMockCompat<Arguments, NodeJS.Timeout>
-  private _setInterval!: JestMockCompat<Arguments, NodeJS.Timeout>
+  private _setTimeout!: SpyInstance<Arguments, NodeJS.Timeout>
+  private _setInterval!: SpyInstance<Arguments, NodeJS.Timeout>
 
-  private _clearTimeout!: JestMockCompat<[NodeJS.Timeout], void>
-  private _clearInterval!: JestMockCompat<[NodeJS.Timeout], void>
+  private _clearTimeout!: SpyInstance<[NodeJS.Timeout], void>
+  private _clearInterval!: SpyInstance<[NodeJS.Timeout], void>
 
   private _advancedTime = 0
   private _nestedTime: Record<string, number> = {}

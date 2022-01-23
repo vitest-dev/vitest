@@ -1,5 +1,6 @@
 import { fileURLToPath, pathToFileURL } from 'url'
 import { dirname, resolve } from 'pathe'
+import type { TransformResult } from 'vite'
 
 export const isWindows = process.platform === 'win32'
 
@@ -40,4 +41,18 @@ export function toFilePath(id: string, root: string): string {
   return isWindows && absolute.startsWith('/')
     ? fileURLToPath(pathToFileURL(absolute.slice(1)).href)
     : absolute
+}
+
+let SOURCEMAPPING_URL = 'sourceMa'
+SOURCEMAPPING_URL += 'ppingURL'
+
+export async function withInlineSourcemap(result: TransformResult) {
+  const { code, map } = result
+
+  if (code.includes(`${SOURCEMAPPING_URL}=`))
+    return result
+  if (map)
+    result.code = `${code}\n\n//# ${SOURCEMAPPING_URL}=data:application/json;charset=utf-8;base64,${Buffer.from(JSON.stringify(map), 'utf-8').toString('base64')}\n`
+
+  return result
 }
