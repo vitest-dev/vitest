@@ -48,7 +48,7 @@ const changeViewMode = (view: Params['view']) => {
           />
         </div>
       </div>
-      <div flex="~" items-center bg-header border="b base" text-sm h-37px>
+      <div flex="~" items-center bg-header border="b-2 base" text-sm h-38px>
         <button
           tab-button
           :class="{ 'tab-button-active': viewMode == null }"

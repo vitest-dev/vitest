@@ -1,6 +1,8 @@
 import { createClient, getTasks } from '@vitest/ws-client'
 import type { WebSocketStatus } from '@vueuse/core'
+import type { Ref } from 'vue'
 import { reactive } from 'vue'
+import type { RunState } from '../../types'
 import { activeFileId } from './params'
 import type { File, ResolvedConfig } from '#types'
 
@@ -8,8 +10,18 @@ export const PORT = import.meta.hot ? '51204' : location.port
 export const HOST = [location.hostname, PORT].filter(Boolean).join(':')
 export const ENTRY_URL = `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${HOST}/__vitest_api__`
 
+export const testRunState: Ref<RunState> = ref('idle')
+
 export const client = createClient(ENTRY_URL, {
   reactive: reactive as any,
+  handlers: {
+    onTaskUpdate() {
+      testRunState.value = 'running'
+    },
+    onFinished() {
+      testRunState.value = 'idle'
+    },
+  },
 })
 
 export const config = shallowRef<ResolvedConfig>({} as any)

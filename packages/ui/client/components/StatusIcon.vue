@@ -8,21 +8,19 @@ defineProps<{ task: Task }>()
 <template>
   <div
     v-if="task.result?.state === 'pass'"
-    v-tooltip.right="'Passed'"
     text-green-500
     flex-shrink-0
     i-carbon:checkmark
   />
   <div
     v-else-if="hasFailedSnapshot(task)"
-    v-tooltip.right="'Failed snapshot'"
+    v-tooltip.right="'Contains failed snapshot'"
     text-red-500
     flex-shrink-0
     i-carbon:compare
   />
   <div
     v-else-if="task.result?.state === 'fail'"
-    v-tooltip.right="'Failed'"
     text-red-500
     flex-shrink-0
     i-carbon:close

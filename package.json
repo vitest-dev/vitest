@@ -1,13 +1,13 @@
 {
   "name": "@vitest/monorepo",
-  "version": "0.1.26",
+  "version": "0.1.27",
   "private": true,
   "description": "A blazing fast unit test framework powered by Vite",
   "type": "module",
   "scripts": {
     "build": "pnpm -r --filter {packages} run build",
     "ci": "ni && nr typecheck && nr lint && nr build && nr test:all",
-    "dev": "pnpm -r --parallel --filter {packages} run dev",
+    "dev": "pnpm -r --parallel --filter vitest --filter ui run dev",
     "docs": "npm -C docs run dev",
     "docs:build": "npm -C docs run build",
     "docs:serve": "npm -C docs run serve",

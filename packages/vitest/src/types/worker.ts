@@ -1,5 +1,5 @@
 import type { MessagePort } from 'worker_threads'
-import type { ViteNodeResolveId } from 'vite-node'
+import type { FetchFunction, ViteNodeResolveId } from 'vite-node'
 import type { RawSourceMap } from '../types'
 import type { ResolvedConfig } from './config'
 import type { File, TaskResultPack } from './tasks'
@@ -13,7 +13,6 @@ export interface WorkerContext {
   invalidates?: string[]
 }
 
-export type FetchFunction = (id: string) => Promise<{ code?: string; externalize?: string }>
 export type ResolveIdFunction = (id: string, importer?: string) => Promise<ViteNodeResolveId | null>
 
 export interface WorkerRPC {
@@ -21,6 +20,7 @@ export interface WorkerRPC {
   resolveId: ResolveIdFunction
   getSourceMap: (id: string, force?: boolean) => Promise<RawSourceMap | undefined>
 
+  onFinished: (files: File[]) => void
   onWorkerExit: (code?: number) => void
   onUserConsoleLog: (log: UserConsoleLog) => void
   onCollected: (files: File[]) => void

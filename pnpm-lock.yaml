@@ -446,11 +446,11 @@ importers:
       codemirror: ^5.65.0
       codemirror-theme-vars: ^0.1.1
       d3-graph-controller: ^2.2.1
+      floating-vue: ^2.0.0-beta.3
       picocolors: ^1.0.0
       rollup: ^2.64.0
       sirv: ^2.0.2
       splitpanes: ^3.0.6
-      tippy.js: ^6.3.7
       unocss: ^0.22.4
       unplugin-auto-import: ^0.5.11
       unplugin-vue-components: ^0.17.13
@@ -471,10 +471,10 @@ importers:
       codemirror: 5.65.0
       codemirror-theme-vars: 0.1.1
       d3-graph-controller: 2.2.2
+      floating-vue: 2.0.0-beta.3_vue@3.2.26
       picocolors: 1.0.0
       rollup: 2.64.0
       splitpanes: 3.0.6
-      tippy.js: 6.3.7
       unocss: 0.22.4
       unplugin-auto-import: 0.5.11_420fb798aa2a20fbf563b9961b692a6d
       unplugin-vue-components: 0.17.14_19c514bd5e4e89f4f64a7d4f3f15a1ba
@@ -2804,6 +2804,16 @@ packages:
       strip-json-comments: 3.1.1
     transitivePeerDependencies:
       - supports-color
+    dev: true
+
+  /@floating-ui/core/0.3.1:
+    resolution: {integrity: sha512-ensKY7Ub59u16qsVIFEo2hwTCqZ/r9oZZFh51ivcLGHfUwTn8l1Xzng8RJUe91H/UP8PeqeBronAGx0qmzwk2g==}
+    dev: true
+
+  /@floating-ui/dom/0.1.10:
+    resolution: {integrity: sha512-4kAVoogvQm2N0XE0G6APQJuCNuErjOfPW8Ux7DFxh8+AfugWflwVJ5LDlHOwrwut7z/30NUvdtHzQ3zSip4EzQ==}
+    dependencies:
+      '@floating-ui/core': 0.3.1
     dev: true
 
   /@gar/promisify/1.1.2:
@@ -10227,6 +10237,16 @@ packages:
   /flatted/3.2.4:
     resolution: {integrity: sha512-8/sOawo8tJ4QOBX8YlQBMxL8+RLZfxMQOif9o0KUKTNTjMYElWPE0r/m5VNFxTRd0NSw8qSy8dajrwX4RYI1Hw==}
 
+  /floating-vue/2.0.0-beta.3_vue@3.2.26:
+    resolution: {integrity: sha512-3vkivXbVVl1Mh3b1qgx7V9V7be9V03shqodF8wPeOQ4PyXiqISwKuJ2T6VAmNJf6zsUDNpTbhMAfctpp2loMlQ==}
+    peerDependencies:
+      vue: ^3.2.0
+    dependencies:
+      '@floating-ui/dom': 0.1.10
+      vue: 3.2.26
+      vue-resize: 2.0.0-alpha.1_vue@3.2.26
+    dev: true
+
   /flush-write-stream/1.1.1:
     resolution: {integrity: sha512-3Z4XhFZ3992uIq0XOqb9AreonueSYphE6oYbpt5+3u06JWklbsPkNv3ZKkP9Bz/r+1MWCaMoSQ28P85+1Yc77w==}
     dependencies:
@@ -15772,12 +15792,6 @@ packages:
     engines: {node: '>=14.0.0'}
     dev: false
 
-  /tippy.js/6.3.7:
-    resolution: {integrity: sha512-E1d3oP2emgJ9dRQZdf3Kkn0qJgI6ZLpyS5z6ZkY1DF3kaQaBsGZsndEpHwx+eC+tYM41HaSNvNtLx8tU57FzTQ==}
-    dependencies:
-      '@popperjs/core': 2.11.0
-    dev: true
-
   /tmp/0.0.33:
     resolution: {integrity: sha512-jRCJlojKnZ3addtTOjdIqoRuPEKBvNXcGYqzO6zWZX8KfKEpnGY5jfggJQ3EjKuu8D4bJRr0y+cYJFmYbImXGw==}
     engines: {node: '>=0.6.0'}
@@ -16619,6 +16633,14 @@ packages:
       semver: 7.3.5
     transitivePeerDependencies:
       - supports-color
+    dev: true
+
+  /vue-resize/2.0.0-alpha.1_vue@3.2.26:
+    resolution: {integrity: sha512-7+iqOueLU7uc9NrMfrzbG8hwMqchfVfSzpVlCMeJQe4pyibqyoifDNbKTZvwxZKDvGkB+PdFeKvnGZMoEb8esg==}
+    peerDependencies:
+      vue: ^3.0.0
+    dependencies:
+      vue: 3.2.26
     dev: true
 
   /vue-router/4.0.12_vue@3.2.26:

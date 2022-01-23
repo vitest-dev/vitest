@@ -249,10 +249,6 @@ When you use `test` in the top level of file, they are collected as part of the 
 
   Also, `expect` can be used statically to access matchers functions, described later, and more.
 
-  :::warning
-  To provide compatibility with [asymmetric matchers](#expectany), Vitest wraps `.eql` and `.equals` chai assertions, so if you need to use chai equality, you can use `.chaiEqual` matcher.
-  :::
-
 ### not
 
 TODO
