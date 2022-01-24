@@ -42,7 +42,6 @@ defineProps<{ task: Task }>()
   />
   <div
     v-else
-    v-tooltip.right="'Running'"
     text-yellow-500
     flex-shrink-0
     i-carbon:circle-dash
