@@ -146,7 +146,7 @@ class WebSocketReporter implements Reporter {
     })
   }
 
-  onFinished(files?: File[] | undefined) {
+  async onFinished(files?: File[] | undefined) {
     this.clients.forEach((client) => {
       client.onFinished?.(files)
     })
