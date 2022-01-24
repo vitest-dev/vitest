@@ -56,7 +56,7 @@ export function resolveConfig(
   const globals = options?.global ?? options.globals
 
   const resolved = {
-    ...deepMerge(options, viteConfig.test || {}),
+    ...options,
     root: viteConfig.root,
     globals,
     global: globals,
