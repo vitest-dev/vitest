@@ -1,4 +1,6 @@
 import type { Plugin, ViteDevServer } from 'vite'
+import { ViteNodeServer } from 'vite-node/server'
+import { ViteNodeRunner } from 'vite-node/client'
 import { toArray } from '../../utils'
 
 interface GlobalSetupFile {
@@ -8,12 +10,23 @@ interface GlobalSetupFile {
 }
 
 async function loadGlobalSetupFiles(server: ViteDevServer): Promise<GlobalSetupFile[]> {
+  const node = new ViteNodeServer(server)
+  const runner = new ViteNodeRunner({
+    root: server.config.root,
+    base: server.config.base,
+    fetchModule(id) {
+      return node.fetchModule(id)
+    },
+    resolveId(id, importer) {
+      return node.resolveId(id, importer)
+    },
+  })
   const globalSetupFiles = toArray(server.config.test?.globalSetup)
-  return Promise.all(globalSetupFiles.map(file => loadGlobalSetupFile(file, server)))
+  return Promise.all(globalSetupFiles.map(file => loadGlobalSetupFile(file, runner)))
 }
 
-async function loadGlobalSetupFile(file: string, server: ViteDevServer): Promise<GlobalSetupFile> {
-  const m = await server.ssrLoadModule(file)
+async function loadGlobalSetupFile(file: string, runner: ViteNodeRunner): Promise<GlobalSetupFile> {
+  const m = await runner.executeFile(file)
   for (const exp of ['default', 'setup', 'teardown']) {
     if (m[exp] != null && typeof m[exp] !== 'function')
       throw new Error(`invalid export in globalSetup file ${file}: ${exp} must be a function`)
@@ -42,17 +55,6 @@ export const GlobalSetupPlugin = (): Plugin => {
   return {
     name: 'vitest:global-setup-plugin',
     enforce: 'pre',
-
-    // @ts-expect-error ssr is still flagged as alpha
-    config(config) {
-      if (config.test?.globalSetup) {
-        return {
-          ssr: {
-            noExternal: true, // needed so ssrLoadModule call doesn't initialize server._ssrExternals
-          },
-        }
-      }
-    },
 
     configureServer(_server) {
       server = _server
