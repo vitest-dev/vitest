@@ -15,4 +15,4 @@ test('custom resolvers work with threads', async() => {
   })
 
   expect(stdout).toContain('hello from custom reporter')
-}, 10000)
+}, 20000)
