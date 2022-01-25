@@ -39,7 +39,8 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
 
       for (const c of [...defaultTasks.tasks, ...context.tasks]) {
         if (c.type === 'test') {
-          file.tasks.push(c)
+          if (!config.testNamePattern || c.name.match(config.testNamePattern))
+            file.tasks.push(c)
         }
         else if (c.type === 'suite') {
           file.tasks.push(c)
@@ -66,7 +67,8 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
 
     interpretTaskModes(file, config.testNamePattern)
 
-    files.push(file)
+    if (file.tasks.length > 0)
+      files.push(file)
   }
 
   return files
