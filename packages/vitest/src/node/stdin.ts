@@ -12,8 +12,8 @@ const keys = [
 export function printShortcutsHelp() {
   process.stdout.write(
     `
-${c.bold('Watch Usage')}
-${keys.map(i => c.dim('  press ') + c.reset(i[0]) + c.dim(` to ${i[1]}`)).join('\n')}
+${c.bold('  Watch Usage')}
+${keys.map(i => c.dim('  press ') + c.bold(c.reset(i[0])) + c.dim(` to ${i[1]}`)).join('\n')}
 `,
   )
 }
