@@ -108,7 +108,7 @@ export class Vitest {
     if (hasCustomReporter)
       config.reporters = []
 
-    return config
+    return config as ResolvedConfig
   }
 
   async start(filters?: string[]) {
