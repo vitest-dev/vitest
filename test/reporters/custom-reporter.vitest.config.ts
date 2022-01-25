@@ -1,5 +1,3 @@
-/// <reference path="vitest" />
-
 import type { Reporter } from 'vitest'
 import type { Vitest } from 'vitest/src/node'
 
