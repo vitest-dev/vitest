@@ -106,7 +106,7 @@ importers:
       lit: 2.1.1
     devDependencies:
       '@vitest/ui': link:../../packages/ui
-      happy-dom: 2.28.0
+      happy-dom: 2.30.0
       vite: 2.7.13
       vitest: link:../../packages/vitest
 
@@ -211,7 +211,7 @@ importers:
     dependencies:
       '@emotion/react': 11.7.1_react@17.0.2
       '@emotion/styled': 11.6.0_79c1490562c3c65ef55eb132a37e39b4
-      '@mui/lab': 5.0.0-alpha.65_a972faa7626ac7c3e5604c6f037ed921
+      '@mui/lab': 5.0.0-alpha.66_a972faa7626ac7c3e5604c6f037ed921
       '@mui/material': 5.3.0_c84e354a724f4213aa6539fdea9d08aa
       history: 5.2.0
       notistack: 2.0.3_14774c92b113a8e5ca091ba9293b0c1b
@@ -395,7 +395,7 @@ importers:
     devDependencies:
       '@vitejs/plugin-vue': 2.0.1_vite@2.7.13+vue@3.2.26
       '@vue/test-utils': 2.0.0-rc.18_vue@3.2.26
-      happy-dom: 2.28.0
+      happy-dom: 2.30.0
       unplugin-auto-import: 0.5.11_0300e2fc4592cc668512bad114c07138
       unplugin-vue-components: 0.17.14_19c514bd5e4e89f4f64a7d4f3f15a1ba
       vitest: link:../../packages/vitest
@@ -412,7 +412,7 @@ importers:
     devDependencies:
       '@vitejs/plugin-vue': 2.0.1_vite@2.7.13+vue@3.2.26
       '@vue/test-utils': 2.0.0-rc.18_vue@3.2.26
-      happy-dom: 2.28.0
+      happy-dom: 2.30.0
       vitest: link:../../packages/vitest
 
   examples/vue-jsx:
@@ -428,7 +428,7 @@ importers:
       '@vitejs/plugin-vue': 2.0.1_vite@2.7.13+vue@3.2.26
       '@vitejs/plugin-vue-jsx': 1.3.3
       '@vue/test-utils': 2.0.0-rc.18_vue@3.2.26
-      happy-dom: 2.28.0
+      happy-dom: 2.30.0
       vite: 2.7.13
       vitest: link:../../packages/vitest
       vue: 3.2.26
@@ -3038,8 +3038,30 @@ packages:
       react-is: 17.0.2
     dev: false
 
-  /@mui/lab/5.0.0-alpha.65_a972faa7626ac7c3e5604c6f037ed921:
-    resolution: {integrity: sha512-YiZvUGK/GbwgR4WU/JgdYrjF9AC9C4qn+mM3ShGsX0xPzTkwFG28uyKoNy2PN+/r10aQxdkkUsVQk3BCLC8/Sg==}
+  /@mui/base/5.0.0-alpha.66_react-dom@17.0.2+react@17.0.2:
+    resolution: {integrity: sha512-LARfVx0HmGV5YwU2pdIqEApQwz/CtEnYtKkV856hlY0cgi5NQL2htzZ/9ujKz0j3LFUaMYiYuJ2AOwrNtGFGrw==}
+    engines: {node: '>=12.0.0'}
+    peerDependencies:
+      '@types/react': ^16.8.6 || ^17.0.0
+      react: ^17.0.0
+      react-dom: ^17.0.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+    dependencies:
+      '@babel/runtime': 7.16.7
+      '@emotion/is-prop-valid': 1.1.1
+      '@mui/utils': 5.3.0_react@17.0.2
+      '@popperjs/core': 2.11.0
+      clsx: 1.1.1
+      prop-types: 15.7.2
+      react: 17.0.2
+      react-dom: 17.0.2_react@17.0.2
+      react-is: 17.0.2
+    dev: false
+
+  /@mui/lab/5.0.0-alpha.66_a972faa7626ac7c3e5604c6f037ed921:
+    resolution: {integrity: sha512-C/WB5vo+arkdbx3r1gRRKh4BcZJ763+ePcPHYj3pShDA1vG0jecp1RWO8MJ07SnsdfDHiKWtlUDJh+DpieR0Og==}
     engines: {node: '>=12.0.0'}
     peerDependencies:
       '@mui/material': ^5.0.0
@@ -3067,7 +3089,7 @@ packages:
       '@date-io/dayjs': 2.11.0
       '@date-io/luxon': 2.11.1
       '@date-io/moment': 2.11.0
-      '@mui/base': 5.0.0-alpha.65_react-dom@17.0.2+react@17.0.2
+      '@mui/base': 5.0.0-alpha.66_react-dom@17.0.2+react@17.0.2
       '@mui/material': 5.3.0_c84e354a724f4213aa6539fdea9d08aa
       '@mui/system': 5.3.0_922a85da57e3646a57465b7970b0de85
       '@mui/utils': 5.3.0_react@17.0.2
@@ -10761,8 +10783,8 @@ packages:
       whatwg-mimetype: 2.3.0
     dev: true
 
-  /happy-dom/2.28.0:
-    resolution: {integrity: sha512-J65003xw/uTXNczNzfTt3EJRODzWbFXVj+zqq0LNlE8tR6n26VYk4Apm0mlqUYO3THGVdKcVqSQ2P8Ss6DHSpQ==}
+  /happy-dom/2.30.0:
+    resolution: {integrity: sha512-//9pqe00RsVdBIR340bM8KRF0pYtwgVEo10pOpkCT3bIl45NjYFYg89ZV8dzu1j7rsP6ECTUy+OqNFf1h2wlaA==}
     dependencies:
       he: 1.2.0
       node-fetch: 2.6.6
