@@ -92,9 +92,23 @@ export class Vitest {
   }
 
   getConfig() {
+    const hasCustomReporter = toArray(this.config.reporters)
+      .some(reporter => typeof reporter !== 'string')
+
+    if (!hasCustomReporter && !this.configOverride)
+      return this.config
+
+    const config = deepMerge({}, this.config)
+
     if (this.configOverride)
-      return deepMerge(clone(this.config), this.configOverride) as ResolvedConfig
-    return this.config
+      deepMerge(config, this.configOverride)
+
+    // Custom reporters cannot be serialized for sending to workers #614
+    // but workers don't need reporters anyway
+    if (hasCustomReporter)
+      config.reporters = []
+
+    return config
   }
 
   async start(filters?: string[]) {
