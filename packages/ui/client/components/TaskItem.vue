@@ -24,8 +24,8 @@ const duration = computed(() => {
     <StatusIcon :task="task" mr-2 />
     <div flex items-end gap-2 :text="task?.result?.state === 'fail' ? 'red-500' : ''">
       <span text-sm truncate font-light>{{ task.name }}</span>
-      <span v-if="duration" text="xs" op20>
-        {{ duration }}ms
+      <span v-if="typeof duration === 'number'" text="xs" op20>
+        {{ duration > 0 ? duration : '< 1' }}ms
       </span>
     </div>
   </div>
