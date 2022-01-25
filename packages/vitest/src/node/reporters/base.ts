@@ -9,9 +9,9 @@ import { F_RIGHT } from './renderers/figures'
 import { divider, getStateString, getStateSymbol, renderSnapshotSummary } from './renderers/utils'
 
 const BADGE_PADDING = '       '
-const HELP_HINT = `${c.dim('press ')}h${c.dim(' to show help')}`
+const HELP_HINT = `${c.dim('press ')}${c.bold('h')}${c.dim(' to show help')}`
 const HELP_UPDATE_SNAP = c.dim('press ') + c.bold(c.yellow('u')) + c.dim(' to update snapshot')
-const HELP_QUITE = `${c.dim('press ')}q${c.dim(' to quit')}`
+const HELP_QUITE = `${c.dim('press ')}${c.bold('q')}${c.dim(' to quit')}`
 
 const WAIT_FOR_CHANGE_PASS = `\n${c.bold(c.inverse(c.green(' PASS ')))}${c.green(' Waiting for file changes...')}`
 const WAIT_FOR_CHANGE_FAIL = `\n${c.bold(c.inverse(c.red(' FAIL ')))}${c.red(' Tests failed. Watching for file changes...')}`
