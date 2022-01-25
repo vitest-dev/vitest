@@ -85,7 +85,6 @@ function interpretTaskModes(suite: Suite, namePattern?: string | RegExp, onlyMod
         // Don't skip this suite
         if (t.mode === 'only')
           t.mode = 'run'
-        interpretTaskModes(t, namePattern, onlyMode)
       }
       else if (t.mode === 'run') { t.mode = 'skip' }
       else if (t.mode === 'only') { t.mode = 'run' }
@@ -103,6 +102,8 @@ function interpretTaskModes(suite: Suite, namePattern?: string | RegExp, onlyMod
         if (t.tasks.every(i => i.mode !== 'run'))
           t.mode = 'skip'
       }
+
+      interpretTaskModes(t, namePattern, onlyMode)
     }
   })
 }
