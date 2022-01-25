@@ -13,7 +13,7 @@ it('initial', () => {
 })
 
 describe('DashboardEntry', () => {
-  it('tail is rendered by default 2', () => {
+  it('tail is rendered by default', () => {
     cy.mount(<DashboardEntry v-slots={{ body, header }}/>)
       .get(tailSelector)
       .should('exist')
