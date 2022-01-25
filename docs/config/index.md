@@ -326,7 +326,7 @@ Determine the transform method of modules
 Use SSR transform pipeline for the specified files.<br>
 Vite plugins will receive `ssr: true` flag when processing those files.
 
-#### transformMode.web
+#### transformMode&#46;web
 
 - **Type:** `RegExp[]`
 - **Default:** *modules other than those specified in `transformMode.ssr`*
