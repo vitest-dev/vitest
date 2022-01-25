@@ -7,7 +7,7 @@ import c from 'picocolors'
 import { ViteNodeServer } from 'vite-node/server'
 import type { ArgumentsType, RawSourceMap, Reporter, ResolvedConfig, UserConfig } from '../types'
 import { SnapshotManager } from '../integrations/snapshot/manager'
-import { clone, deepMerge, hasFailed, noop, slash, toArray } from '../utils'
+import { deepMerge, hasFailed, noop, slash, toArray } from '../utils'
 import { cleanCoverage, reportCoverage } from '../coverage'
 import { DefaultReporter, ReportersMap } from './reporters'
 import { createPool } from './pool'
@@ -92,9 +92,23 @@ export class Vitest {
   }
 
   getConfig() {
+    const hasCustomReporter = toArray(this.config.reporters)
+      .some(reporter => typeof reporter !== 'string')
+
+    if (!hasCustomReporter && !this.configOverride)
+      return this.config
+
+    const config = deepMerge({}, this.config)
+
     if (this.configOverride)
-      return deepMerge(clone(this.config), this.configOverride) as ResolvedConfig
-    return this.config
+      deepMerge(config, this.configOverride)
+
+    // Custom reporters cannot be serialized for sending to workers #614
+    // but workers don't need reporters anyway
+    if (hasCustomReporter)
+      config.reporters = []
+
+    return config as ResolvedConfig
   }
 
   async start(filters?: string[]) {

@@ -665,8 +665,10 @@ importers:
 
   test/reporters:
     specifiers:
+      execa: ^6.0.0
       vitest: workspace:*
     devDependencies:
+      execa: 6.0.0
       vitest: link:../../packages/vitest
 
   test/single-thread:
