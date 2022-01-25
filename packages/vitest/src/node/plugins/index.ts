@@ -55,7 +55,7 @@ export async function VitestPlugin(options: UserConfig = {}, viteOverrides: Vite
       },
     },
     MocksPlugin(),
-    GlobalSetupPlugin(),
+    GlobalSetupPlugin(ctx),
     options.ui
       ? await UIPlugin()
       : null,

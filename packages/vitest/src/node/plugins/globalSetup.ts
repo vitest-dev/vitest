@@ -1,6 +1,6 @@
-import type { Plugin, ViteDevServer } from 'vite'
-import { ViteNodeServer } from 'vite-node/server'
+import type { Plugin } from 'vite'
 import { ViteNodeRunner } from 'vite-node/client'
+import type { Vitest } from '../core'
 import { toArray } from '../../utils'
 
 interface GlobalSetupFile {
@@ -9,8 +9,9 @@ interface GlobalSetupFile {
   teardown?: Function
 }
 
-async function loadGlobalSetupFiles(server: ViteDevServer): Promise<GlobalSetupFile[]> {
-  const node = new ViteNodeServer(server)
+async function loadGlobalSetupFiles(ctx: Vitest): Promise<GlobalSetupFile[]> {
+  const node = ctx.vitenode
+  const server = ctx.server
   const runner = new ViteNodeRunner({
     root: server.config.root,
     base: server.config.base,
@@ -49,22 +50,17 @@ async function loadGlobalSetupFile(file: string, runner: ViteNodeRunner): Promis
   }
 }
 
-export const GlobalSetupPlugin = (): Plugin => {
-  let server: ViteDevServer
+export const GlobalSetupPlugin = (ctx: Vitest): Plugin => {
   let globalSetupFiles: GlobalSetupFile[]
   return {
     name: 'vitest:global-setup-plugin',
     enforce: 'pre',
 
-    configureServer(_server) {
-      server = _server
-    },
-
     async buildStart() {
-      if (!server.config.test?.globalSetup)
+      if (!ctx.server.config.test?.globalSetup)
         return
 
-      globalSetupFiles = await loadGlobalSetupFiles(server)
+      globalSetupFiles = await loadGlobalSetupFiles(ctx)
       for (const globalSetupFile of globalSetupFiles) {
         const teardown = await globalSetupFile.setup?.()
         if (teardown == null || !!globalSetupFile.teardown)
