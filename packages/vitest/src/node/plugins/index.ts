@@ -30,7 +30,7 @@ export async function VitestPlugin(options: UserConfig = {}, viteOverrides: Vite
           },
           server: {
             ...options.api,
-            open: options.ui && !options.noOpen
+            open: options.ui && options.open
               ? options.uiBase ?? '/__vitest__/'
               : undefined,
             preTransformRequests: false,
