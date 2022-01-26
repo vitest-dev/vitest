@@ -15,6 +15,7 @@ cli
   .option('-w, --watch', 'watch mode')
   .option('-t, --testNamePattern <pattern>', 'run test names with the specified pattern')
   .option('--ui', 'open UI')
+  .option('--no-open', 'do not open UI automatically')
   .option('--api [api]', 'serve API, available options: --api.port <port>, --api.host [host] and --api.strictPort')
   .option('--threads', 'enabled threads', { default: true })
   .option('--silent', 'silent console output from tests')

@@ -238,6 +238,13 @@ export interface InlineConfig {
   ui?: boolean
 
   /**
+   * Do not open UI automatically.
+   *
+   * @default false
+   */
+  noOpen?: boolean
+
+  /**
    * Base url for the UI
    *
    * @default '/__vitest__/'
