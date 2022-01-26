@@ -86,14 +86,12 @@ function interpretTaskModes(suite: Suite, namePattern?: string | RegExp, onlyMod
   suite.tasks.forEach((t) => {
     let interpreted = false
     if (onlyMode) {
-      if (t.type === 'suite' && (someTasksAreOnly(t) || suite.mode === 'only')) {
-        // Check if either the parent suite or the task itself are marked as only
-        const includeTasks = isIncluded || t.mode === 'only'
-
+      // Check if either the parent suite or the task itself are marked as only
+      const includeTasks = isIncluded || t.mode === 'only'
+      if (t.type === 'suite' && (includeTasks || someTasksAreOnly(t))) {
         // Don't skip this suite
         if (t.mode === 'only')
           t.mode = 'run'
-
         interpretTaskModes(t, namePattern, onlyMode, includeTasks)
         interpreted = true
       }
@@ -120,7 +118,7 @@ function interpretTaskModes(suite: Suite, namePattern?: string | RegExp, onlyMod
 }
 
 function someTasksAreOnly(suite: Suite): boolean {
-  return suite.mode === 'only' || suite.tasks.some(t => t.mode === 'only' || (t.type === 'suite' && someTasksAreOnly(t)))
+  return suite.tasks.some(t => t.mode === 'only' || (t.type === 'suite' && someTasksAreOnly(t)))
 }
 
 function skipAllTasks(suite: Suite) {
