@@ -93,14 +93,15 @@ export function setup(ctx: Vitest) {
             inlined: Array.from(inlined),
           }
         },
-        updateSnapshot(file: File) {
+        updateSnapshot(file?: File) {
+          if (!file) return ctx.updateSnapshot()
           return ctx.updateSnapshot([file.filepath])
         },
       },
       {
         post: msg => ws.send(msg),
         on: fn => ws.on('message', fn),
-        eventNames: ['onCollected', 'onUserConsoleLog', 'onTaskUpdate'],
+        eventNames: ['onUserConsoleLog', 'onFinished', 'onCollected'],
         serialize: stringify,
         deserialize: parse,
       },
@@ -142,6 +143,12 @@ class WebSocketReporter implements Reporter {
 
     this.clients.forEach((client) => {
       client.onTaskUpdate?.(packs)
+    })
+  }
+
+  onFinished(files?: File[] | undefined) {
+    this.clients.forEach((client) => {
+      client.onFinished?.(files)
     })
   }
 

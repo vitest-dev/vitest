@@ -111,6 +111,9 @@ function createChannel(ctx: Vitest) {
       snapshotSaved(snapshot) {
         ctx.snapshot.add(snapshot)
       },
+      coverageCollected(coverage) {
+        ctx.coverage.push(coverage)
+      },
       async getSourceMap(id, force) {
         if (force) {
           const mod = ctx.server.moduleGraph.getModuleById(id)
@@ -137,6 +140,9 @@ function createChannel(ctx: Vitest) {
       onUserConsoleLog(log) {
         ctx.state.updateUserLog(log)
         ctx.report('onUserConsoleLog', log)
+      },
+      onFinished(files) {
+        ctx.report('onFinished', files)
       },
     },
     {

@@ -95,6 +95,14 @@
       >
         An open source fullstack developer
       </Avatar>
+      <Avatar
+        name="Ivan Demchuk"
+        avatar="https://avatars.githubusercontent.com/u/2339406?v=4"
+        github="Demivan"
+        twitter="IvanDemchuk"
+      >
+        A tech lead, fullstack developer<br>Author of fluent-vue
+      </Avatar>
     </div>
     <h2 id="the-team" op50 font-normal pt-5 pb-2>
       Contributors

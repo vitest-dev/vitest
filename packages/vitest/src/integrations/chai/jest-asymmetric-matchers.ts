@@ -294,7 +294,8 @@ export const JestAsymmetricMatchers: ChaiPlugin = (chai, utils) => {
     (expected: any) => new StringMatching(expected),
   )
 
-  chai.expect.not = {
+  // defineProperty does not work
+  ;(chai.expect as any).not = {
     stringContaining: (expected: string) => new StringContaining(expected, true),
     objectContaining: (expected: any) => new ObjectContaining(expected, true),
     arrayContaining: (expected: unknown[]) => new ArrayContaining(expected, true),

@@ -1,6 +1,6 @@
 import { hasFailedSnapshot } from '@vitest/ws-client'
 import type { Task, Test } from 'vitest/src'
-import { files } from '~/composables/client'
+import { files, testRunState } from '~/composables/client'
 
 type Nullable<T> = T | null | undefined
 type Arrayable<T> = T | Array<T>
@@ -17,7 +17,7 @@ export const filesRunning = computed(() => files.value.filter(f =>
 export const filesSkipped = computed(() => filesIgnore.value.filter(f => f.mode === 'skip'))
 export const filesSnapshotFailed = computed(() => files.value.filter(hasFailedSnapshot))
 export const filesTodo = computed(() => filesIgnore.value.filter(f => f.mode === 'todo'))
-export const finished = computed(() => filesRunning.value.length === 0)
+export const finished = computed(() => testRunState.value === 'idle')
 // tests
 export const tests = computed(() => {
   return getTests(files.value)

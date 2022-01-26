@@ -4,7 +4,7 @@ import type { ResolvedConfig as ResolvedViteConfig, UserConfig as ViteUserConfig
 import type { ApiConfig, ResolvedConfig, UserConfig } from '../types'
 import { defaultExclude, defaultInclude, defaultPort } from '../constants'
 import { resolveC8Options } from '../coverage'
-import { deepMerge, toArray } from '../utils'
+import { toArray } from '../utils'
 
 export function resolveApiConfig<Options extends ApiConfig & UserConfig>(
   options: Options,
@@ -56,7 +56,7 @@ export function resolveConfig(
   const globals = options?.global ?? options.globals
 
   const resolved = {
-    ...deepMerge(options, viteConfig.test || {}),
+    ...options,
     root: viteConfig.root,
     globals,
     global: globals,

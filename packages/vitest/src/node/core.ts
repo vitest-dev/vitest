@@ -1,4 +1,5 @@
 import { existsSync } from 'fs'
+import type { Profiler } from 'inspector'
 import type { ViteDevServer } from 'vite'
 import fg from 'fast-glob'
 import mm from 'micromatch'
@@ -6,7 +7,7 @@ import c from 'picocolors'
 import { ViteNodeServer } from 'vite-node/server'
 import type { ArgumentsType, RawSourceMap, Reporter, ResolvedConfig, UserConfig } from '../types'
 import { SnapshotManager } from '../integrations/snapshot/manager'
-import { clone, deepMerge, hasFailed, noop, slash, toArray } from '../utils'
+import { deepMerge, hasFailed, noop, slash, toArray } from '../utils'
 import { cleanCoverage, reportCoverage } from '../coverage'
 import { DefaultReporter, ReportersMap } from './reporters'
 import { createPool } from './pool'
@@ -24,6 +25,7 @@ export class Vitest {
   server: ViteDevServer = undefined!
   state: StateManager = undefined!
   snapshot: SnapshotManager = undefined!
+  coverage: Profiler.TakePreciseCoverageReturnType[] = []
   reporters: Reporter[] = undefined!
   console: Console
   pool: WorkerPool | undefined
@@ -90,9 +92,23 @@ export class Vitest {
   }
 
   getConfig() {
+    const hasCustomReporter = toArray(this.config.reporters)
+      .some(reporter => typeof reporter !== 'string')
+
+    if (!hasCustomReporter && !this.configOverride)
+      return this.config
+
+    const config = deepMerge({}, this.config)
+
     if (this.configOverride)
-      return deepMerge(clone(this.config), this.configOverride) as ResolvedConfig
-    return this.config
+      deepMerge(config, this.configOverride)
+
+    // Custom reporters cannot be serialized for sending to workers #614
+    // but workers don't need reporters anyway
+    if (hasCustomReporter)
+      config.reporters = []
+
+    return config as ResolvedConfig
   }
 
   async start(filters?: string[]) {
@@ -113,11 +129,11 @@ export class Vitest {
 
     await this.runFiles(files)
 
-    if (this.config.watch)
-      await this.report('onWatcherStart')
-
     if (this.config.coverage.enabled)
       await reportCoverage(this)
+
+    if (this.config.watch)
+      await this.report('onWatcherStart')
   }
 
   private async getTestDependencies(filepath: string) {
@@ -260,6 +276,7 @@ export class Vitest {
       //   })
       // }
       this.snapshot.clear()
+      this.coverage = []
       const files = Array.from(this.changedTests)
       this.changedTests.clear()
 
@@ -282,8 +299,8 @@ export class Vitest {
   private registerWatcher() {
     const onChange = (id: string) => {
       id = slash(id)
-      this.handleFileChanged(id)
-      if (this.changedTests.size)
+      const needsRerun = this.handleFileChanged(id)
+      if (needsRerun)
         this.scheduleRerun(id)
     }
     const onUnlink = (id: string) => {
@@ -315,25 +332,35 @@ export class Vitest {
     }
   }
 
-  private handleFileChanged(id: string) {
+  /**
+   * @returns A value indicating whether rerun is needed (changedTests was mutated)
+   */
+  private handleFileChanged(id: string): boolean {
     if (this.changedTests.has(id) || this.invalidates.has(id) || this.config.watchIgnore.some(i => id.match(i)))
-      return
+      return false
 
     const mod = this.server.moduleGraph.getModuleById(id)
     if (!mod)
-      return
+      return false
 
     this.invalidates.add(id)
 
     if (this.state.filesMap.has(id)) {
       this.changedTests.add(id)
-      return
+      return true
     }
 
+    let rerun = false
     mod.importers.forEach((i) => {
-      if (i.id)
-        this.handleFileChanged(i.id)
+      if (!i.id)
+        return
+
+      const heedsRerun = this.handleFileChanged(i.id)
+      if (heedsRerun)
+        rerun = true
     })
+
+    return rerun
   }
 
   async close() {
@@ -350,23 +377,15 @@ export class Vitest {
     return this.closingPromise
   }
 
-  async exit() {
-    const closePromise = this.close()
-    let timeout: NodeJS.Timeout
-    const timeoutPromise = new Promise((resolve, reject) => {
-      timeout = setTimeout(() => reject(new Error(`close timed out after ${CLOSE_TIMEOUT}ms`)), CLOSE_TIMEOUT).unref()
-    })
-    Promise.race([closePromise, timeoutPromise]).then(
-      () => {
-        clearTimeout(timeout)
-        process.exit()
-      },
-      (err) => {
-        clearTimeout(timeout)
-        console.error('error during close', err)
-        process.exit(1)
-      },
-    )
+  async exit(force = false) {
+    setTimeout(() => {
+      console.warn(`close timed out after ${CLOSE_TIMEOUT}ms`)
+      process.exit()
+    }, CLOSE_TIMEOUT).unref()
+
+    await this.close()
+    if (force)
+      process.exit()
   }
 
   async report<T extends keyof Reporter>(name: T, ...args: ArgumentsType<Reporter[T]>) {

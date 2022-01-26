@@ -10,6 +10,7 @@ import { client, isConnected, isConnecting } from '~/composables/client'
       text="center sm"
       bg="overlay"
       backdrop-blur-sm
+      backdrop-saturate-0
       @click="client.reconnect"
     >
       <div
