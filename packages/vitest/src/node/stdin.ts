@@ -13,7 +13,7 @@ export function printShortcutsHelp() {
   process.stdout.write(
     `
 ${c.bold('  Watch Usage')}
-${keys.map(i => c.dim('  press ') + c.bold(c.reset(i[0])) + c.dim(` to ${i[1]}`)).join('\n')}
+${keys.map(i => c.dim('  press ') + c.reset(c.bold(i[0])) + c.dim(` to ${i[1]}`)).join('\n')}
 `,
   )
 }
