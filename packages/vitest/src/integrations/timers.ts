@@ -12,10 +12,12 @@ import type {
 import {
   withGlobal,
 } from '@sinonjs/fake-timers'
+import MockDate from 'mockdate'
 
 export class FakeTimers {
   private _clock!: InstalledClock
   private _fakingTime: boolean
+  private _fakingDate: boolean
   private _fakeTimers: FakeTimerWithContext
   private _maxLoops: number
   private _now = Date.now
@@ -28,6 +30,8 @@ export class FakeTimers {
     maxLoops?: number
   }) {
     this._maxLoops = maxLoops
+
+    this._fakingDate = false
 
     this._fakingTime = false
     this._fakeTimers = withGlobal(global)
@@ -78,6 +82,11 @@ export class FakeTimers {
   }
 
   useRealTimers(): void {
+    if (this._fakingDate) {
+      MockDate.reset()
+      this._fakingDate = false
+    }
+
     if (this._fakingTime) {
       this._clock.uninstall()
       this._fakingTime = false
@@ -85,6 +94,12 @@ export class FakeTimers {
   }
 
   useFakeTimers(): void {
+    if (this._fakingDate) {
+      throw new Error(
+        '"setSystemTime" was called already and date was mocked. Reset timers using `vi.useRealTimers()` if you want to use fake timers again.',
+      )
+    }
+
     if (!this._fakingTime) {
       const toFake = Object.keys(this._fakeTimers.timers) as Array<keyof FakeTimerWithContext['timers']>
 
@@ -108,8 +123,13 @@ export class FakeTimers {
   }
 
   setSystemTime(now?: number | Date): void {
-    if (this._checkFakeTimers())
+    if (this._fakingTime) {
       this._clock.setSystemTime(now)
+    }
+    else {
+      MockDate.set(now ?? this.getRealSystemTime())
+      this._fakingDate = true
+    }
   }
 
   getRealSystemTime(): number {
