@@ -77,18 +77,25 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
 /**
  * If any tasks been marked as `only`, mark all other tasks as `skip`.
  */
-function interpretTaskModes(suite: Suite, namePattern?: string | RegExp, onlyMode?: boolean) {
+function interpretTaskModes(suite: Suite, namePattern?: string | RegExp, onlyMode?: boolean, isIncluded?: boolean) {
   if (onlyMode === undefined)
     onlyMode = someTasksAreOnly(suite)
 
   suite.tasks.forEach((t) => {
+    let interpreted = false
     if (onlyMode) {
-      if (t.type === 'suite' && someTasksAreOnly(t)) {
+      if (t.type === 'suite' && (someTasksAreOnly(t) || suite.mode === 'only')) {
+        // Check if either the parent suite or the task itself are marked as only
+        const includeTasks = isIncluded || suite.mode === 'only' || t.mode === 'only'
+
         // Don't skip this suite
         if (t.mode === 'only')
           t.mode = 'run'
+
+        interpretTaskModes(t, namePattern, onlyMode, includeTasks)
+        interpreted = true
       }
-      else if (t.mode === 'run') { t.mode = 'skip' }
+      else if (t.mode === 'run' && !isIncluded) { t.mode = 'skip' }
       else if (t.mode === 'only') { t.mode = 'run' }
     }
     if (t.type === 'test') {
@@ -98,8 +105,8 @@ function interpretTaskModes(suite: Suite, namePattern?: string | RegExp, onlyMod
     else if (t.type === 'suite') {
       if (t.mode === 'skip')
         skipAllTasks(t)
-      else
-        interpretTaskModes(t, namePattern, onlyMode)
+      else if (!interpreted)
+        interpretTaskModes(t, namePattern, onlyMode, isIncluded)
 
       // if all subtasks are skipped, marked as skip
       if (t.mode === 'run') {
@@ -111,7 +118,7 @@ function interpretTaskModes(suite: Suite, namePattern?: string | RegExp, onlyMod
 }
 
 function someTasksAreOnly(suite: Suite): boolean {
-  return suite.tasks.some(t => t.mode === 'only' || (t.type === 'suite' && someTasksAreOnly(t)))
+  return suite.mode === 'only' || suite.tasks.some(t => t.mode === 'only' || (t.type === 'suite' && someTasksAreOnly(t)))
 }
 
 function skipAllTasks(suite: Suite) {
