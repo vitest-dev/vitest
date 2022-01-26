@@ -44,8 +44,7 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
 
       for (const c of tasks) {
         if (c.type === 'test') {
-          if (!config.testNamePattern || c.name.match(config.testNamePattern))
-            file.tasks.push(c)
+          file.tasks.push(c)
         }
         else if (c.type === 'suite') {
           file.tasks.push(c)
