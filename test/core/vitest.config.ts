@@ -23,6 +23,7 @@ export default defineConfig({
     setupFiles: [
       './test/setup.ts',
     ],
+    testNamePattern: '^((?!does not include test that).)*$',
     coverage: {
       reporter: ['text', 'html'],
     },
