@@ -95,7 +95,7 @@ function interpretTaskModes(suite: Suite, namePattern?: string | RegExp, onlyMod
         interpretTaskModes(t, namePattern, onlyMode, includeTasks)
         interpreted = true
       }
-      else if (t.mode === 'run' && !isIncluded) { t.mode = 'skip' }
+      else if (t.mode === 'run' && !includeTasks) { t.mode = 'skip' }
       else if (t.mode === 'only') { t.mode = 'run' }
     }
     if (t.type === 'test') {
