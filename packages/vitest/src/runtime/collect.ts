@@ -78,15 +78,17 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
  * If any tasks been marked as `only`, mark all other tasks as `skip`.
  */
 function interpretTaskModes(suite: Suite, namePattern?: string | RegExp, onlyMode?: boolean, isIncluded?: boolean) {
-  if (onlyMode === undefined)
+  if (onlyMode === undefined) {
     onlyMode = someTasksAreOnly(suite)
+    isIncluded = isIncluded || suite.mode === 'only'
+  }
 
   suite.tasks.forEach((t) => {
     let interpreted = false
     if (onlyMode) {
       if (t.type === 'suite' && (someTasksAreOnly(t) || suite.mode === 'only')) {
         // Check if either the parent suite or the task itself are marked as only
-        const includeTasks = isIncluded || suite.mode === 'only' || t.mode === 'only'
+        const includeTasks = isIncluded || t.mode === 'only'
 
         // Don't skip this suite
         if (t.mode === 'only')
