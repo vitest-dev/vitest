@@ -1,4 +1,4 @@
-import type { Plugin as VitePlugin, UserConfig as ViteUserConfig } from 'vite'
+import type { Plugin as VitePlugin } from 'vite'
 import type { UserConfig } from '../../types'
 import { deepMerge, ensurePackageInstalled, notNullish } from '../../utils'
 import { resolveApiConfig } from '../config'
@@ -6,7 +6,7 @@ import { Vitest } from '../core'
 import { GlobalSetupPlugin } from './globalSetup'
 import { MocksPlugin } from './mock'
 
-export async function VitestPlugin(options: UserConfig = {}, viteOverrides: ViteUserConfig = {}, ctx = new Vitest()): Promise<VitePlugin[]> {
+export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest()): Promise<VitePlugin[]> {
   let haveStarted = false
 
   async function UIPlugin() {
@@ -20,7 +20,7 @@ export async function VitestPlugin(options: UserConfig = {}, viteOverrides: Vite
       enforce: 'pre',
       config(viteConfig: any) {
         options = deepMerge(options, viteConfig.test || {})
-        options.api = resolveApiConfig(options, viteOverrides)
+        options.api = resolveApiConfig(options)
         return {
           clearScreen: false,
           resolve: {
