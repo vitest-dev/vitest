@@ -28,8 +28,6 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
       tasks: [],
     }
 
-    let rootTaskCount = 0
-
     clearContext()
     try {
       await runSetupFiles(config)
@@ -39,10 +37,7 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
 
       setHooks(file, getHooks(defaultTasks))
 
-      const tasks = [...defaultTasks.tasks, ...context.tasks]
-      rootTaskCount = tasks.length
-
-      for (const c of tasks) {
+      for (const c of [...defaultTasks.tasks, ...context.tasks]) {
         if (c.type === 'test') {
           file.tasks.push(c)
         }
@@ -70,11 +65,10 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
     calculateHash(file)
 
     interpretTaskModes(file, config.testNamePattern)
+    if (file.tasks.every(t => t.mode === 'skip'))
+      file.mode = 'skip'
 
-    if (file.tasks.length > 0 || rootTaskCount === 0)
-      // Only add files that contain tasks or didn't contain any before filtering
-      // The latter is required for failing on empty tests
-      files.push(file)
+    files.push(file)
   }
 
   return files
@@ -109,11 +103,8 @@ function interpretTaskModes(suite: Suite, namePattern?: string | RegExp, onlyMod
 
       // if all subtasks are skipped, marked as skip
       if (t.mode === 'run') {
-        if (t.tasks.every(i => i.mode !== 'run')) {
+        if (t.tasks.every(i => i.mode !== 'run'))
           t.mode = 'skip'
-          if (t.file)
-            t.file.mode = 'skip'
-        }
       }
     }
   })
