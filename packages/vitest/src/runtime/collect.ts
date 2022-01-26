@@ -65,8 +65,6 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
     calculateHash(file)
 
     interpretTaskModes(file, config.testNamePattern)
-    if (file.tasks.every(t => t.mode === 'skip'))
-      file.mode = 'skip'
 
     files.push(file)
   }
@@ -104,14 +102,14 @@ function interpretTaskModes(suite: Suite, namePattern?: string | RegExp, onlyMod
         skipAllTasks(t)
       else
         interpretTaskModes(t, namePattern, onlyMode, includeTask)
-
-      // if all subtasks are skipped, marked as skip
-      if (t.mode === 'run') {
-        if (t.tasks.every(i => i.mode !== 'run'))
-          t.mode = 'skip'
-      }
     }
   })
+
+  // if all subtasks are skipped, mark as skip
+  if (suite.mode === 'run') {
+    if (suite.tasks.every(i => i.mode !== 'run'))
+      suite.mode = 'skip'
+  }
 }
 
 function someTasksAreOnly(suite: Suite): boolean {
