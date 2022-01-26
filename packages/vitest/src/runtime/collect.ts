@@ -28,6 +28,8 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
       tasks: [],
     }
 
+    let rootTaskCount = 0
+
     clearContext()
     try {
       await runSetupFiles(config)
@@ -37,7 +39,10 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
 
       setHooks(file, getHooks(defaultTasks))
 
-      for (const c of [...defaultTasks.tasks, ...context.tasks]) {
+      const tasks = [...defaultTasks.tasks, ...context.tasks]
+      rootTaskCount = tasks.length
+
+      for (const c of tasks) {
         if (c.type === 'test') {
           if (!config.testNamePattern || c.name.match(config.testNamePattern))
             file.tasks.push(c)
@@ -67,7 +72,9 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
 
     interpretTaskModes(file, config.testNamePattern)
 
-    if (file.tasks.length > 0)
+    if (file.tasks.length > 0 || rootTaskCount === 0)
+      // Only add files that contain tasks or didn't contain any before filtering
+      // The latter is required for failing on empty tests
       files.push(file)
   }
 
