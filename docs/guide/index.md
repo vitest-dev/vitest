@@ -103,7 +103,8 @@ You can specify additional CLI options like `--port` or `--https`. For a full li
 | `-u, --update` | Update snapshots |
 | `-w, --watch` | Watch mode |
 | `-t, --testNamePattern <pattern>` | Run tests with names matching the pattern |
-| `--ui` | Open UI |
+| `--ui` | Enable UI |
+| `--open` | Open the UI automatically if enabled (default: true) |
 | `--api [api]` | Serve API, available options: `--api.port <port>`, `--api.host [host]` and `--api.strictPort` |
 | `--threads` | Enable Threads (default: true) |
 | `--silent` | Silent console output from tests |

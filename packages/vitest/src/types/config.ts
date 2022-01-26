@@ -232,10 +232,17 @@ export interface InlineConfig {
   api?: boolean | number | ApiConfig
 
   /**
-   * Open Vitest UI
+   * Enable Vitest UI
    * @internal WIP
    */
   ui?: boolean
+
+  /**
+   * Open UI automatically.
+   *
+   * @default true
+   */
+  open?: boolean
 
   /**
    * Base url for the UI
