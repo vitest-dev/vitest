@@ -128,13 +128,12 @@ export class Vitest {
     }
 
     await this.runFiles(files)
-    
+
     if (this.config.coverage.enabled)
       await reportCoverage(this)
 
     if (this.config.watch)
       await this.report('onWatcherStart')
-
   }
 
   private async getTestDependencies(filepath: string) {
