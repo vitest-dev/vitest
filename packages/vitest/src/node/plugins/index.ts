@@ -55,7 +55,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
       },
     },
     MocksPlugin(),
-    GlobalSetupPlugin(),
+    GlobalSetupPlugin(ctx),
     options.ui
       ? await UIPlugin()
       : null,
