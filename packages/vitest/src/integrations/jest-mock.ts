@@ -120,7 +120,7 @@ export function spyOn<T, G extends Properties<Required<T>>>(
 export function spyOn<T, M extends Classes<Required<T>>>(
   object: T,
   method: M
-): Required<T>[M] extends new (...args: infer A) => infer R
+): Required<T>[M] extends (...args: infer A) => infer R
   ? SpyInstance<A, R>
   : never
 export function spyOn<T, M extends Methods<Required<T>>>(
