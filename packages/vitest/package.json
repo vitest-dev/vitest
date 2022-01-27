@@ -90,6 +90,7 @@
     "magic-string": "^0.25.7",
     "micromatch": "^4.0.4",
     "mlly": "^0.3.19",
+    "mockdate": "^3.0.5",
     "natural-compare": "^1.4.0",
     "pathe": "^0.2.0",
     "picocolors": "^1.0.0",
@@ -110,6 +111,9 @@
     "jsdom": "*"
   },
   "peerDependenciesMeta": {
+    "@vitest/ui": {
+      "optional": true
+    },
     "c8": {
       "optional": true
     },
@@ -117,9 +121,6 @@
       "optional": true
     },
     "jsdom": {
-      "optional": true
-    },
-    "@vitest/ui": {
       "optional": true
     }
   },

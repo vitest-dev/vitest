@@ -1,14 +1,10 @@
-import { afterEach, beforeEach, expect, test, vi } from 'vitest'
+import { afterEach, expect, test, vi } from 'vitest'
 import { JsonReporter } from '../../../packages/vitest/src/node/reporters/json'
 import { JUnitReporter } from '../../../packages/vitest/src/node/reporters/junit'
 import { TapReporter } from '../../../packages/vitest/src/node/reporters/tap'
 import { TapFlatReporter } from '../../../packages/vitest/src/node/reporters/tap-flat'
 import { getContext } from '../src/context'
 import { files } from '../src/data'
-
-beforeEach(() => {
-  vi.useFakeTimers()
-})
 
 afterEach(() => {
   vi.useRealTimers()
