@@ -8,15 +8,15 @@
     "lint": "eslint . --ext=.ts,.vue"
   },
   "dependencies": {
-    "@vueuse/core": "^7.5.3",
+    "@vueuse/core": "^7.5.5",
     "vue": "^3.2.24"
   },
   "devDependencies": {
     "@iconify-json/carbon": "^1.0.14",
-    "@unocss/reset": "^0.22.4",
-    "@vitejs/plugin-vue": "^2.0.1",
-    "unocss": "^0.22.4",
-    "unplugin-vue-components": "^0.17.13",
+    "@unocss/reset": "^0.22.6",
+    "@vitejs/plugin-vue": "^2.1.0",
+    "unocss": "^0.22.6",
+    "unplugin-vue-components": "^0.17.14",
     "vitepress": "^0.21.6"
   }
 }

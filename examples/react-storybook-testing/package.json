@@ -10,17 +10,17 @@
     "storybook": "start-storybook -p 6006"
   },
   "dependencies": {
-    "cross-fetch": "^3.1.4",
+    "cross-fetch": "^3.1.5",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "react-query": "^3.34.8"
+    "react-query": "^3.34.12"
   },
   "devDependencies": {
-    "@babel/core": "^7.16.7",
-    "@storybook/addon-actions": "^6.4.13",
-    "@storybook/addon-essentials": "^6.4.13",
-    "@storybook/addon-links": "^6.4.13",
-    "@storybook/react": "^6.4.13",
+    "@babel/core": "^7.16.12",
+    "@storybook/addon-actions": "^6.4.14",
+    "@storybook/addon-essentials": "^6.4.14",
+    "@storybook/addon-links": "^6.4.14",
+    "@storybook/react": "^6.4.14",
     "@storybook/testing-library": "^0.0.8",
     "@storybook/testing-react": "^1.2.3",
     "@testing-library/jest-dom": "^5.16.1",
@@ -31,10 +31,10 @@
     "@vitest/ui": "latest",
     "babel-loader": "^8.2.3",
     "jsdom": "^19.0.0",
-    "msw": "^0.36.5",
+    "msw": "^0.36.7",
     "msw-storybook-addon": "^1.6.0",
     "storybook-builder-vite": "^0.1.13",
-    "typescript": "^4.5.4",
+    "typescript": "^4.5.5",
     "vite": "latest",
     "vitest": "latest"
   },
