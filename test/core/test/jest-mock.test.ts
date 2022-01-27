@@ -32,6 +32,7 @@ describe('jest mock compat layer', () => {
     const Spy = vi.fn(() => {})
 
     expect(Spy.mock.instances).toHaveLength(0)
+    // @ts-expect-error ignore
     // eslint-disable-next-line no-new
     new Spy()
     expect(Spy.mock.instances).toHaveLength(1)

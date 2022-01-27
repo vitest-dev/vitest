@@ -1,6 +1,7 @@
+import { expect, test } from 'vitest'
 import { B } from '../src/sourceB'
 
-test('shouldnt run', () => {
+test('shouldn\'t run', () => {
   expect(B).toBe('B')
   expect.fail()
 })

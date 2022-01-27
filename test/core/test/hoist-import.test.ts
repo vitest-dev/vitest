@@ -12,6 +12,7 @@ vi.mock('../src/timeout.ts', () => {
 })
 
 test('"vi" can be used inside factory with empty lines', () => {
+  // @ts-expect-error no types
   expect(globalThis.vi).toBeUndefined()
   expect(timeout).toBe(10_000)
   expect(vi.isMockFunction(fn)).toBe(true)

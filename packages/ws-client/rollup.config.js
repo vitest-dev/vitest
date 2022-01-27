@@ -14,6 +14,7 @@ const external = [
   'birpc',
   'worker_threads',
   'vitest',
+  'inspector',
 ]
 
 export default () => [
