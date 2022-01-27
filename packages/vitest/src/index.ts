@@ -42,7 +42,6 @@ type Promisify<O> = {
 
 declare global {
   namespace Vi {
-
     interface ExpectStatic extends Chai.ExpectStatic, AsymmetricMatchersContaining {
       <T>(actual: T, message?: string): Vi.Assertion<T>
 
@@ -115,15 +114,17 @@ declare global {
       nthReturnedWith<E>(nthCall: number, value: E): void
     }
 
-    type VitestifyAssertion<A> = {
+    // eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error
+    // @ts-ignore build namspace conflict
+    type VitestAssertion<A> = {
       [K in keyof A]: A[K] extends Chai.Assertion
         ? Assertion<any>
         : A[K] extends (...args: any[]) => any
           ? A[K] // not converting function since they may contain overload
-          : VitestifyAssertion<A[K]>
+          : VitestAssertion<A[K]>
     }
 
-    interface Assertion<T = any> extends VitestifyAssertion<Chai.Assertion>, JestAssertion<T> {
+    interface Assertion<T = any> extends VitestAssertion<Chai.Assertion>, JestAssertion<T> {
       resolves: Promisify<Assertion<T>>
       rejects: Promisify<Assertion<T>>
     }
