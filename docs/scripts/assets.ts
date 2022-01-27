@@ -1,7 +1,6 @@
 import { promises as fs } from 'fs'
 import fg from 'fast-glob'
 import { font, preconnectHomeLinks, preconnectLinks } from '../docs-data'
-import { coreTeamMembers } from '../src/contributors'
 
 const preconnect = `
     ${preconnectLinks.map(l => `<link rel="dns-prefetch" href="${l}">`).join('\n')}
