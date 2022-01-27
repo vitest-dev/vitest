@@ -44,12 +44,19 @@ export type Task = Test | Suite | File
 
 export type DoneCallback = (error?: any) => void
 export type TestFunction = (done: DoneCallback) => Awaitable<void>
+export type EachFunction = <T>(cases: T[]) => (name: string, fn: (...args: T extends any[] ? T : [T]) => void) => void
 
-export type TestCollector = ChainableFunction<
+export type TestAPI = ChainableFunction<
 'concurrent' | 'only' | 'skip' | 'todo' | 'fails',
 [name: string, fn?: TestFunction, timeout?: number],
 void
->
+> & { each: EachFunction }
+
+export type SuiteAPI = ChainableFunction<
+'concurrent' | 'only' | 'skip' | 'todo',
+[name: string, factory?: SuiteFactory],
+SuiteCollector
+> & { each: EachFunction }
 
 export type HookListener<T extends any[]> = (...args: T) => Awaitable<void>
 
@@ -64,14 +71,14 @@ export interface SuiteCollector {
   readonly name: string
   readonly mode: RunMode
   type: 'collector'
-  test: TestCollector
+  test: TestAPI
   tasks: (Suite | Test | SuiteCollector)[]
   collect: (file?: File) => Promise<Suite>
   clear: () => void
   on: <T extends keyof SuiteHooks>(name: T, ...fn: SuiteHooks[T]) => void
 }
 
-export type TestFactory = (test: (name: string, fn: TestFunction) => void) => Awaitable<void>
+export type SuiteFactory = (test: (name: string, fn: TestFunction) => void) => Awaitable<void>
 
 export interface RuntimeContext {
   tasks: (SuiteCollector | Test)[]

@@ -6,7 +6,7 @@ import { defineConfig } from 'vite'
 class TestReporter implements Reporter {
   ctx!: Vitest
 
-  onInit(ctx) {
+  onInit(ctx: Vitest) {
     this.ctx = ctx
   }
 

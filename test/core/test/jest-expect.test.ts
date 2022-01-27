@@ -158,7 +158,7 @@ describe('jest-expect', () => {
   // https://jestjs.io/docs/expect#tostrictequalvalue
 
   class LaCroix {
-    constructor(public flavor) {}
+    constructor(public flavor: any) {}
   }
 
   describe('the La Croix cans on my desk', () => {
@@ -173,7 +173,7 @@ describe('jest-expect', () => {
     expect([]).not.toBe([])
     expect([]).toStrictEqual([])
 
-    const foo = []
+    const foo: any[] = []
 
     expect(foo).toBe(foo)
     expect(foo).toStrictEqual(foo)
@@ -195,21 +195,21 @@ describe('jest-expect', () => {
 
 describe('.toStrictEqual()', () => {
   class TestClassA {
-    constructor(public a, public b) {}
+    constructor(public a: any, public b: any) {}
   }
 
   class TestClassB {
-    constructor(public a, public b) {}
+    constructor(public a: any, public b: any) {}
   }
 
   const TestClassC = class Child extends TestClassA {
-    constructor(a, b) {
+    constructor(a: any, b: any) {
       super(a, b)
     }
   }
 
   const TestClassD = class Child extends TestClassB {
-    constructor(a, b) {
+    constructor(a: any, b: any) {
       super(a, b)
     }
   }

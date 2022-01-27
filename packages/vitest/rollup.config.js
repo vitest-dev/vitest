@@ -29,6 +29,7 @@ const external = [
   ...Object.keys(pkg.dependencies),
   ...Object.keys(pkg.peerDependencies),
   'worker_threads',
+  'inspector',
 ]
 
 export default ({ watch }) => [
