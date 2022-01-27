@@ -38,7 +38,8 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
           build: {
             sourcemap: true,
           },
-          optimizeDeps: false,
+          // disable deps optimization
+          cacheDir: undefined,
         }
       },
       async configureServer(server) {
