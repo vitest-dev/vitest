@@ -1,3 +1,6 @@
+<script setup lang="ts">
+import { coreTeamMembers } from '../contributors'
+</script>
 <template>
   <div flex flex-col items-center>
     <div flex flex-col items-center p="t-10 md:t-20 b-10">
@@ -54,55 +57,10 @@
     </h2>
     <div grid="~ sm:cols-2 gap-x-8 gap-y-20 items-center" p-10>
       <Avatar
-        name="Anthony Fu"
-        avatar="https://antfu.me/avatar.png"
-        github="antfu"
-        twitter="antfu7"
-        :sponsors="true"
-        :width="512"
-        :height="512"
-      >
-        A fanatical open sourceror<br>Core team member of Vite & Vue<br>Working at NuxtLabs
-      </Avatar>
-      <Avatar
-        name="Patak"
-        avatar="https://patak.dev/images/patak.jpg"
-        github="patak-dev"
-        twitter="patak_dev"
-        :sponsors="true"
-        :width="512"
-        :height="512"
-      >
-        A collaborative being<br>Core team member of Vite<br>Team member of Vue
-      </Avatar>
-      <Avatar
-        name="Aslemammad"
-        avatar="https://avatars.githubusercontent.com/u/37929992?v=4"
-        github="Aslemammad"
-        twitter="asleMammadam"
-        :width="460"
-        :height="460"
-      >
-        An open source developer<br>Team member of Poimandres and Vike
-      </Avatar>
-      <Avatar
-        name="Vladimir"
-        avatar="https://avatars.githubusercontent.com/u/16173870?v=4"
-        github="sheremet-va"
-        twitter="sheremet_va"
-        :width="460"
-        :height="460"
-      >
-        An open source fullstack developer
-      </Avatar>
-      <Avatar
-        name="Ivan Demchuk"
-        avatar="https://avatars.githubusercontent.com/u/2339406?v=4"
-        github="Demivan"
-        twitter="IvanDemchuk"
-      >
-        A tech lead, fullstack developer<br>Author of fluent-vue
-      </Avatar>
+        v-for="c of coreTeamMembers"
+        :key="c.github"
+        v-bind="c"
+      />
     </div>
     <h2 id="the-team" op50 font-normal pt-5 pb-2>
       Contributors

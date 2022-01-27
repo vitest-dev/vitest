@@ -6,6 +6,14 @@ import Unocss from 'unocss/vite'
 import { presetAttributify, presetIcons, presetUno } from 'unocss'
 import { resolve } from 'pathe'
 import { VitePWA } from 'vite-plugin-pwa'
+import {
+  pwaFontStylesRegex,
+  pwaFontsRegex,
+  pwaImagesRegex,
+  vitestDescription,
+  vitestName,
+  vitestShortName,
+} from './docs-data'
 
 export default defineConfig({
   plugins: [
@@ -43,9 +51,9 @@ export default defineConfig({
       ],
       manifest: {
         id: '/',
-        name: 'Vitest',
-        short_name: 'Vitest',
-        description: 'Vitest - A blazing fast unit test framework powered by Vite',
+        name: vitestName,
+        short_name: vitestShortName,
+        description: vitestDescription,
         theme_color: '#ffffff',
         icons: [
           {
@@ -69,7 +77,7 @@ export default defineConfig({
       workbox: {
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+            urlPattern: pwaFontsRegex,
             handler: 'CacheFirst',
             options: {
               cacheName: 'google-fonts-cache',
@@ -83,7 +91,7 @@ export default defineConfig({
             },
           },
           {
-            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+            urlPattern: pwaFontStylesRegex,
             handler: 'CacheFirst',
             options: {
               cacheName: 'gstatic-fonts-cache',
@@ -97,7 +105,7 @@ export default defineConfig({
             },
           },
           {
-            urlPattern: /^https:\/\/(antfu.me|patak.dev|cdn.jsdelivr.net|github.com|avatars.githubusercontent.com)\/.*/i,
+            urlPattern: pwaImagesRegex,
             handler: 'CacheFirst',
             options: {
               cacheName: 'images-cache',

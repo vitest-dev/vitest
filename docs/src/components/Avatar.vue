@@ -1,24 +1,23 @@
 <script setup lang="ts">
+import type { CoreTeam } from '../contributors'
+
 defineProps<{
-  avatar: string
-  name: string
-  github: string
-  width: number
-  height: number
-  twitter?: string
-  sponsors?: boolean
+  avatar: CoreTeam['avatar']
+  name: CoreTeam['name']
+  github: CoreTeam['github']
+  twitter: CoreTeam['twitter']
+  sponsors: CoreTeam['sponsors']
+  description: CoreTeam['description']
 }>()
 </script>
 
 <template>
   <div text-center>
-    <img :src="avatar" rounded-full :width="width" :height="height" h-25 w-25 :alt="`${name}'s avatar`">
+    <img loading="lazy" :src="`${avatar}100`" rounded-full width="100" height="100" h-25 w-25 :alt="`${name}'s avatar`">
     <div text-xl mt-1 mb-1>
       {{ name }}
     </div>
-    <div op60>
-      <slot />
-    </div>
+    <div op60 v-html="description" />
     <div flex="~ inline gap-2" py-4 text-2xl>
       <a
         class="i-carbon-logo-github inline-block text-current op30 hover:op100 mya transition duration-200"

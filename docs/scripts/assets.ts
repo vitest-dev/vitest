@@ -1,37 +1,16 @@
 import { promises as fs } from 'fs'
 import fg from 'fast-glob'
-
-const font = 'https://fonts.googleapis.com/css2?family=Readex+Pro:wght@200;400;600&display=swap'
-
-const googleapis = 'https://fonts.googleapis.com'
-const gstatic = 'https://fonts.gstatic.com'
-const jsdelivr = 'https://cdn.jsdelivr.net/'
-const antfu = 'https://antfu.me'
-const patak = 'https://patak.dev'
-const github = 'https://github.com'
-const avatars = 'https://avatars.githubusercontent.com'
+import { font, preconnectHomeLinks, preconnectLinks } from '../docs-data'
+import { coreTeamMembers } from '../src/contributors'
 
 const preconnect = `
-    <link rel="dns-prefetch" href="${googleapis}">
-    <link rel="dns-prefetch" href="${gstatic}">
-    <link rel="preconnect" crossorigin="anonymous" href="${googleapis}">
-    <link rel="preconnect" crossorigin="anonymous" href="${gstatic}">
+    ${preconnectLinks.map(l => `<link rel="dns-prefetch" href="${l}">`).join('\n')}
+    ${preconnectLinks.map(l => `<link rel="preconnect" crossorigin="anonymous" href="${l}">`).join('\n')}
 `
+
 const preconnectHome = `
-    <link rel="dns-prefetch" href="${googleapis}">
-    <link rel="dns-prefetch" href="${gstatic}">
-    <link rel="dns-prefetch" href="${antfu}">
-    <link rel="dns-prefetch" href="${patak}">
-    <link rel="dns-prefetch" href="${jsdelivr}">
-    <link rel="dns-prefetch" href="${github}">
-    <link rel="dns-prefetch" href="${avatars}">
-    <link rel="preconnect" crossorigin="anonymous" href="${googleapis}">
-    <link rel="preconnect" crossorigin="anonymous" href="${gstatic}">
-    <link rel="preconnect" crossorigin="anonymous" href="${antfu}">
-    <link rel="preconnect" crossorigin="anonymous" href="${patak}">
-    <link rel="preconnect" crossorigin="anonymous" href="${jsdelivr}">
-    <link rel="preconnect" crossorigin="anonymous" href="${github}">
-    <link rel="preconnect" crossorigin="anonymous" href="${avatars}">
+    ${preconnectHomeLinks.map(l => `<link rel="dns-prefetch" href="${l}">`).join('\n')}
+    ${preconnectHomeLinks.map(l => `<link rel="preconnect" crossorigin="anonymous" href="${l}">`).join('\n')}
 `
 
 export const optimizePages = async() => {
@@ -40,25 +19,21 @@ export const optimizePages = async() => {
   await Promise.all(names.map(async(i) => {
     let html = await fs.readFile(i, 'utf-8')
 
-    let preloadImg = '\n\t<link rel="prefetch" href="/logo.svg" crossorigin="anonymous">'
+    let prefetchImg = '\n\t<link rel="prefetch" href="/logo.svg" crossorigin="anonymous">'
 
     let usePreconnect = preconnect
 
     if (i.endsWith('/dist/index.html')) {
       usePreconnect = preconnectHome
-      preloadImg = `
-${preloadImg}
+      prefetchImg = `
+${prefetchImg}
 \t<link rel="prefetch" href="/netlify.svg">
 \t<link rel="prefetch" href="/bg.png">
-\t<link rel="prefetch" href="https://antfu.me/avatar.png">
-\t<link rel="prefetch" href="https://patak.dev/images/patak.jpg">
-\t<link rel="prefetch" href="https://avatars.githubusercontent.com/u/37929992?v=4">
-\t<link rel="prefetch" href="https://avatars.githubusercontent.com/u/16173870?v=4">
 `
     }
 
     html = html.replace(
-      /<link rel="stylesheet" href="(.*?)">/g,
+      /<link rel="stylesheet" href="(.*)">/g,
       `
     ${usePreconnect}
     <link rel="preload" as="style" href="$1" />
@@ -72,13 +47,16 @@ ${preloadImg}
     <noscript>
       <link rel="stylesheet" crossorigin="anonymous" href="${font}" />
     </noscript>
-    <link rel="prefetch" href="/manifest.webmanifest">${preloadImg}`).trim()
+    <link rel="prefetch" href="/manifest.webmanifest">${prefetchImg}`).trim()
+
+    // we need the font on development, so the font entry is added in vitepress head
+    html = html.replace(`<link href="${font.replace('&', '&amp;')}" rel="stylesheet">`, '')
 
     html = html.replace(
       '</head>',
       '\t<link rel="manifest" href="/manifest.webmanifest">\n<',
     )
-    // TODO: dark/light theme, don't remove
+    // TODO: dark/light theme, don't remove yet
     // html = html.replace(
     //   '</head>',
     //   '\t<link rel="manifest" href="/manifest.webmanifest">\n<script>\n'
