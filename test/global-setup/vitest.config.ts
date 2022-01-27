@@ -9,6 +9,7 @@ export default defineConfig({
       './setupFiles/default-export.js',
       './setupFiles/named-exports.js',
       './setupFiles/ts-with-imports.ts',
+      './setupFiles/another-vite-instance.ts',
     ],
   },
 })

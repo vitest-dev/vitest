@@ -19,7 +19,7 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
     root,
     logLevel: 'error',
     configFile: configPath,
-    plugins: await VitestPlugin(options, viteOverrides, ctx),
+    plugins: await VitestPlugin(options, ctx),
   }
 
   const server = await createServer(mergeConfig(config, viteOverrides))
