@@ -1,5 +1,6 @@
 import { access } from 'fs'
 import { sep } from 'pathe'
+import { expect, test } from 'vitest'
 import { A } from '../src/sourceA'
 
 test('A equals A', () => {
