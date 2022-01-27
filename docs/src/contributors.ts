@@ -61,7 +61,7 @@ const coreTeamMembers: CoreTeam[] = [
     github: 'Demivan',
     twitter: 'IvanDemchuk',
     sponsors: false,
-    description: 'An open source fullstack developer',
+    description: 'A tech lead, fullstack developer<br>Author of fluent-vue',
   },
   {
     avatar: contributorsAvatars.userquin,
