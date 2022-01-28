@@ -1,7 +1,10 @@
 import { existsSync, promises as fs } from 'fs'
+import { takeCoverage } from 'v8'
 import { createRequire } from 'module'
 import { pathToFileURL } from 'url'
+import type { Profiler } from 'inspector'
 import { resolve } from 'pathe'
+import type { RawSourceMap } from 'vite-node'
 import type { Vitest } from '../node'
 import { toArray } from '../utils'
 import type { C8Options, ResolvedC8Options } from '../types'
@@ -52,33 +55,63 @@ export async function cleanCoverage(options: ResolvedC8Options, clean = true) {
 const require = createRequire(import.meta.url)
 
 export async function reportCoverage(ctx: Vitest) {
+  // Flush coverage to disk
+  takeCoverage()
+
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const createReport = require('c8/lib/report')
   const report = createReport(ctx.config.coverage)
 
-  const original = report._getMergedProcessCov
+  // add source maps
+  const sourceMapMata: Record<string, { map: RawSourceMap; source: string | undefined }> = {}
+  await Promise.all(Array
+    .from(ctx.vitenode.fetchCache.entries())
+    .filter(i => !i[0].includes('/node_modules/'))
+    .map(async([file, { result }]) => {
+      const map = result.map
+      if (!map)
+        return
 
-  report._getMergedProcessCov = () => {
-    const r = original.call(report)
+      const url = pathToFileURL(file).href
 
-    // add source maps
-    Array
-      .from(ctx.vitenode.fetchCache.entries())
-      .filter(i => !i[0].includes('/node_modules/'))
-      .forEach(([file, { result }]) => {
-        const map = result.map
-        if (!map)
-          return
-        const url = pathToFileURL(file).href
-        const sources = map.sources.length
-          ? map.sources.map(i => pathToFileURL(i).href)
-          : [url]
-        report.sourceMapCache[url] = {
-          data: { ...map, sources },
-        }
-      })
+      let code: string | undefined
+      try {
+        code = (await fs.readFile(file)).toString()
+      }
+      catch {}
 
-    return r
+      const sources = map.sources.length
+        ? map.sources.map(i => pathToFileURL(i).href)
+        : [url]
+
+      sourceMapMata[url] = {
+        source: result.code,
+        map: {
+          sourcesContent: code ? [code] : undefined,
+          ...map,
+          sources,
+        },
+      }
+    }))
+
+  // This is a magic number it corresponds to the amount of code
+  // that we add in packages/vite-node/src/client.ts:110 (vm.runInThisContext)
+  // TODO: Include our transformations in soucemaps
+  const offset = 190
+
+  report._getSourceMap = (coverage: Profiler.ScriptCoverage) => {
+    const path = pathToFileURL(coverage.url).href
+    const data = sourceMapMata[path]
+
+    if (!data)
+      return {}
+
+    return {
+      sourceMap: {
+        sourcemap: data.map,
+      },
+      source: Array(offset).fill('.').join('') + data.source,
+    }
   }
 
   await report.run()
