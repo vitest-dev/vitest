@@ -2,7 +2,7 @@
   "name": "@vitest/test-coverage",
   "private": true,
   "scripts": {
-    "test": "vitest --coverage",
+    "test": "vitest",
     "coverage": "vitest run --coverage"
   },
   "devDependencies": {
