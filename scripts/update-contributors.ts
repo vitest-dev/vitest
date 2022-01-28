@@ -3,11 +3,10 @@ import fetch from 'node-fetch'
 
 interface Contributor {
   login: string
-  avatar_url?: string
 }
 
 async function fetchContributors() {
-  const collaborators: string[][] = []
+  const collaborators: string[] = []
   const res = await fetch('https://api.github.com/repos/vitest-dev/vitest/contributors', {
     method: 'get',
     headers: {
@@ -15,13 +14,7 @@ async function fetchContributors() {
     },
   })
   const data = await res.json() as Contributor[] || []
-  collaborators.push(...data.map(({ login, avatar_url }) => {
-    // optimize the avatar size: check avatar and contributors components
-    if (avatar_url)
-      return [login, `${avatar_url}${avatar_url.includes('?') ? '&' : '?'}s=`]
-
-    return [login, `https://github.com/${login}.png?size=`]
-  }))
+  collaborators.push(...data.map(i => i.login))
   return collaborators
 }
 

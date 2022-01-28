@@ -1,6 +1,7 @@
 import { promises as fs } from 'fs'
 import fg from 'fast-glob'
-import { font, preconnectHomeLinks, preconnectLinks } from '../docs-data'
+import { font, preconnectHomeLinks, preconnectLinks, sponsors } from '../docs-data'
+import { antfuSponsors, contributors, coreTeamMembers, patakSponsors } from '../src/contributors'
 
 const preconnect = `
     ${preconnectLinks.map(l => `<link rel="dns-prefetch" href="${l}">`).join('\n')}
@@ -12,24 +13,40 @@ const preconnectHome = `
     ${preconnectHomeLinks.map(l => `<link rel="preconnect" crossorigin="anonymous" href="${l}">`).join('\n')}
 `
 
-export const optimizePages = async() => {
+export const optimizePages = async(pwa: boolean) => {
   const names = await fg('./.vitepress/dist/**/*.html', { onlyFiles: true })
 
   await Promise.all(names.map(async(i) => {
     let html = await fs.readFile(i, 'utf-8')
 
-    let prefetchImg = '\n\t<link rel="prefetch" href="/logo.svg" crossorigin="anonymous">'
+    let prefetchImg = '\n\t<link rel="prefetch" href="/logo.svg">'
 
     let usePreconnect = preconnect
 
     if (i.endsWith('/dist/index.html')) {
       usePreconnect = preconnectHome
+      const avatars = new Map<string, string>()
+      coreTeamMembers.forEach(({ github, avatar }) => {
+        if (!avatars.has(github))
+          avatars.set(github, avatar)
+      })
+      contributors.forEach(({ name, avatar }) => {
+        if (!avatars.has(name))
+          avatars.set(name, avatar)
+      })
       prefetchImg = `
 ${prefetchImg}
 \t<link rel="prefetch" href="/netlify.svg">
 \t<link rel="prefetch" href="/bg.png">
+${Array.from(avatars.values()).map(avatar => `\t<link rel="prefetch" href="${avatar}">`).join('\n')}
+\t${sponsors.map(s => `<link rel="prefetch" href="${s}">`).join('\n')}
+\t<link rel="prefetch" href="${antfuSponsors}">
+\t<link rel="prefetch" href="${patakSponsors}">
 `
     }
+
+    // we need the font on development, so the font entry is added in vitepress head
+    html = html.replace(`<link href="${font.replace('&', '&amp;')}" rel="stylesheet">`, '')
 
     html = html.replace(
       /<link rel="stylesheet" href="(.*)">/g,
@@ -45,16 +62,17 @@ ${prefetchImg}
     />
     <noscript>
       <link rel="stylesheet" crossorigin="anonymous" href="${font}" />
-    </noscript>
-    <link rel="prefetch" href="/manifest.webmanifest">${prefetchImg}`).trim()
+    </noscript>`).trim()
 
-    // we need the font on development, so the font entry is added in vitepress head
-    html = html.replace(`<link href="${font.replace('&', '&amp;')}" rel="stylesheet">`, '')
+    if (pwa) {
+      html = html.replace(
+        '</head>',
+        `
+\t<link rel="prefetch" href="/manifest.webmanifest">${prefetchImg}
+\t<link rel="manifest" href="/manifest.webmanifest">\n</head>`,
+      )
+    }
 
-    html = html.replace(
-      '</head>',
-      '\t<link rel="manifest" href="/manifest.webmanifest">\n<',
-    )
     // TODO: dark/light theme, don't remove yet
     // html = html.replace(
     //   '</head>',

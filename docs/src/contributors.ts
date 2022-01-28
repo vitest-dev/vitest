@@ -14,11 +14,18 @@ export interface CoreTeam {
   description: string
 }
 
+// for antfu sponsors
+const jsdelivr = 'cdn.jsdelivr.net'
+// for patak sponsors
+const patak = 'patak.dev'
+const antfuSponsors = `https://${jsdelivr}/gh/antfu/static/sponsors.svg`
+const patakSponsors = `https://${patak}/sponsors.svg`
+
 const contributorsAvatars: Record<string, string> = {}
 
-const contributorList = (contributors as Array<[string, string]>).reduce((acc, [name, avatar]) => {
-  contributorsAvatars[name] = avatar
-  acc.push({ name, avatar })
+const contributorList = (contributors as string[]).reduce((acc, name) => {
+  contributorsAvatars[name] = `https://github.com/${name}.png`
+  acc.push({ name, avatar: contributorsAvatars[name] })
   return acc
 }, [] as Contributor[])
 
@@ -73,4 +80,4 @@ const coreTeamMembers: CoreTeam[] = [
   },
 ]
 
-export { coreTeamMembers, contributorList as contributors }
+export { coreTeamMembers, contributorList as contributors, jsdelivr, patak, antfuSponsors, patakSponsors }

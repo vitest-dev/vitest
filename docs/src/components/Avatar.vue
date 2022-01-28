@@ -13,7 +13,7 @@ defineProps<{
 
 <template>
   <div text-center>
-    <img loading="lazy" :src="`${avatar}100`" rounded-full width="100" height="100" h-25 w-25 :alt="`${name}'s avatar`">
+    <img loading="lazy" :src="avatar" rounded-full h-25 w-25 :alt="`${name}'s avatar`">
     <div text-xl mt-1 mb-1>
       {{ name }}
     </div>

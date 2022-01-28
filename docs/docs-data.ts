@@ -1,3 +1,5 @@
+// noinspection ES6PreferShortImport: IntelliJ IDE hint to avoid warning to use `~/contributors`, will fail on build if changed
+import { antfuSponsors, jsdelivr, patak, patakSponsors } from './src/contributors'
 /* Texts */
 export const vitestName = 'Vitest'
 export const vitestShortName = 'Vitest'
@@ -18,16 +20,17 @@ export const contributing = 'https://github.com/vitest-dev/vitest/blob/main/CONT
 export const discord = 'https://chat.vitest.dev'
 export const twitter = 'https://twitter.com/vitest_dev'
 
-/* Avatar/Image servers */
+/* Avatar/Image/Sponsors servers */
 export const imageServers: Record<string, string> = {
   // for antfu sponsors
-  jsdelivr: 'cdn.jsdelivr.net',
+  jsdelivr,
   // for patak sponsors
-  patak: 'patak.dev',
+  patak,
   // GitHub contributor avatars
   github: 'github.com',
   avatars: 'avatars.githubusercontent.com',
 }
+export const sponsors = [antfuSponsors, patakSponsors]
 export const preconnectLinks = [googleapis, gstatic]
 export const preconnectHomeLinks = [googleapis, gstatic, ...Object.values(imageServers).map(s => `https://${s}`)]
 

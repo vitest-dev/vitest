@@ -37,6 +37,7 @@ export default defineConfig({
     }),
     IncludesPlugin(),
     VitePWA({
+      disable: false,
       outDir: '.vitepress/dist',
       // TODO: to add prompt strategy we should change to custom theme or switch to @vue/theme
       registerType: 'autoUpdate',

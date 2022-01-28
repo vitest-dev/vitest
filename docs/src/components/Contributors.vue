@@ -4,8 +4,8 @@ import { contributors } from '../contributors'
 
 <template>
   <div flex="~ wrap gap-1" justify-center>
-    <a v-for="{name, avatar} of contributors" :key="name" :href="`https://github.com/${name}`" rel="noopener noreferrer" :aria-label="`${name} on GitHub`">
-      <img loading="lazy" :src="`${avatar}40`" rounded-full width="40" height="40" h-10 w-10 :alt="`${name}'s avatar`">
+    <a v-for="{ name, avatar } of contributors" :key="name" :href="`https://github.com/${name}`" m-0 rel="noopener noreferrer" :aria-label="`${name} on GitHub`">
+      <img loading="lazy" :src="avatar" rounded-full h-10 w-10 :alt="`${name}'s avatar`">
     </a>
   </div>
 </template>
