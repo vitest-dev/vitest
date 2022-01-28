@@ -61,9 +61,12 @@ export async function reportCoverage(ctx: Vitest) {
 
     // add source maps
     Array
-      .from(ctx.visitedFilesMap.entries())
+      .from(ctx.vitenode.fetchCache.entries())
       .filter(i => !i[0].includes('/node_modules/'))
-      .forEach(([file, map]) => {
+      .forEach(([file, { result }]) => {
+        const map = result.map
+        if (!map)
+          return
         const url = pathToFileURL(file).href
         const sources = map.sources.length
           ? map.sources.map(i => pathToFileURL(i).href)

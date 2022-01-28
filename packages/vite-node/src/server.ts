@@ -1,7 +1,6 @@
 import type { TransformResult, ViteDevServer } from 'vite'
-import type { FetchResult } from '..'
+import type { FetchResult, RawSourceMap, ViteNodeResolveId, ViteNodeServerOptions } from './types'
 import { shouldExternalize } from './externalize'
-import type { ViteNodeResolveId, ViteNodeServerOptions } from './types'
 import { toFilePath, withInlineSourcemap } from './utils'
 
 export * from './externalize'
@@ -9,7 +8,8 @@ export * from './externalize'
 export class ViteNodeServer {
   private fetchPromiseMap = new Map<string, Promise<FetchResult>>()
   private transformPromiseMap = new Map<string, Promise<TransformResult | null | undefined>>()
-  private fetchCache = new Map<string, {
+
+  fetchCache = new Map<string, {
     timestamp: number
     result: FetchResult
   }>()
@@ -32,6 +32,9 @@ export class ViteNodeServer {
     if (!this.fetchPromiseMap.has(id)) {
       this.fetchPromiseMap.set(id,
         this._fetchModule(id)
+          .then((r) => {
+            return this.options.sourcemap !== true ? { ...r, map: undefined } : r
+          })
           .finally(() => {
             this.fetchPromiseMap.delete(id)
           }),
@@ -69,7 +72,7 @@ export class ViteNodeServer {
   private async _fetchModule(id: string): Promise<FetchResult> {
     let result: FetchResult
 
-    const timestamp = this.server.moduleGraph.getModuleById(id)?.lastHMRTimestamp
+    const timestamp = this.server.moduleGraph.getModuleById(id)?.lastHMRTimestamp || Date.now()
     const cache = this.fetchCache.get(id)
     if (timestamp && cache && cache.timestamp >= timestamp)
       return cache.result
@@ -80,15 +83,13 @@ export class ViteNodeServer {
     }
     else {
       const r = await this._transformRequest(id)
-      result = { code: r?.code }
+      result = { code: r?.code, map: r?.map as unknown as RawSourceMap }
     }
 
-    if (timestamp) {
-      this.fetchCache.set(id, {
-        timestamp,
-        result,
-      })
-    }
+    this.fetchCache.set(id, {
+      timestamp,
+      result,
+    })
 
     return result
   }
@@ -107,7 +108,8 @@ export class ViteNodeServer {
       result = await this.server.transformRequest(id, { ssr: true })
     }
 
-    if (this.options.sourcemap !== false && result && !id.includes('node_modules'))
+    const sourcemap = this.options.sourcemap ?? 'inline'
+    if (sourcemap === 'inline' && result && !id.includes('node_modules'))
       withInlineSourcemap(result)
 
     return result

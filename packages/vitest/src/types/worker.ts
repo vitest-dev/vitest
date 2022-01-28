@@ -1,7 +1,6 @@
 import type { Profiler } from 'inspector'
 import type { MessagePort } from 'worker_threads'
-import type { FetchFunction, ViteNodeResolveId } from 'vite-node'
-import type { RawSourceMap } from '../types'
+import type { FetchFunction, RawSourceMap, ViteNodeResolveId } from 'vite-node'
 import type { ResolvedConfig } from './config'
 import type { File, TaskResultPack } from './tasks'
 import type { SnapshotResult } from './snapshot'
