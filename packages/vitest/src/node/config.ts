@@ -3,7 +3,7 @@ import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 
 import type { ApiConfig, ResolvedConfig, UserConfig } from '../types'
 import { defaultExclude, defaultInclude, defaultPort } from '../constants'
-import { resolveC8Options } from '../coverage'
+import { resolveC8Options } from '../integrations/coverage'
 import { toArray } from '../utils'
 
 export function resolveApiConfig<Options extends ApiConfig & UserConfig>(
