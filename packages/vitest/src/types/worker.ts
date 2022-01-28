@@ -1,4 +1,3 @@
-import type { Profiler } from 'inspector'
 import type { MessagePort } from 'worker_threads'
 import type { FetchFunction, RawSourceMap, ViteNodeResolveId } from 'vite-node'
 import type { ResolvedConfig } from './config'
@@ -27,5 +26,4 @@ export interface WorkerRPC {
   onTaskUpdate: (pack: TaskResultPack[]) => void
 
   snapshotSaved: (snapshot: SnapshotResult) => void
-  coverageCollected: (coverage: Profiler.TakePreciseCoverageReturnType) => void
 }

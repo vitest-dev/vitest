@@ -1,6 +1,4 @@
 import { performance } from 'perf_hooks'
-import inspector from 'inspector'
-import { promisify } from 'util'
 import type { HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, Test } from '../types'
 import { vi } from '../integrations/vi'
 import { getSnapshotClient } from '../integrations/snapshot/chai'
@@ -190,29 +188,7 @@ export async function startTests(paths: string[], config: ResolvedConfig) {
 
   rpc().onCollected(files)
 
-  let session!: inspector.Session
-  let postSession!: any
-  if (config.coverage.enabled) {
-    session = new inspector.Session()
-    session.connect()
-
-    postSession = promisify(session.post.bind(session))
-
-    await postSession('Profiler.enable')
-    await postSession('Profiler.startPreciseCoverage', { detailed: true })
-  }
-
   await runSuites(files)
-
-  if (config.coverage.enabled) {
-    const coverage = await postSession('Profiler.takePreciseCoverage')
-    await rpc().coverageCollected(coverage)
-
-    await postSession('Profiler.stopPreciseCoverage')
-    await postSession('Profiler.disable')
-
-    session.disconnect()
-  }
 
   await getSnapshotClient().saveSnap()
 

@@ -112,9 +112,6 @@ function createChannel(ctx: Vitest) {
       snapshotSaved(snapshot) {
         ctx.snapshot.add(snapshot)
       },
-      coverageCollected(coverage) {
-        ctx.coverage.push(coverage)
-      },
       async getSourceMap(id, force) {
         if (force) {
           const mod = ctx.server.moduleGraph.getModuleById(id)

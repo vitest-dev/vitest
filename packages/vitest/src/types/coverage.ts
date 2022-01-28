@@ -66,4 +66,5 @@ export interface C8Options {
 }
 
 export interface ResolvedC8Options extends Required<C8Options> {
+  tempDirectory: string
 }
