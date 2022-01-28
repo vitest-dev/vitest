@@ -44,7 +44,7 @@ async function sendTasksUpdate() {
   }
 }
 
-export async function runTest(test: Test, config: ResolvedConfig) {
+export async function runTest(test: Test) {
   if (test.mode !== 'run')
     return
 
@@ -72,26 +72,7 @@ export async function runTest(test: Test, config: ResolvedConfig) {
       testPath: test.suite.file?.filepath,
       currentTestName: getFullName(test),
     })
-
-    let session!: inspector.Session
-    if (config.coverage.enabled) {
-      session = new inspector.Session()
-      session.connect()
-
-      session.post('Profiler.enable')
-      session.post('Profiler.startPreciseCoverage', { callCount: true, detailed: true })
-    }
-
     await getFn(test)()
-
-    if (config.coverage.enabled) {
-      session.post('Profiler.takePreciseCoverage', (_, coverage) => {
-        rpc().coverageCollected(coverage)
-      })
-
-      session.disconnect()
-    }
-
     const { assertionCalls, expectedAssertionsNumber, expectedAssertionsNumberError, isExpectingAssertions, isExpectingAssertionsError } = getState()
     if (expectedAssertionsNumber !== null && assertionCalls !== expectedAssertionsNumber)
       throw expectedAssertionsNumberError
@@ -134,7 +115,7 @@ export async function runTest(test: Test, config: ResolvedConfig) {
   updateTask(test)
 }
 
-export async function runSuite(suite: Suite, config: ResolvedConfig) {
+export async function runSuite(suite: Suite) {
   if (suite.result?.state === 'fail')
     return
 
@@ -158,11 +139,11 @@ export async function runSuite(suite: Suite, config: ResolvedConfig) {
 
       for (const tasksGroup of partitionSuiteChildren(suite)) {
         if (tasksGroup[0].concurrent === true) {
-          await Promise.all(tasksGroup.map(c => runSuiteChild(c, config)))
+          await Promise.all(tasksGroup.map(c => runSuiteChild(c)))
         }
         else {
           for (const c of tasksGroup)
-            await runSuiteChild(c, config)
+            await runSuiteChild(c)
         }
       }
 
@@ -192,15 +173,15 @@ export async function runSuite(suite: Suite, config: ResolvedConfig) {
   updateTask(suite)
 }
 
-async function runSuiteChild(c: Task, config: ResolvedConfig) {
+async function runSuiteChild(c: Task) {
   return c.type === 'test'
-    ? runTest(c, config)
-    : runSuite(c, config)
+    ? runTest(c)
+    : runSuite(c)
 }
 
-export async function runSuites(suites: Suite[], config: ResolvedConfig) {
+export async function runSuites(suites: Suite[]) {
   for (const suite of suites)
-    await runSuite(suite, config)
+    await runSuite(suite)
 }
 
 export async function startTests(paths: string[], config: ResolvedConfig) {
@@ -208,7 +189,24 @@ export async function startTests(paths: string[], config: ResolvedConfig) {
 
   rpc().onCollected(files)
 
-  await runSuites(files, config)
+  let session!: inspector.Session
+  if (config.coverage.enabled) {
+    session = new inspector.Session()
+    session.connect()
+
+    session.post('Profiler.enable')
+    session.post('Profiler.startPreciseCoverage', { detailed: true })
+  }
+
+  await runSuites(files)
+
+  if (config.coverage.enabled) {
+    session.post('Profiler.takePreciseCoverage', (_, coverage) => {
+      rpc().coverageCollected(coverage)
+    })
+
+    session.disconnect()
+  }
 
   await getSnapshotClient().saveSnap()
 
