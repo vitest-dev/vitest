@@ -1,7 +1,7 @@
 import { describe, expect, spyOn, test } from 'vitest'
 
 /**
- * @vitest-environment jsdom
+ * @vitest-environment happy-dom
  */
 
 describe('spyOn', () => {
