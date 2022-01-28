@@ -93,6 +93,15 @@ main.home {
 th, td {
   border: 1px solid #8885;
 }
+
+/* h3 breaks SEO => replaced with h2 with the same size */
+.home-content h2 {
+  margin-top: 2rem;
+  font-size: 1.35rem;
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
 img.resizable-img {
   width: unset;
   height: unset;

@@ -77,7 +77,7 @@ import { lazyLoad } from '../images'
     </h2>
     <div grid="~ cols-1 lg:cols-2" w-screen text-center mt-10>
       <div class="flex flex-col">
-        <a text-lg href="https://github.com/sponsors/antfu" rel="noopener noreferrer">Anthony's Sponsors</a>
+        <a text-lg h="32px" href="https://github.com/sponsors/antfu" rel="noopener noreferrer">Anthony's Sponsors</a>
         <a href="https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg" target="_blank" rel="noopener noreferrer">
           <img
             :loading="lazyLoad"
@@ -90,7 +90,7 @@ import { lazyLoad } from '../images'
         </a>
       </div>
       <div class="flex flex-col">
-        <a text-lg href="https://github.com/sponsors/patak-dev" rel="noopener noreferrer">Patak's Sponsors</a>
+        <a text-lg h="32px" href="https://github.com/sponsors/patak-dev" rel="noopener noreferrer">Patak's Sponsors</a>
         <a href="https://patak.dev/sponsors.svg" target="_blank" rel="noopener noreferrer">
           <img
             :loading="lazyLoad"
