@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { CoreTeam } from '../contributors'
+import { lazyLoad } from '../images'
 
 defineProps<{
   avatar: CoreTeam['avatar']
@@ -13,7 +14,7 @@ defineProps<{
 
 <template>
   <div text-center>
-    <img loading="lazy" :src="avatar" rounded-full h-25 w-25 :alt="`${name}'s avatar`">
+    <img :loading="lazyLoad" :src="avatar" rounded-full min-w-25 min-h-25 h-25 w-25 :alt="`${name}'s avatar`">
     <div text-xl mt-1 mb-1>
       {{ name }}
     </div>

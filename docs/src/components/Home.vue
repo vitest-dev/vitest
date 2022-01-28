@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { antfuSponsors, coreTeamMembers, patakSponsors } from '../contributors'
+import { lazyLoad } from '../images'
 </script>
 <template>
   <div flex flex-col items-center>
@@ -79,7 +80,7 @@ import { antfuSponsors, coreTeamMembers, patakSponsors } from '../contributors'
         <a text-lg href="https://github.com/sponsors/antfu" rel="noopener noreferrer">Anthony's Sponsors</a>
         <a href="https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg" target="_blank" rel="noopener noreferrer">
           <img
-            loading="lazy"
+            :loading="lazyLoad"
             :src="antfuSponsors"
             width="768"
             height="1464"
@@ -92,7 +93,7 @@ import { antfuSponsors, coreTeamMembers, patakSponsors } from '../contributors'
         <a text-lg href="https://github.com/sponsors/patak-dev" rel="noopener noreferrer">Patak's Sponsors</a>
         <a href="https://patak.dev/sponsors.svg" target="_blank" rel="noopener noreferrer">
           <img
-            loading="lazy"
+            :loading="lazyLoad"
             :src="patakSponsors"
             width="768"
             height="722"

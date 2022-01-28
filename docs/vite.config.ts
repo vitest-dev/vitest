@@ -7,6 +7,7 @@ import { presetAttributify, presetIcons, presetUno } from 'unocss'
 import { resolve } from 'pathe'
 import { VitePWA } from 'vite-plugin-pwa'
 import {
+  pwaDisabled,
   pwaFontStylesRegex,
   pwaFontsRegex,
   pwaImagesRegex,
@@ -16,6 +17,9 @@ import {
 } from './docs-data'
 
 export default defineConfig({
+  define: {
+    'process.env.__PWA_DISABLED__': pwaDisabled,
+  },
   plugins: [
     Components({
       include: [/\.vue/, /\.md/],
@@ -37,7 +41,7 @@ export default defineConfig({
     }),
     IncludesPlugin(),
     VitePWA({
-      disable: false,
+      disable: pwaDisabled,
       outDir: '.vitepress/dist',
       // TODO: to add prompt strategy we should change to custom theme or switch to @vue/theme
       registerType: 'autoUpdate',

@@ -1,7 +1,6 @@
 import { promises as fs } from 'fs'
 import fg from 'fast-glob'
-import { font, preconnectHomeLinks, preconnectLinks, sponsors } from '../docs-data'
-import { antfuSponsors, contributors, coreTeamMembers, patakSponsors } from '../src/contributors'
+import { font, preconnectHomeLinks, preconnectLinks } from '../docs-data'
 
 const preconnect = `
     ${preconnectLinks.map(l => `<link rel="dns-prefetch" href="${l}">`).join('\n')}
@@ -25,23 +24,10 @@ export const optimizePages = async(pwa: boolean) => {
 
     if (i.endsWith('/dist/index.html')) {
       usePreconnect = preconnectHome
-      const avatars = new Map<string, string>()
-      coreTeamMembers.forEach(({ github, avatar }) => {
-        if (!avatars.has(github))
-          avatars.set(github, avatar)
-      })
-      contributors.forEach(({ name, avatar }) => {
-        if (!avatars.has(name))
-          avatars.set(name, avatar)
-      })
       prefetchImg = `
 ${prefetchImg}
 \t<link rel="prefetch" href="/netlify.svg">
 \t<link rel="prefetch" href="/bg.png">
-${Array.from(avatars.values()).map(avatar => `\t<link rel="prefetch" href="${avatar}">`).join('\n')}
-\t${sponsors.map(s => `<link rel="prefetch" href="${s}">`).join('\n')}
-\t<link rel="prefetch" href="${antfuSponsors}">
-\t<link rel="prefetch" href="${patakSponsors}">
 `
     }
 
