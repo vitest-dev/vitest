@@ -164,19 +164,16 @@ class VitestUtils {
   }
 
   public clearAllMocks() {
-    this._mocker.clearMocks({ clearMocks: true })
     spies.forEach(spy => spy.mockClear())
     return this
   }
 
   public resetAllMocks() {
-    this._mocker.clearMocks({ mockReset: true })
     spies.forEach(spy => spy.mockReset())
     return this
   }
 
   public restoreAllMocks() {
-    this._mocker.clearMocks({ restoreMocks: true })
     spies.forEach(spy => spy.mockRestore())
     return this
   }
