@@ -45,9 +45,8 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
           cacheDir: undefined,
         }
       },
-      async configResolved(viteConfig) {
+      async configResolved() {
         // viteConfig.test is final now, merge it for real
-        options = deepMerge(options, viteConfig.test as any || {})
         options.api = resolveApiConfig(options)
       },
       async configureServer(server) {
