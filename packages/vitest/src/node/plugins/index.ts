@@ -46,14 +46,14 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
         }
       },
       async configResolved() {
-        options.api = resolveApiConfig(options)
+        ctx.config.api = resolveApiConfig(options)
       },
       async configureServer(server) {
         if (haveStarted)
           await ctx.report('onServerRestart')
         await ctx.setServer(options, server)
         haveStarted = true
-        if (options.api)
+        if (ctx.config.api)
           (await import('../../api/setup')).setup(ctx)
 
         // #415, in run mode we don't need the watcher, close it would improve the performance
