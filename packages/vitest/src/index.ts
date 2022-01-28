@@ -16,8 +16,6 @@ export * from './integrations/vi'
 export * from './types'
 export * from './api/types'
 
-export type { Spy, SpyFn } from 'tinyspy'
-
 declare module 'vite' {
   interface UserConfig {
     /**
@@ -43,9 +41,9 @@ type Promisify<O> = {
 }
 
 declare global {
-  namespace Chai {
-    interface ExpectStatic extends AsymmetricMatchersContaining {
-      <T>(actual: T, message?: string): VitestAssertion<T>
+  namespace Vi {
+    interface ExpectStatic extends Chai.ExpectStatic, AsymmetricMatchersContaining {
+      <T>(actual: T, message?: string): Vi.Assertion<T>
 
       extend(expects: MatchersObject): void
       assertions(expected: number): void
@@ -116,19 +114,19 @@ declare global {
       nthReturnedWith<E>(nthCall: number, value: E): void
     }
 
-    type VitestifyAssertion<A> = {
-      [K in keyof A]: A[K] extends Assertion
-        ? VitestAssertion<any>
+    // eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error
+    // @ts-ignore build namspace conflict
+    type VitestAssertion<A> = {
+      [K in keyof A]: A[K] extends Chai.Assertion
+        ? Assertion<any>
         : A[K] extends (...args: any[]) => any
           ? A[K] // not converting function since they may contain overload
-          : VitestifyAssertion<A[K]>
+          : VitestAssertion<A[K]>
     }
 
-    interface VitestAssertion<T = any> extends VitestifyAssertion<Assertion>, JestAssertion<T> {
-      resolves: Promisify<VitestAssertion<T>>
-      rejects: Promisify<VitestAssertion<T>>
-
-      chaiEqual<E>(expected: E): void
+    interface Assertion<T = any> extends VitestAssertion<Chai.Assertion>, JestAssertion<T> {
+      resolves: Promisify<Assertion<T>>
+      rejects: Promisify<Assertion<T>>
     }
   }
 }

@@ -2,7 +2,7 @@
   "name": "@vitest/test-react",
   "private": true,
   "scripts": {
-    "coverage": "vitest --coverage",
+    "coverage": "vitest run --coverage",
     "test": "vitest",
     "test:ui": "vitest --ui"
   },
@@ -14,7 +14,7 @@
     "@types/react-test-renderer": "^17.0.1",
     "@vitejs/plugin-react": "1.1.4",
     "@vitest/ui": "latest",
-    "happy-dom": "^2.27.0",
+    "happy-dom": "^2.30.1",
     "jsdom": "latest",
     "react-test-renderer": "17.0.2",
     "vitest": "latest"

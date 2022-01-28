@@ -95,21 +95,6 @@ describe('jest-expect', () => {
     expect(['Bob', 'Eve']).toEqual(expect.not.arrayContaining(['Steve']))
   })
 
-  it('asymmetric matchers (chai style)', () => {
-    expect({ foo: 'bar' }).equal({ foo: expect.stringContaining('ba') })
-    expect('bar').equal(expect.stringContaining('ba'))
-    expect(['bar']).equal([expect.stringContaining('ba')])
-    expect({ foo: 'bar', bar: 'foo', hi: 'hello' }).equal({
-      foo: expect.stringContaining('ba'),
-      bar: expect.stringContaining('fo'),
-      hi: 'hello',
-    })
-
-    expect({ foo: 'bar' }).not.equal({ foo: expect.stringContaining('zoo') })
-    expect('bar').not.equal(expect.stringContaining('zoo'))
-    expect(['bar']).not.equal([expect.stringContaining('zoo')])
-  })
-
   it('object', () => {
     expect({}).toEqual({})
     expect({ apples: 13 }).toEqual({ apples: 13 })
@@ -126,6 +111,7 @@ describe('jest-expect', () => {
     expect([complex]).toMatchObject([{ foo: 1 }])
     expect(complex).not.toMatchObject({ foo: 2 })
     expect(complex).toMatchObject({ bar: { bar: 100 } })
+    expect(complex).toMatchObject({ foo: expect.any(Number) })
 
     expect(complex).toHaveProperty('foo')
     expect(complex).toHaveProperty('foo', 1)
@@ -172,7 +158,7 @@ describe('jest-expect', () => {
   // https://jestjs.io/docs/expect#tostrictequalvalue
 
   class LaCroix {
-    constructor(public flavor) {}
+    constructor(public flavor: any) {}
   }
 
   describe('the La Croix cans on my desk', () => {
@@ -187,7 +173,7 @@ describe('jest-expect', () => {
     expect([]).not.toBe([])
     expect([]).toStrictEqual([])
 
-    const foo = []
+    const foo: any[] = []
 
     expect(foo).toBe(foo)
     expect(foo).toStrictEqual(foo)
@@ -209,21 +195,21 @@ describe('jest-expect', () => {
 
 describe('.toStrictEqual()', () => {
   class TestClassA {
-    constructor(public a, public b) {}
+    constructor(public a: any, public b: any) {}
   }
 
   class TestClassB {
-    constructor(public a, public b) {}
+    constructor(public a: any, public b: any) {}
   }
 
   const TestClassC = class Child extends TestClassA {
-    constructor(a, b) {
+    constructor(a: any, b: any) {
       super(a, b)
     }
   }
 
   const TestClassD = class Child extends TestClassB {
-    constructor(a, b) {
+    constructor(a: any, b: any) {
       super(a, b)
     }
   }

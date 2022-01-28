@@ -75,19 +75,22 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
 /**
  * If any tasks been marked as `only`, mark all other tasks as `skip`.
  */
-function interpretTaskModes(suite: Suite, namePattern?: string | RegExp, onlyMode?: boolean) {
-  if (onlyMode === undefined)
+function interpretTaskModes(suite: Suite, namePattern?: string | RegExp, onlyMode?: boolean, isIncluded?: boolean) {
+  if (onlyMode === undefined) {
     onlyMode = someTasksAreOnly(suite)
+    isIncluded ||= suite.mode === 'only'
+  }
 
   suite.tasks.forEach((t) => {
+    // Check if either the parent suite or the task itself are marked as included
+    const includeTask = isIncluded || t.mode === 'only'
     if (onlyMode) {
-      if (t.type === 'suite' && someTasksAreOnly(t)) {
+      if (t.type === 'suite' && (includeTask || someTasksAreOnly(t))) {
         // Don't skip this suite
         if (t.mode === 'only')
           t.mode = 'run'
-        interpretTaskModes(t, namePattern, onlyMode)
       }
-      else if (t.mode === 'run') { t.mode = 'skip' }
+      else if (t.mode === 'run' && !includeTask) { t.mode = 'skip' }
       else if (t.mode === 'only') { t.mode = 'run' }
     }
     if (t.type === 'test') {
@@ -97,14 +100,16 @@ function interpretTaskModes(suite: Suite, namePattern?: string | RegExp, onlyMod
     else if (t.type === 'suite') {
       if (t.mode === 'skip')
         skipAllTasks(t)
-
-      // if all subtasks are skipped, marked as skip
-      if (t.mode === 'run') {
-        if (t.tasks.every(i => i.mode !== 'run'))
-          t.mode = 'skip'
-      }
+      else
+        interpretTaskModes(t, namePattern, onlyMode, includeTask)
     }
   })
+
+  // if all subtasks are skipped, mark as skip
+  if (suite.mode === 'run') {
+    if (suite.tasks.every(i => i.mode !== 'run'))
+      suite.mode = 'skip'
+  }
 }
 
 function someTasksAreOnly(suite: Suite): boolean {

@@ -4,7 +4,8 @@ import { resolve } from 'pathe'
 import type { Options as TinypoolOptions } from 'tinypool'
 import { Tinypool } from 'tinypool'
 import { createBirpc } from 'birpc'
-import type { RawSourceMap, WorkerContext, WorkerRPC } from '../types'
+import type { RawSourceMap } from 'vite-node'
+import type { WorkerContext, WorkerRPC } from '../types'
 import { distDir } from '../constants'
 import type { Vitest } from './core'
 
@@ -110,6 +111,9 @@ function createChannel(ctx: Vitest) {
       },
       snapshotSaved(snapshot) {
         ctx.snapshot.add(snapshot)
+      },
+      coverageCollected(coverage) {
+        ctx.coverage.push(coverage)
       },
       async getSourceMap(id, force) {
         if (force) {

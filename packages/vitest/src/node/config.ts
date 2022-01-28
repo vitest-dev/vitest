@@ -1,14 +1,13 @@
 import { resolve } from 'pathe'
-import type { ResolvedConfig as ResolvedViteConfig, UserConfig as ViteUserConfig } from 'vite'
+import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 
 import type { ApiConfig, ResolvedConfig, UserConfig } from '../types'
 import { defaultExclude, defaultInclude, defaultPort } from '../constants'
-import { resolveC8Options } from '../coverage'
-import { deepMerge, toArray } from '../utils'
+import { resolveC8Options } from '../integrations/coverage'
+import { toArray } from '../utils'
 
 export function resolveApiConfig<Options extends ApiConfig & UserConfig>(
   options: Options,
-  viteOverrides?: ViteUserConfig,
 ): ApiConfig | undefined {
   let api: ApiConfig | undefined
 
@@ -23,10 +22,8 @@ export function resolveApiConfig<Options extends ApiConfig & UserConfig>(
     if (api) {
       if (options.api.port)
         api.port = options.api.port
-
       if (options.api.strictPort)
         api.strictPort = options.api.strictPort
-
       if (options.api.host)
         api.host = options.api.host
     }
@@ -38,9 +35,6 @@ export function resolveApiConfig<Options extends ApiConfig & UserConfig>(
   if (api) {
     if (!api.port)
       api.port = defaultPort
-
-    if (viteOverrides)
-      viteOverrides.server = Object.assign(viteOverrides.server || {}, api)
   }
 
   return api
@@ -56,7 +50,7 @@ export function resolveConfig(
   const globals = options?.global ?? options.globals
 
   const resolved = {
-    ...deepMerge(options, viteConfig.test || {}),
+    ...options,
     root: viteConfig.root,
     globals,
     global: globals,

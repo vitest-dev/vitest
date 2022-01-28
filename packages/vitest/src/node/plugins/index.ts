@@ -1,4 +1,4 @@
-import type { Plugin as VitePlugin, UserConfig as ViteUserConfig } from 'vite'
+import type { Plugin as VitePlugin } from 'vite'
 import type { UserConfig } from '../../types'
 import { deepMerge, ensurePackageInstalled, notNullish } from '../../utils'
 import { resolveApiConfig } from '../config'
@@ -6,7 +6,7 @@ import { Vitest } from '../core'
 import { GlobalSetupPlugin } from './globalSetup'
 import { MocksPlugin } from './mock'
 
-export async function VitestPlugin(options: UserConfig = {}, viteOverrides: ViteUserConfig = {}, ctx = new Vitest()): Promise<VitePlugin[]> {
+export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest()): Promise<VitePlugin[]> {
   let haveStarted = false
 
   async function UIPlugin() {
@@ -19,8 +19,11 @@ export async function VitestPlugin(options: UserConfig = {}, viteOverrides: Vite
       name: 'vitest',
       enforce: 'pre',
       config(viteConfig: any) {
-        options = deepMerge(options, viteConfig.test || {})
-        options.api = resolveApiConfig(options, viteOverrides)
+        // preliminary merge of options to be able to create server options for vite
+        // however to allow vitest plugins to modify vitest config values
+        // this is repeated in configResolved where the config is final
+        const preOptions = deepMerge(options, viteConfig.test || {})
+        preOptions.api = resolveApiConfig(preOptions)
         return {
           clearScreen: false,
           resolve: {
@@ -29,17 +32,23 @@ export async function VitestPlugin(options: UserConfig = {}, viteOverrides: Vite
             mainFields: [],
           },
           server: {
-            ...options.api,
-            open: options.ui
-              ? options.uiBase ?? '/__vitest__/'
+            ...preOptions.api,
+            open: preOptions.ui && preOptions.open
+              ? preOptions.uiBase ?? '/__vitest__/'
               : undefined,
             preTransformRequests: false,
           },
           build: {
             sourcemap: true,
           },
-          optimizeDeps: false,
+          // disable deps optimization
+          cacheDir: undefined,
         }
+      },
+      async configResolved(viteConfig) {
+        // viteConfig.test is final now, merge it for real
+        options = deepMerge(options, viteConfig.test as any || {})
+        options.api = resolveApiConfig(options)
       },
       async configureServer(server) {
         if (haveStarted)
@@ -55,7 +64,7 @@ export async function VitestPlugin(options: UserConfig = {}, viteOverrides: Vite
       },
     },
     MocksPlugin(),
-    GlobalSetupPlugin(),
+    GlobalSetupPlugin(ctx),
     options.ui
       ? await UIPlugin()
       : null,

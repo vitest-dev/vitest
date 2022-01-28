@@ -8,7 +8,26 @@ export interface DepsHandlingOptions {
   fallbackCJS?: boolean
 }
 
-export type FetchFunction = (id: string) => Promise<{ code?: string; externalize?: string }>
+export interface StartOfSourceMap {
+  file?: string
+  sourceRoot?: string
+}
+
+export interface RawSourceMap extends StartOfSourceMap {
+  version: string
+  sources: string[]
+  names: string[]
+  sourcesContent?: string[]
+  mappings: string
+}
+
+export interface FetchResult {
+  code?: string
+  externalize?: string
+  map?: RawSourceMap
+}
+
+export type FetchFunction = (id: string) => Promise<FetchResult>
 
 export interface ModuleCache {
   promise?: Promise<any>
@@ -36,9 +55,9 @@ export interface ViteNodeResolveId {
 export interface ViteNodeServerOptions {
   /**
    * Inject inline sourcemap to modules
-   * @default true
+   * @default 'inline'
    */
-  sourcemap?: boolean
+  sourcemap?: 'inline' | boolean
   /**
    * Deps handling
    */

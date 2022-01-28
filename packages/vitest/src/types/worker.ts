@@ -1,6 +1,6 @@
+import type { Profiler } from 'inspector'
 import type { MessagePort } from 'worker_threads'
-import type { ViteNodeResolveId } from 'vite-node'
-import type { RawSourceMap } from '../types'
+import type { FetchFunction, RawSourceMap, ViteNodeResolveId } from 'vite-node'
 import type { ResolvedConfig } from './config'
 import type { File, TaskResultPack } from './tasks'
 import type { SnapshotResult } from './snapshot'
@@ -13,7 +13,6 @@ export interface WorkerContext {
   invalidates?: string[]
 }
 
-export type FetchFunction = (id: string) => Promise<{ code?: string; externalize?: string }>
 export type ResolveIdFunction = (id: string, importer?: string) => Promise<ViteNodeResolveId | null>
 
 export interface WorkerRPC {
@@ -28,4 +27,5 @@ export interface WorkerRPC {
   onTaskUpdate: (pack: TaskResultPack[]) => void
 
   snapshotSaved: (snapshot: SnapshotResult) => void
+  coverageCollected: (coverage: Profiler.TakePreciseCoverageReturnType) => void
 }

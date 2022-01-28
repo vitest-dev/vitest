@@ -26,7 +26,7 @@ export default defineConfig({
       ],
       shortcuts: {
         'bg-base': 'bg-white dark:bg-[#111]',
-        'bg-overlay': 'bg-[#eee]:2 dark:bg-[#222]:2',
+        'bg-overlay': 'bg-[#eee]:50 dark:bg-[#222]:50',
         'bg-header': 'bg-gray-500:5',
         'bg-active': 'bg-gray-500:8',
         'bg-hover': 'bg-gray-500:20',

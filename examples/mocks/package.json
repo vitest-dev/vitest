@@ -6,15 +6,15 @@
     "types"
   ],
   "scripts": {
-    "coverage": "vitest --coverage",
+    "coverage": "vitest run --coverage",
     "dev": "vite",
     "test": "vitest",
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "@vueuse/integrations": "^7.5.3",
+    "@vueuse/integrations": "^7.5.5",
     "axios": "^0.25.0",
-    "tinyspy": "^0.2.8"
+    "tinyspy": "^0.2.10"
   },
   "devDependencies": {
     "@vitest/ui": "latest",

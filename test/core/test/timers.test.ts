@@ -1,250 +1,866 @@
-/* eslint-disable @typescript-eslint/no-use-before-define */
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck taken from Jest, but tsconfig doesn't allow most of the code
 
-import { expect, test, vi } from 'vitest'
-import { timeout } from '../src/timeout'
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of https://github.com/facebook/jest.
+ */
 
-test('timers order: i -> t', () => {
-  const res: string[] = []
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { FakeTimers } from '../../../packages/vitest/src/integrations/timers'
 
-  vi.useFakeTimers()
+class FakeDate extends Date {}
 
-  const interval = setInterval(() => {
-    res.push('interval')
-    clearInterval(interval)
-  })
-  setTimeout(() => {
-    res.push('timeout')
-  })
-
-  vi.runOnlyPendingTimers()
-  vi.useRealTimers()
-
-  expect(res).toEqual(['interval', 'timeout'])
-})
-
-test('timers order: t -> i', () => {
-  const res: string[] = []
-
-  vi.useFakeTimers()
-
-  setTimeout(() => {
-    res.push('timeout')
-  })
-  const interval = setInterval(() => {
-    res.push('interval')
-    clearInterval(interval)
+describe('FakeTimers', () => {
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
-  vi.runOnlyPendingTimers()
-  vi.useRealTimers()
+  describe('construction', () => {
+    it('installs setTimeout mock', () => {
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout }
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
+      expect(global.setTimeout).not.toBe(undefined)
+    })
 
-  expect(res).toEqual(['timeout', 'interval'])
-})
+    it('installs clearTimeout mock', () => {
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout }
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
+      expect(global.clearTimeout).not.toBe(undefined)
+    })
 
-test('timeout', async() => {
-  const t = vi.fn()
+    it('installs setInterval mock', () => {
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout }
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
+      expect(global.setInterval).not.toBe(undefined)
+    })
 
-  vi.useFakeTimers()
+    it('installs clearInterval mock', () => {
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout }
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
+      expect(global.clearInterval).not.toBe(undefined)
+    })
 
-  setTimeout(t, 50)
-  const timeout = setTimeout(t, 50)
-  clearTimeout(timeout)
+    it('mocks process.nextTick if it exists on global', () => {
+      const origNextTick = () => {}
+      const global = {
+        Date: FakeDate,
+        clearTimeout,
+        process: {
+          nextTick: origNextTick,
+        },
+        setTimeout,
+      }
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
+      expect(global.process.nextTick).not.toBe(origNextTick)
+    })
 
-  vi.runOnlyPendingTimers()
-  vi.useRealTimers()
+    it('mocks setImmediate if it exists on global', () => {
+      const origSetImmediate = () => {}
+      const global = {
+        Date: FakeDate,
+        clearTimeout,
+        process,
+        setImmediate: origSetImmediate,
+        setTimeout,
+      }
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
+      expect(global.setImmediate).not.toBe(origSetImmediate)
+    })
 
-  expect(t).toBeCalledTimes(1)
-})
-
-test('advance timeout', () => {
-  const t = vi.fn()
-
-  vi.useFakeTimers()
-
-  setTimeout(t, 50)
-
-  vi.advanceTimersByTime(25)
-
-  expect(t).not.toBeCalled()
-
-  vi.advanceTimersByTime(25)
-
-  expect(t).toBeCalledTimes(1)
-
-  vi.useRealTimers()
-})
-
-test('advance nested timeout', () => {
-  const t60 = vi.fn()
-  const t10 = vi.fn(() => {
-    setTimeout(t60, 60)
-  })
-  const t5 = vi.fn(() => {
-    setTimeout(t10, 10)
-  })
-  const t = vi.fn(() => {
-    setTimeout(t5, 5)
-  })
-
-  vi.useFakeTimers()
-
-  setTimeout(t, 0)
-
-  vi.advanceTimersByTime(3)
-
-  expect(t).toBeCalled()
-  expect(t5).not.toBeCalled()
-
-  vi.advanceTimersByTime(20)
-
-  expect(t).toBeCalledTimes(1)
-  expect(t5).toBeCalledTimes(1)
-  expect(t10).toBeCalledTimes(1)
-
-  expect(t60).not.toBeCalled()
-
-  vi.advanceTimersByTime(51)
-
-  expect(t60).not.toBeCalled()
-
-  vi.advanceTimersByTime(1)
-
-  expect(t60).toBeCalledTimes(1)
-})
-
-test('doesnt trigger twice', () => {
-  const t = vi.fn()
-
-  vi.useFakeTimers()
-
-  setTimeout(t, timeout)
-
-  vi.runOnlyPendingTimers()
-  vi.runOnlyPendingTimers()
-  vi.runAllTimers()
-
-  expect(t).toBeCalledTimes(1)
-})
-
-test.skip('timeout cyclic', async() => {
-  const t = vi.fn(() => {
-    setTimeout(t, timeout)
+    it('mocks clearImmediate if setImmediate is on global', () => {
+      const origSetImmediate = () => {}
+      const origClearImmediate = () => {}
+      const global = {
+        Date: FakeDate,
+        clearImmediate: origClearImmediate,
+        clearTimeout,
+        process,
+        setImmediate: origSetImmediate,
+        setTimeout,
+      }
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
+      expect(global.clearImmediate).not.toBe(origClearImmediate)
+    })
   })
 
-  vi.useFakeTimers()
+  describe('runAllTicks', () => {
+    it('runs all ticks, in order', () => {
+      const global = {
+        Date: FakeDate,
+        clearTimeout,
+        process: {
+          nextTick: () => {},
+        },
+        setTimeout,
+      }
 
-  setTimeout(t, timeout)
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
 
-  expect(() => {
-    vi.runAllTimers()
-  }).toThrow('called 10 000 times')
+      const runOrder = []
+      const mock1 = vi.fn(() => runOrder.push('mock1'))
+      const mock2 = vi.fn(() => runOrder.push('mock2'))
 
-  vi.useRealTimers()
-})
+      global.process.nextTick(mock1)
+      global.process.nextTick(mock2)
 
-test('interval', () => {
-  let count = 0
-  const i = vi.fn(() => {
-    if (count === 20) clearInterval(interval)
-    count++
+      expect(mock1).toHaveBeenCalledTimes(0)
+      expect(mock2).toHaveBeenCalledTimes(0)
+
+      timers.runAllTicks()
+
+      expect(mock1).toHaveBeenCalledTimes(1)
+      expect(mock2).toHaveBeenCalledTimes(1)
+      expect(runOrder).toEqual(['mock1', 'mock2'])
+    })
+
+    it('does nothing when no ticks have been scheduled', () => {
+      const nextTick = vi.fn()
+      const global = {
+        Date: FakeDate,
+        clearTimeout,
+        process: {
+          nextTick,
+        },
+        setTimeout,
+      }
+
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
+      timers.runAllTicks()
+
+      expect(nextTick).toHaveBeenCalledTimes(0)
+    })
+
+    it('only runs a scheduled callback once', () => {
+      const global = {
+        Date: FakeDate,
+        clearTimeout,
+        process: {
+          nextTick: () => {},
+        },
+        setTimeout,
+      }
+
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
+
+      const mock1 = vi.fn()
+      global.process.nextTick(mock1)
+      expect(mock1).toHaveBeenCalledTimes(0)
+
+      timers.runAllTicks()
+      expect(mock1).toHaveBeenCalledTimes(1)
+
+      timers.runAllTicks()
+      expect(mock1).toHaveBeenCalledTimes(1)
+    })
+
+    it('throws before allowing infinite recursion', () => {
+      const global = {
+        Date: FakeDate,
+        clearTimeout,
+        process: {
+          nextTick: () => {},
+        },
+        setTimeout,
+      }
+
+      const timers = new FakeTimers({ global, maxLoops: 100 })
+
+      timers.useFakeTimers()
+
+      global.process.nextTick(function infinitelyRecursingCallback() {
+        global.process.nextTick(infinitelyRecursingCallback)
+      })
+
+      expect(() => {
+        timers.runAllTicks()
+      }).toThrow(
+        'Aborting after running 100 timers, assuming an infinite loop!',
+      )
+    })
   })
 
-  vi.useFakeTimers()
+  describe('runAllTimers', () => {
+    it('runs all timers in order', () => {
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout }
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
 
-  let interval = setInterval(i, 30)
+      const runOrder = []
+      const mock1 = vi.fn(() => runOrder.push('mock1'))
+      const mock2 = vi.fn(() => runOrder.push('mock2'))
+      const mock3 = vi.fn(() => runOrder.push('mock3'))
+      const mock4 = vi.fn(() => runOrder.push('mock4'))
+      const mock5 = vi.fn(() => runOrder.push('mock5'))
+      const mock6 = vi.fn(() => runOrder.push('mock6'))
 
-  vi.runAllTimers()
+      global.setTimeout(mock1, 100)
+      global.setTimeout(mock2, NaN)
+      global.setTimeout(mock3, 0)
+      const intervalHandler = global.setInterval(() => {
+        mock4()
+        global.clearInterval(intervalHandler)
+      }, 200)
+      global.setTimeout(mock5, Infinity)
+      global.setTimeout(mock6, -Infinity)
 
-  expect(i).toBeCalledTimes(21)
-})
+      timers.runAllTimers()
+      expect(runOrder).toEqual([
+        'mock2',
+        'mock3',
+        'mock5',
+        'mock6',
+        'mock1',
+        'mock4',
+      ])
+    })
 
-test('interval only pending', () => {
-  let count = 0
-  const p = vi.fn()
-  const i = vi.fn(() => {
-    setInterval(p, 50)
-    if (count === 3) clearInterval(interval)
-    count++
+    it('warns when trying to advance timers while real timers are used', () => {
+      const timers = new FakeTimers({
+        config: {
+          rootDir: __dirname,
+        },
+        global,
+      })
+      expect(() => timers.runAllTimers()).toThrow(/Timers are not mocked/)
+    })
+
+    it('does nothing when no timers have been scheduled', () => {
+      const nativeSetTimeout = vi.fn()
+      const global = {
+        Date: FakeDate,
+        clearTimeout,
+        process,
+        setTimeout: nativeSetTimeout,
+      }
+
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
+      timers.runAllTimers()
+    })
+
+    it('only runs a setTimeout callback once (ever)', () => {
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout }
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
+
+      const fn = vi.fn()
+      global.setTimeout(fn, 0)
+      expect(fn).toHaveBeenCalledTimes(0)
+
+      timers.runAllTimers()
+      expect(fn).toHaveBeenCalledTimes(1)
+
+      timers.runAllTimers()
+      expect(fn).toHaveBeenCalledTimes(1)
+    })
+
+    it('runs callbacks with arguments after the interval', () => {
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout }
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
+
+      const fn = vi.fn()
+      global.setTimeout(fn, 0, 'mockArg1', 'mockArg2')
+
+      timers.runAllTimers()
+      expect(fn).toHaveBeenCalledTimes(1)
+      expect(fn).toHaveBeenCalledWith('mockArg1', 'mockArg2')
+    })
+
+    it('doesn\'t pass the callback to native setTimeout', () => {
+      const nativeSetTimeout = vi.fn()
+
+      const global = {
+        Date: FakeDate,
+        clearTimeout,
+        process,
+        setTimeout: nativeSetTimeout,
+      }
+
+      const timers = new FakeTimers({ global })
+      // @sinonjs/fake-timers uses `setTimeout` during init to figure out if it's in Node or
+      // browser env. So clear its calls before we install them into the env
+      nativeSetTimeout.mockClear()
+      timers.useFakeTimers()
+
+      const mock1 = vi.fn()
+      global.setTimeout(mock1, 0)
+
+      timers.runAllTimers()
+      expect(mock1).toHaveBeenCalledTimes(1)
+      expect(nativeSetTimeout).toHaveBeenCalledTimes(0)
+    })
+
+    it('throws before allowing infinite recursion', () => {
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout }
+      const timers = new FakeTimers({ global, maxLoops: 100 })
+      timers.useFakeTimers()
+
+      global.setTimeout(function infinitelyRecursingCallback() {
+        global.setTimeout(infinitelyRecursingCallback, 0)
+      }, 0)
+
+      expect(() => {
+        timers.runAllTimers()
+      }).toThrow(
+        'Aborting after running 100 timers, assuming an infinite loop!',
+      )
+    })
+
+    it('also clears ticks', () => {
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout }
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
+
+      const fn = vi.fn()
+      global.setTimeout(() => {
+        process.nextTick(fn)
+      }, 0)
+      expect(fn).toHaveBeenCalledTimes(0)
+
+      timers.runAllTimers()
+      expect(fn).toHaveBeenCalledTimes(1)
+    })
   })
 
-  vi.useFakeTimers()
+  describe('advanceTimersByTime', () => {
+    it('runs timers in order', () => {
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout }
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
 
-  let interval = setInterval(i, 30)
+      const runOrder = []
+      const mock1 = vi.fn(() => runOrder.push('mock1'))
+      const mock2 = vi.fn(() => runOrder.push('mock2'))
+      const mock3 = vi.fn(() => runOrder.push('mock3'))
+      const mock4 = vi.fn(() => runOrder.push('mock4'))
 
-  vi.runOnlyPendingTimers()
+      global.setTimeout(mock1, 100)
+      global.setTimeout(mock2, 0)
+      global.setTimeout(mock3, 0)
+      global.setInterval(() => {
+        mock4()
+      }, 200)
 
-  expect(i).toBeCalledTimes(4)
-  expect(p).not.toBeCalled()
-})
+      // Move forward to t=50
+      timers.advanceTimersByTime(50)
+      expect(runOrder).toEqual(['mock2', 'mock3'])
 
-test('advance interval', () => {
-  let count = 0
-  const p = vi.fn()
-  const i = vi.fn(() => {
-    setInterval(p, 50)
-    if (count === 3) clearInterval(interval)
-    count++
+      // Move forward to t=60
+      timers.advanceTimersByTime(10)
+      expect(runOrder).toEqual(['mock2', 'mock3'])
+
+      // Move forward to t=100
+      timers.advanceTimersByTime(40)
+      expect(runOrder).toEqual(['mock2', 'mock3', 'mock1'])
+
+      // Move forward to t=200
+      timers.advanceTimersByTime(100)
+      expect(runOrder).toEqual(['mock2', 'mock3', 'mock1', 'mock4'])
+
+      // Move forward to t=400
+      timers.advanceTimersByTime(200)
+      expect(runOrder).toEqual(['mock2', 'mock3', 'mock1', 'mock4', 'mock4'])
+    })
+
+    it('does nothing when no timers have been scheduled', () => {
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout }
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
+
+      timers.advanceTimersByTime(100)
+    })
   })
 
-  vi.useFakeTimers()
+  describe('advanceTimersToNextTimer', () => {
+    it('runs timers in order', () => {
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout }
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
 
-  let interval = setInterval(i, 30)
+      const runOrder: Array<string> = []
+      const mock1 = vi.fn(() => runOrder.push('mock1'))
+      const mock2 = vi.fn(() => runOrder.push('mock2'))
+      const mock3 = vi.fn(() => runOrder.push('mock3'))
+      const mock4 = vi.fn(() => runOrder.push('mock4'))
 
-  vi.advanceTimersByTime(100)
+      global.setTimeout(mock1, 100)
+      global.setTimeout(mock2, 0)
+      global.setTimeout(mock3, 0)
+      global.setInterval(() => {
+        mock4()
+      }, 200)
 
-  expect(i).toBeCalledTimes(3)
-  expect(p).toBeCalledTimes(1)
+      timers.advanceTimersToNextTimer()
+      // Move forward to t=0
+      expect(runOrder).toEqual(['mock2', 'mock3'])
 
-  vi.advanceTimersByTime(100)
+      timers.advanceTimersToNextTimer()
+      // Move forward to t=100
+      expect(runOrder).toEqual(['mock2', 'mock3', 'mock1'])
 
-  expect(i).toBeCalledTimes(4)
-  expect(p).toBeCalledTimes(8)
+      timers.advanceTimersToNextTimer()
+      // Move forward to t=200
+      expect(runOrder).toEqual(['mock2', 'mock3', 'mock1', 'mock4'])
 
-  vi.useRealTimers()
-})
+      timers.advanceTimersToNextTimer()
+      // Move forward to t=400
+      expect(runOrder).toEqual(['mock2', 'mock3', 'mock1', 'mock4', 'mock4'])
+    })
 
-test('async timer', async() => {
-  const res: string[] = []
+    it('run correct amount of steps', () => {
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout }
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
 
-  vi.useFakeTimers()
+      const runOrder: Array<string> = []
+      const mock1 = vi.fn(() => runOrder.push('mock1'))
+      const mock2 = vi.fn(() => runOrder.push('mock2'))
+      const mock3 = vi.fn(() => runOrder.push('mock3'))
+      const mock4 = vi.fn(() => runOrder.push('mock4'))
 
-  setTimeout(async() => {
-    await Promise.resolve()
-    res.push('item1')
-  }, 100)
+      global.setTimeout(mock1, 100)
+      global.setTimeout(mock2, 0)
+      global.setTimeout(mock3, 0)
+      global.setInterval(() => {
+        mock4()
+      }, 200)
 
-  setTimeout(async() => {
-    await Promise.resolve()
-    res.push('item2')
-  }, 100)
+      // Move forward to t=100
+      timers.advanceTimersToNextTimer(2)
+      expect(runOrder).toEqual(['mock2', 'mock3', 'mock1'])
 
-  await vi.runAllTimers()
-  vi.useRealTimers()
+      // Move forward to t=600
+      timers.advanceTimersToNextTimer(3)
+      expect(runOrder).toEqual([
+        'mock2',
+        'mock3',
+        'mock1',
+        'mock4',
+        'mock4',
+        'mock4',
+      ])
+    })
 
-  expect(res).toEqual(['item1', 'item2'])
-})
+    it('setTimeout inside setTimeout', () => {
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout }
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
 
-test('advance timer', async() => {
-  const a1 = vi.fn()
-  const a2 = vi.fn()
+      const runOrder: Array<string> = []
+      const mock1 = vi.fn(() => runOrder.push('mock1'))
+      const mock2 = vi.fn(() => runOrder.push('mock2'))
+      const mock3 = vi.fn(() => runOrder.push('mock3'))
+      const mock4 = vi.fn(() => runOrder.push('mock4'))
 
-  vi.useFakeTimers()
+      global.setTimeout(mock1, 0)
+      global.setTimeout(() => {
+        mock2()
+        global.setTimeout(mock3, 50)
+      }, 25)
+      global.setTimeout(mock4, 100)
 
-  setTimeout(a1)
-  setInterval(a2)
+      // Move forward to t=75
+      timers.advanceTimersToNextTimer(3)
+      expect(runOrder).toEqual(['mock1', 'mock2', 'mock3'])
+    })
 
-  vi.advanceTimersToNextTimer()
+    it('does nothing when no timers have been scheduled', () => {
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout }
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
 
-  expect(a1).toHaveBeenCalled()
-  expect(a2).not.toHaveBeenCalled()
+      timers.advanceTimersToNextTimer()
+    })
+  })
 
-  vi.advanceTimersToNextTimer()
+  describe('reset', () => {
+    it('resets all pending setTimeouts', () => {
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout }
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
 
-  expect(a2).toHaveBeenCalled()
+      const mock1 = vi.fn()
+      global.setTimeout(mock1, 100)
 
-  vi.advanceTimersToNextTimer()
+      timers.reset()
+      timers.runAllTimers()
+      expect(mock1).toHaveBeenCalledTimes(0)
+    })
 
-  expect(a2).toHaveBeenCalledTimes(2)
+    it('resets all pending setIntervals', () => {
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout }
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
 
-  vi.useRealTimers()
+      const mock1 = vi.fn()
+      global.setInterval(mock1, 200)
+
+      timers.reset()
+      timers.runAllTimers()
+      expect(mock1).toHaveBeenCalledTimes(0)
+    })
+
+    it('resets all pending ticks callbacks', () => {
+      const global = {
+        Date: FakeDate,
+        clearTimeout,
+        process: {
+          nextTick: () => {},
+        },
+        setImmediate: () => {},
+        setTimeout,
+      }
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
+
+      const mock1 = vi.fn()
+      global.process.nextTick(mock1)
+      global.setImmediate(mock1)
+
+      timers.reset()
+      timers.runAllTicks()
+      expect(mock1).toHaveBeenCalledTimes(0)
+    })
+
+    it('resets current advanceTimersByTime time cursor', () => {
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout }
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
+
+      const mock1 = vi.fn()
+      global.setTimeout(mock1, 100)
+      timers.advanceTimersByTime(50)
+
+      timers.reset()
+      global.setTimeout(mock1, 100)
+
+      timers.advanceTimersByTime(50)
+      expect(mock1).toHaveBeenCalledTimes(0)
+    })
+  })
+
+  describe('runOnlyPendingTimers', () => {
+    it('runs all timers in order', () => {
+      const nativeSetImmediate = vi.fn()
+
+      const global = {
+        Date: FakeDate,
+        clearTimeout,
+        process,
+        setImmediate: nativeSetImmediate,
+        setTimeout,
+      }
+
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
+
+      const runOrder = []
+
+      global.setTimeout(function cb() {
+        runOrder.push('mock1')
+        global.setTimeout(cb, 100)
+      }, 100)
+
+      global.setTimeout(function cb() {
+        runOrder.push('mock2')
+        global.setTimeout(cb, 50)
+      }, 0)
+
+      global.setInterval(() => {
+        runOrder.push('mock3')
+      }, 200)
+
+      global.setImmediate(() => {
+        runOrder.push('mock4')
+      })
+
+      global.setImmediate(function cb() {
+        runOrder.push('mock5')
+        global.setTimeout(cb, 400)
+      })
+
+      timers.runOnlyPendingTimers()
+      const firsRunOrder = [
+        'mock4',
+        'mock5',
+        'mock2',
+        'mock2',
+        'mock1',
+        'mock2',
+        'mock2',
+        'mock3',
+        'mock1',
+        'mock2',
+      ]
+
+      expect(runOrder).toEqual(firsRunOrder)
+
+      timers.runOnlyPendingTimers()
+      expect(runOrder).toEqual([
+        ...firsRunOrder,
+        'mock2',
+        'mock1',
+        'mock2',
+        'mock2',
+        'mock3',
+        'mock5',
+        'mock1',
+        'mock2',
+      ])
+    })
+
+    it('does not run timers that were cleared in another timer', () => {
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout }
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
+
+      const fn = vi.fn()
+      const timer = global.setTimeout(fn, 10)
+      global.setTimeout(() => {
+        global.clearTimeout(timer)
+      }, 0)
+
+      timers.runOnlyPendingTimers()
+      expect(fn).not.toBeCalled()
+    })
+  })
+
+  describe('useRealTimers', () => {
+    it('resets native timer APIs', () => {
+      const nativeSetTimeout = vi.fn()
+      const nativeSetInterval = vi.fn()
+      const nativeClearTimeout = vi.fn()
+      const nativeClearInterval = vi.fn()
+
+      const global = {
+        Date: FakeDate,
+        clearInterval: nativeClearInterval,
+        clearTimeout: nativeClearTimeout,
+        process,
+        setInterval: nativeSetInterval,
+        setTimeout: nativeSetTimeout,
+      }
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
+
+      // Ensure that timers has overridden the native timer APIs
+      // (because if it didn't, this test might pass when it shouldn't)
+      expect(global.setTimeout).not.toBe(nativeSetTimeout)
+      expect(global.setInterval).not.toBe(nativeSetInterval)
+      expect(global.clearTimeout).not.toBe(nativeClearTimeout)
+      expect(global.clearInterval).not.toBe(nativeClearInterval)
+
+      timers.useRealTimers()
+
+      expect(global.setTimeout).toBe(nativeSetTimeout)
+      expect(global.setInterval).toBe(nativeSetInterval)
+      expect(global.clearTimeout).toBe(nativeClearTimeout)
+      expect(global.clearInterval).toBe(nativeClearInterval)
+    })
+
+    it('resets native process.nextTick when present', () => {
+      const nativeProcessNextTick = vi.fn()
+
+      const global = {
+        Date: FakeDate,
+        clearTimeout,
+        process: { nextTick: nativeProcessNextTick },
+        setTimeout,
+      }
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
+
+      // Ensure that timers has overridden the native timer APIs
+      // (because if it didn't, this test might pass when it shouldn't)
+      expect(global.process.nextTick).not.toBe(nativeProcessNextTick)
+
+      timers.useRealTimers()
+
+      expect(global.process.nextTick).toBe(nativeProcessNextTick)
+    })
+
+    it('resets native setImmediate when present', () => {
+      const nativeSetImmediate = vi.fn()
+      const nativeClearImmediate = vi.fn()
+
+      const global = {
+        Date: FakeDate,
+        clearImmediate: nativeClearImmediate,
+        clearTimeout,
+        process,
+        setImmediate: nativeSetImmediate,
+        setTimeout,
+      }
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
+
+      // Ensure that timers has overridden the native timer APIs
+      // (because if it didn't, this test might pass when it shouldn't)
+      expect(global.setImmediate).not.toBe(nativeSetImmediate)
+      expect(global.clearImmediate).not.toBe(nativeClearImmediate)
+
+      timers.useRealTimers()
+
+      expect(global.setImmediate).toBe(nativeSetImmediate)
+      expect(global.clearImmediate).toBe(nativeClearImmediate)
+    })
+  })
+
+  describe('useFakeTimers', () => {
+    it('resets mock timer APIs', () => {
+      const nativeSetTimeout = vi.fn()
+      const nativeSetInterval = vi.fn()
+      const nativeClearTimeout = vi.fn()
+      const nativeClearInterval = vi.fn()
+
+      const global = {
+        Date: FakeDate,
+        clearInterval: nativeClearInterval,
+        clearTimeout: nativeClearTimeout,
+        process,
+        setInterval: nativeSetInterval,
+        setTimeout: nativeSetTimeout,
+      }
+      const timers = new FakeTimers({ global })
+      timers.useRealTimers()
+
+      // Ensure that the real timers are installed at this point
+      // (because if they aren't, this test might pass when it shouldn't)
+      expect(global.setTimeout).toBe(nativeSetTimeout)
+      expect(global.setInterval).toBe(nativeSetInterval)
+      expect(global.clearTimeout).toBe(nativeClearTimeout)
+      expect(global.clearInterval).toBe(nativeClearInterval)
+
+      timers.useFakeTimers()
+
+      expect(global.setTimeout).not.toBe(nativeSetTimeout)
+      expect(global.setInterval).not.toBe(nativeSetInterval)
+      expect(global.clearTimeout).not.toBe(nativeClearTimeout)
+      expect(global.clearInterval).not.toBe(nativeClearInterval)
+    })
+
+    it('resets mock process.nextTick when present', () => {
+      const nativeProcessNextTick = vi.fn()
+
+      const global = {
+        Date: FakeDate,
+        clearTimeout,
+        process: { nextTick: nativeProcessNextTick },
+        setTimeout,
+      }
+      const timers = new FakeTimers({ global })
+      timers.useRealTimers()
+
+      // Ensure that the real timers are installed at this point
+      // (because if they aren't, this test might pass when it shouldn't)
+      expect(global.process.nextTick).toBe(nativeProcessNextTick)
+
+      timers.useFakeTimers()
+
+      expect(global.process.nextTick).not.toBe(nativeProcessNextTick)
+    })
+
+    it('resets mock setImmediate when present', () => {
+      const nativeSetImmediate = vi.fn()
+      const nativeClearImmediate = vi.fn()
+
+      const global = {
+        Date: FakeDate,
+        clearImmediate: nativeClearImmediate,
+        clearTimeout,
+        process,
+        setImmediate: nativeSetImmediate,
+        setTimeout,
+      }
+      const fakeTimers = new FakeTimers({ global })
+      fakeTimers.useRealTimers()
+
+      // Ensure that the real timers are installed at this point
+      // (because if they aren't, this test might pass when it shouldn't)
+      expect(global.setImmediate).toBe(nativeSetImmediate)
+      expect(global.clearImmediate).toBe(nativeClearImmediate)
+
+      fakeTimers.useFakeTimers()
+
+      expect(global.setImmediate).not.toBe(nativeSetImmediate)
+      expect(global.clearImmediate).not.toBe(nativeClearImmediate)
+    })
+  })
+
+  describe('getTimerCount', () => {
+    it('returns the correct count', () => {
+      const timers = new FakeTimers({ global })
+
+      timers.useFakeTimers()
+
+      global.setTimeout(() => {}, 0)
+      global.setTimeout(() => {}, 0)
+      global.setTimeout(() => {}, 10)
+
+      expect(timers.getTimerCount()).toEqual(3)
+
+      timers.advanceTimersByTime(5)
+
+      expect(timers.getTimerCount()).toEqual(1)
+
+      timers.advanceTimersByTime(5)
+
+      expect(timers.getTimerCount()).toEqual(0)
+    })
+
+    it('includes immediates and ticks', () => {
+      const timers = new FakeTimers({ global })
+
+      timers.useFakeTimers()
+
+      global.setTimeout(() => {}, 0)
+      global.setImmediate(() => {})
+      process.nextTick(() => {})
+
+      expect(timers.getTimerCount()).toEqual(3)
+    })
+
+    it('not includes cancelled immediates', () => {
+      const timers = new FakeTimers({ global })
+
+      timers.useFakeTimers()
+
+      global.setImmediate(() => {})
+      expect(timers.getTimerCount()).toEqual(1)
+      timers.clearAllTimers()
+
+      expect(timers.getTimerCount()).toEqual(0)
+    })
+
+    it('throws when using useFakeTimers after setSystemTime', () => {
+      const timers = new FakeTimers({ global })
+
+      const timeStr = 'Fri Feb 20 2015 19:29:31 GMT+0530'
+      const timeStrMs = 1424440771000
+
+      timers.setSystemTime(timeStr)
+
+      expect(Date.now()).toBe(timeStrMs)
+
+      expect(() => timers.useFakeTimers()).toThrowError(/date was mocked/)
+
+      // Some test
+
+      timers.useRealTimers()
+    })
+  })
 })

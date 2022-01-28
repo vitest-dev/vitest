@@ -1,7 +1,7 @@
 import type { CommonServerOptions } from 'vite'
 import type { PrettyFormatOptions } from 'pretty-format'
 import type { BuiltinReporters } from '../node/reporters'
-import type { C8Options, ResolvedC8Options } from '../coverage'
+import type { C8Options, ResolvedC8Options } from './coverage'
 import type { JSDOMOptions } from './jsdom-options'
 import type { Reporter } from './reporter'
 import type { SnapshotStateOptions } from './snapshot'
@@ -232,10 +232,17 @@ export interface InlineConfig {
   api?: boolean | number | ApiConfig
 
   /**
-   * Open Vitest UI
+   * Enable Vitest UI
    * @internal WIP
    */
   ui?: boolean
+
+  /**
+   * Open UI automatically.
+   *
+   * @default true
+   */
+  open?: boolean
 
   /**
    * Base url for the UI

@@ -101,7 +101,7 @@ export function setup(ctx: Vitest) {
       {
         post: msg => ws.send(msg),
         on: fn => ws.on('message', fn),
-        eventNames: ['onCollected', 'onUserConsoleLog', 'onTaskUpdate'],
+        eventNames: ['onUserConsoleLog', 'onFinished', 'onCollected'],
         serialize: stringify,
         deserialize: parse,
       },

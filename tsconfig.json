@@ -30,8 +30,8 @@
   },
   "exclude": [
     "**/dist/**",
+    "./packages/vitest/dist/**",
     "./packages/ui/client/**",
-    "./test/**/*.*",
     "./examples/**/*.*",
     "./bench/**"
   ]

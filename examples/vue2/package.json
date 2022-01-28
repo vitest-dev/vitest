@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "test": "vitest",
-    "coverage": "vitest --coverage"
+    "coverage": "vitest run --coverage"
   },
   "dependencies": {
     "vue": "2.6.14"
@@ -14,7 +14,7 @@
     "happy-dom": "latest",
     "unplugin-vue2-script-setup": "^0.9.1",
     "vite": "latest",
-    "vite-plugin-vue2": "^1.9.2",
+    "vite-plugin-vue2": "^1.9.3",
     "vitest": "latest",
     "vue-template-compiler": "2.6.14"
   }
