@@ -120,7 +120,6 @@ export function spyOn<T, G extends Properties<Required<T>>>(
 export function spyOn<T, M extends (Methods<Required<T>> | Classes<Required<T>>)>(
   obj: T,
   methodName: M,
-  mock?: M extends Methods<Required<T>> ? T[M] : never
 ): Required<T>[M] extends (...args: infer A) => infer R | (new (...args: infer A) => infer R) ? SpyInstance<A, R> : never
 export function spyOn<T, K extends keyof T>(
   obj: T,
