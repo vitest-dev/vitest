@@ -46,7 +46,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
         }
       },
       async configResolved() {
-        ctx.config.api = resolveApiConfig(options)
+        options.api = resolveApiConfig(options)
       },
       async configureServer(server) {
         if (haveStarted)
