@@ -447,8 +447,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     utils.flag(this, 'promise', 'resolves')
     const obj = utils.flag(this, 'object')
     const proxy: any = new Proxy(this, {
-      get: (target, key, reciever) => {
-        const result = Reflect.get(target, key, reciever)
+      get: (target, key, receiver) => {
+        const result = Reflect.get(target, key, receiver)
 
         if (typeof result !== 'function')
           return result instanceof chai.Assertion ? proxy : result
@@ -475,8 +475,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const obj = utils.flag(this, 'object')
     const wrapper = typeof obj === 'function' ? obj() : obj // for jest compat
     const proxy: any = new Proxy(this, {
-      get: (target, key, reciever) => {
-        const result = Reflect.get(target, key, reciever)
+      get: (target, key, receiver) => {
+        const result = Reflect.get(target, key, receiver)
 
         if (typeof result !== 'function')
           return result instanceof chai.Assertion ? proxy : result
