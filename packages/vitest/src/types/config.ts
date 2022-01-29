@@ -1,7 +1,7 @@
 import type { CommonServerOptions } from 'vite'
 import type { PrettyFormatOptions } from 'pretty-format'
 import type { BuiltinReporters } from '../node/reporters'
-import type { C8Options, ResolvedC8Options } from '../coverage'
+import type { C8Options, ResolvedC8Options } from './coverage'
 import type { JSDOMOptions } from './jsdom-options'
 import type { Reporter } from './reporter'
 import type { SnapshotStateOptions } from './snapshot'

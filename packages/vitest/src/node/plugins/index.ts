@@ -19,8 +19,11 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
       name: 'vitest',
       enforce: 'pre',
       config(viteConfig: any) {
-        options = deepMerge(options, viteConfig.test || {})
-        options.api = resolveApiConfig(options)
+        // preliminary merge of options to be able to create server options for vite
+        // however to allow vitest plugins to modify vitest config values
+        // this is repeated in configResolved where the config is final
+        const preOptions = deepMerge(options, viteConfig.test || {})
+        preOptions.api = resolveApiConfig(preOptions)
         return {
           clearScreen: false,
           resolve: {
@@ -29,9 +32,9 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
             mainFields: [],
           },
           server: {
-            ...options.api,
-            open: options.ui && options.open
-              ? options.uiBase ?? '/__vitest__/'
+            ...preOptions.api,
+            open: preOptions.ui && preOptions.open
+              ? preOptions.uiBase ?? '/__vitest__/'
               : undefined,
             preTransformRequests: false,
           },
@@ -41,6 +44,11 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
           // disable deps optimization
           cacheDir: undefined,
         }
+      },
+      async configResolved(viteConfig) {
+        // viteConfig.test is final now, merge it for real
+        options = deepMerge(options, viteConfig.test as any || {})
+        options.api = resolveApiConfig(options)
       },
       async configureServer(server) {
         if (haveStarted)

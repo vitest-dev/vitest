@@ -1,6 +1,6 @@
 {
   "name": "vitest",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "A blazing fast unit test framework powered by Vite",
   "keywords": [
     "vite",
@@ -60,7 +60,7 @@
     "chai": "^4.3.6",
     "local-pkg": "^0.4.1",
     "tinypool": "^0.1.1",
-    "tinyspy": "^0.2.8",
+    "tinyspy": "^0.2.10",
     "vite": ">=2.7.13"
   },
   "devDependencies": {

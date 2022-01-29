@@ -1,6 +1,6 @@
 {
   "name": "@vitest/monorepo",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "private": true,
   "description": "A blazing fast unit test framework powered by Vite",
   "type": "module",
@@ -21,7 +21,7 @@
     "test": "vitest --api -r test/core",
     "test:run": "vitest run -r test/core",
     "test:all": "cross-env CI=true pnpm -r --stream --filter !@vitest/monorepo run test --",
-    "test:ci": "cross-env CI=true pnpm -r --stream --filter !@vitest/monorepo --filter !@vitest/test-fails run test --",
+    "test:ci": "cross-env CI=true pnpm -r --stream --filter !@vitest/monorepo --filter !test-fails run test --",
     "typecheck": "tsc --noEmit",
     "ui:build": "vite build packages/ui",
     "ui:dev": "vite packages/ui"

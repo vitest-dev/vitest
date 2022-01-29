@@ -17,7 +17,7 @@ debouncedWatch(
       graph.value = getModuleGraph(data.value, c.filepath)
     }
   },
-  { debounce: 100 },
+  { debounce: 100, immediate: true },
 )
 
 const open = () => {

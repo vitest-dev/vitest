@@ -20,7 +20,7 @@ onKeyStroke('Escape', () => {
 </script>
 
 <template>
-  <div w-350 max-w-screen>
+  <div w-350 max-w-screen h-full flex flex-col>
     <div p-4 relative>
       <p>Module Info</p>
       <p op50 font-mono text-sm>
@@ -32,21 +32,17 @@ onKeyStroke('Escape', () => {
       No transform result found for this module.
     </div>
     <template v-else>
-      <div grid="~ cols-2" overflow-hidden>
+      <div grid="~ cols-2 rows-[min-content_auto]" overflow-hidden flex-auto>
         <div p="x3 y-1" bg-overlay border="base b t r">
           Source
         </div>
         <div p="x3 y-1" bg-overlay border="base b t">
           Transformed
         </div>
-        <div>
-          <CodeMirror :model-value="source" read-only v-bind="{ lineNumbers: true }" :mode="ext" />
-        </div>
-        <div>
-          <CodeMirror :model-value="code" read-only v-bind="{ lineNumbers: true }" :mode="ext" />
-        </div>
+        <CodeMirror h-full :model-value="source" read-only v-bind="{ lineNumbers: true }" :mode="ext" />
+        <CodeMirror h-full :model-value="code" read-only v-bind="{ lineNumbers: true }" :mode="ext" />
       </div>
-      <template v-if="sourceMap.mappings !== ''">
+      <div v-if="sourceMap.mappings !== ''">
         <div p="x3 y-1" bg-overlay border="base b t">
           Source map (v{{ sourceMap.version }})
         </div>
@@ -56,7 +52,7 @@ onKeyStroke('Escape', () => {
           v-bind="{ lineNumbers: true }"
           :mode="ext"
         />
-      </template>
+      </div>
     </template>
   </div>
 </template>
