@@ -82,9 +82,6 @@ import { lazyLoad } from '../images'
           <img
             :loading="lazyLoad"
             :src="antfuSponsors"
-            width="768"
-            height="1464"
-            class="resizable-img"
             alt="Anthony Fu's sponsors"
           >
         </a>
@@ -95,9 +92,6 @@ import { lazyLoad } from '../images'
           <img
             :loading="lazyLoad"
             :src="patakSponsors"
-            width="768"
-            height="722"
-            class="resizable-img"
             alt="Patak's sponsors"
           >
         </a>
