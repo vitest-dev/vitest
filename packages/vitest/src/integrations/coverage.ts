@@ -94,8 +94,8 @@ export async function reportCoverage(ctx: Vitest) {
       }
     }))
 
-  // This is a magic number it corresponds to the amount of code
-  // that we add in packages/vite-node/src/client.ts:110 (vm.runInThisContext)
+  // This is a magic number. It corresponds to the amount of code
+  // that we add in packages/vite-node/src/client.ts:114 (vm.runInThisContext)
   // TODO: Include our transformations in soucemaps
   const offset = 190
 
