@@ -22,8 +22,9 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
         // preliminary merge of options to be able to create server options for vite
         // however to allow vitest plugins to modify vitest config values
         // this is repeated in configResolved where the config is final
-        const preOptions = deepMerge(options, viteConfig.test || {})
+        const preOptions = deepMerge({}, options, viteConfig.test ?? {})
         preOptions.api = resolveApiConfig(preOptions)
+
         return {
           clearScreen: false,
           resolve: {
