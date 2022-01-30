@@ -15,7 +15,7 @@ const defaultExcludes = [
   '**/*{.,-}test.{js,cjs,mjs,ts,tsx,jsx}',
   '**/__tests__/**',
   '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc}.config.{js,cjs,mjs,ts}',
-  '**/.{eslint,prettier,mocha}rc.{js,cjs}',
+  '**/.{eslint,prettier,mocha}rc.{js,cjs,yml}',
 ]
 
 export type CoverageReporter =
