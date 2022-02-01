@@ -62,5 +62,10 @@ export function processError(err: any) {
   if (typeof err.actual !== 'string')
     err.actual = stringify(err.actual)
 
-  return serializeError(err)
+  try {
+    return serializeError(err)
+  }
+  catch (e: any) {
+    return serializeError(new Error(`Failed to fully serialize error: ${e?.message}.\nInner error message: ${err?.message}`))
+  }
 }
