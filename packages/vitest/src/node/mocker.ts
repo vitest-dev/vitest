@@ -166,11 +166,14 @@ export class VitestMocker {
   }
 
   public mockObject(obj: any) {
+    if (!this.spy)
+      throw new Error('Spy function is not defined. This is Vitest internal bug.')
+
     const type = getObjectType(obj)
 
     if (Array.isArray(obj))
       return []
-    else if ((type !== 'Object' && type !== 'Module') || !this.spy)
+    else if (type !== 'Object' && type !== 'Module')
       return obj
 
     const newObj = { ...obj }
