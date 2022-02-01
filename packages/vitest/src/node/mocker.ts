@@ -167,7 +167,7 @@ export class VitestMocker {
 
   public mockObject(obj: any) {
     if (!this.spy)
-      throw new Error('Spy function is not defined. This is Vitest internal bug.')
+      throw new Error('Internal Vitest error: Spy function is not defined.')
 
     const type = getObjectType(obj)
 
