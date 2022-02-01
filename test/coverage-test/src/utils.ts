@@ -12,6 +12,9 @@ export function divide(a: number, b: number) {
 }
 
 export function sqrt(a: number) {
+  if (a < 0)
+    return Number.NaN // This should not be covered
+
   return Math.sqrt(a)
 }
 
