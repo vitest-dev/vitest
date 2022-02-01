@@ -643,8 +643,12 @@ importers:
 
   test/coverage-test:
     specifiers:
+      '@vitejs/plugin-vue': ^2.0.1
+      '@vue/test-utils': ^2.0.0-rc.18
       vitest: workspace:*
     devDependencies:
+      '@vitejs/plugin-vue': 2.1.0_vite@2.7.13+vue@3.2.26
+      '@vue/test-utils': 2.0.0-rc.18_vue@3.2.26
       vitest: link:../../packages/vitest
 
   test/fails:
