@@ -41,6 +41,12 @@ type Promisify<O> = {
 }
 
 declare global {
+  // support augmenting jest.Matchers by other libraries
+  namespace jest {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    interface Matchers<R, T = {}> {}
+  }
+
   namespace Vi {
     interface ExpectStatic extends Chai.ExpectStatic, AsymmetricMatchersContaining {
       <T>(actual: T, message?: string): Vi.Assertion<T>
@@ -56,7 +62,7 @@ declare global {
       not: AsymmetricMatchersContaining
     }
 
-    interface JestAssertion<T = any> {
+    interface JestAssertion<T = any> extends jest.Matchers<void, T> {
       // Snapshot
       toMatchSnapshot<U extends { [P in keyof T]: any }>(snapshot: Partial<U>, message?: string): void
       toMatchSnapshot(message?: string): void
