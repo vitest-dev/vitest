@@ -30,6 +30,7 @@ cli
   .option('--dom', 'mock browser api with happy-dom')
   .option('--environment <env>', 'runner environment', { default: 'node' })
   .option('--passWithNoTests', 'pass when no tests found')
+  .option('--failOnOnly', 'fail when a test or suite is marked as only')
   .help()
 
 cli

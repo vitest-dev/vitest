@@ -306,6 +306,11 @@ export interface UserConfig extends InlineConfig {
   passWithNoTests?: boolean
 
   /**
+   * Fail when a test or suite is marked as only
+   */
+  failOnOnly?: boolean
+
+  /**
    * Run tests that cover a list of source files
    */
   related?: string[] | string
