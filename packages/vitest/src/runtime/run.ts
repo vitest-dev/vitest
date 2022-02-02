@@ -44,7 +44,7 @@ async function sendTasksUpdate() {
 }
 
 export async function runTest(test: Test) {
-  if (test.mode !== 'run')
+  if (test.mode !== 'run' || test.result)
     return
 
   const start = performance.now()
