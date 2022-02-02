@@ -116,7 +116,7 @@ You can specify additional CLI options like `--port` or `--https`. For a full li
 | `--dom` | Mock browser api with happy-dom |
 | `--environment <env>` | Runner environment (default: node) |
 | `--passWithNoTests` | Pass when no tests found |
-| `--failOnOnly` | Fail when a test or suite is marked as `only` |
+| `--allowOnly` | Allow tests and suites that are marked as `only` (default: false in CI, true otherwise) |
 | `-h, --help` | Display available CLI options |
 
 ## Examples

@@ -65,7 +65,7 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
     calculateHash(file)
 
     const hasOnlyTasks = someTasksAreOnly(file)
-    interpretTaskModes(file, config.testNamePattern, hasOnlyTasks, false, config.failOnOnly)
+    interpretTaskModes(file, config.testNamePattern, hasOnlyTasks, false, config.allowOnly)
 
     files.push(file)
   }
@@ -73,19 +73,10 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
   return files
 }
 
-function checkFailOnOnly(task: TaskBase, failOnOnly?: boolean) {
-  if (failOnOnly) {
-    task.result = {
-      state: 'fail',
-      error: processError(new Error('failOnOnly is enabled')),
-    }
-  }
-}
-
 /**
  * If any tasks been marked as `only`, mark all other tasks as `skip`.
  */
-function interpretTaskModes(suite: Suite, namePattern?: string | RegExp, onlyMode?: boolean, parentIsOnly?: boolean, failOnOnly?: boolean) {
+function interpretTaskModes(suite: Suite, namePattern?: string | RegExp, onlyMode?: boolean, parentIsOnly?: boolean, allowOnly?: boolean) {
   const suiteIsOnly = parentIsOnly || suite.mode === 'only'
 
   suite.tasks.forEach((t) => {
@@ -95,13 +86,13 @@ function interpretTaskModes(suite: Suite, namePattern?: string | RegExp, onlyMod
       if (t.type === 'suite' && (includeTask || someTasksAreOnly(t))) {
         // Don't skip this suite
         if (t.mode === 'only') {
-          checkFailOnOnly(t, failOnOnly)
+          checkAllowOnly(t, allowOnly)
           t.mode = 'run'
         }
       }
       else if (t.mode === 'run' && !includeTask) { t.mode = 'skip' }
       else if (t.mode === 'only') {
-        checkFailOnOnly(t, failOnOnly)
+        checkAllowOnly(t, allowOnly)
         t.mode = 'run'
       }
     }
@@ -113,7 +104,7 @@ function interpretTaskModes(suite: Suite, namePattern?: string | RegExp, onlyMod
       if (t.mode === 'skip')
         skipAllTasks(t)
       else
-        interpretTaskModes(t, namePattern, onlyMode, includeTask, failOnOnly)
+        interpretTaskModes(t, namePattern, onlyMode, includeTask, allowOnly)
     }
   })
 
@@ -136,6 +127,14 @@ function skipAllTasks(suite: Suite) {
         skipAllTasks(t)
     }
   })
+}
+
+function checkAllowOnly(task: TaskBase, allowOnly?: boolean) {
+  if (allowOnly) return
+  task.result = {
+    state: 'fail',
+    error: processError(new Error('only is not allowed')),
+  }
 }
 
 function calculateHash(parent: Suite) {
