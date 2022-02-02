@@ -114,9 +114,20 @@ export async function runTest(test: Test) {
   updateTask(test)
 }
 
+function markTasksAsSkipped(suite: Suite) {
+  suite.tasks.forEach((t) => {
+    t.mode = 'skip'
+    t.result = { ...t.result, state: 'skip' }
+    updateTask(t)
+    if (t.type === 'suite') markTasksAsSkipped(t)
+  })
+}
+
 export async function runSuite(suite: Suite) {
-  if (suite.result?.state === 'fail')
+  if (suite.result?.state === 'fail') {
+    markTasksAsSkipped(suite)
     return
+  }
 
   const start = performance.now()
 
