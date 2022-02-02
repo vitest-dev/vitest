@@ -45,15 +45,15 @@ export default defineConfig({
     editLinks: true,
     editLinkText: 'Suggest changes to this page',
 
-    /* TODO
-
     algolia: {
-      apiKey: '...',
+      apiKey: '9c3ced6fed60d2670bb36ab7e8bed8bc',
       indexName: 'vitest',
       searchParameters: {
         facetFilters: ['tags:en']
       }
     },
+
+    /* TODO
 
     carbonAds: {
       carbon: '...',
