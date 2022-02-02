@@ -44,8 +44,13 @@ async function sendTasksUpdate() {
 }
 
 export async function runTest(test: Test) {
-  if (test.mode !== 'run' || test.result)
+  if (test.mode !== 'run')
     return
+
+  if (test.result?.state === 'fail') {
+    updateTask(test)
+    return
+  }
 
   const start = performance.now()
 
@@ -126,6 +131,7 @@ function markTasksAsSkipped(suite: Suite) {
 export async function runSuite(suite: Suite) {
   if (suite.result?.state === 'fail') {
     markTasksAsSkipped(suite)
+    updateTask(suite)
     return
   }
 
