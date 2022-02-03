@@ -163,7 +163,7 @@ Update snapshot files
 ### watch
 
 - **Type:** `boolean`
-- **Default:** `false`
+- **Default:** `true`
 
 Enable watch mode
 
