@@ -13,6 +13,7 @@ const defaultExcludes = [
   'coverage/**',
   'packages/*/test{,s}/**',
   '**/*.d.ts',
+  'cypress/**',
   'test{,s}/**',
   'test{,-*}.{js,cjs,mjs,ts,tsx,jsx}',
   '**/*{.,-}test.{js,cjs,mjs,ts,tsx,jsx}',
