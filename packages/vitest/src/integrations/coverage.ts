@@ -1,5 +1,4 @@
 import { existsSync, promises as fs } from 'fs'
-import { takeCoverage } from 'v8'
 import { createRequire } from 'module'
 import { pathToFileURL } from 'url'
 import type { Profiler } from 'inspector'
@@ -57,7 +56,11 @@ const require = createRequire(import.meta.url)
 
 export async function reportCoverage(ctx: Vitest) {
   // Flush coverage to disk
-  takeCoverage()
+  const v8 = require('v8')
+  if (v8.takeCoverage == null)
+    console.warn('[Vitest] takeCoverage is not available in this NodeJs version.\nCoverage could be incomplete. Update to NodeJs 14.18.')
+  else
+    v8.takeCoverage()
 
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const createReport = require('c8/lib/report')
