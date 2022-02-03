@@ -16,7 +16,7 @@
     "@unocss/reset": "^0.22.6",
     "@vitejs/plugin-vue": "^2.1.0",
     "unocss": "^0.22.6",
-    "unplugin-vue-components": "^0.17.14",
+    "unplugin-vue-components": "^0.17.15",
     "vitepress": "^0.21.6"
   }
 }

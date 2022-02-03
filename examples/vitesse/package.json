@@ -13,7 +13,7 @@
     "@vue/test-utils": "^2.0.0-rc.18",
     "happy-dom": "latest",
     "unplugin-auto-import": "^0.5.11",
-    "unplugin-vue-components": "^0.17.14",
+    "unplugin-vue-components": "^0.17.15",
     "vitest": "latest"
   }
 }
