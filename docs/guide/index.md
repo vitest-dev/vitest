@@ -135,6 +135,7 @@ You can specify additional CLI options like `--port` or `--https`. For a full li
 - [milkdown](https://github.com/Saul-Mirone/milkdown)
 - [gridjs-svelte](https://github.com/iamyuu/gridjs-svelte)
 - [spring-easing](https://github.com/okikio/spring-easing)
+- [bytemd](https://github.com/bytedance/bytemd)
 
 ## Using Unreleased Commits
 
