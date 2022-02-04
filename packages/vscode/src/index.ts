@@ -49,7 +49,7 @@ const client = createClient(ENTRY_URL, {
 
 function updateRunState(data: Task, run: TestRun) {
   const item = tasksMap.get(data.id)!
-  if (data.mode === 'skip' || data.mode === 'todo') {
+  if (data.mode === 'skip' || data.mode === 'todo' || data.result?.state === 'skip') {
     item.busy = false
     run.skipped(item)
   }
@@ -75,6 +75,7 @@ function createTaskItem(task: Task, parent: TestItemCollection, controller: Test
   const item = controller.createTestItem(task.id, task.name, Uri.file(filepath))
   parent.add(item)
   tasksMap.set(task.id, item)
+  updateRunState(task, run)
   if (task.type === 'test') {
     item.canResolveChildren = false
   }
@@ -83,7 +84,6 @@ function createTaskItem(task: Task, parent: TestItemCollection, controller: Test
       createTaskItem(t, item.children, controller, run)
     })
   }
-  updateRunState(task, run)
 
   return item
 }
@@ -95,6 +95,10 @@ export async function activate(context: ExtensionContext) {
   context.subscriptions.push(ctrl)
 
   ctrl.createRunProfile('Run Tests', TestRunProfileKind.Run, async(request) => {
+    if (currentRun) {
+      currentRun.end()
+      currentRun = undefined
+    }
     const files = request.include?.map(i => i.uri?.fsPath).filter(Boolean) as string[]
     if (files?.length)
       await client.rpc.rerun(files)
@@ -102,12 +106,11 @@ export async function activate(context: ExtensionContext) {
 
   ctrl.resolveHandler = async(item) => {
     if (!item) {
-      const run = ctrl.createTestRun(new TestRunRequest(), 'hi')
+      currentRun = ctrl.createTestRun(new TestRunRequest(), 'hi')
       const files = await client.rpc.getFiles()
-      Object.values(files).forEach((file) => {
-        createTaskItem(file, ctrl.items, ctrl, run)
+      files.forEach((file) => {
+        createTaskItem(file, ctrl.items, ctrl, currentRun!)
       })
-      run.end()
     }
   }
 }

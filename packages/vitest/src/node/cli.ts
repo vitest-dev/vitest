@@ -33,6 +33,11 @@ cli
   .option('--allowOnly', 'Allow tests and suites that are marked as only', { default: !process.env.CI })
   .help()
 
+process.on('uncaughtException', (err) => {
+  console.error(err, err.stack)
+  process.exitCode = 1
+})
+
 cli
   .command('run [...filters]')
   .action(run)
