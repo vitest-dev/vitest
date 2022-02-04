@@ -600,6 +600,24 @@ importers:
       vite-node: link:../vite-node
       ws: 8.4.2
 
+  packages/vscode:
+    specifiers:
+      '@types/vscode': ^1.62.0
+      '@vitest/ws-client': workspace:*
+      flatted: ^3.2.4
+      node-fetch: ^3.1.0
+      rollup: ^2.61.1
+      typescript: ^4.5.3
+      ws: ^8.3.0
+    devDependencies:
+      '@types/vscode': 1.64.0
+      '@vitest/ws-client': link:../ws-client
+      flatted: 3.2.5
+      node-fetch: 3.2.0
+      rollup: 2.67.0
+      typescript: 4.5.5
+      ws: 8.4.2
+
   packages/ws-client:
     specifiers:
       birpc: ^0.1.0
@@ -5912,6 +5930,10 @@ packages:
 
   /@types/unist/2.0.6:
     resolution: {integrity: sha512-PBjIUxZHOuj0R15/xuwJYjFi+KZdNFrehocChv4g5hu6aFroHue8m0lBP0POdK2nKzbw0cgV1mws8+V/JAcEkQ==}
+    dev: true
+
+  /@types/vscode/1.64.0:
+    resolution: {integrity: sha512-bSlAWz5WtcSL3cO9tAT/KpEH9rv5OBnm93OIIFwdCshaAiqr2bp1AUyEwW9MWeCvZBHEXc3V0fTYVdVyzDNwHA==}
     dev: true
 
   /@types/webpack-env/1.16.3:

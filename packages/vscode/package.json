@@ -1,0 +1,52 @@
+{
+  "name": "@vitest/vscode",
+  "displayName": "UnoCSS",
+  "version": "0.16.3",
+  "private": true,
+  "description": "UnoCSS for VS Code",
+  "categories": [
+    "Other"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/antfu/unocss",
+    "directory": "packages/vscode"
+  },
+  "license": "MIT",
+  "publisher": "antfu",
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c --watch src",
+    "vscode:prepublish": "npm run build"
+  },
+  "contributes": {
+    "commands": [],
+    "configuration": {
+      "type": "object",
+      "title": "UnoCSS",
+      "properties": {}
+    }
+  },
+  "activationEvents": [
+    "workspaceContains:vite.config.*",
+    "workspaceContains:nuxt.config.*",
+    "workspaceContains:uno.config.*",
+    "workspaceContains:unocss.config.*",
+    "workspaceContains:package.json"
+  ],
+  "devDependencies": {
+    "@types/vscode": "^1.62.0",
+    "flatted": "^3.2.4",
+    "node-fetch": "^3.1.0",
+    "rollup": "^2.61.1",
+    "typescript": "^4.5.3",
+    "@vitest/ws-client": "workspace:*",
+    "ws": "^8.3.0"
+  },
+  "engines": {
+    "vscode": "^1.62.0"
+  },
+  "icon": "res/logo.png",
+  "preview": true
+}
