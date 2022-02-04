@@ -1,27 +1,57 @@
 import type { ExtensionContext, TestController, TestItem, TestItemCollection, TestRun } from 'vscode'
-import { TestMessage, TestRunProfileKind, TestRunRequest, Uri, tests, window } from 'vscode'
+import { TestMessage, TestRunProfileKind, TestRunRequest, Uri, tests } from 'vscode'
 import { createClient } from '@vitest/ws-client'
 import { WebSocket } from 'ws'
 import type { File, Task } from '../../vitest/src/types'
 
 export const PORT = '51204'
-export const HOST = [location.hostname, PORT].filter(Boolean).join(':')
-export const ENTRY_URL = `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${HOST}/__vitest_api__`
+export const HOST = ['127.0.0.1', PORT].filter(Boolean).join(':')
+export const ENTRY_URL = `ws://${HOST}/__vitest_api__`
 
-export const client = createClient(ENTRY_URL, {
-  WebSocketConstructor: WebSocket as any,
-})
-
+let currentRun: TestRun | undefined
+let ctrl: TestController
 const tasksMap: Map<string, TestItem> = new Map()
+
+function getRun() {
+  if (!currentRun) {
+    currentRun = ctrl.createTestRun(new TestRunRequest())
+    tasksMap.clear()
+  }
+  return currentRun
+}
+
+const client = createClient(ENTRY_URL, {
+  WebSocketConstructor: WebSocket as any,
+  handlers: {
+    onTaskUpdate(packs) {
+      const run = getRun()
+      for (const [id] of packs) {
+        if (client.state.idMap.get(id))
+          updateRunState(client.state.idMap.get(id)!, run)
+      }
+    },
+    onFinished() {
+      if (currentRun) {
+        currentRun.end()
+        currentRun = undefined
+      }
+    },
+    onCollected(files) {
+      if (!files)
+        return
+      const run = getRun()
+      files.forEach((file) => {
+        createTaskItem(file, ctrl.items, ctrl, run)
+      })
+    },
+  },
+})
 
 function updateRunState(data: Task, run: TestRun) {
   const item = tasksMap.get(data.id)!
   if (data.mode === 'skip' || data.mode === 'todo') {
     item.busy = false
     run.skipped(item)
-  }
-  else if (!data.result || data.result.state === 'run') {
-    item.busy = true
   }
   else if (data.result?.state === 'pass') {
     item.busy = false
@@ -35,11 +65,14 @@ function updateRunState(data: Task, run: TestRun) {
       data.result.duration,
     )
   }
+  else {
+    item.busy = true
+  }
 }
 
-function createTaskItem(task: Task, parent: TestItemCollection, controller: TestController, run?: TestRun) {
+function createTaskItem(task: Task, parent: TestItemCollection, controller: TestController, run: TestRun) {
   const filepath = task.file?.filepath || (task as File).filepath
-  const item = parent.get(task.id) || controller.createTestItem(task.id, task.name, Uri.file(filepath))
+  const item = controller.createTestItem(task.id, task.name, Uri.file(filepath))
   parent.add(item)
   tasksMap.set(task.id, item)
   if (task.type === 'test') {
@@ -50,37 +83,21 @@ function createTaskItem(task: Task, parent: TestItemCollection, controller: Test
       createTaskItem(t, item.children, controller, run)
     })
   }
-  if (run)
-    updateRunState(task, run)
+  updateRunState(task, run)
+
   return item
 }
 
 export async function activate(context: ExtensionContext) {
-  const output = window.createOutputChannel('Vitest')
+  // const output = window.createOutputChannel('Vitest')
 
-  const log = (data: any) => {
-    output.appendLine(JSON.stringify(data, null, 2))
-  }
-
-  const ctrl = tests.createTestController('vitest', 'Vitest')
+  ctrl = tests.createTestController('vitest', 'Vitest')
   context.subscriptions.push(ctrl)
-
-  const ws = new WebSocket('ws://localhost:51204/__vitest_api__')
-  ws.on('message', (buffer) => {
-    const msg = JSON.parse(String(buffer))
-    log({ msg })
-  })
-  ws.on('open', () => {
-    ws.send('hi')
-  })
 
   ctrl.createRunProfile('Run Tests', TestRunProfileKind.Run, async(request) => {
     const files = request.include?.map(i => i.uri?.fsPath).filter(Boolean) as string[]
-    if (files?.length) {
-      const run = ctrl.createTestRun(request)
+    if (files?.length)
       await client.rpc.rerun(files)
-      run.end()
-    }
   }, true)
 
   ctrl.resolveHandler = async(item) => {
