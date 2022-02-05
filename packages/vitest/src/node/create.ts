@@ -23,10 +23,11 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
   }
 
   const server = await createServer(mergeConfig(config, viteOverrides))
-  await server.pluginContainer.buildStart({})
 
   if (ctx.config.api?.port)
     await server.listen()
+  else
+    await server.pluginContainer.buildStart({})
 
   return ctx
 }
