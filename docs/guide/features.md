@@ -177,6 +177,8 @@ You can also use `.skip`, `.only`, and `.todo` with concurrent suites and tests.
 
 [Chai](https://www.chaijs.com/) built-in for assertions plus [Jest expect](https://jestjs.io/docs/expect) compatible APIs
 
+Notice that if you are using third-party libraries that add matchers, setting `test.globals` to `true` will provide better compatibility
+
 ## Mocking
 
 [Tinyspy](https://github.com/Aslemammad/tinyspy) built-in for mocking with `jest` compatible APIs on `vi` object.
