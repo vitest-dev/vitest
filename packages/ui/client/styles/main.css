@@ -146,8 +146,12 @@ html.dark {
 .CodeMirror-scroll::-webkit-scrollbar-thumb,
 .scrolls::-webkit-scrollbar-thumb {
   background-color: var(--cm-ttc-c-thumb);
-  border-radius: 3px;
   border: 2px solid var(--cm-ttc-c-thumb);
+}
+.CodeMirror-scroll::-webkit-scrollbar-thumb,
+.scrolls::-webkit-scrollbar-thumb,
+.scrolls-rounded::-webkit-scrollbar-track {
+  border-radius: 3px;
 }
 .CodeMirror-scroll::-webkit-scrollbar-corner,
 .scrolls::-webkit-scrollbar-corner {
