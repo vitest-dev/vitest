@@ -1,12 +1,21 @@
 <script setup lang="ts">
-import type { File } from '#types'
+import type { File, Task } from '#types'
 import { config } from '~/composables/client'
 
 const props = defineProps<{
   file?: File
 }>()
 
-const failed = computed(() => props.file?.tasks.filter(i => i.result?.state === 'fail') || [])
+function collectFailed(task: Task): Task[] {
+  if (task.result?.state !== 'fail') return []
+
+  if (task.type === 'test')
+    return [task]
+  else
+    return [task, ...task.tasks.flatMap(t => collectFailed(t))]
+}
+
+const failed = computed(() => props.file?.tasks.flatMap(t => collectFailed(t)) || [])
 
 function relative(p: string) {
   if (p.startsWith(config.value.root))
