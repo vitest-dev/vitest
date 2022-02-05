@@ -34,7 +34,7 @@ function relative(p: string) {
       <div v-for="task of failed" :key="task.id">
         <div bg="red-500/10" text="red-500 sm" p="x3 y2" m-2 rounded :style="{ 'margin-left': `${2 * task.level + 0.5}rem`}">
           {{ task.name }}
-          <div v-if="task.result?.error" class="scrolls task-error">
+          <div v-if="task.result?.error" class="scrolls scrolls-rounded task-error">
             <pre><b>{{ task.result.error.name || task.result.error.nameStr }}</b>: {{ task.result.error.message }}</pre>
             <pre v-for="stack, i of task.result.error.stacks || []" :key="i" op80> - {{ relative(stack.file) }}:{{ stack.line }}:{{ stack.column }}</pre>
           </div>
