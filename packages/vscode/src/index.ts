@@ -12,6 +12,13 @@ let currentRun: TestRun | undefined
 let ctrl: TestController
 const tasksMap: Map<string, TestItem> = new Map()
 
+function closeRun() {
+  if (currentRun) {
+    currentRun.end()
+    currentRun = undefined
+  }
+}
+
 function getRun() {
   if (!currentRun) {
     currentRun = ctrl.createTestRun(new TestRunRequest())
@@ -26,15 +33,12 @@ const client = createClient(ENTRY_URL, {
     onTaskUpdate(packs) {
       const run = getRun()
       for (const [id] of packs) {
-        if (client.state.idMap.get(id))
-          updateRunState(client.state.idMap.get(id)!, run)
+        const task = client.state.idMap.get(id)!
+        updateRunState(task, run)
       }
     },
     onFinished() {
-      if (currentRun) {
-        currentRun.end()
-        currentRun = undefined
-      }
+      closeRun()
     },
     onCollected(files) {
       if (!files)
@@ -61,7 +65,7 @@ function updateRunState(data: Task, run: TestRun) {
     item.busy = false
     run.failed(
       item,
-      new TestMessage(String(data.result.error)),
+      new TestMessage(String(data.result?.error || '')),
       data.result.duration,
     )
   }
@@ -72,10 +76,12 @@ function updateRunState(data: Task, run: TestRun) {
 
 function createTaskItem(task: Task, parent: TestItemCollection, controller: TestController, run: TestRun) {
   const filepath = task.file?.filepath || (task as File).filepath
-  const item = controller.createTestItem(task.id, task.name, Uri.file(filepath))
-  parent.add(item)
+  let item = parent.get(task.id)!
+  if (!item) {
+    item = controller.createTestItem(task.id, task.name, Uri.file(filepath))
+    parent.add(item)
+  }
   tasksMap.set(task.id, item)
-  updateRunState(task, run)
   if (task.type === 'test') {
     item.canResolveChildren = false
   }
@@ -95,10 +101,7 @@ export async function activate(context: ExtensionContext) {
   context.subscriptions.push(ctrl)
 
   ctrl.createRunProfile('Run Tests', TestRunProfileKind.Run, async(request) => {
-    if (currentRun) {
-      currentRun.end()
-      currentRun = undefined
-    }
+    closeRun()
     const files = request.include?.map(i => i.uri?.fsPath).filter(Boolean) as string[]
     if (files?.length)
       await client.rpc.rerun(files)
@@ -106,7 +109,6 @@ export async function activate(context: ExtensionContext) {
 
   ctrl.resolveHandler = async(item) => {
     if (!item) {
-      currentRun = ctrl.createTestRun(new TestRunRequest(), 'hi')
       const files = await client.rpc.getFiles()
       files.forEach((file) => {
         createTaskItem(file, ctrl.items, ctrl, currentRun!)

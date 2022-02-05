@@ -6,6 +6,11 @@ import { ensurePackageInstalled } from '../utils'
 import { createVitest } from './create'
 import { registerConsoleShortcuts } from './stdin'
 
+process.on('uncaughtException', (err) => {
+  console.error(err, err.stack)
+  process.exitCode = 1
+})
+
 const cli = cac('vitest')
 
 cli
@@ -32,11 +37,6 @@ cli
   .option('--passWithNoTests', 'pass when no tests found')
   .option('--allowOnly', 'Allow tests and suites that are marked as only', { default: !process.env.CI })
   .help()
-
-process.on('uncaughtException', (err) => {
-  console.error(err, err.stack)
-  process.exitCode = 1
-})
 
 cli
   .command('run [...filters]')
