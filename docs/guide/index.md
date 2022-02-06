@@ -52,6 +52,16 @@ export default defineConfig({
 
 See the list of config options in the [Config Reference](../config/)
 
+If you don't want to import vitest types in your every test file, then you can add globally `vitest/globals` to your `tsconfig.json` like this.
+
+```json
+{
+  "compilerOptions": {
+    "types": ["vitest/globals"]
+  }
+}
+```
+
 ## Command Line Interface
 
 In a project where Vitest is installed, you can use the `vitest` binary in your npm scripts, or run it directly with `npx vitest`. Here are the default npm scripts in a scaffolded Vitest project:
