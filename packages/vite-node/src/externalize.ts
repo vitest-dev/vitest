@@ -7,9 +7,6 @@ const ESM_EXT_RE = /\.(es|esm|esm-browser|esm-bundler|es6|module)\.js$/
 const ESM_FOLDER_RE = /\/esm\/(.*\.js)$/
 
 const defaultInline = [
-  /\/vitest\/dist\//,
-  // yarn's .store folder
-  /vitest-virtual-\w+\/dist/,
   /virtual:/,
   /\.ts$/,
   ESM_EXT_RE,
@@ -17,7 +14,7 @@ const defaultInline = [
 ]
 
 const depsExternal = [
-  /\.cjs.js$/,
+  /\.cjs\.js$/,
   /\.mjs$/,
 ]
 

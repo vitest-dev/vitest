@@ -62,6 +62,16 @@ export function resolveConfig(
   resolved.coverage = resolveC8Options(resolved.coverage, resolved.root)
 
   resolved.deps = resolved.deps || {}
+  // vitenode will try to import such file with native node,
+  // but then our mocker will not work properly
+  resolved.deps.inline ??= []
+  resolved.deps.inline.push(
+    /\.mjs$/,
+    /\.cjs\.js$/,
+    /\/vitest\/dist\//,
+    // yarn's .store folder
+    /vitest-virtual-\w+\/dist/,
+  )
 
   resolved.environment = resolved.environment || 'node'
   resolved.threads = resolved.threads ?? true
