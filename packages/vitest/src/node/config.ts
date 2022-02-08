@@ -2,7 +2,7 @@ import { resolve } from 'pathe'
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 
 import type { ApiConfig, ResolvedConfig, UserConfig } from '../types'
-import { defaultPort, defaults } from '../constants'
+import { defaultConfig, defaultPort } from '../constants'
 import { resolveC8Options } from '../integrations/coverage'
 import { toArray } from '../utils'
 
@@ -50,7 +50,7 @@ export function resolveConfig(
   const globals = options?.global ?? options.globals
 
   const resolved = {
-    ...defaults,
+    ...defaultConfig,
     ...options,
     root: viteConfig.root,
     globals,
