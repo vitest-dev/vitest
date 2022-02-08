@@ -4,7 +4,7 @@ importers:
 
   .:
     specifiers:
-      '@vue/composition-api': ^1.4.5
+      '@vue/composition-api': ^1.4.6
       '@vue/test-utils': ^1.3.0
       happy-dom: latest
       unplugin-vue2-script-setup: ^0.9.1
@@ -16,13 +16,13 @@ importers:
     dependencies:
       vue: 2.6.14
     devDependencies:
-      '@vue/composition-api': 1.4.5_vue@2.6.14
+      '@vue/composition-api': 1.4.6_vue@2.6.14
       '@vue/test-utils': 1.3.0_9065e7474e033a8e4b95615fc8e6c36c
       happy-dom: 2.31.1
-      unplugin-vue2-script-setup: 0.9.1_eed9359fbe4c88b7b94ae42b669e079d
+      unplugin-vue2-script-setup: 0.9.1_345596b0cd17ac2b5c2b04de982efd72
       vite: 2.7.13
       vite-plugin-vue2: 1.9.3_e3c37c0cfaae1b9f72ab6085139b0afb
-      vitest: 0.2.5_happy-dom@2.31.1
+      vitest: 0.2.7_happy-dom@2.31.1
       vue-template-compiler: 2.6.14
 
 packages:
@@ -588,8 +588,8 @@ packages:
       prettier: 2.5.1
     dev: true
 
-  /@vue/composition-api/1.4.5_vue@2.6.14:
-    resolution: {integrity: sha512-2Esgcc0EGBqyck4b/yrP2VnGmMr6cPYAE4nF3StIzP8+umNAbRZqBJDc6AhE58whPRt3lHAPf83eppgW7a2dUg==}
+  /@vue/composition-api/1.4.6_vue@2.6.14:
+    resolution: {integrity: sha512-UP359OJ0G0Zli603/i9fhXFmNtZUSrypSFyqClMxizp8ezlaMK2GCmHgy3qyrRnO/xjcDAx09vvXPwNFtxHPtQ==}
     peerDependencies:
       vue: '>= 2.5 < 3'
     dependencies:
@@ -1688,7 +1688,7 @@ packages:
     engines: {node: '>= 10.0.0'}
     dev: true
 
-  /unplugin-vue2-script-setup/0.9.1_eed9359fbe4c88b7b94ae42b669e079d:
+  /unplugin-vue2-script-setup/0.9.1_345596b0cd17ac2b5c2b04de982efd72:
     resolution: {integrity: sha512-1+I300JJ8SBajD3EYQI4Ee7RReLvPS3cL5Rio12e54Vv6e4cd8rPwTNogpskHtt5DNdYA31Cr+DGAf2MmPpsFw==}
     peerDependencies:
       '@vue/composition-api': ^1.4.3
@@ -1707,7 +1707,7 @@ packages:
       '@rollup/pluginutils': 4.1.2
       '@vue/compiler-core': 3.2.26
       '@vue/compiler-dom': 3.2.26
-      '@vue/composition-api': 1.4.5_vue@2.6.14
+      '@vue/composition-api': 1.4.6_vue@2.6.14
       '@vue/reactivity-transform': 3.2.26
       '@vue/shared': 3.2.26
       defu: 5.0.0
@@ -1804,8 +1804,8 @@ packages:
       fsevents: 2.3.2
     dev: true
 
-  /vitest/0.2.5_happy-dom@2.31.1:
-    resolution: {integrity: sha512-QruEhsNxy8ycLxYG9rrGUfHZzJ8A6YvA9ULZ4w/ecvm0Zejm1nxUar/XkRWkL2xzrqA5AjmfqDSQZ8q2bFbA0Q==}
+  /vitest/0.2.7_happy-dom@2.31.1:
+    resolution: {integrity: sha512-rKbmtADi6jsxYrwBrw4+sdYPLm3eiTmx7ojoZXQshScxnGWbHP18hWNa2NUEOYgowatkIiWPDVIyFB1kPnhokw==}
     engines: {node: '>=14.14.0'}
     hasBin: true
     peerDependencies:

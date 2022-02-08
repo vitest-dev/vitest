@@ -37,10 +37,10 @@
   "dependencies": {
     "birpc": "^0.1.0",
     "flatted": "^3.2.5",
-    "ws": "^8.4.2"
+    "ws": "^8.5.0"
   },
   "devDependencies": {
-    "rollup": "^2.67.0"
+    "rollup": "^2.67.1"
   },
   "engines": {
     "node": ">=14.14.0"
