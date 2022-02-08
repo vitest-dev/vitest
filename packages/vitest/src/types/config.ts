@@ -107,7 +107,7 @@ export interface InlineConfig {
   /**
    * Watch mode
    *
-   * @default false
+   * @default true
    */
   watch?: boolean
 
