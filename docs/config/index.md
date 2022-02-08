@@ -24,7 +24,7 @@ export default defineConfig({
 You can retrieve Vitest's default options to expand them if needed:
 
 ```ts
-import { defaultConfig } from 'vitest'
+import { defineConfig, defaultConfig } from 'vitest'
 
 export default defineConfig({
   test: {
