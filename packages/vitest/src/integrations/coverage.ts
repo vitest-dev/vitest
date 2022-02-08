@@ -84,9 +84,9 @@ export async function reportCoverage(ctx: Vitest) {
       }
       catch {}
 
-      const sources = map.sources.length
-        ? map.sources.map(i => pathToFileURL(i).href)
-        : [url]
+      // Vite does not report full path in sourcemap sources
+      // so use an actual file path
+      const sources = [url]
 
       sourceMapMata[url] = {
         source: result.code,
