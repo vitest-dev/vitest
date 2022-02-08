@@ -286,7 +286,7 @@ export class Vitest {
 
       if (this.config.coverage.enabled)
         await reportCoverage(this)
-      
+
       await this.report('onWatcherStart')
     }, WATCHER_DEBOUNCE)
   }
