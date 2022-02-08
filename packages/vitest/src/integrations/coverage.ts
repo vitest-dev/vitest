@@ -21,19 +21,23 @@ const defaultExcludes = [
   '**/.{eslint,mocha}rc.{js,cjs}',
 ]
 
+export const defaults = {
+  enabled: false,
+  clean: true,
+  cleanOnRerun: false,
+  reportsDirectory: './coverage',
+  excludeNodeModules: true,
+  exclude: defaultExcludes,
+  reporter: ['text', 'html'],
+  allowExternal: false,
+  // default extensions used by c8, plus '.vue' and '.svelte'
+  // see https://github.com/istanbuljs/schema/blob/master/default-extension.js
+  extension: ['.js', '.cjs', '.mjs', '.ts', '.tsx', '.jsx', '.vue', 'svelte'],
+} as ResolvedC8Options
+
 export function resolveC8Options(options: C8Options, root: string): ResolvedC8Options {
   const resolved: ResolvedC8Options = {
-    enabled: false,
-    clean: true,
-    cleanOnRerun: false,
-    reportsDirectory: './coverage',
-    excludeNodeModules: true,
-    exclude: defaultExcludes,
-    reporter: ['text', 'html'],
-    allowExternal: false,
-    // default extensions used by c8, plus '.vue' and '.svelte'
-    // see https://github.com/istanbuljs/schema/blob/master/default-extension.js
-    extension: ['.js', '.cjs', '.mjs', '.ts', '.tsx', '.jsx', '.vue', 'svelte'],
+    ...defaults,
     ...options as any,
   }
 
