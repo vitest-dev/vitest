@@ -1,4 +1,5 @@
 import { assert, expect, it, suite, test } from 'vitest'
+import { expect as chaiExpect } from 'chai'
 import { two } from '../src/submodule'
 import { timeout } from '../src/timeout'
 
@@ -23,6 +24,13 @@ test('JSON', () => {
   })
   expect(output).toEqual('{"foo":"hello","bar":"world"}')
   assert.deepEqual(JSON.parse(output), input, 'matches original')
+})
+
+test('assertion is callable', () => {
+  const str = '13'
+  chaiExpect(str).to.be('13')
+  expect(str).to.be('13')
+  expect(str).not.to.be('12')
 })
 
 const hi = suite('suite')
