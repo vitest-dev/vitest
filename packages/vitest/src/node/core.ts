@@ -284,10 +284,10 @@ export class Vitest {
 
       await this.runFiles(files)
 
-      await this.report('onWatcherStart')
-
       if (this.config.coverage.enabled)
         await reportCoverage(this)
+
+      await this.report('onWatcherStart')
     }, WATCHER_DEBOUNCE)
   }
 

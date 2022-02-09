@@ -9,7 +9,7 @@
     "vue": "2.6.14"
   },
   "devDependencies": {
-    "@vue/composition-api": "^1.4.5",
+    "@vue/composition-api": "^1.4.6",
     "@vue/test-utils": "^1.3.0",
     "happy-dom": "latest",
     "unplugin-vue2-script-setup": "^0.9.1",
