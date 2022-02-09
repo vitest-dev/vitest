@@ -50,7 +50,7 @@ export const configDefaults: UserConfig = Object.freeze({
   watchIgnore: [/\/node_modules\//, /\/dist\//],
   update: false,
   watch: !process.env.CI,
-  reporters: 'default',
+  reporters: ['default'],
   silent: false,
   api: false,
   ui: false,
