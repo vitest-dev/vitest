@@ -57,7 +57,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
           options,
         )
         options.api = resolveApiConfig(options)
-        options.watch = options.watch && !options.run
+        options.watch &&= !options.run
 
         process.env.BASE_URL ??= viteConfig.base
         process.env.MODE ??= viteConfig.mode
