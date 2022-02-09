@@ -208,8 +208,6 @@ export class VitestMocker {
 
     const fsPath = this.normalizePath(path)
 
-    console.log('mock', path, fsPath)
-
     this.mockMap[suitefile] ??= {}
     this.mockMap[suitefile][fsPath] = factory || this.resolveMockPath(path, external)
   }
