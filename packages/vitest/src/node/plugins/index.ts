@@ -6,6 +6,7 @@ import { resolveApiConfig } from '../config'
 import { Vitest } from '../core'
 import { GlobalSetupPlugin } from './globalSetup'
 import { MocksPlugin } from './mock'
+import { EnvReplacerPlugin } from './envReplacer'
 
 export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest()): Promise<VitePlugin[]> {
   let haveStarted = false
@@ -57,6 +58,23 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
         )
         options.api = resolveApiConfig(options)
         options.watch = options.watch && !options.run
+
+        process.env.BASE_URL ??= viteConfig.base
+        process.env.MODE ??= viteConfig.mode
+        // process.env can have only string values and will cast string on it if we pass other type,
+        // so we are making them truthy
+        process.env.PROD ??= viteConfig.env.PROD ? '1' : ''
+        process.env.DEV ??= viteConfig.env.DEV ? '1' : ''
+        process.env.SSR ??= '1'
+
+        // account for user env defines
+        for (const key in viteConfig.define) {
+          if (key.startsWith('import.meta.env.')) {
+            const val = viteConfig.define[key]
+            const envKey = key.slice('import.meta.env.'.length)
+            process.env[envKey] = typeof val === 'string' ? JSON.parse(val) : val
+          }
+        }
       },
       async configureServer(server) {
         if (haveStarted)
@@ -71,6 +89,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
           await server.watcher.close()
       },
     },
+    EnvReplacerPlugin(),
     MocksPlugin(),
     GlobalSetupPlugin(ctx),
     options.ui
