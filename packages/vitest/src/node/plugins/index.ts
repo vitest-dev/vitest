@@ -49,13 +49,13 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
         options = deepMerge(options, viteConfig.test as any || {})
         options.api = resolveApiConfig(options)
 
-        process.env.BASE_URL = viteConfig.base
-        process.env.MODE = viteConfig.mode
+        process.env.BASE_URL ??= viteConfig.base
+        process.env.MODE ??= viteConfig.mode
         // process.env can have only string values and will cast string on it if we pass other type,
         // so we are making them truthy
-        process.env.PROD = viteConfig.env.PROD ? '1' : ''
-        process.env.DEV = viteConfig.env.DEV ? '1' : ''
-        process.env.SSR = '1'
+        process.env.PROD ??= viteConfig.env.PROD ? '1' : ''
+        process.env.DEV ??= viteConfig.env.DEV ? '1' : ''
+        process.env.SSR ??= '1'
 
         // account for user env defines
         for (const key in viteConfig.define) {
