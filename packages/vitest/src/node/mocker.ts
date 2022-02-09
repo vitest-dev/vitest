@@ -122,11 +122,11 @@ export class VitestMocker {
   }
 
   public resolveDependency(dep: string) {
-    return normalizeId(dep).replace(/^\/@fs\//, '/')
+    return normalizeId(dep).replace(/^\/@fs\//, '')
   }
 
   public normalizePath(path: string) {
-    return normalizeId(path.replace(this.root, '')).replace(/^\/@fs\//, '/')
+    return normalizeId(path.replace(this.root, '')).replace(/^\/@fs\//, '')
   }
 
   public getFsPath(path: string, external: string | null) {
