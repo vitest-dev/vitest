@@ -66,8 +66,8 @@ export function resolveConfig(
   // but then our mocker will not work properly
   resolved.deps.inline ??= []
   resolved.deps.inline.push(
-    /\.mjs$/,
-    /\.cjs\.js$/,
+    /^(?!.*(?:node_modules)).*\.mjs$/,
+    /^(?!.*(?:node_modules)).*\.cjs\.js$/,
     /\/vitest\/dist\//,
     // yarn's .store folder
     /vitest-virtual-\w+\/dist/,
