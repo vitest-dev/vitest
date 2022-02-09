@@ -73,7 +73,7 @@ export class VitestMocker {
   }
 
   public getSuiteFilepath() {
-    return process.__vitest_worker__?.filepath || 'global'
+    return __vitest_worker__?.filepath || 'global'
   }
 
   public getMocks() {
