@@ -55,6 +55,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
         // so we are making them truthy
         process.env.PROD = viteConfig.env.PROD ? '1' : ''
         process.env.DEV = viteConfig.env.DEV ? '1' : ''
+        process.env.SSR = '1'
 
         // account for user env defines
         for (const key in viteConfig.define) {
