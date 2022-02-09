@@ -1,6 +1,19 @@
 import { assert, expect, it, suite, test } from 'vitest'
 import { two } from '../src/submodule'
 import { timeout } from '../src/timeout'
+import { getAuthToken } from '../src/env'
+
+test('can reassign env locally', () => {
+  import.meta.env.VITEST_ENV = 'TEST'
+  expect(import.meta.env.VITEST_ENV).toBe('TEST')
+})
+
+test('can reassign env everywhere', () => {
+  import.meta.env.AUTH_TOKEN = '123'
+  expect(getAuthToken()).toBe('123')
+  process.env.AUTH_TOKEN = '321'
+  expect(getAuthToken()).toBe('321')
+})
 
 test('Math.sqrt()', async() => {
   assert.equal(Math.sqrt(4), two)

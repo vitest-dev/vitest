@@ -5,6 +5,7 @@ import { resolveApiConfig } from '../config'
 import { Vitest } from '../core'
 import { GlobalSetupPlugin } from './globalSetup'
 import { MocksPlugin } from './mock'
+import { EnvReplacerPlugin } from './envReplacer'
 
 export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest()): Promise<VitePlugin[]> {
   let haveStarted = false
@@ -47,6 +48,15 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
         // viteConfig.test is final now, merge it for real
         options = deepMerge(options, viteConfig.test as any || {})
         options.api = resolveApiConfig(options)
+
+        // account for user env defines
+        for (const key in viteConfig.define) {
+          if (key.startsWith('import.meta.env.')) {
+            const val = viteConfig.define[key]
+            const envKey = key.slice('import.meta.env.'.length)
+            process.env[envKey] = typeof val === 'string' ? val : JSON.stringify(val)
+          }
+        }
       },
       async configureServer(server) {
         if (haveStarted)
@@ -61,6 +71,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
           await server.watcher.close()
       },
     },
+    EnvReplacerPlugin(),
     MocksPlugin(),
     GlobalSetupPlugin(ctx),
     options.ui
