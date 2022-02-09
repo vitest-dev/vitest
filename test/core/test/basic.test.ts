@@ -1,5 +1,4 @@
 import { assert, expect, it, suite, test } from 'vitest'
-import { expect as chaiExpect } from 'chai'
 import { two } from '../src/submodule'
 import { timeout } from '../src/timeout'
 
@@ -28,7 +27,6 @@ test('JSON', () => {
 
 test('assertion is callable', () => {
   const str = '13'
-  chaiExpect(str).to.be('13')
   expect(str).to.be('13')
   expect(str).not.to.be('12')
 })
