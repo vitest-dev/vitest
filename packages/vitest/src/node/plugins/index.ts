@@ -54,7 +54,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
           if (key.startsWith('import.meta.env.')) {
             const val = viteConfig.define[key]
             const envKey = key.slice('import.meta.env.'.length)
-            process.env[envKey] = typeof val === 'string' ? val : JSON.stringify(val)
+            process.env[envKey] = typeof val === 'string' ? JSON.parse(val) : val
           }
         }
       },
