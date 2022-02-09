@@ -16,6 +16,8 @@ export * from './integrations/vi'
 export * from './types'
 export * from './api/types'
 
+export { configDefaults } from './constants'
+
 declare module 'vite' {
   interface UserConfig {
     /**
