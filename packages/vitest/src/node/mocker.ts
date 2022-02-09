@@ -3,7 +3,7 @@ import { isNodeBuiltin } from 'mlly'
 import { basename, dirname, resolve } from 'pathe'
 import type { ModuleCache } from 'vite-node'
 import { toFilePath } from 'vite-node/utils'
-import { mergeSlashes, normalizeId } from '../utils'
+import { isWindows, mergeSlashes, normalizeId } from '../utils'
 import { distDir } from '../constants'
 import type { ExecuteOptions } from './execute'
 
@@ -91,7 +91,7 @@ export class VitestMocker {
     const path = await this.options.resolveId(id, importer)
     return {
       path: normalizeId(path?.id || id),
-      external: path?.id.includes('/node_modules/') ? id : null,
+      external: path?.external ?? path?.id.includes('/node_modules/') ? id : null,
     }
   }
 
@@ -122,11 +122,11 @@ export class VitestMocker {
   }
 
   public resolveDependency(dep: string) {
-    return normalizeId(dep).replace(/^\/@fs\//, '')
+    return normalizeId(dep).replace(/^\/@fs\//, isWindows ? '' : '/')
   }
 
   public normalizePath(path: string) {
-    return normalizeId(path.replace(this.root, '')).replace(/^\/@fs\//, '')
+    return normalizeId(path.replace(this.root, '')).replace(/^\/@fs\//, isWindows ? '' : '/')
   }
 
   public getFsPath(path: string, external: string | null) {
@@ -207,6 +207,8 @@ export class VitestMocker {
     const suitefile = this.getSuiteFilepath()
 
     const fsPath = this.normalizePath(path)
+
+    console.log('mock', path, fsPath)
 
     this.mockMap[suitefile] ??= {}
     this.mockMap[suitefile][fsPath] = factory || this.resolveMockPath(path, external)
