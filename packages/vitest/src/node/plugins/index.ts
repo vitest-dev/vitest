@@ -6,6 +6,10 @@ import { Vitest } from '../core'
 import { GlobalSetupPlugin } from './globalSetup'
 import { MocksPlugin } from './mock'
 
+function createDefaultConfig(options: UserConfig): Partial<UserConfig> {
+  return { watch: !process.env.CI && !options.run }
+}
+
 export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest()): Promise<VitePlugin[]> {
   let haveStarted = false
 
@@ -45,7 +49,11 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
       },
       async configResolved(viteConfig) {
         // viteConfig.test is final now, merge it for real
-        options = deepMerge(options, viteConfig.test as any || {})
+        options = deepMerge(
+          createDefaultConfig(options),
+          (viteConfig.test as any) || {},
+          options,
+        )
         options.api = resolveApiConfig(options)
       },
       async configureServer(server) {
