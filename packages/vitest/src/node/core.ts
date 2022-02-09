@@ -61,9 +61,10 @@ export class Vitest {
     this.state = new StateManager()
     this.snapshot = new SnapshotManager(resolved)
     // @ts-expect-error cli type
-    this.reporters = toArray(resolved.reporters || resolved.reporter)
+    this.reporters = toArray(resolved.reporter || resolved.reporters)
       .map((i) => {
         if (typeof i === 'string') {
+          // @ts-expect-error cli type
           const Reporter = ReportersMap[i]
           if (!Reporter)
             throw new Error(`Unknown reporter: ${i}`)
