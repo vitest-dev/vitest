@@ -128,7 +128,7 @@ declare global {
         : A[K] extends (...args: any[]) => any
           ? A[K] // not converting function since they may contain overload
           : VitestAssertion<A[K]>
-    } & ((type: string, message?: string) => void)
+    } & ((type: string, message?: string) => Assertion)
 
     interface Assertion<T = any> extends VitestAssertion<Chai.Assertion>, JestAssertion<T> {
       resolves: Promisify<Assertion<T>>
