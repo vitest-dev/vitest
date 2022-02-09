@@ -6,10 +6,9 @@ export default function () {
 
   return Foo;
 }
-`;
-  return message;
+`
+  return message
 }
-
 
 test('non default snapshot format', () => {
   expect({ foo: ['bar'] }).toMatchInlineSnapshot(`
@@ -22,5 +21,5 @@ test('non default snapshot format', () => {
 })
 
 test('multiline strings ', () => {
-  expect(println()).toMatchSnapshot();
-});
+  expect(println()).toMatchSnapshot()
+})
