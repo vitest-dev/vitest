@@ -49,6 +49,7 @@ export const configDefaults: UserConfig = Object.freeze({
   isolate: true,
   watchIgnore: [/\/node_modules\//, /\/dist\//],
   update: false,
+  run: !!process.env.CI,
   watch: !process.env.CI,
   reporters: ['default'],
   silent: false,

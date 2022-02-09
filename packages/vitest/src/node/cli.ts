@@ -35,6 +35,7 @@ cli
 
 cli
   .command('run [...filters]')
+  .option('--run', 'do not watch', { default: true })
   .action(run)
 
 cli
