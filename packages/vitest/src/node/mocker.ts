@@ -91,7 +91,7 @@ export class VitestMocker {
     const path = await this.options.resolveId(id, importer)
     return {
       path: normalizeId(path?.id || id),
-      external: path?.external ?? path?.id.includes('/node_modules/') ? id : null,
+      external: path?.external || path?.id.includes('/node_modules/') ? id : null,
     }
   }
 
