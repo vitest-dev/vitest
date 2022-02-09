@@ -20,7 +20,7 @@ const defaultCoverageExcludes = [
   '**/.{eslint,mocha}rc.{js,cjs}',
 ]
 
-export const defaultCoverageConfig = Object.freeze({
+export const coverageConfigDefaults = Object.freeze({
   enabled: false,
   clean: true,
   cleanOnRerun: false,
@@ -34,7 +34,7 @@ export const defaultCoverageConfig = Object.freeze({
   extension: ['.js', '.cjs', '.mjs', '.ts', '.tsx', '.jsx', '.vue', 'svelte'],
 }) as ResolvedC8Options
 
-export const defaultConfig: UserConfig = Object.freeze({
+export const configDefaults: UserConfig = Object.freeze({
   globals: false,
   environment: 'node',
   threads: true,
@@ -55,7 +55,7 @@ export const defaultConfig: UserConfig = Object.freeze({
   ui: false,
   uiBase: '/__vitest__/',
   open: true,
-  coverage: defaultCoverageConfig,
+  coverage: coverageConfigDefaults,
 })
 
 // if changed, update also jsdocs and docs

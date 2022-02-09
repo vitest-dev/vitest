@@ -24,11 +24,11 @@ export default defineConfig({
 You can retrieve Vitest's default options to expand them if needed:
 
 ```ts
-import { defineConfig, defaultConfig } from 'vitest'
+import { defineConfig, configDefaults } from 'vitest'
 
 export default defineConfig({
   test: {
-    exclude: [...defaultConfig.exclude, 'packages/template/*'],
+    exclude: [...configDefaults.exclude, 'packages/template/*'],
   },
 })
 ```

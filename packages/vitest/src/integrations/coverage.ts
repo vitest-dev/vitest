@@ -7,11 +7,11 @@ import type { RawSourceMap } from 'vite-node'
 import type { Vitest } from '../node'
 import { toArray } from '../utils'
 import type { C8Options, ResolvedC8Options } from '../types'
-import { defaultCoverageConfig } from '../constants'
+import { coverageConfigDefaults } from '../constants'
 
 export function resolveC8Options(options: C8Options, root: string): ResolvedC8Options {
   const resolved: ResolvedC8Options = {
-    ...defaultCoverageConfig,
+    ...coverageConfigDefaults,
     ...options as any,
   }
 
