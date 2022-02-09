@@ -35,7 +35,7 @@ cli
 
 cli
   .command('run [...filters]')
-  .action(runInRunMode)
+  .action((cliFilters: string[], argv: UserConfig) => run(cliFilters, { ...argv, run: true, watch: false }))
 
 cli
   .command('related [...filters]')
@@ -54,10 +54,6 @@ cli
   .action(run)
 
 cli.parse()
-
-async function runInRunMode(cliFilters: string[], argv: UserConfig) {
-  await run(cliFilters, { ...argv, run: true })
-}
 
 async function runRelated(relatedFiles: string[] | string, argv: UserConfig) {
   argv.related = relatedFiles
