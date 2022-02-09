@@ -35,8 +35,7 @@ cli
 
 cli
   .command('run [...filters]')
-  .option('--run', 'do not watch', { default: true })
-  .action(run)
+  .action(runInRunMode)
 
 cli
   .command('related [...filters]')
@@ -44,26 +43,26 @@ cli
 
 cli
   .command('watch [...filters]')
-  .action(dev)
+  .action(run)
 
 cli
   .command('dev [...filters]')
-  .action(dev)
+  .action(run)
 
 cli
   .command('[...filters]')
-  .action(dev)
+  .action(run)
 
 cli.parse()
+
+async function runInRunMode(cliFilters: string[], argv: UserConfig) {
+  await run(cliFilters, { ...argv, run: true })
+}
 
 async function runRelated(relatedFiles: string[] | string, argv: UserConfig) {
   argv.related = relatedFiles
   argv.passWithNoTests ??= true
-  await dev([], argv)
-}
-
-async function dev(cliFilters: string[], argv: UserConfig) {
-  await run(cliFilters, argv)
+  await run([], argv)
 }
 
 async function run(cliFilters: string[], options: UserConfig) {
