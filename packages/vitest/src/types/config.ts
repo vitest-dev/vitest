@@ -159,7 +159,7 @@ export interface InlineConfig {
   /**
    * Default timeout of a hook in milliseconds
    *
-   * @default 5000
+   * @default 10000
    */
   hookTimeout?: number
 

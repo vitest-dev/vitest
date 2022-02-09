@@ -1,4 +1,5 @@
 import type { Plugin as VitePlugin } from 'vite'
+import { configDefaults } from '../../constants'
 import type { UserConfig } from '../../types'
 import { deepMerge, ensurePackageInstalled, notNullish } from '../../utils'
 import { resolveApiConfig } from '../config'
@@ -27,6 +28,9 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
         preOptions.api = resolveApiConfig(preOptions)
 
         return {
+          // we are setting NODE_ENV when running CLI to 'test',
+          // but it can be overriden
+          mode: viteConfig.mode || process.env.NODE_ENV || 'test',
           clearScreen: false,
           resolve: {
             // by default Vite resolves `module` field, which not always a native ESM module
@@ -46,8 +50,14 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
       },
       async configResolved(viteConfig) {
         // viteConfig.test is final now, merge it for real
-        options = deepMerge(options, viteConfig.test as any || {})
+        options = deepMerge(
+          {},
+          configDefaults,
+          (viteConfig.test as any) || {},
+          options,
+        )
         options.api = resolveApiConfig(options)
+        options.watch = options.watch && !options.run
 
         process.env.BASE_URL ??= viteConfig.base
         process.env.MODE ??= viteConfig.mode
