@@ -7,7 +7,14 @@ import { GlobalSetupPlugin } from './globalSetup'
 import { MocksPlugin } from './mock'
 
 function createDefaultConfig(options: UserConfig): Partial<UserConfig> {
-  return { watch: !process.env.CI && !options.run }
+  return {
+    allowOnly: !process.env.CI,
+    environment: 'node',
+    isolate: true,
+    open: true,
+    threads: true,
+    watch: !process.env.CI && !options.run,
+  }
 }
 
 export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest()): Promise<VitePlugin[]> {
