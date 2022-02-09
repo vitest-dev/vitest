@@ -1,21 +1,11 @@
 import type { Plugin as VitePlugin } from 'vite'
+import { configDefaults } from '../../constants'
 import type { UserConfig } from '../../types'
 import { deepMerge, ensurePackageInstalled, notNullish } from '../../utils'
 import { resolveApiConfig } from '../config'
 import { Vitest } from '../core'
 import { GlobalSetupPlugin } from './globalSetup'
 import { MocksPlugin } from './mock'
-
-function createDefaultConfig(options: UserConfig): Partial<UserConfig> {
-  return {
-    allowOnly: !process.env.CI,
-    environment: 'node',
-    isolate: true,
-    open: true,
-    threads: true,
-    watch: !process.env.CI && !options.run,
-  }
-}
 
 export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest()): Promise<VitePlugin[]> {
   let haveStarted = false
@@ -57,11 +47,13 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
       async configResolved(viteConfig) {
         // viteConfig.test is final now, merge it for real
         options = deepMerge(
-          createDefaultConfig(options),
+          {},
+          configDefaults,
           (viteConfig.test as any) || {},
           options,
         )
         options.api = resolveApiConfig(options)
+        options.watch = options.watch && !options.run
       },
       async configureServer(server) {
         if (haveStarted)

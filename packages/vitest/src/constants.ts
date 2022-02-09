@@ -35,6 +35,7 @@ export const coverageConfigDefaults = Object.freeze({
 }) as ResolvedC8Options
 
 export const configDefaults: UserConfig = Object.freeze({
+  allowOnly: !process.env.CI,
   globals: false,
   environment: 'node',
   threads: true,
@@ -48,7 +49,8 @@ export const configDefaults: UserConfig = Object.freeze({
   isolate: true,
   watchIgnore: [/\/node_modules\//, /\/dist\//],
   update: false,
-  watch: true,
+  run: process.env.CI,
+  watch: !process.env.CI,
   reporters: 'default',
   silent: false,
   api: false,
