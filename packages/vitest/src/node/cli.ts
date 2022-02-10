@@ -62,6 +62,8 @@ async function runRelated(relatedFiles: string[] | string, argv: UserConfig) {
 }
 
 async function dev(cliFilters: string[], argv: UserConfig) {
+  if (argv.watch == null)
+    argv.watch = !process.env.CI && !argv.run
   await run(cliFilters, argv)
 }
 
