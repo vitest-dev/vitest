@@ -10,7 +10,7 @@ You can learn more about the rationale behind the project in the [Why Vite](./wh
 
 ## Trying Vitest Online
 
-You can try Vitest online on [StackBlitz](https://vitest.dev/new). It runs Vitest directly in the browser, and it is almost identical to the local setup but doesn't require installing anything on your machine.
+You can try Vitest online on [StackBlitz](https://vitest.new). It runs Vitest directly in the browser, and it is almost identical to the local setup but doesn't require installing anything on your machine.
 
 ## Adding Vitest to your Project
 
