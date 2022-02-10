@@ -1,4 +1,3 @@
-import { util } from 'chai'
 import type { SpyImpl } from 'tinyspy'
 import * as tinyspy from 'tinyspy'
 
@@ -228,7 +227,9 @@ function enhanceSpy<TArgs extends any[], TReturns>(
   stub.mockRejectedValueOnce = (val: unknown) =>
     stub.mockImplementationOnce(() => Promise.reject(val))
 
-  util.addProperty(stub, 'mock', () => mockContext)
+  Object.defineProperty(stub, 'mock', {
+    get: () => mockContext,
+  })
 
   stub.willCall(function(this: unknown, ...args) {
     instances.push(this)

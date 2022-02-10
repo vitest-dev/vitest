@@ -6,12 +6,11 @@ import { VitestMocker } from './mocker'
 export type ResolveIdFunction = (id: string, importer?: string) => Promise<ViteNodeResolveId | null>
 
 export interface ExecuteOptions extends ViteNodeRunnerOptions {
-  files: string[]
   mockMap: SuiteMocks
   resolveId: ResolveIdFunction
 }
 
-export async function executeInViteNode(options: ExecuteOptions) {
+export async function executeInViteNode(options: ExecuteOptions & { files: string[] }) {
   const runner = new VitestRunner(options)
 
   const result: any[] = []

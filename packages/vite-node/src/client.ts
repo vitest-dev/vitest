@@ -66,9 +66,15 @@ export class ViteNodeRunner {
 
     const { code: transformed, externalize } = await this.options.fetchModule(id)
     if (externalize) {
-      const mod = await this.interopedImport(externalize)
-      this.setCache(id, { exports: mod })
-      return mod
+      try {
+        const mod = await this.interopedImport(externalize)
+        this.setCache(id, { exports: mod })
+        return mod
+      }
+      catch (err) {
+        console.log(id, externalize, callstack)
+        throw err
+      }
     }
 
     if (transformed == null)
@@ -148,6 +154,7 @@ export class ViteNodeRunner {
    * Import a module and interop it
    */
   async interopedImport(path: string) {
+    console.log(path)
     const mod = await import(path)
 
     if (this.shouldInterop(path, mod)) {

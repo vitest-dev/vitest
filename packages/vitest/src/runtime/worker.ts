@@ -10,8 +10,8 @@ let _viteNode: {
   run: (files: string[], config: ResolvedConfig) => Promise<void>
   collect: (files: string[], config: ResolvedConfig) => Promise<void>
 }
-const moduleCache: Map<string, ModuleCache> = new Map()
-const mockMap = {}
+export const moduleCache: Map<string, ModuleCache> = new Map()
+export const mockMap = {}
 
 async function startViteNode(ctx: WorkerContext) {
   if (_viteNode)
