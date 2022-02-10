@@ -105,5 +105,13 @@ export function resolveConfig(
   if (options.related)
     resolved.related = toArray(options.related).map(file => resolve(resolved.root, file))
 
+  resolved.reporters = Array.from(new Set([
+    ...toArray(resolved.reporters),
+    // @ts-expect-error from CLI
+    ...toArray(resolved.reporter),
+  ])).filter(Boolean)
+  if (!resolved.reporters.length)
+    resolved.reporters.push('default')
+
   return resolved
 }

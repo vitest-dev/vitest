@@ -316,7 +316,7 @@ export interface UserConfig extends InlineConfig {
   related?: string[] | string
 }
 
-export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api'> {
+export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters'> {
   base?: string
 
   config?: string
@@ -326,6 +326,8 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
 
   coverage: ResolvedC8Options
   snapshotOptions: SnapshotStateOptions
+
+  reporters: (Reporter | BuiltinReporters)[]
 
   api?: ApiConfig
 }

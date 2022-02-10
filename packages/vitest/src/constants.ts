@@ -49,7 +49,7 @@ export const configDefaults: UserConfig = Object.freeze({
   isolate: true,
   watchIgnore: [/\/node_modules\//, /\/dist\//],
   update: false,
-  reporters: ['default'],
+  reporters: [],
   silent: false,
   api: false,
   ui: false,
