@@ -32,9 +32,9 @@ interface InlineWorkerContext {
   addEventListener: (e: string, fn: Procedure) => void
   removeEventListener: (e: string, fn: Procedure) => void
   postMessage: (data: any) => void
-  self?: InlineWorkerContext
-  // fetch: global.fetch,
-  // importScripts() {}
+  self: InlineWorkerContext
+  invalidate: string[]
+  importScripts?: any
 }
 
 class InlineWorkerRunner extends VitestRunner {
@@ -44,8 +44,11 @@ class InlineWorkerRunner extends VitestRunner {
 
   prepareContext(context: Record<string, any>) {
     const ctx = super.prepareContext(context)
+    // not supported for now
+    // need to be async
+    this.context.self.importScripts = () => {}
     return Object.assign(ctx, this.context, {
-      importScripts: (...paths: string[]) => Promise.all(paths.map(ctx.__vite_ssr_dynamic_import__)),
+      importScripts: () => {},
     })
   }
 }
@@ -77,6 +80,7 @@ export function defineInlineWorker() {
     public onerror: null | Procedure = null
 
     constructor(url: URL | string) {
+      const invalidate: string[] = []
       const context: InlineWorkerContext = {
         onmessage: null,
         dispatchEvent: (event: Event) => {
@@ -88,9 +92,11 @@ export function defineInlineWorker() {
         postMessage: (data) => {
           this.outside.emit('message', { data })
         },
+        get self() {
+          return context
+        },
+        invalidate,
       }
-
-      context.self = context
 
       this.inside.on('message', (e) => {
         context.onmessage?.(e)
@@ -109,11 +115,15 @@ export function defineInlineWorker() {
 
       id = id.replace('?worker_file', '')
 
+      invalidate.push(id)
+
       runner.executeId(id)
         .then(() => {
-          // worker should be new every time
-          moduleCache.delete(id)
-          moduleCache.delete(`${id}__mock`)
+          invalidate.forEach((path) => {
+            // worker should be new every time
+            moduleCache.delete(path)
+            moduleCache.delete(`${path}__mock`)
+          })
           const q = this.messageQueue
           this.messageQueue = null
           if (q)
