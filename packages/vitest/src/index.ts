@@ -16,6 +16,8 @@ export * from './integrations/vi'
 export * from './types'
 export * from './api/types'
 
+export { configDefaults } from './constants'
+
 declare module 'vite' {
   interface UserConfig {
     /**
@@ -122,15 +124,15 @@ declare global {
 
     // eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error
     // @ts-ignore build namspace conflict
-    type VitestAssertion<A> = {
+    type VitestAssertion<A, T> = {
       [K in keyof A]: A[K] extends Chai.Assertion
-        ? Assertion<any>
+        ? Assertion<T>
         : A[K] extends (...args: any[]) => any
           ? A[K] // not converting function since they may contain overload
-          : VitestAssertion<A[K]>
-    }
+          : VitestAssertion<A[K], T>
+    } & ((type: string, message?: string) => Assertion)
 
-    interface Assertion<T = any> extends VitestAssertion<Chai.Assertion>, JestAssertion<T> {
+    interface Assertion<T = any> extends VitestAssertion<Chai.Assertion, T>, JestAssertion<T> {
       resolves: Promisify<Assertion<T>>
       rejects: Promisify<Assertion<T>>
     }
