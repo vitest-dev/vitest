@@ -45,7 +45,7 @@ class InlineWorkerRunner extends VitestRunner {
   prepareContext(context: Record<string, any>) {
     const ctx = super.prepareContext(context)
     return Object.assign(ctx, this.context, {
-      importScripts: ctx.__vite_ssr_dynamic_import__,
+      importScripts: (...paths: string[]) => Promise.all(paths.map(ctx.__vite_ssr_dynamic_import__)),
     })
   }
 }
@@ -88,8 +88,6 @@ export function defineInlineWorker() {
         postMessage: (data) => {
           this.outside.emit('message', { data })
         },
-        // fetch: global.fetch,
-        // importScripts() {}
       }
 
       context.self = context
@@ -104,14 +102,22 @@ export function defineInlineWorker() {
 
       const runner = new InlineWorkerRunner(runnerOptions, context)
 
-      const id = url instanceof URL ? url.toString() : url
+      let id = url instanceof URL ? url.toString() : url
+
+      if (id.startsWith('file://'))
+        id = id.slice('file://'.length)
+
+      id = id.replace('?worker_file', '')
 
       runner.executeId(id)
         .then(() => {
+          // worker should be new every time
+          moduleCache.delete(id)
+          moduleCache.delete(`${id}__mock`)
           const q = this.messageQueue
           this.messageQueue = null
           if (q)
-            q.forEach(this.postMessage)
+            q.forEach(this.postMessage, this)
         }).catch((e) => {
           this.outside.emit('error', e)
           this.onerror?.(e)

@@ -2,7 +2,7 @@
   "name": "@vitest/test-core",
   "private": true,
   "scripts": {
-    "test": "vitest test/dom.test.ts",
+    "test": "vitest",
     "coverage": "vitest run --coverage"
   },
   "devDependencies": {

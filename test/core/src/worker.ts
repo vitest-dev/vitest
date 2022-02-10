@@ -1,3 +1,3 @@
 self.onmessage = (e) => {
-  console.log('hello', e)
+  self.postMessage(`${e.data} world`)
 }
