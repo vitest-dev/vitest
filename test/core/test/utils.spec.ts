@@ -3,7 +3,7 @@ import { deepMerge } from '../../../packages/vitest/src/utils'
 import { deepMergeSnapshot } from '../../../packages/vitest/src/integrations/snapshot/port/utils'
 
 describe('deepMerge', () => {
-  test('non plain objects retain their prototype, arrays are merging, plain objects are merging', () => {
+  test('non plain objects retain their prototype, arrays are not merging, plain objects are merging', () => {
     class Test {
       baz = 'baz'
 
@@ -37,7 +37,7 @@ describe('deepMerge', () => {
 
     expect(merged.test instanceof Test).toBe(true)
     expect(merged.num).toBe(40)
-    expect(merged.array).toEqual([1, 2, 3, 4])
+    expect(merged.array).toEqual([3, 4])
     expect(merged.obj).toEqual({
       foo: 'foo',
       baz: 'baz',
