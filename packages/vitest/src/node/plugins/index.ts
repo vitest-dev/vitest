@@ -29,7 +29,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
 
         return {
           // we are setting NODE_ENV when running CLI to 'test',
-          // but it can be overriden
+          // but it can be overridden
           mode: viteConfig.mode || process.env.NODE_ENV || 'test',
           clearScreen: false,
           resolve: {
@@ -49,11 +49,15 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
         }
       },
       async configResolved(viteConfig) {
+        const viteConfigTest = (viteConfig.test as any) || {}
+        if (viteConfigTest.watch === false)
+          viteConfigTest.run = true
+
         // viteConfig.test is final now, merge it for real
         options = deepMerge(
           {},
           configDefaults,
-          (viteConfig.test as any) || {},
+          viteConfigTest,
           options,
         )
         options.api = resolveApiConfig(options)
