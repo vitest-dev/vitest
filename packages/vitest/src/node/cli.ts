@@ -1,4 +1,5 @@
 import cac from 'cac'
+import c from 'picocolors'
 import { execa } from 'execa'
 import type { UserConfig } from '../types'
 import { version } from '../../package.json'
@@ -76,6 +77,11 @@ async function run(cliFilters: string[], options: UserConfig) {
 
   if (typeof options.coverage === 'boolean')
     options.coverage = { enabled: options.coverage }
+
+  if (options.run === options.watch) {
+    console.error(c.red(`${c.inverse(c.red(' CLI '))} Run mode and Watch mode cannot be activated simultaneously`))
+    process.exit(1)
+  }
 
   const ctx = await createVitest(options)
 
