@@ -8,7 +8,18 @@ import { GlobalSetupPlugin } from './globalSetup'
 import { MocksPlugin } from './mock'
 import { EnvReplacerPlugin } from './envReplacer'
 
-export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest()): Promise<VitePlugin[]> {
+function isWatchArg() {
+  return (
+    process.argv.includes('-w')
+    || process.argv.includes('--watch')
+    || process.argv.includes('watch')
+  )
+}
+
+export async function VitestPlugin(
+  options: UserConfig = {},
+  ctx = new Vitest(),
+): Promise<VitePlugin[]> {
   let haveStarted = false
 
   async function UIPlugin() {
@@ -39,9 +50,10 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
           },
           server: {
             ...preOptions.api,
-            open: preOptions.ui && preOptions.open
-              ? preOptions.uiBase ?? '/__vitest__/'
-              : undefined,
+            open:
+              preOptions.ui && preOptions.open
+                ? preOptions.uiBase ?? '/__vitest__/'
+                : undefined,
             preTransformRequests: false,
           },
           // disable deps optimization
@@ -50,18 +62,15 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
       },
       async configResolved(viteConfig) {
         const viteConfigTest = (viteConfig.test as any) || {}
-        if (viteConfigTest.watch === false)
-          viteConfigTest.run = true
+        if (viteConfigTest.watch === false) viteConfigTest.run = true
 
         // viteConfig.test is final now, merge it for real
-        options = deepMerge(
-          {},
-          configDefaults,
-          viteConfigTest,
-          options,
-        )
+        options = deepMerge({}, configDefaults, viteConfigTest, options)
         options.api = resolveApiConfig(options)
-        options.watch = options.watch && !options.run
+        if (isWatchArg())
+          options.watch = true
+        else
+          options.watch = options.watch && !options.run
 
         process.env.BASE_URL ??= viteConfig.base
         process.env.MODE ??= viteConfig.mode
@@ -76,29 +85,24 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
           if (key.startsWith('import.meta.env.')) {
             const val = viteConfig.define[key]
             const envKey = key.slice('import.meta.env.'.length)
-            process.env[envKey] = typeof val === 'string' ? JSON.parse(val) : val
+            process.env[envKey]
+              = typeof val === 'string' ? JSON.parse(val) : val
           }
         }
       },
       async configureServer(server) {
-        if (haveStarted)
-          await ctx.report('onServerRestart')
+        if (haveStarted) await ctx.report('onServerRestart')
         await ctx.setServer(options, server)
         haveStarted = true
-        if (options.api)
-          (await import('../../api/setup')).setup(ctx)
+        if (options.api) (await import('../../api/setup')).setup(ctx)
 
         // #415, in run mode we don't need the watcher, close it would improve the performance
-        if (!options.watch)
-          await server.watcher.close()
+        if (!options.watch) await server.watcher.close()
       },
     },
     EnvReplacerPlugin(),
     MocksPlugin(),
     GlobalSetupPlugin(ctx),
-    options.ui
-      ? await UIPlugin()
-      : null,
-  ]
-    .filter(notNullish)
+    options.ui ? await UIPlugin() : null,
+  ].filter(notNullish)
 }
