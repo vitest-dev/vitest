@@ -45,7 +45,6 @@ export function resolveConfig(
   options: UserConfig,
   viteConfig: ResolvedViteConfig,
 ): ResolvedConfig {
-
   if (options.dom) {
     if (
       viteConfig.test?.environment != null
