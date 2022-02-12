@@ -189,7 +189,32 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     )
   })
   def('toBeGreaterThanOrEqual', function(expected: number) {
-    return this.to.greaterThanOrEqual(expected)
+    const actual = this._obj
+    if (typeof actual !== 'number' && typeof actual !== 'bigint') {
+      return this.assert(
+        false,
+        `expected "${actual}" to be a number or bigint`,
+        `expected "${actual}" to be a number or bigint`,
+        actual,
+        expected,
+      )
+    }
+    if (typeof expected !== 'number' && typeof expected !== 'bigint') {
+      return this.assert(
+        false,
+        `expected "${expected}" to be a number or bigint`,
+        `expected "${expected}" to be a number or bigint`,
+        actual,
+        expected,
+      )
+    }
+    return this.assert(
+      actual >= expected,
+      `expected ${actual} to be above ${expected}`,
+      `expected ${actual} not to be above ${expected}`,
+      actual,
+      expected,
+    )
   })
   def('toBeLessThan', function(expected: number) {
     return this.to.lessThan(expected)
