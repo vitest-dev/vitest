@@ -6,7 +6,7 @@
 
 Vitest is a blazing fast unit test framework powered by Vite.
 
-You can learn more about the rationale behind the project in the [Why Vite](./why) section.
+You can learn more about the rationale behind the project in the [Why Vitest](./why) section.
 
 ## Trying Vitest Online
 
