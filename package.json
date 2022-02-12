@@ -56,5 +56,10 @@
     "vitepress": "^0.21.6",
     "vitest": "workspace:*",
     "vue": "^3.2.25"
+  },
+  "pnpm": {
+    "overrides": {
+      "vite": "^2.8.1"
+    }
   }
 }

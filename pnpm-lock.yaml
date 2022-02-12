@@ -1,5 +1,8 @@
 lockfileVersion: 5.3
 
+overrides:
+  vite: ^2.8.1
+
 importers:
 
   .:
@@ -90,7 +93,7 @@ importers:
   examples/basic:
     specifiers:
       '@vitest/ui': latest
-      vite: latest
+      vite: ^2.8.1
       vitest: latest
     devDependencies:
       '@vitest/ui': link:../../packages/ui
@@ -102,7 +105,7 @@ importers:
       '@vitest/ui': latest
       happy-dom: latest
       lit: ^2.1.3
-      vite: latest
+      vite: ^2.8.1
       vitest: latest
     dependencies:
       lit: 2.1.3
@@ -118,7 +121,7 @@ importers:
       '@vueuse/integrations': ^7.5.5
       axios: ^0.25.0
       tinyspy: ^0.2.10
-      vite: latest
+      vite: ^2.8.1
       vitest: latest
     dependencies:
       '@vueuse/integrations': 7.5.5_vue@3.2.26
@@ -133,7 +136,7 @@ importers:
     specifiers:
       '@vitest/ui': latest
       puppeteer: ^13.0.0
-      vite: latest
+      vite: ^2.8.1
       vitest: latest
     devDependencies:
       '@vitest/ui': link:../../packages/ui
@@ -174,7 +177,7 @@ importers:
       enzyme-adapter-react-16: 1.15.6
       react: ^17.0.2
       react-dom: ^17.0.2
-      vite: latest
+      vite: ^2.8.1
       vitest: latest
     dependencies:
       react: 17.0.2
@@ -208,7 +211,7 @@ importers:
       react-router-dom: ^6.2.1
       recharts: ^2.1.8
       swr: ^1.2.1
-      vite: latest
+      vite: ^2.8.1
       vitest: latest
     dependencies:
       '@emotion/react': 11.7.1_react@17.0.2
@@ -257,7 +260,7 @@ importers:
       react-query: ^3.34.14
       storybook-builder-vite: ^0.1.15
       typescript: ^4.5.5
-      vite: latest
+      vite: ^2.8.1
       vitest: latest
     dependencies:
       cross-fetch: 3.1.5
@@ -300,7 +303,7 @@ importers:
       jsdom: latest
       react: ^17.0.2
       react-dom: ^17.0.2
-      vite: latest
+      vite: ^2.8.1
       vitest: latest
     dependencies:
       react: 17.0.2
@@ -332,7 +335,7 @@ importers:
       msw: ^0.36.8
       react: ^17.0.2
       react-dom: ^17.0.2
-      vite: latest
+      vite: ^2.8.1
       vitest: latest
     dependencies:
       '@apollo/client': 3.5.8_react@17.0.2
@@ -423,7 +426,7 @@ importers:
       '@vitejs/plugin-vue-jsx': ^1.3.3
       '@vue/test-utils': ^2.0.0-rc.18
       happy-dom: latest
-      vite: latest
+      vite: ^2.8.1
       vitest: latest
       vue: ^3.2.26
     devDependencies:
@@ -492,7 +495,7 @@ importers:
       mlly: ^0.4.2
       pathe: ^0.2.0
       rollup: ^2.67.1
-      vite: ^2.7.13
+      vite: ^2.8.1
     dependencies:
       kolorist: 1.5.1
       minimist: 1.2.5
@@ -548,7 +551,7 @@ importers:
       tinypool: ^0.1.1
       tinyspy: ^0.2.10
       typescript: ^4.5.5
-      vite: ^2.7.13
+      vite: ^2.8.1
       vite-node: workspace:*
       ws: ^8.5.0
     dependencies:
@@ -6236,17 +6239,6 @@ packages:
       - supports-color
     dev: true
 
-  /@vitejs/plugin-vue/2.1.0_vite@2.7.13+vue@3.2.27:
-    resolution: {integrity: sha512-AZ78WxvFMYd8JmM/GBV6a6SGGTU0GgN/0/4T+FnMMsLzFEzTeAUwuraapy50ifHZsC+G5SvWs86bvaCPTneFlA==}
-    engines: {node: '>=12.0.0'}
-    peerDependencies:
-      vite: ^2.5.10
-      vue: ^3.2.25
-    dependencies:
-      vite: 2.7.13
-      vue: 3.2.27
-    dev: true
-
   /@vitejs/plugin-vue/2.1.0_vite@2.8.1+vue@3.2.26:
     resolution: {integrity: sha512-AZ78WxvFMYd8JmM/GBV6a6SGGTU0GgN/0/4T+FnMMsLzFEzTeAUwuraapy50ifHZsC+G5SvWs86bvaCPTneFlA==}
     engines: {node: '>=12.0.0'}
@@ -6256,6 +6248,17 @@ packages:
     dependencies:
       vite: 2.8.1
       vue: 3.2.26
+    dev: true
+
+  /@vitejs/plugin-vue/2.1.0_vite@2.8.1+vue@3.2.27:
+    resolution: {integrity: sha512-AZ78WxvFMYd8JmM/GBV6a6SGGTU0GgN/0/4T+FnMMsLzFEzTeAUwuraapy50ifHZsC+G5SvWs86bvaCPTneFlA==}
+    engines: {node: '>=12.0.0'}
+    peerDependencies:
+      vite: ^2.5.10
+      vue: ^3.2.25
+    dependencies:
+      vite: 2.8.1
+      vue: 3.2.27
     dev: true
 
   /@vue/babel-helper-vue-transform-on/1.0.2:
@@ -17114,30 +17117,6 @@ packages:
       - supports-color
     dev: true
 
-  /vite/2.7.13:
-    resolution: {integrity: sha512-Mq8et7f3aK0SgSxjDNfOAimZGW9XryfHRa/uV0jseQSilg+KhYDSoNb9h1rknOy6SuMkvNDLKCYAYYUMCE+IgQ==}
-    engines: {node: '>=12.2.0'}
-    hasBin: true
-    peerDependencies:
-      less: '*'
-      sass: '*'
-      stylus: '*'
-    peerDependenciesMeta:
-      less:
-        optional: true
-      sass:
-        optional: true
-      stylus:
-        optional: true
-    dependencies:
-      esbuild: 0.13.15
-      postcss: 8.4.5
-      resolve: 1.21.0
-      rollup: 2.67.1
-    optionalDependencies:
-      fsevents: 2.3.2
-    dev: true
-
   /vite/2.8.1:
     resolution: {integrity: sha512-Typ8qjUnW0p53gBsJpisrKcZlEbUPZATja9BG6Z09QZjg9YrnEn/htkr/VH4WhnH7eNUQeSD+wKI1lHzQRWskw==}
     engines: {node: '>=12.2.0'}
@@ -17168,9 +17147,9 @@ packages:
     dependencies:
       '@docsearch/css': 3.0.0-alpha.42
       '@docsearch/js': 3.0.0-alpha.42
-      '@vitejs/plugin-vue': 2.1.0_vite@2.7.13+vue@3.2.27
+      '@vitejs/plugin-vue': 2.1.0_vite@2.8.1+vue@3.2.27
       prismjs: 1.25.0
-      vite: 2.7.13
+      vite: 2.8.1
       vue: 3.2.27
     transitivePeerDependencies:
       - '@algolia/client-search'
@@ -17208,7 +17187,7 @@ packages:
       local-pkg: 0.4.1
       tinypool: 0.1.1
       tinyspy: 0.2.10
-      vite: 2.7.13
+      vite: 2.8.1
     transitivePeerDependencies:
       - less
       - sass
