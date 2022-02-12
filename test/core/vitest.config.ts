@@ -17,6 +17,9 @@ export default defineConfig({
       },
     },
   ],
+  define: {
+    'import.meta.env.TEST_NAME': '"hello world"',
+  },
   test: {
     testTimeout: 2000,
     // threads: false,

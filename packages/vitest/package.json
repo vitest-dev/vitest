@@ -1,6 +1,6 @@
 {
   "name": "vitest",
-  "version": "0.2.7",
+  "version": "0.3.4",
   "description": "A blazing fast unit test framework powered by Vite",
   "keywords": [
     "vite",
@@ -61,16 +61,16 @@
     "local-pkg": "^0.4.1",
     "tinypool": "^0.1.1",
     "tinyspy": "^0.2.10",
-    "vite": ">=2.7.13"
+    "vite": "^2.7.13"
   },
   "devDependencies": {
     "@antfu/install-pkg": "^0.1.0",
-    "@sinonjs/fake-timers": "^9.0.0",
+    "@sinonjs/fake-timers": "^9.1.0",
     "@types/diff": "^5.0.2",
     "@types/jsdom": "^16.2.14",
     "@types/micromatch": "^4.0.2",
     "@types/natural-compare": "^1.4.1",
-    "@types/node": "^17.0.14",
+    "@types/node": "^17.0.16",
     "@types/prompts": "^2.4.0",
     "@types/sinonjs__fake-timers": "^8.1.1",
     "@vitest/ui": "workspace:*",
@@ -89,20 +89,20 @@
     "log-update": "^5.0.0",
     "magic-string": "^0.25.7",
     "micromatch": "^4.0.4",
-    "mlly": "^0.4.1",
+    "mlly": "^0.4.2",
     "mockdate": "^3.0.5",
     "natural-compare": "^1.4.0",
     "pathe": "^0.2.0",
     "picocolors": "^1.0.0",
     "pkg-types": "^0.3.2",
-    "pretty-format": "^27.4.6",
+    "pretty-format": "^27.5.0",
     "prompts": "^2.4.2",
-    "rollup": "^2.67.0",
+    "rollup": "^2.67.1",
     "source-map-js": "^1.0.2",
     "strip-ansi": "^7.0.1",
     "typescript": "^4.5.5",
     "vite-node": "workspace:*",
-    "ws": "^8.4.2"
+    "ws": "^8.5.0"
   },
   "peerDependencies": {
     "@vitest/ui": "*",

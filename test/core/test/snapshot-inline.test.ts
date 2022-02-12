@@ -87,3 +87,22 @@ test('properties inline snapshot', () => {
     }
   `)
 })
+
+test('literal tag', () => {
+  const html = String.raw
+  const text = `
+<body>
+  <h1>My First Heading.</h1>
+  <p>My first paragraph.</p>
+</body>
+`
+
+  expect(text).toMatchInlineSnapshot(html`
+    "
+    <body>
+      <h1>My First Heading.</h1>
+      <p>My first paragraph.</p>
+    </body>
+    "
+  `)
+})

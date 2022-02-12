@@ -10,7 +10,7 @@
     "react": "^17.0.2"
   },
   "devDependencies": {
-    "@types/react": "^17.0.38",
+    "@types/react": "^17.0.39",
     "@types/react-test-renderer": "^17.0.1",
     "@vitejs/plugin-react": "1.1.4",
     "@vitest/ui": "latest",

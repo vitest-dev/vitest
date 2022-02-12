@@ -7,33 +7,11 @@ import type { RawSourceMap } from 'vite-node'
 import type { Vitest } from '../node'
 import { toArray } from '../utils'
 import type { C8Options, ResolvedC8Options } from '../types'
-
-const defaultExcludes = [
-  'coverage/**',
-  'packages/*/test{,s}/**',
-  '**/*.d.ts',
-  'cypress/**',
-  'test{,s}/**',
-  'test{,-*}.{js,cjs,mjs,ts,tsx,jsx}',
-  '**/*{.,-}test.{js,cjs,mjs,ts,tsx,jsx}',
-  '**/__tests__/**',
-  '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc}.config.{js,cjs,mjs,ts}',
-  '**/.{eslint,mocha}rc.{js,cjs}',
-]
+import { configDefaults } from '../defaults'
 
 export function resolveC8Options(options: C8Options, root: string): ResolvedC8Options {
   const resolved: ResolvedC8Options = {
-    enabled: false,
-    clean: true,
-    cleanOnRerun: false,
-    reportsDirectory: './coverage',
-    excludeNodeModules: true,
-    exclude: defaultExcludes,
-    reporter: ['text', 'html'],
-    allowExternal: false,
-    // default extensions used by c8, plus '.vue' and '.svelte'
-    // see https://github.com/istanbuljs/schema/blob/master/default-extension.js
-    extension: ['.js', '.cjs', '.mjs', '.ts', '.tsx', '.jsx', '.vue', 'svelte'],
+    ...configDefaults.coverage,
     ...options as any,
   }
 
@@ -67,7 +45,7 @@ export async function reportCoverage(ctx: Vitest) {
   const report = createReport(ctx.config.coverage)
 
   // add source maps
-  const sourceMapMata: Record<string, { map: RawSourceMap; source: string | undefined }> = {}
+  const sourceMapMeta: Record<string, { map: RawSourceMap; source: string | undefined }> = {}
   await Promise.all(Array
     .from(ctx.vitenode.fetchCache.entries())
     .filter(i => !i[0].includes('/node_modules/'))
@@ -84,11 +62,11 @@ export async function reportCoverage(ctx: Vitest) {
       }
       catch {}
 
-      const sources = map.sources.length
-        ? map.sources.map(i => pathToFileURL(i).href)
-        : [url]
+      // Vite does not report full path in sourcemap sources
+      // so use an actual file path
+      const sources = [url]
 
-      sourceMapMata[url] = {
+      sourceMapMeta[url] = {
         source: result.code,
         map: {
           sourcesContent: code ? [code] : undefined,
@@ -105,7 +83,7 @@ export async function reportCoverage(ctx: Vitest) {
 
   report._getSourceMap = (coverage: Profiler.ScriptCoverage) => {
     const path = pathToFileURL(coverage.url).href
-    const data = sourceMapMata[path]
+    const data = sourceMapMeta[path]
 
     if (!data)
       return {}

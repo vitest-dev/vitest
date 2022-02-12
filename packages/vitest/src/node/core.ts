@@ -8,7 +8,7 @@ import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig } from '../typ
 import { SnapshotManager } from '../integrations/snapshot/manager'
 import { deepMerge, hasFailed, noop, slash, toArray } from '../utils'
 import { cleanCoverage, reportCoverage } from '../integrations/coverage'
-import { DefaultReporter, ReportersMap } from './reporters'
+import { ReportersMap } from './reporters'
 import { createPool } from './pool'
 import type { WorkerPool } from './pool'
 import { StateManager } from './state'
@@ -60,8 +60,7 @@ export class Vitest {
     this.config = resolved
     this.state = new StateManager()
     this.snapshot = new SnapshotManager(resolved)
-    // @ts-expect-error cli type
-    this.reporters = toArray(resolved.reporters || resolved.reporter)
+    this.reporters = resolved.reporters
       .map((i) => {
         if (typeof i === 'string') {
           const Reporter = ReportersMap[i]
@@ -71,9 +70,6 @@ export class Vitest {
         }
         return i
       })
-
-    if (!this.reporters.length)
-      this.reporters.push(new DefaultReporter())
 
     if (this.config.watch)
       this.registerWatcher()
@@ -284,10 +280,10 @@ export class Vitest {
 
       await this.runFiles(files)
 
-      await this.report('onWatcherStart')
-
       if (this.config.coverage.enabled)
         await reportCoverage(this)
+
+      await this.report('onWatcherStart')
     }, WATCHER_DEBOUNCE)
   }
 
