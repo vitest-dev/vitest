@@ -328,4 +328,6 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
   snapshotOptions: SnapshotStateOptions
 
   api?: ApiConfig
+
+  define?: Record<string, any>
 }

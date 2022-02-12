@@ -43,6 +43,8 @@ export class VitestRunner extends ViteNodeRunner {
       __vite_ssr_dynamic_import__: (dep: string) => mocker.requestWithMock(dep),
 
       __vitest_mocker__: mocker,
+
+      ...process.__vitest_worker__.config.define,
     })
   }
 }
