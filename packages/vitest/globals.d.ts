@@ -11,6 +11,5 @@ declare global {
   const afterAll: typeof import('vitest')['afterAll']
   const beforeEach: typeof import('vitest')['beforeEach']
   const afterEach: typeof import('vitest')['afterEach']
-  let __vitest_worker__: import('vitest').WorkerGlobalState
 }
 export {}
