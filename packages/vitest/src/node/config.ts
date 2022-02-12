@@ -2,7 +2,8 @@ import { resolve } from 'pathe'
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 
 import type { ApiConfig, ResolvedConfig, UserConfig } from '../types'
-import { configDefaults, defaultPort } from '../constants'
+import { defaultPort } from '../constants'
+import { configDefaults } from '../defaults'
 import { resolveC8Options } from '../integrations/coverage'
 import { toArray } from '../utils'
 

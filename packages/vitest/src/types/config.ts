@@ -296,11 +296,6 @@ export interface UserConfig extends InlineConfig {
   dom?: boolean
 
   /**
-   * Do not watch
-   */
-  run?: boolean
-
-  /**
    * Pass with no tests
    */
   passWithNoTests?: boolean

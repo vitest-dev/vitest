@@ -1,5 +1,5 @@
 import type { Plugin as VitePlugin } from 'vite'
-import { configDefaults } from '../../constants'
+import { configDefaults } from '../../defaults'
 import type { UserConfig } from '../../types'
 import { deepMerge, ensurePackageInstalled, notNullish } from '../../utils'
 import { resolveApiConfig } from '../config'
@@ -61,7 +61,6 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
           options,
         )
         options.api = resolveApiConfig(options)
-        options.watch = options.watch && !options.run
 
         process.env.BASE_URL ??= viteConfig.base
         process.env.MODE ??= viteConfig.mode
