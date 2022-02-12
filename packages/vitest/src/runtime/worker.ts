@@ -1,6 +1,6 @@
 import { resolve } from 'pathe'
 import { createBirpc } from 'birpc'
-import type { ModuleCache, ResolvedConfig, WorkerContext, WorkerRPC } from '../types'
+import type { ModuleCache, ResolvedConfig, WorkerContext, WorkerGlobalState, WorkerRPC } from '../types'
 import { distDir } from '../constants'
 import { executeInViteNode } from '../node/execute'
 import { rpc } from './rpc'
@@ -9,6 +9,7 @@ let _viteNode: {
   run: (files: string[], config: ResolvedConfig) => Promise<void>
   collect: (files: string[], config: ResolvedConfig) => Promise<void>
 }
+let __vitest_worker__: WorkerGlobalState
 const moduleCache: Map<string, ModuleCache> = new Map()
 const mockMap = {}
 
@@ -59,7 +60,8 @@ function init(ctx: WorkerContext) {
 
   const { config, port } = ctx
 
-  __vitest_worker__ = {
+  // @ts-expect-error I know what I am doing :P
+  globalThis.__vitest_worker__ = {
     ctx,
     moduleCache,
     config,

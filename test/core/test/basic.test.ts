@@ -2,12 +2,6 @@ import { assert, expect, it, suite, test } from 'vitest'
 import { two } from '../src/submodule'
 import { timeout } from '../src/timeout'
 
-test('mess process', () => {
-  // eslint-disable-next-line no-global-assign
-  // process = 1 as any
-  // expect(process).toStrictEqual(1)
-})
-
 test('Math.sqrt()', async() => {
   assert.equal(Math.sqrt(4), two)
   assert.equal(Math.sqrt(2), Math.SQRT2)
