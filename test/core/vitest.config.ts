@@ -17,6 +17,9 @@ export default defineConfig({
       },
     },
   ],
+  define: {
+    MY_CONSTANT: '"my constant"',
+  },
   test: {
     testTimeout: 2000,
     // threads: false,

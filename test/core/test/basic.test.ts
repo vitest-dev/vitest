@@ -62,3 +62,7 @@ function callbackTest(name: string, doneValue: any) {
 callbackTest('success ', undefined)
 
 callbackTest('success done(false)', false)
+
+test('vite define', () => {
+  expect(MY_CONSTANT).toBe('my constant')
+})
