@@ -84,7 +84,7 @@ declare global {
       toContainEqual<E>(item: E): void
       toBeTruthy(): void
       toBeFalsy(): void
-      toBeGreaterThan(num: number): void
+      toBeGreaterThan(num: number | bigint): void
       toBeGreaterThanOrEqual(num: number): void
       toBeLessThan(num: number): void
       toBeLessThanOrEqual(num: number): void
