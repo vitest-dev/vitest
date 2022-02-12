@@ -1,13 +1,10 @@
-import type {
-  Plugin as PrettyFormatPlugin,
-} from 'pretty-format'
+import type { Plugin as PrettyFormatPlugin } from 'pretty-format'
 import type { Any, Anything } from './integrations/chai/jest-asymmetric-matchers'
 import type { MatcherState, MatchersObject } from './integrations/chai/types'
 import type { Constructable, InlineConfig } from './types'
 
-type VitestInlineConfig = InlineConfig
-
 export { suite, test, describe, it } from './runtime/suite'
+
 export * from './runtime/hooks'
 export * from './integrations/chai'
 export * from './integrations/jest-mock'
@@ -16,7 +13,9 @@ export * from './integrations/vi'
 export * from './types'
 export * from './api/types'
 
-export { configDefaults } from './constants'
+export { configDefaults } from './defaults'
+
+type VitestInlineConfig = InlineConfig
 
 declare module 'vite' {
   interface UserConfig {
