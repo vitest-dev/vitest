@@ -17,10 +17,7 @@ export async function run(files: string[], config: ResolvedConfig): Promise<void
     __vitest_worker__.filepath = file
 
     await withEnv(env as BuiltinEnvironment, config.environmentOptions || {}, async() => {
-      const cacheProcess = process
       await startTests([file], config)
-      // eslint-disable-next-line no-global-assign
-      process = cacheProcess
     })
 
     __vitest_worker__.filepath = undefined
