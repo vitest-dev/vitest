@@ -1,4 +1,5 @@
 import { resolve } from 'pathe'
+import c from 'picocolors'
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 
 import type { ApiConfig, ResolvedConfig, UserConfig } from '../types'
@@ -44,8 +45,25 @@ export function resolveConfig(
   options: UserConfig,
   viteConfig: ResolvedViteConfig,
 ): ResolvedConfig {
-  if (options.dom)
+
+  if (options.dom) {
+    if (
+      viteConfig.test?.environment != null
+      && viteConfig.test!.environment !== 'happy-dom'
+    ) {
+      console.warn(
+        c.yellow(
+          `${c.inverse(c.yellow(' CLI '))} Your config.test.environment ("${
+            viteConfig.test.environment
+          }") conflicts with --dom flag ("happy-dom"), ignoring "${
+            viteConfig.test.environment
+          }"`,
+        ),
+      )
+    }
+
     options.environment = 'happy-dom'
+  }
 
   const globals = options?.global ?? options.globals
 
