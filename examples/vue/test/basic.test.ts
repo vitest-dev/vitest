@@ -1,6 +1,5 @@
 import { mount } from '@vue/test-utils'
 import Hello from '../components/Hello.vue'
-import Define from '../components/Define.vue'
 
 test('mount component', async() => {
   expect(Hello).toBeTruthy()
@@ -21,12 +20,4 @@ test('mount component', async() => {
   await wrapper.get('button').trigger('click')
 
   expect(wrapper.text()).toContain('4 x 4 = 16')
-})
-
-test('vite define in component', async() => {
-  expect(Define).toBeTruthy()
-
-  const wrapper = mount(Define)
-
-  expect(wrapper.text()).toContain('my constant')
 })
