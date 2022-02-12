@@ -5,6 +5,7 @@ const times = ref(2)
 const props = defineProps<{ count: number }>()
 
 const result = computed(() => props.count * times.value)
+
 defineExpose(props)
 </script>
 
