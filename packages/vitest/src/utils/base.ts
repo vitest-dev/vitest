@@ -99,3 +99,11 @@ export function deepMerge<T extends object = object, S extends object = T>(targe
 function isMergableObject(item: any): item is Object {
   return isPlainObject(item) && !Array.isArray(item)
 }
+
+export function assertTypes(item: unknown, name: string, types: string[]): void {
+  const receivedType = typeof item
+  const pass = types.some((type) => {
+    return receivedType === typeof type
+  })
+  if (!pass) throw new Error(`"${name}" value must be ${types.join('or')}, received ${receivedType}`)
+}
