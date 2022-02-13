@@ -3,9 +3,9 @@ import fg from 'fast-glob'
 import { execa } from 'execa'
 import { describe, expect, it } from 'vitest'
 
-describe('should fails', async() => {
+describe('should fails', () => {
   const root = resolve(__dirname, '../fixtures')
-  const files = await fg('*.test.ts', { cwd: root })
+  const files = fg.sync('*.test.ts', { cwd: root })
 
   for (const file of files) {
     it(file, async() => {
