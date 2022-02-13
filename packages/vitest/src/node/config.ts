@@ -52,7 +52,7 @@ export function resolveConfig(
     ) {
       console.warn(
         c.yellow(
-          `${c.inverse(c.yellow(' CLI '))} Your config.test.environment ("${
+          `${c.inverse(c.yellow(' Vitest '))} Your config.test.environment ("${
             viteConfig.test.environment
           }") conflicts with --dom flag ("happy-dom"), ignoring "${
             viteConfig.test.environment
