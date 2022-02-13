@@ -84,6 +84,9 @@ async function run(options: CliOptions = {}) {
     },
   })
 
+  // provide the vite define variable in vm context
+  await runner.executeId('/@vite/env')
+
   for (const file of files)
     await runner.executeFile(file)
 

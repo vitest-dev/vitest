@@ -111,10 +111,7 @@ export class ViteNodeRunner {
       __dirname: dirname(__filename),
     })
 
-    const fn = vm.runInThisContext(`async (${Object.keys(context).join(',')})=>{
-      __vite_ssr_import__("/@vite/env")
-      {${transformed}\n}
-    }`, {
+    const fn = vm.runInThisContext(`async (${Object.keys(context).join(',')})=>{{${transformed}\n}}`, {
       filename: fsPath,
       lineOffset: 0,
     })
