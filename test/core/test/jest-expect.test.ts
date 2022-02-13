@@ -36,8 +36,16 @@ describe('jest-expect', () => {
     expect(1).toBeGreaterThanOrEqual(BigInt(1))
 
     expect(0).toBeLessThan(1)
+    expect(BigInt(0)).toBeLessThan(BigInt(1))
+    expect(BigInt(0)).toBeLessThan(1)
+
     expect(1).toBeLessThanOrEqual(1)
     expect(0).toBeLessThanOrEqual(1)
+    expect(BigInt(1)).toBeLessThanOrEqual(BigInt(1))
+    expect(BigInt(0)).toBeLessThanOrEqual(BigInt(1))
+    expect(BigInt(1)).toBeLessThanOrEqual(1)
+    expect(1).toBeLessThanOrEqual(BigInt(1))
+
     expect(() => {
       throw new Error('this is the error message')
     }).toThrow('this is the error message')

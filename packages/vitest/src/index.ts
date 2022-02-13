@@ -86,8 +86,8 @@ declare global {
       toBeFalsy(): void
       toBeGreaterThan(num: number | bigint): void
       toBeGreaterThanOrEqual(num: number | bigint): void
-      toBeLessThan(num: number): void
-      toBeLessThanOrEqual(num: number): void
+      toBeLessThan(num: number | bigint): void
+      toBeLessThanOrEqual(num: number | bigint): void
       toBeNaN(): void
       toBeUndefined(): void
       toBeNull(): void

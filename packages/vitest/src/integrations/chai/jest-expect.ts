@@ -173,7 +173,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       expected,
     )
   })
-  def('toBeGreaterThanOrEqual', function(expected: number) {
+  def('toBeGreaterThanOrEqual', function(expected: number | bigint) {
     const actual = this._obj
     assertTypes(actual, 'actual', ['number', 'bigint'])
     assertTypes(expected, 'expected', ['number', 'bigint'])
@@ -185,11 +185,29 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       expected,
     )
   })
-  def('toBeLessThan', function(expected: number) {
-    return this.to.lessThan(expected)
+  def('toBeLessThan', function(expected: number | bigint) {
+    const actual = this._obj
+    assertTypes(actual, 'actual', ['number', 'bigint'])
+    assertTypes(expected, 'expected', ['number', 'bigint'])
+    return this.assert(
+      actual < expected,
+      `expected ${actual} to be above ${expected}`,
+      `expected ${actual} not to be above ${expected}`,
+      actual,
+      expected,
+    )
   })
-  def('toBeLessThanOrEqual', function(expected: number) {
-    return this.to.lessThanOrEqual(expected)
+  def('toBeLessThanOrEqual', function(expected: number | bigint) {
+    const actual = this._obj
+    assertTypes(actual, 'actual', ['number', 'bigint'])
+    assertTypes(expected, 'expected', ['number', 'bigint'])
+    return this.assert(
+      actual <= expected,
+      `expected ${actual} to be above ${expected}`,
+      `expected ${actual} not to be above ${expected}`,
+      actual,
+      expected,
+    )
   })
   def('toBeNaN', function() {
     return this.be.NaN
