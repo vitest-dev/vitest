@@ -100,10 +100,8 @@ function isMergableObject(item: any): item is Object {
   return isPlainObject(item) && !Array.isArray(item)
 }
 
-export function assertTypes(item: unknown, name: string, types: string[]): void {
-  const receivedType = typeof item
-  const pass = types.some((type) => {
-    return receivedType === typeof type
-  })
-  if (!pass) throw new Error(`"${name}" value must be ${types.join('or')}, received ${receivedType}`)
+export function assertTypes(value: unknown, name: string, types: string[]): void {
+  const receivedType = typeof value
+  const pass = types.includes(receivedType)
+  if (!pass) throw new TypeError(`${name} value must be ${types.join(' or ')}, received "${receivedType}"`)
 }

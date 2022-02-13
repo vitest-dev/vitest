@@ -2,6 +2,7 @@ import type { EnhancedSpy } from '../jest-mock'
 import { isMockFunction } from '../jest-mock'
 import { addSerializer } from '../snapshot/port/plugins'
 import type { Constructable } from '../../types'
+import { assertTypes } from '../../utils'
 import type { ChaiPlugin, MatcherState } from './types'
 import { arrayBufferEquality, iterableEquality, equals as jestEquals, sparseArrayEquality, subsetEquality, typeEquality } from './jest-utils'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
@@ -162,24 +163,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   })
   def('toBeGreaterThan', function(expected: number | bigint) {
     const actual = this._obj
-    if (typeof actual !== 'number' && typeof actual !== 'bigint') {
-      return this.assert(
-        false,
-        `expected "${actual}" to be a number or bigint`,
-        `expected "${actual}" to be a number or bigint`,
-        actual,
-        expected,
-      )
-    }
-    if (typeof expected !== 'number' && typeof expected !== 'bigint') {
-      return this.assert(
-        false,
-        `expected "${expected}" to be a number or bigint`,
-        `expected "${expected}" to be a number or bigint`,
-        actual,
-        expected,
-      )
-    }
+    assertTypes(actual, 'actual', ['number', 'bigint'])
+    assertTypes(expected, 'expected', ['number', 'bigint'])
     return this.assert(
       actual > expected,
       `expected ${actual} to be above ${expected}`,
@@ -190,24 +175,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   })
   def('toBeGreaterThanOrEqual', function(expected: number) {
     const actual = this._obj
-    if (typeof actual !== 'number' && typeof actual !== 'bigint') {
-      return this.assert(
-        false,
-        `expected "${actual}" to be a number or bigint`,
-        `expected "${actual}" to be a number or bigint`,
-        actual,
-        expected,
-      )
-    }
-    if (typeof expected !== 'number' && typeof expected !== 'bigint') {
-      return this.assert(
-        false,
-        `expected "${expected}" to be a number or bigint`,
-        `expected "${expected}" to be a number or bigint`,
-        actual,
-        expected,
-      )
-    }
+    assertTypes(actual, 'actual', ['number', 'bigint'])
+    assertTypes(expected, 'expected', ['number', 'bigint'])
     return this.assert(
       actual >= expected,
       `expected ${actual} to be above ${expected}`,
