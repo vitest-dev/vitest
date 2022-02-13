@@ -5,6 +5,7 @@
 import { expect, test } from 'vitest'
 import { mount } from '@vue/test-utils'
 import Hello from '../src/Hello.vue'
+import Defined from '../src/Defined.vue'
 
 test('vue 3 coverage', async() => {
   expect(Hello).toBeTruthy()
@@ -25,4 +26,12 @@ test('vue 3 coverage', async() => {
   await wrapper.get('button').trigger('click')
 
   expect(wrapper.text()).toContain('4 x 4 = 16')
+})
+
+test('define package in vm', () => {
+  expect(Defined).toBeTruthy()
+
+  const wrapper = mount(Defined)
+
+  expect(wrapper.text()).toContain(MY_CONSTANT)
 })
