@@ -2,6 +2,7 @@ import type { EnhancedSpy } from '../jest-mock'
 import { isMockFunction } from '../jest-mock'
 import { addSerializer } from '../snapshot/port/plugins'
 import type { Constructable } from '../../types'
+import { assertTypes } from '../../utils'
 import type { ChaiPlugin, MatcherState } from './types'
 import { arrayBufferEquality, iterableEquality, equals as jestEquals, sparseArrayEquality, subsetEquality, typeEquality } from './jest-utils'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
@@ -160,17 +161,53 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       obj,
     )
   })
-  def('toBeGreaterThan', function(expected: number) {
-    return this.to.greaterThan(expected)
+  def('toBeGreaterThan', function(expected: number | bigint) {
+    const actual = this._obj
+    assertTypes(actual, 'actual', ['number', 'bigint'])
+    assertTypes(expected, 'expected', ['number', 'bigint'])
+    return this.assert(
+      actual > expected,
+      `expected ${actual} to be above ${expected}`,
+      `expected ${actual} not to be above ${expected}`,
+      actual,
+      expected,
+    )
   })
-  def('toBeGreaterThanOrEqual', function(expected: number) {
-    return this.to.greaterThanOrEqual(expected)
+  def('toBeGreaterThanOrEqual', function(expected: number | bigint) {
+    const actual = this._obj
+    assertTypes(actual, 'actual', ['number', 'bigint'])
+    assertTypes(expected, 'expected', ['number', 'bigint'])
+    return this.assert(
+      actual >= expected,
+      `expected ${actual} to be above ${expected}`,
+      `expected ${actual} not to be above ${expected}`,
+      actual,
+      expected,
+    )
   })
-  def('toBeLessThan', function(expected: number) {
-    return this.to.lessThan(expected)
+  def('toBeLessThan', function(expected: number | bigint) {
+    const actual = this._obj
+    assertTypes(actual, 'actual', ['number', 'bigint'])
+    assertTypes(expected, 'expected', ['number', 'bigint'])
+    return this.assert(
+      actual < expected,
+      `expected ${actual} to be above ${expected}`,
+      `expected ${actual} not to be above ${expected}`,
+      actual,
+      expected,
+    )
   })
-  def('toBeLessThanOrEqual', function(expected: number) {
-    return this.to.lessThanOrEqual(expected)
+  def('toBeLessThanOrEqual', function(expected: number | bigint) {
+    const actual = this._obj
+    assertTypes(actual, 'actual', ['number', 'bigint'])
+    assertTypes(expected, 'expected', ['number', 'bigint'])
+    return this.assert(
+      actual <= expected,
+      `expected ${actual} to be above ${expected}`,
+      `expected ${actual} not to be above ${expected}`,
+      actual,
+      expected,
+    )
   })
   def('toBeNaN', function() {
     return this.be.NaN

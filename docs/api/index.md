@@ -460,7 +460,7 @@ TODO
 
 ### toBeGreaterThan
 
-- **Type:** `(n: number) => Awaitable<void>`
+- **Type:** `(n: number | bigint) => Awaitable<void>`
 
   `toBeGreaterThan` asserts if actual value is greater than received one. Equal values will fail the test.
 
@@ -475,7 +475,7 @@ TODO
 
 ### toBeGreaterThanOrEqual
 
-- **Type:** `(n: number) => Awaitable<void>`
+- **Type:** `(n: number | bigint) => Awaitable<void>`
 
   `toBeGreaterThanOrEqual` asserts if actual value is greater than received one or equal to it.
 
@@ -490,7 +490,7 @@ TODO
 
 ### toBeLessThan
 
-- **Type:** `(n: number) => Awaitable<void>`
+- **Type:** `(n: number | bigint) => Awaitable<void>`
 
   `toBeLessThan` asserts if actual value is less than received one. Equal values will fail the test.
 
@@ -505,7 +505,7 @@ TODO
 
 ### toBeLessThanOrEqual
 
-- **Type:** `(n: number) => Awaitable<void>`
+- **Type:** `(n: number | bigint) => Awaitable<void>`
 
   `toBeLessThanOrEqual` asserts if actual value is less than received one or equal to it.
 
@@ -596,7 +596,7 @@ TODO
 
 - **Type:** `(received: any) => Awaitable<void>`
 
-  `toContainEqual` asserts if an item with a specific structure and values is contained in an array. 
+  `toContainEqual` asserts if an item with a specific structure and values is contained in an array.
   It works like [`toEqual`](#toequal) inside for each element.
 
   ```ts
@@ -761,7 +761,7 @@ TODO
 
   ```ts
   import { test, expect } from 'vitest'
-  
+
   function getFruitStock(type) {
     if (type === 'pineapples') {
       throw new DiabetesError('Pineapples is not good for people with diabetes')
