@@ -1,5 +1,5 @@
 import { format } from 'util'
-import type { File, MutableArray, RunMode, Suite, SuiteAPI, SuiteCollector, SuiteFactory, SuiteHooks, Test, TestAPI, TestFunction } from '../types'
+import type { File, MutableArray, RunMode, Suite, SuiteAPI, SuiteCollector, SuiteFactory, SuiteHooks, Task, Test, TestAPI, TestFunction } from '../types'
 import { isObject, noop, toArray } from '../utils'
 import { createChainable } from './chain'
 import { collectTask, context, normalizeTest, runWithSuite } from './context'
@@ -114,10 +114,10 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
     if (factory)
       await runWithSuite(collector, () => factory(test))
 
-    const allChildren = await Promise.all(
-      [...factoryQueue, ...tasks]
-        .map(i => i.type === 'collector' ? i.collect(file) : i),
-    )
+    const allChildren: Task[] = []
+
+    for (const i of [...factoryQueue, ...tasks])
+      allChildren.push(i.type === 'collector' ? await i.collect(file) : i)
 
     suite.file = file
     suite.tasks = allChildren
