@@ -4,7 +4,7 @@ import type { PreviewServer } from 'vite'
 import puppeteer from 'puppeteer'
 import type { Browser, Page } from 'puppeteer'
 
-describe('basic', async() => {
+describe('basic', () => {
   let server: PreviewServer
   let browser: Browser
   let page: Page
