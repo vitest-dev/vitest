@@ -1,3 +1,4 @@
+import type { UserConfig } from 'vite'
 import type { Plugin as PrettyFormatPlugin } from 'pretty-format'
 import type { Any, Anything } from './integrations/chai/jest-asymmetric-matchers'
 import type { MatcherState, MatchersObject } from './integrations/chai/types'
@@ -24,6 +25,10 @@ declare module 'vite' {
      */
     test?: VitestInlineConfig
   }
+}
+
+export function defineConfig(config: UserConfig) {
+  return config
 }
 
 interface AsymmetricMatchersContaining {
