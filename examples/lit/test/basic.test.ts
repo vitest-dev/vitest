@@ -7,7 +7,7 @@ declare global {
   interface Window extends IWindow {}
 }
 
-describe('Button with increment', () => {
+describe('Button with increment', async() => {
   beforeEach(async() => {
     document.body.innerHTML = '<my-button name="World"></my-button>'
     await window.happyDOM.whenAsyncComplete()

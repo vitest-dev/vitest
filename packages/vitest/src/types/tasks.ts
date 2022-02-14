@@ -78,7 +78,7 @@ export interface SuiteCollector {
   on: <T extends keyof SuiteHooks>(name: T, ...fn: SuiteHooks[T]) => void
 }
 
-export type SuiteFactory = (test: (name: string, fn: TestFunction) => void) => void
+export type SuiteFactory = (test: (name: string, fn: TestFunction) => void) => Awaitable<void>
 
 export interface RuntimeContext {
   tasks: (SuiteCollector | Test)[]
