@@ -191,8 +191,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     assertTypes(expected, 'expected', ['number', 'bigint'])
     return this.assert(
       actual < expected,
-      `expected ${actual} to be above ${expected}`,
-      `expected ${actual} not to be above ${expected}`,
+      `expected ${actual} to be at least ${expected}`,
+      `expected ${actual} not to be at least ${expected}`,
       actual,
       expected,
     )
@@ -203,8 +203,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     assertTypes(expected, 'expected', ['number', 'bigint'])
     return this.assert(
       actual <= expected,
-      `expected ${actual} to be above ${expected}`,
-      `expected ${actual} not to be above ${expected}`,
+      `expected ${actual} to be at least ${expected}`,
+      `expected ${actual} not to be at least ${expected}`,
       actual,
       expected,
     )
