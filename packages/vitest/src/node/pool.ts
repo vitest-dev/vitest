@@ -62,10 +62,9 @@ export function createWorkerPool(ctx: Vitest): WorkerPool {
 
   const options: TinypoolOptions = {
     filename: workerPath,
-    // Disable this for now, for WebContainer capability
+    // Disable this for now for WebContainers
     // https://github.com/vitest-dev/vitest/issues/93
-    // In future we could conditionally enable it based on the env
-    useAtomics: false,
+    useAtomics: typeof process.versions.webcontainer !== 'string',
 
     maxThreads: ctx.config.maxThreads ?? threadsCount,
     minThreads: ctx.config.minThreads ?? threadsCount,
