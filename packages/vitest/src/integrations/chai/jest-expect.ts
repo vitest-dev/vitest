@@ -227,10 +227,9 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
 
     return this.not.be.undefined
   })
-  def('toBeTypeOf', function(obj: 'bigint' | 'boolean' | 'function' | 'number' | 'object' | 'string' | 'symbol' | 'undefined') {
-    const equal = typeof this._obj === obj
+  def('toBeTypeOf', function(expected: 'bigint' | 'boolean' | 'function' | 'number' | 'object' | 'string' | 'symbol' | 'undefined') {
     const actual = typeof this._obj
-    const expected = obj
+    const equal = expected === actual
     return this.assert(
       equal,
       'expected #{this} to be type of #{exp}',
