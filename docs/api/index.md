@@ -442,6 +442,21 @@ TODO
   })
   ```
 
+### toBeTypeOf
+
+- **Type:** `(c: 'bigint' | 'boolean' | 'function' | 'number' | 'object' | 'string' | 'symbol' | 'undefined') => Awaitable<void>`
+
+  `toBeTypeOf` asserts if an actual value is of type of received type.
+
+  ```ts
+  import { test, expect } from 'vitest'
+  const actual = 'stock'
+
+  test('stock is type of string', () => {
+    expect(actual).toBeTypeOf('string')
+  })
+  ```
+
 ### toBeInstanceOf
 
 - **Type:** `(c: any) => Awaitable<void>`
