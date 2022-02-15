@@ -97,6 +97,7 @@ declare global {
       toBeUndefined(): void
       toBeNull(): void
       toBeDefined(): void
+      toBeTypeOf(expected: 'bigint' | 'boolean' | 'function' | 'number' | 'object' | 'string' | 'symbol' | 'undefined'): void
       toBeInstanceOf<E>(expected: E): void
       toBeCalledTimes(times: number): void
       toHaveLength(length: number): void
