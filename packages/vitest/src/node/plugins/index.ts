@@ -63,7 +63,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
         options.api = resolveApiConfig(options)
 
         // we replace every "import.meta.env" with "process.env"
-        // to allow reassigning, so wee need to put all envs on process.env
+        // to allow reassigning, so we need to put all envs on process.env
         const { PROD, DEV, ...envs } = viteConfig.env
 
         // process.env can have only string values and will cast string on it if we pass other type,
