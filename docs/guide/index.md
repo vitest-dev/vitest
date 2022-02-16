@@ -41,7 +41,7 @@ To configure `vitest` itself, add `test` property in your Vite config. You'll al
 
 ```ts
 /// <reference types="vitest" />
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/node'
 
 export default defineConfig({
   test: {
