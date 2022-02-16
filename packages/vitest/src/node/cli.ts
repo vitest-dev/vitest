@@ -95,7 +95,7 @@ async function start(cliFilters: string[], options: CliOptions) {
 
     if (!process.env.NODE_V8_COVERAGE) {
       process.env.NODE_V8_COVERAGE = ctx.config.coverage.tempDirectory
-      const { exitCode } = await execa(process.argv0, process.argv.slice(1), { stdio: 'inherit' })
+      const { exitCode } = await execa(process.argv0, process.argv.slice(1), { stdio: 'inherit', reject: false })
       process.exit(exitCode)
     }
   }
