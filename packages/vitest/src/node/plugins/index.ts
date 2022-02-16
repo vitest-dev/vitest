@@ -114,7 +114,6 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
           await server.watcher.close()
       },
     },
-    // EnvReplacerPlugin(),
     MocksPlugin(),
     GlobalSetupPlugin(ctx),
     options.ui
