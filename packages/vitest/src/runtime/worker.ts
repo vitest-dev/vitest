@@ -58,7 +58,9 @@ function init(ctx: WorkerContext) {
 
   process.stdout.write('\0')
 
-  const { config, port } = ctx
+  const { config, port, id } = ctx
+
+  process.env.VITEST_WORKER_ID = String(id)
 
   // @ts-expect-error I know what I am doing :P
   globalThis.__vitest_worker__ = {

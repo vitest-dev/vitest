@@ -76,7 +76,7 @@ async function run(cliFilters: string[], options: CliOptions) {
 async function start(cliFilters: string[], options: CliOptions) {
   process.env.TEST = 'true'
   process.env.VITEST = 'true'
-  process.env.NODE_ENV = 'test'
+  process.env.NODE_ENV ??= 'test'
 
   if (options.run)
     options.watch = false
@@ -95,7 +95,7 @@ async function start(cliFilters: string[], options: CliOptions) {
 
     if (!process.env.NODE_V8_COVERAGE) {
       process.env.NODE_V8_COVERAGE = ctx.config.coverage.tempDirectory
-      const { exitCode } = await execa(process.argv0, process.argv.slice(1), { stdio: 'inherit' })
+      const { exitCode } = await execa(process.argv0, process.argv.slice(1), { stdio: 'inherit', reject: false })
       process.exit(exitCode)
     }
   }

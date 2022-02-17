@@ -227,6 +227,17 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
 
     return this.not.be.undefined
   })
+  def('toBeTypeOf', function(expected: 'bigint' | 'boolean' | 'function' | 'number' | 'object' | 'string' | 'symbol' | 'undefined') {
+    const actual = typeof this._obj
+    const equal = expected === actual
+    return this.assert(
+      equal,
+      'expected #{this} to be type of #{exp}',
+      'expected #{this} not to be type of #{exp}',
+      expected,
+      actual,
+    )
+  })
   def('toBeInstanceOf', function(obj: any) {
     return this.instanceOf(obj)
   })
@@ -480,8 +491,9 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     )
   })
 
-  utils.addProperty(chai.Assertion.prototype, 'resolves', function(this: any) {
+  utils.addProperty(chai.Assertion.prototype, 'resolves', function __VITEST_RESOLVES__(this: any) {
     utils.flag(this, 'promise', 'resolves')
+    utils.flag(this, 'error', new Error('resolves'))
     const obj = utils.flag(this, 'object')
     const proxy: any = new Proxy(this, {
       get: (target, key, receiver) => {
@@ -507,8 +519,9 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     return proxy
   })
 
-  utils.addProperty(chai.Assertion.prototype, 'rejects', function(this: any) {
+  utils.addProperty(chai.Assertion.prototype, 'rejects', function __VITEST_REJECTS__(this: any) {
     utils.flag(this, 'promise', 'rejects')
+    utils.flag(this, 'error', new Error('rejects'))
     const obj = utils.flag(this, 'object')
     const wrapper = typeof obj === 'function' ? obj() : obj // for jest compat
     const proxy: any = new Proxy(this, {

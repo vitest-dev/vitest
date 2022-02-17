@@ -41,7 +41,7 @@ To configure `vitest` itself, add `test` property in your Vite config. You'll al
 
 ```ts
 /// <reference types="vitest" />
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/node'
 
 export default defineConfig({
   test: {
@@ -136,6 +136,8 @@ You can specify additional CLI options like `--port` or `--https`. For a full li
 - [gridjs-svelte](https://github.com/iamyuu/gridjs-svelte)
 - [spring-easing](https://github.com/okikio/spring-easing)
 - [bytemd](https://github.com/bytedance/bytemd)
+- [faker](https://github.com/faker-js/faker)
+- [million](https://github.com/aidenybai/million)
 
 ## Using Unreleased Commits
 

@@ -310,6 +310,33 @@ describe('.toStrictEqual()', () => {
   })
 })
 
+describe('toBeTypeOf()', () => {
+  it.each([
+    [1n, 'bigint'],
+    [true, 'boolean'],
+    [false, 'boolean'],
+    [() => {}, 'function'],
+    [function() {}, 'function'],
+    [1, 'number'],
+    [Infinity, 'number'],
+    [NaN, 'number'],
+    [0, 'number'],
+    [{}, 'object'],
+    [[], 'object'],
+    [null, 'object'],
+    ['', 'string'],
+    ['test', 'string'],
+    [Symbol('test'), 'symbol'],
+    [undefined, 'undefined'],
+  ] as const)('pass with typeof %s === %s', (actual, expected) => {
+    expect(actual).toBeTypeOf(expected)
+  })
+
+  it('pass with negotiation', () => {
+    expect('test').not.toBeTypeOf('number')
+  })
+})
+
 describe('async expect', () => {
   it('resolves', async() => {
     await expect((async() => 'true')()).resolves.toBe('true')
