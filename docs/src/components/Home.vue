@@ -95,6 +95,14 @@
       >
         A tech lead, fullstack developer<br>Author of fluent-vue
       </Avatar>
+      <Avatar
+        name="Joaquín Sánchez"
+        avatar="https://avatars.githubusercontent.com/u/6311119?v=4"
+        github="userquin"
+        twitter="userquin"
+      >
+        A fullstack and android developer<br>Vite's fanatical follower
+      </Avatar>
     </div>
     <h3 id="the-team" op50 font-normal pt-5 pb-2>
       Contributors
