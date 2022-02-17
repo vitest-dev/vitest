@@ -112,6 +112,7 @@ You can specify additional CLI options like `--port` or `--https`. For a full li
 | `--outputFile <filename>` | Write test results to a file when the `--reporter=json` option is also specified |
 | `--coverage` | Use c8 for coverage |
 | `--run` | Do not watch |
+| `--mode` | Override Vite mode (default: `test`) |
 | `--global` | Inject APIs globally |
 | `--dom` | Mock browser api with happy-dom |
 | `--environment <env>` | Runner environment (default: node) |

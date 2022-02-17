@@ -364,3 +364,10 @@ export default defineConfig({
 - **Type:** `PrettyFormatOptions`
 
 Format options for snapshot testing.
+
+### mode
+
+- **Type:** `string`
+- **Default:** `test`
+
+Overrides Vite mode.

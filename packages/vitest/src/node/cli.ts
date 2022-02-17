@@ -25,6 +25,7 @@ cli
   .option('--outputFile <filename>', 'write test results to a file when the --reporter=json option is also specified')
   .option('--coverage', 'use c8 for coverage')
   .option('--run', 'do not watch')
+  .option('--mode', 'override Vite mode (default: test)')
   .option('--globals', 'inject apis globally')
   .option('--global', 'deprecated, use --globals')
   .option('--dom', 'mock browser api with happy-dom')
