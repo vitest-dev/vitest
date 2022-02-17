@@ -39,6 +39,7 @@ export function createFakePool(ctx: Vitest): WorkerPool {
         config: ctx.getConfig(),
         files,
         invalidates,
+        id: 1,
       }
 
       await worker[name](data, { transferList: [workerPort] })
@@ -78,6 +79,7 @@ export function createWorkerPool(ctx: Vitest): WorkerPool {
 
   const runWithFiles = (name: string): RunWithFiles => {
     return async(files, invalidates) => {
+      let id = 0
       await Promise.all(files.map(async(file) => {
         const { workerPort, port } = createChannel(ctx)
 
@@ -86,6 +88,7 @@ export function createWorkerPool(ctx: Vitest): WorkerPool {
           config: ctx.getConfig(),
           files: [file],
           invalidates,
+          id: ++id,
         }
 
         await pool.run(data, { transferList: [workerPort], name })

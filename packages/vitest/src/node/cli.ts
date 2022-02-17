@@ -77,7 +77,7 @@ async function run(cliFilters: string[], options: CliOptions) {
 async function start(cliFilters: string[], options: CliOptions) {
   process.env.TEST = 'true'
   process.env.VITEST = 'true'
-  process.env.NODE_ENV = 'test'
+  process.env.NODE_ENV ??= 'test'
 
   if (options.run)
     options.watch = false
