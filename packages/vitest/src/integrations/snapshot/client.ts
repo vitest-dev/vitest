@@ -43,7 +43,7 @@ export class SnapshotClient {
     this.test = undefined
   }
 
-  assert(received: unknown, message?: string, isInline = false, properties?: object, inlineSnapshot?: string): void {
+  assert(received: unknown, message?: string, isInline = false, properties?: object, inlineSnapshot?: string, error?: Error): void {
     if (!this.test)
       throw new Error('Snapshot cannot be used outside of test')
 
@@ -73,6 +73,7 @@ export class SnapshotClient {
       testName,
       received,
       isInline,
+      error,
       inlineSnapshot,
     })
 

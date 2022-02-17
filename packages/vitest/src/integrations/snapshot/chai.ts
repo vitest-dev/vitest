@@ -44,6 +44,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     'toMatchInlineSnapshot',
     function __VITEST_INLINE_SNAPSHOT__(this: Record<string, unknown>, properties?: object, inlineSnapshot?: string, message?: string) {
       const expected = utils.flag(this, 'object')
+      const error = utils.flag(this, 'error')
       if (typeof properties === 'string') {
         message = inlineSnapshot
         inlineSnapshot = properties
@@ -51,7 +52,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       }
       if (inlineSnapshot)
         inlineSnapshot = stripSnapshotIndentation(inlineSnapshot)
-      getSnapshotClient().assert(expected, message, true, properties, inlineSnapshot)
+      getSnapshotClient().assert(expected, message, true, properties, inlineSnapshot, error)
     },
   )
   utils.addMethod(
@@ -67,7 +68,8 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     'toThrowErrorMatchingInlineSnapshot',
     function __VITEST_INLINE_SNAPSHOT__(this: Record<string, unknown>, inlineSnapshot: string, message: string) {
       const expected = utils.flag(this, 'object')
-      getSnapshotClient().assert(getErrorString(expected), message, true, undefined, inlineSnapshot)
+      const error = utils.flag(this, 'error')
+      getSnapshotClient().assert(getErrorString(expected), message, true, undefined, inlineSnapshot, error)
     },
   )
 }
