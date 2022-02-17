@@ -1,17 +1,14 @@
-/**
- * @vitest-environment jsdom
- */
 import { expect, it } from 'vitest'
 
 import MyWorker from '../src/worker?worker'
 
 const testWorker = (worker: Worker) => {
-  return new Promise((resolve) => {
+  return new Promise<void>((resolve) => {
     worker.postMessage('hello')
     worker.onmessage = (e) => {
       expect(e.data).toBe('hello world')
 
-      resolve(0)
+      resolve()
     }
   })
 }
@@ -34,6 +31,7 @@ it('can test workers several times', async() => {
 
 it('worker with url', async() => {
   expect.assertions(1)
+  const url = import.meta.url
 
-  await testWorker(new Worker(new URL('../src/worker.ts', import.meta.url)))
+  await testWorker(new Worker(new URL('../src/worker.ts', url)))
 })

@@ -1,5 +1,7 @@
-import type { ExecuteOptions } from 'vitest/node'
-import { VitestRunner } from 'vitest/node'
+import type { WorkerGlobalState } from 'vitest'
+import { VitestRunner, getVitestRunnerOptions } from 'vitest/node'
+
+declare let __vitest_worker__: WorkerGlobalState
 
 type Procedure = (...args: any[]) => void
 
@@ -42,8 +44,8 @@ interface InlineWorkerContext {
 }
 
 class InlineWorkerRunner extends VitestRunner {
-  constructor(options: ExecuteOptions, private context: InlineWorkerContext) {
-    super(options)
+  constructor(private context: InlineWorkerContext) {
+    super(getVitestRunnerOptions())
   }
 
   prepareContext(context: Record<string, any>) {
@@ -60,20 +62,7 @@ class InlineWorkerRunner extends VitestRunner {
 export function defineInlineWorker() {
   if ('Worker' in globalThis) return
 
-  const { config, rpc, mockMap, moduleCache } = process.__vitest_worker__
-  const runnerOptions: ExecuteOptions = {
-    fetchModule(id) {
-      return rpc.fetch(id)
-    },
-    resolveId(id, importer) {
-      return rpc.resolveId(id, importer)
-    },
-    moduleCache,
-    mockMap,
-    interopDefault: config.deps.interopDefault ?? true,
-    root: config.root,
-    base: config.base,
-  }
+  const { moduleCache } = __vitest_worker__
 
   globalThis.Worker = class Worker {
     private inside = new Bridge()
@@ -115,7 +104,7 @@ export function defineInlineWorker() {
         this.onmessage?.(e)
       })
 
-      const runner = new InlineWorkerRunner(runnerOptions, context)
+      const runner = new InlineWorkerRunner(context)
 
       let id = url instanceof URL ? url.toString() : url
 
@@ -171,5 +160,3 @@ export function defineInlineWorker() {
     }
   }
 }
-
-defineInlineWorker()

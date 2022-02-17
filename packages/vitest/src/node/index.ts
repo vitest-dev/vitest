@@ -8,5 +8,5 @@ export function defineConfig(config: UserConfig) {
 export type { Vitest } from './core'
 export { createVitest } from './create'
 export { VitestPlugin } from './plugins'
-export { VitestRunner } from './execute'
+export { VitestRunner, getVitestRunnerOptions } from './execute'
 export type { ExecuteOptions } from './execute'

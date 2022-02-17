@@ -1,5 +1,4 @@
 import { importModule } from 'local-pkg'
-import { defineInlineWorker } from '../../runtime/inline-worker'
 import type { Environment } from '../../types'
 import { KEYS } from './jsdom-keys'
 
@@ -26,8 +25,6 @@ export default <Environment>({
         configurable: true,
       })
     }
-
-    defineInlineWorker()
 
     return {
       teardown(global) {
