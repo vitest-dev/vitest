@@ -17,3 +17,7 @@ test('can see env in "define"', () => {
   expect(import.meta.env.TEST_NAME).toBe('hello world')
   expect(process.env.TEST_NAME).toBe('hello world')
 })
+
+test('has worker env', () => {
+  expect(process.env.VITEST_WORKER_ID).toBeDefined()
+})

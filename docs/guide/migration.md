@@ -19,3 +19,7 @@ Unlike Jest, mocked modules in `<root>/__mocks__` are not loaded unless `vi.mock
 **Jasmine API**
 
 Jest exports various [`jasmine`](https://jasmine.github.io/) globals (such as `jasmine.any()`). Any such instances will need to be migrated to [their Vitest counterparts](/api/).
+
+**Envs**
+
+Just like Jest, Vitest sets `NODE_ENV` to `test`, if it wasn't set before. Vitest also has a counterpart for `JEST_WORKER_ID` called `VITEST_WORKER_ID`, so if you rely on it, don't forget to rename it.

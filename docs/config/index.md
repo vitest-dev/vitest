@@ -252,7 +252,9 @@ Silent mode
 
 - **Type:** `string | string[]`
 
-Path to setup files
+Path to setup files. They will be run before each test file.
+
+You can use `process.env.VITEST_WORKER_ID` (integer-like string) inside to distinguish between threads (will always be `1`, if run with `threads: false`).
 
 ### globalSetup
 
