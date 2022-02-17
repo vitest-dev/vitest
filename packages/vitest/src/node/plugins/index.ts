@@ -1,10 +1,12 @@
 import type { Plugin as VitePlugin } from 'vite'
+import { configDefaults } from '../../defaults'
 import type { UserConfig } from '../../types'
 import { deepMerge, ensurePackageInstalled, notNullish } from '../../utils'
 import { resolveApiConfig } from '../config'
 import { Vitest } from '../core'
 import { GlobalSetupPlugin } from './globalSetup'
 import { MocksPlugin } from './mock'
+import { EnvReplacerPlugin } from './envReplacer'
 
 export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest()): Promise<VitePlugin[]> {
   let haveStarted = false
@@ -26,6 +28,9 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
         preOptions.api = resolveApiConfig(preOptions)
 
         return {
+          // we are setting NODE_ENV when running CLI to 'test',
+          // but it can be overridden
+          mode: viteConfig.mode || process.env.NODE_ENV || 'test',
           clearScreen: false,
           resolve: {
             // by default Vite resolves `module` field, which not always a native ESM module
@@ -44,9 +49,40 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
         }
       },
       async configResolved(viteConfig) {
+        const viteConfigTest = (viteConfig.test as any) || {}
+        if (viteConfigTest.watch === false)
+          viteConfigTest.run = true
+
         // viteConfig.test is final now, merge it for real
-        options = deepMerge(options, viteConfig.test as any || {})
+        options = deepMerge(
+          {},
+          configDefaults,
+          viteConfigTest,
+          options,
+        )
         options.api = resolveApiConfig(options)
+
+        // we replace every "import.meta.env" with "process.env"
+        // to allow reassigning, so we need to put all envs on process.env
+        const { PROD, DEV, ...envs } = viteConfig.env
+
+        // process.env can have only string values and will cast string on it if we pass other type,
+        // so we are making them truthy
+        process.env.PROD ??= PROD ? '1' : ''
+        process.env.DEV ??= DEV ? '1' : ''
+        process.env.SSR ??= '1'
+
+        for (const name in envs)
+          process.env[name] ??= envs[name]
+
+        // account for user env defines
+        for (const key in viteConfig.define) {
+          if (key.startsWith('import.meta.env.')) {
+            const val = viteConfig.define[key]
+            const envKey = key.slice('import.meta.env.'.length)
+            process.env[envKey] = typeof val === 'string' ? JSON.parse(val) : val
+          }
+        }
       },
       async configureServer(server) {
         if (haveStarted)
@@ -61,6 +97,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
           await server.watcher.close()
       },
     },
+    EnvReplacerPlugin(),
     MocksPlugin(),
     GlobalSetupPlugin(ctx),
     options.ui

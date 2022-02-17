@@ -72,7 +72,7 @@ function prepareSnapString(snap: string, source: string, index: number) {
     : `${quote}\n${lines.map(i => indentNext + i).join('\n').replace(/`/g, '\\`')}\n${indent}${quote}`
 }
 
-const startRegex = /(?:toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot)\s*\(\s*(['"`\)])/m
+const startRegex = /(?:toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot)\s*\(\s*[\w_$]*(['"`\)])/m
 export function replaceInlineSnap(code: string, s: MagicString, index: number, newSnap: string) {
   const startMatch = startRegex.exec(code.slice(index))
   if (!startMatch)

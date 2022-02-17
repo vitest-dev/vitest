@@ -22,11 +22,30 @@ describe('jest-expect', () => {
     expect([{ text: 'Hello' }]).toContainEqual({ text: 'Hello' })
     expect([{ text: 'Bye' }]).not.toContainEqual({ text: 'Hello' })
     expect(1).toBeGreaterThan(0)
+
+    expect(BigInt(1)).toBeGreaterThan(BigInt(0))
+    expect(1).toBeGreaterThan(BigInt(0))
+    expect(BigInt(1)).toBeGreaterThan(0)
+
     expect(1).toBeGreaterThanOrEqual(1)
     expect(1).toBeGreaterThanOrEqual(0)
+
+    expect(BigInt(1)).toBeGreaterThanOrEqual(BigInt(1))
+    expect(BigInt(1)).toBeGreaterThanOrEqual(BigInt(0))
+    expect(BigInt(1)).toBeGreaterThanOrEqual(1)
+    expect(1).toBeGreaterThanOrEqual(BigInt(1))
+
     expect(0).toBeLessThan(1)
+    expect(BigInt(0)).toBeLessThan(BigInt(1))
+    expect(BigInt(0)).toBeLessThan(1)
+
     expect(1).toBeLessThanOrEqual(1)
     expect(0).toBeLessThanOrEqual(1)
+    expect(BigInt(1)).toBeLessThanOrEqual(BigInt(1))
+    expect(BigInt(0)).toBeLessThanOrEqual(BigInt(1))
+    expect(BigInt(1)).toBeLessThanOrEqual(1)
+    expect(1).toBeLessThanOrEqual(BigInt(1))
+
     expect(() => {
       throw new Error('this is the error message')
     }).toThrow('this is the error message')
@@ -288,6 +307,33 @@ describe('.toStrictEqual()', () => {
     expect(Uint8Array.from([9, 3]).buffer).toStrictEqual(
       Uint8Array.from([9, 3]).buffer,
     )
+  })
+})
+
+describe('toBeTypeOf()', () => {
+  it.each([
+    [1n, 'bigint'],
+    [true, 'boolean'],
+    [false, 'boolean'],
+    [() => {}, 'function'],
+    [function() {}, 'function'],
+    [1, 'number'],
+    [Infinity, 'number'],
+    [NaN, 'number'],
+    [0, 'number'],
+    [{}, 'object'],
+    [[], 'object'],
+    [null, 'object'],
+    ['', 'string'],
+    ['test', 'string'],
+    [Symbol('test'), 'symbol'],
+    [undefined, 'undefined'],
+  ] as const)('pass with typeof %s === %s', (actual, expected) => {
+    expect(actual).toBeTypeOf(expected)
+  })
+
+  it('pass with negotiation', () => {
+    expect('test').not.toBeTypeOf('number')
   })
 })
 

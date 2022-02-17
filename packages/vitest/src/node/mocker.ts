@@ -1,9 +1,9 @@
 import { existsSync, readdirSync } from 'fs'
 import { isNodeBuiltin } from 'mlly'
-import { basename, dirname, join, resolve } from 'pathe'
+import { basename, dirname, resolve } from 'pathe'
 import type { ModuleCache } from 'vite-node'
 import { toFilePath } from 'vite-node/utils'
-import { mergeSlashes, normalizeId } from '../utils'
+import { isWindows, mergeSlashes, normalizeId } from '../utils'
 import { distDir } from '../constants'
 import type { ExecuteOptions } from './execute'
 
@@ -73,7 +73,7 @@ export class VitestMocker {
   }
 
   public getSuiteFilepath() {
-    return process.__vitest_worker__?.filepath || 'global'
+    return __vitest_worker__?.filepath || 'global'
   }
 
   public getMocks() {
@@ -99,7 +99,7 @@ export class VitestMocker {
     await Promise.all(pendingIds.map(async(mock) => {
       const { path, external } = await this.resolvePath(mock.id, mock.importer)
       if (mock.type === 'unmock')
-        this.unmockPath(path, external)
+        this.unmockPath(path)
       if (mock.type === 'mock')
         this.mockPath(path, external, mock.factory)
     }))
@@ -121,15 +121,15 @@ export class VitestMocker {
     return this.getMocks()[this.resolveDependency(dep)]
   }
 
-  // npm resolves as /node_modules, but we store as /@fs/.../node_modules
   public resolveDependency(dep: string) {
-    if (dep.startsWith('/node_modules/'))
-      dep = mergeSlashes(`/@fs/${join(this.root, dep)}`)
-
-    return normalizeId(dep)
+    return normalizeId(dep).replace(/^\/@fs\//, isWindows ? '' : '/')
   }
 
-  public getActualPath(path: string, external: string | null) {
+  public normalizePath(path: string) {
+    return normalizeId(path.replace(this.root, '')).replace(/^\/@fs\//, isWindows ? '' : '/')
+  }
+
+  public getFsPath(path: string, external: string | null) {
     if (external)
       return mergeSlashes(`/@fs/${path}`)
 
@@ -194,10 +194,10 @@ export class VitestMocker {
     return newObj
   }
 
-  public unmockPath(path: string, external: string | null) {
+  public unmockPath(path: string) {
     const suitefile = this.getSuiteFilepath()
 
-    const fsPath = this.getActualPath(path, external)
+    const fsPath = this.normalizePath(path)
 
     if (this.mockMap[suitefile]?.[fsPath])
       delete this.mockMap[suitefile][fsPath]
@@ -206,7 +206,7 @@ export class VitestMocker {
   public mockPath(path: string, external: string | null, factory?: () => any) {
     const suitefile = this.getSuiteFilepath()
 
-    const fsPath = this.getActualPath(path, external)
+    const fsPath = this.normalizePath(path)
 
     this.mockMap[suitefile] ??= {}
     this.mockMap[suitefile][fsPath] = factory || this.resolveMockPath(path, external)
@@ -214,7 +214,7 @@ export class VitestMocker {
 
   public async importActual<T>(id: string, importer: string): Promise<T> {
     const { path, external } = await this.resolvePath(id, importer)
-    const fsPath = this.getActualPath(path, external)
+    const fsPath = this.getFsPath(path, external)
     const result = await this.request(fsPath)
     return result as T
   }
@@ -229,7 +229,7 @@ export class VitestMocker {
 
     if (mock === null) {
       await this.ensureSpy()
-      const fsPath = this.getActualPath(path, external)
+      const fsPath = this.getFsPath(path, external)
       const mod = await this.request(fsPath)
       return this.mockObject(mod)
     }
