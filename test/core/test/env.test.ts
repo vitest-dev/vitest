@@ -1,6 +1,10 @@
 import { expect, test } from 'vitest'
 import { getAuthToken } from '../src/env'
 
+test('reads envs from .env file', () => {
+  expect(import.meta.env.VITE_TEST_ENV).toBe('local')
+})
+
 test('can reassign env locally', () => {
   import.meta.env.VITEST_ENV = 'TEST'
   expect(import.meta.env.VITEST_ENV).toBe('TEST')
@@ -16,4 +20,8 @@ test('can reassign env everywhere', () => {
 test('can see env in "define"', () => {
   expect(import.meta.env.TEST_NAME).toBe('hello world')
   expect(process.env.TEST_NAME).toBe('hello world')
+})
+
+test('has worker env', () => {
+  expect(process.env.VITEST_WORKER_ID).toBeDefined()
 })

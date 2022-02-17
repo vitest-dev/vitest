@@ -1,5 +1,5 @@
 import type { ChainableFunction } from '../runtime/chain'
-import type { Awaitable, ErrorWithDiff } from './general'
+import type { Awaitable, ErrorWithDiff, MutableArray } from './general'
 import type { UserConsoleLog } from '.'
 
 export type RunMode = 'run' | 'skip' | 'only' | 'todo'
@@ -44,7 +44,7 @@ export type Task = Test | Suite | File
 
 export type DoneCallback = (error?: any) => void
 export type TestFunction = (done: DoneCallback) => Awaitable<void>
-export type EachFunction = <T>(cases: T[]) => (name: string, fn: (...args: T extends any[] ? T : [T]) => void) => void
+export type EachFunction = <T>(cases: T[] | readonly T[]) => (name: string, fn: (...args: T extends any[] | readonly any[] ? MutableArray<T> : [T]) => void) => void
 
 export type TestAPI = ChainableFunction<
 'concurrent' | 'only' | 'skip' | 'todo' | 'fails',

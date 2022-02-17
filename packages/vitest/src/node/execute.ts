@@ -13,6 +13,9 @@ export interface ExecuteOptions extends ViteNodeRunnerOptions {
 export async function executeInViteNode(options: ExecuteOptions & { files: string[] }) {
   const runner = new VitestRunner(options)
 
+  // provide the vite define variable in this context
+  await runner.executeId('/@vite/env')
+
   const result: any[] = []
   for (const file of options.files)
     result.push(await runner.executeFile(file))

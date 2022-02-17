@@ -1,5 +1,5 @@
 import type { Plugin as VitePlugin } from 'vite'
-import { configDefaults } from '../../constants'
+import { configDefaults } from '../../defaults'
 import type { UserConfig } from '../../types'
 import { deepMerge, ensurePackageInstalled, notNullish } from '../../utils'
 import { resolveApiConfig } from '../config'
@@ -61,15 +61,19 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
           options,
         )
         options.api = resolveApiConfig(options)
-        options.watch = options.watch && !options.run
 
-        process.env.BASE_URL ??= viteConfig.base
-        process.env.MODE ??= viteConfig.mode
+        // we replace every "import.meta.env" with "process.env"
+        // to allow reassigning, so we need to put all envs on process.env
+        const { PROD, DEV, ...envs } = viteConfig.env
+
         // process.env can have only string values and will cast string on it if we pass other type,
         // so we are making them truthy
-        process.env.PROD ??= viteConfig.env.PROD ? '1' : ''
-        process.env.DEV ??= viteConfig.env.DEV ? '1' : ''
+        process.env.PROD ??= PROD ? '1' : ''
+        process.env.DEV ??= DEV ? '1' : ''
         process.env.SSR ??= '1'
+
+        for (const name in envs)
+          process.env[name] ??= envs[name]
 
         // account for user env defines
         for (const key in viteConfig.define) {

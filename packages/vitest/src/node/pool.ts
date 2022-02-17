@@ -39,6 +39,7 @@ export function createFakePool(ctx: Vitest): WorkerPool {
         config: ctx.getConfig(),
         files,
         invalidates,
+        id: 1,
       }
 
       await worker[name](data, { transferList: [workerPort] })
@@ -62,10 +63,9 @@ export function createWorkerPool(ctx: Vitest): WorkerPool {
 
   const options: TinypoolOptions = {
     filename: workerPath,
-    // Disable this for now, for WebContainer capability
+    // Disable this for now for WebContainers
     // https://github.com/vitest-dev/vitest/issues/93
-    // In future we could conditionally enable it based on the env
-    useAtomics: false,
+    useAtomics: typeof process.versions.webcontainer !== 'string',
 
     maxThreads: ctx.config.maxThreads ?? threadsCount,
     minThreads: ctx.config.minThreads ?? threadsCount,
@@ -79,6 +79,7 @@ export function createWorkerPool(ctx: Vitest): WorkerPool {
 
   const runWithFiles = (name: string): RunWithFiles => {
     return async(files, invalidates) => {
+      let id = 0
       await Promise.all(files.map(async(file) => {
         const { workerPort, port } = createChannel(ctx)
 
@@ -87,6 +88,7 @@ export function createWorkerPool(ctx: Vitest): WorkerPool {
           config: ctx.getConfig(),
           files: [file],
           invalidates,
+          id: ++id,
         }
 
         await pool.run(data, { transferList: [workerPort], name })

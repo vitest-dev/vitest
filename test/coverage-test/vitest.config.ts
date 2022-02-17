@@ -5,6 +5,9 @@ export default defineConfig({
   plugins: [
     vue(),
   ],
+  define: {
+    MY_CONSTANT: '"my constant"',
+  },
   test: {
   },
 })

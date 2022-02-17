@@ -87,12 +87,6 @@ export function deepMerge<T extends object = object, S extends object = T>(targe
 
         deepMerge(target[key] as any, source[key] as any)
       }
-      else if (Array.isArray(source[key])) {
-        if (!target[key])
-          target[key] = [] as any
-
-        (target[key] as any).push(...source[key] as any)
-      }
       else {
         target[key] = source[key] as any
       }
@@ -104,4 +98,10 @@ export function deepMerge<T extends object = object, S extends object = T>(targe
 
 function isMergableObject(item: any): item is Object {
   return isPlainObject(item) && !Array.isArray(item)
+}
+
+export function assertTypes(value: unknown, name: string, types: string[]): void {
+  const receivedType = typeof value
+  const pass = types.includes(receivedType)
+  if (!pass) throw new TypeError(`${name} value must be ${types.join(' or ')}, received "${receivedType}"`)
 }

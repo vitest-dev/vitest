@@ -43,33 +43,43 @@ cli
 
 cli
   .command('watch [...filters]')
-  .action(dev)
+  .action(start)
 
 cli
   .command('dev [...filters]')
-  .action(dev)
+  .action(start)
 
 cli
   .command('[...filters]')
-  .action(dev)
+  .action(start)
 
 cli.parse()
 
-async function runRelated(relatedFiles: string[] | string, argv: UserConfig) {
+export interface CliOptions extends UserConfig {
+  /**
+   * Override the watch mode
+   */
+  run?: boolean
+}
+
+async function runRelated(relatedFiles: string[] | string, argv: CliOptions) {
   argv.related = relatedFiles
   argv.passWithNoTests ??= true
-  await dev([], argv)
+  await start([], argv)
 }
 
-async function dev(cliFilters: string[], argv: UserConfig) {
-  if (argv.watch == null)
-    argv.watch = !process.env.CI && !argv.run
-  await run(cliFilters, argv)
+async function run(cliFilters: string[], options: CliOptions) {
+  options.run = true
+  await start(cliFilters, options)
 }
 
-async function run(cliFilters: string[], options: UserConfig) {
+async function start(cliFilters: string[], options: CliOptions) {
+  process.env.TEST = 'true'
   process.env.VITEST = 'true'
-  process.env.NODE_ENV = 'test'
+  process.env.NODE_ENV ??= 'test'
+
+  if (options.run)
+    options.watch = false
 
   if (!await ensurePackageInstalled('vite'))
     process.exit(1)
@@ -85,7 +95,7 @@ async function run(cliFilters: string[], options: UserConfig) {
 
     if (!process.env.NODE_V8_COVERAGE) {
       process.env.NODE_V8_COVERAGE = ctx.config.coverage.tempDirectory
-      const { exitCode } = await execa(process.argv0, process.argv.slice(1), { stdio: 'inherit' })
+      const { exitCode } = await execa(process.argv0, process.argv.slice(1), { stdio: 'inherit', reject: false })
       process.exit(exitCode)
     }
   }

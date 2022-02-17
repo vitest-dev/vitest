@@ -7,11 +7,11 @@ import type { RawSourceMap } from 'vite-node'
 import type { Vitest } from '../node'
 import { toArray } from '../utils'
 import type { C8Options, ResolvedC8Options } from '../types'
-import { coverageConfigDefaults } from '../constants'
+import { configDefaults } from '../defaults'
 
 export function resolveC8Options(options: C8Options, root: string): ResolvedC8Options {
   const resolved: ResolvedC8Options = {
-    ...coverageConfigDefaults,
+    ...configDefaults.coverage,
     ...options as any,
   }
 
@@ -45,7 +45,7 @@ export async function reportCoverage(ctx: Vitest) {
   const report = createReport(ctx.config.coverage)
 
   // add source maps
-  const sourceMapMata: Record<string, { map: RawSourceMap; source: string | undefined }> = {}
+  const sourceMapMeta: Record<string, { map: RawSourceMap; source: string | undefined }> = {}
   await Promise.all(Array
     .from(ctx.vitenode.fetchCache.entries())
     .filter(i => !i[0].includes('/node_modules/'))
@@ -66,7 +66,7 @@ export async function reportCoverage(ctx: Vitest) {
       // so use an actual file path
       const sources = [url]
 
-      sourceMapMata[url] = {
+      sourceMapMeta[url] = {
         source: result.code,
         map: {
           sourcesContent: code ? [code] : undefined,
@@ -83,7 +83,7 @@ export async function reportCoverage(ctx: Vitest) {
 
   report._getSourceMap = (coverage: Profiler.ScriptCoverage) => {
     const path = pathToFileURL(coverage.url).href
-    const data = sourceMapMata[path]
+    const data = sourceMapMeta[path]
 
     if (!data)
       return {}

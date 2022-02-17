@@ -1,13 +1,10 @@
-import type {
-  Plugin as PrettyFormatPlugin,
-} from 'pretty-format'
+import type { Plugin as PrettyFormatPlugin } from 'pretty-format'
 import type { Any, Anything } from './integrations/chai/jest-asymmetric-matchers'
 import type { MatcherState, MatchersObject } from './integrations/chai/types'
 import type { Constructable, InlineConfig } from './types'
 
-type VitestInlineConfig = InlineConfig
-
 export { suite, test, describe, it } from './runtime/suite'
+
 export * from './runtime/hooks'
 export * from './integrations/chai'
 export * from './integrations/jest-mock'
@@ -16,7 +13,7 @@ export * from './integrations/vi'
 export * from './types'
 export * from './api/types'
 
-export { configDefaults } from './constants'
+type VitestInlineConfig = InlineConfig
 
 declare module 'vite' {
   interface UserConfig {
@@ -85,14 +82,15 @@ declare global {
       toContainEqual<E>(item: E): void
       toBeTruthy(): void
       toBeFalsy(): void
-      toBeGreaterThan(num: number): void
-      toBeGreaterThanOrEqual(num: number): void
-      toBeLessThan(num: number): void
-      toBeLessThanOrEqual(num: number): void
+      toBeGreaterThan(num: number | bigint): void
+      toBeGreaterThanOrEqual(num: number | bigint): void
+      toBeLessThan(num: number | bigint): void
+      toBeLessThanOrEqual(num: number | bigint): void
       toBeNaN(): void
       toBeUndefined(): void
       toBeNull(): void
       toBeDefined(): void
+      toBeTypeOf(expected: 'bigint' | 'boolean' | 'function' | 'number' | 'object' | 'string' | 'symbol' | 'undefined'): void
       toBeInstanceOf<E>(expected: E): void
       toBeCalledTimes(times: number): void
       toHaveLength(length: number): void
