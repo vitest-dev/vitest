@@ -237,8 +237,6 @@ function enhanceSpy<TArgs extends any[], TReturns>(
     return impl.apply(this, args)
   })
 
-  Object.defineProperty(stub, '_isMockFunction', { get: () => true })
-
   spies.add(stub)
 
   return stub as any
