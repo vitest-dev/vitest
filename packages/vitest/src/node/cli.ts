@@ -84,8 +84,35 @@ async function watch(cliFilters: string[], options: CliOptions) {
 
 async function run(cliFilters: string[], options: CliOptions) {
   options.run = true
-  await start('test', cliFilters, options)
+  await start(cliFilters, options)
 }
+
+async function start(cliFilters: string[], options: CliOptions) {
+  process.env.TEST = 'true'
+  process.env.VITEST = 'true'
+  process.env.NODE_ENV ??= 'test'
+
+  if (options.run)
+    options.watch = false
+
+  if (!await ensurePackageInstalled('vite'))
+    process.exit(1)
+
+  if (typeof options.coverage === 'boolean')
+    options.coverage = { enabled: options.coverage }
+
+  const ctx = await createVitest(options)
+
+  if (ctx.config.coverage.enabled) {
+    if (!await ensurePackageInstalled('c8'))
+      process.exit(1)
+
+    if (!process.env.NODE_V8_COVERAGE) {
+      process.env.NODE_V8_COVERAGE = ctx.config.coverage.tempDirectory
+      const { exitCode } = await execa(process.argv0, process.argv.slice(1), { stdio: 'inherit', reject: false })
+      process.exit(exitCode)
+    }
+  }
 
 async function benchmark(cliFilters: string[], options: CliOptions) {
   console.warn(c.yellow('Benchmarking is an experimental feature.\nBreaking changes might not follow semver, please pin Vitest\'s version when using it.'))

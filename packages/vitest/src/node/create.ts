@@ -9,6 +9,8 @@ import { VitestPlugin } from './plugins'
 
 export async function createVitest(mode: VitestRunMode, options: UserConfig, viteOverrides: ViteUserConfig = {}) {
   const ctx = new Vitest(mode)
+
+  // 读取用户文件配置或命令行配置
   const root = resolve(options.root || process.cwd())
 
   const configPath = options.config
@@ -23,6 +25,7 @@ export async function createVitest(mode: VitestRunMode, options: UserConfig, vit
     plugins: await VitestPlugin(options, ctx),
   }
 
+  // 创建vite开发服务，用vite服务跑test
   const server = await createServer(mergeConfig(config, mergeConfig(viteOverrides, { root: options.root })))
 
   if (ctx.config.api?.port)
