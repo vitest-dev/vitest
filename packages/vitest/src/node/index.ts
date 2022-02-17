@@ -1,3 +1,5 @@
 export type { Vitest } from './core'
 export { createVitest } from './create'
 export { VitestPlugin } from './plugins'
+export { VitestRunner } from './execute'
+export type { ExecuteOptions } from './execute'

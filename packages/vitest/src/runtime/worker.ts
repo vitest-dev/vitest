@@ -4,6 +4,7 @@ import { createBirpc } from 'birpc'
 import type { ModuleCache, ResolvedConfig, Test, WorkerContext, WorkerRPC } from '../types'
 import { distDir } from '../constants'
 import { executeInViteNode } from '../node/execute'
+import type { SuiteMocks } from '../node/mocker'
 import { rpc } from './rpc'
 
 let _viteNode: {
@@ -64,6 +65,7 @@ function init(ctx: WorkerContext) {
     ctx,
     moduleCache,
     config,
+    mockMap,
     rpc: createBirpc<WorkerRPC>(
       {},
       {
@@ -101,6 +103,7 @@ declare global {
         current?: Test
         filepath?: string
         moduleCache: Map<string, ModuleCache>
+        mockMap: SuiteMocks
       }
     }
   }

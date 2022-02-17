@@ -1,12 +1,11 @@
-import type { ExecuteOptions } from '../node/execute'
-import { VitestRunner } from '../node/execute'
-import { rpc } from './rpc'
-import { mockMap, moduleCache } from './worker'
+import type { ExecuteOptions } from 'vitest/node'
+import { VitestRunner } from 'vitest/node'
 
 type Procedure = (...args: any[]) => void
 
 class Bridge {
-  private callbacks: Record<string, (Procedure)[]> = {}
+  private callbacks: Record<string, Procedure[]> = {}
+
   public on(event: string, fn: Procedure) {
     this.callbacks[event] ??= []
     this.callbacks[event].push(fn)
@@ -19,6 +18,10 @@ class Bridge {
 
   public removeEvents(event: string) {
     this.callbacks[event] = []
+  }
+
+  public clear() {
+    this.callbacks = {}
   }
 
   public emit(event: string, ...data: any[]) {
@@ -55,13 +58,15 @@ class InlineWorkerRunner extends VitestRunner {
 }
 
 export function defineInlineWorker() {
-  const { config } = process.__vitest_worker__
+  if ('Worker' in globalThis) return
+
+  const { config, rpc, mockMap, moduleCache } = process.__vitest_worker__
   const runnerOptions: ExecuteOptions = {
     fetchModule(id) {
-      return rpc().fetch(id)
+      return rpc.fetch(id)
     },
     resolveId(id, importer) {
-      return rpc().resolveId(id, importer)
+      return rpc.resolveId(id, importer)
     },
     moduleCache,
     mockMap,
@@ -114,8 +119,9 @@ export function defineInlineWorker() {
 
       let id = url instanceof URL ? url.toString() : url
 
-      if (id.startsWith('file://'))
-        id = id.slice('file://'.length)
+      // TODO should work in the latest version without the hack
+      // if (id.startsWith('file://'))
+      //   id = id.slice('file://'.length)
 
       id = id.replace('?worker_file', '')
 
@@ -160,7 +166,10 @@ export function defineInlineWorker() {
     }
 
     terminate() {
-      throw new Error('not supported')
+      this.outside.clear()
+      this.inside.clear()
     }
   }
 }
+
+defineInlineWorker()

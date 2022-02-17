@@ -1,0 +1,17 @@
+{
+  "name": "@vitest/addon-web-worker",
+  "version": "1.0.0",
+  "description": "Web Worker support for testing in Vitest",
+  "type": "module",
+  "main": "dist/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "default": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "peerDependencies": {
+    "vitest": "*"
+  }
+}
