@@ -6,17 +6,9 @@ import { toFilePath } from 'vite-node/utils'
 import { isWindows, mergeSlashes, normalizeId } from '../utils'
 import { distDir } from '../constants'
 import type { ExecuteOptions } from './execute'
-
-export type SuiteMocks = Record<string, Record<string, string | null | (() => unknown)>>
+import type { PendingSuiteMock } from '../types/mocker'
 
 type Callback = (...args: any[]) => unknown
-
-interface PendingSuiteMock {
-  id: string
-  importer: string
-  type: 'mock' | 'unmock'
-  factory?: () => unknown
-}
 
 function getObjectType(value: unknown): string {
   return Object.prototype.toString.apply(value).slice(8, -1)

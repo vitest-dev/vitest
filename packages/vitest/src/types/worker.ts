@@ -1,7 +1,7 @@
 import type { MessagePort } from 'worker_threads'
 import type { FetchFunction, ModuleCache, RawSourceMap, ViteNodeResolveId } from 'vite-node'
 import type { BirpcReturn } from 'birpc'
-import type { SuiteMocks } from '../node/mocker'
+import type { SuiteMocks } from './mocker'
 import type { ResolvedConfig } from './config'
 import type { File, TaskResultPack, Test } from './tasks'
 import type { SnapshotResult } from './snapshot'
