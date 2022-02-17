@@ -103,8 +103,8 @@ export const spies = new Set<SpyInstance>()
 
 export function isMockFunction(fn: any): fn is EnhancedSpy {
   return typeof fn === 'function'
-  && '__isSpy' in fn
-  && fn.__isSpy
+  && '_isMockFunction' in fn
+  && fn._isMockFunction
 }
 
 export function spyOn<T, S extends Properties<Required<T>>>(
@@ -236,6 +236,8 @@ function enhanceSpy<TArgs extends any[], TReturns>(
     const impl = onceImplementations.shift() || implementation || stub.getOriginal() || (() => {})
     return impl.apply(this, args)
   })
+
+  Object.defineProperty(stub, '_isMockFunction', { get: () => true })
 
   spies.add(stub)
 
