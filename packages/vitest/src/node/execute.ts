@@ -24,6 +24,7 @@ export async function executeInViteNode(options: ExecuteOptions & { files: strin
 }
 
 export function getVitestRunnerOptions(): ExecuteOptions {
+  // @ts-ignore type works in dev, but fails when building type definitions
   const { config, rpc, mockMap, moduleCache } = __vitest_worker__
 
   return {

@@ -276,12 +276,6 @@ export interface InlineConfig {
    * Format options for snapshot testing.
    */
   snapshotFormat?: PrettyFormatOptions
-
-  /**
-   * TODO
-   * export default (vitest, config) => {}
-   */
-  addons?: string[]
 }
 
 export interface UserConfig extends InlineConfig {

@@ -108,10 +108,6 @@ export function defineInlineWorker() {
 
       let id = url instanceof URL ? url.toString() : url
 
-      // TODO should work in the latest version without the hack
-      // if (id.startsWith('file://'))
-      //   id = id.slice('file://'.length)
-
       id = id.replace('?worker_file', '')
 
       invalidate.push(id)
