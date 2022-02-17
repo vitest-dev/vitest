@@ -14,7 +14,7 @@
   "dependencies": {
     "@vueuse/integrations": "^7.5.5",
     "axios": "^0.25.0",
-    "tinyspy": "^0.2.10"
+    "tinyspy": "^0.3.0"
   },
   "devDependencies": {
     "@vitest/ui": "latest",
