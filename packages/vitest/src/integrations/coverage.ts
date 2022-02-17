@@ -97,4 +97,16 @@ export async function reportCoverage(ctx: Vitest) {
   }
 
   await report.run()
+
+  if (ctx.config.coverage.enabled) {
+    if (ctx.config.coverage['100']) {
+      ctx.config.coverage.lines = 100
+      ctx.config.coverage.functions = 100
+      ctx.config.coverage.branches = 100
+      ctx.config.coverage.statements = 100
+    }
+
+    const { checkCoverages } = require('c8/lib/commands/check-coverage')
+    await checkCoverages(ctx.config.coverage, report)
+  }
 }
