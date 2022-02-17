@@ -10,8 +10,6 @@ declare let SOME: {
   }
 }
 
-export {}
-
 // functions to test that they are not statically replaced
 const get__DEFINE__ = () => __DEFINE__
 const get__JSON__ = () => __JSON__
