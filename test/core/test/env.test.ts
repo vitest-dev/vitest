@@ -2,7 +2,7 @@ import { expect, test } from 'vitest'
 import { getAuthToken } from '../src/env'
 
 test('reads envs from .env file', () => {
-  expect(import.meta.env.VITE_TETS_ENV).toBe('local')
+  expect(import.meta.env.VITE_TEST_ENV).toBe('local')
 })
 
 test('can reassign env locally', () => {
