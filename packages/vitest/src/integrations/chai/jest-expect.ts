@@ -122,10 +122,11 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     )
   })
   def('toMatch', function(expected: string | RegExp) {
-    if (typeof expected === 'string')
-      return this.include(expected)
-    else
-      return this.match(expected)
+    if (typeof expected === 'string') { return this.include(expected) }
+    else {
+      const received = this._obj
+      return new RegExp(expected).test(received)
+    }
   })
   def('toContain', function(item) {
     return this.contain(item)

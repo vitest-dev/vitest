@@ -107,6 +107,13 @@ describe('jest-expect', () => {
     // expect(new Set(['bar'])).not.toEqual(new Set([expect.stringContaining('zoo')]))
   })
 
+  it('does not maintain state when the Regex has global flag', () => {
+    const regex = /[f]\d+/ig
+    expect('f123').toMatch(regex)
+    expect('F1234').toMatch(regex)
+    expect('F1234 F1234').toMatch(regex)
+  })
+
   it('asymmetric matchers negate', () => {
     expect('bar').toEqual(expect.not.stringContaining('zoo'))
     expect('bar').toEqual(expect.not.stringMatching(/zoo/))
