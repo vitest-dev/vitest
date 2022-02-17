@@ -324,5 +324,7 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
 
   reporters: (Reporter | BuiltinReporters)[]
 
+  defines: Record<string, any>
+
   api?: ApiConfig
 }

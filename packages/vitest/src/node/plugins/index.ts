@@ -1,6 +1,6 @@
 import type { Plugin as VitePlugin } from 'vite'
 import { configDefaults } from '../../defaults'
-import type { UserConfig } from '../../types'
+import type { ResolvedConfig, UserConfig } from '../../types'
 import { deepMerge, ensurePackageInstalled, notNullish } from '../../utils'
 import { resolveApiConfig } from '../config'
 import { Vitest } from '../core'
@@ -26,8 +26,10 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
         const preOptions = deepMerge({}, options, viteConfig.test ?? {})
         preOptions.api = resolveApiConfig(preOptions)
 
-        // make user defines globals, if possible
-        // so people can reassign them
+        // store defines for globalThis to make them
+        // reassignable when running in worker in src/runtime/setup.ts
+        const defines: Record<string, any> = {}
+
         for (const key in viteConfig.define) {
           const val = viteConfig.define[key]
           let replacement: any
@@ -44,11 +46,18 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
             process.env[envKey] = replacement
             delete viteConfig.define[key]
           }
+          else if (key.startsWith('process.env.')) {
+            const envKey = key.slice('process.env.'.length)
+            process.env[envKey] = replacement
+            delete viteConfig.define[key]
+          }
           else if (!key.includes('.')) {
-            (globalThis as any)[key] = replacement
+            defines[key] = replacement
             delete viteConfig.define[key]
           }
         }
+
+        (options as ResolvedConfig).defines = defines
 
         return {
           // we are setting NODE_ENV when running CLI to 'test',
