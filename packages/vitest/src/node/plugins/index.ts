@@ -4,6 +4,7 @@ import type { ResolvedConfig, UserConfig } from '../../types'
 import { deepMerge, ensurePackageInstalled, notNullish } from '../../utils'
 import { resolveApiConfig } from '../config'
 import { Vitest } from '../core'
+import { EnvReplacerPlugin } from './envRelacer'
 import { GlobalSetupPlugin } from './globalSetup'
 import { MocksPlugin } from './mock'
 
@@ -66,14 +67,6 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
             // setting this option can bypass that and fallback to cjs version
             mainFields: [],
           },
-          define: {
-            'process.env.NODE_ENV': 'process.env.NODE_ENV',
-            'global.process.env.NODE_ENV': 'global.process.env.NODE_ENV',
-            'globalThis.process.env.NODE_ENV': 'globalThis.process.env.NODE_ENV',
-            // so people can reassign envs at runtime
-            // import.meta.env.VITE_NAME = 'app' -> process.env.VITE_NAME = 'app'
-            'import.meta.env': 'process.env',
-          },
           server: {
             ...preOptions.api,
             open: preOptions.ui && preOptions.open
@@ -98,6 +91,14 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
           options,
         )
         options.api = resolveApiConfig(options)
+
+        // we cannot replace them, because esbuild will throw an error,
+        // so we are removing them to allow reassigning
+        const define = viteConfig.define!
+
+        delete define['process.env.NODE_ENV']
+        delete define['global.process.env.NODE_ENV']
+        delete define['globalThis.process.env.NODE_ENV']
 
         // we replace every "import.meta.env" with "process.env"
         // to allow reassigning, so we need to put all envs on process.env
@@ -125,6 +126,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
           await server.watcher.close()
       },
     },
+    EnvReplacerPlugin(),
     MocksPlugin(),
     GlobalSetupPlugin(ctx),
     options.ui
