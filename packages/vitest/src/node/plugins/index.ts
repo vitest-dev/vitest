@@ -60,9 +60,6 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
         (options as ResolvedConfig).defines = defines
 
         return {
-          // we are setting NODE_ENV when running CLI to 'test',
-          // but it can be overridden
-          mode: viteConfig.mode || process.env.NODE_ENV || 'test',
           clearScreen: false,
           resolve: {
             // by default Vite resolves `module` field, which not always a native ESM module

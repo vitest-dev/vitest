@@ -6,7 +6,7 @@
 
 - Create `vitest.config.ts`, which will have the higher priority
 - Pass `--config` option to CLI, e.g. `vitest --config ./path/to/vitest.config.ts`
-- Use `process.env.VITEST` to conditionally apply different configuration in `vite.config.ts`
+- Use `process.env.VITEST` or `mode` property on `defineConfig` (will be set to `test` if not overridden) to conditionally apply different configuration in `vite.config.ts`
 
 To configure `vitest` itself, add `test` property in your Vite config. You'll also need to add a reference to Vitest types using a [triple slash command](https://www.typescriptlang.org/docs/handbook/triple-slash-directives.html#-reference-types-) at the top of your config file.
 
@@ -366,3 +366,10 @@ export default defineConfig({
 - **Type:** `PrettyFormatOptions`
 
 Format options for snapshot testing.
+
+### mode
+
+- **Type:** `string`
+- **Default:** `test`
+
+Overrides Vite mode.
