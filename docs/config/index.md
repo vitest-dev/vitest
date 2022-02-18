@@ -57,7 +57,7 @@ Handling for dependencies inlining or externalizing
 #### deps.external
 
 - **Type:** `(string | RegExp)[]`
-- **Default:** `['**\/node_modules\/**']`
+- **Default:** `['**\/node_modules\/**','**\/dist\/**']`
 
 Externalize means that Vite will bypass the package to native Node. Externalized dependencies will not be applied Vite's transformers and resolvers, so they do not support HMR on reload. Typically, packages under `node_modules` are externalized.
 
