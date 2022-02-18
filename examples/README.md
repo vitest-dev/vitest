@@ -7,6 +7,7 @@
 | `lit` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/lit) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/lit?initialPath=__vitest__) |
 | `mocks` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/mocks) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/mocks?initialPath=__vitest__) |
 | `puppeteer` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/puppeteer) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/puppeteer?initialPath=__vitest__) |
+| `playwright` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/playwright) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/playwright?initialPath=__vitest__) |
 | `react` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/react) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/react?initialPath=__vitest__) |
 | `react-enzyme` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/react-enzyme) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/react-enzyme?initialPath=__vitest__) |
 | `react-mui` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/react-mui) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/react-mui?initialPath=__vitest__) |
