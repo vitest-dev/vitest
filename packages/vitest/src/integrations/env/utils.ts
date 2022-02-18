@@ -1,11 +1,7 @@
-import { getDescriptor } from '../../utils'
 import { KEYS } from './jsdom-keys'
 
-const filterKeys = new Set([
-  'clearInterval',
-  'clearTimeout',
-  'setInterval',
-  'setTimeout'
+const allowRewrite = new Set([
+  'Event',
 ])
 
 export function getWindowKeys(global: any, win: any) {
@@ -13,11 +9,9 @@ export function getWindowKeys(global: any, win: any) {
     .filter((k) => {
       if (k.startsWith('_')) return false
       if (k in global) {
-        const descriptor = getDescriptor(global, k)
-        if (!descriptor) return true
-        return descriptor.configurable === true
+        return allowRewrite.has(k)
       }
-      return !filterKeys.has(k)
+      return true
     }))
 
   return keys
