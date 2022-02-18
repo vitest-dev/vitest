@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest'
+import { afterAll, expect, test } from 'vitest'
 import { getAuthToken } from '../src/env'
 
 const NODE_ENV = process.env.NODE_ENV
