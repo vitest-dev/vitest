@@ -1,6 +1,12 @@
 import { expect, test } from 'vitest'
 import { getAuthToken } from '../src/env'
 
+const NODE_ENV = process.env.NODE_ENV
+
+afterAll(() => {
+  process.env.NODE_ENV = NODE_ENV
+})
+
 test('reassigning NODE_ENV', () => {
   expect(process.env.NODE_ENV).toBeDefined()
   process.env.NODE_ENV = 'development'
