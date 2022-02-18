@@ -4,6 +4,7 @@ import { vi } from '../integrations/vi'
 import { getSnapshotClient } from '../integrations/snapshot/chai'
 import { getFullName, hasFailed, hasTests, partitionSuiteChildren } from '../utils'
 import { getState, setState } from '../integrations/chai/jest-expect'
+import { takeCoverage } from '../integrations/coverage'
 import { getFn, getHooks } from './map'
 import { rpc } from './rpc'
 import { collectTests } from './collect'
@@ -206,6 +207,8 @@ export async function startTests(paths: string[], config: ResolvedConfig) {
   rpc().onCollected(files)
 
   await runSuites(files)
+
+  takeCoverage()
 
   await getSnapshotClient().saveSnap()
 

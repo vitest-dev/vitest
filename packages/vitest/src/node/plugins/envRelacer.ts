@@ -1,6 +1,8 @@
 import MagicString from 'magic-string'
 import type { Plugin } from 'vite'
 
+// so people can reassign envs at runtime
+// import.meta.env.VITE_NAME = 'app' -> process.env.VITE_NAME = 'app'
 export const EnvReplacerPlugin = (): Plugin => {
   return {
     name: 'vitest:env-replacer',

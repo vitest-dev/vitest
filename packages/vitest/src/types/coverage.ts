@@ -63,6 +63,11 @@ export interface C8Options {
 
   all?: boolean
 
+  100?: boolean
+  lines?: number
+  functions?: number
+  branches?: number
+  statements?: number
 }
 
 export interface ResolvedC8Options extends Required<C8Options> {

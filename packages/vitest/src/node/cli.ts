@@ -25,6 +25,7 @@ cli
   .option('--outputFile <filename>', 'write test results to a file when the --reporter=json option is also specified')
   .option('--coverage', 'use c8 for coverage')
   .option('--run', 'do not watch')
+  .option('--mode', 'override Vite mode (default: test)')
   .option('--globals', 'inject apis globally')
   .option('--global', 'deprecated, use --globals')
   .option('--dom', 'mock browser api with happy-dom')
@@ -76,7 +77,7 @@ async function run(cliFilters: string[], options: CliOptions) {
 async function start(cliFilters: string[], options: CliOptions) {
   process.env.TEST = 'true'
   process.env.VITEST = 'true'
-  process.env.NODE_ENV ??= 'test'
+  process.env.NODE_ENV ??= options.mode || 'test'
 
   if (options.run)
     options.watch = false

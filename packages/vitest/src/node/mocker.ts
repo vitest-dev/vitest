@@ -5,8 +5,8 @@ import type { ModuleCache } from 'vite-node'
 import { toFilePath } from 'vite-node/utils'
 import { isWindows, mergeSlashes, normalizeId } from '../utils'
 import { distDir } from '../constants'
-import type { ExecuteOptions } from './execute'
 import type { PendingSuiteMock } from '../types/mocker'
+import type { ExecuteOptions } from './execute'
 
 type Callback = (...args: any[]) => unknown
 
@@ -177,7 +177,7 @@ export class VitestMocker {
       newObj[k] = this.mockObject(obj[k])
       const type = getObjectType(obj[k])
 
-      if (type.includes('Function') && !obj[k].__isSpy) {
+      if (type.includes('Function') && !obj[k]._isMockFunction) {
         VitestMocker.spyModule.spyOn(newObj, k).mockImplementation(() => {})
         Object.defineProperty(newObj[k], 'length', { value: 0 }) // tinyspy retains length, but jest doesnt
       }

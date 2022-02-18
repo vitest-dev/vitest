@@ -309,6 +309,12 @@ export interface UserConfig extends InlineConfig {
    * Run tests that cover a list of source files
    */
   related?: string[] | string
+
+  /**
+   * Overrides Vite mode
+   * @default 'test'
+   */
+  mode?: string
 }
 
 export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters'> {
@@ -323,6 +329,8 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
   snapshotOptions: SnapshotStateOptions
 
   reporters: (Reporter | BuiltinReporters)[]
+
+  defines: Record<string, any>
 
   api?: ApiConfig
 }

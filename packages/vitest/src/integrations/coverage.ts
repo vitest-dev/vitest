@@ -32,13 +32,17 @@ export async function cleanCoverage(options: ResolvedC8Options, clean = true) {
 
 const require = createRequire(import.meta.url)
 
-export async function reportCoverage(ctx: Vitest) {
-  // Flush coverage to disk
+// Flush coverage to disk
+export function takeCoverage() {
   const v8 = require('v8')
   if (v8.takeCoverage == null)
     console.warn('[Vitest] takeCoverage is not available in this NodeJs version.\nCoverage could be incomplete. Update to NodeJs 14.18.')
   else
     v8.takeCoverage()
+}
+
+export async function reportCoverage(ctx: Vitest) {
+  takeCoverage()
 
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const createReport = require('c8/lib/report')
@@ -97,4 +101,16 @@ export async function reportCoverage(ctx: Vitest) {
   }
 
   await report.run()
+
+  if (ctx.config.coverage.enabled) {
+    if (ctx.config.coverage['100']) {
+      ctx.config.coverage.lines = 100
+      ctx.config.coverage.functions = 100
+      ctx.config.coverage.branches = 100
+      ctx.config.coverage.statements = 100
+    }
+
+    const { checkCoverages } = require('c8/lib/commands/check-coverage')
+    await checkCoverages(ctx.config.coverage, report)
+  }
 }

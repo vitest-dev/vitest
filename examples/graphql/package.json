@@ -1,5 +1,5 @@
 {
-  "name": "@vitest/test-lit",
+  "name": "@vitest/graphql",
   "private": true,
   "files": [
     "dist",
@@ -12,9 +12,8 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "@vueuse/integrations": "^7.6.2",
-    "axios": "^0.26.0",
-    "tinyspy": "^0.3.0"
+    "@rollup/plugin-graphql": "^1.1.0",
+    "graphql": "^16.3.0"
   },
   "devDependencies": {
     "@vitest/ui": "latest",
