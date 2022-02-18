@@ -94,7 +94,3 @@ export async function run(ctx: WorkerContext) {
   const { run } = await startViteNode(ctx)
   return run(ctx.files, ctx.config)
 }
-
-declare global {
-  let __vitest_worker__: import('vitest').WorkerGlobalState
-}
