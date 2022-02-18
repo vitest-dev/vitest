@@ -125,7 +125,9 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     if (typeof expected === 'string') { return this.include(expected) }
     else {
       const received = this._obj
-      return new RegExp(expected).test(received)
+      const pass = new RegExp(expected).test(received)
+      // `match` of chai doesn't seems to catch global flag in regex correctly.
+      return this.assert(pass, `expected '${received}' to match ${expected}`, `expected '${received}' not to match ${expected}`, expected)
     }
   })
   def('toContain', function(item) {
