@@ -41,7 +41,7 @@ export default <Environment>({
     )
 
     const keys = new Set(KEYS.concat(Object.getOwnPropertyNames(dom.window))
-      .filter(k => !k.startsWith('_') && !(k in global)))
+      .filter(k => !k.startsWith('_')))
 
     const overrideObject = new Map<string, any>()
     for (const key of keys) {
