@@ -105,3 +105,11 @@ export function deepMerge<T extends object = object, S extends object = T>(targe
 function isMergableObject(item: any): item is Object {
   return isPlainObject(item) && !Array.isArray(item)
 }
+
+export function getDescriptor(obj: any, key: string): PropertyDescriptor | undefined {
+  if (!isObject(obj)) return undefined
+  const descriptor = Object.getOwnPropertyDescriptor(obj, key)
+  if (descriptor) return descriptor
+  const proto = Object.getPrototypeOf(obj)
+  return getDescriptor(proto, key)
+}
