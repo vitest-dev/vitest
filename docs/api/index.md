@@ -442,6 +442,21 @@ TODO
   })
   ```
 
+### toBeTypeOf
+
+- **Type:** `(c: 'bigint' | 'boolean' | 'function' | 'number' | 'object' | 'string' | 'symbol' | 'undefined') => Awaitable<void>`
+
+  `toBeTypeOf` asserts if an actual value is of type of received type.
+
+  ```ts
+  import { test, expect } from 'vitest'
+  const actual = 'stock'
+
+  test('stock is type of string', () => {
+    expect(actual).toBeTypeOf('string')
+  })
+  ```
+
 ### toBeInstanceOf
 
 - **Type:** `(c: any) => Awaitable<void>`
@@ -460,7 +475,7 @@ TODO
 
 ### toBeGreaterThan
 
-- **Type:** `(n: number) => Awaitable<void>`
+- **Type:** `(n: number | bigint) => Awaitable<void>`
 
   `toBeGreaterThan` asserts if actual value is greater than received one. Equal values will fail the test.
 
@@ -475,7 +490,7 @@ TODO
 
 ### toBeGreaterThanOrEqual
 
-- **Type:** `(n: number) => Awaitable<void>`
+- **Type:** `(n: number | bigint) => Awaitable<void>`
 
   `toBeGreaterThanOrEqual` asserts if actual value is greater than received one or equal to it.
 
@@ -490,7 +505,7 @@ TODO
 
 ### toBeLessThan
 
-- **Type:** `(n: number) => Awaitable<void>`
+- **Type:** `(n: number | bigint) => Awaitable<void>`
 
   `toBeLessThan` asserts if actual value is less than received one. Equal values will fail the test.
 
@@ -505,7 +520,7 @@ TODO
 
 ### toBeLessThanOrEqual
 
-- **Type:** `(n: number) => Awaitable<void>`
+- **Type:** `(n: number | bigint) => Awaitable<void>`
 
   `toBeLessThanOrEqual` asserts if actual value is less than received one or equal to it.
 
@@ -596,7 +611,7 @@ TODO
 
 - **Type:** `(received: any) => Awaitable<void>`
 
-  `toContainEqual` asserts if an item with a specific structure and values is contained in an array. 
+  `toContainEqual` asserts if an item with a specific structure and values is contained in an array.
   It works like [`toEqual`](#toequal) inside for each element.
 
   ```ts
@@ -761,7 +776,7 @@ TODO
 
   ```ts
   import { test, expect } from 'vitest'
-  
+
   function getFruitStock(type) {
     if (type === 'pineapples') {
       throw new DiabetesError('Pineapples is not good for people with diabetes')
@@ -1099,8 +1114,6 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
   - If `factory` is defined, will return its result. Factory function can be asynchronous. You may call [`vi.importActual`](#vi-importactual) inside to get the original module. The call to `vi.mock` is hoisted to the top of the file, so you don't have access to variables declared in the global file scope!
   - If `__mocks__` folder with file of the same name exist, all imports will return its exports. For example, `vi.mock('axios')` with `<root>/__mocks__/axios.ts` folder will return everything exported from `axios.ts`.
   - If there is no `__mocks__` folder or a file with the same name inside, will call original module and mock it. (For the rules applied, see [algorithm](/guide/mocking#automocking-algorithm).)
-
-  Additionally, unlike Jest, mocked modules in `<root>/__mocks__` are not loaded unless `vi.mock()` is called. If you need them to be mocked in every test, like in Jest, you can mock them inside [`setupFiles`](/config/#setupfiles).
 
 ### vi.setSystemTime
 

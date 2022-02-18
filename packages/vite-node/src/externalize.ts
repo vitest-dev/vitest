@@ -7,9 +7,6 @@ const ESM_EXT_RE = /\.(es|esm|esm-browser|esm-bundler|es6|module)\.js$/
 const ESM_FOLDER_RE = /\/esm\/(.*\.js)$/
 
 const defaultInline = [
-  /\/vitest\/dist\//,
-  // yarn's .store folder
-  /vitest-virtual-\w+\/dist/,
   /virtual:/,
   /\.ts$/,
   ESM_EXT_RE,
@@ -17,7 +14,7 @@ const defaultInline = [
 ]
 
 const depsExternal = [
-  /\.cjs.js$/,
+  /\.cjs\.js$/,
   /\.mjs$/,
 ]
 
@@ -70,7 +67,6 @@ async function _shouldExternalize(
     return id
 
   const isNodeModule = id.includes('/node_modules/')
-
   id = isNodeModule ? guessCJSversion(id) || id : id
 
   if (matchExternalizePattern(id, defaultInline))
@@ -78,7 +74,8 @@ async function _shouldExternalize(
   if (matchExternalizePattern(id, depsExternal))
     return id
 
-  if (isNodeModule && await isValidNodeImport(id))
+  const isDist = id.includes('/dist/')
+  if ((isNodeModule || isDist) && await isValidNodeImport(id))
     return id
 
   return false

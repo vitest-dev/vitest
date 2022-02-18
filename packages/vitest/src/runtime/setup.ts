@@ -8,6 +8,10 @@ import { rpc } from './rpc'
 
 let globalSetup = false
 export async function setupGlobalEnv(config: ResolvedConfig) {
+  // should be redeclared for each test
+  // if run with "threads: false"
+  setupDefines(config.defines)
+
   if (globalSetup)
     return
 
@@ -20,13 +24,18 @@ export async function setupGlobalEnv(config: ResolvedConfig) {
     (await import('../integrations/globals')).registerApiGlobally()
 }
 
+function setupDefines(defines: Record<string, any>) {
+  for (const key in defines)
+    (globalThis as any)[key] = defines[key]
+}
+
 export function setupConsoleLogSpy() {
   const stdout = new Writable({
     write(data, encoding, callback) {
       rpc().onUserConsoleLog({
         type: 'stdout',
         content: String(data),
-        taskId: process.__vitest_worker__.current?.id,
+        taskId: __vitest_worker__.current?.id,
         time: Date.now(),
       })
       callback()
@@ -37,7 +46,7 @@ export function setupConsoleLogSpy() {
       rpc().onUserConsoleLog({
         type: 'stderr',
         content: String(data),
-        taskId: process.__vitest_worker__.current?.id,
+        taskId: __vitest_worker__.current?.id,
         time: Date.now(),
       })
       callback()
@@ -69,7 +78,7 @@ export async function runSetupFiles(config: ResolvedConfig) {
   const files = toArray(config.setupFiles)
   await Promise.all(
     files.map(async(file) => {
-      process.__vitest_worker__.moduleCache.delete(file)
+      __vitest_worker__.moduleCache.delete(file)
       await import(file)
     }),
   )

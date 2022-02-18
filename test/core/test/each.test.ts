@@ -27,6 +27,20 @@ describe.each([
 })
 
 describe.each([
+  [1, 'a', '1a'],
+  [1, 'b', '1b'],
+  [2, 'c', '2c'],
+] as const)('describe concatenate(%i, %s)', (a, b, expected) => {
+  test(`returns ${expected}`, () => {
+    // This will fail typechecking if const is not used and/or types for a,b are merged into a union
+    const typedA: number = a
+    const typedB: string = b
+
+    expect(`${typedA}${typedB}`).toBe(expected)
+  })
+})
+
+describe.each([
   { a: 1, b: 1, expected: 2 },
   { a: 1, b: 2, expected: 3 },
   { a: 2, b: 1, expected: 3 },

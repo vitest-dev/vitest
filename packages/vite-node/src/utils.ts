@@ -16,8 +16,10 @@ export function normalizeId(id: string, base?: string): string {
     .replace(/^\/@id\/__x00__/, '\0') // virtual modules start with `\0`
     .replace(/^\/@id\//, '')
     .replace(/^__vite-browser-external:/, '')
-    .replace(/^node:/, '')
+    .replace(/^(node|file):/, '')
+    .replace(/^\/+/, '/') // remove duplicate leading slashes
     .replace(/[?&]v=\w+/, '?') // remove ?v= query
+    .replace(/\?import/, '') // remove ?import query
     .replace(/\?$/, '') // remove end query mark
 }
 

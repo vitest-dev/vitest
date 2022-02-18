@@ -6,7 +6,7 @@
     "coverage": "vitest run --coverage"
   },
   "devDependencies": {
-    "execa": "^6.0.0",
+    "execa": "^6.1.0",
     "vitest": "workspace:*"
   }
 }

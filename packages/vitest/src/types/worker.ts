@@ -1,12 +1,13 @@
-import type { Profiler } from 'inspector'
 import type { MessagePort } from 'worker_threads'
-import type { FetchFunction, RawSourceMap, ViteNodeResolveId } from 'vite-node'
+import type { FetchFunction, ModuleCache, RawSourceMap, ViteNodeResolveId } from 'vite-node'
+import type { BirpcReturn } from 'birpc'
 import type { ResolvedConfig } from './config'
-import type { File, TaskResultPack } from './tasks'
+import type { File, TaskResultPack, Test } from './tasks'
 import type { SnapshotResult } from './snapshot'
 import type { UserConsoleLog } from './general'
 
 export interface WorkerContext {
+  id: number
   port: MessagePort
   config: ResolvedConfig
   files: string[]
@@ -27,5 +28,13 @@ export interface WorkerRPC {
   onTaskUpdate: (pack: TaskResultPack[]) => void
 
   snapshotSaved: (snapshot: SnapshotResult) => void
-  coverageCollected: (coverage: Profiler.TakePreciseCoverageReturnType) => void
+}
+
+export interface WorkerGlobalState {
+  ctx: WorkerContext
+  config: ResolvedConfig
+  rpc: BirpcReturn<WorkerRPC>
+  current?: Test
+  filepath?: string
+  moduleCache: Map<string, ModuleCache>
 }

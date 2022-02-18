@@ -9,7 +9,7 @@ import fs from 'fs'
 import type { Config } from '@jest/types'
 // import { getStackTraceLines, getTopFrame } from 'jest-message-util'
 import type { OptionsReceived as PrettyFormatOptions } from 'pretty-format'
-import type { SnapshotData, SnapshotMatchOptions, SnapshotStateOptions } from '../../../types'
+import type { ParsedStack, SnapshotData, SnapshotMatchOptions, SnapshotStateOptions } from '../../../types'
 import { slash } from '../../../utils'
 import { parseStacktrace } from '../../../utils/source-map'
 import type { InlineSnapshot } from './inlineSnapshot'
@@ -87,6 +87,18 @@ export default class SnapshotState {
     })
   }
 
+  private _getInlineSnapshotStack(stacks: ParsedStack[]) {
+    // if called inside resolves/rejects, stacktrace is different
+    const promiseIndex = stacks.findIndex(i => i.method.match(/__VITEST_(RESOLVES|REJECTS)__/))
+    if (promiseIndex !== -1)
+      return stacks[promiseIndex + 3]
+
+    // inline snapshot function is called __VITEST_INLINE_SNAPSHOT__
+    // in integrations/snapshot/chai.ts
+    const stackIndex = stacks.findIndex(i => i.method.includes('__VITEST_INLINE_SNAPSHOT__'))
+    return stackIndex !== -1 ? stacks[stackIndex + 2] : null
+  }
+
   private _addSnapshot(
     key: string,
     receivedSerialized: string,
@@ -97,10 +109,7 @@ export default class SnapshotState {
       const error = options.error || new Error('Unknown error')
       const stacks = parseStacktrace(error, true)
       stacks.forEach(i => i.file = slash(i.file))
-      // inline snapshot function is called __VITEST_INLINE_SNAPSHOT__
-      // in integrations/snapshot/chai.ts
-      const stackIndex = stacks.findIndex(i => i.method.includes('__VITEST_INLINE_SNAPSHOT__'))
-      const stack = stackIndex !== -1 ? stacks[stackIndex + 2] : null
+      const stack = this._getInlineSnapshotStack(stacks)
       if (!stack) {
         throw new Error(
           `Vitest: Couldn't infer stack frame for inline snapshot.\n${JSON.stringify(stacks)}`,
@@ -193,7 +202,7 @@ export default class SnapshotState {
     const receivedSerialized = addExtraLineBreaks(serialize(received, undefined, this._snapshotFormat))
     const expected = isInline ? inlineSnapshot : this._snapshotData[key]
     const expectedTrimmed = prepareExpected(expected)
-    const pass = expectedTrimmed === receivedSerialized?.trim()
+    const pass = expectedTrimmed === prepareExpected(receivedSerialized)
     const hasSnapshot = expected !== undefined
     const snapshotIsPersisted = isInline || fs.existsSync(this._snapshotPath)
 

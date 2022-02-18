@@ -1,10 +1,10 @@
 import { existsSync, readdirSync } from 'fs'
 import { isNodeBuiltin } from 'mlly'
-import { basename, dirname, join, resolve } from 'pathe'
+import { basename, dirname, resolve } from 'pathe'
 import type { ModuleCache } from 'vite-node'
 import { toFilePath } from 'vite-node/utils'
-import { spies, spyOn } from '../integrations/jest-mock'
-import { mergeSlashes, normalizeId } from '../utils'
+import { isWindows, mergeSlashes, normalizeId } from '../utils'
+import { distDir } from '../constants'
 import type { ExecuteOptions } from './execute'
 
 export type SuiteMocks = Record<string, Record<string, string | null | (() => unknown)>>
@@ -22,7 +22,7 @@ function getObjectType(value: unknown): string {
   return Object.prototype.toString.apply(value).slice(8, -1)
 }
 
-function mockPrototype(proto: any) {
+function mockPrototype(spyOn: typeof import('../integrations/jest-mock')['spyOn'], proto: any) {
   if (!proto) return null
 
   const newProto: any = {}
@@ -46,9 +46,9 @@ export class VitestMocker {
   private request!: (dep: string) => unknown
 
   private root: string
-  // private mockMap: SuiteMocks
 
   private callbacks: Record<string, ((...args: any[]) => unknown)[]> = {}
+  private spy?: typeof import('../integrations/jest-mock')
 
   constructor(
     public options: ExecuteOptions,
@@ -56,7 +56,6 @@ export class VitestMocker {
     request?: (dep: string) => unknown,
   ) {
     this.root = this.options.root
-    // this.mockMap = options.mockMap
     this.request = request!
   }
 
@@ -74,7 +73,7 @@ export class VitestMocker {
   }
 
   public getSuiteFilepath() {
-    return process.__vitest_worker__?.filepath || 'global'
+    return __vitest_worker__?.filepath || 'global'
   }
 
   public getMocks() {
@@ -100,7 +99,7 @@ export class VitestMocker {
     await Promise.all(pendingIds.map(async(mock) => {
       const { path, external } = await this.resolvePath(mock.id, mock.importer)
       if (mock.type === 'unmock')
-        this.unmockPath(path, external)
+        this.unmockPath(path)
       if (mock.type === 'mock')
         this.mockPath(path, external, mock.factory)
     }))
@@ -122,15 +121,15 @@ export class VitestMocker {
     return this.getMocks()[this.resolveDependency(dep)]
   }
 
-  // npm resolves as /node_modules, but we store as /@fs/.../node_modules
   public resolveDependency(dep: string) {
-    if (dep.startsWith('/node_modules/'))
-      dep = mergeSlashes(`/@fs/${join(this.root, dep)}`)
-
-    return normalizeId(dep)
+    return normalizeId(dep).replace(/^\/@fs\//, isWindows ? '' : '/')
   }
 
-  public getActualPath(path: string, external: string | null) {
+  public normalizePath(path: string) {
+    return normalizeId(path.replace(this.root, '')).replace(/^\/@fs\//, isWindows ? '' : '/')
+  }
+
+  public getFsPath(path: string, external: string | null) {
     if (external)
       return mergeSlashes(`/@fs/${path}`)
 
@@ -167,6 +166,9 @@ export class VitestMocker {
   }
 
   public mockObject(obj: any) {
+    if (!this.spy)
+      throw new Error('Internal Vitest error: Spy function is not defined.')
+
     const type = getObjectType(obj)
 
     if (Array.isArray(obj))
@@ -176,7 +178,7 @@ export class VitestMocker {
 
     const newObj = { ...obj }
 
-    const proto = mockPrototype(Object.getPrototypeOf(obj))
+    const proto = mockPrototype(this.spy.spyOn, Object.getPrototypeOf(obj))
     Object.setPrototypeOf(newObj, proto)
 
     // eslint-disable-next-line no-restricted-syntax
@@ -184,18 +186,18 @@ export class VitestMocker {
       newObj[k] = this.mockObject(obj[k])
       const type = getObjectType(obj[k])
 
-      if (type.includes('Function') && !obj[k].__isSpy) {
-        spyOn(newObj, k).mockImplementation(() => {})
+      if (type.includes('Function') && !obj[k]._isMockFunction) {
+        this.spy.spyOn(newObj, k).mockImplementation(() => {})
         Object.defineProperty(newObj[k], 'length', { value: 0 }) // tinyspy retains length, but jest doesnt
       }
     }
     return newObj
   }
 
-  public unmockPath(path: string, external: string | null) {
+  public unmockPath(path: string) {
     const suitefile = this.getSuiteFilepath()
 
-    const fsPath = this.getActualPath(path, external)
+    const fsPath = this.normalizePath(path)
 
     if (this.mockMap[suitefile]?.[fsPath])
       delete this.mockMap[suitefile][fsPath]
@@ -204,7 +206,7 @@ export class VitestMocker {
   public mockPath(path: string, external: string | null, factory?: () => any) {
     const suitefile = this.getSuiteFilepath()
 
-    const fsPath = this.getActualPath(path, external)
+    const fsPath = this.normalizePath(path)
 
     this.mockMap[suitefile] ??= {}
     this.mockMap[suitefile][fsPath] = factory || this.resolveMockPath(path, external)
@@ -212,7 +214,7 @@ export class VitestMocker {
 
   public async importActual<T>(id: string, importer: string): Promise<T> {
     const { path, external } = await this.resolvePath(id, importer)
-    const fsPath = this.getActualPath(path, external)
+    const fsPath = this.getFsPath(path, external)
     const result = await this.request(fsPath)
     return result as T
   }
@@ -226,7 +228,8 @@ export class VitestMocker {
       mock = this.resolveMockPath(path, external)
 
     if (mock === null) {
-      const fsPath = this.getActualPath(path, external)
+      await this.ensureSpy()
+      const fsPath = this.getFsPath(path, external)
       const mod = await this.request(fsPath)
       return this.mockObject(mod)
     }
@@ -235,7 +238,13 @@ export class VitestMocker {
     return this.requestWithMock(mock)
   }
 
+  private async ensureSpy() {
+    if (this.spy) return
+    this.spy = await this.request(resolve(distDir, 'jest-mock.js')) as typeof import('../integrations/jest-mock')
+  }
+
   public async requestWithMock(dep: string) {
+    await this.ensureSpy()
     await this.resolveMocks()
 
     const mock = this.getDependencyMock(dep)
@@ -256,20 +265,6 @@ export class VitestMocker {
     if (typeof mock === 'string')
       dep = mock
     return this.request(dep)
-  }
-
-  public clearMocks({ clearMocks, mockReset, restoreMocks }: { clearMocks?: boolean; mockReset?: boolean; restoreMocks?: boolean }) {
-    if (!clearMocks && !mockReset && !restoreMocks)
-      return
-
-    spies.forEach((s) => {
-      if (restoreMocks)
-        s.mockRestore()
-      else if (mockReset)
-        s.mockReset()
-      else if (clearMocks)
-        s.mockClear()
-    })
   }
 
   public queueMock(id: string, importer: string, factory?: () => unknown) {

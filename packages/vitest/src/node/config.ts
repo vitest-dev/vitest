@@ -1,8 +1,10 @@
 import { resolve } from 'pathe'
+import c from 'picocolors'
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 
 import type { ApiConfig, ResolvedConfig, UserConfig } from '../types'
-import { defaultExclude, defaultInclude, defaultPort } from '../constants'
+import { defaultPort } from '../constants'
+import { configDefaults } from '../defaults'
 import { resolveC8Options } from '../integrations/coverage'
 import { toArray } from '../utils'
 
@@ -44,12 +46,29 @@ export function resolveConfig(
   options: UserConfig,
   viteConfig: ResolvedViteConfig,
 ): ResolvedConfig {
-  if (options.dom)
+  if (options.dom) {
+    if (
+      viteConfig.test?.environment != null
+      && viteConfig.test!.environment !== 'happy-dom'
+    ) {
+      console.warn(
+        c.yellow(
+          `${c.inverse(c.yellow(' Vitest '))} Your config.test.environment ("${
+            viteConfig.test.environment
+          }") conflicts with --dom flag ("happy-dom"), ignoring "${
+            viteConfig.test.environment
+          }"`,
+        ),
+      )
+    }
+
     options.environment = 'happy-dom'
+  }
 
   const globals = options?.global ?? options.globals
 
   const resolved = {
+    ...configDefaults,
     ...options,
     root: viteConfig.root,
     globals,
@@ -59,32 +78,25 @@ export function resolveConfig(
   if (viteConfig.base !== '/')
     resolved.base = viteConfig.base
 
-  resolved.coverage = resolveC8Options(resolved.coverage, resolved.root)
+  resolved.coverage = resolveC8Options(options.coverage || {}, resolved.root)
 
   resolved.deps = resolved.deps || {}
-
-  resolved.environment = resolved.environment || 'node'
-  resolved.threads = resolved.threads ?? true
-
-  resolved.clearMocks = resolved.clearMocks ?? false
-  resolved.restoreMocks = resolved.restoreMocks ?? false
-  resolved.mockReset = resolved.mockReset ?? false
-
-  resolved.include = resolved.include ?? defaultInclude
-  resolved.exclude = resolved.exclude ?? defaultExclude
-
-  resolved.testTimeout = resolved.testTimeout ?? 5_000
-  resolved.hookTimeout = resolved.hookTimeout ?? 10_000
-
-  resolved.isolate = resolved.isolate ?? true
+  // vitenode will try to import such file with native node,
+  // but then our mocker will not work properly
+  resolved.deps.inline ??= []
+  resolved.deps.inline.push(
+    /^(?!.*(?:node_modules)).*\.mjs$/,
+    /^(?!.*(?:node_modules)).*\.cjs\.js$/,
+    /\/vitest\/dist\//,
+    // yarn's .store folder
+    /vitest-virtual-\w+\/dist/,
+  )
 
   resolved.testNamePattern = resolved.testNamePattern
     ? resolved.testNamePattern instanceof RegExp
       ? resolved.testNamePattern
       : new RegExp(resolved.testNamePattern)
     : undefined
-
-  resolved.watchIgnore = resolved.watchIgnore ?? [/\/node_modules\//, /\/dist\//]
 
   const CI = !!process.env.CI
   const UPDATE_SNAPSHOT = resolved.update || process.env.UPDATE_SNAPSHOT
@@ -110,6 +122,14 @@ export function resolveConfig(
 
   if (options.related)
     resolved.related = toArray(options.related).map(file => resolve(resolved.root, file))
+
+  resolved.reporters = Array.from(new Set([
+    ...toArray(resolved.reporters),
+    // @ts-expect-error from CLI
+    ...toArray(resolved.reporter),
+  ])).filter(Boolean)
+  if (!resolved.reporters.length)
+    resolved.reporters.push('default')
 
   return resolved
 }

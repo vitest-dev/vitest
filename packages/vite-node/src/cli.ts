@@ -82,10 +82,10 @@ async function run(options: CliOptions = {}) {
     fetchModule(id) {
       return node.fetchModule(id)
     },
-    resolveId(id, importer) {
-      return node.resolveId(id, importer)
-    },
   })
+
+  // provide the vite define variable in this context
+  await runner.executeId('/@vite/env')
 
   for (const file of files)
     await runner.executeFile(file)

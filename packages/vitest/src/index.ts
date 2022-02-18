@@ -1,13 +1,10 @@
-import type {
-  Plugin as PrettyFormatPlugin,
-} from 'pretty-format'
+import type { Plugin as PrettyFormatPlugin } from 'pretty-format'
 import type { Any, Anything } from './integrations/chai/jest-asymmetric-matchers'
 import type { MatcherState, MatchersObject } from './integrations/chai/types'
 import type { Constructable, InlineConfig } from './types'
 
-type VitestInlineConfig = InlineConfig
-
 export { suite, test, describe, it } from './runtime/suite'
+
 export * from './runtime/hooks'
 export * from './integrations/chai'
 export * from './integrations/jest-mock'
@@ -15,6 +12,8 @@ export * from './integrations/vi'
 
 export * from './types'
 export * from './api/types'
+
+type VitestInlineConfig = InlineConfig
 
 declare module 'vite' {
   interface UserConfig {
@@ -41,6 +40,12 @@ type Promisify<O> = {
 }
 
 declare global {
+  // support augmenting jest.Matchers by other libraries
+  namespace jest {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    interface Matchers<R, T = {}> {}
+  }
+
   namespace Vi {
     interface ExpectStatic extends Chai.ExpectStatic, AsymmetricMatchersContaining {
       <T>(actual: T, message?: string): Vi.Assertion<T>
@@ -56,7 +61,7 @@ declare global {
       not: AsymmetricMatchersContaining
     }
 
-    interface JestAssertion<T = any> {
+    interface JestAssertion<T = any> extends jest.Matchers<void, T> {
       // Snapshot
       toMatchSnapshot<U extends { [P in keyof T]: any }>(snapshot: Partial<U>, message?: string): void
       toMatchSnapshot(message?: string): void
@@ -77,14 +82,15 @@ declare global {
       toContainEqual<E>(item: E): void
       toBeTruthy(): void
       toBeFalsy(): void
-      toBeGreaterThan(num: number): void
-      toBeGreaterThanOrEqual(num: number): void
-      toBeLessThan(num: number): void
-      toBeLessThanOrEqual(num: number): void
+      toBeGreaterThan(num: number | bigint): void
+      toBeGreaterThanOrEqual(num: number | bigint): void
+      toBeLessThan(num: number | bigint): void
+      toBeLessThanOrEqual(num: number | bigint): void
       toBeNaN(): void
       toBeUndefined(): void
       toBeNull(): void
       toBeDefined(): void
+      toBeTypeOf(expected: 'bigint' | 'boolean' | 'function' | 'number' | 'object' | 'string' | 'symbol' | 'undefined'): void
       toBeInstanceOf<E>(expected: E): void
       toBeCalledTimes(times: number): void
       toHaveLength(length: number): void
@@ -116,15 +122,15 @@ declare global {
 
     // eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error
     // @ts-ignore build namspace conflict
-    type VitestAssertion<A> = {
+    type VitestAssertion<A, T> = {
       [K in keyof A]: A[K] extends Chai.Assertion
-        ? Assertion<any>
+        ? Assertion<T>
         : A[K] extends (...args: any[]) => any
           ? A[K] // not converting function since they may contain overload
-          : VitestAssertion<A[K]>
-    }
+          : VitestAssertion<A[K], T>
+    } & ((type: string, message?: string) => Assertion)
 
-    interface Assertion<T = any> extends VitestAssertion<Chai.Assertion>, JestAssertion<T> {
+    interface Assertion<T = any> extends VitestAssertion<Chai.Assertion, T>, JestAssertion<T> {
       resolves: Promisify<Assertion<T>>
       rejects: Promisify<Assertion<T>>
     }

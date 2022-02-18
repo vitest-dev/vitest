@@ -8,7 +8,7 @@
 
 [[redirects]]
   from = "/new"
-  to = "https://stackblitz.com/fork/node-8hobg2?file=test%2Fbasic.test.ts&view=editor"
+  to = "https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/basic?initialPath=__vitest__"
   status = 302
 
 [[redirects]]

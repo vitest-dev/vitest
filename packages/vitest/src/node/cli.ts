@@ -1,4 +1,5 @@
 import cac from 'cac'
+import { execa } from 'execa'
 import type { UserConfig } from '../types'
 import { version } from '../../package.json'
 import { ensurePackageInstalled } from '../utils'
@@ -15,20 +16,22 @@ cli
   .option('-w, --watch', 'watch mode')
   .option('-t, --testNamePattern <pattern>', 'run test names with the specified pattern')
   .option('--ui', 'enable UI')
-  .option('--open', 'open UI automatically', { default: true })
+  .option('--open', 'open UI automatically (default: !process.env.CI))')
   .option('--api [api]', 'serve API, available options: --api.port <port>, --api.host [host] and --api.strictPort')
-  .option('--threads', 'enabled threads', { default: true })
+  .option('--threads', 'enabled threads (default: true)')
   .option('--silent', 'silent console output from tests')
-  .option('--isolate', 'isolate environment for each test file', { default: true })
+  .option('--isolate', 'isolate environment for each test file (default: true)')
   .option('--reporter <name>', 'reporter')
   .option('--outputFile <filename>', 'write test results to a file when the --reporter=json option is also specified')
   .option('--coverage', 'use c8 for coverage')
   .option('--run', 'do not watch')
+  .option('--mode', 'override Vite mode (default: test)')
   .option('--globals', 'inject apis globally')
   .option('--global', 'deprecated, use --globals')
   .option('--dom', 'mock browser api with happy-dom')
-  .option('--environment <env>', 'runner environment', { default: 'node' })
+  .option('--environment <env>', 'runner environment (default: node)')
   .option('--passWithNoTests', 'pass when no tests found')
+  .option('--allowOnly', 'Allow tests and suites that are marked as only (default: !process.env.CI)')
   .help()
 
 cli
@@ -41,33 +44,43 @@ cli
 
 cli
   .command('watch [...filters]')
-  .action(dev)
+  .action(start)
 
 cli
   .command('dev [...filters]')
-  .action(dev)
+  .action(start)
 
 cli
   .command('[...filters]')
-  .action(dev)
+  .action(start)
 
 cli.parse()
 
-async function runRelated(relatedFiles: string[] | string, argv: UserConfig) {
+export interface CliOptions extends UserConfig {
+  /**
+   * Override the watch mode
+   */
+  run?: boolean
+}
+
+async function runRelated(relatedFiles: string[] | string, argv: CliOptions) {
   argv.related = relatedFiles
   argv.passWithNoTests ??= true
-  await dev([], argv)
+  await start([], argv)
 }
 
-async function dev(cliFilters: string[], argv: UserConfig) {
-  if (argv.watch == null)
-    argv.watch = !process.env.CI && !argv.run
-  await run(cliFilters, argv)
+async function run(cliFilters: string[], options: CliOptions) {
+  options.run = true
+  await start(cliFilters, options)
 }
 
-async function run(cliFilters: string[], options: UserConfig) {
+async function start(cliFilters: string[], options: CliOptions) {
+  process.env.TEST = 'true'
   process.env.VITEST = 'true'
-  process.env.NODE_ENV = 'test'
+  process.env.NODE_ENV ??= options.mode || 'test'
+
+  if (options.run)
+    options.watch = false
 
   if (!await ensurePackageInstalled('vite'))
     process.exit(1)
@@ -80,6 +93,12 @@ async function run(cliFilters: string[], options: UserConfig) {
   if (ctx.config.coverage.enabled) {
     if (!await ensurePackageInstalled('c8'))
       process.exit(1)
+
+    if (!process.env.NODE_V8_COVERAGE) {
+      process.env.NODE_V8_COVERAGE = ctx.config.coverage.tempDirectory
+      const { exitCode } = await execa(process.argv0, process.argv.slice(1), { stdio: 'inherit', reject: false })
+      process.exit(exitCode)
+    }
   }
 
   if (ctx.config.environment && ctx.config.environment !== 'node') {

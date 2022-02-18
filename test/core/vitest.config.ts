@@ -17,6 +17,19 @@ export default defineConfig({
       },
     },
   ],
+  define: {
+    'import.meta.env.TEST_NAME': '"hello world"',
+    'process.env.HELLO_PROCESS': '"hello process"',
+    // can reassign
+    '__DEFINE__': '"defined"',
+    '__JSON__': JSON.stringify({ hello: 'world' }),
+    // edge cases
+    // should not be available for reassigning as __MODE__ = 'test2'
+    // but can reassign with process.env.MODE = 'test2'
+    '__MODE__': 'process.env.MODE',
+    'SOME.VARIABLE': '"variable"',
+    'SOME.SOME.VARIABLE': '"nested variable"',
+  },
   test: {
     testTimeout: 2000,
     // threads: false,

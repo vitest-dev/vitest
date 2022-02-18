@@ -1,10 +1,10 @@
 import { performance } from 'perf_hooks'
-import inspector from 'inspector'
 import type { HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, Test } from '../types'
 import { vi } from '../integrations/vi'
 import { getSnapshotClient } from '../integrations/snapshot/chai'
 import { getFullName, hasFailed, hasTests, partitionSuiteChildren } from '../utils'
 import { getState, setState } from '../integrations/chai/jest-expect'
+import { takeCoverage } from '../integrations/coverage'
 import { getFn, getHooks } from './map'
 import { rpc } from './rpc'
 import { collectTests } from './collect'
@@ -48,6 +48,11 @@ export async function runTest(test: Test) {
   if (test.mode !== 'run')
     return
 
+  if (test.result?.state === 'fail') {
+    updateTask(test)
+    return
+  }
+
   const start = performance.now()
 
   test.result = {
@@ -59,7 +64,7 @@ export async function runTest(test: Test) {
 
   getSnapshotClient().setTest(test)
 
-  process.__vitest_worker__.current = test
+  __vitest_worker__.current = test
 
   try {
     await callSuiteHook(test.suite, 'beforeEach', [test, test.suite])
@@ -110,14 +115,26 @@ export async function runTest(test: Test) {
 
   test.result.duration = performance.now() - start
 
-  process.__vitest_worker__.current = undefined
+  __vitest_worker__.current = undefined
 
   updateTask(test)
 }
 
+function markTasksAsSkipped(suite: Suite) {
+  suite.tasks.forEach((t) => {
+    t.mode = 'skip'
+    t.result = { ...t.result, state: 'skip' }
+    updateTask(t)
+    if (t.type === 'suite') markTasksAsSkipped(t)
+  })
+}
+
 export async function runSuite(suite: Suite) {
-  if (suite.result?.state === 'fail')
+  if (suite.result?.state === 'fail') {
+    markTasksAsSkipped(suite)
+    updateTask(suite)
     return
+  }
 
   const start = performance.now()
 
@@ -189,24 +206,9 @@ export async function startTests(paths: string[], config: ResolvedConfig) {
 
   rpc().onCollected(files)
 
-  let session!: inspector.Session
-  if (config.coverage.enabled) {
-    session = new inspector.Session()
-    session.connect()
-
-    session.post('Profiler.enable')
-    session.post('Profiler.startPreciseCoverage', { detailed: true })
-  }
-
   await runSuites(files)
 
-  if (config.coverage.enabled) {
-    session.post('Profiler.takePreciseCoverage', (_, coverage) => {
-      rpc().coverageCollected(coverage)
-    })
-
-    session.disconnect()
-  }
+  takeCoverage()
 
   await getSnapshotClient().saveSnap()
 
@@ -214,7 +216,7 @@ export async function startTests(paths: string[], config: ResolvedConfig) {
 }
 
 export function clearModuleMocks() {
-  const { clearMocks, mockReset, restoreMocks } = process.__vitest_worker__.config
+  const { clearMocks, mockReset, restoreMocks } = __vitest_worker__.config
 
   // since each function calls another, we can just call one
   if (restoreMocks)

@@ -36,5 +36,5 @@ describe('basic', async() => {
       console.error(e)
       expect(e).toBeUndefined()
     }
-  })
+  }, 60_000)
 })

@@ -18,6 +18,7 @@ const entries = [
   'src/node.ts',
   'src/runtime/worker.ts',
   'src/runtime/entry.ts',
+  'src/integrations/jest-mock.ts',
 ]
 
 const dtsEntries = [
@@ -30,6 +31,7 @@ const external = [
   ...Object.keys(pkg.peerDependencies),
   'worker_threads',
   'inspector',
+  'c8',
 ]
 
 export default ({ watch }) => [

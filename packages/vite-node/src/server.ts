@@ -72,12 +72,15 @@ export class ViteNodeServer {
   private async _fetchModule(id: string): Promise<FetchResult> {
     let result: FetchResult
 
-    const timestamp = this.server.moduleGraph.getModuleById(id)?.lastHMRTimestamp || Date.now()
-    const cache = this.fetchCache.get(id)
+    const filePath = toFilePath(id, this.server.config.root)
+
+    const module = this.server.moduleGraph.getModuleById(id)
+    const timestamp = module?.lastHMRTimestamp || Date.now()
+    const cache = this.fetchCache.get(filePath)
     if (timestamp && cache && cache.timestamp >= timestamp)
       return cache.result
 
-    const externalize = await this.shouldExternalize(toFilePath(id, this.server.config.root))
+    const externalize = await this.shouldExternalize(filePath)
     if (externalize) {
       result = { externalize }
     }
@@ -86,7 +89,7 @@ export class ViteNodeServer {
       result = { code: r?.code, map: r?.map as unknown as RawSourceMap }
     }
 
-    this.fetchCache.set(id, {
+    this.fetchCache.set(filePath, {
       timestamp,
       result,
     })
