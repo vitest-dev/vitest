@@ -159,7 +159,7 @@ export interface InlineConfig {
   /**
    * Default timeout of a hook in milliseconds
    *
-   * @default 5000
+   * @default 10000
    */
   hookTimeout?: number
 
@@ -296,11 +296,6 @@ export interface UserConfig extends InlineConfig {
   dom?: boolean
 
   /**
-   * Do not watch
-   */
-  run?: boolean
-
-  /**
    * Pass with no tests
    */
   passWithNoTests?: boolean
@@ -314,9 +309,15 @@ export interface UserConfig extends InlineConfig {
    * Run tests that cover a list of source files
    */
   related?: string[] | string
+
+  /**
+   * Overrides Vite mode
+   * @default 'test'
+   */
+  mode?: string
 }
 
-export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api'> {
+export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters'> {
   base?: string
 
   config?: string
@@ -326,6 +327,10 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
 
   coverage: ResolvedC8Options
   snapshotOptions: SnapshotStateOptions
+
+  reporters: (Reporter | BuiltinReporters)[]
+
+  defines: Record<string, any>
 
   api?: ApiConfig
 }

@@ -1,3 +1,3 @@
 export const rpc = () => {
-  return process.__vitest_worker__!.rpc
+  return __vitest_worker__!.rpc
 }

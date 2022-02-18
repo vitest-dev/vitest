@@ -17,11 +17,11 @@ export async function runWithSuite(suite: SuiteCollector, fn: (() => Awaitable<v
 }
 
 export function getDefaultTestTimeout() {
-  return process.__vitest_worker__!.config!.testTimeout
+  return __vitest_worker__!.config!.testTimeout
 }
 
 export function getDefaultHookTimeout() {
-  return process.__vitest_worker__!.config!.hookTimeout
+  return __vitest_worker__!.config!.hookTimeout
 }
 
 export function withTimeout<T extends((...args: any[]) => any)>(fn: T, _timeout?: number): T {

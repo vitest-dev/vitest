@@ -127,7 +127,11 @@ export default defineConfig({
             {
               text: 'Comparisons',
               link: '/guide/comparisons'
-            }
+            },
+            {
+              text: 'Migration Guide',
+              link: '/guide/migration'
+            },
           ]
         },
         /* TODO

@@ -25,6 +25,17 @@ test('JSON', () => {
   assert.deepEqual(JSON.parse(output), input, 'matches original')
 })
 
+test('mode and NODE_ENV is test by default', () => {
+  expect(process.env.NODE_ENV).toBe('test')
+  expect(import.meta.env.MODE).toBe('test')
+})
+
+test('assertion is callable', () => {
+  const str = '13'
+  expect(str).to.be.a('string')
+  expect(str).not.to.be.a('number')
+})
+
 const hi = suite('suite')
 
 hi.test('expect truthy', () => {

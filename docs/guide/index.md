@@ -6,11 +6,11 @@
 
 Vitest is a blazing fast unit test framework powered by Vite.
 
-You can learn more about the rationale behind the project in the [Why Vite](./why) section.
+You can learn more about the rationale behind the project in the [Why Vitest](./why) section.
 
 ## Trying Vitest Online
 
-You can try Vitest online on [StackBlitz](https://vitest.dev/new). It runs Vitest directly in the browser, and it is almost identical to the local setup but doesn't require installing anything on your machine.
+You can try Vitest online on [StackBlitz](https://vitest.new). It runs Vitest directly in the browser, and it is almost identical to the local setup but doesn't require installing anything on your machine.
 
 ## Adding Vitest to your Project
 
@@ -35,13 +35,13 @@ One of the main advantages of Vitest is its unified configuration with Vite. If 
 
 - Create `vitest.config.ts`, which will have the higher priority
 - Pass `--config` option to CLI, e.g. `vitest --config ./path/to/vitest.config.ts`
-- Use `process.env.VITEST` to conditionally apply different configuration in `vite.config.ts`
+- Use `process.env.VITEST` or `mode` property on `defineConfig` (will be set to `test` if not overridden) to conditionally apply different configuration in `vite.config.ts`
 
 To configure `vitest` itself, add `test` property in your Vite config. You'll also need to add a reference to Vitest types using a [triple slash command](https://www.typescriptlang.org/docs/handbook/triple-slash-directives.html#-reference-types-) at the top of your config file.
 
 ```ts
 /// <reference types="vitest" />
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/node'
 
 export default defineConfig({
   test: {
@@ -112,6 +112,7 @@ You can specify additional CLI options like `--port` or `--https`. For a full li
 | `--outputFile <filename>` | Write test results to a file when the `--reporter=json` option is also specified |
 | `--coverage` | Use c8 for coverage |
 | `--run` | Do not watch |
+| `--mode` | Override Vite mode (default: `test`) |
 | `--global` | Inject APIs globally |
 | `--dom` | Mock browser api with happy-dom |
 | `--environment <env>` | Runner environment (default: node) |
@@ -136,6 +137,8 @@ You can specify additional CLI options like `--port` or `--https`. For a full li
 - [gridjs-svelte](https://github.com/iamyuu/gridjs-svelte)
 - [spring-easing](https://github.com/okikio/spring-easing)
 - [bytemd](https://github.com/bytedance/bytemd)
+- [faker](https://github.com/faker-js/faker)
+- [million](https://github.com/aidenybai/million)
 
 ## Using Unreleased Commits
 

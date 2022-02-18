@@ -21,7 +21,7 @@ class VitestUtils {
     this._mockedDate = null
 
     if (!this._mocker)
-      throw new Error('Vitest was initialised with native Node instead of Vite Node')
+      throw new Error('Vitest was initialized with native Node instead of Vite Node')
   }
 
   // timers
@@ -105,7 +105,7 @@ class VitestUtils {
    * return it.
    * - If there is no `__mocks__` folder or a file with the same name inside, will call original
    * module and mock it.
-   * @param path Path to the module. Can be aliased, if your config suppors it
+   * @param path Path to the module. Can be aliased, if your config supports it
    * @param factory Factory for the mocked module. Has the highest priority.
    */
   public mock(path: string, factory?: () => any) {
@@ -115,7 +115,7 @@ class VitestUtils {
   /**
    * Removes module from mocked registry. All subsequent calls to import will
    * return original module even if it was mocked.
-   * @param path Path to the module. Can be aliased, if your config suppors it
+   * @param path Path to the module. Can be aliased, if your config supports it
    */
   public unmock(path: string) {
     this._mocker.queueUnmock(path, this.getImporter())
@@ -138,7 +138,7 @@ class VitestUtils {
    *
    *  return { ...axios, get: vi.fn() }
    * })
-   * @param path Path to the module. Can be aliased, if your config suppors it
+   * @param path Path to the module. Can be aliased, if your config supports it
    * @returns Actual module without spies
    */
   public async importActual<T>(path: string): Promise<T> {
@@ -148,7 +148,7 @@ class VitestUtils {
   /**
    * Imports a module with all of its properties and nested properties mocked.
    * For the rules applied, see docs.
-   * @param path Path to the module. Can be aliased, if your config suppors it
+   * @param path Path to the module. Can be aliased, if your config supports it
    * @returns Fully mocked module
    */
   public async importMock<T>(path: string): Promise<MaybeMockedDeep<T>> {

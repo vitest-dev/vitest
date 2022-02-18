@@ -7,33 +7,11 @@ import type { RawSourceMap } from 'vite-node'
 import type { Vitest } from '../node'
 import { toArray } from '../utils'
 import type { C8Options, ResolvedC8Options } from '../types'
-
-const defaultExcludes = [
-  'coverage/**',
-  'packages/*/test{,s}/**',
-  '**/*.d.ts',
-  'cypress/**',
-  'test{,s}/**',
-  'test{,-*}.{js,cjs,mjs,ts,tsx,jsx}',
-  '**/*{.,-}test.{js,cjs,mjs,ts,tsx,jsx}',
-  '**/__tests__/**',
-  '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc}.config.{js,cjs,mjs,ts}',
-  '**/.{eslint,mocha}rc.{js,cjs}',
-]
+import { configDefaults } from '../defaults'
 
 export function resolveC8Options(options: C8Options, root: string): ResolvedC8Options {
   const resolved: ResolvedC8Options = {
-    enabled: false,
-    clean: true,
-    cleanOnRerun: false,
-    reportsDirectory: './coverage',
-    excludeNodeModules: true,
-    exclude: defaultExcludes,
-    reporter: ['text', 'html'],
-    allowExternal: false,
-    // default extensions used by c8, plus '.vue' and '.svelte'
-    // see https://github.com/istanbuljs/schema/blob/master/default-extension.js
-    extension: ['.js', '.cjs', '.mjs', '.ts', '.tsx', '.jsx', '.vue', 'svelte'],
+    ...configDefaults.coverage,
     ...options as any,
   }
 
@@ -54,20 +32,24 @@ export async function cleanCoverage(options: ResolvedC8Options, clean = true) {
 
 const require = createRequire(import.meta.url)
 
-export async function reportCoverage(ctx: Vitest) {
-  // Flush coverage to disk
+// Flush coverage to disk
+export function takeCoverage() {
   const v8 = require('v8')
   if (v8.takeCoverage == null)
     console.warn('[Vitest] takeCoverage is not available in this NodeJs version.\nCoverage could be incomplete. Update to NodeJs 14.18.')
   else
     v8.takeCoverage()
+}
+
+export async function reportCoverage(ctx: Vitest) {
+  takeCoverage()
 
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const createReport = require('c8/lib/report')
   const report = createReport(ctx.config.coverage)
 
   // add source maps
-  const sourceMapMata: Record<string, { map: RawSourceMap; source: string | undefined }> = {}
+  const sourceMapMeta: Record<string, { map: RawSourceMap; source: string | undefined }> = {}
   await Promise.all(Array
     .from(ctx.vitenode.fetchCache.entries())
     .filter(i => !i[0].includes('/node_modules/'))
@@ -88,7 +70,7 @@ export async function reportCoverage(ctx: Vitest) {
       // so use an actual file path
       const sources = [url]
 
-      sourceMapMata[url] = {
+      sourceMapMeta[url] = {
         source: result.code,
         map: {
           sourcesContent: code ? [code] : undefined,
@@ -105,7 +87,7 @@ export async function reportCoverage(ctx: Vitest) {
 
   report._getSourceMap = (coverage: Profiler.ScriptCoverage) => {
     const path = pathToFileURL(coverage.url).href
-    const data = sourceMapMata[path]
+    const data = sourceMapMeta[path]
 
     if (!data)
       return {}
@@ -119,4 +101,16 @@ export async function reportCoverage(ctx: Vitest) {
   }
 
   await report.run()
+
+  if (ctx.config.coverage.enabled) {
+    if (ctx.config.coverage['100']) {
+      ctx.config.coverage.lines = 100
+      ctx.config.coverage.functions = 100
+      ctx.config.coverage.branches = 100
+      ctx.config.coverage.statements = 100
+    }
+
+    const { checkCoverages } = require('c8/lib/commands/check-coverage')
+    await checkCoverages(ctx.config.coverage, report)
+  }
 }

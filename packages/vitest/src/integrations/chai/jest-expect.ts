@@ -2,6 +2,7 @@ import type { EnhancedSpy } from '../jest-mock'
 import { isMockFunction } from '../jest-mock'
 import { addSerializer } from '../snapshot/port/plugins'
 import type { Constructable } from '../../types'
+import { assertTypes } from '../../utils'
 import type { ChaiPlugin, MatcherState } from './types'
 import { arrayBufferEquality, iterableEquality, equals as jestEquals, sparseArrayEquality, subsetEquality, typeEquality } from './jest-utils'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
@@ -160,17 +161,53 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       obj,
     )
   })
-  def('toBeGreaterThan', function(expected: number) {
-    return this.to.greaterThan(expected)
+  def('toBeGreaterThan', function(expected: number | bigint) {
+    const actual = this._obj
+    assertTypes(actual, 'actual', ['number', 'bigint'])
+    assertTypes(expected, 'expected', ['number', 'bigint'])
+    return this.assert(
+      actual > expected,
+      `expected ${actual} to be greater than ${expected}`,
+      `expected ${actual} to be not greater than ${expected}`,
+      actual,
+      expected,
+    )
   })
-  def('toBeGreaterThanOrEqual', function(expected: number) {
-    return this.to.greaterThanOrEqual(expected)
+  def('toBeGreaterThanOrEqual', function(expected: number | bigint) {
+    const actual = this._obj
+    assertTypes(actual, 'actual', ['number', 'bigint'])
+    assertTypes(expected, 'expected', ['number', 'bigint'])
+    return this.assert(
+      actual >= expected,
+      `expected ${actual} to be greater than or equal to ${expected}`,
+      `expected ${actual} to be not greater than or equal to ${expected}`,
+      actual,
+      expected,
+    )
   })
-  def('toBeLessThan', function(expected: number) {
-    return this.to.lessThan(expected)
+  def('toBeLessThan', function(expected: number | bigint) {
+    const actual = this._obj
+    assertTypes(actual, 'actual', ['number', 'bigint'])
+    assertTypes(expected, 'expected', ['number', 'bigint'])
+    return this.assert(
+      actual < expected,
+      `expected ${actual} to be less than ${expected}`,
+      `expected ${actual} to be not less than ${expected}`,
+      actual,
+      expected,
+    )
   })
-  def('toBeLessThanOrEqual', function(expected: number) {
-    return this.to.lessThanOrEqual(expected)
+  def('toBeLessThanOrEqual', function(expected: number | bigint) {
+    const actual = this._obj
+    assertTypes(actual, 'actual', ['number', 'bigint'])
+    assertTypes(expected, 'expected', ['number', 'bigint'])
+    return this.assert(
+      actual <= expected,
+      `expected ${actual} to be less than or equal to ${expected}`,
+      `expected ${actual} to be not less than or equal to ${expected}`,
+      actual,
+      expected,
+    )
   })
   def('toBeNaN', function() {
     return this.be.NaN
@@ -189,6 +226,17 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       return this.be.undefined
 
     return this.not.be.undefined
+  })
+  def('toBeTypeOf', function(expected: 'bigint' | 'boolean' | 'function' | 'number' | 'object' | 'string' | 'symbol' | 'undefined') {
+    const actual = typeof this._obj
+    const equal = expected === actual
+    return this.assert(
+      equal,
+      'expected #{this} to be type of #{exp}',
+      'expected #{this} not to be type of #{exp}',
+      expected,
+      actual,
+    )
   })
   def('toBeInstanceOf', function(obj: any) {
     return this.instanceOf(obj)
@@ -443,8 +491,9 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     )
   })
 
-  utils.addProperty(chai.Assertion.prototype, 'resolves', function(this: any) {
+  utils.addProperty(chai.Assertion.prototype, 'resolves', function __VITEST_RESOLVES__(this: any) {
     utils.flag(this, 'promise', 'resolves')
+    utils.flag(this, 'error', new Error('resolves'))
     const obj = utils.flag(this, 'object')
     const proxy: any = new Proxy(this, {
       get: (target, key, receiver) => {
@@ -470,8 +519,9 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     return proxy
   })
 
-  utils.addProperty(chai.Assertion.prototype, 'rejects', function(this: any) {
+  utils.addProperty(chai.Assertion.prototype, 'rejects', function __VITEST_REJECTS__(this: any) {
     utils.flag(this, 'promise', 'rejects')
+    utils.flag(this, 'error', new Error('rejects'))
     const obj = utils.flag(this, 'object')
     const wrapper = typeof obj === 'function' ? obj() : obj // for jest compat
     const proxy: any = new Proxy(this, {

@@ -87,12 +87,6 @@ export function deepMerge<T extends object = object, S extends object = T>(targe
 
         deepMerge(target[key] as any, source[key] as any)
       }
-      else if (Array.isArray(source[key])) {
-        if (!target[key])
-          target[key] = [] as any
-
-        (target[key] as any).push(...source[key] as any)
-      }
       else {
         target[key] = source[key] as any
       }
@@ -112,4 +106,10 @@ export function getDescriptor(obj: any, key: string): PropertyDescriptor | undef
   if (descriptor) return descriptor
   const proto = Object.getPrototypeOf(obj)
   return getDescriptor(proto, key)
+}
+
+export function assertTypes(value: unknown, name: string, types: string[]): void {
+  const receivedType = typeof value
+  const pass = types.includes(receivedType)
+  if (!pass) throw new TypeError(`${name} value must be ${types.join(' or ')}, received "${receivedType}"`)
 }

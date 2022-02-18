@@ -4,6 +4,7 @@ import { vi } from '../integrations/vi'
 import { getSnapshotClient } from '../integrations/snapshot/chai'
 import { getFullName, hasFailed, hasTests, partitionSuiteChildren } from '../utils'
 import { getState, setState } from '../integrations/chai/jest-expect'
+import { takeCoverage } from '../integrations/coverage'
 import { getFn, getHooks } from './map'
 import { rpc } from './rpc'
 import { collectTests } from './collect'
@@ -63,7 +64,7 @@ export async function runTest(test: Test) {
 
   getSnapshotClient().setTest(test)
 
-  process.__vitest_worker__.current = test
+  __vitest_worker__.current = test
 
   try {
     await callSuiteHook(test.suite, 'beforeEach', [test, test.suite])
@@ -114,7 +115,7 @@ export async function runTest(test: Test) {
 
   test.result.duration = performance.now() - start
 
-  process.__vitest_worker__.current = undefined
+  __vitest_worker__.current = undefined
 
   updateTask(test)
 }
@@ -207,13 +208,15 @@ export async function startTests(paths: string[], config: ResolvedConfig) {
 
   await runSuites(files)
 
+  takeCoverage()
+
   await getSnapshotClient().saveSnap()
 
   await sendTasksUpdate()
 }
 
 export function clearModuleMocks() {
-  const { clearMocks, mockReset, restoreMocks } = process.__vitest_worker__.config
+  const { clearMocks, mockReset, restoreMocks } = __vitest_worker__.config
 
   // since each function calls another, we can just call one
   if (restoreMocks)
