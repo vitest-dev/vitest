@@ -5,10 +5,10 @@ import json from '@rollup/plugin-json'
 import alias from '@rollup/plugin-alias'
 import pkg from './package.json'
 
-const entries = [
-  'src/index.ts',
-  'src/pure.ts',
-]
+const entries = {
+  index: 'src/index.ts',
+  pure: 'src/pure.ts',
+}
 
 const external = [
   ...Object.keys(pkg.dependencies || {}),
@@ -39,15 +39,16 @@ export default () => [
     external,
     plugins,
   },
-  ...entries.map(input => ({
-    input,
+  {
+    input: entries,
     output: {
-      file: input.replace('src/', '').replace('.ts', '.d.ts'),
+      dir: process.cwd(),
+      entryFileNames: '[name].d.ts',
       format: 'esm',
     },
     external,
     plugins: [
       dts({ respectExternal: true }),
     ],
-  })),
+  },
 ]

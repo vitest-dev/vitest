@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { parseStacktrace } from '../utils/source-map'
-import type { VitestMocker } from '../node/mocker'
+import type { VitestMocker } from '../runtime/mocker'
 import { FakeTimers } from './timers'
 import type { EnhancedSpy, MaybeMocked, MaybeMockedDeep } from './jest-mock'
 import { fn, isMockFunction, spies, spyOn } from './jest-mock'

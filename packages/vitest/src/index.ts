@@ -13,6 +13,9 @@ export * from './integrations/vi'
 export * from './types'
 export * from './api/types'
 
+export { VitestRunner } from './runtime/execute'
+export type { ExecuteOptions } from './runtime/execute'
+
 type VitestInlineConfig = InlineConfig
 
 declare module 'vite' {

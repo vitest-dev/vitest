@@ -1,5 +1,7 @@
+/* eslint-disable no-restricted-imports */
+
+import { VitestRunner } from 'vitest'
 import type { WorkerGlobalState } from 'vitest'
-import { VitestRunner, getVitestRunnerOptions } from 'vitest/node'
 
 declare let __vitest_worker__: WorkerGlobalState
 
@@ -44,8 +46,8 @@ interface InlineWorkerContext {
 }
 
 class InlineWorkerRunner extends VitestRunner {
-  constructor(private context: InlineWorkerContext) {
-    super(getVitestRunnerOptions())
+  constructor(options: any, private context: InlineWorkerContext) {
+    super(options)
   }
 
   prepareContext(context: Record<string, any>) {
@@ -62,7 +64,21 @@ class InlineWorkerRunner extends VitestRunner {
 export function defineInlineWorker() {
   if ('Worker' in globalThis) return
 
-  const { moduleCache } = __vitest_worker__
+  const { config, rpc, mockMap, moduleCache } = __vitest_worker__
+
+  const options = {
+    fetchModule(id: string) {
+      return rpc.fetch(id)
+    },
+    resolveId(id: string, importer?: string) {
+      return rpc.resolveId(id, importer)
+    },
+    moduleCache,
+    mockMap,
+    interopDefault: config.deps.interopDefault ?? true,
+    root: config.root,
+    base: config.base,
+  }
 
   globalThis.Worker = class Worker {
     private inside = new Bridge()
@@ -104,7 +120,7 @@ export function defineInlineWorker() {
         this.onmessage?.(e)
       })
 
-      const runner = new InlineWorkerRunner(context)
+      const runner = new InlineWorkerRunner(options, context)
 
       let id = url instanceof URL ? url.toString() : url
 

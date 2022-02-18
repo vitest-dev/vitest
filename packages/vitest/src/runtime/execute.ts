@@ -23,25 +23,6 @@ export async function executeInViteNode(options: ExecuteOptions & { files: strin
   return result
 }
 
-export function getVitestRunnerOptions(): ExecuteOptions {
-  // @ts-ignore type works in dev, but fails when building type definitions
-  const { config, rpc, mockMap, moduleCache } = __vitest_worker__
-
-  return {
-    fetchModule(id) {
-      return rpc.fetch(id)
-    },
-    resolveId(id, importer) {
-      return rpc.resolveId(id, importer)
-    },
-    moduleCache,
-    mockMap,
-    interopDefault: config.deps.interopDefault ?? true,
-    root: config.root,
-    base: config.base,
-  }
-}
-
 export class VitestRunner extends ViteNodeRunner {
   mocker: VitestMocker
 
