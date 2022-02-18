@@ -92,16 +92,6 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
         )
         options.api = resolveApiConfig(options)
 
-        // we cannot replace them, because esbuild will throw an error,
-        // so we are removing them to allow reassigning
-        const define = viteConfig.define
-
-        if (define) {
-          delete define['process.env.NODE_ENV']
-          delete define['global.process.env.NODE_ENV']
-          delete define['globalThis.process.env.NODE_ENV']
-        }
-
         // we replace every "import.meta.env" with "process.env"
         // to allow reassigning, so we need to put all envs on process.env
         const { PROD, DEV, ...envs } = viteConfig.env
