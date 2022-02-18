@@ -622,7 +622,7 @@ importers:
     specifiers:
       rollup: ^2.67.2
     devDependencies:
-      rollup: 2.67.2
+      rollup: 2.67.3
 
   packages/ws-client:
     specifiers:
@@ -5092,7 +5092,7 @@ packages:
   /@types/concat-stream/1.6.1:
     resolution: {integrity: sha512-eHE4cQPoj6ngxBZMvVf6Hw7Mh4jMW4U9lpGmS5GBPB9RYxlFg+CHaVN7ErNY4W9XfLIEn20b4VDYaIrbq0q4uA==}
     dependencies:
-      '@types/node': 8.10.66
+      '@types/node': 17.0.18
     dev: true
 
   /@types/cookie/0.4.1:
@@ -5152,7 +5152,7 @@ packages:
   /@types/form-data/0.0.33:
     resolution: {integrity: sha1-yayFsqX9GENbjIXZ7LUObWyJP/g=}
     dependencies:
-      '@types/node': 8.10.66
+      '@types/node': 17.0.18
     dev: true
 
   /@types/fs-extra/9.0.13:
@@ -10483,19 +10483,6 @@ packages:
     resolution: {integrity: sha512-xABIR1/klgdPw5yVhQvbrbpU9025dXpr4pPVP4UG0uITzoPGsYruoDYiDNYT69ZhkGrs4K3pg01uD91mijhJcg==}
     dependencies:
       css.escape: 1.5.1
-      he: 1.2.0
-      node-fetch: 2.6.7
-      sync-request: 6.1.0
-      webidl-conversions: 7.0.0
-      whatwg-encoding: 1.0.5
-      whatwg-mimetype: 2.3.0
-    transitivePeerDependencies:
-      - encoding
-    dev: true
-
-  /happy-dom/2.33.1:
-    resolution: {integrity: sha512-Y6NxWMFZ/Os11Ir2A1LnA5QV3V0+f2ha2MteZXPKHT6o7U0DvPlD/1O6dTl2JxMWtenDflD9G8bo45Ah1D+79A==}
-    dependencies:
       he: 1.2.0
       node-fetch: 2.6.7
       sync-request: 6.1.0
