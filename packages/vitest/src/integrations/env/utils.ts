@@ -1,7 +1,7 @@
 import { getDescriptor } from '../../utils'
 import { KEYS } from './jsdom-keys'
 
-export function getWindowKeys(win: any) {
+export function getWindowKeys(global: any, win: any) {
   return new Set(KEYS.concat(Object.getOwnPropertyNames(win))
     .filter((k) => {
       if (k.startsWith('_')) return false

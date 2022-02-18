@@ -8,7 +8,7 @@ export default <Environment>({
     const { Window } = await importModule('happy-dom') as typeof import('happy-dom')
     const win: any = new Window()
 
-    const keys = getWindowKeys(win)
+    const keys = getWindowKeys(global, win)
 
     const overrideObject = new Map<string, any>()
     for (const key of keys) {

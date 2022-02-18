@@ -40,7 +40,7 @@ export default <Environment>({
       },
     )
 
-    const keys = getWindowKeys(dom.window)
+    const keys = getWindowKeys(global, dom.window)
 
     const overrideObject = new Map<string, any>()
     for (const key of keys) {
