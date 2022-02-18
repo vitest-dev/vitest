@@ -1,6 +1,12 @@
 import { expect, test } from 'vitest'
 import { getAuthToken } from '../src/env'
 
+test('reassigning NODE_ENV', () => {
+  expect(process.env.NODE_ENV).toBeDefined()
+  process.env.NODE_ENV = 'development'
+  expect(process.env.NODE_ENV).toBe('development')
+})
+
 test('reads envs from .env file', () => {
   expect(import.meta.env.VITE_TEST_ENV).toBe('local')
 })
