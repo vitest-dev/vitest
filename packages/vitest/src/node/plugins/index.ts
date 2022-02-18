@@ -1,12 +1,11 @@
 import type { Plugin as VitePlugin } from 'vite'
 import { configDefaults } from '../../defaults'
-import type { UserConfig } from '../../types'
+import type { ResolvedConfig, UserConfig } from '../../types'
 import { deepMerge, ensurePackageInstalled, notNullish } from '../../utils'
 import { resolveApiConfig } from '../config'
 import { Vitest } from '../core'
 import { GlobalSetupPlugin } from './globalSetup'
 import { MocksPlugin } from './mock'
-import { EnvReplacerPlugin } from './envReplacer'
 
 export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest()): Promise<VitePlugin[]> {
   let haveStarted = false
@@ -27,6 +26,39 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
         const preOptions = deepMerge({}, options, viteConfig.test ?? {})
         preOptions.api = resolveApiConfig(preOptions)
 
+        // store defines for globalThis to make them
+        // reassignable when running in worker in src/runtime/setup.ts
+        const defines: Record<string, any> = {}
+
+        for (const key in viteConfig.define) {
+          const val = viteConfig.define[key]
+          let replacement: any
+          try {
+            replacement = typeof val === 'string' ? JSON.parse(val) : val
+          }
+          catch {
+            // probably means it contains reference to some variable,
+            // like this: "__VAR__": "process.env.VAR"
+            continue
+          }
+          if (key.startsWith('import.meta.env.')) {
+            const envKey = key.slice('import.meta.env.'.length)
+            process.env[envKey] = replacement
+            delete viteConfig.define[key]
+          }
+          else if (key.startsWith('process.env.')) {
+            const envKey = key.slice('process.env.'.length)
+            process.env[envKey] = replacement
+            delete viteConfig.define[key]
+          }
+          else if (!key.includes('.')) {
+            defines[key] = replacement
+            delete viteConfig.define[key]
+          }
+        }
+
+        (options as ResolvedConfig).defines = defines
+
         return {
           // we are setting NODE_ENV when running CLI to 'test',
           // but it can be overridden
@@ -36,6 +68,14 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
             // by default Vite resolves `module` field, which not always a native ESM module
             // setting this option can bypass that and fallback to cjs version
             mainFields: [],
+          },
+          define: {
+            'process.env.NODE_ENV': 'process.env.NODE_ENV',
+            'global.process.env.NODE_ENV': 'global.process.env.NODE_ENV',
+            'globalThis.process.env.NODE_ENV': 'globalThis.process.env.NODE_ENV',
+            // so people can reassign envs at runtime
+            // import.meta.env.VITE_NAME = 'app' -> process.env.VITE_NAME = 'app'
+            'import.meta.env': 'process.env',
           },
           server: {
             ...preOptions.api,
@@ -74,15 +114,6 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
 
         for (const name in envs)
           process.env[name] ??= envs[name]
-
-        // account for user env defines
-        for (const key in viteConfig.define) {
-          if (key.startsWith('import.meta.env.')) {
-            const val = viteConfig.define[key]
-            const envKey = key.slice('import.meta.env.'.length)
-            process.env[envKey] = typeof val === 'string' ? JSON.parse(val) : val
-          }
-        }
       },
       async configureServer(server) {
         if (haveStarted)
@@ -97,7 +128,6 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
           await server.watcher.close()
       },
     },
-    EnvReplacerPlugin(),
     MocksPlugin(),
     GlobalSetupPlugin(ctx),
     options.ui

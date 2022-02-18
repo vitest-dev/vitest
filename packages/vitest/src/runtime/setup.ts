@@ -8,6 +8,10 @@ import { rpc } from './rpc'
 
 let globalSetup = false
 export async function setupGlobalEnv(config: ResolvedConfig) {
+  // should be redeclared for each test
+  // if run with "threads: false"
+  setupDefines(config.defines)
+
   if (globalSetup)
     return
 
@@ -18,6 +22,11 @@ export async function setupGlobalEnv(config: ResolvedConfig) {
 
   if (config.globals)
     (await import('../integrations/globals')).registerApiGlobally()
+}
+
+function setupDefines(defines: Record<string, any>) {
+  for (const key in defines)
+    (globalThis as any)[key] = defines[key]
 }
 
 export function setupConsoleLogSpy() {
