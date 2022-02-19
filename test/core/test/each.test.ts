@@ -57,3 +57,10 @@ describe.each([
     expect(a + b).not.toBeLessThan(expected)
   })
 })
+
+// issue #794
+describe.each([1, 2, 0])('%s (describe.each 1d)', (num) => {
+  test(`${num} is a number (describe.each 1d)`, () => {
+    expect(typeof num).toEqual('number')
+  })
+})

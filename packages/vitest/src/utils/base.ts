@@ -53,9 +53,12 @@ export function clone<T>(val: T): T {
  */
 
 export function toArray<T>(array?: Nullable<Arrayable<T>>): Array<T> {
-  array = array || []
+  if (array === null || array === undefined)
+    array = []
+
   if (Array.isArray(array))
     return array
+
   return [array]
 }
 
