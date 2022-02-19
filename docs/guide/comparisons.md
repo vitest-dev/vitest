@@ -12,7 +12,7 @@
 
 Cypress is known as an end-to-end testing tool, however their [new component test runner](https://on.cypress.io/component) has great support for testing Vite components and is an ideal choice to test anything that renders in a browser.
 
-Browser-based runners, like Cypress and Web Test, will catch issues that Vitest cannot because they use the real browser and real browser APIs.
+Browser-based runners, like Cypress and Web Test Runner, will catch issues that Vitest cannot because they use the real browser and real browser APIs.
 
 Cypress's test driver is focused on determining if elements are visible, accessible, and interactive. Cypress is purpose-built for UI development and testing and its DX is centered around test driving your visual components. You see your component rendered alongside the test reporter. Once the test is complete, the component remains interactive and you can debug any failures that occur using your browser devtools.
 
