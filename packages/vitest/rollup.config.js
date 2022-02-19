@@ -24,6 +24,7 @@ const entries = [
 const dtsEntries = [
   'src/index.ts',
   'src/node.ts',
+  'src/config.ts',
 ]
 
 const external = [
@@ -32,6 +33,25 @@ const external = [
   'worker_threads',
   'inspector',
   'c8',
+]
+
+const plugins = [
+  alias({
+    entries: [
+      { find: /^node:(.+)$/, replacement: '$1' },
+      { find: 'vite-node/server', replacement: path.resolve(__dirname, '../vite-node/src/server.ts') },
+      { find: 'vite-node/client', replacement: path.resolve(__dirname, '../vite-node/src/client.ts') },
+      { find: 'vite-node/utils', replacement: path.resolve(__dirname, '../vite-node/src/utils.ts') },
+    ],
+  }),
+  resolve({
+    preferBuiltins: true,
+  }),
+  json(),
+  commonjs(),
+  esbuild({
+    target: 'node14',
+  }),
 ]
 
 export default ({ watch }) => [
@@ -44,22 +64,7 @@ export default ({ watch }) => [
     },
     external,
     plugins: [
-      alias({
-        entries: [
-          { find: /^node:(.+)$/, replacement: '$1' },
-          { find: 'vite-node/server', replacement: path.resolve(__dirname, '../vite-node/src/server.ts') },
-          { find: 'vite-node/client', replacement: path.resolve(__dirname, '../vite-node/src/client.ts') },
-          { find: 'vite-node/utils', replacement: path.resolve(__dirname, '../vite-node/src/utils.ts') },
-        ],
-      }),
-      resolve({
-        preferBuiltins: true,
-      }),
-      json(),
-      commonjs(),
-      esbuild({
-        target: 'node14',
-      }),
+      ...plugins,
       !watch && licensePlugin(),
     ],
     onwarn(message) {
@@ -67,6 +72,21 @@ export default ({ watch }) => [
         return
       console.error(message)
     },
+  },
+  {
+    input: 'src/config.ts',
+    output: [
+      {
+        file: 'dist/config.cjs',
+        format: 'cjs',
+      },
+      {
+        file: 'dist/config.js',
+        format: 'esm',
+      },
+    ],
+    external,
+    plugins,
   },
   ...dtsEntries.map(input => ({
     input,

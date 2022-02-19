@@ -8,10 +8,10 @@
 - Pass `--config` option to CLI, e.g. `vitest --config ./path/to/vitest.config.ts`
 - Use `process.env.VITEST` or `mode` property on `defineConfig` (will be set to `test` if not overridden) to conditionally apply different configuration in `vite.config.ts`
 
-To configure `vitest` itself, add `test` property in your Vite config. You'll also need to add a reference to Vitest types using a [triple slash command](https://www.typescriptlang.org/docs/handbook/triple-slash-directives.html#-reference-types-) at the top of your config file.
+To configure `vitest` itself, add `test` property in your Vite config. You'll also need to add a reference to Vitest types using a [triple slash command](https://www.typescriptlang.org/docs/handbook/triple-slash-directives.html#-reference-types-) at the top of your config file, if you are importing `defineConfig` from `vite` itself.
 
 ```ts
-import { defineConfig } from 'vitest/node'
+import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
@@ -23,7 +23,7 @@ export default defineConfig({
 You can retrieve Vitest's default options to expand them if needed:
 
 ```ts
-import { defineConfig, configDefaults } from 'vitest/node'
+import { defineConfig, configDefaults } from 'vitest/config'
 
 export default defineConfig({
   test: {
@@ -77,7 +77,7 @@ By default, `vitest` does not provide global APIs for explicitness. If you prefe
 
 ```ts
 // vite.config.ts
-import { defineConfig } from 'vitest/node'
+import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
@@ -101,7 +101,7 @@ If you are already using [`unplugin-auto-import`](https://github.com/antfu/unplu
 
 ```ts
 // vite.config.ts
-import { defineConfig } from 'vitest/node'
+import { defineConfig } from 'vitest/config'
 import AutoImport from 'unplugin-auto-import/vite'
 
 export default defineConfig({
@@ -350,7 +350,7 @@ Vite plugins will receive `ssr: false` flag when processing those files.
 When you use JSX as component models other than React (e.g. Vue JSX or SolidJS), you might want to config as following to make `.tsx` / `.jsx` transformed as client-side components:
 
 ```ts
-import { defineConfig } from 'vitest/node'
+import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {

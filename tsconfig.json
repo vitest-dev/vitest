@@ -22,6 +22,7 @@
       "vitest/global": ["./packages/vitest/global.d.ts"],
       "vitest/globals": ["./packages/vitest/globals.d.ts"],
       "vitest/node": ["./packages/vitest/src/node/index.ts"],
+      "vitest/config": ["./packages/vitest/src/config.ts"],
       "vite-node": ["./packages/vite-node/src/index.ts"],
       "vite-node/client": ["./packages/vite-node/src/client.ts"],
       "vite-node/server": ["./packages/vite-node/src/server.ts"],

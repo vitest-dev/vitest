@@ -37,11 +37,10 @@ One of the main advantages of Vitest is its unified configuration with Vite. If 
 - Pass `--config` option to CLI, e.g. `vitest --config ./path/to/vitest.config.ts`
 - Use `process.env.VITEST` or `mode` property on `defineConfig` (will be set to `test` if not overridden) to conditionally apply different configuration in `vite.config.ts`
 
-To configure `vitest` itself, add `test` property in your Vite config. You'll also need to add a reference to Vitest types using a [triple slash command](https://www.typescriptlang.org/docs/handbook/triple-slash-directives.html#-reference-types-) at the top of your config file.
+To configure `vitest` itself, add `test` property in your Vite config. You'll also need to add a reference to Vitest types using a [triple slash command](https://www.typescriptlang.org/docs/handbook/triple-slash-directives.html#-reference-types-) at the top of your config file, if you are importing `defineConfig` from `vite` itself.
 
 ```ts
-/// <reference types="vitest" />
-import { defineConfig } from 'vitest/node'
+import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
