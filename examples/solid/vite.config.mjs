@@ -8,16 +8,14 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     transformMode: {
-      web: ['.*'],
-      ssr: [],
+      web: ['.[jt]sx'],
+    },
+    deps: {
+      inline: [/solid-js/],
     },
   },
   plugins: [solid({ ssr: false, dev: true })],
   resolve: {
     conditions: ['development', 'browser'],
-    alias: {
-      'solid-js/dist/server.js': 'solid-js/dist/dev.js',
-      'solid-js/web/dist/server.js': 'solid-js/web/dist/dev.js',
-    },
   },
 })
