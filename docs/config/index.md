@@ -237,7 +237,7 @@ Default timeout of a test in milliseconds
 ### hookTimeout
 
 - **Type:** `number`
-- **Default:** `5000`
+- **Default:** `10000`
 
 Default timeout of a hook in milliseconds
 
