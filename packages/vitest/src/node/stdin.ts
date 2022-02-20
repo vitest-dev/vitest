@@ -23,6 +23,12 @@ function useChangePattern(ctx: Vitest) {
   let namePattern = ''
   let changingPattern = false
 
+  function backspace() {
+    readline.moveCursor(process.stdout, -1, process.stdout.rows)
+    process.stdout.write(' ')
+    readline.moveCursor(process.stdout, -1, process.stdout.rows)
+  }
+
   function end() {
     ctx.changeNamePattern(namePattern, undefined, 'change pattern')
     namePattern = ''
@@ -34,9 +40,15 @@ function useChangePattern(ctx: Vitest) {
     changingPattern = true
   }
 
-  function append(str: string) {
-    namePattern += str
-    process.stdout.write(str)
+  function append(str: string, key: any) {
+    if (key.name === 'backspace') {
+      namePattern = namePattern.slice(0, namePattern.length - 1)
+      backspace()
+    }
+    else {
+      namePattern += str
+      process.stdout.write(str)
+    }
   }
 
   return {
@@ -69,7 +81,7 @@ export function registerConsoleShortcuts(ctx: Vitest) {
       if (name === 'return')
         return pattern.end()
 
-      return pattern.append(name)
+      return pattern.append(str, key)
     }
 
     // help
