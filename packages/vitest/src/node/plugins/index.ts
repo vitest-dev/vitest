@@ -104,6 +104,19 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
 
         for (const name in envs)
           process.env[name] ??= envs[name]
+
+        viteConfig.server.open = options.ui && options.open
+          ? options.uiBase ?? '/__vitest__/'
+          : undefined
+
+        if (typeof options.api?.host === 'string')
+          viteConfig.server.host = options.api.host
+
+        if (typeof options.api?.host === 'number')
+          viteConfig.server.port = options.api.port
+
+        if (typeof options.api?.strictPort === 'number')
+          viteConfig.server.strictPort = options.api.strictPort
       },
       async configureServer(server) {
         if (haveStarted)
