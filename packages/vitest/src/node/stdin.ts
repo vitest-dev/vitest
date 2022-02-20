@@ -6,7 +6,7 @@ const keys = [
   ['a', 'rerun all tests'],
   ['f', 'rerun only failed tests'],
   ['u', 'update snapshot'],
-  ['t', 'change testNamePattern'],
+  ['t', 'filter by a test name regex pattern'],
   ['q', 'quit'],
 ]
 
@@ -23,32 +23,34 @@ function useChangePattern(ctx: Vitest) {
   let namePattern = ''
   let changingPattern = false
 
-  function endPattern() {
+  function end() {
     ctx.changeNamePattern(namePattern, undefined, 'change pattern')
     namePattern = ''
     changingPattern = false
   }
 
-  function startPattern() {
-    process.stdout.write(`\n${c.bgYellow(' PATTERN ')} ${c.yellow('Change testNamePattern to:')} `)
+  function start() {
+    process.stdout.write(`\n${c.bgMagenta(' PATTERN ')} ${c.magenta('Filter tests by its name regexp pattern:')} `)
     changingPattern = true
   }
 
-  function appendPattern(str: string) {
+  function append(str: string) {
     namePattern += str
     process.stdout.write(str)
   }
 
   return {
-    changingPattern,
-    endPattern,
-    startPattern,
-    appendPattern,
+    get isChanging() {
+      return changingPattern
+    },
+    end,
+    start,
+    append,
   }
 }
 
 export function registerConsoleShortcuts(ctx: Vitest) {
-  const { changingPattern, endPattern, startPattern, appendPattern } = useChangePattern(ctx)
+  const pattern = useChangePattern(ctx)
 
   readline.emitKeypressEvents(process.stdin)
   process.stdin.setRawMode(true)
@@ -63,11 +65,11 @@ export function registerConsoleShortcuts(ctx: Vitest) {
 
     const name = key?.name
 
-    if (changingPattern) {
+    if (pattern.isChanging) {
       if (name === 'return')
-        return endPattern()
+        return pattern.end()
 
-      return appendPattern(name)
+      return pattern.append(name)
     }
 
     // help
@@ -81,7 +83,7 @@ export function registerConsoleShortcuts(ctx: Vitest) {
       return ctx.rerunFiles(undefined, 'rerun all')
     // change testNamePattern
     if (name === 't')
-      return startPattern()
+      return pattern.start()
 
     // quit
     if (name === 'q')
