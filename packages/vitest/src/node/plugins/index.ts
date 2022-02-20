@@ -112,7 +112,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
         if (typeof options.api?.host === 'string')
           viteConfig.server.host = options.api.host
 
-        if (typeof options.api?.host === 'number')
+        if (typeof options.api?.port === 'number')
           viteConfig.server.port = options.api.port
 
         if (typeof options.api?.strictPort === 'number')
