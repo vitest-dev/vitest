@@ -30,7 +30,7 @@ function useChangePattern(ctx: Vitest) {
   }
 
   function start() {
-    process.stdout.write(`\n${c.bgMagenta(' PATTERN ')} ${c.magenta('Filter tests by its name regexp pattern:')} `)
+    process.stdout.write(`\n${c.bgMagenta(' FILTER ')} ${c.magenta('Filter tests by their name (using regexp):')} `)
     changingPattern = true
   }
 
