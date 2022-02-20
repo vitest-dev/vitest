@@ -6,6 +6,7 @@ const keys = [
   ['a', 'rerun all tests'],
   ['f', 'rerun only failed tests'],
   ['u', 'update snapshot'],
+  ['t', 'change testNamePattern'],
   ['q', 'quit'],
 ]
 
@@ -18,7 +19,37 @@ ${keys.map(i => c.dim('  press ') + c.reset(c.bold(i[0])) + c.dim(` to ${i[1]}`)
   )
 }
 
+function useChangePattern(ctx: Vitest) {
+  let namePattern = ''
+  let changingPattern = false
+
+  function endPattern() {
+    ctx.changeNamePattern(namePattern, undefined, 'change pattern')
+    namePattern = ''
+    changingPattern = false
+  }
+
+  function startPattern() {
+    process.stdout.write(`\n${c.bgYellow(' PATTERN ')} ${c.yellow('Change testNamePattern to:')} `)
+    changingPattern = true
+  }
+
+  function appendPattern(str: string) {
+    namePattern += str
+    process.stdout.write(str)
+  }
+
+  return {
+    changingPattern,
+    endPattern,
+    startPattern,
+    appendPattern,
+  }
+}
+
 export function registerConsoleShortcuts(ctx: Vitest) {
+  const { changingPattern, endPattern, startPattern, appendPattern } = useChangePattern(ctx)
+
   readline.emitKeypressEvents(process.stdin)
   process.stdin.setRawMode(true)
   process.stdin.on('keypress', (str: string, key: any) => {
@@ -32,6 +63,13 @@ export function registerConsoleShortcuts(ctx: Vitest) {
 
     const name = key?.name
 
+    if (changingPattern) {
+      if (name === 'return')
+        return endPattern()
+
+      return appendPattern(name)
+    }
+
     // help
     if (name === 'h')
       return printShortcutsHelp()
@@ -41,6 +79,10 @@ export function registerConsoleShortcuts(ctx: Vitest) {
     // rerun all tests
     if (name === 'a' || name === 'return')
       return ctx.rerunFiles(undefined, 'rerun all')
+    // change testNamePattern
+    if (name === 't')
+      return startPattern()
+
     // quit
     if (name === 'q')
       return ctx.exit(true)
