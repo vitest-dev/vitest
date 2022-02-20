@@ -1,9 +1,9 @@
 import { createRequire } from 'module'
 import { fileURLToPath, pathToFileURL } from 'url'
 import vm from 'vm'
-import { dirname, resolve } from 'pathe'
+import { dirname, isAbsolute, resolve } from 'pathe'
 import { isNodeBuiltin } from 'mlly'
-import { isPrimitive, isWindows, normalizeId, slash, toFilePath } from './utils'
+import { isPrimitive, normalizeId, slash, toFilePath } from './utils'
 import type { ModuleCache, ViteNodeRunnerOptions } from './types'
 
 export const DEFAULT_REQUEST_STUBS = {
@@ -143,10 +143,7 @@ export class ViteNodeRunner {
     if (isNodeBuiltin(dep))
       return false
 
-    if (isWindows)
-      return !/^\w:\//i.test(dep) && !dep.startsWith('/')
-
-    return !dep.startsWith('/')
+    return !isAbsolute(dep)
   }
 
   /**
