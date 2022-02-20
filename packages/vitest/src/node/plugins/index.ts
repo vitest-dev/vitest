@@ -106,16 +106,16 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
           process.env[name] ??= envs[name]
 
         viteConfig.server.open = options.ui && options.open
-          ? options.uiBase ?? '/__vitest__/'
+          ? options.uiBase ?? configDefaults.uiBase
           : undefined
 
-        if (typeof options.api?.host === 'string')
+        if (typeof options.api?.host !== 'undefined')
           viteConfig.server.host = options.api.host
 
-        if (typeof options.api?.port === 'number')
+        if (typeof options.api?.port !== 'undefined')
           viteConfig.server.port = options.api.port
 
-        if (typeof options.api?.strictPort === 'number')
+        if (typeof options.api?.strictPort === 'boolean')
           viteConfig.server.strictPort = options.api.strictPort
       },
       async configureServer(server) {
