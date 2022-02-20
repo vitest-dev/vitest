@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { antfuSponsors, coreTeamMembers, patakSponsors } from '../contributors'
+import { lazyLoad } from '../images'
 </script>
 <template>
   <div flex flex-col items-center>
     <div flex flex-col items-center p="t-10 md:t-20 b-10">
-      <img src="/logo.svg" h="40 md:60" alt="Vitest logo">
+      <img src="/logo.svg" h="40 md:60" alt="Vitest logo" width="240" height="240">
       <h1 text-3em md:text-4em font-light>
         Vitest
       </h1>
@@ -79,6 +80,7 @@ import { antfuSponsors, coreTeamMembers, patakSponsors } from '../contributors'
         <a text-lg h="32px" href="https://github.com/sponsors/antfu" rel="noopener noreferrer">Anthony's Sponsors</a>
         <a href="https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg" target="_blank" rel="noopener noreferrer">
           <img
+            :loading="lazyLoad"
             :src="antfuSponsors"
             alt="Anthony Fu's sponsors"
           >
@@ -88,6 +90,7 @@ import { antfuSponsors, coreTeamMembers, patakSponsors } from '../contributors'
         <a text-lg h="32px" href="https://github.com/sponsors/patak-dev" rel="noopener noreferrer">Patak's Sponsors</a>
         <a href="https://patak.dev/sponsors.svg" target="_blank" rel="noopener noreferrer">
           <img
+            :loading="lazyLoad"
             :src="patakSponsors"
             alt="Patak's sponsors"
           >
