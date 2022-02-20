@@ -21,7 +21,7 @@ Vitest smartly searches the module graph and only rerun the related tests (just 
 
 ## Smooth integration with UI Frameworks
 
-Components testing for Vue, React, Lit and more
+Components testing for Vue, React, Svelte, Lit and more
 
 ## Common web idioms out-of-the-box
 
@@ -76,7 +76,7 @@ beforeAll(async () => { ... }, 1000)
 
 ### Skipping suites and tests
 
-Use `.skip` alias `it` to avoid running certain suites or tests
+Use `.skip` to avoid running certain suites or tests
 
 ```ts
 import { describe, assert, it } from 'vitest';

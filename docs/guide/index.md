@@ -139,6 +139,7 @@ You can specify additional CLI options like `--port` or `--https`. For a full li
 - [bytemd](https://github.com/bytedance/bytemd)
 - [faker](https://github.com/faker-js/faker)
 - [million](https://github.com/aidenybai/million)
+- [Vitamin](https://github.com/wtchnm/Vitamin)
 
 ## Using Unreleased Commits
 
