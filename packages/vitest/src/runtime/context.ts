@@ -24,7 +24,7 @@ export function getDefaultHookTimeout() {
   return __vitest_worker__!.config!.hookTimeout
 }
 
-export function withTimeout<T extends((...args: any[]) => any)>(fn: T, _timeout?: number): T {
+export function withTimeout<T extends((...args: any[]) => any)>(fn: T, { isHook, _timeout }: { isHook: boolean; _timeout?: number }): T {
   const timeout = _timeout ?? getDefaultTestTimeout()
   if (timeout <= 0 || timeout === Infinity)
     return fn
@@ -33,11 +33,15 @@ export function withTimeout<T extends((...args: any[]) => any)>(fn: T, _timeout?
     return Promise.race([fn(...args), new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
         clearTimeout(timer)
-        reject(new Error(`Test timed out in ${timeout}ms.`))
+        reject(new Error(makeTimeoutMsg(isHook, timeout)))
       }, timeout)
       timer.unref()
     })]) as Awaitable<void>
   }) as T
+}
+
+function makeTimeoutMsg(isHook: boolean, timeout: number) {
+  return `${isHook ? 'Hook' : 'Test'} timed out in ${timeout}ms.\nPlease pass timeout value as arg or configure globally with "${isHook ? 'hookTimeout' : 'testTimeout'}" in config, if this is a long-running test.`
 }
 
 function ensureAsyncTest(fn: TestFunction): () => Awaitable<void> {
@@ -53,5 +57,5 @@ function ensureAsyncTest(fn: TestFunction): () => Awaitable<void> {
 }
 
 export function normalizeTest(fn: TestFunction, timeout?: number): () => Awaitable<void> {
-  return withTimeout(ensureAsyncTest(fn), timeout)
+  return withTimeout(ensureAsyncTest(fn), { _timeout: timeout, isHook: false })
 }
