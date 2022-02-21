@@ -59,6 +59,11 @@ async function _shouldExternalize(
   if (isNodeBuiltin(id))
     return id
 
+  // data: should be processed by native import,
+  // since it is a feature of ESM
+  if (id.startsWith('data:'))
+    return id
+
   id = patchWindowsImportPath(id)
 
   if (matchExternalizePattern(id, options?.inline))
