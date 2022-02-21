@@ -4,6 +4,12 @@ import type { TransformResult } from 'vite'
 
 export const isWindows = process.platform === 'win32'
 
+export const queryRE = /\?.*$/s
+export const hashRE = /#.*$/s
+
+export const cleanUrl = (url: string): string =>
+  url.replace(hashRE, '').replace(queryRE, '')
+
 export function slash(str: string) {
   return str.replace(/\\/g, '/')
 }

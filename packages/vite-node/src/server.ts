@@ -1,9 +1,13 @@
+import { existsSync } from 'fs'
 import type { TransformResult, ViteDevServer } from 'vite'
+import path from 'pathe'
 import type { FetchResult, RawSourceMap, ViteNodeResolveId, ViteNodeServerOptions } from './types'
 import { shouldExternalize } from './externalize'
-import { toFilePath, withInlineSourcemap } from './utils'
+import { cleanUrl, toFilePath, withInlineSourcemap } from './utils'
 
 export * from './externalize'
+
+const FS_PREFIX = '/@fs/'
 
 export class ViteNodeServer {
   private fetchPromiseMap = new Map<string, Promise<FetchResult>>()
@@ -23,10 +27,33 @@ export class ViteNodeServer {
     return shouldExternalize(id, this.options.deps)
   }
 
-  async resolveId(id: string, importer?: string): Promise<ViteNodeResolveId | null> {
+  // does what importAnalisys does to imports
+  async resolveId(url: string, importer?: string): Promise<ViteNodeResolveId | null> {
     const mode = importer ? this.getTransformMode(importer) : 'ssr'
 
-    return this.server.pluginContainer.resolveId(id, importer, { ssr: mode === 'ssr' })
+    const { root, base } = this.server.config
+
+    if (base !== '/' && url.startsWith(base))
+      url = url.replace(base, '/')
+
+    const resolved = await this.server.pluginContainer.resolveId(url, importer, { ssr: mode === 'ssr' })
+    if (!resolved) return null
+
+    // normalize all imports into resolved URLs
+    // e.g. `import 'foo'` -> `import '/@fs/.../node_modules/foo/index.js`
+    if (resolved.id.startsWith(`${root}/`)) {
+      // in root: infer short absolute path from root
+      url = resolved.id.slice(root.length)
+    }
+    else if (existsSync(cleanUrl(resolved.id))) {
+      // exists but out of root: rewrite to absolute /@fs/ paths
+      url = path.join(FS_PREFIX + resolved.id)
+    }
+    else {
+      url = resolved.id
+    }
+
+    return { ...resolved, id: url }
   }
 
   async fetchModule(id: string): Promise<FetchResult> {

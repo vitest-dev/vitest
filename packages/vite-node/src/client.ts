@@ -1,7 +1,7 @@
 import { createRequire } from 'module'
 import { fileURLToPath, pathToFileURL } from 'url'
 import vm from 'vm'
-import { dirname, isAbsolute, resolve } from 'pathe'
+import { dirname, extname, isAbsolute, resolve } from 'pathe'
 import { isNodeBuiltin } from 'mlly'
 import { isPrimitive, normalizeId, slash, toFilePath } from './utils'
 import type { ModuleCache, ViteNodeRunnerOptions } from './types'
@@ -55,8 +55,10 @@ export class ViteNodeRunner {
     const request = async(dep: string) => {
       // probably means it was passed as variable
       // and wasn't transformed by Vite
-      if (this.shouldResolveId(dep))
-        dep = await this.resolveId(dep, id)
+      if (this.shouldResolveId(dep)) {
+        const resolvedDep = await this.options.resolveId(dep, id)
+        dep = resolvedDep?.id || dep
+      }
 
       if (callstack.includes(dep)) {
         if (!this.moduleCache.get(dep)?.exports)
@@ -138,23 +140,11 @@ export class ViteNodeRunner {
       Object.assign(this.moduleCache.get(id), mod)
   }
 
-  async resolveId(dep: string, importer: string) {
-    const resolvedDep = await this.options.resolveId(dep, importer)
-    if (!resolvedDep) return dep
-    const id = resolvedDep.id
-    // Vite usually resolves non external imports relative to root,
-    // but resolveId for some reason returns full path
-    // we do the same thing for mocking
-    if (!id.includes('node_modules') && id.startsWith(this.options.root))
-      return id.slice(this.options.root.length)
-    return id
-  }
-
   shouldResolveId(dep: string) {
     if (isNodeBuiltin(dep))
       return false
 
-    return !isAbsolute(dep)
+    return !isAbsolute(dep) || !extname(dep)
   }
 
   /**
