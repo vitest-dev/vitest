@@ -208,6 +208,11 @@ export class Vitest {
     await this.report('onWatcherStart')
   }
 
+  async changeNamePattern(pattern: string, files: string[] = this.state.getFilepaths(), trigger?: string) {
+    this.config.testNamePattern = new RegExp(pattern)
+    await this.rerunFiles(files, trigger)
+  }
+
   async returnFailed() {
     await this.rerunFiles(this.state.getFailedFilepaths(), 'rerun failed')
   }

@@ -6,6 +6,7 @@ const keys = [
   ['a', 'rerun all tests'],
   ['f', 'rerun only failed tests'],
   ['u', 'update snapshot'],
+  ['t', 'filter by a test name regex pattern'],
   ['q', 'quit'],
 ]
 
@@ -18,7 +19,51 @@ ${keys.map(i => c.dim('  press ') + c.reset(c.bold(i[0])) + c.dim(` to ${i[1]}`)
   )
 }
 
+function useChangePattern(ctx: Vitest) {
+  let namePattern = ''
+  let changingPattern = false
+
+  function backspace() {
+    readline.moveCursor(process.stdout, -1, process.stdout.rows)
+    process.stdout.write(' ')
+    readline.moveCursor(process.stdout, -1, process.stdout.rows)
+  }
+
+  function end() {
+    ctx.changeNamePattern(namePattern, undefined, 'change pattern')
+    namePattern = ''
+    changingPattern = false
+  }
+
+  function start() {
+    process.stdout.write(`\n${c.bgMagenta(' FILTER ')} ${c.magenta('Filter tests by their name (using regexp):')} `)
+    changingPattern = true
+  }
+
+  function append(str: string, key: any) {
+    if (key.name === 'backspace') {
+      namePattern = namePattern.slice(0, namePattern.length - 1)
+      backspace()
+    }
+    else {
+      namePattern += str
+      process.stdout.write(str)
+    }
+  }
+
+  return {
+    get isChanging() {
+      return changingPattern
+    },
+    end,
+    start,
+    append,
+  }
+}
+
 export function registerConsoleShortcuts(ctx: Vitest) {
+  const pattern = useChangePattern(ctx)
+
   readline.emitKeypressEvents(process.stdin)
   process.stdin.setRawMode(true)
   process.stdin.on('keypress', (str: string, key: any) => {
@@ -32,6 +77,13 @@ export function registerConsoleShortcuts(ctx: Vitest) {
 
     const name = key?.name
 
+    if (pattern.isChanging) {
+      if (name === 'return')
+        return pattern.end()
+
+      return pattern.append(str, key)
+    }
+
     // help
     if (name === 'h')
       return printShortcutsHelp()
@@ -41,6 +93,10 @@ export function registerConsoleShortcuts(ctx: Vitest) {
     // rerun all tests
     if (name === 'a' || name === 'return')
       return ctx.rerunFiles(undefined, 'rerun all')
+    // change testNamePattern
+    if (name === 't')
+      return pattern.start()
+
     // quit
     if (name === 'q')
       return ctx.exit(true)
