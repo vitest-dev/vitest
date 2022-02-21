@@ -169,21 +169,12 @@ th, td {
   .DocSearch-Hit[aria-selected=true] a {
     --docsearch-highlight-color: #fdd888;
   }
-  .DocSearch-Hit[aria-selected=true] .DocSearch-Hit-icon,
-  .DocSearch-Hit[aria-selected=true] .DocSearch-Hit-path,
-  .DocSearch-Hit[aria-selected=true] .DocSearch-Hit-text,
-  .DocSearch-Hit[aria-selected=true] .DocSearch-Hit-title,
-  .DocSearch-Hit[aria-selected=true] .DocSearch-Hit-Tree,
-  .DocSearch-Hit[aria-selected=true] mark {
-    --docsearch-hit-active-color: rgb(45,45,45);
-  }
   .DocSearch-Hit[aria-selected=true] .DocSearch-Hit-action,
   .DocSearch-Hit[aria-selected=true] .DocSearch-Hit-icon,
   .DocSearch-Hit[aria-selected=true] .DocSearch-Hit-path,
   .DocSearch-Hit[aria-selected=true] .DocSearch-Hit-text,
   .DocSearch-Hit[aria-selected=true] .DocSearch-Hit-title,
-  .DocSearch-Hit[aria-selected=true] .DocSearch-Hit-Tree,
-  .DocSearch-Hit[aria-selected=true] mark {
+  .DocSearch-Hit[aria-selected=true] .DocSearch-Hit-Tree {
     --docsearch-hit-active-color: rgb(45,45,45);
   }
   .DocSearch-Hit[aria-selected=true] mark {
