@@ -180,5 +180,8 @@ th, td {
   .DocSearch-Hit[aria-selected=true] mark {
     --docsearch-hit-active-color: rgb(20,20,20);
   }
+  .DocSearch-Reset {
+   --docsearch-icon-color: #90a4b7;
+  }
 }
 
