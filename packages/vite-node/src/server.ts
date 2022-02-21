@@ -24,7 +24,9 @@ export class ViteNodeServer {
   }
 
   async resolveId(id: string, importer?: string): Promise<ViteNodeResolveId | null> {
-    return this.server.pluginContainer.resolveId(id, importer, { ssr: true })
+    const mode = importer ? this.getTransformMode(importer) : 'ssr'
+
+    return this.server.pluginContainer.resolveId(id, importer, { ssr: mode === 'ssr' })
   }
 
   async fetchModule(id: string): Promise<FetchResult> {
