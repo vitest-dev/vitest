@@ -2,19 +2,6 @@ import type { ErrorWithDiff, File, Task, TaskResultPack, UserConsoleLog } from '
 // can't import actual functions from utils, because it's incompatible with @vitest/browsers
 import type { AggregateError as AggregateErrorPonyfill } from '../utils'
 
-interface CollectingPromise {
-  promise: Promise<void>
-  resolve: () => void
-}
-
-export const isAggregateError = (err: unknown): err is AggregateErrorPonyfill => {
-  if (typeof AggregateError !== 'undefined' && err instanceof AggregateError)
-    return true
-
-  return err instanceof Error && 'errors' in err
-}
-
-// Note this file is shared for both node and browser, be aware to avoid node specific logic
 export class StateManager {
   filesMap = new Map<string, File>()
   pathsSet: Set<string> = new Set()
@@ -57,38 +44,39 @@ export class StateManager {
     return Array.from(this.pathsSet)
   }
 
+  /**
+   * 根据keys获取文件集合
+   * @param keys
+   * @returns
+   */
   getFiles(keys?: string[]): File[] {
     if (keys)
       return keys.map(key => this.filesMap.get(key)!).filter(Boolean)
     return Array.from(this.filesMap.values())
   }
 
+  /**
+   * 获取文件路径集合
+   * @returns
+   */
   getFilepaths(): string[] {
     return Array.from(this.filesMap.keys())
   }
 
+  /**
+   * 获取状态失败的文件路径集合
+   * @returns
+   */
   getFailedFilepaths() {
     return this.getFiles()
       .filter(i => i.result?.state === 'fail')
       .map(i => i.filepath)
   }
 
-  collectPaths(paths: string[] = []) {
-    paths.forEach((path) => {
-      this.pathsSet.add(path)
-    })
-  }
-
   collectFiles(files: File[] = []) {
     files.forEach((file) => {
       this.filesMap.set(file.filepath, file)
       this.updateId(file)
-    })
-  }
-
-  clearFiles(paths: string[] = []) {
-    paths.forEach((path) => {
-      this.filesMap.delete(path)
     })
   }
 
@@ -103,6 +91,11 @@ export class StateManager {
     }
   }
 
+  /**
+   * 更新任务
+   * @param packs
+   * @description 写入任务结果
+   */
   updateTasks(packs: TaskResultPack[]) {
     for (const [id, result] of packs) {
       if (this.idMap.has(id))
@@ -110,6 +103,11 @@ export class StateManager {
     }
   }
 
+  /**
+   * 更新用户日志
+   * @param log
+   * @description 根据log中的taskId，写入到任务
+   */
   updateUserLog(log: UserConsoleLog) {
     const task = log.taskId && this.idMap.get(log.taskId)
     if (task) {

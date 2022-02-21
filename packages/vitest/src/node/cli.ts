@@ -101,8 +101,10 @@ async function start(cliFilters: string[], options: CliOptions) {
   if (typeof options.coverage === 'boolean')
     options.coverage = { enabled: options.coverage }
 
+  // 创建 vitest 上下文
   const ctx = await createVitest(options)
 
+  // 是否启用c8
   if (ctx.config.coverage.enabled) {
     if (!await ensurePackageInstalled('c8'))
       process.exit(1)

@@ -51,8 +51,6 @@ export class Vitest {
     this.logger = new Logger(this)
   }
 
-  private _onRestartListeners: OnServerRestartHandler[] = []
-
   async setServer(options: UserConfig, server: ViteDevServer) {
     this.unregisterWatcher?.()
     clearTimeout(this._rerunTimer)
@@ -64,9 +62,19 @@ export class Vitest {
 
     this.server = server
     this.config = resolved
+    // 新建一个状态管理实例
     this.state = new StateManager()
-    this.cache = new VitestCache()
-    this.snapshot = new SnapshotManager({ ...resolved.snapshotOptions })
+    this.snapshot = new SnapshotManager(resolved)
+    this.reporters = resolved.reporters
+      .map((i) => {
+        if (typeof i === 'string') {
+          const Reporter = ReportersMap[i]
+          if (!Reporter)
+            throw new Error(`Unknown reporter: ${i}`)
+          return new Reporter()
+        }
+        return i
+      })
 
     if (this.config.watch)
       this.registerWatcher()

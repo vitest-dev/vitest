@@ -1,3 +1,4 @@
+// node 模块，逐行读取
 import readline from 'readline'
 import c from 'picocolors'
 import prompt from 'prompts'

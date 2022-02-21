@@ -30,6 +30,11 @@ export class SnapshotManager {
   }
 }
 
+/**
+ * 快照详情置空
+ * @param options
+ * @returns
+ */
 export function emptySummary(options: SnapshotStateOptions): SnapshotSummary {
   const summary = {
     added: 0,
