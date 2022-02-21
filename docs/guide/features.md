@@ -212,7 +212,7 @@ After that, change the `environment` option in your config file:
 
 ```ts
 // vite.config.ts
-import { defineConfig } from 'vitest/node'
+import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
@@ -238,7 +238,7 @@ To configure it, set `test.coverage` options in your config file:
 
 ```ts
 // vite.config.ts
-import { defineConfig } from 'vitest/node'
+import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
