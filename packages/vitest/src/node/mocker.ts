@@ -126,7 +126,7 @@ export class VitestMocker {
   }
 
   public normalizePath(path: string) {
-    return normalizeId(path.replace(this.root, '')).replace(/^\/@fs\//, isWindows ? '' : '/')
+    return path.replace(/^\/@fs\//, isWindows ? '' : '/')
   }
 
   public getFsPath(path: string, external: string | null) {
