@@ -102,6 +102,21 @@ For compatibility with Jest, `TestFunction` can also be of type `(done: DoneCall
   test.todo("unimplemented test");
   ```
 
+### test.fails
+
+- **Type:** `(name: string, fn: TestFunction, timeout?: number) => void`
+- **Alias:** `it.fails`
+
+  Use `test.fails` to indicate that an assertion will fail explicitly.
+
+  ```ts
+  import { test } from 'vitest'
+  const myAsyncFunc = () => new Promise((resolve) => resolve(1))
+  test.fails("fail test", () => {
+    expect(myAsyncFunc()).rejects.toBe(1)
+  })
+  ```
+
 ## describe
 
 When you use `test` in the top level of file, they are collected as part of the implicit suite for it. Using `describe` you can define a new suite in the current context, as a set of related tests and other nested suites. A suite lets you organize your tests so reports are more clear.
