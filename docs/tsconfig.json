@@ -15,11 +15,18 @@
     "forceConsistentCasingInFileNames": true,
     "types": [
       "vite/client",
-      "vite-plugin-pages/client"
+      "vite-plugin-pages/client",
+      "vite-plugin-pwa/client",
+      "vitepress"
     ],
     "paths": {
       "~/*": ["src/*"]
     }
   },
+  "include": [
+    "./*.ts",
+    "./.vitepress/**/*.ts",
+    "./.vitepress/**/*.vue"
+  ],
   "exclude": ["dist", "node_modules"]
 }
