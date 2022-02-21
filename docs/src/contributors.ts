@@ -48,7 +48,7 @@ const coreTeamMembers: CoreTeam[] = [
   },
   {
     avatar: contributorsAvatars.Aslemammad,
-    name: 'Aslemammad',
+    name: 'Mohammad Bagher',
     github: 'Aslemammad',
     twitter: 'asleMammadam',
     sponsors: false,
