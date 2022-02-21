@@ -18,6 +18,9 @@ async function loadGlobalSetupFiles(ctx: Vitest): Promise<GlobalSetupFile[]> {
     fetchModule(id) {
       return node.fetchModule(id)
     },
+    resolveId(id, importer) {
+      return node.resolveId(id, importer)
+    },
   })
   const globalSetupFiles = toArray(server.config.test?.globalSetup)
   return Promise.all(globalSetupFiles.map(file => loadGlobalSetupFile(file, runner)))

@@ -1,7 +1,8 @@
 import { createRequire } from 'module'
 import { fileURLToPath, pathToFileURL } from 'url'
 import vm from 'vm'
-import { dirname, resolve } from 'pathe'
+import { dirname, isAbsolute, resolve } from 'pathe'
+import { isNodeBuiltin } from 'mlly'
 import { isPrimitive, normalizeId, slash, toFilePath } from './utils'
 import type { ModuleCache, ViteNodeRunnerOptions } from './types'
 
@@ -52,6 +53,12 @@ export class ViteNodeRunner {
   async directRequest(id: string, fsPath: string, callstack: string[]) {
     callstack = [...callstack, id]
     const request = async(dep: string) => {
+      // probably means it was passed as variable
+      // and wasn't transformed by Vite
+      if (this.shouldResolveId(dep)) {
+        const resolvedDep = await this.options.resolveId(dep, id)
+        dep = resolvedDep?.id || dep
+      }
       if (callstack.includes(dep)) {
         if (!this.moduleCache.get(dep)?.exports)
           throw new Error(`[vite-node] Circular dependency detected\nStack:\n${[...callstack, dep].reverse().map(p => `- ${p}`).join('\n')}`)
@@ -130,6 +137,13 @@ export class ViteNodeRunner {
       this.moduleCache.set(id, mod)
     else
       Object.assign(this.moduleCache.get(id), mod)
+  }
+
+  shouldResolveId(dep: string) {
+    if (isNodeBuiltin(dep))
+      return false
+
+    return !isAbsolute(dep)
   }
 
   /**

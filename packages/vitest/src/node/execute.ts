@@ -1,14 +1,11 @@
 import { ViteNodeRunner } from 'vite-node/client'
-import type { ModuleCache, ViteNodeResolveId, ViteNodeRunnerOptions } from 'vite-node'
+import type { ModuleCache, ViteNodeRunnerOptions } from 'vite-node'
 import type { SuiteMocks } from './mocker'
 import { VitestMocker } from './mocker'
-
-export type ResolveIdFunction = (id: string, importer?: string) => Promise<ViteNodeResolveId | null>
 
 export interface ExecuteOptions extends ViteNodeRunnerOptions {
   files: string[]
   mockMap: SuiteMocks
-  resolveId: ResolveIdFunction
 }
 
 export async function executeInViteNode(options: ExecuteOptions) {
