@@ -5078,7 +5078,7 @@ packages:
   /@types/concat-stream/1.6.1:
     resolution: {integrity: sha512-eHE4cQPoj6ngxBZMvVf6Hw7Mh4jMW4U9lpGmS5GBPB9RYxlFg+CHaVN7ErNY4W9XfLIEn20b4VDYaIrbq0q4uA==}
     dependencies:
-      '@types/node': 8.10.66
+      '@types/node': 17.0.18
     dev: true
 
   /@types/cookie/0.4.1:
@@ -5138,7 +5138,7 @@ packages:
   /@types/form-data/0.0.33:
     resolution: {integrity: sha1-yayFsqX9GENbjIXZ7LUObWyJP/g=}
     dependencies:
-      '@types/node': 8.10.66
+      '@types/node': 17.0.18
     dev: true
 
   /@types/fs-extra/9.0.13:
