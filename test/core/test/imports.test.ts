@@ -26,3 +26,9 @@ test('dynamic absolute import works', async() => {
 
   expect(timeout).toBe(dynamicTimeout)
 })
+
+test('data with dynamic import works', async() => {
+  const dataUri = 'data:text/javascript;charset=utf-8,export default "hi"'
+  const { default: hi } = await import(dataUri)
+  expect(hi).toBe('hi')
+})
