@@ -25,10 +25,20 @@ export abstract class BaseReporter implements Reporter {
 
   onInit(ctx: Vitest) {
     this.ctx = ctx
+
+    this.ctx.log()
+
     const mode = this.ctx.config.watch
-      ? c.blue(' WATCH ')
+      ? c.blue(' DEV ')
       : c.cyan(' RUN ')
-    this.ctx.log(`\n${c.inverse(c.bold(mode))} ${c.gray(this.ctx.config.root)}\n`)
+    this.ctx.log(`${c.inverse(c.bold(mode))} ${c.gray(this.ctx.config.root)}`)
+
+    if (this.ctx.config.ui)
+      this.ctx.log(c.green(`      Vitest UI started at http://${this.ctx.config.api?.host || 'localhost'}:${c.bold(`${this.ctx.server.config.server.port}`)}`))
+    else if (this.ctx.config.api)
+      this.ctx.log(c.green(`      Vitest API started at http://${this.ctx.config.api?.host || 'localhost'}:${c.bold(`${this.ctx.config.api.port}`)}`))
+
+    this.ctx.log()
     this.start = performance.now()
   }
 
