@@ -46,6 +46,7 @@ export default defineConfig({
     editLinkText: 'Suggest changes to this page',
 
     algolia: {
+      appId: 'ZTF29HGJ69',
       apiKey: '9c3ced6fed60d2670bb36ab7e8bed8bc',
       indexName: 'vitest',
       searchParameters: {
