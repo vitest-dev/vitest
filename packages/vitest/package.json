@@ -39,7 +39,7 @@
     "./config": {
       "import": "./dist/config.js",
       "require": "./dist/config.cjs",
-      "types": "./dist/config.d.ts"
+      "types": "./config.d.ts"
     }
   },
   "main": "./dist/index.js",
