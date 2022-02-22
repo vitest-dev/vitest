@@ -1,19 +1,20 @@
-import type { Awaitable, DoneCallback, RuntimeContext, SuiteCollector, TestFunction } from '../types'
+import type { Awaitable, RuntimeContext, SuiteCollector, Test, TestContext, TestFunction } from '../types'
+import { expect } from '../integrations/chai'
 
-export const context: RuntimeContext = {
+export const collectorContext: RuntimeContext = {
   tasks: [],
   currentSuite: null,
 }
 
 export function collectTask(task: SuiteCollector) {
-  context.currentSuite?.tasks.push(task)
+  collectorContext.currentSuite?.tasks.push(task)
 }
 
 export async function runWithSuite(suite: SuiteCollector, fn: (() => Awaitable<void>)) {
-  const prev = context.currentSuite
-  context.currentSuite = suite
+  const prev = collectorContext.currentSuite
+  collectorContext.currentSuite = suite
   await fn()
-  context.currentSuite = prev
+  collectorContext.currentSuite = prev
 }
 
 export function getDefaultTestTimeout() {
@@ -40,18 +41,20 @@ export function withTimeout<T extends((...args: any[]) => any)>(fn: T, _timeout?
   }) as T
 }
 
-function ensureAsyncTest(fn: TestFunction): () => Awaitable<void> {
-  if (!fn.length)
-    return fn as () => Awaitable<void>
+function createTestContext(test: Test): TestContext {
+  const context = (() => {
+    throw new Error('done() callback is deperated, use promise instead')
+  }) as unknown as TestContext
+  context.meta = test
+  // TODO: @antfu use a getter to create new expect instance that bound to the test for concurrent tests
+  context.expect = expect
 
-  return () => new Promise((resolve, reject) => {
-    const done: DoneCallback = (...args: any[]) => args[0] // reject on truthy values
-      ? reject(args[0])
-      : resolve()
-    fn(done)
-  })
+  return context
 }
 
-export function normalizeTest(fn: TestFunction, timeout?: number): () => Awaitable<void> {
-  return withTimeout(ensureAsyncTest(fn), timeout)
+export function normalizeTest(fn: TestFunction, test: Test, timeout?: number): () => Awaitable<void> {
+  return withTimeout(
+    () => fn(createTestContext(test)),
+    timeout,
+  )
 }

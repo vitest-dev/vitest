@@ -2,7 +2,7 @@ import { format } from 'util'
 import type { File, MutableArray, RunMode, Suite, SuiteAPI, SuiteCollector, SuiteFactory, SuiteHooks, Task, Test, TestAPI, TestFunction } from '../types'
 import { isObject, noop, toArray } from '../utils'
 import { createChainable } from './chain'
-import { collectTask, context, normalizeTest, runWithSuite } from './context'
+import { collectTask, collectorContext, normalizeTest, runWithSuite } from './context'
 import { getHooks, setFn, setHooks } from './map'
 
 // apis
@@ -32,14 +32,14 @@ export const it = test
 // implementations
 export const defaultSuite = suite('')
 
-export function clearContext() {
-  context.tasks.length = 0
+export function clearCollectorContext() {
+  collectorContext.tasks.length = 0
   defaultSuite.clear()
-  context.currentSuite = defaultSuite
+  collectorContext.currentSuite = defaultSuite
 }
 
 export function getCurrentSuite() {
-  return context.currentSuite || defaultSuite
+  return collectorContext.currentSuite || defaultSuite
 }
 
 export function createSuiteHooks() {
@@ -73,7 +73,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
     if (this.concurrent || concurrent)
       test.concurrent = true
 
-    setFn(test, normalizeTest(fn || noop, timeout))
+    setFn(test, normalizeTest(fn || noop, test, timeout))
     tasks.push(test)
   })
 

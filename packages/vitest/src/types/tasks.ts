@@ -43,7 +43,7 @@ export interface Test extends TaskBase {
 export type Task = Test | Suite | File
 
 export type DoneCallback = (error?: any) => void
-export type TestFunction = (done: DoneCallback) => Awaitable<void>
+export type TestFunction = (context: TestContext) => Awaitable<void>
 export type EachFunction = <T>(cases: T[] | readonly T[]) => (name: string, fn: (...args: T extends any[] | readonly any[] ? MutableArray<T> : [T]) => void) => void
 
 export type TestAPI = ChainableFunction<
@@ -83,4 +83,21 @@ export type SuiteFactory = (test: (name: string, fn: TestFunction) => void) => A
 export interface RuntimeContext {
   tasks: (SuiteCollector | Test)[]
   currentSuite: SuiteCollector | null
+}
+
+export interface TestContext {
+  /**
+   * @deprecated Use promise instead
+   */
+  (error?: any): void
+
+  /**
+   * Metadata of the current test
+   */
+  meta: Readonly<Test>
+
+  /**
+   * A expect instance bound to the test
+   */
+  expect: Vi.ExpectStatic
 }
