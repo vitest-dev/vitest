@@ -1,5 +1,6 @@
 import readline from 'readline'
 import c from 'picocolors'
+import prompt from 'prompts'
 import type { Vitest } from './core'
 
 const keys = [
@@ -19,54 +20,8 @@ ${keys.map(i => c.dim('  press ') + c.reset(c.bold(i[0])) + c.dim(` to ${i[1]}`)
   )
 }
 
-function useChangePattern(ctx: Vitest) {
-  let namePattern = ''
-  let changingPattern = false
-
-  function backspace() {
-    readline.moveCursor(process.stdout, -1, process.stdout.rows)
-    process.stdout.write(' ')
-    readline.moveCursor(process.stdout, -1, process.stdout.rows)
-  }
-
-  function end() {
-    ctx.changeNamePattern(namePattern, undefined, 'change pattern')
-    namePattern = ''
-    changingPattern = false
-  }
-
-  function start() {
-    process.stdout.write(`\n${c.bgMagenta(' FILTER ')} ${c.magenta('Filter tests by their name (using regexp):')} `)
-    changingPattern = true
-  }
-
-  function append(str: string, key: any) {
-    if (key.name === 'backspace') {
-      namePattern = namePattern.slice(0, namePattern.length - 1)
-      backspace()
-    }
-    else {
-      namePattern += str
-      process.stdout.write(str)
-    }
-  }
-
-  return {
-    get isChanging() {
-      return changingPattern
-    },
-    end,
-    start,
-    append,
-  }
-}
-
 export function registerConsoleShortcuts(ctx: Vitest) {
-  const pattern = useChangePattern(ctx)
-
-  readline.emitKeypressEvents(process.stdin)
-  process.stdin.setRawMode(true)
-  process.stdin.on('keypress', (str: string, key: any) => {
+  async function _keypressHandler(str: string, key: any) {
     // ctrl-c or esc
     if (str === '\x03' || str === '\x1B' || (key && key.ctrl && key.name === 'c'))
       return ctx.exit(true)
@@ -76,13 +31,6 @@ export function registerConsoleShortcuts(ctx: Vitest) {
       return
 
     const name = key?.name
-
-    if (pattern.isChanging) {
-      if (name === 'return')
-        return pattern.end()
-
-      return pattern.append(str, key)
-    }
 
     // help
     if (name === 'h')
@@ -95,12 +43,45 @@ export function registerConsoleShortcuts(ctx: Vitest) {
       return ctx.rerunFiles(undefined, 'rerun all')
     // change testNamePattern
     if (name === 't')
-      return pattern.start()
-
+      return inputNamePattern()
     // quit
     if (name === 'q')
       return ctx.exit(true)
+  }
 
-    // TODO: add more commands
-  })
+  async function keypressHandler(str: string, key: any) {
+    await _keypressHandler(str, key)
+  }
+
+  async function inputNamePattern() {
+    off()
+    const { filter = '' }: { filter: string } = await prompt([{
+      name: 'filter',
+      type: 'text',
+      message: 'Input test name pattern (RegExp)',
+      initial: String(ctx.config.testNamePattern || ''),
+    }])
+    await ctx.changeNamePattern(filter, undefined, 'change pattern')
+    on()
+  }
+
+  let rl: readline.Interface | undefined
+  function on() {
+    off()
+    rl = readline.createInterface({ input: process.stdin, escapeCodeTimeout: 50 })
+    readline.emitKeypressEvents(process.stdin, rl)
+    if (process.stdin.isTTY)
+      process.stdin.setRawMode(true)
+    process.stdin.on('keypress', keypressHandler)
+  }
+
+  function off() {
+    rl?.close()
+    rl = undefined
+    process.stdin.removeListener('keypress', keypressHandler)
+    if (process.stdin.isTTY)
+      process.stdin.setRawMode(false)
+  }
+
+  on()
 }
