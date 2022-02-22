@@ -1,7 +1,7 @@
 import cac from 'cac'
 import { version } from '../../package.json'
-import type { CliOptions } from './cliApi'
-import { startVitest } from './cliApi'
+import type { CliOptions } from './cli-api'
+import { startVitest } from './cli-api'
 
 const cli = cac('vitest')
 
