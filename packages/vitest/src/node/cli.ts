@@ -65,6 +65,6 @@ async function run(cliFilters: string[], options: CliOptions) {
 }
 
 async function start(cliFilters: string[], options: CliOptions) {
-  await startVitest(cliFilters, options)
-  process.exit()
+  if (await startVitest(cliFilters, options) === false)
+    process.exit()
 }

@@ -22,7 +22,7 @@ export async function startVitest(cliFilters: string[], options: CliOptions, vit
 
   if (!await ensurePackageInstalled('vite')) {
     process.exitCode = 1
-    return
+    return false
   }
 
   if (typeof options.coverage === 'boolean')
@@ -33,21 +33,21 @@ export async function startVitest(cliFilters: string[], options: CliOptions, vit
   if (ctx.config.coverage.enabled) {
     if (!await ensurePackageInstalled('c8')) {
       process.exitCode = 1
-      return
+      return false
     }
 
     if (!process.env.NODE_V8_COVERAGE) {
       process.env.NODE_V8_COVERAGE = ctx.config.coverage.tempDirectory
       const { exitCode } = await execa(process.argv0, process.argv.slice(1), { stdio: 'inherit', reject: false })
       process.exitCode = exitCode
-      return
+      return false
     }
   }
 
   if (ctx.config.environment && ctx.config.environment !== 'node') {
     if (!await ensurePackageInstalled(ctx.config.environment)) {
       process.exitCode = 1
-      return
+      return false
     }
   }
 
@@ -72,4 +72,5 @@ export async function startVitest(cliFilters: string[], options: CliOptions, vit
     if (!ctx.config.watch)
       await ctx.exit()
   }
+  return true
 }
