@@ -1,10 +1,7 @@
 import cac from 'cac'
-import { execa } from 'execa'
-import type { UserConfig } from '../types'
 import { version } from '../../package.json'
-import { ensurePackageInstalled } from '../utils'
-import { createVitest } from './create'
-import { registerConsoleShortcuts } from './stdin'
+import type { CliOptions } from './cliApi'
+import { startVitest } from './cliApi'
 
 const cli = cac('vitest')
 
@@ -56,13 +53,6 @@ cli
 
 cli.parse()
 
-export interface CliOptions extends UserConfig {
-  /**
-   * Override the watch mode
-   */
-  run?: boolean
-}
-
 async function runRelated(relatedFiles: string[] | string, argv: CliOptions) {
   argv.related = relatedFiles
   argv.passWithNoTests ??= true
@@ -75,56 +65,6 @@ async function run(cliFilters: string[], options: CliOptions) {
 }
 
 async function start(cliFilters: string[], options: CliOptions) {
-  process.env.TEST = 'true'
-  process.env.VITEST = 'true'
-  process.env.NODE_ENV ??= options.mode || 'test'
-
-  if (options.run)
-    options.watch = false
-
-  if (!await ensurePackageInstalled('vite'))
-    process.exit(1)
-
-  if (typeof options.coverage === 'boolean')
-    options.coverage = { enabled: options.coverage }
-
-  const ctx = await createVitest(options)
-
-  if (ctx.config.coverage.enabled) {
-    if (!await ensurePackageInstalled('c8'))
-      process.exit(1)
-
-    if (!process.env.NODE_V8_COVERAGE) {
-      process.env.NODE_V8_COVERAGE = ctx.config.coverage.tempDirectory
-      const { exitCode } = await execa(process.argv0, process.argv.slice(1), { stdio: 'inherit', reject: false })
-      process.exit(exitCode)
-    }
-  }
-
-  if (ctx.config.environment && ctx.config.environment !== 'node') {
-    if (!await ensurePackageInstalled(ctx.config.environment))
-      process.exit(1)
-  }
-
-  if (process.stdin.isTTY && ctx.config.watch)
-    registerConsoleShortcuts(ctx)
-
-  process.chdir(ctx.config.root)
-
-  ctx.onServerRestarted(() => {
-    // TODO: re-consider how to re-run the tests the server smartly
-    ctx.start(cliFilters)
-  })
-
-  try {
-    await ctx.start(cliFilters)
-  }
-  catch (e) {
-    process.exitCode = 1
-    throw e
-  }
-  finally {
-    if (!ctx.config.watch)
-      await ctx.exit()
-  }
+  await startVitest(cliFilters, options)
+  process.exit()
 }
