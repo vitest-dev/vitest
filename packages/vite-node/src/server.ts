@@ -73,6 +73,12 @@ export class ViteNodeServer {
     return this.server.pluginContainer.resolveId(id, importer, { ssr: mode === 'ssr' })
   }
 
+  /**
+   * fetch请求加载模块
+   * @description 通过vite请求加载模块，transformRequest转换加载的模块
+   * @param id
+   * @returns
+   */
   async fetchModule(id: string): Promise<FetchResult> {
     // reuse transform for concurrent requests
     if (!this.fetchPromiseMap.has(id)) {

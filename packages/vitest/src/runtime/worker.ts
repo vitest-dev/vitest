@@ -43,7 +43,6 @@ async function startViteNode(ctx: WorkerContext) {
   })
 
   const { config } = ctx
-  debugger
 
   const { run, collect } = (await executeInViteNode({
     files: [
