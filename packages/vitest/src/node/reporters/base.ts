@@ -23,6 +23,10 @@ export abstract class BaseReporter implements Reporter {
   isTTY = process.stdout.isTTY && !process.env.CI
   ctx: Vitest = undefined!
 
+  constructor() {
+    this.registerUnhandledRejection()
+  }
+
   onInit(ctx: Vitest) {
     this.ctx = ctx
 
@@ -181,5 +185,15 @@ export abstract class BaseReporter implements Reporter {
       await printError(error, this.ctx)
       errorDivider()
     }
+  }
+
+  registerUnhandledRejection() {
+    process.on('unhandledRejection', async(err) => {
+      process.exitCode = 1
+      this.ctx.error(`\n${c.red(divider(c.bold(c.inverse(' Unhandled Rejection '))))}`)
+      await printError(err, this.ctx)
+      this.ctx.error('\n\n')
+      process.exit(1)
+    })
   }
 }
