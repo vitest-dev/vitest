@@ -7,6 +7,12 @@ import { RealDate } from '../integrations/mock/date'
 import { rpc } from './rpc'
 
 let globalSetup = false
+
+/**
+ * 根据配置设置全局环境
+ * @param config
+ * @returns
+ */
 export async function setupGlobalEnv(config: ResolvedConfig) {
   resetRunOnceCounter()
 
@@ -27,8 +33,9 @@ export async function setupGlobalEnv(config: ResolvedConfig) {
 
   globalSetup = true
 
-  if (isNode)
-    await setupConsoleLogSpy()
+  setupConsoleLogSpy()
+  // 设置 chai 断言库
+  await setupChai()
 
   if (config.globals)
     (await import('../integrations/globals')).registerApiGlobally()
@@ -151,17 +158,12 @@ export async function setupConsoleLogSpy() {
   })
 }
 
-async function loadEnvironment(name: string) {
-  const pkg = await import(`vitest-environment-${name}`)
-  if (!pkg || !pkg.default || typeof pkg.default !== 'object' || typeof pkg.default.setup !== 'function') {
-    throw new Error(
-      `Environment "${name}" is not a valid environment. `
-    + `Package "vitest-environment-${name}" should have default export with "setup" method.`,
-    )
-  }
-  return pkg.default
-}
-
+/**
+ * 根据环境名，等待环境setup后执行回调函数
+ * @param name
+ * @param options
+ * @param fn
+ */
 export async function withEnv(
   name: ResolvedConfig['environment'],
   options: ResolvedConfig['environmentOptions'],

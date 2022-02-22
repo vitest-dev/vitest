@@ -1,7 +1,6 @@
 import { existsSync, promises as fs } from 'fs'
 import type { ViteDevServer } from 'vite'
-import { normalizePath } from 'vite'
-import { relative, toNamespacedPath } from 'pathe'
+// 遍历文件系统和返回路径名
 import fg from 'fast-glob'
 import mm from 'micromatch'
 import c from 'picocolors'
@@ -79,6 +78,7 @@ export class Vitest {
     if (this.config.watch)
       this.registerWatcher()
 
+    // 创建一个node环境的 vite 服务
     this.vitenode = new ViteNodeServer(server, this.config)
     const node = this.vitenode
     this.runner = new ViteNodeRunner({
@@ -155,6 +155,7 @@ export class Vitest {
     ) as ResolvedConfig
   }
 
+  /** 启动vitest */
   async start(filters?: string[]) {
     try {
       await this.initCoverageProvider()
@@ -167,6 +168,7 @@ export class Vitest {
 
     await this.report('onInit', this)
 
+    // 获取test文件
     const files = await this.filterTestsBySource(
       await this.globTestFiles(filters),
     )
@@ -179,9 +181,7 @@ export class Vitest {
       process.exit(exitCode)
     }
 
-    // populate once, update cache on watch
-    await Promise.all(files.map(file => this.cache.stats.updateStats(file)))
-
+    // 跑test文件
     await this.runFiles(files)
 
     if (this.coverageProvider) {
@@ -261,28 +261,21 @@ export class Vitest {
     return runningTests
   }
 
-  async runFiles(paths: string[]) {
-    // previous run
+  // 执行测试文件
+  async runFiles(files: string[]) {
     await this.runningPromise
     this.state.startCollectingPaths()
 
     // schedule the new run
     this.runningPromise = (async () => {
       if (!this.pool)
+        // 创建线程池
         this.pool = createPool(this)
 
       const invalidates = Array.from(this.invalidates)
       this.invalidates.clear()
-      this.snapshot.clear()
-      this.state.clearErrors()
-      try {
-        await this.pool.runTests(paths, invalidates)
-      }
-      catch (err) {
-        this.state.catchError(err, 'Unhandled Error')
-      }
-
-      const files = this.state.getFiles()
+      // 通过进程池多进=线程执行测试文件
+      await this.pool.runTests(files, invalidates)
 
       if (hasFailed(files))
         process.exitCode = 1
@@ -501,19 +494,17 @@ export class Vitest {
     )))
   }
 
-  async globTestFiles(filters: string[] = []) {
-    const { include, exclude, includeSource } = this.config
-
-    const globOptions = {
-      absolute: true,
-      cwd: this.config.dir || this.config.root,
-      ignore: exclude,
-    }
-
-    let testFiles = await fg(include, globOptions)
-
-    if (filters.length && process.platform === 'win32')
-      filters = filters.map(f => toNamespacedPath(f))
+  /** 获取测试文件 */
+  async globTestFiles(filters?: string[]) {
+    // 根据配置，返回匹配到的test文件
+    let files = await fg(
+      this.config.include,
+      {
+        absolute: true,
+        cwd: this.config.root,
+        ignore: this.config.exclude,
+      },
+    )
 
     if (filters.length)
       testFiles = testFiles.filter(i => filters.some(f => i.includes(f)))

@@ -17,11 +17,13 @@ export async function createVitest(mode: VitestRunMode, options: UserConfig, vit
     ? resolve(root, options.config)
     : await findUp(configFiles, { cwd: root } as any)
 
+  // 创建vite内联配置
   const config: ViteInlineConfig = {
     logLevel: 'error',
     configFile: configPath,
     // this will make "mode" = "test" inside defineConfig
-    mode: options.mode || process.env.NODE_ENV || mode,
+    mode: options.mode || process.env.NODE_ENV || 'test',
+    // vitest转换为vite插件，并与vite服务进行绑定（vitest.setServer()）
     plugins: await VitestPlugin(options, ctx),
   }
 

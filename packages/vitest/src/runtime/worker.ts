@@ -16,6 +16,13 @@ let _viteNode: {
 const moduleCache = new ModuleCacheMap()
 const mockMap: MockMap = new Map()
 
+/**
+ * 启动node环境里的vite
+ * @description 返回run函数（来自entry.ts的run函数）
+ * @description 返回collect函数
+ * @param ctx
+ * @returns
+ */
 async function startViteNode(ctx: WorkerContext) {
   if (_viteNode)
     return _viteNode
@@ -36,9 +43,11 @@ async function startViteNode(ctx: WorkerContext) {
   })
 
   const { config } = ctx
+  debugger
 
-  const { run } = (await executeInViteNode({
+  const { run, collect } = (await executeInViteNode({
     files: [
+      // 引用 runtime目录的 entry.ts 文件
       resolve(distDir, 'entry.js'),
     ],
     fetchModule(id) {
@@ -54,11 +63,14 @@ async function startViteNode(ctx: WorkerContext) {
     base: config.base,
   }))[0]
 
+  console.log('collect:', collect)
+
   _viteNode = { run }
 
   return _viteNode
 }
 
+/** 初始化worker */
 function init(ctx: WorkerContext) {
   // @ts-expect-error untyped global
   if (typeof __vitest_worker__ !== 'undefined' && ctx.config.threads && ctx.config.isolate)

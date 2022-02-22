@@ -123,8 +123,8 @@ async function benchmark(cliFilters: string[], options: CliOptions) {
 
 async function start(mode: VitestRunMode, cliFilters: string[], options: CliOptions) {
   try {
-    if (await startVitest(mode, cliFilters, options) === false)
-      process.exit()
+    // 过滤cli命令输入，启动vitest
+    await ctx.start(cliFilters)
   }
   catch (e) {
     process.exitCode = 1

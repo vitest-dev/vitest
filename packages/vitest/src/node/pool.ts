@@ -18,12 +18,57 @@ export interface WorkerPool {
   close: () => Promise<void>
 }
 
-const workerPath = _url.pathToFileURL(resolve(distDir, './worker.js')).href
-const loaderPath = _url.pathToFileURL(resolve(distDir, './loader.js')).href
+/** 创建线程池 */
+export function createPool(ctx: Vitest): WorkerPool {
+  if (ctx.config.threads)
+    return createWorkerPool(ctx)
+  else
+    return createFakePool(ctx)
+}
+
+// runtime目录下的worker.ts
+const workerPath = pathToFileURL(resolve(distDir, './worker.js')).href
+
+export function createFakePool(ctx: Vitest): WorkerPool {
+  const runWithFiles = (name: 'run' | 'collect'): RunWithFiles => {
+    return async(files, invalidates) => {
+      const worker = await import(workerPath)
+
+      const { workerPort, port } = createChannel(ctx)
+
+      const data: WorkerContext = {
+        port: workerPort,
+        config: ctx.getConfig(),
+        files,
+        invalidates,
+        id: 1,
+      }
 
 const suppressLoaderWarningsPath = resolve(rootDir, './suppress-warnings.cjs')
 
-export function createPool(ctx: Vitest): WorkerPool {
+      port.close()
+      workerPort.close()
+    }
+  }
+
+  return {
+    runTests: runWithFiles('run'),
+    collectTests: runWithFiles('collect'),
+    close: async() => {},
+  }
+}
+
+/**
+ * 创建 web worker 池
+ * @description 暴露三个方法出去
+ * @description runTests （执行测试文件）---- 执行worker.ts文件里的run方法
+ * @description collectTests （收集测试文件）---- 执行worker.ts文件里的collect方法
+ * @description close 关闭
+ * @param ctx
+ * @returns
+ */
+export function createWorkerPool(ctx: Vitest): WorkerPool {
+  // 线程数（至少一个线程）
   const threadsCount = ctx.config.watch
     ? Math.max(Math.floor(cpus().length / 2), 1)
     : Math.max(cpus().length - 1, 1)
@@ -34,6 +79,7 @@ export function createPool(ctx: Vitest): WorkerPool {
   const conditions = ctx.server.config.resolve.conditions?.flatMap(c => ['-C', c]) || []
 
   const options: TinypoolOptions = {
+    // 引入worker.ts来创建线程
     filename: workerPath,
     // TODO: investigate further
     // It seems atomics introduced V8 Fatal Error https://github.com/vitest-dev/vitest/issues/1191
@@ -58,23 +104,7 @@ export function createPool(ctx: Vitest): WorkerPool {
     options.concurrentTasksPerWorker = 1
   }
 
-  if (!ctx.config.threads) {
-    options.concurrentTasksPerWorker = 1
-    options.maxThreads = 1
-    options.minThreads = 1
-  }
-
-  ctx.coverageProvider?.onBeforeFilesRun?.()
-
-  options.env = {
-    TEST: 'true',
-    VITEST: 'true',
-    NODE_ENV: ctx.config.mode || 'test',
-    VITEST_MODE: ctx.config.watch ? 'WATCH' : 'RUN',
-    ...process.env,
-    ...ctx.config.env,
-  }
-
+  /** 创建Tinypool，对线程进行通信管理  */
   const pool = new Tinypool(options)
 
   const runWithFiles = (name: string): RunWithFiles => {

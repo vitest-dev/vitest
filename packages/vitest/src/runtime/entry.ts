@@ -5,15 +5,12 @@ import { envs } from '../integrations/env'
 import { setupGlobalEnv, withEnv } from './setup'
 import { startTests } from './run'
 
-function groupBy<T, K extends string | number | symbol >(collection: T[], iteratee: (item: T) => K) {
-  return collection.reduce((acc, item) => {
-    const key = iteratee(item)
-    acc[key] ||= []
-    acc[key].push(item)
-    return acc
-  }, {} as Record<K, T[]>)
-}
-
+/**
+ * 跑单测文件
+ * @description setup环境后，根据配置开始测试
+ * @param files
+ * @param config
+ */
 export async function run(files: string[], config: ResolvedConfig): Promise<void> {
   await setupGlobalEnv(config)
 

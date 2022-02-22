@@ -128,15 +128,24 @@ export class ViteNodeRunner {
     this.debug = options.debug ?? (typeof process !== 'undefined' ? !!process.env.VITE_NODE_DEBUG_RUNNER : false)
   }
 
+  /**
+   * 根据文件路径执行
+   * @param file
+   * @returns
+   */
   async executeFile(file: string) {
     return await this.cachedRequest(`/@fs/${slash(resolve(file))}`, [])
   }
 
+  /**
+   * 根据文件Id执行文件
+   * @param id
+   * @returns
+   */
   async executeId(id: string) {
     return await this.cachedRequest(id, [])
   }
 
-  /** @internal */
   async cachedRequest(rawId: string, callstack: string[]) {
     const id = normalizeRequestId(rawId, this.options.base)
     const fsPath = toFilePath(id, this.root)
@@ -163,31 +172,13 @@ export class ViteNodeRunner {
     return await promise
   }
 
-  /** @internal */
-  async directRequest(id: string, fsPath: string, _callstack: string[]) {
-    const callstack = [..._callstack, fsPath]
-
-    const mod = this.moduleCache.get(fsPath)
-
-    const request = async (dep: string) => {
-      const depFsPath = toFilePath(normalizeRequestId(dep, this.options.base), this.root)
-      const getStack = () => {
-        return `stack:\n${[...callstack, depFsPath].reverse().map(p => `- ${p}`).join('\n')}`
-      }
-
-      let debugTimer: any
-      if (this.debug)
-        debugTimer = setTimeout(() => console.warn(() => `module ${depFsPath} takes over 2s to load.\n${getStack()}`), 2000)
-
-      try {
-        if (callstack.includes(depFsPath)) {
-          const depExports = this.moduleCache.get(depFsPath)?.exports
-          if (depExports)
-            return depExports
-          throw new Error(`[vite-node] Failed to resolve circular dependency, ${getStack()}`)
-        }
-
-        return await this.cachedRequest(dep, callstack)
+  async directRequest(id: string, fsPath: string, callstack: string[]) {
+    callstack = [...callstack, id]
+    const request = async(dep: string) => {
+      if (callstack.includes(dep)) {
+        if (!this.moduleCache.get(dep)?.exports)
+          throw new Error(`[vite-node] Circular dependency detected\nStack:\n${[...callstack, dep].reverse().map(p => `- ${p}`).join('\n')}`)
+        return this.moduleCache.get(dep)!.exports
       }
       finally {
         if (debugTimer)
@@ -220,8 +211,7 @@ export class ViteNodeRunner {
     if (id in requestStubs)
       return requestStubs[id]
 
-    // eslint-disable-next-line prefer-const
-    let { code: transformed, externalize } = await this.options.fetchModule(id)
+    const { code: transformed, externalize } = await this.options.fetchModule(id)
     if (externalize) {
       debugNative(externalize)
       const exports = await this.interopedImport(externalize)

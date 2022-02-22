@@ -416,33 +416,8 @@ async function runSuites(suites: Suite[]) {
     await runSuite(suite)
 }
 
-export async function runFiles(files: File[], config: ResolvedConfig) {
-  for (const file of files) {
-    if (!file.tasks.length && !config.passWithNoTests) {
-      if (!file.result?.error) {
-        file.result = {
-          state: 'fail',
-          error: new Error(`No test suite found in file ${file.filepath}`),
-        }
-      }
-    }
-    await runSuite(file)
-  }
-}
-
-async function startTestsBrowser(paths: string[], config: ResolvedConfig) {
-  if (isNode) {
-    rpc().onPathsCollected(paths)
-  }
-  else {
-    const files = await collectTests(paths, config)
-    await rpc().onCollected(files)
-    await runSuites(files)
-    await sendTasksUpdate()
-  }
-}
-
-async function startTestsNode(paths: string[], config: ResolvedConfig) {
+/** 开始测试 */
+export async function startTests(paths: string[], config: ResolvedConfig) {
   const files = await collectTests(paths, config)
 
   rpc().onCollected(files)
@@ -452,8 +427,8 @@ async function startTestsNode(paths: string[], config: ResolvedConfig) {
 
   await runFiles(files, config)
 
-  const coverage = await takeCoverageInsideWorker(config.coverage)
-  rpc().onAfterSuiteRun({ coverage })
+  // 生成覆盖率
+  takeCoverage()
 
   await getSnapshotClient().saveCurrent()
 

@@ -20,7 +20,13 @@ function hash(str: string): string {
   return `${hash}`
 }
 
-export async function collectTests(paths: string[], config: ResolvedConfig): Promise<File[]> {
+/**
+ * 收集测试文件
+ * @param paths
+ * @param config
+ * @returns
+ */
+export async function collectTests(paths: string[], config: ResolvedConfig) {
   const files: File[] = []
   const browserHashMap = getWorkerState().browserHashMap!
 
