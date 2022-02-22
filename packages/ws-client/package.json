@@ -40,7 +40,7 @@
     "ws": "^8.5.0"
   },
   "devDependencies": {
-    "rollup": "^2.67.2"
+    "rollup": "^2.67.3"
   },
   "engines": {
     "node": ">=14.14.0"
