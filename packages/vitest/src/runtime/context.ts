@@ -24,8 +24,11 @@ export function getDefaultHookTimeout() {
   return __vitest_worker__!.config!.hookTimeout
 }
 
-export function withTimeout<T extends((...args: any[]) => any)>(fn: T, { isHook, _timeout }: { isHook: boolean; _timeout?: number }): T {
-  const timeout = _timeout ?? getDefaultTestTimeout()
+export function withTimeout<T extends((...args: any[]) => any)>(
+  fn: T,
+  timeout = getDefaultTestTimeout(),
+  isHook = false,
+): T {
   if (timeout <= 0 || timeout === Infinity)
     return fn
 
@@ -57,5 +60,5 @@ function ensureAsyncTest(fn: TestFunction): () => Awaitable<void> {
 }
 
 export function normalizeTest(fn: TestFunction, timeout?: number): () => Awaitable<void> {
-  return withTimeout(ensureAsyncTest(fn), { _timeout: timeout, isHook: false })
+  return withTimeout(ensureAsyncTest(fn), timeout)
 }
