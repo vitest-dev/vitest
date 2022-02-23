@@ -116,7 +116,7 @@ function interpretTaskModes(suite: Suite, namePattern?: string | RegExp, onlyMod
 }
 
 function getTaskFullName(task: TaskBase): string {
-  return `${task.suite ? getTaskFullName(task.suite) + ' ' : ''}${task.name}` 
+  return `${task.suite ? `${getTaskFullName(task.suite)} ` : ''}${task.name}`
 }
 
 function someTasksAreOnly(suite: Suite): boolean {
