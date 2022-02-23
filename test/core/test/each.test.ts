@@ -8,6 +8,17 @@ test.each([
   expect(a + b).toBe(expected)
 })
 
+test.each([
+  ['string', true],
+  ['string', false],
+])('can be parsed', (a, b) => {
+  const typedA: string = a
+  const typedB: boolean = b
+
+  expect(typedA).toBeDefined()
+  expect(typedB).toBeDefined()
+})
+
 describe.each([
   [1, 1, 2],
   [1, 2, 3],
