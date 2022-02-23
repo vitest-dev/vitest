@@ -41,7 +41,7 @@ export function withTimeout<T extends((...args: any[]) => any)>(fn: T, { isHook,
 }
 
 function makeTimeoutMsg(isHook: boolean, timeout: number) {
-  return `${isHook ? 'Hook' : 'Test'} timed out in ${timeout}ms.\nPlease pass timeout value as last argument or configure globally with "${isHook ? 'hookTimeout' : 'testTimeout'}" in config, if this is a long-running test.`
+  return `${isHook ? 'Hook' : 'Test'} timed out in ${timeout}ms.\nIf this is a long-running test, pass a timeout value as the last argument or configure it globally with "${isHook ? 'hookTimeout' : 'testTimeout'}".`
 }
 
 function ensureAsyncTest(fn: TestFunction): () => Awaitable<void> {
