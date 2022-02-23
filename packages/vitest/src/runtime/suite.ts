@@ -209,7 +209,7 @@ function createTest(
     return (name: string, fn: (...args: T[]) => void) => {
       cases.forEach((i) => {
         const items = toArray(i) as any
-        suite(formatTitle(name, items), () => fn(...items))
+        test(formatTitle(name, items), () => fn(...items))
       })
     }
   }
