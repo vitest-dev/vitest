@@ -1,5 +1,5 @@
 import { format } from 'util'
-import type { File, MutableArray, RunMode, Suite, SuiteAPI, SuiteCollector, SuiteFactory, SuiteHooks, Task, Test, TestAPI, TestFunction } from '../types'
+import type { File, RunMode, Suite, SuiteAPI, SuiteCollector, SuiteFactory, SuiteHooks, Task, Test, TestAPI, TestFunction } from '../types'
 import { isObject, noop, toArray } from '../utils'
 import { createChainable } from './chain'
 import { collectTask, context, normalizeTest, runWithSuite } from './context'
