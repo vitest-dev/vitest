@@ -1,5 +1,17 @@
 import { format } from 'util'
-import type { File, MutableArray, RunMode, Suite, SuiteAPI, SuiteCollector, SuiteFactory, SuiteHooks, Task, Test, TestAPI, TestFunction } from '../types'
+import type {
+  File,
+  RunMode,
+  Suite,
+  SuiteAPI,
+  SuiteCollector,
+  SuiteFactory,
+  SuiteHooks,
+  Task,
+  Test,
+  TestAPI,
+  TestFunction,
+} from '../types'
 import { isObject, noop, toArray } from '../utils'
 import { createChainable } from './chain'
 import { collectTask, context, normalizeTest, runWithSuite } from './context'
@@ -7,12 +19,14 @@ import { getHooks, setFn, setHooks } from './map'
 
 // apis
 export const suite = createSuite()
-export const test = createTest(
-  function(name: string, fn?: TestFunction, timeout?: number) {
-    // @ts-expect-error untyped internal prop
-    getCurrentSuite().test.fn.call(this, name, fn, timeout)
-  },
-)
+export const test = createTest(function(
+  name: string,
+  fn?: TestFunction,
+  timeout?: number,
+) {
+  // @ts-expect-error untyped internal prop
+  getCurrentSuite().test.fn.call(this, name, fn, timeout)
+})
 
 function formatTitle(template: string, items: any[]) {
   const count = template.split('%').length - 1
@@ -51,7 +65,12 @@ export function createSuiteHooks() {
   }
 }
 
-function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, mode: RunMode, concurrent?: boolean) {
+function createSuiteCollector(
+  name: string,
+  factory: SuiteFactory = () => {},
+  mode: RunMode,
+  concurrent?: boolean,
+) {
   const tasks: (Test | Suite | SuiteCollector)[] = []
   const factoryQueue: (Test | Suite | SuiteCollector)[] = []
 
@@ -59,8 +78,18 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
 
   initSuite()
 
-  const test = createTest(function(name: string, fn?: TestFunction, timeout?: number) {
-    const mode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run'
+  const test = createTest(function(
+    name: string,
+    fn?: TestFunction,
+    timeout?: number,
+  ) {
+    const mode = this.only
+      ? 'only'
+      : this.skip
+        ? 'skip'
+        : this.todo
+          ? 'todo'
+          : 'run'
 
     const test: Test = {
       id: '',
@@ -70,8 +99,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       suite: undefined!,
       fails: this.fails,
     }
-    if (this.concurrent || concurrent)
-      test.concurrent = true
+    if (this.concurrent || concurrent) test.concurrent = true
 
     setFn(test, normalizeTest(fn || noop, timeout))
     tasks.push(test)
@@ -89,7 +117,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
   }
 
   function addHook<T extends keyof SuiteHooks>(name: T, ...fn: SuiteHooks[T]) {
-    getHooks(suite)[name].push(...fn as any)
+    getHooks(suite)[name].push(...(fn as any))
   }
 
   function initSuite() {
@@ -111,8 +139,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
 
   async function collect(file?: File) {
     factoryQueue.length = 0
-    if (factory)
-      await runWithSuite(collector, () => factory(test))
+    if (factory) await runWithSuite(collector, () => factory(test))
 
     const allChildren: Task[] = []
 
@@ -124,8 +151,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
 
     allChildren.forEach((task) => {
       task.suite = suite
-      if (file)
-        task.file = file
+      if (file) task.file = file
     })
 
     return suite
@@ -140,13 +166,19 @@ function createSuite() {
   const suite = createChainable(
     ['concurrent', 'skip', 'only', 'todo'],
     function(name: string, factory?: SuiteFactory) {
-      const mode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run'
+      const mode = this.only
+        ? 'only'
+        : this.skip
+          ? 'skip'
+          : this.todo
+            ? 'todo'
+            : 'run'
       return createSuiteCollector(name, factory, mode, this.concurrent)
     },
   ) as SuiteAPI
 
-  suite.each = <T>(cases: T[] | readonly T[]) => {
-    return (name: string, fn: (...args: T extends any[] | readonly any[] ? MutableArray<T> : [T]) => void) => {
+  suite.each = <T>(cases: ReadonlyArray<T>) => {
+    return (name: string, fn: (...args: T[]) => void) => {
       cases.forEach((i) => {
         const items = toArray(i) as any
         suite(formatTitle(name, items), () => fn(...items))
@@ -157,17 +189,27 @@ function createSuite() {
   return suite as SuiteAPI
 }
 
-function createTest(fn: ((this: Record<'concurrent'| 'skip'| 'only'| 'todo'| 'fails', boolean | undefined>, title: string, fn?: TestFunction, timeout?: number) => void)) {
+function createTest(
+  fn: (
+    this: Record<
+    'concurrent' | 'skip' | 'only' | 'todo' | 'fails',
+    boolean | undefined
+    >,
+    title: string,
+    fn?: TestFunction,
+    timeout?: number
+  ) => void,
+) {
   const test = createChainable(
     ['concurrent', 'skip', 'only', 'todo', 'fails'],
     fn,
   ) as TestAPI
 
-  test.each = <T>(cases: T[] | readonly T[]) => {
-    return (name: string, fn: (...args: T extends any[] | readonly any[] ? MutableArray<T> : [T]) => void) => {
+  test.each = <T>(cases: ReadonlyArray<T>) => {
+    return (name: string, fn: (...args: T[]) => void) => {
       cases.forEach((i) => {
         const items = toArray(i) as any
-        test(formatTitle(name, items), () => fn(...items))
+        suite(formatTitle(name, items), () => fn(...items))
       })
     }
   }
