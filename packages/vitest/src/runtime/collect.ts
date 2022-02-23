@@ -97,7 +97,7 @@ function interpretTaskModes(suite: Suite, namePattern?: string | RegExp, onlyMod
       }
     }
     if (t.type === 'test') {
-      if (namePattern && !t.name.match(namePattern))
+      if (namePattern && !getTaskFullName(t).match(namePattern))
         t.mode = 'skip'
     }
     else if (t.type === 'suite') {
@@ -113,6 +113,10 @@ function interpretTaskModes(suite: Suite, namePattern?: string | RegExp, onlyMod
     if (suite.tasks.every(i => i.mode !== 'run'))
       suite.mode = 'skip'
   }
+}
+
+function getTaskFullName(task: TaskBase): string {
+  return `${task.suite ? `${getTaskFullName(task.suite)} ` : ''}${task.name}`
 }
 
 function someTasksAreOnly(suite: Suite): boolean {
