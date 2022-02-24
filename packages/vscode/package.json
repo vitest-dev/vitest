@@ -1,15 +1,16 @@
 {
   "name": "@vitest/vscode",
-  "displayName": "UnoCSS",
+  "displayName": "Vitest",
   "version": "0.16.3",
   "private": true,
-  "description": "UnoCSS for VS Code",
+  "description": "Vitest for VS Code",
   "categories": [
-    "Other"
+    "Other",
+    "Testing"
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/antfu/unocss",
+    "url": "https://github.com/vitest-dev/vitest",
     "directory": "packages/vscode"
   },
   "license": "MIT",
@@ -24,7 +25,7 @@
     "commands": [],
     "configuration": {
       "type": "object",
-      "title": "UnoCSS",
+      "title": "Vitest",
       "properties": {}
     }
   },
