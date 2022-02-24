@@ -61,6 +61,19 @@ export default ({ watch }) => [
       dir: 'dist',
       format: 'esm',
       sourcemap: 'inline',
+      chunkFileNames: (chunkInfo) => {
+        const id = chunkInfo.facadeModuleId || Object.keys(chunkInfo.modules).find(i => !i.includes('node_modules') && i.includes('src/'))
+        if (id) {
+          const parts = Array.from(
+            new Set(path.relative(process.cwd(), id).split(/\//g)
+              .map(i => i.replace(/\..*$/, ''))
+              .filter(i => !['src', 'index', 'dist', 'node_modules'].some(j => i.includes(j)) && i.match(/^[\w_-]+$/))),
+          )
+          if (parts.length)
+            return `chunk-${parts.slice(-2).join('-')}.[hash].js`
+        }
+        return 'vendor-[name].[hash].js'
+      },
     },
     external,
     plugins: [
