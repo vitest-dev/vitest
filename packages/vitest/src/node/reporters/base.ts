@@ -4,6 +4,7 @@ import c from 'picocolors'
 import type { ErrorWithDiff, File, Reporter, Task, TaskResultPack, UserConsoleLog } from '../../types'
 import { getFullName, getSuites, getTests, hasFailed, hasFailedSnapshot } from '../../utils'
 import type { Vitest } from '../../node'
+import { version } from '../../../package.json'
 import { printError } from './renderers/diff'
 import { F_RIGHT } from './renderers/figures'
 import { divider, getStateString, getStateSymbol, renderSnapshotSummary } from './renderers/utils'
@@ -32,15 +33,18 @@ export abstract class BaseReporter implements Reporter {
 
     this.ctx.log()
 
+    const versionTest = this.ctx.config.watch
+      ? c.blue(`v${version}`)
+      : c.cyan(`v${version}`)
     const mode = this.ctx.config.watch
       ? c.blue(' DEV ')
       : c.cyan(' RUN ')
-    this.ctx.log(`${c.inverse(c.bold(mode))} ${c.gray(this.ctx.config.root)}`)
+    this.ctx.log(`${c.inverse(c.bold(mode))} ${versionTest} ${c.gray(this.ctx.config.root)}`)
 
     if (this.ctx.config.ui)
-      this.ctx.log(c.green(`      Vitest UI started at http://${this.ctx.config.api?.host || 'localhost'}:${c.bold(`${this.ctx.server.config.server.port}`)}`))
+      this.ctx.log(c.dim(c.green(`      UI started at http://${this.ctx.config.api?.host || 'localhost'}:${c.bold(`${this.ctx.server.config.server.port}`)}`)))
     else if (this.ctx.config.api)
-      this.ctx.log(c.green(`      Vitest API started at http://${this.ctx.config.api?.host || 'localhost'}:${c.bold(`${this.ctx.config.api.port}`)}`))
+      this.ctx.log(c.dim(c.green(`      API started at http://${this.ctx.config.api?.host || 'localhost'}:${c.bold(`${this.ctx.config.api.port}`)}`)))
 
     this.ctx.log()
     this.start = performance.now()
