@@ -1,5 +1,7 @@
 // Vitest Snapshot v1
 
+exports[`should fails > empty.test.ts > empty.test.ts 1`] = `"Error: No test suite found in file /Users/antfu/i/vitest/test/fails/fixtures/empty.test.ts"`;
+
 exports[`should fails > expect.test.ts > expect.test.ts 1`] = `"AssertionError: expected 2 to deeply equal 3"`;
 
 exports[`should fails > hook-timeout.test.ts > hook-timeout.test.ts 1`] = `"Error: Hook timed out in 10ms."`;

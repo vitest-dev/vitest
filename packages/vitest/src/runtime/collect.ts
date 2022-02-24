@@ -110,7 +110,7 @@ function interpretTaskModes(suite: Suite, namePattern?: string | RegExp, onlyMod
 
   // if all subtasks are skipped, mark as skip
   if (suite.mode === 'run') {
-    if (suite.tasks.every(i => i.mode !== 'run'))
+    if (suite.tasks.length && suite.tasks.every(i => i.mode !== 'run'))
       suite.mode = 'skip'
   }
 }
