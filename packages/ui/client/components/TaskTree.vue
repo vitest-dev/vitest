@@ -21,7 +21,7 @@ export default {
 
 <template>
   <TaskItem
-    v-if="!search || task.name.match(search)"
+    v-if="!search || task.name.includes(search)"
     v-bind="$attrs"
     :task="task"
     :style="{ paddingLeft: `${indent * 0.75 + 1}rem`}"
