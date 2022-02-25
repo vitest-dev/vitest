@@ -131,7 +131,7 @@ describe('reading messages', () => {
 
 Mock modules observe third-party-libraries, that are invoked in some other code, allowing you to test arguments, output or even redeclare its implementation.
 
-See the [`vi.mock()` api section](/api/#vi-fn) for a more in depth detailed API description.
+See the [`vi.mock()` api section](/api/#vi-mock) for a more in depth detailed API description.
 
 ### Automocking algorithm
 
