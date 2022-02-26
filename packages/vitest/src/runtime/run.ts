@@ -177,7 +177,7 @@ export async function runSuite(suite: Suite) {
     if (!hasTests(suite)) {
       suite.result.state = 'fail'
       if (!suite.result.error)
-        suite.result.error = new Error(`No tests found in suite ${suite.name}`)
+        suite.result.error = new Error(`No test found in suite ${suite.name}`)
     }
     else if (hasFailed(suite)) {
       suite.result.state = 'fail'
@@ -199,9 +199,11 @@ async function runSuiteChild(c: Task) {
 export async function runFiles(files: File[], config: ResolvedConfig) {
   for (const file of files) {
     if (!file.tasks.length && !config.passWithNoTests) {
-      file.result = {
-        state: 'fail',
-        error: new Error(`No test suite found in file ${file.filepath}`),
+      if (!file.result?.error) {
+        file.result = {
+          state: 'fail',
+          error: new Error(`No test suite found in file ${file.filepath}`),
+        }
       }
     }
 
