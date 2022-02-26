@@ -12,6 +12,7 @@ cli
   .option('-u, --update', 'update snapshot')
   .option('-w, --watch', 'watch mode')
   .option('-t, --testNamePattern <pattern>', 'run tests with full names matching the specified pattern')
+  .option('--dir', 'base directory to scan for the test files')
   .option('--ui', 'enable UI')
   .option('--open', 'open UI automatically (default: !process.env.CI))')
   .option('--api [api]', 'serve API, available options: --api.port <port>, --api.host [host] and --api.strictPort')

@@ -397,7 +397,7 @@ export class Vitest {
       this.config.include,
       {
         absolute: true,
-        cwd: this.config.root,
+        cwd: this.config.dir || this.config.root,
         ignore: this.config.exclude,
       },
     )
