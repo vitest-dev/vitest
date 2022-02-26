@@ -18,9 +18,11 @@ export function normalizeId(id: string, base?: string): string {
     .replace(/^__vite-browser-external:/, '')
     .replace(/^(node|file):/, '')
     .replace(/^\/+/, '/') // remove duplicate leading slashes
-    .replace(/[?&]v=\w+/, '?') // remove ?v= query
-    .replace(/[?&]import/, '?') // remove ?import query
-    .replace(/\?$/, '') // remove end query mark
+    .replace(/\?v=\w+/, '?') // remove ?v= query
+    .replace(/&v=\w+/, '') // remove &v= query
+    .replace(/\?import/, '?') // remove ?import query
+    .replace(/&import/, '') // remove &import query
+    .replace(/\?+$/, '') // remove end query mark
 }
 
 export function isPrimitive(v: any) {
