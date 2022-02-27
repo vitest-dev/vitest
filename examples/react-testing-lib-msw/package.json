@@ -10,7 +10,7 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "@apollo/client": "^3.5.9",
+    "@apollo/client": "^3.5.10",
     "react": "^17.0.2",
     "react-dom": "^17.0.2"
   },
