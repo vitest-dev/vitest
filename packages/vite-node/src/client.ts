@@ -111,7 +111,8 @@ export class ViteNodeRunner {
       __dirname: dirname(__filename),
     })
 
-    const fn = vm.runInThisContext(`async (${Object.keys(context).join(',')})=>{{${transformed}\n}}`, {
+    // add 'use strict' since ESM enables it by default
+    const fn = vm.runInThisContext(`'use strict';async (${Object.keys(context).join(',')})=>{{${transformed}\n}}`, {
       filename: fsPath,
       lineOffset: 0,
     })
