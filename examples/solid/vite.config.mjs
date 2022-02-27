@@ -2,13 +2,13 @@
 /// <reference types="vite/client" />
 
 import { defineConfig } from 'vite'
-import solid from 'solid-start'
+import solid from 'solid-start' // or use 'vite-plugin-solid' instead
 
 export default defineConfig({
   test: {
     environment: 'jsdom',
     transformMode: {
-      web: [/.[jt]sx/],
+      web: [/.[jt]sx?/],
     },
     deps: {
       inline: [/solid-js/],
@@ -16,7 +16,7 @@ export default defineConfig({
     threads: false,
     isolate: false,
   },
-  plugins: [solid({ ssr: false, dev: true })],
+  plugins: [solid()],
   resolve: {
     conditions: ['development', 'browser'],
   },
