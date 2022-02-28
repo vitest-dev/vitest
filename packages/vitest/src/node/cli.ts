@@ -1,7 +1,9 @@
 import cac from 'cac'
+import c from 'picocolors'
 import { version } from '../../package.json'
 import type { CliOptions } from './cli-api'
 import { startVitest } from './cli-api'
+import { divider } from './reporters/renderers/utils'
 
 const cli = cac('vitest')
 
@@ -66,6 +68,14 @@ async function run(cliFilters: string[], options: CliOptions) {
 }
 
 async function start(cliFilters: string[], options: CliOptions) {
-  if (await startVitest(cliFilters, options) === false)
-    process.exit()
+  try {
+    if (await startVitest(cliFilters, options) === false)
+      process.exit()
+  }
+  catch (e) {
+    process.exitCode = 1
+    console.error(`\n${c.red(divider(c.bold(c.inverse(' Unhandled Error '))))}`)
+    console.error(e)
+    console.error('\n\n')
+  }
 }
