@@ -141,6 +141,7 @@ You can specify additional CLI options like `--port` or `--https`. For a full li
 - [million](https://github.com/aidenybai/million)
 - [Vitamin](https://github.com/wtchnm/Vitamin)
 - [neodrag](https://github.com/PuruVJ/neodrag)
+- [svelte-multiselect](https://github.com/janosh/svelte-multiselect)
 
 ## Using Unreleased Commits
 

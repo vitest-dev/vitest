@@ -102,7 +102,7 @@ export class ViteNodeServer {
 
     if (this.getTransformMode(id) === 'web') {
       // for components like Vue, we want to use the client side
-      // plugins but then covert the code to be consumed by the server
+      // plugins but then convert the code to be consumed by the server
       result = await this.server.transformRequest(id)
       if (result)
         result = await this.server.ssrTransform(result.code, result.map, id)
