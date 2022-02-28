@@ -1,7 +1,10 @@
 import type { Plugin } from 'vite'
 import { ViteNodeRunner } from 'vite-node/client'
+import c from 'picocolors'
 import type { Vitest } from '../core'
 import { toArray } from '../../utils'
+import { printError } from '../reporters/renderers/diff'
+import { divider } from '../reporters/renderers/utils'
 
 interface GlobalSetupFile {
   file: string
@@ -61,13 +64,21 @@ export const GlobalSetupPlugin = (ctx: Vitest): Plugin => {
         return
 
       globalSetupFiles = await loadGlobalSetupFiles(ctx)
-      for (const globalSetupFile of globalSetupFiles) {
-        const teardown = await globalSetupFile.setup?.()
-        if (teardown == null || !!globalSetupFile.teardown)
-          continue
-        if (typeof teardown !== 'function')
-          throw new Error(`invalid return value in globalSetup file ${globalSetupFile.file}. Must return a function`)
-        globalSetupFile.teardown = teardown
+
+      try {
+        for (const globalSetupFile of globalSetupFiles) {
+          const teardown = await globalSetupFile.setup?.()
+          if (teardown == null || !!globalSetupFile.teardown)
+            continue
+          if (typeof teardown !== 'function')
+            throw new Error(`invalid return value in globalSetup file ${globalSetupFile.file}. Must return a function`)
+          globalSetupFile.teardown = teardown
+        }
+      }
+      catch (e) {
+        ctx.error(`\n${c.red(divider(c.bold(c.inverse(' Error during global setup '))))}`)
+        await printError(e, ctx)
+        process.exit(1)
       }
     },
 
