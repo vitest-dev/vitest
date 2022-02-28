@@ -7,7 +7,7 @@ vi
     mocked: true,
   }))
 
-// doesnt think comments are mocks
+// doesn't think comments are mocks
 // vi.mock('../src/example', () => ({
 //   mocked: false,
 // }))

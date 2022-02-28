@@ -137,7 +137,7 @@ function checkAllowOnly(task: TaskBase, allowOnly?: boolean) {
   if (allowOnly) return
   task.result = {
     state: 'fail',
-    error: processError(new Error('[Vitest] Unexpected .only modifier. Remove it or pass --allowOnly arguement to bypass this error')),
+    error: processError(new Error('[Vitest] Unexpected .only modifier. Remove it or pass --allowOnly argument to bypass this error')),
   }
 }
 

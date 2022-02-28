@@ -98,7 +98,7 @@ export class ViteNodeRunner {
       },
     }
 
-    // Be carefull when changing this
+    // Be careful when changing this
     // changing context will change amount of code added on line :114 (vm.runInThisContext)
     // this messes up sourcemaps for coverage
     // adjust `offset` variable in packages/vitest/src/integrations/coverage.ts#L100 if you do change this

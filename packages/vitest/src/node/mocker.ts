@@ -188,7 +188,7 @@ export class VitestMocker {
 
       if (type.includes('Function') && !obj[k]._isMockFunction) {
         this.spy.spyOn(newObj, k).mockImplementation(() => {})
-        Object.defineProperty(newObj[k], 'length', { value: 0 }) // tinyspy retains length, but jest doesnt
+        Object.defineProperty(newObj[k], 'length', { value: 0 }) // tinyspy retains length, but jest doesn't
       }
     }
     return newObj

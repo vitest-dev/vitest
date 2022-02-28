@@ -348,7 +348,7 @@ TODO
     if(stock === 'Bill') return 13
   }
 
-  test('mary doesnt have a stock', () => {
+  test("mary doesn't have a stock", () => {
     expect(getApplesFromStock('Mary')).toBeUndefined()
   })
   ```
@@ -1122,7 +1122,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 
 ### vi.mock
 
-  **Type**: `(path: string, factory?: () => unknown) => void`
+- **Type**: `(path: string, factory?: () => unknown) => void`
 
   Makes all `imports` to passed module to be mocked. Inside a path you _can_ use configured Vite aliases.
 
