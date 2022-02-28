@@ -18,6 +18,6 @@ class TestReporter implements Reporter {
 export default defineConfig({
   test: {
     include: ['tests/reporters.spec.ts'],
-    reporters: ['default', new TestReporter()],
+    reporters: new TestReporter(),
   },
 })
