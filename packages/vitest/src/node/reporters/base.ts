@@ -5,8 +5,7 @@ import type { ErrorWithDiff, File, Reporter, Task, TaskResultPack, UserConsoleLo
 import { getFullName, getSuites, getTests, hasFailed, hasFailedSnapshot } from '../../utils'
 import type { Vitest } from '../../node'
 import { version } from '../../../package.json'
-import { printError } from './renderers/diff'
-import { F_RIGHT } from './renderers/figures'
+import { F_RIGHT } from '../../utils/figures'
 import { divider, getStateString, getStateSymbol, renderSnapshotSummary } from './renderers/utils'
 
 const BADGE_PADDING = '       '
@@ -186,7 +185,7 @@ export abstract class BaseReporter implements Reporter {
 
         this.ctx.error(`${c.red(c.bold(c.inverse(' FAIL ')))} ${name}`)
       }
-      await printError(error, this.ctx)
+      await this.ctx.printError(error)
       errorDivider()
     }
   }
@@ -195,7 +194,7 @@ export abstract class BaseReporter implements Reporter {
     process.on('unhandledRejection', async(err) => {
       process.exitCode = 1
       this.ctx.error(`\n${c.red(divider(c.bold(c.inverse(' Unhandled Rejection '))))}`)
-      await printError(err, this.ctx)
+      await this.ctx.printError(err)
       this.ctx.error('\n\n')
       process.exit(1)
     })

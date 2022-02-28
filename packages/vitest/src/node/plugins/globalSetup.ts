@@ -3,7 +3,6 @@ import { ViteNodeRunner } from 'vite-node/client'
 import c from 'picocolors'
 import type { Vitest } from '../core'
 import { toArray } from '../../utils'
-import { printError } from '../reporters/renderers/diff'
 import { divider } from '../reporters/renderers/utils'
 
 interface GlobalSetupFile {
@@ -77,7 +76,7 @@ export const GlobalSetupPlugin = (ctx: Vitest): Plugin => {
       }
       catch (e) {
         ctx.error(`\n${c.red(divider(c.bold(c.inverse(' Error during global setup '))))}`)
-        await printError(e, ctx)
+        await ctx.printError(e)
         process.exit(1)
       }
     },
