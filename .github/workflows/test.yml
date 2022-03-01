@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - win/test
 
   pull_request:
     branches:
@@ -17,8 +18,8 @@ jobs:
 
     strategy:
       matrix:
-        node_version: [14.x, 16.x]
-        os: [ubuntu-latest, windows-latest] #, macos-latest]
+        node_version: [16.x]
+        os: [windows-latest] #, macos-latest]
       fail-fast: false
 
     steps:
@@ -42,10 +43,4 @@ jobs:
         run: pnpm run build
 
       - name: Test
-        run: pnpm run test:ci
-
-      - name: Lint
-        run: pnpm run lint --if-present
-
-      - name: TypeCheck
-        run: pnpm run typecheck
+        run: pnpm run test:f

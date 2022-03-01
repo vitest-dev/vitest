@@ -22,6 +22,7 @@
     "test:run": "vitest run -r test/core",
     "test:all": "cross-env CI=true pnpm -r --stream --filter !@vitest/monorepo run test -- --allowOnly",
     "test:ci": "cross-env CI=true pnpm -r --stream --filter !@vitest/monorepo --filter !test-fails run test -- --allowOnly",
+    "test:f": "cross-env CI=true pnpm -r --stream --filter test-global-setup-fail run test -- --allowOnly",
     "typecheck": "tsc --noEmit",
     "ui:build": "vite build packages/ui",
     "ui:dev": "vite packages/ui"
