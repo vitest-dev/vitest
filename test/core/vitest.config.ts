@@ -1,3 +1,4 @@
+import { resolve } from 'pathe'
 import { defineConfig } from 'vite'
 
 export default defineConfig({
@@ -29,6 +30,11 @@ export default defineConfig({
     '__MODE__': 'process.env.MODE',
     'SOME.VARIABLE': '"variable"',
     'SOME.SOME.VARIABLE': '"nested variable"',
+  },
+  resolve: {
+    alias: [
+      { find: '@', replacement: resolve(__dirname, 'src') },
+    ],
   },
   test: {
     testTimeout: 2000,

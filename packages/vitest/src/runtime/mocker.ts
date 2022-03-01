@@ -63,18 +63,18 @@ export class VitestMocker {
     (this.callbacks[event] ?? []).forEach(fn => fn(...args))
   }
 
-  public getSuiteFilepath() {
+  public getSuiteFilepath(): string {
     return __vitest_worker__?.filepath || 'global'
   }
 
   public getMocks() {
     const suite = this.getSuiteFilepath()
-    const suiteMocks = this.mockMap[suite || '']
+    const suiteMocks = this.mockMap[suite]
     const globalMocks = this.mockMap.global
 
     return {
-      ...suiteMocks,
       ...globalMocks,
+      ...suiteMocks,
     }
   }
 

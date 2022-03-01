@@ -13,6 +13,7 @@ import { createPool } from './pool'
 import type { WorkerPool } from './pool'
 import { StateManager } from './state'
 import { resolveConfig } from './config'
+import { printError } from './error'
 
 const WATCHER_DEBOUNCE = 100
 const CLOSE_TIMEOUT = 1_000
@@ -208,6 +209,11 @@ export class Vitest {
     await this.report('onWatcherStart')
   }
 
+  async changeNamePattern(pattern: string, files: string[] = this.state.getFilepaths(), trigger?: string) {
+    this.config.testNamePattern = pattern ? new RegExp(pattern) : undefined
+    await this.rerunFiles(files, trigger)
+  }
+
   async returnFailed() {
     await this.rerunFiles(this.state.getFailedFilepaths(), 'rerun failed')
   }
@@ -392,7 +398,7 @@ export class Vitest {
       this.config.include,
       {
         absolute: true,
-        cwd: this.config.root,
+        cwd: this.config.dir || this.config.root,
         ignore: this.config.exclude,
       },
     )
@@ -407,6 +413,10 @@ export class Vitest {
     if (mm.isMatch(id, this.config.exclude))
       return false
     return mm.isMatch(id, this.config.include)
+  }
+
+  printError(err: unknown) {
+    return printError(err, this)
   }
 
   onServerRestarted(fn: () => void) {

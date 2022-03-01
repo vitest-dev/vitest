@@ -9,21 +9,21 @@
     "test:run": "vitest run"
   },
   "dependencies": {
-    "@emotion/react": "^11.7.1",
-    "@emotion/styled": "^11.6.0",
+    "@emotion/react": "^11.8.1",
+    "@emotion/styled": "^11.8.1",
     "@mui/lab": "*",
-    "@mui/material": "^5.4.1",
-    "history": "^5.2.0",
+    "@mui/material": "^5.4.3",
+    "history": "^5.3.0",
     "notistack": "^2.0.3",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-router-dom": "^6.2.1",
     "recharts": "^2.1.9",
-    "swr": "^1.2.1"
+    "swr": "^1.2.2"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^5.16.2",
-    "@testing-library/react": "^12.1.2",
+    "@testing-library/react": "^12.1.3",
     "@testing-library/user-event": "^13.5.0",
     "@vitest/ui": "latest",
     "date-fns": "^2.28.0",

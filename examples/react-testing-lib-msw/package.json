@@ -10,12 +10,12 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "@apollo/client": "^3.5.8",
+    "@apollo/client": "^3.5.10",
     "react": "^17.0.2",
     "react-dom": "^17.0.2"
   },
   "devDependencies": {
-    "@testing-library/react": "^12.1.2",
+    "@testing-library/react": "^12.1.3",
     "@testing-library/user-event": "^13.5.0",
     "@types/react": "^17.0.39",
     "@types/react-dom": "^17.0.11",
@@ -23,7 +23,7 @@
     "@vitest/ui": "latest",
     "cross-fetch": "^3.1.5",
     "jsdom": "latest",
-    "msw": "^0.36.8",
+    "msw": "^0.38.1",
     "vite": "latest",
     "vitest": "latest"
   }

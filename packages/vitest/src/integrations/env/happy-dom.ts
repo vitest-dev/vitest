@@ -1,6 +1,6 @@
 import { importModule } from 'local-pkg'
 import type { Environment } from '../../types'
-import { KEYS } from './jsdom-keys'
+import { getWindowKeys } from './utils'
 
 export default <Environment>({
   name: 'happy-dom',
@@ -8,8 +8,7 @@ export default <Environment>({
     const { Window } = await importModule('happy-dom') as typeof import('happy-dom')
     const win: any = new Window()
 
-    const keys = new Set(KEYS.concat(Object.getOwnPropertyNames(win))
-      .filter(k => !k.startsWith('_') && !(k in global)))
+    const keys = getWindowKeys(global, win)
 
     const overrideObject = new Map<string, any>()
     for (const key of keys) {

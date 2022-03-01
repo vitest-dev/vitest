@@ -1,5 +1,4 @@
 import type { Plugin as PrettyFormatPlugin } from 'pretty-format'
-import type { Any, Anything } from './integrations/chai/jest-asymmetric-matchers'
 import type { MatcherState, MatchersObject } from './integrations/chai/types'
 import type { Constructable, InlineConfig, WorkerGlobalState } from './types'
 
@@ -58,8 +57,8 @@ declare global {
       extend(expects: MatchersObject): void
       assertions(expected: number): void
       hasAssertions(): void
-      anything(): Anything
-      any(constructor: unknown): Any
+      anything(): any
+      any(constructor: unknown): any
       addSnapshotSerializer(plugin: PrettyFormatPlugin): void
       getState(): MatcherState
       setState(state: Partial<MatcherState>): void

@@ -8,6 +8,17 @@ import { configDefaults } from '../defaults'
 import { resolveC8Options } from '../integrations/coverage'
 import { toArray } from '../utils'
 
+const extraInlineDeps = [
+  /^(?!.*(?:node_modules)).*\.mjs$/,
+  /^(?!.*(?:node_modules)).*\.cjs\.js$/,
+  // Vitest
+  /\/vitest\/dist\//,
+  // yarn's .store folder
+  /vitest-virtual-\w+\/dist/,
+  // Nuxt
+  '@nuxt/test-utils',
+]
+
 export function resolveApiConfig<Options extends ApiConfig & UserConfig>(
   options: Options,
 ): ApiConfig | undefined {
@@ -84,13 +95,7 @@ export function resolveConfig(
   // vitenode will try to import such file with native node,
   // but then our mocker will not work properly
   resolved.deps.inline ??= []
-  resolved.deps.inline.push(
-    /^(?!.*(?:node_modules)).*\.mjs$/,
-    /^(?!.*(?:node_modules)).*\.cjs\.js$/,
-    /\/vitest\/dist\//,
-    // yarn's .store folder
-    /vitest-virtual-\w+\/dist/,
-  )
+  resolved.deps.inline.push(...extraInlineDeps)
 
   resolved.testNamePattern = resolved.testNamePattern
     ? resolved.testNamePattern instanceof RegExp

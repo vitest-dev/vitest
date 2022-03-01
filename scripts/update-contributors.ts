@@ -1,8 +1,6 @@
 import { promises as fs } from 'fs'
 import fetch from 'node-fetch'
 
-const { GITHUB_TOKEN: token } = process.env
-
 interface Contributor {
   login: string
 }
@@ -12,7 +10,6 @@ async function fetchContributors() {
   const res = await fetch('https://api.github.com/repos/vitest-dev/vitest/contributors', {
     method: 'get',
     headers: {
-      'authorization': `bearer ${token}`,
       'content-type': 'application/json',
     },
   })

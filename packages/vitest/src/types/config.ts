@@ -72,6 +72,13 @@ export interface InlineConfig {
   }
 
   /**
+   * Base directory to scan for the test files
+   *
+   * @default `config.root`
+   */
+  dir?: string
+
+  /**
   * Register apis globally
   *
   * @default false

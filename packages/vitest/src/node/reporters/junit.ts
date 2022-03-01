@@ -5,8 +5,8 @@ import { relative, resolve } from 'pathe'
 import type { Vitest } from '../../node'
 import type { ErrorWithDiff, Reporter, Task } from '../../types'
 import { parseStacktrace } from '../../utils/source-map'
-import { F_POINTER } from './renderers/figures'
-import { IndentedLogger } from './utils/indented-logger'
+import { F_POINTER } from '../../utils/figures'
+import { IndentedLogger } from './renderers/indented-logger'
 
 function flattenTasks(task: Task, baseName = ''): Task[] {
   const base = baseName ? `${baseName} > ` : ''

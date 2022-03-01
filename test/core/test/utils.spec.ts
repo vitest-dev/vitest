@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { assertTypes, deepMerge } from '../../../packages/vitest/src/utils'
+import { assertTypes, deepMerge, toArray } from '../../../packages/vitest/src/utils'
 import { deepMergeSnapshot } from '../../../packages/vitest/src/integrations/snapshot/port/utils'
 
 describe('assertTypes', () => {
@@ -22,16 +22,19 @@ describe('assertTypes', () => {
 
 describe('deepMerge', () => {
   test('non plain objects retain their prototype, arrays are not merging, plain objects are merging', () => {
-    class Test {
+    class TestA {
       baz = 'baz'
 
       get foo() {
         return 'foo'
       }
     }
+    class TestB {
+      bar = 'bar'
+    }
 
-    const testA = new Test()
-    const testB = new Test()
+    const testA = new TestA()
+    const testB = new TestB()
 
     const a = {
       test: testA,
@@ -53,7 +56,8 @@ describe('deepMerge', () => {
 
     const merged = deepMerge(a, b)
 
-    expect(merged.test instanceof Test).toBe(true)
+    expect(merged.test instanceof TestB).toBe(true)
+    expect(merged.test.baz).toBeUndefined()
     expect(merged.num).toBe(40)
     expect(merged.array).toEqual([3, 4])
     expect(merged.obj).toEqual({
@@ -94,5 +98,26 @@ describe('deepMerge', () => {
       foo: 88,
       array: [{}, 'test'],
     })
+  })
+})
+
+describe('toArray', () => {
+  test('number should be converted to array correctly', () => {
+    expect(toArray(0)).toEqual([0])
+    expect(toArray(1)).toEqual([1])
+    expect(toArray(2)).toEqual([2])
+  })
+
+  test('return empty array when given null or undefined', () => {
+    expect(toArray(null)).toEqual([])
+    expect(toArray(undefined)).toEqual([])
+  })
+
+  test('return the value as is when given the array', () => {
+    expect(toArray([1, 1, 2])).toEqual([1, 1, 2])
+  })
+
+  test('object should be stored in the array correctly', () => {
+    expect(toArray({ a: 1, b: 1, expected: 2 })).toEqual([{ a: 1, b: 1, expected: 2 }])
   })
 })
