@@ -13,5 +13,8 @@
     "vite": "latest",
     "vitest": "latest",
     "vue": "^3.2.26"
+  },
+  "stackblitz": {
+    "startCommand": "npm run test"
   }
 }

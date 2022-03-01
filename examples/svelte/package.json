@@ -14,5 +14,8 @@
     "jsdom": "latest",
     "svelte": "^3.46.4",
     "vitest": "latest"
+  },
+  "stackblitz": {
+    "startCommand": "npm run test:ui"
   }
 }
