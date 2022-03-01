@@ -24,4 +24,4 @@ it('should fail', async() => {
     .find(i => i.includes('Error: '))
     ?.trim()
   expect(msg).toBe('Error: error')
-}, 20000)
+}, 50000)
