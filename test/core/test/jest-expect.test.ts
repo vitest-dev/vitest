@@ -4,6 +4,17 @@ import { describe, expect, it } from 'vitest'
 
 class TestError extends Error {}
 
+// For expect.extend
+interface CustomMatchers<R = unknown> {
+  toBeDividedBy(divisor: number): R
+}
+declare global {
+  namespace Vi {
+    interface JestAssertion extends CustomMatchers {}
+    interface ExpectStatic extends CustomMatchers {}
+  }
+}
+
 describe('jest-expect', () => {
   it('basic', () => {
     expect(1).toBe(1)
@@ -112,6 +123,37 @@ describe('jest-expect', () => {
     expect('bar').toEqual(expect.not.stringMatching(/zoo/))
     expect({ bar: 'zoo' }).toEqual(expect.not.objectContaining({ zoo: 'bar' }))
     expect(['Bob', 'Eve']).toEqual(expect.not.arrayContaining(['Steve']))
+  })
+
+  it('expect.extend', () => {
+    expect.extend({
+      toBeDividedBy(received, divisor) {
+        const pass = received % divisor === 0
+        if (pass) {
+          return {
+            message: () =>
+              `expected ${received} not to be divisible by ${divisor}`,
+            pass: true,
+          }
+        }
+        else {
+          return {
+            message: () =>
+              `expected ${received} to be divisible by ${divisor}`,
+            pass: false,
+          }
+        }
+      },
+    })
+
+    expect(5).toBeDividedBy(5)
+    expect(5).not.toBeDividedBy(4)
+
+    // TODO: support asymmetric matcher
+    // expect({ one: 1, two: 2 }).toEqual({
+    //   one: expect.toBeDividedBy(1),
+    //   two: expect.toBeDividedBy(1),
+    // })
   })
 
   it('object', () => {
