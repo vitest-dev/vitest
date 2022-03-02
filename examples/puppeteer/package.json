@@ -12,5 +12,8 @@
     "puppeteer": "^13.0.0",
     "vite": "latest",
     "vitest": "latest"
+  },
+  "stackblitz": {
+    "startCommand": "npm run test:ui"
   }
 }

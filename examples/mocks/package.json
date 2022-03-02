@@ -20,5 +20,8 @@
     "@vitest/ui": "latest",
     "vite": "latest",
     "vitest": "latest"
+  },
+  "stackblitz": {
+    "startCommand": "npm run test:ui"
   }
 }

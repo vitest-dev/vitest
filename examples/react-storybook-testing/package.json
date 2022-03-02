@@ -40,5 +40,8 @@
   },
   "msw": {
     "workerDirectory": "public"
+  },
+  "stackblitz": {
+    "startCommand": "npm run test:ui"
   }
 }

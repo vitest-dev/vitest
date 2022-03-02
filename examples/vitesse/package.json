@@ -15,5 +15,8 @@
     "unplugin-auto-import": "^0.6.1",
     "unplugin-vue-components": "^0.17.21",
     "vitest": "latest"
+  },
+  "stackblitz": {
+    "startCommand": "npm run test"
   }
 }

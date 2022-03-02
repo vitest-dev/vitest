@@ -30,5 +30,8 @@
     "jsdom": "^19.0.0",
     "vite": "latest",
     "vitest": "latest"
+  },
+  "stackblitz": {
+    "startCommand": "npm run test:ui"
   }
 }

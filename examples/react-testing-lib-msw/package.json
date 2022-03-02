@@ -26,5 +26,8 @@
     "msw": "^0.38.1",
     "vite": "latest",
     "vitest": "latest"
+  },
+  "stackblitz": {
+    "startCommand": "npm run test:ui"
   }
 }

@@ -13,5 +13,8 @@
     "@vue/test-utils": "^2.0.0-rc.18",
     "happy-dom": "latest",
     "vitest": "latest"
+  },
+  "stackblitz": {
+    "startCommand": "npm run test"
   }
 }
