@@ -140,7 +140,7 @@ importers:
       lit: 2.2.0
     devDependencies:
       '@vitest/ui': link:../../packages/ui
-      happy-dom: 2.41.0
+      happy-dom: 2.43.1
       vite: 2.8.4
       vitest: link:../../packages/vitest
 
@@ -410,7 +410,7 @@ importers:
       solid-js: 1.3.8
     devDependencies:
       jsdom: 19.0.0
-      solid-start: 0.1.0-alpha.61_solid-js@1.3.8+vite@2.8.4
+      solid-start: 0.1.0-alpha.62_solid-js@1.3.8+vite@2.8.4
       solid-testing-library: 0.3.0_solid-js@1.3.8
       vitest: link:../../packages/vitest
 
@@ -430,6 +430,12 @@ importers:
       svelte: 3.46.4
       vitest: link:../../packages/vitest
 
+  examples/vite-node:
+    specifiers:
+      vite-node: latest
+    devDependencies:
+      vite-node: link:../../packages/vite-node
+
   examples/vitesse:
     specifiers:
       '@vitejs/plugin-vue': ^2.2.2
@@ -444,7 +450,7 @@ importers:
     devDependencies:
       '@vitejs/plugin-vue': 2.2.2_vite@2.8.4+vue@3.2.26
       '@vue/test-utils': 2.0.0-rc.18_vue@3.2.26
-      happy-dom: 2.41.0
+      happy-dom: 2.43.1
       unplugin-auto-import: 0.6.1_de6b9341a0800cef9d4c5675dfb00029
       unplugin-vue-components: 0.17.21_2141940c5a41fba4ab85237860ef1202
       vitest: link:../../packages/vitest
@@ -461,7 +467,7 @@ importers:
     devDependencies:
       '@vitejs/plugin-vue': 2.2.2_vite@2.8.4+vue@3.2.31
       '@vue/test-utils': 2.0.0-rc.18_vue@3.2.31
-      happy-dom: 2.41.0
+      happy-dom: 2.43.1
       vitest: link:../../packages/vitest
 
   examples/vue-jsx:
@@ -477,7 +483,7 @@ importers:
       '@vitejs/plugin-vue': 2.2.2_vite@2.8.4+vue@3.2.26
       '@vitejs/plugin-vue-jsx': 1.3.7
       '@vue/test-utils': 2.0.0-rc.18_vue@3.2.26
-      happy-dom: 2.41.0
+      happy-dom: 2.43.1
       vite: 2.8.4
       vitest: link:../../packages/vitest
       vue: 3.2.26
@@ -9313,6 +9319,11 @@ packages:
     resolution: {integrity: sha1-4wOogrNCzD7oylE6eZmXNNqzriw=}
     dev: true
 
+  /cookie-signature/1.2.0:
+    resolution: {integrity: sha512-R0BOPfLGTitaKhgKROKZQN6iyq2iDQcH1DOF8nJoaWapguX5bC2w+Q/I9NmmM5lfcvEarnLZr+cCvmEYYSXvYA==}
+    engines: {node: '>=6.6.0'}
+    dev: true
+
   /cookie/0.4.1:
     resolution: {integrity: sha512-ZwrFkGJxUR3EIoXtO+yVE69Eb7KlixbaeAWfBQB9vVsNn/o+Yw69gBWSSDK825hQNdN+wF8zELf3dFNl/kxkUA==}
     engines: {node: '>= 0.6'}
@@ -12349,6 +12360,20 @@ packages:
       - encoding
     dev: true
 
+  /happy-dom/2.43.1:
+    resolution: {integrity: sha512-lWLeXIkr3z15Yg4kP3eH5dL1JvzGrfXl8uYV23tmOAfPeHncaCmvu4iobxW1misGFEUMJi7kF6TmDaUXltLktw==}
+    dependencies:
+      css.escape: 1.5.1
+      he: 1.2.0
+      node-fetch: 2.6.7
+      sync-request: 6.1.0
+      webidl-conversions: 7.0.0
+      whatwg-encoding: 1.0.5
+      whatwg-mimetype: 2.3.0
+    transitivePeerDependencies:
+      - encoding
+    dev: true
+
   /has-bigints/1.0.1:
     resolution: {integrity: sha512-LSBS2LjbNBTf6287JEbEzvJgftkF5qFkmCo9hDRpAzKhUOlJ+hx8dd4USs00SgsUNwc4617J9ki5YtEClM2ffA==}
     dev: true
@@ -15034,6 +15059,13 @@ packages:
       json-parse-even-better-errors: 2.3.1
       lines-and-columns: 1.1.6
 
+  /parse-multipart-data/1.2.1:
+    resolution: {integrity: sha512-R5X4KciY9tTsB9QEFDpx2dDrcvK8P06MbMML7CYoIt4RcGgMEgmxv54dEP2NANOd29JGA60uQ/P9UcaH/XE6oQ==}
+    dependencies:
+      '@types/node': 10.17.60
+      typescript: 2.9.2
+    dev: true
+
   /parse5-htmlparser2-tree-adapter/6.0.1:
     resolution: {integrity: sha512-qPuWvbLgvDGilKc5BoicRovlT4MtYT6JfJyBOMDsKoiT+GiuP5qyrPCnR9HcPECIJJmZh5jRndyNThnhhb/vlA==}
     dependencies:
@@ -16919,7 +16951,7 @@ packages:
     resolution: {integrity: sha512-0nZ8kFZ105pmMuaVzIwTUUyugV15Jr7HGF2e5BwhoKK0WjAmICiWEbkQPu0zUa0wN99lbpbpmRevsrGa0bextA==}
     dev: true
 
-  /solid-start-node/0.1.0-alpha.8_solid-start@0.1.0-alpha.61:
+  /solid-start-node/0.1.0-alpha.8_solid-start@0.1.0-alpha.62:
     resolution: {integrity: sha512-0cLyLoDfr7mXLtRvEZ2YFuDAE/II0sa7OJZJ4YkyZOoxK/knvnoMxzd0YRTxs+xXyaODMPRhPcsTmqscZeP2JQ==}
     requiresBuild: true
     peerDependencies:
@@ -16932,14 +16964,14 @@ packages:
       polka: 1.0.0-next.22
       rollup: 2.68.0
       sirv: 1.0.19
-      solid-start: 0.1.0-alpha.61_solid-js@1.3.8+vite@2.8.4
+      solid-start: 0.1.0-alpha.62_solid-js@1.3.8+vite@2.8.4
     transitivePeerDependencies:
       - encoding
     dev: true
     optional: true
 
-  /solid-start/0.1.0-alpha.61_solid-js@1.3.8+vite@2.8.4:
-    resolution: {integrity: sha512-BhNcJp5JR9i+A5xtBXH120Z+fOj1cw4JLhUj+pvxffcjezfG3HKhEaPyQMP+K75bo0Fqefe+14hIULQn3XMvlQ==}
+  /solid-start/0.1.0-alpha.62_solid-js@1.3.8+vite@2.8.4:
+    resolution: {integrity: sha512-e1Qaf76WykK3Bstl+2f1gqmKqcoQmLHUSk1cfOCqTunRJPkNITCJUoRkE69qJFvgdcgFeERzjlHfG7yhkp8J9Q==}
     hasBin: true
     peerDependencies:
       solid-app-router: ^0.3.0
@@ -16952,9 +16984,12 @@ packages:
       '@babel/preset-typescript': 7.16.7_@babel+core@7.17.5
       compression: 1.7.4
       connect: 3.7.0
+      cookie: 0.4.2
+      cookie-signature: 1.2.0
       es-module-lexer: 0.9.3
       esbuild: 0.14.21
       fast-glob: 3.2.11
+      parse-multipart-data: 1.2.1
       picocolors: 1.0.0
       rollup: 2.68.0
       rollup-route-manifest: 1.0.0_rollup@2.68.0
@@ -16967,7 +17002,7 @@ packages:
       vite-plugin-inspect: 0.3.14_vite@2.8.4
       vite-plugin-solid: 2.2.5
     optionalDependencies:
-      solid-start-node: 0.1.0-alpha.8_solid-start@0.1.0-alpha.61
+      solid-start-node: 0.1.0-alpha.8_solid-start@0.1.0-alpha.62
     transitivePeerDependencies:
       - encoding
       - less
@@ -17973,6 +18008,12 @@ packages:
 
   /typedarray/0.0.6:
     resolution: {integrity: sha1-hnrHTjhkGHsdPUfZlqeOxciDB3c=}
+    dev: true
+
+  /typescript/2.9.2:
+    resolution: {integrity: sha512-Gr4p6nFNaoufRIY4NMdpQRNmgxVIGMs4Fcu/ujdYk3nAZqk7supzBE9idmvfZIlH/Cuj//dvi+019qEue9lV0w==}
+    engines: {node: '>=4.2.0'}
+    hasBin: true
     dev: true
 
   /typescript/4.5.5:

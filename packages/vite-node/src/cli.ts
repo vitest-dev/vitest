@@ -1,6 +1,7 @@
 import minimist from 'minimist'
 import { dim, red } from 'kolorist'
 import { createServer } from 'vite'
+import { slash } from './utils'
 import { ViteNodeServer } from './server'
 import { ViteNodeRunner } from './client'
 
@@ -61,6 +62,7 @@ export interface CliOptions {
   _?: string[]
   root?: string
   config?: string
+  watch?: boolean
 }
 
 async function run(options: CliOptions = {}) {
@@ -93,5 +95,12 @@ async function run(options: CliOptions = {}) {
   for (const file of files)
     await runner.executeFile(file)
 
-  await server.close()
+  if (!options.watch)
+    await server.close()
+
+  // if file change re-run file
+  server.watcher.on('change', async(file) => {
+    runner.moduleCache.delete(`/@fs/${slash(file)}`)
+    await runner.executeFile(file)
+  })
 }

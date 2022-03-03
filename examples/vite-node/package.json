@@ -1,0 +1,16 @@
+{
+  "name": "vitest-test",
+  "private": true,
+  "main": "index.js",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "start": "vite-node --watch ./src/index.js"
+  },
+  "devDependencies": {
+    "vite-node": "latest"
+  },
+  "stackblitz": {
+    "startCommand": "npm run start"
+  }
+}
