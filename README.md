@@ -17,8 +17,6 @@ A blazing fast unit test framework powered by Vite.
 <br>
 <br>
 
-> ⚠️ **DISCLAIMER**: Vitest is still in development and not stable yet. It's not recommended to use it in production.
-
 > Vitest requires Vite >=v2.7.10 and Node >=v14
 
 Follow the [Getting Started Guide](https://vitest.dev/guide) or learn [why we are building a new test runner](https://vitest.dev/guide/why).

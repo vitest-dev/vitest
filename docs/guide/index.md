@@ -1,7 +1,5 @@
 # Getting Started
 
-<DevelopmentWarning/>
-
 ## Overview
 
 Vitest is a blazing fast unit test framework powered by Vite.
