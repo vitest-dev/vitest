@@ -35,7 +35,6 @@ export async function createVitest(
   if (ctx.config.api?.port) {
     await server.listen();
   } else {
-    console.log("here");
     await server.pluginContainer.buildStart({});
   }
   return ctx;

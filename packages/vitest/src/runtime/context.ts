@@ -35,7 +35,9 @@ export function withTimeout<T extends((...args: any[]) => any)>(fn: T, _timeout?
         clearTimeout(timer)
         reject(new Error(`Test timed out in ${timeout}ms.`))
       }, timeout)
-      timer.unref()
+      if (timer.unref) {
+        timer.unref()
+      }
     })]) as Awaitable<void>
   }) as T
 }

@@ -1,11 +1,15 @@
 import type { TransformResult } from 'vite'
-import type { File, ModuleGraphData, Reporter, ResolvedConfig } from '../types'
+import type { File, ModuleGraphData, Reporter, ResolvedConfig, Task, TaskResultPack } from '../types'
 
 export interface TransformResultWithSource extends TransformResult {
   source?: string
 }
 
 export interface WebSocketHandlers {
+  onWatcherStart: () => Promise<void>
+  onFinished(files?: File[]): Promise<void>
+  onCollected(files?: File[]): Promise<void>
+  onTaskUpdate(packs: TaskResultPack[]): void
   getFiles(): File[]
   getConfig(): ResolvedConfig
   getModuleGraph(id: string): Promise<ModuleGraphData>

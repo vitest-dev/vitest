@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import fs, { promises as fsp } from 'fs'
+import fs from 'fs'
 import path from 'pathe'
 import naturalCompare from 'natural-compare'
 import type { OptionsReceived as PrettyFormatOptions } from 'pretty-format'
@@ -15,6 +15,8 @@ import {
 import type { SnapshotData, SnapshotUpdateState } from '../../../types'
 import { isObject } from '../../../utils'
 import { getSerializers } from './plugins'
+
+
 
 // TODO: rewrite and clean up
 
@@ -152,6 +154,8 @@ export async function saveSnapshotFile(
     )
 
   ensureDirectoryExists(snapshotPath)
+
+  const fsp = fs?.promises
   await fsp.writeFile(
     snapshotPath,
     `${writeSnapshotVersion()}\n\n${snapshots.join('\n\n')}\n`,

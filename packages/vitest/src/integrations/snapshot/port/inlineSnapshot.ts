@@ -1,8 +1,10 @@
-import { promises as fs } from 'fs'
+import _fs from 'fs'
 import type MagicString from 'magic-string'
 import { rpc } from '../../../runtime/rpc'
 import { getOriginalPos, lineSplitRE, numberToPos, posToNumber } from '../../../utils/source-map'
 import { getCallLastIndex } from '../../../utils'
+
+
 
 export interface InlineSnapshot {
   snapshot: string
@@ -14,6 +16,7 @@ export interface InlineSnapshot {
 export async function saveInlineSnapshots(
   snapshots: Array<InlineSnapshot>,
 ) {
+  const fs = _fs?.promises
   const MagicString = (await import('magic-string')).default
   const files = new Set(snapshots.map(i => i.file))
   await Promise.all(Array.from(files).map(async(file) => {

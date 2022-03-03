@@ -193,7 +193,7 @@ export class Vitest {
       if (hasFailed(this.state.getFiles()))
         process.exitCode = 1
 
-      await this.report('onFinished', this.state.getFiles())
+      // await this.report('onFinished', this.state.getFiles())
     })()
       .finally(() => {
         this.runningPromise = undefined
@@ -283,7 +283,7 @@ export class Vitest {
       if (this.config.coverage.enabled)
         await reportCoverage(this)
 
-      await this.report('onWatcherStart')
+      // await this.report('onWatcherStart')
     }, WATCHER_DEBOUNCE)
   }
 

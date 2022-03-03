@@ -7,7 +7,7 @@
   "scripts": {
     "build": "pnpm -r --filter {packages} run build",
     "ci": "ni && nr typecheck && nr lint && nr build && nr test:all",
-    "dev": "pnpm -r --parallel --filter vitest --filter ui run dev",
+    "dev": "pnpm -r --parallel --filter vitest --filter ui --filter web run dev",
     "docs": "npm -C docs run dev",
     "docs:build": "npm -C docs run build",
     "docs:serve": "npm -C docs run serve",
