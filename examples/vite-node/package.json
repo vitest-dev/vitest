@@ -5,7 +5,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "start": "vite-node --watch ./src/index.js"
+    "start": "vite-node --watch ./src/*"
   },
   "devDependencies": {
     "vite-node": "latest"

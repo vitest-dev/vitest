@@ -1,9 +1,12 @@
+import EventEmitter from 'events'
 import minimist from 'minimist'
 import { dim, red } from 'kolorist'
+import type { ModuleNode } from 'vite'
 import { createServer } from 'vite'
-import { slash } from './utils'
 import { ViteNodeServer } from './server'
 import { ViteNodeRunner } from './client'
+import { viteNodeHmrPlugin } from './hmr'
+import { slash } from './utils'
 
 const argv = minimist(process.argv.slice(2), {
   'alias': {
@@ -67,12 +70,15 @@ export interface CliOptions {
 
 async function run(options: CliOptions = {}) {
   const files = options.files || options._ || []
-
+  const event = new EventEmitter()
   const server = await createServer({
     logLevel: 'error',
     clearScreen: false,
     configFile: options.config,
     root: options.root,
+    plugins: [
+      options.watch && viteNodeHmrPlugin(event),
+    ],
   })
   await server.pluginContainer.buildStart({})
 
@@ -98,9 +104,24 @@ async function run(options: CliOptions = {}) {
   if (!options.watch)
     await server.close()
 
-  // if file change re-run file
-  server.watcher.on('change', async(file) => {
-    runner.moduleCache.delete(`/@fs/${slash(file)}`)
-    await runner.executeFile(file)
+  event.on('updateModules', (modules: ModuleNode[]) => {
+    walkModules(modules, (module) => {
+      const { file, url } = module
+      const id = `/@fs/${slash(file!)}`
+      runner.moduleCache.delete(url)
+      runner.moduleCache.delete(id)
+      runner.executeId(id)
+    })
+  })
+}
+
+function walkModules(modules: ModuleNode[], cb: (module: ModuleNode) => void, seen?: Set<string>) {
+  seen ||= new Set()
+  modules.forEach((module) => {
+    if (!seen!.has(module.file!)) {
+      seen?.add(module.file!)
+      cb(module)
+    }
+    walkModules([...module.importers], cb, seen)
   })
 }
