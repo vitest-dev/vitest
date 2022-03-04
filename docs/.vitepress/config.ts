@@ -1,4 +1,3 @@
-
 import { defineConfig } from 'vitepress'
 import { version } from '../../package.json'
 import {

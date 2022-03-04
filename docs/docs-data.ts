@@ -1,7 +1,7 @@
 // noinspection ES6PreferShortImport: IntelliJ IDE hint to avoid warning to use `~/contributors`, will fail on build if changed
 import { antfuSponsors, jsdelivr, patak, patakSponsors } from './src/contributors'
 /* PWA DISABLED */
-export const pwaDisabled = true
+export const pwaDisabled = false
 
 /* Texts */
 export const vitestName = 'Vitest'
@@ -30,7 +30,7 @@ export const imageServers: Record<string, string> = {
   // for patak sponsors
   patak,
   // GitHub contributor avatars
-  github: 'github.com',
+  // github: 'github.com',
   avatars: 'avatars.githubusercontent.com',
 }
 export const sponsors = [antfuSponsors, patakSponsors]

@@ -15,6 +15,23 @@ import {
   vitestName,
   vitestShortName,
 } from './docs-data'
+import avatars from './avatars.json'
+
+const includeAssets = [
+  'favicon.ico',
+  'favicon.svg',
+  'apple-touch-icon.png',
+  'robots.txt',
+  'bg.png',
+  'og.png',
+  'netlify.svg',
+]
+
+const useAvarts = avatars as Record<string, { extension: string }>
+Object.keys(avatars).forEach((id) => {
+  const { extension } = useAvarts[id]
+  includeAssets.push(`images/${id}${extension}`)
+})
 
 export default defineConfig({
   define: {
@@ -45,15 +62,7 @@ export default defineConfig({
       outDir: '.vitepress/dist',
       // TODO: to add prompt strategy we should change to custom theme or switch to @vue/theme
       registerType: 'autoUpdate',
-      includeAssets: [
-        'favicon.ico',
-        'favicon.svg',
-        'apple-touch-icon.png',
-        'robots.txt',
-        'bg.png',
-        'og.png',
-        'netlify.svg',
-      ],
+      includeAssets,
       manifest: {
         id: '/',
         name: vitestName,

@@ -1,4 +1,7 @@
+import avatars from '../avatars.json'
 import contributors from '../contributors.json'
+
+const useAvatars = avatars as Record<string, Record<string, any>>
 
 export interface Contributor {
   name: string
@@ -10,7 +13,7 @@ export interface CoreTeam {
   name: string
   github: string
   twitter?: string
-  sponsors: boolean
+  sponsors?: boolean
   description: string
 }
 
@@ -23,8 +26,13 @@ const patakSponsors = `https://${patak}/sponsors.svg`
 
 const contributorsAvatars: Record<string, string> = {}
 
+const getAvatarUrl = (name: string) => {
+  const avatar = useAvatars[name]
+  return `/images/${name}${avatar.extension}`
+}
+
 const contributorList = (contributors as string[]).reduce((acc, name) => {
-  contributorsAvatars[name] = `https://github.com/${name}.png`
+  contributorsAvatars[name] = getAvatarUrl(name)
   acc.push({ name, avatar: contributorsAvatars[name] })
   return acc
 }, [] as Contributor[])
