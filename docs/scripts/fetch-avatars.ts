@@ -2,8 +2,7 @@ import type { Stats } from 'fs'
 import { promises as fs } from 'fs'
 import type { RequestInit } from 'node-fetch'
 import fetch from 'node-fetch'
-// import { coreTeamMembers } from '../src/contributors'
-// import type { CoreTeam } from '../src/contributors'
+import { coreTeamMembers } from '../src/contributors'
 
 interface Contributor {
   login: string
@@ -26,12 +25,7 @@ interface Avatar {
   images?: [ImageResponse, ImageResponse]
 }
 
-// const members = coreTeamMembers.reduce((acc, member, idx) => {
-//   if (idx === 0)
-//     acc.set(member.github, member)
-//
-//   return acc
-// }, new Map<string, CoreTeam>())
+const members = coreTeamMembers.map(member => member.github)
 const avatarsName = '../docs/avatars.json'
 const contributorsName = '../docs/contributors.json'
 
@@ -93,7 +87,9 @@ async function fetchImage({ url, key }: ImageRequest): Promise<ImageResponse | u
 }
 
 async function fetchImageAvatars({ login, avatar_url }: Contributor) {
-  return [await fetchImage({ key: login, url: `${avatar_url}${avatar_url.includes('?') ? '&' : '?'}` })]
+  const url = `${avatar_url}${avatar_url.includes('?') ? '&' : '?'}size=${members.includes(login) ? '100' : '40'}`
+  await new Promise(resolve => setTimeout(resolve, 1000))
+  return [await fetchImage({ key: login, url })]
   // TODO@userquib: optimizations, excluded sponsors
   // const images: ImageRequest[] = [{ key: login, url: `${avatar_url}${avatar_url.includes('?') ? '&' : '?'}s=40` }]
   // const member = members.get(login)

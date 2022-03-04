@@ -27,8 +27,10 @@ const patakSponsors = `https://${patak}/sponsors.svg`
 const contributorsAvatars: Record<string, string> = {}
 
 const getAvatarUrl = (name: string) => {
-  const avatar = useAvatars[name]
-  return `/images/${name}${avatar.extension}`
+  // when running the avatars script, avatars.json maybe be empty
+  // do not remove this logic, once the avatars.json file is ok this will work as expected
+  const avatar = useAvatars && useAvatars[name]
+  return avatar ? `/images/${name}${avatar.extension}` : `https://github.com/${name}.png`
 }
 
 const contributorList = (contributors as string[]).reduce((acc, name) => {
