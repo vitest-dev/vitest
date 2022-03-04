@@ -63,7 +63,11 @@ export function toArray<T>(array?: Nullable<Arrayable<T>>): Array<T> {
 }
 
 export const toString = (v: any) => Object.prototype.toString.call(v)
-export const isPlainObject = (val: any): val is object => toString(val) === '[object Object]'
+export const isPlainObject = (val: any): val is object =>
+  // `Object.create(null).constructor` is `undefined`
+  // `{}.constructor.name` is `Object`
+  // `new (class A{})().constructor.name` is `A`
+  toString(val) === '[object Object]' && (!val.constructor || val.constructor.name === 'Object')
 
 export function isObject(item: unknown): boolean {
   return item != null && typeof item === 'object' && !Array.isArray(item)

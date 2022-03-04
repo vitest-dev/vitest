@@ -5,7 +5,6 @@ import type { UserConfig } from '../types'
 import { ensurePackageInstalled } from '../utils'
 import { createVitest } from './create'
 import { registerConsoleShortcuts } from './stdin'
-import { printError } from './reporters/renderers/diff'
 import { divider } from './reporters/renderers/utils'
 
 export interface CliOptions extends UserConfig {
@@ -70,13 +69,15 @@ export async function startVitest(cliFilters: string[], options: CliOptions, vit
   catch (e) {
     process.exitCode = 1
     ctx.error(`\n${c.red(divider(c.bold(c.inverse(' Unhandled Error '))))}`)
-    await printError(e, ctx)
+    await ctx.printError(e)
     ctx.error('\n\n')
     return false
   }
-  finally {
-    if (!ctx.config.watch)
-      await ctx.exit()
+
+  if (!ctx.config.watch) {
+    await ctx.exit()
+    return !process.exitCode
   }
+
   return true
 }

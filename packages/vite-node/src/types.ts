@@ -66,7 +66,7 @@ export interface ViteNodeServerOptions {
    */
   deps?: DepsHandlingOptions
   /**
-   * Tranform method for modules
+   * Transform method for modules
    */
   transformMode?: {
     ssr?: RegExp[]

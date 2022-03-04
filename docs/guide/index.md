@@ -1,7 +1,5 @@
 # Getting Started
 
-<DevelopmentWarning/>
-
 ## Overview
 
 Vitest is a blazing fast unit test framework powered by Vite.
@@ -101,7 +99,7 @@ You can specify additional CLI options like `--port` or `--https`. For a full li
 | `-c, --config <path>` | Path to config file |
 | `-u, --update` | Update snapshots |
 | `-w, --watch` | Smart & instant watch mode |
-| `-t, --testNamePattern <pattern>` | Run tests with names matching the pattern |
+| `-t, --testNamePattern <pattern>` | Run tests with full names matching the pattern |
 | `--ui` | Enable UI |
 | `--open` | Open the UI automatically if enabled (default: `true`) |
 | `--api [api]` | Serve API, available options: `--api.port <port>`, `--api.host [host]` and `--api.strictPort` |
@@ -140,6 +138,8 @@ You can specify additional CLI options like `--port` or `--https`. For a full li
 - [faker](https://github.com/faker-js/faker)
 - [million](https://github.com/aidenybai/million)
 - [Vitamin](https://github.com/wtchnm/Vitamin)
+- [neodrag](https://github.com/PuruVJ/neodrag)
+- [svelte-multiselect](https://github.com/janosh/svelte-multiselect)
 
 ## Using Unreleased Commits
 

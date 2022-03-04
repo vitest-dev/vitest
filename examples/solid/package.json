@@ -1,0 +1,17 @@
+{
+  "name": "@vitest/test-solid",
+  "private": true,
+  "scripts": {
+    "test": "if-node-version \">14\" vitest",
+    "coverage": "if-node-version \">14\" vitest --coverage"
+  },
+  "dependencies": {
+    "solid-js": "^1.3.9"
+  },
+  "devDependencies": {
+    "jsdom": "*",
+    "solid-start": "next",
+    "solid-testing-library": "0.3.0",
+    "vitest": "latest"
+  }
+}

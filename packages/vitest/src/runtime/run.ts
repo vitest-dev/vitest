@@ -1,5 +1,5 @@
 import { performance } from 'perf_hooks'
-import type { HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, Test } from '../types'
+import type { File, HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, Test } from '../types'
 import { vi } from '../integrations/vi'
 import { getSnapshotClient } from '../integrations/snapshot/chai'
 import { getFullName, hasFailed, hasTests, partitionSuiteChildren } from '../utils'
@@ -177,7 +177,7 @@ export async function runSuite(suite: Suite) {
     if (!hasTests(suite)) {
       suite.result.state = 'fail'
       if (!suite.result.error)
-        suite.result.error = new Error(`No tests found in suite ${suite.name}`)
+        suite.result.error = new Error(`No test found in suite ${suite.name}`)
     }
     else if (hasFailed(suite)) {
       suite.result.state = 'fail'
@@ -196,9 +196,19 @@ async function runSuiteChild(c: Task) {
     : runSuite(c)
 }
 
-export async function runSuites(suites: Suite[]) {
-  for (const suite of suites)
-    await runSuite(suite)
+export async function runFiles(files: File[], config: ResolvedConfig) {
+  for (const file of files) {
+    if (!file.tasks.length && !config.passWithNoTests) {
+      if (!file.result?.error) {
+        file.result = {
+          state: 'fail',
+          error: new Error(`No test suite found in file ${file.filepath}`),
+        }
+      }
+    }
+
+    await runSuite(file)
+  }
 }
 
 export async function startTests(paths: string[], config: ResolvedConfig) {
@@ -206,7 +216,7 @@ export async function startTests(paths: string[], config: ResolvedConfig) {
 
   rpc().onCollected(files)
 
-  await runSuites(files)
+  await runFiles(files, config)
 
   takeCoverage()
 

@@ -35,19 +35,6 @@ import { lazyLoad } from '../images'
       </div>
     </div>
 
-    <p text="1.4em center yellow-500" leading-7 font-normal tracking-wide>
-      <span i-carbon-warning-alt inline-block align-mid /> Vitest is still in development
-    </p>
-    <p
-      text="1em center"
-      leading-7
-      op60
-      font-normal
-      tracking-wide
-    >
-      It's not recommended to migrate your current testing setups yet<br>You can try it out in new projects if you are willing to get involved and help us
-    </p>
-
     <h2 op50 font-normal pt-10>
       Features
     </h2>

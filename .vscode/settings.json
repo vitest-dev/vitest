@@ -1,7 +1,8 @@
 {
   "cSpell.words": [
-    "Birpc",
+    "birpc",
     "unmock"
   ],
-  "editor.formatOnSave": false
+  "editor.formatOnSave": false,
+  "prettier.enable": false
 }

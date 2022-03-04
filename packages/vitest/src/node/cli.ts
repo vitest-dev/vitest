@@ -1,7 +1,9 @@
 import cac from 'cac'
+import c from 'picocolors'
 import { version } from '../../package.json'
 import type { CliOptions } from './cli-api'
 import { startVitest } from './cli-api'
+import { divider } from './reporters/renderers/utils'
 
 const cli = cac('vitest')
 
@@ -11,7 +13,8 @@ cli
   .option('-c, --config <path>', 'path to config file')
   .option('-u, --update', 'update snapshot')
   .option('-w, --watch', 'watch mode')
-  .option('-t, --testNamePattern <pattern>', 'run test names with the specified pattern')
+  .option('-t, --testNamePattern <pattern>', 'run tests with full names matching the specified pattern')
+  .option('--dir', 'base directory to scan for the test files')
   .option('--ui', 'enable UI')
   .option('--open', 'open UI automatically (default: !process.env.CI))')
   .option('--api [api]', 'serve API, available options: --api.port <port>, --api.host [host] and --api.strictPort')
@@ -22,7 +25,7 @@ cli
   .option('--outputFile <filename>', 'write test results to a file when the --reporter=json option is also specified')
   .option('--coverage', 'use c8 for coverage')
   .option('--run', 'do not watch')
-  .option('--mode', 'override Vite mode (default: test)')
+  .option('--mode <name>', 'override Vite mode (default: test)')
   .option('--globals', 'inject apis globally')
   .option('--global', 'deprecated, use --globals')
   .option('--dom', 'mock browser api with happy-dom')
@@ -65,6 +68,14 @@ async function run(cliFilters: string[], options: CliOptions) {
 }
 
 async function start(cliFilters: string[], options: CliOptions) {
-  if (await startVitest(cliFilters, options) === false)
-    process.exit()
+  try {
+    if (await startVitest(cliFilters, options) === false)
+      process.exit()
+  }
+  catch (e) {
+    process.exitCode = 1
+    console.error(`\n${c.red(divider(c.bold(c.inverse(' Unhandled Error '))))}`)
+    console.error(e)
+    console.error('\n\n')
+  }
 }

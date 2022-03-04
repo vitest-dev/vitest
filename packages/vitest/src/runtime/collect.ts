@@ -97,7 +97,7 @@ function interpretTaskModes(suite: Suite, namePattern?: string | RegExp, onlyMod
       }
     }
     if (t.type === 'test') {
-      if (namePattern && !t.name.match(namePattern))
+      if (namePattern && !getTaskFullName(t).match(namePattern))
         t.mode = 'skip'
     }
     else if (t.type === 'suite') {
@@ -110,9 +110,13 @@ function interpretTaskModes(suite: Suite, namePattern?: string | RegExp, onlyMod
 
   // if all subtasks are skipped, mark as skip
   if (suite.mode === 'run') {
-    if (suite.tasks.every(i => i.mode !== 'run'))
+    if (suite.tasks.length && suite.tasks.every(i => i.mode !== 'run'))
       suite.mode = 'skip'
   }
+}
+
+function getTaskFullName(task: TaskBase): string {
+  return `${task.suite ? `${getTaskFullName(task.suite)} ` : ''}${task.name}`
 }
 
 function someTasksAreOnly(suite: Suite): boolean {
@@ -133,7 +137,7 @@ function checkAllowOnly(task: TaskBase, allowOnly?: boolean) {
   if (allowOnly) return
   task.result = {
     state: 'fail',
-    error: processError(new Error('[Vitest] Unexpected .only modifier. Remove it or pass --allowOnly arguement to bypass this error')),
+    error: processError(new Error('[Vitest] Unexpected .only modifier. Remove it or pass --allowOnly argument to bypass this error')),
   }
 }
 

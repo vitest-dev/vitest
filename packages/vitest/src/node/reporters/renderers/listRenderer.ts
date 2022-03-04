@@ -4,7 +4,7 @@ import cliTruncate from 'cli-truncate'
 import stripAnsi from 'strip-ansi'
 import type { Task } from '../../../types'
 import { getTests } from '../../../utils'
-import { F_RIGHT } from './figures'
+import { F_RIGHT } from '../../../utils/figures'
 import { getCols, getStateSymbol } from './utils'
 
 export interface ListRendererOptions {

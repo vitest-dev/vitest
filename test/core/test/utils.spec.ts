@@ -22,16 +22,19 @@ describe('assertTypes', () => {
 
 describe('deepMerge', () => {
   test('non plain objects retain their prototype, arrays are not merging, plain objects are merging', () => {
-    class Test {
+    class TestA {
       baz = 'baz'
 
       get foo() {
         return 'foo'
       }
     }
+    class TestB {
+      bar = 'bar'
+    }
 
-    const testA = new Test()
-    const testB = new Test()
+    const testA = new TestA()
+    const testB = new TestB()
 
     const a = {
       test: testA,
@@ -53,7 +56,8 @@ describe('deepMerge', () => {
 
     const merged = deepMerge(a, b)
 
-    expect(merged.test instanceof Test).toBe(true)
+    expect(merged.test instanceof TestB).toBe(true)
+    expect(merged.test.baz).toBeUndefined()
     expect(merged.num).toBe(40)
     expect(merged.array).toEqual([3, 4])
     expect(merged.obj).toEqual({

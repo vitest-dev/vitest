@@ -1,5 +1,5 @@
 import { format } from 'util'
-import type { File, MutableArray, RunMode, Suite, SuiteAPI, SuiteCollector, SuiteFactory, SuiteHooks, Task, Test, TestAPI, TestFunction } from '../types'
+import type { File, RunMode, Suite, SuiteAPI, SuiteCollector, SuiteFactory, SuiteHooks, Task, Test, TestAPI, TestFunction } from '../types'
 import { isObject, noop, toArray } from '../utils'
 import { createChainable } from './chain'
 import { collectTask, collectorContext, normalizeTest, runWithSuite } from './context'
@@ -72,7 +72,6 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
     }
     if (this.concurrent || concurrent)
       test.concurrent = true
-
     setFn(test, normalizeTest(fn || noop, test, timeout))
     tasks.push(test)
   })
@@ -145,8 +144,8 @@ function createSuite() {
     },
   ) as SuiteAPI
 
-  suite.each = <T>(cases: T[] | readonly T[]) => {
-    return (name: string, fn: (...args: T extends any[] | readonly any[] ? MutableArray<T> : [T]) => void) => {
+  suite.each = <T>(cases: ReadonlyArray<T>) => {
+    return (name: string, fn: (...args: T[]) => void) => {
       cases.forEach((i) => {
         const items = toArray(i) as any
         suite(formatTitle(name, items), () => fn(...items))
@@ -163,8 +162,8 @@ function createTest(fn: ((this: Record<'concurrent'| 'skip'| 'only'| 'todo'| 'fa
     fn,
   ) as TestAPI
 
-  test.each = <T>(cases: T[] | readonly T[]) => {
-    return (name: string, fn: (...args: T extends any[] | readonly any[] ? MutableArray<T> : [T]) => void) => {
+  test.each = <T>(cases: ReadonlyArray<T>) => {
+    return (name: string, fn: (...args: T[]) => void) => {
       cases.forEach((i) => {
         const items = toArray(i) as any
         test(formatTitle(name, items), () => fn(...items))
