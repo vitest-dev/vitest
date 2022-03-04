@@ -67,7 +67,7 @@ export async function runTest(test: Test) {
   __vitest_worker__.current = test
 
   try {
-    await callSuiteHook(test.suite, 'beforeEach', [test, test.suite])
+    await callSuiteHook(test.suite, 'beforeEach', [test.context, test.suite])
     setState({
       assertionCalls: 0,
       isExpectingAssertions: false,
@@ -92,7 +92,7 @@ export async function runTest(test: Test) {
   }
 
   try {
-    await callSuiteHook(test.suite, 'afterEach', [test, test.suite])
+    await callSuiteHook(test.suite, 'afterEach', [test.context, test.suite])
   }
   catch (e) {
     test.result.state = 'fail'

@@ -2,7 +2,7 @@ import { format } from 'util'
 import type { File, RunMode, Suite, SuiteAPI, SuiteCollector, SuiteFactory, SuiteHooks, Task, Test, TestAPI, TestFunction } from '../types'
 import { isObject, noop, toArray } from '../utils'
 import { createChainable } from './chain'
-import { collectTask, collectorContext, normalizeTest, runWithSuite } from './context'
+import { collectTask, collectorContext, createTestContext, runWithSuite, withTimeout } from './context'
 import { getHooks, setFn, setHooks } from './map'
 
 // apis
@@ -59,7 +59,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
 
   initSuite()
 
-  const test = createTest(function(name: string, fn?: TestFunction, timeout?: number) {
+  const test = createTest(function(name: string, fn = noop, timeout?: number) {
     const mode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run'
 
     const test: Test = {
@@ -69,10 +69,22 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       mode,
       suite: undefined!,
       fails: this.fails,
-    }
+    } as Omit<Test, 'context'> as Test
     if (this.concurrent || concurrent)
       test.concurrent = true
-    setFn(test, normalizeTest(fn || noop, test, timeout))
+
+    const context = createTestContext(test)
+    // create test context
+    Object.defineProperty(test, 'context', {
+      value: context,
+      enumerable: false,
+    })
+
+    setFn(test, withTimeout(
+      () => fn(context),
+      timeout,
+    ))
+
     tasks.push(test)
   })
 

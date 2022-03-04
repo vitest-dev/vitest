@@ -1,4 +1,4 @@
-import type { Awaitable, RuntimeContext, SuiteCollector, Test, TestContext, TestFunction } from '../types'
+import type { Awaitable, RuntimeContext, SuiteCollector, Test, TestContext } from '../types'
 import { expect } from '../integrations/chai'
 
 export const collectorContext: RuntimeContext = {
@@ -44,10 +44,11 @@ export function withTimeout<T extends((...args: any[]) => any)>(
   }) as T
 }
 
-function createTestContext(test: Test): TestContext {
-  const context = (() => {
+export function createTestContext(test: Test): TestContext {
+  const context = function() {
     throw new Error('done() callback is deperated, use promise instead')
-  }) as unknown as TestContext
+  } as unknown as TestContext
+
   context.meta = test
   // TODO: @antfu use a getter to create new expect instance that bound to the test for concurrent tests
   context.expect = expect
@@ -57,11 +58,4 @@ function createTestContext(test: Test): TestContext {
 
 function makeTimeoutMsg(isHook: boolean, timeout: number) {
   return `${isHook ? 'Hook' : 'Test'} timed out in ${timeout}ms.\nIf this is a long-running test, pass a timeout value as the last argument or configure it globally with "${isHook ? 'hookTimeout' : 'testTimeout'}".`
-}
-
-export function normalizeTest(fn: TestFunction, test: Test, timeout?: number): () => Awaitable<void> {
-  return withTimeout(
-    () => fn(createTestContext(test)),
-    timeout,
-  )
 }

@@ -38,6 +38,7 @@ export interface Test extends TaskBase {
   suite: Suite
   result?: TaskResult
   fails?: boolean
+  context: TestContext
 }
 
 export type Task = Test | Suite | File
@@ -112,8 +113,8 @@ export type HookListener<T extends any[]> = (...args: T) => Awaitable<void>
 export interface SuiteHooks {
   beforeAll: HookListener<[Suite]>[]
   afterAll: HookListener<[Suite]>[]
-  beforeEach: HookListener<[Test, Suite]>[]
-  afterEach: HookListener<[Test, Suite]>[]
+  beforeEach: HookListener<[TestContext, Suite]>[]
+  afterEach: HookListener<[TestContext, Suite]>[]
 }
 
 export interface SuiteCollector {
