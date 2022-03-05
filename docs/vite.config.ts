@@ -60,7 +60,6 @@ export default defineConfig({
     VitePWA({
       disable: pwaDisabled,
       outDir: '.vitepress/dist',
-      // TODO: to add prompt strategy we should change to custom theme or switch to @vue/theme
       registerType: 'autoUpdate',
       includeAssets,
       manifest: {
@@ -124,12 +123,12 @@ export default defineConfig({
             options: {
               cacheName: 'images-cache',
               expiration: {
-                maxEntries: 1000,
+                // we only have the sponsors images
+                maxEntries: 10,
                 maxAgeSeconds: 60 * 60 * 24 * 365, // <== 365 days
               },
               cacheableResponse: {
-                // github.com/{user}.png will redirect to avatars.githubusercontent.com
-                statuses: [0, 200, 302],
+                statuses: [0, 200],
               },
             },
           },

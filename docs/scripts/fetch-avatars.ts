@@ -45,6 +45,7 @@ async function fetchImage({ url, key }: ImageRequest): Promise<ImageResponse | u
 
   const response = await fetch(url, options)
   if (response) {
+    // avatar not modified: exclude image to be stored
     if (response.status === 304)
       return undefined
 
@@ -87,26 +88,12 @@ async function fetchImage({ url, key }: ImageRequest): Promise<ImageResponse | u
 }
 
 async function fetchImageAvatars({ login, avatar_url }: Contributor) {
-  const url = `${avatar_url}${avatar_url.includes('?') ? '&' : '?'}size=${members.includes(login) ? '100' : '40'}`
-  await new Promise(resolve => setTimeout(resolve, 1000))
+  const url = `${avatar_url}${avatar_url}?size=${members.includes(login) ? '100' : '40'}`
   return [await fetchImage({ key: login, url })]
-  // TODO@userquib: optimizations, excluded sponsors
-  // const images: ImageRequest[] = [{ key: login, url: `${avatar_url}${avatar_url.includes('?') ? '&' : '?'}s=40` }]
-  // const member = members.get(login)
-  // if (member) {
-  //   images.push({ key: `member-${login}`, url: `${avatar_url}${avatar_url.includes('?') ? '&' : '?'}s=100` })
-  //   if (member.sponsors)
-  //     images.push({ key: `sponsors-${login}`, url: member.sponsors })
-  // }
-  //
-  // return await Promise.all(images.map(async(i) => {
-  //   return await fetchImage(i)
-  // }))
 }
 
 async function fetchAvatars(): Promise<Avatar[]> {
   return await Promise.all(contributors.map(async(name) => {
-    // exclude contributors not included on docs/contributors.json
     const images = await fetchImageAvatars({ login: name, avatar_url: `https://github.com/${name}.png` })
     return {
       name,

@@ -66,6 +66,7 @@ import { antfuSponsors, coreTeamMembers, patakSponsors } from '../contributors'
         <a text-lg h="32px" href="https://github.com/sponsors/antfu" rel="noopener noreferrer">Anthony's Sponsors</a>
         <a href="https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg" target="_blank" rel="noopener noreferrer">
           <img
+            crossorigin="anonymous"
             width="768" height="1464"
             class="resizable-img"
             loading="lazy"
@@ -78,6 +79,7 @@ import { antfuSponsors, coreTeamMembers, patakSponsors } from '../contributors'
         <a text-lg h="32px" href="https://github.com/sponsors/patak-dev" rel="noopener noreferrer">Patak's Sponsors</a>
         <a href="https://patak.dev/sponsors.svg" target="_blank" rel="noopener noreferrer">
           <img
+            crossorigin="anonymous"
             width="768" height="722"
             class="resizable-img"
             loading="lazy"
