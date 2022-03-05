@@ -78,7 +78,7 @@ async function fetchImage({ url, key }: ImageRequest): Promise<ImageResponse | u
     return {
       key,
       extension,
-      lastModified: response.headers.get('last-modified') ?? Date.now(),
+      lastModified: response.headers.get('last-modified') ?? new Date().toUTCString(),
       image,
     }
   }
@@ -88,7 +88,7 @@ async function fetchImage({ url, key }: ImageRequest): Promise<ImageResponse | u
 }
 
 async function fetchImageAvatars({ login, avatar_url }: Contributor) {
-  const url = `${avatar_url}${avatar_url}?size=${members.includes(login) ? '100' : '40'}`
+  const url = `${avatar_url}?size=${members.includes(login) ? '100' : '40'}`
   return [await fetchImage({ key: login, url })]
 }
 

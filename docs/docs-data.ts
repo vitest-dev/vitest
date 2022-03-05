@@ -29,9 +29,6 @@ export const imageServers: Record<string, string> = {
   jsdelivr,
   // for patak sponsors
   patak,
-  // GitHub contributor avatars
-  // github: 'github.com',
-  // avatars: 'avatars.githubusercontent.com',
 }
 export const sponsors = [antfuSponsors, patakSponsors]
 export const preconnectLinks = [googleapis, gstatic]
