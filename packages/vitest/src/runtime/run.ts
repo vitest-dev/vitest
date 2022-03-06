@@ -11,7 +11,11 @@ import { collectTests } from './collect'
 import { processError } from './error'
 
 function updateSuiteHookState(suite: Task, name: keyof SuiteHooks, state: TaskState) {
-  const suiteHooks = suite.result?.hooks
+  if (!suite.result)
+    suite.result = { state: 'run' }
+  if (!suite.result?.hooks)
+    suite.result.hooks = {}
+  const suiteHooks = suite.result.hooks
   if (suiteHooks) {
     suiteHooks[name] = state
     updateTask(suite)
@@ -67,7 +71,6 @@ export async function runTest(test: Test) {
 
   test.result = {
     state: 'run',
-    hooks: {},
   }
   updateTask(test)
 
@@ -151,7 +154,6 @@ export async function runSuite(suite: Suite) {
 
   suite.result = {
     state: 'run',
-    hooks: {},
   }
 
   updateTask(suite)

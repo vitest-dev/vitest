@@ -30,7 +30,7 @@ function formatFilepath(path: string) {
 function renderHookState(task: Task, hookName: keyof SuiteHooks, level = 0) {
   const state = task.result?.hooks?.[hookName]
   if (state && state === 'run')
-    return `${'  '.repeat(level)}${getHookStateSymbol(task, hookName)} ${hookName}`
+    return `${'  '.repeat(level)}${getHookStateSymbol(task, hookName)} ${c.dim(`[ ${hookName} ]`)}`
 
   return ''
 }

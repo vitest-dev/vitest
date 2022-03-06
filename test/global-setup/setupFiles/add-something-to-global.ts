@@ -13,6 +13,14 @@ beforeAll(async() => {
   })
 })
 
+beforeEach(async() => {
+  await new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(null)
+    }, 10)
+  })
+})
+
 afterAll(() => {
   // @ts-expect-error type
   delete global.something
