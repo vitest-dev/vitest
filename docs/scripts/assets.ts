@@ -1,6 +1,6 @@
 import { promises as fs } from 'fs'
 import fg from 'fast-glob'
-import { font, preconnectHomeLinks, preconnectLinks, sponsors } from '../docs-data'
+import { font, preconnectHomeLinks, preconnectLinks } from '../docs-data'
 
 const preconnect = `
     ${preconnectLinks.map(l => `<link rel="dns-prefetch" href="${l}">`).join('\n')}
@@ -26,7 +26,6 @@ export const optimizePages = async(pwa: boolean) => {
       usePreconnect = preconnectHome
       prefetchImg = `
 ${prefetchImg}
-${sponsors.map(s => `\t<link rel="prefetch" href="${s}" crossorigin="anonymous">`).join('\n')}
 \t<link rel="prefetch" href="/netlify.svg">
 \t<link rel="prefetch" href="/bg.png">
 `

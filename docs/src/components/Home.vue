@@ -69,6 +69,7 @@ import { antfuSponsors, coreTeamMembers, patakSponsors } from '../contributors'
             crossorigin="anonymous"
             width="768" height="1464"
             class="resizable-img"
+            loading="lazy"
             :src="antfuSponsors"
             alt="Anthony Fu's sponsors"
           >
@@ -81,6 +82,7 @@ import { antfuSponsors, coreTeamMembers, patakSponsors } from '../contributors'
             crossorigin="anonymous"
             width="768" height="722"
             class="resizable-img"
+            loading="lazy"
             :src="patakSponsors"
             alt="Patak's sponsors"
           >
