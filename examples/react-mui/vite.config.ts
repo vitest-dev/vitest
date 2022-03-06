@@ -1,13 +1,11 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 
-export default defineConfig(() => {
-  return {
-    esbuild: {
-      jsxInject: 'import React from \'react\'',
-    },
-    test: {
-      environment: 'jsdom',
-      globals: true,
-    },
-  }
+export default defineConfig({
+  esbuild: {
+    jsxInject: 'import React from \'react\'',
+  },
+  test: {
+    environment: 'jsdom',
+    globals: true,
+  },
 })
