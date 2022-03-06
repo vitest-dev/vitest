@@ -2,10 +2,10 @@ import { createLogUpdate } from 'log-update'
 import c from 'picocolors'
 import cliTruncate from 'cli-truncate'
 import stripAnsi from 'strip-ansi'
-import type { Task } from '../../../types'
+import type { SuiteHooks, Task } from '../../../types'
 import { getTests } from '../../../utils'
 import { F_RIGHT } from '../../../utils/figures'
-import { getCols, getStateSymbol } from './utils'
+import { getCols, getHookStateSymbol, getStateSymbol } from './utils'
 
 export interface ListRendererOptions {
   renderSucceed?: boolean
@@ -25,6 +25,14 @@ function formatFilepath(path: string) {
   firstDot += lastSlash
 
   return c.dim(path.slice(0, lastSlash)) + path.slice(lastSlash, firstDot) + c.dim(path.slice(firstDot))
+}
+
+function renderHookState(task: Task, hookName: keyof SuiteHooks, level = 0) {
+  const state = task.result?.hooks?.[hookName]
+  if (state && state === 'run')
+    return `${'  '.repeat(level)}${getHookStateSymbol(task, hookName)} ${hookName}`
+
+  return ''
 }
 
 export function renderTree(tasks: Task[], options: ListRendererOptions, level = 0) {
@@ -52,7 +60,6 @@ export function renderTree(tasks: Task[], options: ListRendererOptions, level = 
 
     if ((task.result?.state !== 'pass') && outputMap.get(task) != null) {
       let data: string | undefined = outputMap.get(task)
-
       if (typeof data === 'string') {
         data = stripAnsi(data.trim().split('\n').filter(Boolean).pop()!)
         if (data === '')
@@ -64,14 +71,19 @@ export function renderTree(tasks: Task[], options: ListRendererOptions, level = 
         output.push(`   ${c.gray(cliTruncate(out, getCols(-3)))}`)
       }
     }
+
+    output = output.concat(renderHookState(task, 'beforeAll', level + 1))
+    output = output.concat(renderHookState(task, 'beforeEach', level + 1))
     if (task.type === 'suite' && task.tasks.length > 0) {
       if ((task.result?.state === 'fail' || task.result?.state === 'run' || options.renderSucceed))
         output = output.concat(renderTree(task.tasks, options, level + 1))
     }
+    output = output.concat(renderHookState(task, 'afterAll', level + 1))
+    output = output.concat(renderHookState(task, 'afterEach', level + 1))
   }
 
   // TODO: moving windows
-  return output.join('\n')
+  return output.filter(Boolean).join('\n')
 }
 
 export const createListRenderer = (_tasks: Task[], options: ListRendererOptions) => {
