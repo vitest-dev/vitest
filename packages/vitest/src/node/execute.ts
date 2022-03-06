@@ -38,10 +38,21 @@ export class VitestRunner extends ViteNodeRunner {
       this.setCache(dep, module)
     })
 
+    // support `import.meta.vitest`
+    Object.defineProperty(
+      context.__vite_ssr_import_meta__,
+      'vitest',
+      {
+        get() {
+          // @ts-expect-error injected
+          return globalThis.__vitest_index__
+        },
+      },
+    )
+
     return Object.assign(context, {
       __vite_ssr_import__: (dep: string) => mocker.requestWithMock(dep),
       __vite_ssr_dynamic_import__: (dep: string) => mocker.requestWithMock(dep),
-
       __vitest_mocker__: mocker,
     })
   }
