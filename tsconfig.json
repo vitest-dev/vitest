@@ -28,10 +28,6 @@
       "vite-node/server": ["./packages/vite-node/src/server.ts"],
       "vite-node/utils": ["./packages/vite-node/src/utils.ts"]
     },
-    "types": [
-      "./packages/vitest/globals.d.ts",
-      "./packages/vitest/importMeta.d.ts",
-    ]
   },
   "exclude": [
     "**/dist/**",
