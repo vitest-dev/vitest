@@ -29,7 +29,7 @@
       "vite-node/utils": ["./packages/vite-node/src/utils.ts"]
     },
     "types": [
-      "./packages/vitest/global.d.ts",
+      "./packages/vitest/globals.d.ts",
       "./packages/vitest/importMeta.d.ts",
     ]
   },
