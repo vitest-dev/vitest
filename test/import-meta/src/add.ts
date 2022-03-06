@@ -1,11 +1,8 @@
 export function add(...args: number[]) {
-  if (!args.length)
-    return 0
-  if (args.length === 1)
-    return args[0]
-  return args.reduce((a, b) => a + b)
+  return args.reduce((a, b) => a + b, 0)
 }
 
+// in-source test suites
 if (import.meta.vitest) {
   const { it, expect } = import.meta.vitest
   it('add', () => {
