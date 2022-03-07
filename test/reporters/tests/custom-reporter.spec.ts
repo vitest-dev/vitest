@@ -12,6 +12,7 @@ test('custom reporters work', async() => {
       CI: 'true',
       NO_COLOR: 'true',
     },
+    windowsHide: false,
   })
 
   expect(stdout).toContain('hello from custom reporter')
