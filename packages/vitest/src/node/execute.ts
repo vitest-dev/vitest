@@ -1,5 +1,6 @@
 import { ViteNodeRunner } from 'vite-node/client'
 import type { ModuleCache, ViteNodeRunnerOptions } from 'vite-node'
+import { normalizePath } from 'vite'
 import type { SuiteMocks } from './mocker'
 import { VitestMocker } from './mocker'
 
@@ -23,6 +24,7 @@ export async function executeInViteNode(options: ExecuteOptions) {
 
 export class VitestRunner extends ViteNodeRunner {
   mocker: VitestMocker
+  entries = new Set<string>()
 
   constructor(public options: ExecuteOptions) {
     super(options)
@@ -38,10 +40,15 @@ export class VitestRunner extends ViteNodeRunner {
       this.setCache(dep, module)
     })
 
+    // support `import.meta.vitest` for test entry
+    if (__vitest_worker__.filepath && normalizePath(__vitest_worker__.filepath) === normalizePath(context.__filename)) {
+      // @ts-expect-error injected untyped global
+      Object.defineProperty(context.__vite_ssr_import_meta__, 'vitest', { get: () => globalThis.__vitest_index__ })
+    }
+
     return Object.assign(context, {
       __vite_ssr_import__: (dep: string) => mocker.requestWithMock(dep),
       __vite_ssr_dynamic_import__: (dep: string) => mocker.requestWithMock(dep),
-
       __vitest_mocker__: mocker,
     })
   }

@@ -32,6 +32,9 @@
     "./globals": {
       "types": "./globals.d.ts"
     },
+    "./importMeta": {
+      "types": "./importMeta.d.ts"
+    },
     "./node": {
       "import": "./dist/node.js",
       "types": "./dist/node.d.ts"

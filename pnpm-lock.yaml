@@ -720,6 +720,12 @@ importers:
       execa: 6.1.0
       vitest: link:../../packages/vitest
 
+  test/import-meta:
+    specifiers:
+      vitest: workspace:*
+    devDependencies:
+      vitest: link:../../packages/vitest
+
   test/related:
     specifiers:
       vitest: workspace:*
