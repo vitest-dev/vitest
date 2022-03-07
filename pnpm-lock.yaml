@@ -140,7 +140,7 @@ importers:
       lit: 2.2.0
     devDependencies:
       '@vitest/ui': link:../../packages/ui
-      happy-dom: 2.43.1
+      happy-dom: 2.45.0
       vite: 2.8.4
       vitest: link:../../packages/vitest
 
@@ -410,7 +410,7 @@ importers:
       solid-js: 1.3.8
     devDependencies:
       jsdom: 19.0.0
-      solid-start: 0.1.0-alpha.62_solid-js@1.3.8+vite@2.8.4
+      solid-start: 0.1.0-alpha.63_solid-js@1.3.8+vite@2.8.4
       solid-testing-library: 0.3.0_solid-js@1.3.8
       vitest: link:../../packages/vitest
 
@@ -450,7 +450,7 @@ importers:
     devDependencies:
       '@vitejs/plugin-vue': 2.2.2_vite@2.8.4+vue@3.2.26
       '@vue/test-utils': 2.0.0-rc.18_vue@3.2.26
-      happy-dom: 2.43.1
+      happy-dom: 2.45.0
       unplugin-auto-import: 0.6.1_de6b9341a0800cef9d4c5675dfb00029
       unplugin-vue-components: 0.17.21_2141940c5a41fba4ab85237860ef1202
       vitest: link:../../packages/vitest
@@ -467,7 +467,7 @@ importers:
     devDependencies:
       '@vitejs/plugin-vue': 2.2.2_vite@2.8.4+vue@3.2.31
       '@vue/test-utils': 2.0.0-rc.18_vue@3.2.31
-      happy-dom: 2.43.1
+      happy-dom: 2.45.0
       vitest: link:../../packages/vitest
 
   examples/vue-jsx:
@@ -483,7 +483,7 @@ importers:
       '@vitejs/plugin-vue': 2.2.2_vite@2.8.4+vue@3.2.26
       '@vitejs/plugin-vue-jsx': 1.3.7
       '@vue/test-utils': 2.0.0-rc.18_vue@3.2.26
-      happy-dom: 2.43.1
+      happy-dom: 2.45.0
       vite: 2.8.4
       vitest: link:../../packages/vitest
       vue: 3.2.26
@@ -540,12 +540,14 @@ importers:
   packages/vite-node:
     specifiers:
       '@types/minimist': ^1.2.2
+      '@types/ws': ^8.2.2
       kolorist: ^1.5.1
       minimist: ^1.2.5
       mlly: ^0.4.3
       pathe: ^0.2.0
       rollup: ^2.68.0
       vite: ^2.8.4
+      ws: ^8.5.0
     dependencies:
       kolorist: 1.5.1
       minimist: 1.2.5
@@ -554,7 +556,9 @@ importers:
       vite: 2.8.4
     devDependencies:
       '@types/minimist': 1.2.2
+      '@types/ws': 8.5.1
       rollup: 2.68.0
+      ws: 8.5.0
 
   packages/vitest:
     specifiers:
@@ -12360,8 +12364,8 @@ packages:
       - encoding
     dev: true
 
-  /happy-dom/2.43.1:
-    resolution: {integrity: sha512-lWLeXIkr3z15Yg4kP3eH5dL1JvzGrfXl8uYV23tmOAfPeHncaCmvu4iobxW1misGFEUMJi7kF6TmDaUXltLktw==}
+  /happy-dom/2.45.0:
+    resolution: {integrity: sha512-5f2CQ0m+YLw84UioQjJ9WR4Rj9j9/Y8tIMHhZ0QUXUyDaMVA8yd6le8Q0zbu/eupGhG9SW6z+217gQ5PfKN1OQ==}
     dependencies:
       css.escape: 1.5.1
       he: 1.2.0
@@ -16951,7 +16955,7 @@ packages:
     resolution: {integrity: sha512-0nZ8kFZ105pmMuaVzIwTUUyugV15Jr7HGF2e5BwhoKK0WjAmICiWEbkQPu0zUa0wN99lbpbpmRevsrGa0bextA==}
     dev: true
 
-  /solid-start-node/0.1.0-alpha.8_solid-start@0.1.0-alpha.62:
+  /solid-start-node/0.1.0-alpha.8_solid-start@0.1.0-alpha.63:
     resolution: {integrity: sha512-0cLyLoDfr7mXLtRvEZ2YFuDAE/II0sa7OJZJ4YkyZOoxK/knvnoMxzd0YRTxs+xXyaODMPRhPcsTmqscZeP2JQ==}
     requiresBuild: true
     peerDependencies:
@@ -16964,20 +16968,20 @@ packages:
       polka: 1.0.0-next.22
       rollup: 2.68.0
       sirv: 1.0.19
-      solid-start: 0.1.0-alpha.62_solid-js@1.3.8+vite@2.8.4
+      solid-start: 0.1.0-alpha.63_solid-js@1.3.8+vite@2.8.4
     transitivePeerDependencies:
       - encoding
     dev: true
     optional: true
 
-  /solid-start/0.1.0-alpha.62_solid-js@1.3.8+vite@2.8.4:
-    resolution: {integrity: sha512-e1Qaf76WykK3Bstl+2f1gqmKqcoQmLHUSk1cfOCqTunRJPkNITCJUoRkE69qJFvgdcgFeERzjlHfG7yhkp8J9Q==}
+  /solid-start/0.1.0-alpha.63_solid-js@1.3.8+vite@2.8.4:
+    resolution: {integrity: sha512-Fovju9r6hsMGoN+hi7p0+SRVVK6l4Wsdo69g5QoIBs/WPrZAbtBeqLQozl17OIZapRrNzCanTmyGjYTfSO1JVw==}
     hasBin: true
     peerDependencies:
       solid-app-router: ^0.3.0
       solid-js: ^1.3.5
       solid-meta: ^0.27.2
-      vite: ^2.7.13
+      vite: ^2.8.6
     dependencies:
       '@babel/core': 7.17.5
       '@babel/plugin-syntax-jsx': 7.16.7_@babel+core@7.17.5
@@ -17000,9 +17004,9 @@ packages:
       undici: 4.13.0
       vite: 2.8.4
       vite-plugin-inspect: 0.3.14_vite@2.8.4
-      vite-plugin-solid: 2.2.5
+      vite-plugin-solid: 2.2.6
     optionalDependencies:
-      solid-start-node: 0.1.0-alpha.8_solid-start@0.1.0-alpha.62
+      solid-start-node: 0.1.0-alpha.8_solid-start@0.1.0-alpha.63
     transitivePeerDependencies:
       - encoding
       - less
@@ -18674,8 +18678,8 @@ packages:
       - supports-color
     dev: true
 
-  /vite-plugin-solid/2.2.5:
-    resolution: {integrity: sha512-SJkXdVnrPnhAWzs8Vi/+9oViUfx6TiQo8y1FFlDiyUdZR4nxTyGmRzz4xx+CC75GJL3hgDWac/zYA6sYq8SQAg==}
+  /vite-plugin-solid/2.2.6:
+    resolution: {integrity: sha512-J1RnmqkZZJSNYDW7vZj0giKKHLWGr9tS/gxR70WDSTYfhyXrgukbZdIfSEFbtrsg8ZiQ2t2zXcvkWoeefenqKw==}
     dependencies:
       '@babel/core': 7.17.5
       '@babel/preset-typescript': 7.16.7_@babel+core@7.17.5

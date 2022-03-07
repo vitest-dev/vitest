@@ -62,8 +62,10 @@
     "vite": "^2.8.4"
   },
   "devDependencies": {
+    "@types/ws": "^8.2.2",
     "@types/minimist": "^1.2.2",
-    "rollup": "^2.68.0"
+    "rollup": "^2.68.0",
+    "ws": "^8.5.0"
   },
   "engines": {
     "node": ">=14.14.0"
