@@ -23,6 +23,7 @@ export async function executeInViteNode(options: ExecuteOptions) {
 
 export class VitestRunner extends ViteNodeRunner {
   mocker: VitestMocker
+  entries = new Set<string>()
 
   constructor(public options: ExecuteOptions) {
     super(options)
@@ -38,17 +39,19 @@ export class VitestRunner extends ViteNodeRunner {
       this.setCache(dep, module)
     })
 
-    // support `import.meta.vitest`
-    Object.defineProperty(
-      context.__vite_ssr_import_meta__,
-      'vitest',
-      {
-        get() {
+    // support `import.meta.vitest` for test entry
+    if (__vitest_worker__.filepath === context.__filename) {
+      Object.defineProperty(
+        context.__vite_ssr_import_meta__,
+        'vitest',
+        {
+          get() {
           // @ts-expect-error injected
-          return globalThis.__vitest_index__
+            return globalThis.__vitest_index__
+          },
         },
-      },
-    )
+      )
+    }
 
     return Object.assign(context, {
       __vite_ssr_import__: (dep: string) => mocker.requestWithMock(dep),

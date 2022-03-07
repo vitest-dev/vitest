@@ -1,4 +1,4 @@
-import { existsSync } from 'fs'
+import { existsSync, promises as fs } from 'fs'
 import type { ViteDevServer } from 'vite'
 import fg from 'fast-glob'
 import mm from 'micromatch'
@@ -310,9 +310,9 @@ export class Vitest {
         this.changedTests.delete(id)
       }
     }
-    const onAdd = (id: string) => {
+    const onAdd = async(id: string) => {
       id = slash(id)
-      if (this.isTargetFile(id)) {
+      if (await this.isTargetFile(id)) {
         this.changedTests.add(id)
         this.scheduleRerun(id)
       }
@@ -394,25 +394,51 @@ export class Vitest {
   }
 
   async globTestFiles(filters?: string[]) {
-    let files = await fg(
-      this.config.include,
-      {
-        absolute: true,
-        cwd: this.config.dir || this.config.root,
-        ignore: this.config.exclude,
-      },
-    )
+    const globOptions = {
+      absolute: true,
+      cwd: this.config.dir || this.config.root,
+      ignore: this.config.exclude,
+    }
+
+    let testFiles = await fg(this.config.include, globOptions)
 
     if (filters?.length)
-      files = files.filter(i => filters.some(f => i.includes(f)))
+      testFiles = testFiles.filter(i => filters.some(f => i.includes(f)))
 
-    return files
+    if (this.config.includeSource) {
+      let files = await fg(this.config.includeSource, globOptions)
+      if (filters?.length)
+        files = files.filter(i => filters.some(f => i.includes(f)))
+
+      await Promise.all(files.map(async(file) => {
+        try {
+          const code = await fs.readFile(file, 'utf-8')
+          if (this.isInSourceTestFile(code))
+            testFiles.push(file)
+        }
+        catch {
+          return null
+        }
+      }))
+    }
+
+    return testFiles
   }
 
-  isTargetFile(id: string): boolean {
+  async isTargetFile(id: string, source?: string): Promise<boolean> {
     if (mm.isMatch(id, this.config.exclude))
       return false
-    return mm.isMatch(id, this.config.include)
+    if (mm.isMatch(id, this.config.include))
+      return true
+    if (this.config.includeSource?.length && mm.isMatch(id, this.config.includeSource)) {
+      source = source || await fs.readFile(id, 'utf-8')
+      return this.isInSourceTestFile(source)
+    }
+    return false
+  }
+
+  isInSourceTestFile(code: string) {
+    return code.includes('import.meta.vitest')
   }
 
   printError(err: unknown) {

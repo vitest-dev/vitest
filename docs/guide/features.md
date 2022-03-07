@@ -276,7 +276,7 @@ if (import.meta.vitest) {
 }
 ```
 
-Then you need change the config for Vitest to grab them from `src/`:
+Update the `includeSource` config for Vitest to grab the files under `src/`:
 
 ```ts
 // vite.config.ts
@@ -284,12 +284,18 @@ import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
-    include: ['src/**/*.{js,ts}']
+    includeSource: ['src/**/*.{js,ts}']
   }
 })
 ```
 
-For production build, you need to set the `define` options in your config file, letting the bundler to do the dead code elimination. For example, in Vite
+Then you can start to test!
+
+```bash
+$ npx vitest
+```
+
+For production build, you will need to set the `define` options in your config file, letting the bundler to do the dead code elimination. For example, in Vite
 
 ```diff
 // vite.config.ts
@@ -300,7 +306,7 @@ export default defineConfig({
 +   'import.meta.vitest': false,
 + },
   test: {
-    include: ['src/**/*.{js,ts}']
+    includeSource: ['src/**/*.{js,ts}']
   },
 })
 ```
