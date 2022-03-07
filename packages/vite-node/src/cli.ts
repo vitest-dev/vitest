@@ -3,7 +3,6 @@ import { dim, red } from 'kolorist'
 import { createServer } from 'vite'
 import { ViteNodeServer } from './server'
 import { ViteNodeRunner } from './client'
-import { setupWatch } from './hmr'
 
 const argv = minimist(process.argv.slice(2), {
   'alias': {
@@ -97,5 +96,13 @@ async function run(options: CliOptions = {}) {
   if (!options.watch)
     await server.close()
 
-  setupWatch(server, runner, files)
+  server.watcher.on('all', async(eventName, path) => {
+    // eslint-disable-next-line no-console
+    console.log(dim(`[update] ${path}`))
+    // because module don't had `import.meta.hot.accept`
+    // only can refresh all module
+    runner.moduleCache.clear()
+    for (const file of files)
+      await runner.executeFile(file)
+  })
 }
