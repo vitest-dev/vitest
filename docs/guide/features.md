@@ -311,7 +311,21 @@ export default defineConfig({
 })
 ```
 
+To get TypeScript support for `import.meta.vitest`, add `vitest/importMeta` to your `tsconfig.json`:
+
+```diff
+// tsconfig.json
+{
+  "compilerOptions": {
+    "types": [
++     "vitest/importMeta"
+    ]
+  }
+}
+```
+
 Reference to [`test/import-meta`](https://github.com/vitest-dev/vitest/tree/main/test/import-meta) for the full example.
+
 
 This feature could be useful for:
 
