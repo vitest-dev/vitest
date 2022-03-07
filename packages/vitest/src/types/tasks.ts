@@ -19,6 +19,7 @@ export interface TaskResult {
   state: TaskState
   duration?: number
   error?: ErrorWithDiff
+  hooks?: Partial<Record<keyof SuiteHooks, TaskState>>
 }
 
 export type TaskResultPack = [id: string, result: TaskResult | undefined]
