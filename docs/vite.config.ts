@@ -45,7 +45,7 @@ export default defineConfig({
       outDir: '.vitepress/dist',
       registerType: 'autoUpdate',
       // include all static assets under public/
-      includeAssets: fg.sync('**/*.*', { cwd: resolve(__dirname, 'public') }),
+      includeAssets: fg.sync('**/*.{png,svg,ico,txt}', { cwd: resolve(__dirname, 'public') }),
       manifest: {
         id: '/',
         name: vitestName,
