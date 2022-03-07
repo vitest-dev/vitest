@@ -63,7 +63,7 @@ You can optionally pass a timeout in milliseconds as third argument to tests. Th
 ```ts
 import { test } from 'vitest'
 
-test('name', async () => { ... }, 1000)
+test('name', async() => { /* ... */ }, 1000)
 ```
 
 Hooks also can receive a timeout, with the same 5 seconds default.
@@ -71,7 +71,7 @@ Hooks also can receive a timeout, with the same 5 seconds default.
 ```ts
 import { beforeAll } from 'vitest'
 
-beforeAll(async () => { ... }, 1000)
+beforeAll(async() => { /* ... */ }, 1000)
 ```
 
 ### Skipping suites and tests
@@ -79,21 +79,21 @@ beforeAll(async () => { ... }, 1000)
 Use `.skip` to avoid running certain suites or tests
 
 ```ts
-import { describe, assert, it } from 'vitest';
+import { assert, describe, it } from 'vitest'
 
-describe.skip("skipped suite", () => {
-  it("test", () => {
+describe.skip('skipped suite', () => {
+  it('test', () => {
     // Suite skipped, no error
-    assert.equal(Math.sqrt(4), 3);
-  });
-});
+    assert.equal(Math.sqrt(4), 3)
+  })
+})
 
-describe("suite", () => {
-  it.skip("skipped test", () => {
+describe('suite', () => {
+  it.skip('skipped test', () => {
     // Test skipped, no error
-    assert.equal(Math.sqrt(4), 3);
-  });
-});
+    assert.equal(Math.sqrt(4), 3)
+  })
+})
 ```
 
 ### Selecting suites and tests to run
@@ -101,26 +101,26 @@ describe("suite", () => {
 Use `.only` to only run certain suites or tests
 
 ```ts
-import { describe, assert, it } from 'vitest'
+import { assert, describe, it } from 'vitest'
 
 // Only this suite (and others marked with only) are run
-describe.only("suite", () => {
-  it("test", () => {
-    assert.equal(Math.sqrt(4), 3);
-  });
-});
+describe.only('suite', () => {
+  it('test', () => {
+    assert.equal(Math.sqrt(4), 3)
+  })
+})
 
-describe("another suite", () => {
-  it("skipped test", () => {
+describe('another suite', () => {
+  it('skipped test', () => {
     // Test skipped, as tests are running in Only mode
-    assert.equal(Math.sqrt(4), 3);
-  });
+    assert.equal(Math.sqrt(4), 3)
+  })
 
-  it.only("test", () => {
+  it.only('test', () => {
     // Only this test (and others marked with only) are run
-    assert.equal(Math.sqrt(4), 2);
-  });
-});
+    assert.equal(Math.sqrt(4), 2)
+  })
+})
 ```
 
 ### Unimplemented suites and tests
@@ -131,12 +131,12 @@ Use `.todo` to stub suites and tests that should be implemented
 import { describe, it } from 'vitest'
 
 // An entry will be shown in the report for this suite
-describe.todo("unimplemented suite");
+describe.todo('unimplemented suite')
 
 // An entry will be shown in the report for this test
-describe("suite", () => {
-  it.todo("unimplemented test");
-});
+describe('suite', () => {
+  it.todo('unimplemented test')
+})
 ```
 
 ## Running tests concurrently
@@ -147,11 +147,11 @@ Use `.concurrent` in consecutive tests to run them in parallel
 import { describe, it } from 'vitest'
 
 // The two tests marked with concurrent will be run in parallel
-describe("suite", () => {
-  it("serial test", async () => { /* ... */ });
-  it.concurrent("concurrent test 1", async () => { /* ... */ });
-  it.concurrent("concurrent test 2", async () => { /* ... */ });
-});
+describe('suite', () => {
+  it('serial test', async() => { /* ... */ })
+  it.concurrent('concurrent test 1', async() => { /* ... */ })
+  it.concurrent('concurrent test 2', async() => { /* ... */ })
+})
 ```
 
 If you use `.concurrent` in a suite, every tests in it will be run in parallel
@@ -160,11 +160,11 @@ If you use `.concurrent` in a suite, every tests in it will be run in parallel
 import { describe, it } from 'vitest'
 
 // All tests within this suite will be run in parallel
-describe.concurrent("suite", () => {
-  it("concurrent test 1", async () => { /* ... */ });
-  it("concurrent test 2", async () => { /* ... */ });
-  it.concurrent("concurrent test 3", async () => { /* ... */ });
-});
+describe.concurrent('suite', () => {
+  it('concurrent test 1', async() => { /* ... */ })
+  it('concurrent test 2', async() => { /* ... */ })
+  it.concurrent('concurrent test 3', async() => { /* ... */ })
+})
 ```
 
 You can also use `.skip`, `.only`, and `.todo` with concurrent suites and tests. Read more in the [API Reference](../api/#concurrent)
@@ -184,7 +184,7 @@ Notice that if you are using third-party libraries that add matchers, setting `t
 [Tinyspy](https://github.com/Aslemammad/tinyspy) built-in for mocking with `jest` compatible APIs on `vi` object.
 
 ```ts
-import { vi, expect } from 'vitest'
+import { expect, vi } from 'vitest'
 
 const fn = vi.fn()
 
@@ -193,7 +193,7 @@ fn('hello', 1)
 expect(vi.isMockFunction(fn)).toBe(true)
 expect(fn.mock.calls[0]).toEqual(['hello', 1])
 
-fn.mockImplementation((arg) => arg)
+fn.mockImplementation(arg => arg)
 
 fn('world', 2)
 
@@ -216,8 +216,8 @@ import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
-    environment: 'happy-dom' // or 'jsdom', 'node'
-  }
+    environment: 'happy-dom', // or 'jsdom', 'node'
+  },
 })
 ```
 
@@ -243,9 +243,9 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   test: {
     coverage: {
-      reporter: ['text', 'json', 'html']
-    }
-  }
+      reporter: ['text', 'json', 'html'],
+    },
+  },
 })
 ```
 
@@ -284,8 +284,8 @@ import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
-    includeSource: ['src/**/*.{js,ts}']
-  }
+    includeSource: ['src/**/*.{js,ts}'],
+  },
 })
 ```
 

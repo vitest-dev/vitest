@@ -3,11 +3,10 @@
   "private": true,
   "scripts": {
     "dev": "vitepress --port 3333 --open",
-    "build": "nr avatars && vitepress build && esno scripts/build-pwa.ts",
+    "build": "nr prefetch && vitepress build && esno scripts/build-pwa.ts",
     "serve": "vitepress serve",
     "preview-https": "pnpm run build && serve .vitepress/dist",
-    "lint": "eslint . --ext=.ts,.vue",
-    "avatars": "esno scripts/fetch-avatars.ts"
+    "prefetch": "esno scripts/fetch-avatars.ts"
   },
   "dependencies": {
     "@vueuse/core": "^7.7.1",
