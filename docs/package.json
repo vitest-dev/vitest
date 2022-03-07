@@ -9,7 +9,7 @@
     "lint": "eslint . --ext=.ts,.vue"
   },
   "dependencies": {
-    "@vueuse/core": "^7.7.0",
+    "@vueuse/core": "^7.7.1",
     "vue": "^3.2.24"
   },
   "devDependencies": {
@@ -24,6 +24,6 @@
     "unplugin-vue-components": "^0.17.21",
     "vite-plugin-pwa": "^0.11.13",
     "vitepress": "^0.22.3",
-    "workbox-window": "^6.5.0"
+    "workbox-window": "^6.5.1"
   }
 }
