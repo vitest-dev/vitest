@@ -63,7 +63,7 @@
   },
   "devDependencies": {
     "@types/minimist": "^1.2.2",
-    "rollup": "^2.69.0"
+    "rollup": "^2.70.0"
   },
   "engines": {
     "node": ">=14.14.0"
