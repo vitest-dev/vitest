@@ -4,10 +4,6 @@ import type { RequestInit } from 'node-fetch'
 import fetch from 'node-fetch'
 import { coreTeamMembers } from '../src/contributors'
 
-interface Contributor {
-  login: string
-  avatar_url: string
-}
 interface ImageRequest {
   key: string
   url: string
@@ -22,12 +18,14 @@ interface ImageResponse extends ImageData {
 }
 interface Avatar {
   name: string
-  images?: [ImageResponse, ImageResponse]
+  image?: ImageResponse
 }
 
 const members = coreTeamMembers.map(member => member.github)
+
 const avatarsName = '../docs/avatars.json'
 const contributorsName = '../docs/contributors.json'
+const imageDirectory = '../docs/public/images/'
 
 let storedImages: Record<string, Omit<ImageData, 'key'>> = {}
 let contributors: string[] = []
@@ -39,7 +37,7 @@ async function fetchImage({ url, key }: ImageRequest): Promise<ImageResponse | u
   }
   if (imageData) {
     options.headers = {
-      'If-Modified-Since': `${imageData!.lastModified}`,
+      'If-Modified-Since': `${imageData.lastModified}`,
     }
   }
 
@@ -87,17 +85,15 @@ async function fetchImage({ url, key }: ImageRequest): Promise<ImageResponse | u
   }
 }
 
-async function fetchImageAvatars({ login, avatar_url }: Contributor) {
-  const url = `${avatar_url}?size=${members.includes(login) ? '100' : '40'}`
-  return [await fetchImage({ key: login, url })]
-}
-
 async function fetchAvatars(): Promise<Avatar[]> {
   return await Promise.all(contributors.map(async(name) => {
-    const images = await fetchImageAvatars({ login: name, avatar_url: `https://github.com/${name}.png` })
+    const image = await fetchImage({
+      key: name,
+      url: `https://github.com/${name}.png?size=${members.includes(name) ? '100' : '40'}`,
+    })
     return {
       name,
-      images,
+      image,
     }
   })) as Avatar[]
 }
@@ -115,26 +111,41 @@ async function generate() {
   contributors = JSON.parse(await fs.readFile(contributorsName, { encoding: 'utf-8' }))
 
   const avatars = await fetchAvatars()
-  const storeImages: Omit<ImageResponse, 'lastModified'>[] = []
-  avatars.filter(i => !!i.images).forEach(({ images }) => {
-    images?.filter(i => !!i)?.forEach(({ key, lastModified, extension, image }) => {
-      const entry = storedImages[key]
-      if (entry) {
-        entry.lastModified = lastModified
-        entry.extension = extension
-      }
-      else {
-        storedImages[key] = { lastModified, extension }
-      }
-      storeImages.push({ key, extension, image })
-    })
+  const saveImages: Omit<ImageResponse, 'lastModified'>[] = []
+  const deleteImages: string[] = []
+  avatars.filter(i => !!i.image).forEach(({ image: data }) => {
+    const { key, lastModified, extension, image } = data!
+    const entry = storedImages[key]
+    if (entry) {
+      // delete the current avatar if the extension changes
+      if (entry.extension !== extension)
+        deleteImages.push(`${key}${entry.extension}`)
+
+      entry.lastModified = lastModified
+      entry.extension = extension
+    }
+    else {
+      storedImages[key] = { lastModified, extension }
+    }
+    saveImages.push({ key, extension, image })
   })
 
-  if (storeImages.length > 0) {
-    await Promise.all(storeImages.map(async({ key, extension, image }) => {
-      await fs.writeFile(`../docs/public/images/${key}${extension}`, image.stream())
+  if (saveImages.length > 0) {
+    await Promise.all(saveImages.map(async({ key, extension, image }) => {
+      await fs.writeFile(`${imageDirectory}${key}${extension}`, image.stream())
     }))
     await fs.writeFile(avatarsName, JSON.stringify(storedImages, null, 2), 'utf8')
+    if (deleteImages.length > 0) {
+      await Promise.all(deleteImages.map(async(name) => {
+        console.warn(`Deleting avatar image ${name}...`)
+        try {
+          await fs.unlink(`${imageDirectory}${name}`)
+        }
+        catch {
+          console.warn(`Cannot delete avatar image: ${name}`)
+        }
+      }))
+    }
   }
 }
 
