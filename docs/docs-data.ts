@@ -1,5 +1,5 @@
 // noinspection ES6PreferShortImport: IntelliJ IDE hint to avoid warning to use `~/contributors`, will fail on build if changed
-import { antfuSponsors, jsdelivr, patak, patakSponsors } from './src/contributors'
+import { antfuSponsors, jsdelivr, patakSponsors } from './src/contributors'
 /* PWA DISABLED */
 export const pwaDisabled = false
 
@@ -27,8 +27,6 @@ export const twitter = 'https://twitter.com/vitest_dev'
 export const imageServers: Record<string, string> = {
   // for antfu sponsors
   jsdelivr,
-  // for patak sponsors
-  patak,
 }
 export const sponsors = [antfuSponsors, patakSponsors]
 export const preconnectLinks = [googleapis, gstatic]

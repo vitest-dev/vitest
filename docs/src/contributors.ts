@@ -17,12 +17,11 @@ export interface CoreTeam {
   description: string
 }
 
-// for antfu sponsors
 const jsdelivr = 'cdn.jsdelivr.net'
-// for patak sponsors
-const patak = 'patak.dev'
+// antfu sponsors
 const antfuSponsors = `https://${jsdelivr}/gh/antfu/static/sponsors.svg`
-const patakSponsors = `https://${patak}/sponsors.svg`
+// patak sponsors
+const patakSponsors = `https://${jsdelivr}/gh/patak-dev/static/sponsors.svg`
 
 const contributorsAvatars: Record<string, string> = {}
 
@@ -90,4 +89,4 @@ const coreTeamMembers: CoreTeam[] = [
   },
 ]
 
-export { coreTeamMembers, contributorList as contributors, jsdelivr, patak, antfuSponsors, patakSponsors }
+export { coreTeamMembers, contributorList as contributors, jsdelivr, antfuSponsors, patakSponsors }
