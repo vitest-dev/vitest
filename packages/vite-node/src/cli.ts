@@ -3,8 +3,7 @@ import { dim, red } from 'kolorist'
 import { createServer } from 'vite'
 import { ViteNodeServer } from './server'
 import { ViteNodeRunner } from './client'
-import { resolve } from 'pathe'
-import { slash } from './utils'
+
 const argv = minimist(process.argv.slice(2), {
   'alias': {
     r: 'root',
@@ -97,15 +96,18 @@ async function run(options: CliOptions = {}) {
   if (!options.watch)
     await server.close()
 
-  server.watcher.on('all', async(eventName, path) => {
+  server.watcher.on('change', async(eventName, path) => {
     // eslint-disable-next-line no-console
-    console.log(dim(`[update] ${path}`))
-    // because module don't had `import.meta.hot.accept`
-    // only can refresh all module
-    for (const file of files) {
-      const id = `/@fs/${slash(resolve(file))}`
-      runner.moduleCache.delete(id)
-      await runner.executeId(id)
-    }
+    console.log(dim(`[${eventName}] ${path}`))
+
+    // invalidate module cache but not node_modules
+    Array.from(runner.moduleCache.keys())
+      .forEach((i) => {
+        if (!i.includes('node_modules'))
+          runner.moduleCache.delete(i)
+      })
+
+    for (const file of files)
+      await runner.executeFile(file)
   })
 }
