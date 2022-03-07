@@ -62,9 +62,7 @@
     "vite": "^2.8.4"
   },
   "devDependencies": {
-    "@types/ws": "^8.2.2",
     "@types/minimist": "^1.2.2",
-    "ws": "^8.5.0",
     "rollup": "^2.70.0"
   },
   "engines": {
