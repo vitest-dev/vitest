@@ -6,11 +6,11 @@ import Unocss from 'unocss/vite'
 import { presetAttributify, presetIcons, presetUno } from 'unocss'
 import { resolve } from 'pathe'
 import { VitePWA } from 'vite-plugin-pwa'
+import fg from 'fast-glob'
 import {
   pwaDisabled,
   pwaFontStylesRegex,
   pwaFontsRegex,
-  pwaImagesRegex,
   vitestDescription,
   vitestName,
   vitestShortName,
@@ -43,17 +43,9 @@ export default defineConfig({
     VitePWA({
       disable: pwaDisabled,
       outDir: '.vitepress/dist',
-      // TODO: to add prompt strategy we should change to custom theme or switch to @vue/theme
       registerType: 'autoUpdate',
-      includeAssets: [
-        'favicon.ico',
-        'favicon.svg',
-        'apple-touch-icon.png',
-        'robots.txt',
-        'bg.png',
-        'og.png',
-        'netlify.svg',
-      ],
+      // include all static assets under public/
+      includeAssets: fg.sync('**/*.*', { cwd: resolve(__dirname, 'public') }),
       manifest: {
         id: '/',
         name: vitestName,
@@ -106,21 +98,6 @@ export default defineConfig({
               },
               cacheableResponse: {
                 statuses: [0, 200],
-              },
-            },
-          },
-          {
-            urlPattern: pwaImagesRegex,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'images-cache',
-              expiration: {
-                maxEntries: 1000,
-                maxAgeSeconds: 60 * 60 * 24 * 365, // <== 365 days
-              },
-              cacheableResponse: {
-                // github.com/{user}.png will redirect to avatars.githubusercontent.com
-                statuses: [0, 200, 302],
               },
             },
           },
