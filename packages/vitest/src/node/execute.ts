@@ -1,5 +1,6 @@
 import { ViteNodeRunner } from 'vite-node/client'
 import type { ModuleCache, ViteNodeRunnerOptions } from 'vite-node'
+import { normalizePath } from 'vite'
 import type { SuiteMocks } from './mocker'
 import { VitestMocker } from './mocker'
 
@@ -40,7 +41,7 @@ export class VitestRunner extends ViteNodeRunner {
     })
 
     // support `import.meta.vitest` for test entry
-    if (__vitest_worker__.filepath === context.__filename) {
+    if (__vitest_worker__.filepath && normalizePath(__vitest_worker__.filepath) === normalizePath(context.__filename)) {
       // @ts-expect-error injected untyped global
       Object.defineProperty(context.__vite_ssr_import_meta__, 'vitest', { get: () => globalThis.__vitest_index__ })
     }
