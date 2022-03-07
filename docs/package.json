@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "dev": "vitepress --port 3333 --open",
-    "build": "vitepress build && esno scripts/build-pwa.ts",
+    "build": "nr avatars && vitepress build && esno scripts/build-pwa.ts",
     "serve": "vitepress serve",
     "preview-https": "pnpm run build && serve .vitepress/dist",
     "lint": "eslint . --ext=.ts,.vue",

@@ -1,7 +1,4 @@
-import avatars from '../avatars.json'
 import contributors from '../contributors.json'
-
-const useAvatars = avatars as Record<string, Record<string, any>>
 
 export interface Contributor {
   name: string
@@ -25,12 +22,7 @@ const patakSponsors = `https://${jsdelivr}/gh/patak-dev/static/sponsors.svg`
 
 const contributorsAvatars: Record<string, string> = {}
 
-const getAvatarUrl = (name: string) => {
-  // when running the avatars script, avatars.json maybe be empty
-  // do not remove this logic, once the avatars.json file is ok this will work as expected
-  const avatar = useAvatars && useAvatars[name]
-  return avatar ? `/images/${name}${avatar.extension}` : `https://github.com/${name}.png`
-}
+const getAvatarUrl = (name: string) => `/user-avatars/${name}.png`
 
 const contributorList = (contributors as string[]).reduce((acc, name) => {
   contributorsAvatars[name] = getAvatarUrl(name)
