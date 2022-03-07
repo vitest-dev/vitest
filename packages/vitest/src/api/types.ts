@@ -8,9 +8,11 @@ export interface TransformResultWithSource extends TransformResult {
 export interface WebSocketHandlers {
   onWatcherStart: () => Promise<void>
   onFinished(files?: File[]): Promise<void>
+  // onPathsCollected(paths?: string[]): Promise<void>
   onCollected(files?: File[]): Promise<void>
   onTaskUpdate(packs: TaskResultPack[]): void
   getFiles(): File[]
+  getPaths(): string[]
   getConfig(): ResolvedConfig
   getModuleGraph(id: string): Promise<ModuleGraphData>
   getTransformResult(id: string): Promise<TransformResultWithSource | undefined>
@@ -20,5 +22,5 @@ export interface WebSocketHandlers {
   updateSnapshot(file?: File): Promise<void>
 }
 
-export interface WebSocketEvents extends Pick<Reporter, 'onCollected' | 'onFinished' | 'onTaskUpdate' | 'onUserConsoleLog'> {
+export interface WebSocketEvents extends Pick<Reporter, 'onCollected' | 'onFinished' | 'onTaskUpdate' | 'onUserConsoleLog' | 'onPathsCollected'> {
 }

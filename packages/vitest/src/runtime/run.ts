@@ -223,31 +223,38 @@ export async function runSuites(suites: Suite[]) {
 }
 
 export async function startTests(paths: string[], config: ResolvedConfig) {
-  const files = await collectTests(paths, config);
-
+  console.log('here', paths)
+    // await rpc().onCollected(files);
   if (typeof window === 'undefined') {
-    rpc().onCollected(files);
+    // const files = await collectTests(paths, config)
+    // await rpc().onCollected(files);
+    await rpc().onPathsCollected(paths);
   } else {
+    const files = await collectTests(paths, config);
+    debugger
+    console.log(files)
     await rpc().onCollected(files);
-  }
-
-
-  if (typeof window !== "undefined") {
     await runSuites(files);
-  }
-
-  if (typeof window === "undefined") {
-    // const { takeCoverage } = await import("../integrations/coverage");
-    //
-    // const { getSnapshotClient } = await import("../integrations/snapshot/chai");
-    //
-    // takeCoverage();
-    // await getSnapshotClient().saveSnap();
-  }
-
-  if (typeof window !== "undefined") {
     await sendTasksUpdate();
   }
+
+
+  // if (typeof window !== "undefined") {
+  //   await runSuites(files);
+  // }
+  //
+  // if (typeof window === "undefined") {
+  //   // const { takeCoverage } = await import("../integrations/coverage");
+  //   //
+  //   // const { getSnapshotClient } = await import("../integrations/snapshot/chai");
+  //   //
+  //   // takeCoverage();
+  //   // await getSnapshotClient().saveSnap();
+  // }
+  //
+  // if (typeof window !== "undefined") {
+  //   await sendTasksUpdate();
+  // }
   // await sendTasksUpdate();
 }
 

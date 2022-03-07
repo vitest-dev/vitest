@@ -41,14 +41,18 @@ export function setup(ctx: Vitest) {
   function setupClient(ws: WebSocket) {
     const rpc = createBirpc<WebSocketEvents, WebSocketHandlers>(
       {
+        // async onPathsCollected(paths) {
+        //   await ctx.report("onWatcherStart");
+        // },
         async onWatcherStart() {
-          await ctx.report('onWatcherStart')
+          await ctx.report("onWatcherStart");
         },
         async onFinished() {
-          await ctx.report('onFinished')
+          await ctx.report("onFinished");
         },
-        async onCollected() {
-          await ctx.report('onCollected')
+        async onCollected(files) {
+          ctx.state.collectFiles(files);
+          await ctx.report("onCollected", files);
         },
         async onTaskUpdate(packs) {
           ctx.state.updateTasks(packs);
@@ -56,6 +60,9 @@ export function setup(ctx: Vitest) {
         },
         getFiles() {
           return ctx.state.getFiles();
+        },
+        getPaths() {
+          return ctx.state.getPaths();
         },
         readFile(id) {
           return fs.readFile(id, "utf-8");
@@ -148,6 +155,13 @@ class WebSocketReporter implements Reporter {
     public wss: WebSocketServer,
     public clients: Map<WebSocket, BirpcReturn<WebSocketEvents>>
   ) {}
+
+  onPathsCollected(paths?: string[]) {
+    if (this.clients.size === 0) return;
+    this.clients.forEach((client) => {
+      client.onPathsCollected?.(paths);
+    });
+  }
 
   onCollected(files?: File[]) {
     if (this.clients.size === 0) return;

@@ -11,10 +11,32 @@ export const ENTRY_URL = `${
 
 export const client = createClient(ENTRY_URL, {
   handlers: {
-    async onCollected(files) {
-      if (!files) {
-        return
+    // async onCollected(files) {
+    //   if (!files) {
+    //     return;
+    //   }
+    //   console.log(files);
+    //   const config = globalThis.__vitest_worker__.config;
+    //
+    //   const { startTests, setupGlobalEnv } = (await import(
+    //     "vitest"
+    //   )) as unknown as typeof import("vitest/dist/web");
+    //
+    //   await setupGlobalEnv(config);
+    //
+    //   await startTests(
+    //     files.map((f) => f.filepath),
+    //     config
+    //   );
+    //
+    //   await client.rpc.onFinished();
+    //   await client.rpc.onWatcherStart();
+    // },
+    async onPathsCollected(paths) {
+      if (!paths) {
+        return;
       }
+      console.log(paths);
       const config = globalThis.__vitest_worker__.config;
 
       const { startTests, setupGlobalEnv } = (await import(
@@ -24,12 +46,12 @@ export const client = createClient(ENTRY_URL, {
       await setupGlobalEnv(config);
 
       await startTests(
-        files.map((f) => f.filepath),
+        paths,
         config
       );
 
-      await client.rpc.onFinished()
-      await client.rpc.onWatcherStart()
+      await client.rpc.onFinished();
+      await client.rpc.onWatcherStart();
     },
   },
 });
@@ -51,7 +73,7 @@ ws.addEventListener("open", async () => {
   globalThis.global = globalThis;
   // @ts-ignore
   globalThis.__vitest_mocker__ = {};
-  const files = await client.rpc.getFiles();
+  const files = await client.rpc.getPaths();
 
   const { startTests, setupGlobalEnv } = (await import(
     "vitest"
@@ -59,11 +81,13 @@ ws.addEventListener("open", async () => {
 
   await setupGlobalEnv(config);
 
+  console.log(files)
   await startTests(
-    files.map((f) => f.filepath),
+    // files.map((f) => f.filepath),
+    files,
     config
   );
 
-  await client.rpc.onFinished()
-  await client.rpc.onWatcherStart()
+  await client.rpc.onFinished();
+  await client.rpc.onWatcherStart();
 });

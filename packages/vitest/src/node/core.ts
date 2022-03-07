@@ -125,8 +125,8 @@ export class Vitest {
     if (this.config.coverage.enabled)
       await reportCoverage(this)
 
-    if (this.config.watch)
-      await this.report('onWatcherStart')
+    // if (this.config.watch)
+    //   await this.report('onWatcherStart')
   }
 
   private async getTestDependencies(filepath: string) {
@@ -188,6 +188,7 @@ export class Vitest {
 
       const invalidates = Array.from(this.invalidates)
       this.invalidates.clear()
+      console.log(files, invalidates)
       await this.pool.runTests(files, invalidates)
 
       if (hasFailed(this.state.getFiles()))
@@ -205,7 +206,7 @@ export class Vitest {
   async rerunFiles(files: string[] = this.state.getFilepaths(), trigger?: string) {
     await this.report('onWatcherRerun', files, trigger)
     await this.runFiles(files)
-    await this.report('onWatcherStart')
+    // await this.report('onWatcherStart')
   }
 
   async returnFailed() {

@@ -1,25 +1,44 @@
-import { promises as fs } from 'fs'
-import type { BuiltinEnvironment, ResolvedConfig } from '../types'
-import { setupGlobalEnv, withEnv } from './setup'
-import { startTests } from './run'
+import { promises as fs } from "fs";
+import type { BuiltinEnvironment, ResolvedConfig } from "../types";
+import { setupGlobalEnv, withEnv } from "./setup";
+import { startTests } from "./run";
 
-export async function run(files: string[], config: ResolvedConfig): Promise<void> {
-  await setupGlobalEnv(config)
+export async function run(
+  files: string[],
+  config: ResolvedConfig
+): Promise<void> {
+  await setupGlobalEnv(config);
+
+  // we should batch files and send them to the browser using onCollected, in case the browser can send proper onFinished & onWatcherStart
+  const webFiles: string[] = [];
 
   for (const file of files) {
-    const code = await fs.readFile(file, 'utf-8')
+    // in web env
 
-    const env = code.match(/@(?:vitest|jest)-environment\s+?([\w-]+)\b/)?.[1] || config.environment || 'node'
+    const code = await fs.readFile(file, "utf-8");
 
-    if (!['node', 'jsdom', 'happy-dom'].includes(env))
-      throw new Error(`Unsupported environment: ${env}`)
+    const env =
+      code.match(/@(?:vitest|jest)-environment\s+?([\w-]+)\b/)?.[1] ||
+      config.environment ||
+      "node";
 
-    __vitest_worker__.filepath = file
+    if (!["node", "jsdom", "happy-dom"].includes(env))
+      throw new Error(`Unsupported environment: ${env}`);
 
-    await withEnv(env as BuiltinEnvironment, config.environmentOptions || {}, async() => {
-      await startTests([file], config)
-    })
+    webFiles.push(file);
+    continue;
+    __vitest_worker__.filepath = file;
 
-    __vitest_worker__.filepath = undefined
+    await withEnv(
+      env as BuiltinEnvironment,
+      config.environmentOptions || {},
+      async () => {
+        await startTests([file], config);
+      }
+    );
+
+    __vitest_worker__.filepath = undefined;
   }
+
+  await startTests(webFiles, config);
 }

@@ -24,6 +24,7 @@ export interface WorkerRPC {
   onFinished: (files: File[]) => void
   onWorkerExit: (code?: number) => void
   onUserConsoleLog: (log: UserConsoleLog) => void
+  onPathsCollected: (paths: string[]) => void
   onCollected: (files: File[]) => void
   onTaskUpdate: (pack: TaskResultPack[]) => void
 

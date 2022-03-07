@@ -49,7 +49,11 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
   let onMessage: Function
   ctx.rpc = createBirpc<WebSocketHandlers, WebSocketEvents>(
     {
+      onPathsCollected(paths) {
+        ctx.state.collectPaths(paths)
+      },
       onCollected(files) {
+        console.log('onCollected', files)
         ctx.state.collectFiles(files)
         handlers.onCollected?.(files)
       },

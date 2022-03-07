@@ -1,9 +1,16 @@
 import type { File, Task, TaskResultPack, UserConsoleLog } from '../types'
 
 export class StateManager {
+  // paths is used for the web integration
+  pathsSet: Set<string> = new Set()
   filesMap = new Map<string, File>()
   idMap = new Map<string, Task>()
   taskFileMap = new WeakMap<Task, File>()
+
+  getPaths() {
+    console.log('getPaths', this.pathsSet)
+    return Array.from(this.pathsSet)
+  }
 
   getFiles(keys?: string[]): File[] {
     if (keys)
@@ -19,6 +26,13 @@ export class StateManager {
     return this.getFiles()
       .filter(i => i.result?.state === 'fail')
       .map(i => i.filepath)
+  }
+
+  collectPaths(paths: string[] = []) {
+    paths.forEach((path) => {
+      this.pathsSet.add(path)
+    })
+    console.log('collectPaths', this.pathsSet)
   }
 
   collectFiles(files: File[] = []) {

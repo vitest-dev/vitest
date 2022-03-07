@@ -7,17 +7,14 @@ import { context } from "./context";
 import { runSetupFiles } from "./setup";
 
 async function hash(str: string, length = 10) {
-  return str
-  if (typeof window === 'undefined') {
-    const {createHash} = await import('crypto')
+  return str;
+  if (typeof window === "undefined") {
+    const { createHash } = await import("crypto");
 
-    return createHash('md5')
-      .update(str)
-      .digest('hex')
-      .slice(0, length)
+    return createHash("md5").update(str).digest("hex").slice(0, length);
   } else {
-    return str
-  } 
+    return str;
+  }
 }
 
 export async function collectTests(paths: string[], config: ResolvedConfig) {
@@ -41,7 +38,7 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
         await import(filepath);
       } else {
         // fake cache for browser
-        await import(filepath + "?v=" + Math.round(performance.now()));
+        await import(filepath + "?v=" + new Date().getTime());
       }
 
       const defaultTasks = await defaultSuite.collect(file);
