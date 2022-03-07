@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { antfuSponsors, coreTeamMembers, patakSponsors } from '../contributors'
+import { coreTeamMembers } from '../contributors'
 </script>
 <template>
   <div flex flex-col items-center>
@@ -70,7 +70,7 @@ import { antfuSponsors, coreTeamMembers, patakSponsors } from '../contributors'
             width="768" height="1464"
             class="resizable-img"
             loading="lazy"
-            :src="antfuSponsors"
+            src="/sponsors/antfu.svg"
             alt="Anthony Fu's sponsors"
           >
         </a>
@@ -83,7 +83,7 @@ import { antfuSponsors, coreTeamMembers, patakSponsors } from '../contributors'
             width="768" height="722"
             class="resizable-img"
             loading="lazy"
-            :src="patakSponsors"
+            src="/sponsors/patak-dev.svg"
             alt="Patak's sponsors"
           >
         </a>

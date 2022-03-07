@@ -14,12 +14,6 @@ export interface CoreTeam {
   description: string
 }
 
-const jsdelivr = 'cdn.jsdelivr.net'
-// antfu sponsors
-const antfuSponsors = `https://${jsdelivr}/gh/antfu/static/sponsors.svg`
-// patak sponsors
-const patakSponsors = `https://${jsdelivr}/gh/patak-dev/static/sponsors.svg`
-
 const contributorsAvatars: Record<string, string> = {}
 
 const getAvatarUrl = (name: string) => `/user-avatars/${name}.png`
@@ -81,4 +75,4 @@ const coreTeamMembers: CoreTeam[] = [
   },
 ]
 
-export { coreTeamMembers, contributorList as contributors, jsdelivr, antfuSponsors, patakSponsors }
+export { coreTeamMembers, contributorList as contributors }

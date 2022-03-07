@@ -1,5 +1,4 @@
 // noinspection ES6PreferShortImport: IntelliJ IDE hint to avoid warning to use `~/contributors`, will fail on build if changed
-import { antfuSponsors, jsdelivr, patakSponsors } from './src/contributors'
 /* PWA DISABLED */
 export const pwaDisabled = false
 
@@ -24,15 +23,9 @@ export const discord = 'https://chat.vitest.dev'
 export const twitter = 'https://twitter.com/vitest_dev'
 
 /* Avatar/Image/Sponsors servers */
-export const imageServers: Record<string, string> = {
-  // for antfu sponsors
-  jsdelivr,
-}
-export const sponsors = [antfuSponsors, patakSponsors]
 export const preconnectLinks = [googleapis, gstatic]
-export const preconnectHomeLinks = [googleapis, gstatic, ...Object.values(imageServers).map(s => `https://${s}`)]
+export const preconnectHomeLinks = [googleapis, gstatic]
 
 /* PWA runtime caching urlPattern regular expressions */
-export const pwaImagesRegex = new RegExp(`^https://(${Object.values(imageServers).join('|')})/.*`, 'i')
 export const pwaFontsRegex = new RegExp(`^${googleapis}/.*`, 'i')
 export const pwaFontStylesRegex = new RegExp(`^${gstatic}/.*`, 'i')

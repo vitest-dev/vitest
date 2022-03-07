@@ -10,7 +10,6 @@ import {
   pwaDisabled,
   pwaFontStylesRegex,
   pwaFontsRegex,
-  pwaImagesRegex,
   vitestDescription,
   vitestName,
   vitestShortName,
@@ -109,21 +108,6 @@ export default defineConfig({
             options: {
               cacheName: 'gstatic-fonts-cache',
               expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365, // <== 365 days
-              },
-              cacheableResponse: {
-                statuses: [0, 200],
-              },
-            },
-          },
-          {
-            urlPattern: pwaImagesRegex,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'images-cache',
-              expiration: {
-                // we only have the sponsors images
                 maxEntries: 10,
                 maxAgeSeconds: 60 * 60 * 24 * 365, // <== 365 days
               },
