@@ -3,7 +3,8 @@ import { dim, red } from 'kolorist'
 import { createServer } from 'vite'
 import { ViteNodeServer } from './server'
 import { ViteNodeRunner } from './client'
-
+import { resolve } from 'pathe'
+import { slash } from './utils'
 const argv = minimist(process.argv.slice(2), {
   'alias': {
     r: 'root',
@@ -101,8 +102,10 @@ async function run(options: CliOptions = {}) {
     console.log(dim(`[update] ${path}`))
     // because module don't had `import.meta.hot.accept`
     // only can refresh all module
-    runner.moduleCache.clear()
-    for (const file of files)
-      await runner.executeFile(file)
+    for (const file of files) {
+      const id = `/@fs/${slash(resolve(file))}`
+      runner.moduleCache.delete(id)
+      await runner.executeId(id)
+    }
   })
 }
