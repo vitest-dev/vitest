@@ -16,7 +16,7 @@ export interface CoreTeam {
 
 const contributorsAvatars: Record<string, string> = {}
 
-const getAvatarUrl = (name: string) => `/user-avatars/${name}.png`
+const getAvatarUrl = (name: string) => import.meta.hot ? `https://github.com/${name}.png` : `/user-avatars/${name}.png`
 
 const contributorList = (contributors as string[]).reduce((acc, name) => {
   contributorsAvatars[name] = getAvatarUrl(name)
