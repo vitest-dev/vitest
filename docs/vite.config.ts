@@ -6,6 +6,7 @@ import Unocss from 'unocss/vite'
 import { presetAttributify, presetIcons, presetUno } from 'unocss'
 import { resolve } from 'pathe'
 import { VitePWA } from 'vite-plugin-pwa'
+import fg from 'fast-glob'
 import {
   pwaDisabled,
   pwaFontStylesRegex,
@@ -14,23 +15,6 @@ import {
   vitestName,
   vitestShortName,
 } from './docs-data'
-import avatars from './avatars.json'
-
-const includeAssets = [
-  'favicon.ico',
-  'favicon.svg',
-  'apple-touch-icon.png',
-  'robots.txt',
-  'bg.png',
-  'og.png',
-  'netlify.svg',
-]
-
-const useAvarts = avatars as Record<string, { extension: string }>
-Object.keys(avatars).forEach((id) => {
-  const { extension } = useAvarts[id]
-  includeAssets.push(`images/${id}${extension}`)
-})
 
 export default defineConfig({
   define: {
@@ -60,7 +44,8 @@ export default defineConfig({
       disable: pwaDisabled,
       outDir: '.vitepress/dist',
       registerType: 'autoUpdate',
-      includeAssets,
+      // include all static assets under public/
+      includeAssets: fg.sync('**/*.*', { cwd: resolve(__dirname, 'public') }),
       manifest: {
         id: '/',
         name: vitestName,
