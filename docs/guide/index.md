@@ -110,7 +110,7 @@ You can specify additional CLI options like `--port` or `--https`. For a full li
 | `--coverage` | Use c8 for coverage |
 | `--run` | Do not watch |
 | `--mode` | Override Vite mode (default: `test`) |
-| `--global` | Inject APIs globally `depreciated` use `--globals` |
+| `--global` | Inject APIs globally `deprecated` use `--globals` |
 | `--globals` | Inject APIs globally |
 | `--dom` | Mock browser api with happy-dom |
 | `--environment <env>` | Runner environment (default: `node`) |

@@ -1,9 +1,10 @@
 {
   "name": "@vitest/monorepo",
-  "version": "0.5.9",
+  "version": "0.6.0",
   "private": true,
   "description": "A blazing fast unit test framework powered by Vite",
   "type": "module",
+  "packageManager": "pnpm@6.32.3",
   "scripts": {
     "build": "pnpm -r --filter {packages} run build",
     "ci": "ni && nr typecheck && nr lint && nr build && nr test:all",
@@ -27,7 +28,7 @@
     "ui:dev": "vite packages/ui"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^0.16.1",
+    "@antfu/eslint-config": "^0.18.0",
     "@antfu/ni": "^0.13.2",
     "@rollup/plugin-alias": "^3.1.9",
     "@rollup/plugin-commonjs": "^21.0.2",
@@ -38,7 +39,7 @@
     "bumpp": "^7.1.1",
     "c8": "^7.11.0",
     "cross-env": "^7.0.3",
-    "esbuild": "0.13",
+    "esbuild": "~0.13.15",
     "eslint": "^8.10.0",
     "esno": "^0.14.1",
     "fast-glob": "^3.2.11",
@@ -48,21 +49,21 @@
     "npm-run-all": "^4.1.5",
     "ohmyfetch": "^0.4.15",
     "pathe": "^0.2.0",
-    "pnpm": "^6.32.2",
+    "pnpm": "^6.32.3",
     "rimraf": "^3.0.2",
-    "rollup": "^2.69.0",
-    "rollup-plugin-dts": "^4.1.0",
+    "rollup": "^2.70.0",
+    "rollup-plugin-dts": "^4.2.0",
     "rollup-plugin-esbuild": "^4.8.2",
     "rollup-plugin-license": "^2.6.1",
     "typescript": "^4.6.2",
-    "vite": "^2.8.4",
+    "vite": "^2.8.6",
     "vitepress": "^0.22.3",
     "vitest": "workspace:*",
     "vue": "^3.2.31"
   },
   "pnpm": {
     "overrides": {
-      "vite": "^2.8.4"
+      "vite": "^2.8.6"
     }
   }
 }
