@@ -41,16 +41,8 @@ export class VitestRunner extends ViteNodeRunner {
 
     // support `import.meta.vitest` for test entry
     if (__vitest_worker__.filepath === context.__filename) {
-      Object.defineProperty(
-        context.__vite_ssr_import_meta__,
-        'vitest',
-        {
-          get() {
-          // @ts-expect-error injected
-            return globalThis.__vitest_index__
-          },
-        },
-      )
+      // @ts-expect-error injected untyped global
+      Object.defineProperty(context.__vite_ssr_import_meta__, 'vitest', { get: () => globalThis.__vitest_index__ })
     }
 
     return Object.assign(context, {
