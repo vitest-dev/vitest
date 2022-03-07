@@ -255,7 +255,7 @@ Vitest also provides a way to run tests with in your source code along with the 
 
 This makes the tests share the same closure as the implementations and able to test against private states without exporting. Meanwhile, it also brings the closer feedback loop for development.
 
-To get started, write a `if (import.meta.vitest)` block at the end of your source file, and write the tests inside it. For example:
+To get started, put a `if (import.meta.vitest)` block at the end of your source file and write some tests inside it. For example:
 
 ```ts
 // src/index.ts
@@ -311,7 +311,7 @@ export default defineConfig({
 })
 ```
 
-For reference to [`test/import-meta`](https://github.com/vitest-dev/vitest/tree/main/test/import-meta) for a full example.
+Reference to [`test/import-meta`](https://github.com/vitest-dev/vitest/tree/main/test/import-meta) for the full example.
 
 This feature could be useful for:
 
@@ -319,4 +319,4 @@ This feature could be useful for:
 - Prototyping
 - Inline Assertion
 
-It's recommended to use **separate test files instead** for more complex tests like components or E2E testing.
+It's recommended to **use separate test files instead** for more complex tests like components or E2E testing.
