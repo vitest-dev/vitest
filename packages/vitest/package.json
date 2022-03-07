@@ -1,6 +1,6 @@
 {
   "name": "vitest",
-  "version": "0.5.9",
+  "version": "0.6.0",
   "description": "A blazing fast unit test framework powered by Vite",
   "keywords": [
     "vite",
@@ -31,6 +31,9 @@
     },
     "./globals": {
       "types": "./globals.d.ts"
+    },
+    "./importMeta": {
+      "types": "./importMeta.d.ts"
     },
     "./node": {
       "import": "./dist/node.js",
