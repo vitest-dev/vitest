@@ -4,6 +4,7 @@ import type { UserConsoleLog } from '.'
 
 export type RunMode = 'run' | 'skip' | 'only' | 'todo'
 export type TaskState = RunMode | 'pass' | 'fail'
+
 export interface TaskBase {
   id: string
   name: string
@@ -33,18 +34,18 @@ export interface File extends Suite {
   collectDuration?: number
 }
 
-export interface Test extends TaskBase {
+export interface Test<ExtraContext = {}> extends TaskBase {
   type: 'test'
   suite: Suite
   result?: TaskResult
   fails?: boolean
-  context: TestContext
+  context: TestContext & ExtraContext
 }
 
 export type Task = Test | Suite | File
 
 export type DoneCallback = (error?: any) => void
-export type TestFunction = (context: TestContext) => Awaitable<void>
+export type TestFunction<ExtraContext = {}> = (context: TestContext & ExtraContext) => Awaitable<void>
 
 // jest's ExtractEachCallbackArgs
 type ExtractEachCallbackArgs<T extends ReadonlyArray<any>> = {
@@ -96,16 +97,16 @@ interface EachFunction {
   ) => void
 }
 
-export type TestAPI = ChainableFunction<
+export type TestAPI<ExtraContext = {}> = ChainableFunction<
 'concurrent' | 'only' | 'skip' | 'todo' | 'fails',
-[name: string, fn?: TestFunction, timeout?: number],
+[name: string, fn?: TestFunction<ExtraContext>, timeout?: number],
 void
 > & { each: EachFunction }
 
-export type SuiteAPI = ChainableFunction<
+export type SuiteAPI<ExtraContext = {}> = ChainableFunction<
 'concurrent' | 'only' | 'skip' | 'todo',
 [name: string, factory?: SuiteFactory],
-SuiteCollector
+SuiteCollector<ExtraContext>
 > & { each: EachFunction }
 
 export type HookListener<T extends any[]> = (...args: T) => Awaitable<void>
@@ -117,12 +118,12 @@ export interface SuiteHooks {
   afterEach: HookListener<[TestContext, Suite]>[]
 }
 
-export interface SuiteCollector {
+export interface SuiteCollector<ExtraContext = {}> {
   readonly name: string
   readonly mode: RunMode
   type: 'collector'
-  test: TestAPI
-  tasks: (Suite | Test | SuiteCollector)[]
+  test: TestAPI<ExtraContext>
+  tasks: (Suite | Test | SuiteCollector<ExtraContext>)[]
   collect: (file?: File) => Promise<Suite>
   clear: () => void
   on: <T extends keyof SuiteHooks>(name: T, ...fn: SuiteHooks[T]) => void
