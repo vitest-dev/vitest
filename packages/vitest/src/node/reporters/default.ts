@@ -8,7 +8,6 @@ export class DefaultReporter extends BaseReporter {
   rendererOptions: ListRendererOptions = {} as any
 
   onCollected() {
-    console.trace('here')
     if (this.isTTY) {
       this.rendererOptions.outputStream = this.ctx.outputStream
       const files = this.ctx.state.getFiles(this.watchFilters)

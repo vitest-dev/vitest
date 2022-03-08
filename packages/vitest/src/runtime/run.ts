@@ -223,16 +223,10 @@ export async function runSuites(suites: Suite[]) {
 }
 
 export async function startTests(paths: string[], config: ResolvedConfig) {
-  console.log('here', paths)
-    // await rpc().onCollected(files);
   if (typeof window === 'undefined') {
-    // const files = await collectTests(paths, config)
-    // await rpc().onCollected(files);
-    await rpc().onPathsCollected(paths);
+    rpc().onPathsCollected(paths);
   } else {
     const files = await collectTests(paths, config);
-    debugger
-    console.log(files)
     await rpc().onCollected(files);
     await runSuites(files);
     await sendTasksUpdate();

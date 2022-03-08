@@ -188,7 +188,6 @@ export class Vitest {
 
       const invalidates = Array.from(this.invalidates)
       this.invalidates.clear()
-      console.log(files, invalidates)
       await this.pool.runTests(files, invalidates)
 
       if (hasFailed(this.state.getFiles()))
@@ -332,16 +331,16 @@ export class Vitest {
     if (this.changedTests.has(id) || this.invalidates.has(id) || this.config.watchIgnore.some(i => id.match(i)))
       return false
 
+    if (this.state.filesMap.has(id)) {
+      this.changedTests.add(id)
+      return true
+    }
+
     const mod = this.server.moduleGraph.getModuleById(id)
     if (!mod)
       return false
 
     this.invalidates.add(id)
-
-    if (this.state.filesMap.has(id)) {
-      this.changedTests.add(id)
-      return true
-    }
 
     let rerun = false
     mod.importers.forEach((i) => {

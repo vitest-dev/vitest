@@ -8,7 +8,6 @@ export class StateManager {
   taskFileMap = new WeakMap<Task, File>()
 
   getPaths() {
-    console.log('getPaths', this.pathsSet)
     return Array.from(this.pathsSet)
   }
 
@@ -32,7 +31,6 @@ export class StateManager {
     paths.forEach((path) => {
       this.pathsSet.add(path)
     })
-    console.log('collectPaths', this.pathsSet)
   }
 
   collectFiles(files: File[] = []) {

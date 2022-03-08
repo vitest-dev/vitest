@@ -13,8 +13,6 @@ export async function run(
   const webFiles: string[] = [];
 
   for (const file of files) {
-    // in web env
-
     const code = await fs.readFile(file, "utf-8");
 
     const env =
