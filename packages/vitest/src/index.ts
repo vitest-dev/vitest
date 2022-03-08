@@ -39,6 +39,8 @@ type Promisify<O> = {
 }
 
 declare global {
+  // eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error
+  // @ts-ignore build global namespace conflict
   let __vitest_worker__: WorkerGlobalState
 
   // support augmenting jest.Matchers by other libraries
