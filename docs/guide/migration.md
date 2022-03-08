@@ -1,7 +1,5 @@
 # Migration Guide
 
-<DevelopmentWarning/>
-
 ## Migrating from Jest
 
 Vitest has been designed with a Jest compatible API, in order to make the migration from Jest as simple as possible. Despite those efforts, you may still run into the following differences:

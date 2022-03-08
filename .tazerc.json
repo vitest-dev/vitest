@@ -2,6 +2,7 @@
   "exclude": [
     "vue",
     "esbuild",
-    "puppeteer"
+    "puppeteer",
+    "vite"
   ]
 }

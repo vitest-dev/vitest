@@ -1,0 +1,12 @@
+{
+  "name": "@vitest/test-global-setup-fail",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest"
+  },
+  "devDependencies": {
+    "execa": "^6.1.0",
+    "vitest": "workspace:*"
+  }
+}

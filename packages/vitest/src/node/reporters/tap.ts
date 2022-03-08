@@ -1,7 +1,7 @@
 import type { Vitest } from '../../node'
 import type { ParsedStack, Reporter, Task } from '../../types'
 import { parseStacktrace } from '../../utils/source-map'
-import { IndentedLogger } from './utils/indented-logger'
+import { IndentedLogger } from './renderers/indented-logger'
 
 function yamlString(str: string): string {
   return `"${str.replace(/"/g, '\\"')}"`

@@ -59,6 +59,11 @@ async function _shouldExternalize(
   if (isNodeBuiltin(id))
     return id
 
+  // data: should be processed by native import,
+  // since it is a feature of ESM
+  if (id.startsWith('data:'))
+    return id
+
   id = patchWindowsImportPath(id)
 
   if (matchExternalizePattern(id, options?.inline))
@@ -67,7 +72,6 @@ async function _shouldExternalize(
     return id
 
   const isNodeModule = id.includes('/node_modules/')
-
   id = isNodeModule ? guessCJSversion(id) || id : id
 
   if (matchExternalizePattern(id, defaultInline))
@@ -75,7 +79,8 @@ async function _shouldExternalize(
   if (matchExternalizePattern(id, depsExternal))
     return id
 
-  if (isNodeModule && await isValidNodeImport(id))
+  const isDist = id.includes('/dist/')
+  if ((isNodeModule || isDist) && await isValidNodeImport(id))
     return id
 
   return false

@@ -72,18 +72,18 @@ export class VitestMocker {
     (this.callbacks[event] ?? []).forEach(fn => fn(...args))
   }
 
-  public getSuiteFilepath() {
+  public getSuiteFilepath(): string {
     return __vitest_worker__?.filepath || 'global'
   }
 
   public getMocks() {
     const suite = this.getSuiteFilepath()
-    const suiteMocks = this.mockMap[suite || '']
+    const suiteMocks = this.mockMap[suite]
     const globalMocks = this.mockMap.global
 
     return {
-      ...suiteMocks,
       ...globalMocks,
+      ...suiteMocks,
     }
   }
 
@@ -188,7 +188,7 @@ export class VitestMocker {
 
       if (type.includes('Function') && !obj[k]._isMockFunction) {
         this.spy.spyOn(newObj, k).mockImplementation(() => {})
-        Object.defineProperty(newObj[k], 'length', { value: 0 }) // tinyspy retains length, but jest doesnt
+        Object.defineProperty(newObj[k], 'length', { value: 0 }) // tinyspy retains length, but jest doesn't
       }
     }
     return newObj

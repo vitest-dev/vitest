@@ -8,6 +8,17 @@ test.each([
   expect(a + b).toBe(expected)
 })
 
+test.each([
+  ['string', true],
+  ['string', false],
+])('can be parsed', (a, b) => {
+  const typedA: string = a
+  const typedB: boolean = b
+
+  expect(typedA).toBeDefined()
+  expect(typedB).toBeDefined()
+})
+
 describe.each([
   [1, 1, 2],
   [1, 2, 3],
@@ -55,5 +66,12 @@ describe.each([
 
   test(`returned value not be less than ${expected}`, () => {
     expect(a + b).not.toBeLessThan(expected)
+  })
+})
+
+// issue #794
+describe.each([1, 2, 0])('%s (describe.each 1d)', (num) => {
+  test(`${num} is a number (describe.each 1d)`, () => {
+    expect(typeof num).toEqual('number')
   })
 })

@@ -5,8 +5,21 @@ import Components from 'unplugin-vue-components/vite'
 import Unocss from 'unocss/vite'
 import { presetAttributify, presetIcons, presetUno } from 'unocss'
 import { resolve } from 'pathe'
+import { VitePWA } from 'vite-plugin-pwa'
+import fg from 'fast-glob'
+import {
+  pwaDisabled,
+  pwaFontStylesRegex,
+  pwaFontsRegex,
+  vitestDescription,
+  vitestName,
+  vitestShortName,
+} from './docs-data'
 
 export default defineConfig({
+  define: {
+    'process.env.__PWA_DISABLED__': pwaDisabled,
+  },
   plugins: [
     Components({
       include: [/\.vue/, /\.md/],
@@ -27,6 +40,70 @@ export default defineConfig({
       ],
     }),
     IncludesPlugin(),
+    VitePWA({
+      disable: pwaDisabled,
+      outDir: '.vitepress/dist',
+      registerType: 'autoUpdate',
+      // include all static assets under public/
+      includeAssets: fg.sync('**/*.{png,svg,ico,txt}', { cwd: resolve(__dirname, 'public') }),
+      manifest: {
+        id: '/',
+        name: vitestName,
+        short_name: vitestShortName,
+        description: vitestDescription,
+        theme_color: '#ffffff',
+        icons: [
+          {
+            src: 'pwa-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+          },
+          {
+            src: 'pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+          },
+          {
+            src: 'logo.svg',
+            sizes: '165x165',
+            type: 'image/svg',
+            purpose: 'any maskable',
+          },
+        ],
+      },
+      workbox: {
+        runtimeCaching: [
+          {
+            urlPattern: pwaFontsRegex,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-cache',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 365, // <== 365 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          {
+            urlPattern: pwaFontStylesRegex,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'gstatic-fonts-cache',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 365, // <== 365 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+        ],
+      },
+    }),
   ],
 
   optimizeDeps: {

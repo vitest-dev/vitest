@@ -12,7 +12,7 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "@vueuse/integrations": "^7.6.2",
+    "@vueuse/integrations": "^7.7.1",
     "axios": "^0.26.0",
     "tinyspy": "^0.3.0"
   },
@@ -20,5 +20,8 @@
     "@vitest/ui": "latest",
     "vite": "latest",
     "vitest": "latest"
+  },
+  "stackblitz": {
+    "startCommand": "npm run test:ui"
   }
 }
