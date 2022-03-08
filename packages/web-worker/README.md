@@ -28,8 +28,8 @@ import { defineConfig } from 'vitest/node'
 
 export default defineConfig({
   test: {
-    setupFiles: ['@vitest/addon-web-worker']
-  }
+    setupFiles: ['@vitest/addon-web-worker'],
+  },
 })
 ```
 
@@ -37,17 +37,17 @@ export default defineConfig({
 
 ```ts
 // worker.ts
+import '@vitest/addon-web-worker'
+import MyWorker from '../worker?worker'
+
 self.onmessage = (e) => {
   self.postMessage(`${e.data} world`)
 }
 
 // worker.test.ts
-import '@vitest/addon-web-worker'
-import MyWorker from '../worker?worker'
-
-const worker = new MyWorker()
+let worker = new MyWorker()
 // new Worker is also supported
-const worker = new Worker(new URL('../src/worker.ts', import.meta.url))
+worker = new Worker(new URL('../src/worker.ts', import.meta.url))
 
 worker.postMessage('hello')
 worker.onmessage = (e) => {

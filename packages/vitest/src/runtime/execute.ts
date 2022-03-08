@@ -1,7 +1,7 @@
 import { ViteNodeRunner } from 'vite-node/client'
 import type { ModuleCache, ViteNodeRunnerOptions } from 'vite-node'
-import type { SuiteMocks } from '../types/mocker'
 import { normalizePath } from 'vite'
+import type { SuiteMocks } from '../types/mocker'
 import { VitestMocker } from './mocker'
 
 export interface ExecuteOptions extends ViteNodeRunnerOptions {

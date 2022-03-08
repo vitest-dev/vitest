@@ -1,6 +1,6 @@
 import type { Plugin as PrettyFormatPlugin } from 'pretty-format'
 import type { MatcherState, MatchersObject } from './integrations/chai/types'
-import type { Constructable, InlineConfig, WorkerGlobalState } from './types'
+import type { Constructable, InlineConfig } from './types'
 
 export { suite, test, describe, it } from './runtime/suite'
 
@@ -11,9 +11,6 @@ export * from './integrations/vi'
 
 export * from './types'
 export * from './api/types'
-
-export { VitestRunner } from './runtime/execute'
-export type { ExecuteOptions } from './runtime/execute'
 
 type VitestInlineConfig = InlineConfig
 

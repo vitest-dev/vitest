@@ -1,3 +1,3 @@
-declare function defineInlineWorker(): void;
+declare function defineWebWorker(): void;
 
-export { defineInlineWorker };
+export { defineWebWorker };

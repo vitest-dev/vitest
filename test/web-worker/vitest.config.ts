@@ -4,12 +4,12 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: [
-      './setup.ts'
+      './setup.ts',
     ],
     deps: {
       external: [
-        /packages\/web-worker/
-      ]
-    }
+        /packages\/web-worker/,
+      ],
+    },
   },
 })

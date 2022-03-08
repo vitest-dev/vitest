@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-imports */
 
-import { VitestRunner } from 'vitest'
+import { VitestRunner } from 'vitest/node'
 import type { WorkerGlobalState } from 'vitest'
 
 declare let __vitest_worker__: WorkerGlobalState
