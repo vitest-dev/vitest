@@ -12,3 +12,5 @@ dist
 .idea
 .DS_Store
 bench/test/*/*/
+docs/public/user-avatars
+docs/public/sponsors

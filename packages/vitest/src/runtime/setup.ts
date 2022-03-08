@@ -1,14 +1,19 @@
 import { Console } from 'console'
 import { Writable } from 'stream'
 import { environments } from '../integrations/env'
-import { setupChai } from '../integrations/chai/setup'
 import type { ResolvedConfig } from '../types'
 import { toArray } from '../utils'
+import * as VitestIndex from '../index'
 import { rpc } from './rpc'
 
 let globalSetup = false
 export async function setupGlobalEnv(config: ResolvedConfig) {
-  // should be redeclared for each test
+  Object.defineProperty(globalThis, '__vitest_index__', {
+    value: VitestIndex,
+    enumerable: false,
+  })
+
+  // should be re-declared for each test
   // if run with "threads: false"
   setupDefines(config.defines)
 
@@ -18,7 +23,6 @@ export async function setupGlobalEnv(config: ResolvedConfig) {
   globalSetup = true
 
   setupConsoleLogSpy()
-  await setupChai()
 
   if (config.globals)
     (await import('../integrations/globals')).registerApiGlobally()

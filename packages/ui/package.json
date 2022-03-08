@@ -1,9 +1,17 @@
 {
   "name": "@vitest/ui",
-  "version": "0.5.9",
+  "version": "0.6.0",
   "description": "UI for Vitest",
   "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vitest-dev/vitest.git",
+    "directory": "packages/ui"
+  },
   "type": "module",
+  "files": [
+    "dist"
+  ],
   "exports": {
     ".": {
       "import": "./dist/index.js",
@@ -11,17 +19,9 @@
     },
     "./*": "./*"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/vitest-dev/vitest.git",
-    "directory": "packages/ui"
-  },
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": [
-    "dist"
-  ],
   "scripts": {
     "build": "rimraf dist && pnpm build:node && pnpm build:client",
     "build:client": "vite build",
@@ -37,23 +37,23 @@
     "@types/codemirror": "^5.60.5",
     "@types/d3-force": "^3.0.3",
     "@types/d3-selection": "^3.0.2",
-    "@types/ws": "^8.5.1",
-    "@unocss/reset": "^0.26.4",
-    "@vitejs/plugin-vue": "^2.2.2",
+    "@types/ws": "^8.5.2",
+    "@unocss/reset": "^0.27.2",
+    "@vitejs/plugin-vue": "^2.2.4",
     "@vitest/ws-client": "workspace:*",
-    "@vueuse/core": "^7.7.0",
+    "@vueuse/core": "^7.7.1",
     "codemirror": "^5.65.2",
     "codemirror-theme-vars": "^0.1.1",
-    "d3-graph-controller": "^2.2.12",
+    "d3-graph-controller": "^2.2.14",
     "floating-vue": "^2.0.0-y.0",
     "picocolors": "^1.0.0",
-    "rollup": "^2.68.0",
+    "rollup": "^2.70.0",
     "splitpanes": "^3.1.1",
-    "unocss": "^0.26.4",
+    "unocss": "^0.27.2",
     "unplugin-auto-import": "^0.6.1",
     "unplugin-vue-components": "^0.17.21",
-    "vite-plugin-pages": "^0.20.2",
+    "vite-plugin-pages": "^0.21.4",
     "vue": "^3.2.31",
-    "vue-router": "^4.0.12"
+    "vue-router": "^4.0.13"
   }
 }

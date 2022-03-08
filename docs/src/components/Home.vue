@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { antfuSponsors, coreTeamMembers, patakSponsors } from '../contributors'
-import { lazyLoad } from '../images'
+import { coreTeamMembers } from '../contributors'
 </script>
 <template>
   <div flex flex-col items-center>
@@ -35,19 +34,6 @@ import { lazyLoad } from '../images'
       </div>
     </div>
 
-    <p text="1.4em center yellow-500" leading-7 font-normal tracking-wide>
-      <span i-carbon-warning-alt inline-block align-mid /> Vitest is still in development
-    </p>
-    <p
-      text="1em center"
-      leading-7
-      op60
-      font-normal
-      tracking-wide
-    >
-      It's not recommended to migrate your current testing setups yet<br>You can try it out in new projects if you are willing to get involved and help us
-    </p>
-
     <h2 op50 font-normal pt-10>
       Features
     </h2>
@@ -80,8 +66,11 @@ import { lazyLoad } from '../images'
         <a text-lg h="32px" href="https://github.com/sponsors/antfu" rel="noopener noreferrer">Anthony's Sponsors</a>
         <a href="https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg" target="_blank" rel="noopener noreferrer">
           <img
-            :loading="lazyLoad"
-            :src="antfuSponsors"
+            crossorigin="anonymous"
+            width="768" height="1464"
+            class="resizable-img"
+            loading="lazy"
+            src="/sponsors/antfu.svg"
             alt="Anthony Fu's sponsors"
           >
         </a>
@@ -90,8 +79,11 @@ import { lazyLoad } from '../images'
         <a text-lg h="32px" href="https://github.com/sponsors/patak-dev" rel="noopener noreferrer">Patak's Sponsors</a>
         <a href="https://patak.dev/sponsors.svg" target="_blank" rel="noopener noreferrer">
           <img
-            :loading="lazyLoad"
-            :src="patakSponsors"
+            crossorigin="anonymous"
+            width="768" height="722"
+            class="resizable-img"
+            loading="lazy"
+            src="/sponsors/patak-dev.svg"
             alt="Patak's sponsors"
           >
         </a>

@@ -3,6 +3,10 @@ import { execa } from 'execa'
 import { expect, it } from 'vitest'
 
 it('should fail', async() => {
+  // in Windows child_process is very unstable, we skip testing it
+  if (process.platform === 'win32' && process.env.CI)
+    return
+
   const root = resolve(__dirname, '../fixtures')
   let error: any
   await execa('npx', ['vitest'], {
@@ -24,4 +28,4 @@ it('should fail', async() => {
     .find(i => i.includes('Error: '))
     ?.trim()
   expect(msg).toBe('Error: error')
-}, 20000)
+}, 50000)

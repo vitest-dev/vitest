@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
     "baseUrl": ".",
-    "module": "ESNext",
-    "target": "es2016",
+    "module": "esnext",
+    "target": "esnext",
     "lib": ["DOM", "ESNext"],
     "strict": true,
     "esModuleInterop": true,

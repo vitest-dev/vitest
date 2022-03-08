@@ -12,12 +12,12 @@
     "@emotion/react": "^11.8.1",
     "@emotion/styled": "^11.8.1",
     "@mui/lab": "*",
-    "@mui/material": "^5.4.3",
+    "@mui/material": "^5.4.4",
     "history": "^5.3.0",
     "notistack": "^2.0.3",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "react-router-dom": "^6.2.1",
+    "react-router-dom": "^6.2.2",
     "recharts": "^2.1.9",
     "swr": "^1.2.2"
   },
@@ -30,5 +30,8 @@
     "jsdom": "^19.0.0",
     "vite": "latest",
     "vitest": "latest"
+  },
+  "stackblitz": {
+    "startCommand": "npm run test:ui"
   }
 }

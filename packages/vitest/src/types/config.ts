@@ -35,6 +35,13 @@ export interface InlineConfig {
   exclude?: string[]
 
   /**
+   * Include globs for in-source test files
+   *
+   * @default []
+   */
+  includeSource?: string[]
+
+  /**
    * Handling for dependencies inlining or externalizing
    */
   deps?: {

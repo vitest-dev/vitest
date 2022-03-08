@@ -4,8 +4,10 @@ import stripAnsi from 'strip-ansi'
 import type { SnapshotSummary, Task } from '../../../types'
 import { slash } from '../../../utils'
 import { F_CHECK, F_CROSS, F_DOT, F_DOWN, F_DOWN_RIGHT, F_LONG_DASH, F_POINTER } from '../../../utils/figures'
+import type { SuiteHooks } from './../../../types/tasks'
 
 export const spinnerMap = new WeakMap<Task, () => string>()
+export const hookSpinnerMap = new WeakMap<Task, Map<string, () => string>>()
 export const pointer = c.yellow(F_POINTER)
 export const skipped = c.dim(c.gray(F_DOWN))
 
@@ -135,6 +137,25 @@ export function getStateSymbol(task: Task) {
   }
 
   return ' '
+}
+
+export function getHookStateSymbol(task: Task, hookName: keyof SuiteHooks) {
+  const state = task.result?.hooks?.[hookName]
+
+  // pending
+  if (state && state === 'run') {
+    let spinnerMap = hookSpinnerMap.get(task)
+    if (!spinnerMap) {
+      spinnerMap = new Map<string, () => string>()
+      hookSpinnerMap.set(task, spinnerMap)
+    }
+    let spinner = spinnerMap.get(hookName)
+    if (!spinner) {
+      spinner = elegantSpinner()
+      spinnerMap.set(hookName, spinner)
+    }
+    return c.yellow(spinner())
+  }
 }
 
 export const spinnerFrames = process.platform === 'win32'

@@ -17,5 +17,8 @@
     "vite-plugin-vue2": "^1.9.3",
     "vitest": "latest",
     "vue-template-compiler": "2.6.14"
+  },
+  "stackblitz": {
+    "startCommand": "npm run test"
   }
 }

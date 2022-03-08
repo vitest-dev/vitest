@@ -10,12 +10,15 @@
   },
   "devDependencies": {
     "@types/react": "^17.0.39",
-    "@types/react-dom": "^17.0.11",
+    "@types/react-dom": "^17.0.13",
     "@vitejs/plugin-react": "1.2.0",
     "@vitest/ui": "latest",
     "enzyme": "3.11.0",
     "enzyme-adapter-react-16": "1.15.6",
     "vite": "latest",
     "vitest": "latest"
+  },
+  "stackblitz": {
+    "startCommand": "npm run test:ui"
   }
 }

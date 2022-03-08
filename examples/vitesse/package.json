@@ -9,11 +9,14 @@
     "vue": "^3.2.24"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^2.2.2",
+    "@vitejs/plugin-vue": "^2.2.4",
     "@vue/test-utils": "^2.0.0-rc.18",
     "happy-dom": "latest",
     "unplugin-auto-import": "^0.6.1",
     "unplugin-vue-components": "^0.17.21",
     "vitest": "latest"
+  },
+  "stackblitz": {
+    "startCommand": "npm run test"
   }
 }

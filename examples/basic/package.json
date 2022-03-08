@@ -1,9 +1,9 @@
 {
   "name": "vitest-test",
   "private": true,
-  "main": "index.js",
   "license": "MIT",
   "type": "module",
+  "main": "index.js",
   "scripts": {
     "test": "vitest",
     "test:ui": "vitest --ui",
@@ -13,5 +13,8 @@
     "@vitest/ui": "latest",
     "vite": "latest",
     "vitest": "latest"
+  },
+  "stackblitz": {
+    "startCommand": "npm run test:ui"
   }
 }
