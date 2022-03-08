@@ -1,3 +1,3 @@
-import { defineInlineWorker } from './pure'
+import { defineWebWorker } from './pure'
 
-defineInlineWorker()
+defineWebWorker()

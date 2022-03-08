@@ -42,8 +42,6 @@ type Promisify<O> = {
 }
 
 declare global {
-  let __vitest_worker__: WorkerGlobalState
-
   // support augmenting jest.Matchers by other libraries
   namespace jest {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

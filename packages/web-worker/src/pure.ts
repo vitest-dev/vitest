@@ -61,7 +61,7 @@ class InlineWorkerRunner extends VitestRunner {
   }
 }
 
-export function defineInlineWorker() {
+export function defineWebWorker() {
   if ('Worker' in globalThis) return
 
   const { config, rpc, mockMap, moduleCache } = __vitest_worker__
