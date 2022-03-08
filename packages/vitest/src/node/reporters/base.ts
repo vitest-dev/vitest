@@ -20,7 +20,7 @@ export abstract class BaseReporter implements Reporter {
   start = 0
   end = 0
   watchFilters?: string[]
-  isTTY = process.stdout.isTTY && !process.env.CI
+  isTTY = process.stdout.isTTY
   ctx: Vitest = undefined!
 
   constructor() {
