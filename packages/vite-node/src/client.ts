@@ -57,7 +57,7 @@ export class ViteNodeRunner {
       // and wasn't transformed by Vite
       if (this.shouldResolveId(dep)) {
         const resolvedDep = await this.options.resolveId(dep, id)
-        dep = resolvedDep?.id?.slice(this.root.length) || dep
+        dep = resolvedDep?.id?.replace(this.root, '') || dep
       }
       if (callstack.includes(dep)) {
         if (!this.moduleCache.get(dep)?.exports)
