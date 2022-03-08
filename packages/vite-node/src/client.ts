@@ -1,7 +1,7 @@
 import { createRequire } from 'module'
 import { fileURLToPath, pathToFileURL } from 'url'
 import vm from 'vm'
-import { dirname, isAbsolute, resolve } from 'pathe'
+import { dirname, extname, isAbsolute, resolve } from 'pathe'
 import { isNodeBuiltin } from 'mlly'
 import { isPrimitive, normalizeId, slash, toFilePath } from './utils'
 import type { ModuleCache, ViteNodeRunnerOptions } from './types'
@@ -57,7 +57,7 @@ export class ViteNodeRunner {
       // and wasn't transformed by Vite
       if (this.shouldResolveId(dep)) {
         const resolvedDep = await this.options.resolveId(dep, id)
-        dep = resolvedDep?.id || dep
+        dep = resolvedDep?.id?.slice(this.root.length) || dep
       }
       if (callstack.includes(dep)) {
         if (!this.moduleCache.get(dep)?.exports)
@@ -144,7 +144,7 @@ export class ViteNodeRunner {
     if (isNodeBuiltin(dep))
       return false
 
-    return !isAbsolute(dep)
+    return !isAbsolute(dep) || !extname(dep)
   }
 
   /**
