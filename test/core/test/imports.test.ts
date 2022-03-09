@@ -1,30 +1,30 @@
 import { expect, test } from 'vitest'
 
 test('dynamic relative import works', async() => {
-  const importTimeout = await import('./../src/timeout')
+  const stringTimeoutMod = await import('./../src/timeout')
 
   const timeoutPath = './../src/timeout'
-  const dynamicTimeout = await import(timeoutPath)
+  const variableTimeoutMod = await import(timeoutPath)
 
-  expect(importTimeout).toBe(dynamicTimeout)
+  expect(stringTimeoutMod).toBe(variableTimeoutMod)
 })
 
 test('dynamic aliased import works', async() => {
-  const importTimeout = await import('./../src/timeout')
+  const stringTimeoutMod = await import('./../src/timeout')
 
   const timeoutPath = '@/timeout'
-  const dynamicTimeout = await import(timeoutPath)
+  const variableTimeoutMod = await import(timeoutPath)
 
-  expect(importTimeout).toBe(dynamicTimeout)
+  expect(stringTimeoutMod).toBe(variableTimeoutMod)
 })
 
 test('dynamic absolute import works', async() => {
-  const importTimeout = await import('./../src/timeout')
+  const stringTimeoutMod = await import('./../src/timeout')
 
   const timeoutPath = '/src/timeout'
-  const dynamicTimeout = await import(timeoutPath)
+  const variableTimeoutMod = await import(timeoutPath)
 
-  expect(importTimeout).toBe(dynamicTimeout)
+  expect(stringTimeoutMod).toBe(variableTimeoutMod)
 })
 
 test('data with dynamic import works', async() => {
