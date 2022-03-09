@@ -372,6 +372,9 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     )
   })
   def(['toThrow', 'toThrowError'], function(expected?: string | Constructable | RegExp | Error) {
+    if (typeof expected === 'string' || typeof expected === 'undefined' || expected instanceof RegExp)
+      return this.throws(expected)
+
     const obj = this._obj
     const promise = utils.flag(this, 'promise')
     let thrown: any = null
@@ -399,7 +402,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       )
     }
 
-    if (expected && expected instanceof Error) {
+    if (expected instanceof Error) {
       return this.assert(
         thrown && expected.message === thrown.message,
         `expected error to have message: ${expected.message}`,
@@ -409,7 +412,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       )
     }
 
-    if (expected && typeof (expected as any).asymmetricMatch === 'function') {
+    if (typeof (expected as any).asymmetricMatch === 'function') {
       const matcher = expected as any as AsymmetricMatcher<any>
       return this.assert(
         thrown && matcher.asymmetricMatch(thrown),
@@ -420,7 +423,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       )
     }
 
-    return this.to.throws(expected)
+    throw new Error(`"toThrow" expects string, RegExp, function, Error instance or asymmetric matcher, got "${typeof expected}"`)
   })
   def(['toHaveReturned', 'toReturn'], function() {
     const spy = getSpy(this)
