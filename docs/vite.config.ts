@@ -72,6 +72,7 @@ export default defineConfig({
         ],
       },
       workbox: {
+        navigateFallbackDenylist: [/^\/new$/],
         runtimeCaching: [
           {
             urlPattern: pwaFontsRegex,
