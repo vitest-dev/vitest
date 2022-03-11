@@ -1,3 +1,4 @@
+import { performance } from "perf_hooks";
 import { relative } from "path";
 import type { File, ResolvedConfig, Suite, TaskBase } from "../types";
 import { clearContext, defaultSuite } from "./suite";
@@ -44,6 +45,7 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
       const defaultTasks = await defaultSuite.collect(file);
 
       setHooks(file, getHooks(defaultTasks));
+      console.log(defaultTasks, context, [...defaultTasks.tasks, ...context.tasks]);
 
       for (const c of [...defaultTasks.tasks, ...context.tasks]) {
         if (c.type === "test") {
@@ -62,7 +64,8 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
         state: "fail",
         error: processError(e),
       };
-      // not sure thy, this this line is needed to trigger the error
+      console.error(e);
+      // not sure why, this this line is needed to trigger the error
       process.stdout.write("\0");
     }
 

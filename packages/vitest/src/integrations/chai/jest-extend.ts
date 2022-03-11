@@ -1,4 +1,4 @@
-import chai, { util } from 'chai'
+import { util, Assertion } from 'chai'
 import { getState } from './jest-expect'
 
 import * as matcherUtils from './jest-matcher-utils'
@@ -76,7 +76,7 @@ function JestExtendPlugin(expects: MatchersObject): ChaiPlugin {
 
       const expectAssertionWrapper = isAsyncFunction(expectAssertion) ? expectAsyncWrapper : expectSyncWrapper
 
-      utils.addMethod(chai.Assertion.prototype, expectAssertionName, expectAssertionWrapper)
+      utils.addMethod(Assertion.prototype, expectAssertionName, expectAssertionWrapper)
     })
   }
 }

@@ -9,6 +9,9 @@
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
     },
+    "./vitest": {
+      "import": "./dist/vitest.js"
+    },
     "./*": "./*"
   },
   "repository": {
@@ -26,9 +29,9 @@
     "build": "rimraf dist && pnpm build:node && pnpm build:client",
     "build:client": "vite build",
     "build:node": "rollup -c",
-    "dev:client": "vite",
-    "dev": "rollup -c --watch --watch.include=node/**",
-    "dev:ui": "run-p dev dev:client"
+    "dev:client": "vite build --watch",
+    "dev:node": "rollup -c --watch --watch.include=node/**",
+    "dev": "run-p dev:node dev:client"
   },
   "dependencies": {
     "node-module-polyfill": "^1.0.1",

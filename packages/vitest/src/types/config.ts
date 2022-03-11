@@ -296,6 +296,11 @@ export interface UserConfig extends InlineConfig {
   dom?: boolean
 
   /**
+   * Use web environment 
+   */
+  web?: boolean
+
+  /**
    * Pass with no tests
    */
   passWithNoTests?: boolean

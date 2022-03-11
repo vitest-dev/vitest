@@ -1,4 +1,4 @@
-import chai from 'chai'
+import * as chai from 'chai'
 import { getState, setState } from './jest-expect'
 
 export { assert, should } from 'chai'

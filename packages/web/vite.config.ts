@@ -1,4 +1,3 @@
-import { resolve } from "pathe";
 import { defineConfig } from "vite";
 
 import nodePolyfills from "rollup-plugin-node-polyfills";
@@ -11,14 +10,13 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@vitest/ws-client": `${resolve(__dirname, "../ws-client/src/index.ts")}`,
-      vitest: `vitest/web`,
+      vitest: `/vitest.js`,
     },
   },
   plugins: [
     {
       enforce: "pre",
-      name: "@vitest/web",
+      name: "vitest:web",
       resolveId(id, importer) {
         id = normalizeId(id);
         if (id === "tty") {
@@ -30,13 +28,19 @@ export default defineConfig({
         if (id === "path") {
           return nodeConfig.resolveId(normalizeId(id), importer!);
         }
+        if (id === "module") {
+          return "external:module";
+        }
+        if (id === "perf_hooks") {
+          return "external:perf_hooks";
+        }
         return null;
       },
       load(id) {
-        if (normalizeId(id) === "module") {
+        if (normalizeId(id) === "external:module") {
           return `export const createRequire = () => {}`;
         }
-        if (normalizeId(id) === "perf_hooks") {
+        if (normalizeId(id) === "external:perf_hooks") {
           return `export const performance = globalThis.performance`;
         }
         return null;
@@ -44,7 +48,10 @@ export default defineConfig({
     },
   ],
   build: {
-    outDir: "./dist/client",
+    minify: false,
+    rollupOptions: { external: ["/vitest.js"] },
+    outDir: "./dist",
+    emptyOutDir: false
   },
 });
 

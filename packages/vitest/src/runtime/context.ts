@@ -1,9 +1,24 @@
 import type { Awaitable, DoneCallback, RuntimeContext, SuiteCollector, TestFunction } from '../types'
 
+declare global {
+  // @ts-ignore
+  let __vitest_worker__: import('vitest').WorkerGlobalState & {
+    __context?: RuntimeContext
+    __defaultSuite: SuiteCollector
+  }
+}
+
 export const context: RuntimeContext = {
   tasks: [],
   currentSuite: null,
 }
+
+// debugger
+// if (typeof window !== 'undefined' && __vitest_worker__.__context) {
+//   Object.assign(context, __vitest_worker__.__context)
+// } else {
+//   __vitest_worker__.__context = context
+// }
 
 export function collectTask(task: SuiteCollector) {
   context.currentSuite?.tasks.push(task)

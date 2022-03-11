@@ -1,6 +1,7 @@
 import { it, expect } from "vitest";
 
 console.log('basic')
+debugger
 
 it("basic", async () => {
   const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));

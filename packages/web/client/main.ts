@@ -1,9 +1,9 @@
-import { createClient, getTasks } from "@vitest/ws-client";
+import { createClient } from "@vitest/ws-client";
 
 // @ts-ignore
-globalThis.process = { env: {}, argv: [] };
+globalThis.process = { env: {}, argv: [], stdout: { write: () => {} } };
 
-export const PORT = import.meta.hot ? "3000" : location.port;
+export const PORT = import.meta.hot ? "51204" : location.port;
 export const HOST = [location.hostname, PORT].filter(Boolean).join(":");
 export const ENTRY_URL = `${
   location.protocol === "https:" ? "wss:" : "ws:"
@@ -23,10 +23,7 @@ export const client = createClient(ENTRY_URL, {
 
       await setupGlobalEnv(config);
 
-      await startTests(
-        paths,
-        config
-      );
+      await startTests(paths, config);
 
       await client.rpc.onFinished();
       await client.rpc.onWatcherStart();
@@ -45,7 +42,7 @@ ws.addEventListener("open", async () => {
     rpc: client.rpc,
   };
   // @ts-ignore
-  globalThis.process = { env: {}, argv: [] };
+  globalThis.process = { env: {}, argv: [], stdout: { write: () => {} } };
 
   // @ts-ignore
   globalThis.global = globalThis;
@@ -54,15 +51,12 @@ ws.addEventListener("open", async () => {
   const files = await client.rpc.getPaths();
 
   const { startTests, setupGlobalEnv } = (await import(
-    "vitest"
+    /* @vite-ignore */ "vitest"
   )) as unknown as typeof import("vitest/dist/web");
 
   await setupGlobalEnv(config);
 
-  await startTests(
-    files,
-    config
-  );
+  await startTests(files, config);
 
   await client.rpc.onFinished();
   await client.rpc.onWatcherStart();

@@ -1,9 +1,17 @@
 import { format } from 'util'
-import type { File, MutableArray, RunMode, Suite, SuiteAPI, SuiteCollector, SuiteFactory, SuiteHooks, Task, Test, TestAPI, TestFunction } from '../types'
+import type { File, MutableArray, RunMode, RuntimeContext, Suite, SuiteAPI, SuiteCollector, SuiteFactory, SuiteHooks, Task, Test, TestAPI, TestFunction } from '../types'
 import { isObject, noop, toArray } from '../utils'
 import { createChainable } from './chain'
 import { collectTask, context, normalizeTest, runWithSuite } from './context'
 import { getHooks, setFn, setHooks } from './map'
+
+declare global {
+  // @ts-ignore
+  let __vitest_worker__: import('vitest').WorkerGlobalState & {
+    __context?: RuntimeContext
+    __defaultSuite: SuiteCollector
+  }
+}
 
 // apis
 export const suite = createSuite()
@@ -31,6 +39,14 @@ export const it = test
 
 // implementations
 export const defaultSuite = suite('')
+
+// debugger
+// if (typeof window !== 'undefined' && __vitest_worker__.__defaultSuite) {
+//   Object.assign(defaultSuite, __vitest_worker__.__defaultSuite)
+// } else {
+//   __vitest_worker__.__defaultSuite = defaultSuite
+// }
+
 
 export function clearContext() {
   context.tasks.length = 0

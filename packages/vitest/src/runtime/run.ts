@@ -20,8 +20,6 @@ import { getFn, getHooks } from "./map";
 import { rpc } from "./rpc";
 import { collectTests } from "./collect";
 import { processError } from "./error";
-import { WebSocketHandlers } from "../api/types";
-import { BirpcReturn } from "birpc";
 
 export async function callSuiteHook<T extends keyof SuiteHooks>(
   suite: Suite,
@@ -261,6 +259,6 @@ export function clearModuleMocks() {
   else if (clearMocks) vi.clearAllMocks();
 }
 
-declare global {
-  let __vitest_worker__: import("vitest").WorkerGlobalState;
-}
+// declare global {
+//   let __vitest_worker__: import("vitest").WorkerGlobalState;
+// }
