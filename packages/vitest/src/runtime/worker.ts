@@ -4,6 +4,7 @@ import type { ModuleCache, ResolvedConfig, WorkerContext, WorkerRPC } from '../t
 import { distDir } from '../constants'
 import { executeInViteNode } from './execute'
 import { rpc } from './rpc'
+import '../internal'
 
 let _viteNode: {
   run: (files: string[], config: ResolvedConfig) => Promise<void>
@@ -93,8 +94,4 @@ export async function run(ctx: WorkerContext) {
   init(ctx)
   const { run } = await startViteNode(ctx)
   return run(ctx.files, ctx.config)
-}
-
-declare global {
-  let __vitest_worker__: import('vitest').WorkerGlobalState
 }
