@@ -68,6 +68,22 @@ Externalize means that Vite will bypass the package to native Node. Externalized
 
 Vite will process inlined modules. This could be helpful to handle packages that ship `.js` in ESM format (that Node can't handle).
 
+#### deps.fallbackCJS
+
+- **Type** `boolean`
+- **Default:** `false`
+
+When a dependency is a valid ESM package, try to guess the cjs version based on the path.
+
+This might potentially cause some misalignment if a package has different logic in ESM and CJS mode.
+
+#### deps.interopDefault
+
+- **Type:** `boolean`
+- **Default:** `true`
+
+Interpret CJS module's default as named exports.
+
 ### globals
 
 - **Type:** `boolean`
@@ -222,10 +238,6 @@ Maximum number of threads
 - **Default:** _available CPUs_
 
 Minimum number of threads
-
-### interopDefault
-
-- **Type:** `boolean`
 
 ### testTimeout
 
