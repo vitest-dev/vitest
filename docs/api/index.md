@@ -1506,4 +1506,16 @@ If function returned `'result1`, then threw and error, then `mock.results` will 
 
 ### mock.instances
 
-Currently, this property is not implemented.
+This is an array that contains all of the instances that have been instantiated from this mock function using new.
+
+If a function was instantiated twice, then `mock.instances` will be:
+
+```js
+const Spy = vi.fn()
+
+const a = new Spy()
+const b = new Spy()
+
+mockFn.mock.instances[0] === a // true
+mockFn.mock.instances[1] === b // true
+```

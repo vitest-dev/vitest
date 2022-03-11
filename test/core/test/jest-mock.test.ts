@@ -227,6 +227,40 @@ describe('jest mock compat layer', () => {
     ])
   })
 
+  it('instances', () => {
+    const Spy = vi.fn(() => ({}))
+
+    // @ts-expect-error ignore
+    // eslint-disable-next-line no-new
+    const a = new Spy()
+
+    // @ts-expect-error ignore
+    // eslint-disable-next-line no-new
+    const b = new Spy()
+
+    expect(Spy.mock.instances.length).toBe(2)
+    expect(Spy.mock.instances[0]).toBe(a)
+    expect(Spy.mock.instances[1]).toBe(b)
+  })
+
+  it('instances throwing', () => {
+    const Spy = vi.fn(() => {
+      // eslint-disable-next-line no-throw-literal
+      throw 'error'
+    })
+
+    expect(Spy.mock.instances.length).toBe(0)
+
+    try {
+      // @ts-expect-error ignore
+      // eslint-disable-next-line no-new
+      new Spy()
+    }
+    catch {}
+
+    expect(Spy.mock.instances.length).toBe(0)
+  })
+
   it.todo('mockRejectedValue')
   it.todo('mockResolvedValue')
 })

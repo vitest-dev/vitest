@@ -146,7 +146,6 @@ function enhanceSpy<TArgs extends any[], TReturns>(
 
   let implementation: ((...args: TArgs) => TReturns) | undefined
 
-  let instances: any[] = []
   let invocations: number[] = []
 
   const mockContext = {
@@ -154,7 +153,7 @@ function enhanceSpy<TArgs extends any[], TReturns>(
       return stub.calls
     },
     get instances() {
-      return instances
+      return stub.results.filter(r => r[0] === 'ok').map(r => r[1])
     },
     get invocationCallOrder() {
       return invocations
@@ -179,7 +178,6 @@ function enhanceSpy<TArgs extends any[], TReturns>(
 
   stub.mockClear = () => {
     stub.reset()
-    instances = []
     invocations = []
     return stub
   }
@@ -231,7 +229,6 @@ function enhanceSpy<TArgs extends any[], TReturns>(
   util.addProperty(stub, 'mock', () => mockContext)
 
   stub.willCall(function(this: unknown, ...args) {
-    instances.push(this)
     invocations.push(++callOrder)
     const impl = onceImplementations.shift() || implementation || stub.getOriginal() || (() => {})
     return impl.apply(this, args)
