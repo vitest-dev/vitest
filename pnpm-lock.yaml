@@ -142,7 +142,7 @@ importers:
       lit: 2.2.0
     devDependencies:
       '@vitest/ui': link:../../packages/ui
-      happy-dom: 2.46.0
+      happy-dom: 2.46.3
       vite: 2.8.6
       vitest: link:../../packages/vitest
 
@@ -412,7 +412,7 @@ importers:
       solid-js: 1.3.10
     devDependencies:
       jsdom: 19.0.0
-      solid-start: 0.1.0-alpha.65_solid-js@1.3.10+vite@2.8.6
+      solid-start: 0.1.0-alpha.66_solid-js@1.3.10+vite@2.8.6
       solid-testing-library: 0.3.0_solid-js@1.3.10
       vitest: link:../../packages/vitest
 
@@ -446,7 +446,7 @@ importers:
     devDependencies:
       '@vitejs/plugin-vue': 2.2.4_vite@2.8.6+vue@3.2.26
       '@vue/test-utils': 2.0.0-rc.18_vue@3.2.26
-      happy-dom: 2.46.0
+      happy-dom: 2.46.3
       unplugin-auto-import: 0.6.1_53c174e4a87b2d4cdf7e6c5220b293ba
       unplugin-vue-components: 0.17.21_2c38086ff0f13f691258b880e48d3773
       vitest: link:../../packages/vitest
@@ -463,7 +463,7 @@ importers:
     devDependencies:
       '@vitejs/plugin-vue': 2.2.4_vite@2.8.6+vue@3.2.31
       '@vue/test-utils': 2.0.0-rc.18_vue@3.2.31
-      happy-dom: 2.46.0
+      happy-dom: 2.46.3
       vitest: link:../../packages/vitest
 
   examples/vue-jsx:
@@ -479,7 +479,7 @@ importers:
       '@vitejs/plugin-vue': 2.2.4_vite@2.8.6+vue@3.2.26
       '@vitejs/plugin-vue-jsx': 1.3.8
       '@vue/test-utils': 2.0.0-rc.18_vue@3.2.26
-      happy-dom: 2.46.0
+      happy-dom: 2.46.3
       vite: 2.8.6
       vitest: link:../../packages/vitest
       vue: 3.2.26
@@ -12356,6 +12356,20 @@ packages:
       - encoding
     dev: true
 
+  /happy-dom/2.46.3:
+    resolution: {integrity: sha512-bpzk1NjkB0EGRxb1Nxwjd87VjWcYYFS3v4BuVAZAnpBJAd/Uz3AFgE/0g0ntc30yfD8DzPo9Gd/2nicP0xGiWg==}
+    dependencies:
+      css.escape: 1.5.1
+      he: 1.2.0
+      node-fetch: 2.6.7
+      sync-request: 6.1.0
+      webidl-conversions: 7.0.0
+      whatwg-encoding: 1.0.5
+      whatwg-mimetype: 2.3.0
+    transitivePeerDependencies:
+      - encoding
+    dev: true
+
   /has-bigints/1.0.1:
     resolution: {integrity: sha512-LSBS2LjbNBTf6287JEbEzvJgftkF5qFkmCo9hDRpAzKhUOlJ+hx8dd4USs00SgsUNwc4617J9ki5YtEClM2ffA==}
     dev: true
@@ -17023,12 +17037,8 @@ packages:
       solid-js: 1.3.10
     dev: true
 
-  /solid-ssr/1.3.7:
-    resolution: {integrity: sha512-0nZ8kFZ105pmMuaVzIwTUUyugV15Jr7HGF2e5BwhoKK0WjAmICiWEbkQPu0zUa0wN99lbpbpmRevsrGa0bextA==}
-    dev: true
-
-  /solid-start-node/0.1.0-alpha.65_9cd646126f4b6cfe0ef0d0746ed412aa:
-    resolution: {integrity: sha512-/d+7OMoP+FxopW7bb9CeC9UNaZ6PVsh2plkJnwF5JvS0iED82ALdkG8P1LqekdkIzOZCRfJCIhYewQZPl+2eTg==}
+  /solid-start-node/0.1.0-alpha.66_0ea384134918338f1c5b6cb6cab097e3:
+    resolution: {integrity: sha512-K70hiZzTzKmA6RSBYOODFpYKGkzNBwattiFSHBFdhucvQiEHGyP3IsaCs5TKXuav/oX4pWRzE3ssUcPF5B6N7A==}
     requiresBuild: true
     peerDependencies:
       solid-start: next
@@ -17042,14 +17052,14 @@ packages:
       polka: 1.0.0-next.22
       rollup: 2.70.0
       sirv: 1.0.19
-      solid-start: 0.1.0-alpha.65_solid-js@1.3.10+vite@2.8.6
+      solid-start: 0.1.0-alpha.66_solid-js@1.3.10+vite@2.8.6
       undici: 4.13.0
       vite: 2.8.6
     dev: true
     optional: true
 
-  /solid-start/0.1.0-alpha.65_solid-js@1.3.10+vite@2.8.6:
-    resolution: {integrity: sha512-U1YHcGjiPTt+hEUKw5faAlk3rjuHJi+OoFD86cvEZOLNZTc3jqo8VE1F5m1ofUUGD8DtwMk/tcfpfTY2lTFDQg==}
+  /solid-start/0.1.0-alpha.66_solid-js@1.3.10+vite@2.8.6:
+    resolution: {integrity: sha512-HGJUQy2FIxfwQZTFpfx2ibjBoLT8fTCKpGvGwl215RSl7zDve9DFMuSTqRZiay0l4ERbu6uziS+gFg6tk3V0CA==}
     hasBin: true
     peerDependencies:
       solid-app-router: ^0.3.0
@@ -17074,13 +17084,12 @@ packages:
       sade: 1.8.1
       sirv: 1.0.19
       solid-js: 1.3.10
-      solid-ssr: 1.3.7
       undici: 4.13.0
       vite: 2.8.6
       vite-plugin-inspect: 0.3.14_vite@2.8.6
       vite-plugin-solid: 2.2.6
     optionalDependencies:
-      solid-start-node: 0.1.0-alpha.65_9cd646126f4b6cfe0ef0d0746ed412aa
+      solid-start-node: 0.1.0-alpha.66_0ea384134918338f1c5b6cb6cab097e3
     transitivePeerDependencies:
       - less
       - sass
