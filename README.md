@@ -43,7 +43,7 @@ Read the [documentation](https://vitest.dev/).
 - Filtering, timeouts, concurrent for suite and tests
 
 ```ts
-import { it, describe, expect, assert } from 'vitest'
+import { assert, describe, expect, it } from 'vitest'
 
 describe('suite name', () => {
   it('foo', () => {

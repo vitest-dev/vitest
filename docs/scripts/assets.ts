@@ -58,6 +58,14 @@ ${prefetchImg}
 \t<link rel="manifest" href="/manifest.webmanifest">\n</head>`,
       )
     }
+    else {
+      html = html.replace(
+        '</head>',
+        `
+${prefetchImg}
+</head>`,
+      )
+    }
 
     // TODO: dark/light theme, don't remove yet
     // html = html.replace(

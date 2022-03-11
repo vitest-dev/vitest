@@ -3,7 +3,15 @@
   "version": "0.6.0",
   "description": "UI for Vitest",
   "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vitest-dev/vitest.git",
+    "directory": "packages/ui"
+  },
   "type": "module",
+  "files": [
+    "dist"
+  ],
   "exports": {
     ".": {
       "import": "./dist/index.js",
@@ -11,17 +19,9 @@
     },
     "./*": "./*"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/vitest-dev/vitest.git",
-    "directory": "packages/ui"
-  },
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": [
-    "dist"
-  ],
   "scripts": {
     "build": "rimraf dist && pnpm build:node && pnpm build:client",
     "build:client": "vite build",
