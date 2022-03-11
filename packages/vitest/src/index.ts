@@ -1,6 +1,6 @@
 import type { Plugin as PrettyFormatPlugin } from 'pretty-format'
 import type { MatcherState, MatchersObject } from './integrations/chai/types'
-import type { Constructable, InlineConfig, WorkerGlobalState } from './types'
+import type { Constructable, InlineConfig } from './types'
 
 export { suite, test, describe, it } from './runtime/suite'
 
@@ -39,10 +39,6 @@ type Promisify<O> = {
 }
 
 declare global {
-  // eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error
-  // @ts-ignore build global namespace conflict
-  let __vitest_worker__: WorkerGlobalState
-
   // support augmenting jest.Matchers by other libraries
   namespace jest {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
