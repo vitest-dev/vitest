@@ -14,7 +14,6 @@ export default (base = "/") => {
       id = normalizeId(id);
 
       if (id === "vitest") {
-        console.log(id, "/vitest.js");
         return "/vitest.js";
       }
       if (id === "tty") {
@@ -39,7 +38,6 @@ export default (base = "/") => {
     },
     async configureServer(server) {
       const clientDist = resolve(fileURLToPath(import.meta.url), "..");
-      console.log(clientDist);
       server.middlewares.use(
         base,
         sirv(clientDist, {
