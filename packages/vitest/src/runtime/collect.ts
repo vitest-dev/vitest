@@ -7,15 +7,15 @@ import { processError } from "./error";
 import { context } from "./context";
 import { runSetupFiles } from "./setup";
 
-async function hash(str: string, length = 10) {
-  return str;
-  if (typeof window === "undefined") {
-    const { createHash } = await import("crypto");
-
-    return createHash("md5").update(str).digest("hex").slice(0, length);
-  } else {
-    return str;
+function hash(str: string): string {
+  let hash = 0;
+  if (str.length === 0) return `${hash}`;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash = hash & hash; // Convert to 32bit integer
   }
+  return `${hash}`;
 }
 
 export async function collectTests(paths: string[], config: ResolvedConfig) {
@@ -24,7 +24,7 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
   for (const filepath of paths) {
     const path = relative(config.root, filepath);
     const file: File = {
-      id: await hash(path),
+      id: hash(path),
       name: path,
       type: "suite",
       mode: "run",
@@ -45,7 +45,6 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
       const defaultTasks = await defaultSuite.collect(file);
 
       setHooks(file, getHooks(defaultTasks));
-      console.log(defaultTasks, context, [...defaultTasks.tasks, ...context.tasks]);
 
       for (const c of [...defaultTasks.tasks, ...context.tasks]) {
         if (c.type === "test") {
