@@ -296,7 +296,7 @@ export interface UserConfig extends InlineConfig {
   dom?: boolean
 
   /**
-   * Use web environment 
+   * Use web environment
    */
   web?: boolean
 

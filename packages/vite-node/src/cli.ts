@@ -80,7 +80,6 @@ async function run(options: CliOptions = {}) {
     root: server.config.root,
     base: server.config.base,
     fetchModule(id) {
-      console.log(id)
       return node.fetchModule(id)
     },
   })

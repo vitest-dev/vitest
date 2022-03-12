@@ -16,8 +16,6 @@ import type { SnapshotData, SnapshotUpdateState } from '../../../types'
 import { isObject } from '../../../utils'
 import { getSerializers } from './plugins'
 
-
-
 // TODO: rewrite and clean up
 
 export const SNAPSHOT_VERSION = '1'

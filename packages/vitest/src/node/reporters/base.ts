@@ -4,10 +4,10 @@ import c from 'picocolors'
 import type { ErrorWithDiff, File, Reporter, Task, TaskResultPack, UserConsoleLog } from '../../types'
 import { getFullName, getSuites, getTests, hasFailed, hasFailedSnapshot } from '../../utils'
 import type { Vitest } from '../../node'
+import { defaultPort } from '../../constants'
 import { printError } from './renderers/diff'
 import { F_RIGHT } from './renderers/figures'
 import { divider, getStateString, getStateSymbol, renderSnapshotSummary } from './renderers/utils'
-import { defaultPort } from '../../constants'
 
 const BADGE_PADDING = '       '
 const HELP_HINT = `${c.dim('press ')}${c.bold('h')}${c.dim(' to show help')}`
@@ -30,9 +30,8 @@ export abstract class BaseReporter implements Reporter {
       ? c.blue(' WATCH ')
       : c.cyan(' RUN ')
     this.ctx.log(`\n${c.inverse(c.bold(mode))} ${c.gray(this.ctx.config.root)}\n`)
-    if (ctx.config.web) {
+    if (ctx.config.web)
       this.ctx.log(`\n${c.inverse(c.bold(c.yellow(' WEB ')))} ${c.gray(`Available in ${this.ctx.config.api?.host || 'http://localhost'}:${c.bold(this.ctx.config.api?.port || defaultPort)} using your browser`)}\n`)
-    }
 
     this.start = performance.now()
   }

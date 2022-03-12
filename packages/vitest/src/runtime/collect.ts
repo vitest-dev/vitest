@@ -1,88 +1,92 @@
-import { performance } from "perf_hooks";
-import { relative } from "path";
-import type { File, ResolvedConfig, Suite, TaskBase } from "../types";
-import { clearContext, defaultSuite } from "./suite";
-import { getHooks, setHooks } from "./map";
-import { processError } from "./error";
-import { context } from "./context";
-import { runSetupFiles } from "./setup";
+import { performance } from 'perf_hooks'
+import { relative } from 'path'
+import type { File, ResolvedConfig, Suite, TaskBase } from '../types'
+import { clearContext, defaultSuite } from './suite'
+import { getHooks, setHooks } from './map'
+import { processError } from './error'
+import { context } from './context'
+import { runSetupFiles } from './setup'
 
 function hash(str: string): string {
-  let hash = 0;
-  if (str.length === 0) return `${hash}`;
+  let hash = 0
+  if (str.length === 0) return `${hash}`
   for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash; // Convert to 32bit integer
+    const char = str.charCodeAt(i)
+    hash = (hash << 5) - hash + char
+    hash = hash & hash // Convert to 32bit integer
   }
-  return `${hash}`;
+  return `${hash}`
 }
 
 export async function collectTests(paths: string[], config: ResolvedConfig) {
-  const files: File[] = [];
+  const files: File[] = []
 
   for (const filepath of paths) {
-    const path = relative(config.root, filepath);
+    const path = relative(config.root, filepath)
     const file: File = {
       id: hash(path),
       name: path,
-      type: "suite",
-      mode: "run",
+      type: 'suite',
+      mode: 'run',
       filepath,
       tasks: [],
-    };
-
-    clearContext();
-    try {
-      await runSetupFiles(config);
-      if (typeof window === "undefined") {
-        await import(filepath);
-      } else {
-        // fake cache for browser
-        await import(filepath + "?v=" + new Date().getTime());
-      }
-
-      const defaultTasks = await defaultSuite.collect(file);
-
-      setHooks(file, getHooks(defaultTasks));
-
-      for (const c of [...defaultTasks.tasks, ...context.tasks]) {
-        if (c.type === "test") {
-          file.tasks.push(c);
-        } else if (c.type === "suite") {
-          file.tasks.push(c);
-        } else {
-          const start = performance.now();
-          const suite = await c.collect(file);
-          file.collectDuration = performance.now() - start;
-          if (suite.name || suite.tasks.length) file.tasks.push(suite);
-        }
-      }
-    } catch (e) {
-      file.result = {
-        state: "fail",
-        error: processError(e),
-      };
-      console.error(e);
-      // not sure why, this this line is needed to trigger the error
-      process.stdout.write("\0");
     }
 
-    calculateHash(file);
+    clearContext()
+    try {
+      await runSetupFiles(config)
+      if (typeof window === 'undefined') {
+        await import(filepath)
+      }
+      else {
+        // fake cache for browser
+        await import(`${filepath}?v=${new Date().getTime()}`)
+      }
 
-    const hasOnlyTasks = someTasksAreOnly(file);
+      const defaultTasks = await defaultSuite.collect(file)
+
+      setHooks(file, getHooks(defaultTasks))
+
+      for (const c of [...defaultTasks.tasks, ...context.tasks]) {
+        if (c.type === 'test') {
+          file.tasks.push(c)
+        }
+        else if (c.type === 'suite') {
+          file.tasks.push(c)
+        }
+        else {
+          const start = performance.now()
+          const suite = await c.collect(file)
+          file.collectDuration = performance.now() - start
+          if (suite.name || suite.tasks.length) file.tasks.push(suite)
+        }
+      }
+    }
+    catch (e) {
+      file.result = {
+        state: 'fail',
+        error: processError(e),
+      }
+      console.error(e)
+      // not sure why, this this line is needed to trigger the error
+      process.stdout.write('\0')
+    }
+
+    calculateHash(file)
+
+    const hasOnlyTasks = someTasksAreOnly(file)
     interpretTaskModes(
       file,
       config.testNamePattern,
       hasOnlyTasks,
       false,
-      config.allowOnly
-    );
+      config.allowOnly,
+    )
 
-    files.push(file);
+    files.push(file)
   }
 
-  return files;
+  return files
 }
 
 /**
@@ -93,71 +97,73 @@ function interpretTaskModes(
   namePattern?: string | RegExp,
   onlyMode?: boolean,
   parentIsOnly?: boolean,
-  allowOnly?: boolean
+  allowOnly?: boolean,
 ) {
-  const suiteIsOnly = parentIsOnly || suite.mode === "only";
+  const suiteIsOnly = parentIsOnly || suite.mode === 'only'
 
   suite.tasks.forEach((t) => {
     // Check if either the parent suite or the task itself are marked as included
-    const includeTask = suiteIsOnly || t.mode === "only";
+    const includeTask = suiteIsOnly || t.mode === 'only'
     if (onlyMode) {
-      if (t.type === "suite" && (includeTask || someTasksAreOnly(t))) {
+      if (t.type === 'suite' && (includeTask || someTasksAreOnly(t))) {
         // Don't skip this suite
-        if (t.mode === "only") {
-          checkAllowOnly(t, allowOnly);
-          t.mode = "run";
+        if (t.mode === 'only') {
+          checkAllowOnly(t, allowOnly)
+          t.mode = 'run'
         }
-      } else if (t.mode === "run" && !includeTask) {
-        t.mode = "skip";
-      } else if (t.mode === "only") {
-        checkAllowOnly(t, allowOnly);
-        t.mode = "run";
+      }
+      else if (t.mode === 'run' && !includeTask) {
+        t.mode = 'skip'
+      }
+      else if (t.mode === 'only') {
+        checkAllowOnly(t, allowOnly)
+        t.mode = 'run'
       }
     }
-    if (t.type === "test") {
-      if (namePattern && !t.name.match(namePattern)) t.mode = "skip";
-    } else if (t.type === "suite") {
-      if (t.mode === "skip") skipAllTasks(t);
-      else interpretTaskModes(t, namePattern, onlyMode, includeTask, allowOnly);
+    if (t.type === 'test') {
+      if (namePattern && !t.name.match(namePattern)) t.mode = 'skip'
     }
-  });
+    else if (t.type === 'suite') {
+      if (t.mode === 'skip') skipAllTasks(t)
+      else interpretTaskModes(t, namePattern, onlyMode, includeTask, allowOnly)
+    }
+  })
 
   // if all subtasks are skipped, mark as skip
-  if (suite.mode === "run") {
-    if (suite.tasks.every((i) => i.mode !== "run")) suite.mode = "skip";
-  }
+  if (suite.mode === 'run')
+    if (suite.tasks.every(i => i.mode !== 'run')) suite.mode = 'skip'
 }
 
 function someTasksAreOnly(suite: Suite): boolean {
   return suite.tasks.some(
-    (t) => t.mode === "only" || (t.type === "suite" && someTasksAreOnly(t))
-  );
+    t => t.mode === 'only' || (t.type === 'suite' && someTasksAreOnly(t)),
+  )
 }
 
 function skipAllTasks(suite: Suite) {
   suite.tasks.forEach((t) => {
-    if (t.mode === "run") {
-      t.mode = "skip";
-      if (t.type === "suite") skipAllTasks(t);
+    if (t.mode === 'run') {
+      t.mode = 'skip'
+      if (t.type === 'suite') skipAllTasks(t)
     }
-  });
+  })
 }
 
 function checkAllowOnly(task: TaskBase, allowOnly?: boolean) {
-  if (allowOnly) return;
+  if (allowOnly) return
   task.result = {
-    state: "fail",
+    state: 'fail',
     error: processError(
       new Error(
-        "[Vitest] Unexpected .only modifier. Remove it or pass --allowOnly arguement to bypass this error"
-      )
+        '[Vitest] Unexpected .only modifier. Remove it or pass --allowOnly arguement to bypass this error',
+      ),
     ),
-  };
+  }
 }
 
 function calculateHash(parent: Suite) {
   parent.tasks.forEach((t, idx) => {
-    t.id = `${parent.id}_${idx}`;
-    if (t.type === "suite") calculateHash(t);
-  });
+    t.id = `${parent.id}_${idx}`
+    if (t.type === 'suite') calculateHash(t)
+  })
 }

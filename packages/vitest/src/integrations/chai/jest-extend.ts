@@ -1,4 +1,4 @@
-import { util, Assertion } from 'chai'
+import { Assertion, util } from 'chai'
 import { getState } from './jest-expect'
 
 import * as matcherUtils from './jest-matcher-utils'

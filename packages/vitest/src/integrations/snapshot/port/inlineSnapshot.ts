@@ -4,8 +4,6 @@ import { rpc } from '../../../runtime/rpc'
 import { getOriginalPos, lineSplitRE, numberToPos, posToNumber } from '../../../utils/source-map'
 import { getCallLastIndex } from '../../../utils'
 
-
-
 export interface InlineSnapshot {
   snapshot: string
   file: string

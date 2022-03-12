@@ -1,5 +1,5 @@
 import type { TransformResult } from 'vite'
-import type { File, ModuleGraphData, Reporter, ResolvedConfig, Task, TaskResultPack } from '../types'
+import type { File, ModuleGraphData, Reporter, ResolvedConfig, TaskResultPack } from '../types'
 
 export interface TransformResultWithSource extends TransformResult {
   source?: string

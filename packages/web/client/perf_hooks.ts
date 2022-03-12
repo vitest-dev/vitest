@@ -1,1 +1,1 @@
-export const performance = globalThis.performance;
+export const performance = globalThis.performance
