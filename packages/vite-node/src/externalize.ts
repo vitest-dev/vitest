@@ -1,4 +1,4 @@
-import { existsSync } from 'fs'
+import fs from 'fs'
 import { isNodeBuiltin, isValidNodeImport } from 'mlly'
 import type { DepsHandlingOptions } from './types'
 import { slash } from './utils'
@@ -26,7 +26,7 @@ export function guessCJSversion(id: string): string | undefined {
       id.replace(ESM_EXT_RE, '.cjs.js'),
       id.replace(ESM_EXT_RE, '.js'),
     ]) {
-      if (existsSync(i))
+      if (fs.existsSync(i))
         return i
     }
   }
@@ -36,7 +36,7 @@ export function guessCJSversion(id: string): string | undefined {
       id.replace(ESM_FOLDER_RE, '/cjs/$1'),
       id.replace(ESM_FOLDER_RE, '/$1'),
     ]) {
-      if (existsSync(i))
+      if (fs.existsSync(i))
         return i
     }
   }

@@ -1,4 +1,4 @@
-import { existsSync, promises as fs } from 'fs'
+import fs from 'fs'
 import { createRequire } from 'module'
 import { pathToFileURL } from 'url'
 import type { Profiler } from 'inspector'
@@ -23,11 +23,13 @@ export function resolveC8Options(options: C8Options, root: string): ResolvedC8Op
 }
 
 export async function cleanCoverage(options: ResolvedC8Options, clean = true) {
-  if (clean && existsSync(options.reportsDirectory))
-    await fs.rm(options.reportsDirectory, { recursive: true, force: true })
+  const fsp = fs.promises
 
-  if (!existsSync(options.tempDirectory))
-    await fs.mkdir(options.tempDirectory, { recursive: true })
+  if (clean && fs.existsSync(options.reportsDirectory))
+    await fsp.rm(options.reportsDirectory, { recursive: true, force: true })
+
+  if (!fs.existsSync(options.tempDirectory))
+    await fsp.mkdir(options.tempDirectory, { recursive: true })
 }
 
 const require = createRequire(import.meta.url)
@@ -42,6 +44,8 @@ export function takeCoverage() {
 }
 
 export async function reportCoverage(ctx: Vitest) {
+  const fsp = fs.promises
+
   takeCoverage()
 
   // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -62,7 +66,7 @@ export async function reportCoverage(ctx: Vitest) {
 
       let code: string | undefined
       try {
-        code = (await fs.readFile(file)).toString()
+        code = (await fsp.readFile(file)).toString()
       }
       catch {}
 

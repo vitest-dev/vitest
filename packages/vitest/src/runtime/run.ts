@@ -39,7 +39,7 @@ const packs = new Map<string, TaskResult | undefined>()
 let updateTimer: any
 let previousUpdate: Promise<void> | undefined
 
-export function updateTask(task: Task) {
+function updateTask(task: Task) {
   packs.set(task.id, task.result)
 
   clearTimeout(updateTimer)
@@ -52,9 +52,11 @@ async function sendTasksUpdate() {
   clearTimeout(updateTimer)
   await previousUpdate
 
-  const p = rpc().onTaskUpdate(Array.from(packs))
-  packs.clear()
-  return p
+  if (packs.size) {
+    const p = rpc().onTaskUpdate(Array.from(packs))
+    packs.clear()
+    return p
+  }
 }
 
 export async function runTest(test: Test) {
@@ -225,8 +227,7 @@ async function runSuiteChild(c: Task) {
 export async function runSuites(suites: Suite[]) {
   for (const suite of suites) await runSuite(suite)
 }
-
-export async function startTests(paths: string[], config: ResolvedConfig) {
+async function startTestsWeb(paths: string[], config: ResolvedConfig) {
   if (typeof window === 'undefined') {
     rpc().onPathsCollected(paths)
   }
@@ -236,24 +237,23 @@ export async function startTests(paths: string[], config: ResolvedConfig) {
     await runSuites(files)
     await sendTasksUpdate()
   }
+}
 
-  // if (typeof window !== "undefined") {
-  //   await runSuites(files);
-  // }
-  //
-  // if (typeof window === "undefined") {
-  //   // const { takeCoverage } = await import("../integrations/coverage");
-  //   //
-  //   // const { getSnapshotClient } = await import("../integrations/snapshot/chai");
-  //   //
-  //   // takeCoverage();
-  //   // await getSnapshotClient().saveSnap();
-  // }
-  //
-  // if (typeof window !== "undefined") {
-  //   await sendTasksUpdate();
-  // }
-  // await sendTasksUpdate();
+export async function startTests(paths: string[], config: ResolvedConfig) {
+  if (config.web) return startTestsWeb(paths, config)
+
+  const files = await collectTests(paths, config)
+
+  rpc().onCollected(files)
+  await runSuites(files)
+
+  const { takeCoverage } = await import('../integrations/coverage')
+  const { getSnapshotClient } = await import('../integrations/snapshot/chai')
+
+  takeCoverage()
+  await getSnapshotClient().saveSnap()
+
+  await sendTasksUpdate()
 }
 
 export function clearModuleMocks() {
@@ -265,6 +265,6 @@ export function clearModuleMocks() {
   else if (clearMocks) vi.clearAllMocks()
 }
 
-// declare global {
-//   let __vitest_worker__: import("vitest").WorkerGlobalState;
-// }
+declare global {
+  let __vitest_worker__: import('vitest').WorkerGlobalState
+}

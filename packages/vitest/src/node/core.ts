@@ -125,8 +125,8 @@ export class Vitest {
     if (this.config.coverage.enabled)
       await reportCoverage(this)
 
-    // if (this.config.watch)
-    //   await this.report('onWatcherStart')
+    if (this.config.watch && !this.config.web)
+      await this.report('onWatcherStart')
   }
 
   private async getTestDependencies(filepath: string) {
@@ -193,7 +193,7 @@ export class Vitest {
       if (hasFailed(this.state.getFiles()))
         process.exitCode = 1
 
-      // await this.report('onFinished', this.state.getFiles())
+      if (!this.config.web) await this.report('onFinished', this.state.getFiles())
     })()
       .finally(() => {
         this.runningPromise = undefined
@@ -205,7 +205,7 @@ export class Vitest {
   async rerunFiles(files: string[] = this.state.getFilepaths(), trigger?: string) {
     await this.report('onWatcherRerun', files, trigger)
     await this.runFiles(files)
-    // await this.report('onWatcherStart')
+    if (!this.config.web) await this.report('onWatcherStart')
   }
 
   async returnFailed() {
@@ -283,7 +283,7 @@ export class Vitest {
       if (this.config.coverage.enabled)
         await reportCoverage(this)
 
-      // await this.report('onWatcherStart')
+      if (!this.config.web) await this.report('onWatcherStart')
     }, WATCHER_DEBOUNCE)
   }
 

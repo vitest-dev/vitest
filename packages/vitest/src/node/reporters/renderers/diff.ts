@@ -1,6 +1,6 @@
 /* eslint-disable prefer-template */
 /* eslint-disable no-template-curly-in-string */
-import { existsSync, promises as fs } from 'fs'
+import fs from 'fs'
 import { relative } from 'pathe'
 import c from 'picocolors'
 import * as diff from 'diff'
@@ -11,6 +11,7 @@ import { interpretSourcePos, lineSplitRE, parseStacktrace, posToNumber } from '.
 import { F_POINTER } from './figures'
 
 export async function printError(error: unknown, ctx: Vitest) {
+  const fsp = fs.promises
   let e = error as ErrorWithDiff
 
   if (typeof error === 'string') {
@@ -26,13 +27,13 @@ export async function printError(error: unknown, ctx: Vitest) {
 
   const nearest = stacks.find(stack =>
     ctx.server.moduleGraph.getModuleById(stack.file)
-      && existsSync(stack.file),
+      && fs.existsSync(stack.file),
   )
 
   printErrorMessage(e, ctx.console)
   await printStack(ctx, stacks, nearest, async(s, pos) => {
     if (s === nearest && nearest) {
-      const sourceCode = await fs.readFile(nearest.file, 'utf-8')
+      const sourceCode = await fsp.readFile(nearest.file, 'utf-8')
       ctx.log(c.yellow(generateCodeFrame(sourceCode, 4, pos)))
     }
   })

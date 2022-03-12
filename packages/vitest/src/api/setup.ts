@@ -41,9 +41,6 @@ export function setup(ctx: Vitest) {
   function setupClient(ws: WebSocket) {
     const rpc = createBirpc<WebSocketEvents, WebSocketHandlers>(
       {
-        // async onPathsCollected(paths) {
-        //   await ctx.report("onWatcherStart");
-        // },
         async onWatcherStart() {
           await ctx.report('onWatcherStart')
         },

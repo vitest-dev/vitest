@@ -1,10 +1,8 @@
 // we are using only the ones needed by @testing-library/jest-dom
 // if you need more, just ask
-
 import c from 'picocolors'
 import type { Formatter } from 'picocolors/types'
 import { format as prettyFormat, plugins as prettyFormatPlugins } from 'pretty-format'
-// import { unifiedDiff } from '../../node/reporters/renderers/diff'
 
 export const EXPECTED_COLOR = c.green
 export const RECEIVED_COLOR = c.red
@@ -166,6 +164,8 @@ export interface DiffOptions {
 
 // TODO: do something with options
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-// export function diff(a: any, b: any, options?: DiffOptions) {
-//   return unifiedDiff(stringify(a), stringify(b))
-// }
+export async function diff(a: any, b: any, options?: DiffOptions) {
+  const { unifiedDiff } = await import('../../node/reporters/renderers/diff')
+
+  return unifiedDiff(stringify(a), stringify(b))
+}

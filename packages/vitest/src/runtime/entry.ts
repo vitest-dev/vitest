@@ -9,10 +9,15 @@ export async function run(
 ): Promise<void> {
   await setupGlobalEnv(config)
 
-  // we should batch files and send them to the browser using onCollected, in case the browser can send proper onFinished & onWatcherStart
+  // batch files and send them using onPathsCollected
   const webFiles: string[] = []
 
   for (const file of files) {
+    if (config.web) {
+      webFiles.push(file)
+      continue
+    }
+
     const code = await fs.readFile(file, 'utf-8')
 
     const env
@@ -23,8 +28,6 @@ export async function run(
     if (!['node', 'jsdom', 'happy-dom'].includes(env))
       throw new Error(`Unsupported environment: ${env}`)
 
-    webFiles.push(file)
-    continue
     __vitest_worker__.filepath = file
 
     await withEnv(
@@ -38,5 +41,6 @@ export async function run(
     __vitest_worker__.filepath = undefined
   }
 
-  await startTests(webFiles, config)
+  if (config.web)
+    await startTests(webFiles, config)
 }

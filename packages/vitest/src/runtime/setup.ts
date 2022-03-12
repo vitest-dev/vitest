@@ -1,10 +1,7 @@
-// import { Console } from 'console'
-// import { Writable } from 'stream'
 import { environments } from '../integrations/env'
 import { setupChai } from '../integrations/chai/setup'
 import type { ResolvedConfig } from '../types'
 import { toArray } from '../utils'
-// import { rpc } from './rpc'
 
 let globalSetup = false
 export async function setupGlobalEnv(config: ResolvedConfig) {
@@ -16,7 +13,9 @@ export async function setupGlobalEnv(config: ResolvedConfig) {
 
   globalSetup = true
 
-  await setupConsoleLogSpy()
+  if (typeof window === 'undefined')
+    await setupConsoleLogSpy()
+
   await setupChai()
 
   if (config.globals)
@@ -28,40 +27,38 @@ function setupDefines(defines: Record<string, any>) {
 }
 
 export async function setupConsoleLogSpy() {
-  if (typeof window === 'undefined') {
-    const { Console } = await import('console')
-    const { Writable } = await import('stream')
-    const { rpc } = await import('./rpc')
+  const { Console } = await import('console')
+  const { Writable } = await import('stream')
+  const { rpc } = await import('./rpc')
 
-    const stdout = new Writable({
-      write(data, _, callback) {
-        rpc().onUserConsoleLog({
-          type: 'stdout',
-          content: String(data),
-          taskId: __vitest_worker__.current?.id,
-          time: Date.now(),
-        })
-        callback()
-      },
-    })
-    const stderr = new Writable({
-      write(data, _, callback) {
-        rpc().onUserConsoleLog({
-          type: 'stderr',
-          content: String(data),
-          taskId: __vitest_worker__.current?.id,
-          time: Date.now(),
-        })
-        callback()
-      },
-    })
-    globalThis.console = new Console({
-      stdout,
-      stderr,
-      colorMode: true,
-      groupIndentation: 2,
-    })
-  }
+  const stdout = new Writable({
+    write(data, _, callback) {
+      rpc().onUserConsoleLog({
+        type: 'stdout',
+        content: String(data),
+        taskId: __vitest_worker__.current?.id,
+        time: Date.now(),
+      })
+      callback()
+    },
+  })
+  const stderr = new Writable({
+    write(data, _, callback) {
+      rpc().onUserConsoleLog({
+        type: 'stderr',
+        content: String(data),
+        taskId: __vitest_worker__.current?.id,
+        time: Date.now(),
+      })
+      callback()
+    },
+  })
+  globalThis.console = new Console({
+    stdout,
+    stderr,
+    colorMode: true,
+    groupIndentation: 2,
+  })
 }
 
 export async function withEnv(

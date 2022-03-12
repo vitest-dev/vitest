@@ -1,6 +1,4 @@
-import { it as _it, expect } from 'vitest'
-
-const it = typeof window === 'undefined' ? _it.skip : _it
+import { expect, it } from 'vitest'
 
 it('basic', async() => {
   expect(globalThis.performance).toBeDefined()

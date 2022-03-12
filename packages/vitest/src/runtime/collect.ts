@@ -67,7 +67,9 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
         state: 'fail',
         error: processError(e),
       }
-      console.error(e)
+      if (config.web)
+        console.error(e)
+
       // not sure why, this this line is needed to trigger the error
       process.stdout.write('\0')
     }

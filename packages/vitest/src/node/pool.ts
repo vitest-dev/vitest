@@ -22,7 +22,7 @@ export interface WorkerPool {
 }
 
 export function createPool(ctx: Vitest): WorkerPool {
-  if (ctx.config.threads) return createWorkerPool(ctx)
+  if (ctx.config.threads || ctx.config.web) return createWorkerPool(ctx)
   else return createFakePool(ctx)
 }
 
@@ -82,34 +82,38 @@ export function createWorkerPool(ctx: Vitest): WorkerPool {
     return async(files, invalidates) => {
       let id = 0
 
-      const { workerPort, port } = createChannel(ctx)
+      if (ctx.config.web) {
+        const { workerPort, port } = createChannel(ctx)
 
-      const data: WorkerContext = {
-        port: workerPort,
-        config: ctx.getConfig(),
-        files,
-        invalidates,
-        id: ++id,
+        const data: WorkerContext = {
+          port: workerPort,
+          config: ctx.getConfig(),
+          files,
+          invalidates,
+          id: ++id,
+        }
+
+        await pool.run(data, { transferList: [workerPort], name })
+        port.close()
+        workerPort.close()
       }
+      else {
+        await Promise.all(files.map(async(file) => {
+          const { workerPort, port } = createChannel(ctx)
 
-      await pool.run(data, { transferList: [workerPort], name })
-      port.close()
-      workerPort.close()
-      // await Promise.all(files.map(async(file) => {
-      //   const { workerPort, port } = createChannel(ctx)
-      //
-      //   const data: WorkerContext = {
-      //     port: workerPort,
-      //     config: ctx.getConfig(),
-      //     files: [file],
-      //     invalidates,
-      //     id: ++id,
-      //   }
-      //
-      //   await pool.run(data, { transferList: [workerPort], name })
-      //   port.close()
-      //   workerPort.close()
-      // }))
+          const data: WorkerContext = {
+            port: workerPort,
+            config: ctx.getConfig(),
+            files: [file],
+            invalidates,
+            id: ++id,
+          }
+
+          await pool.run(data, { transferList: [workerPort], name })
+          port.close()
+          workerPort.close()
+        }))
+      }
     }
   }
 

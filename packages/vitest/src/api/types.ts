@@ -8,7 +8,6 @@ export interface TransformResultWithSource extends TransformResult {
 export interface WebSocketHandlers {
   onWatcherStart: () => Promise<void>
   onFinished(files?: File[]): Promise<void>
-  // onPathsCollected(paths?: string[]): Promise<void>
   onCollected(files?: File[]): Promise<void>
   onTaskUpdate(packs: TaskResultPack[]): void
   getFiles(): File[]
