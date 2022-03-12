@@ -67,7 +67,6 @@
     "vite": "^2.8.2"
   },
   "devDependencies": {
-    "local-pkg": "^0.4.1",
     "@antfu/install-pkg": "^0.1.0",
     "@sinonjs/fake-timers": "^9.1.0",
     "@types/diff": "^5.0.2",
@@ -91,6 +90,7 @@
     "flatted": "^3.2.5",
     "happy-dom": "^2.31.1",
     "jsdom": "^19.0.0",
+    "local-pkg": "^0.4.1",
     "log-update": "^5.0.0",
     "magic-string": "^0.25.7",
     "micromatch": "^4.0.4",
@@ -110,8 +110,8 @@
     "ws": "^8.5.0"
   },
   "peerDependencies": {
-    "@vitest/web": "*",
     "@vitest/ui": "*",
+    "@vitest/web": "*",
     "c8": "*",
     "happy-dom": "*",
     "jsdom": "*"
