@@ -59,7 +59,7 @@ exports[`json reporter 1`] = `
     },
     {
       \\"displayName\\": \\"async with timeout\\",
-      \\"skipped\\": false,
+      \\"skipped\\": true,
       \\"testFilePath\\": \\"/vitest/test/core/test/basic.test.ts\\"
     },
     {
