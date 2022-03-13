@@ -67,11 +67,11 @@ export async function runTest(test: Test) {
     return
   }
 
-  const startDate = Date.now()
   const start = performance.now()
 
   test.result = {
     state: 'run',
+    startTime: Date.now(),
   }
   updateTask(test)
 
@@ -128,7 +128,6 @@ export async function runTest(test: Test) {
 
   getSnapshotClient().clearTest()
 
-  test.result.startTime = startDate
   test.result.duration = performance.now() - start
 
   __vitest_worker__.current = undefined
@@ -152,11 +151,11 @@ export async function runSuite(suite: Suite) {
     return
   }
 
-  const startDate = Date.now()
   const start = performance.now()
 
   suite.result = {
     state: 'run',
+    startTime: Date.now(),
   }
 
   updateTask(suite)
@@ -188,7 +187,6 @@ export async function runSuite(suite: Suite) {
     }
   }
   suite.result.duration = performance.now() - start
-  suite.result.startTime = startDate
 
   if (suite.mode === 'run') {
     if (!hasTests(suite)) {
