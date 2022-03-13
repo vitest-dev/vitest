@@ -21,7 +21,6 @@ export async function VitestPlugin(
 
   async function WebPlugin() {
     await ensurePackageInstalled('@vitest/web')
-    // @ts-expect-error @vitest/web depends on vitest and vice versa
     return (await import('@vitest/web')).default('/')
   }
 
