@@ -12,8 +12,8 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "@vueuse/integrations": "^7.7.1",
-    "axios": "^0.26.0",
+    "@vueuse/integrations": "^8.0.0",
+    "axios": "^0.26.1",
     "tinyspy": "^0.3.0"
   },
   "devDependencies": {

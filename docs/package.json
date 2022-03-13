@@ -9,19 +9,19 @@
     "prefetch": "esno scripts/fetch-avatars.ts"
   },
   "dependencies": {
-    "@vueuse/core": "^7.7.1",
+    "@vueuse/core": "^8.0.0",
     "vue": "^3.2.24"
   },
   "devDependencies": {
     "@iconify-json/carbon": "^1.1.1",
     "@types/node": "^17.0.21",
-    "@unocss/reset": "^0.27.2",
+    "@unocss/reset": "^0.28.0",
     "@vitejs/plugin-vue": "^2.2.4",
     "esno": "^0.14.1",
     "fast-glob": "^3.2.11",
     "https-localhost": "^4.7.1",
-    "unocss": "^0.27.2",
-    "unplugin-vue-components": "^0.17.21",
+    "unocss": "^0.28.0",
+    "unplugin-vue-components": "^0.18.0",
     "vite-plugin-pwa": "^0.11.13",
     "vitepress": "^0.22.3",
     "workbox-window": "^6.5.1"
