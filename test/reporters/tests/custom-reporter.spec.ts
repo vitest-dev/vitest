@@ -16,4 +16,4 @@ test('custom reporters work', async() => {
   })
 
   expect(stdout).toContain('hello from custom reporter')
-}, 20000)
+}, 40000)
