@@ -45,6 +45,9 @@ exports[`json reporter 1`] = `
   \\"success\\": false,
   \\"testResults\\": [
     {
+      \\"perfStats\\": {
+        \\"runtime\\": 1.4422860145568848
+      },
       \\"displayName\\": \\"Math.sqrt()\\",
       \\"failureMessage\\": \\"expected 2.23606797749979 to equal 2\\",
       \\"skipped\\": false,
@@ -52,41 +55,60 @@ exports[`json reporter 1`] = `
       \\"testFilePath\\": \\"/vitest/test/core/test/basic.test.ts\\"
     },
     {
+      \\"perfStats\\": {
+        \\"runtime\\": 1.0237109661102295
+      },
       \\"displayName\\": \\"JSON\\",
       \\"skipped\\": false,
       \\"status\\": \\"pass\\",
       \\"testFilePath\\": \\"/vitest/test/core/test/basic.test.ts\\"
     },
     {
+      \\"perfStats\\": {},
       \\"displayName\\": \\"async with timeout\\",
       \\"skipped\\": true,
       \\"testFilePath\\": \\"/vitest/test/core/test/basic.test.ts\\"
     },
     {
+      \\"perfStats\\": {
+        \\"runtime\\": 100.50598406791687
+      },
       \\"displayName\\": \\"timeout\\",
       \\"skipped\\": false,
       \\"status\\": \\"pass\\",
       \\"testFilePath\\": \\"/vitest/test/core/test/basic.test.ts\\"
     },
     {
+      \\"perfStats\\": {
+        \\"runtime\\": 20.184875011444092
+      },
       \\"displayName\\": \\"callback setup success \\",
       \\"skipped\\": false,
       \\"status\\": \\"pass\\",
       \\"testFilePath\\": \\"/vitest/test/core/test/basic.test.ts\\"
     },
     {
+      \\"perfStats\\": {
+        \\"runtime\\": 0.33245420455932617
+      },
       \\"displayName\\": \\"callback test success \\",
       \\"skipped\\": false,
       \\"status\\": \\"pass\\",
       \\"testFilePath\\": \\"/vitest/test/core/test/basic.test.ts\\"
     },
     {
+      \\"perfStats\\": {
+        \\"runtime\\": 19.738605976104736
+      },
       \\"displayName\\": \\"callback setup success done(false)\\",
       \\"skipped\\": false,
       \\"status\\": \\"pass\\",
       \\"testFilePath\\": \\"/vitest/test/core/test/basic.test.ts\\"
     },
     {
+      \\"perfStats\\": {
+        \\"runtime\\": 0.1923508644104004
+      },
       \\"displayName\\": \\"callback test success done(false)\\",
       \\"skipped\\": false,
       \\"status\\": \\"pass\\",
