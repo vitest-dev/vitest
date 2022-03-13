@@ -1,10 +1,10 @@
 {
   "name": "@vitest/monorepo",
+  "type": "module",
   "version": "0.6.0",
   "private": true,
-  "description": "A blazing fast unit test framework powered by Vite",
-  "type": "module",
   "packageManager": "pnpm@6.32.3",
+  "description": "A blazing fast unit test framework powered by Vite",
   "scripts": {
     "build": "pnpm -r --filter {packages} run build",
     "ci": "ni && nr typecheck && nr lint && nr build && nr test:all",

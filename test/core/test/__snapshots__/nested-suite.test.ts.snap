@@ -1,3 +1,5 @@
 // Vitest Snapshot v1
 
 exports[`a > b > c > d > e > very deep > msg 1`] = `"hi"`;
+
+exports[`a > b > c > d > e > very deep > msg 2`] = `"hi"`;

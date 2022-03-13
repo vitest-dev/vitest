@@ -36,6 +36,7 @@ const external = [
   'worker_threads',
   'inspector',
   'c8',
+  '@vitest/web',
 ]
 
 const plugins = [

@@ -1,5 +1,6 @@
 {
   "name": "vitest",
+  "type": "module",
   "version": "0.6.0",
   "description": "A blazing fast unit test framework powered by Vite",
   "keywords": [
@@ -13,19 +14,15 @@
     "url": "https://github.com/vitest-dev/vitest/issues"
   },
   "license": "MIT",
+  "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vitest-dev/vitest.git"
   },
   "funding": "https://github.com/sponsors/antfu",
-  "author": "Anthony Fu <anthonyfu117@hotmail.com>",
-  "type": "module",
-  "files": [
-    "dist",
-    "bin",
-    "*.d.ts",
-    "*.mjs"
-  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "import": "./dist/index.js",
@@ -55,9 +52,12 @@
       "types": "./config.d.ts"
     }
   },
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "bin",
+    "*.d.ts",
+    "*.mjs"
+  ],
   "bin": {
     "vitest": "./vitest.mjs"
   },
@@ -68,11 +68,15 @@
   },
   "peerDependencies": {
     "@vitest/ui": "*",
+    "@vitest/web": "*",
     "c8": "*",
     "happy-dom": "*",
     "jsdom": "*"
   },
   "peerDependenciesMeta": {
+    "@vitest/web": {
+      "optional": true
+    },
     "@vitest/ui": {
       "optional": true
     },
@@ -90,6 +94,7 @@
     "@types/chai": "^4.3.0",
     "@types/chai-subset": "^1.3.3",
     "chai": "^4.3.6",
+    "local-pkg": "^0.4.1",
     "tinypool": "^0.1.2",
     "tinyspy": "^0.3.0",
     "vite": "^2.7.10"
@@ -118,7 +123,6 @@
     "flatted": "^3.2.5",
     "happy-dom": "^2.45.1",
     "jsdom": "^19.0.0",
-    "local-pkg": "^0.4.1",
     "log-update": "^5.0.0",
     "magic-string": "^0.26.1",
     "micromatch": "^4.0.4",

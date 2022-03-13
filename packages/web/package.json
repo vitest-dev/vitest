@@ -1,16 +1,8 @@
 {
   "name": "@vitest/web",
+  "type": "module",
   "version": "0.4.1",
   "description": "UI for Vitest",
-  "sideEffects": false,
-  "type": "module",
-  "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
-    },
-    "./*": "./*"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vitest-dev/vitest.git",
@@ -19,9 +11,17 @@
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./*": "./*"
+  },
   "files": [
     "dist"
   ],
+  "sideEffects": false,
   "scripts": {
     "build": "rimraf dist && pnpm build:node && pnpm build:client",
     "build:client": "vite build",

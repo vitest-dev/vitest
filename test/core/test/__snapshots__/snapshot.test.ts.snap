@@ -7,7 +7,25 @@ exports[`multiline 1`] = `
 "
 `;
 
+exports[`multiline 2`] = `
+"
+  Hello
+    World
+"
+`;
+
 exports[`object 1`] = `
+{
+  "this": {
+    "is": Set {
+      "of",
+      "snapshot",
+    },
+  },
+}
+`;
+
+exports[`object 2`] = `
 {
   "this": {
     "is": Set {
@@ -26,11 +44,29 @@ exports[`properties snapshot 1`] = `
 }
 `;
 
+exports[`properties snapshot 2`] = `
+{
+  "createdAt": Any<Date>,
+  "id": Any<Number>,
+  "name": StringContaining "LeBron",
+}
+`;
+
 exports[`throwing 1`] = `"omega"`;
 
 exports[`throwing 2`] = `"omega"`;
 
 exports[`throwing 3`] = `
+{
+  "error": "omega",
+}
+`;
+
+exports[`throwing 4`] = `"omega"`;
+
+exports[`throwing 5`] = `"omega"`;
+
+exports[`throwing 6`] = `
 {
   "error": "omega",
 }
@@ -78,7 +114,60 @@ exports[`with big array 1`] = `
 }
 `;
 
+exports[`with big array 2`] = `
+{
+  "this": {
+    "is": Set {
+      "one",
+      [
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+      ],
+    },
+  },
+}
+`;
+
 exports[`with big string 1`] = `
+{
+  "this": {
+    "is": Set {
+      "one",
+      "zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo,zoo",
+    },
+  },
+}
+`;
+
+exports[`with big string 2`] = `
 {
   "this": {
     "is": Set {

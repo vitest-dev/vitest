@@ -53,6 +53,9 @@ export default () => [
           if (id === 'fs')
             return './client/noop.ts'
 
+          if (id === 'local-pkg')
+            return './client/local-pkg.ts'
+
           if (id === 'module')
             return './client/module.ts'
 

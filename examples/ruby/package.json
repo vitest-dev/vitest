@@ -1,8 +1,8 @@
 {
   "name": "vitest-test",
+  "type": "module",
   "private": true,
   "license": "MIT",
-  "type": "module",
   "main": "index.js",
   "scripts": {
     "test": "vitest",
