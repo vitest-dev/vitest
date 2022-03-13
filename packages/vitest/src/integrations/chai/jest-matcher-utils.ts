@@ -165,7 +165,7 @@ export interface DiffOptions {
 // TODO: do something with options
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function diff(a: any, b: any, options?: DiffOptions) {
-  const { unifiedDiff } = await import('../../node/reporters/renderers/diff')
+  const { unifiedDiff } = await import('../../node/diff')
 
   return unifiedDiff(stringify(a), stringify(b))
 }

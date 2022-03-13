@@ -1,13 +1,5 @@
 import { performance } from 'perf_hooks'
-import type {
-  HookListener,
-  ResolvedConfig,
-  Suite,
-  SuiteHooks,
-  Task,
-  TaskResult,
-  Test,
-} from '../types'
+import type { File, HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from '../types'
 import { vi } from '../integrations/vi'
 import {
   getFullName,
@@ -21,18 +13,28 @@ import { rpc } from './rpc'
 import { collectTests } from './collect'
 import { processError } from './error'
 
-export async function callSuiteHook<T extends keyof SuiteHooks>(
-  suite: Suite,
-  name: T,
-  args: SuiteHooks[T][0] extends HookListener<infer A> ? A : never,
-) {
-  if (name === 'beforeEach' && suite.suite)
-    await callSuiteHook(suite.suite, name, args)
+function updateSuiteHookState(suite: Task, name: keyof SuiteHooks, state: TaskState) {
+  if (!suite.result)
+    suite.result = { state: 'run' }
+  if (!suite.result?.hooks)
+    suite.result.hooks = {}
+  const suiteHooks = suite.result.hooks
+  if (suiteHooks) {
+    suiteHooks[name] = state
+    updateTask(suite)
+  }
+}
 
+export async function callSuiteHook<T extends keyof SuiteHooks>(suite: Suite, currentTask: Task, name: T, args: SuiteHooks[T][0] extends HookListener<infer A> ? A : never) {
+  if (name === 'beforeEach' && suite.suite)
+    await callSuiteHook(suite.suite, currentTask, name, args)
+
+  updateSuiteHookState(currentTask, name, 'run')
   await Promise.all(getHooks(suite)[name].map(fn => fn(...(args as any))))
+  updateSuiteHookState(currentTask, name, 'pass')
 
   if (name === 'afterEach' && suite.suite)
-    await callSuiteHook(suite.suite, name, args)
+    await callSuiteHook(suite.suite, currentTask, name, args)
 }
 
 const packs = new Map<string, TaskResult | undefined>()
@@ -85,7 +87,7 @@ export async function runTest(test: Test) {
   __vitest_worker__.current = test
 
   try {
-    await callSuiteHook(test.suite, 'beforeEach', [test, test.suite])
+    await callSuiteHook(test.suite, test, 'beforeEach', [test, test.suite])
     setState({
       assertionCalls: 0,
       isExpectingAssertions: false,
@@ -119,7 +121,7 @@ export async function runTest(test: Test) {
   }
 
   try {
-    await callSuiteHook(test.suite, 'afterEach', [test, test.suite])
+    await callSuiteHook(test.suite, test, 'afterEach', [test, test.suite])
   }
   catch (e) {
     test.result.state = 'fail'
@@ -185,7 +187,7 @@ export async function runSuite(suite: Suite) {
   }
   else {
     try {
-      await callSuiteHook(suite, 'beforeAll', [suite])
+      await callSuiteHook(suite, suite, 'beforeAll', [suite])
 
       for (const tasksGroup of partitionSuiteChildren(suite)) {
         if (tasksGroup[0].concurrent === true)
@@ -193,8 +195,7 @@ export async function runSuite(suite: Suite) {
         else
           for (const c of tasksGroup) await runSuiteChild(c)
       }
-
-      await callSuiteHook(suite, 'afterAll', [suite])
+      await callSuiteHook(suite, suite, 'afterAll', [suite])
     }
     catch (e) {
       suite.result.state = 'fail'
@@ -207,7 +208,7 @@ export async function runSuite(suite: Suite) {
     if (!hasTests(suite)) {
       suite.result.state = 'fail'
       if (!suite.result.error)
-        suite.result.error = new Error(`No tests found in suite ${suite.name}`)
+        suite.result.error = new Error(`No test found in suite ${suite.name}`)
     }
     else if (hasFailed(suite)) {
       suite.result.state = 'fail'
@@ -227,6 +228,22 @@ async function runSuiteChild(c: Task) {
 export async function runSuites(suites: Suite[]) {
   for (const suite of suites) await runSuite(suite)
 }
+
+export async function runFiles(files: File[], config: ResolvedConfig) {
+  for (const file of files) {
+    if (!file.tasks.length && !config.passWithNoTests) {
+      if (!file.result?.error) {
+        file.result = {
+          state: 'fail',
+          error: new Error(`No test suite found in file ${file.filepath}`),
+        }
+      }
+    }
+
+    await runSuite(file)
+  }
+}
+
 async function startTestsWeb(paths: string[], config: ResolvedConfig) {
   if (typeof window === 'undefined') {
     rpc().onPathsCollected(paths)
@@ -246,6 +263,8 @@ export async function startTests(paths: string[], config: ResolvedConfig) {
 
   rpc().onCollected(files)
   await runSuites(files)
+
+  await runFiles(files, config)
 
   const { takeCoverage } = await import('../integrations/coverage')
   const { getSnapshotClient } = await import('../integrations/snapshot/chai')

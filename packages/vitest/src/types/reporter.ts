@@ -16,3 +16,5 @@ export interface Reporter {
 
   onUserConsoleLog?: (log: UserConsoleLog) => Awaitable<void>
 }
+
+export type { Vitest }

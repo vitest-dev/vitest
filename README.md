@@ -17,8 +17,6 @@ A blazing fast unit test framework powered by Vite.
 <br>
 <br>
 
-> ⚠️ **DISCLAIMER**: Vitest is still in development and not stable yet. It's not recommended to use it in production.
-
 > Vitest requires Vite >=v2.7.10 and Node >=v14
 
 Follow the [Getting Started Guide](https://vitest.dev/guide) or learn [why we are building a new test runner](https://vitest.dev/guide/why).
@@ -45,7 +43,7 @@ Read the [documentation](https://vitest.dev/).
 - Filtering, timeouts, concurrent for suite and tests
 
 ```ts
-import { it, describe, expect, assert } from 'vitest'
+import { assert, describe, expect, it } from 'vitest'
 
 describe('suite name', () => {
   it('foo', () => {

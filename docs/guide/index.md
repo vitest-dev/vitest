@@ -1,7 +1,5 @@
 # Getting Started
 
-<DevelopmentWarning/>
-
 ## Overview
 
 Vitest is a blazing fast unit test framework powered by Vite.
@@ -37,11 +35,10 @@ One of the main advantages of Vitest is its unified configuration with Vite. If 
 - Pass `--config` option to CLI, e.g. `vitest --config ./path/to/vitest.config.ts`
 - Use `process.env.VITEST` or `mode` property on `defineConfig` (will be set to `test` if not overridden) to conditionally apply different configuration in `vite.config.ts`
 
-To configure `vitest` itself, add `test` property in your Vite config. You'll also need to add a reference to Vitest types using a [triple slash command](https://www.typescriptlang.org/docs/handbook/triple-slash-directives.html#-reference-types-) at the top of your config file.
+To configure `vitest` itself, add `test` property in your Vite config. You'll also need to add a reference to Vitest types using a [triple slash command](https://www.typescriptlang.org/docs/handbook/triple-slash-directives.html#-reference-types-) at the top of your config file, if you are importing `defineConfig` from `vite` itself.
 
 ```ts
-/// <reference types="vitest" />
-import { defineConfig } from 'vitest/node'
+import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
@@ -101,21 +98,22 @@ You can specify additional CLI options like `--port` or `--https`. For a full li
 | `-r, --root <path>` | Define the project root |
 | `-c, --config <path>` | Path to config file |
 | `-u, --update` | Update snapshots |
-| `-w, --watch` | Watch mode |
-| `-t, --testNamePattern <pattern>` | Run tests with names matching the pattern |
+| `-w, --watch` | Smart & instant watch mode |
+| `-t, --testNamePattern <pattern>` | Run tests with full names matching the pattern |
 | `--ui` | Enable UI |
-| `--open` | Open the UI automatically if enabled (default: true) |
+| `--open` | Open the UI automatically if enabled (default: `true`) |
 | `--api [api]` | Serve API, available options: `--api.port <port>`, `--api.host [host]` and `--api.strictPort` |
-| `--threads` | Enable Threads (default: true) |
+| `--threads` | Enable Threads (default: `true`) |
 | `--silent` | Silent console output from tests |
 | `--reporter <name>` | Select reporter: `default`, `verbose`, `dot` or `json` |
 | `--outputFile <filename>` | Write test results to a file when the `--reporter=json` option is also specified |
 | `--coverage` | Use c8 for coverage |
 | `--run` | Do not watch |
 | `--mode` | Override Vite mode (default: `test`) |
-| `--global` | Inject APIs globally |
+| `--global` | Inject APIs globally `deprecated` use `--globals` |
+| `--globals` | Inject APIs globally |
 | `--dom` | Mock browser api with happy-dom |
-| `--environment <env>` | Runner environment (default: node) |
+| `--environment <env>` | Runner environment (default: `node`) |
 | `--passWithNoTests` | Pass when no tests found |
 | `--allowOnly` | Allow tests and suites that are marked as `only` (default: false in CI, true otherwise) |
 | `-h, --help` | Display available CLI options |
@@ -139,6 +137,9 @@ You can specify additional CLI options like `--port` or `--https`. For a full li
 - [bytemd](https://github.com/bytedance/bytemd)
 - [faker](https://github.com/faker-js/faker)
 - [million](https://github.com/aidenybai/million)
+- [Vitamin](https://github.com/wtchnm/Vitamin)
+- [neodrag](https://github.com/PuruVJ/neodrag)
+- [svelte-multiselect](https://github.com/janosh/svelte-multiselect)
 
 ## Using Unreleased Commits
 

@@ -3,12 +3,12 @@
 import fs from 'fs'
 import { relative } from 'pathe'
 import c from 'picocolors'
-import * as diff from 'diff'
 import cliTruncate from 'cli-truncate'
-import type { Vitest } from '../../../node'
-import type { ErrorWithDiff, ParsedStack, Position } from '../../../types/general'
-import { interpretSourcePos, lineSplitRE, parseStacktrace, posToNumber } from '../../../utils/source-map'
-import { F_POINTER } from './figures'
+import type { ErrorWithDiff, ParsedStack, Position } from '../types'
+import { interpretSourcePos, lineSplitRE, parseStacktrace, posToNumber } from '../utils/source-map'
+import { F_POINTER } from '../utils/figures'
+import type { Vitest } from './core'
+import { unifiedDiff } from './diff'
 
 export async function printError(error: unknown, ctx: Vitest) {
   const fsp = fs.promises
@@ -169,89 +169,4 @@ export function generateCodeFrame(
     res = res.map(line => ' '.repeat(indent) + line)
 
   return res.join('\n')
-}
-
-/**
- * Returns unified diff between two strings with coloured ANSI output.
- *
- * @private
- * @param {String} actual
- * @param {String} expected
- * @return {string} The diff.
- */
-export function unifiedDiff(actual: string, expected: string) {
-  if (actual === expected)
-    return ''
-
-  const indent = '  '
-  const diffLimit = 15
-
-  const counts = {
-    '+': 0,
-    '-': 0,
-  }
-  let previousState: '-' | '+' | null = null
-  let previousCount = 0
-  function preprocess(line: string) {
-    if (!line || line.match(/\\ No newline/))
-      return
-
-    const char = line[0] as '+' | '-'
-    if ('-+'.includes(char)) {
-      if (previousState !== char) {
-        previousState = char
-        previousCount = 0
-      }
-      previousCount++
-      counts[char]++
-      if (previousCount === diffLimit)
-        return c.dim(char + ' ...')
-      else if (previousCount > diffLimit)
-        return
-    }
-    return line
-  }
-
-  const msg = diff.createPatch('string', expected, actual)
-  const lines = msg.split('\n').slice(5).map(preprocess).filter(Boolean) as string[]
-  const isCompact = counts['+'] === 1 && counts['-'] === 1 && lines.length === 2
-
-  let formatted = lines.map((line: string) => {
-    if (line[0] === '-') {
-      line = formatLine(line.slice(1))
-      if (isCompact)
-        return c.green(line)
-      return c.green(`- ${formatLine(line)}`)
-    }
-    if (line[0] === '+') {
-      line = formatLine(line.slice(1))
-      if (isCompact)
-        return c.red(line)
-      return c.red(`+ ${formatLine(line)}`)
-    }
-    if (line.match(/@@/))
-      return '--'
-    return ' ' + line
-  })
-
-  // Compact mode
-  if (isCompact) {
-    formatted = [
-      `${c.green('- Expected')}   ${formatted[0]}`,
-      `${c.red('+ Received')}   ${formatted[1]}`,
-    ]
-  }
-  else {
-    formatted.unshift(
-      c.green('- Expected  - ' + counts['-']),
-      c.red('+ Received  + ' + counts['+']),
-      '',
-    )
-  }
-
-  return formatted.map(i => indent + i).join('\n')
-}
-
-function formatLine(line: string) {
-  return cliTruncate(line, (process.stdout.columns || 80) - 4)
 }

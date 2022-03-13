@@ -26,7 +26,7 @@ const isFiltered = computed(() => search.value.trim() !== '')
 const filtered = computed(() => {
   if (!search.value.trim())
     return props.tasks
-  return props.tasks.filter(task => task.name.match(search.value))
+  return props.tasks.filter(task => task.name.includes(search.value))
 })
 const filteredTests: ComputedRef<File[]> = computed(() => isFiltered.value ? filtered.value.map(task => findById(task.id)!).filter(Boolean) : [])
 

@@ -1,20 +1,25 @@
 {
   "name": "vite-node",
-  "version": "0.4.1",
+  "version": "0.6.0",
   "description": "Vite as Node.js runtime",
   "homepage": "https://github.com/vitest-dev/vitest#readme",
   "bugs": {
     "url": "https://github.com/vitest-dev/vitest/issues"
   },
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vitest-dev/vitest.git",
     "directory": "packages/vite-node"
   },
   "funding": "https://github.com/sponsors/antfu",
-  "license": "MIT",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "type": "module",
+  "files": [
+    "dist",
+    "*.d.ts",
+    "*.mjs"
+  ],
   "exports": {
     ".": {
       "import": "./dist/index.js",
@@ -43,11 +48,6 @@
   "bin": {
     "vite-node": "./vite-node.mjs"
   },
-  "files": [
-    "dist",
-    "*.d.ts",
-    "*.mjs"
-  ],
   "scripts": {
     "build": "rimraf dist && rollup -c",
     "dev": "rollup -c --watch --watch.include=src/**",
@@ -59,11 +59,11 @@
     "minimist": "^1.2.5",
     "mlly": "^0.4.3",
     "pathe": "^0.2.0",
-    "vite": "^2.8.2"
+    "vite": "^2.8.4"
   },
   "devDependencies": {
     "@types/minimist": "^1.2.2",
-    "rollup": "^2.67.2"
+    "rollup": "^2.70.0"
   },
   "engines": {
     "node": ">=14.14.0"

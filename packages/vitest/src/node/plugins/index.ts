@@ -32,8 +32,11 @@ export async function VitestPlugin(
         // preliminary merge of options to be able to create server options for vite
         // however to allow vitest plugins to modify vitest config values
         // this is repeated in configResolved where the config is final
-        const preOptions = deepMerge({}, options, viteConfig.test ?? {})
+        const preOptions = deepMerge({}, configDefaults, options, viteConfig.test ?? {})
         preOptions.api = resolveApiConfig(preOptions)
+
+        if (viteConfig.define)
+          delete viteConfig.define['import.meta.vitest']
 
         // store defines for globalThis to make them
         // reassignable when running in worker in src/runtime/setup.ts
@@ -111,7 +114,8 @@ export async function VitestPlugin(
         if (haveStarted) await ctx.report('onServerRestart')
         await ctx.setServer(options, server)
         haveStarted = true
-        if (options.api) (await import('../../api/setup')).setup(ctx)
+        if (options.api && options.watch)
+          (await import('../../api/setup')).setup(ctx)
 
         // #415, in run mode we don't need the watcher, close it would improve the performance
         if (!options.watch) await server.watcher.close()

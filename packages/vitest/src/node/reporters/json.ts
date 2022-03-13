@@ -56,7 +56,7 @@ export class JsonReporter implements Reporter {
     const testResults: Array<TestResult> = tests.map(t => ({
       displayName: t.name,
       failureMessage: t.result?.error?.message,
-      skipped: t.result?.state === 'skip',
+      skipped: t.mode === 'skip',
       status: t.result?.state,
       testFilePath: t.file?.filepath,
     }))

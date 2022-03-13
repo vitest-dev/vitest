@@ -35,6 +35,13 @@ export interface InlineConfig {
   exclude?: string[]
 
   /**
+   * Include globs for in-source test files
+   *
+   * @default []
+   */
+  includeSource?: string[]
+
+  /**
    * Handling for dependencies inlining or externalizing
    */
   deps?: {
@@ -70,6 +77,13 @@ export interface InlineConfig {
      */
     fallbackCJS?: boolean
   }
+
+  /**
+   * Base directory to scan for the test files
+   *
+   * @default `config.root`
+   */
+  dir?: string
 
   /**
   * Register apis globally
