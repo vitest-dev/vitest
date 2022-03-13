@@ -21,6 +21,7 @@ export async function VitestPlugin(
 
   async function WebPlugin() {
     await ensurePackageInstalled('@vitest/web')
+    // @ts-ignore
     return (await import('@vitest/web')).default('/')
   }
 
