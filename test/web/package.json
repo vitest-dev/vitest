@@ -1,5 +1,5 @@
 {
-  "name": "@vitest/test-cjs",
+  "name": "@vitest/test-web",
   "private": true,
   "scripts": {
     "coverage": "vitest run --coverage"
