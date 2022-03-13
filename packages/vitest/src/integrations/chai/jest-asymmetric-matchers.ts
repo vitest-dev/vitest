@@ -1,3 +1,4 @@
+import { getState } from './jest-expect'
 import * as matcherUtils from './jest-matcher-utils'
 
 import { equals, isA } from './jest-utils'
@@ -20,6 +21,7 @@ export abstract class AsymmetricMatcher<
 
   protected getMatcherContext(): State {
     return {
+      ...getState(),
       equals,
       isNot: this.inverse,
       utils: matcherUtils,

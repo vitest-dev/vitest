@@ -15,5 +15,8 @@ expect.setState = setState
 // @ts-expect-error untyped
 expect.extend = fn => chai.expect.extend(fn)
 
+// @ts-expect-error
+globalThis.__vitest_expect__ = expect
+
 export { assert, should } from 'chai'
 export { chai, expect }

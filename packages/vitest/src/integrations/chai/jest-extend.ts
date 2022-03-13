@@ -1,4 +1,5 @@
-import chai, { util } from 'chai'
+import { util } from 'chai'
+import { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import { getState } from './jest-expect'
 
 import * as matcherUtils from './jest-matcher-utils'
@@ -76,7 +77,49 @@ function JestExtendPlugin(expects: MatchersObject): ChaiPlugin {
 
       const expectAssertionWrapper = isAsyncFunction(expectAssertion) ? expectAsyncWrapper : expectSyncWrapper
 
-      utils.addMethod(chai.Assertion.prototype, expectAssertionName, expectAssertionWrapper)
+      utils.addMethod(c.Assertion.prototype, expectAssertionName, expectAssertionWrapper)
+
+      class CustomMatcher extends AsymmetricMatcher<[unknown, ...unknown[]]> {
+        constructor(inverse = false, ...sample: [unknown, ...unknown[]]) {
+          super(sample, inverse)
+        }
+
+        asymmetricMatch(other: unknown) {
+          const { pass } = expectAssertion.call(
+            this.getMatcherContext(),
+            other,
+            ...this.sample,
+          ) as SyncExpectationResult
+
+          return this.inverse ? !pass : pass
+        }
+
+        toString() {
+          return `${this.inverse ? 'not.' : ''}${expectAssertionName}`
+        }
+
+        getExpectedType() {
+          return 'any'
+        }
+
+        toAsymmetricMatcher() {
+          return `${this.toString()}<${this.sample.map(String).join(', ')}>`
+        }
+      }
+
+      Object.defineProperty(__vitest_expect__, expectAssertionName, {
+        configurable: true,
+        enumerable: true,
+        value: (...sample: [unknown, ...unknown[]]) => new CustomMatcher(false, ...sample),
+        writable: true,
+      })
+
+      Object.defineProperty(__vitest_expect__.not, expectAssertionName, {
+        configurable: true,
+        enumerable: true,
+        value: (...sample: [unknown, ...unknown[]]) => new CustomMatcher(true, ...sample),
+        writable: true,
+      })
     })
   }
 }
@@ -85,4 +128,8 @@ export const JestExtend: ChaiPlugin = (chai, utils) => {
   utils.addMethod(chai.expect, 'extend', (expects: MatchersObject) => {
     chai.use(JestExtendPlugin(expects))
   })
+}
+
+declare global {
+  let __vitest_expect__: Vi.ExpectStatic
 }
