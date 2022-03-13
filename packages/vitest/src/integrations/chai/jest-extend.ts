@@ -52,9 +52,9 @@ class JestExtendError extends Error {
   }
 }
 
-function JestExtendPlugin(expects: MatchersObject): ChaiPlugin {
+function JestExtendPlugin(expect: Vi.ExpectStatic, matchers: MatchersObject): ChaiPlugin {
   return (c, utils) => {
-    Object.entries(expects).forEach(([expectAssertionName, expectAssertion]) => {
+    Object.entries(matchers).forEach(([expectAssertionName, expectAssertion]) => {
       function expectSyncWrapper(this: Chai.AssertionStatic & Chai.Assertion, ...args: any[]) {
         const { state, isNot, obj } = getMatcherState(this)
 
@@ -107,14 +107,14 @@ function JestExtendPlugin(expects: MatchersObject): ChaiPlugin {
         }
       }
 
-      Object.defineProperty(__vitest_expect__, expectAssertionName, {
+      Object.defineProperty(expect, expectAssertionName, {
         configurable: true,
         enumerable: true,
         value: (...sample: [unknown, ...unknown[]]) => new CustomMatcher(false, ...sample),
         writable: true,
       })
 
-      Object.defineProperty(__vitest_expect__.not, expectAssertionName, {
+      Object.defineProperty(expect.not, expectAssertionName, {
         configurable: true,
         enumerable: true,
         value: (...sample: [unknown, ...unknown[]]) => new CustomMatcher(true, ...sample),
@@ -125,11 +125,7 @@ function JestExtendPlugin(expects: MatchersObject): ChaiPlugin {
 }
 
 export const JestExtend: ChaiPlugin = (chai, utils) => {
-  utils.addMethod(chai.expect, 'extend', (expects: MatchersObject) => {
-    chai.use(JestExtendPlugin(expects))
+  utils.addMethod(chai.expect, 'extend', function(expect: Vi.ExpectStatic, expects: MatchersObject) {
+    chai.use(JestExtendPlugin(expect, expects))
   })
-}
-
-declare global {
-  let __vitest_expect__: Vi.ExpectStatic
 }
