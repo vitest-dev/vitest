@@ -21,6 +21,8 @@ function hash(str: string): string {
 export async function collectTests(paths: string[], config: ResolvedConfig) {
   const files: File[] = []
 
+  const webCache = __vitest_worker__.webCache
+
   for (const filepath of paths) {
     const path = relative(config.root, filepath)
     const file: File = {
@@ -39,8 +41,12 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
         await import(filepath)
       }
       else {
-        // fake cache for browser
-        await import(`${filepath}?v=${new Date().getTime()}`)
+        // fake cache for browser and windows fix: X:/<path> => /@fs/<path>
+        const match = filepath.match(/^(\w:\/)/)
+        if (match)
+          await import(`/@fs/${filepath.slice(match[1].length)}?v=${webCache!.get(filepath)}`)
+        else
+          await import(`${filepath}?v=${webCache!.get(filepath)}`)
       }
 
       const defaultTasks = await defaultSuite.collect(file)

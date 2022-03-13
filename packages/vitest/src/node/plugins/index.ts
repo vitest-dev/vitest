@@ -21,6 +21,7 @@ export async function VitestPlugin(
 
   async function WebPlugin() {
     await ensurePackageInstalled('@vitest/web')
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment,@typescript-eslint/prefer-ts-expect-error
     // @ts-ignore
     return (await import('@vitest/web')).default('/')
   }
@@ -72,6 +73,13 @@ export async function VitestPlugin(
 
       (options as ResolvedConfig).defines = defines
 
+      let open: string | boolean | undefined
+
+      if (preOptions.ui && preOptions.open)
+        open = preOptions.uiBase ?? '/__vitest__/'
+      else if (preOptions.web)
+        open = '/'
+
       return {
         clearScreen: false,
         resolve: {
@@ -81,9 +89,7 @@ export async function VitestPlugin(
         },
         server: {
           ...preOptions.api,
-          open: preOptions.ui && preOptions.open
-            ? preOptions.uiBase ?? '/__vitest__/'
-            : undefined,
+          open,
           preTransformRequests: false,
         },
         // disable deps optimization

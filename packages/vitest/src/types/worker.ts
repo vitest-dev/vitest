@@ -38,4 +38,5 @@ export interface WorkerGlobalState {
   current?: Test
   filepath?: string
   moduleCache: Map<string, ModuleCache>
+  webCache?: Map<string, string>
 }
