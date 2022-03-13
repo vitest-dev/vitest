@@ -125,7 +125,7 @@ function JestExtendPlugin(expect: Vi.ExpectStatic, matchers: MatchersObject): Ch
 }
 
 export const JestExtend: ChaiPlugin = (chai, utils) => {
-  utils.addMethod(chai.expect, 'extend', function(expect: Vi.ExpectStatic, expects: MatchersObject) {
+  utils.addMethod(chai.expect, 'extend', (expect: Vi.ExpectStatic, expects: MatchersObject) => {
     chai.use(JestExtendPlugin(expect, expects))
   })
 }
