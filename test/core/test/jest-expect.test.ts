@@ -11,7 +11,7 @@ interface CustomMatchers<R = unknown> {
 declare global {
   namespace Vi {
     interface JestAssertion extends CustomMatchers {}
-    interface ExpectStatic extends CustomMatchers {}
+    interface AsymmetricMatchersContaining extends CustomMatchers {}
   }
 }
 
@@ -148,12 +148,10 @@ describe('jest-expect', () => {
 
     expect(5).toBeDividedBy(5)
     expect(5).not.toBeDividedBy(4)
-
-    // TODO: support asymmetric matcher
-    // expect({ one: 1, two: 2 }).toEqual({
-    //   one: expect.toBeDividedBy(1),
-    //   two: expect.toBeDividedBy(1),
-    // })
+    expect({ one: 1, two: 2 }).toEqual({
+      one: expect.toBeDividedBy(1),
+      two: expect.not.toBeDividedBy(5),
+    })
   })
 
   it('object', () => {
