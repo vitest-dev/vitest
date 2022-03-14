@@ -127,12 +127,12 @@ export class ObjectContaining extends AsymmetricMatcher<Record<string, unknown>>
   }
 }
 
-export class ArrayContaining extends AsymmetricMatcher<Array<unknown>> {
-  constructor(sample: Array<unknown>, inverse = false) {
+export class ArrayContaining<T = unknown> extends AsymmetricMatcher<Array<T>> {
+  constructor(sample: Array<T>, inverse = false) {
     super(sample, inverse)
   }
 
-  asymmetricMatch(other: Array<unknown>) {
+  asymmetricMatch(other: Array<T>) {
     if (!Array.isArray(this.sample)) {
       throw new TypeError(
         `You must provide an array to ${this.toString()}, not '${
@@ -287,7 +287,7 @@ export const JestAsymmetricMatchers: ChaiPlugin = (chai, utils) => {
   utils.addMethod(
     chai.expect,
     'arrayContaining',
-    (expected: any) => new ArrayContaining(expected),
+    <T = any>(expected: Array<T>) => new ArrayContaining<T>(expected),
   )
 
   utils.addMethod(
@@ -300,7 +300,7 @@ export const JestAsymmetricMatchers: ChaiPlugin = (chai, utils) => {
   ;(chai.expect as any).not = {
     stringContaining: (expected: string) => new StringContaining(expected, true),
     objectContaining: (expected: any) => new ObjectContaining(expected, true),
-    arrayContaining: (expected: unknown[]) => new ArrayContaining(expected, true),
+    arrayContaining: <T = unknown>(expected: Array<T>) => new ArrayContaining<T>(expected, true),
     stringMatching: (expected: string | RegExp) => new StringMatching(expected, true),
   }
 }

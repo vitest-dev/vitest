@@ -111,6 +111,20 @@ describe('jest-expect', () => {
     expect(['Bob', 'Eve']).toEqual(expect.arrayContaining(['Bob']))
     expect(['Bob', 'Eve']).not.toEqual(expect.arrayContaining(['Mohammad']))
 
+    expect([
+      { name: 'Bob' },
+      { name: 'Eve' },
+    ]).toEqual(expect.arrayContaining<{ name: string }>([
+      { name: 'Bob' },
+    ]))
+    expect([
+      { name: 'Bob' },
+      { name: 'Eve' },
+    ]).not.toEqual(expect.arrayContaining<{ name: string }>([
+      { name: 'Mohammad' },
+    ]))
+
+
     expect('Mohammad').toEqual(expect.stringMatching(/Moh/))
     expect('Mohammad').not.toEqual(expect.stringMatching(/jack/))
 
