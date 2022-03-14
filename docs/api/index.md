@@ -666,6 +666,7 @@ TODO
 
   const invoice = {
     isActive: true,
+    ['P.O']: '12345',
     customer: {
       first_name: 'John',
       last_name: 'Doe',
@@ -699,6 +700,8 @@ TODO
     expect(invoice).toHaveProperty('items[0].type', 'apples')
     expect(invoice).toHaveProperty('items.0.type', 'apples') // dot notation also works
 
+    // Wrap your key in an array so avoid it being parsed as a deep reference
+    expect(invoice).toHaveProperty(['P.O'], '12345');
   })
   ```
 

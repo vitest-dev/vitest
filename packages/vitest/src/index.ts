@@ -93,7 +93,7 @@ declare global {
       toBeInstanceOf<E>(expected: E): void
       toBeCalledTimes(times: number): void
       toHaveLength(length: number): void
-      toHaveProperty<E>(property: string, value?: E): void
+      toHaveProperty<E>(property: string | string[], value?: E): void
       toBeCloseTo(number: number, numDigits?: number): void
       toHaveBeenCalledTimes(times: number): void
       toHaveBeenCalledOnce(): void
