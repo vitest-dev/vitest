@@ -665,15 +665,15 @@ TODO
   import { expect, test } from 'vitest'
 
   const invoice = {
-    isActive: true,
-    ['P.O']: '12345',
-    customer: {
+    'isActive': true,
+    'P.O': '12345',
+    'customer': {
       first_name: 'John',
       last_name: 'Doe',
       location: 'China',
     },
-    total_amount: 5000,
-    items: [
+    'total_amount': 5000,
+    'items': [
       {
         type: 'apples',
         quantity: 10,
