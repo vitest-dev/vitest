@@ -140,6 +140,7 @@ You can specify additional CLI options like `--port` or `--https`. For a full li
 - [Vitamin](https://github.com/wtchnm/Vitamin)
 - [neodrag](https://github.com/PuruVJ/neodrag)
 - [svelte-multiselect](https://github.com/janosh/svelte-multiselect)
+- [iconify](https://github.com/iconify/iconify)
 
 ## Using Unreleased Commits
 
