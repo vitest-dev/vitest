@@ -175,7 +175,15 @@ describe('jest-expect', () => {
     expect({}).not.toBe({})
 
     const foo = {}
-    const complex = { foo: 1, bar: { foo: 'foo', bar: 100, arr: ['first', { zoo: 'monkey' }] } }
+    const complex = {
+      'foo': 1,
+      'foo.bar[0]': 'baz',
+      'bar': {
+        foo: 'foo',
+        bar: 100,
+        arr: ['first', { zoo: 'monkey' }],
+      },
+    }
 
     expect(foo).toBe(foo)
     expect(foo).toStrictEqual(foo)
@@ -193,6 +201,8 @@ describe('jest-expect', () => {
     expect(complex).toHaveProperty('bar.arr[1].zoo', 'monkey')
     expect(complex).toHaveProperty('bar.arr.0')
     expect(complex).toHaveProperty('bar.arr.1.zoo', 'monkey')
+    expect(complex).toHaveProperty(['bar', 'arr', '1', 'zoo'], 'monkey')
+    expect(complex).toHaveProperty(['foo.bar[0]'], 'baz')
   })
 
   it('assertions', () => {

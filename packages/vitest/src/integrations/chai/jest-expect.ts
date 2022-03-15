@@ -245,8 +245,11 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     return this.have.length(length)
   })
   // destructuring, because it checks `arguments` inside, and value is passing as `undefined`
-  def('toHaveProperty', function(...args: [property: string, value?: any]) {
-    return this.have.deep.nested.property(...args)
+  def('toHaveProperty', function(...args: [property: string | string[], value?: any]) {
+    if (Array.isArray(args[0]))
+      args[0] = args[0].map(key => key.replace(/([.[\]])/g, '\\$1')).join('.')
+
+    return this.have.deep.nested.property(...args as [property: string, value?: any])
   })
   def('toBeCloseTo', function(received: number, precision = 2) {
     const expected = this._obj
