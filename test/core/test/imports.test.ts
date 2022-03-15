@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { dynamicRelativeImport } from '../src/relative-import';
+import { dynamicRelativeImport } from '../src/relative-import'
 
 test('dynamic relative import works', async() => {
   const stringTimeoutMod = await import('./../src/timeout')
@@ -14,7 +14,6 @@ test('Relative imports in file work', async() => {
   const relativeImportFromFile = await dynamicRelativeImport('timeout')
   const directImport = await import('./../src/timeout')
 
-  console.log(directImport, relativeImportFromFile);
   expect(relativeImportFromFile).toBe(directImport)
 })
 
