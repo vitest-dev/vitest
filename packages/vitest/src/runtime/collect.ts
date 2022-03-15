@@ -58,7 +58,7 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
         state: 'fail',
         error: processError(e),
       }
-      // not sure thy, this this line is needed to trigger the error
+      // not sure thy, this line is needed to trigger the error
       process.stdout.write('\0')
     }
 
