@@ -700,8 +700,8 @@ TODO
     expect(invoice).toHaveProperty('items[0].type', 'apples')
     expect(invoice).toHaveProperty('items.0.type', 'apples') // dot notation also works
 
-    // Wrap your key in an array so avoid it being parsed as a deep reference
-    expect(invoice).toHaveProperty(['P.O'], '12345');
+    // Wrap your key in an array to avoid the key from being parsed as a deep reference
+    expect(invoice).toHaveProperty(['P.O'], '12345')
   })
   ```
 
