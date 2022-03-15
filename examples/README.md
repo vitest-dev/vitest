@@ -1,9 +1,6 @@
 | Example | Source | Playground |
 |---|---|---|
 | `basic` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/basic) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/basic?initialPath=__vitest__) |
-| `cjs` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/cjs) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/cjs?initialPath=__vitest__) |
-| `coverage-test` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/coverage-test) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/coverage-test?initialPath=__vitest__) |
-| `fails` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/fails) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/fails?initialPath=__vitest__) |
 | `graphql` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/graphql) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/graphql?initialPath=__vitest__) |
 | `lit` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/lit) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/lit?initialPath=__vitest__) |
 | `mocks` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/mocks) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/mocks?initialPath=__vitest__) |
