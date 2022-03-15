@@ -10,7 +10,7 @@ test('dynamic relative import works', async() => {
   expect(stringTimeoutMod).toBe(variableTimeoutMod)
 })
 
-test('Relative imports in file work', async() => {
+test('Relative imports in imported modules work', async() => {
   const relativeImportFromFile = await dynamicRelativeImport('timeout')
   const directImport = await import('./../src/timeout')
 
