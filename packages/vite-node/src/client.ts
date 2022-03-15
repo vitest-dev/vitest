@@ -83,7 +83,9 @@ export class ViteNodeRunner {
 
     // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
     const url = pathToFileURL(fsPath).href
-    const exports: any = {}
+    const exports: any = {
+      [Symbol.toStringTag]: 'Module',
+    }
 
     this.setCache(id, { code: transformed, exports })
 
