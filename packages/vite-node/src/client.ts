@@ -56,11 +56,10 @@ export class ViteNodeRunner {
       // probably means it was passed as variable
       // and wasn't transformed by Vite
       if (this.shouldResolveId(dep)) {
+        if (extname(dep)) dep = normalize(`${dirname(id)}/${dep}`)
         const resolvedDep = await this.options.resolveId(dep, id)
         dep = resolvedDep?.id?.replace(this.root, '') || dep
       }
-      if (!isAbsolute(dep) && extname(dep))
-        dep = normalize(`${dirname(id)}/${dep}`)
 
       if (callstack.includes(dep)) {
         if (!this.moduleCache.get(dep)?.exports)
