@@ -54,6 +54,9 @@ const runner = new ViteNodeRunner({
   fetchModule(id) {
     return node.fetchModule(id)
   },
+  resolveId(id, importer) {
+    return node.resolveId(id, importer)
+  },
 })
 
 // execute the file
