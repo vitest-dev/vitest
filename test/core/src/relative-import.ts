@@ -1,3 +1,3 @@
-export function dynamicRelativeImport(file) {
+export function dynamicRelativeImport(file: string) {
   return import(`./${file}.ts`)
 }
