@@ -37,7 +37,7 @@ export class VitestRunner extends ViteNodeRunner {
     const mocker = this.mocker.withRequest(request)
 
     mocker.on('mocked', (dep: string, module: Partial<ModuleCache>) => {
-      this.setCache(dep, module)
+      this.moduleCache.set(dep, module)
     })
 
     const workerState = getWorkerState()

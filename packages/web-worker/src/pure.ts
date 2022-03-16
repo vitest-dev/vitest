@@ -1,7 +1,7 @@
 /* eslint-disable no-restricted-imports */
-
 import { VitestRunner } from 'vitest/node'
 import type { WorkerGlobalState } from 'vitest'
+import { toFilePath } from '../../vite-node/src/utils'
 
 function getWorkerState(): WorkerGlobalState {
   // @ts-expect-error untyped global
@@ -44,7 +44,7 @@ interface InlineWorkerContext {
   postMessage: (data: any) => void
   self: InlineWorkerContext
   global: InlineWorkerContext
-  invalidate: string[]
+  invalidates: string[]
   importScripts?: any
 }
 
@@ -94,7 +94,7 @@ export function defineWebWorker() {
     public onerror: null | Procedure = null
 
     constructor(url: URL | string) {
-      const invalidate: string[] = []
+      const invalidates: string[] = []
       const context: InlineWorkerContext = {
         onmessage: null,
         dispatchEvent: (event: Event) => {
@@ -112,7 +112,7 @@ export function defineWebWorker() {
         get global() {
           return context
         },
-        invalidate,
+        invalidates,
       }
 
       this.inside.on('message', (e) => {
@@ -127,13 +127,16 @@ export function defineWebWorker() {
 
       let id = url instanceof URL ? url.toString() : url
 
-      id = id.replace('?worker_file', '')
+      id = id
+        .replace('?worker_file', '')
+        .replace(/^file:\/+/, '/')
 
-      invalidate.push(id)
+      const fsPath = toFilePath(id, config.root)
+      invalidates.push(fsPath)
 
-      runner.executeId(id)
+      runner.executeFile(fsPath)
         .then(() => {
-          invalidate.forEach((path) => {
+          invalidates.forEach((path) => {
             // worker should be new every time
             moduleCache.delete(path)
             moduleCache.delete(`${path}__mock`)

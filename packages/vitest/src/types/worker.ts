@@ -1,5 +1,5 @@
 import type { MessagePort } from 'worker_threads'
-import type { FetchFunction, ModuleCache, RawSourceMap, ViteNodeResolveId } from 'vite-node'
+import type { FetchFunction, ModuleCacheMap, RawSourceMap, ViteNodeResolveId } from 'vite-node'
 import type { BirpcReturn } from 'birpc'
 import type { SuiteMocks } from './mocker'
 import type { ResolvedConfig } from './config'
@@ -37,6 +37,6 @@ export interface WorkerGlobalState {
   rpc: BirpcReturn<WorkerRPC>
   current?: Test
   filepath?: string
-  moduleCache: Map<string, ModuleCache>
+  moduleCache: ModuleCacheMap
   mockMap: SuiteMocks
 }
