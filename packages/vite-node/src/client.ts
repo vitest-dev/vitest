@@ -1,7 +1,7 @@
 import { createRequire } from 'module'
 import { fileURLToPath, pathToFileURL } from 'url'
 import vm from 'vm'
-import { dirname, extname, isAbsolute, normalize, resolve } from 'pathe'
+import { dirname, extname, isAbsolute, resolve } from 'pathe'
 import { isNodeBuiltin } from 'mlly'
 import { isPrimitive, normalizeId, slash, toFilePath } from './utils'
 import type { ModuleCache, ViteNodeRunnerOptions } from './types'
@@ -56,7 +56,6 @@ export class ViteNodeRunner {
       // probably means it was passed as variable
       // and wasn't transformed by Vite
       if (this.shouldResolveId(dep)) {
-        if (extname(dep)) dep = normalize(`${dirname(id)}/${dep}`)
         const resolvedDep = await this.options.resolveId(dep, id)
         dep = resolvedDep?.id?.replace(this.root, '') || dep
       }
