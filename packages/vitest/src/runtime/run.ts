@@ -71,6 +71,7 @@ export async function runTest(test: Test) {
 
   test.result = {
     state: 'run',
+    startTime: Date.now(),
   }
   updateTask(test)
 
@@ -154,6 +155,7 @@ export async function runSuite(suite: Suite) {
 
   suite.result = {
     state: 'run',
+    startTime: Date.now(),
   }
 
   updateTask(suite)

@@ -665,14 +665,15 @@ TODO
   import { expect, test } from 'vitest'
 
   const invoice = {
-    isActive: true,
-    customer: {
+    'isActive': true,
+    'P.O': '12345',
+    'customer': {
       first_name: 'John',
       last_name: 'Doe',
       location: 'China',
     },
-    total_amount: 5000,
-    items: [
+    'total_amount': 5000,
+    'items': [
       {
         type: 'apples',
         quantity: 10,
@@ -699,6 +700,8 @@ TODO
     expect(invoice).toHaveProperty('items[0].type', 'apples')
     expect(invoice).toHaveProperty('items.0.type', 'apples') // dot notation also works
 
+    // Wrap your key in an array to avoid the key from being parsed as a deep reference
+    expect(invoice).toHaveProperty(['P.O'], '12345')
   })
   ```
 

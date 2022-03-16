@@ -221,6 +221,7 @@ const OTHER_KEYS = [
   'stop',
   /* 'toString', */
   'top',
+  'Window',
   'window',
 ]
 

@@ -67,5 +67,5 @@ test('json reporter', async() => {
   await reporter.onFinished(files)
 
   // Assert
-  expect(context.output).toMatchSnapshot()
+  expect(JSON.parse(context.output)).toMatchSnapshot()
 })

@@ -79,7 +79,7 @@ export class VitestMocker {
   }
 
   private async resolvePath(id: string, importer: string) {
-    const path = await this.options.resolveId(id, importer)
+    const path = await this.options.resolveId!(id, importer)
     return {
       path: normalizeId(path?.id || id),
       external: path?.id.includes('/node_modules/') ? id : null,

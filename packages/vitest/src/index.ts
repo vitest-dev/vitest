@@ -23,13 +23,6 @@ declare module 'vite' {
   }
 }
 
-interface AsymmetricMatchersContaining {
-  stringContaining(expected: string): any
-  objectContaining(expected: any): any
-  arrayContaining(expected: unknown[]): any
-  stringMatching(expected: string | RegExp): any
-}
-
 type Promisify<O> = {
   [K in keyof O]: O[K] extends (...args: infer A) => infer R
     ? O extends R
@@ -58,6 +51,13 @@ declare global {
       getState(): MatcherState
       setState(state: Partial<MatcherState>): void
       not: AsymmetricMatchersContaining
+    }
+
+    interface AsymmetricMatchersContaining {
+      stringContaining(expected: string): any
+      objectContaining(expected: any): any
+      arrayContaining<T = unknown>(expected: Array<T>): any
+      stringMatching(expected: string | RegExp): any
     }
 
     interface JestAssertion<T = any> extends jest.Matchers<void, T> {
@@ -93,7 +93,7 @@ declare global {
       toBeInstanceOf<E>(expected: E): void
       toBeCalledTimes(times: number): void
       toHaveLength(length: number): void
-      toHaveProperty<E>(property: string, value?: E): void
+      toHaveProperty<E>(property: string | string[], value?: E): void
       toBeCloseTo(number: number, numDigits?: number): void
       toHaveBeenCalledTimes(times: number): void
       toHaveBeenCalledOnce(): void

@@ -1,6 +1,6 @@
 {
   "name": "vitest",
-  "version": "0.6.0",
+  "version": "0.6.3",
   "description": "A blazing fast unit test framework powered by Vite",
   "keywords": [
     "vite",
@@ -112,7 +112,7 @@
     "fast-glob": "^3.2.11",
     "find-up": "^6.3.0",
     "flatted": "^3.2.5",
-    "happy-dom": "^2.45.1",
+    "happy-dom": "^2.47.2",
     "jsdom": "^19.0.0",
     "log-update": "^5.0.0",
     "magic-string": "^0.26.1",
@@ -125,7 +125,7 @@
     "pkg-types": "^0.3.2",
     "pretty-format": "^27.5.1",
     "prompts": "^2.4.2",
-    "rollup": "^2.70.0",
+    "rollup": "^2.70.1",
     "source-map-js": "^1.0.2",
     "strip-ansi": "^7.0.1",
     "typescript": "^4.6.2",
