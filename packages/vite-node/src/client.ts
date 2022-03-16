@@ -22,6 +22,10 @@ export const DEFAULT_REQUEST_STUBS = {
 export class ViteNodeRunner {
   root: string
 
+  /**
+   * Holds the cache of modules
+   * Keys of the map are filepaths, or plain package names
+   */
   moduleCache: Map<string, ModuleCache>
 
   constructor(public options: ViteNodeRunnerOptions) {
@@ -39,13 +43,13 @@ export class ViteNodeRunner {
 
   async cachedRequest(rawId: string, callstack: string[]) {
     const id = normalizeId(rawId, this.options.base)
-
-    if (this.moduleCache.get(id)?.promise)
-      return this.moduleCache.get(id)?.promise
-
     const fsPath = toFilePath(id, this.root)
+
+    if (this.moduleCache.get(fsPath)?.promise)
+      return this.moduleCache.get(fsPath)?.promise
+
     const promise = this.directRequest(id, fsPath, callstack)
-    this.setCache(id, { promise })
+    this.setCache(fsPath, { promise })
 
     return await promise
   }
@@ -74,7 +78,7 @@ export class ViteNodeRunner {
     const { code: transformed, externalize } = await this.options.fetchModule(id)
     if (externalize) {
       const mod = await this.interopedImport(externalize)
-      this.setCache(id, { exports: mod })
+      this.setCache(fsPath, { exports: mod })
       return mod
     }
 
@@ -134,11 +138,11 @@ export class ViteNodeRunner {
     return context
   }
 
-  setCache(id: string, mod: Partial<ModuleCache>) {
-    if (!this.moduleCache.has(id))
-      this.moduleCache.set(id, mod)
+  setCache(fsPath: string, mod: Partial<ModuleCache>) {
+    if (!this.moduleCache.has(fsPath))
+      this.moduleCache.set(fsPath, mod)
     else
-      Object.assign(this.moduleCache.get(id), mod)
+      Object.assign(this.moduleCache.get(fsPath), mod)
   }
 
   shouldResolveId(dep: string) {
