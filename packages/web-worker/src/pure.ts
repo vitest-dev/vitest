@@ -1,7 +1,6 @@
 /* eslint-disable no-restricted-imports */
 import { VitestRunner } from 'vitest/node'
 import type { WorkerGlobalState } from 'vitest'
-import { compileScript } from 'vue/compiler-sfc'
 import { toFilePath } from '../../vite-node/src/utils'
 
 function getWorkerState(): WorkerGlobalState {
