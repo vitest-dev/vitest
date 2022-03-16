@@ -2,9 +2,9 @@ import { resolve } from 'pathe'
 import { createBirpc } from 'birpc'
 import type { ModuleCache, ResolvedConfig, WorkerContext, WorkerRPC } from '../types'
 import { distDir } from '../constants'
+import { getWorkerState } from '../utils'
 import { executeInViteNode } from './execute'
 import { rpc } from './rpc'
-import '../internal'
 
 let _viteNode: {
   run: (files: string[], config: ResolvedConfig) => Promise<void>
@@ -54,8 +54,9 @@ async function startViteNode(ctx: WorkerContext) {
 }
 
 function init(ctx: WorkerContext) {
+  // @ts-expect-error untyped global
   if (typeof __vitest_worker__ !== 'undefined' && ctx.config.threads && ctx.config.isolate)
-    throw new Error(`worker for ${ctx.files.join(',')} already initialized by ${__vitest_worker__.ctx.files.join(',')}. This is probably an internal bug of Vitest.`)
+    throw new Error(`worker for ${ctx.files.join(',')} already initialized by ${getWorkerState().ctx.files.join(',')}. This is probably an internal bug of Vitest.`)
 
   process.stdout.write('\0')
 

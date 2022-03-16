@@ -2,7 +2,7 @@ import { Console } from 'console'
 import { Writable } from 'stream'
 import { environments } from '../integrations/env'
 import type { ResolvedConfig } from '../types'
-import { toArray } from '../utils'
+import { getWorkerState, toArray } from '../utils'
 import * as VitestIndex from '../index'
 import { rpc } from './rpc'
 
@@ -59,7 +59,7 @@ export function setupConsoleLogSpy() {
       rpc().onUserConsoleLog({
         type: 'stdout',
         content: stdoutBuffer.map(i => String(i)).join(''),
-        taskId: __vitest_worker__.current?.id,
+        taskId: getWorkerState().current?.id,
         time: stdoutTime || Date.now(),
       })
     }
@@ -71,7 +71,7 @@ export function setupConsoleLogSpy() {
       rpc().onUserConsoleLog({
         type: 'stderr',
         content: stderrBuffer.map(i => String(i)).join(''),
-        taskId: __vitest_worker__.current?.id,
+        taskId: getWorkerState().current?.id,
         time: stderrTime || Date.now(),
       })
     }
@@ -121,7 +121,7 @@ export async function runSetupFiles(config: ResolvedConfig) {
   const files = toArray(config.setupFiles)
   await Promise.all(
     files.map(async(file) => {
-      __vitest_worker__.moduleCache.delete(file)
+      getWorkerState().moduleCache.delete(file)
       await import(file)
     }),
   )

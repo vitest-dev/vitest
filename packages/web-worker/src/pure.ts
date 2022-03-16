@@ -3,7 +3,7 @@
 import { VitestRunner } from 'vitest/node'
 import type { WorkerGlobalState } from 'vitest'
 
-function getVitestWorker(): WorkerGlobalState {
+function getWorkerState(): WorkerGlobalState {
   // @ts-expect-error untyped global
   return globalThis.__vitest_worker__
 }
@@ -67,7 +67,7 @@ class InlineWorkerRunner extends VitestRunner {
 export function defineWebWorker() {
   if ('Worker' in globalThis) return
 
-  const { config, rpc, mockMap, moduleCache } = getVitestWorker()
+  const { config, rpc, mockMap, moduleCache } = getWorkerState()
 
   const options = {
     fetchModule(id: string) {

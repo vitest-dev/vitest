@@ -3,7 +3,7 @@ import { isNodeBuiltin } from 'mlly'
 import { basename, dirname, resolve } from 'pathe'
 import type { ModuleCache } from 'vite-node'
 import { toFilePath } from 'vite-node/utils'
-import { isWindows, mergeSlashes, normalizeId } from '../utils'
+import { getWorkerState, isWindows, mergeSlashes, normalizeId } from '../utils'
 import { distDir } from '../constants'
 import type { PendingSuiteMock } from '../types/mocker'
 import type { ExecuteOptions } from './execute'
@@ -64,7 +64,7 @@ export class VitestMocker {
   }
 
   public getSuiteFilepath(): string {
-    return __vitest_worker__?.filepath || 'global'
+    return getWorkerState().filepath || 'global'
   }
 
   public getMocks() {
