@@ -22,9 +22,10 @@ export const DEFAULT_REQUEST_STUBS = {
 export class ModuleCacheMap extends Map<string, ModuleCache> {
   normalizePath(fsPath: string) {
     return fsPath
-      .replace(/^\/@fs\//g, '/')
-      .replace(/^file:\//g, '/')
-      .replace(/^\/+/g, '/')
+      .replace(/\\/g, '/')
+      .replace(/^\/@fs\//, '/')
+      .replace(/^file:\//, '/')
+      .replace(/^\/+/, '/')
   }
 
   set(fsPath: string, mod: Partial<ModuleCache>) {
