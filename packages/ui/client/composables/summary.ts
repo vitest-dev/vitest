@@ -43,6 +43,11 @@ export const time = computed(() => {
   if (t > 1000)
     return `${(t / 1000).toFixed(2)}s`
 
+  // Can occur when usage of timer mocking. 
+  // TODO: we should isolate that timer mocking to avoid that case.
+  if (t < 0)
+    return `< 1ms`
+
   return `${Math.round(t)}ms`
 })
 
