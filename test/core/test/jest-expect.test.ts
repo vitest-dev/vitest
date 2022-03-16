@@ -4,6 +4,17 @@ import { describe, expect, it } from 'vitest'
 
 class TestError extends Error {}
 
+// For expect.extend
+interface CustomMatchers<R = unknown> {
+  toBeDividedBy(divisor: number): R
+}
+declare global {
+  namespace Vi {
+    interface JestAssertion extends CustomMatchers {}
+    interface AsymmetricMatchersContaining extends CustomMatchers {}
+  }
+}
+
 describe('jest-expect', () => {
   it('basic', () => {
     expect(1).toBe(1)
@@ -100,6 +111,20 @@ describe('jest-expect', () => {
     expect(['Bob', 'Eve']).toEqual(expect.arrayContaining(['Bob']))
     expect(['Bob', 'Eve']).not.toEqual(expect.arrayContaining(['Mohammad']))
 
+    expect([
+      { name: 'Bob' },
+      { name: 'Eve' },
+    ]).toEqual(expect.arrayContaining<{ name: string }>([
+      { name: 'Bob' },
+    ]))
+    expect([
+      { name: 'Bob' },
+      { name: 'Eve' },
+    ]).not.toEqual(expect.arrayContaining<{ name: string }>([
+      { name: 'Mohammad' },
+    ]))
+
+
     expect('Mohammad').toEqual(expect.stringMatching(/Moh/))
     expect('Mohammad').not.toEqual(expect.stringMatching(/jack/))
 
@@ -114,6 +139,35 @@ describe('jest-expect', () => {
     expect(['Bob', 'Eve']).toEqual(expect.not.arrayContaining(['Steve']))
   })
 
+  it('expect.extend', () => {
+    expect.extend({
+      toBeDividedBy(received, divisor) {
+        const pass = received % divisor === 0
+        if (pass) {
+          return {
+            message: () =>
+              `expected ${received} not to be divisible by ${divisor}`,
+            pass: true,
+          }
+        }
+        else {
+          return {
+            message: () =>
+              `expected ${received} to be divisible by ${divisor}`,
+            pass: false,
+          }
+        }
+      },
+    })
+
+    expect(5).toBeDividedBy(5)
+    expect(5).not.toBeDividedBy(4)
+    expect({ one: 1, two: 2 }).toEqual({
+      one: expect.toBeDividedBy(1),
+      two: expect.not.toBeDividedBy(5),
+    })
+  })
+
   it('object', () => {
     expect({}).toEqual({})
     expect({ apples: 13 }).toEqual({ apples: 13 })
@@ -121,7 +175,15 @@ describe('jest-expect', () => {
     expect({}).not.toBe({})
 
     const foo = {}
-    const complex = { foo: 1, bar: { foo: 'foo', bar: 100, arr: ['first', { zoo: 'monkey' }] } }
+    const complex = {
+      'foo': 1,
+      'foo.bar[0]': 'baz',
+      'bar': {
+        foo: 'foo',
+        bar: 100,
+        arr: ['first', { zoo: 'monkey' }],
+      },
+    }
 
     expect(foo).toBe(foo)
     expect(foo).toStrictEqual(foo)
@@ -139,6 +201,8 @@ describe('jest-expect', () => {
     expect(complex).toHaveProperty('bar.arr[1].zoo', 'monkey')
     expect(complex).toHaveProperty('bar.arr.0')
     expect(complex).toHaveProperty('bar.arr.1.zoo', 'monkey')
+    expect(complex).toHaveProperty(['bar', 'arr', '1', 'zoo'], 'monkey')
+    expect(complex).toHaveProperty(['foo.bar[0]'], 'baz')
   })
 
   it('assertions', () => {

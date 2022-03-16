@@ -1,6 +1,6 @@
 {
   "name": "@vitest/ui",
-  "version": "0.6.0",
+  "version": "0.6.3",
   "description": "UI for Vitest",
   "sideEffects": false,
   "repository": {
@@ -37,23 +37,23 @@
     "@types/codemirror": "^5.60.5",
     "@types/d3-force": "^3.0.3",
     "@types/d3-selection": "^3.0.2",
-    "@types/ws": "^8.5.2",
-    "@unocss/reset": "^0.27.2",
+    "@types/ws": "^8.5.3",
+    "@unocss/reset": "^0.28.1",
     "@vitejs/plugin-vue": "^2.2.4",
     "@vitest/ws-client": "workspace:*",
-    "@vueuse/core": "^7.7.1",
+    "@vueuse/core": "^8.0.1",
     "codemirror": "^5.65.2",
     "codemirror-theme-vars": "^0.1.1",
-    "d3-graph-controller": "^2.2.14",
+    "d3-graph-controller": "^2.2.16",
     "floating-vue": "^2.0.0-y.0",
     "picocolors": "^1.0.0",
-    "rollup": "^2.70.0",
+    "rollup": "^2.70.1",
     "splitpanes": "^3.1.1",
-    "unocss": "^0.27.2",
-    "unplugin-auto-import": "^0.6.1",
-    "unplugin-vue-components": "^0.17.21",
-    "vite-plugin-pages": "^0.21.4",
+    "unocss": "^0.28.1",
+    "unplugin-auto-import": "^0.6.6",
+    "unplugin-vue-components": "^0.18.0",
+    "vite-plugin-pages": "^0.22.0",
     "vue": "^3.2.31",
-    "vue-router": "^4.0.13"
+    "vue-router": "^4.0.14"
   }
 }

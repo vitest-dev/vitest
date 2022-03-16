@@ -2,7 +2,7 @@ import { performance } from 'perf_hooks'
 import type { File, HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from '../types'
 import { vi } from '../integrations/vi'
 import { getSnapshotClient } from '../integrations/snapshot/chai'
-import { getFullName, hasFailed, hasTests, partitionSuiteChildren } from '../utils'
+import { getFullName, getWorkerState, hasFailed, hasTests, partitionSuiteChildren } from '../utils'
 import { getState, setState } from '../integrations/chai/jest-expect'
 import { takeCoverage } from '../integrations/coverage'
 import { getFn, getHooks } from './map'
@@ -71,6 +71,7 @@ export async function runTest(test: Test) {
 
   test.result = {
     state: 'run',
+    startTime: Date.now(),
   }
   updateTask(test)
 
@@ -78,7 +79,9 @@ export async function runTest(test: Test) {
 
   getSnapshotClient().setTest(test)
 
-  __vitest_worker__.current = test
+  const workerState = getWorkerState()
+
+  workerState.current = test
 
   try {
     await callSuiteHook(test.suite, test, 'beforeEach', [test, test.suite])
@@ -129,7 +132,7 @@ export async function runTest(test: Test) {
 
   test.result.duration = performance.now() - start
 
-  __vitest_worker__.current = undefined
+  workerState.current = undefined
 
   updateTask(test)
 }
@@ -154,6 +157,7 @@ export async function runSuite(suite: Suite) {
 
   suite.result = {
     state: 'run',
+    startTime: Date.now(),
   }
 
   updateTask(suite)
@@ -239,7 +243,7 @@ export async function startTests(paths: string[], config: ResolvedConfig) {
 }
 
 export function clearModuleMocks() {
-  const { clearMocks, mockReset, restoreMocks } = __vitest_worker__.config
+  const { clearMocks, mockReset, restoreMocks } = getWorkerState().config
 
   // since each function calls another, we can just call one
   if (restoreMocks)

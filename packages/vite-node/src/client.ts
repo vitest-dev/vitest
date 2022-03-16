@@ -55,10 +55,11 @@ export class ViteNodeRunner {
     const request = async(dep: string) => {
       // probably means it was passed as variable
       // and wasn't transformed by Vite
-      if (this.shouldResolveId(dep)) {
+      if (this.options.resolveId && this.shouldResolveId(dep)) {
         const resolvedDep = await this.options.resolveId(dep, id)
         dep = resolvedDep?.id?.replace(this.root, '') || dep
       }
+
       if (callstack.includes(dep)) {
         if (!this.moduleCache.get(dep)?.exports)
           throw new Error(`[vite-node] Circular dependency detected\nStack:\n${[...callstack, dep].reverse().map(p => `- ${p}`).join('\n')}`)
@@ -83,7 +84,8 @@ export class ViteNodeRunner {
 
     // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
     const url = pathToFileURL(fsPath).href
-    const exports: any = {}
+    const exports: any = Object.create(null)
+    exports[Symbol.toStringTag] = 'Module'
 
     this.setCache(id, { code: transformed, exports })
 

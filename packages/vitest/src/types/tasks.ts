@@ -18,6 +18,7 @@ export interface TaskBase {
 export interface TaskResult {
   state: TaskState
   duration?: number
+  startTime?: number
   error?: ErrorWithDiff
   hooks?: Partial<Record<keyof SuiteHooks, TaskState>>
 }

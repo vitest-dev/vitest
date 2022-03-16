@@ -2,7 +2,7 @@ import { Console } from 'console'
 import { Writable } from 'stream'
 import { environments } from '../integrations/env'
 import type { ResolvedConfig } from '../types'
-import { toArray } from '../utils'
+import { getWorkerState, toArray } from '../utils'
 import * as VitestIndex from '../index'
 import { rpc } from './rpc'
 
@@ -34,25 +34,64 @@ function setupDefines(defines: Record<string, any>) {
 }
 
 export function setupConsoleLogSpy() {
-  const stdout = new Writable({
-    write(data, encoding, callback) {
+  const stdoutBuffer: any[] = []
+  const stderrBuffer: any[] = []
+  let stdoutTime = 0
+  let stderrTime = 0
+  let timer: any
+
+  // group sync console.log calls with macro task
+  function schedule() {
+    clearTimeout(timer)
+    timer = setTimeout(() => {
+      if (stderrTime < stdoutTime) {
+        sendStderr()
+        sendStdout()
+      }
+      else {
+        sendStdout()
+        sendStderr()
+      }
+    })
+  }
+  function sendStdout() {
+    if (stdoutBuffer.length) {
       rpc().onUserConsoleLog({
         type: 'stdout',
-        content: String(data),
-        taskId: __vitest_worker__.current?.id,
-        time: Date.now(),
+        content: stdoutBuffer.map(i => String(i)).join(''),
+        taskId: getWorkerState().current?.id,
+        time: stdoutTime || Date.now(),
       })
+    }
+    stdoutBuffer.length = 0
+    stdoutTime = 0
+  }
+  function sendStderr() {
+    if (stderrBuffer.length) {
+      rpc().onUserConsoleLog({
+        type: 'stderr',
+        content: stderrBuffer.map(i => String(i)).join(''),
+        taskId: getWorkerState().current?.id,
+        time: stderrTime || Date.now(),
+      })
+    }
+    stderrBuffer.length = 0
+    stderrTime = 0
+  }
+
+  const stdout = new Writable({
+    write(data, encoding, callback) {
+      stdoutTime = stdoutTime || Date.now()
+      stdoutBuffer.push(data)
+      schedule()
       callback()
     },
   })
   const stderr = new Writable({
     write(data, encoding, callback) {
-      rpc().onUserConsoleLog({
-        type: 'stderr',
-        content: String(data),
-        taskId: __vitest_worker__.current?.id,
-        time: Date.now(),
-      })
+      stderrTime = stderrTime || Date.now()
+      stderrBuffer.push(data)
+      schedule()
       callback()
     },
   })
@@ -82,7 +121,7 @@ export async function runSetupFiles(config: ResolvedConfig) {
   const files = toArray(config.setupFiles)
   await Promise.all(
     files.map(async(file) => {
-      __vitest_worker__.moduleCache.delete(file)
+      getWorkerState().moduleCache.delete(file)
       await import(file)
     }),
   )
