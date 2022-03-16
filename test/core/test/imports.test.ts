@@ -32,3 +32,16 @@ test('data with dynamic import works', async() => {
   const { default: hi } = await import(dataUri)
   expect(hi).toBe('hi')
 })
+
+test('dynamic import has Module symbol', async() => {
+  const stringTimeoutMod = await import('./../src/timeout')
+
+  // @ts-expect-error The symbol won't exist on the import type
+  expect(stringTimeoutMod[Symbol.toStringTag]).toBe('Module')
+})
+
+test('dynamic import has null prototype', async() => {
+  const stringTimeoutMod = await import('./../src/timeout')
+
+  expect(Object.getPrototypeOf(stringTimeoutMod)).toBe(null)
+})
