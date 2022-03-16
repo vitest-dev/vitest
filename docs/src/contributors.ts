@@ -37,7 +37,7 @@ const coreTeamMembers: CoreTeam[] = [
     avatar: contributorsAvatars['patak-dev'],
     name: 'Patak',
     github: 'patak-dev',
-    twitter: 'patak-dev',
+    twitter: 'patak_dev',
     sponsors: true,
     description: 'A collaborative being<br>Core team member of Vite<br>Team member of Vue',
   },

@@ -1,7 +1,7 @@
 import { createRequire } from 'module'
 import { fileURLToPath, pathToFileURL } from 'url'
 import vm from 'vm'
-import { dirname, isAbsolute, resolve } from 'pathe'
+import { dirname, extname, isAbsolute, resolve } from 'pathe'
 import { isNodeBuiltin } from 'mlly'
 import { isPrimitive, normalizeId, slash, toFilePath } from './utils'
 import type { ModuleCache, ViteNodeRunnerOptions } from './types'
@@ -55,9 +55,9 @@ export class ViteNodeRunner {
     const request = async(dep: string) => {
       // probably means it was passed as variable
       // and wasn't transformed by Vite
-      if (this.shouldResolveId(dep)) {
+      if (this.options.resolveId && this.shouldResolveId(dep)) {
         const resolvedDep = await this.options.resolveId(dep, id)
-        dep = resolvedDep?.id || dep
+        dep = resolvedDep?.id?.replace(this.root, '') || dep
       }
       if (callstack.includes(dep)) {
         if (!this.moduleCache.get(dep)?.exports)
@@ -83,7 +83,8 @@ export class ViteNodeRunner {
 
     // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
     const url = pathToFileURL(fsPath).href
-    const exports: any = {}
+    const exports: any = Object.create(null)
+    exports[Symbol.toStringTag] = 'Module'
 
     this.setCache(id, { code: transformed, exports })
 
@@ -141,10 +142,10 @@ export class ViteNodeRunner {
   }
 
   shouldResolveId(dep: string) {
-    if (isNodeBuiltin(dep))
+    if (isNodeBuiltin(dep) || dep in (this.options.requestStubs || DEFAULT_REQUEST_STUBS))
       return false
 
-    return !isAbsolute(dep)
+    return !isAbsolute(dep) || !extname(dep)
   }
 
   /**

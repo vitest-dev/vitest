@@ -13,7 +13,7 @@ Object.assign(expect, chai.expect)
 expect.getState = getState
 expect.setState = setState
 // @ts-expect-error untyped
-expect.extend = fn => chai.expect.extend(fn)
+expect.extend = matchers => chai.expect.extend(expect, matchers)
 
 export { assert, should } from 'chai'
 export { chai, expect }
