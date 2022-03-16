@@ -1,6 +1,7 @@
 import { resolve } from 'pathe'
 import { createBirpc } from 'birpc'
-import type { ModuleCache, ResolvedConfig, WorkerContext, WorkerRPC } from '../types'
+import { ModuleCacheMap } from 'vite-node/client'
+import type { ResolvedConfig, WorkerContext, WorkerRPC } from '../types'
 import { distDir } from '../constants'
 import { getWorkerState } from '../utils'
 import { executeInViteNode } from './execute'
@@ -11,7 +12,7 @@ let _viteNode: {
   collect: (files: string[], config: ResolvedConfig) => Promise<void>
 }
 
-const moduleCache: Map<string, ModuleCache> = new Map()
+const moduleCache = new ModuleCacheMap()
 const mockMap = {}
 
 async function startViteNode(ctx: WorkerContext) {

@@ -19,6 +19,34 @@ export const DEFAULT_REQUEST_STUBS = {
   },
 }
 
+export class ModuleCacheMap extends Map<string, ModuleCache> {
+  normalizePath(fsPath: string) {
+    return fsPath
+      .replace(/^\/@fs\//g, '/')
+      .replace(/^file:\//g, '/')
+      .replace(/^\/+/g, '/')
+  }
+
+  set(fsPath: string, mod: Partial<ModuleCache>) {
+    fsPath = this.normalizePath(fsPath)
+    if (!super.has(fsPath))
+      super.set(fsPath, mod)
+    else
+      Object.assign(super.get(fsPath), mod)
+    return this
+  }
+
+  get(fsPath: string) {
+    fsPath = this.normalizePath(fsPath)
+    return super.get(fsPath)
+  }
+
+  delete(fsPath: string) {
+    fsPath = this.normalizePath(fsPath)
+    return super.delete(fsPath)
+  }
+}
+
 export class ViteNodeRunner {
   root: string
 
@@ -26,11 +54,11 @@ export class ViteNodeRunner {
    * Holds the cache of modules
    * Keys of the map are filepaths, or plain package names
    */
-  moduleCache: Map<string, ModuleCache>
+  moduleCache: ModuleCacheMap
 
   constructor(public options: ViteNodeRunnerOptions) {
     this.root = options.root || process.cwd()
-    this.moduleCache = options.moduleCache || new Map()
+    this.moduleCache = options.moduleCache || new ModuleCacheMap()
   }
 
   async executeFile(file: string) {
@@ -49,7 +77,7 @@ export class ViteNodeRunner {
       return this.moduleCache.get(fsPath)?.promise
 
     const promise = this.directRequest(id, fsPath, callstack)
-    this.setCache(fsPath, { promise })
+    this.moduleCache.set(fsPath, { promise })
 
     return await promise
   }
@@ -79,7 +107,7 @@ export class ViteNodeRunner {
     const { code: transformed, externalize } = await this.options.fetchModule(id)
     if (externalize) {
       const mod = await this.interopedImport(externalize)
-      this.setCache(fsPath, { exports: mod })
+      this.moduleCache.set(fsPath, { exports: mod })
       return mod
     }
 
@@ -91,7 +119,7 @@ export class ViteNodeRunner {
     const exports: any = Object.create(null)
     exports[Symbol.toStringTag] = 'Module'
 
-    this.setCache(id, { code: transformed, exports })
+    this.moduleCache.set(id, { code: transformed, exports })
 
     const __filename = fileURLToPath(url)
     const moduleProxy = {
@@ -137,13 +165,6 @@ export class ViteNodeRunner {
 
   prepareContext(context: Record<string, any>) {
     return context
-  }
-
-  setCache(fsPath: string, mod: Partial<ModuleCache>) {
-    if (!this.moduleCache.has(fsPath))
-      this.moduleCache.set(fsPath, mod)
-    else
-      Object.assign(this.moduleCache.get(fsPath), mod)
   }
 
   shouldResolveId(dep: string) {

@@ -1,3 +1,5 @@
+import type { ModuleCacheMap } from './client'
+
 export interface DepsHandlingOptions {
   external?: (string | RegExp)[]
   inline?: (string | RegExp)[]
@@ -42,7 +44,7 @@ export interface ViteNodeRunnerOptions {
   fetchModule: FetchFunction
   resolveId?: ResolveIdFunction
   base?: string
-  moduleCache?: Map<string, ModuleCache>
+  moduleCache?: ModuleCacheMap
   interopDefault?: boolean
   requestStubs?: Record<string, any>
 }
@@ -73,3 +75,5 @@ export interface ViteNodeServerOptions {
     web?: RegExp[]
   }
 }
+
+export type { ModuleCacheMap }

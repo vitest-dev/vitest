@@ -1,8 +1,8 @@
 import { existsSync, readdirSync } from 'fs'
 import { isNodeBuiltin } from 'mlly'
 import { basename, dirname, resolve } from 'pathe'
-import type { ModuleCache } from 'vite-node'
 import { toFilePath } from 'vite-node/utils'
+import type { ModuleCacheMap } from 'vite-node/client'
 import { getWorkerState, isWindows, mergeSlashes, normalizeId } from '../utils'
 import { distDir } from '../constants'
 import type { PendingSuiteMock } from '../types/mocker'
@@ -43,7 +43,7 @@ export class VitestMocker {
 
   constructor(
     public options: ExecuteOptions,
-    private moduleCache: Map<string, ModuleCache>,
+    private moduleCache: ModuleCacheMap,
     request?: (dep: string) => unknown,
   ) {
     this.root = this.options.root
