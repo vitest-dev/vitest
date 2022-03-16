@@ -59,6 +59,7 @@ export class ViteNodeRunner {
         const resolvedDep = await this.options.resolveId(dep, id)
         dep = resolvedDep?.id?.replace(this.root, '') || dep
       }
+
       if (callstack.includes(dep)) {
         if (!this.moduleCache.get(dep)?.exports)
           throw new Error(`[vite-node] Circular dependency detected\nStack:\n${[...callstack, dep].reverse().map(p => `- ${p}`).join('\n')}`)

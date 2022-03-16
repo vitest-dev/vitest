@@ -1,3 +1,4 @@
+import { join } from 'pathe'
 import type { TransformResult, ViteDevServer } from 'vite'
 import type { FetchResult, RawSourceMap, ViteNodeResolveId, ViteNodeServerOptions } from './types'
 import { shouldExternalize } from './externalize'
@@ -24,6 +25,8 @@ export class ViteNodeServer {
   }
 
   async resolveId(id: string, importer?: string): Promise<ViteNodeResolveId | null> {
+    if (importer && !importer.startsWith(this.server.config.root))
+      importer = join(this.server.config.root, importer)
     return this.server.pluginContainer.resolveId(id, importer, { ssr: true })
   }
 

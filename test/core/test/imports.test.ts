@@ -1,4 +1,5 @@
 import { expect, test } from 'vitest'
+import { dynamicRelativeImport } from '../src/relative-import'
 
 test('dynamic relative import works', async() => {
   const stringTimeoutMod = await import('./../src/timeout')
@@ -7,6 +8,13 @@ test('dynamic relative import works', async() => {
   const variableTimeoutMod = await import(timeoutPath)
 
   expect(stringTimeoutMod).toBe(variableTimeoutMod)
+})
+
+test('Relative imports in imported modules work', async() => {
+  const relativeImportFromFile = await dynamicRelativeImport('timeout')
+  const directImport = await import('./../src/timeout')
+
+  expect(relativeImportFromFile).toBe(directImport)
 })
 
 test('dynamic aliased import works', async() => {
