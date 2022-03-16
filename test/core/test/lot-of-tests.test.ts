@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest'
 const SUITES = 50
 const TASKS = 10
 
-if (!process.env.CI) {
-  describe(`Suite of ${SUITES * TASKS} tests for UI performance tests`, () => {
+describe(`Suite of ${SUITES * TASKS} tests for UI performance tests`, () => {
+  if (!process.env.CI) {
     for (let i = 1; i <= SUITES; i++) {
       describe(`Test UI nested describe ${i}`, () => {
         for (let j = 1; j <= TASKS; j++) {
@@ -14,5 +14,8 @@ if (!process.env.CI) {
         }
       })
     }
-  })
-}
+  }
+  else {
+    it('skipped in ci', () => {})
+  }
+})

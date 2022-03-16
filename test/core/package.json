@@ -2,7 +2,7 @@
   "name": "@vitest/test-core",
   "private": true,
   "scripts": {
-    "test": "vitest --passWithNoTests",
+    "test": "vitest",
     "coverage": "vitest run --coverage"
   },
   "devDependencies": {
