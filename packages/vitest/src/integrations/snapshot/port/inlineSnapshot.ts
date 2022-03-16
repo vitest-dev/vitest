@@ -63,7 +63,6 @@ function prepareSnapString(snap: string, source: string, index: number) {
     .replace(/\\/g, '\\\\')
     .replace(/\$/g, '\\$')
     .split(/\n/g)
-    .map(i => i.trimEnd())
 
   const isOneline = lines.length <= 1
   const quote = isOneline ? '\'' : '`'
