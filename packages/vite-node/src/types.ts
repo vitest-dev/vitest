@@ -3,7 +3,7 @@ export interface DepsHandlingOptions {
   inline?: (string | RegExp)[]
   /**
    * Try to guess the CJS version of a package when it's invalid ESM
-   * @default true
+   * @default false
    */
   fallbackCJS?: boolean
 }

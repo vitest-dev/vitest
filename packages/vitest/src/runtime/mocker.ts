@@ -3,20 +3,12 @@ import { isNodeBuiltin } from 'mlly'
 import { basename, dirname, resolve } from 'pathe'
 import type { ModuleCache } from 'vite-node'
 import { toFilePath } from 'vite-node/utils'
-import { isWindows, mergeSlashes, normalizeId } from '../utils'
+import { getWorkerState, isWindows, mergeSlashes, normalizeId } from '../utils'
 import { distDir } from '../constants'
+import type { PendingSuiteMock } from '../types/mocker'
 import type { ExecuteOptions } from './execute'
 
-export type SuiteMocks = Record<string, Record<string, string | null | (() => unknown)>>
-
 type Callback = (...args: any[]) => unknown
-
-interface PendingSuiteMock {
-  id: string
-  importer: string
-  type: 'mock' | 'unmock'
-  factory?: () => unknown
-}
 
 function getObjectType(value: unknown): string {
   return Object.prototype.toString.apply(value).slice(8, -1)
@@ -40,15 +32,14 @@ function mockPrototype(spyOn: typeof import('../integrations/jest-mock')['spyOn'
   return newProto
 }
 
-const pendingIds: PendingSuiteMock[] = []
-
 export class VitestMocker {
+  private static pendingIds: PendingSuiteMock[] = []
+  private static spyModule?: typeof import('../integrations/jest-mock')
+
   private request!: (dep: string) => unknown
 
   private root: string
-
   private callbacks: Record<string, ((...args: any[]) => unknown)[]> = {}
-  private spy?: typeof import('../integrations/jest-mock')
 
   constructor(
     public options: ExecuteOptions,
@@ -73,7 +64,7 @@ export class VitestMocker {
   }
 
   public getSuiteFilepath(): string {
-    return __vitest_worker__?.filepath || 'global'
+    return getWorkerState().filepath || 'global'
   }
 
   public getMocks() {
@@ -96,7 +87,7 @@ export class VitestMocker {
   }
 
   private async resolveMocks() {
-    await Promise.all(pendingIds.map(async(mock) => {
+    await Promise.all(VitestMocker.pendingIds.map(async(mock) => {
       const { path, external } = await this.resolvePath(mock.id, mock.importer)
       if (mock.type === 'unmock')
         this.unmockPath(path)
@@ -104,7 +95,7 @@ export class VitestMocker {
         this.mockPath(path, external, mock.factory)
     }))
 
-    pendingIds.length = 0
+    VitestMocker.pendingIds = []
   }
 
   private async callFunctionMock(dep: string, mock: () => any) {
@@ -166,7 +157,7 @@ export class VitestMocker {
   }
 
   public mockObject(obj: any) {
-    if (!this.spy)
+    if (!VitestMocker.spyModule)
       throw new Error('Internal Vitest error: Spy function is not defined.')
 
     const type = getObjectType(obj)
@@ -178,7 +169,7 @@ export class VitestMocker {
 
     const newObj = { ...obj }
 
-    const proto = mockPrototype(this.spy.spyOn, Object.getPrototypeOf(obj))
+    const proto = mockPrototype(VitestMocker.spyModule.spyOn, Object.getPrototypeOf(obj))
     Object.setPrototypeOf(newObj, proto)
 
     // eslint-disable-next-line no-restricted-syntax
@@ -187,8 +178,8 @@ export class VitestMocker {
       const type = getObjectType(obj[k])
 
       if (type.includes('Function') && !obj[k]._isMockFunction) {
-        this.spy.spyOn(newObj, k).mockImplementation(() => {})
-        Object.defineProperty(newObj[k], 'length', { value: 0 }) // tinyspy retains length, but jest doesn't
+        VitestMocker.spyModule.spyOn(newObj, k).mockImplementation(() => {})
+        Object.defineProperty(newObj[k], 'length', { value: 0 }) // tinyspy retains length, but jest doesnt
       }
     }
     return newObj
@@ -239,8 +230,8 @@ export class VitestMocker {
   }
 
   private async ensureSpy() {
-    if (this.spy) return
-    this.spy = await this.request(resolve(distDir, 'jest-mock.js')) as typeof import('../integrations/jest-mock')
+    if (VitestMocker.spyModule) return
+    VitestMocker.spyModule = await this.request(resolve(distDir, 'jest-mock.js')) as typeof import('../integrations/jest-mock')
   }
 
   public async requestWithMock(dep: string) {
@@ -268,11 +259,11 @@ export class VitestMocker {
   }
 
   public queueMock(id: string, importer: string, factory?: () => unknown) {
-    pendingIds.push({ type: 'mock', id, importer, factory })
+    VitestMocker.pendingIds.push({ type: 'mock', id, importer, factory })
   }
 
   public queueUnmock(id: string, importer: string) {
-    pendingIds.push({ type: 'unmock', id, importer })
+    VitestMocker.pendingIds.push({ type: 'unmock', id, importer })
   }
 
   public withRequest(request: (dep: string) => unknown) {
