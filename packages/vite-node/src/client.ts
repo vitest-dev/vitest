@@ -55,7 +55,7 @@ export class ViteNodeRunner {
     const request = async(dep: string) => {
       // probably means it was passed as variable
       // and wasn't transformed by Vite
-      if (this.shouldResolveId(dep)) {
+      if (this.options.resolveId && this.shouldResolveId(dep)) {
         const resolvedDep = await this.options.resolveId(dep, id)
         dep = resolvedDep?.id?.replace(this.root, '') || dep
       }

@@ -38,9 +38,9 @@ export interface ModuleCache {
 }
 
 export interface ViteNodeRunnerOptions {
-  fetchModule: FetchFunction
-  resolveId: ResolveIdFunction
   root: string
+  fetchModule: FetchFunction
+  resolveId?: ResolveIdFunction
   base?: string
   moduleCache?: Map<string, ModuleCache>
   interopDefault?: boolean
