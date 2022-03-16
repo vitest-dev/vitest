@@ -12,7 +12,7 @@
     "@vitejs/plugin-vue": "^2.2.4",
     "@vue/test-utils": "^2.0.0-rc.18",
     "happy-dom": "latest",
-    "unplugin-auto-import": "^0.6.4",
+    "unplugin-auto-import": "^0.6.6",
     "unplugin-vue-components": "^0.18.0",
     "vitest": "latest"
   },
