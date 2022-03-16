@@ -23,10 +23,6 @@ test('JSON', () => {
   })
   expect(output).toEqual('{"foo":"hello","bar":"world"}')
   assert.deepEqual(JSON.parse(output), input, 'matches original')
-
-  console.error('Hey')
-  console.log('Hello')
-  console.log('World')
 })
 
 test('mode and NODE_ENV is test by default', () => {
