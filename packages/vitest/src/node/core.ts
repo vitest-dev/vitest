@@ -1,5 +1,6 @@
 import { existsSync, promises as fs } from 'fs'
 import type { ViteDevServer } from 'vite'
+import { toNamespacedPath } from 'pathe'
 import fg from 'fast-glob'
 import mm from 'micromatch'
 import c from 'picocolors'
@@ -393,7 +394,7 @@ export class Vitest {
     )))
   }
 
-  async globTestFiles(filters?: string[]) {
+  async globTestFiles(filters: string[] = []) {
     const globOptions = {
       absolute: true,
       cwd: this.config.dir || this.config.root,
@@ -402,12 +403,15 @@ export class Vitest {
 
     let testFiles = await fg(this.config.include, globOptions)
 
-    if (filters?.length)
+    if (filters.length && process.arch === 'win32')
+      filters = filters.map(f => toNamespacedPath(f))
+
+    if (filters.length)
       testFiles = testFiles.filter(i => filters.some(f => i.includes(f)))
 
     if (this.config.includeSource) {
       let files = await fg(this.config.includeSource, globOptions)
-      if (filters?.length)
+      if (filters.length)
         files = files.filter(i => filters.some(f => i.includes(f)))
 
       await Promise.all(files.map(async(file) => {
