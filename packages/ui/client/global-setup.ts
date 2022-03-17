@@ -1,3 +1,5 @@
+/// <reference types="vite-plugin-pages/client" />
+
 import { createRouter as _createRouter, createWebHistory } from 'vue-router'
 import FloatingVue, { VTooltip } from 'floating-vue'
 import routes from 'virtual:generated-pages'
