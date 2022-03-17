@@ -437,7 +437,7 @@ importers:
       solid-js: 1.3.12
     devDependencies:
       jsdom: 19.0.0
-      solid-start: 0.1.0-alpha.66_solid-js@1.3.12+vite@2.8.6
+      solid-start: 0.1.0-alpha.68_solid-js@1.3.12+vite@2.8.6
       solid-testing-library: 0.3.0_solid-js@1.3.12
       vitest: link:../../packages/vitest
 
@@ -17139,8 +17139,8 @@ packages:
       solid-js: 1.3.12
     dev: true
 
-  /solid-start-node/0.1.0-alpha.66_0ea384134918338f1c5b6cb6cab097e3:
-    resolution: {integrity: sha512-K70hiZzTzKmA6RSBYOODFpYKGkzNBwattiFSHBFdhucvQiEHGyP3IsaCs5TKXuav/oX4pWRzE3ssUcPF5B6N7A==}
+  /solid-start-node/0.1.0-alpha.68_eff5a7601ff8a6e482f1c876291835be:
+    resolution: {integrity: sha512-/wsB7KXj7JKPbXLI+kNWeWS8i43iRFZbLhzzHIQuT5uLcM1UbVrmoRlsOLHsm0Jo2sD105FltYW/TULAW3Tagw==}
     requiresBuild: true
     peerDependencies:
       solid-start: next
@@ -17154,14 +17154,14 @@ packages:
       polka: 1.0.0-next.22
       rollup: 2.70.1
       sirv: 1.0.19
-      solid-start: 0.1.0-alpha.66_solid-js@1.3.12+vite@2.8.6
+      solid-start: 0.1.0-alpha.68_solid-js@1.3.12+vite@2.8.6
       undici: 4.13.0
       vite: 2.8.6
     dev: true
     optional: true
 
-  /solid-start/0.1.0-alpha.66_solid-js@1.3.12+vite@2.8.6:
-    resolution: {integrity: sha512-HGJUQy2FIxfwQZTFpfx2ibjBoLT8fTCKpGvGwl215RSl7zDve9DFMuSTqRZiay0l4ERbu6uziS+gFg6tk3V0CA==}
+  /solid-start/0.1.0-alpha.68_solid-js@1.3.12+vite@2.8.6:
+    resolution: {integrity: sha512-cfpOWolqSlwfQzDEXFLPox9NtlPsg7/1VWPZN4FfwB+eAmnvc4wg78fcrl92mOpITdM1AusqryHibzrErz9ksA==}
     hasBin: true
     peerDependencies:
       solid-app-router: ^0.3.0
@@ -17191,7 +17191,7 @@ packages:
       vite-plugin-inspect: 0.3.14_vite@2.8.6
       vite-plugin-solid: 2.2.6
     optionalDependencies:
-      solid-start-node: 0.1.0-alpha.66_0ea384134918338f1c5b6cb6cab097e3
+      solid-start-node: 0.1.0-alpha.68_eff5a7601ff8a6e482f1c876291835be
     transitivePeerDependencies:
       - less
       - sass
