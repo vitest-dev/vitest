@@ -3,9 +3,9 @@ import type { MatcherState, MatchersObject } from './integrations/chai/types'
 import type { Constructable, InlineConfig } from './types'
 
 export { suite, test, describe, it } from './runtime/suite'
-
 export * from './runtime/hooks'
-export * from './runtime/setup-once'
+
+export { runOnce } from './integrations/run-once'
 export * from './integrations/chai'
 export * from './integrations/jest-mock'
 export * from './integrations/vi'

@@ -8,9 +8,11 @@ const cache = new Map<string, any>()
  * This utils allows computational intensive tasks to only be ran once
  * across test reruns to improve the watch mode performance.
  *
- * @expiremental
+ * Currently only works with `isolate: false`
+ *
+ * @experimental
  */
-export async function setupOnce<T>(fn: (() => Awaitable<T>), key?: string): Promise<T> {
+export async function runOnce<T>(fn: (() => Awaitable<T>), key?: string): Promise<T> {
   if (!key) {
     const filepath = getWorkerState().filepath || '__unknown_files__'
     filesCount.set(filepath, (filesCount.get(filepath) || 0) + 1)
@@ -22,4 +24,11 @@ export async function setupOnce<T>(fn: (() => Awaitable<T>), key?: string): Prom
     cache.set(key, fn())
 
   return await cache.get(key)
+}
+
+/**
+ * @internal
+ */
+export function resetRunOnceCounter() {
+  filesCount.clear()
 }
