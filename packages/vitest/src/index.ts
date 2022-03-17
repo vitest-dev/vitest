@@ -9,6 +9,7 @@ export { runOnce, isFirstRun } from './integrations/run-once'
 export * from './integrations/chai'
 export * from './integrations/jest-mock'
 export * from './integrations/vi'
+export * from './integrations/utils'
 
 export * from './types'
 export * from './api/types'
