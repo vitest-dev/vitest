@@ -12,7 +12,7 @@ import type {
 import {
   withGlobal,
 } from '@sinonjs/fake-timers'
-import MockDate from 'mockdate'
+import { RealDate, mockDate, resetDate } from './mockdate'
 
 export class FakeTimers {
   private _clock!: InstalledClock
@@ -20,7 +20,7 @@ export class FakeTimers {
   private _fakingDate: boolean
   private _fakeTimers: FakeTimerWithContext
   private _maxLoops: number
-  private _now = Date.now
+  private _now = RealDate.now
 
   constructor({
     global,
@@ -83,7 +83,7 @@ export class FakeTimers {
 
   useRealTimers(): void {
     if (this._fakingDate) {
-      MockDate.reset()
+      resetDate()
       this._fakingDate = false
     }
 
@@ -127,7 +127,7 @@ export class FakeTimers {
       this._clock.setSystemTime(now)
     }
     else {
-      MockDate.set(now ?? this.getRealSystemTime())
+      mockDate(now ?? this.getRealSystemTime())
       this._fakingDate = true
     }
   }

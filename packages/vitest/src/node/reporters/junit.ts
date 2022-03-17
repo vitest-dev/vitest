@@ -6,6 +6,7 @@ import type { Vitest } from '../../node'
 import type { ErrorWithDiff, Reporter, Task } from '../../types'
 import { parseStacktrace } from '../../utils/source-map'
 import { F_POINTER } from '../../utils/figures'
+import { RealDate } from '../../integrations/mockdate'
 import { IndentedLogger } from './renderers/indented-logger'
 
 function flattenTasks(task: Task, baseName = ''): Task[] {
@@ -171,7 +172,7 @@ export class JUnitReporter implements Reporter {
       for (const file of transformed) {
         await this.writeElement('testsuite', {
           name: file.name,
-          timestamp: (new Date()).toISOString(),
+          timestamp: (new RealDate()).toISOString(),
           hostname: hostname(),
           tests: file.tasks.length,
           failures: file.stats.failures,

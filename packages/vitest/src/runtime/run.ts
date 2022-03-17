@@ -5,6 +5,7 @@ import { getSnapshotClient } from '../integrations/snapshot/chai'
 import { getFullName, getWorkerState, hasFailed, hasTests, partitionSuiteChildren } from '../utils'
 import { getState, setState } from '../integrations/chai/jest-expect'
 import { takeCoverage } from '../integrations/coverage'
+import { RealDate } from '../integrations/mockdate'
 import { getFn, getHooks } from './map'
 import { rpc } from './rpc'
 import { collectTests } from './collect'
@@ -71,7 +72,7 @@ export async function runTest(test: Test) {
 
   test.result = {
     state: 'run',
-    startTime: Date.now(),
+    startTime: RealDate.now(),
   }
   updateTask(test)
 
@@ -157,7 +158,7 @@ export async function runSuite(suite: Suite) {
 
   suite.result = {
     state: 'run',
-    startTime: Date.now(),
+    startTime: RealDate.now(),
   }
 
   updateTask(suite)
