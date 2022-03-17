@@ -3401,7 +3401,7 @@ packages:
       '@mui/utils': 5.4.4_react@17.0.2
       '@popperjs/core': 2.11.4
       clsx: 1.1.1
-      prop-types: 15.7.2
+      prop-types: 15.8.1
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
       react-is: 17.0.2
@@ -3442,7 +3442,7 @@ packages:
       '@mui/utils': 5.4.4_react@17.0.2
       clsx: 1.1.1
       date-fns: 2.28.0
-      prop-types: 15.7.2
+      prop-types: 15.8.1
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
       react-is: 17.0.2
@@ -15142,7 +15142,6 @@ packages:
       loose-envify: 1.4.0
       object-assign: 4.1.1
       react-is: 16.13.1
-    dev: true
 
   /property-information/5.6.0:
     resolution: {integrity: sha512-YUHSPk+A30YPv+0Qf8i9Mbfe/C0hdPXk1s1jPVToV8pk8BQtpw10ct89Eo7OWkutrwqvT0eicAxlOg3dOAu8JA==}
@@ -16623,7 +16622,7 @@ packages:
       '@babel/preset-typescript': 7.16.7_@babel+core@7.17.7
       compression: 1.7.4
       connect: 3.7.0
-      cookie: 0.4.1
+      cookie: 0.4.2
       cookie-signature: 1.2.0
       es-module-lexer: 0.9.3
       esbuild: 0.14.27
