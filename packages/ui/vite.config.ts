@@ -55,9 +55,9 @@ export const config: UserConfig = {
       ],
     }),
     // @ts-expect-error Unsure why this is not working -- it's what the documentation says to do
-    // PkgConfig.default(),
+    PkgConfig.default(),
     // @ts-expect-error Unsure why this is not working -- it's what the documentation says to do
-    // OptimizationPersist.default(),
+    OptimizationPersist.default(),
   ],
   build: {
     outDir: './dist/client',
