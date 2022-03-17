@@ -1,6 +1,5 @@
 import { promises as fs } from 'fs'
 import { resolve } from 'pathe'
-import { RealDate } from '../../integrations/mockdate'
 import type { Vitest } from '../../node'
 import type { File, Reporter } from '../../types'
 import { getSuites, getTests } from '../../utils'
@@ -42,7 +41,7 @@ export class JsonReporter implements Reporter {
 
   onInit(ctx: Vitest): void {
     this.ctx = ctx
-    this.start = RealDate.now()
+    this.start = Date.now()
   }
 
   protected async logTasks(files: File[]) {
