@@ -513,7 +513,7 @@ importers:
     specifiers:
       '@cypress/vite-dev-server': ^2.2.2
       '@cypress/vue': ^3.1.0
-      '@faker-js/faker': ^6.0.0-alpha.3
+      '@faker-js/faker': ^6.0.0
       '@types/codemirror': ^5.60.5
       '@types/d3-force': ^3.0.3
       '@types/d3-selection': ^3.0.2
@@ -547,7 +547,7 @@ importers:
     devDependencies:
       '@cypress/vite-dev-server': 2.2.2_vite@2.8.6
       '@cypress/vue': 3.1.0_cypress@9.5.2+vue@3.2.31
-      '@faker-js/faker': 6.0.0-alpha.3
+      '@faker-js/faker': 6.0.0
       '@types/codemirror': 5.60.5
       '@types/d3-force': 3.0.3
       '@types/d3-selection': 3.0.2
@@ -3151,8 +3151,9 @@ packages:
       - supports-color
     dev: true
 
-  /@faker-js/faker/6.0.0-alpha.3:
-    resolution: {integrity: sha512-8B+7Jlwb9ogcoluzxB6AaSRZn2gnoewTA/WygAYhWNxkrFKjQL0TDXK6AW6uJlASMKl7qG/qbEVtpjLByuL0ZQ==}
+  /@faker-js/faker/6.0.0:
+    resolution: {integrity: sha512-10zLCKhp3YEmBuko71ivcMoIZcCLXgQVck6aNswX+AWwaek/L8S3yz9i8m3tHigRkcF6F2vI+qtdtyySHK+bGA==}
+    engines: {node: '>=14.0.0', npm: '>=7.0.0'}
     dev: true
 
   /@floating-ui/core/0.3.1:
@@ -15656,7 +15657,7 @@ packages:
       '@babel/runtime': 7.17.7
       dom-helpers: 5.2.1
       loose-envify: 1.4.0
-      prop-types: 15.7.2
+      prop-types: 15.8.1
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
     dev: false

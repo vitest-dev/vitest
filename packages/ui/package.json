@@ -38,7 +38,7 @@
   "devDependencies": {
     "@cypress/vite-dev-server": "^2.2.2",
     "@cypress/vue": "^3.1.0",
-    "@faker-js/faker": "^6.0.0-alpha.3",
+    "@faker-js/faker": "^6.0.0",
     "@types/codemirror": "^5.60.5",
     "@types/d3-force": "^3.0.3",
     "@types/d3-selection": "^3.0.2",
