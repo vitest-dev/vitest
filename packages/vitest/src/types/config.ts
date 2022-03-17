@@ -93,11 +93,6 @@ export interface InlineConfig {
   globals?: boolean
 
   /**
-   * @deprecated
-   */
-  global?: boolean
-
-  /**
    * Running environment
    *
    * Supports 'node', 'jsdom', 'happy-dom'
