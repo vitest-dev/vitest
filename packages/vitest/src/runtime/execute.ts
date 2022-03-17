@@ -1,12 +1,12 @@
 import { ViteNodeRunner } from 'vite-node/client'
 import type { ModuleCache, ViteNodeRunnerOptions } from 'vite-node'
 import { normalizePath } from 'vite'
-import type { SuiteMocks } from '../types/mocker'
+import type { MockMap } from '../types/mocker'
 import { getWorkerState } from '../utils'
 import { VitestMocker } from './mocker'
 
 export interface ExecuteOptions extends ViteNodeRunnerOptions {
-  mockMap: SuiteMocks
+  mockMap: MockMap
 }
 
 export async function executeInViteNode(options: ExecuteOptions & { files: string[] }) {

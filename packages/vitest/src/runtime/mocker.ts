@@ -69,8 +69,8 @@ export class VitestMocker {
 
   public getMocks() {
     const suite = this.getSuiteFilepath()
-    const suiteMocks = this.mockMap[suite]
-    const globalMocks = this.mockMap.global
+    const suiteMocks = this.mockMap.get(suite)
+    const globalMocks = this.mockMap.get('global')
 
     return {
       ...globalMocks,
@@ -190,8 +190,9 @@ export class VitestMocker {
 
     const fsPath = this.normalizePath(path)
 
-    if (this.mockMap[suitefile]?.[fsPath])
-      delete this.mockMap[suitefile][fsPath]
+    const mock = this.mockMap.get(suitefile)
+    if (mock?.[fsPath])
+      delete mock[fsPath]
   }
 
   public mockPath(path: string, external: string | null, factory?: () => any) {
@@ -199,8 +200,10 @@ export class VitestMocker {
 
     const fsPath = this.normalizePath(path)
 
-    this.mockMap[suitefile] ??= {}
-    this.mockMap[suitefile][fsPath] = factory || this.resolveMockPath(path, external)
+    if (!this.mockMap.has(suitefile))
+      this.mockMap.set(suitefile, {})
+
+    this.mockMap.get(suitefile)![fsPath] = factory || this.resolveMockPath(path, external)
   }
 
   public async importActual<T>(id: string, importer: string): Promise<T> {
