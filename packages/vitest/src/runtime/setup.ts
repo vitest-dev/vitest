@@ -4,10 +4,13 @@ import { environments } from '../integrations/env'
 import type { ResolvedConfig } from '../types'
 import { getWorkerState, toArray } from '../utils'
 import * as VitestIndex from '../index'
+import { resetRunOnceCounter } from '../integrations/run-once'
 import { rpc } from './rpc'
 
 let globalSetup = false
 export async function setupGlobalEnv(config: ResolvedConfig) {
+  resetRunOnceCounter()
+
   Object.defineProperty(globalThis, '__vitest_index__', {
     value: VitestIndex,
     enumerable: false,
