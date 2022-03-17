@@ -11,6 +11,7 @@ let globalSetup = false
 export async function setupGlobalEnv(config: ResolvedConfig) {
   resetRunOnceCounter()
 
+  // for `import.meta.vitest` injection
   Object.defineProperty(globalThis, '__vitest_index__', {
     value: VitestIndex,
     enumerable: false,
