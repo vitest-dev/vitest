@@ -15,10 +15,6 @@ export interface CliOptions extends UserConfig {
 }
 
 export async function startVitest(cliFilters: string[], options: CliOptions, viteOverrides?: ViteUserConfig) {
-  process.env.TEST = 'true'
-  process.env.VITEST = 'true'
-  process.env.NODE_ENV ??= options.mode || 'test'
-
   if (options.run)
     options.watch = false
 
@@ -26,6 +22,11 @@ export async function startVitest(cliFilters: string[], options: CliOptions, vit
     process.exitCode = 1
     return false
   }
+
+  process.env.TEST = 'true'
+  process.env.VITEST = 'true'
+  process.env.VITEST_MODE = options.watch ? 'WATCH' : 'RUN'
+  process.env.NODE_ENV ??= options.mode || 'test'
 
   if (typeof options.coverage === 'boolean')
     options.coverage = { enabled: options.coverage }

@@ -9,6 +9,11 @@ export async function run(files: string[], config: ResolvedConfig): Promise<void
   const workerState = getWorkerState()
   workerState.mockMap.clear()
 
+  const workerState = getWorkerState()
+
+  // reset mock state
+  workerState.mockMap.clear()
+
   for (const file of files) {
     const code = await fs.readFile(file, 'utf-8')
 

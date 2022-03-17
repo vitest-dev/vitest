@@ -1,4 +1,3 @@
-import type { Awaitable } from '../types'
 import { getWorkerState } from '../utils'
 
 const filesCount = new Map<string, number>()
@@ -12,18 +11,36 @@ const cache = new Map<string, any>()
  *
  * @experimental
  */
-export async function runOnce<T>(fn: (() => Awaitable<T>), key?: string): Promise<T> {
+export function runOnce<T>(fn: (() => T), key?: string): T {
+  const filepath = getWorkerState().filepath || '__unknown_files__'
+
   if (!key) {
-    const filepath = getWorkerState().filepath || '__unknown_files__'
     filesCount.set(filepath, (filesCount.get(filepath) || 0) + 1)
-    const count = filesCount.get(filepath)!
-    key = `${filepath}:${count}`
+    key = String(filesCount.get(filepath)!)
   }
 
-  if (!cache.has(key))
-    cache.set(key, fn())
+  const id = `${filepath}:${key}`
 
-  return await cache.get(key)
+  if (!cache.has(id))
+    cache.set(id, fn())
+
+  return cache.get(id)
+}
+
+/**
+ * Get a boolean indicates whether the task is running in the first time.
+ * Could only be `false` in watch mode.
+ *
+ * Currently only works with `isolate: false`
+ *
+ * @experimental
+ */
+export function isFirstRun() {
+  let firstRun = false
+  runOnce(() => {
+    firstRun = true
+  }, '__vitest_first_run__')
+  return firstRun
 }
 
 /**

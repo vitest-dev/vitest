@@ -6,6 +6,9 @@ import { toFilePath, withInlineSourcemap } from './utils'
 
 export * from './externalize'
 
+// store the original reference to avoid it been mocked
+const RealDate = Date
+
 export class ViteNodeServer {
   private fetchPromiseMap = new Map<string, Promise<FetchResult>>()
   private transformPromiseMap = new Map<string, Promise<TransformResult | null | undefined>>()
@@ -78,7 +81,7 @@ export class ViteNodeServer {
     const filePath = toFilePath(id, this.server.config.root)
 
     const module = this.server.moduleGraph.getModuleById(id)
-    const timestamp = module?.lastHMRTimestamp || Date.now()
+    const timestamp = module?.lastHMRTimestamp || RealDate.now()
     const cache = this.fetchCache.get(filePath)
     if (timestamp && cache && cache.timestamp >= timestamp)
       return cache.result

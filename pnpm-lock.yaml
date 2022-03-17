@@ -609,7 +609,6 @@ importers:
       magic-string: ^0.26.1
       micromatch: ^4.0.4
       mlly: ^0.4.3
-      mockdate: ^3.0.5
       natural-compare: ^1.4.0
       pathe: ^0.2.0
       picocolors: ^1.0.0
@@ -660,7 +659,6 @@ importers:
       magic-string: 0.26.1
       micromatch: 4.0.4
       mlly: 0.4.3
-      mockdate: 3.0.5
       natural-compare: 1.4.0
       pathe: 0.2.0
       picocolors: 1.0.0
@@ -14410,10 +14408,6 @@ packages:
 
   /mlly/0.4.3:
     resolution: {integrity: sha512-xezyv7hnfFPuiDS3AiJuWs0OxlvooS++3L2lURvmh/1n7UG4O2Ehz9UkwWgg3wyLEPKGVfJLlr2DjjTCl9UJTg==}
-
-  /mockdate/3.0.5:
-    resolution: {integrity: sha512-iniQP4rj1FhBdBYS/+eQv7j1tadJ9lJtdzgOpvsOHng/GbcDh2Fhdeq+ZRldrPYdXvCyfFUmFeEwEGXZB5I/AQ==}
-    dev: true
 
   /moment/2.29.1:
     resolution: {integrity: sha512-kHmoybcPV8Sqy59DwNDY3Jefr64lK/by/da0ViFcuA4DH0vQg5Q6Ze5VimxkfQNSC+Mls/Kx53s7TjP1RhFEDQ==}
