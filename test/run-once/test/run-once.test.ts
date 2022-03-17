@@ -1,8 +1,8 @@
-import { expect, it, runOnce } from 'vitest'
+import { expect, isFirstRun, it, runOnce } from 'vitest'
 
 let dummy = 0
 
-const one = await runOnce(() => {
+const one = runOnce(() => {
   dummy += 1
   return 1
 })
@@ -12,10 +12,15 @@ const two = await runOnce(async() => {
   return 2
 })
 
-it('run once', async() => {
+it('runOnce', async() => {
   expect(one).toBe(1)
   expect(two).toBe(2)
 
   // edit the file to trigger the hmr and dummy should be 0
   expect(dummy).toBe(2)
+})
+
+it('isFirstRun', () => {
+  // edit the file and this will fail
+  expect(isFirstRun()).toBe(true)
 })
