@@ -15,6 +15,10 @@ export interface CliOptions extends UserConfig {
 }
 
 export async function startVitest(cliFilters: string[], options: CliOptions, viteOverrides?: ViteUserConfig) {
+  process.env.TEST = 'true'
+  process.env.VITEST = 'true'
+  process.env.NODE_ENV ??= options.mode || 'test'
+
   if (options.run)
     options.watch = false
 
@@ -28,10 +32,7 @@ export async function startVitest(cliFilters: string[], options: CliOptions, vit
 
   const ctx = await createVitest(options, viteOverrides)
 
-  process.env.TEST = 'true'
-  process.env.VITEST = 'true'
   process.env.VITEST_MODE = ctx.config.watch ? 'WATCH' : 'RUN'
-  process.env.NODE_ENV ??= ctx.config.mode || 'test'
 
   if (ctx.config.coverage.enabled) {
     if (!await ensurePackageInstalled('c8')) {
