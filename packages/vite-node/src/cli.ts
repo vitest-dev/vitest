@@ -61,11 +61,11 @@ export interface CliOptions {
   _?: string[]
   root?: string
   config?: string
+  watch?: boolean
 }
 
 async function run(options: CliOptions = {}) {
   const files = options.files || options._ || []
-
   const server = await createServer({
     logLevel: 'error',
     clearScreen: false,
@@ -87,8 +87,27 @@ async function run(options: CliOptions = {}) {
     },
   })
 
+  // provide the vite define variable in this context
+  await runner.executeId('/@vite/env')
+
   for (const file of files)
     await runner.executeFile(file)
 
-  await server.close()
+  if (!options.watch)
+    await server.close()
+
+  server.watcher.on('change', async(eventName, path) => {
+    // eslint-disable-next-line no-console
+    console.log(dim(`[${eventName}] ${path}`))
+
+    // invalidate module cache but not node_modules
+    Array.from(runner.moduleCache.keys())
+      .forEach((i) => {
+        if (!i.includes('node_modules'))
+          runner.moduleCache.delete(i)
+      })
+
+    for (const file of files)
+      await runner.executeFile(file)
+  })
 }

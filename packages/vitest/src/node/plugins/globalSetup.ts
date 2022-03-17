@@ -1,5 +1,9 @@
-import type { Plugin, ViteDevServer } from 'vite'
+import type { Plugin } from 'vite'
+import { ViteNodeRunner } from 'vite-node/client'
+import c from 'picocolors'
+import type { Vitest } from '../core'
 import { toArray } from '../../utils'
+import { divider } from '../reporters/renderers/utils'
 
 interface GlobalSetupFile {
   file: string
@@ -7,13 +11,25 @@ interface GlobalSetupFile {
   teardown?: Function
 }
 
-async function loadGlobalSetupFiles(server: ViteDevServer): Promise<GlobalSetupFile[]> {
+async function loadGlobalSetupFiles(ctx: Vitest): Promise<GlobalSetupFile[]> {
+  const node = ctx.vitenode
+  const server = ctx.server
+  const runner = new ViteNodeRunner({
+    root: server.config.root,
+    base: server.config.base,
+    fetchModule(id) {
+      return node.fetchModule(id)
+    },
+    resolveId(id, importer) {
+      return node.resolveId(id, importer)
+    },
+  })
   const globalSetupFiles = toArray(server.config.test?.globalSetup)
-  return Promise.all(globalSetupFiles.map(file => loadGlobalSetupFile(file, server)))
+  return Promise.all(globalSetupFiles.map(file => loadGlobalSetupFile(file, runner)))
 }
 
-async function loadGlobalSetupFile(file: string, server: ViteDevServer): Promise<GlobalSetupFile> {
-  const m = await server.ssrLoadModule(file)
+async function loadGlobalSetupFile(file: string, runner: ViteNodeRunner): Promise<GlobalSetupFile> {
+  const m = await runner.executeFile(file)
   for (const exp of ['default', 'setup', 'teardown']) {
     if (m[exp] != null && typeof m[exp] !== 'function')
       throw new Error(`invalid export in globalSetup file ${file}: ${exp} must be a function`)
@@ -36,40 +52,32 @@ async function loadGlobalSetupFile(file: string, server: ViteDevServer): Promise
   }
 }
 
-export const GlobalSetupPlugin = (): Plugin => {
-  let server: ViteDevServer
+export const GlobalSetupPlugin = (ctx: Vitest): Plugin => {
   let globalSetupFiles: GlobalSetupFile[]
   return {
     name: 'vitest:global-setup-plugin',
     enforce: 'pre',
 
-    // @ts-expect-error ssr is still flagged as alpha
-    config(config) {
-      if (config.test?.globalSetup) {
-        return {
-          ssr: {
-            noExternal: true, // needed so ssrLoadModule call doesn't initialize server._ssrExternals
-          },
-        }
-      }
-    },
-
-    configureServer(_server) {
-      server = _server
-    },
-
     async buildStart() {
-      if (!server.config.test?.globalSetup)
+      if (!ctx.server.config.test?.globalSetup)
         return
 
-      globalSetupFiles = await loadGlobalSetupFiles(server)
-      for (const globalSetupFile of globalSetupFiles) {
-        const teardown = await globalSetupFile.setup?.()
-        if (teardown == null || !!globalSetupFile.teardown)
-          continue
-        if (typeof teardown !== 'function')
-          throw new Error(`invalid return value in globalSetup file ${globalSetupFile.file}. Must return a function`)
-        globalSetupFile.teardown = teardown
+      globalSetupFiles = await loadGlobalSetupFiles(ctx)
+
+      try {
+        for (const globalSetupFile of globalSetupFiles) {
+          const teardown = await globalSetupFile.setup?.()
+          if (teardown == null || !!globalSetupFile.teardown)
+            continue
+          if (typeof teardown !== 'function')
+            throw new Error(`invalid return value in globalSetup file ${globalSetupFile.file}. Must return a function`)
+          globalSetupFile.teardown = teardown
+        }
+      }
+      catch (e) {
+        ctx.error(`\n${c.red(divider(c.bold(c.inverse(' Error during global setup '))))}`)
+        await ctx.printError(e)
+        process.exit(1)
       }
     },
 

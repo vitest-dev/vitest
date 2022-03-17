@@ -1,22 +1,37 @@
 import { performance } from 'perf_hooks'
-import type { HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, Test } from '../types'
+import type { File, HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from '../types'
 import { vi } from '../integrations/vi'
 import { getSnapshotClient } from '../integrations/snapshot/chai'
-import { getFullName, hasFailed, hasTests, partitionSuiteChildren } from '../utils'
+import { getFullName, getWorkerState, hasFailed, hasTests, partitionSuiteChildren } from '../utils'
 import { getState, setState } from '../integrations/chai/jest-expect'
+import { takeCoverage } from '../integrations/coverage'
 import { getFn, getHooks } from './map'
 import { rpc } from './rpc'
 import { collectTests } from './collect'
 import { processError } from './error'
 
-export async function callSuiteHook<T extends keyof SuiteHooks>(suite: Suite, name: T, args: SuiteHooks[T][0] extends HookListener<infer A> ? A : never) {
-  if (name === 'beforeEach' && suite.suite)
-    await callSuiteHook(suite.suite, name, args)
+function updateSuiteHookState(suite: Task, name: keyof SuiteHooks, state: TaskState) {
+  if (!suite.result)
+    suite.result = { state: 'run' }
+  if (!suite.result?.hooks)
+    suite.result.hooks = {}
+  const suiteHooks = suite.result.hooks
+  if (suiteHooks) {
+    suiteHooks[name] = state
+    updateTask(suite)
+  }
+}
 
+export async function callSuiteHook<T extends keyof SuiteHooks>(suite: Suite, currentTask: Task, name: T, args: SuiteHooks[T][0] extends HookListener<infer A> ? A : never) {
+  if (name === 'beforeEach' && suite.suite)
+    await callSuiteHook(suite.suite, currentTask, name, args)
+
+  updateSuiteHookState(currentTask, name, 'run')
   await Promise.all(getHooks(suite)[name].map(fn => fn(...(args as any))))
+  updateSuiteHookState(currentTask, name, 'pass')
 
   if (name === 'afterEach' && suite.suite)
-    await callSuiteHook(suite.suite, name, args)
+    await callSuiteHook(suite.suite, currentTask, name, args)
 }
 
 const packs = new Map<string, TaskResult|undefined>()
@@ -47,10 +62,16 @@ export async function runTest(test: Test) {
   if (test.mode !== 'run')
     return
 
+  if (test.result?.state === 'fail') {
+    updateTask(test)
+    return
+  }
+
   const start = performance.now()
 
   test.result = {
     state: 'run',
+    startTime: Date.now(),
   }
   updateTask(test)
 
@@ -58,10 +79,12 @@ export async function runTest(test: Test) {
 
   getSnapshotClient().setTest(test)
 
-  process.__vitest_worker__.current = test
+  const workerState = getWorkerState()
+
+  workerState.current = test
 
   try {
-    await callSuiteHook(test.suite, 'beforeEach', [test, test.suite])
+    await callSuiteHook(test.suite, test, 'beforeEach', [test, test.suite])
     setState({
       assertionCalls: 0,
       isExpectingAssertions: false,
@@ -86,7 +109,7 @@ export async function runTest(test: Test) {
   }
 
   try {
-    await callSuiteHook(test.suite, 'afterEach', [test, test.suite])
+    await callSuiteHook(test.suite, test, 'afterEach', [test, test.suite])
   }
   catch (e) {
     test.result.state = 'fail'
@@ -109,19 +132,32 @@ export async function runTest(test: Test) {
 
   test.result.duration = performance.now() - start
 
-  process.__vitest_worker__.current = undefined
+  workerState.current = undefined
 
   updateTask(test)
 }
 
+function markTasksAsSkipped(suite: Suite) {
+  suite.tasks.forEach((t) => {
+    t.mode = 'skip'
+    t.result = { ...t.result, state: 'skip' }
+    updateTask(t)
+    if (t.type === 'suite') markTasksAsSkipped(t)
+  })
+}
+
 export async function runSuite(suite: Suite) {
-  if (suite.result?.state === 'fail')
+  if (suite.result?.state === 'fail') {
+    markTasksAsSkipped(suite)
+    updateTask(suite)
     return
+  }
 
   const start = performance.now()
 
   suite.result = {
     state: 'run',
+    startTime: Date.now(),
   }
 
   updateTask(suite)
@@ -134,7 +170,7 @@ export async function runSuite(suite: Suite) {
   }
   else {
     try {
-      await callSuiteHook(suite, 'beforeAll', [suite])
+      await callSuiteHook(suite, suite, 'beforeAll', [suite])
 
       for (const tasksGroup of partitionSuiteChildren(suite)) {
         if (tasksGroup[0].concurrent === true) {
@@ -145,8 +181,7 @@ export async function runSuite(suite: Suite) {
             await runSuiteChild(c)
         }
       }
-
-      await callSuiteHook(suite, 'afterAll', [suite])
+      await callSuiteHook(suite, suite, 'afterAll', [suite])
     }
     catch (e) {
       suite.result.state = 'fail'
@@ -159,7 +194,7 @@ export async function runSuite(suite: Suite) {
     if (!hasTests(suite)) {
       suite.result.state = 'fail'
       if (!suite.result.error)
-        suite.result.error = new Error(`No tests found in suite ${suite.name}`)
+        suite.result.error = new Error(`No test found in suite ${suite.name}`)
     }
     else if (hasFailed(suite)) {
       suite.result.state = 'fail'
@@ -178,9 +213,19 @@ async function runSuiteChild(c: Task) {
     : runSuite(c)
 }
 
-export async function runSuites(suites: Suite[]) {
-  for (const suite of suites)
-    await runSuite(suite)
+export async function runFiles(files: File[], config: ResolvedConfig) {
+  for (const file of files) {
+    if (!file.tasks.length && !config.passWithNoTests) {
+      if (!file.result?.error) {
+        file.result = {
+          state: 'fail',
+          error: new Error(`No test suite found in file ${file.filepath}`),
+        }
+      }
+    }
+
+    await runSuite(file)
+  }
 }
 
 export async function startTests(paths: string[], config: ResolvedConfig) {
@@ -188,7 +233,9 @@ export async function startTests(paths: string[], config: ResolvedConfig) {
 
   rpc().onCollected(files)
 
-  await runSuites(files)
+  await runFiles(files, config)
+
+  takeCoverage()
 
   await getSnapshotClient().saveSnap()
 
@@ -196,7 +243,7 @@ export async function startTests(paths: string[], config: ResolvedConfig) {
 }
 
 export function clearModuleMocks() {
-  const { clearMocks, mockReset, restoreMocks } = process.__vitest_worker__.config
+  const { clearMocks, mockReset, restoreMocks } = getWorkerState().config
 
   // since each function calls another, we can just call one
   if (restoreMocks)

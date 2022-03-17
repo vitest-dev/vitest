@@ -31,70 +31,91 @@ AssertionError: expected 2.23606797749979 to equal 2
 `;
 
 exports[`json reporter 1`] = `
-"{
-  \\"numTotalTestSuites\\": 3,
-  \\"numPassedTestSuites\\": 3,
-  \\"numFailedTestSuites\\": 0,
-  \\"numPendingTestSuites\\": 0,
-  \\"numTotalTests\\": 8,
-  \\"numPassedTests\\": 7,
-  \\"numFailedTests\\": 1,
-  \\"numPendingTests\\": 0,
-  \\"numTodoTests\\": 0,
-  \\"startTime\\": 1642587001759,
-  \\"success\\": false,
-  \\"testResults\\": [
+{
+  "numFailedTestSuites": 0,
+  "numFailedTests": 1,
+  "numPassedTestSuites": 3,
+  "numPassedTests": 7,
+  "numPendingTestSuites": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "numTotalTestSuites": 3,
+  "numTotalTests": 8,
+  "startTime": 1642587001759,
+  "success": false,
+  "testResults": [
     {
-      \\"displayName\\": \\"Math.sqrt()\\",
-      \\"failureMessage\\": \\"expected 2.23606797749979 to equal 2\\",
-      \\"skipped\\": false,
-      \\"status\\": \\"fail\\",
-      \\"testFilePath\\": \\"/vitest/test/core/test/basic.test.ts\\"
+      "displayName": "Math.sqrt()",
+      "failureMessage": "expected 2.23606797749979 to equal 2",
+      "perfStats": {
+        "runtime": 1.4422860145568848,
+      },
+      "skipped": false,
+      "status": "fail",
+      "testFilePath": "/vitest/test/core/test/basic.test.ts",
     },
     {
-      \\"displayName\\": \\"JSON\\",
-      \\"skipped\\": false,
-      \\"status\\": \\"pass\\",
-      \\"testFilePath\\": \\"/vitest/test/core/test/basic.test.ts\\"
+      "displayName": "JSON",
+      "perfStats": {
+        "runtime": 1.0237109661102295,
+      },
+      "skipped": false,
+      "status": "pass",
+      "testFilePath": "/vitest/test/core/test/basic.test.ts",
     },
     {
-      \\"displayName\\": \\"async with timeout\\",
-      \\"skipped\\": false,
-      \\"testFilePath\\": \\"/vitest/test/core/test/basic.test.ts\\"
+      "displayName": "async with timeout",
+      "perfStats": {},
+      "skipped": true,
+      "testFilePath": "/vitest/test/core/test/basic.test.ts",
     },
     {
-      \\"displayName\\": \\"timeout\\",
-      \\"skipped\\": false,
-      \\"status\\": \\"pass\\",
-      \\"testFilePath\\": \\"/vitest/test/core/test/basic.test.ts\\"
+      "displayName": "timeout",
+      "perfStats": {
+        "runtime": 100.50598406791687,
+      },
+      "skipped": false,
+      "status": "pass",
+      "testFilePath": "/vitest/test/core/test/basic.test.ts",
     },
     {
-      \\"displayName\\": \\"callback setup success \\",
-      \\"skipped\\": false,
-      \\"status\\": \\"pass\\",
-      \\"testFilePath\\": \\"/vitest/test/core/test/basic.test.ts\\"
+      "displayName": "callback setup success ",
+      "perfStats": {
+        "runtime": 20.184875011444092,
+      },
+      "skipped": false,
+      "status": "pass",
+      "testFilePath": "/vitest/test/core/test/basic.test.ts",
     },
     {
-      \\"displayName\\": \\"callback test success \\",
-      \\"skipped\\": false,
-      \\"status\\": \\"pass\\",
-      \\"testFilePath\\": \\"/vitest/test/core/test/basic.test.ts\\"
+      "displayName": "callback test success ",
+      "perfStats": {
+        "runtime": 0.33245420455932617,
+      },
+      "skipped": false,
+      "status": "pass",
+      "testFilePath": "/vitest/test/core/test/basic.test.ts",
     },
     {
-      \\"displayName\\": \\"callback setup success done(false)\\",
-      \\"skipped\\": false,
-      \\"status\\": \\"pass\\",
-      \\"testFilePath\\": \\"/vitest/test/core/test/basic.test.ts\\"
+      "displayName": "callback setup success done(false)",
+      "perfStats": {
+        "runtime": 19.738605976104736,
+      },
+      "skipped": false,
+      "status": "pass",
+      "testFilePath": "/vitest/test/core/test/basic.test.ts",
     },
     {
-      \\"displayName\\": \\"callback test success done(false)\\",
-      \\"skipped\\": false,
-      \\"status\\": \\"pass\\",
-      \\"testFilePath\\": \\"/vitest/test/core/test/basic.test.ts\\"
-    }
-  ]
+      "displayName": "callback test success done(false)",
+      "perfStats": {
+        "runtime": 0.1923508644104004,
+      },
+      "skipped": false,
+      "status": "pass",
+      "testFilePath": "/vitest/test/core/test/basic.test.ts",
+    },
+  ],
 }
-"
 `;
 
 exports[`tap reporter 1`] = `

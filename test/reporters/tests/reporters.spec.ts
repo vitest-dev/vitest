@@ -1,10 +1,14 @@
-import { expect, test, vi } from 'vitest'
+import { afterEach, expect, test, vi } from 'vitest'
 import { JsonReporter } from '../../../packages/vitest/src/node/reporters/json'
 import { JUnitReporter } from '../../../packages/vitest/src/node/reporters/junit'
 import { TapReporter } from '../../../packages/vitest/src/node/reporters/tap'
 import { TapFlatReporter } from '../../../packages/vitest/src/node/reporters/tap-flat'
 import { getContext } from '../src/context'
 import { files } from '../src/data'
+
+afterEach(() => {
+  vi.useRealTimers()
+})
 
 test('tap reporter', async() => {
   // Arrange
@@ -41,7 +45,7 @@ test('JUnit reporter', async() => {
     hostname: () => 'hostname',
   }))
 
-  vi.mockCurrentDate(1642587001759)
+  vi.setSystemTime(1642587001759)
 
   // Act
   reporter.onInit(context.vitest)
@@ -56,12 +60,12 @@ test('json reporter', async() => {
   const reporter = new JsonReporter()
   const context = getContext()
 
-  vi.mockCurrentDate(1642587001759)
+  vi.setSystemTime(1642587001759)
 
   // Act
   reporter.onInit(context.vitest)
   await reporter.onFinished(files)
 
   // Assert
-  expect(context.output).toMatchSnapshot()
+  expect(JSON.parse(context.output)).toMatchSnapshot()
 })

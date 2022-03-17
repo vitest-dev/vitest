@@ -6,17 +6,28 @@
 
 - Create `vitest.config.ts`, which will have the higher priority
 - Pass `--config` option to CLI, e.g. `vitest --config ./path/to/vitest.config.ts`
-- Use `process.env.VITEST` to conditionally apply different configuration in `vite.config.ts`
+- Use `process.env.VITEST` or `mode` property on `defineConfig` (will be set to `test` if not overridden) to conditionally apply different configuration in `vite.config.ts`
 
-To configure `vitest` itself, add `test` property in your Vite config. You'll also need to add a reference to Vitest types using a [triple slash command](https://www.typescriptlang.org/docs/handbook/triple-slash-directives.html#-reference-types-) at the top of your config file.
+To configure `vitest` itself, add `test` property in your Vite config. You'll also need to add a reference to Vitest types using a [triple slash command](https://www.typescriptlang.org/docs/handbook/triple-slash-directives.html#-reference-types-) at the top of your config file, if you are importing `defineConfig` from `vite` itself.
 
 ```ts
-/// <reference types="vitest" />
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
     // ...
+  },
+})
+```
+
+You can retrieve Vitest's default options to expand them if needed:
+
+```ts
+import { configDefaults, defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    exclude: [...configDefaults.exclude, 'packages/template/*'],
   },
 })
 ```
@@ -46,7 +57,7 @@ Handling for dependencies inlining or externalizing
 #### deps.external
 
 - **Type:** `(string | RegExp)[]`
-- **Default:** `['**\/node_modules\/**']`
+- **Default:** `['**\/node_modules\/**','**\/dist\/**']`
 
 Externalize means that Vite will bypass the package to native Node. Externalized dependencies will not be applied Vite's transformers and resolvers, so they do not support HMR on reload. Typically, packages under `node_modules` are externalized.
 
@@ -57,6 +68,22 @@ Externalize means that Vite will bypass the package to native Node. Externalized
 
 Vite will process inlined modules. This could be helpful to handle packages that ship `.js` in ESM format (that Node can't handle).
 
+#### deps.fallbackCJS
+
+- **Type** `boolean`
+- **Default:** `false`
+
+When a dependency is a valid ESM package, try to guess the cjs version based on the path.
+
+This might potentially cause some misalignment if a package has different logic in ESM and CJS mode.
+
+#### deps.interopDefault
+
+- **Type:** `boolean`
+- **Default:** `true`
+
+Interpret CJS module's default as named exports.
+
 ### globals
 
 - **Type:** `boolean`
@@ -66,7 +93,7 @@ By default, `vitest` does not provide global APIs for explicitness. If you prefe
 
 ```ts
 // vite.config.ts
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
@@ -90,7 +117,7 @@ If you are already using [`unplugin-auto-import`](https://github.com/antfu/unplu
 
 ```ts
 // vite.config.ts
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import AutoImport from 'unplugin-auto-import/vite'
 
 export default defineConfig({
@@ -163,7 +190,7 @@ Update snapshot files
 ### watch
 
 - **Type:** `boolean`
-- **Default:** `false`
+- **Default:** `true`
 
 Enable watch mode
 
@@ -212,10 +239,6 @@ Maximum number of threads
 
 Minimum number of threads
 
-### interopDefault
-
-- **Type:** `boolean`
-
 ### testTimeout
 
 - **Type:** `number`
@@ -226,7 +249,7 @@ Default timeout of a test in milliseconds
 ### hookTimeout
 
 - **Type:** `number`
-- **Default:** `5000`
+- **Default:** `10000`
 
 Default timeout of a hook in milliseconds
 
@@ -241,7 +264,9 @@ Silent mode
 
 - **Type:** `string | string[]`
 
-Path to setup files
+Path to setup files. They will be run before each test file.
+
+You can use `process.env.VITEST_WORKER_ID` (integer-like string) inside to distinguish between threads (will always be `1`, if run with `threads: false`).
 
 ### globalSetup
 
@@ -326,7 +351,7 @@ Determine the transform method of modules
 Use SSR transform pipeline for the specified files.<br>
 Vite plugins will receive `ssr: true` flag when processing those files.
 
-#### transformMode.web
+#### transformMode&#46;web
 
 - **Type:** `RegExp[]`
 - **Default:** *modules other than those specified in `transformMode.ssr`*
@@ -337,7 +362,7 @@ Vite plugins will receive `ssr: false` flag when processing those files.
 When you use JSX as component models other than React (e.g. Vue JSX or SolidJS), you might want to config as following to make `.tsx` / `.jsx` transformed as client-side components:
 
 ```ts
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
@@ -353,3 +378,10 @@ export default defineConfig({
 - **Type:** `PrettyFormatOptions`
 
 Format options for snapshot testing.
+
+### mode
+
+- **Type:** `string`
+- **Default:** `test`
+
+Overrides Vite mode.

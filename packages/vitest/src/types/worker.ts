@@ -1,19 +1,20 @@
 import type { MessagePort } from 'worker_threads'
-import type { ViteNodeResolveId } from 'vite-node'
-import type { RawSourceMap } from '../types'
+import type { FetchFunction, ModuleCacheMap, RawSourceMap, ViteNodeResolveId } from 'vite-node'
+import type { BirpcReturn } from 'birpc'
+import type { SuiteMocks } from './mocker'
 import type { ResolvedConfig } from './config'
-import type { File, TaskResultPack } from './tasks'
+import type { File, TaskResultPack, Test } from './tasks'
 import type { SnapshotResult } from './snapshot'
 import type { UserConsoleLog } from './general'
 
 export interface WorkerContext {
+  id: number
   port: MessagePort
   config: ResolvedConfig
   files: string[]
   invalidates?: string[]
 }
 
-export type FetchFunction = (id: string) => Promise<{ code?: string; externalize?: string }>
 export type ResolveIdFunction = (id: string, importer?: string) => Promise<ViteNodeResolveId | null>
 
 export interface WorkerRPC {
@@ -28,4 +29,14 @@ export interface WorkerRPC {
   onTaskUpdate: (pack: TaskResultPack[]) => void
 
   snapshotSaved: (snapshot: SnapshotResult) => void
+}
+
+export interface WorkerGlobalState {
+  ctx: WorkerContext
+  config: ResolvedConfig
+  rpc: BirpcReturn<WorkerRPC>
+  current?: Test
+  filepath?: string
+  moduleCache: ModuleCacheMap
+  mockMap: SuiteMocks
 }

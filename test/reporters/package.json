@@ -2,9 +2,10 @@
   "name": "@vitest/test-reporters",
   "private": true,
   "scripts": {
-    "test": "vitest --global"
+    "test": "vitest"
   },
   "devDependencies": {
+    "execa": "^6.1.0",
     "vitest": "workspace:*"
   }
 }

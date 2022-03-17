@@ -1,14 +1,26 @@
 import { resolve } from 'pathe'
-import type { ResolvedConfig as ResolvedViteConfig, UserConfig as ViteUserConfig } from 'vite'
+import c from 'picocolors'
+import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 
 import type { ApiConfig, ResolvedConfig, UserConfig } from '../types'
-import { defaultExclude, defaultInclude, defaultPort } from '../constants'
-import { resolveC8Options } from '../coverage'
-import { deepMerge, toArray } from '../utils'
+import { defaultPort } from '../constants'
+import { configDefaults } from '../defaults'
+import { resolveC8Options } from '../integrations/coverage'
+import { toArray } from '../utils'
+
+const extraInlineDeps = [
+  /^(?!.*(?:node_modules)).*\.mjs$/,
+  /^(?!.*(?:node_modules)).*\.cjs\.js$/,
+  // Vitest
+  /\/vitest\/dist\//,
+  // yarn's .store folder
+  /vitest-virtual-\w+\/dist/,
+  // Nuxt
+  '@nuxt/test-utils',
+]
 
 export function resolveApiConfig<Options extends ApiConfig & UserConfig>(
   options: Options,
-  viteOverrides?: ViteUserConfig,
 ): ApiConfig | undefined {
   let api: ApiConfig | undefined
 
@@ -23,10 +35,8 @@ export function resolveApiConfig<Options extends ApiConfig & UserConfig>(
     if (api) {
       if (options.api.port)
         api.port = options.api.port
-
       if (options.api.strictPort)
         api.strictPort = options.api.strictPort
-
       if (options.api.host)
         api.host = options.api.host
     }
@@ -38,9 +48,6 @@ export function resolveApiConfig<Options extends ApiConfig & UserConfig>(
   if (api) {
     if (!api.port)
       api.port = defaultPort
-
-    if (viteOverrides)
-      viteOverrides.server = Object.assign(viteOverrides.server || {}, api)
   }
 
   return api
@@ -50,13 +57,30 @@ export function resolveConfig(
   options: UserConfig,
   viteConfig: ResolvedViteConfig,
 ): ResolvedConfig {
-  if (options.dom)
+  if (options.dom) {
+    if (
+      viteConfig.test?.environment != null
+      && viteConfig.test!.environment !== 'happy-dom'
+    ) {
+      console.warn(
+        c.yellow(
+          `${c.inverse(c.yellow(' Vitest '))} Your config.test.environment ("${
+            viteConfig.test.environment
+          }") conflicts with --dom flag ("happy-dom"), ignoring "${
+            viteConfig.test.environment
+          }"`,
+        ),
+      )
+    }
+
     options.environment = 'happy-dom'
+  }
 
   const globals = options?.global ?? options.globals
 
   const resolved = {
-    ...deepMerge(options, viteConfig.test || {}),
+    ...configDefaults,
+    ...options,
     root: viteConfig.root,
     globals,
     global: globals,
@@ -65,32 +89,19 @@ export function resolveConfig(
   if (viteConfig.base !== '/')
     resolved.base = viteConfig.base
 
-  resolved.coverage = resolveC8Options(resolved.coverage, resolved.root)
+  resolved.coverage = resolveC8Options(options.coverage || {}, resolved.root)
 
   resolved.deps = resolved.deps || {}
-
-  resolved.environment = resolved.environment || 'node'
-  resolved.threads = resolved.threads ?? true
-
-  resolved.clearMocks = resolved.clearMocks ?? false
-  resolved.restoreMocks = resolved.restoreMocks ?? false
-  resolved.mockReset = resolved.mockReset ?? false
-
-  resolved.include = resolved.include ?? defaultInclude
-  resolved.exclude = resolved.exclude ?? defaultExclude
-
-  resolved.testTimeout = resolved.testTimeout ?? 5_000
-  resolved.hookTimeout = resolved.hookTimeout ?? 10_000
-
-  resolved.isolate = resolved.isolate ?? true
+  // vitenode will try to import such file with native node,
+  // but then our mocker will not work properly
+  resolved.deps.inline ??= []
+  resolved.deps.inline.push(...extraInlineDeps)
 
   resolved.testNamePattern = resolved.testNamePattern
     ? resolved.testNamePattern instanceof RegExp
       ? resolved.testNamePattern
       : new RegExp(resolved.testNamePattern)
     : undefined
-
-  resolved.watchIgnore = resolved.watchIgnore ?? [/\/node_modules\//, /\/dist\//]
 
   const CI = !!process.env.CI
   const UPDATE_SNAPSHOT = resolved.update || process.env.UPDATE_SNAPSHOT
@@ -116,6 +127,14 @@ export function resolveConfig(
 
   if (options.related)
     resolved.related = toArray(options.related).map(file => resolve(resolved.root, file))
+
+  resolved.reporters = Array.from(new Set([
+    ...toArray(resolved.reporters),
+    // @ts-expect-error from CLI
+    ...toArray(resolved.reporter),
+  ])).filter(Boolean)
+  if (!resolved.reporters.length)
+    resolved.reporters.push('default')
 
   return resolved
 }

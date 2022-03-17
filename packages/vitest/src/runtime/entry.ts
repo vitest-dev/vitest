@@ -1,5 +1,6 @@
 import { promises as fs } from 'fs'
 import type { BuiltinEnvironment, ResolvedConfig } from '../types'
+import { getWorkerState } from '../utils'
 import { setupGlobalEnv, withEnv } from './setup'
 import { startTests } from './run'
 
@@ -14,12 +15,13 @@ export async function run(files: string[], config: ResolvedConfig): Promise<void
     if (!['node', 'jsdom', 'happy-dom'].includes(env))
       throw new Error(`Unsupported environment: ${env}`)
 
-    process.__vitest_worker__.filepath = file
+    const workerState = getWorkerState()
+    workerState.filepath = file
 
     await withEnv(env as BuiltinEnvironment, config.environmentOptions || {}, async() => {
       await startTests([file], config)
     })
 
-    process.__vitest_worker__.filepath = undefined
+    workerState.filepath = undefined
   }
 }

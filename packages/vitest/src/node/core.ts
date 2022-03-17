@@ -1,18 +1,20 @@
-import { existsSync } from 'fs'
+import { existsSync, promises as fs } from 'fs'
 import type { ViteDevServer } from 'vite'
+import { toNamespacedPath } from 'pathe'
 import fg from 'fast-glob'
 import mm from 'micromatch'
 import c from 'picocolors'
 import { ViteNodeServer } from 'vite-node/server'
-import type { ArgumentsType, RawSourceMap, Reporter, ResolvedConfig, UserConfig } from '../types'
+import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig } from '../types'
 import { SnapshotManager } from '../integrations/snapshot/manager'
-import { clone, deepMerge, hasFailed, noop, slash, toArray } from '../utils'
-import { cleanCoverage, reportCoverage } from '../coverage'
-import { DefaultReporter, ReportersMap } from './reporters'
+import { deepMerge, hasFailed, noop, slash, toArray } from '../utils'
+import { cleanCoverage, reportCoverage } from '../integrations/coverage'
+import { ReportersMap } from './reporters'
 import { createPool } from './pool'
 import type { WorkerPool } from './pool'
 import { StateManager } from './state'
 import { resolveConfig } from './config'
+import { printError } from './error'
 
 const WATCHER_DEBOUNCE = 100
 const CLOSE_TIMEOUT = 1_000
@@ -35,7 +37,6 @@ export class Vitest {
 
   invalidates: Set<string> = new Set()
   changedTests: Set<string> = new Set()
-  visitedFilesMap: Map<string, RawSourceMap> = new Map()
   runningPromise?: Promise<void>
   closingPromise?: Promise<void>
 
@@ -61,8 +62,7 @@ export class Vitest {
     this.config = resolved
     this.state = new StateManager()
     this.snapshot = new SnapshotManager(resolved)
-    // @ts-expect-error cli type
-    this.reporters = toArray(resolved.reporters || resolved.reporter)
+    this.reporters = resolved.reporters
       .map((i) => {
         if (typeof i === 'string') {
           const Reporter = ReportersMap[i]
@@ -72,9 +72,6 @@ export class Vitest {
         }
         return i
       })
-
-    if (!this.reporters.length)
-      this.reporters.push(new DefaultReporter())
 
     if (this.config.watch)
       this.registerWatcher()
@@ -90,9 +87,23 @@ export class Vitest {
   }
 
   getConfig() {
+    const hasCustomReporter = toArray(this.config.reporters)
+      .some(reporter => typeof reporter !== 'string')
+
+    if (!hasCustomReporter && !this.configOverride)
+      return this.config
+
+    const config = deepMerge({}, this.config)
+
     if (this.configOverride)
-      return deepMerge(clone(this.config), this.configOverride) as ResolvedConfig
-    return this.config
+      deepMerge(config, this.configOverride)
+
+    // Custom reporters cannot be serialized for sending to workers #614
+    // but workers don't need reporters anyway
+    if (hasCustomReporter)
+      config.reporters = []
+
+    return config as ResolvedConfig
   }
 
   async start(filters?: string[]) {
@@ -113,11 +124,11 @@ export class Vitest {
 
     await this.runFiles(files)
 
-    if (this.config.watch)
-      await this.report('onWatcherStart')
-
     if (this.config.coverage.enabled)
       await reportCoverage(this)
+
+    if (this.config.watch)
+      await this.report('onWatcherStart')
   }
 
   private async getTestDependencies(filepath: string) {
@@ -199,6 +210,11 @@ export class Vitest {
     await this.report('onWatcherStart')
   }
 
+  async changeNamePattern(pattern: string, files: string[] = this.state.getFilepaths(), trigger?: string) {
+    this.config.testNamePattern = pattern ? new RegExp(pattern) : undefined
+    await this.rerunFiles(files, trigger)
+  }
+
   async returnFailed() {
     await this.rerunFiles(this.state.getFailedFilepaths(), 'rerun failed')
   }
@@ -271,10 +287,10 @@ export class Vitest {
 
       await this.runFiles(files)
 
-      await this.report('onWatcherStart')
-
       if (this.config.coverage.enabled)
         await reportCoverage(this)
+
+      await this.report('onWatcherStart')
     }, WATCHER_DEBOUNCE)
   }
 
@@ -295,9 +311,9 @@ export class Vitest {
         this.changedTests.delete(id)
       }
     }
-    const onAdd = (id: string) => {
+    const onAdd = async(id: string) => {
       id = slash(id)
-      if (this.isTargetFile(id)) {
+      if (await this.isTargetFile(id)) {
         this.changedTests.add(id)
         this.scheduleRerun(id)
       }
@@ -378,26 +394,59 @@ export class Vitest {
     )))
   }
 
-  async globTestFiles(filters?: string[]) {
-    let files = await fg(
-      this.config.include,
-      {
-        absolute: true,
-        cwd: this.config.root,
-        ignore: this.config.exclude,
-      },
-    )
+  async globTestFiles(filters: string[] = []) {
+    const globOptions = {
+      absolute: true,
+      cwd: this.config.dir || this.config.root,
+      ignore: this.config.exclude,
+    }
 
-    if (filters?.length)
-      files = files.filter(i => filters.some(f => i.includes(f)))
+    let testFiles = await fg(this.config.include, globOptions)
 
-    return files
+    if (filters.length && process.arch === 'win32')
+      filters = filters.map(f => toNamespacedPath(f))
+
+    if (filters.length)
+      testFiles = testFiles.filter(i => filters.some(f => i.includes(f)))
+
+    if (this.config.includeSource) {
+      let files = await fg(this.config.includeSource, globOptions)
+      if (filters.length)
+        files = files.filter(i => filters.some(f => i.includes(f)))
+
+      await Promise.all(files.map(async(file) => {
+        try {
+          const code = await fs.readFile(file, 'utf-8')
+          if (this.isInSourceTestFile(code))
+            testFiles.push(file)
+        }
+        catch {
+          return null
+        }
+      }))
+    }
+
+    return testFiles
   }
 
-  isTargetFile(id: string): boolean {
+  async isTargetFile(id: string, source?: string): Promise<boolean> {
     if (mm.isMatch(id, this.config.exclude))
       return false
-    return mm.isMatch(id, this.config.include)
+    if (mm.isMatch(id, this.config.include))
+      return true
+    if (this.config.includeSource?.length && mm.isMatch(id, this.config.includeSource)) {
+      source = source || await fs.readFile(id, 'utf-8')
+      return this.isInSourceTestFile(source)
+    }
+    return false
+  }
+
+  isInSourceTestFile(code: string) {
+    return code.includes('import.meta.vitest')
+  }
+
+  printError(err: unknown) {
+    return printError(err, this)
   }
 
   onServerRestarted(fn: () => void) {

@@ -18,6 +18,8 @@ export type DeepMerge<F, S> = MergeInsertions<{
         : never;
 }>
 
+export type MutableArray<T extends readonly any[]> = { -readonly [k in keyof T]: T[k] }
+
 export interface Constructable {
   new (...args: any[]): any
 }
@@ -73,17 +75,4 @@ export interface ModuleGraphData {
   graph: Record<string, string[]>
   externalized: string[]
   inlined: string[]
-}
-
-export interface StartOfSourceMap {
-  file?: string
-  sourceRoot?: string
-}
-
-export interface RawSourceMap extends StartOfSourceMap {
-  version: string
-  sources: string[]
-  names: string[]
-  sourcesContent?: string[]
-  mappings: string
 }

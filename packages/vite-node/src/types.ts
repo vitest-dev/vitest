@@ -1,14 +1,36 @@
+import type { ModuleCacheMap } from './client'
+
 export interface DepsHandlingOptions {
   external?: (string | RegExp)[]
   inline?: (string | RegExp)[]
   /**
    * Try to guess the CJS version of a package when it's invalid ESM
-   * @default true
+   * @default false
    */
   fallbackCJS?: boolean
 }
 
-export type FetchFunction = (id: string) => Promise<{ code?: string; externalize?: string }>
+export interface StartOfSourceMap {
+  file?: string
+  sourceRoot?: string
+}
+
+export interface RawSourceMap extends StartOfSourceMap {
+  version: string
+  sources: string[]
+  names: string[]
+  sourcesContent?: string[]
+  mappings: string
+}
+
+export interface FetchResult {
+  code?: string
+  externalize?: string
+  map?: RawSourceMap
+}
+
+export type FetchFunction = (id: string) => Promise<FetchResult>
+
 export type ResolveIdFunction = (id: string, importer?: string) => Promise<ViteNodeResolveId | null>
 
 export interface ModuleCache {
@@ -18,11 +40,11 @@ export interface ModuleCache {
 }
 
 export interface ViteNodeRunnerOptions {
-  fetchModule: FetchFunction
-  resolveId: ResolveIdFunction
   root: string
+  fetchModule: FetchFunction
+  resolveId?: ResolveIdFunction
   base?: string
-  moduleCache?: Map<string, ModuleCache>
+  moduleCache?: ModuleCacheMap
   interopDefault?: boolean
   requestStubs?: Record<string, any>
 }
@@ -38,18 +60,20 @@ export interface ViteNodeResolveId {
 export interface ViteNodeServerOptions {
   /**
    * Inject inline sourcemap to modules
-   * @default true
+   * @default 'inline'
    */
-  sourcemap?: boolean
+  sourcemap?: 'inline' | boolean
   /**
    * Deps handling
    */
   deps?: DepsHandlingOptions
   /**
-   * Tranform method for modules
+   * Transform method for modules
    */
   transformMode?: {
     ssr?: RegExp[]
     web?: RegExp[]
   }
 }
+
+export type { ModuleCacheMap }

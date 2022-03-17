@@ -1,7 +1,7 @@
 import type { CommonServerOptions } from 'vite'
 import type { PrettyFormatOptions } from 'pretty-format'
 import type { BuiltinReporters } from '../node/reporters'
-import type { C8Options, ResolvedC8Options } from '../coverage'
+import type { C8Options, ResolvedC8Options } from './coverage'
 import type { JSDOMOptions } from './jsdom-options'
 import type { Reporter } from './reporter'
 import type { SnapshotStateOptions } from './snapshot'
@@ -35,6 +35,13 @@ export interface InlineConfig {
   exclude?: string[]
 
   /**
+   * Include globs for in-source test files
+   *
+   * @default []
+   */
+  includeSource?: string[]
+
+  /**
    * Handling for dependencies inlining or externalizing
    */
   deps?: {
@@ -66,10 +73,17 @@ export interface InlineConfig {
      * This will significantly improve the performance in huge repo, but might potentially
      * cause some misalignment if a package have different logic in ESM and CJS mode.
      *
-     * @default true
+     * @default false
      */
     fallbackCJS?: boolean
   }
+
+  /**
+   * Base directory to scan for the test files
+   *
+   * @default `config.root`
+   */
+  dir?: string
 
   /**
   * Register apis globally
@@ -107,7 +121,7 @@ export interface InlineConfig {
   /**
    * Watch mode
    *
-   * @default false
+   * @default true
    */
   watch?: boolean
 
@@ -159,7 +173,7 @@ export interface InlineConfig {
   /**
    * Default timeout of a hook in milliseconds
    *
-   * @default 5000
+   * @default 10000
    */
   hookTimeout?: number
 
@@ -232,10 +246,17 @@ export interface InlineConfig {
   api?: boolean | number | ApiConfig
 
   /**
-   * Open Vitest UI
+   * Enable Vitest UI
    * @internal WIP
    */
   ui?: boolean
+
+  /**
+   * Open UI automatically.
+   *
+   * @default true
+   */
+  open?: boolean
 
   /**
    * Base url for the UI
@@ -289,22 +310,28 @@ export interface UserConfig extends InlineConfig {
   dom?: boolean
 
   /**
-   * Do not watch
-   */
-  run?: boolean
-
-  /**
    * Pass with no tests
    */
   passWithNoTests?: boolean
 
   /**
+   * Allow tests and suites that are marked as only
+   */
+  allowOnly?: boolean
+
+  /**
    * Run tests that cover a list of source files
    */
   related?: string[] | string
+
+  /**
+   * Overrides Vite mode
+   * @default 'test'
+   */
+  mode?: string
 }
 
-export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api'> {
+export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters'> {
   base?: string
 
   config?: string
@@ -314,6 +341,10 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
 
   coverage: ResolvedC8Options
   snapshotOptions: SnapshotStateOptions
+
+  reporters: (Reporter | BuiltinReporters)[]
+
+  defines: Record<string, any>
 
   api?: ApiConfig
 }

@@ -18,17 +18,40 @@ const entries = [
   'src/node.ts',
   'src/runtime/worker.ts',
   'src/runtime/entry.ts',
+  'src/integrations/jest-mock.ts',
 ]
 
 const dtsEntries = [
   'src/index.ts',
   'src/node.ts',
+  'src/config.ts',
 ]
 
 const external = [
   ...Object.keys(pkg.dependencies),
   ...Object.keys(pkg.peerDependencies),
   'worker_threads',
+  'inspector',
+  'c8',
+]
+
+const plugins = [
+  alias({
+    entries: [
+      { find: /^node:(.+)$/, replacement: '$1' },
+      { find: 'vite-node/server', replacement: path.resolve(__dirname, '../vite-node/src/server.ts') },
+      { find: 'vite-node/client', replacement: path.resolve(__dirname, '../vite-node/src/client.ts') },
+      { find: 'vite-node/utils', replacement: path.resolve(__dirname, '../vite-node/src/utils.ts') },
+    ],
+  }),
+  resolve({
+    preferBuiltins: true,
+  }),
+  json(),
+  commonjs(),
+  esbuild({
+    target: 'node14',
+  }),
 ]
 
 export default ({ watch }) => [
@@ -38,22 +61,23 @@ export default ({ watch }) => [
       dir: 'dist',
       format: 'esm',
       sourcemap: 'inline',
+      chunkFileNames: (chunkInfo) => {
+        const id = chunkInfo.facadeModuleId || Object.keys(chunkInfo.modules).find(i => !i.includes('node_modules') && i.includes('src/'))
+        if (id) {
+          const parts = Array.from(
+            new Set(path.relative(process.cwd(), id).split(/\//g)
+              .map(i => i.replace(/\..*$/, ''))
+              .filter(i => !['src', 'index', 'dist', 'node_modules'].some(j => i.includes(j)) && i.match(/^[\w_-]+$/))),
+          )
+          if (parts.length)
+            return `chunk-${parts.slice(-2).join('-')}.[hash].js`
+        }
+        return 'vendor-[name].[hash].js'
+      },
     },
     external,
     plugins: [
-      alias({
-        entries: [
-          { find: /^node:(.+)$/, replacement: '$1' },
-        ],
-      }),
-      resolve({
-        preferBuiltins: true,
-      }),
-      json(),
-      commonjs(),
-      esbuild({
-        target: 'node14',
-      }),
+      ...plugins,
       !watch && licensePlugin(),
     ],
     onwarn(message) {
@@ -61,6 +85,21 @@ export default ({ watch }) => [
         return
       console.error(message)
     },
+  },
+  {
+    input: 'src/config.ts',
+    output: [
+      {
+        file: 'dist/config.cjs',
+        format: 'cjs',
+      },
+      {
+        file: 'dist/config.js',
+        format: 'esm',
+      },
+    ],
+    external,
+    plugins,
   },
   ...dtsEntries.map(input => ({
     input,

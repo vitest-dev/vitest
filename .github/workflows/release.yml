@@ -14,9 +14,7 @@ jobs:
           fetch-depth: 0
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v2.0.1
-        with:
-          version: 6.23.5
+        uses: pnpm/action-setup@v2.2.1
 
       - name: Set node version to v16
         uses: actions/setup-node@v2

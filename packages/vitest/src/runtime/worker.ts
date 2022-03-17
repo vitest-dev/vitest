@@ -1,16 +1,18 @@
 import { resolve } from 'pathe'
-import type { BirpcReturn } from 'birpc'
 import { createBirpc } from 'birpc'
-import type { ModuleCache, ResolvedConfig, Test, WorkerContext, WorkerRPC } from '../types'
+import { ModuleCacheMap } from 'vite-node/client'
+import type { ResolvedConfig, WorkerContext, WorkerRPC } from '../types'
 import { distDir } from '../constants'
-import { executeInViteNode } from '../node/execute'
+import { getWorkerState } from '../utils'
+import { executeInViteNode } from './execute'
 import { rpc } from './rpc'
 
 let _viteNode: {
   run: (files: string[], config: ResolvedConfig) => Promise<void>
   collect: (files: string[], config: ResolvedConfig) => Promise<void>
 }
-const moduleCache: Map<string, ModuleCache> = new Map()
+
+const moduleCache = new ModuleCacheMap()
 const mockMap = {}
 
 async function startViteNode(ctx: WorkerContext) {
@@ -53,17 +55,22 @@ async function startViteNode(ctx: WorkerContext) {
 }
 
 function init(ctx: WorkerContext) {
-  if (process.__vitest_worker__ && ctx.config.threads && ctx.config.isolate)
-    throw new Error(`worker for ${ctx.files.join(',')} already initialized by ${process.__vitest_worker__.ctx.files.join(',')}. This is probably an internal bug of Vitest.`)
+  // @ts-expect-error untyped global
+  if (typeof __vitest_worker__ !== 'undefined' && ctx.config.threads && ctx.config.isolate)
+    throw new Error(`worker for ${ctx.files.join(',')} already initialized by ${getWorkerState().ctx.files.join(',')}. This is probably an internal bug of Vitest.`)
 
   process.stdout.write('\0')
 
-  const { config, port } = ctx
+  const { config, port, id } = ctx
 
-  process.__vitest_worker__ = {
+  process.env.VITEST_WORKER_ID = String(id)
+
+  // @ts-expect-error I know what I am doing :P
+  globalThis.__vitest_worker__ = {
     ctx,
     moduleCache,
     config,
+    mockMap,
     rpc: createBirpc<WorkerRPC>(
       {},
       {
@@ -89,19 +96,4 @@ export async function run(ctx: WorkerContext) {
   init(ctx)
   const { run } = await startViteNode(ctx)
   return run(ctx.files, ctx.config)
-}
-
-declare global {
-  namespace NodeJS {
-    interface Process {
-      __vitest_worker__: {
-        ctx: WorkerContext
-        config: ResolvedConfig
-        rpc: BirpcReturn<WorkerRPC>
-        current?: Test
-        filepath?: string
-        moduleCache: Map<string, ModuleCache>
-      }
-    }
-  }
 }

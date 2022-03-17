@@ -1,4 +1,5 @@
 import type { Awaitable, DoneCallback, RuntimeContext, SuiteCollector, TestFunction } from '../types'
+import { getWorkerState } from '../utils'
 
 export const context: RuntimeContext = {
   tasks: [],
@@ -17,15 +18,18 @@ export async function runWithSuite(suite: SuiteCollector, fn: (() => Awaitable<v
 }
 
 export function getDefaultTestTimeout() {
-  return process.__vitest_worker__!.config!.testTimeout
+  return getWorkerState().config.testTimeout
 }
 
 export function getDefaultHookTimeout() {
-  return process.__vitest_worker__!.config!.hookTimeout
+  return getWorkerState().config.hookTimeout
 }
 
-export function withTimeout<T extends((...args: any[]) => any)>(fn: T, _timeout?: number): T {
-  const timeout = _timeout ?? getDefaultTestTimeout()
+export function withTimeout<T extends((...args: any[]) => any)>(
+  fn: T,
+  timeout = getDefaultTestTimeout(),
+  isHook = false,
+): T {
   if (timeout <= 0 || timeout === Infinity)
     return fn
 
@@ -33,11 +37,15 @@ export function withTimeout<T extends((...args: any[]) => any)>(fn: T, _timeout?
     return Promise.race([fn(...args), new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
         clearTimeout(timer)
-        reject(new Error(`Test timed out in ${timeout}ms.`))
+        reject(new Error(makeTimeoutMsg(isHook, timeout)))
       }, timeout)
       timer.unref()
     })]) as Awaitable<void>
   }) as T
+}
+
+function makeTimeoutMsg(isHook: boolean, timeout: number) {
+  return `${isHook ? 'Hook' : 'Test'} timed out in ${timeout}ms.\nIf this is a long-running test, pass a timeout value as the last argument or configure it globally with "${isHook ? 'hookTimeout' : 'testTimeout'}".`
 }
 
 function ensureAsyncTest(fn: TestFunction): () => Awaitable<void> {

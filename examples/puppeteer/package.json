@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "build": "vite build",
-    "coverage": "vitest --coverage",
+    "coverage": "vitest run --coverage",
     "test": "vite build && vitest",
     "test:ui": "vite build && vitest --ui"
   },
@@ -12,5 +12,8 @@
     "puppeteer": "^13.0.0",
     "vite": "latest",
     "vitest": "latest"
+  },
+  "stackblitz": {
+    "startCommand": "npm run test:ui"
   }
 }

@@ -6,13 +6,20 @@ import { getSuites, getTests } from '../../utils'
 
 // for compatibility reasons, the reporter produces a JSON similar to the one produced by the Jest JSON reporter
 // the following types are extracted from the Jest repository (and simplified)
+type Milliseconds = number
 interface TestResult {
   displayName?: string
   failureMessage?: string | null
   skipped: boolean
   status?: string
   testFilePath?: string
+  perfStats: {
+    end?: Milliseconds
+    runtime?: Milliseconds
+    start?: Milliseconds
+  }
 }
+
 interface AggregatedResult {
   numFailedTests: number
   numFailedTestSuites: number
@@ -54,9 +61,14 @@ export class JsonReporter implements Reporter {
     const success = numFailedTestSuites === 0 && numFailedTests === 0
 
     const testResults: Array<TestResult> = tests.map(t => ({
+      perfStats: {
+        runtime: t.result?.duration,
+        start: t.result?.startTime,
+        end: t.result?.duration && t.result?.startTime && t.result.duration + t.result.startTime,
+      },
       displayName: t.name,
       failureMessage: t.result?.error?.message,
-      skipped: t.result?.state === 'skip',
+      skipped: t.mode === 'skip',
       status: t.result?.state,
       testFilePath: t.file?.filepath,
     }))

@@ -4,14 +4,14 @@ import c from 'picocolors'
 import type { ErrorWithDiff, File, Reporter, Task, TaskResultPack, UserConsoleLog } from '../../types'
 import { getFullName, getSuites, getTests, hasFailed, hasFailedSnapshot } from '../../utils'
 import type { Vitest } from '../../node'
-import { printError } from './renderers/diff'
-import { F_RIGHT } from './renderers/figures'
+import { version } from '../../../package.json'
+import { F_RIGHT } from '../../utils/figures'
 import { divider, getStateString, getStateSymbol, renderSnapshotSummary } from './renderers/utils'
 
 const BADGE_PADDING = '       '
-const HELP_HINT = `${c.dim('press ')}h${c.dim(' to show help')}`
+const HELP_HINT = `${c.dim('press ')}${c.bold('h')}${c.dim(' to show help')}`
 const HELP_UPDATE_SNAP = c.dim('press ') + c.bold(c.yellow('u')) + c.dim(' to update snapshot')
-const HELP_QUITE = `${c.dim('press ')}q${c.dim(' to quit')}`
+const HELP_QUITE = `${c.dim('press ')}${c.bold('q')}${c.dim(' to quit')}`
 
 const WAIT_FOR_CHANGE_PASS = `\n${c.bold(c.inverse(c.green(' PASS ')))}${c.green(' Waiting for file changes...')}`
 const WAIT_FOR_CHANGE_FAIL = `\n${c.bold(c.inverse(c.red(' FAIL ')))}${c.red(' Tests failed. Watching for file changes...')}`
@@ -23,12 +23,29 @@ export abstract class BaseReporter implements Reporter {
   isTTY = process.stdout.isTTY && !process.env.CI
   ctx: Vitest = undefined!
 
+  constructor() {
+    this.registerUnhandledRejection()
+  }
+
   onInit(ctx: Vitest) {
     this.ctx = ctx
+
+    this.ctx.log()
+
+    const versionTest = this.ctx.config.watch
+      ? c.blue(`v${version}`)
+      : c.cyan(`v${version}`)
     const mode = this.ctx.config.watch
-      ? c.blue(' WATCH ')
+      ? c.blue(' DEV ')
       : c.cyan(' RUN ')
-    this.ctx.log(`\n${c.inverse(c.bold(mode))} ${c.gray(this.ctx.config.root)}\n`)
+    this.ctx.log(`${c.inverse(c.bold(mode))} ${versionTest} ${c.gray(this.ctx.config.root)}`)
+
+    if (this.ctx.config.ui)
+      this.ctx.log(c.dim(c.green(`      UI started at http://${this.ctx.config.api?.host || 'localhost'}:${c.bold(`${this.ctx.server.config.server.port}`)}`)))
+    else if (this.ctx.config.api)
+      this.ctx.log(c.dim(c.green(`      API started at http://${this.ctx.config.api?.host || 'localhost'}:${c.bold(`${this.ctx.config.api.port}`)}`)))
+
+    this.ctx.log()
     this.start = performance.now()
   }
 
@@ -168,8 +185,18 @@ export abstract class BaseReporter implements Reporter {
 
         this.ctx.error(`${c.red(c.bold(c.inverse(' FAIL ')))} ${name}`)
       }
-      await printError(error, this.ctx)
+      await this.ctx.printError(error)
       errorDivider()
     }
+  }
+
+  registerUnhandledRejection() {
+    process.on('unhandledRejection', async(err) => {
+      process.exitCode = 1
+      this.ctx.error(`\n${c.red(divider(c.bold(c.inverse(' Unhandled Rejection '))))}`)
+      await this.ctx.printError(err)
+      this.ctx.error('\n\n')
+      process.exit(1)
+    })
   }
 }

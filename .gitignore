@@ -15,3 +15,5 @@ bench/test/*/*/
 cypress/videos
 cypress/downloads
 cypress/screenshots
+docs/public/user-avatars
+docs/public/sponsors

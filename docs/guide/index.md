@@ -1,16 +1,14 @@
 # Getting Started
 
-<DevelopmentWarning/>
-
 ## Overview
 
 Vitest is a blazing fast unit test framework powered by Vite.
 
-You can learn more about the rationale behind the project in the [Why Vite](./why) section.
+You can learn more about the rationale behind the project in the [Why Vitest](./why) section.
 
 ## Trying Vitest Online
 
-You can try Vitest online on [StackBlitz](https://vitest.dev/new). It runs Vitest directly in the browser, and it is almost identical to the local setup but doesn't require installing anything on your machine.
+You can try Vitest online on [StackBlitz](https://vitest.new). It runs Vitest directly in the browser, and it is almost identical to the local setup but doesn't require installing anything on your machine.
 
 ## Adding Vitest to your Project
 
@@ -35,13 +33,12 @@ One of the main advantages of Vitest is its unified configuration with Vite. If 
 
 - Create `vitest.config.ts`, which will have the higher priority
 - Pass `--config` option to CLI, e.g. `vitest --config ./path/to/vitest.config.ts`
-- Use `process.env.VITEST` to conditionally apply different configuration in `vite.config.ts`
+- Use `process.env.VITEST` or `mode` property on `defineConfig` (will be set to `test` if not overridden) to conditionally apply different configuration in `vite.config.ts`
 
-To configure `vitest` itself, add `test` property in your Vite config. You'll also need to add a reference to Vitest types using a [triple slash command](https://www.typescriptlang.org/docs/handbook/triple-slash-directives.html#-reference-types-) at the top of your config file.
+To configure `vitest` itself, add `test` property in your Vite config. You'll also need to add a reference to Vitest types using a [triple slash command](https://www.typescriptlang.org/docs/handbook/triple-slash-directives.html#-reference-types-) at the top of your config file, if you are importing `defineConfig` from `vite` itself.
 
 ```ts
-/// <reference types="vitest" />
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
@@ -61,7 +58,7 @@ In a project where Vitest is installed, you can use the `vitest` binary in your 
 {
   "scripts": {
     "test": "vitest",
-    "coverage": "vitest --coverage"
+    "coverage": "vitest run --coverage"
   }
 }
 ```
@@ -101,20 +98,24 @@ You can specify additional CLI options like `--port` or `--https`. For a full li
 | `-r, --root <path>` | Define the project root |
 | `-c, --config <path>` | Path to config file |
 | `-u, --update` | Update snapshots |
-| `-w, --watch` | Watch mode |
-| `-t, --testNamePattern <pattern>` | Run tests with names matching the pattern |
-| `--ui` | Open UI |
+| `-w, --watch` | Smart & instant watch mode |
+| `-t, --testNamePattern <pattern>` | Run tests with full names matching the pattern |
+| `--ui` | Enable UI |
+| `--open` | Open the UI automatically if enabled (default: `true`) |
 | `--api [api]` | Serve API, available options: `--api.port <port>`, `--api.host [host]` and `--api.strictPort` |
-| `--threads` | Enable Threads (default: true) |
+| `--threads` | Enable Threads (default: `true`) |
 | `--silent` | Silent console output from tests |
 | `--reporter <name>` | Select reporter: `default`, `verbose`, `dot` or `json` |
 | `--outputFile <filename>` | Write test results to a file when the `--reporter=json` option is also specified |
 | `--coverage` | Use c8 for coverage |
 | `--run` | Do not watch |
-| `--global` | Inject APIs globally |
+| `--mode` | Override Vite mode (default: `test`) |
+| `--global` | Inject APIs globally `deprecated` use `--globals` |
+| `--globals` | Inject APIs globally |
 | `--dom` | Mock browser api with happy-dom |
-| `--environment <env>` | Runner environment (default: node) |
+| `--environment <env>` | Runner environment (default: `node`) |
 | `--passWithNoTests` | Pass when no tests found |
+| `--allowOnly` | Allow tests and suites that are marked as `only` (default: false in CI, true otherwise) |
 | `-h, --help` | Display available CLI options |
 
 ## Examples
@@ -132,6 +133,14 @@ You can specify additional CLI options like `--port` or `--https`. For a full li
 - [vueuse](https://github.com/vueuse/vueuse)
 - [milkdown](https://github.com/Saul-Mirone/milkdown)
 - [gridjs-svelte](https://github.com/iamyuu/gridjs-svelte)
+- [spring-easing](https://github.com/okikio/spring-easing)
+- [bytemd](https://github.com/bytedance/bytemd)
+- [faker](https://github.com/faker-js/faker)
+- [million](https://github.com/aidenybai/million)
+- [Vitamin](https://github.com/wtchnm/Vitamin)
+- [neodrag](https://github.com/PuruVJ/neodrag)
+- [svelte-multiselect](https://github.com/janosh/svelte-multiselect)
+- [iconify](https://github.com/iconify/iconify)
 
 ## Using Unreleased Commits
 

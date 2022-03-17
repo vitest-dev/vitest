@@ -15,7 +15,7 @@
         "no-restricted-imports": [
           "error",
           {
-            "paths": ["vitest"]
+            "paths": ["vitest", "path"]
           }
         ]
       }

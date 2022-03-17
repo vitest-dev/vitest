@@ -1,4 +1,3 @@
-import { util } from 'chai'
 import type { SpyImpl } from 'tinyspy'
 import * as tinyspy from 'tinyspy'
 
@@ -103,8 +102,8 @@ export const spies = new Set<SpyInstance>()
 
 export function isMockFunction(fn: any): fn is EnhancedSpy {
   return typeof fn === 'function'
-  && '__isSpy' in fn
-  && fn.__isSpy
+  && '_isMockFunction' in fn
+  && fn._isMockFunction
 }
 
 export function spyOn<T, S extends Properties<Required<T>>>(
@@ -117,17 +116,10 @@ export function spyOn<T, G extends Properties<Required<T>>>(
   methodName: G,
   accesType: 'set',
 ): SpyInstance<[T[G]], void>
-export function spyOn<T, M extends Classes<Required<T>>>(
-  object: T,
-  method: M
-): Required<T>[M] extends new (...args: infer A) => infer R
-  ? SpyInstance<A, R>
-  : never
-export function spyOn<T, M extends Methods<Required<T>>>(
+export function spyOn<T, M extends (Methods<Required<T>> | Classes<Required<T>>)>(
   obj: T,
   methodName: M,
-  mock?: T[M]
-): Required<T>[M] extends (...args: infer A) => infer R ? SpyInstance<A, R> : never
+): Required<T>[M] extends (...args: infer A) => infer R | (new (...args: infer A) => infer R) ? SpyInstance<A, R> : never
 export function spyOn<T, K extends keyof T>(
   obj: T,
   method: K,
@@ -235,7 +227,9 @@ function enhanceSpy<TArgs extends any[], TReturns>(
   stub.mockRejectedValueOnce = (val: unknown) =>
     stub.mockImplementationOnce(() => Promise.reject(val))
 
-  util.addProperty(stub, 'mock', () => mockContext)
+  Object.defineProperty(stub, 'mock', {
+    get: () => mockContext,
+  })
 
   stub.willCall(function(this: unknown, ...args) {
     instances.push(this)

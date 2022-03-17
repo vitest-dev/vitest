@@ -2,7 +2,7 @@ import path from 'pathe'
 import { expect } from 'chai'
 import type { SnapshotResult, Test } from '../../types'
 import { rpc } from '../../runtime/rpc'
-import { getNames } from '../../utils'
+import { getNames, getWorkerState } from '../../utils'
 import { equals, iterableEquality, subsetEquality } from '../chai/jest-utils'
 import { deepMergeSnapshot } from './port/utils'
 import SnapshotState from './port/state'
@@ -34,7 +34,7 @@ export class SnapshotClient {
       this.testFile = this.test!.file!.filepath
       this.snapshotState = new SnapshotState(
         resolveSnapshotPath(this.testFile),
-        process.__vitest_worker__!.config.snapshotOptions,
+        getWorkerState().config.snapshotOptions,
       )
     }
   }
@@ -43,7 +43,7 @@ export class SnapshotClient {
     this.test = undefined
   }
 
-  assert(received: unknown, message?: string, isInline = false, properties?: object, inlineSnapshot?: string): void {
+  assert(received: unknown, message?: string, isInline = false, properties?: object, inlineSnapshot?: string, error?: Error): void {
     if (!this.test)
       throw new Error('Snapshot cannot be used outside of test')
 
@@ -73,6 +73,7 @@ export class SnapshotClient {
       testName,
       received,
       isInline,
+      error,
       inlineSnapshot,
     })
 

@@ -33,7 +33,7 @@ defineProps<{ task: Task }>()
     i-carbon:document-blank
   />
   <div
-    v-else-if="task.mode === 'skip'"
+    v-else-if="task.mode === 'skip' || task.result?.state === 'skip'"
     v-tooltip.right="'Skipped'"
     text-gray-500
     flex-shrink-0
@@ -42,7 +42,6 @@ defineProps<{ task: Task }>()
   />
   <div
     v-else
-    v-tooltip.right="'Running'"
     text-yellow-500
     flex-shrink-0
     i-carbon:circle-dash

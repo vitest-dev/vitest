@@ -6,19 +6,22 @@
     "types"
   ],
   "scripts": {
-    "coverage": "vitest --coverage",
+    "coverage": "vitest run --coverage",
     "dev": "vite",
     "test": "vitest",
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "@vueuse/integrations": "^7.5.3",
-    "axios": "^0.25.0",
-    "tinyspy": "^0.2.8"
+    "@vueuse/integrations": "^8.0.1",
+    "axios": "^0.26.1",
+    "tinyspy": "^0.3.0"
   },
   "devDependencies": {
     "@vitest/ui": "latest",
     "vite": "latest",
     "vitest": "latest"
+  },
+  "stackblitz": {
+    "startCommand": "npm run test:ui"
   }
 }

@@ -1,0 +1,5 @@
+// Vitest Snapshot v1
+
+exports[`<Hello /> > renders 1`] = `"<div>4 x 2 = 8</div><button>x1</button>"`;
+
+exports[`<Hello /> > updates 1`] = `"<div>4 x 3 = 12</div><button>x1</button>"`;
