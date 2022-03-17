@@ -109,12 +109,12 @@ export function isMockFunction(fn: any): fn is EnhancedSpy {
 export function spyOn<T, S extends Properties<Required<T>>>(
   obj: T,
   methodName: S,
-  accesType: 'get',
+  accessType: 'get',
 ): SpyInstance<[], T[S]>
 export function spyOn<T, G extends Properties<Required<T>>>(
   obj: T,
   methodName: G,
-  accesType: 'set',
+  accessType: 'set',
 ): SpyInstance<[T[G]], void>
 export function spyOn<T, M extends (Methods<Required<T>> | Classes<Required<T>>)>(
   obj: T,

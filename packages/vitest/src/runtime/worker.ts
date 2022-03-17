@@ -4,6 +4,7 @@ import { ModuleCacheMap } from 'vite-node/client'
 import type { ResolvedConfig, WorkerContext, WorkerRPC } from '../types'
 import { distDir } from '../constants'
 import { getWorkerState } from '../utils'
+import type { MockMap } from '../types/mocker'
 import { executeInViteNode } from './execute'
 import { rpc } from './rpc'
 
@@ -13,7 +14,7 @@ let _viteNode: {
 }
 
 const moduleCache = new ModuleCacheMap()
-const mockMap = {}
+const mockMap: MockMap = new Map()
 
 async function startViteNode(ctx: WorkerContext) {
   if (_viteNode)
