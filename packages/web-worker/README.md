@@ -1,4 +1,4 @@
-# @vitest/addon-web-worker
+# @vitest/web-worker
 
 > Web Worker support for Vitest testing. Doesn't require JSDom.
 
@@ -8,27 +8,27 @@ Simulates Web Worker, but in the same thread. Supports both `new Worker(url)` an
 
 ```sh
 # with npm
-npm install -D @vitest/addon-web-worker
+npm install -D @vitest/web-worker
 
 # with pnpm
-pnpm install -D @vitest/addon-web-worker
+pnpm install -D @vitest/web-worker
 
 # with yarn
-yarn install -D @vitest/addon-web-worker
+yarn install -D @vitest/web-worker
 ```
 
 ## Usage
 
-Just import `@vitest/addon-web-worker` in your test file to test only in current suite.
+Just import `@vitest/web-worker` in your test file to test only in current suite.
 
-Or add `@vitest/addon-web-worker` in your `setupFiles`, if you want to have a global support.
+Or add `@vitest/web-worker` in your `setupFiles`, if you want to have a global support.
 
 ```ts
 import { defineConfig } from 'vitest/node'
 
 export default defineConfig({
   test: {
-    setupFiles: ['@vitest/addon-web-worker'],
+    setupFiles: ['@vitest/web-worker'],
   },
 })
 ```
@@ -37,7 +37,7 @@ export default defineConfig({
 
 ```ts
 // worker.ts
-import '@vitest/addon-web-worker'
+import '@vitest/web-worker'
 import MyWorker from '../worker?worker'
 
 self.onmessage = (e) => {
