@@ -1,4 +1,4 @@
-export type SuiteMocks = Record<string, Record<string, string | null | (() => unknown)>>
+export type MockMap = Map<string, Record<string, string | null | (() => unknown)>>
 
 export interface PendingSuiteMock {
   id: string
