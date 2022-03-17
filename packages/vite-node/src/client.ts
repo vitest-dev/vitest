@@ -13,6 +13,10 @@ export const DEFAULT_REQUEST_STUBS = {
       return {
         accept: () => {},
         prune: () => {},
+        dispose: () => {},
+        decline: () => {},
+        invalidate: () => {},
+        on: () => {},
       }
     },
     updateStyle() {},
