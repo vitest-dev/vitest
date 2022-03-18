@@ -1,6 +1,6 @@
-import { promises as fs } from 'fs'
+import { existsSync, promises as fs } from 'fs'
 import { hostname } from 'os'
-import { relative, resolve } from 'pathe'
+import { dirname, relative, resolve } from 'pathe'
 
 import type { Vitest } from '../../node'
 import type { ErrorWithDiff, Reporter, Task } from '../../types'
@@ -46,6 +46,11 @@ export class JUnitReporter implements Reporter {
 
     if (this.ctx.config.outputFile) {
       this.reportFile = resolve(this.ctx.config.root, this.ctx.config.outputFile)
+
+      const outputDirectory = dirname(this.reportFile)
+      if (!existsSync(outputDirectory))
+        await fs.mkdir(outputDirectory, { recursive: true })
+
       const fileFd = await fs.open(this.reportFile, 'w+')
 
       this.baseLog = async(text: string) => await fs.writeFile(fileFd, `${text}\n`)
