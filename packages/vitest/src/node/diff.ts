@@ -2,8 +2,8 @@ import c from 'picocolors'
 import * as diff from 'diff'
 import cliTruncate from 'cli-truncate'
 
-export function formatLine(line: string) {
-  return cliTruncate(line, (process.stdout.columns || 80) - 4)
+export function formatLine(line: string, outputTruncateLength?: number) {
+  return cliTruncate(line, (outputTruncateLength ?? (process.stdout.columns || 80)) - 4)
 }
 
 /**
@@ -15,7 +15,7 @@ export function formatLine(line: string) {
 * @return {string} The diff.
 */
 
-export function unifiedDiff(actual: string, expected: string) {
+export function unifiedDiff(actual: string, expected: string, outputTruncateLength?: number) {
   if (actual === expected)
     return ''
 
@@ -54,16 +54,16 @@ export function unifiedDiff(actual: string, expected: string) {
 
   let formatted = lines.map((line: string) => {
     if (line[0] === '-') {
-      line = formatLine(line.slice(1))
+      line = formatLine(line.slice(1), outputTruncateLength)
       if (isCompact)
         return c.green(line)
-      return c.green(`- ${formatLine(line)}`)
+      return c.green(`- ${formatLine(line, outputTruncateLength)}`)
     }
     if (line[0] === '+') {
-      line = formatLine(line.slice(1))
+      line = formatLine(line.slice(1), outputTruncateLength)
       if (isCompact)
         return c.red(line)
-      return c.red(`+ ${formatLine(line)}`)
+      return c.red(`+ ${formatLine(line, outputTruncateLength)}`)
     }
     if (line.match(/@@/))
       return '--'

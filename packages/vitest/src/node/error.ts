@@ -40,7 +40,7 @@ export async function printError(error: unknown, ctx: Vitest) {
   handleImportOutsideModuleError(e.stack || e.stackStr || '', ctx)
 
   if (e.showDiff)
-    displayDiff(e.actual, e.expected, ctx.console)
+    displayDiff(e.actual, e.expected, ctx.console, ctx.config.outputTruncateLength)
 }
 
 const esmErrors = [
@@ -79,8 +79,8 @@ function handleImportOutsideModuleError(stack: string, ctx: Vitest) {
 }\n`)))
 }
 
-function displayDiff(actual: string, expected: string, console: Console) {
-  console.error(c.gray(unifiedDiff(actual, expected)) + '\n')
+function displayDiff(actual: string, expected: string, console: Console, outputTruncateLength?: number) {
+  console.error(c.gray(unifiedDiff(actual, expected, outputTruncateLength)) + '\n')
 }
 
 function printErrorMessage(error: ErrorWithDiff, console: Console) {
