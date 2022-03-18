@@ -1,9 +1,13 @@
+import { join } from 'pathe'
 import type { TransformResult, ViteDevServer } from 'vite'
 import type { FetchResult, RawSourceMap, ViteNodeResolveId, ViteNodeServerOptions } from './types'
 import { shouldExternalize } from './externalize'
 import { toFilePath, withInlineSourcemap } from './utils'
 
 export * from './externalize'
+
+// store the original reference to avoid it been mocked
+const RealDate = Date
 
 export class ViteNodeServer {
   private fetchPromiseMap = new Map<string, Promise<FetchResult>>()
@@ -24,6 +28,8 @@ export class ViteNodeServer {
   }
 
   async resolveId(id: string, importer?: string): Promise<ViteNodeResolveId | null> {
+    if (importer && !importer.startsWith(this.server.config.root))
+      importer = join(this.server.config.root, importer)
     return this.server.pluginContainer.resolveId(id, importer, { ssr: true })
   }
 
@@ -75,7 +81,7 @@ export class ViteNodeServer {
     const filePath = toFilePath(id, this.server.config.root)
 
     const module = this.server.moduleGraph.getModuleById(id)
-    const timestamp = module?.lastHMRTimestamp || Date.now()
+    const timestamp = module?.lastHMRTimestamp || RealDate.now()
     const cache = this.fetchCache.get(filePath)
     if (timestamp && cache && cache.timestamp >= timestamp)
       return cache.result

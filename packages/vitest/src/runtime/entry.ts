@@ -1,5 +1,6 @@
 import { promises as fs } from 'fs'
 import type { BuiltinEnvironment, ResolvedConfig } from '../types'
+import { getWorkerState } from '../utils'
 import { setupGlobalEnv, withEnv } from './setup'
 import { startTests } from './run'
 
@@ -11,6 +12,10 @@ export async function run(
 
   // batch files and send them using onPathsCollected
   const webFiles: string[] = []
+  const workerState = getWorkerState()
+
+  // reset mock state
+  workerState.mockMap.clear()
 
   for (const file of files) {
     if (config.web) {
@@ -28,7 +33,7 @@ export async function run(
     if (!['node', 'jsdom', 'happy-dom'].includes(env))
       throw new Error(`Unsupported environment: ${env}`)
 
-    __vitest_worker__.filepath = file
+    workerState.filepath = file
 
     await withEnv(
       env as BuiltinEnvironment,
@@ -38,7 +43,7 @@ export async function run(
       },
     )
 
-    __vitest_worker__.filepath = undefined
+    workerState.filepath = undefined
   }
 
   if (config.web)

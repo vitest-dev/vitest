@@ -73,7 +73,7 @@ export interface InlineConfig {
      * This will significantly improve the performance in huge repo, but might potentially
      * cause some misalignment if a package have different logic in ESM and CJS mode.
      *
-     * @default true
+     * @default false
      */
     fallbackCJS?: boolean
   }

@@ -1,0 +1,37 @@
+{
+  "name": "@vitest/web-worker",
+  "version": "0.7.4",
+  "description": "Web Worker support for testing in Vitest",
+  "type": "module",
+  "files": [
+    "dist",
+    "*.d.ts"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "default": "./dist/index.js",
+      "types": "./index.d.ts"
+    },
+    "./pure": {
+      "import": "./dist/pure.js",
+      "default": "./dist/pure.js",
+      "types": "./pure.d.ts"
+    }
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "scripts": {
+    "build": "rimraf dist && rollup -c",
+    "dev": "rollup -c --watch --watch.include=src/**",
+    "prepublishOnly": "nr build",
+    "typecheck": "tsc --noEmit"
+  },
+  "types": "./index.d.ts",
+  "peerDependencies": {
+    "vitest": "*"
+  },
+  "devDependencies": {
+    "rollup": "^2.67.2"
+  }
+}

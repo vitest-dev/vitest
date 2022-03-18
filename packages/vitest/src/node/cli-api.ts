@@ -32,6 +32,8 @@ export async function startVitest(cliFilters: string[], options: CliOptions, vit
 
   const ctx = await createVitest(options, viteOverrides)
 
+  process.env.VITEST_MODE = ctx.config.watch ? 'WATCH' : 'RUN'
+
   if (ctx.config.coverage.enabled) {
     if (!await ensurePackageInstalled('c8')) {
       process.exitCode = 1

@@ -1,3 +1,5 @@
+import { getWorkerState } from '../utils'
+
 export const rpc = () => {
-  return __vitest_worker__!.rpc
+  return getWorkerState().rpc
 }

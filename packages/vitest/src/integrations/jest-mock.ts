@@ -1,4 +1,3 @@
-import { util } from 'chai'
 import type { SpyImpl } from 'tinyspy'
 import * as tinyspy from 'tinyspy'
 
@@ -110,12 +109,12 @@ export function isMockFunction(fn: any): fn is EnhancedSpy {
 export function spyOn<T, S extends Properties<Required<T>>>(
   obj: T,
   methodName: S,
-  accesType: 'get',
+  accessType: 'get',
 ): SpyInstance<[], T[S]>
 export function spyOn<T, G extends Properties<Required<T>>>(
   obj: T,
   methodName: G,
-  accesType: 'set',
+  accessType: 'set',
 ): SpyInstance<[T[G]], void>
 export function spyOn<T, M extends (Methods<Required<T>> | Classes<Required<T>>)>(
   obj: T,
@@ -228,7 +227,9 @@ function enhanceSpy<TArgs extends any[], TReturns>(
   stub.mockRejectedValueOnce = (val: unknown) =>
     stub.mockImplementationOnce(() => Promise.reject(val))
 
-  util.addProperty(stub, 'mock', () => mockContext)
+  Object.defineProperty(stub, 'mock', {
+    get: () => mockContext,
+  })
 
   stub.willCall(function(this: unknown, ...args) {
     instances.push(this)

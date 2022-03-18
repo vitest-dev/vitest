@@ -1,15 +1,15 @@
 import { ViteNodeRunner } from 'vite-node/client'
 import type { ModuleCache, ViteNodeRunnerOptions } from 'vite-node'
 import { normalizePath } from 'vite'
-import type { SuiteMocks } from './mocker'
+import type { MockMap } from '../types/mocker'
+import { getWorkerState } from '../utils'
 import { VitestMocker } from './mocker'
 
 export interface ExecuteOptions extends ViteNodeRunnerOptions {
-  files: string[]
-  mockMap: SuiteMocks
+  mockMap: MockMap
 }
 
-export async function executeInViteNode(options: ExecuteOptions) {
+export async function executeInViteNode(options: ExecuteOptions & { files: string[] }) {
   const runner = new VitestRunner(options)
 
   // provide the vite define variable in this context
@@ -37,11 +37,13 @@ export class VitestRunner extends ViteNodeRunner {
     const mocker = this.mocker.withRequest(request)
 
     mocker.on('mocked', (dep: string, module: Partial<ModuleCache>) => {
-      this.setCache(dep, module)
+      this.moduleCache.set(dep, module)
     })
 
+    const workerState = getWorkerState()
+
     // support `import.meta.vitest` for test entry
-    if (__vitest_worker__.filepath && normalizePath(__vitest_worker__.filepath) === normalizePath(context.__filename)) {
+    if (workerState.filepath && normalizePath(workerState.filepath) === normalizePath(context.__filename)) {
       // @ts-expect-error injected untyped global
       Object.defineProperty(context.__vite_ssr_import_meta__, 'vitest', { get: () => globalThis.__vitest_index__ })
     }

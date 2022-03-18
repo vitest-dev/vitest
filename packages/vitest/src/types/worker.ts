@@ -1,6 +1,7 @@
 import type { MessagePort } from 'worker_threads'
-import type { FetchFunction, ModuleCache, RawSourceMap, ViteNodeResolveId } from 'vite-node'
+import type { FetchFunction, ModuleCacheMap, RawSourceMap, ViteNodeResolveId } from 'vite-node'
 import type { BirpcReturn } from 'birpc'
+import type { MockMap } from './mocker'
 import type { ResolvedConfig } from './config'
 import type { File, TaskResultPack, Test } from './tasks'
 import type { SnapshotResult } from './snapshot'
@@ -37,6 +38,7 @@ export interface WorkerGlobalState {
   rpc: BirpcReturn<WorkerRPC>
   current?: Test
   filepath?: string
-  moduleCache: Map<string, ModuleCache>
   webCache?: Map<string, string>
+  moduleCache: ModuleCacheMap
+  mockMap: MockMap
 }

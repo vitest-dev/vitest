@@ -13,20 +13,57 @@ export const DEFAULT_REQUEST_STUBS = {
       return {
         accept: () => {},
         prune: () => {},
+        dispose: () => {},
+        decline: () => {},
+        invalidate: () => {},
+        on: () => {},
       }
     },
     updateStyle() {},
   },
 }
 
+export class ModuleCacheMap extends Map<string, ModuleCache> {
+  normalizePath(fsPath: string) {
+    return fsPath
+      .replace(/\\/g, '/')
+      .replace(/^\/@fs\//, '/')
+      .replace(/^file:\//, '/')
+      .replace(/^\/+/, '/')
+  }
+
+  set(fsPath: string, mod: Partial<ModuleCache>) {
+    fsPath = this.normalizePath(fsPath)
+    if (!super.has(fsPath))
+      super.set(fsPath, mod)
+    else
+      Object.assign(super.get(fsPath), mod)
+    return this
+  }
+
+  get(fsPath: string) {
+    fsPath = this.normalizePath(fsPath)
+    return super.get(fsPath)
+  }
+
+  delete(fsPath: string) {
+    fsPath = this.normalizePath(fsPath)
+    return super.delete(fsPath)
+  }
+}
+
 export class ViteNodeRunner {
   root: string
 
-  moduleCache: Map<string, ModuleCache>
+  /**
+   * Holds the cache of modules
+   * Keys of the map are filepaths, or plain package names
+   */
+  moduleCache: ModuleCacheMap
 
   constructor(public options: ViteNodeRunnerOptions) {
     this.root = options.root || process.cwd()
-    this.moduleCache = options.moduleCache || new Map()
+    this.moduleCache = options.moduleCache || new ModuleCacheMap()
   }
 
   async executeFile(file: string) {
@@ -39,13 +76,13 @@ export class ViteNodeRunner {
 
   async cachedRequest(rawId: string, callstack: string[]) {
     const id = normalizeId(rawId, this.options.base)
-
-    if (this.moduleCache.get(id)?.promise)
-      return this.moduleCache.get(id)?.promise
-
     const fsPath = toFilePath(id, this.root)
+
+    if (this.moduleCache.get(fsPath)?.promise)
+      return this.moduleCache.get(fsPath)?.promise
+
     const promise = this.directRequest(id, fsPath, callstack)
-    this.setCache(id, { promise })
+    this.moduleCache.set(fsPath, { promise })
 
     return await promise
   }
@@ -55,10 +92,11 @@ export class ViteNodeRunner {
     const request = async(dep: string) => {
       // probably means it was passed as variable
       // and wasn't transformed by Vite
-      if (this.shouldResolveId(dep)) {
+      if (this.options.resolveId && this.shouldResolveId(dep)) {
         const resolvedDep = await this.options.resolveId(dep, id)
         dep = resolvedDep?.id?.replace(this.root, '') || dep
       }
+
       if (callstack.includes(dep)) {
         if (!this.moduleCache.get(dep)?.exports)
           throw new Error(`[vite-node] Circular dependency detected\nStack:\n${[...callstack, dep].reverse().map(p => `- ${p}`).join('\n')}`)
@@ -74,7 +112,7 @@ export class ViteNodeRunner {
     const { code: transformed, externalize } = await this.options.fetchModule(id)
     if (externalize) {
       const mod = await this.interopedImport(externalize)
-      this.setCache(id, { exports: mod })
+      this.moduleCache.set(fsPath, { exports: mod })
       return mod
     }
 
@@ -83,9 +121,10 @@ export class ViteNodeRunner {
 
     // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
     const url = pathToFileURL(fsPath).href
-    const exports: any = {}
+    const exports: any = Object.create(null)
+    exports[Symbol.toStringTag] = 'Module'
 
-    this.setCache(id, { code: transformed, exports })
+    this.moduleCache.set(id, { code: transformed, exports })
 
     const __filename = fileURLToPath(url)
     const moduleProxy = {
@@ -131,13 +170,6 @@ export class ViteNodeRunner {
 
   prepareContext(context: Record<string, any>) {
     return context
-  }
-
-  setCache(id: string, mod: Partial<ModuleCache>) {
-    if (!this.moduleCache.has(id))
-      this.moduleCache.set(id, mod)
-    else
-      Object.assign(this.moduleCache.get(id), mod)
   }
 
   shouldResolveId(dep: string) {

@@ -1,10 +1,15 @@
 import { environments } from '../integrations/env'
 import type { ResolvedConfig } from '../types'
-import { toArray } from '../utils'
+import { getWorkerState, toArray } from '../utils'
 import * as VitestIndex from '../index'
+import { resetRunOnceCounter } from '../integrations/run-once'
+import { RealDate } from '../integrations/mockdate'
+import { rpc } from './rpc'
 
 let globalSetup = false
 export async function setupGlobalEnv(config: ResolvedConfig) {
+  resetRunOnceCounter()
+
   Object.defineProperty(globalThis, '__vitest_index__', {
     value: VitestIndex,
     enumerable: false,
@@ -30,32 +35,72 @@ function setupDefines(defines: Record<string, any>) {
 }
 
 export async function setupConsoleLogSpy() {
-  const { Console } = await import('console')
-  const { Writable } = await import('stream')
-  const { rpc } = await import('./rpc')
+  const stdoutBuffer: any[] = []
+  const stderrBuffer: any[] = []
+  let stdoutTime = 0
+  let stderrTime = 0
+  let timer: any
 
-  const stdout = new Writable({
-    write(data, _, callback) {
+  // group sync console.log calls with macro task
+  function schedule() {
+    clearTimeout(timer)
+    timer = setTimeout(() => {
+      if (stderrTime < stdoutTime) {
+        sendStderr()
+        sendStdout()
+      }
+      else {
+        sendStdout()
+        sendStderr()
+      }
+    })
+  }
+  function sendStdout() {
+    if (stdoutBuffer.length) {
       rpc().onUserConsoleLog({
         type: 'stdout',
-        content: String(data),
-        taskId: __vitest_worker__.current?.id,
-        time: Date.now(),
+        content: stdoutBuffer.map(i => String(i)).join(''),
+        taskId: getWorkerState().current?.id,
+        time: stdoutTime || RealDate.now(),
       })
+    }
+    stdoutBuffer.length = 0
+    stdoutTime = 0
+  }
+  function sendStderr() {
+    if (stderrBuffer.length) {
+      rpc().onUserConsoleLog({
+        type: 'stderr',
+        content: stderrBuffer.map(i => String(i)).join(''),
+        taskId: getWorkerState().current?.id,
+        time: stderrTime || RealDate.now(),
+      })
+    }
+    stderrBuffer.length = 0
+    stderrTime = 0
+  }
+
+  const { Writable } = await import('stream')
+
+  const stdout = new Writable({
+    write(data, encoding, callback) {
+      stdoutTime = stdoutTime || RealDate.now()
+      stdoutBuffer.push(data)
+      schedule()
       callback()
     },
   })
   const stderr = new Writable({
-    write(data, _, callback) {
-      rpc().onUserConsoleLog({
-        type: 'stderr',
-        content: String(data),
-        taskId: __vitest_worker__.current?.id,
-        time: Date.now(),
-      })
+    write(data, encoding, callback) {
+      stderrTime = stderrTime || RealDate.now()
+      stderrBuffer.push(data)
+      schedule()
       callback()
     },
   })
+
+  const { Console } = await import('console')
+
   globalThis.console = new Console({
     stdout,
     stderr,
@@ -82,7 +127,7 @@ export async function runSetupFiles(config: ResolvedConfig) {
   const files = toArray(config.setupFiles)
   await Promise.all(
     files.map(async(file) => {
-      __vitest_worker__.moduleCache.delete(file)
+      getWorkerState().moduleCache.delete(file)
       await import(file)
     }),
   )

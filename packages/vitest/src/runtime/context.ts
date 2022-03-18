@@ -1,4 +1,5 @@
 import type { Awaitable, DoneCallback, RuntimeContext, SuiteCollector, TestFunction } from '../types'
+import { getWorkerState } from '../utils'
 
 export const context: RuntimeContext = {
   tasks: [],
@@ -17,11 +18,11 @@ export async function runWithSuite(suite: SuiteCollector, fn: (() => Awaitable<v
 }
 
 export function getDefaultTestTimeout() {
-  return __vitest_worker__!.config!.testTimeout
+  return getWorkerState().config.testTimeout
 }
 
 export function getDefaultHookTimeout() {
-  return __vitest_worker__!.config!.hookTimeout
+  return getWorkerState().config.hookTimeout
 }
 
 export function withTimeout<T extends((...args: any[]) => any)>(

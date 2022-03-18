@@ -72,7 +72,8 @@ async function _shouldExternalize(
     return id
 
   const isNodeModule = id.includes('/node_modules/')
-  id = isNodeModule ? guessCJSversion(id) || id : id
+  const guessCJS = isNodeModule && options?.fallbackCJS
+  id = guessCJS ? guessCJSversion(id) || id : id
 
   if (matchExternalizePattern(id, defaultInline))
     return false
