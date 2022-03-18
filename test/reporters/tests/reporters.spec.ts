@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, rmSync } from 'fs'
+import { existsSync, readFileSync, rmSync, rmdirSync } from 'fs'
 import { afterEach, expect, test, vi } from 'vitest'
 import { normalize, resolve } from 'pathe'
 import { JsonReporter } from '../../../packages/vitest/src/node/reporters/json'
@@ -75,13 +75,39 @@ test('JUnit reporter with outputFile', async() => {
   await reporter.onFinished(files)
 
   // Assert
-  const output = context.output.replace(normalize(process.cwd()), '<process-cwd>')
-  expect(output).toMatchSnapshot()
+  expect(normalizeCwd(context.output)).toMatchSnapshot()
   expect(existsSync(outputFile)).toBe(true)
   expect(readFileSync(outputFile, 'utf8')).toMatchSnapshot()
 
   // Cleanup
   rmSync(outputFile)
+})
+
+test('JUnit reporter with outputFile in non-existing directory', async() => {
+  // Arrange
+  const reporter = new JUnitReporter()
+  const rootDirectory = resolve('junitReportDirectory')
+  const outputFile = `${rootDirectory}/deeply/nested/report.xml`
+  const context = getContext()
+  context.vitest.config.outputFile = outputFile
+
+  vi.mock('os', () => ({
+    hostname: () => 'hostname',
+  }))
+
+  vi.setSystemTime(1642587001759)
+
+  // Act
+  await reporter.onInit(context.vitest)
+  await reporter.onFinished(files)
+
+  // Assert
+  expect(normalizeCwd(context.output)).toMatchSnapshot()
+  expect(existsSync(outputFile)).toBe(true)
+  expect(readFileSync(outputFile, 'utf8')).toMatchSnapshot()
+
+  // Cleanup
+  rmdirSync(rootDirectory, { recursive: true })
 })
 
 test('json reporter', async() => {
@@ -113,11 +139,40 @@ test('json reporter with outputFile', async() => {
   await reporter.onFinished(files)
 
   // Assert
-  const output = context.output.replace(normalize(process.cwd()), '<process-cwd>')
-  expect(output).toMatchSnapshot()
+  expect(normalizeCwd(context.output)).toMatchSnapshot()
   expect(existsSync(outputFile)).toBe(true)
   expect(readFileSync(outputFile, 'utf8')).toMatchSnapshot()
 
   // Cleanup
   rmSync(outputFile)
 })
+
+test('json reporter with outputFile in non-existing directory', async() => {
+  // Arrange
+  const reporter = new JsonReporter()
+  const rootDirectory = resolve('jsonReportDirectory')
+  const outputFile = `${rootDirectory}/deeply/nested/report.json`
+  const context = getContext()
+  context.vitest.config.outputFile = outputFile
+
+  vi.setSystemTime(1642587001759)
+
+  // Act
+  reporter.onInit(context.vitest)
+  await reporter.onFinished(files)
+
+  // Assert
+  expect(normalizeCwd(context.output)).toMatchSnapshot()
+  expect(existsSync(outputFile)).toBe(true)
+  expect(readFileSync(outputFile, 'utf8')).toMatchSnapshot()
+
+  // Cleanup
+  rmdirSync(rootDirectory, { recursive: true })
+})
+
+/**
+ * Ensure environment and OS specific paths are consistent in snapshots
+ */
+function normalizeCwd(text: string) {
+  return text.replace(normalize(process.cwd()), '<process-cwd>')
+}
