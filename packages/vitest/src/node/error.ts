@@ -10,6 +10,12 @@ import { F_POINTER } from '../utils/figures'
 import type { Vitest } from './core'
 import { unifiedDiff } from './diff'
 
+export function fileFromParsedStack(stack: ParsedStack) {
+  if (stack.sourcePos?.source && stack.sourcePos.source !== '.' && stack.sourcePos.source !== stack.file)
+    return join(stack.file, '../', stack.sourcePos.source)
+  return stack.file
+}
+
 export async function printError(error: unknown, ctx: Vitest) {
   let e = error as ErrorWithDiff
 
@@ -32,8 +38,7 @@ export async function printError(error: unknown, ctx: Vitest) {
   printErrorMessage(e, ctx.console)
   await printStack(ctx, stacks, nearest, async(s, pos) => {
     if (s === nearest && nearest) {
-      const file = nearest.sourcePos && nearest.sourcePos.source && nearest.sourcePos.source !== '.' ? join(nearest.file, '../', nearest.sourcePos.source) : nearest.file
-      const sourceCode = await fs.readFile(file, 'utf-8')
+      const sourceCode = await fs.readFile(fileFromParsedStack(nearest), 'utf-8')
       ctx.log(c.yellow(generateCodeFrame(sourceCode, 4, pos)))
     }
   })
@@ -101,7 +106,7 @@ async function printStack(
   for (const frame of stack) {
     const pos = frame.sourcePos || frame
     const color = frame === highlight ? c.yellow : c.gray
-    const file = frame.sourcePos && frame.sourcePos.source && frame.sourcePos.source !== '.' ? join(frame.file, '../', frame.sourcePos.source) : frame.file
+    const file = fileFromParsedStack(frame)
     const path = relative(ctx.config.root, file)
 
     ctx.log(color(` ${c.dim(F_POINTER)} ${[frame.method, c.dim(`${path}:${pos.line}:${pos.column}`)].filter(Boolean).join(' ')}`))
