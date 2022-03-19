@@ -11,7 +11,8 @@ import type { Vitest } from './core'
 import { unifiedDiff } from './diff'
 
 export function fileFromParsedStack(stack: ParsedStack) {
-  if (stack.sourcePos?.source && stack.sourcePos.source !== '.' && stack.sourcePos.source !== stack.file)
+  // some files appear as /path with source /@fs/path
+  if (stack.sourcePos?.source && stack.sourcePos.source !== '.' && !stack.sourcePos.source.endsWith(stack.file))
     return join(stack.file, '../', stack.sourcePos.source)
   return stack.file
 }
