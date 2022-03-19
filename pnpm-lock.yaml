@@ -6419,7 +6419,7 @@ packages:
     resolution: {integrity: sha512-3UqjCpey6HiTZT92vODYLPxTBWlM8ZOOjr3LX5F37/VRipW2M1kX6I/Cm4VXzteZqfGfagg8yXywpcOgQBlNsQ==}
     engines: {node: '>=10'}
     dependencies:
-      '@babel/code-frame': 7.16.0
+      '@babel/code-frame': 7.16.7
       '@babel/runtime': 7.16.3
       '@types/aria-query': 4.2.2
       aria-query: 4.2.2
