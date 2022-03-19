@@ -4,10 +4,14 @@ import { environments } from '../integrations/env'
 import type { ResolvedConfig } from '../types'
 import { getWorkerState, toArray } from '../utils'
 import * as VitestIndex from '../index'
+import { resetRunOnceCounter } from '../integrations/run-once'
+import { RealDate } from '../integrations/mockdate'
 import { rpc } from './rpc'
 
 let globalSetup = false
 export async function setupGlobalEnv(config: ResolvedConfig) {
+  resetRunOnceCounter()
+
   Object.defineProperty(globalThis, '__vitest_index__', {
     value: VitestIndex,
     enumerable: false,
@@ -60,7 +64,7 @@ export function setupConsoleLogSpy() {
         type: 'stdout',
         content: stdoutBuffer.map(i => String(i)).join(''),
         taskId: getWorkerState().current?.id,
-        time: stdoutTime || Date.now(),
+        time: stdoutTime || RealDate.now(),
       })
     }
     stdoutBuffer.length = 0
@@ -72,7 +76,7 @@ export function setupConsoleLogSpy() {
         type: 'stderr',
         content: stderrBuffer.map(i => String(i)).join(''),
         taskId: getWorkerState().current?.id,
-        time: stderrTime || Date.now(),
+        time: stderrTime || RealDate.now(),
       })
     }
     stderrBuffer.length = 0
@@ -81,7 +85,7 @@ export function setupConsoleLogSpy() {
 
   const stdout = new Writable({
     write(data, encoding, callback) {
-      stdoutTime = stdoutTime || Date.now()
+      stdoutTime = stdoutTime || RealDate.now()
       stdoutBuffer.push(data)
       schedule()
       callback()
@@ -89,7 +93,7 @@ export function setupConsoleLogSpy() {
   })
   const stderr = new Writable({
     write(data, encoding, callback) {
-      stderrTime = stderrTime || Date.now()
+      stderrTime = stderrTime || RealDate.now()
       stderrBuffer.push(data)
       schedule()
       callback()
