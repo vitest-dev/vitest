@@ -571,10 +571,10 @@ importers:
       kolorist: 1.5.1
       minimist: 1.2.5
       mlly: 0.4.3
-      pathe: 0.2.0
       vite: 2.8.6
     devDependencies:
       '@types/minimist': 1.2.2
+      pathe: 0.2.0
       rollup: 2.70.1
 
   packages/vitest:
@@ -15318,6 +15318,7 @@ packages:
 
   /pathe/0.2.0:
     resolution: {integrity: sha512-sTitTPYnn23esFR3RlqYBWn4c45WGeLcsKzQiUpXJAyfcWkolvlYpV8FLo7JishK946oQwMFUCHXQ9AjGPKExw==}
+    dev: true
 
   /pathval/1.1.1:
     resolution: {integrity: sha512-Dp6zGqpTdETdR63lehJYPeIOqpiNBNtc7BpWSLrOje7UaIsE5aY92r/AunQA7rsXvet3lrJ3JnZX29UPTKXyKQ==}
