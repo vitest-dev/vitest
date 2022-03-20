@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { openInEditor, shouldOpenInEditor } from '../../composables/utils'
+import { openInEditor, shouldOpenInEditor } from '../../composables/error'
 import type { File, Task } from '#types'
 import { config } from '~/composables/client'
 
