@@ -47,6 +47,7 @@ export interface UserConsoleLog {
 }
 
 export interface Position {
+  source?: string
   line: number
   column: number
 }
