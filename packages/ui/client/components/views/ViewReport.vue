@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { openInEditor, shouldOpenInEditor } from '../../composables/utils'
 import type { File, Task } from '#types'
 import { config } from '~/composables/client'
 
@@ -26,13 +27,6 @@ function relative(p: string) {
     return p.slice(config.value.root.length)
   return p
 }
-function shouldOpenInEditor(p: string) {
-  return props.file && p.endsWith(props.file.name)
-}
-async function openInEditor(name: string, line: number, column: number) {
-  const url = encodeURI(`${name}:${line}:${column}`)
-  await fetch(`/__open-in-editor?file=${url}`)
-}
 </script>
 
 <template>
@@ -43,14 +37,14 @@ async function openInEditor(name: string, line: number, column: number) {
           {{ task.name }}
           <div v-if="task.result?.error" class="scrolls scrolls-rounded task-error">
             <pre><b>{{ task.result.error.name || task.result.error.nameStr }}</b>: {{ task.result.error.message }}</pre>
-            <div v-for="(stack, i) of task.result.error.stacks || []" :key="i" class="op80 flex gap-x-2 items-center">
-              <pre> - {{ relative(stack.file) }}:{{ stack.line }}:{{ stack.column }}</pre>
+            <div v-for="({ file: efile, line, column }, i) of task.result.error.stacks || []" :key="i" class="op80 flex gap-x-2 items-center">
+              <pre> - {{ relative(efile) }}:{{ line }}:{{ column }}</pre>
               <div
-                v-if="shouldOpenInEditor(stack.file)"
+                v-if="shouldOpenInEditor(efile, props.file.name)"
                 class="i-carbon-launch text-red-900 hover:cursor-pointer"
                 tabindex="0"
                 title="Open in IDE"
-                @click.passive="openInEditor(stack.file, stack.line, stack.column)"
+                @click.passive="openInEditor(efile, line, column)"
               />
             </div>
           </div>
