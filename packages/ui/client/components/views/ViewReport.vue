@@ -26,6 +26,13 @@ function relative(p: string) {
     return p.slice(config.value.root.length)
   return p
 }
+function shouldOpenInEditor(p: string) {
+  return props.file && p.endsWith(props.file.name)
+}
+async function openInEditor(name: string, line: number, column: number) {
+  const url = encodeURI(`${name}:${line}:${column}`)
+  await fetch(`/__open-in-editor?file=${url}`)
+}
 </script>
 
 <template>
@@ -36,7 +43,16 @@ function relative(p: string) {
           {{ task.name }}
           <div v-if="task.result?.error" class="scrolls scrolls-rounded task-error">
             <pre><b>{{ task.result.error.name || task.result.error.nameStr }}</b>: {{ task.result.error.message }}</pre>
-            <pre v-for="stack, i of task.result.error.stacks || []" :key="i" op80> - {{ relative(stack.file) }}:{{ stack.line }}:{{ stack.column }}</pre>
+            <div v-for="(stack, i) of task.result.error.stacks || []" :key="i" class="op80 flex gap-x-2 items-center">
+              <pre> - {{ relative(stack.file) }}:{{ stack.line }}:{{ stack.column }}</pre>
+              <div
+                v-if="shouldOpenInEditor(stack.file)"
+                class="i-carbon-launch text-red-900 hover:cursor-pointer"
+                tabindex="0"
+                title="Open in IDE"
+                @click.passive="openInEditor(stack.file, stack.line, stack.column)"
+              />
+            </div>
           </div>
         </div>
       </div>
