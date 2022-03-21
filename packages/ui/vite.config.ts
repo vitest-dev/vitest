@@ -1,4 +1,5 @@
 import { resolve } from 'pathe'
+import type { UserConfig } from 'vite'
 import { defineConfig } from 'vite'
 import Vue from '@vitejs/plugin-vue'
 import Components from 'unplugin-vue-components/vite'
@@ -6,8 +7,10 @@ import AutoImport from 'unplugin-auto-import/vite'
 import Unocss from 'unocss/vite'
 import Pages from 'vite-plugin-pages'
 import { presetAttributify, presetIcons, presetUno } from 'unocss'
+import OptimizationPersist from 'vite-plugin-optimize-persist'
+import PkgConfig from 'vite-plugin-package-config'
 
-export default defineConfig({
+export const config: UserConfig = {
   root: __dirname,
   base: '/__vitest__/',
   resolve: {
@@ -51,6 +54,10 @@ export default defineConfig({
         '@vueuse/core',
       ],
     }),
+    // @ts-expect-error Unsure why this is not working -- it's what the documentation says to do
+    PkgConfig.default(),
+    // @ts-expect-error Unsure why this is not working -- it's what the documentation says to do
+    OptimizationPersist.default(),
   ],
   build: {
     outDir: './dist/client',
@@ -60,4 +67,6 @@ export default defineConfig({
       'vue',
     ],
   },
-})
+}
+
+export default defineConfig(config)

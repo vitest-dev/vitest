@@ -25,7 +25,8 @@
     "test:ci": "cross-env CI=true pnpm -r --stream --filter !@vitest/monorepo --filter !test-fails run test -- --allowOnly",
     "typecheck": "tsc --noEmit",
     "ui:build": "vite build packages/ui",
-    "ui:dev": "vite packages/ui"
+    "ui:dev": "vite packages/ui",
+    "ui:test": "npm -C packages/ui run test:run"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^0.18.9",
@@ -56,7 +57,7 @@
     "rollup-plugin-esbuild": "^4.8.2",
     "rollup-plugin-license": "^2.6.1",
     "typescript": "^4.6.2",
-    "vite": "^2.8.6",
+    "vite": "2.9.0-beta.3",
     "vitepress": "^0.22.3",
     "vitest": "workspace:*",
     "vue": "^3.2.31"

@@ -40,6 +40,7 @@ async function onSave(content: string) {
     h-full
     v-bind="{ lineNumbers: true }"
     :mode="ext"
+    data-testid="code-mirror"
     @save="onSave"
   />
 </template>

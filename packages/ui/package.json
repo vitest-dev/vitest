@@ -28,23 +28,32 @@
     "build:node": "rollup -c",
     "dev:client": "vite",
     "dev": "rollup -c --watch --watch.include=node/**",
-    "dev:ui": "run-p dev dev:client"
+    "dev:ui": "run-p dev dev:client",
+    "test:run": "cypress run-ct",
+    "test:open": "cypress open-ct"
   },
   "dependencies": {
     "sirv": "^2.0.2"
   },
   "devDependencies": {
+    "@cypress/vite-dev-server": "^2.2.2",
+    "@cypress/vue": "^3.1.0",
+    "@faker-js/faker": "^6.0.0",
     "@types/codemirror": "^5.60.5",
     "@types/d3-force": "^3.0.3",
     "@types/d3-selection": "^3.0.2",
     "@types/ws": "^8.5.3",
     "@unocss/reset": "^0.29.5",
+    "@vitejs/plugin-vue-jsx": "^1.3.3",
     "@vitejs/plugin-vue": "^2.2.4",
     "@vitest/ws-client": "workspace:*",
     "@vueuse/core": "^8.1.2",
-    "codemirror": "^5.65.2",
+    "birpc": "^0.1.0",
     "codemirror-theme-vars": "^0.1.1",
+    "codemirror": "^5.65.2",
+    "cypress": "^9.5.0",
     "d3-graph-controller": "^2.2.18",
+    "flatted": "^3.2.4",
     "floating-vue": "^2.0.0-y.0",
     "picocolors": "^1.0.0",
     "rollup": "^2.70.1",
@@ -52,8 +61,30 @@
     "unocss": "^0.29.5",
     "unplugin-auto-import": "^0.6.6",
     "unplugin-vue-components": "^0.18.3",
+    "vite-plugin-optimize-persist": "^0.1.2",
+    "vite-plugin-package-config": "^0.1.1",
     "vite-plugin-pages": "^0.22.0",
-    "vue": "^3.2.31",
-    "vue-router": "^4.0.14"
+    "vue-router": "^4.0.14",
+    "vue": "^3.2.31"
+  },
+  "vite": {
+    "optimizeDeps": {
+      "include": [
+        "@cypress/vue",
+        "@faker-js/faker",
+        "@vueuse/core",
+        "birpc",
+        "codemirror",
+        "codemirror/addon/display/placeholder",
+        "codemirror/mode/javascript/javascript",
+        "codemirror/mode/jsx/jsx",
+        "codemirror/mode/xml/xml",
+        "d3-graph-controller",
+        "flatted",
+        "floating-vue",
+        "splitpanes",
+        "vue-router"
+      ]
+    }
   }
 }

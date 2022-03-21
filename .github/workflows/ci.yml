@@ -84,3 +84,23 @@ jobs:
 
       - name: Test
         run: pnpm run test:ci
+
+  test-ui:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2.2.1
+
+      - name: Set node
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16.x
+          cache: "pnpm"
+
+      - name: Install
+        run: pnpm i
+
+      - name: Test UI
+        run: pnpm run ui:test
