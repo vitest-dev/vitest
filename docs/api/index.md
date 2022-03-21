@@ -110,7 +110,7 @@ For compatibility with Jest, `TestFunction` can also be of type `(done: DoneCall
   Use `test.fails` to indicate that an assertion will fail explicitly.
 
   ```ts
-  import { test } from 'vitest'
+  import { expect, test } from 'vitest'
   const myAsyncFunc = () => new Promise(resolve => resolve(1))
   test.fails('fail test', () => {
     expect(myAsyncFunc()).rejects.toBe(1)
@@ -122,7 +122,7 @@ For compatibility with Jest, `TestFunction` can also be of type `(done: DoneCall
 When you use `test` in the top level of file, they are collected as part of the implicit suite for it. Using `describe` you can define a new suite in the current context, as a set of related tests and other nested suites. A suite lets you organize your tests so reports are more clear.
 
   ```ts
-  import { describe, test } from 'vitest'
+  import { describe, expect, test } from 'vitest'
 
   const person = {
     isActive: true,
@@ -178,7 +178,7 @@ When you use `test` in the top level of file, they are collected as part of the 
   Use `describe.skip` in a suite to avoid running a particular describe block.
 
   ```ts
-  import { describe, test } from 'vitest'
+  import { assert, describe, test } from 'vitest'
 
   describe.skip('skipped suite', () => {
     test('sqrt', () => {
