@@ -32,6 +32,6 @@
     "vitest": "*"
   },
   "devDependencies": {
-    "rollup": "^2.67.2"
+    "rollup": "^2.70.1"
   }
 }

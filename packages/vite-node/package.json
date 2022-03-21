@@ -59,13 +59,13 @@
     "minimist": "^1.2.5",
     "mlly": "^0.4.3",
     "pathe": "^0.2.0",
-    "vite": "^2.8.4"
+    "vite": "^2.8.6"
   },
   "devDependencies": {
     "@types/minimist": "^1.2.2",
     "rollup": "^2.70.1"
   },
   "engines": {
-    "node": ">=14.14.0"
+    "node": ">=v14.19.1"
   }
 }
