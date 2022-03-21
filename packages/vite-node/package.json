@@ -2,7 +2,7 @@
   "name": "vite-node",
   "version": "0.7.6",
   "description": "Vite as Node.js runtime",
-  "homepage": "https://github.com/vitest-dev/vitest#readme",
+  "homepage": "https://github.com/vitest-dev/vitest/blob/main/packages/vite-node#readme",
   "bugs": {
     "url": "https://github.com/vitest-dev/vitest/issues"
   },
