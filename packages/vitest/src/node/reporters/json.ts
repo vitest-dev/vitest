@@ -1,5 +1,5 @@
-import { promises as fs } from 'fs'
-import { resolve } from 'pathe'
+import { existsSync, promises as fs } from 'fs'
+import { dirname, resolve } from 'pathe'
 import type { Vitest } from '../../node'
 import type { File, Reporter } from '../../types'
 import { getSuites, getTests } from '../../utils'
@@ -90,6 +90,11 @@ export class JsonReporter implements Reporter {
   async writeReport(report: string) {
     if (this.ctx.config.outputFile) {
       const reportFile = resolve(this.ctx.config.root, this.ctx.config.outputFile)
+
+      const outputDirectory = dirname(reportFile)
+      if (!existsSync(outputDirectory))
+        await fs.mkdir(outputDirectory, { recursive: true })
+
       await fs.writeFile(reportFile, report, 'utf-8')
       this.ctx.log(`JSON report written to ${reportFile}`)
     }

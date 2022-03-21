@@ -1,6 +1,6 @@
 {
   "name": "@vitest/monorepo",
-  "version": "0.7.4",
+  "version": "0.7.6",
   "private": true,
   "description": "A blazing fast unit test framework powered by Vite",
   "type": "module",
@@ -29,7 +29,7 @@
     "ui:test": "npm -C packages/ui run test:run"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^0.18.8",
+    "@antfu/eslint-config": "^0.18.9",
     "@antfu/ni": "^0.13.2",
     "@rollup/plugin-alias": "^3.1.9",
     "@rollup/plugin-commonjs": "^21.0.2",
@@ -40,7 +40,7 @@
     "bumpp": "^7.1.1",
     "c8": "^7.11.0",
     "cross-env": "^7.0.3",
-    "esbuild": "~0.13.15",
+    "esbuild": "~0.14.27",
     "eslint": "^8.11.0",
     "esno": "^0.14.1",
     "fast-glob": "^3.2.11",
