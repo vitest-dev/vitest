@@ -12,7 +12,7 @@
     "happy-dom": "latest",
     "vite": "latest",
     "vitest": "latest",
-    "vue": "^3.2.26"
+    "vue": "^3.2.31"
   },
   "stackblitz": {
     "startCommand": "npm run test"

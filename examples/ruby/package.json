@@ -14,7 +14,7 @@
     "jsdom": "latest",
     "vite-plugin-ruby": "^3.0.8",
     "vitest": "latest",
-    "vue": "^3.2.26"
+    "vue": "^3.2.31"
   },
   "stackblitz": {
     "startCommand": "npm run test"
