@@ -23,7 +23,7 @@ cli
   .option('--isolate', 'isolate environment for each test file (default: true)')
   .option('--reporter <name>', 'reporter')
   .option('--outputTruncateLength <length>', 'diff output length')
-  .option('--outputFile <filename>', 'write test results to a file when the --reporter=json option is also specified')
+  .option('--outputFile <filename>', 'write test results to a file when the --reporter=json or --reporter=junit option is also specified')
   .option('--coverage', 'use c8 for coverage')
   .option('--run', 'do not watch')
   .option('--mode <name>', 'override Vite mode (default: test)')
