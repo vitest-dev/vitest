@@ -107,7 +107,7 @@ You can specify additional CLI options like `--port` or `--https`. For a full li
 | `--threads` | Enable Threads (default: `true`) |
 | `--silent` | Silent console output from tests |
 | `--isolate` | Isolate environment for each test file (default: `true`) |
-| `--reporter <name>` | Select reporter: `default`, `verbose`, `dot` or `json` |
+| `--reporter <name>` | Select reporter: `default`, `verbose`, `dot`, `junit` or `json` |
 | `--outputFile <filename>` | Write test results to a file when the `--reporter=json` or `--reporter=junit` option is also specified |
 | `--coverage` | Use c8 for coverage |
 | `--run` | Do not watch |
