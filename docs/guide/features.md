@@ -221,6 +221,8 @@ export default defineConfig({
 })
 ```
 
+Learn more at [Mocking](/guide/mocking)
+
 ## Coverage
 
 Vitest supports Native code coverage via [c8](https://github.com/bcoe/c8)
@@ -255,8 +257,6 @@ Vitest also provides a way to run tests with in your source code along with the 
 
 This makes the tests share the same closure as the implementations and able to test against private states without exporting. Meanwhile, it also brings the closer feedback loop for development.
 
-To get started, put a `if (import.meta.vitest)` block at the end of your source file and write some tests inside it. For example:
-
 ```ts
 // src/index.ts
 
@@ -276,61 +276,4 @@ if (import.meta.vitest) {
 }
 ```
 
-Update the `includeSource` config for Vitest to grab the files under `src/`:
-
-```ts
-// vite.config.ts
-import { defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  test: {
-    includeSource: ['src/**/*.{js,ts}'],
-  },
-})
-```
-
-Then you can start to test!
-
-```bash
-$ npx vitest
-```
-
-For production build, you will need to set the `define` options in your config file, letting the bundler to do the dead code elimination. For example, in Vite
-
-```diff
-// vite.config.ts
-import { defineConfig } from 'vitest/config'
-
-export default defineConfig({
-+ define: {
-+   'import.meta.vitest': false,
-+ },
-  test: {
-    includeSource: ['src/**/*.{js,ts}']
-  },
-})
-```
-
-To get TypeScript support for `import.meta.vitest`, add `vitest/importMeta` to your `tsconfig.json`:
-
-```diff
-// tsconfig.json
-{
-  "compilerOptions": {
-    "types": [
-+     "vitest/importMeta"
-    ]
-  }
-}
-```
-
-Reference to [`test/import-meta`](https://github.com/vitest-dev/vitest/tree/main/test/import-meta) for the full example.
-
-
-This feature could be useful for:
-
-- Unit testing for small-scoped functions or utilities
-- Prototyping
-- Inline Assertion
-
-It's recommended to **use separate test files instead** for more complex tests like components or E2E testing.
+Learn more at [In-source testing](/guide/in-source)

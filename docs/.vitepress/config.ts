@@ -128,6 +128,10 @@ export default defineConfig({
               link: '/guide/debugging',
             },
             {
+              text: 'In-source testing',
+              link: '/guide/in-source',
+            },
+            {
               text: 'Comparisons',
               link: '/guide/comparisons',
             },
