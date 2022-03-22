@@ -91,7 +91,9 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
           {},
           configDefaults,
           viteConfigTest,
-          options,
+          {
+            defines: (options as ResolvedConfig).defines
+          },
         )
         options.api = resolveApiConfig(options)
 
