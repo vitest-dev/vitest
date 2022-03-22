@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "paths": {
+      "vitest": ["./packages/vitest/index.d.ts"],
+      "vitest/node": ["./packages/vitest/node.d.ts"],
+      "vitest/config": ["./packages/vitest/config.d.ts"],
+    }
+  }
+}
