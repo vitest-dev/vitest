@@ -108,7 +108,7 @@ You can specify additional CLI options like `--port` or `--https`. For a full li
 | `--silent` | Silent console output from tests |
 | `--isolate` | Isolate environment for each test file (default: `true`) |
 | `--reporter <name>` | Select reporter: `default`, `verbose`, `dot` or `json` |
-| `--outputFile <filename>` | Write test results to a file when the `--reporter=json` option is also specified |
+| `--outputFile <filename>` | Write test results to a file when the `--reporter=json` or `--reporter=junit` option is also specified |
 | `--coverage` | Use c8 for coverage |
 | `--run` | Do not watch |
 | `--mode <name>` | Override Vite mode (default: `test`) |

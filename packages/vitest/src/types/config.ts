@@ -143,7 +143,7 @@ export interface InlineConfig {
   outputTruncateLength?: number
 
   /**
-   * Write test results to a file when the --reporter=json option is also specified
+   * Write test results to a file when the --reporter=json` or `--reporter=junit` option is also specified.
    */
   outputFile?: string
 
