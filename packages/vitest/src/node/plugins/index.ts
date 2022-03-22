@@ -1,8 +1,8 @@
-import type { Plugin as VitePlugin } from 'vite'
+import type { InlineConfig, Plugin as VitePlugin } from 'vite'
 import { configDefaults } from '../../defaults'
 import type { ResolvedConfig, UserConfig } from '../../types'
 import { deepMerge, ensurePackageInstalled, notNullish } from '../../utils'
-import { resolveApiConfig } from '../config'
+import { clearInlineConfigTest, resolveApiConfig } from '../config'
 import { Vitest } from '../core'
 import { EnvReplacerPlugin } from './envRelacer'
 import { GlobalSetupPlugin } from './globalSetup'
@@ -21,6 +21,10 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
       name: 'vitest',
       enforce: 'pre',
       config(viteConfig: any) {
+
+        // when the test config changes, the vite server will restart, but `options` will memorize the previous inline config
+        clearInlineConfigTest(options);
+
         // preliminary merge of options to be able to create server options for vite
         // however to allow vitest plugins to modify vitest config values
         // this is repeated in configResolved where the config is final
@@ -91,9 +95,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
           {},
           configDefaults,
           viteConfigTest,
-          {
-            defines: (options as ResolvedConfig).defines
-          },
+          options,
         )
         options.api = resolveApiConfig(options)
 
