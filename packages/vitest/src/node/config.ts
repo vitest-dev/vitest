@@ -137,7 +137,7 @@ export function resolveConfig(
   return resolved
 }
 
-export function clearInlineConfigTest<Options extends ApiConfig & UserConfig>(options: Options) {
+export function clearInlineConfigTest<Options extends ApiConfig & UserConfig>(options: Options, excludeKeys: string[]) {
   const keys: (keyof InlineConfig)[] = [
     'include',
     'exclude',
@@ -177,6 +177,7 @@ export function clearInlineConfigTest<Options extends ApiConfig & UserConfig>(op
   ];
 
   keys.forEach(k => {
-    delete options[k];
+    if (!excludeKeys.includes(k))
+      delete options[k]
   });
 }

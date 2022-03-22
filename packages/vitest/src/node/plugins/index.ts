@@ -10,6 +10,11 @@ import { MocksPlugin } from './mock'
 
 export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest()): Promise<VitePlugin[]> {
   let haveStarted = false
+  let startOptionKeys: string[] = [];
+
+  if (!haveStarted) {
+    startOptionKeys = Object.keys(options);
+  }
 
   async function UIPlugin() {
     await ensurePackageInstalled('@vitest/ui')
@@ -21,10 +26,6 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
       name: 'vitest',
       enforce: 'pre',
       config(viteConfig: any) {
-
-        // when the test config changes, the vite server will restart, but `options` will memorize the previous inline config
-        clearInlineConfigTest(options);
-
         // preliminary merge of options to be able to create server options for vite
         // however to allow vitest plugins to modify vitest config values
         // this is repeated in configResolved where the config is final
@@ -89,6 +90,9 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
         const viteConfigTest = (viteConfig.test as any) || {}
         if (viteConfigTest.watch === false)
           viteConfigTest.run = true
+
+        // when the test config changes, the vite server will restart, but `options` will memorize the previous inline config
+        clearInlineConfigTest(options, startOptionKeys);
 
         // viteConfig.test is final now, merge it for real
         options = deepMerge(
