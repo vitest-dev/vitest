@@ -40,12 +40,8 @@ export async function startVitest(cliFilters: string[], options: CliOptions, vit
       return false
     }
 
-    if (!process.env.NODE_V8_COVERAGE) {
+    if (!process.env.NODE_V8_COVERAGE)
       process.env.NODE_V8_COVERAGE = ctx.config.coverage.tempDirectory
-      const { exitCode } = await execa(process.argv0, process.argv.slice(1), { stdio: 'inherit', reject: false })
-      process.exitCode = exitCode
-      return false
-    }
   }
 
   if (ctx.config.environment && ctx.config.environment !== 'node') {
