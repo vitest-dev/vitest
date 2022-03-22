@@ -2,8 +2,10 @@
   "name": "@vitest/test-coverage",
   "private": true,
   "scripts": {
-    "test": "npm run coverage",
-    "coverage": "vitest run --coverage"
+    "test": "npm run coverage:thread && npm run test:coverage && npm run coverage && npm run test:coverage",
+    "coverage": "vitest run --coverage",
+    "coverage:thread": "cross-env THREAD=true vitest run --coverage",
+    "test:coverage": "vitest -c vitest.config-coverage.ts run"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^2.2.4",
