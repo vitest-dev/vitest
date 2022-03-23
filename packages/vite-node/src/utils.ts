@@ -8,7 +8,7 @@ export function slash(str: string) {
   return str.replace(/\\/g, '/')
 }
 
-export function normalizeId(id: string, base?: string): string {
+export function normalizeRequestId(id: string, base?: string): string {
   if (base && id.startsWith(base))
     id = `/${id.slice(base.length)}`
 
@@ -23,6 +23,14 @@ export function normalizeId(id: string, base?: string): string {
     .replace(/\?import/, '?') // remove ?import query
     .replace(/&import/, '') // remove &import query
     .replace(/\?+$/, '') // remove end query mark
+}
+
+export function normalizeModuleId(id: string) {
+  return id
+    .replace(/\\/g, '/')
+    .replace(/^\/@fs\//, '/')
+    .replace(/^file:\//, '/')
+    .replace(/^\/+/, '/')
 }
 
 export function isPrimitive(v: any) {

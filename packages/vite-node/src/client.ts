@@ -3,7 +3,7 @@ import { fileURLToPath, pathToFileURL } from 'url'
 import vm from 'vm'
 import { dirname, extname, isAbsolute, resolve } from 'pathe'
 import { isNodeBuiltin } from 'mlly'
-import { isPrimitive, normalizeId, slash, toFilePath } from './utils'
+import { isPrimitive, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
 import type { ModuleCache, ViteNodeRunnerOptions } from './types'
 
 export const DEFAULT_REQUEST_STUBS = {
@@ -25,11 +25,7 @@ export const DEFAULT_REQUEST_STUBS = {
 
 export class ModuleCacheMap extends Map<string, ModuleCache> {
   normalizePath(fsPath: string) {
-    return fsPath
-      .replace(/\\/g, '/')
-      .replace(/^\/@fs\//, '/')
-      .replace(/^file:\//, '/')
-      .replace(/^\/+/, '/')
+    return normalizeModuleId(fsPath)
   }
 
   set(fsPath: string, mod: Partial<ModuleCache>) {
@@ -74,8 +70,9 @@ export class ViteNodeRunner {
     return await this.cachedRequest(id, [])
   }
 
+  /** @internal */
   async cachedRequest(rawId: string, callstack: string[]) {
-    const id = normalizeId(rawId, this.options.base)
+    const id = normalizeRequestId(rawId, this.options.base)
     const fsPath = toFilePath(id, this.root)
 
     if (this.moduleCache.get(fsPath)?.promise)
@@ -87,8 +84,9 @@ export class ViteNodeRunner {
     return await promise
   }
 
+  /** @internal */
   async directRequest(id: string, fsPath: string, callstack: string[]) {
-    callstack = [...callstack, id]
+    callstack = [...callstack, normalizeModuleId(id)]
     const request = async(dep: string) => {
       // probably means it was passed as variable
       // and wasn't transformed by Vite
@@ -97,10 +95,11 @@ export class ViteNodeRunner {
         dep = resolvedDep?.id?.replace(this.root, '') || dep
       }
 
-      if (callstack.includes(dep)) {
-        if (!this.moduleCache.get(dep)?.exports)
-          throw new Error(`[vite-node] Circular dependency detected\nStack:\n${[...callstack, dep].reverse().map(p => `- ${p}`).join('\n')}`)
-        return this.moduleCache.get(dep)!.exports
+      if (callstack.includes(normalizeModuleId(dep))) {
+        const depExports = this.moduleCache.get(dep)?.exports
+        if (depExports)
+          return depExports
+        throw new Error(`[vite-node] Circular dependency detected\nStack:\n${[...callstack, dep].reverse().map(p => `- ${p}`).join('\n')}`)
       }
       return this.cachedRequest(dep, callstack)
     }
