@@ -9,6 +9,7 @@ import alias from '@rollup/plugin-alias'
 import license from 'rollup-plugin-license'
 import c from 'picocolors'
 import fg from 'fast-glob'
+import { defineConfig } from 'rollup'
 
 import pkg from './package.json'
 
@@ -101,17 +102,24 @@ export default ({ watch }) => [
     external,
     plugins,
   },
-  ...dtsEntries.map(input => ({
-    input,
-    output: {
-      file: input.replace('src/', 'dist/').replace('.ts', '.d.ts'),
-      format: 'esm',
-    },
-    external,
-    plugins: [
-      dts({ respectExternal: true }),
-    ],
-  })),
+  ...dtsEntries.map((input) => {
+    const _external = external
+    // index is vitest default types export
+    if (!input.includes('index'))
+      _external.push('vitest')
+
+    return defineConfig({
+      input,
+      output: {
+        file: input.replace('src/', 'dist/').replace('.ts', '.d.ts'),
+        format: 'esm',
+      },
+      external: _external,
+      plugins: [
+        dts({ respectExternal: true }),
+      ],
+    })
+  }),
 ]
 
 function licensePlugin() {
