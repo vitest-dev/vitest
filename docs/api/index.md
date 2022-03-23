@@ -117,6 +117,26 @@ For compatibility with Jest, `TestFunction` can also be of type `(done: DoneCall
   })
   ```
 
+### test.each
+- **Type:** `(cases: ReadonlyArray<T>) => void`
+- **Alias:** `it.each`
+
+Use `test.each` when you need to run the same test with different variables.  
+You can use `%i` or `%s` in the test name in the order of the test function parameters.
+```ts
+test.each([
+  [1, 1, 2],
+  [1, 2, 3],
+  [2, 1, 3],
+])('add(%i, %i) -> %i', (a, b, expected) => {
+  expect(a + b).toBe(expected)
+})
+
+// this will return
+// √ add(1, 1) -> 2
+// √ add(1, 2) -> 3
+// √ add(2, 1) -> 3
+```
 ## describe
 
 When you use `test` in the top level of file, they are collected as part of the implicit suite for it. Using `describe` you can define a new suite in the current context, as a set of related tests and other nested suites. A suite lets you organize your tests so reports are more clear.
@@ -240,6 +260,31 @@ When you use `test` in the top level of file, they are collected as part of the 
   ```ts
   // An entry will be shown in the report for this suite
   describe.todo('unimplemented suite')
+  ```
+### describe.each
+
+- **Type:** `(cases: ReadonlyArray<T>): (name: string, fn: (...args: T[]) => void) => void`
+
+  Use `describe.each` if you have more than one test that depends on the same data.
+
+  ```ts
+  describe.each([
+    { a: 1, b: 1, expected: 2 },
+    { a: 1, b: 2, expected: 3 },
+    { a: 2, b: 1, expected: 3 },
+  ])('describe object add(%i, %i)', ({ a, b, expected }) => {
+    test(`returns ${expected}`, () => {
+      expect(a + b).toBe(expected)
+    })
+
+    test(`returned value not be greater than ${expected}`, () => {
+      expect(a + b).not.toBeGreaterThan(expected)
+    })
+
+    test(`returned value not be less than ${expected}`, () => {
+      expect(a + b).not.toBeLessThan(expected)
+    })
+  })
   ```
 
 ## expect
