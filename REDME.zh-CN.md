@@ -5,46 +5,42 @@
 <h1 align="center">
 Vitest
 </h1>
-<p align='center'>
-<b>English</b> | <a href="https://github.com/vitest-dev/vitest/blob/main/README.zh-CN.md">简体中文</a>
-</p>
-
 <p align="center">
-A blazing fast unit test framework powered by Vite.
+一个基于Vite快如闪电的单元测试框架
 <p>
 <p align="center">
   <a href="https://www.npmjs.com/package/vitest"><img src="https://img.shields.io/npm/v/vitest?color=a1b858&label="></a>
 <p>
 <h3 align="center">
-<a href="https://chat.vitest.dev"><i>Get involved!</i></a>
+<a href="https://chat.vitest.dev"><i>参与进来！</i></a>
 </h3>
 <br>
 <br>
 
-> Vitest requires Vite >=v2.7.10 and Node >=v14
+> Vitest 需要 Vite >=v2.7.10 和 Node >=v14
 
-Follow the [Getting Started Guide](https://vitest.dev/guide/) or learn [why we are building a new test runner](https://vitest.dev/guide/why).
+跟随 [入门指南](https://vitest.dev/guide/) 去了解 [我们为什么要构建新的测试框架](https://vitest.dev/guide/why).
 
-## Documentation
+## 文档
 
-Read the [documentation](https://vitest.dev/).
+阅读[文档](https://vitest.dev/).
 
-[Examples](https://vitest.dev/guide/#examples) | [Projects using Vitest](https://vitest.dev/guide/#projects-using-vitest)
+[事例](https://vitest.dev/guide/#examples) | [使用Vitest的项目](https://vitest.dev/guide/#projects-using-vitest)
 
-## Features
+## 特性
 
-- [Vite](https://vitejs.dev/)'s config, transformers, resolvers, and plugins. Use the same setup from your app!
-- [Jest Snapshot](https://jestjs.io/docs/snapshot-testing)
-- [Chai](https://www.chaijs.com/) built-in for assertions, with [Jest expect](https://jestjs.io/docs/expect) compatible APIs.
-- [Smart & instant watch mode](https://vitest.dev/guide/features.html#watch-mode), like HMR for tests!
-- [Native code coverage](https://vitest.dev/guide/features.html#coverage) via [c8](https://github.com/bcoe/c8)
-- [Tinyspy](https://github.com/Aslemammad/tinyspy) built-in for mocking, stubbing, and spies.
-- [JSDOM](https://github.com/jsdom/jsdom) and [happy-dom](https://github.com/capricorn86/happy-dom) for DOM and browser API mocking
-- Components testing ([Vue](./examples/vue), [React](./examples/react), [Svelte](./examples/svelte), [Lit](./examples/lit), [Vitesse](./examples/vitesse))
-- Workers multi-threading via [tinypool](https://github.com/Aslemammad/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina))
-- ESM first, top level await
-- Out-of-box TypeScript / JSX support
-- Filtering, timeouts, concurrent for suite and tests
+- 支持您使用[Vite](https://vitejs.dev/)应用中的配置！
+- [Jest 友好](https://jestjs.io/docs/snapshot-testing)
+- 内置[Chai](https://www.chaijs.com/)的断言, 兼容[Jest expect](https://jestjs.io/docs/expect) APIs
+- 测试用例支持HMR，[智能 & 监听模式](https://vitest.dev/guide/features.html#watch-mode)!
+- 通过[c8](https://github.com/bcoe/c8)输出[测试用例覆盖](https://vitest.dev/guide/features.html#coverage)  
+- 内置[Tinyspy](https://github.com/Aslemammad/tinyspy)的模拟（mocking）、打桩（stubbing）、和窥探（spies）
+- 用于模拟 DOM 和浏览器 API 的[JSDOM](https://github.com/jsdom/jsdom) 和[happy-dom](https://github.com/capricorn86/happy-dom)
+- 组件测试 ([Vue](./examples/vue), [React](./examples/react), [Svelte](./examples/svelte), [Lit](./examples/lit), [Vitesse](./examples/vitesse))
+- 通过[tinypool](https://github.com/Aslemammad/tinypool)支持多线程 ([Piscina](https://github.com/piscinajs/piscina)轻量级分支)
+- ESM先行, 顶层await
+- 开箱即用的 TypeScript / JSX
+- 测试套件的过滤（Filtering）、超时（timeouts）、并发（concurrent）
 
 ```ts
 import { assert, describe, expect, it } from 'vitest'
