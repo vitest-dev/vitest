@@ -1,4 +1,4 @@
-import type { InlineConfig, Plugin as VitePlugin } from 'vite'
+import type { Plugin as VitePlugin } from 'vite'
 import { configDefaults } from '../../defaults'
 import type { ResolvedConfig, UserConfig } from '../../types'
 import { deepMerge, ensurePackageInstalled, notNullish } from '../../utils'
