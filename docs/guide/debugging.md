@@ -32,8 +32,8 @@ Create a 'Node.js' run configuration. Use the following settings to run all test
 
 Setting | Value
  --- | ---
-Working directory | C:\path\to\your-project-root
-JavaScript file | .\node_modules\vitest\vitest.mjs
+Working directory | /path/to/your-project-root
+JavaScript file | ./node_modules/vitest/vitest.mjs
 Application parameters | run --threads false
 
 Then run this configuration in debug mode. The IDE will stop at JS/TS breakpoints set in the editor.
