@@ -1177,8 +1177,8 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
   ```ts
   vi.mock("path", () => {
     return {
-      default: ()=({})
-      namedExport: ()=({})
+      default: { myDefaultKey: vi.fn() }
+      namedExport: vi.fn()
       // etc...
     }
   })
