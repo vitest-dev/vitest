@@ -25,3 +25,15 @@ To debug a test file in VSCode, create the following launch configuration.
 ```
 
 Then in the debug tab ensure 'Debug Current Test File' is selected, you can then open the test file you want to debug and press F5 to start debugging.
+
+## IntelliJ IDEA
+
+Create a 'Node.js' run configuration. Use the following settings to run all tests in debug mode:
+
+Setting | Value
+ --- | ---
+Working directory | C:\path\to\your-project-root
+JavaScript file | .\node_modules\vitest\vitest.mjs
+Application parameters | run --threads false
+
+Then run this configuration in debug mode. The IDE will stop at JS/TS breakpoints set in the editor.
