@@ -1171,7 +1171,19 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 
   Makes all `imports` to passed module to be mocked. Inside a path you _can_ use configured Vite aliases.
 
-  - If `factory` is defined, will return its result. Factory function can be asynchronous. You may call [`vi.importActual`](#vi-importactual) inside to get the original module. The call to `vi.mock` is hoisted to the top of the file, so you don't have access to variables declared in the global file scope!
+  - If `factory` is defined, will return its result. Factory function can be asynchronous. You may call [`vi.importActual`](#vi-importactual) inside to get the original module. The call to `vi.mock` is hoisted to the top of the file, so you don't have access to variables declared in the global file scope! 
+  - If mocking a module with a default export, you'll need to provide a `default` key within the returned factory function object. This is an ES modules specific caveat, therefor `jest` documentation may differ as `jest` uses commonJS modules. *Example:*
+
+  ```ts
+  vi.mock("path", () => {
+    return {
+      default: ()=({})
+      namedExport: ()=({})
+      // etc...
+    }
+  })
+  ```
+
   - If `__mocks__` folder with file of the same name exist, all imports will return its exports. For example, `vi.mock('axios')` with `<root>/__mocks__/axios.ts` folder will return everything exported from `axios.ts`.
   - If there is no `__mocks__` folder or a file with the same name inside, will call original module and mock it. (For the rules applied, see [algorithm](/guide/mocking#automocking-algorithm).)
 
