@@ -1,8 +1,8 @@
-import type { Arrayable, Suite, Task, Test } from '../types'
+import type { Arrayable, Benchmark, Suite, Task, Test } from '../types'
 import { toArray } from './base'
 
-export function getTests(suite: Arrayable<Task>): Test[] {
-  return toArray(suite).flatMap(s => s.type === 'test' ? [s] : s.tasks.flatMap(c => c.type === 'test' ? [c] : getTests(c)))
+export function getTests(suite: Arrayable<Task>): (Test | Benchmark)[] {
+  return toArray(suite).flatMap(s => s.type === 'test' || s.type === 'benchmark' ? [s] : s.tasks.flatMap(c => c.type === 'test' ? [c] : getTests(c)))
 }
 
 export function getTasks(tasks: Arrayable<Task> = []): Task[] {
@@ -13,8 +13,12 @@ export function getSuites(suite: Arrayable<Task>): Suite[] {
   return toArray(suite).flatMap(s => s.type === 'suite' ? [s, ...getSuites(s.tasks)] : [])
 }
 
-export function hasTests(suite: Arrayable<Suite>): boolean {
-  return toArray(suite).some(s => s.tasks.some(c => c.type === 'test' || hasTests(c as Suite)))
+export function hasTests(suite: Arrayable<Suite | Benchmark>): boolean {
+  return toArray(suite).some(s => s.tasks.some(c => ['test', 'benchmark'].includes(c.type) || hasTests(c as Suite | Benchmark)))
+}
+
+export function hasBenchmark(suite: Arrayable<Suite | Benchmark>): boolean {
+  return toArray(suite).some(s => s.tasks.some(c => c.type === 'benchmark' || hasBenchmark(c as Suite)))
 }
 
 export function hasFailed(suite: Arrayable<Task>): boolean {

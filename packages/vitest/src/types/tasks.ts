@@ -141,6 +141,21 @@ export interface Benchmark extends TaskBase {
   type: 'benchmark'
   benchmark?: Benchmark
   tasks: Task[]
+  result?: BenchmarkResult
+}
+
+export interface BenchmarkResult extends TaskResult {
+  cycle: Array<{
+    name: string
+    count: number
+    cycles: number
+    hz: number
+    rme: number
+    sampleSize: number
+  }>
+  complete: {
+    fastest: string
+  }
 }
 
 export interface BenchmarkOptions {

@@ -8,7 +8,7 @@ import type {
   File,
 } from '../types'
 import { benchmarkContext, collectBenchmark } from './context'
-import { setFn } from './map'
+import { setBenchmark } from './map'
 
 // apis
 export const benchmark = (name: string, factory: BenchmarkFactory = () => { }, options?: BenchmarkOptions) => {
@@ -52,9 +52,7 @@ function createBenchmarkCollector(name: string, factory: BenchmarkFactory = () =
       tasks: [],
     }
     benchmarkLib = new BenchmarkLib.Suite(name, options)
-    setFn(benchmark, () => {
-      benchmarkLib.run()
-    })
+    setBenchmark(benchmark, benchmarkLib)
   }
 
   function clear() {

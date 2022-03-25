@@ -5,7 +5,7 @@ import { getSnapshotClient } from '../integrations/snapshot/chai'
 import { getFullName, getWorkerState, hasFailed, hasTests, partitionSuiteChildren } from '../utils'
 import { getState, setState } from '../integrations/chai/jest-expect'
 import { takeCoverage } from '../integrations/coverage'
-import { getFn, getHooks } from './map'
+import { getBenchmark, getFn, getHooks } from './map'
 import { rpc } from './rpc'
 import { collectTests } from './collect'
 import { processError } from './error'
@@ -208,10 +208,41 @@ export async function runSuite(suite: Suite) {
 }
 
 async function runBenchmark(benchmark: Benchmark) {
-  // await getFn(benchmark)()
+  const start = performance.now()
+
   benchmark.result = {
-    state: 'pass',
+    state: 'run',
+    startTime: start,
+    cycle: [],
+    complete: {
+      fastest: '',
+    },
   }
+  updateTask(benchmark)
+
+  const benchmarkLib = getBenchmark(benchmark)
+  benchmarkLib.on('cycle', (e: any) => {
+    const cycle = e.target
+    benchmark.result!.cycle.push({
+      name: cycle.name,
+      count: cycle.count,
+      cycles: cycle.cycles,
+      hz: cycle.hz,
+      rme: cycle.stats.rme,
+      sampleSize: cycle.stats.sample.length,
+    })
+    updateTask(benchmark)
+  })
+  benchmarkLib.on('complete', () => {
+    benchmark.result!.complete = {
+      fastest: benchmarkLib.filter('fastest').map('name')[0],
+    }
+    updateTask(benchmark)
+  })
+  benchmarkLib.run()
+  benchmark.result.duration = performance.now() - start
+  benchmark.result.state = 'pass'
+  updateTask(benchmark)
 }
 
 async function runSuiteChild(c: Task) {
