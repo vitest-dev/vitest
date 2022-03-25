@@ -90,14 +90,14 @@ export async function runTest(test: Test) {
       isExpectingAssertions: false,
       isExpectingAssertionsError: null,
       expectedAssertionsNumber: null,
-      expectedAssertionsNumberError: null,
+      expectedAssertionsNumberErrorGen: null,
       testPath: test.suite.file?.filepath,
       currentTestName: getFullName(test),
     })
     await getFn(test)()
-    const { assertionCalls, expectedAssertionsNumber, expectedAssertionsNumberError, isExpectingAssertions, isExpectingAssertionsError } = getState()
+    const { assertionCalls, expectedAssertionsNumber, expectedAssertionsNumberErrorGen, isExpectingAssertions, isExpectingAssertionsError } = getState()
     if (expectedAssertionsNumber !== null && assertionCalls !== expectedAssertionsNumber)
-      throw expectedAssertionsNumberError
+      throw expectedAssertionsNumberErrorGen!()
     if (isExpectingAssertions === true && assertionCalls === 0)
       throw isExpectingAssertionsError
 
