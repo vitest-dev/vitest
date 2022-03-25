@@ -2,7 +2,7 @@ import { performance } from 'perf_hooks'
 import type { Benchmark, File, HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from '../types'
 import { vi } from '../integrations/vi'
 import { getSnapshotClient } from '../integrations/snapshot/chai'
-import { getFullName, getWorkerState, hasFailed, hasTests, partitionSuiteChildren } from '../utils'
+import { clearTimeout, getFullName, getWorkerState, hasFailed, hasTests, partitionSuiteChildren, setTimeout } from '../utils'
 import { getState, setState } from '../integrations/chai/jest-expect'
 import { takeCoverage } from '../integrations/coverage'
 import { getBenchmark, getFn, getHooks } from './map'
@@ -90,14 +90,14 @@ export async function runTest(test: Test) {
       isExpectingAssertions: false,
       isExpectingAssertionsError: null,
       expectedAssertionsNumber: null,
-      expectedAssertionsNumberError: null,
+      expectedAssertionsNumberErrorGen: null,
       testPath: test.suite.file?.filepath,
       currentTestName: getFullName(test),
     })
     await getFn(test)()
-    const { assertionCalls, expectedAssertionsNumber, expectedAssertionsNumberError, isExpectingAssertions, isExpectingAssertionsError } = getState()
+    const { assertionCalls, expectedAssertionsNumber, expectedAssertionsNumberErrorGen, isExpectingAssertions, isExpectingAssertionsError } = getState()
     if (expectedAssertionsNumber !== null && assertionCalls !== expectedAssertionsNumber)
-      throw expectedAssertionsNumberError
+      throw expectedAssertionsNumberErrorGen!()
     if (isExpectingAssertions === true && assertionCalls === 0)
       throw isExpectingAssertionsError
 

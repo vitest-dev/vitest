@@ -1,5 +1,5 @@
 import type { Awaitable, BenchmarkCollector, BenchmarkContext, DoneCallback, RuntimeContext, SuiteCollector, TestFunction } from '../types'
-import { getWorkerState } from '../utils'
+import { clearTimeout, getWorkerState, setTimeout } from '../utils'
 
 export const benchmarkContext: BenchmarkContext = {
   currentBenchmark: null,

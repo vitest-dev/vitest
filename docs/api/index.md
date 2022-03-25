@@ -117,6 +117,26 @@ For compatibility with Jest, `TestFunction` can also be of type `(done: DoneCall
   })
   ```
 
+### test.each
+- **Type:** `(cases: ReadonlyArray<T>) => void`
+- **Alias:** `it.each`
+
+Use `test.each` when you need to run the same test with different variables.
+You can use `%i` or `%s` in the test name in the order of the test function parameters.
+```ts
+test.each([
+  [1, 1, 2],
+  [1, 2, 3],
+  [2, 1, 3],
+])('add(%i, %i) -> %i', (a, b, expected) => {
+  expect(a + b).toBe(expected)
+})
+
+// this will return
+// √ add(1, 1) -> 2
+// √ add(1, 2) -> 3
+// √ add(2, 1) -> 3
+```
 ## describe
 
 When you use `test` in the top level of file, they are collected as part of the implicit suite for it. Using `describe` you can define a new suite in the current context, as a set of related tests and other nested suites. A suite lets you organize your tests so reports are more clear.
@@ -128,16 +148,16 @@ When you use `test` in the top level of file, they are collected as part of the 
     isActive: true,
     age: 32,
   }
-  
+
   describe('person', () => {
     test('person is defined', () => {
       expect(person).toBeDefined()
     })
-  
+
     test('is active', () => {
       expect(person.isActive).toBeTruthy()
     })
-  
+
     test('age limit', () => {
       expect(person.age).toBeLessThanOrEqual(32)
     })
@@ -152,7 +172,7 @@ When you use `test` in the top level of file, they are collected as part of the 
   const numberToCurrency = (value) => {
     if (typeof value !== 'number')
       throw new Error('Value must be a number')
-  
+
     return value.toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
   }
 
@@ -162,7 +182,7 @@ When you use `test` in the top level of file, they are collected as part of the 
         expect(() => numberToCurrency('abc')).toThrow()
       })
     })
-  
+
     describe('given a valid number', () => {
       test('returns the correct currency format', () => {
         expect(numberToCurrency(10000)).toBe('10,000.00')
@@ -201,7 +221,7 @@ When you use `test` in the top level of file, they are collected as part of the 
       assert.equal(Math.sqrt(4), 3)
     })
   })
-  
+
   describe('other suite', () => {
     // ... will be skipped
   })
@@ -240,6 +260,31 @@ When you use `test` in the top level of file, they are collected as part of the 
   ```ts
   // An entry will be shown in the report for this suite
   describe.todo('unimplemented suite')
+  ```
+### describe.each
+
+- **Type:** `(cases: ReadonlyArray<T>): (name: string, fn: (...args: T[]) => void) => void`
+
+  Use `describe.each` if you have more than one test that depends on the same data.
+
+  ```ts
+  describe.each([
+    { a: 1, b: 1, expected: 2 },
+    { a: 1, b: 2, expected: 3 },
+    { a: 2, b: 1, expected: 3 },
+  ])('describe object add(%i, %i)', ({ a, b, expected }) => {
+    test(`returns ${expected}`, () => {
+      expect(a + b).toBe(expected)
+    })
+
+    test(`returned value not be greater than ${expected}`, () => {
+      expect(a + b).not.toBeGreaterThan(expected)
+    })
+
+    test(`returned value not be less than ${expected}`, () => {
+      expect(a + b).not.toBeLessThan(expected)
+    })
+  })
   ```
 
 ## expect
@@ -309,7 +354,7 @@ TODO
   test.fails('decimals are not equal in javascript', () => {
     expect(0.2 + 0.1).toBe(0.3) // 0.2 + 0.1 is 0.30000000000000004
   })
-  
+
   test('decimals are rounded to 5 after the point', () => {
     // 0.2 + 0.1 is 0.30000 | "000000000004" removed
     expect(0.2 + 0.1).toBeCloseTo(0.3, 5)
@@ -647,7 +692,7 @@ TODO
   test('toHaveLength', () => {
     expect('abc').toHaveLength(3)
     expect([1, 2, 3]).toHaveLength(3)
-  
+
     expect('').not.toHaveLength(3) // doesn't have .length of 3
     expect({ length: 3 }).toHaveLength(3)
   })
@@ -778,7 +823,7 @@ TODO
 
   `toThrowError` asserts if a function throws an error when it is called.
 
-  For example, if we want to test that `getFruitStock('pineapples')` throws, because pineapples is not good for people with diabetes, we could write:
+  For example, if we want to test that `getFruitStock('pineapples')` throws, we could write:
 
   You can provide an optional argument to test that a specific error is thrown:
 
@@ -795,7 +840,7 @@ TODO
   function getFruitStock(type) {
     if (type === 'pineapples')
       throw new DiabetesError('Pineapples is not good for people with diabetes')
-  
+
     // Do some other stuff
   }
 
@@ -872,7 +917,7 @@ TODO
   function buyApples(id) {
     if (!id)
       throw new Error('no id')
-  
+
   }
 
   test('buyApples throws an error when no id provided', async() => {
@@ -1127,6 +1172,18 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
   Makes all `imports` to passed module to be mocked. Inside a path you _can_ use configured Vite aliases.
 
   - If `factory` is defined, will return its result. Factory function can be asynchronous. You may call [`vi.importActual`](#vi-importactual) inside to get the original module. The call to `vi.mock` is hoisted to the top of the file, so you don't have access to variables declared in the global file scope!
+  - If mocking a module with a default export, you'll need to provide a `default` key within the returned factory function object. This is an ES modules specific caveat, therefore `jest` documentation may differ as `jest` uses commonJS modules. *Example:*
+
+  ```ts
+  vi.mock("path", () => {
+    return {
+      default: { myDefaultKey: vi.fn() }
+      namedExport: vi.fn()
+      // etc...
+    }
+  })
+  ```
+
   - If `__mocks__` folder with file of the same name exist, all imports will return its exports. For example, `vi.mock('axios')` with `<root>/__mocks__/axios.ts` folder will return everything exported from `axios.ts`.
   - If there is no `__mocks__` folder or a file with the same name inside, will call original module and mock it. (For the rules applied, see [algorithm](/guide/mocking#automocking-algorithm).)
 
@@ -1214,7 +1271,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
     console.log(++i)
     if (i === 2)
       clearInterval(interval)
-  
+
   }, 50)
 
   vi.runAllTimers()
@@ -1307,13 +1364,13 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
   ```ts
   const mockFn = vi.fn().mockImplementation(apples => apples + 1)
   // or: vi.fn(apples => apples + 1);
-  
+
   const NelliesBucket = mockFn(0)
   const BobsBucket = mockFn(1)
-  
+
   NelliesBucket === 1 // true
   BobsBucket === 2 // true
-  
+
   mockFn.mock.calls[0][0] === 0 // true
   mockFn.mock.calls[1][0] === 1 // true
   ```
@@ -1329,7 +1386,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
     .fn()
     .mockImplementationOnce(() => true)
     .mockImplementationOnce(() => false)
-  
+
   myMockFn() // true
   myMockFn() // false
   ```
@@ -1341,7 +1398,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
     .fn(() => 'default')
     .mockImplementationOnce(() => 'first call')
     .mockImplementationOnce(() => 'second call')
-  
+
   // 'first call', 'second call', 'default', 'default'
   console.log(myMockFn(), myMockFn(), myMockFn(), myMockFn())
   ```
@@ -1355,7 +1412,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
   ```ts
   test('async test', async() => {
     const asyncMock = vi.fn().mockRejectedValue(new Error('Async error'))
-  
+
     await asyncMock() // throws "Async error"
   })
   ```
@@ -1372,7 +1429,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
       .fn()
       .mockResolvedValueOnce('first call')
       .mockRejectedValueOnce(new Error('Async error'))
-  
+
     await asyncMock() // first call
     await asyncMock() // throws "Async error"
   })
@@ -1405,7 +1462,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
   ```ts
   test('async test', async() => {
     const asyncMock = vi.fn().mockResolvedValue(43)
-  
+
     await asyncMock() // 43
   })
   ```
@@ -1423,7 +1480,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
       .mockResolvedValue('default')
       .mockResolvedValueOnce('first call')
       .mockResolvedValueOnce('second call')
-  
+
     await asyncMock() // first call
     await asyncMock() // second call
     await asyncMock() // default
@@ -1463,7 +1520,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
     .mockReturnValue('default')
     .mockReturnValueOnce('first call')
     .mockReturnValueOnce('second call')
-  
+
   // 'first call', 'second call', 'default', 'default'
   console.log(myMockFn(), myMockFn(), myMockFn(), myMockFn())
   ```

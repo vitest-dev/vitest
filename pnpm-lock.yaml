@@ -141,7 +141,7 @@ importers:
     dependencies:
       lit: 2.2.1
     devDependencies:
-      '@vitest/ui': 0.7.10
+      '@vitest/ui': link:../../packages/ui
       happy-dom: 2.50.0
       vite: 2.8.6
       vitest: 0.7.10_12ec5b803b397b4118240576ace1d402
@@ -489,7 +489,7 @@ importers:
       '@vitejs/plugin-vue': 2.2.4_vite@2.8.6+vue@3.2.31
       '@vue/test-utils': 2.0.0-rc.18_vue@3.2.31
       happy-dom: 2.50.0
-      vitest: 0.7.10_c8@7.11.0+happy-dom@2.50.0
+      vitest: link:../../packages/vitest
 
   examples/vue-jsx:
     specifiers:

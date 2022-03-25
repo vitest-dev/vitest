@@ -15,7 +15,7 @@ if (!Object.prototype.hasOwnProperty.call(global, MATCHERS_OBJECT)) {
     isExpectingAssertions: false,
     isExpectingAssertionsError: null,
     expectedAssertionsNumber: null,
-    expectedAssertionsNumberError: null,
+    expectedAssertionsNumberErrorGen: null,
   }
   Object.defineProperty(global, MATCHERS_OBJECT, {
     value: {
@@ -558,13 +558,13 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     chai.expect,
     'assertions',
     function assertions(expected: number) {
-      const error = new Error(`expected number of assertions to be ${expected}, but got ${getState().assertionCalls}`)
+      const errorGen = () => new Error(`expected number of assertions to be ${expected}, but got ${getState().assertionCalls}`)
       if (Error.captureStackTrace)
-        Error.captureStackTrace(error, assertions)
+        Error.captureStackTrace(errorGen(), assertions)
 
       setState({
         expectedAssertionsNumber: expected,
-        expectedAssertionsNumberError: error,
+        expectedAssertionsNumberErrorGen: errorGen,
       })
     },
   )

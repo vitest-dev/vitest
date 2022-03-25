@@ -9,5 +9,12 @@ export default defineConfig({
     MY_CONSTANT: '"my constant"',
   },
   test: {
+    threads: !!process.env.THREAD,
+    include: [
+      'test/*.test.ts',
+    ],
+    exclude: [
+      'coverage-test/*.test.ts',
+    ],
   },
 })

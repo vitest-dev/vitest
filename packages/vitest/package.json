@@ -1,6 +1,6 @@
 {
   "name": "vitest",
-  "version": "0.7.7",
+  "version": "0.7.11",
   "description": "A blazing fast unit test framework powered by Vite",
   "keywords": [
     "vite",
@@ -134,6 +134,6 @@
     "ws": "^8.5.0"
   },
   "engines": {
-    "node": ">=v14.19.1"
+    "node": ">=v14.16.0"
   }
 }
