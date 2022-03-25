@@ -1,5 +1,5 @@
 import type { Awaitable, DoneCallback, RuntimeContext, SuiteCollector, TestFunction } from '../types'
-import { getWorkerState } from '../utils'
+import { clearTimeout, getWorkerState, setTimeout } from '../utils'
 
 export const context: RuntimeContext = {
   tasks: [],
