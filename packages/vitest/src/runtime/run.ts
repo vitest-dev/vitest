@@ -1,5 +1,5 @@
 import { performance } from 'perf_hooks'
-import type { File, HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from '../types'
+import type { Benchmark, File, HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from '../types'
 import { vi } from '../integrations/vi'
 import { getSnapshotClient } from '../integrations/snapshot/chai'
 import { getFullName, getWorkerState, hasFailed, hasTests, partitionSuiteChildren } from '../utils'
@@ -207,10 +207,20 @@ export async function runSuite(suite: Suite) {
   updateTask(suite)
 }
 
+async function runBenchmark(benchmark: Benchmark) {
+  // await getFn(benchmark)()
+  benchmark.result = {
+    state: 'pass',
+  }
+}
+
 async function runSuiteChild(c: Task) {
-  return c.type === 'test'
-    ? runTest(c)
-    : runSuite(c)
+  if (c.type === 'test')
+    return runTest(c)
+  else if (c.type === 'suite')
+    return runSuite(c)
+  else if (c.type === 'benchmark')
+    return runBenchmark(c)
 }
 
 export async function runFiles(files: File[], config: ResolvedConfig) {
@@ -223,7 +233,6 @@ export async function runFiles(files: File[], config: ResolvedConfig) {
         }
       }
     }
-
     await runSuite(file)
   }
 }

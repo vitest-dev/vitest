@@ -1,5 +1,20 @@
-import type { Awaitable, DoneCallback, RuntimeContext, SuiteCollector, TestFunction } from '../types'
+import type { Awaitable, BenchmarkCollector, BenchmarkContext, DoneCallback, RuntimeContext, SuiteCollector, TestFunction } from '../types'
 import { getWorkerState } from '../utils'
+
+export const benchmarkContext: BenchmarkContext = {
+  currentBenchmark: null,
+}
+
+export async function runWithBenchmark(benchmark: BenchmarkCollector, fn: (() => Awaitable<void>)) {
+  const prev = benchmarkContext.currentBenchmark
+  benchmarkContext.currentBenchmark = benchmark
+  await fn()
+  benchmarkContext.currentBenchmark = prev
+}
+
+export function collectBenchmark(benchmark: BenchmarkCollector) {
+  benchmarkContext.currentBenchmark?.tasks.push(benchmark)
+}
 
 export const context: RuntimeContext = {
   tasks: [],

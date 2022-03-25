@@ -3,6 +3,7 @@ import type { MatcherState, MatchersObject } from './integrations/chai/types'
 import type { Constructable, InlineConfig } from './types'
 
 export { suite, test, describe, it } from './runtime/suite'
+export { benchmark } from './runtime/benchmark'
 export * from './runtime/hooks'
 
 export { runOnce, isFirstRun } from './integrations/run-once'

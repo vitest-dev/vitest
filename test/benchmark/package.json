@@ -1,0 +1,9 @@
+{
+  "name": "@vitest/benchmark",
+  "private": true,
+  "scripts": {
+    "test": "vitest",
+    "testu": "vitest -u",
+    "coverage": "vitest run --coverage"
+  }
+}

@@ -6,6 +6,7 @@ import { getHooks, setHooks } from './map'
 import { processError } from './error'
 import { context } from './context'
 import { runSetupFiles } from './setup'
+import { clearBenchmarkContext, defaultBenchmark } from './benchmark'
 
 function hash(str: string, length = 10) {
   return createHash('md5')
@@ -29,27 +30,32 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
     }
 
     clearContext()
+    clearBenchmarkContext()
+
     try {
       await runSetupFiles(config)
       await import(filepath)
 
       const defaultTasks = await defaultSuite.collect(file)
-
+      const defaultBenchmarkTasks = await defaultBenchmark.collect(file)
       setHooks(file, getHooks(defaultTasks))
 
-      for (const c of [...defaultTasks.tasks, ...context.tasks]) {
+      for (const c of [...defaultTasks.tasks, ...context.tasks, ...defaultBenchmarkTasks.tasks]) {
         if (c.type === 'test') {
           file.tasks.push(c)
         }
         else if (c.type === 'suite') {
           file.tasks.push(c)
         }
-        else {
+        else if (c.type === 'collector') {
           const start = performance.now()
           const suite = await c.collect(file)
           file.collectDuration = performance.now() - start
           if (suite.name || suite.tasks.length)
             file.tasks.push(suite)
+        }
+        else if (c.type === 'benchmark') {
+          file.tasks.push(c)
         }
       }
     }

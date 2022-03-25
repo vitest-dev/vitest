@@ -112,9 +112,9 @@ importers:
       vite: ^2.8.6
       vitest: latest
     devDependencies:
-      '@vitest/ui': link:../../packages/ui
+      '@vitest/ui': 0.7.10
       vite: 2.8.6
-      vitest: link:../../packages/vitest
+      vitest: 0.7.10_@vitest+ui@0.7.10+c8@7.11.0
 
   examples/graphql:
     specifiers:
@@ -127,9 +127,9 @@ importers:
       '@rollup/plugin-graphql': 1.1.0_graphql@16.3.0+rollup@2.70.1
       graphql: 16.3.0
     devDependencies:
-      '@vitest/ui': link:../../packages/ui
+      '@vitest/ui': 0.7.10
       vite: 2.8.6
-      vitest: link:../../packages/vitest
+      vitest: 0.7.10_@vitest+ui@0.7.10+c8@7.11.0
 
   examples/lit:
     specifiers:
@@ -141,10 +141,10 @@ importers:
     dependencies:
       lit: 2.2.1
     devDependencies:
-      '@vitest/ui': link:../../packages/ui
-      happy-dom: 2.49.0
+      '@vitest/ui': 0.7.10
+      happy-dom: 2.50.0
       vite: 2.8.6
-      vitest: link:../../packages/vitest
+      vitest: 0.7.10_12ec5b803b397b4118240576ace1d402
 
   examples/mocks:
     specifiers:
@@ -159,9 +159,9 @@ importers:
       axios: 0.26.1
       tinyspy: 0.3.0
     devDependencies:
-      '@vitest/ui': link:../../packages/ui
+      '@vitest/ui': 0.7.10
       vite: 2.8.6
-      vitest: link:../../packages/vitest
+      vitest: 0.7.10_@vitest+ui@0.7.10+c8@7.11.0
 
   examples/nextjs:
     specifiers:
@@ -186,7 +186,7 @@ importers:
       '@vitejs/plugin-react': 1.2.0
       jsdom: 19.0.0
       typescript: 4.6.2
-      vitest: link:../../packages/vitest
+      vitest: 0.7.10_c8@7.11.0+jsdom@19.0.0
 
   examples/puppeteer:
     specifiers:
@@ -195,10 +195,10 @@ importers:
       vite: ^2.8.6
       vitest: latest
     devDependencies:
-      '@vitest/ui': link:../../packages/ui
+      '@vitest/ui': 0.7.10
       puppeteer: 13.5.1
       vite: 2.8.6
-      vitest: link:../../packages/vitest
+      vitest: 0.7.10_@vitest+ui@0.7.10+c8@7.11.0
 
   examples/react:
     specifiers:
@@ -217,11 +217,11 @@ importers:
       '@types/react': 17.0.41
       '@types/react-test-renderer': 17.0.1
       '@vitejs/plugin-react': 1.2.0
-      '@vitest/ui': link:../../packages/ui
+      '@vitest/ui': 0.7.10
       happy-dom: 2.49.0
       jsdom: 19.0.0
       react-test-renderer: 17.0.2_react@17.0.2
-      vitest: link:../../packages/vitest
+      vitest: 0.7.10_489150d4002f5264e8660166fdf5d4d4
 
   examples/react-enzyme:
     specifiers:
@@ -242,11 +242,11 @@ importers:
       '@types/react': 17.0.41
       '@types/react-dom': 17.0.14
       '@vitejs/plugin-react': 1.2.0
-      '@vitest/ui': link:../../packages/ui
+      '@vitest/ui': 0.7.10
       enzyme: 3.11.0
       enzyme-adapter-react-16: 1.15.6_fae758709a8810ba97b4c03852dde4d0
       vite: 2.8.6
-      vitest: link:../../packages/vitest
+      vitest: 0.7.10_@vitest+ui@0.7.10+c8@7.11.0
 
   examples/react-mui:
     specifiers:
@@ -272,7 +272,7 @@ importers:
     dependencies:
       '@emotion/react': 11.8.2_react@17.0.2
       '@emotion/styled': 11.8.1_fa30c4a31333a43d23a4fe708e0dc178
-      '@mui/lab': 5.0.0-alpha.73_f6fd6bd0e74873b8279f94a5e322d84e
+      '@mui/lab': 5.0.0-alpha.74_f6fd6bd0e74873b8279f94a5e322d84e
       '@mui/material': 5.5.1_eb8585ddc00e6d8e3b40a6701d59ed38
       history: 5.3.0
       notistack: 2.0.3_63011001f7e0af16b06ddd93c62e2262
@@ -285,11 +285,11 @@ importers:
       '@testing-library/jest-dom': 5.16.2
       '@testing-library/react': 12.1.4_react-dom@17.0.2+react@17.0.2
       '@testing-library/user-event': 13.5.0
-      '@vitest/ui': link:../../packages/ui
+      '@vitest/ui': 0.7.10
       date-fns: 2.28.0
       jsdom: 19.0.0
       vite: 2.8.6
-      vitest: link:../../packages/vitest
+      vitest: 0.7.10_599e24fde443c6f8c58785dc34357289
 
   examples/react-storybook-testing:
     specifiers:
@@ -336,7 +336,7 @@ importers:
       '@types/react': 17.0.41
       '@types/react-dom': 17.0.14
       '@vitejs/plugin-react': 1.2.0
-      '@vitest/ui': link:../../packages/ui
+      '@vitest/ui': 0.7.10
       babel-loader: 8.2.3_@babel+core@7.17.8
       jsdom: 19.0.0
       msw: 0.39.2
@@ -344,7 +344,7 @@ importers:
       storybook-builder-vite: 0.1.21_c8bc8032f8f20001ab7ac3b1b4d4d032
       typescript: 4.6.2
       vite: 2.8.6
-      vitest: link:../../packages/vitest
+      vitest: 0.7.10_599e24fde443c6f8c58785dc34357289
 
   examples/react-testing-lib:
     specifiers:
@@ -372,10 +372,10 @@ importers:
       '@types/react': 17.0.41
       '@types/react-dom': 17.0.14
       '@vitejs/plugin-react': 1.2.0
-      '@vitest/ui': link:../../packages/ui
+      '@vitest/ui': 0.7.10
       jsdom: 19.0.0
       vite: 2.8.6
-      vitest: link:../../packages/vitest
+      vitest: 0.7.10_599e24fde443c6f8c58785dc34357289
 
   examples/react-testing-lib-msw:
     specifiers:
@@ -403,12 +403,12 @@ importers:
       '@types/react': 17.0.41
       '@types/react-dom': 17.0.14
       '@vitejs/plugin-react': 1.2.0
-      '@vitest/ui': link:../../packages/ui
+      '@vitest/ui': 0.7.10
       cross-fetch: 3.1.5
       jsdom: 19.0.0
       msw: 0.39.2
       vite: 2.8.6
-      vitest: link:../../packages/vitest
+      vitest: 0.7.10_599e24fde443c6f8c58785dc34357289
 
   examples/ruby:
     specifiers:
@@ -423,7 +423,7 @@ importers:
       '@vue/test-utils': 2.0.0-rc.18_vue@3.2.31
       jsdom: 19.0.0
       vite-plugin-ruby: 3.0.8_vite@2.8.6
-      vitest: link:../../packages/vitest
+      vitest: 0.7.10_c8@7.11.0+jsdom@19.0.0
       vue: 3.2.31
 
   examples/solid:
@@ -437,9 +437,9 @@ importers:
       solid-js: 1.3.13
     devDependencies:
       jsdom: 19.0.0
-      solid-start: 0.1.0-alpha.68_solid-js@1.3.13+vite@2.8.6
+      solid-start: 0.1.0-alpha.69_solid-js@1.3.13+vite@2.8.6
       solid-testing-library: 0.3.0_solid-js@1.3.13
-      vitest: link:../../packages/vitest
+      vitest: 0.7.10_c8@7.11.0+jsdom@19.0.0
 
   examples/svelte:
     specifiers:
@@ -452,10 +452,10 @@ importers:
     devDependencies:
       '@sveltejs/vite-plugin-svelte': 1.0.0-next.40_svelte@3.46.4+vite@2.8.6
       '@testing-library/svelte': 3.1.0_svelte@3.46.4
-      '@vitest/ui': link:../../packages/ui
+      '@vitest/ui': 0.7.10
       jsdom: 19.0.0
       svelte: 3.46.4
-      vitest: link:../../packages/vitest
+      vitest: 0.7.10_599e24fde443c6f8c58785dc34357289
 
   examples/vitesse:
     specifiers:
@@ -471,10 +471,10 @@ importers:
     devDependencies:
       '@vitejs/plugin-vue': 2.2.4_vite@2.8.6+vue@3.2.31
       '@vue/test-utils': 2.0.0-rc.18_vue@3.2.31
-      happy-dom: 2.49.0
+      happy-dom: 2.50.0
       unplugin-auto-import: 0.6.6_8823764f94041ba502281f3569357a91
       unplugin-vue-components: 0.18.3_0be41b1e4c88d6dd73f19956d981a243
-      vitest: link:../../packages/vitest
+      vitest: 0.7.10_c8@7.11.0+happy-dom@2.50.0
 
   examples/vue:
     specifiers:
@@ -488,8 +488,8 @@ importers:
     devDependencies:
       '@vitejs/plugin-vue': 2.2.4_vite@2.8.6+vue@3.2.31
       '@vue/test-utils': 2.0.0-rc.18_vue@3.2.31
-      happy-dom: 2.49.0
-      vitest: link:../../packages/vitest
+      happy-dom: 2.50.0
+      vitest: 0.7.10_c8@7.11.0+happy-dom@2.50.0
 
   examples/vue-jsx:
     specifiers:
@@ -504,9 +504,9 @@ importers:
       '@vitejs/plugin-vue': 2.2.4_vite@2.8.6+vue@3.2.31
       '@vitejs/plugin-vue-jsx': 1.3.8
       '@vue/test-utils': 2.0.0-rc.18_vue@3.2.31
-      happy-dom: 2.49.0
+      happy-dom: 2.50.0
       vite: 2.8.6
-      vitest: link:../../packages/vitest
+      vitest: 0.7.10_c8@7.11.0+happy-dom@2.50.0
       vue: 3.2.31
 
   packages/ui:
@@ -599,6 +599,7 @@ importers:
     specifiers:
       '@antfu/install-pkg': ^0.1.0
       '@sinonjs/fake-timers': ^9.1.1
+      '@types/benchmark': ^2.1.1
       '@types/chai': ^4.3.0
       '@types/chai-subset': ^1.3.3
       '@types/diff': ^5.0.2
@@ -609,6 +610,7 @@ importers:
       '@types/prompts': ^2.4.0
       '@types/sinonjs__fake-timers': ^8.1.1
       '@vitest/ui': workspace:*
+      benchmark: ^2.1.4
       birpc: ^0.1.0
       c8: ^7.11.0
       cac: ^6.7.12
@@ -645,6 +647,7 @@ importers:
     dependencies:
       '@types/chai': 4.3.0
       '@types/chai-subset': 1.3.3
+      benchmark: 2.1.4
       chai: 4.3.6
       local-pkg: 0.4.1
       tinypool: 0.1.2
@@ -653,6 +656,7 @@ importers:
     devDependencies:
       '@antfu/install-pkg': 0.1.0
       '@sinonjs/fake-timers': 9.1.1
+      '@types/benchmark': 2.1.1
       '@types/diff': 5.0.2
       '@types/jsdom': 16.2.14
       '@types/micromatch': 4.0.2
@@ -708,6 +712,9 @@ importers:
       ws: 8.5.0
     devDependencies:
       rollup: 2.70.1
+
+  test/benchmark:
+    specifiers: {}
 
   test/cjs:
     specifiers:
@@ -4262,8 +4269,30 @@ packages:
       react-is: 17.0.2
     dev: false
 
-  /@mui/lab/5.0.0-alpha.73_f6fd6bd0e74873b8279f94a5e322d84e:
-    resolution: {integrity: sha512-10Uj0Atc7gBTXKX4VV38P6RdqTQrJZxcl3HeEcytIO1S3NAGfc7gZ3Hdpnhtj5U8kcRJZZPH9LtrBbMZzxU/1A==}
+  /@mui/base/5.0.0-alpha.73_react-dom@17.0.2+react@17.0.2:
+    resolution: {integrity: sha512-TEUCIIEAWrngAqpIa+dY3nofGSNj70LC3KC9WcCzyXPK3M4AG2GNi7ndd/g/0DtC55kbxrudzlV8TG3vrB2Vjw==}
+    engines: {node: '>=12.0.0'}
+    peerDependencies:
+      '@types/react': ^16.8.6 || ^17.0.0
+      react: ^17.0.0
+      react-dom: ^17.0.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+    dependencies:
+      '@babel/runtime': 7.17.2
+      '@emotion/is-prop-valid': 1.1.2
+      '@mui/utils': 5.4.4_react@17.0.2
+      '@popperjs/core': 2.11.4
+      clsx: 1.1.1
+      prop-types: 15.8.1
+      react: 17.0.2
+      react-dom: 17.0.2_react@17.0.2
+      react-is: 17.0.2
+    dev: false
+
+  /@mui/lab/5.0.0-alpha.74_f6fd6bd0e74873b8279f94a5e322d84e:
+    resolution: {integrity: sha512-a3spQ3uWzlHVVBLcHqqMXPOwto39EVojaV3+3x102kTwPU6ZT1CsU+nI6+EiGCjZ7hW09gxjhUWxiU3fow9UWA==}
     engines: {node: '>=12.0.0'}
     peerDependencies:
       '@mui/material': ^5.0.0
@@ -4291,9 +4320,9 @@ packages:
       '@date-io/dayjs': 2.13.1
       '@date-io/luxon': 2.13.1
       '@date-io/moment': 2.13.1
-      '@mui/base': 5.0.0-alpha.72_react-dom@17.0.2+react@17.0.2
+      '@mui/base': 5.0.0-alpha.73_react-dom@17.0.2+react@17.0.2
       '@mui/material': 5.5.1_eb8585ddc00e6d8e3b40a6701d59ed38
-      '@mui/system': 5.5.1_dc240608ee0d50d8faddd7dd724375c2
+      '@mui/system': 5.5.2_dc240608ee0d50d8faddd7dd724375c2
       '@mui/utils': 5.4.4_react@17.0.2
       clsx: 1.1.1
       date-fns: 2.28.0
@@ -4380,6 +4409,27 @@ packages:
       react: 17.0.2
     dev: false
 
+  /@mui/styled-engine/5.5.2_dc240608ee0d50d8faddd7dd724375c2:
+    resolution: {integrity: sha512-jkz5AHHbA43akBo5L3y1X1/X0f+RvXvCp3eXKt+iOf3qnKSAausbtlVz7gBbC4xIWDnP1Jb/6T+t/0/7gObRYA==}
+    engines: {node: '>=12.0.0'}
+    peerDependencies:
+      '@emotion/react': ^11.4.1
+      '@emotion/styled': ^11.3.0
+      react: ^17.0.0
+    peerDependenciesMeta:
+      '@emotion/react':
+        optional: true
+      '@emotion/styled':
+        optional: true
+    dependencies:
+      '@babel/runtime': 7.17.2
+      '@emotion/cache': 11.7.1
+      '@emotion/react': 11.8.2_react@17.0.2
+      '@emotion/styled': 11.8.1_fa30c4a31333a43d23a4fe708e0dc178
+      prop-types: 15.8.1
+      react: 17.0.2
+    dev: false
+
   /@mui/system/5.5.1_dc240608ee0d50d8faddd7dd724375c2:
     resolution: {integrity: sha512-2hynI4hN8304hOCT8sc4knJviwUUYJ7XK3mXwQ0nagVGOPnWSOad/nYADm7K0vdlCeUXLIbDbe7oNN3Kaiu2kA==}
     engines: {node: '>=12.0.0'}
@@ -4401,6 +4451,35 @@ packages:
       '@emotion/styled': 11.8.1_fa30c4a31333a43d23a4fe708e0dc178
       '@mui/private-theming': 5.4.4_react@17.0.2
       '@mui/styled-engine': 5.4.4_dc240608ee0d50d8faddd7dd724375c2
+      '@mui/types': 7.1.3
+      '@mui/utils': 5.4.4_react@17.0.2
+      clsx: 1.1.1
+      csstype: 3.0.11
+      prop-types: 15.8.1
+      react: 17.0.2
+    dev: false
+
+  /@mui/system/5.5.2_dc240608ee0d50d8faddd7dd724375c2:
+    resolution: {integrity: sha512-OATYFI36nliud8xh0u+ZNqDo0jWjxpO0vZLlzqNB+ZtkR5Q/+1X3GgboA9ruiB8Rq+udnJlMBQNGW0qqjvAOHQ==}
+    engines: {node: '>=12.0.0'}
+    peerDependencies:
+      '@emotion/react': ^11.5.0
+      '@emotion/styled': ^11.3.0
+      '@types/react': ^16.8.6 || ^17.0.0
+      react: ^17.0.0
+    peerDependenciesMeta:
+      '@emotion/react':
+        optional: true
+      '@emotion/styled':
+        optional: true
+      '@types/react':
+        optional: true
+    dependencies:
+      '@babel/runtime': 7.17.2
+      '@emotion/react': 11.8.2_react@17.0.2
+      '@emotion/styled': 11.8.1_fa30c4a31333a43d23a4fe708e0dc178
+      '@mui/private-theming': 5.4.4_react@17.0.2
+      '@mui/styled-engine': 5.5.2_dc240608ee0d50d8faddd7dd724375c2
       '@mui/types': 7.1.3
       '@mui/utils': 5.4.4_react@17.0.2
       clsx: 1.1.1
@@ -6615,6 +6694,10 @@ packages:
     resolution: {integrity: sha512-HnYpAE1Y6kRyKM/XkEuiRQhTHvkzMBurTHnpFLYLBGPIylZNPs9jJcuOOYWxPLJCSEtmZT0Y8rHDokKN7rRTig==}
     dev: true
 
+  /@types/benchmark/2.1.1:
+    resolution: {integrity: sha512-XmdNOarpSSxnb3DE2rRFOFsEyoqXLUL+7H8nSGS25vs+JS0018bd+cW5Ma9vdlkPmoTHSQ6e8EUFMFMxeE4l+g==}
+    dev: true
+
   /@types/braces/3.0.1:
     resolution: {integrity: sha512-+euflG6ygo4bn0JHtn4pYqcXwRtLvElQ7/nnjDu7iYG56H0+OhCd7d6Ug0IE3WcFpZozBKW2+80FUbv5QGk5AQ==}
     dev: true
@@ -7366,6 +7449,12 @@ packages:
     dependencies:
       vite: 2.8.6
       vue: 3.2.31
+    dev: true
+
+  /@vitest/ui/0.7.10:
+    resolution: {integrity: sha512-nZzuPBdndCUhQCP/P0Yejk74vxRtlDs3WxnLxHWJkOTH5M6kYxpZKwfRn7jfonJNyqqJJzByeha/QNOJZoo8PQ==}
+    dependencies:
+      sirv: 2.0.2
     dev: true
 
   /@vue/babel-helper-vue-transform-on/1.0.2:
@@ -8515,6 +8604,13 @@ packages:
     dependencies:
       tweetnacl: 0.14.5
     dev: true
+
+  /benchmark/2.1.4:
+    resolution: {integrity: sha1-CfPeMckWQl1JjMLuVloOvzwqVik=}
+    dependencies:
+      lodash: 4.17.21
+      platform: 1.3.6
+    dev: false
 
   /better-opn/2.1.1:
     resolution: {integrity: sha512-kIPXZS5qwyKiX/HcRvDYfmBQUa8XP17I0mYZZ0y4UhpYOSvtsLHDYqmomS+Mj20aDvD3knEiQ0ecQy2nhio3yA==}
@@ -12681,6 +12777,20 @@ packages:
       - encoding
     dev: true
 
+  /happy-dom/2.50.0:
+    resolution: {integrity: sha512-3boJ9i4AbSMUvI4f6N4UEuDDOdKMTCXlnsjoB7KCyhkN1VD+vR9kQEmHLLDHrIPdLn65zA/XhhaFZhCkoWoLQQ==}
+    dependencies:
+      css.escape: 1.5.1
+      he: 1.2.0
+      node-fetch: 2.6.7
+      sync-request: 6.1.0
+      webidl-conversions: 7.0.0
+      whatwg-encoding: 2.0.0
+      whatwg-mimetype: 3.0.0
+    transitivePeerDependencies:
+      - encoding
+    dev: true
+
   /has-bigints/1.0.1:
     resolution: {integrity: sha512-LSBS2LjbNBTf6287JEbEzvJgftkF5qFkmCo9hDRpAzKhUOlJ+hx8dd4USs00SgsUNwc4617J9ki5YtEClM2ffA==}
     dev: true
@@ -15738,6 +15848,10 @@ packages:
       pathe: 0.2.0
     dev: true
 
+  /platform/1.3.6:
+    resolution: {integrity: sha512-fnWVljUchTro6RiCFvCXBbNhJc2NijN7oIQxbwsyL0buWJPG85v81ehlHI9fXrJsMNgTofEoWIQeClKpgxFLrg==}
+    dev: false
+
   /pluralize/8.0.0:
     resolution: {integrity: sha512-Nc3IT5yHzflTfbjgqWcCPpo7DaKy4FnpB0l/zCAW0Tc7jxAiuqSxHasntB3D7887LSrA93kDJ9IXovxJYxyLCA==}
     engines: {node: '>=4'}
@@ -17512,8 +17626,8 @@ packages:
       solid-js: 1.3.13
     dev: true
 
-  /solid-start-node/0.1.0-alpha.68_eff5a7601ff8a6e482f1c876291835be:
-    resolution: {integrity: sha512-/wsB7KXj7JKPbXLI+kNWeWS8i43iRFZbLhzzHIQuT5uLcM1UbVrmoRlsOLHsm0Jo2sD105FltYW/TULAW3Tagw==}
+  /solid-start-node/0.1.0-alpha.69_a55c1ffe1d1ca0e4ab7f11d14b8c5fb6:
+    resolution: {integrity: sha512-4kgC/0xI975gl7ZG6kDlL5/KIqEcduhf7qOPN8Kez70Bl3LxAD1pPb6pquFnxxXrddHFoAYHU/uRNOag0oWCdg==}
     requiresBuild: true
     peerDependencies:
       solid-start: next
@@ -17527,14 +17641,14 @@ packages:
       polka: 1.0.0-next.22
       rollup: 2.70.1
       sirv: 1.0.19
-      solid-start: 0.1.0-alpha.68_solid-js@1.3.13+vite@2.8.6
+      solid-start: 0.1.0-alpha.69_solid-js@1.3.13+vite@2.8.6
       undici: 4.13.0
       vite: 2.8.6
     dev: true
     optional: true
 
-  /solid-start/0.1.0-alpha.68_solid-js@1.3.13+vite@2.8.6:
-    resolution: {integrity: sha512-cfpOWolqSlwfQzDEXFLPox9NtlPsg7/1VWPZN4FfwB+eAmnvc4wg78fcrl92mOpITdM1AusqryHibzrErz9ksA==}
+  /solid-start/0.1.0-alpha.69_solid-js@1.3.13+vite@2.8.6:
+    resolution: {integrity: sha512-EBI54HCB2v8WTtnyo5ctIvukQicNrHOg3BcNSsEOlo5DNAAC+brDIuUwUGlDwM55Qedsxw4LOv7CQrUcqhYjlQ==}
     hasBin: true
     peerDependencies:
       solid-app-router: ^0.3.0
@@ -17564,7 +17678,7 @@ packages:
       vite-plugin-inspect: 0.3.14_vite@2.8.6
       vite-plugin-solid: 2.2.6
     optionalDependencies:
-      solid-start-node: 0.1.0-alpha.68_eff5a7601ff8a6e482f1c876291835be
+      solid-start-node: 0.1.0-alpha.69_a55c1ffe1d1ca0e4ab7f11d14b8c5fb6
     transitivePeerDependencies:
       - less
       - sass
@@ -18367,7 +18481,6 @@ packages:
   /tinyspy/0.3.0:
     resolution: {integrity: sha512-c5uFHqtUp74R2DJE3/Efg0mH5xicmgziaQXMm/LvuuZn3RdpADH32aEGDRyCzObXT1DNfwDMqRQ/Drh1MlO12g==}
     engines: {node: '>=14.0.0'}
-    dev: false
 
   /tmp/0.0.33:
     resolution: {integrity: sha512-jRCJlojKnZ3addtTOjdIqoRuPEKBvNXcGYqzO6zWZX8KfKEpnGY5jfggJQ3EjKuu8D4bJRr0y+cYJFmYbImXGw==}
@@ -19391,6 +19504,214 @@ packages:
       local-pkg: 0.4.1
       tinypool: 0.1.2
       tinyspy: 0.2.10
+      vite: 2.8.6
+    transitivePeerDependencies:
+      - less
+      - sass
+      - stylus
+    dev: true
+
+  /vitest/0.7.10_12ec5b803b397b4118240576ace1d402:
+    resolution: {integrity: sha512-We5a7cnY2aUpX4tAO+w2KRhJiJ4FznfWjYKkqWoAqs4x4pKgyRsMJNZ7OSY/lFHOoRz3yv0mgwfVlZiRc0/mmA==}
+    engines: {node: '>=v14.16.0'}
+    hasBin: true
+    peerDependencies:
+      '@vitest/ui': '*'
+      c8: '*'
+      happy-dom: '*'
+      jsdom: '*'
+    peerDependenciesMeta:
+      '@vitest/ui':
+        optional: true
+      c8:
+        optional: true
+      happy-dom:
+        optional: true
+      jsdom:
+        optional: true
+    dependencies:
+      '@types/chai': 4.3.0
+      '@types/chai-subset': 1.3.3
+      '@vitest/ui': 0.7.10
+      c8: 7.11.0
+      chai: 4.3.6
+      happy-dom: 2.50.0
+      local-pkg: 0.4.1
+      tinypool: 0.1.2
+      tinyspy: 0.3.0
+      vite: 2.8.6
+    transitivePeerDependencies:
+      - less
+      - sass
+      - stylus
+    dev: true
+
+  /vitest/0.7.10_489150d4002f5264e8660166fdf5d4d4:
+    resolution: {integrity: sha512-We5a7cnY2aUpX4tAO+w2KRhJiJ4FznfWjYKkqWoAqs4x4pKgyRsMJNZ7OSY/lFHOoRz3yv0mgwfVlZiRc0/mmA==}
+    engines: {node: '>=v14.16.0'}
+    hasBin: true
+    peerDependencies:
+      '@vitest/ui': '*'
+      c8: '*'
+      happy-dom: '*'
+      jsdom: '*'
+    peerDependenciesMeta:
+      '@vitest/ui':
+        optional: true
+      c8:
+        optional: true
+      happy-dom:
+        optional: true
+      jsdom:
+        optional: true
+    dependencies:
+      '@types/chai': 4.3.0
+      '@types/chai-subset': 1.3.3
+      '@vitest/ui': 0.7.10
+      c8: 7.11.0
+      chai: 4.3.6
+      happy-dom: 2.49.0
+      jsdom: 19.0.0
+      local-pkg: 0.4.1
+      tinypool: 0.1.2
+      tinyspy: 0.3.0
+      vite: 2.8.6
+    transitivePeerDependencies:
+      - less
+      - sass
+      - stylus
+    dev: true
+
+  /vitest/0.7.10_599e24fde443c6f8c58785dc34357289:
+    resolution: {integrity: sha512-We5a7cnY2aUpX4tAO+w2KRhJiJ4FznfWjYKkqWoAqs4x4pKgyRsMJNZ7OSY/lFHOoRz3yv0mgwfVlZiRc0/mmA==}
+    engines: {node: '>=v14.16.0'}
+    hasBin: true
+    peerDependencies:
+      '@vitest/ui': '*'
+      c8: '*'
+      happy-dom: '*'
+      jsdom: '*'
+    peerDependenciesMeta:
+      '@vitest/ui':
+        optional: true
+      c8:
+        optional: true
+      happy-dom:
+        optional: true
+      jsdom:
+        optional: true
+    dependencies:
+      '@types/chai': 4.3.0
+      '@types/chai-subset': 1.3.3
+      '@vitest/ui': 0.7.10
+      c8: 7.11.0
+      chai: 4.3.6
+      jsdom: 19.0.0
+      local-pkg: 0.4.1
+      tinypool: 0.1.2
+      tinyspy: 0.3.0
+      vite: 2.8.6
+    transitivePeerDependencies:
+      - less
+      - sass
+      - stylus
+    dev: true
+
+  /vitest/0.7.10_@vitest+ui@0.7.10+c8@7.11.0:
+    resolution: {integrity: sha512-We5a7cnY2aUpX4tAO+w2KRhJiJ4FznfWjYKkqWoAqs4x4pKgyRsMJNZ7OSY/lFHOoRz3yv0mgwfVlZiRc0/mmA==}
+    engines: {node: '>=v14.16.0'}
+    hasBin: true
+    peerDependencies:
+      '@vitest/ui': '*'
+      c8: '*'
+      happy-dom: '*'
+      jsdom: '*'
+    peerDependenciesMeta:
+      '@vitest/ui':
+        optional: true
+      c8:
+        optional: true
+      happy-dom:
+        optional: true
+      jsdom:
+        optional: true
+    dependencies:
+      '@types/chai': 4.3.0
+      '@types/chai-subset': 1.3.3
+      '@vitest/ui': 0.7.10
+      c8: 7.11.0
+      chai: 4.3.6
+      local-pkg: 0.4.1
+      tinypool: 0.1.2
+      tinyspy: 0.3.0
+      vite: 2.8.6
+    transitivePeerDependencies:
+      - less
+      - sass
+      - stylus
+    dev: true
+
+  /vitest/0.7.10_c8@7.11.0+happy-dom@2.50.0:
+    resolution: {integrity: sha512-We5a7cnY2aUpX4tAO+w2KRhJiJ4FznfWjYKkqWoAqs4x4pKgyRsMJNZ7OSY/lFHOoRz3yv0mgwfVlZiRc0/mmA==}
+    engines: {node: '>=v14.16.0'}
+    hasBin: true
+    peerDependencies:
+      '@vitest/ui': '*'
+      c8: '*'
+      happy-dom: '*'
+      jsdom: '*'
+    peerDependenciesMeta:
+      '@vitest/ui':
+        optional: true
+      c8:
+        optional: true
+      happy-dom:
+        optional: true
+      jsdom:
+        optional: true
+    dependencies:
+      '@types/chai': 4.3.0
+      '@types/chai-subset': 1.3.3
+      c8: 7.11.0
+      chai: 4.3.6
+      happy-dom: 2.50.0
+      local-pkg: 0.4.1
+      tinypool: 0.1.2
+      tinyspy: 0.3.0
+      vite: 2.8.6
+    transitivePeerDependencies:
+      - less
+      - sass
+      - stylus
+    dev: true
+
+  /vitest/0.7.10_c8@7.11.0+jsdom@19.0.0:
+    resolution: {integrity: sha512-We5a7cnY2aUpX4tAO+w2KRhJiJ4FznfWjYKkqWoAqs4x4pKgyRsMJNZ7OSY/lFHOoRz3yv0mgwfVlZiRc0/mmA==}
+    engines: {node: '>=v14.16.0'}
+    hasBin: true
+    peerDependencies:
+      '@vitest/ui': '*'
+      c8: '*'
+      happy-dom: '*'
+      jsdom: '*'
+    peerDependenciesMeta:
+      '@vitest/ui':
+        optional: true
+      c8:
+        optional: true
+      happy-dom:
+        optional: true
+      jsdom:
+        optional: true
+    dependencies:
+      '@types/chai': 4.3.0
+      '@types/chai-subset': 1.3.3
+      c8: 7.11.0
+      chai: 4.3.6
+      jsdom: 19.0.0
+      local-pkg: 0.4.1
+      tinypool: 0.1.2
+      tinyspy: 0.3.0
       vite: 2.8.6
     transitivePeerDependencies:
       - less
