@@ -1097,7 +1097,7 @@ These functions allows you to hook into the life cycle of tests to avoid repeati
   Here the `afterAll` ensures that `stopMocking` method is called after all tests run.
 
 ## Vi
-Vitest provides utility functions to help you out through it's **vi** helper. You can `import { vi } from 'vitest'` or access it **globally** (when [global configuration](/config/#global) is **enabled**).
+Vitest provides utility functions to help you out through it's **vi** helper. You can `import { vi } from 'vitest'` or access it **globally** (when [globals configuration](/config/#globals) is **enabled**).
 
 ### vi.advanceTimersByTime
 
@@ -1135,7 +1135,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 
 - **Type:** `(fn: Function) => CallableMockInstance`
 
-  Creates a spy on a function, though can be initiated without one. Every time a function is invoked, it stores its call arguments, returns and instances. Also, you can manipulate its behavior with [methods](#mockmethods).
+  Creates a spy on a function, though can be initiated without one. Every time a function is invoked, it stores its call arguments, returns and instances. Also, you can manipulate its behavior with [methods](#mockinstance-methods).
   If no function is given, mock will return `undefined`, when invoked.
 
   ```ts
@@ -1146,11 +1146,11 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
   expect(getApples).toHaveBeenCalled()
   expect(getApples).toHaveReturnedWith(0)
 
-  getApples.mockReturnOnce(5)
+  getApples.mockReturnValueOnce(5)
 
   const res = getApples()
   expect(res).toBe(5)
-  expect(getApples).toHaveReturnedNthTimeWith(1, 5)
+  expect(getApples).toHaveNthReturnedWith(2, 5)
   ```
 
 ### vi.getMockedSystemTime
@@ -1175,10 +1175,10 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
   - If mocking a module with a default export, you'll need to provide a `default` key within the returned factory function object. This is an ES modules specific caveat, therefore `jest` documentation may differ as `jest` uses commonJS modules. *Example:*
 
   ```ts
-  vi.mock("path", () => {
+  vi.mock('path', () => {
     return {
-      default: { myDefaultKey: vi.fn() }
-      namedExport: vi.fn()
+      default: { myDefaultKey: vi.fn() },
+      namedExport: vi.fn(),
       // etc...
     }
   })
@@ -1243,7 +1243,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 
 - **Type**: `<T>(path: string) => Promise<MaybeMockedDeep<T>>`
 
-  Imports a module with all of its properties (including nested properties) mocked. Follows the same rules that [`vi.mock`](#mock) follows. For the rules applied, see [algorithm](#automockingalgorithm).
+  Imports a module with all of its properties (including nested properties) mocked. Follows the same rules that [`vi.mock`](#vi-mock) follows. For the rules applied, see [algorithm](/guide/mocking#automocking-algorithm).
 
 ### vi.restoreCurrentDate
 
@@ -1320,7 +1320,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 
 - **Type:** `() => Vitest`
 
-  To enable mocking timers, you need to call this method. It will wrap all further calls to timers (such as `setTimeout`, `setInterval`, `clearTimeout`, `clearInterval`, `nextTick`, `setImmediate`, `clearImmediate`, and `Date`), until [`vi.useRealTimers()`](#userealtimers) is called.
+  To enable mocking timers, you need to call this method. It will wrap all further calls to timers (such as `setTimeout`, `setInterval`, `clearTimeout`, `clearInterval`, `nextTick`, `setImmediate`, `clearImmediate`, and `Date`), until [`vi.useRealTimers()`](#vi-userealtimers) is called.
 
   The implementation is based internally on [`@sinonjs/fake-timers`](https://github.com/sinonjs/fake-timers).
 
