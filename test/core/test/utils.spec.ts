@@ -124,10 +124,10 @@ describe('toArray', () => {
 
 describe('joinArrayItems', () => {
   test('item should simply convert to string', () => {
-    expect(joinArrayItems(['onlyOneItem'])).toBe('onlyOneItems')
+    expect(joinArrayItems(['onlyOneItem'])).toEqual('onlyOneItem')
   })
   test('items should join with comma', () => {
     expect(joinArrayItems(['one', 'two', 'three'])).toBe('one, two, three')
-    expect(joinArrayItems([/\/node_modules\//, /\/dist\//])).toBe('/\/node_modules\//, /\/dist\//')
+    expect(joinArrayItems([/\/node_modules\//, /\/dist\//])).toBe('/\\/node_modules\\//, /\\/dist\\//')
   })
 })
