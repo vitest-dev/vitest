@@ -122,7 +122,6 @@ export class Vitest {
         console.error(`In ${c.bold(this.config.root)}`)
         if (this.config.include) this.console.error(`  include: ${c.yellow(joinArrayItems(this.config.include))}`)
         if (this.config.watchIgnore) this.console.error(`  watchIgnore: ${c.yellow(joinArrayItems(this.config.watchIgnore))}`)
-        if (this.config.testNamePattern) this.console.error(`  testNamePattern: ${c.yellow(this.config.testNamePattern.toString())}`)
       }
 
       process.exit(exitCode)

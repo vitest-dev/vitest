@@ -318,6 +318,27 @@ Isolate environment for each test file
 
 Coverage options
 
+### testNamePattern
+
+- **Type** `string | RegExp`
+
+Run tests with full names matching the pattern.
+If you add `do not run` to this property, tests containing the word `do not run` in the test name will be skipped.
+
+```js
+import { expect, it } from 'vitest'
+
+// run
+test('run', () => {
+  expect(true).toBe(true)
+})
+
+// skipped
+test('do not run', () => {
+  expect(true).toBe(true)
+})
+```
+
 ### open
 
 - **Type:** `boolean`

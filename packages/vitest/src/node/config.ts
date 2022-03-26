@@ -98,6 +98,7 @@ export function resolveConfig(
   // but then our mocker will not work properly
   resolved.deps.inline ??= []
   resolved.deps.inline.push(...extraInlineDeps)
+
   resolved.testNamePattern = resolved.testNamePattern
     ? resolved.testNamePattern instanceof RegExp
       ? resolved.testNamePattern
