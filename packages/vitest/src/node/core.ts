@@ -7,7 +7,7 @@ import c from 'picocolors'
 import { ViteNodeServer } from 'vite-node/server'
 import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig } from '../types'
 import { SnapshotManager } from '../integrations/snapshot/manager'
-import { clearTimeout, deepMerge, hasFailed, noop, setTimeout, slash, toArray } from '../utils'
+import { clearTimeout, deepMerge, hasFailed, joinArrayItems, noop, setTimeout, slash, toArray } from '../utils'
 import { cleanCoverage, reportCoverage } from '../integrations/coverage'
 import { ReportersMap } from './reporters'
 import { createPool } from './pool'
@@ -114,12 +114,18 @@ export class Vitest {
     )
 
     if (!files.length) {
-      if (this.config.passWithNoTests)
-        this.log('No test files found\n')
+      const exitCode = this.config.passWithNoTests ? 0 : 1
+      if (this.config.passWithNoTests) { this.log(`No test files found, existing code with ${exitCode}\n`) }
 
-      else
-        this.error(c.red('No test files found\n'))
-      process.exit(this.config.passWithNoTests ? 0 : 1)
+      else {
+        this.error(c.red(`No test files found, exiting code with ${exitCode}\nRun with \`--passWithNoTests\`to exit with code 0\n`))
+        console.error(`In ${c.bold(this.config.root)}`)
+        if (this.config.include) this.console.error(`  include: ${c.yellow(joinArrayItems(this.config.include))}`)
+        if (this.config.watchIgnore) this.console.error(`  watchIgnore: ${c.yellow(joinArrayItems(this.config.watchIgnore))}`)
+        if (this.config.testNamePattern) this.console.error(`  testNamePattern: ${c.yellow(this.config.testNamePattern.toString())}`)
+      }
+
+      process.exit(exitCode)
     }
 
     await this.runFiles(files)
