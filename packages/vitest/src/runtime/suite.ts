@@ -15,11 +15,13 @@ export const test = createTest(
 )
 
 function formatTitle(template: string, items: any[], idx: number) {
-  // '%#' match index of the test case
-  template = template
-    .replace(/%%/g, '__vitest_escaped_%__')
-    .replace(/%#/g, `${idx}`)
-    .replace(/__vitest_escaped_%__/g, '%%')
+  if (template.includes('%#')) {
+    // '%#' match index of the test case
+    template = template
+      .replace(/%%/g, '__vitest_escaped_%__')
+      .replace(/%#/g, `${idx}`)
+      .replace(/__vitest_escaped_%__/g, '%%')
+  }
 
   const count = template.split('%').length - 1
   let formatted = format(template, ...items.slice(0, count))
