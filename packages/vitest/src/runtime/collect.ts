@@ -1,3 +1,4 @@
+import { performance } from 'perf_hooks'
 import { createHash } from 'crypto'
 import { relative } from 'pathe'
 import type { File, ResolvedConfig, Suite, TaskBase } from '../types'
