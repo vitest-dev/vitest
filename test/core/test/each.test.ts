@@ -75,3 +75,11 @@ describe.each([1, 2, 0])('%s (describe.each 1d)', (num) => {
     expect(typeof num).toEqual('number')
   })
 })
+
+test.each([
+  [1, 1, 2],
+  [1, 2, 3],
+  [2, 1, 3],
+])('the index of the test case is %#', (a, b, expected) => {
+  expect(a + b).toBe(expected)
+})

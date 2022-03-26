@@ -14,7 +14,10 @@ export const test = createTest(
   },
 )
 
-function formatTitle(template: string, items: any[]) {
+function formatTitle(template: string, items: any[], idx: number) {
+  // '%#' match index of the test case
+  template = template.replace(/\%\#/g, `${idx}`)
+
   const count = template.split('%').length - 1
   let formatted = format(template, ...items.slice(0, count))
   if (isObject(items[0])) {
@@ -146,9 +149,9 @@ function createSuite() {
 
   suite.each = <T>(cases: ReadonlyArray<T>) => {
     return (name: string, fn: (...args: T[]) => void) => {
-      cases.forEach((i) => {
+      cases.forEach((i, idx) => {
         const items = toArray(i) as any
-        suite(formatTitle(name, items), () => fn(...items))
+        suite(formatTitle(name, items, idx), () => fn(...items))
       })
     }
   }
@@ -164,9 +167,9 @@ function createTest(fn: ((this: Record<'concurrent'| 'skip'| 'only'| 'todo'| 'fa
 
   test.each = <T>(cases: ReadonlyArray<T>) => {
     return (name: string, fn: (...args: T[]) => void) => {
-      cases.forEach((i) => {
+      cases.forEach((i, idx) => {
         const items = toArray(i) as any
-        test(formatTitle(name, items), () => fn(...items))
+        test(formatTitle(name, items, idx), () => fn(...items))
       })
     }
   }

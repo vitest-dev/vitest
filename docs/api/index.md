@@ -121,22 +121,32 @@ For compatibility with Jest, `TestFunction` can also be of type `(done: DoneCall
 - **Type:** `(cases: ReadonlyArray<T>) => void`
 - **Alias:** `it.each`
 
-Use `test.each` when you need to run the same test with different variables.  
-You can use `%i` or `%s` in the test name in the order of the test function parameters.
-```ts
-test.each([
-  [1, 1, 2],
-  [1, 2, 3],
-  [2, 1, 3],
-])('add(%i, %i) -> %i', (a, b, expected) => {
-  expect(a + b).toBe(expected)
-})
+  Use `test.each` when you need to run the same test with different variables.  
+  You can inject parameters with [printf formmatting](https://nodejs.org/api/util.html#util_util_format_format_args) in the test name in the order of the test function parameters.
 
-// this will return
-// √ add(1, 1) -> 2
-// √ add(1, 2) -> 3
-// √ add(2, 1) -> 3
-```
+  - `%s`: string
+  - `%d`: number
+  - `%i`: integer
+  - `%f`: floating point value
+  - `%j`: json
+  - `$o`: object
+  - `%#`: index of the test case
+  - `%%`: single precent sign ('%')
+
+  ```ts
+  test.each([
+    [1, 1, 2],
+    [1, 2, 3],
+    [2, 1, 3],
+  ])('add(%i, %i) -> %i', (a, b, expected) => {
+    expect(a + b).toBe(expected)
+  })
+
+  // this will return
+  // √ add(1, 1) -> 2
+  // √ add(1, 2) -> 3
+  // √ add(2, 1) -> 3
+  ```
 ## describe
 
 When you use `test` in the top level of file, they are collected as part of the implicit suite for it. Using `describe` you can define a new suite in the current context, as a set of related tests and other nested suites. A suite lets you organize your tests so reports are more clear.
