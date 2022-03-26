@@ -1,38 +1,52 @@
 import { existsSync, promises as fs } from 'fs'
 import { dirname, resolve } from 'pathe'
 import type { Vitest } from '../../node'
-import type { File, Reporter } from '../../types'
+import type { File, Reporter, Suite, Test } from '../../types'
 import { getSuites, getTests } from '../../utils'
 
 // for compatibility reasons, the reporter produces a JSON similar to the one produced by the Jest JSON reporter
 // the following types are extracted from the Jest repository (and simplified)
+
+type Status = 'passed' | 'failed' | 'skipped' | 'pending' | 'todo' | 'disabled'
 type Milliseconds = number
-interface TestResult {
-  displayName?: string
-  failureMessage?: string | null
-  skipped: boolean
-  status?: string
-  testFilePath?: string
-  perfStats: {
-    end?: Milliseconds
-    runtime?: Milliseconds
-    start?: Milliseconds
-  }
+
+interface FormattedAssertionResult {
+  ancestorTitles: Array<string>
+  fullName: string
+  // location?: Callsite | null
+  status: Status
+  title: string
+  duration?: Milliseconds | null
 }
 
-interface AggregatedResult {
+interface FormattedTestResult {
+  message: string
+  name: string
+  summary: string
+  status: 'failed' | 'passed'
+  startTime: number
+  endTime: number
+  // coverage: unknown
+  assertionResults: Array<FormattedAssertionResult>
+}
+
+interface FormattedTestResults {
+  // coverageMap?: CoverageMap | null | undefined
   numFailedTests: number
   numFailedTestSuites: number
   numPassedTests: number
   numPassedTestSuites: number
   numPendingTests: number
-  numTodoTests: number
   numPendingTestSuites: number
+  // numRuntimeErrorTestSuites: number
+  numTodoTests: number
   numTotalTests: number
   numTotalTestSuites: number
+  // snapshot: SnapshotSummary
   startTime: number
   success: boolean
-  testResults: Array<TestResult>
+  testResults: Array<FormattedTestResult>
+  // wasInterrupted: boolean
 }
 
 export class JsonReporter implements Reporter {
@@ -60,20 +74,66 @@ export class JsonReporter implements Reporter {
 
     const success = numFailedTestSuites === 0 && numFailedTests === 0
 
-    const testResults: Array<TestResult> = tests.map(t => ({
-      perfStats: {
-        runtime: t.result?.duration,
-        start: t.result?.startTime,
-        end: t.result?.duration && t.result?.startTime && t.result.duration + t.result.startTime,
-      },
-      displayName: t.name,
-      failureMessage: t.result?.error?.message,
-      skipped: t.mode === 'skip',
-      status: t.result?.state,
-      testFilePath: t.file?.filepath,
-    }))
+    const testResults: Array<FormattedTestResult> = []
+    const fileToTestCases = new Map<string, Test[]>()
 
-    const result: AggregatedResult = { numTotalTestSuites, numPassedTestSuites, numFailedTestSuites, numPendingTestSuites, numTotalTests, numPassedTests, numFailedTests, numPendingTests, numTodoTests, startTime: this.start, success, testResults }
+    for (const test of tests) {
+      const file = test.file
+      if (file) {
+        if (!fileToTestCases.has(file.filepath))
+          fileToTestCases.set(file.filepath, [])
+
+        fileToTestCases.get(file.filepath)!.push(test)
+      }
+    }
+
+    for (const [filepath, tests] of fileToTestCases) {
+      testResults.push({
+        assertionResults: tests.map((t) => {
+          const ancestorTitles = [] as string[]
+          let iter: Suite | undefined = t.suite
+          while (iter) {
+            ancestorTitles.push(iter.name)
+            iter = iter.suite
+          }
+          ancestorTitles.reverse()
+
+          return {
+            ancestorTitles,
+            fullName: ancestorTitles.length > 0 ? `${ancestorTitles.join(' ')} ${t.name}` : t.name,
+            status: t.result?.state,
+            title: t.name,
+            duration: t.result?.duration,
+          } as FormattedAssertionResult
+        }),
+        status: tests.every(t =>
+          t.result?.state === 'pass'
+           || t.result?.state === 'skip'
+            || t.result?.state === 'todo')
+          ? 'passed'
+          : 'failed',
+        startTime: tests.reduce((prev, next) => Math.min(prev, next.result?.startTime ?? Infinity), Infinity),
+        endTime: tests.reduce((prev, next) => Math.max(prev, (next.result?.startTime ?? 0) + (next.result?.duration ?? 0)), 0),
+        message: '',
+        name: filepath,
+        summary: '',
+      })
+    }
+
+    const result: FormattedTestResults = {
+      numTotalTestSuites,
+      numPassedTestSuites,
+      numFailedTestSuites,
+      numPendingTestSuites,
+      numTotalTests,
+      numPassedTests,
+      numFailedTests,
+      numPendingTests,
+      numTodoTests,
+      startTime: this.start,
+      success,
+      testResults,
+    }
 
     await this.writeReport(JSON.stringify(result, null, 2))
   }
