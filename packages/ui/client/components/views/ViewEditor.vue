@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type CodeMirror from 'codemirror'
+import { createTooltip, destroyTooltip } from 'floating-vue'
 import { openInEditor } from '../../composables/error'
 import { client } from '~/composables/client'
 import type { File } from '#types'
@@ -27,13 +28,14 @@ const failed = computed(() => props.file?.tasks.filter(i => i.result?.state === 
 
 const widgets: CodeMirror.LineWidget[] = []
 const handles: CodeMirror.LineHandle[] = []
-const listeners: [el: HTMLSpanElement, l: EventListener][] = []
+const listeners: [el: HTMLSpanElement, l: Record<string, EventListener>, t: () => void][] = []
 
 const hasBeenEdited = ref(false)
 
 const clearListeners = () => {
-  listeners.forEach(([el, l]) => {
-    el.removeEventListener('click', l)
+  listeners.forEach(([el, l, t]) => {
+    Object.keys(l).forEach(e => el.removeEventListener(e, l[e]))
+    t()
   })
   listeners.length = 0
 }
@@ -63,15 +65,30 @@ watch([cm, failed], () => {
         pre.textContent = `${' '.repeat(pos.column)}^ ${e?.nameStr}: ${e?.message}`
         div.appendChild(pre)
         const span = document.createElement('span')
-        span.className = 'i-carbon-launch text-red-900 hover:cursor-pointer'
+        span.className = 'i-carbon-launch c-red-600 dark:c-red-400 hover:cursor-pointer'
         span.tabIndex = 0
-        span.title = 'Open in IDE'
+        span.ariaLabel = 'Open in Editor'
+        const tooltip = createTooltip(span, {
+          content: 'Open in Editor',
+          placement: 'bottom',
+        }, false)
         const el: EventListener = async() => {
           await openInEditor(stacks[0].file, pos.line, pos.column)
         }
-        listeners.push([span, el])
+        const me: EventListener = () => tooltip.show()
+        const mo: EventListener = () => tooltip.hide()
         span.addEventListener('click', el)
+        span.addEventListener('mouseenter', me)
+        span.addEventListener('mouseout', mo)
         div.appendChild(span)
+        listeners.push([
+          span, {
+            click: el,
+            mouseenter: me,
+            mouseout: mo,
+          },
+          () => destroyTooltip(span),
+        ])
         handles.push(cm.value!.addLineClass(pos.line - 1, 'wrap', 'bg-red-500/10'))
         widgets.push(cm.value!.addLineWidget(pos.line - 1, div))
       }
