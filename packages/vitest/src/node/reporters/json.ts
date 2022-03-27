@@ -71,14 +71,7 @@ export class JsonReporter implements Reporter {
   protected async logTasks(files: File[]) {
     const suites = getSuites(files)
     const numTotalTestSuites = suites.length
-    const fileToTestCases = new Map<File, Test[]>()
-
-    for (const file of files) {
-      const relatedTests = getTests([file])
-      fileToTestCases.set(file, relatedTests)
-    }
-
-    const tests = [...fileToTestCases.values()].flat()
+    const tests = getTests(files)
     const numTotalTests = tests.length
     const numFailedTestSuites = suites.filter(s => s.result?.error).length
     const numPassedTestSuites = numTotalTestSuites - numFailedTestSuites
@@ -91,7 +84,8 @@ export class JsonReporter implements Reporter {
 
     const success = numFailedTestSuites === 0 && numFailedTests === 0
 
-    for (const [file, tests] of fileToTestCases) {
+    for (const file of files) {
+      const tests = getTests([file])
       let startTime = tests.reduce((prev, next) => Math.min(prev, next.result?.startTime ?? Infinity), Infinity)
       if (startTime === Infinity)
         startTime = this.start
