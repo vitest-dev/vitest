@@ -67,7 +67,6 @@ export default defineConfig({
             link: contributing,
           },
         ],
-
       },
       {
         text: 'Discord',
@@ -77,25 +76,19 @@ export default defineConfig({
         text: 'Twitter',
         link: twitter,
       },
-      /* TODO
       {
-        text: 'Languages',
+        text: 'English',
         items: [
           {
             text: 'English',
-            link: 'https://vitest.dev'
+            link: '',
           },
           {
             text: '简体中文',
-            link: 'https://cn.vitest.dev'
+            link: 'https://cn.vitest.dev',
           },
-          {
-            text: '日本語',
-            link: 'https://ja.vitest.dev'
-          }
-        ]
-      }
-      */
+        ],
+      },
     ],
 
     sidebar: {
