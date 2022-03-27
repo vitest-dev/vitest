@@ -1,14 +1,23 @@
 import { existsSync, promises as fs } from 'fs'
 import { dirname, resolve } from 'pathe'
 import type { Vitest } from '../../node'
-import type { File, Reporter, Suite, Test } from '../../types'
+import type { File, Reporter, Suite, TaskState, Test } from '../../types'
 import { getSuites, getTests } from '../../utils'
 
 // for compatibility reasons, the reporter produces a JSON similar to the one produced by the Jest JSON reporter
 // the following types are extracted from the Jest repository (and simplified)
+// the commented-out fields are the missing ones
 
 type Status = 'passed' | 'failed' | 'skipped' | 'pending' | 'todo' | 'disabled'
 type Milliseconds = number
+const StatusMap: Record<TaskState, Status> = {
+  fail: 'failed',
+  only: 'pending',
+  pass: 'passed',
+  run: 'pending',
+  skip: 'skipped',
+  todo: 'todo',
+}
 
 interface FormattedAssertionResult {
   ancestorTitles: Array<string>
@@ -106,7 +115,7 @@ export class JsonReporter implements Reporter {
         return {
           ancestorTitles,
           fullName: ancestorTitles.length > 0 ? `${ancestorTitles.join(' ')} ${t.name}` : t.name,
-          status: t.result?.state,
+          status: t.result != null ? StatusMap[t.result.state] : 'skipped',
           title: t.name,
           duration: t.result?.duration,
           failureMessages: t.result?.error?.message == null ? [] : [t.result.error.message],

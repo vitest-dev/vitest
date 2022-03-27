@@ -115,74 +115,95 @@ exports[`json reporter 1`] = `
   "success": false,
   "testResults": [
     {
-      "displayName": "Math.sqrt()",
-      "failureMessage": "expected 2.23606797749979 to equal 2",
-      "perfStats": {
-        "runtime": 1.4422860145568848,
-      },
-      "skipped": false,
-      "status": "fail",
-      "testFilePath": "/vitest/test/core/test/basic.test.ts",
-    },
-    {
-      "displayName": "JSON",
-      "perfStats": {
-        "runtime": 1.0237109661102295,
-      },
-      "skipped": false,
-      "status": "pass",
-      "testFilePath": "/vitest/test/core/test/basic.test.ts",
-    },
-    {
-      "displayName": "async with timeout",
-      "perfStats": {},
-      "skipped": true,
-      "testFilePath": "/vitest/test/core/test/basic.test.ts",
-    },
-    {
-      "displayName": "timeout",
-      "perfStats": {
-        "runtime": 100.50598406791687,
-      },
-      "skipped": false,
-      "status": "pass",
-      "testFilePath": "/vitest/test/core/test/basic.test.ts",
-    },
-    {
-      "displayName": "callback setup success ",
-      "perfStats": {
-        "runtime": 20.184875011444092,
-      },
-      "skipped": false,
-      "status": "pass",
-      "testFilePath": "/vitest/test/core/test/basic.test.ts",
-    },
-    {
-      "displayName": "callback test success ",
-      "perfStats": {
-        "runtime": 0.33245420455932617,
-      },
-      "skipped": false,
-      "status": "pass",
-      "testFilePath": "/vitest/test/core/test/basic.test.ts",
-    },
-    {
-      "displayName": "callback setup success done(false)",
-      "perfStats": {
-        "runtime": 19.738605976104736,
-      },
-      "skipped": false,
-      "status": "pass",
-      "testFilePath": "/vitest/test/core/test/basic.test.ts",
-    },
-    {
-      "displayName": "callback test success done(false)",
-      "perfStats": {
-        "runtime": 0.1923508644104004,
-      },
-      "skipped": false,
-      "status": "pass",
-      "testFilePath": "/vitest/test/core/test/basic.test.ts",
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "suite",
+            "inner suite",
+          ],
+          "duration": 1.4422860145568848,
+          "failureMessages": [
+            "expected 2.23606797749979 to equal 2",
+          ],
+          "fullName": "suite inner suite Math.sqrt()",
+          "status": "failed",
+          "title": "Math.sqrt()",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 1.0237109661102295,
+          "failureMessages": [],
+          "fullName": "suite JSON",
+          "status": "passed",
+          "title": "JSON",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "failureMessages": [],
+          "fullName": "suite async with timeout",
+          "status": "skipped",
+          "title": "async with timeout",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 100.50598406791687,
+          "failureMessages": [],
+          "fullName": "suite timeout",
+          "status": "passed",
+          "title": "timeout",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 20.184875011444092,
+          "failureMessages": [],
+          "fullName": "suite callback setup success ",
+          "status": "passed",
+          "title": "callback setup success ",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 0.33245420455932617,
+          "failureMessages": [],
+          "fullName": "suite callback test success ",
+          "status": "passed",
+          "title": "callback test success ",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 19.738605976104736,
+          "failureMessages": [],
+          "fullName": "suite callback setup success done(false)",
+          "status": "passed",
+          "title": "callback setup success done(false)",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 0.1923508644104004,
+          "failureMessages": [],
+          "fullName": "suite callback test success done(false)",
+          "status": "passed",
+          "title": "callback test success done(false)",
+        },
+      ],
+      "endTime": 1642587001759,
+      "message": "",
+      "name": "/vitest/test/core/test/basic.test.ts",
+      "startTime": 1642587001759,
+      "status": "failed",
     },
   ],
 }
@@ -208,74 +229,95 @@ exports[`json reporter with outputFile 2`] = `
   \\"success\\": false,
   \\"testResults\\": [
     {
-      \\"perfStats\\": {
-        \\"runtime\\": 1.4422860145568848
-      },
-      \\"displayName\\": \\"Math.sqrt()\\",
-      \\"failureMessage\\": \\"expected 2.23606797749979 to equal 2\\",
-      \\"skipped\\": false,
-      \\"status\\": \\"fail\\",
-      \\"testFilePath\\": \\"/vitest/test/core/test/basic.test.ts\\"
-    },
-    {
-      \\"perfStats\\": {
-        \\"runtime\\": 1.0237109661102295
-      },
-      \\"displayName\\": \\"JSON\\",
-      \\"skipped\\": false,
-      \\"status\\": \\"pass\\",
-      \\"testFilePath\\": \\"/vitest/test/core/test/basic.test.ts\\"
-    },
-    {
-      \\"perfStats\\": {},
-      \\"displayName\\": \\"async with timeout\\",
-      \\"skipped\\": true,
-      \\"testFilePath\\": \\"/vitest/test/core/test/basic.test.ts\\"
-    },
-    {
-      \\"perfStats\\": {
-        \\"runtime\\": 100.50598406791687
-      },
-      \\"displayName\\": \\"timeout\\",
-      \\"skipped\\": false,
-      \\"status\\": \\"pass\\",
-      \\"testFilePath\\": \\"/vitest/test/core/test/basic.test.ts\\"
-    },
-    {
-      \\"perfStats\\": {
-        \\"runtime\\": 20.184875011444092
-      },
-      \\"displayName\\": \\"callback setup success \\",
-      \\"skipped\\": false,
-      \\"status\\": \\"pass\\",
-      \\"testFilePath\\": \\"/vitest/test/core/test/basic.test.ts\\"
-    },
-    {
-      \\"perfStats\\": {
-        \\"runtime\\": 0.33245420455932617
-      },
-      \\"displayName\\": \\"callback test success \\",
-      \\"skipped\\": false,
-      \\"status\\": \\"pass\\",
-      \\"testFilePath\\": \\"/vitest/test/core/test/basic.test.ts\\"
-    },
-    {
-      \\"perfStats\\": {
-        \\"runtime\\": 19.738605976104736
-      },
-      \\"displayName\\": \\"callback setup success done(false)\\",
-      \\"skipped\\": false,
-      \\"status\\": \\"pass\\",
-      \\"testFilePath\\": \\"/vitest/test/core/test/basic.test.ts\\"
-    },
-    {
-      \\"perfStats\\": {
-        \\"runtime\\": 0.1923508644104004
-      },
-      \\"displayName\\": \\"callback test success done(false)\\",
-      \\"skipped\\": false,
-      \\"status\\": \\"pass\\",
-      \\"testFilePath\\": \\"/vitest/test/core/test/basic.test.ts\\"
+      \\"assertionResults\\": [
+        {
+          \\"ancestorTitles\\": [
+            \\"suite\\",
+            \\"inner suite\\"
+          ],
+          \\"fullName\\": \\"suite inner suite Math.sqrt()\\",
+          \\"status\\": \\"failed\\",
+          \\"title\\": \\"Math.sqrt()\\",
+          \\"duration\\": 1.4422860145568848,
+          \\"failureMessages\\": [
+            \\"expected 2.23606797749979 to equal 2\\"
+          ]
+        },
+        {
+          \\"ancestorTitles\\": [
+            \\"suite\\"
+          ],
+          \\"fullName\\": \\"suite JSON\\",
+          \\"status\\": \\"passed\\",
+          \\"title\\": \\"JSON\\",
+          \\"duration\\": 1.0237109661102295,
+          \\"failureMessages\\": []
+        },
+        {
+          \\"ancestorTitles\\": [
+            \\"suite\\"
+          ],
+          \\"fullName\\": \\"suite async with timeout\\",
+          \\"status\\": \\"skipped\\",
+          \\"title\\": \\"async with timeout\\",
+          \\"failureMessages\\": []
+        },
+        {
+          \\"ancestorTitles\\": [
+            \\"suite\\"
+          ],
+          \\"fullName\\": \\"suite timeout\\",
+          \\"status\\": \\"passed\\",
+          \\"title\\": \\"timeout\\",
+          \\"duration\\": 100.50598406791687,
+          \\"failureMessages\\": []
+        },
+        {
+          \\"ancestorTitles\\": [
+            \\"suite\\"
+          ],
+          \\"fullName\\": \\"suite callback setup success \\",
+          \\"status\\": \\"passed\\",
+          \\"title\\": \\"callback setup success \\",
+          \\"duration\\": 20.184875011444092,
+          \\"failureMessages\\": []
+        },
+        {
+          \\"ancestorTitles\\": [
+            \\"suite\\"
+          ],
+          \\"fullName\\": \\"suite callback test success \\",
+          \\"status\\": \\"passed\\",
+          \\"title\\": \\"callback test success \\",
+          \\"duration\\": 0.33245420455932617,
+          \\"failureMessages\\": []
+        },
+        {
+          \\"ancestorTitles\\": [
+            \\"suite\\"
+          ],
+          \\"fullName\\": \\"suite callback setup success done(false)\\",
+          \\"status\\": \\"passed\\",
+          \\"title\\": \\"callback setup success done(false)\\",
+          \\"duration\\": 19.738605976104736,
+          \\"failureMessages\\": []
+        },
+        {
+          \\"ancestorTitles\\": [
+            \\"suite\\"
+          ],
+          \\"fullName\\": \\"suite callback test success done(false)\\",
+          \\"status\\": \\"passed\\",
+          \\"title\\": \\"callback test success done(false)\\",
+          \\"duration\\": 0.1923508644104004,
+          \\"failureMessages\\": []
+        }
+      ],
+      \\"startTime\\": 1642587001759,
+      \\"endTime\\": 1642587001759,
+      \\"status\\": \\"failed\\",
+      \\"message\\": \\"\\",
+      \\"name\\": \\"/vitest/test/core/test/basic.test.ts\\"
     }
   ]
 }"
@@ -301,74 +343,95 @@ exports[`json reporter with outputFile in non-existing directory 2`] = `
   \\"success\\": false,
   \\"testResults\\": [
     {
-      \\"perfStats\\": {
-        \\"runtime\\": 1.4422860145568848
-      },
-      \\"displayName\\": \\"Math.sqrt()\\",
-      \\"failureMessage\\": \\"expected 2.23606797749979 to equal 2\\",
-      \\"skipped\\": false,
-      \\"status\\": \\"fail\\",
-      \\"testFilePath\\": \\"/vitest/test/core/test/basic.test.ts\\"
-    },
-    {
-      \\"perfStats\\": {
-        \\"runtime\\": 1.0237109661102295
-      },
-      \\"displayName\\": \\"JSON\\",
-      \\"skipped\\": false,
-      \\"status\\": \\"pass\\",
-      \\"testFilePath\\": \\"/vitest/test/core/test/basic.test.ts\\"
-    },
-    {
-      \\"perfStats\\": {},
-      \\"displayName\\": \\"async with timeout\\",
-      \\"skipped\\": true,
-      \\"testFilePath\\": \\"/vitest/test/core/test/basic.test.ts\\"
-    },
-    {
-      \\"perfStats\\": {
-        \\"runtime\\": 100.50598406791687
-      },
-      \\"displayName\\": \\"timeout\\",
-      \\"skipped\\": false,
-      \\"status\\": \\"pass\\",
-      \\"testFilePath\\": \\"/vitest/test/core/test/basic.test.ts\\"
-    },
-    {
-      \\"perfStats\\": {
-        \\"runtime\\": 20.184875011444092
-      },
-      \\"displayName\\": \\"callback setup success \\",
-      \\"skipped\\": false,
-      \\"status\\": \\"pass\\",
-      \\"testFilePath\\": \\"/vitest/test/core/test/basic.test.ts\\"
-    },
-    {
-      \\"perfStats\\": {
-        \\"runtime\\": 0.33245420455932617
-      },
-      \\"displayName\\": \\"callback test success \\",
-      \\"skipped\\": false,
-      \\"status\\": \\"pass\\",
-      \\"testFilePath\\": \\"/vitest/test/core/test/basic.test.ts\\"
-    },
-    {
-      \\"perfStats\\": {
-        \\"runtime\\": 19.738605976104736
-      },
-      \\"displayName\\": \\"callback setup success done(false)\\",
-      \\"skipped\\": false,
-      \\"status\\": \\"pass\\",
-      \\"testFilePath\\": \\"/vitest/test/core/test/basic.test.ts\\"
-    },
-    {
-      \\"perfStats\\": {
-        \\"runtime\\": 0.1923508644104004
-      },
-      \\"displayName\\": \\"callback test success done(false)\\",
-      \\"skipped\\": false,
-      \\"status\\": \\"pass\\",
-      \\"testFilePath\\": \\"/vitest/test/core/test/basic.test.ts\\"
+      \\"assertionResults\\": [
+        {
+          \\"ancestorTitles\\": [
+            \\"suite\\",
+            \\"inner suite\\"
+          ],
+          \\"fullName\\": \\"suite inner suite Math.sqrt()\\",
+          \\"status\\": \\"failed\\",
+          \\"title\\": \\"Math.sqrt()\\",
+          \\"duration\\": 1.4422860145568848,
+          \\"failureMessages\\": [
+            \\"expected 2.23606797749979 to equal 2\\"
+          ]
+        },
+        {
+          \\"ancestorTitles\\": [
+            \\"suite\\"
+          ],
+          \\"fullName\\": \\"suite JSON\\",
+          \\"status\\": \\"passed\\",
+          \\"title\\": \\"JSON\\",
+          \\"duration\\": 1.0237109661102295,
+          \\"failureMessages\\": []
+        },
+        {
+          \\"ancestorTitles\\": [
+            \\"suite\\"
+          ],
+          \\"fullName\\": \\"suite async with timeout\\",
+          \\"status\\": \\"skipped\\",
+          \\"title\\": \\"async with timeout\\",
+          \\"failureMessages\\": []
+        },
+        {
+          \\"ancestorTitles\\": [
+            \\"suite\\"
+          ],
+          \\"fullName\\": \\"suite timeout\\",
+          \\"status\\": \\"passed\\",
+          \\"title\\": \\"timeout\\",
+          \\"duration\\": 100.50598406791687,
+          \\"failureMessages\\": []
+        },
+        {
+          \\"ancestorTitles\\": [
+            \\"suite\\"
+          ],
+          \\"fullName\\": \\"suite callback setup success \\",
+          \\"status\\": \\"passed\\",
+          \\"title\\": \\"callback setup success \\",
+          \\"duration\\": 20.184875011444092,
+          \\"failureMessages\\": []
+        },
+        {
+          \\"ancestorTitles\\": [
+            \\"suite\\"
+          ],
+          \\"fullName\\": \\"suite callback test success \\",
+          \\"status\\": \\"passed\\",
+          \\"title\\": \\"callback test success \\",
+          \\"duration\\": 0.33245420455932617,
+          \\"failureMessages\\": []
+        },
+        {
+          \\"ancestorTitles\\": [
+            \\"suite\\"
+          ],
+          \\"fullName\\": \\"suite callback setup success done(false)\\",
+          \\"status\\": \\"passed\\",
+          \\"title\\": \\"callback setup success done(false)\\",
+          \\"duration\\": 19.738605976104736,
+          \\"failureMessages\\": []
+        },
+        {
+          \\"ancestorTitles\\": [
+            \\"suite\\"
+          ],
+          \\"fullName\\": \\"suite callback test success done(false)\\",
+          \\"status\\": \\"passed\\",
+          \\"title\\": \\"callback test success done(false)\\",
+          \\"duration\\": 0.1923508644104004,
+          \\"failureMessages\\": []
+        }
+      ],
+      \\"startTime\\": 1642587001759,
+      \\"endTime\\": 1642587001759,
+      \\"status\\": \\"failed\\",
+      \\"message\\": \\"\\",
+      \\"name\\": \\"/vitest/test/core/test/basic.test.ts\\"
     }
   ]
 }"
