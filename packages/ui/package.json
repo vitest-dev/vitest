@@ -82,7 +82,6 @@
         "d3-graph-controller",
         "flatted",
         "floating-vue",
-        "fuse.js",
         "splitpanes",
         "vue-router"
       ]
