@@ -1,7 +1,7 @@
 import { existsSync, promises as fs } from 'fs'
 import { dirname, resolve } from 'pathe'
 import type { Vitest } from '../../node'
-import type { File, Reporter, Suite, TaskState, Test } from '../../types'
+import type { File, Reporter, Suite, TaskState } from '../../types'
 import { getSuites, getTests } from '../../utils'
 
 // for compatibility reasons, the reporter produces a JSON similar to the one produced by the Jest JSON reporter
@@ -109,6 +109,9 @@ export class JsonReporter implements Reporter {
           failureMessages: t.result?.error?.message == null ? [] : [t.result.error.message],
         } as FormattedAssertionResult
       })
+
+      if (tests.some(t => t.result?.state === 'run'))
+        this.ctx.console.warn('WARNING: Some tests are still running when generating the JSON report. This is likely an internal bug in Vitest.')
 
       testResults.push({
         assertionResults,
