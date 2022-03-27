@@ -28,13 +28,13 @@ const failed = computed(() => props.file?.tasks.filter(i => i.result?.state === 
 
 const widgets: CodeMirror.LineWidget[] = []
 const handles: CodeMirror.LineHandle[] = []
-const listeners: [el: HTMLSpanElement, l: Record<string, EventListener>, t: () => void][] = []
+const listeners: [el: HTMLSpanElement, l: EventListener, t: () => void][] = []
 
 const hasBeenEdited = ref(false)
 
 const clearListeners = () => {
   listeners.forEach(([el, l, t]) => {
-    Object.keys(l).forEach(e => el.removeEventListener(e, l[e]))
+    el.removeEventListener('click', l)
     t()
   })
   listeners.length = 0
@@ -75,20 +75,8 @@ watch([cm, failed], () => {
         const el: EventListener = async() => {
           await openInEditor(stacks[0].file, pos.line, pos.column)
         }
-        const me: EventListener = () => tooltip.show()
-        const mo: EventListener = () => tooltip.hide()
-        span.addEventListener('click', el)
-        span.addEventListener('mouseenter', me)
-        span.addEventListener('mouseout', mo)
         div.appendChild(span)
-        listeners.push([
-          span, {
-            click: el,
-            mouseenter: me,
-            mouseout: mo,
-          },
-          () => destroyTooltip(span),
-        ])
+        listeners.push([span, el, () => destroyTooltip(span)])
         handles.push(cm.value!.addLineClass(pos.line - 1, 'wrap', 'bg-red-500/10'))
         widgets.push(cm.value!.addLineWidget(pos.line - 1, div))
       }
