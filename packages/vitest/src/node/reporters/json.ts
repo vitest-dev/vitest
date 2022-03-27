@@ -71,9 +71,15 @@ export class JsonReporter implements Reporter {
   protected async logTasks(files: File[]) {
     const suites = getSuites(files)
     const numTotalTestSuites = suites.length
-    const tests = getTests(files)
-    const numTotalTests = tests.length
+    const fileToTestCases = new Map<File, Test[]>()
 
+    for (const file of files) {
+      const relatedTests = getTests([file])
+      fileToTestCases.set(file, relatedTests)
+    }
+
+    const tests = [...fileToTestCases.values()].flat()
+    const numTotalTests = tests.length
     const numFailedTestSuites = suites.filter(s => s.result?.error).length
     const numPassedTestSuites = numTotalTestSuites - numFailedTestSuites
     const numPendingTestSuites = suites.filter(s => s.result?.state === 'run').length
@@ -81,23 +87,11 @@ export class JsonReporter implements Reporter {
     const numPassedTests = numTotalTests - numFailedTests
     const numPendingTests = tests.filter(t => t.result?.state === 'run').length
     const numTodoTests = tests.filter(t => t.mode === 'todo').length
+    const testResults: Array<FormattedTestResult> = []
 
     const success = numFailedTestSuites === 0 && numFailedTests === 0
 
-    const testResults: Array<FormattedTestResult> = []
-    const fileToTestCases = new Map<string, { file: File; tests: Test[] }>()
-
-    for (const test of tests) {
-      const file = test.file
-      if (file) {
-        if (!fileToTestCases.has(file.filepath))
-          fileToTestCases.set(file.filepath, { file, tests: [] })
-
-        fileToTestCases.get(file.filepath)!.tests.push(test)
-      }
-    }
-
-    for (const [filepath, { tests, file }] of fileToTestCases) {
+    for (const [file, tests] of fileToTestCases) {
       let startTime = tests.reduce((prev, next) => Math.min(prev, next.result?.startTime ?? Infinity), Infinity)
       if (startTime === Infinity)
         startTime = this.start
@@ -129,12 +123,11 @@ export class JsonReporter implements Reporter {
         status: tests.every(t =>
           t.result?.state === 'pass'
            || t.result?.state === 'skip'
-           || t.result?.state === 'run'
             || t.result?.state === 'todo')
           ? 'passed'
           : 'failed',
         message: file.result?.error?.message ?? '',
-        name: filepath,
+        name: file.filepath,
       })
     }
 
