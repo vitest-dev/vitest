@@ -321,7 +321,16 @@ When you use `test` in the top level of file, they are collected as part of the 
 
 ### not
 
-TODO
+  Using `not` will negate the assertion. For example, this code asserts that an `input` value is not equal to `2`. If it's equal, assertion will throw an error, and the test will fail.
+
+  ```ts
+  import { expect, test } from 'vitest'
+
+  const input = Math.sqrt(16)
+
+  expect(input).not.to.equal(2) // chai API
+  expect(input).not.toBe(2) // jest API
+  ```
 
 ### toBe
 
@@ -842,7 +851,7 @@ TODO
   - string: error message includes the substring
 
   :::tip
-    You must wrap the code in a function, otherwise the error will not be caught and the assertion will fail.
+    You must wrap the code in a function, otherwise the error will not be caught, and the assertion will fail.
   :::
 
   ```ts
@@ -867,23 +876,242 @@ TODO
   })
   ```
 
-// snapshots
-
+<!--
+snapshots
 ### toMatchSnapshot
 ### toMatchInlineSnapshot
 ### toThrowErrorMatchingSnapshot
 ### toThrowErrorMatchingInlineSnapshot
+-->
 
 ### toHaveBeenCalled
+
+- **Type:** `() => Awaitable<void>`
+
+  This assertion is useful for testing that a function has been called. Requires a spy function to be passed to `expect`.
+
+  ```ts
+  import { expect, test, vi } from 'vitest'
+
+  const market = {
+    buy(subject: string, amount: number) {
+      // ...
+    },
+  }
+
+  test('spy function', () => {
+    const buySpy = vi.spyOn(market, 'buy')
+
+    expect(buySpy).not.toHaveBeenCalled()
+
+    market.buy('apples', 10)
+
+    expect(buySpy).toHaveBeenCalled()
+  })
+  ```
+
 ### toHaveBeenCalledTimes
+
+ - **Type**: `(amount: number) => Awaitable<void>`
+
+  This assertion checks if a function was called a certain amount of times. Requires a spy function to be passed to `expect`.
+
+  ```ts
+  import { expect, test, vi } from 'vitest'
+
+  const market = {
+    buy(subject: string, amount: number) {
+      // ...
+    },
+  }
+
+  test('spy function called two times', () => {
+    const buySpy = vi.spyOn(market, 'buy')
+
+    market.buy('apples', 10)
+    market.buy('apples', 20)
+
+    expect(buySpy).toHaveBeenCalledTimes(2)
+  })
+  ```
+
 ### toHaveBeenCalledWith
+
+ - **Type**: `(...args: any[]) => Awaitable<void>`
+
+  This assertion checks if a function was called at least once with certain parameters. Requires a spy function to be passed to `expect`.
+
+  ```ts
+  import { expect, test, vi } from 'vitest'
+
+  const market = {
+    buy(subject: string, amount: number) {
+      // ...
+    },
+  }
+
+  test('spy function', () => {
+    const buySpy = vi.spyOn(market, 'buy')
+
+    market.buy('apples', 10)
+    market.buy('apples', 20)
+
+    expect(buySpy).toHaveBeenCalledWith('apples', 10)
+    expect(buySpy).toHaveBeenCalledWith('apples', 20)
+  })
+  ```
+
 ### toHaveBeenLastCalledWith
+
+ - **Type**: `(...args: any[]) => Awaitable<void>`
+
+  This assertion checks if a function was called with certain parameters at it's last invokation. Requires a spy function to be passed to `expect`.
+
+  ```ts
+  import { expect, test, vi } from 'vitest'
+
+  const market = {
+    buy(subject: string, amount: number) {
+      // ...
+    },
+  }
+
+  test('spy function', () => {
+    const buySpy = vi.spyOn(market, 'buy')
+
+    market.buy('apples', 10)
+    market.buy('apples', 20)
+
+    expect(buySpy).not.toHaveBeenLastCalledWith('apples', 10)
+    expect(buySpy).toHaveBeenLastCalledWith('apples', 20)
+  })
+  ```
+
 ### toHaveBeenNthCalledWith
+
+ - **Type**: `(time: number, ...args: any[]) => Awaitable<void>`
+
+  This assertion checks if a function was called with certain parameters at the certain time. The count starts at 1. So, to check the second entry, you would write `.toHaveBeenNthCalledWith(2, ...)`.
+
+  Requires a spy function to be passed to `expect`.
+
+  ```ts
+  import { expect, test, vi } from 'vitest'
+
+  const market = {
+    buy(subject: string, amount: number) {
+      // ...
+    },
+  }
+
+  test('first call of spy function called with right params', () => {
+    const buySpy = vi.spyOn(market, 'buy')
+
+    market.buy('apples', 10)
+    market.buy('apples', 20)
+
+    expect(buySpy).toHaveBeenNthCalledWith(1, 'apples', 10)
+  })
+  ```
+
 ### toHaveReturned
+
+  - **Type**: `() => Awaitable<void>`
+
+  This assertion checks if a function has successfully returned a value at least once (i.e., did not throw an error). Requires a spy function to be passed to `expect`.
+
+  ```ts
+  import { expect, test, vi } from 'vitest'
+
+  const getApplesPrice = (amount: number) => {
+    const PRICE = 10
+    return amount * PRICE
+  }
+
+  test('spy function returned a value', () => {
+    const getPriceSpy = vi.fn(getApplesPrice)
+
+    const price = getPriceSpy(10)
+
+    expect(price).toBe(100)
+    expect(getPriceSpy).toHaveReturned()
+  })
+  ```
+
 ### toHaveReturnedTimes
+
+  - **Type**: `(amount: number) => Awaitable<void>`
+
+  This assertion checks if a function has successfully returned a value exact amount of times (i.e., did not throw an error). Requires a spy function to be passed to `expect`.
+
+  ```ts
+  import { expect, test, vi } from 'vitest'
+
+  test('spy function returns a value two times', () => {
+    const sell = vi.fn((product: string) => ({ product }))
+
+    sell('apples')
+    sell('bananas')
+
+    expect(sell).toHaveReturnedTimes(2)
+  })
+  ```
+
 ### toHaveReturnedWith
+
+  - **Type**: `(returnValue: any) => Awaitable<void>`
+
+  You can call this assertion to check if a function has successfully returned a value with certain parameters at least once. Requires a spy function to be passed to `expect`.
+
+  ```ts
+  import { expect, test, vi } from 'vitest'
+
+  test('spy function returns a product', () => {
+    const sell = vi.fn((product: string) => ({ product }))
+
+    sell('apples')
+
+    expect(sell).toHaveReturnedWith({ procuct: 'apples' })
+  })
+  ```
+
 ### toHaveLastReturnedWith
+
+  - **Type**: `(returnValue: any) => Awaitable<void>`
+
+  You can call this assertion to check if a function has successfully returned a value with certain parameters on it's last invoking. Requires a spy function to be passed to `expect`.
+
+  ```ts
+  import { expect, test, vi } from 'vitest'
+
+  test('spy function returns bananas on a last call', () => {
+    const sell = vi.fn((product: string) => ({ product }))
+
+    sell('apples')
+    sell('bananas')
+
+    expect(sell).toHaveLastReturnedWith({ procuct: 'bananas' })
+  })
+  ```
+
 ### toHaveNthReturnedWith
+
+  - **Type**: `(returnValue: any) => Awaitable<void>`
+
+  You can call this assertion to check if a function has successfully returned a value with certain parameters on a certain call. Requires a spy function to be passed to `expect`.
+
+  ```ts
+  import { expect, test, vi } from 'vitest'
+
+  test('spy function returns bananas on second call', () => {
+    const sell = vi.fn((product: string) => ({ product }))
+
+    sell('apples')
+    sell('bananas')
+
+    expect(sell).toHaveNthReturnedWith(2, { procuct: 'bananas' })
+  })
+  ```
 
 ### resolves
 
@@ -904,12 +1132,13 @@ TODO
 
   test('buyApples returns new stock id', async() => {
     // toEqual returns a promise now, so you HAVE to await it
-    await expect(buyApples()).resolves.toEqual({ id: 1 })
+    await expect(buyApples()).resolves.toEqual({ id: 1 }) // jest API
+    await expect(buyApples()).resolves.to.equal({ id: 1 }) // chai API
   })
   ```
 
   :::warning
-  If the assertion is not awaited, then you will have a false-positive test that will pass every time. To make sure that assertions are actually happened, you may use [`expect.assertions(number)`](#expect-assertions).
+  If the assertion is not awaited, then you will have a false-positive test that will pass every time. To make sure that assertions are actually called, you may use [`expect.assertions(number)`](#expect-assertions).
   :::
 
 ### rejects
@@ -928,7 +1157,6 @@ TODO
   function buyApples(id) {
     if (!id)
       throw new Error('no id')
-
   }
 
   test('buyApples throws an error when no id provided', async() => {
@@ -1010,9 +1238,7 @@ TODO
   })
   ```
 
-// asymmetric matchers
-
-### expect.anything
+<!-- ### expect.anything
 ### expect.any
 ### expect.arrayContaining
 ### expect.not.arrayContaining
@@ -1024,11 +1250,11 @@ TODO
 ### expect.not.stringMatching
 
 ### expect.addSnapshotSerializer
-### expect.extend
+### expect.extend -->
 
 ## Setup and Teardown
 
-These functions allows you to hook into the life cycle of tests to avoid repeating setup and teardown code. They apply to the current context: the file if they are used at the top-level or the current suite if they are inside a `describe` block.
+These functions allow you to hook into the life cycle of tests to avoid repeating setup and teardown code. They apply to the current context: the file if they are used at the top-level or the current suite if they are inside a `describe` block.
 
 ### beforeEach
 
