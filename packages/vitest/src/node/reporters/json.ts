@@ -13,39 +13,40 @@ type Milliseconds = number
 interface FormattedAssertionResult {
   ancestorTitles: Array<string>
   fullName: string
-  // location?: Callsite | null
   status: Status
   title: string
   duration?: Milliseconds | null
+  failureMessages: Array<string>
+  // location?: Callsite | null
 }
 
 interface FormattedTestResult {
   message: string
   name: string
-  summary: string
   status: 'failed' | 'passed'
   startTime: number
   endTime: number
-  // coverage: unknown
   assertionResults: Array<FormattedAssertionResult>
+  // summary: string
+  // coverage: unknown
 }
 
 interface FormattedTestResults {
-  // coverageMap?: CoverageMap | null | undefined
   numFailedTests: number
   numFailedTestSuites: number
   numPassedTests: number
   numPassedTestSuites: number
   numPendingTests: number
   numPendingTestSuites: number
-  // numRuntimeErrorTestSuites: number
   numTodoTests: number
   numTotalTests: number
   numTotalTestSuites: number
-  // snapshot: SnapshotSummary
   startTime: number
   success: boolean
   testResults: Array<FormattedTestResult>
+  // coverageMap?: CoverageMap | null | undefined
+  // numRuntimeErrorTestSuites: number
+  // snapshot: SnapshotSummary
   // wasInterrupted: boolean
 }
 
@@ -75,48 +76,56 @@ export class JsonReporter implements Reporter {
     const success = numFailedTestSuites === 0 && numFailedTests === 0
 
     const testResults: Array<FormattedTestResult> = []
-    const fileToTestCases = new Map<string, Test[]>()
+    const fileToTestCases = new Map<string, { file: File; tests: Test[] }>()
 
     for (const test of tests) {
       const file = test.file
       if (file) {
         if (!fileToTestCases.has(file.filepath))
-          fileToTestCases.set(file.filepath, [])
+          fileToTestCases.set(file.filepath, { file, tests: [] })
 
-        fileToTestCases.get(file.filepath)!.push(test)
+        fileToTestCases.get(file.filepath)!.tests.push(test)
       }
     }
 
-    for (const [filepath, tests] of fileToTestCases) {
-      testResults.push({
-        assertionResults: tests.map((t) => {
-          const ancestorTitles = [] as string[]
-          let iter: Suite | undefined = t.suite
-          while (iter) {
-            ancestorTitles.push(iter.name)
-            iter = iter.suite
-          }
-          ancestorTitles.reverse()
+    for (const [filepath, { tests, file }] of fileToTestCases) {
+      let startTime = tests.reduce((prev, next) => Math.min(prev, next.result?.startTime ?? Infinity), Infinity)
+      if (startTime === Infinity)
+        startTime = this.start
 
-          return {
-            ancestorTitles,
-            fullName: ancestorTitles.length > 0 ? `${ancestorTitles.join(' ')} ${t.name}` : t.name,
-            status: t.result?.state,
-            title: t.name,
-            duration: t.result?.duration,
-          } as FormattedAssertionResult
-        }),
+      const endTime = tests.reduce((prev, next) => Math.max(prev, (next.result?.startTime ?? 0) + (next.result?.duration ?? 0)), startTime)
+      const assertionResults = tests.map((t) => {
+        const ancestorTitles = [] as string[]
+        let iter: Suite | undefined = t.suite
+        while (iter) {
+          ancestorTitles.push(iter.name)
+          iter = iter.suite
+        }
+        ancestorTitles.reverse()
+
+        return {
+          ancestorTitles,
+          fullName: ancestorTitles.length > 0 ? `${ancestorTitles.join(' ')} ${t.name}` : t.name,
+          status: t.result?.state,
+          title: t.name,
+          duration: t.result?.duration,
+          failureMessages: t.result?.error?.message == null ? [] : [t.result.error.message],
+        } as FormattedAssertionResult
+      })
+
+      testResults.push({
+        assertionResults,
+        startTime,
+        endTime,
         status: tests.every(t =>
           t.result?.state === 'pass'
            || t.result?.state === 'skip'
+           || t.result?.state === 'run'
             || t.result?.state === 'todo')
           ? 'passed'
           : 'failed',
-        startTime: tests.reduce((prev, next) => Math.min(prev, next.result?.startTime ?? Infinity), Infinity),
-        endTime: tests.reduce((prev, next) => Math.max(prev, (next.result?.startTime ?? 0) + (next.result?.duration ?? 0)), 0),
-        message: '',
+        message: file.result?.error?.message ?? '',
         name: filepath,
-        summary: '',
       })
     }
 
