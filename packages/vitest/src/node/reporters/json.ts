@@ -110,8 +110,11 @@ export class JsonReporter implements Reporter {
         } as FormattedAssertionResult
       })
 
-      if (tests.some(t => t.result?.state === 'run'))
-        this.ctx.console.warn('WARNING: Some tests are still running when generating the JSON report. This is likely an internal bug in Vitest.')
+      if (tests.some(t => t.result?.state === 'run')) {
+        this.ctx.console.warn('WARNING: Some tests are still running when generating the JSON report.'
+        + 'This is likely an internal bug in Vitest.'
+        + 'Please report it to https://github.com/vitest-dev/vitest/issues')
+      }
 
       testResults.push({
         assertionResults,
