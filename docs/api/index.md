@@ -889,7 +889,7 @@ TODO
 
 - **Type:** `Promisify<Assertions>`
 
-  `resolves` is intended to remove boilerplate when asserting asynchronous code. Use it to unwrap value from pending promise and assert its value with usual assertions. If promise rejects, the assertion will fail.
+  `resolves` is intended to remove boilerplate when asserting asynchronous code. Use it to unwrap value from fulfilled promise and assert its value with usual assertions. If promise rejects, the assertion will fail.
 
   It returns the same `Assertions` object, but all matchers are now return `Promise`, so you would need to `await` it. Also works with `chai` assertions.
 
