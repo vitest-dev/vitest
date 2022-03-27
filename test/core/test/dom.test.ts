@@ -13,7 +13,7 @@ it('jsdom', () => {
   expect(dom.outerHTML).toEqual('<a href="https://vitest.dev">&lt;Vitest&gt;</a>')
 })
 
-it('doesn\'t throw', () => {
+it('dispatchEvent doesn\'t throw', () => {
   const target = new EventTarget()
   const event = new Event('click')
   expect(() => target.dispatchEvent(event)).not.toThrow()
