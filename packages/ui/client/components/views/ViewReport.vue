@@ -40,7 +40,7 @@ function relative(p: string) {
             <div v-for="({ file: efile, line, column }, i) of task.result.error.stacks || []" :key="i" class="op80 flex gap-x-2 items-center">
               <pre> - {{ relative(efile) }}:{{ line }}:{{ column }}</pre>
               <div
-                v-if="shouldOpenInEditor(efile, props.file.name)"
+                v-if="shouldOpenInEditor(efile, props.file?.name)"
                 class="i-carbon-launch text-red-900 hover:cursor-pointer"
                 tabindex="0"
                 title="Open in IDE"

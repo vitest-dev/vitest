@@ -66,5 +66,23 @@
     "overrides": {
       "vite": "^2.8.6"
     }
+  },
+  "vite": {
+    "optimizeDeps": {
+      "include": [
+        "@vueuse/core",
+        "birpc",
+        "codemirror",
+        "codemirror/addon/display/placeholder",
+        "codemirror/mode/javascript/javascript",
+        "codemirror/mode/jsx/jsx",
+        "codemirror/mode/xml/xml",
+        "d3-graph-controller",
+        "flatted",
+        "floating-vue",
+        "splitpanes",
+        "vue-router"
+      ]
+    }
   }
 }
