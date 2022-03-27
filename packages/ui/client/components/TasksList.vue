@@ -3,6 +3,7 @@ import type { ComputedRef } from 'vue'
 import type { File, Task } from '#types'
 import { findById, testRunState } from '~/composables/client'
 import { activeFileId } from '~/composables/params'
+import { caseInsensitiveMatch, isSuite } from '~/utils/task'
 
 const props = withDefaults(defineProps<{
   tasks: Task[]
@@ -23,10 +24,33 @@ const emit = defineEmits<{
 const search = ref('')
 const isFiltered = computed(() => search.value.trim() !== '')
 
+const matchTasks = (tasks: Task[], search: string): boolean => {
+  let result = false
+
+  for (let i = 0; i < tasks.length; i++) {
+    const task = tasks[i]
+
+    if (caseInsensitiveMatch(task.name, search)) {
+      result = true
+      break
+    }
+
+    // walk whole task tree
+    if (isSuite(task) && task.tasks) {
+      result = matchTasks(task.tasks, search)
+      if (result)
+        break
+    }
+  }
+
+  return result
+}
+
 const filtered = computed(() => {
   if (!search.value.trim())
     return props.tasks
-  return props.tasks.filter(task => task.name.includes(search.value))
+
+  return props.tasks.filter(task => matchTasks([task], search.value))
 })
 const filteredTests: ComputedRef<File[]> = computed(() => isFiltered.value ? filtered.value.map(task => findById(task.id)!).filter(Boolean) : [])
 
