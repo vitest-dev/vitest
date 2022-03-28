@@ -41,9 +41,10 @@ function relative(p: string) {
               <pre> - {{ relative(efile) }}:{{ line }}:{{ column }}</pre>
               <div
                 v-if="shouldOpenInEditor(efile, props.file?.name)"
-                class="i-carbon-launch text-red-900 hover:cursor-pointer"
+                v-tooltip.bottom="'Open in Editor'"
+                class="i-carbon-launch c-red-600 dark:c-red-400 hover:cursor-pointer"
                 tabindex="0"
-                title="Open in IDE"
+                aria-label="Open in Editor"
                 @click.passive="openInEditor(efile, line, column)"
               />
             </div>
