@@ -16,7 +16,7 @@ A blazing fast unit test framework powered by Vite.
 <a href="https://chat.vitest.dev"><b>Get involved!</b></a>
 </p>
 <p align="center">
- <a href="https://vitest.dev">Documentation</a> | <a href="hhttps://vitest.dev/guide/">Getting Started</a> | <a href="https://vitest.dev/guide/#examples">Examples</a> | <a href="https://vitest.dev/guide/why">Why Vitest?</a>
+ <a href="https://vitest.dev">Documentation</a> | <a href="https://vitest.dev/guide/">Getting Started</a> | <a href="https://vitest.dev/guide/#examples">Examples</a> | <a href="https://vitest.dev/guide/why">Why Vitest?</a>
 </p>
 <p align="center">
 <a href="https://cn.vitest.dev">中文文档</a>
