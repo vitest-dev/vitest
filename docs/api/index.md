@@ -121,7 +121,7 @@ For compatibility with Jest, `TestFunction` can also be of type `(done: DoneCall
 - **Type:** `(cases: ReadonlyArray<T>) => void`
 - **Alias:** `it.each`
 
-  Use `test.each` when you need to run the same test with different variables.  
+  Use `test.each` when you need to run the same test with different variables.
   You can inject parameters with [printf formmatting](https://nodejs.org/api/util.html#util_util_format_format_args) in the test name in the order of the test function parameters.
 
   - `%s`: string
@@ -1579,9 +1579,9 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 
 - **Type:** `() => MockInstance`
 
-  Clears all information about every call. After calling it, [`spy.mock.calls`](#mockcalls), [`spy.mock.returns`](#mockreturns) will return empty arrays. It is useful if you need to clean up spy between different assertions.
+  Clears all information about every call. After calling it, [`spy.mock.calls`](#mock-calls), [`spy.mock.results`](#mock-results) will return empty arrays. It is useful if you need to clean up spy between different assertions.
 
-  If you want this method to be called before each test automatically, you can enable [`clearMocks`](/config/#clearMocks) setting in config.
+  If you want this method to be called before each test automatically, you can enable [`clearMocks`](/config/#clearmocks) setting in config.
 
 
 ### mockName
@@ -1678,7 +1678,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 
   Does what `mockClear` does and makes inner implementation as an empty function (returning `undefined`, when invoked). This is useful when you want to completely reset a mock back to its initial state.
 
-  If you want this method to be called before each test automatically, you can enable [`mockReset`](/config/#mockReset) setting in config.
+  If you want this method to be called before each test automatically, you can enable [`mockReset`](/config/#mockreset) setting in config.
 
 ### mockRestore
 
@@ -1749,7 +1749,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 
 - **Type:** `(value: any) => MockInstance`
 
-  Accepts a value that will be returned whenever mock function is invoked. If chained, every consecutive call will return passed value. When there are no more `mockReturnValueOnce` values to use, calls a function specified by `mockImplementation` or other `mockReturn*` methods.
+  Accepts a value that will be returned for one call to the mock function. If chained, every consecutive call will return passed value. When there are no more `mockReturnValueOnce` values to use, calls a function specified by `mockImplementation` or other `mockReturn*` methods.
 
   ```ts
   const myMockFn = vi
@@ -1786,7 +1786,7 @@ This is an array containing all values, that were `returned` from function. One 
 
 The `value` property contains returned value or thrown error.
 
-If function returned `'result1`, then threw and error, then `mock.results` will be:
+If function returned `result`, then threw an error, then `mock.results` will be:
 
 ```js
 [
