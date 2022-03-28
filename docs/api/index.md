@@ -965,7 +965,7 @@ snapshots
 
  - **Type**: `(...args: any[]) => Awaitable<void>`
 
-  This assertion checks if a function was called with certain parameters at it's last invokation. Requires a spy function to be passed to `expect`.
+  This assertion checks if a function was called with certain parameters at it's last invocation. Requires a spy function to be passed to `expect`.
 
   ```ts
   import { expect, test, vi } from 'vitest'
