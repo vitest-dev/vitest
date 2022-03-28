@@ -6,7 +6,7 @@
     "coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "vue": "2.6.14"
+    "vue": "3.2.31"
   },
   "devDependencies": {
     "@vue/composition-api": "^1.4.9",
