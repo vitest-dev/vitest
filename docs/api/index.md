@@ -1096,7 +1096,7 @@ snapshots
 
 ### toHaveNthReturnedWith
 
-  - **Type**: `(returnValue: any) => Awaitable<void>`
+  - **Type**: `(time: number, returnValue: any) => Awaitable<void>`
 
   You can call this assertion to check if a function has successfully returned a value with certain parameters on a certain call. Requires a spy function to be passed to `expect`.
 
@@ -1109,7 +1109,7 @@ snapshots
     sell('apples')
     sell('bananas')
 
-    expect(sell).toHaveNthReturnedWith(2, { procuct: 'bananas' })
+    expect(sell).toHaveNthReturnedWith(2, { product: 'bananas' })
   })
   ```
 
