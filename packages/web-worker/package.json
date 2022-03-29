@@ -1,6 +1,6 @@
 {
   "name": "@vitest/web-worker",
-  "version": "0.7.12",
+  "version": "0.7.13",
   "description": "Web Worker support for testing in Vitest",
   "type": "module",
   "files": [
