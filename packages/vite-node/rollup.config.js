@@ -74,7 +74,7 @@ export default () => [
   {
     input: entries,
     output: {
-      dir: process.cwd(),
+      dir: 'dist',
       entryFileNames: '[name].d.ts',
       format: 'esm',
     },
@@ -82,5 +82,6 @@ export default () => [
     plugins: [
       dts({ respectExternal: true }),
     ],
+    onwarn,
   },
 ]

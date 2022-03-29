@@ -24,29 +24,37 @@
     ".": {
       "import": "./dist/index.js",
       "require": "./dist/index.cjs",
-      "types": "./index.d.ts"
+      "types": "./dist/index.d.ts"
     },
     "./client": {
       "import": "./dist/client.js",
       "require": "./dist/client.cjs",
-      "types": "./client.d.ts"
+      "types": "./dist/client.d.ts"
     },
     "./server": {
       "import": "./dist/server.js",
       "require": "./dist/server.cjs",
-      "types": "./server.d.ts"
+      "types": "./dist/server.d.ts"
     },
     "./utils": {
       "import": "./dist/utils.js",
       "require": "./dist/utils.cjs",
-      "types": "./utils.d.ts"
+      "types": "./dist/utils.d.ts"
     }
   },
   "main": "./dist/index.js",
   "module": "./dist/index.js",
-  "types": "./index.d.ts",
+  "types": "./dist/index.d.ts",
   "bin": {
     "vite-node": "./vite-node.mjs"
+  },
+  "typesVersions": {
+    "*": {
+      "*": [
+        "./dist/*",
+        "./dist/index.d.ts"
+      ]
+    }
   },
   "scripts": {
     "build": "rimraf dist && rollup -c",
