@@ -693,6 +693,9 @@ importers:
   packages/web-worker:
     specifiers:
       rollup: ^2.70.1
+      vite-node: workspace:*
+    dependencies:
+      vite-node: link:../vite-node
     devDependencies:
       rollup: 2.70.1
 
