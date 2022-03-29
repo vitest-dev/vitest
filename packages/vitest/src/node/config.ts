@@ -78,14 +78,10 @@ export function resolveConfig(
     options.environment = 'happy-dom'
   }
 
-  const globals = options?.global ?? options.globals
-
   const resolved = {
     ...configDefaults,
     ...options,
     root: viteConfig.root,
-    globals,
-    global: globals,
   } as ResolvedConfig
 
   if (viteConfig.base !== '/')

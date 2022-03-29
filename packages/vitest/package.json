@@ -32,9 +32,6 @@
       "types": "./dist/index.d.ts"
     },
     "./*": "./*",
-    "./global": {
-      "types": "./globals.d.ts"
-    },
     "./globals": {
       "types": "./globals.d.ts"
     },
