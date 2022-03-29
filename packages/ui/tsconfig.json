@@ -1,4 +1,7 @@
 {
+  "compilerOptions": {
+    "jsx": "preserve"
+  },
   "extends": "../../tsconfig.json",
   "exclude": ["dist", "node_modules"]
 }

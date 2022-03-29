@@ -1,6 +1,6 @@
 {
   "name": "@vitest/monorepo",
-  "version": "0.7.0",
+  "version": "0.7.13",
   "private": true,
   "description": "A blazing fast unit test framework powered by Vite",
   "type": "module",
@@ -25,13 +25,14 @@
     "test:ci": "cross-env CI=true pnpm -r --stream --filter !@vitest/monorepo --filter !test-fails run test -- --allowOnly",
     "typecheck": "tsc --noEmit",
     "ui:build": "vite build packages/ui",
-    "ui:dev": "vite packages/ui"
+    "ui:dev": "vite packages/ui",
+    "ui:test": "npm -C packages/ui run test:run"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^0.18.8",
-    "@antfu/ni": "^0.13.2",
+    "@antfu/eslint-config": "^0.18.9",
+    "@antfu/ni": "^0.14.0",
     "@rollup/plugin-alias": "^3.1.9",
-    "@rollup/plugin-commonjs": "^21.0.2",
+    "@rollup/plugin-commonjs": "^21.0.3",
     "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^13.1.3",
     "@types/lodash": "^4.14.180",
@@ -39,8 +40,8 @@
     "bumpp": "^7.1.1",
     "c8": "^7.11.0",
     "cross-env": "^7.0.3",
-    "esbuild": "~0.13.15",
-    "eslint": "^8.11.0",
+    "esbuild": "~0.14.28",
+    "eslint": "^8.12.0",
     "esno": "^0.14.1",
     "fast-glob": "^3.2.11",
     "if-node-version": "^1.1.1",
@@ -55,8 +56,8 @@
     "rollup-plugin-dts": "^4.2.0",
     "rollup-plugin-esbuild": "^4.8.2",
     "rollup-plugin-license": "^2.6.1",
-    "typescript": "^4.6.2",
-    "vite": "^2.8.6",
+    "typescript": "^4.6.3",
+    "vite": "2.9.0-beta.9",
     "vitepress": "^0.22.3",
     "vitest": "workspace:*",
     "vue": "^3.2.31"
@@ -64,6 +65,24 @@
   "pnpm": {
     "overrides": {
       "vite": "^2.8.6"
+    }
+  },
+  "vite": {
+    "optimizeDeps": {
+      "include": [
+        "@vueuse/core",
+        "birpc",
+        "codemirror",
+        "codemirror/addon/display/placeholder",
+        "codemirror/mode/javascript/javascript",
+        "codemirror/mode/jsx/jsx",
+        "codemirror/mode/xml/xml",
+        "d3-graph-controller",
+        "flatted",
+        "floating-vue",
+        "splitpanes",
+        "vue-router"
+      ]
     }
   }
 }

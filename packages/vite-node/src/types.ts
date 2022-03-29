@@ -47,6 +47,7 @@ export interface ViteNodeRunnerOptions {
   moduleCache?: ModuleCacheMap
   interopDefault?: boolean
   requestStubs?: Record<string, any>
+  debug?: boolean
 }
 
 export interface ViteNodeResolveId {

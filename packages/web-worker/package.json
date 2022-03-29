@@ -1,6 +1,6 @@
 {
   "name": "@vitest/web-worker",
-  "version": "0.7.0",
+  "version": "0.7.13",
   "description": "Web Worker support for testing in Vitest",
   "type": "module",
   "files": [
@@ -31,7 +31,10 @@
   "peerDependencies": {
     "vitest": "*"
   },
+  "dependencies": {
+    "vite-node": "workspace:*"
+  },
   "devDependencies": {
-    "rollup": "^2.67.2"
+    "rollup": "^2.70.1"
   }
 }

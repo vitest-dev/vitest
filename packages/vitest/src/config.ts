@@ -1,10 +1,10 @@
 import type { UserConfig as ViteUserConfig } from 'vite'
-import type { InlineConfig } from './types'
 
 export interface UserConfig extends ViteUserConfig {
-  test?: InlineConfig
+  test?: ViteUserConfig['test']
 }
 
+// will import vitest declare test in module 'vite'
 export { configDefaults } from './defaults'
 
 export function defineConfig(config: UserConfig) {

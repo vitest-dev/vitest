@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Task } from '#types'
+import { caseInsensitiveMatch } from '~/utils/task'
 
 withDefaults(defineProps<{
   task: Task
@@ -20,8 +21,10 @@ export default {
 </script>
 
 <template>
+  <!-- maybe provide a KEEP STRUCTURE mode, do not filter by search keyword  -->
+  <!-- v-if = keepStructure ||  (!search || caseInsensitiveMatch(task.name, search))-->
   <TaskItem
-    v-if="!search || task.name.includes(search)"
+    v-if="!search || caseInsensitiveMatch(task.name, search)"
     v-bind="$attrs"
     :task="task"
     :style="{ paddingLeft: `${indent * 0.75 + 1}rem`}"

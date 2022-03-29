@@ -1,7 +1,7 @@
 /* eslint-disable no-restricted-imports */
 import { VitestRunner } from 'vitest/node'
 import type { WorkerGlobalState } from 'vitest'
-import { toFilePath } from '../../vite-node/src/utils'
+import { toFilePath } from 'vite-node/utils'
 
 function getWorkerState(): WorkerGlobalState {
   // @ts-expect-error untyped global

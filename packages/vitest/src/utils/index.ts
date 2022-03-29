@@ -8,6 +8,7 @@ export * from './tasks'
 export * from './path'
 export * from './base'
 export * from './global'
+export * from './timers'
 
 export const isWindows = process.platform === 'win32'
 

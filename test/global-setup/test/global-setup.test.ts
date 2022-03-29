@@ -1,4 +1,5 @@
 import fetch from 'node-fetch'
+import { expect } from 'vitest'
 
 beforeEach(async() => {
   await new Promise((resolve) => {

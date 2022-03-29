@@ -15,6 +15,8 @@ const extraInlineDeps = [
   /\/vitest\/dist\//,
   // yarn's .store folder
   /vitest-virtual-\w+\/dist/,
+  // cnpm
+  /@vitest\/dist/,
   // Nuxt
   '@nuxt/test-utils',
 ]

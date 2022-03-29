@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { openInEditor, shouldOpenInEditor } from '../../composables/error'
 import type { File, Task } from '#types'
 import { config } from '~/composables/client'
 
@@ -36,7 +37,17 @@ function relative(p: string) {
           {{ task.name }}
           <div v-if="task.result?.error" class="scrolls scrolls-rounded task-error">
             <pre><b>{{ task.result.error.name || task.result.error.nameStr }}</b>: {{ task.result.error.message }}</pre>
-            <pre v-for="stack, i of task.result.error.stacks || []" :key="i" op80> - {{ relative(stack.file) }}:{{ stack.line }}:{{ stack.column }}</pre>
+            <div v-for="({ file: efile, line, column }, i) of task.result.error.stacks || []" :key="i" class="op80 flex gap-x-2 items-center">
+              <pre> - {{ relative(efile) }}:{{ line }}:{{ column }}</pre>
+              <div
+                v-if="shouldOpenInEditor(efile, props.file?.name)"
+                v-tooltip.bottom="'Open in Editor'"
+                class="i-carbon-launch c-red-600 dark:c-red-400 hover:cursor-pointer"
+                tabindex="0"
+                aria-label="Open in Editor"
+                @click.passive="openInEditor(efile, line, column)"
+              />
+            </div>
           </div>
         </div>
       </div>

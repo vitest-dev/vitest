@@ -100,16 +100,19 @@ You can specify additional CLI options like `--port` or `--https`. For a full li
 | `-u, --update` | Update snapshots |
 | `-w, --watch` | Smart & instant watch mode |
 | `-t, --testNamePattern <pattern>` | Run tests with full names matching the pattern |
+| `--dir <path>`| Base directory to scan for the test files |
 | `--ui` | Enable UI |
 | `--open` | Open the UI automatically if enabled (default: `true`) |
 | `--api [api]` | Serve API, available options: `--api.port <port>`, `--api.host [host]` and `--api.strictPort` |
 | `--threads` | Enable Threads (default: `true`) |
 | `--silent` | Silent console output from tests |
-| `--reporter <name>` | Select reporter: `default`, `verbose`, `dot` or `json` |
-| `--outputFile <filename>` | Write test results to a file when the `--reporter=json` option is also specified |
+| `--isolate` | Isolate environment for each test file (default: `true`) |
+| `--reporter <name>` | Select reporter: `default`, `verbose`, `dot`, `junit` or `json` |
+| `--outputFile <filename>` | Write test results to a file when the `--reporter=json` or `--reporter=junit` option is also specified |
 | `--coverage` | Use c8 for coverage |
 | `--run` | Do not watch |
 | `--mode` | Override Vite mode (default: `test`) |
+| `--mode <name>` | Override Vite mode (default: `test`) |
 | `--globals` | Inject APIs globally |
 | `--dom` | Mock browser api with happy-dom |
 | `--environment <env>` | Runner environment (default: `node`) |

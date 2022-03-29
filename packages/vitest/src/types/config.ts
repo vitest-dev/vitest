@@ -133,7 +133,12 @@ export interface InlineConfig {
   reporters?: Arrayable<BuiltinReporters | Reporter>
 
   /**
-   * Write test results to a file when the --reporter=json option is also specified
+   * diff output length
+   */
+  outputTruncateLength?: number
+
+  /**
+   * Write test results to a file when the --reporter=json` or `--reporter=junit` option is also specified.
    */
   outputFile?: string
 

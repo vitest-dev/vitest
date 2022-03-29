@@ -3,7 +3,7 @@ import c from 'picocolors'
 import cliTruncate from 'cli-truncate'
 import stripAnsi from 'strip-ansi'
 import type { SuiteHooks, Task } from '../../../types'
-import { getTests } from '../../../utils'
+import { clearInterval, getTests, setInterval } from '../../../utils'
 import { F_RIGHT } from '../../../utils/figures'
 import { getCols, getHookStateSymbol, getStateSymbol } from './utils'
 
