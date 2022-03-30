@@ -11,6 +11,10 @@
     {
       "depTypeList": ["peerDependencies"],
       "enabled": false
+    },
+    {
+	    "packageNames": ["node"],
+      "enabled": false
     }
   ],
   "ignoreDeps": [
