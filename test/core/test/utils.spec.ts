@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { assertTypes, deepMerge, joinArrayItems, toArray } from '../../../packages/vitest/src/utils'
+import { assertTypes, deepMerge, toArray } from '../../../packages/vitest/src/utils'
 import { deepMergeSnapshot } from '../../../packages/vitest/src/integrations/snapshot/port/utils'
 
 describe('assertTypes', () => {
@@ -119,15 +119,5 @@ describe('toArray', () => {
 
   test('object should be stored in the array correctly', () => {
     expect(toArray({ a: 1, b: 1, expected: 2 })).toEqual([{ a: 1, b: 1, expected: 2 }])
-  })
-})
-
-describe('joinArrayItems', () => {
-  test('item should simply convert to string', () => {
-    expect(joinArrayItems(['onlyOneItem'])).toEqual('onlyOneItem')
-  })
-  test('items should join with comma', () => {
-    expect(joinArrayItems(['one', 'two', 'three'])).toBe('one, two, three')
-    expect(joinArrayItems([/\/node_modules\//, /\/dist\//])).toBe('/\\/node_modules\\//, /\\/dist\\//')
   })
 })

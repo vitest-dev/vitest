@@ -112,11 +112,3 @@ export function assertTypes(value: unknown, name: string, types: string[]): void
   const pass = types.includes(receivedType)
   if (!pass) throw new TypeError(`${name} value must be ${types.join(' or ')}, received "${receivedType}"`)
 }
-
-/**
- * joinArrayItems
- * convert Array<T> to a single string to display in stdout
- */
-export function joinArrayItems(items: unknown[]): string {
-  return items.length <= 1 ? String(items) : items.join(', ')
-}
