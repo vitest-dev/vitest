@@ -403,7 +403,7 @@ export class Vitest {
 
     let testFiles = await fg(this.config.include, globOptions)
 
-    if (filters.length && process.arch === 'win32')
+    if (filters.length && process.platform === 'win32')
       filters = filters.map(f => toNamespacedPath(f))
 
     if (filters.length)
