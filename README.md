@@ -83,8 +83,8 @@ $ npx vitest
 ### Patak Sponsors
 
 <p align="center">
-  <a href="https://patak.dev/sponsors.svg">
-    <img src='https://patak.dev/sponsors.svg'/>
+  <a href="https://cdn.jsdelivr.net/gh/patak-dev/static/sponsors.svg">
+    <img src='https://cdn.jsdelivr.net/gh/patak-dev/static/sponsors.svg'/>
   </a>
 </p>
 
