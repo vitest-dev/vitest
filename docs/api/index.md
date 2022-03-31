@@ -131,7 +131,7 @@ For compatibility with Jest, `TestFunction` can also be of type `(done: DoneCall
   - `%j`: json
   - `$o`: object
   - `%#`: index of the test case
-  - `%%`: single precent sign ('%')
+  - `%%`: single percent sign ('%')
 
   ```ts
   test.each([
@@ -1117,9 +1117,9 @@ snapshots
 
 - **Type:** `Promisify<Assertions>`
 
-  `resolves` is intended to remove boilerplate when asserting asynchronous code. Use it to unwrap value from pending promise and assert its value with usual assertions. If promise rejects, the assertion will fail.
+  `resolves` is intended to remove boilerplate when asserting asynchronous code. Use it to unwrap value from the pending promise and assert its value with usual assertions. If the promise rejects, the assertion will fail.
 
-  It returns the same `Assertions` object, but all matchers are now return `Promise`, so you would need to `await` it. Also works with `chai` assertions.
+  It returns the same `Assertions` object, but all matchers now return `Promise`, so you would need to `await` it. Also works with `chai` assertions.
 
   For example, if you have a function, that makes an API call and returns some data, you may use this code to assert its return value:
 
