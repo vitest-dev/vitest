@@ -11,7 +11,7 @@
   "devDependencies": {
     "@vitejs/plugin-vue": "^2.2.4",
     "@vue/test-utils": "^2.0.0-rc.18",
-    "happy-dom": "latest",
+    "jsdom": "latest",
     "vitest": "latest"
   },
   "stackblitz": {
