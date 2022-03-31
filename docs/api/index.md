@@ -131,7 +131,7 @@ For compatibility with Jest, `TestFunction` can also be of type `(done: DoneCall
   - `%j`: json
   - `$o`: object
   - `%#`: index of the test case
-  - `%%`: single precent sign ('%')
+  - `%%`: single percent sign ('%')
 
   ```ts
   test.each([
