@@ -3,6 +3,28 @@ import { promises as fs } from 'fs'
 import { resolve } from 'pathe'
 import { notNullish } from '../packages/vitest/src/utils'
 
+const examples = [
+  'basic',
+  'graphql',
+  'lit',
+  'mocks',
+  'nextjs',
+  'puppeteer',
+  'react',
+  'react-enzyme',
+  'react-mui',
+  'react-storybook-testing',
+  'react-testing-lib',
+  'react-testing-lib-msw',
+  'ruby',
+  'solid',
+  'svelte',
+  'vitesse',
+  'vue',
+  'vue-jsx',
+  'vue2',
+]
+
 const noOnlinePlayground = [
   'puppeteer', // e2e doesn't work in StackBlitz
 ]
@@ -10,12 +32,17 @@ const noOnlinePlayground = [
 async function run() {
   const examplesRoot = resolve(fileURLToPath(import.meta.url), '../../examples')
 
-  const examples = await fs.readdir(examplesRoot)
-
   const data = await Promise.all(examples.map(async(name) => {
     const path = resolve(examplesRoot, name)
-    if ((await fs.lstat(path)).isFile())
+    const pkg = resolve(path, 'package.json')
+    try {
+      if (!(await fs.lstat(pkg)).isFile())
+        return
+    }
+    catch {
+      // lstat can throw
       return
+    }
 
     const github = `https://github.com/vitest-dev/vitest/tree/main/examples/${name}`
     const stackblitz = noOnlinePlayground.includes(name) ? undefined : `https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/${name}?initialPath=__vitest__`

@@ -142,7 +142,7 @@ importers:
       lit: 2.2.1
     devDependencies:
       '@vitest/ui': link:../../packages/ui
-      happy-dom: 2.53.0
+      happy-dom: 2.55.0
       vite: 2.8.6
       vitest: link:../../packages/vitest
 
@@ -471,7 +471,7 @@ importers:
     devDependencies:
       '@vitejs/plugin-vue': 2.2.4_vite@2.8.6+vue@3.2.31
       '@vue/test-utils': 2.0.0-rc.18_vue@3.2.31
-      happy-dom: 2.53.0
+      happy-dom: 2.55.0
       unplugin-auto-import: 0.6.6_30793d9d6b24634df96d91984952e36a
       unplugin-vue-components: 0.18.5_c4eeab2e84bc32178025702a6672683b
       vitest: link:../../packages/vitest
@@ -12740,8 +12740,8 @@ packages:
       - encoding
     dev: true
 
-  /happy-dom/2.53.0:
-    resolution: {integrity: sha512-+tXrnK3R44aPn/tng8q6hipiiescc+qNNmqW3ZsMSabcHtH54rTGroW+LOO6NLWEu8/uxIsPR/1VaL17yeOmDQ==}
+  /happy-dom/2.55.0:
+    resolution: {integrity: sha512-CHDMBRau+l/yKQL+ANmexRAC8FRCuYbXRSpu/GbLVyfqkrlBzV7OSNd5C5HZ+pVFtFv1bFJYC5r+xrqgGQuq5w==}
     dependencies:
       css.escape: 1.5.1
       he: 1.2.0
