@@ -230,9 +230,10 @@ Custom reporters for output. Reporters can be [a Reporter instance](https://gith
 
 ### outputFile
 
-- **Type:** `string`
+- **Type:** `string | Record<string, string>`
 
 Write test results to a file when the `--reporter=json` or `--reporter=junit` option is also specified.
+By providing an object instead of a string you can define individual outputs when using multiple reporters.
 
 ### threads
 
