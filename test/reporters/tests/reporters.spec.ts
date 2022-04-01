@@ -165,7 +165,7 @@ test('JUnit reporter with outputFile object in non-existing directory', async() 
   const outputFile = `${rootDirectory}/deeply/nested/report.xml`
   const context = getContext()
   context.vitest.config.outputFile = {
-    junit: outputFile
+    junit: outputFile,
   }
 
   vi.mock('os', () => ({
@@ -294,7 +294,7 @@ test('json reporter with outputFile object in non-existing directory', async() =
   const outputFile = `${rootDirectory}/deeply/nested/report.json`
   const context = getContext()
   context.vitest.config.outputFile = {
-    json: outputFile
+    json: outputFile,
   }
 
   vi.setSystemTime(1642587001759)
