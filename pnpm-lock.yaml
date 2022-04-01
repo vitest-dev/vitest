@@ -142,7 +142,7 @@ importers:
       lit: 2.2.1
     devDependencies:
       '@vitest/ui': link:../../packages/ui
-      happy-dom: 2.53.1
+      happy-dom: 2.55.0
       vite: 2.8.6
       vitest: link:../../packages/vitest
 
@@ -256,7 +256,7 @@ importers:
       '@mui/material': ^5.5.3
       '@testing-library/jest-dom': ^5.16.3
       '@testing-library/react': ^12.1.4
-      '@testing-library/user-event': ^14.0.3
+      '@testing-library/user-event': ^13.5.0
       '@vitest/ui': latest
       date-fns: ^2.28.0
       history: ^5.3.0
@@ -284,7 +284,7 @@ importers:
     devDependencies:
       '@testing-library/jest-dom': 5.16.3
       '@testing-library/react': 12.1.4_react-dom@17.0.2+react@17.0.2
-      '@testing-library/user-event': 14.0.3
+      '@testing-library/user-event': 13.5.0
       '@vitest/ui': link:../../packages/ui
       date-fns: 2.28.0
       jsdom: 19.0.0
@@ -351,7 +351,7 @@ importers:
       '@testing-library/jest-dom': ^5.16.3
       '@testing-library/react': ^12.1.4
       '@testing-library/react-hooks': ^7.0.2
-      '@testing-library/user-event': ^14.0.3
+      '@testing-library/user-event': ^13.5.0
       '@types/react': ^17.0.43
       '@types/react-dom': ^17.0.14
       '@vitejs/plugin-react': ^1.2.0
@@ -368,7 +368,7 @@ importers:
       '@testing-library/jest-dom': 5.16.3
       '@testing-library/react': 12.1.4_react-dom@17.0.2+react@17.0.2
       '@testing-library/react-hooks': 7.0.2_react-dom@17.0.2+react@17.0.2
-      '@testing-library/user-event': 14.0.3
+      '@testing-library/user-event': 13.5.0
       '@types/react': 17.0.43
       '@types/react-dom': 17.0.14
       '@vitejs/plugin-react': 1.2.0
@@ -381,7 +381,7 @@ importers:
     specifiers:
       '@apollo/client': ^3.5.10
       '@testing-library/react': ^12.1.4
-      '@testing-library/user-event': ^14.0.3
+      '@testing-library/user-event': ^13.5.0
       '@types/react': ^17.0.43
       '@types/react-dom': ^17.0.14
       '@vitejs/plugin-react': ^1.2.0
@@ -399,7 +399,7 @@ importers:
       react-dom: 17.0.2_react@17.0.2
     devDependencies:
       '@testing-library/react': 12.1.4_react-dom@17.0.2+react@17.0.2
-      '@testing-library/user-event': 14.0.3
+      '@testing-library/user-event': 13.5.0
       '@types/react': 17.0.43
       '@types/react-dom': 17.0.14
       '@vitejs/plugin-react': 1.2.0
@@ -471,7 +471,7 @@ importers:
     devDependencies:
       '@vitejs/plugin-vue': 2.3.1_vite@2.8.6+vue@3.2.31
       '@vue/test-utils': 2.0.0-rc.18_vue@3.2.31
-      happy-dom: 2.53.1
+      happy-dom: 2.55.0
       unplugin-auto-import: 0.6.9_30793d9d6b24634df96d91984952e36a
       unplugin-vue-components: 0.18.5_c4eeab2e84bc32178025702a6672683b
       vitest: link:../../packages/vitest
@@ -6561,21 +6561,23 @@ packages:
       svelte: 3.46.6
     dev: true
 
+  /@testing-library/user-event/13.5.0:
+    resolution: {integrity: sha512-5Kwtbo3Y/NowpkbRuSepbyMFkZmHgD+vPzYB/RJ4oxt5Gj/avFFBYjhw27cqSVPVw/3a67NK1PbiIr9k4Gwmdg==}
+    engines: {node: '>=10', npm: '>=6'}
+    peerDependencies:
+      '@testing-library/dom': '>=7.21.4'
+    dependencies:
+      '@babel/runtime': 7.17.2
+    dev: true
+
   /@testing-library/user-event/13.5.0_@testing-library+dom@8.11.1:
     resolution: {integrity: sha512-5Kwtbo3Y/NowpkbRuSepbyMFkZmHgD+vPzYB/RJ4oxt5Gj/avFFBYjhw27cqSVPVw/3a67NK1PbiIr9k4Gwmdg==}
     engines: {node: '>=10', npm: '>=6'}
     peerDependencies:
       '@testing-library/dom': '>=7.21.4'
     dependencies:
-      '@babel/runtime': 7.16.3
+      '@babel/runtime': 7.17.2
       '@testing-library/dom': 8.11.1
-    dev: true
-
-  /@testing-library/user-event/14.0.3:
-    resolution: {integrity: sha512-zIgBG5CxfXbMsm4wBS6iQC3TBNMZk16O25i4shS9MM+eSG7PZHrsBF6LFIesUkepkZ3QKKgstB2/Nola6nvy4A==}
-    engines: {node: '>=12', npm: '>=6'}
-    peerDependencies:
-      '@testing-library/dom': '>=7.21.4'
     dev: true
 
   /@tootallnate/once/2.0.0:
@@ -12621,6 +12623,20 @@ packages:
 
   /happy-dom/2.53.1:
     resolution: {integrity: sha512-gB8Ua3ot3lO/NeqREPbLvrNIOKKNNBXJmbi1jefrCt2J8cxtIOky/KiPaK9Bv9QhYQoitlJueRLsmP64MPb1/A==}
+    dependencies:
+      css.escape: 1.5.1
+      he: 1.2.0
+      node-fetch: 2.6.7
+      sync-request: 6.1.0
+      webidl-conversions: 7.0.0
+      whatwg-encoding: 2.0.0
+      whatwg-mimetype: 3.0.0
+    transitivePeerDependencies:
+      - encoding
+    dev: true
+
+  /happy-dom/2.55.0:
+    resolution: {integrity: sha512-CHDMBRau+l/yKQL+ANmexRAC8FRCuYbXRSpu/GbLVyfqkrlBzV7OSNd5C5HZ+pVFtFv1bFJYC5r+xrqgGQuq5w==}
     dependencies:
       css.escape: 1.5.1
       he: 1.2.0
