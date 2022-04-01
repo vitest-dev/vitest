@@ -35,14 +35,18 @@ async function run() {
   const data = await Promise.all(examples.map(async(name) => {
     const path = resolve(examplesRoot, name)
     const pkg = resolve(path, 'package.json')
+    let error: Error | undefined
     try {
       if (!(await fs.lstat(pkg)).isFile())
-        return
+        error = new Error(`invalid example, remove ${name} from examples below!`)
     }
     catch {
       // lstat can throw
       return
     }
+
+    if (error)
+      throw error
 
     const github = `https://github.com/vitest-dev/vitest/tree/main/examples/${name}`
     const stackblitz = noOnlinePlayground.includes(name) ? undefined : `https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/${name}?initialPath=__vitest__`
