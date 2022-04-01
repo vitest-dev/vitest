@@ -1,6 +1,6 @@
 import { existsSync, promises as fs } from 'fs'
 import type { ViteDevServer } from 'vite'
-import { toNamespacedPath } from 'pathe'
+import { toNamespacedPath, relative } from 'pathe'
 import fg from 'fast-glob'
 import mm from 'micromatch'
 import c from 'picocolors'
@@ -429,12 +429,17 @@ export class Vitest {
     return testFiles
   }
 
+  private isMatchPattern(id: string, pattern: readonly string[]) {
+    const relativeId = relative(this.config.dir || this.config.root, id)
+    return mm.isMatch(relativeId, pattern)
+  }
+
   async isTargetFile(id: string, source?: string): Promise<boolean> {
-    if (mm.isMatch(id, this.config.exclude))
+    if (this.isMatchPattern(id, this.config.exclude))
       return false
-    if (mm.isMatch(id, this.config.include))
+    if (this.isMatchPattern(id, this.config.include))
       return true
-    if (this.config.includeSource?.length && mm.isMatch(id, this.config.includeSource)) {
+    if (this.config.includeSource?.length && this.isMatchPattern(id, this.config.includeSource)) {
       source = source || await fs.readFile(id, 'utf-8')
       return this.isInSourceTestFile(source)
     }
