@@ -56,7 +56,7 @@
   },
   "scripts": {
     "build": "rimraf dist && rollup -c",
-    "dev": "rollup -c --watch",
+    "dev": "rollup -c --watch -m inline",
     "prepublishOnly": "nr build"
   },
   "peerDependencies": {
