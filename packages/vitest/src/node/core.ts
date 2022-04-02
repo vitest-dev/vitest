@@ -15,6 +15,7 @@ import type { WorkerPool } from './pool'
 import { StateManager } from './state'
 import { resolveConfig } from './config'
 import { printError } from './error'
+import { VitestGit } from './git'
 
 const WATCHER_DEBOUNCE = 100
 const CLOSE_TIMEOUT = 1_000
@@ -156,6 +157,19 @@ export class Vitest {
   }
 
   async filterTestsBySource(tests: string[]) {
+    if (this.config.onlyChanged && !this.config.related) {
+      const vitestGit = new VitestGit()
+      const root = await vitestGit.getRoot(this.config.root)
+      if (!root) {
+        this.error(c.red('Could not find Git root. Have you initialized git with `git init`?\n'))
+        process.exit(1)
+      }
+      this.config.related = await vitestGit.findChangedFiles(root, {
+        changedSince: this.config.changedSince,
+        lastCommit: this.config.lastCommit,
+      })
+    }
+
     const related = this.config.related
     if (!related)
       return tests

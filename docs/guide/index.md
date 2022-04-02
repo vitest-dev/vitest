@@ -118,6 +118,9 @@ You can specify additional CLI options like `--port` or `--https`. For a full li
 | `--environment <env>` | Runner environment (default: `node`) |
 | `--passWithNoTests` | Pass when no tests found |
 | `--allowOnly` | Allow tests and suites that are marked as `only` (default: false in CI, true otherwise) |
+| `--onlyChanged` | Run tests that are affected by the changed files (default: false)
+| `--lastCommit` | Run tests that are affected by files changed in the last commit (default: false)'
+| `--changedSince <commit/branch>` | Run tests that are affected by files changed since commit hash or branch
 | `-h, --help` | Display available CLI options |
 
 ## Examples

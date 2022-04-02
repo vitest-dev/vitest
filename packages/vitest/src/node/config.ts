@@ -134,5 +134,10 @@ export function resolveConfig(
   if (!resolved.reporters.length)
     resolved.reporters.push('default')
 
+  if (resolved.changedSince || resolved.lastCommit || resolved.onlyChanged) {
+    resolved.onlyChanged = true
+    resolved.passWithNoTests = true
+  }
+
   return resolved
 }

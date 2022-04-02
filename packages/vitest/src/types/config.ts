@@ -329,6 +329,26 @@ export interface UserConfig extends InlineConfig {
    * @default 'test'
    */
   mode?: string
+
+  /**
+   * Runs tests that are affected by the changes in the repository
+   * Requires initialized git repository
+   * @default false
+   */
+  onlyChanged?: boolean
+
+  /**
+   * Runs tests that are affected by the changes in the last commit
+   * Requires initialized git repository
+   * @default false
+   */
+  lastCommit?: boolean
+
+  /**
+   * Runs tests that are affected by the changes since the specified branch or commit hash
+   * Requires initialized git repository
+   */
+  changedSince?: string
 }
 
 export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters'> {

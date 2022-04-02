@@ -33,6 +33,9 @@ cli
   .option('--environment <env>', 'runner environment (default: node)')
   .option('--passWithNoTests', 'pass when no tests found')
   .option('--allowOnly', 'Allow tests and suites that are marked as only (default: !process.env.CI)')
+  .option('--onlyChanged', 'Run tests that are affected by the changed files (default: false)')
+  .option('--lastCommit', 'Run tests that are affected by files changed in the last commit (default: false)')
+  .option('--changedSince <commit>', 'Run tests that are affected by files changed since commit hash or branch')
   .help()
 
 cli
