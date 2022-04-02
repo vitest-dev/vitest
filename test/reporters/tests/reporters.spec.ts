@@ -106,7 +106,7 @@ test('JUnit reporter with outputFile', async() => {
 test('JUnit reporter with outputFile object', async() => {
   // Arrange
   const reporter = new JUnitReporter()
-  const outputFile = resolve('report.xml')
+  const outputFile = resolve('report_object.xml')
   const context = getContext()
   context.vitest.config.outputFile = {
     junit: outputFile,
@@ -161,7 +161,7 @@ test('JUnit reporter with outputFile in non-existing directory', async() => {
 test('JUnit reporter with outputFile object in non-existing directory', async() => {
   // Arrange
   const reporter = new JUnitReporter()
-  const rootDirectory = resolve('junitReportDirectory')
+  const rootDirectory = resolve('junitReportDirectory_object')
   const outputFile = `${rootDirectory}/deeply/nested/report.xml`
   const context = getContext()
   context.vitest.config.outputFile = {
@@ -243,7 +243,7 @@ test('json reporter with outputFile', async() => {
 test('json reporter with outputFile object', async() => {
   // Arrange
   const reporter = new JsonReporter()
-  const outputFile = resolve('report.json')
+  const outputFile = resolve('report_object.json')
   const context = getContext()
   context.vitest.config.outputFile = {
     json: outputFile,
@@ -290,7 +290,7 @@ test('json reporter with outputFile in non-existing directory', async() => {
 test('json reporter with outputFile object in non-existing directory', async() => {
   // Arrange
   const reporter = new JsonReporter()
-  const rootDirectory = resolve('jsonReportDirectory')
+  const rootDirectory = resolve('jsonReportDirectory_object')
   const outputFile = `${rootDirectory}/deeply/nested/report.json`
   const context = getContext()
   context.vitest.config.outputFile = {

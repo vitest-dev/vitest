@@ -131,7 +131,7 @@ AssertionError: expected 2.23606797749979 to equal 2
 `;
 
 exports[`JUnit reporter with outputFile object 1`] = `
-"JUNIT report written to <process-cwd>/report.xml
+"JUNIT report written to <process-cwd>/report_object.xml
 "
 `;
 
@@ -166,7 +166,7 @@ AssertionError: expected 2.23606797749979 to equal 2
 `;
 
 exports[`JUnit reporter with outputFile object in non-existing directory 1`] = `
-"JUNIT report written to <process-cwd>/junitReportDirectory/deeply/nested/report.xml
+"JUNIT report written to <process-cwd>/junitReportDirectory_object/deeply/nested/report.xml
 "
 `;
 
@@ -647,7 +647,7 @@ exports[`json reporter with outputFile in non-existing directory 2`] = `
 `;
 
 exports[`json reporter with outputFile object 1`] = `
-"JSON report written to <process-cwd>/report.json
+"JSON report written to <process-cwd>/report_object.json
 "
 `;
 
@@ -761,7 +761,7 @@ exports[`json reporter with outputFile object 2`] = `
 `;
 
 exports[`json reporter with outputFile object in non-existing directory 1`] = `
-"JSON report written to <process-cwd>/jsonReportDirectory/deeply/nested/report.json
+"JSON report written to <process-cwd>/jsonReportDirectory_object/deeply/nested/report.json
 "
 `;
 
