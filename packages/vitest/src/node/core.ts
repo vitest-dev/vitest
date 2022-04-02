@@ -114,12 +114,19 @@ export class Vitest {
     )
 
     if (!files.length) {
-      if (this.config.passWithNoTests)
-        this.log('No test files found\n')
+      const exitCode = this.config.passWithNoTests ? 0 : 1
+      if (this.config.passWithNoTests) {
+        this.log(`No test files found, exiting code with ${exitCode}\n`)
+      }
+      else {
+        this.error(c.red(`No test files found, exiting code with ${exitCode}\nRun with \`--passWithNoTests\`to exit with code 0\n`))
+        console.error(`In ${c.bold(this.config.root)}`)
+        if (filters?.length) this.console.error(`  filter: ${c.yellow(filters.join(', '))}`)
+        if (this.config.include) this.console.error(`  include: ${c.yellow(this.config.include.join(', '))}`)
+        if (this.config.watchIgnore) this.console.error(`  watchIgnore: ${c.yellow(this.config.watchIgnore.join(', '))}`)
+      }
 
-      else
-        this.error(c.red('No test files found\n'))
-      process.exit(this.config.passWithNoTests ? 0 : 1)
+      process.exit(exitCode)
     }
 
     await this.runFiles(files)
