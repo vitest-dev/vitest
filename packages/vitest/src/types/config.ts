@@ -345,7 +345,7 @@ export interface UserConfig extends InlineConfig {
   lastCommit?: boolean
 
   /**
-   * Runs tests that are affected by the changes since the specified branch or commit hash
+   * Runs tests that are affected by the changes between the specified branch or commit hash
    * Requires initialized git repository
    */
   changedSince?: string
