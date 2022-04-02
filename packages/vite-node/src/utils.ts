@@ -20,6 +20,8 @@ export function normalizeRequestId(id: string, base?: string): string {
     .replace(/^\/+/, '/') // remove duplicate leading slashes
     .replace(/\?v=\w+/, '?') // remove ?v= query
     .replace(/&v=\w+/, '') // remove &v= query
+    .replace(/\?t=\w+/, '?') // remove ?t= query
+    .replace(/&t=\w+/, '') // remove &t= query
     .replace(/\?import/, '?') // remove ?import query
     .replace(/&import/, '') // remove &import query
     .replace(/\?+$/, '') // remove end query mark
