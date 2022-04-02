@@ -121,6 +121,7 @@ export class Vitest {
       else {
         this.error(c.red(`No test files found, exiting code with ${exitCode}\nRun with \`--passWithNoTests\`to exit with code 0\n`))
         console.error(`In ${c.bold(this.config.root)}`)
+        if (filters?.length) this.console.error(`  filter: ${c.yellow(filters.join(', '))}`)
         if (this.config.include) this.console.error(`  include: ${c.yellow(this.config.include.join(', '))}`)
         if (this.config.watchIgnore) this.console.error(`  watchIgnore: ${c.yellow(this.config.watchIgnore.join(', '))}`)
       }
