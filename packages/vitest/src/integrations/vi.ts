@@ -195,6 +195,21 @@ class VitestUtils {
     spies.forEach(spy => spy.mockRestore())
     return this
   }
+
+  /**
+   * Will put a value on global scope. Useful, if you are
+   * using jsdom/happy-dom and want to mock global variables, like
+   * `IntersectionObserver`.
+   */
+  public stubGlobal(name: string, value: any) {
+    // @ts-expect-error we can do anything!
+    globalThis[name] = value
+    if (globalThis.window)
+      // @ts-expect-error we can do anything!
+      globalThis.window[name] = value
+
+    return this
+  }
 }
 
 export const vitest = new VitestUtils()

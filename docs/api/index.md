@@ -1547,9 +1547,18 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
   expect(spy).toHaveBeenCalled()
   expect(spy).toHaveReturnedWith(1)
   ```
+
+### vi.stubGlobal
+
+- **Type**: `(key: keyof globalThis & Window, value: any) => Vitest`
+
+  Puts a value on global variable. If you are using `jsdom` or `happy-dom`, also puts the value on `window` object.
+
+  Read more in ["Mocking Globals" section](/guide/mocking.html#globals).
+
 ### vi.unmock
 
-**Type**: `(path: string) => void`
+- **Type**: `(path: string) => void`
 
   Removes module from mocked registry. All subsequent calls to import will return original module even if it was mocked.
 
