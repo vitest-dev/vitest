@@ -61,7 +61,6 @@ export default ({ watch }) => [
     output: {
       dir: 'dist',
       format: 'esm',
-      sourcemap: 'inline',
       chunkFileNames: (chunkInfo) => {
         const id = chunkInfo.facadeModuleId || Object.keys(chunkInfo.modules).find(i => !i.includes('node_modules') && i.includes('src/'))
         if (id) {

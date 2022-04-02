@@ -52,7 +52,6 @@ export default () => [
     output: {
       dir: 'dist',
       format: 'esm',
-      sourcemap: 'inline',
       entryFileNames: '[name].js',
     },
     external,
@@ -64,7 +63,6 @@ export default () => [
     output: {
       dir: 'dist',
       format: 'cjs',
-      sourcemap: 'inline',
       entryFileNames: '[name].cjs',
     },
     external,
