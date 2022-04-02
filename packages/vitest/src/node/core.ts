@@ -115,8 +115,9 @@ export class Vitest {
 
     if (!files.length) {
       const exitCode = this.config.passWithNoTests ? 0 : 1
-      if (this.config.passWithNoTests) { this.log(`No test files found, exiting code with ${exitCode}\n`) }
-
+      if (this.config.passWithNoTests) {
+        this.log(`No test files found, exiting code with ${exitCode}\n`)
+      }
       else {
         this.error(c.red(`No test files found, exiting code with ${exitCode}\nRun with \`--passWithNoTests\`to exit with code 0\n`))
         console.error(`In ${c.bold(this.config.root)}`)
