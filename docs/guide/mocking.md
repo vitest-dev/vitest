@@ -126,6 +126,25 @@ describe('reading messages', () => {
 
 - [Jest's Mock Functions](https://jestjs.io/docs/mock-function-api)
 
+## Globals
+
+You can mock global variables that are not present with `jsdom` or `node` by using [`vi.stubGlobal`](/api/#vi-stubglobal) helper. It will put the value of the global variable into a `globalThis` object.
+
+```ts
+import { vi } from 'vitest'
+
+const IntersectionObserverMock = vi.fn(() => ({
+  disconnect: vi.fn(),
+  observe: vi.fn(),
+  takeRecords: vi.fn(),
+  unobserve: vi.fn(),
+}))
+
+vi.stubGlobal('IntersectionObserver', IntersectionObserverMock)
+
+// now you can access it as `IntersectionObserver` or `window.IntersectionObserver`
+```
+
 ## Modules
 
 Mock modules observe third-party-libraries, that are invoked in some other code, allowing you to test arguments, output or even redeclare its implementation.
