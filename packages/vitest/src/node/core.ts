@@ -316,6 +316,8 @@ export class Vitest {
       if (this.state.filesMap.has(id)) {
         this.state.filesMap.delete(id)
         this.changedTests.delete(id)
+        // rerun tests to update console output
+        this.rerunFiles()
       }
     }
     const onAdd = async(id: string) => {
@@ -442,7 +444,7 @@ export class Vitest {
       return false
     if (mm.isMatch(relativeId, this.config.include))
       return true
-    if (this.config.includeSource?.length && mm.isMatch(relativeId, this.config.includeSource)) {
+    if (this.config.includeSource?.length && mm.isMatch(relativeId, this.config.includeSource) && existsSync(id)) {
       source = source || await fs.readFile(id, 'utf-8')
       return this.isInSourceTestFile(source)
     }
