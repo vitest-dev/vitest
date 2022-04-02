@@ -444,7 +444,7 @@ export class Vitest {
       return false
     if (mm.isMatch(relativeId, this.config.include))
       return true
-    if (this.config.includeSource?.length && mm.isMatch(relativeId, this.config.includeSource) && existsSync(id)) {
+    if (this.config.includeSource?.length && mm.isMatch(relativeId, this.config.includeSource)) {
       source = source || await fs.readFile(id, 'utf-8')
       return this.isInSourceTestFile(source)
     }
