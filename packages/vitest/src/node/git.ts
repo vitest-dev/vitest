@@ -8,14 +8,17 @@ export interface GitOptions {
 }
 
 export class VitestGit {
+  private root!: string
+
+  constructor(private cwd: string) {}
+
   private async resolveFilesWithGitCommand(
     args: string[],
-    cwd: string,
   ): Promise<string[]> {
     let result: ExecaReturnValue
 
     try {
-      result = await execa('git', args, { cwd })
+      result = await execa('git', args, { cwd: this.root })
     }
     catch (e: any) {
       e.message = e.stderr
@@ -26,58 +29,64 @@ export class VitestGit {
     return result.stdout
       .split('\n')
       .filter(s => s !== '')
-      .map(changedPath => resolve(cwd, changedPath))
+      .map(changedPath => resolve(this.root, changedPath))
   }
 
-  async findChangedFiles(cwd: string, options: GitOptions) {
+  async findChangedFiles(options: GitOptions) {
+    const root = await this.getRoot(this.cwd)
+    if (!root)
+      return null
+
+    this.root = root
+
     const changedSince = options.changedSince
 
-    if (options && options.lastCommit) {
-      return this.resolveFilesWithGitCommand(
-        ['show', '--name-only', '--pretty=format:', 'HEAD', '--'],
-        cwd,
-      )
-    }
+    if (options && options.lastCommit)
+      return this.getLastCommitFiles()
+
     if (changedSince) {
       const [committed, staged, unstaged] = await Promise.all([
-        this.resolveFilesWithGitCommand(
-          ['diff', '--name-only', `${changedSince}...HEAD`, '--'],
-          cwd,
-        ),
-        this.resolveFilesWithGitCommand(
-          ['diff', '--cached', '--name-only', '--'],
-          cwd,
-        ),
-        this.resolveFilesWithGitCommand(
-          [
-            'ls-files',
-            '--other',
-            '--modified',
-            '--exclude-standard',
-            '--',
-          ],
-          cwd,
-        ),
+        this.getFilesSince(changedSince),
+        this.getStagedFiles(),
+        this.getUnstagedFiles(),
       ])
       return [...committed, ...staged, ...unstaged]
     }
     const [staged, unstaged] = await Promise.all([
-      this.resolveFilesWithGitCommand(
-        ['diff', '--cached', '--name-only', '--'],
-        cwd,
-      ),
-      this.resolveFilesWithGitCommand(
-        [
-          'ls-files',
-          '--other',
-          '--modified',
-          '--exclude-standard',
-          '--',
-        ],
-        cwd,
-      ),
+      this.getStagedFiles(),
+      this.getUnstagedFiles(),
     ])
     return [...staged, ...unstaged]
+  }
+
+  private getFilesSince(hash: string) {
+    return this.resolveFilesWithGitCommand(
+      ['diff', '--name-only', `${hash}...HEAD`, '--'],
+    )
+  }
+
+  private getLastCommitFiles() {
+    return this.resolveFilesWithGitCommand(
+      ['show', '--name-only', '--pretty=format:', 'HEAD', '--'],
+    )
+  }
+
+  private getStagedFiles() {
+    return this.resolveFilesWithGitCommand(
+      ['diff', '--cached', '--name-only', '--'],
+    )
+  }
+
+  private getUnstagedFiles() {
+    return this.resolveFilesWithGitCommand(
+      [
+        'ls-files',
+        '--other',
+        '--modified',
+        '--exclude-standard',
+        '--',
+      ],
+    )
   }
 
   async getRoot(cwd: string) {
