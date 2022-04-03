@@ -68,12 +68,12 @@ export abstract class BaseReporter implements Reporter {
         const count = tests.length
         const failed = tests.filter(t => t.result?.state === 'fail')
         const skipped = tests.filter(t => t.mode === 'skip' || t.mode === 'todo')
-        let state = `${getTests(task).length} test${count > 1 ? 's' : ''}`
+        let state = c.dim(`${getTests(task).length} test${count > 1 ? 's' : ''}`)
         if (failed.length)
           state += ` | ${c.red(`${failed.length} failed`)}`
         if (skipped.length)
           state += ` | ${c.yellow(`${skipped.length} skipped`)}`
-        let suffix = c.dim(` (${state})`)
+        let suffix = c.dim(' (') + state + c.dim(')')
         if (task.result.duration)
           suffix += c.yellow(` ${Math.round(task.result.duration)}${c.dim('ms')}`)
 
