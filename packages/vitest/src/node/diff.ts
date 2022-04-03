@@ -6,6 +6,11 @@ export function formatLine(line: string, outputTruncateLength?: number) {
   return cliTruncate(line, (outputTruncateLength ?? (process.stdout.columns || 80)) - 4)
 }
 
+export interface DiffOptions {
+  outputTruncateLength?: number
+  showLegend?: boolean
+}
+
 /**
 * Returns unified diff between two strings with coloured ANSI output.
 *
@@ -15,9 +20,11 @@ export function formatLine(line: string, outputTruncateLength?: number) {
 * @return {string} The diff.
 */
 
-export function unifiedDiff(actual: string, expected: string, outputTruncateLength?: number) {
+export function unifiedDiff(actual: string, expected: string, options: DiffOptions = {}) {
   if (actual === expected)
     return ''
+
+  const { outputTruncateLength, showLegend = true } = options
 
   const indent = '  '
   const diffLimit = 15
@@ -70,19 +77,21 @@ export function unifiedDiff(actual: string, expected: string, outputTruncateLeng
     return ` ${line}`
   })
 
-  // Compact mode
-  if (isCompact) {
-    formatted = [
-      `${c.green('- Expected')}   ${formatted[0]}`,
-      `${c.red('+ Received')}   ${formatted[1]}`,
-    ]
-  }
-  else {
-    formatted.unshift(
-      c.green(`- Expected  - ${counts['-']}`),
-      c.red(`+ Received  + ${counts['+']}`),
-      '',
-    )
+  if (showLegend) {
+    // Compact mode
+    if (isCompact) {
+      formatted = [
+        `${c.green('- Expected')}   ${formatted[0]}`,
+        `${c.red('+ Received')}   ${formatted[1]}`,
+      ]
+    }
+    else {
+      formatted.unshift(
+        c.green(`- Expected  - ${counts['-']}`),
+        c.red(`+ Received  + ${counts['+']}`),
+        '',
+      )
+    }
   }
 
   return formatted.map(i => indent + i).join('\n')
