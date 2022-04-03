@@ -41,6 +41,7 @@ export function setupConsoleLogSpy() {
   const stdoutBuffer = new Map<string, any[]>()
   const stderrBuffer = new Map<string, any[]>()
   const timers = new Map<string, { stdoutTime: number; stderrTime: number; timer: any }>()
+  const unknownTestId = '__vitest__unknown_test__'
 
   // group sync console.log calls with macro task
   function schedule(taskId: string) {
@@ -91,7 +92,7 @@ export function setupConsoleLogSpy() {
 
   const stdout = new Writable({
     write(data, encoding, callback) {
-      const id = getWorkerState()?.current?.id ?? '__unknown_test__'
+      const id = getWorkerState()?.current?.id ?? unknownTestId
       let timer = timers.get(id)
       if (!timer) {
         timer = { stdoutTime: RealDate.now(), stderrTime: RealDate.now(), timer: 0 }
@@ -110,7 +111,7 @@ export function setupConsoleLogSpy() {
   })
   const stderr = new Writable({
     write(data, encoding, callback) {
-      const id = getWorkerState()?.current?.id ?? '__unknown_test__'
+      const id = getWorkerState()?.current?.id ?? unknownTestId
       let timer = timers.get(id)
       if (!timer) {
         timer = { stdoutTime: RealDate.now(), stderrTime: RealDate.now(), timer: 0 }
