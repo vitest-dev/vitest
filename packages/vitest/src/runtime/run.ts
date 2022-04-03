@@ -1,4 +1,3 @@
-import { performance } from 'perf_hooks'
 import type { File, HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from '../types'
 import { vi } from '../integrations/vi'
 import { getSnapshotClient } from '../integrations/snapshot/chai'
@@ -9,6 +8,8 @@ import { getFn, getHooks } from './map'
 import { rpc } from './rpc'
 import { collectTests } from './collect'
 import { processError } from './error'
+
+const now = Date.now
 
 function updateSuiteHookState(suite: Task, name: keyof SuiteHooks, state: TaskState) {
   if (!suite.result)
@@ -67,11 +68,11 @@ export async function runTest(test: Test) {
     return
   }
 
-  const start = performance.now()
+  const start = now()
 
   test.result = {
     state: 'run',
-    startTime: Date.now(),
+    startTime: start,
   }
   updateTask(test)
 
@@ -130,7 +131,7 @@ export async function runTest(test: Test) {
 
   getSnapshotClient().clearTest()
 
-  test.result.duration = performance.now() - start
+  test.result.duration = now() - start
 
   workerState.current = undefined
 
@@ -154,11 +155,11 @@ export async function runSuite(suite: Suite) {
     return
   }
 
-  const start = performance.now()
+  const start = now()
 
   suite.result = {
     state: 'run',
-    startTime: Date.now(),
+    startTime: start,
   }
 
   updateTask(suite)
@@ -189,7 +190,7 @@ export async function runSuite(suite: Suite) {
       suite.result.error = processError(e)
     }
   }
-  suite.result.duration = performance.now() - start
+  suite.result.duration = now() - start
 
   if (suite.mode === 'run') {
     if (!hasTests(suite)) {

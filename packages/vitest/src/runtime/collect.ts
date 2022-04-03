@@ -1,4 +1,3 @@
-import { performance } from 'perf_hooks'
 import { createHash } from 'crypto'
 import { relative } from 'pathe'
 import type { File, ResolvedConfig, Suite, TaskBase } from '../types'
@@ -7,6 +6,8 @@ import { getHooks, setHooks } from './map'
 import { processError } from './error'
 import { context } from './context'
 import { runSetupFiles } from './setup'
+
+const now = Date.now
 
 function hash(str: string, length = 10) {
   return createHash('md5')
@@ -46,9 +47,9 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
           file.tasks.push(c)
         }
         else {
-          const start = performance.now()
+          const start = now()
           const suite = await c.collect(file)
-          file.collectDuration = performance.now() - start
+          file.collectDuration = now() - start
           if (suite.name || suite.tasks.length)
             file.tasks.push(suite)
         }
