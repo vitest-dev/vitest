@@ -1,5 +1,9 @@
 import type * as exampleModule from '../src/example'
 
+import log from '../src/log'
+
+vi.mock('../src/log')
+
 test('all mocked are valid', async() => {
   const example = await vi.importMock<typeof exampleModule>('../src/example')
 
@@ -34,4 +38,15 @@ test('all mocked are valid', async() => {
   expect(example.string).toEqual('baz')
   expect(example.boolean).toEqual(true)
   expect(example.symbol).toEqual(Symbol.for('a.b.c'))
+})
+
+test('automock doesn\'t throw when unmocked', () => {
+  // logger uses symbols on its prototype
+  // we are checking here that after unmocking
+  // these symbols are accessible
+  expect(() => {
+    log.warn()
+    vi.restoreAllMocks()
+    log.warn()
+  }).not.toThrow()
 })
