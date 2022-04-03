@@ -68,7 +68,7 @@ export function setupConsoleLogSpy() {
         taskId,
         time: timer.stdoutTime || RealDate.now(),
       })
-      stdoutBuffer.set(taskId!, [])
+      stdoutBuffer.set(taskId, [])
       timer.stdoutTime = 0
     }
   }
@@ -82,7 +82,7 @@ export function setupConsoleLogSpy() {
         taskId,
         time: timer.stderrTime || RealDate.now(),
       })
-      stderrBuffer.set(taskId!, [])
+      stderrBuffer.set(taskId, [])
       timer.stderrTime = 0
     }
   }
