@@ -1,5 +1,5 @@
 import { performance } from 'perf_hooks'
-import { relative } from 'path'
+import { relative } from 'pathe'
 import type { File, ResolvedConfig, Suite, TaskBase } from '../types'
 import { clearContext, defaultSuite } from './suite'
 import { getHooks, setHooks } from './map'
