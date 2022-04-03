@@ -1787,6 +1787,10 @@ If a function was invoked twice with the following arguments `fn(arg1, arg2)`, `
 ]
 ```
 
+### mock.lastCall
+
+This contains the arguments of the last call. If spy wasn't called, will return `undefined`.
+
 ### mock.results
 
 This is an array containing all values, that were `returned` from function. One item of the array is an object with properties `type` and `value`. Available types are:
