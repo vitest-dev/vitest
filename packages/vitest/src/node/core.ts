@@ -329,6 +329,7 @@ export class Vitest {
       if (this.state.filesMap.has(id)) {
         this.state.filesMap.delete(id)
         this.changedTests.delete(id)
+        this.report('onTestRemoved', id)
       }
     }
     const onAdd = async(id: string) => {
