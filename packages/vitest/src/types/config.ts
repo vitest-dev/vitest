@@ -331,24 +331,11 @@ export interface UserConfig extends InlineConfig {
   mode?: string
 
   /**
-   * Runs tests that are affected by the changes in the repository
+   * Runs tests that are affected by the changes in the repository, or between specified branch or commit hash
    * Requires initialized git repository
    * @default false
    */
-  onlyChanged?: boolean
-
-  /**
-   * Runs tests that are affected by the changes in the last commit
-   * Requires initialized git repository
-   * @default false
-   */
-  lastCommit?: boolean
-
-  /**
-   * Runs tests that are affected by the changes between the specified branch or commit hash
-   * Requires initialized git repository
-   */
-  changedSince?: string
+  changed?: boolean | string
 }
 
 export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters'> {

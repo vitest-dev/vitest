@@ -3,8 +3,7 @@ import { execa } from 'execa'
 import type { ExecaReturnValue } from 'execa'
 
 export interface GitOptions {
-  lastCommit?: boolean
-  changedSince?: string
+  changedSince?: string | boolean
 }
 
 export class VitestGit {
@@ -40,11 +39,7 @@ export class VitestGit {
     this.root = root
 
     const changedSince = options.changedSince
-
-    if (options && options.lastCommit)
-      return this.getLastCommitFiles()
-
-    if (changedSince) {
+    if (typeof changedSince === 'string') {
       const [committed, staged, unstaged] = await Promise.all([
         this.getFilesSince(changedSince),
         this.getStagedFiles(),
@@ -61,19 +56,13 @@ export class VitestGit {
 
   private getFilesSince(hash: string) {
     return this.resolveFilesWithGitCommand(
-      ['diff', '--name-only', `${hash}...HEAD`, '--'],
-    )
-  }
-
-  private getLastCommitFiles() {
-    return this.resolveFilesWithGitCommand(
-      ['show', '--name-only', '--pretty=format:', 'HEAD', '--'],
+      ['diff', '--name-only', `${hash}...HEAD`],
     )
   }
 
   private getStagedFiles() {
     return this.resolveFilesWithGitCommand(
-      ['diff', '--cached', '--name-only', '--'],
+      ['diff', '--cached', '--name-only'],
     )
   }
 
@@ -84,7 +73,6 @@ export class VitestGit {
         '--other',
         '--modified',
         '--exclude-standard',
-        '--',
       ],
     )
   }

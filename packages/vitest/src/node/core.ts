@@ -157,17 +157,16 @@ export class Vitest {
   }
 
   async filterTestsBySource(tests: string[]) {
-    if (this.config.onlyChanged && !this.config.related) {
+    if (this.config.changed && !this.config.related) {
       const vitestGit = new VitestGit(this.config.root)
       const related = await vitestGit.findChangedFiles({
-        changedSince: this.config.changedSince,
-        lastCommit: this.config.lastCommit,
+        changedSince: this.config.changed,
       })
       if (!related) {
         this.error(c.red('Could not find Git root. Have you initialized git with `git init`?\n'))
         process.exit(1)
       }
-      this.config.related = related
+      this.config.related = Array.from(new Set(related))
     }
 
     const related = this.config.related
