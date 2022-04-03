@@ -12,7 +12,8 @@ export function hoistMocks(code: string) {
   for (const mockResult of mocks) {
     const lastIndex = getMockLastIndex(code.slice(mockResult.index!))
 
-    if (lastIndex === null) continue
+    if (lastIndex === null)
+      continue
 
     const startIndex = mockResult.index!
 

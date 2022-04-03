@@ -13,7 +13,7 @@
       "enabled": false
     },
     {
-	    "packageNames": ["node"],
+      "packageNames": ["node"],
       "enabled": false
     }
   ],

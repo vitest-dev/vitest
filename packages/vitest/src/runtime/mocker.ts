@@ -19,7 +19,8 @@ function getAllProperties(obj: any) {
   let curr = obj
   do {
     // we don't need propterties from 'Object'
-    if (curr === Object.prototype) break
+    if (curr === Object.prototype)
+      break
     const props = Object.getOwnPropertyNames(curr)
     props.forEach(prop => allProps.add(prop))
   // eslint-disable-next-line no-cond-assign
@@ -132,7 +133,8 @@ export class VitestMocker {
       const baseFilename = basename(path)
       const mockFolder = resolve(this.root, '__mocks__', mockDirname)
 
-      if (!existsSync(mockFolder)) return null
+      if (!existsSync(mockFolder))
+        return null
 
       const files = readdirSync(mockFolder)
 
@@ -235,7 +237,8 @@ export class VitestMocker {
   }
 
   private async ensureSpy() {
-    if (VitestMocker.spyModule) return
+    if (VitestMocker.spyModule)
+      return
     VitestMocker.spyModule = await this.request(resolve(distDir, 'jest-mock.js')) as typeof import('../integrations/jest-mock')
   }
 

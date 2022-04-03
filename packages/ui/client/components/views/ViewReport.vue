@@ -12,7 +12,8 @@ type LeveledTask = Task & {
 }
 
 function collectFailed(task: Task, level: number): LeveledTask[] {
-  if (task.result?.state !== 'fail') return []
+  if (task.result?.state !== 'fail')
+    return []
 
   if (task.type === 'test')
     return [{ ...task, level }]

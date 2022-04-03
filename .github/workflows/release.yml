@@ -20,7 +20,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 16
-          cache: "pnpm"
+          cache: pnpm
 
       # - run: pnpm i -g @antfu/ni
       # - run: nci
@@ -28,7 +28,7 @@ jobs:
       # - run: npm publish --access public
       #   env:
       #     NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
-    
+
       - run: npx conventional-github-releaser -p angular
         env:
           CONVENTIONAL_GITHUB_RELEASER_TOKEN: ${{secrets.GITHUB_TOKEN}}

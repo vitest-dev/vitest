@@ -1,4 +1,4 @@
-import path from 'path'
+import path from 'pathe'
 import { startDevServer } from '@cypress/vite-dev-server'
 
 const plugin: Cypress.PluginConfig = (on, config) => {

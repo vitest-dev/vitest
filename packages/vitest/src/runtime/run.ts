@@ -142,7 +142,8 @@ function markTasksAsSkipped(suite: Suite) {
     t.mode = 'skip'
     t.result = { ...t.result, state: 'skip' }
     updateTask(t)
-    if (t.type === 'suite') markTasksAsSkipped(t)
+    if (t.type === 'suite')
+      markTasksAsSkipped(t)
   })
 }
 

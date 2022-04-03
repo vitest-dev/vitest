@@ -94,7 +94,8 @@ export function setup(ctx: Vitest) {
           }
         },
         updateSnapshot(file?: File) {
-          if (!file) return ctx.updateSnapshot()
+          if (!file)
+            return ctx.updateSnapshot()
           return ctx.updateSnapshot([file.filepath])
         },
       },
