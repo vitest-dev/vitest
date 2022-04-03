@@ -93,11 +93,6 @@ export interface InlineConfig {
   globals?: boolean
 
   /**
-   * @deprecated
-   */
-  global?: boolean
-
-  /**
    * Running environment
    *
    * Supports 'node', 'jsdom', 'happy-dom'
@@ -138,7 +133,12 @@ export interface InlineConfig {
   reporters?: Arrayable<BuiltinReporters | Reporter>
 
   /**
-   * Write test results to a file when the --reporter=json option is also specified
+   * diff output length
+   */
+  outputTruncateLength?: number
+
+  /**
+   * Write test results to a file when the --reporter=json` or `--reporter=junit` option is also specified.
    */
   outputFile?: string
 
@@ -334,6 +334,13 @@ export interface UserConfig extends InlineConfig {
    * @default 'test'
    */
   mode?: string
+
+  /**
+   * Runs tests that are affected by the changes in the repository, or between specified branch or commit hash
+   * Requires initialized git repository
+   * @default false
+   */
+  changed?: boolean | string
 }
 
 export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters'> {

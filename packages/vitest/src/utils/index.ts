@@ -5,9 +5,9 @@ import type { Suite, Task } from '../types'
 import { getNames } from './tasks'
 
 export * from './tasks'
-export * from './path'
 export * from './base'
 export * from './global'
+export * from './timers'
 
 export const isWindows = process.platform === 'win32'
 

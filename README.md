@@ -1,5 +1,5 @@
 <p align="center">
-<img src="https://user-images.githubusercontent.com/11247099/145112184-a9ff6727-661c-439d-9ada-963124a281f7.png" height="200">
+<img src="https://user-images.githubusercontent.com/11247099/145112184-a9ff6727-661c-439d-9ada-963124a281f7.png" height="150">
 </p>
 
 <h1 align="center">
@@ -9,23 +9,25 @@ Vitest
 A blazing fast unit test framework powered by Vite.
 <p>
 <p align="center">
-  <a href="https://www.npmjs.com/package/vitest"><img src="https://img.shields.io/npm/v/vitest?color=a1b858&label="></a>
+  <a href="https://www.npmjs.com/package/vitest"><img src="https://img.shields.io/npm/v/vitest?color=729B1B&label="></a>
 <p>
-<h3 align="center">
-<a href="https://chat.vitest.dev"><i>Get involved!</i></a>
-</h3>
+
+<p align="center">
+<a href="https://chat.vitest.dev"><b>Get involved!</b></a>
+</p>
+<p align="center">
+ <a href="https://vitest.dev">Documentation</a> | <a href="https://vitest.dev/guide/">Getting Started</a> | <a href="https://vitest.dev/guide/#examples">Examples</a> | <a href="https://vitest.dev/guide/why">Why Vitest?</a>
+</p>
+<p align="center">
+<a href="https://cn.vitest.dev">中文文档</a>
+</p>
+
+
+<h4 align="center">
+
+</h4>
 <br>
 <br>
-
-> Vitest requires Vite >=v2.7.10 and Node >=v14
-
-Follow the [Getting Started Guide](https://vitest.dev/guide/) or learn [why we are building a new test runner](https://vitest.dev/guide/why).
-
-## Documentation
-
-Read the [documentation](https://vitest.dev/).
-
-[Examples](https://vitest.dev/guide/#examples) | [Projects using Vitest](https://vitest.dev/guide/#projects-using-vitest)
 
 ## Features
 
@@ -41,6 +43,9 @@ Read the [documentation](https://vitest.dev/).
 - ESM first, top level await
 - Out-of-box TypeScript / JSX support
 - Filtering, timeouts, concurrent for suite and tests
+
+> Vitest requires Vite >=v2.7.10 and Node >=v14
+
 
 ```ts
 import { assert, describe, expect, it } from 'vitest'
@@ -78,8 +83,8 @@ $ npx vitest
 ### Patak Sponsors
 
 <p align="center">
-  <a href="https://patak.dev/sponsors.svg">
-    <img src='https://patak.dev/sponsors.svg'/>
+  <a href="https://cdn.jsdelivr.net/gh/patak-dev/static/sponsors.svg">
+    <img src='https://cdn.jsdelivr.net/gh/patak-dev/static/sponsors.svg'/>
   </a>
 </p>
 

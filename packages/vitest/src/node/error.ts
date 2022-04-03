@@ -1,7 +1,7 @@
 /* eslint-disable prefer-template */
 /* eslint-disable no-template-curly-in-string */
-import fs from 'fs'
-import { relative } from 'pathe'
+import { existsSync, promises as fs } from 'fs'
+import { join, relative } from 'pathe'
 import c from 'picocolors'
 import cliTruncate from 'cli-truncate'
 import type { ErrorWithDiff, ParsedStack, Position } from '../types'
@@ -10,8 +10,13 @@ import { F_POINTER } from '../utils/figures'
 import type { Vitest } from './core'
 import { unifiedDiff } from './diff'
 
+export function fileFromParsedStack(stack: ParsedStack) {
+  if (stack?.sourcePos?.source?.startsWith('..'))
+    return join(stack.file, '../', stack.sourcePos.source)
+  return stack.file
+}
+
 export async function printError(error: unknown, ctx: Vitest) {
-  const fsp = fs.promises
   let e = error as ErrorWithDiff
 
   if (typeof error === 'string') {
@@ -27,13 +32,13 @@ export async function printError(error: unknown, ctx: Vitest) {
 
   const nearest = stacks.find(stack =>
     ctx.server.moduleGraph.getModuleById(stack.file)
-      && fs.existsSync(stack.file),
+      && existsSync(stack.file),
   )
 
   printErrorMessage(e, ctx.console)
   await printStack(ctx, stacks, nearest, async(s, pos) => {
     if (s === nearest && nearest) {
-      const sourceCode = await fsp.readFile(nearest.file, 'utf-8')
+      const sourceCode = await fs.readFile(fileFromParsedStack(nearest), 'utf-8')
       ctx.log(c.yellow(generateCodeFrame(sourceCode, 4, pos)))
     }
   })
@@ -41,7 +46,7 @@ export async function printError(error: unknown, ctx: Vitest) {
   handleImportOutsideModuleError(e.stack || e.stackStr || '', ctx)
 
   if (e.showDiff)
-    displayDiff(e.actual, e.expected, ctx.console)
+    displayDiff(e.actual, e.expected, ctx.console, ctx.config.outputTruncateLength)
 }
 
 const esmErrors = [
@@ -80,8 +85,8 @@ function handleImportOutsideModuleError(stack: string, ctx: Vitest) {
 }\n`)))
 }
 
-function displayDiff(actual: string, expected: string, console: Console) {
-  console.error(c.gray(unifiedDiff(actual, expected)) + '\n')
+function displayDiff(actual: string, expected: string, console: Console, outputTruncateLength?: number) {
+  console.error(c.gray(unifiedDiff(actual, expected, outputTruncateLength)) + '\n')
 }
 
 function printErrorMessage(error: ErrorWithDiff, console: Console) {
@@ -101,7 +106,8 @@ async function printStack(
   for (const frame of stack) {
     const pos = frame.sourcePos || frame
     const color = frame === highlight ? c.yellow : c.gray
-    const path = relative(ctx.config.root, frame.file)
+    const file = fileFromParsedStack(frame)
+    const path = relative(ctx.config.root, file)
 
     ctx.log(color(` ${c.dim(F_POINTER)} ${[frame.method, c.dim(`${path}:${pos.line}:${pos.column}`)].filter(Boolean).join(' ')}`))
     await onStack?.(frame, pos)

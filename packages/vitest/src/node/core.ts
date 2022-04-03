@@ -1,13 +1,13 @@
 import { existsSync, promises as fs } from 'fs'
 import type { ViteDevServer } from 'vite'
-import { toNamespacedPath } from 'pathe'
+import { relative, toNamespacedPath } from 'pathe'
 import fg from 'fast-glob'
 import mm from 'micromatch'
 import c from 'picocolors'
 import { ViteNodeServer } from 'vite-node/server'
 import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig } from '../types'
 import { SnapshotManager } from '../integrations/snapshot/manager'
-import { deepMerge, hasFailed, noop, slash, toArray } from '../utils'
+import { clearTimeout, deepMerge, hasFailed, noop, setTimeout, slash, toArray } from '../utils'
 import { cleanCoverage, reportCoverage } from '../integrations/coverage'
 import { ReportersMap } from './reporters'
 import { createPool } from './pool'
@@ -15,6 +15,7 @@ import type { WorkerPool } from './pool'
 import { StateManager } from './state'
 import { resolveConfig } from './config'
 import { printError } from './error'
+import { VitestGit } from './git'
 
 const WATCHER_DEBOUNCE = 100
 const CLOSE_TIMEOUT = 1_000
@@ -114,12 +115,22 @@ export class Vitest {
     )
 
     if (!files.length) {
-      if (this.config.passWithNoTests)
-        this.log('No test files found\n')
+      const exitCode = this.config.passWithNoTests ? 0 : 1
+      if (this.config.passWithNoTests) {
+        this.log(`No test files found, exiting code with ${exitCode}\n`)
+      }
+      else {
+        this.error(c.red(`No test files found, exiting code with ${exitCode}\nRun with \`--passWithNoTests\`to exit with code 0\n`))
+        console.error(`In ${c.bold(this.config.root)}`)
+        if (filters?.length)
+          this.console.error(`  filter: ${c.yellow(filters.join(', '))}`)
+        if (this.config.include)
+          this.console.error(`  include: ${c.yellow(this.config.include.join(', '))}`)
+        if (this.config.watchIgnore)
+          this.console.error(`  watchIgnore: ${c.yellow(this.config.watchIgnore.join(', '))}`)
+      }
 
-      else
-        this.error(c.red('No test files found\n'))
-      process.exit(this.config.passWithNoTests ? 0 : 1)
+      process.exit(exitCode)
     }
 
     await this.runFiles(files)
@@ -156,6 +167,18 @@ export class Vitest {
   }
 
   async filterTestsBySource(tests: string[]) {
+    if (this.config.changed && !this.config.related) {
+      const vitestGit = new VitestGit(this.config.root)
+      const related = await vitestGit.findChangedFiles({
+        changedSince: this.config.changed,
+      })
+      if (!related) {
+        this.error(c.red('Could not find Git root. Have you initialized git with `git init`?\n'))
+        process.exit(1)
+      }
+      this.config.related = Array.from(new Set(related))
+    }
+
     const related = this.config.related
     if (!related)
       return tests
@@ -312,6 +335,7 @@ export class Vitest {
       if (this.state.filesMap.has(id)) {
         this.state.filesMap.delete(id)
         this.changedTests.delete(id)
+        this.report('onTestRemoved', id)
       }
     }
     const onAdd = async(id: string) => {
@@ -406,7 +430,7 @@ export class Vitest {
 
     let testFiles = await fg(this.config.include, globOptions)
 
-    if (filters.length && process.arch === 'win32')
+    if (filters.length && process.platform === 'win32')
       filters = filters.map(f => toNamespacedPath(f))
 
     if (filters.length)
@@ -433,11 +457,12 @@ export class Vitest {
   }
 
   async isTargetFile(id: string, source?: string): Promise<boolean> {
-    if (mm.isMatch(id, this.config.exclude))
+    const relativeId = relative(this.config.dir || this.config.root, id)
+    if (mm.isMatch(relativeId, this.config.exclude))
       return false
-    if (mm.isMatch(id, this.config.include))
+    if (mm.isMatch(relativeId, this.config.include))
       return true
-    if (this.config.includeSource?.length && mm.isMatch(id, this.config.includeSource)) {
+    if (this.config.includeSource?.length && mm.isMatch(relativeId, this.config.includeSource)) {
       source = source || await fs.readFile(id, 'utf-8')
       return this.isInSourceTestFile(source)
     }

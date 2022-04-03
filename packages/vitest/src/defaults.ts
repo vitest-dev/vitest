@@ -1,4 +1,7 @@
-import type { ResolvedC8Options, UserConfig } from './types'
+// rollup dts building will external vitest
+// so output dts entry using vitest to import internal types
+// eslint-disable-next-line no-restricted-imports
+import type { ResolvedC8Options, UserConfig } from 'vitest'
 
 export const defaultInclude = ['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']
 export const defaultExclude = ['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**']

@@ -2,6 +2,7 @@ import { KEYS } from './jsdom-keys'
 
 const allowRewrite = new Set([
   'Event',
+  'EventTarget',
 ])
 
 export function getWindowKeys(global: any, win: any) {

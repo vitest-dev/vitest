@@ -218,6 +218,25 @@ describe('jest-expect', () => {
     expect(1).toBe(1)
   })
 
+  it('assertions when asynchronous code', async() => {
+    expect.assertions(3)
+    await Promise.all([
+      expect(1).toBe(1),
+      expect(1).toBe(1),
+      expect(1).toBe(1),
+    ])
+  })
+
+  it.fails('assertions when asynchronous code', async() => {
+    // Error: expected number of assertions to be 2, but got 3
+    expect.assertions(2)
+    await Promise.all([
+      expect(1).toBe(1),
+      expect(1).toBe(1),
+      expect(1).toBe(1),
+    ])
+  })
+
   it.fails('has assertions', () => {
     expect.hasAssertions()
   })

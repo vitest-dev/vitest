@@ -1,6 +1,6 @@
 import { environments } from '../integrations/env'
 import type { ResolvedConfig } from '../types'
-import { getWorkerState, toArray } from '../utils'
+import { clearTimeout, getWorkerState, setTimeout, toArray } from '../utils'
 import * as VitestIndex from '../index'
 import { resetRunOnceCounter } from '../integrations/run-once'
 import { RealDate } from '../integrations/mockdate'

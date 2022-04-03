@@ -1,7 +1,5 @@
-import type { Reporter } from 'vitest'
-import type { Vitest } from 'vitest/src/node'
-
-import { defineConfig } from 'vite'
+import type { Reporter, Vitest } from 'vitest'
+import { defineConfig } from 'vitest/config'
 
 class TestReporter implements Reporter {
   ctx!: Vitest
@@ -18,6 +16,6 @@ class TestReporter implements Reporter {
 export default defineConfig({
   test: {
     include: ['tests/reporters.spec.ts'],
-    reporters: new TestReporter(),
+    reporters: [new TestReporter()],
   },
 })

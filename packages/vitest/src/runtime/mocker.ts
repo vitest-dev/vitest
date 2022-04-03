@@ -1,36 +1,31 @@
 import { existsSync, readdirSync } from 'fs'
 import { isNodeBuiltin } from 'mlly'
 import { basename, dirname, resolve } from 'pathe'
-import { toFilePath } from 'vite-node/utils'
+import { normalizeRequestId, toFilePath } from 'vite-node/utils'
 import type { ModuleCacheMap } from 'vite-node/client'
-import { getWorkerState, isWindows, mergeSlashes, normalizeId } from '../utils'
+import { getWorkerState, isWindows, mergeSlashes } from '../utils'
 import { distDir } from '../constants'
 import type { PendingSuiteMock } from '../types/mocker'
 import type { ExecuteOptions } from './execute'
 
 type Callback = (...args: any[]) => unknown
 
-function getObjectType(value: unknown): string {
+function getType(value: unknown): string {
   return Object.prototype.toString.apply(value).slice(8, -1)
 }
 
-function mockPrototype(spyOn: typeof import('../integrations/jest-mock')['spyOn'], proto: any) {
-  if (!proto)
-    return null
-
-  const newProto: any = {}
-
-  const protoDescr = Object.getOwnPropertyDescriptors(proto)
-
-  // eslint-disable-next-line no-restricted-syntax
-  for (const d in protoDescr) {
-    Object.defineProperty(newProto, d, protoDescr[d])
-
-    if (typeof protoDescr[d].value === 'function')
-      spyOn(newProto, d).mockImplementation(() => {})
-  }
-
-  return newProto
+function getAllProperties(obj: any) {
+  const allProps = new Set<string>()
+  let curr = obj
+  do {
+    // we don't need propterties from 'Object'
+    if (curr === Object.prototype)
+      break
+    const props = Object.getOwnPropertyNames(curr)
+    props.forEach(prop => allProps.add(prop))
+  // eslint-disable-next-line no-cond-assign
+  } while (curr = Object.getPrototypeOf(curr))
+  return Array.from(allProps)
 }
 
 export class VitestMocker {
@@ -82,7 +77,7 @@ export class VitestMocker {
   private async resolvePath(id: string, importer: string) {
     const path = await this.options.resolveId!(id, importer)
     return {
-      path: normalizeId(path?.id || id),
+      path: normalizeRequestId(path?.id || id),
       external: path?.id.includes('/node_modules/') ? id : null,
     }
   }
@@ -114,22 +109,22 @@ export class VitestMocker {
   }
 
   public resolveDependency(dep: string) {
-    return normalizeId(dep).replace(/^\/@fs\//, isWindows ? '' : '/')
+    return normalizeRequestId(dep).replace(/^\/@fs\//, isWindows ? '' : '/')
   }
 
   public normalizePath(path: string) {
-    return normalizeId(path.replace(this.root, '')).replace(/^\/@fs\//, isWindows ? '' : '/')
+    return normalizeRequestId(path.replace(this.root, '')).replace(/^\/@fs\//, isWindows ? '' : '/')
   }
 
   public getFsPath(path: string, external: string | null) {
     if (external)
       return mergeSlashes(`/@fs/${path}`)
 
-    return normalizeId(path.replace(this.root, ''))
+    return normalizeRequestId(path.replace(this.root, ''))
   }
 
   public resolveMockPath(mockPath: string, external: string | null) {
-    const path = normalizeId(external || mockPath)
+    const path = normalizeRequestId(external || mockPath)
 
     // it's a node_module alias
     // all mocks should be inside <root>/__mocks__
@@ -158,32 +153,39 @@ export class VitestMocker {
     return existsSync(fullPath) ? fullPath.replace(this.root, '') : null
   }
 
-  public mockObject(obj: any) {
-    if (!VitestMocker.spyModule)
-      throw new Error('Internal Vitest error: Spy function is not defined.')
+  public mockValue(value: any) {
+    if (!VitestMocker.spyModule) {
+      throw new Error(
+        'Error: Spy module is not defined. '
+        + 'This is likely an internal bug in Vitest. '
+        + 'Please report it to https://github.com/vitest-dev/vitest/issues')
+    }
 
-    const type = getObjectType(obj)
+    const type = getType(value)
 
-    if (Array.isArray(obj))
+    if (Array.isArray(value))
       return []
     else if (type !== 'Object' && type !== 'Module')
-      return obj
+      return value
 
-    const newObj = { ...obj }
+    const newObj: any = {}
 
-    const proto = mockPrototype(VitestMocker.spyModule.spyOn, Object.getPrototypeOf(obj))
-    Object.setPrototypeOf(newObj, proto)
+    const proproperties = getAllProperties(value)
 
-    // eslint-disable-next-line no-restricted-syntax
-    for (const k in obj) {
-      newObj[k] = this.mockObject(obj[k])
-      const type = getObjectType(obj[k])
+    for (const k of proproperties) {
+      newObj[k] = this.mockValue(value[k])
+      const type = getType(value[k])
 
-      if (type.includes('Function') && !obj[k]._isMockFunction) {
-        VitestMocker.spyModule.spyOn(newObj, k).mockImplementation(() => {})
+      if (type.includes('Function') && !value[k]._isMockFunction) {
+        VitestMocker.spyModule.spyOn(newObj, k).mockImplementation(() => undefined)
         Object.defineProperty(newObj[k], 'length', { value: 0 }) // tinyspy retains length, but jest doesnt
       }
     }
+
+    // should be defined after object, because it may contain
+    // special logic on getting/settings properties
+    // and we don't want to invoke it
+    Object.setPrototypeOf(newObj, Object.getPrototypeOf(value))
     return newObj
   }
 
@@ -227,7 +229,7 @@ export class VitestMocker {
       await this.ensureSpy()
       const fsPath = this.getFsPath(path, external)
       const mod = await this.request(fsPath)
-      return this.mockObject(mod)
+      return this.mockValue(mod)
     }
     if (typeof mock === 'function')
       return this.callFunctionMock(path, mock)
@@ -253,7 +255,7 @@ export class VitestMocker {
         return cache.exports
       const cacheKey = toFilePath(dep, this.root)
       const mod = this.moduleCache.get(cacheKey)?.exports || await this.request(dep)
-      const exports = this.mockObject(mod)
+      const exports = this.mockValue(mod)
       this.emit('mocked', cacheName, { exports })
       return exports
     }

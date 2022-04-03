@@ -110,11 +110,42 @@ For compatibility with Jest, `TestFunction` can also be of type `(done: DoneCall
   Use `test.fails` to indicate that an assertion will fail explicitly.
 
   ```ts
-  import { test } from 'vitest'
+  import { expect, test } from 'vitest'
   const myAsyncFunc = () => new Promise(resolve => resolve(1))
   test.fails('fail test', () => {
     expect(myAsyncFunc()).rejects.toBe(1)
   })
+  ```
+
+### test.each
+- **Type:** `(cases: ReadonlyArray<T>) => void`
+- **Alias:** `it.each`
+
+  Use `test.each` when you need to run the same test with different variables.
+  You can inject parameters with [printf formmatting](https://nodejs.org/api/util.html#util_util_format_format_args) in the test name in the order of the test function parameters.
+
+  - `%s`: string
+  - `%d`: number
+  - `%i`: integer
+  - `%f`: floating point value
+  - `%j`: json
+  - `$o`: object
+  - `%#`: index of the test case
+  - `%%`: single percent sign ('%')
+
+  ```ts
+  test.each([
+    [1, 1, 2],
+    [1, 2, 3],
+    [2, 1, 3],
+  ])('add(%i, %i) -> %i', (a, b, expected) => {
+    expect(a + b).toBe(expected)
+  })
+
+  // this will return
+  // √ add(1, 1) -> 2
+  // √ add(1, 2) -> 3
+  // √ add(2, 1) -> 3
   ```
 
 ## describe
@@ -122,22 +153,22 @@ For compatibility with Jest, `TestFunction` can also be of type `(done: DoneCall
 When you use `test` in the top level of file, they are collected as part of the implicit suite for it. Using `describe` you can define a new suite in the current context, as a set of related tests and other nested suites. A suite lets you organize your tests so reports are more clear.
 
   ```ts
-  import { describe, test } from 'vitest'
+  import { describe, expect, test } from 'vitest'
 
   const person = {
     isActive: true,
     age: 32,
   }
-  
+
   describe('person', () => {
     test('person is defined', () => {
       expect(person).toBeDefined()
     })
-  
+
     test('is active', () => {
       expect(person.isActive).toBeTruthy()
     })
-  
+
     test('age limit', () => {
       expect(person.age).toBeLessThanOrEqual(32)
     })
@@ -152,7 +183,7 @@ When you use `test` in the top level of file, they are collected as part of the 
   const numberToCurrency = (value) => {
     if (typeof value !== 'number')
       throw new Error('Value must be a number')
-  
+
     return value.toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
   }
 
@@ -162,7 +193,7 @@ When you use `test` in the top level of file, they are collected as part of the 
         expect(() => numberToCurrency('abc')).toThrow()
       })
     })
-  
+
     describe('given a valid number', () => {
       test('returns the correct currency format', () => {
         expect(numberToCurrency(10000)).toBe('10,000.00')
@@ -178,7 +209,7 @@ When you use `test` in the top level of file, they are collected as part of the 
   Use `describe.skip` in a suite to avoid running a particular describe block.
 
   ```ts
-  import { describe, test } from 'vitest'
+  import { assert, describe, test } from 'vitest'
 
   describe.skip('skipped suite', () => {
     test('sqrt', () => {
@@ -201,7 +232,7 @@ When you use `test` in the top level of file, they are collected as part of the 
       assert.equal(Math.sqrt(4), 3)
     })
   })
-  
+
   describe('other suite', () => {
     // ... will be skipped
   })
@@ -241,6 +272,31 @@ When you use `test` in the top level of file, they are collected as part of the 
   // An entry will be shown in the report for this suite
   describe.todo('unimplemented suite')
   ```
+### describe.each
+
+- **Type:** `(cases: ReadonlyArray<T>): (name: string, fn: (...args: T[]) => void) => void`
+
+  Use `describe.each` if you have more than one test that depends on the same data.
+
+  ```ts
+  describe.each([
+    { a: 1, b: 1, expected: 2 },
+    { a: 1, b: 2, expected: 3 },
+    { a: 2, b: 1, expected: 3 },
+  ])('describe object add(%i, %i)', ({ a, b, expected }) => {
+    test(`returns ${expected}`, () => {
+      expect(a + b).toBe(expected)
+    })
+
+    test(`returned value not be greater than ${expected}`, () => {
+      expect(a + b).not.toBeGreaterThan(expected)
+    })
+
+    test(`returned value not be less than ${expected}`, () => {
+      expect(a + b).not.toBeLessThan(expected)
+    })
+  })
+  ```
 
 ## expect
 
@@ -265,7 +321,16 @@ When you use `test` in the top level of file, they are collected as part of the 
 
 ### not
 
-TODO
+  Using `not` will negate the assertion. For example, this code asserts that an `input` value is not equal to `2`. If it's equal, assertion will throw an error, and the test will fail.
+
+  ```ts
+  import { expect, test } from 'vitest'
+
+  const input = Math.sqrt(16)
+
+  expect(input).not.to.equal(2) // chai API
+  expect(input).not.toBe(2) // jest API
+  ```
 
 ### toBe
 
@@ -309,7 +374,7 @@ TODO
   test.fails('decimals are not equal in javascript', () => {
     expect(0.2 + 0.1).toBe(0.3) // 0.2 + 0.1 is 0.30000000000000004
   })
-  
+
   test('decimals are rounded to 5 after the point', () => {
     // 0.2 + 0.1 is 0.30000 | "000000000004" removed
     expect(0.2 + 0.1).toBeCloseTo(0.3, 5)
@@ -648,7 +713,7 @@ TODO
   test('toHaveLength', () => {
     expect('abc').toHaveLength(3)
     expect([1, 2, 3]).toHaveLength(3)
-  
+
     expect('').not.toHaveLength(3) // doesn't have .length of 3
     expect({ length: 3 }).toHaveLength(3)
   })
@@ -779,7 +844,7 @@ TODO
 
   `toThrowError` asserts if a function throws an error when it is called.
 
-  For example, if we want to test that `getFruitStock('pineapples')` throws, because pineapples is not good for people with diabetes, we could write:
+  For example, if we want to test that `getFruitStock('pineapples')` throws, we could write:
 
   You can provide an optional argument to test that a specific error is thrown:
 
@@ -787,7 +852,7 @@ TODO
   - string: error message includes the substring
 
   :::tip
-    You must wrap the code in a function, otherwise the error will not be caught and the assertion will fail.
+    You must wrap the code in a function, otherwise the error will not be caught, and the assertion will fail.
   :::
 
   ```ts
@@ -796,7 +861,7 @@ TODO
   function getFruitStock(type) {
     if (type === 'pineapples')
       throw new DiabetesError('Pineapples is not good for people with diabetes')
-  
+
     // Do some other stuff
   }
 
@@ -812,31 +877,250 @@ TODO
   })
   ```
 
-// snapshots
-
+<!--
+snapshots
 ### toMatchSnapshot
 ### toMatchInlineSnapshot
 ### toThrowErrorMatchingSnapshot
 ### toThrowErrorMatchingInlineSnapshot
+-->
 
 ### toHaveBeenCalled
+
+- **Type:** `() => Awaitable<void>`
+
+  This assertion is useful for testing that a function has been called. Requires a spy function to be passed to `expect`.
+
+  ```ts
+  import { expect, test, vi } from 'vitest'
+
+  const market = {
+    buy(subject: string, amount: number) {
+      // ...
+    },
+  }
+
+  test('spy function', () => {
+    const buySpy = vi.spyOn(market, 'buy')
+
+    expect(buySpy).not.toHaveBeenCalled()
+
+    market.buy('apples', 10)
+
+    expect(buySpy).toHaveBeenCalled()
+  })
+  ```
+
 ### toHaveBeenCalledTimes
+
+ - **Type**: `(amount: number) => Awaitable<void>`
+
+  This assertion checks if a function was called a certain amount of times. Requires a spy function to be passed to `expect`.
+
+  ```ts
+  import { expect, test, vi } from 'vitest'
+
+  const market = {
+    buy(subject: string, amount: number) {
+      // ...
+    },
+  }
+
+  test('spy function called two times', () => {
+    const buySpy = vi.spyOn(market, 'buy')
+
+    market.buy('apples', 10)
+    market.buy('apples', 20)
+
+    expect(buySpy).toHaveBeenCalledTimes(2)
+  })
+  ```
+
 ### toHaveBeenCalledWith
+
+ - **Type**: `(...args: any[]) => Awaitable<void>`
+
+  This assertion checks if a function was called at least once with certain parameters. Requires a spy function to be passed to `expect`.
+
+  ```ts
+  import { expect, test, vi } from 'vitest'
+
+  const market = {
+    buy(subject: string, amount: number) {
+      // ...
+    },
+  }
+
+  test('spy function', () => {
+    const buySpy = vi.spyOn(market, 'buy')
+
+    market.buy('apples', 10)
+    market.buy('apples', 20)
+
+    expect(buySpy).toHaveBeenCalledWith('apples', 10)
+    expect(buySpy).toHaveBeenCalledWith('apples', 20)
+  })
+  ```
+
 ### toHaveBeenLastCalledWith
+
+ - **Type**: `(...args: any[]) => Awaitable<void>`
+
+  This assertion checks if a function was called with certain parameters at it's last invocation. Requires a spy function to be passed to `expect`.
+
+  ```ts
+  import { expect, test, vi } from 'vitest'
+
+  const market = {
+    buy(subject: string, amount: number) {
+      // ...
+    },
+  }
+
+  test('spy function', () => {
+    const buySpy = vi.spyOn(market, 'buy')
+
+    market.buy('apples', 10)
+    market.buy('apples', 20)
+
+    expect(buySpy).not.toHaveBeenLastCalledWith('apples', 10)
+    expect(buySpy).toHaveBeenLastCalledWith('apples', 20)
+  })
+  ```
+
 ### toHaveBeenNthCalledWith
+
+ - **Type**: `(time: number, ...args: any[]) => Awaitable<void>`
+
+  This assertion checks if a function was called with certain parameters at the certain time. The count starts at 1. So, to check the second entry, you would write `.toHaveBeenNthCalledWith(2, ...)`.
+
+  Requires a spy function to be passed to `expect`.
+
+  ```ts
+  import { expect, test, vi } from 'vitest'
+
+  const market = {
+    buy(subject: string, amount: number) {
+      // ...
+    },
+  }
+
+  test('first call of spy function called with right params', () => {
+    const buySpy = vi.spyOn(market, 'buy')
+
+    market.buy('apples', 10)
+    market.buy('apples', 20)
+
+    expect(buySpy).toHaveBeenNthCalledWith(1, 'apples', 10)
+  })
+  ```
+
 ### toHaveReturned
+
+  - **Type**: `() => Awaitable<void>`
+
+  This assertion checks if a function has successfully returned a value at least once (i.e., did not throw an error). Requires a spy function to be passed to `expect`.
+
+  ```ts
+  import { expect, test, vi } from 'vitest'
+
+  const getApplesPrice = (amount: number) => {
+    const PRICE = 10
+    return amount * PRICE
+  }
+
+  test('spy function returned a value', () => {
+    const getPriceSpy = vi.fn(getApplesPrice)
+
+    const price = getPriceSpy(10)
+
+    expect(price).toBe(100)
+    expect(getPriceSpy).toHaveReturned()
+  })
+  ```
+
 ### toHaveReturnedTimes
+
+  - **Type**: `(amount: number) => Awaitable<void>`
+
+  This assertion checks if a function has successfully returned a value exact amount of times (i.e., did not throw an error). Requires a spy function to be passed to `expect`.
+
+  ```ts
+  import { expect, test, vi } from 'vitest'
+
+  test('spy function returns a value two times', () => {
+    const sell = vi.fn((product: string) => ({ product }))
+
+    sell('apples')
+    sell('bananas')
+
+    expect(sell).toHaveReturnedTimes(2)
+  })
+  ```
+
 ### toHaveReturnedWith
+
+  - **Type**: `(returnValue: any) => Awaitable<void>`
+
+  You can call this assertion to check if a function has successfully returned a value with certain parameters at least once. Requires a spy function to be passed to `expect`.
+
+  ```ts
+  import { expect, test, vi } from 'vitest'
+
+  test('spy function returns a product', () => {
+    const sell = vi.fn((product: string) => ({ product }))
+
+    sell('apples')
+
+    expect(sell).toHaveReturnedWith({ procuct: 'apples' })
+  })
+  ```
+
 ### toHaveLastReturnedWith
+
+  - **Type**: `(returnValue: any) => Awaitable<void>`
+
+  You can call this assertion to check if a function has successfully returned a value with certain parameters on it's last invoking. Requires a spy function to be passed to `expect`.
+
+  ```ts
+  import { expect, test, vi } from 'vitest'
+
+  test('spy function returns bananas on a last call', () => {
+    const sell = vi.fn((product: string) => ({ product }))
+
+    sell('apples')
+    sell('bananas')
+
+    expect(sell).toHaveLastReturnedWith({ procuct: 'bananas' })
+  })
+  ```
+
 ### toHaveNthReturnedWith
+
+  - **Type**: `(time: number, returnValue: any) => Awaitable<void>`
+
+  You can call this assertion to check if a function has successfully returned a value with certain parameters on a certain call. Requires a spy function to be passed to `expect`.
+
+  ```ts
+  import { expect, test, vi } from 'vitest'
+
+  test('spy function returns bananas on second call', () => {
+    const sell = vi.fn((product: string) => ({ product }))
+
+    sell('apples')
+    sell('bananas')
+
+    expect(sell).toHaveNthReturnedWith(2, { product: 'bananas' })
+  })
+  ```
 
 ### resolves
 
 - **Type:** `Promisify<Assertions>`
 
-  `resolves` is intended to remove boilerplate when asserting asynchronous code. Use it to unwrap value from pending promise and assert its value with usual assertions. If promise rejects, the assertion will fail.
+  `resolves` is intended to remove boilerplate when asserting asynchronous code. Use it to unwrap value from the pending promise and assert its value with usual assertions. If the promise rejects, the assertion will fail.
 
-  It returns the same `Assertions` object, but all matchers are now return `Promise`, so you would need to `await` it. Also works with `chai` assertions.
+  It returns the same `Assertions` object, but all matchers now return `Promise`, so you would need to `await` it. Also works with `chai` assertions.
 
   For example, if you have a function, that makes an API call and returns some data, you may use this code to assert its return value:
 
@@ -849,12 +1133,13 @@ TODO
 
   test('buyApples returns new stock id', async() => {
     // toEqual returns a promise now, so you HAVE to await it
-    await expect(buyApples()).resolves.toEqual({ id: 1 })
+    await expect(buyApples()).resolves.toEqual({ id: 1 }) // jest API
+    await expect(buyApples()).resolves.to.equal({ id: 1 }) // chai API
   })
   ```
 
   :::warning
-  If the assertion is not awaited, then you will have a false-positive test that will pass every time. To make sure that assertions are actually happened, you may use [`expect.assertions(number)`](#expect-assertions).
+  If the assertion is not awaited, then you will have a false-positive test that will pass every time. To make sure that assertions are actually called, you may use [`expect.assertions(number)`](#expect-assertions).
   :::
 
 ### rejects
@@ -873,7 +1158,6 @@ TODO
   function buyApples(id) {
     if (!id)
       throw new Error('no id')
-  
   }
 
   test('buyApples throws an error when no id provided', async() => {
@@ -955,9 +1239,7 @@ TODO
   })
   ```
 
-// asymmetric matchers
-
-### expect.anything
+<!-- ### expect.anything
 ### expect.any
 ### expect.arrayContaining
 ### expect.not.arrayContaining
@@ -969,11 +1251,11 @@ TODO
 ### expect.not.stringMatching
 
 ### expect.addSnapshotSerializer
-### expect.extend
+### expect.extend -->
 
 ## Setup and Teardown
 
-These functions allows you to hook into the life cycle of tests to avoid repeating setup and teardown code. They apply to the current context: the file if they are used at the top-level or the current suite if they are inside a `describe` block.
+These functions allow you to hook into the life cycle of tests to avoid repeating setup and teardown code. They apply to the current context: the file if they are used at the top-level or the current suite if they are inside a `describe` block.
 
 ### beforeEach
 
@@ -1053,7 +1335,7 @@ These functions allows you to hook into the life cycle of tests to avoid repeati
   Here the `afterAll` ensures that `stopMocking` method is called after all tests run.
 
 ## Vi
-Vitest provides utility functions to help you out through it's **vi** helper. You can `import { vi } from 'vitest'` or access it **globally** (when [global configuration](/config/#global) is **enabled**).
+Vitest provides utility functions to help you out through it's **vi** helper. You can `import { vi } from 'vitest'` or access it **globally** (when [globals configuration](/config/#globals) is **enabled**).
 
 ### vi.advanceTimersByTime
 
@@ -1091,7 +1373,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 
 - **Type:** `(fn: Function) => CallableMockInstance`
 
-  Creates a spy on a function, though can be initiated without one. Every time a function is invoked, it stores its call arguments, returns and instances. Also, you can manipulate its behavior with [methods](#mockmethods).
+  Creates a spy on a function, though can be initiated without one. Every time a function is invoked, it stores its call arguments, returns and instances. Also, you can manipulate its behavior with [methods](#mockinstance-methods).
   If no function is given, mock will return `undefined`, when invoked.
 
   ```ts
@@ -1102,11 +1384,11 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
   expect(getApples).toHaveBeenCalled()
   expect(getApples).toHaveReturnedWith(0)
 
-  getApples.mockReturnOnce(5)
+  getApples.mockReturnValueOnce(5)
 
   const res = getApples()
   expect(res).toBe(5)
-  expect(getApples).toHaveReturnedNthTimeWith(1, 5)
+  expect(getApples).toHaveNthReturnedWith(2, 5)
   ```
 
 ### vi.getMockedSystemTime
@@ -1128,6 +1410,18 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
   Makes all `imports` to passed module to be mocked. Inside a path you _can_ use configured Vite aliases.
 
   - If `factory` is defined, will return its result. Factory function can be asynchronous. You may call [`vi.importActual`](#vi-importactual) inside to get the original module. The call to `vi.mock` is hoisted to the top of the file, so you don't have access to variables declared in the global file scope!
+  - If mocking a module with a default export, you'll need to provide a `default` key within the returned factory function object. This is an ES modules specific caveat, therefore `jest` documentation may differ as `jest` uses commonJS modules. *Example:*
+
+  ```ts
+  vi.mock('path', () => {
+    return {
+      default: { myDefaultKey: vi.fn() },
+      namedExport: vi.fn(),
+      // etc...
+    }
+  })
+  ```
+
   - If `__mocks__` folder with file of the same name exist, all imports will return its exports. For example, `vi.mock('axios')` with `<root>/__mocks__/axios.ts` folder will return everything exported from `axios.ts`.
   - If there is no `__mocks__` folder or a file with the same name inside, will call original module and mock it. (For the rules applied, see [algorithm](/guide/mocking#automocking-algorithm).)
 
@@ -1187,7 +1481,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 
 - **Type**: `<T>(path: string) => Promise<MaybeMockedDeep<T>>`
 
-  Imports a module with all of its properties (including nested properties) mocked. Follows the same rules that [`vi.mock`](#mock) follows. For the rules applied, see [algorithm](#automockingalgorithm).
+  Imports a module with all of its properties (including nested properties) mocked. Follows the same rules that [`vi.mock`](#vi-mock) follows. For the rules applied, see [algorithm](/guide/mocking#automocking-algorithm).
 
 ### vi.restoreCurrentDate
 
@@ -1215,7 +1509,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
     console.log(++i)
     if (i === 2)
       clearInterval(interval)
-  
+
   }, 50)
 
   vi.runAllTimers()
@@ -1254,9 +1548,18 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
   expect(spy).toHaveBeenCalled()
   expect(spy).toHaveReturnedWith(1)
   ```
+
+### vi.stubGlobal
+
+- **Type**: `(key: keyof globalThis & Window, value: any) => Vitest`
+
+  Puts a value on global variable. If you are using `jsdom` or `happy-dom`, also puts the value on `window` object.
+
+  Read more in ["Mocking Globals" section](/guide/mocking.html#globals).
+
 ### vi.unmock
 
-**Type**: `(path: string) => void`
+- **Type**: `(path: string) => void`
 
   Removes module from mocked registry. All subsequent calls to import will return original module even if it was mocked.
 
@@ -1264,7 +1567,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 
 - **Type:** `() => Vitest`
 
-  To enable mocking timers, you need to call this method. It will wrap all further calls to timers (such as `setTimeout`, `setInterval`, `clearTimeout`, `clearInterval`, `nextTick`, `setImmediate`, `clearImmediate`, and `Date`), until [`vi.useRealTimers()`](#userealtimers) is called.
+  To enable mocking timers, you need to call this method. It will wrap all further calls to timers (such as `setTimeout`, `setInterval`, `clearTimeout`, `clearInterval`, `nextTick`, `setImmediate`, `clearImmediate`, and `Date`), until [`vi.useRealTimers()`](#vi-userealtimers) is called.
 
   The implementation is based internally on [`@sinonjs/fake-timers`](https://github.com/sinonjs/fake-timers).
 
@@ -1286,9 +1589,9 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 
 - **Type:** `() => MockInstance`
 
-  Clears all information about every call. After calling it, [`spy.mock.calls`](#mockcalls), [`spy.mock.returns`](#mockreturns) will return empty arrays. It is useful if you need to clean up spy between different assertions.
+  Clears all information about every call. After calling it, [`spy.mock.calls`](#mock-calls), [`spy.mock.results`](#mock-results) will return empty arrays. It is useful if you need to clean up spy between different assertions.
 
-  If you want this method to be called before each test automatically, you can enable [`clearMocks`](/config/#clearMocks) setting in config.
+  If you want this method to be called before each test automatically, you can enable [`clearMocks`](/config/#clearmocks) setting in config.
 
 
 ### mockName
@@ -1308,13 +1611,13 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
   ```ts
   const mockFn = vi.fn().mockImplementation(apples => apples + 1)
   // or: vi.fn(apples => apples + 1);
-  
+
   const NelliesBucket = mockFn(0)
   const BobsBucket = mockFn(1)
-  
+
   NelliesBucket === 1 // true
   BobsBucket === 2 // true
-  
+
   mockFn.mock.calls[0][0] === 0 // true
   mockFn.mock.calls[1][0] === 1 // true
   ```
@@ -1330,7 +1633,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
     .fn()
     .mockImplementationOnce(() => true)
     .mockImplementationOnce(() => false)
-  
+
   myMockFn() // true
   myMockFn() // false
   ```
@@ -1342,7 +1645,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
     .fn(() => 'default')
     .mockImplementationOnce(() => 'first call')
     .mockImplementationOnce(() => 'second call')
-  
+
   // 'first call', 'second call', 'default', 'default'
   console.log(myMockFn(), myMockFn(), myMockFn(), myMockFn())
   ```
@@ -1356,7 +1659,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
   ```ts
   test('async test', async() => {
     const asyncMock = vi.fn().mockRejectedValue(new Error('Async error'))
-  
+
     await asyncMock() // throws "Async error"
   })
   ```
@@ -1373,7 +1676,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
       .fn()
       .mockResolvedValueOnce('first call')
       .mockRejectedValueOnce(new Error('Async error'))
-  
+
     await asyncMock() // first call
     await asyncMock() // throws "Async error"
   })
@@ -1385,7 +1688,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 
   Does what `mockClear` does and makes inner implementation as an empty function (returning `undefined`, when invoked). This is useful when you want to completely reset a mock back to its initial state.
 
-  If you want this method to be called before each test automatically, you can enable [`mockReset`](/config/#mockReset) setting in config.
+  If you want this method to be called before each test automatically, you can enable [`mockReset`](/config/#mockreset) setting in config.
 
 ### mockRestore
 
@@ -1406,7 +1709,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
   ```ts
   test('async test', async() => {
     const asyncMock = vi.fn().mockResolvedValue(43)
-  
+
     await asyncMock() // 43
   })
   ```
@@ -1424,7 +1727,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
       .mockResolvedValue('default')
       .mockResolvedValueOnce('first call')
       .mockResolvedValueOnce('second call')
-  
+
     await asyncMock() // first call
     await asyncMock() // second call
     await asyncMock() // default
@@ -1456,7 +1759,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 
 - **Type:** `(value: any) => MockInstance`
 
-  Accepts a value that will be returned whenever mock function is invoked. If chained, every consecutive call will return passed value. When there are no more `mockReturnValueOnce` values to use, calls a function specified by `mockImplementation` or other `mockReturn*` methods.
+  Accepts a value that will be returned for one call to the mock function. If chained, every consecutive call will return passed value. When there are no more `mockReturnValueOnce` values to use, calls a function specified by `mockImplementation` or other `mockReturn*` methods.
 
   ```ts
   const myMockFn = vi
@@ -1464,7 +1767,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
     .mockReturnValue('default')
     .mockReturnValueOnce('first call')
     .mockReturnValueOnce('second call')
-  
+
   // 'first call', 'second call', 'default', 'default'
   console.log(myMockFn(), myMockFn(), myMockFn(), myMockFn())
   ```
@@ -1493,7 +1796,7 @@ This is an array containing all values, that were `returned` from function. One 
 
 The `value` property contains returned value or thrown error.
 
-If function returned `'result1`, then threw and error, then `mock.results` will be:
+If function returned `result`, then threw an error, then `mock.results` will be:
 
 ```js
 [

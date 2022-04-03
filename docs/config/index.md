@@ -10,6 +10,21 @@
 
 To configure `vitest` itself, add `test` property in your Vite config. You'll also need to add a reference to Vitest types using a [triple slash command](https://www.typescriptlang.org/docs/handbook/triple-slash-directives.html#-reference-types-) at the top of your config file, if you are importing `defineConfig` from `vite` itself.
 
+using `defineConfig` from `vite` you should follow this:
+
+```ts
+/// <reference types="vitest" />
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  test: {
+    // ...
+  },
+})
+```
+
+using `defineConfig` from `vitest/config` you should follow this:
+
 ```ts
 import { defineConfig } from 'vitest/config'
 
@@ -206,6 +221,7 @@ Project root
 - **Default:** `'default'`
 
 Custom reporters for output. Reporters can be [a Reporter instance](https://github.com/vitest-dev/vitest/blob/main/packages/vitest/src/types/reporter.ts) or a string to select built in reporters:
+
   - `'default'` - collapse suites when they pass
   - `'verbose'` - keep the full task tree visible
   - `'dot'` -  show each task as a single dot
@@ -302,6 +318,27 @@ Isolate environment for each test file
 
 Coverage options
 
+### testNamePattern
+
+- **Type** `string | RegExp`
+
+Run tests with full names matching the pattern.
+If you add `OnlyRunThis` to this property, tests containing the word `OnlyRunThis` in the test name will be skipped.
+
+```js
+import { expect, test } from 'vitest'
+
+// run
+test('OnlyRunThis', () => {
+  expect(true).toBe(true)
+})
+
+// skipped
+test('doNotRun', () => {
+  expect(true).toBe(true)
+})
+```
+
 ### open
 
 - **Type:** `boolean`
@@ -385,3 +422,12 @@ Format options for snapshot testing.
 - **Default:** `test`
 
 Overrides Vite mode.
+
+### changed
+
+- **Type**: `boolean | string`
+- **Default**: false
+
+Run tests only against changed files. If no value is provided, it will run tests against uncomitted changes (includes staged and unstaged).
+
+To run tests against changes made in last commit, you can use `--changed HEAD~1`. You can also pass commit hash or branch name.

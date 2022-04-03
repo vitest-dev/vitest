@@ -22,7 +22,8 @@ cli
   .option('--silent', 'silent console output from tests')
   .option('--isolate', 'isolate environment for each test file (default: true)')
   .option('--reporter <name>', 'reporter')
-  .option('--outputFile <filename>', 'write test results to a file when the --reporter=json option is also specified')
+  .option('--outputTruncateLength <length>', 'diff output length')
+  .option('--outputFile <filename>', 'write test results to a file when the --reporter=json or --reporter=junit option is also specified')
   .option('--coverage', 'use c8 for coverage')
   .option('--run', 'do not watch')
   .option('--mode <name>', 'override Vite mode (default: test)')
@@ -33,6 +34,7 @@ cli
   .option('--environment <env>', 'runner environment (default: node)')
   .option('--passWithNoTests', 'pass when no tests found')
   .option('--allowOnly', 'Allow tests and suites that are marked as only (default: !process.env.CI)')
+  .option('--changed [since]', 'Run tests that are affected by the changed files (default: false)')
   .help()
 
 cli

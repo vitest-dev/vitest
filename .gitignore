@@ -10,7 +10,11 @@ node_modules
 .cache
 dist
 .idea
+ltex*
 .DS_Store
 bench/test/*/*/
+cypress/videos
+cypress/downloads
+cypress/screenshots
 docs/public/user-avatars
 docs/public/sponsors

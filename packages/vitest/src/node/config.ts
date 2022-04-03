@@ -15,6 +15,8 @@ const extraInlineDeps = [
   /\/vitest\/dist\//,
   // yarn's .store folder
   /vitest-virtual-\w+\/dist/,
+  // cnpm
+  /@vitest\/dist/,
   // Nuxt
   '@nuxt/test-utils',
 ]
@@ -76,14 +78,10 @@ export function resolveConfig(
     options.environment = 'happy-dom'
   }
 
-  const globals = options?.global ?? options.globals
-
   const resolved = {
     ...configDefaults,
     ...options,
     root: viteConfig.root,
-    globals,
-    global: globals,
   } as ResolvedConfig
 
   if (viteConfig.base !== '/')
@@ -135,6 +133,9 @@ export function resolveConfig(
   ])).filter(Boolean)
   if (!resolved.reporters.length)
     resolved.reporters.push('default')
+
+  if (resolved.changed)
+    resolved.passWithNoTests ??= true
 
   return resolved
 }
