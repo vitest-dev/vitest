@@ -39,6 +39,10 @@ export const createDotRenderer = (_tasks: Task[], options: DotRendererOptions) =
   }
 
   return {
+    print() {
+      update()
+      return this
+    },
     start() {
       if (timer)
         return this
