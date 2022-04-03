@@ -45,37 +45,37 @@ export function setupConsoleLogSpy() {
   let timer: any
 
   // group sync console.log calls with macro task
-  function schedule() {
+  function schedule(taskId?: string) {
     clearTimeout(timer)
     timer = setTimeout(() => {
       if (stderrTime < stdoutTime) {
-        sendStderr()
-        sendStdout()
+        sendStderr(taskId)
+        sendStdout(taskId)
       }
       else {
-        sendStdout()
-        sendStderr()
+        sendStdout(taskId)
+        sendStderr(taskId)
       }
     })
   }
-  function sendStdout() {
+  function sendStdout(taskId?: string) {
     if (stdoutBuffer.length) {
       rpc().onUserConsoleLog({
         type: 'stdout',
         content: stdoutBuffer.map(i => String(i)).join(''),
-        taskId: getWorkerState().current?.id,
+        taskId,
         time: stdoutTime || RealDate.now(),
       })
     }
     stdoutBuffer.length = 0
     stdoutTime = 0
   }
-  function sendStderr() {
+  function sendStderr(taskId?: string) {
     if (stderrBuffer.length) {
       rpc().onUserConsoleLog({
         type: 'stderr',
         content: stderrBuffer.map(i => String(i)).join(''),
-        taskId: getWorkerState().current?.id,
+        taskId,
         time: stderrTime || RealDate.now(),
       })
     }
@@ -85,17 +85,19 @@ export function setupConsoleLogSpy() {
 
   const stdout = new Writable({
     write(data, encoding, callback) {
+      const id = getWorkerState()?.current?.id
       stdoutTime = stdoutTime || RealDate.now()
       stdoutBuffer.push(data)
-      schedule()
+      schedule(id)
       callback()
     },
   })
   const stderr = new Writable({
     write(data, encoding, callback) {
+      const id = getWorkerState()?.current?.id
       stderrTime = stderrTime || RealDate.now()
       stderrBuffer.push(data)
-      schedule()
+      schedule(id)
       callback()
     },
   })
