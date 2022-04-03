@@ -1,5 +1,5 @@
-import type { EnhancedSpy } from '../jest-mock'
-import { isMockFunction } from '../jest-mock'
+import type { EnhancedSpy } from '../spy'
+import { isMockFunction } from '../spy'
 import { addSerializer } from '../snapshot/port/plugins'
 import type { Constructable } from '../../types'
 import { assertTypes } from '../../utils'

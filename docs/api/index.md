@@ -1787,6 +1787,10 @@ If a function was invoked twice with the following arguments `fn(arg1, arg2)`, `
 ]
 ```
 
+### mock.lastCall
+
+This contains the arguments of the last call. If spy wasn't called, will return `undefined`.
+
 ### mock.results
 
 This is an array containing all values, that were `returned` from function. One item of the array is an object with properties `type` and `value`. Available types are:
@@ -1813,4 +1817,29 @@ If function returned `result`, then threw an error, then `mock.results` will be:
 
 ### mock.instances
 
-Currently, this property is not implemented.
+This is an array containing all instances that were instantiated when mock was called with a `new` keyword. Note, this is an actual context (`this`) of the function, not a return value.
+
+For example, if mock was instantiated with `new MyClass()`, then `mock.instances` will be an array of one value:
+
+```js
+import { expect, vi } from 'vitest'
+
+const MyClass = vi.fn()
+
+const a = new MyClass()
+
+expect(MyClass.mock.instances[0]).toBe(a)
+```
+
+If you return a value from constructor, it will not be in `instances` array, but instead on `results`:
+
+```js
+import { expect, vi } from 'vitest'
+
+const Spy = vi.fn(() => ({ method: vi.fn() }))
+
+const a = new Spy()
+
+expect(Spy.mock.instances[0]).not.toBe(a)
+expect(Spy.mock.results[0]).toBe(a)
+```

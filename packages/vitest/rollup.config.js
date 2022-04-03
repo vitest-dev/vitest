@@ -19,7 +19,7 @@ const entries = [
   'src/node.ts',
   'src/runtime/worker.ts',
   'src/runtime/entry.ts',
-  'src/integrations/jest-mock.ts',
+  'src/integrations/spy.ts',
 ]
 
 const dtsEntries = [
