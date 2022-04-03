@@ -8,12 +8,12 @@ export class DefaultReporter extends BaseReporter {
   renderer?: ReturnType<typeof createListRenderer>
   rendererOptions: ListRendererOptions = {} as any
 
-  async onReprint(trigger?: string) {
+  async onTestRemoved(trigger?: string) {
     await this.stopListRender()
     this.ctx.console.clear()
-    this.ctx.log(c.blue('Test removed...') + (trigger ? c.dim(` [ ${this.relative(trigger)} ]\n`) : ''))
+    this.ctx.log(c.yellow('Test removed...') + (trigger ? c.dim(` [ ${this.relative(trigger)} ]\n`) : ''))
     const files = this.ctx.state.getFiles(this.watchFilters)
-    this.renderer = createListRenderer(files, this.rendererOptions).print()
+    createListRenderer(files, this.rendererOptions).stop()
     this.ctx.log()
     await super.reportSummary(files)
     super.onWatcherStart()
