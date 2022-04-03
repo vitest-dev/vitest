@@ -81,7 +81,8 @@ watch([cm, failed], () => {
         widgets.push(cm.value!.addLineWidget(pos.line - 1, div))
       }
     })
-    if (!hasBeenEdited.value) cm.value?.clearHistory() // Prevent getting access to initial state
+    if (!hasBeenEdited.value)
+      cm.value?.clearHistory() // Prevent getting access to initial state
   }, 100)
 }, { flush: 'post' })
 

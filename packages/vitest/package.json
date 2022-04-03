@@ -1,6 +1,7 @@
 {
   "name": "vitest",
-  "version": "0.8.3",
+  "type": "module",
+  "version": "0.8.4",
   "description": "A blazing fast unit test framework powered by Vite",
   "keywords": [
     "vite",
@@ -13,19 +14,15 @@
     "url": "https://github.com/vitest-dev/vitest/issues"
   },
   "license": "MIT",
+  "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vitest-dev/vitest.git"
   },
   "funding": "https://github.com/sponsors/antfu",
-  "author": "Anthony Fu <anthonyfu117@hotmail.com>",
-  "type": "module",
-  "files": [
-    "dist",
-    "bin",
-    "*.d.ts",
-    "*.mjs"
-  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "import": "./dist/index.js",
@@ -48,9 +45,12 @@
       "types": "./config.d.ts"
     }
   },
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "bin",
+    "*.d.ts",
+    "*.mjs"
+  ],
   "bin": {
     "vitest": "./vitest.mjs"
   },

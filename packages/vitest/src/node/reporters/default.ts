@@ -1,3 +1,4 @@
+import c from 'picocolors'
 import type { UserConsoleLog } from '../../types'
 import { BaseReporter } from './base'
 import type { ListRendererOptions } from './renderers/listRenderer'
@@ -6,6 +7,17 @@ import { createListRenderer } from './renderers/listRenderer'
 export class DefaultReporter extends BaseReporter {
   renderer?: ReturnType<typeof createListRenderer>
   rendererOptions: ListRendererOptions = {} as any
+
+  async onTestRemoved(trigger?: string) {
+    await this.stopListRender()
+    this.ctx.console.clear()
+    this.ctx.log(c.yellow('Test removed...') + (trigger ? c.dim(` [ ${this.relative(trigger)} ]\n`) : ''))
+    const files = this.ctx.state.getFiles(this.watchFilters)
+    createListRenderer(files, this.rendererOptions).stop()
+    this.ctx.log()
+    await super.reportSummary(files)
+    super.onWatcherStart()
+  }
 
   onCollected() {
     if (this.isTTY) {

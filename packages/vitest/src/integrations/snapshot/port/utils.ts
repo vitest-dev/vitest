@@ -215,7 +215,8 @@ export function deepMergeSnapshot(target: any, source: any): any {
     const mergedOutput = { ...target }
     Object.keys(source).forEach((key) => {
       if (isObject(source[key]) && !source[key].$$typeof) {
-        if (!(key in target)) Object.assign(mergedOutput, { [key]: source[key] })
+        if (!(key in target))
+          Object.assign(mergedOutput, { [key]: source[key] })
         else mergedOutput[key] = deepMergeSnapshot(target[key], source[key])
       }
       else if (Array.isArray(source[key])) {

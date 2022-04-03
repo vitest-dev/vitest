@@ -1,6 +1,6 @@
 {
-  "private": true,
   "type": "module",
+  "private": true,
   "scripts": {
     "bench": "esmo src/index.ts",
     "bench:ci": "esmo src/github.ts"
