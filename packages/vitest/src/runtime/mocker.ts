@@ -15,7 +15,8 @@ function getObjectType(value: unknown): string {
 }
 
 function mockPrototype(spyOn: typeof import('../integrations/jest-mock')['spyOn'], proto: any) {
-  if (!proto) return null
+  if (!proto)
+    return null
 
   const newProto: any = {}
 
@@ -137,7 +138,8 @@ export class VitestMocker {
       const baseFilename = basename(path)
       const mockFolder = resolve(this.root, '__mocks__', mockDirname)
 
-      if (!existsSync(mockFolder)) return null
+      if (!existsSync(mockFolder))
+        return null
 
       const files = readdirSync(mockFolder)
 
@@ -233,7 +235,8 @@ export class VitestMocker {
   }
 
   private async ensureSpy() {
-    if (VitestMocker.spyModule) return
+    if (VitestMocker.spyModule)
+      return
     VitestMocker.spyModule = await this.request(resolve(distDir, 'jest-mock.js')) as typeof import('../integrations/jest-mock')
   }
 

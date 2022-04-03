@@ -1,4 +1,3 @@
-
 import * as React from 'react'
 import fetch from 'cross-fetch'
 import { gql, useLazyQuery } from '@apollo/client'

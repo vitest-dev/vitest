@@ -83,7 +83,8 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
   let openPromise: Promise<void>
 
   function reconnect(reset = false) {
-    if (reset) tries = reconnectTries
+    if (reset)
+      tries = reconnectTries
     ctx.ws = new WebSocket(url)
     registerWS()
   }
@@ -100,7 +101,8 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
     })
     ctx.ws.addEventListener('close', () => {
       tries -= 1
-      if (autoReconnect && tries > 0) setTimeout(reconnect, reconnectInterval)
+      if (autoReconnect && tries > 0)
+        setTimeout(reconnect, reconnectInterval)
     })
   }
 

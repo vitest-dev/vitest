@@ -195,7 +195,8 @@ export class Vitest {
       if (hasFailed(this.state.getFiles()))
         process.exitCode = 1
 
-      if (!this.config.web) await this.report('onFinished', this.state.getFiles())
+      if (!this.config.web)
+        await this.report('onFinished', this.state.getFiles())
     })()
       .finally(() => {
         this.runningPromise = undefined
@@ -207,7 +208,8 @@ export class Vitest {
   async rerunFiles(files: string[] = this.state.getFilepaths(), trigger?: string) {
     await this.report('onWatcherRerun', files, trigger)
     await this.runFiles(files)
-    if (!this.config.web) await this.report('onWatcherStart')
+    if (!this.config.web)
+      await this.report('onWatcherStart')
   }
 
   async changeNamePattern(pattern: string, files: string[] = this.state.getFilepaths(), trigger?: string) {
@@ -290,7 +292,8 @@ export class Vitest {
       if (this.config.coverage.enabled)
         await reportCoverage(this)
 
-      if (!this.config.web) await this.report('onWatcherStart')
+      if (!this.config.web)
+        await this.report('onWatcherStart')
     }, WATCHER_DEBOUNCE)
   }
 

@@ -76,7 +76,8 @@ export default () => [
       }),
     ],
     onwarn(message) {
-      if (message.code === 'CIRCULAR_DEPENDENCY') return
+      if (message.code === 'CIRCULAR_DEPENDENCY')
+        return
       console.error(message)
     },
   },

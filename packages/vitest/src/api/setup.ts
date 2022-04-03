@@ -27,10 +27,12 @@ export function setup(ctx: Vitest) {
   const clients = new Map<WebSocket, BirpcReturn<WebSocketEvents>>()
 
   ctx.server.httpServer?.on('upgrade', (request, socket, head) => {
-    if (!request.url) return
+    if (!request.url)
+      return
 
     const { pathname } = new URL(request.url, 'http://localhost')
-    if (pathname !== API_PATH) return
+    if (pathname !== API_PATH)
+      return
 
     wss.handleUpgrade(request, socket, head, (ws) => {
       wss.emit('connection', ws, request)
@@ -96,8 +98,10 @@ export function setup(ctx: Vitest) {
             mod?: ModuleNode,
             seen = new Map<ModuleNode, string>(),
           ) {
-            if (!mod || !mod.id) return
-            if (seen.has(mod)) return seen.get(mod)
+            if (!mod || !mod.id)
+              return
+            if (seen.has(mod))
+              return seen.get(mod)
             let id = clearId(mod.id)
             seen.set(mod, id)
             const rewrote = await ctx.vitenode.shouldExternalize(id)
@@ -125,7 +129,8 @@ export function setup(ctx: Vitest) {
           }
         },
         updateSnapshot(file?: File) {
-          if (!file) return ctx.updateSnapshot()
+          if (!file)
+            return ctx.updateSnapshot()
           return ctx.updateSnapshot([file.filepath])
         },
       },
@@ -156,21 +161,24 @@ class WebSocketReporter implements Reporter {
   ) {}
 
   onPathsCollected(paths?: string[]) {
-    if (this.clients.size === 0) return
+    if (this.clients.size === 0)
+      return
     this.clients.forEach((client) => {
       client.onPathsCollected?.(paths)
     })
   }
 
   onCollected(files?: File[]) {
-    if (this.clients.size === 0) return
+    if (this.clients.size === 0)
+      return
     this.clients.forEach((client) => {
       client.onCollected?.(files)
     })
   }
 
   async onTaskUpdate(packs: TaskResultPack[]) {
-    if (this.clients.size === 0) return
+    if (this.clients.size === 0)
+      return
 
     await Promise.all(
       packs.map(async(i) => {

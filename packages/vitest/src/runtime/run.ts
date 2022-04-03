@@ -57,7 +57,8 @@ async function sendTasksUpdate() {
 }
 
 export async function runTest(test: Test) {
-  if (test.mode !== 'run') return
+  if (test.mode !== 'run')
+    return
 
   if (test.result?.state === 'fail') {
     updateTask(test)
@@ -158,7 +159,8 @@ function markTasksAsSkipped(suite: Suite) {
     t.mode = 'skip'
     t.result = { ...t.result, state: 'skip' }
     updateTask(t)
-    if (t.type === 'suite') markTasksAsSkipped(t)
+    if (t.type === 'suite')
+      markTasksAsSkipped(t)
   })
 }
 
@@ -256,7 +258,8 @@ async function startTestsWeb(paths: string[], config: ResolvedConfig) {
 }
 
 export async function startTests(paths: string[], config: ResolvedConfig) {
-  if (config.web) return startTestsWeb(paths, config)
+  if (config.web)
+    return startTestsWeb(paths, config)
 
   const files = await collectTests(paths, config)
 
@@ -278,9 +281,12 @@ export function clearModuleMocks() {
   const { clearMocks, mockReset, restoreMocks } = getWorkerState().config
 
   // since each function calls another, we can just call one
-  if (restoreMocks) vi.restoreAllMocks()
-  else if (mockReset) vi.resetAllMocks()
-  else if (clearMocks) vi.clearAllMocks()
+  if (restoreMocks)
+    vi.restoreAllMocks()
+  else if (mockReset)
+    vi.resetAllMocks()
+  else if (clearMocks)
+    vi.clearAllMocks()
 }
 
 declare global {

@@ -101,7 +101,8 @@ export function numberToPos(
   source: string,
   offset: number | Position,
 ): Position {
-  if (typeof offset !== 'number') return offset
+  if (typeof offset !== 'number')
+    return offset
   if (offset > source.length) {
     throw new Error(
       `offset is longer than source length! offset ${offset} > length ${source.length}`,

@@ -3,7 +3,7 @@ name: Benchmark
 on:
   issue_comment:
     types:
-    - created
+      - created
 
 jobs:
   bench:
@@ -19,7 +19,7 @@ jobs:
       - name: Install node
         uses: actions/setup-node@v2
         with:
-          cache: "pnpm"
+          cache: pnpm
 
       - name: Install
         working-directory: ./bench

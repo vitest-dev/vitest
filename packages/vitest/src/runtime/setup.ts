@@ -19,7 +19,8 @@ export async function setupGlobalEnv(config: ResolvedConfig) {
   // if run with "threads: false"
   setupDefines(config.defines)
 
-  if (globalSetup) return
+  if (globalSetup)
+    return
 
   globalSetup = true
 

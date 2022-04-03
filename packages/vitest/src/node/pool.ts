@@ -22,7 +22,8 @@ export interface WorkerPool {
 }
 
 export function createPool(ctx: Vitest): WorkerPool {
-  if (ctx.config.threads || ctx.config.web) return createWorkerPool(ctx)
+  if (ctx.config.threads || ctx.config.web)
+    return createWorkerPool(ctx)
   else return createFakePool(ctx)
 }
 
@@ -140,7 +141,8 @@ function createChannel(ctx: Vitest) {
       async getSourceMap(id, force) {
         if (force) {
           const mod = ctx.server.moduleGraph.getModuleById(id)
-          if (mod) ctx.server.moduleGraph.invalidateModule(mod)
+          if (mod)
+            ctx.server.moduleGraph.invalidateModule(mod)
         }
         const r = await ctx.vitenode.transformRequest(id)
         return r?.map as RawSourceMap | undefined

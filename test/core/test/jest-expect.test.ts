@@ -124,7 +124,6 @@ describe('jest-expect', () => {
       { name: 'Mohammad' },
     ]))
 
-
     expect('Mohammad').toEqual(expect.stringMatching(/Moh/))
     expect('Mohammad').not.toEqual(expect.stringMatching(/jack/))
 

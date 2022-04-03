@@ -9,7 +9,8 @@ import { runSetupFiles } from './setup'
 
 function hash(str: string): string {
   let hash = 0
-  if (str.length === 0) return `${hash}`
+  if (str.length === 0)
+    return `${hash}`
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i)
     hash = (hash << 5) - hash + char
@@ -64,7 +65,8 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
           const start = performance.now()
           const suite = await c.collect(file)
           file.collectDuration = performance.now() - start
-          if (suite.name || suite.tasks.length) file.tasks.push(suite)
+          if (suite.name || suite.tasks.length)
+            file.tasks.push(suite)
         }
       }
     }
@@ -133,7 +135,8 @@ function interpretTaskModes(
         t.mode = 'skip'
     }
     else if (t.type === 'suite') {
-      if (t.mode === 'skip') skipAllTasks(t)
+      if (t.mode === 'skip')
+        skipAllTasks(t)
       else interpretTaskModes(t, namePattern, onlyMode, includeTask, allowOnly)
     }
   })
@@ -159,13 +162,15 @@ function skipAllTasks(suite: Suite) {
   suite.tasks.forEach((t) => {
     if (t.mode === 'run') {
       t.mode = 'skip'
-      if (t.type === 'suite') skipAllTasks(t)
+      if (t.type === 'suite')
+        skipAllTasks(t)
     }
   })
 }
 
 function checkAllowOnly(task: TaskBase, allowOnly?: boolean) {
-  if (allowOnly) return
+  if (allowOnly)
+    return
   task.result = {
     state: 'fail',
     error: processError(new Error('[Vitest] Unexpected .only modifier. Remove it or pass --allowOnly argument to bypass this error')),
@@ -175,6 +180,7 @@ function checkAllowOnly(task: TaskBase, allowOnly?: boolean) {
 function calculateHash(parent: Suite) {
   parent.tasks.forEach((t, idx) => {
     t.id = `${parent.id}_${idx}`
-    if (t.type === 'suite') calculateHash(t)
+    if (t.type === 'suite')
+      calculateHash(t)
   })
 }
