@@ -29,7 +29,7 @@
     "ui:test": "npm -C packages/ui run test:run"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^0.19.2",
+    "@antfu/eslint-config": "^0.19.4",
     "@antfu/ni": "^0.14.0",
     "@rollup/plugin-alias": "^3.1.9",
     "@rollup/plugin-commonjs": "^21.0.3",
