@@ -67,6 +67,7 @@ export function setupConsoleLogSpy() {
         content: buffer.map(i => String(i)).join(''),
         taskId,
         time: timer.stdoutTime || RealDate.now(),
+        size: buffer.length,
       })
       stdoutBuffer.set(taskId, [])
       timer.stdoutTime = 0
@@ -81,6 +82,7 @@ export function setupConsoleLogSpy() {
         content: buffer.map(i => String(i)).join(''),
         taskId,
         time: timer.stderrTime || RealDate.now(),
+        size: buffer.length,
       })
       stderrBuffer.set(taskId, [])
       timer.stderrTime = 0

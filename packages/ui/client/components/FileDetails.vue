@@ -29,6 +29,9 @@ const open = () => {
 const changeViewMode = (view: Params['view']) => {
   viewMode.value = view
 }
+const count = computed(() => {
+  return currentLogs.value?.map(l => l.size).reduce((s, a) => s + a, 0) ?? 0
+})
 </script>
 
 <template>
@@ -72,10 +75,10 @@ const changeViewMode = (view: Params['view']) => {
         </button>
         <button
           tab-button
-          :class="{ 'tab-button-active': viewMode === 'console', 'op20': viewMode !== 'console' && currentLogs?.length === 0 }"
+          :class="{ 'tab-button-active': viewMode === 'console', 'op20': viewMode !== 'console' && count === 0 }"
           @click="changeViewMode('console')"
         >
-          Console ({{ currentLogs?.length || 0 }})
+          Console ({{ count }})
         </button>
       </div>
     </div>
