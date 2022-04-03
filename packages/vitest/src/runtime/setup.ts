@@ -38,16 +38,16 @@ function setupDefines(defines: Record<string, any>) {
 }
 
 export function setupConsoleLogSpy() {
-  const stdoutBuffer: any[] = []
-  const stderrBuffer: any[] = []
-  let stdoutTime = 0
-  let stderrTime = 0
-  let timer: any
+  const stdoutBuffer = new Map<string, any[]>()
+  const stderrBuffer = new Map<string, any[]>()
+  const timers = new Map<string, { stdoutTime: number; stderrTime: number; timer: any }>()
 
   // group sync console.log calls with macro task
-  function schedule(taskId?: string) {
-    clearTimeout(timer)
-    timer = setTimeout(() => {
+  function schedule(taskId: string) {
+    const timer = timers.get(taskId)!
+    const { stdoutTime, stderrTime } = timer
+    clearTimeout(timer.timer)
+    timer.timer = setTimeout(() => {
       if (stderrTime < stdoutTime) {
         sendStderr(taskId)
         sendStdout(taskId)
@@ -58,45 +58,69 @@ export function setupConsoleLogSpy() {
       }
     })
   }
-  function sendStdout(taskId?: string) {
-    if (stdoutBuffer.length) {
+  function sendStdout(taskId: string) {
+    const buffer = stdoutBuffer.get(taskId)
+    if (buffer) {
+      const timer = timers.get(taskId!)!
       rpc().onUserConsoleLog({
         type: 'stdout',
-        content: stdoutBuffer.map(i => String(i)).join(''),
+        content: buffer.map(i => String(i)).join(''),
         taskId,
-        time: stdoutTime || RealDate.now(),
+        time: timer.stdoutTime || RealDate.now(),
       })
+      stdoutBuffer.set(taskId!, [])
+      timer.stdoutTime = 0
     }
-    stdoutBuffer.length = 0
-    stdoutTime = 0
   }
-  function sendStderr(taskId?: string) {
-    if (stderrBuffer.length) {
+  function sendStderr(taskId: string) {
+    const buffer = stderrBuffer.get(taskId)
+    if (buffer) {
+      const timer = timers.get(taskId!)!
       rpc().onUserConsoleLog({
         type: 'stderr',
-        content: stderrBuffer.map(i => String(i)).join(''),
+        content: buffer.map(i => String(i)).join(''),
         taskId,
-        time: stderrTime || RealDate.now(),
+        time: timer.stderrTime || RealDate.now(),
       })
+      stderrBuffer.set(taskId!, [])
+      timer.stderrTime = 0
     }
-    stderrBuffer.length = 0
-    stderrTime = 0
   }
 
   const stdout = new Writable({
     write(data, encoding, callback) {
-      const id = getWorkerState()?.current?.id
-      stdoutTime = stdoutTime || RealDate.now()
-      stdoutBuffer.push(data)
+      const id = getWorkerState()?.current?.id ?? '__unknown_test__'
+      let timer = timers.get(id)
+      if (!timer) {
+        timer = { stdoutTime: RealDate.now(), stderrTime: RealDate.now(), timer: 0 }
+        timers.set(id, timer)
+      }
+      timer.stdoutTime = timer.stdoutTime || RealDate.now()
+      let buffer = stdoutBuffer.get(id)
+      if (!buffer) {
+        buffer = []
+        stdoutBuffer.set(id, buffer)
+      }
+      buffer.push(data)
       schedule(id)
       callback()
     },
   })
   const stderr = new Writable({
     write(data, encoding, callback) {
-      const id = getWorkerState()?.current?.id
-      stderrTime = stderrTime || RealDate.now()
-      stderrBuffer.push(data)
+      const id = getWorkerState()?.current?.id ?? '__unknown_test__'
+      let timer = timers.get(id)
+      if (!timer) {
+        timer = { stdoutTime: RealDate.now(), stderrTime: RealDate.now(), timer: 0 }
+        timers.set(id, timer)
+      }
+      timer.stderrTime = timer.stderrTime || RealDate.now()
+      let buffer = stderrBuffer.get(id)
+      if (!buffer) {
+        buffer = []
+        stderrBuffer.set(id, buffer)
+      }
+      buffer.push(data)
       schedule(id)
       callback()
     },
