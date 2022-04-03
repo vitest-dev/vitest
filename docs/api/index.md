@@ -129,7 +129,7 @@ For compatibility with Jest, `TestFunction` can also be of type `(done: DoneCall
   - `%i`: integer
   - `%f`: floating point value
   - `%j`: json
-  - `$o`: object
+  - `%o`: object
   - `%#`: index of the test case
   - `%%`: single percent sign ('%')
 
