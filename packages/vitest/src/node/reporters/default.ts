@@ -12,7 +12,6 @@ export class DefaultReporter extends BaseReporter {
     await this.stopListRender()
     this.ctx.console.clear()
     this.ctx.log(c.blue('Test removed...') + (trigger ? c.dim(` [ ${this.relative(trigger)} ]\n`) : ''))
-    this.ctx.log()
     const files = this.ctx.state.getFiles(this.watchFilters)
     if (!this.renderer)
       this.renderer = createListRenderer(files, this.rendererOptions).print()
