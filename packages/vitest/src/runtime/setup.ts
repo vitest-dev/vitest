@@ -85,7 +85,7 @@ export function setupConsoleLogSpy() {
 
   const stdout = new Writable({
     write(data, encoding, callback) {
-      const id = getWorkerState().current?.id
+      const id = getWorkerState()?.current?.id
       stdoutTime = stdoutTime || RealDate.now()
       stdoutBuffer.push(data)
       schedule(id)
@@ -94,7 +94,7 @@ export function setupConsoleLogSpy() {
   })
   const stderr = new Writable({
     write(data, encoding, callback) {
-      const id = getWorkerState().current?.id
+      const id = getWorkerState()?.current?.id
       stderrTime = stderrTime || RealDate.now()
       stderrBuffer.push(data)
       schedule(id)
