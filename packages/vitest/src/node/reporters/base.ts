@@ -65,14 +65,13 @@ export abstract class BaseReporter implements Reporter {
       const task = this.ctx.state.idMap.get(pack[0])
       if (task && 'filepath' in task && task.result?.state && task.result?.state !== 'run') {
         const tests = getTests(task)
-        const count = tests.length
         const failed = tests.filter(t => t.result?.state === 'fail')
         const skipped = tests.filter(t => t.mode === 'skip' || t.mode === 'todo')
-        let state = c.dim(`${getTests(task).length} test${count > 1 ? 's' : ''}`)
+        let state = c.dim(`${tests.length} test${tests.length > 1 ? 's' : ''}`)
         if (failed.length)
-          state += ` | ${c.red(`${failed.length} failed`)}`
+          state += ` ${c.dim('|')} ${c.red(`${failed.length} failed`)}`
         if (skipped.length)
-          state += ` | ${c.yellow(`${skipped.length} skipped`)}`
+          state += ` ${c.dim('|')} ${c.yellow(`${skipped.length} skipped`)}`
         let suffix = c.dim(' (') + state + c.dim(')')
         if (task.result.duration)
           suffix += c.yellow(` ${Math.round(task.result.duration)}${c.dim('ms')}`)
