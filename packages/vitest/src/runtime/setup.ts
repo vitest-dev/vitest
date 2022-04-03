@@ -94,11 +94,13 @@ export function setupConsoleLogSpy() {
     write(data, encoding, callback) {
       const id = getWorkerState()?.current?.id ?? unknownTestId
       let timer = timers.get(id)
-      if (!timer) {
+      if (timer) {
+        timer.stdoutTime = timer.stdoutTime || RealDate.now()
+      }
+      else {
         timer = { stdoutTime: RealDate.now(), stderrTime: RealDate.now(), timer: 0 }
         timers.set(id, timer)
       }
-      timer.stdoutTime = timer.stdoutTime || RealDate.now()
       let buffer = stdoutBuffer.get(id)
       if (!buffer) {
         buffer = []
@@ -113,11 +115,13 @@ export function setupConsoleLogSpy() {
     write(data, encoding, callback) {
       const id = getWorkerState()?.current?.id ?? unknownTestId
       let timer = timers.get(id)
-      if (!timer) {
-        timer = { stdoutTime: RealDate.now(), stderrTime: RealDate.now(), timer: 0 }
+      if (timer) {
+        timer.stderrTime = timer.stderrTime || RealDate.now()
+      }
+      else {
+        timer = { stderrTime: RealDate.now(), stdoutTime: RealDate.now(), timer: 0 }
         timers.set(id, timer)
       }
-      timer.stderrTime = timer.stderrTime || RealDate.now()
       let buffer = stderrBuffer.get(id)
       if (!buffer) {
         buffer = []
