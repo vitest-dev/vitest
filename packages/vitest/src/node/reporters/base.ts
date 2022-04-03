@@ -63,8 +63,13 @@ export abstract class BaseReporter implements Reporter {
       return
     for (const pack of packs) {
       const task = this.ctx.state.idMap.get(pack[0])
-      if (task && task.type === 'test' && task.result?.state && task.result?.state !== 'run') {
-        this.ctx.log(` ${getStateSymbol(task)} ${getFullName(task)}`)
+      if (task && 'filepath' in task && task.result?.state && task.result?.state !== 'run') {
+        const count = getTests(task).length
+        let suffix = c.dim(` (${getTests(task).length} test${count > 1 ? 's' : ''})`)
+        if (task.result.duration)
+          suffix += c.yellow(` ${Math.round(task.result.duration)}${c.dim('ms')}`)
+
+        this.ctx.log(` ${getStateSymbol(task)} ${task.name} ${suffix}`)
         if (task.result.state === 'fail')
           this.ctx.log(c.red(`   ${F_RIGHT} ${(task.result.error as any)?.message}`))
       }
