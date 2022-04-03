@@ -211,6 +211,10 @@ export class Vitest {
     return await this.runningPromise
   }
 
+  async reprintFiles(trigger?: string) {
+    await this.report('onReprint', trigger)
+  }
+
   async rerunFiles(files: string[] = this.state.getFilepaths(), trigger?: string) {
     await this.report('onWatcherRerun', files, trigger)
     await this.runFiles(files)
@@ -317,7 +321,7 @@ export class Vitest {
         this.state.filesMap.delete(id)
         this.changedTests.delete(id)
         // rerun tests to update console output
-        this.rerunFiles()
+        this.reprintFiles(id)
       }
     }
     const onAdd = async(id: string) => {

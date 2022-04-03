@@ -8,6 +8,7 @@ export interface Reporter {
   onFinished?: (files?: File[]) => Awaitable<void>
   onTaskUpdate?: (packs: TaskResultPack[]) => Awaitable<void>
 
+  onReprint?: (trigger?: string) => Awaitable<void>
   onWatcherStart?: () => Awaitable<void>
   onWatcherRerun?: (files: string[], trigger?: string) => Awaitable<void>
 

@@ -97,6 +97,10 @@ export const createListRenderer = (_tasks: Task[], options: ListRendererOptions)
   }
 
   return {
+    print() {
+      update()
+      return this
+    },
     start() {
       if (timer)
         return this
