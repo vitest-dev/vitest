@@ -6,7 +6,7 @@ import { getFullName, getSuites, getTests, hasFailed, hasFailedSnapshot } from '
 import type { Vitest } from '../../node'
 import { version } from '../../../package.json'
 import { F_RIGHT } from '../../utils/figures'
-import { divider, getStateString, getStateSymbol, renderSnapshotSummary } from './renderers/utils'
+import { divider, getStateString, getStateSymbol, pointer, renderSnapshotSummary } from './renderers/utils'
 
 const BADGE_PADDING = '       '
 const HELP_HINT = `${c.dim('press ')}${c.bold('h')}${c.dim(' to show help')}`
@@ -75,8 +75,10 @@ export abstract class BaseReporter implements Reporter {
         // print short errors, full errors will be at the end in summary
         if (task.result.state === 'fail') {
           for (const test of tests) {
-            if (test.result?.state === 'fail')
-              this.ctx.log(c.red(`   ${F_RIGHT} ${(test.result.error as any)?.message}`))
+            if (test.result?.state === 'fail') {
+              this.ctx.log(c.red(`   ${pointer} ${getFullName(test)}`))
+              this.ctx.log(c.red(`     ${F_RIGHT} ${(test.result.error as any)?.message}`))
+            }
           }
         }
       }
