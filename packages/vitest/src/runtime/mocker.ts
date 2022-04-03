@@ -18,8 +18,8 @@ function getAllProperties(obj: any) {
   const allProps = new Set<string>()
   let curr = obj
   do {
-    // we don't need propterties from 'Object'
-    if (curr === Object.prototype) break
+    // we don't need propterties from these
+    if (curr === Object.prototype || curr === Function.prototype || curr === RegExp.prototype) break
     const props = Object.getOwnPropertyNames(curr)
     props.forEach(prop => allProps.add(prop))
   // eslint-disable-next-line no-cond-assign
