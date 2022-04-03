@@ -86,7 +86,7 @@ function handleImportOutsideModuleError(stack: string, ctx: Vitest) {
 }
 
 function displayDiff(actual: string, expected: string, console: Console, outputTruncateLength?: number) {
-  console.error(c.gray(unifiedDiff(actual, expected, outputTruncateLength)) + '\n')
+  console.error(c.gray(unifiedDiff(actual, expected, { outputTruncateLength })) + '\n')
 }
 
 function printErrorMessage(error: ErrorWithDiff, console: Console) {

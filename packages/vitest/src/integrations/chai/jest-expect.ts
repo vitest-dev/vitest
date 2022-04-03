@@ -1,11 +1,14 @@
+import c from 'picocolors'
 import type { EnhancedSpy } from '../spy'
 import { isMockFunction } from '../spy'
 import { addSerializer } from '../snapshot/port/plugins'
 import type { Constructable } from '../../types'
 import { assertTypes } from '../../utils'
+import { unifiedDiff } from '../../node/diff'
 import type { ChaiPlugin, MatcherState } from './types'
 import { arrayBufferEquality, iterableEquality, equals as jestEquals, sparseArrayEquality, subsetEquality, typeEquality } from './jest-utils'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
+import { stringify } from './jest-matcher-utils'
 
 const MATCHERS_OBJECT = Symbol.for('matchers-object')
 
@@ -285,6 +288,35 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     assertIsMock(assertion)
     return assertion._obj as EnhancedSpy
   }
+  const ordinalOf = (i: number) => {
+    const j = i % 10
+    const k = i % 100
+
+    if (j === 1 && k !== 11)
+      return `${i}st`
+
+    if (j === 2 && k !== 12)
+      return `${i}nd`
+
+    if (j === 3 && k !== 13)
+      return `${i}rd`
+
+    return `${i}th`
+  }
+  const formatCalls = (spy: EnhancedSpy, msg: string, actualCall?: any) => {
+    msg += c.gray(`\n\nReceived: \n${spy.mock.calls.map((callArg, i) => {
+      let methodCall = c.bold(`    ${ordinalOf(i + 1)} ${spy.getMockName()} call:\n\n`)
+      if (actualCall)
+        methodCall += unifiedDiff(stringify(callArg), stringify(actualCall), { showLegend: false })
+      else
+        methodCall += stringify(callArg).split('\n').map(line => `    ${line}`).join('\n')
+
+      methodCall += '\n'
+      return methodCall
+    }).join('\n')}`)
+    msg += c.gray(`\n\nNumber of calls: ${c.bold(spy.mock.calls.length)}\n`)
+    return msg
+  }
   def(['toHaveBeenCalledTimes', 'toBeCalledTimes'], function(number: number) {
     const spy = getSpy(this)
     const spyName = spy.getMockName()
@@ -313,41 +345,49 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const spy = getSpy(this)
     const spyName = spy.getMockName()
     const called = spy.mock.calls.length > 0
-    return this.assert(
-      called,
-      `expected "${spyName}" to be called at least once`,
-      `expected "${spyName}" to not be called at all`,
-      true,
-      called,
+    const isNot = utils.flag(this, 'negate') as boolean
+    let msg = utils.getMessage(
+      this,
+      [
+        called,
+        `expected "${spyName}" to be called at least once`,
+        `expected "${spyName}" to not be called at all`,
+        true,
+        called,
+      ],
     )
+    if (called && isNot)
+      msg += formatCalls(spy, msg)
+
+    if ((called && isNot) || (!called && !isNot)) {
+      const err = new Error(msg)
+      err.name = 'AssertionError'
+      throw err
+    }
   })
   def(['toHaveBeenCalledWith', 'toBeCalledWith'], function(...args) {
     const spy = getSpy(this)
     const spyName = spy.getMockName()
     const pass = spy.mock.calls.some(callArg => jestEquals(callArg, args, [iterableEquality]))
-    return this.assert(
-      pass,
-      `expected "${spyName}" to be called with arguments: #{exp}`,
-      `expected "${spyName}" to not be called with arguments: #{exp}`,
-      args,
-      spy.mock.calls,
+    const isNot = utils.flag(this, 'negate') as boolean
+
+    let msg = utils.getMessage(
+      this,
+      [
+        pass,
+        `expected "${spyName}" to be called with arguments: #{exp}`,
+        `expected "${spyName}" to not be called with arguments: #{exp}`,
+        args,
+      ],
     )
+
+    if ((pass && isNot) || (!pass && !isNot)) {
+      msg += formatCalls(spy, msg, args)
+      const err = new Error(msg)
+      err.name = 'AssertionError'
+      throw err
+    }
   })
-  const ordinalOf = (i: number) => {
-    const j = i % 10
-    const k = i % 100
-
-    if (j === 1 && k !== 11)
-      return `${i}st`
-
-    if (j === 2 && k !== 12)
-      return `${i}nd`
-
-    if (j === 3 && k !== 13)
-      return `${i}rd`
-
-    return `${i}th`
-  }
   def(['toHaveBeenNthCalledWith', 'nthCalledWith'], function(times: number, ...args: any[]) {
     const spy = getSpy(this)
     const spyName = spy.getMockName()
