@@ -61,7 +61,7 @@ export function setupConsoleLogSpy() {
   function sendStdout(taskId: string) {
     const buffer = stdoutBuffer.get(taskId)
     if (buffer) {
-      const timer = timers.get(taskId!)!
+      const timer = timers.get(taskId)!
       rpc().onUserConsoleLog({
         type: 'stdout',
         content: buffer.map(i => String(i)).join(''),
@@ -75,7 +75,7 @@ export function setupConsoleLogSpy() {
   function sendStderr(taskId: string) {
     const buffer = stderrBuffer.get(taskId)
     if (buffer) {
-      const timer = timers.get(taskId!)!
+      const timer = timers.get(taskId)!
       rpc().onUserConsoleLog({
         type: 'stderr',
         content: buffer.map(i => String(i)).join(''),
