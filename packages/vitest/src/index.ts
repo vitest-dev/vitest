@@ -7,7 +7,7 @@ export * from './runtime/hooks'
 
 export { runOnce, isFirstRun } from './integrations/run-once'
 export * from './integrations/chai'
-export * from './integrations/jest-mock'
+export * from './integrations/spy'
 export * from './integrations/vi'
 export * from './integrations/utils'
 

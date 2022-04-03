@@ -29,7 +29,7 @@ function getAllProperties(obj: any) {
 
 export class VitestMocker {
   private static pendingIds: PendingSuiteMock[] = []
-  private static spyModule?: typeof import('../integrations/jest-mock')
+  private static spyModule?: typeof import('../integrations/spy')
 
   private request!: (dep: string) => unknown
 
@@ -236,7 +236,7 @@ export class VitestMocker {
 
   private async ensureSpy() {
     if (VitestMocker.spyModule) return
-    VitestMocker.spyModule = await this.request(resolve(distDir, 'jest-mock.js')) as typeof import('../integrations/jest-mock')
+    VitestMocker.spyModule = await this.request(resolve(distDir, 'jest-mock.js')) as typeof import('../integrations/spy')
   }
 
   public async requestWithMock(dep: string) {

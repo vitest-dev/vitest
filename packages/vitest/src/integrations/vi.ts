@@ -3,8 +3,8 @@
 import { parseStacktrace } from '../utils/source-map'
 import type { VitestMocker } from '../runtime/mocker'
 import { FakeTimers } from './timers'
-import type { EnhancedSpy, MaybeMocked, MaybeMockedDeep } from './jest-mock'
-import { fn, isMockFunction, spies, spyOn } from './jest-mock'
+import type { EnhancedSpy, MaybeMocked, MaybeMockedDeep } from './spy'
+import { fn, isMockFunction, spies, spyOn } from './spy'
 
 class VitestUtils {
   private _timers: FakeTimers
