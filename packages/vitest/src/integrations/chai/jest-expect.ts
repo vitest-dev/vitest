@@ -1,4 +1,4 @@
-import p from 'picocolors'
+import c from 'picocolors'
 import type { EnhancedSpy } from '../spy'
 import { isMockFunction } from '../spy'
 import { addSerializer } from '../snapshot/port/plugins'
@@ -304,8 +304,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     return `${i}th`
   }
   const formatCalls = (spy: EnhancedSpy, msg: string, actualCall?: any) => {
-    msg += `\n\nReceived: \n${spy.mock.calls.map((callArg, i) => {
-      let methodCall = p.white(`    ${ordinalOf(i + 1)} ${spy.getMockName()} call:\n\n`)
+    msg += c.gray(`\n\nReceived: \n${spy.mock.calls.map((callArg, i) => {
+      let methodCall = c.bold(`    ${ordinalOf(i + 1)} ${spy.getMockName()} call:\n\n`)
       if (actualCall)
         methodCall += unifiedDiff(stringify(callArg), stringify(actualCall), { showLegend: false })
       else
@@ -313,8 +313,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
 
       methodCall += '\n'
       return methodCall
-    }).join('\n')}`
-    msg += `\n\nNumber of calls: ${p.bold(spy.mock.calls.length)}\n`
+    }).join('\n')}`)
+    msg += c.gray(`\n\nNumber of calls: ${c.bold(spy.mock.calls.length)}\n`)
     return msg
   }
   def(['toHaveBeenCalledTimes', 'toBeCalledTimes'], function(number: number) {
