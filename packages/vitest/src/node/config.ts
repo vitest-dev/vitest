@@ -134,5 +134,8 @@ export function resolveConfig(
   if (!resolved.reporters.length)
     resolved.reporters.push('default')
 
+  if (resolved.changed)
+    resolved.passWithNoTests ??= true
+
   return resolved
 }
