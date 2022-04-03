@@ -320,7 +320,6 @@ export class Vitest {
       if (this.state.filesMap.has(id)) {
         this.state.filesMap.delete(id)
         this.changedTests.delete(id)
-        // rerun tests to update console output
         this.reprintFiles(id)
       }
     }
