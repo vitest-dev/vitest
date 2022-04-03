@@ -1,9 +1,9 @@
 import { existsSync, readdirSync } from 'fs'
 import { isNodeBuiltin } from 'mlly'
 import { basename, dirname, resolve } from 'pathe'
-import { toFilePath } from 'vite-node/utils'
+import { normalizeRequestId, toFilePath } from 'vite-node/utils'
 import type { ModuleCacheMap } from 'vite-node/client'
-import { getWorkerState, isWindows, mergeSlashes, normalizeId } from '../utils'
+import { getWorkerState, isWindows, mergeSlashes } from '../utils'
 import { distDir } from '../constants'
 import type { PendingSuiteMock } from '../types/mocker'
 import type { ExecuteOptions } from './execute'
@@ -76,7 +76,7 @@ export class VitestMocker {
   private async resolvePath(id: string, importer: string) {
     const path = await this.options.resolveId!(id, importer)
     return {
-      path: normalizeId(path?.id || id),
+      path: normalizeRequestId(path?.id || id),
       external: path?.id.includes('/node_modules/') ? id : null,
     }
   }
@@ -108,22 +108,22 @@ export class VitestMocker {
   }
 
   public resolveDependency(dep: string) {
-    return normalizeId(dep).replace(/^\/@fs\//, isWindows ? '' : '/')
+    return normalizeRequestId(dep).replace(/^\/@fs\//, isWindows ? '' : '/')
   }
 
   public normalizePath(path: string) {
-    return normalizeId(path.replace(this.root, '')).replace(/^\/@fs\//, isWindows ? '' : '/')
+    return normalizeRequestId(path.replace(this.root, '')).replace(/^\/@fs\//, isWindows ? '' : '/')
   }
 
   public getFsPath(path: string, external: string | null) {
     if (external)
       return mergeSlashes(`/@fs/${path}`)
 
-    return normalizeId(path.replace(this.root, ''))
+    return normalizeRequestId(path.replace(this.root, ''))
   }
 
   public resolveMockPath(mockPath: string, external: string | null) {
-    const path = normalizeId(external || mockPath)
+    const path = normalizeRequestId(external || mockPath)
 
     // it's a node_module alias
     // all mocks should be inside <root>/__mocks__
