@@ -29,7 +29,7 @@ const open = () => {
 const changeViewMode = (view: Params['view']) => {
   viewMode.value = view
 }
-const count = computed(() => {
+const consoleCount = computed(() => {
   return currentLogs.value?.map(l => l.size).reduce((s, a) => s + a, 0) ?? 0
 })
 </script>
@@ -75,10 +75,10 @@ const count = computed(() => {
         </button>
         <button
           tab-button
-          :class="{ 'tab-button-active': viewMode === 'console', 'op20': viewMode !== 'console' && count === 0 }"
+          :class="{ 'tab-button-active': viewMode === 'console', 'op20': viewMode !== 'console' && consoleCount === 0 }"
           @click="changeViewMode('console')"
         >
-          Console ({{ count }})
+          Console ({{ consoleCount }})
         </button>
       </div>
     </div>
