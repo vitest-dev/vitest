@@ -30,7 +30,7 @@ const changeViewMode = (view: Params['view']) => {
   viewMode.value = view
 }
 const consoleCount = computed(() => {
-  return currentLogs.value?.map(l => l.size).reduce((s, a) => s + a, 0) ?? 0
+  return currentLogs.value?.reduce((s, { size }) => s + size, 0) ?? 0
 })
 </script>
 
