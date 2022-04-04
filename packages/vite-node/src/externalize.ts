@@ -9,8 +9,6 @@ const ESM_FOLDER_RE = /\/esm\/(.*\.js)$/
 const defaultInline = [
   /virtual:/,
   /\.ts$/,
-  ESM_EXT_RE,
-  ESM_FOLDER_RE,
 ]
 
 const depsExternal = [
