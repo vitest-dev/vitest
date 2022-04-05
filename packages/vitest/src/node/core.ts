@@ -62,7 +62,7 @@ export class Vitest {
     this.server = server
     this.config = resolved
     this.state = new StateManager()
-    this.snapshot = new SnapshotManager(resolved)
+    this.snapshot = new SnapshotManager({ ...resolved.snapshotOptions })
     this.reporters = resolved.reporters
       .map((i) => {
         if (typeof i === 'string') {
@@ -90,6 +90,11 @@ export class Vitest {
   getConfig() {
     const hasCustomReporter = toArray(this.config.reporters)
       .some(reporter => typeof reporter !== 'string')
+
+    // cannot be serialized for sending to workers
+    // reimplemented on rpc
+    if (this.config.snapshotOptions.resolveSnapshotPath)
+      this.config.snapshotOptions.resolveSnapshotPath = undefined
 
     if (!hasCustomReporter && !this.configOverride)
       return this.config

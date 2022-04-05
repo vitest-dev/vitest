@@ -118,6 +118,9 @@ function createChannel(ctx: Vitest) {
       snapshotSaved(snapshot) {
         ctx.snapshot.add(snapshot)
       },
+      resolveSnapshotPath(testPath: string) {
+        return ctx.snapshot.resolvePath(testPath)
+      },
       async getSourceMap(id, force) {
         if (force) {
           const mod = ctx.server.moduleGraph.getModuleById(id)

@@ -1,0 +1,3 @@
+// Vitest Snapshot v1
+
+exports[`snapshot is stored close to file 1`] = `"moved snapshot"`;

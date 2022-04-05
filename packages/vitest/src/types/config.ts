@@ -290,6 +290,11 @@ export interface InlineConfig {
    * Format options for snapshot testing.
    */
   snapshotFormat?: PrettyFormatOptions
+
+  /**
+   * Resolve custom snapshot path
+   */
+  resolveSnapshotPath?: (path: string, extension: string) => string
 }
 
 export interface UserConfig extends InlineConfig {
@@ -338,7 +343,7 @@ export interface UserConfig extends InlineConfig {
   changed?: boolean | string
 }
 
-export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters'> {
+export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath'> {
   base?: string
 
   config?: string

@@ -78,7 +78,7 @@ export async function runTest(test: Test) {
 
   clearModuleMocks()
 
-  getSnapshotClient().setTest(test)
+  await getSnapshotClient().setTest(test)
 
   const workerState = getWorkerState()
 
