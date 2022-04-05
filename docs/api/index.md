@@ -1483,6 +1483,31 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 
   Imports a module with all of its properties (including nested properties) mocked. Follows the same rules that [`vi.mock`](#vi-mock) follows. For the rules applied, see [algorithm](/guide/mocking#automocking-algorithm).
 
+### vi.resetModules
+
+- **Type**: `() => Vitest`
+
+  Resets modules registry by clearing cache of all modules. Might be useful to isolate modules where local state conflicts between tests.
+
+  ```ts
+  import { vi } from 'vitest'
+
+  beforeAll(() => {
+    vi.resetModules()
+  })
+
+  test('change state', async() => {
+    const mod = await import('./some/path')
+    mod.changeLocalState('new value')
+    expect(mod.getlocalState()).toBe('new value')
+  })
+
+  test('module has old state', async() => {
+    const mod = await import('./some/path')
+    expect(mod.getlocalState()).toBe('old value')
+  })
+  ```
+
 ### vi.restoreCurrentDate
 
 - **Type**: `() => void`
