@@ -2,7 +2,7 @@ import c from 'picocolors'
 import { isPackageExists } from 'local-pkg'
 import { resolve } from 'pathe'
 import type { Suite, Task } from '../types'
-import { getWorkerState } from '../utils'
+import { getWorkerState } from '../utils/global'
 import { getNames } from './tasks'
 
 export * from './tasks'
