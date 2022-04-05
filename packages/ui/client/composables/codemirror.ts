@@ -7,6 +7,8 @@ import 'codemirror/mode/xml/xml'
 // import 'codemirror/mode/htmlmixed/htmlmixed'
 import 'codemirror/mode/jsx/jsx'
 import 'codemirror/addon/display/placeholder'
+import 'codemirror/addon/scroll/simplescrollbars'
+import 'codemirror/addon/scroll/simplescrollbars.css'
 
 export function useCodeMirror(
   textarea: Ref<HTMLTextAreaElement | null | undefined>,
@@ -18,6 +20,7 @@ export function useCodeMirror(
     {
       theme: 'vars',
       ...options,
+      scrollbarStyle: 'simple',
     },
   )
 

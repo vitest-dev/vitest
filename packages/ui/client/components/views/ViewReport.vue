@@ -43,7 +43,7 @@ function relative(p: string) {
               <div
                 v-if="shouldOpenInEditor(efile, props.file?.name)"
                 v-tooltip.bottom="'Open in Editor'"
-                class="i-carbon-launch c-red-600 dark:c-red-400 hover:cursor-pointer"
+                class="i-carbon-launch c-red-600 dark:c-red-400 hover:cursor-pointer min-w-1em min-h-1em"
                 tabindex="0"
                 aria-label="Open in Editor"
                 @click.passive="openInEditor(efile, line, column)"

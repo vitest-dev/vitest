@@ -8,6 +8,7 @@ defineProps<{ icon?: `i-${string}` | `dark:i-${string}`; title?: string; disable
     role="button"
     :opacity="disabled ? 10 : 70"
     rounded
+    :disabled="disabled"
     :hover="disabled ? '' : 'bg-active op100'"
     class="w-1.4em h-1.4em flex"
   >

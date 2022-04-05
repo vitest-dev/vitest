@@ -60,7 +60,7 @@ onMounted(async() => {
     relative
     font-mono
     text-sm
-    class="scrolls"
+    class="codemirror-scrolls"
   >
     <textarea ref="el" />
   </div>

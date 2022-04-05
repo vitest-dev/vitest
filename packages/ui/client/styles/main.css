@@ -113,13 +113,13 @@ html.dark {
 
 .splitpanes--vertical > .splitpanes__splitter:before {
   /* make vertical scroll usable */
-  left: -10px;
+  left: 0;
   right: -10px;
   height: 100%;
 }
 
 .splitpanes--horizontal > .splitpanes__splitter:before {
-  top: -10px;
+  top: 0;
   bottom: -10px;
   width: 100%;
 }
@@ -128,34 +128,33 @@ html.dark {
   transition: none !important;
   height: 100%;
 }
+
+/* CODEMIRROR SCROLLS */
 .CodeMirror-scroll::-webkit-scrollbar,
-.scrolls::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+.codemirror-scrolls::-webkit-scrollbar {
+  display: none;
 }
-.CodeMirror-scroll,
-.scrolls {
+.codemirror-scrolls {
   overflow: auto !important;
   scrollbar-width: thin;
   scrollbar-color: var(--cm-ttc-c-thumb) var(--cm-ttc-c-track);
 }
-.CodeMirror-scroll::-webkit-scrollbar-track,
-.scrolls::-webkit-scrollbar-track {
-  background: var(--cm-ttc-c-track);
+/* the horizontal/vertical background */
+.CodeMirror-simplescroll-horizontal,
+.CodeMirror-simplescroll-vertical {
+  background-color: var(--cm-ttc-c-track) !important;
+  border: none !important;
 }
-.CodeMirror-scroll::-webkit-scrollbar-thumb,
-.scrolls::-webkit-scrollbar-thumb {
-  background-color: var(--cm-ttc-c-thumb);
-  border: 2px solid var(--cm-ttc-c-thumb);
+/* the horizontal/vertical bubble background */
+.CodeMirror-simplescroll-horizontal div,
+.CodeMirror-simplescroll-vertical div {
+  background-color: var(--cm-ttc-c-thumb) !important;
+  border: none !important;
 }
-.CodeMirror-scroll::-webkit-scrollbar-thumb,
-.scrolls::-webkit-scrollbar-thumb,
-.scrolls-rounded::-webkit-scrollbar-track {
-  border-radius: 3px;
-}
-.CodeMirror-scroll::-webkit-scrollbar-corner,
-.scrolls::-webkit-scrollbar-corner {
-  background-color: var(--cm-ttc-c-track);
+/* the right bottom corner background*/
+.CodeMirror-scrollbar-filler,
+.CodeMirror-gutter-filler {
+  background-color: var(--cm-ttc-c-track) !important;
 }
 .CodeMirror {
   overflow: unset !important;
@@ -169,9 +168,33 @@ html.dark {
   margin-right: unset !important;
   padding-bottom: unset !important;
 }
-.CodeMirror-sizer {
-  border-right: none;
+/* END CODEMIRROR SCROLLS */
+
+/* SCROLLS */
+.scrolls::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
+.scrolls {
+  overflow: auto !important;
+  scrollbar-width: thin;
+  scrollbar-color: var(--cm-ttc-c-thumb) var(--cm-ttc-c-track);
+}
+.scrolls::-webkit-scrollbar-track {
+  background: var(--cm-ttc-c-track);
+}
+.scrolls::-webkit-scrollbar-thumb {
+  background-color: var(--cm-ttc-c-thumb);
+  border: 2px solid var(--cm-ttc-c-thumb);
+}
+.scrolls::-webkit-scrollbar-thumb,
+.scrolls-rounded::-webkit-scrollbar-track {
+  border-radius: 3px;
+}
+.scrolls::-webkit-scrollbar-corner {
+  background-color: var(--cm-ttc-c-track);
+}
+/* END SCROLLS */
 
 .v-popper__popper .v-popper__inner {
   font-size: 12px;

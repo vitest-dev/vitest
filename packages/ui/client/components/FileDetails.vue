@@ -45,13 +45,14 @@ const consoleCount = computed(() => {
         <div class="flex text-lg">
           <IconButton
             v-tooltip.bottom="'Open in editor'"
+            title="Open in editor"
             icon="i-carbon-launch"
             :disabled="!current?.filepath"
             @click="open"
           />
         </div>
       </div>
-      <div flex="~" items-center bg-header border="b-2 base" text-sm h-38px>
+      <div flex="~" items-center bg-header border="b-2 base" text-sm h-41px>
         <button
           tab-button
           :class="{ 'tab-button-active': viewMode == null }"
