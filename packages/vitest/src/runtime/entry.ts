@@ -1,6 +1,6 @@
 import { promises as fs } from 'fs'
 import type { BuiltinEnvironment, ResolvedConfig } from '../types'
-import { getWorkerState } from '../utils'
+import { getWorkerState, resetModules } from '../utils'
 import { setupGlobalEnv, withEnv } from './setup'
 import { startTests } from './run'
 
@@ -9,10 +9,9 @@ export async function run(files: string[], config: ResolvedConfig): Promise<void
 
   const workerState = getWorkerState()
 
-  // reset mock state
-  workerState.mockMap.clear()
-
   for (const file of files) {
+    resetModules()
+
     const code = await fs.readFile(file, 'utf-8')
 
     const env = code.match(/@(?:vitest|jest)-environment\s+?([\w-]+)\b/)?.[1] || config.environment || 'node'
