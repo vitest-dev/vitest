@@ -130,6 +130,10 @@ html.dark {
 }
 
 /* CODEMIRROR SCROLLS */
+.CodeMirror-scroll {
+  /* hide FF native scrolls */
+  scrollbar-width: none;
+}
 .CodeMirror-scroll::-webkit-scrollbar,
 .codemirror-scrolls::-webkit-scrollbar {
   display: none;
