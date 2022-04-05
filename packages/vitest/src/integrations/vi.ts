@@ -201,7 +201,7 @@ class VitestUtils {
    * using jsdom/happy-dom and want to mock global variables, like
    * `IntersectionObserver`.
    */
-  public stubGlobal(name: string, value: any) {
+  public stubGlobal(name: string | symbol | number, value: any) {
     // @ts-expect-error we can do anything!
     globalThis[name] = value
     if (globalThis.window)
