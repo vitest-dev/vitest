@@ -2,7 +2,7 @@
 
 import { parseStacktrace } from '../utils/source-map'
 import type { VitestMocker } from '../runtime/mocker'
-import { getWorkerState } from '../utils'
+import { resetModules } from '../utils'
 import { FakeTimers } from './timers'
 import type { EnhancedSpy, MaybeMocked, MaybeMockedDeep } from './spy'
 import { fn, isMockFunction, spies, spyOn } from './spy'
@@ -213,20 +213,7 @@ class VitestUtils {
   }
 
   public resetModules() {
-    const modules = getWorkerState().moduleCache
-    const vitestPaths = [
-      // Vitest
-      /\/vitest\/dist\//,
-      // yarn's .store folder
-      /vitest-virtual-\w+\/dist/,
-      // cnpm
-      /@vitest\/dist/,
-    ]
-    modules.forEach((_, path) => {
-      if (vitestPaths.some(re => re.test(path)))
-        return
-      modules.delete(path)
-    })
+    resetModules()
     return this
   }
 }
