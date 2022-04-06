@@ -40,8 +40,7 @@ function mapLeveledTaskStacks(dark: boolean, tasks: LeveledTask[]) {
       const error = result.error
       if (error) {
         let uiHtmlError = ''
-        const messageWithX1B = error.message.includes('\x1B')
-        if (messageWithX1B)
+        if (error.message.includes('\x1B'))
           uiHtmlError = `<b>${error.nameStr || error.name}</b>: ${filter.toHtml(escapeHtml(error.message))}`
 
         const startStrWithX1B = error.stackStr?.includes('\x1B')
@@ -69,8 +68,8 @@ const failed = computed(() => {
   if (fileError) {
     // create a dummy one
     const fileErrorTask: Suite & { level: number } = {
-      id: props.file!.id,
-      name: props.file!.name,
+      id: file!.id,
+      name: file!.name,
       level: 0,
       type: 'suite',
       mode: 'run',
