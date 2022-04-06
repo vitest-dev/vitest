@@ -196,6 +196,7 @@ expect(fn.mock.calls[0]).toEqual(['hello', 1])
 fn.mockImplementation(arg => arg)
 
 fn('world', 2)
+
 expect(fn.mock.results[1]).toBe('world')
 ```
 
