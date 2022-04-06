@@ -202,7 +202,8 @@ export class Vitest {
     const runningTests = []
 
     for (const [filepath, deps] of testDeps) {
-      if (deps.size && related.some(path => deps.has(path)))
+      // if deps were changed or the test itself
+      if (deps.size && related.some(path => deps.has(path) || path === filepath))
         runningTests.push(filepath)
     }
 
