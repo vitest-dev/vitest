@@ -11,7 +11,7 @@ export async function openInEditor(name: string, line: number, column: number) {
 
 export function createAnsiToHtmlFilter(dark: boolean) {
   return new Filter({
-    fg: dark ? '#000' : '#FFF',
-    bg: dark ? '#FFF' : '#000',
+    fg: dark ? '#FFF' : '#000',
+    bg: dark ? '#000' : '#FFF',
   })
 }

@@ -2,6 +2,8 @@
 import { openInEditor, shouldOpenInEditor } from '../../composables/error'
 import type { File, Task } from '#types'
 import { config } from '~/composables/client'
+import { isDark } from '~/composables/dark'
+import { createAnsiToHtmlFilter } from '~/composables/error'
 
 const props = defineProps<{
   file?: File
@@ -21,7 +23,48 @@ function collectFailed(task: Task, level: number): LeveledTask[] {
     return [{ ...task, level }, ...task.tasks.flatMap(t => collectFailed(t, level + 1))]
 }
 
-const failed = computed(() => props.file?.tasks.flatMap(t => collectFailed(t, 0)) || [])
+function escapeHtml(unsafe: string) {
+  return unsafe
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
+
+function mapLeveledTaskStacks(tasks: LeveledTask[]) {
+  const filter = createAnsiToHtmlFilter(isDark.value)
+  return tasks.map((t) => {
+    const result = t.result
+    if (result) {
+      const error = result.error
+      if (error) {
+        let uiHtmlError = ''
+        if (error.message.includes('\x1B'))
+          uiHtmlError = `<b>${error.nameStr || error.name}</b>: ${filter.toHtml(escapeHtml(error.message))}`
+
+        if (error.stackStr?.includes('\x1B') || error.stack?.includes('\x1B')) {
+          if (uiHtmlError.length > 0)
+            uiHtmlError += filter.toHtml(escapeHtml((error.stackStr || error.stack) as string))
+          else
+            uiHtmlError = `<b>${error.nameStr || error.name}</b>: ${filter.toHtml(escapeHtml((error.stackStr || error.stack) as string))}`
+        }
+        else if (uiHtmlError.length > 0) {
+          uiHtmlError += escapeHtml(error.message)
+        }
+
+        if (uiHtmlError.length > 0)
+          result.uiHtmlError = uiHtmlError
+      }
+    }
+    return t
+  })
+}
+
+const failed = computed(() => {
+  const failedFlatMap = props.file?.tasks?.flatMap(t => collectFailed(t, 0)) ?? []
+  return failedFlatMap.length > 0 ? mapLeveledTaskStacks(failedFlatMap) : failedFlatMap
+})
 
 function relative(p: string) {
   if (p.startsWith(config.value.root))
@@ -34,9 +77,19 @@ function relative(p: string) {
   <div h-full class="scrolls">
     <template v-if="failed.length">
       <div v-for="task of failed" :key="task.id">
-        <div bg="red-500/10" text="red-500 sm" p="x3 y2" m-2 rounded :style="{ 'margin-left': `${2 * task.level + 0.5}rem`}">
+        <div
+          bg="red-500/10"
+          text="red-500 sm"
+          p="x3 y2"
+          m-2
+          rounded
+          :style="{ 'margin-left': `${task.result?.uiHtmlError ? 0.5 : (2 * task.level + 0.5)}rem`}"
+        >
           {{ task.name }}
-          <div v-if="task.result?.error" class="scrolls scrolls-rounded task-error">
+          <div v-if="task.result?.uiHtmlError" class="scrolls scrolls-rounded task-error">
+            <pre v-html="task.result.uiHtmlError" />
+          </div>
+          <div v-else-if="task.result?.error" class="scrolls scrolls-rounded task-error">
             <pre><b>{{ task.result.error.name || task.result.error.nameStr }}</b>: {{ task.result.error.message }}</pre>
             <div v-for="({ file: efile, line, column }, i) of task.result.error.stacks || []" :key="i" class="op80 flex gap-x-2 items-center">
               <pre> - {{ relative(efile) }}:{{ line }}:{{ column }}</pre>
