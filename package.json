@@ -57,14 +57,14 @@
     "rollup-plugin-esbuild": "^4.8.2",
     "rollup-plugin-license": "^2.6.1",
     "typescript": "^4.6.3",
-    "vite": "2.9.1",
+    "vite": "^2.9.1",
     "vitepress": "^0.22.3",
     "vitest": "workspace:*",
     "vue": "^3.2.31"
   },
   "pnpm": {
     "overrides": {
-      "vite": "^2.8.6"
+      "vite": "^2.9.1"
     }
   },
   "vite": {
