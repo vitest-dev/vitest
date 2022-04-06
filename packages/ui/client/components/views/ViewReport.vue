@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { openInEditor, shouldOpenInEditor } from '../../composables/error'
-import type { File, Task } from '#types'
+import type { File, Suite, Task } from '#types'
 import { config } from '~/composables/client'
 import { isDark } from '~/composables/dark'
 import { createAnsiToHtmlFilter } from '~/composables/error'
@@ -32,8 +32,8 @@ function escapeHtml(unsafe: string) {
     .replace(/'/g, '&#039;')
 }
 
-function mapLeveledTaskStacks(tasks: LeveledTask[]) {
-  const filter = createAnsiToHtmlFilter(isDark.value)
+function mapLeveledTaskStacks(dark: boolean, tasks: LeveledTask[]) {
+  const filter = createAnsiToHtmlFilter(dark)
   return tasks.map((t) => {
     const result = t.result
     if (result) {
@@ -62,8 +62,25 @@ function mapLeveledTaskStacks(tasks: LeveledTask[]) {
 }
 
 const failed = computed(() => {
-  const failedFlatMap = props.file?.tasks?.flatMap(t => collectFailed(t, 0)) ?? []
-  return failedFlatMap.length > 0 ? mapLeveledTaskStacks(failedFlatMap) : failedFlatMap
+  const file = props.file
+  const failedFlatMap = file?.tasks?.flatMap(t => collectFailed(t, 0)) ?? []
+  const result = file?.result
+  const fileError = result?.error
+  // we must check also if the test cannot compile
+  if (fileError) {
+    // create a dummy one
+    const fileErrorTask: Suite & { level: number } = {
+      id: props.file!.id,
+      name: props.file!.name,
+      level: 0,
+      type: 'suite',
+      mode: 'run',
+      tasks: [],
+      result,
+    }
+    failedFlatMap.unshift(fileErrorTask)
+  }
+  return failedFlatMap.length > 0 ? mapLeveledTaskStacks(isDark.value, failedFlatMap) : failedFlatMap
 })
 
 function relative(p: string) {
