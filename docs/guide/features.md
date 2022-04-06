@@ -197,7 +197,7 @@ fn.mockImplementation(arg => arg)
 
 fn('world', 2)
 
-expect(fn.mock.returns[1]).toBe('world')
+expect(fn.mock.results[1]).toBe('world')
 ```
 
 Vitest supports both [happy-dom](https://github.com/capricorn86/happy-dom) or [jsdom](https://github.com/jsdom/jsdom) for mocking DOM and browser APIs. They don't come with Vitest, you might need to install them:
