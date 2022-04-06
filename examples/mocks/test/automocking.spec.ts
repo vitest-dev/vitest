@@ -1,8 +1,9 @@
 import type * as exampleModule from '../src/example'
-
 import log from '../src/log'
+import { methodSymbol, moduleWithSymbol } from '../src/moduleWithSymbol'
 
 vi.mock('../src/log')
+vi.mock('../src/moduleWithSymbol')
 
 test('all mocked are valid', async() => {
   const example = await vi.importMock<typeof exampleModule>('../src/example')
@@ -40,13 +41,25 @@ test('all mocked are valid', async() => {
   expect(example.symbol).toEqual(Symbol.for('a.b.c'))
 })
 
-test('automock doesn\'t throw when unmocked', () => {
-  // logger uses symbols on its prototype
-  // we are checking here that after unmocking
-  // these symbols are accessible
+test('automock properly restores mock', async() => {
+  expect(log.warn()).toBeUndefined()
+  expect(moduleWithSymbol.warn()).toBeUndefined()
+  expect(moduleWithSymbol[methodSymbol]()).toBeUndefined()
+
+  vi.restoreAllMocks()
+
+  // `spies` (on linux) is an empty Set()
+  // thus we need to restore manually
+  // however, on an external project or on windows,
+  // `spies` is a complete Set() of all (auto) mocks
+  // and the below two lines are not needed
+  vi.mocked(moduleWithSymbol[methodSymbol]).mockRestore()
+  vi.mocked(moduleWithSymbol.warn).mockRestore()
+
   expect(() => {
     log.warn()
-    vi.restoreAllMocks()
-    log.warn()
   }).not.toThrow()
+
+  expect(moduleWithSymbol[methodSymbol]()).toBe('hello')
+  expect(moduleWithSymbol.warn()).toBe('hello')
 })

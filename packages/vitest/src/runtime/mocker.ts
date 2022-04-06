@@ -15,15 +15,19 @@ function getType(value: unknown): string {
 }
 
 function getAllProperties(obj: any) {
-  const allProps = new Set<string>()
+  const allProps = new Set<string | symbol>()
   let curr = obj
   do {
     // we don't need propterties from these
     if (curr === Object.prototype || curr === Function.prototype || curr === RegExp.prototype)
       break
     const props = Object.getOwnPropertyNames(curr)
+    const symbs = Object.getOwnPropertySymbols(curr)
+
     props.forEach(prop => allProps.add(prop))
-  // eslint-disable-next-line no-cond-assign
+    symbs.forEach(symb => allProps.add(symb))
+
+    // eslint-disable-next-line no-cond-assign
   } while (curr = Object.getPrototypeOf(curr))
   return Array.from(allProps)
 }
@@ -168,7 +172,7 @@ export class VitestMocker {
     else if (type !== 'Object' && type !== 'Module')
       return value
 
-    const newObj: any = {}
+    const newObj: Record<string | symbol, any> = {}
 
     const proproperties = getAllProperties(value)
 
