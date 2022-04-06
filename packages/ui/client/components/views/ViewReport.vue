@@ -40,17 +40,16 @@ function mapLeveledTaskStacks(dark: boolean, tasks: LeveledTask[]) {
       const error = result.error
       if (error) {
         let uiHtmlError = ''
-        if (error.message.includes('\x1B'))
+        const messageWithX1B = error.message.includes('\x1B')
+        if (messageWithX1B)
           uiHtmlError = `<b>${error.nameStr || error.name}</b>: ${filter.toHtml(escapeHtml(error.message))}`
 
-        if (error.stackStr?.includes('\x1B') || error.stack?.includes('\x1B')) {
+        const startStrWithX1B = error.stackStr?.includes('\x1B')
+        if (startStrWithX1B || error.stack?.includes('\x1B')) {
           if (uiHtmlError.length > 0)
-            uiHtmlError += filter.toHtml(escapeHtml((error.stackStr || error.stack) as string))
+            uiHtmlError += filter.toHtml(escapeHtml((startStrWithX1B ? error.stackStr : error.stack) as string))
           else
-            uiHtmlError = `<b>${error.nameStr || error.name}</b>: ${filter.toHtml(escapeHtml((error.stackStr || error.stack) as string))}`
-        }
-        else if (uiHtmlError.length > 0) {
-          uiHtmlError += escapeHtml(error.message)
+            uiHtmlError = `<b>${error.nameStr || error.name}</b>: ${error.message}${filter.toHtml(escapeHtml((startStrWithX1B ? error.stackStr : error.stack) as string))}`
         }
 
         if (uiHtmlError.length > 0)
