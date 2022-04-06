@@ -2,6 +2,7 @@ import c from 'picocolors'
 import { isPackageExists } from 'local-pkg'
 import { resolve } from 'pathe'
 import type { Suite, Task } from '../types'
+import { getWorkerState } from '../utils/global'
 import { getNames } from './tasks'
 
 export * from './tasks'
@@ -30,6 +31,23 @@ export function partitionSuiteChildren(suite: Suite) {
     tasksGroups.push(tasksGroup)
 
   return tasksGroups
+}
+
+export function resetModules() {
+  const modules = getWorkerState().moduleCache
+  const vitestPaths = [
+    // Vitest
+    /\/vitest\/dist\//,
+    // yarn's .store folder
+    /vitest-virtual-\w+\/dist/,
+    // cnpm
+    /@vitest\/dist/,
+  ]
+  modules.forEach((_, path) => {
+    if (vitestPaths.some(re => re.test(path)))
+      return
+    modules.delete(path)
+  })
 }
 
 export function getFullName(task: Task) {
