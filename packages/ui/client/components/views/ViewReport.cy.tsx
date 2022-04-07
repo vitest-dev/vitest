@@ -107,7 +107,7 @@ describe('ViewReport', () => {
             break
           case 1:
             expect(e.innerHTML, 'the error has the correct message').equals('Error: Transform failed with 1 error:')
-            expect(e, 'the error has the correct text color').to.have.attr('style', 'background-color:#00A')
+            expect(e, 'the error has the correct background color').to.have.attr('style', 'background-color:#00A')
             break
           case 2:
             expect(e.children.length, 'the stack children elements is correct').equals(0)
