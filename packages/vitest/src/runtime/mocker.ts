@@ -3,7 +3,7 @@ import { isNodeBuiltin } from 'mlly'
 import { basename, dirname, resolve } from 'pathe'
 import { normalizeRequestId, toFilePath } from 'vite-node/utils'
 import type { ModuleCacheMap } from 'vite-node/client'
-import { getWorkerState, isWindows, mergeSlashes } from '../utils'
+import { getWorkerState, isWindows, mergeSlashes, slash } from '../utils'
 import { distDir } from '../constants'
 import type { PendingSuiteMock } from '../types/mocker'
 import type { ExecuteOptions } from './execute'
@@ -15,15 +15,19 @@ function getType(value: unknown): string {
 }
 
 function getAllProperties(obj: any) {
-  const allProps = new Set<string>()
+  const allProps = new Set<string | symbol>()
   let curr = obj
   do {
     // we don't need propterties from these
     if (curr === Object.prototype || curr === Function.prototype || curr === RegExp.prototype)
       break
     const props = Object.getOwnPropertyNames(curr)
+    const symbs = Object.getOwnPropertySymbols(curr)
+
     props.forEach(prop => allProps.add(prop))
-  // eslint-disable-next-line no-cond-assign
+    symbs.forEach(symb => allProps.add(symb))
+
+    // eslint-disable-next-line no-cond-assign
   } while (curr = Object.getPrototypeOf(curr))
   return Array.from(allProps)
 }
@@ -168,7 +172,7 @@ export class VitestMocker {
     else if (type !== 'Object' && type !== 'Module')
       return value
 
-    const newObj: any = {}
+    const newObj: Record<string | symbol, any> = {}
 
     const proproperties = getAllProperties(value)
 
@@ -239,7 +243,7 @@ export class VitestMocker {
   private async ensureSpy() {
     if (VitestMocker.spyModule)
       return
-    VitestMocker.spyModule = await this.request(resolve(distDir, 'spy.js')) as typeof import('../integrations/spy')
+    VitestMocker.spyModule = await this.request(`/@fs/${slash(resolve(distDir, 'spy.js'))}`) as typeof import('../integrations/spy')
   }
 
   public async requestWithMock(dep: string) {

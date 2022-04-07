@@ -151,13 +151,13 @@ importers:
       '@vitest/ui': latest
       '@vueuse/integrations': ^8.2.4
       axios: ^0.26.1
-      tinyspy: ^0.3.0
+      tinyspy: ^0.3.2
       vite: ^2.9.1
       vitest: latest
     dependencies:
       '@vueuse/integrations': 8.2.4_axios@0.26.1+vue@3.2.31
       axios: 0.26.1
-      tinyspy: 0.3.0
+      tinyspy: 0.3.2
     devDependencies:
       '@vitest/ui': link:../../packages/ui
       vite: 2.9.1
@@ -637,7 +637,7 @@ importers:
       source-map-js: ^1.0.2
       strip-ansi: ^7.0.1
       tinypool: ^0.1.2
-      tinyspy: ^0.3.0
+      tinyspy: ^0.3.2
       typescript: ^4.6.3
       vite: ^2.9.1
       vite-node: workspace:*
@@ -648,7 +648,7 @@ importers:
       chai: 4.3.6
       local-pkg: 0.4.1
       tinypool: 0.1.2
-      tinyspy: 0.3.0
+      tinyspy: 0.3.2
       vite: 2.9.1
     devDependencies:
       '@antfu/install-pkg': 0.1.0
@@ -18418,8 +18418,8 @@ packages:
     engines: {node: '>=14.0.0'}
     dev: false
 
-  /tinyspy/0.3.0:
-    resolution: {integrity: sha512-c5uFHqtUp74R2DJE3/Efg0mH5xicmgziaQXMm/LvuuZn3RdpADH32aEGDRyCzObXT1DNfwDMqRQ/Drh1MlO12g==}
+  /tinyspy/0.3.2:
+    resolution: {integrity: sha512-2+40EP4D3sFYy42UkgkFFB+kiX2Tg3URG/lVvAZFfLxgGpnWl5qQJuBw1gaLttq8UOS+2p3C0WrhJnQigLTT2Q==}
     engines: {node: '>=14.0.0'}
     dev: false
 
