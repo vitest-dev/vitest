@@ -4,10 +4,6 @@ import { client, currentLogs as logs } from '~/composables/client'
 import { isDark } from '~/composables/dark'
 import { createAnsiToHtmlFilter } from '~/composables/error'
 
-function formatTime(t: number) {
-  return (new Date(t)).toLocaleTimeString()
-}
-
 const formattedLogs = computed(() => {
   const data = logs.value
   if (data) {
