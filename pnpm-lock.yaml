@@ -523,6 +523,7 @@ importers:
       '@vitejs/plugin-vue-jsx': ^1.3.9
       '@vitest/ws-client': workspace:*
       '@vueuse/core': ^8.2.4
+      ansi-to-html: ^0.7.2
       birpc: ^0.2.2
       codemirror: ^5.65.2
       codemirror-theme-vars: ^0.1.1
@@ -557,6 +558,7 @@ importers:
       '@vitejs/plugin-vue-jsx': 1.3.9
       '@vitest/ws-client': link:../ws-client
       '@vueuse/core': 8.2.4_vue@3.2.31
+      ansi-to-html: 0.7.2
       birpc: 0.2.2
       codemirror: 5.65.2
       codemirror-theme-vars: 0.1.1
@@ -8119,6 +8121,14 @@ packages:
 
   /ansi-to-html/0.6.15:
     resolution: {integrity: sha512-28ijx2aHJGdzbs+O5SNQF65r6rrKYnkuwTYm8lZlChuoJ9P1vVzIpWO20sQTqTPDXYp6NFwk326vApTtLVFXpQ==}
+    engines: {node: '>=8.0.0'}
+    hasBin: true
+    dependencies:
+      entities: 2.2.0
+    dev: true
+
+  /ansi-to-html/0.7.2:
+    resolution: {integrity: sha512-v6MqmEpNlxF+POuyhKkidusCHWWkaLcGRURzivcU3I9tv7k4JVhFcnukrM5Rlk2rUywdZuzYAZ+kbZqWCnfN3g==}
     engines: {node: '>=8.0.0'}
     hasBin: true
     dependencies:
