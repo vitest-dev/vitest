@@ -20,9 +20,8 @@ export interface TaskResult {
   duration?: number
   startTime?: number
   error?: ErrorWithDiff
+  htmlError?: string
   hooks?: Partial<Record<keyof SuiteHooks, TaskState>>
-  // only for ui: handling internal colored stack traces on report tab
-  uiHtmlError?: string
 }
 
 export type TaskResultPack = [id: string, result: TaskResult | undefined]

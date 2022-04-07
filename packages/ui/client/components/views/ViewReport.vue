@@ -39,20 +39,20 @@ function mapLeveledTaskStacks(dark: boolean, tasks: LeveledTask[]) {
     if (result) {
       const error = result.error
       if (error) {
-        let uiHtmlError = ''
+        let htmlError = ''
         if (error.message.includes('\x1B'))
-          uiHtmlError = `<b>${error.nameStr || error.name}</b>: ${filter.toHtml(escapeHtml(error.message))}`
+          htmlError = `<b>${error.nameStr || error.name}</b>: ${filter.toHtml(escapeHtml(error.message))}`
 
         const startStrWithX1B = error.stackStr?.includes('\x1B')
         if (startStrWithX1B || error.stack?.includes('\x1B')) {
-          if (uiHtmlError.length > 0)
-            uiHtmlError += filter.toHtml(escapeHtml((startStrWithX1B ? error.stackStr : error.stack) as string))
+          if (htmlError.length > 0)
+            htmlError += filter.toHtml(escapeHtml((startStrWithX1B ? error.stackStr : error.stack) as string))
           else
-            uiHtmlError = `<b>${error.nameStr || error.name}</b>: ${error.message}${filter.toHtml(escapeHtml((startStrWithX1B ? error.stackStr : error.stack) as string))}`
+            htmlError = `<b>${error.nameStr || error.name}</b>: ${error.message}${filter.toHtml(escapeHtml((startStrWithX1B ? error.stackStr : error.stack) as string))}`
         }
 
-        if (uiHtmlError.length > 0)
-          result.uiHtmlError = uiHtmlError
+        if (htmlError.length > 0)
+          result.htmlError = htmlError
       }
     }
     return t
@@ -98,11 +98,11 @@ function relative(p: string) {
           p="x3 y2"
           m-2
           rounded
-          :style="{ 'margin-left': `${task.result?.uiHtmlError ? 0.5 : (2 * task.level + 0.5)}rem`}"
+          :style="{ 'margin-left': `${task.result?.htmlError ? 0.5 : (2 * task.level + 0.5)}rem`}"
         >
           {{ task.name }}
-          <div v-if="task.result?.uiHtmlError" class="scrolls scrolls-rounded task-error">
-            <pre v-html="task.result.uiHtmlError" />
+          <div v-if="task.result?.htmlError" class="scrolls scrolls-rounded task-error">
+            <pre v-html="task.result.htmlError" />
           </div>
           <div v-else-if="task.result?.error" class="scrolls scrolls-rounded task-error">
             <pre><b>{{ task.result.error.name || task.result.error.nameStr }}</b>: {{ task.result.error.message }}</pre>
