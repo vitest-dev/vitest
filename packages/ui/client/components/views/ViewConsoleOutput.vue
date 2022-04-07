@@ -31,16 +31,13 @@ function getTaskName(id?: string) {
 <template>
   <div v-if="formattedLogs?.length" h-full class="scrolls" flex flex-col data-testid="logs">
     <div v-for="{ taskId, type, time, html, content } of formattedLogs" :key="taskId" font-mono>
-      <div border="b base" p-4>
-        <div
-          text-xs mb-1
-          :class="type === 'stderr' ? 'text-red-600 dark:text-red-300': 'op30'"
-        >
-          {{ formatTime(time) }} | {{ getTaskName(taskId) }} | {{ type }}
-        </div>
-        <pre v-if="html" v-html="content" />
-        <pre v-else v-text="content" />
-      </div>
+      <ViewConsoleOutputEntry
+        :task-name="getTaskName(taskId)"
+        :type="type"
+        :time="time"
+        :content="content"
+        :html="html"
+      />
     </div>
   </div>
   <p v-else p6>

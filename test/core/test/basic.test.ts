@@ -3,13 +3,6 @@ import { two } from '../src/submodule'
 import { timeout } from '../src/timeout'
 
 test('Math.sqrt()', async() => {
-  // eslint-disable-next-line no-console
-  // console.log(`\x1B[33m${new Date().toISOString()}\x1B[0m`)
-  // eslint-disable-next-line no-console
-  // console.log(`\x1B[31m${new Error('I\'m a red fg error').stack}\x1B[0m`)
-  // eslint-disable-next-line no-console
-  // console.log(`\x1B[37m\x1B[41m${new Error('I\'m a red bg error').stack}\x1B[0m`)
-  // console.error('console error 1', new Error('hey there 2'))
   assert.equal(Math.sqrt(4), two)
   assert.equal(Math.sqrt(2), Math.SQRT2)
   expect(Math.sqrt(144)).toStrictEqual(12)
