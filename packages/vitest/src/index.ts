@@ -7,7 +7,7 @@ export * from './runtime/hooks'
 
 export { runOnce, isFirstRun } from './integrations/run-once'
 export * from './integrations/chai'
-export type { EnhancedSpy, SpyInstance, SpyInstanceFn, SpyContext } from './integrations/spy'
+export type { EnhancedSpy, MockedFunction, MockedObject, SpyInstance, SpyInstanceFn, SpyContext } from './integrations/spy'
 export * from './integrations/vi'
 export * from './integrations/utils'
 
