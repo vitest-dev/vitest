@@ -34,11 +34,15 @@ export const testsTodo = computed(() => testsIgnore.value.filter(f => f.mode ===
 export const totalTests = computed(() => testsFailed.value.length + testsSuccess.value.length)
 export const time = computed(() => {
   const t = getTests(tests.value).reduce((acc, t) => {
-    if (t.result?.duration)
-      acc += t.result.duration
+    const duration = t.result?.duration
+    if (typeof duration !== 'undefined' && duration > 0)
+      acc += duration
 
     return acc
   }, 0)
+
+  if (t < 1)
+    return '< 1ms'
 
   if (t > 1000)
     return `${(t / 1000).toFixed(2)}s`
