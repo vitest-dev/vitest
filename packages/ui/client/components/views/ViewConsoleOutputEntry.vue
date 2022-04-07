@@ -20,9 +20,9 @@ function formatTime(t: number) {
       text-xs mb-1
       :class="props.type === 'stderr' ? 'text-red-600 dark:text-red-300': 'op30'"
     >
-      {{ formatTime(time) }} | {{ props.taskName }} | {{ props.type }}
+      {{ formatTime(props.time) }} | {{ props.taskName }} | {{ props.type }}
     </div>
-    <pre v-if="html" data-type="html" v-html="content" />
-    <pre v-else data-type="text" v-text="content" />
+    <pre v-if="props.html" data-type="html" v-html="props.content" />
+    <pre v-else data-type="text" v-text="props.content" />
   </div>
 </template>
