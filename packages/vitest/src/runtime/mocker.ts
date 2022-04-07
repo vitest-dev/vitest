@@ -3,7 +3,7 @@ import { isNodeBuiltin } from 'mlly'
 import { basename, dirname, resolve } from 'pathe'
 import { normalizeRequestId, toFilePath } from 'vite-node/utils'
 import type { ModuleCacheMap } from 'vite-node/client'
-import { getWorkerState, isWindows, mergeSlashes } from '../utils'
+import { getWorkerState, isWindows, mergeSlashes, slash } from '../utils'
 import { distDir } from '../constants'
 import type { PendingSuiteMock } from '../types/mocker'
 import type { ExecuteOptions } from './execute'
@@ -243,7 +243,7 @@ export class VitestMocker {
   private async ensureSpy() {
     if (VitestMocker.spyModule)
       return
-    VitestMocker.spyModule = await this.request(resolve(distDir, 'spy.js')) as typeof import('../integrations/spy')
+    VitestMocker.spyModule = await this.request(`/@fs/${slash(resolve(distDir, 'spy.js'))}`) as typeof import('../integrations/spy')
   }
 
   public async requestWithMock(dep: string) {

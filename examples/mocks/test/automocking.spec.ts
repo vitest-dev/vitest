@@ -48,14 +48,6 @@ test('automock properly restores mock', async() => {
 
   vi.restoreAllMocks()
 
-  // `spies` (on linux) is an empty Set()
-  // thus we need to restore manually
-  // however, on an external project or on windows,
-  // `spies` is a complete Set() of all (auto) mocks
-  // and the below two lines are not needed
-  vi.mocked(moduleWithSymbol[methodSymbol]).mockRestore()
-  vi.mocked(moduleWithSymbol.warn).mockRestore()
-
   expect(() => {
     log.warn()
   }).not.toThrow()
