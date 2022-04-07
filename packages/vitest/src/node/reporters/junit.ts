@@ -6,6 +6,7 @@ import type { Vitest } from '../../node'
 import type { ErrorWithDiff, Reporter, Task } from '../../types'
 import { parseStacktrace } from '../../utils/source-map'
 import { F_POINTER } from '../../utils/figures'
+import { getOutputFile } from '../../utils/config-helpers'
 import { IndentedLogger } from './renderers/indented-logger'
 
 function flattenTasks(task: Task, baseName = ''): Task[] {
@@ -44,8 +45,10 @@ export class JUnitReporter implements Reporter {
   async onInit(ctx: Vitest): Promise<void> {
     this.ctx = ctx
 
-    if (this.ctx.config.outputFile) {
-      this.reportFile = resolve(this.ctx.config.root, this.ctx.config.outputFile)
+    const outputFile = getOutputFile(this.ctx, 'junit')
+
+    if (outputFile) {
+      this.reportFile = resolve(this.ctx.config.root, outputFile)
 
       const outputDirectory = dirname(this.reportFile)
       if (!existsSync(outputDirectory))
