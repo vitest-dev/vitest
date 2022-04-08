@@ -121,19 +121,18 @@ export class Vitest {
 
     if (!files.length) {
       const exitCode = this.config.passWithNoTests ? 0 : 1
-      if (this.config.passWithNoTests) {
+      if (this.config.passWithNoTests)
         this.log(`No test files found, exiting code with ${exitCode}\n`)
-      }
-      else {
+      else
         this.error(c.red(`No test files found, exiting code with ${exitCode}\nRun with \`--passWithNoTests\`to exit with code 0\n`))
-        console.error(`In ${c.bold(this.config.root)}`)
-        if (filters?.length)
-          this.console.error(`  filter: ${c.yellow(filters.join(', '))}`)
-        if (this.config.include)
-          this.console.error(`  include: ${c.yellow(this.config.include.join(', '))}`)
-        if (this.config.watchIgnore)
-          this.console.error(`  watchIgnore: ${c.yellow(this.config.watchIgnore.join(', '))}`)
-      }
+
+      this.error(`In ${c.bold(this.config.root)}`)
+      if (filters?.length)
+        this.error(`  filter: ${c.yellow(filters.join(', '))}`)
+      if (this.config.include)
+        this.error(`  include: ${c.yellow(this.config.include.join(', '))}`)
+      if (this.config.watchIgnore)
+        this.error(`  watchIgnore: ${c.yellow(this.config.watchIgnore.join(', '))}`)
 
       process.exit(exitCode)
     }
