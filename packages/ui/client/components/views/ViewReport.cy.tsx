@@ -1,43 +1,64 @@
+import faker from '@faker-js/faker'
 import ViewReport from './ViewReport.vue'
 import type { File } from '#types'
 
 const taskErrorSelector = '.task-error'
+const viewReportSelector = '[data-testid=view-report]'
+const stackRowSelector = '[data-testid=stack]'
+
+const makeTextStack = () => ({
+  line: faker.datatype.number(120),
+  column: faker.datatype.number(5000),
+
+  // Absolute file paths
+  file: faker.system.filePath(),
+  method: faker.hacker.verb(),
+})
+
+// 5 Stacks
+const textStacks = Array.from(new Array(5)).map(makeTextStack)
+
+const fileWithTextStacks = {
+  id: 'f-1',
+  name: 'test/plain-stack-trace.ts',
+  type: 'suite',
+  mode: 'run',
+  filepath: 'test/plain-stack-trace.ts',
+  result: {
+    state: 'fail',
+    error: {
+      name: 'Do some test',
+      stacks: textStacks,
+      message: 'Error: Transform failed with 1 error:',
+    },
+  },
+  tasks: [],
+}
 
 describe('ViewReport', () => {
-  it('test plain stack trace', () => {
-    const file: File = {
-      id: 'f-1',
-      name: 'test/plain-stack-trace.ts',
-      type: 'suite',
-      mode: 'run',
-      filepath: 'test/plain-stack-trace.ts',
-      result: {
-        state: 'fail',
-        error: {
-          name: 'Do some test',
-          stacks: [{ line: 10, column: 20, file: 'test/plain-stack-trace.ts', method: 'dummy test' }],
-          message: 'Error: Transform failed with 1 error:',
-        },
-      },
-      tasks: [],
-    }
-    const container = cy.mount(<ViewReport file={file} />)
-      .get(taskErrorSelector)
-    container.should('exist')
-    container.children().then((c) => {
-      c.get().forEach((e, idx) => {
-        if (idx === 0) {
-          expect(e.children[0].tagName, 'error contains <b> element').equals('B')
-          expect(e.children[0].innerHTML, 'the <b> error element is correct').equals('Do some test')
-          expect(e.innerText, 'error has the correct plain text').equals('Do some test: Error: Transform failed with 1 error:')
-        }
-        else {
-          expect(e.children.length, 'the stack children elements is correct: stack and open in editor icon').equals(2)
-          expect(e.children[0].innerHTML, 'stack has the correct message').equals(' - test/plain-stack-trace.ts:10:20')
-        }
-      })
+  describe('File where stacks are in text', () => {
+    beforeEach(() => {
+      cy.mount(<ViewReport file={fileWithTextStacks as File} data-testid="view-report"/>)
+    })
+
+    it('renders all of the stacks', () => {
+      const stacks = fileWithTextStacks.result.error.stacks
+      cy.get(stackRowSelector).should('have.length', stacks.length)
+        .get(stackRowSelector)
+        .each(($stack, idx) => {
+          const { column, line, file: fileName } = stacks[idx]
+          expect($stack).to.contain.text(`${line}:${column}`)
+          expect($stack).to.contain.text(`- ${fileName}`)
+        })
+    })
+
+    it('renders the error message', () => {
+      cy.get(viewReportSelector)
+        .should('contain.text', fileWithTextStacks.result.error.message)
+        .and('contain.text', fileWithTextStacks.result.error.name)
     })
   })
+
   it('test html stack trace without html message', () => {
     const file: File = {
       id: 'f-1',
