@@ -40,7 +40,7 @@ body:
           required: true
         - label: Read the [Contributing Guidelines](https://github.com/vitest-dev/vitest/blob/main/CONTRIBUTING.md).
           required: true
-        - label: Read the [docs](https://vitest.dev/guide).
+        - label: Read the [docs](https://vitest.dev/guide/).
           required: true
         - label: Check that there isn't already an issue that request the same feature to avoid creating a duplicate.
           required: true
