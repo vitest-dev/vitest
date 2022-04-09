@@ -10,13 +10,19 @@ const props = defineProps<{
 }>()
 
 const code = ref('')
+const serverCode = shallowRef<string | undefined>(undefined)
+const draft = ref(false)
 watch(() => props.file,
   async() => {
     if (!props.file || !props.file?.filepath) {
       code.value = ''
+      serverCode.value = code.value
+      draft.value = false
       return
     }
     code.value = await client.rpc.readFile(props.file.filepath)
+    serverCode.value = code.value
+    draft.value = false
   },
   { immediate: true },
 )
@@ -44,8 +50,12 @@ useResizeObserver(editor, () => {
   cm.value?.refresh()
 })
 
-watch([cm, failed], () => {
-  if (!cm.value) {
+function codemirrorChanges() {
+  draft.value = serverCode.value !== cm.value!.getValue()
+}
+
+watch([cm, failed], ([cmValue]) => {
+  if (!cmValue) {
     clearListeners()
     return
   }
@@ -56,6 +66,8 @@ watch([cm, failed], () => {
     handles.forEach(h => cm.value?.removeLineClass(h, 'wrap'))
     widgets.length = 0
     handles.length = 0
+
+    cmValue.on('changes', codemirrorChanges)
 
     failed.value.forEach((i) => {
       const e = i.result?.error
@@ -86,13 +98,15 @@ watch([cm, failed], () => {
       }
     })
     if (!hasBeenEdited.value)
-      cm.value?.clearHistory() // Prevent getting access to initial state
+      cmValue.clearHistory() // Prevent getting access to initial state
   }, 100)
 }, { flush: 'post' })
 
 async function onSave(content: string) {
   hasBeenEdited.value = true
   await client.rpc.writeFile(props.file!.filepath, content)
+  serverCode.value = code.value
+  draft.value = false
 }
 </script>
 
