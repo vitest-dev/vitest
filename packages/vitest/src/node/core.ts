@@ -9,9 +9,9 @@ import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig } from '../typ
 import { SnapshotManager } from '../integrations/snapshot/manager'
 import { clearTimeout, deepMerge, hasFailed, noop, setTimeout, slash, toArray } from '../utils'
 import { cleanCoverage, reportCoverage } from '../integrations/coverage'
-import { ReportersMap } from './reporters'
 import { createPool } from './pool'
 import type { WorkerPool } from './pool'
+import { createReporters } from './reporters/utils'
 import { StateManager } from './state'
 import { resolveConfig } from './config'
 import { printError } from './error'
@@ -63,16 +63,7 @@ export class Vitest {
     this.config = resolved
     this.state = new StateManager()
     this.snapshot = new SnapshotManager({ ...resolved.snapshotOptions })
-    this.reporters = resolved.reporters
-      .map((i) => {
-        if (typeof i === 'string') {
-          const Reporter = ReportersMap[i]
-          if (!Reporter)
-            throw new Error(`Unknown reporter: ${i}`)
-          return new Reporter()
-        }
-        return i
-      })
+    this.reporters = await createReporters(resolved.reporters)
 
     if (this.config.watch)
       this.registerWatcher()
