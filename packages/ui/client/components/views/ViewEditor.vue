@@ -8,6 +8,7 @@ import type { File } from '#types'
 const props = defineProps<{
   file?: File
 }>()
+const emit = defineEmits<{ (event: 'draft', value: boolean): void }>()
 
 const code = ref('')
 const serverCode = shallowRef<string | undefined>(undefined)
@@ -53,6 +54,10 @@ useResizeObserver(editor, () => {
 function codemirrorChanges() {
   draft.value = serverCode.value !== cm.value!.getValue()
 }
+
+watch(draft, (d) => {
+  emit('draft', d)
+}, { immediate: true })
 
 watch([cm, failed], ([cmValue]) => {
   if (!cmValue) {
