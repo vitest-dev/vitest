@@ -105,7 +105,7 @@ watch([cm, failed], ([cmValue]) => {
 async function onSave(content: string) {
   hasBeenEdited.value = true
   await client.rpc.writeFile(props.file!.filepath, content)
-  serverCode.value = code.value
+  serverCode.value = content
   draft.value = false
 }
 </script>
