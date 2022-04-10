@@ -514,6 +514,7 @@ importers:
       '@cypress/vite-dev-server': ^2.2.2
       '@cypress/vue': ^3.1.1
       '@faker-js/faker': ^6.1.1
+      '@testing-library/cypress': ^8.0.2
       '@types/codemirror': ^5.60.5
       '@types/d3-force': ^3.0.3
       '@types/d3-selection': ^3.0.2
@@ -549,6 +550,7 @@ importers:
       '@cypress/vite-dev-server': 2.2.2_vite@2.9.1
       '@cypress/vue': 3.1.1_cypress@9.5.3+vue@3.2.31
       '@faker-js/faker': 6.1.1
+      '@testing-library/cypress': 8.0.2_cypress@9.5.3
       '@types/codemirror': 5.60.5
       '@types/d3-force': 3.0.3
       '@types/d3-selection': 3.0.2
@@ -6698,6 +6700,17 @@ packages:
       vite: 2.9.1
     transitivePeerDependencies:
       - supports-color
+    dev: true
+
+  /@testing-library/cypress/8.0.2_cypress@9.5.3:
+    resolution: {integrity: sha512-KVdm7n37sg/A4e3wKMD4zUl0NpzzVhx06V9Tf0hZHZ7nrZ4yFva6Zwg2EFF1VzHkEfN/ahUzRtT1qiW+vuWnJw==}
+    engines: {node: '>=12', npm: '>=6'}
+    peerDependencies:
+      cypress: ^2.1.0 || ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0 || ^9.0.0
+    dependencies:
+      '@babel/runtime': 7.17.2
+      '@testing-library/dom': 8.11.1
+      cypress: 9.5.3
     dev: true
 
   /@testing-library/dom/7.31.2:
