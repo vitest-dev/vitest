@@ -1,7 +1,7 @@
 {
   "name": "@vitest/ui",
   "type": "module",
-  "version": "0.9.2",
+  "version": "0.9.3",
   "description": "UI for Vitest",
   "repository": {
     "type": "git",
