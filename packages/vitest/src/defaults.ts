@@ -33,11 +33,11 @@ const coverageConfigDefaults = {
   extension: ['.js', '.cjs', '.mjs', '.ts', '.tsx', '.jsx', '.vue', '.svelte'],
 } as ResolvedC8Options
 
-export const configDefaults: UserConfig = Object.freeze({
+const config = {
   allowOnly: !process.env.CI,
   watch: !process.env.CI,
   globals: false,
-  environment: 'node',
+  environment: 'node' as const,
   threads: true,
   clearMocks: false,
   restoreMocks: false,
@@ -56,4 +56,6 @@ export const configDefaults: UserConfig = Object.freeze({
   uiBase: '/__vitest__/',
   open: true,
   coverage: coverageConfigDefaults,
-})
+}
+
+export const configDefaults: Required<Pick<UserConfig, keyof typeof config>> = Object.freeze(config)

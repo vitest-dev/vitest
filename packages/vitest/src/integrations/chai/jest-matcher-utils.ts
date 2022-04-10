@@ -113,7 +113,7 @@ const SPACE_SYMBOL = '\u{00B7}' // middle dot
 const replaceTrailingSpaces = (text: string): string =>
   text.replace(/\s+$/gm, spaces => SPACE_SYMBOL.repeat(spaces.length))
 
-export const stringify = (object: unknown, maxDepth = 10, options?: PrettyFormatOptions): string => {
+export function stringify(object: unknown, maxDepth = 10, options?: PrettyFormatOptions): string {
   const MAX_LENGTH = 10000
   let result
 

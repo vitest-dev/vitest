@@ -1,7 +1,7 @@
 {
   "name": "vitest",
   "type": "module",
-  "version": "0.8.4",
+  "version": "0.9.2",
   "description": "A blazing fast unit test framework powered by Vite",
   "keywords": [
     "vite",
@@ -85,7 +85,7 @@
     "chai": "^4.3.6",
     "local-pkg": "^0.4.1",
     "tinypool": "^0.1.2",
-    "tinyspy": "^0.3.0",
+    "tinyspy": "^0.3.2",
     "vite": "^2.9.1"
   },
   "devDependencies": {

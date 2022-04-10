@@ -139,8 +139,9 @@ export interface InlineConfig {
 
   /**
    * Write test results to a file when the --reporter=json` or `--reporter=junit` option is also specified.
+   * Also definable individually per reporter by using an object instead.
    */
-  outputFile?: string
+  outputFile?: string | (Partial<Record<BuiltinReporters, string>> & Record<string, string>)
 
   /**
    * Enable multi-threading

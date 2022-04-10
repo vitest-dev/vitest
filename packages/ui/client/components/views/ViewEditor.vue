@@ -40,6 +40,10 @@ const clearListeners = () => {
   listeners.length = 0
 }
 
+useResizeObserver(editor, () => {
+  cm.value?.refresh()
+})
+
 watch([cm, failed], () => {
   if (!cm.value) {
     clearListeners()
@@ -65,7 +69,7 @@ watch([cm, failed], () => {
         pre.textContent = `${' '.repeat(pos.column)}^ ${e?.nameStr}: ${e?.message}`
         div.appendChild(pre)
         const span = document.createElement('span')
-        span.className = 'i-carbon-launch c-red-600 dark:c-red-400 hover:cursor-pointer'
+        span.className = 'i-carbon-launch c-red-600 dark:c-red-400 hover:cursor-pointer min-w-1em min-h-1em'
         span.tabIndex = 0
         span.ariaLabel = 'Open in Editor'
         const tooltip = createTooltip(span, {

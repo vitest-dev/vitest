@@ -2,6 +2,7 @@
 
 import { parseStacktrace } from '../utils/source-map'
 import type { VitestMocker } from '../runtime/mocker'
+import { resetModules } from '../utils'
 import { FakeTimers } from './timers'
 import type { EnhancedSpy, MaybeMocked, MaybeMockedDeep } from './spy'
 import { fn, isMockFunction, spies, spyOn } from './spy'
@@ -208,6 +209,11 @@ class VitestUtils {
       // @ts-expect-error we can do anything!
       globalThis.window[name] = value
 
+    return this
+  }
+
+  public resetModules() {
+    resetModules()
     return this
   }
 }

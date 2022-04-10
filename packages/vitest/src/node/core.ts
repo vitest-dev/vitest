@@ -121,18 +121,19 @@ export class Vitest {
 
     if (!files.length) {
       const exitCode = this.config.passWithNoTests ? 0 : 1
-      if (this.config.passWithNoTests)
-        this.log(`No test files found, exiting code with ${exitCode}\n`)
-      else
-        this.error(c.red(`No test files found, exiting code with ${exitCode}\nRun with \`--passWithNoTests\`to exit with code 0\n`))
 
-      this.error(`In ${c.bold(this.config.root)}`)
+      const comma = c.dim(', ')
       if (filters?.length)
-        this.error(`  filter: ${c.yellow(filters.join(', '))}`)
+        this.console.error(c.dim('filter:  ') + c.yellow(filters.join(comma)))
       if (this.config.include)
-        this.error(`  include: ${c.yellow(this.config.include.join(', '))}`)
+        this.console.error(c.dim('include: ') + c.yellow(this.config.include.join(comma)))
       if (this.config.watchIgnore)
-        this.error(`  watchIgnore: ${c.yellow(this.config.watchIgnore.join(', '))}`)
+        this.console.error(c.dim('ignore:  ') + c.yellow(this.config.watchIgnore.join(comma)))
+
+      if (this.config.passWithNoTests)
+        this.log('No test files found, exiting with code 0\n')
+      else
+        this.error(c.red('\nNo test files found, exiting with code 1'))
 
       process.exit(exitCode)
     }
@@ -201,7 +202,8 @@ export class Vitest {
     const runningTests = []
 
     for (const [filepath, deps] of testDeps) {
-      if (deps.size && related.some(path => deps.has(path)))
+      // if deps or the test itself were changed
+      if (deps.size && related.some(path => path === filepath || deps.has(path)))
         runningTests.push(filepath)
     }
 

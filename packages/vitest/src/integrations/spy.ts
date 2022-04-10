@@ -28,13 +28,13 @@ type Procedure = (...args: any[]) => any
 
 type Methods<T> = {
   [K in keyof T]: T[K] extends Procedure ? K : never
-}[keyof T] & string
+}[keyof T] & (string | symbol)
 type Properties<T> = {
   [K in keyof T]: T[K] extends Procedure ? never : K
-}[keyof T] & string
+}[keyof T] & (string | symbol)
 type Classes<T> = {
   [K in keyof T]: T[K] extends new (...args: any[]) => any ? K : never
-}[keyof T] & string
+}[keyof T] & (string | symbol)
 
 export interface SpyInstance<TArgs extends any[] = any[], TReturns = any> {
   getMockName(): string

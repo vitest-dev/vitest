@@ -20,6 +20,7 @@ export interface TaskResult {
   duration?: number
   startTime?: number
   error?: ErrorWithDiff
+  htmlError?: string
   hooks?: Partial<Record<keyof SuiteHooks, TaskState>>
 }
 
