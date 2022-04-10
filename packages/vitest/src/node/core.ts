@@ -1,4 +1,5 @@
 import { existsSync, promises as fs } from 'fs'
+import readline from 'readline'
 import type { ViteDevServer } from 'vite'
 import { relative, toNamespacedPath } from 'pathe'
 import fg from 'fast-glob'
@@ -274,6 +275,17 @@ export class Vitest {
     this.console.error(...args)
   }
 
+  clearScreen() {
+    if (this.server.config.clearScreen === false)
+      return
+
+    const repeatCount = process.stdout.rows - 2
+    const blank = repeatCount > 0 ? '\n'.repeat(repeatCount) : ''
+    this.console.log(blank)
+    readline.cursorTo(process.stdout, 0, 0)
+    readline.clearScreenDown(process.stdout)
+  }
+
   private _rerunTimer: any
   private async scheduleRerun(triggerId: string) {
     const currentCount = this.restartsCount
@@ -308,7 +320,6 @@ export class Vitest {
       const files = Array.from(this.changedTests)
       this.changedTests.clear()
 
-      this.log('return')
       if (this.config.coverage.enabled && this.config.coverage.cleanOnRerun)
         await cleanCoverage(this.config.coverage)
 
