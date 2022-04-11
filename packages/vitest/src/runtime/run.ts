@@ -10,6 +10,8 @@ import { rpc } from './rpc'
 import { collectTests } from './collect'
 import { processError } from './error'
 
+const now = Date.now
+
 function updateSuiteHookState(suite: Task, name: keyof SuiteHooks, state: TaskState) {
   if (!suite.result)
     suite.result = { state: 'run' }
@@ -67,17 +69,17 @@ export async function runTest(test: Test) {
     return
   }
 
-  const start = performance.now()
+  const start = now()
 
   test.result = {
     state: 'run',
-    startTime: Date.now(),
+    startTime: start,
   }
   updateTask(test)
 
   clearModuleMocks()
 
-  getSnapshotClient().setTest(test)
+  await getSnapshotClient().setTest(test)
 
   const workerState = getWorkerState()
 
@@ -130,7 +132,7 @@ export async function runTest(test: Test) {
 
   getSnapshotClient().clearTest()
 
-  test.result.duration = performance.now() - start
+  test.result.duration = now() - start
 
   workerState.current = undefined
 
@@ -142,7 +144,8 @@ function markTasksAsSkipped(suite: Suite) {
     t.mode = 'skip'
     t.result = { ...t.result, state: 'skip' }
     updateTask(t)
-    if (t.type === 'suite') markTasksAsSkipped(t)
+    if (t.type === 'suite')
+      markTasksAsSkipped(t)
   })
 }
 
@@ -153,11 +156,11 @@ export async function runSuite(suite: Suite) {
     return
   }
 
-  const start = performance.now()
+  const start = now()
 
   suite.result = {
     state: 'run',
-    startTime: Date.now(),
+    startTime: start,
   }
 
   updateTask(suite)
@@ -188,7 +191,7 @@ export async function runSuite(suite: Suite) {
       suite.result.error = processError(e)
     }
   }
-  suite.result.duration = performance.now() - start
+  suite.result.duration = now() - start
 
   if (suite.mode === 'run') {
     if (!hasTests(suite)) {

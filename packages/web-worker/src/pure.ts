@@ -1,7 +1,7 @@
 /* eslint-disable no-restricted-imports */
 import { VitestRunner } from 'vitest/node'
 import type { WorkerGlobalState } from 'vitest'
-import { toFilePath } from '../../vite-node/src/utils'
+import { toFilePath } from 'vite-node/utils'
 
 function getWorkerState(): WorkerGlobalState {
   // @ts-expect-error untyped global
@@ -65,7 +65,8 @@ class InlineWorkerRunner extends VitestRunner {
 }
 
 export function defineWebWorker() {
-  if ('Worker' in globalThis) return
+  if ('Worker' in globalThis)
+    return
 
   const { config, rpc, mockMap, moduleCache } = getWorkerState()
 

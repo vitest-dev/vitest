@@ -68,7 +68,6 @@ async function run(options: CliOptions = {}) {
   const files = options.files || options._ || []
   const server = await createServer({
     logLevel: 'error',
-    clearScreen: false,
     configFile: options.config,
     root: options.root,
   })

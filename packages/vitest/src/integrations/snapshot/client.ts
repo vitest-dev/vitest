@@ -1,4 +1,3 @@
-import path from 'pathe'
 import { expect } from 'chai'
 import type { SnapshotResult, Test } from '../../types'
 import { rpc } from '../../runtime/rpc'
@@ -13,18 +12,12 @@ export interface Context {
   fullTitle?: string
 }
 
-const resolveSnapshotPath = (testPath: string) =>
-  path.join(
-    path.join(path.dirname(testPath), '__snapshots__'),
-    `${path.basename(testPath)}.snap`,
-  )
-
 export class SnapshotClient {
   test: Test | undefined
   testFile = ''
   snapshotState: SnapshotState | undefined
 
-  setTest(test: Test) {
+  async setTest(test: Test) {
     this.test = test
 
     if (this.testFile !== this.test.file!.filepath) {
@@ -33,7 +26,7 @@ export class SnapshotClient {
 
       this.testFile = this.test!.file!.filepath
       this.snapshotState = new SnapshotState(
-        resolveSnapshotPath(this.testFile),
+        await rpc().resolveSnapshotPath(this.testFile),
         getWorkerState().config.snapshotOptions,
       )
     }
@@ -89,7 +82,8 @@ export class SnapshotClient {
   }
 
   async saveSnap() {
-    if (!this.testFile || !this.snapshotState) return
+    if (!this.testFile || !this.snapshotState)
+      return
     const result = await packSnapshotState(this.testFile, this.snapshotState)
     await rpc().snapshotSaved(result)
 

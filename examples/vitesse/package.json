@@ -9,11 +9,11 @@
     "vue": "^3.2.31"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^2.2.4",
+    "@vitejs/plugin-vue": "^2.3.1",
     "@vue/test-utils": "^2.0.0-rc.18",
     "happy-dom": "latest",
-    "unplugin-auto-import": "^0.6.6",
-    "unplugin-vue-components": "^0.18.3",
+    "unplugin-auto-import": "^0.6.9",
+    "unplugin-vue-components": "^0.18.5",
     "vitest": "latest"
   },
   "stackblitz": {

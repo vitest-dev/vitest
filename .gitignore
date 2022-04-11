@@ -10,6 +10,7 @@ node_modules
 .cache
 dist
 .idea
+ltex*
 .DS_Store
 bench/test/*/*/
 cypress/videos

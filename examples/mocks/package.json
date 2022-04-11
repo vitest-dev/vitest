@@ -12,9 +12,9 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "@vueuse/integrations": "^8.1.2",
+    "@vueuse/integrations": "^8.2.4",
     "axios": "^0.26.1",
-    "tinyspy": "^0.3.0"
+    "tinyspy": "^0.3.2"
   },
   "devDependencies": {
     "@vitest/ui": "latest",

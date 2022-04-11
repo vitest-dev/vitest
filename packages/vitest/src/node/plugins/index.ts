@@ -64,7 +64,6 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
         (options as ResolvedConfig).defines = defines
 
         return {
-          clearScreen: false,
           resolve: {
             // by default Vite resolves `module` field, which not always a native ESM module
             // setting this option can bypass that and fallback to cjs version
@@ -79,6 +78,9 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
           },
           // disable deps optimization
           cacheDir: undefined,
+          optimizeDeps: {
+            entries: [],
+          },
         }
       },
       async configResolved(viteConfig) {

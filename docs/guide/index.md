@@ -108,16 +108,17 @@ You can specify additional CLI options like `--port` or `--https`. For a full li
 | `--silent` | Silent console output from tests |
 | `--isolate` | Isolate environment for each test file (default: `true`) |
 | `--reporter <name>` | Select reporter: `default`, `verbose`, `dot`, `junit` or `json` |
-| `--outputFile <filename>` | Write test results to a file when the `--reporter=json` or `--reporter=junit` option is also specified |
+| `--outputFile <filename/-s>` | Write test results to a file when the `--reporter=json` or `--reporter=junit` option is also specified <br /> Via [cac's dot notation] you can specify individual outputs for multiple reporters |
 | `--coverage` | Use c8 for coverage |
 | `--run` | Do not watch |
+| `--mode` | Override Vite mode (default: `test`) |
 | `--mode <name>` | Override Vite mode (default: `test`) |
-| `--global` | Inject APIs globally `deprecated` use `--globals` |
 | `--globals` | Inject APIs globally |
 | `--dom` | Mock browser api with happy-dom |
 | `--environment <env>` | Runner environment (default: `node`) |
 | `--passWithNoTests` | Pass when no tests found |
 | `--allowOnly` | Allow tests and suites that are marked as `only` (default: false in CI, true otherwise) |
+| `--changed [since]` | Run tests that are affected by the changed files (default: false)
 | `-h, --help` | Display available CLI options |
 
 ## Examples
@@ -162,3 +163,5 @@ Then go to the project where you are using Vitest and run `pnpm link --global vi
 ## Community
 
 If you have questions or need help, reach out to the community at [Discord](https://chat.vitest.dev) and [GitHub Discussions](https://github.com/vitest-dev/vitest/discussions).
+
+[cac's dot notation]: https://github.com/cacjs/cac#dot-nested-options

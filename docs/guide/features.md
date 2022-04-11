@@ -33,7 +33,7 @@ ESM first, top level await
 
 ## Threads
 
-Workers multi-threading via [tinypool](https://github.com/Aslemammad/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina)), allowing tests to run simultaneously. Threads are enabled by default Vitest, and can be disabled passing `--no-threads` in the CLI.
+Workers multi-threading via [tinypool](https://github.com/Aslemammad/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina)), allowing tests to run simultaneously. Threads are enabled by default in Vitest, and can be disabled passing `--no-threads` in the CLI.
 
 Vitest also isolates each file's environment so env mutations in one file don't affect others. Isolation can be disabled by passing `--no-isolate` to the CLI (trading of correctness for run performance).
 
@@ -197,7 +197,7 @@ fn.mockImplementation(arg => arg)
 
 fn('world', 2)
 
-expect(fn.mock.returns[1]).toBe('world')
+expect(fn.mock.results[1]).toBe('world')
 ```
 
 Vitest supports both [happy-dom](https://github.com/capricorn86/happy-dom) or [jsdom](https://github.com/jsdom/jsdom) for mocking DOM and browser APIs. They don't come with Vitest, you might need to install them:

@@ -1,7 +1,7 @@
 {
   "name": "@vitest/test-svelte",
-  "private": true,
   "type": "module",
+  "private": true,
   "scripts": {
     "test": "vitest",
     "test:ui": "vitest --ui",
@@ -12,7 +12,7 @@
     "@testing-library/svelte": "^3.1.0",
     "@vitest/ui": "latest",
     "jsdom": "latest",
-    "svelte": "^3.46.4",
+    "svelte": "^3.46.6",
     "vitest": "latest"
   },
   "stackblitz": {

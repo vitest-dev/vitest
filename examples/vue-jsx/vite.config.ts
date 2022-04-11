@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [Vue(), Jsx()],
   test: {
     globals: true,
-    environment: 'happy-dom',
+    environment: 'jsdom',
     transformMode: {
       web: [/.[tj]sx$/],
     },

@@ -15,6 +15,7 @@ const external = [
   ...Object.keys(pkg.peerDependencies || {}),
   'vitest',
   'vitest/node',
+  'vite-node/utils',
 ]
 
 const plugins = [

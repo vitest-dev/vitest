@@ -7,6 +7,7 @@ import cliTruncate from 'cli-truncate'
 import type { ErrorWithDiff, ParsedStack, Position } from '../types'
 import { interpretSourcePos, lineSplitRE, parseStacktrace, posToNumber } from '../utils/source-map'
 import { F_POINTER } from '../utils/figures'
+import { stringify } from '../integrations/chai/jest-matcher-utils'
 import type { Vitest } from './core'
 import { unifiedDiff } from './diff'
 
@@ -46,7 +47,7 @@ export async function printError(error: unknown, ctx: Vitest) {
   handleImportOutsideModuleError(e.stack || e.stackStr || '', ctx)
 
   if (e.showDiff)
-    displayDiff(e.actual, e.expected, ctx.console, ctx.config.outputTruncateLength)
+    displayDiff(stringify(e.actual), stringify(e.expected), ctx.console, ctx.config.outputTruncateLength)
 }
 
 const esmErrors = [
@@ -86,7 +87,7 @@ function handleImportOutsideModuleError(stack: string, ctx: Vitest) {
 }
 
 function displayDiff(actual: string, expected: string, console: Console, outputTruncateLength?: number) {
-  console.error(c.gray(unifiedDiff(actual, expected, outputTruncateLength)) + '\n')
+  console.error(c.gray(unifiedDiff(actual, expected, { outputTruncateLength })) + '\n')
 }
 
 function printErrorMessage(error: ErrorWithDiff, console: Console) {

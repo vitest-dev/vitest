@@ -19,7 +19,7 @@ const entries = [
   'src/node.ts',
   'src/runtime/worker.ts',
   'src/runtime/entry.ts',
-  'src/integrations/jest-mock.ts',
+  'src/integrations/spy.ts',
 ]
 
 const dtsEntries = [
@@ -61,7 +61,6 @@ export default ({ watch }) => [
     output: {
       dir: 'dist',
       format: 'esm',
-      sourcemap: 'inline',
       chunkFileNames: (chunkInfo) => {
         const id = chunkInfo.facadeModuleId || Object.keys(chunkInfo.modules).find(i => !i.includes('node_modules') && i.includes('src/'))
         if (id) {

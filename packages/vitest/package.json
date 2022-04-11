@@ -1,6 +1,7 @@
 {
   "name": "vitest",
-  "version": "0.7.11",
+  "type": "module",
+  "version": "0.9.3",
   "description": "A blazing fast unit test framework powered by Vite",
   "keywords": [
     "vite",
@@ -13,28 +14,21 @@
     "url": "https://github.com/vitest-dev/vitest/issues"
   },
   "license": "MIT",
+  "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vitest-dev/vitest.git"
   },
   "funding": "https://github.com/sponsors/antfu",
-  "author": "Anthony Fu <anthonyfu117@hotmail.com>",
-  "type": "module",
-  "files": [
-    "dist",
-    "bin",
-    "*.d.ts",
-    "*.mjs"
-  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
     },
     "./*": "./*",
-    "./global": {
-      "types": "./globals.d.ts"
-    },
     "./globals": {
       "types": "./globals.d.ts"
     },
@@ -51,15 +45,18 @@
       "types": "./config.d.ts"
     }
   },
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "bin",
+    "*.d.ts",
+    "*.mjs"
+  ],
   "bin": {
     "vitest": "./vitest.mjs"
   },
   "scripts": {
     "build": "rimraf dist && rollup -c",
-    "dev": "rollup -c --watch",
+    "dev": "rollup -c --watch -m inline",
     "prepublishOnly": "nr build"
   },
   "peerDependencies": {
@@ -89,8 +86,8 @@
     "chai": "^4.3.6",
     "local-pkg": "^0.4.1",
     "tinypool": "^0.1.2",
-    "tinyspy": "^0.3.0",
-    "vite": "^2.8.6"
+    "tinyspy": "^0.3.2",
+    "vite": "^2.9.1"
   },
   "devDependencies": {
     "@antfu/install-pkg": "^0.1.0",
@@ -100,11 +97,11 @@
     "@types/jsdom": "^16.2.14",
     "@types/micromatch": "^4.0.2",
     "@types/natural-compare": "^1.4.1",
-    "@types/node": "^17.0.21",
+    "@types/node": "^17.0.23",
     "@types/prompts": "^2.4.0",
-    "@types/sinonjs__fake-timers": "^8.1.1",
+    "@types/sinonjs__fake-timers": "^8.1.2",
     "@vitest/ui": "workspace:*",
-    "birpc": "^0.1.0",
+    "birpc": "^0.2.2",
     "c8": "^7.11.0",
     "cac": "^6.7.12",
     "chai-subset": "^1.6.0",
@@ -114,12 +111,12 @@
     "fast-glob": "^3.2.11",
     "find-up": "^6.3.0",
     "flatted": "^3.2.5",
-    "happy-dom": "^2.49.0",
+    "happy-dom": "^2.55.0",
     "jsdom": "^19.0.0",
     "log-update": "^5.0.0",
     "magic-string": "^0.26.1",
-    "micromatch": "^4.0.4",
-    "mlly": "^0.4.3",
+    "micromatch": "^4.0.5",
+    "mlly": "^0.5.1",
     "natural-compare": "^1.4.0",
     "pathe": "^0.2.0",
     "picocolors": "^1.0.0",
@@ -129,7 +126,7 @@
     "rollup": "^2.70.1",
     "source-map-js": "^1.0.2",
     "strip-ansi": "^7.0.1",
-    "typescript": "^4.6.2",
+    "typescript": "^4.6.3",
     "vite-node": "workspace:*",
     "ws": "^8.5.0"
   },

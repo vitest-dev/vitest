@@ -29,10 +29,9 @@ describe('jest mock compat layer', () => {
   })
 
   it('clearing instances', () => {
-    const Spy = vi.fn(() => {})
+    const Spy = vi.fn(() => ({}))
 
     expect(Spy.mock.instances).toHaveLength(0)
-    // @ts-expect-error ignore
     // eslint-disable-next-line no-new
     new Spy()
     expect(Spy.mock.instances).toHaveLength(1)
@@ -168,6 +167,24 @@ describe('jest mock compat layer', () => {
     expect(obj.getter).toBe('original')
   })
 
+  it('getter function spyOn', () => {
+    const obj = {
+      get getter() {
+        return function() { return 'original' }
+      },
+    }
+
+    const spy = vi.spyOn(obj, 'getter')
+
+    expect(obj.getter()).toBe('original')
+
+    spy.mockImplementation(() => 'mocked').mockImplementationOnce(() => 'once')
+
+    expect(obj.getter()).toBe('once')
+    expect(obj.getter()).toBe('mocked')
+    expect(obj.getter()).toBe('mocked')
+  })
+
   it('setter spyOn', () => {
     let settedValue = 'original'
     let mockedValue = 'none'
@@ -211,6 +228,30 @@ describe('jest mock compat layer', () => {
     expect(settedValue).toBe('last')
   })
 
+  it('should work - setter', () => {
+    const obj = {
+      _property: false,
+      set property(value) {
+        this._property = value
+      },
+      get property() {
+        return this._property
+      },
+    }
+
+    const spy = vi.spyOn(obj, 'property', 'set')
+    obj.property = true
+    expect(spy).toHaveBeenCalled()
+    expect(obj.property).toBe(true)
+    obj.property = false
+    spy.mockRestore()
+    obj.property = true
+    // unlike jest, mockRestore only restores implementation to the original one,
+    // we are still spying on the setter
+    expect(spy).toHaveBeenCalled()
+    expect(obj.property).toBe(true)
+  })
+
   it('throwing', async() => {
     const fn = vi.fn(() => {
       // eslint-disable-next-line no-throw-literal
@@ -227,6 +268,44 @@ describe('jest mock compat layer', () => {
     ])
   })
 
-  it.todo('mockRejectedValue')
-  it.todo('mockResolvedValue')
+  it('mockRejectedValue', async() => {
+    const safeCall = async(fn: () => void) => {
+      try {
+        await fn()
+      }
+      catch {}
+    }
+
+    const spy = vi.fn()
+      .mockRejectedValue(new Error('error'))
+      .mockRejectedValueOnce(new Error('once'))
+
+    await safeCall(spy)
+    await safeCall(spy)
+
+    expect(spy.mock.results[0]).toEqual(e(new Error('once')))
+    expect(spy.mock.results[1]).toEqual(e(new Error('error')))
+  })
+  it('mockResolvedValue', async() => {
+    const spy = vi.fn()
+      .mockResolvedValue('resolved')
+      .mockResolvedValueOnce('once')
+
+    await spy()
+    await spy()
+
+    expect(spy.mock.results[0]).toEqual(r('once'))
+    expect(spy.mock.results[1]).toEqual(r('resolved'))
+  })
+
+  it('tracks instances made by mocks', () => {
+    const Fn = vi.fn()
+    expect(Fn.mock.instances).toEqual([])
+
+    const instance1 = new Fn()
+    expect(Fn.mock.instances[0]).toBe(instance1)
+
+    const instance2 = new Fn()
+    expect(Fn.mock.instances[1]).toBe(instance2)
+  })
 })

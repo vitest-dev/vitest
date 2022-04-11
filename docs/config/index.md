@@ -230,9 +230,10 @@ Custom reporters for output. Reporters can be [a Reporter instance](https://gith
 
 ### outputFile
 
-- **Type:** `string`
+- **Type:** `string | Record<string, string>`
 
 Write test results to a file when the `--reporter=json` or `--reporter=junit` option is also specified.
+By providing an object instead of a string you can define individual outputs when using multiple reporters.
 
 ### threads
 
@@ -318,6 +319,27 @@ Isolate environment for each test file
 
 Coverage options
 
+### testNamePattern
+
+- **Type** `string | RegExp`
+
+Run tests with full names matching the pattern.
+If you add `OnlyRunThis` to this property, tests containing the word `OnlyRunThis` in the test name will be skipped.
+
+```js
+import { expect, test } from 'vitest'
+
+// run
+test('OnlyRunThis', () => {
+  expect(true).toBe(true)
+})
+
+// skipped
+test('doNotRun', () => {
+  expect(true).toBe(true)
+})
+```
+
 ### open
 
 - **Type:** `boolean`
@@ -401,3 +423,27 @@ Format options for snapshot testing.
 - **Default:** `test`
 
 Overrides Vite mode.
+
+### changed
+
+- **Type**: `boolean | string`
+- **Default**: false
+
+Run tests only against changed files. If no value is provided, it will run tests against uncomitted changes (includes staged and unstaged).
+
+To run tests against changes made in last commit, you can use `--changed HEAD~1`. You can also pass commit hash or branch name.
+
+### resolveSnapshotPath
+
+- **Type**: `(testPath: string, snapExtension: string) => string`
+- **Default**: stores snapshot files in `__snapshots__` directory
+
+Overrides default snapshot path. For example, to store snapshots next to test files:
+
+```ts
+export default {
+  test: {
+    resolveSnapshotPath: (testPath, snapExtension) => testPath + snapExtension,
+  },
+}
+```

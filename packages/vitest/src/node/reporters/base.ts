@@ -6,7 +6,7 @@ import { getFullName, getSuites, getTests, hasFailed, hasFailedSnapshot } from '
 import type { Vitest } from '../../node'
 import { version } from '../../../package.json'
 import { F_RIGHT } from '../../utils/figures'
-import { divider, getStateString, getStateSymbol, renderSnapshotSummary } from './renderers/utils'
+import { divider, getStateString, getStateSymbol, pointer, renderSnapshotSummary } from './renderers/utils'
 
 const BADGE_PADDING = '       '
 const HELP_HINT = `${c.dim('press ')}${c.bold('h')}${c.dim(' to show help')}`
@@ -63,10 +63,26 @@ export abstract class BaseReporter implements Reporter {
       return
     for (const pack of packs) {
       const task = this.ctx.state.idMap.get(pack[0])
-      if (task && task.type === 'test' && task.result?.state && task.result?.state !== 'run') {
-        this.ctx.log(` ${getStateSymbol(task)} ${getFullName(task)}`)
-        if (task.result.state === 'fail')
-          this.ctx.log(c.red(`   ${F_RIGHT} ${(task.result.error as any)?.message}`))
+      if (task && 'filepath' in task && task.result?.state && task.result?.state !== 'run') {
+        const tests = getTests(task)
+        const failed = tests.filter(t => t.result?.state === 'fail')
+        const skipped = tests.filter(t => t.mode === 'skip' || t.mode === 'todo')
+        let state = c.dim(`${tests.length} test${tests.length > 1 ? 's' : ''}`)
+        if (failed.length)
+          state += ` ${c.dim('|')} ${c.red(`${failed.length} failed`)}`
+        if (skipped.length)
+          state += ` ${c.dim('|')} ${c.yellow(`${skipped.length} skipped`)}`
+        let suffix = c.dim(' (') + state + c.dim(')')
+        if (task.result.duration)
+          suffix += c.yellow(` ${Math.round(task.result.duration)}${c.dim('ms')}`)
+
+        this.ctx.log(` ${getStateSymbol(task)} ${task.name} ${suffix}`)
+
+        // print short errors, full errors will be at the end in summary
+        for (const test of failed) {
+          this.ctx.log(c.red(`   ${pointer} ${getFullName(test)}`))
+          this.ctx.log(c.red(`     ${F_RIGHT} ${(test.result!.error as any)?.message}`))
+        }
       }
     }
   }
@@ -92,8 +108,8 @@ export abstract class BaseReporter implements Reporter {
   async onWatcherRerun(files: string[], trigger?: string) {
     this.watchFilters = files
 
-    this.ctx.console.clear()
-    this.ctx.log(c.blue('Re-running tests...') + (trigger ? c.dim(` [ ${this.relative(trigger)} ]\n`) : ''))
+    this.ctx.clearScreen()
+    this.ctx.log(`\n${c.inverse(c.bold(c.blue(' RERUN ')))}${trigger ? c.dim(` ${this.relative(trigger)}\n`) : ''}`)
     this.start = performance.now()
   }
 

@@ -9,7 +9,7 @@
   },
   "devDependencies": {
     "@vitest/ui": "latest",
-    "puppeteer": "^13.5.1",
+    "puppeteer": "^13.5.2",
     "vite": "latest",
     "vitest": "latest"
   },

@@ -1,4 +1,3 @@
-import { performance } from 'perf_hooks'
 import { createHash } from 'crypto'
 import { relative } from 'pathe'
 import type { File, ResolvedConfig, Suite, TaskBase } from '../types'
@@ -8,6 +7,8 @@ import { processError } from './error'
 import { context } from './context'
 import { runSetupFiles } from './setup'
 import { clearBenchmarkContext, defaultBenchmark } from './benchmark'
+
+const now = Date.now
 
 function hash(str: string, length = 10) {
   return createHash('md5')
@@ -49,9 +50,9 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
           file.tasks.push(c)
         }
         else if (c.type === 'collector') {
-          const start = performance.now()
+          const start = now()
           const suite = await c.collect(file)
-          file.collectDuration = performance.now() - start
+          file.collectDuration = now() - start
           if (suite.name || suite.tasks.length)
             file.tasks.push(suite)
         }
@@ -141,7 +142,8 @@ function skipAllTasks(suite: Suite) {
 }
 
 function checkAllowOnly(task: TaskBase, allowOnly?: boolean) {
-  if (allowOnly) return
+  if (allowOnly)
+    return
   task.result = {
     state: 'fail',
     error: processError(new Error('[Vitest] Unexpected .only modifier. Remove it or pass --allowOnly argument to bypass this error')),
