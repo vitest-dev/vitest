@@ -6,14 +6,14 @@
     "test": "vitest"
   },
   "dependencies": {
-    "vue": "^3.2.31"
+    "vue": "^3.2.32"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^2.3.1",
-    "@vue/test-utils": "^2.0.0-rc.18",
+    "@vue/test-utils": "^2.0.0-rc.20",
     "happy-dom": "latest",
-    "unplugin-auto-import": "^0.6.9",
-    "unplugin-vue-components": "^0.18.5",
+    "unplugin-auto-import": "^0.7.0",
+    "unplugin-vue-components": "^0.19.2",
     "vitest": "latest"
   },
   "stackblitz": {

@@ -54,7 +54,7 @@
     "birpc": "^0.2.2",
     "codemirror": "^5.65.2",
     "codemirror-theme-vars": "^0.1.1",
-    "cypress": "^9.5.3",
+    "cypress": "^9.5.4",
     "d3-graph-controller": "^2.2.25",
     "flatted": "^3.2.5",
     "floating-vue": "^2.0.0-y.0",
@@ -67,7 +67,7 @@
     "vite-plugin-optimize-persist": "^0.1.2",
     "vite-plugin-package-config": "^0.1.1",
     "vite-plugin-pages": "^0.22.0",
-    "vue": "^3.2.31",
+    "vue": "^3.2.32",
     "vue-router": "^4.0.14"
   },
   "vite": {

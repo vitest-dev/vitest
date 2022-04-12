@@ -3,7 +3,7 @@
   "type": "module",
   "version": "0.9.3",
   "private": true,
-  "packageManager": "pnpm@6.32.4",
+  "packageManager": "pnpm@6.32.6",
   "description": "A blazing fast unit test framework powered by Vite",
   "scripts": {
     "build": "pnpm -r --filter {packages} run build",
@@ -40,7 +40,7 @@
     "bumpp": "^7.1.1",
     "c8": "^7.11.0",
     "cross-env": "^7.0.3",
-    "esbuild": "~0.14.30",
+    "esbuild": "~0.14.36",
     "eslint": "^8.13.0",
     "esno": "^0.14.1",
     "fast-glob": "^3.2.11",
@@ -60,7 +60,7 @@
     "vite": "^2.9.1",
     "vitepress": "^0.22.3",
     "vitest": "workspace:*",
-    "vue": "^3.2.31"
+    "vue": "^3.2.32"
   },
   "pnpm": {
     "overrides": {
