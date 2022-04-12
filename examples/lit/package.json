@@ -12,7 +12,7 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "lit": "^2.2.1"
+    "lit": "^2.2.2"
   },
   "devDependencies": {
     "@vitest/ui": "latest",

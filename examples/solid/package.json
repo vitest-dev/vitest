@@ -6,7 +6,7 @@
     "coverage": "if-node-version \">14\" vitest --coverage"
   },
   "dependencies": {
-    "solid-js": "^1.3.13"
+    "solid-js": "^1.3.14"
   },
   "devDependencies": {
     "jsdom": "*",
