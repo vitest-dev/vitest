@@ -24,10 +24,10 @@ function flattenTasks(task: Task, baseName = ''): Task[] {
 }
 
 // https://gist.github.com/john-doherty/b9195065884cdbfd2017a4756e6409cc
-function removeXMLInvalidChars(str: string, removeDiscouragedChars: boolean) {
+function removeInvalidXMLCharacters(value: any, removeDiscouragedChars: boolean): string {
   // eslint-disable-next-line no-control-regex
   let regex = /((?:[\0-\x08\x0B\f\x0E-\x1F\uFFFD\uFFFE\uFFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF]))/g
-  str = String(str || '').replace(regex, '')
+  value = String(value || '').replace(regex, '')
 
   if (removeDiscouragedChars) {
     // remove everything discouraged by XML 1.0 specifications
@@ -41,14 +41,14 @@ function removeXMLInvalidChars(str: string, removeDiscouragedChars: boolean) {
     + 'uE000-\\uFFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF]|[\\uD800-\\uDBFF](?![\\uDC00-\\uDFFF])|'
     + '(?:[^\\uD800-\\uDBFF]|^)[\\uDC00-\\uDFFF]))', 'g')
 
-    str = str.replace(regex, '')
+    value = value.replace(regex, '')
   }
 
-  return str
+  return value
 }
 
 function escapeXML(value: any): string {
-  return removeXMLInvalidChars(
+  return removeInvalidXMLCharacters(
     String(value)
       .replace(/&/g, '&amp;')
       .replace(/"/g, '&quot;')
