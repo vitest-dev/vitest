@@ -2,7 +2,7 @@
 // We suggest you to commit this file into source control
 // Read more: https://github.com/vuejs/vue-next/pull/3399
 
-declare module 'vue' {
+declare module '@vue/runtime-core' {
   export interface GlobalComponents {
     CodeMirror: typeof import('./components/CodeMirror.vue')['default']
     ConnectionOverlay: typeof import('./components/ConnectionOverlay.vue')['default']
@@ -15,6 +15,8 @@ declare module 'vue' {
     ModuleTransformResultView: typeof import('./components/ModuleTransformResultView.vue')['default']
     Navigation: typeof import('./components/Navigation.vue')['default']
     ProgressBar: typeof import('./components/ProgressBar.vue')['default']
+    RouterLink: typeof import('vue-router')['RouterLink']
+    RouterView: typeof import('vue-router')['RouterView']
     StatusIcon: typeof import('./components/StatusIcon.vue')['default']
     Suites: typeof import('./components/Suites.vue')['default']
     TaskItem: typeof import('./components/TaskItem.vue')['default']

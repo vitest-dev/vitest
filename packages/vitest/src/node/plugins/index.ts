@@ -79,6 +79,8 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
           // disable deps optimization
           cacheDir: undefined,
           optimizeDeps: {
+            // experimental in Vite >2.9.2, entries remains to help with older versions
+            disabled: true,
             entries: [],
           },
         }
