@@ -142,6 +142,14 @@ const tasks: Task[] = [
     fails: undefined,
     file,
     result: { state: 'pass', duration: 0.1923508644104004 },
+    logs: [
+      {
+        content: '[33merror[39m',
+        type: 'stderr',
+        time: 1642587001759,
+        size: 15,
+      },
+    ],
   },
 ]
 
