@@ -27,8 +27,10 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
         const preOptions = deepMerge({}, configDefaults, options, viteConfig.test ?? {})
         preOptions.api = resolveApiConfig(preOptions)
 
-        if (viteConfig.define)
+        if (viteConfig.define) {
           delete viteConfig.define['import.meta.vitest']
+          delete viteConfig.define['process.env']
+        }
 
         // store defines for globalThis to make them
         // reassignable when running in worker in src/runtime/setup.ts
