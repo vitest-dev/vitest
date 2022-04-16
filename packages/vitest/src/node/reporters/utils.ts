@@ -3,7 +3,7 @@ import { ReportersMap } from './index'
 import type { BuiltinReporters } from './index'
 
 async function loadCustomReporterModule<C extends Reporter>(path: string, fetchModule: (id: string) => Promise<any>): Promise<new () => C> {
-  let customReporterModule: { default: new() => C }
+  let customReporterModule: { default: new () => C }
   try {
     customReporterModule = await fetchModule(path)
   }
