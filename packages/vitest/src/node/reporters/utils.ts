@@ -21,8 +21,8 @@ function createReporters(reporterReferences: Array<string|Reporter|BuiltinReport
   const promisedReporters = reporterReferences.map(async(referenceOrInstance) => {
     if (typeof referenceOrInstance === 'string') {
       if (referenceOrInstance in ReportersMap) {
-        const Reporter = ReportersMap[referenceOrInstance as BuiltinReporters]
-        return new Reporter()
+        const BuiltinReporter = ReportersMap[referenceOrInstance as BuiltinReporters]
+        return new BuiltinReporter()
       }
       else {
         const CustomReporter = await loadCustomReporterModule(referenceOrInstance, fetchModule)
