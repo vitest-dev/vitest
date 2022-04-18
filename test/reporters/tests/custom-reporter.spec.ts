@@ -22,7 +22,7 @@ async function runTest(...runOptions: string[]): Promise<string> {
 }
 
 describe('Custom reporters', () => {
-  test('custom reporters defined in configuration work', async() => {
+  test('custom reporter instances defined in configuration works', async() => {
     // On Windows child_process is very unstable, we skip testing it
     if (process.platform === 'win32' && process.env.CI)
       return
@@ -31,7 +31,16 @@ describe('Custom reporters', () => {
     expect(stdout).includes('hello from custom reporter')
   }, 40000)
 
-  test('custom TS reporters using ESM given as a CLI argument work', async() => {
+  test('a path to a custom reporter defined in configuration works', async() => {
+    // On Windows child_process is very unstable, we skip testing it
+    if (process.platform === 'win32' && process.env.CI)
+      return
+
+    const stdout = await runTest('--config', 'custom-reporter-path.vitest.config.ts', '--reporter', customJSReporterPath)
+    expect(stdout).includes('hello from custom reporter')
+  }, 40000)
+
+  test('custom TS reporters using ESM given as a CLI argument works', async() => {
     // On Windows child_process is very unstable, we skip testing it
     if (process.platform === 'win32' && process.env.CI)
       return
@@ -40,7 +49,7 @@ describe('Custom reporters', () => {
     expect(stdout).includes('hello from custom reporter')
   }, 40000)
 
-  test('custom JS reporters using CJS given as a CLI argument work', async() => {
+  test('custom JS reporters using CJS given as a CLI argument works', async() => {
     // On Windows child_process is very unstable, we skip testing it
     if (process.platform === 'win32' && process.env.CI)
       return
