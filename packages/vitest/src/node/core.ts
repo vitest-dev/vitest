@@ -268,16 +268,17 @@ export class Vitest {
     }
   }
 
-  _clearScreen() {
+  private _clearScreen() {
     const log = this._clearScreenPending?.trim()
     this._clearScreenPending = undefined
-    const repeatCount = process.stdout.rows - 2
-    const blank = repeatCount > 0 ? '\n'.repeat(repeatCount) : ''
-    this.console.log(blank)
-    readline.cursorTo(process.stdout, 0, 0)
-    readline.clearScreenDown(process.stdout)
-    if (log && log.length > 0)
+    if (log && log.length > 0) {
+      const repeatCount = process.stdout.rows - 2
+      const blank = repeatCount > 0 ? '\n'.repeat(repeatCount) : ''
+      this.console.log(blank)
+      readline.cursorTo(process.stdout, 0, 0)
+      readline.clearScreenDown(process.stdout)
       this.console.log(log)
+    }
   }
 
   log(...args: any[]) {
@@ -291,8 +292,13 @@ export class Vitest {
   }
 
   clearScreen(message?: string) {
-    if (this.server.config.clearScreen === false)
+    if (this.server.config.clearScreen === false) {
+      const log = message?.trim()
+      if (log && log.length > 0)
+        this.console.log(log)
+
       return
+    }
 
     this._clearScreenPending = message
   }
