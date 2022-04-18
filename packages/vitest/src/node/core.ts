@@ -45,6 +45,7 @@ export class Vitest {
   isFirstRun = true
   restartsCount = 0
 
+  private _clearScreenPending: string | undefined
   private _onRestartListeners: Array<() => void> = []
 
   constructor() {
@@ -267,23 +268,33 @@ export class Vitest {
     }
   }
 
-  log(...args: any[]) {
-    this.console.log(...args)
-  }
-
-  error(...args: any[]) {
-    this.console.error(...args)
-  }
-
-  clearScreen() {
-    if (this.server.config.clearScreen === false)
-      return
-
+  _clearScreen() {
+    const log = this._clearScreenPending?.trim()
+    this._clearScreenPending = undefined
     const repeatCount = process.stdout.rows - 2
     const blank = repeatCount > 0 ? '\n'.repeat(repeatCount) : ''
     this.console.log(blank)
     readline.cursorTo(process.stdout, 0, 0)
     readline.clearScreenDown(process.stdout)
+    if (log && log.length > 0)
+      this.console.log(log)
+  }
+
+  log(...args: any[]) {
+    this._clearScreen()
+    this.console.log(...args)
+  }
+
+  error(...args: any[]) {
+    this._clearScreen()
+    this.console.error(...args)
+  }
+
+  clearScreen(message?: string) {
+    if (this.server.config.clearScreen === false)
+      return
+
+    this._clearScreenPending = message
   }
 
   private _rerunTimer: any
