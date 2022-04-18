@@ -811,6 +811,14 @@ importers:
   test/snapshots:
     specifiers: {}
 
+  test/vite-config:
+    specifiers:
+      pathe: ^0.2.0
+      vitest: workspace:*
+    devDependencies:
+      pathe: 0.2.0
+      vitest: link:../../packages/vitest
+
   test/web-worker:
     specifiers:
       '@vitest/web-worker': workspace:*
