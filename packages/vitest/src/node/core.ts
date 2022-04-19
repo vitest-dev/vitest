@@ -1,5 +1,4 @@
 import { existsSync, promises as fs } from 'fs'
-import readline from 'readline'
 import type { ViteDevServer } from 'vite'
 import { relative, toNamespacedPath } from 'pathe'
 import fg from 'fast-glob'
@@ -269,16 +268,19 @@ export class Vitest {
   }
 
   private _clearScreen() {
-    const log = this._clearScreenPending?.trim()
+    const log = this._clearScreenPending
     this._clearScreenPending = undefined
-    if (log && log.length > 0) {
-      const repeatCount = process.stdout.rows - 2
-      const blank = repeatCount > 0 ? '\n'.repeat(repeatCount) : ''
-      this.console.log(blank)
-      readline.cursorTo(process.stdout, 0, 0)
-      readline.clearScreenDown(process.stdout)
-      this.console.log(log)
-    }
+    if (log)
+      // equivalent to ansi-escapes:
+      // stdout.write(ansiEscapes.cursorTo(0, 0) + ansiEscapes.eraseDown + log)
+      this.console.log(`\u001B[1;1H\u001B[J${log}`)
+      // previous line also equivalent to:
+      // const repeatCount = process.stdout.rows - 2
+      // const blank = repeatCount > 0 ? '\n'.repeat(repeatCount) : ''
+      // this.console.log(blank)
+      // readline.cursorTo(process.stdout, 0, 0)
+      // readline.clearScreenDown(process.stdout)
+      // this.console.log(log)
   }
 
   log(...args: any[]) {
@@ -291,12 +293,9 @@ export class Vitest {
     this.console.error(...args)
   }
 
-  clearScreen(message?: string) {
+  clearScreen(message: string) {
     if (this.server.config.clearScreen === false) {
-      const log = message?.trim()
-      if (log && log.length > 0)
-        this.console.log(log)
-
+      this.console.log(message)
       return
     }
 
