@@ -536,6 +536,9 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       callResult,
     )
   })
+  def('toSatisfy', function() {
+    return this.be.satisfy
+  })
 
   utils.addProperty(chai.Assertion.prototype, 'resolves', function __VITEST_RESOLVES__(this: any) {
     utils.flag(this, 'promise', 'resolves')

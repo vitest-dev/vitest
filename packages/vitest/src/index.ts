@@ -119,6 +119,7 @@ declare global {
       lastReturnedWith<E>(value: E): void
       toHaveNthReturnedWith<E>(nthCall: number, value: E): void
       nthReturnedWith<E>(nthCall: number, value: E): void
+      toSatisfy<E>(matcher: (value: E) => boolean, message?: string): void
     }
 
     // eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error
