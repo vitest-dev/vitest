@@ -3,6 +3,7 @@
   "type": "module",
   "version": "0.9.3",
   "description": "UI for Vitest",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vitest-dev/vitest.git",
