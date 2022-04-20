@@ -419,6 +419,18 @@ describe('toBeTypeOf()', () => {
   })
 })
 
+describe('toSatisfy()',() => {
+  const isOdd = (value: number) => value % 2 !== 0
+
+  it('pass with 0',() => {
+    expect(1).toSatisfy(isOdd)
+  })
+
+  it('pass with negotiation',() => {
+    expect(2).not.toSatisfy(isOdd)
+  })
+})
+
 describe('async expect', () => {
   it('resolves', async() => {
     await expect((async() => 'true')()).resolves.toBe('true')
