@@ -4,5 +4,8 @@
     "unmock"
   ],
   "editor.formatOnSave": false,
+  "[json]": {
+    "editor.formatOnSave": false
+  },
   "prettier.enable": false
 }
