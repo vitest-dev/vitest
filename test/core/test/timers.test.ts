@@ -820,6 +820,8 @@ describe('FakeTimers', () => {
       timers.advanceTimersByTime(5)
 
       expect(timers.getTimerCount()).toEqual(0)
+
+      timers.useRealTimers()
     })
 
     it('includes immediates and ticks', () => {
@@ -832,6 +834,8 @@ describe('FakeTimers', () => {
       process.nextTick(() => {})
 
       expect(timers.getTimerCount()).toEqual(3)
+
+      timers.useRealTimers()
     })
 
     it('not includes cancelled immediates', () => {
@@ -844,6 +848,8 @@ describe('FakeTimers', () => {
       timers.clearAllTimers()
 
       expect(timers.getTimerCount()).toEqual(0)
+
+      timers.useRealTimers()
     })
 
     it('throws when using useFakeTimers after setSystemTime', () => {
