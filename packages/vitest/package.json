@@ -90,7 +90,7 @@
   },
   "devDependencies": {
     "@antfu/install-pkg": "^0.1.0",
-    "@sinonjs/fake-timers": "^9.1.2",
+    "@sinonjs/fake-timers": "9.1.1",
     "@types/diff": "^5.0.2",
     "@types/jsdom": "^16.2.14",
     "@types/micromatch": "^4.0.2",
