@@ -68,7 +68,7 @@
     "vite-plugin-optimize-persist": "^0.1.2",
     "vite-plugin-package-config": "^0.1.1",
     "vite-plugin-pages": "^0.23.0",
-    "vue": "^3.2.32",
+    "vue": "^3.2.33",
     "vue-router": "^4.0.14"
   },
   "vite": {
