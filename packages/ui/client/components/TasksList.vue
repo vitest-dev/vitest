@@ -84,7 +84,7 @@ export default {
   <div h="full" flex="~ col">
     <div>
       <div p="2" h-10 flex="~ gap-2" items-center bg-header border="b base">
-        <slot name="header" :filteredTests="isFiltered ? filteredTests : undefined" />
+        <slot name="header" :filtered-tests="isFiltered ? filteredTests : undefined" />
       </div>
       <div
         p="l3 y2 r2"
