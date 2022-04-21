@@ -8,6 +8,7 @@ import type { ModuleGraphData } from '#types'
 
 const data = ref<ModuleGraphData>({ externalized: [], graph: {}, inlined: [] })
 const graph = ref<ModuleGraph>({ nodes: [], links: [] })
+const draft = ref(false)
 
 debouncedWatch(
   current,
@@ -32,6 +33,9 @@ const changeViewMode = (view: Params['view']) => {
 const consoleCount = computed(() => {
   return currentLogs.value?.reduce((s, { size }) => s + size, 0) ?? 0
 })
+function onDraft(value: boolean) {
+  draft.value = value
+}
 </script>
 
 <template>
@@ -72,7 +76,7 @@ const consoleCount = computed(() => {
           :class="{ 'tab-button-active': viewMode === 'editor' }"
           @click="changeViewMode('editor')"
         >
-          Code
+          {{ draft ? '*&#160;': '' }}Code
         </button>
         <button
           tab-button
@@ -86,7 +90,7 @@ const consoleCount = computed(() => {
 
     <div flex flex-col flex-1 overflow="hidden">
       <ViewModuleGraph v-show="viewMode === 'graph'" :graph="graph" />
-      <ViewEditor v-if="viewMode === 'editor'" :key="current.filepath" :file="current" />
+      <ViewEditor v-if="viewMode === 'editor'" :key="current.filepath" :file="current" @draft="onDraft" />
       <ViewConsoleOutput v-else-if="viewMode === 'console'" :file="current" />
       <ViewReport v-else-if="!viewMode" :file="current" />
     </div>
