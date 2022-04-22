@@ -86,15 +86,15 @@ type ExtractEachCallbackArgs<T extends ReadonlyArray<any>> = {
 interface EachFunction {
   <T extends any[] | [any]>(cases: ReadonlyArray<T>): (
     name: string,
-    fn: (...args: T) => void
+    fn: (...args: T) => Awaitable<void>
   ) => void
   <T extends ReadonlyArray<any>>(cases: ReadonlyArray<T>): (
     name: string,
-    fn: (...args: ExtractEachCallbackArgs<T>) => void
+    fn: (...args: ExtractEachCallbackArgs<T>) => Awaitable<void>
   ) => void
   <T>(cases: ReadonlyArray<T>): (
     name: string,
-    fn: (...args: T[]) => void
+    fn: (...args: T[]) => Awaitable<void>
   ) => void
 }
 
