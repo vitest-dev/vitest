@@ -14,7 +14,7 @@ Sometimes you need to be in control of the date to ensure consistency when testi
 ### Example
 
 ```js
-import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const businessHours = [9, 17]
 
