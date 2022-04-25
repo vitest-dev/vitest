@@ -28,7 +28,7 @@
     "@vitest/ui": "latest",
     "date-fns": "^2.28.0",
     "jsdom": "^19.0.0",
-    "vite": "latest",
+    "vite": "^2.9.5",
     "vitest": "latest"
   },
   "stackblitz": {
