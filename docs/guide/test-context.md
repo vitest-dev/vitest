@@ -30,7 +30,7 @@ The `expect` API which bound to the current test.
 The contexts are different for each test. You can access and extend them within the `beforeEach` and `afterEach` hooks.
 
 ```ts
-import { it, beforeEach } from 'vitest'
+import { beforeEach, it } from 'vitest'
 
 beforeEach(async (context) => {
   // extend context
