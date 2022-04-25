@@ -2,7 +2,7 @@ import c from 'picocolors'
 import type { EnhancedSpy } from '../spy'
 import { isMockFunction } from '../spy'
 import { addSerializer } from '../snapshot/port/plugins'
-import type { Constructable } from '../../types'
+import type { Constructable, Test } from '../../types'
 import { assertTypes } from '../../utils'
 import { unifiedDiff } from '../../node/diff'
 import type { ChaiPlugin, MatcherState } from './types'
@@ -63,6 +63,12 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         _super.apply(this, args)
       }
     })
+  })
+
+  // @ts-expect-error @internal
+  def('withTest', function (test: Test) {
+    utils.flag(this, 'vitest-test', test)
+    return this
   })
 
   def('toEqual', function (expected) {

@@ -78,6 +78,7 @@ export async function startVitest(cliFilters: string[], options: CliOptions, vit
     ctx.error(`\n${c.red(divider(c.bold(c.inverse(' Unhandled Error '))))}`)
     await ctx.printError(e)
     ctx.error('\n\n')
+    return false
   }
 
   if (!ctx.config.watch) {

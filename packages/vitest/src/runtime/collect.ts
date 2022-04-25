@@ -1,10 +1,10 @@
 import { createHash } from 'crypto'
 import { relative } from 'pathe'
 import type { File, ResolvedConfig, Suite, TaskBase } from '../types'
-import { clearContext, defaultSuite } from './suite'
+import { clearCollectorContext, defaultSuite } from './suite'
 import { getHooks, setHooks } from './map'
 import { processError } from './error'
-import { context } from './context'
+import { collectorContext } from './context'
 import { runSetupFiles } from './setup'
 
 const now = Date.now
@@ -30,7 +30,7 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
       tasks: [],
     }
 
-    clearContext()
+    clearCollectorContext()
     try {
       await runSetupFiles(config)
       await import(filepath)
@@ -39,7 +39,7 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
 
       setHooks(file, getHooks(defaultTasks))
 
-      for (const c of [...defaultTasks.tasks, ...context.tasks]) {
+      for (const c of [...defaultTasks.tasks, ...collectorContext.tasks]) {
         if (c.type === 'test') {
           file.tasks.push(c)
         }

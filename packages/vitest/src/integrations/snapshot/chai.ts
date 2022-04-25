@@ -31,11 +31,12 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       key,
       function (this: Record<string, unknown>, properties?: object, message?: string) {
         const expected = utils.flag(this, 'object')
+        const test = utils.flag(this, 'vitest-test')
         if (typeof properties === 'string' && typeof message === 'undefined') {
           message = properties
           properties = undefined
         }
-        getSnapshotClient().assert(expected, message, false, properties)
+        getSnapshotClient().assert(expected, test, message, false, properties)
       },
     )
   }
@@ -45,6 +46,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     function __VITEST_INLINE_SNAPSHOT__(this: Record<string, unknown>, properties?: object, inlineSnapshot?: string, message?: string) {
       const expected = utils.flag(this, 'object')
       const error = utils.flag(this, 'error')
+      const test = utils.flag(this, 'vitest-test')
       if (typeof properties === 'string') {
         message = inlineSnapshot
         inlineSnapshot = properties
@@ -52,7 +54,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       }
       if (inlineSnapshot)
         inlineSnapshot = stripSnapshotIndentation(inlineSnapshot)
-      getSnapshotClient().assert(expected, message, true, properties, inlineSnapshot, error)
+      getSnapshotClient().assert(expected, test, message, true, properties, inlineSnapshot, error)
     },
   )
   utils.addMethod(
@@ -60,7 +62,8 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     'toThrowErrorMatchingSnapshot',
     function (this: Record<string, unknown>, message?: string) {
       const expected = utils.flag(this, 'object')
-      getSnapshotClient().assert(getErrorString(expected), message)
+      const test = utils.flag(this, 'vitest-test')
+      getSnapshotClient().assert(getErrorString(expected), test, message)
     },
   )
   utils.addMethod(
@@ -69,7 +72,8 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     function __VITEST_INLINE_SNAPSHOT__(this: Record<string, unknown>, inlineSnapshot: string, message: string) {
       const expected = utils.flag(this, 'object')
       const error = utils.flag(this, 'error')
-      getSnapshotClient().assert(getErrorString(expected), message, true, undefined, inlineSnapshot, error)
+      const test = utils.flag(this, 'vitest-test')
+      getSnapshotClient().assert(getErrorString(expected), test, message, true, undefined, inlineSnapshot, error)
     },
   )
 }

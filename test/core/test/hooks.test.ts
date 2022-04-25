@@ -53,3 +53,31 @@ suite('level1', () => {
     expect(count).toBe(2)
   })
 })
+
+suite('hooks cleanup', () => {
+  let cleanUpCount = 0
+  suite('run', () => {
+    beforeAll(() => {
+      cleanUpCount += 10
+      return () => {
+        cleanUpCount -= 10
+      }
+    })
+    beforeEach(() => {
+      cleanUpCount += 1
+      return () => {
+        cleanUpCount -= 1
+      }
+    })
+
+    it('one', () => {
+      expect(cleanUpCount).toBe(11)
+    })
+    it('two', () => {
+      expect(cleanUpCount).toBe(11)
+    })
+  })
+  it('end', () => {
+    expect(cleanUpCount).toBe(0)
+  })
+})

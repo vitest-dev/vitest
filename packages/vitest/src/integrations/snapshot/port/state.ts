@@ -9,7 +9,7 @@ import fs from 'fs'
 import type { Config } from '@jest/types'
 // import { getStackTraceLines, getTopFrame } from 'jest-message-util'
 import type { OptionsReceived as PrettyFormatOptions } from 'pretty-format'
-import type { ParsedStack, SnapshotData, SnapshotMatchOptions, SnapshotStateOptions } from '../../../types'
+import type { ParsedStack, SnapshotData, SnapshotMatchOptions, SnapshotResult, SnapshotStateOptions } from '../../../types'
 import { slash } from '../../../utils'
 import { parseStacktrace } from '../../../utils/source-map'
 import type { InlineSnapshot } from './inlineSnapshot'
@@ -45,7 +45,6 @@ export default class SnapshotState {
   private _updateSnapshot: Config.SnapshotUpdateState
   private _snapshotData: SnapshotData
   private _initialData: SnapshotData
-  private _snapshotPath: string
   private _inlineSnapshots: Array<InlineSnapshot>
   private _uncheckedKeys: Set<string>
   private _snapshotFormat: PrettyFormatOptions
@@ -56,10 +55,13 @@ export default class SnapshotState {
   unmatched: number
   updated: number
 
-  constructor(snapshotPath: string, options: SnapshotStateOptions) {
-    this._snapshotPath = snapshotPath
+  constructor(
+    public testFilePath: string,
+    public snapshotPath: string,
+    options: SnapshotStateOptions,
+  ) {
     const { data, dirty } = getSnapshotData(
-      this._snapshotPath,
+      this.snapshotPath,
       options.updateSnapshot,
     )
     this._initialData = data
@@ -133,6 +135,7 @@ export default class SnapshotState {
     this.matched = 0
     this.unmatched = 0
     this.updated = 0
+    this._dirty = false
   }
 
   async save(): Promise<SaveStatus> {
@@ -147,15 +150,15 @@ export default class SnapshotState {
 
     if ((this._dirty || this._uncheckedKeys.size) && !isEmpty) {
       if (hasExternalSnapshots)
-        await saveSnapshotFile(this._snapshotData, this._snapshotPath)
+        await saveSnapshotFile(this._snapshotData, this.snapshotPath)
       if (hasInlineSnapshots)
         await saveInlineSnapshots(this._inlineSnapshots)
 
       status.saved = true
     }
-    else if (!hasExternalSnapshots && fs.existsSync(this._snapshotPath)) {
+    else if (!hasExternalSnapshots && fs.existsSync(this.snapshotPath)) {
       if (this._updateSnapshot === 'all')
-        fs.unlinkSync(this._snapshotPath)
+        fs.unlinkSync(this.snapshotPath)
 
       status.deleted = true
     }
@@ -204,7 +207,7 @@ export default class SnapshotState {
     const expectedTrimmed = prepareExpected(expected)
     const pass = expectedTrimmed === prepareExpected(receivedSerialized)
     const hasSnapshot = expected !== undefined
-    const snapshotIsPersisted = isInline || fs.existsSync(this._snapshotPath)
+    const snapshotIsPersisted = isInline || fs.existsSync(this.snapshotPath)
 
     if (pass && !isInline) {
       // Executing a snapshot file as JavaScript and writing the strings back
@@ -279,5 +282,33 @@ export default class SnapshotState {
         }
       }
     }
+  }
+
+  async pack(): Promise<SnapshotResult> {
+    const snapshot: SnapshotResult = {
+      filepath: this.testFilePath,
+      added: 0,
+      fileDeleted: false,
+      matched: 0,
+      unchecked: 0,
+      uncheckedKeys: [],
+      unmatched: 0,
+      updated: 0,
+    }
+    const uncheckedCount = this.getUncheckedCount()
+    const uncheckedKeys = this.getUncheckedKeys()
+    if (uncheckedCount)
+      this.removeUncheckedKeys()
+
+    const status = await this.save()
+    snapshot.fileDeleted = status.deleted
+    snapshot.added = this.added
+    snapshot.matched = this.matched
+    snapshot.unmatched = this.unmatched
+    snapshot.updated = this.updated
+    snapshot.unchecked = !status.deleted ? uncheckedCount : 0
+    snapshot.uncheckedKeys = Array.from(uncheckedKeys)
+
+    return snapshot
   }
 }

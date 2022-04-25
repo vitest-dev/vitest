@@ -3,14 +3,15 @@
 The following types are used in the type signatures below
 
 ```ts
-type DoneCallback = (error?: any) => void
 type Awaitable<T> = T | PromiseLike<T>
-type TestFunction = () => Awaitable<void> | ((done: DoneCallback) => void)
+type TestFunction = () => Awaitable<void>
 ```
 
 When a test function returns a promise, the runner will wait until it is resolved to collect async expectations. If the promise is rejected, the test will fail.
 
-For compatibility with Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If this form is used, the test will not be concluded until `done` is called (with zero arguments or a falsy value for a successful test, and with a truthy error value as argument to trigger a fail). We don't recommend using this form, as you can achieve the same using an `async` function.
+::: tip 
+In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If this form is used, the test will not be concluded until `done` is called. You can achieve the same using an `async` function, see the [Migration guide Done Callback section](../guide/migration#done-callback).
+:::
 
 ## test
 
@@ -88,6 +89,17 @@ For compatibility with Jest, `TestFunction` can also be of type `(done: DoneCall
   test.skip.concurrent(/* ... */) // or test.concurrent.skip(/* ... */)
   test.only.concurrent(/* ... */) // or test.concurrent.only(/* ... */)
   test.todo.concurrent(/* ... */) // or test.concurrent.todo(/* ... */)
+  ```
+
+  When using Snapshots with async concurrent tests, due to the limitation of JavaScript, you need to use the `expect` from the [Test Context](/guide/test-context.md) to ensure the right test is being detected.
+
+  ```ts
+  test.concurrent('test 1', async ({ expect }) => {
+    expect(foo).toMatchSnapshot()
+  })
+  test.concurrent('test 2', async ({ expect }) => {
+    expect(foo).toMatchSnapshot()
+  })
   ```
 
 ### test.todo
@@ -1321,6 +1333,22 @@ These functions allow you to hook into the life cycle of tests to avoid repeatin
 
   Here, the `beforeEach` ensures that user is added for each test.
 
+  Since Vitest v0.10.0, `beforeEach` also accepts an optional cleanup function (equivalent to `afterEach`).
+
+  ```ts
+  import { beforeEach } from 'vitest'
+
+  beforeEach(async () => {
+    // called once before all tests run
+    await prepareSomething()
+  
+    // clean up function, called once after all tests run
+    return async () => {
+      await resetSomething()
+    }
+  })
+  ```
+
 ### afterEach
 
 - **Type:** `afterEach(fn: () => Awaitable<void>, timeout?: number)`
@@ -1356,7 +1384,23 @@ These functions allow you to hook into the life cycle of tests to avoid repeatin
   })
   ```
 
-  Here the `beforeAll` ensures that the mock data is set up before tests run
+  Here the `beforeAll` ensures that the mock data is set up before tests run.
+
+  Since Vitest v0.10.0, `beforeAll` also accepts an optional cleanup function (equivalent to `afterAll`).
+
+  ```ts
+  import { beforeAll } from 'vitest'
+
+  beforeAll(async () => {
+    // called once before all tests run
+    await startMocking()
+  
+    // clean up function, called once after all tests run
+    return async () => {
+      await stopMocking()
+    }
+  })
+  ```
 
 ### afterAll
 
