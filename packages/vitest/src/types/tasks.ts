@@ -154,4 +154,9 @@ export interface TestContext {
    * A expect instance bound to the test
    */
   expect: Vi.ExpectStatic
+
+  /**
+   * Shorthand for making a promise from callback
+   */
+  callback(fn: (done: () => void) => void): void
 }

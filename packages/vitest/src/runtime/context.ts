@@ -52,6 +52,7 @@ export function createTestContext(test: Test): TestContext {
 
   context.meta = test
   context.expect = createExpect(test)
+  context.callback = resolve => new Promise<void>(resolve)
 
   return context
 }
