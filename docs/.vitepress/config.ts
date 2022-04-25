@@ -133,6 +133,10 @@ export default defineConfig({
               link: '/guide/in-source',
             },
             {
+              text: 'Test Context',
+              link: '/guide/test-context',
+            },
+            {
               text: 'Comparisons',
               link: '/guide/comparisons',
             },
