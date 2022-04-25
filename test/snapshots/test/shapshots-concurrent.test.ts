@@ -8,7 +8,7 @@ const data = [
 ]
 
 data.forEach((i) => {
-  test.concurrent(i, async({ expect }) => {
+  test.concurrent(i, async ({ expect }) => {
     await new Promise(resolve => setTimeout(resolve, Math.random() * 100))
     expect(i).toMatchSnapshot()
   })

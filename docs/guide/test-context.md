@@ -32,7 +32,7 @@ The context are different for each test. You can access and extend them with in 
 ```ts
 import { it } from 'vitest'
 
-beforeEach(async(context) => {
+beforeEach(async (context) => {
   // extend context
   context.foo = 'bar'
 })
