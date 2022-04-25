@@ -1,7 +1,7 @@
 {
   "name": "vite-node",
   "type": "module",
-  "version": "0.9.4",
+  "version": "0.10.0",
   "description": "Vite as Node.js runtime",
   "homepage": "https://github.com/vitest-dev/vitest/blob/main/packages/vite-node#readme",
   "bugs": {
