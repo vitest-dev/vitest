@@ -27,7 +27,7 @@ The `expect` API which bound to the current test.
 
 ## Extend Test Context
 
-The context are different for each test. You can access and extend them with in `beforeEach` and `afterEach` hook.
+The contexts are different for each test. You can access and extend them within the `beforeEach` and `afterEach` hooks.
 
 ```ts
 import { it } from 'vitest'
