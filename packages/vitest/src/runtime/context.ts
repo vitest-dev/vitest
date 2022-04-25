@@ -51,7 +51,15 @@ export function createTestContext(test: Test): TestContext {
   } as unknown as TestContext
 
   context.meta = test
-  context.expect = createExpect(test)
+
+  let _expect: Vi.ExpectStatic | undefined
+  Object.defineProperty(context, 'expect', {
+    get() {
+      if (!_expect)
+        _expect = createExpect(test)
+      return _expect
+    },
+  })
 
   return context
 }
