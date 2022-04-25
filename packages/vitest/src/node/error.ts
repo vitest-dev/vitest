@@ -37,7 +37,7 @@ export async function printError(error: unknown, ctx: Vitest) {
   )
 
   printErrorMessage(e, ctx.console)
-  await printStack(ctx, stacks, nearest, async(s, pos) => {
+  await printStack(ctx, stacks, nearest, async (s, pos) => {
     if (s === nearest && nearest) {
       const sourceCode = await fs.readFile(fileFromParsedStack(nearest), 'utf-8')
       ctx.log(c.yellow(generateCodeFrame(sourceCode, 4, pos)))

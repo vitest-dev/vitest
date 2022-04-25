@@ -107,13 +107,13 @@ test('literal tag', () => {
   `)
 })
 
-test('resolves', async() => {
-  const getText = async() => 'text'
+test('resolves', async () => {
+  const getText = async () => 'text'
   await expect(getText()).resolves.toMatchInlineSnapshot('"text"')
 })
 
-test('rejects', async() => {
-  const getText = async() => {
+test('rejects', async () => {
+  const getText = async () => {
     throw new Error('error')
   }
   await expect(getText()).rejects.toMatchInlineSnapshot('[Error: error]')

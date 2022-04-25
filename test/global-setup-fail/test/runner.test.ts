@@ -2,7 +2,7 @@ import { resolve } from 'pathe'
 import { execa } from 'execa'
 import { expect, it } from 'vitest'
 
-it('should fail', async() => {
+it('should fail', async () => {
   // in Windows child_process is very unstable, we skip testing it
   if (process.platform === 'win32' && process.env.CI)
     return

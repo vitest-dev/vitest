@@ -87,7 +87,7 @@ export class VitestMocker {
   }
 
   private async resolveMocks() {
-    await Promise.all(VitestMocker.pendingIds.map(async(mock) => {
+    await Promise.all(VitestMocker.pendingIds.map(async (mock) => {
       const { path, external } = await this.resolvePath(mock.id, mock.importer)
       if (mock.type === 'unmock')
         this.unmockPath(path)

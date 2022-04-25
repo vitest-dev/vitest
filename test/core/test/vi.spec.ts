@@ -13,7 +13,7 @@ describe('testing vi utils', () => {
     expect(IntersectionObserver).toBe(IntersectionObserverMock)
   })
 
-  test('reseting modules', async() => {
+  test('reseting modules', async () => {
     const mod1 = await import('../src/env')
     vi.resetModules()
     const mod2 = await import('../src/env')
@@ -22,7 +22,7 @@ describe('testing vi utils', () => {
     expect(mod2).toBe(mod3)
   })
 
-  test('reseting modules doesnt reset vitest', async() => {
+  test('reseting modules doesnt reset vitest', async () => {
     const v1 = await import('vitest')
     vi.resetModules()
     const v2 = await import('vitest')

@@ -22,7 +22,7 @@ export async function run(files: string[], config: ResolvedConfig): Promise<void
 
     workerState.filepath = file
 
-    await withEnv(env as BuiltinEnvironment, config.environmentOptions || {}, async() => {
+    await withEnv(env as BuiltinEnvironment, config.environmentOptions || {}, async () => {
       await startTests([file], config)
     })
 

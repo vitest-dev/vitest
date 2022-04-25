@@ -2,7 +2,7 @@ import { assert, expect, it, suite, test } from 'vitest'
 import { two } from '../src/submodule'
 import { timeout } from '../src/timeout'
 
-test('Math.sqrt()', async() => {
+test('Math.sqrt()', async () => {
   assert.equal(Math.sqrt(4), two)
   assert.equal(Math.sqrt(2), Math.SQRT2)
   expect(Math.sqrt(144)).toStrictEqual(12)
@@ -44,7 +44,7 @@ hi.test('expect truthy', () => {
 })
 
 // Remove .skip to test async fail by timeout
-test.skip('async with timeout', async() => {
+test.skip('async with timeout', async () => {
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve()

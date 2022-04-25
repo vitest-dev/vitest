@@ -82,10 +82,10 @@ export class JUnitReporter implements Reporter {
 
       const fileFd = await fs.open(this.reportFile, 'w+')
 
-      this.baseLog = async(text: string) => await fs.writeFile(fileFd, `${text}\n`)
+      this.baseLog = async (text: string) => await fs.writeFile(fileFd, `${text}\n`)
     }
     else {
-      this.baseLog = async(text: string) => this.ctx.log(text)
+      this.baseLog = async (text: string) => this.ctx.log(text)
     }
 
     this.logger = new IndentedLogger(this.baseLog)
@@ -138,7 +138,7 @@ export class JUnitReporter implements Reporter {
     if (logs.length === 0)
       return
 
-    await this.writeElement(`system-${type}`, {}, async() => {
+    await this.writeElement(`system-${type}`, {}, async () => {
       for (const log of logs)
         await this.baseLog(escapeXML(log.content))
     })
@@ -150,7 +150,7 @@ export class JUnitReporter implements Reporter {
         classname: filename,
         name: task.name,
         time: getDuration(task),
-      }, async() => {
+      }, async () => {
         await this.writeLogs(task, 'out')
         await this.writeLogs(task, 'err')
 
@@ -163,7 +163,7 @@ export class JUnitReporter implements Reporter {
           await this.writeElement('failure', {
             message: error?.message,
             type: error?.name ?? error?.nameStr,
-          }, async() => {
+          }, async () => {
             if (!error)
               return
 
@@ -201,7 +201,7 @@ export class JUnitReporter implements Reporter {
         }
       })
 
-    await this.writeElement('testsuites', {}, async() => {
+    await this.writeElement('testsuites', {}, async () => {
       for (const file of transformed) {
         await this.writeElement('testsuite', {
           name: file.name,
@@ -212,7 +212,7 @@ export class JUnitReporter implements Reporter {
           errors: 0, // An errored test is one that had an unanticipated problem. We cannot detect those.
           skipped: file.stats.skipped,
           time: getDuration(file),
-        }, async() => {
+        }, async () => {
           await this.writeTasks(file.tasks, file.name)
         })
       }

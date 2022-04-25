@@ -90,7 +90,7 @@ export class ViteNodeRunner {
   /** @internal */
   async directRequest(id: string, fsPath: string, _callstack: string[]) {
     const callstack = [..._callstack, normalizeModuleId(id)]
-    const request = async(dep: string) => {
+    const request = async (dep: string) => {
       const getStack = () => {
         return `stack:\n${[...callstack, dep].reverse().map(p => `- ${p}`).join('\n')}`
       }
@@ -242,7 +242,7 @@ export class ViteNodeRunner {
 }
 
 function proxyMethod(name: 'get' | 'set' | 'has' | 'deleteProperty', tryDefault: boolean) {
-  return function(target: any, key: string | symbol, ...args: [any?, any?]) {
+  return function (target: any, key: string | symbol, ...args: [any?, any?]) {
     const result = Reflect[name](target, key, ...args)
     if (isPrimitive(target.default))
       return result

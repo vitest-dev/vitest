@@ -5,7 +5,7 @@ import { render, screen, userEvent, waitForElementToBeRemoved } from './utils/te
 import App from './App'
 import { posts } from './mocks/handlers'
 
-it('Should return posts when clicking fetch button', async() => {
+it('Should return posts when clicking fetch button', async () => {
   render(<ApolloProvider client={client}>
     <App />
   </ApolloProvider>)
@@ -22,7 +22,7 @@ it('Should return posts when clicking fetch button', async() => {
   })
 })
 
-it('Should return posts when clicking fetch with graphql button', async() => {
+it('Should return posts when clicking fetch with graphql button', async () => {
   render(<ApolloProvider client={client}>
     <App />
   </ApolloProvider>)

@@ -207,7 +207,7 @@ export abstract class BaseReporter implements Reporter {
   }
 
   registerUnhandledRejection() {
-    process.on('unhandledRejection', async(err) => {
+    process.on('unhandledRejection', async (err) => {
       process.exitCode = 1
       this.ctx.error(`\n${c.red(divider(c.bold(c.inverse(' Unhandled Rejection '))))}`)
       await this.ctx.printError(err)

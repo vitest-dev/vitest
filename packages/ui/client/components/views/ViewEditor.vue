@@ -14,7 +14,7 @@ const code = ref('')
 const serverCode = shallowRef<string | undefined>(undefined)
 const draft = ref(false)
 watch(() => props.file,
-  async() => {
+  async () => {
     if (!props.file || !props.file?.filepath) {
       code.value = ''
       serverCode.value = code.value
@@ -93,7 +93,7 @@ watch([cm, failed], ([cmValue]) => {
           content: 'Open in Editor',
           placement: 'bottom',
         }, false)
-        const el: EventListener = async() => {
+        const el: EventListener = async () => {
           await openInEditor(stacks[0].file, pos.line, pos.column)
         }
         div.appendChild(span)

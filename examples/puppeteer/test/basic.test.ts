@@ -4,23 +4,23 @@ import type { PreviewServer } from 'vite'
 import puppeteer from 'puppeteer'
 import type { Browser, Page } from 'puppeteer'
 
-describe('basic', async() => {
+describe('basic', async () => {
   let server: PreviewServer
   let browser: Browser
   let page: Page
 
-  beforeAll(async() => {
+  beforeAll(async () => {
     server = await preview({ preview: { port: 3000 } })
     browser = await puppeteer.launch()
     page = await browser.newPage()
   })
 
-  afterAll(async() => {
+  afterAll(async () => {
     await browser.close()
     await server.httpServer.close()
   })
 
-  test('should have the correct title', async() => {
+  test('should have the correct title', async () => {
     try {
       await page.goto('http://localhost:3000')
       const button = (await page.$('#btn'))!

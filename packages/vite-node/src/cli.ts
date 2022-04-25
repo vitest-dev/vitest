@@ -95,7 +95,7 @@ async function run(options: CliOptions = {}) {
   if (!options.watch)
     await server.close()
 
-  server.watcher.on('change', async(eventName, path) => {
+  server.watcher.on('change', async (eventName, path) => {
     // eslint-disable-next-line no-console
     console.log(dim(`[${eventName}] ${path}`))
 

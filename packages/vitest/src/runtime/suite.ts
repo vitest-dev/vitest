@@ -8,7 +8,7 @@ import { getHooks, setFn, setHooks } from './map'
 // apis
 export const suite = createSuite()
 export const test = createTest(
-  function(name: string, fn?: TestFunction, timeout?: number) {
+  function (name: string, fn?: TestFunction, timeout?: number) {
     // @ts-expect-error untyped internal prop
     getCurrentSuite().test.fn.call(this, name, fn, timeout)
   },
@@ -67,7 +67,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
 
   initSuite()
 
-  const test = createTest(function(name: string, fn?: TestFunction, timeout?: number) {
+  const test = createTest(function (name: string, fn?: TestFunction, timeout?: number) {
     const mode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run'
 
     const test: Test = {
@@ -146,7 +146,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
 function createSuite() {
   const suite = createChainable(
     ['concurrent', 'skip', 'only', 'todo'],
-    function(name: string, factory?: SuiteFactory) {
+    function (name: string, factory?: SuiteFactory) {
       const mode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run'
       return createSuiteCollector(name, factory, mode, this.concurrent)
     },
