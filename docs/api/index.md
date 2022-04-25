@@ -1333,6 +1333,22 @@ These functions allow you to hook into the life cycle of tests to avoid repeatin
 
   Here, the `beforeEach` ensures that user is added for each test.
 
+  Since Vitest v0.10.0, `beforeEach` also accepts an optional cleanup function (equivalent to `afterEach`).
+
+  ```ts
+  import { beforeEach } from 'vitest'
+
+  beforeEach(async () => {
+    // called once before all tests run
+    await prepareSomething()
+  
+    // clean up function, called once after all tests run
+    return async () => {
+      await resetSomething()
+    }
+  })
+  ```
+
 ### afterEach
 
 - **Type:** `afterEach(fn: () => Awaitable<void>, timeout?: number)`
@@ -1368,7 +1384,23 @@ These functions allow you to hook into the life cycle of tests to avoid repeatin
   })
   ```
 
-  Here the `beforeAll` ensures that the mock data is set up before tests run
+  Here the `beforeAll` ensures that the mock data is set up before tests run.
+
+  Since Vitest v0.10.0, `beforeAll` also accepts an optional cleanup function (equivalent to `afterAll`).
+
+  ```ts
+  import { beforeAll } from 'vitest'
+
+  beforeAll(async () => {
+    // called once before all tests run
+    await startMocking()
+  
+    // clean up function, called once after all tests run
+    return async () => {
+      await stopMocking()
+    }
+  })
+  ```
 
 ### afterAll
 
