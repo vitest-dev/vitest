@@ -1,5 +1,5 @@
 {
-  "name": "@vitest/mui-test",
+  "name": "@vitest/example-mui",
   "private": true,
   "license": "MIT",
   "main": "index.js",

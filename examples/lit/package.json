@@ -1,5 +1,5 @@
 {
-  "name": "@vitest/test-lit",
+  "name": "@vitest/example-lit",
   "private": true,
   "files": [
     "dist",

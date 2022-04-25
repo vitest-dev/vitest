@@ -1,5 +1,5 @@
 {
-  "name": "@vitest/react-storybook-testing",
+  "name": "@vitest/example-react-storybook",
   "private": true,
   "scripts": {
     "dev": "vite",

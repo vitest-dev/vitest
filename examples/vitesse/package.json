@@ -1,5 +1,5 @@
 {
-  "name": "@vitest/test-vue",
+  "name": "@vitest/example-vitesse",
   "private": true,
   "scripts": {
     "coverage": "vitest run --coverage",

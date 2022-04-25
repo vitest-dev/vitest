@@ -1,5 +1,5 @@
 {
-  "name": "@vitest/test-testing-lib-react",
+  "name": "@vitest/example-testing-lib-react",
   "private": true,
   "scripts": {
     "build": "tsc && vite build",
