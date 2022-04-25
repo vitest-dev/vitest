@@ -25,3 +25,16 @@ Jest exports various [`jasmine`](https://jasmine.github.io/) globals (such as `j
 **Envs**
 
 Just like Jest, Vitest sets `NODE_ENV` to `test`, if it wasn't set before. Vitest also has a counterpart for `JEST_WORKER_ID` called `VITEST_WORKER_ID`, so if you rely on it, don't forget to rename it.
+
+**Done Callback**
+
+From Vitest v0.10.0, the callback style of declaring tests is deprecated. You can rewrite them to use `async`/`await` functions, or use Promise to mimic the callback style.
+
+```diff
+- it('should work', (done) => {
++ it('should work', () => new Promise(done => {
+    // ...
+    done()
+- })
++ }))
+```
