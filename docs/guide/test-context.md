@@ -25,10 +25,6 @@ A readonly object containing metadata about the test.
 
 The `expect` API which bound to the current test.
 
-#### `context.callback`
-
-Shorthand for making a promise from callback
-
 ## Extend Test Context
 
 The context are different for each test. You can access and extend them with in `beforeEach` and `afterEach` hook.
