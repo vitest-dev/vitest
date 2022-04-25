@@ -110,9 +110,9 @@ importers:
 
   examples/basic:
     specifiers:
-      '@vitest/ui': workspace:latest
+      '@vitest/ui': latest
       vite: ^2.9.5
-      vitest: workspace:latest
+      vitest: latest
     devDependencies:
       '@vitest/ui': link:../../packages/ui
       vite: 2.9.5
@@ -121,10 +121,10 @@ importers:
   examples/graphql:
     specifiers:
       '@rollup/plugin-graphql': ^1.1.0
-      '@vitest/ui': workspace:latest
+      '@vitest/ui': latest
       graphql: ^16.3.0
       vite: ^2.9.5
-      vitest: workspace:latest
+      vitest: latest
     dependencies:
       '@rollup/plugin-graphql': 1.1.0_graphql@16.3.0+rollup@2.70.2
       graphql: 16.3.0
@@ -135,11 +135,11 @@ importers:
 
   examples/lit:
     specifiers:
-      '@vitest/ui': workspace:latest
+      '@vitest/ui': latest
       happy-dom: latest
       lit: ^2.2.2
       vite: ^2.9.5
-      vitest: workspace:latest
+      vitest: latest
     dependencies:
       lit: 2.2.2
     devDependencies:
@@ -150,12 +150,12 @@ importers:
 
   examples/mocks:
     specifiers:
-      '@vitest/ui': workspace:latest
+      '@vitest/ui': latest
       '@vueuse/integrations': ^8.3.1
       axios: ^0.26.1
       tinyspy: ^0.3.2
       vite: ^2.9.5
-      vitest: workspace:latest
+      vitest: latest
     dependencies:
       '@vueuse/integrations': 8.3.1_axios@0.26.1+vue@3.2.33
       axios: 0.26.1
@@ -176,7 +176,7 @@ importers:
       react: 18.0.0
       react-dom: 18.0.0
       typescript: 4.6.3
-      vitest: workspace:latest
+      vitest: latest
     dependencies:
       next: 12.1.5_react-dom@18.0.0+react@18.0.0
       react: 18.0.0
@@ -192,10 +192,10 @@ importers:
 
   examples/puppeteer:
     specifiers:
-      '@vitest/ui': workspace:latest
+      '@vitest/ui': latest
       puppeteer: ^13.6.0
       vite: ^2.9.5
-      vitest: workspace:latest
+      vitest: latest
     devDependencies:
       '@vitest/ui': link:../../packages/ui
       puppeteer: 13.6.0
@@ -207,12 +207,12 @@ importers:
       '@types/react': ^17.0.44
       '@types/react-test-renderer': ^17.0.2
       '@vitejs/plugin-react': 1.3.1
-      '@vitest/ui': workspace:latest
+      '@vitest/ui': latest
       happy-dom: ^2.55.0
       jsdom: latest
       react: ^17.0.2
       react-test-renderer: 17.0.2
-      vitest: workspace:latest
+      vitest: latest
     dependencies:
       react: 17.0.2
     devDependencies:
@@ -230,13 +230,13 @@ importers:
       '@types/react': ^17.0.44
       '@types/react-dom': ^17.0.15
       '@vitejs/plugin-react': 1.3.1
-      '@vitest/ui': workspace:latest
+      '@vitest/ui': latest
       enzyme: 3.11.0
       enzyme-adapter-react-16: 1.15.6
       react: ^17.0.2
       react-dom: ^17.0.2
       vite: ^2.9.5
-      vitest: workspace:latest
+      vitest: latest
     dependencies:
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
@@ -259,7 +259,7 @@ importers:
       '@testing-library/jest-dom': ^5.16.4
       '@testing-library/react': ^12.1.5
       '@testing-library/user-event': ^13.5.0
-      '@vitest/ui': workspace:latest
+      '@vitest/ui': latest
       date-fns: ^2.28.0
       history: ^5.3.0
       jsdom: ^19.0.0
@@ -270,7 +270,7 @@ importers:
       recharts: ^2.1.9
       swr: ^1.3.0
       vite: ^2.9.5
-      vitest: workspace:latest
+      vitest: latest
     dependencies:
       '@emotion/react': 11.9.0_react@17.0.2
       '@emotion/styled': 11.8.1_8636826388a0e7ae99fbe5db0e5dc817
@@ -308,7 +308,7 @@ importers:
       '@types/react': ^17.0.44
       '@types/react-dom': ^17.0.15
       '@vitejs/plugin-react': ^1.3.1
-      '@vitest/ui': workspace:latest
+      '@vitest/ui': latest
       babel-loader: ^8.2.5
       cross-fetch: ^3.1.5
       jsdom: ^19.0.0
@@ -319,7 +319,7 @@ importers:
       react-query: ^3.38.0
       typescript: ^4.6.3
       vite: ^2.9.5
-      vitest: workspace:latest
+      vitest: latest
     dependencies:
       cross-fetch: 3.1.5
       react: 17.0.2
@@ -357,12 +357,12 @@ importers:
       '@types/react': ^17.0.44
       '@types/react-dom': ^17.0.15
       '@vitejs/plugin-react': ^1.3.1
-      '@vitest/ui': workspace:latest
+      '@vitest/ui': latest
       jsdom: latest
       react: ^17.0.2
       react-dom: ^17.0.2
       vite: ^2.9.5
-      vitest: workspace:latest
+      vitest: latest
     dependencies:
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
@@ -387,14 +387,14 @@ importers:
       '@types/react': ^17.0.44
       '@types/react-dom': ^17.0.15
       '@vitejs/plugin-react': ^1.3.1
-      '@vitest/ui': workspace:latest
+      '@vitest/ui': latest
       cross-fetch: ^3.1.5
       jsdom: latest
       msw: ^0.39.2
       react: ^17.0.2
       react-dom: ^17.0.2
       vite: ^2.9.5
-      vitest: workspace:latest
+      vitest: latest
     dependencies:
       '@apollo/client': 3.5.10_react@17.0.2
       react: 17.0.2
@@ -418,7 +418,7 @@ importers:
       '@vue/test-utils': ^2.0.0-rc.21
       jsdom: latest
       vite-plugin-ruby: ^3.0.9
-      vitest: workspace:latest
+      vitest: latest
       vue: ^3.2.33
     devDependencies:
       '@vitejs/plugin-vue': 2.3.1_vite@2.9.5+vue@3.2.33
@@ -434,7 +434,7 @@ importers:
       solid-js: ^1.3.17
       solid-start: next
       solid-testing-library: 0.3.0
-      vitest: workspace:latest
+      vitest: latest
     dependencies:
       solid-js: 1.3.17
     devDependencies:
@@ -447,10 +447,10 @@ importers:
     specifiers:
       '@sveltejs/vite-plugin-svelte': ^1.0.0-next.41
       '@testing-library/svelte': ^3.1.1
-      '@vitest/ui': workspace:latest
+      '@vitest/ui': latest
       jsdom: latest
       svelte: ^3.47.0
-      vitest: workspace:latest
+      vitest: latest
     devDependencies:
       '@sveltejs/vite-plugin-svelte': 1.0.0-next.41_svelte@3.47.0+vite@2.9.5
       '@testing-library/svelte': 3.1.1_svelte@3.47.0
@@ -466,7 +466,7 @@ importers:
       happy-dom: latest
       unplugin-auto-import: ^0.7.1
       unplugin-vue-components: ^0.19.3
-      vitest: workspace:latest
+      vitest: latest
       vue: ^3.2.33
     dependencies:
       vue: 3.2.33
@@ -483,7 +483,7 @@ importers:
       '@vitejs/plugin-vue': ^2.3.1
       '@vue/test-utils': ^2.0.0-rc.21
       jsdom: latest
-      vitest: workspace:latest
+      vitest: latest
       vue: ^3.2.33
     dependencies:
       vue: 3.2.33
@@ -500,7 +500,7 @@ importers:
       '@vue/test-utils': ^2.0.0-rc.21
       jsdom: latest
       vite: ^2.9.5
-      vitest: workspace:latest
+      vitest: latest
       vue: ^3.2.33
     devDependencies:
       '@vitejs/plugin-vue': 2.3.1_vite@2.9.5+vue@3.2.33
@@ -5327,7 +5327,7 @@ packages:
   /@types/concat-stream/1.6.1:
     resolution: {integrity: sha512-eHE4cQPoj6ngxBZMvVf6Hw7Mh4jMW4U9lpGmS5GBPB9RYxlFg+CHaVN7ErNY4W9XfLIEn20b4VDYaIrbq0q4uA==}
     dependencies:
-      '@types/node': 8.10.66
+      '@types/node': 17.0.26
     dev: true
 
   /@types/cookie/0.4.1:
@@ -5393,7 +5393,7 @@ packages:
   /@types/form-data/0.0.33:
     resolution: {integrity: sha1-yayFsqX9GENbjIXZ7LUObWyJP/g=}
     dependencies:
-      '@types/node': 8.10.66
+      '@types/node': 17.0.26
     dev: true
 
   /@types/fs-extra/9.0.13:
