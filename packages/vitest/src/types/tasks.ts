@@ -112,14 +112,16 @@ export type SuiteAPI<ExtraContext = {}> = ChainableFunction<
 SuiteCollector<ExtraContext>
 > & { each: EachFunction }
 
-export type HookListener<T extends any[]> = (...args: T) => Awaitable<void>
+export type HookListener<T extends any[], Return = void> = (...args: T) => Awaitable<Return | void>
 
 export interface SuiteHooks {
-  beforeAll: HookListener<[Suite]>[]
+  beforeAll: HookListener<[Suite], () => Awaitable<void>>[]
   afterAll: HookListener<[Suite]>[]
-  beforeEach: HookListener<[TestContext, Suite]>[]
+  beforeEach: HookListener<[TestContext, Suite], () => Awaitable<void>>[]
   afterEach: HookListener<[TestContext, Suite]>[]
 }
+
+export type HookCleanupCallback = (() => Awaitable<void>) | void
 
 export interface SuiteCollector<ExtraContext = {}> {
   readonly name: string
