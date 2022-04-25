@@ -3,6 +3,7 @@
 
 import c from 'picocolors'
 import type { Formatter } from 'picocolors/types'
+import type { PrettyFormatOptions } from 'pretty-format'
 import { format as prettyFormat, plugins as prettyFormatPlugins } from 'pretty-format'
 import { unifiedDiff } from '../../node/diff'
 
@@ -112,7 +113,7 @@ const SPACE_SYMBOL = '\u{00B7}' // middle dot
 const replaceTrailingSpaces = (text: string): string =>
   text.replace(/\s+$/gm, spaces => SPACE_SYMBOL.repeat(spaces.length))
 
-export const stringify = (object: unknown, maxDepth = 10): string => {
+export function stringify(object: unknown, maxDepth = 10, options?: PrettyFormatOptions): string {
   const MAX_LENGTH = 10000
   let result
 
@@ -121,6 +122,7 @@ export const stringify = (object: unknown, maxDepth = 10): string => {
       maxDepth,
       // min: true,
       plugins: PLUGINS,
+      ...options,
     })
   }
   catch {
@@ -129,6 +131,7 @@ export const stringify = (object: unknown, maxDepth = 10): string => {
       maxDepth,
       // min: true,
       plugins: PLUGINS,
+      ...options,
     })
   }
 

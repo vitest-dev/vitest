@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { parseStacktrace } from '../utils/source-map'
-import type { VitestMocker } from '../node/mocker'
+import type { VitestMocker } from '../runtime/mocker'
+import { resetModules } from '../utils'
 import { FakeTimers } from './timers'
-import type { EnhancedSpy, MaybeMocked, MaybeMockedDeep } from './jest-mock'
-import { fn, isMockFunction, spies, spyOn } from './jest-mock'
+import type { EnhancedSpy, MaybeMocked, MaybeMockedDeep } from './spy'
+import { fn, isMockFunction, spies, spyOn } from './spy'
 
 class VitestUtils {
   private _timers: FakeTimers
@@ -193,6 +194,26 @@ class VitestUtils {
 
   public restoreAllMocks() {
     spies.forEach(spy => spy.mockRestore())
+    return this
+  }
+
+  /**
+   * Will put a value on global scope. Useful, if you are
+   * using jsdom/happy-dom and want to mock global variables, like
+   * `IntersectionObserver`.
+   */
+  public stubGlobal(name: string | symbol | number, value: any) {
+    // @ts-expect-error we can do anything!
+    globalThis[name] = value
+    if (globalThis.window)
+      // @ts-expect-error we can do anything!
+      globalThis.window[name] = value
+
+    return this
+  }
+
+  public resetModules() {
+    resetModules()
     return this
   }
 }

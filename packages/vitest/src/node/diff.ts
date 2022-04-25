@@ -2,8 +2,13 @@ import c from 'picocolors'
 import * as diff from 'diff'
 import cliTruncate from 'cli-truncate'
 
-export function formatLine(line: string) {
-  return cliTruncate(line, (process.stdout.columns || 80) - 4)
+export function formatLine(line: string, outputTruncateLength?: number) {
+  return cliTruncate(line, (outputTruncateLength ?? (process.stdout.columns || 80)) - 4)
+}
+
+export interface DiffOptions {
+  outputTruncateLength?: number
+  showLegend?: boolean
 }
 
 /**
@@ -15,9 +20,11 @@ export function formatLine(line: string) {
 * @return {string} The diff.
 */
 
-export function unifiedDiff(actual: string, expected: string) {
+export function unifiedDiff(actual: string, expected: string, options: DiffOptions = {}) {
   if (actual === expected)
     return ''
+
+  const { outputTruncateLength, showLegend = true } = options
 
   const indent = '  '
   const diffLimit = 15
@@ -54,35 +61,37 @@ export function unifiedDiff(actual: string, expected: string) {
 
   let formatted = lines.map((line: string) => {
     if (line[0] === '-') {
-      line = formatLine(line.slice(1))
+      line = formatLine(line.slice(1), outputTruncateLength)
       if (isCompact)
         return c.green(line)
-      return c.green(`- ${formatLine(line)}`)
+      return c.green(`- ${formatLine(line, outputTruncateLength)}`)
     }
     if (line[0] === '+') {
-      line = formatLine(line.slice(1))
+      line = formatLine(line.slice(1), outputTruncateLength)
       if (isCompact)
         return c.red(line)
-      return c.red(`+ ${formatLine(line)}`)
+      return c.red(`+ ${formatLine(line, outputTruncateLength)}`)
     }
     if (line.match(/@@/))
       return '--'
     return ` ${line}`
   })
 
-  // Compact mode
-  if (isCompact) {
-    formatted = [
-      `${c.green('- Expected')}   ${formatted[0]}`,
-      `${c.red('+ Received')}   ${formatted[1]}`,
-    ]
-  }
-  else {
-    formatted.unshift(
-      c.green(`- Expected  - ${counts['-']}`),
-      c.red(`+ Received  + ${counts['+']}`),
-      '',
-    )
+  if (showLegend) {
+    // Compact mode
+    if (isCompact) {
+      formatted = [
+        `${c.green('- Expected')}   ${formatted[0]}`,
+        `${c.red('+ Received')}   ${formatted[1]}`,
+      ]
+    }
+    else {
+      formatted.unshift(
+        c.green(`- Expected  - ${counts['-']}`),
+        c.red(`+ Received  + ${counts['+']}`),
+        '',
+      )
+    }
   }
 
   return formatted.map(i => indent + i).join('\n')

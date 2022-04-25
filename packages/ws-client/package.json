@@ -1,28 +1,28 @@
 {
   "name": "@vitest/ws-client",
-  "version": "0.5.9",
+  "type": "module",
+  "version": "0.9.4",
   "description": "WebSocket client wrapper for communicating with Vitest",
   "homepage": "https://github.com/vitest-dev/vitest#readme",
   "bugs": {
     "url": "https://github.com/vitest-dev/vitest/issues"
   },
+  "license": "MIT",
+  "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vitest-dev/vitest.git"
   },
   "funding": "https://github.com/sponsors/antfu",
-  "license": "MIT",
-  "author": "Anthony Fu <anthonyfu117@hotmail.com>",
-  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
     }
   },
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "files": [
     "dist",
     "*.d.ts",
@@ -35,14 +35,14 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "birpc": "^0.1.0",
+    "birpc": "^0.2.2",
     "flatted": "^3.2.5",
     "ws": "^8.5.0"
   },
   "devDependencies": {
-    "rollup": "^2.69.0"
+    "rollup": "^2.70.2"
   },
   "engines": {
-    "node": ">=14.14.0"
+    "node": ">=v14.16.0"
   }
 }

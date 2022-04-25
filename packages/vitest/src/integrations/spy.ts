@@ -1,4 +1,3 @@
-import { util } from 'chai'
 import type { SpyImpl } from 'tinyspy'
 import * as tinyspy from 'tinyspy'
 
@@ -17,29 +16,30 @@ interface MockResultThrow {
 
 type MockResult<T> = MockResultReturn<T> | MockResultThrow | MockResultIncomplete
 
-export interface JestMockCompatContext<TArgs, TReturns> {
+export interface SpyContext<TArgs, TReturns> {
   calls: TArgs[]
   instances: TReturns[]
   invocationCallOrder: number[]
   results: MockResult<TReturns>[]
+  lastCall: TArgs | undefined
 }
 
 type Procedure = (...args: any[]) => any
 
 type Methods<T> = {
   [K in keyof T]: T[K] extends Procedure ? K : never
-}[keyof T] & string
+}[keyof T] & (string | symbol)
 type Properties<T> = {
   [K in keyof T]: T[K] extends Procedure ? never : K
-}[keyof T] & string
+}[keyof T] & (string | symbol)
 type Classes<T> = {
   [K in keyof T]: T[K] extends new (...args: any[]) => any ? K : never
-}[keyof T] & string
+}[keyof T] & (string | symbol)
 
 export interface SpyInstance<TArgs extends any[] = any[], TReturns = any> {
   getMockName(): string
   mockName(n: string): this
-  mock: JestMockCompatContext<TArgs, TReturns>
+  mock: SpyContext<TArgs, TReturns>
   mockClear(): this
   mockReset(): this
   mockRestore(): void
@@ -57,6 +57,7 @@ export interface SpyInstance<TArgs extends any[] = any[], TReturns = any> {
 
 export interface SpyInstanceFn<TArgs extends any[] = any, TReturns = any> extends SpyInstance<TArgs, TReturns> {
   (...args: TArgs): TReturns
+  new (...args: TArgs): TReturns
 }
 
 export type MaybeMockedConstructor<T> = T extends new (
@@ -110,12 +111,12 @@ export function isMockFunction(fn: any): fn is EnhancedSpy {
 export function spyOn<T, S extends Properties<Required<T>>>(
   obj: T,
   methodName: S,
-  accesType: 'get',
+  accessType: 'get',
 ): SpyInstance<[], T[S]>
 export function spyOn<T, G extends Properties<Required<T>>>(
   obj: T,
   methodName: G,
-  accesType: 'set',
+  accessType: 'set',
 ): SpyInstance<[T[G]], void>
 export function spyOn<T, M extends (Methods<Required<T>> | Classes<Required<T>>)>(
   obj: T,
@@ -164,6 +165,9 @@ function enhanceSpy<TArgs extends any[], TReturns>(
         const type = callType === 'error' ? 'throw' : 'return'
         return { type, value }
       })
+    },
+    get lastCall() {
+      return stub.calls.at(-1)
     },
   }
 
@@ -228,7 +232,9 @@ function enhanceSpy<TArgs extends any[], TReturns>(
   stub.mockRejectedValueOnce = (val: unknown) =>
     stub.mockImplementationOnce(() => Promise.reject(val))
 
-  util.addProperty(stub, 'mock', () => mockContext)
+  Object.defineProperty(stub, 'mock', {
+    get: () => mockContext,
+  })
 
   stub.willCall(function(this: unknown, ...args) {
     instances.push(this)

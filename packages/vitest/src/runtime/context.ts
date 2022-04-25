@@ -1,5 +1,6 @@
 import type { Awaitable, RuntimeContext, SuiteCollector, Test, TestContext } from '../types'
 import { expect } from '../integrations/chai'
+import { clearTimeout, getWorkerState, setTimeout } from '../utils'
 
 export const collectorContext: RuntimeContext = {
   tasks: [],
@@ -18,11 +19,11 @@ export async function runWithSuite(suite: SuiteCollector, fn: (() => Awaitable<v
 }
 
 export function getDefaultTestTimeout() {
-  return __vitest_worker__!.config!.testTimeout
+  return getWorkerState().config.testTimeout
 }
 
 export function getDefaultHookTimeout() {
-  return __vitest_worker__!.config!.hookTimeout
+  return getWorkerState().config.hookTimeout
 }
 
 export function withTimeout<T extends((...args: any[]) => any)>(

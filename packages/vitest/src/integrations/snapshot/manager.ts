@@ -1,18 +1,32 @@
-import type { ResolvedConfig, SnapshotResult, SnapshotStateOptions, SnapshotSummary } from '../../types'
+import { basename, dirname, join } from 'pathe'
+import type { SnapshotResult, SnapshotStateOptions, SnapshotSummary } from '../../types'
 
 export class SnapshotManager {
   summary: SnapshotSummary = undefined!
+  extension = '.snap'
 
-  constructor(public config: ResolvedConfig) {
+  constructor(public options: SnapshotStateOptions) {
     this.clear()
   }
 
   clear() {
-    this.summary = emptySummary(this.config.snapshotOptions)
+    this.summary = emptySummary(this.options)
   }
 
   add(result: SnapshotResult) {
     addSnapshotResult(this.summary, result)
+  }
+
+  resolvePath(testPath: string) {
+    const resolver = this.options.resolveSnapshotPath || (() => {
+      return join(
+        join(
+          dirname(testPath), '__snapshots__'),
+        `${basename(testPath)}${this.extension}`,
+      )
+    })
+
+    return resolver(testPath, this.extension)
   }
 }
 

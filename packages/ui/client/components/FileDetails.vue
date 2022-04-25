@@ -8,6 +8,7 @@ import type { ModuleGraphData } from '#types'
 
 const data = ref<ModuleGraphData>({ externalized: [], graph: {}, inlined: [] })
 const graph = ref<ModuleGraph>({ nodes: [], links: [] })
+const draft = ref(false)
 
 debouncedWatch(
   current,
@@ -29,6 +30,12 @@ const open = () => {
 const changeViewMode = (view: Params['view']) => {
   viewMode.value = view
 }
+const consoleCount = computed(() => {
+  return currentLogs.value?.reduce((s, { size }) => s + size, 0) ?? 0
+})
+function onDraft(value: boolean) {
+  draft.value = value
+}
 </script>
 
 <template>
@@ -42,13 +49,14 @@ const changeViewMode = (view: Params['view']) => {
         <div class="flex text-lg">
           <IconButton
             v-tooltip.bottom="'Open in editor'"
+            title="Open in editor"
             icon="i-carbon-launch"
             :disabled="!current?.filepath"
             @click="open"
           />
         </div>
       </div>
-      <div flex="~" items-center bg-header border="b-2 base" text-sm h-38px>
+      <div flex="~" items-center bg-header border="b-2 base" text-sm h-41px>
         <button
           tab-button
           :class="{ 'tab-button-active': viewMode == null }"
@@ -68,21 +76,21 @@ const changeViewMode = (view: Params['view']) => {
           :class="{ 'tab-button-active': viewMode === 'editor' }"
           @click="changeViewMode('editor')"
         >
-          Code
+          {{ draft ? '*&#160;': '' }}Code
         </button>
         <button
           tab-button
-          :class="{ 'tab-button-active': viewMode === 'console', 'op20': viewMode !== 'console' && currentLogs?.length === 0 }"
+          :class="{ 'tab-button-active': viewMode === 'console', 'op20': viewMode !== 'console' && consoleCount === 0 }"
           @click="changeViewMode('console')"
         >
-          Console ({{ currentLogs?.length || 0 }})
+          Console ({{ consoleCount }})
         </button>
       </div>
     </div>
 
     <div flex flex-col flex-1 overflow="hidden">
       <ViewModuleGraph v-show="viewMode === 'graph'" :graph="graph" />
-      <ViewEditor v-if="viewMode === 'editor'" :key="current.filepath" :file="current" />
+      <ViewEditor v-if="viewMode === 'editor'" :key="current.filepath" :file="current" @draft="onDraft" />
       <ViewConsoleOutput v-else-if="viewMode === 'console'" :file="current" />
       <ViewReport v-else-if="!viewMode" :file="current" />
     </div>

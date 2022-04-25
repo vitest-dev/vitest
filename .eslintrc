@@ -15,8 +15,21 @@
         "no-restricted-imports": [
           "error",
           {
-            "paths": ["vitest"]
+            "paths": ["vitest", "path"]
           }
+        ]
+      }
+    },
+    {
+      "files": "packages/vitest/**/*.*",
+      "rules": {
+        "no-restricted-globals": [
+          "error",
+          "setTimeout",
+          "clearTimeout",
+          "setInterval",
+          "clearInterval",
+          "performance"
         ]
       }
     }

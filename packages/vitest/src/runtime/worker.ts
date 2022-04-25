@@ -1,17 +1,20 @@
 import { resolve } from 'pathe'
 import { createBirpc } from 'birpc'
-import type { ModuleCache, ResolvedConfig, WorkerContext, WorkerGlobalState, WorkerRPC } from '../types'
+import { ModuleCacheMap } from 'vite-node/client'
+import type { ResolvedConfig, WorkerContext, WorkerRPC } from '../types'
 import { distDir } from '../constants'
-import { executeInViteNode } from '../node/execute'
+import { getWorkerState } from '../utils'
+import type { MockMap } from '../types/mocker'
+import { executeInViteNode } from './execute'
 import { rpc } from './rpc'
 
 let _viteNode: {
   run: (files: string[], config: ResolvedConfig) => Promise<void>
   collect: (files: string[], config: ResolvedConfig) => Promise<void>
 }
-let __vitest_worker__: WorkerGlobalState
-const moduleCache: Map<string, ModuleCache> = new Map()
-const mockMap = {}
+
+const moduleCache = new ModuleCacheMap()
+const mockMap: MockMap = new Map()
 
 async function startViteNode(ctx: WorkerContext) {
   if (_viteNode)
@@ -53,8 +56,9 @@ async function startViteNode(ctx: WorkerContext) {
 }
 
 function init(ctx: WorkerContext) {
-  if (__vitest_worker__ && ctx.config.threads && ctx.config.isolate)
-    throw new Error(`worker for ${ctx.files.join(',')} already initialized by ${__vitest_worker__.ctx.files.join(',')}. This is probably an internal bug of Vitest.`)
+  // @ts-expect-error untyped global
+  if (typeof __vitest_worker__ !== 'undefined' && ctx.config.threads && ctx.config.isolate)
+    throw new Error(`worker for ${ctx.files.join(',')} already initialized by ${getWorkerState().ctx.files.join(',')}. This is probably an internal bug of Vitest.`)
 
   process.stdout.write('\0')
 
@@ -67,6 +71,7 @@ function init(ctx: WorkerContext) {
     ctx,
     moduleCache,
     config,
+    mockMap,
     rpc: createBirpc<WorkerRPC>(
       {},
       {
@@ -92,8 +97,4 @@ export async function run(ctx: WorkerContext) {
   init(ctx)
   const { run } = await startViteNode(ctx)
   return run(ctx.files, ctx.config)
-}
-
-declare global {
-  let __vitest_worker__: import('vitest').WorkerGlobalState
 }

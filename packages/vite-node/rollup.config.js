@@ -18,8 +18,10 @@ const entries = {
 const external = [
   ...Object.keys(pkg.dependencies || {}),
   ...Object.keys(pkg.peerDependencies || {}),
+  'pathe',
   'birpc',
   'vite',
+  'url',
 ]
 
 const plugins = [
@@ -38,33 +40,39 @@ const plugins = [
   }),
 ]
 
+function onwarn(message) {
+  if (message.code === 'EMPTY_BUNDLE')
+    return
+  console.error(message)
+}
+
 export default () => [
   {
     input: entries,
     output: {
       dir: 'dist',
       format: 'esm',
-      sourcemap: 'inline',
       entryFileNames: '[name].js',
     },
     external,
     plugins,
+    onwarn,
   },
   {
     input: entries,
     output: {
       dir: 'dist',
       format: 'cjs',
-      sourcemap: 'inline',
       entryFileNames: '[name].cjs',
     },
     external,
     plugins,
+    onwarn,
   },
   {
     input: entries,
     output: {
-      dir: process.cwd(),
+      dir: 'dist',
       entryFileNames: '[name].d.ts',
       format: 'esm',
     },
@@ -72,5 +80,6 @@ export default () => [
     plugins: [
       dts({ respectExternal: true }),
     ],
+    onwarn,
   },
 ]

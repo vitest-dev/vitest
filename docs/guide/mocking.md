@@ -1,5 +1,5 @@
 # Mocking
-When writing tests it's only a matter of time before you need to create "fake" version of an internal—or external—service. This is commonly referred to as **mocking**. Vitest provides utility functions to help you out through its **vi** helper. You can `import { vi } from 'vitest'` or access it **globally** (when [global configuration](/config/#global) is **enabled**).
+When writing tests it's only a matter of time before you need to create "fake" version of an internal—or external—service. This is commonly referred to as **mocking**. Vitest provides utility functions to help you out through its **vi** helper. You can `import { vi } from 'vitest'` or access it **globally** (when [global configuration](/config/#globals) is **enabled**).
 
 ::: warning
 Always remember to clear or restore mocks before or after each test run to undo mock state changes between runs! See [`mockReset`](/api/#mockreset) docs for more info.
@@ -14,7 +14,7 @@ Sometimes you need to be in control of the date to ensure consistency when testi
 ### Example
 
 ```js
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const businessHours = [9, 17]
 
@@ -22,23 +22,22 @@ const purchase = () => {
   const currentHour = new Date().getHours()
   const [open, close] = businessHours
 
-  if (currentHour > open && currentHour < close) {
+  if (currentHour > open && currentHour < close)
     return { message: 'Success' }
-  }
 
   return { message: 'Error' }
-};
+}
 
 describe('purchasing flow', () => {
   beforeEach(() => {
     // tell vitest we use mocked time
     vi.useFakeTimers()
-  });
+  })
 
   afterEach(() => {
     // restoring date after each test run
     vi.useRealTimers()
-  });
+  })
 
   it('allows purchases within business hours', () => {
     // set hour within business hours
@@ -95,8 +94,8 @@ describe('reading messages', () => {
     expect(spy.getMockName()).toEqual('getLatest')
 
     expect(messages.getLatest()).toEqual(
-      messages.items[messages.items.length - 1]
-    );
+      messages.items[messages.items.length - 1],
+    )
 
     expect(spy).toHaveBeenCalledTimes(1)
 
@@ -104,7 +103,7 @@ describe('reading messages', () => {
     expect(messages.getLatest()).toEqual('access-restricted')
 
     expect(spy).toHaveBeenCalledTimes(2)
-  });
+  })
 
   it('should get with a mock', () => {
     const mock = vi.fn().mockImplementation(getLatest)
@@ -127,6 +126,25 @@ describe('reading messages', () => {
 
 - [Jest's Mock Functions](https://jestjs.io/docs/mock-function-api)
 
+## Globals
+
+You can mock global variables that are not present with `jsdom` or `node` by using [`vi.stubGlobal`](/api/#vi-stubglobal) helper. It will put the value of the global variable into a `globalThis` object.
+
+```ts
+import { vi } from 'vitest'
+
+const IntersectionObserverMock = vi.fn(() => ({
+  disconnect: vi.fn(),
+  observe: vi.fn(),
+  takeRecords: vi.fn(),
+  unobserve: vi.fn(),
+}))
+
+vi.stubGlobal('IntersectionObserver', IntersectionObserverMock)
+
+// now you can access it as `IntersectionObserver` or `window.IntersectionObserver`
+```
+
 ## Modules
 
 Mock modules observe third-party-libraries, that are invoked in some other code, allowing you to test arguments, output or even redeclare its implementation.
@@ -146,22 +164,22 @@ The following principles apply
 ### Example
 
 ```js
-import { vi, beforeEach, afterEach, describe, it } from 'vitest';
-import { Client } from 'pg';
+import { afterEach, beforeEach, describe, it, vi } from 'vitest'
+import { Client } from 'pg'
 
 // handlers
 export function success(data) {}
 export function failure(data) {}
 // get todos
-export const getTodos = async (event, context) => {
+export const getTodos = async(event, context) => {
   const client = new Client({
     // ...clientOptions
-  });
+  })
 
   await client.connect()
 
   try {
-    const result = await client.query(`SELECT * FROM todos;`)
+    const result = await client.query('SELECT * FROM todos;')
 
     client.end()
 
@@ -170,14 +188,15 @@ export const getTodos = async (event, context) => {
       data: result.rows,
       status: true,
     })
-  } catch (e) {
+  }
+  catch (e) {
     console.error(e.stack)
 
     client.end()
 
     return failure({ message: e, status: false })
   }
-};
+}
 
 vi.mock('pg', () => {
   return {
@@ -186,28 +205,28 @@ vi.mock('pg', () => {
       query: vi.fn(),
       end: vi.fn(),
     })),
-  };
-});
+  }
+})
 
 vi.mock('./handler.js', () => {
   return {
     success: vi.fn(),
     failure: vi.fn(),
-  };
-});
+  }
+})
 
 describe('get a list of todo items', () => {
-  let client;
+  let client
 
   beforeEach(() => {
     client = new Client()
-  });
+  })
 
   afterEach(() => {
     vi.clearAllMocks()
-  });
+  })
 
-  it('should return items successfully', async () => {
+  it('should return items successfully', async() => {
     client.query.mockResolvedValueOnce({ rows: [], rowCount: 0 })
 
     await getTodos()
@@ -223,7 +242,7 @@ describe('get a list of todo items', () => {
     })
   })
 
-  it('should throw an error', async () => {
+  it('should throw an error', async() => {
     const mError = new Error('Unable to retrieve rows')
     client.query.mockRejectedValueOnce(mError)
 
@@ -248,7 +267,7 @@ Mock Service Worker (MSW) works by intercepting the requests your tests make, al
 
 Add the following to your test [setup file](/config/#setupfiles)
 ```js
-import { beforeAll, afterAll, afterEach } from 'vitest'
+import { afterAll, afterEach, beforeAll } from 'vitest'
 import { setupServer } from 'msw/node'
 import { graphql, rest } from 'msw'
 
@@ -259,7 +278,7 @@ const posts = [
     title: 'first post title',
     body: 'first post body',
   },
-  ...
+  // ...
 ]
 
 export const restHandlers = [
@@ -304,43 +323,43 @@ See the [`vi.mock()` api section](/api/#vi-usefaketimer) for a more in depth det
 ### Example
 
 ```js
-import { describe, it, beforeEach, afterEach, expect, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const executeAfterTwoHours = (func) => {
   setTimeout(func, 1000 * 60 * 60 * 2) // 2 hours
 }
 
 const executeEveryMinute = (func) => {
-  setInterval(func, 1000 * 60); // 1 minute
+  setInterval(func, 1000 * 60) // 1 minute
 }
 
-const mock = vi.fn(() => console.log('executed'));
+const mock = vi.fn(() => console.log('executed'))
 
 describe('delayed execution', () => {
   beforeEach(() => {
     vi.useFakeTimers()
   })
-  afterEach(()=> {
+  afterEach(() => {
     vi.restoreAllMocks()
   })
   it('should execute the function', () => {
-    executeAfterTwoHours(mock);
-    vi.runAllTimers();
-    expect(mock).toHaveBeenCalledTimes(1);
+    executeAfterTwoHours(mock)
+    vi.runAllTimers()
+    expect(mock).toHaveBeenCalledTimes(1)
   })
   it('should not execute the function', () => {
-    executeAfterTwoHours(mock);
+    executeAfterTwoHours(mock)
     // advancing by 2ms won't trigger the func
-    vi.advanceTimersByTime(2);
-    expect(mock).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(2)
+    expect(mock).not.toHaveBeenCalled()
   })
   it('should execute every minute', () => {
-    executeEveryMinute(mock);
-    vi.advanceTimersToNextTimer();
-    vi.advanceTimersToNextTimer();
-    expect(mock).toHaveBeenCalledTimes(1);
-    vi.advanceTimersToNextTimer();
-    expect(mock).toHaveBeenCalledTimes(2);
+    executeEveryMinute(mock)
+    vi.advanceTimersToNextTimer()
+    vi.advanceTimersToNextTimer()
+    expect(mock).toHaveBeenCalledTimes(1)
+    vi.advanceTimersToNextTimer()
+    expect(mock).toHaveBeenCalledTimes(2)
   })
 })
 ```

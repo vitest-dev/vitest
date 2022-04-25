@@ -1,3 +1,5 @@
+import { expect } from 'vitest'
+
 const println = () => {
   const message = `
 export default function () {
@@ -22,4 +24,15 @@ test('non default snapshot format', () => {
 
 test('multiline strings ', () => {
   expect(println()).toMatchSnapshot()
+})
+
+test('updateInlineSnapshot should not remove end whitespace', () => {
+  // issue #922
+  expect(`
+my string
+`).toMatchInlineSnapshot(`
+  "
+  my string
+  "
+`)
 })

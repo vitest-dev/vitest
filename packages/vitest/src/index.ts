@@ -3,12 +3,14 @@ import type { MatcherState, MatchersObject } from './integrations/chai/types'
 import type { Constructable, InlineConfig } from './types'
 
 export { suite, test, describe, it } from './runtime/suite'
-
 export * from './runtime/hooks'
 export * from './runtime/utils'
+
+export { runOnce, isFirstRun } from './integrations/run-once'
+export type { EnhancedSpy, MockedFunction, MockedObject, SpyInstance, SpyInstanceFn, SpyContext } from './integrations/spy'
 export * from './integrations/chai'
-export * from './integrations/jest-mock'
 export * from './integrations/vi'
+export * from './integrations/utils'
 
 export * from './types'
 export * from './api/types'
@@ -22,13 +24,6 @@ declare module 'vite' {
      */
     test?: VitestInlineConfig
   }
-}
-
-interface AsymmetricMatchersContaining {
-  stringContaining(expected: string): any
-  objectContaining(expected: any): any
-  arrayContaining(expected: unknown[]): any
-  stringMatching(expected: string | RegExp): any
 }
 
 type Promisify<O> = {
@@ -59,6 +54,13 @@ declare global {
       getState(): MatcherState
       setState(state: Partial<MatcherState>): void
       not: AsymmetricMatchersContaining
+    }
+
+    interface AsymmetricMatchersContaining {
+      stringContaining(expected: string): any
+      objectContaining(expected: any): any
+      arrayContaining<T = unknown>(expected: Array<T>): any
+      stringMatching(expected: string | RegExp): any
     }
 
     interface JestAssertion<T = any> extends jest.Matchers<void, T> {
@@ -94,7 +96,7 @@ declare global {
       toBeInstanceOf<E>(expected: E): void
       toBeCalledTimes(times: number): void
       toHaveLength(length: number): void
-      toHaveProperty<E>(property: string, value?: E): void
+      toHaveProperty<E>(property: string | string[], value?: E): void
       toBeCloseTo(number: number, numDigits?: number): void
       toHaveBeenCalledTimes(times: number): void
       toHaveBeenCalledOnce(): void
@@ -118,6 +120,7 @@ declare global {
       lastReturnedWith<E>(value: E): void
       toHaveNthReturnedWith<E>(nthCall: number, value: E): void
       nthReturnedWith<E>(nthCall: number, value: E): void
+      toSatisfy<E>(matcher: (value: E) => boolean, message?: string): void
     }
 
     // eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error

@@ -7,6 +7,8 @@ import { processError } from './error'
 import { collectorContext } from './context'
 import { runSetupFiles } from './setup'
 
+const now = Date.now
+
 function hash(str: string, length = 10) {
   return createHash('md5')
     .update(str)
@@ -45,9 +47,9 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
           file.tasks.push(c)
         }
         else {
-          const start = performance.now()
+          const start = now()
           const suite = await c.collect(file)
-          file.collectDuration = performance.now() - start
+          file.collectDuration = now() - start
           if (suite.name || suite.tasks.length)
             file.tasks.push(suite)
         }
@@ -58,7 +60,7 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
         state: 'fail',
         error: processError(e),
       }
-      // not sure thy, this this line is needed to trigger the error
+      // not sure thy, this line is needed to trigger the error
       process.stdout.write('\0')
     }
 
@@ -134,7 +136,8 @@ function skipAllTasks(suite: Suite) {
 }
 
 function checkAllowOnly(task: TaskBase, allowOnly?: boolean) {
-  if (allowOnly) return
+  if (allowOnly)
+    return
   task.result = {
     state: 'fail',
     error: processError(new Error('[Vitest] Unexpected .only modifier. Remove it or pass --allowOnly argument to bypass this error')),

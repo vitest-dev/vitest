@@ -17,6 +17,7 @@
     <ListItem><a target="_blank" href="https://github.com/Aslemammad/tinyspy" rel="noopener noreferrer">Tinyspy</a> built-in for mocking</ListItem>
     <ListItem><a target="_blank" href="https://github.com/capricorn86/happy-dom" rel="noopener noreferrer">happy-dom</a> or <a target="_blank" href="https://github.com/jsdom/jsdom" rel="noopener noreferrer">jsdom</a> for DOM mocking</ListItem>
     <ListItem>Native code coverage via <a target="_blank" href="https://github.com/bcoe/c8" rel="noopener noreferrer">c8</a></ListItem>
+    <ListItem>Rust like <a href="/guide/in-source">in-source testing</a></ListItem>
   </ul>
 </template>
 

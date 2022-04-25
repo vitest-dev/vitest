@@ -9,8 +9,6 @@ const ESM_FOLDER_RE = /\/esm\/(.*\.js)$/
 const defaultInline = [
   /virtual:/,
   /\.ts$/,
-  ESM_EXT_RE,
-  ESM_FOLDER_RE,
 ]
 
 const depsExternal = [
@@ -72,7 +70,8 @@ async function _shouldExternalize(
     return id
 
   const isNodeModule = id.includes('/node_modules/')
-  id = isNodeModule ? guessCJSversion(id) || id : id
+  const guessCJS = isNodeModule && options?.fallbackCJS
+  id = guessCJS ? guessCJSversion(id) || id : id
 
   if (matchExternalizePattern(id, defaultInline))
     return false

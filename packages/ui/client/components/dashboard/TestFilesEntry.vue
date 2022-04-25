@@ -5,13 +5,14 @@ import { filesFailed, filesSnapshotFailed, filesSuccess, time } from '../../comp
 
 <template>
   <div
+    data-testid="test-files-entry"
     grid="~ cols-[min-content_1fr_min-content]"
     items-center gap="x-2 y-3" p="x4" relative font-light w-80
     op80
   >
     <div i-carbon-document />
     <div>Files</div>
-    <div class="number">
+    <div class="number" data-testid="num-files">
       {{ files.length }}
     </div>
 
@@ -45,7 +46,7 @@ import { filesFailed, filesSnapshotFailed, filesSuccess, time } from '../../comp
 
     <div i-carbon-timer />
     <div>Time</div>
-    <div class="number">
+    <div class="number" data-testid="run-time">
       {{ time }}
     </div>
   </div>

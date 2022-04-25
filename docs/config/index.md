@@ -10,6 +10,21 @@
 
 To configure `vitest` itself, add `test` property in your Vite config. You'll also need to add a reference to Vitest types using a [triple slash command](https://www.typescriptlang.org/docs/handbook/triple-slash-directives.html#-reference-types-) at the top of your config file, if you are importing `defineConfig` from `vite` itself.
 
+using `defineConfig` from `vite` you should follow this:
+
+```ts
+/// <reference types="vitest" />
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  test: {
+    // ...
+  },
+})
+```
+
+using `defineConfig` from `vitest/config` you should follow this:
+
 ```ts
 import { defineConfig } from 'vitest/config'
 
@@ -23,7 +38,7 @@ export default defineConfig({
 You can retrieve Vitest's default options to expand them if needed:
 
 ```ts
-import { defineConfig, configDefaults } from 'vitest/config'
+import { configDefaults, defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
@@ -67,6 +82,22 @@ Externalize means that Vite will bypass the package to native Node. Externalized
 - **Default:** `[]`
 
 Vite will process inlined modules. This could be helpful to handle packages that ship `.js` in ESM format (that Node can't handle).
+
+#### deps.fallbackCJS
+
+- **Type** `boolean`
+- **Default:** `false`
+
+When a dependency is a valid ESM package, try to guess the cjs version based on the path.
+
+This might potentially cause some misalignment if a package has different logic in ESM and CJS mode.
+
+#### deps.interopDefault
+
+- **Type:** `boolean`
+- **Default:** `true`
+
+Interpret CJS module's default as named exports.
 
 ### globals
 
@@ -190,6 +221,7 @@ Project root
 - **Default:** `'default'`
 
 Custom reporters for output. Reporters can be [a Reporter instance](https://github.com/vitest-dev/vitest/blob/main/packages/vitest/src/types/reporter.ts) or a string to select built in reporters:
+
   - `'default'` - collapse suites when they pass
   - `'verbose'` - keep the full task tree visible
   - `'dot'` -  show each task as a single dot
@@ -198,9 +230,10 @@ Custom reporters for output. Reporters can be [a Reporter instance](https://gith
 
 ### outputFile
 
-- **Type:** `string`
+- **Type:** `string | Record<string, string>`
 
 Write test results to a file when the `--reporter=json` or `--reporter=junit` option is also specified.
+By providing an object instead of a string you can define individual outputs when using multiple reporters.
 
 ### threads
 
@@ -222,10 +255,6 @@ Maximum number of threads
 - **Default:** _available CPUs_
 
 Minimum number of threads
-
-### interopDefault
-
-- **Type:** `boolean`
 
 ### testTimeout
 
@@ -289,6 +318,27 @@ Isolate environment for each test file
 - **Default:** `undefined`
 
 Coverage options
+
+### testNamePattern
+
+- **Type** `string | RegExp`
+
+Run tests with full names matching the pattern.
+If you add `OnlyRunThis` to this property, tests containing the word `OnlyRunThis` in the test name will be skipped.
+
+```js
+import { expect, test } from 'vitest'
+
+// run
+test('OnlyRunThis', () => {
+  expect(true).toBe(true)
+})
+
+// skipped
+test('doNotRun', () => {
+  expect(true).toBe(true)
+})
+```
 
 ### open
 
@@ -373,3 +423,27 @@ Format options for snapshot testing.
 - **Default:** `test`
 
 Overrides Vite mode.
+
+### changed
+
+- **Type**: `boolean | string`
+- **Default**: false
+
+Run tests only against changed files. If no value is provided, it will run tests against uncomitted changes (includes staged and unstaged).
+
+To run tests against changes made in last commit, you can use `--changed HEAD~1`. You can also pass commit hash or branch name.
+
+### resolveSnapshotPath
+
+- **Type**: `(testPath: string, snapExtension: string) => string`
+- **Default**: stores snapshot files in `__snapshots__` directory
+
+Overrides default snapshot path. For example, to store snapshots next to test files:
+
+```ts
+export default {
+  test: {
+    resolveSnapshotPath: (testPath, snapExtension) => testPath + snapExtension,
+  },
+}
+```

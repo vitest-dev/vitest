@@ -1,9 +1,9 @@
 {
   "name": "vitest-test",
-  "private": true,
-  "main": "index.js",
-  "license": "MIT",
   "type": "module",
+  "private": true,
+  "license": "MIT",
+  "main": "index.js",
   "scripts": {
     "test": "vitest",
     "test:ui": "vitest --ui",

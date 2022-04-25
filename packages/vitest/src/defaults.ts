@@ -1,4 +1,7 @@
-import type { ResolvedC8Options, UserConfig } from './types'
+// rollup dts building will external vitest
+// so output dts entry using vitest to import internal types
+// eslint-disable-next-line no-restricted-imports
+import type { ResolvedC8Options, UserConfig } from 'vitest'
 
 export const defaultInclude = ['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']
 export const defaultExclude = ['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**']
@@ -30,11 +33,11 @@ const coverageConfigDefaults = {
   extension: ['.js', '.cjs', '.mjs', '.ts', '.tsx', '.jsx', '.vue', '.svelte'],
 } as ResolvedC8Options
 
-export const configDefaults: UserConfig = Object.freeze({
+const config = {
   allowOnly: !process.env.CI,
   watch: !process.env.CI,
   globals: false,
-  environment: 'node',
+  environment: 'node' as const,
   threads: true,
   clearMocks: false,
   restoreMocks: false,
@@ -53,4 +56,6 @@ export const configDefaults: UserConfig = Object.freeze({
   uiBase: '/__vitest__/',
   open: true,
   coverage: coverageConfigDefaults,
-})
+}
+
+export const configDefaults: Required<Pick<UserConfig, keyof typeof config>> = Object.freeze(config)

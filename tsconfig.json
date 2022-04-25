@@ -19,7 +19,6 @@
       "#types": ["./packages/vitest/src/index.ts"],
       "~/*": ["./packages/ui/client/*"],
       "vitest": ["./packages/vitest/src/index.ts"],
-      "vitest/global": ["./packages/vitest/global.d.ts"],
       "vitest/globals": ["./packages/vitest/globals.d.ts"],
       "vitest/node": ["./packages/vitest/src/node/index.ts"],
       "vitest/config": ["./packages/vitest/src/config.ts"],
@@ -27,7 +26,10 @@
       "vite-node/client": ["./packages/vite-node/src/client.ts"],
       "vite-node/server": ["./packages/vite-node/src/server.ts"],
       "vite-node/utils": ["./packages/vite-node/src/utils.ts"]
-    }
+    },
+    "types": [
+      "vite/client",
+    ]
   },
   "exclude": [
     "**/dist/**",

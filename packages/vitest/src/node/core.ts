@@ -1,12 +1,14 @@
-import { existsSync } from 'fs'
+import { existsSync, promises as fs } from 'fs'
+import readline from 'readline'
 import type { ViteDevServer } from 'vite'
+import { relative, toNamespacedPath } from 'pathe'
 import fg from 'fast-glob'
 import mm from 'micromatch'
 import c from 'picocolors'
 import { ViteNodeServer } from 'vite-node/server'
 import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig } from '../types'
 import { SnapshotManager } from '../integrations/snapshot/manager'
-import { deepMerge, hasFailed, noop, slash, toArray } from '../utils'
+import { clearTimeout, deepMerge, hasFailed, noop, setTimeout, slash, toArray } from '../utils'
 import { cleanCoverage, reportCoverage } from '../integrations/coverage'
 import { ReportersMap } from './reporters'
 import { createPool } from './pool'
@@ -14,6 +16,7 @@ import type { WorkerPool } from './pool'
 import { StateManager } from './state'
 import { resolveConfig } from './config'
 import { printError } from './error'
+import { VitestGit } from './git'
 
 const WATCHER_DEBOUNCE = 100
 const CLOSE_TIMEOUT = 1_000
@@ -60,7 +63,7 @@ export class Vitest {
     this.server = server
     this.config = resolved
     this.state = new StateManager()
-    this.snapshot = new SnapshotManager(resolved)
+    this.snapshot = new SnapshotManager({ ...resolved.snapshotOptions })
     this.reporters = resolved.reporters
       .map((i) => {
         if (typeof i === 'string') {
@@ -89,6 +92,11 @@ export class Vitest {
     const hasCustomReporter = toArray(this.config.reporters)
       .some(reporter => typeof reporter !== 'string')
 
+    // cannot be serialized for sending to workers
+    // reimplemented on rpc
+    if (this.config.snapshotOptions.resolveSnapshotPath)
+      this.config.snapshotOptions.resolveSnapshotPath = undefined
+
     if (!hasCustomReporter && !this.configOverride)
       return this.config
 
@@ -113,12 +121,22 @@ export class Vitest {
     )
 
     if (!files.length) {
-      if (this.config.passWithNoTests)
-        this.log('No test files found\n')
+      const exitCode = this.config.passWithNoTests ? 0 : 1
 
+      const comma = c.dim(', ')
+      if (filters?.length)
+        this.console.error(c.dim('filter:  ') + c.yellow(filters.join(comma)))
+      if (this.config.include)
+        this.console.error(c.dim('include: ') + c.yellow(this.config.include.join(comma)))
+      if (this.config.watchIgnore)
+        this.console.error(c.dim('ignore:  ') + c.yellow(this.config.watchIgnore.join(comma)))
+
+      if (this.config.passWithNoTests)
+        this.log('No test files found, exiting with code 0\n')
       else
-        this.error(c.red('No test files found\n'))
-      process.exit(this.config.passWithNoTests ? 0 : 1)
+        this.error(c.red('\nNo test files found, exiting with code 1'))
+
+      process.exit(exitCode)
     }
 
     await this.runFiles(files)
@@ -155,6 +173,18 @@ export class Vitest {
   }
 
   async filterTestsBySource(tests: string[]) {
+    if (this.config.changed && !this.config.related) {
+      const vitestGit = new VitestGit(this.config.root)
+      const related = await vitestGit.findChangedFiles({
+        changedSince: this.config.changed,
+      })
+      if (!related) {
+        this.error(c.red('Could not find Git root. Have you initialized git with `git init`?\n'))
+        process.exit(1)
+      }
+      this.config.related = Array.from(new Set(related))
+    }
+
     const related = this.config.related
     if (!related)
       return tests
@@ -173,7 +203,8 @@ export class Vitest {
     const runningTests = []
 
     for (const [filepath, deps] of testDeps) {
-      if (deps.size && related.some(path => deps.has(path)))
+      // if deps or the test itself were changed
+      if (deps.size && related.some(path => path === filepath || deps.has(path)))
         runningTests.push(filepath)
     }
 
@@ -189,6 +220,7 @@ export class Vitest {
 
       const invalidates = Array.from(this.invalidates)
       this.invalidates.clear()
+      this.snapshot.clear()
       await this.pool.runTests(files, invalidates)
 
       if (hasFailed(this.state.getFiles()))
@@ -244,6 +276,17 @@ export class Vitest {
     this.console.error(...args)
   }
 
+  clearScreen() {
+    if (this.server.config.clearScreen === false)
+      return
+
+    const repeatCount = process.stdout.rows - 2
+    const blank = repeatCount > 0 ? '\n'.repeat(repeatCount) : ''
+    this.console.log(blank)
+    readline.cursorTo(process.stdout, 0, 0)
+    readline.clearScreenDown(process.stdout)
+  }
+
   private _rerunTimer: any
   private async scheduleRerun(triggerId: string) {
     const currentCount = this.restartsCount
@@ -278,7 +321,6 @@ export class Vitest {
       const files = Array.from(this.changedTests)
       this.changedTests.clear()
 
-      this.log('return')
       if (this.config.coverage.enabled && this.config.coverage.cleanOnRerun)
         await cleanCoverage(this.config.coverage)
 
@@ -308,11 +350,12 @@ export class Vitest {
       if (this.state.filesMap.has(id)) {
         this.state.filesMap.delete(id)
         this.changedTests.delete(id)
+        this.report('onTestRemoved', id)
       }
     }
-    const onAdd = (id: string) => {
+    const onAdd = async(id: string) => {
       id = slash(id)
-      if (this.isTargetFile(id)) {
+      if (await this.isTargetFile(id)) {
         this.changedTests.add(id)
         this.scheduleRerun(id)
       }
@@ -393,26 +436,56 @@ export class Vitest {
     )))
   }
 
-  async globTestFiles(filters?: string[]) {
-    let files = await fg(
-      this.config.include,
-      {
-        absolute: true,
-        cwd: this.config.dir || this.config.root,
-        ignore: this.config.exclude,
-      },
-    )
+  async globTestFiles(filters: string[] = []) {
+    const globOptions = {
+      absolute: true,
+      cwd: this.config.dir || this.config.root,
+      ignore: this.config.exclude,
+    }
 
-    if (filters?.length)
-      files = files.filter(i => filters.some(f => i.includes(f)))
+    let testFiles = await fg(this.config.include, globOptions)
 
-    return files
+    if (filters.length && process.platform === 'win32')
+      filters = filters.map(f => toNamespacedPath(f))
+
+    if (filters.length)
+      testFiles = testFiles.filter(i => filters.some(f => i.includes(f)))
+
+    if (this.config.includeSource) {
+      let files = await fg(this.config.includeSource, globOptions)
+      if (filters.length)
+        files = files.filter(i => filters.some(f => i.includes(f)))
+
+      await Promise.all(files.map(async(file) => {
+        try {
+          const code = await fs.readFile(file, 'utf-8')
+          if (this.isInSourceTestFile(code))
+            testFiles.push(file)
+        }
+        catch {
+          return null
+        }
+      }))
+    }
+
+    return testFiles
   }
 
-  isTargetFile(id: string): boolean {
-    if (mm.isMatch(id, this.config.exclude))
+  async isTargetFile(id: string, source?: string): Promise<boolean> {
+    const relativeId = relative(this.config.dir || this.config.root, id)
+    if (mm.isMatch(relativeId, this.config.exclude))
       return false
-    return mm.isMatch(id, this.config.include)
+    if (mm.isMatch(relativeId, this.config.include))
+      return true
+    if (this.config.includeSource?.length && mm.isMatch(relativeId, this.config.includeSource)) {
+      source = source || await fs.readFile(id, 'utf-8')
+      return this.isInSourceTestFile(source)
+    }
+    return false
+  }
+
+  isInSourceTestFile(code: string) {
+    return code.includes('import.meta.vitest')
   }
 
   printError(err: unknown) {

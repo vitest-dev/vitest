@@ -1,11 +1,14 @@
-import type { EnhancedSpy } from '../jest-mock'
-import { isMockFunction } from '../jest-mock'
+import c from 'picocolors'
+import type { EnhancedSpy } from '../spy'
+import { isMockFunction } from '../spy'
 import { addSerializer } from '../snapshot/port/plugins'
 import type { Constructable } from '../../types'
 import { assertTypes } from '../../utils'
+import { unifiedDiff } from '../../node/diff'
 import type { ChaiPlugin, MatcherState } from './types'
 import { arrayBufferEquality, iterableEquality, equals as jestEquals, sparseArrayEquality, subsetEquality, typeEquality } from './jest-utils'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
+import { stringify } from './jest-matcher-utils'
 
 const MATCHERS_OBJECT = Symbol.for('matchers-object')
 
@@ -15,7 +18,7 @@ if (!Object.prototype.hasOwnProperty.call(global, MATCHERS_OBJECT)) {
     isExpectingAssertions: false,
     isExpectingAssertionsError: null,
     expectedAssertionsNumber: null,
-    expectedAssertionsNumberError: null,
+    expectedAssertionsNumberErrorGen: null,
   }
   Object.defineProperty(global, MATCHERS_OBJECT, {
     value: {
@@ -245,8 +248,11 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     return this.have.length(length)
   })
   // destructuring, because it checks `arguments` inside, and value is passing as `undefined`
-  def('toHaveProperty', function(...args: [property: string, value?: any]) {
-    return this.have.deep.nested.property(...args)
+  def('toHaveProperty', function(...args: [property: string | string[], value?: any]) {
+    if (Array.isArray(args[0]))
+      args[0] = args[0].map(key => key.replace(/([.[\]])/g, '\\$1')).join('.')
+
+    return this.have.deep.nested.property(...args as [property: string, value?: any])
   })
   def('toBeCloseTo', function(received: number, precision = 2) {
     const expected = this._obj
@@ -282,6 +288,35 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     assertIsMock(assertion)
     return assertion._obj as EnhancedSpy
   }
+  const ordinalOf = (i: number) => {
+    const j = i % 10
+    const k = i % 100
+
+    if (j === 1 && k !== 11)
+      return `${i}st`
+
+    if (j === 2 && k !== 12)
+      return `${i}nd`
+
+    if (j === 3 && k !== 13)
+      return `${i}rd`
+
+    return `${i}th`
+  }
+  const formatCalls = (spy: EnhancedSpy, msg: string, actualCall?: any) => {
+    msg += c.gray(`\n\nReceived: \n${spy.mock.calls.map((callArg, i) => {
+      let methodCall = c.bold(`    ${ordinalOf(i + 1)} ${spy.getMockName()} call:\n\n`)
+      if (actualCall)
+        methodCall += unifiedDiff(stringify(callArg), stringify(actualCall), { showLegend: false })
+      else
+        methodCall += stringify(callArg).split('\n').map(line => `    ${line}`).join('\n')
+
+      methodCall += '\n'
+      return methodCall
+    }).join('\n')}`)
+    msg += c.gray(`\n\nNumber of calls: ${c.bold(spy.mock.calls.length)}\n`)
+    return msg
+  }
   def(['toHaveBeenCalledTimes', 'toBeCalledTimes'], function(number: number) {
     const spy = getSpy(this)
     const spyName = spy.getMockName()
@@ -310,41 +345,49 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const spy = getSpy(this)
     const spyName = spy.getMockName()
     const called = spy.mock.calls.length > 0
-    return this.assert(
-      called,
-      `expected "${spyName}" to be called at least once`,
-      `expected "${spyName}" to not be called at all`,
-      true,
-      called,
+    const isNot = utils.flag(this, 'negate') as boolean
+    let msg = utils.getMessage(
+      this,
+      [
+        called,
+        `expected "${spyName}" to be called at least once`,
+        `expected "${spyName}" to not be called at all`,
+        true,
+        called,
+      ],
     )
+    if (called && isNot)
+      msg += formatCalls(spy, msg)
+
+    if ((called && isNot) || (!called && !isNot)) {
+      const err = new Error(msg)
+      err.name = 'AssertionError'
+      throw err
+    }
   })
   def(['toHaveBeenCalledWith', 'toBeCalledWith'], function(...args) {
     const spy = getSpy(this)
     const spyName = spy.getMockName()
     const pass = spy.mock.calls.some(callArg => jestEquals(callArg, args, [iterableEquality]))
-    return this.assert(
-      pass,
-      `expected "${spyName}" to be called with arguments: #{exp}`,
-      `expected "${spyName}" to not be called with arguments: #{exp}`,
-      args,
-      spy.mock.calls,
+    const isNot = utils.flag(this, 'negate') as boolean
+
+    let msg = utils.getMessage(
+      this,
+      [
+        pass,
+        `expected "${spyName}" to be called with arguments: #{exp}`,
+        `expected "${spyName}" to not be called with arguments: #{exp}`,
+        args,
+      ],
     )
+
+    if ((pass && isNot) || (!pass && !isNot)) {
+      msg += formatCalls(spy, msg, args)
+      const err = new Error(msg)
+      err.name = 'AssertionError'
+      throw err
+    }
   })
-  const ordinalOf = (i: number) => {
-    const j = i % 10
-    const k = i % 100
-
-    if (j === 1 && k !== 11)
-      return `${i}st`
-
-    if (j === 2 && k !== 12)
-      return `${i}nd`
-
-    if (j === 3 && k !== 13)
-      return `${i}rd`
-
-    return `${i}th`
-  }
   def(['toHaveBeenNthCalledWith', 'nthCalledWith'], function(times: number, ...args: any[]) {
     const spy = getSpy(this)
     const spyName = spy.getMockName()
@@ -372,6 +415,9 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     )
   })
   def(['toThrow', 'toThrowError'], function(expected?: string | Constructable | RegExp | Error) {
+    if (typeof expected === 'string' || typeof expected === 'undefined' || expected instanceof RegExp)
+      return this.throws(expected)
+
     const obj = this._obj
     const promise = utils.flag(this, 'promise')
     let thrown: any = null
@@ -399,7 +445,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       )
     }
 
-    if (expected && expected instanceof Error) {
+    if (expected instanceof Error) {
       return this.assert(
         thrown && expected.message === thrown.message,
         `expected error to have message: ${expected.message}`,
@@ -409,7 +455,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       )
     }
 
-    if (expected && typeof (expected as any).asymmetricMatch === 'function') {
+    if (typeof (expected as any).asymmetricMatch === 'function') {
       const matcher = expected as any as AsymmetricMatcher<any>
       return this.assert(
         thrown && matcher.asymmetricMatch(thrown),
@@ -420,7 +466,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       )
     }
 
-    return this.to.throws(expected)
+    throw new Error(`"toThrow" expects string, RegExp, function, Error instance or asymmetric matcher, got "${typeof expected}"`)
   })
   def(['toHaveReturned', 'toReturn'], function() {
     const spy = getSpy(this)
@@ -490,6 +536,9 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       callResult,
     )
   })
+  def('toSatisfy', function() {
+    return this.be.satisfy
+  })
 
   utils.addProperty(chai.Assertion.prototype, 'resolves', function __VITEST_RESOLVES__(this: any) {
     utils.flag(this, 'promise', 'resolves')
@@ -552,13 +601,13 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     chai.expect,
     'assertions',
     function assertions(expected: number) {
-      const error = new Error(`expected number of assertions to be ${expected}, but got ${getState().assertionCalls}`)
+      const errorGen = () => new Error(`expected number of assertions to be ${expected}, but got ${getState().assertionCalls}`)
       if (Error.captureStackTrace)
-        Error.captureStackTrace(error, assertions)
+        Error.captureStackTrace(errorGen(), assertions)
 
       setState({
         expectedAssertionsNumber: expected,
-        expectedAssertionsNumberError: error,
+        expectedAssertionsNumberErrorGen: errorGen,
       })
     },
   )

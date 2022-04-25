@@ -1,7 +1,6 @@
 import chai from 'chai'
+import './setup'
 import { getState, setState } from './jest-expect'
-
-export { assert, should } from 'chai'
 
 export function createExpect() {
   const expect = ((value: any, message?: string): Vi.Assertion => {
@@ -15,11 +14,12 @@ export function createExpect() {
   expect.setState = setState
 
   // @ts-expect-error untyped
-  expect.extend = fn => chai.expect.extend(fn)
+  expect.extend = matchers => chai.expect.extend(expect, matchers)
 
   return expect
 }
 
 const expect = createExpect()
 
+export { assert, should } from 'chai'
 export { chai, expect }
