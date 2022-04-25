@@ -91,7 +91,7 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
   test.todo.concurrent(/* ... */) // or test.concurrent.todo(/* ... */)
   ```
 
-  When using Snapshots with async concurrent tests, due to the limitation of JavaScript, you need to use the `expect` from the [Test Context](../test-context.md) to ensure the right test is being detected.
+  When using Snapshots with async concurrent tests, due to the limitation of JavaScript, you need to use the `expect` from the [Test Context](/guide/test-context.md) to ensure the right test is being detected.
 
   ```ts
   test.concurrent('test 1', async ({ expect }) => {
