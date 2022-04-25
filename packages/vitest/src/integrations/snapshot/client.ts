@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import type { SnapshotResult, Test } from '../../types'
+import type { Test } from '../../types'
 import { rpc } from '../../runtime/rpc'
 import { getNames, getWorkerState } from '../../utils'
 import { equals, iterableEquality, subsetEquality } from '../chai/jest-utils'
@@ -14,22 +14,32 @@ export interface Context {
 
 export class SnapshotClient {
   test: Test | undefined
-  testFile = ''
   snapshotState: SnapshotState | undefined
+  snapshotStateMap = new Map<string, SnapshotState>()
 
   async setTest(test: Test) {
     this.test = test
 
-    if (this.testFile !== this.test.file!.filepath) {
-      if (this.snapshotState)
-        this.saveSnap()
+    if (this.snapshotState?.testFilePath !== this.test.file!.filepath) {
+      this.saveCurrent()
 
-      this.testFile = this.test!.file!.filepath
-      this.snapshotState = new SnapshotState(
-        await rpc().resolveSnapshotPath(this.testFile),
-        getWorkerState().config.snapshotOptions,
-      )
+      const filePath = this.test!.file!.filepath
+      if (!this.getSnapshotState(test)) {
+        this.snapshotStateMap.set(
+          filePath,
+          new SnapshotState(
+            filePath,
+            await rpc().resolveSnapshotPath(filePath),
+            getWorkerState().config.snapshotOptions,
+          ),
+        )
+      }
+      this.snapshotState = this.getSnapshotState(test)
     }
+  }
+
+  getSnapshotState(test: Test) {
+    return this.snapshotStateMap.get(test.file!.filepath)!
   }
 
   clearTest() {
@@ -62,7 +72,9 @@ export class SnapshotClient {
       ...(message ? [message] : []),
     ].join(' > ')
 
-    const { actual, expected, key, pass } = this.snapshotState!.match({
+    const snapshotState = this.getSnapshotState(test)
+
+    const { actual, expected, key, pass } = snapshotState.match({
       testName,
       received,
       isInline,
@@ -81,41 +93,16 @@ export class SnapshotClient {
     }
   }
 
-  async saveSnap() {
-    if (!this.testFile || !this.snapshotState)
+  async saveCurrent() {
+    if (!this.snapshotState)
       return
-    const result = await packSnapshotState(this.testFile, this.snapshotState)
+    const result = await this.snapshotState.pack()
     await rpc().snapshotSaved(result)
 
-    this.testFile = ''
     this.snapshotState = undefined
   }
-}
 
-export async function packSnapshotState(filepath: string, state: SnapshotState): Promise<SnapshotResult> {
-  const snapshot: SnapshotResult = {
-    filepath,
-    added: 0,
-    fileDeleted: false,
-    matched: 0,
-    unchecked: 0,
-    uncheckedKeys: [],
-    unmatched: 0,
-    updated: 0,
+  clear() {
+    this.snapshotStateMap.clear()
   }
-  const uncheckedCount = state.getUncheckedCount()
-  const uncheckedKeys = state.getUncheckedKeys()
-  if (uncheckedCount)
-    state.removeUncheckedKeys()
-
-  const status = await state.save()
-  snapshot.fileDeleted = status.deleted
-  snapshot.added = state.added
-  snapshot.matched = state.matched
-  snapshot.unmatched = state.unmatched
-  snapshot.updated = state.updated
-  snapshot.unchecked = !status.deleted ? uncheckedCount : 0
-  snapshot.uncheckedKeys = Array.from(uncheckedKeys)
-
-  return snapshot
 }

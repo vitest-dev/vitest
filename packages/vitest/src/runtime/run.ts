@@ -254,12 +254,13 @@ export async function startTests(paths: string[], config: ResolvedConfig) {
   const files = await collectTests(paths, config)
 
   rpc().onCollected(files)
+  getSnapshotClient().clear()
 
   await runFiles(files, config)
 
   takeCoverage()
 
-  await getSnapshotClient().saveSnap()
+  await getSnapshotClient().saveCurrent()
 
   await sendTasksUpdate()
 }
