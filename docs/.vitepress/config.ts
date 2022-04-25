@@ -102,7 +102,6 @@ export default defineConfig({
             {
               text: 'Why Vitest',
               link: '/guide/why',
-
             },
             {
               text: 'Getting Started',
@@ -124,10 +123,7 @@ export default defineConfig({
               text: 'Test Filtering',
               link: '/guide/filtering',
             },
-            {
-              text: 'Debugging',
-              link: '/guide/debugging',
-            },
+
             {
               text: 'In-source testing',
               link: '/guide/in-source',
@@ -135,6 +131,14 @@ export default defineConfig({
             {
               text: 'Test Context',
               link: '/guide/test-context',
+            },
+            {
+              text: 'IDE Integration',
+              link: '/guide/ide',
+            },
+            {
+              text: 'Debugging',
+              link: '/guide/debugging',
             },
             {
               text: 'Comparisons',
