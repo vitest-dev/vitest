@@ -41,3 +41,16 @@ it('should work', ({ foo }) => {
   console.log(foo) // 'bar'
 })
 ```
+
+### TypeScript
+
+To provide type for your custom context properties, you can aggregate the type `TestContext` by adding
+
+```ts
+declare module 'vitest' {
+  export interface TestContext {
+    foo?: string
+  }
+}
+```
+
