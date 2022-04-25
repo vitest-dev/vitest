@@ -24,7 +24,7 @@
     "cross-fetch": "^3.1.5",
     "jsdom": "latest",
     "msw": "^0.39.2",
-    "vite": "latest",
+    "vite": "^2.9.5",
     "vitest": "latest"
   },
   "stackblitz": {

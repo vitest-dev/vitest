@@ -10,7 +10,7 @@
   "devDependencies": {
     "@vitest/ui": "latest",
     "puppeteer": "^13.6.0",
-    "vite": "latest",
+    "vite": "^2.9.5",
     "vitest": "latest"
   },
   "stackblitz": {

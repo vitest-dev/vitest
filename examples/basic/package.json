@@ -11,7 +11,7 @@
   },
   "devDependencies": {
     "@vitest/ui": "latest",
-    "vite": "latest",
+    "vite": "^2.9.5",
     "vitest": "latest"
   },
   "stackblitz": {
