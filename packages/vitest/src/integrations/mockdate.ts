@@ -63,15 +63,15 @@ class MockDate extends RealDate {
 
 MockDate.UTC = RealDate.UTC
 
-MockDate.now = function() {
+MockDate.now = function () {
   return new MockDate().valueOf()
 }
 
-MockDate.parse = function(dateString) {
+MockDate.parse = function (dateString) {
   return RealDate.parse(dateString)
 }
 
-MockDate.toString = function() {
+MockDate.toString = function () {
   return RealDate.toString()
 }
 

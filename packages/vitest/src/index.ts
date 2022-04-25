@@ -4,10 +4,11 @@ import type { Constructable, InlineConfig } from './types'
 
 export { suite, test, describe, it } from './runtime/suite'
 export * from './runtime/hooks'
+export * from './runtime/utils'
 
 export { runOnce, isFirstRun } from './integrations/run-once'
-export * from './integrations/chai'
 export type { EnhancedSpy, MockedFunction, MockedObject, SpyInstance, SpyInstanceFn, SpyContext } from './integrations/spy'
+export * from './integrations/chai'
 export * from './integrations/vi'
 export * from './integrations/utils'
 
@@ -119,6 +120,7 @@ declare global {
       lastReturnedWith<E>(value: E): void
       toHaveNthReturnedWith<E>(nthCall: number, value: E): void
       nthReturnedWith<E>(nthCall: number, value: E): void
+      toSatisfy<E>(matcher: (value: E) => boolean, message?: string): void
     }
 
     // eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error

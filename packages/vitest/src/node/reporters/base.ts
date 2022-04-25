@@ -108,8 +108,8 @@ export abstract class BaseReporter implements Reporter {
   async onWatcherRerun(files: string[], trigger?: string) {
     this.watchFilters = files
 
-    this.ctx.console.clear()
-    this.ctx.log(c.blue('Re-running tests...') + (trigger ? c.dim(` [ ${this.relative(trigger)} ]\n`) : ''))
+    this.ctx.clearScreen()
+    this.ctx.log(`\n${c.inverse(c.bold(c.blue(' RERUN ')))}${trigger ? c.dim(` ${this.relative(trigger)}\n`) : ''}`)
     this.start = performance.now()
   }
 
@@ -207,7 +207,7 @@ export abstract class BaseReporter implements Reporter {
   }
 
   registerUnhandledRejection() {
-    process.on('unhandledRejection', async(err) => {
+    process.on('unhandledRejection', async (err) => {
       process.exitCode = 1
       this.ctx.error(`\n${c.red(divider(c.bold(c.inverse(' Unhandled Rejection '))))}`)
       await this.ctx.printError(err)

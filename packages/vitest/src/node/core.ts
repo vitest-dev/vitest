@@ -1,4 +1,5 @@
 import { existsSync, promises as fs } from 'fs'
+import readline from 'readline'
 import type { ViteDevServer } from 'vite'
 import { relative, toNamespacedPath } from 'pathe'
 import fg from 'fast-glob'
@@ -126,19 +127,19 @@ export class Vitest {
 
     if (!files.length) {
       const exitCode = this.config.passWithNoTests ? 0 : 1
-      if (this.config.passWithNoTests) {
-        this.log(`No test files found, exiting code with ${exitCode}\n`)
-      }
-      else {
-        this.error(c.red(`No test files found, exiting code with ${exitCode}\nRun with \`--passWithNoTests\`to exit with code 0\n`))
-        console.error(`In ${c.bold(this.config.root)}`)
-        if (filters?.length)
-          this.console.error(`  filter: ${c.yellow(filters.join(', '))}`)
-        if (this.config.include)
-          this.console.error(`  include: ${c.yellow(this.config.include.join(', '))}`)
-        if (this.config.watchIgnore)
-          this.console.error(`  watchIgnore: ${c.yellow(this.config.watchIgnore.join(', '))}`)
-      }
+
+      const comma = c.dim(', ')
+      if (filters?.length)
+        this.console.error(c.dim('filter:  ') + c.yellow(filters.join(comma)))
+      if (this.config.include)
+        this.console.error(c.dim('include: ') + c.yellow(this.config.include.join(comma)))
+      if (this.config.watchIgnore)
+        this.console.error(c.dim('ignore:  ') + c.yellow(this.config.watchIgnore.join(comma)))
+
+      if (this.config.passWithNoTests)
+        this.log('No test files found, exiting with code 0\n')
+      else
+        this.error(c.red('\nNo test files found, exiting with code 1'))
 
       process.exit(exitCode)
     }
@@ -155,7 +156,7 @@ export class Vitest {
   private async getTestDependencies(filepath: string) {
     const deps = new Set<string>()
 
-    const addImports = async(filepath: string) => {
+    const addImports = async (filepath: string) => {
       const transformed = await this.vitenode.transformRequest(filepath)
       if (!transformed)
         return
@@ -198,7 +199,7 @@ export class Vitest {
       return []
 
     const testDeps = await Promise.all(
-      tests.map(async(filepath) => {
+      tests.map(async (filepath) => {
         const deps = await this.getTestDependencies(filepath)
         return [filepath, deps] as const
       }),
@@ -218,12 +219,13 @@ export class Vitest {
   async runFiles(files: string[]) {
     await this.runningPromise
 
-    this.runningPromise = (async() => {
+    this.runningPromise = (async () => {
       if (!this.pool)
         this.pool = createPool(this)
 
       const invalidates = Array.from(this.invalidates)
       this.invalidates.clear()
+      this.snapshot.clear()
       await this.pool.runTests(files, invalidates)
 
       if (hasFailed(this.state.getFiles()))
@@ -279,6 +281,17 @@ export class Vitest {
     this.console.error(...args)
   }
 
+  clearScreen() {
+    if (this.server.config.clearScreen === false)
+      return
+
+    const repeatCount = process.stdout.rows - 2
+    const blank = repeatCount > 0 ? '\n'.repeat(repeatCount) : ''
+    this.console.log(blank)
+    readline.cursorTo(process.stdout, 0, 0)
+    readline.clearScreenDown(process.stdout)
+  }
+
   private _rerunTimer: any
   private async scheduleRerun(triggerId: string) {
     const currentCount = this.restartsCount
@@ -290,7 +303,7 @@ export class Vitest {
     if (this.restartsCount !== currentCount)
       return
 
-    this._rerunTimer = setTimeout(async() => {
+    this._rerunTimer = setTimeout(async () => {
       if (this.changedTests.size === 0) {
         this.invalidates.clear()
         return
@@ -313,7 +326,6 @@ export class Vitest {
       const files = Array.from(this.changedTests)
       this.changedTests.clear()
 
-      this.log('return')
       if (this.config.coverage.enabled && this.config.coverage.cleanOnRerun)
         await cleanCoverage(this.config.coverage)
 
@@ -346,7 +358,7 @@ export class Vitest {
         this.report('onTestRemoved', id)
       }
     }
-    const onAdd = async(id: string) => {
+    const onAdd = async (id: string) => {
       id = slash(id)
       if (await this.isTargetFile(id)) {
         this.changedTests.add(id)
@@ -449,7 +461,7 @@ export class Vitest {
       if (filters.length)
         files = files.filter(i => filters.some(f => i.includes(f)))
 
-      await Promise.all(files.map(async(file) => {
+      await Promise.all(files.map(async (file) => {
         try {
           const code = await fs.readFile(file, 'utf-8')
           if (this.isInSourceTestFile(code))

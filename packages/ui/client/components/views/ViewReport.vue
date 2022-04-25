@@ -106,7 +106,7 @@ function relative(p: string) {
           </div>
           <div v-else-if="task.result?.error" class="scrolls scrolls-rounded task-error">
             <pre><b>{{ task.result.error.name || task.result.error.nameStr }}</b>: {{ task.result.error.message }}</pre>
-            <div v-for="({ file: efile, line, column }, i) of task.result.error.stacks || []" :key="i" class="op80 flex gap-x-2 items-center">
+            <div v-for="({ file: efile, line, column }, i) of task.result.error.stacks || []" :key="i" class="op80 flex gap-x-2 items-center" data-testid="stack">
               <pre> - {{ relative(efile) }}:{{ line }}:{{ column }}</pre>
               <div
                 v-if="shouldOpenInEditor(efile, props.file?.name)"

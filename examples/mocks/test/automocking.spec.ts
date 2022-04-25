@@ -5,7 +5,7 @@ import { methodSymbol, moduleWithSymbol } from '../src/moduleWithSymbol'
 vi.mock('../src/log')
 vi.mock('../src/moduleWithSymbol')
 
-test('all mocked are valid', async() => {
+test('all mocked are valid', async () => {
   const example = await vi.importMock<typeof exampleModule>('../src/example')
 
   // creates a new mocked function with no formal arguments.
@@ -41,7 +41,7 @@ test('all mocked are valid', async() => {
   expect(example.symbol).toEqual(Symbol.for('a.b.c'))
 })
 
-test('automock properly restores mock', async() => {
+test('automock properly restores mock', async () => {
   expect(log.warn()).toBeUndefined()
   expect(moduleWithSymbol.warn()).toBeUndefined()
   expect(moduleWithSymbol[methodSymbol]()).toBeUndefined()

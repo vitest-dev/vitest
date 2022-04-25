@@ -2,13 +2,13 @@ import { format } from 'util'
 import type { File, RunMode, Suite, SuiteAPI, SuiteCollector, SuiteFactory, SuiteHooks, Task, Test, TestAPI, TestFunction } from '../types'
 import { isObject, noop, toArray } from '../utils'
 import { createChainable } from './chain'
-import { collectTask, context, normalizeTest, runWithSuite } from './context'
+import { collectTask, collectorContext, createTestContext, runWithSuite, withTimeout } from './context'
 import { getHooks, setFn, setHooks } from './map'
 
 // apis
 export const suite = createSuite()
 export const test = createTest(
-  function(name: string, fn?: TestFunction, timeout?: number) {
+  function (name: string, fn?: TestFunction, timeout?: number) {
     // @ts-expect-error untyped internal prop
     getCurrentSuite().test.fn.call(this, name, fn, timeout)
   },
@@ -40,14 +40,14 @@ export const it = test
 // implementations
 export const defaultSuite = suite('')
 
-export function clearContext() {
-  context.tasks.length = 0
+export function clearCollectorContext() {
+  collectorContext.tasks.length = 0
   defaultSuite.clear()
-  context.currentSuite = defaultSuite
+  collectorContext.currentSuite = defaultSuite
 }
 
 export function getCurrentSuite() {
-  return context.currentSuite || defaultSuite
+  return collectorContext.currentSuite || defaultSuite
 }
 
 export function createSuiteHooks() {
@@ -67,7 +67,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
 
   initSuite()
 
-  const test = createTest(function(name: string, fn?: TestFunction, timeout?: number) {
+  const test = createTest(function (name: string, fn = noop, timeout?: number) {
     const mode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run'
 
     const test: Test = {
@@ -77,10 +77,22 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       mode,
       suite: undefined!,
       fails: this.fails,
-    }
+    } as Omit<Test, 'context'> as Test
     if (this.concurrent || concurrent)
       test.concurrent = true
-    setFn(test, normalizeTest(fn || noop, timeout))
+
+    const context = createTestContext(test)
+    // create test context
+    Object.defineProperty(test, 'context', {
+      value: context,
+      enumerable: false,
+    })
+
+    setFn(test, withTimeout(
+      () => fn(context),
+      timeout,
+    ))
+
     tasks.push(test)
   })
 
@@ -146,7 +158,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
 function createSuite() {
   const suite = createChainable(
     ['concurrent', 'skip', 'only', 'todo'],
-    function(name: string, factory?: SuiteFactory) {
+    function (name: string, factory?: SuiteFactory) {
       const mode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run'
       return createSuiteCollector(name, factory, mode, this.concurrent)
     },

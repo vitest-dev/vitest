@@ -1,5 +1,5 @@
 {
-  "name": "@vitest/test-puppeteer",
+  "name": "@vitest/example-puppeteer",
   "private": true,
   "scripts": {
     "build": "vite build",
@@ -9,8 +9,8 @@
   },
   "devDependencies": {
     "@vitest/ui": "latest",
-    "puppeteer": "^13.5.2",
-    "vite": "latest",
+    "puppeteer": "^13.6.0",
+    "vite": "^2.9.5",
     "vitest": "latest"
   },
   "stackblitz": {

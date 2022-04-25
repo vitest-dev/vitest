@@ -1,5 +1,5 @@
 {
-  "name": "@vitest/test-svelte",
+  "name": "@vitest/example-svelte",
   "type": "module",
   "private": true,
   "scripts": {
@@ -8,11 +8,11 @@
     "coverage": "vitest run --coverage"
   },
   "devDependencies": {
-    "@sveltejs/vite-plugin-svelte": "^1.0.0-next.40",
-    "@testing-library/svelte": "^3.1.0",
+    "@sveltejs/vite-plugin-svelte": "^1.0.0-next.41",
+    "@testing-library/svelte": "^3.1.1",
     "@vitest/ui": "latest",
     "jsdom": "latest",
-    "svelte": "^3.46.6",
+    "svelte": "^3.47.0",
     "vitest": "latest"
   },
   "stackblitz": {

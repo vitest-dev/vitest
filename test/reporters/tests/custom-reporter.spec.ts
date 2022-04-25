@@ -5,6 +5,11 @@ import { describe, expect, test } from 'vitest'
 const customTsReporterPath = resolve(__dirname, '../src/custom-reporter.ts')
 const customJSReporterPath = resolve(__dirname, '../src/custom-reporter.js')
 
+test('custom reporters work', async () => {
+  // in Windows child_process is very unstable, we skip testing it
+  if (process.platform === 'win32' && process.env.CI)
+    return
+
 async function runTest(...runOptions: string[]): Promise<string> {
   const root = resolve(__dirname, '..')
 

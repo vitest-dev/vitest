@@ -53,7 +53,7 @@ export async function reportCoverage(ctx: Vitest) {
   await Promise.all(Array
     .from(ctx.vitenode.fetchCache.entries())
     .filter(i => !i[0].includes('/node_modules/'))
-    .map(async([file, { result }]) => {
+    .map(async ([file, { result }]) => {
       const map = result.map
       if (!map)
         return

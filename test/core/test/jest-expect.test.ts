@@ -218,7 +218,7 @@ describe('jest-expect', () => {
     expect(1).toBe(1)
   })
 
-  it('assertions when asynchronous code', async() => {
+  it('assertions when asynchronous code', async () => {
     expect.assertions(3)
     await Promise.all([
       expect(1).toBe(1),
@@ -227,7 +227,7 @@ describe('jest-expect', () => {
     ])
   })
 
-  it.fails('assertions when asynchronous code', async() => {
+  it.fails('assertions when asynchronous code', async () => {
     // Error: expected number of assertions to be 2, but got 3
     expect.assertions(2)
     await Promise.all([
@@ -398,7 +398,7 @@ describe('toBeTypeOf()', () => {
     [true, 'boolean'],
     [false, 'boolean'],
     [() => {}, 'function'],
-    [function() {}, 'function'],
+    [function () {}, 'function'],
     [1, 'number'],
     [Infinity, 'number'],
     [NaN, 'number'],
@@ -419,45 +419,57 @@ describe('toBeTypeOf()', () => {
   })
 })
 
-describe('async expect', () => {
-  it('resolves', async() => {
-    await expect((async() => 'true')()).resolves.toBe('true')
-    await expect((async() => 'true')()).resolves.not.toBe('true22')
+describe('toSatisfy()',() => {
+  const isOdd = (value: number) => value % 2 !== 0
+
+  it('pass with 0',() => {
+    expect(1).toSatisfy(isOdd)
   })
 
-  it.fails('failed to resolve', async() => {
-    await expect((async() => {
+  it('pass with negotiation',() => {
+    expect(2).not.toSatisfy(isOdd)
+  })
+})
+
+describe('async expect', () => {
+  it('resolves', async () => {
+    await expect((async () => 'true')()).resolves.toBe('true')
+    await expect((async () => 'true')()).resolves.not.toBe('true22')
+  })
+
+  it.fails('failed to resolve', async () => {
+    await expect((async () => {
       throw new Error('err')
     })()).resolves.toBe('true')
   })
 
-  it('rejects', async() => {
-    await expect((async() => {
+  it('rejects', async () => {
+    await expect((async () => {
       throw new Error('err')
     })()).rejects.toStrictEqual(new Error('err'))
-    await expect((async() => {
+    await expect((async () => {
       throw new Error('err')
     })()).rejects.toThrow('err')
-    expect((async() => {
+    expect((async () => {
       throw new TestError('error')
     })()).rejects.toThrow(TestError)
     const err = new Error('hello world')
-    expect((async() => {
+    expect((async () => {
       throw err
     })()).rejects.toThrow(err)
-    expect((async() => {
+    expect((async () => {
       throw new Error('message')
     })()).rejects.toThrow(expect.objectContaining({
       message: expect.stringContaining('mes'),
     }))
 
-    await expect((async() => {
+    await expect((async () => {
       throw new Error('err')
     })()).rejects.not.toStrictEqual(new Error('fake err'))
   })
 
-  it.fails('failed to reject', async() => {
-    await expect((async() => 'test')()).rejects.toBe('test')
+  it.fails('failed to reject', async () => {
+    await expect((async () => 'test')()).rejects.toBe('test')
   })
 })
 

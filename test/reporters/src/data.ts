@@ -66,6 +66,7 @@ const innerTasks: Task[] = [
       error,
       duration: 1.4422860145568848,
     },
+    context: null as any,
   },
 ]
 
@@ -82,6 +83,7 @@ const tasks: Task[] = [
     fails: undefined,
     file,
     result: { state: 'pass', duration: 1.0237109661102295 },
+    context: null as any,
   },
   {
     id: '1223128da3_3',
@@ -92,6 +94,7 @@ const tasks: Task[] = [
     fails: undefined,
     file,
     result: undefined,
+    context: null as any,
   },
   {
     id: '1223128da3_4',
@@ -102,6 +105,7 @@ const tasks: Task[] = [
     fails: undefined,
     file,
     result: { state: 'pass', duration: 100.50598406791687 },
+    context: null as any,
   },
   {
     id: '1223128da3_5',
@@ -112,6 +116,7 @@ const tasks: Task[] = [
     fails: undefined,
     file,
     result: { state: 'pass', duration: 20.184875011444092 },
+    context: null as any,
   },
   {
     id: '1223128da3_6',
@@ -122,6 +127,7 @@ const tasks: Task[] = [
     fails: undefined,
     file,
     result: { state: 'pass', duration: 0.33245420455932617 },
+    context: null as any,
   },
   {
     id: '1223128da3_7',
@@ -132,6 +138,7 @@ const tasks: Task[] = [
     fails: undefined,
     file,
     result: { state: 'pass', duration: 19.738605976104736 },
+    context: null as any,
   },
   {
     id: '1223128da3_8',
@@ -142,6 +149,15 @@ const tasks: Task[] = [
     fails: undefined,
     file,
     result: { state: 'pass', duration: 0.1923508644104004 },
+    context: null as any,
+    logs: [
+      {
+        content: '[33merror[39m',
+        type: 'stderr',
+        time: 1642587001759,
+        size: 15,
+      },
+    ],
   },
 ]
 

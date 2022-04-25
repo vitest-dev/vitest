@@ -1,5 +1,5 @@
 {
-  "name": "@vitest/test-vue",
+  "name": "@vitest/example-vue2",
   "private": true,
   "scripts": {
     "test": "vitest",

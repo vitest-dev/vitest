@@ -3,14 +3,15 @@
 The following types are used in the type signatures below
 
 ```ts
-type DoneCallback = (error?: any) => void
 type Awaitable<T> = T | PromiseLike<T>
-type TestFunction = () => Awaitable<void> | ((done: DoneCallback) => void)
+type TestFunction = () => Awaitable<void>
 ```
 
 When a test function returns a promise, the runner will wait until it is resolved to collect async expectations. If the promise is rejected, the test will fail.
 
-For compatibility with Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If this form is used, the test will not be concluded until `done` is called (with zero arguments or a falsy value for a successful test, and with a truthy error value as argument to trigger a fail). We don't recommend using this form, as you can achieve the same using an `async` function.
+::: tip 
+In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If this form is used, the test will not be concluded until `done` is called. You can achieve the same using an `async` function, see the [Migration guide Done Callback section](../guide/migration#done-callback).
+:::
 
 ## test
 
@@ -75,9 +76,9 @@ For compatibility with Jest, `TestFunction` can also be of type `(done: DoneCall
 
   // The two tests marked with concurrent will be run in parallel
   describe('suite', () => {
-    test('serial test', async() => { /* ... */ })
-    test.concurrent('concurrent test 1', async() => { /* ... */ })
-    test.concurrent('concurrent test 2', async() => { /* ... */ })
+    test('serial test', async () => { /* ... */ })
+    test.concurrent('concurrent test 1', async () => { /* ... */ })
+    test.concurrent('concurrent test 2', async () => { /* ... */ })
   })
   ```
 
@@ -88,6 +89,17 @@ For compatibility with Jest, `TestFunction` can also be of type `(done: DoneCall
   test.skip.concurrent(/* ... */) // or test.concurrent.skip(/* ... */)
   test.only.concurrent(/* ... */) // or test.concurrent.only(/* ... */)
   test.todo.concurrent(/* ... */) // or test.concurrent.todo(/* ... */)
+  ```
+
+  When using Snapshots with async concurrent tests, due to the limitation of JavaScript, you need to use the `expect` from the [Test Context](/guide/test-context.md) to ensure the right test is being detected.
+
+  ```ts
+  test.concurrent('test 1', async ({ expect }) => {
+    expect(foo).toMatchSnapshot()
+  })
+  test.concurrent('test 2', async ({ expect }) => {
+    expect(foo).toMatchSnapshot()
+  })
   ```
 
 ### test.todo
@@ -247,9 +259,9 @@ When you use `test` in the top level of file, they are collected as part of the 
   ```ts
   // All tests within this suite will be run in parallel
   describe.concurrent('suite', () => {
-    test('concurrent test 1', async() => { /* ... */ })
-    test('concurrent test 2', async() => { /* ... */ })
-    test.concurrent('concurrent test 3', async() => { /* ... */ })
+    test('concurrent test 1', async () => { /* ... */ })
+    test('concurrent test 2', async () => { /* ... */ })
+    test.concurrent('concurrent test 3', async () => { /* ... */ })
   })
   ```
 
@@ -877,13 +889,56 @@ When you use `test` in the top level of file, they are collected as part of the 
   })
   ```
 
-<!--
-snapshots
 ### toMatchSnapshot
+
+- **Type:** `(hint?: string) => void`
+
+  This ensures that a value matches the most recent snapshot.
+
+  You can provide an optional `hint` string argument that is appended to the test name. Although Vitest always appends a number at the end of a snapshot name, short descriptive hints might be more useful than numbers to differentiate multiple snapshots in a single it or test block. Vitest sorts snapshots by name in the corresponding `.snap` file.
+
+  :::tip
+    When snapshot mismatch and causing the test failing, if the mismatch is expected, you can press `u` key to update the snapshot for once. Or you can pass `-u` or `--update` CLI options to make Vitest always update the tests.
+  :::
+
+  ```ts
+  import { expect, test } from 'vitest'
+
+  test('matches snapshot', () => {
+    const data = { foo: new Set(['bar', 'snapshot']) }
+    expect(data).toMatchSnapshot()
+  })
+  ```
+
 ### toMatchInlineSnapshot
+
+- **Type:** `(snapshot?: string) => void`
+
+  This ensures that a value matches the most recent snapshot.
+
+  Vitest adds and updates the inlineSnapshot string argument to the matcher in the test file (instead of an external `.snap` file).
+
+  ```ts
+  import { expect, test } from 'vitest'
+
+  test('matches inline snapshot', () => {
+    const data = { foo: new Set(['bar', 'snapshot']) }
+    // Vitest will updates following content when updating the snapshot
+    expect(data).toMatchInlineSnapshot(`
+      {
+        "foo": Set {
+          "bar",
+          "snapshot",
+        },
+      }
+    `)
+  })
+  ```
+
+<!-- 
 ### toThrowErrorMatchingSnapshot
-### toThrowErrorMatchingInlineSnapshot
--->
+
+### toThrowErrorMatchingInlineSnapshot -->
 
 ### toHaveBeenCalled
 
@@ -1131,7 +1186,7 @@ snapshots
     return fetch('/buy/apples').then(r => r.json())
   }
 
-  test('buyApples returns new stock id', async() => {
+  test('buyApples returns new stock id', async () => {
     // toEqual returns a promise now, so you HAVE to await it
     await expect(buyApples()).resolves.toEqual({ id: 1 }) // jest API
     await expect(buyApples()).resolves.to.equal({ id: 1 }) // chai API
@@ -1160,7 +1215,7 @@ snapshots
       throw new Error('no id')
   }
 
-  test('buyApples throws an error when no id provided', async() => {
+  test('buyApples throws an error when no id provided', async () => {
     // toThrow returns a promise now, so you HAVE to await it
     await expect(buyApples()).rejects.toThrow('no id')
   })
@@ -1187,7 +1242,7 @@ snapshots
     )
   }
 
-  test('all assertions are called', async() => {
+  test('all assertions are called', async () => {
     expect.assertions(2)
     function callback1(data) {
       expect(data).toBeTruthy()
@@ -1227,7 +1282,7 @@ snapshots
     })
   }
 
-  test('callback was called', async() => {
+  test('callback was called', async () => {
     expect.hasAssertions()
     onSelect((data) => {
       // should be called on select
@@ -1269,7 +1324,7 @@ These functions allow you to hook into the life cycle of tests to avoid repeatin
   ```ts
   import { beforeEach } from 'vitest'
 
-  beforeEach(async() => {
+  beforeEach(async () => {
     // Clear mocks and add some testing data after before each test run
     await stopMocking()
     await addUser({ name: 'John' })
@@ -1277,6 +1332,22 @@ These functions allow you to hook into the life cycle of tests to avoid repeatin
   ```
 
   Here, the `beforeEach` ensures that user is added for each test.
+
+  Since Vitest v0.10.0, `beforeEach` also accepts an optional cleanup function (equivalent to `afterEach`).
+
+  ```ts
+  import { beforeEach } from 'vitest'
+
+  beforeEach(async () => {
+    // called once before all tests run
+    await prepareSomething()
+  
+    // clean up function, called once after all tests run
+    return async () => {
+      await resetSomething()
+    }
+  })
+  ```
 
 ### afterEach
 
@@ -1290,7 +1361,7 @@ These functions allow you to hook into the life cycle of tests to avoid repeatin
   ```ts
   import { afterEach } from 'vitest'
 
-  afterEach(async() => {
+  afterEach(async () => {
     await clearTestingData() // clear testing data after each test run
   })
   ```
@@ -1308,12 +1379,28 @@ These functions allow you to hook into the life cycle of tests to avoid repeatin
   ```ts
   import { beforeAll } from 'vitest'
 
-  beforeAll(async() => {
+  beforeAll(async () => {
     await startMocking() // called once before all tests run
   })
   ```
 
-  Here the `beforeAll` ensures that the mock data is set up before tests run
+  Here the `beforeAll` ensures that the mock data is set up before tests run.
+
+  Since Vitest v0.10.0, `beforeAll` also accepts an optional cleanup function (equivalent to `afterAll`).
+
+  ```ts
+  import { beforeAll } from 'vitest'
+
+  beforeAll(async () => {
+    // called once before all tests run
+    await startMocking()
+  
+    // clean up function, called once after all tests run
+    return async () => {
+      await stopMocking()
+    }
+  })
+  ```
 
 ### afterAll
 
@@ -1327,7 +1414,7 @@ These functions allow you to hook into the life cycle of tests to avoid repeatin
   ```ts
   import { afterAll } from 'vitest'
 
-  afterAll(async() => {
+  afterAll(async () => {
     await stopMocking() // this method is called after all tests run
   })
   ```
@@ -1454,7 +1541,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
   import example from './example'
   vi.mock('./example')
 
-  test('1+1 equals 2', async() => {
+  test('1+1 equals 2', async () => {
     vi.mocked(example.calc).mockRestore()
 
     const res = example.calc(1, '+', 1)
@@ -1470,7 +1557,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
   Imports module, bypassing all checks if it should be mocked. Can be useful if you want to mock module partially.
 
   ```ts
-  vi.mock('./example', async() => {
+  vi.mock('./example', async () => {
     const axios = await vi.importActual('./example')
 
     return { ...axios, get: vi.fn() }
@@ -1496,13 +1583,13 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
     vi.resetModules()
   })
 
-  test('change state', async() => {
+  test('change state', async () => {
     const mod = await import('./some/path')
     mod.changeLocalState('new value')
     expect(mod.getlocalState()).toBe('new value')
   })
 
-  test('module has old state', async() => {
+  test('module has old state', async () => {
     const mod = await import('./some/path')
     expect(mod.getlocalState()).toBe('old value')
   })
@@ -1682,7 +1769,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
   Accepts an error that will be rejected, when async function will be called.
 
   ```ts
-  test('async test', async() => {
+  test('async test', async () => {
     const asyncMock = vi.fn().mockRejectedValue(new Error('Async error'))
 
     await asyncMock() // throws "Async error"
@@ -1696,7 +1783,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
   Accepts a value that will be rejected for one call to the mock function. If chained, every consecutive call will reject passed value.
 
   ```ts
-  test('async test', async() => {
+  test('async test', async () => {
     const asyncMock = vi
       .fn()
       .mockResolvedValueOnce('first call')
@@ -1732,7 +1819,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
   Accepts a value that will be resolved, when async function will be called.
 
   ```ts
-  test('async test', async() => {
+  test('async test', async () => {
     const asyncMock = vi.fn().mockResolvedValue(43)
 
     await asyncMock() // 43
@@ -1746,7 +1833,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
   Accepts a value that will be resolved for one call to the mock function. If chained, every consecutive call will resolve passed value.
 
   ```ts
-  test('async test', async() => {
+  test('async test', async () => {
     const asyncMock = vi
       .fn()
       .mockResolvedValue('default')

@@ -16,7 +16,6 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
     : await findUp(configFiles, { cwd: root } as any)
 
   const config: ViteInlineConfig = {
-    root,
     logLevel: 'error',
     configFile: configPath,
     // this will make "mode" = "test" inside defineConfig
@@ -24,7 +23,7 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
     plugins: await VitestPlugin(options, ctx),
   }
 
-  const server = await createServer(mergeConfig(config, viteOverrides))
+  const server = await createServer(mergeConfig(config, mergeConfig(viteOverrides, { root: options.root })))
 
   if (ctx.config.api?.port)
     await server.listen()

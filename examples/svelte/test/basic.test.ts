@@ -1,7 +1,7 @@
 import { tick } from 'svelte'
 import Hello from '../components/Hello.svelte'
 
-test('mount component', async() => {
+test('mount component', async () => {
   const host = document.createElement('div')
   host.setAttribute('id', 'host')
   document.body.appendChild(host)

@@ -1,5 +1,5 @@
 {
-  "name": "@vitest/graphql",
+  "name": "@vitest/example-graphql",
   "private": true,
   "files": [
     "dist",
@@ -17,7 +17,7 @@
   },
   "devDependencies": {
     "@vitest/ui": "latest",
-    "vite": "latest",
+    "vite": "^2.9.5",
     "vitest": "latest"
   }
 }

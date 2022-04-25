@@ -1,5 +1,5 @@
 {
-  "name": "vitest-test",
+  "name": "@vitest/example-ruby",
   "type": "module",
   "private": true,
   "license": "MIT",
@@ -10,11 +10,11 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^2.3.1",
-    "@vue/test-utils": "^2.0.0-rc.18",
+    "@vue/test-utils": "^2.0.0-rc.21",
     "jsdom": "latest",
     "vite-plugin-ruby": "^3.0.9",
     "vitest": "latest",
-    "vue": "^3.2.31"
+    "vue": "^3.2.33"
   },
   "stackblitz": {
     "startCommand": "npm run test"

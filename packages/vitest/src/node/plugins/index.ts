@@ -27,8 +27,10 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
         const preOptions = deepMerge({}, configDefaults, options, viteConfig.test ?? {})
         preOptions.api = resolveApiConfig(preOptions)
 
-        if (viteConfig.define)
+        if (viteConfig.define) {
           delete viteConfig.define['import.meta.vitest']
+          delete viteConfig.define['process.env']
+        }
 
         // store defines for globalThis to make them
         // reassignable when running in worker in src/runtime/setup.ts
@@ -64,7 +66,6 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
         (options as ResolvedConfig).defines = defines
 
         return {
-          clearScreen: false,
           resolve: {
             // by default Vite resolves `module` field, which not always a native ESM module
             // setting this option can bypass that and fallback to cjs version
@@ -80,6 +81,8 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
           // disable deps optimization
           cacheDir: undefined,
           optimizeDeps: {
+            // experimental in Vite >2.9.2, entries remains to help with older versions
+            disabled: true,
             entries: [],
           },
         }

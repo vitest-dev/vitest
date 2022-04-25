@@ -68,7 +68,6 @@ async function run(options: CliOptions = {}) {
   const files = options.files || options._ || []
   const server = await createServer({
     logLevel: 'error',
-    clearScreen: false,
     configFile: options.config,
     root: options.root,
   })
@@ -96,7 +95,7 @@ async function run(options: CliOptions = {}) {
   if (!options.watch)
     await server.close()
 
-  server.watcher.on('change', async(eventName, path) => {
+  server.watcher.on('change', async (eventName, path) => {
     // eslint-disable-next-line no-console
     console.log(dim(`[${eventName}] ${path}`))
 

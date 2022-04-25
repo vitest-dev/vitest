@@ -7,9 +7,9 @@ module.exports = {
   },
   framework: '@storybook/react',
   core: {
-    builder: 'storybook-builder-vite',
+    builder: '@storybook/builder-vite',
   },
-  async viteFinal(config, { configType }) {
+  async viteFinal(config) {
     config.optimizeDeps = {
       ...(config.optimizeDeps || {}),
       include: [

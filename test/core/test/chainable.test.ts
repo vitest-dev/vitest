@@ -3,7 +3,7 @@ import { createChainable } from '../../../packages/vitest/src/runtime/chain'
 
 describe('chainable', () => {
   it('creates', () => {
-    const chain = createChainable(['a', 'b'], function() {
+    const chain = createChainable(['a', 'b'], function () {
       return this
     })
 
