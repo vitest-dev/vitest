@@ -47,7 +47,7 @@ export function withTimeout<T extends((...args: any[]) => any)>(
 
 export function createTestContext(test: Test): TestContext {
   const context = function () {
-    throw new Error('done() callback is deperated, use promise instead')
+    throw new Error('done() callback is deprecated, use promise instead')
   } as unknown as TestContext
 
   context.meta = test
