@@ -5,12 +5,7 @@ import { describe, expect, test } from 'vitest'
 const customTsReporterPath = resolve(__dirname, '../src/custom-reporter.ts')
 const customJSReporterPath = resolve(__dirname, '../src/custom-reporter.js')
 
-test('custom reporters work', async () => {
-  // in Windows child_process is very unstable, we skip testing it
-  if (process.platform === 'win32' && process.env.CI)
-    return
-
-async function runTest(...runOptions: string[]): Promise<string> {
+async function run(...runOptions: string[]): Promise<string> {
   const root = resolve(__dirname, '..')
 
   const { stdout } = await execa('npx', ['vitest', 'run', ...runOptions], {
@@ -27,39 +22,28 @@ async function runTest(...runOptions: string[]): Promise<string> {
 }
 
 describe('Custom reporters', () => {
-  test('custom reporter instances defined in configuration works', async() => {
-    // On Windows child_process is very unstable, we skip testing it
-    if (process.platform === 'win32' && process.env.CI)
-      return
+  // On Windows child_process is very unstable, we skip testing it
+  if (process.platform === 'win32' && process.env.CI)
+    return test.skip('skip on windows')
 
-    const stdout = await runTest('--config', 'custom-reporter.vitest.config.ts')
+  test('custom reporter instances defined in configuration works', async () => {
+    const stdout = await run('--config', 'custom-reporter.vitest.config.ts')
     expect(stdout).includes('hello from custom reporter')
   }, 40000)
 
-  test('a path to a custom reporter defined in configuration works', async() => {
-    // On Windows child_process is very unstable, we skip testing it
-    if (process.platform === 'win32' && process.env.CI)
-      return
-
-    const stdout = await runTest('--config', 'custom-reporter-path.vitest.config.ts', '--reporter', customJSReporterPath)
+  test('a path to a custom reporter defined in configuration works', async () => {
+    const stdout = await run('--config', 'custom-reporter-path.vitest.config.ts', '--reporter', customJSReporterPath)
     expect(stdout).includes('hello from custom reporter')
   }, 40000)
 
-  test('custom TS reporters using ESM given as a CLI argument works', async() => {
-    // On Windows child_process is very unstable, we skip testing it
-    if (process.platform === 'win32' && process.env.CI)
-      return
-
-    const stdout = await runTest('--config', 'without-custom-reporter.vitest.config.ts', '--reporter', customTsReporterPath)
+  test('custom TS reporters using ESM given as a CLI argument works', async () => {
+    const stdout = await run('--config', 'without-custom-reporter.vitest.config.ts', '--reporter', customTsReporterPath)
     expect(stdout).includes('hello from custom reporter')
   }, 40000)
 
-  test('custom JS reporters using CJS given as a CLI argument works', async() => {
-    // On Windows child_process is very unstable, we skip testing it
-    if (process.platform === 'win32' && process.env.CI)
-      return
-
-    const stdout = await runTest('--config', 'without-custom-reporter.vitest.config.ts', '--reporter', customJSReporterPath)
+  test('custom JS reporters using CJS given as a CLI argument works', async () => {
+    const stdout = await run('--config', 'without-custom-reporter.vitest.config.ts', '--reporter', customJSReporterPath)
     expect(stdout).includes('hello from custom reporter')
   }, 40000)
 })
+

@@ -18,7 +18,7 @@ async function loadCustomReporterModule<C extends Reporter>(path: string, fetchM
 }
 
 function createReporters(reporterReferences: Array<string|Reporter|BuiltinReporters>, fetchModule: (id: string) => Promise<any>) {
-  const promisedReporters = reporterReferences.map(async(referenceOrInstance) => {
+  const promisedReporters = reporterReferences.map(async (referenceOrInstance) => {
     if (typeof referenceOrInstance === 'string') {
       if (referenceOrInstance in ReportersMap) {
         const BuiltinReporter = ReportersMap[referenceOrInstance as BuiltinReporters]
