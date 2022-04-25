@@ -131,7 +131,7 @@ export interface InlineConfig {
    * Custom reporter for output. Can contain one or more built-in report names, reporter instances,
    * and/or paths to custom reporters
    */
-  reporters?: Arrayable<BuiltinReporters | Reporter | string>
+  reporters?: Arrayable<BuiltinReporters | Reporter | Omit<string, BuiltinReporters>>
 
   /**
    * diff output length
