@@ -1,4 +1,4 @@
-module.exports = class TestReporter {
+export default class TestReporter {
   onInit(ctx) {
     this.ctx = ctx
   }
