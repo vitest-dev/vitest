@@ -5,14 +5,15 @@ import { relative, toNamespacedPath } from 'pathe'
 import fg from 'fast-glob'
 import mm from 'micromatch'
 import c from 'picocolors'
+import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
 import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig } from '../types'
 import { SnapshotManager } from '../integrations/snapshot/manager'
 import { clearTimeout, deepMerge, hasFailed, noop, setTimeout, slash, toArray } from '../utils'
 import { cleanCoverage, reportCoverage } from '../integrations/coverage'
-import { ReportersMap } from './reporters'
 import { createPool } from './pool'
 import type { WorkerPool } from './pool'
+import { createReporters } from './reporters/utils'
 import { StateManager } from './state'
 import { resolveConfig } from './config'
 import { printError } from './error'
@@ -44,6 +45,7 @@ export class Vitest {
 
   isFirstRun = true
   restartsCount = 0
+  runner: ViteNodeRunner = undefined!
 
   private _onRestartListeners: Array<() => void> = []
 
@@ -64,21 +66,24 @@ export class Vitest {
     this.config = resolved
     this.state = new StateManager()
     this.snapshot = new SnapshotManager({ ...resolved.snapshotOptions })
-    this.reporters = resolved.reporters
-      .map((i) => {
-        if (typeof i === 'string') {
-          const Reporter = ReportersMap[i]
-          if (!Reporter)
-            throw new Error(`Unknown reporter: ${i}`)
-          return new Reporter()
-        }
-        return i
-      })
 
     if (this.config.watch)
       this.registerWatcher()
 
     this.vitenode = new ViteNodeServer(server, this.config)
+    const node = this.vitenode
+    this.runner = new ViteNodeRunner({
+      root: server.config.root,
+      base: server.config.base,
+      fetchModule(id: string) {
+        return node.fetchModule(id)
+      },
+      resolveId(id: string, importer: string|undefined) {
+        return node.resolveId(id, importer)
+      },
+    })
+
+    this.reporters = await createReporters(resolved.reporters, this.runner.executeFile.bind(this.runner))
 
     this.runningPromise = undefined
 
