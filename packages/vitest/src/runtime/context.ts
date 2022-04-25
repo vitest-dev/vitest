@@ -1,5 +1,5 @@
 import type { Awaitable, RuntimeContext, SuiteCollector, Test, TestContext } from '../types'
-import { expect } from '../integrations/chai'
+import { createExpect } from '../integrations/chai'
 import { clearTimeout, getWorkerState, setTimeout } from '../utils'
 
 export const collectorContext: RuntimeContext = {
@@ -51,8 +51,7 @@ export function createTestContext(test: Test): TestContext {
   } as unknown as TestContext
 
   context.meta = test
-  // TODO: @antfu use a getter to create new expect instance that bound to the test for concurrent tests
-  context.expect = expect
+  context.expect = createExpect(test)
 
   return context
 }

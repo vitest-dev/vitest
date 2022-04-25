@@ -36,8 +36,8 @@ export class SnapshotClient {
     this.test = undefined
   }
 
-  assert(received: unknown, message?: string, isInline = false, properties?: object, inlineSnapshot?: string, error?: Error): void {
-    if (!this.test)
+  assert(received: unknown, test = this.test, message?: string, isInline = false, properties?: object, inlineSnapshot?: string, error?: Error): void {
+    if (!test)
       throw new Error('Snapshot cannot be used outside of test')
 
     if (typeof properties === 'object') {
@@ -58,7 +58,7 @@ export class SnapshotClient {
     }
 
     const testName = [
-      ...getNames(this.test).slice(1),
+      ...getNames(test).slice(1),
       ...(message ? [message] : []),
     ].join(' > ')
 
