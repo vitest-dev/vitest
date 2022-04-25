@@ -15,7 +15,7 @@ it('should work', (ctx) => {
 })
 ```
 
-## Built-in Text Context
+## Built-in Test Context
 
 #### `context.meta`
 
