@@ -113,8 +113,16 @@ export default defineConfig({
               link: '/guide/features',
             },
             {
+              text: 'CLI',
+              link: '/guide/cli',
+            },
+            {
               text: 'Mocking',
               link: '/guide/mocking',
+            },
+            {
+              text: 'Test Filtering',
+              link: '/guide/filtering',
             },
             {
               text: 'Debugging',
