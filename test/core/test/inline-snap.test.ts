@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { replaceInlineSnap } from '../../../packages/vitest/src/integrations/snapshot/port/inlineSnapshot'
 
 describe('inline-snap utils', () => {
-  it('replaceInlineSnap', async() => {
+  it('replaceInlineSnap', async () => {
     const code = `
 expect('foo').toMatchInlineSnapshot('"foo"')
 expect('foo').toMatchInlineSnapshot(\`{
@@ -24,7 +24,7 @@ expect('foo').toMatchInlineSnapshot(\`{
     `)
   })
 
-  it('replaceInlineSnap with indenetation', async() => {
+  it('replaceInlineSnap with indenetation', async () => {
     const indent = '  '
     const code = `
 ${indent}expect('foo').toMatchInlineSnapshot('"foo"')

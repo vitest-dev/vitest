@@ -151,7 +151,7 @@ export class Vitest {
   private async getTestDependencies(filepath: string) {
     const deps = new Set<string>()
 
-    const addImports = async(filepath: string) => {
+    const addImports = async (filepath: string) => {
       const transformed = await this.vitenode.transformRequest(filepath)
       if (!transformed)
         return
@@ -194,7 +194,7 @@ export class Vitest {
       return []
 
     const testDeps = await Promise.all(
-      tests.map(async(filepath) => {
+      tests.map(async (filepath) => {
         const deps = await this.getTestDependencies(filepath)
         return [filepath, deps] as const
       }),
@@ -214,7 +214,7 @@ export class Vitest {
   async runFiles(files: string[]) {
     await this.runningPromise
 
-    this.runningPromise = (async() => {
+    this.runningPromise = (async () => {
       if (!this.pool)
         this.pool = createPool(this)
 
@@ -298,7 +298,7 @@ export class Vitest {
     if (this.restartsCount !== currentCount)
       return
 
-    this._rerunTimer = setTimeout(async() => {
+    this._rerunTimer = setTimeout(async () => {
       if (this.changedTests.size === 0) {
         this.invalidates.clear()
         return
@@ -353,7 +353,7 @@ export class Vitest {
         this.report('onTestRemoved', id)
       }
     }
-    const onAdd = async(id: string) => {
+    const onAdd = async (id: string) => {
       id = slash(id)
       if (await this.isTargetFile(id)) {
         this.changedTests.add(id)
@@ -456,7 +456,7 @@ export class Vitest {
       if (filters.length)
         files = files.filter(i => filters.some(f => i.includes(f)))
 
-      await Promise.all(files.map(async(file) => {
+      await Promise.all(files.map(async (file) => {
         try {
           const code = await fs.readFile(file, 'utf-8')
           if (this.isInSourceTestFile(code))

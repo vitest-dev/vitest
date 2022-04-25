@@ -1,5 +1,5 @@
 {
-  "name": "@vitest/test-react",
+  "name": "@vitest/example-enzyme",
   "scripts": {
     "test": "vitest",
     "test:ui": "vitest --ui"

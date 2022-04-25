@@ -29,7 +29,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     utils.addMethod(
       chai.Assertion.prototype,
       key,
-      function(this: Record<string, unknown>, properties?: object, message?: string) {
+      function (this: Record<string, unknown>, properties?: object, message?: string) {
         const expected = utils.flag(this, 'object')
         const test = utils.flag(this, 'vitest-test')
         if (typeof properties === 'string' && typeof message === 'undefined') {
@@ -60,7 +60,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
   utils.addMethod(
     chai.Assertion.prototype,
     'toThrowErrorMatchingSnapshot',
-    function(this: Record<string, unknown>, message?: string) {
+    function (this: Record<string, unknown>, message?: string) {
       const expected = utils.flag(this, 'object')
       const test = utils.flag(this, 'vitest-test')
       getSnapshotClient().assert(getErrorString(expected), test, message)

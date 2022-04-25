@@ -12,7 +12,7 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
-test('tap reporter', async() => {
+test('tap reporter', async () => {
   // Arrange
   const reporter = new TapReporter()
   const context = getContext()
@@ -25,7 +25,7 @@ test('tap reporter', async() => {
   expect(context.output).toMatchSnapshot()
 })
 
-test('tap-flat reporter', async() => {
+test('tap-flat reporter', async () => {
   // Arrange
   const reporter = new TapFlatReporter()
   const context = getContext()
@@ -38,7 +38,7 @@ test('tap-flat reporter', async() => {
   expect(context.output).toMatchSnapshot()
 })
 
-test('JUnit reporter', async() => {
+test('JUnit reporter', async () => {
   // Arrange
   const reporter = new JUnitReporter()
   const context = getContext()
@@ -57,7 +57,7 @@ test('JUnit reporter', async() => {
   expect(context.output).toMatchSnapshot()
 })
 
-test('JUnit reporter (no outputFile entry)', async() => {
+test('JUnit reporter (no outputFile entry)', async () => {
   // Arrange
   const reporter = new JUnitReporter()
   const context = getContext()
@@ -77,7 +77,7 @@ test('JUnit reporter (no outputFile entry)', async() => {
   expect(context.output).toMatchSnapshot()
 })
 
-test('JUnit reporter with outputFile', async() => {
+test('JUnit reporter with outputFile', async () => {
   // Arrange
   const reporter = new JUnitReporter()
   const outputFile = resolve('report.xml')
@@ -103,7 +103,7 @@ test('JUnit reporter with outputFile', async() => {
   rmSync(outputFile)
 })
 
-test('JUnit reporter with outputFile object', async() => {
+test('JUnit reporter with outputFile object', async () => {
   // Arrange
   const reporter = new JUnitReporter()
   const outputFile = resolve('report_object.xml')
@@ -131,7 +131,7 @@ test('JUnit reporter with outputFile object', async() => {
   rmSync(outputFile)
 })
 
-test('JUnit reporter with outputFile in non-existing directory', async() => {
+test('JUnit reporter with outputFile in non-existing directory', async () => {
   // Arrange
   const reporter = new JUnitReporter()
   const rootDirectory = resolve('junitReportDirectory')
@@ -158,7 +158,7 @@ test('JUnit reporter with outputFile in non-existing directory', async() => {
   rmdirSync(rootDirectory, { recursive: true })
 })
 
-test('JUnit reporter with outputFile object in non-existing directory', async() => {
+test('JUnit reporter with outputFile object in non-existing directory', async () => {
   // Arrange
   const reporter = new JUnitReporter()
   const rootDirectory = resolve('junitReportDirectory_object')
@@ -187,7 +187,7 @@ test('JUnit reporter with outputFile object in non-existing directory', async() 
   rmdirSync(rootDirectory, { recursive: true })
 })
 
-test('json reporter', async() => {
+test('json reporter', async () => {
   // Arrange
   const reporter = new JsonReporter()
   const context = getContext()
@@ -202,7 +202,7 @@ test('json reporter', async() => {
   expect(JSON.parse(context.output)).toMatchSnapshot()
 })
 
-test('json reporter (no outputFile entry)', async() => {
+test('json reporter (no outputFile entry)', async () => {
   // Arrange
   const reporter = new JsonReporter()
   const context = getContext()
@@ -218,7 +218,7 @@ test('json reporter (no outputFile entry)', async() => {
   expect(JSON.parse(context.output)).toMatchSnapshot()
 })
 
-test('json reporter with outputFile', async() => {
+test('json reporter with outputFile', async () => {
   // Arrange
   const reporter = new JsonReporter()
   const outputFile = resolve('report.json')
@@ -240,7 +240,7 @@ test('json reporter with outputFile', async() => {
   rmSync(outputFile)
 })
 
-test('json reporter with outputFile object', async() => {
+test('json reporter with outputFile object', async () => {
   // Arrange
   const reporter = new JsonReporter()
   const outputFile = resolve('report_object.json')
@@ -264,7 +264,7 @@ test('json reporter with outputFile object', async() => {
   rmSync(outputFile)
 })
 
-test('json reporter with outputFile in non-existing directory', async() => {
+test('json reporter with outputFile in non-existing directory', async () => {
   // Arrange
   const reporter = new JsonReporter()
   const rootDirectory = resolve('jsonReportDirectory')
@@ -287,7 +287,7 @@ test('json reporter with outputFile in non-existing directory', async() => {
   rmdirSync(rootDirectory, { recursive: true })
 })
 
-test('json reporter with outputFile object in non-existing directory', async() => {
+test('json reporter with outputFile object in non-existing directory', async () => {
   // Arrange
   const reporter = new JsonReporter()
   const rootDirectory = resolve('jsonReportDirectory_object')

@@ -1,5 +1,5 @@
 {
-  "name": "@vitest/react-testing-lib-msw",
+  "name": "@vitest/example-react-testing-lib-msw",
   "private": true,
   "scripts": {
     "build": "tsc && vite build",

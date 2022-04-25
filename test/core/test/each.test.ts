@@ -87,7 +87,7 @@ test.each([
 test.each([
   [1, 2, 3],
   [4, 5, 9],
-])('return a promise like result %#', async(a, b, expected) => {
+])('return a promise like result %#', async (a, b, expected) => {
   const promiseResolver = (first: number, second: number) => {
     return new Promise((resolve) => {
       setTimeout(() => resolve(first + second), 1)

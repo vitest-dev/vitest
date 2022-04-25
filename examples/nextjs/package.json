@@ -1,5 +1,5 @@
 {
-  "name": "@vitest/nextjs",
+  "name": "@vitest/example-nextjs",
   "version": "0.1.0",
   "private": true,
   "scripts": {

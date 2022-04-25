@@ -7,7 +7,7 @@ import { mount } from '@vue/test-utils'
 import Hello from '../src/Hello.vue'
 import Defined from '../src/Defined.vue'
 
-test('vue 3 coverage', async() => {
+test('vue 3 coverage', async () => {
   expect(Hello).toBeTruthy()
 
   const wrapper = mount(Hello, {

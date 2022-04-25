@@ -95,7 +95,7 @@
     "@types/jsdom": "^16.2.14",
     "@types/micromatch": "^4.0.2",
     "@types/natural-compare": "^1.4.1",
-    "@types/node": "^17.0.25",
+    "@types/node": "^17.0.26",
     "@types/prompts": "^2.4.0",
     "@types/sinonjs__fake-timers": "^8.1.2",
     "@vitest/ui": "workspace:*",

@@ -1,5 +1,5 @@
 {
-  "name": "@vitest/test-puppeteer",
+  "name": "@vitest/example-puppeteer",
   "private": true,
   "scripts": {
     "build": "vite build",

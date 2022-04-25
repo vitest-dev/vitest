@@ -213,7 +213,7 @@ function enhanceSpy<TArgs extends any[], TReturns>(
   }
 
   stub.mockReturnThis = () =>
-    stub.mockImplementation(function(this: TReturns) {
+    stub.mockImplementation(function (this: TReturns) {
       return this
     })
 
@@ -236,7 +236,7 @@ function enhanceSpy<TArgs extends any[], TReturns>(
     get: () => mockContext,
   })
 
-  stub.willCall(function(this: unknown, ...args) {
+  stub.willCall(function (this: unknown, ...args) {
     instances.push(this)
     invocations.push(++callOrder)
     const impl = onceImplementations.shift() || implementation || stub.getOriginal() || (() => {})

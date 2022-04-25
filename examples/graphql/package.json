@@ -1,5 +1,5 @@
 {
-  "name": "@vitest/graphql",
+  "name": "@vitest/example-graphql",
   "private": true,
   "files": [
     "dist",

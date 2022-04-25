@@ -1,5 +1,5 @@
 {
-  "name": "sb-vue",
+  "name": "@vitest/example-vue-jsx",
   "version": "0.1.0",
   "private": true,
   "scripts": {

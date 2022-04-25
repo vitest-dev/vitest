@@ -2,7 +2,7 @@ import { execa } from 'execa'
 import { resolve } from 'pathe'
 import { expect, test } from 'vitest'
 
-test('custom reporters work', async() => {
+test('custom reporters work', async () => {
   // in Windows child_process is very unstable, we skip testing it
   if (process.platform === 'win32' && process.env.CI)
     return
