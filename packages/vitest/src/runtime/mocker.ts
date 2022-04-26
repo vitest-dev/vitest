@@ -3,33 +3,15 @@ import { isNodeBuiltin } from 'mlly'
 import { basename, dirname, resolve } from 'pathe'
 import { normalizeRequestId, toFilePath } from 'vite-node/utils'
 import type { ModuleCacheMap } from 'vite-node/client'
-import { getWorkerState, isWindows, mergeSlashes, slash } from '../utils'
+import { getAllProperties, getWorkerState, isWindows, mergeSlashes, slash } from '../utils'
 import { distDir } from '../constants'
 import type { PendingSuiteMock } from '../types/mocker'
 import type { ExecuteOptions } from './execute'
 
 type Callback = (...args: any[]) => unknown
 
-function getType(value: unknown): string {
+export function getType(value: unknown): string {
   return Object.prototype.toString.apply(value).slice(8, -1)
-}
-
-function getAllProperties(obj: any) {
-  const allProps = new Set<string | symbol>()
-  let curr = obj
-  do {
-    // we don't need propterties from these
-    if (curr === Object.prototype || curr === Function.prototype || curr === RegExp.prototype)
-      break
-    const props = Object.getOwnPropertyNames(curr)
-    const symbs = Object.getOwnPropertySymbols(curr)
-
-    props.forEach(prop => allProps.add(prop))
-    symbs.forEach(symb => allProps.add(symb))
-
-    // eslint-disable-next-line no-cond-assign
-  } while (curr = Object.getPrototypeOf(curr))
-  return Array.from(allProps)
 }
 
 export class VitestMocker {
@@ -174,9 +156,9 @@ export class VitestMocker {
 
     const newObj: Record<string | symbol, any> = {}
 
-    const proproperties = getAllProperties(value)
+    const proprieties = getAllProperties(value)
 
-    for (const k of proproperties) {
+    for (const k of proprieties) {
       newObj[k] = this.mockValue(value[k])
       const type = getType(value[k])
 
