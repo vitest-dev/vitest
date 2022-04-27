@@ -37,7 +37,7 @@ export class DefaultReporter extends BaseReporter {
 
   async onWatcherStart() {
     await this.stopListRender()
-    super.onWatcherStart()
+    await super.onWatcherStart()
   }
 
   async stopListRender() {
