@@ -114,7 +114,7 @@ export abstract class BaseReporter implements Reporter {
     files.forEach((filepath) => {
       let reruns = this._filesInWatchMode.get(filepath) ?? 0
       this._filesInWatchMode.set(filepath, ++reruns)
-    }, [])
+    })
 
     const hint = this._hintRerunLog
     this._hintRerunLog = (hint + 1) % this._hintRerunChars.length
