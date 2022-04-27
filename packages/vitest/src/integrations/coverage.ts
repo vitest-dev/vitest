@@ -82,7 +82,7 @@ export async function reportCoverage(ctx: Vitest) {
 
   // This is a magic number. It corresponds to the amount of code
   // that we add in packages/vite-node/src/client.ts:114 (vm.runInThisContext)
-  // TODO: Include our transformations in soucemaps
+  // TODO: Include our transformations in sourcemaps
   const offset = 203
 
   report._getSourceMap = (coverage: Profiler.ScriptCoverage) => {
