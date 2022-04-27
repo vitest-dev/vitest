@@ -489,13 +489,13 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   def(['toHaveReturnedTimes', 'toReturnTimes'], function (times: number) {
     const spy = getSpy(this)
     const spyName = spy.getMockName()
-    const successfullReturns = spy.mock.results.reduce((success, { type }) => type === 'throw' ? success : ++success, 0)
+    const successfulReturns = spy.mock.results.reduce((success, { type }) => type === 'throw' ? success : ++success, 0)
     this.assert(
-      successfullReturns === times,
+      successfulReturns === times,
       `expected "${spyName}" to be successfully called ${times} times`,
       `expected "${spyName}" to not be successfully called ${times} times`,
       `expected number of returns: ${times}`,
-      `received number of returns: ${successfullReturns}`,
+      `received number of returns: ${successfulReturns}`,
     )
   })
   def(['toHaveReturnedWith', 'toReturnWith'], function (value: any) {
