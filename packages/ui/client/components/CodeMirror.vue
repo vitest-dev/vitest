@@ -34,17 +34,17 @@ const cm = shallowRef<CodeMirror.EditorFromTextArea>()
 
 defineExpose({ cm })
 
-onMounted(async() => {
+onMounted(async () => {
   cm.value = useCodeMirror(el, input, {
     ...props,
     ...attrs,
     mode: modeMap[props.mode || ''] || props.mode,
     readOnly: props.readOnly ? 'nocursor' : undefined,
     extraKeys: {
-      'Cmd-S': function(cm) {
+      'Cmd-S': function (cm) {
         emit('save', cm.getValue())
       },
-      'Ctrl-S': function(cm) {
+      'Ctrl-S': function (cm) {
         emit('save', cm.getValue())
       },
     },

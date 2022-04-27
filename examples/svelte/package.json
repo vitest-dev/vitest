@@ -1,5 +1,5 @@
 {
-  "name": "@vitest/test-svelte",
+  "name": "@vitest/example-svelte",
   "type": "module",
   "private": true,
   "scripts": {

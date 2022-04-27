@@ -17,7 +17,7 @@ it('renders in the loading state', () => {
   expect(screen.getByLabelText(/loading/i)).toBeInTheDocument()
 })
 
-it('renders with data', async() => {
+it('renders with data', async () => {
   render(<Data />)
   expect(
     screen.getByRole('heading', {
@@ -26,7 +26,7 @@ it('renders with data', async() => {
     }),
   ).toBeInTheDocument()
 
-  posts.forEach(async(post) => {
+  posts.forEach(async (post) => {
     expect(
       await screen.findByRole('heading', { name: post.title, level: 2 }),
     ).toBeDefined()
@@ -34,7 +34,7 @@ it('renders with data', async() => {
   })
 })
 
-it('handles errors', async() => {
+it('handles errors', async () => {
   render(<Error />)
   expect(
     screen.getByRole('heading', {

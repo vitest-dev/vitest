@@ -1,5 +1,5 @@
 import type { Plugin } from 'vite'
-import { ViteNodeRunner } from 'vite-node/client'
+import type { ViteNodeRunner } from 'vite-node/client'
 import c from 'picocolors'
 import type { Vitest } from '../core'
 import { toArray } from '../../utils'
@@ -12,18 +12,8 @@ interface GlobalSetupFile {
 }
 
 async function loadGlobalSetupFiles(ctx: Vitest): Promise<GlobalSetupFile[]> {
-  const node = ctx.vitenode
   const server = ctx.server
-  const runner = new ViteNodeRunner({
-    root: server.config.root,
-    base: server.config.base,
-    fetchModule(id) {
-      return node.fetchModule(id)
-    },
-    resolveId(id, importer) {
-      return node.resolveId(id, importer)
-    },
-  })
+  const runner = ctx.runner
   const globalSetupFiles = toArray(server.config.test?.globalSetup)
   return Promise.all(globalSetupFiles.map(file => loadGlobalSetupFile(file, runner)))
 }

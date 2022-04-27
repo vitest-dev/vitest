@@ -1,5 +1,5 @@
 {
-  "name": "@vitest/test-lit",
+  "name": "@vitest/example-lit",
   "private": true,
   "files": [
     "dist",
@@ -17,7 +17,7 @@
   "devDependencies": {
     "@vitest/ui": "latest",
     "happy-dom": "latest",
-    "vite": "latest",
+    "vite": "^2.9.5",
     "vitest": "latest"
   },
   "stackblitz": {

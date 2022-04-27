@@ -20,7 +20,7 @@ it('one', () => {
   expect(v).toBe(1)
 })
 
-it('two', async() => {
+it('two', async () => {
   expect(v).toBe(1)
   await bump()
   expect(v).toBe(2)
@@ -32,7 +32,7 @@ describe('suite', () => {
     expect(v).toBe(3)
   })
 
-  it('four', async() => {
+  it('four', async () => {
     expect(v).toBe(3)
     await bump()
     expect(v).toBe(4)

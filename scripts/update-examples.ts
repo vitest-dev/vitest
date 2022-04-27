@@ -13,7 +13,7 @@ async function run() {
 
   const examples = await fg('*/package.json', { cwd: examplesRoot, absolute: true })
 
-  const data = await Promise.all(examples.sort().map(async(pkgPath) => {
+  const data = await Promise.all(examples.sort().map(async (pkgPath) => {
     const path = dirname(pkgPath)
     const name = basename(path)
     if ((await fs.lstat(path)).isFile())

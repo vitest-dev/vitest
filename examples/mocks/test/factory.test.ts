@@ -12,7 +12,7 @@ vi
 //   mocked: false,
 // }))
 
-vi.mock('../src/moduleA', async() => {
+vi.mock('../src/moduleA', async () => {
   const actual = await vi.importActual<any>('../src/moduleA')
   return {
     B: 'B',

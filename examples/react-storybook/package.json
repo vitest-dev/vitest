@@ -1,5 +1,5 @@
 {
-  "name": "@vitest/react-storybook-testing",
+  "name": "@vitest/example-react-storybook",
   "private": true,
   "scripts": {
     "dev": "vite",
@@ -13,29 +13,29 @@
     "cross-fetch": "^3.1.5",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "react-query": "^3.34.19"
+    "react-query": "^3.38.0"
   },
   "devDependencies": {
     "@babel/core": "^7.17.9",
     "@storybook/addon-actions": "^6.4.22",
     "@storybook/addon-essentials": "^6.4.22",
     "@storybook/addon-links": "^6.4.22",
-    "@storybook/builder-vite": "^0.1.28",
+    "@storybook/builder-vite": "^0.1.30",
     "@storybook/react": "^6.4.22",
-    "@storybook/testing-library": "^0.0.9",
+    "@storybook/testing-library": "^0.0.11",
     "@storybook/testing-react": "^1.2.4",
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^12.1.5",
     "@types/react": "^17.0.44",
     "@types/react-dom": "^17.0.15",
-    "@vitejs/plugin-react": "^1.3.0",
+    "@vitejs/plugin-react": "^1.3.1",
     "@vitest/ui": "latest",
-    "babel-loader": "^8.2.4",
+    "babel-loader": "^8.2.5",
     "jsdom": "^19.0.0",
     "msw": "^0.39.2",
     "msw-storybook-addon": "^1.6.3",
     "typescript": "^4.6.3",
-    "vite": "latest",
+    "vite": "^2.9.5",
     "vitest": "latest"
   },
   "msw": {

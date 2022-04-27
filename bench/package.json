@@ -14,7 +14,7 @@
     "benchmark": "^2.1.4",
     "esmo": "^0.14.1",
     "execa": "^6.1.0",
-    "fs-extra": "^10.0.1",
+    "fs-extra": "^10.1.0",
     "markdown-table": "^3.0.2",
     "microtime": "^3.0.0",
     "vitest": "link:../packages/vitest"

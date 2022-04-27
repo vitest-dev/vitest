@@ -7,12 +7,12 @@ const one = runOnce(() => {
   return 1
 })
 
-const two = await runOnce(async() => {
+const two = await runOnce(async () => {
   dummy += 1
   return 2
 })
 
-it('runOnce', async() => {
+it('runOnce', async () => {
   expect(one).toBe(1)
   expect(two).toBe(2)
 
