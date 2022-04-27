@@ -24,6 +24,7 @@ export abstract class BaseReporter implements Reporter {
   ctx: Vitest = undefined!
   private _hintRerunLog = 0
   private _hintRerunChars: string[] = ['◑', '◒', '◐', '◓']
+  private _filesInWatchMode = new Map<string, number>()
 
   constructor() {
     this.registerUnhandledRejection()
@@ -110,9 +111,21 @@ export abstract class BaseReporter implements Reporter {
   async onWatcherRerun(files: string[], trigger?: string) {
     this.watchFilters = files
 
+    files.forEach((filepath) => {
+      let reruns = this._filesInWatchMode.get(filepath) ?? 0
+      this._filesInWatchMode.set(filepath, ++reruns)
+    }, [])
+
     const hint = this._hintRerunLog
     this._hintRerunLog = (hint + 1) % this._hintRerunChars.length
-    this.ctx.clearScreen(`\n${c.inverse(c.bold(c.blue(` RERUN ${this._hintRerunChars[hint]} `)))}${trigger ? c.dim(` ${this.relative(trigger)}\n`) : ''}`)
+    if (files.length > 1) {
+      // we need to figure out how to handle rerun all from stdin
+      this.ctx.clearScreen(`\n${c.inverse(c.bold(c.blue(` ${this._hintRerunChars[hint]} RERUN `)))}${trigger ? c.dim(` ${this.relative(trigger)}\n`) : ''}`)
+    }
+    else if (files.length === 1) {
+      const rerun = this._filesInWatchMode.get(files[0]) ?? 1
+      this.ctx.clearScreen(`\n${c.inverse(c.bold(c.blue(` ${this._hintRerunChars[hint]} RERUN (${rerun}) `)))}${trigger ? c.dim(` ${this.relative(trigger)}\n`) : ''}`)
+    }
 
     this.start = performance.now()
   }
