@@ -22,6 +22,8 @@ export abstract class BaseReporter implements Reporter {
   watchFilters?: string[]
   isTTY = process.stdout.isTTY && !process.env.CI
   ctx: Vitest = undefined!
+  private _hintRerunLog = 0
+  private _hintRerunChars: string[] = ['◑', '◒', '◐', '◓']
 
   constructor() {
     this.registerUnhandledRejection()
@@ -108,7 +110,10 @@ export abstract class BaseReporter implements Reporter {
   async onWatcherRerun(files: string[], trigger?: string) {
     this.watchFilters = files
 
-    this.ctx.clearScreen(`\n${c.inverse(c.bold(c.blue(' RERUN ')))}${trigger ? c.dim(` ${this.relative(trigger)}\n`) : ''}`)
+    const hint = this._hintRerunLog
+    this._hintRerunLog = (hint + 1) % this._hintRerunChars.length
+    this.ctx.clearScreen(`\n${c.inverse(c.bold(c.blue(` RERUN ${this._hintRerunChars[hint]} `)))}${trigger ? c.dim(` ${this.relative(trigger)}\n`) : ''}`)
+
     this.start = performance.now()
   }
 
