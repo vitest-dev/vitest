@@ -18,7 +18,7 @@ export function fileFromParsedStack(stack: ParsedStack) {
   return stack.file
 }
 
-export async function printError(error: unknown, type: string | undefined, fullStack: boolean, ctx: Vitest) {
+export async function printError(error: unknown, type: string | undefined, fullStack: boolean, showCodeFrame, ctx: Vitest) {
   let e = error as ErrorWithDiff
 
   if (typeof error === 'string') {
@@ -43,11 +43,16 @@ export async function printError(error: unknown, type: string | undefined, fullS
     printErrorType(type, ctx)
   printErrorMessage(e, ctx.console)
   printStack(ctx, stacks, nearest, errorProperties, (s, pos) => {
-    if (s === nearest && nearest) {
+    if (showCodeFrame && s === nearest && nearest) {
       const sourceCode = readFileSync(fileFromParsedStack(nearest), 'utf-8')
       ctx.log(c.yellow(generateCodeFrame(sourceCode, 4, pos)))
     }
   })
+
+  if (e.cause) {
+    e.cause.name = `Caused by: ${e.cause.name}`
+    await printError(e.cause, undefined, fullStack, false, ctx)
+  }
 
   handleImportOutsideModuleError(e.stack || e.stackStr || '', ctx)
 
@@ -69,6 +74,7 @@ function getErrorProperties(e: ErrorWithDiff) {
     'name',
     'nameStr',
     'stack',
+    'cause',
     'stacks',
     'stackStr',
     'type',
