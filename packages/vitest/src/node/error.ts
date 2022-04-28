@@ -18,7 +18,14 @@ export function fileFromParsedStack(stack: ParsedStack) {
   return stack.file
 }
 
-export async function printError(error: unknown, type: string | undefined, fullStack: boolean, showCodeFrame, ctx: Vitest) {
+interface PrintErrorOptions {
+  type?: string
+  fullStack?: boolean
+  showCodeFrame?: boolean
+}
+
+export async function printError(error: unknown, ctx: Vitest, options: PrintErrorOptions = {}) {
+  const { showCodeFrame = true, fullStack = false, type } = options
   let e = error as ErrorWithDiff
 
   if (typeof error === 'string') {
@@ -51,7 +58,7 @@ export async function printError(error: unknown, type: string | undefined, fullS
 
   if (e.cause) {
     e.cause.name = `Caused by: ${e.cause.name}`
-    await printError(e.cause, undefined, fullStack, false, ctx)
+    await printError(e.cause, ctx, { fullStack, showCodeFrame: false })
   }
 
   handleImportOutsideModuleError(e.stack || e.stackStr || '', ctx)

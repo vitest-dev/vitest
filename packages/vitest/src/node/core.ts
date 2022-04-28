@@ -499,7 +499,11 @@ export class Vitest {
   }
 
   printError(err: unknown, fullStack = false, type?: string) {
-    return printError(err, type, fullStack, true, this)
+    return printError(err, this, {
+      fullStack,
+      type,
+      showCodeFrame: true,
+    })
   }
 
   onServerRestarted(fn: () => void) {
