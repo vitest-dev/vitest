@@ -226,12 +226,17 @@ export class Vitest {
       const invalidates = Array.from(this.invalidates)
       this.invalidates.clear()
       this.snapshot.clear()
-      await this.pool.runTests(files, invalidates)
+      try {
+        await this.pool.runTests(files, invalidates)
+      }
+      catch (err) {
+        this.state.catchError(err, 'Unhandled Error')
+      }
 
       if (hasFailed(this.state.getFiles()))
         process.exitCode = 1
 
-      await this.report('onFinished', this.state.getFiles())
+      await this.report('onFinished', this.state.getFiles(), this.state.getUnhandledErrors())
     })()
       .finally(() => {
         this.runningPromise = undefined
@@ -493,8 +498,8 @@ export class Vitest {
     return code.includes('import.meta.vitest')
   }
 
-  printError(err: unknown, fullStack = false) {
-    return printError(err, fullStack, this)
+  printError(err: unknown, fullStack = false, type?: string) {
+    return printError(err, type, fullStack, this)
   }
 
   onServerRestarted(fn: () => void) {

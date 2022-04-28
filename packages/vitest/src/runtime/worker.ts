@@ -31,6 +31,10 @@ async function startViteNode(ctx: WorkerContext) {
     return processExit(code)
   }
 
+  process.on('unhandledRejection', (err) => {
+    rpc().onUnhandledRejection(err)
+  })
+
   const { config } = ctx
 
   const { run, collect } = (await executeInViteNode({

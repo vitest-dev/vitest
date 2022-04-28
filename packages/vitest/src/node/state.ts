@@ -1,9 +1,23 @@
-import type { File, Task, TaskResultPack, UserConsoleLog } from '../types'
+import type { ErrorWithDiff, File, Task, TaskResultPack, UserConsoleLog } from '../types'
 
 export class StateManager {
   filesMap = new Map<string, File>()
   idMap = new Map<string, Task>()
   taskFileMap = new WeakMap<Task, File>()
+  errorsSet = new Set<unknown>()
+
+  catchError(err: unknown, type: string) {
+    (err as ErrorWithDiff).type = type
+    this.errorsSet.add(err)
+  }
+
+  clearErrors() {
+    this.errorsSet.clear()
+  }
+
+  getUnhandledErrors() {
+    return Array.from(this.errorsSet.values())
+  }
 
   getFiles(keys?: string[]): File[] {
     if (keys)

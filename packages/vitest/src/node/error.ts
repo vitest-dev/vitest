@@ -10,6 +10,7 @@ import { F_POINTER } from '../utils/figures'
 import { stringify } from '../integrations/chai/jest-matcher-utils'
 import type { Vitest } from './core'
 import { unifiedDiff } from './diff'
+import { divider } from './reporters/renderers/utils'
 
 export function fileFromParsedStack(stack: ParsedStack) {
   if (stack?.sourcePos?.source?.startsWith('..'))
@@ -17,7 +18,7 @@ export function fileFromParsedStack(stack: ParsedStack) {
   return stack.file
 }
 
-export async function printError(error: unknown, fullStack: boolean, ctx: Vitest) {
+export async function printError(error: unknown, type: string | undefined, fullStack: boolean, ctx: Vitest) {
   let e = error as ErrorWithDiff
 
   if (typeof error === 'string') {
@@ -38,6 +39,8 @@ export async function printError(error: unknown, fullStack: boolean, ctx: Vitest
 
   const errorProperties = getErrorProperties(e)
 
+  if (type)
+    printErrorType(type, ctx)
   printErrorMessage(e, ctx.console)
   printStack(ctx, stacks, nearest, errorProperties, (s, pos) => {
     if (s === nearest && nearest) {
@@ -52,7 +55,15 @@ export async function printError(error: unknown, fullStack: boolean, ctx: Vitest
     displayDiff(stringify(e.actual), stringify(e.expected), ctx.console, ctx.config.outputTruncateLength)
 }
 
+function printErrorType(type: string, ctx: Vitest) {
+  ctx.error(`\n${c.red(divider(c.bold(c.inverse(` ${type} `))))}`)
+}
+
 function getErrorProperties(e: ErrorWithDiff) {
+  const errorObject = Object.create(null)
+  if (e.name === 'AssertionError')
+    return errorObject
+
   const skip = [
     'message',
     'name',
@@ -60,11 +71,11 @@ function getErrorProperties(e: ErrorWithDiff) {
     'stack',
     'stacks',
     'stackStr',
+    'type',
     'showDiff',
     'actual',
     'expected',
   ]
-  const errorObject = Object.create(null)
   for (const key in e) {
     if (!skip.includes(key))
       errorObject[key] = e[key as keyof ErrorWithDiff]
@@ -128,30 +139,25 @@ function printStack(
   if (!stack.length)
     return
 
-  const hasProperties = Object.keys(errorProperties).length > 0
-
-  let stackNumber = 0
-
   for (const frame of stack) {
     const pos = frame.sourcePos || frame
     const color = frame === highlight ? c.yellow : c.gray
     const file = fileFromParsedStack(frame)
     const path = relative(ctx.config.root, file)
 
-    const isLastStack = stackNumber === stack.length - 1 || frame.file in ctx.state.filesMap
-
-    ctx.log(color(` ${c.dim(F_POINTER)} ${[frame.method, c.dim(`${path}:${pos.line}:${pos.column}`)].filter(Boolean).join(' ')}`), isLastStack && hasProperties ? '{' : '')
+    ctx.log(color(` ${c.dim(F_POINTER)} ${[frame.method, c.dim(`${path}:${pos.line}:${pos.column}`)].filter(Boolean).join(' ')}`))
     onStack?.(frame, pos)
 
     // reached at test file, skip the follow stack
     if (frame.file in ctx.state.filesMap)
       break
-
-    stackNumber++
   }
+  ctx.log()
+  const hasProperties = Object.keys(errorProperties).length > 0
   if (hasProperties) {
-    const propertiesString = stringify(errorProperties, 10, { printBasicPrototype: false }).substring(2)
-    ctx.log(propertiesString)
+    ctx.log(c.red(c.dim(divider())))
+    const propertiesString = stringify(errorProperties, 10, { printBasicPrototype: false })
+    ctx.log(c.red(c.bold('Serialized Error:')), c.gray(propertiesString))
   }
 }
 
