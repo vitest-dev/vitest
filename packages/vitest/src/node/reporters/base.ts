@@ -122,7 +122,6 @@ export abstract class BaseReporter implements Reporter {
   async onWatcherRerun(files: string[], trigger?: string) {
     this.watchFilters = files
 
-    this.ctx.state.clearErrors()
     this.ctx.clearScreen()
     this.ctx.log(`\n${c.inverse(c.bold(c.blue(' RERUN ')))}${trigger ? c.dim(` ${this.relative(trigger)}\n`) : ''}`)
     this.start = performance.now()
