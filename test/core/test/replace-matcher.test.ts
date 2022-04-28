@@ -6,15 +6,26 @@ describe('replace asymmetric matcher', () => {
     const replaced = replaceAsymmetricMatcher(actual, expected)
     expect(replaced.replacedActual).toEqual(replaced.replacedExpected)
   }
-  it('should works', () => {
+  it('should work when various types are passed in', () => {
     expectReplaceAsymmetricMatcher(null, null)
     expectReplaceAsymmetricMatcher(undefined, undefined)
+    expectReplaceAsymmetricMatcher({}, {})
+    expectReplaceAsymmetricMatcher([1, 2], [1, 2])
+    expectReplaceAsymmetricMatcher({}, expect.any(Object))
     expectReplaceAsymmetricMatcher(() => {}, expect.any(Function))
+    expectReplaceAsymmetricMatcher(Promise, expect.any(Function))
     expectReplaceAsymmetricMatcher(false, expect.any(Boolean))
+    expectReplaceAsymmetricMatcher([1, 2], [1, expect.any(Number)])
     expectReplaceAsymmetricMatcher(false, expect.anything())
+    expectReplaceAsymmetricMatcher({}, expect.anything())
     expectReplaceAsymmetricMatcher(Symbol, expect.anything())
+    expectReplaceAsymmetricMatcher(Promise, expect.anything())
+    expectReplaceAsymmetricMatcher(new Map([['a', 1]]), expect.anything())
+    expectReplaceAsymmetricMatcher(new Set([1, 2]), expect.anything())
+    expectReplaceAsymmetricMatcher(new ArrayBuffer(8), expect.anything())
+    expectReplaceAsymmetricMatcher([1, 2], [1, expect.anything()])
     expectReplaceAsymmetricMatcher({
-      str: 'string',
+      str: 'a',
       arr: [1, 2],
     }, {
       str: expect.any(String),
@@ -28,18 +39,11 @@ describe('replace asymmetric matcher', () => {
       arr: expect.anything(),
     })
     expectReplaceAsymmetricMatcher({
-      str: 'world',
+      str: 'a',
       arr: [1, 2],
     }, {
       str: expect.any(String),
       arr: [1, expect.anything()],
-    })
-    expectReplaceAsymmetricMatcher({
-      str: 'world',
-      bool: false,
-    }, {
-      str: expect.any(String),
-      bool: expect.anything(),
     })
   })
 })

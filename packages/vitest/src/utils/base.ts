@@ -32,6 +32,10 @@ export function mergeSlashes(str: string) {
 
 export const noop = () => { }
 
+export function getType(value: unknown): string {
+  return Object.prototype.toString.apply(value).slice(8, -1)
+}
+
 export function clone<T>(val: T): T {
   let k: any, out: any, tmp: any
 

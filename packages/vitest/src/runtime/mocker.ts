@@ -3,16 +3,12 @@ import { isNodeBuiltin } from 'mlly'
 import { basename, dirname, resolve } from 'pathe'
 import { normalizeRequestId, toFilePath } from 'vite-node/utils'
 import type { ModuleCacheMap } from 'vite-node/client'
-import { getAllProperties, getWorkerState, isWindows, mergeSlashes, slash } from '../utils'
+import { getAllProperties, getType, getWorkerState, isWindows, mergeSlashes, slash } from '../utils'
 import { distDir } from '../constants'
 import type { PendingSuiteMock } from '../types/mocker'
 import type { ExecuteOptions } from './execute'
 
 type Callback = (...args: any[]) => unknown
-
-export function getType(value: unknown): string {
-  return Object.prototype.toString.apply(value).slice(8, -1)
-}
 
 export class VitestMocker {
   private static pendingIds: PendingSuiteMock[] = []
@@ -156,9 +152,9 @@ export class VitestMocker {
 
     const newObj: Record<string | symbol, any> = {}
 
-    const proprieties = getAllProperties(value)
+    const properties = getAllProperties(value)
 
-    for (const k of proprieties) {
+    for (const k of properties) {
       newObj[k] = this.mockValue(value[k])
       const type = getType(value[k])
 

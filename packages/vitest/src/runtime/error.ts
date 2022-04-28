@@ -1,8 +1,7 @@
 import { format } from 'util'
 import { util } from 'chai'
 import { stringify } from '../integrations/chai/jest-matcher-utils'
-import { clone } from '../utils'
-import { getType } from './mocker'
+import { clone, getType } from '../utils'
 
 const OBJECT_PROTO = Object.getPrototypeOf({})
 
