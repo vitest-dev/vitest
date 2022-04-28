@@ -1,6 +1,6 @@
 /* eslint-disable prefer-template */
 /* eslint-disable no-template-curly-in-string */
-import { existsSync, promises as fs } from 'fs'
+import { existsSync, readFileSync } from 'fs'
 import { join, relative } from 'pathe'
 import c from 'picocolors'
 import cliTruncate from 'cli-truncate'
@@ -10,6 +10,7 @@ import { F_POINTER } from '../utils/figures'
 import { stringify } from '../integrations/chai/jest-matcher-utils'
 import type { Vitest } from './core'
 import { unifiedDiff } from './diff'
+import { divider } from './reporters/renderers/utils'
 
 export function fileFromParsedStack(stack: ParsedStack) {
   if (stack?.sourcePos?.source?.startsWith('..'))
@@ -17,7 +18,14 @@ export function fileFromParsedStack(stack: ParsedStack) {
   return stack.file
 }
 
-export async function printError(error: unknown, ctx: Vitest) {
+interface PrintErrorOptions {
+  type?: string
+  fullStack?: boolean
+  showCodeFrame?: boolean
+}
+
+export async function printError(error: unknown, ctx: Vitest, options: PrintErrorOptions = {}) {
+  const { showCodeFrame = true, fullStack = false, type } = options
   let e = error as ErrorWithDiff
 
   if (typeof error === 'string') {
@@ -27,7 +35,7 @@ export async function printError(error: unknown, ctx: Vitest) {
     } as any
   }
 
-  const stacks = parseStacktrace(e)
+  const stacks = parseStacktrace(e, fullStack)
 
   await interpretSourcePos(stacks, ctx)
 
@@ -36,18 +44,59 @@ export async function printError(error: unknown, ctx: Vitest) {
       && existsSync(stack.file),
   )
 
+  const errorProperties = getErrorProperties(e)
+
+  if (type)
+    printErrorType(type, ctx)
   printErrorMessage(e, ctx.console)
-  await printStack(ctx, stacks, nearest, async (s, pos) => {
-    if (s === nearest && nearest) {
-      const sourceCode = await fs.readFile(fileFromParsedStack(nearest), 'utf-8')
+  printStack(ctx, stacks, nearest, errorProperties, (s, pos) => {
+    if (showCodeFrame && s === nearest && nearest) {
+      const sourceCode = readFileSync(fileFromParsedStack(nearest), 'utf-8')
       ctx.log(c.yellow(generateCodeFrame(sourceCode, 4, pos)))
     }
   })
+
+  if (e.cause) {
+    e.cause.name = `Caused by: ${e.cause.name}`
+    await printError(e.cause, ctx, { fullStack, showCodeFrame: false })
+  }
 
   handleImportOutsideModuleError(e.stack || e.stackStr || '', ctx)
 
   if (e.showDiff)
     displayDiff(stringify(e.actual), stringify(e.expected), ctx.console, ctx.config.outputTruncateLength)
+}
+
+function printErrorType(type: string, ctx: Vitest) {
+  ctx.error(`\n${c.red(divider(c.bold(c.inverse(` ${type} `))))}`)
+}
+
+function getErrorProperties(e: ErrorWithDiff) {
+  const errorObject = Object.create(null)
+  if (e.name === 'AssertionError')
+    return errorObject
+
+  const skip = [
+    'message',
+    'name',
+    'nameStr',
+    'stack',
+    'cause',
+    'stacks',
+    'stackStr',
+    'type',
+    'showDiff',
+    'actual',
+    'expected',
+    'constructor',
+    'toString',
+  ]
+  for (const key of Object.getOwnPropertyNames(e)) {
+    if (!skip.includes(key))
+      errorObject[key] = e[key as keyof ErrorWithDiff]
+  }
+
+  return errorObject
 }
 
 const esmErrors = [
@@ -95,10 +144,11 @@ function printErrorMessage(error: ErrorWithDiff, console: Console) {
   console.error(c.red(`${c.bold(errorName)}: ${error.message}`))
 }
 
-async function printStack(
+function printStack(
   ctx: Vitest,
   stack: ParsedStack[],
-  highlight?: ParsedStack,
+  highlight: ParsedStack | undefined,
+  errorProperties: Record<string, unknown>,
   onStack?: ((stack: ParsedStack, pos: Position) => void),
 ) {
   if (!stack.length)
@@ -111,13 +161,19 @@ async function printStack(
     const path = relative(ctx.config.root, file)
 
     ctx.log(color(` ${c.dim(F_POINTER)} ${[frame.method, c.dim(`${path}:${pos.line}:${pos.column}`)].filter(Boolean).join(' ')}`))
-    await onStack?.(frame, pos)
+    onStack?.(frame, pos)
 
     // reached at test file, skip the follow stack
     if (frame.file in ctx.state.filesMap)
       break
   }
   ctx.log()
+  const hasProperties = Object.keys(errorProperties).length > 0
+  if (hasProperties) {
+    ctx.log(c.red(c.dim(divider())))
+    const propertiesString = stringify(errorProperties, 10, { printBasicPrototype: false })
+    ctx.log(c.red(c.bold('Serialized Error:')), c.gray(propertiesString))
+  }
 }
 
 export function generateCodeFrame(

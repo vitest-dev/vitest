@@ -26,6 +26,8 @@ const stackBarePathRE = /at ?(.*) (.+):(\d+):(\d+)$/
 
 export async function interpretSourcePos(stackFrames: ParsedStack[], ctx: Vitest): Promise<ParsedStack[]> {
   for (const frame of stackFrames) {
+    if ('sourcePos' in frame)
+      continue
     const transformResult = ctx.server.moduleGraph.getModuleById(frame.file)?.ssrTransformResult
     if (!transformResult)
       continue

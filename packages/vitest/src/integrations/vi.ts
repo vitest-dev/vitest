@@ -21,8 +21,15 @@ class VitestUtils {
     this._mocker = typeof __vitest_mocker__ !== 'undefined' ? __vitest_mocker__ : null
     this._mockedDate = null
 
-    if (!this._mocker)
-      throw new Error('Vitest was initialized with native Node instead of Vite Node')
+    if (!this._mocker) {
+      const errorMsg = 'Vitest was initialized with native Node instead of Vite Node.'
+      + '\n\nOne of the following is possible:'
+      + '\n- "vitest" is imported outside of your tests (in that case, use "vitest/node" or import.meta.vitest)'
+      + '\n- "vitest" is imported inside "globalSetup" (use "setupFiles", because "globalSetup" runs in a different context)'
+      + '\n- Your dependency inside "node_modules" imports "vitest" directly (in that case, inline that dependency, using "deps.inline" config)'
+      + '\n- Otherwise, it might be a Vitest bug. Please report it to https://github.com/vitest-dev/vitest/issues\n'
+      throw new Error(errorMsg)
+    }
   }
 
   // timers
