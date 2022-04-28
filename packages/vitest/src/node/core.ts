@@ -493,8 +493,8 @@ export class Vitest {
     return code.includes('import.meta.vitest')
   }
 
-  printError(err: unknown) {
-    return printError(err, this)
+  printError(err: unknown, fullStack = false) {
+    return printError(err, fullStack, this)
   }
 
   onServerRestarted(fn: () => void) {

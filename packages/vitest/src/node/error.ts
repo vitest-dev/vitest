@@ -1,6 +1,6 @@
 /* eslint-disable prefer-template */
 /* eslint-disable no-template-curly-in-string */
-import { existsSync, promises as fs } from 'fs'
+import { existsSync, readFileSync } from 'fs'
 import { join, relative } from 'pathe'
 import c from 'picocolors'
 import cliTruncate from 'cli-truncate'
@@ -17,7 +17,7 @@ export function fileFromParsedStack(stack: ParsedStack) {
   return stack.file
 }
 
-export async function printError(error: unknown, ctx: Vitest) {
+export async function printError(error: unknown, fullStack: boolean, ctx: Vitest) {
   let e = error as ErrorWithDiff
 
   if (typeof error === 'string') {
@@ -27,7 +27,7 @@ export async function printError(error: unknown, ctx: Vitest) {
     } as any
   }
 
-  const stacks = parseStacktrace(e)
+  const stacks = parseStacktrace(e, fullStack)
 
   await interpretSourcePos(stacks, ctx)
 
@@ -36,10 +36,12 @@ export async function printError(error: unknown, ctx: Vitest) {
       && existsSync(stack.file),
   )
 
+  const errorProperties = getErrorProperties(e)
+
   printErrorMessage(e, ctx.console)
-  await printStack(ctx, stacks, nearest, async (s, pos) => {
+  printStack(ctx, stacks, nearest, errorProperties, (s, pos) => {
     if (s === nearest && nearest) {
-      const sourceCode = await fs.readFile(fileFromParsedStack(nearest), 'utf-8')
+      const sourceCode = readFileSync(fileFromParsedStack(nearest), 'utf-8')
       ctx.log(c.yellow(generateCodeFrame(sourceCode, 4, pos)))
     }
   })
@@ -48,6 +50,27 @@ export async function printError(error: unknown, ctx: Vitest) {
 
   if (e.showDiff)
     displayDiff(stringify(e.actual), stringify(e.expected), ctx.console, ctx.config.outputTruncateLength)
+}
+
+function getErrorProperties(e: ErrorWithDiff) {
+  const skip = [
+    'message',
+    'name',
+    'nameStr',
+    'stack',
+    'stacks',
+    'stackStr',
+    'showDiff',
+    'actual',
+    'expected',
+  ]
+  const errorObject = Object.create(null)
+  for (const key in e) {
+    if (!skip.includes(key))
+      errorObject[key] = e[key as keyof ErrorWithDiff]
+  }
+
+  return errorObject
 }
 
 const esmErrors = [
@@ -95,14 +118,19 @@ function printErrorMessage(error: ErrorWithDiff, console: Console) {
   console.error(c.red(`${c.bold(errorName)}: ${error.message}`))
 }
 
-async function printStack(
+function printStack(
   ctx: Vitest,
   stack: ParsedStack[],
-  highlight?: ParsedStack,
+  highlight: ParsedStack | undefined,
+  errorProperties: Record<string, unknown>,
   onStack?: ((stack: ParsedStack, pos: Position) => void),
 ) {
   if (!stack.length)
     return
+
+  const hasProperties = Object.keys(errorProperties).length > 0
+
+  let stackNumber = 0
 
   for (const frame of stack) {
     const pos = frame.sourcePos || frame
@@ -110,14 +138,21 @@ async function printStack(
     const file = fileFromParsedStack(frame)
     const path = relative(ctx.config.root, file)
 
-    ctx.log(color(` ${c.dim(F_POINTER)} ${[frame.method, c.dim(`${path}:${pos.line}:${pos.column}`)].filter(Boolean).join(' ')}`))
-    await onStack?.(frame, pos)
+    const isLastStack = stackNumber === stack.length - 1 || frame.file in ctx.state.filesMap
+
+    ctx.log(color(` ${c.dim(F_POINTER)} ${[frame.method, c.dim(`${path}:${pos.line}:${pos.column}`)].filter(Boolean).join(' ')}`), isLastStack && hasProperties ? '{' : '')
+    onStack?.(frame, pos)
 
     // reached at test file, skip the follow stack
     if (frame.file in ctx.state.filesMap)
       break
+
+    stackNumber++
   }
-  ctx.log()
+  if (hasProperties) {
+    const propertiesString = stringify(errorProperties, 10, { printBasicPrototype: false }).substring(2)
+    ctx.log(propertiesString)
+  }
 }
 
 export function generateCodeFrame(
