@@ -32,11 +32,16 @@ function getAllProperties(obj: any) {
   return Array.from(allProps)
 }
 
+interface ViteRunnerRequest {
+  (dep: string): any
+  callstack: string[]
+}
+
 export class VitestMocker {
   private static pendingIds: PendingSuiteMock[] = []
   private static spyModule?: typeof import('../integrations/spy')
 
-  private request!: (dep: string) => unknown
+  private request!: ViteRunnerRequest
 
   private root: string
   private callbacks: Record<string, ((...args: any[]) => unknown)[]> = {}
@@ -44,7 +49,7 @@ export class VitestMocker {
   constructor(
     public options: ExecuteOptions,
     private moduleCache: ModuleCacheMap,
-    request?: (dep: string) => unknown,
+    request?: ViteRunnerRequest,
   ) {
     this.root = this.options.root
     this.request = request!
@@ -252,6 +257,8 @@ export class VitestMocker {
 
     const mock = this.getDependencyMock(dep)
 
+    const callstack = this.request.callstack
+
     if (mock === null) {
       const cacheName = `${dep}__mock`
       const cache = this.moduleCache.get(cacheName)
@@ -263,9 +270,11 @@ export class VitestMocker {
       this.emit('mocked', cacheName, { exports })
       return exports
     }
-    if (typeof mock === 'function')
+    if (typeof mock === 'function' && !callstack.includes(`mock-function:${dep}`)) {
+      callstack.push(`mock-function:${dep}`)
       return this.callFunctionMock(dep, mock)
-    if (typeof mock === 'string')
+    }
+    if (typeof mock === 'string' && !callstack.includes(mock))
       dep = mock
     return this.request(dep)
   }
@@ -278,7 +287,7 @@ export class VitestMocker {
     VitestMocker.pendingIds.push({ type: 'unmock', id, importer })
   }
 
-  public withRequest(request: (dep: string) => unknown) {
+  public withRequest(request: ViteRunnerRequest) {
     return new VitestMocker(this.options, this.moduleCache, request)
   }
 }

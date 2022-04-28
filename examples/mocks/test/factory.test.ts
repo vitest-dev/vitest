@@ -1,6 +1,7 @@
 import axios from 'axios'
 import * as example from '../src/example'
 import * as moduleA from '../src/moduleA'
+import logger from '../src/log'
 
 vi
   .mock('../src/example', () => ({
@@ -28,6 +29,16 @@ vi.mock('axios', () => {
   }
 })
 
+vi.mock('../src/log.ts', async () => {
+  const log = await import('../src/log')
+  return {
+    default: {
+      ...log.default,
+      info: vi.fn(),
+    },
+  }
+})
+
 describe('mocking with factory', () => {
   test('successfuly mocked', () => {
     expect((example as any).mocked).toBe(true)
@@ -43,5 +54,11 @@ describe('mocking with factory', () => {
     axios.get('./path')
 
     expect(axios.get).toHaveBeenCalledTimes(1)
+  })
+
+  test('logger extended', () => {
+    expect(logger.warn).toBeTypeOf('function')
+    // @ts-expect-error extending module
+    expect(logger.info).toBeTypeOf('function')
   })
 })

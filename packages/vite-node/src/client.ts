@@ -118,6 +118,8 @@ export class ViteNodeRunner {
       }
     }
 
+    Object.defineProperty(request, 'callstack', { get: () => callstack })
+
     const resolveId = async (dep: string, callstackPosition = -1) => {
       // probably means it was passed as variable
       // and wasn't transformed by Vite
