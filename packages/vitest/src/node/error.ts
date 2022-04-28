@@ -89,7 +89,7 @@ function getErrorProperties(e: ErrorWithDiff) {
     'actual',
     'expected',
   ]
-  for (const key in e) {
+  for (const key of Object.getOwnPropertyNames(e)) {
     if (!skip.includes(key))
       errorObject[key] = e[key as keyof ErrorWithDiff]
   }
