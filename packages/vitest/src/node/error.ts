@@ -88,6 +88,8 @@ function getErrorProperties(e: ErrorWithDiff) {
     'showDiff',
     'actual',
     'expected',
+    'constructor',
+    'toString',
   ]
   for (const key of Object.getOwnPropertyNames(e)) {
     if (!skip.includes(key))
