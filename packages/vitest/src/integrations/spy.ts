@@ -167,7 +167,7 @@ function enhanceSpy<TArgs extends any[], TReturns>(
       })
     },
     get lastCall() {
-      return stub.calls.at(-1)
+      return stub.calls[stub.calls.length - 1]
     },
   }
 
