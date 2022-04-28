@@ -120,7 +120,7 @@ export class ViteNodeRunner {
 
     Object.defineProperty(request, 'callstack', { get: () => callstack })
 
-    const resolveId = async (dep: string, callstackPosition = -1) => {
+    const resolveId = async (dep: string, callstackPosition = 1) => {
       // probably means it was passed as variable
       // and wasn't transformed by Vite
       // or some dependency name was passed
@@ -135,7 +135,7 @@ export class ViteNodeRunner {
       return dep
     }
 
-    id = await resolveId(id, -2)
+    id = await resolveId(id, 2)
 
     const requestStubs = this.options.requestStubs || DEFAULT_REQUEST_STUBS
     if (id in requestStubs)
