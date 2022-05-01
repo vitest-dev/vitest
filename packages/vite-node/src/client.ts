@@ -253,6 +253,11 @@ function proxyMethod(name: 'get' | 'set' | 'has' | 'deleteProperty', tryDefault:
 }
 
 function exportAll(exports: any, sourceModule: any) {
+  // #1120 when a module exports itself it causes
+  // call stack error
+  if (exports === sourceModule)
+    return
+
   // eslint-disable-next-line no-restricted-syntax
   for (const key in sourceModule) {
     if (key !== 'default') {
