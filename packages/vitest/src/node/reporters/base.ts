@@ -16,6 +16,8 @@ const HELP_QUITE = `${c.dim('press ')}${c.bold('q')}${c.dim(' to quit')}`
 const WAIT_FOR_CHANGE_PASS = `\n${c.bold(c.inverse(c.green(' PASS ')))}${c.green(' Waiting for file changes...')}`
 const WAIT_FOR_CHANGE_FAIL = `\n${c.bold(c.inverse(c.red(' FAIL ')))}${c.red(' Tests failed. Watching for file changes...')}`
 
+const DURATION_LONG = 300
+
 export abstract class BaseReporter implements Reporter {
   start = 0
   end = 0
@@ -86,8 +88,12 @@ export abstract class BaseReporter implements Reporter {
         if (skipped.length)
           state += ` ${c.dim('|')} ${c.yellow(`${skipped.length} skipped`)}`
         let suffix = c.dim(' (') + state + c.dim(')')
-        if (task.result.duration)
-          suffix += c.yellow(` ${Math.round(task.result.duration)}${c.dim('ms')}`)
+        if (task.result.duration) {
+          const color = task.result.duration > DURATION_LONG ? c.yellow : c.gray
+          suffix += color(` ${Math.round(task.result.duration)}${c.dim('ms')}`)
+        }
+        if (this.ctx.config.logHeapUsage && task.result.heap != null)
+          suffix += c.magenta(` ${Math.floor(task.result.heap / 1024 / 1024)} MB heap used`)
 
         this.ctx.log(` ${getStateSymbol(task)} ${task.name} ${suffix}`)
 

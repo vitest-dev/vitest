@@ -150,6 +150,7 @@ export async function runTest(test: Test) {
   getSnapshotClient().clearTest()
 
   test.result.duration = now() - start
+  test.result.heap = process.memoryUsage().heapUsed
 
   workerState.current = undefined
 
@@ -211,6 +212,7 @@ export async function runSuite(suite: Suite) {
     }
   }
   suite.result.duration = now() - start
+  suite.result.heap = process.memoryUsage().heapUsed
 
   if (suite.mode === 'run') {
     if (!hasTests(suite)) {

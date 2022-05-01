@@ -22,6 +22,7 @@ export class DefaultReporter extends BaseReporter {
   onCollected() {
     if (this.isTTY) {
       this.rendererOptions.outputStream = this.ctx.outputStream
+      this.rendererOptions.showHeap = this.ctx.config.logHeapUsage
       const files = this.ctx.state.getFiles(this.watchFilters)
       if (!this.renderer)
         this.renderer = createListRenderer(files, this.rendererOptions).start()

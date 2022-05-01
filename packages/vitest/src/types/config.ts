@@ -297,6 +297,11 @@ export interface InlineConfig {
    * Resolve custom snapshot path
    */
   resolveSnapshotPath?: (path: string, extension: string) => string
+
+  /**
+   * Show heap usage after each test. Usefull for debugging memory leaks.
+   */
+  logHeapUsage?: boolean
 }
 
 export interface UserConfig extends InlineConfig {
