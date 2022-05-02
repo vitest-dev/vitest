@@ -3,7 +3,7 @@
   "type": "module",
   "version": "0.10.0",
   "private": true,
-  "packageManager": "pnpm@6.32.9",
+  "packageManager": "pnpm@7.0.0",
   "description": "A blazing fast unit test framework powered by Vite",
   "scripts": {
     "build": "pnpm -r --filter {packages} run build",

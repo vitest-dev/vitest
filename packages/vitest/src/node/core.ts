@@ -78,7 +78,7 @@ export class Vitest {
       fetchModule(id: string) {
         return node.fetchModule(id)
       },
-      resolveId(id: string, importer: string|undefined) {
+      resolveId(id: string, importer: string | undefined) {
         return node.resolveId(id, importer)
       },
     })

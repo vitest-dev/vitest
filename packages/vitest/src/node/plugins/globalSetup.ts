@@ -7,7 +7,7 @@ import { divider } from '../reporters/renderers/utils'
 
 interface GlobalSetupFile {
   file: string
-  setup?: () => Promise<Function|void>|void
+  setup?: () => Promise<Function | void> | void
   teardown?: Function
 }
 

@@ -176,7 +176,7 @@ function createSuite() {
   return suite as SuiteAPI
 }
 
-function createTest(fn: ((this: Record<'concurrent'| 'skip'| 'only'| 'todo'| 'fails', boolean | undefined>, title: string, fn?: TestFunction, timeout?: number) => void)) {
+function createTest(fn: ((this: Record<'concurrent' | 'skip' | 'only' | 'todo' | 'fails', boolean | undefined>, title: string, fn?: TestFunction, timeout?: number) => void)) {
   const test = createChainable(
     ['concurrent', 'skip', 'only', 'todo', 'fails'],
     fn,
