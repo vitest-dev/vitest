@@ -4,7 +4,7 @@ importers:
 
   .:
     specifiers:
-      '@vue/composition-api': ^1.4.9
+      '@vue/composition-api': ^1.6.0
       '@vue/test-utils': ^1.3.0
       jsdom: latest
       unplugin-vue2-script-setup: ^0.10.2
@@ -16,13 +16,13 @@ importers:
     dependencies:
       vue: 2.6.14
     devDependencies:
-      '@vue/composition-api': 1.4.9_vue@2.6.14
+      '@vue/composition-api': 1.6.0_vue@2.6.14
       '@vue/test-utils': 1.3.0_sbs6or2oam5i4s4vmfp4rzwdnq
       jsdom: 19.0.0
-      unplugin-vue2-script-setup: 0.10.2_rgtegbiu77bczvwjr2d4wbjrmi
+      unplugin-vue2-script-setup: 0.10.2_jbxchycigcb4s55enbzv445xhe
       vite: 2.9.7
       vite-plugin-vue2: 1.9.3_doeqnf7tlc7mxy2gphsvq7okte
-      vitest: 0.10.0_jsdom@19.0.0
+      vitest: 0.10.1_jsdom@19.0.0
       vue-template-compiler: 2.6.14
 
 packages:
@@ -568,8 +568,8 @@ packages:
       prettier: 2.5.1
     dev: true
 
-  /@vue/composition-api/1.4.9_vue@2.6.14:
-    resolution: {integrity: sha512-l6YOeg5LEXmfPqyxAnBaCv1FMRw0OGKJ4m6nOWRm6ngt5TuHcj5ZoBRN+LXh3J0u6Ur3C4VA+RiKT+M0eItr/g==}
+  /@vue/composition-api/1.6.0_vue@2.6.14:
+    resolution: {integrity: sha512-m/FbsCXn0Ov2QCYUEIt4yupWJLCL6nfZg/Xx2L5VlFUqgJb2iOrbLnkYSV0TO2VUxkBLSFtTZMyG8IIHZFdKNA==}
     peerDependencies:
       vue: '>= 2.5 < 3'
     dependencies:
@@ -1707,8 +1707,8 @@ packages:
     resolution: {integrity: sha512-9QNk5KwDF+Bvz+PyObkmSYjI5ksVUYtjW7AU22r2NKcfLJcXp96hkDWU3+XndOsUb+AQ9QhfzfCT2O+CNWT5Tw==}
     dev: true
 
-  /tinypool/0.1.2:
-    resolution: {integrity: sha512-fvtYGXoui2RpeMILfkvGIgOVkzJEGediv8UJt7TxdAOY8pnvUkFg/fkvqTfXG9Acc9S17Cnn1S4osDc2164guA==}
+  /tinypool/0.1.3:
+    resolution: {integrity: sha512-2IfcQh7CP46XGWGGbdyO4pjcKqsmVqFAPcXfPxcPXmOWt9cYkTP9HcDmGgsfijYoAEc4z9qcpM/BaBz46Y9/CQ==}
     engines: {node: '>=14.0.0'}
     dev: true
 
@@ -1760,7 +1760,7 @@ packages:
     engines: {node: '>= 10.0.0'}
     dev: true
 
-  /unplugin-vue2-script-setup/0.10.2_rgtegbiu77bczvwjr2d4wbjrmi:
+  /unplugin-vue2-script-setup/0.10.2_jbxchycigcb4s55enbzv445xhe:
     resolution: {integrity: sha512-m886AZIZCXMiAbTbOPQEk+MqmtHBX3dENheFXjcHSRetwBsD0KVDBteQVD5XrSBzDdQKeKw6IU4dV+2eGcLJ0A==}
     peerDependencies:
       '@vue/composition-api': ^1.4.3
@@ -1779,7 +1779,7 @@ packages:
       '@rollup/pluginutils': 4.1.2
       '@vue/compiler-core': 3.2.31
       '@vue/compiler-dom': 3.2.31
-      '@vue/composition-api': 1.4.9_vue@2.6.14
+      '@vue/composition-api': 1.6.0_vue@2.6.14
       '@vue/reactivity-transform': 3.2.31
       '@vue/shared': 3.2.31
       defu: 5.0.1
@@ -1874,8 +1874,8 @@ packages:
       fsevents: 2.3.2
     dev: true
 
-  /vitest/0.10.0_jsdom@19.0.0:
-    resolution: {integrity: sha512-8UXemUg9CA4QYppDTsDV76nH0e1p6C8lV9q+o9i0qMSK9AQ7vA2sjoxtkDP0M+pwNmc3ZGYetBXgSJx0M1D/gg==}
+  /vitest/0.10.1_jsdom@19.0.0:
+    resolution: {integrity: sha512-jFNObjJ48WnfJzxpopJOrd7ZnRCE3OGgE2KSQ1AGmKxNPTgadMCLx81GBrIcxIjuz2E/8qmGBPtC5VH01ihl7A==}
     engines: {node: '>=v14.16.0'}
     hasBin: true
     peerDependencies:
@@ -1898,7 +1898,7 @@ packages:
       chai: 4.3.6
       jsdom: 19.0.0
       local-pkg: 0.4.1
-      tinypool: 0.1.2
+      tinypool: 0.1.3
       tinyspy: 0.3.2
       vite: 2.9.7
     transitivePeerDependencies:

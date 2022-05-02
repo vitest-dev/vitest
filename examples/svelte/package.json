@@ -8,11 +8,11 @@
     "coverage": "vitest run --coverage"
   },
   "devDependencies": {
-    "@sveltejs/vite-plugin-svelte": "^1.0.0-next.41",
+    "@sveltejs/vite-plugin-svelte": "^1.0.0-next.42",
     "@testing-library/svelte": "^3.1.1",
     "@vitest/ui": "latest",
     "jsdom": "latest",
-    "svelte": "^3.47.0",
+    "svelte": "^3.48.0",
     "vitest": "latest"
   },
   "stackblitz": {

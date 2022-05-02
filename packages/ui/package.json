@@ -40,7 +40,7 @@
   "devDependencies": {
     "@cypress/vite-dev-server": "^2.2.2",
     "@cypress/vue": "^3.1.1",
-    "@faker-js/faker": "^6.3.0",
+    "@faker-js/faker": "^6.3.1",
     "@testing-library/cypress": "^8.0.2",
     "@types/codemirror": "^5.60.5",
     "@types/d3-force": "^3.0.3",
