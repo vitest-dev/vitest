@@ -68,7 +68,8 @@
   },
   "pnpm": {
     "overrides": {
-      "vite": "^2.9.5"
+      "vite": "^2.9.5",
+      "vitest": "workspace:*"
     }
   },
   "lint-staged": {
