@@ -57,3 +57,18 @@ it('timeout', () => new Promise(resolve => setTimeout(resolve, timeout)))
 it.fails('deprecated done callback', (done) => {
   done()
 })
+
+const shouldSkip = true
+
+it.skipIf(shouldSkip)('skipped', () => {
+  throw new Error('foo')
+})
+it.skipIf(!shouldSkip)('not skipped', () => {
+  expect(1).toBe(1)
+})
+it.runIf(!shouldSkip)('skipped 2', () => {
+  throw new Error('foo')
+})
+it.runIf(shouldSkip)('not skipped 2', () => {
+  expect(1).toBe(1)
+})

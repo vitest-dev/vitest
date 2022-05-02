@@ -173,10 +173,20 @@ function createSuite() {
     }
   }
 
-  return suite as SuiteAPI
+  suite.skipIf = (condition: any) => (condition ? suite.skip : suite) as SuiteAPI
+  suite.runIf = (condition: any) => (condition ? suite : suite.skip) as SuiteAPI
+
+  return suite
 }
 
-function createTest(fn: ((this: Record<'concurrent' | 'skip' | 'only' | 'todo' | 'fails', boolean | undefined>, title: string, fn?: TestFunction, timeout?: number) => void)) {
+function createTest(fn: (
+  (
+    this: Record<'concurrent' | 'skip' | 'only' | 'todo' | 'fails', boolean | undefined>,
+    title: string,
+    fn?: TestFunction,
+    timeout?: number
+  ) => void
+)) {
   const test = createChainable(
     ['concurrent', 'skip', 'only', 'todo', 'fails'],
     fn,
@@ -190,6 +200,9 @@ function createTest(fn: ((this: Record<'concurrent' | 'skip' | 'only' | 'todo' |
       })
     }
   }
+
+  test.skipIf = (condition: any) => (condition ? test.skip : test) as TestAPI
+  test.runIf = (condition: any) => (condition ? test : test.skip) as TestAPI
 
   return test as TestAPI
 }
