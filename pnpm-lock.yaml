@@ -644,7 +644,7 @@ importers:
       pathe: ^0.2.0
       picocolors: ^1.0.0
       pkg-types: ^0.3.2
-      pretty-format: ^28.0.2
+      pretty-format: ^27.5.1
       prompts: ^2.4.2
       rollup: ^2.71.1
       source-map-js: ^1.0.2
@@ -694,7 +694,7 @@ importers:
       pathe: 0.2.0
       picocolors: 1.0.0
       pkg-types: 0.3.2
-      pretty-format: 28.0.2
+      pretty-format: 27.5.1
       prompts: 2.4.2
       rollup: 2.71.1
       source-map-js: 1.0.2
@@ -3029,13 +3029,6 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
-  /@jest/schemas/28.0.2:
-    resolution: {integrity: sha512-YVDJZjd4izeTDkij00vHHAymNXQ6WWsdChFRK86qck6Jpr3DCL5W3Is3vslviRlP+bLuMYRLbdp98amMvqudhA==}
-    engines: {node: ^12.13.0 || ^14.15.0 || ^16.10.0 || >=17.0.0}
-    dependencies:
-      '@sinclair/typebox': 0.23.5
-    dev: true
-
   /@jest/transform/26.6.2:
     resolution: {integrity: sha512-E9JjhUgNzvuQ+vVAL21vlyfy12gP0GhazGgJC4h6qUt1jSdUXGWJ1wfu/X7Sd8etSgxV4ovT1pb9v5D6QW4XgA==}
     engines: {node: '>= 10.14.2'}
@@ -3065,7 +3058,7 @@ packages:
     dependencies:
       '@types/istanbul-lib-coverage': 2.0.4
       '@types/istanbul-reports': 3.0.1
-      '@types/node': 17.0.26
+      '@types/node': 17.0.31
       '@types/yargs': 15.0.14
       chalk: 4.1.2
     dev: true
@@ -3825,10 +3818,6 @@ packages:
     dependencies:
       estree-walker: 2.0.2
       picomatch: 2.3.1
-
-  /@sinclair/typebox/0.23.5:
-    resolution: {integrity: sha512-AFBVi/iT4g20DHoujvMH1aEDn8fGJh4xsRGCP6d8RpLPMqsNPvW01Jcn0QysXTsg++/xj25NmJsGyH9xug/wKg==}
-    dev: true
 
   /@sinonjs/commons/1.8.3:
     resolution: {integrity: sha512-xkNcLAn/wZaX14RPlwizcKicDk9G3F8m2nU3L7Ukm5zBgTwiT0wsoFAHx9Jq56fJA1z/7uKGtCRu16sOUCLIHQ==}
@@ -12516,7 +12505,7 @@ packages:
       whatwg-encoding: 2.0.0
       whatwg-mimetype: 3.0.0
       whatwg-url: 10.0.0
-      ws: 8.5.0
+      ws: 8.6.0
       xml-name-validator: 4.0.0
     transitivePeerDependencies:
       - bufferutil
@@ -14616,16 +14605,6 @@ packages:
       react-is: 17.0.2
     dev: true
 
-  /pretty-format/28.0.2:
-    resolution: {integrity: sha512-UmGZ1IERwS3yY35LDMTaBUYI1w4udZDdJGGT/DqQeKG9ZLDn7/K2Jf/JtYSRiHCCKMHvUA+zsEGSmHdpaVp1yw==}
-    engines: {node: ^12.13.0 || ^14.15.0 || ^16.10.0 || >=17.0.0}
-    dependencies:
-      '@jest/schemas': 28.0.2
-      ansi-regex: 5.0.1
-      ansi-styles: 5.2.0
-      react-is: 18.1.0
-    dev: true
-
   /pretty-hrtime/1.0.3:
     resolution: {integrity: sha1-t+PqQkNaTJsnWdmeDyAesZWALuE=}
     engines: {node: '>= 0.8'}
@@ -15066,10 +15045,6 @@ packages:
 
   /react-is/17.0.2:
     resolution: {integrity: sha512-w2GsyukL62IJnlaff/nRegPQR94C/XXamvMWmSHRJ4y7Ts/4ocGRmTHvOs8PSE6pB3dWOrD/nueuU5sduBsQ4w==}
-
-  /react-is/18.1.0:
-    resolution: {integrity: sha512-Fl7FuabXsJnV5Q1qIOQwx/sagGF18kogb4gpfcG4gjLBWO0WDiiz1ko/ExayuxE7InyQkBLkxRFG5oxY6Uu3Kg==}
-    dev: true
 
   /react-lifecycles-compat/3.0.4:
     resolution: {integrity: sha512-fBASbA6LnOU9dOU2eW7aQ8xmYBSXUIWr+UmF9b1efZBazGNO+rcXT/icdKnYm2pTwcRylVUYwW7H1PHfLekVzA==}
