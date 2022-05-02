@@ -39,6 +39,10 @@
   "ignoreDeps": [
     // wait for ecosystem to upgrade to React v18
     "@testing-library/react",
-    "@testing-library/user-event"
+    "@testing-library/user-event".
+    // TODO: migrate
+    "pretty-format",
+    // TODO: breaking changes
+    "happy-dom"
   ]
 }
