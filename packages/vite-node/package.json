@@ -71,7 +71,7 @@
   },
   "devDependencies": {
     "@types/minimist": "^1.2.2",
-    "rollup": "^2.70.2"
+    "rollup": "^2.71.1"
   },
   "engines": {
     "node": ">=v14.16.0"
