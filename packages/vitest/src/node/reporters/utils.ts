@@ -18,7 +18,7 @@ async function loadCustomReporterModule<C extends Reporter>(path: string, runner
   return customReporterModule.default
 }
 
-function createReporters(reporterReferences: Array<string|Reporter|BuiltinReporters>, runner: ViteNodeRunner) {
+function createReporters(reporterReferences: Array<string | Reporter | BuiltinReporters>, runner: ViteNodeRunner) {
   const promisedReporters = reporterReferences.map(async (referenceOrInstance) => {
     if (typeof referenceOrInstance === 'string') {
       if (referenceOrInstance in ReportersMap) {

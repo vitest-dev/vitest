@@ -226,6 +226,7 @@ export class Vitest {
       const invalidates = Array.from(this.invalidates)
       this.invalidates.clear()
       this.snapshot.clear()
+      this.state.clearErrors()
       try {
         await this.pool.runTests(files, invalidates)
       }

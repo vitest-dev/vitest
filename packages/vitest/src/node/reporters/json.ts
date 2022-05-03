@@ -104,7 +104,7 @@ export class JsonReporter implements Reporter {
         return {
           ancestorTitles,
           fullName: ancestorTitles.length > 0 ? `${ancestorTitles.join(' ')} ${t.name}` : t.name,
-          status: t.result != null ? StatusMap[t.result.state] : 'skipped',
+          status: StatusMap[t.result?.state || t.mode] || 'skipped',
           title: t.name,
           duration: t.result?.duration,
           failureMessages: t.result?.error?.message == null ? [] : [t.result.error.message],

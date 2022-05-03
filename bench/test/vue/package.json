@@ -6,12 +6,12 @@
     "test:jest": "jest --silent"
   },
   "devDependencies": {
-    "@babel/core": "^7.17.9",
-    "@babel/preset-env": "^7.16.11",
+    "@babel/core": "^7.17.10",
+    "@babel/preset-env": "^7.17.10",
     "@babel/preset-typescript": "^7.16.7",
     "@vitejs/plugin-vue": "^2.3.1",
     "@vue/test-utils": "^2.0.0-rc.21",
-    "@vue/vue3-jest": "^27.0.0-alpha.4",
+    "@vue/vue3-jest": "^27.0.0",
     "babel-jest": "^27.5.1",
     "jest": "^27.5.1",
     "jsdom": "^19.0.0",

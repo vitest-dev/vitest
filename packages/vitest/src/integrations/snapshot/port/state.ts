@@ -6,10 +6,8 @@
  */
 
 import fs from 'fs'
-import type { Config } from '@jest/types'
-// import { getStackTraceLines, getTopFrame } from 'jest-message-util'
 import type { OptionsReceived as PrettyFormatOptions } from 'pretty-format'
-import type { ParsedStack, SnapshotData, SnapshotMatchOptions, SnapshotResult, SnapshotStateOptions } from '../../../types'
+import type { ParsedStack, SnapshotData, SnapshotMatchOptions, SnapshotResult, SnapshotStateOptions, SnapshotUpdateState } from '../../../types'
 import { slash } from '../../../utils'
 import { parseStacktrace } from '../../../utils/source-map'
 import type { InlineSnapshot } from './inlineSnapshot'
@@ -42,7 +40,7 @@ interface SaveStatus {
 export default class SnapshotState {
   private _counters: Map<string, number>
   private _dirty: boolean
-  private _updateSnapshot: Config.SnapshotUpdateState
+  private _updateSnapshot: SnapshotUpdateState
   private _snapshotData: SnapshotData
   private _initialData: SnapshotData
   private _inlineSnapshots: Array<InlineSnapshot>

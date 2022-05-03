@@ -22,12 +22,12 @@ export default {
 
 <template>
   <!-- maybe provide a KEEP STRUCTURE mode, do not filter by search keyword  -->
-  <!-- v-if = keepStructure ||  (!search || caseInsensitiveMatch(task.name, search))-->
+  <!-- v-if = keepStructure ||  (!search || caseInsensitiveMatch(task.name, search)) -->
   <TaskItem
     v-if="!search || caseInsensitiveMatch(task.name, search)"
     v-bind="$attrs"
     :task="task"
-    :style="{ paddingLeft: `${indent * 0.75 + 1}rem`}"
+    :style="{ paddingLeft: `${indent * 0.75 + 1}rem` }"
     @click="onItemClick && onItemClick(task)"
   />
   <div v-if="nested && task.type === 'suite' && task.tasks.length">

@@ -419,14 +419,14 @@ describe('toBeTypeOf()', () => {
   })
 })
 
-describe('toSatisfy()',() => {
+describe('toSatisfy()', () => {
   const isOdd = (value: number) => value % 2 !== 0
 
-  it('pass with 0',() => {
+  it('pass with 0', () => {
     expect(1).toSatisfy(isOdd)
   })
 
-  it('pass with negotiation',() => {
+  it('pass with negotiation', () => {
     expect(2).not.toSatisfy(isOdd)
   })
 })

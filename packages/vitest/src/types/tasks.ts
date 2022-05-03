@@ -104,13 +104,21 @@ export type TestAPI<ExtraContext = {}> = ChainableFunction<
 'concurrent' | 'only' | 'skip' | 'todo' | 'fails',
 [name: string, fn?: TestFunction<ExtraContext>, timeout?: number],
 void
-> & { each: EachFunction }
+> & {
+  each: EachFunction
+  skipIf(condition: any): TestAPI<ExtraContext>
+  runIf(condition: any): TestAPI<ExtraContext>
+}
 
 export type SuiteAPI<ExtraContext = {}> = ChainableFunction<
 'concurrent' | 'only' | 'skip' | 'todo',
 [name: string, factory?: SuiteFactory],
 SuiteCollector<ExtraContext>
-> & { each: EachFunction }
+> & {
+  each: EachFunction
+  skipIf(condition: any): SuiteAPI<ExtraContext>
+  runIf(condition: any): SuiteAPI<ExtraContext>
+}
 
 export type HookListener<T extends any[], Return = void> = (...args: T) => Awaitable<Return | void>
 

@@ -76,7 +76,7 @@ function onDraft(value: boolean) {
           :class="{ 'tab-button-active': viewMode === 'editor' }"
           @click="changeViewMode('editor')"
         >
-          {{ draft ? '*&#160;': '' }}Code
+          {{ draft ? '*&#160;' : '' }}Code
         </button>
         <button
           tab-button

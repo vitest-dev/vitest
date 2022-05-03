@@ -46,6 +46,40 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
   })
   ```
 
+### test.skipIf
+
+- **Type:** `(condition: any) => Test`
+- **Alias:** `it.skipIf`
+
+  In some cases you might run tests multiple times with different environments, and some of the tests might be environment-specific. Instead of wrapping the test code with `if`, you can use `test.skipIf` to skip the test whenever the condition is truthy.
+
+  ```ts
+  import { assert, test } from 'vitest'
+  
+  const isDev = process.env.NODE_ENV === 'development'
+
+  test.skipIf(isDev)('prod only test', () => {
+    // this test only runs in production
+  })
+  ```
+
+### test.runIf
+
+- **Type:** `(condition: any) => Test`
+- **Alias:** `it.runIf`
+
+  Oppsit of [test.skipIf](#testskipif).
+
+  ```ts
+  import { assert, test } from 'vitest'
+  
+  const isDev = process.env.NODE_ENV === 'development'
+
+  test.runIf(isDev)('dev only test', () => {
+    // this test only runs in development
+  })
+  ```
+
 ### test.only
 
 - **Type:** `(name: string, fn: TestFunction, timeout?: number) => void`
