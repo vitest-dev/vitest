@@ -249,7 +249,7 @@ export class VitestMocker {
       return exports
     }
     if (typeof mock === 'function' && !callstack.includes(`mock-function:${dep}`)) {
-      callstack.push(`mock-function:${dep}`)
+      callstack.push(`mock:${dep}`)
       return this.callFunctionMock(dep, mock)
     }
     if (typeof mock === 'string' && !callstack.includes(mock))

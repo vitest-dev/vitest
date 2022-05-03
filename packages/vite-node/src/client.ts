@@ -127,7 +127,9 @@ export class ViteNodeRunner {
       // runner.executeFile('@scope/name')
       // runner.executeFile(myDynamicName)
       if (this.options.resolveId && this.shouldResolveId(dep)) {
-        const importer = callstack[callstack.length - callstackPosition]
+        let importer = callstack[callstack.length - callstackPosition]
+        if (importer && importer.startsWith('mock:'))
+          importer = importer.slice(5)
         const { id } = await this.options.resolveId(dep, importer) || {}
         dep = id && isAbsolute(id) ? `/@fs/${id}` : id || dep
       }
