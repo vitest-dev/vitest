@@ -51,9 +51,9 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
   return callbacks
 }
 
-const packs = new Map<string, TaskResult|undefined>()
+const packs = new Map<string, TaskResult | undefined>()
 let updateTimer: any
-let previousUpdate: Promise<void>|undefined
+let previousUpdate: Promise<void> | undefined
 
 function updateTask(task: Task) {
   packs.set(task.id, task.result)
@@ -150,7 +150,9 @@ export async function runTest(test: Test) {
   getSnapshotClient().clearTest()
 
   test.result.duration = now() - start
-  test.result.heap = process.memoryUsage().heapUsed
+
+  if (workerState.config.logHeapUsage)
+    test.result.heap = process.memoryUsage().heapUsed
 
   workerState.current = undefined
 
@@ -212,7 +214,11 @@ export async function runSuite(suite: Suite) {
     }
   }
   suite.result.duration = now() - start
-  suite.result.heap = process.memoryUsage().heapUsed
+
+  const workerState = getWorkerState()
+
+  if (workerState.config.logHeapUsage)
+    suite.result.heap = process.memoryUsage().heapUsed
 
   if (suite.mode === 'run') {
     if (!hasTests(suite)) {
