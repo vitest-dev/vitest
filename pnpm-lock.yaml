@@ -152,7 +152,7 @@ importers:
       lit: 2.2.3
     devDependencies:
       '@vitest/ui': link:../../packages/ui
-      happy-dom: 3.1.0
+      happy-dom: 2.55.0
       vite: 2.9.5
       vitest: link:../../packages/vitest
 
@@ -4354,35 +4354,6 @@ packages:
       '@emotion/styled': 11.8.1_qy3iey4iudt25gp34xnq4xoic4
       '@mui/private-theming': 5.6.2_react@17.0.2
       '@mui/styled-engine': 5.6.1_bgqmsvm4hz6izcmpcwescmz73y
-      '@mui/types': 7.1.3
-      '@mui/utils': 5.6.1_react@17.0.2
-      clsx: 1.1.1
-      csstype: 3.0.11
-      prop-types: 15.8.1
-      react: 17.0.2
-    dev: false
-
-  /@mui/system/5.6.3_09a0c9559c3e7c8c898f158921333fde:
-    resolution: {integrity: sha512-4SRi52a4ttZ2S4EHEDE8arVNuKqyQLTYUTF80WAZ0tQwnG20qwlBtzcrywCGItmVAMl7RUaYopyWOx3yVPvrmQ==}
-    engines: {node: '>=12.0.0'}
-    peerDependencies:
-      '@emotion/react': ^11.5.0
-      '@emotion/styled': ^11.3.0
-      '@types/react': ^17.0.0 || ^18.0.0
-      react: ^17.0.0 || ^18.0.0
-    peerDependenciesMeta:
-      '@emotion/react':
-        optional: true
-      '@emotion/styled':
-        optional: true
-      '@types/react':
-        optional: true
-    dependencies:
-      '@babel/runtime': 7.17.9
-      '@emotion/react': 11.9.0_react@17.0.2
-      '@emotion/styled': 11.8.1_8636826388a0e7ae99fbe5db0e5dc817
-      '@mui/private-theming': 5.6.2_react@17.0.2
-      '@mui/styled-engine': 5.6.1_09a0c9559c3e7c8c898f158921333fde
       '@mui/types': 7.1.3
       '@mui/utils': 5.6.1_react@17.0.2
       clsx: 1.1.1
@@ -12180,20 +12151,6 @@ packages:
 
   /happy-dom/2.55.0:
     resolution: {integrity: sha512-CHDMBRau+l/yKQL+ANmexRAC8FRCuYbXRSpu/GbLVyfqkrlBzV7OSNd5C5HZ+pVFtFv1bFJYC5r+xrqgGQuq5w==}
-    dependencies:
-      css.escape: 1.5.1
-      he: 1.2.0
-      node-fetch: 2.6.7
-      sync-request: 6.1.0
-      webidl-conversions: 7.0.0
-      whatwg-encoding: 2.0.0
-      whatwg-mimetype: 3.0.0
-    transitivePeerDependencies:
-      - encoding
-    dev: true
-
-  /happy-dom/3.1.0:
-    resolution: {integrity: sha512-BewZQwLdu6JS9HYT7enB2toju80OjSjl44+3HXMB3hT+2skC9Mja+/N/b+SbtnwJCMbQqiZVzy/RXevPPuBIXQ==}
     dependencies:
       css.escape: 1.5.1
       he: 1.2.0
