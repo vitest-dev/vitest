@@ -18,7 +18,7 @@ import { client, isConnected, isConnecting } from '~/composables/client'
 
         flex="~ col gap-2"
         items-center justify-center
-        :class="isConnecting ? 'animate-pulse': ''"
+        :class="isConnecting ? 'animate-pulse' : ''"
       >
         <div
           text="5xl"

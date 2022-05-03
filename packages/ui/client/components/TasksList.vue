@@ -186,7 +186,7 @@ export default {
         </DetailsPanel>
       </template>
 
-      <!--flat-->
+      <!-- flat -->
       <template v-else>
         <TaskTree
           v-for="task in filtered"
@@ -198,7 +198,7 @@ export default {
           :on-item-click="onItemClick"
         />
       </template>
-      <!--empty-state-->
+      <!-- empty-state -->
       <template v-if="isFiltered && filtered.length === 0">
         <div flex="~ col" items-center p="x4 y4" font-light>
           <div op30>

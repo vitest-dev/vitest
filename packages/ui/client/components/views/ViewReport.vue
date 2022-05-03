@@ -98,7 +98,7 @@ function relative(p: string) {
           p="x3 y2"
           m-2
           rounded
-          :style="{ 'margin-left': `${task.result?.htmlError ? 0.5 : (2 * task.level + 0.5)}rem`}"
+          :style="{ 'margin-left': `${task.result?.htmlError ? 0.5 : (2 * task.level + 0.5)}rem` }"
         >
           {{ task.name }}
           <div v-if="task.result?.htmlError" class="scrolls scrolls-rounded task-error">
