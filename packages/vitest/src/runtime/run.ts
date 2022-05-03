@@ -151,6 +151,9 @@ export async function runTest(test: Test) {
 
   test.result.duration = now() - start
 
+  if (workerState.config.logHeapUsage)
+    test.result.heap = process.memoryUsage().heapUsed
+
   workerState.current = undefined
 
   updateTask(test)
@@ -211,6 +214,11 @@ export async function runSuite(suite: Suite) {
     }
   }
   suite.result.duration = now() - start
+
+  const workerState = getWorkerState()
+
+  if (workerState.config.logHeapUsage)
+    suite.result.heap = process.memoryUsage().heapUsed
 
   if (suite.mode === 'run') {
     if (!hasTests(suite)) {

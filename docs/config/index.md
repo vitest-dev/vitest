@@ -448,3 +448,10 @@ export default {
   },
 }
 ```
+
+### logHeapUsage
+
+- **Type**: `boolean`
+- **Default**: `false`
+
+Show heap usage after each test. Usefull for debugging memory leaks.
