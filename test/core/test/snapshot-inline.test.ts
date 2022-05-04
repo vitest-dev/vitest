@@ -80,6 +80,15 @@ test('throwing inline snapshots', () => {
       },
     }
   `)
+
+  expect(() => {
+    throw ['Inline', 'snapshot', 'with', 'newlines'].join('\n')
+  }).toThrowErrorMatchingInlineSnapshot(`
+    "Inline
+    snapshot
+    with
+    newlines"
+  `)
 })
 
 test('properties inline snapshot', () => {
