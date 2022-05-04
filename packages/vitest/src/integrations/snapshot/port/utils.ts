@@ -165,13 +165,13 @@ export function prepareExpected(expected?: string) {
     return match?.[1]?.length || 0
   }
 
-  const startIdent = findStartIndent()
+  const startIndent = findStartIndent()
 
   let expectedTrimmed = expected?.trim()
 
-  if (startIdent) {
+  if (startIndent) {
     expectedTrimmed = expectedTrimmed
-      ?.replace(new RegExp(`^${' '.repeat(startIdent)}`, 'gm'), '').replace(/ +}$/, '}')
+      ?.replace(new RegExp(`^${' '.repeat(startIndent)}`, 'gm'), '').replace(/ +}$/, '}')
   }
 
   return expectedTrimmed
