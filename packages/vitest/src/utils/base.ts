@@ -126,3 +126,9 @@ export function assertTypes(value: unknown, name: string, types: string[]): void
   if (!pass)
     throw new TypeError(`${name} value must be ${types.join(' or ')}, received "${receivedType}"`)
 }
+
+export function stdout(): NodeJS.WriteStream {
+  // @ts-expect-error Node.js maps process.stdout to console._stdout
+  // eslint-disable-next-line no-console
+  return console._stdout || process.stdout
+}

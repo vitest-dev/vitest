@@ -1,7 +1,7 @@
 /* eslint-disable prefer-template */
 /* eslint-disable no-template-curly-in-string */
 import { existsSync, readFileSync } from 'fs'
-import { join, relative } from 'pathe'
+import { join, normalize, relative } from 'pathe'
 import c from 'picocolors'
 import cliTruncate from 'cli-truncate'
 import type { ErrorWithDiff, ParsedStack, Position } from '../types'
@@ -108,7 +108,7 @@ function handleImportOutsideModuleError(stack: string, ctx: Vitest) {
   if (!esmErrors.some(e => stack.includes(e)))
     return
 
-  const path = stack.split('\n')[0].trim()
+  const path = normalize(stack.split('\n')[0].trim())
   let name = path.split('/node_modules/').pop() || ''
   if (name?.startsWith('@'))
     name = name.split('/').slice(0, 2).join('/')
