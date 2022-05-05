@@ -61,7 +61,7 @@ export abstract class BaseReporter implements Reporter {
     if (errors.length) {
       process.exitCode = 1
       const errorMessage = c.red(c.bold(
-        `\nVitest catched ${errors.length} unhandled error${errors.length > 1 ? 's' : ''} during the test run. This might cause false positive tests.`
+        `\nVitest caught ${errors.length} unhandled error${errors.length > 1 ? 's' : ''} during the test run. This might cause false positive tests.`
         + '\nPlease, resolve all the errors to make sure your tests are not affected.',
       ))
       this.ctx.log(c.red(divider(c.bold(c.inverse(' Unhandled Errors ')))))
