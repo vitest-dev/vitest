@@ -36,7 +36,15 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
           message = properties
           properties = undefined
         }
-        getSnapshotClient().assert(expected, test, message, false, properties)
+        const errorMessage = utils.flag(this, 'message')
+        getSnapshotClient().assert({
+          received: expected,
+          test,
+          message,
+          isInline: false,
+          properties,
+          errorMessage,
+        })
       },
     )
   }
@@ -54,7 +62,17 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       }
       if (inlineSnapshot)
         inlineSnapshot = stripSnapshotIndentation(inlineSnapshot)
-      getSnapshotClient().assert(expected, test, message, true, properties, inlineSnapshot, error)
+      const errorMessage = utils.flag(this, 'message')
+      getSnapshotClient().assert({
+        received: expected,
+        test,
+        message,
+        isInline: true,
+        properties,
+        inlineSnapshot,
+        error,
+        errorMessage,
+      })
     },
   )
   utils.addMethod(
@@ -63,7 +81,13 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     function (this: Record<string, unknown>, message?: string) {
       const expected = utils.flag(this, 'object')
       const test = utils.flag(this, 'vitest-test')
-      getSnapshotClient().assert(getErrorString(expected), test, message)
+      const errorMessage = utils.flag(this, 'message')
+      getSnapshotClient().assert({
+        received: getErrorString(expected),
+        test,
+        message,
+        errorMessage,
+      })
     },
   )
   utils.addMethod(
@@ -73,7 +97,16 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       const expected = utils.flag(this, 'object')
       const error = utils.flag(this, 'error')
       const test = utils.flag(this, 'vitest-test')
-      getSnapshotClient().assert(getErrorString(expected), test, message, true, undefined, inlineSnapshot, error)
+      const errorMessage = utils.flag(this, 'message')
+      getSnapshotClient().assert({
+        received: getErrorString(expected),
+        test,
+        message,
+        inlineSnapshot,
+        isInline: true,
+        error,
+        errorMessage,
+      })
     },
   )
 }
