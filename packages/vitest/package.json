@@ -109,7 +109,7 @@
     "fast-glob": "^3.2.11",
     "find-up": "^6.3.0",
     "flatted": "^3.2.5",
-    "happy-dom": "^2.55.0",
+    "happy-dom": "^3.1.0",
     "jsdom": "^19.0.0",
     "log-update": "^5.0.1",
     "magic-string": "^0.26.1",

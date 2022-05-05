@@ -2,7 +2,6 @@ lockfileVersion: 5.4
 
 overrides:
   vite: ^2.9.5
-  happy-dom: ^2.55.0
   vitest: workspace:*
 
 importers:
@@ -144,7 +143,7 @@ importers:
   examples/lit:
     specifiers:
       '@vitest/ui': latest
-      happy-dom: ^2.55.0
+      happy-dom: latest
       lit: ^2.2.3
       vite: ^2.9.5
       vitest: workspace:*
@@ -152,7 +151,7 @@ importers:
       lit: 2.2.3
     devDependencies:
       '@vitest/ui': link:../../packages/ui
-      happy-dom: 2.55.0
+      happy-dom: 3.1.0
       vite: 2.9.5
       vitest: link:../../packages/vitest
 
@@ -216,7 +215,7 @@ importers:
       '@types/react-test-renderer': ^17.0.2
       '@vitejs/plugin-react': 1.3.1
       '@vitest/ui': latest
-      happy-dom: ^2.55.0
+      happy-dom: latest
       jsdom: latest
       react: ^17.0.2
       react-test-renderer: 17.0.2
@@ -228,7 +227,7 @@ importers:
       '@types/react-test-renderer': 17.0.2
       '@vitejs/plugin-react': 1.3.1
       '@vitest/ui': link:../../packages/ui
-      happy-dom: 2.55.0
+      happy-dom: 3.1.0
       jsdom: 19.0.0
       react-test-renderer: 17.0.2_react@17.0.2
       vitest: link:../../packages/vitest
@@ -471,7 +470,7 @@ importers:
     specifiers:
       '@vitejs/plugin-vue': ^2.3.1
       '@vue/test-utils': ^2.0.0-rc.21
-      happy-dom: ^2.55.0
+      happy-dom: latest
       unplugin-auto-import: ^0.7.1
       unplugin-vue-components: ^0.19.3
       vitest: workspace:*
@@ -481,7 +480,7 @@ importers:
     devDependencies:
       '@vitejs/plugin-vue': 2.3.1_vue@3.2.33
       '@vue/test-utils': 2.0.0-rc.21_vue@3.2.33
-      happy-dom: 2.55.0
+      happy-dom: 3.1.0
       unplugin-auto-import: 0.7.1
       unplugin-vue-components: 0.19.3_vue@3.2.33
       vitest: link:../../packages/vitest
@@ -634,7 +633,7 @@ importers:
       fast-glob: ^3.2.11
       find-up: ^6.3.0
       flatted: ^3.2.5
-      happy-dom: ^2.55.0
+      happy-dom: ^3.1.0
       jsdom: ^19.0.0
       local-pkg: ^0.4.1
       log-update: ^5.0.1
@@ -685,7 +684,7 @@ importers:
       fast-glob: 3.2.11
       find-up: 6.3.0
       flatted: 3.2.5
-      happy-dom: 2.55.0
+      happy-dom: 3.1.0
       jsdom: 19.0.0
       log-update: 5.0.1
       magic-string: 0.26.1
@@ -12153,8 +12152,8 @@ packages:
       uglify-js: 3.15.4
     dev: true
 
-  /happy-dom/2.55.0:
-    resolution: {integrity: sha512-CHDMBRau+l/yKQL+ANmexRAC8FRCuYbXRSpu/GbLVyfqkrlBzV7OSNd5C5HZ+pVFtFv1bFJYC5r+xrqgGQuq5w==}
+  /happy-dom/3.1.0:
+    resolution: {integrity: sha512-BewZQwLdu6JS9HYT7enB2toju80OjSjl44+3HXMB3hT+2skC9Mja+/N/b+SbtnwJCMbQqiZVzy/RXevPPuBIXQ==}
     dependencies:
       css.escape: 1.5.1
       he: 1.2.0
