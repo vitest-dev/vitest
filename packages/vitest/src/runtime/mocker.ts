@@ -248,7 +248,7 @@ export class VitestMocker {
       this.emit('mocked', cacheName, { exports })
       return exports
     }
-    if (typeof mock === 'function' && !callstack.includes(`mock-function:${dep}`)) {
+    if (typeof mock === 'function' && !callstack.includes(`mock:${dep}`)) {
       callstack.push(`mock:${dep}`)
       return this.callFunctionMock(dep, mock)
     }
