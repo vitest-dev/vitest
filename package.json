@@ -1,7 +1,7 @@
 {
   "name": "@vitest/monorepo",
   "type": "module",
-  "version": "0.10.1",
+  "version": "0.10.2",
   "private": true,
   "packageManager": "pnpm@7.0.0",
   "description": "A blazing fast unit test framework powered by Vite",
@@ -61,7 +61,7 @@
     "rollup-plugin-license": "^2.7.0",
     "simple-git-hooks": "^2.7.0",
     "typescript": "^4.6.4",
-    "vite": "^2.9.5",
+    "vite": "^2.9.7",
     "vitepress": "^0.22.3",
     "vitest": "workspace:*",
     "vue": "^3.2.33"

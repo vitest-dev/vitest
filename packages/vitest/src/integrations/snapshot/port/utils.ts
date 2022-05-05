@@ -161,17 +161,27 @@ export async function saveSnapshotFile(
 
 export function prepareExpected(expected?: string) {
   function findStartIndent() {
-    const match = /^( +)}\s+$/m.exec(expected || '')
-    return match?.[1]?.length || 0
+    // Attemps to find indentation for objects.
+    // Matches the ending tag of the object.
+    const matchObject = /^( +)}\s+$/m.exec(expected || '')
+    const objectIndent = matchObject?.[1]?.length
+
+    if (objectIndent)
+      return objectIndent
+
+    // Attempts to find indentation for texts.
+    // Matches the quote of first line.
+    const matchText = /^\n( +)"/.exec(expected || '')
+    return matchText?.[1]?.length || 0
   }
 
-  const startIdent = findStartIndent()
+  const startIndent = findStartIndent()
 
   let expectedTrimmed = expected?.trim()
 
-  if (startIdent) {
+  if (startIndent) {
     expectedTrimmed = expectedTrimmed
-      ?.replace(new RegExp(`^${' '.repeat(startIdent)}`, 'gm'), '').replace(/ +}$/, '}')
+      ?.replace(new RegExp(`^${' '.repeat(startIndent)}`, 'gm'), '').replace(/ +}$/, '}')
   }
 
   return expectedTrimmed

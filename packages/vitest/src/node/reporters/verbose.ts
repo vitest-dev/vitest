@@ -17,7 +17,10 @@ export class VerboseReporter extends DefaultReporter {
     for (const pack of packs) {
       const task = this.ctx.state.idMap.get(pack[0])
       if (task && task.type === 'test' && task.result?.state && task.result?.state !== 'run') {
-        this.ctx.log(` ${getStateSymbol(task)} ${getFullName(task)}`)
+        let title = ` ${getStateSymbol(task)} ${getFullName(task)}`
+        if (this.ctx.config.logHeapUsage && task.result.heap != null)
+          title += c.magenta(` ${Math.floor(task.result.heap / 1024 / 1024)} MB heap used`)
+        this.ctx.log(title)
         if (task.result.state === 'fail')
           this.ctx.log(c.red(`   ${F_RIGHT} ${(task.result.error as any)?.message}`))
       }

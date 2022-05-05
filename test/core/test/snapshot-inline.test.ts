@@ -67,6 +67,28 @@ test('throwing inline snapshots', () => {
       "error": "omega",
     }
   `)
+
+  expect(() => {
+    // eslint-disable-next-line no-throw-literal
+    throw { some: { nested: { error: 'object' } } }
+  }).toThrowErrorMatchingInlineSnapshot(`
+    {
+      "some": {
+        "nested": {
+          "error": "object",
+        },
+      },
+    }
+  `)
+
+  expect(() => {
+    throw ['Inline', 'snapshot', 'with', 'newlines'].join('\n')
+  }).toThrowErrorMatchingInlineSnapshot(`
+    "Inline
+    snapshot
+    with
+    newlines"
+  `)
 })
 
 test('properties inline snapshot', () => {
