@@ -133,6 +133,14 @@ export default defineConfig({
               link: '/guide/test-context',
             },
             {
+              text: 'Extending Matchers',
+              link: '/guide/extending-matchers',
+            },
+            {
+              text: 'Snapshot Serializer',
+              link: '/guide/snapshot-serializer',
+            },
+            {
               text: 'IDE Integration',
               link: '/guide/ide',
             },

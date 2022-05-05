@@ -9,7 +9,7 @@ type TestFunction = () => Awaitable<void>
 
 When a test function returns a promise, the runner will wait until it is resolved to collect async expectations. If the promise is rejected, the test will fail.
 
-::: tip 
+::: tip
 In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If this form is used, the test will not be concluded until `done` is called. You can achieve the same using an `async` function, see the [Migration guide Done Callback section](../guide/migration#done-callback).
 :::
 
@@ -957,7 +957,7 @@ When you use `test` in the top level of file, they are collected as part of the 
 
   test('matches inline snapshot', () => {
     const data = { foo: new Set(['bar', 'snapshot']) }
-    // Vitest will updates following content when updating the snapshot
+    // Vitest will update following content when updating the snapshot
     expect(data).toMatchInlineSnapshot(`
       {
         "foo": Set {
@@ -969,10 +969,22 @@ When you use `test` in the top level of file, they are collected as part of the 
   })
   ```
 
-<!-- 
+
 ### toThrowErrorMatchingSnapshot
 
-### toThrowErrorMatchingInlineSnapshot -->
+- **Type:** `(snapshot?: string) => void`
+
+  The same as `[toMatchSnapshot](#toMatchSnapshot)`, but expects the same value as `[toThrowError](#toThrowError)`.
+
+  If the function throws an `Error`, the snapshot will be the error message. Otherwise, snapshot will be the value thrown by the function.
+
+### toThrowErrorMatchingInlineSnapshot
+
+- **Type:** `(snapshot?: string) => void`
+
+  The same as `[toMatchInlineSnapshot](#toMatchInlineSnapshot)`, but expects the same value as `[toThrowError](#toThrowError)`.
+
+  If the function throws an `Error`, the snapshot will be the error message. Otherwise, snapshot will be the value thrown by the function.
 
 ### toHaveBeenCalled
 
@@ -1203,6 +1215,27 @@ When you use `test` in the top level of file, they are collected as part of the 
   })
   ```
 
+### toSatisfy
+
+  - **Type:** `(predicate: (value: any) => boolean) => Awaitable<void>`
+
+  This assertion checks if a value satisfies a certain predicate.
+
+  ```ts
+  describe('toSatisfy()', () => {
+    const isOdd = (value: number) => value % 2 !== 0
+
+    it('pass with 0', () => {
+      expect(1).toSatisfy(isOdd)
+    })
+
+    it('pass with negotiation', () => {
+      expect(2).not.toSatisfy(isOdd)
+    })
+  })
+  ```
+  <!-- toSatisfy -->
+
 ### resolves
 
 - **Type:** `Promisify<Assertions>`
@@ -1337,10 +1370,72 @@ When you use `test` in the top level of file, they are collected as part of the 
 ### expect.stringContaining
 ### expect.not.stringContaining
 ### expect.stringMatching
-### expect.not.stringMatching
+### expect.not.stringMatching -->
 
 ### expect.addSnapshotSerializer
-### expect.extend -->
+
+- **Type:** `(plugin: PrettyFormatPlugin) => void`
+
+  This method adds custom serializers that are called when creating a snapshot. This is advanced feature - if you want to know more, please read a [guide on custom serializers](/guide/snapshot-serializer).
+
+  If you are adding custom serializers, you should call this method inside [`setupFiles`](/config/#setupFiles). This will affect every snapshot.
+
+  :::tip
+  If you previously used Vue CLI with Jest, you might want to install [jest-serializer-vue](https://www.npmjs.com/package/jest-serializer-vue). Otherwise, your snapshots will be wrapped in a string, which cases `"` to be escaped.
+  :::
+
+### expect.extend
+
+- **Type:** `(matchers: MatchersObject) => void`
+
+  You can extend default matchers with your own. This function is used to extend the matchers object with custom matchers.
+
+  When you define matchers that way, you also create asymmetric matchers that can be used like `expect.stringContaining`.
+
+  ```ts
+  import { expect, test } from 'vitest'
+
+  test('custom matchers', () => {
+    expect.extend({
+      toBeFoo: (received, expected) => {
+        if (received !== 'foo') {
+          return {
+            message: () => `expected ${received} to be foo`,
+            pass: false,
+          }
+        }
+      },
+    })
+
+    expect('foo').toBeFoo()
+    expect({ foo: 'foo' }).toEqual({ foo: expect.toBeFoo() })
+  })
+  ```
+
+  > If you want your matchers to appear in every test, you should call this method inside [`setupFiles`](/config/#setupFiles).
+
+  This function is compatible with Jest's `expect.extend`, so any library that uses it to create custom matchers will work with Vitest.
+
+  If you are using TypeScript, you can extend default Matchers interface with the code bellow:
+
+  ```ts
+  interface CustomMatchers<R = unknown> {
+    toBeFoo(): R
+  }
+
+  declare global {
+    namespace Vi {
+      interface Assertion extends CustomMatchers {}
+      interface AsymmetricMatchersContaining extends CustomMatchers {}
+    }
+  }
+  ```
+
+  > Note: augmenting jest.Matchers interface will also work.
+
+  :::tip
+  If you want to know more, checkout [guide on extending matchers](/guide/extending-matchers).
+  :::
 
 ## Setup and Teardown
 
@@ -1375,7 +1470,7 @@ These functions allow you to hook into the life cycle of tests to avoid repeatin
   beforeEach(async () => {
     // called once before all tests run
     await prepareSomething()
-  
+
     // clean up function, called once after all tests run
     return async () => {
       await resetSomething()
