@@ -1,6 +1,7 @@
 import { createHash } from 'crypto'
 import { relative } from 'pathe'
 import type { File, ResolvedConfig, Suite, TaskBase } from '../types'
+import { stdout } from '../utils'
 import { clearCollectorContext, defaultSuite } from './suite'
 import { getHooks, setHooks } from './map'
 import { processError } from './error'
@@ -61,7 +62,7 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
         error: processError(e),
       }
       // not sure thy, this line is needed to trigger the error
-      process.stdout.write('\0')
+      stdout().write('\0')
     }
 
     calculateHash(file)
