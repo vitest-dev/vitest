@@ -30,6 +30,7 @@ vi.mock('axios', () => {
 })
 
 vi.mock('../src/log.ts', async () => {
+  // can import the same module inside and does not go into an infinite loop
   const log = await import('../src/log')
   return {
     default: {
