@@ -164,6 +164,7 @@ importers:
       tinyspy: ^0.3.2
       vite: ^2.9.5
       vitest: workspace:*
+      zustand: 4.0.0-rc.1
     dependencies:
       '@vueuse/integrations': 8.3.1_axios@0.26.1
       axios: 0.26.1
@@ -172,6 +173,7 @@ importers:
       '@vitest/ui': link:../../packages/ui
       vite: 2.9.5
       vitest: link:../../packages/vitest
+      zustand: 4.0.0-rc.1
 
   examples/nextjs:
     specifiers:
@@ -18661,6 +18663,12 @@ packages:
       use-isomorphic-layout-effect: 1.1.2_zdsfwtvwq54q3oqxwtq4jnbhh4
     dev: true
 
+  /use-sync-external-store/1.1.0:
+    resolution: {integrity: sha512-SEnieB2FPKEVne66NpXPd1Np4R1lTNKfjuy3XdIoPQKYBAFdzbzSZlSn1KJZUiihQLQC5Znot4SBz1EOTBwQAQ==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0
+    dev: true
+
   /use-sync-external-store/1.1.0_react@17.0.2:
     resolution: {integrity: sha512-SEnieB2FPKEVne66NpXPd1Np4R1lTNKfjuy3XdIoPQKYBAFdzbzSZlSn1KJZUiihQLQC5Znot4SBz1EOTBwQAQ==}
     peerDependencies:
@@ -19646,6 +19654,21 @@ packages:
   /zen-observable/0.8.15:
     resolution: {integrity: sha512-PQ2PC7R9rslx84ndNBZB/Dkv8V8fZEpk83RLgXtYd0fwUgEjseMn1Dgajh2x6S8QbZAFa9p2qVCEuYZNgve0dQ==}
     dev: false
+
+  /zustand/4.0.0-rc.1:
+    resolution: {integrity: sha512-qgcs7zLqBdHu0PuT3GW4WCIY5SgXdsv30GQMu9Qpp1BA2aS+sNS8l4x0hWuyEhjXkN+701aGWawhKDv6oWJAcw==}
+    engines: {node: '>=12.7.0'}
+    peerDependencies:
+      immer: '>=9.0'
+      react: '>=16.8'
+    peerDependenciesMeta:
+      immer:
+        optional: true
+      react:
+        optional: true
+    dependencies:
+      use-sync-external-store: 1.1.0
+    dev: true
 
   /zwitch/1.0.5:
     resolution: {integrity: sha512-V50KMwwzqJV0NpZIZFwfOD5/lyny3WlSzRiXgA0G7VUnRlqttta1L6UQIHzd6EuBY/cHGfwTIck7w1yH6Q5zUw==}
