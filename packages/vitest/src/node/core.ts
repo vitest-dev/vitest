@@ -263,7 +263,10 @@ export class Vitest {
 
   async updateSnapshot(files?: string[]) {
     // default to failed files
-    files = files || this.state.getFailedFilepaths()
+    files = files || [
+      ...this.state.getFailedFilepaths(),
+      ...this.snapshot.summary.uncheckedKeysByFile.map(s => s.filePath),
+    ]
 
     this.configOverride = {
       snapshotOptions: {
