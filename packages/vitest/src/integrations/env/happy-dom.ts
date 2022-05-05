@@ -5,8 +5,10 @@ import { getWindowKeys } from './utils'
 export default <Environment>({
   name: 'happy-dom',
   async setup(global) {
-    const { Window } = await importModule('happy-dom') as typeof import('happy-dom')
-    const win: any = new Window()
+    // happy-dom v3 introduced a breaking change to Window, but
+    // provides GlobalWindow as a way to use previous behaviour
+    const { Window, GlobalWindow } = await importModule('happy-dom') as typeof import('happy-dom')
+    const win: any = new (GlobalWindow || Window)()
 
     const keys = getWindowKeys(global, win)
 

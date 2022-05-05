@@ -69,7 +69,6 @@
   "pnpm": {
     "overrides": {
       "vite": "^2.9.5",
-      "happy-dom": "^2.55.0",
       "vitest": "workspace:*"
     }
   },
