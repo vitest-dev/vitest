@@ -591,21 +591,19 @@ importers:
 
   packages/vite-node:
     specifiers:
-      '@types/minimist': ^1.2.2
+      cac: ^6.7.12
       kolorist: ^1.5.1
-      minimist: ^1.2.6
       mlly: ^0.5.2
       pathe: ^0.2.0
       rollup: ^2.71.1
       vite: ^2.9.5
     dependencies:
       kolorist: 1.5.1
-      minimist: 1.2.6
       mlly: 0.5.2
       pathe: 0.2.0
       vite: 2.9.5
     devDependencies:
-      '@types/minimist': 1.2.2
+      cac: 6.7.12
       rollup: 2.71.1
 
   packages/vitest:
@@ -14214,6 +14212,7 @@ packages:
 
   /minimist/1.2.6:
     resolution: {integrity: sha512-Jsjnk4bw3YJqYzbdyBiNsPWHPfO++UGG749Cxs6peCu5Xg4nrena6OVxOYxrQTqww0Jmwt+Ref8rggumkTLz9Q==}
+    dev: true
 
   /minipass-collect/1.0.2:
     resolution: {integrity: sha512-6T6lH0H8OG9kITm/Jm6tdooIbogG9e0tLgpY6mphXSm/A9u8Nq1ryBG+Qspiub9LjWlBPsPS3tWQ/Botq4FdxA==}

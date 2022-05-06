@@ -64,13 +64,12 @@
   },
   "dependencies": {
     "kolorist": "^1.5.1",
-    "minimist": "^1.2.6",
     "mlly": "^0.5.2",
     "pathe": "^0.2.0",
     "vite": "^2.9.7"
   },
   "devDependencies": {
-    "@types/minimist": "^1.2.2",
+    "cac": "^6.7.12",
     "rollup": "^2.71.1"
   },
   "engines": {
