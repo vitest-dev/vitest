@@ -243,6 +243,12 @@ By providing an object instead of a string you can define individual outputs whe
 
 Enable multi-threading using [tinypool](https://github.com/Aslemammad/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina))
 
+:::warning
+This option is different from Jest's `--runInBand`. Vitest uses workers not only for running tests in parallel, but also to provide isolation. By disabling this option, your tests will run sequentially, but in the same global context, so you must provide isolation yourself.
+
+This might cause all sorts of issues, if you are relying on global state (frontend frameworks usually do) or your code relies on environment to be defined separately for each test (like, `@vue/test-utils`). But can be a speed boost for Node tests (up to 3 times faster), that don't necessarily rely on global state or can easily bypass that.
+:::
+
 ### maxThreads
 
 - **Type:** `number`
