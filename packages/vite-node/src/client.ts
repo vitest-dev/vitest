@@ -129,7 +129,8 @@ export class ViteNodeRunner {
     if (id in requestStubs)
       return requestStubs[id]
 
-    const { code: transformed, externalize } = await this.options.fetchModule(id)
+    // eslint-disable-next-line prefer-const
+    let { code: transformed, externalize } = await this.options.fetchModule(id)
     if (externalize) {
       const mod = await this.interopedImport(externalize)
       this.moduleCache.set(fsPath, { exports: mod })
@@ -177,8 +178,11 @@ export class ViteNodeRunner {
       __dirname: dirname(__filename),
     })
 
+    if (transformed[0] === '#')
+      transformed = transformed.replace(/^\#\!.*/, s => ' '.repeat(s.length))
+
     // add 'use strict' since ESM enables it by default
-    const fn = vm.runInThisContext(`'use strict';async (${Object.keys(context).join(',')})=>{{${transformed.replace(/^\#\!.*/, s => ' '.repeat(s.length))}\n}}`, {
+    const fn = vm.runInThisContext(`'use strict';async (${Object.keys(context).join(',')})=>{{${transformed}\n}}`, {
       filename: fsPath,
       lineOffset: 0,
     })
