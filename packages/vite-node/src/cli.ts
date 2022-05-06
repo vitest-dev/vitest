@@ -12,8 +12,6 @@ cli
   .option('-r, --root <path>', 'Use specified root directory')
   .option('-c, --config <path>', 'Use specified config file')
   .option('-w, --watch', 'Restart on file changes, similar to "nodemon"')
-  .option('-s, --silent', 'Do not emit errors and logs')
-  .option('--vue', 'Support for importing Vue component')
   .help()
 
 cli
@@ -26,8 +24,6 @@ export interface CliOptions {
   root?: string
   config?: string
   watch?: boolean
-  silent?: boolean
-  vue?: boolean
   '--'?: string[]
 }
 
