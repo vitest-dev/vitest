@@ -170,5 +170,5 @@ export interface DiffOptions {
 // TODO: do something with options
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function diff(a: any, b: any, options?: DiffOptions) {
-  return unifiedDiff(stringify(a), stringify(b))
+  return unifiedDiff(stringify(b), stringify(a))
 }
