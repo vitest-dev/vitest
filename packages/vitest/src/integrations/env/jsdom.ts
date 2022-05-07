@@ -1,6 +1,6 @@
 import { importModule } from 'local-pkg'
 import type { Environment, JSDOMOptions } from '../../types'
-import { getWindowKeys } from './utils'
+import { populateGlobal } from './utils'
 
 export default <Environment>({
   name: 'jsdom',
@@ -40,26 +40,19 @@ export default <Environment>({
       },
     )
 
-    const keys = getWindowKeys(global, dom.window)
+    const { keys, allowRewrite } = populateGlobal(global, dom.window)
 
-    const overrideObject = new Map<string, any>()
-    for (const key of keys) {
-      Object.defineProperty(global, key, {
-        get() {
-          if (overrideObject.has(key))
-            return overrideObject.get(key)
-          return dom.window[key]
-        },
-        set(v) {
-          overrideObject.set(key, v)
-        },
-        configurable: true,
-      })
-    }
+    const originals = new Map<string | symbol, any>(
+      allowRewrite.map(([key]) => [key, global[key]]),
+    )
 
     return {
       teardown(global) {
+        dom.window.document.head.innerHTML = ''
+        dom.window.document.body.innerHTML = ''
+        dom.window.close()
         keys.forEach(key => delete global[key])
+        originals.forEach((v, k) => global[k] = v)
       },
     }
   },
