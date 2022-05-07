@@ -18,3 +18,9 @@ it('dispatchEvent doesn\'t throw', () => {
   const event = new Event('click')
   expect(() => target.dispatchEvent(event)).not.toThrow()
 })
+
+it('Image works as expected', () => {
+  const img = new Image(100)
+
+  expect(img.width).toBe(100)
+})

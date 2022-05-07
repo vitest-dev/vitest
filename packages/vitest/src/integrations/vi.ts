@@ -210,11 +210,14 @@ class VitestUtils {
    * `IntersectionObserver`.
    */
   public stubGlobal(name: string | symbol | number, value: any) {
-    // @ts-expect-error we can do anything!
-    globalThis[name] = value
-    if (globalThis.window)
+    if (globalThis.window) {
       // @ts-expect-error we can do anything!
       globalThis.window[name] = value
+    }
+    else {
+      // @ts-expect-error we can do anything!
+      globalThis[name] = value
+    }
 
     return this
   }
