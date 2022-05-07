@@ -1,71 +1,42 @@
-import minimist from 'minimist'
+import cac from 'cac'
 import { dim, red } from 'kolorist'
 import { createServer } from 'vite'
+import { version } from '../package.json'
 import { ViteNodeServer } from './server'
 import { ViteNodeRunner } from './client'
 
-const argv = minimist(process.argv.slice(2), {
-  'alias': {
-    r: 'root',
-    c: 'config',
-    h: 'help',
-    w: 'watch',
-    s: 'silent',
-  },
-  '--': true,
-  'string': ['root', 'config'],
-  'boolean': ['help', 'watch', 'silent'],
-  unknown(name: string) {
-    if (name[0] === '-') {
-      console.error(red(`Unknown argument: ${name}`))
-      help()
-      process.exit(1)
-    }
-    return true
-  },
-})
+const cli = cac('vite-node')
 
-if (argv.help) {
-  help()
-  process.exit(0)
-}
+cli
+  .version(version)
+  .option('-r, --root <path>', 'Use specified root directory')
+  .option('-c, --config <path>', 'Use specified config file')
+  .option('-w, --watch', 'Restart on file changes, similar to "nodemon"')
+  .help()
 
-if (!argv._.length) {
-  console.error(red('No files specified.'))
-  help()
-  process.exit(1)
-}
+cli
+  .command('[...files]')
+  .action(run)
 
-// forward argv
-process.argv = [...process.argv.slice(0, 2), ...(argv['--'] || [])]
-
-run(argv)
-
-function help() {
-  // eslint-disable-next-line no-console
-  console.log(`
-Usage:
-  $ vite-node [options] [files]
-
-Options:
-  -r, --root <path>      ${dim('[string]')} use specified root directory
-  -c, --config <file>    ${dim('[string]')} use specified config file
-  -w, --watch           ${dim('[boolean]')} restart on file changes, similar to "nodemon"
-  -s, --silent          ${dim('[boolean]')} do not emit errors and logs
-  --vue                 ${dim('[boolean]')} support for importing Vue component
-`)
-}
+cli.parse()
 
 export interface CliOptions {
-  files?: string[]
-  _?: string[]
   root?: string
   config?: string
   watch?: boolean
+  '--'?: string[]
 }
 
-async function run(options: CliOptions = {}) {
-  const files = options.files || options._ || []
+async function run(files: string[], options: CliOptions = {}) {
+  if (!files.length) {
+    console.error(red('No files specified.'))
+    cli.outputHelp()
+    process.exit(1)
+  }
+
+  // forward argv
+  process.argv = [...process.argv.slice(0, 2), ...(options['--'] || [])]
+
   const server = await createServer({
     logLevel: 'error',
     configFile: options.config,
