@@ -116,7 +116,7 @@
     "micromatch": "^4.0.5",
     "mlly": "^0.5.2",
     "natural-compare": "^1.4.0",
-    "pathe": "^0.3.0",
+    "pathe": "^0.2.0",
     "picocolors": "^1.0.0",
     "pkg-types": "^0.3.2",
     "pretty-format": "^27.5.1",
