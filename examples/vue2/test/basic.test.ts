@@ -2,7 +2,7 @@ import { mount } from '@vue/test-utils'
 import { nextTick } from '@vue/composition-api'
 import Hello from '../src/components/Options.vue'
 
-test('mount component', async() => {
+test('mount component', async () => {
   expect(Hello).toBeTruthy()
 
   const wrapper = mount(Hello, {

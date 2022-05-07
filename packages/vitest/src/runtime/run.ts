@@ -1,5 +1,5 @@
 import { performance } from 'perf_hooks'
-import type { Benchmark, File, HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from '../types'
+import type { Benchmark, File, HookCleanupCallback, HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from '../types'
 import { vi } from '../integrations/vi'
 import { getSnapshotClient } from '../integrations/snapshot/chai'
 import { clearTimeout, getFullName, getWorkerState, hasFailed, hasTests, partitionSuiteChildren, setTimeout } from '../utils'
@@ -24,21 +24,37 @@ function updateSuiteHookState(suite: Task, name: keyof SuiteHooks, state: TaskSt
   }
 }
 
-export async function callSuiteHook<T extends keyof SuiteHooks>(suite: Suite, currentTask: Task, name: T, args: SuiteHooks[T][0] extends HookListener<infer A> ? A : never) {
-  if (name === 'beforeEach' && suite.suite)
-    await callSuiteHook(suite.suite, currentTask, name, args)
+export async function callSuiteHook<T extends keyof SuiteHooks>(
+  suite: Suite,
+  currentTask: Task,
+  name: T,
+  args: SuiteHooks[T][0] extends HookListener<infer A, any> ? A : never,
+): Promise<HookCleanupCallback[]> {
+  const callbacks: HookCleanupCallback[] = []
+  if (name === 'beforeEach' && suite.suite) {
+    callbacks.push(
+      ...await callSuiteHook(suite.suite, currentTask, name, args),
+    )
+  }
 
   updateSuiteHookState(currentTask, name, 'run')
-  await Promise.all(getHooks(suite)[name].map(fn => fn(...(args as any))))
+  callbacks.push(
+    ...await Promise.all(getHooks(suite)[name].map(fn => fn(...(args as any)))),
+  )
   updateSuiteHookState(currentTask, name, 'pass')
 
-  if (name === 'afterEach' && suite.suite)
-    await callSuiteHook(suite.suite, currentTask, name, args)
+  if (name === 'afterEach' && suite.suite) {
+    callbacks.push(
+      ...await callSuiteHook(suite.suite, currentTask, name, args),
+    )
+  }
+
+  return callbacks
 }
 
-const packs = new Map<string, TaskResult|undefined>()
+const packs = new Map<string, TaskResult | undefined>()
 let updateTimer: any
-let previousUpdate: Promise<void>|undefined
+let previousUpdate: Promise<void> | undefined
 
 function updateTask(task: Task) {
   packs.set(task.id, task.result)
@@ -85,8 +101,9 @@ export async function runTest(test: Test) {
 
   workerState.current = test
 
+  let beforeEachCleanups: HookCleanupCallback[] = []
   try {
-    await callSuiteHook(test.suite, test, 'beforeEach', [test, test.suite])
+    beforeEachCleanups = await callSuiteHook(test.suite, test, 'beforeEach', [test.context, test.suite])
     setState({
       assertionCalls: 0,
       isExpectingAssertions: false,
@@ -111,7 +128,8 @@ export async function runTest(test: Test) {
   }
 
   try {
-    await callSuiteHook(test.suite, test, 'afterEach', [test, test.suite])
+    await callSuiteHook(test.suite, test, 'afterEach', [test.context, test.suite])
+    await Promise.all(beforeEachCleanups.map(i => i?.()))
   }
   catch (e) {
     test.result.state = 'fail'
@@ -133,6 +151,9 @@ export async function runTest(test: Test) {
   getSnapshotClient().clearTest()
 
   test.result.duration = now() - start
+
+  if (workerState.config.logHeapUsage)
+    test.result.heap = process.memoryUsage().heapUsed
 
   workerState.current = undefined
 
@@ -173,7 +194,7 @@ export async function runSuite(suite: Suite) {
   }
   else {
     try {
-      await callSuiteHook(suite, suite, 'beforeAll', [suite])
+      const beforeAllCleanups = await callSuiteHook(suite, suite, 'beforeAll', [suite])
 
       for (const tasksGroup of partitionSuiteChildren(suite)) {
         if (tasksGroup[0].concurrent === true) {
@@ -184,7 +205,9 @@ export async function runSuite(suite: Suite) {
             await runSuiteChild(c)
         }
       }
+
       await callSuiteHook(suite, suite, 'afterAll', [suite])
+      await Promise.all(beforeAllCleanups.map(i => i?.()))
     }
     catch (e) {
       suite.result.state = 'fail'
@@ -192,6 +215,11 @@ export async function runSuite(suite: Suite) {
     }
   }
   suite.result.duration = now() - start
+
+  const workerState = getWorkerState()
+
+  if (workerState.config.logHeapUsage)
+    suite.result.heap = process.memoryUsage().heapUsed
 
   if (suite.mode === 'run') {
     if (!hasTests(suite)) {
@@ -275,12 +303,13 @@ export async function startTests(paths: string[], config: ResolvedConfig) {
   const files = await collectTests(paths, config)
 
   rpc().onCollected(files)
+  getSnapshotClient().clear()
 
   await runFiles(files, config)
 
   takeCoverage()
 
-  await getSnapshotClient().saveSnap()
+  await getSnapshotClient().saveCurrent()
 
   await sendTasksUpdate()
 }

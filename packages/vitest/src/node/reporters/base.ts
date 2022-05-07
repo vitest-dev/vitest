@@ -16,6 +16,8 @@ const HELP_QUITE = `${c.dim('press ')}${c.bold('q')}${c.dim(' to quit')}`
 const WAIT_FOR_CHANGE_PASS = `\n${c.bold(c.inverse(c.green(' PASS ')))}${c.green(' Waiting for file changes...')}`
 const WAIT_FOR_CHANGE_FAIL = `\n${c.bold(c.inverse(c.red(' FAIL ')))}${c.red(' Tests failed. Watching for file changes...')}`
 
+const DURATION_LONG = 300
+
 export abstract class BaseReporter implements Reporter {
   start = 0
   end = 0
@@ -53,9 +55,22 @@ export abstract class BaseReporter implements Reporter {
     return relative(this.ctx.config.root, path)
   }
 
-  async onFinished(files = this.ctx.state.getFiles()) {
+  async onFinished(files = this.ctx.state.getFiles(), errors = this.ctx.state.getUnhandledErrors()) {
     this.end = performance.now()
     await this.reportSummary(files)
+    if (errors.length) {
+      process.exitCode = 1
+      const errorMessage = c.red(c.bold(
+        `\nVitest caught ${errors.length} unhandled error${errors.length > 1 ? 's' : ''} during the test run. This might cause false positive tests.`
+        + '\nPlease, resolve all the errors to make sure your tests are not affected.',
+      ))
+      this.ctx.log(c.red(divider(c.bold(c.inverse(' Unhandled Errors ')))))
+      this.ctx.log(errorMessage)
+      await Promise.all(errors.map(async (err) => {
+        await this.ctx.printError(err, true, (err as ErrorWithDiff).type || 'Unhandled Error')
+      }))
+      this.ctx.log(c.red(divider()))
+    }
   }
 
   onTaskUpdate(packs: TaskResultPack[]) {
@@ -73,8 +88,12 @@ export abstract class BaseReporter implements Reporter {
         if (skipped.length)
           state += ` ${c.dim('|')} ${c.yellow(`${skipped.length} skipped`)}`
         let suffix = c.dim(' (') + state + c.dim(')')
-        if (task.result.duration)
-          suffix += c.yellow(` ${Math.round(task.result.duration)}${c.dim('ms')}`)
+        if (task.result.duration) {
+          const color = task.result.duration > DURATION_LONG ? c.yellow : c.gray
+          suffix += color(` ${Math.round(task.result.duration)}${c.dim('ms')}`)
+        }
+        if (this.ctx.config.logHeapUsage && task.result.heap != null)
+          suffix += c.magenta(` ${Math.floor(task.result.heap / 1024 / 1024)} MB heap used`)
 
         this.ctx.log(` ${getStateSymbol(task)} ${task.name} ${suffix}`)
 
@@ -89,7 +108,8 @@ export abstract class BaseReporter implements Reporter {
 
   async onWatcherStart() {
     const files = this.ctx.state.getFiles()
-    const failed = hasFailed(files)
+    const errors = this.ctx.state.getUnhandledErrors()
+    const failed = errors.length > 0 || hasFailed(files)
     const failedSnap = hasFailedSnapshot(files)
     if (failed)
       this.ctx.log(WAIT_FOR_CHANGE_FAIL)
@@ -207,10 +227,9 @@ export abstract class BaseReporter implements Reporter {
   }
 
   registerUnhandledRejection() {
-    process.on('unhandledRejection', async(err) => {
+    process.on('unhandledRejection', async (err) => {
       process.exitCode = 1
-      this.ctx.error(`\n${c.red(divider(c.bold(c.inverse(' Unhandled Rejection '))))}`)
-      await this.ctx.printError(err)
+      await this.ctx.printError(err, true, 'Unhandled Rejection')
       this.ctx.error('\n\n')
       process.exit(1)
     })

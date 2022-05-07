@@ -29,7 +29,7 @@ const workerPath = pathToFileURL(resolve(distDir, './worker.js')).href
 
 export function createFakePool(ctx: Vitest): WorkerPool {
   const runWithFiles = (name: 'run' | 'collect'): RunWithFiles => {
-    return async(files, invalidates) => {
+    return async (files, invalidates) => {
       const worker = await import(workerPath)
 
       const { workerPort, port } = createChannel(ctx)
@@ -52,7 +52,7 @@ export function createFakePool(ctx: Vitest): WorkerPool {
   return {
     runTests: runWithFiles('run'),
     collectTests: runWithFiles('collect'),
-    close: async() => {},
+    close: async () => {},
   }
 }
 
@@ -78,9 +78,9 @@ export function createWorkerPool(ctx: Vitest): WorkerPool {
   const pool = new Tinypool(options)
 
   const runWithFiles = (name: string): RunWithFiles => {
-    return async(files, invalidates) => {
+    return async (files, invalidates) => {
       let id = 0
-      await Promise.all(files.map(async(file) => {
+      await Promise.all(files.map(async (file) => {
         const { workerPort, port } = createChannel(ctx)
 
         const data: WorkerContext = {
@@ -101,7 +101,7 @@ export function createWorkerPool(ctx: Vitest): WorkerPool {
   return {
     runTests: runWithFiles('run'),
     collectTests: runWithFiles('collect'),
-    close: async() => {}, // TODO: not sure why this will cause Node crash: pool.destroy(),
+    close: async () => {}, // TODO: not sure why this will cause Node crash: pool.destroy(),
   }
 }
 
@@ -148,8 +148,11 @@ function createChannel(ctx: Vitest) {
         ctx.state.updateUserLog(log)
         ctx.report('onUserConsoleLog', log)
       },
+      onUnhandledRejection(err) {
+        ctx.state.catchError(err, 'Unhandled Rejection')
+      },
       onFinished(files) {
-        ctx.report('onFinished', files)
+        ctx.report('onFinished', files, ctx.state.getUnhandledErrors())
       },
     },
     {

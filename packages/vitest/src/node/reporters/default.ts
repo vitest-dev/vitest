@@ -22,6 +22,7 @@ export class DefaultReporter extends BaseReporter {
   onCollected() {
     if (this.isTTY) {
       this.rendererOptions.outputStream = this.ctx.outputStream
+      this.rendererOptions.showHeap = this.ctx.config.logHeapUsage
       const files = this.ctx.state.getFiles(this.watchFilters)
       if (!this.renderer)
         this.renderer = createListRenderer(files, this.rendererOptions).start()
@@ -30,10 +31,10 @@ export class DefaultReporter extends BaseReporter {
     }
   }
 
-  async onFinished(files = this.ctx.state.getFiles()) {
+  async onFinished(files = this.ctx.state.getFiles(), errors = this.ctx.state.getUnhandledErrors()) {
     await this.stopListRender()
     this.ctx.log()
-    await super.onFinished(files)
+    await super.onFinished(files, errors)
   }
 
   async onWatcherStart() {

@@ -5,7 +5,7 @@ describe('testing date mock functionality', () => {
     vi.useRealTimers()
   })
 
-  test('seting time in the past', () => {
+  test('setting time in the past', () => {
     const date = new Date(2000, 1, 1)
 
     vi.setSystemTime(date)

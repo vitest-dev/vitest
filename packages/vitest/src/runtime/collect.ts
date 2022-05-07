@@ -1,10 +1,11 @@
 import { createHash } from 'crypto'
 import { relative } from 'pathe'
 import type { File, ResolvedConfig, Suite, TaskBase } from '../types'
-import { clearContext, defaultSuite } from './suite'
+import { stdout } from '../utils'
+import { clearCollectorContext, defaultSuite } from './suite'
 import { getHooks, setHooks } from './map'
 import { processError } from './error'
-import { context } from './context'
+import { collectorContext } from './context'
 import { runSetupFiles } from './setup'
 import { clearBenchmarkContext, defaultBenchmark } from './benchmark'
 
@@ -31,7 +32,7 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
       tasks: [],
     }
 
-    clearContext()
+    clearCollectorContext()
     clearBenchmarkContext()
 
     try {
@@ -42,7 +43,7 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
       const defaultBenchmarkTasks = await defaultBenchmark.collect(file)
       setHooks(file, getHooks(defaultTasks))
 
-      for (const c of [...defaultTasks.tasks, ...context.tasks, ...defaultBenchmarkTasks.tasks]) {
+      for (const c of [...defaultTasks.tasks, ...collectorContext.tasks, ...defaultBenchmarkTasks.tasks]) {
         if (c.type === 'test') {
           file.tasks.push(c)
         }
@@ -67,7 +68,7 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
         error: processError(e),
       }
       // not sure thy, this line is needed to trigger the error
-      process.stdout.write('\0')
+      stdout().write('\0')
     }
 
     calculateHash(file)

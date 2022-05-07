@@ -14,13 +14,12 @@ jobs:
           fetch-depth: 0
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v2.2.1
+        uses: pnpm/action-setup@v2
 
       - name: Set node version to v16
         uses: actions/setup-node@v3
         with:
           node-version: 16
-          cache: pnpm
 
       # - run: pnpm i -g @antfu/ni
       # - run: nci

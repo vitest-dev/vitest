@@ -227,6 +227,7 @@ Custom reporters for output. Reporters can be [a Reporter instance](https://gith
   - `'dot'` -  show each task as a single dot
   - `'junit'` - JUnit XML reporter
   - `'json'` -  give a simple JSON summary
+  - path of a custom reporter (e.g. `'./path/to/reporter.ts'`, `'@scope/reporter'`)
 
 ### outputFile
 
@@ -447,3 +448,10 @@ export default {
   },
 }
 ```
+
+### logHeapUsage
+
+- **Type**: `boolean`
+- **Default**: `false`
+
+Show heap usage after each test. Usefull for debugging memory leaks.

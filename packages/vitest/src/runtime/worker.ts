@@ -3,7 +3,7 @@ import { createBirpc } from 'birpc'
 import { ModuleCacheMap } from 'vite-node/client'
 import type { ResolvedConfig, WorkerContext, WorkerRPC } from '../types'
 import { distDir } from '../constants'
-import { getWorkerState } from '../utils'
+import { getWorkerState, stdout } from '../utils'
 import type { MockMap } from '../types/mocker'
 import { executeInViteNode } from './execute'
 import { rpc } from './rpc'
@@ -30,6 +30,10 @@ async function startViteNode(ctx: WorkerContext) {
     rpc().onWorkerExit(code)
     return processExit(code)
   }
+
+  process.on('unhandledRejection', (err) => {
+    rpc().onUnhandledRejection(err)
+  })
 
   const { config } = ctx
 
@@ -60,7 +64,7 @@ function init(ctx: WorkerContext) {
   if (typeof __vitest_worker__ !== 'undefined' && ctx.config.threads && ctx.config.isolate)
     throw new Error(`worker for ${ctx.files.join(',')} already initialized by ${getWorkerState().ctx.files.join(',')}. This is probably an internal bug of Vitest.`)
 
-  process.stdout.write('\0')
+  stdout().write('\0')
 
   const { config, port, id } = ctx
 

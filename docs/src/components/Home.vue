@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { coreTeamMembers } from '../contributors'
 </script>
+
 <template>
   <div flex flex-col items-center>
     <div flex flex-col items-center p="t-10 md:t-20 b-10">

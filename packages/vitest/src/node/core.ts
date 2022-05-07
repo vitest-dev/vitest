@@ -5,14 +5,15 @@ import { relative, toNamespacedPath } from 'pathe'
 import fg from 'fast-glob'
 import mm from 'micromatch'
 import c from 'picocolors'
+import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
 import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig } from '../types'
 import { SnapshotManager } from '../integrations/snapshot/manager'
 import { clearTimeout, deepMerge, hasFailed, noop, setTimeout, slash, toArray } from '../utils'
 import { cleanCoverage, reportCoverage } from '../integrations/coverage'
-import { ReportersMap } from './reporters'
 import { createPool } from './pool'
 import type { WorkerPool } from './pool'
+import { createReporters } from './reporters/utils'
 import { StateManager } from './state'
 import { resolveConfig } from './config'
 import { printError } from './error'
@@ -44,6 +45,7 @@ export class Vitest {
 
   isFirstRun = true
   restartsCount = 0
+  runner: ViteNodeRunner = undefined!
 
   private _onRestartListeners: Array<() => void> = []
 
@@ -64,21 +66,24 @@ export class Vitest {
     this.config = resolved
     this.state = new StateManager()
     this.snapshot = new SnapshotManager({ ...resolved.snapshotOptions })
-    this.reporters = resolved.reporters
-      .map((i) => {
-        if (typeof i === 'string') {
-          const Reporter = ReportersMap[i]
-          if (!Reporter)
-            throw new Error(`Unknown reporter: ${i}`)
-          return new Reporter()
-        }
-        return i
-      })
 
     if (this.config.watch)
       this.registerWatcher()
 
     this.vitenode = new ViteNodeServer(server, this.config)
+    const node = this.vitenode
+    this.runner = new ViteNodeRunner({
+      root: server.config.root,
+      base: server.config.base,
+      fetchModule(id: string) {
+        return node.fetchModule(id)
+      },
+      resolveId(id: string, importer: string | undefined) {
+        return node.resolveId(id, importer)
+      },
+    })
+
+    this.reporters = await createReporters(resolved.reporters, this.runner.executeFile.bind(this.runner))
 
     this.runningPromise = undefined
 
@@ -151,7 +156,7 @@ export class Vitest {
   private async getTestDependencies(filepath: string) {
     const deps = new Set<string>()
 
-    const addImports = async(filepath: string) => {
+    const addImports = async (filepath: string) => {
       const transformed = await this.vitenode.transformRequest(filepath)
       if (!transformed)
         return
@@ -194,7 +199,7 @@ export class Vitest {
       return []
 
     const testDeps = await Promise.all(
-      tests.map(async(filepath) => {
+      tests.map(async (filepath) => {
         const deps = await this.getTestDependencies(filepath)
         return [filepath, deps] as const
       }),
@@ -214,18 +219,25 @@ export class Vitest {
   async runFiles(files: string[]) {
     await this.runningPromise
 
-    this.runningPromise = (async() => {
+    this.runningPromise = (async () => {
       if (!this.pool)
         this.pool = createPool(this)
 
       const invalidates = Array.from(this.invalidates)
       this.invalidates.clear()
-      await this.pool.runTests(files, invalidates)
+      this.snapshot.clear()
+      this.state.clearErrors()
+      try {
+        await this.pool.runTests(files, invalidates)
+      }
+      catch (err) {
+        this.state.catchError(err, 'Unhandled Error')
+      }
 
       if (hasFailed(this.state.getFiles()))
         process.exitCode = 1
 
-      await this.report('onFinished', this.state.getFiles())
+      await this.report('onFinished', this.state.getFiles(), this.state.getUnhandledErrors())
     })()
       .finally(() => {
         this.runningPromise = undefined
@@ -251,7 +263,10 @@ export class Vitest {
 
   async updateSnapshot(files?: string[]) {
     // default to failed files
-    files = files || this.state.getFailedFilepaths()
+    files = files || [
+      ...this.state.getFailedFilepaths(),
+      ...this.snapshot.summary.uncheckedKeysByFile.map(s => s.filePath),
+    ]
 
     this.configOverride = {
       snapshotOptions: {
@@ -297,7 +312,7 @@ export class Vitest {
     if (this.restartsCount !== currentCount)
       return
 
-    this._rerunTimer = setTimeout(async() => {
+    this._rerunTimer = setTimeout(async () => {
       if (this.changedTests.size === 0) {
         this.invalidates.clear()
         return
@@ -352,7 +367,7 @@ export class Vitest {
         this.report('onTestRemoved', id)
       }
     }
-    const onAdd = async(id: string) => {
+    const onAdd = async (id: string) => {
       id = slash(id)
       if (await this.isTargetFile(id)) {
         this.changedTests.add(id)
@@ -455,7 +470,7 @@ export class Vitest {
       if (filters.length)
         files = files.filter(i => filters.some(f => i.includes(f)))
 
-      await Promise.all(files.map(async(file) => {
+      await Promise.all(files.map(async (file) => {
         try {
           const code = await fs.readFile(file, 'utf-8')
           if (this.isInSourceTestFile(code))
@@ -487,8 +502,12 @@ export class Vitest {
     return code.includes('import.meta.vitest')
   }
 
-  printError(err: unknown) {
-    return printError(err, this)
+  printError(err: unknown, fullStack = false, type?: string) {
+    return printError(err, this, {
+      fullStack,
+      type,
+      showCodeFrame: true,
+    })
   }
 
   onServerRestarted(fn: () => void) {

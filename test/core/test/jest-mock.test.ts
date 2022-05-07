@@ -42,7 +42,7 @@ describe('jest mock compat layer', () => {
   })
 
   it('implementation sync fn', () => {
-    const originalFn = function() {
+    const originalFn = function () {
       return 'original'
     }
     const spy = vi.fn(originalFn)
@@ -102,8 +102,8 @@ describe('jest mock compat layer', () => {
     expect(spy.mock.results).toEqual([])
   })
 
-  it('implementation async fn', async() => {
-    const originalFn = async function() {
+  it('implementation async fn', async () => {
+    const originalFn = async function () {
       return 'original'
     }
     const spy = vi.fn(originalFn)
@@ -170,7 +170,7 @@ describe('jest mock compat layer', () => {
   it('getter function spyOn', () => {
     const obj = {
       get getter() {
-        return function() { return 'original' }
+        return function () { return 'original' }
       },
     }
 
@@ -252,7 +252,7 @@ describe('jest mock compat layer', () => {
     expect(obj.property).toBe(true)
   })
 
-  it('throwing', async() => {
+  it('throwing', async () => {
     const fn = vi.fn(() => {
       // eslint-disable-next-line no-throw-literal
       throw 'error'
@@ -268,8 +268,8 @@ describe('jest mock compat layer', () => {
     ])
   })
 
-  it('mockRejectedValue', async() => {
-    const safeCall = async(fn: () => void) => {
+  it('mockRejectedValue', async () => {
+    const safeCall = async (fn: () => void) => {
       try {
         await fn()
       }
@@ -286,7 +286,7 @@ describe('jest mock compat layer', () => {
     expect(spy.mock.results[0]).toEqual(e(new Error('once')))
     expect(spy.mock.results[1]).toEqual(e(new Error('error')))
   })
-  it('mockResolvedValue', async() => {
+  it('mockResolvedValue', async () => {
     const spy = vi.fn()
       .mockResolvedValue('resolved')
       .mockResolvedValueOnce('once')

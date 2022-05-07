@@ -10,6 +10,7 @@ import { getCols, getHookStateSymbol, getStateSymbol } from './utils'
 export interface ListRendererOptions {
   renderSucceed?: boolean
   outputStream: NodeJS.WritableStream
+  showHeap: boolean
 }
 
 const DURATION_LONG = 300
@@ -90,6 +91,9 @@ export function renderTree(tasks: Task[], options: ListRendererOptions, level = 
       if (task.result.duration > DURATION_LONG)
         suffix += c.yellow(` ${Math.round(task.result.duration)}${c.dim('ms')}`)
     }
+
+    if (options.showHeap && task.result?.heap != null)
+      suffix += c.magenta(` ${Math.floor(task.result.heap / 1024 / 1024)} MB heap used`)
 
     let name = task.name
     if (level === 0)

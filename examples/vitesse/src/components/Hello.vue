@@ -1,7 +1,6 @@
 <script setup lang="ts">
-const times = ref(2)
 const props = defineProps<{ count: number }>()
-
+const times = ref(2)
 const result = computed(() => props.count * times.value)
 
 defineExpose(props)

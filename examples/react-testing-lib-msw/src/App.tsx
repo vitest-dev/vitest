@@ -13,7 +13,7 @@ function App() {
   const [posts, setPosts] = React.useState<Post[]>([])
   const [isLoading, setIsLoading] = React.useState(false)
 
-  const fetchPosts = async() => {
+  const fetchPosts = async () => {
     setIsLoading(true)
     await fetch('https://jsonplaceholder.typicode.com/posts')
       .then(res => res.json())

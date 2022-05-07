@@ -22,9 +22,10 @@ export interface WorkerRPC {
   resolveId: ResolveIdFunction
   getSourceMap: (id: string, force?: boolean) => Promise<RawSourceMap | undefined>
 
-  onFinished: (files: File[]) => void
+  onFinished: (files: File[], errors?: unknown[]) => void
   onWorkerExit: (code?: number) => void
   onUserConsoleLog: (log: UserConsoleLog) => void
+  onUnhandledRejection: (err: unknown) => void
   onCollected: (files: File[]) => void
   onTaskUpdate: (pack: TaskResultPack[]) => void
 

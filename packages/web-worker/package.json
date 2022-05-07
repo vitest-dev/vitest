@@ -1,7 +1,7 @@
 {
   "name": "@vitest/web-worker",
   "type": "module",
-  "version": "0.9.3",
+  "version": "0.10.4",
   "description": "Web Worker support for testing in Vitest",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -35,6 +35,6 @@
     "vite-node": "workspace:*"
   },
   "devDependencies": {
-    "rollup": "^2.70.1"
+    "rollup": "^2.71.1"
   }
 }

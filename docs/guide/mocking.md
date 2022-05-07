@@ -14,7 +14,7 @@ Sometimes you need to be in control of the date to ensure consistency when testi
 ### Example
 
 ```js
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const businessHours = [9, 17]
 
@@ -171,7 +171,7 @@ import { Client } from 'pg'
 export function success(data) {}
 export function failure(data) {}
 // get todos
-export const getTodos = async(event, context) => {
+export const getTodos = async (event, context) => {
   const client = new Client({
     // ...clientOptions
   })
@@ -226,7 +226,7 @@ describe('get a list of todo items', () => {
     vi.clearAllMocks()
   })
 
-  it('should return items successfully', async() => {
+  it('should return items successfully', async () => {
     client.query.mockResolvedValueOnce({ rows: [], rowCount: 0 })
 
     await getTodos()
@@ -242,7 +242,7 @@ describe('get a list of todo items', () => {
     })
   })
 
-  it('should throw an error', async() => {
+  it('should throw an error', async () => {
     const mError = new Error('Unable to retrieve rows')
     client.query.mockRejectedValueOnce(mError)
 

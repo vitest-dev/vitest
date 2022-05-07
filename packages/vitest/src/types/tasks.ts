@@ -4,6 +4,7 @@ import type { UserConsoleLog } from '.'
 
 export type RunMode = 'run' | 'skip' | 'only' | 'todo'
 export type TaskState = RunMode | 'pass' | 'fail'
+
 export interface TaskBase {
   id: string
   name: string
@@ -19,6 +20,7 @@ export interface TaskResult {
   state: TaskState
   duration?: number
   startTime?: number
+  heap?: number
   error?: ErrorWithDiff
   htmlError?: string
   hooks?: Partial<Record<keyof SuiteHooks, TaskState>>
@@ -36,17 +38,18 @@ export interface File extends Suite {
   collectDuration?: number
 }
 
-export interface Test extends TaskBase {
+export interface Test<ExtraContext = {}> extends TaskBase {
   type: 'test'
   suite: Suite
   result?: TaskResult
   fails?: boolean
+  context: TestContext & ExtraContext
 }
 
 export type Task = Test | Suite | File | Benchmark
 
 export type DoneCallback = (error?: any) => void
-export type TestFunction = (done: DoneCallback) => Awaitable<void>
+export type TestFunction<ExtraContext = {}> = (context: TestContext & ExtraContext) => Awaitable<void>
 
 // jest's ExtractEachCallbackArgs
 type ExtractEachCallbackArgs<T extends ReadonlyArray<any>> = {
@@ -86,45 +89,55 @@ type ExtractEachCallbackArgs<T extends ReadonlyArray<any>> = {
 interface EachFunction {
   <T extends any[] | [any]>(cases: ReadonlyArray<T>): (
     name: string,
-    fn: (...args: T) => void
+    fn: (...args: T) => Awaitable<void>
   ) => void
   <T extends ReadonlyArray<any>>(cases: ReadonlyArray<T>): (
     name: string,
-    fn: (...args: ExtractEachCallbackArgs<T>) => void
+    fn: (...args: ExtractEachCallbackArgs<T>) => Awaitable<void>
   ) => void
   <T>(cases: ReadonlyArray<T>): (
     name: string,
-    fn: (...args: T[]) => void
+    fn: (...args: T[]) => Awaitable<void>
   ) => void
 }
 
-export type TestAPI = ChainableFunction<
+export type TestAPI<ExtraContext = {}> = ChainableFunction<
 'concurrent' | 'only' | 'skip' | 'todo' | 'fails',
-[name: string, fn?: TestFunction, timeout?: number],
+[name: string, fn?: TestFunction<ExtraContext>, timeout?: number],
 void
-> & { each: EachFunction }
-
-export type SuiteAPI = ChainableFunction<
-'concurrent' | 'only' | 'skip' | 'todo',
-[name: string, factory?: SuiteFactory],
-SuiteCollector
-> & { each: EachFunction }
-
-export type HookListener<T extends any[]> = (...args: T) => Awaitable<void>
-
-export interface SuiteHooks {
-  beforeAll: HookListener<[Suite]>[]
-  afterAll: HookListener<[Suite]>[]
-  beforeEach: HookListener<[Test, Suite]>[]
-  afterEach: HookListener<[Test, Suite]>[]
+> & {
+  each: EachFunction
+  skipIf(condition: any): TestAPI<ExtraContext>
+  runIf(condition: any): TestAPI<ExtraContext>
 }
 
-export interface SuiteCollector {
+export type SuiteAPI<ExtraContext = {}> = ChainableFunction<
+'concurrent' | 'only' | 'skip' | 'todo',
+[name: string, factory?: SuiteFactory],
+SuiteCollector<ExtraContext>
+> & {
+  each: EachFunction
+  skipIf(condition: any): SuiteAPI<ExtraContext>
+  runIf(condition: any): SuiteAPI<ExtraContext>
+}
+
+export type HookListener<T extends any[], Return = void> = (...args: T) => Awaitable<Return | void>
+
+export interface SuiteHooks {
+  beforeAll: HookListener<[Suite], () => Awaitable<void>>[]
+  afterAll: HookListener<[Suite]>[]
+  beforeEach: HookListener<[TestContext, Suite], () => Awaitable<void>>[]
+  afterEach: HookListener<[TestContext, Suite]>[]
+}
+
+export type HookCleanupCallback = (() => Awaitable<void>) | void
+
+export interface SuiteCollector<ExtraContext = {}> {
   readonly name: string
   readonly mode: RunMode
   type: 'collector'
-  test: TestAPI
-  tasks: (Suite | Test | SuiteCollector)[]
+  test: TestAPI<ExtraContext>
+  tasks: (Suite | Test | SuiteCollector<ExtraContext>)[]
   collect: (file?: File) => Promise<Suite>
   clear: () => void
   on: <T extends keyof SuiteHooks>(name: T, ...fn: SuiteHooks[T]) => void
@@ -186,4 +199,21 @@ export interface BenchmarkCollector {
 
 export interface BenchmarkContext {
   currentBenchmark: BenchmarkCollector | null
+}
+
+export interface TestContext {
+  /**
+   * @deprecated Use promise instead
+   */
+  (error?: any): void
+
+  /**
+   * Metadata of the current test
+   */
+  meta: Readonly<Test>
+
+  /**
+   * A expect instance bound to the test
+   */
+  expect: Vi.ExpectStatic
 }

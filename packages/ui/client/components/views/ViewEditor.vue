@@ -8,15 +8,22 @@ import type { File } from '#types'
 const props = defineProps<{
   file?: File
 }>()
+const emit = defineEmits<{ (event: 'draft', value: boolean): void }>()
 
 const code = ref('')
+const serverCode = shallowRef<string | undefined>(undefined)
+const draft = ref(false)
 watch(() => props.file,
-  async() => {
+  async () => {
     if (!props.file || !props.file?.filepath) {
       code.value = ''
+      serverCode.value = code.value
+      draft.value = false
       return
     }
     code.value = await client.rpc.readFile(props.file.filepath)
+    serverCode.value = code.value
+    draft.value = false
   },
   { immediate: true },
 )
@@ -44,8 +51,16 @@ useResizeObserver(editor, () => {
   cm.value?.refresh()
 })
 
-watch([cm, failed], () => {
-  if (!cm.value) {
+function codemirrorChanges() {
+  draft.value = serverCode.value !== cm.value!.getValue()
+}
+
+watch(draft, (d) => {
+  emit('draft', d)
+}, { immediate: true })
+
+watch([cm, failed], ([cmValue]) => {
+  if (!cmValue) {
     clearListeners()
     return
   }
@@ -56,6 +71,8 @@ watch([cm, failed], () => {
     handles.forEach(h => cm.value?.removeLineClass(h, 'wrap'))
     widgets.length = 0
     handles.length = 0
+
+    cmValue.on('changes', codemirrorChanges)
 
     failed.value.forEach((i) => {
       const e = i.result?.error
@@ -76,7 +93,7 @@ watch([cm, failed], () => {
           content: 'Open in Editor',
           placement: 'bottom',
         }, false)
-        const el: EventListener = async() => {
+        const el: EventListener = async () => {
           await openInEditor(stacks[0].file, pos.line, pos.column)
         }
         div.appendChild(span)
@@ -86,13 +103,15 @@ watch([cm, failed], () => {
       }
     })
     if (!hasBeenEdited.value)
-      cm.value?.clearHistory() // Prevent getting access to initial state
+      cmValue.clearHistory() // Prevent getting access to initial state
   }, 100)
 }, { flush: 'post' })
 
 async function onSave(content: string) {
   hasBeenEdited.value = true
   await client.rpc.writeFile(props.file!.filepath, content)
+  serverCode.value = content
+  draft.value = false
 }
 </script>
 

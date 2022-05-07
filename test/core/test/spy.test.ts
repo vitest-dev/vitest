@@ -5,7 +5,7 @@ import { describe, expect, test, vi } from 'vitest'
  */
 
 describe('spyOn', () => {
-  test('correctly infers method types', async() => {
+  test('correctly infers method types', async () => {
     vi.spyOn(localStorage, 'getItem').mockReturnValue('world')
     expect(window.localStorage.getItem('hello')).toEqual('world')
   })
