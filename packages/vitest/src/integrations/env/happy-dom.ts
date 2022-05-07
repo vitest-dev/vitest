@@ -18,8 +18,6 @@ export default <Environment>({
 
     return {
       teardown(global) {
-        win.document.head.innerHTML = ''
-        win.document.body.innerHTML = ''
         win.happyDOM.cancelAsync()
         keys.forEach(key => delete global[key])
         originals.forEach((v, k) => global[k] = v)

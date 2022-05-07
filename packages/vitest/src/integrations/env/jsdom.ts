@@ -48,9 +48,6 @@ export default <Environment>({
 
     return {
       teardown(global) {
-        dom.window.document.head.innerHTML = ''
-        dom.window.document.body.innerHTML = ''
-        dom.window.close()
         keys.forEach(key => delete global[key])
         originals.forEach((v, k) => global[k] = v)
       },

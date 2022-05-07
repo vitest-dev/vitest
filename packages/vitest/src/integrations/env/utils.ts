@@ -42,30 +42,7 @@ export function populateGlobal(global: any, win: any) {
     })
   }
 
-  const globalKeys = ['window', 'self', 'GLOBAL', 'global']
-
-  global.globalThis = new Proxy(global.globalThis, {
-    set(target, key, value, receiver) {
-      overrideObject.set(key, value)
-      return Reflect.set(target, key, value, receiver)
-    },
-    deleteProperty(target, key) {
-      overrideObject.delete(key)
-      return Reflect.deleteProperty(target, key)
-    },
-    defineProperty(target, p, attributes) {
-      if (attributes.writable && 'value' in attributes) {
-        // skip - already covered by "set"
-      }
-      else if (attributes.get) {
-        globalKeys.forEach((key) => {
-          if (win[key])
-            Object.defineProperty(win[key], p, attributes)
-        })
-      }
-      return Reflect.defineProperty(target, p, attributes)
-    },
-  })
+  const globalKeys = new Set<string | symbol>(['window', 'self', 'GLOBAL', 'global'])
 
   globalKeys.forEach((key) => {
     if (!win[key])
@@ -119,6 +96,29 @@ export function populateGlobal(global: any, win: any) {
       },
       configurable: true,
     })
+  })
+
+  global.globalThis = new Proxy(global.globalThis, {
+    set(target, key, value, receiver) {
+      overrideObject.set(key, value)
+      return Reflect.set(target, key, value, receiver)
+    },
+    deleteProperty(target, key) {
+      overrideObject.delete(key)
+      return Reflect.deleteProperty(target, key)
+    },
+    defineProperty(target, p, attributes) {
+      if (attributes.writable && 'value' in attributes) {
+        // skip - already covered by "set"
+      }
+      else if (attributes.get && !globalKeys.has(p)) {
+        globalKeys.forEach((key) => {
+          if (win[key])
+            Object.defineProperty(win[key], p, attributes)
+        })
+      }
+      return Reflect.defineProperty(target, p, attributes)
+    },
   })
 
   skipKeys.forEach(k => keys.add(k))
