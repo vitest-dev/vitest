@@ -62,6 +62,7 @@ export interface C8Options {
   extension?: string | string[]
 
   all?: boolean
+  src?: string[]
 
   100?: boolean
   lines?: number
