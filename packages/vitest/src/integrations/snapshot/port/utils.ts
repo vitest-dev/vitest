@@ -6,7 +6,7 @@
  */
 
 import fs, { promises as fsp } from 'fs'
-import path from 'pathe'
+import { dirname, join } from 'pathe'
 import naturalCompare from 'natural-compare'
 import type { OptionsReceived as PrettyFormatOptions } from 'pretty-format'
 import {
@@ -132,7 +132,7 @@ function printBacktickString(str: string): string {
 
 export function ensureDirectoryExists(filePath: string): void {
   try {
-    fs.mkdirSync(path.join(path.dirname(filePath)), { recursive: true })
+    fs.mkdirSync(join(dirname(filePath)), { recursive: true })
   }
   catch { }
 }

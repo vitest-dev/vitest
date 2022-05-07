@@ -1,11 +1,11 @@
-import path from 'pathe'
+import { resolve } from 'pathe'
 import { startDevServer } from '@cypress/vite-dev-server'
 
 const plugin: Cypress.PluginConfig = (on, config) => {
   on('dev-server:start', options => startDevServer({
     options,
     viteConfig: {
-      configFile: path.resolve(__dirname, './vite.config.ts'),
+      configFile: resolve(__dirname, './vite.config.ts'),
     },
   }))
 
