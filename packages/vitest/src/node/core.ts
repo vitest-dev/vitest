@@ -78,12 +78,12 @@ export class Vitest {
       fetchModule(id: string) {
         return node.fetchModule(id)
       },
-      resolveId(id: string, importer: string | undefined) {
+      resolveId(id: string, importer?: string) {
         return node.resolveId(id, importer)
       },
     })
 
-    this.reporters = await createReporters(resolved.reporters, this.runner.executeFile.bind(this.runner))
+    this.reporters = await createReporters(resolved.reporters, this.runner)
 
     this.runningPromise = undefined
 

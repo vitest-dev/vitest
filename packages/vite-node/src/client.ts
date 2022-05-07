@@ -95,13 +95,6 @@ export class ViteNodeRunner {
         return `stack:\n${[...callstack, dep].reverse().map(p => `- ${p}`).join('\n')}`
       }
 
-      // probably means it was passed as variable
-      // and wasn't transformed by Vite
-      if (this.options.resolveId && this.shouldResolveId(dep)) {
-        const resolvedDep = await this.options.resolveId(dep, id)
-        dep = resolvedDep?.id?.replace(this.root, '') || dep
-      }
-
       let debugTimer: any
       if (this.debug)
         debugTimer = setTimeout(() => this.debugLog(() => `module ${dep} takes over 2s to load.\n${getStack()}`), 2000)
@@ -124,6 +117,27 @@ export class ViteNodeRunner {
           clearTimeout(debugTimer)
       }
     }
+
+    Object.defineProperty(request, 'callstack', { get: () => callstack })
+
+    const resolveId = async (dep: string, callstackPosition = 1) => {
+      // probably means it was passed as variable
+      // and wasn't transformed by Vite
+      // or some dependency name was passed
+      // runner.executeFile('@scope/name')
+      // runner.executeFile(myDynamicName)
+      if (this.options.resolveId && this.shouldResolveId(dep)) {
+        let importer = callstack[callstack.length - callstackPosition]
+        if (importer && importer.startsWith('mock:'))
+          importer = importer.slice(5)
+        const { id } = await this.options.resolveId(dep, importer) || {}
+        dep = id && isAbsolute(id) ? `/@fs/${id}` : id || dep
+      }
+
+      return dep
+    }
+
+    id = await resolveId(id, 2)
 
     const requestStubs = this.options.requestStubs || DEFAULT_REQUEST_STUBS
     if (id in requestStubs)
@@ -158,6 +172,8 @@ export class ViteNodeRunner {
       },
     }
 
+    let require: NodeRequire
+
     // Be careful when changing this
     // changing context will change amount of code added on line :114 (vm.runInThisContext)
     // this messes up sourcemaps for coverage
@@ -170,8 +186,15 @@ export class ViteNodeRunner {
       __vite_ssr_exportAll__: (obj: any) => exportAll(exports, obj),
       __vite_ssr_import_meta__: { url },
 
+      __vitest_resolve_id__: resolveId,
+
       // cjs compact
-      require: createRequire(url),
+      require: (path: string) => {
+        if (!require)
+          require = createRequire(url)
+
+        return require(path)
+      },
       exports,
       module: moduleProxy,
       __filename,
@@ -197,7 +220,7 @@ export class ViteNodeRunner {
   }
 
   shouldResolveId(dep: string) {
-    if (isNodeBuiltin(dep) || dep in (this.options.requestStubs || DEFAULT_REQUEST_STUBS))
+    if (isNodeBuiltin(dep) || dep in (this.options.requestStubs || DEFAULT_REQUEST_STUBS) || dep.startsWith('/@vite'))
       return false
 
     return !isAbsolute(dep) || !extname(dep)

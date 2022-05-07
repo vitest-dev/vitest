@@ -19,7 +19,8 @@
   "devDependencies": {
     "@vitest/ui": "latest",
     "vite": "^2.9.5",
-    "vitest": "latest"
+    "vitest": "latest",
+    "zustand": "4.0.0-rc.1"
   },
   "stackblitz": {
     "startCommand": "npm run test:ui"
