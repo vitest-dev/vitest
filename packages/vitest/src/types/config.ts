@@ -199,7 +199,7 @@ export interface InlineConfig {
   /**
    * Pattern of file paths to be ignore from triggering watch rerun
    *
-   * @default ['**\/node_modules\/**', '**\/dist/**']
+   * @default [/\/node_modules\//, /\/dist\//]
    */
   watchIgnore?: (string | RegExp)[]
 
