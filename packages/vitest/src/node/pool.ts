@@ -14,7 +14,6 @@ export type RunWithFiles = (files: string[], invalidates?: string[]) => Promise<
 
 export interface WorkerPool {
   runTests: RunWithFiles
-  collectTests: RunWithFiles
   close: () => Promise<void>
 }
 
@@ -51,7 +50,6 @@ export function createFakePool(ctx: Vitest): WorkerPool {
 
   return {
     runTests: runWithFiles('run'),
-    collectTests: runWithFiles('collect'),
     close: async () => {},
   }
 }
@@ -100,7 +98,6 @@ export function createWorkerPool(ctx: Vitest): WorkerPool {
 
   return {
     runTests: runWithFiles('run'),
-    collectTests: runWithFiles('collect'),
     close: async () => {}, // TODO: not sure why this will cause Node crash: pool.destroy(),
   }
 }
