@@ -407,7 +407,7 @@ Will call [`.mockReset()`](/api/#mockreset) on all spies before each test. This 
 - **Type:** `boolean`
 - **Default:** `false`
 
-Will call [`.mockRestore()`](api/#mockrestore) on all spies before each test. This will clear mocks history and reset its implementation to the original one.
+Will call [`.mockRestore()`](/api/#mockrestore) on all spies before each test. This will clear mocks history and reset its implementation to the original one.
 
 ### transformMode
 
