@@ -88,7 +88,7 @@ Vite will process inlined modules. This could be helpful to handle packages that
 - **Type** `boolean`
 - **Default:** `false`
 
-When a dependency is a valid ESM package, try to guess the cjs version based on the path. This might be helpful, if dependency has the wrong ESM file.
+When a dependency is a valid ESM package, try to guess the cjs version based on the path. This might be helpful, if a dependency has the wrong ESM file.
 
 This might potentially cause some misalignment if a package has different logic in ESM and CJS mode.
 
@@ -195,7 +195,7 @@ test('use jsdom in this test file', () => {
 })
 ```
 
-If you are running Vitest with [`--no-threads`](#threads) flag, your tests will be run in this order: `node`, `jsdom`, `happy-dom`. Meaning, every test with the same environment is grouped together, but is still run sequentially.
+If you are running Vitest with [`--no-threads`](#threads) flag, your tests will be run in this order: `node`, `jsdom`, `happy-dom`. Meaning, that every test with the same environment is grouped together, but is still run sequentially.
 
 ### update
 
@@ -295,7 +295,7 @@ Path to setup files. They will be run before each test file.
 You can use `process.env.VITEST_WORKER_ID` (integer-like string) inside to distinguish between threads (will always be `1`, if run with `threads: false`).
 
 :::tip
-Note, that if you are running [`--no-threads`](#threads), this file will be run in the same global scope. Meaning, you are accessing the same global object before each test, so make sure you are not doing the same thing more than you need.
+Note, that if you are running [`--no-threads`](#threads), this file will be run in the same global scope. Meaning, that you are accessing the same global object before each test, so make sure you are not doing the same thing more than you need.
 
 For example, you may rely on a global variable:
 
@@ -328,7 +328,7 @@ Multiple globalSetup files are possible. setup and teardown are executed sequent
 :::
 
 ::: warning
-Beware that global setup is run in the different global scope, if you are using [`--threads`](#threads) (default option). If you disabled `--threads`, everything is run in the same scope (including Vite server and its plugins).
+Beware that the global setup is run in a different global scope if you are using [`--threads`](#threads) (default option). If you disabled `--threads`, everything is run in the same scope (including the Vite server and its plugins).
 :::
 
 
@@ -337,7 +337,7 @@ Beware that global setup is run in the different global scope, if you are using 
 - **Type:** `(string | RegExp)[]`
 - **Default:** `[/\/node_modules\//, /\/dist\//]`
 
-Pattern of file paths to be ignore from triggering watch rerun. Glob pattern is not supported.
+Pattern of file paths to be ignored from triggering watch rerun. Glob pattern is not supported.
 
 ### isolate
 
@@ -393,21 +393,21 @@ Listen to port and serve API. When set to true, the default port is 55555
 - **Type:** `boolean`
 - **Default:** `false`
 
-Will call [`.mockClear()`](/api/#mockclear) on all spies before each test. This will clear mocks history, but not reset its implementation to default one.
+Will call [`.mockClear()`](/api/#mockclear) on all spies before each test. This will clear mock history, but not reset its implementation to the default one.
 
 ### mockReset
 
 - **Type:** `boolean`
 - **Default:** `false`
 
-Will call [`.mockReset()`](/api/#mockreset) on all spies before each test. This will clear mocks history and reset its implementation to an empty function (will return `undefined`).
+Will call [`.mockReset()`](/api/#mockreset) on all spies before each test. This will clear mock history and reset its implementation to an empty function (will return `undefined`).
 
 ### restoreMocks
 
 - **Type:** `boolean`
 - **Default:** `false`
 
-Will call [`.mockRestore()`](/api/#mockrestore) on all spies before each test. This will clear mocks history and reset its implementation to the original one.
+Will call [`.mockRestore()`](/api/#mockrestore) on all spies before each test. This will clear mock history and reset its implementation to the original one.
 
 ### transformMode
 

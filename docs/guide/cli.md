@@ -60,6 +60,6 @@
 - **Type**: `boolean | string`
 - **Default**: false
 
-Run tests only against changed files. If no value is provided, it will run tests against uncomitted changes (includes staged and unstaged).
+Run tests only against changed files. If no value is provided, it will run tests against uncommitted changes (including staged and unstaged).
 
-To run tests against changes made in last commit, you can use `--changed HEAD~1`. You can also pass commit hash or branch name.
+To run tests against changes made in the last commit, you can use `--changed HEAD~1`. You can also pass commit hash or branch name.
