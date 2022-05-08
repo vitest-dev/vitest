@@ -55,7 +55,8 @@ export function populateGlobal(global: any, win: any, options: PopulateOptions =
   const globalKeys = new Set<string | symbol>(['window', 'self', 'top', 'parent'])
 
   // we are creating a proxy that intercepts all access to the global object,
-  // stores new value on `override`, and returnes only these values
+  // stores new value on `override`, and returns only these values,
+  // so it actually shares only values defined inside tests
   const globalProxy = new Proxy(win.window, {
     get(target, p, receiver) {
       if (overrideObject.has(p))
@@ -64,7 +65,7 @@ export function populateGlobal(global: any, win: any, options: PopulateOptions =
     },
     set(target, p, value, receiver) {
       try {
-        // if property is defined with configurable: false,
+        // if property is defined with "configurable: false",
         // this will throw an error, but `self.prop = value` should not throw
         // this matches browser behaviour where it silently ignores the error
         // and returns previously defined value, which is a hell for debugging
