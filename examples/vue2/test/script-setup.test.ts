@@ -3,7 +3,7 @@ import { nextTick } from '@vue/composition-api'
 import Hello from '../src/components/ScriptSetup.vue'
 
 // TODO: find out why
-test.skip('mount component', async() => {
+test.skip('mount component', async () => {
   expect(Hello).toBeTruthy()
 
   const wrapper = mount(Hello, {

@@ -1,12 +1,14 @@
-import { performance } from 'perf_hooks'
 import { createHash } from 'crypto'
 import { relative } from 'pathe'
 import type { File, ResolvedConfig, Suite, TaskBase } from '../types'
-import { clearContext, defaultSuite } from './suite'
+import { stdout } from '../utils'
+import { clearCollectorContext, defaultSuite } from './suite'
 import { getHooks, setHooks } from './map'
 import { processError } from './error'
-import { context } from './context'
+import { collectorContext } from './context'
 import { runSetupFiles } from './setup'
+
+const now = Date.now
 
 function hash(str: string, length = 10) {
   return createHash('md5')
@@ -29,7 +31,7 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
       tasks: [],
     }
 
-    clearContext()
+    clearCollectorContext()
     try {
       await runSetupFiles(config)
       await import(filepath)
@@ -38,7 +40,7 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
 
       setHooks(file, getHooks(defaultTasks))
 
-      for (const c of [...defaultTasks.tasks, ...context.tasks]) {
+      for (const c of [...defaultTasks.tasks, ...collectorContext.tasks]) {
         if (c.type === 'test') {
           file.tasks.push(c)
         }
@@ -46,9 +48,9 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
           file.tasks.push(c)
         }
         else {
-          const start = performance.now()
+          const start = now()
           const suite = await c.collect(file)
-          file.collectDuration = performance.now() - start
+          file.collectDuration = now() - start
           if (suite.name || suite.tasks.length)
             file.tasks.push(suite)
         }
@@ -60,7 +62,7 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
         error: processError(e),
       }
       // not sure thy, this line is needed to trigger the error
-      process.stdout.write('\0')
+      stdout().write('\0')
     }
 
     calculateHash(file)
@@ -135,7 +137,8 @@ function skipAllTasks(suite: Suite) {
 }
 
 function checkAllowOnly(task: TaskBase, allowOnly?: boolean) {
-  if (allowOnly) return
+  if (allowOnly)
+    return
   task.result = {
     state: 'fail',
     error: processError(new Error('[Vitest] Unexpected .only modifier. Remove it or pass --allowOnly argument to bypass this error')),

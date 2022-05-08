@@ -5,7 +5,7 @@ beforeAll(() => {
   global.something = 'something'
 })
 
-beforeAll(async() => {
+beforeAll(async () => {
   await new Promise((resolve) => {
     setTimeout(() => {
       resolve(null)
@@ -13,7 +13,7 @@ beforeAll(async() => {
   })
 })
 
-beforeEach(async() => {
+beforeEach(async () => {
   await new Promise((resolve) => {
     setTimeout(() => {
       resolve(null)
@@ -26,7 +26,7 @@ afterAll(() => {
   delete global.something
 })
 
-afterAll(async() => {
+afterAll(async () => {
   await new Promise((resolve) => {
     setTimeout(() => {
       resolve(null)

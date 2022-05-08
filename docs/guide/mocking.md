@@ -14,7 +14,7 @@ Sometimes you need to be in control of the date to ensure consistency when testi
 ### Example
 
 ```js
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const businessHours = [9, 17]
 
@@ -126,6 +126,25 @@ describe('reading messages', () => {
 
 - [Jest's Mock Functions](https://jestjs.io/docs/mock-function-api)
 
+## Globals
+
+You can mock global variables that are not present with `jsdom` or `node` by using [`vi.stubGlobal`](/api/#vi-stubglobal) helper. It will put the value of the global variable into a `globalThis` object.
+
+```ts
+import { vi } from 'vitest'
+
+const IntersectionObserverMock = vi.fn(() => ({
+  disconnect: vi.fn(),
+  observe: vi.fn(),
+  takeRecords: vi.fn(),
+  unobserve: vi.fn(),
+}))
+
+vi.stubGlobal('IntersectionObserver', IntersectionObserverMock)
+
+// now you can access it as `IntersectionObserver` or `window.IntersectionObserver`
+```
+
 ## Modules
 
 Mock modules observe third-party-libraries, that are invoked in some other code, allowing you to test arguments, output or even redeclare its implementation.
@@ -152,7 +171,7 @@ import { Client } from 'pg'
 export function success(data) {}
 export function failure(data) {}
 // get todos
-export const getTodos = async(event, context) => {
+export const getTodos = async (event, context) => {
   const client = new Client({
     // ...clientOptions
   })
@@ -207,7 +226,7 @@ describe('get a list of todo items', () => {
     vi.clearAllMocks()
   })
 
-  it('should return items successfully', async() => {
+  it('should return items successfully', async () => {
     client.query.mockResolvedValueOnce({ rows: [], rowCount: 0 })
 
     await getTodos()
@@ -223,7 +242,7 @@ describe('get a list of todo items', () => {
     })
   })
 
-  it('should throw an error', async() => {
+  it('should throw an error', async () => {
     const mError = new Error('Unable to retrieve rows')
     client.query.mockRejectedValueOnce(mError)
 

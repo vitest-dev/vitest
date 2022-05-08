@@ -1,5 +1,23 @@
 import type { Arrayable, DeepMerge, Nullable } from '../types'
 
+export function getAllProperties(obj: any) {
+  const allProps = new Set<string | symbol>()
+  let curr = obj
+  do {
+    // we don't need propterties from these
+    if (curr === Object.prototype || curr === Function.prototype || curr === RegExp.prototype)
+      break
+    const props = Object.getOwnPropertyNames(curr)
+    const symbs = Object.getOwnPropertySymbols(curr)
+
+    props.forEach(prop => allProps.add(prop))
+    symbs.forEach(symb => allProps.add(symb))
+
+    // eslint-disable-next-line no-cond-assign
+  } while (curr = Object.getPrototypeOf(curr))
+  return Array.from(allProps)
+}
+
 export function notNullish<T>(v: T | null | undefined): v is NonNullable<T> {
   return v != null
 }
@@ -14,6 +32,10 @@ export function mergeSlashes(str: string) {
 
 export const noop = () => { }
 
+export function getType(value: unknown): string {
+  return Object.prototype.toString.apply(value).slice(8, -1)
+}
+
 export function clone<T>(val: T): T {
   let k: any, out: any, tmp: any
 
@@ -26,20 +48,11 @@ export function clone<T>(val: T): T {
   }
 
   if (Object.prototype.toString.call(val) === '[object Object]') {
-    out = {} // null
-    for (k in val) {
-      if (k === '__proto__') {
-        Object.defineProperty(out, k, {
-          value: clone((val as any)[k]),
-          configurable: true,
-          enumerable: true,
-          writable: true,
-        })
-      }
-      else {
-        // eslint-disable-next-line no-cond-assign
-        out[k] = (tmp = (val as any)[k]) && typeof tmp === 'object' ? clone(tmp) : tmp
-      }
+    out = Object.create(Object.getPrototypeOf(val))
+    const props = getAllProperties(val)
+    for (const k of props) {
+      // eslint-disable-next-line no-cond-assign
+      out[k] = (tmp = (val as any)[k]) && typeof tmp === 'object' ? clone(tmp) : tmp
     }
     return out
   }
@@ -110,5 +123,12 @@ function isMergableObject(item: any): item is Object {
 export function assertTypes(value: unknown, name: string, types: string[]): void {
   const receivedType = typeof value
   const pass = types.includes(receivedType)
-  if (!pass) throw new TypeError(`${name} value must be ${types.join(' or ')}, received "${receivedType}"`)
+  if (!pass)
+    throw new TypeError(`${name} value must be ${types.join(' or ')}, received "${receivedType}"`)
+}
+
+export function stdout(): NodeJS.WriteStream {
+  // @ts-expect-error Node.js maps process.stdout to console._stdout
+  // eslint-disable-next-line no-console
+  return console._stdout || process.stdout
 }

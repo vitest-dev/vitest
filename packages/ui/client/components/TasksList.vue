@@ -22,6 +22,7 @@ const emit = defineEmits<{
 }>()
 
 const search = ref('')
+const searchBox = ref<HTMLInputElement | undefined>()
 const isFiltered = computed(() => search.value.trim() !== '')
 
 const matchTasks = (tasks: Task[], search: string): boolean => {
@@ -63,6 +64,14 @@ const running = computed(() => filtered.value.filter(task =>
   && !skipped.value.includes(task),
 ))
 const throttledRunning = useThrottle(running, 250)
+
+const clearSearch = (focus: boolean) => {
+  search.value = ''
+  focus && searchBox.value?.focus()
+}
+const disableClearSearch = computed(() => {
+  return search.value === ''
+})
 </script>
 
 <script lang="ts">
@@ -75,17 +84,18 @@ export default {
   <div h="full" flex="~ col">
     <div>
       <div p="2" h-10 flex="~ gap-2" items-center bg-header border="b base">
-        <slot name="header" :filteredTests="isFiltered ? filteredTests : undefined" />
+        <slot name="header" :filtered-tests="isFiltered ? filteredTests : undefined" />
       </div>
       <div
-        p="x3 y2"
+        p="l3 y2 r2"
         flex="~ gap-2"
         items-center
         bg-header
         border="b-2 base"
       >
-        <div i-carbon:search flex-shrink-0 />
+        <div class="i-carbon:search" flex-shrink-0 />
         <input
+          ref="searchBox"
           v-model="search"
           placeholder="Search..."
           outline="none"
@@ -95,9 +105,16 @@ export default {
           flex-1
           pl-1
           :op="search.length ? '100' : '50'"
-          @keydown.esc="search = ''"
+          @keydown.esc="clearSearch(false)"
           @keydown.enter="emit('run', isFiltered ? filteredTests : undefined)"
         >
+        <IconButton
+          v-tooltip.bottom="'Clear search'"
+          :disabled="disableClearSearch"
+          title="Clear search"
+          icon="i-carbon:filter-remove"
+          @click.passive="clearSearch(true)"
+        />
       </div>
     </div>
 
@@ -153,7 +170,7 @@ export default {
         </DetailsPanel>
         <DetailsPanel v-if="skipped.length">
           <template #summary>
-            <div text-purple5:50>
+            <div class="text-purple5:50">
               SKIP ({{ skipped.length }})
             </div>
           </template>
@@ -169,7 +186,7 @@ export default {
         </DetailsPanel>
       </template>
 
-      <!--flat-->
+      <!-- flat -->
       <template v-else>
         <TaskTree
           v-for="task in filtered"
@@ -181,7 +198,7 @@ export default {
           :on-item-click="onItemClick"
         />
       </template>
-      <!--empty-state-->
+      <!-- empty-state -->
       <template v-if="isFiltered && filtered.length === 0">
         <div flex="~ col" items-center p="x4 y4" font-light>
           <div op30>
@@ -194,7 +211,7 @@ export default {
             border="~ gray-400/50 rounded"
             p="x2 y0.5"
             m="t2"
-            @click="search = ''"
+            @click.passive="clearSearch(true)"
           >
             Clear
           </button>

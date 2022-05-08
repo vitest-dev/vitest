@@ -90,16 +90,9 @@ export class ViteNodeRunner {
   /** @internal */
   async directRequest(id: string, fsPath: string, _callstack: string[]) {
     const callstack = [..._callstack, normalizeModuleId(id)]
-    const request = async(dep: string) => {
+    const request = async (dep: string) => {
       const getStack = () => {
         return `stack:\n${[...callstack, dep].reverse().map(p => `- ${p}`).join('\n')}`
-      }
-
-      // probably means it was passed as variable
-      // and wasn't transformed by Vite
-      if (this.options.resolveId && this.shouldResolveId(dep)) {
-        const resolvedDep = await this.options.resolveId(dep, id)
-        dep = resolvedDep?.id?.replace(this.root, '') || dep
       }
 
       let debugTimer: any
@@ -125,11 +118,33 @@ export class ViteNodeRunner {
       }
     }
 
+    Object.defineProperty(request, 'callstack', { get: () => callstack })
+
+    const resolveId = async (dep: string, callstackPosition = 1) => {
+      // probably means it was passed as variable
+      // and wasn't transformed by Vite
+      // or some dependency name was passed
+      // runner.executeFile('@scope/name')
+      // runner.executeFile(myDynamicName)
+      if (this.options.resolveId && this.shouldResolveId(dep)) {
+        let importer = callstack[callstack.length - callstackPosition]
+        if (importer && importer.startsWith('mock:'))
+          importer = importer.slice(5)
+        const { id } = await this.options.resolveId(dep, importer) || {}
+        dep = id && isAbsolute(id) ? `/@fs/${id}` : id || dep
+      }
+
+      return dep
+    }
+
+    id = await resolveId(id, 2)
+
     const requestStubs = this.options.requestStubs || DEFAULT_REQUEST_STUBS
     if (id in requestStubs)
       return requestStubs[id]
 
-    const { code: transformed, externalize } = await this.options.fetchModule(id)
+    // eslint-disable-next-line prefer-const
+    let { code: transformed, externalize } = await this.options.fetchModule(id)
     if (externalize) {
       const mod = await this.interopedImport(externalize)
       this.moduleCache.set(fsPath, { exports: mod })
@@ -157,6 +172,8 @@ export class ViteNodeRunner {
       },
     }
 
+    let require: NodeRequire
+
     // Be careful when changing this
     // changing context will change amount of code added on line :114 (vm.runInThisContext)
     // this messes up sourcemaps for coverage
@@ -169,13 +186,23 @@ export class ViteNodeRunner {
       __vite_ssr_exportAll__: (obj: any) => exportAll(exports, obj),
       __vite_ssr_import_meta__: { url },
 
+      __vitest_resolve_id__: resolveId,
+
       // cjs compact
-      require: createRequire(url),
+      require: (path: string) => {
+        if (!require)
+          require = createRequire(url)
+
+        return require(path)
+      },
       exports,
       module: moduleProxy,
       __filename,
       __dirname: dirname(__filename),
     })
+
+    if (transformed[0] === '#')
+      transformed = transformed.replace(/^\#\!.*/, s => ' '.repeat(s.length))
 
     // add 'use strict' since ESM enables it by default
     const fn = vm.runInThisContext(`'use strict';async (${Object.keys(context).join(',')})=>{{${transformed}\n}}`, {
@@ -193,7 +220,7 @@ export class ViteNodeRunner {
   }
 
   shouldResolveId(dep: string) {
-    if (isNodeBuiltin(dep) || dep in (this.options.requestStubs || DEFAULT_REQUEST_STUBS))
+    if (isNodeBuiltin(dep) || dep in (this.options.requestStubs || DEFAULT_REQUEST_STUBS) || dep.startsWith('/@vite'))
       return false
 
     return !isAbsolute(dep) || !extname(dep)
@@ -242,7 +269,7 @@ export class ViteNodeRunner {
 }
 
 function proxyMethod(name: 'get' | 'set' | 'has' | 'deleteProperty', tryDefault: boolean) {
-  return function(target: any, key: string | symbol, ...args: [any?, any?]) {
+  return function (target: any, key: string | symbol, ...args: [any?, any?]) {
     const result = Reflect[name](target, key, ...args)
     if (isPrimitive(target.default))
       return result
@@ -253,6 +280,11 @@ function proxyMethod(name: 'get' | 'set' | 'has' | 'deleteProperty', tryDefault:
 }
 
 function exportAll(exports: any, sourceModule: any) {
+  // #1120 when a module exports itself it causes
+  // call stack error
+  if (exports === sourceModule)
+    return
+
   // eslint-disable-next-line no-restricted-syntax
   for (const key in sourceModule) {
     if (key !== 'default') {

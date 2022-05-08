@@ -38,64 +38,97 @@ function setupDefines(defines: Record<string, any>) {
 }
 
 export function setupConsoleLogSpy() {
-  const stdoutBuffer: any[] = []
-  const stderrBuffer: any[] = []
-  let stdoutTime = 0
-  let stderrTime = 0
-  let timer: any
+  const stdoutBuffer = new Map<string, any[]>()
+  const stderrBuffer = new Map<string, any[]>()
+  const timers = new Map<string, { stdoutTime: number; stderrTime: number; timer: any }>()
+  const unknownTestId = '__vitest__unknown_test__'
 
   // group sync console.log calls with macro task
-  function schedule() {
-    clearTimeout(timer)
-    timer = setTimeout(() => {
+  function schedule(taskId: string) {
+    const timer = timers.get(taskId)!
+    const { stdoutTime, stderrTime } = timer
+    clearTimeout(timer.timer)
+    timer.timer = setTimeout(() => {
       if (stderrTime < stdoutTime) {
-        sendStderr()
-        sendStdout()
+        sendStderr(taskId)
+        sendStdout(taskId)
       }
       else {
-        sendStdout()
-        sendStderr()
+        sendStdout(taskId)
+        sendStderr(taskId)
       }
     })
   }
-  function sendStdout() {
-    if (stdoutBuffer.length) {
+  function sendStdout(taskId: string) {
+    const buffer = stdoutBuffer.get(taskId)
+    if (buffer) {
+      const timer = timers.get(taskId)!
       rpc().onUserConsoleLog({
         type: 'stdout',
-        content: stdoutBuffer.map(i => String(i)).join(''),
-        taskId: getWorkerState().current?.id,
-        time: stdoutTime || RealDate.now(),
+        content: buffer.map(i => String(i)).join(''),
+        taskId,
+        time: timer.stdoutTime || RealDate.now(),
+        size: buffer.length,
       })
+      stdoutBuffer.set(taskId, [])
+      timer.stdoutTime = 0
     }
-    stdoutBuffer.length = 0
-    stdoutTime = 0
   }
-  function sendStderr() {
-    if (stderrBuffer.length) {
+  function sendStderr(taskId: string) {
+    const buffer = stderrBuffer.get(taskId)
+    if (buffer) {
+      const timer = timers.get(taskId)!
       rpc().onUserConsoleLog({
         type: 'stderr',
-        content: stderrBuffer.map(i => String(i)).join(''),
-        taskId: getWorkerState().current?.id,
-        time: stderrTime || RealDate.now(),
+        content: buffer.map(i => String(i)).join(''),
+        taskId,
+        time: timer.stderrTime || RealDate.now(),
+        size: buffer.length,
       })
+      stderrBuffer.set(taskId, [])
+      timer.stderrTime = 0
     }
-    stderrBuffer.length = 0
-    stderrTime = 0
   }
 
   const stdout = new Writable({
     write(data, encoding, callback) {
-      stdoutTime = stdoutTime || RealDate.now()
-      stdoutBuffer.push(data)
-      schedule()
+      const id = getWorkerState()?.current?.id ?? unknownTestId
+      let timer = timers.get(id)
+      if (timer) {
+        timer.stdoutTime = timer.stdoutTime || RealDate.now()
+      }
+      else {
+        timer = { stdoutTime: RealDate.now(), stderrTime: RealDate.now(), timer: 0 }
+        timers.set(id, timer)
+      }
+      let buffer = stdoutBuffer.get(id)
+      if (!buffer) {
+        buffer = []
+        stdoutBuffer.set(id, buffer)
+      }
+      buffer.push(data)
+      schedule(id)
       callback()
     },
   })
   const stderr = new Writable({
     write(data, encoding, callback) {
-      stderrTime = stderrTime || RealDate.now()
-      stderrBuffer.push(data)
-      schedule()
+      const id = getWorkerState()?.current?.id ?? unknownTestId
+      let timer = timers.get(id)
+      if (timer) {
+        timer.stderrTime = timer.stderrTime || RealDate.now()
+      }
+      else {
+        timer = { stderrTime: RealDate.now(), stdoutTime: RealDate.now(), timer: 0 }
+        timers.set(id, timer)
+      }
+      let buffer = stderrBuffer.get(id)
+      if (!buffer) {
+        buffer = []
+        stderrBuffer.set(id, buffer)
+      }
+      buffer.push(data)
+      schedule(id)
       callback()
     },
   })
@@ -124,7 +157,7 @@ export async function withEnv(
 export async function runSetupFiles(config: ResolvedConfig) {
   const files = toArray(config.setupFiles)
   await Promise.all(
-    files.map(async(file) => {
+    files.map(async (file) => {
       getWorkerState().moduleCache.delete(file)
       await import(file)
     }),

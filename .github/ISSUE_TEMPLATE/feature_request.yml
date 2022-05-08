@@ -1,6 +1,6 @@
-name: "\U0001F680 New feature proposal"
-description: Propose a new feature to be added to Vite
-labels: ["enhancement: pending triage"]
+name: 🚀 New feature proposal
+description: Propose a new feature to be added to Vitest
+labels: ['enhancement: pending triage']
 body:
   - type: markdown
     attributes:
@@ -10,14 +10,14 @@ body:
     id: feature-description
     attributes:
       label: Clear and concise description of the problem
-      description: "As a developer using Vitest I want [goal / wish] so that [benefit]. If you intend to submit a PR for this issue, tell us in the description. Thanks!"
+      description: 'As a developer using Vitest I want [goal / wish] so that [benefit]. If you intend to submit a PR for this issue, tell us in the description. Thanks!'
     validations:
       required: true
   - type: textarea
     id: suggested-solution
     attributes:
       label: Suggested solution
-      description: "We could provide following implementation..."
+      description: We could provide following implementation...
     validations:
       required: true
   - type: textarea
@@ -40,7 +40,7 @@ body:
           required: true
         - label: Read the [Contributing Guidelines](https://github.com/vitest-dev/vitest/blob/main/CONTRIBUTING.md).
           required: true
-        - label: Read the [docs](https://vitest.dev/guide).
+        - label: Read the [docs](https://vitest.dev/guide/).
           required: true
         - label: Check that there isn't already an issue that request the same feature to avoid creating a duplicate.
           required: true

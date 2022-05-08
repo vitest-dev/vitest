@@ -1,0 +1,9 @@
+// Vitest Snapshot v1
+
+exports[`four 1`] = `"four"`;
+
+exports[`one 1`] = `"one"`;
+
+exports[`three 1`] = `"three"`;
+
+exports[`two 1`] = `"two"`;

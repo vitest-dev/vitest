@@ -1,4 +1,4 @@
-name: "\U0001F41E Bug report"
+name: 🐞 Bug report
 description: Report an issue with Vitest
 labels: [pending triage]
 body:
@@ -52,7 +52,7 @@ body:
           required: true
         - label: Read the [Contributing Guidelines](https://github.com/vitest-dev/vitest/blob/main/CONTRIBUTING.md).
           required: true
-        - label: Read the [docs](https://vitest.dev/guide).
+        - label: Read the [docs](https://vitest.dev/guide/).
           required: true
         - label: Check that there isn't [already an issue](https://github.com/vitest-dev/vitest/issues) that reports the same bug to avoid creating a duplicate.
           required: true

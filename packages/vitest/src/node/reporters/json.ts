@@ -3,6 +3,7 @@ import { dirname, resolve } from 'pathe'
 import type { Vitest } from '../../node'
 import type { File, Reporter, Suite, TaskState } from '../../types'
 import { getSuites, getTests } from '../../utils'
+import { getOutputFile } from '../../utils/config-helpers'
 
 // for compatibility reasons, the reporter produces a JSON similar to the one produced by the Jest JSON reporter
 // the following types are extracted from the Jest repository (and simplified)
@@ -103,7 +104,7 @@ export class JsonReporter implements Reporter {
         return {
           ancestorTitles,
           fullName: ancestorTitles.length > 0 ? `${ancestorTitles.join(' ')} ${t.name}` : t.name,
-          status: t.result != null ? StatusMap[t.result.state] : 'skipped',
+          status: StatusMap[t.result?.state || t.mode] || 'skipped',
           title: t.name,
           duration: t.result?.duration,
           failureMessages: t.result?.error?.message == null ? [] : [t.result.error.message],
@@ -159,8 +160,10 @@ export class JsonReporter implements Reporter {
    * @param report
    */
   async writeReport(report: string) {
-    if (this.ctx.config.outputFile) {
-      const reportFile = resolve(this.ctx.config.root, this.ctx.config.outputFile)
+    const outputFile = getOutputFile(this.ctx, 'json')
+
+    if (outputFile) {
+      const reportFile = resolve(this.ctx.config.root, outputFile)
 
       const outputDirectory = dirname(reportFile)
       if (!existsSync(outputDirectory))

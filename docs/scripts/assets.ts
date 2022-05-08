@@ -12,10 +12,10 @@ const preconnectHome = `
     ${preconnectHomeLinks.map(l => `<link rel="preconnect" crossorigin="anonymous" href="${l}">`).join('\n')}
 `
 
-export const optimizePages = async(pwa: boolean) => {
+export const optimizePages = async (pwa: boolean) => {
   const names = await fg('./.vitepress/dist/**/*.html', { onlyFiles: true })
 
-  await Promise.all(names.map(async(i) => {
+  await Promise.all(names.map(async (i) => {
     let html = await fs.readFile(i, 'utf-8')
 
     let prefetchImg = '\n\t<link rel="prefetch" href="/logo.svg">'

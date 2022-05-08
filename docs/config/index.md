@@ -227,12 +227,14 @@ Custom reporters for output. Reporters can be [a Reporter instance](https://gith
   - `'dot'` -  show each task as a single dot
   - `'junit'` - JUnit XML reporter
   - `'json'` -  give a simple JSON summary
+  - path of a custom reporter (e.g. `'./path/to/reporter.ts'`, `'@scope/reporter'`)
 
 ### outputFile
 
-- **Type:** `string`
+- **Type:** `string | Record<string, string>`
 
 Write test results to a file when the `--reporter=json` or `--reporter=junit` option is also specified.
+By providing an object instead of a string you can define individual outputs when using multiple reporters.
 
 ### threads
 
@@ -240,6 +242,12 @@ Write test results to a file when the `--reporter=json` or `--reporter=junit` op
 - **Default:** `true`
 
 Enable multi-threading using [tinypool](https://github.com/Aslemammad/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina))
+
+:::warning
+This option is different from Jest's `--runInBand`. Vitest uses workers not only for running tests in parallel, but also to provide isolation. By disabling this option, your tests will run sequentially, but in the same global context, so you must provide isolation yourself.
+
+This might cause all sorts of issues, if you are relying on global state (frontend frameworks usually do) or your code relies on environment to be defined separately for each test (like, `@vue/test-utils`). But can be a speed boost for Node tests (up to 3 times faster), that don't necessarily rely on global state or can easily bypass that.
+:::
 
 ### maxThreads
 
@@ -317,6 +325,27 @@ Isolate environment for each test file
 - **Default:** `undefined`
 
 Coverage options
+
+### testNamePattern
+
+- **Type** `string | RegExp`
+
+Run tests with full names matching the pattern.
+If you add `OnlyRunThis` to this property, tests containing the word `OnlyRunThis` in the test name will be skipped.
+
+```js
+import { expect, test } from 'vitest'
+
+// run
+test('OnlyRunThis', () => {
+  expect(true).toBe(true)
+})
+
+// skipped
+test('doNotRun', () => {
+  expect(true).toBe(true)
+})
+```
 
 ### open
 
@@ -401,3 +430,48 @@ Format options for snapshot testing.
 - **Default:** `test`
 
 Overrides Vite mode.
+
+### changed
+
+- **Type**: `boolean | string`
+- **Default**: false
+
+Run tests only against changed files. If no value is provided, it will run tests against uncomitted changes (includes staged and unstaged).
+
+To run tests against changes made in last commit, you can use `--changed HEAD~1`. You can also pass commit hash or branch name.
+
+### resolveSnapshotPath
+
+- **Type**: `(testPath: string, snapExtension: string) => string`
+- **Default**: stores snapshot files in `__snapshots__` directory
+
+Overrides default snapshot path. For example, to store snapshots next to test files:
+
+```ts
+export default {
+  test: {
+    resolveSnapshotPath: (testPath, snapExtension) => testPath + snapExtension,
+  },
+}
+```
+
+### allowOnly
+
+- **Type**: `boolean`
+- **Default**: `false`
+
+Allow tests and suites that are marked as only.
+
+### passWithNoTests
+
+- **Type**: `boolean`
+- **Default**: `false`
+
+Vitest will end the process with `0` exit code, if no tests will be found.
+
+### logHeapUsage
+
+- **Type**: `boolean`
+- **Default**: `false`
+
+Show heap usage after each test. Usefull for debugging memory leaks.

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { coreTeamMembers } from '../contributors'
 </script>
+
 <template>
   <div flex flex-col items-center>
     <div flex flex-col items-center p="t-10 md:t-20 b-10">
@@ -77,7 +78,7 @@ import { coreTeamMembers } from '../contributors'
       </div>
       <div class="flex flex-col">
         <a text-lg h="32px" href="https://github.com/sponsors/patak-dev" rel="noopener noreferrer">Patak's Sponsors</a>
-        <a href="https://patak.dev/sponsors.svg" target="_blank" rel="noopener noreferrer">
+        <a href="https://cdn.jsdelivr.net/gh/patak-dev/static/sponsors.svg" target="_blank" rel="noopener noreferrer">
           <img
             crossorigin="anonymous"
             width="768" height="722"

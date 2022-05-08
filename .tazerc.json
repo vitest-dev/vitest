@@ -3,6 +3,7 @@
     "vue",
     "esbuild",
     "puppeteer",
+    "pretty-format",
     "vite"
   ]
 }

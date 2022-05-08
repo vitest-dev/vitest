@@ -128,9 +128,10 @@ export interface InlineConfig {
   root?: string
 
   /**
-   * Custom reporter for output
+   * Custom reporter for output. Can contain one or more built-in report names, reporter instances,
+   * and/or paths to custom reporters
    */
-  reporters?: Arrayable<BuiltinReporters | Reporter>
+  reporters?: Arrayable<BuiltinReporters | Reporter | Omit<string, BuiltinReporters>>
 
   /**
    * diff output length
@@ -139,8 +140,9 @@ export interface InlineConfig {
 
   /**
    * Write test results to a file when the --reporter=json` or `--reporter=junit` option is also specified.
+   * Also definable individually per reporter by using an object instead.
    */
-  outputFile?: string
+  outputFile?: string | (Partial<Record<BuiltinReporters, string>> & Record<string, string>)
 
   /**
    * Enable multi-threading
@@ -290,6 +292,26 @@ export interface InlineConfig {
    * Format options for snapshot testing.
    */
   snapshotFormat?: PrettyFormatOptions
+
+  /**
+   * Resolve custom snapshot path
+   */
+  resolveSnapshotPath?: (path: string, extension: string) => string
+
+  /**
+   * Pass with no tests
+   */
+  passWithNoTests?: boolean
+
+  /**
+   * Allow tests and suites that are marked as only
+   */
+  allowOnly?: boolean
+
+  /**
+   * Show heap usage after each test. Usefull for debugging memory leaks.
+   */
+  logHeapUsage?: boolean
 }
 
 export interface UserConfig extends InlineConfig {
@@ -310,16 +332,6 @@ export interface UserConfig extends InlineConfig {
   dom?: boolean
 
   /**
-   * Pass with no tests
-   */
-  passWithNoTests?: boolean
-
-  /**
-   * Allow tests and suites that are marked as only
-   */
-  allowOnly?: boolean
-
-  /**
    * Run tests that cover a list of source files
    */
   related?: string[] | string
@@ -329,9 +341,16 @@ export interface UserConfig extends InlineConfig {
    * @default 'test'
    */
   mode?: string
+
+  /**
+   * Runs tests that are affected by the changes in the repository, or between specified branch or commit hash
+   * Requires initialized git repository
+   * @default false
+   */
+  changed?: boolean | string
 }
 
-export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters'> {
+export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath'> {
   base?: string
 
   config?: string

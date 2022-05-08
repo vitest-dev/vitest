@@ -53,7 +53,7 @@ export async function reportCoverage(ctx: Vitest) {
   await Promise.all(Array
     .from(ctx.vitenode.fetchCache.entries())
     .filter(i => !i[0].includes('/node_modules/'))
-    .map(async([file, { result }]) => {
+    .map(async ([file, { result }]) => {
       const map = result.map
       if (!map)
         return
@@ -82,8 +82,8 @@ export async function reportCoverage(ctx: Vitest) {
 
   // This is a magic number. It corresponds to the amount of code
   // that we add in packages/vite-node/src/client.ts:114 (vm.runInThisContext)
-  // TODO: Include our transformations in soucemaps
-  const offset = 203
+  // TODO: Include our transformations in sourcemaps
+  const offset = 224
 
   report._getSourceMap = (coverage: Profiler.ScriptCoverage) => {
     const path = pathToFileURL(coverage.url).href

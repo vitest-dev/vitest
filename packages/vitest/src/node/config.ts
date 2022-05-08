@@ -110,7 +110,11 @@ export function resolveConfig(
       : UPDATE_SNAPSHOT
         ? 'all'
         : 'new',
+    resolveSnapshotPath: options.resolveSnapshotPath,
   }
+
+  if (options.resolveSnapshotPath)
+    delete (resolved as UserConfig).resolveSnapshotPath
 
   if (process.env.VITEST_MAX_THREADS)
     resolved.maxThreads = parseInt(process.env.VITEST_MAX_THREADS)
@@ -133,6 +137,9 @@ export function resolveConfig(
   ])).filter(Boolean)
   if (!resolved.reporters.length)
     resolved.reporters.push('default')
+
+  if (resolved.changed)
+    resolved.passWithNoTests ??= true
 
   return resolved
 }

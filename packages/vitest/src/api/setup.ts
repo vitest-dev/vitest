@@ -94,7 +94,8 @@ export function setup(ctx: Vitest) {
           }
         },
         updateSnapshot(file?: File) {
-          if (!file) return ctx.updateSnapshot()
+          if (!file)
+            return ctx.updateSnapshot()
           return ctx.updateSnapshot([file.filepath])
         },
       },
@@ -136,7 +137,7 @@ class WebSocketReporter implements Reporter {
     if (this.clients.size === 0)
       return
 
-    await Promise.all(packs.map(async(i) => {
+    await Promise.all(packs.map(async (i) => {
       if (i[1]?.error)
         await interpretSourcePos(parseStacktrace(i[1].error as any), this.ctx)
     }))

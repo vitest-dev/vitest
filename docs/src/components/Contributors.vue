@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { contributors } from '../contributors'
 </script>
+
 <template>
   <div flex="~ wrap gap-1" justify-center>
     <a v-for="{ name, avatar } of contributors" :key="name" :href="`https://github.com/${name}`" m-0 rel="noopener noreferrer" :aria-label="`${name} on GitHub`">

@@ -13,23 +13,23 @@ const testWorker = (worker: Worker) => {
   })
 }
 
-it('worker exists', async() => {
+it('worker exists', async () => {
   expect(Worker).toBeDefined()
 })
 
-it('simple worker', async() => {
+it('simple worker', async () => {
   expect.assertions(1)
 
   await testWorker(new MyWorker())
 })
 
-it('can test workers several times', async() => {
+it('can test workers several times', async () => {
   expect.assertions(1)
 
   await testWorker(new MyWorker())
 })
 
-it('worker with url', async() => {
+it('worker with url', async () => {
   expect.assertions(1)
   const url = import.meta.url
 

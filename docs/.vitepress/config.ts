@@ -102,7 +102,6 @@ export default defineConfig({
             {
               text: 'Why Vitest',
               link: '/guide/why',
-
             },
             {
               text: 'Getting Started',
@@ -113,16 +112,41 @@ export default defineConfig({
               link: '/guide/features',
             },
             {
+              text: 'CLI',
+              link: '/guide/cli',
+            },
+            {
               text: 'Mocking',
               link: '/guide/mocking',
             },
             {
-              text: 'Debugging',
-              link: '/guide/debugging',
+              text: 'Test Filtering',
+              link: '/guide/filtering',
             },
+
             {
               text: 'In-source testing',
               link: '/guide/in-source',
+            },
+            {
+              text: 'Test Context',
+              link: '/guide/test-context',
+            },
+            {
+              text: 'Extending Matchers',
+              link: '/guide/extending-matchers',
+            },
+            {
+              text: 'Snapshot Serializer',
+              link: '/guide/snapshot-serializer',
+            },
+            {
+              text: 'IDE Integration',
+              link: '/guide/ide',
+            },
+            {
+              text: 'Debugging',
+              link: '/guide/debugging',
             },
             {
               text: 'Comparisons',

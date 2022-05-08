@@ -22,7 +22,7 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 describe('concurrent tests', () => {
   let count = 0
 
-  const counterTest = (c: number) => async() => {
+  const counterTest = (c: number) => async () => {
     assert.equal(count, c)
     await delay(20)
     count++
@@ -50,7 +50,7 @@ describe('concurrent tests', () => {
 describe.concurrent('concurrent suite', () => {
   let count = 0
 
-  const counterTest = (c: number) => async() => {
+  const counterTest = (c: number) => async () => {
     assert.equal(count, c)
     await delay(20)
     count++

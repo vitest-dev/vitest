@@ -1,6 +1,7 @@
 import readline from 'readline'
 import c from 'picocolors'
 import prompt from 'prompts'
+import { stdout } from '../utils'
 import type { Vitest } from './core'
 
 const keys = [
@@ -12,7 +13,7 @@ const keys = [
 ]
 
 export function printShortcutsHelp() {
-  process.stdout.write(
+  stdout().write(
     `
 ${c.bold('  Watch Usage')}
 ${keys.map(i => c.dim('  press ') + c.reset(c.bold(i[0])) + c.dim(` to ${i[1]}`)).join('\n')}

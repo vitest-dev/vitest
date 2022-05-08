@@ -2,9 +2,10 @@
 
 import { parseStacktrace } from '../utils/source-map'
 import type { VitestMocker } from '../runtime/mocker'
+import { resetModules } from '../utils'
 import { FakeTimers } from './timers'
-import type { EnhancedSpy, MaybeMocked, MaybeMockedDeep } from './jest-mock'
-import { fn, isMockFunction, spies, spyOn } from './jest-mock'
+import type { EnhancedSpy, MaybeMocked, MaybeMockedDeep } from './spy'
+import { fn, isMockFunction, spies, spyOn } from './spy'
 
 class VitestUtils {
   private _timers: FakeTimers
@@ -20,8 +21,15 @@ class VitestUtils {
     this._mocker = typeof __vitest_mocker__ !== 'undefined' ? __vitest_mocker__ : null
     this._mockedDate = null
 
-    if (!this._mocker)
-      throw new Error('Vitest was initialized with native Node instead of Vite Node')
+    if (!this._mocker) {
+      const errorMsg = 'Vitest was initialized with native Node instead of Vite Node.'
+      + '\n\nOne of the following is possible:'
+      + '\n- "vitest" is imported outside of your tests (in that case, use "vitest/node" or import.meta.vitest)'
+      + '\n- "vitest" is imported inside "globalSetup" (use "setupFiles", because "globalSetup" runs in a different context)'
+      + '\n- Your dependency inside "node_modules" imports "vitest" directly (in that case, inline that dependency, using "deps.inline" config)'
+      + '\n- Otherwise, it might be a Vitest bug. Please report it to https://github.com/vitest-dev/vitest/issues\n'
+      throw new Error(errorMsg)
+    }
   }
 
   // timers
@@ -193,6 +201,29 @@ class VitestUtils {
 
   public restoreAllMocks() {
     spies.forEach(spy => spy.mockRestore())
+    return this
+  }
+
+  /**
+   * Will put a value on global scope. Useful, if you are
+   * using jsdom/happy-dom and want to mock global variables, like
+   * `IntersectionObserver`.
+   */
+  public stubGlobal(name: string | symbol | number, value: any) {
+    if (globalThis.window) {
+      // @ts-expect-error we can do anything!
+      globalThis.window[name] = value
+    }
+    else {
+      // @ts-expect-error we can do anything!
+      globalThis[name] = value
+    }
+
+    return this
+  }
+
+  public resetModules() {
+    resetModules()
     return this
   }
 }

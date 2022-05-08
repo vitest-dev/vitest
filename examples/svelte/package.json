@@ -1,18 +1,18 @@
 {
-  "name": "@vitest/test-svelte",
-  "private": true,
+  "name": "@vitest/example-svelte",
   "type": "module",
+  "private": true,
   "scripts": {
     "test": "vitest",
     "test:ui": "vitest --ui",
     "coverage": "vitest run --coverage"
   },
   "devDependencies": {
-    "@sveltejs/vite-plugin-svelte": "^1.0.0-next.40",
-    "@testing-library/svelte": "^3.1.0",
+    "@sveltejs/vite-plugin-svelte": "^1.0.0-next.42",
+    "@testing-library/svelte": "^3.1.1",
     "@vitest/ui": "latest",
     "jsdom": "latest",
-    "svelte": "^3.46.4",
+    "svelte": "^3.48.0",
     "vitest": "latest"
   },
   "stackblitz": {

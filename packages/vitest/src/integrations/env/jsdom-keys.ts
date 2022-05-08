@@ -170,6 +170,7 @@ const OTHER_KEYS = [
   'atob',
   'blur',
   'btoa',
+  'cancelAnimationFrame',
   /* 'clearInterval', */
   /* 'clearTimeout', */
   'close',
@@ -201,6 +202,7 @@ const OTHER_KEYS = [
   'print',
   'prompt',
   'removeEventListener',
+  'requestAnimationFrame',
   'resizeBy',
   'resizeTo',
   'screen',

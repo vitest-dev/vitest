@@ -2,7 +2,7 @@ import { SourceMapConsumer } from 'source-map-js'
 import type { RawSourceMap } from 'vite-node'
 import type { ErrorWithDiff, ParsedStack, Position } from '../types'
 import type { Vitest } from '../node'
-import { notNullish } from './base'
+import { notNullish, slash } from './base'
 
 export const lineSplitRE = /\r?\n/
 
@@ -26,6 +26,8 @@ const stackBarePathRE = /at ?(.*) (.+):(\d+):(\d+)$/
 
 export async function interpretSourcePos(stackFrames: ParsedStack[], ctx: Vitest): Promise<ParsedStack[]> {
   for (const frame of stackFrames) {
+    if ('sourcePos' in frame)
+      continue
     const transformResult = ctx.server.moduleGraph.getModuleById(frame.file)?.ssrTransformResult
     if (!transformResult)
       continue
@@ -58,7 +60,7 @@ export function parseStacktrace(e: ErrorWithDiff, full = false): ParsedStack[] {
       if (!match)
         return null
 
-      let file = match[2]
+      let file = slash(match[2])
       if (file.startsWith('file://'))
         file = file.slice(7)
 
@@ -101,7 +103,8 @@ export function numberToPos(
   source: string,
   offset: number | Position,
 ): Position {
-  if (typeof offset !== 'number') return offset
+  if (typeof offset !== 'number')
+    return offset
   if (offset > source.length) {
     throw new Error(
       `offset is longer than source length! offset ${offset} > length ${source.length}`,

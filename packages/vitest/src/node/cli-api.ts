@@ -1,11 +1,9 @@
 import { execa } from 'execa'
 import type { UserConfig as ViteUserConfig } from 'vite'
-import c from 'picocolors'
 import type { UserConfig } from '../types'
 import { ensurePackageInstalled } from '../utils'
 import { createVitest } from './create'
 import { registerConsoleShortcuts } from './stdin'
-import { divider } from './reporters/renderers/utils'
 
 export interface CliOptions extends UserConfig {
   /**
@@ -75,9 +73,9 @@ export async function startVitest(cliFilters: string[], options: CliOptions, vit
   }
   catch (e) {
     process.exitCode = 1
-    ctx.error(`\n${c.red(divider(c.bold(c.inverse(' Unhandled Error '))))}`)
-    await ctx.printError(e)
+    await ctx.printError(e, true, 'Unhandled Error')
     ctx.error('\n\n')
+    return false
   }
 
   if (!ctx.config.watch) {

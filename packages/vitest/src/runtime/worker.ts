@@ -3,14 +3,13 @@ import { createBirpc } from 'birpc'
 import { ModuleCacheMap } from 'vite-node/client'
 import type { ResolvedConfig, WorkerContext, WorkerRPC } from '../types'
 import { distDir } from '../constants'
-import { getWorkerState } from '../utils'
+import { getWorkerState, stdout } from '../utils'
 import type { MockMap } from '../types/mocker'
 import { executeInViteNode } from './execute'
 import { rpc } from './rpc'
 
 let _viteNode: {
   run: (files: string[], config: ResolvedConfig) => Promise<void>
-  collect: (files: string[], config: ResolvedConfig) => Promise<void>
 }
 
 const moduleCache = new ModuleCacheMap()
@@ -31,9 +30,13 @@ async function startViteNode(ctx: WorkerContext) {
     return processExit(code)
   }
 
+  process.on('unhandledRejection', (err) => {
+    rpc().onUnhandledRejection(err)
+  })
+
   const { config } = ctx
 
-  const { run, collect } = (await executeInViteNode({
+  const { run } = (await executeInViteNode({
     files: [
       resolve(distDir, 'entry.js'),
     ],
@@ -50,7 +53,7 @@ async function startViteNode(ctx: WorkerContext) {
     base: config.base,
   }))[0]
 
-  _viteNode = { run, collect }
+  _viteNode = { run }
 
   return _viteNode
 }
@@ -60,7 +63,7 @@ function init(ctx: WorkerContext) {
   if (typeof __vitest_worker__ !== 'undefined' && ctx.config.threads && ctx.config.isolate)
     throw new Error(`worker for ${ctx.files.join(',')} already initialized by ${getWorkerState().ctx.files.join(',')}. This is probably an internal bug of Vitest.`)
 
-  process.stdout.write('\0')
+  stdout().write('\0')
 
   const { config, port, id } = ctx
 
@@ -82,15 +85,13 @@ function init(ctx: WorkerContext) {
     ),
   }
 
-  if (ctx.invalidates)
-    ctx.invalidates.forEach(i => moduleCache.delete(i))
+  if (ctx.invalidates) {
+    ctx.invalidates.forEach((i) => {
+      moduleCache.delete(i)
+      moduleCache.delete(`${i}__mock`)
+    })
+  }
   ctx.files.forEach(i => moduleCache.delete(i))
-}
-
-export async function collect(ctx: WorkerContext) {
-  init(ctx)
-  const { collect } = await startViteNode(ctx)
-  return collect(ctx.files, ctx.config)
 }
 
 export async function run(ctx: WorkerContext) {

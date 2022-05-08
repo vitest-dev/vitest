@@ -16,29 +16,30 @@ interface MockResultThrow {
 
 type MockResult<T> = MockResultReturn<T> | MockResultThrow | MockResultIncomplete
 
-export interface JestMockCompatContext<TArgs, TReturns> {
+export interface SpyContext<TArgs, TReturns> {
   calls: TArgs[]
   instances: TReturns[]
   invocationCallOrder: number[]
   results: MockResult<TReturns>[]
+  lastCall: TArgs | undefined
 }
 
 type Procedure = (...args: any[]) => any
 
 type Methods<T> = {
   [K in keyof T]: T[K] extends Procedure ? K : never
-}[keyof T] & string
+}[keyof T] & (string | symbol)
 type Properties<T> = {
   [K in keyof T]: T[K] extends Procedure ? never : K
-}[keyof T] & string
+}[keyof T] & (string | symbol)
 type Classes<T> = {
   [K in keyof T]: T[K] extends new (...args: any[]) => any ? K : never
-}[keyof T] & string
+}[keyof T] & (string | symbol)
 
 export interface SpyInstance<TArgs extends any[] = any[], TReturns = any> {
   getMockName(): string
   mockName(n: string): this
-  mock: JestMockCompatContext<TArgs, TReturns>
+  mock: SpyContext<TArgs, TReturns>
   mockClear(): this
   mockReset(): this
   mockRestore(): void
@@ -56,6 +57,7 @@ export interface SpyInstance<TArgs extends any[] = any[], TReturns = any> {
 
 export interface SpyInstanceFn<TArgs extends any[] = any, TReturns = any> extends SpyInstance<TArgs, TReturns> {
   (...args: TArgs): TReturns
+  new (...args: TArgs): TReturns
 }
 
 export type MaybeMockedConstructor<T> = T extends new (
@@ -164,6 +166,9 @@ function enhanceSpy<TArgs extends any[], TReturns>(
         return { type, value }
       })
     },
+    get lastCall() {
+      return stub.calls[stub.calls.length - 1]
+    },
   }
 
   let onceImplementations: ((...args: TArgs) => TReturns)[] = []
@@ -208,7 +213,7 @@ function enhanceSpy<TArgs extends any[], TReturns>(
   }
 
   stub.mockReturnThis = () =>
-    stub.mockImplementation(function(this: TReturns) {
+    stub.mockImplementation(function (this: TReturns) {
       return this
     })
 
@@ -231,7 +236,7 @@ function enhanceSpy<TArgs extends any[], TReturns>(
     get: () => mockContext,
   })
 
-  stub.willCall(function(this: unknown, ...args) {
+  stub.willCall(function (this: unknown, ...args) {
     instances.push(this)
     invocations.push(++callOrder)
     const impl = onceImplementations.shift() || implementation || stub.getOriginal() || (() => {})

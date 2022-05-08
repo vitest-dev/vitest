@@ -1,4 +1,4 @@
-import { resolve } from 'pathe'
+import { basename, dirname, join, resolve } from 'pathe'
 import { defineConfig } from 'vite'
 
 export default defineConfig({
@@ -44,6 +44,11 @@ export default defineConfig({
     testNamePattern: '^((?!does not include test that).)*$',
     coverage: {
       reporter: ['text', 'html'],
+    },
+    resolveSnapshotPath: (path, extension) => {
+      if (path.includes('moved-snapshot'))
+        return path + extension
+      return join(dirname(path), '__snapshots__', `${basename(path)}${extension}`)
     },
   },
 })

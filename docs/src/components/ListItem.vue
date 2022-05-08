@@ -28,7 +28,7 @@ const scope = effectScope()
 
 const visibility = scope.run(() => useElementVisibility(el))
 
-onMounted(async() => {
+onMounted(async () => {
   await until(visibility).toBe(true)
 
   scope.stop()

@@ -1,6 +1,7 @@
 import { fileURLToPath } from 'url'
 import { promises as fs } from 'fs'
-import { resolve } from 'pathe'
+import { basename, dirname, resolve } from 'pathe'
+import fg from 'fast-glob'
 import { notNullish } from '../packages/vitest/src/utils'
 
 const noOnlinePlayground = [
@@ -10,10 +11,11 @@ const noOnlinePlayground = [
 async function run() {
   const examplesRoot = resolve(fileURLToPath(import.meta.url), '../../examples')
 
-  const examples = await fs.readdir(examplesRoot)
+  const examples = await fg('*/package.json', { cwd: examplesRoot, absolute: true })
 
-  const data = await Promise.all(examples.map(async(name) => {
-    const path = resolve(examplesRoot, name)
+  const data = await Promise.all(examples.sort().map(async (pkgPath) => {
+    const path = dirname(pkgPath)
+    const name = basename(path)
     if ((await fs.lstat(path)).isFile())
       return
 

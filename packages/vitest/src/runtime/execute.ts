@@ -33,6 +33,7 @@ export class VitestRunner extends ViteNodeRunner {
 
   prepareContext(context: Record<string, any>) {
     const request = context.__vite_ssr_import__
+    const resolveId = context.__vitest_resolve_id__
 
     const mocker = this.mocker.withRequest(request)
 
@@ -49,8 +50,8 @@ export class VitestRunner extends ViteNodeRunner {
     }
 
     return Object.assign(context, {
-      __vite_ssr_import__: (dep: string) => mocker.requestWithMock(dep),
-      __vite_ssr_dynamic_import__: (dep: string) => mocker.requestWithMock(dep),
+      __vite_ssr_import__: async (dep: string) => mocker.requestWithMock(await resolveId(dep)),
+      __vite_ssr_dynamic_import__: async (dep: string) => mocker.requestWithMock(await resolveId(dep)),
       __vitest_mocker__: mocker,
     })
   }

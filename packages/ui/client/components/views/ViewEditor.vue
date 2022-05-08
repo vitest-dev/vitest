@@ -8,15 +8,22 @@ import type { File } from '#types'
 const props = defineProps<{
   file?: File
 }>()
+const emit = defineEmits<{ (event: 'draft', value: boolean): void }>()
 
 const code = ref('')
+const serverCode = shallowRef<string | undefined>(undefined)
+const draft = ref(false)
 watch(() => props.file,
-  async() => {
+  async () => {
     if (!props.file || !props.file?.filepath) {
       code.value = ''
+      serverCode.value = code.value
+      draft.value = false
       return
     }
     code.value = await client.rpc.readFile(props.file.filepath)
+    serverCode.value = code.value
+    draft.value = false
   },
   { immediate: true },
 )
@@ -40,8 +47,20 @@ const clearListeners = () => {
   listeners.length = 0
 }
 
-watch([cm, failed], () => {
-  if (!cm.value) {
+useResizeObserver(editor, () => {
+  cm.value?.refresh()
+})
+
+function codemirrorChanges() {
+  draft.value = serverCode.value !== cm.value!.getValue()
+}
+
+watch(draft, (d) => {
+  emit('draft', d)
+}, { immediate: true })
+
+watch([cm, failed], ([cmValue]) => {
+  if (!cmValue) {
     clearListeners()
     return
   }
@@ -52,6 +71,8 @@ watch([cm, failed], () => {
     handles.forEach(h => cm.value?.removeLineClass(h, 'wrap'))
     widgets.length = 0
     handles.length = 0
+
+    cmValue.on('changes', codemirrorChanges)
 
     failed.value.forEach((i) => {
       const e = i.result?.error
@@ -65,14 +86,14 @@ watch([cm, failed], () => {
         pre.textContent = `${' '.repeat(pos.column)}^ ${e?.nameStr}: ${e?.message}`
         div.appendChild(pre)
         const span = document.createElement('span')
-        span.className = 'i-carbon-launch c-red-600 dark:c-red-400 hover:cursor-pointer'
+        span.className = 'i-carbon-launch c-red-600 dark:c-red-400 hover:cursor-pointer min-w-1em min-h-1em'
         span.tabIndex = 0
         span.ariaLabel = 'Open in Editor'
         const tooltip = createTooltip(span, {
           content: 'Open in Editor',
           placement: 'bottom',
         }, false)
-        const el: EventListener = async() => {
+        const el: EventListener = async () => {
           await openInEditor(stacks[0].file, pos.line, pos.column)
         }
         div.appendChild(span)
@@ -81,13 +102,16 @@ watch([cm, failed], () => {
         widgets.push(cm.value!.addLineWidget(pos.line - 1, div))
       }
     })
-    if (!hasBeenEdited.value) cm.value?.clearHistory() // Prevent getting access to initial state
+    if (!hasBeenEdited.value)
+      cmValue.clearHistory() // Prevent getting access to initial state
   }, 100)
 }, { flush: 'post' })
 
 async function onSave(content: string) {
   hasBeenEdited.value = true
   await client.rpc.writeFile(props.file!.filepath, content)
+  serverCode.value = content
+  draft.value = false
 }
 </script>
 
