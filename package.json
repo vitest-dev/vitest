@@ -1,9 +1,9 @@
 {
   "name": "@vitest/monorepo",
   "type": "module",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "private": true,
-  "packageManager": "pnpm@7.0.0",
+  "packageManager": "pnpm@7.0.1",
   "description": "A blazing fast unit test framework powered by Vite",
   "scripts": {
     "build": "pnpm -r --filter=./packages/** run build",
@@ -22,7 +22,8 @@
     "test": "vitest --api -r test/core",
     "test:run": "vitest run -r test/core",
     "test:all": "cross-env CI=true pnpm -r --stream run test --allowOnly",
-    "test:ci": "cross-env CI=true pnpm -r --stream --filter=!test-fails run test --allowOnly",
+    "test:ci": "cross-env CI=true pnpm -r --stream --filter !test-fails run test --allowOnly",
+    "test:ci:no-threads": "cross-env CI=true pnpm -r --stream --filter !test-fails run test --allowOnly --no-threads",
     "typecheck": "tsc --noEmit",
     "ui:build": "vite build packages/ui",
     "ui:dev": "vite packages/ui",
@@ -61,14 +62,14 @@
     "rollup-plugin-license": "^2.7.0",
     "simple-git-hooks": "^2.7.0",
     "typescript": "^4.6.4",
-    "vite": "^2.9.7",
+    "vite": "^2.9.8",
     "vitepress": "^0.22.4",
     "vitest": "workspace:*",
     "vue": "^3.2.33"
   },
   "pnpm": {
     "overrides": {
-      "vite": "^2.9.7",
+      "vite": "^2.9.8",
       "vitest": "workspace:*"
     }
   },

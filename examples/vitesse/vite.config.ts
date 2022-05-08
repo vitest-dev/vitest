@@ -21,6 +21,10 @@ export default defineConfig({
       dts: 'src/components.d.ts',
     }),
   ],
+  resolve: {
+    // TODO actually, if @vue/test-utils provided "exports" field, this wouldn't be needed
+    mainFields: ['module'],
+  },
   test: {
     globals: true,
     environment: 'happy-dom',

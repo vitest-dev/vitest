@@ -300,6 +300,16 @@ export interface InlineConfig {
   resolveSnapshotPath?: (path: string, extension: string) => string
 
   /**
+   * Pass with no tests
+   */
+  passWithNoTests?: boolean
+
+  /**
+   * Allow tests and suites that are marked as only
+   */
+  allowOnly?: boolean
+
+  /**
    * Show heap usage after each test. Usefull for debugging memory leaks.
    */
   logHeapUsage?: boolean
@@ -326,16 +336,6 @@ export interface UserConfig extends InlineConfig {
    * Use happy-dom
    */
   dom?: boolean
-
-  /**
-   * Pass with no tests
-   */
-  passWithNoTests?: boolean
-
-  /**
-   * Allow tests and suites that are marked as only
-   */
-  allowOnly?: boolean
 
   /**
    * Run tests that cover a list of source files
