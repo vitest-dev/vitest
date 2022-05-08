@@ -4,7 +4,7 @@
 
 /* eslint-disable vars-on-top */
 
-import { expect, it } from 'vitest'
+import { expect, it, vi } from 'vitest'
 
 declare global {
   // eslint-disable-next-line no-var
@@ -86,4 +86,15 @@ it('usage with defineProperty', () => {
   expect(self.__property).toBe('global_property')
   expect(globalThis.__property).toBe('global_property')
   expect(window.__property).toBe('global_property')
+})
+
+it('can call global functions without window works as expected', async () => {
+  const noop = vi.fn()
+
+  expect(() => addEventListener('abort', noop)).not.toThrow()
+  expect(() => scrollTo()).not.toThrow()
+  expect(() => requestAnimationFrame(noop)).not.toThrow()
+  expect(() => window.requestAnimationFrame(noop)).not.toThrow()
+  expect(() => self.requestAnimationFrame(noop)).not.toThrow()
+  expect(() => globalThis.requestAnimationFrame(noop)).not.toThrow()
 })

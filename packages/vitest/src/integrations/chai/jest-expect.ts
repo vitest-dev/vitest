@@ -20,7 +20,7 @@ if (!Object.prototype.hasOwnProperty.call(global, MATCHERS_OBJECT)) {
     expectedAssertionsNumber: null,
     expectedAssertionsNumberErrorGen: null,
   }
-  Object.defineProperty(global, MATCHERS_OBJECT, {
+  Object.defineProperty(globalThis, MATCHERS_OBJECT, {
     value: {
       state: defaultState,
     },
@@ -28,12 +28,12 @@ if (!Object.prototype.hasOwnProperty.call(global, MATCHERS_OBJECT)) {
 }
 
 export const getState = <State extends MatcherState = MatcherState>(): State =>
-  (global as any)[MATCHERS_OBJECT].state
+  (globalThis as any)[MATCHERS_OBJECT].state
 
 export const setState = <State extends MatcherState = MatcherState>(
   state: Partial<State>,
 ): void => {
-  Object.assign((global as any)[MATCHERS_OBJECT].state, state)
+  Object.assign((globalThis as any)[MATCHERS_OBJECT].state, state)
 }
 
 // Jest Expect Compact
