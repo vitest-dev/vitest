@@ -6,6 +6,7 @@
  */
 
 import type {
+  FakeTimerInstallOpts,
   FakeTimerWithContext,
   InstalledClock,
 } from '@sinonjs/fake-timers'
@@ -19,17 +20,17 @@ export class FakeTimers {
   private _fakingTime: boolean
   private _fakingDate: boolean
   private _fakeTimers: FakeTimerWithContext
-  private _maxLoops: number
+  private _userConfig?: FakeTimerInstallOpts
   private _now = RealDate.now
 
   constructor({
     global,
-    maxLoops = 10_000,
+    config,
   }: {
     global: typeof globalThis
-    maxLoops?: number
+    config: FakeTimerInstallOpts
   }) {
-    this._maxLoops = maxLoops
+    this._userConfig = config
 
     this._fakingDate = false
 
@@ -104,10 +105,9 @@ export class FakeTimers {
       const toFake = Object.keys(this._fakeTimers.timers) as Array<keyof FakeTimerWithContext['timers']>
 
       this._clock = this._fakeTimers.install({
-        loopLimit: this._maxLoops,
         now: Date.now(),
         toFake,
-        shouldClearNativeTimers: true,
+        ...this._userConfig,
       })
 
       this._fakingTime = true
@@ -141,6 +141,10 @@ export class FakeTimers {
       return this._clock.countTimers()
 
     return 0
+  }
+
+  configure(config: FakeTimerInstallOpts): void {
+    this._userConfig = config
   }
 
   private _checkFakeTimers() {

@@ -33,6 +33,20 @@ const coverageConfigDefaults = {
   extension: ['.js', '.cjs', '.mjs', '.ts', '.tsx', '.jsx', '.vue', '.svelte'],
 } as ResolvedC8Options
 
+export const fakeTimersDefaults = {
+  loopLimit: 10_000,
+  shouldClearNativeTimers: true,
+  toFake: [
+    'setTimeout',
+    'clearTimeout',
+    'setInterval',
+    'clearInterval',
+    'setImmediate',
+    'clearImmediate',
+    'Date',
+  ],
+} as NonNullable<UserConfig['fakeTimers']>
+
 const config = {
   allowOnly: !process.env.CI,
   watch: !process.env.CI,
@@ -56,6 +70,7 @@ const config = {
   uiBase: '/__vitest__/',
   open: true,
   coverage: coverageConfigDefaults,
+  fakeTimers: fakeTimersDefaults,
 }
 
 export const configDefaults: Required<Pick<UserConfig, keyof typeof config>> = Object.freeze(config)
