@@ -14,10 +14,6 @@ If you decide to keep globals disabled, be aware that common libraries like [`te
 
 Unlike Jest, mocked modules in `<root>/__mocks__` are not loaded unless `vi.mock()` is called. If you need them to be mocked in every test, like in Jest, you can mock them inside [`setupFiles`](/config/#setupfiles).
 
-**Mocking globals**
-
-In Jest, you could mock global variables by putting them on `window` object. Vitest treats `globalThis` and `window` as different objects, so you would need to either put it on both `window` and `globalThis`, or use [`vi.stubGlobal`](/api/#vi-stubglobal) helper.
-
 **Jasmine API**
 
 Jest exports various [`jasmine`](https://jasmine.github.io/) globals (such as `jasmine.any()`). Any such instances will need to be migrated to [their Vitest counterparts](/api/).
