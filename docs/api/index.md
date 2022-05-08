@@ -974,7 +974,7 @@ When you use `test` in the top level of file, they are collected as part of the 
 
 - **Type:** `(snapshot?: string) => void`
 
-  The same as `[toMatchSnapshot](#toMatchSnapshot)`, but expects the same value as `[toThrowError](#toThrowError)`.
+  The same as [`toMatchSnapshot`](#tomatchsnapshot), but expects the same value as [`toThrowError`](#tothrowerror).
 
   If the function throws an `Error`, the snapshot will be the error message. Otherwise, snapshot will be the value thrown by the function.
 
@@ -982,7 +982,7 @@ When you use `test` in the top level of file, they are collected as part of the 
 
 - **Type:** `(snapshot?: string) => void`
 
-  The same as `[toMatchInlineSnapshot](#toMatchInlineSnapshot)`, but expects the same value as `[toThrowError](#toThrowError)`.
+  The same as [`toMatchInlineSnapshot`](#tomatchinlinesnapshot), but expects the same value as [`toThrowError`](#tothrowerror).
 
   If the function throws an `Error`, the snapshot will be the error message. Otherwise, snapshot will be the value thrown by the function.
 
