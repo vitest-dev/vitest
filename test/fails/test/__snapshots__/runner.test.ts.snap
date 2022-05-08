@@ -6,8 +6,6 @@ exports[`should fails > expect.test.ts > expect.test.ts 1`] = `"AssertionError: 
 
 exports[`should fails > hook-timeout.test.ts > hook-timeout.test.ts 1`] = `"Error: Hook timed out in 10ms."`;
 
-exports[`should fails > mock-import-alias.test.ts > mock-import-alias.test.ts 1`] = `"Error: There are some problems in resolving the mocks API."`;
-
 exports[`should fails > mock-import-proxy-module.test.ts > mock-import-proxy-module.test.ts 1`] = `"Error: There are some problems in resolving the mocks API."`;
 
 exports[`should fails > nested-suite.test.ts > nested-suite.test.ts 1`] = `"AssertionError: expected true to be false // Object.is equality"`;
