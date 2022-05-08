@@ -42,7 +42,7 @@ export function populateGlobal(global: any, win: any) {
     })
   }
 
-  const globalKeys = new Set<string | symbol>(['window', 'self', 'GLOBAL', 'global'])
+  const globalKeys = new Set<string | symbol>(['window', 'self', 'GLOBAL', 'global', 'top', 'parent'])
 
   globalKeys.forEach((key) => {
     if (!win[key])
