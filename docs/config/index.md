@@ -2,9 +2,9 @@
 
 ## Configuration
 
-`vitest` will read your root `vite.config.ts` when it is present to match with the plugins and setup as your Vite app. If you want to have a different configuration for testing, you could either:
+`vitest` will read your root `vite.config.ts` when it is present to match with the plugins and setup as your Vite app. If you want to have a different configuration for testing or your main app doesn't rely on Vite specifically, you could either:
 
-- Create `vitest.config.ts`, which will have the higher priority
+- Create `vitest.config.ts`, which will have the higher priority and will override the configuration from `vite.config.ts`
 - Pass `--config` option to CLI, e.g. `vitest --config ./path/to/vitest.config.ts`
 - Use `process.env.VITEST` or `mode` property on `defineConfig` (will be set to `test` if not overridden) to conditionally apply different configuration in `vite.config.ts`
 
@@ -54,14 +54,14 @@ export default defineConfig({
 - **Type:** `string[]`
 - **Default:** `['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']`
 
-Include globs for test files
+Files to include in the test run, using glob pattern.
 
 ### exclude
 
 - **Type:** `string[]`
 - **Default:** `['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**']`
 
-Exclude globs for test files
+Files to exclude from the test run, using glob pattern.
 
 ### deps
 
@@ -88,7 +88,7 @@ Vite will process inlined modules. This could be helpful to handle packages that
 - **Type** `boolean`
 - **Default:** `false`
 
-When a dependency is a valid ESM package, try to guess the cjs version based on the path.
+When a dependency is a valid ESM package, try to guess the cjs version based on the path. This might be helpful, if dependency has the wrong ESM file.
 
 This might potentially cause some misalignment if a package has different logic in ESM and CJS mode.
 
@@ -195,12 +195,14 @@ test('use jsdom in this test file', () => {
 })
 ```
 
+If you are running Vitest with [`--no-threads`](#threads) flag, your tests will be run in this order: `node`, `jsdom`, `happy-dom`. Meaning, every test with the same environment is grouped together, but is still run sequentially.
+
 ### update
 
 - **Type:** `boolean`
 - **Default:** `false`
 
-Update snapshot files
+Update snapshot files. This will update all changed snapshots and delete obsolete ones.
 
 ### watch
 
@@ -254,14 +256,14 @@ This might cause all sorts of issues, if you are relying on global state (fronte
 - **Type:** `number`
 - **Default:** _available CPUs_
 
-Maximum number of threads
+Maximum number of threads. You can also use `VITEST_MAX_THREADS` environment variable.
 
 ### minThreads
 
 - **Type:** `number`
 - **Default:** _available CPUs_
 
-Minimum number of threads
+Minimum number of threads. You can also use `VITEST_MIN_THREADS` environment variable.
 
 ### testTimeout
 
@@ -282,7 +284,7 @@ Default timeout of a hook in milliseconds
 - **Type:** `boolean`
 - **Default:** `false`
 
-Silent mode
+Silent console output from tests
 
 ### setupFiles
 
@@ -291,6 +293,27 @@ Silent mode
 Path to setup files. They will be run before each test file.
 
 You can use `process.env.VITEST_WORKER_ID` (integer-like string) inside to distinguish between threads (will always be `1`, if run with `threads: false`).
+
+:::tip
+Note, that if you are running [`--no-threads`](#threads), this file will be run in the same global scope. Meaning, you are accessing the same global object before each test, so make sure you are not doing the same thing more than you need.
+
+For example, you may rely on a global variable:
+
+```ts
+import { config } from '@some-testing-lib'
+
+if (!globalThis.defined) {
+  config.plugins = [myCoolPlugin]
+  computeHeavyThing()
+  afterEach(() => {
+    cleanup()
+  })
+  globalThis.defined = true
+}
+
+globalThis.resetBeforeEachTest = true
+```
+:::
 
 ### globalSetup
 
@@ -304,27 +327,31 @@ A global setup file can either export named functions `setup` and `teardown` or 
 Multiple globalSetup files are possible. setup and teardown are executed sequentially with teardown in reverse order.
 :::
 
+::: warning
+Beware that global setup is run in the different global scope, if you are using [`--threads`](#threads) (default option). If you disabled `--threads`, everything is run in the same scope (including Vite server and its plugins).
+:::
+
 
 ### watchIgnore
 
 - **Type:** `(string | RegExp)[]`
-- **Default:** `['**\/node_modules\/**', '**\/dist/**']`
+- **Default:** `[/\/node_modules\//, /\/dist\//]`
 
-Pattern of file paths to be ignore from triggering watch rerun
+Pattern of file paths to be ignore from triggering watch rerun. Glob pattern is not supported.
 
 ### isolate
 
 - **Type:** `boolean`
 - **Default:** `true`
 
-Isolate environment for each test file
+Isolate environment for each test file. Does not work if you disable [`--threads`](#threads).
 
 ### coverage
 
 - **Type:** `C8Options`
 - **Default:** `undefined`
 
-Coverage options
+Coverage options passed to [C8](https://github.com/bcoe/c8).
 
 ### testNamePattern
 
@@ -366,21 +393,21 @@ Listen to port and serve API. When set to true, the default port is 55555
 - **Type:** `boolean`
 - **Default:** `false`
 
-Will call `.mockClear()` on all spies before each test
+Will call [`.mockClear()`](/api/#mockclear) on all spies before each test. This will clear mocks history, but not reset its implementation to default one.
 
 ### mockReset
 
 - **Type:** `boolean`
 - **Default:** `false`
 
-Will call `.mockReset()` on all spies before each test
+Will call [`.mockReset()`](/api/#mockreset) on all spies before each test. This will clear mocks history and reset its implementation to an empty function (will return `undefined`).
 
 ### restoreMocks
 
 - **Type:** `boolean`
 - **Default:** `false`
 
-Will call `.mockRestore()` on all spies before each test
+Will call [`.mockRestore()`](api/#mockrestore) on all spies before each test. This will clear mocks history and reset its implementation to the original one.
 
 ### transformMode
 
@@ -422,23 +449,7 @@ export default defineConfig({
 
 - **Type:** `PrettyFormatOptions`
 
-Format options for snapshot testing.
-
-### mode
-
-- **Type:** `string`
-- **Default:** `test`
-
-Overrides Vite mode.
-
-### changed
-
-- **Type**: `boolean | string`
-- **Default**: false
-
-Run tests only against changed files. If no value is provided, it will run tests against uncomitted changes (includes staged and unstaged).
-
-To run tests against changes made in last commit, you can use `--changed HEAD~1`. You can also pass commit hash or branch name.
+Format options for snapshot testing. These options are passed down to [`pretty-format`](https://www.npmjs.com/package/pretty-format).
 
 ### resolveSnapshotPath
 
@@ -448,11 +459,13 @@ To run tests against changes made in last commit, you can use `--changed HEAD~1`
 Overrides default snapshot path. For example, to store snapshots next to test files:
 
 ```ts
-export default {
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
   test: {
     resolveSnapshotPath: (testPath, snapExtension) => testPath + snapExtension,
   },
-}
+})
 ```
 
 ### allowOnly
@@ -467,7 +480,7 @@ Allow tests and suites that are marked as only.
 - **Type**: `boolean`
 - **Default**: `false`
 
-Vitest will end the process with `0` exit code, if no tests will be found.
+Vitest will not fail, if no tests will be found.
 
 ### logHeapUsage
 
