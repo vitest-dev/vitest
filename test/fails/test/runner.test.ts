@@ -32,6 +32,7 @@ describe('should fails', async () => {
         .reverse()
         .find(i => i.includes('Error: '))
         ?.trim()
+        .replace(root, '<rootDir>')
       expect(msg).toMatchSnapshot(file)
     }, 10000)
   }
