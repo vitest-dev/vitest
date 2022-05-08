@@ -36,11 +36,12 @@ export function populateGlobal(global: any, win: any, options: PopulateOptions =
 
   const overrideObject = new Map<string | symbol, any>()
   for (const key of keys) {
+    const shouldBind = bindFunctions && typeof win[key] === 'function'
     Object.defineProperty(global, key, {
       get() {
         if (overrideObject.has(key))
           return overrideObject.get(key)
-        if (bindFunctions && typeof win[key] === 'function')
+        if (shouldBind)
           return win[key].bind(win)
         return win[key]
       },
