@@ -1378,7 +1378,7 @@ When you use `test` in the top level of file, they are collected as part of the 
 
   This method adds custom serializers that are called when creating a snapshot. This is advanced feature - if you want to know more, please read a [guide on custom serializers](/guide/snapshot-serializer).
 
-  If you are adding custom serializers, you should call this method inside [`setupFiles`](/config/#setupFiles). This will affect every snapshot.
+  If you are adding custom serializers, you should call this method inside [`setupFiles`](/config/#setupfiles). This will affect every snapshot.
 
   :::tip
   If you previously used Vue CLI with Jest, you might want to install [jest-serializer-vue](https://www.npmjs.com/package/jest-serializer-vue). Otherwise, your snapshots will be wrapped in a string, which cases `"` to be escaped.
