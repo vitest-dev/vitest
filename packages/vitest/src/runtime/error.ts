@@ -49,6 +49,10 @@ export function serializeError(val: any, seen = new WeakMap()): any {
   }
 }
 
+function normalizeErrorMessage(message: string) {
+  return message.replace(/__vite_ssr_import_\d+__\./g, '')
+}
+
 export function processError(err: any) {
   if (!err)
     return err
@@ -71,6 +75,13 @@ export function processError(err: any) {
     err.expected = stringify(err.expected)
   if (typeof err.actual !== 'string')
     err.actual = stringify(err.actual)
+
+  if (typeof err.message === 'string')
+    err.message = normalizeErrorMessage(err.message)
+
+  if (typeof err.cause === 'object' && err.cause.message === 'string')
+    err.cause.message = normalizeErrorMessage(err.cause.message)
+
   try {
     return serializeError(err)
   }
