@@ -168,7 +168,7 @@ export class ViteNodeRunner {
         exports.default = value
       },
       get exports() {
-        return exports.default
+        return exports
       },
     }
 
