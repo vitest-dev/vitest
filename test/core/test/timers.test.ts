@@ -176,7 +176,7 @@ describe('FakeTimers', () => {
         setTimeout,
       }
 
-      const timers = new FakeTimers({ global, maxLoops: 100 })
+      const timers = new FakeTimers({ global, config: { loopLimit: 100 } })
 
       timers.useFakeTimers()
 
@@ -306,7 +306,7 @@ describe('FakeTimers', () => {
 
     it('throws before allowing infinite recursion', () => {
       const global = { Date: FakeDate, clearTimeout, process, setTimeout }
-      const timers = new FakeTimers({ global, maxLoops: 100 })
+      const timers = new FakeTimers({ global, config: { loopLimit: 100 } })
       timers.useFakeTimers()
 
       global.setTimeout(function infinitelyRecursingCallback() {
