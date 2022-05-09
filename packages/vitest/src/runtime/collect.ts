@@ -61,8 +61,6 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
         state: 'fail',
         error: processError(e),
       }
-      // not sure thy, this line is needed to trigger the error
-      stdout().write('\0')
     }
 
     calculateHash(file)
