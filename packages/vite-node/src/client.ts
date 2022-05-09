@@ -172,8 +172,6 @@ export class ViteNodeRunner {
       },
     }
 
-    let require: NodeRequire
-
     // Be careful when changing this
     // changing context will change amount of code added on line :114 (vm.runInThisContext)
     // this messes up sourcemaps for coverage
@@ -189,12 +187,7 @@ export class ViteNodeRunner {
       __vitest_resolve_id__: resolveId,
 
       // cjs compact
-      require: (path: string) => {
-        if (!require)
-          require = createRequire(url)
-
-        return require(path)
-      },
+      require: createRequire(url),
       exports,
       module: moduleProxy,
       __filename,
