@@ -315,6 +315,11 @@ export interface InlineConfig {
   logHeapUsage?: boolean
 
   /**
+   * Custom environment variables assigned to `process.env` before running tests.
+   */
+  env?: Record<string, string>
+
+  /**
    * Options for @sinon/fake-timers
    */
   fakeTimers?: FakeTimerInstallOpts
