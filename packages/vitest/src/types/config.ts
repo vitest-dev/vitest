@@ -1,5 +1,6 @@
 import type { CommonServerOptions } from 'vite'
 import type { PrettyFormatOptions } from 'pretty-format'
+import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import type { BuiltinReporters } from '../node/reporters'
 import type { C8Options, ResolvedC8Options } from './coverage'
 import type { JSDOMOptions } from './jsdom-options'
@@ -312,6 +313,11 @@ export interface InlineConfig {
    * Show heap usage after each test. Usefull for debugging memory leaks.
    */
   logHeapUsage?: boolean
+
+  /**
+   * Options for @sinon/fake-timers
+   */
+  fakeTimers?: FakeTimerInstallOpts
 }
 
 export interface UserConfig extends InlineConfig {
