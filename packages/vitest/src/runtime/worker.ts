@@ -63,8 +63,6 @@ function init(ctx: WorkerContext) {
   if (typeof __vitest_worker__ !== 'undefined' && ctx.config.threads && ctx.config.isolate)
     throw new Error(`worker for ${ctx.files.join(',')} already initialized by ${getWorkerState().ctx.files.join(',')}. This is probably an internal bug of Vitest.`)
 
-  stdout().write('\0')
-
   const { config, port, id } = ctx
 
   process.env.VITEST_WORKER_ID = String(id)
