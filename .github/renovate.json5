@@ -43,6 +43,6 @@
     // TODO: migrate
     "pretty-format",
     // TODO: breaking changes
-    "happy-dom"
+    "pathe"
   ]
 }
