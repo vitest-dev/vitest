@@ -31,6 +31,7 @@ export type TaskResultPack = [id: string, result: TaskResult | undefined]
 export interface Suite extends TaskBase {
   type: 'suite'
   tasks: Task[]
+  filepath?: string
 }
 
 export interface File extends Suite {
@@ -124,8 +125,8 @@ SuiteCollector<ExtraContext>
 export type HookListener<T extends any[], Return = void> = (...args: T) => Awaitable<Return | void>
 
 export interface SuiteHooks {
-  beforeAll: HookListener<[Suite], () => Awaitable<void>>[]
-  afterAll: HookListener<[Suite]>[]
+  beforeAll: HookListener<[Suite | File], () => Awaitable<void>>[]
+  afterAll: HookListener<[Suite | File]>[]
   beforeEach: HookListener<[TestContext, Suite], () => Awaitable<void>>[]
   afterEach: HookListener<[TestContext, Suite]>[]
 }
