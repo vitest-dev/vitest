@@ -61,33 +61,39 @@ export function setupConsoleLogSpy() {
   }
   function sendStdout(taskId: string) {
     const buffer = stdoutBuffer.get(taskId)
-    if (buffer) {
-      const timer = timers.get(taskId)!
-      rpc().onUserConsoleLog({
-        type: 'stdout',
-        content: buffer.map(i => String(i)).join(''),
-        taskId,
-        time: timer.stdoutTime || RealDate.now(),
-        size: buffer.length,
-      })
-      stdoutBuffer.set(taskId, [])
-      timer.stdoutTime = 0
-    }
+    if (!buffer)
+      return
+    const content = buffer.map(i => String(i)).join('')
+    if (!content.trim())
+      return
+    const timer = timers.get(taskId)!
+    rpc().onUserConsoleLog({
+      type: 'stdout',
+      content,
+      taskId,
+      time: timer.stdoutTime || RealDate.now(),
+      size: buffer.length,
+    })
+    stdoutBuffer.set(taskId, [])
+    timer.stdoutTime = 0
   }
   function sendStderr(taskId: string) {
     const buffer = stderrBuffer.get(taskId)
-    if (buffer) {
-      const timer = timers.get(taskId)!
-      rpc().onUserConsoleLog({
-        type: 'stderr',
-        content: buffer.map(i => String(i)).join(''),
-        taskId,
-        time: timer.stderrTime || RealDate.now(),
-        size: buffer.length,
-      })
-      stderrBuffer.set(taskId, [])
-      timer.stderrTime = 0
-    }
+    if (!buffer)
+      return
+    const content = buffer.map(i => String(i)).join('')
+    if (!content.trim())
+      return
+    const timer = timers.get(taskId)!
+    rpc().onUserConsoleLog({
+      type: 'stderr',
+      content,
+      taskId,
+      time: timer.stderrTime || RealDate.now(),
+      size: buffer.length,
+    })
+    stderrBuffer.set(taskId, [])
+    timer.stderrTime = 0
   }
 
   const stdout = new Writable({
