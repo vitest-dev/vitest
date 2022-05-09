@@ -1,7 +1,6 @@
 import { createHash } from 'crypto'
 import { relative } from 'pathe'
 import type { File, ResolvedConfig, Suite, TaskBase } from '../types'
-import { stdout } from '../utils'
 import { clearCollectorContext, defaultSuite } from './suite'
 import { getHooks, setHooks } from './map'
 import { processError } from './error'
