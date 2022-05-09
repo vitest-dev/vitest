@@ -86,7 +86,7 @@
     "local-pkg": "^0.4.1",
     "tinypool": "^0.1.3",
     "tinyspy": "^0.3.2",
-    "vite": "^2.9.7"
+    "vite": "^2.9.8"
   },
   "devDependencies": {
     "@antfu/install-pkg": "^0.1.0",
