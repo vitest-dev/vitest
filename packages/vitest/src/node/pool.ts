@@ -17,44 +17,9 @@ export interface WorkerPool {
   close: () => Promise<void>
 }
 
-export function createPool(ctx: Vitest): WorkerPool {
-  if (ctx.config.threads)
-    return createWorkerPool(ctx)
-  else
-    return createFakePool(ctx)
-}
-
 const workerPath = pathToFileURL(resolve(distDir, './worker.js')).href
 
-export function createFakePool(ctx: Vitest): WorkerPool {
-  const runWithFiles = (name: 'run' | 'collect'): RunWithFiles => {
-    return async (files, invalidates) => {
-      const worker = await import(workerPath)
-
-      const { workerPort, port } = createChannel(ctx)
-
-      const data: WorkerContext = {
-        port: workerPort,
-        config: ctx.getConfig(),
-        files,
-        invalidates,
-        id: 1,
-      }
-
-      await worker[name](data, { transferList: [workerPort] })
-
-      port.close()
-      workerPort.close()
-    }
-  }
-
-  return {
-    runTests: runWithFiles('run'),
-    close: async () => {},
-  }
-}
-
-export function createWorkerPool(ctx: Vitest): WorkerPool {
+export function createPool(ctx: Vitest): WorkerPool {
   const threadsCount = ctx.config.watch
     ? Math.max(cpus().length / 2, 1)
     : Math.max(cpus().length - 1, 1)
@@ -64,13 +29,31 @@ export function createWorkerPool(ctx: Vitest): WorkerPool {
     // Disable this for now for WebContainers
     // https://github.com/vitest-dev/vitest/issues/93
     useAtomics: typeof process.versions.webcontainer !== 'string',
-
     maxThreads: ctx.config.maxThreads ?? threadsCount,
     minThreads: ctx.config.minThreads ?? threadsCount,
   }
+
   if (ctx.config.isolate) {
     options.isolateWorkers = true
     options.concurrentTasksPerWorker = 1
+  }
+
+  if (!ctx.config.threads) {
+    options.concurrentTasksPerWorker = 1
+    options.maxThreads = 1
+    options.minThreads = 1
+  }
+
+  if (ctx.config.coverage)
+    process.env.NODE_V8_COVERAGE ||= ctx.config.coverage.tempDirectory
+
+  options.env = {
+    TEST: 'true',
+    VITEST: 'true',
+    NODE_ENV: ctx.config.mode || 'test',
+    VITEST_MODE: ctx.config.watch ? 'WATCH' : 'RUN',
+    ...process.env,
+    ...ctx.config.env,
   }
 
   const pool = new Tinypool(options)
