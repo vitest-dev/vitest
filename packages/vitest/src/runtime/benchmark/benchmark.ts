@@ -1,4 +1,4 @@
-import BenchmarkLib from 'benchmark'
+import BenchmarkLib from 'tinybench'
 import type {
   BenchFunction,
   Benchmark,
@@ -6,9 +6,8 @@ import type {
   BenchmarkFactory,
   BenchmarkOptions,
   File,
-} from '../types'
-import { benchmarkContext, collectBenchmark } from './context'
-import { setBenchmark } from './map'
+} from '../../types'
+import { benchmarkContext, collectBenchmark, setBenchmark } from './context'
 
 // apis
 export const benchmark = (name: string, factory: BenchmarkFactory = () => { }, options?: BenchmarkOptions) => {

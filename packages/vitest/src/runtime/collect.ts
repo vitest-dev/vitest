@@ -41,6 +41,7 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
 
       const defaultTasks = await defaultSuite.collect(file)
       const defaultBenchmarkTasks = await defaultBenchmark.collect(file)
+
       setHooks(file, getHooks(defaultTasks))
 
       for (const c of [...defaultTasks.tasks, ...collectorContext.tasks, ...defaultBenchmarkTasks.tasks]) {

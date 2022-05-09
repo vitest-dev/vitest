@@ -6,6 +6,7 @@ import type { JSDOMOptions } from './jsdom-options'
 import type { Reporter } from './reporter'
 import type { SnapshotStateOptions } from './snapshot'
 import type { Arrayable } from './general'
+import type { BenchmarkUserOptions } from './benchmark'
 
 export type BuiltinEnvironment = 'node' | 'jsdom' | 'happy-dom'
 
@@ -21,6 +22,13 @@ export interface EnvironmentOptions {
 }
 
 export interface InlineConfig {
+  /**
+   * Benchmark options.
+   *
+   * @default {}
+  */
+  benchmark?: BenchmarkUserOptions
+
   /**
    * Include globs for test files
    *
@@ -350,7 +358,7 @@ export interface UserConfig extends InlineConfig {
   changed?: boolean | string
 }
 
-export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath'> {
+export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark'> {
   base?: string
 
   config?: string
@@ -366,4 +374,6 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
   defines: Record<string, any>
 
   api?: ApiConfig
+
+  benchmark?: Required<BenchmarkUserOptions>
 }

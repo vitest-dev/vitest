@@ -451,13 +451,15 @@ export class Vitest {
   }
 
   async globTestFiles(filters: string[] = []) {
+    const { include, exclude, includeSource } = this.config.benchmark || this.config
+
     const globOptions = {
       absolute: true,
       cwd: this.config.dir || this.config.root,
-      ignore: this.config.exclude,
+      ignore: exclude,
     }
 
-    let testFiles = await fg(this.config.include, globOptions)
+    let testFiles = await fg(include, globOptions)
 
     if (filters.length && process.platform === 'win32')
       filters = filters.map(f => toNamespacedPath(f))
@@ -465,8 +467,8 @@ export class Vitest {
     if (filters.length)
       testFiles = testFiles.filter(i => filters.some(f => i.includes(f)))
 
-    if (this.config.includeSource) {
-      let files = await fg(this.config.includeSource, globOptions)
+    if (includeSource) {
+      let files = await fg(includeSource, globOptions)
       if (filters.length)
         files = files.filter(i => filters.some(f => i.includes(f)))
 

@@ -1,21 +1,6 @@
-import type { Awaitable, BenchmarkCollector, BenchmarkContext, RuntimeContext, SuiteCollector, Test, TestContext } from '../types'
+import type { Awaitable, RuntimeContext, SuiteCollector, Test, TestContext } from '../types'
 import { createExpect } from '../integrations/chai'
 import { clearTimeout, getWorkerState, setTimeout } from '../utils'
-
-export const benchmarkContext: BenchmarkContext = {
-  currentBenchmark: null,
-}
-
-export async function runWithBenchmark(benchmark: BenchmarkCollector, fn: (() => Awaitable<void>)) {
-  const prev = benchmarkContext.currentBenchmark
-  benchmarkContext.currentBenchmark = benchmark
-  await fn()
-  benchmarkContext.currentBenchmark = prev
-}
-
-export function collectBenchmark(benchmark: BenchmarkCollector) {
-  benchmarkContext.currentBenchmark?.tasks.push(benchmark)
-}
 
 export const collectorContext: RuntimeContext = {
   tasks: [],

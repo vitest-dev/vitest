@@ -1,6 +1,6 @@
 import type { ChainableFunction } from '../runtime/chain'
 import type { Awaitable, ErrorWithDiff } from './general'
-import type { UserConsoleLog } from '.'
+import type { Benchmark, UserConsoleLog } from '.'
 
 export type RunMode = 'run' | 'skip' | 'only' | 'todo'
 export type TaskState = RunMode | 'pass' | 'fail'
@@ -148,57 +148,6 @@ export type SuiteFactory = (test: (name: string, fn: TestFunction) => void) => A
 export interface RuntimeContext {
   tasks: (SuiteCollector | Test)[]
   currentSuite: SuiteCollector | null
-}
-
-/* benchmark */
-export interface Benchmark extends TaskBase {
-  type: 'benchmark'
-  benchmark?: Benchmark
-  tasks: Task[]
-  result?: BenchmarkResult
-}
-
-export interface BenchmarkResult extends TaskResult {
-  cycle: Array<{
-    name: string
-    count: number
-    cycles: number
-    hz: number
-    rme: number
-    sampleSize: number
-  }>
-  complete: {
-    fastest: string
-  }
-}
-
-export interface BenchmarkOptions {
-  delay?: number | undefined
-  initCount?: number | undefined
-  maxTime?: number | undefined
-  minSamples?: number | undefined
-  minTime?: number | undefined
-  async?: boolean | undefined
-  defer?: boolean | undefined
-  queued?: boolean | undefined
-}
-
-export type BenchFunction = () => Awaitable<void>
-
-export type BenchmarkFactory = (test: (name: string, fn: BenchFunction, options?: BenchmarkOptions) => void) => Awaitable<void>
-
-export interface BenchmarkCollector {
-  readonly name: string
-  readonly mode: RunMode
-  tasks: (Benchmark | BenchmarkCollector)[]
-  type: 'benchmark-collector'
-  bench: (name: string, fn: BenchFunction, options?: BenchmarkOptions) => void
-  collect: (file?: File) => Promise<Benchmark>
-  clear: () => void
-}
-
-export interface BenchmarkContext {
-  currentBenchmark: BenchmarkCollector | null
 }
 
 export interface TestContext {
