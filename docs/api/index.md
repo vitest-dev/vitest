@@ -1173,7 +1173,7 @@ When you use `test` in the top level of file, they are collected as part of the 
 
     sell('apples')
 
-    expect(sell).toHaveReturnedWith({ procuct: 'apples' })
+    expect(sell).toHaveReturnedWith({ product: 'apples' })
   })
   ```
 
@@ -1192,7 +1192,7 @@ When you use `test` in the top level of file, they are collected as part of the 
     sell('apples')
     sell('bananas')
 
-    expect(sell).toHaveLastReturnedWith({ procuct: 'bananas' })
+    expect(sell).toHaveLastReturnedWith({ product: 'bananas' })
   })
   ```
 
