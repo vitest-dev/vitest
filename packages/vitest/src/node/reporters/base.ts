@@ -134,11 +134,20 @@ export abstract class BaseReporter implements Reporter {
   }
 
   onUserConsoleLog(log: UserConsoleLog) {
-    if (this.ctx.config.silent)
+    if (!this.shouldLog(log))
       return
     const task = log.taskId ? this.ctx.state.idMap.get(log.taskId) : undefined
     this.ctx.log(c.gray(log.type + c.dim(` | ${task ? getFullName(task) : 'unknown test'}`)))
     process[log.type].write(`${log.content}\n`)
+  }
+
+  shouldLog(log: UserConsoleLog) {
+    if (this.ctx.config.silent)
+      return false
+    const shouldIgnore = this.ctx.config.onConsoleLog?.(log.content, log.type)
+    if (shouldIgnore === false)
+      return shouldIgnore
+    return true
   }
 
   onServerRestart() {

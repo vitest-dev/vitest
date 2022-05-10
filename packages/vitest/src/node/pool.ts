@@ -35,7 +35,7 @@ export function createFakePool(ctx: Vitest): WorkerPool {
 
       const data: WorkerContext = {
         port: workerPort,
-        config: ctx.getConfig(),
+        config: ctx.getSerializableConfig(),
         files,
         invalidates,
         id: 1,
@@ -68,6 +68,7 @@ export function createWorkerPool(ctx: Vitest): WorkerPool {
     maxThreads: ctx.config.maxThreads ?? threadsCount,
     minThreads: ctx.config.minThreads ?? threadsCount,
   }
+
   if (ctx.config.isolate) {
     options.isolateWorkers = true
     options.concurrentTasksPerWorker = 1
@@ -78,12 +79,13 @@ export function createWorkerPool(ctx: Vitest): WorkerPool {
   const runWithFiles = (name: string): RunWithFiles => {
     return async (files, invalidates) => {
       let id = 0
+      const config = ctx.getSerializableConfig()
       await Promise.all(files.map(async (file) => {
         const { workerPort, port } = createChannel(ctx)
 
         const data: WorkerContext = {
           port: workerPort,
-          config: ctx.getConfig(),
+          config,
           files: [file],
           invalidates,
           id: ++id,
