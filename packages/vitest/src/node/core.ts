@@ -246,7 +246,7 @@ export class Vitest {
     await this.rerunFiles(files, trigger)
   }
 
-  async returnFailed() {
+  async rerunFailed() {
     await this.rerunFiles(this.state.getFailedFilepaths(), 'rerun failed')
   }
 
