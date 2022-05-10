@@ -115,7 +115,7 @@ function handleImportOutsideModuleError(stack: string, ctx: Vitest) {
   else
     name = name.split('/')[0]
 
-  ctx.console.error(c.yellow(
+  ctx.error(c.yellow(
     `Module ${path} seems to be an ES Module but shipped in a CommonJS package. `
 + `You might want to create an issue to the package ${c.bold(`"${name}"`)} asking `
 + 'them to ship the file in .mjs extension or add "type": "module" in their package.json.'

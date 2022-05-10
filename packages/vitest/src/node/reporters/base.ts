@@ -232,6 +232,7 @@ export abstract class BaseReporter implements Reporter {
       }
       await this.ctx.printError(error)
       errorDivider()
+      await Promise.resolve()
     }
   }
 
