@@ -1324,7 +1324,7 @@ When you use `test` in the top level of file, they are collected as part of the 
 
 ### expect.hasAssertions
 
-- **Type:** `(count: number) => void`
+- **Type:** `() => void`
 
   After the test has passed or failed verifies that at least one assertion was called during a test. Useful case would be to check if an asynchronous code was called.
 
