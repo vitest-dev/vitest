@@ -9,7 +9,7 @@ import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
 import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig } from '../types'
 import { SnapshotManager } from '../integrations/snapshot/manager'
-import { clearTimeout, deepMerge, hasFailed, noop, setTimeout, slash, toArray } from '../utils'
+import { clearTimeout, deepMerge, hasFailed, noop, setTimeout, slash } from '../utils'
 import { cleanCoverage, reportCoverage } from '../integrations/coverage'
 import { createPool } from './pool'
 import type { WorkerPool } from './pool'
@@ -93,29 +93,18 @@ export class Vitest {
       await cleanCoverage(resolved.coverage, resolved.coverage.clean)
   }
 
-  getConfig() {
-    const hasCustomReporter = toArray(this.config.reporters)
-      .some(reporter => typeof reporter !== 'string')
-
-    // cannot be serialized for sending to workers
-    // reimplemented on rpc
-    if (this.config.snapshotOptions.resolveSnapshotPath)
-      this.config.snapshotOptions.resolveSnapshotPath = undefined
-
-    if (!hasCustomReporter && !this.configOverride)
-      return this.config
-
-    const config = deepMerge({}, this.config)
-
-    if (this.configOverride)
-      deepMerge(config, this.configOverride)
-
-    // Custom reporters cannot be serialized for sending to workers #614
-    // but workers don't need reporters anyway
-    if (hasCustomReporter)
-      config.reporters = []
-
-    return config as ResolvedConfig
+  getSerializableConfig() {
+    return deepMerge<ResolvedConfig>({
+      ...this.config,
+      reporters: [],
+      snapshotOptions: {
+        ...this.config.snapshotOptions,
+        resolveSnapshotPath: undefined,
+      },
+      onConsoleLog: undefined!,
+    },
+    this.configOverride || {} as any,
+    ) as ResolvedConfig
   }
 
   async start(filters?: string[]) {

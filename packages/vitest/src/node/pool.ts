@@ -26,9 +26,10 @@ export function createPool(ctx: Vitest): WorkerPool {
 
   const options: TinypoolOptions = {
     filename: workerPath,
-    // Disable this for now for WebContainers
-    // https://github.com/vitest-dev/vitest/issues/93
-    useAtomics: typeof process.versions.webcontainer !== 'string',
+    // TODO: investigate futher
+    // It seems atomics introduced V8 Fatal Error https://github.com/vitest-dev/vitest/issues/1191
+    useAtomics: false,
+
     maxThreads: ctx.config.maxThreads ?? threadsCount,
     minThreads: ctx.config.minThreads ?? threadsCount,
   }
@@ -58,29 +59,34 @@ export function createPool(ctx: Vitest): WorkerPool {
 
   const pool = new Tinypool(options)
 
-  const runWithFiles = (name: string): RunWithFiles => {
-    return async (files, invalidates) => {
-      let id = 0
-      await Promise.all(files.map(async (file) => {
-        const { workerPort, port } = createChannel(ctx)
+  const runTests: RunWithFiles = async (files, invalidates) => {
+    let id = 0
+    const config = ctx.getSerializableConfig()
 
-        const data: WorkerContext = {
-          port: workerPort,
-          config: ctx.getConfig(),
-          files: [file],
-          invalidates,
-          id: ++id,
-        }
+    const runFiles = async (files: string[]): Promise<void> => {
+      const { workerPort, port } = createChannel(ctx)
 
-        await pool.run(data, { transferList: [workerPort], name })
-        port.close()
-        workerPort.close()
-      }))
+      const data: WorkerContext = {
+        port: workerPort,
+        config,
+        files,
+        invalidates,
+        id: ++id,
+      }
+
+      await pool.run(data, { transferList: [workerPort], name: 'run' })
+      port.close()
+      workerPort.close()
     }
+
+    if (!ctx.config.isolate && !ctx.config.threads)
+      await runFiles(files) // single thread with no isolation
+    else
+      await Promise.all(files.map(file => runFiles([file])))
   }
 
   return {
-    runTests: runWithFiles('run'),
+    runTests,
     close: async () => {}, // TODO: not sure why this will cause Node crash: pool.destroy(),
   }
 }

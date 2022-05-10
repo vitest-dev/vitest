@@ -323,6 +323,13 @@ export interface InlineConfig {
    * Options for @sinon/fake-timers
    */
   fakeTimers?: FakeTimerInstallOpts
+
+  /**
+   * Custom handler for console.log in tests.
+   *
+   * Return `false` to ignore the log.
+   */
+  onConsoleLog?: (log: string, type: 'stdout' | 'stderr') => false | void
 }
 
 export interface UserConfig extends InlineConfig {

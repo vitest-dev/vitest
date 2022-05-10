@@ -1324,7 +1324,7 @@ When you use `test` in the top level of file, they are collected as part of the 
 
 ### expect.hasAssertions
 
-- **Type:** `(count: number) => void`
+- **Type:** `() => void`
 
   After the test has passed or failed verifies that at least one assertion was called during a test. Useful case would be to check if an asynchronous code was called.
 
@@ -1468,10 +1468,10 @@ These functions allow you to hook into the life cycle of tests to avoid repeatin
   import { beforeEach } from 'vitest'
 
   beforeEach(async () => {
-    // called once before all tests run
+    // called once before each test run
     await prepareSomething()
 
-    // clean up function, called once after all tests run
+    // clean up function, called once after each test run
     return async () => {
       await resetSomething()
     }
