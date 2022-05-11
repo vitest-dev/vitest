@@ -1,18 +1,25 @@
 import type { Arrayable, DeepMerge, Nullable } from '../types'
 
+function isFinalObj(obj: any) {
+  return obj === Object.prototype || obj === Function.prototype || obj === RegExp.prototype
+}
+
+function collectOwnProperties(obj: any, collector: Set<string | symbol>) {
+  const props = Object.getOwnPropertyNames(obj)
+  const symbs = Object.getOwnPropertySymbols(obj)
+
+  props.forEach(prop => collector.add(prop))
+  symbs.forEach(symb => collector.add(symb))
+}
+
 export function getAllProperties(obj: any) {
   const allProps = new Set<string | symbol>()
   let curr = obj
   do {
     // we don't need propterties from these
-    if (curr === Object.prototype || curr === Function.prototype || curr === RegExp.prototype)
+    if (isFinalObj(curr))
       break
-    const props = Object.getOwnPropertyNames(curr)
-    const symbs = Object.getOwnPropertySymbols(curr)
-
-    props.forEach(prop => allProps.add(prop))
-    symbs.forEach(symb => allProps.add(symb))
-
+    collectOwnProperties(curr, allProps)
     // eslint-disable-next-line no-cond-assign
   } while (curr = Object.getPrototypeOf(curr))
   return Array.from(allProps)
@@ -36,6 +43,14 @@ export function getType(value: unknown): string {
   return Object.prototype.toString.apply(value).slice(8, -1)
 }
 
+function getOwnProperties(obj: any) {
+  const ownProps = new Set<string | symbol>()
+  if (isFinalObj(obj))
+    return []
+  collectOwnProperties(obj, ownProps)
+  return Array.from(ownProps)
+}
+
 export function clone<T>(val: T): T {
   let k: any, out: any, tmp: any
 
@@ -49,7 +64,8 @@ export function clone<T>(val: T): T {
 
   if (Object.prototype.toString.call(val) === '[object Object]') {
     out = Object.create(Object.getPrototypeOf(val))
-    const props = getAllProperties(val)
+    // we don't need properties from prototype
+    const props = getOwnProperties(val)
     for (const k of props) {
       // eslint-disable-next-line no-cond-assign
       out[k] = (tmp = (val as any)[k]) && typeof tmp === 'object' ? clone(tmp) : tmp
