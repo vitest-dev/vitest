@@ -68,7 +68,7 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
 - **Type:** `(condition: any) => Test`
 - **Alias:** `it.runIf`
 
-  Oppsit of [test.skipIf](#testskipif).
+  Opposite of [test.skipIf](#testskipif).
 
   ```ts
   import { assert, test } from 'vitest'
@@ -168,7 +168,7 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
 - **Alias:** `it.each`
 
   Use `test.each` when you need to run the same test with different variables.
-  You can inject parameters with [printf formmatting](https://nodejs.org/api/util.html#util_util_format_format_args) in the test name in the order of the test function parameters.
+  You can inject parameters with [printf formatting](https://nodejs.org/api/util.html#util_util_format_format_args) in the test name in the order of the test function parameters.
 
   - `%s`: string
   - `%d`: number

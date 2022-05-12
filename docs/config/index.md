@@ -487,4 +487,4 @@ Vitest will not fail, if no tests will be found.
 - **Type**: `boolean`
 - **Default**: `false`
 
-Show heap usage after each test. Usefull for debugging memory leaks.
+Show heap usage after each test. Useful for debugging memory leaks.

@@ -70,7 +70,7 @@ Learn more about the [Command Line Interface](./cli.md)
 
 ## IDE Integrations
 
-We also provided a official extension for Visual Studio Code to enchance your testing experience with Vitest.
+We also provided a official extension for Visual Studio Code to enhance your testing experience with Vitest.
 
 [Install from VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ZixuanChen.vitest-explorer)
 
