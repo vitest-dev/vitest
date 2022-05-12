@@ -435,6 +435,7 @@ describe('async expect', () => {
   it('resolves', async () => {
     await expect((async () => 'true')()).resolves.toBe('true')
     await expect((async () => 'true')()).resolves.not.toBe('true22')
+    await expect((async () => 'true')()).resolves.not.toThrow()
   })
 
   it('throws an error on .resolves when the argument is not a promise', () => {
@@ -454,6 +455,9 @@ describe('async expect', () => {
     await expect((async () => {
       throw new Error('err')
     })()).resolves.toBe('true')
+    await expect((async () => {
+      throw new Error('err')
+    })()).resolves.not.toThrow()
   })
 
   it('rejects', async () => {

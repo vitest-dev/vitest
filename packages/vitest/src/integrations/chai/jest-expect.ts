@@ -61,6 +61,11 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
             throw object
           })
         }
+        else if (promise === 'resolves') {
+          utils.flag(this, 'object', () => {
+            return object
+          })
+        }
         _super.apply(this, args)
       }
     })
