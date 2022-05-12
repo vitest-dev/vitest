@@ -437,6 +437,19 @@ describe('async expect', () => {
     await expect((async () => 'true')()).resolves.not.toBe('true22')
   })
 
+  it('throws an error on .resolves when the argument is not a promise', () => {
+    expect.assertions(2)
+
+    const expectedError = new TypeError('You must provide a Promise to expect() when using .resolves, not \'number\'.')
+
+    try {
+      expect(1).resolves.toEqual(2)
+    }
+    catch (error) {
+      expect(error).toEqual(expectedError)
+    }
+  })
+
   it.fails('failed to resolve', async () => {
     await expect((async () => {
       throw new Error('err')
@@ -470,6 +483,26 @@ describe('async expect', () => {
 
   it.fails('failed to reject', async () => {
     await expect((async () => 'test')()).rejects.toBe('test')
+  })
+
+  it('throws an error on .rejects when the argument (or function result) is not a promise', () => {
+    expect.assertions(4)
+
+    const expectedError = new TypeError('You must provide a Promise to expect() when using .rejects, not \'number\'.')
+
+    try {
+      expect(1).rejects.toEqual(2)
+    }
+    catch (error) {
+      expect(error).toEqual(expectedError)
+    }
+
+    try {
+      expect(() => 1).rejects.toEqual(2)
+    }
+    catch (error) {
+      expect(error).toEqual(expectedError)
+    }
   })
 })
 
