@@ -119,7 +119,6 @@ export class VitestMocker {
 
     // it's a node_module alias
     // all mocks should be inside <root>/__mocks__
-    // virtual module is /@id/ and any non-existant modules
     if (external || isNodeBuiltin(mockPath) || !existsSync(mockPath)) {
       const mockDirname = dirname(path) // for nested mocks: @vueuse/integration/useJwt
       const mockFolder = resolve(this.root, '__mocks__', mockDirname)
