@@ -1,7 +1,9 @@
 import c from 'picocolors'
+import { AssertionError } from 'chai'
 import type { EnhancedSpy } from '../spy'
 import { isMockFunction } from '../spy'
 import { addSerializer } from '../snapshot/port/plugins'
+import { toString } from '../utils'
 import type { Constructable, Test } from '../../types'
 import { assertTypes } from '../../utils'
 import { unifiedDiff } from '../../node/diff'
@@ -55,10 +57,26 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       return function (this: Chai.Assertion & Chai.AssertionStatic, ...args: any[]) {
         const promise = utils.flag(this, 'promise')
         const object = utils.flag(this, 'object')
+        const isNot = utils.flag(this, 'negate') as boolean
         if (promise === 'rejects') {
           utils.flag(this, 'object', () => {
             throw object
           })
+        }
+        // if it got here, it's already resolved
+        // unless it tries to resolve to a function that should throw
+        // called as '.resolves[.not].toThrow()`
+        else if (promise === 'resolves' && typeof object !== 'function') {
+          if (!isNot) {
+            const message = utils.flag(this, 'message') || 'expected promise to throw an error, but it didn\'t'
+            const error = {
+              showDiff: false,
+            }
+            throw new AssertionError(message, error, utils.flag(this, 'ssfi'))
+          }
+          else {
+            return
+          }
         }
         _super.apply(this, args)
       }
@@ -426,10 +444,26 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
 
     const obj = this._obj
     const promise = utils.flag(this, 'promise')
+    const isNot = utils.flag(this, 'negate') as boolean
     let thrown: any = null
 
-    if (promise) {
+    if (promise === 'rejects') {
       thrown = obj
+    }
+    // if it got here, it's already resolved
+    // unless it tries to resolve to a function that should throw
+    // called as .resolves.toThrow(Error)
+    else if (promise === 'resolves' && typeof obj !== 'function') {
+      if (!isNot) {
+        const message = utils.flag(this, 'message') || 'expected promise to throw an error, but it didn\'t'
+        const error = {
+          showDiff: false,
+        }
+        throw new AssertionError(message, error, utils.flag(this, 'ssfi'))
+      }
+      else {
+        return
+      }
     }
     else {
       try {
@@ -550,6 +584,10 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     utils.flag(this, 'promise', 'resolves')
     utils.flag(this, 'error', new Error('resolves'))
     const obj = utils.flag(this, 'object')
+
+    if (typeof obj?.then !== 'function')
+      throw new TypeError(`You must provide a Promise to expect() when using .resolves, not '${typeof obj}'.`)
+
     const proxy: any = new Proxy(this, {
       get: (target, key, receiver) => {
         const result = Reflect.get(target, key, receiver)
@@ -564,7 +602,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
               return result.call(this, ...args)
             },
             (err: any) => {
-              throw new Error(`promise rejected "${err}" instead of resolving`)
+              throw new Error(`promise rejected "${toString(err)}" instead of resolving`)
             },
           )
         }
@@ -579,6 +617,10 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     utils.flag(this, 'error', new Error('rejects'))
     const obj = utils.flag(this, 'object')
     const wrapper = typeof obj === 'function' ? obj() : obj // for jest compat
+
+    if (typeof wrapper?.then !== 'function')
+      throw new TypeError(`You must provide a Promise to expect() when using .rejects, not '${typeof wrapper}'.`)
+
     const proxy: any = new Proxy(this, {
       get: (target, key, receiver) => {
         const result = Reflect.get(target, key, receiver)
@@ -589,7 +631,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         return async (...args: any[]) => {
           return wrapper.then(
             (value: any) => {
-              throw new Error(`promise resolved "${value}" instead of rejecting`)
+              throw new Error(`promise resolved "${toString(value)}" instead of rejecting`)
             },
             (err: any) => {
               utils.flag(this, 'object', err)
