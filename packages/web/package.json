@@ -1,0 +1,45 @@
+{
+  "name": "@vitest/web",
+  "type": "module",
+  "version": "0.4.1",
+  "description": "UI for Vitest",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vitest-dev/vitest.git",
+    "directory": "packages/ui"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./*": "./*"
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "rimraf dist && pnpm build:node && pnpm build:client",
+    "build:client": "vite build",
+    "build:node": "rollup -c",
+    "dev:client": "vite build --watch",
+    "dev:node": "rollup -c --watch --watch.include=node/**",
+    "dev": "run-p dev:node dev:client"
+  },
+  "dependencies": {
+    "node-module-polyfill": "^1.0.1",
+    "rollup-plugin-node-globals": "^1.4.0",
+    "rollup-plugin-node-polyfills": "^0.2.1",
+    "sirv": "^2.0.2"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.2.2",
+    "@vitest/ws-client": "workspace:*",
+    "picocolors": "^1.0.0",
+    "rollup": "^2.67.2"
+  }
+}
