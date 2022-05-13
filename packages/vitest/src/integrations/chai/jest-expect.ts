@@ -1,4 +1,5 @@
 import c from 'picocolors'
+import { AssertionError } from 'chai'
 import type { EnhancedSpy } from '../spy'
 import { isMockFunction } from '../spy'
 import { addSerializer } from '../snapshot/port/plugins'
@@ -56,15 +57,26 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       return function (this: Chai.Assertion & Chai.AssertionStatic, ...args: any[]) {
         const promise = utils.flag(this, 'promise')
         const object = utils.flag(this, 'object')
+        const isNot = utils.flag(this, 'negate') as boolean
         if (promise === 'rejects') {
           utils.flag(this, 'object', () => {
             throw object
           })
         }
-        else if (promise === 'resolves') {
-          utils.flag(this, 'object', () => {
-            return object
-          })
+        // if it got here, it's already resolved
+        // unless it tries to resolve to a function that should throw
+        // called as '.resolves[.not].toThrow()`
+        else if (promise === 'resolves' && typeof object !== 'function') {
+          if (!isNot) {
+            const message = utils.flag(this, 'message') || 'expected promise to throw an error, but it didn\'t'
+            const error = {
+              showDiff: false,
+            }
+            throw new AssertionError(message, error, utils.flag(this, 'ssfi'))
+          }
+          else {
+            return
+          }
         }
         _super.apply(this, args)
       }
@@ -432,10 +444,26 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
 
     const obj = this._obj
     const promise = utils.flag(this, 'promise')
+    const isNot = utils.flag(this, 'negate') as boolean
     let thrown: any = null
 
-    if (promise) {
+    if (promise === 'rejects') {
       thrown = obj
+    }
+    // if it got here, it's already resolved
+    // unless it tries to resolve to a function that should throw
+    // called as .resolves.toThrow(Error)
+    else if (promise === 'resolves' && typeof obj !== 'function') {
+      if (!isNot) {
+        const message = utils.flag(this, 'message') || 'expected promise to throw an error, but it didn\'t'
+        const error = {
+          showDiff: false,
+        }
+        throw new AssertionError(message, error, utils.flag(this, 'ssfi'))
+      }
+      else {
+        return
+      }
     }
     else {
       try {

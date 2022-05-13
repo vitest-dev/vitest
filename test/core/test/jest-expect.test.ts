@@ -436,6 +436,33 @@ describe('async expect', () => {
     await expect((async () => 'true')()).resolves.toBe('true')
     await expect((async () => 'true')()).resolves.not.toBe('true22')
     await expect((async () => 'true')()).resolves.not.toThrow()
+    await expect((async () => new Error('msg'))()).resolves.not.toThrow() // calls chai assertion
+    await expect((async () => new Error('msg'))()).resolves.not.toThrow(Error) // calls our assertion
+    await expect((async () => () => {
+      throw new Error('msg')
+    })()).resolves.toThrow()
+    await expect((async () => () => {
+      return new Error('msg')
+    })()).resolves.not.toThrow()
+    await expect((async () => () => {
+      return new Error('msg')
+    })()).resolves.not.toThrow(Error)
+  })
+
+  it('resolves trows chai', async () => {
+    const assertion = async () => {
+      await expect((async () => new Error('msg'))()).resolves.toThrow()
+    }
+
+    await expect(assertion).rejects.toThrowError('expected promise to throw an error, but it didn\'t')
+  })
+
+  it('resolves trows jest', async () => {
+    const assertion = async () => {
+      await expect((async () => new Error('msg'))()).resolves.toThrow(Error)
+    }
+
+    await expect(assertion).rejects.toThrowError('expected promise to throw an error, but it didn\'t')
   })
 
   it('throws an error on .resolves when the argument is not a promise', () => {
@@ -455,6 +482,9 @@ describe('async expect', () => {
     await expect((async () => {
       throw new Error('err')
     })()).resolves.toBe('true')
+  })
+
+  it.fails('failed to throw', async () => {
     await expect((async () => {
       throw new Error('err')
     })()).resolves.not.toThrow()
