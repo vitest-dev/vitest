@@ -1,12 +1,12 @@
 {
-  "name": "@vitest/web",
+  "name": "@vitest/browser",
   "type": "module",
   "version": "0.4.1",
-  "description": "UI for Vitest",
+  "description": "Browser running for Vitest",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vitest-dev/vitest.git",
-    "directory": "packages/ui"
+    "directory": "packages/browser"
   },
   "main": "./dist/index.js",
   "module": "./dist/index.js",

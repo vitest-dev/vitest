@@ -24,6 +24,7 @@ export interface WorkerRPC {
 
   onFinished: (files: File[], errors?: unknown[]) => void
   onWorkerExit: (code?: number) => void
+  onPathsCollected: (paths: string[]) => void
   onUserConsoleLog: (log: UserConsoleLog) => void
   onUnhandledRejection: (err: unknown) => void
   onCollected: (files: File[]) => void

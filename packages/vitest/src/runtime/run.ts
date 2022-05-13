@@ -1,7 +1,7 @@
 import type { File, HookCleanupCallback, HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from '../types'
 import { vi } from '../integrations/vi'
 import { getSnapshotClient } from '../integrations/snapshot/chai'
-import { clearTimeout, getFullName, getWorkerState, hasFailed, hasTests, partitionSuiteChildren, setTimeout } from '../utils'
+import { clearTimeout, getFullName, getWorkerState, hasFailed, hasTests, isNode, partitionSuiteChildren, setTimeout } from '../utils'
 import { getState, setState } from '../integrations/chai/jest-expect'
 import { takeCoverage } from '../integrations/coverage'
 import { getFn, getHooks } from './map'
@@ -243,6 +243,11 @@ async function runSuiteChild(c: Task) {
     : runSuite(c)
 }
 
+async function runSuites(suites: Suite[]) {
+  for (const suite of suites)
+    await runSuite(suite)
+}
+
 export async function runFiles(files: File[], config: ResolvedConfig) {
   for (const file of files) {
     if (!file.tasks.length && !config.passWithNoTests) {
@@ -258,7 +263,19 @@ export async function runFiles(files: File[], config: ResolvedConfig) {
   }
 }
 
-export async function startTests(paths: string[], config: ResolvedConfig) {
+async function startTestsBrowser(paths: string[], config: ResolvedConfig) {
+  if (isNode) {
+    rpc().onPathsCollected(paths)
+  }
+  else {
+    const files = await collectTests(paths, config)
+    await rpc().onCollected(files)
+    await runSuites(files)
+    await sendTasksUpdate()
+  }
+}
+
+async function startTestsNode(paths: string[], config: ResolvedConfig) {
   const files = await collectTests(paths, config)
 
   rpc().onCollected(files)
@@ -271,6 +288,13 @@ export async function startTests(paths: string[], config: ResolvedConfig) {
   await getSnapshotClient().saveCurrent()
 
   await sendTasksUpdate()
+}
+
+export async function startTests(paths: string[], config: ResolvedConfig) {
+  if (config.browser)
+    return startTestsBrowser(paths, config)
+  else
+    return startTestsNode(paths, config)
 }
 
 export function clearModuleMocks() {

@@ -15,7 +15,7 @@ import pkg from './package.json'
 
 const entries = [
   'src/index.ts',
-  'src/web.ts',
+  'src/browser.ts',
   'src/node/cli.ts',
   'src/node.ts',
   'src/runtime/worker.ts',
@@ -26,7 +26,7 @@ const entries = [
 const dtsEntries = [
   'src/index.ts',
   'src/node.ts',
-  'src/web.ts',
+  'src/browser.ts',
   'src/config.ts',
 ]
 
@@ -36,7 +36,7 @@ const external = [
   'worker_threads',
   'inspector',
   'c8',
-  '@vitest/web',
+  '@vitest/browser',
 ]
 
 const plugins = [

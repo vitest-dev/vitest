@@ -1,6 +1,6 @@
-# @vitest/web
+# @vitest/browser
 
-This package is for Web environment of Vitest.
+Browser running for Vitest.
 
 > Working in progress.
 
@@ -13,6 +13,6 @@ pnpm -w run dev
 pnpm -w run web:dev
 
 # can be in one terminal
-cd test/web
-pnpm vitest --web
+cd test/browser
+pnpm vitest --browser
 ```

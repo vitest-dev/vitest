@@ -39,9 +39,9 @@
       "import": "./dist/node.js",
       "types": "./dist/node.d.ts"
     },
-    "./web": {
-      "import": "./dist/web.js",
-      "types": "./dist/web.d.ts"
+    "./browser": {
+      "import": "./dist/browser.js",
+      "types": "./dist/browser.d.ts"
     },
     "./config": {
       "import": "./dist/config.js",
@@ -65,7 +65,7 @@
   },
   "peerDependencies": {
     "@vitest/ui": "*",
-    "@vitest/web": "*",
+    "@vitest/browser": "*",
     "c8": "*",
     "happy-dom": "*",
     "jsdom": "*"
@@ -74,7 +74,7 @@
     "@vitest/ui": {
       "optional": true
     },
-    "@vitest/web": {
+    "@vitest/browser": {
       "optional": true
     },
     "c8": {

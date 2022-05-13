@@ -350,6 +350,11 @@ export interface UserConfig extends InlineConfig {
   dom?: boolean
 
   /**
+   * Use in browser environment
+   */
+  browser?: boolean
+
+  /**
    * Run tests that cover a list of source files
    */
   related?: string[] | string
