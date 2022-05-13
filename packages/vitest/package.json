@@ -39,6 +39,10 @@
       "import": "./dist/node.js",
       "types": "./dist/node.d.ts"
     },
+    "./web": {
+      "import": "./dist/web.js",
+      "types": "./dist/web.d.ts"
+    },
     "./config": {
       "import": "./dist/config.js",
       "require": "./dist/config.cjs",
@@ -61,12 +65,16 @@
   },
   "peerDependencies": {
     "@vitest/ui": "*",
+    "@vitest/web": "*",
     "c8": "*",
     "happy-dom": "*",
     "jsdom": "*"
   },
   "peerDependenciesMeta": {
     "@vitest/ui": {
+      "optional": true
+    },
+    "@vitest/web": {
       "optional": true
     },
     "c8": {
