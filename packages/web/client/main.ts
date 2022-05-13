@@ -35,7 +35,7 @@ export const client = createClient(ENTRY_URL, {
 
 const ws = client.ws
 
-ws.addEventListener('open', async() => {
+ws.addEventListener('open', async () => {
   config = await client.rpc.getConfig()
 
   // @ts-expect-error mocking vitest apis

@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest'
 
-it('basic', async() => {
+it('basic', async () => {
   expect(globalThis.performance).toBeDefined()
 })
 

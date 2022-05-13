@@ -707,6 +707,27 @@ importers:
       vite-node: link:../vite-node
       ws: 8.6.0
 
+  packages/web:
+    specifiers:
+      '@types/ws': ^8.2.2
+      '@vitest/ws-client': workspace:*
+      node-module-polyfill: ^1.0.1
+      picocolors: ^1.0.0
+      rollup: ^2.67.2
+      rollup-plugin-node-globals: ^1.4.0
+      rollup-plugin-node-polyfills: ^0.2.1
+      sirv: ^2.0.2
+    dependencies:
+      node-module-polyfill: 1.0.1
+      rollup-plugin-node-globals: 1.4.0
+      rollup-plugin-node-polyfills: 0.2.1
+      sirv: 2.0.2
+    devDependencies:
+      '@types/ws': 8.5.3
+      '@vitest/ws-client': link:../ws-client
+      picocolors: 1.0.0
+      rollup: 2.72.1
+
   packages/web-worker:
     specifiers:
       rollup: ^2.72.1
@@ -830,6 +851,28 @@ importers:
       vitest: workspace:*
     devDependencies:
       pathe: 0.2.0
+      vitest: link:../../packages/vitest
+
+  test/web:
+    specifiers:
+      '@types/fs-extra': ^9.0.13
+      '@types/prettier': ^2.4.4
+      fs-extra: ^10.0.0
+      givens: 1.3.9
+      history: ^5.2.0
+      lodash: ^4.17.21
+      prettier: ^2.5.1
+      temp-dir: ^2.0.0
+      vitest: workspace:*
+    devDependencies:
+      '@types/fs-extra': 9.0.13
+      '@types/prettier': 2.6.0
+      fs-extra: 10.1.0
+      givens: 1.3.9
+      history: 5.3.0
+      lodash: 4.17.21
+      prettier: 2.6.2
+      temp-dir: 2.0.0
       vitest: link:../../packages/vitest
 
   test/web-worker:
@@ -6652,6 +6695,10 @@ packages:
     resolution: {integrity: sha512-F0KIgDJfy2nA3zMLmWGKxcH2ZVEtCZXHHdOQs2gSaQ27+lNeEfGxzkIw90aXswATX7AZ33tahPbzy6KAfUreVw==}
     dev: true
 
+  /@types/node/12.20.52:
+    resolution: {integrity: sha512-cfkwWw72849SNYp3Zx0IcIs25vABmFh73xicxhCkTcvtZQeIez15PpwQN8fY3RD7gv1Wrxlc9MEtfMORZDEsGw==}
+    dev: false
+
   /@types/node/14.18.14:
     resolution: {integrity: sha512-HTgN9C1x8iMFycNAkLKIkJg+D3z1j0/Bm5/CMyzI3bO8a8dS0U1FxlS6hfvg5MPUYqkG3Y1myuje7HUNKLX9Mw==}
     dev: true
@@ -7637,6 +7684,12 @@ packages:
     resolution: {integrity: sha512-OPdCF6GsMIP+Az+aWfAAOEt2/+iVDKE7oy6lJ098aoe59oAmK76qV6Gw60SbZ8jHuG2wH058GF4pLFbYamYrVA==}
     engines: {node: '>=0.4.0'}
     dev: true
+
+  /acorn/5.7.4:
+    resolution: {integrity: sha512-1D++VG7BhrtvQpNbBzovKNc1FLGGEE/oGe7b9xJm/RFHMBeUaUGpluV9RLjZa47YFdPcDAenEYuq9pQPcMdLJg==}
+    engines: {node: '>=0.4.0'}
+    hasBin: true
+    dev: false
 
   /acorn/6.4.2:
     resolution: {integrity: sha512-XtGIhXwF8YM8bJhGxG5kXgjkEuNGLTkoYqVE+KMR+aspr4KGYmKYg7yUe3KghyQ9yheNwLnjmzh/7+gfDBmHCQ==}
@@ -8663,6 +8716,10 @@ packages:
   /buffer-crc32/0.2.13:
     resolution: {integrity: sha1-DTM+PwDqxQqhRUq9MO+MKl2ackI=}
     dev: true
+
+  /buffer-es6/4.9.3:
+    resolution: {integrity: sha1-8mNHuC33b9N+GLy1KIxJcM/VxAQ=}
+    dev: false
 
   /buffer-from/1.1.2:
     resolution: {integrity: sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ==}
@@ -11349,6 +11406,14 @@ packages:
     transitivePeerDependencies:
       - supports-color
     dev: true
+
+  /estree-walker/0.5.2:
+    resolution: {integrity: sha512-XpCnW/AE10ws/kDAs37cngSkvgIR8aN3G0MS85m7dUpuK2EREo9VJ00uvw6Dg/hXEpfsE1I1TvJOJr+Z+TL+ig==}
+    dev: false
+
+  /estree-walker/0.6.1:
+    resolution: {integrity: sha512-SqmZANLWS0mnatqbSfRP5g8OXZC12Fgg1IwNtLsyHDzJizORW4khDfjPqJZsemPWBB2uqykUah5YpQ6epsqC/w==}
+    dev: false
 
   /estree-walker/1.0.1:
     resolution: {integrity: sha512-1fMXF3YP4pZZVozF8j/ZLfvnR8NSIljt56UhbZ5PeeDmmGHpgpdwQt7ITlGvYaQukCvuBRMLEiKiYC+oeIg4cg==}
@@ -14146,6 +14211,12 @@ packages:
     hasBin: true
     dev: true
 
+  /magic-string/0.22.5:
+    resolution: {integrity: sha512-oreip9rJZkzvA8Qzk9HFs8fZGF/u7H/gtrE8EN6RjKJ9kh2HlC+yQ2QezifqTZfGyiuAV0dRv5a+y/8gBb1m9w==}
+    dependencies:
+      vlq: 0.2.3
+    dev: false
+
   /magic-string/0.25.9:
     resolution: {integrity: sha512-RmF0AsMzgt25qzqqLc1+MbHmhdx0ojF2Fvs4XnOqz2ZOBXzzkEwc/dJQZCYHAn7v1jbVOjAZfK8msRn4BxO4VQ==}
     dependencies:
@@ -14827,6 +14898,13 @@ packages:
       util: 0.11.1
       vm-browserify: 1.1.2
     dev: true
+
+  /node-module-polyfill/1.0.1:
+    resolution: {integrity: sha512-ScK3fK8UAlhG9Dm9egLZrjCDy0VPtBVwGta4pi1UrQE1JqfMFzDfltg8ERTZLKOnW6Se46PSgpSTgW5hEtvYww==}
+    dependencies:
+      '@types/node': 12.20.52
+      semver: 6.3.0
+    dev: false
 
   /node-releases/2.0.3:
     resolution: {integrity: sha512-maHFz6OLqYxz+VQyCAtA3PTX4UP/53pa05fyDNc9CwjvJ0yEh6+xBwKsgCxMNhS8taUKBFYxfuiaD9U/55iFaw==}
@@ -15776,6 +15854,10 @@ packages:
     resolution: {integrity: sha512-8aaXdYvl1F7iC7Xm1spqSaY/OJBpYW3v+KJ+F17iYxvdc8sfjW194COK5wVhMZX45tGteiBQgdvD/nhxcRwylw==}
     engines: {node: '>=6'}
     dev: true
+
+  /process-es6/0.11.6:
+    resolution: {integrity: sha1-xrs4n5qVH4K9TrFpYAEFvS/5x3g=}
+    dev: false
 
   /process-nextick-args/2.0.1:
     resolution: {integrity: sha512-3ouUOpQhtgrbOa17J7+uxOTpITYWaGP7/AhoR3+A+/1e9skrzelGi/dXzEYyvbxubEF6Wn2ypscTKiKJFFn1ag==}
@@ -16873,6 +16955,15 @@ packages:
       - supports-color
     dev: true
 
+  /rollup-plugin-inject/3.0.2:
+    resolution: {integrity: sha512-ptg9PQwzs3orn4jkgXJ74bfs5vYz1NCZlSQMBUA0wKcGp5i5pA1AO3fOUEte8enhGUC+iapTCzEWw2jEFFUO/w==}
+    deprecated: This package has been deprecated and is no longer maintained. Please use @rollup/plugin-inject.
+    dependencies:
+      estree-walker: 0.6.1
+      magic-string: 0.25.9
+      rollup-pluginutils: 2.8.2
+    dev: false
+
   /rollup-plugin-license/2.7.0_rollup@2.72.1:
     resolution: {integrity: sha512-0H1Fbuf85rvpadpmAaairdahzQHY0zHtcXkOFV5EStjX9aMCO2Hz5AQp/zZe+K/PB3o6As7R9uzcb8Pw1K94dg==}
     engines: {node: '>=10.0.0'}
@@ -16891,6 +16982,23 @@ packages:
       spdx-satisfies: 5.0.1
     dev: true
 
+  /rollup-plugin-node-globals/1.4.0:
+    resolution: {integrity: sha512-xRkB+W/m1KLIzPUmG0ofvR+CPNcvuCuNdjVBVS7ALKSxr3EDhnzNceGkGi1m8MToSli13AzKFYH4ie9w3I5L3g==}
+    dependencies:
+      acorn: 5.7.4
+      buffer-es6: 4.9.3
+      estree-walker: 0.5.2
+      magic-string: 0.22.5
+      process-es6: 0.11.6
+      rollup-pluginutils: 2.8.2
+    dev: false
+
+  /rollup-plugin-node-polyfills/0.2.1:
+    resolution: {integrity: sha512-4kCrKPTJ6sK4/gLL/U5QzVT8cxJcofO0OU74tnB19F40cmuAKSzH5/siithxlofFEjwvw1YAhPmbvGNA6jEroA==}
+    dependencies:
+      rollup-plugin-inject: 3.0.2
+    dev: false
+
   /rollup-plugin-terser/7.0.2_rollup@2.70.2:
     resolution: {integrity: sha512-w3iIaU4OxcF52UUXiZNsNeuXIMDvFrr+ZXK6bFZ0Q60qyVfq4uLptoS4bbq3paG3x216eQllFZX7zt6TIImguQ==}
     peerDependencies:
@@ -16902,6 +17010,12 @@ packages:
       serialize-javascript: 4.0.0
       terser: 5.12.1
     dev: true
+
+  /rollup-pluginutils/2.8.2:
+    resolution: {integrity: sha512-EEp9NhnUkwY8aif6bxgovPHMoMoNr2FulJziTndpt5H9RdwC47GSGuII9XxpSdzVGM0GWrNPHV6ie1LTNJPaLQ==}
+    dependencies:
+      estree-walker: 0.6.1
+    dev: false
 
   /rollup-route-manifest/1.0.0_rollup@2.72.1:
     resolution: {integrity: sha512-3CmcMmCLAzJDUXiO3z6386/Pt8/k9xTZv8gIHyXI8hYGoAInnYdOsFXiGGzQRMy6TXR1jUZme2qbdwjH2nFMjg==}
@@ -17095,7 +17209,6 @@ packages:
   /semver/6.3.0:
     resolution: {integrity: sha512-b39TBaTSfV6yBrapU89p5fKekE2m/NwnDocOVruQFS1/veMgdzuPcnOM34M6CwxW8jH/lxEa5rBoDeUwu5HHTw==}
     hasBin: true
-    dev: true
 
   /semver/7.0.0:
     resolution: {integrity: sha512-+GB6zVA9LWh6zovYQLALHwv5rb2PHGlJi3lfiqIHxR0uuwCgefcOJc59v9fv1w8GbStwxuuqqAjI9NMAOOgq1A==}
@@ -19300,6 +19413,10 @@ packages:
       - sass
       - stylus
     dev: true
+
+  /vlq/0.2.3:
+    resolution: {integrity: sha512-DRibZL6DsNhIgYQ+wNdWDL2SL3bKPlVrRiBqV5yuMm++op8W4kGFtaQfCs4KEJn0wBZcHVHJ3eoywX8983k1ow==}
+    dev: false
 
   /vm-browserify/1.1.2:
     resolution: {integrity: sha512-2ham8XPWTONajOR0ohOKOHXkm3+gaBmGut3SRuu75xLd/RRaY6vqgh8NBYYk7+RW3u5AtzPQZG8F10LHkl0lAQ==}
