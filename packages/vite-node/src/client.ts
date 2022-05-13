@@ -3,8 +3,12 @@ import { fileURLToPath, pathToFileURL } from 'url'
 import vm from 'vm'
 import { dirname, extname, isAbsolute, resolve } from 'pathe'
 import { isNodeBuiltin } from 'mlly'
+import createDebug from 'debug'
 import { isPrimitive, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
 import type { ModuleCache, ViteNodeRunnerOptions } from './types'
+
+const debugExecute = createDebug('vite-node:client:execute')
+const debugNative = createDebug('vite-node:client:native')
 
 export const DEFAULT_REQUEST_STUBS = {
   '/@vite/client': {
@@ -146,6 +150,7 @@ export class ViteNodeRunner {
     // eslint-disable-next-line prefer-const
     let { code: transformed, externalize } = await this.options.fetchModule(id)
     if (externalize) {
+      debugNative(externalize)
       const mod = await this.interopedImport(externalize)
       this.moduleCache.set(fsPath, { exports: mod })
       return mod
@@ -194,6 +199,9 @@ export class ViteNodeRunner {
       __dirname: dirname(__filename),
     })
 
+    debugExecute(__filename)
+
+    // remove shebang
     if (transformed[0] === '#')
       transformed = transformed.replace(/^\#\!.*/, s => ' '.repeat(s.length))
 

@@ -3,7 +3,7 @@ import * as diff from 'diff'
 import cliTruncate from 'cli-truncate'
 
 export function formatLine(line: string, outputTruncateLength?: number) {
-  return cliTruncate(line, (outputTruncateLength ?? (process.stdout.columns || 80)) - 4)
+  return cliTruncate(line, (outputTruncateLength ?? (process.stdout?.columns || 80)) - 4)
 }
 
 export interface DiffOptions {

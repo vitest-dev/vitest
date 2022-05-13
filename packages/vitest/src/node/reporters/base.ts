@@ -2,7 +2,7 @@ import { performance } from 'perf_hooks'
 import { relative } from 'pathe'
 import c from 'picocolors'
 import type { ErrorWithDiff, File, Reporter, Task, TaskResultPack, UserConsoleLog } from '../../types'
-import { getFullName, getSuites, getTests, hasFailed, hasFailedSnapshot } from '../../utils'
+import { getFullName, getSuites, getTests, hasFailed, hasFailedSnapshot, isNode } from '../../utils'
 import type { Vitest } from '../../node'
 import { version } from '../../../package.json'
 import { F_RIGHT } from '../../utils/figures'
@@ -22,7 +22,7 @@ export abstract class BaseReporter implements Reporter {
   start = 0
   end = 0
   watchFilters?: string[]
-  isTTY = process.stdout.isTTY && !process.env.CI
+  isTTY = isNode && process.stdout?.isTTY && !process.env.CI
   ctx: Vitest = undefined!
 
   constructor() {
