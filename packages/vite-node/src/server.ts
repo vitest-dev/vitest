@@ -1,10 +1,13 @@
 import { join } from 'pathe'
 import type { TransformResult, ViteDevServer } from 'vite'
+import createDebug from 'debug'
 import type { FetchResult, RawSourceMap, ViteNodeResolveId, ViteNodeServerOptions } from './types'
 import { shouldExternalize } from './externalize'
 import { toFilePath, withInlineSourcemap } from './utils'
 
 export * from './externalize'
+
+const debugRequest = createDebug('vite-node:server:request')
 
 // store the original reference to avoid it been mocked
 const RealDate = Date
@@ -104,6 +107,8 @@ export class ViteNodeServer {
   }
 
   private async _transformRequest(id: string) {
+    debugRequest(id)
+
     let result: TransformResult | null = null
 
     if (this.getTransformMode(id) === 'web') {

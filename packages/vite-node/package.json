@@ -66,9 +66,11 @@
     "kolorist": "^1.5.1",
     "mlly": "^0.5.2",
     "pathe": "^0.2.0",
+    "debug": "^4.3.4",
     "vite": "^2.9.8"
   },
   "devDependencies": {
+    "@types/debug": "^4.1.7",
     "cac": "^6.7.12",
     "rollup": "^2.72.1"
   },
