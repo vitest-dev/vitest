@@ -1,7 +1,7 @@
 {
   "name": "vitest",
   "type": "module",
-  "version": "0.12.5",
+  "version": "0.12.6",
   "description": "A blazing fast unit test framework powered by Vite",
   "keywords": [
     "vite",
