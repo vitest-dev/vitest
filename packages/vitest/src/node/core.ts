@@ -283,7 +283,7 @@ export class Vitest {
     if (this.server.config.clearScreen === false)
       return
 
-    const repeatCount = process.stdout.rows - 2
+    const repeatCount = (process.stdout?.rows ?? 0) - 2
     const blank = repeatCount > 0 ? '\n'.repeat(repeatCount) : ''
     this.console.log(blank)
     readline.cursorTo(process.stdout, 0, 0)
