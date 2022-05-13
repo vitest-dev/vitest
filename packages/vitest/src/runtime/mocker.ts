@@ -64,7 +64,7 @@ export class VitestMocker {
   private async resolvePath(id: string, importer: string) {
     const path = await this.options.resolveId!(id, importer)
     // external is node_module or unresolved module
-    // for example, some people mock
+    // for example, some people mock "vscode" and don't have it installed
     const external = path == null || path.id.includes('/node_modules/') ? id : null
 
     return {
