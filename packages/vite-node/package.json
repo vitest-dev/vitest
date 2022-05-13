@@ -63,10 +63,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "debug": "^4.3.4",
     "kolorist": "^1.5.1",
     "mlly": "^0.5.2",
     "pathe": "^0.2.0",
-    "debug": "^4.3.4",
     "vite": "^2.9.8"
   },
   "devDependencies": {
