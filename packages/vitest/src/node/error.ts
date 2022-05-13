@@ -189,7 +189,7 @@ export function generateCodeFrame(
   let count = 0
   let res: string[] = []
 
-  const columns = process.stdout.columns || 80
+  const columns = process.stdout?.columns || 80
 
   function lineNo(no: number | string = '') {
     return c.gray(`${String(no).padStart(3, ' ')}| `)
