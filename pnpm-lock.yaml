@@ -4245,7 +4245,7 @@ packages:
       '@babel/runtime': 7.17.9
       '@emotion/is-prop-valid': 1.1.2
       '@mui/types': 7.1.3
-      '@mui/utils': 5.6.1_react@17.0.2
+      '@mui/utils': 5.7.0_react@17.0.2
       '@popperjs/core': 2.11.5
       clsx: 1.1.1
       prop-types: 15.8.1
@@ -4361,22 +4361,6 @@ packages:
     engines: {node: '>=12.0.0'}
     dev: false
 
-  /@mui/private-theming/5.6.2_react@17.0.2:
-    resolution: {integrity: sha512-IbrSfFXfiZdyhRMC2bgGTFtb16RBQ5mccmjeh3MtAERWuepiCK7gkW5D9WhEsfTu6iez+TEjeUKSgmMHlsM2mg==}
-    engines: {node: '>=12.0.0'}
-    peerDependencies:
-      '@types/react': ^17.0.0 || ^18.0.0
-      react: ^17.0.0 || ^18.0.0
-    peerDependenciesMeta:
-      '@types/react':
-        optional: true
-    dependencies:
-      '@babel/runtime': 7.17.9
-      '@mui/utils': 5.6.1_react@17.0.2
-      prop-types: 15.8.1
-      react: 17.0.2
-    dev: false
-
   /@mui/private-theming/5.7.0_react@17.0.2:
     resolution: {integrity: sha512-r/6JAWAHV1IFASZnceJPe9QT/s12ia/okGbmCUO4MEPdsWcNKye1RVKSwVgLATaX3YwPxDljWguIQrM3R2gZNA==}
     engines: {node: '>=12.0.0'}
@@ -4389,27 +4373,6 @@ packages:
     dependencies:
       '@babel/runtime': 7.17.9
       '@mui/utils': 5.7.0_react@17.0.2
-      prop-types: 15.8.1
-      react: 17.0.2
-    dev: false
-
-  /@mui/styled-engine/5.6.1_bgqmsvm4hz6izcmpcwescmz73y:
-    resolution: {integrity: sha512-jEhH6TBY8jc9S8yVncXmoTYTbATjEu44RMFXj6sIYfKr5NArVwTwRo3JexLL0t3BOAiYM4xsFLgfKEIvB9SAeQ==}
-    engines: {node: '>=12.0.0'}
-    peerDependencies:
-      '@emotion/react': ^11.4.1
-      '@emotion/styled': ^11.3.0
-      react: ^17.0.0 || ^18.0.0
-    peerDependenciesMeta:
-      '@emotion/react':
-        optional: true
-      '@emotion/styled':
-        optional: true
-    dependencies:
-      '@babel/runtime': 7.17.9
-      '@emotion/cache': 11.7.1
-      '@emotion/react': 11.9.0_react@17.0.2
-      '@emotion/styled': 11.8.1_qy3iey4iudt25gp34xnq4xoic4
       prop-types: 15.8.1
       react: 17.0.2
     dev: false
@@ -4454,10 +4417,10 @@ packages:
       '@babel/runtime': 7.17.9
       '@emotion/react': 11.9.0_react@17.0.2
       '@emotion/styled': 11.8.1_qy3iey4iudt25gp34xnq4xoic4
-      '@mui/private-theming': 5.6.2_react@17.0.2
-      '@mui/styled-engine': 5.6.1_bgqmsvm4hz6izcmpcwescmz73y
+      '@mui/private-theming': 5.7.0_react@17.0.2
+      '@mui/styled-engine': 5.7.0_bgqmsvm4hz6izcmpcwescmz73y
       '@mui/types': 7.1.3
-      '@mui/utils': 5.6.1_react@17.0.2
+      '@mui/utils': 5.7.0_react@17.0.2
       clsx: 1.1.1
       csstype: 3.0.11
       prop-types: 15.8.1
