@@ -135,6 +135,10 @@ function createChannel(ctx: Vitest) {
       resolveId(id, importer) {
         return ctx.vitenode.resolveId(id, importer)
       },
+      onPathsCollected(paths) {
+        ctx.state.collectPaths(paths)
+        ctx.report('onPathsCollected', paths)
+      },
       onCollected(files) {
         ctx.state.collectFiles(files)
         ctx.report('onCollected', files)

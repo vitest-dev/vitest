@@ -42,7 +42,9 @@ export abstract class BaseReporter implements Reporter {
       : c.cyan(' RUN ')
     this.ctx.log(`${c.inverse(c.bold(mode))} ${versionTest} ${c.gray(this.ctx.config.root)}`)
 
-    if (this.ctx.config.ui)
+    if (this.ctx.config.browser)
+      this.ctx.log(c.dim(c.green(`      Browser runner started at http://${this.ctx.config.api?.host || 'localhost'}:${c.bold(`${this.ctx.server.config.server.port}`)}`)))
+    else if (this.ctx.config.ui)
       this.ctx.log(c.dim(c.green(`      UI started at http://${this.ctx.config.api?.host || 'localhost'}:${c.bold(`${this.ctx.server.config.server.port}`)}`)))
     else if (this.ctx.config.api)
       this.ctx.log(c.dim(c.green(`      API started at http://${this.ctx.config.api?.host || 'localhost'}:${c.bold(`${this.ctx.config.api.port}`)}`)))

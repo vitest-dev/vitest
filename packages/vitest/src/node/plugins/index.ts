@@ -16,6 +16,11 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
     return (await import('@vitest/ui')).default(options.uiBase)
   }
 
+  async function BrowserPlugin() {
+    await ensurePackageInstalled('@vitest/browser')
+    return (await import('@vitest/browser')).default('/')
+  }
+
   return [
     <VitePlugin>{
       name: 'vitest',
@@ -130,6 +135,9 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
     EnvReplacerPlugin(),
     MocksPlugin(),
     GlobalSetupPlugin(ctx),
+    options.browser
+      ? await BrowserPlugin()
+      : null,
     options.ui
       ? await UIPlugin()
       : null,
