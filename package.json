@@ -6,9 +6,9 @@
   "packageManager": "pnpm@7.0.1",
   "description": "A blazing fast unit test framework powered by Vite",
   "scripts": {
-    "build": "pnpm -r --filter=./packages/** run build",
     "ci": "ni && nr typecheck && nr lint && nr build && nr test:all",
-    "dev": "pnpm -r --parallel --filter=vitest --filter=ui --filter=web-worker --filter=vite-node run dev",
+    "build": "pnpm -r --filter=./packages/** run build",
+    "dev": "pnpm -r --parallel --filter=./packages/** run dev",
     "docs": "npm -C docs run dev",
     "docs:build": "npm -C docs run build",
     "docs:serve": "npm -C docs run serve",
