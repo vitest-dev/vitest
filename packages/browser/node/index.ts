@@ -23,12 +23,12 @@ export default (base = '/'): Plugin[] => {
     {
       enforce: 'pre',
       name: 'vitest:browser',
-      async resolveId(id, _, ctx) {
+      async resolveId(id, imp, ctx) {
         if (ctx.ssr)
           return
 
         if (id === '/__vitest_index__') {
-          const result = await resolvePath('vitest')
+          const result = await resolvePath('vitest/browser')
           return result
         }
 

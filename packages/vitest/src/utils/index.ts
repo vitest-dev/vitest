@@ -10,7 +10,8 @@ export * from './base'
 export * from './global'
 export * from './timers'
 
-export const isNode = typeof process !== 'undefined' && typeof process.platform !== 'undefined'
+export const isNode = typeof process < 'u' && typeof process.stdout < 'u' && !process.versions.deno
+// export const isNode = typeof process !== 'undefined' && typeof process.platform !== 'undefined'
 export const isBrowser = typeof window !== 'undefined'
 export const isWindows = isNode && process.platform === 'win32'
 

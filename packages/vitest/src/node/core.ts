@@ -17,7 +17,7 @@ import { createReporters } from './reporters/utils'
 import { StateManager } from './state'
 import { resolveConfig } from './config'
 import { printError } from './error'
-import { VitestGit } from './git'
+// import { VitestGit } from './git'
 
 const WATCHER_DEBOUNCE = 100
 const CLOSE_TIMEOUT = 1_000
@@ -138,7 +138,7 @@ export class Vitest {
     if (this.config.coverage.enabled)
       await reportCoverage(this)
 
-    if (this.config.watch)
+    if (this.config.watch && !this.config.browser)
       await this.report('onWatcherStart')
   }
 
@@ -168,6 +168,7 @@ export class Vitest {
 
   async filterTestsBySource(tests: string[]) {
     if (this.config.changed && !this.config.related) {
+      const { VitestGit } = await import('./git')
       const vitestGit = new VitestGit(this.config.root)
       const related = await vitestGit.findChangedFiles({
         changedSince: this.config.changed,
@@ -226,7 +227,8 @@ export class Vitest {
       if (hasFailed(this.state.getFiles()))
         process.exitCode = 1
 
-      await this.report('onFinished', this.state.getFiles(), this.state.getUnhandledErrors())
+      if (!this.config.browser)
+        await this.report('onFinished', this.state.getFiles(), this.state.getUnhandledErrors())
     })()
       .finally(() => {
         this.runningPromise = undefined
@@ -238,7 +240,8 @@ export class Vitest {
   async rerunFiles(files: string[] = this.state.getFilepaths(), trigger?: string) {
     await this.report('onWatcherRerun', files, trigger)
     await this.runFiles(files)
-    await this.report('onWatcherStart')
+    if (!this.config.browser)
+      await this.report('onWatcherStart')
   }
 
   async changeNamePattern(pattern: string, files: string[] = this.state.getFilepaths(), trigger?: string) {

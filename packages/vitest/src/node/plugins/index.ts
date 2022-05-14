@@ -74,7 +74,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
 
         if (preOptions.ui && preOptions.open)
           open = preOptions.uiBase ?? '/__vitest__/'
-        else if (preOptions.web)
+        else if (preOptions.browser)
           open = '/'
 
         const config: ViteConfig = {

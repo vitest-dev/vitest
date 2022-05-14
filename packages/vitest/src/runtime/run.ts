@@ -1,7 +1,17 @@
 import type { File, HookCleanupCallback, HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from '../types'
 import { vi } from '../integrations/vi'
 import { getSnapshotClient } from '../integrations/snapshot/chai'
-import { clearTimeout, getFullName, getWorkerState, hasFailed, hasTests, isNode, partitionSuiteChildren, setTimeout } from '../utils'
+import {
+  clearTimeout,
+  getFullName,
+  getWorkerState,
+  hasFailed,
+  hasTests,
+  isBrowser,
+  isNode,
+  partitionSuiteChildren,
+  setTimeout,
+} from '../utils'
 import { getState, setState } from '../integrations/chai/jest-expect'
 import { takeCoverage } from '../integrations/coverage'
 import { getFn, getHooks } from './map'
@@ -147,11 +157,14 @@ export async function runTest(test: Test) {
     }
   }
 
+  if (isBrowser && test.result.error)
+    console.error(test.result.error.message, test.result.error.stackStr)
+
   getSnapshotClient().clearTest()
 
   test.result.duration = now() - start
 
-  if (workerState.config.logHeapUsage)
+  if (workerState.config.logHeapUsage && isNode)
     test.result.heap = process.memoryUsage().heapUsed
 
   workerState.current = undefined

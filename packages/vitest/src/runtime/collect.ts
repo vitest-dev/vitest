@@ -80,6 +80,8 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
         state: 'fail',
         error: processError(e),
       }
+      if (config.browser)
+        console.error(e)
     }
 
     calculateHash(file)
