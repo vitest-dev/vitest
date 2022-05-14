@@ -12,6 +12,7 @@ const stubsNames = [
   'module',
   'noop',
   'perf_hooks',
+  'tty',
 ]
 
 export default (base = '/'): Plugin[] => {
@@ -19,9 +20,6 @@ export default (base = '/'): Plugin[] => {
   const distRoot = resolve(pkgRoot, 'dist')
 
   return [
-    nodePolyfills({
-      include: null,
-    }),
     {
       enforce: 'pre',
       name: 'vitest:browser',
@@ -33,8 +31,6 @@ export default (base = '/'): Plugin[] => {
           const result = await resolvePath('vitest')
           return result
         }
-
-        id = normalizeId(id)
 
         if (stubsNames.includes(id))
           return resolve(pkgRoot, 'stubs', id)
@@ -51,18 +47,8 @@ export default (base = '/'): Plugin[] => {
         )
       },
     },
+    nodePolyfills({
+      include: null,
+    }),
   ]
-}
-
-function normalizeId(id: string, base?: string): string {
-  if (base && id.startsWith(base))
-    id = `/${id.slice(base.length)}`
-
-  return id
-    .replace(/^\/@id\/__x00__/, '\0') // virtual modules start with `\0`
-    .replace(/^\/@id\//, '')
-    .replace(/^__vite-browser-external:/, '')
-    .replace(/^node:/, '')
-    .replace(/[?&]v=\w+/, '?') // remove ?v= query
-    .replace(/\?$/, '') // remove end query mark
 }

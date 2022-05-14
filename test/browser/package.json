@@ -2,7 +2,7 @@
   "name": "@vitest/test-browser",
   "private": true,
   "scripts": {
-    "test": "vitest",
+    "test": "vitest --browser --open",
     "coverage": "vitest run --coverage"
   },
   "devDependencies": {
