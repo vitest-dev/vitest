@@ -255,6 +255,12 @@ export interface InlineConfig {
   ui?: boolean
 
   /**
+   * Use in browser environment
+   * @experimental
+   */
+  browser?: boolean
+
+  /**
    * Open UI automatically.
    *
    * @default true
@@ -348,11 +354,6 @@ export interface UserConfig extends InlineConfig {
    * Use happy-dom
    */
   dom?: boolean
-
-  /**
-   * Use in browser environment
-   */
-  browser?: boolean
 
   /**
    * Run tests that cover a list of source files

@@ -1,4 +1,4 @@
-import type { BirpcReturn } from 'birpc'
+import type { BirpcOptions, BirpcReturn } from 'birpc'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
 // eslint-disable-next-line no-restricted-imports
@@ -47,29 +47,37 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
   ctx.state.idMap = reactive(ctx.state.idMap)
 
   let onMessage: Function
+  const functions: WebSocketEvents = {
+    onPathsCollected(paths) {
+      ctx.state.collectPaths(paths)
+      handlers.onPathsCollected?.(paths)
+    },
+    onCollected(files) {
+      ctx.state.collectFiles(files)
+      handlers.onCollected?.(files)
+    },
+    onTaskUpdate(packs) {
+      ctx.state.updateTasks(packs)
+      handlers.onTaskUpdate?.(packs)
+    },
+    onUserConsoleLog(log) {
+      ctx.state.updateUserLog(log)
+    },
+    onFinished(files) {
+      handlers.onFinished?.(files)
+    },
+  }
+
+  const birpcHandlers: BirpcOptions<WebSocketHandlers> = {
+    post: msg => ctx.ws.send(msg),
+    on: fn => (onMessage = fn),
+    serialize: stringify,
+    deserialize: parse,
+  }
+
   ctx.rpc = createBirpc<WebSocketHandlers, WebSocketEvents>(
-    {
-      onCollected(files) {
-        ctx.state.collectFiles(files)
-        handlers.onCollected?.(files)
-      },
-      onTaskUpdate(packs) {
-        ctx.state.updateTasks(packs)
-        handlers.onTaskUpdate?.(packs)
-      },
-      onUserConsoleLog(log) {
-        ctx.state.updateUserLog(log)
-      },
-      onFinished(files) {
-        handlers.onFinished?.(files)
-      },
-    },
-    {
-      post: msg => ctx.ws.send(msg),
-      on: fn => onMessage = fn,
-      serialize: stringify,
-      deserialize: parse,
-    },
+    functions,
+    birpcHandlers,
   )
 
   let openPromise: Promise<void>

@@ -32,7 +32,7 @@ export default (base = '/') => {
         return join(fileURLToPath(import.meta.url), '..', './perf_hooks.js')
 
       if (id === 'fs')
-        return join(fileURLToPath(import.meta.url), '..', './noop.js')
+        return join(fileURLToPath(import.meta.url), '..', './fs-stub.js')
 
       return null
     },

@@ -51,7 +51,7 @@ export default () => [
             return nodeConfig.resolveId(id, importer)
 
           if (id === 'fs')
-            return './client/noop.ts'
+            return './client/fs-stub.ts'
 
           if (id === 'local-pkg')
             return './client/local-pkg.ts'

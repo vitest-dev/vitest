@@ -41,5 +41,6 @@ export interface WorkerGlobalState {
   current?: Test
   filepath?: string
   moduleCache: ModuleCacheMap
+  browserHashMap?: Map<string, string>
   mockMap: MockMap
 }

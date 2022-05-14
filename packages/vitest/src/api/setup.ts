@@ -33,8 +33,25 @@ export function setup(ctx: Vitest) {
   function setupClient(ws: WebSocket) {
     const rpc = createBirpc<WebSocketEvents, WebSocketHandlers>(
       {
+        async onWatcherStart() {
+          await ctx.report('onWatcherStart')
+        },
+        async onFinished() {
+          await ctx.report('onFinished')
+        },
+        async onCollected(files) {
+          ctx.state.collectFiles(files)
+          await ctx.report('onCollected', files)
+        },
+        async onTaskUpdate(packs) {
+          ctx.state.updateTasks(packs)
+          await ctx.report('onTaskUpdate', packs)
+        },
         getFiles() {
           return ctx.state.getFiles()
+        },
+        getPaths() {
+          return ctx.state.getPaths()
         },
         readFile(id) {
           return fs.readFile(id, 'utf-8')

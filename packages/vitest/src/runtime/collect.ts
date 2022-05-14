@@ -1,5 +1,6 @@
 import { relative } from 'pathe'
 import type { File, ResolvedConfig, Suite, TaskBase } from '../types'
+import { getWorkerState, isBrowser } from '../utils'
 import { clearCollectorContext, defaultSuite } from './suite'
 import { getHooks, setHooks } from './map'
 import { processError } from './error'
@@ -23,6 +24,17 @@ function hash(str: string): string {
 export async function collectTests(paths: string[], config: ResolvedConfig) {
   const files: File[] = []
 
+  const browserHashMap = getWorkerState().browserHashMap!
+
+  async function importFromBrowser(filepath: string) {
+    const match = filepath.match(/^(\w:\/)/)
+    const hash = browserHashMap.get(filepath)
+    if (match)
+      return await import(`/@fs/${filepath.slice(match[1].length)}?v=${hash}`)
+    else
+      return await import(`${filepath}?v=${hash}`)
+  }
+
   for (const filepath of paths) {
     const path = relative(config.root, filepath)
     const file: File = {
@@ -37,7 +49,11 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
     clearCollectorContext()
     try {
       await runSetupFiles(config)
-      await import(filepath)
+
+      if (config.browser && isBrowser)
+        await importFromBrowser(filepath)
+      else
+        await import(filepath)
 
       const defaultTasks = await defaultSuite.collect(file)
 

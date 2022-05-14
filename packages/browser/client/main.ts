@@ -14,7 +14,7 @@ export const ENTRY_URL = `${
 }//${HOST}/__vitest_api__`
 
 let config: ResolvedConfig | undefined
-const webCache = new Map<string, string>()
+const browserHashMap = new Map<string, string>()
 
 export const client = createClient(ENTRY_URL, {
   handlers: {
@@ -25,7 +25,7 @@ export const client = createClient(ENTRY_URL, {
       // const config = __vitest_worker__.config
       const now = `${new Date().getTime()}`
       paths.forEach((i) => {
-        webCache.set(i, now)
+        browserHashMap.set(i, now)
       })
 
       await runTests(paths, config, client)
@@ -41,7 +41,7 @@ ws.addEventListener('open', async () => {
   // @ts-expect-error mocking vitest apis
   globalThis.__vitest_worker__ = {
     config,
-    webCache,
+    browserHashMap,
     rpc: client.rpc,
   }
 
@@ -50,7 +50,7 @@ ws.addEventListener('open', async () => {
   const paths = await client.rpc.getPaths()
 
   const now = `${new Date().getTime()}`
-  paths.forEach(i => webCache.set(i, now))
+  paths.forEach(i => browserHashMap.set(i, now))
 
   const iFrame = document.getElementById('vitest-ui') as HTMLIFrameElement
   iFrame.setAttribute('src', '/__vitest__/')
