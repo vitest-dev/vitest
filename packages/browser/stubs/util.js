@@ -36,15 +36,18 @@
 // import inherits from '_inherits'
 const formatRegExp = /%[sdj%]/g
 export function format(f) {
+  let i
   if (!isString(f)) {
     const objects = []
-    for (var i = 0; i < arguments.length; i++)
+    for (i = 0; i < arguments.length; i++)
+      // eslint-disable-next-line prefer-rest-params
       objects.push(inspect(arguments[i]))
 
     return objects.join(' ')
   }
 
-  var i = 1
+  i = 1
+  // eslint-disable-next-line prefer-rest-params
   const args = arguments
   const len = args.length
   let str = String(f).replace(formatRegExp, (x) => {
@@ -144,8 +147,10 @@ export function inspect(obj, opts) {
   }
   // legacy...
   if (arguments.length >= 3)
+    // eslint-disable-next-line prefer-rest-params
     ctx.depth = arguments[2]
   if (arguments.length >= 4)
+    // eslint-disable-next-line prefer-rest-params
     ctx.colors = arguments[3]
   if (isBoolean(opts)) {
     // legacy...
@@ -211,14 +216,14 @@ function stylizeWithColor(str, styleType) {
   }
 }
 
-function stylizeNoColor(str, styleType) {
+function stylizeNoColor(str, _) {
   return str
 }
 
 function arrayToHash(array) {
   const hash = {}
 
-  array.forEach((val, idx) => {
+  array.forEach((val) => {
     hash[val] = true
   })
 
@@ -302,7 +307,7 @@ function formatValue(ctx, value, recurseTimes) {
   if (isError(value))
     base = ` ${formatError(value)}`
 
-  if (keys.length === 0 && (!array || value.length == 0))
+  if (keys.length === 0 && (!array || value.length === 0))
     return braces[0] + base + braces[1]
 
   if (recurseTimes < 0) {
@@ -372,8 +377,8 @@ function formatArray(ctx, value, recurseTimes, visibleKeys, keys) {
 }
 
 function formatProperty(ctx, value, recurseTimes, visibleKeys, key, array) {
-  let name, str, desc
-  desc = Object.getOwnPropertyDescriptor(value, key) || { value: value[key] }
+  let name, str
+  const desc = Object.getOwnPropertyDescriptor(value, key) || { value: value[key] }
   if (desc.get) {
     if (desc.set)
       str = ctx.stylize('[Getter/Setter]', 'special')
@@ -432,11 +437,12 @@ function formatProperty(ctx, value, recurseTimes, visibleKeys, key, array) {
 }
 
 function reduceToSingleString(output, base, braces) {
-  let numLinesEst = 0
+  // let numLinesEst = 0
   const length = output.reduce((prev, cur) => {
-    numLinesEst++
-    if (cur.includes('\n'))
-      numLinesEst++
+    // numLinesEst++
+    // if (cur.includes('\n'))
+    //   numLinesEst++
+    // eslint-disable-next-line no-control-regex
     return prev + cur.replace(/\u001B\[\d\d?m/g, '').length + 1
   }, 0)
 
@@ -483,6 +489,7 @@ export function isSymbol(arg) {
 }
 
 export function isUndefined(arg) {
+  // eslint-disable-next-line no-void
   return arg === void 0
 }
 
@@ -542,6 +549,7 @@ function timestamp() {
 
 // log is just a thin wrapper to console.log that prepends a timestamp
 export function log() {
+  // eslint-disable-next-line no-console,prefer-spread,prefer-rest-params
   console.log('%s - %s', timestamp(), format.apply(null, arguments))
 }
 
