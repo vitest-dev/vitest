@@ -1,3 +1,6 @@
+import './vite'
+import './global'
+
 export * from './config'
 export * from './tasks'
 export * from './reporter'

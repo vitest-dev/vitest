@@ -1,4 +1,10 @@
 import { util } from 'chai'
+import type {
+  ChaiPlugin,
+  MatcherState,
+  MatchersObject,
+  SyncExpectationResult,
+} from '../../types/chai'
 import { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import { getState } from './jest-expect'
 
@@ -9,12 +15,6 @@ import {
   iterableEquality,
   subsetEquality,
 } from './jest-utils'
-import type {
-  ChaiPlugin,
-  MatcherState,
-  MatchersObject,
-  SyncExpectationResult,
-} from './types'
 
 const isAsyncFunction = (fn: unknown) =>
   typeof fn === 'function' && (fn as any)[Symbol.toStringTag] === 'AsyncFunction'

@@ -632,6 +632,7 @@ importers:
       chai: ^4.3.6
       chai-subset: ^1.6.0
       cli-truncate: ^3.1.0
+      debug: ^4.3.4
       diff: ^5.0.0
       execa: ^6.1.0
       fast-glob: ^3.2.11
@@ -663,6 +664,7 @@ importers:
       '@types/chai': 4.3.1
       '@types/chai-subset': 1.3.3
       chai: 4.3.6
+      debug: 4.3.4
       local-pkg: 0.4.1
       tinypool: 0.1.3
       tinyspy: 0.3.2
