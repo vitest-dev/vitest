@@ -1,4 +1,4 @@
-import type { ChaiPlugin } from '../chai/types'
+import type { ChaiPlugin } from '../../types/chai'
 import { SnapshotClient } from './client'
 import { stripSnapshotIndentation } from './port/inlineSnapshot'
 

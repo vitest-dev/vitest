@@ -3,11 +3,10 @@ import { AssertionError } from 'chai'
 import type { EnhancedSpy } from '../spy'
 import { isMockFunction } from '../spy'
 import { addSerializer } from '../snapshot/port/plugins'
-import { toString } from '../utils'
 import type { Constructable, Test } from '../../types'
 import { assertTypes } from '../../utils'
 import { unifiedDiff } from '../../node/diff'
-import type { ChaiPlugin, MatcherState } from './types'
+import type { ChaiPlugin, MatcherState } from '../../types/chai'
 import { arrayBufferEquality, iterableEquality, equals as jestEquals, sparseArrayEquality, subsetEquality, typeEquality } from './jest-utils'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import { stringify } from './jest-matcher-utils'
@@ -680,4 +679,13 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     'addSnapshotSerializer',
     addSerializer,
   )
+}
+
+function toString(value: any) {
+  try {
+    return `${value}`
+  }
+  catch (_error) {
+    return 'unknown'
+  }
 }

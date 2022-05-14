@@ -71,28 +71,29 @@ function printErrorType(type: string, ctx: Vitest) {
   ctx.error(`\n${c.red(divider(c.bold(c.inverse(` ${type} `))))}`)
 }
 
+const skipErrorProperties = [
+  'message',
+  'name',
+  'nameStr',
+  'stack',
+  'cause',
+  'stacks',
+  'stackStr',
+  'type',
+  'showDiff',
+  'actual',
+  'expected',
+  'constructor',
+  'toString',
+]
+
 function getErrorProperties(e: ErrorWithDiff) {
   const errorObject = Object.create(null)
   if (e.name === 'AssertionError')
     return errorObject
 
-  const skip = [
-    'message',
-    'name',
-    'nameStr',
-    'stack',
-    'cause',
-    'stacks',
-    'stackStr',
-    'type',
-    'showDiff',
-    'actual',
-    'expected',
-    'constructor',
-    'toString',
-  ]
   for (const key of Object.getOwnPropertyNames(e)) {
-    if (!skip.includes(key))
+    if (!skipErrorProperties.includes(key))
       errorObject[key] = e[key as keyof ErrorWithDiff]
   }
 
