@@ -40,6 +40,7 @@
     "@types/ws": "^8.2.2",
     "@vitest/ws-client": "workspace:*",
     "picocolors": "^1.0.0",
-    "rollup": "^2.67.2"
+    "rollup": "^2.67.2",
+    "vitest": "workspace:*"
   }
 }

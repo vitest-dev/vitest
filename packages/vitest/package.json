@@ -64,8 +64,8 @@
     "prepublishOnly": "nr build"
   },
   "peerDependencies": {
-    "@vitest/ui": "*",
     "@vitest/browser": "*",
+    "@vitest/ui": "*",
     "c8": "*",
     "happy-dom": "*",
     "jsdom": "*"
