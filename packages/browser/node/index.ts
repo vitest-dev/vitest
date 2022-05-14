@@ -13,6 +13,7 @@ const stubsNames = [
   'noop',
   'perf_hooks',
   'tty',
+  'util',
 ]
 
 export default (base = '/'): Plugin[] => {
