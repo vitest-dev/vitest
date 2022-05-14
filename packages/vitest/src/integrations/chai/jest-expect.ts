@@ -1,9 +1,8 @@
 import c from 'picocolors'
 import { AssertionError } from 'chai'
-import type { EnhancedSpy } from '../spy'
-import { isMockFunction } from '../spy'
+import type { EnhancedSpy } from '../mock/spy'
+import { isMockFunction } from '../mock/spy'
 import { addSerializer } from '../snapshot/port/plugins'
-import { toString } from '../utils'
 import type { Constructable, Test } from '../../types'
 import { assertTypes } from '../../utils'
 import { unifiedDiff } from '../../node/diff'
@@ -680,4 +679,13 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     'addSnapshotSerializer',
     addSerializer,
   )
+}
+
+function toString(value: any) {
+  try {
+    return `${value}`
+  }
+  catch (_error) {
+    return 'unknown'
+  }
 }

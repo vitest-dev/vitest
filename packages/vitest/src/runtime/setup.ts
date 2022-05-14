@@ -3,7 +3,7 @@ import type { ResolvedConfig } from '../types'
 import { clearTimeout, getWorkerState, isNode, setTimeout, toArray } from '../utils'
 import * as VitestIndex from '../index'
 import { resetRunOnceCounter } from '../integrations/run-once'
-import { RealDate } from '../integrations/mockdate'
+import { RealDate } from '../integrations/mock/date'
 import { rpc } from './rpc'
 
 let globalSetup = false

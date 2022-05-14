@@ -13,7 +13,7 @@ import type {
 import {
   withGlobal,
 } from '@sinonjs/fake-timers'
-import { RealDate, mockDate, resetDate } from './mockdate'
+import { RealDate, mockDate, resetDate } from './date'
 
 export class FakeTimers {
   private _clock!: InstalledClock
