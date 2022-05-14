@@ -28,7 +28,6 @@ cli
   .option('--run', 'do not watch')
   .option('--mode <name>', 'override Vite mode (default: test)')
   .option('--globals', 'inject apis globally')
-  .option('--global', 'deprecated, use --globals')
   .option('--dom', 'mock browser api with happy-dom')
   .option('--browser', 'run tests in browser')
   .option('--environment <env>', 'runner environment (default: node)')
