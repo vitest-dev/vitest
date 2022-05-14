@@ -40,15 +40,12 @@ importers:
       rollup-plugin-dts: ^4.2.1
       rollup-plugin-esbuild: ^4.9.1
       rollup-plugin-license: ^2.7.0
-      rollup-plugin-node-polyfills: ^0.2.1
       simple-git-hooks: ^2.7.0
       typescript: ^4.6.4
       vite: ^2.9.8
       vitepress: ^0.22.4
       vitest: workspace:*
       vue: ^3.2.33
-    dependencies:
-      rollup-plugin-node-polyfills: 0.2.1
     devDependencies:
       '@antfu/eslint-config': 0.23.0_hcfsmds2fshutdssjqluwm76uu
       '@antfu/ni': 0.16.2
@@ -762,10 +759,7 @@ importers:
   test/browser:
     specifiers:
       '@vitest/browser': workspace:*
-      rollup-plugin-polyfill-node: ^0.9.0
       vitest: workspace:*
-    dependencies:
-      rollup-plugin-polyfill-node: 0.9.0
     devDependencies:
       '@vitest/browser': link:../../packages/browser
       vitest: link:../../packages/vitest
@@ -4845,16 +4839,6 @@ packages:
       graphql-tag: 2.12.6_graphql@16.4.0
     dev: false
 
-  /@rollup/plugin-inject/4.0.4:
-    resolution: {integrity: sha512-4pbcU4J/nS+zuHk+c+OL3WtmEQhqxlZ9uqfjQMQDOHOPld7PsCd8k5LWs8h5wjwJN7MgnAn768F2sDxEP4eNFQ==}
-    peerDependencies:
-      rollup: ^1.20.0 || ^2.0.0
-    dependencies:
-      '@rollup/pluginutils': 3.1.0
-      estree-walker: 2.0.2
-      magic-string: 0.25.9
-    dev: false
-
   /@rollup/plugin-inject/4.0.4_rollup@2.72.1:
     resolution: {integrity: sha512-4pbcU4J/nS+zuHk+c+OL3WtmEQhqxlZ9uqfjQMQDOHOPld7PsCd8k5LWs8h5wjwJN7MgnAn768F2sDxEP4eNFQ==}
     peerDependencies:
@@ -4914,17 +4898,6 @@ packages:
       magic-string: 0.25.9
       rollup: 2.70.2
     dev: true
-
-  /@rollup/pluginutils/3.1.0:
-    resolution: {integrity: sha512-GksZ6pr6TpIjHm8h9lSQ8pi8BE9VeubNT0OMJ3B5uZJ8pz73NPiqOtCog/x2/QzM1ENChPKxMDhiQuRHsqc+lg==}
-    engines: {node: '>= 8.0.0'}
-    peerDependencies:
-      rollup: ^1.20.0||^2.0.0
-    dependencies:
-      '@types/estree': 0.0.39
-      estree-walker: 1.0.1
-      picomatch: 2.3.1
-    dev: false
 
   /@rollup/pluginutils/3.1.0_rollup@2.70.2:
     resolution: {integrity: sha512-GksZ6pr6TpIjHm8h9lSQ8pi8BE9VeubNT0OMJ3B5uZJ8pz73NPiqOtCog/x2/QzM1ENChPKxMDhiQuRHsqc+lg==}
@@ -11421,10 +11394,6 @@ packages:
       - supports-color
     dev: true
 
-  /estree-walker/0.6.1:
-    resolution: {integrity: sha512-SqmZANLWS0mnatqbSfRP5g8OXZC12Fgg1IwNtLsyHDzJizORW4khDfjPqJZsemPWBB2uqykUah5YpQ6epsqC/w==}
-    dev: false
-
   /estree-walker/1.0.1:
     resolution: {integrity: sha512-1fMXF3YP4pZZVozF8j/ZLfvnR8NSIljt56UhbZ5PeeDmmGHpgpdwQt7ITlGvYaQukCvuBRMLEiKiYC+oeIg4cg==}
 
@@ -16947,15 +16916,6 @@ packages:
       - supports-color
     dev: true
 
-  /rollup-plugin-inject/3.0.2:
-    resolution: {integrity: sha512-ptg9PQwzs3orn4jkgXJ74bfs5vYz1NCZlSQMBUA0wKcGp5i5pA1AO3fOUEte8enhGUC+iapTCzEWw2jEFFUO/w==}
-    deprecated: This package has been deprecated and is no longer maintained. Please use @rollup/plugin-inject.
-    dependencies:
-      estree-walker: 0.6.1
-      magic-string: 0.25.9
-      rollup-pluginutils: 2.8.2
-    dev: false
-
   /rollup-plugin-license/2.7.0_rollup@2.72.1:
     resolution: {integrity: sha512-0H1Fbuf85rvpadpmAaairdahzQHY0zHtcXkOFV5EStjX9aMCO2Hz5AQp/zZe+K/PB3o6As7R9uzcb8Pw1K94dg==}
     engines: {node: '>=10.0.0'}
@@ -16973,20 +16933,6 @@ packages:
       spdx-expression-validate: 2.0.0
       spdx-satisfies: 5.0.1
     dev: true
-
-  /rollup-plugin-node-polyfills/0.2.1:
-    resolution: {integrity: sha512-4kCrKPTJ6sK4/gLL/U5QzVT8cxJcofO0OU74tnB19F40cmuAKSzH5/siithxlofFEjwvw1YAhPmbvGNA6jEroA==}
-    dependencies:
-      rollup-plugin-inject: 3.0.2
-    dev: false
-
-  /rollup-plugin-polyfill-node/0.9.0:
-    resolution: {integrity: sha512-cVqm7LjgBqtZ77M9hLYayXrLz18nLIVPp3MPqNi2suStrFDg1LsA2cSdMIighr2yeuAQrphu8ymXTAsJNVABow==}
-    peerDependencies:
-      rollup: ^1.20.0 || ^2.0.0
-    dependencies:
-      '@rollup/plugin-inject': 4.0.4
-    dev: false
 
   /rollup-plugin-polyfill-node/0.9.0_rollup@2.72.1:
     resolution: {integrity: sha512-cVqm7LjgBqtZ77M9hLYayXrLz18nLIVPp3MPqNi2suStrFDg1LsA2cSdMIighr2yeuAQrphu8ymXTAsJNVABow==}
@@ -17008,12 +16954,6 @@ packages:
       serialize-javascript: 4.0.0
       terser: 5.12.1
     dev: true
-
-  /rollup-pluginutils/2.8.2:
-    resolution: {integrity: sha512-EEp9NhnUkwY8aif6bxgovPHMoMoNr2FulJziTndpt5H9RdwC47GSGuII9XxpSdzVGM0GWrNPHV6ie1LTNJPaLQ==}
-    dependencies:
-      estree-walker: 0.6.1
-    dev: false
 
   /rollup-route-manifest/1.0.0_rollup@2.72.1:
     resolution: {integrity: sha512-3CmcMmCLAzJDUXiO3z6386/Pt8/k9xTZv8gIHyXI8hYGoAInnYdOsFXiGGzQRMy6TXR1jUZme2qbdwjH2nFMjg==}
