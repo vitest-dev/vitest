@@ -30,6 +30,7 @@ cli
   .option('--globals', 'inject apis globally')
   .option('--global', 'deprecated, use --globals')
   .option('--dom', 'mock browser api with happy-dom')
+  .option('--browser', 'run tests in browser')
   .option('--environment <env>', 'runner environment (default: node)')
   .option('--passWithNoTests', 'pass when no tests found')
   .option('--allowOnly', 'Allow tests and suites that are marked as only (default: !process.env.CI)')

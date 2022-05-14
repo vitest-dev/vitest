@@ -70,6 +70,13 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
 
         (options as ResolvedConfig).defines = defines
 
+        let open: string | boolean | undefined
+
+        if (preOptions.ui && preOptions.open)
+          open = preOptions.uiBase ?? '/__vitest__/'
+        else if (preOptions.web)
+          open = '/'
+
         return {
           resolve: {
             // by default Vite resolves `module` field, which not always a native ESM module
@@ -78,9 +85,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
           },
           server: {
             ...preOptions.api,
-            open: preOptions.ui && preOptions.open
-              ? preOptions.uiBase ?? '/__vitest__/'
-              : undefined,
+            open,
             preTransformRequests: false,
           },
           // disable deps optimization
@@ -135,9 +140,9 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
     EnvReplacerPlugin(),
     MocksPlugin(),
     GlobalSetupPlugin(ctx),
-    options.browser
+    ...(options.browser
       ? await BrowserPlugin()
-      : null,
+      : []),
     options.ui
       ? await UIPlugin()
       : null,

@@ -1,52 +1,57 @@
 import { fileURLToPath } from 'url'
-import nodePolyfills from 'rollup-plugin-node-polyfills'
-import { join, resolve } from 'pathe'
+// eslint-disable-next-line no-restricted-imports
+import { resolve } from 'path'
+import nodePolyfills from 'rollup-plugin-polyfill-node'
 import sirv from 'sirv'
 import type { Plugin } from 'vite'
+import { resolvePath } from 'mlly'
 
-const nodeConfig = nodePolyfills({ fs: true, crypto: true })
+const stubsNames = [
+  'fs',
+  'local-pkg',
+  'module',
+  'noop',
+  'perf_hooks',
+]
 
-export default (base = '/') => {
-  return <Plugin>{
-    enforce: 'pre',
-    name: 'vitest:web',
-    resolveId(id, importer) {
-      id = normalizeId(id)
+export default (base = '/'): Plugin[] => {
+  const pkgRoot = resolve(fileURLToPath(import.meta.url), '../..')
+  const distRoot = resolve(pkgRoot, 'dist')
 
-      if (id === 'vitest')
-        return '/vitest.js'
+  return [
+    nodePolyfills({
+      include: null,
+    }),
+    {
+      enforce: 'pre',
+      name: 'vitest:browser',
+      async resolveId(id, _, ctx) {
+        if (ctx.ssr)
+          return
 
-      if (id === 'tty')
-        return nodeConfig.resolveId(normalizeId(id), importer!)
+        if (id === '/__vitest_index__') {
+          const result = await resolvePath('vitest')
+          return result
+        }
 
-      if (id === 'crypto')
-        return nodeConfig.resolveId(normalizeId(id), importer!)
+        id = normalizeId(id)
 
-      if (id === 'path')
-        return nodeConfig.resolveId(normalizeId(id), importer!)
+        if (stubsNames.includes(id))
+          return resolve(pkgRoot, 'stubs', id)
 
-      if (id === 'module')
-        return join(fileURLToPath(import.meta.url), '..', './module.js')
-
-      if (id === 'perf_hooks')
-        return join(fileURLToPath(import.meta.url), '..', './perf_hooks.js')
-
-      if (id === 'fs')
-        return join(fileURLToPath(import.meta.url), '..', './fs-stub.js')
-
-      return null
+        return null
+      },
+      async configureServer(server) {
+        server.middlewares.use(
+          base,
+          sirv(resolve(distRoot, 'client'), {
+            single: false,
+            dev: true,
+          }),
+        )
+      },
     },
-    async configureServer(server) {
-      const clientDist = resolve(fileURLToPath(import.meta.url), '..')
-      server.middlewares.use(
-        base,
-        sirv(clientDist, {
-          single: true,
-          dev: true,
-        }),
-      )
-    },
-  }
+  ]
 }
 
 function normalizeId(id: string, base?: string): string {

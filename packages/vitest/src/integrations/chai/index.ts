@@ -1,4 +1,4 @@
-import chai from 'chai'
+import * as chai from 'chai'
 import './setup'
 import type { Test } from '../../types'
 import { getState, setState } from './jest-expect'

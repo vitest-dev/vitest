@@ -19,7 +19,8 @@
     "./*": "./*"
   },
   "files": [
-    "dist"
+    "dist",
+    "stubs"
   ],
   "sideEffects": false,
   "scripts": {
@@ -28,12 +29,12 @@
     "build:node": "rollup -c",
     "dev:client": "vite build --watch",
     "dev:node": "rollup -c --watch --watch.include=node/**",
-    "dev": "run-p dev:node dev:client"
+    "dev": "rimraf dist && run-p dev:node dev:client"
   },
   "dependencies": {
-    "node-module-polyfill": "^1.0.1",
-    "rollup-plugin-node-globals": "^1.4.0",
-    "rollup-plugin-node-polyfills": "^0.2.1",
+    "local-pkg": "^0.4.1",
+    "mlly": "^0.5.2",
+    "rollup-plugin-polyfill-node": "^0.9.0",
     "sirv": "^2.0.2"
   },
   "devDependencies": {

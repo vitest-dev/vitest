@@ -1,5 +1,5 @@
 import { MessageChannel } from 'worker_threads'
-import { pathToFileURL } from 'url'
+import _url from 'url'
 import { cpus } from 'os'
 import { resolve } from 'pathe'
 import type { Options as TinypoolOptions } from 'tinypool'
@@ -24,7 +24,7 @@ export function createPool(ctx: Vitest): WorkerPool {
     return createFakePool(ctx)
 }
 
-const workerPath = pathToFileURL(resolve(distDir, './worker.js')).href
+const workerPath = _url.pathToFileURL(resolve(distDir, './worker.js')).href
 
 export function createFakePool(ctx: Vitest): WorkerPool {
   const runWithFiles = (name: 'run' | 'collect'): RunWithFiles => {

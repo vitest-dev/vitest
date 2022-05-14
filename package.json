@@ -40,6 +40,8 @@
     "@types/lodash": "^4.14.182",
     "@types/node": "^17.0.31",
     "@types/ws": "^8.5.3",
+    "@vitest/browser": "workspace:*",
+    "@vitest/ui": "workspace:*",
     "bumpp": "^7.1.1",
     "c8": "^7.11.2",
     "cross-env": "^7.0.3",
@@ -80,5 +82,8 @@
   },
   "simple-git-hooks": {
     "pre-commit": "npx lint-staged"
+  },
+  "dependencies": {
+    "rollup-plugin-node-polyfills": "^0.2.1"
   }
 }
