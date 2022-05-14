@@ -17,7 +17,7 @@ interface ViteRunnerRequest {
 
 export class VitestMocker {
   private static pendingIds: PendingSuiteMock[] = []
-  private static spyModule?: typeof import('../integrations/mock/spy')
+  private static spyModule?: typeof import('../integrations/spy')
 
   private request!: ViteRunnerRequest
 
@@ -230,7 +230,7 @@ export class VitestMocker {
   private async ensureSpy() {
     if (VitestMocker.spyModule)
       return
-    VitestMocker.spyModule = await this.request(`/@fs/${slash(resolve(distDir, 'spy.js'))}`) as typeof import('../integrations/mock/spy')
+    VitestMocker.spyModule = await this.request(`/@fs/${slash(resolve(distDir, 'spy.js'))}`) as typeof import('../integrations/spy')
   }
 
   public async requestWithMock(dep: string) {

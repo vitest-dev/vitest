@@ -16,4 +16,4 @@ export type {
   SpyInstance,
   SpyInstanceFn,
   SpyContext,
-} from '../integrations/mock/spy'
+} from '../integrations/spy'
