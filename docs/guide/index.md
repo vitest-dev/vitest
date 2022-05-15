@@ -99,6 +99,7 @@ Learn more about [IDE Integrations](./ide.md)
 - [neodrag](https://github.com/PuruVJ/neodrag)
 - [svelte-multiselect](https://github.com/janosh/svelte-multiselect)
 - [iconify](https://github.com/iconify/iconify)
+- [tdesign-vue-next](https://github.com/Tencent/tdesign-vue-next)
 
 ## Using Unreleased Commits
 
