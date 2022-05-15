@@ -236,7 +236,7 @@ export async function runSuite(suite: Suite) {
 
   const workerState = getWorkerState()
 
-  if (workerState.config.logHeapUsage)
+  if (workerState.config.logHeapUsage && isNode)
     suite.result.heap = process.memoryUsage().heapUsed
 
   if (suite.mode === 'run') {
