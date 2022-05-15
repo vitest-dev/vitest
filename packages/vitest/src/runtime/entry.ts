@@ -9,13 +9,14 @@ export async function run(files: string[], config: ResolvedConfig): Promise<void
 
   const workerState = getWorkerState()
 
-  const envs = ['node', 'jsdom', 'happy-dom']
-
   // TODO@web-runner: we need to figure out how to do this on the browser
   if (config.browser) {
+    workerState.mockMap.clear()
     await startTests(files, config)
     return
   }
+
+  const envs = ['node', 'jsdom', 'happy-dom']
 
   // if calling from a worker, there will always be one file
   // if calling with no-threads, this will be the whole suite

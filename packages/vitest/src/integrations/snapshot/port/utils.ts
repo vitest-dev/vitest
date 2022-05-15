@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import fs, { promises as fsp } from 'fs'
+import fs from 'fs'
 import { dirname, join } from 'pathe'
 import naturalCompare from 'natural-compare'
 import type { OptionsReceived as PrettyFormatOptions } from 'pretty-format'
@@ -152,7 +152,7 @@ export async function saveSnapshotFile(
     )
 
   ensureDirectoryExists(snapshotPath)
-  await fsp.writeFile(
+  await fs?.promises.writeFile(
     snapshotPath,
     `${writeSnapshotVersion()}\n\n${snapshots.join('\n\n')}\n`,
     'utf-8',

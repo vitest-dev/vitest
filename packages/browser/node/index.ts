@@ -1,7 +1,8 @@
 import { fileURLToPath } from 'url'
 // eslint-disable-next-line no-restricted-imports
 import { resolve } from 'path'
-import nodePolyfills from 'rollup-plugin-polyfill-node'
+// import nodePolyfills from 'rollup-plugin-polyfill-node'
+import nodePolyfills from 'rollup-plugin-node-polyfills'
 import sirv from 'sirv'
 import type { Plugin } from 'vite'
 import { resolvePath } from 'mlly'
@@ -12,9 +13,12 @@ const stubsNames = [
   'module',
   'noop',
   'perf_hooks',
-  'tty',
-  'util',
+  // 'tty',
 ]
+
+const polyfills = ['util', 'tty', 'process', 'path', 'buffer']
+
+const nodeConfig = nodePolyfills({ fs: true, crypto: true, include: polyfills })
 
 export default (base = '/'): Plugin[] => {
   const pkgRoot = resolve(fileURLToPath(import.meta.url), '../..')
@@ -36,6 +40,9 @@ export default (base = '/'): Plugin[] => {
         if (stubsNames.includes(id))
           return resolve(pkgRoot, 'stubs', id)
 
+        if (polyfills.includes(id))
+          return nodeConfig.resolveId(normalizeId(id), imp!)
+
         return null
       },
       async configureServer(server) {
@@ -52,4 +59,17 @@ export default (base = '/'): Plugin[] => {
       include: null,
     }),
   ]
+}
+
+function normalizeId(id: string, base?: string): string {
+  if (base && id.startsWith(base))
+    id = `/${id.slice(base.length)}`
+
+  return id
+    .replace(/^\/@id\/__x00__/, '\0') // virtual modules start with `\0`
+    .replace(/^\/@id\//, '')
+    .replace(/^__vite-browser-external:/, '')
+    .replace(/^node:/, '')
+    .replace(/[?&]v=\w+/, '?') // remove ?v= query
+    .replace(/\?$/, '') // remove end query mark
 }

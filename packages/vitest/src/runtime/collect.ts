@@ -1,6 +1,5 @@
-import { relative } from 'pathe'
 import type { File, ResolvedConfig, Suite, TaskBase } from '../types'
-import { getWorkerState, isBrowser } from '../utils'
+import { getWorkerState, isBrowser, relativePath } from '../utils'
 import { clearCollectorContext, defaultSuite } from './suite'
 import { getHooks, setHooks } from './map'
 import { processError } from './error'
@@ -36,7 +35,7 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
   }
 
   for (const filepath of paths) {
-    const path = relative(config.root, filepath)
+    const path = relativePath(config.root, filepath)
     const file: File = {
       id: hash(path),
       name: path,

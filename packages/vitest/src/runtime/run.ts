@@ -1,6 +1,6 @@
 import type { File, HookCleanupCallback, HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from '../types'
 import { vi } from '../integrations/vi'
-import { getSnapshotClient } from '../integrations/snapshot/chai'
+// import { getSnapshotClient } from '../integrations/snapshot/chai'
 import {
   clearTimeout,
   getFullName,
@@ -104,7 +104,10 @@ export async function runTest(test: Test) {
 
   clearModuleMocks()
 
-  await getSnapshotClient().setTest(test)
+  if (isNode) {
+    const { getSnapshotClient } = await import('../integrations/snapshot/chai')
+    await getSnapshotClient().setTest(test)
+  }
 
   const workerState = getWorkerState()
 
@@ -160,7 +163,10 @@ export async function runTest(test: Test) {
   if (isBrowser && test.result.error)
     console.error(test.result.error.message, test.result.error.stackStr)
 
-  getSnapshotClient().clearTest()
+  if (isNode) {
+    const { getSnapshotClient } = await import('../integrations/snapshot/chai')
+    getSnapshotClient().clearTest()
+  }
 
   test.result.duration = now() - start
 
@@ -292,6 +298,8 @@ async function startTestsNode(paths: string[], config: ResolvedConfig) {
   const files = await collectTests(paths, config)
 
   rpc().onCollected(files)
+
+  const { getSnapshotClient } = await import('../integrations/snapshot/chai')
   getSnapshotClient().clear()
 
   await runFiles(files, config)
