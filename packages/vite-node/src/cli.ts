@@ -4,7 +4,7 @@ import { createServer } from 'vite'
 import { version } from '../package.json'
 import { ViteNodeServer } from './server'
 import { ViteNodeRunner } from './client'
-import type { ViteNodeServerOptions } from './types'
+import type { ViteNodeServerOptions, ViteNodeServerOptionsCLI } from './types'
 
 const cli = cac('vite-node')
 
@@ -28,7 +28,7 @@ export interface CliOptions {
   root?: string
   config?: string
   watch?: boolean
-  serverOptions?: ViteNodeServerOptions
+  serverOptions?: ViteNodeServerOptionsCLI
   '--'?: string[]
 }
 
@@ -42,8 +42,9 @@ async function run(files: string[], options: CliOptions = {}) {
   // forward argv
   process.argv = [...process.argv.slice(0, 2), ...(options['--'] || [])]
 
-  if (options.serverOptions)
-    parseServerOptions(options.serverOptions)
+  const parsedServerOptions = options.serverOptions
+    ? parseServerOptions(options.serverOptions)
+    : undefined
 
   const server = await createServer({
     logLevel: 'error',
@@ -52,7 +53,7 @@ async function run(files: string[], options: CliOptions = {}) {
   })
   await server.pluginContainer.buildStart({})
 
-  const node = new ViteNodeServer(server, options.serverOptions)
+  const node = new ViteNodeServer(server, parsedServerOptions)
 
   const runner = new ViteNodeRunner({
     root: server.config.root,
@@ -90,22 +91,31 @@ async function run(files: string[], options: CliOptions = {}) {
   })
 }
 
-function parseServerOptions(serverOptions: ViteNodeServerOptions) {
-  if (serverOptions.deps && serverOptions.deps.inline) {
-    serverOptions.deps.inline = serverOptions.deps.inline.map((dep) => {
-      return typeof dep === 'string' && dep.startsWith('/') && dep.endsWith('/')
-        ? new RegExp(dep)
-        : dep
-    })
-  }
+function parseServerOptions(serverOptions: ViteNodeServerOptionsCLI): ViteNodeServerOptions {
+  return {
+    ...serverOptions,
 
-  if (serverOptions.deps && serverOptions.deps.external) {
-    serverOptions.deps.external = serverOptions.deps.external.map((dep) => {
-      return typeof dep === 'string' && dep.startsWith('/') && dep.endsWith('/')
-        ? new RegExp(dep)
-        : dep
-    })
-  }
+    deps: {
+      ...serverOptions.deps,
 
-  // TODO: Handle serverOptions.transformMode.
+      inline: serverOptions.deps?.inline?.map((dep) => {
+        return dep.startsWith('/') && dep.endsWith('/')
+          ? new RegExp(dep)
+          : dep
+      }),
+
+      external: serverOptions.deps?.external?.map((dep) => {
+        return dep.startsWith('/') && dep.endsWith('/')
+          ? new RegExp(dep)
+          : dep
+      }),
+    },
+
+    transformMode: {
+      ...serverOptions.transformMode,
+
+      ssr: serverOptions.transformMode?.ssr?.map(dep => new RegExp(dep)),
+      web: serverOptions.transformMode?.ssr?.map(dep => new RegExp(dep)),
+    },
+  }
 }

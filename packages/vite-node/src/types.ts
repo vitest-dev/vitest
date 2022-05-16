@@ -77,4 +77,17 @@ export interface ViteNodeServerOptions {
   }
 }
 
+type Optional<T> = T | undefined
+type ComputeViteNodeServerOptionsCLI<T extends Record<string, any>> = {
+  [K in keyof T]: T[K] extends Optional<RegExp[]>
+    ? string[]
+    : T[K] extends Optional<(string | RegExp)[]>
+      ? string[]
+      : T[K] extends Optional<Record<string, any>>
+        ? ComputeViteNodeServerOptionsCLI<T[K]>
+        : T[K]
+}
+
+export type ViteNodeServerOptionsCLI = ComputeViteNodeServerOptionsCLI<ViteNodeServerOptions>
+
 export type { ModuleCacheMap }
