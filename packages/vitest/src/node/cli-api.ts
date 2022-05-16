@@ -55,7 +55,7 @@ export async function startVitest(cliFilters: string[], options: CliOptions, vit
 
   if (ctx.config.environment && ctx.config.environment !== 'node') {
     if (!await ensurePackageInstalled(ctx.config.environment)) {
-      process.exitCode = 1
+      process.exitCode = 0
       return false
     }
   }
@@ -75,7 +75,7 @@ export async function startVitest(cliFilters: string[], options: CliOptions, vit
   }
   catch (e) {
     process.exitCode = 1
-    ctx.error(`\n${c.red(divider(c.bold(c.inverse(' Unhandled Error '))))}`)
+    ctx.error(`\n${c.red(divider(c.bold(c.inverse('Unhandled Error'))))}`)
     await ctx.printError(e)
     ctx.error('\n\n')
     return false
