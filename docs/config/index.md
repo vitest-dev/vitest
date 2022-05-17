@@ -386,7 +386,7 @@ Open Vitest UI (WIP)
 - **Type:** `boolean | number`
 - **Default:** `false`
 
-Listen to port and serve API. When set to true, the default port is 55555
+Listen to port and serve API. When set to true, the default port is 51204
 
 ### clearMocks
 
