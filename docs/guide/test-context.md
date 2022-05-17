@@ -48,7 +48,7 @@ To provide type for your custom context properties, you can aggregate the type `
 
 ```ts
 declare module 'vitest' {
-  export interface TestContext {
+  export interface Suite {
     foo?: string
   }
 }
