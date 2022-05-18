@@ -13,8 +13,6 @@ cli
   .option('-r, --root <path>', 'Use specified root directory')
   .option('-c, --config <path>', 'Use specified config file')
   .option('-w, --watch', 'Restart on file changes, similar to "nodemon"')
-  // TODO: How could we document this? Ideally, we should link to the
-  // TODO: ViteNodeServerOptions type since it's the source of truth.
   .option('--server-options <options>', 'Use specified Vite server options')
   .help()
 
