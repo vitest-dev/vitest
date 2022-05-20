@@ -4,7 +4,7 @@ import vm from 'vm'
 import { dirname, extname, isAbsolute, resolve } from 'pathe'
 import { isNodeBuiltin } from 'mlly'
 import createDebug from 'debug'
-import { isPrimitive, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
+import { isPrimitive, mergeSlashes, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
 import type { ModuleCache, ViteNodeRunnerOptions } from './types'
 
 const debugExecute = createDebug('vite-node:client:execute')
@@ -135,7 +135,7 @@ export class ViteNodeRunner {
         if (importer && importer.startsWith('mock:'))
           importer = importer.slice(5)
         const { id } = await this.options.resolveId(dep, importer) || {}
-        dep = id && isAbsolute(id) ? `/@fs/${id}` : id || dep
+        dep = id && isAbsolute(id) ? mergeSlashes(`/@fs/${id}`) : id || dep
       }
 
       return dep

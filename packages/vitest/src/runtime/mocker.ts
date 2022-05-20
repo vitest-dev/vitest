@@ -100,7 +100,7 @@ export class VitestMocker {
   }
 
   public resolveDependency(dep: string) {
-    return normalizeRequestId(dep).replace(/^\/@fs\//, isWindows ? '' : '/')
+    return normalizeRequestId(dep.replace(this.root, '')).replace(/^\/@fs\//, isWindows ? '' : '/')
   }
 
   public normalizePath(path: string) {
