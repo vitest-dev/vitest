@@ -40,11 +40,7 @@ export default <Environment>({
       },
     )
 
-    const { keys, allowRewrite } = populateGlobal(global, dom.window)
-
-    const originals = new Map<string | symbol, any>(
-      allowRewrite.map(([key]) => [key, global[key]]),
-    )
+    const { keys, originals } = populateGlobal(global, dom.window, { bindFunctions: true })
 
     return {
       teardown(global) {
