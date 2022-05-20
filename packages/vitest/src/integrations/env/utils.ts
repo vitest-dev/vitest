@@ -26,6 +26,10 @@ export function getWindowKeys(global: any, win: any) {
   return keys
 }
 
+function isClassLikeName(name: string) {
+  return name[0] === name[0].toUpperCase()
+}
+
 interface PopulateOptions {
   bindFunctions?: boolean
 }
@@ -40,7 +44,7 @@ export function populateGlobal(global: any, win: any, options: PopulateOptions =
 
   const overrideObject = new Map<string | symbol, any>()
   for (const key of keys) {
-    const bindedFunction = bindFunctions && typeof win[key] === 'function' && win[key].bind(win)
+    const bindedFunction = bindFunctions && typeof win[key] === 'function' && !isClassLikeName(key) && win[key].bind(win)
     Object.defineProperty(global, key, {
       get() {
         if (overrideObject.has(key))
