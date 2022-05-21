@@ -429,6 +429,10 @@ describe('toSatisfy()', () => {
   it('pass with negotiation', () => {
     expect(2).not.toSatisfy(isOdd)
   })
+
+  it.fails('fail with missing negotiation', () => {
+    expect(2).toSatisfy(isOdd)
+  })
 })
 
 describe('async expect', () => {
