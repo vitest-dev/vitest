@@ -8,8 +8,8 @@ import { createBirpc } from 'birpc'
 import type { RawSourceMap } from 'vite-node'
 import type { WorkerContext, WorkerRPC } from '../types'
 import { distDir } from '../constants'
-import type { Vitest } from './core'
 import { AggregateError } from '../utils'
+import type { Vitest } from './core'
 
 export type RunWithFiles = (files: string[], invalidates?: string[]) => Promise<void>
 
@@ -44,7 +44,8 @@ export function createFakePool(ctx: Vitest): WorkerPool {
 
       try {
         await worker[name](data, { transferList: [workerPort] })
-      } finally {
+      }
+      finally {
         port.close()
         workerPort.close()
       }
@@ -96,16 +97,16 @@ export function createWorkerPool(ctx: Vitest): WorkerPool {
 
         try {
           await pool.run(data, { transferList: [workerPort], name })
-        } finally {
+        }
+        finally {
           port.close()
           workerPort.close()
         }
       }))
 
       const errors = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected').map(r => r.reason)
-      if (errors.length > 0) {
+      if (errors.length > 0)
         throw new AggregateError(errors)
-      }
     }
   }
 
