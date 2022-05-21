@@ -1,6 +1,6 @@
 /* eslint-disable comma-spacing */
 /* eslint-disable no-sparse-arrays */
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 class TestError extends Error {}
 
@@ -428,6 +428,17 @@ describe('toSatisfy()', () => {
 
   it('pass with negotiation', () => {
     expect(2).not.toSatisfy(isOdd)
+  })
+
+  it.fails('fail with missing negotiation', () => {
+    expect(2).toSatisfy(isOdd)
+  })
+
+  it('calls the function', () => {
+    const isOddMock = vi.fn(isOdd)
+    expect(isOddMock).not.toBeCalled()
+    expect(1).toSatisfy(isOddMock)
+    expect(isOddMock).toBeCalled()
   })
 })
 
