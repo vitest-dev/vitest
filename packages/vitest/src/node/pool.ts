@@ -106,7 +106,7 @@ export function createWorkerPool(ctx: Vitest): WorkerPool {
 
       const errors = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected').map(r => r.reason)
       if (errors.length > 0)
-        throw new AggregateError(errors)
+        throw new AggregateError(errors, 'Errors occurred while running tests. For more information, see serialized error.')
     }
   }
 
