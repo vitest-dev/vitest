@@ -433,6 +433,13 @@ describe('toSatisfy()', () => {
   it.fails('fail with missing negotiation', () => {
     expect(2).toSatisfy(isOdd)
   })
+
+  it('calls the function', () => {
+    const isOddMock = vi.fn(isOdd)
+    expect(isOddMock).not.toBeCalled()
+    expect(1).toSatisfy(isOddMock)
+    expect(isOddMock).toBeCalled()
+  })
 })
 
 describe('async expect', () => {
