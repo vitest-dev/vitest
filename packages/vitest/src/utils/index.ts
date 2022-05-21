@@ -129,3 +129,13 @@ export function getCallLastIndex(code: string) {
 }
 
 export { resolve as resolvePath }
+
+// AggregateError is supported in Node.js 15.0.0+
+class AggregateErrorPonyfill extends Error {
+  errors: unknown[]
+  constructor(errors: Iterable<unknown>, message = '') {
+    super(message)
+    this.errors = [...errors]
+  }
+}
+export { AggregateErrorPonyfill as AggregateError }

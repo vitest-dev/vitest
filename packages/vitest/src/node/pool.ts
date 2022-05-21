@@ -8,6 +8,7 @@ import { createBirpc } from 'birpc'
 import type { RawSourceMap } from 'vite-node'
 import type { WorkerContext, WorkerRPC } from '../types'
 import { distDir } from '../constants'
+import { AggregateError } from '../utils'
 import type { Vitest } from './core'
 
 export type RunWithFiles = (files: string[], invalidates?: string[]) => Promise<void>
@@ -41,10 +42,13 @@ export function createFakePool(ctx: Vitest): WorkerPool {
         id: 1,
       }
 
-      await worker[name](data, { transferList: [workerPort] })
-
-      port.close()
-      workerPort.close()
+      try {
+        await worker[name](data, { transferList: [workerPort] })
+      }
+      finally {
+        port.close()
+        workerPort.close()
+      }
     }
   }
 
@@ -80,7 +84,7 @@ export function createWorkerPool(ctx: Vitest): WorkerPool {
     return async (files, invalidates) => {
       let id = 0
       const config = ctx.getSerializableConfig()
-      await Promise.all(files.map(async (file) => {
+      const results = await Promise.allSettled(files.map(async (file) => {
         const { workerPort, port } = createChannel(ctx)
 
         const data: WorkerContext = {
@@ -91,10 +95,18 @@ export function createWorkerPool(ctx: Vitest): WorkerPool {
           id: ++id,
         }
 
-        await pool.run(data, { transferList: [workerPort], name })
-        port.close()
-        workerPort.close()
+        try {
+          await pool.run(data, { transferList: [workerPort], name })
+        }
+        finally {
+          port.close()
+          workerPort.close()
+        }
       }))
+
+      const errors = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected').map(r => r.reason)
+      if (errors.length > 0)
+        throw new AggregateError(errors, 'Errors occurred while running tests. For more information, see serialized error.')
     }
   }
 
