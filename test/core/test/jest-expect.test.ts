@@ -1,6 +1,6 @@
 /* eslint-disable comma-spacing */
 /* eslint-disable no-sparse-arrays */
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 class TestError extends Error {}
 
