@@ -123,7 +123,12 @@ export function resolveConfig(
   if (process.env.VITEST_MIN_THREADS)
     resolved.minThreads = parseInt(process.env.VITEST_MIN_THREADS)
 
-  resolved.setupFiles = toArray(resolved.setupFiles || []).map(file => normalize(resolveModule(file, { paths: [resolved.root] })!))
+  resolved.setupFiles = toArray(resolved.setupFiles || []).map(file =>
+    normalize(
+      resolveModule(file, { paths: [resolved.root] })
+        ?? resolve(resolved.root, file),
+    ),
+  )
 
   // the server has been created, we don't need to override vite.server options
   resolved.api = resolveApiConfig(options)
