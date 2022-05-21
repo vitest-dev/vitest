@@ -126,3 +126,9 @@ it('globals are the same', () => {
   expect(window.globalThis.Blob).toBe(globalThis.Blob)
   expect(Blob).toBe(globalThis.Blob)
 })
+
+it('can extend global class', () => {
+  class SuperBlob extends Blob {}
+
+  expect(SuperBlob).toBeDefined()
+})
