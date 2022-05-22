@@ -19,7 +19,7 @@ export const ReportersMap = {
 }
 
 export const BenchmarkReportsMap = {
-
+  default: 'default',
 }
 
 export type BuiltinReporters = keyof typeof ReportersMap

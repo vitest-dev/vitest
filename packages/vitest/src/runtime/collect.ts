@@ -21,7 +21,55 @@ function hash(str: string): string {
   return `${hash}`
 }
 
-export async function collectTests(paths: string[], config: ResolvedConfig) {
+export async function collectTests(paths: string[], config: ResolvedConfig): Promise<File[]> {
+  if (config.benchmark)
+    return collectBenchmark(paths, config)
+
+  return collectUnitTests(paths, config)
+}
+
+async function collectBenchmark(paths: string[], config: ResolvedConfig): Promise<File[]> {
+  const files: File[] = []
+
+  for (const filepath of paths) {
+    const path = relative(config.root, filepath)
+    const file: File = {
+      id: hash(path),
+      name: path,
+      type: 'suite',
+      mode: 'run',
+      filepath,
+      tasks: [],
+    }
+
+    clearBenchmarkContext()
+
+    try {
+      await runSetupFiles(config)
+      await import(filepath)
+
+      const defaultBenchmarkTasks = await defaultBenchmark.collect(file)
+
+      for (const c of [...defaultBenchmarkTasks.tasks]) {
+        if (c.type === 'benchmark')
+          file.tasks.push(c)
+      }
+    }
+    catch (e) {
+      file.result = {
+        state: 'fail',
+        error: processError(e),
+      }
+    }
+
+    calculateHash(file)
+    files.push(file)
+  }
+
+  return files
+}
+
+async function collectUnitTests(paths: string[], config: ResolvedConfig): Promise<File[]> {
   const files: File[] = []
 
   for (const filepath of paths) {

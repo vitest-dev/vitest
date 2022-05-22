@@ -267,7 +267,7 @@ async function runBenchmark(benchmark: Benchmark) {
   })
   benchmarkLib.on('complete', () => {
     benchmark.result!.complete = {
-      fastest: benchmarkLib.filter('fastest').map('name')[0],
+      fastest: benchmarkLib.filter('fastest').map('name')[0].toString(),
     }
     updateTask(benchmark)
   })

@@ -5,6 +5,10 @@ import type { ResolvedC8Options, UserConfig } from 'vitest'
 
 export const defaultInclude = ['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']
 export const defaultExclude = ['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**']
+export const defaultBenchmark = {
+  include: defaultInclude,
+  exclude: defaultExclude,
+}
 
 const defaultCoverageExcludes = [
   'coverage/**',

@@ -1,6 +1,7 @@
 import cac from 'cac'
 import c from 'picocolors'
 import { version } from '../../package.json'
+import { defaultBenchmark } from '../defaults'
 import type { CliOptions } from './cli-api'
 import { startVitest } from './cli-api'
 import { divider } from './reporters/renderers/utils'
@@ -52,6 +53,10 @@ cli
   .action(start)
 
 cli
+  .command('bench [...filters]')
+  .action(benchmark)
+
+cli
   .command('[...filters]')
   .action(start)
 
@@ -65,6 +70,11 @@ async function runRelated(relatedFiles: string[] | string, argv: CliOptions) {
 
 async function run(cliFilters: string[], options: CliOptions) {
   options.run = true
+  await start(cliFilters, options)
+}
+
+async function benchmark(cliFilters: string[], options: CliOptions) {
+  options.benchmark = defaultBenchmark
   await start(cliFilters, options)
 }
 
