@@ -1,7 +1,5 @@
-import { createHash } from 'crypto'
 import { relative } from 'pathe'
 import type { File, ResolvedConfig, Suite, TaskBase } from '../types'
-import { stdout } from '../utils'
 import { clearCollectorContext, defaultSuite } from './suite'
 import { getHooks, setHooks } from './map'
 import { processError } from './error'
@@ -11,11 +9,16 @@ import { clearBenchmarkContext, defaultBenchmark } from './benchmark'
 
 const now = Date.now
 
-function hash(str: string, length = 10) {
-  return createHash('md5')
-    .update(str)
-    .digest('hex')
-    .slice(0, length)
+function hash(str: string): string {
+  let hash = 0
+  if (str.length === 0)
+    return `${hash}`
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i)
+    hash = (hash << 5) - hash + char
+    hash = hash & hash // Convert to 32bit integer
+  }
+  return `${hash}`
 }
 
 export async function collectTests(paths: string[], config: ResolvedConfig) {
@@ -68,8 +71,6 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
         state: 'fail',
         error: processError(e),
       }
-      // not sure thy, this line is needed to trigger the error
-      stdout().write('\0')
     }
 
     calculateHash(file)

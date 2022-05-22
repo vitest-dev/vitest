@@ -71,28 +71,29 @@ function printErrorType(type: string, ctx: Vitest) {
   ctx.error(`\n${c.red(divider(c.bold(c.inverse(` ${type} `))))}`)
 }
 
+const skipErrorProperties = [
+  'message',
+  'name',
+  'nameStr',
+  'stack',
+  'cause',
+  'stacks',
+  'stackStr',
+  'type',
+  'showDiff',
+  'actual',
+  'expected',
+  'constructor',
+  'toString',
+]
+
 function getErrorProperties(e: ErrorWithDiff) {
   const errorObject = Object.create(null)
   if (e.name === 'AssertionError')
     return errorObject
 
-  const skip = [
-    'message',
-    'name',
-    'nameStr',
-    'stack',
-    'cause',
-    'stacks',
-    'stackStr',
-    'type',
-    'showDiff',
-    'actual',
-    'expected',
-    'constructor',
-    'toString',
-  ]
   for (const key of Object.getOwnPropertyNames(e)) {
-    if (!skip.includes(key))
+    if (!skipErrorProperties.includes(key))
       errorObject[key] = e[key as keyof ErrorWithDiff]
   }
 
@@ -115,7 +116,7 @@ function handleImportOutsideModuleError(stack: string, ctx: Vitest) {
   else
     name = name.split('/')[0]
 
-  ctx.console.error(c.yellow(
+  ctx.error(c.yellow(
     `Module ${path} seems to be an ES Module but shipped in a CommonJS package. `
 + `You might want to create an issue to the package ${c.bold(`"${name}"`)} asking `
 + 'them to ship the file in .mjs extension or add "type": "module" in their package.json.'
@@ -189,7 +190,7 @@ export function generateCodeFrame(
   let count = 0
   let res: string[] = []
 
-  const columns = process.stdout.columns || 80
+  const columns = process.stdout?.columns || 80
 
   function lineNo(no: number | string = '') {
     return c.gray(`${String(no).padStart(3, ' ')}| `)

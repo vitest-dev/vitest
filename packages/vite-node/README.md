@@ -37,7 +37,12 @@ import { ViteNodeServer } from 'vite-node/server'
 import { ViteNodeRunner } from 'vite-node/client'
 
 // create vite server
-const server = await createServer()
+const server = await createServer({
+  optimizeDeps: {
+    // It's recommended to disable deps optimization
+    disabled: true,
+  },
+})
 // this is need to initialize the plugins
 await server.pluginContainer.buildStart({})
 

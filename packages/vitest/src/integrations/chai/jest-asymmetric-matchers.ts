@@ -1,8 +1,8 @@
+import type { ChaiPlugin, MatcherState } from '../../types/chai'
 import { getState } from './jest-expect'
 import * as matcherUtils from './jest-matcher-utils'
 
 import { equals, isA } from './jest-utils'
-import type { ChaiPlugin, MatcherState } from './types'
 
 export interface AsymmetricMatcherInterface {
   asymmetricMatch(other: unknown): boolean

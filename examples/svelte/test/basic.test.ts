@@ -1,8 +1,14 @@
 import { tick } from 'svelte'
 import Hello from '../components/Hello.svelte'
 
+let host: HTMLElement
+
+afterEach(() => {
+  host.remove()
+})
+
 test('mount component', async () => {
-  const host = document.createElement('div')
+  host = document.createElement('div')
   host.setAttribute('id', 'host')
   document.body.appendChild(host)
   const instance = new Hello({ target: host, props: { count: 4 } })

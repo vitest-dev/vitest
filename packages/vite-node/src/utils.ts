@@ -8,6 +8,10 @@ export function slash(str: string) {
   return str.replace(/\\/g, '/')
 }
 
+export function mergeSlashes(str: string) {
+  return str.replace(/\/\//g, '/')
+}
+
 export function normalizeRequestId(id: string, base?: string): string {
   if (base && id.startsWith(base))
     id = `/${id.slice(base.length)}`

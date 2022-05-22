@@ -356,7 +356,6 @@ describe('delayed execution', () => {
   it('should execute every minute', () => {
     executeEveryMinute(mock)
     vi.advanceTimersToNextTimer()
-    vi.advanceTimersToNextTimer()
     expect(mock).toHaveBeenCalledTimes(1)
     vi.advanceTimersToNextTimer()
     expect(mock).toHaveBeenCalledTimes(2)

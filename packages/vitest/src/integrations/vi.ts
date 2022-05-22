@@ -1,9 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
+import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import { parseStacktrace } from '../utils/source-map'
 import type { VitestMocker } from '../runtime/mocker'
-import { resetModules } from '../utils'
-import { FakeTimers } from './timers'
+import { getWorkerState, resetModules } from '../utils'
+import { FakeTimers } from './mock/timers'
 import type { EnhancedSpy, MaybeMocked, MaybeMockedDeep } from './spy'
 import { fn, isMockFunction, spies, spyOn } from './spy'
 
@@ -13,10 +12,6 @@ class VitestUtils {
   private _mocker: VitestMocker
 
   constructor() {
-    this._timers = new FakeTimers({
-      global: globalThis,
-      maxLoops: 10_000,
-    })
     // @ts-expect-error injected by vite-nide
     this._mocker = typeof __vitest_mocker__ !== 'undefined' ? __vitest_mocker__ : null
     this._mockedDate = null
@@ -30,11 +25,24 @@ class VitestUtils {
       + '\n- Otherwise, it might be a Vitest bug. Please report it to https://github.com/vitest-dev/vitest/issues\n'
       throw new Error(errorMsg)
     }
+
+    const workerState = getWorkerState()
+    this._timers = new FakeTimers({
+      global: globalThis,
+      config: workerState.config.fakeTimers,
+    })
   }
 
   // timers
 
-  public useFakeTimers() {
+  public useFakeTimers(config?: FakeTimerInstallOpts) {
+    if (config) {
+      this._timers.configure(config)
+    }
+    else {
+      const workerState = getWorkerState()
+      this._timers.configure(workerState.config.fakeTimers)
+    }
     this._timers.useFakeTimers()
     return this
   }
@@ -210,11 +218,14 @@ class VitestUtils {
    * `IntersectionObserver`.
    */
   public stubGlobal(name: string | symbol | number, value: any) {
-    // @ts-expect-error we can do anything!
-    globalThis[name] = value
-    if (globalThis.window)
+    if (globalThis.window) {
       // @ts-expect-error we can do anything!
       globalThis.window[name] = value
+    }
+    else {
+      // @ts-expect-error we can do anything!
+      globalThis[name] = value
+    }
 
     return this
   }

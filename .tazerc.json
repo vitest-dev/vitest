@@ -4,6 +4,8 @@
     "esbuild",
     "puppeteer",
     "pretty-format",
-    "vite"
+    "vite",
+    "pathe",
+    "esno"
   ]
 }

@@ -53,6 +53,8 @@ export class DefaultReporter extends BaseReporter {
   }
 
   onUserConsoleLog(log: UserConsoleLog) {
+    if (!this.shouldLog(log))
+      return
     this.renderer?.clear()
     super.onUserConsoleLog(log)
   }

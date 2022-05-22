@@ -8,7 +8,7 @@ import type { use as chaiUse } from 'chai'
  *
  */
 
-import type * as jestMatcherUtils from './jest-matcher-utils'
+import type * as jestMatcherUtils from '../integrations/chai/jest-matcher-utils'
 
 export type FirstFunctionArgument<T> = T extends (arg: infer A) => unknown ? A : never
 export type ChaiPlugin = FirstFunctionArgument<typeof chaiUse>

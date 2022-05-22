@@ -1,8 +1,8 @@
 import fs from 'fs'
-import path from 'pathe'
+import { dirname, join, relative, resolve } from 'pathe'
 import esbuild from 'rollup-plugin-esbuild'
 import dts from 'rollup-plugin-dts'
-import resolve from '@rollup/plugin-node-resolve'
+import nodeResolve from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import alias from '@rollup/plugin-alias'
@@ -40,12 +40,12 @@ const plugins = [
   alias({
     entries: [
       { find: /^node:(.+)$/, replacement: '$1' },
-      { find: 'vite-node/server', replacement: path.resolve(__dirname, '../vite-node/src/server.ts') },
-      { find: 'vite-node/client', replacement: path.resolve(__dirname, '../vite-node/src/client.ts') },
-      { find: 'vite-node/utils', replacement: path.resolve(__dirname, '../vite-node/src/utils.ts') },
+      { find: 'vite-node/server', replacement: resolve(__dirname, '../vite-node/src/server.ts') },
+      { find: 'vite-node/client', replacement: resolve(__dirname, '../vite-node/src/client.ts') },
+      { find: 'vite-node/utils', replacement: resolve(__dirname, '../vite-node/src/utils.ts') },
     ],
   }),
-  resolve({
+  nodeResolve({
     preferBuiltins: true,
   }),
   json(),
@@ -65,7 +65,7 @@ export default ({ watch }) => [
         const id = chunkInfo.facadeModuleId || Object.keys(chunkInfo.modules).find(i => !i.includes('node_modules') && i.includes('src/'))
         if (id) {
           const parts = Array.from(
-            new Set(path.relative(process.cwd(), id).split(/\//g)
+            new Set(relative(process.cwd(), id).split(/\//g)
               .map(i => i.replace(/\..*$/, ''))
               .filter(i => !['src', 'index', 'dist', 'node_modules'].some(j => i.includes(j)) && i.match(/^[\w_-]+$/))),
           )
@@ -127,7 +127,7 @@ function licensePlugin() {
       // https://github.com/rollup/rollup/blob/master/build-plugins/generate-license-file.js
       // MIT Licensed https://github.com/rollup/rollup/blob/master/LICENSE-CORE.md
       const coreLicense = fs.readFileSync(
-        path.resolve(__dirname, '../../LICENSE'),
+        resolve(__dirname, '../../LICENSE'),
       )
       function sortLicenses(licenses) {
         let withParenthesis = []
@@ -178,8 +178,8 @@ function licensePlugin() {
 
             if (!licenseText) {
               try {
-                const pkgDir = path.dirname(
-                  resolve(path.join(name, 'package.json'), {
+                const pkgDir = dirname(
+                  resolve(join(name, 'package.json'), {
                     preserveSymlinks: false,
                   }),
                 )

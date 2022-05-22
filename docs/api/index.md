@@ -68,7 +68,7 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
 - **Type:** `(condition: any) => Test`
 - **Alias:** `it.runIf`
 
-  Oppsit of [test.skipIf](#testskipif).
+  Opposite of [test.skipIf](#testskipif).
 
   ```ts
   import { assert, test } from 'vitest'
@@ -168,7 +168,7 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
 - **Alias:** `it.each`
 
   Use `test.each` when you need to run the same test with different variables.
-  You can inject parameters with [printf formmatting](https://nodejs.org/api/util.html#util_util_format_format_args) in the test name in the order of the test function parameters.
+  You can inject parameters with [printf formatting](https://nodejs.org/api/util.html#util_util_format_format_args) in the test name in the order of the test function parameters.
 
   - `%s`: string
   - `%d`: number
@@ -974,7 +974,7 @@ When you use `test` in the top level of file, they are collected as part of the 
 
 - **Type:** `(snapshot?: string) => void`
 
-  The same as `[toMatchSnapshot](#toMatchSnapshot)`, but expects the same value as `[toThrowError](#toThrowError)`.
+  The same as [`toMatchSnapshot`](#tomatchsnapshot), but expects the same value as [`toThrowError`](#tothrowerror).
 
   If the function throws an `Error`, the snapshot will be the error message. Otherwise, snapshot will be the value thrown by the function.
 
@@ -982,7 +982,7 @@ When you use `test` in the top level of file, they are collected as part of the 
 
 - **Type:** `(snapshot?: string) => void`
 
-  The same as `[toMatchInlineSnapshot](#toMatchInlineSnapshot)`, but expects the same value as `[toThrowError](#toThrowError)`.
+  The same as [`toMatchInlineSnapshot`](#tomatchinlinesnapshot), but expects the same value as [`toThrowError`](#tothrowerror).
 
   If the function throws an `Error`, the snapshot will be the error message. Otherwise, snapshot will be the value thrown by the function.
 
@@ -1173,7 +1173,7 @@ When you use `test` in the top level of file, they are collected as part of the 
 
     sell('apples')
 
-    expect(sell).toHaveReturnedWith({ procuct: 'apples' })
+    expect(sell).toHaveReturnedWith({ product: 'apples' })
   })
   ```
 
@@ -1192,7 +1192,7 @@ When you use `test` in the top level of file, they are collected as part of the 
     sell('apples')
     sell('bananas')
 
-    expect(sell).toHaveLastReturnedWith({ procuct: 'bananas' })
+    expect(sell).toHaveLastReturnedWith({ product: 'bananas' })
   })
   ```
 
@@ -1324,7 +1324,7 @@ When you use `test` in the top level of file, they are collected as part of the 
 
 ### expect.hasAssertions
 
-- **Type:** `(count: number) => void`
+- **Type:** `() => void`
 
   After the test has passed or failed verifies that at least one assertion was called during a test. Useful case would be to check if an asynchronous code was called.
 
@@ -1378,7 +1378,7 @@ When you use `test` in the top level of file, they are collected as part of the 
 
   This method adds custom serializers that are called when creating a snapshot. This is advanced feature - if you want to know more, please read a [guide on custom serializers](/guide/snapshot-serializer).
 
-  If you are adding custom serializers, you should call this method inside [`setupFiles`](/config/#setupFiles). This will affect every snapshot.
+  If you are adding custom serializers, you should call this method inside [`setupFiles`](/config/#setupfiles). This will affect every snapshot.
 
   :::tip
   If you previously used Vue CLI with Jest, you might want to install [jest-serializer-vue](https://www.npmjs.com/package/jest-serializer-vue). Otherwise, your snapshots will be wrapped in a string, which cases `"` to be escaped.
@@ -1468,10 +1468,10 @@ These functions allow you to hook into the life cycle of tests to avoid repeatin
   import { beforeEach } from 'vitest'
 
   beforeEach(async () => {
-    // called once before all tests run
+    // called once before each test run
     await prepareSomething()
 
-    // clean up function, called once after all tests run
+    // clean up function, called once after each test run
     return async () => {
       await resetSomething()
     }

@@ -52,5 +52,14 @@
 | `--environment <env>` | Runner environment (default: `node`) |
 | `--passWithNoTests` | Pass when no tests found |
 | `--allowOnly` | Allow tests and suites that are marked as `only` (default: false in CI, true otherwise) |
-| `--changed [since]` | Run tests that are affected by the changed files (default: false)
+| `--changed [since]` | Run tests that are affected by the changed files (default: false). See [docs](#changed)
 | `-h, --help` | Display available CLI options |
+
+### changed
+
+- **Type**: `boolean | string`
+- **Default**: false
+
+Run tests only against changed files. If no value is provided, it will run tests against uncommitted changes (including staged and unstaged).
+
+To run tests against changes made in the last commit, you can use `--changed HEAD~1`. You can also pass commit hash or branch name.

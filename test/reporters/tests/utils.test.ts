@@ -2,13 +2,16 @@
  * @format
  */
 import { resolve } from 'pathe'
+import type { ViteNodeRunner } from 'vite-node/client'
 import { describe, expect, test } from 'vitest'
 import { createReporters } from 'vitest/src/node/reporters/utils'
-import { DefaultReporter } from '../../../../vitest/packages/vitest/src/node/reporters/default'
+import { DefaultReporter } from '../../../packages/vitest/src/node/reporters/default'
 import TestReporter from '../src/custom-reporter'
 
 const customReporterPath = resolve(__dirname, '../src/custom-reporter.js')
-const fetchModule = (id: string) => import(id)
+const fetchModule = {
+  executeId: (id: string) => import(id),
+} as ViteNodeRunner
 
 describe('Reporter Utils', () => {
   test('passing an empty array returns nothing', async () => {

@@ -1,4 +1,5 @@
-import { resolve } from 'pathe'
+import { resolveModule } from 'local-pkg'
+import { normalize, resolve } from 'pathe'
 import c from 'picocolors'
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 
@@ -122,7 +123,12 @@ export function resolveConfig(
   if (process.env.VITEST_MIN_THREADS)
     resolved.minThreads = parseInt(process.env.VITEST_MIN_THREADS)
 
-  resolved.setupFiles = toArray(resolved.setupFiles || []).map(file => resolve(resolved.root, file))
+  resolved.setupFiles = toArray(resolved.setupFiles || []).map(file =>
+    normalize(
+      resolveModule(file, { paths: [resolved.root] })
+        ?? resolve(resolved.root, file),
+    ),
+  )
 
   // the server has been created, we don't need to override vite.server options
   resolved.api = resolveApiConfig(options)

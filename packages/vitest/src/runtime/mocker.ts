@@ -10,11 +10,16 @@ import type { ExecuteOptions } from './execute'
 
 type Callback = (...args: any[]) => unknown
 
+interface ViteRunnerRequest {
+  (dep: string): any
+  callstack: string[]
+}
+
 export class VitestMocker {
   private static pendingIds: PendingSuiteMock[] = []
   private static spyModule?: typeof import('../integrations/spy')
 
-  private request!: (dep: string) => unknown
+  private request!: ViteRunnerRequest
 
   private root: string
   private callbacks: Record<string, ((...args: any[]) => unknown)[]> = {}
@@ -22,7 +27,7 @@ export class VitestMocker {
   constructor(
     public options: ExecuteOptions,
     private moduleCache: ModuleCacheMap,
-    request?: (dep: string) => unknown,
+    request?: ViteRunnerRequest,
   ) {
     this.root = this.options.root
     this.request = request!
@@ -58,9 +63,13 @@ export class VitestMocker {
 
   private async resolvePath(id: string, importer: string) {
     const path = await this.options.resolveId!(id, importer)
+    // external is node_module or unresolved module
+    // for example, some people mock "vscode" and don't have it installed
+    const external = path == null || path.id.includes('/node_modules/') ? id : null
+
     return {
       path: normalizeRequestId(path?.id || id),
-      external: path?.id.includes('/node_modules/') ? id : null,
+      external,
     }
   }
 
@@ -91,7 +100,7 @@ export class VitestMocker {
   }
 
   public resolveDependency(dep: string) {
-    return normalizeRequestId(dep).replace(/^\/@fs\//, isWindows ? '' : '/')
+    return normalizeRequestId(dep.replace(this.root, '')).replace(/^\/@fs\//, isWindows ? '' : '/')
   }
 
   public normalizePath(path: string) {
@@ -110,15 +119,15 @@ export class VitestMocker {
 
     // it's a node_module alias
     // all mocks should be inside <root>/__mocks__
-    if (external || isNodeBuiltin(mockPath)) {
+    if (external || isNodeBuiltin(mockPath) || !existsSync(mockPath)) {
       const mockDirname = dirname(path) // for nested mocks: @vueuse/integration/useJwt
-      const baseFilename = basename(path)
       const mockFolder = resolve(this.root, '__mocks__', mockDirname)
 
       if (!existsSync(mockFolder))
         return null
 
       const files = readdirSync(mockFolder)
+      const baseFilename = basename(path)
 
       for (const file of files) {
         const [basename] = file.split('.')
@@ -230,6 +239,8 @@ export class VitestMocker {
 
     const mock = this.getDependencyMock(dep)
 
+    const callstack = this.request.callstack
+
     if (mock === null) {
       const cacheName = `${dep}__mock`
       const cache = this.moduleCache.get(cacheName)
@@ -241,9 +252,14 @@ export class VitestMocker {
       this.emit('mocked', cacheName, { exports })
       return exports
     }
-    if (typeof mock === 'function')
-      return this.callFunctionMock(dep, mock)
-    if (typeof mock === 'string')
+    if (typeof mock === 'function' && !callstack.includes(`mock:${dep}`)) {
+      callstack.push(`mock:${dep}`)
+      const result = await this.callFunctionMock(dep, mock)
+      const indexMock = callstack.indexOf(`mock:${dep}`)
+      callstack.splice(indexMock, 1)
+      return result
+    }
+    if (typeof mock === 'string' && !callstack.includes(mock))
       dep = mock
     return this.request(dep)
   }
@@ -256,7 +272,7 @@ export class VitestMocker {
     VitestMocker.pendingIds.push({ type: 'unmock', id, importer })
   }
 
-  public withRequest(request: (dep: string) => unknown) {
+  public withRequest(request: ViteRunnerRequest) {
     return new VitestMocker(this.options, this.moduleCache, request)
   }
 }

@@ -56,12 +56,17 @@ jobs:
   test:
     runs-on: ${{ matrix.os }}
 
-    timeout-minutes: 10
+    timeout-minutes: 20
 
     strategy:
       matrix:
-        node_version: [14.x, 16.x]
-        os: [ubuntu-latest, windows-latest] # , macos-latest]
+        os: [ubuntu-latest]
+        node_version: [14, 16]
+        include:
+          - os: macos-latest
+            node_version: 16
+          - os: windows-latest
+            node_version: 16
       fail-fast: false
 
     steps:
@@ -84,6 +89,9 @@ jobs:
 
       - name: Test
         run: pnpm run test:ci
+
+      - name: Test
+        run: pnpm run test:ci:no-threads
 
   test-ui:
     runs-on: ubuntu-latest

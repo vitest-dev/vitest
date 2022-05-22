@@ -1,5 +1,6 @@
 import type { CommonServerOptions } from 'vite'
 import type { PrettyFormatOptions } from 'pretty-format'
+import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import type { BuiltinReporters } from '../node/reporters'
 import type { C8Options, ResolvedC8Options } from './coverage'
 import type { JSDOMOptions } from './jsdom-options'
@@ -207,7 +208,7 @@ export interface InlineConfig {
   /**
    * Pattern of file paths to be ignore from triggering watch rerun
    *
-   * @default ['**\/node_modules\/**', '**\/dist/**']
+   * @default [/\/node_modules\//, /\/dist\//]
    */
   watchIgnore?: (string | RegExp)[]
 
@@ -307,9 +308,36 @@ export interface InlineConfig {
   resolveSnapshotPath?: (path: string, extension: string) => string
 
   /**
+   * Pass with no tests
+   */
+  passWithNoTests?: boolean
+
+  /**
+   * Allow tests and suites that are marked as only
+   */
+  allowOnly?: boolean
+
+  /**
    * Show heap usage after each test. Usefull for debugging memory leaks.
    */
   logHeapUsage?: boolean
+
+  /**
+   * Custom environment variables assigned to `process.env` before running tests.
+   */
+  env?: Record<string, string>
+
+  /**
+   * Options for @sinon/fake-timers
+   */
+  fakeTimers?: FakeTimerInstallOpts
+
+  /**
+   * Custom handler for console.log in tests.
+   *
+   * Return `false` to ignore the log.
+   */
+  onConsoleLog?: (log: string, type: 'stdout' | 'stderr') => false | void
 }
 
 export interface UserConfig extends InlineConfig {
@@ -328,16 +356,6 @@ export interface UserConfig extends InlineConfig {
    * Use happy-dom
    */
   dom?: boolean
-
-  /**
-   * Pass with no tests
-   */
-  passWithNoTests?: boolean
-
-  /**
-   * Allow tests and suites that are marked as only
-   */
-  allowOnly?: boolean
 
   /**
    * Run tests that cover a list of source files

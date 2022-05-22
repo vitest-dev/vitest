@@ -1,4 +1,4 @@
-import type { Plugin as VitePlugin } from 'vite'
+import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import { configDefaults } from '../../defaults'
 import type { ResolvedConfig, UserConfig } from '../../types'
 import { deepMerge, ensurePackageInstalled, notNullish } from '../../utils'
@@ -65,7 +65,11 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
 
         (options as ResolvedConfig).defines = defines
 
-        return {
+        const open = preOptions.ui && preOptions.open
+          ? preOptions.uiBase ?? '/__vitest__/'
+          : undefined
+
+        const config: ViteConfig = {
           resolve: {
             // by default Vite resolves `module` field, which not always a native ESM module
             // setting this option can bypass that and fallback to cjs version
@@ -73,9 +77,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
           },
           server: {
             ...preOptions.api,
-            open: preOptions.ui && preOptions.open
-              ? preOptions.uiBase ?? '/__vitest__/'
-              : undefined,
+            open,
             preTransformRequests: false,
           },
           // disable deps optimization
@@ -86,6 +88,8 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
             entries: [],
           },
         }
+
+        return config
       },
       async configResolved(viteConfig) {
         const viteConfigTest = (viteConfig.test as any) || {}
