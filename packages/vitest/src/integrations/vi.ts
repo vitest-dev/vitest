@@ -248,7 +248,7 @@ class VitestUtils {
         promises.push(mod.promise)
     }
     await Promise.all(promises)
-    // wait untill the end of the loop, so `.then` on modules called,
+    // wait until the end of the loop, so `.then` on modules called,
     // like in import('./example').then(...)
     await new Promise(resolve => setTimeout(resolve))
   }
