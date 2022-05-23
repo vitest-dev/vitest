@@ -234,6 +234,21 @@ class VitestUtils {
     resetModules()
     return this
   }
+
+  /**
+   * Wait for all imports to load.
+   * Useful, if you have a synchronous call that starts
+   * importing a module, that you cannot wait otherwise.
+   */
+  public async dynamicImportSettled() {
+    const state = getWorkerState()
+    const promises: Promise<unknown>[] = []
+    for (const mod of state.moduleCache.values()) {
+      if (!mod.exports && mod.promise)
+        promises.push(mod.promise)
+    }
+    await Promise.all(promises)
+  }
 }
 
 export const vitest = new VitestUtils()
