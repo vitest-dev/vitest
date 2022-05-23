@@ -8,9 +8,8 @@ test('mount component', async () => {
 
   await wrapper.find('button').trigger('click')
 
-  await flushPromises()
+  await flushPromises() // start loading, so vitest started loading
   await vi.dynamicImportSettled()
-  await flushPromises()
 
   expect(wrapper.html()).toContain('1 x 2 = 2')
 })
