@@ -28,4 +28,15 @@ describe('testing vi utils', () => {
     const v2 = await import('vitest')
     expect(v1).toBe(v2)
   })
+
+  test('loads unloaded module', async () => {
+    let mod: any
+    import('../src/timeout').then(m => mod = m)
+
+    expect(mod).toBeUndefined()
+
+    await vi.dynamicImportSettled()
+
+    expect(mod.timeout).toBe(100)
+  })
 })

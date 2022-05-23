@@ -1,7 +1,7 @@
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import { parseStacktrace } from '../utils/source-map'
 import type { VitestMocker } from '../runtime/mocker'
-import { getWorkerState, resetModules } from '../utils'
+import { getWorkerState, resetModules, setTimeout } from '../utils'
 import { FakeTimers } from './mock/timers'
 import type { EnhancedSpy, MaybeMocked, MaybeMockedDeep } from './spy'
 import { fn, isMockFunction, spies, spyOn } from './spy'
@@ -248,6 +248,9 @@ class VitestUtils {
         promises.push(mod.promise)
     }
     await Promise.all(promises)
+    // wait untill the end of the loop, so `.then` on modules called,
+    // like in import('./example').then(...)
+    await new Promise(resolve => setTimeout(resolve))
   }
 }
 
