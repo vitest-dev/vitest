@@ -35,12 +35,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "birpc": "^0.2.2",
+    "birpc": "^0.2.3",
     "flatted": "^3.2.5",
     "ws": "^8.6.0"
   },
   "devDependencies": {
-    "rollup": "^2.73.0"
+    "rollup": "^2.74.1"
   },
   "engines": {
     "node": ">=v14.16.0"
