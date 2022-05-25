@@ -73,6 +73,14 @@ const coreTeamMembers: CoreTeam[] = [
     sponsors: false,
     description: 'A fullstack and android developer<br>Vite\'s fanatical follower',
   },
+  {
+    avatar: contributorsAvatars.zxch3n,
+    name: 'Zixuan Chen',
+    github: 'zxch3n',
+    twitter: 'zxch3n',
+    sponsors: false,
+    description: 'A fullstack developer<br>Creating tools for collaboration',
+  },
 ]
 
 export { coreTeamMembers, contributorList as contributors }
