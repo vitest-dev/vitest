@@ -1,5 +1,6 @@
 /* eslint-disable comma-spacing */
 /* eslint-disable no-sparse-arrays */
+import { AssertionError } from 'assert'
 import { describe, expect, it, vi } from 'vitest'
 
 class TestError extends Error {}
@@ -544,6 +545,20 @@ describe('async expect', () => {
 
     try {
       expect(() => 1).rejects.toEqual(2)
+    }
+    catch (error) {
+      expect(error).toEqual(expectedError)
+    }
+  })
+
+  it('show users message `[serializes to the same string]` if they are comparing objects', () => {
+    const actual = { key: 'value' }
+    const expectedError = new AssertionError({
+      message: 'expected { key: \'value\' } to be [serializes to the same string] // Object.is equality',
+    })
+
+    try {
+      expect(actual).toBe({ ...actual })
     }
     catch (error) {
       expect(error).toEqual(expectedError)

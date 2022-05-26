@@ -129,10 +129,37 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   })
   def('toBe', function (expected) {
     const actual = this._obj
+    const equal = Object.is(actual, expected)
+
+    let toBeMessage = 'expected #{this} to be #{exp} // Object.is equality'
+    let notToBeMessage = 'expected #{this} not to be #{exp} // Object.is equality'
+    if (!equal) {
+      const objectEqual = jestEquals(
+        actual,
+        expected,
+        [iterableEquality],
+      ) || jestEquals(
+        actual,
+        expected,
+        [
+          iterableEquality,
+          typeEquality,
+          sparseArrayEquality,
+          arrayBufferEquality,
+        ],
+        true,
+      )
+
+      if (objectEqual) {
+        toBeMessage = 'expected #{this} to be [serializes to the same string] // Object.is equality'
+        notToBeMessage = 'expected #{this} to not be #{exp} // Object.is equality'
+      }
+    }
+
     return this.assert(
-      Object.is(actual, expected),
-      'expected #{this} to be #{exp} // Object.is equality',
-      'expected #{this} not to be #{exp} // Object.is equality',
+      equal,
+      toBeMessage,
+      notToBeMessage,
       expected,
       actual,
     )
