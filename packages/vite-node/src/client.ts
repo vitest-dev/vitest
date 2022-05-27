@@ -37,7 +37,7 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
     if (!super.has(fsPath))
       super.set(fsPath, mod)
     else
-      Object.assign(super.get(fsPath), mod)
+      Object.assign(super.get(fsPath) as ModuleCache, mod)
     return this
   }
 
