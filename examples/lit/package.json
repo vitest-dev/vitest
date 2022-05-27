@@ -12,12 +12,12 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "lit": "^2.2.3"
+    "lit": "^2.2.5"
   },
   "devDependencies": {
     "@vitest/ui": "latest",
     "happy-dom": "latest",
-    "vite": "^2.9.5",
+    "vite": "^2.9.9",
     "vitest": "latest"
   },
   "stackblitz": {

@@ -9,10 +9,10 @@
     "test:run": "vitest run"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^2.3.2",
-    "@vue/test-utils": "^2.0.0-rc.21",
+    "@vitejs/plugin-vue": "^2.3.3",
+    "@vue/test-utils": "^2.0.0",
     "jsdom": "latest",
-    "vite-plugin-ruby": "^3.0.10",
+    "vite-plugin-ruby": "^3.0.12",
     "vitest": "latest",
     "vue": "^3.2.33"
   },
