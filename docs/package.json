@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@vueuse/core": "^8.5.0",
-    "vue": "^3.2.33"
+    "vue": "^3.2.36"
   },
   "devDependencies": {
     "@iconify-json/carbon": "^1.1.5",
