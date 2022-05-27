@@ -129,16 +129,13 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   })
   def('toBe', function (expected) {
     const actual = this._obj
-    const equal = Object.is(actual, expected)
+    const pass = Object.is(actual, expected)
 
     let toBeMessage = 'expected #{this} to be #{exp} // Object.is equality'
     let notToBeMessage = 'expected #{this} not to be #{exp} // Object.is equality'
-    if (!equal) {
-      const objectEqual = jestEquals(
-        actual,
-        expected,
-        [iterableEquality],
-      ) || jestEquals(
+    if (!pass) {
+      let deepEqualityName = 'toStrictEqual'
+      const toStrictEqualPass = jestEquals(
         actual,
         expected,
         [
@@ -150,14 +147,31 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         true,
       )
 
-      if (objectEqual) {
-        toBeMessage = 'expected #{this} to be [serializes to the same string] // Object.is equality'
-        notToBeMessage = 'expected #{this} to not be #{exp} // Object.is equality'
+      if (toStrictEqualPass) {
+        const reminderMessage = `If it should pass with deep equality, replace "toBe" with "${deepEqualityName}"\n\n`
+
+        toBeMessage = `${reminderMessage}expected #{this} to be [serializes to the same string] // Object.is equality`
+        notToBeMessage = `${reminderMessage}expected #{this} not to be [serializes to the same string] // Object.is equality`
+      }
+      else {
+        const toEqualPass = jestEquals(
+          actual,
+          expected,
+          [iterableEquality],
+        )
+
+        if (toEqualPass) {
+          deepEqualityName = 'toEqual'
+          const reminderMessage = `If it should pass with deep equality, replace "toBe" with "${deepEqualityName}"\n\n`
+
+          toBeMessage = `${reminderMessage}expected #{this} to be [serializes to the same string] // Object.is equality`
+          notToBeMessage = `${reminderMessage}expected #{this} not to be [serializes to the same string] // Object.is equality`
+        }
       }
     }
 
     return this.assert(
-      equal,
+      pass,
       toBeMessage,
       notToBeMessage,
       expected,

@@ -551,17 +551,49 @@ describe('async expect', () => {
     }
   })
 
-  it('show users message `[serializes to the same string]` if they are comparing objects', () => {
-    const actual = { key: 'value' }
-    const expectedError = new AssertionError({
-      message: 'expected { key: \'value\' } to be [serializes to the same string] // Object.is equality',
+  it('reminds users to use deep equality checks if they are comparing objects', () => {
+    const createAssertionError = (
+      deepEqualityName: string,
+      expected: string,
+    ) => new AssertionError({
+      message: 'If it should pass with deep equality, '
+        + `replace "toBe" with "${deepEqualityName}"\n\nexpected ${expected} `
+        + 'to be [serializes to the same string] // Object.is equality',
     })
 
+    const actual = { key: 'value' }
+    class FakeClass {}
+
+    const toStrictEqualError1 = createAssertionError('toStrictEqual', '{ key: \'value\' }')
     try {
       expect(actual).toBe({ ...actual })
     }
     catch (error) {
-      expect(error).toEqual(expectedError)
+      expect(error).toEqual(toStrictEqualError1)
+    }
+
+    const toStrictEqualError2 = createAssertionError('toStrictEqual', 'FakeClass{}')
+    try {
+      expect(new FakeClass()).toBe(new FakeClass())
+    }
+    catch (error) {
+      expect(error).toEqual(toStrictEqualError2)
+    }
+
+    const toEqualError1 = createAssertionError('toEqual', '{}')
+    try {
+      expect({}).toBe(new FakeClass())
+    }
+    catch (error) {
+      expect(error).toEqual(toEqualError1)
+    }
+
+    const toEqualError2 = createAssertionError('toEqual', 'FakeClass{}')
+    try {
+      expect(new FakeClass()).toBe({})
+    }
+    catch (error) {
+      expect(error).toEqual(toEqualError2)
     }
   })
 })
