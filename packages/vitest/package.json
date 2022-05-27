@@ -3,30 +3,27 @@
   "type": "module",
   "version": "0.12.9",
   "description": "A blazing fast unit test framework powered by Vite",
+  "author": "Anthony Fu <anthonyfu117@hotmail.com>",
+  "license": "MIT",
+  "funding": "https://github.com/sponsors/antfu",
+  "homepage": "https://github.com/vitest-dev/vitest#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vitest-dev/vitest.git"
+  },
+  "bugs": {
+    "url": "https://github.com/vitest-dev/vitest/issues"
+  },
   "keywords": [
     "vite",
     "vite-node",
     "test",
     "jest"
   ],
-  "homepage": "https://github.com/vitest-dev/vitest#readme",
-  "bugs": {
-    "url": "https://github.com/vitest-dev/vitest/issues"
-  },
-  "license": "MIT",
-  "author": "Anthony Fu <anthonyfu117@hotmail.com>",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/vitest-dev/vitest.git"
-  },
-  "funding": "https://github.com/sponsors/antfu",
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
     },
     "./*": "./*",
     "./globals": {
@@ -36,14 +33,20 @@
       "types": "./importMeta.d.ts"
     },
     "./node": {
-      "import": "./dist/node.js",
-      "types": "./dist/node.d.ts"
+      "types": "./dist/node.d.ts",
+      "import": "./dist/node.js"
     },
     "./config": {
+      "types": "./config.d.ts",
       "import": "./dist/config.js",
-      "require": "./dist/config.cjs",
-      "types": "./config.d.ts"
+      "require": "./dist/config.cjs"
     }
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "vitest": "./vitest.mjs"
   },
   "files": [
     "dist",
@@ -51,8 +54,8 @@
     "*.d.ts",
     "*.mjs"
   ],
-  "bin": {
-    "vitest": "./vitest.mjs"
+  "engines": {
+    "node": ">=v14.16.0"
   },
   "scripts": {
     "build": "rimraf dist && rollup -c",
@@ -128,8 +131,5 @@
     "typescript": "^4.7.2",
     "vite-node": "workspace:*",
     "ws": "^8.7.0"
-  },
-  "engines": {
-    "node": ">=v14.16.0"
   }
 }

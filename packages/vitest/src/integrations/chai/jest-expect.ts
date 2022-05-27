@@ -290,7 +290,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       pass = true
     }
     else {
-      expectedDiff = Math.pow(10, -precision) / 2
+      expectedDiff = 10 ** -precision / 2
       receivedDiff = Math.abs(expected - received)
       pass = receivedDiff < expectedDiff
     }

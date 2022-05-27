@@ -9,20 +9,20 @@
     "url": "git+https://github.com/vitest-dev/vitest.git",
     "directory": "packages/ui"
   },
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "sideEffects": false,
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
     },
     "./*": "./*"
   },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "files": [
     "dist"
   ],
-  "sideEffects": false,
   "scripts": {
     "build": "rimraf dist && pnpm build:node && pnpm build:client",
     "build:client": "vite build",
