@@ -132,9 +132,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const pass = Object.is(actual, expected)
 
     let toBeMessage = 'expected #{this} to be #{exp} // Object.is equality'
-    let notToBeMessage = 'expected #{this} not to be #{exp} // Object.is equality'
     if (!pass) {
-      let deepEqualityName = 'toStrictEqual'
+      let reminderMessage = 'If it should pass with deep equality, replace "toBe" with "toStrictEqual"\n\n'
       const toStrictEqualPass = jestEquals(
         actual,
         expected,
@@ -148,10 +147,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       )
 
       if (toStrictEqualPass) {
-        const reminderMessage = `If it should pass with deep equality, replace "toBe" with "${deepEqualityName}"\n\n`
-
         toBeMessage = `${reminderMessage}expected #{this} to be [serializes to the same string] // Object.is equality`
-        notToBeMessage = `${reminderMessage}expected #{this} not to be [serializes to the same string] // Object.is equality`
       }
       else {
         const toEqualPass = jestEquals(
@@ -161,11 +157,9 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         )
 
         if (toEqualPass) {
-          deepEqualityName = 'toEqual'
-          const reminderMessage = `If it should pass with deep equality, replace "toBe" with "${deepEqualityName}"\n\n`
+          reminderMessage = 'If it should pass with deep equality, replace "toBe" with "toEqual"\n\n'
 
           toBeMessage = `${reminderMessage}expected #{this} to be [serializes to the same string] // Object.is equality`
-          notToBeMessage = `${reminderMessage}expected #{this} not to be [serializes to the same string] // Object.is equality`
         }
       }
     }
@@ -173,7 +167,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     return this.assert(
       pass,
       toBeMessage,
-      notToBeMessage,
+      'expected #{this} not to be #{exp} // Object.is equality',
       expected,
       actual,
     )
