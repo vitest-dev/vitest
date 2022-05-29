@@ -15,7 +15,6 @@
     "docs:https": "npm -C docs run preview-https",
     "docs:examples": "esmo scripts/update-examples.ts",
     "docs:contributors": "esmo scripts/update-contributors.ts",
-    "postinstall": "pnpm -C examples/vue2 i",
     "lint": "eslint .",
     "lint:fix": "nr lint --fix",
     "release": "bumpp package.json packages/*/package.json --commit --push --tag && pnpm -r publish --access public",
@@ -64,8 +63,7 @@
     "typescript": "^4.7.2",
     "vite": "^2.9.9",
     "vitepress": "^0.22.4",
-    "vitest": "workspace:*",
-    "vue": "^3.2.36"
+    "vitest": "workspace:*"
   },
   "pnpm": {
     "overrides": {
