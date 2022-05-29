@@ -18,47 +18,9 @@ export interface WorkerPool {
   close: () => Promise<void>
 }
 
-export function createPool(ctx: Vitest): WorkerPool {
-  if (ctx.config.threads)
-    return createWorkerPool(ctx)
-  else
-    return createFakePool(ctx)
-}
-
 const workerPath = pathToFileURL(resolve(distDir, './worker.js')).href
 
-export function createFakePool(ctx: Vitest): WorkerPool {
-  const runWithFiles = (name: 'run' | 'collect'): RunWithFiles => {
-    return async (files, invalidates) => {
-      const worker = await import(workerPath)
-
-      const { workerPort, port } = createChannel(ctx)
-
-      const data: WorkerContext = {
-        port: workerPort,
-        config: ctx.getSerializableConfig(),
-        files,
-        invalidates,
-        id: 1,
-      }
-
-      try {
-        await worker[name](data, { transferList: [workerPort] })
-      }
-      finally {
-        port.close()
-        workerPort.close()
-      }
-    }
-  }
-
-  return {
-    runTests: runWithFiles('run'),
-    close: async () => {},
-  }
-}
-
-export function createWorkerPool(ctx: Vitest): WorkerPool {
+export function createPool(ctx: Vitest): WorkerPool {
   const threadsCount = ctx.config.watch
     ? Math.max(cpus().length / 2, 1)
     : Math.max(cpus().length - 1, 1)
@@ -78,23 +40,28 @@ export function createWorkerPool(ctx: Vitest): WorkerPool {
     options.concurrentTasksPerWorker = 1
   }
 
+  if (!ctx.config.threads) {
+    options.concurrentTasksPerWorker = 1
+    options.maxThreads = 1
+    options.minThreads = 1
+  }
+
   const pool = new Tinypool(options)
 
   const runWithFiles = (name: string): RunWithFiles => {
     return async (files, invalidates) => {
       let id = 0
       const config = ctx.getSerializableConfig()
-      const results = await Promise.allSettled(files.map(async (file) => {
-        const { workerPort, port } = createChannel(ctx)
 
+      if (!ctx.config.threads) {
+        const { workerPort, port } = createChannel(ctx)
         const data: WorkerContext = {
           port: workerPort,
           config,
-          files: [file],
+          files,
           invalidates,
           id: ++id,
         }
-
         try {
           await pool.run(data, { transferList: [workerPort], name })
         }
@@ -102,11 +69,32 @@ export function createWorkerPool(ctx: Vitest): WorkerPool {
           port.close()
           workerPort.close()
         }
-      }))
+      }
+      else {
+        const results = await Promise.allSettled(files.map(async (file) => {
+          const { workerPort, port } = createChannel(ctx)
 
-      const errors = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected').map(r => r.reason)
-      if (errors.length > 0)
-        throw new AggregateError(errors, 'Errors occurred while running tests. For more information, see serialized error.')
+          const data: WorkerContext = {
+            port: workerPort,
+            config,
+            files: [file],
+            invalidates,
+            id: ++id,
+          }
+
+          try {
+            await pool.run(data, { transferList: [workerPort], name })
+          }
+          finally {
+            port.close()
+            workerPort.close()
+          }
+        }))
+
+        const errors = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected').map(r => r.reason)
+        if (errors.length > 0)
+          throw new AggregateError(errors, 'Errors occurred while running tests. For more information, see serialized error.')
+      }
     }
   }
 
