@@ -4,7 +4,7 @@ import { createServer } from 'vite'
 import { version } from '../package.json'
 import { ViteNodeServer } from './server'
 import { ViteNodeRunner } from './client'
-import type { ViteNodeServerOptions, ViteNodeServerOptionsCLI } from './types'
+import type { ViteNodeServerOptions } from './types'
 
 const cli = cac('vite-node')
 
@@ -13,7 +13,7 @@ cli
   .option('-r, --root <path>', 'Use specified root directory')
   .option('-c, --config <path>', 'Use specified config file')
   .option('-w, --watch', 'Restart on file changes, similar to "nodemon"')
-  .option('--server-options <options>', 'Use specified Vite server options')
+  .option('--options <options>', 'Use specified Vite server options')
   .help()
 
 cli
@@ -26,7 +26,7 @@ export interface CliOptions {
   root?: string
   config?: string
   watch?: boolean
-  serverOptions?: ViteNodeServerOptionsCLI
+  options?: ViteNodeServerOptionsCLI
   '--'?: string[]
 }
 
@@ -40,8 +40,8 @@ async function run(files: string[], options: CliOptions = {}) {
   // forward argv
   process.argv = [...process.argv.slice(0, 2), ...(options['--'] || [])]
 
-  const parsedServerOptions = options.serverOptions
-    ? parseServerOptions(options.serverOptions)
+  const parsedServerOptions = options.options
+    ? parseServerOptions(options.options)
     : undefined
 
   const server = await createServer({
@@ -92,16 +92,13 @@ async function run(files: string[], options: CliOptions = {}) {
 function parseServerOptions(serverOptions: ViteNodeServerOptionsCLI): ViteNodeServerOptions {
   return {
     ...serverOptions,
-
     deps: {
       ...serverOptions.deps,
-
       inline: serverOptions.deps?.inline?.map((dep) => {
         return dep.startsWith('/') && dep.endsWith('/')
           ? new RegExp(dep)
           : dep
       }),
-
       external: serverOptions.deps?.external?.map((dep) => {
         return dep.startsWith('/') && dep.endsWith('/')
           ? new RegExp(dep)
@@ -117,3 +114,16 @@ function parseServerOptions(serverOptions: ViteNodeServerOptionsCLI): ViteNodeSe
     },
   }
 }
+
+type Optional<T> = T | undefined
+type ComputeViteNodeServerOptionsCLI<T extends Record<string, any>> = {
+  [K in keyof T]: T[K] extends Optional<RegExp[]>
+    ? string[]
+    : T[K] extends Optional<(string | RegExp)[]>
+      ? string[]
+      : T[K] extends Optional<Record<string, any>>
+        ? ComputeViteNodeServerOptionsCLI<T[K]>
+        : T[K]
+}
+
+export type ViteNodeServerOptionsCLI = ComputeViteNodeServerOptionsCLI<ViteNodeServerOptions>

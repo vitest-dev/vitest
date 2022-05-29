@@ -27,12 +27,12 @@ Options:
 npx vite-node -h
 ```
 
-### ViteNodeServer options
+### Options via CLI
 
 [All `ViteNodeServer` options](https://github.com/vitest-dev/vitest/blob/main/packages/vite-node/src/types.ts#L61-L78) are supported by the CLI. They may be defined through the dot syntax, as shown below:
 
 ```bash
-npx vite-node --server-options.deps.inline="module-name" --server-options.deps.external="/module-regexp/" index.ts
+npx vite-node --options.deps.inline="module-name" --options.deps.external="/module-regexp/" index.ts
 ```
 
 Note that for options supporting RegExps, strings passed to the CLI must start _and_ end with a `/`;
