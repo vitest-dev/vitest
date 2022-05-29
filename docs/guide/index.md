@@ -102,6 +102,12 @@ Learn more about [IDE Integrations](./ide.md)
 - [tdesign-vue-next](https://github.com/Tencent/tdesign-vue-next)
 - [cz-git](https://github.com/Zhengqbbb/cz-git)
 
+<!--
+For contributors: 
+We no longer accept new entries to this list a this moment.
+Thanks for choosing Vitest!
+-->
+
 ## Using Unreleased Commits
 
 If you can't wait for a new release to test the latest features, you will need to clone the [vitest repo](https://github.com/vitest-dev/vitest) to your local machine and then build and link it yourself ([pnpm](https://pnpm.io/) is required):
