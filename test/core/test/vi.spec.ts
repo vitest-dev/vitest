@@ -37,6 +37,7 @@ describe('testing vi utils', () => {
 
     await vi.dynamicImportSettled()
 
+    expect(mod).toBeDefined()
     expect(mod.timeout).toBe(100)
   })
 })
