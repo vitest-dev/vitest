@@ -27,7 +27,7 @@ export function createPool(ctx: Vitest): WorkerPool {
 
   const options: TinypoolOptions = {
     filename: workerPath,
-    // TODO: investigate futher
+    // TODO: investigate further
     // It seems atomics introduced V8 Fatal Error https://github.com/vitest-dev/vitest/issues/1191
     useAtomics: false,
 
@@ -46,50 +46,49 @@ export function createPool(ctx: Vitest): WorkerPool {
     options.minThreads = 1
   }
 
+  if (ctx.config.coverage)
+    process.env.NODE_V8_COVERAGE ||= ctx.config.coverage.tempDirectory
+
+  options.env = {
+    TEST: 'true',
+    VITEST: 'true',
+    NODE_ENV: ctx.config.mode || 'test',
+    VITEST_MODE: ctx.config.watch ? 'WATCH' : 'RUN',
+    ...process.env,
+    ...ctx.config.env,
+  }
+
   const pool = new Tinypool(options)
 
   const runWithFiles = (name: string): RunWithFiles => {
-    return async (files, invalidates) => {
-      let id = 0
-      const config = ctx.getSerializableConfig()
+    let id = 0
+    const config = ctx.getSerializableConfig()
 
+    async function runFiles(files: string[], invalidates: string[] = []) {
+      const { workerPort, port } = createChannel(ctx)
+      const data: WorkerContext = {
+        port: workerPort,
+        config,
+        files,
+        invalidates,
+        id: ++id,
+      }
+      try {
+        await pool.run(data, { transferList: [workerPort], name })
+      }
+      finally {
+        port.close()
+        workerPort.close()
+      }
+    }
+
+    return async (files, invalidates) => {
       if (!ctx.config.threads) {
-        const { workerPort, port } = createChannel(ctx)
-        const data: WorkerContext = {
-          port: workerPort,
-          config,
-          files,
-          invalidates,
-          id: ++id,
-        }
-        try {
-          await pool.run(data, { transferList: [workerPort], name })
-        }
-        finally {
-          port.close()
-          workerPort.close()
-        }
+        await runFiles(files)
       }
       else {
-        const results = await Promise.allSettled(files.map(async (file) => {
-          const { workerPort, port } = createChannel(ctx)
-
-          const data: WorkerContext = {
-            port: workerPort,
-            config,
-            files: [file],
-            invalidates,
-            id: ++id,
-          }
-
-          try {
-            await pool.run(data, { transferList: [workerPort], name })
-          }
-          finally {
-            port.close()
-            workerPort.close()
-          }
-        }))
+        const results = await Promise.allSettled(files
+          .map(file => runFiles([file], invalidates)))
 
         const errors = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected').map(r => r.reason)
         if (errors.length > 0)
