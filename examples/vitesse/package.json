@@ -6,7 +6,7 @@
     "test": "vitest"
   },
   "dependencies": {
-    "vue": "^3.2.33"
+    "vue": "^3.2.36"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^2.3.3",

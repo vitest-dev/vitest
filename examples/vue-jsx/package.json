@@ -12,7 +12,7 @@
     "jsdom": "latest",
     "vite": "^2.9.9",
     "vitest": "latest",
-    "vue": "^3.2.33"
+    "vue": "^3.2.36"
   },
   "stackblitz": {
     "startCommand": "npm run test"
