@@ -250,7 +250,7 @@ class VitestUtils {
     await Promise.allSettled(promises)
     // wait until the end of the loop, so `.then` on modules called,
     // like in import('./example').then(...)
-    await new Promise(resolve => setTimeout(resolve)).then(() => Promise.resolve())
+    await new Promise(resolve => setTimeout(resolve, 1)).then(() => Promise.resolve())
   }
 }
 
