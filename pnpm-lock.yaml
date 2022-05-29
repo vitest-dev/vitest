@@ -43,6 +43,7 @@ importers:
       vite: ^2.9.9
       vitepress: ^0.22.4
       vitest: workspace:*
+      vue: ^3.2.36
     devDependencies:
       '@antfu/eslint-config': 0.24.2_xztl6dhthcahlo6akmb2bmjmle
       '@antfu/ni': 0.16.2
@@ -79,6 +80,7 @@ importers:
       vite: 2.9.9
       vitepress: 0.22.4
       vitest: link:packages/vitest
+      vue: 3.2.36
 
   docs:
     specifiers:
