@@ -247,10 +247,10 @@ class VitestUtils {
       if (!mod.exports && mod.promise)
         promises.push(mod.promise)
     }
-    await Promise.all(promises)
+    await Promise.allSettled(promises)
     // wait until the end of the loop, so `.then` on modules called,
     // like in import('./example').then(...)
-    await new Promise(resolve => setTimeout(resolve)).then(() => Promise.resolve())
+    await new Promise(resolve => setImmediate(resolve)).then(() => Promise.resolve())
   }
 }
 
