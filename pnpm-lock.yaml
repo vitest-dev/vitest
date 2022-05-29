@@ -13950,11 +13950,11 @@ packages:
     dev: true
 
   /has-unicode/2.0.1:
-    resolution: {integrity: sha1-4Ob+aijPUROIVeCG0Wkedx3iqLk=}
+    resolution: {integrity: sha512-8Rf9Y83NBReMnx0gFzA8JImQACstCYWUplepDa9xprwwtmgEZUF0h/i5xSA625zB/I37EtrswSST6OXxwaaIJQ==}
     dev: true
 
   /has-value/0.3.1:
-    resolution: {integrity: sha1-ex9YutpiyoJ+wKIHgCVlSEWZXh8=}
+    resolution: {integrity: sha512-gpG936j8/MzaeID5Yif+577c17TxaDmhuyVgSwtnL/q8UUTySg8Mecb+8Cf1otgLoD7DDH75axp86ER7LFsf3Q==}
     engines: {node: '>=0.10.0'}
     dependencies:
       get-value: 2.0.6
@@ -13963,7 +13963,7 @@ packages:
     dev: true
 
   /has-value/1.0.0:
-    resolution: {integrity: sha1-GLKB2lhbHFxR3vJMkw7SmgvmsXc=}
+    resolution: {integrity: sha512-IBXk4GTsLYdQ7Rvt+GRBrFSVEkmuOUy4re0Xjd9kJSUQpnTrWR4/y9RpfexN9vkAPMFuQoeWKwqzPozRTlasGw==}
     engines: {node: '>=0.10.0'}
     dependencies:
       get-value: 2.0.6
@@ -13972,12 +13972,12 @@ packages:
     dev: true
 
   /has-values/0.1.4:
-    resolution: {integrity: sha1-bWHeldkd/Km5oCCJrThL/49it3E=}
+    resolution: {integrity: sha512-J8S0cEdWuQbqD9//tlZxiMuMNmxB8PlEwvYwuxsTmR1G5RXUePEX/SJn7aD0GMLieuZYSwNH0cQuJGwnYunXRQ==}
     engines: {node: '>=0.10.0'}
     dev: true
 
   /has-values/1.0.0:
-    resolution: {integrity: sha1-lbC2P+whRmGab+V/51Yo1aOe/k8=}
+    resolution: {integrity: sha512-ODYZC64uqzmtfGMEAX/FvZiRyWLpAC3vYnNunURUnkGVTS+mI0smVsWaPydRBsE3g+ok7h960jChO8mFcWlHaQ==}
     engines: {node: '>=0.10.0'}
     dependencies:
       is-number: 3.0.0
