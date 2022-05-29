@@ -15,7 +15,6 @@
     "docs:https": "pnpm -C docs run preview-https",
     "docs:examples": "esmo scripts/update-examples.ts",
     "docs:contributors": "esmo scripts/update-contributors.ts",
-    "postinstall": "pnpm -C examples/vue2 i",
     "lint": "eslint .",
     "lint:fix": "nr lint --fix",
     "release": "bumpp package.json packages/*/package.json --commit --push --tag && pnpm -r publish --access public",
