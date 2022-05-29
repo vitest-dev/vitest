@@ -3,13 +3,13 @@ import fg from 'fast-glob'
 import { font, preconnectHomeLinks, preconnectLinks } from '../docs-data'
 
 const preconnect = `
-    ${preconnectLinks.map(l => `<link rel="dns-prefetch" href="${l}">`).join('\n')}
-    ${preconnectLinks.map(l => `<link rel="preconnect" crossorigin="anonymous" href="${l}">`).join('\n')}
+  ${preconnectLinks.map(l => `<link rel="dns-prefetch" href="${l}">`).join('\n')}
+  ${preconnectLinks.map(l => `<link rel="preconnect" crossorigin="anonymous" href="${l}">`).join('\n')}
 `
 
 const preconnectHome = `
-    ${preconnectHomeLinks.map(l => `<link rel="dns-prefetch" href="${l}">`).join('\n')}
-    ${preconnectHomeLinks.map(l => `<link rel="preconnect" crossorigin="anonymous" href="${l}">`).join('\n')}
+  ${preconnectHomeLinks.map(l => `<link rel="dns-prefetch" href="${l}">`).join('\n')}
+  ${preconnectHomeLinks.map(l => `<link rel="preconnect" crossorigin="anonymous" href="${l}">`).join('\n')}
 `
 
 export const optimizePages = async (pwa: boolean) => {

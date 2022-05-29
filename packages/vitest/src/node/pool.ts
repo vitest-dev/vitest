@@ -27,7 +27,7 @@ export function createPool(ctx: Vitest): WorkerPool {
 
   const options: TinypoolOptions = {
     filename: workerPath,
-    // TODO: investigate futher
+    // TODO: investigate further
     // It seems atomics introduced V8 Fatal Error https://github.com/vitest-dev/vitest/issues/1191
     useAtomics: false,
 
@@ -64,44 +64,31 @@ export function createPool(ctx: Vitest): WorkerPool {
     let id = 0
     const config = ctx.getSerializableConfig()
 
+    async function runFiles(files: string[], invalidates: string[] = []) {
+      const { workerPort, port } = createChannel(ctx)
+      const data: WorkerContext = {
+        port: workerPort,
+        config,
+        files,
+        invalidates,
+        id: ++id,
+      }
+      try {
+        await pool.run(data, { transferList: [workerPort], name })
+      }
+      finally {
+        port.close()
+        workerPort.close()
+      }
+    }
+
     return async (files, invalidates) => {
       if (!ctx.config.threads) {
-        const { workerPort, port } = createChannel(ctx)
-        const data: WorkerContext = {
-          port: workerPort,
-          config,
-          files,
-          invalidates,
-          id: ++id,
-        }
-        try {
-          await pool.run(data, { transferList: [workerPort], name })
-        }
-        finally {
-          port.close()
-          workerPort.close()
-        }
+        await runFiles(files)
       }
       else {
-        const results = await Promise.allSettled(files.map(async (file) => {
-          const { workerPort, port } = createChannel(ctx)
-
-          const data: WorkerContext = {
-            port: workerPort,
-            config,
-            files: [file],
-            invalidates,
-            id: ++id,
-          }
-
-          try {
-            await pool.run(data, { transferList: [workerPort], name })
-          }
-          finally {
-            port.close()
-            workerPort.close()
-          }
-        }))
+        const results = await Promise.allSettled(files
+          .map(file => runFiles([file], invalidates)))
 
         const errors = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected').map(r => r.reason)
         if (errors.length > 0)
