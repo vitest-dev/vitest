@@ -12,7 +12,7 @@
   "devDependencies": {
     "@vitest/ui": "latest",
     "jest-image-snapshot": "^4.5.1",
-    "vite": "^2.9.5",
+    "vite": "^2.9.9",
     "vitest": "latest"
   },
   "stackblitz": {
