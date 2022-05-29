@@ -100,6 +100,7 @@ Learn more about [IDE Integrations](./ide.md)
 - [svelte-multiselect](https://github.com/janosh/svelte-multiselect)
 - [iconify](https://github.com/iconify/iconify)
 - [tdesign-vue-next](https://github.com/Tencent/tdesign-vue-next)
+- [cz-git](https://github.com/Zhengqbbb/cz-git)
 
 ## Using Unreleased Commits
 
