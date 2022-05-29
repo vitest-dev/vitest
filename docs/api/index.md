@@ -1585,6 +1585,10 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 
   Removes all timers that are scheduled to run. These timers will never run in the future.
 
+### vi.dynamicImportSettled
+
+  Wait for all imports to load. Useful, if you have a synchronous call that starts importing a module, that you cannot wait otherwise.
+
 ### vi.fn
 
 - **Type:** `(fn: Function) => CallableMockInstance`
