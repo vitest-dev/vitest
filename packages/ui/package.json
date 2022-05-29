@@ -9,20 +9,20 @@
     "url": "git+https://github.com/vitest-dev/vitest.git",
     "directory": "packages/ui"
   },
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "sideEffects": false,
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
     },
     "./*": "./*"
   },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "files": [
     "dist"
   ],
-  "sideEffects": false,
   "scripts": {
     "build": "rimraf dist && pnpm build:node && pnpm build:client",
     "build:client": "vite build",
@@ -40,7 +40,7 @@
   "devDependencies": {
     "@cypress/vite-dev-server": "^2.2.3",
     "@cypress/vue": "^3.1.2",
-    "@faker-js/faker": "^7.0.1",
+    "@faker-js/faker": "^7.1.0",
     "@testing-library/cypress": "^8.0.2",
     "@types/codemirror": "^5.60.5",
     "@types/d3-force": "^3.0.3",
@@ -63,10 +63,10 @@
     "rollup": "^2.74.1",
     "splitpanes": "^3.1.1",
     "unocss": "^0.34.1",
-    "unplugin-auto-import": "^0.8.2",
-    "unplugin-vue-components": "^0.19.5",
+    "unplugin-auto-import": "^0.8.5",
+    "unplugin-vue-components": "^0.19.6",
     "vite-plugin-pages": "^0.23.0",
-    "vue": "^3.2.33",
+    "vue": "^3.2.36",
     "vue-router": "^4.0.15"
   }
 }

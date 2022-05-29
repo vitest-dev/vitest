@@ -421,7 +421,7 @@ const hasPropertyInObject = (object: object, key: string): boolean => {
 const isObjectWithKeys = (a: any) =>
   isObject(a)
   && !(a instanceof Error)
-  && !(a instanceof Array)
+  && !(Array.isArray(a))
   && !(a instanceof Date)
 
 export const subsetEquality = (

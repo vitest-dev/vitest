@@ -3,21 +3,21 @@
   "type": "module",
   "version": "0.12.9",
   "description": "Web Worker support for testing in Vitest",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./pure": {
+      "types": "./pure.d.ts",
+      "import": "./dist/pure.js",
+      "default": "./dist/pure.js"
+    }
+  },
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./index.d.ts",
-  "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "default": "./dist/index.js",
-      "types": "./index.d.ts"
-    },
-    "./pure": {
-      "import": "./dist/pure.js",
-      "default": "./dist/pure.js",
-      "types": "./pure.d.ts"
-    }
-  },
   "files": [
     "dist",
     "*.d.ts"

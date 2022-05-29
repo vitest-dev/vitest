@@ -6,13 +6,13 @@
     "bench:ci": "esmo src/github.ts"
   },
   "devDependencies": {
-    "@actions/core": "^1.8.0",
+    "@actions/core": "^1.8.2",
     "@actions/exec": "^1.1.1",
-    "@actions/github": "^5.0.1",
+    "@actions/github": "^5.0.3",
     "@happy-dom/jest-environment": "^4.1.0",
     "@types/benchmark": "^2.1.1",
     "benchmark": "^2.1.4",
-    "esmo": "^0.14.1",
+    "esno": "^0.16.3",
     "execa": "^6.1.0",
     "fs-extra": "^10.1.0",
     "markdown-table": "^3.0.2",
