@@ -2,6 +2,10 @@
   "compilerOptions": {
     "target": "esnext",
     "module": "esnext",
-    "jsx": "preserve"
+    "jsx": "preserve",
+    "moduleResolution": "node",
+    "types": [
+      "vitest/globals"
+    ]
   }
 }

@@ -9627,7 +9627,7 @@ packages:
     dev: true
 
   /console-control-strings/1.1.0:
-    resolution: {integrity: sha1-PXz0Rk22RG6mRL9LOVB/mFEAjo4=}
+    resolution: {integrity: sha512-ty/fTekppD2fIwRvnZAVdeOiGd1c7YXEixbgJTNzqcxJWKQnjJ/V1bNEEE6hygpM3WjwHFUVK6HTjWSzV4a8sQ==}
     dev: true
 
   /constants-browserify/1.0.0:
@@ -9652,7 +9652,7 @@ packages:
       safe-buffer: 5.1.2
 
   /cookie-signature/1.0.6:
-    resolution: {integrity: sha1-4wOogrNCzD7oylE6eZmXNNqzriw=}
+    resolution: {integrity: sha512-QADzlaHc8icV8I7vbaJXJwod9HWYp8uCqf1xa4OfNu1T7JVxQIrUgOWtHdNDtPiywmFbiS12VjotIXLrKM3orQ==}
     dev: true
 
   /cookie-signature/1.2.0:
@@ -12176,7 +12176,7 @@ packages:
     dev: true
 
   /file-system-cache/1.0.5:
-    resolution: {integrity: sha1-hCWbNqK7uNPW6xAh0xMv/mTP/08=}
+    resolution: {integrity: sha512-w9jqeQdOeVaXBCgl4c90XJ6zI8MguJgSiC5LsLdhUu6eSCzcRHPPXUF3lkKMagpzHi+6GnDkjv9BtxMmXdvptA==}
     dependencies:
       bluebird: 3.7.2
       fs-extra: 0.30.0
@@ -12480,7 +12480,7 @@ packages:
     dev: true
 
   /fs-extra/0.30.0:
-    resolution: {integrity: sha1-8jP/zAjU2n1DLapEl3aYnbHfk/A=}
+    resolution: {integrity: sha512-UvSPKyhMn6LEd/WpUaV9C9t3zATuqoqfWc3QdPhPLb58prN9tqYPlPWi8Krxi44loBoUzlobqZ3+8tGpxxSzwA==}
     dependencies:
       graceful-fs: 4.2.10
       jsonfile: 2.4.0
