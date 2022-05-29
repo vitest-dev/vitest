@@ -91,7 +91,7 @@ jobs:
         run: pnpm run test:ci
 
       - name: Test Single Thread
-        run: pnpm run test:ci:single-threads
+        run: pnpm run test:ci:single-thread
 
   test-ui:
     runs-on: ubuntu-latest
