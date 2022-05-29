@@ -1,4 +1,3 @@
-import { execa } from 'execa'
 import type { UserConfig as ViteUserConfig } from 'vite'
 import type { UserConfig } from '../types'
 import { ensurePackageInstalled } from '../utils'
@@ -30,27 +29,10 @@ export async function startVitest(cliFilters: string[], options: CliOptions, vit
 
   const ctx = await createVitest(options, viteOverrides)
 
-  process.env.VITEST_MODE = ctx.config.watch ? 'WATCH' : 'RUN'
-
-  if (ctx.config.env)
-    Object.assign(process.env, ctx.config.env)
-
   if (ctx.config.coverage.enabled) {
     if (!await ensurePackageInstalled('c8')) {
       process.exitCode = 1
       return false
-    }
-
-    if (!process.env.NODE_V8_COVERAGE) {
-      process.env.NODE_V8_COVERAGE = ctx.config.coverage.tempDirectory
-      // thread enable test will exec in thread
-      // so don't need to restarting Vitest
-      if (!ctx.config.threads) {
-        await ctx.server.close()
-        const { exitCode } = await execa(process.argv0, process.argv.slice(1), { stdio: 'inherit', reject: false })
-        process.exitCode = exitCode
-        return false
-      }
     }
   }
 
@@ -63,8 +45,6 @@ export async function startVitest(cliFilters: string[], options: CliOptions, vit
 
   if (process.stdin.isTTY && ctx.config.watch)
     registerConsoleShortcuts(ctx)
-
-  process.chdir(ctx.config.root)
 
   ctx.onServerRestarted(() => {
     // TODO: re-consider how to re-run the tests the server smartly

@@ -46,13 +46,25 @@ export function createPool(ctx: Vitest): WorkerPool {
     options.minThreads = 1
   }
 
+  if (ctx.config.coverage)
+    process.env.NODE_V8_COVERAGE ||= ctx.config.coverage.tempDirectory
+
+  options.env = {
+    TEST: 'true',
+    VITEST: 'true',
+    NODE_ENV: ctx.config.mode || 'test',
+    VITEST_MODE: ctx.config.watch ? 'WATCH' : 'RUN',
+    ...process.env,
+    ...ctx.config.env,
+  }
+
   const pool = new Tinypool(options)
 
   const runWithFiles = (name: string): RunWithFiles => {
-    return async (files, invalidates) => {
-      let id = 0
-      const config = ctx.getSerializableConfig()
+    let id = 0
+    const config = ctx.getSerializableConfig()
 
+    return async (files, invalidates) => {
       if (!ctx.config.threads) {
         const { workerPort, port } = createChannel(ctx)
         const data: WorkerContext = {
