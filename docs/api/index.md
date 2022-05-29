@@ -68,7 +68,7 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
 - **Type:** `(condition: any) => Test`
 - **Alias:** `it.runIf`
 
-  Oppsit of [test.skipIf](#testskipif).
+  Opposite of [test.skipIf](#testskipif).
 
   ```ts
   import { assert, test } from 'vitest'
@@ -168,7 +168,7 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
 - **Alias:** `it.each`
 
   Use `test.each` when you need to run the same test with different variables.
-  You can inject parameters with [printf formmatting](https://nodejs.org/api/util.html#util_util_format_format_args) in the test name in the order of the test function parameters.
+  You can inject parameters with [printf formatting](https://nodejs.org/api/util.html#util_util_format_format_args) in the test name in the order of the test function parameters.
 
   - `%s`: string
   - `%d`: number
@@ -329,7 +329,7 @@ When you use `test` in the top level of file, they are collected as part of the 
     { a: 1, b: 1, expected: 2 },
     { a: 1, b: 2, expected: 3 },
     { a: 2, b: 1, expected: 3 },
-  ])('describe object add(%i, %i)', ({ a, b, expected }) => {
+  ])('describe object add($a, $b)', ({ a, b, expected }) => {
     test(`returns ${expected}`, () => {
       expect(a + b).toBe(expected)
     })
@@ -1324,7 +1324,7 @@ When you use `test` in the top level of file, they are collected as part of the 
 
 ### expect.hasAssertions
 
-- **Type:** `(count: number) => void`
+- **Type:** `() => void`
 
   After the test has passed or failed verifies that at least one assertion was called during a test. Useful case would be to check if an asynchronous code was called.
 
@@ -1468,10 +1468,10 @@ These functions allow you to hook into the life cycle of tests to avoid repeatin
   import { beforeEach } from 'vitest'
 
   beforeEach(async () => {
-    // called once before all tests run
+    // called once before each test run
     await prepareSomething()
 
-    // clean up function, called once after all tests run
+    // clean up function, called once after each test run
     return async () => {
       await resetSomething()
     }
@@ -1584,6 +1584,10 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 ### vi.clearAllTimers
 
   Removes all timers that are scheduled to run. These timers will never run in the future.
+
+### vi.dynamicImportSettled
+
+  Wait for all imports to load. Useful, if you have a synchronous call that starts importing a module, that you cannot wait otherwise.
 
 ### vi.fn
 

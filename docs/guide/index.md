@@ -70,7 +70,7 @@ Learn more about the [Command Line Interface](./cli.md)
 
 ## IDE Integrations
 
-We also provided a official extension for Visual Studio Code to enchance your testing experience with Vitest.
+We also provided a official extension for Visual Studio Code to enhance your testing experience with Vitest.
 
 [Install from VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ZixuanChen.vitest-explorer)
 
@@ -99,6 +99,14 @@ Learn more about [IDE Integrations](./ide.md)
 - [neodrag](https://github.com/PuruVJ/neodrag)
 - [svelte-multiselect](https://github.com/janosh/svelte-multiselect)
 - [iconify](https://github.com/iconify/iconify)
+- [tdesign-vue-next](https://github.com/Tencent/tdesign-vue-next)
+- [cz-git](https://github.com/Zhengqbbb/cz-git)
+
+<!--
+For contributors: 
+We no longer accept new entries to this list a this moment.
+Thanks for choosing Vitest!
+-->
 
 ## Using Unreleased Commits
 

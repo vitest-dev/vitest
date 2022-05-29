@@ -1,11 +1,9 @@
-import { Console } from 'console'
-import { Writable } from 'stream'
 import { environments } from '../integrations/env'
 import type { ResolvedConfig } from '../types'
-import { clearTimeout, getWorkerState, setTimeout, toArray } from '../utils'
+import { clearTimeout, getWorkerState, isNode, setTimeout, toArray } from '../utils'
 import * as VitestIndex from '../index'
 import { resetRunOnceCounter } from '../integrations/run-once'
-import { RealDate } from '../integrations/mockdate'
+import { RealDate } from '../integrations/mock/date'
 import { rpc } from './rpc'
 
 let globalSetup = false
@@ -26,7 +24,8 @@ export async function setupGlobalEnv(config: ResolvedConfig) {
 
   globalSetup = true
 
-  setupConsoleLogSpy()
+  if (isNode)
+    await setupConsoleLogSpy()
 
   if (config.globals)
     (await import('../integrations/globals')).registerApiGlobally()
@@ -37,11 +36,14 @@ function setupDefines(defines: Record<string, any>) {
     (globalThis as any)[key] = defines[key]
 }
 
-export function setupConsoleLogSpy() {
+export async function setupConsoleLogSpy() {
   const stdoutBuffer = new Map<string, any[]>()
   const stderrBuffer = new Map<string, any[]>()
   const timers = new Map<string, { stdoutTime: number; stderrTime: number; timer: any }>()
   const unknownTestId = '__vitest__unknown_test__'
+
+  const { Writable } = await import('stream')
+  const { Console } = await import('console')
 
   // group sync console.log calls with macro task
   function schedule(taskId: string) {

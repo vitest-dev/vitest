@@ -76,17 +76,21 @@ export function processError(err: any) {
   if (typeof err.actual !== 'string')
     err.actual = stringify(err.actual)
 
-  if (typeof err.message === 'string')
-    err.message = normalizeErrorMessage(err.message)
+  // some Error implementations don't allow rewriting message
+  try {
+    if (typeof err.message === 'string')
+      err.message = normalizeErrorMessage(err.message)
 
-  if (typeof err.cause === 'object' && err.cause.message === 'string')
-    err.cause.message = normalizeErrorMessage(err.cause.message)
+    if (typeof err.cause === 'object' && err.cause.message === 'string')
+      err.cause.message = normalizeErrorMessage(err.cause.message)
+  }
+  catch {}
 
   try {
     return serializeError(err)
   }
   catch (e: any) {
-    return serializeError(new Error(`Failed to fully serialize error: ${e?.message}.\nInner error message: ${err?.message}`))
+    return serializeError(new Error(`Failed to fully serialize error: ${e?.message}\nInner error message: ${err?.message}`))
   }
 }
 

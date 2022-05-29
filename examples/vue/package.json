@@ -6,11 +6,11 @@
     "coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "vue": "^3.2.33"
+    "vue": "^3.2.36"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^2.3.2",
-    "@vue/test-utils": "^2.0.0-rc.21",
+    "@vitejs/plugin-vue": "^2.3.3",
+    "@vue/test-utils": "^2.0.0",
     "jsdom": "latest",
     "vitest": "latest"
   },

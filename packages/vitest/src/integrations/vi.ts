@@ -1,10 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import { parseStacktrace } from '../utils/source-map'
 import type { VitestMocker } from '../runtime/mocker'
-import { getWorkerState, resetModules } from '../utils'
-import { FakeTimers } from './timers'
+import { getWorkerState, resetModules, setTimeout } from '../utils'
+import { FakeTimers } from './mock/timers'
 import type { EnhancedSpy, MaybeMocked, MaybeMockedDeep } from './spy'
 import { fn, isMockFunction, spies, spyOn } from './spy'
 
@@ -235,6 +233,24 @@ class VitestUtils {
   public resetModules() {
     resetModules()
     return this
+  }
+
+  /**
+   * Wait for all imports to load.
+   * Useful, if you have a synchronous call that starts
+   * importing a module, that you cannot wait otherwise.
+   */
+  public async dynamicImportSettled() {
+    const state = getWorkerState()
+    const promises: Promise<unknown>[] = []
+    for (const mod of state.moduleCache.values()) {
+      if (mod.promise)
+        promises.push(mod.promise)
+    }
+    await Promise.allSettled(promises)
+    // wait until the end of the loop, so `.then` on modules called,
+    // like in import('./example').then(...)
+    await new Promise(resolve => setTimeout(resolve, 1)).then(() => Promise.resolve())
   }
 }
 

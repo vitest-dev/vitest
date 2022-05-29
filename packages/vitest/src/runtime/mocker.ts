@@ -63,9 +63,13 @@ export class VitestMocker {
 
   private async resolvePath(id: string, importer: string) {
     const path = await this.options.resolveId!(id, importer)
+    // external is node_module or unresolved module
+    // for example, some people mock "vscode" and don't have it installed
+    const external = path == null || path.id.includes('/node_modules/') ? id : null
+
     return {
       path: normalizeRequestId(path?.id || id),
-      external: path?.id.includes('/node_modules/') ? id : null,
+      external,
     }
   }
 
@@ -96,7 +100,7 @@ export class VitestMocker {
   }
 
   public resolveDependency(dep: string) {
-    return normalizeRequestId(dep).replace(/^\/@fs\//, isWindows ? '' : '/')
+    return normalizeRequestId(dep.replace(this.root, '')).replace(/^\/@fs\//, isWindows ? '' : '/')
   }
 
   public normalizePath(path: string) {
@@ -115,15 +119,15 @@ export class VitestMocker {
 
     // it's a node_module alias
     // all mocks should be inside <root>/__mocks__
-    if (external || isNodeBuiltin(mockPath)) {
+    if (external || isNodeBuiltin(mockPath) || !existsSync(mockPath)) {
       const mockDirname = dirname(path) // for nested mocks: @vueuse/integration/useJwt
-      const baseFilename = basename(path)
       const mockFolder = resolve(this.root, '__mocks__', mockDirname)
 
       if (!existsSync(mockFolder))
         return null
 
       const files = readdirSync(mockFolder)
+      const baseFilename = basename(path)
 
       for (const file of files) {
         const [basename] = file.split('.')

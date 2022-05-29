@@ -5,7 +5,7 @@ import { resolve } from 'pathe'
 import type { ViteNodeRunner } from 'vite-node/client'
 import { describe, expect, test } from 'vitest'
 import { createReporters } from 'vitest/src/node/reporters/utils'
-import { DefaultReporter } from '../../../../vitest/packages/vitest/src/node/reporters/default'
+import { DefaultReporter } from '../../../packages/vitest/src/node/reporters/default'
 import TestReporter from '../src/custom-reporter'
 
 const customReporterPath = resolve(__dirname, '../src/custom-reporter.js')

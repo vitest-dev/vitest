@@ -10,11 +10,7 @@ export default <Environment>({
     const { Window, GlobalWindow } = await importModule('happy-dom') as typeof import('happy-dom')
     const win = new (GlobalWindow || Window)()
 
-    const { keys, allowRewrite } = populateGlobal(global, win, { bindFunctions: true })
-
-    const originals = new Map<string | symbol, any>(
-      allowRewrite.map(([key]) => [key, global[key]]),
-    )
+    const { keys, originals } = populateGlobal(global, win, { bindFunctions: true })
 
     return {
       teardown(global) {

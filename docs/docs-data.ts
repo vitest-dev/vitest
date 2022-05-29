@@ -1,6 +1,4 @@
 // noinspection ES6PreferShortImport: IntelliJ IDE hint to avoid warning to use `~/contributors`, will fail on build if changed
-/* PWA DISABLED */
-export const pwaDisabled = false
 
 /* Texts */
 export const vitestName = 'Vitest'

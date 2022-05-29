@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// eslint-disable-next-line @typescript-eslint/consistent-type-imports
 import type CodeMirror from 'codemirror'
 import { createTooltip, destroyTooltip } from 'floating-vue'
 import { openInEditor } from '../../composables/error'

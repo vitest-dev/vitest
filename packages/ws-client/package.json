@@ -1,33 +1,36 @@
 {
   "name": "@vitest/ws-client",
   "type": "module",
-  "version": "0.12.1",
+  "version": "0.12.10",
   "description": "WebSocket client wrapper for communicating with Vitest",
-  "homepage": "https://github.com/vitest-dev/vitest#readme",
-  "bugs": {
-    "url": "https://github.com/vitest-dev/vitest/issues"
-  },
-  "license": "MIT",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
+  "license": "MIT",
+  "funding": "https://github.com/sponsors/antfu",
+  "homepage": "https://github.com/vitest-dev/vitest#readme",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vitest-dev/vitest.git"
   },
-  "funding": "https://github.com/sponsors/antfu",
+  "bugs": {
+    "url": "https://github.com/vitest-dev/vitest/issues"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
-    }
-  },
   "files": [
     "dist",
     "*.d.ts",
     "*.mjs"
   ],
+  "engines": {
+    "node": ">=v14.16.0"
+  },
   "scripts": {
     "build": "rimraf dist && rollup -c",
     "dev": "rollup -c --watch --watch.include=src/**",
@@ -35,14 +38,11 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "birpc": "^0.2.2",
+    "birpc": "^0.2.3",
     "flatted": "^3.2.5",
-    "ws": "^8.6.0"
+    "ws": "^8.7.0"
   },
   "devDependencies": {
-    "rollup": "^2.72.1"
-  },
-  "engines": {
-    "node": ">=v14.16.0"
+    "rollup": "^2.74.1"
   }
 }

@@ -1,5 +1,5 @@
 import cac from 'cac'
-import { dim, red } from 'kolorist'
+import { cyan, dim, red } from 'kolorist'
 import { createServer } from 'vite'
 import { version } from '../package.json'
 import { ViteNodeServer } from './server'
@@ -73,9 +73,9 @@ async function run(files: string[], options: CliOptions = {}) {
   if (!options.watch)
     await server.close()
 
-  server.watcher.on('change', async (eventName, path) => {
+  server.watcher.on('change', async (path) => {
     // eslint-disable-next-line no-console
-    console.log(dim(`[${eventName}] ${path}`))
+    console.log(`${cyan('[vite-node]')} File change detected. ${dim(path)}`)
 
     // invalidate module cache but not node_modules
     Array.from(runner.moduleCache.keys())

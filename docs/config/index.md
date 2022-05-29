@@ -386,7 +386,7 @@ Open Vitest UI (WIP)
 - **Type:** `boolean | number`
 - **Default:** `false`
 
-Listen to port and serve API. When set to true, the default port is 55555
+Listen to port and serve API. When set to true, the default port is 51204
 
 ### clearMocks
 
@@ -487,4 +487,4 @@ Vitest will not fail, if no tests will be found.
 - **Type**: `boolean`
 - **Default**: `false`
 
-Show heap usage after each test. Usefull for debugging memory leaks.
+Show heap usage after each test. Useful for debugging memory leaks.
