@@ -1,5 +1,4 @@
 /* eslint-disable prefer-template */
-/* eslint-disable no-template-curly-in-string */
 import { existsSync, readFileSync } from 'fs'
 import { join, normalize, relative } from 'pathe'
 import c from 'picocolors'

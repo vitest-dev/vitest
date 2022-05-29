@@ -44,7 +44,6 @@ export function takeCoverage() {
 export async function reportCoverage(ctx: Vitest) {
   takeCoverage()
 
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const createReport = require('c8/lib/report')
   const report = createReport(ctx.config.coverage)
 

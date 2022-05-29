@@ -1,4 +1,3 @@
-/* eslint-disable comma-spacing */
 /* eslint-disable no-sparse-arrays */
 import { describe, expect, it, vi } from 'vitest'
 

@@ -74,7 +74,6 @@ async function run(files: string[], options: CliOptions = {}) {
     await server.close()
 
   server.watcher.on('change', async (path) => {
-    // eslint-disable-next-line no-console
     console.log(`${cyan('[vite-node]')} File change detected. ${dim(path)}`)
 
     // invalidate module cache but not node_modules

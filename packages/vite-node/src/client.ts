@@ -286,7 +286,6 @@ function exportAll(exports: any, sourceModule: any) {
   if (exports === sourceModule)
     return
 
-  // eslint-disable-next-line no-restricted-syntax
   for (const key in sourceModule) {
     if (key !== 'default') {
       try {

@@ -38,8 +38,8 @@
     },
     "./config": {
       "types": "./config.d.ts",
-      "import": "./dist/config.js",
-      "require": "./dist/config.cjs"
+      "require": "./dist/config.cjs",
+      "import": "./dist/config.js"
     }
   },
   "main": "./dist/index.js",

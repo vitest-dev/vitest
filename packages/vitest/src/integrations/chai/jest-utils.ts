@@ -188,7 +188,7 @@ function eq(
 
 function keys(obj: object, hasKey: (obj: object, key: string) => boolean) {
   const keys = []
-  // eslint-disable-next-line no-restricted-syntax
+
   for (const key in obj) {
     if (hasKey(obj, key))
       keys.push(key)
