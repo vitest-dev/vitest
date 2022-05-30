@@ -1,7 +1,7 @@
 import type TinyBench from 'tinybench'
 import type { BenchmarkBuiltinReporters } from '../node/reporters'
 import type { ChainableFunction } from '../runtime/chain'
-import type { Arrayable, Reporter, TaskBase, TaskResult } from '.'
+import type { Arrayable, Reporter, Suite, TaskBase, TaskResult } from '.'
 
 export interface BenchmarkUserOptions {
   /**
@@ -33,8 +33,10 @@ export interface BenchmarkUserOptions {
 
 export interface Benchmark extends TaskBase {
   type: 'benchmark'
-  options: BenchmarkOptions
+  suite: Suite
   result?: TaskResult
+  fails?: boolean
+  options: BenchmarkOptions
 }
 
 export interface BenchmarkResult {

@@ -35,7 +35,6 @@ export interface Suite extends TaskBase {
   tasks: Task[]
   filepath?: string
   benchmark?: BenchmarkLib
-  isBenchmark?: boolean
 }
 
 export interface File extends Suite {
@@ -143,7 +142,7 @@ export interface SuiteCollector<ExtraContext = {}> {
   type: 'collector'
   test: TestAPI<ExtraContext>
   benchmark: BenchmarkAPI
-  tasks: (Suite | Test | SuiteCollector<ExtraContext>)[]
+  tasks: (Suite | Test | Benchmark | SuiteCollector<ExtraContext>)[]
   collect: (file?: File) => Promise<Suite>
   clear: () => void
   on: <T extends keyof SuiteHooks>(name: T, ...fn: SuiteHooks[T]) => void

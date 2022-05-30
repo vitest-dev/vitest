@@ -195,8 +195,7 @@ export async function runSuite(suite: Suite) {
   else {
     try {
       const beforeAllCleanups = await callSuiteHook(suite, suite, 'beforeAll', [suite])
-
-      if (suite.isBenchmark) {
+      if (getWorkerState().config.benchmark) {
         await runBenchmarkSuit(suite)
       }
       else {

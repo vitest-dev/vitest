@@ -9,13 +9,12 @@ import { getHooks, setFn, setHooks } from './map'
 export const suite = createSuite()
 export const test = createTest(
   function (name: string, fn?: TestFunction, timeout?: number) {
-    // @ts-expect-error untyped internal prop
     getCurrentSuite().test.fn.call(this, name, fn, timeout)
   },
 )
+
 export const benchmark = createBenchmark(
   function (name, fn, options) {
-    // @ts-expect-error untyped internal prop
     getCurrentSuite().benchmark.fn.call(this, name, fn, options)
   },
 )
@@ -66,7 +65,7 @@ export function createSuiteHooks() {
 }
 
 function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, mode: RunMode, concurrent?: boolean) {
-  const tasks: (Test | Suite | SuiteCollector)[] = []
+  const tasks: (Benchmark | Test | Suite | SuiteCollector)[] = []
   const factoryQueue: (Test | Suite | SuiteCollector)[] = []
 
   let suite: Suite
@@ -113,6 +112,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
     }
 
     setFn(benchmark, fn)
+    tasks.push(benchmark)
   })
 
   const collector: SuiteCollector = {
