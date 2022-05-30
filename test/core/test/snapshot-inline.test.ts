@@ -25,7 +25,7 @@ test('single line', () => {
      $string"
   `)
   // eslint-disable-next-line no-template-curly-in-string
-  expect('inline multiline\n \${string}').toMatchInlineSnapshot(`
+  expect('inline multiline\n ${string}').toMatchInlineSnapshot(`
     "inline multiline
      \${string}"
   `)
