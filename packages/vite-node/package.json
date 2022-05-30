@@ -75,6 +75,6 @@
   "devDependencies": {
     "@types/debug": "^4.1.7",
     "cac": "^6.7.12",
-    "rollup": "^2.74.1"
+    "rollup": "^2.75.3"
   }
 }
