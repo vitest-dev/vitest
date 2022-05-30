@@ -1,5 +1,5 @@
 import { format } from 'util'
-import type { File, RunMode, Suite, SuiteAPI, SuiteCollector, SuiteFactory, SuiteHooks, Task, Test, TestAPI, TestFunction } from '../types'
+import type { BenchFunction, Benchmark, BenchmarkAPI, BenchmarkOptions, File, RunMode, Suite, SuiteAPI, SuiteCollector, SuiteFactory, SuiteHooks, Task, Test, TestAPI, TestFunction } from '../types'
 import { isObject, noop, toArray } from '../utils'
 import { createChainable } from './chain'
 import { collectTask, collectorContext, createTestContext, runWithSuite, withTimeout } from './context'
@@ -11,6 +11,12 @@ export const test = createTest(
   function (name: string, fn?: TestFunction, timeout?: number) {
     // @ts-expect-error untyped internal prop
     getCurrentSuite().test.fn.call(this, name, fn, timeout)
+  },
+)
+export const benchmark = createBenchmark(
+  function (name, fn, options) {
+    // @ts-expect-error untyped internal prop
+    getCurrentSuite().benchmark.fn.call(this, name, fn, options)
   },
 )
 
@@ -96,12 +102,26 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
     tasks.push(test)
   })
 
+  const benchmark = createBenchmark((name: string, fn = noop, options: BenchmarkOptions) => {
+    const benchmark: Benchmark = {
+      type: 'benchmark',
+      id: '',
+      name,
+      mode: 'run',
+      options,
+      suite: undefined!,
+    }
+
+    setFn(benchmark, fn)
+  })
+
   const collector: SuiteCollector = {
     type: 'collector',
     name,
     mode,
     test,
     tasks,
+    benchmark,
     collect,
     clear,
     on: addHook,
@@ -205,4 +225,23 @@ function createTest(fn: (
   test.runIf = (condition: any) => (condition ? test : test.skip) as TestAPI
 
   return test as TestAPI
+}
+
+function createBenchmark(fn: (
+  (
+    this: Record<'skip', boolean | undefined>,
+    name: string,
+    fn: BenchFunction,
+    options: BenchmarkOptions
+  ) => void
+)) {
+  const benchmark = createChainable(
+    ['skip'],
+    fn,
+  ) as BenchmarkAPI
+
+  benchmark.skipIf = (condition: any) => (condition ? benchmark.skip : benchmark) as BenchmarkAPI
+  benchmark.runIf = (condition: any) => (condition ? benchmark : benchmark.skip) as BenchmarkAPI
+
+  return benchmark as BenchmarkAPI
 }

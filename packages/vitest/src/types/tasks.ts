@@ -1,6 +1,7 @@
+import type BenchmarkLib from 'tinybench'
 import type { ChainableFunction } from '../runtime/chain'
 import type { Awaitable, ErrorWithDiff } from './general'
-import type { Benchmark, UserConsoleLog } from '.'
+import type { Benchmark, BenchmarkAPI, BenchmarkResult, UserConsoleLog } from '.'
 
 export type RunMode = 'run' | 'skip' | 'only' | 'todo'
 export type TaskState = RunMode | 'pass' | 'fail'
@@ -24,6 +25,7 @@ export interface TaskResult {
   error?: ErrorWithDiff
   htmlError?: string
   hooks?: Partial<Record<keyof SuiteHooks, TaskState>>
+  benchmark?: BenchmarkResult
 }
 
 export type TaskResultPack = [id: string, result: TaskResult | undefined]
@@ -32,6 +34,8 @@ export interface Suite extends TaskBase {
   type: 'suite'
   tasks: Task[]
   filepath?: string
+  benchmark?: BenchmarkLib
+  isBenchmark?: boolean
 }
 
 export interface File extends Suite {
@@ -138,6 +142,7 @@ export interface SuiteCollector<ExtraContext = {}> {
   readonly mode: RunMode
   type: 'collector'
   test: TestAPI<ExtraContext>
+  benchmark: BenchmarkAPI
   tasks: (Suite | Test | SuiteCollector<ExtraContext>)[]
   collect: (file?: File) => Promise<Suite>
   clear: () => void

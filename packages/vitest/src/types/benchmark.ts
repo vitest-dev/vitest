@@ -1,5 +1,7 @@
+import type TinyBench from 'tinybench'
 import type { BenchmarkBuiltinReporters } from '../node/reporters'
-import type { Arrayable, Awaitable, File, Reporter, RunMode, Task, TaskBase, TaskResult } from '.'
+import type { ChainableFunction } from '../runtime/chain'
+import type { Arrayable, Reporter, TaskBase, TaskResult } from '.'
 
 export interface BenchmarkUserOptions {
   /**
@@ -31,12 +33,11 @@ export interface BenchmarkUserOptions {
 
 export interface Benchmark extends TaskBase {
   type: 'benchmark'
-  benchmark?: Benchmark
-  tasks: Task[]
-  result?: BenchmarkResult
+  options: BenchmarkOptions
+  result?: TaskResult
 }
 
-export interface BenchmarkResult extends TaskResult {
+export interface BenchmarkResult {
   cycle: Array<{
     name: string
     count: number
@@ -50,31 +51,13 @@ export interface BenchmarkResult extends TaskResult {
   }
 }
 
-export interface BenchmarkOptions {
-  delay?: number | undefined
-  initCount?: number | undefined
-  maxTime?: number | undefined
-  minSamples?: number | undefined
-  minTime?: number | undefined
-  async?: boolean | undefined
-  defer?: boolean | undefined
-  queued?: boolean | undefined
-}
-
-export type BenchFunction = () => Awaitable<void>
-
-export type BenchmarkFactory = (test: (name: string, fn: BenchFunction, options?: BenchmarkOptions) => void) => Awaitable<void>
-
-export interface BenchmarkCollector {
-  readonly name: string
-  readonly mode: RunMode
-  tasks: (Benchmark | BenchmarkCollector)[]
-  type: 'benchmark-collector'
-  bench: (name: string, fn: BenchFunction, options?: BenchmarkOptions) => void
-  collect: (file?: File) => Promise<Benchmark>
-  clear: () => void
-}
-
-export interface BenchmarkContext {
-  currentBenchmark: BenchmarkCollector | null
+export type BenchmarkOptions = TinyBench.Options
+export type BenchFunction = (this: TinyBench.Suite, deferred: TinyBench.Deferred) => void
+export type BenchmarkAPI = ChainableFunction<
+'skip',
+[name: string, fn?: BenchFunction, options?: BenchmarkOptions],
+void
+> & {
+  skipIf(condition: any): BenchmarkAPI
+  runIf(condition: any): BenchmarkAPI
 }

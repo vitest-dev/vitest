@@ -53,11 +53,11 @@ function renderBenchmark(task: Benchmark, title: string, level = 0) {
     '  '.repeat(level),
     title,
     '',
-    c.green(result.complete.fastest),
+    c.green(result.benchmark!.complete.fastest),
   ].join(' '))
 
   level += 2
-  for (const cycle of result!.cycle) {
+  for (const cycle of result!.benchmark!.cycle) {
     output.push([
       '  '.repeat(level),
       c.dim(cycle.name),

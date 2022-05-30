@@ -1,15 +1,14 @@
 import { performance } from 'perf_hooks'
-import type { Benchmark, File, HookCleanupCallback, HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from '../types'
+import type { File, HookCleanupCallback, HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from '../types'
 import { vi } from '../integrations/vi'
 import { getSnapshotClient } from '../integrations/snapshot/chai'
 import { clearTimeout, getFullName, getWorkerState, hasFailed, hasTests, partitionSuiteChildren, setTimeout } from '../utils'
 import { getState, setState } from '../integrations/chai/jest-expect'
 import { takeCoverage } from '../integrations/coverage'
-import { getFn, getHooks } from './map'
+import { getBenchmarkLib, getFn, getHooks } from './map'
 import { rpc } from './rpc'
 import { collectTests } from './collect'
 import { processError } from './error'
-import { getBenchmark } from './benchmark'
 
 const now = Date.now
 
@@ -197,13 +196,18 @@ export async function runSuite(suite: Suite) {
     try {
       const beforeAllCleanups = await callSuiteHook(suite, suite, 'beforeAll', [suite])
 
-      for (const tasksGroup of partitionSuiteChildren(suite)) {
-        if (tasksGroup[0].concurrent === true) {
-          await Promise.all(tasksGroup.map(c => runSuiteChild(c)))
-        }
-        else {
-          for (const c of tasksGroup)
-            await runSuiteChild(c)
+      if (suite.isBenchmark) {
+        await runBenchmarkSuit(suite)
+      }
+      else {
+        for (const tasksGroup of partitionSuiteChildren(suite)) {
+          if (tasksGroup[0].concurrent === true) {
+            await Promise.all(tasksGroup.map(c => runSuiteChild(c)))
+          }
+          else {
+            for (const c of tasksGroup)
+              await runSuiteChild(c)
+          }
         }
       }
 
@@ -239,42 +243,63 @@ export async function runSuite(suite: Suite) {
   updateTask(suite)
 }
 
-async function runBenchmark(benchmark: Benchmark) {
+async function runBenchmarkSuit(suite: Suite) {
   const start = performance.now()
 
-  benchmark.result = {
-    state: 'run',
-    startTime: start,
-    cycle: [],
-    complete: {
-      fastest: '',
-    },
+  const benchmarkGroup = []
+  const benchmarkSuiteGroup = []
+  for (const task of suite.tasks) {
+    if (task.type === 'benchmark')
+      benchmarkGroup.push(task)
+    else if (task.type === 'suite')
+      benchmarkSuiteGroup.push(task)
   }
-  updateTask(benchmark)
 
-  const benchmarkLib = getBenchmark(benchmark)
-  benchmarkLib.on('cycle', (e: any) => {
-    const cycle = e.target
-    benchmark.result!.cycle.push({
-      name: cycle.name,
-      count: cycle.count,
-      cycles: cycle.cycles,
-      hz: cycle.hz,
-      rme: cycle.stats.rme,
-      sampleSize: cycle.stats.sample.length,
-    })
-    updateTask(benchmark)
-  })
-  benchmarkLib.on('complete', () => {
-    benchmark.result!.complete = {
-      fastest: benchmarkLib.filter('fastest').map('name')[0].toString(),
+  if (benchmarkSuiteGroup.length) {
+    for (const suite of benchmarkSuiteGroup)
+      await runBenchmarkSuit(suite)
+  }
+
+  if (benchmarkGroup.length) {
+    const benchmarkLib = getBenchmarkLib(suite)
+    suite.result = {
+      state: 'run',
+      startTime: start,
+      benchmark: {
+        cycle: [],
+        complete: {
+          fastest: '',
+        },
+      },
     }
-    updateTask(benchmark)
-  })
-  benchmarkLib.run()
-  benchmark.result.duration = performance.now() - start
-  benchmark.result.state = 'pass'
-  updateTask(benchmark)
+    updateTask(suite)
+    benchmarkGroup.forEach((benchmark) => {
+      const benchmarkFn = getFn(benchmark)
+      benchmarkLib.add(benchmark.name, benchmarkFn, benchmark.options)
+    })
+    benchmarkLib.on('cycle', (e: any) => {
+      const cycle = e.target
+      suite.result!.benchmark!.cycle.push({
+        name: cycle.name,
+        count: cycle.count,
+        cycles: cycle.cycles,
+        hz: cycle.hz,
+        rme: cycle.stats.rme,
+        sampleSize: cycle.stats.sample.length,
+      })
+      updateTask(suite)
+    })
+    benchmarkLib.on('complete', () => {
+      suite.result!.benchmark!.complete = {
+        fastest: benchmarkLib.filter('fastest').map('name')[0].toString(),
+      }
+      updateTask(suite)
+    })
+    benchmarkLib.run()
+    suite.result!.duration = performance.now() - start
+    suite.result!.state = 'pass'
+    updateTask(suite)
+  }
 }
 
 async function runSuiteChild(c: Task) {
@@ -282,8 +307,6 @@ async function runSuiteChild(c: Task) {
     return runTest(c)
   else if (c.type === 'suite')
     return runSuite(c)
-  else if (c.type === 'benchmark')
-    return runBenchmark(c)
 }
 
 export async function runFiles(files: File[], config: ResolvedConfig) {
