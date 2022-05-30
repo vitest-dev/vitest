@@ -3,4 +3,3 @@ packages:
   - packages/*
   - examples/*
   - test/*
-  - '!examples/vue2'

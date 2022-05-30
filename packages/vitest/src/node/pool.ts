@@ -18,54 +18,16 @@ export interface WorkerPool {
   close: () => Promise<void>
 }
 
-export function createPool(ctx: Vitest): WorkerPool {
-  if (ctx.config.threads)
-    return createWorkerPool(ctx)
-  else
-    return createFakePool(ctx)
-}
-
 const workerPath = pathToFileURL(resolve(distDir, './worker.js')).href
 
-export function createFakePool(ctx: Vitest): WorkerPool {
-  const runWithFiles = (name: 'run' | 'collect'): RunWithFiles => {
-    return async (files, invalidates) => {
-      const worker = await import(workerPath)
-
-      const { workerPort, port } = createChannel(ctx)
-
-      const data: WorkerContext = {
-        port: workerPort,
-        config: ctx.getSerializableConfig(),
-        files,
-        invalidates,
-        id: 1,
-      }
-
-      try {
-        await worker[name](data, { transferList: [workerPort] })
-      }
-      finally {
-        port.close()
-        workerPort.close()
-      }
-    }
-  }
-
-  return {
-    runTests: runWithFiles('run'),
-    close: async () => {},
-  }
-}
-
-export function createWorkerPool(ctx: Vitest): WorkerPool {
+export function createPool(ctx: Vitest): WorkerPool {
   const threadsCount = ctx.config.watch
     ? Math.max(cpus().length / 2, 1)
     : Math.max(cpus().length - 1, 1)
 
   const options: TinypoolOptions = {
     filename: workerPath,
-    // TODO: investigate futher
+    // TODO: investigate further
     // It seems atomics introduced V8 Fatal Error https://github.com/vitest-dev/vitest/issues/1191
     useAtomics: false,
 
@@ -78,35 +40,60 @@ export function createWorkerPool(ctx: Vitest): WorkerPool {
     options.concurrentTasksPerWorker = 1
   }
 
+  if (!ctx.config.threads) {
+    options.concurrentTasksPerWorker = 1
+    options.maxThreads = 1
+    options.minThreads = 1
+  }
+
+  if (ctx.config.coverage)
+    process.env.NODE_V8_COVERAGE ||= ctx.config.coverage.tempDirectory
+
+  options.env = {
+    TEST: 'true',
+    VITEST: 'true',
+    NODE_ENV: ctx.config.mode || 'test',
+    VITEST_MODE: ctx.config.watch ? 'WATCH' : 'RUN',
+    ...process.env,
+    ...ctx.config.env,
+  }
+
   const pool = new Tinypool(options)
 
   const runWithFiles = (name: string): RunWithFiles => {
+    let id = 0
+    const config = ctx.getSerializableConfig()
+
+    async function runFiles(files: string[], invalidates: string[] = []) {
+      const { workerPort, port } = createChannel(ctx)
+      const data: WorkerContext = {
+        port: workerPort,
+        config,
+        files,
+        invalidates,
+        id: ++id,
+      }
+      try {
+        await pool.run(data, { transferList: [workerPort], name })
+      }
+      finally {
+        port.close()
+        workerPort.close()
+      }
+    }
+
     return async (files, invalidates) => {
-      let id = 0
-      const config = ctx.getSerializableConfig()
-      const results = await Promise.allSettled(files.map(async (file) => {
-        const { workerPort, port } = createChannel(ctx)
+      if (!ctx.config.threads) {
+        await runFiles(files)
+      }
+      else {
+        const results = await Promise.allSettled(files
+          .map(file => runFiles([file], invalidates)))
 
-        const data: WorkerContext = {
-          port: workerPort,
-          config,
-          files: [file],
-          invalidates,
-          id: ++id,
-        }
-
-        try {
-          await pool.run(data, { transferList: [workerPort], name })
-        }
-        finally {
-          port.close()
-          workerPort.close()
-        }
-      }))
-
-      const errors = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected').map(r => r.reason)
-      if (errors.length > 0)
-        throw new AggregateError(errors, 'Errors occurred while running tests. For more information, see serialized error.')
+        const errors = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected').map(r => r.reason)
+        if (errors.length > 0)
+          throw new AggregateError(errors, 'Errors occurred while running tests. For more information, see serialized error.')
+      }
     }
   }
 

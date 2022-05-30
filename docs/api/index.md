@@ -329,7 +329,7 @@ When you use `test` in the top level of file, they are collected as part of the 
     { a: 1, b: 1, expected: 2 },
     { a: 1, b: 2, expected: 3 },
     { a: 2, b: 1, expected: 3 },
-  ])('describe object add(%i, %i)', ({ a, b, expected }) => {
+  ])('describe object add($a, $b)', ({ a, b, expected }) => {
     test(`returns ${expected}`, () => {
       expect(a + b).toBe(expected)
     })
@@ -1584,6 +1584,10 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 ### vi.clearAllTimers
 
   Removes all timers that are scheduled to run. These timers will never run in the future.
+
+### vi.dynamicImportSettled
+
+  Wait for all imports to load. Useful, if you have a synchronous call that starts importing a module, that you cannot wait otherwise.
 
 ### vi.fn
 

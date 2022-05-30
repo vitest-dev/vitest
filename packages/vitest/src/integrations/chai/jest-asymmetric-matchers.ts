@@ -107,7 +107,6 @@ export class ObjectContaining extends AsymmetricMatcher<Record<string, unknown>>
 
     let result = true
 
-    // eslint-disable-next-line no-restricted-syntax
     for (const property in this.sample) {
       if (!this.hasProperty(other, property) || !equals(this.sample[property], other[property])) {
         result = false

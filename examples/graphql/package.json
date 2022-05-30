@@ -13,11 +13,11 @@
   },
   "dependencies": {
     "@rollup/plugin-graphql": "^1.1.0",
-    "graphql": "^16.4.0"
+    "graphql": "^16.5.0"
   },
   "devDependencies": {
     "@vitest/ui": "latest",
-    "vite": "^2.9.5",
+    "vite": "^2.9.9",
     "vitest": "latest"
   }
 }

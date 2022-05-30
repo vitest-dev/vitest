@@ -8,9 +8,10 @@ function yamlString(str: string): string {
 }
 
 function tapString(str: string): string {
-  // Test name cannot contain #
-  // Test name cannot start with number
-  return str.replace(/#/g, '?').replace(/^[0-9]+/, '?')
+  return str
+    .replace(/\\/g, '\\\\') // escape slashes
+    .replace(/#/g, '\\#') // escape #
+    .replace(/\n/g, ' ') // remove newlines
 }
 
 export class TapReporter implements Reporter {

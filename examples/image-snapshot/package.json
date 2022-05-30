@@ -1,18 +1,18 @@
 {
-  "name": "@vitest/example-svelte",
+  "name": "@vitest/example-image-snapshot",
   "type": "module",
   "private": true,
+  "license": "MIT",
+  "main": "index.js",
   "scripts": {
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "coverage": "vitest run --coverage"
+    "test:run": "vitest run"
   },
   "devDependencies": {
-    "@sveltejs/vite-plugin-svelte": "^1.0.0-next.45",
-    "@testing-library/svelte": "^3.1.1",
     "@vitest/ui": "latest",
-    "jsdom": "latest",
-    "svelte": "^3.48.0",
+    "jest-image-snapshot": "^4.5.1",
+    "vite": "^2.9.9",
     "vitest": "latest"
   },
   "stackblitz": {

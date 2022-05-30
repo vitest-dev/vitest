@@ -188,7 +188,7 @@ function eq(
 
 function keys(obj: object, hasKey: (obj: object, key: string) => boolean) {
   const keys = []
-  // eslint-disable-next-line no-restricted-syntax
+
   for (const key in obj) {
     if (hasKey(obj, key))
       keys.push(key)
@@ -421,7 +421,7 @@ const hasPropertyInObject = (object: object, key: string): boolean => {
 const isObjectWithKeys = (a: any) =>
   isObject(a)
   && !(a instanceof Error)
-  && !(a instanceof Array)
+  && !(Array.isArray(a))
   && !(a instanceof Date)
 
 export const subsetEquality = (

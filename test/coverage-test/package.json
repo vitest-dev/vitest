@@ -10,8 +10,8 @@
     "test:nothread": "npm run coverage && npm run coverage-test"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^2.3.2",
-    "@vue/test-utils": "^2.0.0-rc.21",
+    "@vitejs/plugin-vue": "^2.3.3",
+    "@vue/test-utils": "^2.0.0",
     "vitest": "workspace:*"
   }
 }

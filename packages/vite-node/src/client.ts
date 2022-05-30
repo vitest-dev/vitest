@@ -37,7 +37,7 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
     if (!super.has(fsPath))
       super.set(fsPath, mod)
     else
-      Object.assign(super.get(fsPath), mod)
+      Object.assign(super.get(fsPath) as ModuleCache, mod)
     return this
   }
 
@@ -286,7 +286,6 @@ function exportAll(exports: any, sourceModule: any) {
   if (exports === sourceModule)
     return
 
-  // eslint-disable-next-line no-restricted-syntax
   for (const key in sourceModule) {
     if (key !== 'default') {
       try {
