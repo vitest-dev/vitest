@@ -13,7 +13,7 @@ import { clearTimeout, deepMerge, hasFailed, noop, setTimeout, slash } from '../
 import { cleanCoverage, reportCoverage } from '../integrations/coverage'
 import { createPool } from './pool'
 import type { WorkerPool } from './pool'
-import { createReporters } from './reporters/utils'
+import { createBenchmarkReporters, createReporters } from './reporters/utils'
 import { StateManager } from './state'
 import { resolveConfig } from './config'
 import { printError } from './error'
@@ -83,7 +83,9 @@ export class Vitest {
       },
     })
 
-    this.reporters = await createReporters(resolved.reporters, this.runner)
+    this.reporters = resolved.benchmark
+      ? await createBenchmarkReporters(resolved.benchmark.reporters, this.runner)
+      : await createReporters(resolved.reporters, this.runner)
 
     this.runningPromise = undefined
 

@@ -8,6 +8,7 @@ export const defaultExclude = ['**/node_modules/**', '**/dist/**', '**/cypress/*
 export const defaultBenchmark = {
   include: defaultInclude,
   exclude: defaultExclude,
+  reporters: ['default'],
 }
 
 const defaultCoverageExcludes = [
