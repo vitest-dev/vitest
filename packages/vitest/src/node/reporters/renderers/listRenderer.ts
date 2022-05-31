@@ -42,39 +42,27 @@ function renderHookState(task: Task, hookName: keyof SuiteHooks, level = 0) {
   return ''
 }
 
-function renderBenchmark(task: Benchmark, title: string, level = 0) {
-  const output = []
+function renderBenchmark(task: Benchmark, level = 0): string {
   const result = task.result
-
-  if (!result)
-    return []
-
-  output.push([
-    '  '.repeat(level),
-    title,
-    '',
-    c.green(result.benchmark!.complete.fastest),
-  ].join(' '))
-
   level += 2
-  for (const cycle of result!.benchmark!.cycle) {
-    output.push([
-      '  '.repeat(level),
-      c.dim(cycle.name),
-      c.dim(' x '),
-      c.yellow(formatNumber(cycle.hz)),
-      c.dim(' ops/sec ±'),
-      c.yellow(cycle.rme.toFixed(2)),
-      c.dim('% ('),
-      `${c.yellow(cycle.sampleSize)} `,
-      c.dim(`run${cycle.sampleSize === 1 ? '' : 's'} sampled)`),
-    ].join(''))
-  }
+  if (!(result && result.benchmark))
+    return '  '.repeat(level) + task.name
 
-  return output
+  const cycle = result.benchmark!
+  return [
+    '  '.repeat(level),
+    c.dim(cycle.name),
+    c.dim(' x '),
+    c.yellow(formatNumber(cycle.hz)),
+    c.dim(' ops/sec ±'),
+    c.yellow(cycle.rme.toFixed(2)),
+    c.dim('% ('),
+    `${c.yellow(cycle.sampleSize)} `,
+    c.dim(`run${cycle.sampleSize === 1 ? '' : 's'} sampled)`),
+  ].join('')
 }
 
-export function renderTree(tasks: Task[], options: ListRendererOptions, level = 0, onlyBenchmark = false) {
+export function renderTree(tasks: Task[], options: ListRendererOptions, level = 0) {
   let output: string[] = []
 
   for (const task of tasks) {
@@ -100,13 +88,12 @@ export function renderTree(tasks: Task[], options: ListRendererOptions, level = 
       name = formatFilepath(name)
 
     const title = prefix + name + suffix
-    if (task.type === 'benchmark' && onlyBenchmark) {
-      output = output.concat(renderBenchmark(task, title, level))
-      return output.filter(Boolean).join('\n')
+    if (task.type === 'benchmark') {
+      // console.log(task)
+      output.push(renderBenchmark(task, level))
     }
-    else {
-      output.push('  '.repeat(level) + title)
-    }
+
+    else { output.push('  '.repeat(level) + title) }
 
     if ((task.result?.state !== 'pass') && outputMap.get(task) != null) {
       let data: string | undefined = outputMap.get(task)
@@ -125,10 +112,11 @@ export function renderTree(tasks: Task[], options: ListRendererOptions, level = 
     output = output.concat(renderHookState(task, 'beforeAll', level + 1))
     output = output.concat(renderHookState(task, 'beforeEach', level + 1))
     if (task.type === 'suite' && task.tasks.length > 0) {
-      if ((task.result?.state === 'fail' || task.result?.state === 'run' || options.renderSucceed))
+      if (
+        (task.result?.state === 'fail' || task.result?.state === 'run' || options.renderSucceed)
+        || hasBenchmark(task)
+      )
         output = output.concat(renderTree(task.tasks, options, level + 1))
-      else if (hasBenchmark(task)) // benchmark output keep print
-        output = output.concat(renderTree(task.tasks, options, level + 1, true))
     }
     output = output.concat(renderHookState(task, 'afterAll', level + 1))
     output = output.concat(renderHookState(task, 'afterEach', level + 1))

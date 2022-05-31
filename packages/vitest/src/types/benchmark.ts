@@ -40,17 +40,12 @@ export interface Benchmark extends TaskBase {
 }
 
 export interface BenchmarkResult {
-  cycle: Array<{
-    name: string
-    count: number
-    cycles: number
-    hz: number
-    rme: number
-    sampleSize: number
-  }>
-  complete: {
-    fastest: string
-  }
+  name: string
+  count: number
+  cycles: number
+  hz: number
+  rme: number
+  sampleSize: number
 }
 
 export type BenchmarkOptions = TinyBench.Options

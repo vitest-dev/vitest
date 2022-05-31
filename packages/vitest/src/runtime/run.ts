@@ -1,5 +1,5 @@
 import { performance } from 'perf_hooks'
-import type { File, HookCleanupCallback, HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from '../types'
+import type { Benchmark, File, HookCleanupCallback, HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from '../types'
 import { vi } from '../integrations/vi'
 import { getSnapshotClient } from '../integrations/snapshot/chai'
 import { clearTimeout, getFullName, getWorkerState, hasFailed, hasTests, partitionSuiteChildren, setTimeout } from '../utils'
@@ -261,37 +261,53 @@ async function runBenchmarkSuit(suite: Suite) {
 
   if (benchmarkGroup.length) {
     const benchmarkLib = getBenchmarkLib(suite)
+    const benchmarkMap: Record<string, Benchmark> = {}
     suite.result = {
       state: 'run',
       startTime: start,
       benchmark: {
-        cycle: [],
-        complete: {
-          fastest: '',
-        },
+        name: '',
+        count: 0,
+        cycles: 0,
+        hz: 0,
+        rme: 0,
+        sampleSize: 0,
       },
     }
     updateTask(suite)
     benchmarkGroup.forEach((benchmark) => {
       const benchmarkFn = getFn(benchmark)
+      benchmark.result = {
+        state: 'run',
+        startTime: start,
+        benchmark: {
+          name: '',
+          count: 0,
+          cycles: 0,
+          hz: 0,
+          rme: 0,
+          sampleSize: 0,
+        },
+      }
+      benchmarkMap[benchmark.name] = benchmark
       benchmarkLib.add(benchmark.name, benchmarkFn, benchmark.options)
+      updateTask(benchmark)
     })
-    benchmarkLib.on('cycle', (e: any) => {
+    benchmarkLib.on('cycle', (e) => {
       const cycle = e.target
-      suite.result!.benchmark!.cycle.push({
-        name: cycle.name,
-        count: cycle.count,
-        cycles: cycle.cycles,
-        hz: cycle.hz,
-        rme: cycle.stats.rme,
-        sampleSize: cycle.stats.sample.length,
-      })
-      updateTask(suite)
+      const benchmark = benchmarkMap[cycle.name || '']
+      if (benchmark) {
+        const result = benchmark.result!.benchmark!
+        result.name = cycle.name || result.name
+        result.count = cycle.count || result.count
+        result.cycles = cycle.cycles || result.cycles
+        result.hz = cycle.hz || result.hz
+        result.rme = cycle.stats?.rme || result.rme
+        result.sampleSize = cycle.stats?.sample.length || result.sampleSize
+        updateTask(benchmark)
+      }
     })
     benchmarkLib.on('complete', () => {
-      suite.result!.benchmark!.complete = {
-        fastest: benchmarkLib.filter('fastest').map('name')[0].toString(),
-      }
       updateTask(suite)
     })
     benchmarkLib.run()
