@@ -46,7 +46,7 @@ export function createPool(ctx: Vitest): WorkerPool {
     options.minThreads = 1
   }
 
-  if (ctx.config.coverage)
+  if (ctx.config.coverage.enabled)
     process.env.NODE_V8_COVERAGE ||= ctx.config.coverage.tempDirectory
 
   options.env = {
