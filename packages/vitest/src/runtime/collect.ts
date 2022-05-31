@@ -48,6 +48,9 @@ export async function collectTests(paths: string[], config: ResolvedConfig): Pro
         if (c.type === 'test') {
           file.tasks.push(c)
         }
+        else if (c.type === 'benchmark') {
+          file.tasks.push(c)
+        }
         else if (c.type === 'suite') {
           file.tasks.push(c)
         }
@@ -57,9 +60,6 @@ export async function collectTests(paths: string[], config: ResolvedConfig): Pro
           file.collectDuration = now() - start
           if (suite.name || suite.tasks.length)
             file.tasks.push(suite)
-        }
-        else if (c.type === 'benchmark') {
-          file.tasks.push(c)
         }
       }
     }

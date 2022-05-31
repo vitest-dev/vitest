@@ -393,6 +393,7 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
 
   api?: ApiConfig
 
+  // Only benchmark command it has value
   benchmark?: Omit<Required<BenchmarkUserOptions>, 'reporters'> & {
     reporters: (Reporter | BenchmarkBuiltinReporters)[]
   }

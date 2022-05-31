@@ -5,6 +5,7 @@ import { getSnapshotClient } from '../integrations/snapshot/chai'
 import { clearTimeout, getFullName, getWorkerState, hasFailed, hasTests, partitionSuiteChildren, setTimeout } from '../utils'
 import { getState, setState } from '../integrations/chai/jest-expect'
 import { takeCoverage } from '../integrations/coverage'
+import { isBenchmarkMode } from './../utils/index'
 import { getBenchmarkLib, getFn, getHooks } from './map'
 import { rpc } from './rpc'
 import { collectTests } from './collect'
@@ -195,7 +196,7 @@ export async function runSuite(suite: Suite) {
   else {
     try {
       const beforeAllCleanups = await callSuiteHook(suite, suite, 'beforeAll', [suite])
-      if (getWorkerState().config.benchmark) {
+      if (isBenchmarkMode()) {
         await runBenchmarkSuit(suite)
       }
       else {

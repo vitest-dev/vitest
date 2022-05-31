@@ -97,6 +97,10 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
         if (viteConfigTest.watch === false)
           viteConfigTest.run = true
 
+        // options.benchmark is not used in viteConfig.test when command is not benchmark
+        if (!options.benchmark)
+          delete viteConfigTest.benchmark
+
         // viteConfig.test is final now, merge it for real
         options = deepMerge(
           {},

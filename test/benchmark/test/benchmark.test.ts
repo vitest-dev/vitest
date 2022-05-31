@@ -1,4 +1,4 @@
-import { benchmark, describe } from 'vitest'
+import { benchmark, describe, expect, test } from 'vitest'
 
 describe('sort', () => {
   benchmark('normal', () => {
@@ -13,5 +13,9 @@ describe('sort', () => {
     x.reverse().sort((a, b) => {
       return a - b
     })
+  })
+
+  test('add', () => {
+    expect(1 + 1).toBe(2)
   })
 })

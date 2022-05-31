@@ -1,6 +1,6 @@
 import { format } from 'util'
 import type { BenchFunction, Benchmark, BenchmarkAPI, BenchmarkOptions, File, RunMode, Suite, SuiteAPI, SuiteCollector, SuiteFactory, SuiteHooks, Task, Test, TestAPI, TestFunction } from '../types'
-import { isObject, noop, toArray } from '../utils'
+import { isBenchmarkMode, isObject, noop, toArray } from '../utils'
 import { createChainable } from './chain'
 import { collectTask, collectorContext, createTestContext, runWithSuite, withTimeout } from './context'
 import { getHooks, setFn, setHooks } from './map'
@@ -73,6 +73,9 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
   initSuite()
 
   const test = createTest(function (name: string, fn = noop, timeout?: number) {
+    if (isBenchmarkMode())
+      return
+
     const mode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run'
 
     const test: Test = {
@@ -101,12 +104,17 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
     tasks.push(test)
   })
 
-  const benchmark = createBenchmark((name: string, fn = noop, options: BenchmarkOptions) => {
+  const benchmark = createBenchmark(function (name: string, fn = noop, options: BenchmarkOptions) {
+    const mode = this.skip ? 'skip' : 'run'
+
+    if (!isBenchmarkMode())
+      return
+
     const benchmark: Benchmark = {
       type: 'benchmark',
       id: '',
       name,
-      mode: 'run',
+      mode,
       options,
       suite: undefined!,
     }

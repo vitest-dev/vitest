@@ -13,6 +13,7 @@ export * from './timers'
 export const isNode = typeof process !== 'undefined' && typeof process.platform !== 'undefined'
 export const isBrowser = typeof window !== 'undefined'
 export const isWindows = isNode && process.platform === 'win32'
+export const isBenchmarkMode = () => getWorkerState().config.benchmark
 
 /**
  * Partition in tasks groups by consecutive concurrent

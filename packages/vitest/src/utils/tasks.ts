@@ -22,7 +22,7 @@ export function hasTests(suite: Arrayable<Suite>): boolean {
 }
 
 export function hasBenchmark(suite: Arrayable<Suite>): boolean {
-  return toArray(suite).some(s => s.tasks.some(c => c.type === 'benchmark' || hasBenchmark(c as Suite)))
+  return toArray(suite).some(s => s?.tasks?.some(c => c.type === 'benchmark' || hasBenchmark(c as Suite)))
 }
 
 export function hasFailed(suite: Arrayable<Task>): boolean {

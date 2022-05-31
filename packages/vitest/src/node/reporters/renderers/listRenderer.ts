@@ -3,7 +3,7 @@ import c from 'picocolors'
 import cliTruncate from 'cli-truncate'
 import stripAnsi from 'strip-ansi'
 import type { Benchmark, SuiteHooks, Task } from '../../../types'
-import { clearInterval, getTests, hasBenchmark, setInterval } from '../../../utils'
+import { clearInterval, getTests, setInterval } from '../../../utils'
 import { F_RIGHT } from '../../../utils/figures'
 import { getCols, getHookStateSymbol, getStateSymbol } from './utils'
 
@@ -44,7 +44,7 @@ function renderHookState(task: Task, hookName: keyof SuiteHooks, level = 0) {
 
 function renderBenchmark(task: Benchmark, level = 0): string {
   const result = task.result
-  level += 2
+  level += 1
   if (!(result && result.benchmark))
     return '  '.repeat(level) + task.name
 
@@ -88,12 +88,10 @@ export function renderTree(tasks: Task[], options: ListRendererOptions, level = 
       name = formatFilepath(name)
 
     const title = prefix + name + suffix
-    if (task.type === 'benchmark') {
-      // console.log(task)
+    if (task.type === 'benchmark')
       output.push(renderBenchmark(task, level))
-    }
-
-    else { output.push('  '.repeat(level) + title) }
+    else
+      output.push('  '.repeat(level) + title)
 
     if ((task.result?.state !== 'pass') && outputMap.get(task) != null) {
       let data: string | undefined = outputMap.get(task)
@@ -112,10 +110,7 @@ export function renderTree(tasks: Task[], options: ListRendererOptions, level = 
     output = output.concat(renderHookState(task, 'beforeAll', level + 1))
     output = output.concat(renderHookState(task, 'beforeEach', level + 1))
     if (task.type === 'suite' && task.tasks.length > 0) {
-      if (
-        (task.result?.state === 'fail' || task.result?.state === 'run' || options.renderSucceed)
-        || hasBenchmark(task)
-      )
+      if ((task.result?.state === 'fail' || task.result?.state === 'run' || options.renderSucceed))
         output = output.concat(renderTree(task.tasks, options, level + 1))
     }
     output = output.concat(renderHookState(task, 'afterAll', level + 1))

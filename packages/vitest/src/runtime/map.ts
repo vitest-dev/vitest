@@ -26,10 +26,6 @@ export function isTest(task: Test | Benchmark): task is Test {
   return task.type === 'test'
 }
 
-export function isBenchmark(task: Test | Benchmark): task is Benchmark {
-  return task.type === 'benchmark'
-}
-
 export function getBenchmarkLib(key: Suite): BenchmarkLib.Suite {
   let benchmark = benchmarkMap.get(key)
   if (!benchmark) {
