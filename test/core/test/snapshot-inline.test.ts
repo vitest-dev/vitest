@@ -19,6 +19,16 @@ test('object', () => {
 
 test('single line', () => {
   expect('inline string').toMatchInlineSnapshot('"inline string"')
+  expect('inline $ string').toMatchInlineSnapshot('"inline $ string"')
+  expect('inline multiline\n $string').toMatchInlineSnapshot(`
+    "inline multiline
+     $string"
+  `)
+  // eslint-disable-next-line no-template-curly-in-string
+  expect('inline multiline\n ${string}').toMatchInlineSnapshot(`
+    "inline multiline
+     \${string}"
+  `)
 })
 
 test('multiline', () => {

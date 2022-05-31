@@ -78,6 +78,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
           server: {
             ...preOptions.api,
             open,
+            hmr: false,
             preTransformRequests: false,
           },
           // disable deps optimization
