@@ -131,7 +131,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const actual = this._obj
     const pass = Object.is(actual, expected)
 
-    let deepEqualityName = '';
+    let deepEqualityName = ''
 
     if (!pass) {
       const toStrictEqualPass = jestEquals(
