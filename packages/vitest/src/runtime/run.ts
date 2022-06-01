@@ -315,7 +315,7 @@ async function runBenchmarkSuit(suite: Suite) {
     benchmarkLib.on('error', (e) => {
       defer.reject(e)
     })
-    benchmarkLib.run({ async: true })
+    benchmarkLib.run({ async: true, delay: 0 })
     await defer
   }
 }
