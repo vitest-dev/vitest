@@ -5,6 +5,7 @@ import { version } from '../package.json'
 import { ViteNodeServer } from './server'
 import { ViteNodeRunner } from './client'
 import type { ViteNodeServerOptions } from './types'
+import { toArray } from './utils'
 
 const cli = cac('vite-node')
 
@@ -89,32 +90,16 @@ async function run(files: string[], options: CliOptions = {}) {
 }
 
 function parseServerOptions(serverOptions: ViteNodeServerOptionsCLI): ViteNodeServerOptions {
-  const serverOptionsDepsInline = typeof serverOptions.deps?.inline === 'string'
-    ? [serverOptions.deps?.inline]
-    : serverOptions.deps?.inline
-
-  const serverOptionsDepsExternal = typeof serverOptions.deps?.external === 'string'
-    ? [serverOptions.deps?.external]
-    : serverOptions.deps?.external
-
-  const serverOptionsTransformModeSsr = typeof serverOptions.transformMode?.ssr === 'string'
-    ? [serverOptions.transformMode?.ssr]
-    : serverOptions.transformMode?.ssr
-
-  const serverOptionsTransformModeWeb = typeof serverOptions.transformMode?.web === 'string'
-    ? [serverOptions.transformMode?.web]
-    : serverOptions.transformMode?.web
-
   return {
     ...serverOptions,
     deps: {
       ...serverOptions.deps,
-      inline: serverOptionsDepsInline?.map((dep) => {
+      inline: toArray(serverOptions.deps?.inline).map((dep) => {
         return dep.startsWith('/') && dep.endsWith('/')
           ? new RegExp(dep)
           : dep
       }),
-      external: serverOptionsDepsExternal?.map((dep) => {
+      external: toArray(serverOptions.deps?.external).map((dep) => {
         return dep.startsWith('/') && dep.endsWith('/')
           ? new RegExp(dep)
           : dep
@@ -124,8 +109,8 @@ function parseServerOptions(serverOptions: ViteNodeServerOptionsCLI): ViteNodeSe
     transformMode: {
       ...serverOptions.transformMode,
 
-      ssr: serverOptionsTransformModeSsr?.map(dep => new RegExp(dep)),
-      web: serverOptionsTransformModeWeb?.map(dep => new RegExp(dep)),
+      ssr: toArray(serverOptions.transformMode?.ssr).map(dep => new RegExp(dep)),
+      web: toArray(serverOptions.transformMode?.web).map(dep => new RegExp(dep)),
     },
   }
 }
