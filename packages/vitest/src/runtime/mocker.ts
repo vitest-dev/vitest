@@ -230,7 +230,7 @@ export class VitestMocker {
   private async ensureSpy() {
     if (VitestMocker.spyModule)
       return
-    VitestMocker.spyModule = await this.request(`/@fs/${slash(resolve(distDir, 'spy.js'))}`) as typeof import('../integrations/spy')
+    VitestMocker.spyModule = await this.request(`/@fs/${slash(resolve(distDir, 'spy.mjs'))}`) as typeof import('../integrations/spy')
   }
 
   public async requestWithMock(dep: string) {
