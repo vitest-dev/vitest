@@ -2,10 +2,9 @@ import { performance } from 'perf_hooks'
 import type { Benchmark, File, HookCleanupCallback, HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from '../types'
 import { vi } from '../integrations/vi'
 import { getSnapshotClient } from '../integrations/snapshot/chai'
-import { clearTimeout, getFullName, getWorkerState, hasFailed, hasTests, partitionSuiteChildren, setTimeout } from '../utils'
+import { clearTimeout, createDefer, getFullName, getWorkerState, hasFailed, hasTests, isBenchmarkMode, partitionSuiteChildren, setTimeout } from '../utils'
 import { getState, setState } from '../integrations/chai/jest-expect'
 import { takeCoverage } from '../integrations/coverage'
-import { isBenchmarkMode } from './../utils/index'
 import { getBenchmarkLib, getFn, getHooks } from './map'
 import { rpc } from './rpc'
 import { collectTests } from './collect'
@@ -255,13 +254,12 @@ async function runBenchmarkSuit(suite: Suite) {
       benchmarkSuiteGroup.push(task)
   }
 
-  if (benchmarkSuiteGroup.length) {
-    for (const suite of benchmarkSuiteGroup)
-      await runBenchmarkSuit(suite)
-  }
+  if (benchmarkSuiteGroup.length)
+    await Promise.all(benchmarkSuiteGroup.map(subSuite => runBenchmarkSuit(subSuite)))
 
   if (benchmarkGroup.length) {
     const benchmarkLib = getBenchmarkLib(suite)
+    const defer = createDefer()
     const benchmarkMap: Record<string, Benchmark> = {}
     suite.result = {
       state: 'run',
@@ -309,12 +307,16 @@ async function runBenchmarkSuit(suite: Suite) {
       }
     })
     benchmarkLib.on('complete', () => {
+      suite.result!.duration = performance.now() - start
+      suite.result!.state = 'pass'
       updateTask(suite)
+      defer.resolve(null)
     })
-    benchmarkLib.run()
-    suite.result!.duration = performance.now() - start
-    suite.result!.state = 'pass'
-    updateTask(suite)
+    benchmarkLib.on('error', (e) => {
+      defer.reject(e)
+    })
+    benchmarkLib.run({ async: true })
+    await defer
   }
 }
 

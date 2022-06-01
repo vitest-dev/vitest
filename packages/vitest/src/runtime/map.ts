@@ -29,7 +29,7 @@ export function isTest(task: Test | Benchmark): task is Test {
 export function getBenchmarkLib(key: Suite): BenchmarkLib.Suite {
   let benchmark = benchmarkMap.get(key)
   if (!benchmark) {
-    benchmark = new BenchmarkLib.Suite()
+    benchmark = new BenchmarkLib.Suite(key.name)
     benchmarkMap.set(key, benchmark)
   }
   return benchmark
