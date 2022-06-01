@@ -19,3 +19,23 @@ describe('sort', () => {
     expect(1 + 1).toBe(2)
   })
 })
+
+function timeout(time: number) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, time)
+  })
+}
+
+describe('timeout', () => {
+  benchmark('timeout1000', async () => {
+    await timeout(1000)
+  })
+
+  benchmark('timeout500', async () => {
+    await timeout(500)
+  })
+
+  test('reduce', () => {
+    expect(1 - 1).toBe(0)
+  })
+})

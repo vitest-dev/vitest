@@ -49,10 +49,10 @@ export interface BenchmarkResult {
 }
 
 export type BenchmarkOptions = TinyBench.Options
-export type BenchFunction = (this: TinyBench.Suite, deferred: TinyBench.Deferred) => void
+export type BenchFunction = ((this: TinyBench.Suite, deferred: TinyBench.Deferred) => void) | ((this: TinyBench.Suite) => Promise<void>)
 export type BenchmarkAPI = ChainableFunction<
 'skip',
-[name: string, fn?: BenchFunction, options?: BenchmarkOptions],
+[name: string, fn: BenchFunction, options?: BenchmarkOptions],
 void
 > & {
   skipIf(condition: any): BenchmarkAPI
