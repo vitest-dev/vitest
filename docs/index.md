@@ -7,7 +7,7 @@ titleTemplate: A blazing fast unit test framework powered by Vite
 
 hero:
   name: Vitest
-  text: A blazing fast Unit test framework
+  text: Blazing Fast Unit Test Framework
   tagline: A Vite-native unit test framework. It's fast!
   image:
     src: /logo.svg
