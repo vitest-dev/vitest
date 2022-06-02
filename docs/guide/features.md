@@ -1,3 +1,7 @@
+---
+outline: deep
+---
+
 # Features
 
 <FeaturesList class="!gap-1 text-lg" />
