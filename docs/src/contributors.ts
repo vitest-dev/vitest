@@ -42,20 +42,20 @@ const coreTeamMembers: CoreTeam[] = [
     description: 'A collaborative being<br>Core team member of Vite<br>Team member of Vue',
   },
   {
-    avatar: contributorsAvatars.Aslemammad,
-    name: 'Mohammad Bagher',
-    github: 'Aslemammad',
-    twitter: 'asleMammadam',
-    sponsors: false,
-    description: 'An open source developer<br>Team member of Poimandres and Vike',
-  },
-  {
     avatar: contributorsAvatars['sheremet-va'],
     name: 'Vladimir',
     github: 'sheremet-va',
     twitter: 'sheremet_va',
     sponsors: false,
     description: 'An open source fullstack developer',
+  },
+  {
+    avatar: contributorsAvatars.Aslemammad,
+    name: 'Mohammad Bagher',
+    github: 'Aslemammad',
+    twitter: 'asleMammadam',
+    sponsors: false,
+    description: 'An open source developer<br>Team member of Poimandres and Vike',
   },
   {
     avatar: contributorsAvatars.Demivan,

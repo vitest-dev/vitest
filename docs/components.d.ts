@@ -8,7 +8,7 @@ declare module '@vue/runtime-core' {
     Avatar: typeof import('./src/components/Avatar.vue')['default']
     Contributors: typeof import('./src/components/Contributors.vue')['default']
     FeaturesList: typeof import('./src/components/FeaturesList.vue')['default']
-    Home: typeof import('./src/components/Home.vue')['default']
+    HomePage: typeof import('./src/components/HomePage.vue')['default']
     ListItem: typeof import('./src/components/ListItem.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
