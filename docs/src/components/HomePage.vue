@@ -7,8 +7,8 @@ import { coreTeamMembers } from '../contributors'
     <h2 id="meet-the-team" op50 font-normal p="t-10 b-2">
       Meet The Team
     </h2>
-    <div grid="~ sm:cols-2 md:cols-3 gap-x-8 gap-y-20 items-center" p-10>
-      <Avatar
+    <div grid="~ cols-1 md:cols-2 lg:cols-3 gap-x-10 gap-y-10 items-center" p-10>
+      <TeamMember
         v-for="c of coreTeamMembers"
         :key="c.github"
         v-bind="c"
@@ -32,6 +32,7 @@ import { coreTeamMembers } from '../contributors'
         <a href="https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg" target="_blank" rel="noopener noreferrer">
           <img
             crossorigin="anonymous"
+            inline-block
             width="768" height="1464"
             class="resizable-img"
             loading="lazy"
@@ -45,6 +46,7 @@ import { coreTeamMembers } from '../contributors'
         <a href="https://cdn.jsdelivr.net/gh/patak-dev/static/sponsors.svg" target="_blank" rel="noopener noreferrer">
           <img
             crossorigin="anonymous"
+            inline-block
             width="768" height="722"
             class="resizable-img"
             loading="lazy"
@@ -54,7 +56,6 @@ import { coreTeamMembers } from '../contributors'
         </a>
       </div>
     </div>
-
     <p class="text-center opacity-75">
       <a href="https://www.netlify.com" rel="noopener noreferrer">
         <img src="/netlify.svg" alt="Deploys by Netlify" width="114" height="151">

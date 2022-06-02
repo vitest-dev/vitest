@@ -7,7 +7,6 @@
     "strict": true,
     "jsx": "preserve",
     "esModuleInterop": true,
-    "incremental": false,
     "skipLibCheck": true,
     "moduleResolution": "node",
     "resolveJsonModule": true,

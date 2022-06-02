@@ -257,15 +257,15 @@ importers:
       vite: ^2.9.9
       vitest: workspace:*
     dependencies:
-      react: 17.0.2
-      react-dom: 16.14.0_react@17.0.2
+      react: 16.14.0
+      react-dom: 16.14.0_react@16.14.0
     devDependencies:
       '@types/react': 17.0.45
       '@types/react-dom': 17.0.17
       '@vitejs/plugin-react': 1.3.1
       '@vitest/ui': link:../../packages/ui
       enzyme: 3.11.0
-      enzyme-adapter-react-16: 1.15.6_nzetpuaj6rwcpymp3an2fxuqfy
+      enzyme-adapter-react-16: 1.15.6_j6bpv5pizkyfppcg2tmva6pmii
       vite: 2.9.9
       vitest: link:../../packages/vitest
 
@@ -352,7 +352,7 @@ importers:
       '@storybook/builder-vite': 0.1.35_232lyga3osnhqucz6qw2facp2y
       '@storybook/react': 6.4.22_xzhww52kftivill7y72sn2b2py
       '@storybook/testing-library': 0.0.11_sfoxds7t5ydpegc3knd667wn6m
-      '@storybook/testing-react': 1.3.0_zmp7smyayanu66ckztnuvka5hu
+      '@storybook/testing-react': 1.3.0_ndrjlzltktbx2icl6lpdatt3le
       '@testing-library/jest-dom': 5.16.4
       '@testing-library/react': 12.1.5_sfoxds7t5ydpegc3knd667wn6m
       '@types/react': 17.0.45
@@ -6834,7 +6834,7 @@ packages:
       - react-dom
     dev: true
 
-  /@storybook/testing-react/1.3.0_zmp7smyayanu66ckztnuvka5hu:
+  /@storybook/testing-react/1.3.0_ndrjlzltktbx2icl6lpdatt3le:
     resolution: {integrity: sha512-TfxzflxwBHSPhetWKuYt239t+1iN8gnnUN8OKo5UGtwwirghKQlApjH23QXW6j8YBqFhmq+yP29Oqf8HgKCFLw==}
     engines: {node: '>=10'}
     peerDependencies:
@@ -6844,7 +6844,7 @@ packages:
       '@storybook/react': '>=6.4.0'
       react: ^16.8.0 || ^17.0.0 || ^18.0.0
     dependencies:
-      '@storybook/addons': 6.5.5_sfoxds7t5ydpegc3knd667wn6m
+      '@storybook/addons': 6.5.6_sfoxds7t5ydpegc3knd667wn6m
       '@storybook/client-api': 6.4.22_sfoxds7t5ydpegc3knd667wn6m
       '@storybook/csf': 0.0.2--canary.87bc651.0
       '@storybook/preview-web': 6.5.5_sfoxds7t5ydpegc3knd667wn6m
@@ -8652,7 +8652,7 @@ packages:
       symbol.prototype.description: 1.0.5
     dev: true
 
-  /airbnb-prop-types/2.16.0_react@17.0.2:
+  /airbnb-prop-types/2.16.0_react@16.14.0:
     resolution: {integrity: sha512-7WHOFolP/6cS96PhKNrslCLMYAI8yB1Pp6u6XmxozQOiZbsI5ycglZr5cHhBFfuRcQQjzCMith5ZPZdYiJCxUg==}
     peerDependencies:
       react: ^0.14 || ^15.0.0 || ^16.0.0-alpha
@@ -8665,7 +8665,7 @@ packages:
       object.entries: 1.1.5
       prop-types: 15.8.1
       prop-types-exact: 1.2.0
-      react: 17.0.2
+      react: 16.14.0
       react-is: 16.13.1
     dev: true
 
@@ -11815,7 +11815,7 @@ packages:
     engines: {node: '>=0.12'}
     dev: true
 
-  /enzyme-adapter-react-16/1.15.6_nzetpuaj6rwcpymp3an2fxuqfy:
+  /enzyme-adapter-react-16/1.15.6_j6bpv5pizkyfppcg2tmva6pmii:
     resolution: {integrity: sha512-yFlVJCXh8T+mcQo8M6my9sPgeGzj85HSHi6Apgf1Cvq/7EL/J9+1JoJmJsRxZgyTvPMAqOEpRSu/Ii/ZpyOk0g==}
     peerDependencies:
       enzyme: ^3.0.0
@@ -11823,31 +11823,31 @@ packages:
       react-dom: ^16.0.0-0
     dependencies:
       enzyme: 3.11.0
-      enzyme-adapter-utils: 1.14.0_react@17.0.2
+      enzyme-adapter-utils: 1.14.0_react@16.14.0
       enzyme-shallow-equal: 1.0.4
       has: 1.0.3
       object.assign: 4.1.2
       object.values: 1.1.5
       prop-types: 15.8.1
-      react: 17.0.2
-      react-dom: 16.14.0_react@17.0.2
+      react: 16.14.0
+      react-dom: 16.14.0_react@16.14.0
       react-is: 16.13.1
-      react-test-renderer: 16.14.0_react@17.0.2
+      react-test-renderer: 16.14.0_react@16.14.0
       semver: 5.7.1
     dev: true
 
-  /enzyme-adapter-utils/1.14.0_react@17.0.2:
+  /enzyme-adapter-utils/1.14.0_react@16.14.0:
     resolution: {integrity: sha512-F/z/7SeLt+reKFcb7597IThpDp0bmzcH1E9Oabqv+o01cID2/YInlqHbFl7HzWBl4h3OdZYedtwNDOmSKkk0bg==}
     peerDependencies:
       react: 0.13.x || 0.14.x || ^15.0.0-0 || ^16.0.0-0
     dependencies:
-      airbnb-prop-types: 2.16.0_react@17.0.2
+      airbnb-prop-types: 2.16.0_react@16.14.0
       function.prototype.name: 1.1.5
       has: 1.0.3
       object.assign: 4.1.2
       object.fromentries: 2.0.5
       prop-types: 15.8.1
-      react: 17.0.2
+      react: 16.14.0
       semver: 5.7.1
     dev: true
 
@@ -17162,7 +17162,7 @@ packages:
     dev: true
 
   /object-assign/4.1.1:
-    resolution: {integrity: sha1-IQmtx5ZYh8/AXLvUQsrIv7s2CGM=}
+    resolution: {integrity: sha512-rJgTQnkUnH1sFw8yT6VSU3zD3sWmu6sZhIseY8VX+GRu3P6F7Fu+JNDoXfklElbLJSnc3FUQHVe4cU5hj+BcUg==}
     engines: {node: '>=0.10.0'}
 
   /object-copy/0.1.0:
@@ -18373,7 +18373,7 @@ packages:
       - supports-color
     dev: true
 
-  /react-dom/16.14.0_react@17.0.2:
+  /react-dom/16.14.0_react@16.14.0:
     resolution: {integrity: sha512-1gCeQXDLoIqMgqD3IO2Ah9bnf0w9kzhwN5q4FGnHZ67hBm9yePzB5JJAIQCc8x3pFnNlwFq4RidZggNAAkzWWw==}
     peerDependencies:
       react: ^16.14.0
@@ -18381,7 +18381,7 @@ packages:
       loose-envify: 1.4.0
       object-assign: 4.1.1
       prop-types: 15.8.1
-      react: 17.0.2
+      react: 16.14.0
       scheduler: 0.19.1
 
   /react-dom/17.0.2_react@17.0.2:
@@ -18621,14 +18621,14 @@ packages:
       refractor: 3.6.0
     dev: true
 
-  /react-test-renderer/16.14.0_react@17.0.2:
+  /react-test-renderer/16.14.0_react@16.14.0:
     resolution: {integrity: sha512-L8yPjqPE5CZO6rKsKXRO/rVPiaCOy0tQQJbC+UjPNlobl5mad59lvPjwFsQHTvL03caVDIVr9x9/OSgDe6I5Eg==}
     peerDependencies:
       react: ^16.14.0
     dependencies:
       object-assign: 4.1.1
       prop-types: 15.8.1
-      react: 17.0.2
+      react: 16.14.0
       react-is: 16.13.1
       scheduler: 0.19.1
     dev: true
@@ -18686,6 +18686,14 @@ packages:
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
     dev: false
+
+  /react/16.14.0:
+    resolution: {integrity: sha512-0X2CImDkJGApiAlcf0ODKIneSwBPhqJawOa5wCtKbu7ZECrmS26NvtSILynQ66cgkT/RJ4LidJOc3bUESwmU8g==}
+    engines: {node: '>=0.10.0'}
+    dependencies:
+      loose-envify: 1.4.0
+      object-assign: 4.1.1
+      prop-types: 15.8.1
 
   /react/17.0.2:
     resolution: {integrity: sha512-gnhPt75i/dq/z3/6q/0asP78D0u592D5L1pd7M8P+dck6Fu/jJeL6iVVK23fptSUZj8Vjf++7wXA8UNclGQcbA==}
@@ -19209,6 +19217,7 @@ packages:
     hasBin: true
     optionalDependencies:
       fsevents: 2.3.2
+    dev: true
 
   /rollup/2.75.3:
     resolution: {integrity: sha512-YA29fLU6MAYSaDxIQYrGGOcbXlDmG96h0krGGYObroezcQ0KgEPM3+7MtKD/qeuUbFuAJXvKZee5dA1dpwq1PQ==}
@@ -21805,7 +21814,7 @@ packages:
       esbuild: 0.14.42
       postcss: 8.4.14
       resolve: 1.22.0
-      rollup: 2.74.1
+      rollup: 2.75.3
     optionalDependencies:
       fsevents: 2.3.2
 
