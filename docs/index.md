@@ -10,7 +10,7 @@ hero:
   text: Blazing Fast Unit Test Framework
   tagline: A Vite-native unit test framework. It's fast!
   image:
-    src: /logo.svg
+    src: /logo-shadow.svg
     alt: Vitest
   actions:
     - theme: brand
