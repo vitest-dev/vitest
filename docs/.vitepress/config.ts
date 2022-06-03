@@ -57,9 +57,9 @@ export default defineConfig({
       appId: 'ZTF29HGJ69',
       apiKey: '9c3ced6fed60d2670bb36ab7e8bed8bc',
       indexName: 'vitest',
-      searchParameters: {
-        facetFilters: ['tags:en'],
-      },
+      // searchParameters: {
+      //   facetFilters: ['tags:en'],
+      // },
     },
 
     localeLinks: {
