@@ -12,7 +12,7 @@ We are now providing an official extension for Visual Studio Code to enhance you
 
 ![](https://i.ibb.co/bJCbCf2/202203292020.gif)
 
-## WebStorm
+## IntelliJ/WebStorm
 
 <p text-center>
 <img src="https://raw.githubusercontent.com/linux-china/vitest-jetbrains-plugin/main/banner.png" w-80>
