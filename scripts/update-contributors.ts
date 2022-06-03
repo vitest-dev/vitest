@@ -21,7 +21,7 @@ async function fetchContributors(page = 1) {
 
 async function generate() {
   const collaborators = await fetchContributors()
-  await fs.writeFile('./docs/contributors.json', JSON.stringify(collaborators, null, 2), 'utf8')
+  await fs.writeFile('./docs/.vitepress/contributor-names.json', JSON.stringify(collaborators, null, 2), 'utf8')
 }
 
 generate()

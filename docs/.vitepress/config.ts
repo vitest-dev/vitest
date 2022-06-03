@@ -11,8 +11,8 @@ import {
   twitter,
   vitestDescription,
   vitestName,
-} from '../docs-data'
-import { coreTeamMembers } from '../src/contributors'
+} from './meta'
+import { teamMembers } from './contributors'
 
 export default defineConfig({
   lang: 'en-US',
@@ -22,7 +22,7 @@ export default defineConfig({
     ['meta', { name: 'theme-color', content: '#ffffff' }],
     ['link', { rel: 'icon', href: '/logo.svg', type: 'image/svg+xml' }],
     ['link', { rel: 'alternate icon', href: '/favicon.ico', type: 'image/png', sizes: '16x16' }],
-    ['meta', { name: 'author', content: `${coreTeamMembers.map(c => c.name).join(', ')} and ${vitestName} contributors` }],
+    ['meta', { name: 'author', content: `${teamMembers.map(c => c.name).join(', ')} and ${vitestName} contributors` }],
     ['meta', { name: 'keywords', content: 'vitest, vite, test, coverage, snapshot, react, vue, preact, svelte, solid, lit, ruby, cypress, puppeteer, jsdom, happy-dom, test-runner, jest, typescript, esm, tinypool, tinyspy, c8, node' }],
     ['meta', { property: 'og:title', content: vitestName }],
     ['meta', { property: 'og:description', content: vitestDescription }],

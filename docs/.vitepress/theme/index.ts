@@ -1,10 +1,10 @@
 import { h } from 'vue'
 import Theme from 'vitepress/theme'
 import { inBrowser } from 'vitepress'
-import '../../main.css'
-import '../../style/vars.css'
+import '../style/main.css'
+import '../style/vars.css'
 import 'uno.css'
-import HomePage from '../../src/components/HomePage.vue'
+import HomePage from '../components/HomePage.vue'
 
 if (inBrowser)
   import('./pwa')

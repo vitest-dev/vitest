@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { coreTeamMembers } from '../contributors'
+import { teamMembers } from '../contributors'
 </script>
 
 <template>
@@ -12,7 +12,7 @@ import { coreTeamMembers } from '../contributors'
           </h2>
           <div grid="~ cols-1 md:cols-2 lg:cols-3 gap-x-10 gap-y-10 items-center" p-10>
             <TeamMember
-              v-for="c of coreTeamMembers"
+              v-for="c of teamMembers"
               :key="c.github"
               v-bind="c"
             />

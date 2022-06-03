@@ -1,4 +1,4 @@
-import contributors from '../contributors.json'
+import contributorNames from './contributor-names.json'
 
 export interface Contributor {
   name: string
@@ -18,13 +18,13 @@ const contributorsAvatars: Record<string, string> = {}
 
 const getAvatarUrl = (name: string) => import.meta.hot ? `https://github.com/${name}.png` : `/user-avatars/${name}.png`
 
-const contributorList = (contributors as string[]).reduce((acc, name) => {
+export const contributors = (contributorNames as string[]).reduce((acc, name) => {
   contributorsAvatars[name] = getAvatarUrl(name)
   acc.push({ name, avatar: contributorsAvatars[name] })
   return acc
 }, [] as Contributor[])
 
-const coreTeamMembers: CoreTeam[] = [
+export const teamMembers: CoreTeam[] = [
   {
     avatar: contributorsAvatars.antfu,
     name: 'Anthony Fu',
@@ -82,5 +82,3 @@ const coreTeamMembers: CoreTeam[] = [
     description: 'A fullstack developer<br>Creating tools for collaboration',
   },
 ]
-
-export { coreTeamMembers, contributorList as contributors }
