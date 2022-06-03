@@ -2,7 +2,7 @@
   <ul
     class="features-list"
     dir="auto"
-    flex="~ col gap-5 md:gap-3"
+    flex="~ col gap2 md:gap-3"
   >
     <ListItem><a target="_blank" href="https://vitejs.dev" rel="noopener noreferrer">Vite</a>'s config, transformers, resolvers, and plugins.</ListItem>
     <ListItem>Use the same setup from your app to run the tests!</ListItem>
@@ -26,6 +26,7 @@
   list-style: none;
   display: flex;
   gap: 0.4rem;
+  margin: 0;
 }
 
 .features-list {

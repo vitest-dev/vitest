@@ -1,3 +1,7 @@
+---
+outline: deep
+---
+
 # API Reference
 
 The following types are used in the type signatures below

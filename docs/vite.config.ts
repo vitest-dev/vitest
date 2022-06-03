@@ -14,8 +14,8 @@ import {
   vitestDescription,
   vitestName,
   vitestShortName,
-} from './docs-data'
-import { optimizePages } from './scripts/assets'
+} from './.vitepress/meta'
+import { optimizePages } from './.vitepress/scripts/assets'
 
 const PWA = VitePWA({
   outDir: '.vitepress/dist',
@@ -86,7 +86,8 @@ export default defineConfig({
   plugins: [
     Components({
       include: [/\.vue/, /\.md/],
-      dts: true,
+      dirs: '.vitepress/components',
+      dts: '.vitepress/components.d.ts',
     }),
     Unocss({
       shortcuts: [

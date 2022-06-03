@@ -4,23 +4,25 @@ import {
   contributing,
   discord,
   font,
+  github,
   ogImage,
   ogUrl,
   releases,
   twitter,
   vitestDescription,
   vitestName,
-} from '../docs-data'
-import { coreTeamMembers } from '../src/contributors'
+} from './meta'
+import { teamMembers } from './contributors'
 
 export default defineConfig({
+  lang: 'en-US',
   title: vitestName,
   description: vitestDescription,
   head: [
     ['meta', { name: 'theme-color', content: '#ffffff' }],
     ['link', { rel: 'icon', href: '/logo.svg', type: 'image/svg+xml' }],
     ['link', { rel: 'alternate icon', href: '/favicon.ico', type: 'image/png', sizes: '16x16' }],
-    ['meta', { name: 'author', content: `${coreTeamMembers.map(c => c.name).join(', ')} and ${vitestName} contributors` }],
+    ['meta', { name: 'author', content: `${teamMembers.map(c => c.name).join(', ')} and ${vitestName} contributors` }],
     ['meta', { name: 'keywords', content: 'vitest, vite, test, coverage, snapshot, react, vue, preact, svelte, solid, lit, ruby, cypress, puppeteer, jsdom, happy-dom, test-runner, jest, typescript, esm, tinypool, tinyspy, c8, node' }],
     ['meta', { property: 'og:title', content: vitestName }],
     ['meta', { property: 'og:description', content: vitestDescription }],
@@ -34,21 +36,48 @@ export default defineConfig({
     ['link', { rel: 'mask-icon', href: '/logo.svg', color: '#ffffff' }],
     ['link', { rel: 'apple-touch-icon', href: '/apple-touch-icon.png', sizes: '180x180' }],
   ],
+  lastUpdated: true,
+  markdown: {
+    theme: {
+      light: 'vitesse-light',
+      dark: 'vitesse-dark',
+    },
+  },
   themeConfig: {
-    repo: 'vitest-dev/vitest',
     logo: '/logo.svg',
-    docsDir: 'docs',
-    docsBranch: 'main',
-    editLinks: true,
-    editLinkText: 'Suggest changes to this page',
+
+    editLink: {
+      repo: 'vitest-dev/vitest',
+      branch: 'main',
+      dir: 'docs',
+      text: 'Suggest changes to this page',
+    },
 
     algolia: {
       appId: 'ZTF29HGJ69',
       apiKey: '9c3ced6fed60d2670bb36ab7e8bed8bc',
       indexName: 'vitest',
-      // searchParameters: {
-      //   facetFilters: ['tags:en']
-      // }
+      searchParameters: {
+        facetFilters: ['tags:en'],
+      },
+    },
+
+    localeLinks: {
+      text: 'English',
+      items: [
+        { text: '简体中文', link: 'https://cn.vitest.dev' },
+      ],
+    },
+
+    socialLinks: [
+      { icon: 'twitter', link: twitter },
+      { icon: 'discord', link: discord },
+      { icon: 'github', link: github },
+    ],
+
+    footer: {
+      message: 'Released under the MIT License.',
+      copyright: 'Copyright © 2021-PRESENT Anthony Fu, Matías Capeletto and Vitest contributors',
     },
 
     nav: [
@@ -68,37 +97,14 @@ export default defineConfig({
           },
         ],
       },
-      {
-        text: 'Discord',
-        link: discord,
-      },
-      {
-        text: 'Twitter',
-        link: twitter,
-      },
-      {
-        text: 'English',
-        items: [
-          {
-            text: 'English',
-            link: '',
-          },
-          {
-            text: '简体中文',
-            link: 'https://cn.vitest.dev',
-          },
-        ],
-      },
     ],
 
     sidebar: {
-      '/config/': 'auto',
-      '/api/': 'auto',
-      // catch-all fallback
+      // TODO: bring sidebar of apis and config back
       '/': [
         {
           text: 'Guide',
-          children: [
+          items: [
             {
               text: 'Why Vitest',
               link: '/guide/why',
@@ -155,6 +161,24 @@ export default defineConfig({
             {
               text: 'Migration Guide',
               link: '/guide/migration',
+            },
+          ],
+        },
+        {
+          text: 'API',
+          items: [
+            {
+              text: 'API Reference',
+              link: '/api/',
+            },
+          ],
+        },
+        {
+          text: 'Config',
+          items: [
+            {
+              text: 'Config Reference',
+              link: '/config/',
             },
           ],
         },
