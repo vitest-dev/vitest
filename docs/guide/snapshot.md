@@ -108,3 +108,63 @@ Pretty foo: Object {
 ```
 
 We are using Jest's `pretty-format` for serializing snapshots. You can read more about it here: [pretty-format](https://github.com/facebook/jest/blob/main/packages/pretty-format/README.md#serialize).
+
+## Difference from Jest
+
+Vitest provides an almost compatible Snapshot feature with [Jest's](https://jestjs.io/docs/snapshot-testing) with a few exceptions:
+
+#### 1. Comment header in the snapshot file is different
+
+```diff
+- // Jest Snapshot v1
++ // Vitest Snapshot v1
+```
+
+This does not really affects the functionality but might affect your commit diff when migrating from Jest.
+
+#### 2. `printBasicPrototype` is default to `false`
+
+Both Jest and Vitest's snapshots are powered by [`pretty-format`](https://github.com/facebook/jest/blob/main/packages/pretty-format). In Vitest we set `printBasicPrototype` default to `false` to provide a cleaner snapshot output, while in Jest it's `true` by default.
+
+```ts
+import { expect, test } from 'vitest'
+
+test('snapshot', () => {
+  const bar = [
+    {
+      foo: 'bar',
+    },
+  ]
+
+  // in Jest
+  expect(bar).toMatchInlineSnapshot(`
+    Array [
+      Object {
+        "foo": "bar",
+      },
+    ]
+  `)
+
+  // in Vitest
+  expect(bar).toMatchInlineSnapshot(`
+    [
+      {
+        "foo": "bar",
+      },
+    ]
+  `)
+})
+```
+
+We believe this is a more reasonable default for readability and overall DX. If you still prefer Jest's behavior, you can change your config by:
+
+```ts
+// vitest.config.js
+export default defineConfig({
+  test: {
+    snapshotFormat: {
+      printBasicPrototype: true
+    }
+  }
+})
+```
