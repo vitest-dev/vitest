@@ -15,7 +15,13 @@ hero:
   actions:
     - theme: brand
       text: Get Started
-      link: /guide/getting-started
+      link: /guide/
+    - theme: alt
+      text: Features
+      link: /guide/features
+    - theme: alt
+      text: Why Vitest?
+      link: /guide/why
     - theme: alt
       text: View on GitHub
       link: https://github.com/vitest-dev/vitest
@@ -30,5 +36,3 @@ features:
   - title: ESM, TypeScript, JSX
     details: Out-of-box ESM, TypeScript and JSX support powered by esbuild
 ---
-
-<HomePage />
