@@ -18,7 +18,7 @@ We are now providing an official extension for Visual Studio Code to enhance you
 <img src="https://raw.githubusercontent.com/linux-china/vitest-jetbrains-plugin/main/banner.png" w-80>
 </p>
 
-A plugin for WebStorm is supplied to enhance your testing experience with Vitest.
+A plugin for IntelliJ/WebStorm is supplied to enhance your testing experience with Vitest.
 
 [GitHub](https://github.com/linux-china/vitest-jetbrains-plugin) | [JetBrains Plugin Marketplace](https://plugins.jetbrains.com/plugin/19220-vitest-runner)
 
