@@ -122,16 +122,19 @@ export default defineConfig({
               link: '/guide/cli',
             },
             {
+              text: 'Test Filtering',
+              link: '/guide/filtering',
+            },
+            {
+              text: 'Snapshot',
+              link: '/guide/snapshot',
+            },
+            {
               text: 'Mocking',
               link: '/guide/mocking',
             },
             {
-              text: 'Test Filtering',
-              link: '/guide/filtering',
-            },
-
-            {
-              text: 'In-source testing',
+              text: 'In-source Testing',
               link: '/guide/in-source',
             },
             {
@@ -141,10 +144,6 @@ export default defineConfig({
             {
               text: 'Extending Matchers',
               link: '/guide/extending-matchers',
-            },
-            {
-              text: 'Snapshot Serializer',
-              link: '/guide/snapshot-serializer',
             },
             {
               text: 'IDE Integration',

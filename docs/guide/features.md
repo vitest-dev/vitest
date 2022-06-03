@@ -70,7 +70,18 @@ You can also use `.skip`, `.only`, and `.todo` with concurrent suites and tests.
 
 ## Snapshot
 
-[Jest Snapshot](https://jestjs.io/docs/snapshot-testing) support
+[Jest-compatible](https://jestjs.io/docs/snapshot-testing) snapshot support.
+
+```ts
+import { expect, it } from 'vitest'
+
+it('renders correctly', () => {
+  const result = render()
+  expect(result).toMatchSnapshot()
+})
+```
+
+Learn more at [Snapshot](/guide/snapshot)
 
 ## Chai and Jest expect compatibility
 

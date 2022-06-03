@@ -12,7 +12,11 @@
     <ListItem>ESM first, top level await</ListItem>
     <ListItem>Workers multi-threading via <a target="_blank" href="https://github.com/Aslemammad/tinypool" rel="noopener noreferrer">tinypool</a></ListItem>
     <ListItem>Filtering, timeouts, concurrent for suite and tests</ListItem>
-    <ListItem><a target="_blank" href="https://jestjs.io/docs/snapshot-testing" rel="noopener noreferrer">Jest Snapshot</a></ListItem>
+    <ListItem>
+      <a href="/guide/snapshot">
+        Jest-compatible Snapshot
+      </a>
+    </ListItem>
     <ListItem><a target="_blank" href="https://www.chaijs.com/" rel="noopener noreferrer">Chai</a> built-in for assertions + <a target="_blank" href="https://jestjs.io/docs/expect" rel="noopener noreferrer">Jest expect</a> compatible APIs</ListItem>
     <ListItem><a target="_blank" href="https://github.com/Aslemammad/tinyspy" rel="noopener noreferrer">Tinyspy</a> built-in for mocking</ListItem>
     <ListItem><a target="_blank" href="https://github.com/capricorn86/happy-dom" rel="noopener noreferrer">happy-dom</a> or <a target="_blank" href="https://github.com/jsdom/jsdom" rel="noopener noreferrer">jsdom</a> for DOM mocking</ListItem>

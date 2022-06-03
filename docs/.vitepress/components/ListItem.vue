@@ -16,8 +16,8 @@ function reset() {
 
 const color = computed(() => {
   return {
-    '--c-brand': state.value === 1
-      ? 'rgba(74,222,128,1)'
+    '--vp-c-brand': state.value === 1
+      ? '#66ba1c'
       : state.value === 2
         ? 'rgba(248, 113, 113)'
         : 'rgba(250, 204, 21)',

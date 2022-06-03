@@ -4,13 +4,14 @@
 
 :root {
   --vp-c-accent: rgb(218, 180, 11);
-  --vp-c-brand: #61aa17;
+  --vp-c-brand: #6ab02c;
   --vp-c-brand-light: #9ac440;
   --vp-c-brand-lighter: #acd05c;
   --vp-c-brand-dark: #668d11;
   --vp-c-brand-darker: #52730d;
+  --vp-c-text-code: #bbeebb;
   --vp-code-block-bg: rgba(125,125,125,0.04);
-  --vp-c-green-light: rgb(18, 181, 157);
+  --vp-custom-block-tip-text: rgb(18, 181, 157);
   --vp-custom-block-tip-border: rgba(18, 181, 157, 0.5);
   --vp-custom-block-tip-bg: rgba(18, 181, 157, 0.1);
 }
