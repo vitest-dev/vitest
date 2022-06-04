@@ -362,7 +362,7 @@ Coverage options passed to [C8](https://github.com/bcoe/c8).
 - **Type** `string | RegExp`
 
 Run tests with full names matching the pattern.
-If you add `OnlyRunThis` to this property, tests containing the word `OnlyRunThis` in the test name will be skipped.
+If you add `OnlyRunThis` to this property, tests not containing the word `OnlyRunThis` in the test name will be skipped.
 
 ```js
 import { expect, test } from 'vitest'
