@@ -12,7 +12,7 @@ export type ModuleGraphConfig = GraphConfig<ModuleType, ModuleNode, ModuleLink>
 function defineExternalModuleNode(module: string): ModuleNode {
   let label = module
   if (label.includes('/node_modules/'))
-    label = label.split(/\/node_modules\//g).pop()!.split(/\//g).shift()!
+    label = label.split(/\/node_modules\//g).pop()!
   else
     label = label.split(/\//g).pop()!
 
