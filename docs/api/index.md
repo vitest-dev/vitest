@@ -162,8 +162,8 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
   ```ts
   import { expect, test } from 'vitest'
   const myAsyncFunc = () => new Promise(resolve => resolve(1))
-  test.fails('fail test', () => {
-    expect(myAsyncFunc()).rejects.toBe(1)
+  test.fails('fail test', async () => {
+    await expect(myAsyncFunc()).rejects.toBe(1)
   })
   ```
 
