@@ -355,6 +355,10 @@ test('execute a script', async () => {
 })
 ```
 
+::: tip
+Make sure that your files are not excluded by `watchExclude`.
+:::
+
 ### isolate
 
 - **Type:** `boolean`
