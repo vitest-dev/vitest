@@ -386,7 +386,7 @@ export class Vitest {
    * @returns A value indicating whether rerun is needed (changedTests was mutated)
    */
   private handleFileChanged(id: string): boolean {
-    if (this.changedTests.has(id) || this.invalidates.has(id) || mm.isMatch(id, this.config.watchExclude))
+    if (this.changedTests.has(id) || this.invalidates.has(id))
       return false
 
     if (mm.isMatch(id, this.config.dumbWatchInclude)) {
