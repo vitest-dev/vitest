@@ -1,3 +1,11 @@
+.dark [img-light] {
+  display: none;
+}
+
+html:not(.dark) [img-dark] {
+  display: none;
+}
+
 /* Overrides */
 
 .VPSocialLink {
@@ -21,3 +29,5 @@ img.resizable-img {
   width: unset;
   height: unset;
 }
+
+

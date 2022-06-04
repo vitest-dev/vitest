@@ -126,12 +126,20 @@ export default defineConfig({
               link: '/guide/filtering',
             },
             {
+              text: 'Coverage',
+              link: '/guide/coverage',
+            },
+            {
               text: 'Snapshot',
               link: '/guide/snapshot',
             },
             {
               text: 'Mocking',
               link: '/guide/mocking',
+            },
+            {
+              text: 'Vitest UI',
+              link: '/guide/ui',
             },
             {
               text: 'In-source Testing',
