@@ -65,6 +65,19 @@ Or you can use the `--updateSnapshot` or `-u` flag in the CLI to make Vitest int
 vitest -u
 ```
 
+## Image Snapshots
+
+It's also possible to snapshoting images using [`jest-image-snapshot`](https://github.com/americanexpress/jest-image-snapshot).
+
+```ts
+test('image snapshot', () => {
+  expect(readFileSync('./test/stubs/input-image.png'))
+    .toMatchImageSnapshot()
+})
+```
+
+You can learn more in the [`examples/image-snapshot`](https://github.com/vitest-dev/vitest/blob/main/examples/image-snapshot) example.
+
 ## Custom Serializer
 
 You can add your own logic to alter how your snapshots are serialized. Like Jest, Vitest has default serializers for built-in JavaScript types, HTML elements, ImmutableJS and for React elements.
