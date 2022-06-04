@@ -1,6 +1,7 @@
 import { fileURLToPath, pathToFileURL } from 'url'
 import { dirname, resolve } from 'pathe'
 import type { TransformResult } from 'vite'
+import type { Arrayable, Nullable } from './types'
 
 export const isWindows = process.platform === 'win32'
 
@@ -73,4 +74,19 @@ export async function withInlineSourcemap(result: TransformResult) {
     result.code = `${code}\n\n//# ${SOURCEMAPPING_URL}=data:application/json;charset=utf-8;base64,${Buffer.from(JSON.stringify(map), 'utf-8').toString('base64')}\n`
 
   return result
+}
+
+/**
+ * Convert `Arrayable<T>` to `Array<T>`
+ *
+ * @category Array
+ */
+export function toArray<T>(array?: Nullable<Arrayable<T>>): Array<T> {
+  if (array === null || array === undefined)
+    array = []
+
+  if (Array.isArray(array))
+    return array
+
+  return [array]
 }
