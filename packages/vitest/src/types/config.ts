@@ -198,11 +198,18 @@ export interface InlineConfig {
   globalSetup?: string | string[]
 
   /**
-   * Pattern of file paths to be ignore from triggering watch rerun
-   *
-   * @default [/\/node_modules\//, /\/dist\//]
+   * Glob pattern of file paths to be ignore from triggering watch rerun
    */
-  watchIgnore?: (string | RegExp)[]
+  watchExclude?: string[]
+
+  /**
+   * Glob patter of file paths that will trigger the whole suite rerun
+   *
+   * Useful if you are testing calling CLI commands
+   *
+   * @default []
+   */
+  dumbWatchInclude?: string[]
 
   /**
    * Isolate environment for each test file
