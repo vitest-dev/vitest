@@ -38,7 +38,7 @@ async function startViteNode(ctx: WorkerContext) {
 
   const { run } = (await executeInViteNode({
     files: [
-      resolve(distDir, 'entry.js'),
+      resolve(distDir, 'entry.mjs'),
     ],
     fetchModule(id) {
       return rpc().fetch(id)

@@ -18,7 +18,7 @@ export interface WorkerPool {
   close: () => Promise<void>
 }
 
-const workerPath = pathToFileURL(resolve(distDir, './worker.js')).href
+const workerPath = pathToFileURL(resolve(distDir, './worker.mjs')).href
 
 export function createPool(ctx: Vitest): WorkerPool {
   const threadsCount = ctx.config.watch
