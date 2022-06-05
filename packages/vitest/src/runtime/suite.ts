@@ -42,7 +42,6 @@ export const defaultSuite = suite('')
 
 export function clearCollectorContext() {
   collectorContext.tasks.length = 0
-  defaultSuite.clear()
   collectorContext.currentSuite = defaultSuite
 }
 
