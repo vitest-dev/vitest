@@ -31,7 +31,6 @@ export class ViteNodeServer {
       options.deps ??= {}
 
       // we don't externalize ssr, because it has different semantics in Vite
-      // Vite prefers using `require`, but we try to import ESM with async `import`
       // if (ssrOptions.external) {
       //   options.deps.external ??= []
       //   options.deps.external.push(...ssrOptions.external)
