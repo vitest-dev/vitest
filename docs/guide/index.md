@@ -13,14 +13,14 @@ You can try Vitest online on [StackBlitz](https://vitest.new). It runs Vitest di
 ## Adding Vitest to your Project
 
 ```bash
-// with npm
-$ npm install -D vitest
+# with npm
+npm install -D vitest
 
-// or with yarn
-$ yarn add -D vitest
+# or with yarn
+yarn add -D vitest
 
-// or with pnpm
-$ pnpm add -D vitest
+# or with pnpm
+pnpm add -D vitest
 ```
 
 :::tip
@@ -54,7 +54,7 @@ See the list of config options in the [Config Reference](../config/)
 In a project where Vitest is installed, you can use the `vitest` binary in your npm scripts, or run it directly with `npx vitest`. Here are the default npm scripts in a scaffolded Vitest project:
 
 <!-- prettier-ignore -->
-```json5
+```json
 {
   "scripts": {
     "test": "vitest",

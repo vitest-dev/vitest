@@ -6,7 +6,7 @@
     "build": "nr prefetch && vitepress build",
     "serve": "vitepress serve",
     "preview-https": "pnpm run build && serve .vitepress/dist",
-    "prefetch": "esno scripts/fetch-avatars.ts"
+    "prefetch": "esno .vitepress/scripts/fetch-avatars.ts"
   },
   "dependencies": {
     "@vueuse/core": "^8.5.0",
@@ -23,7 +23,7 @@
     "unocss": "^0.36.0",
     "unplugin-vue-components": "^0.19.6",
     "vite-plugin-pwa": "^0.12.0",
-    "vitepress": "^0.22.4",
+    "vitepress": "^1.0.0-alpha.1",
     "workbox-window": "^6.5.3"
   }
 }

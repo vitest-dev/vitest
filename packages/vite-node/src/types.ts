@@ -1,5 +1,8 @@
 import type { ModuleCacheMap } from './client'
 
+export type Nullable<T> = T | null | undefined
+export type Arrayable<T> = T | Array<T>
+
 export interface DepsHandlingOptions {
   external?: (string | RegExp)[]
   inline?: (string | RegExp)[]

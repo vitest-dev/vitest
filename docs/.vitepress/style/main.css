@@ -1,0 +1,33 @@
+.dark [img-light] {
+  display: none;
+}
+
+html:not(.dark) [img-dark] {
+  display: none;
+}
+
+/* Overrides */
+
+.VPSocialLink {
+  transform: scale(0.9);
+}
+
+.vp-doc th, .vp-doc td {
+  padding: 6px 10px;
+  border: 1px solid #8882;
+}
+
+/* h3 breaks SEO => replaced with h2 with the same size */
+.home-content h2 {
+  margin-top: 2rem;
+  font-size: 1.35rem;
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+img.resizable-img {
+  width: unset;
+  height: unset;
+}
+
+

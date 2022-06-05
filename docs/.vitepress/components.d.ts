@@ -5,13 +5,13 @@ import '@vue/runtime-core'
 
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
-    Avatar: typeof import('./src/components/Avatar.vue')['default']
-    Contributors: typeof import('./src/components/Contributors.vue')['default']
-    FeaturesList: typeof import('./src/components/FeaturesList.vue')['default']
-    Home: typeof import('./src/components/Home.vue')['default']
-    ListItem: typeof import('./src/components/ListItem.vue')['default']
+    Contributors: typeof import('./components/Contributors.vue')['default']
+    FeaturesList: typeof import('./components/FeaturesList.vue')['default']
+    HomePage: typeof import('./components/HomePage.vue')['default']
+    ListItem: typeof import('./components/ListItem.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    TeamMember: typeof import('./components/TeamMember.vue')['default']
   }
 }
 
