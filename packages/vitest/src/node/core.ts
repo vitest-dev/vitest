@@ -123,7 +123,7 @@ export class Vitest {
       if (this.config.include)
         this.console.error(c.dim('include: ') + c.yellow(this.config.include.join(comma)))
       if (this.config.watchExclude)
-        this.console.error(c.dim('ignore:  ') + c.yellow(this.config.watchExclude.join(comma)))
+        this.console.error(c.dim('watch exclude:  ') + c.yellow(this.config.watchExclude.join(comma)))
 
       if (this.config.passWithNoTests)
         this.log('No test files found, exiting with code 0\n')
