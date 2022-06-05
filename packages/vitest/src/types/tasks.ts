@@ -140,7 +140,7 @@ export interface SuiteCollector<ExtraContext = {}> {
   test: TestAPI<ExtraContext>
   tasks: (Suite | Test | SuiteCollector<ExtraContext>)[]
   collect: (file?: File) => Promise<Suite>
-  clear: () => void
+  clear: (clearHooks?: boolean) => void
   on: <T extends keyof SuiteHooks>(name: T, ...fn: SuiteHooks[T]) => void
 }
 
