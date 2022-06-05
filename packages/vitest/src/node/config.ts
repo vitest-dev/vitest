@@ -94,8 +94,16 @@ export function resolveConfig(
   // vitenode will try to import such file with native node,
   // but then our mocker will not work properly
   if (resolved.deps.inline !== true) {
-    resolved.deps.inline ??= []
-    resolved.deps.inline.push(...extraInlineDeps)
+    // @ts-expect-error ssr is not typed
+    const ssrOptions = viteConfig.ssr
+
+    if (ssrOptions.noExternal === true && resolved.deps.inline == null) {
+      resolved.deps.inline = true
+    }
+    else {
+      resolved.deps.inline ??= []
+      resolved.deps.inline.push(...extraInlineDeps)
+    }
   }
 
   resolved.testNamePattern = resolved.testNamePattern

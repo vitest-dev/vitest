@@ -37,7 +37,7 @@ export class ViteNodeServer {
       // }
 
       if (ssrOptions.noExternal === true) {
-        options.deps.inline = true
+        options.deps.inline ??= true
       }
       else if (options.deps.inline !== true) {
         options.deps.inline ??= []
