@@ -90,15 +90,19 @@ async function run(files: string[], options: CliOptions = {}) {
 }
 
 function parseServerOptions(serverOptions: ViteNodeServerOptionsCLI): ViteNodeServerOptions {
+  const inlineOptions = serverOptions.deps?.inline === true ? true : toArray(serverOptions.deps?.inline)
+
   return {
     ...serverOptions,
     deps: {
       ...serverOptions.deps,
-      inline: toArray(serverOptions.deps?.inline).map((dep) => {
-        return dep.startsWith('/') && dep.endsWith('/')
-          ? new RegExp(dep)
-          : dep
-      }),
+      inline: inlineOptions !== true
+        ? inlineOptions.map((dep) => {
+          return dep.startsWith('/') && dep.endsWith('/')
+            ? new RegExp(dep)
+            : dep
+        })
+        : true,
       external: toArray(serverOptions.deps?.external).map((dep) => {
         return dep.startsWith('/') && dep.endsWith('/')
           ? new RegExp(dep)
@@ -121,9 +125,11 @@ type ComputeViteNodeServerOptionsCLI<T extends Record<string, any>> = {
     ? string | string[]
     : T[K] extends Optional<(string | RegExp)[]>
       ? string | string[]
-      : T[K] extends Optional<Record<string, any>>
-        ? ComputeViteNodeServerOptionsCLI<T[K]>
-        : T[K]
+      : T[K] extends Optional<(string | RegExp)[] | true>
+        ? string | string[] | true
+        : T[K] extends Optional<Record<string, any>>
+          ? ComputeViteNodeServerOptionsCLI<T[K]>
+          : T[K]
 }
 
 export type ViteNodeServerOptionsCLI = ComputeViteNodeServerOptionsCLI<ViteNodeServerOptions>

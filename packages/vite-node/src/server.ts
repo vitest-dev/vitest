@@ -3,7 +3,7 @@ import type { TransformResult, ViteDevServer } from 'vite'
 import createDebug from 'debug'
 import type { FetchResult, RawSourceMap, ViteNodeResolveId, ViteNodeServerOptions } from './types'
 import { shouldExternalize } from './externalize'
-import { toFilePath, withInlineSourcemap } from './utils'
+import { toArray, toFilePath, withInlineSourcemap } from './utils'
 
 export * from './externalize'
 
@@ -24,7 +24,28 @@ export class ViteNodeServer {
   constructor(
     public server: ViteDevServer,
     public options: ViteNodeServerOptions = {},
-  ) {}
+  ) {
+    // @ts-expect-error ssr is not typed
+    const ssrOptions = server.config.ssr
+    if (ssrOptions) {
+      options.deps ??= {}
+
+      // we don't externalize ssr, because it has different semantics in Vite
+      // Vite prefers using `require`, but we try to import ESM with async `import`
+      // if (ssrOptions.external) {
+      //   options.deps.external ??= []
+      //   options.deps.external.push(...ssrOptions.external)
+      // }
+
+      if (ssrOptions.noExternal === true) {
+        options.deps.inline = true
+      }
+      else if (options.deps.inline !== true) {
+        options.deps.inline ??= []
+        options.deps.inline.push(...toArray(ssrOptions.noExternal))
+      }
+    }
+  }
 
   shouldExternalize(id: string) {
     return shouldExternalize(id, this.options.deps)

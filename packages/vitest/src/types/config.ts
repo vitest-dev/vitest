@@ -59,8 +59,10 @@ export interface InlineConfig {
      * Vite will process inlined modules.
      *
      * This could be helpful to handle packages that ship `.js` in ESM format (that Node can't handle).
+     *
+     * If `true`, every dependency will be inlined
      */
-    inline?: (string | RegExp)[]
+    inline?: (string | RegExp)[] | true
 
     /**
      * Interpret CJS module's default as named exports
