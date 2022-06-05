@@ -365,8 +365,8 @@ export class Vitest {
     }
     const watcher = this.server.watcher
 
-    if (this.config.dumbWatchInclude.length)
-      watcher.add(this.config.dumbWatchInclude)
+    if (this.config.forceRerunTriggers.length)
+      watcher.add(this.config.forceRerunTriggers)
 
     watcher.unwatch(this.config.watchExclude)
 
@@ -389,7 +389,7 @@ export class Vitest {
     if (this.changedTests.has(id) || this.invalidates.has(id))
       return false
 
-    if (mm.isMatch(id, this.config.dumbWatchInclude)) {
+    if (mm.isMatch(id, this.config.forceRerunTriggers)) {
       this.state.getFilepaths().forEach(file => this.changedTests.add(file))
       return true
     }

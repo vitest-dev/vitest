@@ -339,7 +339,7 @@ Beware that the global setup is run in a different global scope if you are using
 
 Glob pattern of file paths to be ignored from triggering watch rerun.
 
-### dumbWatchInclude
+### forceRerunTriggers
 
 - **Type**: `string[]`
 - **Default:** `[]`

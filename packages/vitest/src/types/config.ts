@@ -209,7 +209,7 @@ export interface InlineConfig {
    *
    * @default []
    */
-  dumbWatchInclude?: string[]
+  forceRerunTriggers?: string[]
 
   /**
    * Isolate environment for each test file

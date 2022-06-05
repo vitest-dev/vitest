@@ -62,7 +62,7 @@ const config = {
   hookTimeout: 10000,
   isolate: true,
   watchExclude: ['**/node_modules/**', '**/dist/**'],
-  dumbWatchInclude: [],
+  forceRerunTriggers: [],
   update: false,
   reporters: [],
   silent: false,
