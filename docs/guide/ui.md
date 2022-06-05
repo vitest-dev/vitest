@@ -12,7 +12,7 @@ Then you can start the tests with UI by passing the `--ui` flag:
 vitest --ui
 ```
 
-Then you can visit the Vitest UI at [`http://localhost:51204/__vitest__/`](http://localhost:51204/__vitest__/).
+Then you can visit the Vitest UI at <a href="http://localhost:51204/__vitest__/">`http://localhost:51204/__vitest__/`</a>
 
 
 <img alt="Vitest UI" img-light src="https://user-images.githubusercontent.com/11247099/171992267-5cae2fa0-b927-400a-8eb1-da776974cb61.png">
