@@ -50,7 +50,7 @@ export interface Test<ExtraContext = {}> extends TaskBase {
 export type Task = Test | Suite | File
 
 export type DoneCallback = (error?: any) => void
-export type TestFunction<ExtraContext = {}> = (context: TestContext & ExtraContext) => Awaitable<void>
+export type TestFunction<ExtraContext = {}> = (context: TestContext & ExtraContext) => Awaitable<any>
 
 // jest's ExtractEachCallbackArgs
 type ExtractEachCallbackArgs<T extends ReadonlyArray<any>> = {
