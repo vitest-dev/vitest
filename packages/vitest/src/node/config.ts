@@ -95,7 +95,7 @@ export function resolveConfig(
   // but then our mocker will not work properly
   if (resolved.deps.inline !== true) {
     // @ts-expect-error ssr is not typed
-    const ssrOptions = viteConfig.ssr
+    const ssrOptions = viteConfig.ssr || {}
 
     if (ssrOptions.noExternal === true && resolved.deps.inline == null) {
       resolved.deps.inline = true
