@@ -336,12 +336,32 @@ Beware that the global setup is run in a different global scope if you are using
 :::
 
 
-### watchIgnore
+### watchExclude
 
-- **Type:** `(string | RegExp)[]`
-- **Default:** `[/\/node_modules\//, /\/dist\//]`
+- **Type:** `string[]`
+- **Default:** `['**/node_modules/**', '**/dist/**']`
 
-Pattern of file paths to be ignored from triggering watch rerun. Glob pattern is not supported.
+Glob pattern of file paths to be ignored from triggering watch rerun.
+
+### forceRerunTriggers
+
+- **Type**: `string[]`
+- **Default:** `[]`
+
+Glob patter of file paths that will trigger the whole suite rerun.
+
+Useful if you are testing calling CLI commands, because Vite cannot construct a module graph:
+
+```ts
+test('execute a script', async () => {
+  // Vite cannot rerun this test, if content of `dist/index.js` changes
+  await execa('node', ['dist/index.js'])
+})
+```
+
+::: tip
+Make sure that your files are not excluded by `watchExclude`.
+:::
 
 ### isolate
 
