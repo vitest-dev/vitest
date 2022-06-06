@@ -27,10 +27,14 @@ it('dispatchEvent doesn\'t throw', () => {
   expect(() => target.dispatchEvent(event)).not.toThrow()
 })
 
-it('Image works as expected', () => {
+it('Non-public "live" keys work as expected', () => {
   const img = new Image(100)
+  const audio = new Audio()
+  const option = new Option()
 
   expect(img.width).toBe(100)
+  expect(audio).toBeInstanceOf(window.Audio)
+  expect(option).toBeInstanceOf(window.Option)
 })
 
 it('defined on self/window are defined on global', () => {
