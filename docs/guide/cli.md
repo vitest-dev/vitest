@@ -54,6 +54,7 @@ vitest related /src/index.ts /src/hello-world.js
 | `--silent` | Silent console output from tests |
 | `--isolate` | Isolate environment for each test file (default: `true`) |
 | `--reporter <name>` | Select reporter: `default`, `verbose`, `dot`, `junit`, `json`, or a path to a custom reporter |
+| `--outputTruncateLength <length>` | Truncate output diff lines up to `<length>` number of characters. |
 | `--outputFile <filename/-s>` | Write test results to a file when the `--reporter=json` or `--reporter=junit` option is also specified <br /> Via [cac's dot notation] you can specify individual outputs for multiple reporters |
 | `--coverage` | Use c8 for coverage |
 | `--run` | Do not watch |

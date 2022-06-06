@@ -22,7 +22,7 @@ cli
   .option('--silent', 'silent console output from tests')
   .option('--isolate', 'isolate environment for each test file (default: true)')
   .option('--reporter <name>', 'reporter')
-  .option('--outputTruncateLength <length>', 'diff output length')
+  .option('--outputTruncateLength <length>', 'diff output length (default: 80)')
   .option('--outputFile <filename/-s>', 'write test results to a file when the --reporter=json or --reporter=junit option is also specified, use cac\'s dot notation for individual outputs of mutliple reporters')
   .option('--coverage', 'use c8 for coverage')
   .option('--run', 'do not watch')

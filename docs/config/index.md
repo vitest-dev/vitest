@@ -237,6 +237,14 @@ Custom reporters for output. Reporters can be [a Reporter instance](https://gith
   - `'json'` -  give a simple JSON summary
   - path of a custom reporter (e.g. `'./path/to/reporter.ts'`, `'@scope/reporter'`)
 
+### outputTruncateLength
+
+- **Type:** `number`
+- **Default:** `80`
+
+Truncate output diff lines up to `80` number of characters. You may wish to tune this,
+depending on you terminal window width.
+
 ### outputFile
 
 - **Type:** `string | Record<string, string>`
