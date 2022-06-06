@@ -46,6 +46,7 @@ export interface BenchmarkResult {
   hz: number
   rme: number
   sampleSize: number
+  sort: number
 }
 
 export type BenchmarkOptions = TinyBench.Options

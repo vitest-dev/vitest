@@ -265,12 +265,13 @@ async function runBenchmarkSuit(suite: Suite) {
       state: 'run',
       startTime: start,
       benchmark: {
-        name: '',
+        name: suite.name,
         count: 0,
         cycles: 0,
         hz: 0,
         rme: 0,
         sampleSize: 0,
+        sort: 0,
       },
     }
     updateTask(suite)
@@ -280,12 +281,13 @@ async function runBenchmarkSuit(suite: Suite) {
         state: 'run',
         startTime: start,
         benchmark: {
-          name: '',
+          name: benchmark.name,
           count: 0,
           cycles: 0,
           hz: 0,
           rme: 0,
           sampleSize: 0,
+          sort: 0,
         },
       }
       benchmarkMap[benchmark.name] = benchmark
@@ -306,9 +308,17 @@ async function runBenchmarkSuit(suite: Suite) {
         updateTask(benchmark)
       }
     })
-    benchmarkLib.on('complete', () => {
+    benchmarkLib.on('complete', function () {
       suite.result!.duration = performance.now() - start
       suite.result!.state = 'pass'
+      this.sort((a, b) => b.hz - a.hz).forEach((cycle, idx) => {
+        const benchmark = benchmarkMap[cycle.name || '']
+        if (benchmark) {
+          const result = benchmark.result!.benchmark!
+          result.sort = Number(idx) + 1
+          updateTask(benchmark)
+        }
+      })
       updateTask(suite)
       defer.resolve(null)
     })

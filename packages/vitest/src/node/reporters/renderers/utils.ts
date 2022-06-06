@@ -1,7 +1,7 @@
 import { basename, dirname, isAbsolute, relative } from 'pathe'
 import c from 'picocolors'
 import stripAnsi from 'strip-ansi'
-import type { SnapshotSummary, Task } from '../../../types'
+import type { BenchmarkResult, SnapshotSummary, Task } from '../../../types'
 import { slash } from '../../../utils'
 import { F_CHECK, F_CROSS, F_DOT, F_DOWN, F_DOWN_RIGHT, F_LONG_DASH, F_POINTER } from '../../../utils/figures'
 import type { SuiteHooks } from './../../../types/tasks'
@@ -137,6 +137,19 @@ export function getStateSymbol(task: Task) {
   }
 
   return ' '
+}
+
+export function getBenchmarkSortNumber(task: BenchmarkResult): string {
+  const sort = task.sort
+  if (sort === 0)
+    return c.gray('·')
+  else if (sort === 1)
+    return c.green('1')
+  else if (sort === 2)
+    return c.red('2')
+  else if (sort === 3)
+    return c.blue('3')
+  return c.dim(sort)
 }
 
 export function getHookStateSymbol(task: Task, hookName: keyof SuiteHooks) {

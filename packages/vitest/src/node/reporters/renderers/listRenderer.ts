@@ -5,7 +5,7 @@ import stripAnsi from 'strip-ansi'
 import type { Benchmark, SuiteHooks, Task } from '../../../types'
 import { clearInterval, getTests, setInterval } from '../../../utils'
 import { F_RIGHT } from '../../../utils/figures'
-import { getCols, getHookStateSymbol, getStateSymbol } from './utils'
+import { getBenchmarkSortNumber, getCols, getHookStateSymbol, getStateSymbol } from './utils'
 
 export interface ListRendererOptions {
   renderSucceed?: boolean
@@ -51,6 +51,8 @@ function renderBenchmark(task: Benchmark, level = 0): string {
   const cycle = result.benchmark!
   return [
     '  '.repeat(level),
+    getBenchmarkSortNumber(cycle),
+    ' ',
     c.dim(cycle.name),
     c.dim(' x '),
     c.yellow(formatNumber(cycle.hz)),

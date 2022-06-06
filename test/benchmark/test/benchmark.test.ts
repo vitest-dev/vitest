@@ -31,8 +31,16 @@ describe('timeout', () => {
     await timeout(1000)
   })
 
+  benchmark('timeout750', async () => {
+    await timeout(750)
+  })
+
   benchmark('timeout500', async () => {
     await timeout(500)
+  })
+
+  benchmark('timeout250', async () => {
+    await timeout(250)
   })
 
   test('reduce', () => {
