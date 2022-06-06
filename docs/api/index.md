@@ -1943,7 +1943,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 
 - **Type:** `() => MockInstance`
 
-  Does what `mockRestore` does and restores inner implementation to the original function.
+  Does what `mockReset` does and restores inner implementation to the original function.
 
   Note that restoring mock from `vi.fn()` will set implementation to an empty function that returns `undefined`. Restoring a `vi.fn(impl)` will restore implementation to `impl`.
 
