@@ -74,6 +74,7 @@ async function run(cliFilters: string[], options: CliOptions) {
 }
 
 async function benchmark(cliFilters: string[], options: CliOptions) {
+  console.warn('API might change in the future')
   options.benchmark = defaultBenchmark
   await start(cliFilters, options)
 }
