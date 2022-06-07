@@ -1,6 +1,6 @@
 import { existsSync, readdirSync } from 'fs'
 import { isNodeBuiltin } from 'mlly'
-import { basename, dirname, resolve } from 'pathe'
+import { basename, dirname, relative, resolve } from 'pathe'
 import { normalizeRequestId, toFilePath } from 'vite-node/utils'
 import type { ModuleCacheMap } from 'vite-node/client'
 import { getAllProperties, getType, getWorkerState, isWindows, mergeSlashes, slash } from '../utils'
@@ -100,18 +100,18 @@ export class VitestMocker {
   }
 
   public resolveDependency(dep: string) {
-    return normalizeRequestId(dep.replace(this.root, '')).replace(/^\/@fs\//, isWindows ? '' : '/')
+    return normalizeRequestId(relative(this.root, dep)).replace(/^\/@fs\//, isWindows ? '' : '/')
   }
 
   public normalizePath(path: string) {
-    return normalizeRequestId(path.replace(this.root, '')).replace(/^\/@fs\//, isWindows ? '' : '/')
+    return normalizeRequestId(relative(this.root, path)).replace(/^\/@fs\//, isWindows ? '' : '/')
   }
 
   public getFsPath(path: string, external: string | null) {
     if (external)
       return mergeSlashes(`/@fs/${path}`)
 
-    return normalizeRequestId(path.replace(this.root, ''))
+    return normalizeRequestId(relative(this.root, path))
   }
 
   public resolveMockPath(mockPath: string, external: string | null) {
@@ -132,7 +132,7 @@ export class VitestMocker {
       for (const file of files) {
         const [basename] = file.split('.')
         if (basename === baseFilename)
-          return resolve(mockFolder, file).replace(this.root, '')
+          return relative(this.root, resolve(mockFolder, file))
       }
 
       return null
@@ -141,7 +141,7 @@ export class VitestMocker {
     const dir = dirname(path)
     const baseId = basename(path)
     const fullPath = resolve(dir, '__mocks__', baseId)
-    return existsSync(fullPath) ? fullPath.replace(this.root, '') : null
+    return existsSync(fullPath) ? relative(this.root, fullPath) : null
   }
 
   public mockValue(value: any) {
