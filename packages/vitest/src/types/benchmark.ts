@@ -47,6 +47,12 @@ export interface BenchmarkResult {
   rme: number
   sampleSize: number
   sort: number
+  max: number
+  min: number
+  p75: number
+  p99: number
+  p995: number
+  p999: number
 }
 
 export type BenchmarkOptions = TinyBench.Options

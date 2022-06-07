@@ -272,6 +272,12 @@ async function runBenchmarkSuit(suite: Suite) {
         rme: 0,
         sampleSize: 0,
         sort: 0,
+        max: 0,
+        min: 0,
+        p75: 0,
+        p99: 0,
+        p995: 0,
+        p999: 0,
       },
     }
     updateTask(suite)
@@ -288,6 +294,12 @@ async function runBenchmarkSuit(suite: Suite) {
           rme: 0,
           sampleSize: 0,
           sort: 0,
+          max: 0,
+          min: 0,
+          p75: 0,
+          p99: 0,
+          p995: 0,
+          p999: 0,
         },
       }
       benchmarkMap[benchmark.name] = benchmark
@@ -299,12 +311,21 @@ async function runBenchmarkSuit(suite: Suite) {
       const benchmark = benchmarkMap[cycle.name || '']
       if (benchmark) {
         const result = benchmark.result!.benchmark!
+        const all = cycle.stats?.sample.sort()
+        result.sampleSize = all?.length || result.sampleSize
+        if (all?.length) {
+          result.min = all[0]
+          result.max = all[-1]
+          result.p75 = all[result.sampleSize * Math.ceil(75 / 100) - 1]
+          result.p99 = all[result.sampleSize * Math.ceil(99 / 100) - 1]
+          result.p995 = all[result.sampleSize * Math.ceil(99.5 / 100) - 1]
+          result.p999 = all[result.sampleSize * Math.ceil(99.9 / 100) - 1]
+        }
         result.name = cycle.name || result.name
         result.count = cycle.count || result.count
         result.cycles = cycle.cycles || result.cycles
         result.hz = cycle.hz || result.hz
         result.rme = cycle.stats?.rme || result.rme
-        result.sampleSize = cycle.stats?.sample.length || result.sampleSize
         updateTask(benchmark)
       }
     })
