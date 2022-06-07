@@ -51,25 +51,30 @@ function getOwnProperties(obj: any) {
   return Array.from(ownProps)
 }
 
-export function clone<T>(val: T): T {
-  let k: any, out: any, tmp: any
+export function deepClone<T>(val: T): T {
+  const seen = new WeakMap()
+  return clone(val, seen)
+}
 
+export function clone<T>(val: T, seen: WeakMap<any, any>): T {
+  let k: any, out: any
+  if (seen.has(val))
+    return seen.get(val)
   if (Array.isArray(val)) {
     out = Array(k = val.length)
+    seen.set(val, out)
     while (k--)
-      // eslint-disable-next-line no-cond-assign
-      out[k] = (tmp = val[k]) && typeof tmp === 'object' ? clone(tmp) : tmp
+      out[k] = clone(val[k], seen)
     return out as any
   }
 
   if (Object.prototype.toString.call(val) === '[object Object]') {
     out = Object.create(Object.getPrototypeOf(val))
+    seen.set(val, out)
     // we don't need properties from prototype
     const props = getOwnProperties(val)
-    for (const k of props) {
-      // eslint-disable-next-line no-cond-assign
-      out[k] = (tmp = (val as any)[k]) && typeof tmp === 'object' ? clone(tmp) : tmp
-    }
+    for (const k of props)
+      out[k] = clone((val as any)[k], seen)
     return out
   }
 

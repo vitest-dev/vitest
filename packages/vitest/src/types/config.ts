@@ -67,8 +67,10 @@ export interface InlineConfig {
      * Vite will process inlined modules.
      *
      * This could be helpful to handle packages that ship `.js` in ESM format (that Node can't handle).
+     *
+     * If `true`, every dependency will be inlined
      */
-    inline?: (string | RegExp)[]
+    inline?: (string | RegExp)[] | true
 
     /**
      * Interpret CJS module's default as named exports
@@ -206,11 +208,18 @@ export interface InlineConfig {
   globalSetup?: string | string[]
 
   /**
-   * Pattern of file paths to be ignore from triggering watch rerun
-   *
-   * @default [/\/node_modules\//, /\/dist\//]
+   * Glob pattern of file paths to be ignore from triggering watch rerun
    */
-  watchIgnore?: (string | RegExp)[]
+  watchExclude?: string[]
+
+  /**
+   * Glob patter of file paths that will trigger the whole suite rerun
+   *
+   * Useful if you are testing calling CLI commands
+   *
+   * @default []
+   */
+  forceRerunTriggers?: string[]
 
   /**
    * Isolate environment for each test file

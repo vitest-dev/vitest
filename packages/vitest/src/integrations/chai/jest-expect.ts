@@ -7,7 +7,7 @@ import type { Constructable, Test } from '../../types'
 import { assertTypes } from '../../utils'
 import { unifiedDiff } from '../../node/diff'
 import type { ChaiPlugin, MatcherState } from '../../types/chai'
-import { arrayBufferEquality, iterableEquality, equals as jestEquals, sparseArrayEquality, subsetEquality, typeEquality } from './jest-utils'
+import { arrayBufferEquality, generateToBeMessage, iterableEquality, equals as jestEquals, sparseArrayEquality, subsetEquality, typeEquality } from './jest-utils'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import { stringify } from './jest-matcher-utils'
 
@@ -129,9 +129,41 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   })
   def('toBe', function (expected) {
     const actual = this._obj
+    const pass = Object.is(actual, expected)
+
+    let deepEqualityName = ''
+
+    if (!pass) {
+      const toStrictEqualPass = jestEquals(
+        actual,
+        expected,
+        [
+          iterableEquality,
+          typeEquality,
+          sparseArrayEquality,
+          arrayBufferEquality,
+        ],
+        true,
+      )
+
+      if (toStrictEqualPass) {
+        deepEqualityName = 'toStrictEqual'
+      }
+      else {
+        const toEqualPass = jestEquals(
+          actual,
+          expected,
+          [iterableEquality],
+        )
+
+        if (toEqualPass)
+          deepEqualityName = 'toEqual'
+      }
+    }
+
     return this.assert(
-      Object.is(actual, expected),
-      'expected #{this} to be #{exp} // Object.is equality',
+      pass,
+      generateToBeMessage(deepEqualityName),
       'expected #{this} not to be #{exp} // Object.is equality',
       expected,
       actual,

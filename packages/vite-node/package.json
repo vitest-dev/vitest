@@ -1,7 +1,6 @@
 {
   "name": "vite-node",
-  "type": "module",
-  "version": "0.13.0",
+  "version": "0.14.1",
   "description": "Vite as Node.js runtime",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -19,26 +18,26 @@
     ".": {
       "types": "./dist/index.d.ts",
       "require": "./dist/index.cjs",
-      "import": "./dist/index.js"
+      "import": "./dist/index.mjs"
     },
     "./client": {
       "types": "./dist/client.d.ts",
       "require": "./dist/client.cjs",
-      "import": "./dist/client.js"
+      "import": "./dist/client.mjs"
     },
     "./server": {
       "types": "./dist/server.d.ts",
       "require": "./dist/server.cjs",
-      "import": "./dist/server.js"
+      "import": "./dist/server.mjs"
     },
     "./utils": {
       "types": "./dist/utils.d.ts",
       "require": "./dist/utils.cjs",
-      "import": "./dist/utils.js"
+      "import": "./dist/utils.mjs"
     }
   },
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "typesVersions": {
     "*": {

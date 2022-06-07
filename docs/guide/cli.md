@@ -2,27 +2,39 @@
 
 ## Commands
 
-### `vitest watch`
+### `vitest`
 
-  Run all test suites but watch for changes and rerun tests when they change. Same as calling `vitest` without a command. In CI environments this command will fallback to `vitest run`
+Start Vitest in the current directory. Will enter the watch mode in development environment and run mode in CI automatically.
+
+You can pass a addition argument as the filter of the tests files to run. For example:
+
+```bash
+vitest foobar
+```
+
+Will run only the test file that contains `foobar` in their paths.
 
 ### `vitest run`
 
-  Perform a single run without watch mode.
+Perform a single run without watch mode.
+
+### `vitest watch`
+
+Run all test suites but watch for changes and rerun tests when they change. Same as calling `vitest` without a command. Will fallback to `vitest run` in CI.
 
 ### `vitest dev`
 
-  Run vitest in development mode.
+Alias to `vitest watch`.
 
 ### `vitest related`
 
-  Run only tests that cover a list of source files. Works with static lazy imports, but not the dynamic ones. All files should be relative to root folder.
+Run only tests that cover a list of source files. Works with static lazy imports, but not the dynamic ones. All files should be relative to root folder.
 
-  Useful to run with [`lint-staged`](https://github.com/okonet/lint-staged) or with your CI setup.
+Useful to run with [`lint-staged`](https://github.com/okonet/lint-staged) or with your CI setup.
 
-  ```bash
-  vitest related /src/index.ts /src/hello-world.js
-  ```
+```bash
+vitest related /src/index.ts /src/hello-world.js
+```
 
 ## Options
 

@@ -61,6 +61,7 @@ export default ({ watch }) => [
     output: {
       dir: 'dist',
       format: 'esm',
+      entryFileNames: '[name].mjs',
       chunkFileNames: (chunkInfo) => {
         const id = chunkInfo.facadeModuleId || Object.keys(chunkInfo.modules).find(i => !i.includes('node_modules') && i.includes('src/'))
         if (id) {
@@ -70,9 +71,9 @@ export default ({ watch }) => [
               .filter(i => !['src', 'index', 'dist', 'node_modules'].some(j => i.includes(j)) && i.match(/^[\w_-]+$/))),
           )
           if (parts.length)
-            return `chunk-${parts.slice(-2).join('-')}.[hash].js`
+            return `chunk-${parts.slice(-2).join('-')}.[hash].mjs`
         }
-        return 'vendor-[name].[hash].js'
+        return 'vendor-[name].[hash].mjs'
       },
     },
     external,
@@ -94,7 +95,7 @@ export default ({ watch }) => [
         format: 'cjs',
       },
       {
-        file: 'dist/config.js',
+        file: 'dist/config.mjs',
         format: 'esm',
       },
     ],

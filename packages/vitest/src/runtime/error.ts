@@ -1,7 +1,7 @@
 import { format } from 'util'
 import { util } from 'chai'
 import { stringify } from '../integrations/chai/jest-matcher-utils'
-import { clone, getType } from '../utils'
+import { deepClone, getType } from '../utils'
 
 const OBJECT_PROTO = Object.getPrototypeOf({})
 
@@ -63,8 +63,8 @@ export function processError(err: any) {
   if (err.name)
     err.nameStr = String(err.name)
 
-  const clonedActual = clone(err.actual)
-  const clonedExpected = clone(err.expected)
+  const clonedActual = deepClone(err.actual)
+  const clonedExpected = deepClone(err.expected)
 
   const { replacedActual, replacedExpected } = replaceAsymmetricMatcher(clonedActual, clonedExpected)
 
@@ -105,9 +105,13 @@ function isReplaceable(obj1: any, obj2: any) {
   return obj1Type === obj2Type && obj1Type === 'Object'
 }
 
-export function replaceAsymmetricMatcher(actual: any, expected: any) {
+export function replaceAsymmetricMatcher(actual: any, expected: any, actualReplaced = new WeakMap(), expectedReplaced = new WeakMap()) {
   if (!isReplaceable(actual, expected))
     return { replacedActual: actual, replacedExpected: expected }
+  if (actualReplaced.has(actual) || expectedReplaced.has(expected))
+    return { replacedActual: actual, replacedExpected: expected }
+  actualReplaced.set(actual, true)
+  expectedReplaced.set(expected, true)
   util.getOwnEnumerableProperties(expected).forEach((key) => {
     const expectedValue = expected[key]
     const actualValue = actual[key]
@@ -123,6 +127,8 @@ export function replaceAsymmetricMatcher(actual: any, expected: any) {
       const replaced = replaceAsymmetricMatcher(
         actualValue,
         expectedValue,
+        actualReplaced,
+        expectedReplaced,
       )
       actual[key] = replaced.replacedActual
       expected[key] = replaced.replacedExpected

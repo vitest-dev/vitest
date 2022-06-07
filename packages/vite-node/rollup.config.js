@@ -4,6 +4,7 @@ import resolve from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import alias from '@rollup/plugin-alias'
+import { defineConfig } from 'rollup'
 import pkg from './package.json'
 
 const entries = {
@@ -46,13 +47,14 @@ function onwarn(message) {
   console.error(message)
 }
 
-export default () => [
+export default defineConfig([
   {
     input: entries,
     output: {
       dir: 'dist',
       format: 'esm',
-      entryFileNames: '[name].js',
+      entryFileNames: '[name].mjs',
+      chunkFileNames: 'chunk-[name].mjs',
     },
     external,
     plugins,
@@ -64,6 +66,7 @@ export default () => [
       dir: 'dist',
       format: 'cjs',
       entryFileNames: '[name].cjs',
+      chunkFileNames: 'chunk-[name].cjs',
     },
     external,
     plugins,
@@ -82,4 +85,4 @@ export default () => [
     ],
     onwarn,
   },
-]
+])

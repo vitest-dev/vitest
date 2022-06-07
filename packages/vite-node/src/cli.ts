@@ -5,6 +5,7 @@ import { version } from '../package.json'
 import { ViteNodeServer } from './server'
 import { ViteNodeRunner } from './client'
 import type { ViteNodeServerOptions } from './types'
+import { toArray } from './utils'
 
 const cli = cac('vite-node')
 
@@ -89,16 +90,20 @@ async function run(files: string[], options: CliOptions = {}) {
 }
 
 function parseServerOptions(serverOptions: ViteNodeServerOptionsCLI): ViteNodeServerOptions {
+  const inlineOptions = serverOptions.deps?.inline === true ? true : toArray(serverOptions.deps?.inline)
+
   return {
     ...serverOptions,
     deps: {
       ...serverOptions.deps,
-      inline: serverOptions.deps?.inline?.map((dep) => {
-        return dep.startsWith('/') && dep.endsWith('/')
-          ? new RegExp(dep)
-          : dep
-      }),
-      external: serverOptions.deps?.external?.map((dep) => {
+      inline: inlineOptions !== true
+        ? inlineOptions.map((dep) => {
+          return dep.startsWith('/') && dep.endsWith('/')
+            ? new RegExp(dep)
+            : dep
+        })
+        : true,
+      external: toArray(serverOptions.deps?.external).map((dep) => {
         return dep.startsWith('/') && dep.endsWith('/')
           ? new RegExp(dep)
           : dep
@@ -108,8 +113,8 @@ function parseServerOptions(serverOptions: ViteNodeServerOptionsCLI): ViteNodeSe
     transformMode: {
       ...serverOptions.transformMode,
 
-      ssr: serverOptions.transformMode?.ssr?.map(dep => new RegExp(dep)),
-      web: serverOptions.transformMode?.ssr?.map(dep => new RegExp(dep)),
+      ssr: toArray(serverOptions.transformMode?.ssr).map(dep => new RegExp(dep)),
+      web: toArray(serverOptions.transformMode?.web).map(dep => new RegExp(dep)),
     },
   }
 }
@@ -117,12 +122,14 @@ function parseServerOptions(serverOptions: ViteNodeServerOptionsCLI): ViteNodeSe
 type Optional<T> = T | undefined
 type ComputeViteNodeServerOptionsCLI<T extends Record<string, any>> = {
   [K in keyof T]: T[K] extends Optional<RegExp[]>
-    ? string[]
+    ? string | string[]
     : T[K] extends Optional<(string | RegExp)[]>
-      ? string[]
-      : T[K] extends Optional<Record<string, any>>
-        ? ComputeViteNodeServerOptionsCLI<T[K]>
-        : T[K]
+      ? string | string[]
+      : T[K] extends Optional<(string | RegExp)[] | true>
+        ? string | string[] | true
+        : T[K] extends Optional<Record<string, any>>
+          ? ComputeViteNodeServerOptionsCLI<T[K]>
+          : T[K]
 }
 
 export type ViteNodeServerOptionsCLI = ComputeViteNodeServerOptionsCLI<ViteNodeServerOptions>

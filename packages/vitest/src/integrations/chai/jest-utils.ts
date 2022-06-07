@@ -508,3 +508,16 @@ export const sparseArrayEquality = (
     equals(a, b, [iterableEquality, typeEquality], true) && equals(aKeys, bKeys)
   )
 }
+
+export const generateToBeMessage = (
+  deepEqualityName: string,
+  expected = '#{this}',
+  actual = '#{exp}',
+) => {
+  const toBeMessage = `expected ${expected} to be ${actual} // Object.is equality`
+
+  if (['toStrictEqual', 'toEqual'].includes(deepEqualityName))
+    return `${toBeMessage}\n\nIf it should pass with deep equality, replace "toBe" with "${deepEqualityName}"\n\nExpected: ${expected}\nReceived: serializes to the same string\n`
+
+  return toBeMessage
+}

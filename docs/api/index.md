@@ -1,3 +1,7 @@
+---
+outline: deep
+---
+
 # API Reference
 
 The following types are used in the type signatures below
@@ -158,8 +162,8 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
   ```ts
   import { expect, test } from 'vitest'
   const myAsyncFunc = () => new Promise(resolve => resolve(1))
-  test.fails('fail test', () => {
-    expect(myAsyncFunc()).rejects.toBe(1)
+  test.fails('fail test', async () => {
+    await expect(myAsyncFunc()).rejects.toBe(1)
   })
   ```
 
@@ -1376,7 +1380,7 @@ When you use `test` in the top level of file, they are collected as part of the 
 
 - **Type:** `(plugin: PrettyFormatPlugin) => void`
 
-  This method adds custom serializers that are called when creating a snapshot. This is advanced feature - if you want to know more, please read a [guide on custom serializers](/guide/snapshot-serializer).
+  This method adds custom serializers that are called when creating a snapshot. This is advanced feature - if you want to know more, please read a [guide on custom serializers](/guide/snapshot#custom-serializer).
 
   If you are adding custom serializers, you should call this method inside [`setupFiles`](/config/#setupfiles). This will affect every snapshot.
 
@@ -1939,7 +1943,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 
 - **Type:** `() => MockInstance`
 
-  Does what `mockRestore` does and restores inner implementation to the original function.
+  Does what `mockReset` does and restores inner implementation to the original function.
 
   Note that restoring mock from `vi.fn()` will set implementation to an empty function that returns `undefined`. Restoring a `vi.fn(impl)` will restore implementation to `impl`.
 

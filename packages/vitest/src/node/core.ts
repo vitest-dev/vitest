@@ -124,8 +124,8 @@ export class Vitest {
         this.console.error(c.dim('filter:  ') + c.yellow(filters.join(comma)))
       if (this.config.include)
         this.console.error(c.dim('include: ') + c.yellow(this.config.include.join(comma)))
-      if (this.config.watchIgnore)
-        this.console.error(c.dim('ignore:  ') + c.yellow(this.config.watchIgnore.join(comma)))
+      if (this.config.watchExclude)
+        this.console.error(c.dim('watch exclude:  ') + c.yellow(this.config.watchExclude.join(comma)))
 
       if (this.config.passWithNoTests)
         this.log('No test files found, exiting with code 0\n')
@@ -366,6 +366,12 @@ export class Vitest {
       }
     }
     const watcher = this.server.watcher
+
+    if (this.config.forceRerunTriggers.length)
+      watcher.add(this.config.forceRerunTriggers)
+
+    watcher.unwatch(this.config.watchExclude)
+
     watcher.on('change', onChange)
     watcher.on('unlink', onUnlink)
     watcher.on('add', onAdd)
@@ -382,8 +388,13 @@ export class Vitest {
    * @returns A value indicating whether rerun is needed (changedTests was mutated)
    */
   private handleFileChanged(id: string): boolean {
-    if (this.changedTests.has(id) || this.invalidates.has(id) || this.config.watchIgnore.some(i => id.match(i)))
+    if (this.changedTests.has(id) || this.invalidates.has(id))
       return false
+
+    if (mm.isMatch(id, this.config.forceRerunTriggers)) {
+      this.state.getFilepaths().forEach(file => this.changedTests.add(file))
+      return true
+    }
 
     const mod = this.server.moduleGraph.getModuleById(id)
     if (!mod)

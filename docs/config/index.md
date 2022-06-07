@@ -1,3 +1,7 @@
+---
+outline: deep
+---
+
 # Configuring Vitest
 
 ## Configuration
@@ -72,16 +76,18 @@ Handling for dependencies inlining or externalizing
 #### deps.external
 
 - **Type:** `(string | RegExp)[]`
-- **Default:** `['**\/node_modules\/**','**\/dist\/**']`
+- **Default:** `['**/node_modules/**', '**/dist/**']`
 
 Externalize means that Vite will bypass the package to native Node. Externalized dependencies will not be applied Vite's transformers and resolvers, so they do not support HMR on reload. Typically, packages under `node_modules` are externalized.
 
 #### deps.inline
 
-- **Type:** `(string | RegExp)[]`
+- **Type:** `(string | RegExp)[] | true`
 - **Default:** `[]`
 
 Vite will process inlined modules. This could be helpful to handle packages that ship `.js` in ESM format (that Node can't handle).
+
+If `true`, every dependency will be inlined. All dependencies, specified in [`ssr.noExternal`](https://vitejs.dev/guide/ssr.html#ssr-externals) will be inlined by default.
 
 #### deps.fallbackCJS
 
@@ -238,6 +244,8 @@ Custom reporters for output. Reporters can be [a Reporter instance](https://gith
 Write test results to a file when the `--reporter=json` or `--reporter=junit` option is also specified.
 By providing an object instead of a string you can define individual outputs when using multiple reporters.
 
+To provide object via CLI command, use the following syntax: `--outputFile.json=./path --outputFile.junit=./other-path`.
+
 ### threads
 
 - **Type:** `boolean`
@@ -248,7 +256,7 @@ Enable multi-threading using [tinypool](https://github.com/Aslemammad/tinypool) 
 :::warning
 This option is different from Jest's `--runInBand`. Vitest uses workers not only for running tests in parallel, but also to provide isolation. By disabling this option, your tests will run sequentially, but in the same global context, so you must provide isolation yourself.
 
-This might cause all sorts of issues, if you are relying on global state (frontend frameworks usually do) or your code relies on environment to be defined separately for each test (like, `@vue/test-utils`). But can be a speed boost for Node tests (up to 3 times faster), that don't necessarily rely on global state or can easily bypass that.
+This might cause all sorts of issues, if you are relying on global state (frontend frameworks usually do) or your code relies on environment to be defined separately for each test. But can be a speed boost for your tests (up to 3 times faster), that don't necessarily rely on global state or can easily bypass that.
 :::
 
 ### maxThreads
@@ -292,7 +300,7 @@ Silent console output from tests
 
 Path to setup files. They will be run before each test file.
 
-You can use `process.env.VITEST_WORKER_ID` (integer-like string) inside to distinguish between threads (will always be `1`, if run with `threads: false`).
+You can use `process.env.VITEST_WORKER_ID` (integer-like string) inside to distinguish between threads (will always be `'1'`, if run with `threads: false`).
 
 :::tip
 Note, that if you are running [`--no-threads`](#threads), this file will be run in the same global scope. Meaning, that you are accessing the same global object before each test, so make sure you are not doing the same thing more than you need.
@@ -305,11 +313,13 @@ import { config } from '@some-testing-lib'
 if (!globalThis.defined) {
   config.plugins = [myCoolPlugin]
   computeHeavyThing()
-  afterEach(() => {
-    cleanup()
-  })
   globalThis.defined = true
 }
+
+// hooks are reseted before each suite
+afterEach(() => {
+  cleanup()
+})
 
 globalThis.resetBeforeEachTest = true
 ```
@@ -328,16 +338,36 @@ Multiple globalSetup files are possible. setup and teardown are executed sequent
 :::
 
 ::: warning
-Beware that the global setup is run in a different global scope if you are using [`--threads`](#threads) (default option). If you disabled `--threads`, everything is run in the same scope (including the Vite server and its plugins).
+Beware that the global setup is run in a different global scope, so your tests don't have access to variables defined here.
 :::
 
 
-### watchIgnore
+### watchExclude
 
-- **Type:** `(string | RegExp)[]`
-- **Default:** `[/\/node_modules\//, /\/dist\//]`
+- **Type:** `string[]`
+- **Default:** `['**/node_modules/**', '**/dist/**']`
 
-Pattern of file paths to be ignored from triggering watch rerun. Glob pattern is not supported.
+Glob pattern of file paths to be ignored from triggering watch rerun.
+
+### forceRerunTriggers
+
+- **Type**: `string[]`
+- **Default:** `[]`
+
+Glob patter of file paths that will trigger the whole suite rerun.
+
+Useful if you are testing calling CLI commands, because Vite cannot construct a module graph:
+
+```ts
+test('execute a script', async () => {
+  // Vitest cannot rerun this test, if content of `dist/index.js` changes
+  await execa('node', ['dist/index.js'])
+})
+```
+
+::: tip
+Make sure that your files are not excluded by `watchExclude`.
+:::
 
 ### isolate
 
@@ -358,7 +388,7 @@ Coverage options passed to [C8](https://github.com/bcoe/c8).
 - **Type** `string | RegExp`
 
 Run tests with full names matching the pattern.
-If you add `OnlyRunThis` to this property, tests containing the word `OnlyRunThis` in the test name will be skipped.
+If you add `OnlyRunThis` to this property, tests not containing the word `OnlyRunThis` in the test name will be skipped.
 
 ```js
 import { expect, test } from 'vitest'

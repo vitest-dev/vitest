@@ -77,6 +77,9 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
           },
           server: {
             ...preOptions.api,
+            watch: {
+              ignored: preOptions.watchExclude,
+            },
             open,
             hmr: false,
             preTransformRequests: false,

@@ -1,7 +1,6 @@
 {
   "name": "vitest",
-  "type": "module",
-  "version": "0.13.0",
+  "version": "0.14.1",
   "description": "A blazing fast unit test framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -23,7 +22,7 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/index.mjs"
     },
     "./*": "./*",
     "./globals": {
@@ -34,16 +33,16 @@
     },
     "./node": {
       "types": "./dist/node.d.ts",
-      "import": "./dist/node.js"
+      "import": "./dist/node.mjs"
     },
     "./config": {
       "types": "./config.d.ts",
       "require": "./dist/config.cjs",
-      "import": "./dist/config.js"
+      "import": "./dist/config.mjs"
     }
   },
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "bin": {
     "vitest": "./vitest.mjs"

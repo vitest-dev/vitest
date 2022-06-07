@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { assertTypes, clone, deepMerge, toArray } from '../../../packages/vitest/src/utils'
+import { assertTypes, deepClone, deepMerge, toArray } from '../../../packages/vitest/src/utils'
 import { deepMergeSnapshot } from '../../../packages/vitest/src/integrations/snapshot/port/utils'
 
 describe('assertTypes', () => {
@@ -122,16 +122,16 @@ describe('toArray', () => {
   })
 })
 
-describe('clone', () => {
+describe('deepClone', () => {
   test('various types should be cloned correctly', () => {
-    expect(clone(1)).toBe(1)
-    expect(clone(true)).toBe(true)
-    expect(clone(undefined)).toBe(undefined)
-    expect(clone(null)).toBe(null)
-    expect(clone({ a: 1 })).toEqual({ a: 1 })
-    expect(clone([1, 2])).toEqual([1, 2])
+    expect(deepClone(1)).toBe(1)
+    expect(deepClone(true)).toBe(true)
+    expect(deepClone(undefined)).toBe(undefined)
+    expect(deepClone(null)).toBe(null)
+    expect(deepClone({ a: 1 })).toEqual({ a: 1 })
+    expect(deepClone([1, 2])).toEqual([1, 2])
     const symbolA = Symbol('a')
-    expect(clone(symbolA)).toBe(symbolA)
+    expect(deepClone(symbolA)).toBe(symbolA)
     const objB: any = {}
     Object.defineProperty(objB, 'value', {
       configurable: false,
@@ -139,8 +139,11 @@ describe('clone', () => {
       value: 1,
       writable: false,
     })
-    expect(clone(objB).value).toEqual(objB.value)
+    expect(deepClone(objB).value).toEqual(objB.value)
     const objC = Object.create(objB)
-    expect(clone(objC).value).toEqual(objC.value)
+    expect(deepClone(objC).value).toEqual(objC.value)
+    const objD: any = { name: 'd', ref: null }
+    objD.ref = objD
+    expect(deepClone(objD)).toEqual(objD)
   })
 })
