@@ -94,7 +94,8 @@ export function resolveConfig(
   // vitenode will try to import such file with native node,
   // but then our mocker will not work properly
   if (resolved.deps.inline !== true) {
-    // @ts-expect-error ssr is not typed
+    // eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error
+    // @ts-ignore ssr is not typed in Vite 2, but defined in Vite 3, so we can't use expect-error
     const ssrOptions = viteConfig.ssr || {}
 
     if (ssrOptions.noExternal === true && resolved.deps.inline == null) {
