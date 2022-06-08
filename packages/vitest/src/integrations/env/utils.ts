@@ -15,7 +15,7 @@ const skipKeys = [
 export function getWindowKeys(global: any, win: any) {
   const keys = new Set(KEYS.concat(Object.getOwnPropertyNames(win))
     .filter((k) => {
-      if (k.startsWith('_') || skipKeys.includes(k))
+      if (skipKeys.includes(k))
         return false
       if (k in global)
         return allowRewrite.includes(k)
