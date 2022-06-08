@@ -8,7 +8,7 @@ import { interpretSourcePos, lineSplitRE, parseStacktrace, posToNumber } from '.
 import { F_POINTER } from '../utils/figures'
 import { stringify } from '../integrations/chai/jest-matcher-utils'
 import type { Vitest } from './core'
-import { unifiedDiff } from './diff'
+import { type DiffOptions, unifiedDiff } from './diff'
 import { divider } from './reporters/renderers/utils'
 
 export function fileFromParsedStack(stack: ParsedStack) {
@@ -62,8 +62,12 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
 
   handleImportOutsideModuleError(e.stack || e.stackStr || '', ctx)
 
-  if (e.showDiff)
-    displayDiff(stringify(e.actual), stringify(e.expected), ctx.console, ctx.config.outputTruncateLength)
+  if (e.showDiff) {
+    displayDiff(stringify(e.actual), stringify(e.expected), ctx.console, {
+      outputTruncateLength: ctx.config.outputTruncateLength,
+      outputDiffLines: ctx.config.outputDiffLines,
+    })
+  }
 }
 
 function printErrorType(type: string, ctx: Vitest) {
@@ -135,8 +139,8 @@ function handleImportOutsideModuleError(stack: string, ctx: Vitest) {
 }\n`)))
 }
 
-function displayDiff(actual: string, expected: string, console: Console, outputTruncateLength?: number) {
-  console.error(c.gray(unifiedDiff(actual, expected, { outputTruncateLength })) + '\n')
+function displayDiff(actual: string, expected: string, console: Console, options?: Omit<DiffOptions, 'showLegend'>) {
+  console.error(c.gray(unifiedDiff(actual, expected, options)) + '\n')
 }
 
 function printErrorMessage(error: ErrorWithDiff, console: Console) {
