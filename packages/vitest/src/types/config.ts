@@ -142,6 +142,11 @@ export interface InlineConfig {
   outputTruncateLength?: number
 
   /**
+   * number of diff output lines
+   */
+  outputDiffLines?: number
+
+  /**
    * Write test results to a file when the --reporter=json` or `--reporter=junit` option is also specified.
    * Also definable individually per reporter by using an object instead.
    */

@@ -25,7 +25,8 @@ export class ViteNodeServer {
     public server: ViteDevServer,
     public options: ViteNodeServerOptions = {},
   ) {
-    // @ts-expect-error ssr is not typed
+    // eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error
+    // @ts-ignore ssr is not typed in Vite 2, but defined in Vite 3, so we can't use expect-error
     const ssrOptions = server.config.ssr
     if (ssrOptions) {
       options.deps ??= {}

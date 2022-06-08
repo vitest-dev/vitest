@@ -45,5 +45,8 @@ describe('replace asymmetric matcher', () => {
       str: expect.any(String),
       arr: [1, expect.anything()],
     })
+    const circleObj: any = { name: 'circle', ref: null }
+    circleObj.ref = circleObj
+    expectReplaceAsymmetricMatcher(circleObj, circleObj)
   })
 })

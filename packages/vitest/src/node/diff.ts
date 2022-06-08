@@ -8,6 +8,7 @@ export function formatLine(line: string, outputTruncateLength?: number) {
 
 export interface DiffOptions {
   outputTruncateLength?: number
+  outputDiffLines?: number
   showLegend?: boolean
 }
 
@@ -24,10 +25,10 @@ export function unifiedDiff(actual: string, expected: string, options: DiffOptio
   if (actual === expected)
     return ''
 
-  const { outputTruncateLength, showLegend = true } = options
+  const { outputTruncateLength, outputDiffLines, showLegend = true } = options
 
   const indent = '  '
-  const diffLimit = 15
+  const diffLimit = outputDiffLines || 15
 
   const counts = {
     '+': 0,
