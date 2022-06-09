@@ -13,6 +13,7 @@ export * from './timers'
 export const isNode = typeof process !== 'undefined' && typeof process.platform !== 'undefined'
 export const isBrowser = typeof window !== 'undefined'
 export const isWindows = isNode && process.platform === 'win32'
+export const isBenchmarkMode = () => getWorkerState().config.benchmark
 
 /**
  * Partition in tasks groups by consecutive concurrent
@@ -139,3 +140,22 @@ class AggregateErrorPonyfill extends Error {
   }
 }
 export { AggregateErrorPonyfill as AggregateError }
+
+type DeferPromise<T> = Promise<T> & {
+  resolve: (value: T | PromiseLike<T>) => void
+  reject: (reason?: any) => void
+}
+
+export function createDefer<T>(): DeferPromise<T> {
+  let resolve: ((value: T | PromiseLike<T>) => void) | null = null
+  let reject: ((reason?: any) => void) | null = null
+
+  const p = new Promise<T>((_resolve, _reject) => {
+    resolve = _resolve
+    reject = _reject
+  }) as DeferPromise<T>
+
+  p.resolve = resolve!
+  p.reject = reject!
+  return p
+}

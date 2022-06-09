@@ -24,12 +24,12 @@ export async function startVitest(cliFilters: string[], options: CliOptions, vit
     return false
   }
 
-  if (typeof options.coverage === 'boolean')
+  if (typeof options.coverage === 'boolean' && !options.benchmark)
     options.coverage = { enabled: options.coverage }
 
   const ctx = await createVitest(options, viteOverrides)
 
-  if (ctx.config.coverage.enabled) {
+  if (ctx.config.coverage.enabled && !options.benchmark) {
     if (!await ensurePackageInstalled('c8')) {
       process.exitCode = 1
       return false

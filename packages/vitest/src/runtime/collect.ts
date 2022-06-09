@@ -20,7 +20,7 @@ function hash(str: string): string {
   return `${hash}`
 }
 
-export async function collectTests(paths: string[], config: ResolvedConfig) {
+export async function collectTests(paths: string[], config: ResolvedConfig): Promise<File[]> {
   const files: File[] = []
 
   for (const filepath of paths) {
@@ -35,6 +35,7 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
     }
 
     clearCollectorContext()
+
     try {
       await runSetupFiles(config)
       await import(filepath)
@@ -47,10 +48,13 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
         if (c.type === 'test') {
           file.tasks.push(c)
         }
+        else if (c.type === 'benchmark') {
+          file.tasks.push(c)
+        }
         else if (c.type === 'suite') {
           file.tasks.push(c)
         }
-        else {
+        else if (c.type === 'collector') {
           const start = now()
           const suite = await c.collect(file)
           file.collectDuration = now() - start

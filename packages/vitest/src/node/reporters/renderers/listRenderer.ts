@@ -2,10 +2,10 @@ import { createLogUpdate } from 'log-update'
 import c from 'picocolors'
 import cliTruncate from 'cli-truncate'
 import stripAnsi from 'strip-ansi'
-import type { SuiteHooks, Task } from '../../../types'
+import type { Benchmark, SuiteHooks, Task } from '../../../types'
 import { clearInterval, getTests, setInterval } from '../../../utils'
 import { F_RIGHT } from '../../../utils/figures'
-import { getCols, getHookStateSymbol, getStateSymbol } from './utils'
+import { getBenchmarkSortNumber, getCols, getHookStateSymbol, getStateSymbol } from './utils'
 
 export interface ListRendererOptions {
   renderSucceed?: boolean
@@ -28,12 +28,40 @@ function formatFilepath(path: string) {
   return c.dim(path.slice(0, lastSlash)) + path.slice(lastSlash, firstDot) + c.dim(path.slice(firstDot))
 }
 
+function formatNumber(number: number) {
+  const res = String(number.toFixed(number < 100 ? 2 : 0)).split('.')
+  return res[0].replace(/(?=(?:\d{3})+$)(?!\b)/g, ',')
+    + (res[1] ? `.${res[1]}` : '')
+}
+
 function renderHookState(task: Task, hookName: keyof SuiteHooks, level = 0) {
   const state = task.result?.hooks?.[hookName]
   if (state && state === 'run')
     return `${'  '.repeat(level)} ${getHookStateSymbol(task, hookName)} ${c.dim(`[ ${hookName} ]`)}`
 
   return ''
+}
+
+function renderBenchmark(task: Benchmark, level = 0): string {
+  const result = task.result
+  level += 1
+  if (!(result && result.benchmark))
+    return '  '.repeat(level) + task.name
+
+  const cycle = result.benchmark!
+  return [
+    '  '.repeat(level),
+    getBenchmarkSortNumber(cycle),
+    ' ',
+    c.dim(cycle.name),
+    c.dim(' x '),
+    c.yellow(formatNumber(cycle.hz)),
+    c.dim(' ops/sec ±'),
+    c.yellow(cycle.rme.toFixed(2)),
+    c.dim('% ('),
+    `${c.yellow(cycle.sampleSize)} `,
+    c.dim(`run${cycle.sampleSize === 1 ? '' : 's'} sampled)`),
+  ].join('')
 }
 
 export function renderTree(tasks: Task[], options: ListRendererOptions, level = 0) {
@@ -60,7 +88,12 @@ export function renderTree(tasks: Task[], options: ListRendererOptions, level = 
     let name = task.name
     if (level === 0)
       name = formatFilepath(name)
-    output.push('  '.repeat(level) + prefix + name + suffix)
+
+    const title = prefix + name + suffix
+    if (task.type === 'benchmark')
+      output.push(renderBenchmark(task, level))
+    else
+      output.push('  '.repeat(level) + title)
 
     if ((task.result?.state !== 'pass') && outputMap.get(task) != null) {
       let data: string | undefined = outputMap.get(task)

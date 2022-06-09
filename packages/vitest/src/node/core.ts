@@ -13,7 +13,7 @@ import { clearTimeout, deepMerge, hasFailed, noop, setTimeout, slash } from '../
 import { cleanCoverage, reportCoverage } from '../integrations/coverage'
 import { createPool } from './pool'
 import type { WorkerPool } from './pool'
-import { createReporters } from './reporters/utils'
+import { createBenchmarkReporters, createReporters } from './reporters/utils'
 import { StateManager } from './state'
 import { resolveConfig } from './config'
 import { printError } from './error'
@@ -83,7 +83,9 @@ export class Vitest {
       },
     })
 
-    this.reporters = await createReporters(resolved.reporters, this.runner)
+    this.reporters = resolved.benchmark
+      ? await createBenchmarkReporters(resolved.benchmark.reporters, this.runner)
+      : await createReporters(resolved.reporters, this.runner)
 
     this.runningPromise = undefined
 
@@ -451,13 +453,15 @@ export class Vitest {
   }
 
   async globTestFiles(filters: string[] = []) {
+    const { include, exclude, includeSource } = this.config.benchmark || this.config
+
     const globOptions = {
       absolute: true,
       cwd: this.config.dir || this.config.root,
-      ignore: this.config.exclude,
+      ignore: exclude,
     }
 
-    let testFiles = await fg(this.config.include, globOptions)
+    let testFiles = await fg(include, globOptions)
 
     if (filters.length && process.platform === 'win32')
       filters = filters.map(f => toNamespacedPath(f))
@@ -465,8 +469,8 @@ export class Vitest {
     if (filters.length)
       testFiles = testFiles.filter(i => filters.some(f => i.includes(f)))
 
-    if (this.config.includeSource) {
-      let files = await fg(this.config.includeSource, globOptions)
+    if (includeSource) {
+      let files = await fg(includeSource, globOptions)
       if (filters.length)
         files = files.filter(i => filters.some(f => i.includes(f)))
 

@@ -35,6 +35,11 @@ export function createPool(ctx: Vitest): WorkerPool {
     minThreads: ctx.config.minThreads ?? threadsCount,
   }
 
+  process.env.VITEST_MODE = ctx.config.watch ? 'WATCH' : 'RUN'
+
+  if (ctx.config.env)
+    Object.assign(process.env, ctx.config.env)
+
   if (ctx.config.isolate) {
     options.isolateWorkers = true
     options.concurrentTasksPerWorker = 1

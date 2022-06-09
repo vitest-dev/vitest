@@ -1,10 +1,11 @@
-import type { File, HookCleanupCallback, HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from '../types'
+import { performance } from 'perf_hooks'
+import type { Benchmark, File, HookCleanupCallback, HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from '../types'
 import { vi } from '../integrations/vi'
 import { getSnapshotClient } from '../integrations/snapshot/chai'
-import { clearTimeout, getFullName, getWorkerState, hasFailed, hasTests, partitionSuiteChildren, setTimeout } from '../utils'
+import { clearTimeout, createDefer, getFullName, getWorkerState, hasFailed, hasTests, isBenchmarkMode, partitionSuiteChildren, setTimeout } from '../utils'
 import { getState, setState } from '../integrations/chai/jest-expect'
 import { takeCoverage } from '../integrations/coverage'
-import { getFn, getHooks } from './map'
+import { getBenchmarkLib, getFn, getHooks } from './map'
 import { rpc } from './rpc'
 import { collectTests } from './collect'
 import { processError } from './error'
@@ -194,14 +195,18 @@ export async function runSuite(suite: Suite) {
   else {
     try {
       const beforeAllCleanups = await callSuiteHook(suite, suite, 'beforeAll', [suite])
-
-      for (const tasksGroup of partitionSuiteChildren(suite)) {
-        if (tasksGroup[0].concurrent === true) {
-          await Promise.all(tasksGroup.map(c => runSuiteChild(c)))
-        }
-        else {
-          for (const c of tasksGroup)
-            await runSuiteChild(c)
+      if (isBenchmarkMode()) {
+        await runBenchmarkSuit(suite)
+      }
+      else {
+        for (const tasksGroup of partitionSuiteChildren(suite)) {
+          if (tasksGroup[0].concurrent === true) {
+            await Promise.all(tasksGroup.map(c => runSuiteChild(c)))
+          }
+          else {
+            for (const c of tasksGroup)
+              await runSuiteChild(c)
+          }
         }
       }
 
@@ -237,10 +242,120 @@ export async function runSuite(suite: Suite) {
   updateTask(suite)
 }
 
+async function runBenchmarkSuit(suite: Suite) {
+  const start = performance.now()
+
+  const benchmarkGroup = []
+  const benchmarkSuiteGroup = []
+  for (const task of suite.tasks) {
+    if (task.type === 'benchmark')
+      benchmarkGroup.push(task)
+    else if (task.type === 'suite')
+      benchmarkSuiteGroup.push(task)
+  }
+
+  if (benchmarkSuiteGroup.length)
+    await Promise.all(benchmarkSuiteGroup.map(subSuite => runBenchmarkSuit(subSuite)))
+
+  if (benchmarkGroup.length) {
+    const benchmarkLib = getBenchmarkLib(suite)
+    const defer = createDefer()
+    const benchmarkMap: Record<string, Benchmark> = {}
+    suite.result = {
+      state: 'run',
+      startTime: start,
+      benchmark: {
+        name: suite.name,
+        count: 0,
+        cycles: 0,
+        hz: 0,
+        rme: 0,
+        sampleSize: 0,
+        sort: 0,
+        max: 0,
+        min: 0,
+        p75: 0,
+        p99: 0,
+        p995: 0,
+        p999: 0,
+      },
+    }
+    updateTask(suite)
+    benchmarkGroup.forEach((benchmark) => {
+      const benchmarkFn = getFn(benchmark)
+      benchmark.result = {
+        state: 'run',
+        startTime: start,
+        benchmark: {
+          name: benchmark.name,
+          count: 0,
+          cycles: 0,
+          hz: 0,
+          rme: 0,
+          sampleSize: 0,
+          sort: 0,
+          max: 0,
+          min: 0,
+          p75: 0,
+          p99: 0,
+          p995: 0,
+          p999: 0,
+        },
+      }
+      benchmarkMap[benchmark.name] = benchmark
+      benchmarkLib.add(benchmark.name, benchmarkFn, benchmark.options)
+      updateTask(benchmark)
+    })
+    benchmarkLib.on('cycle', (e) => {
+      const cycle = e.target
+      const benchmark = benchmarkMap[cycle.name || '']
+      if (benchmark) {
+        const result = benchmark.result!.benchmark!
+        const all = cycle.stats?.sample.sort()
+        result.sampleSize = all?.length || result.sampleSize
+        if (all?.length) {
+          result.min = all[0]
+          result.max = all[-1]
+          result.p75 = all[result.sampleSize * Math.ceil(75 / 100) - 1]
+          result.p99 = all[result.sampleSize * Math.ceil(99 / 100) - 1]
+          result.p995 = all[result.sampleSize * Math.ceil(99.5 / 100) - 1]
+          result.p999 = all[result.sampleSize * Math.ceil(99.9 / 100) - 1]
+        }
+        result.name = cycle.name || result.name
+        result.count = cycle.count || result.count
+        result.cycles = cycle.cycles || result.cycles
+        result.hz = cycle.hz || result.hz
+        result.rme = cycle.stats?.rme || result.rme
+        updateTask(benchmark)
+      }
+    })
+    benchmarkLib.on('complete', function () {
+      suite.result!.duration = performance.now() - start
+      suite.result!.state = 'pass'
+      this.sort((a, b) => b.hz - a.hz).forEach((cycle, idx) => {
+        const benchmark = benchmarkMap[cycle.name || '']
+        if (benchmark) {
+          const result = benchmark.result!.benchmark!
+          result.sort = Number(idx) + 1
+          updateTask(benchmark)
+        }
+      })
+      updateTask(suite)
+      defer.resolve(null)
+    })
+    benchmarkLib.on('error', (e) => {
+      defer.reject(e)
+    })
+    benchmarkLib.run({ async: true, delay: 0 })
+    await defer
+  }
+}
+
 async function runSuiteChild(c: Task) {
-  return c.type === 'test'
-    ? runTest(c)
-    : runSuite(c)
+  if (c.type === 'test')
+    return runTest(c)
+  else if (c.type === 'suite')
+    return runSuite(c)
 }
 
 export async function runFiles(files: File[], config: ResolvedConfig) {
@@ -253,7 +368,6 @@ export async function runFiles(files: File[], config: ResolvedConfig) {
         }
       }
     }
-
     await runSuite(file)
   }
 }

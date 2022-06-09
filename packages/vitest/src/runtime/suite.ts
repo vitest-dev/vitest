@@ -1,6 +1,6 @@
 import { format } from 'util'
-import type { File, RunMode, Suite, SuiteAPI, SuiteCollector, SuiteFactory, SuiteHooks, Task, Test, TestAPI, TestFunction } from '../types'
-import { isObject, noop, toArray } from '../utils'
+import type { BenchFunction, Benchmark, BenchmarkAPI, BenchmarkOptions, File, RunMode, Suite, SuiteAPI, SuiteCollector, SuiteFactory, SuiteHooks, Task, Test, TestAPI, TestFunction } from '../types'
+import { isBenchmarkMode, isObject, noop, toArray } from '../utils'
 import { createChainable } from './chain'
 import { collectTask, collectorContext, createTestContext, runWithSuite, withTimeout } from './context'
 import { getHooks, setFn, setHooks } from './map'
@@ -9,8 +9,13 @@ import { getHooks, setFn, setHooks } from './map'
 export const suite = createSuite()
 export const test = createTest(
   function (name: string, fn?: TestFunction, timeout?: number) {
-    // @ts-expect-error untyped internal prop
     getCurrentSuite().test.fn.call(this, name, fn, timeout)
+  },
+)
+
+export const benchmark = createBenchmark(
+  function (name, fn, options) {
+    getCurrentSuite().benchmark.fn.call(this, name, fn, options)
   },
 )
 
@@ -60,7 +65,7 @@ export function createSuiteHooks() {
 }
 
 function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, mode: RunMode, concurrent?: boolean) {
-  const tasks: (Test | Suite | SuiteCollector)[] = []
+  const tasks: (Benchmark | Test | Suite | SuiteCollector)[] = []
   const factoryQueue: (Test | Suite | SuiteCollector)[] = []
 
   let suite: Suite
@@ -68,6 +73,9 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
   initSuite()
 
   const test = createTest(function (name: string, fn = noop, timeout?: number) {
+    if (isBenchmarkMode())
+      return
+
     const mode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run'
 
     const test: Test = {
@@ -96,12 +104,32 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
     tasks.push(test)
   })
 
+  const benchmark = createBenchmark(function (name: string, fn = noop, options: BenchmarkOptions) {
+    const mode = this.skip ? 'skip' : 'run'
+
+    if (!isBenchmarkMode())
+      return
+
+    const benchmark: Benchmark = {
+      type: 'benchmark',
+      id: '',
+      name,
+      mode,
+      options,
+      suite: undefined!,
+    }
+
+    setFn(benchmark, fn)
+    tasks.push(benchmark)
+  })
+
   const collector: SuiteCollector = {
     type: 'collector',
     name,
     mode,
     test,
     tasks,
+    benchmark,
     collect,
     clear,
     on: addHook,
@@ -205,4 +233,23 @@ function createTest(fn: (
   test.runIf = (condition: any) => (condition ? test : test.skip) as TestAPI
 
   return test as TestAPI
+}
+
+function createBenchmark(fn: (
+  (
+    this: Record<'skip', boolean | undefined>,
+    name: string,
+    fn: BenchFunction,
+    options: BenchmarkOptions
+  ) => void
+)) {
+  const benchmark = createChainable(
+    ['skip'],
+    fn,
+  ) as BenchmarkAPI
+
+  benchmark.skipIf = (condition: any) => (condition ? benchmark.skip : benchmark) as BenchmarkAPI
+  benchmark.runIf = (condition: any) => (condition ? benchmark : benchmark.skip) as BenchmarkAPI
+
+  return benchmark as BenchmarkAPI
 }

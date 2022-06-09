@@ -8,7 +8,7 @@ export * from './snapshot'
 export * from './worker'
 export * from './general'
 export * from './coverage'
-
+export * from './benchmark'
 export type {
   EnhancedSpy,
   MockedFunction,

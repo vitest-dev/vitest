@@ -1,6 +1,7 @@
+import type BenchmarkLib from 'tinybench'
 import type { ChainableFunction } from '../runtime/chain'
 import type { Awaitable, ErrorWithDiff } from './general'
-import type { UserConsoleLog } from '.'
+import type { Benchmark, BenchmarkAPI, BenchmarkResult, UserConsoleLog } from '.'
 
 export type RunMode = 'run' | 'skip' | 'only' | 'todo'
 export type TaskState = RunMode | 'pass' | 'fail'
@@ -24,6 +25,7 @@ export interface TaskResult {
   error?: ErrorWithDiff
   htmlError?: string
   hooks?: Partial<Record<keyof SuiteHooks, TaskState>>
+  benchmark?: BenchmarkResult
 }
 
 export type TaskResultPack = [id: string, result: TaskResult | undefined]
@@ -32,6 +34,7 @@ export interface Suite extends TaskBase {
   type: 'suite'
   tasks: Task[]
   filepath?: string
+  benchmark?: BenchmarkLib
 }
 
 export interface File extends Suite {
@@ -47,7 +50,7 @@ export interface Test<ExtraContext = {}> extends TaskBase {
   context: TestContext & ExtraContext
 }
 
-export type Task = Test | Suite | File
+export type Task = Test | Suite | File | Benchmark
 
 export type DoneCallback = (error?: any) => void
 export type TestFunction<ExtraContext = {}> = (context: TestContext & ExtraContext) => Awaitable<any> | void
@@ -138,7 +141,8 @@ export interface SuiteCollector<ExtraContext = {}> {
   readonly mode: RunMode
   type: 'collector'
   test: TestAPI<ExtraContext>
-  tasks: (Suite | Test | SuiteCollector<ExtraContext>)[]
+  benchmark: BenchmarkAPI
+  tasks: (Suite | Test | Benchmark | SuiteCollector<ExtraContext>)[]
   collect: (file?: File) => Promise<Suite>
   clear: () => void
   on: <T extends keyof SuiteHooks>(name: T, ...fn: SuiteHooks[T]) => void
