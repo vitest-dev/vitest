@@ -162,6 +162,8 @@ const LIVING_KEYS = [
 
   // not specified in docs, but is available
   'Image',
+  'Audio',
+  'Option',
 ]
 
 const OTHER_KEYS = [
