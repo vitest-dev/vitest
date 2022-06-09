@@ -50,8 +50,13 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
   printErrorMessage(e, ctx.console)
   printStack(ctx, stacks, nearest, errorProperties, (s, pos) => {
     if (showCodeFrame && s === nearest && nearest) {
-      const sourceCode = readFileSync(fileFromParsedStack(nearest), 'utf-8')
-      ctx.log(c.yellow(generateCodeFrame(sourceCode, 4, pos)))
+      const file = fileFromParsedStack(nearest)
+      // could point to non-existing original file
+      // for example, when there is a source map file, but no source in node_modules
+      if (existsSync(file)) {
+        const sourceCode = readFileSync(file, 'utf-8')
+        ctx.log(c.yellow(generateCodeFrame(sourceCode, 4, pos)))
+      }
     }
   })
 
