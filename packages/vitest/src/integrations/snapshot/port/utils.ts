@@ -158,7 +158,6 @@ export async function saveSnapshotFile(
     return
 
   ensureDirectoryExists(snapshotPath)
-
   await fsp.writeFile(
     snapshotPath,
     content,
