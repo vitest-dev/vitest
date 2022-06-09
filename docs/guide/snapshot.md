@@ -55,7 +55,7 @@ This allows you to see the expect output directly without jumpping across differ
 
 ## Updating Snapshots
 
-When the received value doesn't match with the snapshot, the test would fail and show you the difference between them. When the snapshot change is expected, you maybe want to update the snapshot from teh current state.
+When the received value doesn't match with the snapshot, the test would fail and show you the difference between them. When the snapshot change is expected, you maybe want to update the snapshot from the current state.
 
 In watch mode, you can press `u` key in the terminal to update the failed snapshot directly.
 
