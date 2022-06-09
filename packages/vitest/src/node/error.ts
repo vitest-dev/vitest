@@ -54,7 +54,7 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
       // could point to non-existing original file
       // for example, when there is a source map file, but no source in node_modules
       if (existsSync(file)) {
-        const sourceCode = readFileSync(fileFromParsedStack(nearest), 'utf-8')
+        const sourceCode = readFileSync(file, 'utf-8')
         ctx.log(c.yellow(generateCodeFrame(sourceCode, 4, pos)))
       }
     }
