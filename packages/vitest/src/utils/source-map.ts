@@ -21,9 +21,6 @@ export function getOriginalPos(map: RawSourceMap | null | undefined, { line, col
   })
 }
 
-const stackFnCallRE = /at (.*) \((.+):(\d+):(\d+)\)$/
-const stackBarePathRE = /at ?(.*) (.+):(\d+):(\d+)$/
-
 export async function interpretSourcePos(stackFrames: ParsedStack[], ctx: Vitest): Promise<ParsedStack[]> {
   for (const frame of stackFrames) {
     if ('sourcePos' in frame)
@@ -47,6 +44,18 @@ const stackIgnorePatterns = [
   '/node_modules/tinyspy/',
 ]
 
+function extractLocation(urlLike: string) {
+  // Fail-fast but return locations like "(native)"
+  if (!urlLike.includes(':'))
+    return [urlLike]
+
+  const regExp = /(.+?)(?::(\d+))?(?::(\d+))?$/
+  const parts = regExp.exec(urlLike.replace(/[()]/g, ''))
+  if (!parts)
+    return [urlLike]
+  return [parts[1], parts[2] || undefined, parts[3] || undefined]
+}
+
 export function parseStacktrace(e: ErrorWithDiff, full = false): ParsedStack[] {
   if (e.stacks)
     return e.stacks
@@ -54,24 +63,49 @@ export function parseStacktrace(e: ErrorWithDiff, full = false): ParsedStack[] {
   const stackStr = e.stack || e.stackStr || ''
   const stackFrames = stackStr
     .split('\n')
+    // Based on https://github.com/stacktracejs/error-stack-parser
+    // Credit to stacktracejs
     .map((raw): ParsedStack | null => {
-      const line = raw.trim()
-      const match = line.match(stackFnCallRE) || line.match(stackBarePathRE)
-      if (!match)
+      let line = raw.trim()
+
+      if (line.includes('(eval '))
+        line = line.replace(/eval code/g, 'eval').replace(/(\(eval at [^()]*)|(,.*$)/g, '')
+
+      let sanitizedLine = line
+        .replace(/^\s+/, '')
+        .replace(/\(eval code/g, '(')
+        .replace(/^.*?\s+/, '')
+
+      // capture and preseve the parenthesized location "(/foo/my bar.js:12:87)" in
+      // case it has spaces in it, as the string is split on \s+ later on
+      const location = sanitizedLine.match(/ (\(.+\)$)/)
+
+      // remove the parenthesized location from the line, if it was matched
+      sanitizedLine = location ? sanitizedLine.replace(location[0], '') : sanitizedLine
+
+      // if a location was matched, pass it to extractLocation() otherwise pass all sanitizedLine
+      // because this line doesn't have function name
+      const [url, lineNumber, columnNumber] = extractLocation(location ? location[1] : sanitizedLine)
+      let method = (location && sanitizedLine) || ''
+      let file = url && ['eval', '<anonymous>'].includes(url) ? undefined : url
+
+      if (!file || !lineNumber || !columnNumber)
         return null
 
-      let file = slash(match[2])
+      if (method.startsWith('async '))
+        method = method.slice(6)
+
       if (file.startsWith('file://'))
         file = file.slice(7)
 
-      if (!full && stackIgnorePatterns.some(p => file.includes(p)))
+      if (!full && stackIgnorePatterns.some(p => file && file.includes(p)))
         return null
 
       return {
-        method: match[1],
-        file: match[2],
-        line: parseInt(match[3]),
-        column: parseInt(match[4]),
+        method,
+        file: slash(file),
+        line: parseInt(lineNumber),
+        column: parseInt(columnNumber),
       }
     })
     .filter(notNullish)
