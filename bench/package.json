@@ -16,7 +16,7 @@
     "execa": "^6.1.0",
     "fs-extra": "^10.1.0",
     "markdown-table": "^3.0.2",
-    "microtime": "^3.0.0",
+    "microtime": "^3.1.0",
     "vitest": "link:../packages/vitest"
   }
 }

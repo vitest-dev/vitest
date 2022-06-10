@@ -40,9 +40,9 @@
   "dependencies": {
     "birpc": "^0.2.3",
     "flatted": "^3.2.5",
-    "ws": "^8.7.0"
+    "ws": "^8.8.0"
   },
   "devDependencies": {
-    "rollup": "^2.75.3"
+    "rollup": "^2.75.6"
   }
 }
