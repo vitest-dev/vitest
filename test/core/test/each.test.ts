@@ -9,6 +9,13 @@ test.each([
 })
 
 test.each([
+  null,
+  [null],
+])('null is null', (value) => {
+  expect(value).toBe(null)
+})
+
+test.each([
   ['string', true],
   ['string', false],
 ])('can be parsed', (a, b) => {

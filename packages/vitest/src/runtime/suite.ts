@@ -1,6 +1,6 @@
 import { format } from 'util'
 import type { File, RunMode, Suite, SuiteAPI, SuiteCollector, SuiteFactory, SuiteHooks, Task, Test, TestAPI, TestFunction } from '../types'
-import { isObject, noop, toArray } from '../utils'
+import { isObject, noop } from '../utils'
 import { createChainable } from './chain'
 import { collectTask, collectorContext, createTestContext, runWithSuite, withTimeout } from './context'
 import { getHooks, setFn, setHooks } from './map'
@@ -167,7 +167,7 @@ function createSuite() {
   suite.each = <T>(cases: ReadonlyArray<T>) => {
     return (name: string, fn: (...args: T[]) => void) => {
       cases.forEach((i, idx) => {
-        const items = toArray(i) as any
+        const items = Array.isArray(i) ? i : [i]
         suite(formatTitle(name, items, idx), () => fn(...items))
       })
     }
@@ -195,7 +195,7 @@ function createTest(fn: (
   test.each = <T>(cases: ReadonlyArray<T>) => {
     return (name: string, fn: (...args: T[]) => void) => {
       cases.forEach((i, idx) => {
-        const items = toArray(i) as any
+        const items = Array.isArray(i) ? i : [i]
         test(formatTitle(name, items, idx), () => fn(...items))
       })
     }
