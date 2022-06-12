@@ -1,0 +1,13 @@
+{
+  "name": "vite-node-test",
+  "private": true,
+  "main": "index.js",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "vite-node --watch ./src/*"
+  },
+  "devDependencies": {
+    "vite-node": "workspace:*"
+  }
+}
