@@ -2,6 +2,7 @@ import chai, { util } from 'chai'
 import './setup'
 import type { Test } from '../../types'
 import { getFullName } from '../../utils'
+import type { MatcherState } from '../../types/chai'
 import { getState, setState } from './jest-expect'
 import { GLOBAL_EXPECT } from './constants'
 
@@ -19,8 +20,7 @@ export function createExpect(test?: Test) {
   Object.assign(expect, chai.expect)
 
   expect.getState = () => getState(expect)
-  // @ts-expect-error type confusion
-  expect.setState = state => setState(state, expect)
+  expect.setState = state => setState(state as Partial<MatcherState>, expect)
 
   setState({
     assertionCalls: 0,
