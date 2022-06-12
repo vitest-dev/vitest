@@ -36,7 +36,7 @@ export function createExpect(test?: Test) {
   expect.extend = matchers => chai.expect.extend(expect, matchers)
 
   function assertions(expected: number) {
-    const errorGen = () => new Error(`expected number of assertions to be ${expected}, but got ${getState(expect).assertionCalls}`)
+    const errorGen = () => new Error(`expected number of assertions to be ${expected}, but got ${expect.getState().assertionCalls}`)
     if (Error.captureStackTrace)
       Error.captureStackTrace(errorGen(), assertions)
 
