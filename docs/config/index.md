@@ -533,3 +533,14 @@ Vitest will not fail, if no tests will be found.
 - **Default**: `false`
 
 Show heap usage after each test. Useful for debugging memory leaks.
+
+### processCss
+
+- **Type**: `boolen | RegExp[]`
+- **Default**: `[/\.module\./]`
+
+Configure if CSS should be processed.
+
+If regexp is provided, it will transform matched files.
+
+By default, processes only CSS Modules, because it affects runtime. JSDOM and Happy DOM don't fully support injecting CSS, so disabling this setting might help with performance.

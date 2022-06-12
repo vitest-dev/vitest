@@ -344,6 +344,15 @@ export interface InlineConfig {
    * Return `false` to ignore the log.
    */
   onConsoleLog?: (log: string, type: 'stdout' | 'stderr') => false | void
+
+  /**
+   * Should css be processed.
+   *
+   * If regexp is provided, it will transform matched files.
+   *
+   * @default [/\.module\./]
+   */
+  processCss?: boolean | RegExp[]
 }
 
 export interface UserConfig extends InlineConfig {

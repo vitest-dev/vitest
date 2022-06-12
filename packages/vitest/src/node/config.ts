@@ -158,5 +158,7 @@ export function resolveConfig(
   if (resolved.changed)
     resolved.passWithNoTests ??= true
 
+  resolved.processCss ??= [/\.module\./]
+
   return resolved
 }
