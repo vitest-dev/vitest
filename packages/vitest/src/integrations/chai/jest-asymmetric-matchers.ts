@@ -19,9 +19,9 @@ export abstract class AsymmetricMatcher<
 
   constructor(protected sample: T, protected inverse = false) {}
 
-  protected getMatcherContext(): State {
+  protected getMatcherContext(expect: Vi.ExpectStatic): State {
     return {
-      ...getState(),
+      ...getState(expect),
       equals,
       isNot: this.inverse,
       utils: matcherUtils,

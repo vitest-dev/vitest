@@ -2,8 +2,9 @@ import type { File, HookCleanupCallback, HookListener, ResolvedConfig, Suite, Su
 import { vi } from '../integrations/vi'
 import { getSnapshotClient } from '../integrations/snapshot/chai'
 import { clearTimeout, getFullName, getWorkerState, hasFailed, hasTests, partitionSuiteChildren, setTimeout } from '../utils'
-import { getState, setState } from '../integrations/chai/jest-expect'
 import { takeCoverage } from '../integrations/coverage'
+import { getState, setState } from '../integrations/chai/jest-expect'
+import { GLOBAL_EXPECT } from '../integrations/chai/constants'
 import { getFn, getHooks } from './map'
 import { rpc } from './rpc'
 import { collectTests } from './collect'
@@ -111,9 +112,18 @@ export async function runTest(test: Test) {
       expectedAssertionsNumberErrorGen: null,
       testPath: test.suite.file?.filepath,
       currentTestName: getFullName(test),
-    })
+    }, (globalThis as any)[GLOBAL_EXPECT])
     await getFn(test)()
-    const { assertionCalls, expectedAssertionsNumber, expectedAssertionsNumberErrorGen, isExpectingAssertions, isExpectingAssertionsError } = getState()
+    const {
+      assertionCalls,
+      expectedAssertionsNumber,
+      expectedAssertionsNumberErrorGen,
+      isExpectingAssertions,
+      isExpectingAssertionsError,
+      // @ts-expect-error local is private
+    } = test.context._local
+      ? test.context.expect.getState()
+      : getState((globalThis as any)[GLOBAL_EXPECT])
     if (expectedAssertionsNumber !== null && assertionCalls !== expectedAssertionsNumber)
       throw expectedAssertionsNumberErrorGen!()
     if (isExpectingAssertions === true && assertionCalls === 0)
