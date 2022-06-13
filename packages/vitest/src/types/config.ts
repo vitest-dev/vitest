@@ -346,13 +346,16 @@ export interface InlineConfig {
   onConsoleLog?: (log: string, type: 'stdout' | 'stderr') => false | void
 
   /**
-   * Should css be processed.
+   * Should css be processed. If not, `css` files will be empty.
    *
    * If regexp is provided, it will transform matched files.
    *
-   * @default [/\.module\./]
+   * @default { include: [/\.module\./] }
    */
-  processCss?: boolean | RegExp[]
+  css?: boolean | {
+    include?: RegExp | RegExp[]
+    exclude?: RegExp | RegExp[]
+  }
 }
 
 export interface UserConfig extends InlineConfig {

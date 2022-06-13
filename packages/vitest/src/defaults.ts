@@ -70,6 +70,9 @@ const config = {
   ui: false,
   uiBase: '/__vitest__/',
   open: true,
+  css: {
+    include: [/\.module\./],
+  },
   coverage: coverageConfigDefaults,
   fakeTimers: fakeTimersDefaults,
 }

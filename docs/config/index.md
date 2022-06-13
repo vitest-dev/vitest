@@ -534,13 +534,24 @@ Vitest will not fail, if no tests will be found.
 
 Show heap usage after each test. Useful for debugging memory leaks.
 
-### processCss
+### css
 
-- **Type**: `boolen | RegExp[]`
-- **Default**: `[/\.module\./]`
+- **Type**: `boolen | { include?, exclude? }`
 
-Configure if CSS should be processed.
-
-If regexp is provided, it will transform matched files.
+Configure if CSS should be processed. If not, `css` files will be empty.
 
 By default, processes only CSS Modules, because it affects runtime. JSDOM and Happy DOM don't fully support injecting CSS, so disabling this setting might help with performance.
+
+#### css.include
+
+- **Type**: `RegExp | RegExp[]`
+- **Default**: `[/\.module\./]`
+
+RegExp pattern for files that should return actual CSS and will be processed by Vite pipeline.
+
+#### css.exclude
+
+- **Type**: `RegExp | RegExp[]`
+- **Default**: `[]`
+
+RegExp pattern for files that will return en empty CSS file.
