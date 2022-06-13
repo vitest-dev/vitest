@@ -346,9 +346,9 @@ export interface InlineConfig {
   onConsoleLog?: (log: string, type: 'stdout' | 'stderr') => false | void
 
   /**
-   * Should css be processed. If not, `css` files will be empty.
+   * Indicates if CSS files should be processed.
    *
-   * If regexp is provided, it will transform matched files.
+   * When excluded, the CSS files will be replaced with empty strings to bypass the subsequent processing.
    *
    * @default { include: [/\.module\./] }
    */

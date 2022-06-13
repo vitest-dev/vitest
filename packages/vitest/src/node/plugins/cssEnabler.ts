@@ -10,24 +10,24 @@ const isCSS = (id: string) => {
 }
 
 export function CSSEnablerPlugin(ctx: Vitest): VitePlugin {
-  const shouldProcess = (id: string) => {
+  const skipProcessing = (id: string) => {
     if (!isCSS(id))
-      return true
+      return false
     const { css } = ctx.config
     if (typeof css === 'boolean')
-      return css
+      return !css
     if (toArray(css.exclude).some(re => re.test(id)))
-      return false
-    if (toArray(css.include).some(re => re.test(id)))
       return true
-    return true
+    if (toArray(css.include).some(re => re.test(id)))
+      return false
+    return false
   }
 
   return {
     name: 'vitest:css-enabler',
     enforce: 'pre',
     transform(code, id) {
-      if (!shouldProcess(id))
+      if (skipProcessing(id))
         return ''
     },
   }

@@ -538,7 +538,7 @@ Show heap usage after each test. Useful for debugging memory leaks.
 
 - **Type**: `boolen | { include?, exclude? }`
 
-Configure if CSS should be processed. If not, `css` files will be empty.
+Configure if CSS should be processed. When excluded, CSS files will be replaced with empty strings to bypass the subsequent processing.
 
 By default, processes only CSS Modules, because it affects runtime. JSDOM and Happy DOM don't fully support injecting CSS, so disabling this setting might help with performance.
 
