@@ -25,14 +25,17 @@ export function createPool(ctx: Vitest): WorkerPool {
     ? Math.max(cpus().length / 2, 1)
     : Math.max(cpus().length - 1, 1)
 
+  const maxThreads = ctx.config.maxThreads ?? threadsCount
+  const minThreads = ctx.config.minThreads ?? threadsCount
+
   const options: TinypoolOptions = {
     filename: workerPath,
     // TODO: investigate further
     // It seems atomics introduced V8 Fatal Error https://github.com/vitest-dev/vitest/issues/1191
     useAtomics: false,
 
-    maxThreads: ctx.config.maxThreads ?? threadsCount,
-    minThreads: ctx.config.minThreads ?? threadsCount,
+    maxThreads,
+    minThreads,
   }
 
   if (ctx.config.isolate) {
@@ -66,12 +69,14 @@ export function createPool(ctx: Vitest): WorkerPool {
 
     async function runFiles(files: string[], invalidates: string[] = []) {
       const { workerPort, port } = createChannel(ctx)
+      const workerId = ctx.config.threads ? 1 : ++id
       const data: WorkerContext = {
         port: workerPort,
         config,
         files,
         invalidates,
-        id: ++id,
+        workerId,
+        poolId: ((workerId - 1) % maxThreads) + 1,
       }
       try {
         await pool.run(data, { transferList: [workerPort], name })

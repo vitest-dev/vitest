@@ -315,7 +315,7 @@ Silent console output from tests
 
 Path to setup files. They will be run before each test file.
 
-You can use `process.env.VITEST_WORKER_ID` (integer-like string) inside to distinguish between threads (will always be `'1'`, if run with `threads: false`).
+You can use `process.env.VITEST_POOL_ID` (integer-like string) inside to distinguish between threads (will always be `'1'`, if run with `threads: false`).
 
 :::tip
 Note, that if you are running [`--no-threads`](#threads), this file will be run in the same global scope. Meaning, that you are accessing the same global object before each test, so make sure you are not doing the same thing more than you need.
