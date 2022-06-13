@@ -69,14 +69,14 @@ export function createPool(ctx: Vitest): WorkerPool {
 
     async function runFiles(files: string[], invalidates: string[] = []) {
       const { workerPort, port } = createChannel(ctx)
-      const workerId = ctx.config.threads ? 1 : ++id
+      const workerId = ++id
       const data: WorkerContext = {
         port: workerPort,
         config,
         files,
         invalidates,
         workerId,
-        poolId: ((workerId - 1) % maxThreads) + 1,
+        poolId: !ctx.config.threads ? 1 : ((workerId - 1) % maxThreads) + 1,
       }
       try {
         await pool.run(data, { transferList: [workerPort], name })
