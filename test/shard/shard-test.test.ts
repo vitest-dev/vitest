@@ -15,7 +15,7 @@ const parsePaths = (stdout: string) => {
     .sort()
 }
 
-test.concurrent('--shard=1/1', async () => {
+test('--shard=1/1', async () => {
   const stdout = await runVitest(['--shard=1/1'])
 
   const paths = parsePaths(stdout)
@@ -23,7 +23,7 @@ test.concurrent('--shard=1/1', async () => {
   expect(paths).toEqual(['1.test.js', '2.test.js', '3.test.js'])
 })
 
-test.concurrent('--shard=1/2', async () => {
+test('--shard=1/2', async () => {
   const stdout = await runVitest(['--shard=1/2'])
 
   const paths = parsePaths(stdout)
@@ -31,7 +31,7 @@ test.concurrent('--shard=1/2', async () => {
   expect(paths).toEqual(['2.test.js', '3.test.js'])
 })
 
-test.concurrent('--shard=2/2', async () => {
+test('--shard=2/2', async () => {
   const stdout = await runVitest(['--shard=2/2'])
 
   const paths = parsePaths(stdout)
@@ -39,7 +39,7 @@ test.concurrent('--shard=2/2', async () => {
   expect(paths).toEqual(['1.test.js'])
 })
 
-test.concurrent('--shard=4/4', async () => {
+test('--shard=4/4', async () => {
   const stdout = await runVitest(['--shard=4/4'])
 
   const paths = parsePaths(stdout)
