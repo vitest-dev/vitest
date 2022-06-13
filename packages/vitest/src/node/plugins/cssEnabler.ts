@@ -2,13 +2,16 @@ import type { Plugin as VitePlugin } from 'vite'
 import { toArray } from '../../utils'
 import type { Vitest } from '../core'
 
-const isCss = (id: string) => {
-  return /\.(css|styl|less|sass|scss)$/.test(id)
+const cssLangs = '\\.(css|less|sass|scss|styl|stylus|pcss|postcss)($|\\?)'
+const cssLangRE = new RegExp(cssLangs)
+
+const isCSS = (id: string) => {
+  return cssLangRE.test(id)
 }
 
 export function CSSEnablerPlugin(ctx: Vitest): VitePlugin {
   const shouldProcess = (id: string) => {
-    if (!isCss(id))
+    if (!isCSS(id))
       return true
     const { css } = ctx.config
     if (typeof css === 'boolean')
