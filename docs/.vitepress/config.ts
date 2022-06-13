@@ -82,7 +82,7 @@ export default defineConfig({
 
     nav: [
       { text: 'Guide', link: '/guide/' },
-      { text: 'API', link: '/api/' },
+      { text: 'API', link: '/api/runner' },
       { text: 'Config', link: '/config/' },
       {
         text: `v${version}`,
