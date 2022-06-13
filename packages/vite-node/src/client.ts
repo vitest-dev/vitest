@@ -205,6 +205,12 @@ export class ViteNodeRunner {
     if (transformed[0] === '#')
       transformed = transformed.replace(/^\#\!.*/, s => ' '.repeat(s.length))
 
+    // #855 make `default` property configurable
+    if (/Object\.defineProperty\(\_\_vite\_ssr\_exports\_\_\,\s\"default\"\,\s\{.*value/.test(transformed)) {
+      const exportsPropertyDefinition = 'Object.defineProperty(__vite_ssr_exports__, "default", { configurable: true, writable: true, enumerable: true, value'
+      transformed = transformed.replace(/Object\.defineProperty\(\_\_vite\_ssr\_exports\_\_\,\s\"default\"\,\s\{.*value/, exportsPropertyDefinition)
+    }
+
     // add 'use strict' since ESM enables it by default
     const fn = vm.runInThisContext(`'use strict';async (${Object.keys(context).join(',')})=>{{${transformed}\n}}`, {
       filename: fsPath,

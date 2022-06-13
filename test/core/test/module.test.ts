@@ -10,6 +10,6 @@ it('should work when using cjs module', () => {
 })
 
 it('should work when using esm module', () => {
-  expect(c).toBe(1)
+  expect(c()).toBe(1)
   expect(d).toBe(2)
 })
