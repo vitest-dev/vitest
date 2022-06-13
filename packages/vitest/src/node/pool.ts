@@ -1,7 +1,7 @@
 import { MessageChannel } from 'worker_threads'
 import { pathToFileURL } from 'url'
 import { cpus } from 'os'
-import crypto from 'crypto'
+import { createHash } from 'crypto'
 import { resolve } from 'pathe'
 import type { Options as TinypoolOptions } from 'tinypool'
 import { Tinypool } from 'tinypool'
@@ -9,7 +9,7 @@ import { createBirpc } from 'birpc'
 import type { RawSourceMap } from 'vite-node'
 import type { WorkerContext, WorkerRPC } from '../types'
 import { distDir } from '../constants'
-import { AggregateError } from '../utils'
+import { AggregateError, slash } from '../utils'
 import type { Vitest } from './core'
 
 export type RunWithFiles = (files: string[], invalidates?: string[]) => Promise<void>
@@ -96,11 +96,12 @@ export function createPool(ctx: Vitest): WorkerPool {
         const shardEnd = shardSize * index
         files = files
           .map((file) => {
+            const fullPath = resolve(slash(config.root), slash(file))
+            const specPath = fullPath.slice(config.root.length)
             return {
               file,
-              hash: crypto
-                .createHash('sha1')
-                .update(file)
+              hash: createHash('sha1')
+                .update(specPath)
                 .digest('hex'),
             }
           })

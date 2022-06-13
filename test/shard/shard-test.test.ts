@@ -28,7 +28,7 @@ test('--shard=1/2', async () => {
 
   const paths = parsePaths(stdout)
 
-  expect(paths).toEqual(['2.test.js', '3.test.js'])
+  expect(paths).toEqual(['1.test.js', '2.test.js'])
 })
 
 test('--shard=2/2', async () => {
@@ -36,7 +36,7 @@ test('--shard=2/2', async () => {
 
   const paths = parsePaths(stdout)
 
-  expect(paths).toEqual(['1.test.js'])
+  expect(paths).toEqual(['3.test.js'])
 })
 
 test('--shard=4/4', async () => {
