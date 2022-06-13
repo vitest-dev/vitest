@@ -1,6 +1,7 @@
 import { MessageChannel } from 'worker_threads'
 import { pathToFileURL } from 'url'
 import { cpus } from 'os'
+import crypto from 'crypto'
 import { resolve } from 'pathe'
 import type { Options as TinypoolOptions } from 'tinypool'
 import { Tinypool } from 'tinypool'
@@ -88,6 +89,26 @@ export function createPool(ctx: Vitest): WorkerPool {
     }
 
     return async (files, invalidates) => {
+      if (config.shard) {
+        const { index, count } = config.shard
+        const shardSize = Math.ceil(files.length / count)
+        const shardStart = shardSize * (index - 1)
+        const shardEnd = shardSize * index
+        files = files
+          .map((file) => {
+            return {
+              file,
+              hash: crypto
+                .createHash('sha1')
+                .update(file)
+                .digest('hex'),
+            }
+          })
+          .sort((a, b) => (a.hash < b.hash ? -1 : a.hash > b.hash ? 1 : 0))
+          .slice(shardStart, shardEnd)
+          .map(({ file }) => file)
+      }
+
       if (!ctx.config.threads) {
         await runFiles(files)
       }

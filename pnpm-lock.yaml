@@ -847,6 +847,14 @@ importers:
     devDependencies:
       vitest: link:../../packages/vitest
 
+  test/shard:
+    specifiers:
+      execa: ^6.1.0
+      vitest: workspace:*
+    devDependencies:
+      execa: 6.1.0
+      vitest: link:../../packages/vitest
+
   test/single-thread:
     specifiers:
       vitest: workspace:*

@@ -56,6 +56,16 @@ export function resolveApiConfig<Options extends ApiConfig & UserConfig>(
   return api
 }
 
+const configError = (error: string): never => {
+  console.warn(
+    c.yellow(
+      `${c.inverse(c.red(' VITEST '))} ${error}\n`,
+    ),
+  )
+
+  process.exit(1)
+}
+
 export function resolveConfig(
   options: UserConfig,
   viteConfig: ResolvedViteConfig,
@@ -89,6 +99,23 @@ export function resolveConfig(
     resolved.base = viteConfig.base
 
   resolved.coverage = resolveC8Options(options.coverage || {}, resolved.root)
+
+  if (options.shard) {
+    if (resolved.watch)
+      configError('You cannot use --shard option with enabled watch')
+
+    const [indexString, countString] = options.shard.split('/')
+    const index = Math.abs(parseInt(indexString, 10))
+    const count = Math.abs(parseInt(countString, 10))
+
+    if (isNaN(count) || count <= 0)
+      configError('--shard <count> must be a positive number')
+
+    if (isNaN(index) || index <= 0 || index > count)
+      configError('--shard <index> must be a positive number less then <count>')
+
+    resolved.shard = { index, count }
+  }
 
   resolved.deps = resolved.deps || {}
   // vitenode will try to import such file with native node,
