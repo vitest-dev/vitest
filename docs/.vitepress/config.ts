@@ -175,8 +175,16 @@ export default defineConfig({
           text: 'API',
           items: [
             {
-              text: 'API Reference',
-              link: '/api/',
+              text: 'Test Runner API',
+              link: '/api/runner',
+            },
+            {
+              text: 'Expect API',
+              link: '/api/expect',
+            },
+            {
+              text: 'Vi API',
+              link: '/api/vi',
             },
           ],
         },
