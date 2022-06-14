@@ -344,6 +344,12 @@ export interface InlineConfig {
    * Return `false` to ignore the log.
    */
   onConsoleLog?: (log: string, type: 'stdout' | 'stderr') => false | void
+
+  /**
+   * A number of tests that are allowed to run at the same time marked with `test.concurrent`.
+   * @default 5
+   */
+  maxConcurrency?: number
 }
 
 export interface UserConfig extends InlineConfig {
