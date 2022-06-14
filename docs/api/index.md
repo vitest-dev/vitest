@@ -1253,7 +1253,7 @@ When you use `test` in the top level of file, they are collected as part of the 
   ```ts
   import { expect, test } from 'vitest'
 
-  function buyApples() {
+  async function buyApples() {
     return fetch('/buy/apples').then(r => r.json())
   }
 
@@ -1281,7 +1281,7 @@ When you use `test` in the top level of file, they are collected as part of the 
   ```ts
   import { expect, test } from 'vitest'
 
-  function buyApples(id) {
+  async function buyApples(id) {
     if (!id)
       throw new Error('no id')
   }

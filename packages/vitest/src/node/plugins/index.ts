@@ -126,10 +126,16 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
       async configureServer(server) {
         if (haveStarted)
           await ctx.report('onServerRestart')
-        await ctx.setServer(options, server)
-        haveStarted = true
-        if (options.api && options.watch)
-          (await import('../../api/setup')).setup(ctx)
+        try {
+          await ctx.setServer(options, server)
+          haveStarted = true
+          if (options.api && options.watch)
+            (await import('../../api/setup')).setup(ctx)
+        }
+        catch (err) {
+          ctx.printError(err, true)
+          process.exit(1)
+        }
 
         // #415, in run mode we don't need the watcher, close it would improve the performance
         if (!options.watch)
