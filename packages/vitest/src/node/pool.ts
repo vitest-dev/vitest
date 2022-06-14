@@ -4,6 +4,7 @@ import { cpus } from 'os'
 import { resolve } from 'pathe'
 import type { Options as TinypoolOptions } from 'tinypool'
 import { Tinypool } from 'tinypool'
+import limit from 'p-limit'
 import { createBirpc } from 'birpc'
 import type { RawSourceMap } from 'vite-node'
 import type { WorkerContext, WorkerRPC } from '../types'
@@ -67,21 +68,28 @@ export function createPool(ctx: Vitest): WorkerPool {
     let id = 0
     const config = ctx.getSerializableConfig()
 
+    const freePoolId = new Set<number>(
+      new Array(maxThreads).fill(0).map((_, i) => (i % maxThreads)),
+    )
+
     async function runFiles(files: string[], invalidates: string[] = []) {
       const { workerPort, port } = createChannel(ctx)
       const workerId = ++id
+      const poolId = !ctx.config.threads ? 1 : freePoolId.values().next().value
       const data: WorkerContext = {
         port: workerPort,
         config,
         files,
         invalidates,
         workerId,
-        poolId: !ctx.config.threads ? 1 : ((workerId - 1) % maxThreads) + 1,
+        poolId: poolId + 1,
       }
+      freePoolId.delete(poolId)
       try {
         await pool.run(data, { transferList: [workerPort], name })
       }
       finally {
+        freePoolId.add(poolId)
         port.close()
         workerPort.close()
       }
@@ -92,8 +100,14 @@ export function createPool(ctx: Vitest): WorkerPool {
         await runFiles(files)
       }
       else {
-        const results = await Promise.allSettled(files
-          .map(file => runFiles([file], invalidates)))
+        const mutex = limit(maxThreads)
+
+        const promises: Promise<void>[] = []
+
+        for (const file of files)
+          promises.push(mutex(() => runFiles([file], invalidates)))
+
+        const results = await Promise.allSettled(promises)
 
         const errors = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected').map(r => r.reason)
         if (errors.length > 0)
