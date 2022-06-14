@@ -90,6 +90,23 @@ export function resolveConfig(
 
   resolved.coverage = resolveC8Options(options.coverage || {}, resolved.root)
 
+  if (options.shard) {
+    if (resolved.watch)
+      throw new Error('You cannot use --shard option with enabled watch')
+
+    const [indexString, countString] = options.shard.split('/')
+    const index = Math.abs(parseInt(indexString, 10))
+    const count = Math.abs(parseInt(countString, 10))
+
+    if (isNaN(count) || count <= 0)
+      throw new Error('--shard <count> must be a positive number')
+
+    if (isNaN(index) || index <= 0 || index > count)
+      throw new Error('--shard <index> must be a positive number less then <count>')
+
+    resolved.shard = { index, count }
+  }
+
   resolved.deps = resolved.deps || {}
   // vitenode will try to import such file with native node,
   // but then our mocker will not work properly
