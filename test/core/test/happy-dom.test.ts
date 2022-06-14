@@ -14,6 +14,8 @@ declare global {
 it('defined on self/window are defined on global', () => {
   expect(self).toBeDefined()
   expect(window).toBeDefined()
+  expect(top).toBeDefined()
+  expect(parent).toBeDefined()
 
   expect(self.__property_dom).not.toBeDefined()
   expect(window.__property_dom).not.toBeDefined()
