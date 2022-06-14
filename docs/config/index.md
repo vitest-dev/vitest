@@ -536,7 +536,7 @@ Show heap usage after each test. Useful for debugging memory leaks.
 
 ### css
 
-- **Type**: `boolen | { include?, exclude? }`
+- **Type**: `boolean | { include?, exclude? }`
 
 Configure if CSS should be processed. When excluded, CSS files will be replaced with empty strings to bypass the subsequent processing.
 
