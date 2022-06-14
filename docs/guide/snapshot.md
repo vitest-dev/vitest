@@ -6,7 +6,7 @@ When using snapshot, Vitest will take a snapshot of the given value, then compar
 
 ## Use Snapshots
 
-To snapshoting a value, you can use the [`toMatchSnapshot()`](/api/#tomatchsnapshot) from `expect()` API:
+To snapshoting a value, you can use the [`toMatchSnapshot()`](/api/expect#tomatchsnapshot) from `expect()` API:
 
 ```ts
 import { expect, it } from 'vitest'
@@ -29,7 +29,7 @@ The snapshot artifact should be committed alongside code changes, and reviewed a
 
 ## Inline Snapshots
 
-Similarly, you can use the [`toMatchInlineSnapshot()`](/api/#tomatchinlinesnapshot) to store the snapshot inline within the test file.
+Similarly, you can use the [`toMatchInlineSnapshot()`](/api/expect#tomatchinlinesnapshot) to store the snapshot inline within the test file.
 
 ```ts
 import { expect, it } from 'vitest'

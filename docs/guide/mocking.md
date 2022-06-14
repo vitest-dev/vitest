@@ -2,14 +2,14 @@
 When writing tests it's only a matter of time before you need to create "fake" version of an internal—or external—service. This is commonly referred to as **mocking**. Vitest provides utility functions to help you out through its **vi** helper. You can `import { vi } from 'vitest'` or access it **globally** (when [global configuration](/config/#globals) is **enabled**).
 
 ::: warning
-Always remember to clear or restore mocks before or after each test run to undo mock state changes between runs! See [`mockReset`](/api/#mockreset) docs for more info.
+Always remember to clear or restore mocks before or after each test run to undo mock state changes between runs! See [`mockReset`](/api/runner#mockreset) docs for more info.
 :::
 
-If you wanna dive in head first, check out the [API section](/api/#vi) otherwise keep reading to take a deeper dive into the world of mocking.
+If you wanna dive in head first, check out the [API section](/api/vi) otherwise keep reading to take a deeper dive into the world of mocking.
 
 ## Dates
 
-Sometimes you need to be in control of the date to ensure consistency when testing. Vitest uses [`@sinonjs/fake-timers`](https://github.com/sinonjs/fake-timers) package for manipulating timers, as well as system date. You can find more about the specific API in detail [here](/api/#vi-setsystemtime).
+Sometimes you need to be in control of the date to ensure consistency when testing. Vitest uses [`@sinonjs/fake-timers`](https://github.com/sinonjs/fake-timers) package for manipulating timers, as well as system date. You can find more about the specific API in detail [here](/api/vi#vi-setsystemtime).
 
 ### Example
 
@@ -63,9 +63,9 @@ describe('purchasing flow', () => {
 
 Mocking functions can be split up into two different categories; *spying & mocking*.
 
-Sometimes all you need is to validate whether or not a specific function has been called (and possibly which arguments were passed). In these cases a spy would be all we need which you can use directly with `vi.spyOn()` ([read more here](/api/#vi-spyon)).
+Sometimes all you need is to validate whether or not a specific function has been called (and possibly which arguments were passed). In these cases a spy would be all we need which you can use directly with `vi.spyOn()` ([read more here](/api/vi#vi-spyon)).
 
-However spies can only help you **spy** on functions, they are not able to alter the implementation of those functions. In the case where we do need to create a fake (or mocked) version of a function we can  use `vi.fn()` ([read more here](/api/#vi-fn)).
+However spies can only help you **spy** on functions, they are not able to alter the implementation of those functions. In the case where we do need to create a fake (or mocked) version of a function we can  use `vi.fn()` ([read more here](/api/vi#vi-fn)).
 
 We use [Tinyspy](https://github.com/Aslemammad/tinyspy) as a base for mocking functions, but we have our own wrapper to make it `jest` compatible. Both `vi.fn()` and `vi.spyOn()` share the same methods, however only the return result of `vi.fn()` is callable.
 
@@ -128,7 +128,7 @@ describe('reading messages', () => {
 
 ## Globals
 
-You can mock global variables that are not present with `jsdom` or `node` by using [`vi.stubGlobal`](/api/#vi-stubglobal) helper. It will put the value of the global variable into a `globalThis` object.
+You can mock global variables that are not present with `jsdom` or `node` by using [`vi.stubGlobal`](/api/vi#vi-stubglobal) helper. It will put the value of the global variable into a `globalThis` object.
 
 ```ts
 import { vi } from 'vitest'
@@ -149,7 +149,7 @@ vi.stubGlobal('IntersectionObserver', IntersectionObserverMock)
 
 Mock modules observe third-party-libraries, that are invoked in some other code, allowing you to test arguments, output or even redeclare its implementation.
 
-See the [`vi.mock()` api section](/api/#vi-mock) for a more in depth detailed API description.
+See the [`vi.mock()` api section](/api/vi#vi-mock) for a more in depth detailed API description.
 
 ### Automocking algorithm
 
@@ -318,7 +318,7 @@ There is much more to MSW. You can access cookies and query parameters, define m
 
 Whenever we test code that involves `timeOut`s or intervals, instead of having our tests it wait out or time-out. We can speed up our tests by using "fake" timers by mocking calls to `setTimeout` and `setInterval`, too.
 
-See the [`vi.mock()` api section](/api/#vi-usefaketimer) for a more in depth detailed API description.
+See the [`vi.mock()` api section](/api/vi#vi-usefaketimer) for a more in depth detailed API description.
 
 ### Example
 

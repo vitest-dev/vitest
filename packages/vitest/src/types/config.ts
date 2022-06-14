@@ -32,7 +32,7 @@ export interface InlineConfig {
   /**
    * Exclude globs for test files
    * @default ['node_modules', 'dist', '.idea', '.git', '.cache']
-   */
+  */
   exclude?: string[]
 
   /**
