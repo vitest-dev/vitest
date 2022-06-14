@@ -193,9 +193,9 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
   })
 
   // this will return
-  // √ add(1, 1) -> 2
-  // √ add(1, 2) -> 3
-  // √ add(2, 1) -> 3
+  // ✓ add(1, 1) -> 2
+  // ✓ add(1, 2) -> 3
+  // ✓ add(2, 1) -> 3
   ```
 
 ## describe
