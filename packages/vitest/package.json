@@ -119,6 +119,7 @@
     "micromatch": "^4.0.5",
     "mlly": "^0.5.2",
     "natural-compare": "^1.4.0",
+    "p-limit": "^4.0.0",
     "pathe": "^0.2.0",
     "picocolors": "^1.0.0",
     "pkg-types": "^0.3.2",
@@ -127,7 +128,6 @@
     "rollup": "^2.75.6",
     "source-map-js": "^1.0.2",
     "strip-ansi": "^7.0.1",
-    "throat": "^6.0.1",
     "typescript": "^4.7.3",
     "vite-node": "workspace:*",
     "ws": "^8.8.0"

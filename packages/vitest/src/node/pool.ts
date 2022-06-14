@@ -4,7 +4,7 @@ import { cpus } from 'os'
 import { resolve } from 'pathe'
 import type { Options as TinypoolOptions } from 'tinypool'
 import { Tinypool } from 'tinypool'
-import throat from 'throat'
+import limit from 'p-limit'
 import { createBirpc } from 'birpc'
 import type { RawSourceMap } from 'vite-node'
 import type { WorkerContext, WorkerRPC } from '../types'
@@ -100,7 +100,7 @@ export function createPool(ctx: Vitest): WorkerPool {
         await runFiles(files)
       }
       else {
-        const mutex = throat(maxThreads)
+        const mutex = limit(maxThreads)
 
         const promises: Promise<void>[] = []
 
