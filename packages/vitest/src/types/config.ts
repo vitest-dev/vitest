@@ -346,6 +346,17 @@ export interface InlineConfig {
   onConsoleLog?: (log: string, type: 'stdout' | 'stderr') => false | void
 
   /**
+   * Indicates if CSS files should be processed.
+   *
+   * When excluded, the CSS files will be replaced with empty strings to bypass the subsequent processing.
+   *
+   * @default { include: [/\.module\./] }
+   */
+  css?: boolean | {
+    include?: RegExp | RegExp[]
+    exclude?: RegExp | RegExp[]
+  }
+  /**
    * A number of tests that are allowed to run at the same time marked with `test.concurrent`.
    * @default 5
    */

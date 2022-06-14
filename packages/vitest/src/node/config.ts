@@ -175,5 +175,9 @@ export function resolveConfig(
   if (resolved.changed)
     resolved.passWithNoTests ??= true
 
+  resolved.css ??= {}
+  if (typeof resolved.css === 'object')
+    resolved.css.include ??= [/\.module\./]
+
   return resolved
 }
