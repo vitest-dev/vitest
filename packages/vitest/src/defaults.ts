@@ -72,6 +72,7 @@ const config = {
   open: true,
   coverage: coverageConfigDefaults,
   fakeTimers: fakeTimersDefaults,
+  maxConcurrency: 5,
 }
 
 export const configDefaults: Required<Pick<UserConfig, keyof typeof config>> = Object.freeze(config)

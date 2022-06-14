@@ -676,6 +676,7 @@ importers:
       micromatch: ^4.0.5
       mlly: ^0.5.2
       natural-compare: ^1.4.0
+      p-limit: ^4.0.0
       pathe: ^0.2.0
       picocolors: ^1.0.0
       pkg-types: ^0.3.2
@@ -727,6 +728,7 @@ importers:
       micromatch: 4.0.5
       mlly: 0.5.2
       natural-compare: 1.4.0
+      p-limit: 4.0.0
       pathe: 0.2.0
       picocolors: 1.0.0
       pkg-types: 0.3.2

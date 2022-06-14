@@ -533,3 +533,12 @@ Vitest will not fail, if no tests will be found.
 - **Default**: `false`
 
 Show heap usage after each test. Useful for debugging memory leaks.
+
+### maxConcurrency
+
+- **Type**: `number`
+- **Default**: `5`
+
+A number of tests that are allowed to run at the same time marked with `test.concurrent`.
+
+Test above this limit will be queued to run when available slot appears.
