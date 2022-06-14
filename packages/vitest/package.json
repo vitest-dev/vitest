@@ -127,6 +127,7 @@
     "rollup": "^2.75.6",
     "source-map-js": "^1.0.2",
     "strip-ansi": "^7.0.1",
+    "throat": "^6.0.1",
     "typescript": "^4.7.3",
     "vite-node": "workspace:*",
     "ws": "^8.8.0"
