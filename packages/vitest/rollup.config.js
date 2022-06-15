@@ -56,12 +56,11 @@ const plugins = [
 ]
 
 export default ({ watch }) => [
-  {
+  defineConfig({
     input: entries,
     output: {
       dir: 'dist',
       format: 'esm',
-      entryFileNames: '[name].mjs',
       chunkFileNames: (chunkInfo) => {
         const id = chunkInfo.facadeModuleId || Object.keys(chunkInfo.modules).find(i => !i.includes('node_modules') && i.includes('src/'))
         if (id) {
@@ -71,9 +70,9 @@ export default ({ watch }) => [
               .filter(i => !['src', 'index', 'dist', 'node_modules'].some(j => i.includes(j)) && i.match(/^[\w_-]+$/))),
           )
           if (parts.length)
-            return `chunk-${parts.slice(-2).join('-')}.[hash].mjs`
+            return `chunk-${parts.slice(-2).join('-')}.[hash].js`
         }
-        return 'vendor-[name].[hash].mjs'
+        return 'vendor-[name].[hash].js'
       },
     },
     external,
@@ -86,8 +85,8 @@ export default ({ watch }) => [
         return
       console.error(message)
     },
-  },
-  {
+  }),
+  defineConfig({
     input: 'src/config.ts',
     output: [
       {
@@ -95,13 +94,13 @@ export default ({ watch }) => [
         format: 'cjs',
       },
       {
-        file: 'dist/config.mjs',
+        file: 'dist/config.js',
         format: 'esm',
       },
     ],
     external,
     plugins,
-  },
+  }),
   ...dtsEntries.map((input) => {
     const _external = external
     // index is vitest default types export
