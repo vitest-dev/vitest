@@ -78,25 +78,6 @@ export default ({ watch }) => [
     external,
     plugins: [
       ...plugins,
-      {
-        // Add commonjs files so importing vitest in nodenext or node16 environments work
-        // without changing the test file extension or package.json type
-        name: 'shim-cjs-files',
-        generateBundle() {
-          this.emitFile({
-            id: 'index.d.cts',
-            type: 'asset',
-            fileName: 'index.d.cts',
-            source: 'export * from \'./index.js\'',
-          })
-          this.emitFile({
-            id: 'index.cjs',
-            type: 'asset',
-            fileName: 'index.cjs',
-            source: '',
-          })
-        },
-      },
       !watch && licensePlugin(),
     ],
     onwarn(message) {
