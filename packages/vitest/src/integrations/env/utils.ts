@@ -71,6 +71,7 @@ export function populateGlobal(global: any, win: any, options: PopulateOptions =
   global.window = global
   global.self = global
   global.top = global
+  global.parent = global
 
   if (global.global)
     global.global = global

@@ -102,8 +102,8 @@ export function defineWebWorker() {
           this.inside.emit(event.type, event)
           return true
         },
-        addEventListener: this.inside.on,
-        removeEventListener: this.inside.off,
+        addEventListener: this.inside.on.bind(this.inside),
+        removeEventListener: this.inside.off.bind(this.inside),
         postMessage: (data) => {
           this.outside.emit('message', { data })
         },

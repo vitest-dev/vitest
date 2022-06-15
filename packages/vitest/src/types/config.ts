@@ -344,6 +344,23 @@ export interface InlineConfig {
    * Return `false` to ignore the log.
    */
   onConsoleLog?: (log: string, type: 'stdout' | 'stderr') => false | void
+
+  /**
+   * Indicates if CSS files should be processed.
+   *
+   * When excluded, the CSS files will be replaced with empty strings to bypass the subsequent processing.
+   *
+   * @default { include: [/\.module\./] }
+   */
+  css?: boolean | {
+    include?: RegExp | RegExp[]
+    exclude?: RegExp | RegExp[]
+  }
+  /**
+   * A number of tests that are allowed to run at the same time marked with `test.concurrent`.
+   * @default 5
+   */
+  maxConcurrency?: number
 }
 
 export interface UserConfig extends InlineConfig {
@@ -380,9 +397,17 @@ export interface UserConfig extends InlineConfig {
    * @default false
    */
   changed?: boolean | string
+
+  /**
+   * Test suite shard to execute in a format of <index>/<count>.
+   * Will divide tests into a `count` numbers, and run only the `indexed` part.
+   * Cannot be used with enabled watch.
+   * @example --shard=2/3
+   */
+  shard?: string
 }
 
-export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath'> {
+export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'shard'> {
   base?: string
 
   config?: string
@@ -398,4 +423,8 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
   defines: Record<string, any>
 
   api?: ApiConfig
+  shard?: {
+    index: number
+    count: number
+  }
 }

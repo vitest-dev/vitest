@@ -33,12 +33,12 @@ importers:
       npm-run-all: ^4.1.5
       ohmyfetch: ^0.4.18
       pathe: ^0.2.0
-      pnpm: 7.2.0
+      pnpm: 7.2.1
       rimraf: ^3.0.2
       rollup: ^2.75.6
       rollup-plugin-dts: ^4.2.2
       rollup-plugin-esbuild: ^4.9.1
-      rollup-plugin-license: ^2.8.0
+      rollup-plugin-license: ^2.8.1
       simple-git-hooks: ^2.8.0
       typescript: ^4.7.3
       vite: ^2.9.10
@@ -69,12 +69,12 @@ importers:
       npm-run-all: 4.1.5
       ohmyfetch: 0.4.18
       pathe: 0.2.0
-      pnpm: 7.2.0
+      pnpm: 7.2.1
       rimraf: 3.0.2
       rollup: 2.75.6
       rollup-plugin-dts: 4.2.2_fgms252lqu3rk7srzpqqayl4ya
       rollup-plugin-esbuild: 4.9.1_qv6slia5ybvwwvahh3z7va6kda
-      rollup-plugin-license: 2.8.0_rollup@2.75.6
+      rollup-plugin-license: 2.8.1_rollup@2.75.6
       simple-git-hooks: 2.8.0
       typescript: 4.7.3
       vite: 2.9.10
@@ -574,7 +574,7 @@ importers:
       codemirror: ^5.65.5
       codemirror-theme-vars: ^0.1.1
       cypress: ^9.7.0
-      d3-graph-controller: ^2.2.40
+      d3-graph-controller: ^2.2.41
       flatted: ^3.2.5
       floating-vue: ^2.0.0-y.0
       picocolors: ^1.0.0
@@ -608,7 +608,7 @@ importers:
       codemirror: 5.65.5
       codemirror-theme-vars: 0.1.1
       cypress: 9.7.0
-      d3-graph-controller: 2.2.40
+      d3-graph-controller: 2.2.41
       flatted: 3.2.5
       floating-vue: 2.0.0-y.0_vue@3.2.37
       picocolors: 1.0.0
@@ -652,7 +652,7 @@ importers:
       '@types/jsdom': ^16.2.14
       '@types/micromatch': ^4.0.2
       '@types/natural-compare': ^1.4.1
-      '@types/node': ^17.0.35
+      '@types/node': '*'
       '@types/prompts': ^2.4.0
       '@types/sinonjs__fake-timers': ^8.1.2
       '@vitest/ui': workspace:*
@@ -676,6 +676,7 @@ importers:
       micromatch: ^4.0.5
       mlly: ^0.5.2
       natural-compare: ^1.4.0
+      p-limit: ^4.0.0
       pathe: ^0.2.0
       picocolors: ^1.0.0
       pkg-types: ^0.3.2
@@ -693,6 +694,7 @@ importers:
     dependencies:
       '@types/chai': 4.3.1
       '@types/chai-subset': 1.3.3
+      '@types/node': 17.0.35
       chai: 4.3.6
       debug: 4.3.4
       local-pkg: 0.4.1
@@ -706,7 +708,6 @@ importers:
       '@types/jsdom': 16.2.14
       '@types/micromatch': 4.0.2
       '@types/natural-compare': 1.4.1
-      '@types/node': 17.0.35
       '@types/prompts': 2.4.0
       '@types/sinonjs__fake-timers': 8.1.2
       '@vitest/ui': link:../ui
@@ -727,6 +728,7 @@ importers:
       micromatch: 4.0.5
       mlly: 0.5.2
       natural-compare: 1.4.0
+      p-limit: 4.0.0
       pathe: 0.2.0
       picocolors: 1.0.0
       pkg-types: 0.3.2
@@ -845,6 +847,14 @@ importers:
     specifiers:
       vitest: workspace:*
     devDependencies:
+      vitest: link:../../packages/vitest
+
+  test/shard:
+    specifiers:
+      execa: ^6.1.0
+      vitest: workspace:*
+    devDependencies:
+      execa: 6.1.0
       vitest: link:../../packages/vitest
 
   test/single-thread:
@@ -6477,7 +6487,6 @@ packages:
 
   /@types/node/17.0.35:
     resolution: {integrity: sha512-vu1SrqBjbbZ3J6vwY17jBs8Sr/BKA+/a/WtjRG+whKg1iuLFOosq872EXS0eXWILdO36DHQQeku/ZcL6hz2fpg==}
-    dev: true
 
   /@types/node/17.0.40:
     resolution: {integrity: sha512-UXdBxNGqTMtm7hCwh9HtncFVLrXoqA3oJW30j6XWp5BH/wu3mVeaxo7cq5benFdBw34HB3XDT2TRPI7rXZ+mDg==}
@@ -7702,8 +7711,8 @@ packages:
     resolution: {integrity: sha512-NuHqBY1PB/D8xU6s/thBgOAiAP7HOYDQ32+BFZILJ8ivkUkAHQnWfn6WhL79Owj1qmUnoN/YPhktdIoucipkAQ==}
     dev: true
 
-  /@yeger/debounce/1.0.18:
-    resolution: {integrity: sha512-QwW6oR6g+5vo1VNUUdHOJrK5/Yr6j27DEvwzh9KzgIE7GB/vt9izLoPv/52h3a7AaQLYN8CP0pRhzbkr+M8LWw==}
+  /@yeger/debounce/1.0.19:
+    resolution: {integrity: sha512-ynzlNQIqKyMnAERNPyp1qez553+U51yYTvDQiOWwpj2Y0HCS9xlShWyEdNmnVcM4fIzhHcHYDxO6AlvcyH/faA==}
     dev: true
 
   /abab/2.0.6:
@@ -9454,7 +9463,7 @@ packages:
     dev: true
 
   /concat-map/0.0.1:
-    resolution: {integrity: sha1-2Klr13/Wjfd5OnMDajug1UBdR3s=}
+    resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
 
   /concat-stream/1.6.2:
     resolution: {integrity: sha512-27HBghJxjiZtIk3Ycvn/4kbJk/1uZuJFfuPEns6LaEvpvG1f0hTea8lilrouyo9mVc2GWdcEZ8OLoGmSADlrCw==}
@@ -10270,10 +10279,10 @@ packages:
     resolution: {integrity: sha512-Ab3S6XuE/Q+flY96HXT0jOXcM4EAClYFnRGY5zsjRGNy6qCYrQsMffs7cV5Q9xejb35zxW5hf/guKw34kvIKsA==}
     dev: false
 
-  /d3-graph-controller/2.2.40:
-    resolution: {integrity: sha512-fwpgWnM4Xq6/2PHkFbO7vznjZ2EivnkTkDYMNFe3cUOdkFfTlxLYV9txB0AV6gq/I4u6zC9nHKLHzHjOaTuNVw==}
+  /d3-graph-controller/2.2.41:
+    resolution: {integrity: sha512-YdjOO8SZwJHi/mu1Ahy2a1liMvyA0EyzE6eLJYInYXtnVh/flGI06ZWXsJZA0QScq5pSQtFkCRRo5MFNkEohXA==}
     dependencies:
-      '@yeger/debounce': 1.0.18
+      '@yeger/debounce': 1.0.19
       d3-drag: 3.0.0
       d3-force: 3.0.0
       d3-selection: 3.0.0
@@ -16690,9 +16699,9 @@ packages:
       - typescript
     dev: true
 
-  /pnpm/7.2.0:
-    resolution: {integrity: sha512-bYRTXwdJDNJBSzzmWTGWldUDY1j4/2GFZJoIm8X2XNxSf3VRVxTcqnwddm22wTDsKN6suHtfAlsYeSvQ/xNK8g==}
-    engines: {node: '>=14.19'}
+  /pnpm/7.2.1:
+    resolution: {integrity: sha512-Z2Wg7YHxeit2U+0aSj+doBPF9+ER0e3VLOGuJOQbk8rzIxK6zMtrQ0ICieCUGPWRM0Vbwj8yIcTKzO22Yhs/Cg==}
+    engines: {node: '>=14.6'}
     hasBin: true
     dev: true
 
@@ -17968,8 +17977,8 @@ packages:
       - supports-color
     dev: true
 
-  /rollup-plugin-license/2.8.0_rollup@2.75.6:
-    resolution: {integrity: sha512-P+CM6tlgahnpnOFKeirABCcs3Eez4AQsm2fC7rvVR3aMIWd/KgSNAImmcfGS+Pmd0dGFmjE1tYgflnTINxNpIQ==}
+  /rollup-plugin-license/2.8.1_rollup@2.75.6:
+    resolution: {integrity: sha512-VYd9pzaNL7NN6xQp93XiiCV2UoduXgSmTcz6rl9bHPdiifT6yH3Zw/omEr73Rq8TIyN4nqJACBbKIT/2eE66wg==}
     engines: {node: '>=10.0.0'}
     peerDependencies:
       rollup: ^1.0.0 || ^2.0.0
@@ -19624,7 +19633,7 @@ packages:
     dev: true
 
   /type-check/0.3.2:
-    resolution: {integrity: sha1-WITKtRLPHTVeP7eE8wgEsrUg23I=}
+    resolution: {integrity: sha512-ZCmOJdvOWDBYJlzAoFkC+Q0+bUyEOS1ltgp1MGU03fqHG+dbi9tBFU2Rd9QKiDZFAYrhPh2JUf7rZRIuHRKtOg==}
     engines: {node: '>= 0.8.0'}
     dependencies:
       prelude-ls: 1.1.2
@@ -19985,7 +19994,7 @@ packages:
     dev: true
 
   /unpipe/1.0.0:
-    resolution: {integrity: sha1-sr9O6FFKrmFltIF4KdIbLvSZBOw=}
+    resolution: {integrity: sha512-pjy2bYhSsufwWlKwPc+l3cN7+wuJlK6uz0YdJEOlQDbl6jo/YlPi4mb8agUkVC8BF7V8NuzeyPNqRksA3hztKQ==}
     engines: {node: '>= 0.8'}
     dev: true
 
@@ -20358,7 +20367,7 @@ packages:
     dev: true
 
   /utils-merge/1.0.1:
-    resolution: {integrity: sha1-n5VxD1CiZ5R7LMwSR0HBAoQn5xM=}
+    resolution: {integrity: sha512-pMZTvIkT1d+TFGvDOqodOclx0QWkkgi6Tdoa8gC8ffGAAqz9pzPTZWAybbsHHoED/ztMtkv/VoYTYyShUn81hA==}
     engines: {node: '>= 0.4.0'}
     dev: true
 

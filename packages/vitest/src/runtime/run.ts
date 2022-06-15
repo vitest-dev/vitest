@@ -1,9 +1,11 @@
+import limit from 'p-limit'
 import type { File, HookCleanupCallback, HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from '../types'
 import { vi } from '../integrations/vi'
 import { getSnapshotClient } from '../integrations/snapshot/chai'
 import { clearTimeout, getFullName, getWorkerState, hasFailed, hasTests, partitionSuiteChildren, setTimeout } from '../utils'
-import { getState, setState } from '../integrations/chai/jest-expect'
 import { takeCoverage } from '../integrations/coverage'
+import { getState, setState } from '../integrations/chai/jest-expect'
+import { GLOBAL_EXPECT } from '../integrations/chai/constants'
 import { getFn, getHooks } from './map'
 import { rpc } from './rpc'
 import { collectTests } from './collect'
@@ -111,9 +113,18 @@ export async function runTest(test: Test) {
       expectedAssertionsNumberErrorGen: null,
       testPath: test.suite.file?.filepath,
       currentTestName: getFullName(test),
-    })
+    }, (globalThis as any)[GLOBAL_EXPECT])
     await getFn(test)()
-    const { assertionCalls, expectedAssertionsNumber, expectedAssertionsNumberErrorGen, isExpectingAssertions, isExpectingAssertionsError } = getState()
+    const {
+      assertionCalls,
+      expectedAssertionsNumber,
+      expectedAssertionsNumberErrorGen,
+      isExpectingAssertions,
+      isExpectingAssertionsError,
+      // @ts-expect-error local is private
+    } = test.context._local
+      ? test.context.expect.getState()
+      : getState((globalThis as any)[GLOBAL_EXPECT])
     if (expectedAssertionsNumber !== null && assertionCalls !== expectedAssertionsNumber)
       throw expectedAssertionsNumberErrorGen!()
     if (isExpectingAssertions === true && assertionCalls === 0)
@@ -185,6 +196,8 @@ export async function runSuite(suite: Suite) {
 
   updateTask(suite)
 
+  const workerState = getWorkerState()
+
   if (suite.mode === 'skip') {
     suite.result.state = 'skip'
   }
@@ -197,7 +210,8 @@ export async function runSuite(suite: Suite) {
 
       for (const tasksGroup of partitionSuiteChildren(suite)) {
         if (tasksGroup[0].concurrent === true) {
-          await Promise.all(tasksGroup.map(c => runSuiteChild(c)))
+          const mutex = limit(workerState.config.maxConcurrency)
+          await Promise.all(tasksGroup.map(c => mutex(() => runSuiteChild(c))))
         }
         else {
           for (const c of tasksGroup)
@@ -214,8 +228,6 @@ export async function runSuite(suite: Suite) {
     }
   }
   suite.result.duration = now() - start
-
-  const workerState = getWorkerState()
 
   if (workerState.config.logHeapUsage)
     suite.result.heap = process.memoryUsage().heapUsed

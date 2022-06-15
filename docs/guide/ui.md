@@ -1,6 +1,6 @@
 # Vitest UI
 
-Powered by Vite, Vitest also has a dev server under the hood when running the tests. This allows Vitest to provide a beautiful UI to view and interactive with your tests. The Vitest UI is optional, you can install it by:
+Powered by Vite, Vitest also has a dev server under the hood when running the tests. This allows Vitest to provide a beautiful UI to view and interact with your tests. The Vitest UI is optional, you can install it by:
 
 ```bash
 npm i -D @vitest/ui
