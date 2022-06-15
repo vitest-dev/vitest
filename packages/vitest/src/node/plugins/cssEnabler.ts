@@ -28,7 +28,7 @@ export function CSSEnablerPlugin(ctx: Vitest): VitePlugin {
       if (!isCSS(id))
         return
       if (!shouldProcessCSS(id))
-        return ''
+        return { code: '' }
     },
   }
 }
