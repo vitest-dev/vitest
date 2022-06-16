@@ -67,6 +67,8 @@ const globalExpect = createExpect()
 
 Object.defineProperty(globalThis, GLOBAL_EXPECT, {
   value: globalExpect,
+  writable: true,
+  configurable: true,
 })
 
 export { assert, should } from 'chai'
