@@ -7,7 +7,7 @@
   },
   "devDependencies": {
     "vite": "^2.9.10",
-    "vitest": "workspace:*",
-    "vite-node": "workspace:*"
+    "vite-node": "workspace:*",
+    "vitest": "workspace:*"
   }
 }
