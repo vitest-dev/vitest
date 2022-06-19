@@ -78,8 +78,10 @@ async function sendTasksUpdate() {
 }
 
 export async function runTest(test: Test) {
-  if (test.mode !== 'run')
+  if (test.mode !== 'run') {
+    getSnapshotClient().skipTestSnapshots(test)
     return
+  }
 
   if (test.result?.state === 'fail') {
     updateTask(test)
