@@ -7,6 +7,7 @@ import { Vitest } from '../core'
 import { EnvReplacerPlugin } from './envRelacer'
 import { GlobalSetupPlugin } from './globalSetup'
 import { MocksPlugin } from './mock'
+import { CSSEnablerPlugin } from './cssEnabler'
 
 export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest()): Promise<VitePlugin[]> {
   let haveStarted = false
@@ -125,10 +126,16 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
       async configureServer(server) {
         if (haveStarted)
           await ctx.report('onServerRestart')
-        await ctx.setServer(options, server)
-        haveStarted = true
-        if (options.api && options.watch)
-          (await import('../../api/setup')).setup(ctx)
+        try {
+          await ctx.setServer(options, server)
+          haveStarted = true
+          if (options.api && options.watch)
+            (await import('../../api/setup')).setup(ctx)
+        }
+        catch (err) {
+          ctx.printError(err, true)
+          process.exit(1)
+        }
 
         // #415, in run mode we don't need the watcher, close it would improve the performance
         if (!options.watch)
@@ -138,6 +145,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
     EnvReplacerPlugin(),
     MocksPlugin(),
     GlobalSetupPlugin(ctx),
+    CSSEnablerPlugin(ctx),
     options.ui
       ? await UIPlugin()
       : null,

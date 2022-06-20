@@ -66,7 +66,8 @@ vitest related /src/index.ts /src/hello-world.js
 | `--environment <env>` | Runner environment (default: `node`) |
 | `--passWithNoTests` | Pass when no tests found |
 | `--allowOnly` | Allow tests and suites that are marked as `only` (default: false in CI, true otherwise) |
-| `--changed [since]` | Run tests that are affected by the changed files (default: false). See [docs](#changed)
+| `--changed [since]` | Run tests that are affected by the changed files (default: false). See [docs](#changed) |
+| `--shard <shard>` | Execute tests in a specified shard |
 | `-h, --help` | Display available CLI options |
 
 ### changed
@@ -74,6 +75,28 @@ vitest related /src/index.ts /src/hello-world.js
 - **Type**: `boolean | string`
 - **Default**: false
 
-Run tests only against changed files. If no value is provided, it will run tests against uncommitted changes (including staged and unstaged).
+  Run tests only against changed files. If no value is provided, it will run tests against uncommitted changes (including staged and unstaged).
 
-To run tests against changes made in the last commit, you can use `--changed HEAD~1`. You can also pass commit hash or branch name.
+  To run tests against changes made in the last commit, you can use `--changed HEAD~1`. You can also pass commit hash or branch name.
+
+### shard
+
+- **Type**: `string`
+- **Default**: disabled
+
+  Test suite shard to execute in a format of `<index>`/`<count>`, where
+
+  - `count` is a positive integer, count of divided parts
+  - `index` is a positive integer, index of divided part
+
+  This command will divide all tests into `count` equal parts, and will run only those that happen to be in an `index` part. For example, to split your tests suite into three parts, use this:
+
+  ```sh
+  vitest run --shard=1/3
+  vitest run --shard=2/3
+  vitest run --shard=3/3
+  ```
+
+:::warning
+You cannot use this option with `--watch` enabled (enabled in dev by default).
+:::

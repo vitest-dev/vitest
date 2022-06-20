@@ -8,7 +8,8 @@ import type { SnapshotResult } from './snapshot'
 import type { UserConsoleLog } from './general'
 
 export interface WorkerContext {
-  id: number
+  workerId: number
+  poolId: number
   port: MessagePort
   config: ResolvedConfig
   files: string[]

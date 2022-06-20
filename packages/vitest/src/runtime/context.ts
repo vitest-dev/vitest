@@ -61,6 +61,11 @@ export function createTestContext(test: Test): TestContext {
       return _expect
     },
   })
+  Object.defineProperty(context, '_local', {
+    get() {
+      return _expect != null
+    },
+  })
 
   return context
 }

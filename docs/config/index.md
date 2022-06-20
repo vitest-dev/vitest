@@ -315,10 +315,11 @@ Silent console output from tests
 
 Path to setup files. They will be run before each test file.
 
-You can use `process.env.VITEST_WORKER_ID` (integer-like string) inside to distinguish between threads (will always be `'1'`, if run with `threads: false`).
+You can use `process.env.VITEST_POOL_ID` (integer-like string) inside to distinguish between threads (will always be `'1'`, if run with `threads: false`).
 
 :::tip
-Note, that if you are running [`--no-threads`](#threads), this file will be run in the same global scope. Meaning, that you are accessing the same global object before each test, so make sure you are not doing the same thing more than you need.
+Note, that if you are running [`--no-threads`](#threads), this setup file will be run in the same global scope multiple times. Meaning, that you are accessing the same global object before each test, so make sure you are not doing the same thing more than you need.
+:::
 
 For example, you may rely on a global variable:
 
@@ -331,14 +332,13 @@ if (!globalThis.defined) {
   globalThis.defined = true
 }
 
-// hooks are reseted before each suite
+// hooks are reset before each suite
 afterEach(() => {
   cleanup()
 })
 
 globalThis.resetBeforeEachTest = true
 ```
-:::
 
 ### globalSetup
 
@@ -533,3 +533,34 @@ Vitest will not fail, if no tests will be found.
 - **Default**: `false`
 
 Show heap usage after each test. Useful for debugging memory leaks.
+
+### css
+
+- **Type**: `boolean | { include?, exclude? }`
+
+Configure if CSS should be processed. When excluded, CSS files will be replaced with empty strings to bypass the subsequent processing.
+
+By default, processes only CSS Modules, because it affects runtime. JSDOM and Happy DOM don't fully support injecting CSS, so disabling this setting might help with performance.
+
+#### css.include
+
+- **Type**: `RegExp | RegExp[]`
+- **Default**: `[/\.module\./]`
+
+RegExp pattern for files that should return actual CSS and will be processed by Vite pipeline.
+
+#### css.exclude
+
+- **Type**: `RegExp | RegExp[]`
+- **Default**: `[]`
+
+RegExp pattern for files that will return en empty CSS file.
+
+### maxConcurrency
+
+- **Type**: `number`
+- **Default**: `5`
+
+A number of tests that are allowed to run at the same time marked with `test.concurrent`.
+
+Test above this limit will be queued to run when available slot appears.

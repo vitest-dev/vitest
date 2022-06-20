@@ -193,9 +193,9 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
   })
 
   // this will return
-  // √ add(1, 1) -> 2
-  // √ add(1, 2) -> 3
-  // √ add(2, 1) -> 3
+  // ✓ add(1, 1) -> 2
+  // ✓ add(1, 2) -> 3
+  // ✓ add(2, 1) -> 3
   ```
 
 ## describe
@@ -1253,7 +1253,7 @@ When you use `test` in the top level of file, they are collected as part of the 
   ```ts
   import { expect, test } from 'vitest'
 
-  function buyApples() {
+  async function buyApples() {
     return fetch('/buy/apples').then(r => r.json())
   }
 
@@ -1281,7 +1281,7 @@ When you use `test` in the top level of file, they are collected as part of the 
   ```ts
   import { expect, test } from 'vitest'
 
-  function buyApples(id) {
+  async function buyApples(id) {
     if (!id)
       throw new Error('no id')
   }

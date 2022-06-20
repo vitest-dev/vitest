@@ -13,6 +13,9 @@ declare global {
 
 it('jsdom', () => {
   expect(window).toBeDefined()
+  expect(top).toBeDefined()
+  expect(parent).toBeDefined()
+  expect(self).toBeDefined()
 
   const dom = document.createElement('a')
   dom.href = 'https://vitest.dev'
