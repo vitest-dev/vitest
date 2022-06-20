@@ -1,4 +1,5 @@
-import type { ModuleCacheMap } from './client'
+import type { ViteHotContext } from 'vite/types/hot'
+import type { ModuleCacheMap, ViteNodeRunner } from './client'
 
 export type Nullable<T> = T | null | undefined
 export type Arrayable<T> = T | Array<T>
@@ -32,9 +33,13 @@ export interface FetchResult {
   map?: RawSourceMap
 }
 
+export type HotContext = Omit<ViteHotContext, 'acceptDeps' | 'decline'>
+
 export type FetchFunction = (id: string) => Promise<FetchResult>
 
 export type ResolveIdFunction = (id: string, importer?: string) => Promise<ViteNodeResolveId | null>
+
+export type CreateHotContextFunction = (runner: ViteNodeRunner, url: string) => HotContext
 
 export interface ModuleCache {
   promise?: Promise<any>
@@ -46,6 +51,7 @@ export interface ViteNodeRunnerOptions {
   root: string
   fetchModule: FetchFunction
   resolveId?: ResolveIdFunction
+  createHotContext?: CreateHotContextFunction
   base?: string
   moduleCache?: ModuleCacheMap
   interopDefault?: boolean

@@ -187,7 +187,10 @@ export class ViteNodeRunner {
       __vite_ssr_dynamic_import__: request,
       __vite_ssr_exports__: exports,
       __vite_ssr_exportAll__: (obj: any) => exportAll(exports, obj),
-      __vite_ssr_import_meta__: { url },
+      __vite_ssr_import_meta__: {
+        url,
+        hot: this.options.createHotContext?.(this, `/@fs/${fsPath}`),
+      },
 
       __vitest_resolve_id__: resolveId,
 
