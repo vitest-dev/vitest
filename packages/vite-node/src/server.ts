@@ -54,7 +54,7 @@ export class ViteNodeServer {
   async resolveId(id: string, importer?: string): Promise<ViteNodeResolveId | null> {
     if (importer && !importer.startsWith(this.server.config.root))
       importer = join(this.server.config.root, importer)
-    const mode = this.getTransformMode(id)
+    const mode = (importer && this.getTransformMode(importer)) || 'ssr'
     return this.server.pluginContainer.resolveId(id, importer, { ssr: mode === 'ssr' })
   }
 

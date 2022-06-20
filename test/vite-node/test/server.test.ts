@@ -12,7 +12,9 @@ describe('server works correctly', async () => {
 
     const vnServer = new ViteNodeServer(mockDevServer({
       pluginContainer: { resolveId },
-      config: {},
+      config: {
+        root: '/',
+      },
     }), {
       transformMode: {
         web: [/web/],
@@ -20,10 +22,10 @@ describe('server works correctly', async () => {
       },
     })
 
-    await vnServer.resolveId('/web path')
-    expect(resolveId).toHaveBeenCalledWith('/web path', undefined, { ssr: false })
+    await vnServer.resolveId('/path', '/web path')
+    expect(resolveId).toHaveBeenCalledWith('/path', '/web path', { ssr: false })
 
-    await vnServer.resolveId('/ssr path')
-    expect(resolveId).toHaveBeenCalledWith('/ssr path', undefined, { ssr: true })
+    await vnServer.resolveId('/ssr', '/ssr path')
+    expect(resolveId).toHaveBeenCalledWith('/ssr', '/ssr path', { ssr: true })
   })
 })
