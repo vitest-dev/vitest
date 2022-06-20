@@ -2,7 +2,10 @@
  * @vitest-environment jsdom
  */
 
+import type { MockedFunction, MockedObject } from 'vitest'
 import { describe, expect, test, vi } from 'vitest'
+
+const expectType = <T>(obj: T) => obj
 
 describe('testing vi utils', () => {
   test('global scope has variable', () => {
@@ -29,7 +32,14 @@ describe('testing vi utils', () => {
     expect(v1).toBe(v2)
   })
 
-  // TODO: it's unstable in CI, skip until resolved
+  test('vi mocked', () => {
+    expectType<MockedObject<{ bar: () => boolean }>>({
+      bar: vi.fn(() => true),
+    })
+    expectType<MockedFunction<() => boolean>>(vi.fn(() => true))
+    expectType<MockedFunction<() => boolean>>(vi.fn())
+  })
+
   test.skip('loads unloaded module', async () => {
     let mod: any
     import('../src/timeout').then(m => mod = m)

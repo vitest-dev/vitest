@@ -67,10 +67,10 @@ export type MaybeMockedConstructor<T> = T extends new (
 ) => infer R
   ? SpyInstanceFn<ConstructorParameters<T>, R>
   : T
-export type MockedFunction<T extends Procedure> = MockWithArgs<T> & {
+export type MockedFunction<T extends Procedure> = SpyInstanceFn<Parameters<T>, ReturnType<T>> & {
   [K in keyof T]: T[K];
 }
-export type MockedFunctionDeep<T extends Procedure> = MockWithArgs<T> & MockedObjectDeep<T>
+export type MockedFunctionDeep<T extends Procedure> = SpyInstanceFn<Parameters<T>, ReturnType<T>> & MockedObjectDeep<T>
 export type MockedObject<T> = MaybeMockedConstructor<T> & {
   [K in Methods<T>]: T[K] extends Procedure
     ? MockedFunction<T[K]>
@@ -95,12 +95,6 @@ export type MaybeMocked<T> = T extends Procedure
     : T
 
 export type EnhancedSpy<TArgs extends any[] = any[], TReturns = any> = SpyInstance<TArgs, TReturns> & SpyImpl<TArgs, TReturns>
-
-export interface MockWithArgs<T extends Procedure>
-  extends SpyInstanceFn<Parameters<T>, ReturnType<T>> {
-  new (...args: T extends new (...args: any) => any ? ConstructorParameters<T> : never): T
-  (...args: Parameters<T>): ReturnType<T>
-}
 
 export const spies = new Set<SpyInstance>()
 
