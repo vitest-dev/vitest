@@ -40,6 +40,7 @@ describe('testing vi utils', () => {
     expectType<MockedFunction<() => boolean>>(vi.fn())
   })
 
+  // TODO: it's unstable in CI, skip until resolved
   test.skip('loads unloaded module', async () => {
     let mod: any
     import('../src/timeout').then(m => mod = m)
