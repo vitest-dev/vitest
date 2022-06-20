@@ -1,4 +1,4 @@
-import { expect } from 'vitest'
+import { expect, test } from 'vitest'
 
 const println = () => {
   const message = `
@@ -14,11 +14,11 @@ export default function () {
 
 test('non default snapshot format', () => {
   expect({ foo: ['bar'] }).toMatchInlineSnapshot(`
-  Object {
-    "foo": Array [
-      "bar",
-    ],
-  }
+    Object {
+      "foo": Array [
+        "bar",
+      ],
+    }
   `)
 })
 

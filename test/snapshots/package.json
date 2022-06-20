@@ -2,8 +2,12 @@
   "name": "@vitest/snapshots",
   "private": true,
   "scripts": {
-    "test": "vitest",
-    "testu": "vitest -u",
+    "test": "pnpm run test:snaps && pnpm run test:update",
+    "test:snaps": "vitest run --dir test",
+    "test:update": "vitest run -u --dir test-update",
     "coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "vitest": "workspace:*"
   }
 }

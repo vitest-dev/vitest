@@ -87,7 +87,7 @@ export default class SnapshotState {
     })
   }
 
-  private _getInlineSnapshotStack(stacks: ParsedStack[]) {
+  private _inferInlineSnapshotStack(stacks: ParsedStack[]) {
     // if called inside resolves/rejects, stacktrace is different
     const promiseIndex = stacks.findIndex(i => i.method.match(/__VITEST_(RESOLVES|REJECTS)__/))
     if (promiseIndex !== -1)
@@ -109,12 +109,16 @@ export default class SnapshotState {
       const error = options.error || new Error('Unknown error')
       const stacks = parseStacktrace(error, true)
       stacks.forEach(i => i.file = slash(i.file))
-      const stack = this._getInlineSnapshotStack(stacks)
+      const stack = this._inferInlineSnapshotStack(stacks)
       if (!stack) {
         throw new Error(
           `Vitest: Couldn't infer stack frame for inline snapshot.\n${JSON.stringify(stacks)}`,
         )
       }
+      // removing 1 column, because source map points to the wrong
+      // location for js files, but `column-1` points to the same in both js/ts
+      // #vite/8657
+      stack.column--
       this._inlineSnapshots.push({
         snapshot: receivedSerialized,
         ...stack,
