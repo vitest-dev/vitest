@@ -874,6 +874,12 @@ importers:
       pathe: 0.2.0
       vitest: link:../../packages/vitest
 
+  test/vite-node:
+    specifiers:
+      vite-node: workspace:*
+    devDependencies:
+      vite-node: link:../../packages/vite-node
+
   test/web-worker:
     specifiers:
       '@vitest/web-worker': workspace:*
