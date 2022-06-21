@@ -879,11 +879,9 @@ importers:
 
   test/vite-node:
     specifiers:
-      vite: ^2.9.10
       vite-node: workspace:*
       vitest: workspace:*
     devDependencies:
-      vite: 2.9.10
       vite-node: link:../../packages/vite-node
       vitest: link:../../packages/vitest
 
