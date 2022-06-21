@@ -318,7 +318,8 @@ Path to setup files. They will be run before each test file.
 You can use `process.env.VITEST_POOL_ID` (integer-like string) inside to distinguish between threads (will always be `'1'`, if run with `threads: false`).
 
 :::tip
-Note, that if you are running [`--no-threads`](#threads), this file will be run in the same global scope. Meaning, that you are accessing the same global object before each test, so make sure you are not doing the same thing more than you need.
+Note, that if you are running [`--no-threads`](#threads), this setup file will be run in the same global scope multiple times. Meaning, that you are accessing the same global object before each test, so make sure you are not doing the same thing more than you need.
+:::
 
 For example, you may rely on a global variable:
 
@@ -331,14 +332,13 @@ if (!globalThis.defined) {
   globalThis.defined = true
 }
 
-// hooks are reseted before each suite
+// hooks are reset before each suite
 afterEach(() => {
   cleanup()
 })
 
 globalThis.resetBeforeEachTest = true
 ```
-:::
 
 ### globalSetup
 
