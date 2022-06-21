@@ -7,7 +7,7 @@ import type { Options as TinypoolOptions } from 'tinypool'
 import { Tinypool } from 'tinypool'
 import { createBirpc } from 'birpc'
 import type { RawSourceMap } from 'vite-node'
-import type { WorkerContext, WorkerRPC } from '../types'
+import type { ResolvedConfig, WorkerContext, WorkerRPC } from '../types'
 import { distDir } from '../constants'
 import { AggregateError, slash } from '../utils'
 import type { Vitest } from './core'
@@ -66,9 +66,8 @@ export function createPool(ctx: Vitest): WorkerPool {
 
   const runWithFiles = (name: string): RunWithFiles => {
     let id = 0
-    const config = ctx.getSerializableConfig()
 
-    async function runFiles(files: string[], invalidates: string[] = []) {
+    async function runFiles(config: ResolvedConfig, files: string[], invalidates: string[] = []) {
       const { workerPort, port } = createChannel(ctx)
       const workerId = ++id
       const data: WorkerContext = {
@@ -89,6 +88,8 @@ export function createPool(ctx: Vitest): WorkerPool {
     }
 
     return async (files, invalidates) => {
+      const config = ctx.getSerializableConfig()
+
       if (config.shard) {
         const { index, count } = config.shard
         const shardSize = Math.ceil(files.length / count)
@@ -111,11 +112,11 @@ export function createPool(ctx: Vitest): WorkerPool {
       }
 
       if (!ctx.config.threads) {
-        await runFiles(files)
+        await runFiles(config, files)
       }
       else {
         const results = await Promise.allSettled(files
-          .map(file => runFiles([file], invalidates)))
+          .map(file => runFiles(config, [file], invalidates)))
 
         const errors = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected').map(r => r.reason)
         if (errors.length > 0)
