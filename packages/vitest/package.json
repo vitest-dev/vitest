@@ -1,6 +1,6 @@
 {
   "name": "vitest",
-  "version": "0.15.1",
+  "version": "0.15.2",
   "description": "A blazing fast unit test framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
