@@ -18119,13 +18119,6 @@ packages:
       fsevents: 2.3.2
     dev: true
 
-  /rollup/2.75.5:
-    resolution: {integrity: sha512-JzNlJZDison3o2mOxVmb44Oz7t74EfSd1SQrplQk0wSaXV7uLQXtVdHbxlcT3w+8tZ1TL4r/eLfc7nAbz38BBA==}
-    engines: {node: '>=10.0.0'}
-    hasBin: true
-    optionalDependencies:
-      fsevents: 2.3.2
-
   /rollup/2.75.7:
     resolution: {integrity: sha512-VSE1iy0eaAYNCxEXaleThdFXqZJ42qDBatAwrfnPlENEZ8erQ+0LYX4JXOLPceWfZpV1VtZwZ3dFCuOZiSyFtQ==}
     engines: {node: '>=10.0.0'}
@@ -20760,7 +20753,7 @@ packages:
       esbuild: 0.14.42
       postcss: 8.4.14
       resolve: 1.22.0
-      rollup: 2.75.6
+      rollup: 2.75.7
     optionalDependencies:
       fsevents: 2.3.2
 
