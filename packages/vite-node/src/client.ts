@@ -177,6 +177,8 @@ export class ViteNodeRunner {
       },
     }
 
+    const isNeedHmr = transformed.includes('__vite_ssr_import_meta__.hot')
+
     // Be careful when changing this
     // changing context will change amount of code added on line :114 (vm.runInThisContext)
     // this messes up sourcemaps for coverage
@@ -189,7 +191,7 @@ export class ViteNodeRunner {
       __vite_ssr_exportAll__: (obj: any) => exportAll(exports, obj),
       __vite_ssr_import_meta__: {
         url,
-        hot: this.options.createHotContext?.(this, `/@fs/${fsPath}`),
+        hot: isNeedHmr ? this.options.createHotContext?.(this, `/@fs/${fsPath}`) : undefined,
       },
 
       __vitest_resolve_id__: resolveId,

@@ -1,9 +1,12 @@
 /* eslint-disable no-console */
 import type { ErrorPayload, FullReloadPayload, HMRPayload, PrunePayload, Update, UpdatePayload } from 'vite/types/hmrPayload'
 import { cyan } from 'kolorist'
+import createDebug from 'debug'
 import type { ViteNodeRunner } from '../client'
 import type { HotContext } from '../types'
 import type { HMREmitter } from './emitter'
+
+const debugHmr = createDebug('vite-node:hmr')
 
 export interface CustomEventMap {
   'vite:beforeUpdate': UpdatePayload
@@ -221,6 +224,7 @@ export function createHotContext(
   files: string[],
   ownerPath: string,
 ): HotContext {
+  debugHmr('createHotContext', ownerPath)
   const maps = getCache(runner)
   if (!maps.dataMap.has(ownerPath))
     maps.dataMap.set(ownerPath, {})

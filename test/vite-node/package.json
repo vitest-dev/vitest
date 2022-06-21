@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "dev": "vite-node --watch ./src/*",
-    "debug:dev": "node --inspect-brk ../../packages/vite-node/dist/cli.cjs --watch ./src/*",
+    "debug:dev": "cross-env DEBUG=vite-node:hmr node --inspect-brk ../../packages/vite-node/dist/cli.cjs --watch ./src/*",
     "debug": "node --inspect-brk ../../packages/vite-node/dist/cli.cjs"
   },
   "devDependencies": {
