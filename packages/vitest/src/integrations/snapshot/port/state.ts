@@ -117,7 +117,7 @@ export default class SnapshotState {
       }
       // removing 1 column, because source map points to the wrong
       // location for js files, but `column-1` points to the same in both js/ts
-      // #vite/8657
+      // https://github.com/vitejs/vite/issues/8657
       stack.column--
       this._inlineSnapshots.push({
         snapshot: receivedSerialized,
