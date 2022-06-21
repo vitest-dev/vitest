@@ -1,4 +1,6 @@
-import { expect } from 'vitest'
+import fs from 'fs/promises'
+import pathe from 'pathe'
+import { expect, test } from 'vitest'
 
 const println = () => {
   const message = `
@@ -14,11 +16,11 @@ export default function () {
 
 test('non default snapshot format', () => {
   expect({ foo: ['bar'] }).toMatchInlineSnapshot(`
-  Object {
-    "foo": Array [
-      "bar",
-    ],
-  }
+    Object {
+      "foo": Array [
+        "bar",
+      ],
+    }
   `)
 })
 
@@ -35,4 +37,10 @@ my string
   my string
   "
 `)
+})
+
+test('js snapshots generated correctly', async () => {
+  const path = pathe.resolve(__dirname, '../test-update/shapshots-inline-js.test.js')
+  const content = await fs.readFile(path, 'utf8')
+  expect(content).toMatchSnapshot()
 })
