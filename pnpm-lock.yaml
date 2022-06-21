@@ -109,9 +109,9 @@ importers:
       fast-glob: 3.2.11
       https-localhost: 4.7.1
       unocss: 0.39.3_vite@2.9.10
-      unplugin-vue-components: 0.19.6_wuxm4j6bgrlfg6ha3fbo625rke
+      unplugin-vue-components: 0.19.6_vite@2.9.10+vue@3.2.37
       vite-plugin-pwa: 0.12.0_vite@2.9.10
-      vitepress: 1.0.0-alpha.2_ohobp6rpsmerwlq5ipwfh5yigy
+      vitepress: 1.0.0-alpha.2
       workbox-window: 6.5.3
 
   examples/basic:
@@ -4245,7 +4245,7 @@ packages:
       slash: 3.0.0
     dev: true
 
-  /@rollup/plugin-babel/5.3.1_wwj6nrjtrryxuar2uaqwelbtjy:
+  /@rollup/plugin-babel/5.3.1_obr3axpgyrzzba3wi3xvzr4i4e:
     resolution: {integrity: sha512-WFfdLWU/xVWKeRQnKmIAQULUI7Il0gZnBIH/ZFO069wYIfPu+8zrfp/KMW0atmELoRDq8FbiP3VCss9MhCut7Q==}
     engines: {node: '>= 10.0.0'}
     peerDependencies:
@@ -4258,8 +4258,8 @@ packages:
     dependencies:
       '@babel/core': 7.18.2
       '@babel/helper-module-imports': 7.16.7
-      '@rollup/pluginutils': 3.1.0_rollup@2.75.6
-      rollup: 2.75.6
+      '@rollup/pluginutils': 3.1.0_rollup@2.75.7
+      rollup: 2.75.7
     dev: true
 
   /@rollup/plugin-commonjs/21.1.0_rollup@2.75.7:
@@ -4316,19 +4316,19 @@ packages:
       rollup: 2.75.7
     dev: true
 
-  /@rollup/plugin-node-resolve/11.2.1_rollup@2.75.6:
+  /@rollup/plugin-node-resolve/11.2.1_rollup@2.75.7:
     resolution: {integrity: sha512-yc2n43jcqVyGE2sqV5/YCmocy9ArjVAP/BeXyTtADTBBX6V0e5UMqwO8CdQ0kzjb6zu5P1qMzsScCMRvE9OlVg==}
     engines: {node: '>= 10.0.0'}
     peerDependencies:
       rollup: ^1.20.0||^2.0.0
     dependencies:
-      '@rollup/pluginutils': 3.1.0_rollup@2.75.6
+      '@rollup/pluginutils': 3.1.0_rollup@2.75.7
       '@types/resolve': 1.17.1
       builtin-modules: 3.3.0
       deepmerge: 4.2.2
       is-module: 1.0.0
       resolve: 1.22.0
-      rollup: 2.75.6
+      rollup: 2.75.7
     dev: true
 
   /@rollup/plugin-node-resolve/13.3.0_rollup@2.75.7:
@@ -4346,14 +4346,14 @@ packages:
       rollup: 2.75.7
     dev: true
 
-  /@rollup/plugin-replace/2.4.2_rollup@2.75.6:
+  /@rollup/plugin-replace/2.4.2_rollup@2.75.7:
     resolution: {integrity: sha512-IGcu+cydlUMZ5En85jxHH4qj2hta/11BHq95iHEyb2sbgiN0eCdzvUcHw5gt9pBL5lTi4JDYJ1acCoMGpTvEZg==}
     peerDependencies:
       rollup: ^1.20.0 || ^2.0.0
     dependencies:
-      '@rollup/pluginutils': 3.1.0_rollup@2.75.6
+      '@rollup/pluginutils': 3.1.0_rollup@2.75.7
       magic-string: 0.25.9
-      rollup: 2.75.6
+      rollup: 2.75.7
     dev: true
 
   /@rollup/pluginutils/3.1.0_rollup@2.75.7:
@@ -8106,7 +8106,7 @@ packages:
     dependencies:
       call-bind: 1.0.2
       define-properties: 1.1.4
-      es-abstract: 1.19.5
+      es-abstract: 1.20.1
       es-shim-unscopables: 1.0.0
     dev: true
 
@@ -10932,7 +10932,7 @@ packages:
     engines: {node: '>=0.12'}
     dev: true
 
-  /enzyme-adapter-react-16/1.15.6_7ltvq4e2railvf5uya4ffxpe2a:
+  /enzyme-adapter-react-16/1.15.6_j6bpv5pizkyfppcg2tmva6pmii:
     resolution: {integrity: sha512-yFlVJCXh8T+mcQo8M6my9sPgeGzj85HSHi6Apgf1Cvq/7EL/J9+1JoJmJsRxZgyTvPMAqOEpRSu/Ii/ZpyOk0g==}
     peerDependencies:
       enzyme: ^3.0.0
@@ -17710,7 +17710,7 @@ packages:
     dev: false
 
   /reflect.ownkeys/0.2.0:
-    resolution: {integrity: sha1-dJrO7H8/34tj+SegSAnpDFwLNGA=}
+    resolution: {integrity: sha512-qOLsBKHCpSOFKK1NUOCGC5VyeufB6lEsFe92AL2bhIJsacZS1qdoOZSbPk3MYKuT2cFlRDnulKXuuElIrMjGUg==}
     dev: true
 
   /refractor/3.6.0:
@@ -18071,14 +18071,14 @@ packages:
       spdx-satisfies: 5.0.1
     dev: true
 
-  /rollup-plugin-terser/7.0.2_rollup@2.75.6:
+  /rollup-plugin-terser/7.0.2_rollup@2.75.7:
     resolution: {integrity: sha512-w3iIaU4OxcF52UUXiZNsNeuXIMDvFrr+ZXK6bFZ0Q60qyVfq4uLptoS4bbq3paG3x216eQllFZX7zt6TIImguQ==}
     peerDependencies:
       rollup: ^2.0.0
     dependencies:
       '@babel/code-frame': 7.16.7
       jest-worker: 26.6.2
-      rollup: 2.75.6
+      rollup: 2.75.7
       serialize-javascript: 4.0.0
       terser: 5.12.1
     dev: true
@@ -20287,30 +20287,6 @@ packages:
       webpack-virtual-modules: 0.4.3
     dev: true
 
-  /unplugin/0.6.3_rollup@2.75.5+vite@2.9.10:
-    resolution: {integrity: sha512-CoW88FQfCW/yabVc4bLrjikN9HC8dEvMU4O7B6K2jsYMPK0l6iAnd9dpJwqGcmXJKRCU9vwSsy653qg+RK0G6A==}
-    peerDependencies:
-      esbuild: '>=0.13'
-      rollup: ^2.50.0
-      vite: ^2.3.0
-      webpack: 4 || 5
-    peerDependenciesMeta:
-      esbuild:
-        optional: true
-      rollup:
-        optional: true
-      vite:
-        optional: true
-      webpack:
-        optional: true
-    dependencies:
-      chokidar: 3.5.3
-      rollup: 2.75.5
-      vite: 2.9.10
-      webpack-sources: 3.2.3
-      webpack-virtual-modules: 0.4.3
-    dev: true
-
   /unplugin/0.6.3_rollup@2.75.7+vite@2.9.10:
     resolution: {integrity: sha512-CoW88FQfCW/yabVc4bLrjikN9HC8dEvMU4O7B6K2jsYMPK0l6iAnd9dpJwqGcmXJKRCU9vwSsy653qg+RK0G6A==}
     peerDependencies:
@@ -20778,7 +20754,7 @@ packages:
     optionalDependencies:
       fsevents: 2.3.2
 
-  /vitepress/1.0.0-alpha.2_ohobp6rpsmerwlq5ipwfh5yigy:
+  /vitepress/1.0.0-alpha.2:
     resolution: {integrity: sha512-twSsmx2DI/3XgZZ8KLyRAH8RgK2Zj4kJx/kwhZhimwndYqQDrtcIaAcuV+P3FKukZ+cYtm9yt9qohz631jKx4A==}
     engines: {node: '>=14.6.0'}
     hasBin: true
@@ -21241,9 +21217,9 @@ packages:
       '@babel/core': 7.18.2
       '@babel/preset-env': 7.16.11_@babel+core@7.18.2
       '@babel/runtime': 7.17.9
-      '@rollup/plugin-babel': 5.3.1_wwj6nrjtrryxuar2uaqwelbtjy
-      '@rollup/plugin-node-resolve': 11.2.1_rollup@2.75.6
-      '@rollup/plugin-replace': 2.4.2_rollup@2.75.6
+      '@rollup/plugin-babel': 5.3.1_obr3axpgyrzzba3wi3xvzr4i4e
+      '@rollup/plugin-node-resolve': 11.2.1_rollup@2.75.7
+      '@rollup/plugin-replace': 2.4.2_rollup@2.75.7
       '@surma/rollup-plugin-off-main-thread': 2.2.3
       ajv: 8.11.0
       common-tags: 1.8.2
@@ -21252,8 +21228,8 @@ packages:
       glob: 7.2.3
       lodash: 4.17.21
       pretty-bytes: 5.6.0
-      rollup: 2.75.6
-      rollup-plugin-terser: 7.0.2_rollup@2.75.6
+      rollup: 2.75.7
+      rollup-plugin-terser: 7.0.2_rollup@2.75.7
       source-map: 0.8.0-beta.0
       stringify-object: 3.3.0
       strip-comments: 2.0.1
