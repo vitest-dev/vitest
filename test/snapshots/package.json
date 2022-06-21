@@ -2,7 +2,7 @@
   "name": "@vitest/snapshots",
   "private": true,
   "scripts": {
-    "test": "pnpm run test:snaps && pnpm run test:update",
+    "test": "pnpm run test:update && pnpm run test:snaps",
     "test:snaps": "vitest run --dir test",
     "test:update": "vitest run -u --dir test-update",
     "coverage": "vitest run --coverage"
