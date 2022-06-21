@@ -7,22 +7,10 @@ describe('snapshots are generated in correct order', async () => {
   await validateNoSnapshots(__filename)
 
   test('first snaphot', () => {
-    expect({ foo: ['bar'] }).toMatchInlineSnapshot(`
-      Object {
-        "foo": Array [
-          "bar",
-        ],
-      }
-    `)
+    expect({ foo: ['bar'] }).toMatchInlineSnapshot()
   })
 
   test('second snapshot', () => {
-    expect({ foo: ['zed'] }).toMatchInlineSnapshot(`
-      Object {
-        "foo": Array [
-          "zed",
-        ],
-      }
-    `)
+    expect({ foo: ['zed'] }).toMatchInlineSnapshot()
   })
 })
