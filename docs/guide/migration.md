@@ -35,6 +35,54 @@ From Vitest v0.10.0, the callback style of declaring tests is deprecated. You ca
 + }))
 ```
 
+**Hooks**
+
+`beforeAll`/`beforeEach` hooks may return [teardown function](/api/#setup-and-teardown) in Vitest. Because of that you may need to rewrite your hooks declarations, if they return something other than `undefined` or `null`:
+
+```diff
+- beforeEach(() => setActivePinia(createTestingPinia()))
++ beforeEach(() => { setActivePinia(createTestingPinia()) })
+```
+
+**Types**
+
+Vitest doesn't expose a lot of types on `Vi` namespace, it exists mainly for compatibility with matchers, so you might need to import types directly from `vitest` instead of relying on `Vi` namespace:
+
+```diff
+- let fn: jest.Mock
++ import type { Mock } from 'vitest'
++ let fn: Mock
+```
+
+**Timers**
+
+Vitest doesn't support jest's legacy timers.
+
+**it.each**
+
+Vitest intentionally doesn't support template literals for `it.each`. You will need to rewrite it to either an array of arguments, or array of objects:
+
+Before:
+```ts
+it.each`
+a    | b    | expected
+${1} | ${3} | ${4}
+${2} | ${2} | ${4}
+`('adds $a to $b', ({ a, b, expected }) => {
+  expect(add(a, b)).toEqual(expected)
+})
+```
+
+After:
+```ts
+it.each([
+  [1, 3, 4],
+  [2, 2, 4],
+])('adds %d to %d', (a, b, expected) => {
+  expect(add(a, b)).toEqual(expected)
+})
+```
+
 **Vue Snapshots**
 
 This is not a Jest specific feature, but if you previously were using Jest with vue-cli preset, you will need to install [`jest-serializer-vue`](https://github.com/eddyerburgh/jest-serializer-vue) package, and use it inside [setupFiles](/config/#setupfiles):
