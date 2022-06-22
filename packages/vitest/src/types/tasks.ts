@@ -122,16 +122,16 @@ SuiteCollector<ExtraContext>
   runIf(condition: any): SuiteAPI<ExtraContext>
 }
 
-export type HookListener<T extends any[], Return = void> = (...args: T) => Awaitable<Return | void>
+export type HookListener<T extends any[], Return = void> = (...args: T) => Awaitable<Return>
+
+export type HookCleanupCallback = (() => Awaitable<unknown>) | void
 
 export interface SuiteHooks {
-  beforeAll: HookListener<[Suite | File], () => Awaitable<void>>[]
+  beforeAll: HookListener<[Suite | File], HookCleanupCallback>[]
   afterAll: HookListener<[Suite | File]>[]
-  beforeEach: HookListener<[TestContext, Suite], () => Awaitable<void>>[]
+  beforeEach: HookListener<[TestContext, Suite], HookCleanupCallback>[]
   afterEach: HookListener<[TestContext, Suite]>[]
 }
-
-export type HookCleanupCallback = (() => Awaitable<void>) | void
 
 export interface SuiteCollector<ExtraContext = {}> {
   readonly name: string
