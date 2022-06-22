@@ -16,7 +16,7 @@ interface MockResultThrow {
 
 type MockResult<T> = MockResultReturn<T> | MockResultThrow | MockResultIncomplete
 
-export interface SpyContext<TArgs, TReturns> {
+export interface MockContext<TArgs, TReturns> {
   calls: TArgs[]
   instances: TReturns[]
   invocationCallOrder: number[]
@@ -41,7 +41,7 @@ export interface SpyInstance<TArgs extends any[] = any[], TReturns = any> {
 
   getMockName(): string
   mockName(n: string): this
-  mock: SpyContext<TArgs, TReturns>
+  mock: MockContext<TArgs, TReturns>
   mockClear(): this
   mockReset(): this
   mockRestore(): void
@@ -57,20 +57,20 @@ export interface SpyInstance<TArgs extends any[] = any[], TReturns = any> {
   mockRejectedValueOnce(obj: any): this
 }
 
-export interface SpyInstanceFn<TArgs extends any[] = any, TReturns = any> extends SpyInstance<TArgs, TReturns> {
-  (...args: TArgs): TReturns
+export interface Mock<TArgs extends any[] = any, TReturns = any> extends SpyInstance<TArgs, TReturns> {
   new (...args: TArgs): TReturns
+  (...args: TArgs): TReturns
 }
 
 export type MaybeMockedConstructor<T> = T extends new (
   ...args: Array<any>
 ) => infer R
-  ? SpyInstanceFn<ConstructorParameters<T>, R>
+  ? Mock<ConstructorParameters<T>, R>
   : T
-export type MockedFunction<T extends Procedure> = SpyInstanceFn<Parameters<T>, ReturnType<T>> & {
+export type MockedFunction<T extends Procedure> = Mock<Parameters<T>, ReturnType<T>> & {
   [K in keyof T]: T[K];
 }
-export type MockedFunctionDeep<T extends Procedure> = SpyInstanceFn<Parameters<T>, ReturnType<T>> & MockedObjectDeep<T>
+export type MockedFunctionDeep<T extends Procedure> = Mock<Parameters<T>, ReturnType<T>> & MockedObjectDeep<T>
 export type MockedObject<T> = MaybeMockedConstructor<T> & {
   [K in Methods<T>]: T[K] extends Procedure
     ? MockedFunction<T[K]>
@@ -244,12 +244,12 @@ function enhanceSpy<TArgs extends any[], TReturns>(
   return stub as any
 }
 
-export function fn<TArgs extends any[] = any[], R = any>(): SpyInstanceFn<TArgs, R>
+export function fn<TArgs extends any[] = any[], R = any>(): Mock<TArgs, R>
 export function fn<TArgs extends any[] = any[], R = any>(
   implementation: (...args: TArgs) => R
-): SpyInstanceFn<TArgs, R>
+): Mock<TArgs, R>
 export function fn<TArgs extends any[] = any[], R = any>(
   implementation?: (...args: TArgs) => R,
-): SpyInstanceFn<TArgs, R> {
-  return enhanceSpy(tinyspy.spyOn({ fn: implementation || (() => {}) }, 'fn')) as unknown as SpyInstanceFn
+): Mock<TArgs, R> {
+  return enhanceSpy(tinyspy.spyOn({ fn: implementation || (() => {}) }, 'fn')) as unknown as Mock
 }
