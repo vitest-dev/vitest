@@ -14,6 +14,9 @@ export type {
   MockedFunction,
   MockedObject,
   SpyInstance,
+  MockInstance,
   Mock,
   MockContext,
+  Mocked,
+  MockedClass,
 } from '../integrations/spy'
