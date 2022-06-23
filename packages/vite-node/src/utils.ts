@@ -29,6 +29,7 @@ export function normalizeRequestId(id: string, base?: string): string {
     .replace(/&t=\w+/, '') // remove &t= query
     .replace(/\?import/, '?') // remove ?import query
     .replace(/&import/, '') // remove &import query
+    .replace(/\?&/, '?') // replace ?& with just ?
     .replace(/\?+$/, '') // remove end query mark
 }
 
