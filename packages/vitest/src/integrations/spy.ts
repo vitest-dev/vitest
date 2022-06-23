@@ -37,8 +37,6 @@ type Classes<T> = {
 }[keyof T] & (string | symbol)
 
 export interface SpyInstance<TArgs extends any[] = any[], TReturns = any> {
-  (...args: TArgs): TReturns
-
   getMockName(): string
   mockName(n: string): this
   mock: MockContext<TArgs, TReturns>
@@ -56,6 +54,8 @@ export interface SpyInstance<TArgs extends any[] = any[], TReturns = any> {
   mockRejectedValue(obj: any): this
   mockRejectedValueOnce(obj: any): this
 }
+
+export interface MockInstance<A extends any[] = any[], R = any> extends SpyInstance<A, R> {}
 
 export interface Mock<TArgs extends any[] = any, TReturns = any> extends SpyInstance<TArgs, TReturns> {
   new (...args: TArgs): TReturns
@@ -93,6 +93,26 @@ export type MaybeMocked<T> = T extends Procedure
   : T extends object
     ? MockedObject<T>
     : T
+
+interface Constructable {
+  new (...args: any[]): any
+}
+
+export type MockedClass<T extends Constructable> = MockInstance<
+    InstanceType<T>,
+    T extends new (...args: infer P) => any ? P : never
+> & {
+  prototype: T extends { prototype: any } ? Mocked<T['prototype']> : never
+} & T
+
+export type Mocked<T> = {
+  [P in keyof T]: T[P] extends (...args: infer Args) => infer Returns
+    ? MockInstance<Args, Returns>
+    : T[P] extends Constructable
+      ? MockedClass<T[P]>
+      : T[P]
+} &
+T
 
 export type EnhancedSpy<TArgs extends any[] = any[], TReturns = any> = SpyInstance<TArgs, TReturns> & SpyImpl<TArgs, TReturns>
 
