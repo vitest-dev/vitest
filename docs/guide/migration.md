@@ -49,10 +49,12 @@ From Vitest v0.10.0, the callback style of declaring tests is deprecated. You ca
 Vitest doesn't expose a lot of types on `Vi` namespace, it exists mainly for compatibility with matchers, so you might need to import types directly from `vitest` instead of relying on `Vi` namespace:
 
 ```diff
-- let fn: jest.Mock
+- let fn: jest.Mock<string, [string]>
 + import type { Mock } from 'vitest'
-+ let fn: Mock
++ let fn: Mock<[string], string>
 ```
+
+Also, Vitest has `Args` type as a first argument instead of `Returns`, as you can see in diff.
 
 **Timers**
 
