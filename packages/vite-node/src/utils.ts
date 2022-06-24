@@ -1,5 +1,5 @@
 import { fileURLToPath, pathToFileURL } from 'url'
-import { dirname, resolve } from 'pathe'
+import { resolve } from 'pathe'
 import type { TransformResult } from 'vite'
 import type { Arrayable, Nullable } from './types'
 
@@ -48,7 +48,7 @@ export function isPrimitive(v: any) {
 export function toFilePath(id: string, root: string): string {
   let absolute = slash(id).startsWith('/@fs/')
     ? id.slice(4)
-    : id.startsWith(dirname(root)) && dirname(root) !== '/'
+    : id.startsWith(root)
       ? id
       : id.startsWith('/')
         ? slash(resolve(root, id.slice(1)))
