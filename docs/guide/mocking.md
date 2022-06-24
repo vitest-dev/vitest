@@ -164,12 +164,14 @@ The following principles apply
 ### Example
 
 ```js
-import { afterEach, beforeEach, describe, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Client } from 'pg'
+import { failure, success } from './handlers'
 
 // handlers
 export function success(data) {}
 export function failure(data) {}
+
 // get todos
 export const getTodos = async (event, context) => {
   const client = new Client({
@@ -199,16 +201,15 @@ export const getTodos = async (event, context) => {
 }
 
 vi.mock('pg', () => {
-  return {
-    Client: vi.fn(() => ({
-      connect: vi.fn(),
-      query: vi.fn(),
-      end: vi.fn(),
-    })),
-  }
+  const Client = vi.fn()
+  Client.prototype.connect = vi.fn()
+  Client.prototype.query = vi.fn()
+  Client.prototype.end = vi.fn()
+
+  return { Client }
 })
 
-vi.mock('./handler.js', () => {
+vi.mock('./handlers', () => {
   return {
     success: vi.fn(),
     failure: vi.fn(),
