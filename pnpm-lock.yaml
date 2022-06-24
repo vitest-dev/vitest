@@ -685,7 +685,7 @@ importers:
       rollup: ^2.75.7
       source-map-js: ^1.0.2
       strip-ansi: ^7.0.1
-      tinypool: ^0.2.0
+      tinypool: ^0.2.1
       tinyspy: ^0.3.3
       typescript: ^4.7.4
       vite: ^2.9.10
@@ -698,7 +698,7 @@ importers:
       chai: 4.3.6
       debug: 4.3.4
       local-pkg: 0.4.1
-      tinypool: 0.2.0
+      tinypool: 0.2.1
       tinyspy: 0.3.3
       vite: 2.9.10
     devDependencies:
@@ -19491,8 +19491,8 @@ packages:
       setimmediate: 1.0.5
     dev: true
 
-  /tinypool/0.2.0:
-    resolution: {integrity: sha512-lFrNAMh9pmj/ZDXmbnnsTiCYSmrQdPbCmWSXdHKpXs5xSMkuNBiD6knVYqgOuGg/ngs9J92vcYKsTEA+7t6eEA==}
+  /tinypool/0.2.1:
+    resolution: {integrity: sha512-HFU5ZYVq3wBfhSaf8qdqGsneaqXm0FgJQpoUlJbVdHpRLzm77IneKAD3RjzJWZvIv0YpPB9S7LUW53f6BE6ZSg==}
     engines: {node: '>=14.0.0'}
     dev: false
 
