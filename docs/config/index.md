@@ -564,3 +564,16 @@ RegExp pattern for files that will return en empty CSS file.
 A number of tests that are allowed to run at the same time marked with `test.concurrent`.
 
 Test above this limit will be queued to run when available slot appears.
+
+### cache
+
+- **Type**: `false | { path? }`
+
+Options to configure Vitest cache policy. At the moment Vitest stores cache for test results to run the longer and failed tests first.
+
+#### cache.path
+
+- **Type**: `string`
+- **Default**: `node_modules/.vitest`
+
+Path to cache directory.

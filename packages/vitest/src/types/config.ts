@@ -361,6 +361,14 @@ export interface InlineConfig {
    * @default 5
    */
   maxConcurrency?: number
+
+  /**
+   * Options for configuring cache policy.
+   * @default { path: 'node_modules/.vitest' }
+   */
+  cache?: false | {
+    path?: string
+  }
 }
 
 export interface UserConfig extends InlineConfig {
@@ -407,7 +415,7 @@ export interface UserConfig extends InlineConfig {
   shard?: string
 }
 
-export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'shard'> {
+export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'shard' | 'cache'> {
   base?: string
 
   config?: string
@@ -427,4 +435,8 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
     index: number
     count: number
   }
+
+  cache: {
+    path: string
+  } | false
 }

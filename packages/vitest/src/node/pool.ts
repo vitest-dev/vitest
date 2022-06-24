@@ -110,6 +110,23 @@ export function createPool(ctx: Vitest): WorkerPool {
           .map(({ file }) => file)
       }
 
+      files = files.sort((a, b) => {
+        const aState = ctx.state.results.getResults(a)
+        const bState = ctx.state.results.getResults(b)
+
+        if (!aState || !bState)
+          return !aState && bState ? -1 : !bState && aState ? 1 : 0
+
+        // run failed first
+        if (aState.failed && !bState.failed)
+          return -1
+        if (!aState.failed && bState.failed)
+          return 1
+
+        // run longer first
+        return bState.duration - aState.duration
+      })
+
       if (!ctx.config.threads) {
         await runFiles(config, files)
       }

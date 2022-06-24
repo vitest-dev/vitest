@@ -7,7 +7,7 @@ import type { ApiConfig, ResolvedConfig, UserConfig } from '../types'
 import { defaultPort } from '../constants'
 import { configDefaults } from '../defaults'
 import { resolveC8Options } from '../integrations/coverage'
-import { toArray } from '../utils'
+import { slash, toArray } from '../utils'
 
 const extraInlineDeps = [
   /^(?!.*(?:node_modules)).*\.mjs$/,
@@ -180,6 +180,12 @@ export function resolveConfig(
   resolved.css ??= {}
   if (typeof resolved.css === 'object')
     resolved.css.include ??= [/\.module\./]
+
+  resolved.cache ??= { path: '' }
+  if (resolved.cache) {
+    const path = slash(resolved.cache.path || 'node_modules/.vitest')
+    resolved.cache.path = resolve(resolved.root, path)
+  }
 
   return resolved
 }
