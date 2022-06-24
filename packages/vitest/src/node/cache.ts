@@ -1,4 +1,4 @@
-import { existsSync, promises as fsp } from 'fs'
+import fs from 'fs'
 import { dirname, resolve } from 'pathe'
 import type { File, ResolvedConfig } from '../types'
 import { version } from '../../package.json'
@@ -25,8 +25,8 @@ export class ResultsCache {
       return
 
     const resultsCachePath = resolve(this.config.path, 'results.json')
-    if (existsSync(resultsCachePath)) {
-      const resultsCache = await fsp.readFile(resultsCachePath, 'utf8')
+    if (fs.existsSync(resultsCachePath)) {
+      const resultsCache = await fs.promises.readFile(resultsCachePath, 'utf8')
       this.cache = new Map(JSON.parse(resultsCache).results)
     }
   }
@@ -57,10 +57,10 @@ export class ResultsCache {
 
     const cacheDirname = dirname(resultsCachePath)
 
-    if (!existsSync(cacheDirname))
-      await fsp.mkdir(cacheDirname, { recursive: true })
+    if (!fs.existsSync(cacheDirname))
+      await fs.promises.mkdir(cacheDirname, { recursive: true })
 
-    await fsp.writeFile(resultsCachePath, JSON.stringify({
+    await fs.promises.writeFile(resultsCachePath, JSON.stringify({
       version,
       results: resultsCache,
     }))
