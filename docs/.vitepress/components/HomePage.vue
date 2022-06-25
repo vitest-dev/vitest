@@ -11,7 +11,9 @@ import { teamMembers } from '../contributors'
           <h2 id="meet-the-team" op50 font-normal p="t-10 b-2">
             Meet The Team
           </h2>
-          <VPTeamMembers size="small" :members="teamMembers" />
+          <div w-full p-10>
+            <VPTeamMembers size="small" :members="teamMembers" />
+          </div>
           <h2 id="the-team" op50 font-normal pt-5 pb-2>
             Contributors
           </h2>

@@ -54,7 +54,7 @@ export const teamMembers: CoreTeam[] = [
     sponsor: 'https://github.com/sponsors/antfu',
     title: 'A fanatical open sourceror, working',
     org: 'NuxtLabs',
-    desc: 'Core team member of Vite & Vue & Vitest',
+    desc: 'Core team member of Vite & Vue',
   },
   {
     avatar: contributorsAvatars['sheremet-va'],
@@ -70,7 +70,7 @@ export const teamMembers: CoreTeam[] = [
     sponsor: 'https://github.com/sponsors/patak-dev',
     title: 'A collaborative being, working',
     org: 'StackBlitz',
-    desc: 'Core team member of Vite & Vue & Vitest',
+    desc: 'Core team member of Vite & Vue',
   },
   {
     avatar: contributorsAvatars.Aslemammad,
