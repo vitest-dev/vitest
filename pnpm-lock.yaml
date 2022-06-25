@@ -1902,6 +1902,7 @@ packages:
     dependencies:
       '@babel/core': 7.18.5
       '@babel/helper-plugin-utils': 7.16.7
+    dev: false
 
   /@babel/plugin-syntax-jsx/7.17.12_@babel+core@7.18.5:
     resolution: {integrity: sha512-spyY3E3AURfxh/RHtjx5j6hs8am5NbUBGfcZ2vB3uShSpZdQyXSf5rR5Mk76vbtlAZOelyVQ71Fg0x9SG4fsog==}
@@ -3571,7 +3572,7 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@babel/runtime': 7.17.2
+      '@babel/runtime': 7.18.3
       '@emotion/is-prop-valid': 1.1.2
       '@mui/types': 7.1.4
       '@mui/utils': 5.8.4_react@17.0.2
@@ -3613,7 +3614,7 @@ packages:
       moment:
         optional: true
     dependencies:
-      '@babel/runtime': 7.17.2
+      '@babel/runtime': 7.18.3
       '@emotion/react': 11.9.3_afqnugmud6bgjswh26aoju7tfu
       '@emotion/styled': 11.8.1_r7saxg7yu6i4thzk5ddk7sdyba
       '@mui/base': 5.0.0-alpha.86_sfoxds7t5ydpegc3knd667wn6m
@@ -3718,7 +3719,7 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@babel/runtime': 7.17.2
+      '@babel/runtime': 7.18.3
       '@emotion/react': 11.9.3_afqnugmud6bgjswh26aoju7tfu
       '@emotion/styled': 11.8.1_r7saxg7yu6i4thzk5ddk7sdyba
       '@mui/private-theming': 5.8.4_react@17.0.2
@@ -17515,7 +17516,7 @@ packages:
       react: '>=16.6.0'
       react-dom: '>=16.6.0'
     dependencies:
-      '@babel/runtime': 7.17.2
+      '@babel/runtime': 7.18.3
       dom-helpers: 5.2.1
       loose-envify: 1.4.0
       prop-types: 15.8.1
@@ -18618,7 +18619,7 @@ packages:
       vite: ^2.8.6
     dependencies:
       '@babel/core': 7.18.5
-      '@babel/plugin-syntax-jsx': 7.16.7_@babel+core@7.18.5
+      '@babel/plugin-syntax-jsx': 7.17.12_@babel+core@7.18.5
       '@babel/preset-env': 7.16.8_@babel+core@7.18.5
       '@babel/preset-typescript': 7.16.7_@babel+core@7.18.5
       chokidar: 3.5.3
