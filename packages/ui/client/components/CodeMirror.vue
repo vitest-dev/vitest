@@ -2,17 +2,18 @@
 import type CodeMirror from 'codemirror'
 import { useCodeMirror } from '../composables/codemirror'
 
-const attrs = useAttrs()
-const emit = defineEmits<{
-  (event: 'update:modelValue', value: string): void
-  (event: 'save', content: string): void
-}>()
 const props = defineProps<{
   modelValue: string
   mode?: string
   readOnly?: boolean
 }>()
 
+const emit = defineEmits<{
+  (event: 'update:modelValue', value: string): void
+  (event: 'save', content: string): void
+}>()
+
+const attrs = useAttrs()
 const modeMap: Record<string, any> = {
   // html: 'htmlmixed',
   // vue: 'htmlmixed',
@@ -34,17 +35,17 @@ const cm = shallowRef<CodeMirror.EditorFromTextArea>()
 
 defineExpose({ cm })
 
-onMounted(async() => {
+onMounted(async () => {
   cm.value = useCodeMirror(el, input, {
     ...props,
     ...attrs,
     mode: modeMap[props.mode || ''] || props.mode,
     readOnly: props.readOnly ? 'nocursor' : undefined,
     extraKeys: {
-      'Cmd-S': function(cm) {
+      'Cmd-S': function (cm) {
         emit('save', cm.getValue())
       },
-      'Ctrl-S': function(cm) {
+      'Ctrl-S': function (cm) {
         emit('save', cm.getValue())
       },
     },
@@ -60,7 +61,7 @@ onMounted(async() => {
     relative
     font-mono
     text-sm
-    class="scrolls"
+    class="codemirror-scrolls"
   >
     <textarea ref="el" />
   </div>

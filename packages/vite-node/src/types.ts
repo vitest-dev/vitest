@@ -1,9 +1,14 @@
+import type { ModuleCacheMap } from './client'
+
+export type Nullable<T> = T | null | undefined
+export type Arrayable<T> = T | Array<T>
+
 export interface DepsHandlingOptions {
   external?: (string | RegExp)[]
-  inline?: (string | RegExp)[]
+  inline?: (string | RegExp)[] | true
   /**
    * Try to guess the CJS version of a package when it's invalid ESM
-   * @default true
+   * @default false
    */
   fallbackCJS?: boolean
 }
@@ -38,13 +43,14 @@ export interface ModuleCache {
 }
 
 export interface ViteNodeRunnerOptions {
-  fetchModule: FetchFunction
-  resolveId: ResolveIdFunction
   root: string
+  fetchModule: FetchFunction
+  resolveId?: ResolveIdFunction
   base?: string
-  moduleCache?: Map<string, ModuleCache>
+  moduleCache?: ModuleCacheMap
   interopDefault?: boolean
   requestStubs?: Record<string, any>
+  debug?: boolean
 }
 
 export interface ViteNodeResolveId {
@@ -73,3 +79,5 @@ export interface ViteNodeServerOptions {
     web?: RegExp[]
   }
 }
+
+export type { ModuleCacheMap }

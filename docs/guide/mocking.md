@@ -1,5 +1,5 @@
 # Mocking
-When writing tests it's only a matter of time before you need to create "fake" version of an internal—or external—service. This is commonly referred to as **mocking**. Vitest provides utility functions to help you out through its **vi** helper. You can `import { vi } from 'vitest'` or access it **globally** (when [global configuration](/config/#global) is **enabled**).
+When writing tests it's only a matter of time before you need to create "fake" version of an internal—or external—service. This is commonly referred to as **mocking**. Vitest provides utility functions to help you out through its **vi** helper. You can `import { vi } from 'vitest'` or access it **globally** (when [global configuration](/config/#globals) is **enabled**).
 
 ::: warning
 Always remember to clear or restore mocks before or after each test run to undo mock state changes between runs! See [`mockReset`](/api/#mockreset) docs for more info.
@@ -14,7 +14,7 @@ Sometimes you need to be in control of the date to ensure consistency when testi
 ### Example
 
 ```js
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const businessHours = [9, 17]
 
@@ -126,6 +126,25 @@ describe('reading messages', () => {
 
 - [Jest's Mock Functions](https://jestjs.io/docs/mock-function-api)
 
+## Globals
+
+You can mock global variables that are not present with `jsdom` or `node` by using [`vi.stubGlobal`](/api/#vi-stubglobal) helper. It will put the value of the global variable into a `globalThis` object.
+
+```ts
+import { vi } from 'vitest'
+
+const IntersectionObserverMock = vi.fn(() => ({
+  disconnect: vi.fn(),
+  observe: vi.fn(),
+  takeRecords: vi.fn(),
+  unobserve: vi.fn(),
+}))
+
+vi.stubGlobal('IntersectionObserver', IntersectionObserverMock)
+
+// now you can access it as `IntersectionObserver` or `window.IntersectionObserver`
+```
+
 ## Modules
 
 Mock modules observe third-party-libraries, that are invoked in some other code, allowing you to test arguments, output or even redeclare its implementation.
@@ -145,14 +164,16 @@ The following principles apply
 ### Example
 
 ```js
-import { afterEach, beforeEach, describe, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Client } from 'pg'
+import { failure, success } from './handlers'
 
 // handlers
 export function success(data) {}
 export function failure(data) {}
+
 // get todos
-export const getTodos = async(event, context) => {
+export const getTodos = async (event, context) => {
   const client = new Client({
     // ...clientOptions
   })
@@ -180,16 +201,15 @@ export const getTodos = async(event, context) => {
 }
 
 vi.mock('pg', () => {
-  return {
-    Client: vi.fn(() => ({
-      connect: vi.fn(),
-      query: vi.fn(),
-      end: vi.fn(),
-    })),
-  }
+  const Client = vi.fn()
+  Client.prototype.connect = vi.fn()
+  Client.prototype.query = vi.fn()
+  Client.prototype.end = vi.fn()
+
+  return { Client }
 })
 
-vi.mock('./handler.js', () => {
+vi.mock('./handlers', () => {
   return {
     success: vi.fn(),
     failure: vi.fn(),
@@ -207,7 +227,7 @@ describe('get a list of todo items', () => {
     vi.clearAllMocks()
   })
 
-  it('should return items successfully', async() => {
+  it('should return items successfully', async () => {
     client.query.mockResolvedValueOnce({ rows: [], rowCount: 0 })
 
     await getTodos()
@@ -223,7 +243,7 @@ describe('get a list of todo items', () => {
     })
   })
 
-  it('should throw an error', async() => {
+  it('should throw an error', async () => {
     const mError = new Error('Unable to retrieve rows')
     client.query.mockRejectedValueOnce(mError)
 
@@ -337,10 +357,149 @@ describe('delayed execution', () => {
   it('should execute every minute', () => {
     executeEveryMinute(mock)
     vi.advanceTimersToNextTimer()
-    vi.advanceTimersToNextTimer()
     expect(mock).toHaveBeenCalledTimes(1)
     vi.advanceTimersToNextTimer()
     expect(mock).toHaveBeenCalledTimes(2)
   })
 })
+```
+
+## Cheat Sheet
+
+:::info
+`vi` in the examples below is imported directly from `vitest`. You can also use it globally, if you set `globals` to `true` in your [config](/config/).
+:::
+
+I want to…
+
+- Spy on a `method`
+
+```ts
+const instance = new SomeClass()
+vi.spyOn(instance, 'method')
+```
+
+- Spy on module export function
+```ts
+import * as exports from 'some-path'
+vi.spyOn(exports, 'function')
+```
+
+- Spy on module export setter/getter
+```ts
+import * as exports from 'some-path'
+vi.spyOn(exports, 'getter', 'get')
+vi.spyOn(exports, 'setter', 'set')
+```
+
+- Mock a module export function
+
+Example with `vi.mock`:
+```ts
+import { method } from 'some-path'
+vi.mock('some-path', () => ({
+  method: vi.fn()
+}))
+```
+
+Example with `vi.spyOn`:
+```ts
+import * as exports from 'some-path'
+vi.spyOn(exports, 'method').mockImplementation(() => {})
+```
+
+- Mock a module export class implementation
+
+Example with `vi.mock` and prototype:
+```ts
+import { SomeClass } from 'some-path'
+vi.mock('some-path', () => {
+  const SomeClass = vi.fn()
+  SomeClass.prototype.someMethod = vi.fn()
+  return { SomeClass }
+})
+// SomeClass.mock.instances will have SomeClass
+```
+
+Example with `vi.mock` and return value:
+```ts
+import { SomeClass } from 'some-path'
+vi.mock('some-path', () => {
+  const SomeClass = vi.fn(() => ({
+    someMethod: vi.fn()
+  }))
+  return { SomeClass }
+})
+// SomeClass.mock.returns will have returned object
+```
+
+Example with `vi.spyOn`:
+
+```ts
+import * as exports from 'some-path'
+vi.spyOn(exports, 'SomeClass').mockImplementation(() => {
+  // whatever suites you from first two examples
+})
+```
+
+- Spy on an object returned from a function
+
+Example using cache:
+
+```ts
+// useObject.js
+import { useObject } from 'some-path'
+const obj = useObject()
+obj.method()
+```
+
+```ts
+// useObject.test.js
+import { useObject } from 'some-path'
+vi.mock('some-path', () => {
+  let _cache
+  const useObject = () => {
+    if (!_cache) {
+      _cache = {
+        method: vi.fn(),
+      }
+    }
+    return _cache
+  }
+  return { useObject }
+})
+
+const obj = useObject()
+expect(obj.method).toHaveBeenCalled()
+```
+
+- Mock part of a module
+
+```ts
+import { mocked, original } from 'some-path'
+vi.mock('some-path', async () => {
+  const mod = await vi.importActual<typeof import('some-path')>('some-path')
+  return {
+    ...mod,
+    mocked: vi.fn()
+  }
+})
+original() // has original behaviour
+mocked() // is a spy function
+```
+
+- Mock current date
+
+```ts
+const mockDate = new Date(2022, 0, 1)
+vi.setSystemTime(mockDate)
+const now = new Date()
+expect(now.valueOf()).toBe(mockDate.valueOf())
+```
+
+- Mock global variable
+
+```ts
+vi.stubGlobal('__VERSION__', '1.0.0')
+expect(__VERSION__).toBe('1.0.0')
 ```

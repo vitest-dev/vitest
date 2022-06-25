@@ -7,7 +7,7 @@ Vite as Node runtime. The engine powers [Vitest](https://github.com/vitest-dev/v
 ## Features
 
 - Out-of-box ESM & TypeScript support (possible for more with plugins)
-- Top-level await
+- Top-level `await`
 - Vite plugins, resolve, aliasing
 - Respect `vite.config.ts`
 - Shims for `__dirname` and `__filename` in ESM
@@ -27,9 +27,19 @@ Options:
 npx vite-node -h
 ```
 
+### Options via CLI
+
+[All `ViteNodeServer` options](https://github.com/vitest-dev/vitest/blob/main/packages/vite-node/src/types.ts#L61-L78) are supported by the CLI. They may be defined through the dot syntax, as shown below:
+
+```bash
+npx vite-node --options.deps.inline="module-name" --options.deps.external="/module-regexp/" index.ts
+```
+
+Note that for options supporting RegExps, strings passed to the CLI must start _and_ end with a `/`;
+
 ## Programmatic Usage
 
-In Vite Node, the server and runner (client) are separated, so you can integrate them in different contexts (workers, cross-process, or remote) if needed. The demo below shows a simple example of having the server and running in the same context
+In Vite Node, the server and runner (client) are separated, so you can integrate them in different contexts (workers, cross-process, or remote) if needed. The demo below shows a simple example of having both (server and runner) running in the same context
 
 ```ts
 import { createServer } from 'vite'
@@ -37,7 +47,12 @@ import { ViteNodeServer } from 'vite-node/server'
 import { ViteNodeRunner } from 'vite-node/client'
 
 // create vite server
-const server = await createServer()
+const server = await createServer({
+  optimizeDeps: {
+    // It's recommended to disable deps optimization
+    disabled: true,
+  },
+})
 // this is need to initialize the plugins
 await server.pluginContainer.buildStart({})
 
@@ -53,6 +68,9 @@ const runner = new ViteNodeRunner({
   // and pass to this function
   fetchModule(id) {
     return node.fetchModule(id)
+  },
+  resolveId(id, importer) {
+    return node.resolveId(id, importer)
   },
 })
 

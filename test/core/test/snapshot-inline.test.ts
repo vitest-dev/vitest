@@ -19,6 +19,16 @@ test('object', () => {
 
 test('single line', () => {
   expect('inline string').toMatchInlineSnapshot('"inline string"')
+  expect('inline $ string').toMatchInlineSnapshot('"inline $ string"')
+  expect('inline multiline\n $string').toMatchInlineSnapshot(`
+    "inline multiline
+     $string"
+  `)
+  // eslint-disable-next-line no-template-curly-in-string
+  expect('inline multiline\n ${string}').toMatchInlineSnapshot(`
+    "inline multiline
+     \${string}"
+  `)
 })
 
 test('multiline', () => {
@@ -67,6 +77,28 @@ test('throwing inline snapshots', () => {
       "error": "omega",
     }
   `)
+
+  expect(() => {
+    // eslint-disable-next-line no-throw-literal
+    throw { some: { nested: { error: 'object' } } }
+  }).toThrowErrorMatchingInlineSnapshot(`
+    {
+      "some": {
+        "nested": {
+          "error": "object",
+        },
+      },
+    }
+  `)
+
+  expect(() => {
+    throw ['Inline', 'snapshot', 'with', 'newlines'].join('\n')
+  }).toThrowErrorMatchingInlineSnapshot(`
+    "Inline
+    snapshot
+    with
+    newlines"
+  `)
 })
 
 test('properties inline snapshot', () => {
@@ -107,13 +139,13 @@ test('literal tag', () => {
   `)
 })
 
-test('resolves', async() => {
-  const getText = async() => 'text'
+test('resolves', async () => {
+  const getText = async () => 'text'
   await expect(getText()).resolves.toMatchInlineSnapshot('"text"')
 })
 
-test('rejects', async() => {
-  const getText = async() => {
+test('rejects', async () => {
+  const getText = async () => {
     throw new Error('error')
   }
   await expect(getText()).rejects.toMatchInlineSnapshot('[Error: error]')

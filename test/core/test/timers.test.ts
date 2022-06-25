@@ -9,7 +9,7 @@
  */
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { FakeTimers } from '../../../packages/vitest/src/integrations/timers'
+import { FakeTimers } from '../../../packages/vitest/src/integrations/mock/timers'
 
 class FakeDate extends Date {}
 
@@ -176,7 +176,7 @@ describe('FakeTimers', () => {
         setTimeout,
       }
 
-      const timers = new FakeTimers({ global, maxLoops: 100 })
+      const timers = new FakeTimers({ global, config: { loopLimit: 100 } })
 
       timers.useFakeTimers()
 
@@ -306,7 +306,7 @@ describe('FakeTimers', () => {
 
     it('throws before allowing infinite recursion', () => {
       const global = { Date: FakeDate, clearTimeout, process, setTimeout }
-      const timers = new FakeTimers({ global, maxLoops: 100 })
+      const timers = new FakeTimers({ global, config: { loopLimit: 100 } })
       timers.useFakeTimers()
 
       global.setTimeout(function infinitelyRecursingCallback() {
@@ -820,6 +820,8 @@ describe('FakeTimers', () => {
       timers.advanceTimersByTime(5)
 
       expect(timers.getTimerCount()).toEqual(0)
+
+      timers.useRealTimers()
     })
 
     it('includes immediates and ticks', () => {
@@ -832,6 +834,8 @@ describe('FakeTimers', () => {
       process.nextTick(() => {})
 
       expect(timers.getTimerCount()).toEqual(3)
+
+      timers.useRealTimers()
     })
 
     it('not includes cancelled immediates', () => {
@@ -844,6 +848,8 @@ describe('FakeTimers', () => {
       timers.clearAllTimers()
 
       expect(timers.getTimerCount()).toEqual(0)
+
+      timers.useRealTimers()
     })
 
     it('throws when using useFakeTimers after setSystemTime', () => {

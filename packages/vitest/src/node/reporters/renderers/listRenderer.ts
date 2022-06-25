@@ -3,13 +3,14 @@ import c from 'picocolors'
 import cliTruncate from 'cli-truncate'
 import stripAnsi from 'strip-ansi'
 import type { SuiteHooks, Task } from '../../../types'
-import { getTests } from '../../../utils'
+import { clearInterval, getTests, setInterval } from '../../../utils'
 import { F_RIGHT } from '../../../utils/figures'
 import { getCols, getHookStateSymbol, getStateSymbol } from './utils'
 
 export interface ListRendererOptions {
   renderSucceed?: boolean
   outputStream: NodeJS.WritableStream
+  showHeap: boolean
 }
 
 const DURATION_LONG = 300
@@ -30,7 +31,7 @@ function formatFilepath(path: string) {
 function renderHookState(task: Task, hookName: keyof SuiteHooks, level = 0) {
   const state = task.result?.hooks?.[hookName]
   if (state && state === 'run')
-    return `${'  '.repeat(level)}${getHookStateSymbol(task, hookName)} ${c.dim(`[ ${hookName} ]`)}`
+    return `${'  '.repeat(level)} ${getHookStateSymbol(task, hookName)} ${c.dim(`[ ${hookName} ]`)}`
 
   return ''
 }
@@ -52,6 +53,9 @@ export function renderTree(tasks: Task[], options: ListRendererOptions, level = 
       if (task.result.duration > DURATION_LONG)
         suffix += c.yellow(` ${Math.round(task.result.duration)}${c.dim('ms')}`)
     }
+
+    if (options.showHeap && task.result?.heap != null)
+      suffix += c.magenta(` ${Math.floor(task.result.heap / 1024 / 1024)} MB heap used`)
 
     let name = task.name
     if (level === 0)

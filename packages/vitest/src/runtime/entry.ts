@@ -1,25 +1,53 @@
 import { promises as fs } from 'fs'
 import type { BuiltinEnvironment, ResolvedConfig } from '../types'
+import { getWorkerState, resetModules } from '../utils'
 import { setupGlobalEnv, withEnv } from './setup'
 import { startTests } from './run'
 
 export async function run(files: string[], config: ResolvedConfig): Promise<void> {
   await setupGlobalEnv(config)
 
-  for (const file of files) {
+  const workerState = getWorkerState()
+
+  const envs = ['node', 'jsdom', 'happy-dom']
+
+  // if calling from a worker, there will always be one file
+  // if calling with no-threads, this will be the whole suite
+  const filesWithEnv = await Promise.all(files.map(async (file) => {
     const code = await fs.readFile(file, 'utf-8')
-
     const env = code.match(/@(?:vitest|jest)-environment\s+?([\w-]+)\b/)?.[1] || config.environment || 'node'
+    if (!envs.includes(env))
+      throw new Error(`Unsupported environment: "${env}" in ${file}`)
+    return {
+      file,
+      env: env as BuiltinEnvironment,
+    }
+  }))
 
-    if (!['node', 'jsdom', 'happy-dom'].includes(env))
-      throw new Error(`Unsupported environment: ${env}`)
+  const filesByEnv = filesWithEnv.reduce((acc, { file, env }) => {
+    acc[env] ||= []
+    acc[env].push(file)
+    return acc
+  }, {} as Record<BuiltinEnvironment, string[]>)
 
-    __vitest_worker__.filepath = file
+  for (const env of envs) {
+    const environment = env as BuiltinEnvironment
+    const files = filesByEnv[environment]
 
-    await withEnv(env as BuiltinEnvironment, config.environmentOptions || {}, async() => {
-      await startTests([file], config)
+    if (!files || !files.length)
+      continue
+
+    await withEnv(environment, config.environmentOptions || {}, async () => {
+      for (const file of files) {
+        workerState.mockMap.clear()
+        resetModules()
+
+        workerState.filepath = file
+
+        await startTests([file], config)
+
+        workerState.filepath = undefined
+      }
     })
-
-    __vitest_worker__.filepath = undefined
   }
 }

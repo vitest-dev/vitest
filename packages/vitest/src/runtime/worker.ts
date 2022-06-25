@@ -1,17 +1,20 @@
 import { resolve } from 'pathe'
 import { createBirpc } from 'birpc'
-import type { ModuleCache, ResolvedConfig, WorkerContext, WorkerGlobalState, WorkerRPC } from '../types'
+import { workerId as poolId } from 'tinypool'
+import { ModuleCacheMap } from 'vite-node/client'
+import type { ResolvedConfig, WorkerContext, WorkerRPC } from '../types'
 import { distDir } from '../constants'
-import { executeInViteNode } from '../node/execute'
+import { getWorkerState } from '../utils'
+import type { MockMap } from '../types/mocker'
+import { executeInViteNode } from './execute'
 import { rpc } from './rpc'
 
 let _viteNode: {
   run: (files: string[], config: ResolvedConfig) => Promise<void>
-  collect: (files: string[], config: ResolvedConfig) => Promise<void>
 }
-let __vitest_worker__: WorkerGlobalState
-const moduleCache: Map<string, ModuleCache> = new Map()
-const mockMap = {}
+
+const moduleCache = new ModuleCacheMap()
+const mockMap: MockMap = new Map()
 
 async function startViteNode(ctx: WorkerContext) {
   if (_viteNode)
@@ -28,11 +31,15 @@ async function startViteNode(ctx: WorkerContext) {
     return processExit(code)
   }
 
+  process.on('unhandledRejection', (err) => {
+    rpc().onUnhandledRejection(err)
+  })
+
   const { config } = ctx
 
-  const { run, collect } = (await executeInViteNode({
+  const { run } = (await executeInViteNode({
     files: [
-      resolve(distDir, 'entry.js'),
+      resolve(distDir, 'entry.mjs'),
     ],
     fetchModule(id) {
       return rpc().fetch(id)
@@ -47,26 +54,27 @@ async function startViteNode(ctx: WorkerContext) {
     base: config.base,
   }))[0]
 
-  _viteNode = { run, collect }
+  _viteNode = { run }
 
   return _viteNode
 }
 
 function init(ctx: WorkerContext) {
-  if (__vitest_worker__ && ctx.config.threads && ctx.config.isolate)
-    throw new Error(`worker for ${ctx.files.join(',')} already initialized by ${__vitest_worker__.ctx.files.join(',')}. This is probably an internal bug of Vitest.`)
+  // @ts-expect-error untyped global
+  if (typeof __vitest_worker__ !== 'undefined' && ctx.config.threads && ctx.config.isolate)
+    throw new Error(`worker for ${ctx.files.join(',')} already initialized by ${getWorkerState().ctx.files.join(',')}. This is probably an internal bug of Vitest.`)
 
-  process.stdout.write('\0')
+  const { config, port, workerId } = ctx
 
-  const { config, port, id } = ctx
-
-  process.env.VITEST_WORKER_ID = String(id)
+  process.env.VITEST_WORKER_ID = String(workerId)
+  process.env.VITEST_POOL_ID = String(poolId)
 
   // @ts-expect-error I know what I am doing :P
   globalThis.__vitest_worker__ = {
     ctx,
     moduleCache,
     config,
+    mockMap,
     rpc: createBirpc<WorkerRPC>(
       {},
       {
@@ -77,23 +85,17 @@ function init(ctx: WorkerContext) {
     ),
   }
 
-  if (ctx.invalidates)
-    ctx.invalidates.forEach(i => moduleCache.delete(i))
+  if (ctx.invalidates) {
+    ctx.invalidates.forEach((i) => {
+      moduleCache.delete(i)
+      moduleCache.delete(`${i}__mock`)
+    })
+  }
   ctx.files.forEach(i => moduleCache.delete(i))
-}
-
-export async function collect(ctx: WorkerContext) {
-  init(ctx)
-  const { collect } = await startViteNode(ctx)
-  return collect(ctx.files, ctx.config)
 }
 
 export async function run(ctx: WorkerContext) {
   init(ctx)
   const { run } = await startViteNode(ctx)
   return run(ctx.files, ctx.config)
-}
-
-declare global {
-  let __vitest_worker__: import('vitest').WorkerGlobalState
 }

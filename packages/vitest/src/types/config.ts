@@ -1,5 +1,6 @@
 import type { CommonServerOptions } from 'vite'
 import type { PrettyFormatOptions } from 'pretty-format'
+import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import type { BuiltinReporters } from '../node/reporters'
 import type { C8Options, ResolvedC8Options } from './coverage'
 import type { JSDOMOptions } from './jsdom-options'
@@ -58,8 +59,10 @@ export interface InlineConfig {
      * Vite will process inlined modules.
      *
      * This could be helpful to handle packages that ship `.js` in ESM format (that Node can't handle).
+     *
+     * If `true`, every dependency will be inlined
      */
-    inline?: (string | RegExp)[]
+    inline?: (string | RegExp)[] | true
 
     /**
      * Interpret CJS module's default as named exports
@@ -73,7 +76,7 @@ export interface InlineConfig {
      * This will significantly improve the performance in huge repo, but might potentially
      * cause some misalignment if a package have different logic in ESM and CJS mode.
      *
-     * @default true
+     * @default false
      */
     fallbackCJS?: boolean
   }
@@ -91,11 +94,6 @@ export interface InlineConfig {
   * @default false
   */
   globals?: boolean
-
-  /**
-   * @deprecated
-   */
-  global?: boolean
 
   /**
    * Running environment
@@ -133,14 +131,26 @@ export interface InlineConfig {
   root?: string
 
   /**
-   * Custom reporter for output
+   * Custom reporter for output. Can contain one or more built-in report names, reporter instances,
+   * and/or paths to custom reporters
    */
-  reporters?: Arrayable<BuiltinReporters | Reporter>
+  reporters?: Arrayable<BuiltinReporters | Reporter | Omit<string, BuiltinReporters>>
 
   /**
-   * Write test results to a file when the --reporter=json option is also specified
+   * diff output length
    */
-  outputFile?: string
+  outputTruncateLength?: number
+
+  /**
+   * number of diff output lines
+   */
+  outputDiffLines?: number
+
+  /**
+   * Write test results to a file when the --reporter=json` or `--reporter=junit` option is also specified.
+   * Also definable individually per reporter by using an object instead.
+   */
+  outputFile?: string | (Partial<Record<BuiltinReporters, string>> & Record<string, string>)
 
   /**
    * Enable multi-threading
@@ -195,11 +205,18 @@ export interface InlineConfig {
   globalSetup?: string | string[]
 
   /**
-   * Pattern of file paths to be ignore from triggering watch rerun
-   *
-   * @default ['**\/node_modules\/**', '**\/dist/**']
+   * Glob pattern of file paths to be ignore from triggering watch rerun
    */
-  watchIgnore?: (string | RegExp)[]
+  watchExclude?: string[]
+
+  /**
+   * Glob patter of file paths that will trigger the whole suite rerun
+   *
+   * Useful if you are testing calling CLI commands
+   *
+   * @default []
+   */
+  forceRerunTriggers?: string[]
 
   /**
    * Isolate environment for each test file
@@ -290,6 +307,60 @@ export interface InlineConfig {
    * Format options for snapshot testing.
    */
   snapshotFormat?: PrettyFormatOptions
+
+  /**
+   * Resolve custom snapshot path
+   */
+  resolveSnapshotPath?: (path: string, extension: string) => string
+
+  /**
+   * Pass with no tests
+   */
+  passWithNoTests?: boolean
+
+  /**
+   * Allow tests and suites that are marked as only
+   */
+  allowOnly?: boolean
+
+  /**
+   * Show heap usage after each test. Usefull for debugging memory leaks.
+   */
+  logHeapUsage?: boolean
+
+  /**
+   * Custom environment variables assigned to `process.env` before running tests.
+   */
+  env?: Record<string, string>
+
+  /**
+   * Options for @sinon/fake-timers
+   */
+  fakeTimers?: FakeTimerInstallOpts
+
+  /**
+   * Custom handler for console.log in tests.
+   *
+   * Return `false` to ignore the log.
+   */
+  onConsoleLog?: (log: string, type: 'stdout' | 'stderr') => false | void
+
+  /**
+   * Indicates if CSS files should be processed.
+   *
+   * When excluded, the CSS files will be replaced with empty strings to bypass the subsequent processing.
+   *
+   * @default { include: [/\.module\./] }
+   */
+  css?: boolean | {
+    include?: RegExp | RegExp[]
+    exclude?: RegExp | RegExp[]
+  }
+  /**
+   * A number of tests that are allowed to run at the same time marked with `test.concurrent`.
+   * @default 5
+   */
+  maxConcurrency?: number
 }
 
 export interface UserConfig extends InlineConfig {
@@ -310,16 +381,6 @@ export interface UserConfig extends InlineConfig {
   dom?: boolean
 
   /**
-   * Pass with no tests
-   */
-  passWithNoTests?: boolean
-
-  /**
-   * Allow tests and suites that are marked as only
-   */
-  allowOnly?: boolean
-
-  /**
    * Run tests that cover a list of source files
    */
   related?: string[] | string
@@ -329,9 +390,24 @@ export interface UserConfig extends InlineConfig {
    * @default 'test'
    */
   mode?: string
+
+  /**
+   * Runs tests that are affected by the changes in the repository, or between specified branch or commit hash
+   * Requires initialized git repository
+   * @default false
+   */
+  changed?: boolean | string
+
+  /**
+   * Test suite shard to execute in a format of <index>/<count>.
+   * Will divide tests into a `count` numbers, and run only the `indexed` part.
+   * Cannot be used with enabled watch.
+   * @example --shard=2/3
+   */
+  shard?: string
 }
 
-export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters'> {
+export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'shard'> {
   base?: string
 
   config?: string
@@ -347,4 +423,8 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
   defines: Record<string, any>
 
   api?: ApiConfig
+  shard?: {
+    index: number
+    count: number
+  }
 }

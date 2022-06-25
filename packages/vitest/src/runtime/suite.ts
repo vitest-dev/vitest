@@ -1,20 +1,28 @@
 import { format } from 'util'
 import type { File, RunMode, Suite, SuiteAPI, SuiteCollector, SuiteFactory, SuiteHooks, Task, Test, TestAPI, TestFunction } from '../types'
-import { isObject, noop, toArray } from '../utils'
+import { isObject, noop } from '../utils'
 import { createChainable } from './chain'
-import { collectTask, context, normalizeTest, runWithSuite } from './context'
+import { collectTask, collectorContext, createTestContext, runWithSuite, withTimeout } from './context'
 import { getHooks, setFn, setHooks } from './map'
 
 // apis
 export const suite = createSuite()
 export const test = createTest(
-  function(name: string, fn?: TestFunction, timeout?: number) {
+  function (name: string, fn?: TestFunction, timeout?: number) {
     // @ts-expect-error untyped internal prop
     getCurrentSuite().test.fn.call(this, name, fn, timeout)
   },
 )
 
-function formatTitle(template: string, items: any[]) {
+function formatTitle(template: string, items: any[], idx: number) {
+  if (template.includes('%#')) {
+    // '%#' match index of the test case
+    template = template
+      .replace(/%%/g, '__vitest_escaped_%__')
+      .replace(/%#/g, `${idx}`)
+      .replace(/__vitest_escaped_%__/g, '%%')
+  }
+
   const count = template.split('%').length - 1
   let formatted = format(template, ...items.slice(0, count))
   if (isObject(items[0])) {
@@ -32,14 +40,14 @@ export const it = test
 // implementations
 export const defaultSuite = suite('')
 
-export function clearContext() {
-  context.tasks.length = 0
+export function clearCollectorContext() {
+  collectorContext.tasks.length = 0
   defaultSuite.clear()
-  context.currentSuite = defaultSuite
+  collectorContext.currentSuite = defaultSuite
 }
 
 export function getCurrentSuite() {
-  return context.currentSuite || defaultSuite
+  return collectorContext.currentSuite || defaultSuite
 }
 
 export function createSuiteHooks() {
@@ -59,7 +67,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
 
   initSuite()
 
-  const test = createTest(function(name: string, fn?: TestFunction, timeout?: number) {
+  const test = createTest(function (name: string, fn = noop, timeout?: number) {
     const mode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run'
 
     const test: Test = {
@@ -69,10 +77,22 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       mode,
       suite: undefined!,
       fails: this.fails,
-    }
+    } as Omit<Test, 'context'> as Test
     if (this.concurrent || concurrent)
       test.concurrent = true
-    setFn(test, normalizeTest(fn || noop, timeout))
+
+    const context = createTestContext(test)
+    // create test context
+    Object.defineProperty(test, 'context', {
+      value: context,
+      enumerable: false,
+    })
+
+    setFn(test, withTimeout(
+      () => fn(context),
+      timeout,
+    ))
+
     tasks.push(test)
   })
 
@@ -138,7 +158,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
 function createSuite() {
   const suite = createChainable(
     ['concurrent', 'skip', 'only', 'todo'],
-    function(name: string, factory?: SuiteFactory) {
+    function (name: string, factory?: SuiteFactory) {
       const mode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run'
       return createSuiteCollector(name, factory, mode, this.concurrent)
     },
@@ -146,17 +166,27 @@ function createSuite() {
 
   suite.each = <T>(cases: ReadonlyArray<T>) => {
     return (name: string, fn: (...args: T[]) => void) => {
-      cases.forEach((i) => {
-        const items = toArray(i) as any
-        suite(formatTitle(name, items), () => fn(...items))
+      cases.forEach((i, idx) => {
+        const items = Array.isArray(i) ? i : [i]
+        suite(formatTitle(name, items, idx), () => fn(...items))
       })
     }
   }
 
-  return suite as SuiteAPI
+  suite.skipIf = (condition: any) => (condition ? suite.skip : suite) as SuiteAPI
+  suite.runIf = (condition: any) => (condition ? suite : suite.skip) as SuiteAPI
+
+  return suite
 }
 
-function createTest(fn: ((this: Record<'concurrent'| 'skip'| 'only'| 'todo'| 'fails', boolean | undefined>, title: string, fn?: TestFunction, timeout?: number) => void)) {
+function createTest(fn: (
+  (
+    this: Record<'concurrent' | 'skip' | 'only' | 'todo' | 'fails', boolean | undefined>,
+    title: string,
+    fn?: TestFunction,
+    timeout?: number
+  ) => void
+)) {
   const test = createChainable(
     ['concurrent', 'skip', 'only', 'todo', 'fails'],
     fn,
@@ -164,12 +194,15 @@ function createTest(fn: ((this: Record<'concurrent'| 'skip'| 'only'| 'todo'| 'fa
 
   test.each = <T>(cases: ReadonlyArray<T>) => {
     return (name: string, fn: (...args: T[]) => void) => {
-      cases.forEach((i) => {
-        const items = toArray(i) as any
-        test(formatTitle(name, items), () => fn(...items))
+      cases.forEach((i, idx) => {
+        const items = Array.isArray(i) ? i : [i]
+        test(formatTitle(name, items, idx), () => fn(...items))
       })
     }
   }
+
+  test.skipIf = (condition: any) => (condition ? test.skip : test) as TestAPI
+  test.runIf = (condition: any) => (condition ? test : test.skip) as TestAPI
 
   return test as TestAPI
 }

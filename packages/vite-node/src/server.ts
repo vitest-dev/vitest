@@ -1,9 +1,16 @@
+import { join } from 'pathe'
 import type { TransformResult, ViteDevServer } from 'vite'
+import createDebug from 'debug'
 import type { FetchResult, RawSourceMap, ViteNodeResolveId, ViteNodeServerOptions } from './types'
 import { shouldExternalize } from './externalize'
-import { toFilePath, withInlineSourcemap } from './utils'
+import { toArray, toFilePath, withInlineSourcemap } from './utils'
 
 export * from './externalize'
+
+const debugRequest = createDebug('vite-node:server:request')
+
+// store the original reference to avoid it been mocked
+const RealDate = Date
 
 export class ViteNodeServer {
   private fetchPromiseMap = new Map<string, Promise<FetchResult>>()
@@ -17,14 +24,38 @@ export class ViteNodeServer {
   constructor(
     public server: ViteDevServer,
     public options: ViteNodeServerOptions = {},
-  ) {}
+  ) {
+    // eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error
+    // @ts-ignore ssr is not typed in Vite 2, but defined in Vite 3, so we can't use expect-error
+    const ssrOptions = server.config.ssr
+    if (ssrOptions) {
+      options.deps ??= {}
+
+      // we don't externalize ssr, because it has different semantics in Vite
+      // if (ssrOptions.external) {
+      //   options.deps.external ??= []
+      //   options.deps.external.push(...ssrOptions.external)
+      // }
+
+      if (ssrOptions.noExternal === true) {
+        options.deps.inline ??= true
+      }
+      else if (options.deps.inline !== true) {
+        options.deps.inline ??= []
+        options.deps.inline.push(...toArray(ssrOptions.noExternal))
+      }
+    }
+  }
 
   shouldExternalize(id: string) {
     return shouldExternalize(id, this.options.deps)
   }
 
   async resolveId(id: string, importer?: string): Promise<ViteNodeResolveId | null> {
-    return this.server.pluginContainer.resolveId(id, importer, { ssr: true })
+    if (importer && !importer.startsWith(this.server.config.root))
+      importer = join(this.server.config.root, importer)
+    const mode = (importer && this.getTransformMode(importer)) || 'ssr'
+    return this.server.pluginContainer.resolveId(id, importer, { ssr: mode === 'ssr' })
   }
 
   async fetchModule(id: string): Promise<FetchResult> {
@@ -75,7 +106,7 @@ export class ViteNodeServer {
     const filePath = toFilePath(id, this.server.config.root)
 
     const module = this.server.moduleGraph.getModuleById(id)
-    const timestamp = module?.lastHMRTimestamp || Date.now()
+    const timestamp = module?.lastHMRTimestamp || RealDate.now()
     const cache = this.fetchCache.get(filePath)
     if (timestamp && cache && cache.timestamp >= timestamp)
       return cache.result
@@ -98,6 +129,8 @@ export class ViteNodeServer {
   }
 
   private async _transformRequest(id: string) {
+    debugRequest(id)
+
     let result: TransformResult | null = null
 
     if (this.getTransformMode(id) === 'web') {

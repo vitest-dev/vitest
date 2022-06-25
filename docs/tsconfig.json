@@ -5,8 +5,8 @@
     "target": "esnext",
     "lib": ["DOM", "ESNext"],
     "strict": true,
+    "jsx": "preserve",
     "esModuleInterop": true,
-    "incremental": false,
     "skipLibCheck": true,
     "moduleResolution": "node",
     "resolveJsonModule": true,
@@ -15,7 +15,6 @@
     "forceConsistentCasingInFileNames": true,
     "types": [
       "vite/client",
-      "vite-plugin-pages/client",
       "vite-plugin-pwa/client",
       "vitepress"
     ],

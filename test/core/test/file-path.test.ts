@@ -77,5 +77,17 @@ describe('toFilePath', () => {
 
       expect(slash(filePath)).toEqual(expected)
     })
+
+    it('unix with absolute path in first level catalog', () => {
+      const root = '/root'
+      const id = '/root/path/to/file.js'
+      const expected = '/root/path/to/file.js'
+
+      const processSpy = vi.spyOn(process, 'cwd').mockReturnValue(root)
+      const filePath = toFilePath(id, root)
+      processSpy.mockRestore()
+
+      expect(slash(filePath)).toEqual(expected)
+    })
   }
 })

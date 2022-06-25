@@ -12,7 +12,8 @@ export function hoistMocks(code: string) {
   for (const mockResult of mocks) {
     const lastIndex = getMockLastIndex(code.slice(mockResult.index!))
 
-    if (lastIndex === null) continue
+    if (lastIndex === null)
+      continue
 
     const startIndex = mockResult.index!
 
@@ -32,6 +33,13 @@ export function hoistMocks(code: string) {
   return m
 }
 
+const API_NOT_FOUND_ERROR = `There are some problems in resolving the mocks API.
+You may encounter this issue when importing the mocks API from another module other than 'vitest'.
+
+To fix this issue you can either:
+- import the mocks API directly from 'vitest'
+- enable the 'globals' options`
+
 export const MocksPlugin = (): Plugin => {
   return {
     name: 'vitest:mock-plugin',
@@ -42,12 +50,22 @@ export const MocksPlugin = (): Plugin => {
       if (m) {
         // hoist vitest imports in case it was used inside vi.mock factory #425
         const vitestImports = code.matchAll(vitestRegexp)
+        let found = false
+
         for (const match of vitestImports) {
           const indexStart = match.index!
           const indexEnd = match[0].length + indexStart
           m.remove(indexStart, indexEnd)
           m.prepend(`${match[0]}\n`)
+          found = true
         }
+
+        // if no vitest import found, check if the mock API is reachable after the hoisting
+        if (!found) {
+          m.prepend('try { vi } catch (_) { try { vitest } catch (__)'
+           + `{ throw new Error(${JSON.stringify(API_NOT_FOUND_ERROR)}) } }\n`)
+        }
+
         return {
           code: m.toString(),
           map: m.generateMap({ hires: true }),

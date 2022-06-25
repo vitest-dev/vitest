@@ -1,80 +1,58 @@
-import minimist from 'minimist'
-import { dim, red } from 'kolorist'
+import cac from 'cac'
+import { cyan, dim, red } from 'kolorist'
 import { createServer } from 'vite'
+import { version } from '../package.json'
 import { ViteNodeServer } from './server'
 import { ViteNodeRunner } from './client'
+import type { ViteNodeServerOptions } from './types'
+import { toArray } from './utils'
 
-const argv = minimist(process.argv.slice(2), {
-  'alias': {
-    r: 'root',
-    c: 'config',
-    h: 'help',
-    w: 'watch',
-    s: 'silent',
-  },
-  '--': true,
-  'string': ['root', 'config'],
-  'boolean': ['help', 'watch', 'silent'],
-  unknown(name: string) {
-    if (name[0] === '-') {
-      console.error(red(`Unknown argument: ${name}`))
-      help()
-      process.exit(1)
-    }
-    return true
-  },
-})
+const cli = cac('vite-node')
 
-if (argv.help) {
-  help()
-  process.exit(0)
-}
+cli
+  .version(version)
+  .option('-r, --root <path>', 'Use specified root directory')
+  .option('-c, --config <path>', 'Use specified config file')
+  .option('-w, --watch', 'Restart on file changes, similar to "nodemon"')
+  .option('--options <options>', 'Use specified Vite server options')
+  .help()
 
-if (!argv._.length) {
-  console.error(red('No files specified.'))
-  help()
-  process.exit(1)
-}
+cli
+  .command('[...files]')
+  .action(run)
 
-// forward argv
-process.argv = [...process.argv.slice(0, 2), ...(argv['--'] || [])]
-
-run(argv)
-
-function help() {
-  // eslint-disable-next-line no-console
-  console.log(`
-Usage:
-  $ vite-node [options] [files]
-
-Options:
-  -r, --root <path>      ${dim('[string]')} use specified root directory
-  -c, --config <file>    ${dim('[string]')} use specified config file
-  -w, --watch           ${dim('[boolean]')} restart on file changes, similar to "nodemon"
-  -s, --silent          ${dim('[boolean]')} do not emit errors and logs
-  --vue                 ${dim('[boolean]')} support for importing Vue component
-`)
-}
+cli.parse()
 
 export interface CliOptions {
-  files?: string[]
-  _?: string[]
   root?: string
   config?: string
+  watch?: boolean
+  options?: ViteNodeServerOptionsCLI
+  '--'?: string[]
 }
 
-async function run(options: CliOptions = {}) {
-  const files = options.files || options._ || []
+async function run(files: string[], options: CliOptions = {}) {
+  if (!files.length) {
+    console.error(red('No files specified.'))
+    cli.outputHelp()
+    process.exit(1)
+  }
+
+  // forward argv
+  process.argv = [...process.argv.slice(0, 2), ...(options['--'] || [])]
+
+  const parsedServerOptions = options.options
+    ? parseServerOptions(options.options)
+    : undefined
 
   const server = await createServer({
     logLevel: 'error',
-    clearScreen: false,
     configFile: options.config,
     root: options.root,
   })
   await server.pluginContainer.buildStart({})
 
-  const node = new ViteNodeServer(server)
+  const node = new ViteNodeServer(server, parsedServerOptions)
 
   const runner = new ViteNodeRunner({
     root: server.config.root,
@@ -93,5 +71,65 @@ async function run(options: CliOptions = {}) {
   for (const file of files)
     await runner.executeFile(file)
 
-  await server.close()
+  if (!options.watch)
+    await server.close()
+
+  server.watcher.on('change', async (path) => {
+    console.log(`${cyan('[vite-node]')} File change detected. ${dim(path)}`)
+
+    // invalidate module cache but not node_modules
+    Array.from(runner.moduleCache.keys())
+      .forEach((i) => {
+        if (!i.includes('node_modules'))
+          runner.moduleCache.delete(i)
+      })
+
+    for (const file of files)
+      await runner.executeFile(file)
+  })
 }
+
+function parseServerOptions(serverOptions: ViteNodeServerOptionsCLI): ViteNodeServerOptions {
+  const inlineOptions = serverOptions.deps?.inline === true ? true : toArray(serverOptions.deps?.inline)
+
+  return {
+    ...serverOptions,
+    deps: {
+      ...serverOptions.deps,
+      inline: inlineOptions !== true
+        ? inlineOptions.map((dep) => {
+          return dep.startsWith('/') && dep.endsWith('/')
+            ? new RegExp(dep)
+            : dep
+        })
+        : true,
+      external: toArray(serverOptions.deps?.external).map((dep) => {
+        return dep.startsWith('/') && dep.endsWith('/')
+          ? new RegExp(dep)
+          : dep
+      }),
+    },
+
+    transformMode: {
+      ...serverOptions.transformMode,
+
+      ssr: toArray(serverOptions.transformMode?.ssr).map(dep => new RegExp(dep)),
+      web: toArray(serverOptions.transformMode?.web).map(dep => new RegExp(dep)),
+    },
+  }
+}
+
+type Optional<T> = T | undefined
+type ComputeViteNodeServerOptionsCLI<T extends Record<string, any>> = {
+  [K in keyof T]: T[K] extends Optional<RegExp[]>
+    ? string | string[]
+    : T[K] extends Optional<(string | RegExp)[]>
+      ? string | string[]
+      : T[K] extends Optional<(string | RegExp)[] | true>
+        ? string | string[] | true
+        : T[K] extends Optional<Record<string, any>>
+          ? ComputeViteNodeServerOptionsCLI<T[K]>
+          : T[K]
+}
+
+export type ViteNodeServerOptionsCLI = ComputeViteNodeServerOptionsCLI<ViteNodeServerOptions>

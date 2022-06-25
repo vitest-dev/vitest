@@ -16,7 +16,7 @@ export async function saveInlineSnapshots(
 ) {
   const MagicString = (await import('magic-string')).default
   const files = new Set(snapshots.map(i => i.file))
-  await Promise.all(Array.from(files).map(async(file) => {
+  await Promise.all(Array.from(files).map(async (file) => {
     const map = await rpc().getSourceMap(file)
     const snaps = snapshots.filter(i => i.file === file)
     const code = await fs.readFile(file, 'utf8')
@@ -61,15 +61,14 @@ function prepareSnapString(snap: string, source: string, index: number) {
   const lines = snap
     .trim()
     .replace(/\\/g, '\\\\')
-    .replace(/\$/g, '\\$')
     .split(/\n/g)
-    .map(i => i.trimEnd())
 
   const isOneline = lines.length <= 1
   const quote = isOneline ? '\'' : '`'
-  return isOneline
-    ? `'${lines.join('\n').replace(/'/g, '\\\'')}'`
-    : `${quote}\n${lines.map(i => indentNext + i).join('\n').replace(/`/g, '\\`')}\n${indent}${quote}`
+  if (isOneline)
+    return `'${lines.join('\n').replace(/'/g, '\\\'')}'`
+  else
+    return `${quote}\n${lines.map(i => i ? indentNext + i : '').join('\n').replace(/`/g, '\\`').replace(/\${/g, '\\${')}\n${indent}${quote}`
 }
 
 const startRegex = /(?:toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot)\s*\(\s*[\w_$]*(['"`\)])/m

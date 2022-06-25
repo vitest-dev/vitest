@@ -3,12 +3,12 @@ import fg from 'fast-glob'
 import { execa } from 'execa'
 import { describe, expect, it } from 'vitest'
 
-describe('should fails', async() => {
+describe('should fails', async () => {
   const root = resolve(__dirname, '../fixtures')
   const files = await fg('*.test.ts', { cwd: root })
 
   for (const file of files) {
-    it(file, async() => {
+    it(file, async () => {
       // in Windows child_process is very unstable, we skip testing it
       if (process.platform === 'win32' && process.env.CI)
         return
@@ -32,6 +32,7 @@ describe('should fails', async() => {
         .reverse()
         .find(i => i.includes('Error: '))
         ?.trim()
+        .replace(root, '<rootDir>')
       expect(msg).toMatchSnapshot(file)
     }, 10000)
   }

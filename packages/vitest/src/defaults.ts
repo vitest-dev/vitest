@@ -1,4 +1,7 @@
-import type { ResolvedC8Options, UserConfig } from './types'
+// rollup dts building will external vitest
+// so output dts entry using vitest to import internal types
+// eslint-disable-next-line no-restricted-imports
+import type { ResolvedC8Options, UserConfig } from 'vitest'
 
 export const defaultInclude = ['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']
 export const defaultExclude = ['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**']
@@ -30,11 +33,25 @@ const coverageConfigDefaults = {
   extension: ['.js', '.cjs', '.mjs', '.ts', '.tsx', '.jsx', '.vue', '.svelte'],
 } as ResolvedC8Options
 
-export const configDefaults: UserConfig = Object.freeze({
+export const fakeTimersDefaults = {
+  loopLimit: 10_000,
+  shouldClearNativeTimers: true,
+  toFake: [
+    'setTimeout',
+    'clearTimeout',
+    'setInterval',
+    'clearInterval',
+    'setImmediate',
+    'clearImmediate',
+    'Date',
+  ],
+} as NonNullable<UserConfig['fakeTimers']>
+
+const config = {
   allowOnly: !process.env.CI,
   watch: !process.env.CI,
   globals: false,
-  environment: 'node',
+  environment: 'node' as const,
   threads: true,
   clearMocks: false,
   restoreMocks: false,
@@ -44,7 +61,8 @@ export const configDefaults: UserConfig = Object.freeze({
   testTimeout: 5000,
   hookTimeout: 10000,
   isolate: true,
-  watchIgnore: [/\/node_modules\//, /\/dist\//],
+  watchExclude: ['**/node_modules/**', '**/dist/**'],
+  forceRerunTriggers: [],
   update: false,
   reporters: [],
   silent: false,
@@ -52,5 +70,12 @@ export const configDefaults: UserConfig = Object.freeze({
   ui: false,
   uiBase: '/__vitest__/',
   open: true,
+  css: {
+    include: [/\.module\./],
+  },
   coverage: coverageConfigDefaults,
-})
+  fakeTimers: fakeTimersDefaults,
+  maxConcurrency: 5,
+}
+
+export const configDefaults: Required<Pick<UserConfig, keyof typeof config>> = Object.freeze(config)

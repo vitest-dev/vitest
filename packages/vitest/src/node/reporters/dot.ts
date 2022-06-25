@@ -1,4 +1,5 @@
 import type { UserConsoleLog } from '../../types'
+import { setTimeout } from '../../utils'
 import { BaseReporter } from './base'
 import { createDotRenderer } from './renderers/dotRenderer'
 import type { createListRenderer } from './renderers/listRenderer'
@@ -16,10 +17,10 @@ export class DotReporter extends BaseReporter {
     }
   }
 
-  async onFinished(files = this.ctx.state.getFiles()) {
+  async onFinished(files = this.ctx.state.getFiles(), errors = this.ctx.state.getUnhandledErrors()) {
     await this.stopListRender()
     this.ctx.log()
-    await super.onFinished(files)
+    await super.onFinished(files, errors)
   }
 
   async onWatcherStart() {

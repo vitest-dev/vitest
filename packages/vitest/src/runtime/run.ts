@@ -1,14 +1,17 @@
-import { performance } from 'perf_hooks'
-import type { File, HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from '../types'
+import limit from 'p-limit'
+import type { File, HookCleanupCallback, HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from '../types'
 import { vi } from '../integrations/vi'
 import { getSnapshotClient } from '../integrations/snapshot/chai'
-import { getFullName, hasFailed, hasTests, partitionSuiteChildren } from '../utils'
-import { getState, setState } from '../integrations/chai/jest-expect'
+import { clearTimeout, getFullName, getWorkerState, hasFailed, hasTests, partitionSuiteChildren, setTimeout } from '../utils'
 import { takeCoverage } from '../integrations/coverage'
+import { getState, setState } from '../integrations/chai/jest-expect'
+import { GLOBAL_EXPECT } from '../integrations/chai/constants'
 import { getFn, getHooks } from './map'
 import { rpc } from './rpc'
 import { collectTests } from './collect'
 import { processError } from './error'
+
+const now = Date.now
 
 function updateSuiteHookState(suite: Task, name: keyof SuiteHooks, state: TaskState) {
   if (!suite.result)
@@ -22,21 +25,37 @@ function updateSuiteHookState(suite: Task, name: keyof SuiteHooks, state: TaskSt
   }
 }
 
-export async function callSuiteHook<T extends keyof SuiteHooks>(suite: Suite, currentTask: Task, name: T, args: SuiteHooks[T][0] extends HookListener<infer A> ? A : never) {
-  if (name === 'beforeEach' && suite.suite)
-    await callSuiteHook(suite.suite, currentTask, name, args)
+export async function callSuiteHook<T extends keyof SuiteHooks>(
+  suite: Suite,
+  currentTask: Task,
+  name: T,
+  args: SuiteHooks[T][0] extends HookListener<infer A, any> ? A : never,
+): Promise<HookCleanupCallback[]> {
+  const callbacks: HookCleanupCallback[] = []
+  if (name === 'beforeEach' && suite.suite) {
+    callbacks.push(
+      ...await callSuiteHook(suite.suite, currentTask, name, args),
+    )
+  }
 
   updateSuiteHookState(currentTask, name, 'run')
-  await Promise.all(getHooks(suite)[name].map(fn => fn(...(args as any))))
+  callbacks.push(
+    ...await Promise.all(getHooks(suite)[name].map(fn => fn(...(args as any)))),
+  )
   updateSuiteHookState(currentTask, name, 'pass')
 
-  if (name === 'afterEach' && suite.suite)
-    await callSuiteHook(suite.suite, currentTask, name, args)
+  if (name === 'afterEach' && suite.suite) {
+    callbacks.push(
+      ...await callSuiteHook(suite.suite, currentTask, name, args),
+    )
+  }
+
+  return callbacks
 }
 
-const packs = new Map<string, TaskResult|undefined>()
+const packs = new Map<string, TaskResult | undefined>()
 let updateTimer: any
-let previousUpdate: Promise<void>|undefined
+let previousUpdate: Promise<void> | undefined
 
 function updateTask(task: Task) {
   packs.set(task.id, task.result)
@@ -59,42 +78,57 @@ async function sendTasksUpdate() {
 }
 
 export async function runTest(test: Test) {
-  if (test.mode !== 'run')
+  if (test.mode !== 'run') {
+    getSnapshotClient().skipTestSnapshots(test)
     return
+  }
 
   if (test.result?.state === 'fail') {
     updateTask(test)
     return
   }
 
-  const start = performance.now()
+  const start = now()
 
   test.result = {
     state: 'run',
+    startTime: start,
   }
   updateTask(test)
 
   clearModuleMocks()
 
-  getSnapshotClient().setTest(test)
+  await getSnapshotClient().setTest(test)
 
-  __vitest_worker__.current = test
+  const workerState = getWorkerState()
 
+  workerState.current = test
+
+  let beforeEachCleanups: HookCleanupCallback[] = []
   try {
-    await callSuiteHook(test.suite, test, 'beforeEach', [test, test.suite])
+    beforeEachCleanups = await callSuiteHook(test.suite, test, 'beforeEach', [test.context, test.suite])
     setState({
       assertionCalls: 0,
       isExpectingAssertions: false,
       isExpectingAssertionsError: null,
       expectedAssertionsNumber: null,
-      expectedAssertionsNumberError: null,
+      expectedAssertionsNumberErrorGen: null,
       testPath: test.suite.file?.filepath,
       currentTestName: getFullName(test),
-    })
+    }, (globalThis as any)[GLOBAL_EXPECT])
     await getFn(test)()
-    const { assertionCalls, expectedAssertionsNumber, expectedAssertionsNumberError, isExpectingAssertions, isExpectingAssertionsError } = getState()
+    const {
+      assertionCalls,
+      expectedAssertionsNumber,
+      expectedAssertionsNumberErrorGen,
+      isExpectingAssertions,
+      isExpectingAssertionsError,
+      // @ts-expect-error local is private
+    } = test.context._local
+      ? test.context.expect.getState()
+      : getState((globalThis as any)[GLOBAL_EXPECT])
     if (expectedAssertionsNumber !== null && assertionCalls !== expectedAssertionsNumber)
-      throw expectedAssertionsNumberError
+      throw expectedAssertionsNumberErrorGen!()
     if (isExpectingAssertions === true && assertionCalls === 0)
       throw isExpectingAssertionsError
 
@@ -106,7 +140,8 @@ export async function runTest(test: Test) {
   }
 
   try {
-    await callSuiteHook(test.suite, test, 'afterEach', [test, test.suite])
+    await callSuiteHook(test.suite, test, 'afterEach', [test.context, test.suite])
+    await Promise.all(beforeEachCleanups.map(i => i?.()))
   }
   catch (e) {
     test.result.state = 'fail'
@@ -127,9 +162,12 @@ export async function runTest(test: Test) {
 
   getSnapshotClient().clearTest()
 
-  test.result.duration = performance.now() - start
+  test.result.duration = now() - start
 
-  __vitest_worker__.current = undefined
+  if (workerState.config.logHeapUsage)
+    test.result.heap = process.memoryUsage().heapUsed
+
+  workerState.current = undefined
 
   updateTask(test)
 }
@@ -139,7 +177,8 @@ function markTasksAsSkipped(suite: Suite) {
     t.mode = 'skip'
     t.result = { ...t.result, state: 'skip' }
     updateTask(t)
-    if (t.type === 'suite') markTasksAsSkipped(t)
+    if (t.type === 'suite')
+      markTasksAsSkipped(t)
   })
 }
 
@@ -150,13 +189,16 @@ export async function runSuite(suite: Suite) {
     return
   }
 
-  const start = performance.now()
+  const start = now()
 
   suite.result = {
     state: 'run',
+    startTime: start,
   }
 
   updateTask(suite)
+
+  const workerState = getWorkerState()
 
   if (suite.mode === 'skip') {
     suite.result.state = 'skip'
@@ -166,25 +208,31 @@ export async function runSuite(suite: Suite) {
   }
   else {
     try {
-      await callSuiteHook(suite, suite, 'beforeAll', [suite])
+      const beforeAllCleanups = await callSuiteHook(suite, suite, 'beforeAll', [suite])
 
       for (const tasksGroup of partitionSuiteChildren(suite)) {
         if (tasksGroup[0].concurrent === true) {
-          await Promise.all(tasksGroup.map(c => runSuiteChild(c)))
+          const mutex = limit(workerState.config.maxConcurrency)
+          await Promise.all(tasksGroup.map(c => mutex(() => runSuiteChild(c))))
         }
         else {
           for (const c of tasksGroup)
             await runSuiteChild(c)
         }
       }
+
       await callSuiteHook(suite, suite, 'afterAll', [suite])
+      await Promise.all(beforeAllCleanups.map(i => i?.()))
     }
     catch (e) {
       suite.result.state = 'fail'
       suite.result.error = processError(e)
     }
   }
-  suite.result.duration = performance.now() - start
+  suite.result.duration = now() - start
+
+  if (workerState.config.logHeapUsage)
+    suite.result.heap = process.memoryUsage().heapUsed
 
   if (suite.mode === 'run') {
     if (!hasTests(suite)) {
@@ -228,18 +276,19 @@ export async function startTests(paths: string[], config: ResolvedConfig) {
   const files = await collectTests(paths, config)
 
   rpc().onCollected(files)
+  getSnapshotClient().clear()
 
   await runFiles(files, config)
 
   takeCoverage()
 
-  await getSnapshotClient().saveSnap()
+  await getSnapshotClient().saveCurrent()
 
   await sendTasksUpdate()
 }
 
 export function clearModuleMocks() {
-  const { clearMocks, mockReset, restoreMocks } = __vitest_worker__.config
+  const { clearMocks, mockReset, restoreMocks } = getWorkerState().config
 
   // since each function calls another, we can just call one
   if (restoreMocks)

@@ -1,7 +1,9 @@
+import type { ChaiPlugin, MatcherState } from '../../types/chai'
+import { GLOBAL_EXPECT } from './constants'
+import { getState } from './jest-expect'
 import * as matcherUtils from './jest-matcher-utils'
 
 import { equals, isA } from './jest-utils'
-import type { ChaiPlugin, MatcherState } from './types'
 
 export interface AsymmetricMatcherInterface {
   asymmetricMatch(other: unknown): boolean
@@ -18,8 +20,9 @@ export abstract class AsymmetricMatcher<
 
   constructor(protected sample: T, protected inverse = false) {}
 
-  protected getMatcherContext(): State {
+  protected getMatcherContext(expect?: Vi.ExpectStatic): State {
     return {
+      ...getState(expect || (globalThis as any)[GLOBAL_EXPECT]),
       equals,
       isNot: this.inverse,
       utils: matcherUtils,
@@ -105,7 +108,6 @@ export class ObjectContaining extends AsymmetricMatcher<Record<string, unknown>>
 
     let result = true
 
-    // eslint-disable-next-line no-restricted-syntax
     for (const property in this.sample) {
       if (!this.hasProperty(other, property) || !equals(this.sample[property], other[property])) {
         result = false
@@ -125,12 +127,12 @@ export class ObjectContaining extends AsymmetricMatcher<Record<string, unknown>>
   }
 }
 
-export class ArrayContaining extends AsymmetricMatcher<Array<unknown>> {
-  constructor(sample: Array<unknown>, inverse = false) {
+export class ArrayContaining<T = unknown> extends AsymmetricMatcher<Array<T>> {
+  constructor(sample: Array<T>, inverse = false) {
     super(sample, inverse)
   }
 
-  asymmetricMatch(other: Array<unknown>) {
+  asymmetricMatch(other: Array<T>) {
     if (!Array.isArray(this.sample)) {
       throw new TypeError(
         `You must provide an array to ${this.toString()}, not '${
@@ -285,7 +287,7 @@ export const JestAsymmetricMatchers: ChaiPlugin = (chai, utils) => {
   utils.addMethod(
     chai.expect,
     'arrayContaining',
-    (expected: any) => new ArrayContaining(expected),
+    <T = any>(expected: Array<T>) => new ArrayContaining<T>(expected),
   )
 
   utils.addMethod(
@@ -298,7 +300,7 @@ export const JestAsymmetricMatchers: ChaiPlugin = (chai, utils) => {
   ;(chai.expect as any).not = {
     stringContaining: (expected: string) => new StringContaining(expected, true),
     objectContaining: (expected: any) => new ObjectContaining(expected, true),
-    arrayContaining: (expected: unknown[]) => new ArrayContaining(expected, true),
+    arrayContaining: <T = unknown>(expected: Array<T>) => new ArrayContaining<T>(expected, true),
     stringMatching: (expected: string | RegExp) => new StringMatching(expected, true),
   }
 }

@@ -4,6 +4,7 @@ import resolve from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import alias from '@rollup/plugin-alias'
+import { defineConfig } from 'rollup'
 import pkg from './package.json'
 
 const entries = {
@@ -18,8 +19,10 @@ const entries = {
 const external = [
   ...Object.keys(pkg.dependencies || {}),
   ...Object.keys(pkg.peerDependencies || {}),
+  'pathe',
   'birpc',
   'vite',
+  'url',
 ]
 
 const plugins = [
@@ -38,33 +41,41 @@ const plugins = [
   }),
 ]
 
-export default () => [
+function onwarn(message) {
+  if (message.code === 'EMPTY_BUNDLE')
+    return
+  console.error(message)
+}
+
+export default defineConfig([
   {
     input: entries,
     output: {
       dir: 'dist',
       format: 'esm',
-      sourcemap: 'inline',
-      entryFileNames: '[name].js',
+      entryFileNames: '[name].mjs',
+      chunkFileNames: 'chunk-[name].mjs',
     },
     external,
     plugins,
+    onwarn,
   },
   {
     input: entries,
     output: {
       dir: 'dist',
       format: 'cjs',
-      sourcemap: 'inline',
       entryFileNames: '[name].cjs',
+      chunkFileNames: 'chunk-[name].cjs',
     },
     external,
     plugins,
+    onwarn,
   },
   {
     input: entries,
     output: {
-      dir: process.cwd(),
+      dir: 'dist',
       entryFileNames: '[name].d.ts',
       format: 'esm',
     },
@@ -72,5 +83,6 @@ export default () => [
     plugins: [
       dts({ respectExternal: true }),
     ],
+    onwarn,
   },
-]
+])

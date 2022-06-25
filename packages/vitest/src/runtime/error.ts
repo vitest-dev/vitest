@@ -1,5 +1,7 @@
 import { format } from 'util'
+import { util } from 'chai'
 import { stringify } from '../integrations/chai/jest-matcher-utils'
+import { deepClone, getType } from '../utils'
 
 const OBJECT_PROTO = Object.getPrototypeOf({})
 
@@ -47,6 +49,10 @@ export function serializeError(val: any, seen = new WeakMap()): any {
   }
 }
 
+function normalizeErrorMessage(message: string) {
+  return message.replace(/__vite_ssr_import_\d+__\./g, '')
+}
+
 export function processError(err: any) {
   if (!err)
     return err
@@ -57,15 +63,79 @@ export function processError(err: any) {
   if (err.name)
     err.nameStr = String(err.name)
 
+  const clonedActual = deepClone(err.actual)
+  const clonedExpected = deepClone(err.expected)
+
+  const { replacedActual, replacedExpected } = replaceAsymmetricMatcher(clonedActual, clonedExpected)
+
+  err.actual = replacedActual
+  err.expected = replacedExpected
+
   if (typeof err.expected !== 'string')
     err.expected = stringify(err.expected)
   if (typeof err.actual !== 'string')
     err.actual = stringify(err.actual)
 
+  // some Error implementations don't allow rewriting message
+  try {
+    if (typeof err.message === 'string')
+      err.message = normalizeErrorMessage(err.message)
+
+    if (typeof err.cause === 'object' && err.cause.message === 'string')
+      err.cause.message = normalizeErrorMessage(err.cause.message)
+  }
+  catch {}
+
   try {
     return serializeError(err)
   }
   catch (e: any) {
-    return serializeError(new Error(`Failed to fully serialize error: ${e?.message}.\nInner error message: ${err?.message}`))
+    return serializeError(new Error(`Failed to fully serialize error: ${e?.message}\nInner error message: ${err?.message}`))
+  }
+}
+
+function isAsymmetricMatcher(data: any) {
+  const type = getType(data)
+  return type === 'Object' && typeof data.asymmetricMatch === 'function'
+}
+
+function isReplaceable(obj1: any, obj2: any) {
+  const obj1Type = getType(obj1)
+  const obj2Type = getType(obj2)
+  return obj1Type === obj2Type && obj1Type === 'Object'
+}
+
+export function replaceAsymmetricMatcher(actual: any, expected: any, actualReplaced = new WeakMap(), expectedReplaced = new WeakMap()) {
+  if (!isReplaceable(actual, expected))
+    return { replacedActual: actual, replacedExpected: expected }
+  if (actualReplaced.has(actual) || expectedReplaced.has(expected))
+    return { replacedActual: actual, replacedExpected: expected }
+  actualReplaced.set(actual, true)
+  expectedReplaced.set(expected, true)
+  util.getOwnEnumerableProperties(expected).forEach((key) => {
+    const expectedValue = expected[key]
+    const actualValue = actual[key]
+    if (isAsymmetricMatcher(expectedValue)) {
+      if (expectedValue.asymmetricMatch(actualValue))
+        actual[key] = expectedValue
+    }
+    else if (isAsymmetricMatcher(actualValue)) {
+      if (actualValue.asymmetricMatch(expectedValue))
+        expected[key] = actualValue
+    }
+    else if (isReplaceable(actualValue, expectedValue)) {
+      const replaced = replaceAsymmetricMatcher(
+        actualValue,
+        expectedValue,
+        actualReplaced,
+        expectedReplaced,
+      )
+      actual[key] = replaced.replacedActual
+      expected[key] = replaced.replacedExpected
+    }
+  })
+  return {
+    replacedActual: actual,
+    replacedExpected: expected,
   }
 }

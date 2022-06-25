@@ -2,13 +2,17 @@ import c from 'picocolors'
 import { isPackageExists } from 'local-pkg'
 import { resolve } from 'pathe'
 import type { Suite, Task } from '../types'
+import { getWorkerState } from '../utils/global'
 import { getNames } from './tasks'
 
 export * from './tasks'
-export * from './path'
 export * from './base'
+export * from './global'
+export * from './timers'
 
-export const isWindows = process.platform === 'win32'
+export const isNode = typeof process !== 'undefined' && typeof process.platform !== 'undefined'
+export const isBrowser = typeof window !== 'undefined'
+export const isWindows = isNode && process.platform === 'win32'
 
 /**
  * Partition in tasks groups by consecutive concurrent
@@ -29,6 +33,23 @@ export function partitionSuiteChildren(suite: Suite) {
     tasksGroups.push(tasksGroup)
 
   return tasksGroups
+}
+
+export function resetModules() {
+  const modules = getWorkerState().moduleCache
+  const vitestPaths = [
+    // Vitest
+    /\/vitest\/dist\//,
+    // yarn's .store folder
+    /vitest-virtual-\w+\/dist/,
+    // cnpm
+    /@vitest\/dist/,
+  ]
+  modules.forEach((_, path) => {
+    if (vitestPaths.some(re => re.test(path)))
+      return
+    modules.delete(path)
+  })
 }
 
 export function getFullName(task: Task) {
@@ -108,3 +129,13 @@ export function getCallLastIndex(code: string) {
 }
 
 export { resolve as resolvePath }
+
+// AggregateError is supported in Node.js 15.0.0+
+class AggregateErrorPonyfill extends Error {
+  errors: unknown[]
+  constructor(errors: Iterable<unknown>, message = '') {
+    super(message)
+    this.errors = [...errors]
+  }
+}
+export { AggregateErrorPonyfill as AggregateError }

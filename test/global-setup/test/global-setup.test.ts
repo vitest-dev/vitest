@@ -1,6 +1,7 @@
-import fetch from 'node-fetch'
+import fetch from 'node-fetch-native'
+import { expect } from 'vitest'
 
-beforeEach(async() => {
+beforeEach(async () => {
   await new Promise((resolve) => {
     setTimeout(() => {
       resolve(null)
@@ -8,7 +9,7 @@ beforeEach(async() => {
   })
 })
 
-afterEach(async() => {
+afterEach(async () => {
   await new Promise((resolve) => {
     setTimeout(() => {
       resolve(null)
@@ -16,12 +17,12 @@ afterEach(async() => {
   })
 })
 
-test('server running', async() => {
+test('server running', async () => {
   const res = await (await fetch('http://localhost:9876')).text()
   expect(res).toBe('Hello Vitest\n')
 })
 
-test('vite instance running', async() => {
+test('vite instance running', async () => {
   const res = await (await fetch('http://localhost:9988')).text()
   expect(res).toContain('<script type="module" src="/@vite/client">')
   expect(res).toContain('Hello Vitest\n')

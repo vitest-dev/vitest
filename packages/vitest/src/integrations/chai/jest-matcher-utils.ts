@@ -2,9 +2,10 @@
 // if you need more, just ask
 
 import c from 'picocolors'
-import type { Formatter } from 'picocolors/types'
+import type { PrettyFormatOptions } from 'pretty-format'
 import { format as prettyFormat, plugins as prettyFormatPlugins } from 'pretty-format'
 import { unifiedDiff } from '../../node/diff'
+import type { DiffOptions, MatcherHintOptions } from '../../types/matcher-utils'
 
 export const EXPECTED_COLOR = c.green
 export const RECEIVED_COLOR = c.red
@@ -29,17 +30,6 @@ const PLUGINS = [
   Immutable,
   AsymmetricMatcher,
 ]
-
-export interface MatcherHintOptions {
-  comment?: string
-  expectedColor?: Formatter
-  isDirectExpectCall?: boolean
-  isNot?: boolean
-  promise?: string
-  receivedColor?: Formatter
-  secondArgument?: string
-  secondArgumentColor?: Formatter
-}
 
 export function matcherHint(
   matcherName: string,
@@ -112,7 +102,7 @@ const SPACE_SYMBOL = '\u{00B7}' // middle dot
 const replaceTrailingSpaces = (text: string): string =>
   text.replace(/\s+$/gm, spaces => SPACE_SYMBOL.repeat(spaces.length))
 
-export const stringify = (object: unknown, maxDepth = 10): string => {
+export function stringify(object: unknown, maxDepth = 10, options?: PrettyFormatOptions): string {
   const MAX_LENGTH = 10000
   let result
 
@@ -121,6 +111,7 @@ export const stringify = (object: unknown, maxDepth = 10): string => {
       maxDepth,
       // min: true,
       plugins: PLUGINS,
+      ...options,
     })
   }
   catch {
@@ -129,6 +120,7 @@ export const stringify = (object: unknown, maxDepth = 10): string => {
       maxDepth,
       // min: true,
       plugins: PLUGINS,
+      ...options,
     })
   }
 
@@ -142,30 +134,8 @@ export const printReceived = (object: unknown): string =>
 export const printExpected = (value: unknown): string =>
   EXPECTED_COLOR(replaceTrailingSpaces(stringify(value)))
 
-export interface DiffOptions {
-  aAnnotation?: string
-  aColor?: Formatter
-  aIndicator?: string
-  bAnnotation?: string
-  bColor?: Formatter
-  bIndicator?: string
-  changeColor?: Formatter
-  changeLineTrailingSpaceColor?: Formatter
-  commonColor?: Formatter
-  commonIndicator?: string
-  commonLineTrailingSpaceColor?: Formatter
-  contextLines?: number
-  emptyFirstOrLastLinePlaceholder?: string
-  expand?: boolean
-  includeChangeCounts?: boolean
-  omitAnnotationLines?: boolean
-  patchColor?: Formatter
-  // pretty-format type
-  compareKeys?: any
-}
-
 // TODO: do something with options
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function diff(a: any, b: any, options?: DiffOptions) {
-  return unifiedDiff(stringify(a), stringify(b))
+  return unifiedDiff(stringify(b), stringify(a))
 }

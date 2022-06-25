@@ -1,23 +1,9 @@
-import type { Reporter } from 'vitest'
-import type { Vitest } from 'vitest/src/node'
-
-import { defineConfig } from 'vite'
-
-class TestReporter implements Reporter {
-  ctx!: Vitest
-
-  onInit(ctx: Vitest) {
-    this.ctx = ctx
-  }
-
-  onFinished() {
-    this.ctx.log('hello from custom reporter')
-  }
-}
+import { defineConfig } from 'vitest/config'
+import TestReporter from './src/custom-reporter'
 
 export default defineConfig({
   test: {
     include: ['tests/reporters.spec.ts'],
-    reporters: new TestReporter(),
+    reporters: [new TestReporter()],
   },
 })

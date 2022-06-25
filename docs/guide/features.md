@@ -1,143 +1,42 @@
+---
+outline: deep
+---
+
 # Features
 
 <FeaturesList class="!gap-1 text-lg" />
 
 ## Shared config between test, dev and build
 
-Vite's config, transformers, resolvers, and plugins. Use the same setup from your app to run the tests
+Vite's config, transformers, resolvers, and plugins. Use the same setup from your app to run the tests.
+
+Learn more at [Configuring Vitest](/guide/#configuring-vitest)
 
 ## Watch Mode
 
-Smart & instant watch mode, [like HMR for tests!](https://twitter.com/antfu7/status/1468233216939245579)
-
 ```bash
-$ vitest -w
+$ vitest
 ```
 
-Vitest smartly searches the module graph and only rerun the related tests (just like how HMR works in Vite!).
+When you modify your source code or the test files, Vitest smartly searches the module graph and only rerun the related tests, [just like how HMR works in Vite!](https://twitter.com/antfu7/status/1468233216939245579)
 
-`vitest`, `vitest dev` and `vitest watch` are aliases and they all start vitest in watch mode by default. They also depend on the `CI` environment variable, which if it appears to be defined, Vitest is going to run the tests only one time and not in watch mode, like `vitest run`.
-
-
-## Smooth integration with UI Frameworks
-
-Components testing for Vue, React, Svelte, Lit and more
+`vitest` starts in `watch mode` **by default in development environment** and `run mode` in CI environment (when `process.env.CI` presents) smartly. You can use `vitest watch` or `vitest run` to explicitly specify the desired mode.
 
 ## Common web idioms out-of-the-box
 
-Out-of-box TypeScript / JSX support / PostCSS
-
-## ESM first
-
-ESM first, top level await
+Out-of-box ES Module / TypeScript / JSX support / PostCSS
 
 ## Threads
 
-Workers multi-threading via [tinypool](https://github.com/Aslemammad/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina)), allowing tests to run simultaneously. Threads are enabled by default Vitest, and can be disabled passing `--no-threads` in the CLI.
+Workers multi-threading via [tinypool](https://github.com/Aslemammad/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina)), allowing tests to run simultaneously. Threads are enabled by default in Vitest, and can be disabled passing `--no-threads` in the CLI.
 
 Vitest also isolates each file's environment so env mutations in one file don't affect others. Isolation can be disabled by passing `--no-isolate` to the CLI (trading of correctness for run performance).
 
-## Filtering
+## Test Filtering
 
-Filtering, timeouts, concurrent for suite and tests
+Vitest provided many ways to narrow down the tests to run to speed up and focus during the development.
 
-### CLI
-
-You can use CLI to filter test files by name:
-
-```bash
-$ vitest basic
-```
-
-Will only execute test files that contain `basic`, e.g.
-
-```
-basic.test.ts
-basic-foo.test.ts
-```
-
-### Specifying a Timeout
-
-You can optionally pass a timeout in milliseconds as third argument to tests. The default is 5 seconds.
-
-```ts
-import { test } from 'vitest'
-
-test('name', async() => { /* ... */ }, 1000)
-```
-
-Hooks also can receive a timeout, with the same 5 seconds default.
-
-```ts
-import { beforeAll } from 'vitest'
-
-beforeAll(async() => { /* ... */ }, 1000)
-```
-
-### Skipping suites and tests
-
-Use `.skip` to avoid running certain suites or tests
-
-```ts
-import { assert, describe, it } from 'vitest'
-
-describe.skip('skipped suite', () => {
-  it('test', () => {
-    // Suite skipped, no error
-    assert.equal(Math.sqrt(4), 3)
-  })
-})
-
-describe('suite', () => {
-  it.skip('skipped test', () => {
-    // Test skipped, no error
-    assert.equal(Math.sqrt(4), 3)
-  })
-})
-```
-
-### Selecting suites and tests to run
-
-Use `.only` to only run certain suites or tests
-
-```ts
-import { assert, describe, it } from 'vitest'
-
-// Only this suite (and others marked with only) are run
-describe.only('suite', () => {
-  it('test', () => {
-    assert.equal(Math.sqrt(4), 3)
-  })
-})
-
-describe('another suite', () => {
-  it('skipped test', () => {
-    // Test skipped, as tests are running in Only mode
-    assert.equal(Math.sqrt(4), 3)
-  })
-
-  it.only('test', () => {
-    // Only this test (and others marked with only) are run
-    assert.equal(Math.sqrt(4), 2)
-  })
-})
-```
-
-### Unimplemented suites and tests
-
-Use `.todo` to stub suites and tests that should be implemented
-
-```ts
-import { describe, it } from 'vitest'
-
-// An entry will be shown in the report for this suite
-describe.todo('unimplemented suite')
-
-// An entry will be shown in the report for this test
-describe('suite', () => {
-  it.todo('unimplemented test')
-})
-```
+Learn more about [Test Filtering](./filtering.md)
 
 ## Running tests concurrently
 
@@ -148,9 +47,9 @@ import { describe, it } from 'vitest'
 
 // The two tests marked with concurrent will be run in parallel
 describe('suite', () => {
-  it('serial test', async() => { /* ... */ })
-  it.concurrent('concurrent test 1', async() => { /* ... */ })
-  it.concurrent('concurrent test 2', async() => { /* ... */ })
+  it('serial test', async () => { /* ... */ })
+  it.concurrent('concurrent test 1', async () => { /* ... */ })
+  it.concurrent('concurrent test 2', async () => { /* ... */ })
 })
 ```
 
@@ -161,9 +60,9 @@ import { describe, it } from 'vitest'
 
 // All tests within this suite will be run in parallel
 describe.concurrent('suite', () => {
-  it('concurrent test 1', async() => { /* ... */ })
-  it('concurrent test 2', async() => { /* ... */ })
-  it.concurrent('concurrent test 3', async() => { /* ... */ })
+  it('concurrent test 1', async () => { /* ... */ })
+  it('concurrent test 2', async () => { /* ... */ })
+  it.concurrent('concurrent test 3', async () => { /* ... */ })
 })
 ```
 
@@ -171,7 +70,18 @@ You can also use `.skip`, `.only`, and `.todo` with concurrent suites and tests.
 
 ## Snapshot
 
-[Jest Snapshot](https://jestjs.io/docs/snapshot-testing) support
+[Jest-compatible](https://jestjs.io/docs/snapshot-testing) snapshot support.
+
+```ts
+import { expect, it } from 'vitest'
+
+it('renders correctly', () => {
+  const result = render()
+  expect(result).toMatchSnapshot()
+})
+```
+
+Learn more at [Snapshot](/guide/snapshot)
 
 ## Chai and Jest expect compatibility
 
@@ -197,7 +107,7 @@ fn.mockImplementation(arg => arg)
 
 fn('world', 2)
 
-expect(fn.mock.returns[1]).toBe('world')
+expect(fn.mock.results[1].value).toBe('world')
 ```
 
 Vitest supports both [happy-dom](https://github.com/capricorn86/happy-dom) or [jsdom](https://github.com/jsdom/jsdom) for mocking DOM and browser APIs. They don't come with Vitest, you might need to install them:
@@ -220,6 +130,8 @@ export default defineConfig({
   },
 })
 ```
+
+Learn more at [Mocking](/guide/mocking)
 
 ## Coverage
 
@@ -251,11 +163,9 @@ export default defineConfig({
 
 ## In-source testing
 
-Vitest also provides a way to run tests with in your source code along with the implementation, simliar to [Rust's module tests](https://doc.rust-lang.org/book/ch11-03-test-organization.html#the-tests-module-and-cfgtest).
+Vitest also provides a way to run tests with in your source code along with the implementation, similar to [Rust's module tests](https://doc.rust-lang.org/book/ch11-03-test-organization.html#the-tests-module-and-cfgtest).
 
 This makes the tests share the same closure as the implementations and able to test against private states without exporting. Meanwhile, it also brings the closer feedback loop for development.
-
-To get started, put a `if (import.meta.vitest)` block at the end of your source file and write some tests inside it. For example:
 
 ```ts
 // src/index.ts
@@ -276,61 +186,4 @@ if (import.meta.vitest) {
 }
 ```
 
-Update the `includeSource` config for Vitest to grab the files under `src/`:
-
-```ts
-// vite.config.ts
-import { defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  test: {
-    includeSource: ['src/**/*.{js,ts}'],
-  },
-})
-```
-
-Then you can start to test!
-
-```bash
-$ npx vitest
-```
-
-For production build, you will need to set the `define` options in your config file, letting the bundler to do the dead code elimination. For example, in Vite
-
-```diff
-// vite.config.ts
-import { defineConfig } from 'vitest/config'
-
-export default defineConfig({
-+ define: {
-+   'import.meta.vitest': false,
-+ },
-  test: {
-    includeSource: ['src/**/*.{js,ts}']
-  },
-})
-```
-
-To get TypeScript support for `import.meta.vitest`, add `vitest/importMeta` to your `tsconfig.json`:
-
-```diff
-// tsconfig.json
-{
-  "compilerOptions": {
-    "types": [
-+     "vitest/importMeta"
-    ]
-  }
-}
-```
-
-Reference to [`test/import-meta`](https://github.com/vitest-dev/vitest/tree/main/test/import-meta) for the full example.
-
-
-This feature could be useful for:
-
-- Unit testing for small-scoped functions or utilities
-- Prototyping
-- Inline Assertion
-
-It's recommended to **use separate test files instead** for more complex tests like components or E2E testing.
+Learn more at [In-source testing](/guide/in-source)

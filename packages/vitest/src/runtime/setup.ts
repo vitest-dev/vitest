@@ -1,13 +1,15 @@
-import { Console } from 'console'
-import { Writable } from 'stream'
 import { environments } from '../integrations/env'
 import type { ResolvedConfig } from '../types'
-import { toArray } from '../utils'
+import { clearTimeout, getWorkerState, isNode, setTimeout, toArray } from '../utils'
 import * as VitestIndex from '../index'
+import { resetRunOnceCounter } from '../integrations/run-once'
+import { RealDate } from '../integrations/mock/date'
 import { rpc } from './rpc'
 
 let globalSetup = false
 export async function setupGlobalEnv(config: ResolvedConfig) {
+  resetRunOnceCounter()
+
   Object.defineProperty(globalThis, '__vitest_index__', {
     value: VitestIndex,
     enumerable: false,
@@ -22,7 +24,8 @@ export async function setupGlobalEnv(config: ResolvedConfig) {
 
   globalSetup = true
 
-  setupConsoleLogSpy()
+  if (isNode)
+    await setupConsoleLogSpy()
 
   if (config.globals)
     (await import('../integrations/globals')).registerApiGlobally()
@@ -33,26 +36,107 @@ function setupDefines(defines: Record<string, any>) {
     (globalThis as any)[key] = defines[key]
 }
 
-export function setupConsoleLogSpy() {
+export async function setupConsoleLogSpy() {
+  const stdoutBuffer = new Map<string, any[]>()
+  const stderrBuffer = new Map<string, any[]>()
+  const timers = new Map<string, { stdoutTime: number; stderrTime: number; timer: any }>()
+  const unknownTestId = '__vitest__unknown_test__'
+
+  const { Writable } = await import('stream')
+  const { Console } = await import('console')
+
+  // group sync console.log calls with macro task
+  function schedule(taskId: string) {
+    const timer = timers.get(taskId)!
+    const { stdoutTime, stderrTime } = timer
+    clearTimeout(timer.timer)
+    timer.timer = setTimeout(() => {
+      if (stderrTime < stdoutTime) {
+        sendStderr(taskId)
+        sendStdout(taskId)
+      }
+      else {
+        sendStdout(taskId)
+        sendStderr(taskId)
+      }
+    })
+  }
+  function sendStdout(taskId: string) {
+    const buffer = stdoutBuffer.get(taskId)
+    if (!buffer)
+      return
+    const content = buffer.map(i => String(i)).join('')
+    if (!content.trim())
+      return
+    const timer = timers.get(taskId)!
+    rpc().onUserConsoleLog({
+      type: 'stdout',
+      content,
+      taskId,
+      time: timer.stdoutTime || RealDate.now(),
+      size: buffer.length,
+    })
+    stdoutBuffer.set(taskId, [])
+    timer.stdoutTime = 0
+  }
+  function sendStderr(taskId: string) {
+    const buffer = stderrBuffer.get(taskId)
+    if (!buffer)
+      return
+    const content = buffer.map(i => String(i)).join('')
+    if (!content.trim())
+      return
+    const timer = timers.get(taskId)!
+    rpc().onUserConsoleLog({
+      type: 'stderr',
+      content,
+      taskId,
+      time: timer.stderrTime || RealDate.now(),
+      size: buffer.length,
+    })
+    stderrBuffer.set(taskId, [])
+    timer.stderrTime = 0
+  }
+
   const stdout = new Writable({
     write(data, encoding, callback) {
-      rpc().onUserConsoleLog({
-        type: 'stdout',
-        content: String(data),
-        taskId: __vitest_worker__.current?.id,
-        time: Date.now(),
-      })
+      const id = getWorkerState()?.current?.id ?? unknownTestId
+      let timer = timers.get(id)
+      if (timer) {
+        timer.stdoutTime = timer.stdoutTime || RealDate.now()
+      }
+      else {
+        timer = { stdoutTime: RealDate.now(), stderrTime: RealDate.now(), timer: 0 }
+        timers.set(id, timer)
+      }
+      let buffer = stdoutBuffer.get(id)
+      if (!buffer) {
+        buffer = []
+        stdoutBuffer.set(id, buffer)
+      }
+      buffer.push(data)
+      schedule(id)
       callback()
     },
   })
   const stderr = new Writable({
     write(data, encoding, callback) {
-      rpc().onUserConsoleLog({
-        type: 'stderr',
-        content: String(data),
-        taskId: __vitest_worker__.current?.id,
-        time: Date.now(),
-      })
+      const id = getWorkerState()?.current?.id ?? unknownTestId
+      let timer = timers.get(id)
+      if (timer) {
+        timer.stderrTime = timer.stderrTime || RealDate.now()
+      }
+      else {
+        timer = { stderrTime: RealDate.now(), stdoutTime: RealDate.now(), timer: 0 }
+        timers.set(id, timer)
+      }
+      let buffer = stderrBuffer.get(id)
+      if (!buffer) {
+        buffer = []
+        stderrBuffer.set(id, buffer)
+      }
+      buffer.push(data)
+      schedule(id)
       callback()
     },
   })
@@ -81,8 +165,8 @@ export async function withEnv(
 export async function runSetupFiles(config: ResolvedConfig) {
   const files = toArray(config.setupFiles)
   await Promise.all(
-    files.map(async(file) => {
-      __vitest_worker__.moduleCache.delete(file)
+    files.map(async (file) => {
+      getWorkerState().moduleCache.delete(file)
       await import(file)
     }),
   )

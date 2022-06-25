@@ -1,4 +1,5 @@
-import { resolve } from 'pathe'
+import { resolveModule } from 'local-pkg'
+import { normalize, resolve } from 'pathe'
 import c from 'picocolors'
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 
@@ -15,6 +16,8 @@ const extraInlineDeps = [
   /\/vitest\/dist\//,
   // yarn's .store folder
   /vitest-virtual-\w+\/dist/,
+  // cnpm
+  /@vitest\/dist/,
   // Nuxt
   '@nuxt/test-utils',
 ]
@@ -76,14 +79,10 @@ export function resolveConfig(
     options.environment = 'happy-dom'
   }
 
-  const globals = options?.global ?? options.globals
-
   const resolved = {
     ...configDefaults,
     ...options,
     root: viteConfig.root,
-    globals,
-    global: globals,
   } as ResolvedConfig
 
   if (viteConfig.base !== '/')
@@ -91,11 +90,39 @@ export function resolveConfig(
 
   resolved.coverage = resolveC8Options(options.coverage || {}, resolved.root)
 
+  if (options.shard) {
+    if (resolved.watch)
+      throw new Error('You cannot use --shard option with enabled watch')
+
+    const [indexString, countString] = options.shard.split('/')
+    const index = Math.abs(parseInt(indexString, 10))
+    const count = Math.abs(parseInt(countString, 10))
+
+    if (isNaN(count) || count <= 0)
+      throw new Error('--shard <count> must be a positive number')
+
+    if (isNaN(index) || index <= 0 || index > count)
+      throw new Error('--shard <index> must be a positive number less then <count>')
+
+    resolved.shard = { index, count }
+  }
+
   resolved.deps = resolved.deps || {}
   // vitenode will try to import such file with native node,
   // but then our mocker will not work properly
-  resolved.deps.inline ??= []
-  resolved.deps.inline.push(...extraInlineDeps)
+  if (resolved.deps.inline !== true) {
+    // eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error
+    // @ts-ignore ssr is not typed in Vite 2, but defined in Vite 3, so we can't use expect-error
+    const ssrOptions = viteConfig.ssr || {}
+
+    if (ssrOptions.noExternal === true && resolved.deps.inline == null) {
+      resolved.deps.inline = true
+    }
+    else {
+      resolved.deps.inline ??= []
+      resolved.deps.inline.push(...extraInlineDeps)
+    }
+  }
 
   resolved.testNamePattern = resolved.testNamePattern
     ? resolved.testNamePattern instanceof RegExp
@@ -112,7 +139,11 @@ export function resolveConfig(
       : UPDATE_SNAPSHOT
         ? 'all'
         : 'new',
+    resolveSnapshotPath: options.resolveSnapshotPath,
   }
+
+  if (options.resolveSnapshotPath)
+    delete (resolved as UserConfig).resolveSnapshotPath
 
   if (process.env.VITEST_MAX_THREADS)
     resolved.maxThreads = parseInt(process.env.VITEST_MAX_THREADS)
@@ -120,7 +151,12 @@ export function resolveConfig(
   if (process.env.VITEST_MIN_THREADS)
     resolved.minThreads = parseInt(process.env.VITEST_MIN_THREADS)
 
-  resolved.setupFiles = toArray(resolved.setupFiles || []).map(file => resolve(resolved.root, file))
+  resolved.setupFiles = toArray(resolved.setupFiles || []).map(file =>
+    normalize(
+      resolveModule(file, { paths: [resolved.root] })
+        ?? resolve(resolved.root, file),
+    ),
+  )
 
   // the server has been created, we don't need to override vite.server options
   resolved.api = resolveApiConfig(options)
@@ -135,6 +171,13 @@ export function resolveConfig(
   ])).filter(Boolean)
   if (!resolved.reporters.length)
     resolved.reporters.push('default')
+
+  if (resolved.changed)
+    resolved.passWithNoTests ??= true
+
+  resolved.css ??= {}
+  if (typeof resolved.css === 'object')
+    resolved.css.include ??= [/\.module\./]
 
   return resolved
 }

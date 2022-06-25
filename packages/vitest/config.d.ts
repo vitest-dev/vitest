@@ -1,1 +1,1 @@
-export * from './dist/config'
+export * from './dist/config.js'

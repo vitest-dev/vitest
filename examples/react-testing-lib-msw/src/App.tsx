@@ -1,4 +1,3 @@
-
 import * as React from 'react'
 import fetch from 'cross-fetch'
 import { gql, useLazyQuery } from '@apollo/client'
@@ -14,7 +13,7 @@ function App() {
   const [posts, setPosts] = React.useState<Post[]>([])
   const [isLoading, setIsLoading] = React.useState(false)
 
-  const fetchPosts = async() => {
+  const fetchPosts = async () => {
     setIsLoading(true)
     await fetch('https://jsonplaceholder.typicode.com/posts')
       .then(res => res.json())

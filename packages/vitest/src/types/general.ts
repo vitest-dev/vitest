@@ -44,9 +44,11 @@ export interface UserConsoleLog {
   type: 'stdout' | 'stderr'
   taskId?: string
   time: number
+  size: number
 }
 
 export interface Position {
+  source?: string
   line: number
   column: number
 }
@@ -69,6 +71,7 @@ export interface ErrorWithDiff extends Error {
   actual?: any
   expected?: any
   operator?: string
+  type?: string
 }
 
 export interface ModuleGraphData {

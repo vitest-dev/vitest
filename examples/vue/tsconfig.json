@@ -3,5 +3,7 @@
     "target": "esnext",
     "module": "esnext",
     "moduleResolution": "node",
+    "jsx": "preserve",
+    "types": ["vitest/globals"]
   }
 }

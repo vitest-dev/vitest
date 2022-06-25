@@ -1,19 +1,19 @@
 {
-  "name": "@vitest/test-vue",
+  "name": "@vitest/example-vitesse",
   "private": true,
   "scripts": {
     "coverage": "vitest run --coverage",
     "test": "vitest"
   },
   "dependencies": {
-    "vue": "^3.2.24"
+    "vue": "^3.2.36"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^2.2.4",
-    "@vue/test-utils": "^2.0.0-rc.18",
-    "happy-dom": "latest",
-    "unplugin-auto-import": "^0.6.1",
-    "unplugin-vue-components": "^0.17.21",
+    "@vitejs/plugin-vue": "^2.3.3",
+    "@vue/test-utils": "^2.0.0",
+    "jsdom": "^19.0.0",
+    "unplugin-auto-import": "^0.8.5",
+    "unplugin-vue-components": "^0.19.6",
     "vitest": "latest"
   },
   "stackblitz": {

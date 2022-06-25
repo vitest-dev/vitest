@@ -1,23 +1,3 @@
-<template>
-  <div
-    class="fixed inset-0 z-40"
-    :class="modelValue ? '': 'pointer-events-none'"
-  >
-    <div
-      class="bg-base inset-0 absolute transition-opacity duration-500 ease-out"
-      :class="modelValue ? 'opacity-50': 'opacity-0'"
-      @click="$emit('update:modelValue', false)"
-    />
-    <div
-      class="bg-base border-base absolute transition-all duration-200 ease-out"
-      :class="[positionClass, 'scrolls']"
-      :style="modelValue ? {}: {transform}"
-    >
-      <slot />
-    </div>
-  </div>
-</template>
-
 <script setup lang='ts'>
 const props = withDefaults(defineProps<{
   modelValue?: boolean
@@ -61,3 +41,23 @@ const transform = computed(() => {
   }
 })
 </script>
+
+<template>
+  <div
+    class="fixed inset-0 z-40"
+    :class="modelValue ? '' : 'pointer-events-none'"
+  >
+    <div
+      class="bg-base inset-0 absolute transition-opacity duration-500 ease-out"
+      :class="modelValue ? 'opacity-50' : 'opacity-0'"
+      @click="$emit('update:modelValue', false)"
+    />
+    <div
+      class="bg-base border-base absolute transition-all duration-200 ease-out scrolls"
+      :class="[positionClass]"
+      :style="modelValue ? {} : { transform }"
+    >
+      <slot />
+    </div>
+  </div>
+</template>

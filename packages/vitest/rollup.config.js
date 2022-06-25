@@ -1,14 +1,15 @@
 import fs from 'fs'
-import path from 'pathe'
+import { dirname, join, relative, resolve } from 'pathe'
 import esbuild from 'rollup-plugin-esbuild'
 import dts from 'rollup-plugin-dts'
-import resolve from '@rollup/plugin-node-resolve'
+import nodeResolve from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import alias from '@rollup/plugin-alias'
 import license from 'rollup-plugin-license'
 import c from 'picocolors'
 import fg from 'fast-glob'
+import { defineConfig } from 'rollup'
 
 import pkg from './package.json'
 
@@ -18,7 +19,7 @@ const entries = [
   'src/node.ts',
   'src/runtime/worker.ts',
   'src/runtime/entry.ts',
-  'src/integrations/jest-mock.ts',
+  'src/integrations/spy.ts',
 ]
 
 const dtsEntries = [
@@ -39,12 +40,12 @@ const plugins = [
   alias({
     entries: [
       { find: /^node:(.+)$/, replacement: '$1' },
-      { find: 'vite-node/server', replacement: path.resolve(__dirname, '../vite-node/src/server.ts') },
-      { find: 'vite-node/client', replacement: path.resolve(__dirname, '../vite-node/src/client.ts') },
-      { find: 'vite-node/utils', replacement: path.resolve(__dirname, '../vite-node/src/utils.ts') },
+      { find: 'vite-node/server', replacement: resolve(__dirname, '../vite-node/src/server.ts') },
+      { find: 'vite-node/client', replacement: resolve(__dirname, '../vite-node/src/client.ts') },
+      { find: 'vite-node/utils', replacement: resolve(__dirname, '../vite-node/src/utils.ts') },
     ],
   }),
-  resolve({
+  nodeResolve({
     preferBuiltins: true,
   }),
   json(),
@@ -60,19 +61,19 @@ export default ({ watch }) => [
     output: {
       dir: 'dist',
       format: 'esm',
-      sourcemap: 'inline',
+      entryFileNames: '[name].mjs',
       chunkFileNames: (chunkInfo) => {
         const id = chunkInfo.facadeModuleId || Object.keys(chunkInfo.modules).find(i => !i.includes('node_modules') && i.includes('src/'))
         if (id) {
           const parts = Array.from(
-            new Set(path.relative(process.cwd(), id).split(/\//g)
+            new Set(relative(process.cwd(), id).split(/\//g)
               .map(i => i.replace(/\..*$/, ''))
               .filter(i => !['src', 'index', 'dist', 'node_modules'].some(j => i.includes(j)) && i.match(/^[\w_-]+$/))),
           )
           if (parts.length)
-            return `chunk-${parts.slice(-2).join('-')}.[hash].js`
+            return `chunk-${parts.slice(-2).join('-')}.[hash].mjs`
         }
-        return 'vendor-[name].[hash].js'
+        return 'vendor-[name].[hash].mjs'
       },
     },
     external,
@@ -94,24 +95,31 @@ export default ({ watch }) => [
         format: 'cjs',
       },
       {
-        file: 'dist/config.js',
+        file: 'dist/config.mjs',
         format: 'esm',
       },
     ],
     external,
     plugins,
   },
-  ...dtsEntries.map(input => ({
-    input,
-    output: {
-      file: input.replace('src/', 'dist/').replace('.ts', '.d.ts'),
-      format: 'esm',
-    },
-    external,
-    plugins: [
-      dts({ respectExternal: true }),
-    ],
-  })),
+  ...dtsEntries.map((input) => {
+    const _external = external
+    // index is vitest default types export
+    if (!input.includes('index'))
+      _external.push('vitest')
+
+    return defineConfig({
+      input,
+      output: {
+        file: input.replace('src/', 'dist/').replace('.ts', '.d.ts'),
+        format: 'esm',
+      },
+      external: _external,
+      plugins: [
+        dts({ respectExternal: true }),
+      ],
+    })
+  }),
 ]
 
 function licensePlugin() {
@@ -120,7 +128,7 @@ function licensePlugin() {
       // https://github.com/rollup/rollup/blob/master/build-plugins/generate-license-file.js
       // MIT Licensed https://github.com/rollup/rollup/blob/master/LICENSE-CORE.md
       const coreLicense = fs.readFileSync(
-        path.resolve(__dirname, '../../LICENSE'),
+        resolve(__dirname, '../../LICENSE'),
       )
       function sortLicenses(licenses) {
         let withParenthesis = []
@@ -171,8 +179,8 @@ function licensePlugin() {
 
             if (!licenseText) {
               try {
-                const pkgDir = path.dirname(
-                  resolve(path.join(name, 'package.json'), {
+                const pkgDir = dirname(
+                  resolve(join(name, 'package.json'), {
                     preserveSymlinks: false,
                   }),
                 )

@@ -10,7 +10,7 @@ export async function setup() {
   })
 
   await server.listen(9988)
-  return async() => {
+  return async () => {
     await server.close()
   }
 }

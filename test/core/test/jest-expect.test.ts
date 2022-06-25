@@ -1,8 +1,20 @@
-/* eslint-disable comma-spacing */
 /* eslint-disable no-sparse-arrays */
-import { describe, expect, it } from 'vitest'
+import { AssertionError } from 'assert'
+import { describe, expect, it, vi } from 'vitest'
+import { generateToBeMessage } from 'vitest/src/integrations/chai/jest-utils'
 
 class TestError extends Error {}
+
+// For expect.extend
+interface CustomMatchers<R = unknown> {
+  toBeDividedBy(divisor: number): R
+}
+declare global {
+  namespace Vi {
+    interface JestAssertion extends CustomMatchers {}
+    interface AsymmetricMatchersContaining extends CustomMatchers {}
+  }
+}
 
 describe('jest-expect', () => {
   it('basic', () => {
@@ -100,6 +112,19 @@ describe('jest-expect', () => {
     expect(['Bob', 'Eve']).toEqual(expect.arrayContaining(['Bob']))
     expect(['Bob', 'Eve']).not.toEqual(expect.arrayContaining(['Mohammad']))
 
+    expect([
+      { name: 'Bob' },
+      { name: 'Eve' },
+    ]).toEqual(expect.arrayContaining<{ name: string }>([
+      { name: 'Bob' },
+    ]))
+    expect([
+      { name: 'Bob' },
+      { name: 'Eve' },
+    ]).not.toEqual(expect.arrayContaining<{ name: string }>([
+      { name: 'Mohammad' },
+    ]))
+
     expect('Mohammad').toEqual(expect.stringMatching(/Moh/))
     expect('Mohammad').not.toEqual(expect.stringMatching(/jack/))
 
@@ -114,6 +139,35 @@ describe('jest-expect', () => {
     expect(['Bob', 'Eve']).toEqual(expect.not.arrayContaining(['Steve']))
   })
 
+  it('expect.extend', () => {
+    expect.extend({
+      toBeDividedBy(received, divisor) {
+        const pass = received % divisor === 0
+        if (pass) {
+          return {
+            message: () =>
+              `expected ${received} not to be divisible by ${divisor}`,
+            pass: true,
+          }
+        }
+        else {
+          return {
+            message: () =>
+              `expected ${received} to be divisible by ${divisor}`,
+            pass: false,
+          }
+        }
+      },
+    })
+
+    expect(5).toBeDividedBy(5)
+    expect(5).not.toBeDividedBy(4)
+    expect({ one: 1, two: 2 }).toEqual({
+      one: expect.toBeDividedBy(1),
+      two: expect.not.toBeDividedBy(5),
+    })
+  })
+
   it('object', () => {
     expect({}).toEqual({})
     expect({ apples: 13 }).toEqual({ apples: 13 })
@@ -121,7 +175,15 @@ describe('jest-expect', () => {
     expect({}).not.toBe({})
 
     const foo = {}
-    const complex = { foo: 1, bar: { foo: 'foo', bar: 100, arr: ['first', { zoo: 'monkey' }] } }
+    const complex = {
+      'foo': 1,
+      'foo.bar[0]': 'baz',
+      'bar': {
+        foo: 'foo',
+        bar: 100,
+        arr: ['first', { zoo: 'monkey' }],
+      },
+    }
 
     expect(foo).toBe(foo)
     expect(foo).toStrictEqual(foo)
@@ -139,6 +201,8 @@ describe('jest-expect', () => {
     expect(complex).toHaveProperty('bar.arr[1].zoo', 'monkey')
     expect(complex).toHaveProperty('bar.arr.0')
     expect(complex).toHaveProperty('bar.arr.1.zoo', 'monkey')
+    expect(complex).toHaveProperty(['bar', 'arr', '1', 'zoo'], 'monkey')
+    expect(complex).toHaveProperty(['foo.bar[0]'], 'baz')
   })
 
   it('assertions', () => {
@@ -153,6 +217,25 @@ describe('jest-expect', () => {
     expect(1).toBe(1)
     expect(1).toBe(1)
     expect(1).toBe(1)
+  })
+
+  it('assertions when asynchronous code', async () => {
+    expect.assertions(3)
+    await Promise.all([
+      expect(1).toBe(1),
+      expect(1).toBe(1),
+      expect(1).toBe(1),
+    ])
+  })
+
+  it.fails('assertions when asynchronous code', async () => {
+    // Error: expected number of assertions to be 2, but got 3
+    expect.assertions(2)
+    await Promise.all([
+      expect(1).toBe(1),
+      expect(1).toBe(1),
+      expect(1).toBe(1),
+    ])
   })
 
   it.fails('has assertions', () => {
@@ -316,7 +399,7 @@ describe('toBeTypeOf()', () => {
     [true, 'boolean'],
     [false, 'boolean'],
     [() => {}, 'function'],
-    [function() {}, 'function'],
+    [function () {}, 'function'],
     [1, 'number'],
     [Infinity, 'number'],
     [NaN, 'number'],
@@ -337,45 +420,181 @@ describe('toBeTypeOf()', () => {
   })
 })
 
-describe('async expect', () => {
-  it('resolves', async() => {
-    await expect((async() => 'true')()).resolves.toBe('true')
-    await expect((async() => 'true')()).resolves.not.toBe('true22')
+describe('toSatisfy()', () => {
+  const isOdd = (value: number) => value % 2 !== 0
+
+  it('pass with 0', () => {
+    expect(1).toSatisfy(isOdd)
   })
 
-  it.fails('failed to resolve', async() => {
-    await expect((async() => {
+  it('pass with negotiation', () => {
+    expect(2).not.toSatisfy(isOdd)
+  })
+
+  it.fails('fail with missing negotiation', () => {
+    expect(2).toSatisfy(isOdd)
+  })
+
+  it('calls the function', () => {
+    const isOddMock = vi.fn(isOdd)
+    expect(isOddMock).not.toBeCalled()
+    expect(1).toSatisfy(isOddMock)
+    expect(isOddMock).toBeCalled()
+  })
+})
+
+describe('async expect', () => {
+  it('resolves', async () => {
+    await expect((async () => 'true')()).resolves.toBe('true')
+    await expect((async () => 'true')()).resolves.not.toBe('true22')
+    await expect((async () => 'true')()).resolves.not.toThrow()
+    await expect((async () => new Error('msg'))()).resolves.not.toThrow() // calls chai assertion
+    await expect((async () => new Error('msg'))()).resolves.not.toThrow(Error) // calls our assertion
+    await expect((async () => () => {
+      throw new Error('msg')
+    })()).resolves.toThrow()
+    await expect((async () => () => {
+      return new Error('msg')
+    })()).resolves.not.toThrow()
+    await expect((async () => () => {
+      return new Error('msg')
+    })()).resolves.not.toThrow(Error)
+  })
+
+  it('resolves trows chai', async () => {
+    const assertion = async () => {
+      await expect((async () => new Error('msg'))()).resolves.toThrow()
+    }
+
+    await expect(assertion).rejects.toThrowError('expected promise to throw an error, but it didn\'t')
+  })
+
+  it('resolves trows jest', async () => {
+    const assertion = async () => {
+      await expect((async () => new Error('msg'))()).resolves.toThrow(Error)
+    }
+
+    await expect(assertion).rejects.toThrowError('expected promise to throw an error, but it didn\'t')
+  })
+
+  it('throws an error on .resolves when the argument is not a promise', () => {
+    expect.assertions(2)
+
+    const expectedError = new TypeError('You must provide a Promise to expect() when using .resolves, not \'number\'.')
+
+    try {
+      expect(1).resolves.toEqual(2)
+    }
+    catch (error) {
+      expect(error).toEqual(expectedError)
+    }
+  })
+
+  it.fails('failed to resolve', async () => {
+    await expect((async () => {
       throw new Error('err')
     })()).resolves.toBe('true')
   })
 
-  it('rejects', async() => {
-    await expect((async() => {
+  it.fails('failed to throw', async () => {
+    await expect((async () => {
+      throw new Error('err')
+    })()).resolves.not.toThrow()
+  })
+
+  it('rejects', async () => {
+    await expect((async () => {
       throw new Error('err')
     })()).rejects.toStrictEqual(new Error('err'))
-    await expect((async() => {
+    await expect((async () => {
       throw new Error('err')
     })()).rejects.toThrow('err')
-    expect((async() => {
+    expect((async () => {
       throw new TestError('error')
     })()).rejects.toThrow(TestError)
     const err = new Error('hello world')
-    expect((async() => {
+    expect((async () => {
       throw err
     })()).rejects.toThrow(err)
-    expect((async() => {
+    expect((async () => {
       throw new Error('message')
     })()).rejects.toThrow(expect.objectContaining({
       message: expect.stringContaining('mes'),
     }))
 
-    await expect((async() => {
+    await expect((async () => {
       throw new Error('err')
     })()).rejects.not.toStrictEqual(new Error('fake err'))
   })
 
-  it.fails('failed to reject', async() => {
-    await expect((async() => 'test')()).rejects.toBe('test')
+  it.fails('failed to reject', async () => {
+    await expect((async () => 'test')()).rejects.toBe('test')
+  })
+
+  it('throws an error on .rejects when the argument (or function result) is not a promise', () => {
+    expect.assertions(4)
+
+    const expectedError = new TypeError('You must provide a Promise to expect() when using .rejects, not \'number\'.')
+
+    try {
+      expect(1).rejects.toEqual(2)
+    }
+    catch (error) {
+      expect(error).toEqual(expectedError)
+    }
+
+    try {
+      expect(() => 1).rejects.toEqual(2)
+    }
+    catch (error) {
+      expect(error).toEqual(expectedError)
+    }
+  })
+
+  it('reminds users to use deep equality checks if they are comparing objects', () => {
+    const generatedToBeMessage = (
+      deepEqualityName: string,
+      expected: string,
+      actual: string,
+    ) => new AssertionError({
+      message: generateToBeMessage(deepEqualityName, expected, actual),
+    })
+
+    const actual = { key: 'value' }
+    class FakeClass {}
+
+    const toStrictEqualError1 = generatedToBeMessage('toStrictEqual', '{ key: \'value\' }', '{ key: \'value\' }')
+    try {
+      expect(actual).toBe({ ...actual })
+    }
+    catch (error) {
+      expect(error).toEqual(toStrictEqualError1)
+    }
+
+    const toStrictEqualError2 = generatedToBeMessage('toStrictEqual', 'FakeClass{}', 'FakeClass{}')
+    try {
+      expect(new FakeClass()).toBe(new FakeClass())
+    }
+    catch (error) {
+      expect(error).toEqual(toStrictEqualError2)
+    }
+
+    const toEqualError1 = generatedToBeMessage('toEqual', '{}', 'FakeClass{}')
+    try {
+      expect({}).toBe(new FakeClass())
+    }
+    catch (error) {
+      expect(error).toEqual(toEqualError1)
+      // expect(error).toEqual('1234')
+    }
+
+    const toEqualError2 = generatedToBeMessage('toEqual', 'FakeClass{}', '{}')
+    try {
+      expect(new FakeClass()).toBe({})
+    }
+    catch (error) {
+      expect(error).toEqual(toEqualError2)
+    }
   })
 })
 
