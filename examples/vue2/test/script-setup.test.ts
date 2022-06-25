@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils'
-import { nextTick } from '@vue/composition-api'
+import Vue from 'vue'
 import Hello from '../src/components/ScriptSetup.vue'
 
 // TODO: find out why
@@ -12,7 +12,7 @@ test.skip('mount component', async () => {
     },
   })
 
-  await nextTick()
+  await Vue.nextTick()
 
   expect(wrapper.text()).toContain('4 x 2 = 8')
   expect(wrapper.html()).toMatchSnapshot()

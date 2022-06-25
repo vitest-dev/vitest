@@ -84,6 +84,14 @@ export function defineWebWorker() {
     base: config.base,
   }
 
+  // Vite imports env.mjs file, but doesn't define __DEFINES__ for workers
+  if (!('__DEFINES__' in globalThis)) {
+    Object.defineProperty(globalThis, '__DEFINES__', {
+      value: {},
+      configurable: true,
+    })
+  }
+
   globalThis.Worker = class Worker {
     private inside = new Bridge()
     private outside = new Bridge()
@@ -129,7 +137,6 @@ export function defineWebWorker() {
       let id = url instanceof URL ? url.toString() : url
 
       id = id
-        .replace('?worker_file', '')
         .replace(/^file:\/+/, '/')
 
       const fsPath = toFilePath(id, config.root)
