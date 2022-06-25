@@ -38,6 +38,15 @@ img.resizable-img {
   min-height: 3rem;
 }
 
+/* fix height ~ 3 lines of text: 4 cards per row */
+@media (min-width: 1064px) and (max-width: 1143px) {
+  .VPTeamMembersItem.small .profile .data .affiliation {
+    min-height: 4rem;
+  }
+  .VPTeamMembersItem.small .profile .data .desc {
+    min-height: 4rem;
+  }
+}
 /* fix height ~ 3 lines of text: 3 cards per row */
 @media (min-width: 815px) and (max-width: 875px) {
   .VPTeamMembersItem.small .profile .data .affiliation {
