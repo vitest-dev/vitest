@@ -2,7 +2,7 @@
 /// <reference types="vite/client" />
 
 import { defineConfig } from 'vite'
-import solid from 'solid-start' // or use 'vite-plugin-solid' instead
+import solid from 'vite-plugin-solid' // or use 'vite-plugin-solid' instead
 
 export default defineConfig({
   test: {
