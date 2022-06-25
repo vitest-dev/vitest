@@ -67,7 +67,7 @@ export const teamMembers: CoreTeam[] = [
     avatar: contributorsAvatars['patak-dev'],
     name: 'Patak',
     links: createLinks([['github', 'patak-dev'], ['twitter', 'patak_dev']]),
-    sponsor: 'https://github.com/sponsors/dev',
+    sponsor: 'https://github.com/sponsors/patak-dev',
     title: 'A collaborative being, working',
     org: 'StackBlitz',
     desc: 'Core team member of Vite & Vue & Vitest',
