@@ -126,11 +126,7 @@ export function defineWebWorker() {
 
       const runner = new InlineWorkerRunner(options, context)
 
-      let id = url instanceof URL ? url.toString() : url
-
-      id = id
-        .replace('?worker_file', '')
-        .replace(/^file:\/+/, '/')
+      const id = (url instanceof URL ? url.toString() : url).replace(/^file:\/+/, '/')
 
       const fsPath = toFilePath(id, config.root)
       invalidates.push(fsPath)
