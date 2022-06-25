@@ -13,7 +13,7 @@ describe('Hello.svelte', () => {
     expect(container.innerHTML).toMatchSnapshot()
   })
 
-  it('updates on button click', async() => {
+  it('updates on button click', async () => {
     render(Hello, { count: 4 })
     const btn = screen.getByRole('button')
     const div = screen.getByText('4 x 2 = 8')
