@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { VPTeamMembers } from 'vitepress/theme'
 import { teamMembers } from '../contributors'
 </script>
 
@@ -10,13 +11,7 @@ import { teamMembers } from '../contributors'
           <h2 id="meet-the-team" op50 font-normal p="t-10 b-2">
             Meet The Team
           </h2>
-          <div grid="~ cols-1 md:cols-2 lg:cols-3 gap-x-10 gap-y-10 items-center" p-10>
-            <TeamMember
-              v-for="c of teamMembers"
-              :key="c.github"
-              v-bind="c"
-            />
-          </div>
+          <VPTeamMembers size="small" :members="teamMembers" />
           <h2 id="the-team" op50 font-normal pt-5 pb-2>
             Contributors
           </h2>
