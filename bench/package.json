@@ -2,8 +2,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "bench": "esmo src/index.ts",
-    "bench:ci": "esmo src/github.ts"
+    "bench": "esno src/index.ts",
+    "bench:ci": "esno src/github.ts"
   },
   "devDependencies": {
     "@actions/core": "^1.9.0",
