@@ -38,8 +38,8 @@ img.resizable-img {
   min-height: 3rem;
 }
 
-@media (max-width: 612px) {
-  /* fix height ~ 3 lines of text: 2 cards per row */
+/* fix height ~ 3 lines of text: 3 cards per row */
+@media (min-width: 815px) and (max-width: 875px) {
   .VPTeamMembersItem.small .profile .data .affiliation {
     min-height: 4rem;
   }
@@ -47,8 +47,17 @@ img.resizable-img {
     min-height: 4rem;
   }
 }
+/* fix height ~ 3 lines of text: 2 cards per row */
+@media (max-width: 612px) {
+  .VPTeamMembersItem.small .profile .data .affiliation {
+    min-height: 4rem;
+  }
+  .VPTeamMembersItem.small .profile .data .desc {
+    min-height: 4rem;
+  }
+}
+/* fix height: one card per row */
 @media (max-width: 568px) {
-  /* fix height: one card per row */
   .VPTeamMembersItem.small .profile .data .affiliation {
     min-height: unset;
   }
