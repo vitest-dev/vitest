@@ -13,6 +13,8 @@ export interface SocialEntry {
 export interface CoreTeam {
   avatar: string
   name: string
+  // required to download avatars from GitHub
+  github: string
   sponsor?: string
   title?: string
   org?: string
@@ -50,6 +52,7 @@ export const teamMembers: CoreTeam[] = [
   {
     avatar: contributorsAvatars.antfu,
     name: 'Anthony Fu',
+    github: 'antfu',
     links: createLinks([['github', 'antfu'], ['twitter', 'antfu7']]),
     sponsor: 'https://github.com/sponsors/antfu',
     title: 'A fanatical open sourceror, working',
@@ -59,6 +62,7 @@ export const teamMembers: CoreTeam[] = [
   {
     avatar: contributorsAvatars['sheremet-va'],
     name: 'Vladimir',
+    github: 'sheremet-va',
     links: createLinks([['github', 'sheremet-va'], ['twitter', 'sheremet_va']]),
     title: 'An open source fullstack developer',
     desc: 'Core team member of Vitest',
@@ -66,6 +70,7 @@ export const teamMembers: CoreTeam[] = [
   {
     avatar: contributorsAvatars['patak-dev'],
     name: 'Patak',
+    github: 'patak-dev',
     links: createLinks([['github', 'patak-dev'], ['twitter', 'patak_dev']]),
     sponsor: 'https://github.com/sponsors/patak-dev',
     title: 'A collaborative being, working',
@@ -75,6 +80,7 @@ export const teamMembers: CoreTeam[] = [
   {
     avatar: contributorsAvatars.Aslemammad,
     name: 'Mohammad Bagher',
+    github: 'Aslemammad',
     links: createLinks([['github', 'Aslemammad'], ['twitter', 'asleMammadam']]),
     title: 'An open source developer',
     desc: 'Team member of Poimandres & Vike',
@@ -82,6 +88,7 @@ export const teamMembers: CoreTeam[] = [
   {
     avatar: contributorsAvatars.Demivan,
     name: 'Ivan Demchuk',
+    github: 'Demivan',
     links: createLinks([['github', 'Demivan'], ['twitter', 'IvanDemchuk']]),
     title: 'A tech lead, fullstack developer',
     desc: 'Author of fluent-vue',
@@ -89,6 +96,7 @@ export const teamMembers: CoreTeam[] = [
   {
     avatar: contributorsAvatars.userquin,
     name: 'Joaquín Sánchez',
+    github: 'userquin',
     links: createLinks([['github', 'userquin'], ['twitter', 'userquin']]),
     title: 'A fullstack and android developer',
     desc: 'Vite\'s fanatical follower',
@@ -96,6 +104,7 @@ export const teamMembers: CoreTeam[] = [
   {
     avatar: contributorsAvatars.zxch3n,
     name: 'Zixuan Chen',
+    github: 'zxch3n',
     links: createLinks([['github', 'zxch3n'], ['twitter', 'zxch3n']]),
     title: 'A fullstack developer',
     desc: 'Creating tools for collaboration',
