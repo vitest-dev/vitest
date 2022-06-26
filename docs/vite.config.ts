@@ -8,6 +8,7 @@ import { resolve } from 'pathe'
 import { VitePWA } from 'vite-plugin-pwa'
 import fg from 'fast-glob'
 import {
+  githubusercontentRegex,
   pwaFontStylesRegex,
   pwaFontsRegex,
   vitestDescription,
@@ -69,6 +70,7 @@ export default defineConfig({
       },
       workbox: {
         navigateFallbackDenylist: [/^\/new$/],
+        globPatterns: ['**/*.{css,js,html,woff2}'],
         runtimeCaching: [
           {
             urlPattern: pwaFontsRegex,
@@ -89,6 +91,20 @@ export default defineConfig({
             handler: 'CacheFirst',
             options: {
               cacheName: 'gstatic-fonts-cache',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 365, // <== 365 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          {
+            urlPattern: githubusercontentRegex,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'githubusercontent-images-cache',
               expiration: {
                 maxEntries: 10,
                 maxAgeSeconds: 60 * 60 * 24 * 365, // <== 365 days
