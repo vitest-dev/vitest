@@ -2,8 +2,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "bench": "esno src/index.ts",
-    "bench:ci": "esno src/github.ts"
+    "bench": "esmo src/index.ts",
+    "bench:ci": "esmo src/github.ts"
   },
   "devDependencies": {
     "@actions/core": "^1.9.0",
@@ -12,7 +12,7 @@
     "@happy-dom/jest-environment": "^4.1.0",
     "@types/benchmark": "^2.1.1",
     "benchmark": "^2.1.4",
-    "esno": "^0.16.3",
+    "esno": "^0.14.1",
     "execa": "^6.1.0",
     "fs-extra": "^10.1.0",
     "markdown-table": "^3.0.2",
