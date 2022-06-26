@@ -15,6 +15,7 @@ import {
   vitestName,
   vitestShortName,
 } from './.vitepress/meta'
+import SponsorLinkFix from './plugins/FixSponsorLink'
 
 export default defineConfig({
   plugins: [
@@ -37,6 +38,7 @@ export default defineConfig({
         }),
       ],
     }),
+    SponsorLinkFix(),
     IncludesPlugin(),
     VitePWA({
       outDir: '.vitepress/dist',
