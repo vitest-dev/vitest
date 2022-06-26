@@ -67,8 +67,8 @@
   },
   "pnpm": {
     "overrides": {
-      "vite": "^2.9.10",
-      "esbuild": "^0.14.42",
+      "vite": "^2.9.12",
+      "esbuild": "^0.14.47",
       "vitest": "workspace:*"
     }
   },
