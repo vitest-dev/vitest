@@ -21,7 +21,7 @@ export class StateManager {
 
   getFiles(keys?: string[]): File[] {
     if (keys)
-      return keys.map(key => this.filesMap.get(key)!)
+      return keys.map(key => this.filesMap.get(key)!).filter(Boolean)
     return Array.from(this.filesMap.values())
   }
 
