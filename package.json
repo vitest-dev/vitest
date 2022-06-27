@@ -62,13 +62,12 @@
     "rollup-plugin-license": "^2.8.1",
     "simple-git-hooks": "^2.8.0",
     "typescript": "^4.7.4",
-    "vite": "^2.9.12",
+    "vite": "^2.9.12 || ^3.0.0-0",
     "vitest": "workspace:*",
     "vue": "^3.2.37"
   },
   "pnpm": {
     "overrides": {
-      "vite": "^2.9.12",
       "esbuild": "^0.14.47",
       "vitest": "workspace:*"
     }

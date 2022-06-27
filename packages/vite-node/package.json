@@ -69,7 +69,7 @@
     "kolorist": "^1.5.1",
     "mlly": "^0.5.3",
     "pathe": "^0.2.0",
-    "vite": "^2.9.12"
+    "vite": "^2.9.12 || ^3.0.0-0"
   },
   "devDependencies": {
     "@types/debug": "^4.1.7",
