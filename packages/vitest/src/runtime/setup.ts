@@ -1,4 +1,3 @@
-import { existsSync } from 'fs'
 import { environments } from '../integrations/env'
 import type { ResolvedConfig } from '../types'
 import { clearTimeout, getWorkerState, isNode, setTimeout, toArray } from '../utils'
@@ -168,8 +167,7 @@ export async function runSetupFiles(config: ResolvedConfig) {
   await Promise.all(
     files.map(async (file) => {
       getWorkerState().moduleCache.delete(file)
-      if (existsSync(file))
-        await import(file)
+      await import(file)
     }),
   )
 }
