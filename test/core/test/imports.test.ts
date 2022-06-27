@@ -7,14 +7,14 @@ test('dynamic relative import works', async () => {
   const timeoutPath = './../src/timeout'
   const variableTimeoutMod = await import(timeoutPath)
 
-  expect(stringTimeoutMod).toStrictEqual(variableTimeoutMod)
+  expect(stringTimeoutMod).toBe(variableTimeoutMod)
 })
 
 test('Relative imports in imported modules work', async () => {
   const relativeImportFromFile = await dynamicRelativeImport('timeout')
   const directImport = await import('./../src/timeout')
 
-  expect(relativeImportFromFile).toStrictEqual(directImport)
+  expect(relativeImportFromFile).toBe(directImport)
 })
 
 test('dynamic aliased import works', async () => {
@@ -23,7 +23,7 @@ test('dynamic aliased import works', async () => {
   const timeoutPath = '@/timeout'
   const variableTimeoutMod = await import(timeoutPath)
 
-  expect(stringTimeoutMod).toStrictEqual(variableTimeoutMod)
+  expect(stringTimeoutMod).toBe(variableTimeoutMod)
 })
 
 test('dynamic absolute import works', async () => {
@@ -32,7 +32,7 @@ test('dynamic absolute import works', async () => {
   const timeoutPath = '/src/timeout'
   const variableTimeoutMod = await import(timeoutPath)
 
-  expect(stringTimeoutMod).toStrictEqual(variableTimeoutMod)
+  expect(stringTimeoutMod).toBe(variableTimeoutMod)
 })
 
 test('data with dynamic import works', async () => {
