@@ -12,6 +12,8 @@ import { toArray } from '../utils'
 const extraInlineDeps = [
   /^(?!.*(?:node_modules)).*\.mjs$/,
   /^(?!.*(?:node_modules)).*\.cjs\.js$/,
+  // Vite client
+  /vite\w*\/dist\/client\/env.mjs/,
   // Vitest
   /\/vitest\/dist\//,
   // yarn's .store folder
