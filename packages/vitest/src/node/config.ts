@@ -113,9 +113,9 @@ export function resolveConfig(
   if (resolved.deps.inline !== true) {
     // eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error
     // @ts-ignore ssr is not typed in Vite 2, but defined in Vite 3, so we can't use expect-error
-    const ssrOptions = viteConfig.ssr || {}
+    const ssrOptions = viteConfig.ssr
 
-    if (ssrOptions.noExternal === true && resolved.deps.inline == null) {
+    if (ssrOptions?.noExternal === true && resolved.deps.inline == null) {
       resolved.deps.inline = true
     }
     else {
