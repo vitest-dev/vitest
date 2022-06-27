@@ -13,6 +13,7 @@
     "docs:build": "pnpm -C docs run build",
     "docs:serve": "pnpm -C docs run serve",
     "docs:https": "pnpm -C docs run preview-https",
+    "docs:https-no-prefetch": "pnpm -C docs run preview-https-no-prefecth",
     "docs:examples": "esmo scripts/update-examples.ts",
     "docs:contributors": "esmo scripts/update-contributors.ts",
     "lint": "eslint .",
@@ -44,7 +45,7 @@
     "cross-env": "^7.0.3",
     "esbuild": "~0.14.47",
     "eslint": "^8.18.0",
-    "esno": "^0.16.3",
+    "esno": "^0.14.1",
     "fast-glob": "^3.2.11",
     "if-node-version": "^1.1.1",
     "lint-staged": "^12.5.0",
@@ -68,7 +69,7 @@
   "pnpm": {
     "overrides": {
       "vite": "^2.9.10 || ^3.0.0-0",
-      "esbuild": "^0.14.42",
+      "esbuild": "^0.14.47",
       "vitest": "workspace:*"
     }
   },
