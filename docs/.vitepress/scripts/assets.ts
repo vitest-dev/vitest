@@ -27,7 +27,6 @@ export const optimizePages = async (pwa: boolean) => {
       prefetchImg = `
 ${prefetchImg}
 \t<link rel="prefetch" href="/netlify.svg">
-\t<link rel="prefetch" href="/bg.png">
 `
     }
 
