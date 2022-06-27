@@ -28,5 +28,10 @@
     "vite-plugin-pwa": "^0.12.0",
     "vitepress": "^1.0.0-alpha.4",
     "workbox-window": "^6.5.3"
+  },
+  "pnpm": {
+    "overrides": {
+      "vite": "^2.9.10"
+    }
   }
 }
