@@ -465,6 +465,13 @@ Repository: git://github.com/kpdecker/jsdiff.git
 
 ---------------------------------------
 
+## eastasianwidth
+License: MIT
+By: Masaki Komagata
+Repository: git://github.com/komagata/eastasianwidth.git
+
+---------------------------------------
+
 ## emoji-regex
 License: MIT
 By: Mathias Bynens
