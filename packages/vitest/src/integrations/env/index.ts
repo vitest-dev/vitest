@@ -12,7 +12,7 @@ export const environments = {
 
 export const envs = Object.keys(environments)
 
-export const envNpm = {
+export const envPackageNames: Record<Exclude<keyof typeof environments, 'node'>, string> = {
   'jsdom': 'jsdom',
   'happy-dom': 'happy-dom',
   'edge-runtime': '@edge-runtime/vm',

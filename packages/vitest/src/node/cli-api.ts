@@ -1,5 +1,5 @@
 import type { UserConfig as ViteUserConfig } from 'vite'
-import { envNpm } from '../integrations/env'
+import { envPackageNames } from '../integrations/env'
 import type { UserConfig } from '../types'
 import { ensurePackageInstalled } from '../utils'
 import { createVitest } from './create'
@@ -38,8 +38,8 @@ export async function startVitest(cliFilters: string[], options: CliOptions, vit
   }
 
   if (ctx.config.environment && ctx.config.environment !== 'node') {
-    const packName = envNpm[ctx.config.environment]
-    if (!await ensurePackageInstalled(packName)) {
+    const packageName = envPackageNames[ctx.config.environment]
+    if (!await ensurePackageInstalled(packageName)) {
       process.exitCode = 1
       return false
     }
