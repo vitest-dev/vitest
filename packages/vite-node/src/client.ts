@@ -5,7 +5,7 @@ import { dirname, extname, isAbsolute, resolve } from 'pathe'
 import { isNodeBuiltin } from 'mlly'
 import createDebug from 'debug'
 import { isPrimitive, mergeSlashes, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
-import type { ModuleCache, ViteNodeRunnerOptions } from './types'
+import type { HotContext, ModuleCache, ViteNodeRunnerOptions } from './types'
 
 const debugExecute = createDebug('vite-node:client:execute')
 const debugNative = createDebug('vite-node:client:native')
@@ -161,6 +161,7 @@ export class ViteNodeRunner {
 
     // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
     const url = pathToFileURL(fsPath).href
+    const meta = { url }
     const exports: any = Object.create(null)
     exports[Symbol.toStringTag] = 'Module'
 
@@ -177,7 +178,17 @@ export class ViteNodeRunner {
       },
     }
 
-    const isNeedHmr = transformed.includes('__vite_ssr_import_meta__.hot')
+    // Vite hot context
+    let hotContext: HotContext | undefined
+    if (this.options.createHotContext) {
+      Object.defineProperty(meta, 'hot', {
+        enumerable: true,
+        get: () => {
+          hotContext ||= this.options.createHotContext?.(this, `/@fs/${fsPath}`)
+          return hotContext
+        },
+      })
+    }
 
     // Be careful when changing this
     // changing context will change amount of code added on line :114 (vm.runInThisContext)
@@ -189,11 +200,7 @@ export class ViteNodeRunner {
       __vite_ssr_dynamic_import__: request,
       __vite_ssr_exports__: exports,
       __vite_ssr_exportAll__: (obj: any) => exportAll(exports, obj),
-      __vite_ssr_import_meta__: {
-        url,
-        hot: isNeedHmr ? this.options.createHotContext?.(this, `/@fs/${fsPath}`) : undefined,
-      },
-
+      __vite_ssr_import_meta__: meta,
       __vitest_resolve_id__: resolveId,
 
       // cjs compact
