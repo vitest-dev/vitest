@@ -51,7 +51,7 @@ async function run(files: string[], options: CliOptions = {}) {
     configFile: options.config,
     root: options.root,
     plugins: [
-      viteNodeHmrPlugin(),
+      options.watch && viteNodeHmrPlugin(),
     ],
   })
   await server.pluginContainer.buildStart({})
@@ -81,7 +81,7 @@ async function run(files: string[], options: CliOptions = {}) {
   if (!options.watch)
     await server.close()
 
-  server.emitter.on('message', (payload) => {
+  server.emitter?.on('message', (payload) => {
     handleMessage(runner, server.emitter, files, payload)
   })
 }
