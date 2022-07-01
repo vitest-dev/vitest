@@ -9,7 +9,6 @@ import type { UserConsoleLog } from './general'
 
 export interface WorkerContext {
   workerId: number
-  poolId: number
   port: MessagePort
   config: ResolvedConfig
   files: string[]

@@ -929,7 +929,7 @@ When you use `test` in the top level of file, they are collected as part of the 
 
 ### toMatchSnapshot
 
-- **Type:** `(hint?: string) => void`
+- **Type:** `<T>(shape?: Partial<T> | string, message?: string) => void`
 
   This ensures that a value matches the most recent snapshot.
 
@@ -948,9 +948,20 @@ When you use `test` in the top level of file, they are collected as part of the 
   })
   ```
 
+  You can also provide a shape of an object, if you are testing just a shape of an object, and don't need it to be 100% compatible:
+
+  ```ts
+  import { expect, test } from 'vitest'
+
+  test('matches snapshot', () => {
+    const data = { foo: new Set(['bar', 'snapshot']) }
+    expect(data).toMatchSnapshot({ foo: expect.any(Set) })
+  })
+  ```
+
 ### toMatchInlineSnapshot
 
-- **Type:** `(snapshot?: string) => void`
+- **Type:** `<T>(shape?: Partial<T> | string, snapshot?: string, message?: string) => void`
 
   This ensures that a value matches the most recent snapshot.
 
@@ -973,10 +984,28 @@ When you use `test` in the top level of file, they are collected as part of the 
   })
   ```
 
+  You can also provide a shape of an object, if you are testing just a shape of an object, and don't need it to be 100% compatible:
+
+  ```ts
+  import { expect, test } from 'vitest'
+
+  test('matches snapshot', () => {
+    const data = { foo: new Set(['bar', 'snapshot']) }
+    expect(data).toMatchInlineSnapshot(
+      { foo: expect.any(Set) },
+      `
+      {
+        "foo": Any<Set>,
+      }
+    `
+    )
+  })
+  ```
+
 
 ### toThrowErrorMatchingSnapshot
 
-- **Type:** `(snapshot?: string) => void`
+- **Type:** `(message?: string) => void`
 
   The same as [`toMatchSnapshot`](#tomatchsnapshot), but expects the same value as [`toThrowError`](#tothrowerror).
 
@@ -984,7 +1013,7 @@ When you use `test` in the top level of file, they are collected as part of the 
 
 ### toThrowErrorMatchingInlineSnapshot
 
-- **Type:** `(snapshot?: string) => void`
+- **Type:** `(snapshot?: string, message?: string) => void`
 
   The same as [`toMatchInlineSnapshot`](#tomatchinlinesnapshot), but expects the same value as [`toThrowError`](#tothrowerror).
 
@@ -1238,7 +1267,6 @@ When you use `test` in the top level of file, they are collected as part of the 
     })
   })
   ```
-  <!-- toSatisfy -->
 
 ### resolves
 
@@ -1300,7 +1328,7 @@ When you use `test` in the top level of file, they are collected as part of the 
 
 - **Type:** `(count: number) => void`
 
-  After the test has passed or failed verifies that curtain number of assertions was called during a test. Useful case would be to check if an asynchronous code was called.
+  After the test has passed or failed verifies that certain number of assertions was called during a test. Useful case would be to check if an asynchronous code was called.
 
   For examples, if we have a function than asynchronously calls two matchers, we can assert that they were actually called.
 
@@ -1365,16 +1393,145 @@ When you use `test` in the top level of file, they are collected as part of the 
   })
   ```
 
-<!-- ### expect.anything
+<!-- asymmetric matchers -->
+
+### expect.anything
+
+- **Type:** `() => any`
+
+  This asymmetric matcher, when used with equality check, will always return `true`. Useful, if you just want to be sure that the property exist.
+
+  ```ts
+  import { expect, test } from 'vitest'
+
+  test('object has "apples" key', () => {
+    expect({ apples: 22 }).toEqual({ apples: expect.anything() })
+  })
+  ```
+
 ### expect.any
+
+- **Type:** `(constructor: unknown) => any`
+
+  This asymmetric matcher, when used with equality check, will return `true` only if value is an instance of specified constructor. Useful, if you have a value that is generated each time, and you only want to know that it exist with a proper type.
+
+  ```ts
+  import { expect, test } from 'vitest'
+  import { generateId } from './generators'
+
+  test('"id" is a number', () => {
+    expect({ id: generateId() }).toEqual({ id: expect.any(Number) })
+  })
+  ```
+
 ### expect.arrayContaining
-### expect.not.arrayContaining
+
+- **Type:** `<T>(expected: T[]) => any`
+
+  When used with equality check, this asymmetric matcher will return `true` if value is an array and contains specified items.
+
+  ```ts
+  import { expect, test } from 'vitest'
+
+  test('basket includes fuji', () => {
+    const basket = {
+      varieties: [
+        'Empire',
+        'Fuji',
+        'Gala',
+      ],
+      count: 3
+    }
+    expect(basket).toEqual({
+      count: 3,
+      varieties: expect.arrayContaining(['Fuji'])
+    })
+  })
+  ```
+
+  :::tip
+  You can use `expect.not` with this matcher to negate the expected value.
+  :::
+
 ### expect.objectContaining
-### expect.not.objectContaining
+
+- **Type:** `(expected: any) => any`
+
+  When used with equality check, this asymmetric matcher will return `true` if value has a similar shape.
+
+  ```ts
+  import { expect, test } from 'vitest'
+
+  test('basket has empire apples', () => {
+    const basket = {
+      varieties: [
+        {
+          name: 'Empire',
+          count: 1,
+        }
+      ],
+    }
+    expect(basket).toEqual({
+      varieties: [
+        expect.objectContaining({ name: 'Empire' }),
+      ]
+    })
+  })
+  ```
+
+  :::tip
+  You can use `expect.not` with this matcher to negate the expected value.
+  :::
+
 ### expect.stringContaining
-### expect.not.stringContaining
+
+- **Type:** `(expected: any) => any`
+
+  When used with equality check, this asymmetric matcher will return `true` if value is a string and contains specified substring.
+
+  ```ts
+  import { expect, test } from 'vitest'
+
+  test('variety has "Emp" in its name', () => {
+    const variety = {
+      name: 'Empire',
+      count: 1,
+    }
+    expect(basket).toEqual({
+      name: expect.stringContaining('Emp'),
+      count: 1,
+    })
+  })
+  ```
+
+  :::tip
+  You can use `expect.not` with this matcher to negate the expected value.
+  :::
+
 ### expect.stringMatching
-### expect.not.stringMatching -->
+
+- **Type:** `(expected: any) => any`
+
+  When used with equality check, this asymmetric matcher will return `true` if value is a string and contains specified substring or the string matches regular expression.
+
+  ```ts
+  import { expect, test } from 'vitest'
+
+  test('variety ends with "re"', () => {
+    const variety = {
+      name: 'Empire',
+      count: 1,
+    }
+    expect(basket).toEqual({
+      name: expect.stringMatching(/re$/),
+      count: 1,
+    })
+  })
+  ```
+
+  :::tip
+  You can use `expect.not` with this matcher to negate the expected value.
+  :::
 
 ### expect.addSnapshotSerializer
 

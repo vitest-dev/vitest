@@ -47,9 +47,7 @@ export default defineConfig({
     logo: '/logo.svg',
 
     editLink: {
-      repo: 'vitest-dev/vitest',
-      branch: 'main',
-      dir: 'docs',
+      pattern: 'https://github.com/vitest-dev/vitest/tree/main/docs/:path',
       text: 'Suggest changes to this page',
     },
 

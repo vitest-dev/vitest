@@ -76,7 +76,6 @@ export function createPool(ctx: Vitest): WorkerPool {
         files,
         invalidates,
         workerId,
-        poolId: !ctx.config.threads ? 1 : ((workerId - 1) % maxThreads) + 1,
       }
       try {
         await pool.run(data, { transferList: [workerPort], name })

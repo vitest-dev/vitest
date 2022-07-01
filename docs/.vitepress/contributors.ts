@@ -5,13 +5,22 @@ export interface Contributor {
   avatar: string
 }
 
+export interface SocialEntry {
+  icon: string
+  link: string
+}
+
 export interface CoreTeam {
   avatar: string
   name: string
+  // required to download avatars from GitHub
   github: string
-  twitter?: string
-  sponsors?: boolean
-  description: string
+  twitter: string
+  sponsor?: string
+  title?: string
+  org?: string
+  desc?: string
+  links?: SocialEntry[]
 }
 
 const contributorsAvatars: Record<string, string> = {}
@@ -24,61 +33,77 @@ export const contributors = (contributorNames as string[]).reduce((acc, name) =>
   return acc
 }, [] as Contributor[])
 
-export const teamMembers: CoreTeam[] = [
+const createLinks = (tm: CoreTeam): CoreTeam => {
+  tm.links = [
+    { icon: 'github', link: `https://github.com/${tm.github}` },
+    { icon: 'twitter', link: `https://twitter.com/${tm.twitter}` },
+  ]
+  return tm
+}
+
+const plainTeamMembers: CoreTeam[] = [
   {
     avatar: contributorsAvatars.antfu,
     name: 'Anthony Fu',
     github: 'antfu',
     twitter: 'antfu7',
-    sponsors: true,
-    description: 'A fanatical open sourceror<br>Core team member of Vite & Vue<br>Working at NuxtLabs',
-  },
-  {
-    avatar: contributorsAvatars['patak-dev'],
-    name: 'Patak',
-    github: 'patak-dev',
-    twitter: 'patak_dev',
-    sponsors: true,
-    description: 'A collaborative being<br>Core team member of Vite<br>Team member of Vue',
+    sponsor: 'https://github.com/sponsors/antfu',
+    title: 'A fanatical open sourceror, working',
+    org: 'NuxtLabs',
+    desc: 'Core team member of Vite & Vue',
   },
   {
     avatar: contributorsAvatars['sheremet-va'],
     name: 'Vladimir',
     github: 'sheremet-va',
     twitter: 'sheremet_va',
-    sponsors: false,
-    description: 'An open source fullstack developer',
+    title: 'An open source fullstack developer',
+    desc: 'Core team member of Vitest',
+  },
+  {
+    avatar: contributorsAvatars['patak-dev'],
+    name: 'Patak',
+    github: 'patak-dev',
+    twitter: 'patak_dev',
+    sponsor: 'https://github.com/sponsors/patak-dev',
+    title: 'A collaborative being, working',
+    org: 'StackBlitz',
+    desc: 'Core team member of Vite & Vue',
   },
   {
     avatar: contributorsAvatars.Aslemammad,
     name: 'Mohammad Bagher',
     github: 'Aslemammad',
     twitter: 'asleMammadam',
-    sponsors: false,
-    description: 'An open source developer<br>Team member of Poimandres and Vike',
+    title: 'An open source developer',
+    desc: 'Team member of Poimandres & Vike',
   },
   {
     avatar: contributorsAvatars.Demivan,
     name: 'Ivan Demchuk',
     github: 'Demivan',
     twitter: 'IvanDemchuk',
-    sponsors: false,
-    description: 'A tech lead, fullstack developer<br>Author of fluent-vue',
+    title: 'A tech lead, fullstack developer',
+    desc: 'Author of fluent-vue',
   },
   {
     avatar: contributorsAvatars.userquin,
     name: 'Joaquín Sánchez',
     github: 'userquin',
     twitter: 'userquin',
-    sponsors: false,
-    description: 'A fullstack and android developer<br>Vite\'s fanatical follower',
+    title: 'A fullstack and android developer',
+    desc: 'Vite\'s fanatical follower',
   },
   {
     avatar: contributorsAvatars.zxch3n,
     name: 'Zixuan Chen',
     github: 'zxch3n',
     twitter: 'zxch3n',
-    sponsors: false,
-    description: 'A fullstack developer<br>Creating tools for collaboration',
+    title: 'A fullstack developer',
+    desc: 'Creating tools for collaboration',
   },
 ]
+
+const teamMembers = plainTeamMembers.map(tm => createLinks(tm))
+
+export { teamMembers }
