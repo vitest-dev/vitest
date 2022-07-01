@@ -65,7 +65,8 @@
     "@vitest/ui": "*",
     "c8": "*",
     "happy-dom": "*",
-    "jsdom": "*"
+    "jsdom": "*",
+    "@edge-runtime/vm": "*"
   },
   "peerDependenciesMeta": {
     "@vitest/ui": {
@@ -78,6 +79,9 @@
       "optional": true
     },
     "jsdom": {
+      "optional": true
+    },
+    "@edge-runtime/vm": {
       "optional": true
     }
   },
