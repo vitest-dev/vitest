@@ -11,6 +11,7 @@ export interface SuiteResultCache {
 export class ResultsCache {
   private cache = new Map<string, SuiteResultCache>()
   private cachePath: string | null = null
+  private version: string = version
 
   setConfig(config: ResolvedConfig['cache']) {
     if (config)
@@ -27,7 +28,9 @@ export class ResultsCache {
 
     if (fs.existsSync(this.cachePath)) {
       const resultsCache = await fs.promises.readFile(this.cachePath, 'utf8')
-      this.cache = new Map(JSON.parse(resultsCache).results)
+      const { results, version } = JSON.parse(resultsCache)
+      this.cache = new Map(results)
+      this.version = version
     }
   }
 
@@ -60,7 +63,7 @@ export class ResultsCache {
       await fs.promises.mkdir(cacheDirname, { recursive: true })
 
     await fs.promises.writeFile(this.cachePath, JSON.stringify({
-      version,
+      version: this.version,
       results: resultsCache,
     }))
   }
