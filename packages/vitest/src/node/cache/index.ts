@@ -25,12 +25,17 @@ export class VitestCache {
 
     const cache = config.config.test?.cache
 
-    if (!cache)
+    if (cache === false)
       throw new Error('[vitest] Cache is disabled')
 
-    const cachePath = VitestCache.resolveCacheDir(root, cache.dir)
+    const cachePath = VitestCache.resolveCacheDir(root, cache?.dir)
 
-    if (fs.existsSync(cachePath))
+    let cleared = false
+
+    if (fs.existsSync(cachePath)) {
       fs.rmSync(cachePath, { recursive: true, force: true })
+      cleared = true
+    }
+    return { dir: cachePath, cleared }
   }
 }

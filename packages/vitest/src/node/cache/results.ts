@@ -12,14 +12,16 @@ export class ResultsCache {
   private cache = new Map<string, SuiteResultCache>()
   private cachePath: string | null = null
   private version: string = version
+  private root = '/'
 
-  setConfig(config: ResolvedConfig['cache']) {
+  setConfig(root: string, config: ResolvedConfig['cache']) {
+    this.root = root
     if (config)
       this.cachePath = resolve(config.dir, 'results.json')
   }
 
-  getResults(id: string) {
-    return this.cache.get(id)
+  getResults(fsPath: string) {
+    return this.cache.get(fsPath.slice(this.root.length))
   }
 
   async readFromCache() {
@@ -40,7 +42,9 @@ export class ResultsCache {
       if (!result)
         return
       const duration = result.duration || 0
-      this.cache.set(file.filepath, {
+      // store as relative, so cache would be the same in CI and locally
+      const relativePath = file.filepath.slice(this.root.length)
+      this.cache.set(relativePath, {
         duration: duration >= 0 ? duration : 0,
         failed: result.state === 'fail',
       })

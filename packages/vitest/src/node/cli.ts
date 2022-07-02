@@ -59,9 +59,18 @@ cli
   .action(start)
 
 cli.command('clearCache')
-  .action(VitestCache.clearCache)
+  .action(clearCache)
 
 cli.parse()
+
+async function clearCache(args: CliOptions) {
+  const { dir, cleared } = await VitestCache.clearCache(args)
+
+  if (cleared)
+    console.log(c.bgGreen(' VITEST '), `Cache cleared at ${dir}`)
+  else
+    console.log(c.bgRed(' VITEST '), `No cache found at ${dir}`)
+}
 
 async function runRelated(relatedFiles: string[] | string, argv: CliOptions) {
   argv.related = relatedFiles

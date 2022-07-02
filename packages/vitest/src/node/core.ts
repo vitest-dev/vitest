@@ -92,7 +92,7 @@ export class Vitest {
     if (resolved.coverage.enabled)
       await cleanCoverage(resolved.coverage, resolved.coverage.clean)
 
-    this.state.results.setConfig(resolved.cache)
+    this.state.results.setConfig(resolved.root, resolved.cache)
     await this.state.results.readFromCache()
   }
 
