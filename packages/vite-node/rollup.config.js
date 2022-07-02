@@ -14,6 +14,7 @@ const entries = {
   client: 'src/client.ts',
   utils: 'src/utils.ts',
   cli: 'src/cli.ts',
+  hmr: 'src/hmr/index.ts',
 }
 
 const external = [
@@ -23,6 +24,7 @@ const external = [
   'birpc',
   'vite',
   'url',
+  'events',
 ]
 
 const plugins = [

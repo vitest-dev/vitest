@@ -30,7 +30,7 @@ test('with big string', () => {
   }).toMatchSnapshot()
 })
 
-test('throwing', () => {
+test('throwing', async () => {
   expect(() => {
     throw new Error('omega')
   }).toThrowErrorMatchingSnapshot()
@@ -44,6 +44,16 @@ test('throwing', () => {
     // eslint-disable-next-line no-throw-literal
     throw { error: 'omega' }
   }).toThrowErrorMatchingSnapshot()
+
+  await expect(async () => {
+    throw new Error('omega')
+  }).rejects.toThrowErrorMatchingSnapshot()
+})
+
+test('throwing expect should be a function', async () => {
+  expect(() => {
+    expect(new Error('omega')).toThrowErrorMatchingSnapshot()
+  }).toThrow(/expected must be a function/)
 })
 
 test('properties snapshot', () => {
