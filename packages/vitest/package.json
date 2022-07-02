@@ -62,6 +62,7 @@
     "prepublishOnly": "nr build"
   },
   "peerDependencies": {
+    "@edge-runtime/vm": "*",
     "@vitest/ui": "*",
     "c8": "*",
     "happy-dom": "*",
@@ -79,6 +80,9 @@
     },
     "jsdom": {
       "optional": true
+    },
+    "@edge-runtime/vm": {
+      "optional": true
     }
   },
   "dependencies": {
@@ -94,6 +98,7 @@
   },
   "devDependencies": {
     "@antfu/install-pkg": "^0.1.0",
+    "@edge-runtime/vm": "1.1.0-beta.10",
     "@sinonjs/fake-timers": "^9.1.2",
     "@types/diff": "^5.0.2",
     "@types/jsdom": "^16.2.14",

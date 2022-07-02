@@ -1,6 +1,7 @@
 import { promises as fs } from 'fs'
 import type { BuiltinEnvironment, ResolvedConfig } from '../types'
 import { getWorkerState, resetModules } from '../utils'
+import { envs } from '../integrations/env'
 import { setupGlobalEnv, withEnv } from './setup'
 import { startTests } from './run'
 
@@ -8,8 +9,6 @@ export async function run(files: string[], config: ResolvedConfig): Promise<void
   await setupGlobalEnv(config)
 
   const workerState = getWorkerState()
-
-  const envs = ['node', 'jsdom', 'happy-dom']
 
   // if calling from a worker, there will always be one file
   // if calling with no-threads, this will be the whole suite

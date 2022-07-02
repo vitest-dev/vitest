@@ -3,10 +3,12 @@
   "private": true,
   "scripts": {
     "test": "vitest",
-    "coverage": "vitest run --coverage"
+    "coverage": "vitest run --coverage",
+    "dev": "vite-node --watch ./src/*",
+    "debug:dev": "cross-env DEBUG=vite-node:* node --inspect-brk ../../packages/vite-node/dist/cli.cjs --watch ./src/*",
+    "debug": "node --inspect-brk ../../packages/vite-node/dist/cli.cjs"
   },
   "devDependencies": {
-    "vite": "^2.9.10",
     "vite-node": "workspace:*",
     "vitest": "workspace:*"
   }

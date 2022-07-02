@@ -34,6 +34,11 @@
       "types": "./dist/utils.d.ts",
       "require": "./dist/utils.cjs",
       "import": "./dist/utils.mjs"
+    },
+    "./hmr": {
+      "types": "./dist/hmr.d.ts",
+      "require": "./dist/hmr.cjs",
+      "import": "./dist/hmr.mjs"
     }
   },
   "main": "./dist/index.mjs",
