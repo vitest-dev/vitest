@@ -136,6 +136,9 @@ export class Vitest {
       process.exit(exitCode)
     }
 
+    // populate once, update cache on watch
+    await Promise.all(files.map(file => this.state.stats.updateStats(file)))
+
     await this.runFiles(files)
 
     if (this.config.coverage.enabled)
@@ -361,6 +364,7 @@ export class Vitest {
       if (this.state.filesMap.has(id)) {
         this.state.filesMap.delete(id)
         this.state.results.removeFromCache(id)
+        this.state.stats.removeStats(id)
         this.changedTests.delete(id)
         this.report('onTestRemoved', id)
       }
@@ -369,6 +373,7 @@ export class Vitest {
       id = slash(id)
       if (await this.isTargetFile(id)) {
         this.changedTests.add(id)
+        await this.state.stats.updateStats(id)
         this.scheduleRerun(id)
       }
     }

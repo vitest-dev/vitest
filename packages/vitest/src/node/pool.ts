@@ -114,8 +114,16 @@ export function createPool(ctx: Vitest): WorkerPool {
         const aState = ctx.state.results.getResults(a)
         const bState = ctx.state.results.getResults(b)
 
-        if (!aState || !bState)
-          return !aState && bState ? -1 : !bState && aState ? 1 : 0
+        if (!aState || !bState) {
+          const statsA = ctx.state.stats.getStats(a)
+          const statsB = ctx.state.stats.getStats(b)
+
+          if (!statsA || !statsB)
+            return !aState && bState ? -1 : !bState && aState ? 1 : 0
+
+          // run larger files first
+          return statsB.size - statsA.size
+        }
 
         // run failed first
         if (aState.failed && !bState.failed)
