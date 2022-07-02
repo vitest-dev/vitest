@@ -1,6 +1,7 @@
 import cac from 'cac'
 import c from 'picocolors'
 import { version } from '../../package.json'
+import { VitestCache } from './cache'
 import type { CliOptions } from './cli-api'
 import { startVitest } from './cli-api'
 import { divider } from './reporters/renderers/utils'
@@ -56,6 +57,9 @@ cli
 cli
   .command('[...filters]')
   .action(start)
+
+cli.command('clearCache')
+  .action(VitestCache.clearCache)
 
 cli.parse()
 

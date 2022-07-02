@@ -364,10 +364,10 @@ export interface InlineConfig {
 
   /**
    * Options for configuring cache policy.
-   * @default { path: 'node_modules/.vitest' }
+   * @default { dir: 'node_modules/.vitest' }
    */
   cache?: false | {
-    path?: string
+    dir?: string
   }
 }
 
@@ -437,6 +437,6 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
   }
 
   cache: {
-    path: string
+    dir: string
   } | false
 }

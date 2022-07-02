@@ -567,11 +567,11 @@ Test above this limit will be queued to run when available slot appears.
 
 ### cache
 
-- **Type**: `false | { path? }`
+- **Type**: `false | { dir? }`
 
 Options to configure Vitest cache policy. At the moment Vitest stores cache for test results to run the longer and failed tests first.
 
-#### cache.path
+#### cache.dir
 
 - **Type**: `string`
 - **Default**: `node_modules/.vitest`

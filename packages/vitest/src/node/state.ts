@@ -1,5 +1,5 @@
 import type { ErrorWithDiff, File, Task, TaskResultPack, UserConsoleLog } from '../types'
-import { ResultsCache } from './cache'
+import { ResultsCache } from './cache/results'
 
 export class StateManager {
   filesMap = new Map<string, File>()

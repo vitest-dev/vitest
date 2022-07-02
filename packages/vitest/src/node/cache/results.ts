@@ -1,7 +1,7 @@
 import fs from 'fs'
 import { dirname, resolve } from 'pathe'
-import type { File, ResolvedConfig } from '../types'
-import { version } from '../../package.json'
+import type { File, ResolvedConfig } from '../../types'
+import { version } from '../../../package.json'
 
 interface SuiteResultCache {
   failed: boolean
@@ -10,10 +10,11 @@ interface SuiteResultCache {
 
 export class ResultsCache {
   private cache = new Map<string, SuiteResultCache>()
-  public config!: ResolvedConfig['cache']
+  private cachePath: string | null = null
 
   setConfig(config: ResolvedConfig['cache']) {
-    this.config = config
+    if (config)
+      this.cachePath = resolve(config.dir, 'results.json')
   }
 
   getResults(id: string) {
@@ -21,12 +22,11 @@ export class ResultsCache {
   }
 
   async readFromCache() {
-    if (this.config === false)
+    if (!this.cachePath)
       return
 
-    const resultsCachePath = resolve(this.config.path, 'results.json')
-    if (fs.existsSync(resultsCachePath)) {
-      const resultsCache = await fs.promises.readFile(resultsCachePath, 'utf8')
+    if (fs.existsSync(this.cachePath)) {
+      const resultsCache = await fs.promises.readFile(this.cachePath, 'utf8')
       this.cache = new Map(JSON.parse(resultsCache).results)
     }
   }
@@ -49,18 +49,17 @@ export class ResultsCache {
   }
 
   async writeToCache() {
-    if (this.config === false)
+    if (!this.cachePath)
       return
 
-    const resultsCachePath = resolve(this.config.path, 'results.json')
     const resultsCache = Array.from(this.cache.entries())
 
-    const cacheDirname = dirname(resultsCachePath)
+    const cacheDirname = dirname(this.cachePath)
 
     if (!fs.existsSync(cacheDirname))
       await fs.promises.mkdir(cacheDirname, { recursive: true })
 
-    await fs.promises.writeFile(resultsCachePath, JSON.stringify({
+    await fs.promises.writeFile(this.cachePath, JSON.stringify({
       version,
       results: resultsCache,
     }))
