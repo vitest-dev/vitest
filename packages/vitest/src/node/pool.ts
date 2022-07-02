@@ -1,7 +1,6 @@
 import { MessageChannel } from 'worker_threads'
 import { pathToFileURL } from 'url'
 import { cpus } from 'os'
-import { createHash } from 'crypto'
 import { resolve } from 'pathe'
 import type { Options as TinypoolOptions } from 'tinypool'
 import { Tinypool } from 'tinypool'
@@ -9,8 +8,9 @@ import { createBirpc } from 'birpc'
 import type { RawSourceMap } from 'vite-node'
 import type { ResolvedConfig, WorkerContext, WorkerRPC } from '../types'
 import { distDir } from '../constants'
-import { AggregateError, slash } from '../utils'
+import { AggregateError } from '../utils'
 import type { Vitest } from './core'
+import { BaseSequelizer } from './sequelizers/BaseSequelizer'
 
 export type RunWithFiles = (files: string[], invalidates?: string[]) => Promise<void>
 
@@ -86,54 +86,15 @@ export function createPool(ctx: Vitest): WorkerPool {
       }
     }
 
+    const sequelizer = new BaseSequelizer(ctx)
+
     return async (files, invalidates) => {
       const config = ctx.getSerializableConfig()
 
-      if (config.shard) {
-        const { index, count } = config.shard
-        const shardSize = Math.ceil(files.length / count)
-        const shardStart = shardSize * (index - 1)
-        const shardEnd = shardSize * index
-        files = files
-          .map((file) => {
-            const fullPath = resolve(slash(config.root), slash(file))
-            const specPath = fullPath.slice(config.root.length)
-            return {
-              file,
-              hash: createHash('sha1')
-                .update(specPath)
-                .digest('hex'),
-            }
-          })
-          .sort((a, b) => (a.hash < b.hash ? -1 : a.hash > b.hash ? 1 : 0))
-          .slice(shardStart, shardEnd)
-          .map(({ file }) => file)
-      }
+      if (config.shard)
+        files = await sequelizer.shard(files)
 
-      files = files.sort((a, b) => {
-        const aState = ctx.state.results.getResults(a)
-        const bState = ctx.state.results.getResults(b)
-
-        if (!aState || !bState) {
-          const statsA = ctx.state.stats.getStats(a)
-          const statsB = ctx.state.stats.getStats(b)
-
-          if (!statsA || !statsB)
-            return !aState && bState ? -1 : !bState && aState ? 1 : 0
-
-          // run larger files first
-          return statsB.size - statsA.size
-        }
-
-        // run failed first
-        if (aState.failed && !bState.failed)
-          return -1
-        if (!aState.failed && bState.failed)
-          return 1
-
-        // run longer first
-        return bState.duration - aState.duration
-      })
+      files = await sequelizer.sort(files)
 
       if (!ctx.config.threads) {
         await runFiles(config, files)

@@ -3,7 +3,7 @@ import { dirname, resolve } from 'pathe'
 import type { File, ResolvedConfig } from '../../types'
 import { version } from '../../../package.json'
 
-interface SuiteResultCache {
+export interface SuiteResultCache {
   failed: boolean
   duration: number
 }

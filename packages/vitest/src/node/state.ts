@@ -10,6 +10,14 @@ export class StateManager {
   results = new ResultsCache()
   stats = new FilesCache()
 
+  getFileTestResults(id: string) {
+    return this.results.getResults(id)
+  }
+
+  getFileStats(id: string) {
+    return this.stats.getStats(id)
+  }
+
   catchError(err: unknown, type: string) {
     (err as ErrorWithDiff).type = type
     this.errorsSet.add(err)
