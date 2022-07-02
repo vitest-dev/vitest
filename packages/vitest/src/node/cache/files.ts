@@ -1,11 +1,11 @@
 import fs, { type Stats } from 'fs'
 
-type FileCacheStats = Pick<Stats, 'size'>
+type FileStatsCache = Pick<Stats, 'size'>
 
-export class FilesCache {
-  public cache = new Map<string, FileCacheStats>()
+export class FilesStatsCache {
+  public cache = new Map<string, FileStatsCache>()
 
-  public getStats(fsPath: string): FileCacheStats | undefined {
+  public getStats(fsPath: string): FileStatsCache | undefined {
     return this.cache.get(fsPath)
   }
 

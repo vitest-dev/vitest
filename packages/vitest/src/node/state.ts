@@ -1,5 +1,5 @@
 import type { ErrorWithDiff, File, Task, TaskResultPack, UserConsoleLog } from '../types'
-import { FilesCache } from './cache/files'
+import { FilesStatsCache } from './cache/files'
 import { ResultsCache } from './cache/results'
 
 export class StateManager {
@@ -8,7 +8,7 @@ export class StateManager {
   taskFileMap = new WeakMap<Task, File>()
   errorsSet = new Set<unknown>()
   results = new ResultsCache()
-  stats = new FilesCache()
+  stats = new FilesStatsCache()
 
   getFileTestResults(id: string) {
     return this.results.getResults(id)
