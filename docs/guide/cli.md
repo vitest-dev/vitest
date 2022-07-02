@@ -36,7 +36,7 @@ Useful to run with [`lint-staged`](https://github.com/okonet/lint-staged) or wit
 vitest related /src/index.ts /src/hello-world.js
 ```
 
-### `vitest clearCache`
+### `vitest clean cache`
 
 Clears cache folder.
 
