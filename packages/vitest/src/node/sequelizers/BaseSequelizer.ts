@@ -45,7 +45,7 @@ export class BaseSequelizer implements TestSequelizer {
         const statsA = ctx.state.getFileStats(a)
         const statsB = ctx.state.getFileStats(b)
 
-        // run unknown forst
+        // run unknown first
         if (!statsA || !statsB)
           return !statsA && statsB ? -1 : !statsB && statsA ? 1 : 0
 

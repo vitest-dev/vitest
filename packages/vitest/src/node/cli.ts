@@ -58,18 +58,26 @@ cli
   .command('[...filters]')
   .action(start)
 
-cli.command('clearCache')
-  .action(clearCache)
+cli.command('clean <type>')
+  .action(clean)
 
 cli.parse()
 
-async function clearCache(args: CliOptions) {
-  const { dir, cleared } = await VitestCache.clearCache(args)
+async function clean(subject: string, args: CliOptions) {
+  if (subject !== 'cache')
+    return
 
-  if (cleared)
-    console.log(c.bgGreen(' VITEST '), `Cache cleared at ${dir}`)
-  else
-    console.log(c.bgRed(' VITEST '), `No cache found at ${dir}`)
+  try {
+    const { dir, cleared } = await VitestCache.clearCache(args)
+
+    if (cleared)
+      console.log(c.bgGreen(' VITEST '), `Cache cleared at ${dir}`)
+    else
+      console.log(c.bgRed(' ERROR '), `No cache found at ${dir}`)
+  }
+  catch (err: any) {
+    console.log(c.bgRed('  ERROR  '), err.message)
+  }
 }
 
 async function runRelated(relatedFiles: string[] | string, argv: CliOptions) {

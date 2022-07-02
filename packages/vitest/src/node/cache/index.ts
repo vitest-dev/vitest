@@ -20,13 +20,10 @@ export class VitestCache {
 
     const config = await loadConfigFromFile({ command: 'serve', mode: 'test' }, configPath)
 
-    if (!config)
-      throw new Error(`[vitest] Not able to load config from ${configPath}`)
-
-    const cache = config.config.test?.cache
+    const cache = config?.config.test?.cache
 
     if (cache === false)
-      throw new Error('[vitest] Cache is disabled')
+      throw new Error('Cache is disabled')
 
     const cachePath = VitestCache.resolveCacheDir(root, cache?.dir)
 
