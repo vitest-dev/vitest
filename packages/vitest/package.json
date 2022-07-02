@@ -62,11 +62,11 @@
     "prepublishOnly": "nr build"
   },
   "peerDependencies": {
+    "@edge-runtime/vm": "*",
     "@vitest/ui": "*",
     "c8": "*",
     "happy-dom": "*",
-    "jsdom": "*",
-    "@edge-runtime/vm": "*"
+    "jsdom": "*"
   },
   "peerDependenciesMeta": {
     "@vitest/ui": {
