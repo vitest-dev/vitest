@@ -21,7 +21,7 @@ export class BaseSequelizer implements TestSequelizer {
     return [...files]
       .map((file) => {
         const fullPath = resolve(slash(config.root), slash(file))
-        const specPath = fullPath.slice(config.root.length)
+        const specPath = fullPath?.slice(config.root.length)
         return {
           file,
           hash: createHash('sha1')

@@ -21,7 +21,7 @@ export class ResultsCache {
   }
 
   getResults(fsPath: string) {
-    return this.cache.get(fsPath.slice(this.root.length))
+    return this.cache.get(fsPath?.slice(this.root.length))
   }
 
   async readFromCache() {
@@ -43,7 +43,7 @@ export class ResultsCache {
         return
       const duration = result.duration || 0
       // store as relative, so cache would be the same in CI and locally
-      const relativePath = file.filepath.slice(this.root.length)
+      const relativePath = file.filepath?.slice(this.root.length)
       this.cache.set(relativePath, {
         duration: duration >= 0 ? duration : 0,
         failed: result.state === 'fail',
