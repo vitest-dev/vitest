@@ -648,6 +648,7 @@ importers:
   packages/vitest:
     specifiers:
       '@antfu/install-pkg': ^0.1.0
+      '@edge-runtime/vm': 1.1.0-beta.10
       '@sinonjs/fake-timers': ^9.1.2
       '@types/chai': ^4.3.1
       '@types/chai-subset': ^1.3.3
@@ -706,6 +707,7 @@ importers:
       vite: 3.0.0-beta.4
     devDependencies:
       '@antfu/install-pkg': 0.1.0
+      '@edge-runtime/vm': 1.1.0-beta.10
       '@sinonjs/fake-timers': 9.1.2
       '@types/diff': 5.0.2
       '@types/jsdom': 16.2.14
@@ -878,6 +880,16 @@ importers:
       vitest: workspace:*
     devDependencies:
       pathe: 0.2.0
+      vitest: link:../../packages/vitest
+
+  test/vite-edge:
+    specifiers:
+      '@edge-runtime/vm': 1.1.0-beta.10
+      '@vitest/web-worker': workspace:*
+      vitest: workspace:*
+    devDependencies:
+      '@edge-runtime/vm': 1.1.0-beta.10
+      '@vitest/web-worker': link:../../packages/web-worker
       vitest: link:../../packages/vitest
 
   test/vite-node:
@@ -3055,6 +3067,16 @@ packages:
       algoliasearch: 4.13.1
       react: 18.1.0
       react-dom: 18.1.0_react@18.1.0
+    dev: true
+
+  /@edge-runtime/primitives/1.1.0-beta.10:
+    resolution: {integrity: sha512-hv0i2ce35yspqlnmcSKV/GEKfk8WyB9aTSOk0ZMK6gOR6ZvBDCzDpdacIcGuktaTuDinwon2DLxXRhiAS2PjUg==}
+    dev: true
+
+  /@edge-runtime/vm/1.1.0-beta.10:
+    resolution: {integrity: sha512-AHeIdWp1OUf4kvA4to56shXZzM66bR84LMNTbYGY7G3+BBr+VkUcvU+hWr8JYCOj/iAHi/fuE9r1TyrMm2pQaw==}
+    dependencies:
+      '@edge-runtime/primitives': 1.1.0-beta.10
     dev: true
 
   /@emotion/babel-plugin/11.9.2_@babel+core@7.18.2:
@@ -6301,7 +6323,7 @@ packages:
     dev: true
 
   /@types/form-data/0.0.33:
-    resolution: {integrity: sha1-yayFsqX9GENbjIXZ7LUObWyJP/g=}
+    resolution: {integrity: sha512-8BSvG1kGm83cyJITQMZSulnl6QV8jqAGreJsc5tPu1Jq0vTSOiY/k24Wx82JRpWwZSqrala6sd5rWi6aNXvqcw==}
     dependencies:
       '@types/node': 17.0.40
     dev: true
