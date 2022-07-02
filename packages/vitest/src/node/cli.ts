@@ -64,8 +64,10 @@ cli.command('clean <type>')
 cli.parse()
 
 async function clean(subject: string, args: CliOptions) {
-  if (subject !== 'cache')
+  if (subject !== 'cache') {
+    console.log(c.bgRed('  ERROR  '), `Unknown clean type: "${subject}".\nSupported types:\n - cache`)
     return
+  }
 
   try {
     const { dir, cleared } = await VitestCache.clearCache(args)
