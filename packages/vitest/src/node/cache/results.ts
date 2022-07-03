@@ -59,16 +59,18 @@ export class ResultsCache {
     if (!this.cachePath)
       return
 
-    const resultsCache = Array.from(this.cache.entries())
+    const results = Array.from(this.cache.entries())
 
     const cacheDirname = dirname(this.cachePath)
 
     if (!fs.existsSync(cacheDirname))
       await fs.promises.mkdir(cacheDirname, { recursive: true })
 
-    await fs.promises.writeFile(this.cachePath, JSON.stringify({
+    const cache = JSON.stringify({
       version: this.version,
-      results: resultsCache,
-    }))
+      results,
+    })
+
+    await fs.promises.writeFile(this.cachePath, cache)
   }
 }

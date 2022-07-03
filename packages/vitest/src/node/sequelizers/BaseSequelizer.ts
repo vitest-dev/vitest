@@ -13,7 +13,7 @@ export class BaseSequelizer implements TestSequelizer {
 
   // async so it can be extended by other sequelizers
   public async shard(files: string[]): Promise<string[]> {
-    const config = this.ctx.getSerializableConfig()
+    const { config } = this.ctx
     const { index, count } = config.shard!
     const shardSize = Math.ceil(files.length / count)
     const shardStart = shardSize * (index - 1)
@@ -36,14 +36,14 @@ export class BaseSequelizer implements TestSequelizer {
 
   // async so it can be extended by other sequelizers
   public async sort(files: string[]): Promise<string[]> {
-    const ctx = this.ctx
+    const { state } = this.ctx
     return [...files].sort((a, b) => {
-      const aState = ctx.state.getFileTestResults(a)
-      const bState = ctx.state.getFileTestResults(b)
+      const aState = state.getFileTestResults(a)
+      const bState = state.getFileTestResults(b)
 
       if (!aState || !bState) {
-        const statsA = ctx.state.getFileStats(a)
-        const statsB = ctx.state.getFileStats(b)
+        const statsA = state.getFileStats(a)
+        const statsB = state.getFileStats(b)
 
         // run unknown first
         if (!statsA || !statsB)

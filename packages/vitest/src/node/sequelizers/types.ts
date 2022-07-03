@@ -1,4 +1,5 @@
 import type { Awaitable } from '../../types'
+import type { Vitest } from '../core'
 
 export interface TestSequelizer {
   /**
@@ -7,4 +8,8 @@ export interface TestSequelizer {
    */
   shard(files: string[]): Awaitable<string[]>
   sort(files: string[]): Awaitable<string[]>
+}
+
+export interface TestSequelizerContructor {
+  new (ctx: Vitest): TestSequelizer
 }
