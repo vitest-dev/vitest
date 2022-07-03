@@ -768,6 +768,12 @@ importers:
     devDependencies:
       rollup: 2.75.7
 
+  test/base:
+    specifiers:
+      vitest: workspace:*
+    devDependencies:
+      vitest: link:../../packages/vitest
+
   test/cjs:
     specifiers:
       '@types/fs-extra': ^9.0.13

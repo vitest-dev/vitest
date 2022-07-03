@@ -1,5 +1,5 @@
 import { ViteNodeRunner } from 'vite-node/client'
-import type { ModuleCache, ViteNodeRunnerOptions } from 'vite-node'
+import type { ViteNodeRunnerOptions } from 'vite-node'
 import { normalizePath } from 'vite'
 import type { MockMap } from '../types/mocker'
 import { getWorkerState } from '../utils'
@@ -36,10 +36,6 @@ export class VitestRunner extends ViteNodeRunner {
     const resolveId = context.__vitest_resolve_id__
 
     const mocker = this.mocker.withRequest(request)
-
-    mocker.on('mocked', (dep: string, module: Partial<ModuleCache>) => {
-      this.moduleCache.set(dep, module)
-    })
 
     const workerState = getWorkerState()
 
