@@ -8,6 +8,7 @@ import { defaultPort } from '../constants'
 import { configDefaults } from '../defaults'
 import { resolveC8Options } from '../integrations/coverage'
 import { toArray } from '../utils'
+import { VitestCache } from './cache'
 
 const extraInlineDeps = [
   /^(?!.*(?:node_modules)).*\.mjs$/,
@@ -180,6 +181,10 @@ export function resolveConfig(
   resolved.css ??= {}
   if (typeof resolved.css === 'object')
     resolved.css.include ??= [/\.module\./]
+
+  resolved.cache ??= { dir: '' }
+  if (resolved.cache)
+    resolved.cache.dir = VitestCache.resolveCacheDir(resolved.root, resolved.cache.dir)
 
   return resolved
 }

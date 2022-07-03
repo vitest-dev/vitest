@@ -199,7 +199,7 @@ importers:
       typescript: 4.6.3
       vitest: workspace:*
     dependencies:
-      next: 12.1.5_ezdxe4hg7n3pawg24sxf3xmgta
+      next: 12.1.5_zpnidt7m3osuk7shl3s4oenomq
       react: 18.0.0
       react-dom: 18.0.0_react@18.0.0
     devDependencies:
@@ -767,6 +767,12 @@ importers:
       ws: 8.8.0
     devDependencies:
       rollup: 2.75.7
+
+  test/cache:
+    specifiers:
+      vitest: workspace:*
+    devDependencies:
+      vitest: link:../../packages/vitest
 
   test/cjs:
     specifiers:
@@ -15837,7 +15843,7 @@ packages:
     resolution: {integrity: sha512-9iN1ka/9zmX1ZvLV9ewJYEk9h7RyRRtqdK0woXcqohu8EWIerfPUjYJPg0ULy0UqP7cslmdGc8xKDJcojlKiaw==}
     dev: true
 
-  /next/12.1.5_ezdxe4hg7n3pawg24sxf3xmgta:
+  /next/12.1.5_zpnidt7m3osuk7shl3s4oenomq:
     resolution: {integrity: sha512-YGHDpyfgCfnT5GZObsKepmRnne7Kzp7nGrac07dikhutWQug7hHg85/+sPJ4ZW5Q2pDkb+n0FnmLkmd44htIJQ==}
     engines: {node: '>=12.22.0'}
     hasBin: true
@@ -15860,7 +15866,7 @@ packages:
       postcss: 8.4.5
       react: 18.0.0
       react-dom: 18.0.0_react@18.0.0
-      styled-jsx: 5.0.1_uyynoipo3v3vrfv6si7tyrw7ku
+      styled-jsx: 5.0.1_react@18.0.0
     optionalDependencies:
       '@next/swc-android-arm-eabi': 12.1.5
       '@next/swc-android-arm64': 12.1.5
@@ -19034,7 +19040,7 @@ packages:
       inline-style-parser: 0.1.1
     dev: true
 
-  /styled-jsx/5.0.1_uyynoipo3v3vrfv6si7tyrw7ku:
+  /styled-jsx/5.0.1_react@18.0.0:
     resolution: {integrity: sha512-+PIZ/6Uk40mphiQJJI1202b+/dYeTVd9ZnMPR80pgiWbjIwvN2zIp4r9et0BgqBuShh48I0gttPlAXA7WVvBxw==}
     engines: {node: '>= 12.0.0'}
     peerDependencies:
@@ -19047,7 +19053,6 @@ packages:
       babel-plugin-macros:
         optional: true
     dependencies:
-      '@babel/core': 7.18.2
       react: 18.0.0
     dev: false
 
