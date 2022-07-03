@@ -1,3 +1,7 @@
+---
+title: Why Vitest | Guide
+---
+
 # Why Vitest
 
 :::tip NOTE
