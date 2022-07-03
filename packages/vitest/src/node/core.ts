@@ -91,6 +91,9 @@ export class Vitest {
 
     if (resolved.coverage.enabled)
       await cleanCoverage(resolved.coverage, resolved.coverage.clean)
+
+    this.state.results.setConfig(resolved.root, resolved.cache)
+    await this.state.results.readFromCache()
   }
 
   getSerializableConfig() {
@@ -132,6 +135,9 @@ export class Vitest {
 
       process.exit(exitCode)
     }
+
+    // populate once, update cache on watch
+    await Promise.all(files.map(file => this.state.stats.updateStats(file)))
 
     await this.runFiles(files)
 
@@ -205,7 +211,7 @@ export class Vitest {
     return runningTests
   }
 
-  async runFiles(files: string[]) {
+  async runFiles(paths: string[]) {
     await this.runningPromise
 
     this.runningPromise = (async () => {
@@ -217,16 +223,21 @@ export class Vitest {
       this.snapshot.clear()
       this.state.clearErrors()
       try {
-        await this.pool.runTests(files, invalidates)
+        await this.pool.runTests(paths, invalidates)
       }
       catch (err) {
         this.state.catchError(err, 'Unhandled Error')
       }
 
-      if (hasFailed(this.state.getFiles()))
+      const files = this.state.getFiles()
+
+      if (hasFailed(files))
         process.exitCode = 1
 
-      await this.report('onFinished', this.state.getFiles(), this.state.getUnhandledErrors())
+      await this.report('onFinished', files, this.state.getUnhandledErrors())
+
+      this.state.results.updateResults(files)
+      await this.state.results.writeToCache()
     })()
       .finally(() => {
         this.runningPromise = undefined
@@ -352,6 +363,8 @@ export class Vitest {
 
       if (this.state.filesMap.has(id)) {
         this.state.filesMap.delete(id)
+        this.state.results.removeFromCache(id)
+        this.state.stats.removeStats(id)
         this.changedTests.delete(id)
         this.report('onTestRemoved', id)
       }
@@ -360,6 +373,7 @@ export class Vitest {
       id = slash(id)
       if (await this.isTargetFile(id)) {
         this.changedTests.add(id)
+        await this.state.stats.updateStats(id)
         this.scheduleRerun(id)
       }
     }
