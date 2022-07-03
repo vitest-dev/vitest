@@ -1,6 +1,6 @@
 import type { Vitest } from 'vitest'
 import { describe, expect, test, vi } from 'vitest'
-import { BaseSequelizer } from '../../../packages/vitest/src/node/sequelizers/BaseSequelizer'
+import { BaseSequencer } from '../../../packages/vitest/src/node/sequencers/BaseSequencer'
 
 const buildCtx = () => {
   return {
@@ -13,7 +13,7 @@ const buildCtx = () => {
 
 describe('test sequelizers', () => {
   test('sorting when no info is available', async () => {
-    const sequelizer = new BaseSequelizer(buildCtx())
+    const sequelizer = new BaseSequencer(buildCtx())
     const files = ['a', 'b', 'c']
     const sorted = await sequelizer.sort(files)
     expect(sorted).toStrictEqual(files)
@@ -25,7 +25,7 @@ describe('test sequelizers', () => {
       if (file === 'b')
         return { size: 2 }
     })
-    const sequelizer = new BaseSequelizer(ctx)
+    const sequelizer = new BaseSequencer(ctx)
     const files = ['b', 'a', 'c']
     const sorted = await sequelizer.sort(files)
     expect(sorted).toStrictEqual(['a', 'c', 'b'])
@@ -41,7 +41,7 @@ describe('test sequelizers', () => {
       if (file === 'c')
         return { size: 3 }
     })
-    const sequelizer = new BaseSequelizer(ctx)
+    const sequelizer = new BaseSequencer(ctx)
     const files = ['b', 'a', 'c']
     const sorted = await sequelizer.sort(files)
     expect(sorted).toStrictEqual(['c', 'b', 'a'])
@@ -57,7 +57,7 @@ describe('test sequelizers', () => {
       if (file === 'c')
         return { failed: true, duration: 1 }
     })
-    const sequelizer = new BaseSequelizer(ctx)
+    const sequelizer = new BaseSequencer(ctx)
     const files = ['b', 'a', 'c']
     const sorted = await sequelizer.sort(files)
     expect(sorted).toStrictEqual(['b', 'c', 'a'])
@@ -73,7 +73,7 @@ describe('test sequelizers', () => {
       if (file === 'c')
         return { failed: true, duration: 3 }
     })
-    const sequelizer = new BaseSequelizer(ctx)
+    const sequelizer = new BaseSequencer(ctx)
     const files = ['b', 'a', 'c']
     const sorted = await sequelizer.sort(files)
     expect(sorted).toStrictEqual(['c', 'b', 'a'])
@@ -89,7 +89,7 @@ describe('test sequelizers', () => {
       if (file === 'c')
         return { failed: true, duration: 3 }
     })
-    const sequelizer = new BaseSequelizer(ctx)
+    const sequelizer = new BaseSequencer(ctx)
     const files = ['b', 'a', 'c']
     const sorted = await sequelizer.sort(files)
     expect(sorted).toStrictEqual(['c', 'b', 'a'])
