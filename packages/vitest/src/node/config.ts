@@ -9,6 +9,8 @@ import { configDefaults } from '../defaults'
 import { resolveC8Options } from '../integrations/coverage'
 import { toArray } from '../utils'
 import { VitestCache } from './cache'
+import { BaseSequencer } from './sequencers/BaseSequencer'
+import { RandomSequencer } from './sequencers/RandomSequencer'
 
 const extraInlineDeps = [
   /^(?!.*(?:node_modules)).*\.mjs$/,
@@ -185,6 +187,14 @@ export function resolveConfig(
   resolved.cache ??= { dir: '' }
   if (resolved.cache)
     resolved.cache.dir = VitestCache.resolveCacheDir(resolved.root, resolved.cache.dir)
+
+  // random should have the priority over config, because it is a CLI flag
+  if (!resolved.sequence?.sequencer || resolved.random) {
+    resolved.sequence ??= {} as any
+    resolved.sequence.sequencer = resolved.sequence.random || resolved.random
+      ? RandomSequencer
+      : BaseSequencer
+  }
 
   return resolved
 }

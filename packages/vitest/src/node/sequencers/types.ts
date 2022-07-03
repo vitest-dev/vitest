@@ -1,7 +1,7 @@
 import type { Awaitable } from '../../types'
 import type { Vitest } from '../core'
 
-export interface TestSequelizer {
+export interface TestSequencer {
   /**
    * Slicing tests into shards. Will be run before `sort`.
    * Only run, if `shard` is defined.
@@ -10,6 +10,6 @@ export interface TestSequelizer {
   sort(files: string[]): Awaitable<string[]>
 }
 
-export interface TestSequelizerContructor {
-  new (ctx: Vitest): TestSequelizer
+export interface TestSequencerContructor {
+  new (ctx: Vitest): TestSequencer
 }

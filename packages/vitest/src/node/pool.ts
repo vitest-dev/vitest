@@ -10,7 +10,6 @@ import type { ResolvedConfig, WorkerContext, WorkerRPC } from '../types'
 import { distDir } from '../constants'
 import { AggregateError } from '../utils'
 import type { Vitest } from './core'
-import { BaseSequelizer } from './sequelizers/BaseSequelizer'
 
 export type RunWithFiles = (files: string[], invalidates?: string[]) => Promise<void>
 
@@ -86,15 +85,16 @@ export function createPool(ctx: Vitest): WorkerPool {
       }
     }
 
-    const sequelizer = new BaseSequelizer(ctx)
+    const Sequencer = ctx.config.sequence.sequencer
+    const sequencer = new Sequencer(ctx)
 
     return async (files, invalidates) => {
       const config = ctx.getSerializableConfig()
 
       if (config.shard)
-        files = await sequelizer.shard(files)
+        files = await sequencer.shard(files)
 
-      files = await sequelizer.sort(files)
+      files = await sequencer.sort(files)
 
       if (!ctx.config.threads) {
         await runFiles(config, files)
