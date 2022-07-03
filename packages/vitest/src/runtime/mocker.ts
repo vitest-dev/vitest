@@ -17,15 +17,11 @@ export class VitestMocker {
   private static pendingIds: PendingSuiteMock[] = []
   private static spyModule?: typeof import('../integrations/spy')
 
-  private request!: ViteRunnerRequest
-
   constructor(
     public options: ExecuteOptions,
     private moduleCache: ModuleCacheMap,
-    request?: ViteRunnerRequest,
-  ) {
-    this.request = request!
-  }
+    private request: ViteRunnerRequest,
+  ) {}
 
   private get root() {
     return this.options.root
@@ -261,9 +257,5 @@ export class VitestMocker {
 
   public queueUnmock(id: string, importer: string) {
     VitestMocker.pendingIds.push({ type: 'unmock', id, importer })
-  }
-
-  public withRequest(request: ViteRunnerRequest) {
-    return new VitestMocker(this.options, this.moduleCache, request)
   }
 }
