@@ -1,7 +1,6 @@
 import cac from 'cac'
 import c from 'picocolors'
 import { version } from '../../package.json'
-import { VitestCache } from './cache'
 import type { CliOptions } from './cli-api'
 import { startVitest } from './cli-api'
 import { divider } from './reporters/renderers/utils'
@@ -58,29 +57,7 @@ cli
   .command('[...filters]')
   .action(start)
 
-cli.command('clean <type>')
-  .action(clean)
-
 cli.parse()
-
-async function clean(subject: string, args: CliOptions) {
-  if (subject !== 'cache') {
-    console.log(c.bgRed('  ERROR  '), `Unknown clean type: "${subject}".\nSupported types:\n - cache`)
-    return
-  }
-
-  try {
-    const { dir, cleared } = await VitestCache.clearCache(args)
-
-    if (cleared)
-      console.log(c.bgGreen(' VITEST '), `Cache cleared at ${dir}`)
-    else
-      console.log(c.bgRed(' ERROR '), `No cache found at ${dir}`)
-  }
-  catch (err: any) {
-    console.log(c.bgRed('  ERROR  '), err.message)
-  }
-}
 
 async function runRelated(relatedFiles: string[] | string, argv: CliOptions) {
   argv.related = relatedFiles
