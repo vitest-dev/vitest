@@ -1,6 +1,6 @@
 import { format } from 'util'
 import type { File, RunMode, Suite, SuiteAPI, SuiteCollector, SuiteFactory, SuiteHooks, Task, Test, TestAPI, TestFunction } from '../types'
-import { isObject, noop } from '../utils'
+import { getWorkerState, isObject, noop } from '../utils'
 import { createChainable } from './chain'
 import { collectTask, collectorContext, createTestContext, runWithSuite, withTimeout } from './context'
 import { getHooks, setFn, setHooks } from './map'
@@ -37,8 +37,12 @@ function formatTitle(template: string, items: any[], idx: number) {
 export const describe = suite
 export const it = test
 
+const workerState = getWorkerState()
+
 // implementations
-export const defaultSuite = suite('')
+export const defaultSuite = workerState.config.sequence.random
+  ? suite.random('')
+  : suite('')
 
 export function clearCollectorContext() {
   collectorContext.tasks.length = 0
@@ -59,7 +63,7 @@ export function createSuiteHooks() {
   }
 }
 
-function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, mode: RunMode, concurrent?: boolean) {
+function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, mode: RunMode, concurrent?: boolean, random?: boolean) {
   const tasks: (Test | Suite | SuiteCollector)[] = []
   const factoryQueue: (Test | Suite | SuiteCollector)[] = []
 
@@ -80,6 +84,8 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
     } as Omit<Test, 'context'> as Test
     if (this.concurrent || concurrent)
       test.concurrent = true
+    if (random)
+      test.random = true
 
     const context = createTestContext(test)
     // create test context
@@ -117,6 +123,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       type: 'suite',
       name,
       mode,
+      random,
       tasks: [],
     }
     setHooks(suite, createSuiteHooks())
@@ -157,10 +164,10 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
 
 function createSuite() {
   const suite = createChainable(
-    ['concurrent', 'skip', 'only', 'todo'],
+    ['concurrent', 'random', 'skip', 'only', 'todo'],
     function (name: string, factory?: SuiteFactory) {
       const mode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run'
-      return createSuiteCollector(name, factory, mode, this.concurrent)
+      return createSuiteCollector(name, factory, mode, this.concurrent, this.random)
     },
   ) as SuiteAPI
 

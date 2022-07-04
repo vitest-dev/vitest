@@ -2,7 +2,7 @@ import limit from 'p-limit'
 import type { File, HookCleanupCallback, HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from '../types'
 import { vi } from '../integrations/vi'
 import { getSnapshotClient } from '../integrations/snapshot/chai'
-import { clearTimeout, getFullName, getWorkerState, hasFailed, hasTests, partitionSuiteChildren, setTimeout } from '../utils'
+import { clearTimeout, getFullName, getWorkerState, hasFailed, hasTests, partitionSuiteChildren, randomize, setTimeout } from '../utils'
 import { takeCoverage } from '../integrations/coverage'
 import { getState, setState } from '../integrations/chai/jest-expect'
 import { GLOBAL_EXPECT } from '../integrations/chai/constants'
@@ -210,12 +210,20 @@ export async function runSuite(suite: Suite) {
     try {
       const beforeAllCleanups = await callSuiteHook(suite, suite, 'beforeAll', [suite])
 
-      for (const tasksGroup of partitionSuiteChildren(suite)) {
+      for (let tasksGroup of partitionSuiteChildren(suite)) {
         if (tasksGroup[0].concurrent === true) {
           const mutex = limit(workerState.config.maxConcurrency)
           await Promise.all(tasksGroup.map(c => mutex(() => runSuiteChild(c))))
         }
         else {
+          const { sequence } = workerState.config
+          if (sequence.random || suite.random) {
+            // run describe block independently from tests
+            const suites = tasksGroup.filter(group => group.type === 'suite')
+            const tests = tasksGroup.filter(group => group.type === 'test')
+            const groups = randomize([suites, tests], sequence.seed)
+            tasksGroup = groups.flatMap(group => randomize(group, sequence.seed))
+          }
           for (const c of tasksGroup)
             await runSuiteChild(c)
         }

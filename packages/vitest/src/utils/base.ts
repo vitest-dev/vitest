@@ -153,3 +153,24 @@ export function stdout(): NodeJS.WriteStream {
   // eslint-disable-next-line no-console
   return console._stdout || process.stdout
 }
+
+function random(seed: number) {
+  const x = Math.sin(seed++) * 10000
+  return x - Math.floor(x)
+}
+
+export function randomize<T>(array: T[], seed?: number): T[] {
+  let length = array.length
+  seed ??= Date.now()
+
+  while (length) {
+    const index = Math.floor(random(seed) * length--)
+
+    const previous = array[length]
+    array[length] = array[index]
+    array[index] = previous
+    ++seed
+  }
+
+  return array
+}

@@ -35,6 +35,7 @@ cli
   .option('--allowOnly', 'Allow tests and suites that are marked as only (default: !process.env.CI)')
   .option('--shard <shard>', 'Test suite shard to execute in a format of <index>/<count>')
   .option('--changed [since]', 'Run tests that are affected by the changed files (default: false)')
+  .option('--random', 'Run tests in random order (default: false)')
   .help()
 
 cli

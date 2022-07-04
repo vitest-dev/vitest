@@ -442,7 +442,7 @@ export interface UserConfig extends InlineConfig {
    * If tests should be run in random.
    * @default false
    */
-  random?: string
+  random?: boolean
 }
 
 export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'shard' | 'cache' | 'sequence'> {

@@ -191,6 +191,7 @@ export function resolveConfig(
   // random should have the priority over config, because it is a CLI flag
   if (!resolved.sequence?.sequencer || resolved.random) {
     resolved.sequence ??= {} as any
+    resolved.sequence.random ??= resolved.random
     resolved.sequence.sequencer = resolved.sequence.random || resolved.random
       ? RandomSequencer
       : BaseSequencer
