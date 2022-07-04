@@ -1,3 +1,4 @@
+import { RealDate } from '../integrations/mock/date'
 import type { Arrayable, DeepMerge, Nullable } from '../types'
 
 function isFinalObj(obj: any) {
@@ -161,7 +162,7 @@ function random(seed: number) {
 
 export function randomize<T>(array: T[], seed?: number): T[] {
   let length = array.length
-  seed ??= Date.now()
+  seed ??= RealDate.now()
 
   while (length) {
     const index = Math.floor(random(seed) * length--)
