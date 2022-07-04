@@ -53,6 +53,10 @@ export default defineConfig({
 
 ## Options
 
+:::tip
+In addition to the following options, you can also use any configuration option from [Vite](https://vitejs.dev/config/). For example, `define` to define global variables, or `resolve.alias` to define aliases.
+:::
+
 ### include
 
 - **Type:** `string[]`
