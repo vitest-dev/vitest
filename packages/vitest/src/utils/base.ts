@@ -160,9 +160,8 @@ function random(seed: number) {
   return x - Math.floor(x)
 }
 
-export function randomize<T>(array: T[], seed?: number): T[] {
+export function randomize<T>(array: T[], seed = RealDate.now()): T[] {
   let length = array.length
-  seed ??= RealDate.now()
 
   while (length) {
     const index = Math.floor(random(seed) * length--)
