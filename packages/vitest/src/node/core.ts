@@ -190,7 +190,7 @@ export class Vitest {
       return tests
 
     const forceRerunTriggers = this.config.forceRerunTriggers
-    if (forceRerunTriggers.length && mm(related, forceRerunTriggers))
+    if (forceRerunTriggers.length && mm(related, forceRerunTriggers).length)
       return tests
 
     // don't run anything if no related sources are found
