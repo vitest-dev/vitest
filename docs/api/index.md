@@ -320,9 +320,9 @@ When you use `test` in the top level of file, they are collected as part of the 
 
   ```ts
   describe.random('suite', () => {
-    test('concurrent test 1', async () => { /* ... */ })
-    test('concurrent test 2', async () => { /* ... */ })
-    test('concurrent test 3', async () => { /* ... */ })
+    test('random test 1', async () => { /* ... */ })
+    test('random test 2', async () => { /* ... */ })
+    test('random test 3', async () => { /* ... */ })
   })
   // order depends on sequence.seed option in config (Date.now() by default)
   ```
