@@ -848,8 +848,10 @@ importers:
 
   test/related:
     specifiers:
+      execa: ^6.1.0
       vitest: workspace:*
     devDependencies:
+      execa: 6.1.0
       vitest: link:../../packages/vitest
 
   test/reporters:
@@ -6335,7 +6337,7 @@ packages:
     dev: true
 
   /@types/form-data/0.0.33:
-    resolution: {integrity: sha512-8BSvG1kGm83cyJITQMZSulnl6QV8jqAGreJsc5tPu1Jq0vTSOiY/k24Wx82JRpWwZSqrala6sd5rWi6aNXvqcw==}
+    resolution: {integrity: sha1-yayFsqX9GENbjIXZ7LUObWyJP/g=}
     dependencies:
       '@types/node': 17.0.40
     dev: true
