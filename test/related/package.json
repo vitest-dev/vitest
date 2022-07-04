@@ -6,7 +6,6 @@
     "test:related": "vitest related src/sourceA.ts --globals --watch=false",
     "test:rerun": "vitest run rerun"
   },
-  
   "devDependencies": {
     "execa": "^6.1.0",
     "vitest": "workspace:*"
