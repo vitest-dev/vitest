@@ -374,7 +374,7 @@ Glob pattern of file paths to be ignored from triggering watch rerun.
 - **Type**: `string[]`
 - **Default:** `[]`
 
-Glob patter of file paths that will trigger the whole suite rerun.
+Glob patter of file paths that will trigger the whole suite rerun. This paired with the `--changed` argument will run the whole test suite if the trigger is found in the git diff.
 
 Useful if you are testing calling CLI commands, because Vite cannot construct a module graph:
 
