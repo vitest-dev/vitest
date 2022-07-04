@@ -1330,7 +1330,7 @@ When you use `test` in the top level of file, they are collected as part of the 
 
   After the test has passed or failed verifies that certain number of assertions was called during a test. Useful case would be to check if an asynchronous code was called.
 
-  For examples, if we have a function than asynchronously calls two matchers, we can assert that they were actually called.
+  For example, if we have a function that asynchronously calls two matchers, we can assert that they were actually called.
 
   ```ts
   import { expect, test } from 'vitest'
