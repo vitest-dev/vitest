@@ -478,7 +478,7 @@ Vite plugins will receive `ssr: true` flag when processing those files.
 - **Type:** `RegExp[]`
 - **Default:** *modules other than those specified in `transformMode.ssr`*
 
-First do a normal transform pipeline (targeting browser), then then do a SSR rewrite to run the code in Node.<br>
+First do a normal transform pipeline (targeting browser), then do a SSR rewrite to run the code in Node.<br>
 Vite plugins will receive `ssr: false` flag when processing those files.
 
 When you use JSX as component models other than React (e.g. Vue JSX or SolidJS), you might want to config as following to make `.tsx` / `.jsx` transformed as client-side components:
@@ -559,7 +559,7 @@ RegExp pattern for files that should return actual CSS and will be processed by 
 - **Type**: `RegExp | RegExp[]`
 - **Default**: `[]`
 
-RegExp pattern for files that will return en empty CSS file.
+RegExp pattern for files that will return an empty CSS file.
 
 ### maxConcurrency
 
