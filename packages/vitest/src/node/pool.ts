@@ -23,7 +23,7 @@ const workerPath = pathToFileURL(resolve(distDir, './worker.mjs')).href
 
 export function createPool(ctx: Vitest): WorkerPool {
   const threadsCount = ctx.config.watch
-    ? Math.max(cpus().length / 2, 1)
+    ? Math.max(Math.floor(cpus().length / 2), 1)
     : Math.max(cpus().length - 1, 1)
 
   const maxThreads = ctx.config.maxThreads ?? threadsCount
