@@ -12,7 +12,7 @@ describe('forceRerunTrigger', () => {
   })
 
   it('should run the whole test suite if file exists', async () => {
-    writeFile(fileName, '', error => console.error(error))
+    writeFile(fileName, '', () => {})
     const { stdout } = await run()
     expect(stdout).toContain('1 passed')
   }, 60_000)

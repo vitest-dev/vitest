@@ -372,7 +372,7 @@ Glob pattern of file paths to be ignored from triggering watch rerun.
 ### forceRerunTriggers
 
 - **Type**: `string[]`
-- **Default:** `[]`
+- **Default:** `['**/package.json/**', '**/vitest.config.*/**', '**/vite.config.*/**', '**/dist/**']`
 
 Glob pattern of file paths that will trigger the whole suite rerun. This paired with the `--changed` argument will run the whole test suite if the trigger is found in the git diff.
 

@@ -62,7 +62,12 @@ const config = {
   hookTimeout: 10000,
   isolate: true,
   watchExclude: ['**/node_modules/**', '**/dist/**'],
-  forceRerunTriggers: [],
+  forceRerunTriggers: [
+    '**/package.json/**',
+    '**/vitest.config.*/**',
+    '**/vite.config.*/**',
+    '**/dist/**',
+  ],
   update: false,
   reporters: [],
   silent: false,
