@@ -848,8 +848,10 @@ importers:
 
   test/related:
     specifiers:
+      execa: ^6.1.0
       vitest: workspace:*
     devDependencies:
+      execa: 6.1.0
       vitest: link:../../packages/vitest
 
   test/reporters:

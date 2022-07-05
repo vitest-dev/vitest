@@ -83,6 +83,8 @@ Clears cache folder.
 
   To run tests against changes made in the last commit, you can use `--changed HEAD~1`. You can also pass commit hash or branch name.
 
+  If paired with the `forceRerunTriggers` config option it will run the whole test suite if a match is found.
+
 ### shard
 
 - **Type**: `string`
