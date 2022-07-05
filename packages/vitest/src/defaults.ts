@@ -66,7 +66,6 @@ const config = {
     '**/package.json/**',
     '**/vitest.config.*/**',
     '**/vite.config.*/**',
-    '**/dist/**',
   ],
   update: false,
   reporters: [],
