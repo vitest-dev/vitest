@@ -188,13 +188,10 @@ export function resolveConfig(
   if (resolved.cache)
     resolved.cache.dir = VitestCache.resolveCacheDir(resolved.root, resolved.cache.dir)
 
-  // random should have the priority over config, because it is a CLI flag
-  if (!resolved.sequence?.sequencer || resolved.random) {
+  if (!resolved.sequence?.sequencer) {
     resolved.sequence ??= {} as any
     // CLI flag has higher priority
-    if (resolved.random)
-      resolved.sequence.random = true
-    resolved.sequence.sequencer = resolved.sequence.random
+    resolved.sequence.sequencer = resolved.sequence.shuffle
       ? RandomSequencer
       : BaseSequencer
   }

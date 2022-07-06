@@ -40,8 +40,8 @@ export const it = test
 const workerState = getWorkerState()
 
 // implementations
-export const defaultSuite = workerState.config.sequence.random
-  ? suite.random('')
+export const defaultSuite = workerState.config.sequence.shuffle
+  ? suite.shuffle('')
   : suite('')
 
 export function clearCollectorContext() {
@@ -63,7 +63,7 @@ export function createSuiteHooks() {
   }
 }
 
-function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, mode: RunMode, concurrent?: boolean, random?: boolean) {
+function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, mode: RunMode, concurrent?: boolean, shuffle?: boolean) {
   const tasks: (Test | Suite | SuiteCollector)[] = []
   const factoryQueue: (Test | Suite | SuiteCollector)[] = []
 
@@ -84,8 +84,8 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
     } as Omit<Test, 'context'> as Test
     if (this.concurrent || concurrent)
       test.concurrent = true
-    if (random)
-      test.random = true
+    if (shuffle)
+      test.shuffle = true
 
     const context = createTestContext(test)
     // create test context
@@ -123,7 +123,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       type: 'suite',
       name,
       mode,
-      random,
+      shuffle,
       tasks: [],
     }
     setHooks(suite, createSuiteHooks())
@@ -164,10 +164,10 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
 
 function createSuite() {
   const suite = createChainable(
-    ['concurrent', 'random', 'skip', 'only', 'todo'],
+    ['concurrent', 'shuffle', 'skip', 'only', 'todo'],
     function (name: string, factory?: SuiteFactory) {
       const mode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run'
-      return createSuiteCollector(name, factory, mode, this.concurrent, this.random)
+      return createSuiteCollector(name, factory, mode, this.concurrent, this.shuffle)
     },
   ) as SuiteAPI
 

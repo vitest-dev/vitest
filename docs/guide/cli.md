@@ -68,7 +68,7 @@ vitest related /src/index.ts /src/hello-world.js
 | `--allowOnly` | Allow tests and suites that are marked as `only` (default: false in CI, true otherwise) |
 | `--changed [since]` | Run tests that are affected by the changed files (default: false). See [docs](#changed) |
 | `--shard <shard>` | Execute tests in a specified shard |
-| `--random` | Execute tests in random order |
+| `--sequence` | Define in what order to run tests. Use [cac's dot notation] to specify options (for example, use `--sequence.suffle` to run tests in random order) |
 | `-h, --help` | Display available CLI options |
 
 ### changed

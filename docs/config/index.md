@@ -585,7 +585,7 @@ Path to cache directory.
 
 ### sequence
 
-- **Type**: `{ sequencer?, random?, seed? }`
+- **Type**: `{ sequencer?, shuffle?, seed? }`
 
 Options for how tests should be sorted.
 
@@ -598,12 +598,12 @@ A custom class that defines methods for sharding and sorting. You can extend `Ba
 
 Sharding is happening before sorting, and only if `--shard` option is provided.
 
-#### sequence.random
+#### sequence.shuffle
 
 - **Type**: `boolean`
 - **Default**: `false`
 
-If you want tests to run randomly, you can enable it with this option, or CLI argument [`--random`](/guide/cli).
+If you want tests to run randomly, you can enable it with this option, or CLI argument [`--shuffle`](/guide/cli).
 
 Vitest usually uses cache to sort tests, so long running tests start earlier - this makes tests run faster. If your tests will run in random order you will lose this performance improvement, but it may be useful to track tests that accidentally depend on another run previously.
 

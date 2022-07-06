@@ -312,14 +312,14 @@ When you use `test` in the top level of file, they are collected as part of the 
   describe.todo.concurrent(/* ... */) // or describe.concurrent.todo(/* ... */)
   ```
 
-### describe.random
+### describe.shuffle
 
 - **Type:** `(name: string, fn: TestFunction, timeout?: number) => void`
 
-  Vitest provides a way to run all tests in random order via CLI flag [`--random`](/guide/cli) or config option [`sequence.random`](/config/#sequence-random), but if you want to have only part of your test suite to run tests in random order, you can mark it with this flag.
+  Vitest provides a way to run all tests in random order via CLI flag [`--random`](/guide/cli) or config option [`sequence.shuffle`](/config/#sequence-shuffle), but if you want to have only part of your test suite to run tests in random order, you can mark it with this flag.
 
   ```ts
-  describe.random('suite', () => {
+  describe.shuffle('suite', () => {
     test('random test 1', async () => { /* ... */ })
     test('random test 2', async () => { /* ... */ })
     test('random test 3', async () => { /* ... */ })

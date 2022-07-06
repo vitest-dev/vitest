@@ -386,7 +386,7 @@ export interface InlineConfig {
      * Should tests run in random order.
      * @default false
      */
-    random?: boolean
+    shuffle?: boolean
     /**
      * Seed for the random number generator.
      * @default Date.now()
@@ -437,12 +437,6 @@ export interface UserConfig extends InlineConfig {
    * @example --shard=2/3
    */
   shard?: string
-
-  /**
-   * If tests should be run in random.
-   * @default false
-   */
-  random?: boolean
 }
 
 export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'shard' | 'cache' | 'sequence'> {
@@ -472,7 +466,7 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
 
   sequence: {
     sequencer: TestSequencerContructor
-    random?: boolean
+    shuffle?: boolean
     seed?: number
   }
 }

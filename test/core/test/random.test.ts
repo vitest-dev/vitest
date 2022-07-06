@@ -3,9 +3,9 @@ import { afterAll, describe, expect, test } from 'vitest'
 // tests use seed of 101, so they have deterministic random order
 const numbers: number[] = []
 
-describe.random('random tests', () => {
+describe.shuffle('random tests', () => {
   describe('inside', () => {
-    // random is not inhereted from parent
+    // shuffle is not inhereted from parent
 
     test('inside 1', () => {
       numbers.push(1)

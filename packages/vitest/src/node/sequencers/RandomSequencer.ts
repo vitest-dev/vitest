@@ -1,4 +1,4 @@
-import { randomize } from '../../utils'
+import { shuffle } from '../../utils'
 import { BaseSequencer } from './BaseSequencer'
 
 export class RandomSequencer extends BaseSequencer {
@@ -7,6 +7,6 @@ export class RandomSequencer extends BaseSequencer {
 
     const seed = sequence?.seed ?? Date.now()
 
-    return randomize(files, seed)
+    return shuffle(files, seed)
   }
 }
