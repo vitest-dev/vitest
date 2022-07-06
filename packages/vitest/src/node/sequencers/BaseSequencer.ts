@@ -2,9 +2,9 @@ import { createHash } from 'crypto'
 import { resolve } from 'pathe'
 import { slash } from 'vite-node/utils'
 import type { Vitest } from '../core'
-import type { TestSequelizer } from './types'
+import type { TestSequencer } from './types'
 
-export class BaseSequelizer implements TestSequelizer {
+export class BaseSequencer implements TestSequencer {
   protected ctx: Vitest
 
   constructor(ctx: Vitest) {

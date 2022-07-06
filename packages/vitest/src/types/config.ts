@@ -2,6 +2,7 @@ import type { CommonServerOptions } from 'vite'
 import type { PrettyFormatOptions } from 'pretty-format'
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import type { BuiltinReporters } from '../node/reporters'
+import type { TestSequencerContructor } from '../node/sequencers/types'
 import type { C8Options, ResolvedC8Options } from './coverage'
 import type { JSDOMOptions } from './jsdom-options'
 import type { Reporter } from './reporter'
@@ -369,6 +370,29 @@ export interface InlineConfig {
   cache?: false | {
     dir?: string
   }
+
+  /**
+   * Options for configuring the order of running tests.
+   */
+  sequence?: {
+    /**
+     * Class that handles sorting and sharding algorithm.
+     * If you only need to change sorting, you can extend
+     * your custom sequencer from `BaseSequencer` from `vitest/node`.
+     * @default BaseSequencer
+     */
+    sequencer?: TestSequencerContructor
+    /**
+     * Should tests run in random order.
+     * @default false
+     */
+    shuffle?: boolean
+    /**
+     * Seed for the random number generator.
+     * @default Date.now()
+     */
+    seed?: number
+  }
 }
 
 export interface UserConfig extends InlineConfig {
@@ -415,7 +439,7 @@ export interface UserConfig extends InlineConfig {
   shard?: string
 }
 
-export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'shard' | 'cache'> {
+export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'shard' | 'cache' | 'sequence'> {
   base?: string
 
   config?: string
@@ -439,4 +463,10 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
   cache: {
     dir: string
   } | false
+
+  sequence: {
+    sequencer: TestSequencerContructor
+    shuffle?: boolean
+    seed?: number
+  }
 }

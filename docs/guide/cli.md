@@ -36,10 +36,6 @@ Useful to run with [`lint-staged`](https://github.com/okonet/lint-staged) or wit
 vitest related /src/index.ts /src/hello-world.js
 ```
 
-### `vitest clean cache`
-
-Clears cache folder.
-
 ## Options
 
 | Options       |               |
@@ -72,6 +68,7 @@ Clears cache folder.
 | `--allowOnly` | Allow tests and suites that are marked as `only` (default: false in CI, true otherwise) |
 | `--changed [since]` | Run tests that are affected by the changed files (default: false). See [docs](#changed) |
 | `--shard <shard>` | Execute tests in a specified shard |
+| `--sequence` | Define in what order to run tests. Use [cac's dot notation] to specify options (for example, use `--sequence.suffle` to run tests in random order) |
 | `-h, --help` | Display available CLI options |
 
 ### changed

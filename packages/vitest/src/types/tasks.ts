@@ -10,6 +10,7 @@ export interface TaskBase {
   name: string
   mode: RunMode
   concurrent?: boolean
+  shuffle?: boolean
   suite?: Suite
   file?: File
   result?: TaskResult
@@ -113,7 +114,7 @@ void
 }
 
 export type SuiteAPI<ExtraContext = {}> = ChainableFunction<
-'concurrent' | 'only' | 'skip' | 'todo',
+'concurrent' | 'only' | 'skip' | 'todo' | 'shuffle',
 [name: string, factory?: SuiteFactory],
 SuiteCollector<ExtraContext>
 > & {

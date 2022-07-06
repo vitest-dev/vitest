@@ -105,6 +105,10 @@ export class Vitest {
         resolveSnapshotPath: undefined,
       },
       onConsoleLog: undefined!,
+      sequence: {
+        ...this.config.sequence,
+        sequencer: undefined!,
+      },
     },
     this.configOverride || {} as any,
     ) as ResolvedConfig
