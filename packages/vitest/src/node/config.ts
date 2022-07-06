@@ -182,7 +182,7 @@ export function resolveConfig(
   if (typeof resolved.css === 'object')
     resolved.css.include ??= [/\.module\./]
 
-  resolved.cache ??= { dir: '' }
+  resolved.cache ??= "cacheDir" in resolved ? {dir: (resolved.cacheDir ?? '') as string } :  { dir: '' }
   if (resolved.cache)
     resolved.cache.dir = VitestCache.resolveCacheDir(resolved.root, resolved.cache.dir)
 
