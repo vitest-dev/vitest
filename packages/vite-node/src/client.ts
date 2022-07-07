@@ -82,6 +82,11 @@ export class ViteNodeRunner {
     const id = normalizeRequestId(rawId, this.options.base)
     const fsPath = toFilePath(id, this.root)
 
+    // the callstack reference itself circularly
+    if (callstack.includes(fsPath) && this.moduleCache.get(fsPath)?.exports)
+      return this.moduleCache.get(fsPath)?.exports
+
+    // cached module
     if (this.moduleCache.get(fsPath)?.promise)
       return this.moduleCache.get(fsPath)?.promise
 

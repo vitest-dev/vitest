@@ -908,9 +908,11 @@ importers:
 
   test/vite-node:
     specifiers:
+      execa: ^6.1.0
       vite-node: workspace:*
       vitest: workspace:*
     devDependencies:
+      execa: 6.1.0
       vite-node: link:../../packages/vite-node
       vitest: link:../../packages/vitest
 
