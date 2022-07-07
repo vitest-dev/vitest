@@ -7,7 +7,7 @@
     "build-no-prefetch": "vitepress build && esno .vitepress/scripts/build-pwa.ts",
     "serve": "vitepress serve",
     "preview-https": "pnpm run build && serve .vitepress/dist",
-    "preview-https-no-prefecth": "pnpm run build-no-prefetch && serve .vitepress/dist",
+    "preview-https-no-prefetch": "pnpm run build-no-prefetch && serve .vitepress/dist",
     "prefetch": "esno .vitepress/scripts/fetch-avatars.ts"
   },
   "dependencies": {
