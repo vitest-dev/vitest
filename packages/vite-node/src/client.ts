@@ -98,20 +98,21 @@ export class ViteNodeRunner {
 
   /** @internal */
   async directRequest(id: string, fsPath: string, _callstack: string[]) {
-    const callstack = [..._callstack, normalizeModuleId(id)]
+    const callstack = [..._callstack, fsPath]
     const request = async (dep: string) => {
+      const fsPath = toFilePath(normalizeRequestId(dep, this.options.base), this.root)
       const getStack = () => {
-        return `stack:\n${[...callstack, dep].reverse().map(p => `- ${p}`).join('\n')}`
+        return `stack:\n${[...callstack, fsPath].reverse().map(p => `- ${p}`).join('\n')}`
       }
 
       let debugTimer: any
       if (this.debug)
-        debugTimer = setTimeout(() => this.debugLog(() => `module ${dep} takes over 2s to load.\n${getStack()}`), 2000)
+        debugTimer = setTimeout(() => this.debugLog(() => `module ${fsPath} takes over 2s to load.\n${getStack()}`), 2000)
 
       try {
-        if (callstack.includes(normalizeModuleId(dep))) {
+        if (callstack.includes(fsPath)) {
           this.debugLog(() => `circular dependency, ${getStack()}`)
-          const depExports = this.moduleCache.get(dep)?.exports
+          const depExports = this.moduleCache.get(fsPath)?.exports
           if (depExports)
             return depExports
           throw new Error(`[vite-node] Failed to resolve circular dependency, ${getStack()}`)
