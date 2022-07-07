@@ -3128,7 +3128,7 @@ packages:
     resolution: {integrity: sha512-r65Zy4Iljb8oyjtLeCuBH8Qjiy107dOYC6SJq7g7GV5UCQWMObY4SJDPGFjiiVpPrOJ2hmJOoBiYTC7hwx9E2A==}
     dependencies:
       '@emotion/memoize': 0.7.5
-      '@emotion/sheet': 1.1.0
+      '@emotion/sheet': 1.1.1
       '@emotion/utils': 1.1.0
       '@emotion/weak-memoize': 0.2.5
       stylis: 4.0.13
@@ -3241,10 +3241,6 @@ packages:
   /@emotion/sheet/0.9.4:
     resolution: {integrity: sha512-zM9PFmgVSqBw4zL101Q0HrBVTGmpAxFZH/pYx/cjJT5advXguvcgjHFTCaIO3enL/xr89vK2bh0Mfyj9aa0ANA==}
     dev: true
-
-  /@emotion/sheet/1.1.0:
-    resolution: {integrity: sha512-u0AX4aSo25sMAygCuQTzS+HsImZFuS8llY8O7b9MDRzbJM0kVJlAz6KNDqcG7pOuQZJmj/8X/rAW+66kMnMW+g==}
-    dev: false
 
   /@emotion/sheet/1.1.1:
     resolution: {integrity: sha512-J3YPccVRMiTZxYAY0IOq3kd+hUP8idY8Kz6B/Cyo+JuXq52Ek+zbPbSQUrVQp95aJ+lsAW7DPL1P2Z+U1jGkKA==}
@@ -3781,11 +3777,11 @@ packages:
         optional: true
     dependencies:
       '@babel/runtime': 7.17.9
-      '@emotion/is-prop-valid': 1.1.2
+      '@emotion/is-prop-valid': 1.1.3
       '@mui/types': 7.1.4
       '@mui/utils': 5.8.6_react@17.0.2
       '@popperjs/core': 2.11.5
-      clsx: 1.1.1
+      clsx: 1.2.1
       prop-types: 15.8.1
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
@@ -3914,27 +3910,6 @@ packages:
       react: 17.0.2
     dev: false
 
-  /@mui/styled-engine/5.8.0_bgqmsvm4hz6izcmpcwescmz73y:
-    resolution: {integrity: sha512-Q3spibB8/EgeMYHc+/o3RRTnAYkSl7ROCLhXJ830W8HZ2/iDiyYp16UcxKPurkXvLhUaILyofPVrP3Su2uKsAw==}
-    engines: {node: '>=12.0.0'}
-    peerDependencies:
-      '@emotion/react': ^11.4.1
-      '@emotion/styled': ^11.3.0
-      react: ^17.0.0 || ^18.0.0
-    peerDependenciesMeta:
-      '@emotion/react':
-        optional: true
-      '@emotion/styled':
-        optional: true
-    dependencies:
-      '@babel/runtime': 7.17.9
-      '@emotion/cache': 11.7.1
-      '@emotion/react': 11.9.0_3dj5wppwohj5ocihzt4m54mr2a
-      '@emotion/styled': 11.8.1_3zgpe2oef7sbs566rsy6a7qm7i
-      prop-types: 15.8.1
-      react: 17.0.2
-    dev: false
-
   /@mui/styled-engine/5.8.7_bgqmsvm4hz6izcmpcwescmz73y:
     resolution: {integrity: sha512-tVqtowjbYmiRq+qcqXK731L9eWoL9H8xTRhuTgaDGKdch1zlt4I2UwInUe1w2N9N/u3/jHsFbLcl1Un3uOwpQg==}
     engines: {node: '>=12.0.0'}
@@ -3977,10 +3952,10 @@ packages:
       '@emotion/react': 11.9.0_3dj5wppwohj5ocihzt4m54mr2a
       '@emotion/styled': 11.8.1_3zgpe2oef7sbs566rsy6a7qm7i
       '@mui/private-theming': 5.8.6_react@17.0.2
-      '@mui/styled-engine': 5.8.0_bgqmsvm4hz6izcmpcwescmz73y
+      '@mui/styled-engine': 5.8.7_bgqmsvm4hz6izcmpcwescmz73y
       '@mui/types': 7.1.4
       '@mui/utils': 5.8.6_react@17.0.2
-      clsx: 1.1.1
+      clsx: 1.2.1
       csstype: 3.1.0
       prop-types: 15.8.1
       react: 17.0.2
