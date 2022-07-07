@@ -117,7 +117,7 @@ export class VitestMocker {
       for (const file of files) {
         const [basename] = file.split('.')
         if (basename === baseFilename)
-          return resolve(mockFolder, file).replace(this.root, '')
+          return resolve(mockFolder, file)
       }
 
       return null
@@ -126,7 +126,7 @@ export class VitestMocker {
     const dir = dirname(path)
     const baseId = basename(path)
     const fullPath = resolve(dir, '__mocks__', baseId)
-    return existsSync(fullPath) ? fullPath.replace(this.root, '') : null
+    return fullPath
   }
 
   public mockValue(value: any) {
