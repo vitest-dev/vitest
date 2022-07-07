@@ -86,9 +86,9 @@ function init(ctx: WorkerContext) {
   }
 
   if (ctx.invalidates) {
-    ctx.invalidates.forEach((i) => {
-      moduleCache.delete(i)
-      moduleCache.delete(`${i}__mock`)
+    ctx.invalidates.forEach((fsPath) => {
+      moduleCache.delete(fsPath)
+      moduleCache.delete(`${fsPath}__mock`)
     })
   }
   ctx.files.forEach(i => moduleCache.delete(i))

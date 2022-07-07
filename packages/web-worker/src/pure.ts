@@ -133,10 +133,10 @@ export function defineWebWorker() {
 
       runner.executeFile(fsPath)
         .then(() => {
-          invalidates.forEach((path) => {
+          invalidates.forEach((fsPath) => {
             // worker should be new every time
-            moduleCache.delete(path)
-            moduleCache.delete(`${path}__mock`)
+            moduleCache.delete(fsPath)
+            moduleCache.delete(`${fsPath}__mock`)
           })
           const q = this.messageQueue
           this.messageQueue = null

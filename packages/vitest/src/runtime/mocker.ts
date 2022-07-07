@@ -196,19 +196,20 @@ export class VitestMocker {
   public async importMock(id: string, importer: string): Promise<any> {
     const { path, external } = await this.resolvePath(id, importer)
 
-    let mock = this.getDependencyMock(path)
+    const fsPath = this.getFsPath(path, external)
+    let mock = this.getDependencyMock(fsPath)
 
     if (mock === undefined)
-      mock = this.resolveMockPath(path, external)
+      mock = this.resolveMockPath(fsPath, external)
 
     if (mock === null) {
       await this.ensureSpy()
-      const fsPath = this.getFsPath(path, external)
       const mod = await this.request(fsPath)
       return this.mockValue(mod)
     }
+
     if (typeof mock === 'function')
-      return this.callFunctionMock(path, mock)
+      return this.callFunctionMock(fsPath, mock)
     return this.requestWithMock(mock)
   }
 

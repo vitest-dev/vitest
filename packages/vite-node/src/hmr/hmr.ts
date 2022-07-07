@@ -74,9 +74,9 @@ export function sendMessageBuffer(runner: ViteNodeRunner, emitter: HMREmitter) {
 export async function reload(runner: ViteNodeRunner, files: string[]) {
   // invalidate module cache but not node_modules
   Array.from(runner.moduleCache.keys())
-    .forEach((i) => {
-      if (!i.includes('node_modules'))
-        runner.moduleCache.delete(i)
+    .forEach((fsPath) => {
+      if (!fsPath.includes('node_modules'))
+        runner.moduleCache.delete(fsPath)
     })
 
   return Promise.all(files.map(file => runner.executeId(file)))
