@@ -1,6 +1,6 @@
 import { existsSync, readdirSync } from 'fs'
 import { isNodeBuiltin } from 'mlly'
-import { basename, dirname, resolve } from 'pathe'
+import { basename, dirname, join, resolve } from 'pathe'
 import { normalizeRequestId, toFilePath } from 'vite-node/utils'
 import type { ModuleCacheMap } from 'vite-node/client'
 import { getAllProperties, getType, getWorkerState, isWindows, mergeSlashes, slash } from '../utils'
@@ -106,7 +106,7 @@ export class VitestMocker {
     // all mocks should be inside <root>/__mocks__
     if (external || isNodeBuiltin(mockPath) || !existsSync(mockPath)) {
       const mockDirname = dirname(path) // for nested mocks: @vueuse/integration/useJwt
-      const mockFolder = resolve(this.root, '__mocks__', mockDirname)
+      const mockFolder = join(this.root, '__mocks__', mockDirname)
 
       if (!existsSync(mockFolder))
         return null
@@ -117,7 +117,7 @@ export class VitestMocker {
       for (const file of files) {
         const [basename] = file.split('.')
         if (basename === baseFilename)
-          return resolve(mockFolder, file).replace(this.root, '')
+          return resolve(mockFolder, file)
       }
 
       return null
@@ -126,7 +126,7 @@ export class VitestMocker {
     const dir = dirname(path)
     const baseId = basename(path)
     const fullPath = resolve(dir, '__mocks__', baseId)
-    return existsSync(fullPath) ? fullPath.replace(this.root, '') : null
+    return existsSync(fullPath) ? fullPath : null
   }
 
   public mockValue(value: any) {
@@ -196,19 +196,20 @@ export class VitestMocker {
   public async importMock(id: string, importer: string): Promise<any> {
     const { path, external } = await this.resolvePath(id, importer)
 
-    let mock = this.getDependencyMock(path)
+    const fsPath = this.getFsPath(path, external)
+    let mock = this.getDependencyMock(fsPath)
 
     if (mock === undefined)
-      mock = this.resolveMockPath(path, external)
+      mock = this.resolveMockPath(fsPath, external)
 
     if (mock === null) {
       await this.ensureSpy()
-      const fsPath = this.getFsPath(path, external)
       const mod = await this.request(fsPath)
       return this.mockValue(mod)
     }
+
     if (typeof mock === 'function')
-      return this.callFunctionMock(path, mock)
+      return this.callFunctionMock(fsPath, mock)
     return this.requestWithMock(mock)
   }
 

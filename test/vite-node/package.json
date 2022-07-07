@@ -9,6 +9,7 @@
     "debug": "node --inspect-brk ../../packages/vite-node/dist/cli.cjs"
   },
   "devDependencies": {
+    "execa": "^6.1.0",
     "vite-node": "workspace:*",
     "vitest": "workspace:*"
   }
