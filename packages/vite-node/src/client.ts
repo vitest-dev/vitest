@@ -170,7 +170,7 @@ export class ViteNodeRunner {
     const exports: any = Object.create(null)
     exports[Symbol.toStringTag] = 'Module'
 
-    this.moduleCache.set(id, { code: transformed, exports })
+    this.moduleCache.set(fsPath, { code: transformed, exports })
 
     const __filename = fileURLToPath(url)
     const moduleProxy = {
