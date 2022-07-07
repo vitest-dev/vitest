@@ -101,15 +101,16 @@ export class VitestMocker {
 
   public resolveMockPath(mockPath: string, external: string | null) {
     const path = normalizeRequestId(external || mockPath)
-    const mockDirname = dirname(path) // for nested mocks: @vueuse/integration/useJwt
-    const mockFolder = join(this.root, '__mocks__', mockDirname)
-
-    if (!existsSync(mockFolder))
-      return null
 
     // it's a node_module alias
     // all mocks should be inside <root>/__mocks__
-    if (external || isNodeBuiltin(mockPath) || !existsSync(mockFolder)) {
+    if (external || isNodeBuiltin(mockPath) || !existsSync(mockPath)) {
+      const mockDirname = dirname(path) // for nested mocks: @vueuse/integration/useJwt
+      const mockFolder = join(this.root, '__mocks__', mockDirname)
+
+      if (!existsSync(mockFolder))
+        return null
+
       const files = readdirSync(mockFolder)
       const baseFilename = basename(path)
 
@@ -122,9 +123,10 @@ export class VitestMocker {
       return null
     }
 
+    const dir = dirname(path)
     const baseId = basename(path)
-    const fullPath = resolve(mockDirname, '__mocks__', baseId)
-    return fullPath
+    const fullPath = resolve(dir, '__mocks__', baseId)
+    return existsSync(fullPath) ? fullPath : null
   }
 
   public mockValue(value: any) {
