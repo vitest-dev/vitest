@@ -818,6 +818,16 @@ importers:
       '@vue/test-utils': 2.0.0_vue@3.2.37
       vitest: link:../../packages/vitest
 
+  test/edge-runtime:
+    specifiers:
+      '@edge-runtime/vm': 1.1.0-beta.10
+      '@vitest/web-worker': workspace:*
+      vitest: workspace:*
+    devDependencies:
+      '@edge-runtime/vm': 1.1.0-beta.10
+      '@vitest/web-worker': link:../../packages/web-worker
+      vitest: link:../../packages/vitest
+
   test/fails:
     specifiers:
       execa: ^6.1.0
@@ -894,16 +904,6 @@ importers:
       vitest: workspace:*
     devDependencies:
       pathe: 0.2.0
-      vitest: link:../../packages/vitest
-
-  test/vite-edge:
-    specifiers:
-      '@edge-runtime/vm': 1.1.0-beta.10
-      '@vitest/web-worker': workspace:*
-      vitest: workspace:*
-    devDependencies:
-      '@edge-runtime/vm': 1.1.0-beta.10
-      '@vitest/web-worker': link:../../packages/web-worker
       vitest: link:../../packages/vitest
 
   test/vite-node:
@@ -6337,7 +6337,7 @@ packages:
     dev: true
 
   /@types/form-data/0.0.33:
-    resolution: {integrity: sha512-8BSvG1kGm83cyJITQMZSulnl6QV8jqAGreJsc5tPu1Jq0vTSOiY/k24Wx82JRpWwZSqrala6sd5rWi6aNXvqcw==}
+    resolution: {integrity: sha1-yayFsqX9GENbjIXZ7LUObWyJP/g=}
     dependencies:
       '@types/node': 17.0.40
     dev: true
@@ -9549,7 +9549,7 @@ packages:
       lodash: ^4.17.20
       marko: ^3.14.4
       mote: ^0.2.0
-      mustache: ^4.0.1
+      mustache: ^3.0.0
       nunjucks: ^3.2.2
       plates: ~0.4.11
       pug: ^3.0.0
