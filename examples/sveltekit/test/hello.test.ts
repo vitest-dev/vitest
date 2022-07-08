@@ -10,7 +10,7 @@ describe('Hello.svelte', () => {
     const { container } = render(Hello, { count: 4 })
     expect(container).toBeTruthy()
     expect(container.innerHTML).toContain('4 x 2 = 8')
-    expect(container.innerHTML).toMatchSnapshot()
+    expect(container).toMatchSnapshot()
   })
 
   it('updates on button click', async () => {
