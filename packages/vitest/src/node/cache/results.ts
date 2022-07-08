@@ -14,6 +14,10 @@ export class ResultsCache {
   private version: string = version
   private root = '/'
 
+  public getCachePath() {
+    return this.cachePath
+  }
+
   setConfig(root: string, config: ResolvedConfig['cache']) {
     this.root = root
     if (config)

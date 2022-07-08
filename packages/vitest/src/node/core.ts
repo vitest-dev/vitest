@@ -93,7 +93,12 @@ export class Vitest {
       await cleanCoverage(resolved.coverage, resolved.coverage.clean)
 
     this.state.results.setConfig(resolved.root, resolved.cache)
-    await this.state.results.readFromCache()
+    try {
+      await this.state.results.readFromCache()
+    }
+    catch (err) {
+      this.error(`[vitest] Error, while trying to parse cache in ${this.state.results.getCachePath()}:`, err)
+    }
   }
 
   getSerializableConfig() {
