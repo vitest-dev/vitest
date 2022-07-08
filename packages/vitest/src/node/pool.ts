@@ -1,7 +1,6 @@
 import { MessageChannel } from 'worker_threads'
 import { pathToFileURL } from 'url'
 import { cpus } from 'os'
-import { createHash } from 'crypto'
 import { resolve } from 'pathe'
 import type { Options as TinypoolOptions } from 'tinypool'
 import { Tinypool } from 'tinypool'
@@ -9,7 +8,7 @@ import { createBirpc } from 'birpc'
 import type { RawSourceMap } from 'vite-node'
 import type { ResolvedConfig, WorkerContext, WorkerRPC } from '../types'
 import { distDir } from '../constants'
-import { AggregateError, slash } from '../utils'
+import { AggregateError } from '../utils'
 import type { Vitest } from './core'
 
 export type RunWithFiles = (files: string[], invalidates?: string[]) => Promise<void>
@@ -23,7 +22,7 @@ const workerPath = pathToFileURL(resolve(distDir, './worker.mjs')).href
 
 export function createPool(ctx: Vitest): WorkerPool {
   const threadsCount = ctx.config.watch
-    ? Math.max(cpus().length / 2, 1)
+    ? Math.max(Math.floor(cpus().length / 2), 1)
     : Math.max(cpus().length - 1, 1)
 
   const maxThreads = ctx.config.maxThreads ?? threadsCount
@@ -68,6 +67,7 @@ export function createPool(ctx: Vitest): WorkerPool {
     let id = 0
 
     async function runFiles(config: ResolvedConfig, files: string[], invalidates: string[] = []) {
+      ctx.state.clearFiles(files)
       const { workerPort, port } = createChannel(ctx)
       const workerId = ++id
       const data: WorkerContext = {
@@ -86,29 +86,16 @@ export function createPool(ctx: Vitest): WorkerPool {
       }
     }
 
+    const Sequencer = ctx.config.sequence.sequencer
+    const sequencer = new Sequencer(ctx)
+
     return async (files, invalidates) => {
       const config = ctx.getSerializableConfig()
 
-      if (config.shard) {
-        const { index, count } = config.shard
-        const shardSize = Math.ceil(files.length / count)
-        const shardStart = shardSize * (index - 1)
-        const shardEnd = shardSize * index
-        files = files
-          .map((file) => {
-            const fullPath = resolve(slash(config.root), slash(file))
-            const specPath = fullPath.slice(config.root.length)
-            return {
-              file,
-              hash: createHash('sha1')
-                .update(specPath)
-                .digest('hex'),
-            }
-          })
-          .sort((a, b) => (a.hash < b.hash ? -1 : a.hash > b.hash ? 1 : 0))
-          .slice(shardStart, shardEnd)
-          .map(({ file }) => file)
-      }
+      if (config.shard)
+        files = await sequencer.shard(files)
+
+      files = await sequencer.sort(files)
 
       if (!ctx.config.threads) {
         await runFiles(config, files)

@@ -1,3 +1,4 @@
+import { RealDate } from '../integrations/mock/date'
 import type { Arrayable, DeepMerge, Nullable } from '../types'
 
 function isFinalObj(obj: any) {
@@ -152,4 +153,24 @@ export function stdout(): NodeJS.WriteStream {
   // @ts-expect-error Node.js maps process.stdout to console._stdout
   // eslint-disable-next-line no-console
   return console._stdout || process.stdout
+}
+
+function random(seed: number) {
+  const x = Math.sin(seed++) * 10000
+  return x - Math.floor(x)
+}
+
+export function shuffle<T>(array: T[], seed = RealDate.now()): T[] {
+  let length = array.length
+
+  while (length) {
+    const index = Math.floor(random(seed) * length--)
+
+    const previous = array[length]
+    array[length] = array[index]
+    array[index] = previous
+    ++seed
+  }
+
+  return array
 }

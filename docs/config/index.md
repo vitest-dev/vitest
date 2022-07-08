@@ -53,6 +53,10 @@ export default defineConfig({
 
 ## Options
 
+:::tip
+In addition to the following options, you can also use any configuration option from [Vite](https://vitejs.dev/config/). For example, `define` to define global variables, or `resolve.alias` to define aliases.
+:::
+
 ### include
 
 - **Type:** `string[]`
@@ -123,7 +127,7 @@ export default defineConfig({
 })
 ```
 
-To get TypeScript working with the global APIs, add `vitest/globals` to the `types` filed in your `tsconfig.json`
+To get TypeScript working with the global APIs, add `vitest/globals` to the `types` field in your `tsconfig.json`
 
 ```json
 // tsconfig.json
@@ -153,13 +157,14 @@ export default defineConfig({
 
 ### environment
 
-- **Type:** `'node' | 'jsdom' | 'happy-dom'`
+- **Type:** `'node' | 'jsdom' | 'happy-dom' | 'edge-runtime'`
 - **Default:** `'node'`
 
 The environment that will be used for testing. The default environment in Vitest
 is a Node.js environment. If you are building a web application, you can use
 browser-like environment through either [`jsdom`](https://github.com/jsdom/jsdom)
 or [`happy-dom`](https://github.com/capricorn86/happy-dom) instead.
+If you are building edge functions, you can use [`edge-runtime`](https://edge-runtime.vercel.app/packages/vm) environment
 
 By adding a `@vitest-environment` docblock or comment at the top of the file,
 you can specify another environment to be used for all tests in that file:
@@ -367,9 +372,9 @@ Glob pattern of file paths to be ignored from triggering watch rerun.
 ### forceRerunTriggers
 
 - **Type**: `string[]`
-- **Default:** `[]`
+- **Default:** `['**/package.json/**', '**/vitest.config.*/**', '**/vite.config.*/**']`
 
-Glob patter of file paths that will trigger the whole suite rerun.
+Glob pattern of file paths that will trigger the whole suite rerun. When paired with the `--changed` argument will run the whole test suite if the trigger is found in the git diff.
 
 Useful if you are testing calling CLI commands, because Vite cannot construct a module graph:
 
@@ -473,7 +478,7 @@ Vite plugins will receive `ssr: true` flag when processing those files.
 - **Type:** `RegExp[]`
 - **Default:** *modules other than those specified in `transformMode.ssr`*
 
-First do a normal transform pipeline (targeting browser), then then do a SSR rewrite to run the code in Node.<br>
+First do a normal transform pipeline (targeting browser), then do a SSR rewrite to run the code in Node.<br>
 Vite plugins will receive `ssr: false` flag when processing those files.
 
 When you use JSX as component models other than React (e.g. Vue JSX or SolidJS), you might want to config as following to make `.tsx` / `.jsx` transformed as client-side components:
@@ -554,7 +559,7 @@ RegExp pattern for files that should return actual CSS and will be processed by 
 - **Type**: `RegExp | RegExp[]`
 - **Default**: `[]`
 
-RegExp pattern for files that will return en empty CSS file.
+RegExp pattern for files that will return an empty CSS file.
 
 ### maxConcurrency
 
@@ -564,3 +569,47 @@ RegExp pattern for files that will return en empty CSS file.
 A number of tests that are allowed to run at the same time marked with `test.concurrent`.
 
 Test above this limit will be queued to run when available slot appears.
+
+### cache
+
+- **Type**: `false | { dir? }`
+
+Options to configure Vitest cache policy. At the moment Vitest stores cache for test results to run the longer and failed tests first.
+
+#### cache.dir
+
+- **Type**: `string`
+- **Default**: `node_modules/.vitest`
+
+Path to cache directory.
+
+### sequence
+
+- **Type**: `{ sequencer?, shuffle?, seed? }`
+
+Options for how tests should be sorted.
+
+#### sequence.sequencer
+
+- **Type**: `TestSequencerConstructor`
+- **Default**: `BaseSequencer`
+
+A custom class that defines methods for sharding and sorting. You can extend `BaseSequencer` from `vitest/node`, if you only need to redefine one of the `sort` and `shard` methods, but both should exist.
+
+Sharding is happening before sorting, and only if `--shard` option is provided.
+
+#### sequence.shuffle
+
+- **Type**: `boolean`
+- **Default**: `false`
+
+If you want tests to run randomly, you can enable it with this option, or CLI argument [`--sequence.shuffle`](/guide/cli).
+
+Vitest usually uses cache to sort tests, so long running tests start earlier - this makes tests run faster. If your tests will run in random order you will lose this performance improvement, but it may be useful to track tests that accidentally depend on another run previously.
+
+#### sequence.seed
+
+- **Type**: `number`
+- **Default**: `Date.now()`
+
+Sets the randomization seed, if tests are running in random order.

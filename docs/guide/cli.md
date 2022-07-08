@@ -68,6 +68,7 @@ vitest related /src/index.ts /src/hello-world.js
 | `--allowOnly` | Allow tests and suites that are marked as `only` (default: false in CI, true otherwise) |
 | `--changed [since]` | Run tests that are affected by the changed files (default: false). See [docs](#changed) |
 | `--shard <shard>` | Execute tests in a specified shard |
+| `--sequence` | Define in what order to run tests. Use [cac's dot notation] to specify options (for example, use `--sequence.suffle` to run tests in random order) |
 | `-h, --help` | Display available CLI options |
 
 ### changed
@@ -78,6 +79,8 @@ vitest related /src/index.ts /src/hello-world.js
   Run tests only against changed files. If no value is provided, it will run tests against uncommitted changes (including staged and unstaged).
 
   To run tests against changes made in the last commit, you can use `--changed HEAD~1`. You can also pass commit hash or branch name.
+
+  If paired with the `forceRerunTriggers` config option it will run the whole test suite if a match is found.
 
 ### shard
 

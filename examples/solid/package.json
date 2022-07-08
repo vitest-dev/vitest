@@ -10,8 +10,8 @@
   },
   "devDependencies": {
     "jsdom": "*",
-    "solid-start": "next",
     "solid-testing-library": "0.3.0",
+    "vite-plugin-solid": "^2.2.6",
     "vitest": "latest"
   }
 }

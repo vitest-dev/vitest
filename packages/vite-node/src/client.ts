@@ -5,7 +5,7 @@ import { dirname, extname, isAbsolute, resolve } from 'pathe'
 import { isNodeBuiltin } from 'mlly'
 import createDebug from 'debug'
 import { isPrimitive, mergeSlashes, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
-import type { ModuleCache, ViteNodeRunnerOptions } from './types'
+import type { HotContext, ModuleCache, ViteNodeRunnerOptions } from './types'
 
 const debugExecute = createDebug('vite-node:client:execute')
 const debugNative = createDebug('vite-node:client:native')
@@ -82,6 +82,11 @@ export class ViteNodeRunner {
     const id = normalizeRequestId(rawId, this.options.base)
     const fsPath = toFilePath(id, this.root)
 
+    // the callstack reference itself circularly
+    if (callstack.includes(fsPath) && this.moduleCache.get(fsPath)?.exports)
+      return this.moduleCache.get(fsPath)?.exports
+
+    // cached module
     if (this.moduleCache.get(fsPath)?.promise)
       return this.moduleCache.get(fsPath)?.promise
 
@@ -93,20 +98,21 @@ export class ViteNodeRunner {
 
   /** @internal */
   async directRequest(id: string, fsPath: string, _callstack: string[]) {
-    const callstack = [..._callstack, normalizeModuleId(id)]
+    const callstack = [..._callstack, fsPath]
     const request = async (dep: string) => {
+      const fsPath = toFilePath(normalizeRequestId(dep, this.options.base), this.root)
       const getStack = () => {
-        return `stack:\n${[...callstack, dep].reverse().map(p => `- ${p}`).join('\n')}`
+        return `stack:\n${[...callstack, fsPath].reverse().map(p => `- ${p}`).join('\n')}`
       }
 
       let debugTimer: any
       if (this.debug)
-        debugTimer = setTimeout(() => this.debugLog(() => `module ${dep} takes over 2s to load.\n${getStack()}`), 2000)
+        debugTimer = setTimeout(() => this.debugLog(() => `module ${fsPath} takes over 2s to load.\n${getStack()}`), 2000)
 
       try {
-        if (callstack.includes(normalizeModuleId(dep))) {
+        if (callstack.includes(fsPath)) {
           this.debugLog(() => `circular dependency, ${getStack()}`)
-          const depExports = this.moduleCache.get(dep)?.exports
+          const depExports = this.moduleCache.get(fsPath)?.exports
           if (depExports)
             return depExports
           throw new Error(`[vite-node] Failed to resolve circular dependency, ${getStack()}`)
@@ -161,10 +167,11 @@ export class ViteNodeRunner {
 
     // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
     const url = pathToFileURL(fsPath).href
+    const meta = { url }
     const exports: any = Object.create(null)
     exports[Symbol.toStringTag] = 'Module'
 
-    this.moduleCache.set(id, { code: transformed, exports })
+    this.moduleCache.set(fsPath, { code: transformed, exports })
 
     const __filename = fileURLToPath(url)
     const moduleProxy = {
@@ -177,6 +184,18 @@ export class ViteNodeRunner {
       },
     }
 
+    // Vite hot context
+    let hotContext: HotContext | undefined
+    if (this.options.createHotContext) {
+      Object.defineProperty(meta, 'hot', {
+        enumerable: true,
+        get: () => {
+          hotContext ||= this.options.createHotContext?.(this, `/@fs/${fsPath}`)
+          return hotContext
+        },
+      })
+    }
+
     // Be careful when changing this
     // changing context will change amount of code added on line :114 (vm.runInThisContext)
     // this messes up sourcemaps for coverage
@@ -187,8 +206,7 @@ export class ViteNodeRunner {
       __vite_ssr_dynamic_import__: request,
       __vite_ssr_exports__: exports,
       __vite_ssr_exportAll__: (obj: any) => exportAll(exports, obj),
-      __vite_ssr_import_meta__: { url },
-
+      __vite_ssr_import_meta__: meta,
       __vitest_resolve_id__: resolveId,
 
       // cjs compact

@@ -59,7 +59,7 @@ test('template literal', () => {
   `)
 })
 
-test('throwing inline snapshots', () => {
+test('throwing inline snapshots', async () => {
   expect(() => {
     throw new Error('omega')
   }).toThrowErrorMatchingInlineSnapshot('"omega"')
@@ -99,6 +99,16 @@ test('throwing inline snapshots', () => {
     with
     newlines"
   `)
+
+  await expect(async () => {
+    throw new Error('omega')
+  }).rejects.toThrowErrorMatchingInlineSnapshot('"omega"')
+})
+
+test('throwing expect should be a function', async () => {
+  expect(() => {
+    expect(new Error('omega')).toThrowErrorMatchingInlineSnapshot()
+  }).toThrow(/expected must be a function/)
 })
 
 test('properties inline snapshot', () => {

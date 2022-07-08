@@ -126,21 +126,17 @@ export function defineWebWorker() {
 
       const runner = new InlineWorkerRunner(options, context)
 
-      let id = url instanceof URL ? url.toString() : url
-
-      id = id
-        .replace('?worker_file', '')
-        .replace(/^file:\/+/, '/')
+      const id = (url instanceof URL ? url.toString() : url).replace(/^file:\/+/, '/')
 
       const fsPath = toFilePath(id, config.root)
       invalidates.push(fsPath)
 
       runner.executeFile(fsPath)
         .then(() => {
-          invalidates.forEach((path) => {
+          invalidates.forEach((fsPath) => {
             // worker should be new every time
-            moduleCache.delete(path)
-            moduleCache.delete(`${path}__mock`)
+            moduleCache.delete(fsPath)
+            moduleCache.delete(`${fsPath}__mock`)
           })
           const q = this.messageQueue
           this.messageQueue = null

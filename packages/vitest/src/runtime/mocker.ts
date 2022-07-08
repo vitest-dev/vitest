@@ -1,14 +1,12 @@
 import { existsSync, readdirSync } from 'fs'
 import { isNodeBuiltin } from 'mlly'
-import { basename, dirname, resolve } from 'pathe'
+import { basename, dirname, join, resolve } from 'pathe'
 import { normalizeRequestId, toFilePath } from 'vite-node/utils'
 import type { ModuleCacheMap } from 'vite-node/client'
 import { getAllProperties, getType, getWorkerState, isWindows, mergeSlashes, slash } from '../utils'
 import { distDir } from '../constants'
 import type { PendingSuiteMock } from '../types/mocker'
 import type { ExecuteOptions } from './execute'
-
-type Callback = (...args: any[]) => unknown
 
 interface ViteRunnerRequest {
   (dep: string): any
@@ -19,31 +17,22 @@ export class VitestMocker {
   private static pendingIds: PendingSuiteMock[] = []
   private static spyModule?: typeof import('../integrations/spy')
 
-  private request!: ViteRunnerRequest
-
-  private root: string
-  private callbacks: Record<string, ((...args: any[]) => unknown)[]> = {}
-
   constructor(
     public options: ExecuteOptions,
     private moduleCache: ModuleCacheMap,
-    request?: ViteRunnerRequest,
-  ) {
-    this.root = this.options.root
-    this.request = request!
+    private request: ViteRunnerRequest,
+  ) {}
+
+  private get root() {
+    return this.options.root
   }
 
-  get mockMap() {
+  private get base() {
+    return this.options.base
+  }
+
+  private get mockMap() {
     return this.options.mockMap
-  }
-
-  public on(event: string, cb: Callback) {
-    this.callbacks[event] ??= []
-    this.callbacks[event].push(cb)
-  }
-
-  private emit(event: string, ...args: any[]) {
-    (this.callbacks[event] ?? []).forEach(fn => fn(...args))
   }
 
   public getSuiteFilepath(): string {
@@ -91,20 +80,16 @@ export class VitestMocker {
     if (cached)
       return cached
     const exports = await mock()
-    this.emit('mocked', cacheName, { exports })
+    this.moduleCache.set(cacheName, { exports })
     return exports
   }
 
   public getDependencyMock(dep: string) {
-    return this.getMocks()[this.resolveDependency(dep)]
-  }
-
-  public resolveDependency(dep: string) {
-    return normalizeRequestId(dep.replace(this.root, '')).replace(/^\/@fs\//, isWindows ? '' : '/')
+    return this.getMocks()[this.normalizePath(dep)]
   }
 
   public normalizePath(path: string) {
-    return normalizeRequestId(path.replace(this.root, '')).replace(/^\/@fs\//, isWindows ? '' : '/')
+    return normalizeRequestId(path.replace(this.root, ''), this.base).replace(/^\/@fs\//, isWindows ? '' : '/')
   }
 
   public getFsPath(path: string, external: string | null) {
@@ -121,7 +106,7 @@ export class VitestMocker {
     // all mocks should be inside <root>/__mocks__
     if (external || isNodeBuiltin(mockPath) || !existsSync(mockPath)) {
       const mockDirname = dirname(path) // for nested mocks: @vueuse/integration/useJwt
-      const mockFolder = resolve(this.root, '__mocks__', mockDirname)
+      const mockFolder = join(this.root, '__mocks__', mockDirname)
 
       if (!existsSync(mockFolder))
         return null
@@ -132,7 +117,7 @@ export class VitestMocker {
       for (const file of files) {
         const [basename] = file.split('.')
         if (basename === baseFilename)
-          return resolve(mockFolder, file).replace(this.root, '')
+          return resolve(mockFolder, file)
       }
 
       return null
@@ -141,7 +126,7 @@ export class VitestMocker {
     const dir = dirname(path)
     const baseId = basename(path)
     const fullPath = resolve(dir, '__mocks__', baseId)
-    return existsSync(fullPath) ? fullPath.replace(this.root, '') : null
+    return existsSync(fullPath) ? fullPath : null
   }
 
   public mockValue(value: any) {
@@ -183,22 +168,22 @@ export class VitestMocker {
   public unmockPath(path: string) {
     const suitefile = this.getSuiteFilepath()
 
-    const fsPath = this.normalizePath(path)
+    const id = this.normalizePath(path)
 
     const mock = this.mockMap.get(suitefile)
-    if (mock?.[fsPath])
-      delete mock[fsPath]
+    if (mock?.[id])
+      delete mock[id]
   }
 
   public mockPath(path: string, external: string | null, factory?: () => any) {
     const suitefile = this.getSuiteFilepath()
+    const id = this.normalizePath(path)
 
-    const fsPath = this.normalizePath(path)
+    const mocks = this.mockMap.get(suitefile) || {}
 
-    if (!this.mockMap.has(suitefile))
-      this.mockMap.set(suitefile, {})
+    mocks[id] = factory || this.resolveMockPath(path, external)
 
-    this.mockMap.get(suitefile)![fsPath] = factory || this.resolveMockPath(path, external)
+    this.mockMap.set(suitefile, mocks)
   }
 
   public async importActual<T>(id: string, importer: string): Promise<T> {
@@ -211,19 +196,20 @@ export class VitestMocker {
   public async importMock(id: string, importer: string): Promise<any> {
     const { path, external } = await this.resolvePath(id, importer)
 
-    let mock = this.getDependencyMock(path)
+    const fsPath = this.getFsPath(path, external)
+    let mock = this.getDependencyMock(fsPath)
 
     if (mock === undefined)
-      mock = this.resolveMockPath(path, external)
+      mock = this.resolveMockPath(fsPath, external)
 
     if (mock === null) {
       await this.ensureSpy()
-      const fsPath = this.getFsPath(path, external)
       const mod = await this.request(fsPath)
       return this.mockValue(mod)
     }
+
     if (typeof mock === 'function')
-      return this.callFunctionMock(path, mock)
+      return this.callFunctionMock(fsPath, mock)
     return this.requestWithMock(mock)
   }
 
@@ -234,8 +220,10 @@ export class VitestMocker {
   }
 
   public async requestWithMock(dep: string) {
-    await this.ensureSpy()
-    await this.resolveMocks()
+    await Promise.all([
+      this.ensureSpy(),
+      this.resolveMocks(),
+    ])
 
     const mock = this.getDependencyMock(dep)
 
@@ -249,7 +237,7 @@ export class VitestMocker {
       const cacheKey = toFilePath(dep, this.root)
       const mod = this.moduleCache.get(cacheKey)?.exports || await this.request(dep)
       const exports = this.mockValue(mod)
-      this.emit('mocked', cacheName, { exports })
+      this.moduleCache.set(cacheName, { exports })
       return exports
     }
     if (typeof mock === 'function' && !callstack.includes(`mock:${dep}`)) {
@@ -270,9 +258,5 @@ export class VitestMocker {
 
   public queueUnmock(id: string, importer: string) {
     VitestMocker.pendingIds.push({ type: 'unmock', id, importer })
-  }
-
-  public withRequest(request: ViteRunnerRequest) {
-    return new VitestMocker(this.options, this.moduleCache, request)
   }
 }

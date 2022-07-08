@@ -1,6 +1,6 @@
 {
   "name": "vitest",
-  "version": "0.16.0",
+  "version": "0.17.1",
   "description": "A blazing fast unit test framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -62,6 +62,7 @@
     "prepublishOnly": "nr build"
   },
   "peerDependencies": {
+    "@edge-runtime/vm": "*",
     "@vitest/ui": "*",
     "c8": "*",
     "happy-dom": "*",
@@ -79,6 +80,9 @@
     },
     "jsdom": {
       "optional": true
+    },
+    "@edge-runtime/vm": {
+      "optional": true
     }
   },
   "dependencies": {
@@ -90,10 +94,11 @@
     "local-pkg": "^0.4.1",
     "tinypool": "^0.2.1",
     "tinyspy": "^0.3.3",
-    "vite": "^2.9.12"
+    "vite": "^2.9.12 || ^3.0.0-0"
   },
   "devDependencies": {
     "@antfu/install-pkg": "^0.1.0",
+    "@edge-runtime/vm": "1.1.0-beta.10",
     "@sinonjs/fake-timers": "^9.1.2",
     "@types/diff": "^5.0.2",
     "@types/jsdom": "^16.2.14",

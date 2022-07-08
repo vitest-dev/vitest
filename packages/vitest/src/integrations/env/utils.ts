@@ -3,6 +3,7 @@ import { KEYS } from './jsdom-keys'
 const allowRewrite = [
   'Event',
   'EventTarget',
+  'MessageEvent',
 ]
 
 const skipKeys = [

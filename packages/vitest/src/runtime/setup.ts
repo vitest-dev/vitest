@@ -165,9 +165,9 @@ export async function withEnv(
 export async function runSetupFiles(config: ResolvedConfig) {
   const files = toArray(config.setupFiles)
   await Promise.all(
-    files.map(async (file) => {
-      getWorkerState().moduleCache.delete(file)
-      await import(file)
+    files.map(async (fsPath) => {
+      getWorkerState().moduleCache.delete(fsPath)
+      await import(fsPath)
     }),
   )
 }

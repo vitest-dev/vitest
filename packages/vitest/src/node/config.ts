@@ -8,10 +8,15 @@ import { defaultPort } from '../constants'
 import { configDefaults } from '../defaults'
 import { resolveC8Options } from '../integrations/coverage'
 import { toArray } from '../utils'
+import { VitestCache } from './cache'
+import { BaseSequencer } from './sequencers/BaseSequencer'
+import { RandomSequencer } from './sequencers/RandomSequencer'
 
 const extraInlineDeps = [
   /^(?!.*(?:node_modules)).*\.mjs$/,
   /^(?!.*(?:node_modules)).*\.cjs\.js$/,
+  // Vite client
+  /vite\w*\/dist\/client\/env.mjs/,
   // Vitest
   /\/vitest\/dist\//,
   // yarn's .store folder
@@ -113,9 +118,9 @@ export function resolveConfig(
   if (resolved.deps.inline !== true) {
     // eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error
     // @ts-ignore ssr is not typed in Vite 2, but defined in Vite 3, so we can't use expect-error
-    const ssrOptions = viteConfig.ssr || {}
+    const ssrOptions = viteConfig.ssr
 
-    if (ssrOptions.noExternal === true && resolved.deps.inline == null) {
+    if (ssrOptions?.noExternal === true && resolved.deps.inline == null) {
       resolved.deps.inline = true
     }
     else {
@@ -178,6 +183,18 @@ export function resolveConfig(
   resolved.css ??= {}
   if (typeof resolved.css === 'object')
     resolved.css.include ??= [/\.module\./]
+
+  resolved.cache ??= { dir: '' }
+  if (resolved.cache)
+    resolved.cache.dir = VitestCache.resolveCacheDir(resolved.root, resolved.cache.dir)
+
+  if (!resolved.sequence?.sequencer) {
+    resolved.sequence ??= {} as any
+    // CLI flag has higher priority
+    resolved.sequence.sequencer = resolved.sequence.shuffle
+      ? RandomSequencer
+      : BaseSequencer
+  }
 
   return resolved
 }

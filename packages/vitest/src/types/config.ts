@@ -2,13 +2,14 @@ import type { CommonServerOptions } from 'vite'
 import type { PrettyFormatOptions } from 'pretty-format'
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import type { BuiltinReporters } from '../node/reporters'
+import type { TestSequencerContructor } from '../node/sequencers/types'
 import type { C8Options, ResolvedC8Options } from './coverage'
 import type { JSDOMOptions } from './jsdom-options'
 import type { Reporter } from './reporter'
 import type { SnapshotStateOptions } from './snapshot'
 import type { Arrayable } from './general'
 
-export type BuiltinEnvironment = 'node' | 'jsdom' | 'happy-dom'
+export type BuiltinEnvironment = 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime'
 
 export type ApiConfig = Pick<CommonServerOptions, 'port' | 'strictPort' | 'host'>
 
@@ -98,7 +99,7 @@ export interface InlineConfig {
   /**
    * Running environment
    *
-   * Supports 'node', 'jsdom', 'happy-dom'
+   * Supports 'node', 'jsdom', 'happy-dom', 'edge-runtime'
    *
    * @default 'node'
    */
@@ -361,6 +362,37 @@ export interface InlineConfig {
    * @default 5
    */
   maxConcurrency?: number
+
+  /**
+   * Options for configuring cache policy.
+   * @default { dir: 'node_modules/.vitest' }
+   */
+  cache?: false | {
+    dir?: string
+  }
+
+  /**
+   * Options for configuring the order of running tests.
+   */
+  sequence?: {
+    /**
+     * Class that handles sorting and sharding algorithm.
+     * If you only need to change sorting, you can extend
+     * your custom sequencer from `BaseSequencer` from `vitest/node`.
+     * @default BaseSequencer
+     */
+    sequencer?: TestSequencerContructor
+    /**
+     * Should tests run in random order.
+     * @default false
+     */
+    shuffle?: boolean
+    /**
+     * Seed for the random number generator.
+     * @default Date.now()
+     */
+    seed?: number
+  }
 }
 
 export interface UserConfig extends InlineConfig {
@@ -407,7 +439,7 @@ export interface UserConfig extends InlineConfig {
   shard?: string
 }
 
-export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'shard'> {
+export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'shard' | 'cache' | 'sequence'> {
   base?: string
 
   config?: string
@@ -426,5 +458,15 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
   shard?: {
     index: number
     count: number
+  }
+
+  cache: {
+    dir: string
+  } | false
+
+  sequence: {
+    sequencer: TestSequencerContructor
+    shuffle?: boolean
+    seed?: number
   }
 }

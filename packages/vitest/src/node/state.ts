@@ -1,10 +1,22 @@
 import type { ErrorWithDiff, File, Task, TaskResultPack, UserConsoleLog } from '../types'
+import { FilesStatsCache } from './cache/files'
+import { ResultsCache } from './cache/results'
 
 export class StateManager {
   filesMap = new Map<string, File>()
   idMap = new Map<string, Task>()
   taskFileMap = new WeakMap<Task, File>()
   errorsSet = new Set<unknown>()
+  results = new ResultsCache()
+  stats = new FilesStatsCache()
+
+  getFileTestResults(id: string) {
+    return this.results.getResults(id)
+  }
+
+  getFileStats(id: string) {
+    return this.stats.getStats(id)
+  }
 
   catchError(err: unknown, type: string) {
     (err as ErrorWithDiff).type = type
@@ -21,7 +33,7 @@ export class StateManager {
 
   getFiles(keys?: string[]): File[] {
     if (keys)
-      return keys.map(key => this.filesMap.get(key)!)
+      return keys.map(key => this.filesMap.get(key)!).filter(Boolean)
     return Array.from(this.filesMap.values())
   }
 
@@ -39,6 +51,12 @@ export class StateManager {
     files.forEach((file) => {
       this.filesMap.set(file.filepath, file)
       this.updateId(file)
+    })
+  }
+
+  clearFiles(paths: string[] = []) {
+    paths.forEach((path) => {
+      this.filesMap.delete(path)
     })
   }
 

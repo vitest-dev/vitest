@@ -5,7 +5,9 @@ import type { Deferred, Event, Target } from 'benchmark'
 
 import Benchmark from 'benchmark'
 import { execa } from 'execa'
-import { copySync } from 'fs-extra'
+import fsExtra from 'fs-extra'
+
+const { copySync } = fsExtra
 
 // eslint-disable-next-line no-console
 const log = console.log
