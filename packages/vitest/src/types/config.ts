@@ -312,7 +312,7 @@ export interface InlineConfig {
   /**
    * Resolve custom snapshot path
    */
-  resolveSnapshotPath?: (path: string, extension: string) => string
+  resolveSnapshotPath?: (path: string, extension: string, options: { context: any }) => string
 
   /**
    * Pass with no tests

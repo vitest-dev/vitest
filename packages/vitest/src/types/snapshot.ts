@@ -8,7 +8,7 @@ export interface SnapshotStateOptions {
   updateSnapshot: SnapshotUpdateState
   expand?: boolean
   snapshotFormat?: PrettyFormatOptions
-  resolveSnapshotPath?: (path: string, extension: string) => string
+  resolveSnapshotPath?: (path: string, extension: string, options: { context: any }) => string
 }
 
 export interface SnapshotMatchOptions {

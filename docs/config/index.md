@@ -503,7 +503,7 @@ Format options for snapshot testing. These options are passed down to [`pretty-f
 
 ### resolveSnapshotPath
 
-- **Type**: `(testPath: string, snapExtension: string) => string`
+- **Type**: `(testPath: string, snapExtension: string, options: { context: any }) => string`
 - **Default**: stores snapshot files in `__snapshots__` directory
 
 Overrides default snapshot path. For example, to store snapshots next to test files:
