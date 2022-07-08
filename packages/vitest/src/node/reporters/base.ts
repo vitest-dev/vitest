@@ -138,13 +138,15 @@ export abstract class BaseReporter implements Reporter {
 
     const hint = this._hintRerunLog
     this._hintRerunLog = (hint + 1) % this._hintRerunChars.length
+    const BADGE = c.inverse(c.bold(c.blue(' RERUN ')))
+    const TRIGGER = trigger ? c.dim(` ${this.relative(trigger)}`) : ''
     if (files.length > 1) {
       // we need to figure out how to handle rerun all from stdin
-      this.ctx.clearScreen(`\n${c.inverse(c.bold(c.blue(` ${this._hintRerunChars[hint]} RERUN `)))}${trigger ? c.dim(` ${this.relative(trigger)}\n`) : ''}`)
+      this.ctx.clearScreen(`\n${BADGE}${TRIGGER}\n`, true)
     }
     else if (files.length === 1) {
       const rerun = this._filesInWatchMode.get(files[0]) ?? 1
-      this.ctx.clearScreen(`\n${c.inverse(c.bold(c.blue(` ${this._hintRerunChars[hint]} RERUN (${rerun}) `)))}${trigger ? c.dim(` ${this.relative(trigger)}\n`) : ''}`)
+      this.ctx.clearScreen(`\n${BADGE}${TRIGGER} ${c.blue(`x${rerun}`)}\n`)
     }
 
     this.start = performance.now()

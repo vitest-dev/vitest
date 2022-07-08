@@ -1,4 +1,5 @@
 import { existsSync, promises as fs } from 'fs'
+import readline from 'readline'
 import type { ViteDevServer } from 'vite'
 import { relative, toNamespacedPath } from 'pathe'
 import fg from 'fast-glob'
@@ -304,13 +305,6 @@ export class Vitest {
       // equivalent to ansi-escapes:
       // stdout.write(ansiEscapes.cursorTo(0, 0) + ansiEscapes.eraseDown + log)
       this.console.log(`\u001B[1;1H\u001B[J${log}`)
-      // previous line also equivalent to:
-      // const repeatCount = process.stdout.rows - 2
-      // const blank = repeatCount > 0 ? '\n'.repeat(repeatCount) : ''
-      // this.console.log(blank)
-      // readline.cursorTo(process.stdout, 0, 0)
-      // readline.clearScreenDown(process.stdout)
-      // this.console.log(log)
   }
 
   log(...args: any[]) {
@@ -323,13 +317,15 @@ export class Vitest {
     this.console.error(...args)
   }
 
-  clearScreen(message: string) {
+  clearScreen(message: string, force = false) {
     if (this.server.config.clearScreen === false) {
       this.console.log(message)
       return
     }
 
     this._clearScreenPending = message
+    if (force)
+      this._clearScreen()
   }
 
   private _rerunTimer: any

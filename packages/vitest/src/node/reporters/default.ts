@@ -10,7 +10,7 @@ export class DefaultReporter extends BaseReporter {
 
   async onTestRemoved(trigger?: string) {
     await this.stopListRender()
-    this.ctx.clearScreen(c.yellow('Test removed...') + (trigger ? c.dim(` [ ${this.relative(trigger)} ]\n`) : ''))
+    this.ctx.clearScreen(c.yellow('Test removed...') + (trigger ? c.dim(` [ ${this.relative(trigger)} ]\n`) : ''), true)
     const files = this.ctx.state.getFiles(this.watchFilters)
     createListRenderer(files, this.rendererOptions).stop()
     this.ctx.log()
