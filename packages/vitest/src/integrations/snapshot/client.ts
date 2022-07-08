@@ -12,6 +12,17 @@ export interface Context {
   fullTitle?: string
 }
 
+interface AssertOptions {
+  received: unknown
+  test?: Test
+  message?: string
+  isInline?: boolean
+  properties?: object
+  inlineSnapshot?: string
+  error?: Error
+  errorMessage?: string
+}
+
 export class SnapshotClient {
   test: Test | undefined
   snapshotState: SnapshotState | undefined
@@ -46,7 +57,22 @@ export class SnapshotClient {
     this.test = undefined
   }
 
-  assert(received: unknown, test = this.test, message?: string, isInline = false, properties?: object, inlineSnapshot?: string, error?: Error): void {
+  skipTestSnapshots(test: Test) {
+    this.snapshotState?.markSnapshotsAsCheckedForTest(test.name)
+  }
+
+  assert(options: AssertOptions): void {
+    const {
+      test = this.test,
+      message,
+      isInline = false,
+      properties,
+      inlineSnapshot,
+      error,
+      errorMessage,
+    } = options
+    let { received } = options
+
     if (!test)
       throw new Error('Snapshot cannot be used outside of test')
 
@@ -62,7 +88,7 @@ export class SnapshotClient {
           received = deepMergeSnapshot(received, properties)
       }
       catch (err: any) {
-        err.message = 'Snapshot mismatched'
+        err.message = errorMessage || 'Snapshot mismatched'
         throw err
       }
     }
@@ -87,7 +113,7 @@ export class SnapshotClient {
         expect(actual.trim()).equals(expected ? expected.trim() : '')
       }
       catch (error: any) {
-        error.message = `Snapshot \`${key || 'unknown'}\` mismatched`
+        error.message = errorMessage || `Snapshot \`${key || 'unknown'}\` mismatched`
         throw error
       }
     }

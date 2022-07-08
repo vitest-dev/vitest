@@ -1,9 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
+import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import { parseStacktrace } from '../utils/source-map'
 import type { VitestMocker } from '../runtime/mocker'
-import { resetModules } from '../utils'
-import { FakeTimers } from './timers'
+import { getWorkerState, resetModules, setTimeout } from '../utils'
+import { FakeTimers } from './mock/timers'
 import type { EnhancedSpy, MaybeMocked, MaybeMockedDeep } from './spy'
 import { fn, isMockFunction, spies, spyOn } from './spy'
 
@@ -13,21 +12,37 @@ class VitestUtils {
   private _mocker: VitestMocker
 
   constructor() {
-    this._timers = new FakeTimers({
-      global: globalThis,
-      maxLoops: 10_000,
-    })
     // @ts-expect-error injected by vite-nide
     this._mocker = typeof __vitest_mocker__ !== 'undefined' ? __vitest_mocker__ : null
     this._mockedDate = null
 
-    if (!this._mocker)
-      throw new Error('Vitest was initialized with native Node instead of Vite Node')
+    if (!this._mocker) {
+      const errorMsg = 'Vitest was initialized with native Node instead of Vite Node.'
+      + '\n\nOne of the following is possible:'
+      + '\n- "vitest" is imported outside of your tests (in that case, use "vitest/node" or import.meta.vitest)'
+      + '\n- "vitest" is imported inside "globalSetup" (use "setupFiles", because "globalSetup" runs in a different context)'
+      + '\n- Your dependency inside "node_modules" imports "vitest" directly (in that case, inline that dependency, using "deps.inline" config)'
+      + '\n- Otherwise, it might be a Vitest bug. Please report it to https://github.com/vitest-dev/vitest/issues\n'
+      throw new Error(errorMsg)
+    }
+
+    const workerState = getWorkerState()
+    this._timers = new FakeTimers({
+      global: globalThis,
+      config: workerState.config.fakeTimers,
+    })
   }
 
   // timers
 
-  public useFakeTimers() {
+  public useFakeTimers(config?: FakeTimerInstallOpts) {
+    if (config) {
+      this._timers.configure(config)
+    }
+    else {
+      const workerState = getWorkerState()
+      this._timers.configure(workerState.config.fakeTimers)
+    }
     this._timers.useFakeTimers()
     return this
   }
@@ -203,11 +218,14 @@ class VitestUtils {
    * `IntersectionObserver`.
    */
   public stubGlobal(name: string | symbol | number, value: any) {
-    // @ts-expect-error we can do anything!
-    globalThis[name] = value
-    if (globalThis.window)
+    if (globalThis.window) {
       // @ts-expect-error we can do anything!
       globalThis.window[name] = value
+    }
+    else {
+      // @ts-expect-error we can do anything!
+      globalThis[name] = value
+    }
 
     return this
   }
@@ -215,6 +233,24 @@ class VitestUtils {
   public resetModules() {
     resetModules()
     return this
+  }
+
+  /**
+   * Wait for all imports to load.
+   * Useful, if you have a synchronous call that starts
+   * importing a module, that you cannot wait otherwise.
+   */
+  public async dynamicImportSettled() {
+    const state = getWorkerState()
+    const promises: Promise<unknown>[] = []
+    for (const mod of state.moduleCache.values()) {
+      if (mod.promise)
+        promises.push(mod.promise)
+    }
+    await Promise.allSettled(promises)
+    // wait until the end of the loop, so `.then` on modules called,
+    // like in import('./example').then(...)
+    await new Promise(resolve => setTimeout(resolve, 1)).then(() => Promise.resolve())
   }
 }
 

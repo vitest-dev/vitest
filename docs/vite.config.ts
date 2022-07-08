@@ -8,23 +8,23 @@ import { resolve } from 'pathe'
 import { VitePWA } from 'vite-plugin-pwa'
 import fg from 'fast-glob'
 import {
-  pwaDisabled,
+  githubusercontentRegex,
   pwaFontStylesRegex,
   pwaFontsRegex,
   vitestDescription,
   vitestName,
   vitestShortName,
-} from './docs-data'
+} from './.vitepress/meta'
+import SponsorLinkFix from './plugins/FixSponsorLink'
 
 export default defineConfig({
-  define: {
-    'process.env.__PWA_DISABLED__': pwaDisabled,
-  },
   plugins: [
+    // TODO remove cast when moved to Vite 3
     Components({
       include: [/\.vue/, /\.md/],
-      dts: true,
-    }),
+      dirs: '.vitepress/components',
+      dts: '.vitepress/components.d.ts',
+    }) as Plugin,
     Unocss({
       shortcuts: [
         ['btn', 'px-4 py-1 rounded inline-flex justify-center gap-2 text-white leading-30px children:mya !no-underline cursor-pointer disabled:cursor-default disabled:bg-gray-600 disabled:opacity-50'],
@@ -38,10 +38,10 @@ export default defineConfig({
           scale: 1.2,
         }),
       ],
-    }),
+    }) as unknown as Plugin,
+    SponsorLinkFix(),
     IncludesPlugin(),
     VitePWA({
-      disable: pwaDisabled,
       outDir: '.vitepress/dist',
       registerType: 'autoUpdate',
       // include all static assets under public/
@@ -73,6 +73,7 @@ export default defineConfig({
       },
       workbox: {
         navigateFallbackDenylist: [/^\/new$/],
+        globPatterns: ['**/*.{css,js,html,woff2}'],
         runtimeCaching: [
           {
             urlPattern: pwaFontsRegex,
@@ -102,20 +103,24 @@ export default defineConfig({
               },
             },
           },
+          {
+            urlPattern: githubusercontentRegex,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'githubusercontent-images-cache',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 365, // <== 365 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
         ],
       },
     }),
   ],
-
-  optimizeDeps: {
-    include: [
-      'vue',
-      '@vueuse/core',
-    ],
-    exclude: [
-      'vue-demi',
-    ],
-  },
 })
 
 function IncludesPlugin(): Plugin {

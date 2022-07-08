@@ -8,7 +8,7 @@ import type { SnapshotResult } from './snapshot'
 import type { UserConsoleLog } from './general'
 
 export interface WorkerContext {
-  id: number
+  workerId: number
   port: MessagePort
   config: ResolvedConfig
   files: string[]
@@ -22,9 +22,10 @@ export interface WorkerRPC {
   resolveId: ResolveIdFunction
   getSourceMap: (id: string, force?: boolean) => Promise<RawSourceMap | undefined>
 
-  onFinished: (files: File[]) => void
+  onFinished: (files: File[], errors?: unknown[]) => void
   onWorkerExit: (code?: number) => void
   onUserConsoleLog: (log: UserConsoleLog) => void
+  onUnhandledRejection: (err: unknown) => void
   onCollected: (files: File[]) => void
   onTaskUpdate: (pack: TaskResultPack[]) => void
 

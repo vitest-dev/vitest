@@ -3,11 +3,12 @@ import * as diff from 'diff'
 import cliTruncate from 'cli-truncate'
 
 export function formatLine(line: string, outputTruncateLength?: number) {
-  return cliTruncate(line, (outputTruncateLength ?? (process.stdout.columns || 80)) - 4)
+  return cliTruncate(line, (outputTruncateLength ?? (process.stdout?.columns || 80)) - 4)
 }
 
 export interface DiffOptions {
   outputTruncateLength?: number
+  outputDiffLines?: number
   showLegend?: boolean
 }
 
@@ -24,10 +25,10 @@ export function unifiedDiff(actual: string, expected: string, options: DiffOptio
   if (actual === expected)
     return ''
 
-  const { outputTruncateLength, showLegend = true } = options
+  const { outputTruncateLength, outputDiffLines, showLegend = true } = options
 
   const indent = '  '
-  const diffLimit = 15
+  const diffLimit = outputDiffLines || 15
 
   const counts = {
     '+': 0,
@@ -60,6 +61,7 @@ export function unifiedDiff(actual: string, expected: string, options: DiffOptio
   const isCompact = counts['+'] === 1 && counts['-'] === 1 && lines.length === 2
 
   let formatted = lines.map((line: string) => {
+    line = line.replace(/\\"/g, '"')
     if (line[0] === '-') {
       line = formatLine(line.slice(1), outputTruncateLength)
       if (isCompact)
@@ -86,6 +88,13 @@ export function unifiedDiff(actual: string, expected: string, options: DiffOptio
       ]
     }
     else {
+      if (formatted[0].includes('"'))
+        formatted[0] = formatted[0].replace('"', '')
+
+      const last = formatted.length - 1
+      if (formatted[last].endsWith('"'))
+        formatted[last] = formatted[last].slice(0, formatted[last].length - 1)
+
       formatted.unshift(
         c.green(`- Expected  - ${counts['-']}`),
         c.red(`+ Received  + ${counts['+']}`),

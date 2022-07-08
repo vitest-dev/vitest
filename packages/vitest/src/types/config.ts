@@ -1,13 +1,15 @@
 import type { CommonServerOptions } from 'vite'
 import type { PrettyFormatOptions } from 'pretty-format'
+import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import type { BuiltinReporters } from '../node/reporters'
+import type { TestSequencerContructor } from '../node/sequencers/types'
 import type { C8Options, ResolvedC8Options } from './coverage'
 import type { JSDOMOptions } from './jsdom-options'
 import type { Reporter } from './reporter'
 import type { SnapshotStateOptions } from './snapshot'
 import type { Arrayable } from './general'
 
-export type BuiltinEnvironment = 'node' | 'jsdom' | 'happy-dom'
+export type BuiltinEnvironment = 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime'
 
 export type ApiConfig = Pick<CommonServerOptions, 'port' | 'strictPort' | 'host'>
 
@@ -58,8 +60,10 @@ export interface InlineConfig {
      * Vite will process inlined modules.
      *
      * This could be helpful to handle packages that ship `.js` in ESM format (that Node can't handle).
+     *
+     * If `true`, every dependency will be inlined
      */
-    inline?: (string | RegExp)[]
+    inline?: (string | RegExp)[] | true
 
     /**
      * Interpret CJS module's default as named exports
@@ -95,7 +99,7 @@ export interface InlineConfig {
   /**
    * Running environment
    *
-   * Supports 'node', 'jsdom', 'happy-dom'
+   * Supports 'node', 'jsdom', 'happy-dom', 'edge-runtime'
    *
    * @default 'node'
    */
@@ -137,6 +141,11 @@ export interface InlineConfig {
    * diff output length
    */
   outputTruncateLength?: number
+
+  /**
+   * number of diff output lines
+   */
+  outputDiffLines?: number
 
   /**
    * Write test results to a file when the --reporter=json` or `--reporter=junit` option is also specified.
@@ -197,11 +206,18 @@ export interface InlineConfig {
   globalSetup?: string | string[]
 
   /**
-   * Pattern of file paths to be ignore from triggering watch rerun
-   *
-   * @default ['**\/node_modules\/**', '**\/dist/**']
+   * Glob pattern of file paths to be ignore from triggering watch rerun
    */
-  watchIgnore?: (string | RegExp)[]
+  watchExclude?: string[]
+
+  /**
+   * Glob patter of file paths that will trigger the whole suite rerun
+   *
+   * Useful if you are testing calling CLI commands
+   *
+   * @default []
+   */
+  forceRerunTriggers?: string[]
 
   /**
    * Isolate environment for each test file
@@ -297,6 +313,86 @@ export interface InlineConfig {
    * Resolve custom snapshot path
    */
   resolveSnapshotPath?: (path: string, extension: string) => string
+
+  /**
+   * Pass with no tests
+   */
+  passWithNoTests?: boolean
+
+  /**
+   * Allow tests and suites that are marked as only
+   */
+  allowOnly?: boolean
+
+  /**
+   * Show heap usage after each test. Usefull for debugging memory leaks.
+   */
+  logHeapUsage?: boolean
+
+  /**
+   * Custom environment variables assigned to `process.env` before running tests.
+   */
+  env?: Record<string, string>
+
+  /**
+   * Options for @sinon/fake-timers
+   */
+  fakeTimers?: FakeTimerInstallOpts
+
+  /**
+   * Custom handler for console.log in tests.
+   *
+   * Return `false` to ignore the log.
+   */
+  onConsoleLog?: (log: string, type: 'stdout' | 'stderr') => false | void
+
+  /**
+   * Indicates if CSS files should be processed.
+   *
+   * When excluded, the CSS files will be replaced with empty strings to bypass the subsequent processing.
+   *
+   * @default { include: [/\.module\./] }
+   */
+  css?: boolean | {
+    include?: RegExp | RegExp[]
+    exclude?: RegExp | RegExp[]
+  }
+  /**
+   * A number of tests that are allowed to run at the same time marked with `test.concurrent`.
+   * @default 5
+   */
+  maxConcurrency?: number
+
+  /**
+   * Options for configuring cache policy.
+   * @default { dir: 'node_modules/.vitest' }
+   */
+  cache?: false | {
+    dir?: string
+  }
+
+  /**
+   * Options for configuring the order of running tests.
+   */
+  sequence?: {
+    /**
+     * Class that handles sorting and sharding algorithm.
+     * If you only need to change sorting, you can extend
+     * your custom sequencer from `BaseSequencer` from `vitest/node`.
+     * @default BaseSequencer
+     */
+    sequencer?: TestSequencerContructor
+    /**
+     * Should tests run in random order.
+     * @default false
+     */
+    shuffle?: boolean
+    /**
+     * Seed for the random number generator.
+     * @default Date.now()
+     */
+    seed?: number
+  }
 }
 
 export interface UserConfig extends InlineConfig {
@@ -317,16 +413,6 @@ export interface UserConfig extends InlineConfig {
   dom?: boolean
 
   /**
-   * Pass with no tests
-   */
-  passWithNoTests?: boolean
-
-  /**
-   * Allow tests and suites that are marked as only
-   */
-  allowOnly?: boolean
-
-  /**
    * Run tests that cover a list of source files
    */
   related?: string[] | string
@@ -343,9 +429,17 @@ export interface UserConfig extends InlineConfig {
    * @default false
    */
   changed?: boolean | string
+
+  /**
+   * Test suite shard to execute in a format of <index>/<count>.
+   * Will divide tests into a `count` numbers, and run only the `indexed` part.
+   * Cannot be used with enabled watch.
+   * @example --shard=2/3
+   */
+  shard?: string
 }
 
-export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath'> {
+export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'shard' | 'cache' | 'sequence'> {
   base?: string
 
   config?: string
@@ -361,4 +455,18 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
   defines: Record<string, any>
 
   api?: ApiConfig
+  shard?: {
+    index: number
+    count: number
+  }
+
+  cache: {
+    dir: string
+  } | false
+
+  sequence: {
+    sequencer: TestSequencerContructor
+    shuffle?: boolean
+    seed?: number
+  }
 }

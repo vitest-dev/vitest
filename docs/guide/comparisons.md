@@ -6,7 +6,7 @@
 
 ## Cypress
 
-[Cypress](https://www.cypress.io/) is a browser-based test runner and a complimentary tool to Vitest. If you'd like to use Cypress, we suggest using Vitest for all headless logic in your application and Cypress for all browser-based logic.
+[Cypress](https://www.cypress.io/) is a browser-based test runner and a complementary tool to Vitest. If you'd like to use Cypress, we suggest using Vitest for all headless logic in your application and Cypress for all browser-based logic.
 
 Cypress is known as an end-to-end testing tool, however their [new component test runner](https://on.cypress.io/component) has great support for testing Vite components and is an ideal choice to test anything that renders in a browser.
 

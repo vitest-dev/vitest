@@ -102,8 +102,8 @@ export function defineWebWorker() {
           this.inside.emit(event.type, event)
           return true
         },
-        addEventListener: this.inside.on,
-        removeEventListener: this.inside.off,
+        addEventListener: this.inside.on.bind(this.inside),
+        removeEventListener: this.inside.off.bind(this.inside),
         postMessage: (data) => {
           this.outside.emit('message', { data })
         },
@@ -126,21 +126,17 @@ export function defineWebWorker() {
 
       const runner = new InlineWorkerRunner(options, context)
 
-      let id = url instanceof URL ? url.toString() : url
-
-      id = id
-        .replace('?worker_file', '')
-        .replace(/^file:\/+/, '/')
+      const id = (url instanceof URL ? url.toString() : url).replace(/^file:\/+/, '/')
 
       const fsPath = toFilePath(id, config.root)
       invalidates.push(fsPath)
 
       runner.executeFile(fsPath)
         .then(() => {
-          invalidates.forEach((path) => {
+          invalidates.forEach((fsPath) => {
             // worker should be new every time
-            moduleCache.delete(path)
-            moduleCache.delete(`${path}__mock`)
+            moduleCache.delete(fsPath)
+            moduleCache.delete(`${fsPath}__mock`)
           })
           const q = this.messageQueue
           this.messageQueue = null

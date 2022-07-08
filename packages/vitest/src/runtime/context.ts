@@ -40,7 +40,8 @@ export function withTimeout<T extends((...args: any[]) => any)>(
         clearTimeout(timer)
         reject(new Error(makeTimeoutMsg(isHook, timeout)))
       }, timeout)
-      timer.unref()
+      // `unref` might not exist in browser
+      timer.unref?.()
     })]) as Awaitable<void>
   }) as T
 }
@@ -58,6 +59,11 @@ export function createTestContext(test: Test): TestContext {
       if (!_expect)
         _expect = createExpect(test)
       return _expect
+    },
+  })
+  Object.defineProperty(context, '_local', {
+    get() {
+      return _expect != null
     },
   })
 

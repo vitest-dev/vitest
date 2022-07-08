@@ -6,7 +6,8 @@
       {
         "paths": ["path"]
       }
-    ]
+    ],
+    "import/no-named-as-default": "off"
   },
   "overrides": [
     {

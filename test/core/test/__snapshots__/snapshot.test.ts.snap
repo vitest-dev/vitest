@@ -36,6 +36,8 @@ exports[`throwing 3`] = `
 }
 `;
 
+exports[`throwing 4`] = `"omega"`;
+
 exports[`with big array 1`] = `
 {
   "this": {

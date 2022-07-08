@@ -6,7 +6,7 @@ Simulates Web Worker, but in the same thread. Supports both `new Worker(url)` an
 
 ## Installing
 
-```sh
+```bash
 # with npm
 npm install -D @vitest/web-worker
 

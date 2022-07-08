@@ -159,6 +159,17 @@ const tasks: Task[] = [
       },
     ],
   },
+  {
+    id: '1223128da3_9',
+    type: 'test',
+    name: 'todo test',
+    mode: 'todo',
+    suite,
+    fails: undefined,
+    file,
+    result: undefined,
+    context: null as any,
+  },
 ]
 
 file.tasks = [suite]

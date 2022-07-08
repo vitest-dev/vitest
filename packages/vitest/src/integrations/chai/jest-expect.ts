@@ -1,39 +1,34 @@
 import c from 'picocolors'
+import { AssertionError } from 'chai'
 import type { EnhancedSpy } from '../spy'
 import { isMockFunction } from '../spy'
 import { addSerializer } from '../snapshot/port/plugins'
 import type { Constructable, Test } from '../../types'
 import { assertTypes } from '../../utils'
 import { unifiedDiff } from '../../node/diff'
-import type { ChaiPlugin, MatcherState } from './types'
-import { arrayBufferEquality, iterableEquality, equals as jestEquals, sparseArrayEquality, subsetEquality, typeEquality } from './jest-utils'
+import type { ChaiPlugin, MatcherState } from '../../types/chai'
+import { arrayBufferEquality, generateToBeMessage, iterableEquality, equals as jestEquals, sparseArrayEquality, subsetEquality, typeEquality } from './jest-utils'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import { stringify } from './jest-matcher-utils'
+import { MATCHERS_OBJECT } from './constants'
 
-const MATCHERS_OBJECT = Symbol.for('matchers-object')
-
-if (!Object.prototype.hasOwnProperty.call(global, MATCHERS_OBJECT)) {
-  const defaultState: Partial<MatcherState> = {
-    assertionCalls: 0,
-    isExpectingAssertions: false,
-    isExpectingAssertionsError: null,
-    expectedAssertionsNumber: null,
-    expectedAssertionsNumberErrorGen: null,
-  }
-  Object.defineProperty(global, MATCHERS_OBJECT, {
-    value: {
-      state: defaultState,
-    },
+if (!Object.prototype.hasOwnProperty.call(globalThis, MATCHERS_OBJECT)) {
+  Object.defineProperty(globalThis, MATCHERS_OBJECT, {
+    value: new WeakMap<Vi.ExpectStatic, MatcherState>(),
   })
 }
 
-export const getState = <State extends MatcherState = MatcherState>(): State =>
-  (global as any)[MATCHERS_OBJECT].state
+export const getState = <State extends MatcherState = MatcherState>(expect: Vi.ExpectStatic): State =>
+  (globalThis as any)[MATCHERS_OBJECT].get(expect)
 
 export const setState = <State extends MatcherState = MatcherState>(
   state: Partial<State>,
+  expect: Vi.ExpectStatic,
 ): void => {
-  Object.assign((global as any)[MATCHERS_OBJECT].state, state)
+  const map = (globalThis as any)[MATCHERS_OBJECT]
+  const current = map.get(expect) || {}
+  Object.assign(current, state)
+  map.set(expect, current)
 }
 
 // Jest Expect Compact
@@ -55,10 +50,26 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       return function (this: Chai.Assertion & Chai.AssertionStatic, ...args: any[]) {
         const promise = utils.flag(this, 'promise')
         const object = utils.flag(this, 'object')
+        const isNot = utils.flag(this, 'negate') as boolean
         if (promise === 'rejects') {
           utils.flag(this, 'object', () => {
             throw object
           })
+        }
+        // if it got here, it's already resolved
+        // unless it tries to resolve to a function that should throw
+        // called as '.resolves[.not].toThrow()`
+        else if (promise === 'resolves' && typeof object !== 'function') {
+          if (!isNot) {
+            const message = utils.flag(this, 'message') || 'expected promise to throw an error, but it didn\'t'
+            const error = {
+              showDiff: false,
+            }
+            throw new AssertionError(message, error, utils.flag(this, 'ssfi'))
+          }
+          else {
+            return
+          }
         }
         _super.apply(this, args)
       }
@@ -112,9 +123,41 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   })
   def('toBe', function (expected) {
     const actual = this._obj
+    const pass = Object.is(actual, expected)
+
+    let deepEqualityName = ''
+
+    if (!pass) {
+      const toStrictEqualPass = jestEquals(
+        actual,
+        expected,
+        [
+          iterableEquality,
+          typeEquality,
+          sparseArrayEquality,
+          arrayBufferEquality,
+        ],
+        true,
+      )
+
+      if (toStrictEqualPass) {
+        deepEqualityName = 'toStrictEqual'
+      }
+      else {
+        const toEqualPass = jestEquals(
+          actual,
+          expected,
+          [iterableEquality],
+        )
+
+        if (toEqualPass)
+          deepEqualityName = 'toEqual'
+      }
+    }
+
     return this.assert(
-      Object.is(actual, expected),
-      'expected #{this} to be #{exp} // Object.is equality',
+      pass,
+      generateToBeMessage(deepEqualityName),
       'expected #{this} not to be #{exp} // Object.is equality',
       expected,
       actual,
@@ -273,7 +316,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       pass = true
     }
     else {
-      expectedDiff = Math.pow(10, -precision) / 2
+      expectedDiff = 10 ** -precision / 2
       receivedDiff = Math.abs(expected - received)
       pass = receivedDiff < expectedDiff
     }
@@ -426,10 +469,26 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
 
     const obj = this._obj
     const promise = utils.flag(this, 'promise')
+    const isNot = utils.flag(this, 'negate') as boolean
     let thrown: any = null
 
-    if (promise) {
+    if (promise === 'rejects') {
       thrown = obj
+    }
+    // if it got here, it's already resolved
+    // unless it tries to resolve to a function that should throw
+    // called as .resolves.toThrow(Error)
+    else if (promise === 'resolves' && typeof obj !== 'function') {
+      if (!isNot) {
+        const message = utils.flag(this, 'message') || 'expected promise to throw an error, but it didn\'t'
+        const error = {
+          showDiff: false,
+        }
+        throw new AssertionError(message, error, utils.flag(this, 'ssfi'))
+      }
+      else {
+        return
+      }
     }
     else {
       try {
@@ -542,14 +601,18 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       callResult,
     )
   })
-  def('toSatisfy', function () {
-    return this.be.satisfy
+  def('toSatisfy', function (matcher: Function, message?: string) {
+    return this.be.satisfy(matcher, message)
   })
 
   utils.addProperty(chai.Assertion.prototype, 'resolves', function __VITEST_RESOLVES__(this: any) {
     utils.flag(this, 'promise', 'resolves')
     utils.flag(this, 'error', new Error('resolves'))
     const obj = utils.flag(this, 'object')
+
+    if (typeof obj?.then !== 'function')
+      throw new TypeError(`You must provide a Promise to expect() when using .resolves, not '${typeof obj}'.`)
+
     const proxy: any = new Proxy(this, {
       get: (target, key, receiver) => {
         const result = Reflect.get(target, key, receiver)
@@ -564,7 +627,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
               return result.call(this, ...args)
             },
             (err: any) => {
-              throw new Error(`promise rejected "${err}" instead of resolving`)
+              throw new Error(`promise rejected "${toString(err)}" instead of resolving`)
             },
           )
         }
@@ -579,6 +642,10 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     utils.flag(this, 'error', new Error('rejects'))
     const obj = utils.flag(this, 'object')
     const wrapper = typeof obj === 'function' ? obj() : obj // for jest compat
+
+    if (typeof wrapper?.then !== 'function')
+      throw new TypeError(`You must provide a Promise to expect() when using .rejects, not '${typeof wrapper}'.`)
+
     const proxy: any = new Proxy(this, {
       get: (target, key, receiver) => {
         const result = Reflect.get(target, key, receiver)
@@ -589,7 +656,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         return async (...args: any[]) => {
           return wrapper.then(
             (value: any) => {
-              throw new Error(`promise resolved "${value}" instead of rejecting`)
+              throw new Error(`promise resolved "${toString(value)}" instead of rejecting`)
             },
             (err: any) => {
               utils.flag(this, 'object', err)
@@ -605,37 +672,16 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
 
   utils.addMethod(
     chai.expect,
-    'assertions',
-    function assertions(expected: number) {
-      const errorGen = () => new Error(`expected number of assertions to be ${expected}, but got ${getState().assertionCalls}`)
-      if (Error.captureStackTrace)
-        Error.captureStackTrace(errorGen(), assertions)
-
-      setState({
-        expectedAssertionsNumber: expected,
-        expectedAssertionsNumberErrorGen: errorGen,
-      })
-    },
-  )
-
-  utils.addMethod(
-    chai.expect,
-    'hasAssertions',
-    function hasAssertions() {
-      const error = new Error('expected any number of assertion, but got none')
-      if (Error.captureStackTrace)
-        Error.captureStackTrace(error, hasAssertions)
-
-      setState({
-        isExpectingAssertions: true,
-        isExpectingAssertionsError: error,
-      })
-    },
-  )
-
-  utils.addMethod(
-    chai.expect,
     'addSnapshotSerializer',
     addSerializer,
   )
+}
+
+function toString(value: any) {
+  try {
+    return `${value}`
+  }
+  catch (_error) {
+    return 'unknown'
+  }
 }

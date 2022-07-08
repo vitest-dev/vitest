@@ -26,12 +26,12 @@ it('renders with data', async () => {
     }),
   ).toBeInTheDocument()
 
-  posts.forEach(async (post) => {
+  for (const post of posts) {
     expect(
       await screen.findByRole('heading', { name: post.title, level: 2 }),
     ).toBeDefined()
     expect(screen.getByText(post.body)).toBeDefined()
-  })
+  }
 })
 
 it('handles errors', async () => {

@@ -1,4 +1,4 @@
-import type { ChaiPlugin } from '../chai/types'
+import type { ChaiPlugin } from '../../types/chai'
 import { SnapshotClient } from './client'
 import { stripSnapshotIndentation } from './port/inlineSnapshot'
 
@@ -10,15 +10,27 @@ export function getSnapshotClient(): SnapshotClient {
   return _client
 }
 
-const getErrorString = (expected: () => void) => {
+const getErrorMessage = (err: unknown) => {
+  if (err instanceof Error)
+    return err.message
+
+  return err
+}
+
+const getErrorString = (expected: () => void | Error, promise: string | undefined) => {
+  if (typeof expected !== 'function') {
+    if (!promise)
+      throw new Error(`expected must be a function, received ${typeof expected}`)
+
+    // when "promised", it receives thrown error
+    return getErrorMessage(expected)
+  }
+
   try {
     expected()
   }
   catch (e) {
-    if (e instanceof Error)
-      return e.message
-
-    return e
+    return getErrorMessage(e)
   }
 
   throw new Error('snapshot function didn\'t threw')
@@ -36,7 +48,15 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
           message = properties
           properties = undefined
         }
-        getSnapshotClient().assert(expected, test, message, false, properties)
+        const errorMessage = utils.flag(this, 'message')
+        getSnapshotClient().assert({
+          received: expected,
+          test,
+          message,
+          isInline: false,
+          properties,
+          errorMessage,
+        })
       },
     )
   }
@@ -54,7 +74,17 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       }
       if (inlineSnapshot)
         inlineSnapshot = stripSnapshotIndentation(inlineSnapshot)
-      getSnapshotClient().assert(expected, test, message, true, properties, inlineSnapshot, error)
+      const errorMessage = utils.flag(this, 'message')
+      getSnapshotClient().assert({
+        received: expected,
+        test,
+        message,
+        isInline: true,
+        properties,
+        inlineSnapshot,
+        error,
+        errorMessage,
+      })
     },
   )
   utils.addMethod(
@@ -63,7 +93,14 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     function (this: Record<string, unknown>, message?: string) {
       const expected = utils.flag(this, 'object')
       const test = utils.flag(this, 'vitest-test')
-      getSnapshotClient().assert(getErrorString(expected), test, message)
+      const promise = utils.flag(this, 'promise') as string | undefined
+      const errorMessage = utils.flag(this, 'message')
+      getSnapshotClient().assert({
+        received: getErrorString(expected, promise),
+        test,
+        message,
+        errorMessage,
+      })
     },
   )
   utils.addMethod(
@@ -73,7 +110,17 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       const expected = utils.flag(this, 'object')
       const error = utils.flag(this, 'error')
       const test = utils.flag(this, 'vitest-test')
-      getSnapshotClient().assert(getErrorString(expected), test, message, true, undefined, inlineSnapshot, error)
+      const promise = utils.flag(this, 'promise') as string | undefined
+      const errorMessage = utils.flag(this, 'message')
+      getSnapshotClient().assert({
+        received: getErrorString(expected, promise),
+        test,
+        message,
+        inlineSnapshot,
+        isInline: true,
+        error,
+        errorMessage,
+      })
     },
   )
 }

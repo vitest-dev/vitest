@@ -1,10 +1,14 @@
+---
+outline: deep
+---
+
 # Configuring Vitest
 
 ## Configuration
 
-`vitest` will read your root `vite.config.ts` when it is present to match with the plugins and setup as your Vite app. If you want to have a different configuration for testing, you could either:
+`vitest` will read your root `vite.config.ts` when it is present to match with the plugins and setup as your Vite app. If you want to have a different configuration for testing or your main app doesn't rely on Vite specifically, you could either:
 
-- Create `vitest.config.ts`, which will have the higher priority
+- Create `vitest.config.ts`, which will have the higher priority and will override the configuration from `vite.config.ts`
 - Pass `--config` option to CLI, e.g. `vitest --config ./path/to/vitest.config.ts`
 - Use `process.env.VITEST` or `mode` property on `defineConfig` (will be set to `test` if not overridden) to conditionally apply different configuration in `vite.config.ts`
 
@@ -49,19 +53,23 @@ export default defineConfig({
 
 ## Options
 
+:::tip
+In addition to the following options, you can also use any configuration option from [Vite](https://vitejs.dev/config/). For example, `define` to define global variables, or `resolve.alias` to define aliases.
+:::
+
 ### include
 
 - **Type:** `string[]`
 - **Default:** `['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']`
 
-Include globs for test files
+Files to include in the test run, using glob pattern.
 
 ### exclude
 
 - **Type:** `string[]`
 - **Default:** `['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**']`
 
-Exclude globs for test files
+Files to exclude from the test run, using glob pattern.
 
 ### deps
 
@@ -72,23 +80,25 @@ Handling for dependencies inlining or externalizing
 #### deps.external
 
 - **Type:** `(string | RegExp)[]`
-- **Default:** `['**\/node_modules\/**','**\/dist\/**']`
+- **Default:** `['**/node_modules/**', '**/dist/**']`
 
 Externalize means that Vite will bypass the package to native Node. Externalized dependencies will not be applied Vite's transformers and resolvers, so they do not support HMR on reload. Typically, packages under `node_modules` are externalized.
 
 #### deps.inline
 
-- **Type:** `(string | RegExp)[]`
+- **Type:** `(string | RegExp)[] | true`
 - **Default:** `[]`
 
 Vite will process inlined modules. This could be helpful to handle packages that ship `.js` in ESM format (that Node can't handle).
+
+If `true`, every dependency will be inlined. All dependencies, specified in [`ssr.noExternal`](https://vitejs.dev/guide/ssr.html#ssr-externals) will be inlined by default.
 
 #### deps.fallbackCJS
 
 - **Type** `boolean`
 - **Default:** `false`
 
-When a dependency is a valid ESM package, try to guess the cjs version based on the path.
+When a dependency is a valid ESM package, try to guess the cjs version based on the path. This might be helpful, if a dependency has the wrong ESM file.
 
 This might potentially cause some misalignment if a package has different logic in ESM and CJS mode.
 
@@ -117,7 +127,7 @@ export default defineConfig({
 })
 ```
 
-To get TypeScript working with the global APIs, add `vitest/globals` to the `types` filed in your `tsconfig.json`
+To get TypeScript working with the global APIs, add `vitest/globals` to the `types` field in your `tsconfig.json`
 
 ```json
 // tsconfig.json
@@ -147,13 +157,14 @@ export default defineConfig({
 
 ### environment
 
-- **Type:** `'node' | 'jsdom' | 'happy-dom'`
+- **Type:** `'node' | 'jsdom' | 'happy-dom' | 'edge-runtime'`
 - **Default:** `'node'`
 
 The environment that will be used for testing. The default environment in Vitest
 is a Node.js environment. If you are building a web application, you can use
 browser-like environment through either [`jsdom`](https://github.com/jsdom/jsdom)
 or [`happy-dom`](https://github.com/capricorn86/happy-dom) instead.
+If you are building edge functions, you can use [`edge-runtime`](https://edge-runtime.vercel.app/packages/vm) environment
 
 By adding a `@vitest-environment` docblock or comment at the top of the file,
 you can specify another environment to be used for all tests in that file:
@@ -195,12 +206,14 @@ test('use jsdom in this test file', () => {
 })
 ```
 
+If you are running Vitest with [`--no-threads`](#threads) flag, your tests will be run in this order: `node`, `jsdom`, `happy-dom`. Meaning, that every test with the same environment is grouped together, but is still run sequentially.
+
 ### update
 
 - **Type:** `boolean`
 - **Default:** `false`
 
-Update snapshot files
+Update snapshot files. This will update all changed snapshots and delete obsolete ones.
 
 ### watch
 
@@ -229,12 +242,29 @@ Custom reporters for output. Reporters can be [a Reporter instance](https://gith
   - `'json'` -  give a simple JSON summary
   - path of a custom reporter (e.g. `'./path/to/reporter.ts'`, `'@scope/reporter'`)
 
+### outputTruncateLength
+
+- **Type:** `number`
+- **Default:** `80`
+
+Truncate output diff lines up to `80` number of characters. You may wish to tune this,
+depending on you terminal window width.
+
+### outputDiffLines
+
+- **Type:** `number`
+- **Default:** `15`
+
+Limit number of output diff lines up to `15`.
+
 ### outputFile
 
 - **Type:** `string | Record<string, string>`
 
 Write test results to a file when the `--reporter=json` or `--reporter=junit` option is also specified.
 By providing an object instead of a string you can define individual outputs when using multiple reporters.
+
+To provide object via CLI command, use the following syntax: `--outputFile.json=./path --outputFile.junit=./other-path`.
 
 ### threads
 
@@ -243,19 +273,25 @@ By providing an object instead of a string you can define individual outputs whe
 
 Enable multi-threading using [tinypool](https://github.com/Aslemammad/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina))
 
+:::warning
+This option is different from Jest's `--runInBand`. Vitest uses workers not only for running tests in parallel, but also to provide isolation. By disabling this option, your tests will run sequentially, but in the same global context, so you must provide isolation yourself.
+
+This might cause all sorts of issues, if you are relying on global state (frontend frameworks usually do) or your code relies on environment to be defined separately for each test. But can be a speed boost for your tests (up to 3 times faster), that don't necessarily rely on global state or can easily bypass that.
+:::
+
 ### maxThreads
 
 - **Type:** `number`
 - **Default:** _available CPUs_
 
-Maximum number of threads
+Maximum number of threads. You can also use `VITEST_MAX_THREADS` environment variable.
 
 ### minThreads
 
 - **Type:** `number`
 - **Default:** _available CPUs_
 
-Minimum number of threads
+Minimum number of threads. You can also use `VITEST_MIN_THREADS` environment variable.
 
 ### testTimeout
 
@@ -276,7 +312,7 @@ Default timeout of a hook in milliseconds
 - **Type:** `boolean`
 - **Default:** `false`
 
-Silent mode
+Silent console output from tests
 
 ### setupFiles
 
@@ -284,7 +320,30 @@ Silent mode
 
 Path to setup files. They will be run before each test file.
 
-You can use `process.env.VITEST_WORKER_ID` (integer-like string) inside to distinguish between threads (will always be `1`, if run with `threads: false`).
+You can use `process.env.VITEST_POOL_ID` (integer-like string) inside to distinguish between threads (will always be `'1'`, if run with `threads: false`).
+
+:::tip
+Note, that if you are running [`--no-threads`](#threads), this setup file will be run in the same global scope multiple times. Meaning, that you are accessing the same global object before each test, so make sure you are not doing the same thing more than you need.
+:::
+
+For example, you may rely on a global variable:
+
+```ts
+import { config } from '@some-testing-lib'
+
+if (!globalThis.defined) {
+  config.plugins = [myCoolPlugin]
+  computeHeavyThing()
+  globalThis.defined = true
+}
+
+// hooks are reset before each suite
+afterEach(() => {
+  cleanup()
+})
+
+globalThis.resetBeforeEachTest = true
+```
 
 ### globalSetup
 
@@ -298,34 +357,58 @@ A global setup file can either export named functions `setup` and `teardown` or 
 Multiple globalSetup files are possible. setup and teardown are executed sequentially with teardown in reverse order.
 :::
 
+::: warning
+Beware that the global setup is run in a different global scope, so your tests don't have access to variables defined here.
+:::
 
-### watchIgnore
 
-- **Type:** `(string | RegExp)[]`
-- **Default:** `['**\/node_modules\/**', '**\/dist/**']`
+### watchExclude
 
-Pattern of file paths to be ignore from triggering watch rerun
+- **Type:** `string[]`
+- **Default:** `['**/node_modules/**', '**/dist/**']`
+
+Glob pattern of file paths to be ignored from triggering watch rerun.
+
+### forceRerunTriggers
+
+- **Type**: `string[]`
+- **Default:** `['**/package.json/**', '**/vitest.config.*/**', '**/vite.config.*/**']`
+
+Glob pattern of file paths that will trigger the whole suite rerun. When paired with the `--changed` argument will run the whole test suite if the trigger is found in the git diff.
+
+Useful if you are testing calling CLI commands, because Vite cannot construct a module graph:
+
+```ts
+test('execute a script', async () => {
+  // Vitest cannot rerun this test, if content of `dist/index.js` changes
+  await execa('node', ['dist/index.js'])
+})
+```
+
+::: tip
+Make sure that your files are not excluded by `watchExclude`.
+:::
 
 ### isolate
 
 - **Type:** `boolean`
 - **Default:** `true`
 
-Isolate environment for each test file
+Isolate environment for each test file. Does not work if you disable [`--threads`](#threads).
 
 ### coverage
 
 - **Type:** `C8Options`
 - **Default:** `undefined`
 
-Coverage options
+Coverage options passed to [C8](https://github.com/bcoe/c8).
 
 ### testNamePattern
 
 - **Type** `string | RegExp`
 
 Run tests with full names matching the pattern.
-If you add `OnlyRunThis` to this property, tests containing the word `OnlyRunThis` in the test name will be skipped.
+If you add `OnlyRunThis` to this property, tests not containing the word `OnlyRunThis` in the test name will be skipped.
 
 ```js
 import { expect, test } from 'vitest'
@@ -353,28 +436,28 @@ Open Vitest UI (WIP)
 - **Type:** `boolean | number`
 - **Default:** `false`
 
-Listen to port and serve API. When set to true, the default port is 55555
+Listen to port and serve API. When set to true, the default port is 51204
 
 ### clearMocks
 
 - **Type:** `boolean`
 - **Default:** `false`
 
-Will call `.mockClear()` on all spies before each test
+Will call [`.mockClear()`](/api/#mockclear) on all spies before each test. This will clear mock history, but not reset its implementation to the default one.
 
 ### mockReset
 
 - **Type:** `boolean`
 - **Default:** `false`
 
-Will call `.mockReset()` on all spies before each test
+Will call [`.mockReset()`](/api/#mockreset) on all spies before each test. This will clear mock history and reset its implementation to an empty function (will return `undefined`).
 
 ### restoreMocks
 
 - **Type:** `boolean`
 - **Default:** `false`
 
-Will call `.mockRestore()` on all spies before each test
+Will call [`.mockRestore()`](/api/#mockrestore) on all spies before each test. This will clear mock history and reset its implementation to the original one.
 
 ### transformMode
 
@@ -395,7 +478,7 @@ Vite plugins will receive `ssr: true` flag when processing those files.
 - **Type:** `RegExp[]`
 - **Default:** *modules other than those specified in `transformMode.ssr`*
 
-First do a normal transform pipeline (targeting browser), then then do a SSR rewrite to run the code in Node.<br>
+First do a normal transform pipeline (targeting browser), then do a SSR rewrite to run the code in Node.<br>
 Vite plugins will receive `ssr: false` flag when processing those files.
 
 When you use JSX as component models other than React (e.g. Vue JSX or SolidJS), you might want to config as following to make `.tsx` / `.jsx` transformed as client-side components:
@@ -416,23 +499,7 @@ export default defineConfig({
 
 - **Type:** `PrettyFormatOptions`
 
-Format options for snapshot testing.
-
-### mode
-
-- **Type:** `string`
-- **Default:** `test`
-
-Overrides Vite mode.
-
-### changed
-
-- **Type**: `boolean | string`
-- **Default**: false
-
-Run tests only against changed files. If no value is provided, it will run tests against uncomitted changes (includes staged and unstaged).
-
-To run tests against changes made in last commit, you can use `--changed HEAD~1`. You can also pass commit hash or branch name.
+Format options for snapshot testing. These options are passed down to [`pretty-format`](https://www.npmjs.com/package/pretty-format).
 
 ### resolveSnapshotPath
 
@@ -442,9 +509,107 @@ To run tests against changes made in last commit, you can use `--changed HEAD~1`
 Overrides default snapshot path. For example, to store snapshots next to test files:
 
 ```ts
-export default {
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
   test: {
     resolveSnapshotPath: (testPath, snapExtension) => testPath + snapExtension,
   },
-}
+})
 ```
+
+### allowOnly
+
+- **Type**: `boolean`
+- **Default**: `false`
+
+Allow tests and suites that are marked as only.
+
+### passWithNoTests
+
+- **Type**: `boolean`
+- **Default**: `false`
+
+Vitest will not fail, if no tests will be found.
+
+### logHeapUsage
+
+- **Type**: `boolean`
+- **Default**: `false`
+
+Show heap usage after each test. Useful for debugging memory leaks.
+
+### css
+
+- **Type**: `boolean | { include?, exclude? }`
+
+Configure if CSS should be processed. When excluded, CSS files will be replaced with empty strings to bypass the subsequent processing.
+
+By default, processes only CSS Modules, because it affects runtime. JSDOM and Happy DOM don't fully support injecting CSS, so disabling this setting might help with performance.
+
+#### css.include
+
+- **Type**: `RegExp | RegExp[]`
+- **Default**: `[/\.module\./]`
+
+RegExp pattern for files that should return actual CSS and will be processed by Vite pipeline.
+
+#### css.exclude
+
+- **Type**: `RegExp | RegExp[]`
+- **Default**: `[]`
+
+RegExp pattern for files that will return an empty CSS file.
+
+### maxConcurrency
+
+- **Type**: `number`
+- **Default**: `5`
+
+A number of tests that are allowed to run at the same time marked with `test.concurrent`.
+
+Test above this limit will be queued to run when available slot appears.
+
+### cache
+
+- **Type**: `false | { dir? }`
+
+Options to configure Vitest cache policy. At the moment Vitest stores cache for test results to run the longer and failed tests first.
+
+#### cache.dir
+
+- **Type**: `string`
+- **Default**: `node_modules/.vitest`
+
+Path to cache directory.
+
+### sequence
+
+- **Type**: `{ sequencer?, shuffle?, seed? }`
+
+Options for how tests should be sorted.
+
+#### sequence.sequencer
+
+- **Type**: `TestSequencerConstructor`
+- **Default**: `BaseSequencer`
+
+A custom class that defines methods for sharding and sorting. You can extend `BaseSequencer` from `vitest/node`, if you only need to redefine one of the `sort` and `shard` methods, but both should exist.
+
+Sharding is happening before sorting, and only if `--shard` option is provided.
+
+#### sequence.shuffle
+
+- **Type**: `boolean`
+- **Default**: `false`
+
+If you want tests to run randomly, you can enable it with this option, or CLI argument [`--sequence.shuffle`](/guide/cli).
+
+Vitest usually uses cache to sort tests, so long running tests start earlier - this makes tests run faster. If your tests will run in random order you will lose this performance improvement, but it may be useful to track tests that accidentally depend on another run previously.
+
+#### sequence.seed
+
+- **Type**: `number`
+- **Default**: `Date.now()`
+
+Sets the randomization seed, if tests are running in random order.

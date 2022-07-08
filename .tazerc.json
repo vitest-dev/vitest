@@ -1,8 +1,8 @@
 {
   "exclude": [
     "vue",
-    "esbuild",
     "puppeteer",
-    "vite"
+    "pretty-format",
+    "pathe"
   ]
 }

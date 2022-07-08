@@ -1,11 +1,9 @@
-import { execa } from 'execa'
 import type { UserConfig as ViteUserConfig } from 'vite'
-import c from 'picocolors'
+import { envPackageNames } from '../integrations/env'
 import type { UserConfig } from '../types'
 import { ensurePackageInstalled } from '../utils'
 import { createVitest } from './create'
 import { registerConsoleShortcuts } from './stdin'
-import { divider } from './reporters/renderers/utils'
 
 export interface CliOptions extends UserConfig {
   /**
@@ -32,29 +30,16 @@ export async function startVitest(cliFilters: string[], options: CliOptions, vit
 
   const ctx = await createVitest(options, viteOverrides)
 
-  process.env.VITEST_MODE = ctx.config.watch ? 'WATCH' : 'RUN'
-
   if (ctx.config.coverage.enabled) {
     if (!await ensurePackageInstalled('c8')) {
       process.exitCode = 1
       return false
     }
-
-    if (!process.env.NODE_V8_COVERAGE) {
-      process.env.NODE_V8_COVERAGE = ctx.config.coverage.tempDirectory
-      // thread enable test will exec in thread
-      // so don't need to restarting Vitest
-      if (!ctx.config.threads) {
-        await ctx.server.close()
-        const { exitCode } = await execa(process.argv0, process.argv.slice(1), { stdio: 'inherit', reject: false })
-        process.exitCode = exitCode
-        return false
-      }
-    }
   }
 
   if (ctx.config.environment && ctx.config.environment !== 'node') {
-    if (!await ensurePackageInstalled(ctx.config.environment)) {
+    const packageName = envPackageNames[ctx.config.environment]
+    if (!await ensurePackageInstalled(packageName)) {
       process.exitCode = 1
       return false
     }
@@ -62,8 +47,6 @@ export async function startVitest(cliFilters: string[], options: CliOptions, vit
 
   if (process.stdin.isTTY && ctx.config.watch)
     registerConsoleShortcuts(ctx)
-
-  process.chdir(ctx.config.root)
 
   ctx.onServerRestarted(() => {
     // TODO: re-consider how to re-run the tests the server smartly
@@ -75,8 +58,7 @@ export async function startVitest(cliFilters: string[], options: CliOptions, vit
   }
   catch (e) {
     process.exitCode = 1
-    ctx.error(`\n${c.red(divider(c.bold(c.inverse(' Unhandled Error '))))}`)
-    await ctx.printError(e)
+    await ctx.printError(e, true, 'Unhandled Error')
     ctx.error('\n\n')
     return false
   }

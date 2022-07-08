@@ -1,4 +1,11 @@
 import { util } from 'chai'
+import type {
+  ChaiPlugin,
+  MatcherState,
+  MatchersObject,
+  SyncExpectationResult,
+} from '../../types/chai'
+import { getSnapshotClient } from '../snapshot/chai'
 import { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import { getState } from './jest-expect'
 
@@ -9,17 +16,11 @@ import {
   iterableEquality,
   subsetEquality,
 } from './jest-utils'
-import type {
-  ChaiPlugin,
-  MatcherState,
-  MatchersObject,
-  SyncExpectationResult,
-} from './types'
 
 const isAsyncFunction = (fn: unknown) =>
   typeof fn === 'function' && (fn as any)[Symbol.toStringTag] === 'AsyncFunction'
 
-const getMatcherState = (assertion: Chai.AssertionStatic & Chai.Assertion) => {
+const getMatcherState = (assertion: Chai.AssertionStatic & Chai.Assertion, expect: Vi.ExpectStatic) => {
   const obj = assertion._obj
   const isNot = util.flag(assertion, 'negate') as boolean
   const promise = util.flag(assertion, 'promise') || ''
@@ -30,13 +31,14 @@ const getMatcherState = (assertion: Chai.AssertionStatic & Chai.Assertion) => {
   }
 
   const matcherState: MatcherState = {
-    ...getState(),
+    ...getState(expect),
     isNot,
     utils: jestUtils,
     promise,
     equals,
     // needed for built-in jest-snapshots, but we don't use it
     suppressedErrors: [],
+    snapshotState: getSnapshotClient().snapshotState!,
   }
 
   return {
@@ -56,7 +58,7 @@ function JestExtendPlugin(expect: Vi.ExpectStatic, matchers: MatchersObject): Ch
   return (c, utils) => {
     Object.entries(matchers).forEach(([expectAssertionName, expectAssertion]) => {
       function expectSyncWrapper(this: Chai.AssertionStatic & Chai.Assertion, ...args: any[]) {
-        const { state, isNot, obj } = getMatcherState(this)
+        const { state, isNot, obj } = getMatcherState(this, expect)
 
         // @ts-expect-error args wanting tuple
         const { pass, message, actual, expected } = expectAssertion.call(state, obj, ...args) as SyncExpectationResult
@@ -66,7 +68,7 @@ function JestExtendPlugin(expect: Vi.ExpectStatic, matchers: MatchersObject): Ch
       }
 
       async function expectAsyncWrapper(this: Chai.AssertionStatic & Chai.Assertion, ...args: any[]) {
-        const { state, isNot, obj } = getMatcherState(this)
+        const { state, isNot, obj } = getMatcherState(this, expect)
 
         // @ts-expect-error args wanting tuple
         const { pass, message, actual, expected } = await expectAssertion.call(state, obj, ...args) as SyncExpectationResult
@@ -86,7 +88,7 @@ function JestExtendPlugin(expect: Vi.ExpectStatic, matchers: MatchersObject): Ch
 
         asymmetricMatch(other: unknown) {
           const { pass } = expectAssertion.call(
-            this.getMatcherContext(),
+            this.getMatcherContext(expect),
             other,
             ...this.sample,
           ) as SyncExpectationResult

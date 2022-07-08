@@ -13,14 +13,14 @@ You can try Vitest online on [StackBlitz](https://vitest.new). It runs Vitest di
 ## Adding Vitest to your Project
 
 ```bash
-// with npm
-$ npm install -D vitest
+# with npm
+npm install -D vitest
 
-// or with yarn
-$ yarn add -D vitest
+# or with yarn
+yarn add -D vitest
 
-// or with pnpm
-$ pnpm add -D vitest
+# or with pnpm
+pnpm add -D vitest
 ```
 
 :::tip
@@ -54,7 +54,7 @@ See the list of config options in the [Config Reference](../config/)
 In a project where Vitest is installed, you can use the `vitest` binary in your npm scripts, or run it directly with `npx vitest`. Here are the default npm scripts in a scaffolded Vitest project:
 
 <!-- prettier-ignore -->
-```json5
+```json
 {
   "scripts": {
     "test": "vitest",
@@ -70,7 +70,7 @@ Learn more about the [Command Line Interface](./cli.md)
 
 ## IDE Integrations
 
-We also provided a official extension for Visual Studio Code to enchance your testing experience with Vitest.
+We also provided a official extension for Visual Studio Code to enhance your testing experience with Vitest.
 
 [Install from VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ZixuanChen.vitest-explorer)
 
@@ -99,6 +99,14 @@ Learn more about [IDE Integrations](./ide.md)
 - [neodrag](https://github.com/PuruVJ/neodrag)
 - [svelte-multiselect](https://github.com/janosh/svelte-multiselect)
 - [iconify](https://github.com/iconify/iconify)
+- [tdesign-vue-next](https://github.com/Tencent/tdesign-vue-next)
+- [cz-git](https://github.com/Zhengqbbb/cz-git)
+
+<!--
+For contributors: 
+We no longer accept new entries to this list a this moment.
+Thanks for choosing Vitest!
+-->
 
 ## Using Unreleased Commits
 

@@ -162,6 +162,8 @@ const LIVING_KEYS = [
 
   // not specified in docs, but is available
   'Image',
+  'Audio',
+  'Option',
 ]
 
 const OTHER_KEYS = [
@@ -170,6 +172,7 @@ const OTHER_KEYS = [
   'atob',
   'blur',
   'btoa',
+  'cancelAnimationFrame',
   /* 'clearInterval', */
   /* 'clearTimeout', */
   'close',
@@ -201,6 +204,7 @@ const OTHER_KEYS = [
   'print',
   'prompt',
   'removeEventListener',
+  'requestAnimationFrame',
   'resizeBy',
   'resizeTo',
   'screen',

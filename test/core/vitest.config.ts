@@ -45,10 +45,16 @@ export default defineConfig({
     coverage: {
       reporter: ['text', 'html'],
     },
+    env: {
+      CUSTOM_ENV: 'foo',
+    },
     resolveSnapshotPath: (path, extension) => {
       if (path.includes('moved-snapshot'))
         return path + extension
       return join(dirname(path), '__snapshots__', `${basename(path)}${extension}`)
+    },
+    sequence: {
+      seed: 101,
     },
   },
 })

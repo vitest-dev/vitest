@@ -6,7 +6,7 @@
  */
 
 import fs, { promises as fsp } from 'fs'
-import path from 'pathe'
+import { dirname, join } from 'pathe'
 import naturalCompare from 'natural-compare'
 import type { OptionsReceived as PrettyFormatOptions } from 'pretty-format'
 import {
@@ -132,7 +132,7 @@ function printBacktickString(str: string): string {
 
 export function ensureDirectoryExists(filePath: string): void {
   try {
-    fs.mkdirSync(path.join(path.dirname(filePath)), { recursive: true })
+    fs.mkdirSync(join(dirname(filePath)), { recursive: true })
   }
   catch { }
 }
@@ -151,27 +151,43 @@ export async function saveSnapshotFile(
       key => `exports[${printBacktickString(key)}] = ${printBacktickString(normalizeNewlines(snapshotData[key]))};`,
     )
 
+  const content = `${writeSnapshotVersion()}\n\n${snapshots.join('\n\n')}\n`
+  const skipWriting = fs.existsSync(snapshotPath) && (await fsp.readFile(snapshotPath, 'utf8')) === content
+
+  if (skipWriting)
+    return
+
   ensureDirectoryExists(snapshotPath)
   await fsp.writeFile(
     snapshotPath,
-    `${writeSnapshotVersion()}\n\n${snapshots.join('\n\n')}\n`,
+    content,
     'utf-8',
   )
 }
 
 export function prepareExpected(expected?: string) {
   function findStartIndent() {
-    const match = /^( +)}\s+$/m.exec(expected || '')
-    return match?.[1]?.length || 0
+    // Attemps to find indentation for objects.
+    // Matches the ending tag of the object.
+    const matchObject = /^( +)}\s+$/m.exec(expected || '')
+    const objectIndent = matchObject?.[1]?.length
+
+    if (objectIndent)
+      return objectIndent
+
+    // Attempts to find indentation for texts.
+    // Matches the quote of first line.
+    const matchText = /^\n( +)"/.exec(expected || '')
+    return matchText?.[1]?.length || 0
   }
 
-  const startIdent = findStartIndent()
+  const startIndent = findStartIndent()
 
   let expectedTrimmed = expected?.trim()
 
-  if (startIdent) {
+  if (startIndent) {
     expectedTrimmed = expectedTrimmed
-      ?.replace(new RegExp(`^${' '.repeat(startIdent)}`, 'gm'), '').replace(/ +}$/, '}')
+      ?.replace(new RegExp(`^${' '.repeat(startIndent)}`, 'gm'), '').replace(/ +}$/, '}')
   }
 
   return expectedTrimmed

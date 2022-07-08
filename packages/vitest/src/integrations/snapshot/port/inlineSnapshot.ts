@@ -61,14 +61,14 @@ function prepareSnapString(snap: string, source: string, index: number) {
   const lines = snap
     .trim()
     .replace(/\\/g, '\\\\')
-    .replace(/\$/g, '\\$')
     .split(/\n/g)
 
   const isOneline = lines.length <= 1
   const quote = isOneline ? '\'' : '`'
-  return isOneline
-    ? `'${lines.join('\n').replace(/'/g, '\\\'')}'`
-    : `${quote}\n${lines.map(i => indentNext + i).join('\n').replace(/`/g, '\\`')}\n${indent}${quote}`
+  if (isOneline)
+    return `'${lines.join('\n').replace(/'/g, '\\\'')}'`
+  else
+    return `${quote}\n${lines.map(i => i ? indentNext + i : '').join('\n').replace(/`/g, '\\`').replace(/\${/g, '\\${')}\n${indent}${quote}`
 }
 
 const startRegex = /(?:toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot)\s*\(\s*[\w_$]*(['"`\)])/m

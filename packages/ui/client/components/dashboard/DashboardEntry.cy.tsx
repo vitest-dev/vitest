@@ -1,4 +1,4 @@
-import faker from '@faker-js/faker'
+import { faker } from '@faker-js/faker'
 import DashboardEntry from './DashboardEntry.vue'
 
 const body = () => (<div data-testid="body-content">{ faker.lorem.words(2) }</div>)

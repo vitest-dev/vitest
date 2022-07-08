@@ -28,7 +28,7 @@
       "vite-node/utils": ["./packages/vite-node/src/utils.ts"]
     },
     "types": [
-      "vite/client",
+      "vite/client"
     ]
   },
   "exclude": [

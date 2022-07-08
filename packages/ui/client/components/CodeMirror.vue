@@ -2,17 +2,18 @@
 import type CodeMirror from 'codemirror'
 import { useCodeMirror } from '../composables/codemirror'
 
-const attrs = useAttrs()
-const emit = defineEmits<{
-  (event: 'update:modelValue', value: string): void
-  (event: 'save', content: string): void
-}>()
 const props = defineProps<{
   modelValue: string
   mode?: string
   readOnly?: boolean
 }>()
 
+const emit = defineEmits<{
+  (event: 'update:modelValue', value: string): void
+  (event: 'save', content: string): void
+}>()
+
+const attrs = useAttrs()
 const modeMap: Record<string, any> = {
   // html: 'htmlmixed',
   // vue: 'htmlmixed',

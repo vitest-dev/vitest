@@ -1,9 +1,11 @@
+import limit from 'p-limit'
 import type { File, HookCleanupCallback, HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from '../types'
 import { vi } from '../integrations/vi'
 import { getSnapshotClient } from '../integrations/snapshot/chai'
-import { clearTimeout, getFullName, getWorkerState, hasFailed, hasTests, partitionSuiteChildren, setTimeout } from '../utils'
-import { getState, setState } from '../integrations/chai/jest-expect'
+import { clearTimeout, getFullName, getWorkerState, hasFailed, hasTests, partitionSuiteChildren, setTimeout, shuffle } from '../utils'
 import { takeCoverage } from '../integrations/coverage'
+import { getState, setState } from '../integrations/chai/jest-expect'
+import { GLOBAL_EXPECT } from '../integrations/chai/constants'
 import { getFn, getHooks } from './map'
 import { rpc } from './rpc'
 import { collectTests } from './collect'
@@ -51,9 +53,9 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
   return callbacks
 }
 
-const packs = new Map<string, TaskResult|undefined>()
+const packs = new Map<string, TaskResult | undefined>()
 let updateTimer: any
-let previousUpdate: Promise<void>|undefined
+let previousUpdate: Promise<void> | undefined
 
 function updateTask(task: Task) {
   packs.set(task.id, task.result)
@@ -76,8 +78,10 @@ async function sendTasksUpdate() {
 }
 
 export async function runTest(test: Test) {
-  if (test.mode !== 'run')
+  if (test.mode !== 'run') {
+    getSnapshotClient().skipTestSnapshots(test)
     return
+  }
 
   if (test.result?.state === 'fail') {
     updateTask(test)
@@ -111,9 +115,18 @@ export async function runTest(test: Test) {
       expectedAssertionsNumberErrorGen: null,
       testPath: test.suite.file?.filepath,
       currentTestName: getFullName(test),
-    })
+    }, (globalThis as any)[GLOBAL_EXPECT])
     await getFn(test)()
-    const { assertionCalls, expectedAssertionsNumber, expectedAssertionsNumberErrorGen, isExpectingAssertions, isExpectingAssertionsError } = getState()
+    const {
+      assertionCalls,
+      expectedAssertionsNumber,
+      expectedAssertionsNumberErrorGen,
+      isExpectingAssertions,
+      isExpectingAssertionsError,
+      // @ts-expect-error local is private
+    } = test.context._local
+      ? test.context.expect.getState()
+      : getState((globalThis as any)[GLOBAL_EXPECT])
     if (expectedAssertionsNumber !== null && assertionCalls !== expectedAssertionsNumber)
       throw expectedAssertionsNumberErrorGen!()
     if (isExpectingAssertions === true && assertionCalls === 0)
@@ -151,6 +164,9 @@ export async function runTest(test: Test) {
 
   test.result.duration = now() - start
 
+  if (workerState.config.logHeapUsage)
+    test.result.heap = process.memoryUsage().heapUsed
+
   workerState.current = undefined
 
   updateTask(test)
@@ -182,6 +198,8 @@ export async function runSuite(suite: Suite) {
 
   updateTask(suite)
 
+  const workerState = getWorkerState()
+
   if (suite.mode === 'skip') {
     suite.result.state = 'skip'
   }
@@ -192,11 +210,20 @@ export async function runSuite(suite: Suite) {
     try {
       const beforeAllCleanups = await callSuiteHook(suite, suite, 'beforeAll', [suite])
 
-      for (const tasksGroup of partitionSuiteChildren(suite)) {
+      for (let tasksGroup of partitionSuiteChildren(suite)) {
         if (tasksGroup[0].concurrent === true) {
-          await Promise.all(tasksGroup.map(c => runSuiteChild(c)))
+          const mutex = limit(workerState.config.maxConcurrency)
+          await Promise.all(tasksGroup.map(c => mutex(() => runSuiteChild(c))))
         }
         else {
+          const { sequence } = workerState.config
+          if (sequence.shuffle || suite.shuffle) {
+            // run describe block independently from tests
+            const suites = tasksGroup.filter(group => group.type === 'suite')
+            const tests = tasksGroup.filter(group => group.type === 'test')
+            const groups = shuffle([suites, tests], sequence.seed)
+            tasksGroup = groups.flatMap(group => shuffle(group, sequence.seed))
+          }
           for (const c of tasksGroup)
             await runSuiteChild(c)
         }
@@ -211,6 +238,9 @@ export async function runSuite(suite: Suite) {
     }
   }
   suite.result.duration = now() - start
+
+  if (workerState.config.logHeapUsage)
+    suite.result.heap = process.memoryUsage().heapUsed
 
   if (suite.mode === 'run') {
     if (!hasTests(suite)) {

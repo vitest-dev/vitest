@@ -16,7 +16,6 @@ function onItemClick(task: Task) {
   showDashboard(false)
 }
 const toggleMode = computed(() => isDark.value ? 'light' : 'dark')
-
 </script>
 
 <template>

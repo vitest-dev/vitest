@@ -1,3 +1,7 @@
+---
+outline: deep
+---
+
 # Features
 
 <FeaturesList class="!gap-1 text-lg" />
@@ -66,7 +70,18 @@ You can also use `.skip`, `.only`, and `.todo` with concurrent suites and tests.
 
 ## Snapshot
 
-[Jest Snapshot](https://jestjs.io/docs/snapshot-testing) support
+[Jest-compatible](https://jestjs.io/docs/snapshot-testing) snapshot support.
+
+```ts
+import { expect, it } from 'vitest'
+
+it('renders correctly', () => {
+  const result = render()
+  expect(result).toMatchSnapshot()
+})
+```
+
+Learn more at [Snapshot](/guide/snapshot)
 
 ## Chai and Jest expect compatibility
 
@@ -92,7 +107,7 @@ fn.mockImplementation(arg => arg)
 
 fn('world', 2)
 
-expect(fn.mock.results[1]).toBe('world')
+expect(fn.mock.results[1].value).toBe('world')
 ```
 
 Vitest supports both [happy-dom](https://github.com/capricorn86/happy-dom) or [jsdom](https://github.com/jsdom/jsdom) for mocking DOM and browser APIs. They don't come with Vitest, you might need to install them:
@@ -148,7 +163,7 @@ export default defineConfig({
 
 ## In-source testing
 
-Vitest also provides a way to run tests with in your source code along with the implementation, simliar to [Rust's module tests](https://doc.rust-lang.org/book/ch11-03-test-organization.html#the-tests-module-and-cfgtest).
+Vitest also provides a way to run tests with in your source code along with the implementation, similar to [Rust's module tests](https://doc.rust-lang.org/book/ch11-03-test-organization.html#the-tests-module-and-cfgtest).
 
 This makes the tests share the same closure as the implementations and able to test against private states without exporting. Meanwhile, it also brings the closer feedback loop for development.
 

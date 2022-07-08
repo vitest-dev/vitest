@@ -85,9 +85,11 @@ async function _shouldExternalize(
   return false
 }
 
-function matchExternalizePattern(id: string, patterns?: (string | RegExp)[]) {
-  if (!patterns)
+function matchExternalizePattern(id: string, patterns?: (string | RegExp)[] | true) {
+  if (patterns == null)
     return false
+  if (patterns === true)
+    return true
   for (const ex of patterns) {
     if (typeof ex === 'string') {
       if (id.includes(`/node_modules/${ex}/`))

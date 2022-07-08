@@ -6,101 +6,112 @@ import type { Options as TinypoolOptions } from 'tinypool'
 import { Tinypool } from 'tinypool'
 import { createBirpc } from 'birpc'
 import type { RawSourceMap } from 'vite-node'
-import type { WorkerContext, WorkerRPC } from '../types'
+import type { ResolvedConfig, WorkerContext, WorkerRPC } from '../types'
 import { distDir } from '../constants'
+import { AggregateError } from '../utils'
 import type { Vitest } from './core'
 
 export type RunWithFiles = (files: string[], invalidates?: string[]) => Promise<void>
 
 export interface WorkerPool {
   runTests: RunWithFiles
-  collectTests: RunWithFiles
   close: () => Promise<void>
 }
 
+const workerPath = pathToFileURL(resolve(distDir, './worker.mjs')).href
+
 export function createPool(ctx: Vitest): WorkerPool {
-  if (ctx.config.threads)
-    return createWorkerPool(ctx)
-  else
-    return createFakePool(ctx)
-}
-
-const workerPath = pathToFileURL(resolve(distDir, './worker.js')).href
-
-export function createFakePool(ctx: Vitest): WorkerPool {
-  const runWithFiles = (name: 'run' | 'collect'): RunWithFiles => {
-    return async (files, invalidates) => {
-      const worker = await import(workerPath)
-
-      const { workerPort, port } = createChannel(ctx)
-
-      const data: WorkerContext = {
-        port: workerPort,
-        config: ctx.getConfig(),
-        files,
-        invalidates,
-        id: 1,
-      }
-
-      await worker[name](data, { transferList: [workerPort] })
-
-      port.close()
-      workerPort.close()
-    }
-  }
-
-  return {
-    runTests: runWithFiles('run'),
-    collectTests: runWithFiles('collect'),
-    close: async () => {},
-  }
-}
-
-export function createWorkerPool(ctx: Vitest): WorkerPool {
   const threadsCount = ctx.config.watch
-    ? Math.max(cpus().length / 2, 1)
+    ? Math.max(Math.floor(cpus().length / 2), 1)
     : Math.max(cpus().length - 1, 1)
+
+  const maxThreads = ctx.config.maxThreads ?? threadsCount
+  const minThreads = ctx.config.minThreads ?? threadsCount
 
   const options: TinypoolOptions = {
     filename: workerPath,
-    // Disable this for now for WebContainers
-    // https://github.com/vitest-dev/vitest/issues/93
-    useAtomics: typeof process.versions.webcontainer !== 'string',
+    // TODO: investigate further
+    // It seems atomics introduced V8 Fatal Error https://github.com/vitest-dev/vitest/issues/1191
+    useAtomics: false,
 
-    maxThreads: ctx.config.maxThreads ?? threadsCount,
-    minThreads: ctx.config.minThreads ?? threadsCount,
+    maxThreads,
+    minThreads,
   }
+
   if (ctx.config.isolate) {
     options.isolateWorkers = true
     options.concurrentTasksPerWorker = 1
   }
 
+  if (!ctx.config.threads) {
+    options.concurrentTasksPerWorker = 1
+    options.maxThreads = 1
+    options.minThreads = 1
+  }
+
+  if (ctx.config.coverage.enabled)
+    process.env.NODE_V8_COVERAGE ||= ctx.config.coverage.tempDirectory
+
+  options.env = {
+    TEST: 'true',
+    VITEST: 'true',
+    NODE_ENV: ctx.config.mode || 'test',
+    VITEST_MODE: ctx.config.watch ? 'WATCH' : 'RUN',
+    ...process.env,
+    ...ctx.config.env,
+  }
+
   const pool = new Tinypool(options)
 
   const runWithFiles = (name: string): RunWithFiles => {
-    return async (files, invalidates) => {
-      let id = 0
-      await Promise.all(files.map(async (file) => {
-        const { workerPort, port } = createChannel(ctx)
+    let id = 0
 
-        const data: WorkerContext = {
-          port: workerPort,
-          config: ctx.getConfig(),
-          files: [file],
-          invalidates,
-          id: ++id,
-        }
-
+    async function runFiles(config: ResolvedConfig, files: string[], invalidates: string[] = []) {
+      const { workerPort, port } = createChannel(ctx)
+      const workerId = ++id
+      const data: WorkerContext = {
+        port: workerPort,
+        config,
+        files,
+        invalidates,
+        workerId,
+      }
+      try {
         await pool.run(data, { transferList: [workerPort], name })
+      }
+      finally {
         port.close()
         workerPort.close()
-      }))
+      }
+    }
+
+    const Sequencer = ctx.config.sequence.sequencer
+    const sequencer = new Sequencer(ctx)
+
+    return async (files, invalidates) => {
+      const config = ctx.getSerializableConfig()
+
+      if (config.shard)
+        files = await sequencer.shard(files)
+
+      files = await sequencer.sort(files)
+
+      if (!ctx.config.threads) {
+        await runFiles(config, files)
+      }
+      else {
+        const results = await Promise.allSettled(files
+          .map(file => runFiles(config, [file], invalidates)))
+
+        const errors = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected').map(r => r.reason)
+        if (errors.length > 0)
+          throw new AggregateError(errors, 'Errors occurred while running tests. For more information, see serialized error.')
+      }
     }
   }
 
   return {
     runTests: runWithFiles('run'),
-    collectTests: runWithFiles('collect'),
     close: async () => {}, // TODO: not sure why this will cause Node crash: pool.destroy(),
   }
 }
@@ -148,8 +159,11 @@ function createChannel(ctx: Vitest) {
         ctx.state.updateUserLog(log)
         ctx.report('onUserConsoleLog', log)
       },
+      onUnhandledRejection(err) {
+        ctx.state.catchError(err, 'Unhandled Rejection')
+      },
       onFinished(files) {
-        ctx.report('onFinished', files)
+        ctx.report('onFinished', files, ctx.state.getUnhandledErrors())
       },
     },
     {

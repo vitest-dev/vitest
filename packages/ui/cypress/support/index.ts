@@ -1,4 +1,4 @@
-import faker from '@faker-js/faker'
+import { faker } from '@faker-js/faker'
 import '@testing-library/cypress/add-commands'
 import '../../client/global-setup'
 

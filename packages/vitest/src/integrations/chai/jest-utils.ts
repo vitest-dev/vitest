@@ -21,9 +21,8 @@ OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 */
-
 import { isObject } from '../../utils'
-import type { Tester } from './types'
+import type { Tester } from '../../types/chai'
 
 // Extracted out of jasmine 2.5.2
 export function equals(
@@ -189,7 +188,7 @@ function eq(
 
 function keys(obj: object, hasKey: (obj: object, key: string) => boolean) {
   const keys = []
-  // eslint-disable-next-line no-restricted-syntax
+
   for (const key in obj) {
     if (hasKey(obj, key))
       keys.push(key)
@@ -422,7 +421,7 @@ const hasPropertyInObject = (object: object, key: string): boolean => {
 const isObjectWithKeys = (a: any) =>
   isObject(a)
   && !(a instanceof Error)
-  && !(a instanceof Array)
+  && !(Array.isArray(a))
   && !(a instanceof Date)
 
 export const subsetEquality = (
@@ -508,4 +507,17 @@ export const sparseArrayEquality = (
   return (
     equals(a, b, [iterableEquality, typeEquality], true) && equals(aKeys, bKeys)
   )
+}
+
+export const generateToBeMessage = (
+  deepEqualityName: string,
+  expected = '#{this}',
+  actual = '#{exp}',
+) => {
+  const toBeMessage = `expected ${expected} to be ${actual} // Object.is equality`
+
+  if (['toStrictEqual', 'toEqual'].includes(deepEqualityName))
+    return `${toBeMessage}\n\nIf it should pass with deep equality, replace "toBe" with "${deepEqualityName}"\n\nExpected: ${expected}\nReceived: serializes to the same string\n`
+
+  return toBeMessage
 }

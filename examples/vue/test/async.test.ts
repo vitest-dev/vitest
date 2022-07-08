@@ -6,7 +6,7 @@ test('async component with suspense', async () => {
   expect(AsyncWrapper).toBeTruthy()
 
   let resolve: Function
-  // eslint-disable-next-line promise/param-names
+
   const promise = new Promise(_resolve => resolve = _resolve)
   const wrapper = mount(AsyncWrapper, {
     props: {

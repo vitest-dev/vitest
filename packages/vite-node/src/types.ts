@@ -1,8 +1,12 @@
-import type { ModuleCacheMap } from './client'
+import type { ViteHotContext } from 'vite/types/hot'
+import type { ModuleCacheMap, ViteNodeRunner } from './client'
+
+export type Nullable<T> = T | null | undefined
+export type Arrayable<T> = T | Array<T>
 
 export interface DepsHandlingOptions {
   external?: (string | RegExp)[]
-  inline?: (string | RegExp)[]
+  inline?: (string | RegExp)[] | true
   /**
    * Try to guess the CJS version of a package when it's invalid ESM
    * @default false
@@ -29,9 +33,13 @@ export interface FetchResult {
   map?: RawSourceMap
 }
 
+export type HotContext = Omit<ViteHotContext, 'acceptDeps' | 'decline'>
+
 export type FetchFunction = (id: string) => Promise<FetchResult>
 
 export type ResolveIdFunction = (id: string, importer?: string) => Promise<ViteNodeResolveId | null>
+
+export type CreateHotContextFunction = (runner: ViteNodeRunner, url: string) => HotContext
 
 export interface ModuleCache {
   promise?: Promise<any>
@@ -43,6 +51,7 @@ export interface ViteNodeRunnerOptions {
   root: string
   fetchModule: FetchFunction
   resolveId?: ResolveIdFunction
+  createHotContext?: CreateHotContextFunction
   base?: string
   moduleCache?: ModuleCacheMap
   interopDefault?: boolean

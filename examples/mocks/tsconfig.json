@@ -1,5 +1,5 @@
 {
-    "compilerOptions": {
-        "types": ["vitest/globals"],
-    }
+  "compilerOptions": {
+    "types": ["vitest/globals"]
+  }
 }
