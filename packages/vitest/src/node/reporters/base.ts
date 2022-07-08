@@ -1,8 +1,9 @@
 import { performance } from 'perf_hooks'
 import { relative } from 'pathe'
 import c from 'picocolors'
+import { createLogUpdate } from 'log-update'
 import type { ErrorWithDiff, File, Reporter, Task, TaskResultPack, UserConsoleLog } from '../../types'
-import { getFullName, getSuites, getTests, hasFailed, hasFailedSnapshot, isNode } from '../../utils'
+import { clearInterval, getFullName, getSuites, getTests, hasFailed, hasFailedSnapshot, isNode, setInterval } from '../../utils'
 import type { Vitest } from '../../node'
 import { version } from '../../../package.json'
 import { F_RIGHT } from '../../utils/figures'
@@ -17,6 +18,8 @@ const WAIT_FOR_CHANGE_PASS = `\n${c.bold(c.inverse(c.green(' PASS ')))}${c.green
 const WAIT_FOR_CHANGE_FAIL = `\n${c.bold(c.inverse(c.red(' FAIL ')))}${c.red(' Tests failed. Watching for file changes...')}`
 
 const DURATION_LONG = 300
+const LAST_RUN_LOG_TIMEOUT = 6_000
+const LAST_RUN_LOG_INTERVAL = 1_000
 
 export abstract class BaseReporter implements Reporter {
   start = 0
@@ -24,9 +27,13 @@ export abstract class BaseReporter implements Reporter {
   watchFilters?: string[]
   isTTY = isNode && process.stdout?.isTTY && !process.env.CI
   ctx: Vitest = undefined!
+
   private _hintRerunLog = 0
   private _hintRerunChars: string[] = ['◑', '◒', '◐', '◓']
   private _filesInWatchMode = new Map<string, number>()
+  private _logUpdate: ReturnType<typeof createLogUpdate> = undefined!
+  private _lastRunFinishTime = 0
+  private _lastRunTimer: NodeJS.Timer | undefined
 
   constructor() {
     this.registerUnhandledRejection()
@@ -43,6 +50,7 @@ export abstract class BaseReporter implements Reporter {
     const mode = this.ctx.config.watch
       ? c.blue(' DEV ')
       : c.cyan(' RUN ')
+    this._logUpdate = createLogUpdate(this.ctx.outputStream)
     this.ctx.log(`${c.inverse(c.bold(mode))} ${versionTest} ${c.gray(this.ctx.config.root)}`)
 
     if (this.ctx.config.ui)
@@ -110,6 +118,8 @@ export abstract class BaseReporter implements Reporter {
   }
 
   async onWatcherStart() {
+    this.resetLastRunLog()
+
     const files = this.ctx.state.getFiles()
     const errors = this.ctx.state.getUnhandledErrors()
     const failed = errors.length > 0 || hasFailed(files)
@@ -126,9 +136,26 @@ export abstract class BaseReporter implements Reporter {
       hints.push(HELP_QUITE)
 
     this.ctx.log(BADGE_PADDING + hints.join(c.dim(', ')))
+    this._logUpdate(c.blue(`${BADGE_PADDING}Finished just now`))
+    this._lastRunFinishTime = Date.now()
+    this._lastRunTimer = setInterval(() => {
+      const time = Date.now()
+      const delta = time - this._lastRunFinishTime
+      if (delta > LAST_RUN_LOG_TIMEOUT)
+        this.resetLastRunLog()
+      else
+        this._logUpdate(c.blue(`${BADGE_PADDING}Finished ${Math.round(delta / 1000)} seconds ago.`))
+    }, LAST_RUN_LOG_INTERVAL)
+  }
+
+  private resetLastRunLog() {
+    clearInterval(this._lastRunTimer)
+    this._lastRunTimer = undefined
+    this._logUpdate.clear()
   }
 
   async onWatcherRerun(files: string[], trigger?: string) {
+    this.resetLastRunLog()
     this.watchFilters = files
 
     files.forEach((filepath) => {

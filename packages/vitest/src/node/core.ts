@@ -1,5 +1,4 @@
 import { existsSync, promises as fs } from 'fs'
-import readline from 'readline'
 import type { ViteDevServer } from 'vite'
 import { relative, toNamespacedPath } from 'pathe'
 import fg from 'fast-glob'
@@ -299,12 +298,14 @@ export class Vitest {
   }
 
   private _clearScreen() {
+    if (!this._clearScreenPending)
+      return
+
     const log = this._clearScreenPending
     this._clearScreenPending = undefined
-    if (log)
-      // equivalent to ansi-escapes:
-      // stdout.write(ansiEscapes.cursorTo(0, 0) + ansiEscapes.eraseDown + log)
-      this.console.log(`\u001B[1;1H\u001B[J${log}`)
+    // equivalent to ansi-escapes:
+    // stdout.write(ansiEscapes.cursorTo(0, 0) + ansiEscapes.eraseDown + log)
+    this.console.log(`\u001B[1;1H\u001B[J${log}`)
   }
 
   log(...args: any[]) {
