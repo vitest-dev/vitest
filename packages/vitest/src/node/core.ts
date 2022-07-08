@@ -129,6 +129,8 @@ export class Vitest {
         this.console.error(c.dim('filter:  ') + c.yellow(filters.join(comma)))
       if (this.config.include)
         this.console.error(c.dim('include: ') + c.yellow(this.config.include.join(comma)))
+      if (this.config.exclude)
+        this.console.error(c.dim('exclude:  ') + c.yellow(this.config.exclude.join(comma)))
       if (this.config.watchExclude)
         this.console.error(c.dim('watch exclude:  ') + c.yellow(this.config.watchExclude.join(comma)))
 
