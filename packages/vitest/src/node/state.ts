@@ -54,6 +54,12 @@ export class StateManager {
     })
   }
 
+  clearFiles(paths: string[] = []) {
+    paths.forEach((path) => {
+      this.filesMap.delete(path)
+    })
+  }
+
   updateId(task: Task) {
     if (this.idMap.get(task.id) === task)
       return
