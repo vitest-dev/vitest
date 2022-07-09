@@ -1,4 +1,5 @@
 import fs from 'fs'
+import { builtinModules } from 'module'
 import { dirname, join, relative, resolve } from 'pathe'
 import esbuild from 'rollup-plugin-esbuild'
 import dts from 'rollup-plugin-dts'
@@ -29,6 +30,7 @@ const dtsEntries = [
 ]
 
 const external = [
+  ...builtinModules,
   ...Object.keys(pkg.dependencies),
   ...Object.keys(pkg.peerDependencies),
   'worker_threads',

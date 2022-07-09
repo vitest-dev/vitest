@@ -18,6 +18,7 @@ import { StateManager } from './state'
 import { resolveConfig } from './config'
 import { printError } from './error'
 import { VitestGit } from './git'
+import { VitestCache } from './cache'
 
 const WATCHER_DEBOUNCE = 100
 const CLOSE_TIMEOUT = 1_000
@@ -29,6 +30,7 @@ export class Vitest {
   server: ViteDevServer = undefined!
   state: StateManager = undefined!
   snapshot: SnapshotManager = undefined!
+  cache: VitestCache = undefined!
   reporters: Reporter[] = undefined!
   console: Console
   pool: WorkerPool | undefined
@@ -65,6 +67,7 @@ export class Vitest {
     this.server = server
     this.config = resolved
     this.state = new StateManager()
+    this.cache = new VitestCache()
     this.snapshot = new SnapshotManager({ ...resolved.snapshotOptions })
 
     if (this.config.watch)
@@ -92,12 +95,12 @@ export class Vitest {
     if (resolved.coverage.enabled)
       await cleanCoverage(resolved.coverage, resolved.coverage.clean)
 
-    this.state.results.setConfig(resolved.root, resolved.cache)
+    this.cache.results.setConfig(resolved.root, resolved.cache)
     try {
-      await this.state.results.readFromCache()
+      await this.cache.results.readFromCache()
     }
     catch (err) {
-      this.error(`[vitest] Error, while trying to parse cache in ${this.state.results.getCachePath()}:`, err)
+      this.error(`[vitest] Error, while trying to parse cache in ${this.cache.results.getCachePath()}:`, err)
     }
   }
 
@@ -148,7 +151,7 @@ export class Vitest {
     }
 
     // populate once, update cache on watch
-    await Promise.all(files.map(file => this.state.stats.updateStats(file)))
+    await Promise.all(files.map(file => this.cache.stats.updateStats(file)))
 
     await this.runFiles(files)
 
@@ -253,8 +256,8 @@ export class Vitest {
 
       await this.report('onFinished', files, this.state.getUnhandledErrors())
 
-      this.state.results.updateResults(files)
-      await this.state.results.writeToCache()
+      this.cache.results.updateResults(files)
+      await this.cache.results.writeToCache()
     })()
       .finally(() => {
         this.runningPromise = undefined
@@ -380,8 +383,8 @@ export class Vitest {
 
       if (this.state.filesMap.has(id)) {
         this.state.filesMap.delete(id)
-        this.state.results.removeFromCache(id)
-        this.state.stats.removeStats(id)
+        this.cache.results.removeFromCache(id)
+        this.cache.stats.removeStats(id)
         this.changedTests.delete(id)
         this.report('onTestRemoved', id)
       }
@@ -390,7 +393,7 @@ export class Vitest {
       id = slash(id)
       if (await this.isTargetFile(id)) {
         this.changedTests.add(id)
-        await this.state.stats.updateStats(id)
+        await this.cache.stats.updateStats(id)
         this.scheduleRerun(id)
       }
     }

@@ -13,7 +13,6 @@ export class FilesStatsCache {
   public async updateStats(fsPath: string) {
     if (!fs.existsSync(fsPath))
       return
-
     const stats = await fs.promises.stat(fsPath)
     this.cache.set(fsPath, { size: stats.size })
   }
