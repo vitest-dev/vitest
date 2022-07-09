@@ -1,8 +1,11 @@
 {
   "exclude": [
     "vue",
+    "vite",
     "puppeteer",
     "pretty-format",
-    "pathe"
+    "pathe",
+    "codemirror",
+    "esno"
   ]
 }
