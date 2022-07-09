@@ -210,8 +210,10 @@ export class Vitest {
   }
 
   async runFiles(paths: string[]) {
+    // previous run
     await this.runningPromise
 
+    // schedule the new run
     this.runningPromise = (async () => {
       if (!this.pool)
         this.pool = createPool(this)

@@ -67,6 +67,7 @@ export function createPool(ctx: Vitest): WorkerPool {
     let id = 0
 
     async function runFiles(config: ResolvedConfig, files: string[], invalidates: string[] = []) {
+      ctx.state.clearFiles(files)
       const { workerPort, port } = createChannel(ctx)
       const workerId = ++id
       const data: WorkerContext = {
