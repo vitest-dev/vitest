@@ -379,7 +379,7 @@ const instance = new SomeClass()
 vi.spyOn(instance, 'method')
 ```
 
-- Mock exported constant
+- Mock exported variables
 ```ts
 // some-path.ts
 export const getter = 'variable'
