@@ -6,5 +6,5 @@ export { startVitest } from './cli-api'
 export { VitestRunner } from '../runtime/execute'
 export type { ExecuteOptions } from '../runtime/execute'
 
-export type { TestSequencer, TestSequencerContructor } from './sequencers/types'
+export type { TestSequencer, TestSequencerConstructor } from './sequencers/types'
 export { BaseSequencer } from './sequencers/BaseSequencer'
