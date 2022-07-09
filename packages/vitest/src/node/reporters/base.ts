@@ -18,8 +18,14 @@ const WAIT_FOR_CHANGE_PASS = `\n${c.bold(c.inverse(c.green(' PASS ')))}${c.green
 const WAIT_FOR_CHANGE_FAIL = `\n${c.bold(c.inverse(c.red(' FAIL ')))}${c.red(' Tests failed. Watching for file changes...')}`
 
 const DURATION_LONG = 300
-const LAST_RUN_LOG_TIMEOUT = 6_000
-const LAST_RUN_LOG_INTERVAL = 1_000
+
+const LAST_RUN_TEXTS = [
+  'Updated',
+  c.gray('Updated'),
+  c.dim(c.gray('Updated')),
+]
+const LAST_RUN_LOG_TIMEOUT = 2_000
+const LAST_RUN_LOG_INTERVAL = LAST_RUN_LOG_TIMEOUT / LAST_RUN_TEXTS.length
 
 export abstract class BaseReporter implements Reporter {
   start = 0
@@ -136,15 +142,16 @@ export abstract class BaseReporter implements Reporter {
       hints.push(HELP_QUITE)
 
     this.ctx.log(BADGE_PADDING + hints.join(c.dim(', ')))
-    this._logUpdate(c.blue(`${BADGE_PADDING}Finished just now`))
+    this._logUpdate(BADGE_PADDING + LAST_RUN_TEXTS[0])
     this._lastRunFinishTime = Date.now()
     this._lastRunTimer = setInterval(() => {
       const time = Date.now()
       const delta = time - this._lastRunFinishTime
+      const index = Math.round(delta / LAST_RUN_LOG_INTERVAL)
       if (delta > LAST_RUN_LOG_TIMEOUT)
         this.resetLastRunLog()
       else
-        this._logUpdate(c.blue(`${BADGE_PADDING}Finished ${Math.round(delta / 1000)} seconds ago.`))
+        this._logUpdate(BADGE_PADDING + LAST_RUN_TEXTS[index])
     }, LAST_RUN_LOG_INTERVAL)
   }
 
