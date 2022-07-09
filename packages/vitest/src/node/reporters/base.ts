@@ -1,7 +1,6 @@
 import { performance } from 'perf_hooks'
 import { relative } from 'pathe'
 import c from 'picocolors'
-import type { createLogUpdate } from 'log-update'
 import type { ErrorWithDiff, File, Reporter, Task, TaskResultPack, UserConsoleLog } from '../../types'
 import { clearInterval, getFullName, getSuites, getTests, hasFailed, hasFailedSnapshot, isNode, setInterval } from '../../utils'
 import type { Vitest } from '../../node'
@@ -19,7 +18,7 @@ const WAIT_FOR_CHANGE_FAIL = `\n${c.bold(c.inverse(c.red(' FAIL ')))}${c.red(' T
 const DURATION_LONG = 300
 
 const LAST_RUN_TEXTS = [
-  'Updated',
+  c.blue('Updated'),
   c.gray('Updated'),
   c.dim(c.gray('Updated')),
 ]
@@ -36,8 +35,7 @@ export abstract class BaseReporter implements Reporter {
   private _hintRerunLog = 0
   private _hintRerunChars: string[] = ['◑', '◒', '◐', '◓']
   private _filesInWatchMode = new Map<string, number>()
-  private _logUpdate: ReturnType<typeof createLogUpdate> = undefined!
-  private _lastRunFinishTime = 0
+  private _lastRunCount = 0
   private _lastRunTimer: NodeJS.Timer | undefined
 
   constructor() {
@@ -117,23 +115,21 @@ export abstract class BaseReporter implements Reporter {
       hints.push(HELP_QUITE)
 
     this.ctx.logger.log(BADGE_PADDING + hints.join(c.dim(', ')))
-    this._logUpdate(BADGE_PADDING + LAST_RUN_TEXTS[0])
-    this._lastRunFinishTime = Date.now()
+    this.ctx.logger.logUpdate(BADGE_PADDING + LAST_RUN_TEXTS[0])
+    this._lastRunCount = 0
     this._lastRunTimer = setInterval(() => {
-      const time = Date.now()
-      const delta = time - this._lastRunFinishTime
-      const index = Math.round(delta / LAST_RUN_LOG_INTERVAL)
-      if (delta > LAST_RUN_LOG_TIMEOUT)
+      this._lastRunCount += 1
+      if (this._lastRunCount >= LAST_RUN_TEXTS.length)
         this.resetLastRunLog()
       else
-        this._logUpdate(BADGE_PADDING + LAST_RUN_TEXTS[index])
+        this.ctx.logger.logUpdate(BADGE_PADDING + LAST_RUN_TEXTS[this._lastRunCount])
     }, LAST_RUN_LOG_INTERVAL)
   }
 
   private resetLastRunLog() {
     clearInterval(this._lastRunTimer)
     this._lastRunTimer = undefined
-    this._logUpdate.clear()
+    this.ctx.logger.logUpdate.clear()
   }
 
   async onWatcherRerun(files: string[], trigger?: string) {
