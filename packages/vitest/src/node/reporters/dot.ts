@@ -11,7 +11,7 @@ export class DotReporter extends BaseReporter {
     if (this.isTTY) {
       const files = this.ctx.state.getFiles(this.watchFilters)
       if (!this.renderer)
-        this.renderer = createDotRenderer(files, { outputStream: this.ctx.outputStream }).start()
+        this.renderer = createDotRenderer(files, { outputStream: this.ctx.logger.outputStream }).start()
       else
         this.renderer.update(files)
     }
@@ -19,7 +19,7 @@ export class DotReporter extends BaseReporter {
 
   async onFinished(files = this.ctx.state.getFiles(), errors = this.ctx.state.getUnhandledErrors()) {
     await this.stopListRender()
-    this.ctx.log()
+    this.ctx.logger.log()
     await super.onFinished(files, errors)
   }
 

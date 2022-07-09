@@ -58,8 +58,8 @@ export async function startVitest(cliFilters: string[], options: CliOptions, vit
   }
   catch (e) {
     process.exitCode = 1
-    await ctx.printError(e, true, 'Unhandled Error')
-    ctx.error('\n\n')
+    await ctx.logger.printError(e, true, 'Unhandled Error')
+    ctx.logger.error('\n\n')
     return false
   }
 
