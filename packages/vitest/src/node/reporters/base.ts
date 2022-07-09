@@ -16,14 +16,7 @@ const WAIT_FOR_CHANGE_PASS = `\n${c.bold(c.inverse(c.green(' PASS ')))}${c.green
 const WAIT_FOR_CHANGE_FAIL = `\n${c.bold(c.inverse(c.red(' FAIL ')))}${c.red(' Tests failed. Watching for file changes...')}`
 
 const DURATION_LONG = 300
-
-const LAST_RUN_TEXTS = [
-  c.blue('Updated'),
-  c.gray('Updated'),
-  c.dim(c.gray('Updated')),
-]
-const LAST_RUN_LOG_TIMEOUT = 2_000
-const LAST_RUN_LOG_INTERVAL = LAST_RUN_LOG_TIMEOUT / LAST_RUN_TEXTS.length
+const LAST_RUN_LOG_TIMEOUT = 1_500
 
 export abstract class BaseReporter implements Reporter {
   start = 0
@@ -32,11 +25,10 @@ export abstract class BaseReporter implements Reporter {
   isTTY = isNode && process.stdout?.isTTY && !process.env.CI
   ctx: Vitest = undefined!
 
-  private _hintRerunLog = 0
-  private _hintRerunChars: string[] = ['◑', '◒', '◐', '◓']
   private _filesInWatchMode = new Map<string, number>()
-  private _lastRunCount = 0
+  private _lastRunTimeout = 0
   private _lastRunTimer: NodeJS.Timer | undefined
+  private _lastRunCount = 0
 
   constructor() {
     this.registerUnhandledRejection()
@@ -115,15 +107,27 @@ export abstract class BaseReporter implements Reporter {
       hints.push(HELP_QUITE)
 
     this.ctx.logger.log(BADGE_PADDING + hints.join(c.dim(', ')))
-    this.ctx.logger.logUpdate(BADGE_PADDING + LAST_RUN_TEXTS[0])
-    this._lastRunCount = 0
-    this._lastRunTimer = setInterval(() => {
-      this._lastRunCount += 1
-      if (this._lastRunCount >= LAST_RUN_TEXTS.length)
-        this.resetLastRunLog()
-      else
-        this.ctx.logger.logUpdate(BADGE_PADDING + LAST_RUN_TEXTS[this._lastRunCount])
-    }, LAST_RUN_LOG_INTERVAL)
+
+    if (this._lastRunCount) {
+      const LAST_RUN_TEXT = `rerun x${this._lastRunCount}`
+      const LAST_RUN_TEXTS = [
+        c.blue(LAST_RUN_TEXT),
+        c.gray(LAST_RUN_TEXT),
+        c.dim(c.gray(LAST_RUN_TEXT)),
+      ]
+      this.ctx.logger.logUpdate(BADGE_PADDING + LAST_RUN_TEXTS[0])
+      this._lastRunTimeout = 0
+      this._lastRunTimer = setInterval(
+        () => {
+          this._lastRunTimeout += 1
+          if (this._lastRunTimeout >= LAST_RUN_TEXTS.length)
+            this.resetLastRunLog()
+          else
+            this.ctx.logger.logUpdate(BADGE_PADDING + LAST_RUN_TEXTS[this._lastRunTimeout])
+        },
+        LAST_RUN_LOG_TIMEOUT / LAST_RUN_TEXTS.length,
+      )
+    }
   }
 
   private resetLastRunLog() {
@@ -141,16 +145,16 @@ export abstract class BaseReporter implements Reporter {
       this._filesInWatchMode.set(filepath, ++reruns)
     })
 
-    const hint = this._hintRerunLog
-    this._hintRerunLog = (hint + 1) % this._hintRerunChars.length
     const BADGE = c.inverse(c.bold(c.blue(' RERUN ')))
     const TRIGGER = trigger ? c.dim(` ${this.relative(trigger)}`) : ''
     if (files.length > 1) {
       // we need to figure out how to handle rerun all from stdin
       this.ctx.logger.clearScreen(`\n${BADGE}${TRIGGER}\n`, true)
+      this._lastRunCount = 0
     }
     else if (files.length === 1) {
       const rerun = this._filesInWatchMode.get(files[0]) ?? 1
+      this._lastRunCount = rerun
       this.ctx.logger.clearScreen(`\n${BADGE}${TRIGGER} ${c.blue(`x${rerun}`)}\n`)
     }
 

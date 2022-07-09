@@ -7,10 +7,10 @@ function isFinalObj(obj: any) {
 
 function collectOwnProperties(obj: any, collector: Set<string | symbol>) {
   const props = Object.getOwnPropertyNames(obj)
-  const symbs = Object.getOwnPropertySymbols(obj)
+  const symbols = Object.getOwnPropertySymbols(obj)
 
   props.forEach(prop => collector.add(prop))
-  symbs.forEach(symb => collector.add(symb))
+  symbols.forEach(symbol => collector.add(symbol))
 }
 
 export function getAllProperties(obj: any) {
