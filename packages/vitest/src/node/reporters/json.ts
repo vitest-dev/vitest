@@ -112,7 +112,7 @@ export class JsonReporter implements Reporter {
       })
 
       if (tests.some(t => t.result?.state === 'run')) {
-        this.ctx.console.warn('WARNING: Some tests are still running when generating the JSON report.'
+        this.ctx.logger.warn('WARNING: Some tests are still running when generating the JSON report.'
         + 'This is likely an internal bug in Vitest.'
         + 'Please report it to https://github.com/vitest-dev/vitest/issues')
       }
@@ -170,10 +170,10 @@ export class JsonReporter implements Reporter {
         await fs.mkdir(outputDirectory, { recursive: true })
 
       await fs.writeFile(reportFile, report, 'utf-8')
-      this.ctx.log(`JSON report written to ${reportFile}`)
+      this.ctx.logger.log(`JSON report written to ${reportFile}`)
     }
     else {
-      this.ctx.log(report)
+      this.ctx.logger.log(report)
     }
   }
 }

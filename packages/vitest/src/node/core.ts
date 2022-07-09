@@ -1,5 +1,4 @@
 import { existsSync, promises as fs } from 'fs'
-import readline from 'readline'
 import type { ViteDevServer } from 'vite'
 import { relative, toNamespacedPath } from 'pathe'
 import fg from 'fast-glob'
@@ -16,8 +15,8 @@ import type { WorkerPool } from './pool'
 import { createReporters } from './reporters/utils'
 import { StateManager } from './state'
 import { resolveConfig } from './config'
-import { printError } from './error'
 import { VitestGit } from './git'
+import { Logger } from './logger'
 import { VitestCache } from './cache'
 
 const WATCHER_DEBOUNCE = 100
@@ -32,11 +31,8 @@ export class Vitest {
   snapshot: SnapshotManager = undefined!
   cache: VitestCache = undefined!
   reporters: Reporter[] = undefined!
-  console: Console
+  logger: Logger
   pool: WorkerPool | undefined
-
-  outputStream = process.stdout
-  errorStream = process.stderr
 
   vitenode: ViteNodeServer = undefined!
 
@@ -49,11 +45,11 @@ export class Vitest {
   restartsCount = 0
   runner: ViteNodeRunner = undefined!
 
-  private _onRestartListeners: Array<() => void> = []
-
   constructor() {
-    this.console = globalThis.console
+    this.logger = new Logger(this)
   }
+
+  private _onRestartListeners: Array<() => void> = []
 
   async setServer(options: UserConfig, server: ViteDevServer) {
     this.unregisterWatcher?.()
@@ -100,7 +96,7 @@ export class Vitest {
       await this.cache.results.readFromCache()
     }
     catch (err) {
-      this.error(`[vitest] Error, while trying to parse cache in ${this.cache.results.getCachePath()}:`, err)
+      this.logger.error(`[vitest] Error, while trying to parse cache in ${this.cache.results.getCachePath()}:`, err)
     }
   }
 
@@ -132,20 +128,7 @@ export class Vitest {
     if (!files.length) {
       const exitCode = this.config.passWithNoTests ? 0 : 1
 
-      const comma = c.dim(', ')
-      if (filters?.length)
-        this.console.error(c.dim('filter:  ') + c.yellow(filters.join(comma)))
-      if (this.config.include)
-        this.console.error(c.dim('include: ') + c.yellow(this.config.include.join(comma)))
-      if (this.config.exclude)
-        this.console.error(c.dim('exclude:  ') + c.yellow(this.config.exclude.join(comma)))
-      if (this.config.watchExclude)
-        this.console.error(c.dim('watch exclude:  ') + c.yellow(this.config.watchExclude.join(comma)))
-
-      if (this.config.passWithNoTests)
-        this.log('No test files found, exiting with code 0\n')
-      else
-        this.error(c.red('\nNo test files found, exiting with code 1'))
+      this.logger.printNoTestFound(filters)
 
       process.exit(exitCode)
     }
@@ -193,7 +176,7 @@ export class Vitest {
         changedSince: this.config.changed,
       })
       if (!related) {
-        this.error(c.red('Could not find Git root. Have you initialized git with `git init`?\n'))
+        this.logger.error(c.red('Could not find Git root. Have you initialized git with `git init`?\n'))
         process.exit(1)
       }
       this.config.related = Array.from(new Set(related))
@@ -300,25 +283,6 @@ export class Vitest {
     finally {
       this.configOverride = undefined
     }
-  }
-
-  log(...args: any[]) {
-    this.console.log(...args)
-  }
-
-  error(...args: any[]) {
-    this.console.error(...args)
-  }
-
-  clearScreen() {
-    if (this.server.config.clearScreen === false)
-      return
-
-    const repeatCount = (process.stdout?.rows ?? 0) - 2
-    const blank = repeatCount > 0 ? '\n'.repeat(repeatCount) : ''
-    this.console.log(blank)
-    readline.cursorTo(process.stdout, 0, 0)
-    readline.clearScreenDown(process.stdout)
   }
 
   private _rerunTimer: any
@@ -459,7 +423,7 @@ export class Vitest {
         this.server.close(),
       ].filter(Boolean)).then((results) => {
         results.filter(r => r.status === 'rejected').forEach((err) => {
-          this.error('error during close', (err as PromiseRejectedResult).reason)
+          this.logger.error('error during close', (err as PromiseRejectedResult).reason)
         })
       })
     }
@@ -534,14 +498,6 @@ export class Vitest {
 
   isInSourceTestFile(code: string) {
     return code.includes('import.meta.vitest')
-  }
-
-  printError(err: unknown, fullStack = false, type?: string) {
-    return printError(err, this, {
-      fullStack,
-      type,
-      showCodeFrame: true,
-    })
   }
 
   onServerRestarted(fn: () => void) {

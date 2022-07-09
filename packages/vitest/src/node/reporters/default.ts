@@ -10,18 +10,17 @@ export class DefaultReporter extends BaseReporter {
 
   async onTestRemoved(trigger?: string) {
     await this.stopListRender()
-    this.ctx.clearScreen()
-    this.ctx.log(c.yellow('Test removed...') + (trigger ? c.dim(` [ ${this.relative(trigger)} ]\n`) : ''))
+    this.ctx.logger.clearScreen(c.yellow('Test removed...') + (trigger ? c.dim(` [ ${this.relative(trigger)} ]\n`) : ''), true)
     const files = this.ctx.state.getFiles(this.watchFilters)
     createListRenderer(files, this.rendererOptions).stop()
-    this.ctx.log()
+    this.ctx.logger.log()
     await super.reportSummary(files)
     super.onWatcherStart()
   }
 
   onCollected() {
     if (this.isTTY) {
-      this.rendererOptions.outputStream = this.ctx.outputStream
+      this.rendererOptions.logger = this.ctx.logger
       this.rendererOptions.showHeap = this.ctx.config.logHeapUsage
       const files = this.ctx.state.getFiles(this.watchFilters)
       if (!this.renderer)
@@ -33,13 +32,13 @@ export class DefaultReporter extends BaseReporter {
 
   async onFinished(files = this.ctx.state.getFiles(), errors = this.ctx.state.getUnhandledErrors()) {
     await this.stopListRender()
-    this.ctx.log()
+    this.ctx.logger.log()
     await super.onFinished(files, errors)
   }
 
   async onWatcherStart() {
     await this.stopListRender()
-    super.onWatcherStart()
+    await super.onWatcherStart()
   }
 
   async stopListRender() {

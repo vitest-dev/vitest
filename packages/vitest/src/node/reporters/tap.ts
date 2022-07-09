@@ -20,7 +20,7 @@ export class TapReporter implements Reporter {
 
   onInit(ctx: Vitest): void {
     this.ctx = ctx
-    this.logger = new IndentedLogger(this.ctx.log.bind(this.ctx))
+    this.logger = new IndentedLogger(this.ctx.logger.log.bind(this.ctx))
   }
 
   static getComment(task: Task): string {
