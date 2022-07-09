@@ -8,7 +8,7 @@ const buildCtx = () => {
     config: {
       sequence: {},
     },
-    state: {
+    cache: {
       getFileTestResults: vi.fn(),
       getFileStats: vi.fn(),
     },
@@ -23,9 +23,9 @@ describe('base sequencer', () => {
     expect(sorted).toStrictEqual(files)
   })
 
-  test('prioritaze unknown files', async () => {
+  test('prioritize unknown files', async () => {
     const ctx = buildCtx()
-    vi.spyOn(ctx.state, 'getFileStats').mockImplementation((file) => {
+    vi.spyOn(ctx.cache, 'getFileStats').mockImplementation((file) => {
       if (file === 'b')
         return { size: 2 }
     })
@@ -37,7 +37,7 @@ describe('base sequencer', () => {
 
   test('sort by size, larger first', async () => {
     const ctx = buildCtx()
-    vi.spyOn(ctx.state, 'getFileStats').mockImplementation((file) => {
+    vi.spyOn(ctx.cache, 'getFileStats').mockImplementation((file) => {
       if (file === 'a')
         return { size: 1 }
       if (file === 'b')
@@ -53,7 +53,7 @@ describe('base sequencer', () => {
 
   test('sort by results, failed first', async () => {
     const ctx = buildCtx()
-    vi.spyOn(ctx.state, 'getFileTestResults').mockImplementation((file) => {
+    vi.spyOn(ctx.cache, 'getFileTestResults').mockImplementation((file) => {
       if (file === 'a')
         return { failed: false, duration: 1 }
       if (file === 'b')
@@ -69,7 +69,7 @@ describe('base sequencer', () => {
 
   test('sort by results, long first', async () => {
     const ctx = buildCtx()
-    vi.spyOn(ctx.state, 'getFileTestResults').mockImplementation((file) => {
+    vi.spyOn(ctx.cache, 'getFileTestResults').mockImplementation((file) => {
       if (file === 'a')
         return { failed: true, duration: 1 }
       if (file === 'b')
@@ -85,7 +85,7 @@ describe('base sequencer', () => {
 
   test('sort by results, long and failed first', async () => {
     const ctx = buildCtx()
-    vi.spyOn(ctx.state, 'getFileTestResults').mockImplementation((file) => {
+    vi.spyOn(ctx.cache, 'getFileTestResults').mockImplementation((file) => {
       if (file === 'a')
         return { failed: false, duration: 1 }
       if (file === 'b')

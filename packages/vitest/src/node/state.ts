@@ -1,22 +1,11 @@
 import type { ErrorWithDiff, File, Task, TaskResultPack, UserConsoleLog } from '../types'
-import { FilesStatsCache } from './cache/files'
-import { ResultsCache } from './cache/results'
 
+// Note this file is shared for both node and browser, be aware to avoid node specific logic
 export class StateManager {
   filesMap = new Map<string, File>()
   idMap = new Map<string, Task>()
   taskFileMap = new WeakMap<Task, File>()
   errorsSet = new Set<unknown>()
-  results = new ResultsCache()
-  stats = new FilesStatsCache()
-
-  getFileTestResults(id: string) {
-    return this.results.getResults(id)
-  }
-
-  getFileStats(id: string) {
-    return this.stats.getStats(id)
-  }
 
   catchError(err: unknown, type: string) {
     (err as ErrorWithDiff).type = type
