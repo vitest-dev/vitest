@@ -1,3 +1,7 @@
+---
+outline: deep
+---
+
 # API Reference
 
 The following types are used in the type signatures below
@@ -158,8 +162,8 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
   ```ts
   import { expect, test } from 'vitest'
   const myAsyncFunc = () => new Promise(resolve => resolve(1))
-  test.fails('fail test', () => {
-    expect(myAsyncFunc()).rejects.toBe(1)
+  test.fails('fail test', async () => {
+    await expect(myAsyncFunc()).rejects.toBe(1)
   })
   ```
 
@@ -189,9 +193,9 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
   })
 
   // this will return
-  // √ add(1, 1) -> 2
-  // √ add(1, 2) -> 3
-  // √ add(2, 1) -> 3
+  // ✓ add(1, 1) -> 2
+  // ✓ add(1, 2) -> 3
+  // ✓ add(2, 1) -> 3
   ```
 
 ## describe
@@ -308,6 +312,23 @@ When you use `test` in the top level of file, they are collected as part of the 
   describe.todo.concurrent(/* ... */) // or describe.concurrent.todo(/* ... */)
   ```
 
+### describe.shuffle
+
+- **Type:** `(name: string, fn: TestFunction, timeout?: number) => void`
+
+  Vitest provides a way to run all tests in random order via CLI flag [`--sequence.shuffle`](/guide/cli) or config option [`sequence.shuffle`](/config/#sequence-shuffle), but if you want to have only part of your test suite to run tests in random order, you can mark it with this flag.
+
+  ```ts
+  describe.shuffle('suite', () => {
+    test('random test 1', async () => { /* ... */ })
+    test('random test 2', async () => { /* ... */ })
+    test('random test 3', async () => { /* ... */ })
+  })
+  // order depends on sequence.seed option in config (Date.now() by default)
+  ```
+
+`.skip`, `.only`, and `.todo` works with random suites.
+
 ### describe.todo
 
 - **Type:** `(name: string) => void`
@@ -329,7 +350,7 @@ When you use `test` in the top level of file, they are collected as part of the 
     { a: 1, b: 1, expected: 2 },
     { a: 1, b: 2, expected: 3 },
     { a: 2, b: 1, expected: 3 },
-  ])('describe object add(%i, %i)', ({ a, b, expected }) => {
+  ])('describe object add($a, $b)', ({ a, b, expected }) => {
     test(`returns ${expected}`, () => {
       expect(a + b).toBe(expected)
     })
@@ -925,7 +946,7 @@ When you use `test` in the top level of file, they are collected as part of the 
 
 ### toMatchSnapshot
 
-- **Type:** `(hint?: string) => void`
+- **Type:** `<T>(shape?: Partial<T> | string, message?: string) => void`
 
   This ensures that a value matches the most recent snapshot.
 
@@ -944,9 +965,20 @@ When you use `test` in the top level of file, they are collected as part of the 
   })
   ```
 
+  You can also provide a shape of an object, if you are testing just a shape of an object, and don't need it to be 100% compatible:
+
+  ```ts
+  import { expect, test } from 'vitest'
+
+  test('matches snapshot', () => {
+    const data = { foo: new Set(['bar', 'snapshot']) }
+    expect(data).toMatchSnapshot({ foo: expect.any(Set) })
+  })
+  ```
+
 ### toMatchInlineSnapshot
 
-- **Type:** `(snapshot?: string) => void`
+- **Type:** `<T>(shape?: Partial<T> | string, snapshot?: string, message?: string) => void`
 
   This ensures that a value matches the most recent snapshot.
 
@@ -969,10 +1001,28 @@ When you use `test` in the top level of file, they are collected as part of the 
   })
   ```
 
+  You can also provide a shape of an object, if you are testing just a shape of an object, and don't need it to be 100% compatible:
+
+  ```ts
+  import { expect, test } from 'vitest'
+
+  test('matches snapshot', () => {
+    const data = { foo: new Set(['bar', 'snapshot']) }
+    expect(data).toMatchInlineSnapshot(
+      { foo: expect.any(Set) },
+      `
+      {
+        "foo": Any<Set>,
+      }
+    `
+    )
+  })
+  ```
+
 
 ### toThrowErrorMatchingSnapshot
 
-- **Type:** `(snapshot?: string) => void`
+- **Type:** `(message?: string) => void`
 
   The same as [`toMatchSnapshot`](#tomatchsnapshot), but expects the same value as [`toThrowError`](#tothrowerror).
 
@@ -980,7 +1030,7 @@ When you use `test` in the top level of file, they are collected as part of the 
 
 ### toThrowErrorMatchingInlineSnapshot
 
-- **Type:** `(snapshot?: string) => void`
+- **Type:** `(snapshot?: string, message?: string) => void`
 
   The same as [`toMatchInlineSnapshot`](#tomatchinlinesnapshot), but expects the same value as [`toThrowError`](#tothrowerror).
 
@@ -1234,7 +1284,6 @@ When you use `test` in the top level of file, they are collected as part of the 
     })
   })
   ```
-  <!-- toSatisfy -->
 
 ### resolves
 
@@ -1249,7 +1298,7 @@ When you use `test` in the top level of file, they are collected as part of the 
   ```ts
   import { expect, test } from 'vitest'
 
-  function buyApples() {
+  async function buyApples() {
     return fetch('/buy/apples').then(r => r.json())
   }
 
@@ -1277,7 +1326,7 @@ When you use `test` in the top level of file, they are collected as part of the 
   ```ts
   import { expect, test } from 'vitest'
 
-  function buyApples(id) {
+  async function buyApples(id) {
     if (!id)
       throw new Error('no id')
   }
@@ -1296,9 +1345,9 @@ When you use `test` in the top level of file, they are collected as part of the 
 
 - **Type:** `(count: number) => void`
 
-  After the test has passed or failed verifies that curtain number of assertions was called during a test. Useful case would be to check if an asynchronous code was called.
+  After the test has passed or failed verifies that certain number of assertions was called during a test. Useful case would be to check if an asynchronous code was called.
 
-  For examples, if we have a function than asynchronously calls two matchers, we can assert that they were actually called.
+  For example, if we have a function that asynchronously calls two matchers, we can assert that they were actually called.
 
   ```ts
   import { expect, test } from 'vitest'
@@ -1361,22 +1410,151 @@ When you use `test` in the top level of file, they are collected as part of the 
   })
   ```
 
-<!-- ### expect.anything
+<!-- asymmetric matchers -->
+
+### expect.anything
+
+- **Type:** `() => any`
+
+  This asymmetric matcher, when used with equality check, will always return `true`. Useful, if you just want to be sure that the property exist.
+
+  ```ts
+  import { expect, test } from 'vitest'
+
+  test('object has "apples" key', () => {
+    expect({ apples: 22 }).toEqual({ apples: expect.anything() })
+  })
+  ```
+
 ### expect.any
+
+- **Type:** `(constructor: unknown) => any`
+
+  This asymmetric matcher, when used with equality check, will return `true` only if value is an instance of specified constructor. Useful, if you have a value that is generated each time, and you only want to know that it exist with a proper type.
+
+  ```ts
+  import { expect, test } from 'vitest'
+  import { generateId } from './generators'
+
+  test('"id" is a number', () => {
+    expect({ id: generateId() }).toEqual({ id: expect.any(Number) })
+  })
+  ```
+
 ### expect.arrayContaining
-### expect.not.arrayContaining
+
+- **Type:** `<T>(expected: T[]) => any`
+
+  When used with equality check, this asymmetric matcher will return `true` if value is an array and contains specified items.
+
+  ```ts
+  import { expect, test } from 'vitest'
+
+  test('basket includes fuji', () => {
+    const basket = {
+      varieties: [
+        'Empire',
+        'Fuji',
+        'Gala',
+      ],
+      count: 3
+    }
+    expect(basket).toEqual({
+      count: 3,
+      varieties: expect.arrayContaining(['Fuji'])
+    })
+  })
+  ```
+
+  :::tip
+  You can use `expect.not` with this matcher to negate the expected value.
+  :::
+
 ### expect.objectContaining
-### expect.not.objectContaining
+
+- **Type:** `(expected: any) => any`
+
+  When used with equality check, this asymmetric matcher will return `true` if value has a similar shape.
+
+  ```ts
+  import { expect, test } from 'vitest'
+
+  test('basket has empire apples', () => {
+    const basket = {
+      varieties: [
+        {
+          name: 'Empire',
+          count: 1,
+        }
+      ],
+    }
+    expect(basket).toEqual({
+      varieties: [
+        expect.objectContaining({ name: 'Empire' }),
+      ]
+    })
+  })
+  ```
+
+  :::tip
+  You can use `expect.not` with this matcher to negate the expected value.
+  :::
+
 ### expect.stringContaining
-### expect.not.stringContaining
+
+- **Type:** `(expected: any) => any`
+
+  When used with equality check, this asymmetric matcher will return `true` if value is a string and contains specified substring.
+
+  ```ts
+  import { expect, test } from 'vitest'
+
+  test('variety has "Emp" in its name', () => {
+    const variety = {
+      name: 'Empire',
+      count: 1,
+    }
+    expect(basket).toEqual({
+      name: expect.stringContaining('Emp'),
+      count: 1,
+    })
+  })
+  ```
+
+  :::tip
+  You can use `expect.not` with this matcher to negate the expected value.
+  :::
+
 ### expect.stringMatching
-### expect.not.stringMatching -->
+
+- **Type:** `(expected: any) => any`
+
+  When used with equality check, this asymmetric matcher will return `true` if value is a string and contains specified substring or the string matches regular expression.
+
+  ```ts
+  import { expect, test } from 'vitest'
+
+  test('variety ends with "re"', () => {
+    const variety = {
+      name: 'Empire',
+      count: 1,
+    }
+    expect(basket).toEqual({
+      name: expect.stringMatching(/re$/),
+      count: 1,
+    })
+  })
+  ```
+
+  :::tip
+  You can use `expect.not` with this matcher to negate the expected value.
+  :::
 
 ### expect.addSnapshotSerializer
 
 - **Type:** `(plugin: PrettyFormatPlugin) => void`
 
-  This method adds custom serializers that are called when creating a snapshot. This is advanced feature - if you want to know more, please read a [guide on custom serializers](/guide/snapshot-serializer).
+  This method adds custom serializers that are called when creating a snapshot. This is advanced feature - if you want to know more, please read a [guide on custom serializers](/guide/snapshot#custom-serializer).
 
   If you are adding custom serializers, you should call this method inside [`setupFiles`](/config/#setupfiles). This will affect every snapshot.
 
@@ -1584,6 +1762,10 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 ### vi.clearAllTimers
 
   Removes all timers that are scheduled to run. These timers will never run in the future.
+
+### vi.dynamicImportSettled
+
+  Wait for all imports to load. Useful, if you have a synchronous call that starts importing a module, that you cannot wait otherwise.
 
 ### vi.fn
 
@@ -1935,7 +2117,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 
 - **Type:** `() => MockInstance`
 
-  Does what `mockRestore` does and restores inner implementation to the original function.
+  Does what `mockReset` does and restores inner implementation to the original function.
 
   Note that restoring mock from `vi.fn()` will set implementation to an empty function that returns `undefined`. Restoring a `vi.fn(impl)` will restore implementation to `impl`.
 

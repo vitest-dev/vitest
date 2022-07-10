@@ -1,6 +1,7 @@
-/* eslint-disable comma-spacing */
 /* eslint-disable no-sparse-arrays */
-import { describe, expect, it } from 'vitest'
+import { AssertionError } from 'assert'
+import { describe, expect, it, vi } from 'vitest'
+import { generateToBeMessage } from 'vitest/src/integrations/chai/jest-utils'
 
 class TestError extends Error {}
 
@@ -429,6 +430,17 @@ describe('toSatisfy()', () => {
   it('pass with negotiation', () => {
     expect(2).not.toSatisfy(isOdd)
   })
+
+  it.fails('fail with missing negotiation', () => {
+    expect(2).toSatisfy(isOdd)
+  })
+
+  it('calls the function', () => {
+    const isOddMock = vi.fn(isOdd)
+    expect(isOddMock).not.toBeCalled()
+    expect(1).toSatisfy(isOddMock)
+    expect(isOddMock).toBeCalled()
+  })
 })
 
 describe('async expect', () => {
@@ -536,6 +548,52 @@ describe('async expect', () => {
     }
     catch (error) {
       expect(error).toEqual(expectedError)
+    }
+  })
+
+  it('reminds users to use deep equality checks if they are comparing objects', () => {
+    const generatedToBeMessage = (
+      deepEqualityName: string,
+      expected: string,
+      actual: string,
+    ) => new AssertionError({
+      message: generateToBeMessage(deepEqualityName, expected, actual),
+    })
+
+    const actual = { key: 'value' }
+    class FakeClass {}
+
+    const toStrictEqualError1 = generatedToBeMessage('toStrictEqual', '{ key: \'value\' }', '{ key: \'value\' }')
+    try {
+      expect(actual).toBe({ ...actual })
+    }
+    catch (error) {
+      expect(error).toEqual(toStrictEqualError1)
+    }
+
+    const toStrictEqualError2 = generatedToBeMessage('toStrictEqual', 'FakeClass{}', 'FakeClass{}')
+    try {
+      expect(new FakeClass()).toBe(new FakeClass())
+    }
+    catch (error) {
+      expect(error).toEqual(toStrictEqualError2)
+    }
+
+    const toEqualError1 = generatedToBeMessage('toEqual', '{}', 'FakeClass{}')
+    try {
+      expect({}).toBe(new FakeClass())
+    }
+    catch (error) {
+      expect(error).toEqual(toEqualError1)
+      // expect(error).toEqual('1234')
+    }
+
+    const toEqualError2 = generatedToBeMessage('toEqual', 'FakeClass{}', '{}')
+    try {
+      expect(new FakeClass()).toBe({})
+    }
+    catch (error) {
+      expect(error).toEqual(toEqualError2)
     }
   })
 })

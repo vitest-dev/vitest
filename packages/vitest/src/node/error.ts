@@ -1,5 +1,4 @@
 /* eslint-disable prefer-template */
-/* eslint-disable no-template-curly-in-string */
 import { existsSync, readFileSync } from 'fs'
 import { join, normalize, relative } from 'pathe'
 import c from 'picocolors'
@@ -9,8 +8,9 @@ import { interpretSourcePos, lineSplitRE, parseStacktrace, posToNumber } from '.
 import { F_POINTER } from '../utils/figures'
 import { stringify } from '../integrations/chai/jest-matcher-utils'
 import type { Vitest } from './core'
-import { unifiedDiff } from './diff'
+import { type DiffOptions, unifiedDiff } from './diff'
 import { divider } from './reporters/renderers/utils'
+import type { Logger } from './logger'
 
 export function fileFromParsedStack(stack: ParsedStack) {
   if (stack?.sourcePos?.source?.startsWith('..'))
@@ -48,11 +48,17 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
 
   if (type)
     printErrorType(type, ctx)
-  printErrorMessage(e, ctx.console)
+
+  printErrorMessage(e, ctx.logger)
   printStack(ctx, stacks, nearest, errorProperties, (s, pos) => {
     if (showCodeFrame && s === nearest && nearest) {
-      const sourceCode = readFileSync(fileFromParsedStack(nearest), 'utf-8')
-      ctx.log(c.yellow(generateCodeFrame(sourceCode, 4, pos)))
+      const file = fileFromParsedStack(nearest)
+      // could point to non-existing original file
+      // for example, when there is a source map file, but no source in node_modules
+      if (existsSync(file)) {
+        const sourceCode = readFileSync(file, 'utf-8')
+        ctx.logger.log(c.yellow(generateCodeFrame(sourceCode, 4, pos)))
+      }
     }
   })
 
@@ -63,12 +69,16 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
 
   handleImportOutsideModuleError(e.stack || e.stackStr || '', ctx)
 
-  if (e.showDiff)
-    displayDiff(stringify(e.actual), stringify(e.expected), ctx.console, ctx.config.outputTruncateLength)
+  if (e.showDiff) {
+    displayDiff(stringify(e.actual), stringify(e.expected), ctx.logger.console, {
+      outputTruncateLength: ctx.config.outputTruncateLength,
+      outputDiffLines: ctx.config.outputDiffLines,
+    })
+  }
 }
 
 function printErrorType(type: string, ctx: Vitest) {
-  ctx.error(`\n${c.red(divider(c.bold(c.inverse(` ${type} `))))}`)
+  ctx.logger.error(`\n${c.red(divider(c.bold(c.inverse(` ${type} `))))}`)
 }
 
 const skipErrorProperties = [
@@ -116,7 +126,7 @@ function handleImportOutsideModuleError(stack: string, ctx: Vitest) {
   else
     name = name.split('/')[0]
 
-  ctx.error(c.yellow(
+  ctx.logger.error(c.yellow(
     `Module ${path} seems to be an ES Module but shipped in a CommonJS package. `
 + `You might want to create an issue to the package ${c.bold(`"${name}"`)} asking `
 + 'them to ship the file in .mjs extension or add "type": "module" in their package.json.'
@@ -136,13 +146,13 @@ function handleImportOutsideModuleError(stack: string, ctx: Vitest) {
 }\n`)))
 }
 
-function displayDiff(actual: string, expected: string, console: Console, outputTruncateLength?: number) {
-  console.error(c.gray(unifiedDiff(actual, expected, { outputTruncateLength })) + '\n')
+function displayDiff(actual: string, expected: string, console: Console, options?: Omit<DiffOptions, 'showLegend'>) {
+  console.error(c.gray(unifiedDiff(actual, expected, options)) + '\n')
 }
 
-function printErrorMessage(error: ErrorWithDiff, console: Console) {
+function printErrorMessage(error: ErrorWithDiff, logger: Logger) {
   const errorName = error.name || error.nameStr || 'Unknown Error'
-  console.error(c.red(`${c.bold(errorName)}: ${error.message}`))
+  logger.error(c.red(`${c.bold(errorName)}: ${error.message}`))
 }
 
 function printStack(
@@ -155,25 +165,27 @@ function printStack(
   if (!stack.length)
     return
 
+  const logger = ctx.logger
+
   for (const frame of stack) {
     const pos = frame.sourcePos || frame
     const color = frame === highlight ? c.yellow : c.gray
     const file = fileFromParsedStack(frame)
     const path = relative(ctx.config.root, file)
 
-    ctx.log(color(` ${c.dim(F_POINTER)} ${[frame.method, c.dim(`${path}:${pos.line}:${pos.column}`)].filter(Boolean).join(' ')}`))
+    logger.log(color(` ${c.dim(F_POINTER)} ${[frame.method, c.dim(`${path}:${pos.line}:${pos.column}`)].filter(Boolean).join(' ')}`))
     onStack?.(frame, pos)
 
     // reached at test file, skip the follow stack
     if (frame.file in ctx.state.filesMap)
       break
   }
-  ctx.log()
+  logger.log()
   const hasProperties = Object.keys(errorProperties).length > 0
   if (hasProperties) {
-    ctx.log(c.red(c.dim(divider())))
+    logger.log(c.red(c.dim(divider())))
     const propertiesString = stringify(errorProperties, 10, { printBasicPrototype: false })
-    ctx.log(c.red(c.bold('Serialized Error:')), c.gray(propertiesString))
+    logger.log(c.red(c.bold('Serialized Error:')), c.gray(propertiesString))
   }
 }
 

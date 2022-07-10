@@ -5,7 +5,7 @@ export async function asyncSquare(a: number, b: number) {
   const result = (await a) * b
   return result
 }
-export const someClasss = new (class Bar {
+export const someClasses = new (class Bar {
   public array: number[]
   constructor() {
     this.array = [1, 2, 3]

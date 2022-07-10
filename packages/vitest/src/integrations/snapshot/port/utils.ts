@@ -151,10 +151,16 @@ export async function saveSnapshotFile(
       key => `exports[${printBacktickString(key)}] = ${printBacktickString(normalizeNewlines(snapshotData[key]))};`,
     )
 
+  const content = `${writeSnapshotVersion()}\n\n${snapshots.join('\n\n')}\n`
+  const skipWriting = fs.existsSync(snapshotPath) && (await fsp.readFile(snapshotPath, 'utf8')) === content
+
+  if (skipWriting)
+    return
+
   ensureDirectoryExists(snapshotPath)
   await fs?.promises.writeFile(
     snapshotPath,
-    `${writeSnapshotVersion()}\n\n${snapshots.join('\n\n')}\n`,
+    content,
     'utf-8',
   )
 }

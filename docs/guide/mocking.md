@@ -164,12 +164,14 @@ The following principles apply
 ### Example
 
 ```js
-import { afterEach, beforeEach, describe, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Client } from 'pg'
+import { failure, success } from './handlers'
 
 // handlers
 export function success(data) {}
 export function failure(data) {}
+
 // get todos
 export const getTodos = async (event, context) => {
   const client = new Client({
@@ -199,16 +201,15 @@ export const getTodos = async (event, context) => {
 }
 
 vi.mock('pg', () => {
-  return {
-    Client: vi.fn(() => ({
-      connect: vi.fn(),
-      query: vi.fn(),
-      end: vi.fn(),
-    })),
-  }
+  const Client = vi.fn()
+  Client.prototype.connect = vi.fn()
+  Client.prototype.query = vi.fn()
+  Client.prototype.end = vi.fn()
+
+  return { Client }
 })
 
-vi.mock('./handler.js', () => {
+vi.mock('./handlers', () => {
   return {
     success: vi.fn(),
     failure: vi.fn(),
@@ -356,10 +357,165 @@ describe('delayed execution', () => {
   it('should execute every minute', () => {
     executeEveryMinute(mock)
     vi.advanceTimersToNextTimer()
-    vi.advanceTimersToNextTimer()
     expect(mock).toHaveBeenCalledTimes(1)
     vi.advanceTimersToNextTimer()
     expect(mock).toHaveBeenCalledTimes(2)
   })
 })
+```
+
+## Cheat Sheet
+
+:::info
+`vi` in the examples below is imported directly from `vitest`. You can also use it globally, if you set `globals` to `true` in your [config](/config/).
+:::
+
+I want to…
+
+- Spy on a `method`
+
+```ts
+const instance = new SomeClass()
+vi.spyOn(instance, 'method')
+```
+
+- Mock exported variables
+```ts
+// some-path.ts
+export const getter = 'variable'
+```
+```ts
+// some-path.test.ts
+import * as exports from 'some-path'
+vi.spyOn(exports, 'getter', 'get').mockReturnValue('mocked')
+```
+
+- Mock exported function
+
+Example with `vi.mock`:
+```ts
+// some-path.ts
+export function method() {}
+```
+```ts
+import { method } from 'some-path'
+vi.mock('some-path', () => ({
+  method: vi.fn()
+}))
+```
+
+Example with `vi.spyOn`:
+```ts
+import * as exports from 'some-path'
+vi.spyOn(exports, 'method').mockImplementation(() => {})
+```
+
+- Mock exported class implementation
+
+Example with `vi.mock` and prototype:
+```ts
+// some-path.ts
+export class SomeClass {}
+```
+```ts
+import { SomeClass } from 'some-path'
+vi.mock('some-path', () => {
+  const SomeClass = vi.fn()
+  SomeClass.prototype.someMethod = vi.fn()
+  return { SomeClass }
+})
+// SomeClass.mock.instances will have SomeClass
+```
+
+Example with `vi.mock` and return value:
+```ts
+import { SomeClass } from 'some-path'
+vi.mock('some-path', () => {
+  const SomeClass = vi.fn(() => ({
+    someMethod: vi.fn()
+  }))
+  return { SomeClass }
+})
+// SomeClass.mock.returns will have returned object
+```
+
+Example with `vi.spyOn`:
+
+```ts
+import * as exports from 'some-path'
+vi.spyOn(exports, 'SomeClass').mockImplementation(() => {
+  // whatever suites you from first two examples
+})
+```
+
+- Spy on an object returned from a function
+
+Example using cache:
+
+```ts
+// some-path.ts
+export function useObject() {
+  return { method: () => true }
+}
+```
+
+```ts
+// useObject.js
+import { useObject } from 'some-path'
+const obj = useObject()
+obj.method()
+```
+
+```ts
+// useObject.test.js
+import { useObject } from 'some-path'
+vi.mock('some-path', () => {
+  let _cache
+  const useObject = () => {
+    if (!_cache) {
+      _cache = {
+        method: vi.fn(),
+      }
+    }
+    // now everytime useObject() is called it will
+    // return the same object reference
+    return _cache
+  }
+  return { useObject }
+})
+
+const obj = useObject()
+// obj.method was called inside some-path
+expect(obj.method).toHaveBeenCalled()
+```
+
+- Mock part of a module
+
+```ts
+import { mocked, original } from 'some-path'
+vi.mock('some-path', async () => {
+  const mod = await vi.importActual<typeof import('some-path')>('some-path')
+  return {
+    ...mod,
+    mocked: vi.fn()
+  }
+})
+original() // has original behaviour
+mocked() // is a spy function
+```
+
+- Mock current date
+
+```ts
+const mockDate = new Date(2022, 0, 1)
+vi.setSystemTime(mockDate)
+const now = new Date()
+expect(now.valueOf()).toBe(mockDate.valueOf())
+```
+
+- Mock global variable
+
+```ts
+vi.stubGlobal('__VERSION__', '1.0.0')
+expect(__VERSION__).toBe('1.0.0')
 ```

@@ -1,4 +1,4 @@
-import faker from '@faker-js/faker'
+import { faker } from '@faker-js/faker'
 import ViewReport from './ViewReport.vue'
 import type { File } from '#types'
 

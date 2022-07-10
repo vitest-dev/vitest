@@ -61,7 +61,12 @@ const config = {
   testTimeout: 5000,
   hookTimeout: 10000,
   isolate: true,
-  watchIgnore: [/\/node_modules\//, /\/dist\//],
+  watchExclude: ['**/node_modules/**', '**/dist/**'],
+  forceRerunTriggers: [
+    '**/package.json/**',
+    '**/vitest.config.*/**',
+    '**/vite.config.*/**',
+  ],
   update: false,
   reporters: [],
   silent: false,
@@ -69,8 +74,12 @@ const config = {
   ui: false,
   uiBase: '/__vitest__/',
   open: true,
+  css: {
+    include: [/\.module\./],
+  },
   coverage: coverageConfigDefaults,
   fakeTimers: fakeTimersDefaults,
+  maxConcurrency: 5,
 }
 
 export const configDefaults: Required<Pick<UserConfig, keyof typeof config>> = Object.freeze(config)

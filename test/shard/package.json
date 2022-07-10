@@ -1,0 +1,11 @@
+{
+  "name": "@vitest/test-shard",
+  "private": true,
+  "scripts": {
+    "test": "vitest run shard-test.test.ts"
+  },
+  "devDependencies": {
+    "execa": "^6.1.0",
+    "vitest": "workspace:*"
+  }
+}

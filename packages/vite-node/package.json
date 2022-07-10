@@ -1,53 +1,49 @@
 {
   "name": "vite-node",
-  "type": "module",
-  "version": "0.12.6",
+  "version": "0.18.0",
   "description": "Vite as Node.js runtime",
-  "homepage": "https://github.com/vitest-dev/vitest/blob/main/packages/vite-node#readme",
-  "bugs": {
-    "url": "https://github.com/vitest-dev/vitest/issues"
-  },
-  "license": "MIT",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
+  "license": "MIT",
+  "funding": "https://github.com/sponsors/antfu",
+  "homepage": "https://github.com/vitest-dev/vitest/blob/main/packages/vite-node#readme",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vitest-dev/vitest.git",
     "directory": "packages/vite-node"
   },
-  "funding": "https://github.com/sponsors/antfu",
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "bugs": {
+    "url": "https://github.com/vitest-dev/vitest/issues"
+  },
   "exports": {
     ".": {
-      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts",
       "require": "./dist/index.cjs",
-      "types": "./dist/index.d.ts"
+      "import": "./dist/index.mjs"
     },
     "./client": {
-      "import": "./dist/client.js",
+      "types": "./dist/client.d.ts",
       "require": "./dist/client.cjs",
-      "types": "./dist/client.d.ts"
+      "import": "./dist/client.mjs"
     },
     "./server": {
-      "import": "./dist/server.js",
+      "types": "./dist/server.d.ts",
       "require": "./dist/server.cjs",
-      "types": "./dist/server.d.ts"
+      "import": "./dist/server.mjs"
     },
     "./utils": {
-      "import": "./dist/utils.js",
+      "types": "./dist/utils.d.ts",
       "require": "./dist/utils.cjs",
-      "types": "./dist/utils.d.ts"
+      "import": "./dist/utils.mjs"
+    },
+    "./hmr": {
+      "types": "./dist/hmr.d.ts",
+      "require": "./dist/hmr.cjs",
+      "import": "./dist/hmr.mjs"
     }
   },
-  "files": [
-    "dist",
-    "*.d.ts",
-    "*.mjs"
-  ],
-  "bin": {
-    "vite-node": "./vite-node.mjs"
-  },
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
   "typesVersions": {
     "*": {
       "*": [
@@ -55,6 +51,17 @@
         "./dist/index.d.ts"
       ]
     }
+  },
+  "bin": {
+    "vite-node": "./vite-node.mjs"
+  },
+  "files": [
+    "dist",
+    "*.d.ts",
+    "*.mjs"
+  ],
+  "engines": {
+    "node": ">=v14.16.0"
   },
   "scripts": {
     "build": "rimraf dist && rollup -c",
@@ -65,16 +72,13 @@
   "dependencies": {
     "debug": "^4.3.4",
     "kolorist": "^1.5.1",
-    "mlly": "^0.5.2",
+    "mlly": "^0.5.3",
     "pathe": "^0.2.0",
-    "vite": "^2.9.8"
+    "vite": "^2.9.12 || ^3.0.0-0"
   },
   "devDependencies": {
     "@types/debug": "^4.1.7",
     "cac": "^6.7.12",
-    "rollup": "^2.73.0"
-  },
-  "engines": {
-    "node": ">=v14.16.0"
+    "rollup": "^2.75.7"
   }
 }

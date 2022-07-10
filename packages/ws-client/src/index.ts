@@ -85,7 +85,7 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
   function reconnect(reset = false) {
     if (reset)
       tries = reconnectTries
-    ctx.ws = new WebSocket(url)
+    ctx.ws = new WebSocketConstructor(url)
     registerWS()
   }
 

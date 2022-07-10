@@ -1,5 +1,4 @@
 import { existsSync, promises as fs } from 'fs'
-import readline from 'readline'
 import type { ViteDevServer } from 'vite'
 import { relative, toNamespacedPath } from 'pathe'
 import fg from 'fast-glob'
@@ -16,8 +15,8 @@ import type { WorkerPool } from './pool'
 import { createReporters } from './reporters/utils'
 import { StateManager } from './state'
 import { resolveConfig } from './config'
-import { printError } from './error'
-// import { VitestGit } from './git'
+import { Logger } from './logger'
+import { VitestCache } from './cache'
 
 const WATCHER_DEBOUNCE = 100
 const CLOSE_TIMEOUT = 1_000
@@ -29,12 +28,10 @@ export class Vitest {
   server: ViteDevServer = undefined!
   state: StateManager = undefined!
   snapshot: SnapshotManager = undefined!
+  cache: VitestCache = undefined!
   reporters: Reporter[] = undefined!
-  console: Console
+  logger: Logger
   pool: WorkerPool | undefined
-
-  outputStream = process.stdout
-  errorStream = process.stderr
 
   vitenode: ViteNodeServer = undefined!
 
@@ -47,11 +44,11 @@ export class Vitest {
   restartsCount = 0
   runner: ViteNodeRunner = undefined!
 
-  private _onRestartListeners: Array<() => void> = []
-
   constructor() {
-    this.console = globalThis.console
+    this.logger = new Logger(this)
   }
+
+  private _onRestartListeners: Array<() => void> = []
 
   async setServer(options: UserConfig, server: ViteDevServer) {
     this.unregisterWatcher?.()
@@ -65,6 +62,7 @@ export class Vitest {
     this.server = server
     this.config = resolved
     this.state = new StateManager()
+    this.cache = new VitestCache()
     this.snapshot = new SnapshotManager({ ...resolved.snapshotOptions })
 
     if (this.config.watch)
@@ -91,6 +89,14 @@ export class Vitest {
 
     if (resolved.coverage.enabled)
       await cleanCoverage(resolved.coverage, resolved.coverage.clean)
+
+    this.cache.results.setConfig(resolved.root, resolved.cache)
+    try {
+      await this.cache.results.readFromCache()
+    }
+    catch (err) {
+      this.logger.error(`[vitest] Error, while trying to parse cache in ${this.cache.results.getCachePath()}:`, err)
+    }
   }
 
   getSerializableConfig() {
@@ -102,6 +108,10 @@ export class Vitest {
         resolveSnapshotPath: undefined,
       },
       onConsoleLog: undefined!,
+      sequence: {
+        ...this.config.sequence,
+        sequencer: undefined!,
+      },
     },
     this.configOverride || {} as any,
     ) as ResolvedConfig
@@ -117,21 +127,13 @@ export class Vitest {
     if (!files.length) {
       const exitCode = this.config.passWithNoTests ? 0 : 1
 
-      const comma = c.dim(', ')
-      if (filters?.length)
-        this.console.error(c.dim('filter:  ') + c.yellow(filters.join(comma)))
-      if (this.config.include)
-        this.console.error(c.dim('include: ') + c.yellow(this.config.include.join(comma)))
-      if (this.config.watchIgnore)
-        this.console.error(c.dim('ignore:  ') + c.yellow(this.config.watchIgnore.join(comma)))
-
-      if (this.config.passWithNoTests)
-        this.log('No test files found, exiting with code 0\n')
-      else
-        this.error(c.red('\nNo test files found, exiting with code 1'))
+      this.logger.printNoTestFound(filters)
 
       process.exit(exitCode)
     }
+
+    // populate once, update cache on watch
+    await Promise.all(files.map(file => this.cache.stats.updateStats(file)))
 
     await this.runFiles(files)
 
@@ -174,7 +176,7 @@ export class Vitest {
         changedSince: this.config.changed,
       })
       if (!related) {
-        this.error(c.red('Could not find Git root. Have you initialized git with `git init`?\n'))
+        this.logger.error(c.red('Could not find Git root. Have you initialized git with `git init`?\n'))
         process.exit(1)
       }
       this.config.related = Array.from(new Set(related))
@@ -182,6 +184,10 @@ export class Vitest {
 
     const related = this.config.related
     if (!related)
+      return tests
+
+    const forceRerunTriggers = this.config.forceRerunTriggers
+    if (forceRerunTriggers.length && mm(related, forceRerunTriggers).length)
       return tests
 
     // don't run anything if no related sources are found
@@ -206,9 +212,11 @@ export class Vitest {
     return runningTests
   }
 
-  async runFiles(files: string[]) {
+  async runFiles(paths: string[]) {
+    // previous run
     await this.runningPromise
 
+    // schedule the new run
     this.runningPromise = (async () => {
       if (!this.pool)
         this.pool = createPool(this)
@@ -218,17 +226,24 @@ export class Vitest {
       this.snapshot.clear()
       this.state.clearErrors()
       try {
-        await this.pool.runTests(files, invalidates)
+        await this.pool.runTests(paths, invalidates)
       }
       catch (err) {
         this.state.catchError(err, 'Unhandled Error')
       }
 
-      if (hasFailed(this.state.getFiles()))
+      const files = this.state.getFiles()
+
+      if (hasFailed(files))
         process.exitCode = 1
 
       if (!this.config.browser)
         await this.report('onFinished', this.state.getFiles(), this.state.getUnhandledErrors())
+
+      await this.report('onFinished', files, this.state.getUnhandledErrors())
+
+      this.cache.results.updateResults(files)
+      await this.cache.results.writeToCache()
     })()
       .finally(() => {
         this.runningPromise = undefined
@@ -272,25 +287,6 @@ export class Vitest {
     finally {
       this.configOverride = undefined
     }
-  }
-
-  log(...args: any[]) {
-    this.console.log(...args)
-  }
-
-  error(...args: any[]) {
-    this.console.error(...args)
-  }
-
-  clearScreen() {
-    if (this.server.config.clearScreen === false)
-      return
-
-    const repeatCount = (process.stdout?.rows ?? 0) - 2
-    const blank = repeatCount > 0 ? '\n'.repeat(repeatCount) : ''
-    this.console.log(blank)
-    readline.cursorTo(process.stdout, 0, 0)
-    readline.clearScreenDown(process.stdout)
   }
 
   private _rerunTimer: any
@@ -356,6 +352,8 @@ export class Vitest {
 
       if (this.state.filesMap.has(id)) {
         this.state.filesMap.delete(id)
+        this.cache.results.removeFromCache(id)
+        this.cache.stats.removeStats(id)
         this.changedTests.delete(id)
         this.report('onTestRemoved', id)
       }
@@ -364,10 +362,17 @@ export class Vitest {
       id = slash(id)
       if (await this.isTargetFile(id)) {
         this.changedTests.add(id)
+        await this.cache.stats.updateStats(id)
         this.scheduleRerun(id)
       }
     }
     const watcher = this.server.watcher
+
+    if (this.config.forceRerunTriggers.length)
+      watcher.add(this.config.forceRerunTriggers)
+
+    watcher.unwatch(this.config.watchExclude)
+
     watcher.on('change', onChange)
     watcher.on('unlink', onUnlink)
     watcher.on('add', onAdd)
@@ -384,8 +389,13 @@ export class Vitest {
    * @returns A value indicating whether rerun is needed (changedTests was mutated)
    */
   private handleFileChanged(id: string): boolean {
-    if (this.changedTests.has(id) || this.invalidates.has(id) || this.config.watchIgnore.some(i => id.match(i)))
+    if (this.changedTests.has(id) || this.invalidates.has(id))
       return false
+
+    if (mm.isMatch(id, this.config.forceRerunTriggers)) {
+      this.state.getFilepaths().forEach(file => this.changedTests.add(file))
+      return true
+    }
 
     const mod = this.server.moduleGraph.getModuleById(id)
     if (!mod)
@@ -418,7 +428,7 @@ export class Vitest {
         this.server.close(),
       ].filter(Boolean)).then((results) => {
         results.filter(r => r.status === 'rejected').forEach((err) => {
-          this.error('error during close', (err as PromiseRejectedResult).reason)
+          this.logger.error('error during close', (err as PromiseRejectedResult).reason)
         })
       })
     }
@@ -493,14 +503,6 @@ export class Vitest {
 
   isInSourceTestFile(code: string) {
     return code.includes('import.meta.vitest')
-  }
-
-  printError(err: unknown, fullStack = false, type?: string) {
-    return printError(err, this, {
-      fullStack,
-      type,
-      showCodeFrame: true,
-    })
   }
 
   onServerRestarted(fn: () => void) {

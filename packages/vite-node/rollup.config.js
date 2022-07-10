@@ -1,9 +1,11 @@
+import { builtinModules } from 'module'
 import esbuild from 'rollup-plugin-esbuild'
 import dts from 'rollup-plugin-dts'
 import resolve from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import alias from '@rollup/plugin-alias'
+import { defineConfig } from 'rollup'
 import pkg from './package.json'
 
 const entries = {
@@ -13,15 +15,18 @@ const entries = {
   client: 'src/client.ts',
   utils: 'src/utils.ts',
   cli: 'src/cli.ts',
+  hmr: 'src/hmr/index.ts',
 }
 
 const external = [
+  ...builtinModules,
   ...Object.keys(pkg.dependencies || {}),
   ...Object.keys(pkg.peerDependencies || {}),
   'pathe',
   'birpc',
   'vite',
   'url',
+  'events',
 ]
 
 const plugins = [
@@ -46,13 +51,14 @@ function onwarn(message) {
   console.error(message)
 }
 
-export default () => [
+export default defineConfig([
   {
     input: entries,
     output: {
       dir: 'dist',
       format: 'esm',
-      entryFileNames: '[name].js',
+      entryFileNames: '[name].mjs',
+      chunkFileNames: 'chunk-[name].mjs',
     },
     external,
     plugins,
@@ -64,6 +70,7 @@ export default () => [
       dir: 'dist',
       format: 'cjs',
       entryFileNames: '[name].cjs',
+      chunkFileNames: 'chunk-[name].cjs',
     },
     external,
     plugins,
@@ -82,4 +89,4 @@ export default () => [
     ],
     onwarn,
   },
-]
+])

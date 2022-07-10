@@ -22,7 +22,8 @@ cli
   .option('--silent', 'silent console output from tests')
   .option('--isolate', 'isolate environment for each test file (default: true)')
   .option('--reporter <name>', 'reporter')
-  .option('--outputTruncateLength <length>', 'diff output length')
+  .option('--outputTruncateLength <length>', 'diff output length (default: 80)')
+  .option('--outputDiffLines <lines>', 'number of diff output lines (default: 15)')
   .option('--outputFile <filename/-s>', 'write test results to a file when the --reporter=json or --reporter=junit option is also specified, use cac\'s dot notation for individual outputs of mutliple reporters')
   .option('--coverage', 'use c8 for coverage')
   .option('--run', 'do not watch')
@@ -33,7 +34,9 @@ cli
   .option('--environment <env>', 'runner environment (default: node)')
   .option('--passWithNoTests', 'pass when no tests found')
   .option('--allowOnly', 'Allow tests and suites that are marked as only (default: !process.env.CI)')
+  .option('--shard <shard>', 'Test suite shard to execute in a format of <index>/<count>')
   .option('--changed [since]', 'Run tests that are affected by the changed files (default: false)')
+  .option('--sequence <options>', 'Define in what order to run tests (use --sequence.shuffle to run tests in random order)')
   .help()
 
 cli

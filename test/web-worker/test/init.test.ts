@@ -1,6 +1,7 @@
 import { expect, it } from 'vitest'
 
 import MyWorker from '../src/worker?worker'
+import MyEventListenerWorker from '../src/eventListenerWorker?worker'
 
 const testWorker = (worker: Worker) => {
   return new Promise<void>((resolve) => {
@@ -21,6 +22,12 @@ it('simple worker', async () => {
   expect.assertions(1)
 
   await testWorker(new MyWorker())
+})
+
+it('event listener worker', async () => {
+  expect.assertions(1)
+
+  await testWorker(new MyEventListenerWorker())
 })
 
 it('can test workers several times', async () => {

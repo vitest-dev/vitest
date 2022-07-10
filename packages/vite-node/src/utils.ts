@@ -1,11 +1,16 @@
 import { fileURLToPath, pathToFileURL } from 'url'
-import { dirname, resolve } from 'pathe'
+import { resolve } from 'pathe'
 import type { TransformResult } from 'vite'
+import type { Arrayable, Nullable } from './types'
 
 export const isWindows = process.platform === 'win32'
 
 export function slash(str: string) {
   return str.replace(/\\/g, '/')
+}
+
+export function mergeSlashes(str: string) {
+  return str.replace(/\/\//g, '/')
 }
 
 export function normalizeRequestId(id: string, base?: string): string {
@@ -24,6 +29,7 @@ export function normalizeRequestId(id: string, base?: string): string {
     .replace(/&t=\w+/, '') // remove &t= query
     .replace(/\?import/, '?') // remove ?import query
     .replace(/&import/, '') // remove &import query
+    .replace(/\?&/, '?') // replace ?& with just ?
     .replace(/\?+$/, '') // remove end query mark
 }
 
@@ -40,12 +46,12 @@ export function isPrimitive(v: any) {
 }
 
 export function toFilePath(id: string, root: string): string {
-  let absolute = slash(id).startsWith('/@fs/')
+  let absolute = id.startsWith('/@fs/')
     ? id.slice(4)
-    : id.startsWith(dirname(root)) && dirname(root) !== '/'
+    : id.startsWith(root)
       ? id
       : id.startsWith('/')
-        ? slash(resolve(root, id.slice(1)))
+        ? resolve(root, id.slice(1))
         : id
 
   if (absolute.startsWith('//'))
@@ -53,7 +59,7 @@ export function toFilePath(id: string, root: string): string {
 
   // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
   return isWindows && absolute.startsWith('/')
-    ? fileURLToPath(pathToFileURL(absolute.slice(1)).href)
+    ? slash(fileURLToPath(pathToFileURL(absolute.slice(1)).href))
     : absolute
 }
 
@@ -69,4 +75,19 @@ export async function withInlineSourcemap(result: TransformResult) {
     result.code = `${code}\n\n//# ${SOURCEMAPPING_URL}=data:application/json;charset=utf-8;base64,${Buffer.from(JSON.stringify(map), 'utf-8').toString('base64')}\n`
 
   return result
+}
+
+/**
+ * Convert `Arrayable<T>` to `Array<T>`
+ *
+ * @category Array
+ */
+export function toArray<T>(array?: Nullable<Arrayable<T>>): Array<T> {
+  if (array === null || array === undefined)
+    array = []
+
+  if (Array.isArray(array))
+    return array
+
+  return [array]
 }

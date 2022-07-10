@@ -1,5 +1,6 @@
 import type { ErrorWithDiff, File, Task, TaskResultPack, UserConsoleLog } from '../types'
 
+// Note this file is shared for both node and browser, be aware to avoid node specific logic
 export class StateManager {
   filesMap = new Map<string, File>()
   pathsSet: Set<string> = new Set()
@@ -26,7 +27,7 @@ export class StateManager {
 
   getFiles(keys?: string[]): File[] {
     if (keys)
-      return keys.map(key => this.filesMap.get(key)!)
+      return keys.map(key => this.filesMap.get(key)!).filter(Boolean)
     return Array.from(this.filesMap.values())
   }
 
@@ -50,6 +51,12 @@ export class StateManager {
     files.forEach((file) => {
       this.filesMap.set(file.filepath, file)
       this.updateId(file)
+    })
+  }
+
+  clearFiles(paths: string[] = []) {
+    paths.forEach((path) => {
+      this.filesMap.delete(path)
     })
   }
 

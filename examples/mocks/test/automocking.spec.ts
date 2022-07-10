@@ -17,10 +17,10 @@ test('all mocked are valid', async () => {
   expect(example.asyncSquare.length).toEqual(0)
 
   // creates a new class with the same interface, member functions and properties are mocked.
-  expect(example.someClasss.constructor.name).toEqual('Bar')
-  expect(example.someClasss.foo.name).toEqual('foo')
-  expect(vi.isMockFunction(example.someClasss.foo)).toBe(true)
-  expect(example.someClasss.array.length).toEqual(0)
+  expect(example.someClasses.constructor.name).toEqual('Bar')
+  expect(example.someClasses.foo.name).toEqual('foo')
+  expect(vi.isMockFunction(example.someClasses.foo)).toBe(true)
+  expect(example.someClasses.array.length).toEqual(0)
 
   // creates a deeply cloned version of the original object.
   expect(example.object).toEqual({

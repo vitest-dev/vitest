@@ -6,12 +6,12 @@
     "coverage": "if-node-version \">14\" vitest --coverage"
   },
   "dependencies": {
-    "solid-js": "^1.3.17"
+    "solid-js": "^1.4.3"
   },
   "devDependencies": {
     "jsdom": "*",
-    "solid-start": "next",
     "solid-testing-library": "0.3.0",
+    "vite-plugin-solid": "^2.2.6",
     "vitest": "latest"
   }
 }

@@ -1,3 +1,4 @@
+import { builtinModules } from 'module'
 import esbuild from 'rollup-plugin-esbuild'
 import dts from 'rollup-plugin-dts'
 import resolve from '@rollup/plugin-node-resolve'
@@ -11,6 +12,7 @@ const entry = [
 ]
 
 const external = [
+  ...builtinModules,
   ...Object.keys(pkg.dependencies),
   ...Object.keys(pkg.peerDependencies || {}),
   'worker_threads',

@@ -10,6 +10,7 @@ export interface TaskBase {
   name: string
   mode: RunMode
   concurrent?: boolean
+  shuffle?: boolean
   suite?: Suite
   file?: File
   result?: TaskResult
@@ -50,7 +51,7 @@ export interface Test<ExtraContext = {}> extends TaskBase {
 export type Task = Test | Suite | File
 
 export type DoneCallback = (error?: any) => void
-export type TestFunction<ExtraContext = {}> = (context: TestContext & ExtraContext) => Awaitable<void>
+export type TestFunction<ExtraContext = {}> = (context: TestContext & ExtraContext) => Awaitable<any> | void
 
 // jest's ExtractEachCallbackArgs
 type ExtractEachCallbackArgs<T extends ReadonlyArray<any>> = {
@@ -113,7 +114,7 @@ void
 }
 
 export type SuiteAPI<ExtraContext = {}> = ChainableFunction<
-'concurrent' | 'only' | 'skip' | 'todo',
+'concurrent' | 'only' | 'skip' | 'todo' | 'shuffle',
 [name: string, factory?: SuiteFactory],
 SuiteCollector<ExtraContext>
 > & {
@@ -122,16 +123,16 @@ SuiteCollector<ExtraContext>
   runIf(condition: any): SuiteAPI<ExtraContext>
 }
 
-export type HookListener<T extends any[], Return = void> = (...args: T) => Awaitable<Return | void>
+export type HookListener<T extends any[], Return = void> = (...args: T) => Awaitable<Return>
+
+export type HookCleanupCallback = (() => Awaitable<unknown>) | void
 
 export interface SuiteHooks {
-  beforeAll: HookListener<[Suite | File], () => Awaitable<void>>[]
+  beforeAll: HookListener<[Suite | File], HookCleanupCallback>[]
   afterAll: HookListener<[Suite | File]>[]
-  beforeEach: HookListener<[TestContext, Suite], () => Awaitable<void>>[]
+  beforeEach: HookListener<[TestContext, Suite], HookCleanupCallback>[]
   afterEach: HookListener<[TestContext, Suite]>[]
 }
-
-export type HookCleanupCallback = (() => Awaitable<void>) | void
 
 export interface SuiteCollector<ExtraContext = {}> {
   readonly name: string

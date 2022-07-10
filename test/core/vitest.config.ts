@@ -53,5 +53,8 @@ export default defineConfig({
         return path + extension
       return join(dirname(path), '__snapshots__', `${basename(path)}${extension}`)
     },
+    sequence: {
+      seed: 101,
+    },
   },
 })

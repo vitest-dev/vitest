@@ -14,6 +14,8 @@ declare global {
 it('defined on self/window are defined on global', () => {
   expect(self).toBeDefined()
   expect(window).toBeDefined()
+  expect(top).toBeDefined()
+  expect(parent).toBeDefined()
 
   expect(self.__property_dom).not.toBeDefined()
   expect(window.__property_dom).not.toBeDefined()
@@ -97,4 +99,11 @@ it('can call global functions without window works as expected', async () => {
   expect(() => window.requestAnimationFrame(noop)).not.toThrow()
   expect(() => self.requestAnimationFrame(noop)).not.toThrow()
   expect(() => globalThis.requestAnimationFrame(noop)).not.toThrow()
+})
+
+it('globals are the same', () => {
+  expect(window.globalThis).toBe(globalThis)
+  expect(window.Blob).toBe(globalThis.Blob)
+  expect(window.globalThis.Blob).toBe(globalThis.Blob)
+  expect(Blob).toBe(globalThis.Blob)
 })

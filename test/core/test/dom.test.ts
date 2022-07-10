@@ -13,6 +13,9 @@ declare global {
 
 it('jsdom', () => {
   expect(window).toBeDefined()
+  expect(top).toBeDefined()
+  expect(parent).toBeDefined()
+  expect(self).toBeDefined()
 
   const dom = document.createElement('a')
   dom.href = 'https://vitest.dev'
@@ -27,10 +30,14 @@ it('dispatchEvent doesn\'t throw', () => {
   expect(() => target.dispatchEvent(event)).not.toThrow()
 })
 
-it('Image works as expected', () => {
+it('Non-public "live" keys work as expected', () => {
   const img = new Image(100)
+  const audio = new Audio()
+  const option = new Option()
 
   expect(img.width).toBe(100)
+  expect(audio).toBeInstanceOf(window.Audio)
+  expect(option).toBeInstanceOf(window.Option)
 })
 
 it('defined on self/window are defined on global', () => {
@@ -118,4 +125,17 @@ it('can call global functions without window works as expected', async () => {
   expect(() => window.requestAnimationFrame(noop)).not.toThrow()
   expect(() => self.requestAnimationFrame(noop)).not.toThrow()
   expect(() => globalThis.requestAnimationFrame(noop)).not.toThrow()
+})
+
+it('globals are the same', () => {
+  expect(window.globalThis).toBe(globalThis)
+  expect(window.Blob).toBe(globalThis.Blob)
+  expect(window.globalThis.Blob).toBe(globalThis.Blob)
+  expect(Blob).toBe(globalThis.Blob)
+})
+
+it('can extend global class', () => {
+  class SuperBlob extends Blob {}
+
+  expect(SuperBlob).toBeDefined()
 })

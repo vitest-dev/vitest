@@ -1,4 +1,4 @@
-import type { UserConfig as ViteUserConfig } from 'vite'
+import type { ConfigEnv, UserConfig as ViteUserConfig } from 'vite'
 
 export interface UserConfig extends ViteUserConfig {
   test?: ViteUserConfig['test']
@@ -7,6 +7,10 @@ export interface UserConfig extends ViteUserConfig {
 // will import vitest declare test in module 'vite'
 export { configDefaults } from './defaults'
 
-export function defineConfig(config: UserConfig) {
+export type { ConfigEnv }
+export type UserConfigFn = (env: ConfigEnv) => UserConfig | Promise<UserConfig>
+export type UserConfigExport = UserConfig | Promise<UserConfig> | UserConfigFn
+
+export function defineConfig(config: UserConfigExport) {
   return config
 }

@@ -1,3 +1,4 @@
+import { RealDate } from '../integrations/mock/date'
 import type { Arrayable, DeepMerge, Nullable } from '../types'
 
 function isFinalObj(obj: any) {
@@ -6,10 +7,10 @@ function isFinalObj(obj: any) {
 
 function collectOwnProperties(obj: any, collector: Set<string | symbol>) {
   const props = Object.getOwnPropertyNames(obj)
-  const symbs = Object.getOwnPropertySymbols(obj)
+  const symbols = Object.getOwnPropertySymbols(obj)
 
   props.forEach(prop => collector.add(prop))
-  symbs.forEach(symb => collector.add(symb))
+  symbols.forEach(symbol => collector.add(symbol))
 }
 
 export function getAllProperties(obj: any) {
@@ -51,25 +52,30 @@ function getOwnProperties(obj: any) {
   return Array.from(ownProps)
 }
 
-export function clone<T>(val: T): T {
-  let k: any, out: any, tmp: any
+export function deepClone<T>(val: T): T {
+  const seen = new WeakMap()
+  return clone(val, seen)
+}
 
+export function clone<T>(val: T, seen: WeakMap<any, any>): T {
+  let k: any, out: any
+  if (seen.has(val))
+    return seen.get(val)
   if (Array.isArray(val)) {
     out = Array(k = val.length)
+    seen.set(val, out)
     while (k--)
-      // eslint-disable-next-line no-cond-assign
-      out[k] = (tmp = val[k]) && typeof tmp === 'object' ? clone(tmp) : tmp
+      out[k] = clone(val[k], seen)
     return out as any
   }
 
   if (Object.prototype.toString.call(val) === '[object Object]') {
     out = Object.create(Object.getPrototypeOf(val))
+    seen.set(val, out)
     // we don't need properties from prototype
     const props = getOwnProperties(val)
-    for (const k of props) {
-      // eslint-disable-next-line no-cond-assign
-      out[k] = (tmp = (val as any)[k]) && typeof tmp === 'object' ? clone(tmp) : tmp
-    }
+    for (const k of props)
+      out[k] = clone((val as any)[k], seen)
     return out
   }
 
@@ -147,4 +153,24 @@ export function stdout(): NodeJS.WriteStream {
   // @ts-expect-error Node.js maps process.stdout to console._stdout
   // eslint-disable-next-line no-console
   return console._stdout || process.stdout
+}
+
+function random(seed: number) {
+  const x = Math.sin(seed++) * 10000
+  return x - Math.floor(x)
+}
+
+export function shuffle<T>(array: T[], seed = RealDate.now()): T[] {
+  let length = array.length
+
+  while (length) {
+    const index = Math.floor(random(seed) * length--)
+
+    const previous = array[length]
+    array[length] = array[index]
+    array[index] = previous
+    ++seed
+  }
+
+  return array
 }

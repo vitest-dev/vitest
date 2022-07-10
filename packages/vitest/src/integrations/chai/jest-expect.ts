@@ -7,34 +7,28 @@ import type { Constructable, Test } from '../../types'
 import { assertTypes } from '../../utils'
 import { unifiedDiff } from '../../node/diff'
 import type { ChaiPlugin, MatcherState } from '../../types/chai'
-import { arrayBufferEquality, iterableEquality, equals as jestEquals, sparseArrayEquality, subsetEquality, typeEquality } from './jest-utils'
+import { arrayBufferEquality, generateToBeMessage, iterableEquality, equals as jestEquals, sparseArrayEquality, subsetEquality, typeEquality } from './jest-utils'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import { stringify } from './jest-matcher-utils'
+import { MATCHERS_OBJECT } from './constants'
 
-const MATCHERS_OBJECT = Symbol.for('matchers-object')
-
-if (!Object.prototype.hasOwnProperty.call(global, MATCHERS_OBJECT)) {
-  const defaultState: Partial<MatcherState> = {
-    assertionCalls: 0,
-    isExpectingAssertions: false,
-    isExpectingAssertionsError: null,
-    expectedAssertionsNumber: null,
-    expectedAssertionsNumberErrorGen: null,
-  }
+if (!Object.prototype.hasOwnProperty.call(globalThis, MATCHERS_OBJECT)) {
   Object.defineProperty(globalThis, MATCHERS_OBJECT, {
-    value: {
-      state: defaultState,
-    },
+    value: new WeakMap<Vi.ExpectStatic, MatcherState>(),
   })
 }
 
-export const getState = <State extends MatcherState = MatcherState>(): State =>
-  (globalThis as any)[MATCHERS_OBJECT].state
+export const getState = <State extends MatcherState = MatcherState>(expect: Vi.ExpectStatic): State =>
+  (globalThis as any)[MATCHERS_OBJECT].get(expect)
 
 export const setState = <State extends MatcherState = MatcherState>(
   state: Partial<State>,
+  expect: Vi.ExpectStatic,
 ): void => {
-  Object.assign((globalThis as any)[MATCHERS_OBJECT].state, state)
+  const map = (globalThis as any)[MATCHERS_OBJECT]
+  const current = map.get(expect) || {}
+  Object.assign(current, state)
+  map.set(expect, current)
 }
 
 // Jest Expect Compact
@@ -129,9 +123,41 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   })
   def('toBe', function (expected) {
     const actual = this._obj
+    const pass = Object.is(actual, expected)
+
+    let deepEqualityName = ''
+
+    if (!pass) {
+      const toStrictEqualPass = jestEquals(
+        actual,
+        expected,
+        [
+          iterableEquality,
+          typeEquality,
+          sparseArrayEquality,
+          arrayBufferEquality,
+        ],
+        true,
+      )
+
+      if (toStrictEqualPass) {
+        deepEqualityName = 'toStrictEqual'
+      }
+      else {
+        const toEqualPass = jestEquals(
+          actual,
+          expected,
+          [iterableEquality],
+        )
+
+        if (toEqualPass)
+          deepEqualityName = 'toEqual'
+      }
+    }
+
     return this.assert(
-      Object.is(actual, expected),
-      'expected #{this} to be #{exp} // Object.is equality',
+      pass,
+      generateToBeMessage(deepEqualityName),
       'expected #{this} not to be #{exp} // Object.is equality',
       expected,
       actual,
@@ -290,7 +316,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       pass = true
     }
     else {
-      expectedDiff = Math.pow(10, -precision) / 2
+      expectedDiff = 10 ** -precision / 2
       receivedDiff = Math.abs(expected - received)
       pass = receivedDiff < expectedDiff
     }
@@ -575,8 +601,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       callResult,
     )
   })
-  def('toSatisfy', function () {
-    return this.be.satisfy
+  def('toSatisfy', function (matcher: Function, message?: string) {
+    return this.be.satisfy(matcher, message)
   })
 
   utils.addProperty(chai.Assertion.prototype, 'resolves', function __VITEST_RESOLVES__(this: any) {
@@ -643,36 +669,6 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
 
     return proxy
   })
-
-  utils.addMethod(
-    chai.expect,
-    'assertions',
-    function assertions(expected: number) {
-      const errorGen = () => new Error(`expected number of assertions to be ${expected}, but got ${getState().assertionCalls}`)
-      if (Error.captureStackTrace)
-        Error.captureStackTrace(errorGen(), assertions)
-
-      setState({
-        expectedAssertionsNumber: expected,
-        expectedAssertionsNumberErrorGen: errorGen,
-      })
-    },
-  )
-
-  utils.addMethod(
-    chai.expect,
-    'hasAssertions',
-    function hasAssertions() {
-      const error = new Error('expected any number of assertion, but got none')
-      if (Error.captureStackTrace)
-        Error.captureStackTrace(error, hasAssertions)
-
-      setState({
-        isExpectingAssertions: true,
-        isExpectingAssertionsError: error,
-      })
-    },
-  )
 
   utils.addMethod(
     chai.expect,
