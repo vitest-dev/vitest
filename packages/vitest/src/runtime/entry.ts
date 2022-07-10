@@ -17,7 +17,6 @@ export async function run(files: string[], config: ResolvedConfig): Promise<void
     return
   }
 
-  const envs = ['node', 'jsdom', 'happy-dom']
   // if calling from a worker, there will always be one file
   // if calling with no-threads, this will be the whole suite
   const filesWithEnv = await Promise.all(files.map(async (file) => {
