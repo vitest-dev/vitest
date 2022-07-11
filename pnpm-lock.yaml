@@ -167,7 +167,7 @@ importers:
       lit: 2.2.7
     devDependencies:
       '@vitest/ui': link:../../packages/ui
-      happy-dom: 6.0.2
+      happy-dom: 6.0.3
       vite: 2.9.14
       vitest: link:../../packages/vitest
 
@@ -5622,7 +5622,7 @@ packages:
   /@types/concat-stream/1.6.1:
     resolution: {integrity: sha512-eHE4cQPoj6ngxBZMvVf6Hw7Mh4jMW4U9lpGmS5GBPB9RYxlFg+CHaVN7ErNY4W9XfLIEn20b4VDYaIrbq0q4uA==}
     dependencies:
-      '@types/node': 8.10.66
+      '@types/node': 18.0.3
     dev: true
 
   /@types/cookie/0.4.1:
@@ -5673,9 +5673,9 @@ packages:
     dev: true
 
   /@types/form-data/0.0.33:
-    resolution: {integrity: sha512-8BSvG1kGm83cyJITQMZSulnl6QV8jqAGreJsc5tPu1Jq0vTSOiY/k24Wx82JRpWwZSqrala6sd5rWi6aNXvqcw==}
+    resolution: {integrity: sha1-yayFsqX9GENbjIXZ7LUObWyJP/g=}
     dependencies:
-      '@types/node': 8.10.66
+      '@types/node': 18.0.3
     dev: true
 
   /@types/fs-extra/9.0.13:
@@ -8816,7 +8816,7 @@ packages:
       lodash: ^4.17.20
       marko: ^3.14.4
       mote: ^0.2.0
-      mustache: ^3.0.0
+      mustache: ^4.0.1
       nunjucks: ^3.2.2
       plates: ~0.4.11
       pug: ^3.0.0
@@ -12183,8 +12183,8 @@ packages:
       - encoding
     dev: true
 
-  /happy-dom/6.0.2:
-    resolution: {integrity: sha512-NLPdk85xDRRYmOo3FjQ4KILNTH0geVofs1jW6x8IVO3PSl6bSLbB89DcLZGlkSYNLMJ8fggwd0v5v6gZidriXA==}
+  /happy-dom/6.0.3:
+    resolution: {integrity: sha512-1P1l2ynhs9lkO2M8X+fJzMbGUBzKZX8CSqjYrMw5LInqwdURvwj1veYD+br13jtNCwbjzZrYNuQXjj1vqENK4w==}
     dependencies:
       css.escape: 1.5.1
       he: 1.2.0

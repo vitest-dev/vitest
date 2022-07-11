@@ -152,7 +152,7 @@ export async function saveSnapshotFile(
     )
 
   const content = `${writeSnapshotVersion()}\n\n${snapshots.join('\n\n')}\n`
-  const skipWriting = fs.existsSync(snapshotPath) && (await fsp.readFile(snapshotPath, 'utf8')) === content
+  const skipWriting = fs.existsSync(snapshotPath) && (await fs?.promises.readFile(snapshotPath, 'utf8')) === content
 
   if (skipWriting)
     return
