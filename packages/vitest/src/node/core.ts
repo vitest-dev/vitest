@@ -237,13 +237,12 @@ export class Vitest {
       if (hasFailed(files))
         process.exitCode = 1
 
-      if (!this.config.browser)
-        await this.report('onFinished', this.state.getFiles(), this.state.getUnhandledErrors())
-
-      await this.report('onFinished', files, this.state.getUnhandledErrors())
-
+      if (!this.config.browser) {
+        await this.report('onFinished', files, this.state.getUnhandledErrors())
+      }
       this.cache.results.updateResults(files)
       await this.cache.results.writeToCache()
+      // await this.report('onFinished', files, this.state.getUnhandledErrors())
     })()
       .finally(() => {
         this.runningPromise = undefined
