@@ -26,10 +26,10 @@ const entries = [
 ]
 
 const dtsEntries = [
-  'src/index.ts',
+  /* 'src/index.ts',
   'src/node.ts',
   'src/browser.ts',
-  'src/config.ts',
+  'src/config.ts', */
 ]
 
 const external = [
