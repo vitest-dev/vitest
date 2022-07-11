@@ -22,7 +22,6 @@ export async function startVitest(cliFilters: string[], options: CliOptions, vit
   if (options.browser) // enabling threads in browser mode causes inconsistensies
     options.threads = false
 
-  console.log(options.threads)
   if (!await ensurePackageInstalled('vite')) {
     process.exitCode = 1
     return false
