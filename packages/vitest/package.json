@@ -36,8 +36,8 @@
       "import": "./dist/node.mjs"
     },
     "./browser": {
-      "import": "./dist/browser.js",
-      "types": "./dist/browser.d.ts"
+      "types": "./dist/browser.d.ts",
+      "import": "./dist/browser.mjs"
     },
     "./config": {
       "types": "./config.d.ts",
