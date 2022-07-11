@@ -66,8 +66,8 @@
     "prepublishOnly": "nr build"
   },
   "peerDependencies": {
-    "@vitest/browser": "*",
     "@edge-runtime/vm": "*",
+    "@vitest/browser": "*",
     "@vitest/ui": "*",
     "c8": "*",
     "happy-dom": "*",

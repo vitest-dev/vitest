@@ -9,7 +9,6 @@ export async function run(files: string[], config: ResolvedConfig): Promise<void
   await setupGlobalEnv(config)
 
   const workerState = getWorkerState()
-  console.log(files)
 
   // TODO @web-runner: we need to figure out how to do this on the browser
   if (config.browser) {

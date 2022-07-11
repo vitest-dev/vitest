@@ -295,7 +295,6 @@ export async function runFiles(files: File[], config: ResolvedConfig) {
 
 async function startTestsBrowser(paths: string[], config: ResolvedConfig) {
   if (isNode) {
-    console.log('paths', paths)
     rpc().onPathsCollected(paths)
   }
   else {
