@@ -163,7 +163,7 @@ importers:
       lit: 2.2.5
     devDependencies:
       '@vitest/ui': link:../../packages/ui
-      happy-dom: 6.0.2
+      happy-dom: 6.0.3
       vite: 2.9.12
       vitest: link:../../packages/vitest
 
@@ -672,7 +672,7 @@ importers:
       fast-glob: ^3.2.11
       find-up: ^6.3.0
       flatted: ^3.2.5
-      happy-dom: ^4.1.0
+      happy-dom: ^6.0.3
       jsdom: ^19.0.0
       local-pkg: ^0.4.1
       log-update: ^5.0.1
@@ -726,7 +726,7 @@ importers:
       fast-glob: 3.2.11
       find-up: 6.3.0
       flatted: 3.2.5
-      happy-dom: 4.1.0
+      happy-dom: 6.0.3
       jsdom: 19.0.0
       log-update: 5.0.1
       magic-string: 0.26.2
@@ -814,7 +814,7 @@ importers:
       '@vue/test-utils': ^2.0.0
       vitest: workspace:*
     devDependencies:
-      '@vitejs/plugin-vue': 2.3.3_vite@2.9.13+vue@3.2.37
+      '@vitejs/plugin-vue': 2.3.3_vite@2.9.14+vue@3.2.37
       '@vue/test-utils': 2.0.0_vue@3.2.37
       vitest: link:../../packages/vitest
 
@@ -7107,6 +7107,17 @@ packages:
       vue: 3.2.36
     dev: true
 
+  /@vitejs/plugin-vue/2.3.3_vite@2.9.14+vue@3.2.37:
+    resolution: {integrity: sha512-SmQLDyhz+6lGJhPELsBdzXGc+AcaT8stgkbiTFGpXPe8Tl1tJaBw1A6pxDqDuRsVkD8uscrkx3hA7QDOoKYtyw==}
+    engines: {node: '>=12.0.0'}
+    peerDependencies:
+      vite: ^2.5.10
+      vue: ^3.2.25
+    dependencies:
+      vite: 2.9.14
+      vue: 3.2.37
+    dev: true
+
   /@vue/babel-helper-vue-jsx-merge-props/1.2.1:
     resolution: {integrity: sha512-QOi5OW45e2R20VygMSNhyQHvpdUwQZqGPc748JLGCYEy+yp8fNFNdbNIGAgZmi9e+2JHPd6i6idRuqivyicIkA==}
     dev: true
@@ -9573,7 +9584,7 @@ packages:
       lodash: ^4.17.20
       marko: ^3.14.4
       mote: ^0.2.0
-      mustache: ^3.0.0
+      mustache: ^4.0.1
       nunjucks: ^3.2.2
       plates: ~0.4.11
       pug: ^3.0.0
@@ -12864,8 +12875,8 @@ packages:
       - encoding
     dev: true
 
-  /happy-dom/6.0.2:
-    resolution: {integrity: sha512-NLPdk85xDRRYmOo3FjQ4KILNTH0geVofs1jW6x8IVO3PSl6bSLbB89DcLZGlkSYNLMJ8fggwd0v5v6gZidriXA==}
+  /happy-dom/6.0.3:
+    resolution: {integrity: sha512-1P1l2ynhs9lkO2M8X+fJzMbGUBzKZX8CSqjYrMw5LInqwdURvwj1veYD+br13jtNCwbjzZrYNuQXjj1vqENK4w==}
     dependencies:
       css.escape: 1.5.1
       he: 1.2.0
