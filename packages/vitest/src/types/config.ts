@@ -1,4 +1,4 @@
-import type { CommonServerOptions } from 'vite'
+import type { AliasOptions, CommonServerOptions } from 'vite'
 import type { PrettyFormatOptions } from 'pretty-format'
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import type { BuiltinReporters } from '../node/reporters'
@@ -393,6 +393,13 @@ export interface InlineConfig {
      */
     seed?: number
   }
+
+  /**
+   * Specifies an `Object`, or an `Array` of `Object`,
+   * which defines aliases used to replace values in `import` or `require` statements.
+   * Will be merged with the default aliases inside `resolve.alias`.
+   */
+  alias?: AliasOptions
 }
 
 export interface UserConfig extends InlineConfig {

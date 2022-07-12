@@ -75,6 +75,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
             // by default Vite resolves `module` field, which not always a native ESM module
             // setting this option can bypass that and fallback to cjs version
             mainFields: [],
+            alias: preOptions.alias,
           },
           server: {
             ...preOptions.api,
@@ -100,6 +101,9 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
         const viteConfigTest = (viteConfig.test as any) || {}
         if (viteConfigTest.watch === false)
           viteConfigTest.run = true
+
+        if ('alias' in viteConfigTest)
+          delete viteConfigTest.alias
 
         // viteConfig.test is final now, merge it for real
         options = deepMerge(
