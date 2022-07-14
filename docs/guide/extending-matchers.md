@@ -1,3 +1,7 @@
+---
+title: Extending Matchers | Guide
+---
+
 # Extending Matchers
 
 Since Vitest is compatible with both Chai and Jest, you can use either `chai.use` API or `expect.extend`, whichever you prefer.
