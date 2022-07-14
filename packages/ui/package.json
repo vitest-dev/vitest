@@ -30,16 +30,14 @@
     "dev:client": "vite",
     "dev": "rollup -c --watch --watch.include=node/**",
     "dev:ui": "run-p dev dev:client",
-    "test:run": "cypress run-ct",
-    "test:open": "cypress open-ct",
+    "test:run": "cypress run --component",
+    "test:open": "cypress open --component",
     "prepublishOnly": "pnpm build"
   },
   "dependencies": {
     "sirv": "^2.0.2"
   },
   "devDependencies": {
-    "@cypress/vite-dev-server": "^2.2.3",
-    "@cypress/vue": "^3.1.2",
     "@faker-js/faker": "^7.3.0",
     "@testing-library/cypress": "^8.0.3",
     "@types/codemirror": "^5.60.5",
@@ -55,7 +53,7 @@
     "birpc": "^0.2.3",
     "codemirror": "^5.65.6",
     "codemirror-theme-vars": "^0.1.1",
-    "cypress": "^9.7.0",
+    "cypress": "^10.3.0",
     "d3-graph-controller": "^2.2.43",
     "flatted": "^3.2.5",
     "floating-vue": "^2.0.0-y.0",
