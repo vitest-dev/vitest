@@ -1,3 +1,7 @@
+---
+title: Snapshot | Guide
+---
+
 # Snapshot
 
 Snapshot tests are a very useful tool whenever you want to make sure the output of your functions not change unexpectedly.

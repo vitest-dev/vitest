@@ -1,3 +1,7 @@
+---
+title: Getting Started | Guide
+---
+
 # Getting Started
 
 ## Overview
@@ -103,7 +107,7 @@ Learn more about [IDE Integrations](./ide.md)
 - [cz-git](https://github.com/Zhengqbbb/cz-git)
 
 <!--
-For contributors: 
+For contributors:
 We no longer accept new entries to this list a this moment.
 Thanks for choosing Vitest!
 -->
