@@ -8,6 +8,34 @@ import { distDir } from '../constants'
 import type { PendingSuiteMock } from '../types/mocker'
 import type { ExecuteOptions } from './execute'
 
+class RefTracker {
+  private idMap = new Map<any, number>()
+  private mockedValueMap = new Map<number, any>()
+
+  public getId(value: any) {
+    return this.idMap.get(value)
+  }
+
+  public getMockedValue(id: number) {
+    return this.mockedValueMap.get(id)
+  }
+
+  public track(originalValue: any, mockedValue: any): number {
+    const newId = this.idMap.size
+    this.idMap.set(originalValue, newId)
+    this.mockedValueMap.set(newId, mockedValue)
+    return newId
+  }
+}
+
+type Key = string | symbol
+
+function isSpecialProp(prop: Key, parentType: string) {
+  return parentType.includes('Function')
+      && typeof prop === 'string'
+      && ['arguments', 'callee', 'caller', 'length', 'name'].includes(prop)
+}
+
 interface ViteRunnerRequest {
   (dep: string): any
   callstack: string[]
@@ -129,40 +157,78 @@ export class VitestMocker {
     return existsSync(fullPath) ? fullPath : null
   }
 
-  public mockValue(value: any) {
+  public mockObject(object: Record<string | symbol, any>) {
     if (!VitestMocker.spyModule) {
       throw new Error(
         'Error: Spy module is not defined. '
         + 'This is likely an internal bug in Vitest. '
         + 'Please report it to https://github.com/vitest-dev/vitest/issues')
     }
+    const spyModule = VitestMocker.spyModule
 
-    const type = getType(value)
+    const finalizers = new Array<() => void>()
+    const refs = new RefTracker()
 
-    if (Array.isArray(value))
-      return []
-    else if (type !== 'Object' && type !== 'Module')
-      return value
+    const mockPropertiesOf = (container: Record<Key, any>, newContainer: Record<Key, any>) => {
+      const containerType = getType(container)
+      const isModule = containerType === 'Module' || !!container.__esModule
+      for (const property of getAllProperties(container)) {
+        // Modules define their exports as getters. We want to process those.
+        if (!isModule) {
+          // TODO: Mock getters/setters somehow?
+          const descriptor = Object.getOwnPropertyDescriptor(container, property)
+          if (descriptor?.get || descriptor?.set)
+            continue
+        }
 
-    const newObj: Record<string | symbol, any> = {}
+        // Skip special read-only props, we don't want to mess with those.
+        if (isSpecialProp(property, containerType))
+          continue
 
-    const properties = getAllProperties(value)
+        const value = container[property]
 
-    for (const k of properties) {
-      newObj[k] = this.mockValue(value[k])
-      const type = getType(value[k])
+        // Special handling of references we've seen before to prevent infinite
+        // recursion in circular objects.
+        const refId = refs.getId(value)
+        if (refId) {
+          finalizers.push(() => newContainer[property] = refs.getMockedValue(refId))
+          continue
+        }
 
-      if (type.includes('Function') && !value[k]._isMockFunction) {
-        VitestMocker.spyModule.spyOn(newObj, k).mockImplementation(() => undefined)
-        Object.defineProperty(newObj[k], 'length', { value: 0 }) // tinyspy retains length, but jest doesnt
+        const type = getType(value)
+
+        if (Array.isArray(value)) {
+          newContainer[property] = []
+          continue
+        }
+
+        const isFunction = type.includes('Function') && typeof value === 'function'
+        if ((!isFunction || value.__isMockFunction) && type !== 'Object' && type !== 'Module') {
+          newContainer[property] = value
+          continue
+        }
+
+        newContainer[property] = isFunction ? value : {}
+
+        if (isFunction) {
+          spyModule.spyOn(newContainer, property).mockImplementation(() => undefined)
+          // tinyspy retains length, but jest doesn't.
+          Object.defineProperty(newContainer[property], 'length', { value: 0 })
+        }
+
+        refs.track(value, newContainer[property])
+        mockPropertiesOf(value, newContainer[property])
       }
     }
 
-    // should be defined after object, because it may contain
-    // special logic on getting/settings properties
-    // and we don't want to invoke it
-    Object.setPrototypeOf(newObj, Object.getPrototypeOf(value))
-    return newObj
+    const mockedObject: Record<Key, any> = {}
+    mockPropertiesOf(object, mockedObject)
+
+    // Plug together refs
+    for (const finalizer of finalizers)
+      finalizer()
+
+    return mockedObject
   }
 
   public unmockPath(path: string) {
@@ -205,7 +271,7 @@ export class VitestMocker {
     if (mock === null) {
       await this.ensureSpy()
       const mod = await this.request(fsPath)
-      return this.mockValue(mod)
+      return this.mockObject(mod)
     }
 
     if (typeof mock === 'function')
@@ -236,7 +302,7 @@ export class VitestMocker {
         return cache.exports
       const cacheKey = toFilePath(dep, this.root)
       const mod = this.moduleCache.get(cacheKey)?.exports || await this.request(dep)
-      const exports = this.mockValue(mod)
+      const exports = this.mockObject(mod)
       this.moduleCache.set(cacheName, { exports })
       return exports
     }
