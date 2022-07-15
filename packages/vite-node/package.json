@@ -72,13 +72,13 @@
   "dependencies": {
     "debug": "^4.3.4",
     "kolorist": "^1.5.1",
-    "mlly": "^0.5.3",
+    "mlly": "^0.5.4",
     "pathe": "^0.2.0",
     "vite": "^2.9.12 || ^3.0.0-0"
   },
   "devDependencies": {
     "@types/debug": "^4.1.7",
     "cac": "^6.7.12",
-    "rollup": "^2.75.7"
+    "rollup": "^2.76.0"
   }
 }
