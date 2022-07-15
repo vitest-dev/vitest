@@ -5,8 +5,21 @@ import { loadConfigFromFile } from 'vite'
 import { configFiles } from '../../constants'
 import type { CliOptions } from '../cli-api'
 import { slash } from '../../utils'
+import { FilesStatsCache } from './files'
+import { ResultsCache } from './results'
 
 export class VitestCache {
+  results = new ResultsCache()
+  stats = new FilesStatsCache()
+
+  getFileTestResults(id: string) {
+    return this.results.getResults(id)
+  }
+
+  getFileStats(id: string) {
+    return this.stats.getStats(id)
+  }
+
   static resolveCacheDir(root: string, dir: string | undefined) {
     return resolve(root, slash(dir || 'node_modules/.vitest'))
   }

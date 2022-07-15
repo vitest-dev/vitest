@@ -133,7 +133,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
             (await import('../../api/setup')).setup(ctx)
         }
         catch (err) {
-          ctx.printError(err, true)
+          ctx.logger.printError(err, true)
           process.exit(1)
         }
 

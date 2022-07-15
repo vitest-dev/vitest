@@ -1,4 +1,9 @@
+---
+title: Mocking | Guide
+---
+
 # Mocking
+
 When writing tests it's only a matter of time before you need to create "fake" version of an internal—or external—service. This is commonly referred to as **mocking**. Vitest provides utility functions to help you out through its **vi** helper. You can `import { vi } from 'vitest'` or access it **globally** (when [global configuration](/config/#globals) is **enabled**).
 
 ::: warning
@@ -379,22 +384,24 @@ const instance = new SomeClass()
 vi.spyOn(instance, 'method')
 ```
 
-- Spy on module export function
+- Mock exported variables
 ```ts
+// some-path.ts
+export const getter = 'variable'
+```
+```ts
+// some-path.test.ts
 import * as exports from 'some-path'
-vi.spyOn(exports, 'function')
+vi.spyOn(exports, 'getter', 'get').mockReturnValue('mocked')
 ```
 
-- Spy on module export setter/getter
-```ts
-import * as exports from 'some-path'
-vi.spyOn(exports, 'getter', 'get')
-vi.spyOn(exports, 'setter', 'set')
-```
-
-- Mock a module export function
+- Mock exported function
 
 Example with `vi.mock`:
+```ts
+// some-path.ts
+export function method() {}
+```
 ```ts
 import { method } from 'some-path'
 vi.mock('some-path', () => ({
@@ -408,9 +415,13 @@ import * as exports from 'some-path'
 vi.spyOn(exports, 'method').mockImplementation(() => {})
 ```
 
-- Mock a module export class implementation
+- Mock exported class implementation
 
 Example with `vi.mock` and prototype:
+```ts
+// some-path.ts
+export class SomeClass {}
+```
 ```ts
 import { SomeClass } from 'some-path'
 vi.mock('some-path', () => {
@@ -447,6 +458,13 @@ vi.spyOn(exports, 'SomeClass').mockImplementation(() => {
 Example using cache:
 
 ```ts
+// some-path.ts
+export function useObject() {
+  return { method: () => true }
+}
+```
+
+```ts
 // useObject.js
 import { useObject } from 'some-path'
 const obj = useObject()
@@ -464,12 +482,15 @@ vi.mock('some-path', () => {
         method: vi.fn(),
       }
     }
+    // now everytime useObject() is called it will
+    // return the same object reference
     return _cache
   }
   return { useObject }
 })
 
 const obj = useObject()
+// obj.method was called inside some-path
 expect(obj.method).toHaveBeenCalled()
 ```
 

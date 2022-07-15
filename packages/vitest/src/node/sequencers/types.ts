@@ -10,6 +10,6 @@ export interface TestSequencer {
   sort(files: string[]): Awaitable<string[]>
 }
 
-export interface TestSequencerContructor {
+export interface TestSequencerConstructor {
   new (ctx: Vitest): TestSequencer
 }

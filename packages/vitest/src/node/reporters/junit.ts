@@ -85,7 +85,7 @@ export class JUnitReporter implements Reporter {
       this.baseLog = async (text: string) => await fs.writeFile(fileFd, `${text}\n`)
     }
     else {
-      this.baseLog = async (text: string) => this.ctx.log(text)
+      this.baseLog = async (text: string) => this.ctx.logger.log(text)
     }
 
     this.logger = new IndentedLogger(this.baseLog)
@@ -219,6 +219,6 @@ export class JUnitReporter implements Reporter {
     })
 
     if (this.reportFile)
-      this.ctx.log(`JUNIT report written to ${this.reportFile}`)
+      this.ctx.logger.log(`JUNIT report written to ${this.reportFile}`)
   }
 }

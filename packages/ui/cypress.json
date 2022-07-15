@@ -1,7 +1,0 @@
-{
-  "testFiles": "**/*.cy.{js,ts,jsx,tsx}",
-  "componentFolder": "client",
-  "supportFile": "cypress/support/index.ts",
-  "pluginsFile": "cypress/plugins/index.ts",
-  "fixturesFolder": false
-}

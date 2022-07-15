@@ -36,14 +36,14 @@ export class BaseSequencer implements TestSequencer {
 
   // async so it can be extended by other sequelizers
   public async sort(files: string[]): Promise<string[]> {
-    const { state } = this.ctx
+    const cache = this.ctx.cache
     return [...files].sort((a, b) => {
-      const aState = state.getFileTestResults(a)
-      const bState = state.getFileTestResults(b)
+      const aState = cache.getFileTestResults(a)
+      const bState = cache.getFileTestResults(b)
 
       if (!aState || !bState) {
-        const statsA = state.getFileStats(a)
-        const statsB = state.getFileStats(b)
+        const statsA = cache.getFileStats(a)
+        const statsB = cache.getFileStats(b)
 
         // run unknown first
         if (!statsA || !statsB)
