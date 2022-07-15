@@ -31,19 +31,19 @@
   },
   "devDependencies": {
     "@antfu/eslint-config": "^0.25.2",
-    "@antfu/ni": "^0.16.3",
+    "@antfu/ni": "^0.17.2",
     "@rollup/plugin-alias": "^3.1.9",
     "@rollup/plugin-commonjs": "^22.0.1",
     "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^13.3.0",
     "@types/fs-extra": "^9.0.13",
     "@types/lodash": "^4.14.182",
-    "@types/node": "^18.0.3",
+    "@types/node": "^18.0.4",
     "@types/ws": "^8.5.3",
     "bumpp": "^8.2.1",
     "c8": "^7.11.3",
     "cross-env": "^7.0.3",
-    "esbuild": "~0.14.48",
+    "esbuild": "~0.14.49",
     "eslint": "^8.19.0",
     "esno": "^0.14.1",
     "fast-glob": "^3.2.11",
@@ -54,7 +54,7 @@
     "npm-run-all": "^4.1.5",
     "ohmyfetch": "^0.4.18",
     "pathe": "^0.2.0",
-    "pnpm": "7.5.0",
+    "pnpm": "7.5.2",
     "rimraf": "^3.0.2",
     "rollup": "^2.76.0",
     "rollup-plugin-dts": "^4.2.2",
@@ -69,6 +69,7 @@
   "pnpm": {
     "overrides": {
       "esbuild": "^0.14.47",
+      "vite": "^2.9.12",
       "vitest": "workspace:*"
     }
   },
