@@ -30,9 +30,9 @@ export function guessCJSversion(id: string): string | undefined {
   }
   if (id.match(ESM_FOLDER_RE)) {
     for (const i of [
-      id.replace(ESM_FOLDER_RE, '/lib/$1'),
       id.replace(ESM_FOLDER_RE, '/umd/$1'),
       id.replace(ESM_FOLDER_RE, '/cjs/$1'),
+      id.replace(ESM_FOLDER_RE, '/lib/$1'),
       id.replace(ESM_FOLDER_RE, '/$1'),
     ]) {
       if (existsSync(i))
