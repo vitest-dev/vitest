@@ -77,10 +77,11 @@ async function sendTasksUpdate() {
 }
 
 export async function runTest(test: Test) {
-  /* if (test.mode !== 'run') {
-    (await getSnapshotClient())?.skipTestSnapshots(test)
+  if (test.mode !== 'run') {
+    const { getSnapshotClient } = await import('../integrations/snapshot/chai')
+    getSnapshotClient().skipTestSnapshots(test)
     return
-  } */
+  }
 
   if (test.result?.state === 'fail') {
     updateTask(test)
