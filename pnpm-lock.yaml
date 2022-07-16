@@ -134,7 +134,7 @@ importers:
       vite: ^2.9.12
       vitest: workspace:*
     dependencies:
-      '@rollup/plugin-graphql': 1.1.0_43ql3v2t6o4ybgpyc3nievjubi
+      '@rollup/plugin-graphql': 1.1.0_nhmex7luzljoezdhc6xbg5ot4a
       graphql: 16.5.0
     devDependencies:
       '@vitest/ui': link:../../packages/ui
@@ -4169,7 +4169,7 @@ packages:
       rollup: 2.77.0
     dev: true
 
-  /@rollup/plugin-graphql/1.1.0_43ql3v2t6o4ybgpyc3nievjubi:
+  /@rollup/plugin-graphql/1.1.0_nhmex7luzljoezdhc6xbg5ot4a:
     resolution: {integrity: sha512-X+H6oFlprDlnO3D0UiEytdW97AMphPXO0C7KunS7i/rBXIGQRQVDU5WKTXnBu2tfyYbjCTtfhXMSGI0i885PNg==}
     peerDependencies:
       graphql: '>=0.9.0'
@@ -4178,7 +4178,7 @@ packages:
       '@rollup/pluginutils': 4.2.1
       graphql: 16.5.0
       graphql-tag: 2.12.6_graphql@16.5.0
-      rollup: 2.77.0
+      rollup: 2.76.0
     dev: false
 
   /@rollup/plugin-json/4.1.0_rollup@2.77.0:
@@ -6228,7 +6228,7 @@ packages:
     dev: true
 
   /@types/form-data/0.0.33:
-    resolution: {integrity: sha512-8BSvG1kGm83cyJITQMZSulnl6QV8jqAGreJsc5tPu1Jq0vTSOiY/k24Wx82JRpWwZSqrala6sd5rWi6aNXvqcw==}
+    resolution: {integrity: sha1-yayFsqX9GENbjIXZ7LUObWyJP/g=}
     dependencies:
       '@types/node': 18.0.4
     dev: true
@@ -14573,7 +14573,7 @@ packages:
       whatwg-encoding: 2.0.0
       whatwg-mimetype: 3.0.0
       whatwg-url: 11.0.0
-      ws: 8.8.1
+      ws: 8.8.0
       xml-name-validator: 4.0.0
     transitivePeerDependencies:
       - bufferutil
@@ -17974,6 +17974,7 @@ packages:
     hasBin: true
     optionalDependencies:
       fsevents: 2.3.2
+    dev: true
 
   /rst-selector-parser/2.2.3:
     resolution: {integrity: sha1-gbIw6i/MYGbInjRy3nlChdmwPZE=}
