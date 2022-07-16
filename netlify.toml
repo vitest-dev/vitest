@@ -5,6 +5,7 @@
 [build]
   publish = "docs/.vitepress/dist"
   command = "npx pnpm i --store=node_modules/.pnpm-store && npm run docs:build"
+  ignore = "git diff --quiet $COMMIT_REF $CACHED_COMMIT_REF -- docs/ package.json"
 
 [[redirects]]
   from = "/new"
