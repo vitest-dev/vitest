@@ -185,9 +185,11 @@ export class JsonReporter implements Reporter {
     if (!error)
       return
 
-    const stack = parseStacktrace(error)
-    const endOfStack = stack[stack.length - 1]
-    const pos = endOfStack.sourcePos || endOfStack
+    const frame = parseStacktrace(error).at(-1)
+    if (!frame)
+      return
+
+    const pos = frame.sourcePos || frame
     return { line: pos.line, column: pos.column }
   }
 }
