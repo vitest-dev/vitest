@@ -1,9 +1,10 @@
 import { existsSync, promises as fs } from 'fs'
 import { dirname, resolve } from 'pathe'
 import type { Vitest } from '../../node'
-import type { File, Reporter, Suite, TaskState } from '../../types'
+import type { File, Reporter, Suite, TaskState, Test } from '../../types'
 import { getSuites, getTests } from '../../utils'
 import { getOutputFile } from '../../utils/config-helpers'
+import { parseStacktrace } from '../../utils/source-map'
 
 // for compatibility reasons, the reporter produces a JSON similar to the one produced by the Jest JSON reporter
 // the following types are extracted from the Jest repository (and simplified)
@@ -11,6 +12,7 @@ import { getOutputFile } from '../../utils/config-helpers'
 
 type Status = 'passed' | 'failed' | 'skipped' | 'pending' | 'todo' | 'disabled'
 type Milliseconds = number
+interface Callsite { line: number; column: number }
 const StatusMap: Record<TaskState, Status> = {
   fail: 'failed',
   only: 'pending',
@@ -27,7 +29,7 @@ interface FormattedAssertionResult {
   title: string
   duration?: Milliseconds | null
   failureMessages: Array<string>
-  // location?: Callsite | null
+  location?: Callsite | null
 }
 
 interface FormattedTestResult {
@@ -108,6 +110,7 @@ export class JsonReporter implements Reporter {
           title: t.name,
           duration: t.result?.duration,
           failureMessages: t.result?.error?.message == null ? [] : [t.result.error.message],
+          location: this.getFailureLocation(t),
         } as FormattedAssertionResult
       })
 
@@ -175,5 +178,16 @@ export class JsonReporter implements Reporter {
     else {
       this.ctx.logger.log(report)
     }
+  }
+
+  protected getFailureLocation(test: Test): Callsite | undefined {
+    const error = test.result?.error
+    if (!error)
+      return
+
+    const stack = parseStacktrace(error)
+    const endOfStack = stack[stack.length - 1]
+    const pos = endOfStack.sourcePos || endOfStack
+    return { line: pos.line, column: pos.column }
   }
 }
