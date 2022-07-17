@@ -26,7 +26,7 @@ export default (base = '/'): Plugin[] => {
     {
       enforce: 'pre',
       name: 'vitest:browser',
-      async resolveId(id, imp, ctx) {
+      async resolveId(id, _, ctx) {
         if (ctx.ssr)
           return
 
