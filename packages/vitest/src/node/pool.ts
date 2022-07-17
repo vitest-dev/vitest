@@ -50,7 +50,7 @@ export function createPool(ctx: Vitest): WorkerPool {
   }
 
   if (ctx.config.coverage.enabled)
-    process.env.NODE_V8_COVERAGE ||= ctx.config.coverage.tempDirectory
+    ctx.coverageProvider.onBeforeFilesRun?.()
 
   options.env = {
     TEST: 'true',
@@ -155,6 +155,9 @@ function createChannel(ctx: Vitest) {
       onCollected(files) {
         ctx.state.collectFiles(files)
         ctx.report('onCollected', files)
+      },
+      onFilesRun() {
+        ctx.coverageProvider.onAfterSuiteRun()
       },
       onTaskUpdate(packs) {
         ctx.state.updateTasks(packs)

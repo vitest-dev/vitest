@@ -2,9 +2,9 @@ import limit from 'p-limit'
 import type { File, HookCleanupCallback, HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from '../types'
 import { vi } from '../integrations/vi'
 import { clearTimeout, getFullName, getWorkerState, hasFailed, hasTests, isBrowser, isNode, partitionSuiteChildren, setTimeout, shuffle } from '../utils'
-import { takeCoverage } from '../integrations/coverage/c8'
 import { getState, setState } from '../integrations/chai/jest-expect'
 import { GLOBAL_EXPECT } from '../integrations/chai/constants'
+import { getCoverageInsideWorker } from '../integrations/coverage'
 import { getFn, getHooks } from './map'
 import { rpc } from './rpc'
 import { collectTests } from './collect'
@@ -316,7 +316,8 @@ async function startTestsNode(paths: string[], config: ResolvedConfig) {
 
   await runFiles(files, config)
 
-  takeCoverage()
+  getCoverageInsideWorker(config.coverage)
+  rpc().onFilesRun()
 
   await getSnapshotClient().saveCurrent()
 
