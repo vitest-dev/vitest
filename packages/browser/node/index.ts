@@ -1,8 +1,8 @@
 import { fileURLToPath } from 'url'
 // eslint-disable-next-line no-restricted-imports
 import { resolve } from 'path'
-// import nodePolyfills from 'rollup-plugin-polyfill-node'
-import nodePolyfills from 'rollup-plugin-node-polyfills'
+import { builtinModules } from 'module'
+import { polyfillPath } from 'modern-node-polyfills'
 import sirv from 'sirv'
 import type { Plugin } from 'vite'
 import { resolvePath } from 'mlly'
@@ -17,8 +17,6 @@ const stubsNames = [
 ]
 
 const polyfills = ['util', 'tty', 'process', 'path', 'buffer']
-
-const nodeConfig = nodePolyfills({ fs: true, crypto: true, include: polyfills })
 
 export default (base = '/'): Plugin[] => {
   const pkgRoot = resolve(fileURLToPath(import.meta.url), '../..')
@@ -41,7 +39,7 @@ export default (base = '/'): Plugin[] => {
           return resolve(pkgRoot, 'stubs', id)
 
         if (polyfills.includes(id))
-          return nodeConfig.resolveId(normalizeId(id), imp!)
+          return polyfillPath(normalizeId(id))
 
         return null
       },
@@ -55,9 +53,16 @@ export default (base = '/'): Plugin[] => {
         )
       },
     },
-    nodePolyfills({
-      include: null,
-    }),
+    {
+      name: 'modern-node-polyfills',
+      async resolveId(id, _, ctx) {
+        if (ctx.ssr || !builtinModules.includes(id))
+          return
+
+        id = normalizeId(id)
+        return { id: await polyfillPath(id), moduleSideEffects: false }
+      },
+    },
   ]
 }
 

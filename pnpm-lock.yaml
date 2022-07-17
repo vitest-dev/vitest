@@ -565,17 +565,17 @@ importers:
       '@vitest/ws-client': workspace:*
       local-pkg: ^0.4.1
       mlly: ^0.5.2
+      modern-node-polyfills: ^0.0.6
       picocolors: ^1.0.0
       rollup: ^2.67.2
       rollup-plugin-node-polyfills: ^0.2.1
-      rollup-plugin-polyfill-node: ^0.9.0
       sirv: ^2.0.2
       vitest: workspace:*
     dependencies:
       local-pkg: 0.4.1
       mlly: 0.5.4
+      modern-node-polyfills: 0.0.6
       rollup-plugin-node-polyfills: 0.2.1
-      rollup-plugin-polyfill-node: 0.9.0_rollup@2.76.0
       sirv: 2.0.2
     devDependencies:
       '@types/ws': 8.5.3
@@ -3343,6 +3343,10 @@ packages:
       string-argv: 0.3.1
       type-detect: 4.0.8
     dev: true
+
+  /@jspm/core/2.0.0-beta.24:
+    resolution: {integrity: sha512-a4Bo/80Z6CoJNor5ldgs6002utmmbttP4JYd/FJ0Ob2fVdf6O6ha5SORBCqrnDnBvMc1TlrHY7dCfat5+H0a6A==}
+    dev: false
 
   /@lit/reactive-element/1.3.3:
     resolution: {integrity: sha512-ukelZ49tzUqgOAEbVujl/U62JNK3wdn5kKtXVqrjKND4QvHACZOMOYaZI6/5Jd8vsg+Fq9HDwiib70FBLydOiQ==}
@@ -7030,7 +7034,6 @@ packages:
     resolution: {integrity: sha512-Xx54uLJQZ19lKygFXOWsscKUbsBZW0CPykPhVQdhIeIwrbPmJzqeASDInc8nKBnp/JT6igTs82qPXz069H8I/A==}
     engines: {node: '>=0.4.0'}
     hasBin: true
-    dev: true
 
   /address/1.2.0:
     resolution: {integrity: sha512-tNEZYz5G/zYunxFm7sfhAxkXEuLj3K6BKwv6ZURlsF6yiUQ65z0Q2wZW9L5cPUl9ocofGvXOdFYbFHp0+6MOig==}
@@ -14990,6 +14993,17 @@ packages:
       pathe: 0.3.2
       pkg-types: 0.3.3
 
+  /modern-node-polyfills/0.0.6:
+    resolution: {integrity: sha512-8ugATC1CAs8gIawAx0dFdexBDXxB2N2ArOH/4tpvDkbh4qHFVTTgCftSVzJSOFCR6oLJK5aU2xvhSHkD4nLLWw==}
+    dependencies:
+      '@jspm/core': 2.0.0-beta.24
+      '@rollup/plugin-inject': 4.0.4_rollup@2.76.0
+      acorn: 8.7.1
+      esbuild: 0.14.48
+      local-pkg: 0.4.1
+      rollup: 2.76.0
+    dev: false
+
   /moment/2.29.4:
     resolution: {integrity: sha512-5LC9SOxjSc2HF6vO2CyuTDNivEdoz2IvyJJGj6X8DJ0eFyfszE0QiEd+iXmBvUP3WHxSjFH/vIsA0EN00cgr8w==}
     dev: true
@@ -17375,15 +17389,6 @@ packages:
     resolution: {integrity: sha512-4kCrKPTJ6sK4/gLL/U5QzVT8cxJcofO0OU74tnB19F40cmuAKSzH5/siithxlofFEjwvw1YAhPmbvGNA6jEroA==}
     dependencies:
       rollup-plugin-inject: 3.0.2
-    dev: false
-
-  /rollup-plugin-polyfill-node/0.9.0_rollup@2.76.0:
-    resolution: {integrity: sha512-cVqm7LjgBqtZ77M9hLYayXrLz18nLIVPp3MPqNi2suStrFDg1LsA2cSdMIighr2yeuAQrphu8ymXTAsJNVABow==}
-    peerDependencies:
-      rollup: ^1.20.0 || ^2.0.0
-    dependencies:
-      '@rollup/plugin-inject': 4.0.4_rollup@2.76.0
-      rollup: 2.76.0
     dev: false
 
   /rollup-plugin-terser/7.0.2_rollup@2.76.0:
