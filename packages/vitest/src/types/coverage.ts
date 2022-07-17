@@ -15,29 +15,36 @@ export type CoverageReporter =
   | 'text-summary'
   | 'text'
 
-export interface C8Options {
+export type CoverageOptions = C8Options & { provider?: 'c8' }
+
+interface BaseCoverageOptions {
   /**
    * Enable coverage, pass `--coverage` to enable
    *
    * @default false
    */
   enabled?: boolean
-  /**
-   * Directory to write coverage report to
-   */
-  reportsDirectory?: string
-  /**
-   * Clean coverage before running tests
-   *
-   * @default true
-   */
-  clean?: boolean
+
   /**
    * Clean coverage report on watch rerun
    *
    * @default false
    */
   cleanOnRerun?: boolean
+
+  /**
+   * Directory to write coverage report to
+   */
+  reportsDirectory?: string
+}
+
+export interface C8Options extends BaseCoverageOptions {
+  /**
+   * Clean coverage before running tests
+   *
+   * @default true
+   */
+  clean?: boolean
   /**
    * Check thresholds per file
    *
@@ -77,6 +84,6 @@ export interface C8Options {
   statements?: number
 }
 
-export interface ResolvedC8Options extends Required<C8Options> {
-  tempDirectory: string
-}
+export type ResolvedCoverageOptions =
+  & { tempDirectory: string }
+  & Required<CoverageOptions>

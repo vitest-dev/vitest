@@ -6,7 +6,6 @@ import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 import type { ApiConfig, ResolvedConfig, UserConfig } from '../types'
 import { defaultPort } from '../constants'
 import { configDefaults } from '../defaults'
-import { resolveC8Options } from '../integrations/coverage/c8'
 import { toArray } from '../utils'
 import { VitestCache } from './cache'
 import { BaseSequencer } from './sequencers/BaseSequencer'
@@ -92,8 +91,6 @@ export function resolveConfig(
 
   if (viteConfig.base !== '/')
     resolved.base = viteConfig.base
-
-  resolved.coverage = resolveC8Options(options.coverage || {}, resolved.root)
 
   if (options.shard) {
     if (resolved.watch)

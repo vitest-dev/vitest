@@ -9,7 +9,8 @@ import { ViteNodeServer } from 'vite-node/server'
 import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig } from '../types'
 import { SnapshotManager } from '../integrations/snapshot/manager'
 import { clearTimeout, deepMerge, hasFailed, noop, setTimeout, slash } from '../utils'
-import { cleanCoverage, reportCoverage } from '../integrations/coverage/c8'
+import type { BaseCoverageProvider } from '../integrations/coverage/base'
+import { getCoverageProvider } from '../integrations/coverage'
 import { createPool } from './pool'
 import type { WorkerPool } from './pool'
 import { createReporters } from './reporters/utils'
@@ -29,6 +30,7 @@ export class Vitest {
   snapshot: SnapshotManager = undefined!
   cache: VitestCache = undefined!
   reporters: Reporter[] = undefined!
+  coverageProvider: BaseCoverageProvider = undefined!
   logger: Logger
   pool: WorkerPool | undefined
 
@@ -82,12 +84,17 @@ export class Vitest {
 
     this.reporters = await createReporters(resolved.reporters, this.runner)
 
+    this.coverageProvider = getCoverageProvider(options.coverage)
+    this.coverageProvider.initialize(this)
+
+    this.config.coverage = this.coverageProvider.resolveOptions()
+
     this.runningPromise = undefined
 
     this._onRestartListeners.forEach(fn => fn())
 
-    if (resolved.coverage.enabled)
-      await cleanCoverage(resolved.coverage, resolved.coverage.clean)
+    if (this.config.coverage.enabled)
+      await this.coverageProvider.clean(this.config.coverage.clean)
 
     this.cache.results.setConfig(resolved.root, resolved.cache)
     try {
@@ -137,7 +144,7 @@ export class Vitest {
     await this.runFiles(files)
 
     if (this.config.coverage.enabled)
-      await reportCoverage(this)
+      await this.coverageProvider.onAfterAllFilesRun()
 
     if (this.config.watch && !this.config.browser)
       await this.report('onWatcherStart')
@@ -322,14 +329,14 @@ export class Vitest {
       this.changedTests.clear()
 
       if (this.config.coverage.enabled && this.config.coverage.cleanOnRerun)
-        await cleanCoverage(this.config.coverage)
+        await this.coverageProvider.clean()
 
       await this.report('onWatcherRerun', files, triggerId)
 
       await this.runFiles(files)
 
       if (this.config.coverage.enabled)
-        await reportCoverage(this)
+        await this.coverageProvider.onAfterAllFilesRun()
 
       if (!this.config.browser)
         await this.report('onWatcherStart')
