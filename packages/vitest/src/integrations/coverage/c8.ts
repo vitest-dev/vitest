@@ -4,10 +4,10 @@ import _url from 'url'
 import type { Profiler } from 'inspector'
 import { resolve } from 'pathe'
 import type { RawSourceMap } from 'vite-node'
-import type { Vitest } from '../node'
-import { toArray } from '../utils'
-import type { C8Options, ResolvedC8Options } from '../types'
-import { configDefaults } from '../defaults'
+import type { Vitest } from '../../node'
+import { toArray } from '../../utils'
+import type { C8Options, ResolvedC8Options } from '../../types'
+import { configDefaults } from '../../defaults'
 
 export function resolveC8Options(options: C8Options, root: string): ResolvedC8Options {
   const resolved: ResolvedC8Options = {
