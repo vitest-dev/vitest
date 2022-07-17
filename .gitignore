@@ -5,6 +5,7 @@ yarn-debug.log*
 yarn-error.log*
 lib-cov
 coverage
+!**/integrations/coverage
 node_modules
 .env
 .cache
