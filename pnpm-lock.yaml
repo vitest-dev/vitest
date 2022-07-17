@@ -565,7 +565,7 @@ importers:
       '@vitest/ws-client': workspace:*
       local-pkg: ^0.4.1
       mlly: ^0.5.2
-      modern-node-polyfills: ^0.0.6
+      modern-node-polyfills: ^0.0.7
       picocolors: ^1.0.0
       rollup: ^2.67.2
       rollup-plugin-node-polyfills: ^0.2.1
@@ -574,7 +574,7 @@ importers:
     dependencies:
       local-pkg: 0.4.1
       mlly: 0.5.4
-      modern-node-polyfills: 0.0.6
+      modern-node-polyfills: 0.0.7
       rollup-plugin-node-polyfills: 0.2.1
       sirv: 2.0.2
     devDependencies:
@@ -14993,8 +14993,8 @@ packages:
       pathe: 0.3.2
       pkg-types: 0.3.3
 
-  /modern-node-polyfills/0.0.6:
-    resolution: {integrity: sha512-8ugATC1CAs8gIawAx0dFdexBDXxB2N2ArOH/4tpvDkbh4qHFVTTgCftSVzJSOFCR6oLJK5aU2xvhSHkD4nLLWw==}
+  /modern-node-polyfills/0.0.7:
+    resolution: {integrity: sha512-nQ1ckaD2n6rKvt3YW5kSqJTnA8MFQU+TTSn84PVyX7ySyy1ZXOxxbH95QIAT1WgqWosvSHO6tQK4LdM8J0E5AQ==}
     dependencies:
       '@jspm/core': 2.0.0-beta.24
       '@rollup/plugin-inject': 4.0.4_rollup@2.76.0

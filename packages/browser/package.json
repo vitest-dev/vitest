@@ -34,7 +34,7 @@
   "dependencies": {
     "local-pkg": "^0.4.1",
     "mlly": "^0.5.2",
-    "modern-node-polyfills": "^0.0.6",
+    "modern-node-polyfills": "^0.0.7",
     "rollup-plugin-node-polyfills": "^0.2.1",
     "sirv": "^2.0.2"
   },
