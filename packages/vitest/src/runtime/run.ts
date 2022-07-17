@@ -2,7 +2,6 @@ import limit from 'p-limit'
 import type { File, HookCleanupCallback, HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from '../types'
 import { vi } from '../integrations/vi'
 import { clearTimeout, getFullName, getWorkerState, hasFailed, hasTests, isBrowser, isNode, partitionSuiteChildren, setTimeout, shuffle } from '../utils'
-import { takeCoverage } from '../integrations/coverage/c8'
 import { getState, setState } from '../integrations/chai/jest-expect'
 import { GLOBAL_EXPECT } from '../integrations/chai/constants'
 import { getFn, getHooks } from './map'
@@ -316,7 +315,9 @@ async function startTestsNode(paths: string[], config: ResolvedConfig) {
 
   await runFiles(files, config)
 
-  takeCoverage()
+  // TODO: Not sure if this will work. Previously v8.takeCoverage() was called
+  // here inside the worker. Now, this will simply inform the main process to call it.
+  rpc().onFilesRun()
 
   await getSnapshotClient().saveCurrent()
 
