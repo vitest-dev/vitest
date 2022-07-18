@@ -8,6 +8,7 @@ export const defaultExclude = ['**/node_modules/**', '**/dist/**', '**/cypress/*
 
 const defaultCoverageExcludes = [
   'coverage/**',
+  'dist/**',
   'packages/*/test{,s}/**',
   '**/*.d.ts',
   'cypress/**',
