@@ -21,9 +21,9 @@ export async function startVitest(cliFilters: string[], options: CliOptions, vit
   if (options.run)
     options.watch = false
 
-  options.root = resolve(options.root || process.cwd())
+  const root = resolve(options.root || process.cwd())
 
-  if (!await ensurePackageInstalled('vite', options.root)) {
+  if (!await ensurePackageInstalled('vite', root)) {
     process.exitCode = 1
     return false
   }
@@ -34,7 +34,7 @@ export async function startVitest(cliFilters: string[], options: CliOptions, vit
   const ctx = await createVitest(options, viteOverrides)
 
   if (ctx.config.coverage.enabled) {
-    if (!await ensurePackageInstalled('c8', options.root)) {
+    if (!await ensurePackageInstalled('c8', root)) {
       process.exitCode = 1
       return false
     }
@@ -42,7 +42,7 @@ export async function startVitest(cliFilters: string[], options: CliOptions, vit
 
   if (ctx.config.environment && ctx.config.environment !== 'node') {
     const packageName = envPackageNames[ctx.config.environment]
-    if (!await ensurePackageInstalled(packageName, options.root)) {
+    if (!await ensurePackageInstalled(packageName, root)) {
       process.exitCode = 1
       return false
     }
