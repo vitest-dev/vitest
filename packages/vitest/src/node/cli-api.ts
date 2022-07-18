@@ -1,3 +1,4 @@
+import { resolve } from 'pathe'
 import type { UserConfig as ViteUserConfig } from 'vite'
 import { envPackageNames } from '../integrations/env'
 import type { UserConfig } from '../types'
@@ -20,7 +21,9 @@ export async function startVitest(cliFilters: string[], options: CliOptions, vit
   if (options.run)
     options.watch = false
 
-  if (!await ensurePackageInstalled('vite')) {
+  options.root = resolve(options.root || process.cwd())
+
+  if (!await ensurePackageInstalled('vite', options.root)) {
     process.exitCode = 1
     return false
   }
@@ -31,7 +34,7 @@ export async function startVitest(cliFilters: string[], options: CliOptions, vit
   const ctx = await createVitest(options, viteOverrides)
 
   if (ctx.config.coverage.enabled) {
-    if (!await ensurePackageInstalled('c8')) {
+    if (!await ensurePackageInstalled('c8', options.root)) {
       process.exitCode = 1
       return false
     }
@@ -39,7 +42,7 @@ export async function startVitest(cliFilters: string[], options: CliOptions, vit
 
   if (ctx.config.environment && ctx.config.environment !== 'node') {
     const packageName = envPackageNames[ctx.config.environment]
-    if (!await ensurePackageInstalled(packageName)) {
+    if (!await ensurePackageInstalled(packageName, options.root)) {
       process.exitCode = 1
       return false
     }
