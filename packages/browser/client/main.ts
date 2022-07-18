@@ -35,8 +35,25 @@ export const client = createClient(ENTRY_URL, {
 
 const ws = client.ws
 
+async function loadConfig() {
+  let retries = 5
+  do {
+    try {
+      await new Promise(resolve => setTimeout(resolve, 150))
+      config = await client.rpc.getConfig()
+      return
+    }
+    catch (_) {
+      // just ignore
+    }
+  }
+  while (--retries > 0)
+
+  throw new Error('cannot load configuration after 5 retries')
+}
+
 ws.addEventListener('open', async () => {
-  config = await client.rpc.getConfig()
+  await loadConfig()
 
   // @ts-expect-error mocking vitest apis
   globalThis.__vitest_worker__ = {
