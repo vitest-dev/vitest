@@ -1,3 +1,7 @@
+---
+title: Coverage | Guide
+---
+
 # Coverage
 
 Vitest supports Native code coverage via [`c8`](https://github.com/bcoe/c8). `c8` is an optional peer dependency, to use the coverage feature you will need to install it first by:

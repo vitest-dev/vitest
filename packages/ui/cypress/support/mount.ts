@@ -1,4 +1,4 @@
-import { mount } from '@cypress/vue'
+import { mount } from 'cypress/vue'
 import type { Component } from 'vue'
 import { directives, plugins } from '../../client/global-setup'
 

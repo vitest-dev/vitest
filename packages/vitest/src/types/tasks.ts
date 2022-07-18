@@ -103,24 +103,28 @@ interface EachFunction {
   ) => void
 }
 
-export type TestAPI<ExtraContext = {}> = ChainableFunction<
+type ChainableTestAPI<ExtraContext = {}> = ChainableFunction<
 'concurrent' | 'only' | 'skip' | 'todo' | 'fails',
 [name: string, fn?: TestFunction<ExtraContext>, timeout?: number],
 void
-> & {
+>
+
+export type TestAPI<ExtraContext = {}> = ChainableTestAPI<ExtraContext> & {
   each: EachFunction
-  skipIf(condition: any): TestAPI<ExtraContext>
-  runIf(condition: any): TestAPI<ExtraContext>
+  skipIf(condition: any): ChainableTestAPI<ExtraContext>
+  runIf(condition: any): ChainableTestAPI<ExtraContext>
 }
 
-export type SuiteAPI<ExtraContext = {}> = ChainableFunction<
+type ChainableSuiteAPI<ExtraContext = {}> = ChainableFunction<
 'concurrent' | 'only' | 'skip' | 'todo' | 'shuffle',
 [name: string, factory?: SuiteFactory],
 SuiteCollector<ExtraContext>
-> & {
+>
+
+export type SuiteAPI<ExtraContext = {}> = ChainableSuiteAPI & {
   each: EachFunction
-  skipIf(condition: any): SuiteAPI<ExtraContext>
-  runIf(condition: any): SuiteAPI<ExtraContext>
+  skipIf(condition: any): ChainableSuiteAPI<ExtraContext>
+  runIf(condition: any): ChainableSuiteAPI<ExtraContext>
 }
 
 export type HookListener<T extends any[], Return = void> = (...args: T) => Awaitable<Return>

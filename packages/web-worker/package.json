@@ -1,7 +1,7 @@
 {
   "name": "@vitest/web-worker",
   "type": "module",
-  "version": "0.18.0",
+  "version": "0.18.1",
   "description": "Web Worker support for testing in Vitest",
   "exports": {
     ".": {
@@ -35,6 +35,6 @@
     "vite-node": "workspace:*"
   },
   "devDependencies": {
-    "rollup": "^2.75.7"
+    "rollup": "^2.77.0"
   }
 }

@@ -3,6 +3,8 @@
 // Read more: https://github.com/vuejs/core/pull/3399
 import '@vue/runtime-core'
 
+export {}
+
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
     CodeMirror: typeof import('./components/CodeMirror.vue')['default']
@@ -33,5 +35,3 @@ declare module '@vue/runtime-core' {
     ViewReport: typeof import('./components/views/ViewReport.vue')['default']
   }
 }
-
-export {}

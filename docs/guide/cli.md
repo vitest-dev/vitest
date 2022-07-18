@@ -1,3 +1,7 @@
+---
+title: Command Line Interface | Guide
+---
+
 # Command Line Interface
 
 ## Commands
