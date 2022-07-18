@@ -212,6 +212,20 @@ importers:
       typescript: 4.6.3
       vitest: link:../../packages/vitest
 
+  examples/playwright:
+    specifiers:
+      '@playwright/test': ^1.23.4
+      '@vitest/ui': latest
+      playwright: ^1.23.4
+      vite: ^2.9.12
+      vitest: workspace:*
+    devDependencies:
+      '@playwright/test': 1.23.4
+      '@vitest/ui': link:../../packages/ui
+      playwright: 1.23.4
+      vite: 2.9.14
+      vitest: link:../../packages/vitest
+
   examples/puppeteer:
     specifiers:
       '@vitest/ui': latest
@@ -4078,6 +4092,15 @@ packages:
 
   /@open-draft/until/1.0.3:
     resolution: {integrity: sha512-Aq58f5HiWdyDlFffbbSjAlv596h/cOnt2DO1w3DOC7OJ5EHs0hd/nycJfiu9RJbT6Yk6F1knnRRXNSpxoIVZ9Q==}
+    dev: true
+
+  /@playwright/test/1.23.4:
+    resolution: {integrity: sha512-iIsoMJDS/lyuhw82FtcV/B3PXikgVD3hNe5hyvOpRM0uRr1OIpN3LgPeRbBjhzBWmyf6RgRg5fqK5sVcpA03yA==}
+    engines: {node: '>=14'}
+    hasBin: true
+    dependencies:
+      '@types/node': 18.0.4
+      playwright-core: 1.23.4
     dev: true
 
   /@pmmmwh/react-refresh-webpack-plugin/0.5.5_a3gyllrqvxpec3fpybsrposvju:
@@ -16598,6 +16621,21 @@ packages:
       jsonc-parser: 3.0.0
       mlly: 0.5.4
       pathe: 0.3.2
+
+  /playwright-core/1.23.4:
+    resolution: {integrity: sha512-h5V2yw7d8xIwotjyNrkLF13nV9RiiZLHdXeHo+nVJIYGVlZ8U2qV0pMxNJKNTvfQVT0N8/A4CW6/4EW2cOcTiA==}
+    engines: {node: '>=14'}
+    hasBin: true
+    dev: true
+
+  /playwright/1.23.4:
+    resolution: {integrity: sha512-NUPOLMpd8WydmwZFllST/YZ7cImgDDDrvcaq7Gj2vAjNg0jYCndFJt6HHtbkOPSIlRo4BaQYlbFx6meq1r1FXQ==}
+    engines: {node: '>=14'}
+    hasBin: true
+    requiresBuild: true
+    dependencies:
+      playwright-core: 1.23.4
+    dev: true
 
   /pluralize/8.0.0:
     resolution: {integrity: sha512-Nc3IT5yHzflTfbjgqWcCPpo7DaKy4FnpB0l/zCAW0Tc7jxAiuqSxHasntB3D7887LSrA93kDJ9IXovxJYxyLCA==}
