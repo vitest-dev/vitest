@@ -1,6 +1,7 @@
 import type { CoverageOptions } from '../../types'
 import type { BaseCoverageProvider } from './base'
 import { C8CoverageProvider } from './c8'
+import { IstanbulCoverageProvider } from './istanbul'
 import { NullCoverageProvider } from './NullCoverageProvider'
 
 const CoverageProviderMap: Record<
@@ -8,6 +9,7 @@ const CoverageProviderMap: Record<
   { new(): BaseCoverageProvider; getCoverage(): any }
 > = {
   c8: C8CoverageProvider,
+  istanbul: IstanbulCoverageProvider,
 }
 
 export function getCoverageProvider(options?: CoverageOptions): BaseCoverageProvider {

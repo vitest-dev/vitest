@@ -28,7 +28,7 @@ export interface WorkerRPC {
   onUserConsoleLog: (log: UserConsoleLog) => void
   onUnhandledRejection: (err: unknown) => void
   onCollected: (files: File[]) => void
-  onFilesRun: () => void
+  onFilesRun: (coverage: any) => void
   onTaskUpdate: (pack: TaskResultPack[]) => void
 
   snapshotSaved: (snapshot: SnapshotResult) => void

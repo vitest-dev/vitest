@@ -18,6 +18,7 @@ export type CoverageReporter =
 export type CoverageOptions =
   | NullCoverageOptions & { provider?: null }
   | C8Options & { provider?: 'c8' }
+  | IstanbulOptions & { provider?: 'istanbul' }
 
 interface BaseCoverageOptions {
   /**
@@ -45,25 +46,70 @@ interface BaseCoverageOptions {
    * Directory to write coverage report to
    */
   reportsDirectory?: string
-}
 
-export interface NullCoverageOptions extends BaseCoverageOptions {
-  enabled: false
-}
-
-export interface C8Options extends BaseCoverageOptions {
   /**
-   * Clean coverage before running tests
+   * Reporters
    *
-   * @default true
+   * @default 'text'
    */
-  clean?: boolean
+  reporter?: Arrayable<CoverageReporter>
+
+  /**
+   * List of files excluded from coverage as glob patterns
+   */
+  exclude?: string[]
+
+  /**
+   * Do not show files with 100% statement, branch, and function coverage
+   */
+  skipFull?: boolean
+
   /**
    * Check thresholds per file
    *
    * @default false
    */
   perFile?: boolean
+
+  /**
+   * Threshold for lines
+   */
+  lines?: number
+
+  /**
+   * Threshold for functions
+   */
+  functions?: number
+
+  /**
+   * Threshold for branches
+   */
+  branches?: number
+
+  /**
+   * Threshold for statements
+   */
+  statements?: number
+}
+
+export interface NullCoverageOptions extends BaseCoverageOptions {
+  enabled: false
+}
+
+export interface IstanbulOptions extends BaseCoverageOptions {
+  /* Set to array of class method names to ignore for coverage */
+  ignoreClassMethods?: string[]
+
+  /* Watermarks for statements, lines, branches and functions */
+  watermarks?: {
+    statements?: [number, number]
+    functions?: [number, number]
+    branches?: [number, number]
+    lines?: [number, number]
+  }
+}
+
+export interface C8Options extends BaseCoverageOptions {
   /**
    * Allow files from outside of your cwd.
    *
@@ -71,30 +117,18 @@ export interface C8Options extends BaseCoverageOptions {
    */
   allowExternal?: any
   /**
-   * Reporters
-   *
-   * @default 'text'
-   */
-  reporter?: Arrayable<CoverageReporter>
-  /**
    * Exclude coverage under /node_modules/
    *
    * @default true
    */
   excludeNodeModules?: boolean
-  exclude?: string[]
   include?: string[]
-  skipFull?: boolean
   extension?: string | string[]
 
   all?: boolean
   src?: string[]
 
   100?: boolean
-  lines?: number
-  functions?: number
-  branches?: number
-  statements?: number
 }
 
 export type ResolvedCoverageOptions =

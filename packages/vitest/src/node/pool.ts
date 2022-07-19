@@ -170,8 +170,8 @@ function createChannel(ctx: Vitest) {
         ctx.state.collectFiles(files)
         ctx.report('onCollected', files)
       },
-      onFilesRun() {
-        ctx.coverageProvider.onAfterSuiteRun()
+      onFilesRun(coverage: any) {
+        ctx.coverageProvider.onAfterSuiteRun(coverage)
       },
       onTaskUpdate(packs) {
         ctx.state.updateTasks(packs)

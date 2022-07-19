@@ -10,6 +10,14 @@ export class NullCoverageProvider implements BaseCoverageProvider {
       cleanOnRerun: false,
       reportsDirectory: 'coverage',
       tempDirectory: 'coverage/tmp',
+      reporter: [],
+      exclude: [],
+      skipFull: true,
+      branches: 0,
+      functions: 0,
+      lines: 0,
+      statements: 0,
+      perFile: false,
     }
   }
 

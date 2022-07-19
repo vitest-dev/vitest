@@ -712,6 +712,11 @@ importers:
       find-up: ^6.3.0
       flatted: ^3.2.6
       happy-dom: ^6.0.4
+      istanbul-lib-coverage: ^3.2.0
+      istanbul-lib-instrument: ^5.2.0
+      istanbul-lib-report: ^3.0.0
+      istanbul-lib-source-maps: ^4.0.1
+      istanbul-reports: ^3.1.5
       jsdom: ^20.0.0
       local-pkg: ^0.4.2
       log-update: ^5.0.1
@@ -767,6 +772,11 @@ importers:
       find-up: 6.3.0
       flatted: 3.2.6
       happy-dom: 6.0.4
+      istanbul-lib-coverage: 3.2.0
+      istanbul-lib-instrument: 5.2.0
+      istanbul-lib-report: 3.0.0
+      istanbul-lib-source-maps: 4.0.1
+      istanbul-reports: 3.1.5
       jsdom: 20.0.0
       log-update: 5.0.1
       magic-string: 0.26.2
@@ -9980,7 +9990,7 @@ packages:
       foreground-child: 2.0.0
       istanbul-lib-coverage: 3.2.0
       istanbul-lib-report: 3.0.0
-      istanbul-reports: 3.1.4
+      istanbul-reports: 3.1.5
       rimraf: 3.0.2
       test-exclude: 6.0.0
       v8-to-istanbul: 9.0.0
@@ -14696,6 +14706,14 @@ packages:
 
   /istanbul-reports/3.1.4:
     resolution: {integrity: sha512-r1/DshN4KSE7xWEknZLLLLDn5CJybV3nw01VTkp6D5jzLuELlcbudfj/eSQFvrKsJuTVCGnePO7ho82Nw9zzfw==}
+    engines: {node: '>=8'}
+    dependencies:
+      html-escaper: 2.0.2
+      istanbul-lib-report: 3.0.0
+    dev: true
+
+  /istanbul-reports/3.1.5:
+    resolution: {integrity: sha512-nUsEMa9pBt/NOHqbcbeJEgqIlY/K7rVWUX6Lql2orY5e9roQOthbR3vtY4zzf2orPELg80fnxxk9zUyPlgwD1w==}
     engines: {node: '>=8'}
     dependencies:
       html-escaper: 2.0.2
