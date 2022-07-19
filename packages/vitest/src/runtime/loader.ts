@@ -1,4 +1,5 @@
 import { pathToFileURL } from 'url'
+import { isNodeBuiltin } from 'mlly'
 import { normalizeModuleId } from 'vite-node/utils'
 import type { Awaitable } from '../types'
 import { getWorkerState } from '../utils'
@@ -39,9 +40,11 @@ interface Loader {
   (url: string, context: LoaderContext, next: Loader): Awaitable<LoaderResult>
 }
 
+// apply transformations only to libraries
+// inline code preccessed by vite-node
 export const resolve: Resolver = async (url, context, next) => {
   const { parentURL } = context
-  if (!parentURL || !parentURL.includes('node_modules'))
+  if (!parentURL || !parentURL.includes('node_modules') || isNodeBuiltin(url))
     return next(url, context, next)
 
   const id = normalizeModuleId(url)
