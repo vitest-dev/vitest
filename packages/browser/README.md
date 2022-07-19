@@ -6,13 +6,11 @@ Browser running for Vitest.
 
 ## Development Setup
 
-At project root, create terminals with each of the following commands:
+At project root:
 
 ```bash
-pnpm -w run dev
-pnpm -w run web:dev
+pnpm dev
 
-# can be in one terminal
 cd test/browser
 pnpm vitest --browser
 ```

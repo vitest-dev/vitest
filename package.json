@@ -7,7 +7,7 @@
   "description": "A blazing fast unit test framework powered by Vite",
   "scripts": {
     "ci": "ni && nr typecheck && nr lint && nr build && nr test:all",
-    "build": "pnpm -r --filter=./packages/** run build && esmo scripts/copy-ui-to-browser.ts",
+    "build": "pnpm -r --filter=./packages/** run build",
     "dev": "pnpm -r --parallel --filter=./packages/** run dev",
     "docs": "pnpm -C docs run dev",
     "docs:build": "pnpm -C docs run build",

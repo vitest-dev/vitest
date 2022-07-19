@@ -24,12 +24,13 @@
     "stubs"
   ],
   "scripts": {
-    "build": "rimraf dist && pnpm build:node && pnpm build:client",
+    "build": "rimraf dist && pnpm build:node && pnpm build:client && pnpm copy",
     "build:client": "vite build",
     "build:node": "rollup -c",
     "dev:client": "vite build --watch",
     "dev:node": "rollup -c --watch --watch.include=node/**",
-    "dev": "rimraf dist && run-p dev:node dev:client"
+    "dev": "rimraf dist && run-p dev:node dev:client",
+    "copy": "esmo scripts/copy-ui-to-browser.ts"
   },
   "dependencies": {
     "local-pkg": "^0.4.1",

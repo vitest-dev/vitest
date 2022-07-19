@@ -3,7 +3,7 @@ import fs from 'fs'
 import { resolve } from 'pathe'
 import fg from 'fast-glob'
 
-const root = resolve(fileURLToPath(import.meta.url), '../../packages')
+const root = resolve(fileURLToPath(import.meta.url), '../../../../packages')
 
 const ui = resolve(root, 'ui/dist/client')
 const browser = resolve(root, 'browser/dist/client/__vitest__/')
