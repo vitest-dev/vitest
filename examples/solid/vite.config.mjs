@@ -10,9 +10,6 @@ export default defineConfig({
     transformMode: {
       web: [/.[jt]sx?/],
     },
-    deps: {
-      inline: [/solid-js/],
-    },
     threads: false,
     isolate: false,
   },
