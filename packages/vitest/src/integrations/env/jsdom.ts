@@ -1,4 +1,3 @@
-import { importModule } from 'local-pkg'
 import type { Environment, JSDOMOptions } from '../../types'
 import { populateGlobal } from './utils'
 
@@ -10,7 +9,7 @@ export default <Environment>({
       JSDOM,
       ResourceLoader,
       VirtualConsole,
-    } = await importModule('jsdom') as typeof import('jsdom')
+    } = await import('jsdom')
     const {
       html = '<!DOCTYPE html>',
       userAgent,
