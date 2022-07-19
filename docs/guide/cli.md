@@ -71,6 +71,7 @@ vitest related /src/index.ts /src/hello-world.js
 | `--environment <env>` | Runner environment (default: `node`) |
 | `--passWithNoTests` | Pass when no tests found |
 | `--allowOnly` | Allow tests and suites that are marked as `only` (default: false in CI, true otherwise) |
+| `--dangerouslyIgnoreUnhandledErrors` | Ignore any unhandled errors that occur |
 | `--changed [since]` | Run tests that are affected by the changed files (default: false). See [docs](#changed) |
 | `--shard <shard>` | Execute tests in a specified shard |
 | `--sequence` | Define in what order to run tests. Use [cac's dot notation] to specify options (for example, use `--sequence.shuffle` to run tests in random order) |

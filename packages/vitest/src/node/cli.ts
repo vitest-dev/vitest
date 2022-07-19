@@ -34,6 +34,7 @@ cli
   .option('--environment <env>', 'runner environment (default: node)')
   .option('--passWithNoTests', 'pass when no tests found')
   .option('--allowOnly', 'Allow tests and suites that are marked as only (default: !process.env.CI)')
+  .option('--dangerouslyIgnoreUnhandledErrors', 'Ignore any unhandled errors that occur')
   .option('--shard <shard>', 'Test suite shard to execute in a format of <index>/<count>')
   .option('--changed [since]', 'Run tests that are affected by the changed files (default: false)')
   .option('--sequence <options>', 'Define in what order to run tests (use --sequence.shuffle to run tests in random order)')
