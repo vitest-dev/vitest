@@ -60,7 +60,7 @@ export default defineConfig({
       {
         find: 'test-alias',
         replacement: '',
-        // vitest doesn't crach because function is defined
+        // vitest doesn't crash because function is defined
         customResolver: () => resolve(__dirname, 'src', 'aliased-mod.ts'),
       },
     ],
