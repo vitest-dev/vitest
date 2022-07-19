@@ -9,6 +9,7 @@ import { unifiedDiff } from '../../node/diff'
 import type { ChaiPlugin, MatcherState } from '../../types/chai'
 import { arrayBufferEquality, generateToBeMessage, iterableEquality, equals as jestEquals, sparseArrayEquality, subsetEquality, typeEquality } from './jest-utils'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
+import { Any, Anything } from './jest-asymmetric-matchers'
 import { stringify } from './jest-matcher-utils'
 import { MATCHERS_OBJECT } from './constants'
 
@@ -301,7 +302,15 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     if (Array.isArray(args[0]))
       args[0] = args[0].map(key => key.replace(/([.[\]])/g, '\\$1')).join('.')
 
-    return this.have.deep.nested.property(...args as [property: string, value?: any])
+    const [propertyName, propertyValue] = args
+
+    if (propertyValue instanceof Anything)
+      return this.have.deep.nested.property(propertyName)
+
+    if (propertyValue instanceof Any)
+      return this.have.deep.nested.property(propertyName).that.is.a(propertyValue.getExpectedType())
+
+    return this.have.deep.nested.property(...args as [property: string, value: any])
   })
   def('toBeCloseTo', function (received: number, precision = 2) {
     const expected = this._obj
