@@ -270,6 +270,12 @@ export interface InlineConfig {
   ui?: boolean
 
   /**
+   * Use in browser environment
+   * @experimental
+   */
+  browser?: boolean
+
+  /**
    * Open UI automatically.
    *
    * @default true

@@ -20,6 +20,8 @@ export async function startVitest(cliFilters: string[], options: CliOptions, vit
 
   if (options.run)
     options.watch = false
+  if (options.browser) // enabling threads in browser mode causes inconsistensies
+    options.threads = false
 
   // this shouldn't affect _application root_ that can be changed inside config
   const root = resolve(options.root || process.cwd())

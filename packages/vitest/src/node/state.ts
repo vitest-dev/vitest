@@ -3,6 +3,7 @@ import type { ErrorWithDiff, File, Task, TaskResultPack, UserConsoleLog } from '
 // Note this file is shared for both node and browser, be aware to avoid node specific logic
 export class StateManager {
   filesMap = new Map<string, File>()
+  pathsSet: Set<string> = new Set()
   idMap = new Map<string, Task>()
   taskFileMap = new WeakMap<Task, File>()
   errorsSet = new Set<unknown>()
@@ -20,6 +21,10 @@ export class StateManager {
     return Array.from(this.errorsSet.values())
   }
 
+  getPaths() {
+    return Array.from(this.pathsSet)
+  }
+
   getFiles(keys?: string[]): File[] {
     if (keys)
       return keys.map(key => this.filesMap.get(key)!).filter(Boolean)
@@ -34,6 +39,12 @@ export class StateManager {
     return this.getFiles()
       .filter(i => i.result?.state === 'fail')
       .map(i => i.filepath)
+  }
+
+  collectPaths(paths: string[] = []) {
+    paths.forEach((path) => {
+      this.pathsSet.add(path)
+    })
   }
 
   collectFiles(files: File[] = []) {

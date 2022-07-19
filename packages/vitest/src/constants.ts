@@ -1,7 +1,7 @@
-import { fileURLToPath } from 'url'
+import url from 'url'
 import { resolve } from 'pathe'
 
-export const distDir = resolve(fileURLToPath(import.meta.url), '../../dist')
+export const distDir = resolve(url.fileURLToPath(import.meta.url), '../../dist')
 
 // if changed, update also jsdocs and docs
 export const defaultPort = 51204

@@ -1,12 +1,17 @@
 import type { TransformResult } from 'vite'
-import type { File, ModuleGraphData, Reporter, ResolvedConfig } from '../types'
+import type { File, ModuleGraphData, Reporter, ResolvedConfig, TaskResultPack } from '../types'
 
 export interface TransformResultWithSource extends TransformResult {
   source?: string
 }
 
 export interface WebSocketHandlers {
+  onWatcherStart: () => Promise<void>
+  onFinished(files?: File[]): Promise<void>
+  onCollected(files?: File[]): Promise<void>
+  onTaskUpdate(packs: TaskResultPack[]): void
   getFiles(): File[]
+  getPaths(): string[]
   getConfig(): ResolvedConfig
   getModuleGraph(id: string): Promise<ModuleGraphData>
   getTransformResult(id: string): Promise<TransformResultWithSource | undefined>
@@ -16,5 +21,5 @@ export interface WebSocketHandlers {
   updateSnapshot(file?: File): Promise<void>
 }
 
-export interface WebSocketEvents extends Pick<Reporter, 'onCollected' | 'onFinished' | 'onTaskUpdate' | 'onUserConsoleLog'> {
+export interface WebSocketEvents extends Pick<Reporter, 'onCollected' | 'onFinished' | 'onTaskUpdate' | 'onUserConsoleLog' | 'onPathsCollected'> {
 }

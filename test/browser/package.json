@@ -1,0 +1,12 @@
+{
+  "name": "@vitest/test-browser",
+  "private": true,
+  "scripts": {
+    "test": "vitest --browser --open",
+    "coverage": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "@vitest/browser": "workspace:*",
+    "vitest": "workspace:*"
+  }
+}

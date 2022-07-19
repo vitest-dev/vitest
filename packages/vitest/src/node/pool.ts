@@ -1,5 +1,5 @@
 import { MessageChannel } from 'worker_threads'
-import { pathToFileURL } from 'url'
+import _url from 'url'
 import { cpus } from 'os'
 import { resolve } from 'pathe'
 import type { Options as TinypoolOptions } from 'tinypool'
@@ -18,7 +18,7 @@ export interface WorkerPool {
   close: () => Promise<void>
 }
 
-const workerPath = pathToFileURL(resolve(distDir, './worker.mjs')).href
+const workerPath = _url.pathToFileURL(resolve(distDir, './worker.mjs')).href
 
 export function createPool(ctx: Vitest): WorkerPool {
   const threadsCount = ctx.config.watch
@@ -147,6 +147,10 @@ function createChannel(ctx: Vitest) {
       },
       resolveId(id, importer) {
         return ctx.vitenode.resolveId(id, importer)
+      },
+      onPathsCollected(paths) {
+        ctx.state.collectPaths(paths)
+        ctx.report('onPathsCollected', paths)
       },
       onCollected(files) {
         ctx.state.collectFiles(files)

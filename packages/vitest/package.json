@@ -35,6 +35,10 @@
       "types": "./dist/node.d.ts",
       "import": "./dist/node.mjs"
     },
+    "./browser": {
+      "types": "./dist/browser.d.ts",
+      "import": "./dist/browser.mjs"
+    },
     "./config": {
       "types": "./config.d.ts",
       "require": "./dist/config.cjs",
@@ -63,6 +67,7 @@
   },
   "peerDependencies": {
     "@edge-runtime/vm": "*",
+    "@vitest/browser": "*",
     "@vitest/ui": "*",
     "c8": "*",
     "happy-dom": "*",
@@ -70,6 +75,9 @@
   },
   "peerDependenciesMeta": {
     "@vitest/ui": {
+      "optional": true
+    },
+    "@vitest/browser": {
       "optional": true
     },
     "c8": {

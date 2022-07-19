@@ -1,6 +1,6 @@
 import { existsSync, promises as fs } from 'fs'
 import { createRequire } from 'module'
-import { pathToFileURL } from 'url'
+import _url from 'url'
 import type { Profiler } from 'inspector'
 import { resolve } from 'pathe'
 import type { RawSourceMap } from 'vite-node'
@@ -57,7 +57,7 @@ export async function reportCoverage(ctx: Vitest) {
       if (!map)
         return
 
-      const url = pathToFileURL(file).href
+      const url = _url.pathToFileURL(file).href
 
       let code: string | undefined
       try {
@@ -85,7 +85,7 @@ export async function reportCoverage(ctx: Vitest) {
   const offset = 224
 
   report._getSourceMap = (coverage: Profiler.ScriptCoverage) => {
-    const path = pathToFileURL(coverage.url).href
+    const path = _url.pathToFileURL(coverage.url).href
     const data = sourceMapMeta[path]
 
     if (!data)

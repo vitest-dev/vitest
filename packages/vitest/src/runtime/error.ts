@@ -1,5 +1,5 @@
-import { format } from 'util'
-import { util } from 'chai'
+import util from 'util'
+import { util as ChaiUtil } from 'chai'
 import { stringify } from '../integrations/chai/jest-matcher-utils'
 import { deepClone, getType } from '../utils'
 
@@ -18,7 +18,7 @@ export function serializeError(val: any, seen = new WeakMap()): any {
   if (typeof Element !== 'undefined' && val instanceof Element)
     return val.tagName
   if (typeof val.asymmetricMatch === 'function')
-    return `${val.toString()} ${format(val.sample)}`
+    return `${val.toString()} ${util.format(val.sample)}`
 
   if (seen.has(val))
     return seen.get(val)
@@ -112,7 +112,7 @@ export function replaceAsymmetricMatcher(actual: any, expected: any, actualRepla
     return { replacedActual: actual, replacedExpected: expected }
   actualReplaced.set(actual, true)
   expectedReplaced.set(expected, true)
-  util.getOwnEnumerableProperties(expected).forEach((key) => {
+  ChaiUtil.getOwnEnumerableProperties(expected).forEach((key) => {
     const expectedValue = expected[key]
     const actualValue = actual[key]
     if (isAsymmetricMatcher(expectedValue)) {

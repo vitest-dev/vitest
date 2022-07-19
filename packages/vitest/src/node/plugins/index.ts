@@ -17,6 +17,11 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
     return (await import('@vitest/ui')).default(options.uiBase)
   }
 
+  async function BrowserPlugin() {
+    await ensurePackageInstalled('@vitest/browser', ctx.config?.root || options.root || process.cwd())
+    return (await import('@vitest/browser')).default('/')
+  }
+
   return [
     <VitePlugin>{
       name: 'vitest',
@@ -66,9 +71,12 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
 
         (options as ResolvedConfig).defines = defines
 
-        const open = preOptions.ui && preOptions.open
-          ? preOptions.uiBase ?? '/__vitest__/'
-          : undefined
+        let open: string | boolean | undefined
+
+        if (preOptions.ui && preOptions.open)
+          open = preOptions.uiBase ?? '/__vitest__/'
+        else if (preOptions.browser)
+          open = '/'
 
         const config: ViteConfig = {
           resolve: {
@@ -86,13 +94,18 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
             hmr: false,
             preTransformRequests: false,
           },
+        }
+
+        if (!options.browser) {
           // disable deps optimization
-          cacheDir: undefined,
-          optimizeDeps: {
-            // experimental in Vite >2.9.2, entries remains to help with older versions
-            disabled: true,
-            entries: [],
-          },
+          Object.assign(config, {
+            cacheDir: undefined,
+            optimizeDeps: {
+              // experimental in Vite >2.9.2, entries remains to help with older versions
+              disabled: true,
+              entries: [],
+            },
+          })
         }
 
         return config
@@ -149,6 +162,9 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
     EnvReplacerPlugin(),
     MocksPlugin(),
     GlobalSetupPlugin(ctx),
+    ...(options.browser
+      ? await BrowserPlugin()
+      : []),
     CSSEnablerPlugin(ctx),
     options.ui
       ? await UIPlugin()
