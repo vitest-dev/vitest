@@ -1,3 +1,4 @@
+import { resolve } from 'pathe'
 import type { UserConfig as ViteUserConfig } from 'vite'
 import { envPackageNames } from '../integrations/env'
 import type { UserConfig } from '../types'
@@ -22,7 +23,10 @@ export async function startVitest(cliFilters: string[], options: CliOptions, vit
   if (options.browser) // enabling threads in browser mode causes inconsistensies
     options.threads = false
 
-  if (!await ensurePackageInstalled('vite')) {
+  // this shouldn't affect _application root_ that can be changed inside config
+  const root = resolve(options.root || process.cwd())
+
+  if (!await ensurePackageInstalled('vite', root)) {
     process.exitCode = 1
     return false
   }
@@ -33,7 +37,7 @@ export async function startVitest(cliFilters: string[], options: CliOptions, vit
   const ctx = await createVitest(options, viteOverrides)
 
   if (ctx.config.coverage.enabled) {
-    if (!await ensurePackageInstalled('c8')) {
+    if (!await ensurePackageInstalled('c8', root)) {
       process.exitCode = 1
       return false
     }
@@ -41,7 +45,7 @@ export async function startVitest(cliFilters: string[], options: CliOptions, vit
 
   if (ctx.config.environment && ctx.config.environment !== 'node') {
     const packageName = envPackageNames[ctx.config.environment]
-    if (!await ensurePackageInstalled(packageName)) {
+    if (!await ensurePackageInstalled(packageName, root)) {
       process.exitCode = 1
       return false
     }

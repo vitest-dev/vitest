@@ -1,4 +1,3 @@
-import { importModule } from 'local-pkg'
 // todo@web-runner: omit JSDOMOptions, browser will fail
 import type { Environment/* , JSDOMOptions */ } from '../../types'
 import { populateGlobal } from './utils'
@@ -11,7 +10,7 @@ export default <Environment>({
       JSDOM,
       ResourceLoader,
       VirtualConsole,
-    } = await importModule('jsdom') as typeof import('jsdom')
+    } = await import('jsdom')
     const {
       html = '<!DOCTYPE html>',
       userAgent,

@@ -13,7 +13,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
   let haveStarted = false
 
   async function UIPlugin() {
-    await ensurePackageInstalled('@vitest/ui')
+    await ensurePackageInstalled('@vitest/ui', ctx.config?.root || options.root || process.cwd())
     return (await import('@vitest/ui')).default(options.uiBase)
   }
 

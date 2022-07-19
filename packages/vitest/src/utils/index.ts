@@ -63,10 +63,12 @@ export function getFullName(task: Task) {
 
 export async function ensurePackageInstalled(
   dependency: string,
-  promptInstall = !process.env.CI && process.stdout.isTTY,
+  root: string,
 ) {
-  if (isPackageExists(dependency))
+  if (isPackageExists(dependency, { paths: [root] }))
     return true
+
+  const promptInstall = !process.env.CI && process.stdout.isTTY
 
   process.stderr.write(c.red(`${c.inverse(c.red(' MISSING DEP '))} Can not find dependency '${dependency}'\n\n`))
 
