@@ -19,6 +19,7 @@ export interface WorkerPool {
 }
 
 const workerPath = _url.pathToFileURL(resolve(distDir, './worker.mjs')).href
+const loaderPath = _url.pathToFileURL(resolve(distDir, './loader.mjs')).href
 
 export function createPool(ctx: Vitest): WorkerPool {
   const threadsCount = ctx.config.watch
@@ -36,6 +37,13 @@ export function createPool(ctx: Vitest): WorkerPool {
 
     maxThreads,
     minThreads,
+
+    execArgv: [
+      '--experimental-loader',
+      loaderPath,
+      ...ctx.server.config.resolve.conditions?.flatMap(c => ['-C', c]) ?? [],
+      '--no-warnings',
+    ],
   }
 
   if (ctx.config.isolate) {
