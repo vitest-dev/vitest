@@ -18,7 +18,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
   }
 
   async function BrowserPlugin() {
-    await ensurePackageInstalled('@vitest/browser')
+    await ensurePackageInstalled('@vitest/browser', ctx.config?.root || options.root || process.cwd())
     return (await import('@vitest/browser')).default('/')
   }
 
