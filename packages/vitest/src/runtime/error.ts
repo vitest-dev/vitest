@@ -81,7 +81,7 @@ export function processError(err: any) {
     if (typeof err.message === 'string')
       err.message = normalizeErrorMessage(err.message)
 
-    if (typeof err.cause === 'object' && err.cause.message === 'string')
+    if (typeof err.cause === 'object' && typeof err.cause.message === 'string')
       err.cause.message = normalizeErrorMessage(err.cause.message)
   }
   catch {}
