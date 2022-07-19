@@ -3,7 +3,7 @@ import { normalize, resolve } from 'pathe'
 import c from 'picocolors'
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 
-import type { ApiConfig, ResolvedConfig, UserConfig } from '../types'
+import type { ApiConfig, ResolvedConfig, UserConfig, InlineConfig } from '../types'
 import { defaultPort } from '../constants'
 import { configDefaults } from '../defaults'
 import { resolveC8Options } from '../integrations/coverage'
@@ -72,10 +72,8 @@ export function resolveConfig(
     ) {
       console.warn(
         c.yellow(
-          `${c.inverse(c.yellow(' Vitest '))} Your config.test.environment ("${
-            viteConfig.test.environment
-          }") conflicts with --dom flag ("happy-dom"), ignoring "${
-            viteConfig.test.environment
+          `${c.inverse(c.yellow(' Vitest '))} Your config.test.environment ("${viteConfig.test.environment
+          }") conflicts with --dom flag ("happy-dom"), ignoring "${viteConfig.test.environment
           }"`,
         ),
       )
@@ -197,4 +195,49 @@ export function resolveConfig(
   }
 
   return resolved
+}
+
+export function clearInlineConfigTest<Options extends ApiConfig & UserConfig>(options: Options, excludeKeys: string[]) {
+  const keys: (keyof InlineConfig)[] = [
+    'include',
+    'exclude',
+    'includeSource',
+    'deps',
+    'dir',
+    'globals',
+    'global',
+    'environment',
+    'environmentOptions',
+    'update',
+    'watch',
+    'root',
+    'reporters',
+    'outputFile',
+    'threads',
+    'maxThreads',
+    'minThreads',
+    'testTimeout',
+    'hookTimeout',
+    'silent',
+    'setupFiles',
+    'globalSetup',
+    'watchIgnore',
+    'isolate',
+    'coverage',
+    'testNamePattern',
+    'clearMocks',
+    'mockReset',
+    'restoreMocks',
+    'api',
+    'ui',
+    'open',
+    'uiBase',
+    'transformMode',
+    'snapshotFormat',
+  ];
+
+  keys.forEach(k => {
+    if (!excludeKeys.includes(k))
+      delete options[k]
+  });
 }

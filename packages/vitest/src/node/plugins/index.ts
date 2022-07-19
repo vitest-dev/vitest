@@ -2,7 +2,7 @@ import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import { configDefaults } from '../../defaults'
 import type { ResolvedConfig, UserConfig } from '../../types'
 import { deepMerge, ensurePackageInstalled, notNullish } from '../../utils'
-import { resolveApiConfig } from '../config'
+import { clearInlineConfigTest, resolveApiConfig } from '../config'
 import { Vitest } from '../core'
 import { EnvReplacerPlugin } from './envRelacer'
 import { GlobalSetupPlugin } from './globalSetup'
@@ -11,6 +11,11 @@ import { CSSEnablerPlugin } from './cssEnabler'
 
 export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest()): Promise<VitePlugin[]> {
   let haveStarted = false
+  let startOptionKeys: string[] = [];
+
+  if (!haveStarted) {
+    startOptionKeys = Object.keys(options);
+  }
 
   async function UIPlugin() {
     await ensurePackageInstalled('@vitest/ui', ctx.config?.root || options.root || process.cwd())
@@ -100,6 +105,9 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
         const viteConfigTest = (viteConfig.test as any) || {}
         if (viteConfigTest.watch === false)
           viteConfigTest.run = true
+
+        // when the test config changes, the vite server will restart, but `options` will memorize the previous inline config
+        clearInlineConfigTest(options, startOptionKeys);
 
         // viteConfig.test is final now, merge it for real
         options = deepMerge(
