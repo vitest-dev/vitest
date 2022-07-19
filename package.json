@@ -23,7 +23,7 @@
     "test:run": "vitest run -r test/core",
     "test:all": "cross-env CI=true pnpm -r --stream run test --allowOnly",
     "test:ci": "cross-env CI=true pnpm -r --stream --filter !test-fails --filter !test-browser run test --allowOnly",
-    "test:ci:no-threads": "cross-env CI=true pnpm -r --stream --filter !test-fails --filter !test-browser run test --allowOnly --no-threads",
+    "test:ci:single-thread": "cross-env CI=true pnpm -r --stream --filter !test-fails run test --allowOnly --no-threads",
     "typecheck": "tsc --noEmit",
     "ui:build": "vite build packages/ui",
     "ui:dev": "vite packages/ui",
