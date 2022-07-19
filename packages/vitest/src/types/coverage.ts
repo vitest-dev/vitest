@@ -18,6 +18,7 @@ export type CoverageReporter =
 export type CoverageOptions =
   | NullCoverageOptions & { provider?: null }
   | C8Options & { provider?: 'c8' }
+  | IstanbulOptions & { provider?: 'istanbul' }
 
 interface BaseCoverageOptions {
   /**
@@ -45,10 +46,49 @@ interface BaseCoverageOptions {
    * Directory to write coverage report to
    */
   reportsDirectory?: string
+
+  /**
+   * Reporters
+   *
+   * @default 'text'
+   */
+  reporter?: Arrayable<CoverageReporter>
 }
 
 export interface NullCoverageOptions extends BaseCoverageOptions {
   enabled: false
+}
+
+export interface IstanbulOptions extends BaseCoverageOptions {
+  /* Report boolean value of logical expressions. (optional, default false) */
+  reportLogic?: boolean
+
+  /* Preserve comments in output. (optional, default false) */
+  preserveComments?: boolean
+
+  /* Generate compact code. (optional, default true) */
+  compact?: boolean
+
+  /* Set to true to instrument ES6 modules. (optional, default false) */
+  esModules?: boolean
+
+  /* Set to true to allow return statements outside of functions. (optional, default false) */
+  autoWrap?: boolean
+
+  /* Set to true to produce a source map for the instrumented code. (optional, default false) */
+  produceSourceMap?: boolean
+
+  /* Set to array of class method names to ignore for coverage. (optional, default []) */
+  ignoreClassMethods?: string[]
+
+  /* A callback function that is called when a source map URL. is found in the original code. This function is called with the source file name and the source map URL. (optional, default null) */
+  sourceMapUrlCallback?: Function
+
+  /* Turn debugging on. (optional, default false) */
+  debug?: boolean
+
+  /* Set babel parser plugins, see @istanbuljs/schema for defaults. */
+  parserPlugins?: string[]
 }
 
 export interface C8Options extends BaseCoverageOptions {
@@ -58,12 +98,6 @@ export interface C8Options extends BaseCoverageOptions {
    * @default false
    */
   allowExternal?: any
-  /**
-   * Reporters
-   *
-   * @default 'text'
-   */
-  reporter?: Arrayable<CoverageReporter>
   /**
    * Exclude coverage under /node_modules/
    *
