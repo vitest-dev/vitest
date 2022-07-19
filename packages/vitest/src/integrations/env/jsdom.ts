@@ -1,5 +1,4 @@
-// todo@web-runner: omit JSDOMOptions, browser will fail
-import type { Environment/* , JSDOMOptions */ } from '../../types'
+import type { Environment } from '../../types'
 import { populateGlobal } from './utils'
 
 export default <Environment>({
