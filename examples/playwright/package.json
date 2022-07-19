@@ -1,0 +1,16 @@
+{
+  "name": "@vitest/example-playwright",
+  "private": true,
+  "scripts": {
+    "build": "vite build",
+    "test": "vite build && vitest",
+    "test:ui": "vite build && vitest --ui"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.23.4",
+    "@vitest/ui": "latest",
+    "playwright": "^1.23.4",
+    "vite": "^2.9.9",
+    "vitest": "latest"
+  }
+}
