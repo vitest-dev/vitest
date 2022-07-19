@@ -262,6 +262,10 @@ exports[`json reporter (no outputFile entry) 1`] = `
             "expected 2.23606797749979 to equal 2",
           ],
           "fullName": "suite inner suite Math.sqrt()",
+          "location": {
+            "column": 32,
+            "line": 8,
+          },
           "status": "failed",
           "title": "Math.sqrt()",
         },
@@ -380,6 +384,10 @@ exports[`json reporter 1`] = `
             "expected 2.23606797749979 to equal 2",
           ],
           "fullName": "suite inner suite Math.sqrt()",
+          "location": {
+            "column": 32,
+            "line": 8,
+          },
           "status": "failed",
           "title": "Math.sqrt()",
         },
@@ -504,7 +512,11 @@ exports[`json reporter with outputFile 2`] = `
           \\"duration\\": 1.4422860145568848,
           \\"failureMessages\\": [
             \\"expected 2.23606797749979 to equal 2\\"
-          ]
+          ],
+          \\"location\\": {
+            \\"line\\": 8,
+            \\"column\\": 32
+          }
         },
         {
           \\"ancestorTitles\\": [
@@ -627,7 +639,11 @@ exports[`json reporter with outputFile in non-existing directory 2`] = `
           \\"duration\\": 1.4422860145568848,
           \\"failureMessages\\": [
             \\"expected 2.23606797749979 to equal 2\\"
-          ]
+          ],
+          \\"location\\": {
+            \\"line\\": 8,
+            \\"column\\": 32
+          }
         },
         {
           \\"ancestorTitles\\": [
@@ -750,7 +766,11 @@ exports[`json reporter with outputFile object 2`] = `
           \\"duration\\": 1.4422860145568848,
           \\"failureMessages\\": [
             \\"expected 2.23606797749979 to equal 2\\"
-          ]
+          ],
+          \\"location\\": {
+            \\"line\\": 8,
+            \\"column\\": 32
+          }
         },
         {
           \\"ancestorTitles\\": [
@@ -873,7 +893,11 @@ exports[`json reporter with outputFile object in non-existing directory 2`] = `
           \\"duration\\": 1.4422860145568848,
           \\"failureMessages\\": [
             \\"expected 2.23606797749979 to equal 2\\"
-          ]
+          ],
+          \\"location\\": {
+            \\"line\\": 8,
+            \\"column\\": 32
+          }
         },
         {
           \\"ancestorTitles\\": [
