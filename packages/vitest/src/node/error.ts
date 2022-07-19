@@ -221,7 +221,7 @@ export function generateCodeFrame(
         if (lineLength > 200)
           return ''
 
-        res.push(lineNo(j + 1) + cliTruncate(lines[j], columns - 5 - indent))
+        res.push(lineNo(j + 1) + cliTruncate(lines[j].replace(/\t/g, ' '), columns - 5 - indent))
 
         if (j === i) {
           // push underline
