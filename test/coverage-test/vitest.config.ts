@@ -9,6 +9,10 @@ export default defineConfig({
     MY_CONSTANT: '"my constant"',
   },
   test: {
+    // coverage: {
+    //   enabled: true,
+    //   provider: 'istanbul',
+    // },
     threads: !!process.env.THREAD,
     include: [
       'test/*.test.ts',

@@ -315,9 +315,17 @@ async function startTestsNode(paths: string[], config: ResolvedConfig) {
 
   await runFiles(files, config)
 
-  // TODO: Not sure if this will work. Previously v8.takeCoverage() was called
+  // TODO: How could this __VITEST_COVERAGE__ specific logic be passed from pool.ts to here
+  // so that it would only be declared inside coverage/istanbul.ts?
+  // Passing globalThis to onFilesRun does not work
+
+  // @ts-expect-error -- untyped global
+  const coverage = globalThis.__VITEST_COVERAGE__
+
+  // TODO: Not sure if this will work for c8. Previously v8.takeCoverage() was called
   // here inside the worker. Now, this will simply inform the main process to call it.
-  rpc().onFilesRun()
+
+  rpc().onFilesRun(coverage)
 
   await getSnapshotClient().saveCurrent()
 
