@@ -29,6 +29,8 @@ export function createPool(ctx: Vitest): WorkerPool {
   const maxThreads = ctx.config.maxThreads ?? threadsCount
   const minThreads = ctx.config.minThreads ?? threadsCount
 
+  const conditions = ctx.server.config.resolve.conditions?.flatMap(c => ['-C', c])
+
   const options: TinypoolOptions = {
     filename: workerPath,
     // TODO: investigate further
@@ -41,7 +43,7 @@ export function createPool(ctx: Vitest): WorkerPool {
     execArgv: [
       '--experimental-loader',
       loaderPath,
-      ...ctx.server.config.resolve.conditions?.flatMap(c => ['-C', c]) ?? [],
+      ...conditions || [],
       '--no-warnings',
     ],
   }

@@ -1,44 +1,8 @@
 import { pathToFileURL } from 'url'
 import { isNodeBuiltin } from 'mlly'
 import { normalizeModuleId } from 'vite-node/utils'
-import type { Awaitable } from '../types'
 import { getWorkerState } from '../utils'
-
-interface ModuleContext {
-  conditions: string[]
-  parentURL?: string
-}
-
-enum ModuleFormat {
-  Builtin = 'builtin',
-  Commonjs = 'commonjs',
-  Json = 'json',
-  Module = 'module',
-  Wasm = 'wasm',
-}
-
-interface ResolveResult {
-  url: string
-  format?: ModuleFormat
-}
-
-interface Resolver {
-  (url: string, context: ModuleContext, next: Resolver): Awaitable<ResolveResult>
-}
-
-interface LoaderContext {
-  format: ModuleFormat
-  importAssertions: Record<string, string>
-}
-
-interface LoaderResult {
-  format: ModuleFormat
-  source: string | ArrayBuffer | SharedArrayBuffer | Uint8Array
-}
-
-interface Loader {
-  (url: string, context: LoaderContext, next: Loader): Awaitable<LoaderResult>
-}
+import type { Loader, Resolver } from '../types/loader'
 
 // apply transformations only to libraries
 // inline code preccessed by vite-node
