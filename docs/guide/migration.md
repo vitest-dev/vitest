@@ -1,3 +1,7 @@
+---
+title: Migration Guide | Guide
+---
+
 # Migration Guide
 
 ## Migrating from Jest

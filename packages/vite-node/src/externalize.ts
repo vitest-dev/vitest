@@ -4,11 +4,11 @@ import type { DepsHandlingOptions } from './types'
 import { slash } from './utils'
 
 const ESM_EXT_RE = /\.(es|esm|esm-browser|esm-bundler|es6|module)\.js$/
-const ESM_FOLDER_RE = /\/esm\/(.*\.js)$/
+const ESM_FOLDER_RE = /\/(es|esm)\/(.*\.js)$/
 
 const defaultInline = [
   /virtual:/,
-  /\.ts$/,
+  /\.[mc]?ts$/,
 ]
 
 const depsExternal = [
@@ -32,6 +32,7 @@ export function guessCJSversion(id: string): string | undefined {
     for (const i of [
       id.replace(ESM_FOLDER_RE, '/umd/$1'),
       id.replace(ESM_FOLDER_RE, '/cjs/$1'),
+      id.replace(ESM_FOLDER_RE, '/lib/$1'),
       id.replace(ESM_FOLDER_RE, '/$1'),
     ]) {
       if (existsSync(i))

@@ -65,8 +65,8 @@ export const GlobalSetupPlugin = (ctx: Vitest): Plugin => {
         }
       }
       catch (e) {
-        ctx.error(`\n${c.red(divider(c.bold(c.inverse(' Error during global setup '))))}`)
-        await ctx.printError(e)
+        ctx.logger.error(`\n${c.red(divider(c.bold(c.inverse(' Error during global setup '))))}`)
+        await ctx.logger.printError(e)
         process.exit(1)
       }
     },
@@ -78,7 +78,7 @@ export const GlobalSetupPlugin = (ctx: Vitest): Plugin => {
             await globalSetupFile.teardown?.()
           }
           catch (error) {
-            console.error(`error during global teardown of ${globalSetupFile.file}`, error)
+            ctx.logger.error(`error during global teardown of ${globalSetupFile.file}`, error)
           }
         }
       }

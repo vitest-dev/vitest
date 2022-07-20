@@ -13,8 +13,13 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
   let haveStarted = false
 
   async function UIPlugin() {
-    await ensurePackageInstalled('@vitest/ui')
+    await ensurePackageInstalled('@vitest/ui', ctx.config?.root || options.root || process.cwd())
     return (await import('@vitest/ui')).default(options.uiBase)
+  }
+
+  async function BrowserPlugin() {
+    await ensurePackageInstalled('@vitest/browser', ctx.config?.root || options.root || process.cwd())
+    return (await import('@vitest/browser')).default('/')
   }
 
   return [
@@ -66,15 +71,19 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
 
         (options as ResolvedConfig).defines = defines
 
-        const open = preOptions.ui && preOptions.open
-          ? preOptions.uiBase ?? '/__vitest__/'
-          : undefined
+        let open: string | boolean | undefined
+
+        if (preOptions.ui && preOptions.open)
+          open = preOptions.uiBase ?? '/__vitest__/'
+        else if (preOptions.browser)
+          open = '/'
 
         const config: ViteConfig = {
           resolve: {
             // by default Vite resolves `module` field, which not always a native ESM module
             // setting this option can bypass that and fallback to cjs version
             mainFields: [],
+            alias: preOptions.alias,
           },
           server: {
             ...preOptions.api,
@@ -85,13 +94,18 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
             hmr: false,
             preTransformRequests: false,
           },
+        }
+
+        if (!options.browser) {
           // disable deps optimization
-          cacheDir: undefined,
-          optimizeDeps: {
-            // experimental in Vite >2.9.2, entries remains to help with older versions
-            disabled: true,
-            entries: [],
-          },
+          Object.assign(config, {
+            cacheDir: undefined,
+            optimizeDeps: {
+              // experimental in Vite >2.9.2, entries remains to help with older versions
+              disabled: true,
+              entries: [],
+            },
+          })
         }
 
         return config
@@ -100,6 +114,9 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
         const viteConfigTest = (viteConfig.test as any) || {}
         if (viteConfigTest.watch === false)
           viteConfigTest.run = true
+
+        if ('alias' in viteConfigTest)
+          delete viteConfigTest.alias
 
         // viteConfig.test is final now, merge it for real
         options = deepMerge(
@@ -133,7 +150,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
             (await import('../../api/setup')).setup(ctx)
         }
         catch (err) {
-          ctx.printError(err, true)
+          ctx.logger.printError(err, true)
           process.exit(1)
         }
 
@@ -145,6 +162,9 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
     EnvReplacerPlugin(),
     MocksPlugin(),
     GlobalSetupPlugin(ctx),
+    ...(options.browser
+      ? await BrowserPlugin()
+      : []),
     CSSEnablerPlugin(ctx),
     options.ui
       ? await UIPlugin()

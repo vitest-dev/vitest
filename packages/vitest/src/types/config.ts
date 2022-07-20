@@ -1,8 +1,8 @@
-import type { CommonServerOptions } from 'vite'
+import type { AliasOptions, CommonServerOptions } from 'vite'
 import type { PrettyFormatOptions } from 'pretty-format'
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import type { BuiltinReporters } from '../node/reporters'
-import type { TestSequencerContructor } from '../node/sequencers/types'
+import type { TestSequencerConstructor } from '../node/sequencers/types'
 import type { C8Options, ResolvedC8Options } from './coverage'
 import type { JSDOMOptions } from './jsdom-options'
 import type { Reporter } from './reporter'
@@ -270,6 +270,12 @@ export interface InlineConfig {
   ui?: boolean
 
   /**
+   * Use in browser environment
+   * @experimental
+   */
+  browser?: boolean
+
+  /**
    * Open UI automatically.
    *
    * @default true
@@ -381,7 +387,7 @@ export interface InlineConfig {
      * your custom sequencer from `BaseSequencer` from `vitest/node`.
      * @default BaseSequencer
      */
-    sequencer?: TestSequencerContructor
+    sequencer?: TestSequencerConstructor
     /**
      * Should tests run in random order.
      * @default false
@@ -393,6 +399,13 @@ export interface InlineConfig {
      */
     seed?: number
   }
+
+  /**
+   * Specifies an `Object`, or an `Array` of `Object`,
+   * which defines aliases used to replace values in `import` or `require` statements.
+   * Will be merged with the default aliases inside `resolve.alias`.
+   */
+  alias?: AliasOptions
 }
 
 export interface UserConfig extends InlineConfig {
@@ -465,7 +478,7 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
   } | false
 
   sequence: {
-    sequencer: TestSequencerContructor
+    sequencer: TestSequencerConstructor
     shuffle?: boolean
     seed?: number
   }

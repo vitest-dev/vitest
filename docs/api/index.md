@@ -59,7 +59,7 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
 
   ```ts
   import { assert, test } from 'vitest'
-  
+
   const isDev = process.env.NODE_ENV === 'development'
 
   test.skipIf(isDev)('prod only test', () => {
@@ -76,7 +76,7 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
 
   ```ts
   import { assert, test } from 'vitest'
-  
+
   const isDev = process.env.NODE_ENV === 'development'
 
   test.runIf(isDev)('dev only test', () => {
@@ -1701,7 +1701,7 @@ These functions allow you to hook into the life cycle of tests to avoid repeatin
   beforeAll(async () => {
     // called once before all tests run
     await startMocking()
-  
+
     // clean up function, called once after all tests run
     return async () => {
       await stopMocking()
@@ -1758,6 +1758,10 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
     .advanceTimersToNextTimer() // log 2
     .advanceTimersToNextTimer() // log 3
   ```
+
+### vi.clearAllMocks
+
+  Will call [`.mockClear()`](/api/#mockclear) on all spies. This will clear mock history, but not reset its implementation to the default one.
 
 ### vi.clearAllTimers
 
@@ -1823,25 +1827,6 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
   - If `__mocks__` folder with file of the same name exist, all imports will return its exports. For example, `vi.mock('axios')` with `<root>/__mocks__/axios.ts` folder will return everything exported from `axios.ts`.
   - If there is no `__mocks__` folder or a file with the same name inside, will call original module and mock it. (For the rules applied, see [algorithm](/guide/mocking#automocking-algorithm).)
 
-### vi.setSystemTime
-
-- **Type**: `(date: string | number | Date) => void`
-
-  Sets current date to the one that was passed. All `Date` calls will return this date.
-
-  Useful if you need to test anything that depends on the current date - for example [luxon](https://github.com/moment/luxon/) calls inside your code.
-
-  ```ts
-  const date = new Date(1998, 11, 19)
-
-  vi.useFakeTimers()
-  vi.setSystemTime(date)
-
-  expect(Date.now()).toBe(date.valueOf())
-
-  vi.useRealTimers()
-  ```
-
 ### vi.mocked
 
 - **Type**: `<T>(obj: T, deep?: boolean) => MaybeMockedDeep<T>`
@@ -1881,6 +1866,10 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 
   Imports a module with all of its properties (including nested properties) mocked. Follows the same rules that [`vi.mock`](#vi-mock) follows. For the rules applied, see [algorithm](/guide/mocking#automocking-algorithm).
 
+### vi.resetAllMocks
+
+  Will call [`.mockReset()`](/api/#mockreset) on all spies. This will clear mock history and reset its implementation to an empty function (will return `undefined`).
+
 ### vi.resetModules
 
 - **Type**: `() => Vitest`
@@ -1905,6 +1894,10 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
     expect(mod.getlocalState()).toBe('old value')
   })
   ```
+
+### vi.restoreAllMocks
+
+  Will call [`.mockRestore()`](/api/#mockrestore) on all spies. This will clear mock history and reset its implementation to the original one.
 
 ### vi.restoreCurrentDate
 
@@ -1949,6 +1942,25 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
   setInterval(() => console.log(++i), 50)
 
   vi.runOnlyPendingTimers()
+  ```
+
+### vi.setSystemTime
+
+- **Type**: `(date: string | number | Date) => void`
+
+  Sets current date to the one that was passed. All `Date` calls will return this date.
+
+  Useful if you need to test anything that depends on the current date - for example [luxon](https://github.com/moment/luxon/) calls inside your code.
+
+  ```ts
+  const date = new Date(1998, 11, 19)
+
+  vi.useFakeTimers()
+  vi.setSystemTime(date)
+
+  expect(Date.now()).toBe(date.valueOf())
+
+  vi.useRealTimers()
   ```
 
 ### vi.spyOn

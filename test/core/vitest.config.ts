@@ -56,5 +56,13 @@ export default defineConfig({
     sequence: {
       seed: 101,
     },
+    alias: [
+      {
+        find: 'test-alias',
+        replacement: '',
+        // vitest doesn't crash because function is defined
+        customResolver: () => resolve(__dirname, 'src', 'aliased-mod.ts'),
+      },
+    ],
   },
 })

@@ -1,3 +1,7 @@
+---
+title: Command Line Interface | Guide
+---
+
 # Command Line Interface
 
 ## Commands
@@ -63,6 +67,7 @@ vitest related /src/index.ts /src/hello-world.js
 | `--mode <name>` | Override Vite mode (default: `test`) |
 | `--globals` | Inject APIs globally |
 | `--dom` | Mock browser api with happy-dom |
+| `--browser` | Run tests in browser |
 | `--environment <env>` | Runner environment (default: `node`) |
 | `--passWithNoTests` | Pass when no tests found |
 | `--allowOnly` | Allow tests and suites that are marked as `only` (default: false in CI, true otherwise) |

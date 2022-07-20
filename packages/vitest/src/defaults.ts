@@ -8,14 +8,16 @@ export const defaultExclude = ['**/node_modules/**', '**/dist/**', '**/cypress/*
 
 const defaultCoverageExcludes = [
   'coverage/**',
+  'dist/**',
   'packages/*/test{,s}/**',
   '**/*.d.ts',
   'cypress/**',
   'test{,s}/**',
   'test{,-*}.{js,cjs,mjs,ts,tsx,jsx}',
   '**/*{.,-}test.{js,cjs,mjs,ts,tsx,jsx}',
+  '**/*{.,-}spec.{js,cjs,mjs,ts,tsx,jsx}',
   '**/__tests__/**',
-  '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc}.config.{js,cjs,mjs,ts}',
+  '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress}.config.{js,cjs,mjs,ts}',
   '**/.{eslint,mocha,prettier}rc.{js,cjs,yml}',
 ]
 

@@ -1,4 +1,5 @@
 ---
+title: Features | Guide
 outline: deep
 ---
 

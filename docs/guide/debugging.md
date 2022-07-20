@@ -1,3 +1,7 @@
+---
+title: Debugging | Guide
+---
+
 # Debugging
 
 ## VSCode

@@ -1,6 +1,8 @@
+// eslint-disable-next-line no-restricted-imports
+import { relative as relativeBrowser } from 'path'
 import c from 'picocolors'
 import { isPackageExists } from 'local-pkg'
-import { resolve } from 'pathe'
+import { relative as relativeNode } from 'pathe'
 import type { Suite, Task } from '../types'
 import { getWorkerState } from '../utils/global'
 import { getNames } from './tasks'
@@ -10,9 +12,12 @@ export * from './base'
 export * from './global'
 export * from './timers'
 
-export const isNode = typeof process !== 'undefined' && typeof process.platform !== 'undefined'
+export const isNode = typeof process < 'u' && typeof process.stdout < 'u' && !process.versions?.deno && !globalThis.window
+// export const isNode = typeof process !== 'undefined' && typeof process.platform !== 'undefined'
 export const isBrowser = typeof window !== 'undefined'
 export const isWindows = isNode && process.platform === 'win32'
+
+export const relativePath = isBrowser ? relativeBrowser : relativeNode
 
 /**
  * Partition in tasks groups by consecutive concurrent
@@ -58,10 +63,12 @@ export function getFullName(task: Task) {
 
 export async function ensurePackageInstalled(
   dependency: string,
-  promptInstall = !process.env.CI && process.stdout.isTTY,
+  root: string,
 ) {
-  if (isPackageExists(dependency))
+  if (isPackageExists(dependency, { paths: [root] }))
     return true
+
+  const promptInstall = !process.env.CI && process.stdout.isTTY
 
   process.stderr.write(c.red(`${c.inverse(c.red(' MISSING DEP '))} Can not find dependency '${dependency}'\n\n`))
 
@@ -127,6 +134,8 @@ export function getCallLastIndex(code: string) {
   }
   return null
 }
+
+const resolve = isNode ? relativeNode : relativeBrowser
 
 export { resolve as resolvePath }
 

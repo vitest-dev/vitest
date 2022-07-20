@@ -109,6 +109,12 @@ This might potentially cause some misalignment if a package has different logic 
 
 Interpret CJS module's default as named exports.
 
+### alias
+
+- **Type:** `Record<string, string> | Array<{ find: string | RegExp, replacement: string, customResolver?: ResolverFunction | ResolverObject }>`
+
+Define custom aliases when running inside tests. They will be merged with aliases from `resolve.alias`.
+
 ### globals
 
 - **Type:** `boolean`
