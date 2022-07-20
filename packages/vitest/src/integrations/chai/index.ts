@@ -1,4 +1,4 @@
-import chai, { util } from 'chai'
+import * as chai from 'chai'
 import './setup'
 import type { Test } from '../../types'
 import { getFullName } from '../../utils'
@@ -57,8 +57,8 @@ export function createExpect(test?: Test) {
     })
   }
 
-  util.addMethod(expect, 'assertions', assertions)
-  util.addMethod(expect, 'hasAssertions', hasAssertions)
+  chai.util.addMethod(expect, 'assertions', assertions)
+  chai.util.addMethod(expect, 'hasAssertions', hasAssertions)
 
   return expect
 }

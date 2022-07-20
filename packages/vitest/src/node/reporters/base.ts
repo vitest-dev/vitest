@@ -1,8 +1,7 @@
 import { performance } from 'perf_hooks'
-import { relative } from 'pathe'
 import c from 'picocolors'
 import type { ErrorWithDiff, File, Reporter, Task, TaskResultPack, UserConsoleLog } from '../../types'
-import { clearInterval, getFullName, getSuites, getTests, hasFailed, hasFailedSnapshot, isNode, setInterval } from '../../utils'
+import { clearInterval, getFullName, getSuites, getTests, hasFailed, hasFailedSnapshot, isNode, relativePath, setInterval } from '../../utils'
 import type { Vitest } from '../../node'
 import { F_RIGHT } from '../../utils/figures'
 import { divider, getStateString, getStateSymbol, pointer, renderSnapshotSummary } from './renderers/utils'
@@ -42,7 +41,7 @@ export abstract class BaseReporter implements Reporter {
   }
 
   relative(path: string) {
-    return relative(this.ctx.config.root, path)
+    return relativePath(this.ctx.config.root, path)
   }
 
   async onFinished(files = this.ctx.state.getFiles(), errors = this.ctx.state.getUnhandledErrors()) {

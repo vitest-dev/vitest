@@ -15,7 +15,6 @@ import type { WorkerPool } from './pool'
 import { createReporters } from './reporters/utils'
 import { StateManager } from './state'
 import { resolveConfig } from './config'
-import { VitestGit } from './git'
 import { Logger } from './logger'
 import { VitestCache } from './cache'
 
@@ -141,7 +140,7 @@ export class Vitest {
     if (this.config.coverage.enabled)
       await reportCoverage(this)
 
-    if (this.config.watch)
+    if (this.config.watch && !this.config.browser)
       await this.report('onWatcherStart')
   }
 
@@ -171,6 +170,7 @@ export class Vitest {
 
   async filterTestsBySource(tests: string[]) {
     if (this.config.changed && !this.config.related) {
+      const { VitestGit } = await import('./git')
       const vitestGit = new VitestGit(this.config.root)
       const related = await vitestGit.findChangedFiles({
         changedSince: this.config.changed,
@@ -237,8 +237,8 @@ export class Vitest {
       if (hasFailed(files))
         process.exitCode = 1
 
-      await this.report('onFinished', files, this.state.getUnhandledErrors())
-
+      if (!this.config.browser)
+        await this.report('onFinished', files, this.state.getUnhandledErrors())
       this.cache.results.updateResults(files)
       await this.cache.results.writeToCache()
     })()
@@ -252,7 +252,8 @@ export class Vitest {
   async rerunFiles(files: string[] = this.state.getFilepaths(), trigger?: string) {
     await this.report('onWatcherRerun', files, trigger)
     await this.runFiles(files)
-    await this.report('onWatcherStart')
+    if (!this.config.browser)
+      await this.report('onWatcherStart')
   }
 
   async changeNamePattern(pattern: string, files: string[] = this.state.getFilepaths(), trigger?: string) {
@@ -329,7 +330,8 @@ export class Vitest {
       if (this.config.coverage.enabled)
         await reportCoverage(this)
 
-      await this.report('onWatcherStart')
+      if (!this.config.browser)
+        await this.report('onWatcherStart')
     }, WATCHER_DEBOUNCE)
   }
 

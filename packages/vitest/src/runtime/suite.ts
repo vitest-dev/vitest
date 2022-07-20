@@ -1,4 +1,4 @@
-import { format } from 'util'
+import util from 'util'
 import type { File, RunMode, Suite, SuiteAPI, SuiteCollector, SuiteFactory, SuiteHooks, Task, Test, TestAPI, TestFunction } from '../types'
 import { getWorkerState, isObject, noop } from '../utils'
 import { createChainable } from './chain'
@@ -24,7 +24,7 @@ function formatTitle(template: string, items: any[], idx: number) {
   }
 
   const count = template.split('%').length - 1
-  let formatted = format(template, ...items.slice(0, count))
+  let formatted = util.format(template, ...items.slice(0, count))
   if (isObject(items[0])) {
     formatted = formatted.replace(/\$([$\w_]+)/g, (_, key) => {
       return items[0][key]
