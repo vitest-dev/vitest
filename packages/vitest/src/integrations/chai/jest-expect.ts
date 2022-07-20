@@ -1,5 +1,5 @@
 import c from 'picocolors'
-import { AssertionError } from 'chai'
+import { AssertionError, util as chaiUtil } from 'chai'
 import type { EnhancedSpy } from '../spy'
 import { isMockFunction } from '../spy'
 import { addSerializer } from '../snapshot/port/plugins'
@@ -9,7 +9,6 @@ import { unifiedDiff } from '../../node/diff'
 import type { ChaiPlugin, MatcherState } from '../../types/chai'
 import { arrayBufferEquality, generateToBeMessage, iterableEquality, equals as jestEquals, sparseArrayEquality, subsetEquality, typeEquality } from './jest-utils'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
-import { Any, Anything } from './jest-asymmetric-matchers'
 import { stringify } from './jest-matcher-utils'
 import { MATCHERS_OBJECT } from './constants'
 
@@ -302,15 +301,18 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     if (Array.isArray(args[0]))
       args[0] = args[0].map(key => key.replace(/([.[\]])/g, '\\$1')).join('.')
 
-    const [propertyName, propertyValue] = args
+    const actual = this._obj
+    const [propertyName, expected] = args
+    const { value, exists } = chaiUtil.getPathInfo(actual, propertyName)
+    const pass = exists && (args.length === 1 || jestEquals(expected, value))
 
-    if (propertyValue instanceof Anything)
-      return this.have.deep.nested.property(propertyName)
-
-    if (propertyValue instanceof Any)
-      return this.have.deep.nested.property(propertyName).that.is.a(propertyValue.getExpectedType())
-
-    return this.have.deep.nested.property(...args as [property: string, value: any])
+    return this.assert(
+      pass,
+      'expected #{this} to have property #{exp}',
+      'expected #{this} to not have property #{exp}',
+      expected,
+      actual,
+    )
   })
   def('toBeCloseTo', function (received: number, precision = 2) {
     const expected = this._obj
