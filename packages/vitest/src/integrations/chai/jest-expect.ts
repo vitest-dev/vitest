@@ -1,5 +1,5 @@
 import c from 'picocolors'
-import { AssertionError, util as chaiUtil } from 'chai'
+import { AssertionError } from 'chai'
 import type { EnhancedSpy } from '../spy'
 import { isMockFunction } from '../spy'
 import { addSerializer } from '../snapshot/port/plugins'
@@ -303,7 +303,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
 
     const actual = this._obj
     const [propertyName, expected] = args
-    const { value, exists } = chaiUtil.getPathInfo(actual, propertyName)
+    const { value, exists } = utils.getPathInfo(actual, propertyName)
     const pass = exists && (args.length === 1 || jestEquals(expected, value))
 
     return this.assert(
