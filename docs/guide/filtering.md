@@ -1,8 +1,8 @@
 ---
-title: Tests Filtering | Guide
+title: Test Filtering | Guide
 ---
 
-# Tests Filtering
+# Test Filtering
 
 Filtering, timeouts, concurrent for suite and tests
 
@@ -39,7 +39,7 @@ import { beforeAll } from 'vitest'
 beforeAll(async () => { /* ... */ }, 1000)
 ```
 
-## Skipping suites and tests
+## Skipping Suites and Tests
 
 Use `.skip` to avoid running certain suites or tests
 
@@ -61,7 +61,7 @@ describe('suite', () => {
 })
 ```
 
-## Selecting suites and tests to run
+## Selecting Suites and Tests to Run
 
 Use `.only` to only run certain suites or tests
 
@@ -88,7 +88,7 @@ describe('another suite', () => {
 })
 ```
 
-## Unimplemented suites and tests
+## Unimplemented Suites and Tests
 
 Use `.todo` to stub suites and tests that should be implemented
 

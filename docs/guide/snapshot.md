@@ -4,13 +4,13 @@ title: Snapshot | Guide
 
 # Snapshot
 
-Snapshot tests are a very useful tool whenever you want to make sure the output of your functions not change unexpectedly.
+Snapshot tests are a very useful tool whenever you want to make sure the output of your functions does not change unexpectedly.
 
 When using snapshot, Vitest will take a snapshot of the given value, then compares it to a reference snapshot file stored alongside the test. The test will fail if the two snapshots do not match: either the change is unexpected, or the reference snapshot needs to be updated to the new version of the result.
 
 ## Use Snapshots
 
-To snapshoting a value, you can use the [`toMatchSnapshot()`](/api/#tomatchsnapshot) from `expect()` API:
+To snapshot a value, you can use the [`toMatchSnapshot()`](/api/#tomatchsnapshot) from `expect()` API:
 
 ```ts
 import { expect, it } from 'vitest'
@@ -55,11 +55,11 @@ it('toUpperCase', () => {
 })
 ```
 
-This allows you to see the expect output directly without jumpping across different files.
+This allows you to see the expect output directly without jumping across different files.
 
 ## Updating Snapshots
 
-When the received value doesn't match with the snapshot, the test would fail and show you the difference between them. When the snapshot change is expected, you maybe want to update the snapshot from the current state.
+When the received value doesn't match with the snapshot, the test would fail and show you the difference between them. When the snapshot change is expected, you may want to update the snapshot from the current state.
 
 In watch mode, you can press `u` key in the terminal to update the failed snapshot directly.
 
@@ -71,7 +71,11 @@ vitest -u
 
 ## Image Snapshots
 
-It's also possible to snapshoting images using [`jest-image-snapshot`](https://github.com/americanexpress/jest-image-snapshot).
+It's also possible to snapshot images using [`jest-image-snapshot`](https://github.com/americanexpress/jest-image-snapshot).
+
+```bash
+npm i -D jest-image-snapshot
+```
 
 ```ts
 test('image snapshot', () => {
@@ -137,7 +141,7 @@ Vitest provides an almost compatible Snapshot feature with [Jest's](https://jest
 + // Vitest Snapshot v1
 ```
 
-This does not really affects the functionality but might affect your commit diff when migrating from Jest.
+This does not really affect the functionality but might affect your commit diff when migrating from Jest.
 
 #### 2. `printBasicPrototype` is default to `false`
 
@@ -173,7 +177,7 @@ test('snapshot', () => {
 })
 ```
 
-We believe this is a more reasonable default for readability and overall DX. If you still prefer Jest's behavior, you can change your config by:
+We believe this is a more reasonable default for readability and overall DX. If you still prefer Jest's behavior, you can change your config:
 
 ```ts
 // vitest.config.js

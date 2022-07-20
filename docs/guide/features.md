@@ -11,7 +11,7 @@ outline: deep
 
 Vite's config, transformers, resolvers, and plugins. Use the same setup from your app to run the tests.
 
-Learn more at [Configuring Vitest](/guide/#configuring-vitest)
+Learn more at [Configuring Vitest](/guide/#configuring-vitest).
 
 ## Watch Mode
 
@@ -19,29 +19,29 @@ Learn more at [Configuring Vitest](/guide/#configuring-vitest)
 $ vitest
 ```
 
-When you modify your source code or the test files, Vitest smartly searches the module graph and only rerun the related tests, [just like how HMR works in Vite!](https://twitter.com/antfu7/status/1468233216939245579)
+When you modify your source code or the test files, Vitest smartly searches the module graph and only reruns the related tests, [just like how HMR works in Vite!](https://twitter.com/antfu7/status/1468233216939245579)
 
 `vitest` starts in `watch mode` **by default in development environment** and `run mode` in CI environment (when `process.env.CI` presents) smartly. You can use `vitest watch` or `vitest run` to explicitly specify the desired mode.
 
 ## Common web idioms out-of-the-box
 
-Out-of-box ES Module / TypeScript / JSX support / PostCSS
+Out-of-the-box ES Module / TypeScript / JSX support / PostCSS
 
 ## Threads
 
-Workers multi-threading via [tinypool](https://github.com/Aslemammad/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina)), allowing tests to run simultaneously. Threads are enabled by default in Vitest, and can be disabled passing `--no-threads` in the CLI.
+Workers multi-threading via [tinypool](https://github.com/Aslemammad/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina)), allowing tests to run simultaneously. Threads are enabled by default in Vitest, and can be disabled by passing `--no-threads` in the CLI.
 
-Vitest also isolates each file's environment so env mutations in one file don't affect others. Isolation can be disabled by passing `--no-isolate` to the CLI (trading of correctness for run performance).
+Vitest also isolates each file's environment so env mutations in one file don't affect others. Isolation can be disabled by passing `--no-isolate` to the CLI (trading correctness for run performance).
 
 ## Test Filtering
 
-Vitest provided many ways to narrow down the tests to run to speed up and focus during the development.
+Vitest provided many ways to narrow down the tests to run in order to speed up testing so you can focus on development.
 
-Learn more about [Test Filtering](./filtering.md)
+Learn more about [Test Filtering](./filtering.md).
 
 ## Running tests concurrently
 
-Use `.concurrent` in consecutive tests to run them in parallel
+Use `.concurrent` in consecutive tests to run them in parallel.
 
 ```ts
 import { describe, it } from 'vitest'
@@ -54,7 +54,7 @@ describe('suite', () => {
 })
 ```
 
-If you use `.concurrent` in a suite, every tests in it will be run in parallel
+If you use `.concurrent` on a suite, every test in it will be run in parallel.
 
 ```ts
 import { describe, it } from 'vitest'
@@ -67,7 +67,7 @@ describe.concurrent('suite', () => {
 })
 ```
 
-You can also use `.skip`, `.only`, and `.todo` with concurrent suites and tests. Read more in the [API Reference](../api/#concurrent)
+You can also use `.skip`, `.only`, and `.todo` with concurrent suites and tests. Read more in the [API Reference](../api/#concurrent).
 
 ## Snapshot
 
@@ -82,17 +82,17 @@ it('renders correctly', () => {
 })
 ```
 
-Learn more at [Snapshot](/guide/snapshot)
+Learn more at [Snapshot](/guide/snapshot).
 
-## Chai and Jest expect compatibility
+## Chai and Jest `expect` compatibility
 
-[Chai](https://www.chaijs.com/) built-in for assertions plus [Jest expect](https://jestjs.io/docs/expect) compatible APIs
+[Chai](https://www.chaijs.com/) is built-in for assertions plus [Jest `expect`](https://jestjs.io/docs/expect)-compatible APIs.
 
-Notice that if you are using third-party libraries that add matchers, setting `test.globals` to `true` will provide better compatibility
+Notice that if you are using third-party libraries that add matchers, setting `test.globals` to `true` will provide better compatibility.
 
 ## Mocking
 
-[Tinyspy](https://github.com/Aslemammad/tinyspy) built-in for mocking with `jest` compatible APIs on `vi` object.
+[Tinyspy](https://github.com/Aslemammad/tinyspy) is built-in for mocking with `jest`-compatible APIs on `vi` object.
 
 ```ts
 import { expect, vi } from 'vitest'
@@ -132,11 +132,11 @@ export default defineConfig({
 })
 ```
 
-Learn more at [Mocking](/guide/mocking)
+Learn more at [Mocking](/guide/mocking).
 
 ## Coverage
 
-Vitest supports Native code coverage via [c8](https://github.com/bcoe/c8)
+Vitest supports Native code coverage via [c8](https://github.com/bcoe/c8).
 
 ```json
 {
@@ -164,9 +164,9 @@ export default defineConfig({
 
 ## In-source testing
 
-Vitest also provides a way to run tests with in your source code along with the implementation, similar to [Rust's module tests](https://doc.rust-lang.org/book/ch11-03-test-organization.html#the-tests-module-and-cfgtest).
+Vitest also provides a way to run tests within your source code along with the implementation, similar to [Rust's module tests](https://doc.rust-lang.org/book/ch11-03-test-organization.html#the-tests-module-and-cfgtest).
 
-This makes the tests share the same closure as the implementations and able to test against private states without exporting. Meanwhile, it also brings the closer feedback loop for development.
+This makes the tests share the same closure as the implementations and able to test against private states without exporting. Meanwhile, it also brings the feedback loop closer for development.
 
 ```ts
 // src/index.ts
@@ -187,4 +187,4 @@ if (import.meta.vitest) {
 }
 ```
 
-Learn more at [In-source testing](/guide/in-source)
+Learn more at [In-source testing](/guide/in-source).
