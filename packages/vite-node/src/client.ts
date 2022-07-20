@@ -23,7 +23,20 @@ export const DEFAULT_REQUEST_STUBS = {
         on: () => {},
       }
     },
-    updateStyle() {},
+    updateStyle(id: string, css: string) {
+      if (typeof document === 'undefined')
+        return
+
+      const element = document.getElementById(id)
+      if (element)
+        element.remove()
+
+      const head = document.querySelector('head')
+      const style = document.createElement('style')
+      style.id = id
+      style.innerHTML = css
+      head?.appendChild(style)
+    },
   },
 }
 
