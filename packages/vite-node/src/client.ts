@@ -33,6 +33,7 @@ export const DEFAULT_REQUEST_STUBS = {
 
       const head = document.querySelector('head')
       const style = document.createElement('style')
+      style.setAttribute('type', 'text/css')
       style.id = id
       style.innerHTML = css
       head?.appendChild(style)
