@@ -313,6 +313,13 @@ Default timeout of a test in milliseconds
 
 Default timeout of a hook in milliseconds
 
+### teardownTimeout
+
+- **Type:** `number`
+- **Default:** `1000`
+
+Default timeout to wait for close when Vitest shuts down, in milliseconds
+
 ### silent
 
 - **Type:** `boolean`
