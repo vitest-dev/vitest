@@ -133,7 +133,7 @@ importers:
   examples/gatsby:
     specifiers:
       '@testing-library/react': ^13.3.0
-      '@vitejs/plugin-react': ^2.0.0
+      '@vitejs/plugin-react': ^1.3.2
       gatsby: ^4.19.1
       jsdom: ^20.0.0
       prettier: ^2.7.1
@@ -146,7 +146,7 @@ importers:
       react-dom: 18.2.0_react@18.2.0
     devDependencies:
       '@testing-library/react': 13.3.0_biqbaboplfbrettd7655fr4n2y
-      '@vitejs/plugin-react': 2.0.0_vite@3.0.2
+      '@vitejs/plugin-react': 1.3.2
       jsdom: 20.0.0
       prettier: 2.7.1
       vitest: link:../../packages/vitest
@@ -2427,6 +2427,7 @@ packages:
     dependencies:
       '@babel/core': 7.18.9
       '@babel/helper-plugin-utils': 7.18.9
+    dev: false
 
   /@babel/plugin-syntax-logical-assignment-operators/7.10.4_@babel+core@7.18.2:
     resolution: {integrity: sha512-d8waShlpFDinQ5MtvGU9xDAOzKH47+FFoney2baFIoMr952hKOLp1HR7VszoZvOsV/4+RRszNY7D17ba0te0ig==}
@@ -3076,16 +3077,6 @@ packages:
       '@babel/core': 7.18.2
       '@babel/plugin-transform-react-jsx': 7.18.6_@babel+core@7.18.2
 
-  /@babel/plugin-transform-react-jsx-development/7.18.6_@babel+core@7.18.9:
-    resolution: {integrity: sha512-SA6HEjwYFKF7WDjWcMcMGUimmw/nhNRDWxr+KaLSCrkD/LMDBvWRmHAYgE1HDeF8KUuI8OAu+RT6EOtKxSW2qA==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.18.9
-      '@babel/plugin-transform-react-jsx': 7.18.6_@babel+core@7.18.9
-    dev: true
-
   /@babel/plugin-transform-react-jsx-self/7.16.7_@babel+core@7.17.9:
     resolution: {integrity: sha512-oe5VuWs7J9ilH3BCCApGoYjHoSO48vkjX2CbA5bFVhIuO2HKxA3vyF7rleA4o6/4rTDbk6r8hBW7Ul8E+UZrpA==}
     engines: {node: '>=6.9.0'}
@@ -3106,16 +3097,6 @@ packages:
       '@babel/helper-plugin-utils': 7.16.7
     dev: true
 
-  /@babel/plugin-transform-react-jsx-self/7.18.6_@babel+core@7.18.9:
-    resolution: {integrity: sha512-A0LQGx4+4Jv7u/tWzoJF7alZwnBDQd6cGLh9P+Ttk4dpiL+J5p7NSNv/9tlEFFJDq3kjxOavWmbm6t0Gk+A3Ig==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.18.9
-      '@babel/helper-plugin-utils': 7.18.9
-    dev: true
-
   /@babel/plugin-transform-react-jsx-source/7.16.7_@babel+core@7.17.9:
     resolution: {integrity: sha512-rONFiQz9vgbsnaMtQlZCjIRwhJvlrPET8TabIUK2hzlXw9B9s2Ieaxte1SCOOXMbWRHodbKixNf3BLcWVOQ8Bw==}
     engines: {node: '>=6.9.0'}
@@ -3134,16 +3115,6 @@ packages:
     dependencies:
       '@babel/core': 7.18.2
       '@babel/helper-plugin-utils': 7.16.7
-    dev: true
-
-  /@babel/plugin-transform-react-jsx-source/7.18.6_@babel+core@7.18.9:
-    resolution: {integrity: sha512-utZmlASneDfdaMh0m/WausbjUjEdGrQJz0vFK93d7wD3xf5wBtX219+q6IlCNZeguIcxS2f/CvLZrlLSvSHQXw==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    dependencies:
-      '@babel/core': 7.18.9
-      '@babel/helper-plugin-utils': 7.18.9
     dev: true
 
   /@babel/plugin-transform-react-jsx/7.17.3_@babel+core@7.17.9:
@@ -3199,6 +3170,7 @@ packages:
       '@babel/helper-plugin-utils': 7.18.9
       '@babel/plugin-syntax-jsx': 7.18.6_@babel+core@7.18.9
       '@babel/types': 7.18.9
+    dev: false
 
   /@babel/plugin-transform-react-pure-annotations/7.16.7_@babel+core@7.18.2:
     resolution: {integrity: sha512-hs71ToC97k3QWxswh2ElzMFABXHvGiJ01IB1TbYQDGeWRKWz/MPUTh5jGExdHvosYKpnJW5Pm3S4+TA3FyX+GA==}
@@ -9441,24 +9413,6 @@ packages:
       - supports-color
     dev: true
 
-  /@vitejs/plugin-react/2.0.0_vite@3.0.2:
-    resolution: {integrity: sha512-zHkRR+X4zqEPNBbKV2FvWSxK7Q6crjMBVIAYroSU8Nbb4M3E5x4qOiLoqJBHtXgr27kfednXjkwr3lr8jS6Wrw==}
-    engines: {node: '>=14.18.0'}
-    peerDependencies:
-      vite: ^3.0.0
-    dependencies:
-      '@babel/core': 7.18.9
-      '@babel/plugin-transform-react-jsx': 7.18.6_@babel+core@7.18.9
-      '@babel/plugin-transform-react-jsx-development': 7.18.6_@babel+core@7.18.9
-      '@babel/plugin-transform-react-jsx-self': 7.18.6_@babel+core@7.18.9
-      '@babel/plugin-transform-react-jsx-source': 7.18.6_@babel+core@7.18.9
-      magic-string: 0.26.2
-      react-refresh: 0.14.0
-      vite: 3.0.2
-    transitivePeerDependencies:
-      - supports-color
-    dev: true
-
   /@vitejs/plugin-vue-jsx/1.3.10:
     resolution: {integrity: sha512-Cf5zznh4yNMiEMBfTOztaDVDmK1XXfgxClzOSUVUc8WAmHzogrCUeM8B05ABzuGtg0D1amfng+mUmSIOFGP3Pw==}
     engines: {node: '>=12.0.0'}
@@ -10990,7 +10944,7 @@ packages:
     resolution: {integrity: sha512-Y1IQok9821cC9onCx5otgFfRm7Lm+I+wwxOx738M/WLPZ9Q42m4IG5W0FNX8WLL2gYMZo3JkuXIH2DOpWM+qwA==}
     engines: {node: '>=8'}
     dependencies:
-      '@babel/helper-plugin-utils': 7.16.7
+      '@babel/helper-plugin-utils': 7.18.9
       '@istanbuljs/load-nyc-config': 1.1.0
       '@istanbuljs/schema': 0.1.3
       istanbul-lib-instrument: 5.2.0
@@ -18445,8 +18399,8 @@ packages:
     resolution: {integrity: sha512-6Lthe1hqXHBNsqvgDzGO6l03XNeu3CrG4RqQ1KM9+l5+jNGpEJfIELx1NS3SEHmJQA8np/u+E4EPRKRiu6m19A==}
     engines: {node: '>=8'}
     dependencies:
-      '@babel/core': 7.18.2
-      '@babel/parser': 7.18.4
+      '@babel/core': 7.18.9
+      '@babel/parser': 7.18.9
       '@istanbuljs/schema': 0.1.3
       istanbul-lib-coverage: 3.2.0
       semver: 6.3.0
@@ -22909,11 +22863,6 @@ packages:
     engines: {node: '>=0.10.0'}
     dev: true
 
-  /react-refresh/0.14.0:
-    resolution: {integrity: sha512-wViHqhAd8OHeLS/IRMJjTSDHF3U9eWi62F/MledQGPdJGDhodXJ9PBLNGr6WWL7qlH12Mt3TyTpbS+hGXMjCzQ==}
-    engines: {node: '>=0.10.0'}
-    dev: true
-
   /react-refresh/0.9.0:
     resolution: {integrity: sha512-Gvzk7OZpiqKSkxsQvO/mbTN1poglhmAV7gR/DdIrRrSMXraRQQlfikRJOr3Nb9GTMPC5kof948Zy6jJZIFtDvQ==}
     engines: {node: '>=0.10.0'}
@@ -26634,33 +26583,6 @@ packages:
       rollup: 2.76.0
     optionalDependencies:
       fsevents: 2.3.2
-
-  /vite/3.0.2:
-    resolution: {integrity: sha512-TAqydxW/w0U5AoL5AsD9DApTvGb2iNbGs3sN4u2VdT1GFkQVUfgUldt+t08TZgi23uIauh1TUOQJALduo9GXqw==}
-    engines: {node: ^14.18.0 || >=16.0.0}
-    hasBin: true
-    peerDependencies:
-      less: '*'
-      sass: '*'
-      stylus: '*'
-      terser: ^5.4.0
-    peerDependenciesMeta:
-      less:
-        optional: true
-      sass:
-        optional: true
-      stylus:
-        optional: true
-      terser:
-        optional: true
-    dependencies:
-      esbuild: 0.14.47
-      postcss: 8.4.14
-      resolve: 1.22.1
-      rollup: 2.77.0
-    optionalDependencies:
-      fsevents: 2.3.2
-    dev: true
 
   /vitepress/1.0.0-alpha.4_jbvntnid6ohjelon6ccj5dhg2u:
     resolution: {integrity: sha512-bOAA4KW6vYGlkbcrPLZLTKWTgXVroObU+o9xj9EENyEl6yg26WWvfN7DGA4BftjdM5O8nR93Z5khPQ3W/tFE7Q==}
