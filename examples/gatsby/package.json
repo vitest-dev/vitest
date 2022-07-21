@@ -1,8 +1,8 @@
 {
   "name": "@vitest/gatsby",
+  "version": "0.1.0",
   "private": true,
   "description": "A example of using Vitest with Gatsby",
-  "version": "0.1.0",
   "license": "0BSD",
   "scripts": {
     "build": "gatsby build",
