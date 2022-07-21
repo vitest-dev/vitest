@@ -1,0 +1,28 @@
+{
+  "name": "@vitest/gatsby",
+  "private": true,
+  "description": "A example of using Vitest with Gatsby",
+  "version": "0.1.0",
+  "license": "0BSD",
+  "scripts": {
+    "build": "gatsby build",
+    "develop": "gatsby develop",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
+    "start": "gatsby develop",
+    "serve": "gatsby serve",
+    "clean": "gatsby clean",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "gatsby": "^4.19.1",
+    "react": "^18.1.0",
+    "react-dom": "^18.1.0"
+  },
+  "devDependencies": {
+    "@testing-library/react": "^13.3.0",
+    "@vitejs/plugin-react": "^2.0.0",
+    "jsdom": "^20.0.0",
+    "prettier": "^2.7.1",
+    "vitest": "^0.18.1"
+  }
+}
