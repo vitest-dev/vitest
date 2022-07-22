@@ -94,8 +94,7 @@ export class Vitest {
 
     this._onRestartListeners.forEach(fn => fn())
 
-    if (this.config.coverage.enabled)
-      await this.coverageProvider.clean(this.config.coverage.clean)
+    await this.coverageProvider.clean(this.config.coverage.clean)
 
     this.cache.results.setConfig(resolved.root, resolved.cache)
     try {
@@ -144,8 +143,7 @@ export class Vitest {
 
     await this.runFiles(files)
 
-    if (this.config.coverage.enabled)
-      await this.coverageProvider.onAfterAllFilesRun()
+    await this.coverageProvider.onAfterAllFilesRun()
 
     if (this.config.watch && !this.config.browser)
       await this.report('onWatcherStart')
@@ -327,15 +325,14 @@ export class Vitest {
       const files = Array.from(this.changedTests)
       this.changedTests.clear()
 
-      if (this.config.coverage.enabled && this.config.coverage.cleanOnRerun)
+      if (this.config.coverage.cleanOnRerun)
         await this.coverageProvider.clean()
 
       await this.report('onWatcherRerun', files, triggerId)
 
       await this.runFiles(files)
 
-      if (this.config.coverage.enabled)
-        await this.coverageProvider.onAfterAllFilesRun()
+      await this.coverageProvider.onAfterAllFilesRun()
 
       if (!this.config.browser)
         await this.report('onWatcherStart')
