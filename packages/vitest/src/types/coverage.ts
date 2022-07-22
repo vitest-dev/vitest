@@ -15,7 +15,9 @@ export type CoverageReporter =
   | 'text-summary'
   | 'text'
 
-export type CoverageOptions = C8Options & { provider?: 'c8' }
+export type CoverageOptions =
+  | NullCoverageOptions & { provider?: null }
+  | C8Options & { provider?: 'c8' }
 
 interface BaseCoverageOptions {
   /**
@@ -24,6 +26,13 @@ interface BaseCoverageOptions {
    * @default false
    */
   enabled?: boolean
+
+  /**
+   * Clean coverage before running tests
+   *
+   * @default true
+   */
+  clean?: boolean
 
   /**
    * Clean coverage report on watch rerun
@@ -36,6 +45,10 @@ interface BaseCoverageOptions {
    * Directory to write coverage report to
    */
   reportsDirectory?: string
+}
+
+export interface NullCoverageOptions extends BaseCoverageOptions {
+  enabled: false
 }
 
 export interface C8Options extends BaseCoverageOptions {

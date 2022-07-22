@@ -1,7 +1,7 @@
 import type { CoverageOptions } from '../../types'
-
 import type { BaseCoverageProvider } from './base'
 import { C8CoverageProvider } from './c8'
+import { NullCoverageProvider } from './NullCoverageProvider'
 
 const CoverageProviderMap: Record<
   NonNullable<CoverageOptions['provider']>,
@@ -17,8 +17,7 @@ export function getCoverageProvider(options?: CoverageOptions): BaseCoverageProv
     return new CoverageProvider()
   }
 
-  // TODO: Return NullCoverageProvider
-  return new C8CoverageProvider()
+  return new NullCoverageProvider()
 }
 
 export function getCoverageInsideWorker(options: CoverageOptions) {

@@ -64,8 +64,7 @@ export function createPool(ctx: Vitest): WorkerPool {
     options.minThreads = 1
   }
 
-  if (ctx.config.coverage.enabled)
-    ctx.coverageProvider.onBeforeFilesRun?.()
+  ctx.coverageProvider.onBeforeFilesRun?.()
 
   options.env = {
     TEST: 'true',
