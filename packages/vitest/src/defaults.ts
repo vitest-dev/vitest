@@ -62,6 +62,7 @@ const config = {
   exclude: defaultExclude,
   testTimeout: 5000,
   hookTimeout: 10000,
+  teardownTimeout: 1000,
   isolate: true,
   watchExclude: ['**/node_modules/**', '**/dist/**'],
   forceRerunTriggers: [

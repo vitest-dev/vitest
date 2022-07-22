@@ -19,7 +19,6 @@ import { Logger } from './logger'
 import { VitestCache } from './cache'
 
 const WATCHER_DEBOUNCE = 100
-const CLOSE_TIMEOUT = 1_000
 
 export class Vitest {
   config: ResolvedConfig = undefined!
@@ -434,9 +433,9 @@ export class Vitest {
 
   async exit(force = false) {
     setTimeout(() => {
-      console.warn(`close timed out after ${CLOSE_TIMEOUT}ms`)
+      console.warn(`close timed out after ${this.config.teardownTimeout}ms`)
       process.exit()
-    }, CLOSE_TIMEOUT).unref()
+    }, this.config.teardownTimeout).unref()
 
     await this.close()
     if (force)

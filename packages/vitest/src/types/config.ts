@@ -189,6 +189,13 @@ export interface InlineConfig {
   hookTimeout?: number
 
   /**
+   * Default timeout to wait for close when Vitest shuts down, in milliseconds
+   *
+   * @default 1000
+   */
+  teardownTimeout?: number
+
+  /**
    * Silent mode
    *
    * @default false
