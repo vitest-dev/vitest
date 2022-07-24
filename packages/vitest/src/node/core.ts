@@ -244,8 +244,7 @@ export class Vitest {
     })()
       .finally(() => {
         this.runningPromise = undefined
-        if (this.config.browser)
-          this.state.finishCollectingPaths()
+        this.state.finishCollectingPaths()
       })
 
     return await this.runningPromise
