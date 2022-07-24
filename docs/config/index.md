@@ -172,7 +172,7 @@ export default defineConfig({
 
 ### environment
 
-- **Type:** `'node' | 'jsdom' | 'happy-dom' | 'edge-runtime'`
+- **Type:** `'node' | 'jsdom' | 'happy-dom' | 'edge-runtime' | 'miniflare'`
 - **Default:** `'node'`
 
 The environment that will be used for testing. The default environment in Vitest
@@ -180,6 +180,7 @@ is a Node.js environment. If you are building a web application, you can use
 browser-like environment through either [`jsdom`](https://github.com/jsdom/jsdom)
 or [`happy-dom`](https://github.com/capricorn86/happy-dom) instead.
 If you are building edge functions, you can use [`edge-runtime`](https://edge-runtime.vercel.app/packages/vm) environment
+If you are building for Cloudflare Workers, you can use the [`miniflare`](https://github.com/cloudflare/miniflare) environment
 
 By adding a `@vitest-environment` docblock or comment at the top of the file,
 you can specify another environment to be used for all tests in that file:
