@@ -322,7 +322,7 @@ There is much more to MSW. You can access cookies and query parameters, define m
 
 ## Timers
 
-Whenever we test code that involves `timeOut`s or intervals, instead of having our tests wait it out or time-out. We can speed up our tests by using "fake" timers by mocking calls to `setTimeout` and `setInterval`, too.
+Whenever we test code that involves `timeOut`s or intervals, instead of having our tests wait it out or timeout. We can speed up our tests by using "fake" timers by mocking calls to `setTimeout` and `setInterval`, too.
 
 See the [`vi.usefaketimers` api section](/api/#vi-usefaketimers) for a more in depth detailed API description.
 
