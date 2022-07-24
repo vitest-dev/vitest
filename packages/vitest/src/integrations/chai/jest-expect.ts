@@ -301,7 +301,18 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     if (Array.isArray(args[0]))
       args[0] = args[0].map(key => key.replace(/([.[\]])/g, '\\$1')).join('.')
 
-    return this.have.deep.nested.property(...args as [property: string, value?: any])
+    const actual = this._obj
+    const [propertyName, expected] = args
+    const { value, exists } = utils.getPathInfo(actual, propertyName)
+    const pass = exists && (args.length === 1 || jestEquals(expected, value))
+
+    return this.assert(
+      pass,
+      'expected #{this} to have property #{exp}',
+      'expected #{this} to not have property #{exp}',
+      expected,
+      actual,
+    )
   })
   def('toBeCloseTo', function (received: number, precision = 2) {
     const expected = this._obj
