@@ -75,9 +75,9 @@ export default defineConfig({
 
 ```diff
 // build.config.ts
-import { defineConfig } from 'unbuild'
+import { defineBuildConfig } from 'unbuild'
 
-export default defineConfig({
+export default defineBuildConfig({
 + replace: {
 +   'import.meta.vitest': 'undefined',
 + },
