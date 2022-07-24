@@ -7,7 +7,7 @@ import { Tinypool } from 'tinypool'
 import { createBirpc } from 'birpc'
 import type { RawSourceMap } from 'vite-node'
 import type { ResolvedConfig, WorkerContext, WorkerRPC } from '../types'
-import { distDir } from '../constants'
+import { distDir, rootDir } from '../constants'
 import { AggregateError } from '../utils'
 import type { Vitest } from './core'
 
@@ -20,6 +20,8 @@ export interface WorkerPool {
 
 const workerPath = _url.pathToFileURL(resolve(distDir, './worker.mjs')).href
 const loaderPath = _url.pathToFileURL(resolve(distDir, './loader.mjs')).href
+
+const suppressLoaderWarningsPath = resolve(rootDir, './suppress-warnings.cjs')
 
 export function createPool(ctx: Vitest): WorkerPool {
   const threadsCount = ctx.config.watch
@@ -41,10 +43,11 @@ export function createPool(ctx: Vitest): WorkerPool {
     minThreads,
 
     execArgv: [
+      '--require',
+      suppressLoaderWarningsPath,
       '--experimental-loader',
       loaderPath,
       ...conditions || [],
-      '--no-warnings',
     ],
   }
 
