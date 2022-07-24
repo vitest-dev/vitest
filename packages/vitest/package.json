@@ -72,7 +72,8 @@
     "@vitest/browser": "*",
     "@vitest/ui": "*",
     "happy-dom": "*",
-    "jsdom": "*"
+    "jsdom": "*",
+    "miniflare": "*"
   },
   "peerDependenciesMeta": {
     "@vitest/ui": {
@@ -88,6 +89,9 @@
       "optional": true
     },
     "@edge-runtime/vm": {
+      "optional": true
+    },
+    "miniflare": {
       "optional": true
     }
   },
@@ -127,6 +131,7 @@
     "log-update": "^5.0.1",
     "magic-string": "^0.26.2",
     "micromatch": "^4.0.5",
+    "miniflare": "^2.6.0",
     "mlly": "^0.5.12",
     "natural-compare": "^1.4.0",
     "p-limit": "^4.0.0",

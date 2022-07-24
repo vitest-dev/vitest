@@ -9,7 +9,7 @@ import type { Reporter } from './reporter'
 import type { SnapshotStateOptions } from './snapshot'
 import type { Arrayable } from './general'
 
-export type BuiltinEnvironment = 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime'
+export type BuiltinEnvironment = 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime' | 'miniflare'
 
 export type ApiConfig = Pick<CommonServerOptions, 'port' | 'strictPort' | 'host'>
 
@@ -105,7 +105,7 @@ export interface InlineConfig {
   /**
    * Running environment
    *
-   * Supports 'node', 'jsdom', 'happy-dom', 'edge-runtime'
+   * Supports 'node', 'jsdom', 'happy-dom', 'edge-runtime' , 'miniflare'
    *
    * @default 'node'
    */
