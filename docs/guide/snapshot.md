@@ -55,15 +55,15 @@ it('toUpperCase', () => {
 })
 ```
 
-This allows you to see the expect output directly without jumping across different files.
+This allows you to see the expected output directly without jumping across different files.
 
 ## Updating Snapshots
 
-When the received value doesn't match with the snapshot, the test would fail and show you the difference between them. When the snapshot change is expected, you may want to update the snapshot from the current state.
+When the received value doesn't match the snapshot, the test fails and shows you the difference between them. When the snapshot change is expected, you may want to update the snapshot from the current state.
 
-In watch mode, you can press `u` key in the terminal to update the failed snapshot directly.
+In watch mode, you can press the `u` key in the terminal to update the failed snapshot directly.
 
-Or you can use the `--updateSnapshot` or `-u` flag in the CLI to make Vitest into snapshot updating mode.
+Or you can use the `--updateSnapshot` or `-u` flag in the CLI to make Vitest update snapshots.
 
 ```bash
 vitest -u
