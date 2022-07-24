@@ -62,7 +62,7 @@
   },
   "scripts": {
     "build": "rimraf dist && rollup -c",
-    "dev": "rollup -c --watch -m inline",
+    "dev": "NODE_OPTIONS=\"--max-old-space-size=8192\" rollup -c --watch -m inline",
     "prepublishOnly": "nr build"
   },
   "peerDependencies": {
