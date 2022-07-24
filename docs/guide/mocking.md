@@ -154,11 +154,11 @@ vi.stubGlobal('IntersectionObserver', IntersectionObserverMock)
 
 Mock modules observe third-party-libraries, that are invoked in some other code, allowing you to test arguments, output or even redeclare its implementation.
 
-See the [`vi.mock()` api section](/api/#vi-mock) for a more in depth detailed API description.
+See the [`vi.mock()` api section](/api/#vi-mock) for a more in-depth detailed API description.
 
 ### Automocking algorithm
 
-If your code is importing mocked module, without any associated `__mocks__` file or `factory` for this module, Vitest will mock the module itself by invoking it and mocking every export.
+If your code is importing a mocked module, without any associated `__mocks__` file or `factory` for this module, Vitest will mock the module itself by invoking it and mocking every export.
 
 The following principles apply
 * All arrays will be emptied
@@ -271,7 +271,7 @@ Mock Service Worker (MSW) works by intercepting the requests your tests make, al
 
 ### Configuration
 
-Add the following to your test [setup file](/config/#setupfiles)
+You can use it like below in your [setup file](/config/#setupfiles)
 ```js
 import { afterAll, afterEach, beforeAll } from 'vitest'
 import { setupServer } from 'msw/node'
@@ -322,9 +322,9 @@ There is much more to MSW. You can access cookies and query parameters, define m
 
 ## Timers
 
-Whenever we test code that involves `timeOut`s or intervals, instead of having our tests it wait out or time-out. We can speed up our tests by using "fake" timers by mocking calls to `setTimeout` and `setInterval`, too.
+Whenever we test code that involves `timeOut`s or intervals, instead of having our tests wait it out or timeout. We can speed up our tests by using "fake" timers by mocking calls to `setTimeout` and `setInterval`, too.
 
-See the [`vi.mock()` api section](/api/#vi-usefaketimer) for a more in depth detailed API description.
+See the [`vi.usefaketimers` api section](/api/#vi-usefaketimers) for a more in depth detailed API description.
 
 ### Example
 

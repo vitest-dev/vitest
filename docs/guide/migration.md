@@ -62,7 +62,7 @@ Also, Vitest has `Args` type as a first argument instead of `Returns`, as you ca
 
 **Timers**
 
-Vitest doesn't support jest's legacy timers.
+Vitest doesn't support Jest's legacy timers.
 
 **it.each**
 
@@ -91,7 +91,7 @@ it.each([
 
 **Vue Snapshots**
 
-This is not a Jest specific feature, but if you previously were using Jest with vue-cli preset, you will need to install [`jest-serializer-vue`](https://github.com/eddyerburgh/jest-serializer-vue) package, and use it inside [setupFiles](/config/#setupfiles):
+This is not a Jest-specific feature, but if you previously were using Jest with vue-cli preset, you will need to install [`jest-serializer-vue`](https://github.com/eddyerburgh/jest-serializer-vue) package, and use it inside [setupFiles](/config/#setupfiles):
 
 ```ts
 import vueSnapshotSerializer from 'jest-serializer-vue'

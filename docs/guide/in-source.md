@@ -4,9 +4,9 @@ title: In-source testing | Guide
 
 # In-source testing
 
-Vitest also provides a way to run tests with in your source code along with the implementation, similar to [Rust's module tests](https://doc.rust-lang.org/book/ch11-03-test-organization.html#the-tests-module-and-cfgtest).
+Vitest also provides a way to run tests within your source code along side the implementation, similar to [Rust's module tests](https://doc.rust-lang.org/book/ch11-03-test-organization.html#the-tests-module-and-cfgtest).
 
-This makes the tests share the same closure as the implementations and able to test against private states without exporting. Meanwhile, it also brings the closer feedback loop for development.
+This makes the tests share the same closure as the implementations and able to test against private states without exporting. Meanwhile, it also brings a closer feedback loop for development.
 
 ## Setup
 
@@ -52,7 +52,7 @@ $ npx vitest
 
 ## Production build
 
-For production build, you will need to set the `define` options in your config file, letting the bundler to do the dead code elimination. For example, in Vite
+For the production build, you will need to set the `define` options in your config file, letting the bundler do the dead code elimination. For example, in Vite
 
 ```diff
 // vite.config.ts
