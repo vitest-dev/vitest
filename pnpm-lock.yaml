@@ -978,6 +978,16 @@ importers:
     devDependencies:
       vitest: link:../../packages/vitest
 
+  test/miniflare:
+    specifiers:
+      '@vitest/web-worker': workspace:*
+      miniflare: ^2.6.0
+      vitest: workspace:*
+    devDependencies:
+      '@vitest/web-worker': link:../../packages/web-worker
+      miniflare: 2.6.0
+      vitest: link:../../packages/vitest
+
   test/related:
     specifiers:
       execa: ^6.1.0

@@ -1,0 +1,10 @@
+name = "vitest-test-miniflare"
+compatibility_date = "2022-07-17"
+
+[[kv_namespaces]]
+binding = "KV"
+id = "12345678901234567890123456789012"
+
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "vitest-test-miniflare"

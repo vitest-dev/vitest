@@ -1,0 +1,14 @@
+{
+  "name": "@vitest/test-miniflare",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "vitest",
+    "coverage": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "@vitest/web-worker": "workspace:*",
+    "miniflare": "^2.6.0",
+    "vitest": "workspace:*"
+  }
+}
