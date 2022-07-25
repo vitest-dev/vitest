@@ -860,10 +860,12 @@ importers:
     specifiers:
       '@vitejs/plugin-vue': ^2.3.3
       '@vue/test-utils': ^2.0.0
+      happy-dom: ^6.0.4
       vitest: workspace:*
     devDependencies:
       '@vitejs/plugin-vue': 2.3.3_vite@2.9.14+vue@3.2.37
       '@vue/test-utils': 2.0.0_vue@3.2.37
+      happy-dom: 6.0.4
       vitest: link:../../packages/vitest
 
   test/edge-runtime:
@@ -12762,6 +12764,20 @@ packages:
       - encoding
     dev: true
 
+  /happy-dom/6.0.4:
+    resolution: {integrity: sha512-b+ID23Ms0BY08UNLymsOMG7EI2jSlwEt4cbJs938GZfeNAg+fqgkSO3TokQMgSOFoHznpjWmpVjBUL5boJ9PWw==}
+    dependencies:
+      css.escape: 1.5.1
+      he: 1.2.0
+      node-fetch: 2.6.7
+      sync-request: 6.1.0
+      webidl-conversions: 7.0.0
+      whatwg-encoding: 2.0.0
+      whatwg-mimetype: 3.0.0
+    transitivePeerDependencies:
+      - encoding
+    dev: true
+
   /has-ansi/2.0.0:
     resolution: {integrity: sha1-NPUEnOHs3ysGSa8+8k5F7TVBbZE=}
     engines: {node: '>=0.10.0'}
@@ -18089,6 +18105,7 @@ packages:
     hasBin: true
     optionalDependencies:
       fsevents: 2.3.2
+    dev: false
 
   /rollup/2.77.0:
     resolution: {integrity: sha512-vL8xjY4yOQEw79DvyXLijhnhh+R/O9zpF/LEgkCebZFtb6ELeN9H3/2T0r8+mp+fFTBHZ5qGpOpW2ela2zRt3g==}
@@ -20575,7 +20592,7 @@ packages:
       esbuild: 0.14.47
       postcss: 8.4.14
       resolve: 1.22.1
-      rollup: 2.76.0
+      rollup: 2.77.0
     optionalDependencies:
       fsevents: 2.3.2
 
