@@ -93,7 +93,7 @@ function onDraft(value: boolean) {
     </div>
 
     <div flex flex-col flex-1 overflow="hidden">
-      <div v-if="hasGraphBeenDisplayed">
+      <div v-if="hasGraphBeenDisplayed" flex-1>
         <ViewModuleGraph v-show="viewMode === 'graph'" :graph="graph" />
       </div>
       <ViewEditor v-if="viewMode === 'editor'" :key="current.filepath" :file="current" @draft="onDraft" />
