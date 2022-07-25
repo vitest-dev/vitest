@@ -8,7 +8,7 @@
   "scripts": {
     "ci": "ni && nr typecheck && nr lint && nr build && nr test:all",
     "build": "pnpm -r --filter=./packages/** run build",
-    "dev": "pnpm -r --parallel --filter=./packages/** run dev",
+    "dev": "NODE_OPTIONS=\"--max-old-space-size=8192\" pnpm -r --parallel --filter=./packages/** run dev",
     "docs": "pnpm -C docs run dev",
     "docs:build": "pnpm -C docs run build",
     "docs:serve": "pnpm -C docs run serve",

@@ -38,8 +38,6 @@ const external = [
   ...Object.keys(pkg.peerDependencies),
   'worker_threads',
   'inspector',
-  'c8',
-  '@vitest/browser',
 ]
 
 const plugins = [

@@ -12,6 +12,7 @@
   "devDependencies": {
     "@vitejs/plugin-vue": "^2.3.3",
     "@vue/test-utils": "^2.0.0",
+    "happy-dom": "^6.0.4",
     "vitest": "workspace:*"
   }
 }
