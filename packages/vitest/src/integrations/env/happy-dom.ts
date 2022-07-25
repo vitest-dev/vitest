@@ -4,9 +4,10 @@ import { populateGlobal } from './utils'
 export default <Environment>({
   name: 'happy-dom',
   async setup(global) {
+    const libName = 'happy-dom'
     // happy-dom v3 introduced a breaking change to Window, but
     // provides GlobalWindow as a way to use previous behaviour
-    const { Window, GlobalWindow } = await import('happy-dom')
+    const { Window, GlobalWindow } = await import(libName) as typeof import('happy-dom')
     const win = new (GlobalWindow || Window)()
 
     const { keys, originals } = populateGlobal(global, win, { bindFunctions: true })

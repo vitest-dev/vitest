@@ -4,12 +4,13 @@ import { populateGlobal } from './utils'
 export default <Environment>({
   name: 'jsdom',
   async setup(global, { jsdom = {} }) {
+    const libName = 'jsdom'
     const {
       CookieJar,
       JSDOM,
       ResourceLoader,
       VirtualConsole,
-    } = await import('jsdom')
+    } = await import(libName) as typeof import('jsdom')
     const {
       html = '<!DOCTYPE html>',
       userAgent,
