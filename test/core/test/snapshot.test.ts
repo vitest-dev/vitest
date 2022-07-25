@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest'
+import { expect, test, vi } from 'vitest'
 import { testOutsideInlineSnapshot } from './snapshots-outside'
 
 test('object', () => {
@@ -82,3 +82,34 @@ test.fails('properties snapshot fails', () => {
     id: expect.any(String),
   })
 })
+
+test('renders mock snapshot', () => {
+  const fn = vi.fn()
+  expect(fn).toMatchSnapshot()
+  fn('hello', 'world', 2)
+  expect(fn).toMatchSnapshot()
+})
+
+test('renders inline mock snapshot', () => {
+  const fn = vi.fn()
+  expect(fn).toMatchInlineSnapshot('[MockFunction spy]')
+  fn('hello', 'world', 2)
+  expect(fn).toMatchInlineSnapshot(`
+    [MockFunction spy] {
+      "calls": [
+        [
+          "hello",
+          "world",
+          2,
+        ],
+      ],
+      "results": [
+        {
+          "type": "return",
+          "value": undefined,
+        },
+      ],
+    }
+  `)
+})
+

@@ -13,6 +13,8 @@ import {
   plugins as prettyFormatPlugins,
 } from 'pretty-format'
 
+import MockSerializer from './mockSerializer'
+
 const {
   DOMCollection,
   DOMElement,
@@ -29,12 +31,9 @@ let PLUGINS: PrettyFormatPlugins = [
   DOMCollection,
   Immutable,
   AsymmetricMatcher,
-  // TODO: write sinon mock serializer
-  // https://github.com/facebook/jest/blob/4eb4f6a59b6eae0e05b8e51dd8cd3fdca1c7aff1/packages/jest-snapshot/src/mockSerializer.ts#L4
+  MockSerializer,
 ]
 
-// TODO: expose these and allow user to add custom serializers
-// Prepend to list so the last added is the first tested.
 export const addSerializer = (plugin: PrettyFormatPlugin): void => {
   PLUGINS = [plugin].concat(PLUGINS)
 }
