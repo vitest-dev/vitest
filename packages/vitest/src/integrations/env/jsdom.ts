@@ -1,16 +1,16 @@
+import { importModule } from 'local-pkg'
 import type { Environment } from '../../types'
 import { populateGlobal } from './utils'
 
 export default <Environment>({
   name: 'jsdom',
   async setup(global, { jsdom = {} }) {
-    const libName = 'jsdom'
     const {
       CookieJar,
       JSDOM,
       ResourceLoader,
       VirtualConsole,
-    } = await import(libName) as typeof import('jsdom')
+    } = await importModule('jsdom') as typeof import('jsdom')
     const {
       html = '<!DOCTYPE html>',
       userAgent,
