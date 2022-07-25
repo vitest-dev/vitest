@@ -26,6 +26,26 @@ exports[`properties snapshot 1`] = `
 }
 `;
 
+exports[`renders mock snapshot 1`] = `[MockFunction spy]`;
+
+exports[`renders mock snapshot 2`] = `
+[MockFunction spy] {
+  "calls": [
+    [
+      "hello",
+      "world",
+      2,
+    ],
+  ],
+  "results": [
+    {
+      "type": "return",
+      "value": undefined,
+    },
+  ],
+}
+`;
+
 exports[`throwing 1`] = `"omega"`;
 
 exports[`throwing 2`] = `"omega"`;
