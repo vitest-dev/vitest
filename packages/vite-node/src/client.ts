@@ -107,11 +107,10 @@ export class ViteNodeRunner {
 
       let debugTimer: any
       if (this.debug)
-        debugTimer = setTimeout(() => this.debugLog(() => `module ${fsPath} takes over 2s to load.\n${getStack()}`), 2000)
+        debugTimer = setTimeout(() => console.warn(() => `module ${fsPath} takes over 2s to load.\n${getStack()}`), 2000)
 
       try {
         if (callstack.includes(fsPath)) {
-          this.debugLog(() => `circular dependency, ${getStack()}`)
           const depExports = this.moduleCache.get(fsPath)?.exports
           if (depExports)
             return depExports
@@ -278,12 +277,6 @@ export class ViteNodeRunner {
 
   hasNestedDefault(target: any) {
     return '__esModule' in target && target.__esModule && 'default' in target.default
-  }
-
-  private debugLog(msg: () => string) {
-    if (this.debug)
-      // eslint-disable-next-line no-console
-      console.log(`[vite-node] ${msg()}`)
   }
 }
 

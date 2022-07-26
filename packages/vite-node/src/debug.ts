@@ -1,6 +1,8 @@
+/* eslint-disable no-console */
 import { existsSync, promises as fs } from 'fs'
-import { join } from 'pathe'
+import { join, resolve } from 'pathe'
 import type { TransformResult } from 'vite'
+import { gray } from 'kolorist'
 import type { DebuggerOptions } from './types'
 
 function hashCode(s: string) {
@@ -11,15 +13,22 @@ export class Debugger {
   dumpDir: string | undefined
   initPromise: Promise<void> | undefined
 
-  constructor(public options: DebuggerOptions) {
-    this.dumpDir = options.dumpModules === true ? '.vite-node/dump' : (options.dumpModules || undefined)
+  constructor(root: string, public options: DebuggerOptions) {
+    if (options.dumpModules)
+      this.dumpDir = resolve(root, options.dumpModules === true ? '.vite-node/dump' : options.dumpModules)
+    if (this.dumpDir) {
+      if (options.loadDumppedModules)
+        console.info(gray(`[vite-node] [debug] load modules from ${this.dumpDir}`))
+      else
+        console.info(gray(`[vite-node] [debug] dump modules to ${this.dumpDir}`))
+    }
     this.initPromise = this.clearDump()
   }
 
   async clearDump() {
-    if (!this.dumpDir || this.options.loadDumppedModules)
+    if (!this.dumpDir)
       return
-    if (existsSync(this.dumpDir))
+    if (!this.options.loadDumppedModules && existsSync(this.dumpDir))
       await fs.rm(this.dumpDir, { recursive: true, force: true })
     await fs.mkdir(this.dumpDir, { recursive: true })
   }
@@ -46,7 +55,7 @@ export class Debugger {
       return null
     const code = await fs.readFile(path, 'utf-8')
     return {
-      code,
+      code: code.replace(/^\/\/.*?\n/, ''),
       map: undefined!,
     }
   }

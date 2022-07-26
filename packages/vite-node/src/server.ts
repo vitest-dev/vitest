@@ -55,7 +55,7 @@ export class ViteNodeServer {
       }, options.debug ?? {})
     }
     if (options.debug)
-      import('./debug').then(r => this.debugger = new r.Debugger(options.debug!))
+      import('./debug').then(r => this.debugger = new r.Debugger(server.config.root, options.debug!))
   }
 
   shouldExternalize(id: string) {
