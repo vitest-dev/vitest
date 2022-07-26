@@ -50,8 +50,8 @@ export function setup(ctx: Vitest) {
         getFiles() {
           return ctx.state.getFiles()
         },
-        getPaths() {
-          return ctx.state.getPaths()
+        async getPaths() {
+          return await ctx.state.getPaths()
         },
         readFile(id) {
           return fs.readFile(id, 'utf-8')

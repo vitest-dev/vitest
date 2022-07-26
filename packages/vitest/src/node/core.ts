@@ -214,6 +214,7 @@ export class Vitest {
   async runFiles(paths: string[]) {
     // previous run
     await this.runningPromise
+    this.state.startCollectingPaths()
 
     // schedule the new run
     this.runningPromise = (async () => {
@@ -243,6 +244,7 @@ export class Vitest {
     })()
       .finally(() => {
         this.runningPromise = undefined
+        this.state.finishCollectingPaths()
       })
 
     return await this.runningPromise

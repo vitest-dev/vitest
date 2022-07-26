@@ -1,9 +1,15 @@
 import type { ErrorWithDiff, File, Task, TaskResultPack, UserConsoleLog } from '../types'
 
+interface CollectingPromise {
+  promise: Promise<void>
+  resolve: () => void
+}
+
 // Note this file is shared for both node and browser, be aware to avoid node specific logic
 export class StateManager {
   filesMap = new Map<string, File>()
   pathsSet: Set<string> = new Set()
+  collectingPromise: CollectingPromise | undefined = undefined
   idMap = new Map<string, Task>()
   taskFileMap = new WeakMap<Task, File>()
   errorsSet = new Set<unknown>()
@@ -21,7 +27,21 @@ export class StateManager {
     return Array.from(this.errorsSet.values())
   }
 
-  getPaths() {
+  startCollectingPaths() {
+    let _resolve: CollectingPromise['resolve']
+    const promise = new Promise<void>((resolve) => {
+      _resolve = resolve
+    })
+    this.collectingPromise = { promise, resolve: _resolve! }
+  }
+
+  finishCollectingPaths() {
+    this.collectingPromise?.resolve()
+    this.collectingPromise = undefined
+  }
+
+  async getPaths() {
+    await this.collectingPromise?.promise
     return Array.from(this.pathsSet)
   }
 
