@@ -22,6 +22,8 @@ export class ViteNodeServer {
     result: FetchResult
   }>()
 
+  externalizeCache = new Map<string, Promise<string | false>>()
+
   debugger?: Debugger
 
   constructor(
@@ -59,7 +61,7 @@ export class ViteNodeServer {
   }
 
   shouldExternalize(id: string) {
-    return shouldExternalize(id, this.options.deps)
+    return shouldExternalize(id, this.options.deps, this.externalizeCache)
   }
 
   async resolveId(id: string, importer?: string): Promise<ViteNodeResolveId | null> {

@@ -41,10 +41,11 @@ export function guessCJSversion(id: string): string | undefined {
   }
 }
 
+const _defaultExternalizeCache = new Map<string, Promise<string | false>>()
 export async function shouldExternalize(
   id: string,
   options?: DepsHandlingOptions,
-  cache = new Map<string, Promise<string | false>>(),
+  cache = _defaultExternalizeCache,
 ) {
   if (!cache.has(id))
     cache.set(id, _shouldExternalize(id, options))
