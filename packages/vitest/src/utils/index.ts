@@ -3,8 +3,8 @@ import { relative as relativeBrowser } from 'path'
 import c from 'picocolors'
 import { isPackageExists } from 'local-pkg'
 import { relative as relativeNode } from 'pathe'
+import type { ModuleCacheMap } from 'vite-node'
 import type { Suite, Task } from '../types'
-import { getWorkerState } from '../utils/global'
 import { getNames } from './tasks'
 
 export * from './tasks'
@@ -40,8 +40,7 @@ export function partitionSuiteChildren(suite: Suite) {
   return tasksGroups
 }
 
-export function resetModules() {
-  const modules = getWorkerState().moduleCache
+export function resetModules(modules: ModuleCacheMap) {
   const vitestPaths = [
     // Vitest
     /\/vitest\/dist\//,
@@ -49,6 +48,8 @@ export function resetModules() {
     /vitest-virtual-\w+\/dist/,
     // cnpm
     /@vitest\/dist/,
+    // don't clear mocks
+    /^mock:/,
   ]
   modules.forEach((_, path) => {
     if (vitestPaths.some(re => re.test(path)))

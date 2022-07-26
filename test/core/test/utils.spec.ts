@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest'
-import { assertTypes, deepClone, deepMerge, toArray } from '../../../packages/vitest/src/utils'
+import { assertTypes, deepClone, deepMerge, resetModules, toArray } from '../../../packages/vitest/src/utils'
 import { deepMergeSnapshot } from '../../../packages/vitest/src/integrations/snapshot/port/utils'
+import type { ModuleCacheMap } from '../../../packages/vite-node/src/types'
 
 describe('assertTypes', () => {
   test('the type of value should be number', () => {
@@ -145,5 +146,39 @@ describe('deepClone', () => {
     const objD: any = { name: 'd', ref: null }
     objD.ref = objD
     expect(deepClone(objD)).toEqual(objD)
+  })
+})
+
+describe('resetModules doesn\'t resets only user modules', () => {
+  test('resets user modules', () => {
+    const moduleCache = new Map() as ModuleCacheMap
+    moduleCache.set('/some-module.ts', {})
+    moduleCache.set('/@fs/some-path.ts', {})
+
+    resetModules(moduleCache)
+
+    expect(moduleCache.size).toBe(0)
+  })
+
+  test('doesn\'t reset vitest modules', () => {
+    const moduleCache = new Map() as ModuleCacheMap
+    moduleCache.set('/node_modules/vitest/dist/index.js', {})
+    moduleCache.set('/node_modules/vitest-virtual-da9876a/dist/index.js', {})
+    moduleCache.set('/node_modules/some-module@vitest/dist/index.js', {})
+    moduleCache.set('/packages/vitest/dist/index.js', {})
+
+    resetModules(moduleCache)
+
+    expect(moduleCache.size).toBe(4)
+  })
+
+  test('doesn\'t reset mocks', () => {
+    const moduleCache = new Map() as ModuleCacheMap
+    moduleCache.set('mock:/some-module.ts', {})
+    moduleCache.set('mock:/@fs/some-path.ts', {})
+
+    resetModules(moduleCache)
+
+    expect(moduleCache.size).toBe(2)
   })
 })
