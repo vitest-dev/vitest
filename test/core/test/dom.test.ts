@@ -139,3 +139,18 @@ it('can extend global class', () => {
 
   expect(SuperBlob).toBeDefined()
 })
+
+it('uses jsdom ArrayBuffer', async () => {
+  const blob = new Blob(['Hello'], { type: 'text/plain' })
+
+  const arraybuffer = await new Promise<ArrayBuffer>((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result as ArrayBuffer)
+    reader.onerror = () => reject(reader.error)
+    reader.readAsArrayBuffer(blob)
+  })
+
+  expect(arraybuffer.constructor.name).toBe('ArrayBuffer')
+  expect(arraybuffer instanceof ArrayBuffer).toBeTruthy()
+  expect(arraybuffer.constructor === ArrayBuffer).toBeTruthy()
+})
