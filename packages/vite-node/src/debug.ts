@@ -9,9 +9,11 @@ function hashCode(s: string) {
 
 export class Debugger {
   dumpDir: string | undefined
+  initPromise: Promise<void> | undefined
 
   constructor(public options: DebuggerOptions) {
     this.dumpDir = options.dumpModules === true ? '.vite-node/dump' : (options.dumpModules || undefined)
+    this.initPromise = this.clearDump()
   }
 
   async clearDump() {
@@ -29,13 +31,15 @@ export class Debugger {
   async dumpFile(id: string, result: TransformResult | null) {
     if (!result || !this.dumpDir)
       return
+    await this.initPromise
     const name = this.encodeId(id)
-    return fs.writeFile(join(this.dumpDir, name), `// ${id.replace(/\0/g, '\\0')}\n${result.code}`, 'utf-8')
+    return await fs.writeFile(join(this.dumpDir, name), `// ${id.replace(/\0/g, '\\0')}\n${result.code}`, 'utf-8')
   }
 
   async loadDump(id: string): Promise<TransformResult | null> {
     if (!this.dumpDir)
       return null
+    await this.initPromise
     const name = this.encodeId(id)
     const path = join(this.dumpDir, name)
     if (!existsSync(path))

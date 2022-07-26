@@ -66,7 +66,7 @@ export class ViteNodeRunner {
   constructor(public options: ViteNodeRunnerOptions) {
     this.root = options.root ?? process.cwd()
     this.moduleCache = options.moduleCache ?? new ModuleCacheMap()
-    this.debug = options.debug ?? (typeof process !== 'undefined' ? !!process.env.VITE_NODE_DEBUG : false)
+    this.debug = options.debug ?? (typeof process !== 'undefined' ? !!process.env.VITE_NODE_DEBUG_RUNNER : false)
   }
 
   async executeFile(file: string) {

@@ -83,12 +83,41 @@ await server.close()
 
 ## Debugging
 
+### Debug Transformation
+
 Sometimes you might inspect the transformed code to investigate issues. You can set environment variable `VITE_NODE_DEBUG_DUMP=true` to let vite-node write transformed result of each module under `.vite-node/dump`.
 
 If you want to debug by modifying the dumped code, you can set environment variable `VITE_NODE_DEBUG_DUMP=load` instead and vite-node will skip the transformation but read the code from dumpped files when they exists.
 
 ```bash
 VITE_NODE_DEBUG_DUMP=load vite-node example.ts
+```
+
+Or programmatically:
+
+```js
+const server = new ViteNodeServer(viteServer, {
+  debug: {
+    dumpModules: true,
+    loadDumppedModules: true,
+  }
+})
+```
+
+### Debug Execution
+
+If the process get stuck, it might because there is a unresolvable circular dependencies, you can set `VITE_NODE_DEBUG_RUNNER=true` to vite-node warn about it.
+
+```bash
+VITE_NODE_DEBUG_RUNNER=load vite-node example.ts
+```
+
+Or programmatically:
+
+```js
+const runner = new ViteNodeRunner({
+  debug: true
+})
 ```
 
 ## Credits
