@@ -9,6 +9,7 @@ import type { ModuleGraphData } from '#types'
 const data = ref<ModuleGraphData>({ externalized: [], graph: {}, inlined: [] })
 const graph = ref<ModuleGraph>({ nodes: [], links: [] })
 const draft = ref(false)
+const hasGraphBeenDisplayed = ref(false)
 
 debouncedWatch(
   current,
@@ -28,6 +29,9 @@ const open = () => {
 }
 
 const changeViewMode = (view: Params['view']) => {
+  if (view === 'graph')
+    hasGraphBeenDisplayed.value = true
+
   viewMode.value = view
 }
 const consoleCount = computed(() => {
@@ -89,7 +93,9 @@ function onDraft(value: boolean) {
     </div>
 
     <div flex flex-col flex-1 overflow="hidden">
-      <ViewModuleGraph v-show="viewMode === 'graph'" :graph="graph" />
+      <div v-if="hasGraphBeenDisplayed" flex-1>
+        <ViewModuleGraph v-show="viewMode === 'graph'" :graph="graph" />
+      </div>
       <ViewEditor v-if="viewMode === 'editor'" :key="current.filepath" :file="current" @draft="onDraft" />
       <ViewConsoleOutput v-else-if="viewMode === 'console'" :file="current" />
       <ViewReport v-else-if="!viewMode" :file="current" />
