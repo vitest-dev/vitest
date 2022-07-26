@@ -81,6 +81,49 @@ await runner.executeFile('./example.ts')
 await server.close()
 ```
 
+## Debugging
+
+### Debug Transformation
+
+Sometimes you might want to inspect the transformed code to investigate issues. You can set environment variable `VITE_NODE_DEBUG_DUMP=true` to let vite-node write the transformed result of each module under `.vite-node/dump`.
+
+If you want to debug by modifying the dumped code, you can change the value of `VITE_NODE_DEBUG_DUMP` to `load` and search for the dumpped files and use them for executing.
+
+```bash
+VITE_NODE_DEBUG_DUMP=load vite-node example.ts
+```
+
+Or programmatically:
+
+```js
+import { ViteNodeServer } from 'vite-node/server'
+
+const server = new ViteNodeServer(viteServer, {
+  debug: {
+    dumpModules: true,
+    loadDumppedModules: true,
+  }
+})
+```
+
+### Debug Execution
+
+If the process get stuck, it might because there is a unresolvable circular dependencies, you can set `VITE_NODE_DEBUG_RUNNER=true` to vite-node warn about it.
+
+```bash
+VITE_NODE_DEBUG_RUNNER=true vite-node example.ts
+```
+
+Or programmatically:
+
+```js
+import { ViteNodeRunner } from 'vite-node/client'
+
+const runner = new ViteNodeRunner({
+  debug: true
+})
+```
+
 ## Credits
 
 Based on [@pi0](https://github.com/pi0)'s brilliant idea of having a Vite server as the on-demand transforming service for [Nuxt's Vite SSR](https://github.com/nuxt/vite/pull/201).

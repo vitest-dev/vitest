@@ -1,9 +1,10 @@
 import { join } from 'pathe'
 import type { TransformResult, ViteDevServer } from 'vite'
 import createDebug from 'debug'
-import type { FetchResult, RawSourceMap, ViteNodeResolveId, ViteNodeServerOptions } from './types'
+import type { DebuggerOptions, FetchResult, RawSourceMap, ViteNodeResolveId, ViteNodeServerOptions } from './types'
 import { shouldExternalize } from './externalize'
 import { toArray, toFilePath, withInlineSourcemap } from './utils'
+import type { Debugger } from './debug'
 
 export * from './externalize'
 
@@ -20,6 +21,10 @@ export class ViteNodeServer {
     timestamp: number
     result: FetchResult
   }>()
+
+  externalizeCache = new Map<string, Promise<string | false>>()
+
+  debugger?: Debugger
 
   constructor(
     public server: ViteDevServer,
@@ -45,10 +50,18 @@ export class ViteNodeServer {
         options.deps.inline.push(...toArray(ssrOptions.noExternal))
       }
     }
+    if (process.env.VITE_NODE_DEBUG_DUMP) {
+      options.debug = Object.assign(<DebuggerOptions>{
+        dumpModules: !!process.env.VITE_NODE_DEBUG_DUMP,
+        loadDumppedModules: process.env.VITE_NODE_DEBUG_DUMP === 'load',
+      }, options.debug ?? {})
+    }
+    if (options.debug)
+      import('./debug').then(r => this.debugger = new r.Debugger(server.config.root, options.debug!))
   }
 
   shouldExternalize(id: string) {
-    return shouldExternalize(id, this.options.deps)
+    return shouldExternalize(id, this.options.deps, this.externalizeCache)
   }
 
   async resolveId(id: string, importer?: string): Promise<ViteNodeResolveId | null> {
@@ -133,6 +146,12 @@ export class ViteNodeServer {
 
     let result: TransformResult | null = null
 
+    if (this.options.debug?.loadDumppedModules) {
+      result = await this.debugger?.loadDump(id) ?? null
+      if (result)
+        return result
+    }
+
     if (this.getTransformMode(id) === 'web') {
       // for components like Vue, we want to use the client side
       // plugins but then convert the code to be consumed by the server
@@ -147,6 +166,9 @@ export class ViteNodeServer {
     const sourcemap = this.options.sourcemap ?? 'inline'
     if (sourcemap === 'inline' && result && !id.includes('node_modules'))
       withInlineSourcemap(result)
+
+    if (this.options.debug?.dumpModules)
+      await this.debugger?.dumpFile(id, result)
 
     return result
   }

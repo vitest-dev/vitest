@@ -10,6 +10,7 @@ node_modules
 .cache
 dist
 .idea
+.vite-node
 ltex*
 .DS_Store
 bench/test/*/*/
