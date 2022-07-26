@@ -40,8 +40,8 @@ export function partitionSuiteChildren(suite: Suite) {
   return tasksGroups
 }
 
-export function resetModules(modules: ModuleCacheMap) {
-  const vitestPaths = [
+export function resetModules(modules: ModuleCacheMap, resetMocks = false) {
+  const skipPaths = [
     // Vitest
     /\/vitest\/dist\//,
     // yarn's .store folder
@@ -49,10 +49,10 @@ export function resetModules(modules: ModuleCacheMap) {
     // cnpm
     /@vitest\/dist/,
     // don't clear mocks
-    /^mock:/,
+    ...(!resetMocks ? [/^mock:/] : []),
   ]
   modules.forEach((_, path) => {
-    if (vitestPaths.some(re => re.test(path)))
+    if (skipPaths.some(re => re.test(path)))
       return
     modules.delete(path)
   })
