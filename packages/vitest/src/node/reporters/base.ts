@@ -48,7 +48,8 @@ export abstract class BaseReporter implements Reporter {
     this.end = performance.now()
     await this.reportSummary(files)
     if (errors.length) {
-      process.exitCode = 1
+      if (!this.ctx.config.dangerouslyIgnoreUnhandledErrors)
+        process.exitCode = 1
       this.ctx.logger.printUnhandledErrors(errors)
     }
   }

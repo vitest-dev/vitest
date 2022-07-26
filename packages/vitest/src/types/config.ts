@@ -413,6 +413,11 @@ export interface InlineConfig {
    * Will be merged with the default aliases inside `resolve.alias`.
    */
   alias?: AliasOptions
+
+  /**
+   * Ignore any unhandled errors that occur
+   */
+  dangerouslyIgnoreUnhandledErrors?: boolean
 }
 
 export interface UserConfig extends InlineConfig {

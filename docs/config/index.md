@@ -538,6 +538,13 @@ export default defineConfig({
 
 Allow tests and suites that are marked as only.
 
+### dangerouslyIgnoreUnhandledErrors
+
+- **Type**: `boolean`
+- **Default**: `false`
+
+Ignore any unhandled errors that occur.
+
 ### passWithNoTests
 
 - **Type**: `boolean`
