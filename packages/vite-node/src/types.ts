@@ -84,6 +84,21 @@ export interface ViteNodeServerOptions {
     ssr?: RegExp[]
     web?: RegExp[]
   }
+
+  debug?: DebuggerOptions
+}
+
+export interface DebuggerOptions {
+  /**
+   * Dump the transformed module to filesystem
+   * Passing a string will dump to the specified path
+   */
+  dumpModules?: boolean | string
+  /**
+   * Read dumpped module from filesystem whenever exists.
+   * Useful for debugging by modifying the dump result from the filesystem.
+   */
+  loadDumppedModules?: boolean
 }
 
 export type { ModuleCacheMap }

@@ -42,9 +42,9 @@ async function run(files: string[], options: CliOptions = {}) {
   // forward argv
   process.argv = [...process.argv.slice(0, 2), ...(options['--'] || [])]
 
-  const parsedServerOptions = options.options
+  const serverOptions = options.options
     ? parseServerOptions(options.options)
-    : undefined
+    : {}
 
   const server = await createServer({
     logLevel: 'error',
@@ -56,7 +56,7 @@ async function run(files: string[], options: CliOptions = {}) {
   })
   await server.pluginContainer.buildStart({})
 
-  const node = new ViteNodeServer(server, parsedServerOptions)
+  const node = new ViteNodeServer(server, serverOptions)
 
   const runner = new ViteNodeRunner({
     root: server.config.root,
@@ -109,7 +109,6 @@ function parseServerOptions(serverOptions: ViteNodeServerOptionsCLI): ViteNodeSe
 
     transformMode: {
       ...serverOptions.transformMode,
-
       ssr: toArray(serverOptions.transformMode?.ssr).map(dep => new RegExp(dep)),
       web: toArray(serverOptions.transformMode?.web).map(dep => new RegExp(dep)),
     },
