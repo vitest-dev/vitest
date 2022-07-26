@@ -103,12 +103,11 @@ export class VitestMocker {
   }
 
   private async callFunctionMock(dep: string, mock: () => any) {
-    const cacheName = this.getMockPath(dep)
-    const cached = this.moduleCache.get(cacheName)?.exports
+    const cached = this.moduleCache.get(dep)?.exports
     if (cached)
       return cached
     const exports = await mock()
-    this.moduleCache.set(cacheName, { exports })
+    this.moduleCache.set(dep, { exports })
     return exports
   }
 
@@ -116,8 +115,8 @@ export class VitestMocker {
     return `mock:${dep}`
   }
 
-  public getDependencyMock(dep: string) {
-    return this.getMocks()[this.normalizePath(dep)]
+  public getDependencyMock(id: string) {
+    return this.getMocks()[id]
   }
 
   public normalizePath(path: string) {
@@ -267,7 +266,8 @@ export class VitestMocker {
     const { path, external } = await this.resolvePath(id, importer)
 
     const fsPath = this.getFsPath(path, external)
-    let mock = this.getDependencyMock(fsPath)
+    const normalizedId = this.normalizePath(fsPath)
+    let mock = this.getDependencyMock(normalizedId)
 
     if (mock === undefined)
       mock = this.resolveMockPath(fsPath, external)
@@ -295,10 +295,11 @@ export class VitestMocker {
       this.resolveMocks(),
     ])
 
-    const mock = this.getDependencyMock(dep)
+    const id = this.normalizePath(dep)
+    const mock = this.getDependencyMock(id)
 
     const callstack = this.request.callstack
-    const mockPath = this.getMockPath(dep)
+    const mockPath = this.getMockPath(id)
 
     if (mock === null) {
       const cache = this.moduleCache.get(mockPath)
@@ -312,7 +313,7 @@ export class VitestMocker {
     }
     if (typeof mock === 'function' && !callstack.includes(mockPath)) {
       callstack.push(mockPath)
-      const result = await this.callFunctionMock(dep, mock)
+      const result = await this.callFunctionMock(mockPath, mock)
       const indexMock = callstack.indexOf(mockPath)
       callstack.splice(indexMock, 1)
       return result
