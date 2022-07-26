@@ -20,6 +20,7 @@ const entries = [
   'src/node/cli.ts',
   'src/node.ts',
   'src/runtime/worker.ts',
+  'src/runtime/loader.ts',
   'src/runtime/entry.ts',
   'src/runtime/suite.ts',
   'src/integrations/spy.ts',
