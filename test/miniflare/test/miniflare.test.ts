@@ -1,6 +1,3 @@
-/**
- *  @vitest-environment miniflare
- */
 import { afterEach, describe, expect, it } from 'vitest'
 
 declare const miniflare: import('miniflare').Miniflare
@@ -9,7 +6,7 @@ describe('KV', async () => {
   const kv = await miniflare.getKVNamespace('12345678901234567890123456789012')
 
   afterEach(async () => {
-    await miniflare.
+    await miniflare
   })
 
   it('can put and get values', async () => {
