@@ -4,7 +4,7 @@ import { populateGlobal } from './utils'
 // https://miniflare.dev/testing/ava#isolated-tests
 export default <Environment>({
   name: 'miniflare',
-  async setup(global) {
+  async setup(global, { miniflare: options }) {
     const { Miniflare } = await import('miniflare')
 
     const miniflare = new Miniflare({
@@ -19,6 +19,13 @@ export default <Environment>({
 
       sourceMap: true,
       scriptRequired: false,
+
+      // Disable checks that we're running inside a request handler
+      globalTimers: true,
+      globalAsyncIO: true,
+      globalRandom: true,
+
+      ...options,
     })
 
     populateGlobal(global, { miniflare })

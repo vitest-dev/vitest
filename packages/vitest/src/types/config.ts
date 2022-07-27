@@ -1,4 +1,5 @@
 import type { AliasOptions, CommonServerOptions } from 'vite'
+import type { MiniflareOptions } from 'miniflare'
 import type { PrettyFormatOptions } from 'pretty-format'
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import type { BuiltinReporters } from '../node/reporters'
@@ -20,6 +21,10 @@ export interface EnvironmentOptions {
    * jsdom options.
    */
   jsdom?: JSDOMOptions
+  /**
+   * miniflare options.
+   */
+  miniflare?: Partial<Omit<MiniflareOptions, 'script' | 'scriptPath' | 'buildCommand' | 'open'>>
 }
 
 export interface InlineConfig {
@@ -96,10 +101,10 @@ export interface InlineConfig {
   dir?: string
 
   /**
-  * Register apis globally
-  *
-  * @default false
-  */
+   * Register apis globally
+   *
+   * @default false
+   */
   globals?: boolean
 
   /**
