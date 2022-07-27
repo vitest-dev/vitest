@@ -12,6 +12,7 @@ function hashCode(s: string) {
 export class Debugger {
   dumpDir: string | undefined
   initPromise: Promise<void> | undefined
+  externalizeMap = new Map<string, string>()
 
   constructor(root: string, public options: DebuggerOptions) {
     if (options.dumpModules)
@@ -37,6 +38,13 @@ export class Debugger {
     return `${id.replace(/[^\w@_-]/g, '_').replace(/_+/g, '_')}-${hashCode(id)}.js`
   }
 
+  async recordExternalize(id: string, path: string) {
+    if (!this.dumpDir)
+      return
+    this.externalizeMap.set(id, path)
+    await this.writeInfo()
+  }
+
   async dumpFile(id: string, result: TransformResult | null) {
     if (!result || !this.dumpDir)
       return
@@ -58,5 +66,15 @@ export class Debugger {
       code: code.replace(/^\/\/.*?\n/, ''),
       map: undefined!,
     }
+  }
+
+  async writeInfo() {
+    if (!this.dumpDir)
+      return
+    const info = JSON.stringify({
+      time: new Date().toLocaleString(),
+      externalize: Object.fromEntries(this.externalizeMap.entries()),
+    }, null, 2)
+    return fs.writeFile(join(this.dumpDir, 'info.json'), info, 'utf-8')
   }
 }
