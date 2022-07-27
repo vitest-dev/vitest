@@ -2,7 +2,7 @@
 import { existsSync, promises as fs } from 'fs'
 import { join, resolve } from 'pathe'
 import type { TransformResult } from 'vite'
-import { gray } from 'kolorist'
+import c from 'picocolors'
 import type { DebuggerOptions } from './types'
 
 function hashCode(s: string) {
@@ -19,9 +19,9 @@ export class Debugger {
       this.dumpDir = resolve(root, options.dumpModules === true ? '.vite-node/dump' : options.dumpModules)
     if (this.dumpDir) {
       if (options.loadDumppedModules)
-        console.info(gray(`[vite-node] [debug] load modules from ${this.dumpDir}`))
+        console.info(c.gray(`[vite-node] [debug] load modules from ${this.dumpDir}`))
       else
-        console.info(gray(`[vite-node] [debug] dump modules to ${this.dumpDir}`))
+        console.info(c.gray(`[vite-node] [debug] dump modules to ${this.dumpDir}`))
     }
     this.initPromise = this.clearDump()
   }
