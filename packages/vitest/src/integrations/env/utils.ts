@@ -4,6 +4,7 @@ const allowRewrite = [
   'Event',
   'EventTarget',
   'MessageEvent',
+  'ArrayBuffer',
 ]
 
 const skipKeys = [
