@@ -209,7 +209,10 @@ export abstract class BaseReporter implements Reporter {
     }
 
     const executionTime = this.end - this.start
-    const threadTime = files.reduce((acc, test) => acc + Math.max(0, test.result?.duration || 0) + Math.max(0, test.collectDuration || 0), 0)
+    const collectTime = files.reduce((acc, test) => acc + Math.max(0, test.collectDuration || 0), 0)
+    const setupTime = files.reduce((acc, test) => acc + Math.max(0, test.setupDuration || 0), 0)
+    const testsTime = files.reduce((acc, test) => acc + Math.max(0, test.result?.duration || 0), 0)
+    const threadTime = collectTime + testsTime + setupTime
 
     const padTitle = (str: string) => c.dim(`${str.padStart(10)} `)
     const time = (time: number) => {
@@ -232,9 +235,8 @@ export abstract class BaseReporter implements Reporter {
     logger.log(padTitle('Tests'), getStateString(tests))
     if (this.watchFilters)
       logger.log(padTitle('Time'), time(threadTime))
-
     else
-      logger.log(padTitle('Time'), time(executionTime) + c.gray(` (in thread ${time(threadTime)}, ${(executionTime / threadTime * 100).toFixed(2)}%)`))
+      logger.log(padTitle('Time'), time(executionTime) + c.gray(` (setup ${time(setupTime)}, collect ${time(collectTime)}, tests ${time(testsTime)})`))
 
     logger.log()
   }

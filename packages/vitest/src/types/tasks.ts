@@ -38,6 +38,7 @@ export interface Suite extends TaskBase {
 export interface File extends Suite {
   filepath: string
   collectDuration?: number
+  setupDuration?: number
 }
 
 export interface Test<ExtraContext = {}> extends TaskBase {

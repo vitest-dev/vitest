@@ -47,8 +47,11 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
 
     clearCollectorContext()
     try {
+      const setupStart = now()
       await runSetupFiles(config)
 
+      const collectStart = now()
+      file.setupDuration = collectStart - setupStart
       if (config.browser && isBrowser)
         await importFromBrowser(filepath)
       else
@@ -66,13 +69,12 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
           file.tasks.push(c)
         }
         else {
-          const start = now()
           const suite = await c.collect(file)
-          file.collectDuration = now() - start
           if (suite.name || suite.tasks.length)
             file.tasks.push(suite)
         }
       }
+      file.collectDuration = now() - collectStart
     }
     catch (e) {
       file.result = {
