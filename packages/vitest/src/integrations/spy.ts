@@ -99,8 +99,8 @@ interface Constructable {
 }
 
 export type MockedClass<T extends Constructable> = MockInstance<
-    InstanceType<T>,
-    T extends new (...args: infer P) => any ? P : never
+    T extends new (...args: infer P) => any ? P : never,
+    InstanceType<T>
 > & {
   prototype: T extends { prototype: any } ? Mocked<T['prototype']> : never
 } & T
