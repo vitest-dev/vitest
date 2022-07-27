@@ -46,7 +46,7 @@ export async function run(files: string[], config: ResolvedConfig): Promise<void
     await withEnv(environment, config.environmentOptions || {}, async () => {
       for (const file of files) {
         workerState.mockMap.clear()
-        resetModules()
+        resetModules(workerState.moduleCache, true)
 
         workerState.filepath = file
 

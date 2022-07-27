@@ -136,7 +136,7 @@ export function defineWebWorker() {
           invalidates.forEach((fsPath) => {
             // worker should be new every time
             moduleCache.delete(fsPath)
-            moduleCache.delete(`${fsPath}__mock`)
+            moduleCache.delete(`mock:${fsPath}`)
           })
           const q = this.messageQueue
           this.messageQueue = null
