@@ -76,9 +76,9 @@
     "vite": "^2.9.12 || ^3.0.0-0"
   },
   "devDependencies": {
-    "picocolors": "^1.0.0",
     "@types/debug": "^4.1.7",
     "cac": "^6.7.12",
+    "picocolors": "^1.0.0",
     "rollup": "^2.77.0"
   }
 }
