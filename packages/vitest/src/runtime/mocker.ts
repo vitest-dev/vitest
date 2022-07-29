@@ -103,6 +103,7 @@ export class VitestMocker {
   }
 
   private async callFunctionMock(dep: string, mock: () => any) {
+    dep = toFilePath(dep, this.root)
     const cached = this.moduleCache.get(dep)?.exports
     if (cached)
       return cached
