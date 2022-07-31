@@ -129,6 +129,8 @@ export function resolveConfig(
     }
   }
 
+  resolved.deps.experimentalLoader ??= true
+
   resolved.testNamePattern = resolved.testNamePattern
     ? resolved.testNamePattern instanceof RegExp
       ? resolved.testNamePattern
