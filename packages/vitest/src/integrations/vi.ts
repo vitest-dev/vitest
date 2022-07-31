@@ -231,7 +231,8 @@ class VitestUtils {
   }
 
   public resetModules() {
-    resetModules()
+    const state = getWorkerState()
+    resetModules(state.moduleCache)
     return this
   }
 

@@ -1,7 +1,7 @@
 {
   "name": "@vitest/browser",
   "type": "module",
-  "version": "0.19.1",
+  "version": "0.20.2",
   "description": "Browser running for Vitest",
   "repository": {
     "type": "git",
@@ -33,17 +33,17 @@
     "copy": "esmo scripts/copy-ui-to-browser.ts"
   },
   "dependencies": {
-    "local-pkg": "^0.4.1",
-    "mlly": "^0.5.2",
+    "local-pkg": "^0.4.2",
+    "mlly": "^0.5.5",
     "modern-node-polyfills": "^0.0.7",
     "rollup-plugin-node-polyfills": "^0.2.1",
     "sirv": "^2.0.2"
   },
   "devDependencies": {
-    "@types/ws": "^8.2.2",
+    "@types/ws": "^8.5.3",
     "@vitest/ws-client": "workspace:*",
     "picocolors": "^1.0.0",
-    "rollup": "^2.67.2",
+    "rollup": "^2.77.2",
     "vitest": "workspace:*"
   }
 }

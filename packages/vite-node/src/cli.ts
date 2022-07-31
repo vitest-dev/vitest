@@ -1,5 +1,5 @@
 import cac from 'cac'
-import { red } from 'kolorist'
+import c from 'picocolors'
 import { createServer } from 'vite'
 import { version } from '../package.json'
 import { ViteNodeServer } from './server'
@@ -34,7 +34,7 @@ export interface CliOptions {
 
 async function run(files: string[], options: CliOptions = {}) {
   if (!files.length) {
-    console.error(red('No files specified.'))
+    console.error(c.red('No files specified.'))
     cli.outputHelp()
     process.exit(1)
   }

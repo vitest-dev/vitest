@@ -2,7 +2,7 @@
 import { existsSync, promises as fs } from 'fs'
 import { join, resolve } from 'pathe'
 import type { TransformResult } from 'vite'
-import { gray } from 'kolorist'
+import c from 'picocolors'
 import type { DebuggerOptions } from './types'
 
 function hashCode(s: string) {
@@ -12,15 +12,16 @@ function hashCode(s: string) {
 export class Debugger {
   dumpDir: string | undefined
   initPromise: Promise<void> | undefined
+  externalizeMap = new Map<string, string>()
 
   constructor(root: string, public options: DebuggerOptions) {
     if (options.dumpModules)
       this.dumpDir = resolve(root, options.dumpModules === true ? '.vite-node/dump' : options.dumpModules)
     if (this.dumpDir) {
       if (options.loadDumppedModules)
-        console.info(gray(`[vite-node] [debug] load modules from ${this.dumpDir}`))
+        console.info(c.gray(`[vite-node] [debug] load modules from ${this.dumpDir}`))
       else
-        console.info(gray(`[vite-node] [debug] dump modules to ${this.dumpDir}`))
+        console.info(c.gray(`[vite-node] [debug] dump modules to ${this.dumpDir}`))
     }
     this.initPromise = this.clearDump()
   }
@@ -35,6 +36,13 @@ export class Debugger {
 
   encodeId(id: string) {
     return `${id.replace(/[^\w@_-]/g, '_').replace(/_+/g, '_')}-${hashCode(id)}.js`
+  }
+
+  async recordExternalize(id: string, path: string) {
+    if (!this.dumpDir)
+      return
+    this.externalizeMap.set(id, path)
+    await this.writeInfo()
   }
 
   async dumpFile(id: string, result: TransformResult | null) {
@@ -58,5 +66,15 @@ export class Debugger {
       code: code.replace(/^\/\/.*?\n/, ''),
       map: undefined!,
     }
+  }
+
+  async writeInfo() {
+    if (!this.dumpDir)
+      return
+    const info = JSON.stringify({
+      time: new Date().toLocaleString(),
+      externalize: Object.fromEntries(this.externalizeMap.entries()),
+    }, null, 2)
+    return fs.writeFile(join(this.dumpDir, 'info.json'), info, 'utf-8')
   }
 }

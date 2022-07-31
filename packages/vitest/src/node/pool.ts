@@ -42,13 +42,15 @@ export function createPool(ctx: Vitest): WorkerPool {
     maxThreads,
     minThreads,
 
-    execArgv: [
-      '--require',
-      suppressLoaderWarningsPath,
-      '--experimental-loader',
-      loaderPath,
-      ...conditions || [],
-    ],
+    execArgv: ctx.config.deps.registerNodeLoader
+      ? [
+          '--require',
+          suppressLoaderWarningsPath,
+          '--experimental-loader',
+          loaderPath,
+          ...conditions || [],
+        ]
+      : [],
   }
 
   if (ctx.config.isolate) {

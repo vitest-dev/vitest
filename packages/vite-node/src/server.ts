@@ -127,6 +127,7 @@ export class ViteNodeServer {
     const externalize = await this.shouldExternalize(filePath)
     if (externalize) {
       result = { externalize }
+      this.debugger?.recordExternalize(id, externalize)
     }
     else {
       const r = await this._transformRequest(id)
