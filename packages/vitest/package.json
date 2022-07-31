@@ -55,7 +55,8 @@
     "dist",
     "bin",
     "*.d.ts",
-    "*.mjs"
+    "*.mjs",
+    "*.cjs"
   ],
   "engines": {
     "node": ">=v14.16.0"
