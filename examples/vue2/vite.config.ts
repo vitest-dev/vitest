@@ -8,5 +8,6 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
+    alias: [{ find: /^vue$/, replacement: 'vue/dist/vue.runtime.common.js' }],
   },
 })

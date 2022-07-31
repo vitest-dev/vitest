@@ -1,8 +1,7 @@
 import { mount } from '@vue/test-utils'
 import Hello from '../src/components/ScriptSetup.vue'
 
-// TODO: find out why
-test.skip('mount component', async () => {
+test('mount component', async () => {
   expect(Hello).toBeTruthy()
 
   const wrapper = mount(Hello, {
