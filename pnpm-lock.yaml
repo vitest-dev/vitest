@@ -693,7 +693,7 @@ importers:
       '@types/chai': ^4.3.1
       '@types/chai-subset': ^1.3.3
       '@types/diff': ^5.0.2
-      '@types/jsdom': ^16.2.15
+      '@types/jsdom': ^20.0.0
       '@types/micromatch': ^4.0.2
       '@types/natural-compare': ^1.4.1
       '@types/node': '*'
@@ -714,7 +714,7 @@ importers:
       find-up: ^6.3.0
       flatted: ^3.2.6
       happy-dom: ^6.0.4
-      jsdom: ^19.0.0
+      jsdom: ^20.0.0
       local-pkg: ^0.4.2
       log-update: ^5.0.1
       magic-string: ^0.26.2
@@ -752,7 +752,7 @@ importers:
       '@edge-runtime/vm': 1.1.0-beta.23
       '@sinonjs/fake-timers': 9.1.2
       '@types/diff': 5.0.2
-      '@types/jsdom': 16.2.15
+      '@types/jsdom': 20.0.0
       '@types/micromatch': 4.0.2
       '@types/natural-compare': 1.4.1
       '@types/prompts': 2.4.0
@@ -769,7 +769,7 @@ importers:
       find-up: 6.3.0
       flatted: 3.2.6
       happy-dom: 6.0.4
-      jsdom: 19.0.0
+      jsdom: 20.0.0
       log-update: 5.0.1
       magic-string: 0.26.2
       micromatch: 4.0.5
@@ -6384,12 +6384,12 @@ packages:
     resolution: {integrity: sha512-qC4bCqYGy1y/NP7dDVr7KJarn+PbX1nSpwA7JXdu0HxT3QYjO8MJ+cntENtHFVy2dRAyBV23OZ6MxsW1AM1L8g==}
     dev: true
 
-  /@types/jsdom/16.2.15:
-    resolution: {integrity: sha512-nwF87yjBKuX/roqGYerZZM0Nv1pZDMAT5YhOHYeM/72Fic+VEqJh4nyoqoapzJnW3pUlfxPY5FhgsJtM+dRnQQ==}
+  /@types/jsdom/20.0.0:
+    resolution: {integrity: sha512-YfAchFs0yM1QPDrLm2VHe+WHGtqms3NXnXAMolrgrVP6fgBHHXy1ozAbo/dFtPNtZC/m66bPiCTWYmqp1F14gA==}
     dependencies:
       '@types/node': 18.0.4
-      '@types/parse5': 6.0.3
       '@types/tough-cookie': 4.0.2
+      parse5: 7.0.0
     dev: true
 
   /@types/json-schema/7.0.11:
@@ -6475,10 +6475,6 @@ packages:
 
   /@types/parse5/5.0.3:
     resolution: {integrity: sha512-kUNnecmtkunAoQ3CnjmMkzNU/gtxG8guhi+Fk2U/kOpIKjIMKnXGp4IJCgQJrXSgMsWYimYG4TGjz/UzbGEBTw==}
-    dev: true
-
-  /@types/parse5/6.0.3:
-    resolution: {integrity: sha512-SuT16Q1K51EAVPz1K29DJ/sXjhSQ0zjvsypYJ6tlwVsRV9jwW5Adq2ch8Dq8kDBCkYnELS7N7VNCSB5nC56t/g==}
     dev: true
 
   /@types/prettier/2.6.1:
@@ -9450,7 +9446,7 @@ packages:
     dev: true
 
   /concat-map/0.0.1:
-    resolution: {integrity: sha1-2Klr13/Wjfd5OnMDajug1UBdR3s=}
+    resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
 
   /concat-stream/1.6.2:
     resolution: {integrity: sha512-27HBghJxjiZtIk3Ycvn/4kbJk/1uZuJFfuPEns6LaEvpvG1f0hTea8lilrouyo9mVc2GWdcEZ8OLoGmSADlrCw==}
@@ -14673,7 +14669,7 @@ packages:
         optional: true
     dependencies:
       abab: 2.0.6
-      acorn: 8.7.1
+      acorn: 8.8.0
       acorn-globals: 6.0.0
       cssom: 0.5.0
       cssstyle: 2.3.0
