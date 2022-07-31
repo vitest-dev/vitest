@@ -42,7 +42,7 @@ export function createPool(ctx: Vitest): WorkerPool {
     maxThreads,
     minThreads,
 
-    execArgv: ctx.config.deps.experimentalLoader
+    execArgv: ctx.config.deps.registerNodeLoader
       ? [
           '--require',
           suppressLoaderWarningsPath,

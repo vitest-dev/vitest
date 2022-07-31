@@ -82,10 +82,10 @@ export interface InlineConfig {
     fallbackCJS?: boolean
 
     /**
-     * Use experimental loader to resolve imports inside node_modules using Vite resolve algorithm.
+     * Use experimental Node loader to resolve imports inside node_modules using Vite resolve algorithm.
      * @default true
      */
-    experimentalLoader?: boolean
+    registerNodeLoader?: boolean
   }
 
   /**

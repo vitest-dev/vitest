@@ -129,7 +129,7 @@ export function resolveConfig(
     }
   }
 
-  resolved.deps.experimentalLoader ??= true
+  resolved.deps.registerNodeLoader ??= true
 
   resolved.testNamePattern = resolved.testNamePattern
     ? resolved.testNamePattern instanceof RegExp

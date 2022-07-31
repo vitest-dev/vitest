@@ -102,12 +102,12 @@ When a dependency is a valid ESM package, try to guess the cjs version based on 
 
 This might potentially cause some misalignment if a package has different logic in ESM and CJS mode.
 
-#### deps.experimentalLoader
+#### deps.registerNodeLoader
 
 - **Type:** `boolean`
 - **Default:** `true`
 
-Use experimental loader to resolve imports inside `node_modules`, using Vite resolve algorithm.
+Use [experimental Node loader](https://nodejs.org/api/esm.html#loaders) to resolve imports inside `node_modules`, using Vite resolve algorithm.
 
 If disabled, your `alias` and `<plugin>.resolveId` won't affect imports inside `node_modules` or `deps.external`.
 
