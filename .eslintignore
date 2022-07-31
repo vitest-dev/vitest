@@ -4,5 +4,6 @@ node_modules
 *.snap
 *.d.ts
 coverage
+!**/integrations/coverage
 !.vitepress
 test/core/src/self

@@ -2,7 +2,6 @@ import limit from 'p-limit'
 import type { File, HookCleanupCallback, HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from '../types'
 import { vi } from '../integrations/vi'
 import { clearTimeout, getFullName, getWorkerState, hasFailed, hasTests, isBrowser, isNode, partitionSuiteChildren, setTimeout, shuffle } from '../utils'
-import { takeCoverage } from '../integrations/coverage'
 import { getState, setState } from '../integrations/chai/jest-expect'
 import { GLOBAL_EXPECT } from '../integrations/chai/constants'
 import { getFn, getHooks } from './map'
@@ -316,7 +315,17 @@ async function startTestsNode(paths: string[], config: ResolvedConfig) {
 
   await runFiles(files, config)
 
-  takeCoverage()
+  // TODO: How could this __VITEST_COVERAGE__ specific logic be passed from pool.ts to here
+  // so that it would only be declared inside coverage/istanbul.ts?
+  // Passing globalThis to onFilesRun does not work
+
+  // @ts-expect-error -- untyped global
+  const coverage = globalThis.__VITEST_COVERAGE__
+
+  // TODO: Not sure if this will work for c8. Previously v8.takeCoverage() was called
+  // here inside the worker. Now, this will simply inform the main process to call it.
+
+  rpc().onFilesRun(coverage)
 
   await getSnapshotClient().saveCurrent()
 
