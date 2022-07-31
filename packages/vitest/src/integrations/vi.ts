@@ -3,7 +3,7 @@ import { parseStacktrace } from '../utils/source-map'
 import type { VitestMocker } from '../runtime/mocker'
 import { getWorkerState, resetModules, setTimeout } from '../utils'
 import { FakeTimers } from './mock/timers'
-import type { EnhancedSpy, MaybeMocked, MaybeMockedDeep } from './spy'
+import type { EnhancedSpy, MaybeMocked, MaybeMockedDeep, MaybePartiallyMocked, MaybePartiallyMockedDeep } from './spy'
 import { fn, isMockFunction, spies, spyOn } from './spy'
 
 class VitestUtils {
@@ -173,6 +173,8 @@ class VitestUtils {
 
   /**
    * Type helpers for TypeScript. In reality just returns the object that was passed.
+   *
+   * When `partial` is `true` it will expect a `Partial<T>` as a return value.
    * @example
    * import example from './example'
    * vi.mock('./example')
@@ -186,10 +188,15 @@ class VitestUtils {
    * })
    * @param item Anything that can be mocked
    * @param deep If the object is deeply mocked
+   * @param options If the object is partially or deeply mocked
    */
   public mocked<T>(item: T, deep?: false): MaybeMocked<T>
   public mocked<T>(item: T, deep: true): MaybeMockedDeep<T>
-  public mocked<T>(item: T, _deep = false): MaybeMocked<T> | MaybeMockedDeep<T> {
+  public mocked<T>(item: T, options: { partial?: false; deep?: false }): MaybeMocked<T>
+  public mocked<T>(item: T, options: { partial?: false; deep: true }): MaybeMockedDeep<T>
+  public mocked<T>(item: T, options: { partial: true; deep?: false }): MaybePartiallyMocked<T>
+  public mocked<T>(item: T, options: { partial: true; deep: true }): MaybePartiallyMockedDeep<T>
+  public mocked<T>(item: T, _options = {}): MaybeMocked<T> {
     return item as any
   }
 

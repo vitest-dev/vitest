@@ -40,6 +40,30 @@ describe('testing vi utils', () => {
     expectType<MockedFunction<() => boolean>>(vi.fn())
   })
 
+  test('vi partial mocked', () => {
+    interface FooBar {
+      foo: () => void
+      bar: () => boolean
+      baz: string
+    }
+
+    type FooBarFactory = () => FooBar
+
+    const mockFactory: FooBarFactory = vi.fn()
+
+    vi.mocked(mockFactory, { partial: true }).mockReturnValue({
+      foo: vi.fn(),
+    })
+
+    vi.mocked(mockFactory, { partial: true, deep: false }).mockReturnValue({
+      bar: vi.fn(),
+    })
+
+    vi.mocked(mockFactory, { partial: true, deep: true }).mockReturnValue({
+      baz: 'baz',
+    })
+  })
+
   // TODO: it's unstable in CI, skip until resolved
   test.skip('loads unloaded module', async () => {
     let mod: any
