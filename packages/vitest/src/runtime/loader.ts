@@ -20,6 +20,7 @@ export const resolve: Resolver = async (url, context, next) => {
     if (resolved) {
       return {
         url: pathToFileURL(resolved.id).toString(),
+        shortCircuit: true,
       }
     }
   }
