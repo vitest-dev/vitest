@@ -32,8 +32,7 @@ type Key = string | symbol
 
 function isSpecialProp(prop: Key, parentType: string) {
   return parentType.includes('Function')
-      && typeof prop === 'string'
-      && ['arguments', 'callee', 'caller', 'length', 'name'].includes(prop)
+      && ['arguments', 'callee', 'caller', 'length', 'name', Symbol.hasInstance].includes(prop)
 }
 
 interface ViteRunnerRequest {
