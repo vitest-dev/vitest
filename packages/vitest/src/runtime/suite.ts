@@ -46,7 +46,7 @@ export const defaultSuite = workerState.config.sequence.shuffle
 
 export function clearCollectorContext() {
   collectorContext.tasks.length = 0
-  defaultSuite.clear()
+  defaultSuite.clear(false)
   collectorContext.currentSuite = defaultSuite
 }
 
@@ -129,10 +129,12 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
     setHooks(suite, createSuiteHooks())
   }
 
-  function clear() {
+  function clear(recreate = true) {
     tasks.length = 0
     factoryQueue.length = 0
-    initSuite()
+
+    if (recreate)
+      initSuite()
   }
 
   async function collect(file?: File) {
