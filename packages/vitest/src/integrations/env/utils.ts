@@ -4,6 +4,7 @@ const allowRewrite = [
   'Event',
   'EventTarget',
   'MessageEvent',
+  // implemented in Node 18
   'ArrayBuffer',
 ]
 
@@ -41,7 +42,7 @@ export function populateGlobal(global: any, win: any, options: PopulateOptions =
   const keys = getWindowKeys(global, win)
 
   const originals = new Map<string | symbol, any>(
-    allowRewrite.map(([key]) => [key, global[key]]),
+    allowRewrite.filter(key => key in global).map(key => [key, global[key]]),
   )
 
   const overrideObject = new Map<string | symbol, any>()
