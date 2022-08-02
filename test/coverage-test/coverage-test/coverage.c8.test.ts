@@ -2,7 +2,7 @@ import fs from 'fs'
 import { resolve } from 'pathe'
 import { expect, test } from 'vitest'
 
-test('coverage', async () => {
+test('coverage c8', async () => {
   const coveragePath = resolve('./coverage/tmp/')
   const stat = fs.statSync(coveragePath)
   expect(stat.isDirectory()).toBe(true)

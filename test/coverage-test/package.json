@@ -2,12 +2,19 @@
   "name": "@vitest/test-coverage",
   "private": true,
   "scripts": {
-    "test": "npm run test:thread && npm run test:nothread",
-    "coverage": "vitest run --coverage",
-    "coverage:thread": "cross-env THREAD=true vitest run --coverage",
-    "coverage-test": "vitest -c vitest.config-coverage.ts run",
-    "test:thread": "npm run coverage:thread && npm run coverage-test",
-    "test:nothread": "npm run coverage && npm run coverage-test"
+    "test": "npm run test:c8 && npm run test:istanbul",
+    "test:c8": "npm run test:thread:c8 && npm run test:nothread:c8",
+    "coverage:c8": "vitest run --coverage.provider c8",
+    "coverage:thread:c8": "cross-env THREAD=true vitest run --coverage.provider c8",
+    "coverage-test:c8": "vitest -c vitest.config-c8-coverage.ts run",
+    "test:thread:c8": "npm run coverage:thread:c8 && npm run coverage-test:c8",
+    "test:nothread:c8": "npm run coverage:c8 && npm run coverage-test:c8",
+    "test:istanbul": "npm run test:thread:istanbul && npm run test:nothread:istanbul",
+    "coverage:istanbul": "vitest run --coverage.provider istanbul",
+    "coverage:thread:istanbul": "cross-env THREAD=true vitest run --coverage.provider istanbul",
+    "coverage-test:istanbul": "vitest -c vitest.config-istanbul-coverage.ts run",
+    "test:thread:istanbul": "npm run coverage:thread:istanbul && npm run coverage-test:istanbul",
+    "test:nothread:istanbul": "npm run coverage:istanbul && npm run coverage-test:istanbul"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^3.0.1",
