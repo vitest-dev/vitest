@@ -17,7 +17,7 @@ export class SnapshotManager {
     addSnapshotResult(this.summary, result)
   }
 
-  resolvePath(testPath: string) {
+  resolvePath(testPath: string, options: { context: any }) {
     const resolver = this.options.resolveSnapshotPath || (() => {
       return join(
         join(
@@ -26,7 +26,7 @@ export class SnapshotManager {
       )
     })
 
-    return resolver(testPath, this.extension)
+    return resolver(testPath, this.extension, options)
   }
 }
 
