@@ -63,7 +63,7 @@
     "unocss": "^0.45.1",
     "unplugin-auto-import": "^0.10.3",
     "unplugin-vue-components": "^0.21.2",
-    "vite": "^2.9.14",
+    "vite": "^3.0.4",
     "vite-plugin-pages": "^0.25.0",
     "vue": "^3.2.37",
     "vue-router": "^4.1.3"
