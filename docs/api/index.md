@@ -1830,9 +1830,11 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 ### vi.mocked
 
 - **Type**: `<T>(obj: T, deep?: boolean) => MaybeMockedDeep<T>`
+- **Type**: `<T>(obj: T, options?: { partial?: boolean; deep?: boolean }) => MaybePartiallyMockedDeep<T>`
 
   Type helper for TypeScript. In reality just returns the object that was passed.
 
+  When `partial` is `true` it will expect a `Partial<T>` as a return value.
   ```ts
   import example from './example'
   vi.mock('./example')
