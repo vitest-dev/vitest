@@ -24,8 +24,8 @@
     "https-localhost": "^4.7.1",
     "unocss": "^0.45.1",
     "unplugin-vue-components": "^0.21.2",
-    "vite": "^3.0.4",
-    "vite-plugin-pwa": "^0.12.3",
+    "vite": "2.9.14",
+    "vite-plugin-pwa": "0.12.0",
     "vitepress": "^1.0.0-alpha.4",
     "workbox-window": "^6.5.4"
   }

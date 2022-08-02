@@ -12,6 +12,8 @@ let contributors: string[] = []
 const team = teamMembers.map(i => i.github)
 
 async function download(url: string, fileName: string) {
+  if (fs.existsSync(fileName))
+    return
   // eslint-disable-next-line no-console
   console.log('downloading', fileName)
   const image = await $fetch(url, { responseType: 'arrayBuffer' })
