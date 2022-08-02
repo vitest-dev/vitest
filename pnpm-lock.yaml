@@ -860,12 +860,12 @@ importers:
 
   test/coverage-test:
     specifiers:
-      '@vitejs/plugin-vue': ^2.3.3
+      '@vitejs/plugin-vue': ^3.0.1
       '@vue/test-utils': ^2.0.0
       happy-dom: ^6.0.4
       vitest: workspace:*
     devDependencies:
-      '@vitejs/plugin-vue': 2.3.3_vite@2.9.14+vue@3.2.37
+      '@vitejs/plugin-vue': 3.0.1_vite@3.0.4+vue@3.2.37
       '@vue/test-utils': 2.0.0_vue@3.2.37
       happy-dom: 6.0.4
       vitest: link:../../packages/vitest
