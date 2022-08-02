@@ -11,4 +11,5 @@ test('returns valid globals', () => {
   const { originals } = populateGlobal(global, win)
   expect(originals.get('Event')).toBe(globalEvent)
   expect(win.Event).toBe(winEvent)
+  expect(global.Event).toBe(winEvent)
 })
