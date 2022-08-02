@@ -4,12 +4,12 @@ import type { ErrorWithDiff, File, Reporter, Task, TaskResultPack, UserConsoleLo
 import { clearInterval, getFullName, getSuites, getTests, hasFailed, hasFailedSnapshot, isNode, relativePath, setInterval } from '../../utils'
 import type { Vitest } from '../../node'
 import { F_RIGHT } from '../../utils/figures'
-import { divider, getStateString, getStateSymbol, pointer, renderSnapshotSummary } from './renderers/utils'
+import { divider, formatTimeString, getStateString, getStateSymbol, pointer, renderSnapshotSummary } from './renderers/utils'
 
 const BADGE_PADDING = '       '
-const HELP_HINT = `${c.dim('Press ')}${c.bold('h')}${c.dim(' to show help')}`
-const HELP_UPDATE_SNAP = c.dim('Press ') + c.bold(c.yellow('u')) + c.dim(' to update snapshot')
-const HELP_QUITE = `${c.dim('Press ')}${c.bold('q')}${c.dim(' to quit')}`
+const HELP_HINT = `${c.dim('press ')}${c.bold('h')}${c.dim(' to show help')}`
+const HELP_UPDATE_SNAP = c.dim('press ') + c.bold(c.yellow('u')) + c.dim(' to update snapshot')
+const HELP_QUITE = `${c.dim('press ')}${c.bold('q')}${c.dim(' to quit')}`
 
 const WAIT_FOR_CHANGE_PASS = `\n${c.bold(c.inverse(c.green(' PASS ')))}${c.green(' Waiting for file changes...')}`
 const WAIT_FOR_CHANGE_FAIL = `\n${c.bold(c.inverse(c.red(' FAIL ')))}${c.red(' Tests failed. Watching for file changes...')}`
@@ -28,7 +28,7 @@ export abstract class BaseReporter implements Reporter {
   private _lastRunTimeout = 0
   private _lastRunTimer: NodeJS.Timer | undefined
   private _lastRunCount = 0
-  private _timeNow = ''
+  private _timeStart = new Date()
 
   constructor() {
     this.registerUnhandledRejection()
@@ -38,7 +38,6 @@ export abstract class BaseReporter implements Reporter {
     this.ctx = ctx
 
     ctx.logger.printBanner()
-    this._timeNow = new Date().toTimeString().split(' ')[0]
     this.start = performance.now()
   }
 
@@ -111,13 +110,11 @@ export abstract class BaseReporter implements Reporter {
     this.ctx.logger.log(BADGE_PADDING + hints.join(c.dim(', ')))
 
     if (this._lastRunCount) {
-      const LAST_RUN_TEXT = `Running Test(s) x${this._lastRunCount}`
+      const LAST_RUN_TEXT = `rerun x${this._lastRunCount}`
       const LAST_RUN_TEXTS = [
-        c.bold(c.blue(`${LAST_RUN_TEXT} .`)),
-        c.blue(`${LAST_RUN_TEXT} ..`),
-        c.bold(c.gray(`${LAST_RUN_TEXT} ...`)),
-        c.gray(`${LAST_RUN_TEXT} ....`),
-        c.dim(c.gray(`${LAST_RUN_TEXT} .....`)),
+        c.blue(LAST_RUN_TEXT),
+        c.gray(LAST_RUN_TEXT),
+        c.dim(c.gray(LAST_RUN_TEXT)),
       ]
       this.ctx.logger.logUpdate(BADGE_PADDING + LAST_RUN_TEXTS[0])
       this._lastRunTimeout = 0
@@ -162,7 +159,7 @@ export abstract class BaseReporter implements Reporter {
       this.ctx.logger.clearScreen(`\n${BADGE}${TRIGGER} ${c.blue(`x${rerun}`)}\n`)
     }
 
-    this._timeNow = new Date().toTimeString().split(' ')[0]
+    this._timeStart = new Date()
     this.start = performance.now()
   }
 
@@ -238,11 +235,11 @@ export abstract class BaseReporter implements Reporter {
 
     logger.log(padTitle('Test Files'), getStateString(files))
     logger.log(padTitle('Tests'), getStateString(tests))
-    logger.log(padTitle('Start Time'), this._timeNow)
+    logger.log(padTitle('Start at'), formatTimeString(this._timeStart))
     if (this.watchFilters)
-      logger.log(padTitle('Time'), time(threadTime))
+      logger.log(padTitle('Duration'), time(threadTime))
     else
-      logger.log(padTitle('Time'), time(executionTime) + c.gray(` (setup ${time(setupTime)}, collect ${time(collectTime)}, tests ${time(testsTime)})`))
+      logger.log(padTitle('Duration'), time(executionTime) + c.gray(` (setup ${time(setupTime)}, collect ${time(collectTime)}, tests ${time(testsTime)})`))
 
     logger.log()
   }
