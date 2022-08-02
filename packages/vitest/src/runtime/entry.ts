@@ -45,8 +45,13 @@ export async function run(files: string[], config: ResolvedConfig): Promise<void
 
     await withEnv(environment, config.environmentOptions || {}, async () => {
       for (const file of files) {
-        workerState.mockMap.clear()
-        resetModules(workerState.moduleCache, true)
+        // it doesn't matter if running with --threads
+        // if running with --no-threads, we usually want to reset everything before running a test
+        // but we have --isolate option to disable this
+        if (config.isolate) {
+          workerState.mockMap.clear()
+          resetModules(workerState.moduleCache, true)
+        }
 
         workerState.filepath = file
 
