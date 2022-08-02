@@ -4,7 +4,7 @@ import type { ErrorWithDiff, File, Reporter, Task, TaskResultPack, UserConsoleLo
 import { clearInterval, getFullName, getSuites, getTests, hasFailed, hasFailedSnapshot, isNode, relativePath, setInterval } from '../../utils'
 import type { Vitest } from '../../node'
 import { F_RIGHT } from '../../utils/figures'
-import { divider, getStateString, getStateSymbol, pointer, renderSnapshotSummary } from './renderers/utils'
+import { divider, formatTimeString, getStateString, getStateSymbol, pointer, renderSnapshotSummary } from './renderers/utils'
 
 const BADGE_PADDING = '       '
 const HELP_HINT = `${c.dim('press ')}${c.bold('h')}${c.dim(' to show help')}`
@@ -28,6 +28,7 @@ export abstract class BaseReporter implements Reporter {
   private _lastRunTimeout = 0
   private _lastRunTimer: NodeJS.Timer | undefined
   private _lastRunCount = 0
+  private _timeStart = new Date()
 
   constructor() {
     this.registerUnhandledRejection()
@@ -158,6 +159,7 @@ export abstract class BaseReporter implements Reporter {
       this.ctx.logger.clearScreen(`\n${BADGE}${TRIGGER} ${c.blue(`x${rerun}`)}\n`)
     }
 
+    this._timeStart = new Date()
     this.start = performance.now()
   }
 
@@ -233,10 +235,11 @@ export abstract class BaseReporter implements Reporter {
 
     logger.log(padTitle('Test Files'), getStateString(files))
     logger.log(padTitle('Tests'), getStateString(tests))
+    logger.log(padTitle('Start at'), formatTimeString(this._timeStart))
     if (this.watchFilters)
-      logger.log(padTitle('Time'), time(threadTime))
+      logger.log(padTitle('Duration'), time(threadTime))
     else
-      logger.log(padTitle('Time'), time(executionTime) + c.gray(` (setup ${time(setupTime)}, collect ${time(collectTime)}, tests ${time(testsTime)})`))
+      logger.log(padTitle('Duration'), time(executionTime) + c.gray(` (setup ${time(setupTime)}, collect ${time(collectTime)}, tests ${time(testsTime)})`))
 
     logger.log()
   }
