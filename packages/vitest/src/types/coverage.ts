@@ -39,6 +39,12 @@ export interface C8Options {
    */
   cleanOnRerun?: boolean
   /**
+   * Check thresholds per file
+   *
+   * @default false
+   */
+  perFile?: boolean
+  /**
    * Allow files from outside of your cwd.
    *
    * @default false
