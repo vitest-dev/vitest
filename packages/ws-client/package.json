@@ -1,7 +1,7 @@
 {
   "name": "@vitest/ws-client",
   "type": "module",
-  "version": "0.20.2",
+  "version": "0.20.3",
   "description": "WebSocket client wrapper for communicating with Vitest",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
