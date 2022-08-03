@@ -75,7 +75,7 @@ export const resolve: Resolver = async (url, context, next) => {
   const source = await getPotentialSource(filepath, result)
   const isPseudoESM = detectESM(result.url, source)
   if (typeof source === 'string')
-    cache.set(result.url, { isPseudoESM: isPseudoESM || false, source })
+    cache.set(result.url, { isPseudoESM, source })
   if (isPseudoESM)
     result.format = ModuleFormat.Module
   return result
