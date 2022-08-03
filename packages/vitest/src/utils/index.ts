@@ -1,7 +1,6 @@
 // eslint-disable-next-line no-restricted-imports
 import { relative as relativeBrowser } from 'path'
 import c from 'picocolors'
-import { isPackageExists } from 'local-pkg'
 import { relative as relativeNode } from 'pathe'
 import type { ModuleCacheMap } from 'vite-node'
 import type { Suite, Task } from '../types'
@@ -66,6 +65,7 @@ export async function ensurePackageInstalled(
   dependency: string,
   root: string,
 ) {
+  const { isPackageExists } = await import('local-pkg')
   if (isPackageExists(dependency, { paths: [root] }))
     return true
 
