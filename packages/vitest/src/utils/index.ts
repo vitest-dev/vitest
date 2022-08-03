@@ -149,3 +149,8 @@ class AggregateErrorPonyfill extends Error {
   }
 }
 export { AggregateErrorPonyfill as AggregateError }
+
+export const isAggregateError = (err: unknown): err is AggregateErrorPonyfill => {
+  return err instanceof AggregateErrorPonyfill
+    || (typeof AggregateError !== 'undefined' && err instanceof AggregateError)
+}

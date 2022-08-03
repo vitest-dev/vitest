@@ -1,4 +1,5 @@
 import type { ErrorWithDiff, File, Task, TaskResultPack, UserConsoleLog } from '../types'
+import { isAggregateError } from '../utils'
 
 interface CollectingPromise {
   promise: Promise<void>
@@ -14,7 +15,10 @@ export class StateManager {
   taskFileMap = new WeakMap<Task, File>()
   errorsSet = new Set<unknown>()
 
-  catchError(err: unknown, type: string) {
+  catchError(err: unknown, type: string): void {
+    if (isAggregateError(err))
+      return err.errors.forEach(error => this.catchError(error, type));
+
     (err as ErrorWithDiff).type = type
     this.errorsSet.add(err)
   }
