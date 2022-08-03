@@ -105,7 +105,7 @@ This might potentially cause some misalignment if a package has different logic 
 #### deps.registerNodeLoader
 
 - **Type:** `boolean`
-- **Default:** `false`
+- **Default:** `true`
 
 Use [experimental Node loader](https://nodejs.org/api/esm.html#loaders) to resolve imports inside `node_modules`, using Vite resolve algorithm.
 

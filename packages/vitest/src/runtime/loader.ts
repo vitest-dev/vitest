@@ -1,6 +1,6 @@
 import { pathToFileURL } from 'url'
 import { readFile } from 'fs/promises'
-import { isNodeBuiltin } from 'mlly'
+import { hasCJSSyntax, isNodeBuiltin } from 'mlly'
 import { normalizeModuleId } from 'vite-node/utils'
 import { getWorkerState } from '../utils'
 import type { Loader, ResolveResult, Resolver } from '../types/loader'
@@ -19,9 +19,27 @@ interface ContextCache {
 
 const cache = new Map<string, ContextCache>()
 
+const getPotentialSource = async (filepath: string, result: ResolveResult) => {
+  if (!result.url.startsWith('file://') || result.format === 'module')
+    return null
+  let source = cache.get(result.url)?.source
+  if (source == null)
+    source = await readFile(filepath, 'utf8')
+  return source
+}
+
+const detectESM = (url: string, source: string | null) => {
+  const cached = cache.get(url)
+  if (cached)
+    return cached.isPseudoESM
+  if (!source)
+    return false
+  return (hasESMSyntax(source) && !hasCJSSyntax(source))
+}
+
 // apply transformations only to libraries
 // inline code preccessed by vite-node
-// make Node understand "module" field and pseudo ESM
+// make Node pseudo ESM
 export const resolve: Resolver = async (url, context, next) => {
   const { parentURL } = context
   const state = getWorkerState()
@@ -54,10 +72,8 @@ export const resolve: Resolver = async (url, context, next) => {
     }
   }
 
-  const isReadable = result.url.startsWith('file://')
-
-  const source = isReadable && result.format !== 'module' && (cache.get(result.url)?.source ?? await readFile(filepath, 'utf8'))
-  const isPseudoESM = cache.get(result.url)?.isPseudoESM ?? (source && hasESMSyntax(source))
+  const source = await getPotentialSource(filepath, result)
+  const isPseudoESM = detectESM(result.url, source)
   if (typeof source === 'string')
     cache.set(result.url, { isPseudoESM: isPseudoESM || false, source })
   if (isPseudoESM)

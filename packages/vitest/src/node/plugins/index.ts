@@ -96,9 +96,6 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
           },
         }
 
-        if (viteConfig.test?.deps?.registerNodeLoader === true)
-          delete config.resolve!.mainFields
-
         if (!options.browser) {
           // disable deps optimization
           Object.assign(config, {
