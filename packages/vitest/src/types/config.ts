@@ -83,7 +83,7 @@ export interface InlineConfig {
 
     /**
      * Use experimental Node loader to resolve imports inside node_modules using Vite resolve algorithm.
-     * @default true
+     * @default false
      */
     registerNodeLoader?: boolean
   }

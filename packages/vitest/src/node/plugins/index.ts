@@ -80,6 +80,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
 
         const config: ViteConfig = {
           resolve: {
+            mainFields: [],
             alias: preOptions.alias,
           },
           server: {
@@ -93,8 +94,8 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
           },
         }
 
-        if (viteConfig.test?.deps?.registerNodeLoader === false)
-          config.resolve!.mainFields = []
+        if (viteConfig.test?.deps?.registerNodeLoader === true)
+          delete config.resolve!.mainFields
 
         if (!options.browser) {
           // disable deps optimization
