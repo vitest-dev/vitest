@@ -9,5 +9,5 @@ describe('circular', async () => {
   test('should works', async () => {
     const result = await execa('npx', ['esno', cliPath, entryPath], { reject: true })
     expect(result.stdout).toMatchInlineSnapshot('"A Bindex index"')
-  }, 30_000)
+  }, 60_000)
 })
