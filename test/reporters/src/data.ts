@@ -1,6 +1,5 @@
 import { AssertionError } from 'assert'
-import type { ErrorWithDiff } from '../../../packages/vitest/dist'
-import type { File, Suite, Task } from '../../../packages/vitest/src/types'
+import type { ErrorWithDiff, File, Suite, Task } from 'vitest'
 
 const file: File = {
   id: '1223128da3',

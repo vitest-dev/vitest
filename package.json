@@ -25,6 +25,7 @@
     "test:ci": "cross-env CI=true pnpm -r --stream --filter !test-fails --filter !test-browser run test --allowOnly",
     "test:ci:single-thread": "cross-env CI=true pnpm -r --stream --filter !test-fails run test --allowOnly --no-threads",
     "typecheck": "tsc --noEmit",
+    "typecheck:why": "tsc --noEmit --explainFiles > explainTypes.txt",
     "ui:build": "vite build packages/ui",
     "ui:dev": "vite packages/ui",
     "ui:test": "npm -C packages/ui run test:run"

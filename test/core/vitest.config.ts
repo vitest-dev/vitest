@@ -1,5 +1,5 @@
 import { basename, dirname, join, resolve } from 'pathe'
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   plugins: [
