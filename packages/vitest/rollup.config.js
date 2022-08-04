@@ -21,6 +21,7 @@ const entries = [
   'src/node.ts',
   'src/runtime/worker.ts',
   'src/runtime/loader.ts',
+  'src/runtime/child.ts',
   'src/runtime/entry.ts',
   'src/runtime/suite.ts',
   'src/integrations/spy.ts',

@@ -22,12 +22,13 @@ async function startViteNode(ctx: WorkerContext) {
 
   const processExit = process.exit
 
-  process.on('beforeExit', (code) => {
-    rpc().onWorkerExit(code)
+  // TODO
+  process.on('beforeExit', () => {
+    // rpc().onWorkerExit(code)
   })
 
   process.exit = (code = process.exitCode || 0): never => {
-    rpc().onWorkerExit(code)
+    // rpc().onWorkerExit(code)
     return processExit(code)
   }
 
@@ -79,8 +80,12 @@ function init(ctx: WorkerContext) {
       {},
       {
         eventNames: ['onUserConsoleLog', 'onFinished', 'onCollected', 'onWorkerExit'],
-        post(v) { port.postMessage(v) },
-        on(fn) { port.addListener('message', fn) },
+        post(v) {
+          port.postMessage(v)
+        },
+        on(fn) {
+          port.addListener('message', fn)
+        },
       },
     ),
   }
@@ -97,5 +102,6 @@ function init(ctx: WorkerContext) {
 export async function run(ctx: WorkerContext) {
   init(ctx)
   const { run } = await startViteNode(ctx)
+  // console.log('vite node started')
   return run(ctx.files, ctx.config)
 }
