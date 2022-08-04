@@ -3,7 +3,7 @@ import { isNodeBuiltin } from 'mlly'
 import { basename, dirname, join, resolve } from 'pathe'
 import { normalizeRequestId, toFilePath } from 'vite-node/utils'
 import type { ModuleCacheMap } from 'vite-node/client'
-import { getAllProperties, getType, getWorkerState, isWindows, mergeSlashes, slash } from '../utils'
+import { getType, getWorkerState, isFinalObj, isWindows, mergeSlashes, slash } from '../utils'
 import { distDir } from '../constants'
 import type { PendingSuiteMock } from '../types/mocker'
 import type { ExecuteOptions } from './execute'
@@ -173,14 +173,19 @@ export class VitestMocker {
     const refs = new RefTracker()
 
     const mockPropertiesOf = (container: Record<Key, any>, newContainer: Record<Key, any>) => {
+      // If the container is a base-type, there's no need to mock it.
+      if (isFinalObj(container))
+        return
+
       const containerType = getType(container)
       const isModule = containerType === 'Module' || !!container.__esModule
-      for (const property of getAllProperties(container)) {
+
+      const descriptors = Object.getOwnPropertyDescriptors(container)
+      for (const [property, descriptor] of Object.entries(descriptors)) {
         // Modules define their exports as getters. We want to process those.
         if (!isModule) {
           // TODO: Mock getters/setters somehow?
-          const descriptor = Object.getOwnPropertyDescriptor(container, property)
-          if (descriptor?.get || descriptor?.set)
+          if (descriptor.get || descriptor.set)
             continue
         }
 

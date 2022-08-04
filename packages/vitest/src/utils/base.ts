@@ -1,7 +1,7 @@
 import { RealDate } from '../integrations/mock/date'
 import type { Arrayable, DeepMerge, Nullable } from '../types'
 
-function isFinalObj(obj: any) {
+export function isFinalObj(obj: any) {
   return obj === Object.prototype || obj === Function.prototype || obj === RegExp.prototype
 }
 
@@ -11,19 +11,6 @@ function collectOwnProperties(obj: any, collector: Set<string | symbol>) {
 
   props.forEach(prop => collector.add(prop))
   symbols.forEach(symbol => collector.add(symbol))
-}
-
-export function getAllProperties(obj: any) {
-  const allProps = new Set<string | symbol>()
-  let curr = obj
-  do {
-    // we don't need propterties from these
-    if (isFinalObj(curr))
-      break
-    collectOwnProperties(curr, allProps)
-    // eslint-disable-next-line no-cond-assign
-  } while (curr = Object.getPrototypeOf(curr))
-  return Array.from(allProps)
 }
 
 export function notNullish<T>(v: T | null | undefined): v is NonNullable<T> {

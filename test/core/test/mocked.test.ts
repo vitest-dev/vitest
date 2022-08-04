@@ -4,7 +4,7 @@ import { value as virtualValue } from 'virtual-module'
 import { two } from '../src/submodule'
 import * as mocked from '../src/mockedA'
 import { mockedB } from '../src/mockedB'
-import { MockedC, asyncFunc } from '../src/mockedC'
+import { MockedC, asyncFunc, exportedStream } from '../src/mockedC'
 import * as globalMock from '../src/global-mock'
 
 vitest.mock('../src/submodule')
@@ -62,4 +62,9 @@ test('async functions should be mocked', () => {
   expect(vi.mocked(asyncFunc).mockResolvedValue).toBeDefined()
   vi.mocked(asyncFunc).mockResolvedValue('foo')
   expect(asyncFunc()).resolves.toBe('foo')
+})
+
+// This is here because mocking streams previously caused some problems (#1671).
+test('streams', () => {
+  expect(exportedStream).toBeDefined()
 })
