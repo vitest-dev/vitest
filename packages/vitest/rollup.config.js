@@ -60,7 +60,7 @@ const plugins = [
   }),
 ]
 
-export default ({ watch }) => [
+export default ({ watch }) => defineConfig([
   {
     input: entries,
     output: {
@@ -107,25 +107,19 @@ export default ({ watch }) => [
     external,
     plugins,
   },
-  ...dtsEntries.map((input) => {
-    const _external = external
-    // index is vitest default types export
-    if (!input.includes('index'))
-      _external.push('vitest')
-
-    return defineConfig({
-      input,
-      output: {
-        file: input.replace('src/', 'dist/').replace('.ts', '.d.ts'),
-        format: 'esm',
-      },
-      external: _external,
-      plugins: [
-        dts({ respectExternal: true }),
-      ],
-    })
-  }),
-]
+  {
+    input: dtsEntries,
+    output: {
+      dir: 'dist',
+      entryFileNames: chunk => `${chunk.name.replace('src/', '')}.d.ts`,
+      format: 'esm',
+    },
+    external,
+    plugins: [
+      dts({ respectExternal: true }),
+    ],
+  },
+])
 
 function licensePlugin() {
   return license({
