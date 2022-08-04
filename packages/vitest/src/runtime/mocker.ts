@@ -3,7 +3,7 @@ import { isNodeBuiltin } from 'mlly'
 import { basename, dirname, join, resolve } from 'pathe'
 import { normalizeRequestId, toFilePath } from 'vite-node/utils'
 import type { ModuleCacheMap } from 'vite-node/client'
-import { getAllProperties, getType, getWorkerState, isWindows, mergeSlashes, slash } from '../utils'
+import { getAllMockableProperties, getType, getWorkerState, isWindows, mergeSlashes, slash } from '../utils'
 import { distDir } from '../constants'
 import type { PendingSuiteMock } from '../types/mocker'
 import type { ExecuteOptions } from './execute'
@@ -172,15 +172,24 @@ export class VitestMocker {
     const finalizers = new Array<() => void>()
     const refs = new RefTracker()
 
+    const define = (container: Record<Key, any>, key: Key, value: any) => {
+      try {
+        container[key] = value
+        return true
+      }
+      catch {
+        return false
+      }
+    }
+
     const mockPropertiesOf = (container: Record<Key, any>, newContainer: Record<Key, any>) => {
       const containerType = getType(container)
       const isModule = containerType === 'Module' || !!container.__esModule
-      for (const property of getAllProperties(container)) {
+      for (const { key: property, descriptor } of getAllMockableProperties(container)) {
         // Modules define their exports as getters. We want to process those.
         if (!isModule) {
           // TODO: Mock getters/setters somehow?
-          const descriptor = Object.getOwnPropertyDescriptor(container, property)
-          if (descriptor?.get || descriptor?.set)
+          if (descriptor.get || descriptor.set)
             continue
         }
 
@@ -194,24 +203,27 @@ export class VitestMocker {
         // recursion in circular objects.
         const refId = refs.getId(value)
         if (refId) {
-          finalizers.push(() => newContainer[property] = refs.getMockedValue(refId))
+          finalizers.push(() => define(newContainer, property, refs.getMockedValue(refId)))
           continue
         }
 
         const type = getType(value)
 
         if (Array.isArray(value)) {
-          newContainer[property] = []
+          define(newContainer, property, [])
           continue
         }
 
         const isFunction = type.includes('Function') && typeof value === 'function'
         if ((!isFunction || value.__isMockFunction) && type !== 'Object' && type !== 'Module') {
-          newContainer[property] = value
+          define(newContainer, property, value)
           continue
         }
 
-        newContainer[property] = isFunction ? value : {}
+        // Sometimes this assignment fails for some unknown reason. If it does,
+        // just move along.
+        if (!define(newContainer, property, isFunction ? value : {}))
+          continue
 
         if (isFunction) {
           spyModule.spyOn(newContainer, property).mockImplementation(() => undefined)
