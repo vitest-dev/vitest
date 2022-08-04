@@ -167,6 +167,13 @@ export interface InlineConfig {
   threads?: boolean
 
   /**
+   * Run tests in parallel
+   *
+   * @default true
+   */
+  parallel?: boolean
+
+  /**
    * Maximum number of threads
    *
    * @default available CPUs

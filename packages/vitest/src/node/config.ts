@@ -95,6 +95,8 @@ export function resolveConfig(
 
   resolved.coverage = resolveC8Options(options.coverage || {}, resolved.root)
 
+  resolved.parallel ??= true
+
   if (options.shard) {
     if (resolved.watch)
       throw new Error('You cannot use --shard option with enabled watch')

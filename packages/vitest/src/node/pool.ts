@@ -40,12 +40,17 @@ export function createPool(ctx: Vitest): WorkerPool {
 
     files = await sequencer.sort(files)
 
-    const results = await Promise.allSettled(files
-      .map(file => runFiles(config, [file], invalidates)))
+    if (!ctx.config.parallel) {
+      await runFiles(config, files)
+    }
+    else {
+      const results = await Promise.allSettled(files
+        .map(file => runFiles(config, [file], invalidates)))
 
-    const errors = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected').map(r => r.reason)
-    if (errors.length > 0)
-      throw new AggregateError(errors, 'Errors occurred while running tests. For more information, see serialized error.')
+      const errors = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected').map(r => r.reason)
+      if (errors.length > 0)
+        throw new AggregateError(errors, 'Errors occurred while running tests. For more information, see serialized error.')
+    }
   }
 
   return {
@@ -255,6 +260,7 @@ function createProcessChannel(ctx: Vitest) {
     },
   })
 
+  // TODO https://github.com/avajs/ava/blob/main/lib/ipc-flow-control.cjs
   createBirpc<{}, WorkerRPC>(
     getRPCObject(ctx),
     {
