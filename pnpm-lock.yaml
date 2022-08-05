@@ -20852,7 +20852,7 @@ packages:
       webpack:
         optional: true
     dependencies:
-      acorn: 8.7.1
+      acorn: 8.8.0
       chokidar: 3.5.3
       rollup: 2.77.2
       vite: 3.0.4
