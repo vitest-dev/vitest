@@ -89,41 +89,59 @@ type ExtractEachCallbackArgs<T extends ReadonlyArray<any>> = {
                     ? 10
                     : 'fallback']
 
-interface EachFunction {
+interface SuiteEachFunction {
   <T extends any[] | [any]>(cases: ReadonlyArray<T>): (
     name: string,
-    fn: (...args: T) => Awaitable<void>
+    fn: (...args: T) => Awaitable<void>,
   ) => void
   <T extends ReadonlyArray<any>>(cases: ReadonlyArray<T>): (
     name: string,
-    fn: (...args: ExtractEachCallbackArgs<T>) => Awaitable<void>
+    fn: (...args: ExtractEachCallbackArgs<T>) => Awaitable<void>,
   ) => void
   <T>(cases: ReadonlyArray<T>): (
     name: string,
-    fn: (...args: T[]) => Awaitable<void>
+    fn: (...args: T[]) => Awaitable<void>,
+  ) => void
+}
+
+interface TestEachFunction {
+  <T extends any[] | [any]>(cases: ReadonlyArray<T>): (
+    name: string,
+    fn: (...args: T) => Awaitable<void>,
+    timeout?: number,
+  ) => void
+  <T extends ReadonlyArray<any>>(cases: ReadonlyArray<T>): (
+    name: string,
+    fn: (...args: ExtractEachCallbackArgs<T>) => Awaitable<void>,
+    timeout?: number,
+  ) => void
+  <T>(cases: ReadonlyArray<T>): (
+    name: string,
+    fn: (...args: T[]) => Awaitable<void>,
+    timeout?: number,
   ) => void
 }
 
 type ChainableTestAPI<ExtraContext = {}> = ChainableFunction<
-'concurrent' | 'only' | 'skip' | 'todo' | 'fails',
-[name: string, fn?: TestFunction<ExtraContext>, timeout?: number],
-void
+  'concurrent' | 'only' | 'skip' | 'todo' | 'fails',
+  [name: string, fn?: TestFunction<ExtraContext>, timeout?: number],
+  void
 >
 
 export type TestAPI<ExtraContext = {}> = ChainableTestAPI<ExtraContext> & {
-  each: EachFunction
+  each: TestEachFunction
   skipIf(condition: any): ChainableTestAPI<ExtraContext>
   runIf(condition: any): ChainableTestAPI<ExtraContext>
 }
 
 type ChainableSuiteAPI<ExtraContext = {}> = ChainableFunction<
-'concurrent' | 'only' | 'skip' | 'todo' | 'shuffle',
-[name: string, factory?: SuiteFactory],
-SuiteCollector<ExtraContext>
+  'concurrent' | 'only' | 'skip' | 'todo' | 'shuffle',
+  [name: string, factory?: SuiteFactory],
+  SuiteCollector<ExtraContext>
 >
 
 export type SuiteAPI<ExtraContext = {}> = ChainableSuiteAPI & {
-  each: EachFunction
+  each: SuiteEachFunction
   skipIf(condition: any): ChainableSuiteAPI<ExtraContext>
   runIf(condition: any): ChainableSuiteAPI<ExtraContext>
 }

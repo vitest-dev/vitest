@@ -166,7 +166,7 @@ function createSuite() {
   const suite = createChainable(
     ['concurrent', 'shuffle', 'skip', 'only', 'todo'],
     function (name: string, factory?: SuiteFactory) {
-      const mode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run'
+      const mode: RunMode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run'
       return createSuiteCollector(name, factory, mode, this.concurrent, this.shuffle)
     },
   ) as SuiteAPI
@@ -200,10 +200,10 @@ function createTest(fn: (
   ) as TestAPI
 
   test.each = <T>(cases: ReadonlyArray<T>) => {
-    return (name: string, fn: (...args: T[]) => void) => {
+    return (name: string, fn: (...args: T[]) => void, timeout?: number) => {
       cases.forEach((i, idx) => {
         const items = Array.isArray(i) ? i : [i]
-        test(formatTitle(name, items, idx), () => fn(...items))
+        test(formatTitle(name, items, idx), () => fn(...items), timeout)
       })
     }
   }
