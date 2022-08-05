@@ -163,15 +163,13 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
 }
 
 function createSuite() {
-  const suite = createChainable(
-    ['concurrent', 'shuffle', 'skip', 'only', 'todo'],
-    function (name: string, factory?: SuiteFactory) {
-      const mode: RunMode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run'
-      return createSuiteCollector(name, factory, mode, this.concurrent, this.shuffle)
-    },
-  ) as SuiteAPI
+  function suiteFn(this: Record<string, boolean | undefined>, name: string, factory?: SuiteFactory) {
+    const mode: RunMode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run'
+    return createSuiteCollector(name, factory, mode, this.concurrent, this.shuffle)
+  }
 
-  suite.each = <T>(cases: ReadonlyArray<T>) => {
+  suiteFn.each = function<T>(this: { withContext: () => SuiteAPI }, cases: ReadonlyArray<T>) {
+    const suite = this.withContext()
     return (name: string, fn: (...args: T[]) => void) => {
       cases.forEach((i, idx) => {
         const items = Array.isArray(i) ? i : [i]
@@ -180,10 +178,13 @@ function createSuite() {
     }
   }
 
-  suite.skipIf = (condition: any) => (condition ? suite.skip : suite) as SuiteAPI
-  suite.runIf = (condition: any) => (condition ? suite : suite.skip) as SuiteAPI
+  suiteFn.skipIf = (condition: any) => (condition ? suite.skip : suite) as SuiteAPI
+  suiteFn.runIf = (condition: any) => (condition ? suite : suite.skip) as SuiteAPI
 
-  return suite
+  return createChainable(
+    ['concurrent', 'shuffle', 'skip', 'only', 'todo'],
+    suiteFn,
+  ) as unknown as SuiteAPI
 }
 
 function createTest(fn: (
@@ -194,12 +195,11 @@ function createTest(fn: (
     timeout?: number
   ) => void
 )) {
-  const test = createChainable(
-    ['concurrent', 'skip', 'only', 'todo', 'fails'],
-    fn,
-  ) as TestAPI
+  const testFn = fn as any
 
-  test.each = <T>(cases: ReadonlyArray<T>) => {
+  testFn.each = function<T>(this: { withContext: () => TestAPI }, cases: ReadonlyArray<T>) {
+    const test = this.withContext()
+
     return (name: string, fn: (...args: T[]) => void, timeout?: number) => {
       cases.forEach((i, idx) => {
         const items = Array.isArray(i) ? i : [i]
@@ -208,8 +208,11 @@ function createTest(fn: (
     }
   }
 
-  test.skipIf = (condition: any) => (condition ? test.skip : test) as TestAPI
-  test.runIf = (condition: any) => (condition ? test : test.skip) as TestAPI
+  testFn.skipIf = (condition: any) => (condition ? test.skip : test) as TestAPI
+  testFn.runIf = (condition: any) => (condition ? test : test.skip) as TestAPI
 
-  return test as TestAPI
+  return createChainable(
+    ['concurrent', 'skip', 'only', 'todo', 'fails'],
+    testFn,
+  ) as TestAPI
 }

@@ -198,6 +198,8 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
   // ✓ add(2, 1) -> 3
   ```
 
+  If you want to have access to `TestContext`, use `describe.each` with a single test.
+
 ## describe
 
 When you use `test` in the top level of file, they are collected as part of the implicit suite for it. Using `describe` you can define a new suite in the current context, as a set of related tests and other nested suites. A suite lets you organize your tests so reports are more clear.

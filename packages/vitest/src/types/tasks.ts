@@ -125,7 +125,8 @@ interface TestEachFunction {
 type ChainableTestAPI<ExtraContext = {}> = ChainableFunction<
   'concurrent' | 'only' | 'skip' | 'todo' | 'fails',
   [name: string, fn?: TestFunction<ExtraContext>, timeout?: number],
-  void
+  void,
+  { each: TestEachFunction }
 >
 
 export type TestAPI<ExtraContext = {}> = ChainableTestAPI<ExtraContext> & {
@@ -137,7 +138,8 @@ export type TestAPI<ExtraContext = {}> = ChainableTestAPI<ExtraContext> & {
 type ChainableSuiteAPI<ExtraContext = {}> = ChainableFunction<
   'concurrent' | 'only' | 'skip' | 'todo' | 'shuffle',
   [name: string, factory?: SuiteFactory],
-  SuiteCollector<ExtraContext>
+  SuiteCollector<ExtraContext>,
+  { each: TestEachFunction }
 >
 
 export type SuiteAPI<ExtraContext = {}> = ChainableSuiteAPI & {
