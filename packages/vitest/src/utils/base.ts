@@ -5,22 +5,25 @@ function isFinalObj(obj: any) {
   return obj === Object.prototype || obj === Function.prototype || obj === RegExp.prototype
 }
 
-function collectOwnProperties(obj: any, collector: Set<string | symbol>) {
-  const props = Object.getOwnPropertyNames(obj)
-  const symbols = Object.getOwnPropertySymbols(obj)
-
-  props.forEach(prop => collector.add(prop))
-  symbols.forEach(symbol => collector.add(symbol))
+function collectOwnProperties(obj: any, collector: Set<string | symbol> | ((key: string | symbol) => void)) {
+  const collect = typeof collector === 'function' ? collector : (key: string | symbol) => collector.add(key)
+  Object.getOwnPropertyNames(obj).forEach(collect)
+  Object.getOwnPropertySymbols(obj).forEach(collect)
 }
 
-export function getAllProperties(obj: any) {
-  const allProps = new Set<string | symbol>()
+export function getAllMockableProperties(obj: any) {
+  const allProps = new Set<{ key: string | symbol; descriptor: PropertyDescriptor }>()
   let curr = obj
   do {
-    // we don't need propterties from these
+    // we don't need properties from these
     if (isFinalObj(curr))
       break
-    collectOwnProperties(curr, allProps)
+
+    collectOwnProperties(curr, (key) => {
+      const descriptor = Object.getOwnPropertyDescriptor(curr, key)
+      if (descriptor)
+        allProps.add({ key, descriptor })
+    })
     // eslint-disable-next-line no-cond-assign
   } while (curr = Object.getPrototypeOf(curr))
   return Array.from(allProps)
