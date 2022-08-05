@@ -375,11 +375,14 @@ export interface InlineConfig {
    *
    * When excluded, the CSS files will be replaced with empty strings to bypass the subsequent processing.
    *
-   * @default { include: [/\.module\./] }
+   * @default { include: [/\.module\./], modules: { mangleClassName: false } }
    */
   css?: boolean | {
     include?: RegExp | RegExp[]
     exclude?: RegExp | RegExp[]
+    modules?: {
+      mangleClassName?: boolean
+    }
   }
   /**
    * A number of tests that are allowed to run at the same time marked with `test.concurrent`.
