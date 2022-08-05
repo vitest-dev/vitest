@@ -26,6 +26,9 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
     <VitePlugin>{
       name: 'vitest',
       enforce: 'pre',
+      options() {
+        this.meta.watchMode = false
+      },
       config(viteConfig: any) {
         // preliminary merge of options to be able to create server options for vite
         // however to allow vitest plugins to modify vitest config values
