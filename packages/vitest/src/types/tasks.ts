@@ -124,8 +124,7 @@ interface TestEachFunction {
 
 type ChainableTestAPI<ExtraContext = {}> = ChainableFunction<
   'concurrent' | 'only' | 'skip' | 'todo' | 'fails',
-  [name: string, fn?: TestFunction<ExtraContext>, timeout?: number],
-  void
+  <T extends ExtraContext = ExtraContext>(name: string, fn?: TestFunction<T>, timeout?: number) => void
 >
 
 export type TestAPI<ExtraContext = {}> = ChainableTestAPI<ExtraContext> & {
@@ -136,8 +135,7 @@ export type TestAPI<ExtraContext = {}> = ChainableTestAPI<ExtraContext> & {
 
 type ChainableSuiteAPI<ExtraContext = {}> = ChainableFunction<
   'concurrent' | 'only' | 'skip' | 'todo' | 'shuffle',
-  [name: string, factory?: SuiteFactory],
-  SuiteCollector<ExtraContext>
+  <T extends ExtraContext = ExtraContext>(name: string, factory?: SuiteFactory<T>) => SuiteCollector<ExtraContext>
 >
 
 export type SuiteAPI<ExtraContext = {}> = ChainableSuiteAPI & {
@@ -168,7 +166,7 @@ export interface SuiteCollector<ExtraContext = {}> {
   on: <T extends keyof SuiteHooks>(name: T, ...fn: SuiteHooks[T]) => void
 }
 
-export type SuiteFactory = (test: (name: string, fn: TestFunction) => void) => Awaitable<void>
+export type SuiteFactory<ExtraContext = {}> = (test: (name: string, fn: TestFunction<ExtraContext>) => void) => Awaitable<void>
 
 export interface RuntimeContext {
   tasks: (SuiteCollector | Test)[]
