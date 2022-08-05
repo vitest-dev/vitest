@@ -158,11 +158,11 @@ export type HookListener<T extends any[], Return = void> = (...args: T) => Await
 
 export type HookCleanupCallback = (() => Awaitable<unknown>) | void
 
-export interface SuiteHooks {
+export interface SuiteHooks<ExtraContext = {}> {
   beforeAll: HookListener<[Suite | File], HookCleanupCallback>[]
   afterAll: HookListener<[Suite | File]>[]
-  beforeEach: HookListener<[TestContext, Suite], HookCleanupCallback>[]
-  afterEach: HookListener<[TestContext, Suite]>[]
+  beforeEach: HookListener<[TestContext & ExtraContext, Suite], HookCleanupCallback>[]
+  afterEach: HookListener<[TestContext & ExtraContext, Suite]>[]
 }
 
 export interface SuiteCollector<ExtraContext = {}> {
@@ -173,7 +173,7 @@ export interface SuiteCollector<ExtraContext = {}> {
   tasks: (Suite | Test | SuiteCollector<ExtraContext>)[]
   collect: (file?: File) => Promise<Suite>
   clear: () => void
-  on: <T extends keyof SuiteHooks>(name: T, ...fn: SuiteHooks[T]) => void
+  on: <T extends keyof SuiteHooks<ExtraContext>>(name: T, ...fn: SuiteHooks<ExtraContext>[T]) => void
 }
 
 export type SuiteFactory<ExtraContext = {}> = (test: (name: string, fn: TestFunction<ExtraContext>) => void) => Awaitable<void>

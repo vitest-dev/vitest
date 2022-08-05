@@ -50,8 +50,8 @@ export function clearCollectorContext() {
   collectorContext.currentSuite = defaultSuite
 }
 
-export function getCurrentSuite() {
-  return collectorContext.currentSuite || defaultSuite
+export function getCurrentSuite<ExtraContext = {}>() {
+  return (collectorContext.currentSuite || defaultSuite) as SuiteCollector<ExtraContext>
 }
 
 export function createSuiteHooks() {
