@@ -131,7 +131,7 @@ export function resolveConfig(
 
   // disable loader for Yarn PnP until Node implements chain loader
   // https://github.com/nodejs/node/pull/43772
-  resolved.deps.registerNodeLoader ??= typeof process.versions.pnp === 'undefined'
+  resolved.deps.registerNodeLoader ??= false
 
   resolved.testNamePattern = resolved.testNamePattern
     ? resolved.testNamePattern instanceof RegExp

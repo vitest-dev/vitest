@@ -880,6 +880,17 @@ importers:
       '@vitest/web-worker': link:../../packages/web-worker
       vitest: link:../../packages/vitest
 
+  test/esm:
+    specifiers:
+      css-what: 6.1.0
+      tslib: 2.4.0
+      vitest: workspace:*
+    dependencies:
+      css-what: 6.1.0
+      tslib: 2.4.0
+    devDependencies:
+      vitest: link:../../packages/vitest
+
   test/fails:
     specifiers:
       execa: ^6.1.0
@@ -10892,7 +10903,6 @@ packages:
   /css-what/6.1.0:
     resolution: {integrity: sha512-HTUrgRJ7r4dsZKU6GjmpfRK1O76h97Z8MfS1G0FozR+oF2kG6Vfe8JE6zwrkbxigziPHinCJ+gCPjA9EaBDtRw==}
     engines: {node: '>= 6'}
-    dev: true
 
   /css.escape/1.5.1:
     resolution: {integrity: sha512-YUifsXXuknHlUsmlgyY0PKzgPOr7/FjCePfHNt0jxm83wHZi44VDMQ7/fGNkjY3/jV1MC+1CmZbaHzugyeRtpg==}

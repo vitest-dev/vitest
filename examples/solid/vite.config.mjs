@@ -10,6 +10,9 @@ export default defineConfig({
     transformMode: {
       web: [/.[jt]sx?/],
     },
+    deps: {
+      registerNodeLoader: true,
+    },
     threads: false,
     isolate: false,
   },
