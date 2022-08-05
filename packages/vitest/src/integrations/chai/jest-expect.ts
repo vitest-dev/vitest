@@ -303,8 +303,12 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
 
     const actual = this._obj
     const [propertyName, expected] = args
-    const { value, exists } = utils.getPathInfo(actual, propertyName)
-    const pass = exists && (args.length === 1 || jestEquals(expected, value))
+    let pass = false
+    if (Object.prototype.hasOwnProperty.call(actual, propertyName)) { pass = true }
+    else {
+      const { value, exists } = utils.getPathInfo(actual, propertyName)
+      pass = exists && (args.length === 1 || jestEquals(expected, value))
+    }
 
     return this.assert(
       pass,
