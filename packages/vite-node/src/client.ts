@@ -182,7 +182,11 @@ export class ViteNodeRunner {
     const url = pathToFileURL(fsPath).href
     const meta = { url }
     const exports: any = Object.create(null)
-    exports[Symbol.toStringTag] = 'Module'
+    Object.defineProperty(exports, Symbol.toStringTag, {
+      value: 'Module',
+      enumerable: false,
+      configurable: false,
+    })
 
     this.moduleCache.set(fsPath, { code: transformed, exports })
 
