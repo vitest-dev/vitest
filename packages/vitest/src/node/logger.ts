@@ -108,7 +108,7 @@ export class Logger {
   async printUnhandledErrors(errors: unknown[]) {
     const errorMessage = c.red(c.bold(
       `\nVitest caught ${errors.length} unhandled error${errors.length > 1 ? 's' : ''} during the test run. This might cause false positive tests.`
-      + '\nPlease, resolve all the errors to make sure your tests are not affected.',
+      + '\nPlease, resolve all errors to make sure your tests are not affected.',
     ))
     this.log(c.red(divider(c.bold(c.inverse(' Unhandled Errors ')))))
     this.log(errorMessage)
