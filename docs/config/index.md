@@ -545,7 +545,7 @@ export default defineConfig({
 - **Type**: `boolean`
 - **Default**: `false`
 
-Allow tests and suites that are marked as only.
+Allow tests and suites that are marked as only. This also requires to set `threads` to `false`.
 
 ### dangerouslyIgnoreUnhandledErrors
 

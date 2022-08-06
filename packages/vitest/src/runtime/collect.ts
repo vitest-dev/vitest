@@ -22,6 +22,7 @@ function hash(str: string): string {
 
 export async function collectTests(paths: string[], config: ResolvedConfig) {
   const files: File[] = []
+  const filesWithOnlyTasks = []
 
   const browserHashMap = getWorkerState().browserHashMap!
 
@@ -91,9 +92,10 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
     interpretTaskModes(file, config.testNamePattern, hasOnlyTasks, false, config.allowOnly)
 
     files.push(file)
+    if (hasOnlyTasks) filesWithOnlyTasks.push(file);
   }
 
-  return files
+  return config.allowOnly ? filesWithOnlyTasks : files;
 }
 
 /**
