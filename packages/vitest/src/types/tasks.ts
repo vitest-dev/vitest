@@ -126,7 +126,10 @@ type ChainableTestAPI<ExtraContext = {}> = ChainableFunction<
   'concurrent' | 'only' | 'skip' | 'todo' | 'fails',
   [name: string, fn?: TestFunction<ExtraContext>, timeout?: number],
   void,
-  { each: TestEachFunction }
+  {
+    each: TestEachFunction
+    <T extends ExtraContext>(name: string, fn?: TestFunction<T>, timeout?: number): void
+  }
 >
 
 export type TestAPI<ExtraContext = {}> = ChainableTestAPI<ExtraContext> & {
@@ -137,12 +140,15 @@ export type TestAPI<ExtraContext = {}> = ChainableTestAPI<ExtraContext> & {
 
 type ChainableSuiteAPI<ExtraContext = {}> = ChainableFunction<
   'concurrent' | 'only' | 'skip' | 'todo' | 'shuffle',
-  [name: string, factory?: SuiteFactory],
+  [name: string, factory?: SuiteFactory<ExtraContext>],
   SuiteCollector<ExtraContext>,
-  { each: TestEachFunction }
+  {
+    each: TestEachFunction
+    <T extends ExtraContext>(name: string, factory?: SuiteFactory<T>): SuiteCollector<T>
+  }
 >
 
-export type SuiteAPI<ExtraContext = {}> = ChainableSuiteAPI & {
+export type SuiteAPI<ExtraContext = {}> = ChainableSuiteAPI<ExtraContext> & {
   each: SuiteEachFunction
   skipIf(condition: any): ChainableSuiteAPI<ExtraContext>
   runIf(condition: any): ChainableSuiteAPI<ExtraContext>
@@ -152,11 +158,11 @@ export type HookListener<T extends any[], Return = void> = (...args: T) => Await
 
 export type HookCleanupCallback = (() => Awaitable<unknown>) | void
 
-export interface SuiteHooks {
+export interface SuiteHooks<ExtraContext = {}> {
   beforeAll: HookListener<[Suite | File], HookCleanupCallback>[]
   afterAll: HookListener<[Suite | File]>[]
-  beforeEach: HookListener<[TestContext, Suite], HookCleanupCallback>[]
-  afterEach: HookListener<[TestContext, Suite]>[]
+  beforeEach: HookListener<[TestContext & ExtraContext, Suite], HookCleanupCallback>[]
+  afterEach: HookListener<[TestContext & ExtraContext, Suite]>[]
 }
 
 export interface SuiteCollector<ExtraContext = {}> {
@@ -167,10 +173,10 @@ export interface SuiteCollector<ExtraContext = {}> {
   tasks: (Suite | Test | SuiteCollector<ExtraContext>)[]
   collect: (file?: File) => Promise<Suite>
   clear: () => void
-  on: <T extends keyof SuiteHooks>(name: T, ...fn: SuiteHooks[T]) => void
+  on: <T extends keyof SuiteHooks<ExtraContext>>(name: T, ...fn: SuiteHooks<ExtraContext>[T]) => void
 }
 
-export type SuiteFactory = (test: (name: string, fn: TestFunction) => void) => Awaitable<void>
+export type SuiteFactory<ExtraContext = {}> = (test: (name: string, fn: TestFunction<ExtraContext>) => void) => Awaitable<void>
 
 export interface RuntimeContext {
   tasks: (SuiteCollector | Test)[]
