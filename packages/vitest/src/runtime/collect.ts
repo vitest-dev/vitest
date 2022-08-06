@@ -92,10 +92,11 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
     interpretTaskModes(file, config.testNamePattern, hasOnlyTasks, false, config.allowOnly)
 
     files.push(file)
-    if (hasOnlyTasks) filesWithOnlyTasks.push(file);
+    if (hasOnlyTasks)
+      filesWithOnlyTasks.push(file)
   }
 
-  return config.allowOnly ? filesWithOnlyTasks : files;
+  return config.allowOnly ? filesWithOnlyTasks : files
 }
 
 /**
