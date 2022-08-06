@@ -3,6 +3,11 @@ import { expect, it } from 'vitest'
 // @ts-expect-error
 import { a, b } from '../src/module-cjs'
 import c, { d } from '../src/module-esm'
+import * as timeout from '../src/timeout'
+
+it('doesn\'t when extending module', () => {
+  expect(() => Object.assign(globalThis, timeout)).not.toThrow()
+})
 
 it('should work when using cjs module', () => {
   expect(a).toBe(1)
