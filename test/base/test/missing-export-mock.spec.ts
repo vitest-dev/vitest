@@ -5,7 +5,7 @@ vi.mock('../src', () => ({
 }))
 
 it('should return baz on hmm import', async () => {
-  // @ts-expect-error 2339
+  // @ts-expect-error 2339 - should resolve as expected on a mocked export
   expect(await import('../src').then(m => m.hmm)).toBe('baz')
 })
 
