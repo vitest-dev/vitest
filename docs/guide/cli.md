@@ -32,7 +32,7 @@ Alias to `vitest watch`.
 
 ### `vitest related`
 
-Run only tests that cover a list of source files. Works with static lazy imports, but not the dynamic ones. All files should be relative to root folder.
+Run only tests that cover a list of source files. Works with static imports (e.g., `import('./index.ts')` or `import index from './index.ts`), but not the dynamic ones (e.g., `import(filepath)`). All files should be relative to root folder.
 
 Useful to run with [`lint-staged`](https://github.com/okonet/lint-staged) or with your CI setup.
 
