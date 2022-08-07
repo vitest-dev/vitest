@@ -19,7 +19,7 @@ export default defineConfig({
   title: vitestName,
   description: vitestDescription,
   head: [
-    ['meta', { name: 'theme-color', content: '#ffffff' }],
+    ['meta', { name: 'theme-color', content: '##729b1a' }],
     ['link', { rel: 'icon', href: '/logo.svg', type: 'image/svg+xml' }],
     ['link', { rel: 'alternate icon', href: '/favicon.ico', type: 'image/png', sizes: '16x16' }],
     ['meta', { name: 'author', content: `${teamMembers.map(c => c.name).join(', ')} and ${vitestName} contributors` }],
