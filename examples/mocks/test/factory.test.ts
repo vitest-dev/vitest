@@ -6,6 +6,9 @@ import logger from '../src/log'
 vi
   .mock('../src/example', () => ({
     mocked: true,
+    then: 'a then export',
+    square: (a: any, b: any) => a + b,
+    asyncSquare: async (a: any, b: any) => Promise.resolve(a + b),
   }))
 
 // doesn't think comments are mocks
@@ -41,9 +44,19 @@ vi.mock('../src/log.ts', async () => {
 })
 
 describe('mocking with factory', () => {
-  test('successfuly mocked', () => {
+  test('missing exports on mock', () => {
+    expect(() => example.default).toThrowError('[vitest] No "default" export is defined on the "../src/example" mock defined here:')
+    expect(() => example.boolean).toThrowError('[vitest] No "boolean" export is defined on the "../src/example" mock defined here:')
+    expect(() => example.object).toThrowError('[vitest] No "object" export is defined on the "../src/example" mock defined here:')
+    expect(() => example.array).toThrowError('[vitest] No "array" export is defined on the "../src/example" mock defined here:')
+    expect(() => example.someClasses).toThrowError('[vitest] No "someClasses" export is defined on the "../src/example" mock defined here:')
+  })
+
+  test('defined exports on mock', async () => {
+    expect((example as any).then).toBe('a then export')
     expect((example as any).mocked).toBe(true)
-    expect(example.boolean).toBeUndefined()
+    expect(example.square(2, 3)).toBe(5)
+    expect(example.asyncSquare(2, 3)).resolves.toBe(5)
   })
 
   test('successfuly with actual', () => {
