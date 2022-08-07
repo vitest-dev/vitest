@@ -4,7 +4,7 @@ vi.mock('../src', () => ({
   hmm: 'baz',
 }))
 
-it('should return baz on unknown import', async () => {
+it('should return baz on hmm import', async () => {
   // @ts-expect-error 2339
   expect(await import('../src').then(m => m.hmm)).toBe('baz')
 })
