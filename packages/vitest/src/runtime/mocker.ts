@@ -335,7 +335,33 @@ export class VitestMocker {
     return this.request(dep)
   }
 
+  private wrapFactoryInProxy(id: string, importer: string, factory?: () => unknown) {
+    if (!factory)
+      return factory
+
+    const exportHandler = {
+      get(target: Record<string, any>, prop: any) {
+        const val = target[prop]
+
+        // 'then' occurs when proxy object goes through a Promise, don't throw for that case
+        if (val === undefined && prop !== 'then')
+          throw new Error(`[vitest] No "${prop}" export is defined on the "${id}" mock defined here: ${importer}`)
+
+        return val
+      },
+    }
+
+    const factoryHandler = {
+      apply(target: () => Object) {
+        return new Proxy(target(), exportHandler)
+      },
+    }
+
+    return new Proxy(factory, factoryHandler) as () => unknown
+  }
+
   public queueMock(id: string, importer: string, factory?: () => unknown) {
+    factory = this.wrapFactoryInProxy(id, importer, factory)
     VitestMocker.pendingIds.push({ type: 'mock', id, importer, factory })
   }
 
