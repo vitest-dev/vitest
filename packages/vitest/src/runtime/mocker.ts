@@ -107,6 +107,10 @@ export class VitestMocker {
     if (cached)
       return cached
     const exports = await mock()
+
+    if (exports === null || typeof exports !== 'object')
+      throw new Error('[vitest] vi.mock(path: string, factory?: () => unknown) is not returning an object. Did you mean to return an object with a "default" key?')
+
     this.moduleCache.set(dep, { exports })
 
     const exportHandler = {
@@ -354,16 +358,6 @@ export class VitestMocker {
   }
 
   public queueMock(id: string, importer: string, factory?: () => unknown) {
-    const factoryHandler = {
-      apply(target: () => unknown) {
-        const value = target()
-        if (typeof value !== 'object')
-          throw new Error(`[vitest] vi.mock("${id}", factory?: () => unknown) is not returning an object. Did you mean to return an object with a "default" key?`)
-        return value
-      },
-    }
-
-    factory = factory === undefined ? factory : new Proxy(factory, factoryHandler)
     VitestMocker.pendingIds.push({ type: 'mock', id, importer, factory })
   }
 
