@@ -107,8 +107,30 @@ export class VitestMocker {
     if (cached)
       return cached
     const exports = await mock()
+
+    if (exports === null || typeof exports !== 'object')
+      throw new Error('[vitest] vi.mock(path: string, factory?: () => unknown) is not returning an object. Did you mean to return an object with a "default" key?')
+
     this.moduleCache.set(dep, { exports })
-    return exports
+
+    const exportHandler = {
+      get(target: Record<string, any>, prop: any) {
+        const val = target[prop]
+
+        // 'then' can exist on non-Promise objects, need nested instanceof check for logic to work
+        if (prop === 'then') {
+          if (target instanceof Promise)
+            return target.then.bind(target)
+        }
+        else if (val === undefined) {
+          throw new Error(`[vitest] No "${prop}" export is defined on the "${dep}"`)
+        }
+
+        return val
+      },
+    }
+
+    return new Proxy(exports, exportHandler)
   }
 
   private getMockPath(dep: string) {

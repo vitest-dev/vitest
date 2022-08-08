@@ -25,3 +25,4 @@ export const number = 123
 export const string = 'baz'
 export const boolean = true
 export const symbol = Symbol.for('a.b.c')
+export default 'a default'
