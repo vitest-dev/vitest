@@ -108,7 +108,25 @@ export class VitestMocker {
       return cached
     const exports = await mock()
     this.moduleCache.set(dep, { exports })
-    return exports
+
+    const exportHandler = {
+      get(target: Record<string, any>, prop: any) {
+        const val = target[prop]
+
+        // 'then' can exist on non-Promise objects, need nested instanceof check for logic to work
+        if (prop === 'then') {
+          if (target instanceof Promise)
+            return target.then.bind(target)
+        }
+        else if (val === undefined) {
+          throw new Error(`[vitest] No "${prop}" export is defined on the "${dep}"`)
+        }
+
+        return val
+      },
+    }
+
+    return new Proxy(exports, exportHandler)
   }
 
   private getMockPath(dep: string) {
@@ -335,38 +353,17 @@ export class VitestMocker {
     return this.request(dep)
   }
 
-  private wrapFactoryInProxy(id: string, importer: string, factory?: () => unknown) {
-    if (!factory)
-      return factory
-
-    const exportHandler = {
-      get(target: Record<string, any>, prop: any) {
-        const val = target[prop]
-
-        // 'then' can exist on non-Promise objects, need nested instanceof check for logic to work
-        if (prop === 'then') {
-          if (target instanceof Promise)
-            return target.then.bind(target)
-        }
-        else if (val === undefined) {
-          throw new Error(`[vitest] No "${prop}" export is defined on the "${id}" mock defined here: ${importer}`)
-        }
-
-        return val
-      },
-    }
-
-    const factoryHandler = {
-      apply(target: () => Object) {
-        return new Proxy(target(), exportHandler)
-      },
-    }
-
-    return new Proxy(factory, factoryHandler) as () => unknown
-  }
-
   public queueMock(id: string, importer: string, factory?: () => unknown) {
-    factory = this.wrapFactoryInProxy(id, importer, factory)
+    const factoryHandler = {
+      apply(target: () => unknown) {
+        const value = target()
+        if (typeof value !== 'object')
+          throw new Error(`[vitest] vi.mock("${id}", factory?: () => unknown) is not returning an object. Did you mean to return an object with a "default" key?`)
+        return value
+      },
+    }
+
+    factory = factory === undefined ? factory : new Proxy(factory, factoryHandler)
     VitestMocker.pendingIds.push({ type: 'mock', id, importer, factory })
   }
 
