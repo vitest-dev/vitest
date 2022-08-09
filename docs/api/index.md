@@ -102,6 +102,13 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
   })
   ```
 
+  Sometimes it is very usefull to run `only` tests, in a certain file ignoring all other tests from the whole test suite, which polute the output.
+
+  In order to do that run `vitest` with specific file containing the tests in question.
+  ```
+  # vitest interesting.test.ts
+  ```
+
 ### test.concurrent
 
 - **Type:** `(name: string, fn: TestFunction, timeout?: number) => void`
@@ -288,6 +295,13 @@ When you use `test` in the top level of file, they are collected as part of the 
   describe('other suite', () => {
     // ... will be skipped
   })
+  ```
+
+  Sometimes it is very usefull to run `only` tests, in a certain file ignoring all other tests from the whole test suite, which polute the output.
+
+  In order to do that run `vitest` with specific file containing the tests in question.
+  ```
+  # vitest interesting.test.ts
   ```
 
 ### describe.concurrent
