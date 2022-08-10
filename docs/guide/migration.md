@@ -16,12 +16,12 @@ If you decide to keep globals disabled, be aware that common libraries like [`te
 
 **Module mocks**
 
-When mocking a module in Jest, if the factory argument returned a primitive, the mock would implicitly mock the default export. In Vitest, the factory argument has to return an object where each export is explicitly defined. For example, the following `jest.mock` would have to be updated as follows:
+When mocking a module in Jest, the factory argument's return value is the default export. In Vitest, the factory argument has to return an object with each export explicitly defined. For example, the following `jest.mock` would have to be updated as follows:
 
 ```diff
 - jest.mock('./some-path', () => 'hello')
 + vi.mock('./some-path', () => ({
-+   default: 'hello';
++   default: 'hello',
 + })
 ```
 
