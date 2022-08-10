@@ -48,7 +48,7 @@ it('should work', ({ foo }) => {
 
 ### TypeScript
 
-To provide types for your custom context properties, you can aggregate the `TestContext` type by adding
+To provide property types for all your custom contexts, you can aggregate the `TestContext` type by adding
 
 ```ts
 declare module 'vitest' {
@@ -58,3 +58,20 @@ declare module 'vitest' {
 }
 ```
 
+Since Vitest v0.21.1, if you want to provide property types only for specific `beforeEach`, `afterEach`, `it` and `test` hooks, you can provide an extra context type as type parameter.
+
+```ts
+interface LocalTestContext {
+  foo: string
+}
+
+beforeEach<LocalTestContext>(async (context) => {
+  // typeof context is 'TestContext & LocalTestContext'
+  context.foo = 'bar'
+})
+
+it<LocalTestContext>('should work', ({ foo }) => {
+  // typeof foo is 'string'
+  console.log(foo) // 'bar'
+})
+```
