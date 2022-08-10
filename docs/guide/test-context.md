@@ -58,7 +58,7 @@ declare module 'vitest' {
 }
 ```
 
-Since Vitest v0.21.1, if you want to provide property types only for specific `beforeEach`, `afterEach`, `it` and `test` hooks, you can provide an extra context type as type parameter.
+If you want to provide property types only for specific `beforeEach`, `afterEach`, `it` and `test` hooks, you can pass the type as a generic.
 
 ```ts
 interface LocalTestContext {
