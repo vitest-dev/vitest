@@ -7,6 +7,7 @@ vi
   .mock('../src/example', () => ({
     mocked: true,
     then: 'a then export',
+    ok: undefined,
     square: (a: any, b: any) => a + b,
     asyncSquare: async (a: any, b: any) => Promise.resolve(a + b),
   }))
@@ -60,6 +61,7 @@ describe('mocking with factory', () => {
   })
 
   test('defined exports on mock', async () => {
+    expect((example as any).ok).toBe(undefined)
     expect((example as any).then).toBe('a then export')
     expect((example as any).mocked).toBe(true)
     expect(example.square(2, 3)).toBe(5)
