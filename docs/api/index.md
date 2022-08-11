@@ -102,7 +102,7 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
   })
   ```
 
-  Sometimes it is very usefull to run `only` tests, in a certain file ignoring all other tests from the whole test suite, which polute the output.
+  Sometimes it is very useful to run `only` tests in a certain file, ignoring all other tests from the whole test suite, which pollute the output.
 
   In order to do that run `vitest` with specific file containing the tests in question.
   ```
@@ -297,7 +297,7 @@ When you use `test` in the top level of file, they are collected as part of the 
   })
   ```
 
-  Sometimes it is very usefull to run `only` tests, in a certain file ignoring all other tests from the whole test suite, which polute the output.
+  Sometimes it is very useful to run `only` tests in a certain file, ignoring all other tests from the whole test suite, which pollute the output.
 
   In order to do that run `vitest` with specific file containing the tests in question.
   ```
