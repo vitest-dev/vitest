@@ -58,8 +58,9 @@ function escapeXML(value: any): string {
     true)
 }
 
-function getDuration(task: Task): string | undefined {
-  return task.result?.duration ? (task.result.duration / 1000).toFixed(10) : undefined
+export function getDuration(task: Task): string | undefined {
+  const duration = task.result?.duration ?? 0
+  return (duration / 1000).toFixed(10).replace(/^(\d+)((?:\.0+)|(\.\d+?)0+)$/, '$1$3')
 }
 
 export class JUnitReporter implements Reporter {
