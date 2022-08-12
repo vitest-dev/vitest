@@ -51,7 +51,7 @@ export async function reportCoverage(ctx: Vitest) {
   const sourceMapMeta: Record<string, { map: RawSourceMap; source: string | undefined }> = {}
   await Promise.all(Array
     .from(ctx.vitenode.fetchCache.entries())
-    .filter(i => !i[0].includes('/node_modules/'))
+    .filter(i => !i[0].includes('/node_modules/') && existsSync(i[0]))
     .map(async ([file, { result }]) => {
       const map = result.map
       if (!map)
