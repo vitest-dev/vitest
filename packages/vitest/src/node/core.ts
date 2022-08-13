@@ -9,7 +9,7 @@ import { ViteNodeServer } from 'vite-node/server'
 import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig } from '../types'
 import { SnapshotManager } from '../integrations/snapshot/manager'
 import { clearTimeout, deepMerge, hasFailed, noop, setTimeout, slash } from '../utils'
-import type { BaseCoverageProvider } from '../integrations/coverage/base'
+import type { CoverageProvider } from '../integrations/coverage/base'
 import { getCoverageProvider } from '../integrations/coverage'
 import { createPool } from './pool'
 import type { WorkerPool } from './pool'
@@ -30,7 +30,7 @@ export class Vitest {
   snapshot: SnapshotManager = undefined!
   cache: VitestCache = undefined!
   reporters: Reporter[] = undefined!
-  coverageProvider: BaseCoverageProvider = undefined!
+  coverageProvider: CoverageProvider | undefined
   logger: Logger
   pool: WorkerPool | undefined
 
@@ -85,15 +85,16 @@ export class Vitest {
     this.reporters = await createReporters(resolved.reporters, this.runner)
 
     this.coverageProvider = getCoverageProvider(options.coverage)
-    this.coverageProvider.initialize(this)
-
-    this.config.coverage = this.coverageProvider.resolveOptions()
+    if (this.coverageProvider) {
+      this.coverageProvider.initialize(this)
+      this.config.coverage = this.coverageProvider.resolveOptions()
+    }
 
     this.runningPromise = undefined
 
     this._onRestartListeners.forEach(fn => fn())
 
-    await this.coverageProvider.clean(this.config.coverage.clean)
+    await this.coverageProvider?.clean(this.config.coverage.clean)
 
     this.cache.results.setConfig(resolved.root, resolved.cache)
     try {
@@ -142,7 +143,10 @@ export class Vitest {
 
     await this.runFiles(files)
 
-    await this.coverageProvider.onAfterAllFilesRun()
+    if (this.coverageProvider) {
+      this.logger.log(c.blue(' % ') + c.dim('Coverage report from ') + c.yellow(this.coverageProvider.name))
+      await this.coverageProvider.reportCoverage()
+    }
 
     if (this.config.watch && !this.config.browser)
       await this.report('onWatcherStart')
@@ -326,14 +330,14 @@ export class Vitest {
       const files = Array.from(this.changedTests)
       this.changedTests.clear()
 
-      if (this.config.coverage.cleanOnRerun)
+      if (this.coverageProvider && this.config.coverage.cleanOnRerun)
         await this.coverageProvider.clean()
 
       await this.report('onWatcherRerun', files, triggerId)
 
       await this.runFiles(files)
 
-      await this.coverageProvider.onAfterAllFilesRun()
+      await this.coverageProvider?.reportCoverage()
 
       if (!this.config.browser)
         await this.report('onWatcherStart')

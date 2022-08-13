@@ -9,11 +9,13 @@ import { toArray } from '../../utils'
 import { configDefaults } from '../../defaults'
 import type { C8Options, ResolvedCoverageOptions } from '../../types'
 import type { Vitest } from '../../node'
-import type { BaseCoverageProvider } from './base'
+import type { CoverageProvider } from './base'
 
 const require = createRequire(import.meta.url)
 
-export class C8CoverageProvider implements BaseCoverageProvider {
+export class C8CoverageProvider implements CoverageProvider {
+  name = 'c8'
+
   ctx!: Vitest
   options!: ResolvedCoverageOptions & { provider: 'c8' }
 
@@ -42,7 +44,7 @@ export class C8CoverageProvider implements BaseCoverageProvider {
     C8CoverageProvider.getCoverage()
   }
 
-  async onAfterAllFilesRun() {
+  async reportCoverage() {
     C8CoverageProvider.getCoverage()
 
     const createReport = require('c8/lib/report')

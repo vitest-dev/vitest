@@ -6,7 +6,7 @@ import type { ExistingRawSourceMap, TransformPluginContext } from 'rollup'
 import { configDefaults, defaultExclude, defaultInclude } from '../../defaults'
 import type { Vitest } from '../../node'
 import type { IstanbulOptions, ResolvedCoverageOptions } from '../../types'
-import type { BaseCoverageProvider } from './base'
+import type { CoverageProvider } from './base'
 
 const require = createRequire(import.meta.url)
 const coverageVariable = '__VITEST_COVERAGE__'
@@ -42,7 +42,9 @@ interface TestExclude {
   }): { shouldInstrument(filePath: string): boolean }
 }
 
-export class IstanbulCoverageProvider implements BaseCoverageProvider {
+export class IstanbulCoverageProvider implements CoverageProvider {
+  name = 'istanbul'
+
   ctx!: Vitest
   options!: ResolvedCoverageOptions & { provider: 'istanbul' }
   instrumenter!: Instrumenter
@@ -109,7 +111,7 @@ export class IstanbulCoverageProvider implements BaseCoverageProvider {
     this.coverages = []
   }
 
-  async onAfterAllFilesRun() {
+  async reportCoverage() {
     const libReport = require('istanbul-lib-report')
     const reports = require('istanbul-reports')
     const libCoverage = require('istanbul-lib-coverage')
