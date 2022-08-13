@@ -1,19 +1,20 @@
+/* eslint-disable no-restricted-imports */
 import { existsSync, promises as fs } from 'fs'
-import { createRequire } from 'module'
 import _url from 'url'
 import type { Profiler } from 'inspector'
+import v8 from 'v8'
 import { resolve } from 'pathe'
 import type { RawSourceMap } from 'vite-node'
 
-import { toArray } from '../../utils'
-import { configDefaults } from '../../defaults'
-import type { C8Options, ResolvedCoverageOptions } from '../../types'
-import type { Vitest } from '../../node'
-import type { CoverageProvider } from './base'
+import { configDefaults } from 'vitest/config'
+import type { CoverageC8Options, CoverageProvider, ResolvedCoverageOptions } from 'vitest'
+import type { Vitest } from 'vitest/node'
+// @ts-expect-error missing types
+import createReport from 'c8/lib/report'
+// @ts-expect-error missing types
+import { checkCoverages } from 'c8/lib/commands/check-coverage'
 
-const require = createRequire(import.meta.url)
-
-export class C8CoverageProvider implements CoverageProvider {
+export default class C8CoverageProvider implements CoverageProvider {
   name = 'c8'
 
   ctx!: Vitest
@@ -46,8 +47,6 @@ export class C8CoverageProvider implements CoverageProvider {
 
   async reportCoverage() {
     C8CoverageProvider.getCoverage()
-
-    const createReport = require('c8/lib/report')
     const report = createReport(this.ctx.config.coverage)
 
     // add source maps
@@ -103,14 +102,11 @@ export class C8CoverageProvider implements CoverageProvider {
     }
 
     await report.run()
-
-    const { checkCoverages } = require('c8/lib/commands/check-coverage')
     await checkCoverages(this.options, report)
   }
 
   // Flush coverage to disk
   static getCoverage() {
-    const v8 = require('v8')
     if (v8.takeCoverage == null)
       console.warn('[Vitest] takeCoverage is not available in this NodeJs version.\nCoverage could be incomplete. Update to NodeJs 14.18.')
     else
@@ -118,7 +114,7 @@ export class C8CoverageProvider implements CoverageProvider {
   }
 }
 
-function resolveC8Options(options: C8Options, root: string) {
+function resolveC8Options(options: CoverageC8Options, root: string) {
   const resolved = {
     ...configDefaults.coverage,
     ...options as any,
@@ -131,7 +127,8 @@ function resolveC8Options(options: C8Options, root: string) {
     resolved.statements = 100
   }
 
-  resolved.reporter = toArray(resolved.reporter)
+  resolved.reporter = resolved.reporter || []
+  resolved.reporter = Array.isArray(resolved.reporter) ? resolved.reporter : [resolved.reporter]
   resolved.reportsDirectory = resolve(root, resolved.reportsDirectory)
   resolved.tempDirectory = process.env.NODE_V8_COVERAGE || resolve(resolved.reportsDirectory, 'tmp')
 

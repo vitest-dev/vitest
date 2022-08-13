@@ -1,0 +1,50 @@
+{
+  "name": "@vitest/coverage-c8",
+  "type": "module",
+  "version": "0.0.0",
+  "description": "C8 coverage provider for Vitest",
+  "author": "Anthony Fu <anthonyfu117@hotmail.com>",
+  "license": "MIT",
+  "funding": "https://github.com/sponsors/antfu",
+  "homepage": "https://github.com/vitest-dev/vitest#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vitest-dev/vitest.git",
+    "directory": "packages/coverage-c8"
+  },
+  "bugs": {
+    "url": "https://github.com/vitest-dev/vitest/issues"
+  },
+  "keywords": [
+    "vite",
+    "vitest",
+    "test",
+    "coverage",
+    "c8"
+  ],
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.cjs",
+      "import": "./dist/index.mjs"
+    }
+  },
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch=src"
+  },
+  "dependencies": {
+    "vitest": "workspace:*",
+    "c8": "^7.12.0"
+  },
+  "devDependencies": {
+    "vite-node": "workspace:*"
+  }
+}

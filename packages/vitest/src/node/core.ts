@@ -6,10 +6,9 @@ import mm from 'micromatch'
 import c from 'picocolors'
 import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
-import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig } from '../types'
+import type { ArgumentsType, CoverageProvider, Reporter, ResolvedConfig, UserConfig } from '../types'
 import { SnapshotManager } from '../integrations/snapshot/manager'
 import { clearTimeout, deepMerge, hasFailed, noop, setTimeout, slash } from '../utils'
-import type { CoverageProvider } from '../integrations/coverage/base'
 import { getCoverageProvider } from '../integrations/coverage'
 import { createPool } from './pool'
 import type { WorkerPool } from './pool'
@@ -84,7 +83,7 @@ export class Vitest {
 
     this.reporters = await createReporters(resolved.reporters, this.runner)
 
-    this.coverageProvider = getCoverageProvider(options.coverage)
+    this.coverageProvider = await getCoverageProvider(options.coverage)
     if (this.coverageProvider) {
       this.coverageProvider.initialize(this)
       this.config.coverage = this.coverageProvider.resolveOptions()

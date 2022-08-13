@@ -1,4 +1,25 @@
+import type { ExistingRawSourceMap, TransformPluginContext } from 'rollup'
+import type { Vitest } from '../node'
 import type { Arrayable } from './general'
+
+export interface CoverageProvider {
+  name: string
+  initialize(ctx: Vitest): Promise<void> | void
+
+  resolveOptions(): ResolvedCoverageOptions
+  clean(clean?: boolean): void | Promise<void>
+
+  onBeforeFilesRun?(): void | Promise<void>
+  onAfterSuiteRun(collectedCoverage: any): void | Promise<void>
+
+  reportCoverage(): void | Promise<void>
+
+  onFileTransform?(
+    sourceCode: string,
+    id: string,
+    pluginCtx: TransformPluginContext
+  ): void | { code: string; map: ExistingRawSourceMap }
+}
 
 export type CoverageReporter =
   | 'clover'
@@ -16,11 +37,15 @@ export type CoverageReporter =
   | 'text'
 
 export type CoverageOptions =
-  | NullCoverageOptions & { provider?: null }
-  | C8Options & { provider?: 'c8' }
-  | IstanbulOptions & { provider?: 'istanbul' }
+  | BaseCoverageOptions & { provider?: null }
+  | CoverageC8Options & { provider?: 'c8' }
+  | CoverageIstanbulOptions & { provider?: 'istanbul' }
 
-interface BaseCoverageOptions {
+export type ResolvedCoverageOptions =
+  & { tempDirectory: string }
+  & Required<CoverageOptions>
+
+export interface BaseCoverageOptions {
   /**
    * Enable coverage, pass `--coverage` to enable
    *
@@ -92,11 +117,7 @@ interface BaseCoverageOptions {
   statements?: number
 }
 
-export interface NullCoverageOptions extends BaseCoverageOptions {
-  enabled: false
-}
-
-export interface IstanbulOptions extends BaseCoverageOptions {
+export interface CoverageIstanbulOptions extends BaseCoverageOptions {
   /* Set to array of class method names to ignore for coverage */
   ignoreClassMethods?: string[]
 
@@ -109,7 +130,7 @@ export interface IstanbulOptions extends BaseCoverageOptions {
   }
 }
 
-export interface C8Options extends BaseCoverageOptions {
+export interface CoverageC8Options extends BaseCoverageOptions {
   /**
    * Allow files from outside of your cwd.
    *
@@ -130,7 +151,3 @@ export interface C8Options extends BaseCoverageOptions {
 
   100?: boolean
 }
-
-export type ResolvedCoverageOptions =
-  & { tempDirectory: string }
-  & Required<CoverageOptions>

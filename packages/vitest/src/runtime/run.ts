@@ -316,7 +316,7 @@ async function startTestsNode(paths: string[], config: ResolvedConfig) {
 
   await runFiles(files, config)
 
-  const coverage = getCoverageInsideWorker(config.coverage)
+  const coverage = await getCoverageInsideWorker(config.coverage)
   rpc().onFilesRun(coverage)
 
   await getSnapshotClient().saveCurrent()

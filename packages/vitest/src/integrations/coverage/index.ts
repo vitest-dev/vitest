@@ -1,28 +1,22 @@
-import type { CoverageOptions } from '../../types'
-import type { CoverageProvider } from './base'
-import { C8CoverageProvider } from './c8'
-import { IstanbulCoverageProvider } from './istanbul'
+import { importModule } from 'local-pkg'
+import type { CoverageOptions, CoverageProvider } from '../../types'
 
-const CoverageProviderMap: Record<
-  NonNullable<CoverageOptions['provider']>,
-  { new(): CoverageProvider; getCoverage(): any }
-> = {
-  c8: C8CoverageProvider,
-  istanbul: IstanbulCoverageProvider,
+const providerMap = {
+  c8: '@vitest/coverage-c8',
+  istanbul: '@vitest/coverage-istanbul',
 }
 
-export function getCoverageProvider(options?: CoverageOptions): CoverageProvider | undefined {
+export async function getCoverageProvider(options?: CoverageOptions): Promise<CoverageProvider | undefined> {
   if (options?.enabled && options?.provider) {
-    const CoverageProvider = CoverageProviderMap[options.provider]
+    const { default: CoverageProvider } = await importModule(providerMap[options.provider])
     return new CoverageProvider()
   }
   return undefined
 }
 
-export function getCoverageInsideWorker(options: CoverageOptions) {
+export async function getCoverageInsideWorker(options: CoverageOptions) {
   if (options.enabled && options.provider) {
-    const CoverageProvider = CoverageProviderMap[options.provider]
-
-    return CoverageProvider.getCoverage()
+    const { default: CoverageProvider } = await importModule(providerMap[options.provider])
+    return CoverageProvider?.getCoverage()
   }
 }

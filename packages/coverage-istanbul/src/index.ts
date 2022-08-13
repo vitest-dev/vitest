@@ -1,12 +1,10 @@
+/* eslint-disable no-restricted-imports */
 import { existsSync, promises as fs } from 'fs'
 import { createRequire } from 'module'
 import { relative, resolve } from 'pathe'
 import type { ExistingRawSourceMap, TransformPluginContext } from 'rollup'
-
-import { configDefaults, defaultExclude, defaultInclude } from '../../defaults'
-import type { Vitest } from '../../node'
-import type { IstanbulOptions, ResolvedCoverageOptions } from '../../types'
-import type { CoverageProvider } from './base'
+import type { CoverageIstanbulOptions, CoverageProvider, ResolvedCoverageOptions, Vitest } from 'vitest'
+import { configDefaults, defaultExclude, defaultInclude } from 'vitest/config'
 
 const require = createRequire(import.meta.url)
 const coverageVariable = '__VITEST_COVERAGE__'
@@ -42,7 +40,7 @@ interface TestExclude {
   }): { shouldInstrument(filePath: string): boolean }
 }
 
-export class IstanbulCoverageProvider implements CoverageProvider {
+export default class IstanbulCoverageProvider implements CoverageProvider {
   name = 'istanbul'
 
   ctx!: Vitest
@@ -198,13 +196,12 @@ export class IstanbulCoverageProvider implements CoverageProvider {
   }
 }
 
-function resolveIstanbulOptions(options: IstanbulOptions, root: string) {
+function resolveIstanbulOptions(options: CoverageIstanbulOptions, root: string) {
   const reportsDirectory = resolve(root, options.reportsDirectory || configDefaults.coverage.reportsDirectory!)
 
   const resolved = {
     ...configDefaults.coverage,
     ...options,
-
     provider: 'istanbul',
     reportsDirectory,
     tempDirectory: resolve(reportsDirectory, 'tmp'),
