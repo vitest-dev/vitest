@@ -6,6 +6,7 @@ export { runOnce, isFirstRun } from './integrations/run-once'
 export * from './integrations/chai'
 export * from './integrations/vi'
 export * from './integrations/utils'
+export * from './integrations/spy'
 
 export * from './types'
 export * from './api/types'
