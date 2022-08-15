@@ -216,7 +216,7 @@ importers:
       react-dom: 18.0.0_react@18.0.0
     devDependencies:
       '@testing-library/react': 13.2.0_zpnidt7m3osuk7shl3s4oenomq
-      '@types/node': 18.7.3
+      '@types/node': 18.7.4
       '@types/react': 18.0.17
       '@vitejs/plugin-react': 2.0.1
       jsdom: 20.0.0
@@ -616,7 +616,6 @@ importers:
 
   packages/coverage-c8:
     specifiers:
-      '@types/node': ^18.7.3
       c8: ^7.12.0
       vite-node: workspace:*
       vitest: workspace:*
@@ -624,7 +623,6 @@ importers:
       c8: 7.12.0
       vitest: link:../vitest
     devDependencies:
-      '@types/node': 18.7.3
       vite-node: link:../vite-node
 
   packages/coverage-istanbul:
@@ -634,7 +632,6 @@ importers:
       '@types/istanbul-lib-report': ^3.0.0
       '@types/istanbul-lib-source-maps': ^4.0.1
       '@types/istanbul-reports': ^3.0.1
-      '@types/node': ^18.7.3
       istanbul-lib-coverage: ^3.2.0
       istanbul-lib-instrument: ^5.2.0
       istanbul-lib-report: ^3.0.0
@@ -656,7 +653,6 @@ importers:
       '@types/istanbul-lib-report': 3.0.0
       '@types/istanbul-lib-source-maps': 4.0.1
       '@types/istanbul-reports': 3.0.1
-      '@types/node': 18.7.3
 
   packages/ui:
     specifiers:
@@ -7133,7 +7129,7 @@ packages:
   /@types/concat-stream/1.6.1:
     resolution: {integrity: sha512-eHE4cQPoj6ngxBZMvVf6Hw7Mh4jMW4U9lpGmS5GBPB9RYxlFg+CHaVN7ErNY4W9XfLIEn20b4VDYaIrbq0q4uA==}
     dependencies:
-      '@types/node': 18.7.3
+      '@types/node': 18.7.4
     dev: true
 
   /@types/cookie/0.4.1:
@@ -7175,7 +7171,7 @@ packages:
   /@types/form-data/0.0.33:
     resolution: {integrity: sha1-yayFsqX9GENbjIXZ7LUObWyJP/g=}
     dependencies:
-      '@types/node': 18.7.3
+      '@types/node': 18.7.4
     dev: true
 
   /@types/fs-extra/9.0.13:
@@ -7325,6 +7321,10 @@ packages:
 
   /@types/node/18.7.3:
     resolution: {integrity: sha512-LJgzOEwWuMTBxHzgBR/fhhBOWrvBjvO+zPteUgbbuQi80rYIZHrk1mNbRUqPZqSLP2H7Rwt1EFLL/tNLD1Xx/w==}
+    dev: true
+
+  /@types/node/18.7.4:
+    resolution: {integrity: sha512-RzRcw8c0B8LzryWOR4Wj7YOTFXvdYKwvrb6xQQyuDfnlTxwYXGCV5RZ/TEbq5L5kn+w3rliHAUyRcG1RtbmTFg==}
     dev: true
 
   /@types/node/8.10.66:

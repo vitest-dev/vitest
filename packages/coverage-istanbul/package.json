@@ -54,7 +54,6 @@
     "@types/istanbul-lib-instrument": "^1.7.4",
     "@types/istanbul-lib-report": "^3.0.0",
     "@types/istanbul-lib-source-maps": "^4.0.1",
-    "@types/istanbul-reports": "^3.0.1",
-    "@types/node": "^18.7.3"
+    "@types/istanbul-reports": "^3.0.1"
   }
 }
