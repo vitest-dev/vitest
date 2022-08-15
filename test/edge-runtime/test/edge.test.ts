@@ -8,7 +8,7 @@ describe('edge runtime api', () => {
   })
 
   it('allows to run fetch', async () => {
-    const response = await fetch('https://vitest.dev')
+    const response = await fetch('https://github.com/robots.txt')
     expect(response.status).toEqual(200)
   })
 
