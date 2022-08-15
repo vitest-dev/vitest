@@ -37,8 +37,8 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup",
-    "dev": "tsup --watch=src"
+    "build": "rimraf dist && rollup -c",
+    "dev": "rollup -c --watch --watch.include=src/**"
   },
   "dependencies": {
     "c8": "^7.12.0",

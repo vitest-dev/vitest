@@ -37,8 +37,8 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup",
-    "dev": "tsup --watch=src"
+    "build": "rimraf dist && rollup -c",
+    "dev": "rollup -c --watch --watch.include=src/**"
   },
   "dependencies": {
     "istanbul-lib-coverage": "^3.2.0",
@@ -54,6 +54,7 @@
     "@types/istanbul-lib-instrument": "^1.7.4",
     "@types/istanbul-lib-report": "^3.0.0",
     "@types/istanbul-lib-source-maps": "^4.0.1",
-    "@types/istanbul-reports": "^3.0.1"
+    "@types/istanbul-reports": "^3.0.1",
+    "pathe": "^0.2.0"
   }
 }

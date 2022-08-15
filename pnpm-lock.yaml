@@ -637,6 +637,7 @@ importers:
       istanbul-lib-report: ^3.0.0
       istanbul-lib-source-maps: ^4.0.1
       istanbul-reports: ^3.1.5
+      pathe: ^0.2.0
       test-exclude: ^6.0.0
       vitest: workspace:*
     dependencies:
@@ -653,6 +654,7 @@ importers:
       '@types/istanbul-lib-report': 3.0.0
       '@types/istanbul-lib-source-maps': 4.0.1
       '@types/istanbul-reports': 3.0.1
+      pathe: 0.2.0
 
   packages/ui:
     specifiers:
