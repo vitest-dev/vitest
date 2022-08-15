@@ -27,7 +27,7 @@ async function fetchAvatars() {
   await fs.ensureDir(dirAvatars)
   contributors = JSON.parse(await fs.readFile(pathContributors, { encoding: 'utf-8' }))
 
-  await Promise.all(contributors.map(name => download(`https://github.com/${name}.png?size${team.includes(name) ? 100 : 40}`, join(dirAvatars, `${name}.png`))))
+  await Promise.all(contributors.map(name => download(`https://github.com/${name}.png?size=${team.includes(name) ? 100 : 40}`, join(dirAvatars, `${name}.png`))))
 }
 
 async function fetchSponsors() {
