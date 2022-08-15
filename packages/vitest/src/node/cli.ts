@@ -40,6 +40,8 @@ cli
   .option('--sequence <options>', 'Define in what order to run tests (use --sequence.shuffle to run tests in random order)')
   .option('--no-color', 'Removes colors from the console output')
   .option('--segfault-retry <times>', 'Return tests on segment fault (default: 0)', { default: 0 })
+  .option('--inspect', 'Enable Node.js inspector')
+  .option('--inspect-brk', 'Enable Node.js inspector with break')
   .help()
 
 cli
