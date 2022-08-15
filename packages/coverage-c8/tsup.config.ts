@@ -7,4 +7,5 @@ export const tsup: Options = {
   entryPoints: [
     'src/index.ts',
   ],
+  tsconfig: '../../tsconfig.json',
 }
