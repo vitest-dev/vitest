@@ -10,7 +10,7 @@
     "@playwright/test": "^1.23.4",
     "@vitest/ui": "latest",
     "playwright": "^1.23.4",
-    "vite": "^2.9.9",
+    "vite": "latest",
     "vitest": "latest"
   }
 }
