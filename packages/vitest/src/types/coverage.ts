@@ -1,6 +1,7 @@
 import type { TransformPluginContext, TransformResult } from 'rollup'
 import type { Vitest } from '../node'
 import type { Arrayable } from './general'
+import type { AfterSuiteRunMeta } from './worker'
 
 export interface CoverageProvider {
   name: string
@@ -10,7 +11,7 @@ export interface CoverageProvider {
   clean(clean?: boolean): void | Promise<void>
 
   onBeforeFilesRun?(): void | Promise<void>
-  onAfterSuiteRun(collectedCoverage: any): void | Promise<void>
+  onAfterSuiteRun(meta: AfterSuiteRunMeta): void | Promise<void>
 
   reportCoverage(): void | Promise<void>
 
@@ -19,6 +20,17 @@ export interface CoverageProvider {
     id: string,
     pluginCtx: TransformPluginContext
   ): TransformResult | Promise<TransformResult>
+}
+
+export interface CoverageProviderModule {
+  /**
+   * Factory for creating a new coverage provider
+   */
+  getProvider(): CoverageProvider | Promise<CoverageProvider>
+  /**
+   * Executed on after each run in the worker thread. Possible to return a payload passed to the provider
+   */
+  takeCoverage?(): unknown | Promise<unknown>
 }
 
 export type CoverageReporter =

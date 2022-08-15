@@ -4,7 +4,7 @@ import { vi } from '../integrations/vi'
 import { clearTimeout, getFullName, getWorkerState, hasFailed, hasTests, isBrowser, isNode, partitionSuiteChildren, setTimeout, shuffle } from '../utils'
 import { getState, setState } from '../integrations/chai/jest-expect'
 import { GLOBAL_EXPECT } from '../integrations/chai/constants'
-import { getCoverageInsideWorker } from '../integrations/coverage'
+import { takeCoverageInsideWorker } from '../integrations/coverage'
 import { getFn, getHooks } from './map'
 import { rpc } from './rpc'
 import { collectTests } from './collect'
@@ -316,8 +316,8 @@ async function startTestsNode(paths: string[], config: ResolvedConfig) {
 
   await runFiles(files, config)
 
-  const coverage = await getCoverageInsideWorker(config.coverage)
-  rpc().onFilesRun(coverage)
+  const coverage = await takeCoverageInsideWorker(config.coverage)
+  rpc().onAfterSuiteRun({ coverage })
 
   await getSnapshotClient().saveCurrent()
 
