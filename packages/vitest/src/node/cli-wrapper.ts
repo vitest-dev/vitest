@@ -94,10 +94,10 @@ async function start(args: string[]) {
     stdin: 'inherit',
   })
   child.stderr?.pipe(process.stderr)
-  const { stdout } = await child
+  const { stderr = '' } = await child
 
   for (const error of ERRORS) {
-    if (stdout.includes(error.trigger)) {
+    if (stderr.includes(error.trigger)) {
       if (process.env.GITHUB_ACTIONS)
         console.log(`::warning:: Segmentfault Error Detected: ${error.trigger}\nRefer to ${error.url}`)
 
