@@ -7,6 +7,7 @@ import c from 'picocolors'
 import { execa } from 'execa'
 
 const ENTRY = new URL('./cli.mjs', import.meta.url)
+const NODE_ARGS = ['--inspect', '--inspect-brk']
 
 interface ErrorDef {
   trigger: string
@@ -69,17 +70,34 @@ have Vitest auto retries on flaky segfaults.\n`))
 main()
 
 async function start(args: string[]) {
-  const child = execa('node', [fileURLToPath(ENTRY), ...args], {
+  const nodeArgs: string[] = []
+  const vitestArgs: string[] = []
+
+  // move node args to the front
+  for (let i = 0; i < args.length; i++) {
+    let matched = false
+    for (const nodeArg of NODE_ARGS) {
+      if (args[i] === nodeArg || args[i].startsWith(`${nodeArg}=`)) {
+        matched = true
+        nodeArgs.push(args[i])
+        break
+      }
+    }
+    if (!matched)
+      vitestArgs.push(args[i])
+  }
+
+  const child = execa('node', [...nodeArgs, fileURLToPath(ENTRY), ...vitestArgs], {
     reject: false,
     stderr: 'pipe',
     stdout: 'inherit',
     stdin: 'inherit',
   })
   child.stderr?.pipe(process.stderr)
-  const { stderr: output = '' } = await child
+  const { stderr = '' } = await child
 
   for (const error of ERRORS) {
-    if (output.includes(error.trigger)) {
+    if (stderr.includes(error.trigger)) {
       if (process.env.GITHUB_ACTIONS)
         console.log(`::warning:: Segmentfault Error Detected: ${error.trigger}\nRefer to ${error.url}`)
 
