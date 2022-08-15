@@ -9,6 +9,9 @@ on:
     branches:
       - main
 
+env:
+  VITEST_SEGFAULT_RETRY: 3
+
 jobs:
   lint:
     runs-on: ubuntu-latest
