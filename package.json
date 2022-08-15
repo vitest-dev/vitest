@@ -31,7 +31,7 @@
     "ui:test": "npm -C packages/ui run test:run"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^0.25.2",
+    "@antfu/eslint-config": "^0.26.1",
     "@antfu/ni": "^0.17.2",
     "@rollup/plugin-alias": "^3.1.9",
     "@rollup/plugin-commonjs": "^22.0.2",
@@ -39,15 +39,15 @@
     "@rollup/plugin-node-resolve": "^13.3.0",
     "@types/fs-extra": "^9.0.13",
     "@types/lodash": "^4.14.182",
-    "@types/node": "^18.0.4",
+    "@types/node": "^18.7.3",
     "@types/ws": "^8.5.3",
     "@vitest/browser": "workspace:*",
     "@vitest/ui": "workspace:*",
     "bumpp": "^8.2.1",
     "c8": "^7.12.0",
     "cross-env": "^7.0.3",
-    "esbuild": "~0.14.53",
-    "eslint": "^8.21.0",
+    "esbuild": "~0.14.54",
+    "eslint": "^8.22.0",
     "esno": "^0.14.1",
     "fast-glob": "^3.2.11",
     "if-node-version": "^1.1.1",
@@ -59,9 +59,9 @@
     "pathe": "^0.2.0",
     "pnpm": "7.9.0",
     "rimraf": "^3.0.2",
-    "rollup": "^2.77.2",
+    "rollup": "^2.77.3",
     "rollup-plugin-dts": "^4.2.2",
-    "rollup-plugin-esbuild": "^4.9.1",
+    "rollup-plugin-esbuild": "^4.9.3",
     "rollup-plugin-license": "^2.8.1",
     "simple-git-hooks": "^2.8.0",
     "typescript": "^4.7.4",
@@ -73,7 +73,8 @@
     "overrides": {
       "esbuild": "^0.14.47",
       "vitest>vite": "^3.0.4",
-      "vitest": "workspace:*"
+      "vitest": "workspace:*",
+      "rollup": "~2.77.3"
     }
   },
   "simple-git-hooks": {

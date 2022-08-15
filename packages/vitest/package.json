@@ -131,7 +131,7 @@
     "log-update": "^5.0.1",
     "magic-string": "^0.26.2",
     "micromatch": "^4.0.5",
-    "mlly": "^0.5.7",
+    "mlly": "^0.5.12",
     "natural-compare": "^1.4.0",
     "p-limit": "^4.0.0",
     "pathe": "^0.2.0",
