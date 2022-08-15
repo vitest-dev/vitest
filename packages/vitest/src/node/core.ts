@@ -6,10 +6,10 @@ import mm from 'micromatch'
 import c from 'picocolors'
 import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
-import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig } from '../types'
+import type { ArgumentsType, CoverageProvider, Reporter, ResolvedConfig, UserConfig } from '../types'
 import { SnapshotManager } from '../integrations/snapshot/manager'
 import { clearTimeout, deepMerge, hasFailed, noop, setTimeout, slash } from '../utils'
-import { cleanCoverage, reportCoverage } from '../integrations/coverage'
+import { getCoverageProvider } from '../integrations/coverage'
 import { createPool } from './pool'
 import type { WorkerPool } from './pool'
 import { createReporters } from './reporters/utils'
@@ -29,6 +29,7 @@ export class Vitest {
   snapshot: SnapshotManager = undefined!
   cache: VitestCache = undefined!
   reporters: Reporter[] = undefined!
+  coverageProvider: CoverageProvider | null | undefined
   logger: Logger
   pool: WorkerPool | undefined
 
@@ -86,8 +87,7 @@ export class Vitest {
 
     this._onRestartListeners.forEach(fn => fn())
 
-    if (resolved.coverage.enabled)
-      await cleanCoverage(resolved.coverage, resolved.coverage.clean)
+    await this.coverageProvider?.clean(this.config.coverage.clean)
 
     this.cache.results.setConfig(resolved.root, resolved.cache)
     try {
@@ -96,6 +96,17 @@ export class Vitest {
     catch (err) {
       this.logger.error(`[vitest] Error, while trying to parse cache in ${this.cache.results.getCachePath()}:`, err)
     }
+  }
+
+  async initCoverageProvider() {
+    if (this.coverageProvider !== undefined)
+      return
+    this.coverageProvider = await getCoverageProvider(this.config.coverage)
+    if (this.coverageProvider) {
+      await this.coverageProvider.initialize(this)
+      this.config.coverage = this.coverageProvider.resolveOptions()
+    }
+    return this.coverageProvider
   }
 
   getSerializableConfig() {
@@ -117,6 +128,14 @@ export class Vitest {
   }
 
   async start(filters?: string[]) {
+    try {
+      await this.initCoverageProvider()
+    }
+    catch (e) {
+      this.logger.error(e)
+      process.exit(1)
+    }
+
     await this.report('onInit', this)
 
     const files = await this.filterTestsBySource(
@@ -136,8 +155,10 @@ export class Vitest {
 
     await this.runFiles(files)
 
-    if (this.config.coverage.enabled)
-      await reportCoverage(this)
+    if (this.coverageProvider) {
+      this.logger.log(c.blue(' % ') + c.dim('Coverage report from ') + c.yellow(this.coverageProvider.name))
+      await this.coverageProvider.reportCoverage()
+    }
 
     if (this.config.watch && !this.config.browser)
       await this.report('onWatcherStart')
@@ -321,15 +342,14 @@ export class Vitest {
       const files = Array.from(this.changedTests)
       this.changedTests.clear()
 
-      if (this.config.coverage.enabled && this.config.coverage.cleanOnRerun)
-        await cleanCoverage(this.config.coverage)
+      if (this.coverageProvider && this.config.coverage.cleanOnRerun)
+        await this.coverageProvider.clean()
 
       await this.report('onWatcherRerun', files, triggerId)
 
       await this.runFiles(files)
 
-      if (this.config.coverage.enabled)
-        await reportCoverage(this)
+      await this.coverageProvider?.reportCoverage()
 
       if (!this.config.browser)
         await this.report('onWatcherStart')

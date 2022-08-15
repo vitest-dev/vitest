@@ -16,6 +16,7 @@
   "keywords": [
     "vite",
     "vite-node",
+    "vitest",
     "test",
     "jest"
   ],
@@ -70,7 +71,6 @@
     "@edge-runtime/vm": "*",
     "@vitest/browser": "*",
     "@vitest/ui": "*",
-    "c8": "*",
     "happy-dom": "*",
     "jsdom": "*"
   },
@@ -79,9 +79,6 @@
       "optional": true
     },
     "@vitest/browser": {
-      "optional": true
-    },
-    "c8": {
       "optional": true
     },
     "happy-dom": {
@@ -117,7 +114,6 @@
     "@types/sinonjs__fake-timers": "^8.1.2",
     "@vitest/ui": "workspace:*",
     "birpc": "^0.2.3",
-    "c8": "^7.12.0",
     "cac": "^6.7.12",
     "chai-subset": "^1.6.0",
     "cli-truncate": "^3.1.0",

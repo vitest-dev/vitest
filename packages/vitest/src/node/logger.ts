@@ -102,6 +102,9 @@ export class Logger {
     else if (this.ctx.config.api)
       this.log(c.dim(c.green(`      API started at http://${this.ctx.config.api?.host || 'localhost'}:${c.bold(`${this.ctx.config.api.port}`)}`)))
 
+    if (this.ctx.coverageProvider)
+      this.log(c.dim('      Coverage enabled with ') + c.yellow(this.ctx.coverageProvider.name))
+
     this.log()
   }
 

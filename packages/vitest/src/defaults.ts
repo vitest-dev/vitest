@@ -1,4 +1,4 @@
-import type { ResolvedC8Options, UserConfig } from './types'
+import type { ResolvedCoverageOptions, UserConfig } from './types'
 
 export const defaultInclude = ['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']
 export const defaultExclude = ['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**']
@@ -19,6 +19,7 @@ const defaultCoverageExcludes = [
 ]
 
 const coverageConfigDefaults = {
+  provider: 'c8',
   enabled: false,
   clean: true,
   cleanOnRerun: false,
@@ -30,7 +31,7 @@ const coverageConfigDefaults = {
   // default extensions used by c8, plus '.vue' and '.svelte'
   // see https://github.com/istanbuljs/schema/blob/master/default-extension.js
   extension: ['.js', '.cjs', '.mjs', '.ts', '.tsx', '.jsx', '.vue', '.svelte'],
-} as ResolvedC8Options
+} as ResolvedCoverageOptions
 
 export const fakeTimersDefaults = {
   loopLimit: 10_000,

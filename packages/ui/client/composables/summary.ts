@@ -52,6 +52,7 @@ function toArray<T>(array?: Nullable<Arrayable<T>>): Array<T> {
     return array
   return [array]
 }
+
 function getTests(suite: Arrayable<Task>): Test[] {
   return toArray(suite).flatMap(s => s.type === 'test' ? [s] : s.tasks.flatMap(c => c.type === 'test' ? [c] : getTests(c)))
 }

@@ -30,6 +30,7 @@
       "vite-node/utils": ["./packages/vite-node/src/utils.ts"]
     },
     "types": [
+      "node",
       "vite/client"
     ]
   },
