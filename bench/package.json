@@ -6,7 +6,7 @@
     "bench:ci": "esno src/github.ts"
   },
   "devDependencies": {
-    "@actions/core": "^1.9.0",
+    "@actions/core": "^1.9.1",
     "@actions/exec": "^1.1.1",
     "@actions/github": "^5.0.3",
     "@happy-dom/jest-environment": "^6.0.4",
@@ -16,7 +16,7 @@
     "execa": "^6.1.0",
     "fs-extra": "^10.1.0",
     "markdown-table": "^3.0.2",
-    "microtime": "^3.1.0",
+    "microtime": "^3.1.1",
     "vitest": "link:../packages/vitest"
   }
 }
