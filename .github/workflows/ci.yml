@@ -25,7 +25,6 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 16.x
-          cache: pnpm
 
       - name: Install
         run: pnpm i
@@ -45,7 +44,6 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 16.x
-          cache: pnpm
 
       - name: Install
         run: pnpm i
@@ -82,7 +80,6 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node_version }}
-          cache: pnpm
 
       - name: Install
         run: pnpm i
