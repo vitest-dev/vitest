@@ -71,13 +71,12 @@ main()
 async function start(args: string[]) {
   const child = execa('node', [fileURLToPath(ENTRY), ...args], {
     reject: false,
-    all: true,
     stderr: 'pipe',
     stdout: 'inherit',
     stdin: 'inherit',
   })
   child.stderr?.pipe(process.stderr)
-  const { all: output = '' } = await child
+  const { stderr: output = '' } = await child
 
   for (const error of ERRORS) {
     if (output.includes(error.trigger)) {
