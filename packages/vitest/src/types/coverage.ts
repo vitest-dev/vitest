@@ -49,7 +49,7 @@ export type CoverageReporter =
   | 'text'
 
 export type CoverageOptions =
-  | BaseCoverageOptions & { provider?: null }
+  | BaseCoverageOptions & { provider?: null | CoverageProviderModule }
   | CoverageC8Options & { provider?: 'c8' }
   | CoverageIstanbulOptions & { provider?: 'istanbul' }
 

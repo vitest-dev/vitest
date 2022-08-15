@@ -68,3 +68,23 @@ export default defineConfig({
   },
 })
 ```
+
+## Custom Coverage Provider
+
+It's also possible to provide your custom coverage provider by passing an object to the `test.coverage.provider`:
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vitest/config'
+import CustomCoverageProvider from 'my-custom-coverage-provider'
+
+export default defineConfig({
+  test: {
+    coverage: {
+      provider: CustomCoverageProvider()
+    },
+  },
+})
+```
+
+Please refer to the type definition for more details.
