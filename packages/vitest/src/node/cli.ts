@@ -39,6 +39,7 @@ cli
   .option('--changed [since]', 'Run tests that are affected by the changed files (default: false)')
   .option('--sequence <options>', 'Define in what order to run tests (use --sequence.shuffle to run tests in random order)')
   .option('--no-color', 'Removes colors from the console output')
+  .option('--segfault-retry <times>', 'Return tests on segment fault (default: 0)', { default: 0 })
   .help()
 
 cli

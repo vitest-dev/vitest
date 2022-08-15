@@ -2,85 +2,95 @@
 /**
  * Wrapper of the CLI with child process to manage segfaults and retries.
  */
+import { fileURLToPath } from 'url'
 import c from 'picocolors'
-import minimist from 'minimist'
-import { execaNode } from 'execa'
+import { execa } from 'execa'
 
-const ENTRY = './cli.mjs'
+const ENTRY = new URL('./cli.mjs', import.meta.url)
+
+interface ErrorDef {
+  trigger: string
+  url: string
+}
 
 // Node errors seen in Vitest (vitejs/vite#9492)
-const ERRORS = [
-  'Check failed: result.second.', // nodejs/node#43617
-  'FATAL ERROR: v8::FromJust Maybe value is Nothing.', // vitest-dev/vitest#1191
+const ERRORS: ErrorDef[] = [
+  {
+    trigger: 'Check failed: result.second.',
+    url: 'https://github.com/nodejs/node/issues/43617',
+  },
+  {
+    trigger: 'FATAL ERROR: v8::FromJust Maybe value is Nothing.',
+    url: 'https://github.com/vitest-dev/vitest/issues/1191',
+  },
+  {
+    trigger: 'FATAL ERROR: v8::ToLocalChecked Empty MaybeLocal.',
+    url: 'https://github.com/nodejs/node/issues/42407',
+  },
 ]
 
-interface Args {
-  args: string[]
-  retries: number
-}
-
-function parseArgs(): Args {
-  const OPTION = 'segfault-retry'
-  const args = minimist(process.argv.slice(2), {
-    'string': [OPTION],
-    '--': true,
-    'stopEarly': true,
-  })
-
-  const showUsageAndExit = (msg: string) => {
-    console.error(msg)
-    process.exit(1)
-  }
-
-  if (args.r && Number.isNaN(Number(args.OPTION)))
-    showUsageAndExit(c.red(`Invalid ${OPTION} value`))
-
-  return {
-    retries: Number(args[OPTION]),
-    args: args._ || [],
-  }
-}
-
-function findError(log: string) {
-  return log ? ERRORS.find(error => log.includes(error)) ?? '' : ''
-}
-
-async function main({ args, retries }: Args) {
+async function main() {
   // default exit code = 100, as in retries were exhausted
   const exitCode = 100
+  let retries = 0
+  const args = process.argv.slice(2)
 
-  console.log(args)
-
-  for (let i = 0; i < retries; i++) {
-    const childProc = execaNode(ENTRY, args, {
-      reject: false,
-      all: true,
-    })
-    childProc.all!.pipe(process.stdout)
-    const { all: cmdOutput } = await childProc
-
-    const error = findError(cmdOutput ?? '')
-    if (error) {
-      // use GitHub Action annotation to highlight error
-      if (process.env.GITHUB_ACTIONS)
-        console.log(`::warning::FLAKE DETECTED: ${error}`)
-
-      console.log(
-        `${c.black(c.bgRed(' FLAKE DETECTED: '))
-           } ${
-           c.red(error)}`,
-      )
-      console.log(
-         `${c.black(c.bgBlue(' RETRYING: '))} ${c.gray(
-           `(${i + 1} of ${retries})`,
-         )} ${c.blue(args.join(' '))}`,
-      )
+  if (process.env.VITEST_SEGFAULT_RETRY) {
+    retries = +process.env.VITEST_SEGFAULT_RETRY
+  }
+  else {
+    for (let i = 0; i < args.length; i++) {
+      if (args[i].startsWith('--segfault-retry=')) {
+        retries = +args[i].split('=')[1]
+        break
+      }
+      else if (args[i] === '--segfault-retry' && args[i + 1]?.match(/^\d+$/)) {
+        retries = +args[i + 1]
+        break
+      }
     }
-    else {
-      process.exit(childProc.exitCode!)
+  }
+
+  retries = Math.max(1, retries || 1)
+
+  for (let i = 1; i <= retries; i++) {
+    if (i !== 1)
+      console.log(`${c.inverse(c.bold(c.magenta(' Retrying ')))} vitest ${args.join(' ')} ${c.gray(`(${i} of ${retries})`)}`)
+    await start(args)
+    if (i === 1 && retries === 1) {
+      console.log(c.yellow(`It seems to be an upstream bug of Node.js. To improve the test stability,
+you could pass ${c.bold(c.green('--segfault-retry=3'))} or set env ${c.bold(c.green('VITEST_SEGFAULT_RETRY=3'))} to
+have Vitest auto retries on flaky segfaults.\n`))
     }
   }
   process.exit(exitCode)
 }
 
-main(parseArgs())
+main()
+
+async function start(args: string[]) {
+  const child = execa('node', [fileURLToPath(ENTRY), ...args], {
+    reject: false,
+    all: true,
+    stderr: 'pipe',
+    stdout: 'inherit',
+    stdin: 'inherit',
+  })
+  child.stderr?.pipe(process.stderr)
+  const { all: output = '' } = await child
+
+  for (const error of ERRORS) {
+    if (output.includes(error.trigger)) {
+      if (process.env.GITHUB_ACTIONS)
+        console.log(`::warning:: Segmentfault Error Detected: ${error.trigger}\nRefer to ${error.url}`)
+
+      const RED_BLOCK = c.inverse(c.red(' '))
+      console.log(`\n${c.inverse(c.bold(c.red(' Segmentfault Error Detected ')))}\n${RED_BLOCK} ${c.red(error.trigger)}\n${RED_BLOCK} ${c.red(`Refer to ${error.url}`)}\n`)
+      return
+    }
+  }
+
+  // no segmentfault found
+  process.exit(child.exitCode!)
+}
+
