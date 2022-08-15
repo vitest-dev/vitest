@@ -616,11 +616,17 @@ importers:
 
   packages/coverage-istanbul:
     specifiers:
+      '@types/istanbul-lib-coverage': ^2.0.4
+      '@types/istanbul-lib-instrument': ^1.7.4
+      '@types/istanbul-lib-report': ^3.0.0
+      '@types/istanbul-lib-source-maps': ^4.0.1
+      '@types/istanbul-reports': ^3.0.1
       istanbul-lib-coverage: ^3.2.0
       istanbul-lib-instrument: ^5.2.0
       istanbul-lib-report: ^3.0.0
       istanbul-lib-source-maps: ^4.0.1
       istanbul-reports: ^3.1.5
+      test-exclude: ^6.0.0
       vitest: workspace:*
     dependencies:
       istanbul-lib-coverage: 3.2.0
@@ -628,7 +634,14 @@ importers:
       istanbul-lib-report: 3.0.0
       istanbul-lib-source-maps: 4.0.1
       istanbul-reports: 3.1.5
+      test-exclude: 6.0.0
       vitest: link:../vitest
+    devDependencies:
+      '@types/istanbul-lib-coverage': 2.0.4
+      '@types/istanbul-lib-instrument': 1.7.4
+      '@types/istanbul-lib-report': 3.0.0
+      '@types/istanbul-lib-source-maps': 4.0.1
+      '@types/istanbul-reports': 3.0.1
 
   packages/ui:
     specifiers:
@@ -7612,6 +7625,10 @@ packages:
     resolution: {integrity: sha512-HnYpAE1Y6kRyKM/XkEuiRQhTHvkzMBurTHnpFLYLBGPIylZNPs9jJcuOOYWxPLJCSEtmZT0Y8rHDokKN7rRTig==}
     dev: true
 
+  /@types/babel-types/7.0.11:
+    resolution: {integrity: sha512-pkPtJUUY+Vwv6B1inAz55rQvivClHJxc9aVEPPmaq2cbyeMLCiDpbKpcKyX4LAwpNGi+SHBv0tHv6+0gXv0P2A==}
+    dev: true
+
   /@types/babel__core/7.1.19:
     resolution: {integrity: sha512-WEOTgRsbYkvA/KCsDwVEGkd7WAr1e3g31VHQ8zy5gul/V1qKullU/BU5I68X5v7V3GnB9eotmom4v5a5gjxorw==}
     dependencies:
@@ -7751,10 +7768,25 @@ packages:
   /@types/istanbul-lib-coverage/2.0.4:
     resolution: {integrity: sha512-z/QT1XN4K4KYuslS23k62yDIDLwLFkzxOuMplDtObz0+y7VqJCaO2o+SPwHCvLFZh7xazvvoor2tA/hPz9ee7g==}
 
+  /@types/istanbul-lib-instrument/1.7.4:
+    resolution: {integrity: sha512-1i1VVkU2KrpZCmti+t5J/zBb2KLKxHgU1EYL+0QtnDnVyZ59aSKcpnG6J0I6BZGDON566YzPNIlNfk7m+9l1JA==}
+    dependencies:
+      '@types/babel-types': 7.0.11
+      '@types/istanbul-lib-coverage': 2.0.4
+      source-map: 0.6.1
+    dev: true
+
   /@types/istanbul-lib-report/3.0.0:
     resolution: {integrity: sha512-plGgXAPfVKFoYfa9NpYDAkseG+g6Jr294RqeqcqDixSbU34MZVJRi/P+7Y8GDpzkEwLaGZZOpKIEmeVZNtKsrg==}
     dependencies:
       '@types/istanbul-lib-coverage': 2.0.4
+    dev: true
+
+  /@types/istanbul-lib-source-maps/4.0.1:
+    resolution: {integrity: sha512-WH6e5naLXI3vB2Px3whNeYxzDgm6S6sk3Ht8e3/BiWwEnzZi72wja3bWzWwcgbFTFp8hBLB7NT2p3lNJgxCxvA==}
+    dependencies:
+      '@types/istanbul-lib-coverage': 2.0.4
+      source-map: 0.6.1
     dev: true
 
   /@types/istanbul-reports/3.0.1:

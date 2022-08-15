@@ -1,4 +1,4 @@
-import type { ExistingRawSourceMap, TransformPluginContext } from 'rollup'
+import type { TransformPluginContext, TransformResult } from 'rollup'
 import type { Vitest } from '../node'
 import type { Arrayable } from './general'
 
@@ -18,7 +18,7 @@ export interface CoverageProvider {
     sourceCode: string,
     id: string,
     pluginCtx: TransformPluginContext
-  ): void | { code: string; map: ExistingRawSourceMap }
+  ): TransformResult | Promise<TransformResult>
 }
 
 export type CoverageReporter =

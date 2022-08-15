@@ -8,7 +8,7 @@ import { EnvReplacerPlugin } from './envRelacer'
 import { GlobalSetupPlugin } from './globalSetup'
 import { MocksPlugin } from './mock'
 import { CSSEnablerPlugin } from './cssEnabler'
-import { InstrumenterPlugin } from './instrumenter'
+import { CoverageTransform } from './coverageTransform'
 
 export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest()): Promise<VitePlugin[]> {
   let haveStarted = false
@@ -170,7 +170,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
       ? await BrowserPlugin()
       : []),
     CSSEnablerPlugin(ctx),
-    InstrumenterPlugin(ctx),
+    CoverageTransform(ctx),
     options.ui
       ? await UIPlugin()
       : null,

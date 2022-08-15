@@ -41,11 +41,19 @@
     "dev": "tsup --watch=src"
   },
   "dependencies": {
-    "vitest": "workspace:*",
     "istanbul-lib-coverage": "^3.2.0",
     "istanbul-lib-instrument": "^5.2.0",
     "istanbul-lib-report": "^3.0.0",
     "istanbul-lib-source-maps": "^4.0.1",
-    "istanbul-reports": "^3.1.5"
+    "istanbul-reports": "^3.1.5",
+    "test-exclude": "^6.0.0",
+    "vitest": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/istanbul-lib-coverage": "^2.0.4",
+    "@types/istanbul-lib-instrument": "^1.7.4",
+    "@types/istanbul-lib-report": "^3.0.0",
+    "@types/istanbul-lib-source-maps": "^4.0.1",
+    "@types/istanbul-reports": "^3.0.1"
   }
 }

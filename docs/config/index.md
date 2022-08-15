@@ -420,7 +420,7 @@ Isolate environment for each test file. Does not work if you disable [`--threads
 
 ### coverage
 
-- **Type:** `C8Options | IstanbulOptions`
+- **Type:** `CoverageC8Options | CoverageIstanbulOptions`
 - **Default:** `undefined`
 
 You can use [`c8`](https://github.com/bcoe/c8) or [`istanbul`](https://istanbul.js.org/) for coverage collection.
@@ -432,11 +432,11 @@ You can use [`c8`](https://github.com/bcoe/c8) or [`istanbul`](https://istanbul.
 
 Use `provider` to select the tool for coverage collection.
 
-#### C8Options
+#### CoverageC8Options
 
 Used when `provider: 'c8'` is set. Coverage options are passed to [`c8`](https://github.com/bcoe/c8).
 
-#### IstanbulOptions
+#### CoverageIstanbulOptions
 
 Used when `provider: 'istanbul'` is set.
 
