@@ -156,7 +156,7 @@ export class Vitest {
     await this.runFiles(files)
 
     if (this.coverageProvider) {
-      this.logger.log(c.blue(' % ') + c.dim('Coverage report from ') + c.green(this.coverageProvider.name))
+      this.logger.log(c.blue(' % ') + c.dim('Coverage report from ') + c.yellow(this.coverageProvider.name))
       await this.coverageProvider.reportCoverage()
     }
 
