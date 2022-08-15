@@ -155,7 +155,7 @@ test('JUnit reporter with outputFile in non-existing directory', async () => {
   expect(await fs.readFile(outputFile, 'utf8')).toMatchSnapshot()
 
   // Cleanup
-  await fs.rm(rootDirectory, { recursive: true })
+  await fs.rm(rootDirectory, { recursive: true, force: true })
 })
 
 test('JUnit reporter with outputFile object in non-existing directory', async () => {
@@ -184,7 +184,7 @@ test('JUnit reporter with outputFile object in non-existing directory', async ()
   expect(await fs.readFile(outputFile, 'utf8')).toMatchSnapshot()
 
   // Cleanup
-  await fs.rm(rootDirectory, { recursive: true })
+  await fs.rm(rootDirectory, { recursive: true, force: true })
 })
 
 test('json reporter', async () => {
@@ -237,7 +237,7 @@ test('json reporter with outputFile', async () => {
   expect(await fs.readFile(outputFile, 'utf8')).toMatchSnapshot()
 
   // Cleanup
-  await fs.rm(outputFile)
+  await fs.rm(outputFile, { force: true })
 })
 
 test('json reporter with outputFile object', async () => {
@@ -261,7 +261,7 @@ test('json reporter with outputFile object', async () => {
   expect(await fs.readFile(outputFile, 'utf8')).toMatchSnapshot()
 
   // Cleanup
-  await fs.rm(outputFile)
+  await fs.rm(outputFile, { force: true })
 })
 
 test('json reporter with outputFile in non-existing directory', async () => {
@@ -284,7 +284,7 @@ test('json reporter with outputFile in non-existing directory', async () => {
   expect(await fs.readFile(outputFile, 'utf8')).toMatchSnapshot()
 
   // Cleanup
-  await fs.rm(rootDirectory, { recursive: true })
+  await fs.rm(rootDirectory, { recursive: true, force: true })
 })
 
 test('json reporter with outputFile object in non-existing directory', async () => {
@@ -309,7 +309,7 @@ test('json reporter with outputFile object in non-existing directory', async () 
   expect(await fs.readFile(outputFile, 'utf8')).toMatchSnapshot()
 
   // Cleanup
-  await fs.rm(rootDirectory, { recursive: true })
+  await fs.rm(rootDirectory, { recursive: true, force: true })
 })
 
 /**
