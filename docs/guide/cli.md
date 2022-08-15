@@ -61,7 +61,7 @@ vitest related /src/index.ts /src/hello-world.js
 | `--outputTruncateLength <length>` | Truncate output diff lines up to `<length>` number of characters. |
 | `--outputDiffLines <lines>` | Limit number of output diff lines up to `<lines>`. |
 | `--outputFile <filename/-s>` | Write test results to a file when the `--reporter=json` or `--reporter=junit` option is also specified <br /> Via [cac's dot notation] you can specify individual outputs for multiple reporters |
-| `--coverage` | Use c8 for coverage |
+| `--coverage` | Enable coverage report |
 | `--run` | Do not watch |
 | `--mode` | Override Vite mode (default: `test`) |
 | `--mode <name>` | Override Vite mode (default: `test`) |

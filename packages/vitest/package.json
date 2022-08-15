@@ -71,7 +71,6 @@
     "@edge-runtime/vm": "*",
     "@vitest/browser": "*",
     "@vitest/ui": "*",
-    "c8": "*",
     "happy-dom": "*",
     "jsdom": "*"
   },
