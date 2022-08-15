@@ -6,7 +6,6 @@
     "pretty-format",
     "pathe",
     "codemirror",
-    "esno",
     "rollup"
   ]
 }
