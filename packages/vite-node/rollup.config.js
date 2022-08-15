@@ -45,12 +45,6 @@ const plugins = [
   }),
 ]
 
-function onwarn(message) {
-  if (message.code === 'EMPTY_BUNDLE')
-    return
-  console.error(message)
-}
-
 export default defineConfig([
   {
     input: entries,
@@ -90,3 +84,9 @@ export default defineConfig([
     onwarn,
   },
 ])
+
+function onwarn(message) {
+  if (['EMPTY_BUNDLE', 'CIRCULAR_DEPENDENCY'].includes(message.code))
+    return
+  console.error(message)
+}
