@@ -14,6 +14,19 @@ Jest has their [globals API](https://jestjs.io/docs/api) enabled by default. Vit
 
 If you decide to keep globals disabled, be aware that common libraries like [`testing-library`](https://testing-library.com/) will not run auto DOM [cleanup](https://testing-library.com/docs/svelte-testing-library/api/#cleanup).
 
+**Module mocks**
+
+When mocking a module in Jest, the factory argument's return value is the default export. In Vitest, the factory argument has to return an object with each export explicitly defined. For example, the following `jest.mock` would have to be updated as follows:
+
+```diff
+- jest.mock('./some-path', () => 'hello')
++ vi.mock('./some-path', () => ({
++   default: 'hello',
++ })
+```
+
+For more details please refer to the [vi.mock api](/api/#vi-mock)
+
 **Auto-Mocking Behaviour**
 
 Unlike Jest, mocked modules in `<root>/__mocks__` are not loaded unless `vi.mock()` is called. If you need them to be mocked in every test, like in Jest, you can mock them inside [`setupFiles`](/config/#setupfiles).

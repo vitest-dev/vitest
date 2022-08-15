@@ -122,7 +122,7 @@ export class VitestMocker {
           if (target instanceof Promise)
             return target.then.bind(target)
         }
-        else if (val === undefined) {
+        else if (!(prop in target)) {
           throw new Error(`[vitest] No "${prop}" export is defined on the "${dep}"`)
         }
 
