@@ -3,7 +3,7 @@
   "type": "module",
   "version": "0.21.1",
   "private": true,
-  "packageManager": "pnpm@7.8.0",
+  "packageManager": "pnpm@7.9.0",
   "description": "A blazing fast unit test framework powered by Vite",
   "scripts": {
     "ci": "ni && nr typecheck && nr lint && nr build && nr test:all",
@@ -31,7 +31,7 @@
     "ui:test": "npm -C packages/ui run test:run"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^0.25.2",
+    "@antfu/eslint-config": "^0.26.1",
     "@antfu/ni": "^0.17.2",
     "@rollup/plugin-alias": "^3.1.9",
     "@rollup/plugin-commonjs": "^22.0.2",
@@ -48,7 +48,7 @@
     "bumpp": "^8.2.1",
     "c8": "^7.12.0",
     "cross-env": "^7.0.3",
-    "esbuild": "^0.14.54",
+    "esbuild": "~0.14.54",
     "eslint": "^8.22.0",
     "esno": "^0.14.1",
     "fast-glob": "^3.2.11",
@@ -61,7 +61,7 @@
     "pathe": "^0.2.0",
     "pnpm": "7.9.0",
     "rimraf": "^3.0.2",
-    "rollup": "^2.78.0",
+    "rollup": "^2.77.3",
     "rollup-plugin-dts": "^4.2.2",
     "rollup-plugin-esbuild": "^4.9.3",
     "rollup-plugin-license": "^2.8.1",
@@ -76,7 +76,8 @@
     "overrides": {
       "esbuild": "^0.14.47",
       "vitest>vite": "^3.0.4",
-      "vitest": "workspace:*"
+      "vitest": "workspace:*",
+      "rollup": "~2.77.3"
     }
   },
   "simple-git-hooks": {

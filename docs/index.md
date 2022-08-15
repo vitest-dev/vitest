@@ -28,7 +28,7 @@ hero:
 
 features:
   - title: Vite Powered
-    details: Reuse Vite's config, transformers, resolvers, and plugins - consistant across your app and tests.
+    details: Reuse Vite's config, transformers, resolvers, and plugins - consistent across your app and tests.
   - title: Jest Compatible
     details: Expect, snapshot, coverage, and more - migrating from Jest is straightforward.
   - title: Smart & instant watch mode
