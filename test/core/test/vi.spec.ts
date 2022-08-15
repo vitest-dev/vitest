@@ -25,7 +25,7 @@ describe('testing vi utils', () => {
     expect(mod2).toBe(mod3)
   })
 
-  test("resetting modules doesn't reset vitest", async () => {
+  test('resetting modules doesn\'t reset vitest', async () => {
     const v1 = await import('vitest')
     vi.resetModules()
     const v2 = await import('vitest')

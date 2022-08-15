@@ -555,7 +555,7 @@ When you use `test` in the top level of file, they are collected as part of the 
   import { Stocks } from './stocks'
   const stocks = new Stocks()
 
-  test("if Bill stock hasn't failed, sell apples to him", () => {
+  test('if Bill stock hasn\'t failed, sell apples to him', () => {
     stocks.syncStocks('Bill')
     expect(stocks.stockFailed('Bill')).toBeFalsy()
   })
@@ -576,7 +576,7 @@ When you use `test` in the top level of file, they are collected as part of the 
     return null
   }
 
-  test("we don't have apples", () => {
+  test('we don\'t have apples', () => {
     expect(apples()).toBeNull()
   })
   ```
