@@ -5,7 +5,7 @@ const numbers: number[] = []
 
 describe.shuffle('random tests', () => {
   describe('inside', () => {
-    // shuffle is not inhereted from parent
+    // shuffle is not inherited from parent
 
     test('inside 1', () => {
       numbers.push(1)

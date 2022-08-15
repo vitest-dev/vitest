@@ -124,9 +124,9 @@ export function deepMerge<T extends object = object, S extends object = T>(targe
   if (source === undefined)
     return target as any
 
-  if (isMergableObject(target) && isMergableObject(source)) {
+  if (isMergeableObject(target) && isMergeableObject(source)) {
     (Object.keys(source) as (keyof S & keyof T)[]).forEach((key) => {
-      if (isMergableObject(source[key])) {
+      if (isMergeableObject(source[key])) {
         if (!target[key])
           target[key] = {} as any
 
@@ -141,7 +141,7 @@ export function deepMerge<T extends object = object, S extends object = T>(targe
   return deepMerge(target, ...sources)
 }
 
-function isMergableObject(item: any): item is Object {
+function isMergeableObject(item: any): item is Object {
   return isPlainObject(item) && !Array.isArray(item)
 }
 

@@ -68,7 +68,7 @@ describe('mocking with factory', () => {
     expect(example.asyncSquare(2, 3)).resolves.toBe(5)
   })
 
-  test('successfuly with actual', () => {
+  test('successfully with actual', () => {
     expect(moduleA.A).toBe('A')
     expect((moduleA as any).B).toBe('B')
   })
