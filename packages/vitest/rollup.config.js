@@ -18,6 +18,7 @@ const entries = [
   'src/index.ts',
   'src/browser.ts',
   'src/node/cli.ts',
+  'src/node/cli-wrapper.ts',
   'src/node.ts',
   'src/runtime/worker.ts',
   'src/runtime/loader.ts',
