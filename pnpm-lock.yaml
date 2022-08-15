@@ -614,6 +614,7 @@ importers:
 
   packages/coverage-c8:
     specifiers:
+      '@types/node': ^18.7.3
       c8: ^7.12.0
       vite-node: workspace:*
       vitest: workspace:*
@@ -621,6 +622,7 @@ importers:
       c8: 7.12.0
       vitest: link:../vitest
     devDependencies:
+      '@types/node': 18.7.3
       vite-node: link:../vite-node
 
   packages/coverage-istanbul:
@@ -630,6 +632,7 @@ importers:
       '@types/istanbul-lib-report': ^3.0.0
       '@types/istanbul-lib-source-maps': ^4.0.1
       '@types/istanbul-reports': ^3.0.1
+      '@types/node': ^18.7.3
       istanbul-lib-coverage: ^3.2.0
       istanbul-lib-instrument: ^5.2.0
       istanbul-lib-report: ^3.0.0
@@ -651,6 +654,7 @@ importers:
       '@types/istanbul-lib-report': 3.0.0
       '@types/istanbul-lib-source-maps': 4.0.1
       '@types/istanbul-reports': 3.0.1
+      '@types/node': 18.7.3
 
   packages/ui:
     specifiers:

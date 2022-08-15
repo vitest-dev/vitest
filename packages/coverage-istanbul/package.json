@@ -50,6 +50,7 @@
     "vitest": "workspace:*"
   },
   "devDependencies": {
+    "@types/node": "^18.7.3",
     "@types/istanbul-lib-coverage": "^2.0.4",
     "@types/istanbul-lib-instrument": "^1.7.4",
     "@types/istanbul-lib-report": "^3.0.0",
