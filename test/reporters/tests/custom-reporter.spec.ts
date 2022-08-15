@@ -21,28 +21,42 @@ async function run(...runOptions: string[]): Promise<string> {
   return stdout
 }
 
-describe('Custom reporters', () => {
+async function runWithRetry(...runOptions: string[]) {
+  const count = 3
+
+  for (let i = count; i >= 0; i--) {
+    try {
+      return await run(...runOptions)
+    }
+    catch (e) {
+      if (i <= 0)
+        throw e
+    }
+  }
+}
+
+describe.concurrent('custom reporters', () => {
   // On Windows child_process is very unstable, we skip testing it
   if (process.platform === 'win32' && process.env.CI)
     return test.skip('skip on windows')
 
   test('custom reporter instances defined in configuration works', async () => {
-    const stdout = await run('--config', 'custom-reporter.vitest.config.ts')
+    const stdout = await runWithRetry('--config', 'custom-reporter.vitest.config.ts')
     expect(stdout).includes('hello from custom reporter')
   }, 40000)
 
   test('a path to a custom reporter defined in configuration works', async () => {
-    const stdout = await run('--config', 'custom-reporter-path.vitest.config.ts', '--reporter', customJSReporterPath)
+    const stdout = await runWithRetry('--config', 'custom-reporter-path.vitest.config.ts', '--reporter', customJSReporterPath)
     expect(stdout).includes('hello from custom reporter')
   }, 40000)
 
   test('custom TS reporters using ESM given as a CLI argument works', async () => {
-    const stdout = await run('--config', 'without-custom-reporter.vitest.config.ts', '--reporter', customTsReporterPath)
+    const stdout = await runWithRetry('--config', 'without-custom-reporter.vitest.config.ts', '--reporter', customTsReporterPath)
     expect(stdout).includes('hello from custom reporter')
   }, 40000)
 
   test('custom JS reporters using CJS given as a CLI argument works', async () => {
-    const stdout = await run('--config', 'without-custom-reporter.vitest.config.ts', '--reporter', customJSReporterPath)
+    const stdout = await runWithRetry('--config', 'without-custom-reporter.vitest.config.ts', '--reporter', customJSReporterPath)
     expect(stdout).includes('hello from custom reporter')
   }, 40000)
 })
