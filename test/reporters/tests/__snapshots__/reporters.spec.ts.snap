@@ -3,32 +3,32 @@
 exports[`JUnit reporter (no outputFile entry) 1`] = `
 "<?xml version=\\"1.0\\" encoding=\\"UTF-8\\" ?>
 <testsuites>
-    <testsuite name=\\"test/core/test/basic.test.ts\\" timestamp=\\"2022-01-19T10:10:01.759Z\\" hostname=\\"hostname\\" tests=\\"9\\" failures=\\"1\\" errors=\\"0\\" skipped=\\"2\\" time=\\"0.1459928420\\">
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; inner suite &gt; Math.sqrt()\\" time=\\"0.0014422860\\">
+    <testsuite name=\\"test/core/test/basic.test.ts\\" timestamp=\\"2022-01-19T10:10:01.759Z\\" hostname=\\"hostname\\" tests=\\"9\\" failures=\\"1\\" errors=\\"0\\" skipped=\\"2\\" time=\\"0.145992842\\">
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; inner suite &gt; Math.sqrt()\\" time=\\"0.001442286\\">
             <failure message=\\"expected 2.23606797749979 to equal 2\\" type=\\"AssertionError\\">
 AssertionError: expected 2.23606797749979 to equal 2
  ❯ vitest/test/core/test/basic.test.ts:8:32
             </failure>
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; JSON\\" time=\\"0.0010237110\\">
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; JSON\\" time=\\"0.001023711\\">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; async with timeout\\">
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; async with timeout\\" time=\\"0\\">
             <skipped/>
         </testcase>
         <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; timeout\\" time=\\"0.1005059841\\">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback setup success \\" time=\\"0.0201848750\\">
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback setup success \\" time=\\"0.020184875\\">
         </testcase>
         <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback test success \\" time=\\"0.0003324542\\">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback setup success done(false)\\" time=\\"0.0197386060\\">
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback setup success done(false)\\" time=\\"0.019738606\\">
         </testcase>
         <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback test success done(false)\\" time=\\"0.0001923509\\">
             <system-err>
 [33merror[39m
             </system-err>
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; todo test\\">
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; todo test\\" time=\\"0\\">
             <skipped/>
         </testcase>
     </testsuite>
@@ -39,32 +39,32 @@ AssertionError: expected 2.23606797749979 to equal 2
 exports[`JUnit reporter 1`] = `
 "<?xml version=\\"1.0\\" encoding=\\"UTF-8\\" ?>
 <testsuites>
-    <testsuite name=\\"test/core/test/basic.test.ts\\" timestamp=\\"2022-01-19T10:10:01.759Z\\" hostname=\\"hostname\\" tests=\\"9\\" failures=\\"1\\" errors=\\"0\\" skipped=\\"2\\" time=\\"0.1459928420\\">
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; inner suite &gt; Math.sqrt()\\" time=\\"0.0014422860\\">
+    <testsuite name=\\"test/core/test/basic.test.ts\\" timestamp=\\"2022-01-19T10:10:01.759Z\\" hostname=\\"hostname\\" tests=\\"9\\" failures=\\"1\\" errors=\\"0\\" skipped=\\"2\\" time=\\"0.145992842\\">
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; inner suite &gt; Math.sqrt()\\" time=\\"0.001442286\\">
             <failure message=\\"expected 2.23606797749979 to equal 2\\" type=\\"AssertionError\\">
 AssertionError: expected 2.23606797749979 to equal 2
  ❯ vitest/test/core/test/basic.test.ts:8:32
             </failure>
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; JSON\\" time=\\"0.0010237110\\">
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; JSON\\" time=\\"0.001023711\\">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; async with timeout\\">
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; async with timeout\\" time=\\"0\\">
             <skipped/>
         </testcase>
         <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; timeout\\" time=\\"0.1005059841\\">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback setup success \\" time=\\"0.0201848750\\">
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback setup success \\" time=\\"0.020184875\\">
         </testcase>
         <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback test success \\" time=\\"0.0003324542\\">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback setup success done(false)\\" time=\\"0.0197386060\\">
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback setup success done(false)\\" time=\\"0.019738606\\">
         </testcase>
         <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback test success done(false)\\" time=\\"0.0001923509\\">
             <system-err>
 [33merror[39m
             </system-err>
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; todo test\\">
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; todo test\\" time=\\"0\\">
             <skipped/>
         </testcase>
     </testsuite>
@@ -80,32 +80,32 @@ exports[`JUnit reporter with outputFile 1`] = `
 exports[`JUnit reporter with outputFile 2`] = `
 "<?xml version=\\"1.0\\" encoding=\\"UTF-8\\" ?>
 <testsuites>
-    <testsuite name=\\"test/core/test/basic.test.ts\\" timestamp=\\"2022-01-19T10:10:01.759Z\\" hostname=\\"hostname\\" tests=\\"9\\" failures=\\"1\\" errors=\\"0\\" skipped=\\"2\\" time=\\"0.1459928420\\">
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; inner suite &gt; Math.sqrt()\\" time=\\"0.0014422860\\">
+    <testsuite name=\\"test/core/test/basic.test.ts\\" timestamp=\\"2022-01-19T10:10:01.759Z\\" hostname=\\"hostname\\" tests=\\"9\\" failures=\\"1\\" errors=\\"0\\" skipped=\\"2\\" time=\\"0.145992842\\">
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; inner suite &gt; Math.sqrt()\\" time=\\"0.001442286\\">
             <failure message=\\"expected 2.23606797749979 to equal 2\\" type=\\"AssertionError\\">
 AssertionError: expected 2.23606797749979 to equal 2
  ❯ vitest/test/core/test/basic.test.ts:8:32
             </failure>
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; JSON\\" time=\\"0.0010237110\\">
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; JSON\\" time=\\"0.001023711\\">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; async with timeout\\">
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; async with timeout\\" time=\\"0\\">
             <skipped/>
         </testcase>
         <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; timeout\\" time=\\"0.1005059841\\">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback setup success \\" time=\\"0.0201848750\\">
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback setup success \\" time=\\"0.020184875\\">
         </testcase>
         <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback test success \\" time=\\"0.0003324542\\">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback setup success done(false)\\" time=\\"0.0197386060\\">
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback setup success done(false)\\" time=\\"0.019738606\\">
         </testcase>
         <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback test success done(false)\\" time=\\"0.0001923509\\">
             <system-err>
 [33merror[39m
             </system-err>
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; todo test\\">
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; todo test\\" time=\\"0\\">
             <skipped/>
         </testcase>
     </testsuite>
@@ -121,32 +121,32 @@ exports[`JUnit reporter with outputFile in non-existing directory 1`] = `
 exports[`JUnit reporter with outputFile in non-existing directory 2`] = `
 "<?xml version=\\"1.0\\" encoding=\\"UTF-8\\" ?>
 <testsuites>
-    <testsuite name=\\"test/core/test/basic.test.ts\\" timestamp=\\"2022-01-19T10:10:01.759Z\\" hostname=\\"hostname\\" tests=\\"9\\" failures=\\"1\\" errors=\\"0\\" skipped=\\"2\\" time=\\"0.1459928420\\">
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; inner suite &gt; Math.sqrt()\\" time=\\"0.0014422860\\">
+    <testsuite name=\\"test/core/test/basic.test.ts\\" timestamp=\\"2022-01-19T10:10:01.759Z\\" hostname=\\"hostname\\" tests=\\"9\\" failures=\\"1\\" errors=\\"0\\" skipped=\\"2\\" time=\\"0.145992842\\">
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; inner suite &gt; Math.sqrt()\\" time=\\"0.001442286\\">
             <failure message=\\"expected 2.23606797749979 to equal 2\\" type=\\"AssertionError\\">
 AssertionError: expected 2.23606797749979 to equal 2
  ❯ vitest/test/core/test/basic.test.ts:8:32
             </failure>
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; JSON\\" time=\\"0.0010237110\\">
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; JSON\\" time=\\"0.001023711\\">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; async with timeout\\">
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; async with timeout\\" time=\\"0\\">
             <skipped/>
         </testcase>
         <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; timeout\\" time=\\"0.1005059841\\">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback setup success \\" time=\\"0.0201848750\\">
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback setup success \\" time=\\"0.020184875\\">
         </testcase>
         <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback test success \\" time=\\"0.0003324542\\">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback setup success done(false)\\" time=\\"0.0197386060\\">
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback setup success done(false)\\" time=\\"0.019738606\\">
         </testcase>
         <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback test success done(false)\\" time=\\"0.0001923509\\">
             <system-err>
 [33merror[39m
             </system-err>
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; todo test\\">
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; todo test\\" time=\\"0\\">
             <skipped/>
         </testcase>
     </testsuite>
@@ -162,32 +162,32 @@ exports[`JUnit reporter with outputFile object 1`] = `
 exports[`JUnit reporter with outputFile object 2`] = `
 "<?xml version=\\"1.0\\" encoding=\\"UTF-8\\" ?>
 <testsuites>
-    <testsuite name=\\"test/core/test/basic.test.ts\\" timestamp=\\"2022-01-19T10:10:01.759Z\\" hostname=\\"hostname\\" tests=\\"9\\" failures=\\"1\\" errors=\\"0\\" skipped=\\"2\\" time=\\"0.1459928420\\">
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; inner suite &gt; Math.sqrt()\\" time=\\"0.0014422860\\">
+    <testsuite name=\\"test/core/test/basic.test.ts\\" timestamp=\\"2022-01-19T10:10:01.759Z\\" hostname=\\"hostname\\" tests=\\"9\\" failures=\\"1\\" errors=\\"0\\" skipped=\\"2\\" time=\\"0.145992842\\">
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; inner suite &gt; Math.sqrt()\\" time=\\"0.001442286\\">
             <failure message=\\"expected 2.23606797749979 to equal 2\\" type=\\"AssertionError\\">
 AssertionError: expected 2.23606797749979 to equal 2
  ❯ vitest/test/core/test/basic.test.ts:8:32
             </failure>
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; JSON\\" time=\\"0.0010237110\\">
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; JSON\\" time=\\"0.001023711\\">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; async with timeout\\">
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; async with timeout\\" time=\\"0\\">
             <skipped/>
         </testcase>
         <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; timeout\\" time=\\"0.1005059841\\">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback setup success \\" time=\\"0.0201848750\\">
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback setup success \\" time=\\"0.020184875\\">
         </testcase>
         <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback test success \\" time=\\"0.0003324542\\">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback setup success done(false)\\" time=\\"0.0197386060\\">
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback setup success done(false)\\" time=\\"0.019738606\\">
         </testcase>
         <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback test success done(false)\\" time=\\"0.0001923509\\">
             <system-err>
 [33merror[39m
             </system-err>
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; todo test\\">
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; todo test\\" time=\\"0\\">
             <skipped/>
         </testcase>
     </testsuite>
@@ -203,32 +203,32 @@ exports[`JUnit reporter with outputFile object in non-existing directory 1`] = `
 exports[`JUnit reporter with outputFile object in non-existing directory 2`] = `
 "<?xml version=\\"1.0\\" encoding=\\"UTF-8\\" ?>
 <testsuites>
-    <testsuite name=\\"test/core/test/basic.test.ts\\" timestamp=\\"2022-01-19T10:10:01.759Z\\" hostname=\\"hostname\\" tests=\\"9\\" failures=\\"1\\" errors=\\"0\\" skipped=\\"2\\" time=\\"0.1459928420\\">
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; inner suite &gt; Math.sqrt()\\" time=\\"0.0014422860\\">
+    <testsuite name=\\"test/core/test/basic.test.ts\\" timestamp=\\"2022-01-19T10:10:01.759Z\\" hostname=\\"hostname\\" tests=\\"9\\" failures=\\"1\\" errors=\\"0\\" skipped=\\"2\\" time=\\"0.145992842\\">
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; inner suite &gt; Math.sqrt()\\" time=\\"0.001442286\\">
             <failure message=\\"expected 2.23606797749979 to equal 2\\" type=\\"AssertionError\\">
 AssertionError: expected 2.23606797749979 to equal 2
  ❯ vitest/test/core/test/basic.test.ts:8:32
             </failure>
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; JSON\\" time=\\"0.0010237110\\">
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; JSON\\" time=\\"0.001023711\\">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; async with timeout\\">
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; async with timeout\\" time=\\"0\\">
             <skipped/>
         </testcase>
         <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; timeout\\" time=\\"0.1005059841\\">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback setup success \\" time=\\"0.0201848750\\">
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback setup success \\" time=\\"0.020184875\\">
         </testcase>
         <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback test success \\" time=\\"0.0003324542\\">
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback setup success done(false)\\" time=\\"0.0197386060\\">
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback setup success done(false)\\" time=\\"0.019738606\\">
         </testcase>
         <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; callback test success done(false)\\" time=\\"0.0001923509\\">
             <system-err>
 [33merror[39m
             </system-err>
         </testcase>
-        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; todo test\\">
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; todo test\\" time=\\"0\\">
             <skipped/>
         </testcase>
     </testsuite>
