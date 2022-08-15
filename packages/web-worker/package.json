@@ -35,6 +35,6 @@
     "vite-node": "workspace:*"
   },
   "devDependencies": {
-    "rollup": "^2.77.3"
+    "rollup": "^2.78.0"
   }
 }
