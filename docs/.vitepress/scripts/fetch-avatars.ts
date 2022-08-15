@@ -16,8 +16,11 @@ async function download(url: string, fileName: string) {
     return
   // eslint-disable-next-line no-console
   console.log('downloading', fileName)
-  const image = await $fetch(url, { responseType: 'arrayBuffer' })
-  await fs.writeFile(fileName, Buffer.from(image))
+  try {
+    const image = await $fetch(url, { responseType: 'arrayBuffer' })
+    await fs.writeFile(fileName, Buffer.from(image))
+  }
+  catch {}
 }
 
 async function fetchAvatars() {
