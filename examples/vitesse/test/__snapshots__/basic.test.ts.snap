@@ -1,13 +1,13 @@
 // Vitest Snapshot v1
 
 exports[`mount component 1`] = `
-"<div class=\\"foo\\" data-v-54024074=\\"\\">
+"<div class=\\"foo\\" data-v-958b189a=\\"\\">
   <div>4 x 2 = 8</div><button> x1 </button>
 </div>"
 `;
 
 exports[`mount component 2`] = `
-"<div class=\\"foo\\" data-v-54024074=\\"\\">
+"<div class=\\"foo\\" data-v-958b189a=\\"\\">
   <div>4 x 5 = 20</div><button> x1 </button>
 </div>"
 `;
