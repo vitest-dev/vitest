@@ -86,11 +86,7 @@ export default ({ watch }) => defineConfig([
       ...plugins,
       !watch && licensePlugin(),
     ],
-    onwarn(message) {
-      if (/Circular dependencies/.test(message))
-        return
-      console.error(message)
-    },
+    onwarn,
   },
   {
     input: 'src/config.ts',
@@ -227,4 +223,10 @@ function licensePlugin() {
       }
     },
   })
+}
+
+function onwarn(message) {
+  if (['EMPTY_BUNDLE', 'CIRCULAR_DEPENDENCY'].includes(message.code))
+    return
+  console.error(message)
 }

@@ -72,6 +72,7 @@
   "pnpm": {
     "overrides": {
       "esbuild": "^0.14.47",
+      "vite": "^3.0.7",
       "vitest": "workspace:*",
       "rollup": "~2.77.3"
     }
