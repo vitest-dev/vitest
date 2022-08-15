@@ -21,8 +21,8 @@ jobs:
       - name: Set node
         uses: actions/setup-node@v3
         with:
-          node-version: 16.x
-          # cache: pnpm
+          node-version: 18.x
+          cache: pnpm
 
       - name: Install
         run: pnpm i
@@ -41,8 +41,8 @@ jobs:
       - name: Set node
         uses: actions/setup-node@v3
         with:
-          node-version: 16.x
-          # cache: pnpm
+          node-version: 18.x
+          cache: pnpm
 
       - name: Install
         run: pnpm i
@@ -61,12 +61,12 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        node_version: [14, 16]
+        node_version: [14, 16, 18]
         include:
           - os: macos-latest
-            node_version: 16
+            node_version: 18
           - os: windows-latest
-            node_version: 16
+            node_version: 18
       fail-fast: false
 
     steps:
@@ -79,7 +79,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node_version }}
-          # cache: pnpm
+          cache: pnpm
 
       - name: Install
         run: pnpm i
@@ -104,8 +104,8 @@ jobs:
       - name: Set node
         uses: actions/setup-node@v3
         with:
-          node-version: 16.x
-          # cache: pnpm
+          node-version: 18.x
+          cache: pnpm
 
       - name: Install
         run: pnpm i
