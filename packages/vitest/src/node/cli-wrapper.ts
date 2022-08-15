@@ -1,4 +1,7 @@
 /* eslint-disable no-console */
+/**
+ * Wrapper of the CLI with child process to manage segfaults and retries.
+ */
 import c from 'picocolors'
 import minimist from 'minimist'
 import { execaNode } from 'execa'
@@ -17,8 +20,9 @@ interface Args {
 }
 
 function parseArgs(): Args {
+  const OPTION = 'segfault-retry'
   const args = minimist(process.argv.slice(2), {
-    'string': ['segfault-retry'],
+    'string': [OPTION],
     '--': true,
     'stopEarly': true,
   })
@@ -28,15 +32,12 @@ function parseArgs(): Args {
     process.exit(1)
   }
 
-  if (args.r && Number.isNaN(Number(args.r)))
-    showUsageAndExit(c.red('Invalid <r> value'))
-
-  if (!args._.length)
-    showUsageAndExit(c.red('Missing <cmd> argument'))
+  if (args.r && Number.isNaN(Number(args.OPTION)))
+    showUsageAndExit(c.red(`Invalid ${OPTION} value`))
 
   return {
-    retries: Number(args.r),
-    args: args._,
+    retries: Number(args[OPTION]),
+    args: args._ || [],
   }
 }
 
@@ -46,7 +47,7 @@ function findError(log: string) {
 
 async function main({ args, retries }: Args) {
   // default exit code = 100, as in retries were exhausted
-  let exitCode = 100
+  const exitCode = 100
 
   console.log(args)
 
@@ -76,8 +77,7 @@ async function main({ args, retries }: Args) {
       )
     }
     else {
-      exitCode = childProc.exitCode!
-      break
+      process.exit(childProc.exitCode!)
     }
   }
   process.exit(exitCode)
