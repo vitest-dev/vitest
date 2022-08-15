@@ -3,22 +3,22 @@
   "private": true,
   "scripts": {
     "dev": "vitepress --port 3333 --open",
-    "build": "nr prefetch && vitepress build && esno .vitepress/scripts/build-pwa.ts",
-    "build-no-prefetch": "vitepress build && esno .vitepress/scripts/build-pwa.ts",
+    "build": "nr prefetch && vitepress build && node .vitepress/scripts/build-pwa.mjs",
+    "build-no-prefetch": "vitepress build && node .vitepress/scripts/build-pwa.mjs",
     "serve": "vitepress serve",
     "preview-https": "pnpm run build && serve .vitepress/dist",
-    "preview-https-no-prefetch": "pnpm run build-no-prefetch && serve .vitepress/dist",
     "prefetch": "esno .vitepress/scripts/fetch-avatars.ts"
   },
   "dependencies": {
     "@vueuse/core": "^9.1.0",
+    "jiti": "^1.14.0",
     "vue": "latest"
   },
   "devDependencies": {
     "@iconify-json/carbon": "^1.1.7",
     "@unocss/reset": "^0.45.6",
     "@vitejs/plugin-vue": "latest",
-    "esno": "^0.14.1",
+    "esno": "^0.16.3",
     "fast-glob": "^3.2.11",
     "https-localhost": "^4.7.1",
     "unocss": "^0.45.6",

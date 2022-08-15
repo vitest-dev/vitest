@@ -30,7 +30,7 @@
     "dev:client": "vite build --watch",
     "dev:node": "rollup -c --watch --watch.include=node/**",
     "dev": "rimraf dist && run-p dev:node dev:client",
-    "copy": "esmo scripts/copy-ui-to-browser.ts"
+    "copy": "esno scripts/copy-ui-to-browser.ts"
   },
   "dependencies": {
     "local-pkg": "^0.4.2",
