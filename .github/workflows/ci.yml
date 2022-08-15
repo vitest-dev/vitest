@@ -9,6 +9,9 @@ on:
     branches:
       - main
 
+env:
+  VITEST_SEGFAULT_RETRY: 3
+
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -21,7 +24,7 @@ jobs:
       - name: Set node
         uses: actions/setup-node@v3
         with:
-          node-version: 18.x
+          node-version: 16.x
           cache: pnpm
 
       - name: Install
@@ -41,7 +44,7 @@ jobs:
       - name: Set node
         uses: actions/setup-node@v3
         with:
-          node-version: 18.x
+          node-version: 16.x
           cache: pnpm
 
       - name: Install
@@ -61,12 +64,12 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        node_version: [14, 16, 18]
+        node_version: [14, 16]
         include:
           - os: macos-latest
-            node_version: 18
+            node_version: 16
           - os: windows-latest
-            node_version: 18
+            node_version: 16
       fail-fast: false
 
     steps:
@@ -104,8 +107,7 @@ jobs:
       - name: Set node
         uses: actions/setup-node@v3
         with:
-          node-version: 18.x
-          cache: pnpm
+          node-version: 16.x
 
       - name: Install
         run: pnpm i
