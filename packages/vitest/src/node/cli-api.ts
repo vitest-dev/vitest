@@ -1,5 +1,6 @@
 import { resolve } from 'pathe'
 import type { UserConfig as ViteUserConfig } from 'vite'
+import { CoverageProviderMap } from '../integrations/coverage'
 import { envPackageNames } from '../integrations/env'
 import type { UserConfig } from '../types'
 import { ensurePackageInstalled } from '../utils'
@@ -37,9 +38,14 @@ export async function startVitest(cliFilters: string[], options: CliOptions, vit
   const ctx = await createVitest(options, viteOverrides)
 
   if (ctx.config.coverage.enabled) {
-    if (!await ensurePackageInstalled('c8', root)) {
-      process.exitCode = 1
-      return false
+    const provider = ctx.config.coverage.provider || 'c8'
+    if (typeof provider === 'string') {
+      const requiredPackages = CoverageProviderMap[provider]
+
+      if (!await ensurePackageInstalled(requiredPackages, root)) {
+        process.exitCode = 1
+        return false
+      }
     }
   }
 

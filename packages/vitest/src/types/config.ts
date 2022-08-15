@@ -3,7 +3,7 @@ import type { PrettyFormatOptions } from 'pretty-format'
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import type { BuiltinReporters } from '../node/reporters'
 import type { TestSequencerConstructor } from '../node/sequencers/types'
-import type { C8Options, ResolvedC8Options } from './coverage'
+import type { CoverageOptions, ResolvedCoverageOptions } from './coverage'
 import type { JSDOMOptions } from './jsdom-options'
 import type { Reporter } from './reporter'
 import type { SnapshotStateOptions } from './snapshot'
@@ -242,7 +242,7 @@ export interface InlineConfig {
   /**
    * Coverage options
    */
-  coverage?: C8Options
+  coverage?: CoverageOptions
 
   /**
    * run test names with the specified pattern
@@ -478,7 +478,7 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
   testNamePattern?: RegExp
   related?: string[]
 
-  coverage: ResolvedC8Options
+  coverage: ResolvedCoverageOptions
   snapshotOptions: SnapshotStateOptions
 
   reporters: (Reporter | BuiltinReporters)[]

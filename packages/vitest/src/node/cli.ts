@@ -25,7 +25,7 @@ cli
   .option('--outputTruncateLength <length>', 'diff output length (default: 80)')
   .option('--outputDiffLines <lines>', 'number of diff output lines (default: 15)')
   .option('--outputFile <filename/-s>', 'write test results to a file when the --reporter=json or --reporter=junit option is also specified, use cac\'s dot notation for individual outputs of multiple reporters')
-  .option('--coverage', 'use c8 for coverage')
+  .option('--coverage', 'enable coverage report')
   .option('--run', 'do not watch')
   .option('--mode <name>', 'override Vite mode (default: test)')
   .option('--globals', 'inject apis globally')

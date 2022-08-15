@@ -20,7 +20,7 @@
     <ListItem><a target="_blank" href="https://www.chaijs.com/" rel="noopener noreferrer">Chai</a> built-in for assertions + <a target="_blank" href="https://jestjs.io/docs/expect" rel="noopener noreferrer">Jest expect</a> compatible APIs</ListItem>
     <ListItem><a target="_blank" href="https://github.com/Aslemammad/tinyspy" rel="noopener noreferrer">Tinyspy</a> built-in for mocking</ListItem>
     <ListItem><a target="_blank" href="https://github.com/capricorn86/happy-dom" rel="noopener noreferrer">happy-dom</a> or <a target="_blank" href="https://github.com/jsdom/jsdom" rel="noopener noreferrer">jsdom</a> for DOM mocking</ListItem>
-    <ListItem>Native code coverage via <a target="_blank" href="https://github.com/bcoe/c8" rel="noopener noreferrer">c8</a></ListItem>
+    <ListItem>Code coverage via <a target="_blank" href="https://github.com/bcoe/c8" rel="noopener noreferrer">c8</a> or <a target="_blank" href="https://istanbul.js.org/" rel="noopener noreferrer">istanbul</a></ListItem>
     <ListItem>Rust-like <a href="/guide/in-source">in-source testing</a></ListItem>
   </ul>
 </template>

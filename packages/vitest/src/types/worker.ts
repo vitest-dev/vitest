@@ -17,6 +17,10 @@ export interface WorkerContext {
 
 export type ResolveIdFunction = (id: string, importer?: string) => Promise<ViteNodeResolveId | null>
 
+export interface AfterSuiteRunMeta {
+  coverage?: unknown
+}
+
 export interface WorkerRPC {
   fetch: FetchFunction
   resolveId: ResolveIdFunction
@@ -28,6 +32,7 @@ export interface WorkerRPC {
   onUserConsoleLog: (log: UserConsoleLog) => void
   onUnhandledRejection: (err: unknown) => void
   onCollected: (files: File[]) => void
+  onAfterSuiteRun: (meta: AfterSuiteRunMeta) => void
   onTaskUpdate: (pack: TaskResultPack[]) => void
 
   snapshotSaved: (snapshot: SnapshotResult) => void

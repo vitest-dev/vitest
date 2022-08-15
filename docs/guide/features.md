@@ -136,7 +136,7 @@ Learn more at [Mocking](/guide/mocking).
 
 ## Coverage
 
-Vitest supports Native code coverage via [c8](https://github.com/bcoe/c8).
+Vitest supports Native code coverage via [`c8`](https://github.com/bcoe/c8) and instrumented code coverage via [`istanbul`](https://istanbul.js.org/).
 
 ```json
 {
@@ -147,20 +147,7 @@ Vitest supports Native code coverage via [c8](https://github.com/bcoe/c8).
 }
 ```
 
-To configure it, set `test.coverage` options in your config file:
-
-```ts
-// vite.config.ts
-import { defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  test: {
-    coverage: {
-      reporter: ['text', 'json', 'html'],
-    },
-  },
-})
-```
+Learn more at [Coverage](/guide/coverage).
 
 ## In-source testing
 
