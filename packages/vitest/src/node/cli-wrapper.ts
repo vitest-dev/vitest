@@ -7,7 +7,7 @@ import c from 'picocolors'
 import { execa } from 'execa'
 
 const ENTRY = new URL('./cli.mjs', import.meta.url)
-const NODE_ARGS = ['--inspect', '--inspect-brk']
+const NODE_ARGS = ['--inspect', '--inspect-brk', '--trace-deprecation']
 
 interface ErrorDef {
   trigger: string
