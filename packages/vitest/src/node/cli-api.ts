@@ -39,11 +39,13 @@ export async function startVitest(cliFilters: string[], options: CliOptions, vit
 
   if (ctx.config.coverage.enabled) {
     const provider = ctx.config.coverage.provider || 'c8'
-    const requiredPackages = CoverageProviderMap[provider]
+    if (typeof provider === 'string') {
+      const requiredPackages = CoverageProviderMap[provider]
 
-    if (!await ensurePackageInstalled(requiredPackages, root)) {
-      process.exitCode = 1
-      return false
+      if (!await ensurePackageInstalled(requiredPackages, root)) {
+        process.exitCode = 1
+        return false
+      }
     }
   }
 
