@@ -344,7 +344,7 @@ export interface InlineConfig {
   allowOnly?: boolean
 
   /**
-   * Show heap usage after each test. Usefull for debugging memory leaks.
+   * Show heap usage after each test. Useful for debugging memory leaks.
    */
   logHeapUsage?: boolean
 

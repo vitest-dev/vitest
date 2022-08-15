@@ -40,7 +40,7 @@ my string
 })
 
 test('js snapshots generated correctly', async () => {
-  const path = pathe.resolve(__dirname, '../test-update/shapshots-inline-js.test.js')
+  const path = pathe.resolve(__dirname, '../test-update/snapshots-inline-js.test.js')
   const content = await fs.readFile(path, 'utf8')
   expect(content).toMatchSnapshot()
 })

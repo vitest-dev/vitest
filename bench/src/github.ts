@@ -15,21 +15,21 @@ type GitHub = ReturnType<typeof getOctokit>
 type Repo = Context['repo']
 type Pull = WebhookPayload['pull_request']
 
-const COMMNET_HEADING = '## Benchmark'
+const COMMENT_HEADING = '## Benchmark'
 
 async function fetchPreviousComment(
   octokit: GitHub,
   repo: { owner: string; repo: string },
   pr: { number: number },
 ) {
-  const { data: commnets } = await octokit.rest.issues.listComments(
+  const { data: comments } = await octokit.rest.issues.listComments(
     {
       ...repo,
       issue_number: pr.number,
     },
   )
 
-  return commnets.find(comment => comment.body.startsWith(COMMNET_HEADING))
+  return comments.find(comment => comment.body.startsWith(COMMENT_HEADING))
 }
 
 const token = process.env.GITHUB_TOKEN // getInput('github_token')
@@ -108,7 +108,7 @@ function formatCompareTable(nowResults: Result[], wasResults: Result[]): string 
 }
 
 async function compareToRef(ref: string, pr?: Pull, repo?: Repo, octokit?: GitHub) {
-  let body = `${COMMNET_HEADING}\n\n`
+  let body = `${COMMENT_HEADING}\n\n`
 
   const now = await buildAndGetTime(null)
   const was = await buildAndGetTime(ref)

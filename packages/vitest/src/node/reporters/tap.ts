@@ -39,7 +39,7 @@ export class TapReporter implements Reporter {
     this.logger.log(`message: ${yamlString(error.message)}`)
 
     if (stack) {
-      // For compatibility with tap-mocha-repoter
+      // For compatibility with tap-mocha-reporter
       this.logger.log(`stack: ${yamlString(`${stack.file}:${stack.line}:${stack.column}`)}`)
     }
   }
