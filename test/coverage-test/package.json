@@ -17,9 +17,11 @@
     "test:nothread:istanbul": "npm run coverage:istanbul && npm run coverage-test:istanbul"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^3.0.1",
-    "@vue/test-utils": "^2.0.0",
-    "happy-dom": "^6.0.4",
-    "vitest": "workspace:*"
+    "@vitejs/plugin-vue": "latest",
+    "@vue/test-utils": "latest",
+    "happy-dom": "latest",
+    "vite": "latest",
+    "vitest": "workspace:*",
+    "vue": "latest"
   }
 }

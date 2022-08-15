@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, rmSync, rmdirSync } from 'fs'
+import { existsSync, promises as fs } from 'fs'
 import { afterEach, expect, test, vi } from 'vitest'
 import { normalize, resolve } from 'pathe'
 import { JsonReporter } from '../../../packages/vitest/src/node/reporters/json'
@@ -97,10 +97,10 @@ test('JUnit reporter with outputFile', async () => {
   // Assert
   expect(normalizeCwd(context.output)).toMatchSnapshot()
   expect(existsSync(outputFile)).toBe(true)
-  expect(readFileSync(outputFile, 'utf8')).toMatchSnapshot()
+  expect(await fs.readFile(outputFile, 'utf8')).toMatchSnapshot()
 
   // Cleanup
-  rmSync(outputFile)
+  await fs.rm(outputFile)
 })
 
 test('JUnit reporter with outputFile object', async () => {
@@ -125,10 +125,10 @@ test('JUnit reporter with outputFile object', async () => {
   // Assert
   expect(normalizeCwd(context.output)).toMatchSnapshot()
   expect(existsSync(outputFile)).toBe(true)
-  expect(readFileSync(outputFile, 'utf8')).toMatchSnapshot()
+  expect(await fs.readFile(outputFile, 'utf8')).toMatchSnapshot()
 
   // Cleanup
-  rmSync(outputFile)
+  await fs.rm(outputFile)
 })
 
 test('JUnit reporter with outputFile in non-existing directory', async () => {
@@ -152,10 +152,10 @@ test('JUnit reporter with outputFile in non-existing directory', async () => {
   // Assert
   expect(normalizeCwd(context.output)).toMatchSnapshot()
   expect(existsSync(outputFile)).toBe(true)
-  expect(readFileSync(outputFile, 'utf8')).toMatchSnapshot()
+  expect(await fs.readFile(outputFile, 'utf8')).toMatchSnapshot()
 
   // Cleanup
-  rmdirSync(rootDirectory, { recursive: true })
+  await fs.rm(rootDirectory, { recursive: true })
 })
 
 test('JUnit reporter with outputFile object in non-existing directory', async () => {
@@ -181,10 +181,10 @@ test('JUnit reporter with outputFile object in non-existing directory', async ()
   // Assert
   expect(normalizeCwd(context.output)).toMatchSnapshot()
   expect(existsSync(outputFile)).toBe(true)
-  expect(readFileSync(outputFile, 'utf8')).toMatchSnapshot()
+  expect(await fs.readFile(outputFile, 'utf8')).toMatchSnapshot()
 
   // Cleanup
-  rmdirSync(rootDirectory, { recursive: true })
+  await fs.rm(rootDirectory, { recursive: true })
 })
 
 test('json reporter', async () => {
@@ -234,10 +234,10 @@ test('json reporter with outputFile', async () => {
   // Assert
   expect(normalizeCwd(context.output)).toMatchSnapshot()
   expect(existsSync(outputFile)).toBe(true)
-  expect(readFileSync(outputFile, 'utf8')).toMatchSnapshot()
+  expect(await fs.readFile(outputFile, 'utf8')).toMatchSnapshot()
 
   // Cleanup
-  rmSync(outputFile)
+  await fs.rm(outputFile)
 })
 
 test('json reporter with outputFile object', async () => {
@@ -258,10 +258,10 @@ test('json reporter with outputFile object', async () => {
   // Assert
   expect(normalizeCwd(context.output)).toMatchSnapshot()
   expect(existsSync(outputFile)).toBe(true)
-  expect(readFileSync(outputFile, 'utf8')).toMatchSnapshot()
+  expect(await fs.readFile(outputFile, 'utf8')).toMatchSnapshot()
 
   // Cleanup
-  rmSync(outputFile)
+  await fs.rm(outputFile)
 })
 
 test('json reporter with outputFile in non-existing directory', async () => {
@@ -281,10 +281,10 @@ test('json reporter with outputFile in non-existing directory', async () => {
   // Assert
   expect(normalizeCwd(context.output)).toMatchSnapshot()
   expect(existsSync(outputFile)).toBe(true)
-  expect(readFileSync(outputFile, 'utf8')).toMatchSnapshot()
+  expect(await fs.readFile(outputFile, 'utf8')).toMatchSnapshot()
 
   // Cleanup
-  rmdirSync(rootDirectory, { recursive: true })
+  await fs.rm(rootDirectory, { recursive: true })
 })
 
 test('json reporter with outputFile object in non-existing directory', async () => {
@@ -306,10 +306,10 @@ test('json reporter with outputFile object in non-existing directory', async () 
   // Assert
   expect(normalizeCwd(context.output)).toMatchSnapshot()
   expect(existsSync(outputFile)).toBe(true)
-  expect(readFileSync(outputFile, 'utf8')).toMatchSnapshot()
+  expect(await fs.readFile(outputFile, 'utf8')).toMatchSnapshot()
 
   // Cleanup
-  rmdirSync(rootDirectory, { recursive: true })
+  await fs.rm(rootDirectory, { recursive: true })
 })
 
 /**
