@@ -702,7 +702,6 @@ importers:
       '@types/diff': ^5.0.2
       '@types/jsdom': ^20.0.0
       '@types/micromatch': ^4.0.2
-      '@types/minimist': ^1.2.2
       '@types/natural-compare': ^1.4.1
       '@types/node': '*'
       '@types/prompts': ^2.4.0
@@ -726,7 +725,6 @@ importers:
       log-update: ^5.0.1
       magic-string: ^0.26.2
       micromatch: ^4.0.5
-      minimist: ^1.2.6
       mlly: ^0.5.12
       natural-compare: ^1.4.0
       p-limit: ^4.0.0
@@ -761,7 +759,6 @@ importers:
       '@types/diff': 5.0.2
       '@types/jsdom': 20.0.0
       '@types/micromatch': 4.0.2
-      '@types/minimist': 1.2.2
       '@types/natural-compare': 1.4.1
       '@types/prompts': 2.4.0
       '@types/sinonjs__fake-timers': 8.1.2
@@ -781,7 +778,6 @@ importers:
       log-update: 5.0.1
       magic-string: 0.26.2
       micromatch: 4.0.5
-      minimist: 1.2.6
       mlly: 0.5.12
       natural-compare: 1.4.0
       p-limit: 4.0.0
@@ -7233,10 +7229,6 @@ packages:
 
   /@types/minimatch/3.0.5:
     resolution: {integrity: sha512-Klz949h02Gz2uZCMGwDUSDS1YBlTdDDgbWHi+81l29tQALUtvz4rAYi5uoVhE5Lagoq6DeqAUlbrHvW/mXDgdQ==}
-    dev: true
-
-  /@types/minimist/1.2.2:
-    resolution: {integrity: sha512-jhuKLIRrhvCPLqwPcx6INqmKeiA5EWrsCOPhrlFSrbrmU4ZMPjj5Ul/oLCMDO98XRUIwVm78xICz4EPCektzeQ==}
     dev: true
 
   /@types/ms/0.7.31:
