@@ -36,8 +36,8 @@ async function runWithRetry(...runOptions: string[]) {
 }
 
 describe.concurrent('custom reporters', () => {
-  // On Windows child_process is very unstable, we skip testing it
-  if (process.platform === 'win32' && process.env.CI)
+  // On Windows and macOS child_process is very unstable, we skip testing it as the functionality is tested on Linux
+  if ((process.platform === 'win32' || process.platform === 'darwin') && process.env.CI)
     return test.skip('skip on windows')
 
   test('custom reporter instances defined in configuration works', async () => {
