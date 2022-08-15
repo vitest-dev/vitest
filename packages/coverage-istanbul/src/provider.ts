@@ -30,7 +30,7 @@ export class IstanbulCoverageProvider implements CoverageProvider {
   name = 'istanbul'
 
   ctx!: Vitest
-  options!: ResolvedCoverageOptions & { provider: 'istanbul' }
+  options!: ResolvedCoverageOptions & CoverageIstanbulOptions & { provider: 'istanbul' }
   instrumenter!: Instrumenter
   testExclude!: InstanceType<TestExclude>
 
@@ -61,8 +61,6 @@ export class IstanbulCoverageProvider implements CoverageProvider {
       cwd: ctx.config.root,
       exclude: [...defaultExclude, ...defaultInclude, ...this.options.exclude],
       excludeNodeModules: true,
-
-      // @ts-expect-error -- extension is not typed in configDefaults for some reason
       extension: configDefaults.coverage.extension,
     })
   }

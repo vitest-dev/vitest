@@ -127,6 +127,11 @@ export interface BaseCoverageOptions {
    * Threshold for statements
    */
   statements?: number
+
+  /**
+   * Extensions for files to be included in coverage
+   */
+  extension?: string | string[]
 }
 
 export interface CoverageIstanbulOptions extends BaseCoverageOptions {
@@ -156,7 +161,6 @@ export interface CoverageC8Options extends BaseCoverageOptions {
    */
   excludeNodeModules?: boolean
   include?: string[]
-  extension?: string | string[]
 
   all?: boolean
   src?: string[]
