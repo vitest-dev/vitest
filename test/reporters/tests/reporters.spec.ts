@@ -156,6 +156,7 @@ test('JUnit reporter with outputFile in non-existing directory', async () => {
 
   // Cleanup
   await fs.rm(rootDirectory, { recursive: true, force: true })
+    .catch()
 })
 
 test('JUnit reporter with outputFile object in non-existing directory', async () => {
@@ -185,6 +186,7 @@ test('JUnit reporter with outputFile object in non-existing directory', async ()
 
   // Cleanup
   await fs.rm(rootDirectory, { recursive: true, force: true })
+    .catch()
 })
 
 test('json reporter', async () => {
