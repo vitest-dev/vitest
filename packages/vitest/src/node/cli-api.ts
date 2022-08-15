@@ -1,5 +1,6 @@
 import { resolve } from 'pathe'
 import type { UserConfig as ViteUserConfig } from 'vite'
+import { CoverageProviderMap } from '../integrations/coverage'
 import { envPackageNames } from '../integrations/env'
 import type { UserConfig } from '../types'
 import { ensurePackageInstalled } from '../utils'
@@ -37,24 +38,12 @@ export async function startVitest(cliFilters: string[], options: CliOptions, vit
   const ctx = await createVitest(options, viteOverrides)
 
   if (ctx.config.coverage.enabled) {
-    // TODO: Requring all these packages to be installed by users may be too much
-    const requiredPackages = ctx.config.coverage.provider === 'istanbul'
-      ? [
-          'istanbul-lib-coverage',
-          'istanbul-lib-instrument',
-          'istanbul-lib-report',
-          'istanbul-reports',
-          'istanbul-lib-source-maps',
-        ]
-      : ctx.config.coverage.provider === 'c8'
-        ? ['c8']
-        : []
+    const provider = ctx.config.coverage.provider || 'c8'
+    const requiredPackages = CoverageProviderMap[provider]
 
-    for (const pkg of requiredPackages) {
-      if (!await ensurePackageInstalled(pkg, root)) {
-        process.exitCode = 1
-        return false
-      }
+    if (!await ensurePackageInstalled(requiredPackages, root)) {
+      process.exitCode = 1
+      return false
     }
   }
 

@@ -29,7 +29,7 @@ export class Vitest {
   snapshot: SnapshotManager = undefined!
   cache: VitestCache = undefined!
   reporters: Reporter[] = undefined!
-  coverageProvider: CoverageProvider | undefined
+  coverageProvider: CoverageProvider | null | undefined
   logger: Logger
   pool: WorkerPool | undefined
 
@@ -83,12 +83,6 @@ export class Vitest {
 
     this.reporters = await createReporters(resolved.reporters, this.runner)
 
-    this.coverageProvider = await getCoverageProvider(options.coverage)
-    if (this.coverageProvider) {
-      this.coverageProvider.initialize(this)
-      this.config.coverage = this.coverageProvider.resolveOptions()
-    }
-
     this.runningPromise = undefined
 
     this._onRestartListeners.forEach(fn => fn())
@@ -102,6 +96,17 @@ export class Vitest {
     catch (err) {
       this.logger.error(`[vitest] Error, while trying to parse cache in ${this.cache.results.getCachePath()}:`, err)
     }
+  }
+
+  async initCoverageProvider() {
+    if (this.coverageProvider !== undefined)
+      return
+    this.coverageProvider = await getCoverageProvider(this.config.coverage)
+    if (this.coverageProvider) {
+      await this.coverageProvider.initialize(this)
+      this.config.coverage = this.coverageProvider.resolveOptions()
+    }
+    return this.coverageProvider
   }
 
   getSerializableConfig() {
@@ -123,6 +128,14 @@ export class Vitest {
   }
 
   async start(filters?: string[]) {
+    try {
+      await this.initCoverageProvider()
+    }
+    catch (e) {
+      this.logger.error(e)
+      process.exit(1)
+    }
+
     await this.report('onInit', this)
 
     const files = await this.filterTestsBySource(
@@ -143,7 +156,7 @@ export class Vitest {
     await this.runFiles(files)
 
     if (this.coverageProvider) {
-      this.logger.log(c.blue(' % ') + c.dim('Coverage report from ') + c.yellow(this.coverageProvider.name))
+      this.logger.log(c.blue(' % ') + c.dim('Coverage report from ') + c.green(this.coverageProvider.name))
       await this.coverageProvider.reportCoverage()
     }
 

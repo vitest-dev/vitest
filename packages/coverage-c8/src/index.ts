@@ -10,9 +10,9 @@ import { configDefaults } from 'vitest/config'
 import type { CoverageC8Options, CoverageProvider, ResolvedCoverageOptions } from 'vitest'
 import type { Vitest } from 'vitest/node'
 // @ts-expect-error missing types
-import createReport from 'c8/lib/report'
+import createReport from 'c8/lib/report.js'
 // @ts-expect-error missing types
-import { checkCoverages } from 'c8/lib/commands/check-coverage'
+import { checkCoverages } from 'c8/lib/commands/check-coverage.js'
 
 export default class C8CoverageProvider implements CoverageProvider {
   name = 'c8'
