@@ -11,8 +11,6 @@ import { CSSEnablerPlugin } from './cssEnabler'
 import { CoverageTransform } from './coverageTransform'
 
 export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest()): Promise<VitePlugin[]> {
-  let haveStarted = false
-
   async function UIPlugin() {
     await ensurePackageInstalled('@vitest/ui', ctx.config?.root || options.root || process.cwd())
     return (await import('@vitest/ui')).default(options.uiBase)
@@ -145,11 +143,8 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
           process.env[name] ??= envs[name]
       },
       async configureServer(server) {
-        if (haveStarted)
-          await ctx.report('onServerRestart')
         try {
           await ctx.setServer(options, server)
-          haveStarted = true
           if (options.api && options.watch)
             (await import('../../api/setup')).setup(ctx)
         }

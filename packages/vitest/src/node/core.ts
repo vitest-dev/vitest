@@ -1,12 +1,13 @@
 import { existsSync, promises as fs } from 'fs'
 import type { ViteDevServer } from 'vite'
+import { normalizePath } from 'vite'
 import { relative, toNamespacedPath } from 'pathe'
 import fg from 'fast-glob'
 import mm from 'micromatch'
 import c from 'picocolors'
 import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
-import type { ArgumentsType, CoverageProvider, Reporter, ResolvedConfig, UserConfig } from '../types'
+import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter, ResolvedConfig, UserConfig } from '../types'
 import { SnapshotManager } from '../integrations/snapshot/manager'
 import { clearTimeout, deepMerge, hasFailed, noop, setTimeout, slash } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
@@ -48,7 +49,7 @@ export class Vitest {
     this.logger = new Logger(this)
   }
 
-  private _onRestartListeners: Array<() => void> = []
+  private _onRestartListeners: OnServerRestartHandler[] = []
 
   async setServer(options: UserConfig, server: ViteDevServer) {
     this.unregisterWatcher?.()
@@ -81,11 +82,28 @@ export class Vitest {
       },
     })
 
+    if (this.config.watch) {
+      // hijack server restart
+      const serverRestart = server.restart
+      server.restart = async (...args) => {
+        await Promise.all(this._onRestartListeners.map(fn => fn()))
+        return await serverRestart(...args)
+      }
+
+      // since we set `server.hmr: false`, Vite does not auto restart itself
+      server.watcher.on('change', async (file) => {
+        file = normalizePath(file)
+        const isConfig = file === server.config.configFile
+        if (isConfig) {
+          await Promise.all(this._onRestartListeners.map(fn => fn('config')))
+          await serverRestart()
+        }
+      })
+    }
+
     this.reporters = await createReporters(resolved.reporters, this.runner)
 
     this.runningPromise = undefined
-
-    this._onRestartListeners.forEach(fn => fn())
 
     await this.coverageProvider?.clean(this.config.coverage.clean)
 
@@ -331,13 +349,6 @@ export class Vitest {
 
       this.isFirstRun = false
 
-      // add previously failed files
-      // if (RERUN_FAILED) {
-      //   ctx.state.getFiles().forEach((file) => {
-      //     if (file.result?.state === 'fail')
-      //       changedTests.add(file.filepath)
-      //   })
-      // }
       this.snapshot.clear()
       const files = Array.from(this.changedTests)
       this.changedTests.clear()
@@ -523,7 +534,7 @@ export class Vitest {
     return code.includes('import.meta.vitest')
   }
 
-  onServerRestarted(fn: () => void) {
+  onServerRestart(fn: OnServerRestartHandler) {
     this._onRestartListeners.push(fn)
   }
 }

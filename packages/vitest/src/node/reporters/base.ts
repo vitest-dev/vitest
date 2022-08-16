@@ -180,8 +180,12 @@ export abstract class BaseReporter implements Reporter {
     return true
   }
 
-  onServerRestart() {
-    this.ctx.logger.log(c.cyan('Restarted due to config changes...'))
+  onServerRestart(reason?: string) {
+    this.ctx.logger.log(c.bold(c.magenta(
+      reason === 'config'
+        ? '\nRestarting due to config changes...'
+        : '\nRestarting Vitest...',
+    )))
   }
 
   async reportSummary(files: File[]) {

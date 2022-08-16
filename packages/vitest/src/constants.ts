@@ -7,6 +7,8 @@ export const distDir = resolve(url.fileURLToPath(import.meta.url), '../../dist')
 // if changed, update also jsdocs and docs
 export const defaultPort = 51204
 
+export const EXIT_CODE_RESTART = 43
+
 export const API_PATH = '/__vitest_api__'
 
 export const configFiles = [

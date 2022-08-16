@@ -1,5 +1,6 @@
 import { resolve } from 'pathe'
 import type { UserConfig as ViteUserConfig } from 'vite'
+import { EXIT_CODE_RESTART } from '../constants'
 import { CoverageProviderMap } from '../integrations/coverage'
 import { envPackageNames } from '../integrations/env'
 import type { UserConfig } from '../types'
@@ -60,9 +61,13 @@ export async function startVitest(cliFilters: string[], options: CliOptions, vit
   if (process.stdin.isTTY && ctx.config.watch)
     registerConsoleShortcuts(ctx)
 
-  ctx.onServerRestarted(() => {
-    // TODO: re-consider how to re-run the tests the server smartly
-    ctx.start(cliFilters)
+  ctx.onServerRestart((reason) => {
+    ctx.report('onServerRestart', reason)
+
+    if (process.env.VITEST_CLI_WRAPPER)
+      process.exit(EXIT_CODE_RESTART)
+    else
+      ctx.start(cliFilters)
   })
 
   try {
