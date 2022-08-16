@@ -18,6 +18,7 @@ export class ViteNodeServer {
   private transformPromiseMap = new Map<string, Promise<TransformResult | null | undefined>>()
 
   fetchCache = new Map<string, {
+    duration?: number
     timestamp: number
     result: FetchResult
   }>()
@@ -125,16 +126,20 @@ export class ViteNodeServer {
       return cache.result
 
     const externalize = await this.shouldExternalize(filePath)
+    let duration: number | undefined
     if (externalize) {
       result = { externalize }
       this.debugger?.recordExternalize(id, externalize)
     }
     else {
+      const start = performance.now()
       const r = await this._transformRequest(id)
+      duration = performance.now() - start
       result = { code: r?.code, map: r?.map as unknown as RawSourceMap }
     }
 
     this.fetchCache.set(filePath, {
+      duration,
       timestamp,
       result,
     })

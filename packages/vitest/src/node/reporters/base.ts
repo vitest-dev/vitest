@@ -218,6 +218,7 @@ export abstract class BaseReporter implements Reporter {
     const collectTime = files.reduce((acc, test) => acc + Math.max(0, test.collectDuration || 0), 0)
     const setupTime = files.reduce((acc, test) => acc + Math.max(0, test.setupDuration || 0), 0)
     const testsTime = files.reduce((acc, test) => acc + Math.max(0, test.result?.duration || 0), 0)
+    const transformTime = Array.from(this.ctx.vitenode.fetchCache.values()).reduce((a, b) => a + (b?.duration || 0), 0)
     const threadTime = collectTime + testsTime + setupTime
 
     const padTitle = (str: string) => c.dim(`${str.padStart(10)} `)
@@ -226,6 +227,14 @@ export abstract class BaseReporter implements Reporter {
         return `${(time / 1000).toFixed(2)}s`
       return `${Math.round(time)}ms`
     }
+
+    // show top 10 costly transform module
+    // console.log(Array.from(this.ctx.vitenode.fetchCache.entries()).filter(i => i[1].duration)
+    //   .sort((a, b) => b[1].duration! - a[1].duration!)
+    //   .map(i => `${time(i[1].duration!)} ${i[0]}`)
+    //   .slice(0, 10)
+    //   .join('\n'),
+    // )
 
     const snapshotOutput = renderSnapshotSummary(this.ctx.config.root, this.ctx.snapshot.summary)
     if (snapshotOutput.length) {
@@ -243,7 +252,7 @@ export abstract class BaseReporter implements Reporter {
     if (this.watchFilters)
       logger.log(padTitle('Duration'), time(threadTime))
     else
-      logger.log(padTitle('Duration'), time(executionTime) + c.gray(` (setup ${time(setupTime)}, collect ${time(collectTime)}, tests ${time(testsTime)})`))
+      logger.log(padTitle('Duration'), time(executionTime) + c.dim(` (transform ${time(transformTime)}, setup ${time(setupTime)}, collect ${time(collectTime)}, tests ${time(testsTime)})`))
 
     logger.log()
   }
