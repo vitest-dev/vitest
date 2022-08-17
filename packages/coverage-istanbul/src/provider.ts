@@ -184,6 +184,7 @@ function resolveIstanbulOptions(options: CoverageIstanbulOptions, root: string) 
     provider: 'istanbul',
     reportsDirectory,
     tempDirectory: resolve(reportsDirectory, 'tmp'),
+    reporter: Array.isArray(options.reporter) ? options.reporter : [options.reporter],
   }
 
   return resolved as ResolvedCoverageOptions & { provider: 'istanbul' }
