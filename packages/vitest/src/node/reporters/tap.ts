@@ -20,7 +20,7 @@ export class TapReporter implements Reporter {
 
   onInit(ctx: Vitest): void {
     this.ctx = ctx
-    this.logger = new IndentedLogger(this.ctx.logger.log.bind(this.ctx))
+    this.logger = new IndentedLogger(ctx.logger.log.bind(ctx.logger))
   }
 
   static getComment(task: Task): string {
@@ -39,7 +39,7 @@ export class TapReporter implements Reporter {
     this.logger.log(`message: ${yamlString(error.message)}`)
 
     if (stack) {
-      // For compatibility with tap-mocha-repoter
+      // For compatibility with tap-mocha-reporter
       this.logger.log(`stack: ${yamlString(`${stack.file}:${stack.line}:${stack.column}`)}`)
     }
   }

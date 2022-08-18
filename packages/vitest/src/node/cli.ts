@@ -24,8 +24,8 @@ cli
   .option('--reporter <name>', 'reporter')
   .option('--outputTruncateLength <length>', 'diff output length (default: 80)')
   .option('--outputDiffLines <lines>', 'number of diff output lines (default: 15)')
-  .option('--outputFile <filename/-s>', 'write test results to a file when the --reporter=json or --reporter=junit option is also specified, use cac\'s dot notation for individual outputs of mutliple reporters')
-  .option('--coverage', 'use c8 for coverage')
+  .option('--outputFile <filename/-s>', 'write test results to a file when the --reporter=json or --reporter=junit option is also specified, use cac\'s dot notation for individual outputs of multiple reporters')
+  .option('--coverage', 'enable coverage report')
   .option('--run', 'do not watch')
   .option('--mode <name>', 'override Vite mode (default: test)')
   .option('--globals', 'inject apis globally')
@@ -38,6 +38,10 @@ cli
   .option('--shard <shard>', 'Test suite shard to execute in a format of <index>/<count>')
   .option('--changed [since]', 'Run tests that are affected by the changed files (default: false)')
   .option('--sequence <options>', 'Define in what order to run tests (use --sequence.shuffle to run tests in random order)')
+  .option('--no-color', 'Removes colors from the console output')
+  .option('--segfault-retry <times>', 'Return tests on segment fault (default: 0)', { default: 0 })
+  .option('--inspect', 'Enable Node.js inspector')
+  .option('--inspect-brk', 'Enable Node.js inspector with break')
   .help()
 
 cli

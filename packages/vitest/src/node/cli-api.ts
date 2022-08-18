@@ -1,5 +1,7 @@
 import { resolve } from 'pathe'
 import type { UserConfig as ViteUserConfig } from 'vite'
+import { EXIT_CODE_RESTART } from '../constants'
+import { CoverageProviderMap } from '../integrations/coverage'
 import { envPackageNames } from '../integrations/env'
 import type { UserConfig } from '../types'
 import { ensurePackageInstalled } from '../utils'
@@ -37,9 +39,14 @@ export async function startVitest(cliFilters: string[], options: CliOptions, vit
   const ctx = await createVitest(options, viteOverrides)
 
   if (ctx.config.coverage.enabled) {
-    if (!await ensurePackageInstalled('c8', root)) {
-      process.exitCode = 1
-      return false
+    const provider = ctx.config.coverage.provider || 'c8'
+    if (typeof provider === 'string') {
+      const requiredPackages = CoverageProviderMap[provider]
+
+      if (!await ensurePackageInstalled(requiredPackages, root)) {
+        process.exitCode = 1
+        return false
+      }
     }
   }
 
@@ -54,9 +61,13 @@ export async function startVitest(cliFilters: string[], options: CliOptions, vit
   if (process.stdin.isTTY && ctx.config.watch)
     registerConsoleShortcuts(ctx)
 
-  ctx.onServerRestarted(() => {
-    // TODO: re-consider how to re-run the tests the server smartly
-    ctx.start(cliFilters)
+  ctx.onServerRestart((reason) => {
+    ctx.report('onServerRestart', reason)
+
+    if (process.env.VITEST_CLI_WRAPPER)
+      process.exit(EXIT_CODE_RESTART)
+    else
+      ctx.start(cliFilters)
   })
 
   try {

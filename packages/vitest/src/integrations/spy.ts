@@ -61,6 +61,10 @@ export interface Mock<TArgs extends any[] = any, TReturns = any> extends SpyInst
   new (...args: TArgs): TReturns
   (...args: TArgs): TReturns
 }
+export interface PartialMock<TArgs extends any[] = any, TReturns = any> extends SpyInstance<TArgs, Partial<TReturns>> {
+  new (...args: TArgs): TReturns
+  (...args: TArgs): TReturns
+}
 
 export type MaybeMockedConstructor<T> = T extends new (
   ...args: Array<any>
@@ -70,7 +74,11 @@ export type MaybeMockedConstructor<T> = T extends new (
 export type MockedFunction<T extends Procedure> = Mock<Parameters<T>, ReturnType<T>> & {
   [K in keyof T]: T[K];
 }
+export type PartiallyMockedFunction<T extends Procedure> = PartialMock<Parameters<T>, ReturnType<T>> & {
+  [K in keyof T]: T[K];
+}
 export type MockedFunctionDeep<T extends Procedure> = Mock<Parameters<T>, ReturnType<T>> & MockedObjectDeep<T>
+export type PartiallyMockedFunctionDeep<T extends Procedure> = PartialMock<Parameters<T>, ReturnType<T>> & MockedObjectDeep<T>
 export type MockedObject<T> = MaybeMockedConstructor<T> & {
   [K in Methods<T>]: T[K] extends Procedure
     ? MockedFunction<T[K]>
@@ -88,8 +96,20 @@ export type MaybeMockedDeep<T> = T extends Procedure
     ? MockedObjectDeep<T>
     : T
 
+export type MaybePartiallyMockedDeep<T> = T extends Procedure
+  ? PartiallyMockedFunctionDeep<T>
+  : T extends object
+    ? MockedObjectDeep<T>
+    : T
+
 export type MaybeMocked<T> = T extends Procedure
   ? MockedFunction<T>
+  : T extends object
+    ? MockedObject<T>
+    : T
+
+export type MaybePartiallyMocked<T> = T extends Procedure
+  ? PartiallyMockedFunction<T>
   : T extends object
     ? MockedObject<T>
     : T

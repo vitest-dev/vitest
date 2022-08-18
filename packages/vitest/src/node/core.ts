@@ -1,15 +1,16 @@
 import { existsSync, promises as fs } from 'fs'
 import type { ViteDevServer } from 'vite'
+import { normalizePath } from 'vite'
 import { relative, toNamespacedPath } from 'pathe'
 import fg from 'fast-glob'
 import mm from 'micromatch'
 import c from 'picocolors'
 import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
-import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig } from '../types'
+import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter, ResolvedConfig, UserConfig } from '../types'
 import { SnapshotManager } from '../integrations/snapshot/manager'
 import { clearTimeout, deepMerge, hasFailed, noop, setTimeout, slash } from '../utils'
-import { cleanCoverage, reportCoverage } from '../integrations/coverage'
+import { getCoverageProvider } from '../integrations/coverage'
 import { createPool } from './pool'
 import type { WorkerPool } from './pool'
 import { createReporters } from './reporters/utils'
@@ -29,6 +30,7 @@ export class Vitest {
   snapshot: SnapshotManager = undefined!
   cache: VitestCache = undefined!
   reporters: Reporter[] = undefined!
+  coverageProvider: CoverageProvider | null | undefined
   logger: Logger
   pool: WorkerPool | undefined
 
@@ -47,7 +49,7 @@ export class Vitest {
     this.logger = new Logger(this)
   }
 
-  private _onRestartListeners: Array<() => void> = []
+  private _onRestartListeners: OnServerRestartHandler[] = []
 
   async setServer(options: UserConfig, server: ViteDevServer) {
     this.unregisterWatcher?.()
@@ -80,14 +82,30 @@ export class Vitest {
       },
     })
 
+    if (this.config.watch) {
+      // hijack server restart
+      const serverRestart = server.restart
+      server.restart = async (...args) => {
+        await Promise.all(this._onRestartListeners.map(fn => fn()))
+        return await serverRestart(...args)
+      }
+
+      // since we set `server.hmr: false`, Vite does not auto restart itself
+      server.watcher.on('change', async (file) => {
+        file = normalizePath(file)
+        const isConfig = file === server.config.configFile
+        if (isConfig) {
+          await Promise.all(this._onRestartListeners.map(fn => fn('config')))
+          await serverRestart()
+        }
+      })
+    }
+
     this.reporters = await createReporters(resolved.reporters, this.runner)
 
     this.runningPromise = undefined
 
-    this._onRestartListeners.forEach(fn => fn())
-
-    if (resolved.coverage.enabled)
-      await cleanCoverage(resolved.coverage, resolved.coverage.clean)
+    await this.coverageProvider?.clean(this.config.coverage.clean)
 
     this.cache.results.setConfig(resolved.root, resolved.cache)
     try {
@@ -96,6 +114,17 @@ export class Vitest {
     catch (err) {
       this.logger.error(`[vitest] Error, while trying to parse cache in ${this.cache.results.getCachePath()}:`, err)
     }
+  }
+
+  async initCoverageProvider() {
+    if (this.coverageProvider !== undefined)
+      return
+    this.coverageProvider = await getCoverageProvider(this.config.coverage)
+    if (this.coverageProvider) {
+      await this.coverageProvider.initialize(this)
+      this.config.coverage = this.coverageProvider.resolveOptions()
+    }
+    return this.coverageProvider
   }
 
   getSerializableConfig() {
@@ -117,6 +146,14 @@ export class Vitest {
   }
 
   async start(filters?: string[]) {
+    try {
+      await this.initCoverageProvider()
+    }
+    catch (e) {
+      this.logger.error(e)
+      process.exit(1)
+    }
+
     await this.report('onInit', this)
 
     const files = await this.filterTestsBySource(
@@ -136,8 +173,10 @@ export class Vitest {
 
     await this.runFiles(files)
 
-    if (this.config.coverage.enabled)
-      await reportCoverage(this)
+    if (this.coverageProvider) {
+      this.logger.log(c.blue(' % ') + c.dim('Coverage report from ') + c.yellow(this.coverageProvider.name))
+      await this.coverageProvider.reportCoverage()
+    }
 
     if (this.config.watch && !this.config.browser)
       await this.report('onWatcherStart')
@@ -310,26 +349,18 @@ export class Vitest {
 
       this.isFirstRun = false
 
-      // add previously failed files
-      // if (RERUN_FAILED) {
-      //   ctx.state.getFiles().forEach((file) => {
-      //     if (file.result?.state === 'fail')
-      //       changedTests.add(file.filepath)
-      //   })
-      // }
       this.snapshot.clear()
       const files = Array.from(this.changedTests)
       this.changedTests.clear()
 
-      if (this.config.coverage.enabled && this.config.coverage.cleanOnRerun)
-        await cleanCoverage(this.config.coverage)
+      if (this.coverageProvider && this.config.coverage.cleanOnRerun)
+        await this.coverageProvider.clean()
 
       await this.report('onWatcherRerun', files, triggerId)
 
       await this.runFiles(files)
 
-      if (this.config.coverage.enabled)
-        await reportCoverage(this)
+      await this.coverageProvider?.reportCoverage()
 
       if (!this.config.browser)
         await this.report('onWatcherStart')
@@ -503,7 +534,7 @@ export class Vitest {
     return code.includes('import.meta.vitest')
   }
 
-  onServerRestarted(fn: () => void) {
+  onServerRestart(fn: OnServerRestartHandler) {
     this._onRestartListeners.push(fn)
   }
 }

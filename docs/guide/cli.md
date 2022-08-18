@@ -32,7 +32,7 @@ Alias to `vitest watch`.
 
 ### `vitest related`
 
-Run only tests that cover a list of source files. Works with static lazy imports, but not the dynamic ones. All files should be relative to root folder.
+Run only tests that cover a list of source files. Works with static imports (e.g., `import('./index.ts')` or `import index from './index.ts`), but not the dynamic ones (e.g., `import(filepath)`). All files should be relative to root folder.
 
 Useful to run with [`lint-staged`](https://github.com/okonet/lint-staged) or with your CI setup.
 
@@ -61,7 +61,7 @@ vitest related /src/index.ts /src/hello-world.js
 | `--outputTruncateLength <length>` | Truncate output diff lines up to `<length>` number of characters. |
 | `--outputDiffLines <lines>` | Limit number of output diff lines up to `<lines>`. |
 | `--outputFile <filename/-s>` | Write test results to a file when the `--reporter=json` or `--reporter=junit` option is also specified <br /> Via [cac's dot notation] you can specify individual outputs for multiple reporters |
-| `--coverage` | Use c8 for coverage |
+| `--coverage` | Enable coverage report |
 | `--run` | Do not watch |
 | `--mode` | Override Vite mode (default: `test`) |
 | `--mode <name>` | Override Vite mode (default: `test`) |
@@ -75,6 +75,7 @@ vitest related /src/index.ts /src/hello-world.js
 | `--changed [since]` | Run tests that are affected by the changed files (default: false). See [docs](#changed) |
 | `--shard <shard>` | Execute tests in a specified shard |
 | `--sequence` | Define in what order to run tests. Use [cac's dot notation] to specify options (for example, use `--sequence.shuffle` to run tests in random order) |
+| `--no-color` | Removes colors from the console output |
 | `-h, --help` | Display available CLI options |
 
 ### changed

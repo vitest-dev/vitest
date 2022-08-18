@@ -2,21 +2,21 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "bench": "esmo src/index.ts",
-    "bench:ci": "esmo src/github.ts"
+    "bench": "esno src/index.ts",
+    "bench:ci": "esno src/github.ts"
   },
   "devDependencies": {
-    "@actions/core": "^1.9.0",
+    "@actions/core": "^1.9.1",
     "@actions/exec": "^1.1.1",
     "@actions/github": "^5.0.3",
-    "@happy-dom/jest-environment": "^4.1.0",
+    "@happy-dom/jest-environment": "^6.0.4",
     "@types/benchmark": "^2.1.1",
     "benchmark": "^2.1.4",
-    "esno": "^0.14.1",
+    "esno": "^0.16.3",
     "execa": "^6.1.0",
     "fs-extra": "^10.1.0",
     "markdown-table": "^3.0.2",
-    "microtime": "^3.1.0",
+    "microtime": "^3.1.1",
     "vitest": "link:../packages/vitest"
   }
 }

@@ -5,6 +5,7 @@ import { isPackageExists } from 'local-pkg'
 import { relative as relativeNode } from 'pathe'
 import type { ModuleCacheMap } from 'vite-node'
 import type { Suite, Task } from '../types'
+import { EXIT_CODE_RESTART } from '../constants'
 import { getNames } from './tasks'
 
 export * from './tasks'
@@ -87,7 +88,7 @@ export async function ensurePackageInstalled(
     await (await import('@antfu/install-pkg')).installPackage(dependency, { dev: true })
     // TODO: somehow it fails to load the package after installation, remove this when it's fixed
     process.stderr.write(c.yellow(`\nPackage ${dependency} installed, re-run the command to start.\n`))
-    process.exit(1)
+    process.exit(EXIT_CODE_RESTART)
     return true
   }
 

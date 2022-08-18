@@ -22,3 +22,6 @@ export async function asyncFunc(): Promise<string> {
   await new Promise<void>(resolve => resolve())
   return '1234'
 }
+
+// This is here because mocking streams previously caused some problems (#1671).
+export const exportedStream = process.stderr

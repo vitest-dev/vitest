@@ -1,9 +1,7 @@
 import { mount } from '@vue/test-utils'
-import { nextTick } from '@vue/composition-api'
 import Hello from '../src/components/ScriptSetup.vue'
 
-// TODO: find out why
-test.skip('mount component', async () => {
+test('mount component', async () => {
   expect(Hello).toBeTruthy()
 
   const wrapper = mount(Hello, {
@@ -11,8 +9,6 @@ test.skip('mount component', async () => {
       count: 4,
     },
   })
-
-  await nextTick()
 
   expect(wrapper.text()).toContain('4 x 2 = 8')
   expect(wrapper.html()).toMatchSnapshot()

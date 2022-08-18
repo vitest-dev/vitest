@@ -30,12 +30,14 @@
       "vite-node/utils": ["./packages/vite-node/src/utils.ts"]
     },
     "types": [
+      "node",
       "vite/client"
     ]
   },
   "exclude": [
     "**/dist/**",
     "./packages/vitest/dist/**",
+    "./packages/vitest/*.d.ts",
     "./packages/ui/client/**",
     "./examples/**/*.*",
     "./bench/**"

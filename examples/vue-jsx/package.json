@@ -6,13 +6,13 @@
     "test": "vitest"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^2.3.3",
-    "@vitejs/plugin-vue-jsx": "^1.3.10",
-    "@vue/test-utils": "^2.0.0",
+    "@vitejs/plugin-vue": "latest",
+    "@vitejs/plugin-vue-jsx": "latest",
+    "@vue/test-utils": "latest",
     "jsdom": "latest",
-    "vite": "^2.9.9",
+    "vite": "latest",
     "vitest": "latest",
-    "vue": "^3.2.36"
+    "vue": "latest"
   },
   "stackblitz": {
     "startCommand": "npm run test"

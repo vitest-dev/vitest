@@ -4,7 +4,7 @@ import type { ErrorWithDiff, File, Reporter, Task, TaskResultPack, UserConsoleLo
 import { clearInterval, getFullName, getSuites, getTests, hasFailed, hasFailedSnapshot, isNode, relativePath, setInterval } from '../../utils'
 import type { Vitest } from '../../node'
 import { F_RIGHT } from '../../utils/figures'
-import { divider, getStateString, getStateSymbol, pointer, renderSnapshotSummary } from './renderers/utils'
+import { divider, formatTimeString, getStateString, getStateSymbol, pointer, renderSnapshotSummary } from './renderers/utils'
 
 const BADGE_PADDING = '       '
 const HELP_HINT = `${c.dim('press ')}${c.bold('h')}${c.dim(' to show help')}`
@@ -28,6 +28,7 @@ export abstract class BaseReporter implements Reporter {
   private _lastRunTimeout = 0
   private _lastRunTimer: NodeJS.Timer | undefined
   private _lastRunCount = 0
+  private _timeStart = new Date()
 
   constructor() {
     this.registerUnhandledRejection()
@@ -158,6 +159,7 @@ export abstract class BaseReporter implements Reporter {
       this.ctx.logger.clearScreen(`\n${BADGE}${TRIGGER} ${c.blue(`x${rerun}`)}\n`)
     }
 
+    this._timeStart = new Date()
     this.start = performance.now()
   }
 
@@ -178,8 +180,12 @@ export abstract class BaseReporter implements Reporter {
     return true
   }
 
-  onServerRestart() {
-    this.ctx.logger.log(c.cyan('Restarted due to config changes...'))
+  onServerRestart(reason?: string) {
+    this.ctx.logger.log(c.bold(c.magenta(
+      reason === 'config'
+        ? '\nRestarting due to config changes...'
+        : '\nRestarting Vitest...',
+    )))
   }
 
   async reportSummary(files: File[]) {
@@ -212,6 +218,7 @@ export abstract class BaseReporter implements Reporter {
     const collectTime = files.reduce((acc, test) => acc + Math.max(0, test.collectDuration || 0), 0)
     const setupTime = files.reduce((acc, test) => acc + Math.max(0, test.setupDuration || 0), 0)
     const testsTime = files.reduce((acc, test) => acc + Math.max(0, test.result?.duration || 0), 0)
+    const transformTime = Array.from(this.ctx.vitenode.fetchCache.values()).reduce((a, b) => a + (b?.duration || 0), 0)
     const threadTime = collectTime + testsTime + setupTime
 
     const padTitle = (str: string) => c.dim(`${str.padStart(10)} `)
@@ -220,6 +227,14 @@ export abstract class BaseReporter implements Reporter {
         return `${(time / 1000).toFixed(2)}s`
       return `${Math.round(time)}ms`
     }
+
+    // show top 10 costly transform module
+    // console.log(Array.from(this.ctx.vitenode.fetchCache.entries()).filter(i => i[1].duration)
+    //   .sort((a, b) => b[1].duration! - a[1].duration!)
+    //   .map(i => `${time(i[1].duration!)} ${i[0]}`)
+    //   .slice(0, 10)
+    //   .join('\n'),
+    // )
 
     const snapshotOutput = renderSnapshotSummary(this.ctx.config.root, this.ctx.snapshot.summary)
     if (snapshotOutput.length) {
@@ -233,10 +248,11 @@ export abstract class BaseReporter implements Reporter {
 
     logger.log(padTitle('Test Files'), getStateString(files))
     logger.log(padTitle('Tests'), getStateString(tests))
+    logger.log(padTitle('Start at'), formatTimeString(this._timeStart))
     if (this.watchFilters)
-      logger.log(padTitle('Time'), time(threadTime))
+      logger.log(padTitle('Duration'), time(threadTime))
     else
-      logger.log(padTitle('Time'), time(executionTime) + c.gray(` (setup ${time(setupTime)}, collect ${time(collectTime)}, tests ${time(testsTime)})`))
+      logger.log(padTitle('Duration'), time(executionTime) + c.dim(` (transform ${time(transformTime)}, setup ${time(setupTime)}, collect ${time(collectTime)}, tests ${time(testsTime)})`))
 
     logger.log()
   }

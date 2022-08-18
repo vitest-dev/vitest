@@ -1,11 +1,11 @@
 import type { Awaitable } from './general'
 
-interface ModuleContext {
+interface ModuleContext extends Record<string, unknown> {
   conditions: string[]
   parentURL?: string
 }
 
-enum ModuleFormat {
+export enum ModuleFormat {
   Builtin = 'builtin',
   Commonjs = 'commonjs',
   Json = 'json',
@@ -13,8 +13,9 @@ enum ModuleFormat {
   Wasm = 'wasm',
 }
 
-interface ResolveResult {
+export interface ResolveResult {
   url: string
+  shortCircuit?: boolean
   format?: ModuleFormat
 }
 
@@ -22,13 +23,14 @@ export interface Resolver {
   (url: string, context: ModuleContext, next: Resolver): Awaitable<ResolveResult>
 }
 
-interface LoaderContext {
+interface LoaderContext extends Record<string, any> {
   format: ModuleFormat
   importAssertions: Record<string, string>
 }
 
 interface LoaderResult {
   format: ModuleFormat
+  shortCircuit?: boolean
   source: string | ArrayBuffer | SharedArrayBuffer | Uint8Array
 }
 

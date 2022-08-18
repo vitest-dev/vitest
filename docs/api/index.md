@@ -102,6 +102,13 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
   })
   ```
 
+  Sometimes it is very useful to run `only` tests in a certain file, ignoring all other tests from the whole test suite, which pollute the output.
+
+  In order to do that run `vitest` with specific file containing the tests in question.
+  ```
+  # vitest interesting.test.ts
+  ```
+
 ### test.concurrent
 
 - **Type:** `(name: string, fn: TestFunction, timeout?: number) => void`
@@ -198,6 +205,8 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
   // ✓ add(2, 1) -> 3
   ```
 
+  If you want to have access to `TestContext`, use `describe.each` with a single test.
+
 ## describe
 
 When you use `test` in the top level of file, they are collected as part of the implicit suite for it. Using `describe` you can define a new suite in the current context, as a set of related tests and other nested suites. A suite lets you organize your tests so reports are more clear.
@@ -286,6 +295,13 @@ When you use `test` in the top level of file, they are collected as part of the 
   describe('other suite', () => {
     // ... will be skipped
   })
+  ```
+
+  Sometimes it is very useful to run `only` tests in a certain file, ignoring all other tests from the whole test suite, which pollute the output.
+
+  In order to do that run `vitest` with specific file containing the tests in question.
+  ```
+  # vitest interesting.test.ts
   ```
 
 ### describe.concurrent
@@ -539,7 +555,7 @@ When you use `test` in the top level of file, they are collected as part of the 
   import { Stocks } from './stocks'
   const stocks = new Stocks()
 
-  test('if Bill stock hasnt failed, sell apples to him', () => {
+  test('if Bill stock hasn\'t failed, sell apples to him', () => {
     stocks.syncStocks('Bill')
     expect(stocks.stockFailed('Bill')).toBeFalsy()
   })
@@ -560,7 +576,7 @@ When you use `test` in the top level of file, they are collected as part of the 
     return null
   }
 
-  test('we dont have apples', () => {
+  test('we don\'t have apples', () => {
     expect(apples()).toBeNull()
   })
   ```
@@ -1405,7 +1421,7 @@ When you use `test` in the top level of file, they are collected as part of the 
       expect(data).toBeTruthy()
     })
     // if not awaited, test will fail
-    // if you dont have expect.hasAssertions(), test will pass
+    // if you don't have expect.hasAssertions(), test will pass
     await select(3)
   })
   ```
@@ -1830,9 +1846,11 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 ### vi.mocked
 
 - **Type**: `<T>(obj: T, deep?: boolean) => MaybeMockedDeep<T>`
+- **Type**: `<T>(obj: T, options?: { partial?: boolean; deep?: boolean }) => MaybePartiallyMockedDeep<T>`
 
   Type helper for TypeScript. In reality just returns the object that was passed.
 
+  When `partial` is `true` it will expect a `Partial<T>` as a return value.
   ```ts
   import example from './example'
   vi.mock('./example')

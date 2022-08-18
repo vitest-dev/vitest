@@ -1,4 +1,5 @@
-import { join } from 'pathe'
+import { performance } from 'perf_hooks'
+import { resolve } from 'pathe'
 import type { TransformResult, ViteDevServer } from 'vite'
 import createDebug from 'debug'
 import type { DebuggerOptions, FetchResult, RawSourceMap, ViteNodeResolveId, ViteNodeServerOptions } from './types'
@@ -18,6 +19,7 @@ export class ViteNodeServer {
   private transformPromiseMap = new Map<string, Promise<TransformResult | null | undefined>>()
 
   fetchCache = new Map<string, {
+    duration?: number
     timestamp: number
     result: FetchResult
   }>()
@@ -66,7 +68,7 @@ export class ViteNodeServer {
 
   async resolveId(id: string, importer?: string): Promise<ViteNodeResolveId | null> {
     if (importer && !importer.startsWith(this.server.config.root))
-      importer = join(this.server.config.root, importer)
+      importer = resolve(this.server.config.root, importer)
     const mode = (importer && this.getTransformMode(importer)) || 'ssr'
     return this.server.pluginContainer.resolveId(id, importer, { ssr: mode === 'ssr' })
   }
@@ -125,16 +127,20 @@ export class ViteNodeServer {
       return cache.result
 
     const externalize = await this.shouldExternalize(filePath)
+    let duration: number | undefined
     if (externalize) {
       result = { externalize }
       this.debugger?.recordExternalize(id, externalize)
     }
     else {
+      const start = performance.now()
       const r = await this._transformRequest(id)
+      duration = performance.now() - start
       result = { code: r?.code, map: r?.map as unknown as RawSourceMap }
     }
 
     this.fetchCache.set(filePath, {
+      duration,
       timestamp,
       result,
     })

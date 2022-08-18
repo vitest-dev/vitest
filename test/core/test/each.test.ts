@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest'
+import { afterAll, describe, expect, test } from 'vitest'
 
 test.each([
   [1, 1, 2],
@@ -103,4 +103,36 @@ test.each([
 
   const result = await promiseResolver(a, b)
   expect(result).toBe(expected)
+})
+
+describe('context on test and describe - todo/skip', () => {
+  let count = 0
+
+  describe.todo.each([1])('todo describe', () => {
+    test('this is todo test', () => {
+      count++
+    })
+  })
+
+  describe.skip.each([1])('todo describe', () => {
+    test('this is todo test', () => {
+      count++
+    })
+  })
+
+  test.skip.each([1])('todo test', () => {
+    count++
+  })
+
+  afterAll(() => {
+    expect(count).toBe(0)
+  })
+})
+
+describe('context with each - concurrent', () => {
+  describe.concurrent.each([[1, 1, 2], [1, 2, 3], [1, 3, 4]])('block', (number1, number2, number3) => {
+    test('numbered test', ({ expect }) => {
+      expect(number1 + number2).toBe(number3)
+    })
+  })
 })

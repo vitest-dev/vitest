@@ -6,7 +6,6 @@ import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 import type { ApiConfig, ResolvedConfig, UserConfig } from '../types'
 import { defaultPort } from '../constants'
 import { configDefaults } from '../defaults'
-import { resolveC8Options } from '../integrations/coverage'
 import { toArray } from '../utils'
 import { VitestCache } from './cache'
 import { BaseSequencer } from './sequencers/BaseSequencer'
@@ -93,8 +92,6 @@ export function resolveConfig(
   if (viteConfig.base !== '/')
     resolved.base = viteConfig.base
 
-  resolved.coverage = resolveC8Options(options.coverage || {}, resolved.root)
-
   if (options.shard) {
     if (resolved.watch)
       throw new Error('You cannot use --shard option with enabled watch')
@@ -129,7 +126,9 @@ export function resolveConfig(
     }
   }
 
-  resolved.deps.registerNodeLoader ??= true
+  // disable loader for Yarn PnP until Node implements chain loader
+  // https://github.com/nodejs/node/pull/43772
+  resolved.deps.registerNodeLoader ??= false
 
   resolved.testNamePattern = resolved.testNamePattern
     ? resolved.testNamePattern instanceof RegExp

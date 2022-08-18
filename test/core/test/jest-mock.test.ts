@@ -186,15 +186,15 @@ describe('jest mock compat layer', () => {
   })
 
   it('setter spyOn', () => {
-    let settedValue = 'original'
+    let setValue = 'original'
     let mockedValue = 'none'
 
     const obj = {
       get setter() {
-        return settedValue
+        return setValue
       },
       set setter(v: any) {
-        settedValue = v
+        setValue = v
       },
     }
 
@@ -202,22 +202,22 @@ describe('jest mock compat layer', () => {
 
     obj.setter = 'first'
 
-    expect(settedValue).toBe('first')
+    expect(setValue).toBe('first')
     expect(mockedValue).toBe('none')
 
     spy.mockImplementation(() => (mockedValue = 'mocked')).mockImplementationOnce(() => (mockedValue = 'once'))
 
     obj.setter = 'i can do whatever'
     expect(mockedValue).toBe('once')
-    expect(settedValue).toBe('first')
+    expect(setValue).toBe('first')
 
     obj.setter = 'does nothing'
     expect(mockedValue).toBe('mocked')
-    expect(settedValue).toBe('first')
+    expect(setValue).toBe('first')
 
     obj.setter = 'since setter is mocked'
     expect(mockedValue).toBe('mocked')
-    expect(settedValue).toBe('first')
+    expect(setValue).toBe('first')
 
     spy.mockRestore()
 
@@ -225,7 +225,7 @@ describe('jest mock compat layer', () => {
 
     expect(spy.getMockImplementation()).toBe(undefined)
 
-    expect(settedValue).toBe('last')
+    expect(setValue).toBe('last')
   })
 
   it('should work - setter', () => {

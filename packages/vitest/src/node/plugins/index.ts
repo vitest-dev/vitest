@@ -8,10 +8,9 @@ import { EnvReplacerPlugin } from './envRelacer'
 import { GlobalSetupPlugin } from './globalSetup'
 import { MocksPlugin } from './mock'
 import { CSSEnablerPlugin } from './cssEnabler'
+import { CoverageTransform } from './coverageTransform'
 
 export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest()): Promise<VitePlugin[]> {
-  let haveStarted = false
-
   async function UIPlugin() {
     await ensurePackageInstalled('@vitest/ui', ctx.config?.root || options.root || process.cwd())
     return (await import('@vitest/ui')).default(options.uiBase)
@@ -26,6 +25,9 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
     <VitePlugin>{
       name: 'vitest',
       enforce: 'pre',
+      options() {
+        this.meta.watchMode = false
+      },
       config(viteConfig: any) {
         // preliminary merge of options to be able to create server options for vite
         // however to allow vitest plugins to modify vitest config values
@@ -141,11 +143,8 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
           process.env[name] ??= envs[name]
       },
       async configureServer(server) {
-        if (haveStarted)
-          await ctx.report('onServerRestart')
         try {
           await ctx.setServer(options, server)
-          haveStarted = true
           if (options.api && options.watch)
             (await import('../../api/setup')).setup(ctx)
         }
@@ -166,6 +165,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
       ? await BrowserPlugin()
       : []),
     CSSEnablerPlugin(ctx),
+    CoverageTransform(ctx),
     options.ui
       ? await UIPlugin()
       : null,

@@ -167,7 +167,7 @@ export async function saveSnapshotFile(
 
 export function prepareExpected(expected?: string) {
   function findStartIndent() {
-    // Attemps to find indentation for objects.
+    // Attempts to find indentation for objects.
     // Matches the ending tag of the object.
     const matchObject = /^( +)}\s+$/m.exec(expected || '')
     const objectIndent = matchObject?.[1]?.length

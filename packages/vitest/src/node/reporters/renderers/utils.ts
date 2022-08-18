@@ -170,3 +170,7 @@ export function elegantSpinner() {
     return spinnerFrames[index]
   }
 }
+
+export function formatTimeString(date: Date) {
+  return date.toTimeString().split(' ')[0]
+}
