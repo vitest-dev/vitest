@@ -46,13 +46,21 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
     return normalizeModuleId(fsPath)
   }
 
-  set(fsPath: string, mod: Partial<ModuleCache>) {
+  /**
+   * Assign partial data to the map
+   */
+  update(fsPath: string, mod: Partial<ModuleCache>) {
     fsPath = this.normalizePath(fsPath)
     if (!super.has(fsPath))
       super.set(fsPath, mod)
     else
       Object.assign(super.get(fsPath) as ModuleCache, mod)
     return this
+  }
+
+  set(fsPath: string, mod: ModuleCache) {
+    fsPath = this.normalizePath(fsPath)
+    return super.set(fsPath, mod)
   }
 
   get(fsPath: string) {
@@ -105,7 +113,7 @@ export class ViteNodeRunner {
       return this.moduleCache.get(fsPath)?.promise
 
     const promise = this.directRequest(id, fsPath, callstack)
-    this.moduleCache.set(fsPath, { promise })
+    this.moduleCache.update(fsPath, { promise })
 
     return await promise
   }
@@ -113,19 +121,20 @@ export class ViteNodeRunner {
   /** @internal */
   async directRequest(id: string, fsPath: string, _callstack: string[]) {
     const callstack = [..._callstack, fsPath]
+
     const request = async (dep: string) => {
-      const fsPath = toFilePath(normalizeRequestId(dep, this.options.base), this.root)
+      const depFsPath = toFilePath(normalizeRequestId(dep, this.options.base), this.root)
       const getStack = () => {
-        return `stack:\n${[...callstack, fsPath].reverse().map(p => `- ${p}`).join('\n')}`
+        return `stack:\n${[...callstack, depFsPath].reverse().map(p => `- ${p}`).join('\n')}`
       }
 
       let debugTimer: any
       if (this.debug)
-        debugTimer = setTimeout(() => console.warn(() => `module ${fsPath} takes over 2s to load.\n${getStack()}`), 2000)
+        debugTimer = setTimeout(() => console.warn(() => `module ${depFsPath} takes over 2s to load.\n${getStack()}`), 2000)
 
       try {
-        if (callstack.includes(fsPath)) {
-          const depExports = this.moduleCache.get(fsPath)?.exports
+        if (callstack.includes(depFsPath)) {
+          const depExports = this.moduleCache.get(depFsPath)?.exports
           if (depExports)
             return depExports
           throw new Error(`[vite-node] Failed to resolve circular dependency, ${getStack()}`)
@@ -171,7 +180,7 @@ export class ViteNodeRunner {
     if (externalize) {
       debugNative(externalize)
       const mod = await this.interopedImport(externalize)
-      this.moduleCache.set(fsPath, { exports: mod })
+      this.moduleCache.update(fsPath, { exports: mod })
       return mod
     }
 
@@ -188,7 +197,7 @@ export class ViteNodeRunner {
       configurable: false,
     })
 
-    this.moduleCache.set(fsPath, { code: transformed, exports })
+    this.moduleCache.update(fsPath, { code: transformed, exports })
 
     const __filename = fileURLToPath(url)
     const moduleProxy = {
