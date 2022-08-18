@@ -99,7 +99,7 @@
     "debug": "^4.3.4",
     "local-pkg": "^0.4.2",
     "tinypool": "^0.2.4",
-    "tinyspy": "^1.0.0",
+    "tinyspy": "^1.0.2",
     "vite": "^2.9.12 || ^3.0.0-0"
   },
   "devDependencies": {

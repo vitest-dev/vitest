@@ -786,7 +786,7 @@ importers:
       source-map-js: ^1.0.2
       strip-ansi: ^7.0.1
       tinypool: ^0.2.4
-      tinyspy: ^1.0.0
+      tinyspy: ^1.0.2
       typescript: ^4.7.4
       vite: ^3.0.7
       vite-node: workspace:*
@@ -799,7 +799,7 @@ importers:
       debug: 4.3.4
       local-pkg: 0.4.2
       tinypool: 0.2.4
-      tinyspy: 1.0.0
+      tinyspy: 1.0.2
       vite: 3.0.7
     devDependencies:
       '@antfu/install-pkg': 0.1.0
@@ -18950,8 +18950,8 @@ packages:
     engines: {node: '>=14.0.0'}
     dev: false
 
-  /tinyspy/1.0.0:
-    resolution: {integrity: sha512-FI5B2QdODQYDRjfuLF+OrJ8bjWRMCXokQPcwKm0W3IzcbUmBNv536cQc7eXGoAuXphZwgx1DFbqImwzz08Fnhw==}
+  /tinyspy/1.0.2:
+    resolution: {integrity: sha512-bSGlgwLBYf7PnUsQ6WOc6SJ3pGOcd+d8AA6EUnLDDM0kWEstC1JIlSZA3UNliDXhd9ABoS7hiRBDCu+XP/sf1Q==}
     engines: {node: '>=14.0.0'}
     dev: false
 
