@@ -224,7 +224,7 @@ export class VitestMocker {
         // Special handling of references we've seen before to prevent infinite
         // recursion in circular objects.
         const refId = refs.getId(value)
-        if (refId) {
+        if (refId !== undefined) {
           finalizers.push(() => define(newContainer, property, refs.getMockedValue(refId)))
           continue
         }

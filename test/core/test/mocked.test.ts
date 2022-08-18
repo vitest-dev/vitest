@@ -5,11 +5,13 @@ import { two } from '../src/submodule'
 import * as mocked from '../src/mockedA'
 import { mockedB } from '../src/mockedB'
 import { MockedC, asyncFunc, exportedStream } from '../src/mockedC'
+import MockedDefault, { MockedC as MockedD } from '../src/mockedD'
 import * as globalMock from '../src/global-mock'
 
 vitest.mock('../src/submodule')
 vitest.mock('virtual-module', () => ({ value: 'mock' }))
 vitest.mock('../src/mockedC')
+vitest.mock('../src/mockedD')
 
 test('submodule is mocked to return "two" as 3', () => {
   assert.equal(3, two)
@@ -37,6 +39,7 @@ describe('mocked classes', () => {
   test('should not delete the prototype', () => {
     expect(MockedC).toBeTypeOf('function')
     expect(MockedC.prototype.doSomething).toBeTypeOf('function')
+    expect(MockedC.prototype.constructor).toBe(MockedC)
   })
 
   test('should mock the constructor', () => {
@@ -54,6 +57,17 @@ describe('mocked classes', () => {
 
     expect(MockedC.prototype.doSomething).toHaveBeenCalledOnce()
     expect(MockedC.prototype.doSomething).not.toHaveReturnedWith('A')
+  })
+})
+
+describe('default exported classes', () => {
+  test('should preserve equality for re-exports', () => {
+    expect(MockedDefault).toEqual(MockedD)
+  })
+
+  test('should preserve prototype', () => {
+    expect(MockedDefault.prototype.constructor).toBe(MockedDefault)
+    expect(MockedD.prototype.constructor).toBe(MockedD)
   })
 })
 
