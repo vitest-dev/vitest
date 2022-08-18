@@ -23,7 +23,10 @@ interface TestExclude {
     exclude?: string | string[]
     extension?: string | string[]
     excludeNodeModules?: boolean
-  }): { shouldInstrument(filePath: string): boolean }
+  }): {
+    shouldInstrument(filePath: string): boolean
+    glob(cwd: string): Promise<string[]>
+  }
 }
 
 export class IstanbulCoverageProvider implements CoverageProvider {
@@ -95,11 +98,14 @@ export class IstanbulCoverageProvider implements CoverageProvider {
   }
 
   async reportCoverage() {
-    const mergedCoverage = this.coverages.reduce((coverage, previousCoverageMap) => {
+    const mergedCoverage: CoverageMap = this.coverages.reduce((coverage, previousCoverageMap) => {
       const map = libCoverage.createCoverageMap(coverage)
       map.merge(previousCoverageMap)
       return map
     }, {})
+
+    if (this.options.all)
+      await this.includeUntestedFiles(mergedCoverage)
 
     const sourceMapStore = libSourceMaps.createSourceMapStore()
     const coverageMap: CoverageMap = await sourceMapStore.transformCoverage(mergedCoverage)
@@ -172,6 +178,39 @@ export class IstanbulCoverageProvider implements CoverageProvider {
             console.error(errorMessage)
           }
         }
+      }
+    }
+  }
+
+  async includeUntestedFiles(coverageMap: CoverageMap) {
+    // Load, instrument and collect empty coverages from all files which
+    // are not already in the coverage map
+    const includedFiles = await this.testExclude.glob(this.ctx.config.root)
+    const uncoveredFiles = includedFiles
+      .map(file => resolve(this.ctx.config.root, file))
+      .filter(file => !coverageMap.data[file])
+
+    const transformResults = await Promise.all(uncoveredFiles.map(async (filename) => {
+      const transformResult = await this.ctx.vitenode.transformRequest(filename)
+      return { transformResult, filename }
+    }))
+
+    for (const { transformResult, filename } of transformResults) {
+      const sourceMap = transformResult?.map
+
+      if (sourceMap) {
+        this.instrumenter.instrumentSync(
+          transformResult.code,
+          filename,
+          {
+            ...sourceMap,
+            version: sourceMap.version.toString(),
+          },
+        )
+
+        const lastCoverage = this.instrumenter.lastFileCoverage()
+        if (lastCoverage)
+          coverageMap.data[lastCoverage.path] = lastCoverage
       }
     }
   }
