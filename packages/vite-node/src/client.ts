@@ -63,14 +63,33 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
     return super.set(fsPath, mod)
   }
 
-  get(fsPath: string) {
+  get(fsPath: string): ModuleCache {
     fsPath = this.normalizePath(fsPath)
-    return super.get(fsPath)
+    if (!super.has(fsPath))
+      super.set(fsPath, {})
+    return super.get(fsPath)!
   }
 
   delete(fsPath: string) {
     fsPath = this.normalizePath(fsPath)
     return super.delete(fsPath)
+  }
+
+  /**
+   * Invalidate modules that dependent on the given modules, up to the main entry
+   */
+  invalidateDepTree(ids: string[] | Set<string>, invalidated = new Set<string>()) {
+    for (const _id of ids) {
+      const id = this.normalizePath(_id)
+      if (invalidated.has(id))
+        continue
+      invalidated.add(id)
+      const mod = super.get(id)
+      if (mod?.importers)
+        this.invalidateDepTree(mod.importers, invalidated)
+      super.delete(id)
+    }
+    return invalidated
   }
 }
 
@@ -104,16 +123,24 @@ export class ViteNodeRunner {
     const id = normalizeRequestId(rawId, this.options.base)
     const fsPath = toFilePath(id, this.root)
 
+    const mod = this.moduleCache.get(fsPath)
+    const importee = callstack[callstack.length - 1]
+
+    if (!mod.importers)
+      mod.importers = new Set()
+    if (importee)
+      mod.importers.add(importee)
+
     // the callstack reference itself circularly
-    if (callstack.includes(fsPath) && this.moduleCache.get(fsPath)?.exports)
-      return this.moduleCache.get(fsPath)?.exports
+    if (callstack.includes(fsPath) && mod.exports)
+      return mod.exports
 
     // cached module
-    if (this.moduleCache.get(fsPath)?.promise)
-      return this.moduleCache.get(fsPath)?.promise
+    if (mod.promise)
+      return mod.promise
 
     const promise = this.directRequest(id, fsPath, callstack)
-    this.moduleCache.update(fsPath, { promise })
+    Object.assign(mod, { promise })
 
     return await promise
   }
@@ -121,6 +148,8 @@ export class ViteNodeRunner {
   /** @internal */
   async directRequest(id: string, fsPath: string, _callstack: string[]) {
     const callstack = [..._callstack, fsPath]
+
+    const mod = this.moduleCache.get(fsPath)
 
     const request = async (dep: string) => {
       const depFsPath = toFilePath(normalizeRequestId(dep, this.options.base), this.root)
@@ -140,9 +169,7 @@ export class ViteNodeRunner {
           throw new Error(`[vite-node] Failed to resolve circular dependency, ${getStack()}`)
         }
 
-        const mod = await this.cachedRequest(dep, callstack)
-
-        return mod
+        return await this.cachedRequest(dep, callstack)
       }
       finally {
         if (debugTimer)
@@ -179,9 +206,9 @@ export class ViteNodeRunner {
     let { code: transformed, externalize } = await this.options.fetchModule(id)
     if (externalize) {
       debugNative(externalize)
-      const mod = await this.interopedImport(externalize)
-      this.moduleCache.update(fsPath, { exports: mod })
-      return mod
+      const exports = await this.interopedImport(externalize)
+      mod.exports = exports
+      return exports
     }
 
     if (transformed == null)
@@ -197,7 +224,7 @@ export class ViteNodeRunner {
       configurable: false,
     })
 
-    this.moduleCache.update(fsPath, { code: transformed, exports })
+    Object.assign(mod, { code: transformed, exports })
 
     const __filename = fileURLToPath(url)
     const moduleProxy = {
