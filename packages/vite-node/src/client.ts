@@ -74,6 +74,23 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
     fsPath = this.normalizePath(fsPath)
     return super.delete(fsPath)
   }
+
+  /**
+   * Invalidate modules that dependent on the given modules, up to the main entry
+   */
+  invalidateDepTree(ids: string[] | Set<string>, invalidated = new Set<string>()) {
+    for (const _id of ids) {
+      const id = this.normalizePath(_id)
+      if (invalidated.has(id))
+        continue
+      invalidated.add(id)
+      const mod = super.get(id)
+      if (mod?.importers)
+        this.invalidateDepTree(mod.importers, invalidated)
+      super.delete(id)
+    }
+    return invalidated
+  }
 }
 
 export class ViteNodeRunner {
