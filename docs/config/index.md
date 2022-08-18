@@ -51,6 +51,20 @@ export default defineConfig({
 })
 ```
 
+You can also extend Vite's options if needed:
+
+```ts
+import { mergeConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
+import viteConfig from './vite.config'
+
+export default mergeConfig(viteConfig, defineConfig({
+  test: {
+    exclude: ['packages/template/*'],
+  },
+}))
+```
+
 ## Options
 
 :::tip
