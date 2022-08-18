@@ -45,6 +45,10 @@ export interface ModuleCache {
   promise?: Promise<any>
   exports?: any
   code?: string
+  /**
+   * Module ids that imports this module
+   */
+  importers?: Set<string>
 }
 
 export interface ViteNodeRunnerOptions {
