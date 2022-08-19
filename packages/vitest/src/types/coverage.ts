@@ -92,6 +92,11 @@ export interface BaseCoverageOptions {
   reporter?: Arrayable<CoverageReporter>
 
   /**
+   * List of files included in coverage as glob patterns
+   */
+  include?: string[]
+
+  /**
    * List of files excluded from coverage as glob patterns
    */
   exclude?: string[]
@@ -160,7 +165,6 @@ export interface CoverageC8Options extends BaseCoverageOptions {
    * @default true
    */
   excludeNodeModules?: boolean
-  include?: string[]
 
   all?: boolean
   src?: string[]
