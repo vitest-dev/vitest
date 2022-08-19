@@ -1,3 +1,4 @@
+import { Readable } from 'stream'
 import { describe, expect, it } from 'vitest'
 import { serializeError } from '../../../packages/vitest/src/runtime/error'
 
@@ -92,5 +93,14 @@ describe('error serialize', () => {
       stack: expect.any(String),
       toString: 'Function<toString>',
     })
+  })
+
+  it('Should try to serialize even if the object contains unserializable values', () => {
+    const unserializable = new Readable()
+    const error = Object.assign(new Error('test'), { unserializable })
+
+    const serialized = serializeError(error)
+    expect(serialized.unserializable).toHaveProperty('UNSERIALIZABLE_VALUE')
+    expect(serialized.unserializable.UNSERIALIZABLE_VALUE.error).toBeTypeOf('string')
   })
 })
