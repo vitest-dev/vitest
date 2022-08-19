@@ -50,6 +50,7 @@ export class IstanbulCoverageProvider implements CoverageProvider {
       produceSourceMap: true,
       autoWrap: false,
       esModules: true,
+      compact: false,
       coverageVariable: COVERAGE_STORE_KEY,
       // @ts-expect-error missing type
       coverageGlobalScope: 'globalThis',
