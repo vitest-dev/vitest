@@ -60,6 +60,7 @@ export class IstanbulCoverageProvider implements CoverageProvider {
 
     this.testExclude = new _TestExclude({
       cwd: ctx.config.root,
+      include: typeof this.options.include === 'undefined' ? undefined : [...this.options.include],
       exclude: [...defaultExclude, ...defaultInclude, ...this.options.exclude],
       excludeNodeModules: true,
       extension: configDefaults.coverage.extension,
