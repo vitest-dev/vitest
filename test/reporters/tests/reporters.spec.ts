@@ -103,10 +103,10 @@ test('JUnit reporter with outputFile', async () => {
   rmSync(outputFile)
 })
 
-test('JUnit reporter with outputFile with XML in error details', async () => {
+test('JUnit reporter with outputFile with XML in error message', async () => {
   // Arrange
   const reporter = new JUnitReporter()
-  const outputFile = resolve('report.xml')
+  const outputFile = resolve('report_escape_msg_xml.xml')
   const context = getContext()
   context.vitest.config.outputFile = outputFile
 
