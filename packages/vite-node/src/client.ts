@@ -91,6 +91,24 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
     }
     return invalidated
   }
+
+  /**
+   * Invalidate dependency modules of the given modules, down to the bottom-level dependencies
+   */
+  invalidateSubDepTree(ids: string[] | Set<string>, invalidated = new Set<string>()) {
+    for (const _id of ids) {
+      const id = this.normalizePath(_id)
+      if (invalidated.has(id))
+        continue
+      invalidated.add(id)
+      const subIds = Array.from(super.entries())
+        .filter(([,mod]) => mod.importers?.has(id))
+        .map(([key]) => key)
+      subIds.length && this.invalidateSubDepTree(subIds, invalidated)
+      super.delete(id)
+    }
+    return invalidated
+  }
 }
 
 export class ViteNodeRunner {
