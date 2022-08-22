@@ -136,8 +136,8 @@ export function defineWebWorker() {
           // worker should be new every time, invalidate its sub dependency
           moduleCache.invalidateSubDepTree(
             invalidates.reduce(
-              (acc, fsPath) => acc.concat([fsPath, `mock:${fsPath}`]), [] as string[]
-          ))
+              (acc, fsPath) => acc.concat([fsPath, `mock:${fsPath}`]), [] as string[],
+            ))
           const q = this.messageQueue
           this.messageQueue = null
           if (q)
