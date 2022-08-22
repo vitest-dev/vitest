@@ -6,7 +6,8 @@ import { JUnitReporter } from '../../../packages/vitest/src/node/reporters/junit
 import { TapReporter } from '../../../packages/vitest/src/node/reporters/tap'
 import { TapFlatReporter } from '../../../packages/vitest/src/node/reporters/tap-flat'
 import { getContext } from '../src/context'
-import { createSuiteHavingFailedTestWithXmlInError, files } from '../src/data'
+import { files } from '../src/data'
+import { createSuiteHavingFailedTestWithXmlInError } from '../src/data-for-junit'
 
 afterEach(() => {
   vi.useRealTimers()
@@ -116,7 +117,7 @@ test('JUnit reporter with outputFile with XML in error message', async () => {
 
   vi.setSystemTime(1642587001759)
 
-  // setup test with failed test with xml
+  // setup suite with failed test with xml
   const filesWithTestHavingXmlInError = createSuiteHavingFailedTestWithXmlInError()
 
   // Act
