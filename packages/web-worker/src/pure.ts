@@ -44,7 +44,6 @@ interface InlineWorkerContext {
   postMessage: (data: any) => void
   self: InlineWorkerContext
   global: InlineWorkerContext
-  invalidates: string[]
   importScripts?: any
 }
 
@@ -95,7 +94,6 @@ export function defineWebWorker() {
     public onerror: null | Procedure = null
 
     constructor(url: URL | string) {
-      const invalidates: string[] = []
       const context: InlineWorkerContext = {
         onmessage: null,
         dispatchEvent: (event: Event) => {
@@ -113,7 +111,6 @@ export function defineWebWorker() {
         get global() {
           return context
         },
-        invalidates,
       }
 
       this.inside.on('message', (e) => {
@@ -129,15 +126,11 @@ export function defineWebWorker() {
       const id = (url instanceof URL ? url.toString() : url).replace(/^file:\/+/, '/')
 
       const fsPath = toFilePath(id, config.root)
-      invalidates.push(fsPath)
 
       runner.executeFile(fsPath)
         .then(() => {
           // worker should be new every time, invalidate its sub dependency
-          moduleCache.invalidateSubDepTree(
-            invalidates.reduce(
-              (acc, fsPath) => acc.concat([fsPath, `mock:${fsPath}`]), [] as string[],
-            ))
+          moduleCache.invalidateSubDepTree([fsPath, `mock:${fsPath}`])
           const q = this.messageQueue
           this.messageQueue = null
           if (q)
