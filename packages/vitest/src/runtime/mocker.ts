@@ -209,10 +209,21 @@ export class VitestMocker {
       const isModule = containerType === 'Module' || !!container.__esModule
       for (const { key: property, descriptor } of getAllMockableProperties(container)) {
         // Modules define their exports as getters. We want to process those.
-        if (!isModule) {
-          // TODO: Mock getters/setters somehow?
-          if (descriptor.get || descriptor.set)
-            continue
+        if (!isModule && descriptor.get) {
+          try {
+            const newDescriptor: PropertyDescriptor = {
+              enumerable: true,
+              configurable: true,
+              get: spyModule.fn(),
+            }
+            if (descriptor.set)
+              newDescriptor.set = spyModule.fn()
+            Object.defineProperty(newContainer, property, newDescriptor)
+          }
+          catch (error) {
+            // Ignore errors, just move on to the next prop.
+          }
+          continue
         }
 
         // Skip special read-only props, we don't want to mess with those.

@@ -13,6 +13,25 @@ vitest.mock('virtual-module', () => ({ value: 'mock' }))
 vitest.mock('../src/mockedC')
 vitest.mock('../src/mockedD')
 
+/**
+ * Get a property descriptor from an object.
+ *
+ * This is different from `Object.getOwnPropertyDescriptor` because it recurses
+ * into the prototype chain until it either finds a match or reaches the end.
+ *
+ * @param object The object that contains the property.
+ * @param property The property.
+ * @returns The property's descriptor, or undefined if no matching property was found.
+ */
+function getPropertyDescriptor(object: any, property: PropertyKey) {
+  for (let o = object; o; o = Object.getPrototypeOf(o)) {
+    const descriptor = Object.getOwnPropertyDescriptor(o, property)
+    if (descriptor)
+      return descriptor
+  }
+  return undefined
+}
+
 test('submodule is mocked to return "two" as 3', () => {
   assert.equal(3, two)
 })
@@ -57,6 +76,43 @@ describe('mocked classes', () => {
 
     expect(MockedC.prototype.doSomething).toHaveBeenCalledOnce()
     expect(MockedC.prototype.doSomething).not.toHaveReturnedWith('A')
+  })
+
+  test('should mock getters', () => {
+    const instance = new MockedC()
+
+    expect(instance).toHaveProperty('getOnlyProp')
+    const descriptor = getPropertyDescriptor(instance, 'getOnlyProp')
+    expect(descriptor?.get).toBeDefined()
+    expect(descriptor?.set).not.toBeDefined()
+
+    expect(instance.getOnlyProp).toBeUndefined()
+    // @ts-expect-error Assign to the read-only prop to ensure it errors.
+    expect(() => instance.getOnlyProp = 4).toThrow()
+
+    const getterSpy = vi.spyOn(instance, 'getOnlyProp', 'get').mockReturnValue(456)
+    expect(instance.getOnlyProp).toEqual(456)
+    expect(getterSpy).toHaveBeenCalledOnce()
+  })
+
+  test('should mock getters and setters', () => {
+    const instance = new MockedC()
+
+    expect(instance).toHaveProperty('getSetProp')
+    const descriptor = getPropertyDescriptor(instance, 'getSetProp')
+    expect(descriptor?.get).toBeDefined()
+    expect(descriptor?.set).toBeDefined()
+
+    expect(instance.getSetProp).toBeUndefined()
+    expect(() => instance.getSetProp = 4).not.toThrow()
+
+    const getterSpy = vi.spyOn(instance, 'getSetProp', 'get').mockReturnValue(789)
+    expect(instance.getSetProp).toEqual(789)
+    expect(getterSpy).toHaveBeenCalledOnce()
+
+    const setterSpy = vi.spyOn(instance, 'getSetProp', 'set')
+    instance.getSetProp = 159
+    expect(setterSpy).toHaveBeenCalledWith(159)
   })
 })
 

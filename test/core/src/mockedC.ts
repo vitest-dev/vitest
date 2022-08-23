@@ -11,6 +11,10 @@ export class MockedC {
     return mockedA()
   }
 
+  get getOnlyProp(): number {
+    return 42
+  }
+
   get getSetProp(): number {
     return 123
   }
