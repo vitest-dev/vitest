@@ -112,7 +112,10 @@ export class JUnitReporter implements Reporter {
 
   async writeErrorDetails(error: ErrorWithDiff): Promise<void> {
     const errorName = error.name ?? error.nameStr ?? 'Unknown Error'
-    await this.baseLog(`${errorName}: ${error.message}`)
+    const errorDetails = `${errorName}: ${error.message}`
+
+    // Be sure to escape any XML in the error Details
+    await this.baseLog(escapeXML(errorDetails))
 
     const stack = parseStacktrace(error)
 

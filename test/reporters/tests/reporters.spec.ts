@@ -7,6 +7,7 @@ import { TapReporter } from '../../../packages/vitest/src/node/reporters/tap'
 import { TapFlatReporter } from '../../../packages/vitest/src/node/reporters/tap-flat'
 import { getContext } from '../src/context'
 import { files } from '../src/data'
+import { createSuiteHavingFailedTestWithXmlInError } from '../src/data-for-junit'
 
 afterEach(() => {
   vi.useRealTimers()
@@ -93,6 +94,35 @@ test('JUnit reporter with outputFile', async () => {
   // Act
   await reporter.onInit(context.vitest)
   await reporter.onFinished(files)
+
+  // Assert
+  expect(normalizeCwd(context.output)).toMatchSnapshot()
+  expect(existsSync(outputFile)).toBe(true)
+  expect(readFileSync(outputFile, 'utf8')).toMatchSnapshot()
+
+  // Cleanup
+  rmSync(outputFile)
+})
+
+test('JUnit reporter with outputFile with XML in error message', async () => {
+  // Arrange
+  const reporter = new JUnitReporter()
+  const outputFile = resolve('report_escape_msg_xml.xml')
+  const context = getContext()
+  context.vitest.config.outputFile = outputFile
+
+  vi.mock('os', () => ({
+    hostname: () => 'hostname',
+  }))
+
+  vi.setSystemTime(1642587001759)
+
+  // setup suite with failed test with xml
+  const filesWithTestHavingXmlInError = createSuiteHavingFailedTestWithXmlInError()
+
+  // Act
+  await reporter.onInit(context.vitest)
+  await reporter.onFinished(filesWithTestHavingXmlInError)
 
   // Assert
   expect(normalizeCwd(context.output)).toMatchSnapshot()

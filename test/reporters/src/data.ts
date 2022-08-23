@@ -174,4 +174,7 @@ const tasks: Task[] = [
 file.tasks = [suite]
 suite.tasks = tasks
 
-export const files = [file]
+const files = [file]
+
+export { files }
+

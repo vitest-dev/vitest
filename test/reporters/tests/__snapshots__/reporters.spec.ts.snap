@@ -236,6 +236,26 @@ AssertionError: expected 2.23606797749979 to equal 2
 "
 `;
 
+exports[`JUnit reporter with outputFile with XML in error message 1`] = `
+"JUNIT report written to <process-cwd>/report_escape_msg_xml.xml
+"
+`;
+
+exports[`JUnit reporter with outputFile with XML in error message 2`] = `
+"<?xml version=\\"1.0\\" encoding=\\"UTF-8\\" ?>
+<testsuites>
+    <testsuite name=\\"test/core/test/basic.test.ts\\" timestamp=\\"2022-01-19T10:10:01.759Z\\" hostname=\\"hostname\\" tests=\\"1\\" failures=\\"1\\" errors=\\"0\\" skipped=\\"0\\" time=\\"0.145992842\\">
+        <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; test with xml in error\\" time=\\"0.0021231231\\">
+            <failure message=\\"error message that has XML in it &lt;tag&gt;\\" type=\\"AssertionError\\">
+AssertionError: error message that has XML in it &lt;tag&gt;
+ ❯ vitest/test/core/test/basic.test.ts:8:32
+            </failure>
+        </testcase>
+    </testsuite>
+</testsuites>
+"
+`;
+
 exports[`json reporter (no outputFile entry) 1`] = `
 {
   "numFailedTestSuites": 0,
