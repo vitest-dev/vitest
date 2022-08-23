@@ -51,7 +51,7 @@ export default defineConfig({
 })
 ```
 
-You can also extend Vite's options if needed:
+When using a separate `vitest.config.js`, you can also extend Vite's options from another config file if needed:
 
 ```ts
 import { mergeConfig } from 'vite'
