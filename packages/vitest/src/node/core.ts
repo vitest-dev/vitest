@@ -491,8 +491,13 @@ export class Vitest {
 
     let testFiles = await fg(this.config.include, globOptions)
 
-    if (filters.length && process.platform === 'win32')
-      filters = filters.map(f => toNamespacedPath(f))
+    if (filters.length && process.platform === 'win32') {
+      filters = filters.map((f) => {
+        const filePath = toNamespacedPath(f)
+        return filePath.match(/^[a-z][:].*/) ? filePath.charAt(0).toUpperCase() + filePath.slice(1) : filePath
+      })
+      testFiles = testFiles.map(f => f.match(/^[a-z][:].*/) ? f.charAt(0).toUpperCase() + f.slice(1) : f)
+    }
 
     if (filters.length)
       testFiles = testFiles.filter(i => filters.some(f => i.includes(f)))
