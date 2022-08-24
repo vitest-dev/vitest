@@ -8,6 +8,7 @@ const keys = [
   ['a', 'rerun all tests'],
   ['f', 'rerun only failed tests'],
   ['u', 'update snapshot'],
+  ['p', 'filter by a filename regex pattern'],
   ['t', 'filter by a test name regex pattern'],
   ['q', 'quit'],
 ]
@@ -48,6 +49,9 @@ export function registerConsoleShortcuts(ctx: Vitest) {
     // change testNamePattern
     if (name === 't')
       return inputNamePattern()
+    // change fileNamePattern
+    if (name === 'p')
+      return inputFilePattern()
     // quit
     if (name === 'q')
       return ctx.exit(true)
@@ -66,6 +70,18 @@ export function registerConsoleShortcuts(ctx: Vitest) {
       initial: String(ctx.config.testNamePattern || ''),
     }])
     await ctx.changeNamePattern(filter, undefined, 'change pattern')
+    on()
+  }
+
+  async function inputFilePattern() {
+    off()
+    const { filter = '' }: { filter: string } = await prompt([{
+      name: 'filter',
+      type: 'text',
+      message: 'Input filename pattern (RegExp)',
+      initial: String(ctx.config.fileNamePattern || ''),
+    }])
+    await ctx.changeFilenamePattern(filter, undefined, 'change filename pattern')
     on()
   }
 

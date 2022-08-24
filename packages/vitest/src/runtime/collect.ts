@@ -89,6 +89,7 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
 
     const hasOnlyTasks = someTasksAreOnly(file)
     interpretTaskModes(file, config.testNamePattern, hasOnlyTasks, false, config.allowOnly)
+    skipByFileNamePattern(file, config.fileNamePattern)
 
     files.push(file)
   }
@@ -135,6 +136,19 @@ function interpretTaskModes(suite: Suite, namePattern?: string | RegExp, onlyMod
   if (suite.mode === 'run') {
     if (suite.tasks.length && suite.tasks.every(i => i.mode !== 'run'))
       suite.mode = 'skip'
+  }
+}
+
+/**
+ * If test filename matches `fileNamePattern`, mark all tasks inside as `skip`.
+ */
+function skipByFileNamePattern(suite: Suite, fileNamePattern?: RegExp) {
+  if (!fileNamePattern)
+    return
+
+  if (!fileNamePattern.test(suite.name)) {
+    suite.mode = 'skip'
+    skipAllTasks(suite)
   }
 }
 

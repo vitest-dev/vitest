@@ -50,6 +50,7 @@ vitest related /src/index.ts /src/hello-world.js
 | `-u, --update` | Update snapshots |
 | `-w, --watch` | Smart & instant watch mode |
 | `-t, --testNamePattern <pattern>` | Run tests with full names matching the pattern |
+| `-p, --fileNamePattern <pattern>` | Run test files matching the pattern |
 | `--dir <path>`| Base directory to scan for the test files |
 | `--ui` | Enable UI |
 | `--open` | Open the UI automatically if enabled (default: `true`) |

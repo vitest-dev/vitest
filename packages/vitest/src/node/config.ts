@@ -136,6 +136,12 @@ export function resolveConfig(
       : new RegExp(resolved.testNamePattern)
     : undefined
 
+  resolved.fileNamePattern = resolved.fileNamePattern
+    ? resolved.fileNamePattern instanceof RegExp
+      ? resolved.fileNamePattern
+      : new RegExp(resolved.fileNamePattern)
+    : undefined
+
   const CI = !!process.env.CI
   const UPDATE_SNAPSHOT = resolved.update || process.env.UPDATE_SNAPSHOT
   resolved.snapshotOptions = {
