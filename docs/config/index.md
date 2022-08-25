@@ -555,7 +555,7 @@ test('doNotRun', () => {
 
 ### fileNamePattern
 
-- **Type** `string | RegExp`
+- **Type** `string`
 
 Run test files matching the pattern.
 If you add `Reducer` to this property, it will run test files matching this pattern. 

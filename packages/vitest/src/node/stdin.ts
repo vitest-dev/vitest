@@ -78,7 +78,7 @@ export function registerConsoleShortcuts(ctx: Vitest) {
     const { filter = '' }: { filter: string } = await prompt([{
       name: 'filter',
       type: 'text',
-      message: 'Input filename pattern (RegExp)',
+      message: 'Input filename pattern',
       initial: String(ctx.config.fileNamePattern || ''),
     }])
     await ctx.changeFilenamePattern(filter, undefined, 'change filename pattern')

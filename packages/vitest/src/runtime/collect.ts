@@ -22,7 +22,6 @@ function hash(str: string): string {
 
 export async function collectTests(paths: string[], config: ResolvedConfig) {
   const files: File[] = []
-
   const browserHashMap = getWorkerState().browserHashMap!
 
   async function importFromBrowser(filepath: string) {
@@ -34,7 +33,7 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
       return await import(`${filepath}?v=${hash}`)
   }
 
-  for (const filepath of paths) {
+  for (const filepath of matchPattern(paths, config.fileNamePattern)) {
     const path = relativePath(config.root, filepath)
     const file: File = {
       id: hash(path),
@@ -89,7 +88,6 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
 
     const hasOnlyTasks = someTasksAreOnly(file)
     interpretTaskModes(file, config.testNamePattern, hasOnlyTasks, false, config.allowOnly)
-    skipByFileNamePattern(file, config.fileNamePattern)
 
     files.push(file)
   }
@@ -138,18 +136,14 @@ function interpretTaskModes(suite: Suite, namePattern?: string | RegExp, onlyMod
       suite.mode = 'skip'
   }
 }
-
 /**
- * If test filename matches `fileNamePattern`, mark all tasks inside as `skip`.
+ * Skip files that are not matched by the pattern.
  */
-function skipByFileNamePattern(suite: Suite, fileNamePattern?: RegExp) {
-  if (!fileNamePattern)
-    return
+function matchPattern(files: string[], pattern = '') {
+  if (!pattern)
+    return files
 
-  if (!fileNamePattern.test(suite.name)) {
-    suite.mode = 'skip'
-    skipAllTasks(suite)
-  }
+  return files.filter(f => f.includes(pattern))
 }
 
 function getTaskFullName(task: TaskBase): string {

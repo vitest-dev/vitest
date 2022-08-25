@@ -252,7 +252,7 @@ export interface InlineConfig {
   /**
    * run test files with the specified pattern
    */
-  fileNamePattern?: string | RegExp
+  fileNamePattern?: string
   /**
    * Will call `.mockClear()` on all spies before each test
    * @default false
@@ -480,7 +480,7 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
   config?: string
   filters?: string[]
   testNamePattern?: RegExp
-  fileNamePattern?: RegExp
+  fileNamePattern?: string
   related?: string[]
 
   coverage: ResolvedCoverageOptions
