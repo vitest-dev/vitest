@@ -176,5 +176,10 @@ suite.tasks = tasks
 
 const files = [file]
 
+export function clearSourcePos() {
+  if (error.stacks)
+    error.stacks = undefined
+}
+
 export { files }
 
