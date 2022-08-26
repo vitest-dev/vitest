@@ -7,7 +7,7 @@ export default defineConfig({
       ssr: [/ssr\.test\.ts/],
     },
     deps: {
-      inline: [/resolve\/package/],
+      external: [/pkg-/],
     },
   },
 })
