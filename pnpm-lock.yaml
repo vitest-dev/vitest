@@ -237,11 +237,11 @@ importers:
       react: 18.0.0
       react-dom: 18.0.0_react@18.0.0
     devDependencies:
-      '@testing-library/react': 13.3.0_zpnidt7m3osuk7shl3s4oenomq
-      '@types/node': 18.11.5
-      '@types/react': 18.0.22
-      '@vitejs/plugin-react': 2.1.0
-      jsdom: 20.0.1
+      '@testing-library/react': 13.2.0_zpnidt7m3osuk7shl3s4oenomq
+      '@types/node': 18.7.13
+      '@types/react': 18.0.17
+      '@vitejs/plugin-react': 2.0.1
+      jsdom: 20.0.0
       typescript: 4.6.3
       vitest: link:../../packages/vitest
 
@@ -1042,6 +1042,12 @@ importers:
       vitest: workspace:*
     devDependencies:
       execa: 6.1.0
+      vitest: link:../../packages/vitest
+
+  test/resolve:
+    specifiers:
+      vitest: workspace:*
+    devDependencies:
       vitest: link:../../packages/vitest
 
   test/run-once:
@@ -5883,6 +5889,26 @@ packages:
   /@types/node/18.7.13:
     resolution: {integrity: sha512-46yIhxSe5xEaJZXWdIBP7GU4HDTG8/eo0qd9atdiL+lFpA03y8KS+lkTN834TWJj5767GbWv4n/P6efyTFt1Dw==}
     dev: false
+
+  /@types/node/17.0.40:
+    resolution: {integrity: sha512-UXdBxNGqTMtm7hCwh9HtncFVLrXoqA3oJW30j6XWp5BH/wu3mVeaxo7cq5benFdBw34HB3XDT2TRPI7rXZ+mDg==}
+    dev: true
+
+  /@types/node/18.0.4:
+    resolution: {integrity: sha512-M0+G6V0Y4YV8cqzHssZpaNCqvYwlCiulmm0PwpNLF55r/+cT8Ol42CHRU1SEaYFH2rTwiiE1aYg/2g2rrtGdPA==}
+    dev: true
+
+  /@types/node/18.7.13:
+    resolution: {integrity: sha512-46yIhxSe5xEaJZXWdIBP7GU4HDTG8/eo0qd9atdiL+lFpA03y8KS+lkTN834TWJj5767GbWv4n/P6efyTFt1Dw==}
+    dev: true
+
+  /@types/node/18.7.3:
+    resolution: {integrity: sha512-LJgzOEwWuMTBxHzgBR/fhhBOWrvBjvO+zPteUgbbuQi80rYIZHrk1mNbRUqPZqSLP2H7Rwt1EFLL/tNLD1Xx/w==}
+    dev: true
+
+  /@types/node/18.7.4:
+    resolution: {integrity: sha512-RzRcw8c0B8LzryWOR4Wj7YOTFXvdYKwvrb6xQQyuDfnlTxwYXGCV5RZ/TEbq5L5kn+w3rliHAUyRcG1RtbmTFg==}
+    dev: true
 
   /@types/node/8.10.66:
     resolution: {integrity: sha512-tktOkFUA4kXx2hhhrB8bIFb5TbwzS4uOhKEmwiD+NoiL0qtP2OQ9mFldbgD4dV1djrlBYP6eBuQZiWjuHUpqFw==}
