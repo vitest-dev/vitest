@@ -723,7 +723,7 @@ When you use `test` in the top level of file, they are collected as part of the 
   ```
 
   :::warning
-  A _deep equality_ will not be performed for `Error` objects. To test if something was thrown, use [`toThrow`](#tothrow) assertion.
+  A _deep equality_ will not be performed for `Error` objects. To test if something was thrown, use [`toThrowError`](#tothrowerror) assertion.
   :::
 
 ### toStrictEqual
@@ -924,19 +924,11 @@ When you use `test` in the top level of file, they are collected as part of the 
 ### toThrowError
 
 - **Type:** `(received: any) => Awaitable<void>`
+- **Alias:** `toThrow`
 
   `toThrowError` asserts if a function throws an error when it is called.
 
   For example, if we want to test that `getFruitStock('pineapples')` throws, we could write:
-
-  You can provide an optional argument to test that a specific error is thrown:
-
-  - regular expression: error message matches the pattern
-  - string: error message includes the substring
-
-  :::tip
-    You must wrap the code in a function, otherwise the error will not be caught, and the assertion will fail.
-  :::
 
   ```ts
   import { expect, test } from 'vitest'
@@ -959,6 +951,19 @@ When you use `test` in the top level of file, they are collected as part of the 
     )
   })
   ```
+
+  You can provide an optional argument to test that a specific error is thrown:
+
+  - regular expression: error message matches the pattern
+  - string: error message includes the substring
+
+  :::tip
+    You must wrap the code in a function, otherwise the error will not be caught, and the assertion will fail.
+  :::
+
+  :::tip
+    To assert that an async function rejects, you must use [`rejects`](#rejects) together with [`toThrowError`](#tothrowerror).  Otherwise Vitest will complain that it caught an unhandled error during the test run.
+  :::
 
 ### toMatchSnapshot
 
@@ -1044,6 +1049,10 @@ When you use `test` in the top level of file, they are collected as part of the 
 
   If the function throws an `Error`, the snapshot will be the error message. Otherwise, snapshot will be the value thrown by the function.
 
+  :::tip
+    To assert that an async function rejects, you must use [`rejects`](#rejects) together with [`toThrowErrorMatchingSnapshot`](#tothrowerrormatchingsnapshot). Otherwise Vitest will complain that it caught an unhandled error during the test run.
+  :::
+
 ### toThrowErrorMatchingInlineSnapshot
 
 - **Type:** `(snapshot?: string, message?: string) => void`
@@ -1051,6 +1060,10 @@ When you use `test` in the top level of file, they are collected as part of the 
   The same as [`toMatchInlineSnapshot`](#tomatchinlinesnapshot), but expects the same value as [`toThrowError`](#tothrowerror).
 
   If the function throws an `Error`, the snapshot will be the error message. Otherwise, snapshot will be the value thrown by the function.
+
+  :::tip
+    To assert that an async function rejects, you must use [`rejects`](#rejects) together with [`toThrowErrorMatchingInlineSnapshot`](#toThrowerrormatchinginlinesnapshot). Otherwise Vitest will complain that it caught an unhandled error during the test run.
+  :::
 
 ### toHaveBeenCalled
 
