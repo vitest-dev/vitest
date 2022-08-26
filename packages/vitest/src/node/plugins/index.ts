@@ -90,7 +90,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
             // setting this option can bypass that and fallback to cjs version
             mainFields: [],
             alias: preOptions.alias,
-            conditions: ['node'],
+            conditions: ['node', 'import'],
           },
           server: {
             ...preOptions.api,
