@@ -1,4 +1,4 @@
-import { existsSync, promises as fs } from 'fs'
+import { existsSync, promises as fs, mkdirSync, rmSync } from 'fs'
 import _url from 'url'
 import type { Profiler } from 'inspector'
 import { takeCoverage } from 'v8'
@@ -29,6 +29,18 @@ export class C8CoverageProvider implements CoverageProvider {
   }
 
   onBeforeFilesRun() {
+    let tmpExist = existsSync(this.options.tempDirectory)
+
+    // clean tmp dir before run
+    if (tmpExist) {
+      rmSync(this.options.tempDirectory, { recursive: true, force: true })
+      tmpExist = false
+    }
+
+    // make sure tmp dir exist before run
+    if (!tmpExist)
+      mkdirSync(this.options.tempDirectory, { recursive: true })
+
     process.env.NODE_V8_COVERAGE ||= this.options.tempDirectory
   }
 
