@@ -105,8 +105,6 @@ export class Vitest {
 
     this.runningPromise = undefined
 
-    await this.coverageProvider?.clean(this.config.coverage.clean)
-
     this.cache.results.setConfig(resolved.root, resolved.cache)
     try {
       await this.cache.results.readFromCache()
@@ -148,6 +146,7 @@ export class Vitest {
   async start(filters?: string[]) {
     try {
       await this.initCoverageProvider()
+      await this.coverageProvider?.clean(this.config.coverage.clean)
     }
     catch (e) {
       this.logger.error(e)
