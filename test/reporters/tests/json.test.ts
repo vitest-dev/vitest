@@ -22,9 +22,11 @@ describe('json reporter', async () => {
 
     const data = JSON.parse(stdout)
 
-    expect(data.testResults).toBeInstanceOf(Array)
     expect(data.testResults).toHaveLength(1)
+    expect(data.testResults[0].assertionResults).toHaveLength(1)
 
-    expect(data.testResults[0].assertionResults).toMatchSnapshot()
+    const result = data.testResults[0].assertionResults[0]
+    delete result.duration
+    expect(result).toMatchSnapshot()
   }, 10000)
 })
