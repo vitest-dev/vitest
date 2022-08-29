@@ -15,7 +15,6 @@ export interface TaskBase {
   file?: File
   result?: TaskResult
   retry?: number
-  currentRetry?: number
   logs?: UserConsoleLog[]
 }
 
@@ -27,6 +26,7 @@ export interface TaskResult {
   error?: ErrorWithDiff
   htmlError?: string
   hooks?: Partial<Record<keyof SuiteHooks, TaskState>>
+  retryCount?: number
 }
 
 export type TaskResultPack = [id: string, result: TaskResult | undefined]

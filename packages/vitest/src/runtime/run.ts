@@ -108,7 +108,7 @@ export async function runTest(test: Test) {
   workerState.current = test
 
   const retry = test.retry || 1
-  for (let currentRetry = 0; currentRetry < retry; currentRetry++) {
+  for (let retryCount = 0; retryCount < retry; retryCount++) {
     let beforeEachCleanups: HookCleanupCallback[] = []
     try {
       beforeEachCleanups = await callSuiteHook(test.suite, test, 'beforeEach', [test.context, test.suite])
@@ -122,7 +122,7 @@ export async function runTest(test: Test) {
         currentTestName: getFullName(test),
       }, (globalThis as any)[GLOBAL_EXPECT])
 
-      test.currentRetry = currentRetry
+      test.result.retryCount = retryCount
 
       await getFn(test)()
       const {
@@ -158,6 +158,9 @@ export async function runTest(test: Test) {
 
     if (test.result.state === 'pass')
       break
+
+    // update retry info
+    updateTask(test)
   }
 
   // if test is marked to be failed, flip the result
