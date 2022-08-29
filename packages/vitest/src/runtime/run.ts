@@ -383,9 +383,11 @@ async function runBenchmarkSuit(suite: Suite) {
 }
 
 async function runSuiteChild(c: Task) {
-  return c.type === 'test'
-    ? runTest(c)
-    : runSuite(c)
+  if (c.type === 'test')
+    return runTest(c)
+
+  else if (c.type === 'suite')
+    return runSuite(c)
 }
 
 async function runSuites(suites: Suite[]) {
