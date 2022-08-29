@@ -109,6 +109,7 @@ export async function runTest(test: Test) {
 
   let beforeEachCleanups: HookCleanupCallback[] = []
   try {
+    let retryError: unknown
     beforeEachCleanups = await callSuiteHook(test.suite, test, 'beforeEach', [test.context, test.suite])
     setState({
       assertionCalls: 0,
@@ -119,7 +120,21 @@ export async function runTest(test: Test) {
       testPath: test.suite.file?.filepath,
       currentTestName: getFullName(test),
     }, (globalThis as any)[GLOBAL_EXPECT])
-    await getFn(test)()
+
+    const retry = test.retry || 1
+    for (let i = 0; i < retry; i++) {
+      try {
+        await getFn(test)()
+        retryError = undefined
+      }
+      catch (e) {
+        retryError = e
+      }
+    }
+
+    if (retryError !== undefined)
+      throw retryError
+
     const {
       assertionCalls,
       expectedAssertionsNumber,

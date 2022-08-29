@@ -9,6 +9,11 @@ The following types are used in the type signatures below
 ```ts
 type Awaitable<T> = T | PromiseLike<T>
 type TestFunction = () => Awaitable<void>
+
+interface TestOptions {
+  timeout?: number
+  retry?: number
+}
 ```
 
 When a test function returns a promise, the runner will wait until it is resolved to collect async expectations. If the promise is rejected, the test will fail.
@@ -19,7 +24,7 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
 
 ## test
 
-- **Type:** `(name: string, fn: TestFunction, timeout?: number) => void`
+- **Type:** `(name: string, fn: TestFunction, timeout?: number | TestOptions) => void`
 - **Alias:** `it`
 
   `test` defines a set of related expectations. It receives the test name and a function that holds the expectations to test.
@@ -36,7 +41,7 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
 
 ### test.skip
 
-- **Type:** `(name: string, fn: TestFunction, timeout?: number) => void`
+- **Type:** `(name: string, fn: TestFunction, timeout?: number | TestOptions) => void`
 - **Alias:** `it.skip`
 
   If you want to skip running certain tests, but you don't want to delete the code due to any reason, you can use `test.skip` to avoid running them.
@@ -330,7 +335,7 @@ When you use `test` in the top level of file, they are collected as part of the 
 
 ### describe.shuffle
 
-- **Type:** `(name: string, fn: TestFunction, timeout?: number) => void`
+- **Type:** `(name: string, fn: TestFunction, timeout?: number | TestOptions) => void`
 
   Vitest provides a way to run all tests in random order via CLI flag [`--sequence.shuffle`](/guide/cli) or config option [`sequence.shuffle`](/config/#sequence-shuffle), but if you want to have only part of your test suite to run tests in random order, you can mark it with this flag.
 
