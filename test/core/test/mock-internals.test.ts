@@ -19,7 +19,7 @@ test('node internal is mocked', () => {
 })
 
 test('builtin is mocked with __mocks__ folder', () => {
-  expect(timers.clearInterval()).toBe('foo')
+  expect(timers.clearInterval(undefined)).toBe('foo')
 })
 
 test('mocked dynamically imported packages', async () => {

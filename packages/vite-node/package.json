@@ -71,14 +71,14 @@
   },
   "dependencies": {
     "debug": "^4.3.4",
-    "mlly": "^0.5.12",
+    "mlly": "^0.5.14",
     "pathe": "^0.2.0",
     "vite": "^2.9.12 || ^3.0.0-0"
   },
   "devDependencies": {
     "@types/debug": "^4.1.7",
-    "cac": "^6.7.12",
+    "cac": "^6.7.14",
     "picocolors": "^1.0.0",
-    "rollup": "^2.78.0"
+    "rollup": "^2.78.1"
   }
 }
