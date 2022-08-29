@@ -6,6 +6,7 @@ import { relative as relativeNode } from 'pathe'
 import type { ModuleCacheMap } from 'vite-node'
 import type { Suite, Task } from '../types'
 import { EXIT_CODE_RESTART } from '../constants'
+import { getWorkerState } from '../utils'
 import { getNames } from './tasks'
 
 export * from './tasks'
