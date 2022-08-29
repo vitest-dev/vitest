@@ -12,7 +12,14 @@ it.fails('retry test fails', () => {
   expect(count2).toBe(3)
 }, { retry: 2 })
 
+let count3 = 0
+it('retry test fails', () => {
+  count3 += 1
+  expect(count3).toBe(3)
+}, { retry: 10 })
+
 it('result', () => {
   expect(count1).toEqual(3)
   expect(count2).toEqual(2)
+  expect(count3).toEqual(3)
 })

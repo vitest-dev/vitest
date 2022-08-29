@@ -107,63 +107,55 @@ export async function runTest(test: Test) {
 
   workerState.current = test
 
-  let beforeEachCleanups: HookCleanupCallback[] = []
-  try {
-    let retryError: unknown
-    beforeEachCleanups = await callSuiteHook(test.suite, test, 'beforeEach', [test.context, test.suite])
-    setState({
-      assertionCalls: 0,
-      isExpectingAssertions: false,
-      isExpectingAssertionsError: null,
-      expectedAssertionsNumber: null,
-      expectedAssertionsNumberErrorGen: null,
-      testPath: test.suite.file?.filepath,
-      currentTestName: getFullName(test),
-    }, (globalThis as any)[GLOBAL_EXPECT])
+  const retry = test.retry || 1
+  for (let i = 0; i < retry; i++) {
+    let beforeEachCleanups: HookCleanupCallback[] = []
+    try {
+      beforeEachCleanups = await callSuiteHook(test.suite, test, 'beforeEach', [test.context, test.suite])
+      setState({
+        assertionCalls: 0,
+        isExpectingAssertions: false,
+        isExpectingAssertionsError: null,
+        expectedAssertionsNumber: null,
+        expectedAssertionsNumberErrorGen: null,
+        testPath: test.suite.file?.filepath,
+        currentTestName: getFullName(test),
+      }, (globalThis as any)[GLOBAL_EXPECT])
 
-    const retry = test.retry || 1
-    for (let i = 0; i < retry; i++) {
-      try {
-        await getFn(test)()
-        retryError = undefined
-      }
-      catch (e) {
-        retryError = e
-      }
+      await getFn(test)()
+      const {
+        assertionCalls,
+        expectedAssertionsNumber,
+        expectedAssertionsNumberErrorGen,
+        isExpectingAssertions,
+        isExpectingAssertionsError,
+      // @ts-expect-error local is private
+      } = test.context._local
+        ? test.context.expect.getState()
+        : getState((globalThis as any)[GLOBAL_EXPECT])
+      if (expectedAssertionsNumber !== null && assertionCalls !== expectedAssertionsNumber)
+        throw expectedAssertionsNumberErrorGen!()
+      if (isExpectingAssertions === true && assertionCalls === 0)
+        throw isExpectingAssertionsError
+
+      test.result.state = 'pass'
+    }
+    catch (e) {
+      test.result.state = 'fail'
+      test.result.error = processError(e)
     }
 
-    if (retryError !== undefined)
-      throw retryError
+    try {
+      await callSuiteHook(test.suite, test, 'afterEach', [test.context, test.suite])
+      await Promise.all(beforeEachCleanups.map(i => i?.()))
+    }
+    catch (e) {
+      test.result.state = 'fail'
+      test.result.error = processError(e)
+    }
 
-    const {
-      assertionCalls,
-      expectedAssertionsNumber,
-      expectedAssertionsNumberErrorGen,
-      isExpectingAssertions,
-      isExpectingAssertionsError,
-      // @ts-expect-error local is private
-    } = test.context._local
-      ? test.context.expect.getState()
-      : getState((globalThis as any)[GLOBAL_EXPECT])
-    if (expectedAssertionsNumber !== null && assertionCalls !== expectedAssertionsNumber)
-      throw expectedAssertionsNumberErrorGen!()
-    if (isExpectingAssertions === true && assertionCalls === 0)
-      throw isExpectingAssertionsError
-
-    test.result.state = 'pass'
-  }
-  catch (e) {
-    test.result.state = 'fail'
-    test.result.error = processError(e)
-  }
-
-  try {
-    await callSuiteHook(test.suite, test, 'afterEach', [test.context, test.suite])
-    await Promise.all(beforeEachCleanups.map(i => i?.()))
-  }
-  catch (e) {
-    test.result.state = 'fail'
-    test.result.error = processError(e)
+    if (test.result.state === 'pass')
+      break
   }
 
   // if test is marked to be failed, flip the result
