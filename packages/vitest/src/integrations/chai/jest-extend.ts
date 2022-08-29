@@ -20,7 +20,7 @@ import {
 const isAsyncFunction = (fn: unknown) =>
   typeof fn === 'function' && (fn as any)[Symbol.toStringTag] === 'AsyncFunction'
 
-const getMatcherState = (assertion: Chai.AssertionStatic & Chai.Assertion) => {
+const getMatcherState = (assertion: Chai.AssertionStatic & Chai.Assertion, expect: Vi.ExpectStatic) => {
   const obj = assertion._obj
   const isNot = util.flag(assertion, 'negate') as boolean
   const promise = util.flag(assertion, 'promise') || ''
@@ -31,7 +31,7 @@ const getMatcherState = (assertion: Chai.AssertionStatic & Chai.Assertion) => {
   }
 
   const matcherState: MatcherState = {
-    ...getState(),
+    ...getState(expect),
     isNot,
     utils: jestUtils,
     promise,
@@ -58,7 +58,7 @@ function JestExtendPlugin(expect: Vi.ExpectStatic, matchers: MatchersObject): Ch
   return (c, utils) => {
     Object.entries(matchers).forEach(([expectAssertionName, expectAssertion]) => {
       function expectSyncWrapper(this: Chai.AssertionStatic & Chai.Assertion, ...args: any[]) {
-        const { state, isNot, obj } = getMatcherState(this)
+        const { state, isNot, obj } = getMatcherState(this, expect)
 
         // @ts-expect-error args wanting tuple
         const { pass, message, actual, expected } = expectAssertion.call(state, obj, ...args) as SyncExpectationResult
@@ -68,7 +68,7 @@ function JestExtendPlugin(expect: Vi.ExpectStatic, matchers: MatchersObject): Ch
       }
 
       async function expectAsyncWrapper(this: Chai.AssertionStatic & Chai.Assertion, ...args: any[]) {
-        const { state, isNot, obj } = getMatcherState(this)
+        const { state, isNot, obj } = getMatcherState(this, expect)
 
         // @ts-expect-error args wanting tuple
         const { pass, message, actual, expected } = await expectAssertion.call(state, obj, ...args) as SyncExpectationResult
@@ -88,7 +88,7 @@ function JestExtendPlugin(expect: Vi.ExpectStatic, matchers: MatchersObject): Ch
 
         asymmetricMatch(other: unknown) {
           const { pass } = expectAssertion.call(
-            this.getMatcherContext(),
+            this.getMatcherContext(expect),
             other,
             ...this.sample,
           ) as SyncExpectationResult

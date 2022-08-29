@@ -12,17 +12,22 @@ let contributors: string[] = []
 const team = teamMembers.map(i => i.github)
 
 async function download(url: string, fileName: string) {
+  if (fs.existsSync(fileName))
+    return
   // eslint-disable-next-line no-console
   console.log('downloading', fileName)
-  const image = await $fetch(url, { responseType: 'arrayBuffer' })
-  await fs.writeFile(fileName, Buffer.from(image))
+  try {
+    const image = await $fetch(url, { responseType: 'arrayBuffer' })
+    await fs.writeFile(fileName, Buffer.from(image))
+  }
+  catch {}
 }
 
 async function fetchAvatars() {
   await fs.ensureDir(dirAvatars)
   contributors = JSON.parse(await fs.readFile(pathContributors, { encoding: 'utf-8' }))
 
-  await Promise.all(contributors.map(name => download(`https://github.com/${name}.png?size${team.includes(name) ? 100 : 40}`, join(dirAvatars, `${name}.png`))))
+  await Promise.all(contributors.map(name => download(`https://github.com/${name}.png?size=${team.includes(name) ? 100 : 40}`, join(dirAvatars, `${name}.png`))))
 }
 
 async function fetchSponsors() {

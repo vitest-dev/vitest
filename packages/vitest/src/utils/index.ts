@@ -1,8 +1,11 @@
+// eslint-disable-next-line no-restricted-imports
+import { relative as relativeBrowser } from 'path'
 import c from 'picocolors'
 import { isPackageExists } from 'local-pkg'
-import { resolve } from 'pathe'
+import { relative as relativeNode } from 'pathe'
+import type { ModuleCacheMap } from 'vite-node'
 import type { Suite, Task } from '../types'
-import { getWorkerState } from '../utils/global'
+import { EXIT_CODE_RESTART } from '../constants'
 import { getNames } from './tasks'
 
 export * from './tasks'
@@ -10,10 +13,13 @@ export * from './base'
 export * from './global'
 export * from './timers'
 
-export const isNode = typeof process !== 'undefined' && typeof process.platform !== 'undefined'
+export const isNode = typeof process < 'u' && typeof process.stdout < 'u' && !process.versions?.deno && !globalThis.window
+// export const isNode = typeof process !== 'undefined' && typeof process.platform !== 'undefined'
 export const isBrowser = typeof window !== 'undefined'
 export const isWindows = isNode && process.platform === 'win32'
 export const isBenchmarkMode = () => getWorkerState().config.benchmark
+
+export const relativePath = isBrowser ? relativeBrowser : relativeNode
 
 /**
  * Partition in tasks groups by consecutive concurrent
@@ -36,18 +42,19 @@ export function partitionSuiteChildren(suite: Suite) {
   return tasksGroups
 }
 
-export function resetModules() {
-  const modules = getWorkerState().moduleCache
-  const vitestPaths = [
+export function resetModules(modules: ModuleCacheMap, resetMocks = false) {
+  const skipPaths = [
     // Vitest
     /\/vitest\/dist\//,
     // yarn's .store folder
     /vitest-virtual-\w+\/dist/,
     // cnpm
     /@vitest\/dist/,
+    // don't clear mocks
+    ...(!resetMocks ? [/^mock:/] : []),
   ]
   modules.forEach((_, path) => {
-    if (vitestPaths.some(re => re.test(path)))
+    if (skipPaths.some(re => re.test(path)))
       return
     modules.delete(path)
   })
@@ -59,10 +66,12 @@ export function getFullName(task: Task) {
 
 export async function ensurePackageInstalled(
   dependency: string,
-  promptInstall = !process.env.CI && process.stdout.isTTY,
+  root: string,
 ) {
-  if (isPackageExists(dependency))
+  if (isPackageExists(dependency, { paths: [root] }))
     return true
+
+  const promptInstall = !process.env.CI && process.stdout.isTTY
 
   process.stderr.write(c.red(`${c.inverse(c.red(' MISSING DEP '))} Can not find dependency '${dependency}'\n\n`))
 
@@ -80,7 +89,7 @@ export async function ensurePackageInstalled(
     await (await import('@antfu/install-pkg')).installPackage(dependency, { dev: true })
     // TODO: somehow it fails to load the package after installation, remove this when it's fixed
     process.stderr.write(c.yellow(`\nPackage ${dependency} installed, re-run the command to start.\n`))
-    process.exit(1)
+    process.exit(EXIT_CODE_RESTART)
     return true
   }
 
@@ -128,6 +137,8 @@ export function getCallLastIndex(code: string) {
   }
   return null
 }
+
+const resolve = isNode ? relativeNode : relativeBrowser
 
 export { resolve as resolvePath }
 

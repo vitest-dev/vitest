@@ -59,7 +59,7 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
 
   ```ts
   import { assert, test } from 'vitest'
-  
+
   const isDev = process.env.NODE_ENV === 'development'
 
   test.skipIf(isDev)('prod only test', () => {
@@ -76,7 +76,7 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
 
   ```ts
   import { assert, test } from 'vitest'
-  
+
   const isDev = process.env.NODE_ENV === 'development'
 
   test.runIf(isDev)('dev only test', () => {
@@ -100,6 +100,13 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
     // Only this test (and others marked with only) are run
     assert.equal(Math.sqrt(4), 2)
   })
+  ```
+
+  Sometimes it is very useful to run `only` tests in a certain file, ignoring all other tests from the whole test suite, which pollute the output.
+
+  In order to do that run `vitest` with specific file containing the tests in question.
+  ```
+  # vitest interesting.test.ts
   ```
 
 ### test.concurrent
@@ -193,10 +200,12 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
   })
 
   // this will return
-  // √ add(1, 1) -> 2
-  // √ add(1, 2) -> 3
-  // √ add(2, 1) -> 3
+  // ✓ add(1, 1) -> 2
+  // ✓ add(1, 2) -> 3
+  // ✓ add(2, 1) -> 3
   ```
+
+  If you want to have access to `TestContext`, use `describe.each` with a single test.
 
 ## describe
 
@@ -288,6 +297,13 @@ When you use `test` in the top level of file, they are collected as part of the 
   })
   ```
 
+  Sometimes it is very useful to run `only` tests in a certain file, ignoring all other tests from the whole test suite, which pollute the output.
+
+  In order to do that run `vitest` with specific file containing the tests in question.
+  ```
+  # vitest interesting.test.ts
+  ```
+
 ### describe.concurrent
 
 - **Type:** `(name: string, fn: TestFunction, timeout?: number) => void`
@@ -311,6 +327,23 @@ When you use `test` in the top level of file, they are collected as part of the 
   describe.only.concurrent(/* ... */) // or describe.concurrent.only(/* ... */)
   describe.todo.concurrent(/* ... */) // or describe.concurrent.todo(/* ... */)
   ```
+
+### describe.shuffle
+
+- **Type:** `(name: string, fn: TestFunction, timeout?: number) => void`
+
+  Vitest provides a way to run all tests in random order via CLI flag [`--sequence.shuffle`](/guide/cli) or config option [`sequence.shuffle`](/config/#sequence-shuffle), but if you want to have only part of your test suite to run tests in random order, you can mark it with this flag.
+
+  ```ts
+  describe.shuffle('suite', () => {
+    test('random test 1', async () => { /* ... */ })
+    test('random test 2', async () => { /* ... */ })
+    test('random test 3', async () => { /* ... */ })
+  })
+  // order depends on sequence.seed option in config (Date.now() by default)
+  ```
+
+`.skip`, `.only`, and `.todo` works with random suites.
 
 ### describe.todo
 
@@ -522,7 +555,7 @@ When you use `test` in the top level of file, they are collected as part of the 
   import { Stocks } from './stocks'
   const stocks = new Stocks()
 
-  test('if Bill stock hasnt failed, sell apples to him', () => {
+  test('if Bill stock hasn\'t failed, sell apples to him', () => {
     stocks.syncStocks('Bill')
     expect(stocks.stockFailed('Bill')).toBeFalsy()
   })
@@ -543,7 +576,7 @@ When you use `test` in the top level of file, they are collected as part of the 
     return null
   }
 
-  test('we dont have apples', () => {
+  test('we don\'t have apples', () => {
     expect(apples()).toBeNull()
   })
   ```
@@ -929,7 +962,7 @@ When you use `test` in the top level of file, they are collected as part of the 
 
 ### toMatchSnapshot
 
-- **Type:** `(hint?: string) => void`
+- **Type:** `<T>(shape?: Partial<T> | string, message?: string) => void`
 
   This ensures that a value matches the most recent snapshot.
 
@@ -948,9 +981,20 @@ When you use `test` in the top level of file, they are collected as part of the 
   })
   ```
 
+  You can also provide a shape of an object, if you are testing just a shape of an object, and don't need it to be 100% compatible:
+
+  ```ts
+  import { expect, test } from 'vitest'
+
+  test('matches snapshot', () => {
+    const data = { foo: new Set(['bar', 'snapshot']) }
+    expect(data).toMatchSnapshot({ foo: expect.any(Set) })
+  })
+  ```
+
 ### toMatchInlineSnapshot
 
-- **Type:** `(snapshot?: string) => void`
+- **Type:** `<T>(shape?: Partial<T> | string, snapshot?: string, message?: string) => void`
 
   This ensures that a value matches the most recent snapshot.
 
@@ -973,10 +1017,28 @@ When you use `test` in the top level of file, they are collected as part of the 
   })
   ```
 
+  You can also provide a shape of an object, if you are testing just a shape of an object, and don't need it to be 100% compatible:
+
+  ```ts
+  import { expect, test } from 'vitest'
+
+  test('matches snapshot', () => {
+    const data = { foo: new Set(['bar', 'snapshot']) }
+    expect(data).toMatchInlineSnapshot(
+      { foo: expect.any(Set) },
+      `
+      {
+        "foo": Any<Set>,
+      }
+    `
+    )
+  })
+  ```
+
 
 ### toThrowErrorMatchingSnapshot
 
-- **Type:** `(snapshot?: string) => void`
+- **Type:** `(message?: string) => void`
 
   The same as [`toMatchSnapshot`](#tomatchsnapshot), but expects the same value as [`toThrowError`](#tothrowerror).
 
@@ -984,7 +1046,7 @@ When you use `test` in the top level of file, they are collected as part of the 
 
 ### toThrowErrorMatchingInlineSnapshot
 
-- **Type:** `(snapshot?: string) => void`
+- **Type:** `(snapshot?: string, message?: string) => void`
 
   The same as [`toMatchInlineSnapshot`](#tomatchinlinesnapshot), but expects the same value as [`toThrowError`](#tothrowerror).
 
@@ -1238,7 +1300,6 @@ When you use `test` in the top level of file, they are collected as part of the 
     })
   })
   ```
-  <!-- toSatisfy -->
 
 ### resolves
 
@@ -1253,7 +1314,7 @@ When you use `test` in the top level of file, they are collected as part of the 
   ```ts
   import { expect, test } from 'vitest'
 
-  function buyApples() {
+  async function buyApples() {
     return fetch('/buy/apples').then(r => r.json())
   }
 
@@ -1281,7 +1342,7 @@ When you use `test` in the top level of file, they are collected as part of the 
   ```ts
   import { expect, test } from 'vitest'
 
-  function buyApples(id) {
+  async function buyApples(id) {
     if (!id)
       throw new Error('no id')
   }
@@ -1300,9 +1361,9 @@ When you use `test` in the top level of file, they are collected as part of the 
 
 - **Type:** `(count: number) => void`
 
-  After the test has passed or failed verifies that curtain number of assertions was called during a test. Useful case would be to check if an asynchronous code was called.
+  After the test has passed or failed verifies that certain number of assertions was called during a test. Useful case would be to check if an asynchronous code was called.
 
-  For examples, if we have a function than asynchronously calls two matchers, we can assert that they were actually called.
+  For example, if we have a function that asynchronously calls two matchers, we can assert that they were actually called.
 
   ```ts
   import { expect, test } from 'vitest'
@@ -1360,21 +1421,150 @@ When you use `test` in the top level of file, they are collected as part of the 
       expect(data).toBeTruthy()
     })
     // if not awaited, test will fail
-    // if you dont have expect.hasAssertions(), test will pass
+    // if you don't have expect.hasAssertions(), test will pass
     await select(3)
   })
   ```
 
-<!-- ### expect.anything
+<!-- asymmetric matchers -->
+
+### expect.anything
+
+- **Type:** `() => any`
+
+  This asymmetric matcher, when used with equality check, will always return `true`. Useful, if you just want to be sure that the property exist.
+
+  ```ts
+  import { expect, test } from 'vitest'
+
+  test('object has "apples" key', () => {
+    expect({ apples: 22 }).toEqual({ apples: expect.anything() })
+  })
+  ```
+
 ### expect.any
+
+- **Type:** `(constructor: unknown) => any`
+
+  This asymmetric matcher, when used with equality check, will return `true` only if value is an instance of specified constructor. Useful, if you have a value that is generated each time, and you only want to know that it exist with a proper type.
+
+  ```ts
+  import { expect, test } from 'vitest'
+  import { generateId } from './generators'
+
+  test('"id" is a number', () => {
+    expect({ id: generateId() }).toEqual({ id: expect.any(Number) })
+  })
+  ```
+
 ### expect.arrayContaining
-### expect.not.arrayContaining
+
+- **Type:** `<T>(expected: T[]) => any`
+
+  When used with equality check, this asymmetric matcher will return `true` if value is an array and contains specified items.
+
+  ```ts
+  import { expect, test } from 'vitest'
+
+  test('basket includes fuji', () => {
+    const basket = {
+      varieties: [
+        'Empire',
+        'Fuji',
+        'Gala',
+      ],
+      count: 3
+    }
+    expect(basket).toEqual({
+      count: 3,
+      varieties: expect.arrayContaining(['Fuji'])
+    })
+  })
+  ```
+
+  :::tip
+  You can use `expect.not` with this matcher to negate the expected value.
+  :::
+
 ### expect.objectContaining
-### expect.not.objectContaining
+
+- **Type:** `(expected: any) => any`
+
+  When used with equality check, this asymmetric matcher will return `true` if value has a similar shape.
+
+  ```ts
+  import { expect, test } from 'vitest'
+
+  test('basket has empire apples', () => {
+    const basket = {
+      varieties: [
+        {
+          name: 'Empire',
+          count: 1,
+        }
+      ],
+    }
+    expect(basket).toEqual({
+      varieties: [
+        expect.objectContaining({ name: 'Empire' }),
+      ]
+    })
+  })
+  ```
+
+  :::tip
+  You can use `expect.not` with this matcher to negate the expected value.
+  :::
+
 ### expect.stringContaining
-### expect.not.stringContaining
+
+- **Type:** `(expected: any) => any`
+
+  When used with equality check, this asymmetric matcher will return `true` if value is a string and contains specified substring.
+
+  ```ts
+  import { expect, test } from 'vitest'
+
+  test('variety has "Emp" in its name', () => {
+    const variety = {
+      name: 'Empire',
+      count: 1,
+    }
+    expect(basket).toEqual({
+      name: expect.stringContaining('Emp'),
+      count: 1,
+    })
+  })
+  ```
+
+  :::tip
+  You can use `expect.not` with this matcher to negate the expected value.
+  :::
+
 ### expect.stringMatching
-### expect.not.stringMatching -->
+
+- **Type:** `(expected: any) => any`
+
+  When used with equality check, this asymmetric matcher will return `true` if value is a string and contains specified substring or the string matches regular expression.
+
+  ```ts
+  import { expect, test } from 'vitest'
+
+  test('variety ends with "re"', () => {
+    const variety = {
+      name: 'Empire',
+      count: 1,
+    }
+    expect(basket).toEqual({
+      name: expect.stringMatching(/re$/),
+      count: 1,
+    })
+  })
+  ```
+
+  :::tip
+  You can use `expect.not` with this matcher to negate the expected value.
+  :::
 
 ### expect.addSnapshotSerializer
 
@@ -1527,7 +1717,7 @@ These functions allow you to hook into the life cycle of tests to avoid repeatin
   beforeAll(async () => {
     // called once before all tests run
     await startMocking()
-  
+
     // clean up function, called once after all tests run
     return async () => {
       await stopMocking()
@@ -1584,6 +1774,10 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
     .advanceTimersToNextTimer() // log 2
     .advanceTimersToNextTimer() // log 3
   ```
+
+### vi.clearAllMocks
+
+  Will call [`.mockClear()`](/api/#mockclear) on all spies. This will clear mock history, but not reset its implementation to the default one.
 
 ### vi.clearAllTimers
 
@@ -1649,31 +1843,14 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
   - If `__mocks__` folder with file of the same name exist, all imports will return its exports. For example, `vi.mock('axios')` with `<root>/__mocks__/axios.ts` folder will return everything exported from `axios.ts`.
   - If there is no `__mocks__` folder or a file with the same name inside, will call original module and mock it. (For the rules applied, see [algorithm](/guide/mocking#automocking-algorithm).)
 
-### vi.setSystemTime
-
-- **Type**: `(date: string | number | Date) => void`
-
-  Sets current date to the one that was passed. All `Date` calls will return this date.
-
-  Useful if you need to test anything that depends on the current date - for example [luxon](https://github.com/moment/luxon/) calls inside your code.
-
-  ```ts
-  const date = new Date(1998, 11, 19)
-
-  vi.useFakeTimers()
-  vi.setSystemTime(date)
-
-  expect(Date.now()).toBe(date.valueOf())
-
-  vi.useRealTimers()
-  ```
-
 ### vi.mocked
 
 - **Type**: `<T>(obj: T, deep?: boolean) => MaybeMockedDeep<T>`
+- **Type**: `<T>(obj: T, options?: { partial?: boolean; deep?: boolean }) => MaybePartiallyMockedDeep<T>`
 
   Type helper for TypeScript. In reality just returns the object that was passed.
 
+  When `partial` is `true` it will expect a `Partial<T>` as a return value.
   ```ts
   import example from './example'
   vi.mock('./example')
@@ -1707,6 +1884,10 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 
   Imports a module with all of its properties (including nested properties) mocked. Follows the same rules that [`vi.mock`](#vi-mock) follows. For the rules applied, see [algorithm](/guide/mocking#automocking-algorithm).
 
+### vi.resetAllMocks
+
+  Will call [`.mockReset()`](/api/#mockreset) on all spies. This will clear mock history and reset its implementation to an empty function (will return `undefined`).
+
 ### vi.resetModules
 
 - **Type**: `() => Vitest`
@@ -1731,6 +1912,10 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
     expect(mod.getlocalState()).toBe('old value')
   })
   ```
+
+### vi.restoreAllMocks
+
+  Will call [`.mockRestore()`](/api/#mockrestore) on all spies. This will clear mock history and reset its implementation to the original one.
 
 ### vi.restoreCurrentDate
 
@@ -1775,6 +1960,25 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
   setInterval(() => console.log(++i), 50)
 
   vi.runOnlyPendingTimers()
+  ```
+
+### vi.setSystemTime
+
+- **Type**: `(date: string | number | Date) => void`
+
+  Sets current date to the one that was passed. All `Date` calls will return this date.
+
+  Useful if you need to test anything that depends on the current date - for example [luxon](https://github.com/moment/luxon/) calls inside your code.
+
+  ```ts
+  const date = new Date(1998, 11, 19)
+
+  vi.useFakeTimers()
+  vi.setSystemTime(date)
+
+  expect(Date.now()).toBe(date.valueOf())
+
+  vi.useRealTimers()
   ```
 
 ### vi.spyOn

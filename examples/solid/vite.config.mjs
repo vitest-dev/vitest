@@ -2,7 +2,7 @@
 /// <reference types="vite/client" />
 
 import { defineConfig } from 'vite'
-import solid from 'solid-start' // or use 'vite-plugin-solid' instead
+import solid from 'vite-plugin-solid'
 
 export default defineConfig({
   test: {
@@ -11,7 +11,7 @@ export default defineConfig({
       web: [/.[jt]sx?/],
     },
     deps: {
-      inline: [/solid-js/],
+      registerNodeLoader: true,
     },
     threads: false,
     isolate: false,

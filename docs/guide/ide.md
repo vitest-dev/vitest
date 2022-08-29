@@ -1,3 +1,7 @@
+---
+title: IDE Integrations | Guide
+---
+
 # IDE Integrations
 
 ## VS Code <sup><code>Official</code></sup>

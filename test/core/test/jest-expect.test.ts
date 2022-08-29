@@ -203,6 +203,11 @@ describe('jest-expect', () => {
     expect(complex).toHaveProperty('bar.arr.1.zoo', 'monkey')
     expect(complex).toHaveProperty(['bar', 'arr', '1', 'zoo'], 'monkey')
     expect(complex).toHaveProperty(['foo.bar[0]'], 'baz')
+
+    expect(complex).toHaveProperty('foo', expect.any(Number))
+    expect(complex).toHaveProperty('bar', expect.any(Object))
+    expect(complex).toHaveProperty('bar.arr', expect.any(Array))
+    expect(complex).toHaveProperty('bar.arr.0', expect.anything())
   })
 
   it('assertions', () => {

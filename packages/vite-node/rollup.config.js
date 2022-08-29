@@ -1,3 +1,4 @@
+import { builtinModules } from 'module'
 import esbuild from 'rollup-plugin-esbuild'
 import dts from 'rollup-plugin-dts'
 import resolve from '@rollup/plugin-node-resolve'
@@ -14,15 +15,18 @@ const entries = {
   client: 'src/client.ts',
   utils: 'src/utils.ts',
   cli: 'src/cli.ts',
+  hmr: 'src/hmr/index.ts',
 }
 
 const external = [
+  ...builtinModules,
   ...Object.keys(pkg.dependencies || {}),
   ...Object.keys(pkg.peerDependencies || {}),
   'pathe',
   'birpc',
   'vite',
   'url',
+  'events',
 ]
 
 const plugins = [
@@ -40,12 +44,6 @@ const plugins = [
     target: 'node14',
   }),
 ]
-
-function onwarn(message) {
-  if (message.code === 'EMPTY_BUNDLE')
-    return
-  console.error(message)
-}
 
 export default defineConfig([
   {
@@ -86,3 +84,9 @@ export default defineConfig([
     onwarn,
   },
 ])
+
+function onwarn(message) {
+  if (['EMPTY_BUNDLE', 'CIRCULAR_DEPENDENCY'].includes(message.code))
+    return
+  console.error(message)
+}

@@ -44,7 +44,6 @@ interface InlineWorkerContext {
   postMessage: (data: any) => void
   self: InlineWorkerContext
   global: InlineWorkerContext
-  invalidates: string[]
   importScripts?: any
 }
 
@@ -95,15 +94,14 @@ export function defineWebWorker() {
     public onerror: null | Procedure = null
 
     constructor(url: URL | string) {
-      const invalidates: string[] = []
       const context: InlineWorkerContext = {
         onmessage: null,
         dispatchEvent: (event: Event) => {
           this.inside.emit(event.type, event)
           return true
         },
-        addEventListener: this.inside.on,
-        removeEventListener: this.inside.off,
+        addEventListener: this.inside.on.bind(this.inside),
+        removeEventListener: this.inside.off.bind(this.inside),
         postMessage: (data) => {
           this.outside.emit('message', { data })
         },
@@ -113,7 +111,6 @@ export function defineWebWorker() {
         get global() {
           return context
         },
-        invalidates,
       }
 
       this.inside.on('message', (e) => {
@@ -126,22 +123,14 @@ export function defineWebWorker() {
 
       const runner = new InlineWorkerRunner(options, context)
 
-      let id = url instanceof URL ? url.toString() : url
-
-      id = id
-        .replace('?worker_file', '')
-        .replace(/^file:\/+/, '/')
+      const id = (url instanceof URL ? url.toString() : url).replace(/^file:\/+/, '/')
 
       const fsPath = toFilePath(id, config.root)
-      invalidates.push(fsPath)
 
       runner.executeFile(fsPath)
         .then(() => {
-          invalidates.forEach((path) => {
-            // worker should be new every time
-            moduleCache.delete(path)
-            moduleCache.delete(`${path}__mock`)
-          })
+          // worker should be new every time, invalidate its sub dependency
+          moduleCache.invalidateSubDepTree([fsPath, `mock:${fsPath}`])
           const q = this.messageQueue
           this.messageQueue = null
           if (q)

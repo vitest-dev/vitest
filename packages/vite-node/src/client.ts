@@ -5,7 +5,7 @@ import { dirname, extname, isAbsolute, resolve } from 'pathe'
 import { isNodeBuiltin } from 'mlly'
 import createDebug from 'debug'
 import { isPrimitive, mergeSlashes, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
-import type { ModuleCache, ViteNodeRunnerOptions } from './types'
+import type { HotContext, ModuleCache, ViteNodeRunnerOptions } from './types'
 
 const debugExecute = createDebug('vite-node:client:execute')
 const debugNative = createDebug('vite-node:client:native')
@@ -23,7 +23,21 @@ export const DEFAULT_REQUEST_STUBS = {
         on: () => {},
       }
     },
-    updateStyle() {},
+    updateStyle(id: string, css: string) {
+      if (typeof document === 'undefined')
+        return
+
+      const element = document.getElementById(id)
+      if (element)
+        element.remove()
+
+      const head = document.querySelector('head')
+      const style = document.createElement('style')
+      style.setAttribute('type', 'text/css')
+      style.id = id
+      style.innerHTML = css
+      head?.appendChild(style)
+    },
   },
 }
 
@@ -32,7 +46,10 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
     return normalizeModuleId(fsPath)
   }
 
-  set(fsPath: string, mod: Partial<ModuleCache>) {
+  /**
+   * Assign partial data to the map
+   */
+  update(fsPath: string, mod: Partial<ModuleCache>) {
     fsPath = this.normalizePath(fsPath)
     if (!super.has(fsPath))
       super.set(fsPath, mod)
@@ -41,14 +58,56 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
     return this
   }
 
-  get(fsPath: string) {
+  set(fsPath: string, mod: ModuleCache) {
     fsPath = this.normalizePath(fsPath)
-    return super.get(fsPath)
+    return super.set(fsPath, mod)
+  }
+
+  get(fsPath: string): ModuleCache {
+    fsPath = this.normalizePath(fsPath)
+    if (!super.has(fsPath))
+      super.set(fsPath, {})
+    return super.get(fsPath)!
   }
 
   delete(fsPath: string) {
     fsPath = this.normalizePath(fsPath)
     return super.delete(fsPath)
+  }
+
+  /**
+   * Invalidate modules that dependent on the given modules, up to the main entry
+   */
+  invalidateDepTree(ids: string[] | Set<string>, invalidated = new Set<string>()) {
+    for (const _id of ids) {
+      const id = this.normalizePath(_id)
+      if (invalidated.has(id))
+        continue
+      invalidated.add(id)
+      const mod = super.get(id)
+      if (mod?.importers)
+        this.invalidateDepTree(mod.importers, invalidated)
+      super.delete(id)
+    }
+    return invalidated
+  }
+
+  /**
+   * Invalidate dependency modules of the given modules, down to the bottom-level dependencies
+   */
+  invalidateSubDepTree(ids: string[] | Set<string>, invalidated = new Set<string>()) {
+    for (const _id of ids) {
+      const id = this.normalizePath(_id)
+      if (invalidated.has(id))
+        continue
+      invalidated.add(id)
+      const subIds = Array.from(super.entries())
+        .filter(([,mod]) => mod.importers?.has(id))
+        .map(([key]) => key)
+      subIds.length && this.invalidateSubDepTree(subIds, invalidated)
+      super.delete(id)
+    }
+    return invalidated
   }
 }
 
@@ -66,7 +125,7 @@ export class ViteNodeRunner {
   constructor(public options: ViteNodeRunnerOptions) {
     this.root = options.root ?? process.cwd()
     this.moduleCache = options.moduleCache ?? new ModuleCacheMap()
-    this.debug = options.debug ?? (typeof process !== 'undefined' ? !!process.env.VITE_NODE_DEBUG : false)
+    this.debug = options.debug ?? (typeof process !== 'undefined' ? !!process.env.VITE_NODE_DEBUG_RUNNER : false)
   }
 
   async executeFile(file: string) {
@@ -82,39 +141,53 @@ export class ViteNodeRunner {
     const id = normalizeRequestId(rawId, this.options.base)
     const fsPath = toFilePath(id, this.root)
 
-    if (this.moduleCache.get(fsPath)?.promise)
-      return this.moduleCache.get(fsPath)?.promise
+    const mod = this.moduleCache.get(fsPath)
+    const importee = callstack[callstack.length - 1]
+
+    if (!mod.importers)
+      mod.importers = new Set()
+    if (importee)
+      mod.importers.add(importee)
+
+    // the callstack reference itself circularly
+    if (callstack.includes(fsPath) && mod.exports)
+      return mod.exports
+
+    // cached module
+    if (mod.promise)
+      return mod.promise
 
     const promise = this.directRequest(id, fsPath, callstack)
-    this.moduleCache.set(fsPath, { promise })
+    Object.assign(mod, { promise })
 
     return await promise
   }
 
   /** @internal */
   async directRequest(id: string, fsPath: string, _callstack: string[]) {
-    const callstack = [..._callstack, normalizeModuleId(id)]
+    const callstack = [..._callstack, fsPath]
+
+    const mod = this.moduleCache.get(fsPath)
+
     const request = async (dep: string) => {
+      const depFsPath = toFilePath(normalizeRequestId(dep, this.options.base), this.root)
       const getStack = () => {
-        return `stack:\n${[...callstack, dep].reverse().map(p => `- ${p}`).join('\n')}`
+        return `stack:\n${[...callstack, depFsPath].reverse().map(p => `- ${p}`).join('\n')}`
       }
 
       let debugTimer: any
       if (this.debug)
-        debugTimer = setTimeout(() => this.debugLog(() => `module ${dep} takes over 2s to load.\n${getStack()}`), 2000)
+        debugTimer = setTimeout(() => console.warn(() => `module ${depFsPath} takes over 2s to load.\n${getStack()}`), 2000)
 
       try {
-        if (callstack.includes(normalizeModuleId(dep))) {
-          this.debugLog(() => `circular dependency, ${getStack()}`)
-          const depExports = this.moduleCache.get(dep)?.exports
+        if (callstack.includes(depFsPath)) {
+          const depExports = this.moduleCache.get(depFsPath)?.exports
           if (depExports)
             return depExports
           throw new Error(`[vite-node] Failed to resolve circular dependency, ${getStack()}`)
         }
 
-        const mod = await this.cachedRequest(dep, callstack)
-
-        return mod
+        return await this.cachedRequest(dep, callstack)
       }
       finally {
         if (debugTimer)
@@ -151,9 +224,9 @@ export class ViteNodeRunner {
     let { code: transformed, externalize } = await this.options.fetchModule(id)
     if (externalize) {
       debugNative(externalize)
-      const mod = await this.interopedImport(externalize)
-      this.moduleCache.set(fsPath, { exports: mod })
-      return mod
+      const exports = await this.interopedImport(externalize)
+      mod.exports = exports
+      return exports
     }
 
     if (transformed == null)
@@ -161,10 +234,15 @@ export class ViteNodeRunner {
 
     // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
     const url = pathToFileURL(fsPath).href
+    const meta = { url }
     const exports: any = Object.create(null)
-    exports[Symbol.toStringTag] = 'Module'
+    Object.defineProperty(exports, Symbol.toStringTag, {
+      value: 'Module',
+      enumerable: false,
+      configurable: false,
+    })
 
-    this.moduleCache.set(id, { code: transformed, exports })
+    Object.assign(mod, { code: transformed, exports })
 
     const __filename = fileURLToPath(url)
     const moduleProxy = {
@@ -177,18 +255,29 @@ export class ViteNodeRunner {
       },
     }
 
+    // Vite hot context
+    let hotContext: HotContext | undefined
+    if (this.options.createHotContext) {
+      Object.defineProperty(meta, 'hot', {
+        enumerable: true,
+        get: () => {
+          hotContext ||= this.options.createHotContext?.(this, `/@fs/${fsPath}`)
+          return hotContext
+        },
+      })
+    }
+
     // Be careful when changing this
     // changing context will change amount of code added on line :114 (vm.runInThisContext)
     // this messes up sourcemaps for coverage
-    // adjust `offset` variable in packages/vitest/src/integrations/coverage.ts#L100 if you do change this
+    // adjust `offset` variable in packages/vitest/src/integrations/coverage/c8.ts#86 if you do change this
     const context = this.prepareContext({
       // esm transformed by Vite
       __vite_ssr_import__: request,
       __vite_ssr_dynamic_import__: request,
       __vite_ssr_exports__: exports,
       __vite_ssr_exportAll__: (obj: any) => exportAll(exports, obj),
-      __vite_ssr_import_meta__: { url },
-
+      __vite_ssr_import_meta__: meta,
       __vitest_resolve_id__: resolveId,
 
       // cjs compact
@@ -260,12 +349,6 @@ export class ViteNodeRunner {
 
   hasNestedDefault(target: any) {
     return '__esModule' in target && target.__esModule && 'default' in target.default
-  }
-
-  private debugLog(msg: () => string) {
-    if (this.debug)
-      // eslint-disable-next-line no-console
-      console.log(`[vite-node] ${msg()}`)
   }
 }
 

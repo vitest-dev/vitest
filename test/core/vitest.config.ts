@@ -1,5 +1,5 @@
 import { basename, dirname, join, resolve } from 'pathe'
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   plugins: [
@@ -43,6 +43,7 @@ export default defineConfig({
     ],
     testNamePattern: '^((?!does not include test that).)*$',
     coverage: {
+      provider: 'istanbul',
       reporter: ['text', 'html'],
     },
     env: {
@@ -53,5 +54,16 @@ export default defineConfig({
         return path + extension
       return join(dirname(path), '__snapshots__', `${basename(path)}${extension}`)
     },
+    sequence: {
+      seed: 101,
+    },
+    alias: [
+      {
+        find: 'test-alias',
+        replacement: '',
+        // vitest doesn't crash because function is defined
+        customResolver: () => resolve(__dirname, 'src', 'aliased-mod.ts'),
+      },
+    ],
   },
 })

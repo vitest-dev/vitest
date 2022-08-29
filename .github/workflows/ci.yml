@@ -9,6 +9,9 @@ on:
     branches:
       - main
 
+env:
+  VITEST_SEGFAULT_RETRY: 3
+
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -22,7 +25,6 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 16.x
-          # cache: pnpm
 
       - name: Install
         run: pnpm i
@@ -42,7 +44,6 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 16.x
-          # cache: pnpm
 
       - name: Install
         run: pnpm i
@@ -79,7 +80,6 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node_version }}
-          # cache: pnpm
 
       - name: Install
         run: pnpm i
@@ -105,7 +105,6 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 16.x
-          # cache: pnpm
 
       - name: Install
         run: pnpm i

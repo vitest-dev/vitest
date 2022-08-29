@@ -1,11 +1,12 @@
 import cac from 'cac'
-import { cyan, dim, red } from 'kolorist'
+import c from 'picocolors'
 import { createServer } from 'vite'
 import { version } from '../package.json'
 import { ViteNodeServer } from './server'
 import { ViteNodeRunner } from './client'
 import type { ViteNodeServerOptions } from './types'
 import { toArray } from './utils'
+import { createHotContext, handleMessage, viteNodeHmrPlugin } from './hmr'
 
 const cli = cac('vite-node')
 
@@ -33,7 +34,7 @@ export interface CliOptions {
 
 async function run(files: string[], options: CliOptions = {}) {
   if (!files.length) {
-    console.error(red('No files specified.'))
+    console.error(c.red('No files specified.'))
     cli.outputHelp()
     process.exit(1)
   }
@@ -41,18 +42,21 @@ async function run(files: string[], options: CliOptions = {}) {
   // forward argv
   process.argv = [...process.argv.slice(0, 2), ...(options['--'] || [])]
 
-  const parsedServerOptions = options.options
+  const serverOptions = options.options
     ? parseServerOptions(options.options)
-    : undefined
+    : {}
 
   const server = await createServer({
     logLevel: 'error',
     configFile: options.config,
     root: options.root,
+    plugins: [
+      options.watch && viteNodeHmrPlugin(),
+    ],
   })
   await server.pluginContainer.buildStart({})
 
-  const node = new ViteNodeServer(server, parsedServerOptions)
+  const node = new ViteNodeServer(server, serverOptions)
 
   const runner = new ViteNodeRunner({
     root: server.config.root,
@@ -62,6 +66,9 @@ async function run(files: string[], options: CliOptions = {}) {
     },
     resolveId(id, importer) {
       return node.resolveId(id, importer)
+    },
+    createHotContext(runner, url) {
+      return createHotContext(runner, server.emitter, files, url)
     },
   })
 
@@ -74,18 +81,8 @@ async function run(files: string[], options: CliOptions = {}) {
   if (!options.watch)
     await server.close()
 
-  server.watcher.on('change', async (path) => {
-    console.log(`${cyan('[vite-node]')} File change detected. ${dim(path)}`)
-
-    // invalidate module cache but not node_modules
-    Array.from(runner.moduleCache.keys())
-      .forEach((i) => {
-        if (!i.includes('node_modules'))
-          runner.moduleCache.delete(i)
-      })
-
-    for (const file of files)
-      await runner.executeFile(file)
+  server.emitter?.on('message', (payload) => {
+    handleMessage(runner, server.emitter, files, payload)
   })
 }
 
@@ -112,7 +109,6 @@ function parseServerOptions(serverOptions: ViteNodeServerOptionsCLI): ViteNodeSe
 
     transformMode: {
       ...serverOptions.transformMode,
-
       ssr: toArray(serverOptions.transformMode?.ssr).map(dep => new RegExp(dep)),
       web: toArray(serverOptions.transformMode?.web).map(dep => new RegExp(dep)),
     },

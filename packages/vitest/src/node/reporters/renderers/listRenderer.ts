@@ -1,15 +1,15 @@
-import { createLogUpdate } from 'log-update'
 import c from 'picocolors'
 import cliTruncate from 'cli-truncate'
 import stripAnsi from 'strip-ansi'
 import type { Benchmark, SuiteHooks, Task } from '../../../types'
 import { clearInterval, getTests, setInterval } from '../../../utils'
 import { F_RIGHT } from '../../../utils/figures'
+import type { Logger } from '../../logger'
 import { getBenchmarkSortNumber, getCols, getHookStateSymbol, getStateSymbol } from './utils'
 
 export interface ListRendererOptions {
   renderSucceed?: boolean
-  outputStream: NodeJS.WritableStream
+  logger: Logger
   showHeap: boolean
 }
 
@@ -127,7 +127,7 @@ export const createListRenderer = (_tasks: Task[], options: ListRendererOptions)
   let tasks = _tasks
   let timer: any
 
-  const log = createLogUpdate(options.outputStream)
+  const log = options.logger.logUpdate
 
   function update() {
     log(renderTree(tasks, options))
@@ -151,7 +151,7 @@ export const createListRenderer = (_tasks: Task[], options: ListRendererOptions)
         timer = undefined
       }
       log.clear()
-      options.outputStream.write(`${renderTree(tasks, options)}\n`)
+      options.logger.log(renderTree(tasks, options))
       return this
     },
     clear() {

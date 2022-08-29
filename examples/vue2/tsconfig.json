@@ -14,7 +14,7 @@
     "declaration": true,
     "inlineSourceMap": true,
     "types": [
-      "vitest"
+      "vitest/globals"
     ]
   },
   "exclude": [

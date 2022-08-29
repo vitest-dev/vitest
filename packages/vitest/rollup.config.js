@@ -1,4 +1,5 @@
 import fs from 'fs'
+import { builtinModules } from 'module'
 import { dirname, join, relative, resolve } from 'pathe'
 import esbuild from 'rollup-plugin-esbuild'
 import dts from 'rollup-plugin-dts'
@@ -15,25 +16,30 @@ import pkg from './package.json'
 
 const entries = [
   'src/index.ts',
+  'src/browser.ts',
   'src/node/cli.ts',
+  'src/node/cli-wrapper.ts',
   'src/node.ts',
   'src/runtime/worker.ts',
+  'src/runtime/loader.ts',
   'src/runtime/entry.ts',
+  'src/runtime/suite.ts',
   'src/integrations/spy.ts',
 ]
 
 const dtsEntries = [
   'src/index.ts',
   'src/node.ts',
+  'src/browser.ts',
   'src/config.ts',
 ]
 
 const external = [
+  ...builtinModules,
   ...Object.keys(pkg.dependencies),
   ...Object.keys(pkg.peerDependencies),
   'worker_threads',
   'inspector',
-  'c8',
 ]
 
 const plugins = [
@@ -55,7 +61,7 @@ const plugins = [
   }),
 ]
 
-export default ({ watch }) => [
+export default ({ watch }) => defineConfig([
   {
     input: entries,
     output: {
@@ -81,11 +87,7 @@ export default ({ watch }) => [
       ...plugins,
       !watch && licensePlugin(),
     ],
-    onwarn(message) {
-      if (/Circular dependencies/.test(message))
-        return
-      console.error(message)
-    },
+    onwarn,
   },
   {
     input: 'src/config.ts',
@@ -102,25 +104,19 @@ export default ({ watch }) => [
     external,
     plugins,
   },
-  ...dtsEntries.map((input) => {
-    const _external = external
-    // index is vitest default types export
-    if (!input.includes('index'))
-      _external.push('vitest')
-
-    return defineConfig({
-      input,
-      output: {
-        file: input.replace('src/', 'dist/').replace('.ts', '.d.ts'),
-        format: 'esm',
-      },
-      external: _external,
-      plugins: [
-        dts({ respectExternal: true }),
-      ],
-    })
-  }),
-]
+  {
+    input: dtsEntries,
+    output: {
+      dir: 'dist',
+      entryFileNames: chunk => `${chunk.name.replace('src/', '')}.d.ts`,
+      format: 'esm',
+    },
+    external,
+    plugins: [
+      dts({ respectExternal: true }),
+    ],
+  },
+])
 
 function licensePlugin() {
   return license({
@@ -228,4 +224,10 @@ function licensePlugin() {
       }
     },
   })
+}
+
+function onwarn(message) {
+  if (['EMPTY_BUNDLE', 'CIRCULAR_DEPENDENCY'].includes(message.code))
+    return
+  console.error(message)
 }

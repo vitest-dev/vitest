@@ -1,4 +1,4 @@
-import chai from 'chai'
+import * as chai from 'chai'
 import Subset from 'chai-subset'
 import { SnapshotPlugin } from '../snapshot/chai'
 import { JestExtend } from './jest-extend'

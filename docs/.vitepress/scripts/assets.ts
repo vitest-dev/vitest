@@ -27,7 +27,6 @@ export const optimizePages = async (pwa: boolean) => {
       prefetchImg = `
 ${prefetchImg}
 \t<link rel="prefetch" href="/netlify.svg">
-\t<link rel="prefetch" href="/bg.png">
 `
     }
 
@@ -66,19 +65,6 @@ ${prefetchImg}
 </head>`,
       )
     }
-
-    // TODO: dark/light theme, don't remove yet
-    // html = html.replace(
-    //   '</head>',
-    //   '\t<link rel="manifest" href="/manifest.webmanifest">\n<script>\n'
-    //     + '    (function() {\n'
-    //     + '      const prefersDark = window.matchMedia && window.matchMedia(\'(prefers-color-scheme: dark)\').matches\n'
-    //     + '      const setting = localStorage.getItem(\'color-schema\') || \'auto\'\n'
-    //     + '      if (setting === \'dark\' || (prefersDark && setting !== \'light\'))\n'
-    //     + '        document.documentElement.classList.toggle(\'dark\', true)\n'
-    //     + '    })()\n'
-    //     + '  </script></head>',
-    // )
 
     html = html.replace(
       /aria-hidden="true"/gi,

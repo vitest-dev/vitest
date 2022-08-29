@@ -1,10 +1,11 @@
 import { performance } from 'perf_hooks'
+import limit from 'p-limit'
 import type { Benchmark, File, HookCleanupCallback, HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from '../types'
 import { vi } from '../integrations/vi'
-import { getSnapshotClient } from '../integrations/snapshot/chai'
-import { clearTimeout, createDefer, getFullName, getWorkerState, hasFailed, hasTests, isBenchmarkMode, partitionSuiteChildren, setTimeout } from '../utils'
+import { clearTimeout, createDefer, getFullName, getWorkerState, hasFailed, hasTests, isBenchmarkMode, isBrowser, isNode, partitionSuiteChildren, setTimeout, shuffle } from '../utils'
 import { getState, setState } from '../integrations/chai/jest-expect'
-import { takeCoverage } from '../integrations/coverage'
+import { GLOBAL_EXPECT } from '../integrations/chai/constants'
+import { takeCoverageInsideWorker } from '../integrations/coverage'
 import { getBenchmarkLib, getFn, getHooks } from './map'
 import { rpc } from './rpc'
 import { collectTests } from './collect'
@@ -77,8 +78,11 @@ async function sendTasksUpdate() {
 }
 
 export async function runTest(test: Test) {
-  if (test.mode !== 'run')
+  if (test.mode !== 'run') {
+    const { getSnapshotClient } = await import('../integrations/snapshot/chai')
+    getSnapshotClient().skipTestSnapshots(test)
     return
+  }
 
   if (test.result?.state === 'fail') {
     updateTask(test)
@@ -95,7 +99,10 @@ export async function runTest(test: Test) {
 
   clearModuleMocks()
 
-  await getSnapshotClient().setTest(test)
+  if (isNode) {
+    const { getSnapshotClient } = await import('../integrations/snapshot/chai')
+    await getSnapshotClient().setTest(test)
+  }
 
   const workerState = getWorkerState()
 
@@ -112,9 +119,18 @@ export async function runTest(test: Test) {
       expectedAssertionsNumberErrorGen: null,
       testPath: test.suite.file?.filepath,
       currentTestName: getFullName(test),
-    })
+    }, (globalThis as any)[GLOBAL_EXPECT])
     await getFn(test)()
-    const { assertionCalls, expectedAssertionsNumber, expectedAssertionsNumberErrorGen, isExpectingAssertions, isExpectingAssertionsError } = getState()
+    const {
+      assertionCalls,
+      expectedAssertionsNumber,
+      expectedAssertionsNumberErrorGen,
+      isExpectingAssertions,
+      isExpectingAssertionsError,
+      // @ts-expect-error local is private
+    } = test.context._local
+      ? test.context.expect.getState()
+      : getState((globalThis as any)[GLOBAL_EXPECT])
     if (expectedAssertionsNumber !== null && assertionCalls !== expectedAssertionsNumber)
       throw expectedAssertionsNumberErrorGen!()
     if (isExpectingAssertions === true && assertionCalls === 0)
@@ -148,11 +164,17 @@ export async function runTest(test: Test) {
     }
   }
 
-  getSnapshotClient().clearTest()
+  if (isBrowser && test.result.error)
+    console.error(test.result.error.message, test.result.error.stackStr)
+
+  if (isNode) {
+    const { getSnapshotClient } = await import('../integrations/snapshot/chai')
+    getSnapshotClient().clearTest()
+  }
 
   test.result.duration = now() - start
 
-  if (workerState.config.logHeapUsage)
+  if (workerState.config.logHeapUsage && isNode)
     test.result.heap = process.memoryUsage().heapUsed
 
   workerState.current = undefined
@@ -186,6 +208,8 @@ export async function runSuite(suite: Suite) {
 
   updateTask(suite)
 
+  const workerState = getWorkerState()
+
   if (suite.mode === 'skip') {
     suite.result.state = 'skip'
   }
@@ -199,11 +223,20 @@ export async function runSuite(suite: Suite) {
         await runBenchmarkSuit(suite)
       }
       else {
-        for (const tasksGroup of partitionSuiteChildren(suite)) {
+        for (let tasksGroup of partitionSuiteChildren(suite)) {
           if (tasksGroup[0].concurrent === true) {
-            await Promise.all(tasksGroup.map(c => runSuiteChild(c)))
+            const mutex = limit(workerState.config.maxConcurrency)
+            await Promise.all(tasksGroup.map(c => mutex(() => runSuiteChild(c))))
           }
           else {
+            const { sequence } = workerState.config
+            if (sequence.shuffle || suite.shuffle) {
+              // run describe block independently from tests
+              const suites = tasksGroup.filter(group => group.type === 'suite')
+              const tests = tasksGroup.filter(group => group.type === 'test')
+              const groups = shuffle([suites, tests], sequence.seed)
+              tasksGroup = groups.flatMap(group => shuffle(group, sequence.seed))
+            }
             for (const c of tasksGroup)
               await runSuiteChild(c)
           }
@@ -220,9 +253,7 @@ export async function runSuite(suite: Suite) {
   }
   suite.result.duration = now() - start
 
-  const workerState = getWorkerState()
-
-  if (workerState.config.logHeapUsage)
+  if (workerState.config.logHeapUsage && isNode)
     suite.result.heap = process.memoryUsage().heapUsed
 
   if (suite.mode === 'run') {
@@ -352,10 +383,14 @@ async function runBenchmarkSuit(suite: Suite) {
 }
 
 async function runSuiteChild(c: Task) {
-  if (c.type === 'test')
-    return runTest(c)
-  else if (c.type === 'suite')
-    return runSuite(c)
+  return c.type === 'test'
+    ? runTest(c)
+    : runSuite(c)
+}
+
+async function runSuites(suites: Suite[]) {
+  for (const suite of suites)
+    await runSuite(suite)
 }
 
 export async function runFiles(files: File[], config: ResolvedConfig) {
@@ -372,19 +407,41 @@ export async function runFiles(files: File[], config: ResolvedConfig) {
   }
 }
 
-export async function startTests(paths: string[], config: ResolvedConfig) {
+async function startTestsBrowser(paths: string[], config: ResolvedConfig) {
+  if (isNode) {
+    rpc().onPathsCollected(paths)
+  }
+  else {
+    const files = await collectTests(paths, config)
+    await rpc().onCollected(files)
+    await runSuites(files)
+    await sendTasksUpdate()
+  }
+}
+
+async function startTestsNode(paths: string[], config: ResolvedConfig) {
   const files = await collectTests(paths, config)
 
   rpc().onCollected(files)
+
+  const { getSnapshotClient } = await import('../integrations/snapshot/chai')
   getSnapshotClient().clear()
 
   await runFiles(files, config)
 
-  takeCoverage()
+  const coverage = await takeCoverageInsideWorker(config.coverage)
+  rpc().onAfterSuiteRun({ coverage })
 
   await getSnapshotClient().saveCurrent()
 
   await sendTasksUpdate()
+}
+
+export async function startTests(paths: string[], config: ResolvedConfig) {
+  if (config.browser)
+    return startTestsBrowser(paths, config)
+  else
+    return startTestsNode(paths, config)
 }
 
 export function clearModuleMocks() {

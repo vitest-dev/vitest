@@ -201,3 +201,7 @@ export function duration(time: number, locale = 'en-us') {
 
   return `${Number((time / 36e11).toFixed(2)).toLocaleString(locale)} h`
 }
+
+export function formatTimeString(date: Date) {
+  return date.toTimeString().split(' ')[0]
+}

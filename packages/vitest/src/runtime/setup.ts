@@ -15,6 +15,9 @@ export async function setupGlobalEnv(config: ResolvedConfig) {
     enumerable: false,
   })
 
+  // it's useful to see the full stack trace in the console by default
+  Error.stackTraceLimit = 100
+
   // should be re-declared for each test
   // if run with "threads: false"
   setupDefines(config.defines)
@@ -165,9 +168,9 @@ export async function withEnv(
 export async function runSetupFiles(config: ResolvedConfig) {
   const files = toArray(config.setupFiles)
   await Promise.all(
-    files.map(async (file) => {
-      getWorkerState().moduleCache.delete(file)
-      await import(file)
+    files.map(async (fsPath) => {
+      getWorkerState().moduleCache.delete(fsPath)
+      await import(fsPath)
     }),
   )
 }

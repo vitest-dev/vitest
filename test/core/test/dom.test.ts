@@ -13,6 +13,9 @@ declare global {
 
 it('jsdom', () => {
   expect(window).toBeDefined()
+  expect(top).toBeDefined()
+  expect(parent).toBeDefined()
+  expect(self).toBeDefined()
 
   const dom = document.createElement('a')
   dom.href = 'https://vitest.dev'
@@ -27,10 +30,14 @@ it('dispatchEvent doesn\'t throw', () => {
   expect(() => target.dispatchEvent(event)).not.toThrow()
 })
 
-it('Image works as expected', () => {
+it('Non-public "live" keys work as expected', () => {
   const img = new Image(100)
+  const audio = new Audio()
+  const option = new Option()
 
   expect(img.width).toBe(100)
+  expect(audio).toBeInstanceOf(window.Audio)
+  expect(option).toBeInstanceOf(window.Option)
 })
 
 it('defined on self/window are defined on global', () => {
@@ -131,4 +138,19 @@ it('can extend global class', () => {
   class SuperBlob extends Blob {}
 
   expect(SuperBlob).toBeDefined()
+})
+
+it('uses jsdom ArrayBuffer', async () => {
+  const blob = new Blob(['Hello'], { type: 'text/plain' })
+
+  const arraybuffer = await new Promise<ArrayBuffer>((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result as ArrayBuffer)
+    reader.onerror = () => reject(reader.error)
+    reader.readAsArrayBuffer(blob)
+  })
+
+  expect(arraybuffer.constructor.name).toBe('ArrayBuffer')
+  expect(arraybuffer instanceof ArrayBuffer).toBeTruthy()
+  expect(arraybuffer.constructor === ArrayBuffer).toBeTruthy()
 })

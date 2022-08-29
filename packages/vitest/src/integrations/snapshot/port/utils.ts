@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import fs, { promises as fsp } from 'fs'
+import fs from 'fs'
 import { dirname, join } from 'pathe'
 import naturalCompare from 'natural-compare'
 import type { OptionsReceived as PrettyFormatOptions } from 'pretty-format'
@@ -151,17 +151,23 @@ export async function saveSnapshotFile(
       key => `exports[${printBacktickString(key)}] = ${printBacktickString(normalizeNewlines(snapshotData[key]))};`,
     )
 
+  const content = `${writeSnapshotVersion()}\n\n${snapshots.join('\n\n')}\n`
+  const skipWriting = fs.existsSync(snapshotPath) && (await fs?.promises.readFile(snapshotPath, 'utf8')) === content
+
+  if (skipWriting)
+    return
+
   ensureDirectoryExists(snapshotPath)
-  await fsp.writeFile(
+  await fs?.promises.writeFile(
     snapshotPath,
-    `${writeSnapshotVersion()}\n\n${snapshots.join('\n\n')}\n`,
+    content,
     'utf-8',
   )
 }
 
 export function prepareExpected(expected?: string) {
   function findStartIndent() {
-    // Attemps to find indentation for objects.
+    // Attempts to find indentation for objects.
     // Matches the ending tag of the object.
     const matchObject = /^( +)}\s+$/m.exec(expected || '')
     const objectIndent = matchObject?.[1]?.length

@@ -1,9 +1,17 @@
-import { format } from 'util'
-import { util } from 'chai'
+import util from 'util'
+import { util as ChaiUtil } from 'chai'
 import { stringify } from '../integrations/chai/jest-matcher-utils'
 import { deepClone, getType } from '../utils'
 
 const OBJECT_PROTO = Object.getPrototypeOf({})
+
+function getUnserializableMessage(err: unknown) {
+  if (err instanceof Error)
+    return `<unserializable>: ${err.message}`
+  if (typeof err === 'string')
+    return `<unserializable>: ${err}`
+  return '<unserializable>'
+}
 
 // https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm
 export function serializeError(val: any, seen = new WeakMap()): any {
@@ -13,12 +21,12 @@ export function serializeError(val: any, seen = new WeakMap()): any {
     return `Function<${val.name}>`
   if (typeof val !== 'object')
     return val
-  if (val instanceof Promise || 'then' in val || (val.constructor && val.constructor.prototype === 'AsyncFunction'))
+  if (val instanceof Promise || (val.constructor && val.constructor.prototype === 'AsyncFunction'))
     return 'Promise'
   if (typeof Element !== 'undefined' && val instanceof Element)
     return val.tagName
   if (typeof val.asymmetricMatch === 'function')
-    return `${val.toString()} ${format(val.sample)}`
+    return `${val.toString()} ${util.format(val.sample)}`
 
   if (seen.has(val))
     return seen.get(val)
@@ -27,7 +35,12 @@ export function serializeError(val: any, seen = new WeakMap()): any {
     const clone: any[] = new Array(val.length)
     seen.set(val, clone)
     val.forEach((e, i) => {
-      clone[i] = serializeError(e, seen)
+      try {
+        clone[i] = serializeError(e, seen)
+      }
+      catch (err) {
+        clone[i] = getUnserializableMessage(err)
+      }
     })
     return clone
   }
@@ -40,8 +53,16 @@ export function serializeError(val: any, seen = new WeakMap()): any {
     let obj = val
     while (obj && obj !== OBJECT_PROTO) {
       Object.getOwnPropertyNames(obj).forEach((key) => {
-        if (!(key in clone))
+        if ((key in clone))
+          return
+        try {
           clone[key] = serializeError(obj[key], seen)
+        }
+        catch (err) {
+          // delete in case it has a setter from prototype that might throw
+          delete clone[key]
+          clone[key] = getUnserializableMessage(err)
+        }
       })
       obj = Object.getPrototypeOf(obj)
     }
@@ -54,7 +75,7 @@ function normalizeErrorMessage(message: string) {
 }
 
 export function processError(err: any) {
-  if (!err)
+  if (!err || typeof err !== 'object')
     return err
   // stack is not serialized in worker communication
   // we stringify it first
@@ -81,7 +102,7 @@ export function processError(err: any) {
     if (typeof err.message === 'string')
       err.message = normalizeErrorMessage(err.message)
 
-    if (typeof err.cause === 'object' && err.cause.message === 'string')
+    if (typeof err.cause === 'object' && typeof err.cause.message === 'string')
       err.cause.message = normalizeErrorMessage(err.cause.message)
   }
   catch {}
@@ -112,7 +133,7 @@ export function replaceAsymmetricMatcher(actual: any, expected: any, actualRepla
     return { replacedActual: actual, replacedExpected: expected }
   actualReplaced.set(actual, true)
   expectedReplaced.set(expected, true)
-  util.getOwnEnumerableProperties(expected).forEach((key) => {
+  ChaiUtil.getOwnEnumerableProperties(expected).forEach((key) => {
     const expectedValue = expected[key]
     const actualValue = actual[key]
     if (isAsymmetricMatcher(expectedValue)) {

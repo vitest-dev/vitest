@@ -2,7 +2,7 @@
 
 This package is for UI interface of Vitest.
 
-> Working in progress.
+> Work in progress.
 
 ## Development Setup
 

@@ -1,5 +1,5 @@
 import { fileURLToPath, pathToFileURL } from 'url'
-import { dirname, resolve } from 'pathe'
+import { resolve } from 'pathe'
 import type { TransformResult } from 'vite'
 import type { Arrayable, Nullable } from './types'
 
@@ -29,6 +29,7 @@ export function normalizeRequestId(id: string, base?: string): string {
     .replace(/&t=\w+/, '') // remove &t= query
     .replace(/\?import/, '?') // remove ?import query
     .replace(/&import/, '') // remove &import query
+    .replace(/\?&/, '?') // replace ?& with just ?
     .replace(/\?+$/, '') // remove end query mark
 }
 
@@ -45,12 +46,12 @@ export function isPrimitive(v: any) {
 }
 
 export function toFilePath(id: string, root: string): string {
-  let absolute = slash(id).startsWith('/@fs/')
+  let absolute = id.startsWith('/@fs/')
     ? id.slice(4)
-    : id.startsWith(dirname(root)) && dirname(root) !== '/'
+    : id.startsWith(root)
       ? id
       : id.startsWith('/')
-        ? slash(resolve(root, id.slice(1)))
+        ? resolve(root, id.slice(1))
         : id
 
   if (absolute.startsWith('//'))
@@ -58,7 +59,7 @@ export function toFilePath(id: string, root: string): string {
 
   // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
   return isWindows && absolute.startsWith('/')
-    ? fileURLToPath(pathToFileURL(absolute.slice(1)).href)
+    ? slash(fileURLToPath(pathToFileURL(absolute.slice(1)).href))
     : absolute
 }
 

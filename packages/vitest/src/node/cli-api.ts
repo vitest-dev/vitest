@@ -1,4 +1,8 @@
+import { resolve } from 'pathe'
 import type { UserConfig as ViteUserConfig } from 'vite'
+import { EXIT_CODE_RESTART } from '../constants'
+import { CoverageProviderMap } from '../integrations/coverage'
+import { envPackageNames } from '../integrations/env'
 import type { UserConfig } from '../types'
 import { ensurePackageInstalled } from '../utils'
 import { createVitest } from './create'
@@ -18,8 +22,13 @@ export async function startVitest(cliFilters: string[], options: CliOptions, vit
 
   if (options.run)
     options.watch = false
+  if (options.browser) // enabling threads in browser mode causes inconsistences
+    options.threads = false
 
-  if (!await ensurePackageInstalled('vite')) {
+  // this shouldn't affect _application root_ that can be changed inside config
+  const root = resolve(options.root || process.cwd())
+
+  if (!await ensurePackageInstalled('vite', root)) {
     process.exitCode = 1
     return false
   }
@@ -30,14 +39,20 @@ export async function startVitest(cliFilters: string[], options: CliOptions, vit
   const ctx = await createVitest(options, viteOverrides)
 
   if (ctx.config.coverage.enabled && !options.benchmark) {
-    if (!await ensurePackageInstalled('c8')) {
-      process.exitCode = 1
-      return false
+    const provider = ctx.config.coverage.provider || 'c8'
+    if (typeof provider === 'string') {
+      const requiredPackages = CoverageProviderMap[provider]
+
+      if (!await ensurePackageInstalled(requiredPackages, root)) {
+        process.exitCode = 1
+        return false
+      }
     }
   }
 
   if (ctx.config.environment && ctx.config.environment !== 'node') {
-    if (!await ensurePackageInstalled(ctx.config.environment)) {
+    const packageName = envPackageNames[ctx.config.environment]
+    if (!await ensurePackageInstalled(packageName, root)) {
       process.exitCode = 1
       return false
     }
@@ -46,9 +61,13 @@ export async function startVitest(cliFilters: string[], options: CliOptions, vit
   if (process.stdin.isTTY && ctx.config.watch)
     registerConsoleShortcuts(ctx)
 
-  ctx.onServerRestarted(() => {
-    // TODO: re-consider how to re-run the tests the server smartly
-    ctx.start(cliFilters)
+  ctx.onServerRestart((reason) => {
+    ctx.report('onServerRestart', reason)
+
+    if (process.env.VITEST_CLI_WRAPPER)
+      process.exit(EXIT_CODE_RESTART)
+    else
+      ctx.start(cliFilters)
   })
 
   try {
@@ -56,8 +75,8 @@ export async function startVitest(cliFilters: string[], options: CliOptions, vit
   }
   catch (e) {
     process.exitCode = 1
-    await ctx.printError(e, true, 'Unhandled Error')
-    ctx.error('\n\n')
+    await ctx.logger.printError(e, true, 'Unhandled Error')
+    ctx.logger.error('\n\n')
     return false
   }
 

@@ -3,6 +3,9 @@ import { KEYS } from './jsdom-keys'
 const allowRewrite = [
   'Event',
   'EventTarget',
+  'MessageEvent',
+  // implemented in Node 18
+  'ArrayBuffer',
 ]
 
 const skipKeys = [
@@ -15,7 +18,7 @@ const skipKeys = [
 export function getWindowKeys(global: any, win: any) {
   const keys = new Set(KEYS.concat(Object.getOwnPropertyNames(win))
     .filter((k) => {
-      if (k.startsWith('_') || skipKeys.includes(k))
+      if (skipKeys.includes(k))
         return false
       if (k in global)
         return allowRewrite.includes(k)
@@ -39,14 +42,14 @@ export function populateGlobal(global: any, win: any, options: PopulateOptions =
   const keys = getWindowKeys(global, win)
 
   const originals = new Map<string | symbol, any>(
-    allowRewrite.map(([key]) => [key, global[key]]),
+    allowRewrite.filter(key => key in global).map(key => [key, global[key]]),
   )
 
   const overrideObject = new Map<string | symbol, any>()
   for (const key of keys) {
     // we bind functions such as addEventListener and others
     // because they rely on `this` in happy-dom, and in jsdom it
-    // has a priority for getting implementaion from symbols
+    // has a priority for getting implementation from symbols
     // (global doesn't have these symbols, but window - does)
     const boundFunction = bindFunctions
       && typeof win[key] === 'function'
@@ -71,6 +74,7 @@ export function populateGlobal(global: any, win: any, options: PopulateOptions =
   global.window = global
   global.self = global
   global.top = global
+  global.parent = global
 
   if (global.global)
     global.global = global

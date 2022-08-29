@@ -1,3 +1,4 @@
+import type { Logger } from '../../../packages/vitest/src/node/logger'
 import type { Vitest } from '../../../packages/vitest/src/node'
 import type { StateManager } from '../../../packages/vitest/src/node/state'
 import type { File, ResolvedConfig } from '../../../packages/vitest/src/types'
@@ -9,7 +10,6 @@ interface Context {
 
 export function getContext(): Context {
   let output = ''
-  const log = (text: string) => output += `${text}\n`
 
   const config: Partial<ResolvedConfig> = {
     root: '/',
@@ -20,10 +20,14 @@ export function getContext(): Context {
   }
 
   const context: Partial<Vitest> = {
-    log,
     state: state as StateManager,
     config: config as ResolvedConfig,
   }
+
+  context.logger = {
+    ctx: context as Vitest,
+    log: (text: string) => output += `${text}\n`,
+  } as unknown as Logger
 
   return {
     vitest: context as Vitest,

@@ -22,7 +22,8 @@ describe('basic', async () => {
     })
   })
 
-  test('should have the correct title', async () => {
+  // TODO make more stable
+  test.skip('should have the correct title', async () => {
     try {
       await page.goto('http://localhost:3000')
       const button = (await page.$('#btn'))!

@@ -1,4 +1,5 @@
 import type { ChaiPlugin, MatcherState } from '../../types/chai'
+import { GLOBAL_EXPECT } from './constants'
 import { getState } from './jest-expect'
 import * as matcherUtils from './jest-matcher-utils'
 
@@ -19,9 +20,9 @@ export abstract class AsymmetricMatcher<
 
   constructor(protected sample: T, protected inverse = false) {}
 
-  protected getMatcherContext(): State {
+  protected getMatcherContext(expect?: Vi.ExpectStatic): State {
     return {
-      ...getState(),
+      ...getState(expect || (globalThis as any)[GLOBAL_EXPECT]),
       equals,
       isNot: this.inverse,
       utils: matcherUtils,

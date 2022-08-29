@@ -11,6 +11,7 @@ export interface TaskBase {
   name: string
   mode: RunMode
   concurrent?: boolean
+  shuffle?: boolean
   suite?: Suite
   file?: File
   result?: TaskResult
@@ -40,6 +41,7 @@ export interface Suite extends TaskBase {
 export interface File extends Suite {
   filepath: string
   collectDuration?: number
+  setupDuration?: number
 }
 
 export interface Test<ExtraContext = {}> extends TaskBase {
@@ -90,51 +92,81 @@ type ExtractEachCallbackArgs<T extends ReadonlyArray<any>> = {
                     ? 10
                     : 'fallback']
 
-interface EachFunction {
+interface SuiteEachFunction {
   <T extends any[] | [any]>(cases: ReadonlyArray<T>): (
     name: string,
-    fn: (...args: T) => Awaitable<void>
+    fn: (...args: T) => Awaitable<void>,
   ) => void
   <T extends ReadonlyArray<any>>(cases: ReadonlyArray<T>): (
     name: string,
-    fn: (...args: ExtractEachCallbackArgs<T>) => Awaitable<void>
+    fn: (...args: ExtractEachCallbackArgs<T>) => Awaitable<void>,
   ) => void
   <T>(cases: ReadonlyArray<T>): (
     name: string,
-    fn: (...args: T[]) => Awaitable<void>
+    fn: (...args: T[]) => Awaitable<void>,
   ) => void
 }
 
-export type TestAPI<ExtraContext = {}> = ChainableFunction<
-'concurrent' | 'only' | 'skip' | 'todo' | 'fails',
-[name: string, fn?: TestFunction<ExtraContext>, timeout?: number],
-void
-> & {
-  each: EachFunction
-  skipIf(condition: any): TestAPI<ExtraContext>
-  runIf(condition: any): TestAPI<ExtraContext>
+interface TestEachFunction {
+  <T extends any[] | [any]>(cases: ReadonlyArray<T>): (
+    name: string,
+    fn: (...args: T) => Awaitable<void>,
+    timeout?: number,
+  ) => void
+  <T extends ReadonlyArray<any>>(cases: ReadonlyArray<T>): (
+    name: string,
+    fn: (...args: ExtractEachCallbackArgs<T>) => Awaitable<void>,
+    timeout?: number,
+  ) => void
+  <T>(cases: ReadonlyArray<T>): (
+    name: string,
+    fn: (...args: T[]) => Awaitable<void>,
+    timeout?: number,
+  ) => void
 }
 
-export type SuiteAPI<ExtraContext = {}> = ChainableFunction<
-'concurrent' | 'only' | 'skip' | 'todo',
-[name: string, factory?: SuiteFactory],
-SuiteCollector<ExtraContext>
-> & {
-  each: EachFunction
-  skipIf(condition: any): SuiteAPI<ExtraContext>
-  runIf(condition: any): SuiteAPI<ExtraContext>
+type ChainableTestAPI<ExtraContext = {}> = ChainableFunction<
+  'concurrent' | 'only' | 'skip' | 'todo' | 'fails',
+  [name: string, fn?: TestFunction<ExtraContext>, timeout?: number],
+  void,
+  {
+    each: TestEachFunction
+    <T extends ExtraContext>(name: string, fn?: TestFunction<T>, timeout?: number): void
+  }
+>
+
+export type TestAPI<ExtraContext = {}> = ChainableTestAPI<ExtraContext> & {
+  each: TestEachFunction
+  skipIf(condition: any): ChainableTestAPI<ExtraContext>
+  runIf(condition: any): ChainableTestAPI<ExtraContext>
 }
 
-export type HookListener<T extends any[], Return = void> = (...args: T) => Awaitable<Return | void>
+type ChainableSuiteAPI<ExtraContext = {}> = ChainableFunction<
+  'concurrent' | 'only' | 'skip' | 'todo' | 'shuffle',
+  [name: string, factory?: SuiteFactory<ExtraContext>],
+  SuiteCollector<ExtraContext>,
+  {
+    each: TestEachFunction
+    <T extends ExtraContext>(name: string, factory?: SuiteFactory<T>): SuiteCollector<T>
+  }
+>
 
-export interface SuiteHooks {
-  beforeAll: HookListener<[Suite | File], () => Awaitable<void>>[]
+export type SuiteAPI<ExtraContext = {}> = ChainableSuiteAPI<ExtraContext> & {
+  each: SuiteEachFunction
+  skipIf(condition: any): ChainableSuiteAPI<ExtraContext>
+  runIf(condition: any): ChainableSuiteAPI<ExtraContext>
+}
+
+export type HookListener<T extends any[], Return = void> = (...args: T) => Awaitable<Return>
+
+export type HookCleanupCallback = (() => Awaitable<unknown>) | void
+
+export interface SuiteHooks<ExtraContext = {}> {
+  beforeAll: HookListener<[Suite | File], HookCleanupCallback>[]
   afterAll: HookListener<[Suite | File]>[]
-  beforeEach: HookListener<[TestContext, Suite], () => Awaitable<void>>[]
-  afterEach: HookListener<[TestContext, Suite]>[]
+  beforeEach: HookListener<[TestContext & ExtraContext, Suite], HookCleanupCallback>[]
+  afterEach: HookListener<[TestContext & ExtraContext, Suite]>[]
 }
-
-export type HookCleanupCallback = (() => Awaitable<void>) | void
 
 export interface SuiteCollector<ExtraContext = {}> {
   readonly name: string
@@ -145,10 +177,10 @@ export interface SuiteCollector<ExtraContext = {}> {
   tasks: (Suite | Test | Benchmark | SuiteCollector<ExtraContext>)[]
   collect: (file?: File) => Promise<Suite>
   clear: () => void
-  on: <T extends keyof SuiteHooks>(name: T, ...fn: SuiteHooks[T]) => void
+  on: <T extends keyof SuiteHooks<ExtraContext>>(name: T, ...fn: SuiteHooks<ExtraContext>[T]) => void
 }
 
-export type SuiteFactory = (test: (name: string, fn: TestFunction) => void) => Awaitable<void>
+export type SuiteFactory<ExtraContext = {}> = (test: (name: string, fn: TestFunction<ExtraContext>) => void) => Awaitable<void>
 
 export interface RuntimeContext {
   tasks: (SuiteCollector | Test)[]

@@ -20,9 +20,9 @@ export class VerboseReporter extends DefaultReporter {
         let title = ` ${getStateSymbol(task)} ${getFullName(task)}`
         if (this.ctx.config.logHeapUsage && task.result.heap != null)
           title += c.magenta(` ${Math.floor(task.result.heap / 1024 / 1024)} MB heap used`)
-        this.ctx.log(title)
+        this.ctx.logger.log(title)
         if (task.result.state === 'fail')
-          this.ctx.log(c.red(`   ${F_RIGHT} ${(task.result.error as any)?.message}`))
+          this.ctx.logger.log(c.red(`   ${F_RIGHT} ${(task.result.error as any)?.message}`))
       }
     }
   }

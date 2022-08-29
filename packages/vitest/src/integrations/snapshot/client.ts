@@ -57,6 +57,10 @@ export class SnapshotClient {
     this.test = undefined
   }
 
+  skipTestSnapshots(test: Test) {
+    this.snapshotState?.markSnapshotsAsCheckedForTest(test.name)
+  }
+
   assert(options: AssertOptions): void {
     const {
       test = this.test,

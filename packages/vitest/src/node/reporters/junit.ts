@@ -58,8 +58,9 @@ function escapeXML(value: any): string {
     true)
 }
 
-function getDuration(task: Task): string | undefined {
-  return task.result?.duration ? (task.result.duration / 1000).toFixed(10) : undefined
+export function getDuration(task: Task): string | undefined {
+  const duration = task.result?.duration ?? 0
+  return (duration / 1000).toLocaleString(undefined, { useGrouping: false, maximumFractionDigits: 10 })
 }
 
 export class JUnitReporter implements Reporter {
@@ -85,7 +86,7 @@ export class JUnitReporter implements Reporter {
       this.baseLog = async (text: string) => await fs.writeFile(fileFd, `${text}\n`)
     }
     else {
-      this.baseLog = async (text: string) => this.ctx.log(text)
+      this.baseLog = async (text: string) => this.ctx.logger.log(text)
     }
 
     this.logger = new IndentedLogger(this.baseLog)
@@ -111,7 +112,10 @@ export class JUnitReporter implements Reporter {
 
   async writeErrorDetails(error: ErrorWithDiff): Promise<void> {
     const errorName = error.name ?? error.nameStr ?? 'Unknown Error'
-    await this.baseLog(`${errorName}: ${error.message}`)
+    const errorDetails = `${errorName}: ${error.message}`
+
+    // Be sure to escape any XML in the error Details
+    await this.baseLog(escapeXML(errorDetails))
 
     const stack = parseStacktrace(error)
 
@@ -219,6 +223,6 @@ export class JUnitReporter implements Reporter {
     })
 
     if (this.reportFile)
-      this.ctx.log(`JUNIT report written to ${this.reportFile}`)
+      this.ctx.logger.log(`JUNIT report written to ${this.reportFile}`)
   }
 }

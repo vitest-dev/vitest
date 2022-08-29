@@ -51,7 +51,25 @@ export default defineConfig({
 })
 ```
 
+When using a separate `vitest.config.js`, you can also extend Vite's options from another config file if needed:
+
+```ts
+import { mergeConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
+import viteConfig from './vite.config'
+
+export default mergeConfig(viteConfig, defineConfig({
+  test: {
+    exclude: ['packages/template/*'],
+  },
+}))
+```
+
 ## Options
+
+:::tip
+In addition to the following options, you can also use any configuration option from [Vite](https://vitejs.dev/config/). For example, `define` to define global variables, or `resolve.alias` to define aliases.
+:::
 
 ### include
 
@@ -98,12 +116,27 @@ When a dependency is a valid ESM package, try to guess the cjs version based on 
 
 This might potentially cause some misalignment if a package has different logic in ESM and CJS mode.
 
+#### deps.registerNodeLoader
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Use [experimental Node loader](https://nodejs.org/api/esm.html#loaders) to resolve imports inside `node_modules`, using Vite resolve algorithm.
+
+If disabled, your `alias` and `<plugin>.resolveId` won't affect imports inside `node_modules` or `deps.external`.
+
 #### deps.interopDefault
 
 - **Type:** `boolean`
 - **Default:** `true`
 
 Interpret CJS module's default as named exports.
+
+### alias
+
+- **Type:** `Record<string, string> | Array<{ find: string | RegExp, replacement: string, customResolver?: ResolverFunction | ResolverObject }>`
+
+Define custom aliases when running inside tests. They will be merged with aliases from `resolve.alias`.
 
 ### globals
 
@@ -123,7 +156,7 @@ export default defineConfig({
 })
 ```
 
-To get TypeScript working with the global APIs, add `vitest/globals` to the `types` filed in your `tsconfig.json`
+To get TypeScript working with the global APIs, add `vitest/globals` to the `types` field in your `tsconfig.json`
 
 ```json
 // tsconfig.json
@@ -153,13 +186,14 @@ export default defineConfig({
 
 ### environment
 
-- **Type:** `'node' | 'jsdom' | 'happy-dom'`
+- **Type:** `'node' | 'jsdom' | 'happy-dom' | 'edge-runtime'`
 - **Default:** `'node'`
 
 The environment that will be used for testing. The default environment in Vitest
 is a Node.js environment. If you are building a web application, you can use
 browser-like environment through either [`jsdom`](https://github.com/jsdom/jsdom)
 or [`happy-dom`](https://github.com/capricorn86/happy-dom) instead.
+If you are building edge functions, you can use [`edge-runtime`](https://edge-runtime.vercel.app/packages/vm) environment
 
 By adding a `@vitest-environment` docblock or comment at the top of the file,
 you can specify another environment to be used for all tests in that file:
@@ -237,6 +271,21 @@ Custom reporters for output. Reporters can be [a Reporter instance](https://gith
   - `'json'` -  give a simple JSON summary
   - path of a custom reporter (e.g. `'./path/to/reporter.ts'`, `'@scope/reporter'`)
 
+### outputTruncateLength
+
+- **Type:** `number`
+- **Default:** `80`
+
+Truncate output diff lines up to `80` number of characters. You may wish to tune this,
+depending on you terminal window width.
+
+### outputDiffLines
+
+- **Type:** `number`
+- **Default:** `15`
+
+Limit number of output diff lines up to `15`.
+
 ### outputFile
 
 - **Type:** `string | Record<string, string>`
@@ -287,6 +336,13 @@ Default timeout of a test in milliseconds
 
 Default timeout of a hook in milliseconds
 
+### teardownTimeout
+
+- **Type:** `number`
+- **Default:** `1000`
+
+Default timeout to wait for close when Vitest shuts down, in milliseconds
+
 ### silent
 
 - **Type:** `boolean`
@@ -300,10 +356,11 @@ Silent console output from tests
 
 Path to setup files. They will be run before each test file.
 
-You can use `process.env.VITEST_WORKER_ID` (integer-like string) inside to distinguish between threads (will always be `'1'`, if run with `threads: false`).
+You can use `process.env.VITEST_POOL_ID` (integer-like string) inside to distinguish between threads (will always be `'1'`, if run with `threads: false`).
 
 :::tip
-Note, that if you are running [`--no-threads`](#threads), this file will be run in the same global scope. Meaning, that you are accessing the same global object before each test, so make sure you are not doing the same thing more than you need.
+Note, that if you are running [`--no-threads`](#threads), this setup file will be run in the same global scope multiple times. Meaning, that you are accessing the same global object before each test, so make sure you are not doing the same thing more than you need.
+:::
 
 For example, you may rely on a global variable:
 
@@ -316,14 +373,13 @@ if (!globalThis.defined) {
   globalThis.defined = true
 }
 
-// hooks are reseted before each suite
+// hooks are reset before each suite
 afterEach(() => {
   cleanup()
 })
 
 globalThis.resetBeforeEachTest = true
 ```
-:::
 
 ### globalSetup
 
@@ -352,9 +408,9 @@ Glob pattern of file paths to be ignored from triggering watch rerun.
 ### forceRerunTriggers
 
 - **Type**: `string[]`
-- **Default:** `[]`
+- **Default:** `['**/package.json/**', '**/vitest.config.*/**', '**/vite.config.*/**']`
 
-Glob patter of file paths that will trigger the whole suite rerun.
+Glob pattern of file paths that will trigger the whole suite rerun. When paired with the `--changed` argument will run the whole test suite if the trigger is found in the git diff.
 
 Useful if you are testing calling CLI commands, because Vite cannot construct a module graph:
 
@@ -378,10 +434,103 @@ Isolate environment for each test file. Does not work if you disable [`--threads
 
 ### coverage
 
-- **Type:** `C8Options`
+- **Type:** `CoverageC8Options | CoverageIstanbulOptions`
 - **Default:** `undefined`
 
-Coverage options passed to [C8](https://github.com/bcoe/c8).
+You can use [`c8`](https://github.com/bcoe/c8) or [`istanbul`](https://istanbul.js.org/) for coverage collection.
+
+#### provider
+
+- **Type:** `'c8' | 'istanbul'`
+- **Default:** `'c8'`
+
+Use `provider` to select the tool for coverage collection.
+
+#### CoverageC8Options
+
+Used when `provider: 'c8'` is set. Coverage options are passed to [`c8`](https://github.com/bcoe/c8).
+
+#### CoverageIstanbulOptions
+
+Used when `provider: 'istanbul'` is set.
+
+##### exclude
+
+- **Type:** `string[]`
+- **Default:** `[]`
+
+List of files excluded from coverage as glob patterns.
+
+##### skipFull
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Do not show files with 100% statement, branch, and function coverage.
+
+##### perFile
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Check thresholds per file.
+
+##### lines
+
+- **Type:** `number`
+
+Threshold for lines.
+
+##### functions
+
+- **Type:** `number`
+
+Threshold for functions.
+
+##### branches
+
+- **Type:** `number`
+
+Threshold for branches.
+
+##### statements
+
+- **Type:** `number`
+
+Threshold for statements.
+
+##### ignoreClassMethods
+
+- **Type:** `string[]`
+- **Default:** []
+
+Set to array of class method names to ignore for coverage.
+
+##### watermarks
+
+- **Type:**
+<!-- eslint-skip -->
+```ts
+{
+  statements?: [number, number],
+  functions?: [number, number],
+  branches?: [number, number],
+  lines?: [number, number]
+}
+```
+
+- **Default:**
+<!-- eslint-skip -->
+```ts
+{
+  statements: [50, 80],
+  functions: [50, 80],
+  branches: [50, 80],
+  lines: [50, 80]
+}
+```
+
+Watermarks for statements, lines, branches and functions.
 
 ### testNamePattern
 
@@ -458,7 +607,7 @@ Vite plugins will receive `ssr: true` flag when processing those files.
 - **Type:** `RegExp[]`
 - **Default:** *modules other than those specified in `transformMode.ssr`*
 
-First do a normal transform pipeline (targeting browser), then then do a SSR rewrite to run the code in Node.<br>
+First do a normal transform pipeline (targeting browser), then do a SSR rewrite to run the code in Node.<br>
 Vite plugins will receive `ssr: false` flag when processing those files.
 
 When you use JSX as component models other than React (e.g. Vue JSX or SolidJS), you might want to config as following to make `.tsx` / `.jsx` transformed as client-side components:
@@ -505,6 +654,13 @@ export default defineConfig({
 
 Allow tests and suites that are marked as only.
 
+### dangerouslyIgnoreUnhandledErrors
+
+- **Type**: `boolean`
+- **Default**: `false`
+
+Ignore any unhandled errors that occur.
+
 ### passWithNoTests
 
 - **Type**: `boolean`
@@ -518,3 +674,78 @@ Vitest will not fail, if no tests will be found.
 - **Default**: `false`
 
 Show heap usage after each test. Useful for debugging memory leaks.
+
+### css
+
+- **Type**: `boolean | { include?, exclude? }`
+
+Configure if CSS should be processed. When excluded, CSS files will be replaced with empty strings to bypass the subsequent processing.
+
+By default, processes only CSS Modules, because it affects runtime. JSDOM and Happy DOM don't fully support injecting CSS, so disabling this setting might help with performance.
+
+#### css.include
+
+- **Type**: `RegExp | RegExp[]`
+- **Default**: `[/\.module\./]`
+
+RegExp pattern for files that should return actual CSS and will be processed by Vite pipeline.
+
+#### css.exclude
+
+- **Type**: `RegExp | RegExp[]`
+- **Default**: `[]`
+
+RegExp pattern for files that will return an empty CSS file.
+
+### maxConcurrency
+
+- **Type**: `number`
+- **Default**: `5`
+
+A number of tests that are allowed to run at the same time marked with `test.concurrent`.
+
+Test above this limit will be queued to run when available slot appears.
+
+### cache
+
+- **Type**: `false | { dir? }`
+
+Options to configure Vitest cache policy. At the moment Vitest stores cache for test results to run the longer and failed tests first.
+
+#### cache.dir
+
+- **Type**: `string`
+- **Default**: `node_modules/.vitest`
+
+Path to cache directory.
+
+### sequence
+
+- **Type**: `{ sequencer?, shuffle?, seed? }`
+
+Options for how tests should be sorted.
+
+#### sequence.sequencer
+
+- **Type**: `TestSequencerConstructor`
+- **Default**: `BaseSequencer`
+
+A custom class that defines methods for sharding and sorting. You can extend `BaseSequencer` from `vitest/node`, if you only need to redefine one of the `sort` and `shard` methods, but both should exist.
+
+Sharding is happening before sorting, and only if `--shard` option is provided.
+
+#### sequence.shuffle
+
+- **Type**: `boolean`
+- **Default**: `false`
+
+If you want tests to run randomly, you can enable it with this option, or CLI argument [`--sequence.shuffle`](/guide/cli).
+
+Vitest usually uses cache to sort tests, so long running tests start earlier - this makes tests run faster. If your tests will run in random order you will lose this performance improvement, but it may be useful to track tests that accidentally depend on another run previously.
+
+#### sequence.seed
+
+- **Type**: `number`
+- **Default**: `Date.now()`
+
+Sets the randomization seed, if tests are running in random order.
