@@ -1,3 +1,4 @@
+import type { ModuleGraph, ViteDevServer } from 'vite'
 import type { Logger } from '../../../packages/vitest/src/node/logger'
 import type { Vitest } from '../../../packages/vitest/src/node'
 import type { StateManager } from '../../../packages/vitest/src/node/state'
@@ -15,6 +16,14 @@ export function getContext(): Context {
     root: '/',
   }
 
+  const moduleGraph: Partial<ModuleGraph> = {
+    getModuleById: () => undefined,
+  }
+
+  const server: Partial<ViteDevServer> = {
+    moduleGraph: moduleGraph as ModuleGraph,
+  }
+
   const state: Partial<StateManager> = {
     filesMap: new Map<string, File>(),
   }
@@ -22,6 +31,7 @@ export function getContext(): Context {
   const context: Partial<Vitest> = {
     state: state as StateManager,
     config: config as ResolvedConfig,
+    server: server as ViteDevServer,
   }
 
   context.logger = {
