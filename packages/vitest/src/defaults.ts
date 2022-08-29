@@ -26,7 +26,7 @@ const coverageConfigDefaults = {
   reportsDirectory: './coverage',
   excludeNodeModules: true,
   exclude: defaultCoverageExcludes,
-  reporter: ['text', 'html', 'clover'],
+  reporter: ['text', 'html', 'clover', 'json'],
   allowExternal: false,
   // default extensions used by c8, plus '.vue' and '.svelte'
   // see https://github.com/istanbuljs/schema/blob/master/default-extension.js
