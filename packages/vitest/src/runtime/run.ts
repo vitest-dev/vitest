@@ -108,7 +108,7 @@ export async function runTest(test: Test) {
   workerState.current = test
 
   const retry = test.retry || 1
-  for (let i = 0; i < retry; i++) {
+  for (let currentRetry = 0; currentRetry < retry; currentRetry++) {
     let beforeEachCleanups: HookCleanupCallback[] = []
     try {
       beforeEachCleanups = await callSuiteHook(test.suite, test, 'beforeEach', [test.context, test.suite])
@@ -121,6 +121,8 @@ export async function runTest(test: Test) {
         testPath: test.suite.file?.filepath,
         currentTestName: getFullName(test),
       }, (globalThis as any)[GLOBAL_EXPECT])
+
+      test.currentRetry = currentRetry
 
       await getFn(test)()
       const {

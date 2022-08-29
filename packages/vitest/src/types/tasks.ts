@@ -15,6 +15,7 @@ export interface TaskBase {
   file?: File
   result?: TaskResult
   retry?: number
+  currentRetry?: number
   logs?: UserConsoleLog[]
 }
 
