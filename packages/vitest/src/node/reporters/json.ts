@@ -4,7 +4,7 @@ import type { Vitest } from '../../node'
 import type { File, Reporter, Suite, TaskState, Test } from '../../types'
 import { getSuites, getTests } from '../../utils'
 import { getOutputFile } from '../../utils/config-helpers'
-import { parseStacktrace } from '../../utils/source-map'
+import { interpretSourcePos, parseStacktrace } from '../../utils/source-map'
 
 // for compatibility reasons, the reporter produces a JSON similar to the one produced by the Jest JSON reporter
 // the following types are extracted from the Jest repository (and simplified)
@@ -94,7 +94,7 @@ export class JsonReporter implements Reporter {
         startTime = this.start
 
       const endTime = tests.reduce((prev, next) => Math.max(prev, (next.result?.startTime ?? 0) + (next.result?.duration ?? 0)), startTime)
-      const assertionResults = tests.map((t) => {
+      const assertionResults = await Promise.all(tests.map(async (t) => {
         const ancestorTitles = [] as string[]
         let iter: Suite | undefined = t.suite
         while (iter) {
@@ -110,9 +110,9 @@ export class JsonReporter implements Reporter {
           title: t.name,
           duration: t.result?.duration,
           failureMessages: t.result?.error?.message == null ? [] : [t.result.error.message],
-          location: this.getFailureLocation(t),
+          location: await this.getFailureLocation(t),
         } as FormattedAssertionResult
-      })
+      }))
 
       if (tests.some(t => t.result?.state === 'run')) {
         this.ctx.logger.warn('WARNING: Some tests are still running when generating the JSON report.'
@@ -180,12 +180,13 @@ export class JsonReporter implements Reporter {
     }
   }
 
-  protected getFailureLocation(test: Test): Callsite | undefined {
+  protected async getFailureLocation(test: Test): Promise<Callsite | undefined> {
     const error = test.result?.error
     if (!error)
       return
 
     const stack = parseStacktrace(error)
+    await interpretSourcePos(stack, this.ctx)
     const frame = stack[stack.length - 1]
     if (!frame)
       return

@@ -1,0 +1,19 @@
+// Vitest Snapshot v1
+
+exports[`json reporter > generates correct report 1`] = `
+{
+  "ancestorTitles": [
+    "",
+  ],
+  "failureMessages": [
+    "expected 2 to deeply equal 1",
+  ],
+  "fullName": " should fail",
+  "location": {
+    "column": 12,
+    "line": 6,
+  },
+  "status": "failed",
+  "title": "should fail",
+}
+`;
