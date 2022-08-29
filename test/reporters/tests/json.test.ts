@@ -5,11 +5,9 @@ import { describe, expect, it } from 'vitest'
 describe('json reporter', async () => {
   const root = resolve(__dirname, '../fixtures')
 
-  // in Windows child_process is very unstable, we skip testing it
-  if (process.platform === 'win32' && process.env.CI)
-    return
+  const skip = (process.platform === 'win32' || process.platform === 'darwin') && process.env.CI
 
-  it('generates correct report', async () => {
+  it.skipIf(skip)('generates correct report', async () => {
     const { stdout } = await execa('npx', ['vitest', 'run', 'json-fail', '--reporter=json'], {
       cwd: root,
       env: {
@@ -28,5 +26,5 @@ describe('json reporter', async () => {
     const result = data.testResults[0].assertionResults[0]
     delete result.duration
     expect(result).toMatchSnapshot()
-  }, 10000)
+  }, 40000)
 })
