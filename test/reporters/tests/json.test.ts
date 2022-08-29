@@ -18,13 +18,13 @@ describe('should fails', async () => {
       },
     }).catch(e => e)
 
-    // remove the Timestamp/Duration part from json report
+    // remove the Timestamp/Duration/test file name part from json report
     const msg = stdout
       .split(/\n/g)
       .map(line =>
-        line.includes('startTime') || line.includes('endTime') || line.includes('duration') ? '' : line,
+        line.includes('startTime') || line.includes('endTime') || line.includes('duration') || line.includes('name') ? '' : line,
       )
 
     expect(msg).toMatchSnapshot()
-  }, 10000)
+  })
 })

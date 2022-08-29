@@ -39,7 +39,7 @@ exports[`should fails > should fails 1`] = `
   "",
   "      \\"status\\": \\"failed\\",",
   "      \\"message\\": \\"\\",",
-  "      \\"name\\": \\"C:/projects/Github/vitest/test/reporters/fixtures/expect.test.ts\\"",
+  "",
   "    }",
   "  ]",
   "}",
