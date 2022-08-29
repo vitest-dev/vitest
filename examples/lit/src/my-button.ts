@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { LitElement, css, html } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 
