@@ -27,20 +27,20 @@ function timeout(time: number) {
 }
 
 describe('timeout', () => {
-  benchmark('timeout1000', async () => {
-    await timeout(1000)
+  benchmark('timeout100', async () => {
+    await timeout(100)
   })
 
-  benchmark('timeout750', async () => {
-    await timeout(750)
+  benchmark('timeout75', async () => {
+    await timeout(75)
   })
 
-  benchmark('timeout500', async () => {
-    await timeout(500)
+  benchmark('timeout50', async () => {
+    await timeout(50)
   })
 
-  benchmark('timeout250', async () => {
-    await timeout(250)
+  benchmark('timeout25', async () => {
+    await timeout(25)
   })
 
   test('reduce', () => {
