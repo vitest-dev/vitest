@@ -1,12 +1,12 @@
 import { performance } from 'perf_hooks'
 import limit from 'p-limit'
-import type { Benchmark, File, HookCleanupCallback, HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from '../types'
+import type { BenchTask, Benchmark, BenchmarkResult, File, HookCleanupCallback, HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from '../types'
 import { vi } from '../integrations/vi'
 import { clearTimeout, createDefer, getFullName, getWorkerState, hasFailed, hasTests, isBenchmarkMode, isBrowser, isNode, partitionSuiteChildren, setTimeout, shuffle } from '../utils'
 import { getState, setState } from '../integrations/chai/jest-expect'
 import { GLOBAL_EXPECT } from '../integrations/chai/constants'
 import { takeCoverageInsideWorker } from '../integrations/coverage'
-import { getBenchmarkLib, getFn, getHooks } from './map'
+import { getBenchmarkFactory, getFn, getHooks } from './map'
 import { rpc } from './rpc'
 import { collectTests } from './collect'
 import { processError } from './error'
@@ -273,6 +273,23 @@ export async function runSuite(suite: Suite) {
   updateTask(suite)
 }
 
+function createBenchmarkResult(name: string): BenchmarkResult {
+  return {
+    name,
+    count: 0,
+    hz: 0,
+    rme: 0,
+    sampleSize: 0,
+    sort: 0,
+    max: 0,
+    min: 0,
+    p75: 0,
+    p99: 0,
+    p995: 0,
+    p999: 0,
+  }
+}
+
 async function runBenchmarkSuit(suite: Suite) {
   const start = performance.now()
 
@@ -289,27 +306,13 @@ async function runBenchmarkSuit(suite: Suite) {
     await Promise.all(benchmarkSuiteGroup.map(subSuite => runBenchmarkSuit(subSuite)))
 
   if (benchmarkGroup.length) {
-    const benchmarkLib = getBenchmarkLib(suite)
+    const benchmarkInstance = getBenchmarkFactory(suite)
     const defer = createDefer()
     const benchmarkMap: Record<string, Benchmark> = {}
     suite.result = {
       state: 'run',
       startTime: start,
-      benchmark: {
-        name: suite.name,
-        count: 0,
-        cycles: 0,
-        hz: 0,
-        rme: 0,
-        sampleSize: 0,
-        sort: 0,
-        max: 0,
-        min: 0,
-        p75: 0,
-        p99: 0,
-        p995: 0,
-        p999: 0,
-      },
+      benchmark: createBenchmarkResult(suite.name),
     }
     updateTask(suite)
     benchmarkGroup.forEach((benchmark) => {
@@ -317,67 +320,53 @@ async function runBenchmarkSuit(suite: Suite) {
       benchmark.result = {
         state: 'run',
         startTime: start,
-        benchmark: {
-          name: benchmark.name,
-          count: 0,
-          cycles: 0,
-          hz: 0,
-          rme: 0,
-          sampleSize: 0,
-          sort: 0,
-          max: 0,
-          min: 0,
-          p75: 0,
-          p99: 0,
-          p995: 0,
-          p999: 0,
-        },
+        benchmark: createBenchmarkResult(benchmark.name),
       }
       benchmarkMap[benchmark.name] = benchmark
-      benchmarkLib.add(benchmark.name, benchmarkFn, benchmark.options)
+      benchmarkInstance.add(benchmark.name, benchmarkFn)
       updateTask(benchmark)
     })
-    benchmarkLib.on('cycle', (e) => {
-      const cycle = e.target
-      const benchmark = benchmarkMap[cycle.name || '']
+    benchmarkInstance.addEventListener('cycle', (e: any) => {
+      const task = e.target as BenchTask
+      const benchmark = benchmarkMap[task.name || '']
       if (benchmark) {
+        const taskRes = task.result!
         const result = benchmark.result!.benchmark!
-        const all = cycle.stats?.sample.sort()
-        result.sampleSize = all?.length || result.sampleSize
-        if (all?.length) {
-          result.min = all[0]
-          result.max = all[-1]
-          result.p75 = all[result.sampleSize * Math.ceil(75 / 100) - 1]
-          result.p99 = all[result.sampleSize * Math.ceil(99 / 100) - 1]
-          result.p995 = all[result.sampleSize * Math.ceil(99.5 / 100) - 1]
-          result.p999 = all[result.sampleSize * Math.ceil(99.9 / 100) - 1]
-        }
-        result.name = cycle.name || result.name
-        result.count = cycle.count || result.count
-        result.cycles = cycle.cycles || result.cycles
-        result.hz = cycle.hz || result.hz
-        result.rme = cycle.stats?.rme || result.rme
+        result.min = taskRes.min
+        result.max = taskRes.max
+        result.p75 = taskRes.p75
+        result.p99 = taskRes.p99
+        result.p995 = taskRes.p995
+        result.p999 = taskRes.p999
+        result.sampleSize = taskRes.samples.length
+        result.name = task.name || result.name
+        result.count = task.runs || result.count
+        result.hz = taskRes.hz || result.hz
+        result.rme = taskRes.rme || result.rme
         updateTask(benchmark)
       }
     })
-    benchmarkLib.on('complete', function () {
+    benchmarkInstance.addEventListener('complete', () => {
       suite.result!.duration = performance.now() - start
       suite.result!.state = 'pass'
-      this.sort((a, b) => b.hz - a.hz).forEach((cycle, idx) => {
-        const benchmark = benchmarkMap[cycle.name || '']
-        if (benchmark) {
-          const result = benchmark.result!.benchmark!
-          result.sort = Number(idx) + 1
-          updateTask(benchmark)
-        }
-      })
+
+      benchmarkInstance.tasks
+        .sort((a, b) => b.result!.hz - a.result!.hz)
+        .forEach((cycle, idx) => {
+          const benchmark = benchmarkMap[cycle.name || '']
+          if (benchmark) {
+            const result = benchmark.result!.benchmark!
+            result.sort = Number(idx) + 1
+            updateTask(benchmark)
+          }
+        })
       updateTask(suite)
       defer.resolve(null)
     })
-    benchmarkLib.on('error', (e) => {
+    benchmarkInstance.addEventListener('error', (e) => {
       defer.reject(e)
     })
-    benchmarkLib.run({ async: true, delay: 0 })
+    benchmarkInstance.run()
     await defer
   }
 }

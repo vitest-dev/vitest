@@ -1,5 +1,5 @@
 import util from 'util'
-import type { BenchFunction, Benchmark, BenchmarkAPI, BenchmarkOptions, File, RunMode, Suite, SuiteAPI, SuiteCollector, SuiteFactory, SuiteHooks, Task, Test, TestAPI, TestFunction } from '../types'
+import type { BenchFunction, BenchOptions, Benchmark, BenchmarkAPI, File, RunMode, Suite, SuiteAPI, SuiteCollector, SuiteFactory, SuiteHooks, Task, Test, TestAPI, TestFunction } from '../types'
 import { getWorkerState, isBenchmarkMode, isObject, noop } from '../utils'
 import { createChainable } from './chain'
 import { collectTask, collectorContext, createTestContext, runWithSuite, withTimeout } from './context'
@@ -110,7 +110,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
     tasks.push(test)
   })
 
-  const benchmark = createBenchmark(function (name: string, fn = noop, options: BenchmarkOptions) {
+  const benchmark = createBenchmark(function (name: string, fn = noop, options: BenchOptions) {
     const mode = this.skip ? 'skip' : 'run'
 
     if (!isBenchmarkMode())
@@ -250,7 +250,7 @@ function createBenchmark(fn: (
     this: Record<'skip', boolean | undefined>,
     name: string,
     fn: BenchFunction,
-    options: BenchmarkOptions
+    options: BenchOptions
   ) => void
 )) {
   const benchmark = createChainable(

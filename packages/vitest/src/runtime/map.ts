@@ -1,5 +1,5 @@
-import BenchmarkLib from 'tinybench'
-import type { Awaitable, BenchFunction, Benchmark, Suite, SuiteHooks, Test } from '../types'
+import Bench from 'tinybench'
+import type { Awaitable, BenchFactory, BenchFunction, Benchmark, Suite, SuiteHooks, Test } from '../types'
 
 // use WeakMap here to make the Test and Suite object serializable
 const fnMap = new WeakMap()
@@ -26,10 +26,10 @@ export function isTest(task: Test | Benchmark): task is Test {
   return task.type === 'test'
 }
 
-export function getBenchmarkLib(key: Suite): BenchmarkLib.Suite {
+export function getBenchmarkFactory(key: Suite): BenchFactory {
   let benchmark = benchmarkMap.get(key)
   if (!benchmark) {
-    benchmark = new BenchmarkLib.Suite(key.name)
+    benchmark = new Bench({})
     benchmarkMap.set(key, benchmark)
   }
   return benchmark

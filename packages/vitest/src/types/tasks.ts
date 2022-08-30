@@ -1,5 +1,5 @@
-import type BenchmarkLib from 'tinybench'
 import type { ChainableFunction } from '../runtime/chain'
+import type { BenchFactory } from './benchmark'
 import type { Awaitable, ErrorWithDiff } from './general'
 import type { Benchmark, BenchmarkAPI, BenchmarkResult, UserConsoleLog } from '.'
 
@@ -35,7 +35,7 @@ export interface Suite extends TaskBase {
   type: 'suite'
   tasks: Task[]
   filepath?: string
-  benchmark?: BenchmarkLib
+  benchmark?: BenchFactory
 }
 
 export interface File extends Suite {
