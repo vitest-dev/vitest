@@ -106,12 +106,7 @@ export class Vitest {
     this.runningPromise = undefined
 
     this.cache.results.setConfig(resolved.root, resolved.cache)
-    try {
-      await this.cache.results.readFromCache()
-    }
-    catch (err) {
-      this.logger.error(`[vitest] Error, while trying to parse cache in ${this.cache.results.getCachePath()}:`, err)
-    }
+    await this.cache.results.readFromCache()
   }
 
   async initCoverageProvider() {

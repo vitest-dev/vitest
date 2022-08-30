@@ -34,9 +34,12 @@ export class ResultsCache {
 
     if (fs.existsSync(this.cachePath)) {
       const resultsCache = await fs.promises.readFile(this.cachePath, 'utf8')
-      const { results, version } = JSON.parse(resultsCache)
-      this.cache = new Map(results)
-      this.version = version
+      try {
+        const { results, version } = JSON.parse(resultsCache)
+        this.cache = new Map(results)
+        this.version = version
+      }
+      catch {}
     }
   }
 
