@@ -13,7 +13,7 @@ export const test = createTest(
   },
 )
 
-export const benchmark = createBenchmark(
+export const bench = createBenchmark(
   function (name, fn, options) {
     getCurrentSuite().benchmark.fn.call(this, name, fn, options)
   },

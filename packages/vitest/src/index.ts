@@ -1,4 +1,4 @@
-export { suite, test, describe, it, benchmark } from './runtime/suite'
+export { suite, test, describe, it, bench } from './runtime/suite'
 export * from './runtime/hooks'
 export * from './runtime/utils'
 
