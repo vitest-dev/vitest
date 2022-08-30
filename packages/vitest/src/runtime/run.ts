@@ -1,6 +1,6 @@
 import { performance } from 'perf_hooks'
 import limit from 'p-limit'
-import type { BenchTask, Benchmark, BenchmarkResult, File, HookCleanupCallback, HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from '../types'
+import type { Benchmark, BenchmarkResult, File, HookCleanupCallback, HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from '../types'
 import { vi } from '../integrations/vi'
 import { clearTimeout, createDefer, getFullName, getWorkerState, hasFailed, hasTests, isBenchmarkMode, isBrowser, isNode, partitionSuiteChildren, setTimeout, shuffle } from '../utils'
 import { getState, setState } from '../integrations/chai/jest-expect'
@@ -326,8 +326,8 @@ async function runBenchmarkSuit(suite: Suite) {
       benchmarkInstance.add(benchmark.name, benchmarkFn)
       updateTask(benchmark)
     })
-    benchmarkInstance.addEventListener('cycle', (e: any) => {
-      const task = e.target as BenchTask
+    benchmarkInstance.addEventListener('cycle', (e) => {
+      const task = e.task
       const benchmark = benchmarkMap[task.name || '']
       if (benchmark) {
         const taskRes = task.result!
