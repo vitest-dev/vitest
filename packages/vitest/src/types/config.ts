@@ -1,7 +1,7 @@
 import type { AliasOptions, CommonServerOptions } from 'vite'
 import type { PrettyFormatOptions } from 'pretty-format'
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
-import type { BenchmarkBuiltinReporters, BuiltinReporters } from '../node/reporters'
+import type { BuiltinReporters } from '../node/reporters'
 import type { TestSequencerConstructor } from '../node/sequencers/types'
 import type { CoverageOptions, ResolvedCoverageOptions } from './coverage'
 import type { JSDOMOptions } from './jsdom-options'
@@ -22,6 +22,8 @@ export interface EnvironmentOptions {
    */
   jsdom?: JSDOMOptions
 }
+
+export type VitestRunMode = 'test' | 'benchmark'
 
 export interface InlineConfig {
   /**
@@ -479,6 +481,8 @@ export interface UserConfig extends InlineConfig {
 }
 
 export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence'> {
+  mode: VitestRunMode
+
   base?: string
 
   config?: string
@@ -495,10 +499,8 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
 
   api?: ApiConfig
 
-  // Only benchmark command it has value
-  benchmark?: Omit<Required<BenchmarkUserOptions>, 'reporters'> & {
-    reporters: (Reporter | BenchmarkBuiltinReporters)[]
-  }
+  benchmark?: Required<BenchmarkUserOptions>
+
   shard?: {
     index: number
     count: number

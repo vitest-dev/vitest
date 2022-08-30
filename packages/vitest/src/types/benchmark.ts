@@ -28,7 +28,7 @@ export interface BenchmarkUserOptions {
    * Custom reporter for output. Can contain one or more built-in report names, reporter instances,
    * and/or paths to custom reporters
    */
-  reporters?: Arrayable<BenchmarkBuiltinReporters | Reporter | Omit<string, BenchmarkBuiltinReporters>>
+  reporters?: Arrayable<BenchmarkBuiltinReporters | Reporter>
 }
 
 export interface Benchmark extends TaskBase {

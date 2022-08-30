@@ -7,9 +7,9 @@ import mm from 'micromatch'
 import c from 'picocolors'
 import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
-import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter, ResolvedConfig, UserConfig } from '../types'
+import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter, ResolvedConfig, UserConfig, VitestRunMode } from '../types'
 import { SnapshotManager } from '../integrations/snapshot/manager'
-import { clearTimeout, deepMerge, hasFailed, noop, setTimeout, slash } from '../utils'
+import { clearTimeout, deepMerge, hasFailed, noop, setTimeout, slash, toArray } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
 import { createPool } from './pool'
 import type { WorkerPool } from './pool'
@@ -45,7 +45,9 @@ export class Vitest {
   restartsCount = 0
   runner: ViteNodeRunner = undefined!
 
-  constructor() {
+  constructor(
+    public readonly mode: VitestRunMode,
+  ) {
     this.logger = new Logger(this)
   }
 
@@ -58,7 +60,7 @@ export class Vitest {
     this.pool?.close()
     this.pool = undefined
 
-    const resolved = resolveConfig(options, server.config)
+    const resolved = resolveConfig(this.mode, options, server.config)
 
     this.server = server
     this.config = resolved
@@ -102,7 +104,7 @@ export class Vitest {
     }
 
     this.reporters = resolved.benchmark
-      ? await createBenchmarkReporters(resolved.benchmark.reporters, this.runner)
+      ? await createBenchmarkReporters(toArray(resolved.benchmark.reporters), this.runner)
       : await createReporters(resolved.reporters, this.runner)
 
     this.runningPromise = undefined

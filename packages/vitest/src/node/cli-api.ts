@@ -3,7 +3,7 @@ import type { UserConfig as ViteUserConfig } from 'vite'
 import { EXIT_CODE_RESTART } from '../constants'
 import { CoverageProviderMap } from '../integrations/coverage'
 import { envPackageNames } from '../integrations/env'
-import type { UserConfig } from '../types'
+import type { UserConfig, VitestRunMode } from '../types'
 import { ensurePackageInstalled } from '../utils'
 import { createVitest } from './create'
 import { registerConsoleShortcuts } from './stdin'
@@ -15,7 +15,7 @@ export interface CliOptions extends UserConfig {
   run?: boolean
 }
 
-export async function startVitest(cliFilters: string[], options: CliOptions, viteOverrides?: ViteUserConfig) {
+export async function startVitest(mode: VitestRunMode, cliFilters: string[], options: CliOptions, viteOverrides?: ViteUserConfig) {
   process.env.TEST = 'true'
   process.env.VITEST = 'true'
   process.env.NODE_ENV ??= options.mode || 'test'
@@ -33,12 +33,12 @@ export async function startVitest(cliFilters: string[], options: CliOptions, vit
     return false
   }
 
-  if (typeof options.coverage === 'boolean' && !options.benchmark)
+  if (typeof options.coverage === 'boolean')
     options.coverage = { enabled: options.coverage }
 
-  const ctx = await createVitest(options, viteOverrides)
+  const ctx = await createVitest(mode, options, viteOverrides)
 
-  if (ctx.config.coverage.enabled && !options.benchmark) {
+  if (mode !== 'benchmark' && ctx.config.coverage.enabled) {
     const provider = ctx.config.coverage.provider || 'c8'
     if (typeof provider === 'string') {
       const requiredPackages = CoverageProviderMap[provider]

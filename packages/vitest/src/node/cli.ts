@@ -2,6 +2,7 @@ import cac from 'cac'
 import c from 'picocolors'
 import { version } from '../../package.json'
 import { benchmarkConfigDefaults } from '../defaults'
+import type { VitestRunMode } from '../types'
 import type { CliOptions } from './cli-api'
 import { startVitest } from './cli-api'
 import { divider } from './reporters/renderers/utils'
@@ -67,30 +68,31 @@ cli
 
 cli
   .command('[...filters]')
-  .action(start)
+  .action((filter, options) => start('test', filter, options))
 
 cli.parse()
 
 async function runRelated(relatedFiles: string[] | string, argv: CliOptions) {
   argv.related = relatedFiles
   argv.passWithNoTests ??= true
-  await start([], argv)
+  await start('test', [], argv)
 }
 
 async function run(cliFilters: string[], options: CliOptions) {
   options.run = true
-  await start(cliFilters, options)
+  await start('test', cliFilters, options)
 }
 
 async function benchmark(cliFilters: string[], options: CliOptions) {
   console.warn(c.yellow('Benchmarking is an experimental feature. API might change in the future.'))
+  // TODO: remove this
   options.benchmark = benchmarkConfigDefaults
-  await start(cliFilters, options)
+  await start('benchmark', cliFilters, options)
 }
 
-async function start(cliFilters: string[], options: CliOptions) {
+async function start(mode: VitestRunMode, cliFilters: string[], options: CliOptions) {
   try {
-    if (await startVitest(cliFilters, options) === false)
+    if (await startVitest(mode, cliFilters, options) === false)
       process.exit()
   }
   catch (e) {

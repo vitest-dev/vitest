@@ -10,7 +10,7 @@ import { MocksPlugin } from './mock'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { CoverageTransform } from './coverageTransform'
 
-export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest()): Promise<VitePlugin[]> {
+export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('test')): Promise<VitePlugin[]> {
   async function UIPlugin() {
     await ensurePackageInstalled('@vitest/ui', ctx.config?.root || options.root || process.cwd())
     return (await import('@vitest/ui')).default(options.uiBase)
