@@ -15,8 +15,9 @@ describe('sort', () => {
     })
   })
 
-  test('add', () => {
-    expect(1 + 1).toBe(2)
+  // should not be collect
+  it('test', () => {
+    expect(1 + 1).toBe(3)
   })
 })
 
@@ -44,13 +45,6 @@ describe('timeout', () => {
   })
 
   test('reduce', () => {
-    expect(1 - 1).toBe(0)
-  })
-})
-
-describe('unit test', () => {
-  // should not be collect
-  it('test', () => {
-    expect(1 + 1).toBe(3)
+    expect(1 - 1).toBe(2)
   })
 })
