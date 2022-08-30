@@ -123,7 +123,7 @@ importers:
       unocss: 0.45.13_vite@3.0.9
       unplugin-vue-components: 0.22.4_vite@3.0.9+vue@3.2.37
       vite: 3.0.9
-      vite-plugin-pwa: 0.12.3_f7se6o6eqkwcix4u3svh6mkvda
+      vite-plugin-pwa: 0.12.3_vite@3.0.9
       vitepress: 1.0.0-alpha.12
       workbox-window: 6.5.4
 
@@ -20231,11 +20231,10 @@ packages:
       - supports-color
     dev: true
 
-  /vite-plugin-pwa/0.12.3_f7se6o6eqkwcix4u3svh6mkvda:
+  /vite-plugin-pwa/0.12.3_vite@3.0.9:
     resolution: {integrity: sha512-gmYdIVXpmBuNjzbJFPZFzxWYrX4lHqwMAlOtjmXBbxApiHjx9QPXKQPJjSpeTeosLKvVbNcKSAAhfxMda0QVNQ==}
     peerDependencies:
       vite: ^2.0.0 || ^3.0.0-0
-      workbox-window: ^6.4.0
     dependencies:
       debug: 4.3.4
       fast-glob: 3.2.11
