@@ -1,7 +1,7 @@
 import cac from 'cac'
 import c from 'picocolors'
 import { version } from '../../package.json'
-import { defaultBenchmark } from '../defaults'
+import { benchmarkConfigDefaults } from '../defaults'
 import type { CliOptions } from './cli-api'
 import { startVitest } from './cli-api'
 import { divider } from './reporters/renderers/utils'
@@ -83,8 +83,8 @@ async function run(cliFilters: string[], options: CliOptions) {
 }
 
 async function benchmark(cliFilters: string[], options: CliOptions) {
-  console.warn('API might change in the future')
-  options.benchmark = defaultBenchmark
+  console.warn(c.yellow('Benchmarking is an experimental feature. API might change in the future.'))
+  options.benchmark = benchmarkConfigDefaults
   await start(cliFilters, options)
 }
 
