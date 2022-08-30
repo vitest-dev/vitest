@@ -1,4 +1,3 @@
-import Bench from 'tinybench'
 import type { Awaitable, BenchFactory, BenchFunction, Benchmark, Suite, SuiteHooks, Test } from '../types'
 
 // use WeakMap here to make the Test and Suite object serializable
@@ -26,9 +25,13 @@ export function isTest(task: Test | Benchmark): task is Test {
   return task.type === 'test'
 }
 
-export function getBenchmarkFactory(key: Suite): BenchFactory {
+export async function getBenchmarkFactory(key: Suite): Promise<BenchFactory> {
   let benchmark = benchmarkMap.get(key)
   if (!benchmark) {
+    if (!globalThis.EventTarget)
+      await import('event-target-polyfill' as any)
+
+    const Bench = (await import('tinybench')).default
     benchmark = new Bench({})
     benchmarkMap.set(key, benchmark)
   }

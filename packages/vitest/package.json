@@ -114,6 +114,7 @@
     "@types/prompts": "^2.4.0",
     "@types/sinonjs__fake-timers": "^8.1.2",
     "@vitest/ui": "workspace:*",
+    "event-target-polyfill": "^0.0.3",
     "birpc": "^0.2.3",
     "cac": "^6.7.14",
     "chai-subset": "^1.6.0",

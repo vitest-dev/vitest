@@ -306,7 +306,7 @@ async function runBenchmarkSuit(suite: Suite) {
     await Promise.all(benchmarkSuiteGroup.map(subSuite => runBenchmarkSuit(subSuite)))
 
   if (benchmarkGroup.length) {
-    const benchmarkInstance = getBenchmarkFactory(suite)
+    const benchmarkInstance = await getBenchmarkFactory(suite)
     const defer = createDefer()
     const benchmarkMap: Record<string, Benchmark> = {}
     suite.result = {

@@ -764,6 +764,7 @@ importers:
       cli-truncate: ^3.1.0
       debug: ^4.3.4
       diff: ^5.1.0
+      event-target-polyfill: ^0.0.3
       execa: ^6.1.0
       fast-glob: ^3.2.11
       find-up: ^6.3.0
@@ -819,6 +820,7 @@ importers:
       chai-subset: 1.6.0
       cli-truncate: 3.1.0
       diff: 5.1.0
+      event-target-polyfill: 0.0.3
       execa: 6.1.0
       fast-glob: 3.2.11
       find-up: 6.3.0
@@ -12211,6 +12213,10 @@ packages:
   /etag/1.8.1:
     resolution: {integrity: sha512-aIL5Fx7mawVa300al2BnEE4iNvo1qETxLrPI/o05L7z6go7fCw1J6EQmbK4FmJ2AS7kgVF/KEZWufBfdClMcPg==}
     engines: {node: '>= 0.6'}
+    dev: true
+
+  /event-target-polyfill/0.0.3:
+    resolution: {integrity: sha512-ZMc6UuvmbinrCk4RzGyVmRyIsAyxMRlp4CqSrcQRO8Dy0A9ldbiRy5kdtBj4OtP7EClGdqGfIqo9JmOClMsGLQ==}
     dev: true
 
   /eventemitter2/6.4.5:
