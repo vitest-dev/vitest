@@ -1,4 +1,4 @@
-import { bench, describe, expect, it, test } from 'vitest'
+import { bench, describe } from 'vitest'
 
 describe('sort', () => {
   bench('normal', () => {
@@ -15,10 +15,11 @@ describe('sort', () => {
     })
   })
 
+  // TODO: move to failed tests
   // should not be collect
-  it('test', () => {
-    expect(1 + 1).toBe(3)
-  })
+  // it('test', () => {
+  //   expect(1 + 1).toBe(3)
+  // })
 })
 
 function timeout(time: number) {
@@ -44,7 +45,8 @@ describe('timeout', () => {
     await timeout(25)
   })
 
-  test('reduce', () => {
-    expect(1 - 1).toBe(2)
-  })
+  // TODO: move to failed tests
+  // test('reduce', () => {
+  //   expect(1 - 1).toBe(2)
+  // })
 })

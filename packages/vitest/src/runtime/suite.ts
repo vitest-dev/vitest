@@ -1,6 +1,6 @@
 import util from 'util'
 import type { BenchFunction, BenchOptions, Benchmark, BenchmarkAPI, File, RunMode, Suite, SuiteAPI, SuiteCollector, SuiteFactory, SuiteHooks, Task, Test, TestAPI, TestFunction } from '../types'
-import { getWorkerState, isBenchmarkMode, isObject, noop } from '../utils'
+import { getWorkerState, isObject, isRunningInBenchmark, isRunningInTest, noop } from '../utils'
 import { createChainable } from './chain'
 import { collectTask, collectorContext, createTestContext, runWithSuite, withTimeout } from './context'
 import { getHooks, setFn, setHooks } from './map'
@@ -77,8 +77,8 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
   initSuite()
 
   const test = createTest(function (name: string, fn = noop, timeout?: number) {
-    if (isBenchmarkMode())
-      return
+    if (!isRunningInTest())
+      throw new Error('`test()` and `it()` is only available in test mode.')
 
     const mode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run'
 
@@ -113,8 +113,8 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
   const benchmark = createBenchmark(function (name: string, fn = noop, options: BenchOptions) {
     const mode = this.skip ? 'skip' : 'run'
 
-    if (!isBenchmarkMode())
-      return
+    if (!isRunningInBenchmark())
+      throw new Error('`bench()` is only available in benchmark mode. Run with `vitest bench` instead.')
 
     const benchmark: Benchmark = {
       type: 'benchmark',

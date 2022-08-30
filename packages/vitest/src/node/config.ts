@@ -88,6 +88,7 @@ export function resolveConfig(
     ...configDefaults,
     ...options,
     root: viteConfig.root,
+    mode,
   } as ResolvedConfig
 
   if (viteConfig.base !== '/')
