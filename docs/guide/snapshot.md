@@ -63,7 +63,7 @@ When the received value doesn't match the snapshot, the test fails and shows you
 
 In watch mode, you can press the `u` key in the terminal to update the failed snapshot directly.
 
-Or you can use the `--updateSnapshot` or `-u` flag in the CLI to make Vitest update snapshots.
+Or you can use the `--update` or `-u` flag in the CLI to make Vitest update snapshots.
 
 ```bash
 vitest -u
