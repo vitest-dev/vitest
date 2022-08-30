@@ -67,13 +67,14 @@ export class Logger {
 
   printNoTestFound(filters?: string[]) {
     const config = this.ctx.config
+    const filtersConfig = config.benchmark || config
     const comma = c.dim(', ')
     if (filters?.length)
       this.console.error(c.dim('filter:  ') + c.yellow(filters.join(comma)))
-    if (config.include)
-      this.console.error(c.dim('include: ') + c.yellow(config.include.join(comma)))
-    if (config.exclude)
-      this.console.error(c.dim('exclude:  ') + c.yellow(config.exclude.join(comma)))
+    if (filtersConfig.include)
+      this.console.error(c.dim('include: ') + c.yellow(filtersConfig.include.join(comma)))
+    if (filtersConfig.exclude)
+      this.console.error(c.dim('exclude:  ') + c.yellow(filtersConfig.exclude.join(comma)))
     if (config.watchExclude)
       this.console.error(c.dim('watch exclude:  ') + c.yellow(config.watchExclude.join(comma)))
 

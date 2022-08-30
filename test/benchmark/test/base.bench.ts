@@ -1,4 +1,4 @@
-import { bench, describe, expect, test } from 'vitest'
+import { bench, describe, expect, it, test } from 'vitest'
 
 describe('sort', () => {
   bench('normal', () => {
@@ -45,5 +45,12 @@ describe('timeout', () => {
 
   test('reduce', () => {
     expect(1 - 1).toBe(0)
+  })
+})
+
+describe('unit test', () => {
+  // should not be collect
+  it('test', () => {
+    expect(1 + 1).toBe(3)
   })
 })
