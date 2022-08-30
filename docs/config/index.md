@@ -553,33 +553,6 @@ test('doNotRun', () => {
 })
 ```
 
-### fileNamePattern
-
-- **Type** `string`
-
-Run test files matching the pattern.
-If you add `Reducer` to this property, it will run test files matching this pattern. 
-
-```js
-// fileName: UserReducer.test.ts
-import { expect, test } from 'vitest'
-
-// run
-test('test inside UserReducer.test.ts', () => {
-  expect(true).toBe(true)
-})
-```
-
-```js
-// fileName: UserService.test.ts
-import { expect, test } from 'vitest'
-
-// skipped
-test('test inside UserService.test.ts', () => {
-  expect(true).toBe(true)
-})
-```
-
 ### open
 
 - **Type:** `boolean`

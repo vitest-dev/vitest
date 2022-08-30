@@ -42,7 +42,6 @@ export default defineConfig({
       './test/setup.ts',
     ],
     testNamePattern: '^((?!does not include test that).)*$',
-    fileNamePattern: '/core/test/',
     coverage: {
       provider: 'istanbul',
       reporter: ['text', 'html'],

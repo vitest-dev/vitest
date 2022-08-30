@@ -8,7 +8,7 @@ const keys = [
   ['a', 'rerun all tests'],
   ['f', 'rerun only failed tests'],
   ['u', 'update snapshot'],
-  ['p', 'filter by a filename regex pattern'],
+  ['p', 'filter by a filename'],
   ['t', 'filter by a test name regex pattern'],
   ['q', 'quit'],
 ]
@@ -23,6 +23,8 @@ ${keys.map(i => c.dim('  press ') + c.reset(c.bold(i[0])) + c.dim(` to ${i[1]}`)
 }
 
 export function registerConsoleShortcuts(ctx: Vitest) {
+  let latestFilename = ''
+
   async function _keypressHandler(str: string, key: any) {
     // ctrl-c or esc
     if (str === '\x03' || str === '\x1B' || (key && key.ctrl && key.name === 'c'))
@@ -79,9 +81,10 @@ export function registerConsoleShortcuts(ctx: Vitest) {
       name: 'filter',
       type: 'text',
       message: 'Input filename pattern',
-      initial: String(ctx.config.fileNamePattern || ''),
+      initial: latestFilename,
     }])
-    await ctx.changeFilenamePattern(filter, undefined, 'change filename pattern')
+    latestFilename = filter
+    await ctx.changeFilenamePattern(filter)
     on()
   }
 

@@ -301,9 +301,12 @@ export class Vitest {
     await this.rerunFiles(files, trigger)
   }
 
-  async changeFilenamePattern(pattern: string, files: string[] = this.state.getFilepaths().filter(f => f.includes(pattern)), trigger?: string) {
-    this.config.fileNamePattern = pattern
-    await this.rerunFiles(files, trigger)
+  async changeFilenamePattern(pattern: string) {
+    const files = this.state.getFilepaths()
+    if (!pattern)
+      return await this.rerunFiles(files, 'reset filename pattern')
+    const filteredFiles = await this.globTestFiles([pattern])
+    await this.rerunFiles(filteredFiles, 'change filename pattern')
   }
 
   async rerunFailed() {

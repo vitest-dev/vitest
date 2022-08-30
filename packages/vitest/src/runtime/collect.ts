@@ -33,7 +33,7 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
       return await import(`${filepath}?v=${hash}`)
   }
 
-  for (const filepath of matchPattern(paths, config.fileNamePattern)) {
+  for (const filepath of paths) {
     const path = relativePath(config.root, filepath)
     const file: File = {
       id: hash(path),
@@ -135,15 +135,6 @@ function interpretTaskModes(suite: Suite, namePattern?: string | RegExp, onlyMod
     if (suite.tasks.length && suite.tasks.every(i => i.mode !== 'run'))
       suite.mode = 'skip'
   }
-}
-/**
- * Skip files that are not matched by the pattern.
- */
-function matchPattern(files: string[], pattern = '') {
-  if (!pattern)
-    return files
-
-  return files.filter(f => f.includes(pattern))
 }
 
 function getTaskFullName(task: TaskBase): string {

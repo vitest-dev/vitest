@@ -14,7 +14,6 @@ cli
   .option('-u, --update', 'update snapshot')
   .option('-w, --watch', 'watch mode')
   .option('-t, --testNamePattern <pattern>', 'run tests with full names matching the specified pattern')
-  .option('-p, --fileNamePattern <pattern>', 'run test files matching the pattern')
   .option('--dir <path>', 'base directory to scan for the test files')
   .option('--ui', 'enable UI')
   .option('--open', 'open UI automatically (default: !process.env.CI))')

@@ -250,10 +250,6 @@ export interface InlineConfig {
   testNamePattern?: string | RegExp
 
   /**
-   * run test files with the specified pattern
-   */
-  fileNamePattern?: string
-  /**
    * Will call `.mockClear()` on all spies before each test
    * @default false
    */
@@ -474,13 +470,12 @@ export interface UserConfig extends InlineConfig {
   shard?: string
 }
 
-export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'fileNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'shard' | 'cache' | 'sequence'> {
+export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'shard' | 'cache' | 'sequence'> {
   base?: string
 
   config?: string
   filters?: string[]
   testNamePattern?: RegExp
-  fileNamePattern?: string
   related?: string[]
 
   coverage: ResolvedCoverageOptions
