@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'vitest'
 import { execa } from 'execa'
 import { resolve } from 'pathe'
+import { cliPath } from './utils'
 
-const cliPath = resolve(__dirname, '../../../packages/vite-node/src/cli.ts')
 const entryPath = resolve(__dirname, '../src/circular/index.ts')
 
 describe('circular', async () => {

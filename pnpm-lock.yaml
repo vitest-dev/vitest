@@ -1080,11 +1080,15 @@ importers:
 
   test/vite-node:
     specifiers:
+      '@types/fs-extra': ^9.0.13
       execa: ^6.1.0
+      fs-extra: ^10.1.0
       vite-node: workspace:*
       vitest: workspace:*
     devDependencies:
+      '@types/fs-extra': 9.0.13
       execa: 6.1.0
+      fs-extra: 10.1.0
       vite-node: link:../../packages/vite-node
       vitest: link:../../packages/vitest
 

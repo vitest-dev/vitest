@@ -79,7 +79,7 @@ export async function reload(runner: ViteNodeRunner, files: string[]) {
         runner.moduleCache.delete(fsPath)
     })
 
-  return Promise.all(files.map(file => runner.executeId(file)))
+  return Promise.allSettled(files.map(file => runner.executeId(file)))
 }
 
 function notifyListeners<T extends string>(
@@ -147,12 +147,18 @@ async function fetchUpdate(runner: ViteNodeRunner, { path, acceptedPath }: Updat
       const disposer = maps.disposeMap.get(dep)
       if (disposer)
         await disposer(maps.dataMap.get(dep))
-      try {
-        const newMod = await reload(runner, [dep])
-        moduleMap.set(dep, newMod)
+
+      const reloadResult = await reload(runner, [dep])
+      const failures = reloadResult.filter((v): v is PromiseRejectedResult => v.status === 'rejected')
+
+      if (failures.length) {
+        const errors = failures.map(v => v.reason).filter(v => v instanceof Error)
+        warnFailedFetch(errors, dep)
       }
-      catch (e: any) {
-        warnFailedFetch(e, dep)
+      else {
+        // If block above confirms they all succeeded so this is safe
+        const newMod = await Promise.all(reloadResult)
+        moduleMap.set(dep, newMod)
       }
     }),
   )
@@ -166,9 +172,11 @@ async function fetchUpdate(runner: ViteNodeRunner, { path, acceptedPath }: Updat
   }
 }
 
-function warnFailedFetch(err: Error, path: string | string[]) {
-  if (!err.message.match('fetch'))
-    console.error(err)
+function warnFailedFetch(errs: Error[], path: string | string[]) {
+  for (const err of errs) {
+    if (!err.message.match('fetch'))
+      console.error(err)
+  }
 
   console.error(
     `[hmr] Failed to reload ${path}. `
