@@ -1,4 +1,4 @@
-import type { Bench as BenchFactory, Options as BenchOptions, Task as BenchTask, TaskResult as BenchTaskResult } from 'tinybench'
+import type { Bench as BenchFactory, Options as BenchOptions, Task as BenchTask, TaskResult as BenchTaskResult, TaskResult as TinybenchResult } from 'tinybench'
 import type { BenchmarkBuiltinReporters } from '../node/reporters'
 import type { ChainableFunction } from '../runtime/chain'
 import type { Arrayable, Reporter, Suite, TaskBase, TaskResult } from '.'
@@ -39,19 +39,9 @@ export interface Benchmark extends TaskBase {
   options: BenchOptions
 }
 
-export interface BenchmarkResult extends Omit<TaskResult, 'state'> {
+export interface BenchmarkResult extends TinybenchResult {
   name: string
-  count: number
-  hz: number
-  rme: number
-  sampleSize: number
-  sort: number
-  max: number
-  min: number
-  p75: number
-  p99: number
-  p995: number
-  p999: number
+  rank: number
 }
 
 export type BenchFunction = (this: BenchFactory) => Promise<void> | void

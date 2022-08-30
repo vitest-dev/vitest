@@ -486,7 +486,7 @@ export class Vitest {
   }
 
   async globTestFiles(filters: string[] = []) {
-    const { include, exclude, includeSource } = this.config.benchmark || this.config
+    const { include, exclude, includeSource } = this.config
 
     const globOptions = {
       absolute: true,

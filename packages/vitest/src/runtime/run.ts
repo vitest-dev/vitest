@@ -276,18 +276,10 @@ export async function runSuite(suite: Suite) {
 function createBenchmarkResult(name: string): BenchmarkResult {
   return {
     name,
-    count: 0,
-    hz: 0,
+    rank: 0,
     rme: 0,
-    sampleSize: 0,
-    sort: 0,
-    max: 0,
-    min: 0,
-    p75: 0,
-    p99: 0,
-    p995: 0,
-    p999: 0,
-  }
+    samples: [] as number[],
+  } as BenchmarkResult
 }
 
 async function runBenchmarkSuit(suite: Suite) {
@@ -315,15 +307,16 @@ async function runBenchmarkSuit(suite: Suite) {
       benchmark: createBenchmarkResult(suite.name),
     }
     updateTask(suite)
-    benchmarkGroup.forEach((benchmark) => {
+    benchmarkGroup.forEach((benchmark, idx) => {
       const benchmarkFn = getFn(benchmark)
       benchmark.result = {
         state: 'run',
         startTime: start,
         benchmark: createBenchmarkResult(benchmark.name),
       }
-      benchmarkMap[benchmark.name] = benchmark
-      benchmarkInstance.add(benchmark.name, benchmarkFn)
+      const id = idx.toString()
+      benchmarkMap[id] = benchmark
+      benchmarkInstance.add(id, benchmarkFn)
       updateTask(benchmark)
     })
     benchmarkInstance.addEventListener('cycle', (e) => {
@@ -332,20 +325,11 @@ async function runBenchmarkSuit(suite: Suite) {
       if (benchmark) {
         const taskRes = task.result!
         const result = benchmark.result!.benchmark!
-        result.min = taskRes.min
-        result.max = taskRes.max
-        result.p75 = taskRes.p75
-        result.p99 = taskRes.p99
-        result.p995 = taskRes.p995
-        result.p999 = taskRes.p999
-        result.sampleSize = taskRes.samples.length
-        result.name = task.name || result.name
-        result.count = task.runs || result.count
-        result.hz = taskRes.hz || result.hz
-        result.rme = taskRes.rme || result.rme
+        Object.assign(result, taskRes)
         updateTask(benchmark)
       }
     })
+
     benchmarkInstance.addEventListener('complete', () => {
       suite.result!.duration = performance.now() - start
       suite.result!.state = 'pass'
@@ -354,18 +338,21 @@ async function runBenchmarkSuit(suite: Suite) {
         .sort((a, b) => b.result!.mean - a.result!.mean)
         .forEach((cycle, idx) => {
           const benchmark = benchmarkMap[cycle.name || '']
+          benchmark.result!.state = 'pass'
           if (benchmark) {
             const result = benchmark.result!.benchmark!
-            result.sort = Number(idx) + 1
+            result.rank = Number(idx) + 1
             updateTask(benchmark)
           }
         })
       updateTask(suite)
       defer.resolve(null)
     })
+
     benchmarkInstance.addEventListener('error', (e) => {
       defer.reject(e)
     })
+
     benchmarkInstance.run()
     await defer
   }

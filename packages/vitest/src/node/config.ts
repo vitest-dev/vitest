@@ -164,7 +164,11 @@ export function resolveConfig(
       ...benchmarkConfigDefaults,
       ...resolved.benchmark,
     }
+    // override test config
     resolved.coverage.enabled = false
+    resolved.include = resolved.benchmark.include
+    resolved.exclude = resolved.benchmark.exclude
+    resolved.includeSource = resolved.benchmark.includeSource
   }
 
   resolved.setupFiles = toArray(resolved.setupFiles || []).map(file =>

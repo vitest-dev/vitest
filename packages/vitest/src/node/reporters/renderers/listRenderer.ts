@@ -1,11 +1,11 @@
 import c from 'picocolors'
 import cliTruncate from 'cli-truncate'
 import stripAnsi from 'strip-ansi'
-import type { Benchmark, SuiteHooks, Task } from '../../../types'
-import { clearInterval, getTests, setInterval } from '../../../utils'
+import type { Benchmark, BenchmarkResult, SuiteHooks, Task } from '../../../types'
+import { clearInterval, getTests, notNullish, setInterval } from '../../../utils'
 import { F_RIGHT } from '../../../utils/figures'
 import type { Logger } from '../../logger'
-import { getBenchmarkSortNumber, getCols, getHookStateSymbol, getStateSymbol } from './utils'
+import { getCols, getHookStateSymbol, getStateSymbol } from './utils'
 
 export interface ListRendererOptions {
   renderSucceed?: boolean
@@ -42,25 +42,46 @@ function renderHookState(task: Task, hookName: keyof SuiteHooks, level = 0) {
   return ''
 }
 
-function renderBenchmark(task: Benchmark, level = 0): string {
-  const result = task.result
-  level += 1
-  if (!(result && result.benchmark))
-    return '  '.repeat(level) + task.name
-
-  const cycle = result.benchmark!
+function renderBenchmarkItems(result: BenchmarkResult) {
   return [
-    '  '.repeat(level),
-    getBenchmarkSortNumber(cycle),
-    ' ',
-    c.dim(cycle.name),
-    c.dim(' x '),
-    c.yellow(formatNumber(cycle.hz)),
-    c.dim(' ops/sec ±'),
-    c.yellow(cycle.rme.toFixed(2)),
-    c.dim('% ('),
-    `${c.yellow(cycle.sampleSize)} `,
-    c.dim(`run${cycle.sampleSize === 1 ? '' : 's'} sampled)`),
+    result.name,
+    formatNumber(result.hz || 0),
+    formatNumber(result.p99 || 0),
+    `±${result.rme.toFixed(2)}%`,
+    result.samples.length.toString(),
+  ]
+}
+
+function renderBenchmark(task: Benchmark, tasks: Task[]): string {
+  const result = task.result?.benchmark
+  if (!result)
+    return task.name
+
+  const benchs = tasks
+    .map(i => i.type === 'benchmark' ? i.result?.benchmark : undefined)
+    .filter(notNullish)
+
+  const allItems = benchs.map(renderBenchmarkItems)
+  const items = renderBenchmarkItems(result)
+  const padded = items.map((i, idx) => {
+    const width = Math.max(...allItems.map(i => i[idx].length))
+    return idx
+      ? i.padStart(width, ' ')
+      : i.padEnd(width, ' ') // name
+  })
+
+  return [
+    padded[0], // name
+    c.dim('  '),
+    c.blue(padded[1]),
+    c.dim(' ops/sec '),
+    c.cyan(padded[3]),
+    c.dim(` (${padded[4]} samples)`),
+    result.rank === 1
+      ? c.bold(c.green(' fastest'))
+      : result.rank === benchs.length && benchs.length > 2
+        ? c.bold(c.gray(' slowest'))
+        : '',
   ].join('')
 }
 
@@ -89,11 +110,12 @@ export function renderTree(tasks: Task[], options: ListRendererOptions, level = 
     if (level === 0)
       name = formatFilepath(name)
 
-    const title = prefix + name + suffix
-    if (task.type === 'benchmark')
-      output.push(renderBenchmark(task, level))
-    else
-      output.push('  '.repeat(level) + title)
+    const padding = '  '.repeat(level)
+    const body = task.type === 'benchmark'
+      ? renderBenchmark(task, tasks)
+      : name
+
+    output.push(padding + prefix + body + suffix)
 
     if ((task.result?.state !== 'pass') && outputMap.get(task) != null) {
       let data: string | undefined = outputMap.get(task)
