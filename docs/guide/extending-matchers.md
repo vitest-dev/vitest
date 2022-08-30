@@ -8,7 +8,7 @@ Since Vitest is compatible with both Chai and Jest, you can use either the `chai
 
 This guide will explore extending matchers with `expect.extend`, however, here is a little guide on how to extend Chai assertions in Vitest using an existing plugin. If you are interested in Chai's API on how to create Chai plugins check [their guide](https://www.chaijs.com/guide/plugins/). 
 
-To extend Vitest's chai assertions with an existing plugin or one you create, here is a quick example on how to `chai.use` [sinon-chai](https://www.chaijs.com/plugins/sinon-chai/) plugin with Vitest:
+To extend Vitest's chai assertions with an existing plugin or one you create, here is a quick example of how to `chai.use` [sinon-chai](https://www.chaijs.com/plugins/sinon-chai/) plugin with Vitest:
 
 ```ts
 import { chai } from 'vitest'
