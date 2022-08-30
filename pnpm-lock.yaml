@@ -59,7 +59,7 @@ importers:
       '@rollup/plugin-node-resolve': 13.3.0_rollup@2.77.3
       '@types/fs-extra': 9.0.13
       '@types/lodash': 4.14.184
-      '@types/node': 18.7.13
+      '@types/node': 18.7.14
       '@types/ws': 8.5.3
       '@vitest/browser': link:packages/browser
       '@vitest/coverage-c8': link:packages/coverage-c8
@@ -123,7 +123,7 @@ importers:
       unocss: 0.45.13_vite@3.0.9
       unplugin-vue-components: 0.22.4_vite@3.0.9+vue@3.2.37
       vite: 3.0.9
-      vite-plugin-pwa: 0.12.3_vite@3.0.9
+      vite-plugin-pwa: 0.12.3_f7se6o6eqkwcix4u3svh6mkvda
       vitepress: 1.0.0-alpha.12
       workbox-window: 6.5.4
 
@@ -7211,7 +7211,7 @@ packages:
   /@types/concat-stream/1.6.1:
     resolution: {integrity: sha512-eHE4cQPoj6ngxBZMvVf6Hw7Mh4jMW4U9lpGmS5GBPB9RYxlFg+CHaVN7ErNY4W9XfLIEn20b4VDYaIrbq0q4uA==}
     dependencies:
-      '@types/node': 18.7.13
+      '@types/node': 18.7.14
     dev: true
 
   /@types/cookie/0.4.1:
@@ -7257,13 +7257,13 @@ packages:
   /@types/form-data/0.0.33:
     resolution: {integrity: sha1-yayFsqX9GENbjIXZ7LUObWyJP/g=}
     dependencies:
-      '@types/node': 18.7.13
+      '@types/node': 18.7.14
     dev: true
 
   /@types/fs-extra/9.0.13:
     resolution: {integrity: sha512-nEnwB++1u5lVDM2UI4c1+5R+FYaKfaAzS4OococimjVm3nQw3TuzH5UNsocrcTBbhnerblyHj4A49qXbIiZdpA==}
     dependencies:
-      '@types/node': 18.7.13
+      '@types/node': 18.7.14
     dev: true
 
   /@types/glob/7.2.0:
@@ -7525,7 +7525,7 @@ packages:
   /@types/resolve/1.17.1:
     resolution: {integrity: sha512-yy7HuzQhj0dhGpD8RLXSZWEkLsV9ibvxvi6EiJ3bkqLAO1RGo0WbkWQiwpRlSFymTJRz0d3k5LM3kkx8ArDbLw==}
     dependencies:
-      '@types/node': 18.7.13
+      '@types/node': 18.7.14
     dev: true
 
   /@types/scheduler/0.16.2:
@@ -7615,7 +7615,7 @@ packages:
   /@types/ws/8.5.3:
     resolution: {integrity: sha512-6YOoWjruKj1uLf3INHH7D3qTXwFfEsg1kf3c0uDdSBJwfa/llkwIjrAGV7j7mVgGNbzTQ3HiHKKDXl6bJPD97w==}
     dependencies:
-      '@types/node': 18.7.13
+      '@types/node': 18.7.14
     dev: true
 
   /@types/yargs-parser/21.0.0:
@@ -20225,10 +20225,11 @@ packages:
       - supports-color
     dev: true
 
-  /vite-plugin-pwa/0.12.3_vite@3.0.9:
+  /vite-plugin-pwa/0.12.3_f7se6o6eqkwcix4u3svh6mkvda:
     resolution: {integrity: sha512-gmYdIVXpmBuNjzbJFPZFzxWYrX4lHqwMAlOtjmXBbxApiHjx9QPXKQPJjSpeTeosLKvVbNcKSAAhfxMda0QVNQ==}
     peerDependencies:
       vite: ^2.0.0 || ^3.0.0-0
+      workbox-window: ^6.4.0
     dependencies:
       debug: 4.3.4
       fast-glob: 3.2.11
