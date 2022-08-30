@@ -86,7 +86,7 @@ describe('mocked classes', () => {
     expect(descriptor?.get).toBeDefined()
     expect(descriptor?.set).not.toBeDefined()
 
-    expect(instance.getOnlyProp).toBeUndefined()
+    expect(instance.getOnlyProp).toBe(42)
     // @ts-expect-error Assign to the read-only prop to ensure it errors.
     expect(() => instance.getOnlyProp = 4).toThrow()
 
@@ -103,7 +103,7 @@ describe('mocked classes', () => {
     expect(descriptor?.get).toBeDefined()
     expect(descriptor?.set).toBeDefined()
 
-    expect(instance.getSetProp).toBeUndefined()
+    expect(instance.getSetProp).toBe(123)
     expect(() => instance.getSetProp = 4).not.toThrow()
 
     const getterSpy = vi.spyOn(instance, 'getSetProp', 'get').mockReturnValue(789)

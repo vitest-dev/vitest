@@ -211,14 +211,7 @@ export class VitestMocker {
         // Modules define their exports as getters. We want to process those.
         if (!isModule && descriptor.get) {
           try {
-            const newDescriptor: PropertyDescriptor = {
-              enumerable: true,
-              configurable: true,
-              get: spyModule.fn(),
-            }
-            if (descriptor.set)
-              newDescriptor.set = spyModule.fn()
-            Object.defineProperty(newContainer, property, newDescriptor)
+            Object.defineProperty(newContainer, property, descriptor)
           }
           catch (error) {
             // Ignore errors, just move on to the next prop.
