@@ -81,7 +81,8 @@ async function _shouldExternalize(
     return id
 
   const isDist = id.includes('/dist/')
-  if ((isNodeModule || isDist) && await isValidNodeImport(id))
+  // don't check for valid Node import, if we are using custom loader
+  if ((isNodeModule || isDist) && (options?.registerNodeLoader || await isValidNodeImport(id)))
     return id
 
   return false

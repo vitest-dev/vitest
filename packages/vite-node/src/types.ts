@@ -12,6 +12,7 @@ export interface DepsHandlingOptions {
    * @default false
    */
   fallbackCJS?: boolean
+  registerNodeLoader?: boolean
 }
 
 export interface StartOfSourceMap {
