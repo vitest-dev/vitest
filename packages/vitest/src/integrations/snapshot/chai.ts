@@ -33,7 +33,7 @@ const getErrorString = (expected: () => void | Error, promise: string | undefine
     return getErrorMessage(e)
   }
 
-  throw new Error('snapshot function didn\'t threw')
+  throw new Error('snapshot function didn\'t throw')
 }
 
 export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
