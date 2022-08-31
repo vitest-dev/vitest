@@ -1,8 +1,10 @@
 import type * as exampleModule from '../src/example'
 import log from '../src/log'
+import { A } from '../src/moduleA'
 import { methodSymbol, moduleWithSymbol } from '../src/moduleWithSymbol'
 
 vi.mock('../src/log')
+vi.mock('../src/moduleA')
 vi.mock('../src/moduleWithSymbol')
 
 test('all mocked are valid', async () => {
@@ -54,4 +56,8 @@ test('automock properly restores mock', async () => {
 
   expect(moduleWithSymbol[methodSymbol]()).toBe('hello')
   expect(moduleWithSymbol.warn()).toBe('hello')
+})
+
+test('automock has a getter', () => {
+  expect(A).toBe('A')
 })
