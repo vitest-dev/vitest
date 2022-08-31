@@ -25,12 +25,14 @@ export class JsonReporter implements Reporter {
     const tests = getTests(files)
     const numTotalTests = tests.length
     const testResults: Record<string, BenchTaskResult[]> = {}
-
+    const outputFile = getOutputFile(this.ctx, 'json')
     for (const file of files) {
       const tests = getTests([file])
       for (const test of tests) {
         const res = test.result!.benchmark!
-        res.samples = null as any
+        if (!outputFile)
+          res.samples = 'ignore on terminal' as any
+
         testResults[test.suite.name] = (testResults[test.suite.name] || []).concat(res)
       }
 
