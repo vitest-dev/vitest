@@ -18,9 +18,6 @@ export const ReportersMap = {
   'junit': JUnitReporter,
 }
 
-export const BenchmarkReportsMap = {
-  default: VerboseReporter,
-}
-
 export type BuiltinReporters = keyof typeof ReportersMap
-export type BenchmarkBuiltinReporters = keyof typeof BenchmarkReportsMap
+
+export * from './benchmark'
