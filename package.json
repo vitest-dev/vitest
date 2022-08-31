@@ -89,5 +89,8 @@
     "*.{js,ts,tsx,vue,md}": [
       "eslint --fix"
     ]
+  },
+  "dependencies": {
+    "strip-literal": "^0.4.0"
   }
 }

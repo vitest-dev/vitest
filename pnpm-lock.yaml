@@ -46,12 +46,15 @@ importers:
       rollup-plugin-esbuild: ^4.10.1
       rollup-plugin-license: ^2.8.1
       simple-git-hooks: ^2.8.0
+      strip-literal: ^0.4.0
       ts-node: ^10.9.1
       tsup: ^6.2.3
       typescript: ^4.8.2
       vite: ^3.0.9
       vitest: workspace:*
       vue: latest
+    dependencies:
+      strip-literal: 0.4.0
     devDependencies:
       '@antfu/eslint-config': 0.26.2_yqf6kl63nyoq5megxukfnom5rm
       '@antfu/ni': 0.17.2
@@ -16994,7 +16997,6 @@ packages:
     resolution: {integrity: sha512-ql/sBDoJOybTKSIOWrrh8kgUEMjXMwRAkZTD0EwiwxQH/6tTPkZvMIEjp0CRlpi6V5FMiJyvxeRkEi1KrGISoA==}
     dependencies:
       acorn: 8.8.0
-    dev: true
 
   /style-loader/1.3.0_webpack@4.46.0:
     resolution: {integrity: sha512-V7TCORko8rs9rIqkSrlMfkqA63DfoGBBJmK1kKGCcSi+BWb4cqz0SRsnp4l6rU5iwOEd0/2ePv68SV22VXon4Q==}
