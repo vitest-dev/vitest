@@ -235,11 +235,26 @@ export class ViteNodeRunner {
     // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
     const url = pathToFileURL(fsPath).href
     const meta = { url }
-    const exports: any = Object.create(null)
-    Object.defineProperty(exports, Symbol.toStringTag, {
+    const exportsBase: any = Object.create(null)
+    Object.defineProperty(exportsBase, Symbol.toStringTag, {
       value: 'Module',
       enumerable: false,
       configurable: false,
+    })
+    const exports = new Proxy(exportsBase, {
+      set(target, p, value, receiver) {
+        const result = Reflect.set(target, p, value, receiver)
+        if (p !== 'default') {
+          if (!Reflect.has(target, 'default'))
+            target.default = {}
+
+          // Node also allows access of named exports via exports.default
+          // https://nodejs.org/api/esm.html#commonjs-namespaces
+          if (target.default && typeof target.default === 'object')
+            target.default[p] = value
+        }
+        return result
+      },
     })
 
     Object.assign(mod, { code: transformed, exports })

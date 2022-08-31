@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest'
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-expect-error
-import { a, b } from '../src/module-cjs'
+import cjs, { a, b } from '../src/module-cjs'
 import c, { d } from '../src/module-esm'
 import * as timeout from '../src/timeout'
 
@@ -10,6 +10,8 @@ it('doesn\'t when extending module', () => {
 })
 
 it('should work when using cjs module', () => {
+  expect(cjs.a).toBe(1)
+  expect(cjs.b).toBe(2)
   expect(a).toBe(1)
   expect(b).toBe(2)
 })
