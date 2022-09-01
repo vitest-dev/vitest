@@ -46,15 +46,12 @@ importers:
       rollup-plugin-esbuild: ^4.10.1
       rollup-plugin-license: ^2.8.1
       simple-git-hooks: ^2.8.0
-      strip-literal: ^0.4.0
       ts-node: ^10.9.1
       tsup: ^6.2.3
       typescript: ^4.8.2
       vite: ^3.0.9
       vitest: workspace:*
       vue: latest
-    dependencies:
-      strip-literal: 0.4.0
     devDependencies:
       '@antfu/eslint-config': 0.26.2_yqf6kl63nyoq5megxukfnom5rm
       '@antfu/ni': 0.17.2
@@ -791,6 +788,7 @@ importers:
       rollup: ~2.77.3
       source-map-js: ^1.0.2
       strip-ansi: ^7.0.1
+      strip-literal: ^0.4.0
       tinypool: ^0.2.4
       tinyspy: ^1.0.2
       typescript: ^4.8.2
@@ -804,6 +802,7 @@ importers:
       chai: 4.3.6
       debug: 4.3.4
       local-pkg: 0.4.2
+      strip-literal: 0.4.0
       tinypool: 0.2.4
       tinyspy: 1.0.2
       vite: 3.0.9
@@ -16607,6 +16606,7 @@ packages:
   /source-map/0.6.1:
     resolution: {integrity: sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g==}
     engines: {node: '>=0.10.0'}
+    requiresBuild: true
 
   /source-map/0.7.4:
     resolution: {integrity: sha512-l3BikUxvPOcn5E74dZiq5BGsTb5yEwhaTSzccU6t4sDOH8NWJCstKO5QT2CvtFoK6F0saL7p9xHAqHOlCPJygA==}
