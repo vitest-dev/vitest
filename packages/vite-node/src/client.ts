@@ -15,12 +15,12 @@ export const DEFAULT_REQUEST_STUBS = {
     injectQuery: (id: string) => id,
     createHotContext() {
       return {
-        accept: () => {},
-        prune: () => {},
-        dispose: () => {},
-        decline: () => {},
-        invalidate: () => {},
-        on: () => {},
+        accept: () => { },
+        prune: () => { },
+        dispose: () => { },
+        decline: () => { },
+        invalidate: () => { },
+        on: () => { },
       }
     },
     updateStyle(id: string, css: string) {
@@ -102,7 +102,7 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
         continue
       invalidated.add(id)
       const subIds = Array.from(super.entries())
-        .filter(([,mod]) => mod.importers?.has(id))
+        .filter(([, mod]) => mod.importers?.has(id))
         .map(([key]) => key)
       subIds.length && this.invalidateSubDepTree(subIds, invalidated)
       super.delete(id)
@@ -221,7 +221,7 @@ export class ViteNodeRunner {
       return requestStubs[id]
 
     // eslint-disable-next-line prefer-const
-    let { code: transformed, externalize } = await this.options.fetchModule(id)
+    let { code: transformed, externalize } = await this.options.fetchModule(decodeURI(id))
     if (externalize) {
       debugNative(externalize)
       const exports = await this.interopedImport(externalize)
