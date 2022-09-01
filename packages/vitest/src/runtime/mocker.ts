@@ -280,6 +280,10 @@ export class VitestMocker {
     const mock = this.mockMap.get(suitefile)
     if (mock?.[id])
       delete mock[id]
+
+    const mockId = this.getMockPath(id)
+    if (this.moduleCache.get(mockId))
+      this.moduleCache.delete(mockId)
   }
 
   public mockPath(path: string, external: string | null, factory?: () => any) {
