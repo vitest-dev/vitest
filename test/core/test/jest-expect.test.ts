@@ -603,4 +603,16 @@ describe('async expect', () => {
   })
 })
 
+it('compatible with jest', () => {
+  expect.extend({
+    someObject() {
+      return { pass: true, message: () => '' }
+    },
+  })
+  const { matchers, state } = (globalThis as any)[Symbol.for('$$jest-matchers-object')]
+  expect(matchers).toHaveProperty('someObject')
+  expect(matchers).toHaveProperty('toBe')
+  expect(state).toHaveProperty('assertionCalls', 1)
+})
+
 it('timeout', () => new Promise(resolve => setTimeout(resolve, 500)))
