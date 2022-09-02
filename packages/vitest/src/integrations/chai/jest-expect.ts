@@ -19,7 +19,6 @@ if (!Object.prototype.hasOwnProperty.call(globalThis, MATCHERS_OBJECT)) {
   })
   Object.defineProperty(globalThis, JEST_MATCHERS_OBJECT, {
     configurable: true,
-    writable: true,
     get: () => ({
       state: matchers.get((globalThis as any)[GLOBAL_EXPECT]),
       matchers: Object.create(null),
