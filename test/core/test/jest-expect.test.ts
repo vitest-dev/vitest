@@ -612,7 +612,7 @@ it('compatible with jest', () => {
   const { matchers, state } = (globalThis as any)[Symbol.for('$$jest-matchers-object')]
   expect(matchers).toHaveProperty('someObject')
   expect(matchers).toHaveProperty('toBe')
-  expect(state).toHaveProperty('assertionCalls', 1)
+  expect(state.assertionCalls).toBe(2)
 })
 
 it('timeout', () => new Promise(resolve => setTimeout(resolve, 500)))
