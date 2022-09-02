@@ -178,6 +178,8 @@ describe('jest-expect', () => {
     const complex = {
       'foo': 1,
       'foo.bar[0]': 'baz',
+      'a-b': true,
+      'a-b-1.0.0': true,
       'bar': {
         foo: 'foo',
         bar: 100,
@@ -194,6 +196,8 @@ describe('jest-expect', () => {
     expect(complex).toMatchObject({ bar: { bar: 100 } })
     expect(complex).toMatchObject({ foo: expect.any(Number) })
 
+    expect(complex).toHaveProperty('a-b')
+    expect(complex).toHaveProperty('a-b-1.0.0')
     expect(complex).toHaveProperty('foo')
     expect(complex).toHaveProperty('foo', 1)
     expect(complex).toHaveProperty('bar.foo', 'foo')
@@ -208,6 +212,14 @@ describe('jest-expect', () => {
     expect(complex).toHaveProperty('bar', expect.any(Object))
     expect(complex).toHaveProperty('bar.arr', expect.any(Array))
     expect(complex).toHaveProperty('bar.arr.0', expect.anything())
+
+    expect(() => {
+      expect(complex).toHaveProperty('some-unknown-property')
+    }).toThrowError()
+
+    expect(() => {
+      expect(complex).toHaveProperty('a-b', false)
+    }).toThrowErrorMatchingInlineSnapshot('"expected { foo: 1, \'foo.bar[0]\': \'baz\', …(3) } to have property \\"a-b\\" with value false"')
   })
 
   it('assertions', () => {
