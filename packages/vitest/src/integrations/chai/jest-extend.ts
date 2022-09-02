@@ -6,6 +6,7 @@ import type {
   SyncExpectationResult,
 } from '../../types/chai'
 import { getSnapshotClient } from '../snapshot/chai'
+import { GLOBAL_EXPECT } from './constants'
 import { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import { getState } from './jest-expect'
 
@@ -79,6 +80,7 @@ function JestExtendPlugin(expect: Vi.ExpectStatic, matchers: MatchersObject): Ch
 
       const expectAssertionWrapper = isAsyncFunction(expectAssertion) ? expectAsyncWrapper : expectSyncWrapper
 
+      utils.addMethod((globalThis as any)[GLOBAL_EXPECT].matchers, expectAssertionName, expectAssertionWrapper)
       utils.addMethod(c.Assertion.prototype, expectAssertionName, expectAssertionWrapper)
 
       class CustomMatcher extends AsymmetricMatcher<[unknown, ...unknown[]]> {
