@@ -56,6 +56,8 @@ export function CSSEnablerPlugin(ctx: Vitest): VitePlugin[] {
           })`
           return { code }
         }
+
+        return { code: '' }
       },
     },
   ]
