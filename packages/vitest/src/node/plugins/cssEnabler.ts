@@ -26,33 +26,27 @@ export function CSSEnablerPlugin(ctx: Vitest): VitePlugin {
     return false
   }
 
-  const shouldReturnProxy = (id: string) => {
-    const { css } = ctx.config
-    if (typeof css === 'boolean')
-      return css
-    if (!isCSSModule(id))
-      return false
-    return !css.modules?.mangleClassName
-  }
-
   return {
     name: 'vitest:css-enabler',
     enforce: 'pre',
     transform(code, id) {
       if (!isCSS(id))
         return
-      if (!shouldProcessCSS(id)) {
-        return { code: '' }
-      }
-      else if (shouldReturnProxy(id)) {
-        // TODO parse and check if object actually exists
+      if (shouldProcessCSS(id))
+        return
+
+      // return proxy for css modules, so that imported module has names:
+      // styles.foo returns a "foo" instead of "undefined"
+      if (isCSSModule(id)) {
         const code = `export default new Proxy(Object.create(null), {
-          get(_, style) {
-            return style;
-          },
-        })`
+            get(_, style) {
+              return style;
+            },
+          })`
         return { code }
       }
+
+      return { code: '' }
     },
   }
 }

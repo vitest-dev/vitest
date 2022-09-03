@@ -706,14 +706,12 @@ Show heap usage after each test. Useful for debugging memory leaks.
 
 - **Type**: `boolean | { include?, exclude? }`
 
-Configure if CSS should be processed. When excluded, CSS files will be replaced with empty strings to bypass the subsequent processing.
-
-By default, processes only CSS Modules, because it affects runtime. JSDOM and Happy DOM don't fully support injecting CSS, so disabling this setting might help with performance.
+Configure if CSS should be processed. When excluded, CSS files will be replaced with empty strings to bypass the subsequent processing. CSS Modules will return a proxy to not affect runtime.
 
 #### css.include
 
 - **Type**: `RegExp | RegExp[]`
-- **Default**: `[/\.module\./]`
+- **Default**: `[]`
 
 RegExp pattern for files that should return actual CSS and will be processed by Vite pipeline.
 
@@ -723,6 +721,33 @@ RegExp pattern for files that should return actual CSS and will be processed by 
 - **Default**: `[]`
 
 RegExp pattern for files that will return an empty CSS file.
+
+#### css.modules
+
+- **Type**: `{ scopeClassNames? }`
+- **Default**: `{}`
+
+#### css.modules.scopeClassNames
+
+- **Type**: `boolean`
+- **Default**: false
+
+If you decide to process CSS files, you can configure if class names inside CSS modules should be scoped. By default, Vitest exports a proxy, bypassing CSS Modules processing.
+
+You might want to enable this, if your CSS classes are conflicting with each other, when CSS is inlined. For example, when you are accessing computed styles:
+
+```tsx
+// global.module.css
+// .error { width: 600px }
+
+// element.module.css
+// .error { width: 100px }
+
+// test
+const styles = window.getComputedStyles(<div className={error}></div>)
+// it's possible to have two different classes with conflicting styles
+expect(styles).toMatchObject({ with: '100px' })
+```
 
 ### maxConcurrency
 

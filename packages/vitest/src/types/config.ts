@@ -375,13 +375,13 @@ export interface InlineConfig {
    *
    * When excluded, the CSS files will be replaced with empty strings to bypass the subsequent processing.
    *
-   * @default { include: [/\.module\./], modules: { mangleClassName: false } }
+   * @default { include: [], modules: { scopeClassNames: false } }
    */
   css?: boolean | {
     include?: RegExp | RegExp[]
     exclude?: RegExp | RegExp[]
     modules?: {
-      mangleClassName?: boolean
+      scopeClassNames?: boolean
     }
   }
   /**

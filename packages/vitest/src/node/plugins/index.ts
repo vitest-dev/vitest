@@ -98,6 +98,12 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
           },
         }
 
+        if (!preOptions?.css?.modules?.scopeClassNames) {
+          config.css ??= {}
+          config.css.modules ??= {}
+          config.css.modules.generateScopedName = (name: string) => name
+        }
+
         if (!options.browser) {
           // disable deps optimization
           Object.assign(config, {

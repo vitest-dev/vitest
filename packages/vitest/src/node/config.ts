@@ -183,9 +183,8 @@ export function resolveConfig(
 
   resolved.css ??= {}
   if (typeof resolved.css === 'object') {
-    resolved.css.include ??= [/\.module\./]
     resolved.css.modules ??= {}
-    resolved.css.modules.mangleClassName ??= false
+    resolved.css.modules.scopeClassNames ??= false
   }
 
   resolved.cache ??= { dir: '' }
