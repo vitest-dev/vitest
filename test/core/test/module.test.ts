@@ -9,6 +9,8 @@ import primitiveCjs, { a as primitiveA } from '../src/cjs/primitive-cjs'
 import * as primitiveAll from '../src/cjs/primitive-cjs'
 // @ts-expect-error is not typed with imports
 import * as arrayCjs from '../src/cjs/array-cjs'
+// @ts-expect-error is not typed with imports
+import * as classCjs from '../src/cjs/class-cjs'
 import c, { d } from '../src/module-esm'
 import * as timeout from '../src/timeout'
 
@@ -41,6 +43,12 @@ it('primitive cjs retains its logic', () => {
 it('arrays-cjs', () => {
   expect(arrayCjs.default).toEqual([1, '2'])
   expect(arrayCjs).not.toHaveProperty('0')
+})
+
+it('class-cjs', () => {
+  expect(classCjs.default).toEqual({ variable: 1, Test: expect.any(Function) })
+  expect(classCjs.default).toBeInstanceOf(classCjs.Test)
+  expect(classCjs).not.toHaveProperty('variable')
 })
 
 it('should work when using esm module', () => {
