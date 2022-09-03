@@ -404,7 +404,7 @@ function exportAll(exports: any, sourceModule: any) {
   if (exports === sourceModule)
     return
 
-  if (sourceModule === null || typeof sourceModule !== 'object')
+  if (sourceModule === null || typeof sourceModule !== 'object' || Array.isArray(sourceModule))
     return
 
   for (const key in sourceModule) {

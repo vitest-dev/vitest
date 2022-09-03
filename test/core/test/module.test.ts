@@ -7,6 +7,8 @@ import bareCjs, { a as bareA, b as bareB } from '../src/cjs/bare-cjs'
 import primitiveCjs, { a as primitiveA } from '../src/cjs/primitive-cjs'
 // @ts-expect-error is not typed with imports
 import * as primitiveAll from '../src/cjs/primitive-cjs'
+// @ts-expect-error is not typed with imports
+import * as arrayCjs from '../src/cjs/array-cjs'
 import c, { d } from '../src/module-esm'
 import * as timeout from '../src/timeout'
 
@@ -34,6 +36,11 @@ it('primitive cjs retains its logic', () => {
   expect(primitiveCjs).toBe('string')
   expect(primitiveAll.default).toBe('string')
   expect(primitiveAll, 'doesn\'t put chars from "string" on exports').not.toHaveProperty('0')
+})
+
+it('arrays-cjs', () => {
+  expect(arrayCjs.default).toEqual([1, '2'])
+  expect(arrayCjs).not.toHaveProperty('0')
 })
 
 it('should work when using esm module', () => {
