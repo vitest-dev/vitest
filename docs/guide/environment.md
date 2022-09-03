@@ -2,7 +2,7 @@
 
 Vitest provides [`environment`](/config/#environment) option to run code inside a specific environment. You can modify how environment behaves with [`environmentOptions`](/config/#environmentoptions) option.
 
-By default, you can use this environments:
+By default, you can use these environments:
 
 - `node` is default environment
 - `jsdon` emulates browser environment by providing Browser API, uses [`jsdom`](https://github.com/jsdom/jsdom) package
