@@ -170,7 +170,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
     ...(options.browser
       ? await BrowserPlugin()
       : []),
-    CSSEnablerPlugin(ctx),
+    ...CSSEnablerPlugin(ctx),
     CoverageTransform(ctx),
     options.ui
       ? await UIPlugin()

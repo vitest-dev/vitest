@@ -745,7 +745,7 @@ You might want to enable this, if your CSS classes are conflicting with each oth
 
 // test
 const styles = window.getComputedStyles(<div className={error}></div>)
-// it's possible to have two different classes with conflicting styles
+// this will fail, if global css is loaded after element
 expect(styles).toMatchObject({ with: '100px' })
 ```
 

@@ -126,7 +126,7 @@ importers:
       unocss: 0.45.13_vite@3.0.9
       unplugin-vue-components: 0.22.4_vite@3.0.9+vue@3.2.38
       vite: 3.0.9
-      vite-plugin-pwa: 0.12.3_vite@3.0.9
+      vite-plugin-pwa: 0.12.3_f7se6o6eqkwcix4u3svh6mkvda
       vitepress: 1.0.0-alpha.13
       workbox-window: 6.5.4
 
@@ -931,6 +931,14 @@ importers:
       vite: 3.0.9
       vitest: link:../../packages/vitest
       vue: 3.2.38
+
+  test/css:
+    specifiers:
+      jsdom: ^20.0.0
+      vitest: workspace:*
+    devDependencies:
+      jsdom: 20.0.0
+      vitest: link:../../packages/vitest
 
   test/edge-runtime:
     specifiers:
@@ -17836,6 +17844,7 @@ packages:
   /unified/9.2.0:
     resolution: {integrity: sha512-vx2Z0vY+a3YoTj8+pttM3tiJHCwY5UFbYdiWrwBEbHmK8pvsPj2rtAX2BFfgXen8T39CJWblWRDT4L5WGXtDdg==}
     dependencies:
+      '@types/unist': 2.0.6
       bail: 1.0.5
       extend: 3.0.2
       is-buffer: 2.0.5
@@ -18387,10 +18396,11 @@ packages:
       - supports-color
     dev: true
 
-  /vite-plugin-pwa/0.12.3_vite@3.0.9:
+  /vite-plugin-pwa/0.12.3_f7se6o6eqkwcix4u3svh6mkvda:
     resolution: {integrity: sha512-gmYdIVXpmBuNjzbJFPZFzxWYrX4lHqwMAlOtjmXBbxApiHjx9QPXKQPJjSpeTeosLKvVbNcKSAAhfxMda0QVNQ==}
     peerDependencies:
       vite: ^2.0.0 || ^3.0.0-0
+      workbox-window: ^6.4.0
     dependencies:
       debug: 4.3.4
       fast-glob: 3.2.11
