@@ -11,6 +11,8 @@ import * as primitiveAll from '../src/cjs/primitive-cjs'
 import * as arrayCjs from '../src/cjs/array-cjs'
 // @ts-expect-error is not typed with imports
 import * as classCjs from '../src/cjs/class-cjs'
+// @ts-expect-error is not typed with imports
+import * as internalEsm from '../src/esm/internal-esm.mjs'
 import c, { d } from '../src/module-esm'
 import * as timeout from '../src/timeout'
 
@@ -54,4 +56,8 @@ it('class-cjs', () => {
 it('should work when using esm module', () => {
   expect(c).toBe(1)
   expect(d).toBe(2)
+})
+
+it('exports all from native ESM module', () => {
+  expect(internalEsm).toHaveProperty('restoreAll')
 })

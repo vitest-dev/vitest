@@ -907,8 +907,10 @@ importers:
 
   test/core:
     specifiers:
+      tinyspy: ^1.0.2
       vitest: workspace:*
     devDependencies:
+      tinyspy: 1.0.2
       vitest: link:../../packages/vitest
 
   test/coverage-test:
@@ -19197,7 +19199,6 @@ packages:
   /tinyspy/1.0.2:
     resolution: {integrity: sha512-bSGlgwLBYf7PnUsQ6WOc6SJ3pGOcd+d8AA6EUnLDDM0kWEstC1JIlSZA3UNliDXhd9ABoS7hiRBDCu+XP/sf1Q==}
     engines: {node: '>=14.0.0'}
-    dev: false
 
   /tmp/0.0.33:
     resolution: {integrity: sha512-jRCJlojKnZ3addtTOjdIqoRuPEKBvNXcGYqzO6zWZX8KfKEpnGY5jfggJQ3EjKuu8D4bJRr0y+cYJFmYbImXGw==}
