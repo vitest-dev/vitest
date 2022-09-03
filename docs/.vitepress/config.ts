@@ -148,6 +148,10 @@ export default defineConfig({
               link: '/guide/test-context',
             },
             {
+              text: 'Environment',
+              link: '/guide/environment',
+            },
+            {
               text: 'Extending Matchers',
               link: '/guide/extending-matchers',
             },
