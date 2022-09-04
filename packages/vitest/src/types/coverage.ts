@@ -137,6 +137,11 @@ export interface BaseCoverageOptions {
    * Extensions for files to be included in coverage
    */
   extension?: string | string[]
+
+  /**
+   * Whether to include all files, including the untested ones into report
+   */
+  all?: boolean
 }
 
 export interface CoverageIstanbulOptions extends BaseCoverageOptions {
@@ -166,7 +171,6 @@ export interface CoverageC8Options extends BaseCoverageOptions {
    */
   excludeNodeModules?: boolean
 
-  all?: boolean
   src?: string[]
 
   100?: boolean

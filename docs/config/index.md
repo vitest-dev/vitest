@@ -559,6 +559,13 @@ Set to array of class method names to ignore for coverage.
 
 Watermarks for statements, lines, branches and functions.
 
+##### all
+
+- **Type:** `boolean`
+- **Default:** false
+
+Whether to include all files, including the untested ones into report.
+
 ### testNamePattern
 
 - **Type** `string | RegExp`
