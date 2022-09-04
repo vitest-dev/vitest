@@ -30,9 +30,9 @@ export default <Environment>{
 You also have access to default Vitest environments through `vitest/environments` entry:
 
 ```ts
-import { environments, populateGlobal } from 'vitest/environments'
+import { builtinEnvironments, populateGlobal } from 'vitest/environments'
 
-console.log(environments) // { jsdom, happy-dom, node, edge-runtime }
+console.log(builtinEnvironments) // { jsdom, happy-dom, node, edge-runtime }
 ```
 
 Vitest also provides `populateGlobal` utility function, which can be used to move properties from one object into the global namespace:

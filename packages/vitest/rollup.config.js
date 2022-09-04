@@ -32,6 +32,7 @@ const dtsEntries = [
   'src/index.ts',
   'src/node.ts',
   'src/browser.ts',
+  'src/environments.ts',
   'src/config.ts',
 ]
 
