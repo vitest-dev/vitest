@@ -10,6 +10,8 @@ import type { SnapshotStateOptions } from './snapshot'
 import type { Arrayable } from './general'
 
 export type BuiltinEnvironment = 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime'
+// Record is used, so user can get intellisense for builtin environments, but still allow custom environments
+export type VitestEnvironment = BuiltinEnvironment | (string & Record<never, never>)
 
 export type ApiConfig = Pick<CommonServerOptions, 'port' | 'strictPort' | 'host'>
 
@@ -20,6 +22,7 @@ export interface EnvironmentOptions {
    * jsdom options.
    */
   jsdom?: JSDOMOptions
+  [x: string]: unknown
 }
 
 export interface InlineConfig {
@@ -107,9 +110,11 @@ export interface InlineConfig {
    *
    * Supports 'node', 'jsdom', 'happy-dom', 'edge-runtime'
    *
+   * If used unsupported string, will try to load the package `vitest-environment-${env}`
+   *
    * @default 'node'
    */
-  environment?: BuiltinEnvironment
+  environment?: VitestEnvironment
 
   /**
    * Environment options.
