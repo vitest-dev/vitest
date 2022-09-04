@@ -181,7 +181,7 @@ export function shuffle<T>(array: T[], seed = RealDate.now()): T[] {
 // removes stack trace from error, when we don't really need it
 // by default stack trace limit is 100 in vitest, but we might
 // create errors just to get the last line of stack trace behind the scenes
-export function createSimpleError(message?: string, limit = 0) {
+export function createErrorWithTraceLimit(message?: string, limit = 0) {
   if (!('stackTraceLimit' in Error)) {
     const err = new Error(message)
     if (limit === 0)

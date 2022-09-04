@@ -1,7 +1,8 @@
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import { parseStacktrace } from '../utils/source-map'
 import type { VitestMocker } from '../runtime/mocker'
-import { createSimpleError, getWorkerState, resetModules, setTimeout } from '../utils'
+import { getWorkerState, resetModules, setTimeout } from '../utils'
+import { createErrorWithTraceLimit } from '../utils/base'
 import { FakeTimers } from './mock/timers'
 import type { EnhancedSpy, MaybeMocked, MaybeMockedDeep, MaybePartiallyMocked, MaybePartiallyMockedDeep } from './spy'
 import { fn, isMockFunction, spies, spyOn } from './spy'
@@ -108,7 +109,7 @@ class VitestUtils {
   fn = fn
 
   private getImporter() {
-    const err = createSimpleError('mock', 3)
+    const err = createErrorWithTraceLimit('mock', 3)
     const [,, importer] = parseStacktrace(err, true)
     return importer.file
   }

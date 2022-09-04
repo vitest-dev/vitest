@@ -1,7 +1,7 @@
 import type { ErrorWithDiff, File, Task, TaskResultPack, UserConsoleLog } from '../types'
 // can't import actual functions from utils, because it's incompatible with @vitest/browsers
 import type { AggregateError as AggregateErrorPonyfill } from '../utils'
-import { createSimpleError } from '../utils'
+import { createErrorWithTraceLimit } from '../utils/base'
 
 interface CollectingPromise {
   promise: Promise<void>
@@ -26,7 +26,7 @@ export class StateManager {
 
   catchError(err: unknown, type: string): void {
     if (err == null)
-      err = createSimpleError('Unknown "null" error thrown')
+      err = createErrorWithTraceLimit('Unknown "null" error thrown')
 
     if (isAggregateError(err))
       return err.errors.forEach(error => this.catchError(error, type))
