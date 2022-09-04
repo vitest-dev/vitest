@@ -12,6 +12,7 @@ import type { Arrayable } from './general'
 export type BuiltinEnvironment = 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime'
 // Record is used, so user can get intellisense for builtin environments, but still allow custom environments
 export type VitestEnvironment = BuiltinEnvironment | (string & Record<never, never>)
+export type CSSModuleScopeStrategy = 'stable' | 'scoped' | 'non-scoped'
 
 export type ApiConfig = Pick<CommonServerOptions, 'port' | 'strictPort' | 'host'>
 
@@ -375,13 +376,13 @@ export interface InlineConfig {
    *
    * When excluded, the CSS files will be replaced with empty strings to bypass the subsequent processing.
    *
-   * @default { include: [], modules: { scopeClassNames: false } }
+   * @default { include: [], modules: { classNamesStrategy: false } }
    */
   css?: boolean | {
     include?: RegExp | RegExp[]
     exclude?: RegExp | RegExp[]
     modules?: {
-      scopeClassNames?: boolean
+      classNamesStrategy?: CSSModuleScopeStrategy
     }
   }
   /**

@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import { useRemoveStyles } from './utils'
 
-describe('don\'t process css by default', () => {
+describe('processing module css', () => {
   useRemoveStyles()
 
   test('doesn\'t apply css', async () => {
@@ -10,18 +10,23 @@ describe('don\'t process css by default', () => {
     const element = document.createElement('div')
     element.className = 'main'
     const computed = window.getComputedStyle(element)
-    expect(computed.display).toBe('block')
+    expect(computed.display, 'css is not processed').toBe('block')
   })
 
   test('module is processed', async () => {
     const { default: styles } = await import('../src/App.module.css')
 
-    expect(styles.module).toBe('module')
+    expect(styles.module).toBe('_module_c3JjL0')
     expect(styles.someRandomValue).toBeUndefined()
     const element = document.createElement('div')
-    element.className = 'main module'
+    element.className = '_main_c3JjL0 _module_c3JjL0'
     const computed = window.getComputedStyle(element)
-    expect(computed.display).toBe('flex')
+    expect(computed.display, 'css is processed').toBe('flex')
     expect(computed.width).toBe('100px')
+    expect(element).toMatchInlineSnapshot(`
+      <div
+        class="_main_c3JjL0 _module_c3JjL0"
+      />
+    `)
   })
 })

@@ -184,7 +184,7 @@ export function resolveConfig(
   resolved.css ??= {}
   if (typeof resolved.css === 'object') {
     resolved.css.modules ??= {}
-    resolved.css.modules.scopeClassNames ??= false
+    resolved.css.modules.classNamesStrategy ??= 'stable'
   }
 
   resolved.cache ??= { dir: '' }

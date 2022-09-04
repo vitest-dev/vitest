@@ -11,17 +11,28 @@ describe('don\'t process css by default', () => {
     element.className = 'main'
     const computed = window.getComputedStyle(element)
     expect(computed.display).toBe('block')
+    expect(element).toMatchInlineSnapshot(`
+      <div
+        class="main"
+      />
+    `)
   })
 
   test('module is not processed', async () => {
     const { default: styles } = await import('../src/App.module.css')
 
-    expect(styles.module).toBe('module')
-    expect(styles.someRandomValue).toBe('someRandomValue')
+    // HASH is static, based on the filepath to root
+    expect(styles.module).toBe('_module_c3JjL0')
+    expect(styles.someRandomValue).toBe('_someRandomValue_c3JjL0')
     const element = document.createElement('div')
-    element.className = 'module'
+    element.className = '_module_c3JjL0'
     const computed = window.getComputedStyle(element)
     expect(computed.display).toBe('block')
     expect(computed.width).toBe('')
+    expect(element).toMatchInlineSnapshot(`
+      <div
+        class="_module_c3JjL0"
+      />
+    `)
   })
 })

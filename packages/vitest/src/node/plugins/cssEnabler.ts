@@ -1,4 +1,7 @@
+import { relative } from 'pathe'
 import type { Plugin as VitePlugin } from 'vite'
+import { generateCssFilenameHash } from '../../integrations/css/css-modules'
+import type { CSSModuleScopeStrategy } from '../../types'
 import { toArray } from '../../utils'
 import type { Vitest } from '../core'
 
@@ -12,6 +15,13 @@ const isCSS = (id: string) => {
 
 const isCSSModule = (id: string) => {
   return cssModuleRE.test(id)
+}
+
+const getCSSModuleProxyReturn = (strategy: CSSModuleScopeStrategy, filename: string) => {
+  if (strategy === 'non-scoped')
+    return 'style'
+  const hash = generateCssFilenameHash(filename)
+  return `\`_\${style}_${hash}\``
 }
 
 export function CSSEnablerPlugin(ctx: Vitest): VitePlugin[] {
@@ -49,9 +59,12 @@ export function CSSEnablerPlugin(ctx: Vitest): VitePlugin[] {
         if (isCSSModule(id)) {
           // return proxy for css modules, so that imported module has names:
           // styles.foo returns a "foo" instead of "undefined"
+          // we don't use code content to generate hash for "scoped", because it's empty
+          const scopeStrategy = (typeof ctx.config.css !== 'boolean' && ctx.config.css.modules?.classNamesStrategy) || 'stable'
+          const proxyReturn = getCSSModuleProxyReturn(scopeStrategy, relative(ctx.config.root, id))
           const code = `export default new Proxy(Object.create(null), {
             get(_, style) {
-              return style;
+              return ${proxyReturn};
             },
           })`
           return { code }

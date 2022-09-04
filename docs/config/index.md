@@ -724,30 +724,19 @@ RegExp pattern for files that will return an empty CSS file.
 
 #### css.modules
 
-- **Type**: `{ scopeClassNames? }`
+- **Type**: `{ classNamesStrategy? }`
 - **Default**: `{}`
 
-#### css.modules.scopeClassNames
+#### css.modules.classNamesStrategy
 
-- **Type**: `boolean`
-- **Default**: false
+- **Type**: `'stable' | 'scoped' | 'non-scoped'`
+- **Default**: `'stable'`
 
-If you decide to process CSS files, you can configure if class names inside CSS modules should be scoped. By default, Vitest exports a proxy, bypassing CSS Modules processing.
+If you decide to process CSS files, you can configure if class names inside CSS modules should be scoped. By default, Vitest exports a proxy, bypassing CSS Modules processing. You can choose one of the options:
 
-You might want to enable this, if your CSS classes are conflicting with each other, when CSS is inlined. For example, when you are accessing computed styles:
-
-```tsx
-// global.module.css
-// .error { width: 600px }
-
-// element.module.css
-// .error { width: 100px }
-
-// test
-const styles = window.getComputedStyles(<div className={error}></div>)
-// this will fail, if global css is loaded after element
-expect(styles).toMatchObject({ with: '100px' })
-```
+- `stable`: class names will be generated as `_${name}_${hashedFilename}`, which means that generated class will stay the same, if CSS content is changed, but will change, if the name of the file is modified, or file is moved to another folder. This setting is useful, if you use snapshot feature.
+- `scoped`: class names will be generated as usual, respecting `css.modules.generateScopeName` method, if you have one. By default, filename will be generated as `_${name}_${hash}`, where hash includes filename and content of the file.
+- `non-scoped`: class names will stay as they are defined in CSS.
 
 ### maxConcurrency
 
