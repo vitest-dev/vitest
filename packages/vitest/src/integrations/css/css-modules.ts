@@ -1,7 +1,8 @@
+import { createHash } from 'node:crypto'
 import type { CSSModuleScopeStrategy } from '../../types'
 
-export function generateCssFilenameHash(filename: string) {
-  return Buffer.from(filename).toString('base64').substring(0, 6)
+export function generateCssFilenameHash(filepath: string) {
+  return createHash('md5').update(filepath).digest('hex').slice(0, 6)
 }
 
 export function generateScopedClassName(
