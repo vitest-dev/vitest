@@ -182,8 +182,10 @@ export function resolveConfig(
     resolved.passWithNoTests ??= true
 
   resolved.css ??= {}
-  if (typeof resolved.css === 'object')
-    resolved.css.include ??= [/\.module\./]
+  if (typeof resolved.css === 'object') {
+    resolved.css.modules ??= {}
+    resolved.css.modules.classNameStrategy ??= 'stable'
+  }
 
   resolved.cache ??= { dir: '' }
   if (resolved.cache)
