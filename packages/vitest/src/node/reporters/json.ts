@@ -1,7 +1,7 @@
 import { existsSync, promises as fs } from 'fs'
 import { dirname, resolve } from 'pathe'
 import type { Vitest } from '../../node'
-import type { File, Reporter, Suite, TaskState, Test } from '../../types'
+import type { File, Reporter, Suite, Task, TaskState } from '../../types'
 import { getSuites, getTests } from '../../utils'
 import { getOutputFile } from '../../utils/config-helpers'
 import { interpretSourcePos, parseStacktrace } from '../../utils/source-map'
@@ -180,7 +180,7 @@ export class JsonReporter implements Reporter {
     }
   }
 
-  protected async getFailureLocation(test: Test): Promise<Callsite | undefined> {
+  protected async getFailureLocation(test: Task): Promise<Callsite | undefined> {
     const error = test.result?.error
     if (!error)
       return

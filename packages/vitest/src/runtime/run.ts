@@ -1,11 +1,12 @@
+import { performance } from 'perf_hooks'
 import limit from 'p-limit'
-import type { File, HookCleanupCallback, HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from '../types'
+import type { Benchmark, BenchmarkResult, File, HookCleanupCallback, HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from '../types'
 import { vi } from '../integrations/vi'
-import { clearTimeout, getFullName, getWorkerState, hasFailed, hasTests, isBrowser, isNode, partitionSuiteChildren, setTimeout, shuffle } from '../utils'
+import { clearTimeout, createDefer, getFullName, getWorkerState, hasFailed, hasTests, isBrowser, isNode, isRunningInBenchmark, partitionSuiteChildren, setTimeout, shuffle } from '../utils'
 import { getState, setState } from '../integrations/chai/jest-expect'
 import { GLOBAL_EXPECT } from '../integrations/chai/constants'
 import { takeCoverageInsideWorker } from '../integrations/coverage'
-import { getFn, getHooks } from './map'
+import { getBenchmarkFactory, getFn, getHooks } from './map'
 import { rpc } from './rpc'
 import { collectTests } from './collect'
 import { processError } from './error'
@@ -230,23 +231,27 @@ export async function runSuite(suite: Suite) {
   else {
     try {
       const beforeAllCleanups = await callSuiteHook(suite, suite, 'beforeAll', [suite])
-
-      for (let tasksGroup of partitionSuiteChildren(suite)) {
-        if (tasksGroup[0].concurrent === true) {
-          const mutex = limit(workerState.config.maxConcurrency)
-          await Promise.all(tasksGroup.map(c => mutex(() => runSuiteChild(c))))
-        }
-        else {
-          const { sequence } = workerState.config
-          if (sequence.shuffle || suite.shuffle) {
-            // run describe block independently from tests
-            const suites = tasksGroup.filter(group => group.type === 'suite')
-            const tests = tasksGroup.filter(group => group.type === 'test')
-            const groups = shuffle([suites, tests], sequence.seed)
-            tasksGroup = groups.flatMap(group => shuffle(group, sequence.seed))
+      if (isRunningInBenchmark()) {
+        await runBenchmarkSuit(suite)
+      }
+      else {
+        for (let tasksGroup of partitionSuiteChildren(suite)) {
+          if (tasksGroup[0].concurrent === true) {
+            const mutex = limit(workerState.config.maxConcurrency)
+            await Promise.all(tasksGroup.map(c => mutex(() => runSuiteChild(c))))
           }
-          for (const c of tasksGroup)
-            await runSuiteChild(c)
+          else {
+            const { sequence } = workerState.config
+            if (sequence.shuffle || suite.shuffle) {
+              // run describe block independently from tests
+              const suites = tasksGroup.filter(group => group.type === 'suite')
+              const tests = tasksGroup.filter(group => group.type === 'test')
+              const groups = shuffle([suites, tests], sequence.seed)
+              tasksGroup = groups.flatMap(group => shuffle(group, sequence.seed))
+            }
+            for (const c of tasksGroup)
+              await runSuiteChild(c)
+          }
         }
       }
 
@@ -280,10 +285,97 @@ export async function runSuite(suite: Suite) {
   updateTask(suite)
 }
 
+function createBenchmarkResult(name: string): BenchmarkResult {
+  return {
+    name,
+    rank: 0,
+    rme: 0,
+    samples: [] as number[],
+  } as BenchmarkResult
+}
+
+async function runBenchmarkSuit(suite: Suite) {
+  const start = performance.now()
+
+  const benchmarkGroup = []
+  const benchmarkSuiteGroup = []
+  for (const task of suite.tasks) {
+    if (task.type === 'benchmark')
+      benchmarkGroup.push(task)
+    else if (task.type === 'suite')
+      benchmarkSuiteGroup.push(task)
+  }
+
+  if (benchmarkSuiteGroup.length)
+    await Promise.all(benchmarkSuiteGroup.map(subSuite => runBenchmarkSuit(subSuite)))
+
+  if (benchmarkGroup.length) {
+    const benchmarkInstance = await getBenchmarkFactory(suite)
+    const defer = createDefer()
+    const benchmarkMap: Record<string, Benchmark> = {}
+    suite.result = {
+      state: 'run',
+      startTime: start,
+      benchmark: createBenchmarkResult(suite.name),
+    }
+    updateTask(suite)
+    benchmarkGroup.forEach((benchmark, idx) => {
+      const benchmarkFn = getFn(benchmark)
+      benchmark.result = {
+        state: 'run',
+        startTime: start,
+        benchmark: createBenchmarkResult(benchmark.name),
+      }
+      const id = idx.toString()
+      benchmarkMap[id] = benchmark
+      benchmarkInstance.add(id, benchmarkFn)
+      updateTask(benchmark)
+    })
+    benchmarkInstance.addEventListener('cycle', (e) => {
+      const task = e.task
+      const benchmark = benchmarkMap[task.name || '']
+      if (benchmark) {
+        const taskRes = task.result!
+        const result = benchmark.result!.benchmark!
+        Object.assign(result, taskRes)
+        updateTask(benchmark)
+      }
+    })
+
+    benchmarkInstance.addEventListener('complete', () => {
+      suite.result!.duration = performance.now() - start
+      suite.result!.state = 'pass'
+
+      benchmarkInstance.tasks
+        .sort((a, b) => b.result!.mean - a.result!.mean)
+        .forEach((cycle, idx) => {
+          const benchmark = benchmarkMap[cycle.name || '']
+          benchmark.result!.state = 'pass'
+          if (benchmark) {
+            const result = benchmark.result!.benchmark!
+            result.rank = Number(idx) + 1
+            updateTask(benchmark)
+          }
+        })
+      updateTask(suite)
+      defer.resolve(null)
+    })
+
+    benchmarkInstance.addEventListener('error', (e) => {
+      defer.reject(e)
+    })
+
+    benchmarkInstance.run()
+    await defer
+  }
+}
+
 async function runSuiteChild(c: Task) {
-  return c.type === 'test'
-    ? runTest(c)
-    : runSuite(c)
+  if (c.type === 'test')
+    return runTest(c)
+
+  else if (c.type === 'suite')
+    return runSuite(c)
 }
 
 async function runSuites(suites: Suite[]) {
@@ -301,7 +393,6 @@ export async function runFiles(files: File[], config: ResolvedConfig) {
         }
       }
     }
-
     await runSuite(file)
   }
 }

@@ -12,7 +12,7 @@ import { MocksPlugin } from './mock'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { CoverageTransform } from './coverageTransform'
 
-export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest()): Promise<VitePlugin[]> {
+export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('test')): Promise<VitePlugin[]> {
   const getRoot = () => ctx.config?.root || options.root || process.cwd()
 
   async function UIPlugin() {

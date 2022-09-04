@@ -3,9 +3,9 @@ import { normalize, resolve } from 'pathe'
 import c from 'picocolors'
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 
-import type { ApiConfig, ResolvedConfig, UserConfig } from '../types'
+import type { ApiConfig, ResolvedConfig, UserConfig, VitestRunMode } from '../types'
 import { defaultPort } from '../constants'
-import { configDefaults } from '../defaults'
+import { benchmarkConfigDefaults, configDefaults } from '../defaults'
 import { toArray } from '../utils'
 import { VitestCache } from './cache'
 import { BaseSequencer } from './sequencers/BaseSequencer'
@@ -61,6 +61,7 @@ export function resolveApiConfig<Options extends ApiConfig & UserConfig>(
 }
 
 export function resolveConfig(
+  mode: VitestRunMode,
   options: UserConfig,
   viteConfig: ResolvedViteConfig,
 ): ResolvedConfig {
@@ -87,6 +88,7 @@ export function resolveConfig(
     ...configDefaults,
     ...options,
     root: viteConfig.root,
+    mode,
   } as ResolvedConfig
 
   if (viteConfig.base !== '/')
@@ -157,6 +159,18 @@ export function resolveConfig(
   if (process.env.VITEST_MIN_THREADS)
     resolved.minThreads = parseInt(process.env.VITEST_MIN_THREADS)
 
+  if (mode === 'benchmark') {
+    resolved.benchmark = {
+      ...benchmarkConfigDefaults,
+      ...resolved.benchmark,
+    }
+    // override test config
+    resolved.coverage.enabled = false
+    resolved.include = resolved.benchmark.include
+    resolved.exclude = resolved.benchmark.exclude
+    resolved.includeSource = resolved.benchmark.includeSource
+  }
+
   resolved.setupFiles = toArray(resolved.setupFiles || []).map(file =>
     normalize(
       resolveModule(file, { paths: [resolved.root] })
@@ -175,6 +189,7 @@ export function resolveConfig(
     // @ts-expect-error from CLI
     ...toArray(resolved.reporter),
   ])).filter(Boolean)
+
   if (!resolved.reporters.length)
     resolved.reporters.push('default')
 

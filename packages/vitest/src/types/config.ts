@@ -8,6 +8,7 @@ import type { JSDOMOptions } from './jsdom-options'
 import type { Reporter } from './reporter'
 import type { SnapshotStateOptions } from './snapshot'
 import type { Arrayable } from './general'
+import type { BenchmarkUserOptions } from './benchmark'
 
 export type BuiltinEnvironment = 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime'
 // Record is used, so user can get intellisense for builtin environments, but still allow custom environments
@@ -26,7 +27,16 @@ export interface EnvironmentOptions {
   [x: string]: unknown
 }
 
+export type VitestRunMode = 'test' | 'benchmark'
+
 export interface InlineConfig {
+  /**
+   * Benchmark options.
+   *
+   * @default {}
+  */
+  benchmark?: BenchmarkUserOptions
+
   /**
    * Include globs for test files
    *
@@ -479,7 +489,9 @@ export interface UserConfig extends InlineConfig {
   shard?: string
 }
 
-export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'shard' | 'cache' | 'sequence'> {
+export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence'> {
+  mode: VitestRunMode
+
   base?: string
 
   config?: string
@@ -495,6 +507,9 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
   defines: Record<string, any>
 
   api?: ApiConfig
+
+  benchmark?: Required<BenchmarkUserOptions>
+
   shard?: {
     index: number
     count: number

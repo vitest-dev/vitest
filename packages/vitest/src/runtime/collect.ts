@@ -20,7 +20,7 @@ function hash(str: string): string {
   return `${hash}`
 }
 
-export async function collectTests(paths: string[], config: ResolvedConfig) {
+export async function collectTests(paths: string[], config: ResolvedConfig): Promise<File[]> {
   const files: File[] = []
   const browserHashMap = getWorkerState().browserHashMap!
 
@@ -45,6 +45,7 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
     }
 
     clearCollectorContext()
+
     try {
       const setupStart = now()
       await runSetupFiles(config)
@@ -64,10 +65,13 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
         if (c.type === 'test') {
           file.tasks.push(c)
         }
+        else if (c.type === 'benchmark') {
+          file.tasks.push(c)
+        }
         else if (c.type === 'suite') {
           file.tasks.push(c)
         }
-        else {
+        else if (c.type === 'collector') {
           const suite = await c.collect(file)
           if (suite.name || suite.tasks.length)
             file.tasks.push(suite)

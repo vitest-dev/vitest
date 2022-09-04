@@ -2,6 +2,8 @@ export type ChainableFunction<T extends string, Args extends any[], R = any, E =
   (...args: Args): R
 } & {
   [x in T]: ChainableFunction<T, Args, R, E>
+} & {
+  fn: (this: Record<T, boolean | undefined>, ...args: Args) => R
 } & E
 
 export function createChainable<T extends string, Args extends any[], R = any, E = {}>(

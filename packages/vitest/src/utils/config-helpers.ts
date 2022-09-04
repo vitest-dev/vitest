@@ -1,7 +1,7 @@
 import type { Vitest } from '../node/core'
-import type { BuiltinReporters } from '../node/reporters'
+import type { BenchmarkBuiltinReporters, BuiltinReporters } from '../node/reporters'
 
-export const getOutputFile = ({ config }: Vitest, reporter: BuiltinReporters) => {
+export const getOutputFile = ({ config }: Vitest, reporter: BuiltinReporters | BenchmarkBuiltinReporters) => {
   if (!config.outputFile)
     return
 

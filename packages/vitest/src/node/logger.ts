@@ -78,9 +78,9 @@ export class Logger {
       this.console.error(c.dim('watch exclude:  ') + c.yellow(config.watchExclude.join(comma)))
 
     if (config.passWithNoTests)
-      this.log('No test files found, exiting with code 0\n')
+      this.log(`No ${config.mode} files found, exiting with code 0\n`)
     else
-      this.error(c.red('\nNo test files found, exiting with code 1'))
+      this.error(c.red(`\nNo ${config.mode} files found, exiting with code 1`))
   }
 
   printBanner() {

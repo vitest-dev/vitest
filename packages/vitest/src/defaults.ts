@@ -1,7 +1,14 @@
-import type { ResolvedCoverageOptions, UserConfig } from './types'
+import type { BenchmarkUserOptions, ResolvedCoverageOptions, UserConfig } from './types'
 
 export const defaultInclude = ['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']
 export const defaultExclude = ['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**']
+
+export const benchmarkConfigDefaults: Required<BenchmarkUserOptions> = {
+  include: ['**/*.{bench,benchmark}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+  exclude: defaultExclude,
+  includeSource: [],
+  reporters: ['default'],
+}
 
 const defaultCoverageExcludes = [
   'coverage/**',
