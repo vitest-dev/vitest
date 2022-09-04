@@ -149,7 +149,7 @@ export class VitestMocker {
     if (external)
       return mergeSlashes(`/@fs/${path}`)
 
-    return this.normalizePath(path)
+    return normalizeRequestId(path, this.base)
   }
 
   public resolveMockPath(mockPath: string, external: string | null) {
