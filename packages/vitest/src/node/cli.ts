@@ -67,7 +67,7 @@ cli
 
 cli
   .command('[...filters]')
-  .action(watch)
+  .action((filters, options) => start('test', filters, options))
 
 cli.parse()
 
