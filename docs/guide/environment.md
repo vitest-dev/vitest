@@ -6,7 +6,7 @@ By default, you can use these environments:
 
 - `node` is default environment
 - `jsdon` emulates browser environment by providing Browser API, uses [`jsdom`](https://github.com/jsdom/jsdom) package
-- `happy-dom` emulates browser environment by providing Browser API, and considered to be faster than jsdom, but lacks some browser API, uses [`happy-dom`](https://github.com/capricorn86/happy-dom) package
+- `happy-dom` emulates browser environment by providing Browser API, and considered to be faster than jsdom, but lacks some API, uses [`happy-dom`](https://github.com/capricorn86/happy-dom) package
 - `edge-runtime` emulates Vercel's [edge-runtime](https://edge-runtime.vercel.app/), uses [`@edge-runtime/vm`](https://www.npmjs.com/package/@edge-runtime/vm) package
 
 Starting from 0.23.0, you can create your own package to extend Vitest environment. To do so, create package with the name `vitest-environment-${name}`. That package should export an object with the shape of `Environment`:
@@ -35,7 +35,7 @@ import { builtinEnvironments, populateGlobal } from 'vitest/environments'
 console.log(builtinEnvironments) // { jsdom, happy-dom, node, edge-runtime }
 ```
 
-Vitest also provides `populateGlobal` utility function, which can be used to move properties from one object into the global namespace:
+Vitest also provides `populateGlobal` utility function, which can be used to move properties from object into the global namespace:
 
 ```ts
 interface PopulateOptions {

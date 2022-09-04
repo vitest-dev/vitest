@@ -255,7 +255,7 @@ export default <Environment>{
 }
 ```
 
-Vitest also exposes `builtinEnvironments` variable with built-in environments through `vitest/environments`, in case you just want to extend it. You can read more about extending environments in [our guide](/guide/environment).
+Vitest also exposes `builtinEnvironments` through `vitest/environments` entry, in case you just want to extend it. You can read more about extending environments in [our guide](/guide/environment).
 
 ### environmentOptions
 
