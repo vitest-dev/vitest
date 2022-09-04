@@ -69,7 +69,8 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
 
   handleImportOutsideModuleError(e.stack || e.stackStr || '', ctx)
 
-  if (e.showDiff) {
+  // Eg. AssertionError from assert does not set showDiff but has both actual and expected properties
+  if (e.showDiff || (e.showDiff === undefined && e.actual && e.expected)) {
     displayDiff(stringify(e.actual), stringify(e.expected), ctx.logger.console, {
       outputTruncateLength: ctx.config.outputTruncateLength,
       outputDiffLines: ctx.config.outputDiffLines,
