@@ -55,11 +55,11 @@ cli
 
 cli
   .command('watch [...filters]')
-  .action(start)
+  .action(watch)
 
 cli
   .command('dev [...filters]')
-  .action(start)
+  .action(watch)
 
 cli
   .command('bench [...filters]')
@@ -67,7 +67,7 @@ cli
 
 cli
   .command('[...filters]')
-  .action((filter, options) => start('test', filter, options))
+  .action(watch)
 
 cli.parse()
 
@@ -75,6 +75,11 @@ async function runRelated(relatedFiles: string[] | string, argv: CliOptions) {
   argv.related = relatedFiles
   argv.passWithNoTests ??= true
   await start('test', [], argv)
+}
+
+async function watch(cliFilters: string[], options: CliOptions) {
+  options.watch = true
+  await start('test', cliFilters, options)
 }
 
 async function run(cliFilters: string[], options: CliOptions) {
