@@ -2,7 +2,7 @@ import { performance } from 'perf_hooks'
 import limit from 'p-limit'
 import type { Benchmark, BenchmarkResult, File, HookCleanupCallback, HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from '../types'
 import { vi } from '../integrations/vi'
-import { clearTimeout, createDefer, getFullName, getRunMode, getWorkerState, hasFailed, hasTests, isBrowser, isNode, partitionSuiteChildren, setTimeout, shuffle } from '../utils'
+import { clearTimeout, createDefer, getFullName, getWorkerState, hasFailed, hasTests, isBrowser, isNode, isRunningInBenchmark, partitionSuiteChildren, setTimeout, shuffle } from '../utils'
 import { getState, setState } from '../integrations/chai/jest-expect'
 import { GLOBAL_EXPECT } from '../integrations/chai/constants'
 import { takeCoverageInsideWorker } from '../integrations/coverage'
@@ -231,7 +231,7 @@ export async function runSuite(suite: Suite) {
   else {
     try {
       const beforeAllCleanups = await callSuiteHook(suite, suite, 'beforeAll', [suite])
-      if (getRunMode()) {
+      if (isRunningInBenchmark()) {
         await runBenchmarkSuit(suite)
       }
       else {
