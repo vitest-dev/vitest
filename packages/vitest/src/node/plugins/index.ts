@@ -102,14 +102,14 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
           },
         }
 
-        const classNamesStrategy = preOptions.css && preOptions.css?.modules?.classNamesStrategy
+        const classNameStrategy = preOptions.css && preOptions.css?.modules?.classNameStrategy
 
-        if (classNamesStrategy !== 'scoped') {
+        if (classNameStrategy !== 'scoped') {
           config.css ??= {}
           config.css.modules ??= {}
           config.css.modules.generateScopedName = (name: string, filename: string) => {
             const root = getRoot()
-            return generateScopedClassName(classNamesStrategy, name, relative(root, filename))!
+            return generateScopedClassName(classNameStrategy, name, relative(root, filename))!
           }
         }
 

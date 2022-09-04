@@ -4,8 +4,8 @@ const configs = [
   ['test/default-css', {}],
   ['test/process-css', { include: [/App\.css/] }],
   ['test/process-module', { include: [/App\.module\.css/] }],
-  ['test/scope-module', { include: [/App\.module\.css/], modules: { classNamesStrategy: 'scoped' } }],
-  ['test/non-scope-module', { include: [/App\.module\.css/], modules: { classNamesStrategy: 'non-scoped' } }],
+  ['test/scope-module', { include: [/App\.module\.css/], modules: { classNameStrategy: 'scoped' } }],
+  ['test/non-scope-module', { include: [/App\.module\.css/], modules: { classNameStrategy: 'non-scoped' } }],
 ]
 
 async function runTests() {

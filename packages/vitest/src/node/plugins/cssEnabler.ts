@@ -60,7 +60,7 @@ export function CSSEnablerPlugin(ctx: Vitest): VitePlugin[] {
           // return proxy for css modules, so that imported module has names:
           // styles.foo returns a "foo" instead of "undefined"
           // we don't use code content to generate hash for "scoped", because it's empty
-          const scopeStrategy = (typeof ctx.config.css !== 'boolean' && ctx.config.css.modules?.classNamesStrategy) || 'stable'
+          const scopeStrategy = (typeof ctx.config.css !== 'boolean' && ctx.config.css.modules?.classNameStrategy) || 'stable'
           const proxyReturn = getCSSModuleProxyReturn(scopeStrategy, relative(ctx.config.root, id))
           const code = `export default new Proxy(Object.create(null), {
             get(_, style) {

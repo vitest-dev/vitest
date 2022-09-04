@@ -376,13 +376,13 @@ export interface InlineConfig {
    *
    * When excluded, the CSS files will be replaced with empty strings to bypass the subsequent processing.
    *
-   * @default { include: [], modules: { classNamesStrategy: false } }
+   * @default { include: [], modules: { classNameStrategy: false } }
    */
   css?: boolean | {
     include?: RegExp | RegExp[]
     exclude?: RegExp | RegExp[]
     modules?: {
-      classNamesStrategy?: CSSModuleScopeStrategy
+      classNameStrategy?: CSSModuleScopeStrategy
     }
   }
   /**

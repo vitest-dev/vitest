@@ -724,10 +724,10 @@ RegExp pattern for files that will return an empty CSS file.
 
 #### css.modules
 
-- **Type**: `{ classNamesStrategy? }`
+- **Type**: `{ classNameStrategy? }`
 - **Default**: `{}`
 
-#### css.modules.classNamesStrategy
+#### css.modules.classNameStrategy
 
 - **Type**: `'stable' | 'scoped' | 'non-scoped'`
 - **Default**: `'stable'`
