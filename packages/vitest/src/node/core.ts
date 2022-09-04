@@ -103,8 +103,8 @@ export class Vitest {
       })
     }
 
-    this.reporters = resolved.benchmark
-      ? await createBenchmarkReporters(toArray(resolved.benchmark.reporters), this.runner)
+    this.reporters = resolved.mode === 'benchmark'
+      ? await createBenchmarkReporters(toArray(resolved.benchmark?.reporters), this.runner)
       : await createReporters(resolved.reporters, this.runner)
 
     this.runningPromise = undefined
