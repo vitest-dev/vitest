@@ -126,7 +126,7 @@ importers:
       unocss: 0.45.13_vite@3.0.9
       unplugin-vue-components: 0.22.4_vite@3.0.9+vue@3.2.38
       vite: 3.0.9
-      vite-plugin-pwa: 0.12.3_f7se6o6eqkwcix4u3svh6mkvda
+      vite-plugin-pwa: 0.12.3_vite@3.0.9
       vitepress: 1.0.0-alpha.13
       workbox-window: 6.5.4
 
@@ -566,7 +566,7 @@ importers:
       vue: latest
     devDependencies:
       '@vitejs/plugin-vue': 3.0.3_vite@3.0.9+vue@3.2.38
-      '@vitejs/plugin-vue-jsx': 2.0.0_vite@3.0.9+vue@3.2.38
+      '@vitejs/plugin-vue-jsx': 2.0.1_vite@3.0.9+vue@3.2.38
       '@vue/test-utils': 2.0.2_vue@3.2.38
       jsdom: 20.0.0
       vite: 3.0.9
@@ -789,6 +789,7 @@ importers:
       rollup: ~2.77.3
       source-map-js: ^1.0.2
       strip-ansi: ^7.0.1
+      strip-literal: ^0.4.0
       tinybench: ^2.1.3
       tinypool: ^0.2.4
       tinyspy: ^1.0.2
@@ -803,6 +804,7 @@ importers:
       chai: 4.3.6
       debug: 4.3.4
       local-pkg: 0.4.2
+      strip-literal: 0.4.0
       tinybench: 2.1.3
       tinypool: 0.2.4
       tinyspy: 1.0.2
@@ -917,8 +919,10 @@ importers:
 
   test/core:
     specifiers:
+      tinyspy: ^1.0.2
       vitest: workspace:*
     devDependencies:
+      tinyspy: 1.0.2
       vitest: link:../../packages/vitest
 
   test/coverage-test:
@@ -937,6 +941,14 @@ importers:
       vitest: link:../../packages/vitest
       vue: 3.2.38
 
+  test/css:
+    specifiers:
+      jsdom: ^20.0.0
+      vitest: workspace:*
+    devDependencies:
+      jsdom: 20.0.0
+      vitest: link:../../packages/vitest
+
   test/edge-runtime:
     specifiers:
       '@edge-runtime/vm': 1.1.0-beta.26
@@ -946,6 +958,14 @@ importers:
       '@edge-runtime/vm': 1.1.0-beta.26
       '@vitest/web-worker': link:../../packages/web-worker
       vitest: link:../../packages/vitest
+
+  test/env-custom:
+    specifiers:
+      vitest: workspace:*
+      vitest-environment-custom: file:./vitest-environment-custom
+    devDependencies:
+      vitest: link:../../packages/vitest
+      vitest-environment-custom: file:test/env-custom/vitest-environment-custom
 
   test/esm:
     specifiers:
@@ -6332,6 +6352,23 @@ packages:
   /@vitejs/plugin-vue-jsx/2.0.0_vite@3.0.9+vue@3.2.38:
     resolution: {integrity: sha512-WF9ApZ/ivyyW3volQfu0Td0KNPhcccYEaRNzNY1NxRLVJQLSX0nFqquv3e2g7MF74p1XZK4bGtDL2y5i5O5+1A==}
     engines: {node: '>=14.18.0'}
+    peerDependencies:
+      vite: ^3.0.0
+      vue: ^3.0.0
+    dependencies:
+      '@babel/core': 7.18.13
+      '@babel/plugin-syntax-import-meta': 7.10.4_@babel+core@7.18.13
+      '@babel/plugin-transform-typescript': 7.18.12_@babel+core@7.18.13
+      '@vue/babel-plugin-jsx': 1.1.1_@babel+core@7.18.13
+      vite: 3.0.9
+      vue: 3.2.38
+    transitivePeerDependencies:
+      - supports-color
+    dev: true
+
+  /@vitejs/plugin-vue-jsx/2.0.1_vite@3.0.9+vue@3.2.38:
+    resolution: {integrity: sha512-lmiR1k9+lrF7LMczO0pxtQ8mOn6XeppJDHxnpxkJQpT5SiKz4SKhKdeNstXaTNuR8qZhUo5X0pJlcocn72Y4Jg==}
+    engines: {node: ^14.18.0 || >=16.0.0}
     peerDependencies:
       vite: ^3.0.0
       vue: ^3.0.0
@@ -16627,6 +16664,7 @@ packages:
   /source-map/0.6.1:
     resolution: {integrity: sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g==}
     engines: {node: '>=0.10.0'}
+    requiresBuild: true
 
   /source-map/0.7.4:
     resolution: {integrity: sha512-l3BikUxvPOcn5E74dZiq5BGsTb5yEwhaTSzccU6t4sDOH8NWJCstKO5QT2CvtFoK6F0saL7p9xHAqHOlCPJygA==}
@@ -17017,7 +17055,6 @@ packages:
     resolution: {integrity: sha512-ql/sBDoJOybTKSIOWrrh8kgUEMjXMwRAkZTD0EwiwxQH/6tTPkZvMIEjp0CRlpi6V5FMiJyvxeRkEi1KrGISoA==}
     dependencies:
       acorn: 8.8.0
-    dev: true
 
   /style-loader/1.3.0_webpack@4.46.0:
     resolution: {integrity: sha512-V7TCORko8rs9rIqkSrlMfkqA63DfoGBBJmK1kKGCcSi+BWb4cqz0SRsnp4l6rU5iwOEd0/2ePv68SV22VXon4Q==}
@@ -17408,7 +17445,6 @@ packages:
   /tinyspy/1.0.2:
     resolution: {integrity: sha512-bSGlgwLBYf7PnUsQ6WOc6SJ3pGOcd+d8AA6EUnLDDM0kWEstC1JIlSZA3UNliDXhd9ABoS7hiRBDCu+XP/sf1Q==}
     engines: {node: '>=14.0.0'}
-    dev: false
 
   /tmp/0.0.33:
     resolution: {integrity: sha512-jRCJlojKnZ3addtTOjdIqoRuPEKBvNXcGYqzO6zWZX8KfKEpnGY5jfggJQ3EjKuu8D4bJRr0y+cYJFmYbImXGw==}
@@ -18389,11 +18425,10 @@ packages:
       - supports-color
     dev: true
 
-  /vite-plugin-pwa/0.12.3_f7se6o6eqkwcix4u3svh6mkvda:
+  /vite-plugin-pwa/0.12.3_vite@3.0.9:
     resolution: {integrity: sha512-gmYdIVXpmBuNjzbJFPZFzxWYrX4lHqwMAlOtjmXBbxApiHjx9QPXKQPJjSpeTeosLKvVbNcKSAAhfxMda0QVNQ==}
     peerDependencies:
       vite: ^2.0.0 || ^3.0.0-0
-      workbox-window: ^6.4.0
     dependencies:
       debug: 4.3.4
       fast-glob: 3.2.11
@@ -19280,4 +19315,9 @@ packages:
 
   /zwitch/1.0.5:
     resolution: {integrity: sha512-V50KMwwzqJV0NpZIZFwfOD5/lyny3WlSzRiXgA0G7VUnRlqttta1L6UQIHzd6EuBY/cHGfwTIck7w1yH6Q5zUw==}
+    dev: true
+
+  file:test/env-custom/vitest-environment-custom:
+    resolution: {directory: test/env-custom/vitest-environment-custom, type: directory}
+    name: vitest-environment-custom
     dev: true

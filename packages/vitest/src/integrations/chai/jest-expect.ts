@@ -10,11 +10,20 @@ import type { ChaiPlugin, MatcherState } from '../../types/chai'
 import { arrayBufferEquality, generateToBeMessage, iterableEquality, equals as jestEquals, sparseArrayEquality, subsetEquality, typeEquality } from './jest-utils'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import { stringify } from './jest-matcher-utils'
-import { MATCHERS_OBJECT } from './constants'
+import { GLOBAL_EXPECT, JEST_MATCHERS_OBJECT, MATCHERS_OBJECT } from './constants'
 
 if (!Object.prototype.hasOwnProperty.call(globalThis, MATCHERS_OBJECT)) {
+  const globalState = new WeakMap<Vi.ExpectStatic, MatcherState>()
+  const matchers = Object.create(null)
   Object.defineProperty(globalThis, MATCHERS_OBJECT, {
-    value: new WeakMap<Vi.ExpectStatic, MatcherState>(),
+    get: () => globalState,
+  })
+  Object.defineProperty(globalThis, JEST_MATCHERS_OBJECT, {
+    configurable: true,
+    get: () => ({
+      state: globalState.get((globalThis as any)[GLOBAL_EXPECT]),
+      matchers,
+    }),
   })
 }
 
@@ -36,6 +45,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   function def(name: keyof Vi.Assertion | (keyof Vi.Assertion)[], fn: ((this: Chai.AssertionStatic & Vi.Assertion, ...args: any[]) => any)) {
     const addMethod = (n: keyof Vi.Assertion) => {
       utils.addMethod(chai.Assertion.prototype, n, fn)
+      utils.addMethod((globalThis as any)[JEST_MATCHERS_OBJECT].matchers, n, fn)
     }
 
     if (Array.isArray(name))
@@ -303,18 +313,21 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
 
     const actual = this._obj
     const [propertyName, expected] = args
-    let pass = false
-    if (Object.prototype.hasOwnProperty.call(actual, propertyName)) { pass = true }
-    else {
-      const { value, exists } = utils.getPathInfo(actual, propertyName)
-      pass = exists && (args.length === 1 || jestEquals(expected, value))
+    const getValue = () => {
+      const hasOwn = Object.prototype.hasOwnProperty.call(actual, propertyName)
+      if (hasOwn)
+        return { value: actual[propertyName], exists: true }
+      return utils.getPathInfo(actual, propertyName)
     }
+    const { value, exists } = getValue()
+    const pass = exists && (args.length === 1 || jestEquals(expected, value))
+
+    const valueString = args.length === 1 ? '' : ` with value ${utils.objDisplay(expected)}`
 
     return this.assert(
       pass,
-      'expected #{this} to have property #{exp}',
-      'expected #{this} to not have property #{exp}',
-      expected,
+      `expected #{this} to have property "${propertyName}"${valueString}`,
+      `expected #{this} to not have property "${propertyName}"${valueString}`,
       actual,
     )
   })

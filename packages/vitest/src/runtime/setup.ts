@@ -1,5 +1,5 @@
 import { environments } from '../integrations/env'
-import type { ResolvedConfig } from '../types'
+import type { Environment, ResolvedConfig } from '../types'
 import { clearTimeout, getWorkerState, isNode, setTimeout, toArray } from '../utils'
 import * as VitestIndex from '../index'
 import { resetRunOnceCounter } from '../integrations/run-once'
@@ -151,12 +151,24 @@ export async function setupConsoleLogSpy() {
   })
 }
 
+async function loadEnvironment(name: string) {
+  const pkg = await import(`vitest-environment-${name}`)
+  if (!pkg || !pkg.default || typeof pkg.default !== 'object' || typeof pkg.default.setup !== 'function') {
+    throw new Error(
+      `Environment "${name}" is not a valid environment. `
+    + `Package "vitest-environment-${name}" should have default export with "setup" method.`,
+    )
+  }
+  return pkg.default
+}
+
 export async function withEnv(
   name: ResolvedConfig['environment'],
   options: ResolvedConfig['environmentOptions'],
   fn: () => Promise<void>,
 ) {
-  const env = await environments[name].setup(globalThis, options)
+  const config: Environment = (environments as any)[name] || await loadEnvironment(name)
+  const env = await config.setup(globalThis, options)
   try {
     await fn()
   }

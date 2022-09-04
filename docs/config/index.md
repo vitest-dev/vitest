@@ -186,7 +186,7 @@ export default defineConfig({
 
 ### environment
 
-- **Type:** `'node' | 'jsdom' | 'happy-dom' | 'edge-runtime'`
+- **Type:** `'node' | 'jsdom' | 'happy-dom' | 'edge-runtime' | string`
 - **Default:** `'node'`
 
 The environment that will be used for testing. The default environment in Vitest
@@ -235,7 +235,34 @@ test('use jsdom in this test file', () => {
 })
 ```
 
-If you are running Vitest with [`--no-threads`](#threads) flag, your tests will be run in this order: `node`, `jsdom`, `happy-dom`. Meaning, that every test with the same environment is grouped together, but is still run sequentially.
+If you are running Vitest with [`--no-threads`](#threads) flag, your tests will be run in this order: `node`, `jsdom`, `happy-dom`, `edge-runtime`, `custom environments`. Meaning, that every test with the same environment is grouped together, but is still running sequentially.
+
+Starting from 0.23.0, you can also define custom environment. When non-builtin environment is used, Vitest will try to load package `vitest-environment-${name}`. That package should export an object with the shape of `Environment`:
+
+```ts
+import type { Environment } from 'vitest'
+
+export default <Environment>{
+  name: 'custom',
+  setup() {
+    // custom setup
+    return {
+      teardown() {
+        // called after all tests with this env have been run
+      }
+    }
+  }
+}
+```
+
+Vitest also exposes `builtinEnvironments` through `vitest/environments` entry, in case you just want to extend it. You can read more about extending environments in [our guide](/guide/environment).
+
+### environmentOptions
+
+- **Type:** `Record<'jsdom' | string, unknown>`
+- **Default:** `{}`
+
+These options are passed down to `setup` method of current [`environment`](/#environment). By default, you can configure only JSDOM options, if you are using it as your test environment.
 
 ### update
 
@@ -532,6 +559,13 @@ Set to array of class method names to ignore for coverage.
 
 Watermarks for statements, lines, branches and functions.
 
+##### all
+
+- **Type:** `boolean`
+- **Default:** false
+
+Whether to include all files, including the untested ones into report.
+
 ### testNamePattern
 
 - **Type** `string | RegExp`
@@ -679,14 +713,12 @@ Show heap usage after each test. Useful for debugging memory leaks.
 
 - **Type**: `boolean | { include?, exclude? }`
 
-Configure if CSS should be processed. When excluded, CSS files will be replaced with empty strings to bypass the subsequent processing.
-
-By default, processes only CSS Modules, because it affects runtime. JSDOM and Happy DOM don't fully support injecting CSS, so disabling this setting might help with performance.
+Configure if CSS should be processed. When excluded, CSS files will be replaced with empty strings to bypass the subsequent processing. CSS Modules will return a proxy to not affect runtime.
 
 #### css.include
 
 - **Type**: `RegExp | RegExp[]`
-- **Default**: `[/\.module\./]`
+- **Default**: `[]`
 
 RegExp pattern for files that should return actual CSS and will be processed by Vite pipeline.
 
@@ -696,6 +728,22 @@ RegExp pattern for files that should return actual CSS and will be processed by 
 - **Default**: `[]`
 
 RegExp pattern for files that will return an empty CSS file.
+
+#### css.modules
+
+- **Type**: `{ classNameStrategy? }`
+- **Default**: `{}`
+
+#### css.modules.classNameStrategy
+
+- **Type**: `'stable' | 'scoped' | 'non-scoped'`
+- **Default**: `'stable'`
+
+If you decide to process CSS files, you can configure if class names inside CSS modules should be scoped. By default, Vitest exports a proxy, bypassing CSS Modules processing. You can choose one of the options:
+
+- `stable`: class names will be generated as `_${name}_${hashedFilename}`, which means that generated class will stay the same, if CSS content is changed, but will change, if the name of the file is modified, or file is moved to another folder. This setting is useful, if you use snapshot feature.
+- `scoped`: class names will be generated as usual, respecting `css.modules.generateScopeName` method, if you have one. By default, filename will be generated as `_${name}_${hash}`, where hash includes filename and content of the file.
+- `non-scoped`: class names will stay as they are defined in CSS.
 
 ### maxConcurrency
 

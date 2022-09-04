@@ -34,6 +34,10 @@ function isClassLikeName(name: string) {
 }
 
 interface PopulateOptions {
+  // we bind functions such as addEventListener and others
+  // because they rely on `this` in happy-dom, and in jsdom it
+  // has a priority for getting implementation from symbols
+  // (global doesn't have these symbols, but window - does)
   bindFunctions?: boolean
 }
 
@@ -47,10 +51,6 @@ export function populateGlobal(global: any, win: any, options: PopulateOptions =
 
   const overrideObject = new Map<string | symbol, any>()
   for (const key of keys) {
-    // we bind functions such as addEventListener and others
-    // because they rely on `this` in happy-dom, and in jsdom it
-    // has a priority for getting implementation from symbols
-    // (global doesn't have these symbols, but window - does)
     const boundFunction = bindFunctions
       && typeof win[key] === 'function'
       && !isClassLikeName(key)

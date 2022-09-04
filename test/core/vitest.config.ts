@@ -57,6 +57,9 @@ export default defineConfig({
     sequence: {
       seed: 101,
     },
+    deps: {
+      external: ['tinyspy'],
+    },
     alias: [
       {
         find: 'test-alias',

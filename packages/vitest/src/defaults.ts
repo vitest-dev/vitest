@@ -83,7 +83,7 @@ const config = {
   uiBase: '/__vitest__/',
   open: true,
   css: {
-    include: [/\.module\./],
+    include: [],
   },
   coverage: coverageConfigDefaults,
   fakeTimers: fakeTimersDefaults,

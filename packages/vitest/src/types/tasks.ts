@@ -15,6 +15,7 @@ export interface TaskBase {
   suite?: Suite
   file?: File
   result?: TaskResult
+  retry?: number
   logs?: UserConsoleLog[]
 }
 
@@ -27,6 +28,7 @@ export interface TaskResult {
   htmlError?: string
   hooks?: Partial<Record<keyof SuiteHooks, TaskState>>
   benchmark?: BenchmarkResult
+  retryCount?: number
 }
 
 export type TaskResultPack = [id: string, result: TaskResult | undefined]
@@ -111,29 +113,43 @@ interface TestEachFunction {
   <T extends any[] | [any]>(cases: ReadonlyArray<T>): (
     name: string,
     fn: (...args: T) => Awaitable<void>,
-    timeout?: number,
+    options?: number | TestOptions,
   ) => void
   <T extends ReadonlyArray<any>>(cases: ReadonlyArray<T>): (
     name: string,
     fn: (...args: ExtractEachCallbackArgs<T>) => Awaitable<void>,
-    timeout?: number,
+    options?: number | TestOptions,
   ) => void
   <T>(cases: ReadonlyArray<T>): (
     name: string,
     fn: (...args: T[]) => Awaitable<void>,
-    timeout?: number,
+    options?: number | TestOptions,
   ) => void
 }
 
 type ChainableTestAPI<ExtraContext = {}> = ChainableFunction<
   'concurrent' | 'only' | 'skip' | 'todo' | 'fails',
-  [name: string, fn?: TestFunction<ExtraContext>, timeout?: number],
+  [name: string, fn?: TestFunction<ExtraContext>, options?: number | TestOptions],
   void,
   {
     each: TestEachFunction
-    <T extends ExtraContext>(name: string, fn?: TestFunction<T>, timeout?: number): void
+    <T extends ExtraContext>(name: string, fn?: TestFunction<T>, options?: number | TestOptions): void
   }
 >
+
+export interface TestOptions {
+  /**
+   * Test timeout.
+   */
+  timeout?: number
+  /**
+   * Times to retry the test if fails. Useful for making flaky tests more stable.
+   * When retries is up, the last test error will be thrown.
+   *
+   * @default 1
+   */
+  retry?: number
+}
 
 export type TestAPI<ExtraContext = {}> = ChainableTestAPI<ExtraContext> & {
   each: TestEachFunction

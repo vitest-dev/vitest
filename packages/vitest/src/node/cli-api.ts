@@ -2,7 +2,7 @@ import { resolve } from 'pathe'
 import type { UserConfig as ViteUserConfig } from 'vite'
 import { EXIT_CODE_RESTART } from '../constants'
 import { CoverageProviderMap } from '../integrations/coverage'
-import { envPackageNames } from '../integrations/env'
+import { getEnvPackageName } from '../integrations/env'
 import type { UserConfig, VitestRunMode } from '../types'
 import { ensurePackageInstalled } from '../utils'
 import { createVitest } from './create'
@@ -50,12 +50,11 @@ export async function startVitest(mode: VitestRunMode, cliFilters: string[], opt
     }
   }
 
-  if (ctx.config.environment && ctx.config.environment !== 'node') {
-    const packageName = envPackageNames[ctx.config.environment]
-    if (!await ensurePackageInstalled(packageName, root)) {
-      process.exitCode = 1
-      return false
-    }
+  const environmentPackage = getEnvPackageName(ctx.config.environment)
+
+  if (environmentPackage && !await ensurePackageInstalled(environmentPackage, root)) {
+    process.exitCode = 1
+    return false
   }
 
   if (process.stdin.isTTY && ctx.config.watch)

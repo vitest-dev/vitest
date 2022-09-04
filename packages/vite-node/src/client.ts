@@ -4,7 +4,7 @@ import vm from 'vm'
 import { dirname, extname, isAbsolute, resolve } from 'pathe'
 import { isNodeBuiltin } from 'mlly'
 import createDebug from 'debug'
-import { isPrimitive, mergeSlashes, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
+import { getType, isPrimitive, mergeSlashes, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
 import type { HotContext, ModuleCache, ViteNodeRunnerOptions } from './types'
 
 const debugExecute = createDebug('vite-node:client:execute')
@@ -241,17 +241,43 @@ export class ViteNodeRunner {
       enumerable: false,
       configurable: false,
     })
+    // this prosxy is triggered only on exports.name and module.exports access
+    const cjsExports = new Proxy(exports, {
+      get(_, p, receiver) {
+        return Reflect.get(exports, p, receiver)
+      },
+      set(_, p, value) {
+        // Node also allows access of named exports via exports.default
+        // https://nodejs.org/api/esm.html#commonjs-namespaces
+        if (p !== 'default') {
+          if (!Reflect.has(exports, 'default'))
+            exports.default = {}
+
+          // returns undefined, when accessing named exports, if default is not an object
+          // but is still present inside hasOwnKeys, this is Node behaviour for CJS
+          if (exports.default === null || typeof exports.default !== 'object') {
+            defineExport(exports, p, () => undefined)
+            return true
+          }
+
+          exports.default[p] = value
+          defineExport(exports, p, () => value)
+          return true
+        }
+        return Reflect.set(exports, p, value)
+      },
+    })
 
     Object.assign(mod, { code: transformed, exports })
 
     const __filename = fileURLToPath(url)
     const moduleProxy = {
       set exports(value) {
-        exportAll(exports, value)
-        exports.default = value
+        exportAll(cjsExports, value)
+        cjsExports.default = value
       },
       get exports() {
-        return exports
+        return cjsExports
       },
     }
 
@@ -282,7 +308,7 @@ export class ViteNodeRunner {
 
       // cjs compact
       require: createRequire(url),
-      exports,
+      exports: cjsExports,
       module: moduleProxy,
       __filename,
       __dirname: dirname(__filename),
@@ -363,20 +389,35 @@ function proxyMethod(name: 'get' | 'set' | 'has' | 'deleteProperty', tryDefault:
   }
 }
 
+// keep consistency with Vite on how exports are defined
+function defineExport(exports: any, key: string | symbol, value: () => any) {
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    configurable: true,
+    get: value,
+  })
+}
+
 function exportAll(exports: any, sourceModule: any) {
   // #1120 when a module exports itself it causes
   // call stack error
   if (exports === sourceModule)
     return
 
+  const type = getType(sourceModule)
+  if (type !== 'Object' && type !== 'Module')
+    return
+
+  const constructor = sourceModule.constructor?.name
+
+  // allow only plain objects and modules (modules don't have name)
+  if (constructor && constructor !== 'Object')
+    return
+
   for (const key in sourceModule) {
     if (key !== 'default') {
       try {
-        Object.defineProperty(exports, key, {
-          enumerable: true,
-          configurable: true,
-          get() { return sourceModule[key] },
-        })
+        defineExport(exports, key, () => sourceModule[key])
       }
       catch (_err) { }
     }

@@ -22,7 +22,6 @@ function hash(str: string): string {
 
 export async function collectTests(paths: string[], config: ResolvedConfig): Promise<File[]> {
   const files: File[] = []
-
   const browserHashMap = getWorkerState().browserHashMap!
 
   async function importFromBrowser(filepath: string) {

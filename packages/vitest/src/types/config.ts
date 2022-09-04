@@ -11,6 +11,9 @@ import type { Arrayable } from './general'
 import type { BenchmarkUserOptions } from './benchmark'
 
 export type BuiltinEnvironment = 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime'
+// Record is used, so user can get intellisense for builtin environments, but still allow custom environments
+export type VitestEnvironment = BuiltinEnvironment | (string & Record<never, never>)
+export type CSSModuleScopeStrategy = 'stable' | 'scoped' | 'non-scoped'
 
 export type ApiConfig = Pick<CommonServerOptions, 'port' | 'strictPort' | 'host'>
 
@@ -21,6 +24,7 @@ export interface EnvironmentOptions {
    * jsdom options.
    */
   jsdom?: JSDOMOptions
+  [x: string]: unknown
 }
 
 export type VitestRunMode = 'test' | 'benchmark'
@@ -117,9 +121,11 @@ export interface InlineConfig {
    *
    * Supports 'node', 'jsdom', 'happy-dom', 'edge-runtime'
    *
+   * If used unsupported string, will try to load the package `vitest-environment-${env}`
+   *
    * @default 'node'
    */
-  environment?: BuiltinEnvironment
+  environment?: VitestEnvironment
 
   /**
    * Environment options.
@@ -380,11 +386,14 @@ export interface InlineConfig {
    *
    * When excluded, the CSS files will be replaced with empty strings to bypass the subsequent processing.
    *
-   * @default { include: [/\.module\./] }
+   * @default { include: [], modules: { classNameStrategy: false } }
    */
   css?: boolean | {
     include?: RegExp | RegExp[]
     exclude?: RegExp | RegExp[]
+    modules?: {
+      classNameStrategy?: CSSModuleScopeStrategy
+    }
   }
   /**
    * A number of tests that are allowed to run at the same time marked with `test.concurrent`.

@@ -10,6 +10,7 @@ import type { use as chaiUse } from 'chai'
 
 import type * as jestMatcherUtils from '../integrations/chai/jest-matcher-utils'
 import type SnapshotState from '../integrations/snapshot/port/state'
+import type { VitestEnvironment } from './config'
 
 export type FirstFunctionArgument<T> = T extends (arg: infer A) => unknown ? A : never
 export type ChaiPlugin = FirstFunctionArgument<typeof chaiUse>
@@ -33,6 +34,7 @@ export interface MatcherState {
   isExpectingAssertions?: boolean
   isExpectingAssertionsError?: Error | null
   isNot: boolean
+  environment: VitestEnvironment
   promise: string
   snapshotState: SnapshotState
   suppressedErrors: Array<Error>
