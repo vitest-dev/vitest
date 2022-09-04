@@ -43,6 +43,9 @@ export function renderTree(tasks: Task[], options: ListRendererOptions, level = 
     let suffix = ''
     const prefix = ` ${getStateSymbol(task)} `
 
+    if (task.type === 'test' && task.result?.retryCount && task.result.retryCount > 1)
+      suffix += c.yellow(` (retry x${task.result.retryCount})`)
+
     if (task.type === 'suite')
       suffix += c.dim(` (${getTests(task).length})`)
 

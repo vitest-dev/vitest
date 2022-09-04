@@ -1,5 +1,5 @@
 import util from 'util'
-import type { File, RunMode, Suite, SuiteAPI, SuiteCollector, SuiteFactory, SuiteHooks, Task, Test, TestAPI, TestFunction } from '../types'
+import type { File, RunMode, Suite, SuiteAPI, SuiteCollector, SuiteFactory, SuiteHooks, Task, Test, TestAPI, TestFunction, TestOptions } from '../types'
 import { getWorkerState, isObject, noop } from '../utils'
 import { createChainable } from './chain'
 import { collectTask, collectorContext, createTestContext, runWithSuite, withTimeout } from './context'
@@ -8,9 +8,9 @@ import { getHooks, setFn, setHooks } from './map'
 // apis
 export const suite = createSuite()
 export const test = createTest(
-  function (name: string, fn?: TestFunction, timeout?: number) {
+  function (name: string, fn?: TestFunction, options?: number | TestOptions) {
     // @ts-expect-error untyped internal prop
-    getCurrentSuite().test.fn.call(this, name, fn, timeout)
+    getCurrentSuite().test.fn.call(this, name, fn, options)
   },
 )
 
@@ -71,8 +71,11 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
 
   initSuite()
 
-  const test = createTest(function (name: string, fn = noop, timeout?: number) {
+  const test = createTest(function (name: string, fn = noop, options?: number | TestOptions) {
     const mode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run'
+
+    if (typeof options === 'number')
+      options = { timeout: options }
 
     const test: Test = {
       id: '',
@@ -81,7 +84,9 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       mode,
       suite: undefined!,
       fails: this.fails,
+      retry: options?.retry,
     } as Omit<Test, 'context'> as Test
+
     if (this.concurrent || concurrent)
       test.concurrent = true
     if (shuffle)
@@ -96,7 +101,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
 
     setFn(test, withTimeout(
       () => fn(context),
-      timeout,
+      options?.timeout,
     ))
 
     tasks.push(test)
@@ -192,7 +197,7 @@ function createTest(fn: (
     this: Record<'concurrent' | 'skip' | 'only' | 'todo' | 'fails', boolean | undefined>,
     title: string,
     fn?: TestFunction,
-    timeout?: number
+    options?: number | TestOptions
   ) => void
 )) {
   const testFn = fn as any
@@ -200,10 +205,10 @@ function createTest(fn: (
   testFn.each = function<T>(this: { withContext: () => TestAPI }, cases: ReadonlyArray<T>) {
     const test = this.withContext()
 
-    return (name: string, fn: (...args: T[]) => void, timeout?: number) => {
+    return (name: string, fn: (...args: T[]) => void, options?: number | TestOptions) => {
       cases.forEach((i, idx) => {
         const items = Array.isArray(i) ? i : [i]
-        test(formatTitle(name, items, idx), () => fn(...items), timeout)
+        test(formatTitle(name, items, idx), () => fn(...items), options)
       })
     }
   }
