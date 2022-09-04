@@ -259,7 +259,7 @@ Vitest also exposes `builtinEnvironments` through `vitest/environments` entry, i
 
 ### environmentOptions
 
-- **Type:** `Record<'jsdom' | string, string>`
+- **Type:** `Record<'jsdom' | string, unknown>`
 - **Default:** `{}`
 
 These options are passed down to `setup` method of current [`environment`](/#environment). By default, you can configure only JSDOM options, if you are using it as your test environment.
