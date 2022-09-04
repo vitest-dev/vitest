@@ -10,7 +10,7 @@ const configs = [
 
 async function runTests() {
   for (const [name, config] of configs) {
-    const success = await startVitest([name], {
+    const success = await startVitest('test', [name], {
       run: true,
       css: config,
       update: false,
