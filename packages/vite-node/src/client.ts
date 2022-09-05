@@ -4,7 +4,7 @@ import vm from 'vm'
 import { dirname, extname, isAbsolute, resolve } from 'pathe'
 import { isNodeBuiltin } from 'mlly'
 import createDebug from 'debug'
-import { getType, isPrimitive, mergeSlashes, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
+import { isPrimitive, mergeSlashes, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
 import type { HotContext, ModuleCache, ViteNodeRunnerOptions } from './types'
 
 const debugExecute = createDebug('vite-node:client:execute')
@@ -404,14 +404,7 @@ function exportAll(exports: any, sourceModule: any) {
   if (exports === sourceModule)
     return
 
-  const type = getType(sourceModule)
-  if (type !== 'Object' && type !== 'Module')
-    return
-
-  const constructor = sourceModule.constructor?.name
-
-  // allow only plain objects and modules (modules don't have name)
-  if (constructor && constructor !== 'Object')
+  if (typeof sourceModule !== 'object' || Array.isArray(sourceModule) || !sourceModule)
     return
 
   for (const key in sourceModule) {

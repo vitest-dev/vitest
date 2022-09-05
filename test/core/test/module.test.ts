@@ -50,7 +50,7 @@ it('arrays-cjs', () => {
 it('class-cjs', () => {
   expect(classCjs.default).toEqual({ variable: 1, Test: expect.any(Function) })
   expect(classCjs.default).toBeInstanceOf(classCjs.Test)
-  expect(classCjs).not.toHaveProperty('variable')
+  expect(classCjs, 'for compat with ESM it also defines props on Module').toHaveProperty('variable')
 })
 
 it('should work when using esm module', () => {
