@@ -16,14 +16,16 @@ You can try Vitest online on [StackBlitz](https://vitest.new). It runs Vitest di
 
 ## Adding Vitest to your Project
 
+With npm
 ```bash
-# with npm
 npm install -D vitest
-
-# or with yarn
+```
+or with yarn
+```bash
 yarn add -D vitest
-
-# or with pnpm
+```
+or with pnpm
+```bash
 pnpm add -D vitest
 ```
 
