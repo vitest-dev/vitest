@@ -119,7 +119,7 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
 - **Type:** `(name: string, fn: TestFunction, timeout?: number) => void`
 - **Alias:** `it.concurrent`
 
-  `test.concurrent` marks consecutive tests to be run them in parallel. It receives the test name, an async function with the tests to collect, and an optional timeout (in milliseconds).
+  `test.concurrent` marks consecutive tests to be run in parallel. It receives the test name, an async function with the tests to collect, and an optional timeout (in milliseconds).
 
   ```ts
   import { describe, test } from 'vitest'
