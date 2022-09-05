@@ -33,7 +33,7 @@ Created by [The Wallaby Team](https://wallabyjs.com)
 [Wallaby.js](https://wallabyjs.com) runs your Vitest tests immediately as you type, highlighting results in your IDE right next to your code.
 
 <p text-left>
-<img src="https:/wallabyjs.com/assets/img/vitest_cover.png" w-142 />
+<img src="https://wallabyjs.com/assets/img/vitest_cover.png" w-142 />
 </p>
 
 [VS Code](https://marketplace.visualstudio.com/items?itemName=WallabyJs.wallaby-vscode) | [JetBrains](https://plugins.jetbrains.com/plugin/15742-wallaby) |
