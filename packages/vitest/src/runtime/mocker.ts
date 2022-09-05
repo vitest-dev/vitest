@@ -1,9 +1,9 @@
 import { existsSync, readdirSync } from 'fs'
 import { isNodeBuiltin } from 'mlly'
 import { basename, dirname, join, resolve } from 'pathe'
-import { normalizeRequestId, toFilePath } from 'vite-node/utils'
+import { normalizeRequestId, pathFromRoot, toFilePath } from 'vite-node/utils'
 import type { ModuleCacheMap } from 'vite-node/client'
-import { getAllMockableProperties, getType, getWorkerState, isWindows, mergeSlashes, slash } from '../utils'
+import { getAllMockableProperties, getType, getWorkerState, mergeSlashes, slash } from '../utils'
 import { distDir } from '../constants'
 import type { PendingSuiteMock } from '../types/mocker'
 import type { ExecuteOptions } from './execute'
@@ -142,14 +142,14 @@ export class VitestMocker {
   }
 
   public normalizePath(path: string) {
-    return normalizeRequestId(path.replace(this.root, ''), this.base).replace(/^\/@fs\//, isWindows ? '' : '/')
+    return pathFromRoot(this.root, normalizeRequestId(path, this.base))
   }
 
   public getFsPath(path: string, external: string | null) {
     if (external)
       return mergeSlashes(`/@fs/${path}`)
 
-    return normalizeRequestId(path.replace(this.root, ''))
+    return normalizeRequestId(path, this.base)
   }
 
   public resolveMockPath(mockPath: string, external: string | null) {
