@@ -39,4 +39,4 @@ Created by [The Wallaby Team](https://wallabyjs.com)
 [VS Code](https://marketplace.visualstudio.com/items?itemName=WallabyJs.wallaby-vscode) | [JetBrains](https://plugins.jetbrains.com/plugin/15742-wallaby) |
 [Visual Studio](https://marketplace.visualstudio.com/items?itemName=vs-publisher-999439.WallabyjsforVisualStudio2022) | [Sublime Text](https://packagecontrol.io/packages/Wallaby)
 
-![Wallaby VS Code Demo](https:/wallabyjs.com/assets/img/vitest_demo.gif)
+![Wallaby VS Code Demo](https://wallabyjs.com/assets/img/vitest_demo.gif)
