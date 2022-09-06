@@ -49,6 +49,9 @@ export async function run(files: string[], config: ResolvedConfig): Promise<void
     const environment = env as VitestEnvironment
     const files = filesByEnv[environment]
 
+    if (!files || !files.length)
+      continue
+
     const filesByOptions = groupBy(files, ({ envOptions }) => JSON.stringify(envOptions))
 
     for (const options of Object.keys(filesByOptions)) {
