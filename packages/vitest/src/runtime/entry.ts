@@ -30,7 +30,7 @@ export async function run(files: string[], config: ResolvedConfig): Promise<void
   }))
 
   for (const { file, env, envOptions } of filesWithEnv) {
-    await withEnv(env, envOptions || config.environmentOptions, async () => {
+    await withEnv(env, envOptions || config.environmentOptions || {}, async () => {
       // it doesn't matter if running with --threads
       // if running with --no-threads, we usually want to reset everything before running a test
       // but we have --isolate option to disable this
