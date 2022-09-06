@@ -119,14 +119,14 @@ importers:
     devDependencies:
       '@iconify-json/carbon': 1.1.7
       '@unocss/reset': 0.45.15
-      '@vitejs/plugin-vue': 3.0.3_vite@3.0.9+vue@3.2.38
+      '@vitejs/plugin-vue': 3.1.0_vite@3.0.9+vue@3.2.38
       esno: 0.16.3
       fast-glob: 3.2.11
       https-localhost: 4.7.1
       unocss: 0.45.15_vite@3.0.9
       unplugin-vue-components: 0.22.4_vite@3.0.9+vue@3.2.38
       vite: 3.0.9
-      vite-plugin-pwa: 0.12.6_f7se6o6eqkwcix4u3svh6mkvda
+      vite-plugin-pwa: 0.12.6_vite@3.0.9
       vitepress: 1.0.0-alpha.13
       workbox-window: 6.5.4
 
@@ -219,9 +219,9 @@ importers:
       react-dom: 18.0.0_react@18.0.0
     devDependencies:
       '@testing-library/react': 13.3.0_zpnidt7m3osuk7shl3s4oenomq
-      '@types/node': 18.7.14
+      '@types/node': 18.7.15
       '@types/react': 18.0.18
-      '@vitejs/plugin-react': 2.0.1
+      '@vitejs/plugin-react': 2.1.0
       jsdom: 20.0.0
       typescript: 4.6.3
       vitest: link:../../packages/vitest
@@ -269,7 +269,7 @@ importers:
     devDependencies:
       '@types/react': 17.0.49
       '@types/react-test-renderer': 17.0.2
-      '@vitejs/plugin-react': 2.0.1_vite@3.0.9
+      '@vitejs/plugin-react': 2.1.0_vite@3.0.9
       '@vitest/ui': link:../../packages/ui
       happy-dom: 6.0.4
       jsdom: 20.0.0
@@ -297,7 +297,7 @@ importers:
       '@types/enzyme': 3.10.12
       '@types/react': 17.0.49
       '@types/react-dom': 17.0.17
-      '@vitejs/plugin-react': 2.0.1_vite@3.0.9
+      '@vitejs/plugin-react': 2.1.0_vite@3.0.9
       '@vitest/ui': link:../../packages/ui
       '@wojtekmaj/enzyme-adapter-react-17': 0.6.7_7ltvq4e2railvf5uya4ffxpe2a
       enzyme: 3.11.0
@@ -476,7 +476,7 @@ importers:
       vitest: workspace:*
       vue: latest
     devDependencies:
-      '@vitejs/plugin-vue': 3.0.3_vite@3.0.9+vue@3.2.38
+      '@vitejs/plugin-vue': 3.1.0_vite@3.0.9+vue@3.2.38
       '@vue/test-utils': 2.0.2_vue@3.2.38
       jsdom: 20.0.0
       vite: 3.0.9
@@ -530,7 +530,7 @@ importers:
     dependencies:
       vue: 3.2.38
     devDependencies:
-      '@vitejs/plugin-vue': 3.0.3_vite@3.0.9+vue@3.2.38
+      '@vitejs/plugin-vue': 3.1.0_vite@3.0.9+vue@3.2.38
       '@vue/test-utils': 2.0.2_vue@3.2.38
       jsdom: 20.0.0
       unplugin-auto-import: 0.11.2_vite@3.0.9
@@ -549,7 +549,7 @@ importers:
     dependencies:
       vue: 3.2.38
     devDependencies:
-      '@vitejs/plugin-vue': 3.0.3_vite@3.0.9+vue@3.2.38
+      '@vitejs/plugin-vue': 3.1.0_vite@3.0.9+vue@3.2.38
       '@vue/test-utils': 2.0.0_vue@3.2.38
       jsdom: 20.0.0
       vite: 3.0.9
@@ -565,7 +565,7 @@ importers:
       vitest: workspace:*
       vue: latest
     devDependencies:
-      '@vitejs/plugin-vue': 3.0.3_vite@3.0.9+vue@3.2.38
+      '@vitejs/plugin-vue': 3.1.0_vite@3.0.9+vue@3.2.38
       '@vitejs/plugin-vue-jsx': 2.0.1_vite@3.0.9+vue@3.2.38
       '@vue/test-utils': 2.0.2_vue@3.2.38
       jsdom: 20.0.0
@@ -790,7 +790,7 @@ importers:
       source-map-js: ^1.0.2
       strip-ansi: ^7.0.1
       strip-literal: ^0.4.0
-      tinybench: ^2.1.4
+      tinybench: ^2.1.5
       tinypool: ^0.3.0
       tinyspy: ^1.0.2
       typescript: ^4.8.2
@@ -805,7 +805,7 @@ importers:
       debug: 4.3.4
       local-pkg: 0.4.2
       strip-literal: 0.4.0
-      tinybench: 2.1.4
+      tinybench: 2.1.5
       tinypool: 0.3.0
       tinyspy: 1.0.2
       vite: 3.0.9
@@ -934,7 +934,7 @@ importers:
       vitest: workspace:*
       vue: latest
     devDependencies:
-      '@vitejs/plugin-vue': 3.0.3_vite@3.0.9+vue@3.2.38
+      '@vitejs/plugin-vue': 3.1.0_vite@3.0.9+vue@3.2.38
       '@vue/test-utils': 2.0.2_vue@3.2.38
       happy-dom: 6.0.4
       vite: 3.0.9
@@ -5809,6 +5809,10 @@ packages:
     resolution: {integrity: sha512-6bbDaETVi8oyIARulOE9qF1/Qdi/23z6emrUh0fNJRUmjznqrixD4MpGDdgOFk5Xb0m2H6Xu42JGdvAxaJR/wA==}
     dev: true
 
+  /@types/node/18.7.15:
+    resolution: {integrity: sha512-XnjpaI8Bgc3eBag2Aw4t2Uj/49lLBSStHWfqKvIuXD7FIrZyMLWp8KuAFHAqxMZYTF9l08N1ctUn9YNybZJVmQ==}
+    dev: true
+
   /@types/node/8.10.66:
     resolution: {integrity: sha512-tktOkFUA4kXx2hhhrB8bIFb5TbwzS4uOhKEmwiD+NoiL0qtP2OQ9mFldbgD4dV1djrlBYP6eBuQZiWjuHUpqFw==}
     dev: true
@@ -6314,8 +6318,8 @@ packages:
       - supports-color
     dev: true
 
-  /@vitejs/plugin-react/2.0.1:
-    resolution: {integrity: sha512-uINzNHmjrbunlFtyVkST6lY1ewSfz/XwLufG0PIqvLGnpk2nOIOa/1CACTDNcKi1/RwaCzJLmsXwm1NsUVV/NA==}
+  /@vitejs/plugin-react/2.1.0:
+    resolution: {integrity: sha512-am6rPyyU3LzUYne3Gd9oj9c4Rzbq5hQnuGXSMT6Gujq45Il/+bunwq3lrB7wghLkiF45ygMwft37vgJ/NE8IAA==}
     engines: {node: ^14.18.0 || >=16.0.0}
     peerDependencies:
       vite: ^3.0.0
@@ -6331,8 +6335,8 @@ packages:
       - supports-color
     dev: true
 
-  /@vitejs/plugin-react/2.0.1_vite@3.0.9:
-    resolution: {integrity: sha512-uINzNHmjrbunlFtyVkST6lY1ewSfz/XwLufG0PIqvLGnpk2nOIOa/1CACTDNcKi1/RwaCzJLmsXwm1NsUVV/NA==}
+  /@vitejs/plugin-react/2.1.0_vite@3.0.9:
+    resolution: {integrity: sha512-am6rPyyU3LzUYne3Gd9oj9c4Rzbq5hQnuGXSMT6Gujq45Il/+bunwq3lrB7wghLkiF45ygMwft37vgJ/NE8IAA==}
     engines: {node: ^14.18.0 || >=16.0.0}
     peerDependencies:
       vite: ^3.0.0
@@ -6368,6 +6372,17 @@ packages:
 
   /@vitejs/plugin-vue/3.0.3_vite@3.0.9+vue@3.2.38:
     resolution: {integrity: sha512-U4zNBlz9mg+TA+i+5QPc3N5lQvdUXENZLO2h0Wdzp56gI1MWhqJOv+6R+d4kOzoaSSq6TnGPBdZAXKOe4lXy6g==}
+    engines: {node: ^14.18.0 || >=16.0.0}
+    peerDependencies:
+      vite: ^3.0.0
+      vue: ^3.2.25
+    dependencies:
+      vite: 3.0.9
+      vue: 3.2.38
+    dev: true
+
+  /@vitejs/plugin-vue/3.1.0_vite@3.0.9+vue@3.2.38:
+    resolution: {integrity: sha512-fmxtHPjSOEIRg6vHYDaem+97iwCUg/uSIaTzp98lhELt2ISOQuDo2hbkBdXod0g15IhfPMQmAxh4heUks2zvDA==}
     engines: {node: ^14.18.0 || >=16.0.0}
     peerDependencies:
       vite: ^3.0.0
@@ -17413,9 +17428,8 @@ packages:
       setimmediate: 1.0.5
     dev: true
 
-  /tinybench/2.1.4:
-    resolution: {integrity: sha512-NFWIw2Gg7EUPdeE8nL1Dc7AMVlk7sOr2PmSNKVuQrZ0YwTOFoshPQ+hcLrgnhK8dTP3FWMCJaf4N+/hXp6lKPw==}
-    engines: {node: '>=16.0.0'}
+  /tinybench/2.1.5:
+    resolution: {integrity: sha512-ak+PZZEuH3mw6CCFOgf5S90YH0MARnZNhxjhjguAmoJimEMAJuNip/rJRd6/wyylHItomVpKTzZk9zrhTrQCoQ==}
     dev: false
 
   /tinypool/0.3.0:
@@ -18411,11 +18425,10 @@ packages:
       - supports-color
     dev: true
 
-  /vite-plugin-pwa/0.12.6_f7se6o6eqkwcix4u3svh6mkvda:
+  /vite-plugin-pwa/0.12.6_vite@3.0.9:
     resolution: {integrity: sha512-qRxx1zUlwKq2QD20nDZVL449wV+dflRVeDMLa2k4LZiHfWRfHWwmdhnDZOlMEgni0Zss1DkhyTmuzLYuO6aO3A==}
     peerDependencies:
       vite: ^2.0.0 || ^3.0.0-0
-      workbox-window: ^6.4.0
     dependencies:
       debug: 4.3.4
       fast-glob: 3.2.11
@@ -18489,7 +18502,7 @@ packages:
     dependencies:
       '@docsearch/css': 3.2.1
       '@docsearch/js': 3.2.1
-      '@vitejs/plugin-vue': 3.0.3_vite@3.0.9+vue@3.2.38
+      '@vitejs/plugin-vue': 3.1.0_vite@3.0.9+vue@3.2.38
       '@vue/devtools-api': 6.2.1
       '@vueuse/core': 9.1.1_vue@3.2.38
       body-scroll-lock: 4.0.0-beta.0
