@@ -1,8 +1,18 @@
 import { promises as fs } from 'fs'
 import type { EnvironmentOptions, ResolvedConfig, VitestEnvironment } from '../types'
 import { getWorkerState, resetModules } from '../utils'
+import { envs } from '../integrations/env'
 import { setupGlobalEnv, withEnv } from './setup'
 import { startTests } from './run'
+
+function groupBy<T, K extends string | number | symbol >(collection: T[], iteratee: (item: T) => K) {
+  return collection.reduce((acc, item) => {
+    const key = iteratee(item)
+    acc[key] ||= []
+    acc[key].push(item)
+    return acc
+  }, {} as Record<K, T[]>)
+}
 
 export async function run(files: string[], config: ResolvedConfig): Promise<void> {
   await setupGlobalEnv(config)
@@ -29,21 +39,41 @@ export async function run(files: string[], config: ResolvedConfig): Promise<void
     }
   }))
 
-  for (const { file, env, envOptions } of filesWithEnv) {
-    await withEnv(env, envOptions || config.environmentOptions || {}, async () => {
-      // it doesn't matter if running with --threads
-      // if running with --no-threads, we usually want to reset everything before running a test
-      // but we have --isolate option to disable this
-      if (config.isolate) {
-        workerState.mockMap.clear()
-        resetModules(workerState.moduleCache, true)
-      }
+  const filesByEnv = groupBy(filesWithEnv, ({ env }) => env)
 
-      workerState.filepath = file
+  const orderedEnvs = envs.concat(
+    Object.keys(filesByEnv).filter(env => !envs.includes(env)),
+  )
 
-      await startTests([file], config)
+  for (const env of orderedEnvs) {
+    const environment = env as VitestEnvironment
+    const files = filesByEnv[environment]
 
-      workerState.filepath = undefined
-    })
+    const filesByOptions = groupBy(files, ({ envOptions }) => JSON.stringify(envOptions))
+
+    for (const options of Object.keys(filesByOptions)) {
+      const files = filesByOptions[options]
+
+      if (!files || !files.length)
+        continue
+
+      await withEnv(environment, JSON.parse(options) || config.environmentOptions || {}, async () => {
+        for (const { file } of files) {
+        // it doesn't matter if running with --threads
+        // if running with --no-threads, we usually want to reset everything before running a test
+        // but we have --isolate option to disable this
+          if (config.isolate) {
+            workerState.mockMap.clear()
+            resetModules(workerState.moduleCache, true)
+          }
+
+          workerState.filepath = file
+
+          await startTests([file], config)
+
+          workerState.filepath = undefined
+        }
+      })
+    }
   }
 }
