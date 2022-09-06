@@ -35,7 +35,7 @@ export async function run(files: string[], config: ResolvedConfig): Promise<void
     return {
       file,
       env: env as VitestEnvironment,
-      envOptions: envOptions as EnvironmentOptions | undefined,
+      envOptions: { [env]: envOptions } as EnvironmentOptions,
     }
   }))
 
