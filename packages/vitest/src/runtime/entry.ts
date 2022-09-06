@@ -60,7 +60,7 @@ export async function run(files: string[], config: ResolvedConfig): Promise<void
       if (!files || !files.length)
         continue
 
-      await withEnv(environment, JSON.parse(options) || config.environmentOptions || {}, async () => {
+      await withEnv(environment, files[0].envOptions || config.environmentOptions || {}, async () => {
         for (const { file } of files) {
         // it doesn't matter if running with --threads
         // if running with --no-threads, we usually want to reset everything before running a test
