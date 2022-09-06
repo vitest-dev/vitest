@@ -5,7 +5,7 @@
   "license": "MIT",
   "main": "index.js",
   "scripts": {
-    "dev": "tsx watch src",
+    "dev": "NODE_ENV=development tsx watch src",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run"

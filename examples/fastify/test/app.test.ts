@@ -8,7 +8,7 @@ import { usersData } from '../mockData'
 test('with HTTP injection', async () => {
   const response = await app.inject({
     method: 'GET',
-    url: '/users'
+    url: '/users',
   })
 
   expect(response.statusCode).toBe(200)
@@ -17,23 +17,22 @@ test('with HTTP injection', async () => {
 })
 
 test('with a running server', async () => {
-
   await app.ready()
 
   const response = await supertest(app.server)
-  .get('/users')
-  .expect(200)
+    .get('/users')
+    .expect(200)
 
   expect(response.body).toHaveLength(4)
   expect(response.body).toStrictEqual(usersData)
 })
 
 test('with axios', async () => {
-  await app.listen();
-  await app.ready();
+  await app.listen()
+  await app.ready()
 
-  const address = app.server.address();
-  const port = typeof address === 'string' ? address : address?.port;
+  const address = app.server.address()
+  const port = typeof address === 'string' ? address : address?.port
 
   const response = await axios.get(`http://localhost:${port}/users`)
 
@@ -41,7 +40,7 @@ test('with axios', async () => {
   expect(response.data).toStrictEqual(usersData)
 })
 
-afterAll(async ()=> {
+afterAll(async () => {
   await app.close()
 })
 
