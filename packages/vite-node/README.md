@@ -2,7 +2,7 @@
 
 [![NPM version](https://img.shields.io/npm/v/vite-node?color=a1b858&label=)](https://www.npmjs.com/package/vite-node)
 
-Vite as Node runtime. The engine powers [Vitest](https://github.com/vitest-dev/vitest).
+Vite as Node runtime. The engine powers [Vitest](https://github.com/vitest-dev/vitest) and [Nuxt 3 Dev SSR](https://github.com/nuxt/framework).
 
 ## Features
 

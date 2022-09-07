@@ -68,7 +68,7 @@
   },
   "scripts": {
     "build": "rimraf dist && rollup -c",
-    "dev": "NODE_OPTIONS=\"--max-old-space-size=8192\" rollup -c --watch -m inline",
+    "dev": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" rollup -c --watch -m inline",
     "prepublishOnly": "nr build"
   },
   "peerDependencies": {
@@ -103,7 +103,7 @@
     "debug": "^4.3.4",
     "local-pkg": "^0.4.2",
     "strip-literal": "^0.4.0",
-    "tinybench": "^2.1.4",
+    "tinybench": "^2.1.5",
     "tinypool": "^0.3.0",
     "tinyspy": "^1.0.2",
     "vite": "^2.9.12 || ^3.0.0-0"
