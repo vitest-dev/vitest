@@ -347,7 +347,7 @@ async function runBenchmarkSuit(suite: Suite) {
       suite.result!.state = 'pass'
 
       benchmarkInstance.tasks
-        .sort((a, b) => b.result!.mean - a.result!.mean)
+        .sort((a, b) => a.result!.mean - b.result!.mean)
         .forEach((cycle, idx) => {
           const benchmark = benchmarkMap[cycle.name || '']
           benchmark.result!.state = 'pass'
