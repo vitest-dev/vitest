@@ -18,7 +18,7 @@ export interface BenchmarkUserOptions {
   exclude?: string[]
 
   /**
-   * Include globs for in-source test files
+   * Include globs for in-source benchmark test files
    *
    * @default []
    */

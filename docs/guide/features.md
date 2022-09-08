@@ -175,3 +175,27 @@ if (import.meta.vitest) {
 ```
 
 Learn more at [In-source testing](/guide/in-source).
+
+## Benchmarking <sup><code>experimental</code></sup>
+
+Since Vitest 0.23.0, you can run benchmark tests with [`bench`](/api/#bench) function to compare performance results.
+
+```ts
+import { bench, describe } from 'vitest'
+
+describe('sort', () => {
+  bench('normal', () => {
+    const x = [1, 5, 4, 2, 3]
+    x.sort((a, b) => {
+      return a - b
+    })
+  })
+
+  bench('reverse', () => {
+    const x = [1, 5, 4, 2, 3]
+    x.reverse().sort((a, b) => {
+      return a - b
+    })
+  })
+})
+```

@@ -29,16 +29,16 @@ export class JsonReporter implements Reporter {
     for (const file of files) {
       const tests = getTests([file])
       for (const test of tests) {
-        const res = test.result!.benchmark!
+        const res = test.result?.benchmark
+        if (!res || test.mode === 'skip') // TODO mark as skipped
+          continue
         if (!outputFile)
           res.samples = 'ignore on terminal' as any
-
         testResults[test.suite.name] = (testResults[test.suite.name] || []).concat(res)
       }
 
-      // test.suite.name
       if (tests.some(t => t.result?.state === 'run')) {
-        this.ctx.logger.warn('WARNING: Some tests are still running when generating the markdown report.'
+        this.ctx.logger.warn('WARNING: Some tests are still running when generating the json report.'
         + 'This is likely an internal bug in Vitest.'
         + 'Please report it to https://github.com/vitest-dev/vitest/issues')
       }
@@ -73,7 +73,7 @@ export class JsonReporter implements Reporter {
         await fs.mkdir(outputDirectory, { recursive: true })
 
       await fs.writeFile(reportFile, report, 'utf-8')
-      this.ctx.logger.log(`markdown report written to ${reportFile}`)
+      this.ctx.logger.log(`json report written to ${reportFile}`)
     }
     else {
       this.ctx.logger.log(report)

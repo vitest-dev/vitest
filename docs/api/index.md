@@ -212,11 +212,98 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
 
   If you want to have access to `TestContext`, use `describe.each` with a single test.
 
-## describe
+## bench
 
-When you use `test` in the top level of file, they are collected as part of the implicit suite for it. Using `describe` you can define a new suite in the current context, as a set of related tests and other nested suites. A suite lets you organize your tests so reports are more clear.
+- **Type:** `(name: string, fn: BenchFunction, options?: BenchOptions) => void`
+
+`bench` defines a benchmark. In Vitest terms benchmark is a function that defines a series of operations. Vitest runs this function multiple times to display different performance results.
+
+Vitest uses [`tinybench`](https://github.com/tinylibs/tinybench) library under the hood, inheriting all its options that can be used as a third argument.
 
   ```ts
+  import { bench } from 'vitest'
+
+  bench('normal sorting', () => {
+    const x = [1, 5, 4, 2, 3]
+    x.sort((a, b) => {
+      return a - b
+    })
+  }, { time: 1000 })
+  ```
+
+  ```ts
+  export interface Options {
+    /**
+     * time needed for running a benchmark task (milliseconds)
+     * @default 500
+     */
+    time?: number
+
+    /**
+     * number of times that a task should run if even the time option is finished
+     * @default 10
+     */
+    iterations?: number
+
+    /**
+     * function to get the current timestamp in milliseconds
+     */
+    now?: () => number
+
+    /**
+     * An AbortSignal for aborting the benchmark
+     */
+    signal?: AbortSignal
+
+    /**
+     * warmup time (milliseconds)
+     * @default 100ms
+     */
+    warmupTime?: number
+
+    /**
+     * warmup iterations
+     * @default 5
+     */
+    warmupIterations?: number
+
+    /**
+     * setup function to run before each benchmark task (cycle)
+     */
+    setup?: Hook
+
+    /**
+     * teardown function to run after each benchmark task (cycle)
+     */
+    teardown?: Hook
+  }
+  ```
+
+### bench.skip
+
+- **Type:** `(name: string, fn: BenchFunction, options?: BenchOptions) => void`
+
+You can use `bench.skip` syntax to skip running certain benchmarks.
+
+  ```ts
+  import { bench } from 'vitest'
+
+  bench.skip('normal sorting', () => {
+    const x = [1, 5, 4, 2, 3]
+    x.sort((a, b) => {
+      return a - b
+    })
+  })
+  ```
+
+## describe
+
+When you use `test` or `bench` in the top level of file, they are collected as part of the implicit suite for it. Using `describe` you can define a new suite in the current context, as a set of related tests or benchmarks and other nested suites. A suite lets you organize your tests and benchmarks so reports are more clear.
+
+  ```ts
+  // basic.spec.ts
+  // organizing tests
+
   import { describe, expect, test } from 'vitest'
 
   const person = {
@@ -239,7 +326,30 @@ When you use `test` in the top level of file, they are collected as part of the 
   })
   ```
 
-  You can also nest describe blocks if you have a hierarchy of tests:
+  ```ts
+  // basic.bench.ts
+  // organizing benchmarks
+
+  import { bench, describe } from 'vitest'
+
+  describe('sort', () => {
+    bench('normal', () => {
+      const x = [1, 5, 4, 2, 3]
+      x.sort((a, b) => {
+        return a - b
+      })
+    })
+
+    bench('reverse', () => {
+      const x = [1, 5, 4, 2, 3]
+      x.reverse().sort((a, b) => {
+        return a - b
+      })
+    })
+  })
+  ```
+
+  You can also nest describe blocks if you have a hierarchy of tests or benchmarks:
 
   ```ts
   import { describe, expect, test } from 'vitest'
@@ -360,6 +470,7 @@ When you use `test` in the top level of file, they are collected as part of the 
   // An entry will be shown in the report for this suite
   describe.todo('unimplemented suite')
   ```
+
 ### describe.each
 
 - **Type:** `(cases: ReadonlyArray<T>): (name: string, fn: (...args: T[]) => void) => void`
