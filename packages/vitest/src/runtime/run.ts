@@ -318,7 +318,6 @@ async function runBenchmarkSuit(suite: Suite) {
     await Promise.all(benchmarkSuiteGroup.map(subSuite => runBenchmarkSuit(subSuite)))
 
   if (benchmarkGroup.length) {
-    // const benchmarkInstance = await getBenchmarkFactory(suite, {})
     const defer = createDefer()
     const benchmarkMap: Record<string, Benchmark> = {}
     suite.result = {
@@ -342,7 +341,6 @@ async function runBenchmarkSuit(suite: Suite) {
 
       const task = new Task(benchmarkInstance, id, benchmarkFn)
       benchmark.task = task
-      // benchmarkInstance.add(id, benchmarkFn)
       updateTask(benchmark)
     })
 
