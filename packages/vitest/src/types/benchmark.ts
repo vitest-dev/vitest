@@ -36,6 +36,7 @@ export interface Benchmark extends TaskBase {
   suite: Suite
   result?: TaskResult
   fails?: boolean
+  task?: BenchTask
   options: BenchOptions
 }
 
