@@ -5,7 +5,7 @@ Vitest provides [`environment`](/config/#environment) option to run code inside 
 By default, you can use these environments:
 
 - `node` is default environment
-- `jsdon` emulates browser environment by providing Browser API, uses [`jsdom`](https://github.com/jsdom/jsdom) package
+- `jsdom` emulates browser environment by providing Browser API, uses [`jsdom`](https://github.com/jsdom/jsdom) package
 - `happy-dom` emulates browser environment by providing Browser API, and considered to be faster than jsdom, but lacks some API, uses [`happy-dom`](https://github.com/capricorn86/happy-dom) package
 - `edge-runtime` emulates Vercel's [edge-runtime](https://edge-runtime.vercel.app/), uses [`@edge-runtime/vm`](https://www.npmjs.com/package/@edge-runtime/vm) package
 
