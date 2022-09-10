@@ -1,15 +1,22 @@
 import { performance } from 'perf_hooks'
 import limit from 'p-limit'
-import type { Benchmark, BenchmarkResult, File, HookCleanupCallback, HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from '../types'
+import type { BenchTask, Benchmark, BenchmarkResult, File, HookCleanupCallback, HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from '../types'
 import { vi } from '../integrations/vi'
 import { clearTimeout, createDefer, getFullName, getWorkerState, hasFailed, hasTests, isBrowser, isNode, isRunningInBenchmark, partitionSuiteChildren, setTimeout, shuffle } from '../utils'
 import { getState, setState } from '../integrations/chai/jest-expect'
 import { GLOBAL_EXPECT } from '../integrations/chai/constants'
 import { takeCoverageInsideWorker } from '../integrations/coverage'
-import { getBenchmarkFactory, getFn, getHooks } from './map'
+import { getFn, getHooks } from './map'
 import { rpc } from './rpc'
 import { collectTests } from './collect'
 import { processError } from './error'
+
+async function importTinybench() {
+  if (!globalThis.EventTarget)
+    await import('event-target-polyfill' as any)
+
+  return (await import('tinybench'))
+}
 
 const now = Date.now
 
@@ -295,6 +302,7 @@ function createBenchmarkResult(name: string): BenchmarkResult {
 }
 
 async function runBenchmarkSuit(suite: Suite) {
+  const { Task, Bench } = await importTinybench()
   const start = performance.now()
 
   const benchmarkGroup = []
@@ -310,7 +318,6 @@ async function runBenchmarkSuit(suite: Suite) {
     await Promise.all(benchmarkSuiteGroup.map(subSuite => runBenchmarkSuit(subSuite)))
 
   if (benchmarkGroup.length) {
-    const benchmarkInstance = await getBenchmarkFactory(suite)
     const defer = createDefer()
     const benchmarkMap: Record<string, Benchmark> = {}
     suite.result = {
@@ -320,7 +327,10 @@ async function runBenchmarkSuit(suite: Suite) {
     }
     updateTask(suite)
     benchmarkGroup.forEach((benchmark, idx) => {
+      const benchmarkInstance = new Bench(benchmark.options)
+
       const benchmarkFn = getFn(benchmark)
+
       benchmark.result = {
         state: 'run',
         startTime: start,
@@ -328,25 +338,38 @@ async function runBenchmarkSuit(suite: Suite) {
       }
       const id = idx.toString()
       benchmarkMap[id] = benchmark
-      benchmarkInstance.add(id, benchmarkFn)
+
+      const task = new Task(benchmarkInstance, id, benchmarkFn)
+      benchmark.task = task
       updateTask(benchmark)
     })
-    benchmarkInstance.addEventListener('cycle', (e) => {
-      const task = e.task
-      const benchmark = benchmarkMap[task.name || '']
-      if (benchmark) {
-        const taskRes = task.result!
-        const result = benchmark.result!.benchmark!
-        Object.assign(result, taskRes)
-        updateTask(benchmark)
-      }
+
+    benchmarkGroup.forEach((benchmark) => {
+      benchmark.task!.addEventListener('complete', (e) => {
+        const task = e.task
+        const _benchmark = benchmarkMap[task.name || '']
+        if (_benchmark) {
+          const taskRes = task.result!
+          const result = _benchmark.result!.benchmark!
+          Object.assign(result, taskRes)
+          updateTask(_benchmark)
+        }
+      })
+      benchmark.task!.addEventListener('error', (e) => {
+        defer.reject(e)
+      })
     })
 
-    benchmarkInstance.addEventListener('complete', () => {
+    Promise.all(benchmarkGroup.map(async (benchmark) => {
+      await benchmark.task!.warmup()
+      return await new Promise<BenchTask>(resolve => setTimeout(async () => {
+        resolve(await benchmark.task!.run())
+      }))
+    })).then((tasks) => {
       suite.result!.duration = performance.now() - start
       suite.result!.state = 'pass'
 
-      benchmarkInstance.tasks
+      tasks
         .sort((a, b) => a.result!.mean - b.result!.mean)
         .forEach((cycle, idx) => {
           const benchmark = benchmarkMap[cycle.name || '']
@@ -361,11 +384,6 @@ async function runBenchmarkSuit(suite: Suite) {
       defer.resolve(null)
     })
 
-    benchmarkInstance.addEventListener('error', (e) => {
-      defer.reject(e)
-    })
-
-    benchmarkInstance.run()
     await defer
   }
 }

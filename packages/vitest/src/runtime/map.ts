@@ -1,9 +1,8 @@
-import type { Awaitable, BenchFactory, BenchFunction, Benchmark, Suite, SuiteHooks, Test } from '../types'
+import type { Awaitable, BenchFunction, Benchmark, Suite, SuiteHooks, Test } from '../types'
 
 // use WeakMap here to make the Test and Suite object serializable
 const fnMap = new WeakMap()
 const hooksMap = new WeakMap()
-const benchmarkMap = new WeakMap()
 
 export function setFn(key: Test | Benchmark, fn: (() => Awaitable<void>) | BenchFunction) {
   fnMap.set(key, fn)
@@ -23,17 +22,4 @@ export function getHooks(key: Suite): SuiteHooks {
 
 export function isTest(task: Test | Benchmark): task is Test {
   return task.type === 'test'
-}
-
-export async function getBenchmarkFactory(key: Suite): Promise<BenchFactory> {
-  let benchmark = benchmarkMap.get(key)
-  if (!benchmark) {
-    if (!globalThis.EventTarget)
-      await import('event-target-polyfill' as any)
-
-    const Bench = (await import('tinybench')).default
-    benchmark = new Bench({})
-    benchmarkMap.set(key, benchmark)
-  }
-  return benchmark
 }
