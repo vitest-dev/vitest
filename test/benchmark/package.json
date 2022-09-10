@@ -2,7 +2,7 @@
   "name": "@vitest/benchmark",
   "private": true,
   "scripts": {
-    "test": "vitest bench",
+    "test": "node test.mjs",
     "testu": "vitest -u",
     "coverage": "vitest run --coverage"
   }
