@@ -1,0 +1,63 @@
+// Vitest Snapshot v1
+
+exports[`stacktraces should respect sourcemaps > add.test.ts > add.test.ts 1`] = `
+"
+Error: Command failed with exit code 1: npx vitest run add.test.ts
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  add.test.ts > add
+AssertionError: expected 10 to be 100 // Object.is equality
+  - Expected   \\"100\\"
+  + Received   \\"10\\"
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ RUN  v0.23.1 <rootDir>
+
+   ❯ add.test.ts > add
+     → expected 10 to be 100 // Object.is equality
+
+ ❯ add.test.ts:13:22
+     11| 
+     12| it(\\"add\\",function() { 
+     13|  expect(add(a.count)).toBe(100);
+       |                      ^
+     14|  expect(add(1)).toBe(1);
+     15|  return expect(add(1,2,3)).toBe(6);
+
+Test Files  1 failed (1)
+     Tests  1 failed (1)
+"
+`;
+
+exports[`stacktraces should respect sourcemaps > add-in-js.test.js > add-in-js.test.js 1`] = `
+"
+Error: Command failed with exit code 1: npx vitest run add-in-js.test.js
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  add-in-js.test.js > add
+AssertionError: expected +0 to be 100 // Object.is equality
+  - Expected   \\"100\\"
+  + Received   \\"0\\"
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ RUN  v0.23.1 <rootDir>
+
+   ❯ add-in-js.test.js > add
+     → expected +0 to be 100 // Object.is equality
+
+ ❯ add-in-js.test.js:7:16
+      5| 
+      6| it(\\"add\\",function() { 
+      7|  expect(add()).toBe(100);
+       |                ^
+      8|  expect(add(1)).toBe(1);
+      9|  return expect(add(1,2,3)).toBe(6);
+
+Test Files  1 failed (1)
+     Tests  1 failed (1)
+"
+`;
