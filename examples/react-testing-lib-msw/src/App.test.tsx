@@ -5,11 +5,15 @@ import { render, screen, userEvent, waitForElementToBeRemoved } from './utils/te
 import App from './App'
 import { posts } from './mocks/handlers'
 
-it('Should return posts when clicking fetch button', async () => {
-  render(<ApolloProvider client={client}>
+beforeEach(()=>{
+ render(
+  <ApolloProvider client={client}>
     <App />
-  </ApolloProvider>)
+  </ApolloProvider>
+  )
+})
 
+it('Should return posts when clicking fetch button', async () => {
   expect(screen.getByRole('heading', { name: 'MSW Testing Library Example', level: 1 })).toBeDefined()
 
   userEvent.click(screen.getByRole('button', { name: 'Fetch Posts' }))
@@ -23,10 +27,6 @@ it('Should return posts when clicking fetch button', async () => {
 })
 
 it('Should return posts when clicking fetch with graphql button', async () => {
-  render(<ApolloProvider client={client}>
-    <App />
-  </ApolloProvider>)
-
   expect(screen.getByRole('heading', { name: 'MSW Testing Library Example', level: 1 })).toBeDefined()
 
   userEvent.click(screen.getByRole('button', { name: 'Fetch Posts GraphQL' }))
