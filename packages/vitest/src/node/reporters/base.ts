@@ -34,6 +34,10 @@ export abstract class BaseReporter implements Reporter {
     this.registerUnhandledRejection()
   }
 
+  get mode() {
+    return this.ctx.config.mode
+  }
+
   onInit(ctx: Vitest) {
     this.ctx = ctx
 
@@ -189,30 +193,16 @@ export abstract class BaseReporter implements Reporter {
   }
 
   async reportSummary(files: File[]) {
-    const logger = this.ctx.logger
-    const suites = getSuites(files)
+    await this.printErrorsSummary(files)
+    if (this.mode === 'benchmark')
+      await this.reportBenchmarkSummary(files)
+    else
+      await this.reportTestSummary(files)
+  }
+
+  async reportTestSummary(files: File[]) {
     const tests = getTests(files)
-
-    const failedSuites = suites.filter(i => i.result?.error)
-    const failedTests = tests.filter(i => i.result?.state === 'fail')
-    const failedTotal = failedSuites.length + failedTests.length
-
-    let current = 1
-
-    const errorDivider = () => logger.error(`${c.red(c.dim(divider(`[${current++}/${failedTotal}]`, undefined, 1)))}\n`)
-
-    if (failedSuites.length) {
-      logger.error(c.red(divider(c.bold(c.inverse(` Failed Suites ${failedSuites.length} `)))))
-      logger.error()
-      await this.printTaskErrors(failedSuites, errorDivider)
-    }
-
-    if (failedTests.length) {
-      logger.error(c.red(divider(c.bold(c.inverse(` Failed Tests ${failedTests.length} `)))))
-      logger.error()
-
-      await this.printTaskErrors(failedTests, errorDivider)
-    }
+    const logger = this.ctx.logger
 
     const executionTime = this.end - this.start
     const collectTime = files.reduce((acc, test) => acc + Math.max(0, test.collectDuration || 0), 0)
@@ -255,6 +245,56 @@ export abstract class BaseReporter implements Reporter {
       logger.log(padTitle('Duration'), time(executionTime) + c.dim(` (transform ${time(transformTime)}, setup ${time(setupTime)}, collect ${time(collectTime)}, tests ${time(testsTime)})`))
 
     logger.log()
+  }
+
+  private async printErrorsSummary(files: File[]) {
+    const logger = this.ctx.logger
+    const suites = getSuites(files)
+    const tests = getTests(files)
+
+    const failedSuites = suites.filter(i => i.result?.error)
+    const failedTests = tests.filter(i => i.result?.state === 'fail')
+    const failedTotal = failedSuites.length + failedTests.length
+
+    let current = 1
+
+    const errorDivider = () => logger.error(`${c.red(c.dim(divider(`[${current++}/${failedTotal}]`, undefined, 1)))}\n`)
+
+    if (failedSuites.length) {
+      logger.error(c.red(divider(c.bold(c.inverse(` Failed Suites ${failedSuites.length} `)))))
+      logger.error()
+      await this.printTaskErrors(failedSuites, errorDivider)
+    }
+
+    if (failedTests.length) {
+      logger.error(c.red(divider(c.bold(c.inverse(` Failed Tests ${failedTests.length} `)))))
+      logger.error()
+
+      await this.printTaskErrors(failedTests, errorDivider)
+    }
+    return tests
+  }
+
+  async reportBenchmarkSummary(files: File[]) {
+    const logger = this.ctx.logger
+    const benchs = getTests(files)
+
+    const topBenchs = benchs.filter(i => i.result?.benchmark?.rank === 1)
+
+    logger.log(`\n${c.cyan(c.inverse(c.bold(' BENCH ')))} ${c.cyan('Summary')}\n`)
+    for (const bench of topBenchs) {
+      const group = bench.suite
+      const groupName = getFullName(group)
+      logger.log(`  ${bench.name}${c.dim(` - ${groupName}`)}`)
+      const siblings = group.tasks
+        .filter(i => i.result?.benchmark && i !== bench)
+        .sort((a, b) => a.result!.benchmark!.rank - b.result!.benchmark!.rank)
+      for (const sibling of siblings) {
+        const number = `${(sibling.result!.benchmark!.mean / bench.result!.benchmark!.mean).toFixed(2)}x`
+        logger.log(`    ${c.green(number)} ${c.gray('faster than')} ${sibling.name}`)
+      }
+      logger.log('')
+    }
   }
 
   private async printTaskErrors(tasks: Task[], errorDivider: () => void) {

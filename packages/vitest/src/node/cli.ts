@@ -88,7 +88,7 @@ async function run(cliFilters: string[], options: CliOptions) {
 }
 
 async function benchmark(cliFilters: string[], options: CliOptions) {
-  console.warn(c.yellow('Benchmarking is an experimental feature. API might change in the future.'))
+  console.warn(c.yellow('Benchmarking is an experimental feature.\nBreaking changes might not follow semver, please pin Vitest\'s version when using it.'))
   await start('benchmark', cliFilters, options)
 }
 

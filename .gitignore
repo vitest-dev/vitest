@@ -15,6 +15,7 @@ dist
 ltex*
 .DS_Store
 bench/test/*/*/
+**/benchmark/bench.json
 cypress/videos
 cypress/downloads
 cypress/screenshots

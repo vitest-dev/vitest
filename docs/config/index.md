@@ -132,6 +132,42 @@ If disabled, your `alias` and `<plugin>.resolveId` won't affect imports inside `
 
 Interpret CJS module's default as named exports.
 
+### benchmark
+
+- **Type:** `{ include?, exclude?, ... }`
+
+Options used when running `vitest bench`.
+
+### benchmark.include
+
+- **Type:** `string[]`
+- **Default:** `['**/*.{bench,benchmark}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']`
+
+Include globs for benchmark test files
+
+### benchmark.exclude
+
+- **Type:** `string[]`
+- **Default:** `['node_modules', 'dist', '.idea', '.git', '.cache']`
+
+Exclude globs for benchmark test files
+
+### benchmark.includeSource
+
+- **Type:** `string[]`
+- **Default:** `[]`
+
+Include globs for in-source benchmark test files. This option is similar to [`includeSource`](#includesource).
+
+When defined, Vitest will run all matched files with `import.meta.vitest` inside.
+
+### benchmark.reporters
+
+- **Type:** `Arrayable<BenchmarkBuiltinReporters | Reporter>`
+- **Default:** `'default'`
+
+Custom reporter for output. Can contain one or more built-in report names, reporter instances, and/or paths to custom reporters.
+
 ### alias
 
 - **Type:** `Record<string, string> | Array<{ find: string | RegExp, replacement: string, customResolver?: ResolverFunction | ResolverObject }>`
