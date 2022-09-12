@@ -30,12 +30,11 @@ describe('stacktraces should respect sourcemaps', async () => {
       const msg = String(error)
         .split(/\n/g)
         .reduce((acc, line) => {
-          if (line.includes('Start at') || line.includes('Duration') || line.includes('(1 test | 1 failed)'))
+          if (line.includes('Start at') || line.includes('Duration') || line.includes('(1 test | 1 failed)') || line.includes(root))
             return acc
 
           return `${acc}\n${line}`
         }, '')
-        .replace(root, '<rootDir>')
       expect(msg).toMatchSnapshot(file)
     }, 10000)
   }

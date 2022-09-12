@@ -13,18 +13,17 @@ AssertionError: expected 10 to be 100 // Object.is equality
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
 
- RUN  v0.23.1 <rootDir>
 
    ❯ add.test.ts > add
      → expected 10 to be 100 // Object.is equality
 
- ❯ add.test.ts:13:22
-     11| 
-     12| it(\\"add\\",function() { 
-     13|  expect(add(a.count)).toBe(100);
-       |                      ^
-     14|  expect(add(1)).toBe(1);
-     15|  return expect(add(1,2,3)).toBe(6);
+ ❯ add.test.ts:12:23
+     10| 
+     11| it('add', () => {
+     12|   expect(add(a.count)).toBe(100)
+       |                       ^
+     13|   expect(add(1)).toBe(1)
+     14|   return expect(add(1, 2, 3)).toBe(6)
 
 Test Files  1 failed (1)
      Tests  1 failed (1)
@@ -44,18 +43,17 @@ AssertionError: expected +0 to be 100 // Object.is equality
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
 
- RUN  v0.23.1 <rootDir>
 
    ❯ add-in-js.test.js > add
      → expected +0 to be 100 // Object.is equality
 
- ❯ add-in-js.test.js:7:16
-      5| 
-      6| it(\\"add\\",function() { 
-      7|  expect(add()).toBe(100);
-       |                ^
-      8|  expect(add(1)).toBe(1);
-      9|  return expect(add(1,2,3)).toBe(6);
+ ❯ add-in-js.test.js:6:17
+      4| 
+      5| it('add', () => {
+      6|   expect(add()).toBe(100)
+       |                 ^
+      7|   expect(add(1)).toBe(1)
+      8|   return expect(add(1, 2, 3)).toBe(6)
 
 Test Files  1 failed (1)
      Tests  1 failed (1)
