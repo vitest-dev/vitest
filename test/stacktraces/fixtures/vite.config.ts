@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 
-const imba = () => {
-  return {
+export default defineConfig({
+  plugins: [{
     name: 'vite-plugin-imba',
     transform(code, id) {
       if (id.endsWith('add-in-imba.test.imba')) {
@@ -23,11 +23,7 @@ const imba = () => {
         }
       }
     },
-  }
-}
-
-export default defineConfig({
-  plugins: [imba()],
+  }],
   test: {
     threads: false,
     isolate: false,
