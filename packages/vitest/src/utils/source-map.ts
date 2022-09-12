@@ -25,9 +25,13 @@ export async function interpretSourcePos(stackFrames: ParsedStack[], ctx: Vitest
   for (const frame of stackFrames) {
     if ('sourcePos' in frame)
       continue
-    const map = ctx.vitenode.fetchCache.get(frame.file)?.result?.map
-    if (!map)
+    const ssrTransformResult = ctx.server.moduleGraph.getModuleById(frame.file)?.ssrTransformResult
+    const transformResult = ctx.server.moduleGraph.getModuleById(frame.file)?.transformResult
+    const result = ssrTransformResult || transformResult
+    if (!result)
       continue
+    const fetchResult = ctx.vitenode.fetchCache.get(frame.file)?.result
+    const map = fetchResult?.map || ssrTransformResult?.map
     const sourcePos = await getOriginalPos(map as any as RawSourceMap | undefined, frame)
     if (sourcePos)
       frame.sourcePos = sourcePos
