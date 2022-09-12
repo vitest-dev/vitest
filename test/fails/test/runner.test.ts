@@ -34,6 +34,6 @@ describe('should fails', async () => {
         ?.trim()
         .replace(root, '<rootDir>')
       expect(msg).toMatchSnapshot(file)
-    }, 10000)
+    }, 20000)
   }
 })

@@ -36,6 +36,6 @@ describe('stacktraces should respect sourcemaps', async () => {
           return `${acc}\n${line}`
         }, '')
       expect(msg).toMatchSnapshot(file)
-    }, 10000)
+    }, 20000)
   }
 })
