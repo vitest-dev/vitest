@@ -12,6 +12,7 @@ export const config: UserConfig = {
   root: __dirname,
   base: '/__vitest__/',
   resolve: {
+    dedupe: ['vue'],
     alias: {
       '~/': `${resolve(__dirname, 'client')}/`,
       '@vitest/ws-client': `${resolve(__dirname, '../ws-client/src/index.ts')}`,

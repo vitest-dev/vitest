@@ -50,7 +50,6 @@ importers:
       typescript: ^4.8.3
       vite: ^3.1.0
       vitest: workspace:*
-      vue: latest
     devDependencies:
       '@antfu/eslint-config': 0.26.3_itqs5654cmlnjraw6gjzqacppi
       '@antfu/ni': 0.18.0
@@ -92,7 +91,6 @@ importers:
       typescript: 4.8.3
       vite: 3.1.0
       vitest: link:packages/vitest
-      vue: 3.2.39
 
   docs:
     specifiers:
@@ -125,7 +123,7 @@ importers:
       unocss: 0.45.15_vite@3.1.0
       unplugin-vue-components: 0.22.4_vite@3.1.0+vue@3.2.39
       vite: 3.1.0
-      vite-plugin-pwa: 0.12.6_vite@3.1.0
+      vite-plugin-pwa: 0.12.6_zp7t6aa2r77waajuyr5zt63phe
       vitepress: 1.0.0-alpha.13
       workbox-window: 6.5.4
 
@@ -236,8 +234,8 @@ importers:
       react-dom: 18.0.0_react@18.0.0
     devDependencies:
       '@testing-library/react': 13.3.0_zpnidt7m3osuk7shl3s4oenomq
-      '@types/node': 18.7.16
-      '@types/react': 18.0.18
+      '@types/node': 18.7.17
+      '@types/react': 18.0.19
       '@vitejs/plugin-react': 2.1.0
       jsdom: 20.0.0
       typescript: 4.6.3
@@ -5853,6 +5851,10 @@ packages:
     resolution: {integrity: sha512-EQHhixfu+mkqHMZl1R2Ovuvn47PUw18azMJOTwSZr9/fhzHNGXAJ0ma0dayRVchprpCj0Kc1K1xKoWaATWF1qg==}
     dev: true
 
+  /@types/node/18.7.17:
+    resolution: {integrity: sha512-0UyfUnt02zIuqp7yC8RYtDkp/vo8bFaQ13KkSEvUAohPOAlnVNbj5Fi3fgPSuwzakS+EvvnnZ4x9y7i6ASaSPQ==}
+    dev: true
+
   /@types/node/8.10.66:
     resolution: {integrity: sha512-tktOkFUA4kXx2hhhrB8bIFb5TbwzS4uOhKEmwiD+NoiL0qtP2OQ9mFldbgD4dV1djrlBYP6eBuQZiWjuHUpqFw==}
     dev: true
@@ -5900,7 +5902,7 @@ packages:
   /@types/react-dom/18.0.6:
     resolution: {integrity: sha512-/5OFZgfIPSwy+YuIBP/FgJnQnsxhZhjjrnxudMddeblOouIodEQ75X14Rr4wGSG/bknL+Omy9iWlLo1u/9GzAA==}
     dependencies:
-      '@types/react': 18.0.18
+      '@types/react': 18.0.19
     dev: true
 
   /@types/react-is/17.0.3:
@@ -5935,6 +5937,14 @@ packages:
       '@types/prop-types': 15.7.5
       '@types/scheduler': 0.16.2
       csstype: 3.1.0
+
+  /@types/react/18.0.19:
+    resolution: {integrity: sha512-BDc3Q+4Q3zsn7k9xZrKfjWyJsSlEDMs38gD1qp2eDazLCdcPqAT+vq1ND+Z8AGel/UiwzNUk8ptpywgNQcJ1MQ==}
+    dependencies:
+      '@types/prop-types': 15.7.5
+      '@types/scheduler': 0.16.2
+      csstype: 3.1.0
+    dev: true
 
   /@types/resolve/1.17.1:
     resolution: {integrity: sha512-yy7HuzQhj0dhGpD8RLXSZWEkLsV9ibvxvi6EiJ3bkqLAO1RGo0WbkWQiwpRlSFymTJRz0d3k5LM3kkx8ArDbLw==}
@@ -19065,10 +19075,11 @@ packages:
       - supports-color
     dev: true
 
-  /vite-plugin-pwa/0.12.6_vite@3.1.0:
+  /vite-plugin-pwa/0.12.6_zp7t6aa2r77waajuyr5zt63phe:
     resolution: {integrity: sha512-qRxx1zUlwKq2QD20nDZVL449wV+dflRVeDMLa2k4LZiHfWRfHWwmdhnDZOlMEgni0Zss1DkhyTmuzLYuO6aO3A==}
     peerDependencies:
       vite: ^2.0.0 || ^3.0.0-0
+      workbox-window: ^6.4.0
     dependencies:
       debug: 4.3.4
       fast-glob: 3.2.11
