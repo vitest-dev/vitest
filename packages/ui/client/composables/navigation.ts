@@ -2,7 +2,7 @@ import { client, findById } from './client'
 import { activeFileId } from './params'
 import type { File } from '#types'
 
-export const currentModule = ref<File | undefined>(undefined)
+export const currentModule = ref<File>()
 export const dashboardVisible = ref(true)
 
 export function initializeNavigation() {
