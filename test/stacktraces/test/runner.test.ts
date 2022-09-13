@@ -27,14 +27,9 @@ describe('stacktraces should respect sourcemaps', async () => {
         })
 
       expect(error).toBeTruthy()
-      const msg = String(error)
-        .split(/\n/g)
-        .reduce((acc, line) => {
-          if (line.includes('Start at') || line.includes('Duration') || line.includes('(1 test | 1 failed)') || line.includes(root))
-            return acc
-
-          return `${acc}\n${line}`
-        }, '')
+      const lines = String(error).split(/\n/g)
+      const index = lines.findIndex(val => val.includes(`${file}:`))
+      const msg = lines.slice(index, index + 8).join('\n')
       expect(msg).toMatchSnapshot(file)
     }, 10000)
   }
