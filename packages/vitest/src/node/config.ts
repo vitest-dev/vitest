@@ -10,6 +10,7 @@ import { toArray } from '../utils'
 import { VitestCache } from './cache'
 import { BaseSequencer } from './sequencers/BaseSequencer'
 import { RandomSequencer } from './sequencers/RandomSequencer'
+import type { BenchmarkBuiltinReporters } from './reporters'
 
 const extraInlineDeps = [
   /^(?!.*(?:node_modules)).*\.mjs$/,
@@ -169,6 +170,13 @@ export function resolveConfig(
     resolved.include = resolved.benchmark.include
     resolved.exclude = resolved.benchmark.exclude
     resolved.includeSource = resolved.benchmark.includeSource
+    // @ts-expect-error reporter is CLI flag
+    const reporters = [...toArray(options.reporters), ...toArray(options.reporter)]
+    if (reporters.length)
+      resolved.benchmark.reporters = reporters as BenchmarkBuiltinReporters[]
+
+    if (options.outputFile)
+      resolved.benchmark.outputFile = options.outputFile
   }
 
   resolved.setupFiles = toArray(resolved.setupFiles || []).map(file =>
@@ -184,11 +192,13 @@ export function resolveConfig(
   if (options.related)
     resolved.related = toArray(options.related).map(file => resolve(resolved.root, file))
 
-  resolved.reporters = Array.from(new Set([
-    ...toArray(resolved.reporters),
-    // @ts-expect-error from CLI
-    ...toArray(resolved.reporter),
-  ])).filter(Boolean)
+  if (mode !== 'benchmark') {
+    resolved.reporters = Array.from(new Set([
+      ...toArray(resolved.reporters),
+      // @ts-expect-error from CLI
+      ...toArray(resolved.reporter),
+    ])).filter(Boolean)
+  }
 
   if (!resolved.reporters.length)
     resolved.reporters.push('default')

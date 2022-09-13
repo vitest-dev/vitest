@@ -163,7 +163,7 @@ export class JsonReporter implements Reporter {
    * @param report
    */
   async writeReport(report: string) {
-    const outputFile = getOutputFile(this.ctx, 'json')
+    const outputFile = getOutputFile(this.ctx.config, 'json')
 
     if (outputFile) {
       const reportFile = resolve(this.ctx.config.root, outputFile)

@@ -896,7 +896,10 @@ importers:
       vitest: link:../../packages/vitest
 
   test/benchmark:
-    specifiers: {}
+    specifiers:
+      execa: ^6.1.0
+    devDependencies:
+      execa: 6.1.0
 
   test/browser:
     specifiers:

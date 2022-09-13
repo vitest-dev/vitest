@@ -168,6 +168,15 @@ When defined, Vitest will run all matched files with `import.meta.vitest` inside
 
 Custom reporter for output. Can contain one or more built-in report names, reporter instances, and/or paths to custom reporters.
 
+### benchmark.outputFile
+
+- **Type:** `string | Record<string, string>`
+
+Write benchmark results to a file when the `--reporter=json` option is also specified.
+By providing an object instead of a string you can define individual outputs when using multiple reporters.
+
+To provide object via CLI command, use the following syntax: `--outputFile.json=./path --outputFile.junit=./other-path`.
+
 ### alias
 
 - **Type:** `Record<string, string> | Array<{ find: string | RegExp, replacement: string, customResolver?: ResolverFunction | ResolverObject }>`
