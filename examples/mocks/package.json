@@ -18,9 +18,11 @@
   },
   "devDependencies": {
     "@vitest/ui": "latest",
+    "react": "18.0",
     "vite": "latest",
     "vitest": "latest",
-    "zustand": "4.0.0-rc.1"
+    "vue": "^3.2.39",
+    "zustand": "4.1.1"
   },
   "stackblitz": {
     "startCommand": "npm run test:ui"

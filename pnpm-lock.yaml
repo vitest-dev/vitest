@@ -202,19 +202,23 @@ importers:
       '@vitest/ui': latest
       '@vueuse/integrations': ^8.5.0
       axios: ^0.26.1
+      react: '18.0'
       tinyspy: ^0.3.2
       vite: ^3.1.0
       vitest: workspace:*
-      zustand: 4.0.0-rc.1
+      vue: ^3.2.39
+      zustand: 4.1.1
     dependencies:
-      '@vueuse/integrations': 8.9.4_axios@0.26.1
+      '@vueuse/integrations': 8.9.4_axios@0.26.1+vue@3.2.39
       axios: 0.26.1
       tinyspy: 0.3.3
     devDependencies:
       '@vitest/ui': link:../../packages/ui
+      react: 18.0.0
       vite: 3.1.0
       vitest: link:../../packages/vitest
-      zustand: 4.0.0-rc.1
+      vue: 3.2.39
+      zustand: 4.1.1_react@18.0.0
 
   examples/nextjs:
     specifiers:
@@ -6838,7 +6842,7 @@ packages:
       vue: 3.2.39
     dev: true
 
-  /@vueuse/core/8.9.4:
+  /@vueuse/core/8.9.4_vue@3.2.39:
     resolution: {integrity: sha512-B/Mdj9TK1peFyWaPof+Zf/mP9XuGAngaJZBwPaXBvU3aCTZlx3ltlrFFFyMV4iGBwsjSCeUCgZrtkEj9dS2Y3Q==}
     peerDependencies:
       '@vue/composition-api': ^1.1.0
@@ -6851,8 +6855,9 @@ packages:
     dependencies:
       '@types/web-bluetooth': 0.0.14
       '@vueuse/metadata': 8.9.4
-      '@vueuse/shared': 8.9.4
-      vue-demi: 0.13.11
+      '@vueuse/shared': 8.9.4_vue@3.2.39
+      vue: 3.2.39
+      vue-demi: 0.13.11_vue@3.2.39
     dev: false
 
   /@vueuse/core/9.1.1_vue@3.2.39:
@@ -6878,7 +6883,7 @@ packages:
       - vue
     dev: true
 
-  /@vueuse/integrations/8.9.4_axios@0.26.1:
+  /@vueuse/integrations/8.9.4_axios@0.26.1+vue@3.2.39:
     resolution: {integrity: sha512-Nk7mH0ThTdiuiiuB+1lyC+5ihnywrr+9h9IA4R4Ry8Mli/cZL38zc3qZWIsCVPm66Lr+7kEp3nnHdSxKi7ivrg==}
     peerDependencies:
       async-validator: '*'
@@ -6913,10 +6918,10 @@ packages:
       universal-cookie:
         optional: true
     dependencies:
-      '@vueuse/core': 8.9.4
-      '@vueuse/shared': 8.9.4
+      '@vueuse/core': 8.9.4_vue@3.2.39
+      '@vueuse/shared': 8.9.4_vue@3.2.39
       axios: 0.26.1
-      vue-demi: 0.13.11
+      vue-demi: 0.13.11_vue@3.2.39
     transitivePeerDependencies:
       - '@vue/composition-api'
       - vue
@@ -6933,7 +6938,7 @@ packages:
     resolution: {integrity: sha512-exN4KE6iquxDCdt72BgEhb3tlOpECtD61AUdXnUqBTIUCl70x1Ar/QXo3bYcvxmdMS2/peQyfeTzBjRTpvL5xw==}
     dev: true
 
-  /@vueuse/shared/8.9.4:
+  /@vueuse/shared/8.9.4_vue@3.2.39:
     resolution: {integrity: sha512-wt+T30c4K6dGRMVqPddexEVLa28YwxW5OFIPmzUHICjphfAuBFTTdDoyqREZNDOFJZ44ARH1WWQNCUK8koJ+Ag==}
     peerDependencies:
       '@vue/composition-api': ^1.1.0
@@ -6944,7 +6949,8 @@ packages:
       vue:
         optional: true
     dependencies:
-      vue-demi: 0.13.11
+      vue: 3.2.39
+      vue-demi: 0.13.11_vue@3.2.39
     dev: false
 
   /@vueuse/shared/9.1.1_vue@3.2.39:
@@ -18933,10 +18939,12 @@ packages:
       querystring: 0.2.0
     dev: true
 
-  /use-sync-external-store/1.1.0:
-    resolution: {integrity: sha512-SEnieB2FPKEVne66NpXPd1Np4R1lTNKfjuy3XdIoPQKYBAFdzbzSZlSn1KJZUiihQLQC5Znot4SBz1EOTBwQAQ==}
+  /use-sync-external-store/1.2.0_react@18.0.0:
+    resolution: {integrity: sha512-eEgnFxGQ1Ife9bzYs6VLi8/4X6CObHMw9Qr9tPY43iKwsPw8xE8+EFsf/2cFZ5S3esXgpWgtSCtLNS41F+sKPA==}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0
+    dependencies:
+      react: 18.0.0
     dev: true
 
   /use/3.1.1:
@@ -19197,19 +19205,6 @@ packages:
         optional: true
     dependencies:
       vue: 3.2.39
-
-  /vue-demi/0.13.11:
-    resolution: {integrity: sha512-IR8HoEEGM65YY3ZJYAjMlKygDQn25D5ajNFNoKh9RSDMQtlzCxtfQjdQgv9jjK+m3377SsJXY8ysq8kLCZL25A==}
-    engines: {node: '>=12'}
-    hasBin: true
-    requiresBuild: true
-    peerDependencies:
-      '@vue/composition-api': ^1.0.0-rc.1
-      vue: ^3.0.0-0 || ^2.6.0
-    peerDependenciesMeta:
-      '@vue/composition-api':
-        optional: true
-    dev: false
 
   /vue-demi/0.13.11_vue@3.2.38:
     resolution: {integrity: sha512-IR8HoEEGM65YY3ZJYAjMlKygDQn25D5ajNFNoKh9RSDMQtlzCxtfQjdQgv9jjK+m3377SsJXY8ysq8kLCZL25A==}
@@ -19974,8 +19969,8 @@ packages:
     resolution: {integrity: sha512-PQ2PC7R9rslx84ndNBZB/Dkv8V8fZEpk83RLgXtYd0fwUgEjseMn1Dgajh2x6S8QbZAFa9p2qVCEuYZNgve0dQ==}
     dev: false
 
-  /zustand/4.0.0-rc.1:
-    resolution: {integrity: sha512-qgcs7zLqBdHu0PuT3GW4WCIY5SgXdsv30GQMu9Qpp1BA2aS+sNS8l4x0hWuyEhjXkN+701aGWawhKDv6oWJAcw==}
+  /zustand/4.1.1_react@18.0.0:
+    resolution: {integrity: sha512-h4F3WMqsZgvvaE0n3lThx4MM81Ls9xebjvrABNzf5+jb3/03YjNTSgZXeyrvXDArMeV9untvWXRw1tY+ntPYbA==}
     engines: {node: '>=12.7.0'}
     peerDependencies:
       immer: '>=9.0'
@@ -19986,7 +19981,8 @@ packages:
       react:
         optional: true
     dependencies:
-      use-sync-external-store: 1.1.0
+      react: 18.0.0
+      use-sync-external-store: 1.2.0_react@18.0.0
     dev: true
 
   /zwitch/1.0.5:
