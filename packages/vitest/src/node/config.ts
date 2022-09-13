@@ -170,10 +170,15 @@ export function resolveConfig(
     resolved.include = resolved.benchmark.include
     resolved.exclude = resolved.benchmark.exclude
     resolved.includeSource = resolved.benchmark.includeSource
-    // @ts-expect-error reporter is CLI flag
-    const reporters = [...toArray(options.reporters), ...toArray(options.reporter)]
+    const reporters = Array.from(new Set<BenchmarkBuiltinReporters>([
+      ...toArray(resolved.benchmark.reporters),
+      // @ts-expect-error reporter is CLI flag
+      ...toArray(options.reporter),
+    ])).filter(Boolean)
     if (reporters.length)
-      resolved.benchmark.reporters = reporters as BenchmarkBuiltinReporters[]
+      resolved.benchmark.reporters = reporters
+    else
+      resolved.benchmark.reporters = ['default']
 
     if (options.outputFile)
       resolved.benchmark.outputFile = options.outputFile
