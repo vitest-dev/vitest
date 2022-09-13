@@ -1,6 +1,6 @@
 import { existsSync, readdirSync } from 'fs'
 import { isNodeBuiltin } from 'mlly'
-import { basename, dirname, join, resolve } from 'pathe'
+import { basename, dirname, extname, join, resolve } from 'pathe'
 import { normalizeRequestId, pathFromRoot, toFilePath } from 'vite-node/utils'
 import type { ModuleCacheMap } from 'vite-node/client'
 import { getAllMockableProperties, getType, getWorkerState, mergeSlashes, slash } from '../utils'
@@ -165,11 +165,11 @@ export class VitestMocker {
         return null
 
       const files = readdirSync(mockFolder)
-      const baseFilename = basename(path)
+      const baseOriginal = basename(path)
 
       for (const file of files) {
-        const [basename] = file.split('.')
-        if (basename === baseFilename)
+        const baseFile = basename(file, extname(file))
+        if (baseFile === baseOriginal)
           return resolve(mockFolder, file)
       }
 
