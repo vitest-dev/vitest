@@ -238,8 +238,9 @@ export async function runSuite(suite: Suite) {
   else {
     try {
       const beforeAllCleanups = await callSuiteHook(suite, suite, 'beforeAll', [suite])
+
       if (isRunningInBenchmark()) {
-        await runBenchmarkSuit(suite)
+        await runBenchmarkSuite(suite)
       }
       else {
         for (let tasksGroup of partitionSuiteChildren(suite)) {
@@ -301,13 +302,16 @@ function createBenchmarkResult(name: string): BenchmarkResult {
   } as BenchmarkResult
 }
 
-async function runBenchmarkSuit(suite: Suite) {
+async function runBenchmarkSuite(suite: Suite) {
   const { Task, Bench } = await importTinybench()
   const start = performance.now()
 
   const benchmarkGroup = []
   const benchmarkSuiteGroup = []
   for (const task of suite.tasks) {
+    if (task.mode !== 'run')
+      continue
+
     if (task.type === 'benchmark')
       benchmarkGroup.push(task)
     else if (task.type === 'suite')
@@ -315,7 +319,7 @@ async function runBenchmarkSuit(suite: Suite) {
   }
 
   if (benchmarkSuiteGroup.length)
-    await Promise.all(benchmarkSuiteGroup.map(subSuite => runBenchmarkSuit(subSuite)))
+    await Promise.all(benchmarkSuiteGroup.map(subSuite => runBenchmarkSuite(subSuite)))
 
   if (benchmarkGroup.length) {
     const defer = createDefer()

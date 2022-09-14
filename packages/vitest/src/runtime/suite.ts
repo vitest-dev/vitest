@@ -116,7 +116,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
   })
 
   const benchmark = createBenchmark(function (name: string, fn = noop, options: BenchOptions) {
-    const mode = this.skip ? 'skip' : 'run'
+    const mode = this.only ? 'only' : this.skip ? 'skip' : 'run'
 
     if (!isRunningInBenchmark())
       throw new Error('`bench()` is only available in benchmark mode. Run with `vitest bench` instead.')
@@ -251,14 +251,14 @@ function createTest(fn: (
 
 function createBenchmark(fn: (
   (
-    this: Record<'skip', boolean | undefined>,
+    this: Record<'skip' | 'only', boolean | undefined>,
     name: string,
     fn: BenchFunction,
     options: BenchOptions
   ) => void
 )) {
   const benchmark = createChainable(
-    ['skip'],
+    ['skip', 'only'],
     fn,
   ) as BenchmarkAPI
 
