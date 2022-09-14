@@ -14,10 +14,12 @@ Vite as Node runtime.<br>The engine powers <a href="https://github.com/vitest-de
 
 ## Features
 
-- Out-of-box ESM & TypeScript support (more with plugins)
-- Vite's plugins, resolve, aliasing
+- On-demand evaluation
+- Vite's pipeline, plugins, resolve, aliasing
+- Out-of-box ESM & TypeScript support
 - Respect `vite.config.ts`
-- Hot module replacement
+- Hot module replacement (HMR)
+- Separate server/client architecture
 - Top-level `await`
 - Shims for `__dirname` and `__filename` in ESM
 - Access to native node modules like `fs`, `path`, etc.
