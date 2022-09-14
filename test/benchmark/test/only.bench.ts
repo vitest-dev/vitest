@@ -1,4 +1,3 @@
-import assert from 'node:assert'
 import { bench, describe, expect } from 'vitest'
 
 const run = [false, false, false, false]
@@ -58,11 +57,3 @@ describe('a4', () => {
     })
   })
 })
-
-bench.only(
-  'visited',
-  () => {
-    assert.deepEqual(run, [true, true, true, true, true])
-  },
-  { iterations: 1, time: 0 },
-)
