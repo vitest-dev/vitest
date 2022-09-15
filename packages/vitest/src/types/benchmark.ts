@@ -29,6 +29,12 @@ export interface BenchmarkUserOptions {
    * and/or paths to custom reporters
    */
   reporters?: Arrayable<BenchmarkBuiltinReporters | Reporter>
+
+  /**
+   * Write test results to a file when the `--reporter=json` option is also specified.
+   * Also definable individually per reporter by using an object instead.
+   */
+  outputFile?: string | (Partial<Record<BenchmarkBuiltinReporters, string>> & Record<string, string>)
 }
 
 export interface Benchmark extends TaskBase {

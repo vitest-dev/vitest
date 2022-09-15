@@ -1,18 +1,26 @@
 import { readFile } from 'fs/promises'
-import { startVitest } from 'vitest/node'
+import { execa } from 'execa'
 
-const success = await startVitest('benchmark', ['base.bench', 'mode.bench'], {
-  run: true,
-  update: false,
-  outputFile: './bench.json', // TODO move outputFile to benchmark
-  benchmark: {
-    reporters: ['json'],
+let error
+await execa('npx', ['vitest', 'bench', 'base.bench', 'mode.bench'], {
+  env: {
+    ...process.env,
+    CI: 'true',
+    NO_COLOR: 'true',
   },
 })
+  .catch((e) => {
+    error = e
+  })
 
 const benchResult = await readFile('./bench.json', 'utf-8')
 
 if (benchResult.includes('skip'))
   process.exit(1)
 
-process.exit(success ? 0 : 1)
+if (error) {
+  console.error(error)
+  process.exit(1)
+}
+
+process.exit(0)

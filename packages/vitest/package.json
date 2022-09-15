@@ -1,6 +1,6 @@
 {
   "name": "vitest",
-  "version": "0.23.2",
+  "version": "0.23.3",
   "description": "A blazing fast unit test framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -102,7 +102,7 @@
     "chai": "^4.3.6",
     "debug": "^4.3.4",
     "local-pkg": "^0.4.2",
-    "strip-literal": "^0.4.0",
+    "strip-literal": "^0.4.1",
     "tinybench": "^2.1.5",
     "tinypool": "^0.3.0",
     "tinyspy": "^1.0.2",

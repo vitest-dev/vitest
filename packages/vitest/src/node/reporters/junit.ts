@@ -72,7 +72,7 @@ export class JUnitReporter implements Reporter {
   async onInit(ctx: Vitest): Promise<void> {
     this.ctx = ctx
 
-    const outputFile = getOutputFile(this.ctx, 'junit')
+    const outputFile = getOutputFile(this.ctx.config, 'junit')
 
     if (outputFile) {
       this.reportFile = resolve(this.ctx.config.root, outputFile)

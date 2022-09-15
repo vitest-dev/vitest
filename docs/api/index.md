@@ -378,7 +378,7 @@ When you use `test` or `bench` in the top level of file, they are collected as p
 
 ### describe.skip
 
-- **Type:** `(name: string, fn: TestFunction) => void`
+- **Type:** `(name: string, fn: TestFunction, options?: number | TestOptions) => void`
 
   Use `describe.skip` in a suite to avoid running a particular describe block.
 
@@ -395,7 +395,7 @@ When you use `test` or `bench` in the top level of file, they are collected as p
 
 ### describe.only
 
-- **Type:** `(name: string, fn: TestFunction) => void`
+- **Type:** `(name: string, fn: TestFunction, options?: number | TestOptions) => void`
 
   Use `describe.only` to only run certain suites
 
@@ -421,7 +421,7 @@ When you use `test` or `bench` in the top level of file, they are collected as p
 
 ### describe.concurrent
 
-- **Type:** `(name: string, fn: TestFunction, timeout?: number) => void`
+- **Type:** `(name: string, fn: TestFunction, options?: number | TestOptions) => void`
 
   `describe.concurrent` in a suite marks every tests as concurrent
 
@@ -445,7 +445,7 @@ When you use `test` or `bench` in the top level of file, they are collected as p
 
 ### describe.shuffle
 
-- **Type:** `(name: string, fn: TestFunction, timeout?: number | TestOptions) => void`
+- **Type:** `(name: string, fn: TestFunction, options?: number | TestOptions) => void`
 
   Vitest provides a way to run all tests in random order via CLI flag [`--sequence.shuffle`](/guide/cli) or config option [`sequence.shuffle`](/config/#sequence-shuffle), but if you want to have only part of your test suite to run tests in random order, you can mark it with this flag.
 
@@ -473,7 +473,7 @@ When you use `test` or `bench` in the top level of file, they are collected as p
 
 ### describe.each
 
-- **Type:** `(cases: ReadonlyArray<T>): (name: string, fn: (...args: T[]) => void) => void`
+- **Type:** `(cases: ReadonlyArray<T>): (name: string, fn: (...args: T[]) => void, options?: number | TestOptions) => void`
 
   Use `describe.each` if you have more than one test that depends on the same data.
 

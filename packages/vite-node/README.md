@@ -1,15 +1,26 @@
-# vite-node
+<p align="center">
+<img src="https://github.com/vitest-dev/vitest/blob/main/packages/vite-node/assets/vite-node.svg?raw=true" height="120">
+</p>
 
-[![NPM version](https://img.shields.io/npm/v/vite-node?color=a1b858&label=)](https://www.npmjs.com/package/vite-node)
-
-Vite as Node runtime. The engine powers [Vitest](https://github.com/vitest-dev/vitest) and [Nuxt 3 Dev SSR](https://github.com/nuxt/framework).
+<h1 align="center">
+vite-node
+</h1>
+<p align="center">
+Vite as Node runtime.<br>The engine powers <a href="https://github.com/vitest-dev/vitest">Vitest</a> and <a href="https://github.com/nuxt/framework">Nuxt 3 Dev SSR</a>.
+<p>
+<p align="center">
+  <a href="https://www.npmjs.com/package/vitest"><img src="https://img.shields.io/npm/v/vite-node?color=FCC72B&label="></a>
+<p>
 
 ## Features
 
-- Out-of-box ESM & TypeScript support (possible for more with plugins)
-- Top-level `await`
-- Vite plugins, resolve, aliasing
+- On-demand evaluation
+- Vite's pipeline, plugins, resolve, aliasing
+- Out-of-box ESM & TypeScript support
 - Respect `vite.config.ts`
+- Hot module replacement (HMR)
+- Separate server/client architecture
+- Top-level `await`
 - Shims for `__dirname` and `__filename` in ESM
 - Access to native node modules like `fs`, `path`, etc.
 

@@ -3,7 +3,10 @@
   "private": true,
   "scripts": {
     "test": "node test.mjs",
-    "testu": "vitest -u",
+    "bench": "vitest bench --reporter=json",
     "coverage": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "execa": "^6.1.0"
   }
 }

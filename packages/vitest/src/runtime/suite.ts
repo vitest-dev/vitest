@@ -68,7 +68,7 @@ export function createSuiteHooks() {
   }
 }
 
-function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, mode: RunMode, concurrent?: boolean, shuffle?: boolean) {
+function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, mode: RunMode, concurrent?: boolean, shuffle?: boolean, suiteOptions?: number | TestOptions) {
   const tasks: (Benchmark | Test | Suite | SuiteCollector)[] = []
   const factoryQueue: (Test | Suite | SuiteCollector)[] = []
 
@@ -76,7 +76,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
 
   initSuite()
 
-  const test = createTest(function (name: string, fn = noop, options?: number | TestOptions) {
+  const test = createTest(function (name: string, fn = noop, options = suiteOptions) {
     if (!isRunningInTest())
       throw new Error('`test()` and `it()` is only available in test mode.')
 
@@ -191,22 +191,21 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
   }
 
   collectTask(collector)
-
   return collector
 }
 
 function createSuite() {
-  function suiteFn(this: Record<string, boolean | undefined>, name: string, factory?: SuiteFactory) {
+  function suiteFn(this: Record<string, boolean | undefined>, name: string, factory?: SuiteFactory, options?: number | TestOptions) {
     const mode: RunMode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run'
-    return createSuiteCollector(name, factory, mode, this.concurrent, this.shuffle)
+    return createSuiteCollector(name, factory, mode, this.concurrent, this.shuffle, options)
   }
 
   suiteFn.each = function<T>(this: { withContext: () => SuiteAPI }, cases: ReadonlyArray<T>) {
     const suite = this.withContext()
-    return (name: string, fn: (...args: T[]) => void) => {
+    return (name: string, fn: (...args: T[]) => void, options?: number | TestOptions) => {
       cases.forEach((i, idx) => {
         const items = Array.isArray(i) ? i : [i]
-        suite(formatTitle(name, items, idx), () => fn(...items))
+        suite(formatTitle(name, items, idx), () => fn(...items), options)
       })
     }
   }
