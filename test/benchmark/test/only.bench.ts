@@ -7,7 +7,7 @@ describe('a0', () => {
   bench.only('0', () => {
     run[0] = true
   })
-  bench.only('s0', () => {
+  bench('s0', () => {
     expect(true).toBe(false)
   })
 })

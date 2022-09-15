@@ -2,7 +2,7 @@ import { readFile } from 'fs/promises'
 import { execa } from 'execa'
 
 let error
-await execa('npx', ['vitest', 'bench', 'base.bench', 'mode.bench'], {
+await execa('npx', ['vitest', 'bench', 'base.bench', 'mode.bench', 'only.bench'], {
   env: {
     ...process.env,
     CI: 'true',
