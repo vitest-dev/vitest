@@ -1,13 +1,13 @@
 import assert from 'node:assert'
 import { bench, describe, expect } from 'vitest'
 
-const run = [false, false, false, false]
+const run = [false, false, false, false, false]
 
 describe('a0', () => {
   bench.only('0', () => {
     run[0] = true
   })
-  bench('s0', () => {
+  bench.only('s0', () => {
     expect(true).toBe(false)
   })
 })

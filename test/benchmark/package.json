@@ -2,19 +2,11 @@
   "name": "@vitest/benchmark",
   "private": true,
   "scripts": {
-<<<<<<< HEAD
     "test": "node test.mjs",
     "bench": "vitest bench --reporter=json",
     "coverage": "vitest run --coverage"
   },
   "devDependencies": {
     "execa": "^6.1.0"
-||||||| parent of db53b9bf (run benchmarks)
-    "test": "node test.mjs",
-    "testu": "vitest -u",
-    "coverage": "vitest run --coverage"
-=======
-    "bench": "vitest bench"
->>>>>>> db53b9bf (run benchmarks)
   }
 }
