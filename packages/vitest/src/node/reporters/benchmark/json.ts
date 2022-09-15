@@ -25,7 +25,7 @@ export class JsonReporter implements Reporter {
     const tests = getTests(files)
     const numTotalTests = tests.length
     const testResults: Record<string, BenchTaskResult[]> = {}
-    const outputFile = getOutputFile(this.ctx, 'json')
+    const outputFile = getOutputFile(this.ctx.config.benchmark, 'json')
     for (const file of files) {
       const tests = getTests([file])
       for (const test of tests) {
@@ -63,7 +63,7 @@ export class JsonReporter implements Reporter {
    * @param report
    */
   async writeReport(report: string) {
-    const outputFile = getOutputFile(this.ctx, 'json')
+    const outputFile = getOutputFile(this.ctx.config.benchmark, 'json')
 
     if (outputFile) {
       const reportFile = resolve(this.ctx.config.root, outputFile)
