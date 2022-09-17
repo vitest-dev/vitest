@@ -7,7 +7,7 @@ import c from 'picocolors'
 import { execa } from 'execa'
 import { EXIT_CODE_RESTART } from '../constants'
 
-const ENTRY = new URL('./cli.mjs', import.meta.url)
+const ENTRY = new URL('./cli.js', import.meta.url)
 
 /** Arguments passed to Node before the script */
 const NODE_ARGS = [
