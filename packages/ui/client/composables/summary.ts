@@ -1,5 +1,5 @@
 import { hasFailedSnapshot } from '@vitest/ws-client'
-import type { Task, Test } from 'vitest/src'
+import type { Benchmark, Task, Test } from 'vitest/src'
 import { files, testRunState } from '~/composables/client'
 
 type Nullable<T> = T | null | undefined
@@ -52,6 +52,9 @@ function toArray<T>(array?: Nullable<Arrayable<T>>): Array<T> {
     return array
   return [array]
 }
-function getTests(suite: Arrayable<Task>): Test[] {
-  return toArray(suite).flatMap(s => s.type === 'test' ? [s] : s.tasks.flatMap(c => c.type === 'test' ? [c] : getTests(c)))
+function isAtomTest(s: Task): s is Test | Benchmark {
+  return (s.type === 'test' || s.type === 'benchmark')
+}
+function getTests(suite: Arrayable<Task>): (Test | Benchmark)[] {
+  return toArray(suite).flatMap(s => isAtomTest(s) ? [s] : s.tasks.flatMap(c => isAtomTest(c) ? [c] : getTests(c)))
 }

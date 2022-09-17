@@ -1,11 +1,11 @@
-import React from 'react'
 import { shallow } from 'enzyme'
+import type { ShallowWrapper } from 'enzyme'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import Button from '../components/Button'
 
 describe('Button component', () => {
-  let wrapper
+  let wrapper: ShallowWrapper
   const mockedOnSubmit = vi.fn()
 
   beforeEach(() => {

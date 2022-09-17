@@ -1,5 +1,3 @@
-/// <reference types="vitest" />
-
 import assert from 'assert'
 import { join } from 'pathe'
 import { defineConfig } from 'vite'

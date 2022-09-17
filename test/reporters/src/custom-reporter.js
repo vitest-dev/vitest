@@ -4,6 +4,6 @@ export default class TestReporter {
   }
 
   onFinished() {
-    this.ctx.log('hello from custom reporter')
+    this.ctx.logger.log('hello from custom reporter')
   }
 }

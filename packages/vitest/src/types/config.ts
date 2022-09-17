@@ -1,14 +1,19 @@
-import type { CommonServerOptions } from 'vite'
+import type { AliasOptions, CommonServerOptions } from 'vite'
 import type { PrettyFormatOptions } from 'pretty-format'
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import type { BuiltinReporters } from '../node/reporters'
-import type { C8Options, ResolvedC8Options } from './coverage'
+import type { TestSequencerConstructor } from '../node/sequencers/types'
+import type { CoverageOptions, ResolvedCoverageOptions } from './coverage'
 import type { JSDOMOptions } from './jsdom-options'
 import type { Reporter } from './reporter'
 import type { SnapshotStateOptions } from './snapshot'
 import type { Arrayable } from './general'
+import type { BenchmarkUserOptions } from './benchmark'
 
-export type BuiltinEnvironment = 'node' | 'jsdom' | 'happy-dom'
+export type BuiltinEnvironment = 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime'
+// Record is used, so user can get intellisense for builtin environments, but still allow custom environments
+export type VitestEnvironment = BuiltinEnvironment | (string & Record<never, never>)
+export type CSSModuleScopeStrategy = 'stable' | 'scoped' | 'non-scoped'
 
 export type ApiConfig = Pick<CommonServerOptions, 'port' | 'strictPort' | 'host'>
 
@@ -19,9 +24,19 @@ export interface EnvironmentOptions {
    * jsdom options.
    */
   jsdom?: JSDOMOptions
+  [x: string]: unknown
 }
 
+export type VitestRunMode = 'test' | 'benchmark'
+
 export interface InlineConfig {
+  /**
+   * Benchmark options.
+   *
+   * @default {}
+  */
+  benchmark?: BenchmarkUserOptions
+
   /**
    * Include globs for test files
    *
@@ -79,6 +94,12 @@ export interface InlineConfig {
      * @default false
      */
     fallbackCJS?: boolean
+
+    /**
+     * Use experimental Node loader to resolve imports inside node_modules using Vite resolve algorithm.
+     * @default false
+     */
+    registerNodeLoader?: boolean
   }
 
   /**
@@ -98,11 +119,13 @@ export interface InlineConfig {
   /**
    * Running environment
    *
-   * Supports 'node', 'jsdom', 'happy-dom'
+   * Supports 'node', 'jsdom', 'happy-dom', 'edge-runtime'
+   *
+   * If used unsupported string, will try to load the package `vitest-environment-${env}`
    *
    * @default 'node'
    */
-  environment?: BuiltinEnvironment
+  environment?: VitestEnvironment
 
   /**
    * Environment options.
@@ -188,6 +211,13 @@ export interface InlineConfig {
   hookTimeout?: number
 
   /**
+   * Default timeout to wait for close when Vitest shuts down, in milliseconds
+   *
+   * @default 1000
+   */
+  teardownTimeout?: number
+
+  /**
    * Silent mode
    *
    * @default false
@@ -228,7 +258,7 @@ export interface InlineConfig {
   /**
    * Coverage options
    */
-  coverage?: C8Options
+  coverage?: CoverageOptions
 
   /**
    * run test names with the specified pattern
@@ -267,6 +297,12 @@ export interface InlineConfig {
    * @internal WIP
    */
   ui?: boolean
+
+  /**
+   * Use in browser environment
+   * @experimental
+   */
+  browser?: boolean
 
   /**
    * Open UI automatically.
@@ -324,7 +360,7 @@ export interface InlineConfig {
   allowOnly?: boolean
 
   /**
-   * Show heap usage after each test. Usefull for debugging memory leaks.
+   * Show heap usage after each test. Useful for debugging memory leaks.
    */
   logHeapUsage?: boolean
 
@@ -350,17 +386,63 @@ export interface InlineConfig {
    *
    * When excluded, the CSS files will be replaced with empty strings to bypass the subsequent processing.
    *
-   * @default { include: [/\.module\./] }
+   * @default { include: [], modules: { classNameStrategy: false } }
    */
   css?: boolean | {
     include?: RegExp | RegExp[]
     exclude?: RegExp | RegExp[]
+    modules?: {
+      classNameStrategy?: CSSModuleScopeStrategy
+    }
   }
   /**
    * A number of tests that are allowed to run at the same time marked with `test.concurrent`.
    * @default 5
    */
   maxConcurrency?: number
+
+  /**
+   * Options for configuring cache policy.
+   * @default { dir: 'node_modules/.vitest' }
+   */
+  cache?: false | {
+    dir?: string
+  }
+
+  /**
+   * Options for configuring the order of running tests.
+   */
+  sequence?: {
+    /**
+     * Class that handles sorting and sharding algorithm.
+     * If you only need to change sorting, you can extend
+     * your custom sequencer from `BaseSequencer` from `vitest/node`.
+     * @default BaseSequencer
+     */
+    sequencer?: TestSequencerConstructor
+    /**
+     * Should tests run in random order.
+     * @default false
+     */
+    shuffle?: boolean
+    /**
+     * Seed for the random number generator.
+     * @default Date.now()
+     */
+    seed?: number
+  }
+
+  /**
+   * Specifies an `Object`, or an `Array` of `Object`,
+   * which defines aliases used to replace values in `import` or `require` statements.
+   * Will be merged with the default aliases inside `resolve.alias`.
+   */
+  alias?: AliasOptions
+
+  /**
+   * Ignore any unhandled errors that occur
+   */
+  dangerouslyIgnoreUnhandledErrors?: boolean
 }
 
 export interface UserConfig extends InlineConfig {
@@ -407,7 +489,9 @@ export interface UserConfig extends InlineConfig {
   shard?: string
 }
 
-export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'shard'> {
+export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence'> {
+  mode: VitestRunMode
+
   base?: string
 
   config?: string
@@ -415,7 +499,7 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
   testNamePattern?: RegExp
   related?: string[]
 
-  coverage: ResolvedC8Options
+  coverage: ResolvedCoverageOptions
   snapshotOptions: SnapshotStateOptions
 
   reporters: (Reporter | BuiltinReporters)[]
@@ -423,8 +507,23 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
   defines: Record<string, any>
 
   api?: ApiConfig
+
+  benchmark?: Required<Omit<BenchmarkUserOptions, 'outputFile'>> & {
+    outputFile?: BenchmarkUserOptions['outputFile']
+  }
+
   shard?: {
     index: number
     count: number
+  }
+
+  cache: {
+    dir: string
+  } | false
+
+  sequence: {
+    sequencer: TestSequencerConstructor
+    shuffle?: boolean
+    seed?: number
   }
 }

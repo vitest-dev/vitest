@@ -22,7 +22,7 @@ export class TapFlatReporter extends TapReporter {
   }
 
   async onFinished(files = this.ctx.state.getFiles()) {
-    this.ctx.log('TAP version 13')
+    this.ctx.logger.log('TAP version 13')
 
     const flatTasks = files.flatMap(task => flattenTasks(task))
 

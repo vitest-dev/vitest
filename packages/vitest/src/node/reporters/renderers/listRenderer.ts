@@ -1,15 +1,15 @@
-import { createLogUpdate } from 'log-update'
 import c from 'picocolors'
 import cliTruncate from 'cli-truncate'
 import stripAnsi from 'strip-ansi'
-import type { SuiteHooks, Task } from '../../../types'
-import { clearInterval, getTests, setInterval } from '../../../utils'
+import type { Benchmark, BenchmarkResult, SuiteHooks, Task } from '../../../types'
+import { clearInterval, getTests, notNullish, setInterval } from '../../../utils'
 import { F_RIGHT } from '../../../utils/figures'
+import type { Logger } from '../../logger'
 import { getCols, getHookStateSymbol, getStateSymbol } from './utils'
 
 export interface ListRendererOptions {
   renderSucceed?: boolean
-  outputStream: NodeJS.WritableStream
+  logger: Logger
   showHeap: boolean
 }
 
@@ -28,6 +28,12 @@ function formatFilepath(path: string) {
   return c.dim(path.slice(0, lastSlash)) + path.slice(lastSlash, firstDot) + c.dim(path.slice(firstDot))
 }
 
+function formatNumber(number: number) {
+  const res = String(number.toFixed(number < 100 ? 4 : 2)).split('.')
+  return res[0].replace(/(?=(?:\d{3})+$)(?!\b)/g, ',')
+    + (res[1] ? `.${res[1]}` : '')
+}
+
 function renderHookState(task: Task, hookName: keyof SuiteHooks, level = 0) {
   const state = task.result?.hooks?.[hookName]
   if (state && state === 'run')
@@ -36,12 +42,58 @@ function renderHookState(task: Task, hookName: keyof SuiteHooks, level = 0) {
   return ''
 }
 
+function renderBenchmarkItems(result: BenchmarkResult) {
+  return [
+    result.name,
+    formatNumber(result.hz || 0),
+    formatNumber(result.p99 || 0),
+    `±${result.rme.toFixed(2)}%`,
+    result.samples.length.toString(),
+  ]
+}
+
+function renderBenchmark(task: Benchmark, tasks: Task[]): string {
+  const result = task.result?.benchmark
+  if (!result)
+    return task.name
+
+  const benchs = tasks
+    .map(i => i.type === 'benchmark' ? i.result?.benchmark : undefined)
+    .filter(notNullish)
+
+  const allItems = benchs.map(renderBenchmarkItems)
+  const items = renderBenchmarkItems(result)
+  const padded = items.map((i, idx) => {
+    const width = Math.max(...allItems.map(i => i[idx].length))
+    return idx
+      ? i.padStart(width, ' ')
+      : i.padEnd(width, ' ') // name
+  })
+
+  return [
+    padded[0], // name
+    c.dim('  '),
+    c.blue(padded[1]),
+    c.dim(' ops/sec '),
+    c.cyan(padded[3]),
+    c.dim(` (${padded[4]} samples)`),
+    result.rank === 1
+      ? c.bold(c.green(' fastest'))
+      : result.rank === benchs.length && benchs.length > 2
+        ? c.bold(c.gray(' slowest'))
+        : '',
+  ].join('')
+}
+
 export function renderTree(tasks: Task[], options: ListRendererOptions, level = 0) {
   let output: string[] = []
 
   for (const task of tasks) {
     let suffix = ''
     const prefix = ` ${getStateSymbol(task)} `
+
+    if (task.type === 'test' && task.result?.retryCount && task.result.retryCount > 1)
+      suffix += c.yellow(` (retry x${task.result.retryCount})`)
 
     if (task.type === 'suite')
       suffix += c.dim(` (${getTests(task).length})`)
@@ -60,7 +112,13 @@ export function renderTree(tasks: Task[], options: ListRendererOptions, level = 
     let name = task.name
     if (level === 0)
       name = formatFilepath(name)
-    output.push('  '.repeat(level) + prefix + name + suffix)
+
+    const padding = '  '.repeat(level)
+    const body = task.type === 'benchmark'
+      ? renderBenchmark(task, tasks)
+      : name
+
+    output.push(padding + prefix + body + suffix)
 
     if ((task.result?.state !== 'pass') && outputMap.get(task) != null) {
       let data: string | undefined = outputMap.get(task)
@@ -94,7 +152,7 @@ export const createListRenderer = (_tasks: Task[], options: ListRendererOptions)
   let tasks = _tasks
   let timer: any
 
-  const log = createLogUpdate(options.outputStream)
+  const log = options.logger.logUpdate
 
   function update() {
     log(renderTree(tasks, options))
@@ -118,7 +176,7 @@ export const createListRenderer = (_tasks: Task[], options: ListRendererOptions)
         timer = undefined
       }
       log.clear()
-      options.outputStream.write(`${renderTree(tasks, options)}\n`)
+      options.logger.log(renderTree(tasks, options))
       return this
     },
     clear() {

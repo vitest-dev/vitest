@@ -127,8 +127,11 @@ export function getStateSymbol(task: Task) {
     return c.yellow(spinner())
   }
 
-  if (task.result.state === 'pass')
-    return c.green(F_CHECK)
+  if (task.result.state === 'pass') {
+    return task.type === 'benchmark'
+      ? c.green(F_DOT)
+      : c.green(F_CHECK)
+  }
 
   if (task.result.state === 'fail') {
     return task.type === 'suite'
@@ -169,4 +172,26 @@ export function elegantSpinner() {
     index = ++index % spinnerFrames.length
     return spinnerFrames[index]
   }
+}
+
+export function duration(time: number, locale = 'en-us') {
+  if (time < 1e0)
+    return `${Number((time * 1e3).toFixed(2)).toLocaleString(locale)} ps`
+
+  if (time < 1e3)
+    return `${Number(time.toFixed(2)).toLocaleString(locale)} ns`
+  if (time < 1e6)
+    return `${Number((time / 1e3).toFixed(2)).toLocaleString(locale)} µs`
+  if (time < 1e9)
+    return `${Number((time / 1e6).toFixed(2)).toLocaleString(locale)} ms`
+  if (time < 1e12)
+    return `${Number((time / 1e9).toFixed(2)).toLocaleString(locale)} s`
+  if (time < 36e11)
+    return `${Number((time / 60e9).toFixed(2)).toLocaleString(locale)} m`
+
+  return `${Number((time / 36e11).toFixed(2)).toLocaleString(locale)} h`
+}
+
+export function formatTimeString(date: Date) {
+  return date.toTimeString().split(' ')[0]
 }

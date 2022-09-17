@@ -1,37 +1,44 @@
-// rollup dts building will external vitest
-// so output dts entry using vitest to import internal types
-// eslint-disable-next-line no-restricted-imports
-import type { ResolvedC8Options, UserConfig } from 'vitest'
+import type { BenchmarkUserOptions, ResolvedCoverageOptions, UserConfig } from './types'
 
 export const defaultInclude = ['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']
 export const defaultExclude = ['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**']
 
+export const benchmarkConfigDefaults: Required<Omit<BenchmarkUserOptions, 'outputFile'>> = {
+  include: ['**/*.{bench,benchmark}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+  exclude: defaultExclude,
+  includeSource: [],
+  reporters: ['default'],
+}
+
 const defaultCoverageExcludes = [
   'coverage/**',
+  'dist/**',
   'packages/*/test{,s}/**',
   '**/*.d.ts',
   'cypress/**',
   'test{,s}/**',
   'test{,-*}.{js,cjs,mjs,ts,tsx,jsx}',
   '**/*{.,-}test.{js,cjs,mjs,ts,tsx,jsx}',
+  '**/*{.,-}spec.{js,cjs,mjs,ts,tsx,jsx}',
   '**/__tests__/**',
-  '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc}.config.{js,cjs,mjs,ts}',
+  '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress}.config.{js,cjs,mjs,ts}',
   '**/.{eslint,mocha,prettier}rc.{js,cjs,yml}',
 ]
 
 const coverageConfigDefaults = {
+  provider: 'c8',
   enabled: false,
   clean: true,
   cleanOnRerun: false,
   reportsDirectory: './coverage',
   excludeNodeModules: true,
   exclude: defaultCoverageExcludes,
-  reporter: ['text', 'html'],
+  reporter: ['text', 'html', 'clover', 'json'],
   allowExternal: false,
   // default extensions used by c8, plus '.vue' and '.svelte'
   // see https://github.com/istanbuljs/schema/blob/master/default-extension.js
   extension: ['.js', '.cjs', '.mjs', '.ts', '.tsx', '.jsx', '.vue', '.svelte'],
-} as ResolvedC8Options
+} as ResolvedCoverageOptions
 
 export const fakeTimersDefaults = {
   loopLimit: 10_000,
@@ -60,9 +67,14 @@ const config = {
   exclude: defaultExclude,
   testTimeout: 5000,
   hookTimeout: 10000,
+  teardownTimeout: 1000,
   isolate: true,
   watchExclude: ['**/node_modules/**', '**/dist/**'],
-  forceRerunTriggers: [],
+  forceRerunTriggers: [
+    '**/package.json/**',
+    '**/vitest.config.*/**',
+    '**/vite.config.*/**',
+  ],
   update: false,
   reporters: [],
   silent: false,
@@ -71,11 +83,12 @@ const config = {
   uiBase: '/__vitest__/',
   open: true,
   css: {
-    include: [/\.module\./],
+    include: [],
   },
   coverage: coverageConfigDefaults,
   fakeTimers: fakeTimersDefaults,
   maxConcurrency: 5,
+  dangerouslyIgnoreUnhandledErrors: false,
 }
 
 export const configDefaults: Required<Pick<UserConfig, keyof typeof config>> = Object.freeze(config)

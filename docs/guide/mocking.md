@@ -1,5 +1,10 @@
+---
+title: Mocking | Guide
+---
+
 # Mocking
-When writing tests it's only a matter of time before you need to create "fake" version of an internal—or external—service. This is commonly referred to as **mocking**. Vitest provides utility functions to help you out through its **vi** helper. You can `import { vi } from 'vitest'` or access it **globally** (when [global configuration](/config/#globals) is **enabled**).
+
+When writing tests it's only a matter of time before you need to create a "fake" version of an internal — or external — service. This is commonly referred to as **mocking**. Vitest provides utility functions to help you out through its **vi** helper. You can `import { vi } from 'vitest'` or access it **globally** (when [global configuration](/config/#globals) is **enabled**).
 
 ::: warning
 Always remember to clear or restore mocks before or after each test run to undo mock state changes between runs! See [`mockReset`](/api/#mockreset) docs for more info.
@@ -149,11 +154,11 @@ vi.stubGlobal('IntersectionObserver', IntersectionObserverMock)
 
 Mock modules observe third-party-libraries, that are invoked in some other code, allowing you to test arguments, output or even redeclare its implementation.
 
-See the [`vi.mock()` api section](/api/#vi-mock) for a more in depth detailed API description.
+See the [`vi.mock()` api section](/api/#vi-mock) for a more in-depth detailed API description.
 
 ### Automocking algorithm
 
-If your code is importing mocked module, without any associated `__mocks__` file or `factory` for this module, Vitest will mock the module itself by invoking it and mocking every export.
+If your code is importing a mocked module, without any associated `__mocks__` file or `factory` for this module, Vitest will mock the module itself by invoking it and mocking every export.
 
 The following principles apply
 * All arrays will be emptied
@@ -164,12 +169,14 @@ The following principles apply
 ### Example
 
 ```js
-import { afterEach, beforeEach, describe, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Client } from 'pg'
+import { failure, success } from './handlers'
 
 // handlers
 export function success(data) {}
 export function failure(data) {}
+
 // get todos
 export const getTodos = async (event, context) => {
   const client = new Client({
@@ -199,16 +206,15 @@ export const getTodos = async (event, context) => {
 }
 
 vi.mock('pg', () => {
-  return {
-    Client: vi.fn(() => ({
-      connect: vi.fn(),
-      query: vi.fn(),
-      end: vi.fn(),
-    })),
-  }
+  const Client = vi.fn()
+  Client.prototype.connect = vi.fn()
+  Client.prototype.query = vi.fn()
+  Client.prototype.end = vi.fn()
+
+  return { Client }
 })
 
-vi.mock('./handler.js', () => {
+vi.mock('./handlers', () => {
   return {
     success: vi.fn(),
     failure: vi.fn(),
@@ -265,7 +271,7 @@ Mock Service Worker (MSW) works by intercepting the requests your tests make, al
 
 ### Configuration
 
-Add the following to your test [setup file](/config/#setupfiles)
+You can use it like below in your [setup file](/config/#setupfiles)
 ```js
 import { afterAll, afterEach, beforeAll } from 'vitest'
 import { setupServer } from 'msw/node'
@@ -316,9 +322,9 @@ There is much more to MSW. You can access cookies and query parameters, define m
 
 ## Timers
 
-Whenever we test code that involves `timeOut`s or intervals, instead of having our tests it wait out or time-out. We can speed up our tests by using "fake" timers by mocking calls to `setTimeout` and `setInterval`, too.
+Whenever we test code that involves timeouts or intervals, instead of having our tests wait it out or timeout. We can speed up our tests by using "fake" timers by mocking calls to `setTimeout` and `setInterval`, too.
 
-See the [`vi.mock()` api section](/api/#vi-usefaketimer) for a more in depth detailed API description.
+See the [`vi.usefaketimers` api section](/api/#vi-usefaketimers) for a more in depth detailed API description.
 
 ### Example
 
@@ -361,4 +367,160 @@ describe('delayed execution', () => {
     expect(mock).toHaveBeenCalledTimes(2)
   })
 })
+```
+
+## Cheat Sheet
+
+:::info
+`vi` in the examples below is imported directly from `vitest`. You can also use it globally, if you set `globals` to `true` in your [config](/config/).
+:::
+
+I want to…
+
+- Spy on a `method`
+
+```ts
+const instance = new SomeClass()
+vi.spyOn(instance, 'method')
+```
+
+- Mock exported variables
+```ts
+// some-path.ts
+export const getter = 'variable'
+```
+```ts
+// some-path.test.ts
+import * as exports from 'some-path'
+vi.spyOn(exports, 'getter', 'get').mockReturnValue('mocked')
+```
+
+- Mock exported function
+
+Example with `vi.mock`:
+```ts
+// some-path.ts
+export function method() {}
+```
+```ts
+import { method } from 'some-path'
+vi.mock('some-path', () => ({
+  method: vi.fn()
+}))
+```
+
+Example with `vi.spyOn`:
+```ts
+import * as exports from 'some-path'
+vi.spyOn(exports, 'method').mockImplementation(() => {})
+```
+
+- Mock exported class implementation
+
+Example with `vi.mock` and prototype:
+```ts
+// some-path.ts
+export class SomeClass {}
+```
+```ts
+import { SomeClass } from 'some-path'
+vi.mock('some-path', () => {
+  const SomeClass = vi.fn()
+  SomeClass.prototype.someMethod = vi.fn()
+  return { SomeClass }
+})
+// SomeClass.mock.instances will have SomeClass
+```
+
+Example with `vi.mock` and return value:
+```ts
+import { SomeClass } from 'some-path'
+vi.mock('some-path', () => {
+  const SomeClass = vi.fn(() => ({
+    someMethod: vi.fn()
+  }))
+  return { SomeClass }
+})
+// SomeClass.mock.returns will have returned object
+```
+
+Example with `vi.spyOn`:
+
+```ts
+import * as exports from 'some-path'
+vi.spyOn(exports, 'SomeClass').mockImplementation(() => {
+  // whatever suites you from first two examples
+})
+```
+
+- Spy on an object returned from a function
+
+Example using cache:
+
+```ts
+// some-path.ts
+export function useObject() {
+  return { method: () => true }
+}
+```
+
+```ts
+// useObject.js
+import { useObject } from 'some-path'
+const obj = useObject()
+obj.method()
+```
+
+```ts
+// useObject.test.js
+import { useObject } from 'some-path'
+vi.mock('some-path', () => {
+  let _cache
+  const useObject = () => {
+    if (!_cache) {
+      _cache = {
+        method: vi.fn(),
+      }
+    }
+    // now everytime useObject() is called it will
+    // return the same object reference
+    return _cache
+  }
+  return { useObject }
+})
+
+const obj = useObject()
+// obj.method was called inside some-path
+expect(obj.method).toHaveBeenCalled()
+```
+
+- Mock part of a module
+
+```ts
+import { mocked, original } from 'some-path'
+vi.mock('some-path', async () => {
+  const mod = await vi.importActual<typeof import('some-path')>('some-path')
+  return {
+    ...mod,
+    mocked: vi.fn()
+  }
+})
+original() // has original behaviour
+mocked() // is a spy function
+```
+
+- Mock current date
+
+```ts
+const mockDate = new Date(2022, 0, 1)
+vi.setSystemTime(mockDate)
+const now = new Date()
+expect(now.valueOf()).toBe(mockDate.valueOf())
+```
+
+- Mock global variable
+
+```ts
+vi.stubGlobal('__VERSION__', '1.0.0')
+expect(__VERSION__).toBe('1.0.0')
 ```

@@ -1,9 +1,11 @@
-import { join } from 'pathe'
+import { performance } from 'perf_hooks'
+import { resolve } from 'pathe'
 import type { TransformResult, ViteDevServer } from 'vite'
 import createDebug from 'debug'
-import type { FetchResult, RawSourceMap, ViteNodeResolveId, ViteNodeServerOptions } from './types'
+import type { DebuggerOptions, FetchResult, RawSourceMap, ViteNodeResolveId, ViteNodeServerOptions } from './types'
 import { shouldExternalize } from './externalize'
 import { toArray, toFilePath, withInlineSourcemap } from './utils'
+import type { Debugger } from './debug'
 
 export * from './externalize'
 
@@ -17,9 +19,14 @@ export class ViteNodeServer {
   private transformPromiseMap = new Map<string, Promise<TransformResult | null | undefined>>()
 
   fetchCache = new Map<string, {
+    duration?: number
     timestamp: number
     result: FetchResult
   }>()
+
+  externalizeCache = new Map<string, Promise<string | false>>()
+
+  debugger?: Debugger
 
   constructor(
     public server: ViteDevServer,
@@ -45,16 +52,25 @@ export class ViteNodeServer {
         options.deps.inline.push(...toArray(ssrOptions.noExternal))
       }
     }
+    if (process.env.VITE_NODE_DEBUG_DUMP) {
+      options.debug = Object.assign(<DebuggerOptions>{
+        dumpModules: !!process.env.VITE_NODE_DEBUG_DUMP,
+        loadDumppedModules: process.env.VITE_NODE_DEBUG_DUMP === 'load',
+      }, options.debug ?? {})
+    }
+    if (options.debug)
+      import('./debug').then(r => this.debugger = new r.Debugger(server.config.root, options.debug!))
   }
 
   shouldExternalize(id: string) {
-    return shouldExternalize(id, this.options.deps)
+    return shouldExternalize(id, this.options.deps, this.externalizeCache)
   }
 
   async resolveId(id: string, importer?: string): Promise<ViteNodeResolveId | null> {
     if (importer && !importer.startsWith(this.server.config.root))
-      importer = join(this.server.config.root, importer)
-    return this.server.pluginContainer.resolveId(id, importer, { ssr: true })
+      importer = resolve(this.server.config.root, importer)
+    const mode = (importer && this.getTransformMode(importer)) || 'ssr'
+    return this.server.pluginContainer.resolveId(id, importer, { ssr: mode === 'ssr' })
   }
 
   async fetchModule(id: string): Promise<FetchResult> {
@@ -111,15 +127,20 @@ export class ViteNodeServer {
       return cache.result
 
     const externalize = await this.shouldExternalize(filePath)
+    let duration: number | undefined
     if (externalize) {
       result = { externalize }
+      this.debugger?.recordExternalize(id, externalize)
     }
     else {
+      const start = performance.now()
       const r = await this._transformRequest(id)
+      duration = performance.now() - start
       result = { code: r?.code, map: r?.map as unknown as RawSourceMap }
     }
 
     this.fetchCache.set(filePath, {
+      duration,
       timestamp,
       result,
     })
@@ -131,6 +152,12 @@ export class ViteNodeServer {
     debugRequest(id)
 
     let result: TransformResult | null = null
+
+    if (this.options.debug?.loadDumppedModules) {
+      result = await this.debugger?.loadDump(id) ?? null
+      if (result)
+        return result
+    }
 
     if (this.getTransformMode(id) === 'web') {
       // for components like Vue, we want to use the client side
@@ -146,6 +173,9 @@ export class ViteNodeServer {
     const sourcemap = this.options.sourcemap ?? 'inline'
     if (sourcemap === 'inline' && result && !id.includes('node_modules'))
       withInlineSourcemap(result)
+
+    if (this.options.debug?.dumpModules)
+      await this.debugger?.dumpFile(id, result)
 
     return result
   }

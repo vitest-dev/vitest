@@ -2,13 +2,13 @@ import { resolve } from 'pathe'
 import { createServer, mergeConfig } from 'vite'
 import type { InlineConfig as ViteInlineConfig, UserConfig as ViteUserConfig } from 'vite'
 import { findUp } from 'find-up'
-import type { UserConfig } from '../types'
+import type { UserConfig, VitestRunMode } from '../types'
 import { configFiles } from '../constants'
 import { Vitest } from './core'
 import { VitestPlugin } from './plugins'
 
-export async function createVitest(options: UserConfig, viteOverrides: ViteUserConfig = {}) {
-  const ctx = new Vitest()
+export async function createVitest(mode: VitestRunMode, options: UserConfig, viteOverrides: ViteUserConfig = {}) {
+  const ctx = new Vitest(mode)
   const root = resolve(options.root || process.cwd())
 
   const configPath = options.config
@@ -19,7 +19,7 @@ export async function createVitest(options: UserConfig, viteOverrides: ViteUserC
     logLevel: 'error',
     configFile: configPath,
     // this will make "mode" = "test" inside defineConfig
-    mode: options.mode || process.env.NODE_ENV || 'test',
+    mode: options.mode || process.env.NODE_ENV || mode,
     plugins: await VitestPlugin(options, ctx),
   }
 

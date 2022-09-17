@@ -1,7 +1,7 @@
 import type { ViteNodeRunner } from 'vite-node/client'
 import type { Reporter } from '../../types'
-import { ReportersMap } from './index'
-import type { BuiltinReporters } from './index'
+import { BenchmarkReportsMap, ReportersMap } from './index'
+import type { BenchmarkBuiltinReporters, BuiltinReporters } from './index'
 
 async function loadCustomReporterModule<C extends Reporter>(path: string, runner: ViteNodeRunner): Promise<new () => C> {
   let customReporterModule: { default: new () => C }
@@ -35,4 +35,21 @@ function createReporters(reporterReferences: Array<string | Reporter | BuiltinRe
   return Promise.all(promisedReporters)
 }
 
-export { createReporters }
+function createBenchmarkReporters(reporterReferences: Array<string | Reporter | BenchmarkBuiltinReporters>, runner: ViteNodeRunner) {
+  const promisedReporters = reporterReferences.map(async (referenceOrInstance) => {
+    if (typeof referenceOrInstance === 'string') {
+      if (referenceOrInstance in BenchmarkReportsMap) {
+        const BuiltinReporter = BenchmarkReportsMap[referenceOrInstance as BenchmarkBuiltinReporters]
+        return new BuiltinReporter()
+      }
+      else {
+        const CustomReporter = await loadCustomReporterModule(referenceOrInstance, runner)
+        return new CustomReporter()
+      }
+    }
+    return referenceOrInstance
+  })
+  return Promise.all(promisedReporters)
+}
+
+export { createReporters, createBenchmarkReporters }

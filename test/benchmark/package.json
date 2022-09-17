@@ -1,0 +1,12 @@
+{
+  "name": "@vitest/benchmark",
+  "private": true,
+  "scripts": {
+    "test": "node test.mjs",
+    "bench": "vitest bench --reporter=json",
+    "coverage": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "execa": "^6.1.0"
+  }
+}

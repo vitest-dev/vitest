@@ -1,6 +1,7 @@
 import { fileURLToPath, pathToFileURL } from 'url'
-import { dirname, resolve } from 'pathe'
+import { relative, resolve } from 'pathe'
 import type { TransformResult } from 'vite'
+import { isNodeBuiltin } from 'mlly'
 import type { Arrayable, Nullable } from './types'
 
 export const isWindows = process.platform === 'win32'
@@ -29,6 +30,7 @@ export function normalizeRequestId(id: string, base?: string): string {
     .replace(/&t=\w+/, '') // remove &t= query
     .replace(/\?import/, '?') // remove ?import query
     .replace(/&import/, '') // remove &import query
+    .replace(/\?&/, '?') // replace ?& with just ?
     .replace(/\?+$/, '') // remove end query mark
 }
 
@@ -44,13 +46,41 @@ export function isPrimitive(v: any) {
   return v !== Object(v)
 }
 
+export function pathFromRoot(root: string, filename: string) {
+  if (isNodeBuiltin(filename))
+    return filename
+
+  // don't replace with "/" on windows, "/C:/foo" is not a valid path
+  filename = filename.replace(/^\/@fs\//, isWindows ? '' : '/')
+
+  if (!filename.startsWith(root))
+    return filename
+
+  const relativePath = relative(root, filename)
+  // foo.js -> /foo.js
+  if (!relativePath.startsWith('/') && !relativePath.startsWith('.'))
+    return `/${relativePath}`
+
+  let index = 0
+  for (const char of relativePath) {
+    // ../../foo.js
+    //      ^ returns from here -> /foo.js
+    if (char !== '.' && char !== '/')
+      return relativePath.slice(index - 1)
+
+    index++
+  }
+
+  return relativePath
+}
+
 export function toFilePath(id: string, root: string): string {
-  let absolute = slash(id).startsWith('/@fs/')
+  let absolute = id.startsWith('/@fs/')
     ? id.slice(4)
-    : id.startsWith(dirname(root)) && dirname(root) !== '/'
+    : id.startsWith(root)
       ? id
       : id.startsWith('/')
-        ? slash(resolve(root, id.slice(1)))
+        ? resolve(root, id.slice(1))
         : id
 
   if (absolute.startsWith('//'))
@@ -58,7 +88,7 @@ export function toFilePath(id: string, root: string): string {
 
   // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
   return isWindows && absolute.startsWith('/')
-    ? fileURLToPath(pathToFileURL(absolute.slice(1)).href)
+    ? slash(fileURLToPath(pathToFileURL(absolute.slice(1)).href))
     : absolute
 }
 

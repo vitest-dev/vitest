@@ -16,7 +16,7 @@ async function fetchContributors(page = 1) {
   collaborators.push(...data.map(i => i.login))
   if (data.length === 100)
     collaborators.push(...(await fetchContributors(page + 1)))
-  return collaborators
+  return collaborators.filter(name => !name.includes('[bot]'))
 }
 
 async function generate() {

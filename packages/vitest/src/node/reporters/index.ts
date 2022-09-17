@@ -19,3 +19,5 @@ export const ReportersMap = {
 }
 
 export type BuiltinReporters = keyof typeof ReportersMap
+
+export * from './benchmark'

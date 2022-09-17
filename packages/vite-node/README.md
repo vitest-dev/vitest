@@ -1,15 +1,26 @@
-# vite-node
+<p align="center">
+<img src="https://github.com/vitest-dev/vitest/blob/main/packages/vite-node/assets/vite-node.svg?raw=true" height="120">
+</p>
 
-[![NPM version](https://img.shields.io/npm/v/vite-node?color=a1b858&label=)](https://www.npmjs.com/package/vite-node)
-
-Vite as Node runtime. The engine powers [Vitest](https://github.com/vitest-dev/vitest).
+<h1 align="center">
+vite-node
+</h1>
+<p align="center">
+Vite as Node runtime.<br>The engine powers <a href="https://github.com/vitest-dev/vitest">Vitest</a> and <a href="https://github.com/nuxt/framework">Nuxt 3 Dev SSR</a>.
+<p>
+<p align="center">
+  <a href="https://www.npmjs.com/package/vitest"><img src="https://img.shields.io/npm/v/vite-node?color=FCC72B&label="></a>
+<p>
 
 ## Features
 
-- Out-of-box ESM & TypeScript support (possible for more with plugins)
-- Top-level `await`
-- Vite plugins, resolve, aliasing
+- On-demand evaluation
+- Vite's pipeline, plugins, resolve, aliasing
+- Out-of-box ESM & TypeScript support
 - Respect `vite.config.ts`
+- Hot module replacement (HMR)
+- Separate server/client architecture
+- Top-level `await`
 - Shims for `__dirname` and `__filename` in ESM
 - Access to native node modules like `fs`, `path`, etc.
 
@@ -29,7 +40,7 @@ npx vite-node -h
 
 ### Options via CLI
 
-[All `ViteNodeServer` options](https://github.com/vitest-dev/vitest/blob/main/packages/vite-node/src/types.ts#L61-L78) are supported by the CLI. They may be defined through the dot syntax, as shown below:
+[All `ViteNodeServer` options](https://github.com/vitest-dev/vitest/blob/main/packages/vite-node/src/types.ts#L70-L89) are supported by the CLI. They may be defined through the dot syntax, as shown below:
 
 ```bash
 npx vite-node --options.deps.inline="module-name" --options.deps.external="/module-regexp/" index.ts
@@ -79,6 +90,49 @@ await runner.executeFile('./example.ts')
 
 // close the vite server
 await server.close()
+```
+
+## Debugging
+
+### Debug Transformation
+
+Sometimes you might want to inspect the transformed code to investigate issues. You can set environment variable `VITE_NODE_DEBUG_DUMP=true` to let vite-node write the transformed result of each module under `.vite-node/dump`.
+
+If you want to debug by modifying the dumped code, you can change the value of `VITE_NODE_DEBUG_DUMP` to `load` and search for the dumpped files and use them for executing.
+
+```bash
+VITE_NODE_DEBUG_DUMP=load vite-node example.ts
+```
+
+Or programmatically:
+
+```js
+import { ViteNodeServer } from 'vite-node/server'
+
+const server = new ViteNodeServer(viteServer, {
+  debug: {
+    dumpModules: true,
+    loadDumppedModules: true,
+  }
+})
+```
+
+### Debug Execution
+
+If the process get stuck, it might because there is a unresolvable circular dependencies, you can set `VITE_NODE_DEBUG_RUNNER=true` to vite-node warn about it.
+
+```bash
+VITE_NODE_DEBUG_RUNNER=true vite-node example.ts
+```
+
+Or programmatically:
+
+```js
+import { ViteNodeRunner } from 'vite-node/client'
+
+const runner = new ViteNodeRunner({
+  debug: true
+})
 ```
 
 ## Credits

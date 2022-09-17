@@ -1,8 +1,12 @@
 {
   "exclude": [
-    "vue",
+    "vite",
     "puppeteer",
     "pretty-format",
     "pathe"
-  ]
+  ],
+  "packageMode": {
+    "vue": "minor",
+    "codemirror": "minor"
+  }
 }

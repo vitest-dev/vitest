@@ -19,7 +19,7 @@ export default defineConfig({
   title: vitestName,
   description: vitestDescription,
   head: [
-    ['meta', { name: 'theme-color', content: '#ffffff' }],
+    ['meta', { name: 'theme-color', content: '#729b1a' }],
     ['link', { rel: 'icon', href: '/logo.svg', type: 'image/svg+xml' }],
     ['link', { rel: 'alternate icon', href: '/favicon.ico', type: 'image/png', sizes: '16x16' }],
     ['meta', { name: 'author', content: `${teamMembers.map(c => c.name).join(', ')} and ${vitestName} contributors` }],
@@ -47,9 +47,7 @@ export default defineConfig({
     logo: '/logo.svg',
 
     editLink: {
-      repo: 'vitest-dev/vitest',
-      branch: 'main',
-      dir: 'docs',
+      pattern: 'https://github.com/vitest-dev/vitest/tree/main/docs/:path',
       text: 'Suggest changes to this page',
     },
 
@@ -148,6 +146,10 @@ export default defineConfig({
             {
               text: 'Test Context',
               link: '/guide/test-context',
+            },
+            {
+              text: 'Environment',
+              link: '/guide/environment',
             },
             {
               text: 'Extending Matchers',

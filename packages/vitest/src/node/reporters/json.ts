@@ -1,9 +1,10 @@
 import { existsSync, promises as fs } from 'fs'
 import { dirname, resolve } from 'pathe'
 import type { Vitest } from '../../node'
-import type { File, Reporter, Suite, TaskState } from '../../types'
+import type { File, Reporter, Suite, Task, TaskState } from '../../types'
 import { getSuites, getTests } from '../../utils'
 import { getOutputFile } from '../../utils/config-helpers'
+import { interpretSourcePos, parseStacktrace } from '../../utils/source-map'
 
 // for compatibility reasons, the reporter produces a JSON similar to the one produced by the Jest JSON reporter
 // the following types are extracted from the Jest repository (and simplified)
@@ -11,6 +12,7 @@ import { getOutputFile } from '../../utils/config-helpers'
 
 type Status = 'passed' | 'failed' | 'skipped' | 'pending' | 'todo' | 'disabled'
 type Milliseconds = number
+interface Callsite { line: number; column: number }
 const StatusMap: Record<TaskState, Status> = {
   fail: 'failed',
   only: 'pending',
@@ -27,7 +29,7 @@ interface FormattedAssertionResult {
   title: string
   duration?: Milliseconds | null
   failureMessages: Array<string>
-  // location?: Callsite | null
+  location?: Callsite | null
 }
 
 interface FormattedTestResult {
@@ -92,7 +94,7 @@ export class JsonReporter implements Reporter {
         startTime = this.start
 
       const endTime = tests.reduce((prev, next) => Math.max(prev, (next.result?.startTime ?? 0) + (next.result?.duration ?? 0)), startTime)
-      const assertionResults = tests.map((t) => {
+      const assertionResults = await Promise.all(tests.map(async (t) => {
         const ancestorTitles = [] as string[]
         let iter: Suite | undefined = t.suite
         while (iter) {
@@ -108,11 +110,12 @@ export class JsonReporter implements Reporter {
           title: t.name,
           duration: t.result?.duration,
           failureMessages: t.result?.error?.message == null ? [] : [t.result.error.message],
+          location: await this.getFailureLocation(t),
         } as FormattedAssertionResult
-      })
+      }))
 
       if (tests.some(t => t.result?.state === 'run')) {
-        this.ctx.console.warn('WARNING: Some tests are still running when generating the JSON report.'
+        this.ctx.logger.warn('WARNING: Some tests are still running when generating the JSON report.'
         + 'This is likely an internal bug in Vitest.'
         + 'Please report it to https://github.com/vitest-dev/vitest/issues')
       }
@@ -160,7 +163,7 @@ export class JsonReporter implements Reporter {
    * @param report
    */
   async writeReport(report: string) {
-    const outputFile = getOutputFile(this.ctx, 'json')
+    const outputFile = getOutputFile(this.ctx.config, 'json')
 
     if (outputFile) {
       const reportFile = resolve(this.ctx.config.root, outputFile)
@@ -170,10 +173,25 @@ export class JsonReporter implements Reporter {
         await fs.mkdir(outputDirectory, { recursive: true })
 
       await fs.writeFile(reportFile, report, 'utf-8')
-      this.ctx.log(`JSON report written to ${reportFile}`)
+      this.ctx.logger.log(`JSON report written to ${reportFile}`)
     }
     else {
-      this.ctx.log(report)
+      this.ctx.logger.log(report)
     }
+  }
+
+  protected async getFailureLocation(test: Task): Promise<Callsite | undefined> {
+    const error = test.result?.error
+    if (!error)
+      return
+
+    const stack = parseStacktrace(error)
+    await interpretSourcePos(stack, this.ctx)
+    const frame = stack[stack.length - 1]
+    if (!frame)
+      return
+
+    const pos = frame.sourcePos || frame
+    return { line: pos.line, column: pos.column }
   }
 }

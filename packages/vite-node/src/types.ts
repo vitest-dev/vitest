@@ -1,4 +1,5 @@
-import type { ModuleCacheMap } from './client'
+import type { ViteHotContext } from 'vite/types/hot'
+import type { ModuleCacheMap, ViteNodeRunner } from './client'
 
 export type Nullable<T> = T | null | undefined
 export type Arrayable<T> = T | Array<T>
@@ -32,20 +33,29 @@ export interface FetchResult {
   map?: RawSourceMap
 }
 
+export type HotContext = Omit<ViteHotContext, 'acceptDeps' | 'decline'>
+
 export type FetchFunction = (id: string) => Promise<FetchResult>
 
 export type ResolveIdFunction = (id: string, importer?: string) => Promise<ViteNodeResolveId | null>
+
+export type CreateHotContextFunction = (runner: ViteNodeRunner, url: string) => HotContext
 
 export interface ModuleCache {
   promise?: Promise<any>
   exports?: any
   code?: string
+  /**
+   * Module ids that imports this module
+   */
+  importers?: Set<string>
 }
 
 export interface ViteNodeRunnerOptions {
   root: string
   fetchModule: FetchFunction
   resolveId?: ResolveIdFunction
+  createHotContext?: CreateHotContextFunction
   base?: string
   moduleCache?: ModuleCacheMap
   interopDefault?: boolean
@@ -78,6 +88,21 @@ export interface ViteNodeServerOptions {
     ssr?: RegExp[]
     web?: RegExp[]
   }
+
+  debug?: DebuggerOptions
+}
+
+export interface DebuggerOptions {
+  /**
+   * Dump the transformed module to filesystem
+   * Passing a string will dump to the specified path
+   */
+  dumpModules?: boolean | string
+  /**
+   * Read dumpped module from filesystem whenever exists.
+   * Useful for debugging by modifying the dump result from the filesystem.
+   */
+  loadDumppedModules?: boolean
 }
 
 export type { ModuleCacheMap }

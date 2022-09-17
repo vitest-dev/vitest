@@ -6,14 +6,15 @@
     "test": "vitest"
   },
   "dependencies": {
-    "vue": "^3.2.36"
+    "vue": "latest"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^2.3.3",
-    "@vue/test-utils": "^2.0.0",
-    "jsdom": "^19.0.0",
-    "unplugin-auto-import": "^0.8.5",
-    "unplugin-vue-components": "^0.19.6",
+    "@vitejs/plugin-vue": "latest",
+    "@vue/test-utils": "^2.0.2",
+    "jsdom": "latest",
+    "unplugin-auto-import": "^0.11.1",
+    "unplugin-vue-components": "^0.22.4",
+    "vite": "latest",
     "vitest": "latest"
   },
   "stackblitz": {

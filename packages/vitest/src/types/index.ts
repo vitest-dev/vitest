@@ -8,12 +8,15 @@ export * from './snapshot'
 export * from './worker'
 export * from './general'
 export * from './coverage'
-
+export * from './benchmark'
 export type {
   EnhancedSpy,
   MockedFunction,
   MockedObject,
   SpyInstance,
-  SpyInstanceFn,
-  SpyContext,
+  MockInstance,
+  Mock,
+  MockContext,
+  Mocked,
+  MockedClass,
 } from '../integrations/spy'

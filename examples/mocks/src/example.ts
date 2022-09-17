@@ -5,7 +5,7 @@ export async function asyncSquare(a: number, b: number) {
   const result = (await a) * b
   return result
 }
-export const someClasss = new (class Bar {
+export const someClasses = new (class Bar {
   public array: number[]
   constructor() {
     this.array = [1, 2, 3]
@@ -25,3 +25,4 @@ export const number = 123
 export const string = 'baz'
 export const boolean = true
 export const symbol = Symbol.for('a.b.c')
+export default 'a default'

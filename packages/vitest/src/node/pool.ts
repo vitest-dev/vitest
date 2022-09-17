@@ -1,15 +1,14 @@
 import { MessageChannel } from 'worker_threads'
-import { pathToFileURL } from 'url'
+import _url from 'url'
 import { cpus } from 'os'
-import { createHash } from 'crypto'
 import { resolve } from 'pathe'
 import type { Options as TinypoolOptions } from 'tinypool'
 import { Tinypool } from 'tinypool'
 import { createBirpc } from 'birpc'
 import type { RawSourceMap } from 'vite-node'
-import type { WorkerContext, WorkerRPC } from '../types'
-import { distDir } from '../constants'
-import { AggregateError, slash } from '../utils'
+import type { ResolvedConfig, WorkerContext, WorkerRPC } from '../types'
+import { distDir, rootDir } from '../constants'
+import { AggregateError } from '../utils'
 import type { Vitest } from './core'
 
 export type RunWithFiles = (files: string[], invalidates?: string[]) => Promise<void>
@@ -19,15 +18,20 @@ export interface WorkerPool {
   close: () => Promise<void>
 }
 
-const workerPath = pathToFileURL(resolve(distDir, './worker.js')).href
+const workerPath = _url.pathToFileURL(resolve(distDir, './worker.js')).href
+const loaderPath = _url.pathToFileURL(resolve(distDir, './loader.js')).href
+
+const suppressLoaderWarningsPath = resolve(rootDir, './suppress-warnings.cjs')
 
 export function createPool(ctx: Vitest): WorkerPool {
   const threadsCount = ctx.config.watch
-    ? Math.max(cpus().length / 2, 1)
+    ? Math.max(Math.floor(cpus().length / 2), 1)
     : Math.max(cpus().length - 1, 1)
 
   const maxThreads = ctx.config.maxThreads ?? threadsCount
   const minThreads = ctx.config.minThreads ?? threadsCount
+
+  const conditions = ctx.server.config.resolve.conditions?.flatMap(c => ['-C', c]) || []
 
   const options: TinypoolOptions = {
     filename: workerPath,
@@ -37,6 +41,16 @@ export function createPool(ctx: Vitest): WorkerPool {
 
     maxThreads,
     minThreads,
+
+    execArgv: ctx.config.deps.registerNodeLoader
+      ? [
+          '--require',
+          suppressLoaderWarningsPath,
+          '--experimental-loader',
+          loaderPath,
+          ...conditions,
+        ]
+      : conditions,
   }
 
   if (ctx.config.isolate) {
@@ -50,8 +64,7 @@ export function createPool(ctx: Vitest): WorkerPool {
     options.minThreads = 1
   }
 
-  if (ctx.config.coverage.enabled)
-    process.env.NODE_V8_COVERAGE ||= ctx.config.coverage.tempDirectory
+  ctx.coverageProvider?.onBeforeFilesRun?.()
 
   options.env = {
     TEST: 'true',
@@ -66,9 +79,9 @@ export function createPool(ctx: Vitest): WorkerPool {
 
   const runWithFiles = (name: string): RunWithFiles => {
     let id = 0
-    const config = ctx.getSerializableConfig()
 
-    async function runFiles(files: string[], invalidates: string[] = []) {
+    async function runFiles(config: ResolvedConfig, files: string[], invalidates: string[] = []) {
+      ctx.state.clearFiles(files)
       const { workerPort, port } = createChannel(ctx)
       const workerId = ++id
       const data: WorkerContext = {
@@ -77,7 +90,6 @@ export function createPool(ctx: Vitest): WorkerPool {
         files,
         invalidates,
         workerId,
-        poolId: !ctx.config.threads ? 1 : ((workerId - 1) % maxThreads) + 1,
       }
       try {
         await pool.run(data, { transferList: [workerPort], name })
@@ -88,34 +100,23 @@ export function createPool(ctx: Vitest): WorkerPool {
       }
     }
 
+    const Sequencer = ctx.config.sequence.sequencer
+    const sequencer = new Sequencer(ctx)
+
     return async (files, invalidates) => {
-      if (config.shard) {
-        const { index, count } = config.shard
-        const shardSize = Math.ceil(files.length / count)
-        const shardStart = shardSize * (index - 1)
-        const shardEnd = shardSize * index
-        files = files
-          .map((file) => {
-            const fullPath = resolve(slash(config.root), slash(file))
-            const specPath = fullPath.slice(config.root.length)
-            return {
-              file,
-              hash: createHash('sha1')
-                .update(specPath)
-                .digest('hex'),
-            }
-          })
-          .sort((a, b) => (a.hash < b.hash ? -1 : a.hash > b.hash ? 1 : 0))
-          .slice(shardStart, shardEnd)
-          .map(({ file }) => file)
-      }
+      const config = ctx.getSerializableConfig()
+
+      if (config.shard)
+        files = await sequencer.shard(files)
+
+      files = await sequencer.sort(files)
 
       if (!ctx.config.threads) {
-        await runFiles(files)
+        await runFiles(config, files)
       }
       else {
         const results = await Promise.allSettled(files
-          .map(file => runFiles([file], invalidates)))
+          .map(file => runFiles(config, [file], invalidates)))
 
         const errors = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected').map(r => r.reason)
         if (errors.length > 0)
@@ -161,9 +162,16 @@ function createChannel(ctx: Vitest) {
       resolveId(id, importer) {
         return ctx.vitenode.resolveId(id, importer)
       },
+      onPathsCollected(paths) {
+        ctx.state.collectPaths(paths)
+        ctx.report('onPathsCollected', paths)
+      },
       onCollected(files) {
         ctx.state.collectFiles(files)
         ctx.report('onCollected', files)
+      },
+      onAfterSuiteRun(meta) {
+        ctx.coverageProvider?.onAfterSuiteRun(meta)
       },
       onTaskUpdate(packs) {
         ctx.state.updateTasks(packs)

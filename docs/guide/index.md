@@ -1,3 +1,7 @@
+---
+title: Getting Started | Guide
+---
+
 # Getting Started
 
 ## Overview
@@ -12,14 +16,16 @@ You can try Vitest online on [StackBlitz](https://vitest.new). It runs Vitest di
 
 ## Adding Vitest to your Project
 
+With npm
 ```bash
-# with npm
 npm install -D vitest
-
-# or with yarn
+```
+or with yarn
+```bash
 yarn add -D vitest
-
-# or with pnpm
+```
+or with pnpm
+```bash
 pnpm add -D vitest
 ```
 
@@ -103,7 +109,7 @@ Learn more about [IDE Integrations](./ide.md)
 - [cz-git](https://github.com/Zhengqbbb/cz-git)
 
 <!--
-For contributors: 
+For contributors:
 We no longer accept new entries to this list a this moment.
 Thanks for choosing Vitest!
 -->

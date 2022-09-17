@@ -1,12 +1,10 @@
 import { performance } from 'perf_hooks'
-import { relative } from 'pathe'
 import c from 'picocolors'
 import type { ErrorWithDiff, File, Reporter, Task, TaskResultPack, UserConsoleLog } from '../../types'
-import { getFullName, getSuites, getTests, hasFailed, hasFailedSnapshot, isNode } from '../../utils'
+import { clearInterval, getFullName, getSuites, getTests, hasFailed, hasFailedSnapshot, isNode, relativePath, setInterval } from '../../utils'
 import type { Vitest } from '../../node'
-import { version } from '../../../package.json'
 import { F_RIGHT } from '../../utils/figures'
-import { divider, getStateString, getStateSymbol, pointer, renderSnapshotSummary } from './renderers/utils'
+import { divider, formatTimeString, getStateString, getStateSymbol, pointer, renderSnapshotSummary } from './renderers/utils'
 
 const BADGE_PADDING = '       '
 const HELP_HINT = `${c.dim('press ')}${c.bold('h')}${c.dim(' to show help')}`
@@ -17,6 +15,7 @@ const WAIT_FOR_CHANGE_PASS = `\n${c.bold(c.inverse(c.green(' PASS ')))}${c.green
 const WAIT_FOR_CHANGE_FAIL = `\n${c.bold(c.inverse(c.red(' FAIL ')))}${c.red(' Tests failed. Watching for file changes...')}`
 
 const DURATION_LONG = 300
+const LAST_RUN_LOG_TIMEOUT = 1_500
 
 export abstract class BaseReporter implements Reporter {
   start = 0
@@ -25,57 +24,45 @@ export abstract class BaseReporter implements Reporter {
   isTTY = isNode && process.stdout?.isTTY && !process.env.CI
   ctx: Vitest = undefined!
 
+  private _filesInWatchMode = new Map<string, number>()
+  private _lastRunTimeout = 0
+  private _lastRunTimer: NodeJS.Timer | undefined
+  private _lastRunCount = 0
+  private _timeStart = new Date()
+
   constructor() {
     this.registerUnhandledRejection()
+  }
+
+  get mode() {
+    return this.ctx.config.mode
   }
 
   onInit(ctx: Vitest) {
     this.ctx = ctx
 
-    this.ctx.log()
-
-    const versionTest = this.ctx.config.watch
-      ? c.blue(`v${version}`)
-      : c.cyan(`v${version}`)
-    const mode = this.ctx.config.watch
-      ? c.blue(' DEV ')
-      : c.cyan(' RUN ')
-    this.ctx.log(`${c.inverse(c.bold(mode))} ${versionTest} ${c.gray(this.ctx.config.root)}`)
-
-    if (this.ctx.config.ui)
-      this.ctx.log(c.dim(c.green(`      UI started at http://${this.ctx.config.api?.host || 'localhost'}:${c.bold(`${this.ctx.server.config.server.port}`)}`)))
-    else if (this.ctx.config.api)
-      this.ctx.log(c.dim(c.green(`      API started at http://${this.ctx.config.api?.host || 'localhost'}:${c.bold(`${this.ctx.config.api.port}`)}`)))
-
-    this.ctx.log()
+    ctx.logger.printBanner()
     this.start = performance.now()
   }
 
   relative(path: string) {
-    return relative(this.ctx.config.root, path)
+    return relativePath(this.ctx.config.root, path)
   }
 
   async onFinished(files = this.ctx.state.getFiles(), errors = this.ctx.state.getUnhandledErrors()) {
     this.end = performance.now()
     await this.reportSummary(files)
     if (errors.length) {
-      process.exitCode = 1
-      const errorMessage = c.red(c.bold(
-        `\nVitest caught ${errors.length} unhandled error${errors.length > 1 ? 's' : ''} during the test run. This might cause false positive tests.`
-        + '\nPlease, resolve all the errors to make sure your tests are not affected.',
-      ))
-      this.ctx.log(c.red(divider(c.bold(c.inverse(' Unhandled Errors ')))))
-      this.ctx.log(errorMessage)
-      await Promise.all(errors.map(async (err) => {
-        await this.ctx.printError(err, true, (err as ErrorWithDiff).type || 'Unhandled Error')
-      }))
-      this.ctx.log(c.red(divider()))
+      if (!this.ctx.config.dangerouslyIgnoreUnhandledErrors)
+        process.exitCode = 1
+      this.ctx.logger.printUnhandledErrors(errors)
     }
   }
 
   onTaskUpdate(packs: TaskResultPack[]) {
     if (this.isTTY)
       return
+    const logger = this.ctx.logger
     for (const pack of packs) {
       const task = this.ctx.state.idMap.get(pack[0])
       if (task && 'filepath' in task && task.result?.state && task.result?.state !== 'run') {
@@ -95,26 +82,28 @@ export abstract class BaseReporter implements Reporter {
         if (this.ctx.config.logHeapUsage && task.result.heap != null)
           suffix += c.magenta(` ${Math.floor(task.result.heap / 1024 / 1024)} MB heap used`)
 
-        this.ctx.log(` ${getStateSymbol(task)} ${task.name} ${suffix}`)
+        logger.log(` ${getStateSymbol(task)} ${task.name} ${suffix}`)
 
         // print short errors, full errors will be at the end in summary
         for (const test of failed) {
-          this.ctx.log(c.red(`   ${pointer} ${getFullName(test)}`))
-          this.ctx.log(c.red(`     ${F_RIGHT} ${(test.result!.error as any)?.message}`))
+          logger.log(c.red(`   ${pointer} ${getFullName(test)}`))
+          logger.log(c.red(`     ${F_RIGHT} ${(test.result!.error as any)?.message}`))
         }
       }
     }
   }
 
   async onWatcherStart() {
+    this.resetLastRunLog()
+
     const files = this.ctx.state.getFiles()
     const errors = this.ctx.state.getUnhandledErrors()
     const failed = errors.length > 0 || hasFailed(files)
     const failedSnap = hasFailedSnapshot(files)
     if (failed)
-      this.ctx.log(WAIT_FOR_CHANGE_FAIL)
+      this.ctx.logger.log(WAIT_FOR_CHANGE_FAIL)
     else
-      this.ctx.log(WAIT_FOR_CHANGE_PASS)
+      this.ctx.logger.log(WAIT_FOR_CHANGE_PASS)
 
     const hints = [HELP_HINT]
     if (failedSnap)
@@ -122,14 +111,59 @@ export abstract class BaseReporter implements Reporter {
     else
       hints.push(HELP_QUITE)
 
-    this.ctx.log(BADGE_PADDING + hints.join(c.dim(', ')))
+    this.ctx.logger.log(BADGE_PADDING + hints.join(c.dim(', ')))
+
+    if (this._lastRunCount) {
+      const LAST_RUN_TEXT = `rerun x${this._lastRunCount}`
+      const LAST_RUN_TEXTS = [
+        c.blue(LAST_RUN_TEXT),
+        c.gray(LAST_RUN_TEXT),
+        c.dim(c.gray(LAST_RUN_TEXT)),
+      ]
+      this.ctx.logger.logUpdate(BADGE_PADDING + LAST_RUN_TEXTS[0])
+      this._lastRunTimeout = 0
+      this._lastRunTimer = setInterval(
+        () => {
+          this._lastRunTimeout += 1
+          if (this._lastRunTimeout >= LAST_RUN_TEXTS.length)
+            this.resetLastRunLog()
+          else
+            this.ctx.logger.logUpdate(BADGE_PADDING + LAST_RUN_TEXTS[this._lastRunTimeout])
+        },
+        LAST_RUN_LOG_TIMEOUT / LAST_RUN_TEXTS.length,
+      )
+    }
+  }
+
+  private resetLastRunLog() {
+    clearInterval(this._lastRunTimer)
+    this._lastRunTimer = undefined
+    this.ctx.logger.logUpdate.clear()
   }
 
   async onWatcherRerun(files: string[], trigger?: string) {
+    this.resetLastRunLog()
     this.watchFilters = files
 
-    this.ctx.clearScreen()
-    this.ctx.log(`\n${c.inverse(c.bold(c.blue(' RERUN ')))}${trigger ? c.dim(` ${this.relative(trigger)}\n`) : ''}`)
+    files.forEach((filepath) => {
+      let reruns = this._filesInWatchMode.get(filepath) ?? 0
+      this._filesInWatchMode.set(filepath, ++reruns)
+    })
+
+    const BADGE = c.inverse(c.bold(c.blue(' RERUN ')))
+    const TRIGGER = trigger ? c.dim(` ${this.relative(trigger)}`) : ''
+    if (files.length > 1) {
+      // we need to figure out how to handle rerun all from stdin
+      this.ctx.logger.clearScreen(`\n${BADGE}${TRIGGER}\n`, true)
+      this._lastRunCount = 0
+    }
+    else if (files.length === 1) {
+      const rerun = this._filesInWatchMode.get(files[0]) ?? 1
+      this._lastRunCount = rerun
+      this.ctx.logger.clearScreen(`\n${BADGE}${TRIGGER} ${c.blue(`x${rerun}`)}\n`)
+    }
+
+    this._timeStart = new Date()
     this.start = performance.now()
   }
 
@@ -137,7 +171,7 @@ export abstract class BaseReporter implements Reporter {
     if (!this.shouldLog(log))
       return
     const task = log.taskId ? this.ctx.state.idMap.get(log.taskId) : undefined
-    this.ctx.log(c.gray(log.type + c.dim(` | ${task ? getFullName(task) : 'unknown test'}`)))
+    this.ctx.logger.log(c.gray(log.type + c.dim(` | ${task ? getFullName(task) : 'unknown test'}`)))
     process[log.type].write(`${log.content}\n`)
   }
 
@@ -150,11 +184,71 @@ export abstract class BaseReporter implements Reporter {
     return true
   }
 
-  onServerRestart() {
-    this.ctx.log(c.cyan('Restarted due to config changes...'))
+  onServerRestart(reason?: string) {
+    this.ctx.logger.log(c.bold(c.magenta(
+      reason === 'config'
+        ? '\nRestarting due to config changes...'
+        : '\nRestarting Vitest...',
+    )))
   }
 
   async reportSummary(files: File[]) {
+    await this.printErrorsSummary(files)
+    if (this.mode === 'benchmark')
+      await this.reportBenchmarkSummary(files)
+    else
+      await this.reportTestSummary(files)
+  }
+
+  async reportTestSummary(files: File[]) {
+    const tests = getTests(files)
+    const logger = this.ctx.logger
+
+    const executionTime = this.end - this.start
+    const collectTime = files.reduce((acc, test) => acc + Math.max(0, test.collectDuration || 0), 0)
+    const setupTime = files.reduce((acc, test) => acc + Math.max(0, test.setupDuration || 0), 0)
+    const testsTime = files.reduce((acc, test) => acc + Math.max(0, test.result?.duration || 0), 0)
+    const transformTime = Array.from(this.ctx.vitenode.fetchCache.values()).reduce((a, b) => a + (b?.duration || 0), 0)
+    const threadTime = collectTime + testsTime + setupTime
+
+    const padTitle = (str: string) => c.dim(`${str.padStart(10)} `)
+    const time = (time: number) => {
+      if (time > 1000)
+        return `${(time / 1000).toFixed(2)}s`
+      return `${Math.round(time)}ms`
+    }
+
+    // show top 10 costly transform module
+    // console.log(Array.from(this.ctx.vitenode.fetchCache.entries()).filter(i => i[1].duration)
+    //   .sort((a, b) => b[1].duration! - a[1].duration!)
+    //   .map(i => `${time(i[1].duration!)} ${i[0]}`)
+    //   .slice(0, 10)
+    //   .join('\n'),
+    // )
+
+    const snapshotOutput = renderSnapshotSummary(this.ctx.config.root, this.ctx.snapshot.summary)
+    if (snapshotOutput.length) {
+      logger.log(snapshotOutput.map((t, i) => i === 0
+        ? `${padTitle('Snapshots')} ${t}`
+        : `${padTitle('')} ${t}`,
+      ).join('\n'))
+      if (snapshotOutput.length > 1)
+        logger.log()
+    }
+
+    logger.log(padTitle('Test Files'), getStateString(files))
+    logger.log(padTitle('Tests'), getStateString(tests))
+    logger.log(padTitle('Start at'), formatTimeString(this._timeStart))
+    if (this.watchFilters)
+      logger.log(padTitle('Duration'), time(threadTime))
+    else
+      logger.log(padTitle('Duration'), time(executionTime) + c.dim(` (transform ${time(transformTime)}, setup ${time(setupTime)}, collect ${time(collectTime)}, tests ${time(testsTime)})`))
+
+    logger.log()
+  }
+
+  private async printErrorsSummary(files: File[]) {
+    const logger = this.ctx.logger
     const suites = getSuites(files)
     const tests = getTests(files)
 
@@ -164,50 +258,43 @@ export abstract class BaseReporter implements Reporter {
 
     let current = 1
 
-    const errorDivider = () => this.ctx.error(`${c.red(c.dim(divider(`[${current++}/${failedTotal}]`, undefined, 1)))}\n`)
+    const errorDivider = () => logger.error(`${c.red(c.dim(divider(`[${current++}/${failedTotal}]`, undefined, 1)))}\n`)
 
     if (failedSuites.length) {
-      this.ctx.error(c.red(divider(c.bold(c.inverse(` Failed Suites ${failedSuites.length} `)))))
-      this.ctx.error()
+      logger.error(c.red(divider(c.bold(c.inverse(` Failed Suites ${failedSuites.length} `)))))
+      logger.error()
       await this.printTaskErrors(failedSuites, errorDivider)
     }
 
     if (failedTests.length) {
-      this.ctx.error(c.red(divider(c.bold(c.inverse(` Failed Tests ${failedTests.length} `)))))
-      this.ctx.error()
+      logger.error(c.red(divider(c.bold(c.inverse(` Failed Tests ${failedTests.length} `)))))
+      logger.error()
 
       await this.printTaskErrors(failedTests, errorDivider)
     }
+    return tests
+  }
 
-    const executionTime = this.end - this.start
-    const threadTime = files.reduce((acc, test) => acc + Math.max(0, test.result?.duration || 0) + Math.max(0, test.collectDuration || 0), 0)
+  async reportBenchmarkSummary(files: File[]) {
+    const logger = this.ctx.logger
+    const benchs = getTests(files)
 
-    const padTitle = (str: string) => c.dim(`${str.padStart(10)} `)
-    const time = (time: number) => {
-      if (time > 1000)
-        return `${(time / 1000).toFixed(2)}s`
-      return `${Math.round(time)}ms`
+    const topBenchs = benchs.filter(i => i.result?.benchmark?.rank === 1)
+
+    logger.log(`\n${c.cyan(c.inverse(c.bold(' BENCH ')))} ${c.cyan('Summary')}\n`)
+    for (const bench of topBenchs) {
+      const group = bench.suite
+      const groupName = getFullName(group)
+      logger.log(`  ${bench.name}${c.dim(` - ${groupName}`)}`)
+      const siblings = group.tasks
+        .filter(i => i.result?.benchmark && i !== bench)
+        .sort((a, b) => a.result!.benchmark!.rank - b.result!.benchmark!.rank)
+      for (const sibling of siblings) {
+        const number = `${(sibling.result!.benchmark!.mean / bench.result!.benchmark!.mean).toFixed(2)}x`
+        logger.log(`    ${c.green(number)} ${c.gray('faster than')} ${sibling.name}`)
+      }
+      logger.log('')
     }
-
-    const snapshotOutput = renderSnapshotSummary(this.ctx.config.root, this.ctx.snapshot.summary)
-    if (snapshotOutput.length) {
-      this.ctx.log(snapshotOutput.map((t, i) => i === 0
-        ? `${padTitle('Snapshots')} ${t}`
-        : `${padTitle('')} ${t}`,
-      ).join('\n'))
-      if (snapshotOutput.length > 1)
-        this.ctx.log()
-    }
-
-    this.ctx.log(padTitle('Test Files'), getStateString(files))
-    this.ctx.log(padTitle('Tests'), getStateString(tests))
-    if (this.watchFilters)
-      this.ctx.log(padTitle('Time'), time(threadTime))
-
-    else
-      this.ctx.log(padTitle('Time'), time(executionTime) + c.gray(` (in thread ${time(threadTime)}, ${(executionTime / threadTime * 100).toFixed(2)}%)`))
-
-    this.ctx.log()
   }
 
   private async printTaskErrors(tasks: Task[], errorDivider: () => void) {
@@ -228,9 +315,9 @@ export abstract class BaseReporter implements Reporter {
         if (filepath)
           name = `${name} ${c.dim(`[ ${this.relative(filepath)} ]`)}`
 
-        this.ctx.error(`${c.red(c.bold(c.inverse(' FAIL ')))} ${name}`)
+        this.ctx.logger.error(`${c.red(c.bold(c.inverse(' FAIL ')))} ${name}`)
       }
-      await this.ctx.printError(error)
+      await this.ctx.logger.printError(error)
       errorDivider()
       await Promise.resolve()
     }
@@ -239,8 +326,8 @@ export abstract class BaseReporter implements Reporter {
   registerUnhandledRejection() {
     process.on('unhandledRejection', async (err) => {
       process.exitCode = 1
-      await this.ctx.printError(err, true, 'Unhandled Rejection')
-      this.ctx.error('\n\n')
+      await this.ctx.logger.printError(err, true, 'Unhandled Rejection')
+      this.ctx.logger.error('\n\n')
       process.exit(1)
     })
   }

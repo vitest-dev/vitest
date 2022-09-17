@@ -9,6 +9,11 @@ The following types are used in the type signatures below
 ```ts
 type Awaitable<T> = T | PromiseLike<T>
 type TestFunction = () => Awaitable<void>
+
+interface TestOptions {
+  timeout?: number
+  retry?: number
+}
 ```
 
 When a test function returns a promise, the runner will wait until it is resolved to collect async expectations. If the promise is rejected, the test will fail.
@@ -19,7 +24,7 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
 
 ## test
 
-- **Type:** `(name: string, fn: TestFunction, timeout?: number) => void`
+- **Type:** `(name: string, fn: TestFunction, timeout?: number | TestOptions) => void`
 - **Alias:** `it`
 
   `test` defines a set of related expectations. It receives the test name and a function that holds the expectations to test.
@@ -36,7 +41,7 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
 
 ### test.skip
 
-- **Type:** `(name: string, fn: TestFunction, timeout?: number) => void`
+- **Type:** `(name: string, fn: TestFunction, timeout?: number | TestOptions) => void`
 - **Alias:** `it.skip`
 
   If you want to skip running certain tests, but you don't want to delete the code due to any reason, you can use `test.skip` to avoid running them.
@@ -59,7 +64,7 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
 
   ```ts
   import { assert, test } from 'vitest'
-  
+
   const isDev = process.env.NODE_ENV === 'development'
 
   test.skipIf(isDev)('prod only test', () => {
@@ -76,7 +81,7 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
 
   ```ts
   import { assert, test } from 'vitest'
-  
+
   const isDev = process.env.NODE_ENV === 'development'
 
   test.runIf(isDev)('dev only test', () => {
@@ -102,12 +107,19 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
   })
   ```
 
+  Sometimes it is very useful to run `only` tests in a certain file, ignoring all other tests from the whole test suite, which pollute the output.
+
+  In order to do that run `vitest` with specific file containing the tests in question.
+  ```
+  # vitest interesting.test.ts
+  ```
+
 ### test.concurrent
 
 - **Type:** `(name: string, fn: TestFunction, timeout?: number) => void`
 - **Alias:** `it.concurrent`
 
-  `test.concurrent` marks consecutive tests to be run them in parallel. It receives the test name, an async function with the tests to collect, and an optional timeout (in milliseconds).
+  `test.concurrent` marks consecutive tests to be run in parallel. It receives the test name, an async function with the tests to collect, and an optional timeout (in milliseconds).
 
   ```ts
   import { describe, test } from 'vitest'
@@ -193,16 +205,105 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
   })
 
   // this will return
-  // √ add(1, 1) -> 2
-  // √ add(1, 2) -> 3
-  // √ add(2, 1) -> 3
+  // ✓ add(1, 1) -> 2
+  // ✓ add(1, 2) -> 3
+  // ✓ add(2, 1) -> 3
+  ```
+
+  If you want to have access to `TestContext`, use `describe.each` with a single test.
+
+## bench
+
+- **Type:** `(name: string, fn: BenchFunction, options?: BenchOptions) => void`
+
+`bench` defines a benchmark. In Vitest terms benchmark is a function that defines a series of operations. Vitest runs this function multiple times to display different performance results.
+
+Vitest uses [`tinybench`](https://github.com/tinylibs/tinybench) library under the hood, inheriting all its options that can be used as a third argument.
+
+  ```ts
+  import { bench } from 'vitest'
+
+  bench('normal sorting', () => {
+    const x = [1, 5, 4, 2, 3]
+    x.sort((a, b) => {
+      return a - b
+    })
+  }, { time: 1000 })
+  ```
+
+  ```ts
+  export interface Options {
+    /**
+     * time needed for running a benchmark task (milliseconds)
+     * @default 500
+     */
+    time?: number
+
+    /**
+     * number of times that a task should run if even the time option is finished
+     * @default 10
+     */
+    iterations?: number
+
+    /**
+     * function to get the current timestamp in milliseconds
+     */
+    now?: () => number
+
+    /**
+     * An AbortSignal for aborting the benchmark
+     */
+    signal?: AbortSignal
+
+    /**
+     * warmup time (milliseconds)
+     * @default 100ms
+     */
+    warmupTime?: number
+
+    /**
+     * warmup iterations
+     * @default 5
+     */
+    warmupIterations?: number
+
+    /**
+     * setup function to run before each benchmark task (cycle)
+     */
+    setup?: Hook
+
+    /**
+     * teardown function to run after each benchmark task (cycle)
+     */
+    teardown?: Hook
+  }
+  ```
+
+### bench.skip
+
+- **Type:** `(name: string, fn: BenchFunction, options?: BenchOptions) => void`
+
+You can use `bench.skip` syntax to skip running certain benchmarks.
+
+  ```ts
+  import { bench } from 'vitest'
+
+  bench.skip('normal sorting', () => {
+    const x = [1, 5, 4, 2, 3]
+    x.sort((a, b) => {
+      return a - b
+    })
+  })
   ```
 
 ## describe
 
-When you use `test` in the top level of file, they are collected as part of the implicit suite for it. Using `describe` you can define a new suite in the current context, as a set of related tests and other nested suites. A suite lets you organize your tests so reports are more clear.
+When you use `test` or `bench` in the top level of file, they are collected as part of the implicit suite for it. Using `describe` you can define a new suite in the current context, as a set of related tests or benchmarks and other nested suites. A suite lets you organize your tests and benchmarks so reports are more clear.
 
   ```ts
+  // basic.spec.ts
+  // organizing tests
+
   import { describe, expect, test } from 'vitest'
 
   const person = {
@@ -225,7 +326,30 @@ When you use `test` in the top level of file, they are collected as part of the 
   })
   ```
 
-  You can also nest describe blocks if you have a hierarchy of tests:
+  ```ts
+  // basic.bench.ts
+  // organizing benchmarks
+
+  import { bench, describe } from 'vitest'
+
+  describe('sort', () => {
+    bench('normal', () => {
+      const x = [1, 5, 4, 2, 3]
+      x.sort((a, b) => {
+        return a - b
+      })
+    })
+
+    bench('reverse', () => {
+      const x = [1, 5, 4, 2, 3]
+      x.reverse().sort((a, b) => {
+        return a - b
+      })
+    })
+  })
+  ```
+
+  You can also nest describe blocks if you have a hierarchy of tests or benchmarks:
 
   ```ts
   import { describe, expect, test } from 'vitest'
@@ -254,7 +378,7 @@ When you use `test` in the top level of file, they are collected as part of the 
 
 ### describe.skip
 
-- **Type:** `(name: string, fn: TestFunction) => void`
+- **Type:** `(name: string, fn: TestFunction, options?: number | TestOptions) => void`
 
   Use `describe.skip` in a suite to avoid running a particular describe block.
 
@@ -271,7 +395,7 @@ When you use `test` in the top level of file, they are collected as part of the 
 
 ### describe.only
 
-- **Type:** `(name: string, fn: TestFunction) => void`
+- **Type:** `(name: string, fn: TestFunction, options?: number | TestOptions) => void`
 
   Use `describe.only` to only run certain suites
 
@@ -288,9 +412,16 @@ When you use `test` in the top level of file, they are collected as part of the 
   })
   ```
 
+  Sometimes it is very useful to run `only` tests in a certain file, ignoring all other tests from the whole test suite, which pollute the output.
+
+  In order to do that run `vitest` with specific file containing the tests in question.
+  ```
+  # vitest interesting.test.ts
+  ```
+
 ### describe.concurrent
 
-- **Type:** `(name: string, fn: TestFunction, timeout?: number) => void`
+- **Type:** `(name: string, fn: TestFunction, options?: number | TestOptions) => void`
 
   `describe.concurrent` in a suite marks every tests as concurrent
 
@@ -312,6 +443,23 @@ When you use `test` in the top level of file, they are collected as part of the 
   describe.todo.concurrent(/* ... */) // or describe.concurrent.todo(/* ... */)
   ```
 
+### describe.shuffle
+
+- **Type:** `(name: string, fn: TestFunction, options?: number | TestOptions) => void`
+
+  Vitest provides a way to run all tests in random order via CLI flag [`--sequence.shuffle`](/guide/cli) or config option [`sequence.shuffle`](/config/#sequence-shuffle), but if you want to have only part of your test suite to run tests in random order, you can mark it with this flag.
+
+  ```ts
+  describe.shuffle('suite', () => {
+    test('random test 1', async () => { /* ... */ })
+    test('random test 2', async () => { /* ... */ })
+    test('random test 3', async () => { /* ... */ })
+  })
+  // order depends on sequence.seed option in config (Date.now() by default)
+  ```
+
+`.skip`, `.only`, and `.todo` works with random suites.
+
 ### describe.todo
 
 - **Type:** `(name: string) => void`
@@ -322,9 +470,10 @@ When you use `test` in the top level of file, they are collected as part of the 
   // An entry will be shown in the report for this suite
   describe.todo('unimplemented suite')
   ```
+
 ### describe.each
 
-- **Type:** `(cases: ReadonlyArray<T>): (name: string, fn: (...args: T[]) => void) => void`
+- **Type:** `(cases: ReadonlyArray<T>): (name: string, fn: (...args: T[]) => void, options?: number | TestOptions) => void`
 
   Use `describe.each` if you have more than one test that depends on the same data.
 
@@ -522,7 +671,7 @@ When you use `test` in the top level of file, they are collected as part of the 
   import { Stocks } from './stocks'
   const stocks = new Stocks()
 
-  test('if Bill stock hasnt failed, sell apples to him', () => {
+  test('if Bill stock hasn\'t failed, sell apples to him', () => {
     stocks.syncStocks('Bill')
     expect(stocks.stockFailed('Bill')).toBeFalsy()
   })
@@ -543,7 +692,7 @@ When you use `test` in the top level of file, they are collected as part of the 
     return null
   }
 
-  test('we dont have apples', () => {
+  test('we don\'t have apples', () => {
     expect(apples()).toBeNull()
   })
   ```
@@ -929,7 +1078,7 @@ When you use `test` in the top level of file, they are collected as part of the 
 
 ### toMatchSnapshot
 
-- **Type:** `(hint?: string) => void`
+- **Type:** `<T>(shape?: Partial<T> | string, message?: string) => void`
 
   This ensures that a value matches the most recent snapshot.
 
@@ -948,9 +1097,20 @@ When you use `test` in the top level of file, they are collected as part of the 
   })
   ```
 
+  You can also provide a shape of an object, if you are testing just a shape of an object, and don't need it to be 100% compatible:
+
+  ```ts
+  import { expect, test } from 'vitest'
+
+  test('matches snapshot', () => {
+    const data = { foo: new Set(['bar', 'snapshot']) }
+    expect(data).toMatchSnapshot({ foo: expect.any(Set) })
+  })
+  ```
+
 ### toMatchInlineSnapshot
 
-- **Type:** `(snapshot?: string) => void`
+- **Type:** `<T>(shape?: Partial<T> | string, snapshot?: string, message?: string) => void`
 
   This ensures that a value matches the most recent snapshot.
 
@@ -973,10 +1133,28 @@ When you use `test` in the top level of file, they are collected as part of the 
   })
   ```
 
+  You can also provide a shape of an object, if you are testing just a shape of an object, and don't need it to be 100% compatible:
+
+  ```ts
+  import { expect, test } from 'vitest'
+
+  test('matches snapshot', () => {
+    const data = { foo: new Set(['bar', 'snapshot']) }
+    expect(data).toMatchInlineSnapshot(
+      { foo: expect.any(Set) },
+      `
+      {
+        "foo": Any<Set>,
+      }
+    `
+    )
+  })
+  ```
+
 
 ### toThrowErrorMatchingSnapshot
 
-- **Type:** `(snapshot?: string) => void`
+- **Type:** `(message?: string) => void`
 
   The same as [`toMatchSnapshot`](#tomatchsnapshot), but expects the same value as [`toThrowError`](#tothrowerror).
 
@@ -984,7 +1162,7 @@ When you use `test` in the top level of file, they are collected as part of the 
 
 ### toThrowErrorMatchingInlineSnapshot
 
-- **Type:** `(snapshot?: string) => void`
+- **Type:** `(snapshot?: string, message?: string) => void`
 
   The same as [`toMatchInlineSnapshot`](#tomatchinlinesnapshot), but expects the same value as [`toThrowError`](#tothrowerror).
 
@@ -1238,7 +1416,6 @@ When you use `test` in the top level of file, they are collected as part of the 
     })
   })
   ```
-  <!-- toSatisfy -->
 
 ### resolves
 
@@ -1300,9 +1477,9 @@ When you use `test` in the top level of file, they are collected as part of the 
 
 - **Type:** `(count: number) => void`
 
-  After the test has passed or failed verifies that curtain number of assertions was called during a test. Useful case would be to check if an asynchronous code was called.
+  After the test has passed or failed verifies that certain number of assertions was called during a test. Useful case would be to check if an asynchronous code was called.
 
-  For examples, if we have a function than asynchronously calls two matchers, we can assert that they were actually called.
+  For example, if we have a function that asynchronously calls two matchers, we can assert that they were actually called.
 
   ```ts
   import { expect, test } from 'vitest'
@@ -1360,21 +1537,150 @@ When you use `test` in the top level of file, they are collected as part of the 
       expect(data).toBeTruthy()
     })
     // if not awaited, test will fail
-    // if you dont have expect.hasAssertions(), test will pass
+    // if you don't have expect.hasAssertions(), test will pass
     await select(3)
   })
   ```
 
-<!-- ### expect.anything
+<!-- asymmetric matchers -->
+
+### expect.anything
+
+- **Type:** `() => any`
+
+  This asymmetric matcher, when used with equality check, will always return `true`. Useful, if you just want to be sure that the property exist.
+
+  ```ts
+  import { expect, test } from 'vitest'
+
+  test('object has "apples" key', () => {
+    expect({ apples: 22 }).toEqual({ apples: expect.anything() })
+  })
+  ```
+
 ### expect.any
+
+- **Type:** `(constructor: unknown) => any`
+
+  This asymmetric matcher, when used with equality check, will return `true` only if value is an instance of specified constructor. Useful, if you have a value that is generated each time, and you only want to know that it exist with a proper type.
+
+  ```ts
+  import { expect, test } from 'vitest'
+  import { generateId } from './generators'
+
+  test('"id" is a number', () => {
+    expect({ id: generateId() }).toEqual({ id: expect.any(Number) })
+  })
+  ```
+
 ### expect.arrayContaining
-### expect.not.arrayContaining
+
+- **Type:** `<T>(expected: T[]) => any`
+
+  When used with equality check, this asymmetric matcher will return `true` if value is an array and contains specified items.
+
+  ```ts
+  import { expect, test } from 'vitest'
+
+  test('basket includes fuji', () => {
+    const basket = {
+      varieties: [
+        'Empire',
+        'Fuji',
+        'Gala',
+      ],
+      count: 3
+    }
+    expect(basket).toEqual({
+      count: 3,
+      varieties: expect.arrayContaining(['Fuji'])
+    })
+  })
+  ```
+
+  :::tip
+  You can use `expect.not` with this matcher to negate the expected value.
+  :::
+
 ### expect.objectContaining
-### expect.not.objectContaining
+
+- **Type:** `(expected: any) => any`
+
+  When used with equality check, this asymmetric matcher will return `true` if value has a similar shape.
+
+  ```ts
+  import { expect, test } from 'vitest'
+
+  test('basket has empire apples', () => {
+    const basket = {
+      varieties: [
+        {
+          name: 'Empire',
+          count: 1,
+        }
+      ],
+    }
+    expect(basket).toEqual({
+      varieties: [
+        expect.objectContaining({ name: 'Empire' }),
+      ]
+    })
+  })
+  ```
+
+  :::tip
+  You can use `expect.not` with this matcher to negate the expected value.
+  :::
+
 ### expect.stringContaining
-### expect.not.stringContaining
+
+- **Type:** `(expected: any) => any`
+
+  When used with equality check, this asymmetric matcher will return `true` if value is a string and contains specified substring.
+
+  ```ts
+  import { expect, test } from 'vitest'
+
+  test('variety has "Emp" in its name', () => {
+    const variety = {
+      name: 'Empire',
+      count: 1,
+    }
+    expect(basket).toEqual({
+      name: expect.stringContaining('Emp'),
+      count: 1,
+    })
+  })
+  ```
+
+  :::tip
+  You can use `expect.not` with this matcher to negate the expected value.
+  :::
+
 ### expect.stringMatching
-### expect.not.stringMatching -->
+
+- **Type:** `(expected: any) => any`
+
+  When used with equality check, this asymmetric matcher will return `true` if value is a string and contains specified substring or the string matches regular expression.
+
+  ```ts
+  import { expect, test } from 'vitest'
+
+  test('variety ends with "re"', () => {
+    const variety = {
+      name: 'Empire',
+      count: 1,
+    }
+    expect(basket).toEqual({
+      name: expect.stringMatching(/re$/),
+      count: 1,
+    })
+  })
+  ```
+
+  :::tip
+  You can use `expect.not` with this matcher to negate the expected value.
+  :::
 
 ### expect.addSnapshotSerializer
 
@@ -1489,7 +1795,7 @@ These functions allow you to hook into the life cycle of tests to avoid repeatin
   Register a callback to be called after each one of the tests in the current context completes.
   If the function returns a promise, Vitest waits until the promise resolve before continuing.
 
-  Optionally, you can a timeout (in milliseconds) for specifying how long to wait before terminating. The default is 5 seconds.
+  Optionally, you can provide a timeout (in milliseconds) for specifying how long to wait before terminating. The default is 5 seconds.
 
   ```ts
   import { afterEach } from 'vitest'
@@ -1527,7 +1833,7 @@ These functions allow you to hook into the life cycle of tests to avoid repeatin
   beforeAll(async () => {
     // called once before all tests run
     await startMocking()
-  
+
     // clean up function, called once after all tests run
     return async () => {
       await stopMocking()
@@ -1585,6 +1891,10 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
     .advanceTimersToNextTimer() // log 3
   ```
 
+### vi.clearAllMocks
+
+  Will call [`.mockClear()`](/api/#mockclear) on all spies. This will clear mock history, but not reset its implementation to the default one.
+
 ### vi.clearAllTimers
 
   Removes all timers that are scheduled to run. These timers will never run in the future.
@@ -1595,7 +1905,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 
 ### vi.fn
 
-- **Type:** `(fn: Function) => CallableMockInstance`
+- **Type:** `(fn?: Function) => CallableMockInstance`
 
   Creates a spy on a function, though can be initiated without one. Every time a function is invoked, it stores its call arguments, returns and instances. Also, you can manipulate its behavior with [methods](#mockinstance-methods).
   If no function is given, mock will return `undefined`, when invoked.
@@ -1649,31 +1959,14 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
   - If `__mocks__` folder with file of the same name exist, all imports will return its exports. For example, `vi.mock('axios')` with `<root>/__mocks__/axios.ts` folder will return everything exported from `axios.ts`.
   - If there is no `__mocks__` folder or a file with the same name inside, will call original module and mock it. (For the rules applied, see [algorithm](/guide/mocking#automocking-algorithm).)
 
-### vi.setSystemTime
-
-- **Type**: `(date: string | number | Date) => void`
-
-  Sets current date to the one that was passed. All `Date` calls will return this date.
-
-  Useful if you need to test anything that depends on the current date - for example [luxon](https://github.com/moment/luxon/) calls inside your code.
-
-  ```ts
-  const date = new Date(1998, 11, 19)
-
-  vi.useFakeTimers()
-  vi.setSystemTime(date)
-
-  expect(Date.now()).toBe(date.valueOf())
-
-  vi.useRealTimers()
-  ```
-
 ### vi.mocked
 
 - **Type**: `<T>(obj: T, deep?: boolean) => MaybeMockedDeep<T>`
+- **Type**: `<T>(obj: T, options?: { partial?: boolean; deep?: boolean }) => MaybePartiallyMockedDeep<T>`
 
   Type helper for TypeScript. In reality just returns the object that was passed.
 
+  When `partial` is `true` it will expect a `Partial<T>` as a return value.
   ```ts
   import example from './example'
   vi.mock('./example')
@@ -1707,6 +2000,10 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 
   Imports a module with all of its properties (including nested properties) mocked. Follows the same rules that [`vi.mock`](#vi-mock) follows. For the rules applied, see [algorithm](/guide/mocking#automocking-algorithm).
 
+### vi.resetAllMocks
+
+  Will call [`.mockReset()`](/api/#mockreset) on all spies. This will clear mock history and reset its implementation to an empty function (will return `undefined`).
+
 ### vi.resetModules
 
 - **Type**: `() => Vitest`
@@ -1731,6 +2028,10 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
     expect(mod.getlocalState()).toBe('old value')
   })
   ```
+
+### vi.restoreAllMocks
+
+  Will call [`.mockRestore()`](/api/#mockrestore) on all spies. This will clear mock history and reset its implementation to the original one.
 
 ### vi.restoreCurrentDate
 
@@ -1775,6 +2076,25 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
   setInterval(() => console.log(++i), 50)
 
   vi.runOnlyPendingTimers()
+  ```
+
+### vi.setSystemTime
+
+- **Type**: `(date: string | number | Date) => void`
+
+  Sets current date to the one that was passed. All `Date` calls will return this date.
+
+  Useful if you need to test anything that depends on the current date - for example [luxon](https://github.com/moment/luxon/) calls inside your code.
+
+  ```ts
+  const date = new Date(1998, 11, 19)
+
+  vi.useFakeTimers()
+  vi.setSystemTime(date)
+
+  expect(Date.now()).toBe(date.valueOf())
+
+  vi.useRealTimers()
   ```
 
 ### vi.spyOn

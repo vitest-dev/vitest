@@ -2,8 +2,13 @@
   "name": "@vitest/snapshots",
   "private": true,
   "scripts": {
-    "test": "vitest",
-    "testu": "vitest -u",
+    "test": "pnpm run test:generate && pnpm run test:update && pnpm run test:snaps",
+    "test:generate": "node tools/generate-inline-test.mjs",
+    "test:snaps": "vitest run --dir test",
+    "test:update": "vitest run -u --dir test-update",
     "coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "vitest": "workspace:*"
   }
 }

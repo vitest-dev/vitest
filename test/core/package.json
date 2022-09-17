@@ -6,6 +6,7 @@
     "coverage": "vitest run --coverage"
   },
   "devDependencies": {
+    "tinyspy": "^1.0.2",
     "vitest": "workspace:*"
   }
 }

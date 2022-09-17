@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { openInEditor, shouldOpenInEditor } from '../../composables/error'
-import type { File, Suite, Task } from '#types'
+import type { File, ParsedStack, Suite, Task } from '#types'
 import { config } from '~/composables/client'
 import { isDark } from '~/composables/dark'
 import { createAnsiToHtmlFilter } from '~/composables/error'
@@ -17,7 +17,7 @@ function collectFailed(task: Task, level: number): LeveledTask[] {
   if (task.result?.state !== 'fail')
     return []
 
-  if (task.type === 'test')
+  if (task.type === 'test' || task.type === 'benchmark')
     return [{ ...task, level }]
   else
     return [{ ...task, level }, ...task.tasks.flatMap(t => collectFailed(t, level + 1))]
@@ -86,6 +86,14 @@ function relative(p: string) {
     return p.slice(config.value.root.length)
   return p
 }
+
+function line(stack: ParsedStack) {
+  return stack.sourcePos?.line ?? stack.line
+}
+
+function column(stack: ParsedStack) {
+  return stack.sourcePos?.column ?? stack.column
+}
 </script>
 
 <template>
@@ -107,14 +115,14 @@ function relative(p: string) {
           <div v-else-if="task.result?.error" class="scrolls scrolls-rounded task-error">
             <pre><b>{{ task.result.error.name || task.result.error.nameStr }}</b>: {{ task.result.error.message }}</pre>
             <div v-for="(stack, i) of task.result.error.stacks" :key="i" class="op80 flex gap-x-2 items-center" data-testid="stack">
-              <pre> - {{ relative(stack.file) }}:{{ stack.line }}:{{ stack.column }}</pre>
+              <pre> - {{ relative(stack.file) }}:{{ line(stack) }}:{{ column(stack) }}</pre>
               <div
                 v-if="shouldOpenInEditor(stack.file, props.file?.name)"
                 v-tooltip.bottom="'Open in Editor'"
                 class="i-carbon-launch c-red-600 dark:c-red-400 hover:cursor-pointer min-w-1em min-h-1em"
                 tabindex="0"
                 aria-label="Open in Editor"
-                @click.passive="openInEditor(stack.file, stack.line, stack.column)"
+                @click.passive="openInEditor(stack.file, line(stack), column(stack))"
               />
             </div>
           </div>

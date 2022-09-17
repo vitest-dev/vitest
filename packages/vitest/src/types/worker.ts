@@ -9,7 +9,6 @@ import type { UserConsoleLog } from './general'
 
 export interface WorkerContext {
   workerId: number
-  poolId: number
   port: MessagePort
   config: ResolvedConfig
   files: string[]
@@ -18,6 +17,10 @@ export interface WorkerContext {
 
 export type ResolveIdFunction = (id: string, importer?: string) => Promise<ViteNodeResolveId | null>
 
+export interface AfterSuiteRunMeta {
+  coverage?: unknown
+}
+
 export interface WorkerRPC {
   fetch: FetchFunction
   resolveId: ResolveIdFunction
@@ -25,9 +28,11 @@ export interface WorkerRPC {
 
   onFinished: (files: File[], errors?: unknown[]) => void
   onWorkerExit: (code?: number) => void
+  onPathsCollected: (paths: string[]) => void
   onUserConsoleLog: (log: UserConsoleLog) => void
   onUnhandledRejection: (err: unknown) => void
   onCollected: (files: File[]) => void
+  onAfterSuiteRun: (meta: AfterSuiteRunMeta) => void
   onTaskUpdate: (pack: TaskResultPack[]) => void
 
   snapshotSaved: (snapshot: SnapshotResult) => void
@@ -41,5 +46,6 @@ export interface WorkerGlobalState {
   current?: Test
   filepath?: string
   moduleCache: ModuleCacheMap
+  browserHashMap?: Map<string, string>
   mockMap: MockMap
 }

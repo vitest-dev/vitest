@@ -1,6 +1,6 @@
-import { format } from 'util'
-import type { File, RunMode, Suite, SuiteAPI, SuiteCollector, SuiteFactory, SuiteHooks, Task, Test, TestAPI, TestFunction } from '../types'
-import { isObject, noop } from '../utils'
+import util from 'util'
+import type { BenchFunction, BenchOptions, Benchmark, BenchmarkAPI, File, RunMode, Suite, SuiteAPI, SuiteCollector, SuiteFactory, SuiteHooks, Task, Test, TestAPI, TestFunction, TestOptions } from '../types'
+import { getWorkerState, isObject, isRunningInBenchmark, isRunningInTest, noop } from '../utils'
 import { createChainable } from './chain'
 import { collectTask, collectorContext, createTestContext, runWithSuite, withTimeout } from './context'
 import { getHooks, setFn, setHooks } from './map'
@@ -8,9 +8,14 @@ import { getHooks, setFn, setHooks } from './map'
 // apis
 export const suite = createSuite()
 export const test = createTest(
-  function (name: string, fn?: TestFunction, timeout?: number) {
-    // @ts-expect-error untyped internal prop
-    getCurrentSuite().test.fn.call(this, name, fn, timeout)
+  function (name: string, fn?: TestFunction, options?: number | TestOptions) {
+    getCurrentSuite().test.fn.call(this, name, fn, options)
+  },
+)
+
+export const bench = createBenchmark(
+  function (name, fn, options) {
+    getCurrentSuite().benchmark.fn.call(this, name, fn, options)
   },
 )
 
@@ -24,7 +29,7 @@ function formatTitle(template: string, items: any[], idx: number) {
   }
 
   const count = template.split('%').length - 1
-  let formatted = format(template, ...items.slice(0, count))
+  let formatted = util.format(template, ...items.slice(0, count))
   if (isObject(items[0])) {
     formatted = formatted.replace(/\$([$\w_]+)/g, (_, key) => {
       return items[0][key]
@@ -37,8 +42,12 @@ function formatTitle(template: string, items: any[], idx: number) {
 export const describe = suite
 export const it = test
 
+const workerState = getWorkerState()
+
 // implementations
-export const defaultSuite = suite('')
+export const defaultSuite = workerState.config.sequence.shuffle
+  ? suite.shuffle('')
+  : suite('')
 
 export function clearCollectorContext() {
   collectorContext.tasks.length = 0
@@ -46,8 +55,8 @@ export function clearCollectorContext() {
   collectorContext.currentSuite = defaultSuite
 }
 
-export function getCurrentSuite() {
-  return collectorContext.currentSuite || defaultSuite
+export function getCurrentSuite<ExtraContext = {}>() {
+  return (collectorContext.currentSuite || defaultSuite) as SuiteCollector<ExtraContext>
 }
 
 export function createSuiteHooks() {
@@ -59,16 +68,22 @@ export function createSuiteHooks() {
   }
 }
 
-function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, mode: RunMode, concurrent?: boolean) {
-  const tasks: (Test | Suite | SuiteCollector)[] = []
+function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, mode: RunMode, concurrent?: boolean, shuffle?: boolean, suiteOptions?: number | TestOptions) {
+  const tasks: (Benchmark | Test | Suite | SuiteCollector)[] = []
   const factoryQueue: (Test | Suite | SuiteCollector)[] = []
 
   let suite: Suite
 
   initSuite()
 
-  const test = createTest(function (name: string, fn = noop, timeout?: number) {
+  const test = createTest(function (name: string, fn = noop, options = suiteOptions) {
+    if (!isRunningInTest())
+      throw new Error('`test()` and `it()` is only available in test mode.')
+
     const mode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run'
+
+    if (typeof options === 'number')
+      options = { timeout: options }
 
     const test: Test = {
       id: '',
@@ -77,9 +92,13 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       mode,
       suite: undefined!,
       fails: this.fails,
+      retry: options?.retry,
     } as Omit<Test, 'context'> as Test
+
     if (this.concurrent || concurrent)
       test.concurrent = true
+    if (shuffle)
+      test.shuffle = true
 
     const context = createTestContext(test)
     // create test context
@@ -90,10 +109,29 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
 
     setFn(test, withTimeout(
       () => fn(context),
-      timeout,
+      options?.timeout,
     ))
 
     tasks.push(test)
+  })
+
+  const benchmark = createBenchmark(function (name: string, fn = noop, options: BenchOptions) {
+    const mode = this.skip ? 'skip' : 'run'
+
+    if (!isRunningInBenchmark())
+      throw new Error('`bench()` is only available in benchmark mode. Run with `vitest bench` instead.')
+
+    const benchmark: Benchmark = {
+      type: 'benchmark',
+      id: '',
+      name,
+      mode,
+      options,
+      suite: undefined!,
+    }
+
+    setFn(benchmark, fn)
+    tasks.push(benchmark)
   })
 
   const collector: SuiteCollector = {
@@ -102,6 +140,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
     mode,
     test,
     tasks,
+    benchmark,
     collect,
     clear,
     on: addHook,
@@ -117,6 +156,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       type: 'suite',
       name,
       mode,
+      shuffle,
       tasks: [],
     }
     setHooks(suite, createSuiteHooks())
@@ -151,32 +191,32 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
   }
 
   collectTask(collector)
-
   return collector
 }
 
 function createSuite() {
-  const suite = createChainable(
-    ['concurrent', 'skip', 'only', 'todo'],
-    function (name: string, factory?: SuiteFactory) {
-      const mode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run'
-      return createSuiteCollector(name, factory, mode, this.concurrent)
-    },
-  ) as SuiteAPI
+  function suiteFn(this: Record<string, boolean | undefined>, name: string, factory?: SuiteFactory, options?: number | TestOptions) {
+    const mode: RunMode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run'
+    return createSuiteCollector(name, factory, mode, this.concurrent, this.shuffle, options)
+  }
 
-  suite.each = <T>(cases: ReadonlyArray<T>) => {
-    return (name: string, fn: (...args: T[]) => void) => {
+  suiteFn.each = function<T>(this: { withContext: () => SuiteAPI }, cases: ReadonlyArray<T>) {
+    const suite = this.withContext()
+    return (name: string, fn: (...args: T[]) => void, options?: number | TestOptions) => {
       cases.forEach((i, idx) => {
         const items = Array.isArray(i) ? i : [i]
-        suite(formatTitle(name, items, idx), () => fn(...items))
+        suite(formatTitle(name, items, idx), () => fn(...items), options)
       })
     }
   }
 
-  suite.skipIf = (condition: any) => (condition ? suite.skip : suite) as SuiteAPI
-  suite.runIf = (condition: any) => (condition ? suite : suite.skip) as SuiteAPI
+  suiteFn.skipIf = (condition: any) => (condition ? suite.skip : suite) as SuiteAPI
+  suiteFn.runIf = (condition: any) => (condition ? suite : suite.skip) as SuiteAPI
 
-  return suite
+  return createChainable(
+    ['concurrent', 'shuffle', 'skip', 'only', 'todo'],
+    suiteFn,
+  ) as unknown as SuiteAPI
 }
 
 function createTest(fn: (
@@ -184,25 +224,46 @@ function createTest(fn: (
     this: Record<'concurrent' | 'skip' | 'only' | 'todo' | 'fails', boolean | undefined>,
     title: string,
     fn?: TestFunction,
-    timeout?: number
+    options?: number | TestOptions
   ) => void
 )) {
-  const test = createChainable(
-    ['concurrent', 'skip', 'only', 'todo', 'fails'],
-    fn,
-  ) as TestAPI
+  const testFn = fn as any
 
-  test.each = <T>(cases: ReadonlyArray<T>) => {
-    return (name: string, fn: (...args: T[]) => void) => {
+  testFn.each = function<T>(this: { withContext: () => TestAPI }, cases: ReadonlyArray<T>) {
+    const test = this.withContext()
+
+    return (name: string, fn: (...args: T[]) => void, options?: number | TestOptions) => {
       cases.forEach((i, idx) => {
         const items = Array.isArray(i) ? i : [i]
-        test(formatTitle(name, items, idx), () => fn(...items))
+        test(formatTitle(name, items, idx), () => fn(...items), options)
       })
     }
   }
 
-  test.skipIf = (condition: any) => (condition ? test.skip : test) as TestAPI
-  test.runIf = (condition: any) => (condition ? test : test.skip) as TestAPI
+  testFn.skipIf = (condition: any) => (condition ? test.skip : test) as TestAPI
+  testFn.runIf = (condition: any) => (condition ? test : test.skip) as TestAPI
 
-  return test as TestAPI
+  return createChainable(
+    ['concurrent', 'skip', 'only', 'todo', 'fails'],
+    testFn,
+  ) as TestAPI
+}
+
+function createBenchmark(fn: (
+  (
+    this: Record<'skip', boolean | undefined>,
+    name: string,
+    fn: BenchFunction,
+    options: BenchOptions
+  ) => void
+)) {
+  const benchmark = createChainable(
+    ['skip'],
+    fn,
+  ) as BenchmarkAPI
+
+  benchmark.skipIf = (condition: any) => (condition ? benchmark.skip : benchmark) as BenchmarkAPI
+  benchmark.runIf = (condition: any) => (condition ? benchmark : benchmark.skip) as BenchmarkAPI
+
+  return benchmark as BenchmarkAPI
 }

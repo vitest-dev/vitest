@@ -1,10 +1,10 @@
-import { createLogUpdate } from 'log-update'
 import c from 'picocolors'
 import type { Task } from '../../../types'
 import { clearInterval, getTests, setInterval } from '../../../utils'
+import type { Logger } from '../../logger'
 
 export interface DotRendererOptions {
-  outputStream: NodeJS.WritableStream
+  logger: Logger
 }
 
 const check = c.green('·')
@@ -32,7 +32,7 @@ export const createDotRenderer = (_tasks: Task[], options: DotRendererOptions) =
   let tasks = _tasks
   let timer: any
 
-  const log = createLogUpdate(options.outputStream)
+  const log = options.logger.logUpdate
 
   function update() {
     log(render(tasks))
@@ -56,7 +56,7 @@ export const createDotRenderer = (_tasks: Task[], options: DotRendererOptions) =
         timer = undefined
       }
       log.clear()
-      options.outputStream.write(`${render(tasks)}\n`)
+      options.logger.log(render(tasks))
       return this
     },
     clear() {

@@ -1,5 +1,6 @@
 import { resolve } from 'pathe'
 import { createBirpc } from 'birpc'
+import { workerId as poolId } from 'tinypool'
 import { ModuleCacheMap } from 'vite-node/client'
 import type { ResolvedConfig, WorkerContext, WorkerRPC } from '../types'
 import { distDir } from '../constants'
@@ -63,7 +64,7 @@ function init(ctx: WorkerContext) {
   if (typeof __vitest_worker__ !== 'undefined' && ctx.config.threads && ctx.config.isolate)
     throw new Error(`worker for ${ctx.files.join(',')} already initialized by ${getWorkerState().ctx.files.join(',')}. This is probably an internal bug of Vitest.`)
 
-  const { config, port, workerId, poolId } = ctx
+  const { config, port, workerId } = ctx
 
   process.env.VITEST_WORKER_ID = String(workerId)
   process.env.VITEST_POOL_ID = String(poolId)
@@ -85,9 +86,9 @@ function init(ctx: WorkerContext) {
   }
 
   if (ctx.invalidates) {
-    ctx.invalidates.forEach((i) => {
-      moduleCache.delete(i)
-      moduleCache.delete(`${i}__mock`)
+    ctx.invalidates.forEach((fsPath) => {
+      moduleCache.delete(fsPath)
+      moduleCache.delete(`mock:${fsPath}`)
     })
   }
   ctx.files.forEach(i => moduleCache.delete(i))

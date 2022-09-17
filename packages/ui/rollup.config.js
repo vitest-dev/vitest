@@ -1,3 +1,4 @@
+import { builtinModules } from 'module'
 import esbuild from 'rollup-plugin-esbuild'
 import dts from 'rollup-plugin-dts'
 import resolve from '@rollup/plugin-node-resolve'
@@ -11,6 +12,7 @@ const entry = [
 ]
 
 const external = [
+  ...builtinModules,
   ...Object.keys(pkg.dependencies),
   ...Object.keys(pkg.peerDependencies || {}),
   'worker_threads',
@@ -39,11 +41,7 @@ export default () => [
         target: 'node14',
       }),
     ],
-    onwarn(message) {
-      if (message.code === 'CIRCULAR_DEPENDENCY')
-        return
-      console.error(message)
-    },
+    onwarn,
   },
   {
     input: entry,
@@ -57,3 +55,9 @@ export default () => [
     ],
   },
 ]
+
+function onwarn(message) {
+  if (['EMPTY_BUNDLE', 'CIRCULAR_DEPENDENCY'].includes(message.code))
+    return
+  console.error(message)
+}
