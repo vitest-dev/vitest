@@ -120,6 +120,7 @@ export class IstanbulCoverageProvider implements CoverageProvider {
     for (const reporter of this.options.reporter) {
       reports.create(reporter as any, {
         skipFull: this.options.skipFull,
+        projectRoot: this.ctx.config.root,
       }).execute(context)
     }
 
