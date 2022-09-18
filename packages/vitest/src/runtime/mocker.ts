@@ -106,12 +106,25 @@ export class VitestMocker {
     const cached = this.moduleCache.get(dep)?.exports
     if (cached)
       return cached
-    const exports = await mock()
+    let exports: any
+    try {
+      exports = await mock()
+    }
+    catch (err) {
+      const vitestError = new Error(
+        '[vitest] There was an error, when mocking a module. '
+      + 'If you are using vi.mock, make sure you are not using top level variables inside, since this call is hoisted. '
+      + 'Read more: https://vitest.dev/api/#vi-mock')
+      vitestError.cause = err
+      throw vitestError
+    }
 
     if (exports === null || typeof exports !== 'object')
       throw new Error('[vitest] vi.mock(path: string, factory?: () => unknown) is not returning an object. Did you mean to return an object with a "default" key?')
 
     this.moduleCache.set(dep, { exports })
+
+    const filepath = dep.slice('mock:'.length)
 
     const exportHandler = {
       get(target: Record<string, any>, prop: any) {
@@ -123,7 +136,7 @@ export class VitestMocker {
             return target.then.bind(target)
         }
         else if (!(prop in target)) {
-          throw new Error(`[vitest] No "${prop}" export is defined on the "${dep}"`)
+          throw new Error(`[vitest] No "${prop}" export is defined on the "${filepath}"`)
         }
 
         return val
