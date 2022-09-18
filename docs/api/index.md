@@ -296,6 +296,23 @@ You can use `bench.skip` syntax to skip running certain benchmarks.
   })
   ```
 
+### bench.only
+
+- **Type:** `(name: string, fn: BenchFunction, options?: BenchOptions) => void`
+
+Use `bench.only` to only run certain benchmarks in a given suite. This is useful when debugging.
+
+  ```ts
+  import { bench } from 'vitest'
+
+  bench.only('normal sorting', () => {
+    const x = [1, 5, 4, 2, 3]
+    x.sort((a, b) => {
+      return a - b
+    })
+  })
+  ```
+
 ## describe
 
 When you use `test` or `bench` in the top level of file, they are collected as part of the implicit suite for it. Using `describe` you can define a new suite in the current context, as a set of related tests or benchmarks and other nested suites. A suite lets you organize your tests and benchmarks so reports are more clear.
