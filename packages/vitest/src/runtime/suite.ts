@@ -14,7 +14,7 @@ export const test = createTest(
 )
 
 export const bench = createBenchmark(
-  function (name, fn: BenchFunction = () => { }, options: BenchOptions = {}) {
+  function (name, fn: BenchFunction = noop, options: BenchOptions = {}) {
     getCurrentSuite().benchmark.fn.call(this, name, fn, options)
   },
 )
