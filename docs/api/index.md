@@ -313,6 +313,18 @@ Use `bench.only` to only run certain benchmarks in a given suite. This is useful
   })
   ```
 
+### bench.todo
+
+- **Type:** `(name: string) => void`
+
+Use `bench.todo` to stub benchmarks to be implemented later.
+
+  ```ts
+  import { bench } from 'vitest'
+
+  bench.todo('unimplemented test')
+  ```
+
 ## describe
 
 When you use `test` or `bench` in the top level of file, they are collected as part of the implicit suite for it. Using `describe` you can define a new suite in the current context, as a set of related tests or benchmarks and other nested suites. A suite lets you organize your tests and benchmarks so reports are more clear.

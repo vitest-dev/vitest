@@ -22,6 +22,10 @@ const skippedBenches = ['s0', 's1', 's2', 's3', 'sb4', 's4']
 if (skippedBenches.some(b => benchResult.includes(b)))
   process.exit(1)
 
+const todoBenches = ['unimplemented suite', 'unimplemented test']
+if (todoBenches.some(b => benchResult.includes(b)))
+  process.exit(1)
+
 if (error) {
   console.error(error)
   process.exit(1)
