@@ -38,7 +38,7 @@ importers:
       npm-run-all: ^4.1.5
       ohmyfetch: ^0.4.18
       pathe: ^0.2.0
-      pnpm: 7.11.0
+      pnpm: 7.12.0
       rimraf: ^3.0.2
       rollup: ^2.79.0
       rollup-plugin-dts: ^4.2.2
@@ -79,7 +79,7 @@ importers:
       npm-run-all: 4.1.5
       ohmyfetch: 0.4.18
       pathe: 0.2.0
-      pnpm: 7.11.0
+      pnpm: 7.12.0
       rimraf: 3.0.2
       rollup: 2.79.0
       rollup-plugin-dts: 4.2.2_ihkqvyh37tzxtjmovjyy2yrv7m
@@ -105,8 +105,8 @@ importers:
       unocss: ^0.45.21
       unplugin-vue-components: ^0.22.7
       vite: ^3.1.0
-      vite-plugin-pwa: 0.12.7
-      vitepress: ^1.0.0-alpha.13
+      vite-plugin-pwa: 0.12.8
+      vitepress: ^1.0.0-alpha.15
       vue: latest
       workbox-window: ^6.5.4
     dependencies:
@@ -123,8 +123,8 @@ importers:
       unocss: 0.45.21_vite@3.1.0
       unplugin-vue-components: 0.22.7_vite@3.1.0+vue@3.2.39
       vite: 3.1.0
-      vite-plugin-pwa: 0.12.7_vite@3.1.0
-      vitepress: 1.0.0-alpha.13
+      vite-plugin-pwa: 0.12.8_zp7t6aa2r77waajuyr5zt63phe
+      vitepress: 1.0.0-alpha.15
       workbox-window: 6.5.4
 
   examples/basic:
@@ -695,8 +695,8 @@ importers:
       birpc: ^0.2.3
       codemirror: ^5.65.8
       codemirror-theme-vars: ^0.1.1
-      cypress: ^10.7.0
-      d3-graph-controller: ^2.3.13
+      cypress: ^10.8.0
+      d3-graph-controller: ^2.3.15
       flatted: ^3.2.7
       floating-vue: ^2.0.0-y.0
       picocolors: ^1.0.0
@@ -714,7 +714,7 @@ importers:
       sirv: 2.0.2
     devDependencies:
       '@faker-js/faker': 7.5.0
-      '@testing-library/cypress': 8.0.3_cypress@10.7.0
+      '@testing-library/cypress': 8.0.3_cypress@10.8.0
       '@types/codemirror': 5.60.5
       '@types/d3-force': 3.0.3
       '@types/d3-selection': 3.0.3
@@ -728,8 +728,8 @@ importers:
       birpc: 0.2.3
       codemirror: 5.65.8
       codemirror-theme-vars: 0.1.1
-      cypress: 10.7.0
-      d3-graph-controller: 2.3.13
+      cypress: 10.8.0
+      d3-graph-controller: 2.3.15
       flatted: 3.2.7
       floating-vue: 2.0.0-y.0_vue@3.2.39
       picocolors: 1.0.0
@@ -808,7 +808,7 @@ importers:
       rollup: ^2.79.0
       source-map-js: ^1.0.2
       strip-ansi: ^7.0.1
-      strip-literal: ^0.4.1
+      strip-literal: ^0.4.2
       tinybench: ^2.1.5
       tinypool: ^0.3.0
       tinyspy: ^1.0.2
@@ -823,7 +823,7 @@ importers:
       chai: 4.3.6
       debug: 4.3.4
       local-pkg: 0.4.2
-      strip-literal: 0.4.1
+      strip-literal: 0.4.2
       tinybench: 2.1.5
       tinypool: 0.3.0
       tinyspy: 1.0.2
@@ -5443,7 +5443,7 @@ packages:
       - supports-color
     dev: true
 
-  /@testing-library/cypress/8.0.3_cypress@10.7.0:
+  /@testing-library/cypress/8.0.3_cypress@10.8.0:
     resolution: {integrity: sha512-nY2YaSbmuPo5k6kL0iLj/pGPPfka3iwb3kpTx8QN/vOCns92Saz9wfACqB8FJzcR7+lfA4d5HUOWqmTddBzczg==}
     engines: {node: '>=12', npm: '>=6'}
     peerDependencies:
@@ -5451,7 +5451,7 @@ packages:
     dependencies:
       '@babel/runtime': 7.18.9
       '@testing-library/dom': 8.17.1
-      cypress: 10.7.0
+      cypress: 10.8.0
     dev: true
 
   /@testing-library/dom/7.31.2:
@@ -9048,8 +9048,8 @@ packages:
     resolution: {integrity: sha512-NJGVKPS81XejHcLhaLJS7plab0fK3slPh11mESeeDq2W4ZI5kUKK/LRRdVDvjJseojbPB7ZwjnyOybg3Igea/A==}
     dev: true
 
-  /cypress/10.7.0:
-    resolution: {integrity: sha512-gTFvjrUoBnqPPOu9Vl5SBHuFlzx/Wxg/ZXIz2H4lzoOLFelKeF7mbwYUOzgzgF0oieU2WhJAestQdkgwJMMTvQ==}
+  /cypress/10.8.0:
+    resolution: {integrity: sha512-QVse0dnLm018hgti2enKMVZR9qbIO488YGX06nH5j3Dg1isL38DwrBtyrax02CANU6y8F4EJUuyW6HJKw1jsFA==}
     engines: {node: '>=12.0.0'}
     hasBin: true
     requiresBuild: true
@@ -9073,7 +9073,7 @@ packages:
       dayjs: 1.11.5
       debug: 4.3.4_supports-color@8.1.1
       enquirer: 2.3.6
-      eventemitter2: 6.4.5
+      eventemitter2: 6.4.7
       execa: 4.1.0
       executable: 4.1.1
       extract-zip: 2.0.1_supports-color@8.1.1
@@ -9141,8 +9141,8 @@ packages:
     engines: {node: '>=12'}
     dev: false
 
-  /d3-graph-controller/2.3.13:
-    resolution: {integrity: sha512-hNeZ7eGQkzpuaw+acV/Sm3GJIxHF7cmx6DThuUntxQr23M2Jz3m1a25RoFSv4HFy3MSG3Jv+O94ysVXGuu9XQQ==}
+  /d3-graph-controller/2.3.15:
+    resolution: {integrity: sha512-jZmT3cujZvnR4/Mk0MSlGiV/wHpSFLJ025RfkeJgGSRrVNM00eASYX/vT2jAXhCtDN94mZhsp5+QfiKnetYE+Q==}
     dependencies:
       '@yeger/debounce': 1.0.38
       d3-drag: 3.0.0
@@ -10653,8 +10653,8 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
-  /eventemitter2/6.4.5:
-    resolution: {integrity: sha512-bXE7Dyc1i6oQElDG0jMRZJrRAn9QR2xyyFGmBdZleNmyQX0FqGYmhZIrIrpPfm/w//LTo4tVQGOGQcGCb5q9uw==}
+  /eventemitter2/6.4.7:
+    resolution: {integrity: sha512-tYUSVOGeQPKt/eC1ABfhHy5Xd96N3oIijJvN3O9+TsC28T5V9yX9oEfEK5faP0EFSNVOG97qtAS68GBrQB2hDg==}
     dev: true
 
   /eventemitter3/4.0.7:
@@ -14395,6 +14395,10 @@ packages:
       set-blocking: 2.0.0
     dev: true
 
+  /nprogress/0.2.0:
+    resolution: {integrity: sha512-I19aIingLgR1fmhftnbWWO3dXc0hSxqHQHQb3H8m+K3TnEn/iSeTZZOyvKXWqQESMwuUVnatlCnZdLBZZt2VSA==}
+    dev: true
+
   /nth-check/2.1.1:
     resolution: {integrity: sha512-lqjrjmaOoAnWfMmBPL+XNnynZh2+swxiX3WUE0s4yEHI6m+AwrK2UZOimIRl3X/4QctVqS8AiZjFqyOGrMXb/w==}
     dependencies:
@@ -15156,8 +15160,8 @@ packages:
       - typescript
     dev: true
 
-  /pnpm/7.11.0:
-    resolution: {integrity: sha512-cxh4TfCE8L4ZbLBN72kTGKTYP7X08nrIzoQ2rQCKihAcIHAdNIgsk4bEJyE1xHjE+bNJt9skwr7aJv3LpvUawQ==}
+  /pnpm/7.12.0:
+    resolution: {integrity: sha512-Zc38WaMNkomazbIFl5nq2TR1e97R4iG+G7f9QKUL+YHbHOnkOYV3UuR45xYPhhpn1ArLfTpxjxmRu1H3gn6SPw==}
     engines: {node: '>=14.6'}
     hasBin: true
     dev: true
@@ -17352,17 +17356,10 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
-  /strip-literal/0.4.0:
-    resolution: {integrity: sha512-ql/sBDoJOybTKSIOWrrh8kgUEMjXMwRAkZTD0EwiwxQH/6tTPkZvMIEjp0CRlpi6V5FMiJyvxeRkEi1KrGISoA==}
+  /strip-literal/0.4.2:
+    resolution: {integrity: sha512-pv48ybn4iE1O9RLgCAN0iU4Xv7RlBTiit6DKmMiErbs9x1wH6vXBs45tWc0H5wUIF6TLTrKweqkmYF/iraQKNw==}
     dependencies:
       acorn: 8.8.0
-    dev: true
-
-  /strip-literal/0.4.1:
-    resolution: {integrity: sha512-z+F/xmDM8GOdvA5UoZXFxEnxdvMOZ+XEBIwjfLfc8hMSuHpGxjXAUCfuEo+t1GOHSb8+qgI/IBRpxXVMaABYWA==}
-    dependencies:
-      acorn: 8.8.0
-    dev: false
 
   /style-loader/1.3.0_webpack@4.46.0:
     resolution: {integrity: sha512-V7TCORko8rs9rIqkSrlMfkqA63DfoGBBJmK1kKGCcSi+BWb4cqz0SRsnp4l6rU5iwOEd0/2ePv68SV22VXon4Q==}
@@ -18240,13 +18237,13 @@ packages:
     dependencies:
       '@rollup/pluginutils': 4.2.1
       escape-string-regexp: 5.0.0
-      fast-glob: 3.2.11
+      fast-glob: 3.2.12
       local-pkg: 0.4.2
       magic-string: 0.26.3
       mlly: 0.5.14
       pathe: 0.3.5
       scule: 0.3.2
-      strip-literal: 0.4.0
+      strip-literal: 0.4.2
       unplugin: 0.9.5_rollup@2.79.0+vite@3.1.0
     transitivePeerDependencies:
       - esbuild
@@ -18260,13 +18257,13 @@ packages:
     dependencies:
       '@rollup/pluginutils': 4.2.1
       escape-string-regexp: 5.0.0
-      fast-glob: 3.2.11
+      fast-glob: 3.2.12
       local-pkg: 0.4.2
       magic-string: 0.26.3
       mlly: 0.5.14
       pathe: 0.3.5
       scule: 0.3.2
-      strip-literal: 0.4.0
+      strip-literal: 0.4.2
       unplugin: 0.9.5_vite@3.1.0
     transitivePeerDependencies:
       - esbuild
@@ -18809,10 +18806,11 @@ packages:
       - supports-color
     dev: true
 
-  /vite-plugin-pwa/0.12.7_vite@3.1.0:
-    resolution: {integrity: sha512-salSwS1wWc1niNWfhX2W6gtfXmk+XESMz62w95EHLq6fSM2bDgDm1APmvq1nkDcxH6Onky7HxysCBKMzvOHXYg==}
+  /vite-plugin-pwa/0.12.8_zp7t6aa2r77waajuyr5zt63phe:
+    resolution: {integrity: sha512-pSiFHmnJGMQJJL8aJzQ8SaraZBSBPMGvGUkCNzheIq9UQCEk/eP3UmANNmS9eupuhIpTK8AdxTOHcaMcAqAbCA==}
     peerDependencies:
       vite: ^2.0.0 || ^3.0.0-0
+      workbox-window: ^6.4.0
     dependencies:
       debug: 4.3.4
       fast-glob: 3.2.12
@@ -18880,8 +18878,8 @@ packages:
     optionalDependencies:
       fsevents: 2.3.2
 
-  /vitepress/1.0.0-alpha.13:
-    resolution: {integrity: sha512-gCbKb+6o0g5wHt2yyqBPk7FcvrB+MfwGtg1JMS5p99GTQR87l3b7symCl8o1ecv7MDXwJ2mPB8ZrYNLnQAJxLQ==}
+  /vitepress/1.0.0-alpha.15:
+    resolution: {integrity: sha512-+pHJQCpnv0wVgLRyonisrj7Y77PVhbns2nTLxV9GkH3T+RTY/W2JmRatzBg5WciMaPyO8Ms6F3YElO5PULVv3w==}
     hasBin: true
     dependencies:
       '@docsearch/css': 3.2.1
@@ -18890,6 +18888,7 @@ packages:
       '@vue/devtools-api': 6.2.1
       '@vueuse/core': 9.2.0_vue@3.2.39
       body-scroll-lock: 4.0.0-beta.0
+      nprogress: 0.2.0
       shiki: 0.11.1
       vite: 3.1.0
       vue: 3.2.39
