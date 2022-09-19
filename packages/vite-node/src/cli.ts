@@ -80,8 +80,15 @@ async function run(files: string[], options: CliOptions = {}) {
       await runner.executeFile(file)
     }
     catch (e) {
-      if (!options.watch)
-        throw e
+      if (options.watch) {
+        process.exitCode = 1
+        // Circular reference throws a TypeError
+        if (e instanceof Error && e.name === 'TypeError')
+          continue
+
+        console.error(e)
+      }
+      else { throw e }
     }
   }
 
