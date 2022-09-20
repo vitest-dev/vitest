@@ -29,7 +29,7 @@ Out-of-the-box ES Module / TypeScript / JSX support / PostCSS
 
 ## Threads
 
-Workers multi-threading via [tinypool](https://github.com/Aslemammad/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina)), allowing tests to run simultaneously. Threads are enabled by default in Vitest, and can be disabled by passing `--no-threads` in the CLI.
+Workers multi-threading via [Tinypool](https://github.com/tinylibs/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina)), allowing tests to run simultaneously. Threads are enabled by default in Vitest, and can be disabled by passing `--no-threads` in the CLI.
 
 Vitest also isolates each file's environment so env mutations in one file don't affect others. Isolation can be disabled by passing `--no-isolate` to the CLI (trading correctness for run performance).
 
@@ -92,7 +92,7 @@ Notice that if you are using third-party libraries that add matchers, setting `t
 
 ## Mocking
 
-[Tinyspy](https://github.com/Aslemammad/tinyspy) is built-in for mocking with `jest`-compatible APIs on `vi` object.
+[Tinyspy](https://github.com/tinylibs/tinyspy) is built-in for mocking with `jest`-compatible APIs on `vi` object.
 
 ```ts
 import { expect, vi } from 'vitest'
@@ -178,7 +178,8 @@ Learn more at [In-source testing](/guide/in-source).
 
 ## Benchmarking <sup><code>experimental</code></sup>
 
-Since Vitest 0.23.0, you can run benchmark tests with [`bench`](/api/#bench) function to compare performance results.
+Since Vitest 0.23.0, you can run benchmark tests with [`bench`](/api/#bench)
+function via [Tinybench](https://github.com/tinylibs/tinybench) to compare performance results.
 
 ```ts
 import { bench, describe } from 'vitest'
