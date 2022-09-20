@@ -1,9 +1,9 @@
 import { existsSync, readdirSync } from 'fs'
 import { isNodeBuiltin } from 'mlly'
-import { basename, dirname, join, resolve } from 'pathe'
-import { normalizeRequestId, toFilePath } from 'vite-node/utils'
+import { basename, dirname, extname, join, resolve } from 'pathe'
+import { normalizeRequestId, pathFromRoot, toFilePath } from 'vite-node/utils'
 import type { ModuleCacheMap } from 'vite-node/client'
-import { getAllProperties, getType, getWorkerState, isWindows, mergeSlashes, slash } from '../utils'
+import { getAllMockableProperties, getType, getWorkerState, mergeSlashes, slash } from '../utils'
 import { distDir } from '../constants'
 import type { PendingSuiteMock } from '../types/mocker'
 import type { ExecuteOptions } from './execute'
@@ -103,28 +103,66 @@ export class VitestMocker {
   }
 
   private async callFunctionMock(dep: string, mock: () => any) {
-    const cacheName = `${dep}__mock`
-    const cached = this.moduleCache.get(cacheName)?.exports
+    const cached = this.moduleCache.get(dep)?.exports
     if (cached)
       return cached
-    const exports = await mock()
-    this.moduleCache.set(cacheName, { exports })
-    return exports
+    let exports: any
+    try {
+      exports = await mock()
+    }
+    catch (err) {
+      const vitestError = new Error(
+        '[vitest] There was an error, when mocking a module. '
+      + 'If you are using vi.mock, make sure you are not using top level variables inside, since this call is hoisted. '
+      + 'Read more: https://vitest.dev/api/#vi-mock')
+      vitestError.cause = err
+      throw vitestError
+    }
+
+    if (exports === null || typeof exports !== 'object')
+      throw new Error('[vitest] vi.mock(path: string, factory?: () => unknown) is not returning an object. Did you mean to return an object with a "default" key?')
+
+    this.moduleCache.set(dep, { exports })
+
+    const filepath = dep.slice('mock:'.length)
+
+    const exportHandler = {
+      get(target: Record<string, any>, prop: any) {
+        const val = target[prop]
+
+        // 'then' can exist on non-Promise objects, need nested instanceof check for logic to work
+        if (prop === 'then') {
+          if (target instanceof Promise)
+            return target.then.bind(target)
+        }
+        else if (!(prop in target)) {
+          throw new Error(`[vitest] No "${prop}" export is defined on the "${filepath}"`)
+        }
+
+        return val
+      },
+    }
+
+    return new Proxy(exports, exportHandler)
   }
 
-  public getDependencyMock(dep: string) {
-    return this.getMocks()[this.normalizePath(dep)]
+  private getMockPath(dep: string) {
+    return `mock:${dep}`
+  }
+
+  public getDependencyMock(id: string) {
+    return this.getMocks()[id]
   }
 
   public normalizePath(path: string) {
-    return normalizeRequestId(path.replace(this.root, ''), this.base).replace(/^\/@fs\//, isWindows ? '' : '/')
+    return pathFromRoot(this.root, normalizeRequestId(path, this.base))
   }
 
   public getFsPath(path: string, external: string | null) {
     if (external)
       return mergeSlashes(`/@fs/${path}`)
 
-    return normalizeRequestId(path.replace(this.root, ''))
+    return normalizeRequestId(path, this.base)
   }
 
   public resolveMockPath(mockPath: string, external: string | null) {
@@ -140,11 +178,11 @@ export class VitestMocker {
         return null
 
       const files = readdirSync(mockFolder)
-      const baseFilename = basename(path)
+      const baseOriginal = basename(path)
 
       for (const file of files) {
-        const [basename] = file.split('.')
-        if (basename === baseFilename)
+        const baseFile = basename(file, extname(file))
+        if (baseFile === baseOriginal)
           return resolve(mockFolder, file)
       }
 
@@ -169,16 +207,29 @@ export class VitestMocker {
     const finalizers = new Array<() => void>()
     const refs = new RefTracker()
 
+    const define = (container: Record<Key, any>, key: Key, value: any) => {
+      try {
+        container[key] = value
+        return true
+      }
+      catch {
+        return false
+      }
+    }
+
     const mockPropertiesOf = (container: Record<Key, any>, newContainer: Record<Key, any>) => {
       const containerType = getType(container)
       const isModule = containerType === 'Module' || !!container.__esModule
-      for (const property of getAllProperties(container)) {
+      for (const { key: property, descriptor } of getAllMockableProperties(container)) {
         // Modules define their exports as getters. We want to process those.
-        if (!isModule) {
-          // TODO: Mock getters/setters somehow?
-          const descriptor = Object.getOwnPropertyDescriptor(container, property)
-          if (descriptor?.get || descriptor?.set)
-            continue
+        if (!isModule && descriptor.get) {
+          try {
+            Object.defineProperty(newContainer, property, descriptor)
+          }
+          catch (error) {
+            // Ignore errors, just move on to the next prop.
+          }
+          continue
         }
 
         // Skip special read-only props, we don't want to mess with those.
@@ -190,25 +241,28 @@ export class VitestMocker {
         // Special handling of references we've seen before to prevent infinite
         // recursion in circular objects.
         const refId = refs.getId(value)
-        if (refId) {
-          finalizers.push(() => newContainer[property] = refs.getMockedValue(refId))
+        if (refId !== undefined) {
+          finalizers.push(() => define(newContainer, property, refs.getMockedValue(refId)))
           continue
         }
 
         const type = getType(value)
 
         if (Array.isArray(value)) {
-          newContainer[property] = []
+          define(newContainer, property, [])
           continue
         }
 
         const isFunction = type.includes('Function') && typeof value === 'function'
         if ((!isFunction || value.__isMockFunction) && type !== 'Object' && type !== 'Module') {
-          newContainer[property] = value
+          define(newContainer, property, value)
           continue
         }
 
-        newContainer[property] = isFunction ? value : {}
+        // Sometimes this assignment fails for some unknown reason. If it does,
+        // just move along.
+        if (!define(newContainer, property, isFunction ? value : {}))
+          continue
 
         if (isFunction) {
           spyModule.spyOn(newContainer, property).mockImplementation(() => undefined)
@@ -239,6 +293,10 @@ export class VitestMocker {
     const mock = this.mockMap.get(suitefile)
     if (mock?.[id])
       delete mock[id]
+
+    const mockId = this.getMockPath(id)
+    if (this.moduleCache.get(mockId))
+      this.moduleCache.delete(mockId)
   }
 
   public mockPath(path: string, external: string | null, factory?: () => any) {
@@ -263,7 +321,8 @@ export class VitestMocker {
     const { path, external } = await this.resolvePath(id, importer)
 
     const fsPath = this.getFsPath(path, external)
-    let mock = this.getDependencyMock(fsPath)
+    const normalizedId = this.normalizePath(fsPath)
+    let mock = this.getDependencyMock(normalizedId)
 
     if (mock === undefined)
       mock = this.resolveMockPath(fsPath, external)
@@ -291,25 +350,26 @@ export class VitestMocker {
       this.resolveMocks(),
     ])
 
-    const mock = this.getDependencyMock(dep)
+    const id = this.normalizePath(dep)
+    const mock = this.getDependencyMock(id)
 
     const callstack = this.request.callstack
+    const mockPath = this.getMockPath(id)
 
     if (mock === null) {
-      const cacheName = `${dep}__mock`
-      const cache = this.moduleCache.get(cacheName)
+      const cache = this.moduleCache.get(mockPath)
       if (cache?.exports)
         return cache.exports
       const cacheKey = toFilePath(dep, this.root)
       const mod = this.moduleCache.get(cacheKey)?.exports || await this.request(dep)
       const exports = this.mockObject(mod)
-      this.moduleCache.set(cacheName, { exports })
+      this.moduleCache.set(mockPath, { exports })
       return exports
     }
-    if (typeof mock === 'function' && !callstack.includes(`mock:${dep}`)) {
-      callstack.push(`mock:${dep}`)
-      const result = await this.callFunctionMock(dep, mock)
-      const indexMock = callstack.indexOf(`mock:${dep}`)
+    if (typeof mock === 'function' && !callstack.includes(mockPath)) {
+      callstack.push(mockPath)
+      const result = await this.callFunctionMock(mockPath, mock)
+      const indexMock = callstack.indexOf(mockPath)
       callstack.splice(indexMock, 1)
       return result
     }

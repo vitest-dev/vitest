@@ -4,8 +4,8 @@
 
 [build]
   publish = "docs/.vitepress/dist"
-  command = "npx pnpm i --store=node_modules/.pnpm-store && npm run docs:build"
-  ignore = "git diff --quiet $COMMIT_REF $CACHED_COMMIT_REF -- docs/ package.json"
+  command = "npx pnpm@7.8.0 i --store=node_modules/.pnpm-store --no-frozen-lockfile && npm run docs:build"
+  ignore = "git diff --quiet $COMMIT_REF $CACHED_COMMIT_REF -- docs/ package.json pnpm-lock.yaml"
 
 [[redirects]]
   from = "/new"

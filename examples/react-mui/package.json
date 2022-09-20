@@ -27,8 +27,8 @@
     "@testing-library/user-event": "^14.2.3",
     "@vitest/ui": "latest",
     "date-fns": "^2.28.0",
-    "jsdom": "^20.0.0",
-    "vite": "^2.9.9",
+    "jsdom": "latest",
+    "vite": "latest",
     "vitest": "latest"
   },
   "stackblitz": {

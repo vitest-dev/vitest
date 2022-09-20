@@ -10,7 +10,7 @@ outline: deep
 
 - Create `vitest.config.ts`, which will have the higher priority and will override the configuration from `vite.config.ts`
 - Pass `--config` option to CLI, e.g. `vitest --config ./path/to/vitest.config.ts`
-- Use `process.env.VITEST` or `mode` property on `defineConfig` (will be set to `test` if not overridden) to conditionally apply different configuration in `vite.config.ts`
+- Use `process.env.VITEST` or `mode` property on `defineConfig` (will be set to `test`/`benchmark` if not overridden) to conditionally apply different configuration in `vite.config.ts`
 
 To configure `vitest` itself, add `test` property in your Vite config. You'll also need to add a reference to Vitest types using a [triple slash command](https://www.typescriptlang.org/docs/handbook/triple-slash-directives.html#-reference-types-) at the top of your config file, if you are importing `defineConfig` from `vite` itself.
 
@@ -49,6 +49,20 @@ export default defineConfig({
     exclude: [...configDefaults.exclude, 'packages/template/*'],
   },
 })
+```
+
+When using a separate `vitest.config.js`, you can also extend Vite's options from another config file if needed:
+
+```ts
+import { mergeConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
+import viteConfig from './vite.config'
+
+export default mergeConfig(viteConfig, defineConfig({
+  test: {
+    exclude: ['packages/template/*'],
+  },
+}))
 ```
 
 ## Options
@@ -102,12 +116,66 @@ When a dependency is a valid ESM package, try to guess the cjs version based on 
 
 This might potentially cause some misalignment if a package has different logic in ESM and CJS mode.
 
+#### deps.registerNodeLoader
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Use [experimental Node loader](https://nodejs.org/api/esm.html#loaders) to resolve imports inside `node_modules`, using Vite resolve algorithm.
+
+If disabled, your `alias` and `<plugin>.resolveId` won't affect imports inside `node_modules` or `deps.external`.
+
 #### deps.interopDefault
 
 - **Type:** `boolean`
 - **Default:** `true`
 
 Interpret CJS module's default as named exports.
+
+### benchmark
+
+- **Type:** `{ include?, exclude?, ... }`
+
+Options used when running `vitest bench`.
+
+### benchmark.include
+
+- **Type:** `string[]`
+- **Default:** `['**/*.{bench,benchmark}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']`
+
+Include globs for benchmark test files
+
+### benchmark.exclude
+
+- **Type:** `string[]`
+- **Default:** `['node_modules', 'dist', '.idea', '.git', '.cache']`
+
+Exclude globs for benchmark test files
+
+### benchmark.includeSource
+
+- **Type:** `string[]`
+- **Default:** `[]`
+
+Include globs for in-source benchmark test files. This option is similar to [`includeSource`](#includesource).
+
+When defined, Vitest will run all matched files with `import.meta.vitest` inside.
+
+### benchmark.reporters
+
+- **Type:** `Arrayable<BenchmarkBuiltinReporters | Reporter>`
+- **Default:** `'default'`
+
+Custom reporter for output. Can contain one or more built-in report names, reporter instances, and/or paths to custom reporters.
+
+### benchmark.outputFile
+
+- **Type:** `string | Record<string, string>`
+
+Write benchmark results to a file when the `--reporter=json` option is also specified.
+By providing an object instead of a string you can define individual outputs when using multiple reporters.
+
+To provide object via CLI command, use the following syntax: `--outputFile.json=./path --outputFile.junit=./other-path`.
 
 ### alias
 
@@ -163,7 +231,7 @@ export default defineConfig({
 
 ### environment
 
-- **Type:** `'node' | 'jsdom' | 'happy-dom' | 'edge-runtime'`
+- **Type:** `'node' | 'jsdom' | 'happy-dom' | 'edge-runtime' | string`
 - **Default:** `'node'`
 
 The environment that will be used for testing. The default environment in Vitest
@@ -212,7 +280,34 @@ test('use jsdom in this test file', () => {
 })
 ```
 
-If you are running Vitest with [`--no-threads`](#threads) flag, your tests will be run in this order: `node`, `jsdom`, `happy-dom`. Meaning, that every test with the same environment is grouped together, but is still run sequentially.
+If you are running Vitest with [`--no-threads`](#threads) flag, your tests will be run in this order: `node`, `jsdom`, `happy-dom`, `edge-runtime`, `custom environments`. Meaning, that every test with the same environment is grouped together, but is still running sequentially.
+
+Starting from 0.23.0, you can also define custom environment. When non-builtin environment is used, Vitest will try to load package `vitest-environment-${name}`. That package should export an object with the shape of `Environment`:
+
+```ts
+import type { Environment } from 'vitest'
+
+export default <Environment>{
+  name: 'custom',
+  setup() {
+    // custom setup
+    return {
+      teardown() {
+        // called after all tests with this env have been run
+      }
+    }
+  }
+}
+```
+
+Vitest also exposes `builtinEnvironments` through `vitest/environments` entry, in case you just want to extend it. You can read more about extending environments in [our guide](/guide/environment).
+
+### environmentOptions
+
+- **Type:** `Record<'jsdom' | string, unknown>`
+- **Default:** `{}`
+
+These options are passed down to `setup` method of current [`environment`](#environment). By default, you can configure only JSDOM options, if you are using it as your test environment.
 
 ### update
 
@@ -277,7 +372,7 @@ To provide object via CLI command, use the following syntax: `--outputFile.json=
 - **Type:** `boolean`
 - **Default:** `true`
 
-Enable multi-threading using [tinypool](https://github.com/Aslemammad/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina))
+Enable multi-threading using [tinypool](https://github.com/tinylibs/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina))
 
 :::warning
 This option is different from Jest's `--runInBand`. Vitest uses workers not only for running tests in parallel, but also to provide isolation. By disabling this option, your tests will run sequentially, but in the same global context, so you must provide isolation yourself.
@@ -312,6 +407,13 @@ Default timeout of a test in milliseconds
 - **Default:** `10000`
 
 Default timeout of a hook in milliseconds
+
+### teardownTimeout
+
+- **Type:** `number`
+- **Default:** `1000`
+
+Default timeout to wait for close when Vitest shuts down, in milliseconds
 
 ### silent
 
@@ -404,10 +506,110 @@ Isolate environment for each test file. Does not work if you disable [`--threads
 
 ### coverage
 
-- **Type:** `C8Options`
+- **Type:** `CoverageC8Options | CoverageIstanbulOptions`
 - **Default:** `undefined`
 
-Coverage options passed to [C8](https://github.com/bcoe/c8).
+You can use [`c8`](https://github.com/bcoe/c8) or [`istanbul`](https://istanbul.js.org/) for coverage collection.
+
+#### provider
+
+- **Type:** `'c8' | 'istanbul'`
+- **Default:** `'c8'`
+
+Use `provider` to select the tool for coverage collection.
+
+#### CoverageC8Options
+
+Used when `provider: 'c8'` is set. Coverage options are passed to [`c8`](https://github.com/bcoe/c8).
+
+#### CoverageIstanbulOptions
+
+Used when `provider: 'istanbul'` is set.
+
+##### exclude
+
+- **Type:** `string[]`
+- **Default:** `[]`
+
+List of files excluded from coverage as glob patterns.
+
+##### skipFull
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Do not show files with 100% statement, branch, and function coverage.
+
+##### perFile
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Check thresholds per file.
+
+##### lines
+
+- **Type:** `number`
+
+Threshold for lines.
+
+##### functions
+
+- **Type:** `number`
+
+Threshold for functions.
+
+##### branches
+
+- **Type:** `number`
+
+Threshold for branches.
+
+##### statements
+
+- **Type:** `number`
+
+Threshold for statements.
+
+##### ignoreClassMethods
+
+- **Type:** `string[]`
+- **Default:** []
+
+Set to array of class method names to ignore for coverage.
+
+##### watermarks
+
+- **Type:**
+<!-- eslint-skip -->
+```ts
+{
+  statements?: [number, number],
+  functions?: [number, number],
+  branches?: [number, number],
+  lines?: [number, number]
+}
+```
+
+- **Default:**
+<!-- eslint-skip -->
+```ts
+{
+  statements: [50, 80],
+  functions: [50, 80],
+  branches: [50, 80],
+  lines: [50, 80]
+}
+```
+
+Watermarks for statements, lines, branches and functions.
+
+##### all
+
+- **Type:** `boolean`
+- **Default:** false
+
+Whether to include all files, including the untested ones into report.
 
 ### testNamePattern
 
@@ -531,6 +733,13 @@ export default defineConfig({
 
 Allow tests and suites that are marked as only.
 
+### dangerouslyIgnoreUnhandledErrors
+
+- **Type**: `boolean`
+- **Default**: `false`
+
+Ignore any unhandled errors that occur.
+
 ### passWithNoTests
 
 - **Type**: `boolean`
@@ -549,14 +758,12 @@ Show heap usage after each test. Useful for debugging memory leaks.
 
 - **Type**: `boolean | { include?, exclude? }`
 
-Configure if CSS should be processed. When excluded, CSS files will be replaced with empty strings to bypass the subsequent processing.
-
-By default, processes only CSS Modules, because it affects runtime. JSDOM and Happy DOM don't fully support injecting CSS, so disabling this setting might help with performance.
+Configure if CSS should be processed. When excluded, CSS files will be replaced with empty strings to bypass the subsequent processing. CSS Modules will return a proxy to not affect runtime.
 
 #### css.include
 
 - **Type**: `RegExp | RegExp[]`
-- **Default**: `[/\.module\./]`
+- **Default**: `[]`
 
 RegExp pattern for files that should return actual CSS and will be processed by Vite pipeline.
 
@@ -566,6 +773,22 @@ RegExp pattern for files that should return actual CSS and will be processed by 
 - **Default**: `[]`
 
 RegExp pattern for files that will return an empty CSS file.
+
+#### css.modules
+
+- **Type**: `{ classNameStrategy? }`
+- **Default**: `{}`
+
+#### css.modules.classNameStrategy
+
+- **Type**: `'stable' | 'scoped' | 'non-scoped'`
+- **Default**: `'stable'`
+
+If you decide to process CSS files, you can configure if class names inside CSS modules should be scoped. By default, Vitest exports a proxy, bypassing CSS Modules processing. You can choose one of the options:
+
+- `stable`: class names will be generated as `_${name}_${hashedFilename}`, which means that generated class will stay the same, if CSS content is changed, but will change, if the name of the file is modified, or file is moved to another folder. This setting is useful, if you use snapshot feature.
+- `scoped`: class names will be generated as usual, respecting `css.modules.generateScopeName` method, if you have one. By default, filename will be generated as `_${name}_${hash}`, where hash includes filename and content of the file.
+- `non-scoped`: class names will stay as they are defined in CSS.
 
 ### maxConcurrency
 

@@ -15,9 +15,19 @@ import {
   vitestName,
   vitestShortName,
 } from './.vitepress/meta'
-import SponsorLinkFix from './plugins/FixSponsorLink'
 
 export default defineConfig({
+  ssr: {
+    format: 'cjs',
+  },
+  legacy: {
+    buildSsrCjsExternalHeuristics: true,
+  },
+  optimizeDeps: {
+    // vitepress is aliased with replacement `join(DIST_CLIENT_PATH, '/index')`
+    // This needs to be excluded from optimization
+    exclude: ['vitepress'],
+  },
   plugins: [
     // TODO remove cast when moved to Vite 3
     Components({
@@ -39,7 +49,6 @@ export default defineConfig({
         }),
       ],
     }) as unknown as Plugin,
-    SponsorLinkFix(),
     IncludesPlugin(),
     VitePWA({
       outDir: '.vitepress/dist',

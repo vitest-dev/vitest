@@ -5,7 +5,7 @@ export interface UserConfig extends ViteUserConfig {
 }
 
 // will import vitest declare test in module 'vite'
-export { configDefaults } from './defaults'
+export { configDefaults, defaultInclude, defaultExclude } from './defaults'
 
 export type { ConfigEnv }
 export type UserConfigFn = (env: ConfigEnv) => UserConfig | Promise<UserConfig>

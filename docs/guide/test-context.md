@@ -8,7 +8,7 @@ Inspired by [Playwright Fixtures](https://playwright.dev/docs/test-fixtures), Vi
 
 ## Usage
 
-The first argument or each test callback is a test context.
+The first argument for each test callback is a test context.
 
 ```ts
 import { it } from 'vitest'
@@ -27,7 +27,7 @@ A readonly object containing metadata about the test.
 
 #### `context.expect`
 
-The `expect` API which bound to the current test.
+The `expect` API bound to the current test.
 
 ## Extend Test Context
 
@@ -48,7 +48,7 @@ it('should work', ({ foo }) => {
 
 ### TypeScript
 
-To provide type for your custom context properties, you can aggregate the type `TestContext` by adding
+To provide property types for all your custom contexts, you can aggregate the `TestContext` type by adding
 
 ```ts
 declare module 'vitest' {
@@ -58,3 +58,20 @@ declare module 'vitest' {
 }
 ```
 
+If you want to provide property types only for specific `beforeEach`, `afterEach`, `it` and `test` hooks, you can pass the type as a generic.
+
+```ts
+interface LocalTestContext {
+  foo: string
+}
+
+beforeEach<LocalTestContext>(async (context) => {
+  // typeof context is 'TestContext & LocalTestContext'
+  context.foo = 'bar'
+})
+
+it<LocalTestContext>('should work', ({ foo }) => {
+  // typeof foo is 'string'
+  console.log(foo) // 'bar'
+})
+```

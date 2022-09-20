@@ -41,11 +41,7 @@ export default () => [
         target: 'node14',
       }),
     ],
-    onwarn(message) {
-      if (message.code === 'CIRCULAR_DEPENDENCY')
-        return
-      console.error(message)
-    },
+    onwarn,
   },
   {
     input: entry,
@@ -59,3 +55,9 @@ export default () => [
     ],
   },
 ]
+
+function onwarn(message) {
+  if (['EMPTY_BUNDLE', 'CIRCULAR_DEPENDENCY'].includes(message.code))
+    return
+  console.error(message)
+}

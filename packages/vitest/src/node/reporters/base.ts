@@ -4,7 +4,7 @@ import type { ErrorWithDiff, File, Reporter, Task, TaskResultPack, UserConsoleLo
 import { clearInterval, getFullName, getSuites, getTests, hasFailed, hasFailedSnapshot, isNode, relativePath, setInterval } from '../../utils'
 import type { Vitest } from '../../node'
 import { F_RIGHT } from '../../utils/figures'
-import { divider, getStateString, getStateSymbol, pointer, renderSnapshotSummary } from './renderers/utils'
+import { divider, formatTimeString, getStateString, getStateSymbol, pointer, renderSnapshotSummary } from './renderers/utils'
 
 const BADGE_PADDING = '       '
 const HELP_HINT = `${c.dim('press ')}${c.bold('h')}${c.dim(' to show help')}`
@@ -28,9 +28,14 @@ export abstract class BaseReporter implements Reporter {
   private _lastRunTimeout = 0
   private _lastRunTimer: NodeJS.Timer | undefined
   private _lastRunCount = 0
+  private _timeStart = new Date()
 
   constructor() {
     this.registerUnhandledRejection()
+  }
+
+  get mode() {
+    return this.ctx.config.mode
   }
 
   onInit(ctx: Vitest) {
@@ -48,7 +53,8 @@ export abstract class BaseReporter implements Reporter {
     this.end = performance.now()
     await this.reportSummary(files)
     if (errors.length) {
-      process.exitCode = 1
+      if (!this.ctx.config.dangerouslyIgnoreUnhandledErrors)
+        process.exitCode = 1
       this.ctx.logger.printUnhandledErrors(errors)
     }
   }
@@ -157,6 +163,7 @@ export abstract class BaseReporter implements Reporter {
       this.ctx.logger.clearScreen(`\n${BADGE}${TRIGGER} ${c.blue(`x${rerun}`)}\n`)
     }
 
+    this._timeStart = new Date()
     this.start = performance.now()
   }
 
@@ -177,11 +184,70 @@ export abstract class BaseReporter implements Reporter {
     return true
   }
 
-  onServerRestart() {
-    this.ctx.logger.log(c.cyan('Restarted due to config changes...'))
+  onServerRestart(reason?: string) {
+    this.ctx.logger.log(c.bold(c.magenta(
+      reason === 'config'
+        ? '\nRestarting due to config changes...'
+        : '\nRestarting Vitest...',
+    )))
   }
 
   async reportSummary(files: File[]) {
+    await this.printErrorsSummary(files)
+    if (this.mode === 'benchmark')
+      await this.reportBenchmarkSummary(files)
+    else
+      await this.reportTestSummary(files)
+  }
+
+  async reportTestSummary(files: File[]) {
+    const tests = getTests(files)
+    const logger = this.ctx.logger
+
+    const executionTime = this.end - this.start
+    const collectTime = files.reduce((acc, test) => acc + Math.max(0, test.collectDuration || 0), 0)
+    const setupTime = files.reduce((acc, test) => acc + Math.max(0, test.setupDuration || 0), 0)
+    const testsTime = files.reduce((acc, test) => acc + Math.max(0, test.result?.duration || 0), 0)
+    const transformTime = Array.from(this.ctx.vitenode.fetchCache.values()).reduce((a, b) => a + (b?.duration || 0), 0)
+    const threadTime = collectTime + testsTime + setupTime
+
+    const padTitle = (str: string) => c.dim(`${str.padStart(10)} `)
+    const time = (time: number) => {
+      if (time > 1000)
+        return `${(time / 1000).toFixed(2)}s`
+      return `${Math.round(time)}ms`
+    }
+
+    // show top 10 costly transform module
+    // console.log(Array.from(this.ctx.vitenode.fetchCache.entries()).filter(i => i[1].duration)
+    //   .sort((a, b) => b[1].duration! - a[1].duration!)
+    //   .map(i => `${time(i[1].duration!)} ${i[0]}`)
+    //   .slice(0, 10)
+    //   .join('\n'),
+    // )
+
+    const snapshotOutput = renderSnapshotSummary(this.ctx.config.root, this.ctx.snapshot.summary)
+    if (snapshotOutput.length) {
+      logger.log(snapshotOutput.map((t, i) => i === 0
+        ? `${padTitle('Snapshots')} ${t}`
+        : `${padTitle('')} ${t}`,
+      ).join('\n'))
+      if (snapshotOutput.length > 1)
+        logger.log()
+    }
+
+    logger.log(padTitle('Test Files'), getStateString(files))
+    logger.log(padTitle('Tests'), getStateString(tests))
+    logger.log(padTitle('Start at'), formatTimeString(this._timeStart))
+    if (this.watchFilters)
+      logger.log(padTitle('Duration'), time(threadTime))
+    else
+      logger.log(padTitle('Duration'), time(executionTime) + c.dim(` (transform ${time(transformTime)}, setup ${time(setupTime)}, collect ${time(collectTime)}, tests ${time(testsTime)})`))
+
+    logger.log()
+  }
+
+  private async printErrorsSummary(files: File[]) {
     const logger = this.ctx.logger
     const suites = getSuites(files)
     const tests = getTests(files)
@@ -206,36 +272,29 @@ export abstract class BaseReporter implements Reporter {
 
       await this.printTaskErrors(failedTests, errorDivider)
     }
+    return tests
+  }
 
-    const executionTime = this.end - this.start
-    const threadTime = files.reduce((acc, test) => acc + Math.max(0, test.result?.duration || 0) + Math.max(0, test.collectDuration || 0), 0)
+  async reportBenchmarkSummary(files: File[]) {
+    const logger = this.ctx.logger
+    const benchs = getTests(files)
 
-    const padTitle = (str: string) => c.dim(`${str.padStart(10)} `)
-    const time = (time: number) => {
-      if (time > 1000)
-        return `${(time / 1000).toFixed(2)}s`
-      return `${Math.round(time)}ms`
+    const topBenchs = benchs.filter(i => i.result?.benchmark?.rank === 1)
+
+    logger.log(`\n${c.cyan(c.inverse(c.bold(' BENCH ')))} ${c.cyan('Summary')}\n`)
+    for (const bench of topBenchs) {
+      const group = bench.suite
+      const groupName = getFullName(group)
+      logger.log(`  ${bench.name}${c.dim(` - ${groupName}`)}`)
+      const siblings = group.tasks
+        .filter(i => i.result?.benchmark && i !== bench)
+        .sort((a, b) => a.result!.benchmark!.rank - b.result!.benchmark!.rank)
+      for (const sibling of siblings) {
+        const number = `${(sibling.result!.benchmark!.mean / bench.result!.benchmark!.mean).toFixed(2)}x`
+        logger.log(`    ${c.green(number)} ${c.gray('faster than')} ${sibling.name}`)
+      }
+      logger.log('')
     }
-
-    const snapshotOutput = renderSnapshotSummary(this.ctx.config.root, this.ctx.snapshot.summary)
-    if (snapshotOutput.length) {
-      logger.log(snapshotOutput.map((t, i) => i === 0
-        ? `${padTitle('Snapshots')} ${t}`
-        : `${padTitle('')} ${t}`,
-      ).join('\n'))
-      if (snapshotOutput.length > 1)
-        logger.log()
-    }
-
-    logger.log(padTitle('Test Files'), getStateString(files))
-    logger.log(padTitle('Tests'), getStateString(tests))
-    if (this.watchFilters)
-      logger.log(padTitle('Time'), time(threadTime))
-
-    else
-      logger.log(padTitle('Time'), time(executionTime) + c.gray(` (in thread ${time(threadTime)}, ${(executionTime / threadTime * 100).toFixed(2)}%)`))
-
-    logger.log()
   }
 
   private async printTaskErrors(tasks: Task[], errorDivider: () => void) {

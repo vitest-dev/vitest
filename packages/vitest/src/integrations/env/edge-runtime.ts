@@ -1,10 +1,11 @@
+import { importModule } from 'local-pkg'
 import type { Environment } from '../../types'
 import { populateGlobal } from './utils'
 
 export default <Environment>({
   name: 'edge-runtime',
   async setup(global) {
-    const { EdgeVM } = await import('@edge-runtime/vm')
+    const { EdgeVM } = await importModule('@edge-runtime/vm') as typeof import('@edge-runtime/vm')
     const vm = new EdgeVM({
       extend: (context) => {
         context.global = context

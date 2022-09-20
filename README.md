@@ -35,11 +35,12 @@ A blazing fast unit test framework powered by Vite.
 - [Jest Snapshot](https://jestjs.io/docs/snapshot-testing)
 - [Chai](https://www.chaijs.com/) built-in for assertions, with [Jest expect](https://jestjs.io/docs/expect) compatible APIs.
 - [Smart & instant watch mode](https://vitest.dev/guide/features.html#watch-mode), like HMR for tests!
-- [Native code coverage](https://vitest.dev/guide/features.html#coverage) via [c8](https://github.com/bcoe/c8)
-- [Tinyspy](https://github.com/Aslemammad/tinyspy) built-in for mocking, stubbing, and spies.
+- [Native code coverage](https://vitest.dev/guide/features.html#coverage) via [c8](https://github.com/bcoe/c8) or [`istanbul`](https://istanbul.js.org/).
+- [Tinyspy](https://github.com/tinylibs/tinyspy) built-in for mocking, stubbing, and spies.
 - [JSDOM](https://github.com/jsdom/jsdom) and [happy-dom](https://github.com/capricorn86/happy-dom) for DOM and browser API mocking
 - Components testing ([Vue](./examples/vue), [React](./examples/react), [Svelte](./examples/svelte), [Lit](./examples/lit), [Vitesse](./examples/vitesse))
-- Workers multi-threading via [tinypool](https://github.com/Aslemammad/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina))
+- Workers multi-threading via [Tinypool](https://github.com/tinylibs/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina))
+- Benchmarking support with [Tinybench](https://github.com/tinylibs/tinybench)
 - ESM first, top level await
 - Out-of-box TypeScript / JSX support
 - Filtering, timeouts, concurrent for suite and tests

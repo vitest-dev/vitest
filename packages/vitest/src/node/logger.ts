@@ -78,9 +78,9 @@ export class Logger {
       this.console.error(c.dim('watch exclude:  ') + c.yellow(config.watchExclude.join(comma)))
 
     if (config.passWithNoTests)
-      this.log('No test files found, exiting with code 0\n')
+      this.log(`No ${config.mode} files found, exiting with code 0\n`)
     else
-      this.error(c.red('\nNo test files found, exiting with code 1'))
+      this.error(c.red(`\nNo ${config.mode} files found, exiting with code 1`))
   }
 
   printBanner() {
@@ -102,13 +102,16 @@ export class Logger {
     else if (this.ctx.config.api)
       this.log(c.dim(c.green(`      API started at http://${this.ctx.config.api?.host || 'localhost'}:${c.bold(`${this.ctx.config.api.port}`)}`)))
 
+    if (this.ctx.coverageProvider)
+      this.log(c.dim('      Coverage enabled with ') + c.yellow(this.ctx.coverageProvider.name))
+
     this.log()
   }
 
   async printUnhandledErrors(errors: unknown[]) {
     const errorMessage = c.red(c.bold(
-      `\nVitest caught ${errors.length} unhandled error${errors.length > 1 ? 's' : ''} during the test run. This might cause false positive tests.`
-      + '\nPlease, resolve all the errors to make sure your tests are not affected.',
+      `\nVitest caught ${errors.length} unhandled error${errors.length > 1 ? 's' : ''} during the test run.`
+      + '\nThis might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.',
     ))
     this.log(c.red(divider(c.bold(c.inverse(' Unhandled Errors ')))))
     this.log(errorMessage)

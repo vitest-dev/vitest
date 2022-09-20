@@ -79,3 +79,5 @@ export interface ModuleGraphData {
   externalized: string[]
   inlined: string[]
 }
+
+export type OnServerRestartHandler = (reason?: string) => Promise<void> | void

@@ -3,14 +3,14 @@ import { normalize, resolve } from 'pathe'
 import c from 'picocolors'
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 
-import type { ApiConfig, ResolvedConfig, UserConfig } from '../types'
+import type { ApiConfig, ResolvedConfig, UserConfig, VitestRunMode } from '../types'
 import { defaultPort } from '../constants'
-import { configDefaults } from '../defaults'
-import { resolveC8Options } from '../integrations/coverage'
+import { benchmarkConfigDefaults, configDefaults } from '../defaults'
 import { toArray } from '../utils'
 import { VitestCache } from './cache'
 import { BaseSequencer } from './sequencers/BaseSequencer'
 import { RandomSequencer } from './sequencers/RandomSequencer'
+import type { BenchmarkBuiltinReporters } from './reporters'
 
 const extraInlineDeps = [
   /^(?!.*(?:node_modules)).*\.mjs$/,
@@ -62,6 +62,7 @@ export function resolveApiConfig<Options extends ApiConfig & UserConfig>(
 }
 
 export function resolveConfig(
+  mode: VitestRunMode,
   options: UserConfig,
   viteConfig: ResolvedViteConfig,
 ): ResolvedConfig {
@@ -88,12 +89,11 @@ export function resolveConfig(
     ...configDefaults,
     ...options,
     root: viteConfig.root,
+    mode,
   } as ResolvedConfig
 
   if (viteConfig.base !== '/')
     resolved.base = viteConfig.base
-
-  resolved.coverage = resolveC8Options(options.coverage || {}, resolved.root)
 
   if (options.shard) {
     if (resolved.watch)
@@ -129,6 +129,10 @@ export function resolveConfig(
     }
   }
 
+  // disable loader for Yarn PnP until Node implements chain loader
+  // https://github.com/nodejs/node/pull/43772
+  resolved.deps.registerNodeLoader ??= false
+
   resolved.testNamePattern = resolved.testNamePattern
     ? resolved.testNamePattern instanceof RegExp
       ? resolved.testNamePattern
@@ -156,6 +160,30 @@ export function resolveConfig(
   if (process.env.VITEST_MIN_THREADS)
     resolved.minThreads = parseInt(process.env.VITEST_MIN_THREADS)
 
+  if (mode === 'benchmark') {
+    resolved.benchmark = {
+      ...benchmarkConfigDefaults,
+      ...resolved.benchmark,
+    }
+    // override test config
+    resolved.coverage.enabled = false
+    resolved.include = resolved.benchmark.include
+    resolved.exclude = resolved.benchmark.exclude
+    resolved.includeSource = resolved.benchmark.includeSource
+    const reporters = Array.from(new Set<BenchmarkBuiltinReporters>([
+      ...toArray(resolved.benchmark.reporters),
+      // @ts-expect-error reporter is CLI flag
+      ...toArray(options.reporter),
+    ])).filter(Boolean)
+    if (reporters.length)
+      resolved.benchmark.reporters = reporters
+    else
+      resolved.benchmark.reporters = ['default']
+
+    if (options.outputFile)
+      resolved.benchmark.outputFile = options.outputFile
+  }
+
   resolved.setupFiles = toArray(resolved.setupFiles || []).map(file =>
     normalize(
       resolveModule(file, { paths: [resolved.root] })
@@ -169,11 +197,14 @@ export function resolveConfig(
   if (options.related)
     resolved.related = toArray(options.related).map(file => resolve(resolved.root, file))
 
-  resolved.reporters = Array.from(new Set([
-    ...toArray(resolved.reporters),
-    // @ts-expect-error from CLI
-    ...toArray(resolved.reporter),
-  ])).filter(Boolean)
+  if (mode !== 'benchmark') {
+    resolved.reporters = Array.from(new Set([
+      ...toArray(resolved.reporters),
+      // @ts-expect-error from CLI
+      ...toArray(resolved.reporter),
+    ])).filter(Boolean)
+  }
+
   if (!resolved.reporters.length)
     resolved.reporters.push('default')
 
@@ -181,8 +212,10 @@ export function resolveConfig(
     resolved.passWithNoTests ??= true
 
   resolved.css ??= {}
-  if (typeof resolved.css === 'object')
-    resolved.css.include ??= [/\.module\./]
+  if (typeof resolved.css === 'object') {
+    resolved.css.modules ??= {}
+    resolved.css.modules.classNameStrategy ??= 'stable'
+  }
 
   resolved.cache ??= { dir: '' }
   if (resolved.cache)

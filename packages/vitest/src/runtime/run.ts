@@ -1,14 +1,22 @@
+import { performance } from 'perf_hooks'
 import limit from 'p-limit'
-import type { File, HookCleanupCallback, HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from '../types'
+import type { BenchTask, Benchmark, BenchmarkResult, File, HookCleanupCallback, HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from '../types'
 import { vi } from '../integrations/vi'
-import { clearTimeout, getFullName, getWorkerState, hasFailed, hasTests, isBrowser, isNode, partitionSuiteChildren, setTimeout, shuffle } from '../utils'
-import { takeCoverage } from '../integrations/coverage'
+import { clearTimeout, createDefer, getFullName, getWorkerState, hasFailed, hasTests, isBrowser, isNode, isRunningInBenchmark, partitionSuiteChildren, setTimeout, shuffle } from '../utils'
 import { getState, setState } from '../integrations/chai/jest-expect'
 import { GLOBAL_EXPECT } from '../integrations/chai/constants'
+import { takeCoverageInsideWorker } from '../integrations/coverage'
 import { getFn, getHooks } from './map'
 import { rpc } from './rpc'
 import { collectTests } from './collect'
 import { processError } from './error'
+
+async function importTinybench() {
+  if (!globalThis.EventTarget)
+    await import('event-target-polyfill' as any)
+
+  return (await import('tinybench'))
+}
 
 const now = Date.now
 
@@ -107,48 +115,60 @@ export async function runTest(test: Test) {
 
   workerState.current = test
 
-  let beforeEachCleanups: HookCleanupCallback[] = []
-  try {
-    beforeEachCleanups = await callSuiteHook(test.suite, test, 'beforeEach', [test.context, test.suite])
-    setState({
-      assertionCalls: 0,
-      isExpectingAssertions: false,
-      isExpectingAssertionsError: null,
-      expectedAssertionsNumber: null,
-      expectedAssertionsNumberErrorGen: null,
-      testPath: test.suite.file?.filepath,
-      currentTestName: getFullName(test),
-    }, (globalThis as any)[GLOBAL_EXPECT])
-    await getFn(test)()
-    const {
-      assertionCalls,
-      expectedAssertionsNumber,
-      expectedAssertionsNumberErrorGen,
-      isExpectingAssertions,
-      isExpectingAssertionsError,
+  const retry = test.retry || 1
+  for (let retryCount = 0; retryCount < retry; retryCount++) {
+    let beforeEachCleanups: HookCleanupCallback[] = []
+    try {
+      beforeEachCleanups = await callSuiteHook(test.suite, test, 'beforeEach', [test.context, test.suite])
+      setState({
+        assertionCalls: 0,
+        isExpectingAssertions: false,
+        isExpectingAssertionsError: null,
+        expectedAssertionsNumber: null,
+        expectedAssertionsNumberErrorGen: null,
+        testPath: test.suite.file?.filepath,
+        currentTestName: getFullName(test),
+      }, (globalThis as any)[GLOBAL_EXPECT])
+
+      test.result.retryCount = retryCount
+
+      await getFn(test)()
+      const {
+        assertionCalls,
+        expectedAssertionsNumber,
+        expectedAssertionsNumberErrorGen,
+        isExpectingAssertions,
+        isExpectingAssertionsError,
       // @ts-expect-error local is private
-    } = test.context._local
-      ? test.context.expect.getState()
-      : getState((globalThis as any)[GLOBAL_EXPECT])
-    if (expectedAssertionsNumber !== null && assertionCalls !== expectedAssertionsNumber)
-      throw expectedAssertionsNumberErrorGen!()
-    if (isExpectingAssertions === true && assertionCalls === 0)
-      throw isExpectingAssertionsError
+      } = test.context._local
+        ? test.context.expect.getState()
+        : getState((globalThis as any)[GLOBAL_EXPECT])
+      if (expectedAssertionsNumber !== null && assertionCalls !== expectedAssertionsNumber)
+        throw expectedAssertionsNumberErrorGen!()
+      if (isExpectingAssertions === true && assertionCalls === 0)
+        throw isExpectingAssertionsError
 
-    test.result.state = 'pass'
-  }
-  catch (e) {
-    test.result.state = 'fail'
-    test.result.error = processError(e)
-  }
+      test.result.state = 'pass'
+    }
+    catch (e) {
+      test.result.state = 'fail'
+      test.result.error = processError(e)
+    }
 
-  try {
-    await callSuiteHook(test.suite, test, 'afterEach', [test.context, test.suite])
-    await Promise.all(beforeEachCleanups.map(i => i?.()))
-  }
-  catch (e) {
-    test.result.state = 'fail'
-    test.result.error = processError(e)
+    try {
+      await callSuiteHook(test.suite, test, 'afterEach', [test.context, test.suite])
+      await Promise.all(beforeEachCleanups.map(i => i?.()))
+    }
+    catch (e) {
+      test.result.state = 'fail'
+      test.result.error = processError(e)
+    }
+
+    if (test.result.state === 'pass')
+      break
+
+    // update retry info
+    updateTask(test)
   }
 
   // if test is marked to be failed, flip the result
@@ -219,22 +239,27 @@ export async function runSuite(suite: Suite) {
     try {
       const beforeAllCleanups = await callSuiteHook(suite, suite, 'beforeAll', [suite])
 
-      for (let tasksGroup of partitionSuiteChildren(suite)) {
-        if (tasksGroup[0].concurrent === true) {
-          const mutex = limit(workerState.config.maxConcurrency)
-          await Promise.all(tasksGroup.map(c => mutex(() => runSuiteChild(c))))
-        }
-        else {
-          const { sequence } = workerState.config
-          if (sequence.shuffle || suite.shuffle) {
-            // run describe block independently from tests
-            const suites = tasksGroup.filter(group => group.type === 'suite')
-            const tests = tasksGroup.filter(group => group.type === 'test')
-            const groups = shuffle([suites, tests], sequence.seed)
-            tasksGroup = groups.flatMap(group => shuffle(group, sequence.seed))
+      if (isRunningInBenchmark()) {
+        await runBenchmarkSuite(suite)
+      }
+      else {
+        for (let tasksGroup of partitionSuiteChildren(suite)) {
+          if (tasksGroup[0].concurrent === true) {
+            const mutex = limit(workerState.config.maxConcurrency)
+            await Promise.all(tasksGroup.map(c => mutex(() => runSuiteChild(c))))
           }
-          for (const c of tasksGroup)
-            await runSuiteChild(c)
+          else {
+            const { sequence } = workerState.config
+            if (sequence.shuffle || suite.shuffle) {
+              // run describe block independently from tests
+              const suites = tasksGroup.filter(group => group.type === 'suite')
+              const tests = tasksGroup.filter(group => group.type === 'test')
+              const groups = shuffle([suites, tests], sequence.seed)
+              tasksGroup = groups.flatMap(group => shuffle(group, sequence.seed))
+            }
+            for (const c of tasksGroup)
+              await runSuiteChild(c)
+          }
         }
       }
 
@@ -268,10 +293,111 @@ export async function runSuite(suite: Suite) {
   updateTask(suite)
 }
 
+function createBenchmarkResult(name: string): BenchmarkResult {
+  return {
+    name,
+    rank: 0,
+    rme: 0,
+    samples: [] as number[],
+  } as BenchmarkResult
+}
+
+async function runBenchmarkSuite(suite: Suite) {
+  const { Task, Bench } = await importTinybench()
+  const start = performance.now()
+
+  const benchmarkGroup = []
+  const benchmarkSuiteGroup = []
+  for (const task of suite.tasks) {
+    if (task.mode !== 'run')
+      continue
+
+    if (task.type === 'benchmark')
+      benchmarkGroup.push(task)
+    else if (task.type === 'suite')
+      benchmarkSuiteGroup.push(task)
+  }
+
+  if (benchmarkSuiteGroup.length)
+    await Promise.all(benchmarkSuiteGroup.map(subSuite => runBenchmarkSuite(subSuite)))
+
+  if (benchmarkGroup.length) {
+    const defer = createDefer()
+    const benchmarkMap: Record<string, Benchmark> = {}
+    suite.result = {
+      state: 'run',
+      startTime: start,
+      benchmark: createBenchmarkResult(suite.name),
+    }
+    updateTask(suite)
+    benchmarkGroup.forEach((benchmark, idx) => {
+      const benchmarkInstance = new Bench(benchmark.options)
+
+      const benchmarkFn = getFn(benchmark)
+
+      benchmark.result = {
+        state: 'run',
+        startTime: start,
+        benchmark: createBenchmarkResult(benchmark.name),
+      }
+      const id = idx.toString()
+      benchmarkMap[id] = benchmark
+
+      const task = new Task(benchmarkInstance, id, benchmarkFn)
+      benchmark.task = task
+      updateTask(benchmark)
+    })
+
+    benchmarkGroup.forEach((benchmark) => {
+      benchmark.task!.addEventListener('complete', (e) => {
+        const task = e.task
+        const _benchmark = benchmarkMap[task.name || '']
+        if (_benchmark) {
+          const taskRes = task.result!
+          const result = _benchmark.result!.benchmark!
+          Object.assign(result, taskRes)
+          updateTask(_benchmark)
+        }
+      })
+      benchmark.task!.addEventListener('error', (e) => {
+        defer.reject(e)
+      })
+    })
+
+    Promise.all(benchmarkGroup.map(async (benchmark) => {
+      await benchmark.task!.warmup()
+      return await new Promise<BenchTask>(resolve => setTimeout(async () => {
+        resolve(await benchmark.task!.run())
+      }))
+    })).then((tasks) => {
+      suite.result!.duration = performance.now() - start
+      suite.result!.state = 'pass'
+
+      tasks
+        .sort((a, b) => a.result!.mean - b.result!.mean)
+        .forEach((cycle, idx) => {
+          const benchmark = benchmarkMap[cycle.name || '']
+          benchmark.result!.state = 'pass'
+          if (benchmark) {
+            const result = benchmark.result!.benchmark!
+            result.rank = Number(idx) + 1
+            updateTask(benchmark)
+          }
+        })
+      updateTask(suite)
+      defer.resolve(null)
+    })
+
+    await defer
+  }
+}
+
 async function runSuiteChild(c: Task) {
-  return c.type === 'test'
-    ? runTest(c)
-    : runSuite(c)
+  if (c.type === 'test')
+    return runTest(c)
+
+  else if (c.type === 'suite')
+    return runSuite(c)
 }
 
 async function runSuites(suites: Suite[]) {
@@ -289,7 +415,6 @@ export async function runFiles(files: File[], config: ResolvedConfig) {
         }
       }
     }
-
     await runSuite(file)
   }
 }
@@ -316,7 +441,8 @@ async function startTestsNode(paths: string[], config: ResolvedConfig) {
 
   await runFiles(files, config)
 
-  takeCoverage()
+  const coverage = await takeCoverageInsideWorker(config.coverage)
+  rpc().onAfterSuiteRun({ coverage })
 
   await getSnapshotClient().saveCurrent()
 

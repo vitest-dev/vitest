@@ -1,24 +1,27 @@
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
+import { relative } from 'pathe'
 import { configDefaults } from '../../defaults'
 import type { ResolvedConfig, UserConfig } from '../../types'
 import { deepMerge, ensurePackageInstalled, notNullish } from '../../utils'
 import { resolveApiConfig } from '../config'
 import { Vitest } from '../core'
-import { EnvReplacerPlugin } from './envRelacer'
+import { generateScopedClassName } from '../../integrations/css/css-modules'
+import { EnvReplacerPlugin } from './envReplacer'
 import { GlobalSetupPlugin } from './globalSetup'
 import { MocksPlugin } from './mock'
 import { CSSEnablerPlugin } from './cssEnabler'
+import { CoverageTransform } from './coverageTransform'
 
-export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest()): Promise<VitePlugin[]> {
-  let haveStarted = false
+export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('test')): Promise<VitePlugin[]> {
+  const getRoot = () => ctx.config?.root || options.root || process.cwd()
 
   async function UIPlugin() {
-    await ensurePackageInstalled('@vitest/ui', ctx.config?.root || options.root || process.cwd())
+    await ensurePackageInstalled('@vitest/ui', getRoot())
     return (await import('@vitest/ui')).default(options.uiBase)
   }
 
   async function BrowserPlugin() {
-    await ensurePackageInstalled('@vitest/browser', ctx.config?.root || options.root || process.cwd())
+    await ensurePackageInstalled('@vitest/browser', getRoot())
     return (await import('@vitest/browser')).default('/')
   }
 
@@ -26,6 +29,9 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
     <VitePlugin>{
       name: 'vitest',
       enforce: 'pre',
+      options() {
+        this.meta.watchMode = false
+      },
       config(viteConfig: any) {
         // preliminary merge of options to be able to create server options for vite
         // however to allow vitest plugins to modify vitest config values
@@ -96,6 +102,17 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
           },
         }
 
+        const classNameStrategy = preOptions.css && preOptions.css?.modules?.classNameStrategy
+
+        if (classNameStrategy !== 'scoped') {
+          config.css ??= {}
+          config.css.modules ??= {}
+          config.css.modules.generateScopedName = (name: string, filename: string) => {
+            const root = getRoot()
+            return generateScopedClassName(classNameStrategy, name, relative(root, filename))!
+          }
+        }
+
         if (!options.browser) {
           // disable deps optimization
           Object.assign(config, {
@@ -141,11 +158,8 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
           process.env[name] ??= envs[name]
       },
       async configureServer(server) {
-        if (haveStarted)
-          await ctx.report('onServerRestart')
         try {
           await ctx.setServer(options, server)
-          haveStarted = true
           if (options.api && options.watch)
             (await import('../../api/setup')).setup(ctx)
         }
@@ -165,7 +179,8 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest())
     ...(options.browser
       ? await BrowserPlugin()
       : []),
-    CSSEnablerPlugin(ctx),
+    ...CSSEnablerPlugin(ctx),
+    CoverageTransform(ctx),
     options.ui
       ? await UIPlugin()
       : null,

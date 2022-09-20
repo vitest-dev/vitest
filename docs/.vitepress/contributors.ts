@@ -57,6 +57,7 @@ const plainTeamMembers: CoreTeam[] = [
     name: 'Vladimir',
     github: 'sheremet-va',
     twitter: 'sheremet_va',
+    sponsor: 'https://github.com/sponsors/sheremet-va',
     title: 'An open source fullstack developer',
     desc: 'Core team member of Vitest',
   },

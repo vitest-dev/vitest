@@ -1,6 +1,7 @@
 import { fileURLToPath, pathToFileURL } from 'url'
-import { resolve } from 'pathe'
+import { relative, resolve } from 'pathe'
 import type { TransformResult } from 'vite'
+import { isNodeBuiltin } from 'mlly'
 import type { Arrayable, Nullable } from './types'
 
 export const isWindows = process.platform === 'win32'
@@ -43,6 +44,34 @@ export function normalizeModuleId(id: string) {
 
 export function isPrimitive(v: any) {
   return v !== Object(v)
+}
+
+export function pathFromRoot(root: string, filename: string) {
+  if (isNodeBuiltin(filename))
+    return filename
+
+  // don't replace with "/" on windows, "/C:/foo" is not a valid path
+  filename = filename.replace(/^\/@fs\//, isWindows ? '' : '/')
+
+  if (!filename.startsWith(root))
+    return filename
+
+  const relativePath = relative(root, filename)
+  // foo.js -> /foo.js
+  if (!relativePath.startsWith('/') && !relativePath.startsWith('.'))
+    return `/${relativePath}`
+
+  let index = 0
+  for (const char of relativePath) {
+    // ../../foo.js
+    //      ^ returns from here -> /foo.js
+    if (char !== '.' && char !== '/')
+      return relativePath.slice(index - 1)
+
+    index++
+  }
+
+  return relativePath
 }
 
 export function toFilePath(id: string, root: string): string {

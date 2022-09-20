@@ -16,7 +16,7 @@ const fileCount = 50
 
 const copyExclude = ['node_modules', 'package.json', 'vitest.config.ts', 'tsconfig.json']
 
-// To not polute the repo with a lot of tests, copy basic tests multiple times
+// To not pollute the repo with a lot of tests, copy basic tests multiple times
 function copyTestFiles(suite: string) {
   for (let i = 0; i < fileCount; i++) {
     const path = `test/${suite}/test/${i}`

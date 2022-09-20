@@ -1,3 +1,4 @@
+import { importModule } from 'local-pkg'
 import type { Environment } from '../../types'
 import { populateGlobal } from './utils'
 
@@ -6,7 +7,7 @@ export default <Environment>({
   async setup(global) {
     // happy-dom v3 introduced a breaking change to Window, but
     // provides GlobalWindow as a way to use previous behaviour
-    const { Window, GlobalWindow } = await import('happy-dom')
+    const { Window, GlobalWindow } = await importModule('happy-dom') as typeof import('happy-dom')
     const win = new (GlobalWindow || Window)()
 
     const { keys, originals } = populateGlobal(global, win, { bindFunctions: true })

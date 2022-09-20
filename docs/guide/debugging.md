@@ -28,7 +28,7 @@ To debug a test file in VSCode, create the following launch configuration.
 }
 ```
 
-Then in the debug tab ensure 'Debug Current Test File' is selected, you can then open the test file you want to debug and press F5 to start debugging.
+Then in the debug tab, ensure 'Debug Current Test File' is selected. You can then open the test file you want to debug and press F5 to start debugging.
 
 ## IntelliJ IDEA
 

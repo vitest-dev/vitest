@@ -1,14 +1,32 @@
 import type { ErrorWithDiff, File, Task, TaskResultPack, UserConsoleLog } from '../types'
+// can't import actual functions from utils, because it's incompatible with @vitest/browsers
+import type { AggregateError as AggregateErrorPonyfill } from '../utils'
+
+interface CollectingPromise {
+  promise: Promise<void>
+  resolve: () => void
+}
+
+export const isAggregateError = (err: unknown): err is AggregateErrorPonyfill => {
+  if (typeof AggregateError !== 'undefined' && err instanceof AggregateError)
+    return true
+
+  return err instanceof Error && 'errors' in err
+}
 
 // Note this file is shared for both node and browser, be aware to avoid node specific logic
 export class StateManager {
   filesMap = new Map<string, File>()
   pathsSet: Set<string> = new Set()
+  collectingPromise: CollectingPromise | undefined = undefined
   idMap = new Map<string, Task>()
   taskFileMap = new WeakMap<Task, File>()
   errorsSet = new Set<unknown>()
 
-  catchError(err: unknown, type: string) {
+  catchError(err: unknown, type: string): void {
+    if (isAggregateError(err))
+      return err.errors.forEach(error => this.catchError(error, type));
+
     (err as ErrorWithDiff).type = type
     this.errorsSet.add(err)
   }
@@ -21,7 +39,21 @@ export class StateManager {
     return Array.from(this.errorsSet.values())
   }
 
-  getPaths() {
+  startCollectingPaths() {
+    let _resolve: CollectingPromise['resolve']
+    const promise = new Promise<void>((resolve) => {
+      _resolve = resolve
+    })
+    this.collectingPromise = { promise, resolve: _resolve! }
+  }
+
+  finishCollectingPaths() {
+    this.collectingPromise?.resolve()
+    this.collectingPromise = undefined
+  }
+
+  async getPaths() {
+    await this.collectingPromise?.promise
     return Array.from(this.pathsSet)
   }
 

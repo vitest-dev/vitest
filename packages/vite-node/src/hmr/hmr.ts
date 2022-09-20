@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 import type { ErrorPayload, FullReloadPayload, HMRPayload, PrunePayload, Update, UpdatePayload } from 'vite/types/hmrPayload'
-import { cyan } from 'kolorist'
+import c from 'picocolors'
 import createDebug from 'debug'
 import type { ViteNodeRunner } from '../client'
 import type { HotContext } from '../types'
@@ -162,7 +162,7 @@ async function fetchUpdate(runner: ViteNodeRunner, { path, acceptedPath }: Updat
       fn(deps.map(dep => moduleMap.get(dep)))
 
     const loggedPath = isSelfUpdate ? path : `${acceptedPath} via ${path}`
-    console.log(`${cyan('[vite-node]')} hot updated: ${loggedPath}`)
+    console.log(`${c.cyan('[vite-node]')} hot updated: ${loggedPath}`)
   }
 }
 
@@ -195,7 +195,7 @@ export async function handleMessage(runner: ViteNodeRunner, emitter: HMREmitter,
         }
         else {
           // css-update
-          console.error(`${cyan('[vite-node]')} no support css hmr.}`)
+          console.error(`${c.cyan('[vite-node]')} no support css hmr.}`)
         }
       })
       break
@@ -212,7 +212,7 @@ export async function handleMessage(runner: ViteNodeRunner, emitter: HMREmitter,
     case 'error': {
       notifyListeners(runner, 'vite:error', payload)
       const err = payload.err
-      console.error(`${cyan('[vite-node]')} Internal Server Error\n${err.message}\n${err.stack}`)
+      console.error(`${c.cyan('[vite-node]')} Internal Server Error\n${err.message}\n${err.stack}`)
       break
     }
   }

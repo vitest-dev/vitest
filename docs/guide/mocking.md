@@ -4,7 +4,7 @@ title: Mocking | Guide
 
 # Mocking
 
-When writing tests it's only a matter of time before you need to create "fake" version of an internal—or external—service. This is commonly referred to as **mocking**. Vitest provides utility functions to help you out through its **vi** helper. You can `import { vi } from 'vitest'` or access it **globally** (when [global configuration](/config/#globals) is **enabled**).
+When writing tests it's only a matter of time before you need to create a "fake" version of an internal — or external — service. This is commonly referred to as **mocking**. Vitest provides utility functions to help you out through its **vi** helper. You can `import { vi } from 'vitest'` or access it **globally** (when [global configuration](/config/#globals) is **enabled**).
 
 ::: warning
 Always remember to clear or restore mocks before or after each test run to undo mock state changes between runs! See [`mockReset`](/api/#mockreset) docs for more info.
@@ -72,7 +72,7 @@ Sometimes all you need is to validate whether or not a specific function has bee
 
 However spies can only help you **spy** on functions, they are not able to alter the implementation of those functions. In the case where we do need to create a fake (or mocked) version of a function we can  use `vi.fn()` ([read more here](/api/#vi-fn)).
 
-We use [Tinyspy](https://github.com/Aslemammad/tinyspy) as a base for mocking functions, but we have our own wrapper to make it `jest` compatible. Both `vi.fn()` and `vi.spyOn()` share the same methods, however only the return result of `vi.fn()` is callable.
+We use [Tinyspy](https://github.com/tinylibs/tinyspy) as a base for mocking functions, but we have our own wrapper to make it `jest` compatible. Both `vi.fn()` and `vi.spyOn()` share the same methods, however only the return result of `vi.fn()` is callable.
 
 ### Example
 
@@ -154,11 +154,11 @@ vi.stubGlobal('IntersectionObserver', IntersectionObserverMock)
 
 Mock modules observe third-party-libraries, that are invoked in some other code, allowing you to test arguments, output or even redeclare its implementation.
 
-See the [`vi.mock()` api section](/api/#vi-mock) for a more in depth detailed API description.
+See the [`vi.mock()` api section](/api/#vi-mock) for a more in-depth detailed API description.
 
 ### Automocking algorithm
 
-If your code is importing mocked module, without any associated `__mocks__` file or `factory` for this module, Vitest will mock the module itself by invoking it and mocking every export.
+If your code is importing a mocked module, without any associated `__mocks__` file or `factory` for this module, Vitest will mock the module itself by invoking it and mocking every export.
 
 The following principles apply
 * All arrays will be emptied
@@ -271,7 +271,7 @@ Mock Service Worker (MSW) works by intercepting the requests your tests make, al
 
 ### Configuration
 
-Add the following to your test [setup file](/config/#setupfiles)
+You can use it like below in your [setup file](/config/#setupfiles)
 ```js
 import { afterAll, afterEach, beforeAll } from 'vitest'
 import { setupServer } from 'msw/node'
@@ -322,9 +322,9 @@ There is much more to MSW. You can access cookies and query parameters, define m
 
 ## Timers
 
-Whenever we test code that involves `timeOut`s or intervals, instead of having our tests it wait out or time-out. We can speed up our tests by using "fake" timers by mocking calls to `setTimeout` and `setInterval`, too.
+Whenever we test code that involves timeouts or intervals, instead of having our tests wait it out or timeout. We can speed up our tests by using "fake" timers by mocking calls to `setTimeout` and `setInterval`, too.
 
-See the [`vi.mock()` api section](/api/#vi-usefaketimer) for a more in depth detailed API description.
+See the [`vi.usefaketimers` api section](/api/#vi-usefaketimers) for a more in depth detailed API description.
 
 ### Example
 

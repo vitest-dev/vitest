@@ -1,8 +1,11 @@
-import type { Vitest } from '../node/core'
-import type { BuiltinReporters } from '../node/reporters'
+import type { BenchmarkBuiltinReporters, BuiltinReporters } from '../node/reporters'
 
-export const getOutputFile = ({ config }: Vitest, reporter: BuiltinReporters) => {
-  if (!config.outputFile)
+interface PotentialConfig {
+  outputFile?: string | Partial<Record<string, string>>
+}
+
+export const getOutputFile = (config: PotentialConfig | undefined, reporter: BuiltinReporters | BenchmarkBuiltinReporters) => {
+  if (!config?.outputFile)
     return
 
   if (typeof config.outputFile === 'string')

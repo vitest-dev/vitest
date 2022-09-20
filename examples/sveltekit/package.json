@@ -3,7 +3,6 @@
   "type": "module",
   "version": "0.0.1",
   "scripts": {
-    "prepare": "svelte-kit sync",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "coverage": "vitest --coverage"

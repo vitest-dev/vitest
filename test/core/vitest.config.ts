@@ -1,5 +1,5 @@
 import { basename, dirname, join, resolve } from 'pathe'
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   plugins: [
@@ -43,6 +43,7 @@ export default defineConfig({
     ],
     testNamePattern: '^((?!does not include test that).)*$',
     coverage: {
+      provider: 'istanbul',
       reporter: ['text', 'html'],
     },
     env: {
@@ -55,6 +56,9 @@ export default defineConfig({
     },
     sequence: {
       seed: 101,
+    },
+    deps: {
+      external: ['tinyspy'],
     },
     alias: [
       {

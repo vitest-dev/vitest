@@ -9,6 +9,11 @@ The following types are used in the type signatures below
 ```ts
 type Awaitable<T> = T | PromiseLike<T>
 type TestFunction = () => Awaitable<void>
+
+interface TestOptions {
+  timeout?: number
+  retry?: number
+}
 ```
 
 When a test function returns a promise, the runner will wait until it is resolved to collect async expectations. If the promise is rejected, the test will fail.
@@ -19,7 +24,7 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
 
 ## test
 
-- **Type:** `(name: string, fn: TestFunction, timeout?: number) => void`
+- **Type:** `(name: string, fn: TestFunction, timeout?: number | TestOptions) => void`
 - **Alias:** `it`
 
   `test` defines a set of related expectations. It receives the test name and a function that holds the expectations to test.
@@ -36,7 +41,7 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
 
 ### test.skip
 
-- **Type:** `(name: string, fn: TestFunction, timeout?: number) => void`
+- **Type:** `(name: string, fn: TestFunction, timeout?: number | TestOptions) => void`
 - **Alias:** `it.skip`
 
   If you want to skip running certain tests, but you don't want to delete the code due to any reason, you can use `test.skip` to avoid running them.
@@ -102,12 +107,19 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
   })
   ```
 
+  Sometimes it is very useful to run `only` tests in a certain file, ignoring all other tests from the whole test suite, which pollute the output.
+
+  In order to do that run `vitest` with specific file containing the tests in question.
+  ```
+  # vitest interesting.test.ts
+  ```
+
 ### test.concurrent
 
 - **Type:** `(name: string, fn: TestFunction, timeout?: number) => void`
 - **Alias:** `it.concurrent`
 
-  `test.concurrent` marks consecutive tests to be run them in parallel. It receives the test name, an async function with the tests to collect, and an optional timeout (in milliseconds).
+  `test.concurrent` marks consecutive tests to be run in parallel. It receives the test name, an async function with the tests to collect, and an optional timeout (in milliseconds).
 
   ```ts
   import { describe, test } from 'vitest'
@@ -198,11 +210,129 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
   // ✓ add(2, 1) -> 3
   ```
 
-## describe
+  If you want to have access to `TestContext`, use `describe.each` with a single test.
 
-When you use `test` in the top level of file, they are collected as part of the implicit suite for it. Using `describe` you can define a new suite in the current context, as a set of related tests and other nested suites. A suite lets you organize your tests so reports are more clear.
+## bench
+
+- **Type:** `(name: string, fn: BenchFunction, options?: BenchOptions) => void`
+
+`bench` defines a benchmark. In Vitest terms benchmark is a function that defines a series of operations. Vitest runs this function multiple times to display different performance results.
+
+Vitest uses [`tinybench`](https://github.com/tinylibs/tinybench) library under the hood, inheriting all its options that can be used as a third argument.
 
   ```ts
+  import { bench } from 'vitest'
+
+  bench('normal sorting', () => {
+    const x = [1, 5, 4, 2, 3]
+    x.sort((a, b) => {
+      return a - b
+    })
+  }, { time: 1000 })
+  ```
+
+  ```ts
+  export interface Options {
+    /**
+     * time needed for running a benchmark task (milliseconds)
+     * @default 500
+     */
+    time?: number
+
+    /**
+     * number of times that a task should run if even the time option is finished
+     * @default 10
+     */
+    iterations?: number
+
+    /**
+     * function to get the current timestamp in milliseconds
+     */
+    now?: () => number
+
+    /**
+     * An AbortSignal for aborting the benchmark
+     */
+    signal?: AbortSignal
+
+    /**
+     * warmup time (milliseconds)
+     * @default 100ms
+     */
+    warmupTime?: number
+
+    /**
+     * warmup iterations
+     * @default 5
+     */
+    warmupIterations?: number
+
+    /**
+     * setup function to run before each benchmark task (cycle)
+     */
+    setup?: Hook
+
+    /**
+     * teardown function to run after each benchmark task (cycle)
+     */
+    teardown?: Hook
+  }
+  ```
+
+### bench.skip
+
+- **Type:** `(name: string, fn: BenchFunction, options?: BenchOptions) => void`
+
+You can use `bench.skip` syntax to skip running certain benchmarks.
+
+  ```ts
+  import { bench } from 'vitest'
+
+  bench.skip('normal sorting', () => {
+    const x = [1, 5, 4, 2, 3]
+    x.sort((a, b) => {
+      return a - b
+    })
+  })
+  ```
+
+### bench.only
+
+- **Type:** `(name: string, fn: BenchFunction, options?: BenchOptions) => void`
+
+Use `bench.only` to only run certain benchmarks in a given suite. This is useful when debugging.
+
+  ```ts
+  import { bench } from 'vitest'
+
+  bench.only('normal sorting', () => {
+    const x = [1, 5, 4, 2, 3]
+    x.sort((a, b) => {
+      return a - b
+    })
+  })
+  ```
+
+### bench.todo
+
+- **Type:** `(name: string) => void`
+
+Use `bench.todo` to stub benchmarks to be implemented later.
+
+  ```ts
+  import { bench } from 'vitest'
+
+  bench.todo('unimplemented test')
+  ```
+
+## describe
+
+When you use `test` or `bench` in the top level of file, they are collected as part of the implicit suite for it. Using `describe` you can define a new suite in the current context, as a set of related tests or benchmarks and other nested suites. A suite lets you organize your tests and benchmarks so reports are more clear.
+
+  ```ts
+  // basic.spec.ts
+  // organizing tests
+
   import { describe, expect, test } from 'vitest'
 
   const person = {
@@ -225,7 +355,30 @@ When you use `test` in the top level of file, they are collected as part of the 
   })
   ```
 
-  You can also nest describe blocks if you have a hierarchy of tests:
+  ```ts
+  // basic.bench.ts
+  // organizing benchmarks
+
+  import { bench, describe } from 'vitest'
+
+  describe('sort', () => {
+    bench('normal', () => {
+      const x = [1, 5, 4, 2, 3]
+      x.sort((a, b) => {
+        return a - b
+      })
+    })
+
+    bench('reverse', () => {
+      const x = [1, 5, 4, 2, 3]
+      x.reverse().sort((a, b) => {
+        return a - b
+      })
+    })
+  })
+  ```
+
+  You can also nest describe blocks if you have a hierarchy of tests or benchmarks:
 
   ```ts
   import { describe, expect, test } from 'vitest'
@@ -254,7 +407,7 @@ When you use `test` in the top level of file, they are collected as part of the 
 
 ### describe.skip
 
-- **Type:** `(name: string, fn: TestFunction) => void`
+- **Type:** `(name: string, fn: TestFunction, options?: number | TestOptions) => void`
 
   Use `describe.skip` in a suite to avoid running a particular describe block.
 
@@ -271,7 +424,7 @@ When you use `test` in the top level of file, they are collected as part of the 
 
 ### describe.only
 
-- **Type:** `(name: string, fn: TestFunction) => void`
+- **Type:** `(name: string, fn: TestFunction, options?: number | TestOptions) => void`
 
   Use `describe.only` to only run certain suites
 
@@ -288,9 +441,16 @@ When you use `test` in the top level of file, they are collected as part of the 
   })
   ```
 
+  Sometimes it is very useful to run `only` tests in a certain file, ignoring all other tests from the whole test suite, which pollute the output.
+
+  In order to do that run `vitest` with specific file containing the tests in question.
+  ```
+  # vitest interesting.test.ts
+  ```
+
 ### describe.concurrent
 
-- **Type:** `(name: string, fn: TestFunction, timeout?: number) => void`
+- **Type:** `(name: string, fn: TestFunction, options?: number | TestOptions) => void`
 
   `describe.concurrent` in a suite marks every tests as concurrent
 
@@ -314,7 +474,7 @@ When you use `test` in the top level of file, they are collected as part of the 
 
 ### describe.shuffle
 
-- **Type:** `(name: string, fn: TestFunction, timeout?: number) => void`
+- **Type:** `(name: string, fn: TestFunction, options?: number | TestOptions) => void`
 
   Vitest provides a way to run all tests in random order via CLI flag [`--sequence.shuffle`](/guide/cli) or config option [`sequence.shuffle`](/config/#sequence-shuffle), but if you want to have only part of your test suite to run tests in random order, you can mark it with this flag.
 
@@ -339,9 +499,10 @@ When you use `test` in the top level of file, they are collected as part of the 
   // An entry will be shown in the report for this suite
   describe.todo('unimplemented suite')
   ```
+
 ### describe.each
 
-- **Type:** `(cases: ReadonlyArray<T>): (name: string, fn: (...args: T[]) => void) => void`
+- **Type:** `(cases: ReadonlyArray<T>): (name: string, fn: (...args: T[]) => void, options?: number | TestOptions) => void`
 
   Use `describe.each` if you have more than one test that depends on the same data.
 
@@ -539,7 +700,7 @@ When you use `test` in the top level of file, they are collected as part of the 
   import { Stocks } from './stocks'
   const stocks = new Stocks()
 
-  test('if Bill stock hasnt failed, sell apples to him', () => {
+  test('if Bill stock hasn\'t failed, sell apples to him', () => {
     stocks.syncStocks('Bill')
     expect(stocks.stockFailed('Bill')).toBeFalsy()
   })
@@ -560,7 +721,7 @@ When you use `test` in the top level of file, they are collected as part of the 
     return null
   }
 
-  test('we dont have apples', () => {
+  test('we don\'t have apples', () => {
     expect(apples()).toBeNull()
   })
   ```
@@ -1405,7 +1566,7 @@ When you use `test` in the top level of file, they are collected as part of the 
       expect(data).toBeTruthy()
     })
     // if not awaited, test will fail
-    // if you dont have expect.hasAssertions(), test will pass
+    // if you don't have expect.hasAssertions(), test will pass
     await select(3)
   })
   ```
@@ -1663,7 +1824,7 @@ These functions allow you to hook into the life cycle of tests to avoid repeatin
   Register a callback to be called after each one of the tests in the current context completes.
   If the function returns a promise, Vitest waits until the promise resolve before continuing.
 
-  Optionally, you can a timeout (in milliseconds) for specifying how long to wait before terminating. The default is 5 seconds.
+  Optionally, you can provide a timeout (in milliseconds) for specifying how long to wait before terminating. The default is 5 seconds.
 
   ```ts
   import { afterEach } from 'vitest'
@@ -1773,7 +1934,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 
 ### vi.fn
 
-- **Type:** `(fn: Function) => CallableMockInstance`
+- **Type:** `(fn?: Function) => CallableMockInstance`
 
   Creates a spy on a function, though can be initiated without one. Every time a function is invoked, it stores its call arguments, returns and instances. Also, you can manipulate its behavior with [methods](#mockinstance-methods).
   If no function is given, mock will return `undefined`, when invoked.
@@ -1830,9 +1991,11 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 ### vi.mocked
 
 - **Type**: `<T>(obj: T, deep?: boolean) => MaybeMockedDeep<T>`
+- **Type**: `<T>(obj: T, options?: { partial?: boolean; deep?: boolean }) => MaybePartiallyMockedDeep<T>`
 
   Type helper for TypeScript. In reality just returns the object that was passed.
 
+  When `partial` is `true` it will expect a `Partial<T>` as a return value.
   ```ts
   import example from './example'
   vi.mock('./example')

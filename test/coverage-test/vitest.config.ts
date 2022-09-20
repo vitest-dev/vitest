@@ -16,5 +16,11 @@ export default defineConfig({
     exclude: [
       'coverage-test/*.test.ts',
     ],
+    coverage: {
+      enabled: true,
+      clean: true,
+      all: true,
+      reporter: ['html', 'text', 'lcov'],
+    },
   },
 })

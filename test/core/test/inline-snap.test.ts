@@ -24,7 +24,7 @@ expect('foo').toMatchInlineSnapshot(\`{
     `)
   })
 
-  it('replaceInlineSnap with indenetation', async () => {
+  it('replaceInlineSnap with indentation', async () => {
     const indent = '  '
     const code = `
 ${indent}expect('foo').toMatchInlineSnapshot('"foo"')

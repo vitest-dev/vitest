@@ -20,9 +20,8 @@ function hash(str: string): string {
   return `${hash}`
 }
 
-export async function collectTests(paths: string[], config: ResolvedConfig) {
+export async function collectTests(paths: string[], config: ResolvedConfig): Promise<File[]> {
   const files: File[] = []
-
   const browserHashMap = getWorkerState().browserHashMap!
 
   async function importFromBrowser(filepath: string) {
@@ -46,9 +45,13 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
     }
 
     clearCollectorContext()
+
     try {
+      const setupStart = now()
       await runSetupFiles(config)
 
+      const collectStart = now()
+      file.setupDuration = collectStart - setupStart
       if (config.browser && isBrowser)
         await importFromBrowser(filepath)
       else
@@ -62,17 +65,19 @@ export async function collectTests(paths: string[], config: ResolvedConfig) {
         if (c.type === 'test') {
           file.tasks.push(c)
         }
+        else if (c.type === 'benchmark') {
+          file.tasks.push(c)
+        }
         else if (c.type === 'suite') {
           file.tasks.push(c)
         }
-        else {
-          const start = now()
+        else if (c.type === 'collector') {
           const suite = await c.collect(file)
-          file.collectDuration = now() - start
           if (suite.name || suite.tasks.length)
             file.tasks.push(suite)
         }
       }
+      file.collectDuration = now() - collectStart
     }
     catch (e) {
       file.result = {

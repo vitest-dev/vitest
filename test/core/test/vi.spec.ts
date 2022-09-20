@@ -16,7 +16,7 @@ describe('testing vi utils', () => {
     expect(IntersectionObserver).toBe(IntersectionObserverMock)
   })
 
-  test('reseting modules', async () => {
+  test('resetting modules', async () => {
     const mod1 = await import('../src/env')
     vi.resetModules()
     const mod2 = await import('../src/env')
@@ -25,7 +25,7 @@ describe('testing vi utils', () => {
     expect(mod2).toBe(mod3)
   })
 
-  test('reseting modules doesnt reset vitest', async () => {
+  test('resetting modules doesn\'t reset vitest', async () => {
     const v1 = await import('vitest')
     vi.resetModules()
     const v2 = await import('vitest')
@@ -38,6 +38,30 @@ describe('testing vi utils', () => {
     })
     expectType<MockedFunction<() => boolean>>(vi.fn(() => true))
     expectType<MockedFunction<() => boolean>>(vi.fn())
+  })
+
+  test('vi partial mocked', () => {
+    interface FooBar {
+      foo: () => void
+      bar: () => boolean
+      baz: string
+    }
+
+    type FooBarFactory = () => FooBar
+
+    const mockFactory: FooBarFactory = vi.fn()
+
+    vi.mocked(mockFactory, { partial: true }).mockReturnValue({
+      foo: vi.fn(),
+    })
+
+    vi.mocked(mockFactory, { partial: true, deep: false }).mockReturnValue({
+      bar: vi.fn(),
+    })
+
+    vi.mocked(mockFactory, { partial: true, deep: true }).mockReturnValue({
+      baz: 'baz',
+    })
   })
 
   // TODO: it's unstable in CI, skip until resolved

@@ -43,3 +43,7 @@ test('custom env', () => {
   expect(process.env.CUSTOM_ENV).toBe('foo')
   expect(import.meta.env.CUSTOM_ENV).toBe('foo')
 })
+
+test('ignores import.meta.env in string literals', () => {
+  expect('import.meta.env').toBe('import' + '.meta.env')
+})

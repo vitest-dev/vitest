@@ -1,4 +1,4 @@
-// this file should not be converted to js
+// this file should not be converted to ts
 // so it won't be transformed by esbuild
 
 import { assert, test, vi } from 'vitest'

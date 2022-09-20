@@ -10,7 +10,7 @@ export async function generateInlineTest(templatePath, testpath) {
   console.log(`Generated ${testpath}`)
 }
 
-const filepath = pathe.resolve(dirname, '../test-update/shapshots-inline-js.test.js')
+const filepath = pathe.resolve(dirname, '../test-update/snapshots-inline-js.test.js')
 const template = pathe.resolve(dirname, './inline-test-template.js');
 
 (async () => {

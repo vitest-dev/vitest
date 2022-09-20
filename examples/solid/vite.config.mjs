@@ -11,7 +11,7 @@ export default defineConfig({
       web: [/.[jt]sx?/],
     },
     deps: {
-      inline: [/solid-js/],
+      registerNodeLoader: true,
     },
     threads: false,
     isolate: false,

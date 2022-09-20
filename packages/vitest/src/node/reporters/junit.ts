@@ -58,8 +58,9 @@ function escapeXML(value: any): string {
     true)
 }
 
-function getDuration(task: Task): string | undefined {
-  return task.result?.duration ? (task.result.duration / 1000).toFixed(10) : undefined
+export function getDuration(task: Task): string | undefined {
+  const duration = task.result?.duration ?? 0
+  return (duration / 1000).toLocaleString(undefined, { useGrouping: false, maximumFractionDigits: 10 })
 }
 
 export class JUnitReporter implements Reporter {
@@ -71,7 +72,7 @@ export class JUnitReporter implements Reporter {
   async onInit(ctx: Vitest): Promise<void> {
     this.ctx = ctx
 
-    const outputFile = getOutputFile(this.ctx, 'junit')
+    const outputFile = getOutputFile(this.ctx.config, 'junit')
 
     if (outputFile) {
       this.reportFile = resolve(this.ctx.config.root, outputFile)
@@ -111,7 +112,10 @@ export class JUnitReporter implements Reporter {
 
   async writeErrorDetails(error: ErrorWithDiff): Promise<void> {
     const errorName = error.name ?? error.nameStr ?? 'Unknown Error'
-    await this.baseLog(`${errorName}: ${error.message}`)
+    const errorDetails = `${errorName}: ${error.message}`
+
+    // Be sure to escape any XML in the error Details
+    await this.baseLog(escapeXML(errorDetails))
 
     const stack = parseStacktrace(error)
 

@@ -93,4 +93,36 @@ describe('error serialize', () => {
       toString: 'Function<toString>',
     })
   })
+
+  it('Should not fail on errored getters/setters', () => {
+    const error = new Error('test')
+    Object.defineProperty(error, 'unserializable', {
+      get() {
+        throw new Error('I am unserializable')
+      },
+      set() {
+        throw new Error('I am unserializable')
+      },
+    })
+    Object.defineProperty(error, 'array', {
+      value: [{
+        get name() {
+          throw new Error('name cannnot be accessed')
+        },
+      }],
+    })
+    expect(serializeError(error)).toEqual({
+      array: [
+        {
+          name: '<unserializable>: name cannnot be accessed',
+        },
+      ],
+      constructor: 'Function<Error>',
+      message: 'test',
+      name: 'Error',
+      stack: expect.stringContaining('Error: test'),
+      toString: 'Function<toString>',
+      unserializable: '<unserializable>: I am unserializable',
+    })
+  })
 })

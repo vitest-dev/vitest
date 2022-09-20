@@ -11,6 +11,10 @@ export class MockedC {
     return mockedA()
   }
 
+  get getOnlyProp(): number {
+    return 42
+  }
+
   get getSetProp(): number {
     return 123
   }
@@ -22,3 +26,6 @@ export async function asyncFunc(): Promise<string> {
   await new Promise<void>(resolve => resolve())
   return '1234'
 }
+
+// This is here because mocking streams previously caused some problems (#1671).
+export const exportedStream = process.stderr

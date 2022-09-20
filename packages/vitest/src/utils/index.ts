@@ -3,8 +3,10 @@ import { relative as relativeBrowser } from 'path'
 import c from 'picocolors'
 import { isPackageExists } from 'local-pkg'
 import { relative as relativeNode } from 'pathe'
+import type { ModuleCacheMap } from 'vite-node'
 import type { Suite, Task } from '../types'
-import { getWorkerState } from '../utils/global'
+import { EXIT_CODE_RESTART } from '../constants'
+import { getWorkerState } from '../utils'
 import { getNames } from './tasks'
 
 export * from './tasks'
@@ -16,6 +18,9 @@ export const isNode = typeof process < 'u' && typeof process.stdout < 'u' && !pr
 // export const isNode = typeof process !== 'undefined' && typeof process.platform !== 'undefined'
 export const isBrowser = typeof window !== 'undefined'
 export const isWindows = isNode && process.platform === 'win32'
+export const getRunMode = () => getWorkerState().config.mode
+export const isRunningInTest = () => getRunMode() === 'test'
+export const isRunningInBenchmark = () => getRunMode() === 'benchmark'
 
 export const relativePath = isBrowser ? relativeBrowser : relativeNode
 
@@ -40,18 +45,19 @@ export function partitionSuiteChildren(suite: Suite) {
   return tasksGroups
 }
 
-export function resetModules() {
-  const modules = getWorkerState().moduleCache
-  const vitestPaths = [
+export function resetModules(modules: ModuleCacheMap, resetMocks = false) {
+  const skipPaths = [
     // Vitest
     /\/vitest\/dist\//,
     // yarn's .store folder
     /vitest-virtual-\w+\/dist/,
     // cnpm
     /@vitest\/dist/,
+    // don't clear mocks
+    ...(!resetMocks ? [/^mock:/] : []),
   ]
   modules.forEach((_, path) => {
-    if (vitestPaths.some(re => re.test(path)))
+    if (skipPaths.some(re => re.test(path)))
       return
     modules.delete(path)
   })
@@ -86,7 +92,7 @@ export async function ensurePackageInstalled(
     await (await import('@antfu/install-pkg')).installPackage(dependency, { dev: true })
     // TODO: somehow it fails to load the package after installation, remove this when it's fixed
     process.stderr.write(c.yellow(`\nPackage ${dependency} installed, re-run the command to start.\n`))
-    process.exit(1)
+    process.exit(EXIT_CODE_RESTART)
     return true
   }
 
@@ -148,3 +154,22 @@ class AggregateErrorPonyfill extends Error {
   }
 }
 export { AggregateErrorPonyfill as AggregateError }
+
+type DeferPromise<T> = Promise<T> & {
+  resolve: (value: T | PromiseLike<T>) => void
+  reject: (reason?: any) => void
+}
+
+export function createDefer<T>(): DeferPromise<T> {
+  let resolve: ((value: T | PromiseLike<T>) => void) | null = null
+  let reject: ((reason?: any) => void) | null = null
+
+  const p = new Promise<T>((_resolve, _reject) => {
+    resolve = _resolve
+    reject = _reject
+  }) as DeferPromise<T>
+
+  p.resolve = resolve!
+  p.reject = reject!
+  return p
+}
