@@ -94,13 +94,15 @@ async function benchmark(cliFilters: string[], options: CliOptions) {
 
 async function start(mode: VitestRunMode, cliFilters: string[], options: CliOptions) {
   try {
-    if (await startVitest(mode, cliFilters, options) === false)
-      process.exit()
+    const ctx = await startVitest(mode, cliFilters, options)
+    if (!ctx?.config.watch)
+      await ctx?.exit()
+    return ctx
   }
   catch (e) {
-    process.exitCode = 1
     console.error(`\n${c.red(divider(c.bold(c.inverse(' Unhandled Error '))))}`)
     console.error(e)
     console.error('\n\n')
+    process.exit(1)
   }
 }

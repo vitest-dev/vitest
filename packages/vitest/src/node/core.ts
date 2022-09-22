@@ -475,6 +475,9 @@ export class Vitest {
     return this.closingPromise
   }
 
+  /**
+   * Close the thread pool and exit the process
+   */
   async exit(force = false) {
     setTimeout(() => {
       console.warn(`close timed out after ${this.config.teardownTimeout}ms`)
