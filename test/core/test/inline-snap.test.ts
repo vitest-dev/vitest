@@ -45,4 +45,105 @@ ${indent}}\`)
       "
     `)
   })
+
+  it('replaceInlineSnap(string) with block comment(in same line)', async () => {
+    const code = `
+  expect('foo').toMatchInlineSnapshot(/* comment1 */'"foo"')
+  `
+    const s = new MagicString(code)
+    replaceInlineSnap(code, s, 0, '"bar"')
+    expect(s.toString()).toMatchInlineSnapshot(`
+      "
+        expect('foo').toMatchInlineSnapshot(/* comment1 */'\\"bar\\"')
+        "
+    `)
+  })
+
+  it('replaceInlineSnap(string) with block comment(new line)', async () => {
+    const code = `
+  expect('foo').toMatchInlineSnapshot(
+    /* comment1
+       comment2
+    */
+
+    '"foo"')
+  `
+    const s = new MagicString(code)
+    replaceInlineSnap(code, s, 0, '"bar"')
+    expect(s.toString()).toMatchInlineSnapshot(`
+      "
+        expect('foo').toMatchInlineSnapshot(
+          /* comment1
+             comment2
+          */
+
+          '\\"bar\\"')
+        "
+    `)
+  })
+
+  it('replaceInlineSnap(string) with single line comment', async () => {
+    const code = `
+  expect('foo').toMatchInlineSnapshot(
+    // comment1
+    // comment2
+    '"foo"')
+  `
+    const s = new MagicString(code)
+    replaceInlineSnap(code, s, 0, '"bar"')
+    expect(s.toString()).toMatchInlineSnapshot(`
+      "
+        expect('foo').toMatchInlineSnapshot(
+          // comment1
+          // comment2
+          '\\"bar\\"')
+        "
+    `)
+  })
+
+  it('replaceInlineSnap(object) comments', async () => {
+    const code = `
+  expect({}).toMatchInlineSnapshot(
+    // comment1
+    // comment2
+    /*
+      comment3
+      comment4
+    */
+    \`{
+        "foo": {
+          "map": Map {},
+          "type": "object",
+        },
+      }\`)
+  `
+    const s = new MagicString(code)
+    replaceInlineSnap(code, s, 0, `
+    {
+      "bar": {
+        "map2": Map {},
+        "type": "object1",
+      },
+    }
+  `)
+    expect(s.toString()).toMatchInlineSnapshot(`
+      "
+        expect({}).toMatchInlineSnapshot(
+          // comment1
+          // comment2
+          /*
+            comment3
+            comment4
+          */
+          \`
+        {
+              \\"bar\\": {
+                \\"map2\\": Map {},
+                \\"type\\": \\"object1\\",
+              },
+            }
+      \`)
+        "
+    `)
+  })
 })
