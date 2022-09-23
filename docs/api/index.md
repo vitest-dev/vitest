@@ -2086,7 +2086,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
   setTimeout(() => console.log(++i))
   const interval = setInterval(() => {
     console.log(++i)
-    if (i === 2)
+    if (i === 3)
       clearInterval(interval)
 
   }, 50)
