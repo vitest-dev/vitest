@@ -195,9 +195,11 @@ export async function handleMessage(runner: ViteNodeRunner, emitter: HMREmitter,
       })
       break
     case 'full-reload':
+      notifyListeners(runner, 'vite:beforeFullReload', payload)
       reload(runner, files)
       break
     case 'prune':
+      notifyListeners(runner, 'vite:beforePrune', payload)
       payload.paths.forEach((path) => {
         const fn = maps.pruneMap.get(path)
         if (fn)
@@ -277,6 +279,7 @@ export function createHotContext(
     },
 
     invalidate() {
+      notifyListeners(runner, 'vite:invalidate', { path: ownerPath })
       return reload(runner, files)
     },
 
