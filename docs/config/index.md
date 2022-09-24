@@ -526,6 +526,13 @@ Used when `provider: 'c8'` is set. Coverage options are passed to [`c8`](https:/
 
 Used when `provider: 'istanbul'` is set.
 
+##### include
+
+- **Type:** `string[]`
+- **Default:** `['**']`
+
+List of files included in coverage as glob patterns
+
 ##### exclude
 
 - **Type:** `string[]`
