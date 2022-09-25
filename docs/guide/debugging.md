@@ -14,7 +14,7 @@ To debug a test file in VSCode, create the following launch configuration.
   "version": "0.2.0",
   "configurations": [
     {
-      "type": "pwa-node",
+      "type": "node",
       "request": "launch",
       "name": "Debug Current Test File",
       "autoAttachChildProcesses": true,
