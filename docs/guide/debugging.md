@@ -4,6 +4,18 @@ title: Debugging | Guide
 
 # Debugging
 
+## Terminal
+
+To debug a test file in you shell, add a `debugger` statement anywhere in your code, and then run `ndb`:
+
+```sh
+# install ndb globally
+npm install -g ndb
+
+# run tests with debugger enabled
+ndb npm run test
+```
+
 ## VSCode
 
 To debug a test file in VSCode, create the following launch configuration.
