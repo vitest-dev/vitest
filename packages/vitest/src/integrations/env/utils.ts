@@ -6,6 +6,8 @@ const allowRewrite = [
   'MessageEvent',
   // implemented in Node 18
   'ArrayBuffer',
+  // implemented in Node 18
+  'Blob',
 ]
 
 const skipKeys = [
