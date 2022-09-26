@@ -6,7 +6,7 @@ title: Debugging | Guide
 
 ## Terminal
 
-To debug a test file in you shell, add a `debugger` statement anywhere in your code, and then run `ndb`:
+To debug a test file in your shell, add a `debugger` statement anywhere in your code, and then run `ndb`:
 
 ```sh
 # install ndb globally
