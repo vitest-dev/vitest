@@ -103,7 +103,7 @@
     "debug": "^4.3.4",
     "local-pkg": "^0.4.2",
     "strip-literal": "^0.4.2",
-    "tinybench": "^2.1.5",
+    "tinybench": "^2.2.1",
     "tinypool": "^0.3.0",
     "tinyspy": "^1.0.2",
     "vite": "^2.9.12 || ^3.0.0-0"

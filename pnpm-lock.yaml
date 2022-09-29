@@ -809,7 +809,7 @@ importers:
       source-map-js: ^1.0.2
       strip-ansi: ^7.0.1
       strip-literal: ^0.4.2
-      tinybench: ^2.1.5
+      tinybench: ^2.2.1
       tinypool: ^0.3.0
       tinyspy: ^1.0.2
       typescript: ^4.8.3
@@ -824,7 +824,7 @@ importers:
       debug: 4.3.4
       local-pkg: 0.4.2
       strip-literal: 0.4.2
-      tinybench: 2.1.5
+      tinybench: 2.2.1
       tinypool: 0.3.0
       tinyspy: 1.0.2
       vite: 3.1.0
@@ -17772,8 +17772,8 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
-  /tinybench/2.1.5:
-    resolution: {integrity: sha512-ak+PZZEuH3mw6CCFOgf5S90YH0MARnZNhxjhjguAmoJimEMAJuNip/rJRd6/wyylHItomVpKTzZk9zrhTrQCoQ==}
+  /tinybench/2.2.1:
+    resolution: {integrity: sha512-VxB1P8DUhpCC1j2WtKgFYpv3SwU7vtnfmG29cK7hXcqyD7lLiq6SYCVpDceoAT99mvTN+V8Ay4OdtZQbB72+Sw==}
     dev: false
 
   /tinypool/0.3.0:
