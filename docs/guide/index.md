@@ -129,6 +129,10 @@ pnpm link --global # you can use your preferred package manager for this step
 
 Then go to the project where you are using Vitest and run `pnpm link --global vitest` (or the package manager that you used to link `vitest` globally).
 
+## More Resources 
+
+- [Vitest + React Testing Library](https://www.robinwieruch.de/vitest-react-testing-library/)
+
 ## Community
 
 If you have questions or need help, reach out to the community at [Discord](https://chat.vitest.dev) and [GitHub Discussions](https://github.com/vitest-dev/vitest/discussions).
