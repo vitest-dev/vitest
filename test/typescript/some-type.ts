@@ -1,2 +1,2 @@
-const variable: () => number = () => 'some stirng'
-variable()
+// const variable: () => number = () => 'some stirng'
+// variable()

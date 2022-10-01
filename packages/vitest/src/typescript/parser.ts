@@ -1,8 +1,14 @@
+import { readFile } from 'fs/promises'
 import { execaCommand } from 'execa'
-import { relative, resolve } from 'pathe'
-import type { Awaitable, File, ParsedStack, TypeCheck, Vitest } from '../types'
+import { resolve } from 'pathe'
+import { parse as parseAst } from 'acorn'
+import { ancestor as walkAst } from 'acorn-walk'
+import type { RawSourceMap } from 'vite-node'
+import { SourceMapConsumer } from 'source-map-js'
+import type { Awaitable, File, ParsedStack, Suite, TscErrorInfo, Vitest } from '../types'
 import { TYPECHECK_ERROR } from './constants'
 import { getRawErrsMapFromTsCompile, getTsconfigPath } from './parse'
+import { createIndexMap } from './utils'
 
 export class TypeCheckError extends Error {
   [TYPECHECK_ERROR] = true
@@ -17,6 +23,34 @@ export class TypeCheckError extends Error {
 interface ErrorsCache {
   files: File[]
   sourceErrors: TypeCheckError[]
+}
+
+interface ParsedFile extends File {
+  start: number
+  end: number
+}
+
+interface ParsedSuite extends Suite {
+  start: number
+  end: number
+}
+
+interface LocalCallDefinition {
+  start: number
+  end: number
+  name: string
+  type: string
+  mode: 'run' | 'skip' | 'only' | 'todo'
+  task: ParsedSuite | ParsedFile
+}
+
+interface FileInformation {
+  file: ParsedFile
+  content: string
+  filepath: string
+  parsed: string
+  map: RawSourceMap | null
+  definitions: LocalCallDefinition[]
 }
 
 type Callback<Args extends Array<any> = []> = (...args: Args) => Awaitable<void>
@@ -45,51 +79,171 @@ export class Typechecker {
     this._onWatcherRerun = fn
   }
 
+  protected async parseTestFile(filepath: string): Promise<FileInformation | null> {
+    const [request, content] = await Promise.all([
+      this.ctx.vitenode.transformRequest(filepath),
+      readFile(filepath, 'utf-8'),
+    ])
+    if (!request)
+      return null
+    const ast = parseAst(request.code, {
+      ecmaVersion: 'latest',
+      allowAwaitOutsideFunction: true,
+    })
+    const file: ParsedFile = {
+      filepath,
+      type: 'suite',
+      id: '-1',
+      name: filepath,
+      mode: 'run',
+      tasks: [],
+      start: ast.start,
+      end: ast.end,
+      result: {
+        state: 'pass',
+      },
+    }
+    const definitions: LocalCallDefinition[] = []
+    const getName = (callee: any): string | null => {
+      if (!callee)
+        return null
+      if (callee.type === 'Identifier')
+        return callee.name
+      if (callee.type === 'MemberExpression') {
+        // direct call as `__vite_ssr__.test()`
+        if (callee.object?.name?.startsWith('__vite_ssr_'))
+          return getName(callee.property)
+        return getName(callee.object?.property)
+      }
+      return null
+    }
+    walkAst(ast, {
+      CallExpression(node) {
+        const { callee } = node as any
+        const name = getName(callee)
+        if (!name)
+          return
+        if (!['it', 'test', 'describe', 'suite'].includes(name))
+          return
+        const { arguments: [{ value: message }] } = node as any
+        const property = callee?.property?.name
+        const mode = !property || property === name ? 'run' : property
+        if (mode === 'each')
+          throw new Error(`${name}.each syntax is not supported when testing types`)
+        definitions.push({
+          start: node.start,
+          end: node.end,
+          name: message,
+          type: name,
+          mode,
+        } as LocalCallDefinition)
+      },
+    })
+    let lastSuite: ParsedSuite = file
+    const getLatestSuite = (index: number) => {
+      const suite = lastSuite
+      while (lastSuite !== file && lastSuite.end < index)
+        lastSuite = suite.suite as ParsedSuite
+      return lastSuite
+    }
+    definitions.sort((a, b) => a.start - b.start).forEach((definition, idx) => {
+      const latestSuite = getLatestSuite(definition.start)
+      const state = definition.mode === 'run' ? 'pass' : definition.mode
+      if (definition.type === 'describe' || definition.type === 'suite') {
+        const suite: ParsedSuite = {
+          type: 'suite',
+          id: idx.toString(),
+          mode: definition.mode,
+          name: definition.name,
+          suite: latestSuite,
+          tasks: [],
+          result: {
+            state,
+          },
+          start: definition.start,
+          end: definition.end,
+        }
+        definition.task = suite
+        latestSuite.tasks.push(suite)
+        lastSuite = suite
+        return
+      }
+      const task: ParsedSuite = {
+        type: 'suite',
+        id: idx.toString(),
+        suite: latestSuite,
+        file,
+        tasks: [],
+        mode: definition.mode,
+        name: definition.name,
+        end: definition.end,
+        result: {
+          state,
+        },
+        start: definition.start,
+      }
+      definition.task = task
+      latestSuite.tasks.push(task)
+    })
+    return {
+      file,
+      parsed: request.code,
+      content,
+      filepath,
+      map: request.map as RawSourceMap | null,
+      definitions,
+    }
+  }
+
   protected async prepareResults(output: string) {
     const typeErrors = await this.parseTscLikeOutput(output)
-    const testFiles = new Set(this.files.map(f => relative(this.ctx.config.root, f)))
+    const testFiles = new Set(this.files)
+
+    const sourceDefinitions = (await Promise.all(
+      this.files.map(filepath => this.parseTestFile(filepath)),
+    )).reduce((acc, data) => {
+      if (!data)
+        return acc
+      acc[data.filepath] = data
+      return acc
+    }, {} as Record<string, FileInformation>)
 
     const files: File[] = []
 
-    testFiles.forEach((path) => { // TODO parse files to create tasks
+    testFiles.forEach((path) => {
+      const { file, definitions, map, parsed } = sourceDefinitions[path]
       const errors = typeErrors.get(path)
-      const suite: File = {
-        type: 'suite',
-        filepath: path,
-        tasks: [],
-        id: path,
-        name: path,
-        mode: 'run',
-      }
-      if (!errors) {
-        return files.push({
-          ...suite,
-          result: {
-            state: 'pass',
-          },
-        })
-      }
-      const tasks = errors.map((error, idx) => {
-        const task: TypeCheck = {
+      files.push(file)
+      if (!errors)
+        return files.push(file)
+      const sortedDefinitions = [...definitions.sort((a, b) => b.start - a.start)]
+      const mapConsumer = map && new SourceMapConsumer(map)
+      const indexMap = createIndexMap(parsed)
+      errors.forEach(({ error, originalError }, idx) => {
+        const originalPos = mapConsumer?.generatedPositionFor({
+          line: originalError.line,
+          column: originalError.column,
+          source: path,
+        }) || originalError
+        const index = indexMap.get(`${originalPos.line}:${originalPos.column}`)
+        const definition = index != null && sortedDefinitions.find(def => def.start <= index && def.end >= index)
+        if (!definition)
+          return
+        definition.task.result = {
+          state: 'fail',
+        }
+        definition.task.tasks.push({
           type: 'typecheck',
           id: idx.toString(),
           name: `error expect ${idx + 1}`,
           mode: 'run',
-          file: suite,
-          suite,
+          file,
+          suite: definition.task,
           result: {
             state: 'fail',
             error,
           },
-        }
-        return task
-      })
-      suite.tasks = tasks
-      files.push({
-        ...suite,
-        result: {
-          state: 'fail',
-        },
+        })
       })
     })
 
@@ -97,7 +251,7 @@ export class Typechecker {
 
     typeErrors.forEach((errors, path) => {
       if (!testFiles.has(path))
-        sourceErrors.push(...errors)
+        sourceErrors.push(...errors.map(({ error }) => error))
     })
 
     return {
@@ -108,7 +262,7 @@ export class Typechecker {
 
   protected async parseTscLikeOutput(output: string) {
     const errorsMap = await getRawErrsMapFromTsCompile(output)
-    const typesErrors = new Map<string, TypeCheckError[]>()
+    const typesErrors = new Map<string, { error: TypeCheckError; originalError: TscErrorInfo }[]>()
     errorsMap.forEach((errors, path) => {
       const filepath = resolve(this.ctx.config.root, path)
       const suiteErrors = errors.map((info) => {
@@ -128,9 +282,12 @@ export class Typechecker {
             },
           },
         ]
-        return error
+        return {
+          originalError: info,
+          error,
+        }
       })
-      typesErrors.set(path, suiteErrors)
+      typesErrors.set(filepath, suiteErrors)
     })
     return typesErrors
   }
