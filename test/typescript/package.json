@@ -1,7 +1,7 @@
 {
   "scripts": {
     "test": "vitest typecheck",
-    "tsc": "vue-tsc --watch --pretty false --noEmit"
+    "tsc": "tsc --watch --pretty false --noEmit"
   },
   "dependencies": {
     "vitest": "workspace:*"

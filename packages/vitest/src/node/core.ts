@@ -174,7 +174,8 @@ export class Vitest {
     })
     checker.onWatcherRerun(async () => {
       const { files } = checker.getResult()
-      this.report('onWatcherRerun', files.map(f => f.filepath), 'File change detected. Triggering rerun.')
+      await this.report('onWatcherRerun', files.map(f => f.filepath), 'File change detected. Triggering rerun.')
+      this.logger.log(c.cyan('Typechecking...')) // TODO show list of test files?
     })
     await checker.start()
   }

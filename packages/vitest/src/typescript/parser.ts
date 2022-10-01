@@ -1,11 +1,11 @@
 import { readFile } from 'fs/promises'
 import { execaCommand } from 'execa'
-import { resolve } from 'pathe'
+import { relative, resolve } from 'pathe'
 import { parse as parseAst } from 'acorn'
 import { ancestor as walkAst } from 'acorn-walk'
 import type { RawSourceMap } from 'vite-node'
 import { SourceMapConsumer } from 'source-map-js'
-import type { Awaitable, File, ParsedStack, Suite, TscErrorInfo, Vitest } from '../types'
+import type { Awaitable, File, ParsedStack, Suite, Task, TscErrorInfo, Vitest } from '../types'
 import { TYPECHECK_ERROR } from './constants'
 import { getRawErrsMapFromTsCompile, getTsconfigPath } from './parse'
 import { createIndexMap } from './utils'
@@ -94,7 +94,7 @@ export class Typechecker {
       filepath,
       type: 'suite',
       id: '-1',
-      name: filepath,
+      name: relative(this.ctx.config.root, filepath),
       mode: 'run',
       tasks: [],
       start: ast.start,
@@ -168,6 +168,8 @@ export class Typechecker {
         lastSuite = suite
         return
       }
+      // expectTypeOf and any type error is actually a "test" ("typecheck"),
+      // and all "test"s should be inside a "suite"
       const task: ParsedSuite = {
         type: 'suite',
         id: idx.toString(),
@@ -208,6 +210,7 @@ export class Typechecker {
       return acc
     }, {} as Record<string, FileInformation>)
 
+    const sourceErrors: TypeCheckError[] = []
     const files: File[] = []
 
     testFiles.forEach((path) => {
@@ -226,28 +229,31 @@ export class Typechecker {
           source: path,
         }) || originalError
         const index = indexMap.get(`${originalPos.line}:${originalPos.column}`)
-        const definition = index != null && sortedDefinitions.find(def => def.start <= index && def.end >= index)
-        if (!definition)
+        const definition = (index != null && sortedDefinitions.find(def => def.start <= index && def.end >= index)) || file
+        if (!definition) {
+          // to still show even if we messed up
+          sourceErrors.push(error)
           return
-        definition.task.result = {
-          state: 'fail',
         }
-        definition.task.tasks.push({
+        const suite = 'task' in definition ? definition.task : definition
+        const task: Task = {
           type: 'typecheck',
           id: idx.toString(),
           name: `error expect ${idx + 1}`,
           mode: 'run',
           file,
-          suite: definition.task,
+          suite,
           result: {
             state: 'fail',
             error,
           },
-        })
+        }
+        suite.result = {
+          state: 'fail',
+        }
+        suite.tasks.push(task)
       })
     })
-
-    const sourceErrors: TypeCheckError[] = []
 
     typeErrors.forEach((errors, path) => {
       if (!testFiles.has(path))
@@ -298,6 +304,8 @@ export class Typechecker {
     let cmd = `${this.ctx.config.typecheck.checker} --noEmit --pretty false -p ${tmpConfigPath}`
     if (this.ctx.config.watch)
       cmd += ' --watch'
+    if (this.ctx.config.typecheck.allowJs)
+      cmd += ' --allowJs --checkJs'
     let output = ''
     const stdout = execaCommand(cmd, {
       cwd: this.ctx.config.root,

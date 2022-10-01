@@ -451,6 +451,7 @@ export interface TypecheckConfig {
   checker: 'tsc' | 'vue-tsc'
   include: string[]
   exclude: string[]
+  allowJs?: boolean
 }
 
 export interface UserConfig extends InlineConfig {

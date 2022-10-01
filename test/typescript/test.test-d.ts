@@ -2,7 +2,7 @@ import { describe, expectTypeOf, test } from 'vitest'
 
 describe('test', () => {
   test('some-test', () => {
-    expectTypeOf(45).toBe('22')
+    expectTypeOf(45).toBe(22)
   })
 
   describe('test2', () => {

@@ -97,7 +97,7 @@ async function benchmark(cliFilters: string[], options: CliOptions): Promise<voi
 }
 
 async function typecheck(cliFilters: string[] = [], options: CliOptions = {}) {
-  console.warn(c.yellow('TypeChecking with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow semver, please pin Vitest\'s version when using it.'))
+  console.warn(c.yellow('Testing types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow semver, please pin Vitest\'s version when using it.'))
   await start('typecheck', cliFilters, options)
 }
 
