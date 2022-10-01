@@ -1,15 +1,8 @@
 import { execaCommand } from 'execa'
 import { relative, resolve } from 'pathe'
-import type { Awaitable, File, ParsedStack, TypeCheck } from '../types'
+import type { Awaitable, File, ParsedStack, TypeCheck, Vitest } from '../types'
 import { TYPECHECK_ERROR } from './constants'
 import { getRawErrsMapFromTsCompile, getTsconfigPath } from './parse'
-
-interface OutputOptions {
-  watch: boolean
-  root: string
-  checker: string
-  files: string[]
-}
 
 export class TypeCheckError extends Error {
   [TYPECHECK_ERROR] = true
@@ -38,7 +31,7 @@ export class Typechecker {
     sourceErrors: [],
   }
 
-  constructor(private options: OutputOptions) {}
+  constructor(protected ctx: Vitest, protected files: string[]) {}
 
   public onParseStart(fn: Callback) {
     this._onParseStart = fn
@@ -54,7 +47,7 @@ export class Typechecker {
 
   protected async prepareResults(output: string) {
     const typeErrors = await this.parseTscLikeOutput(output)
-    const testFiles = new Set(this.options.files.map(f => relative(this.options.root, f)))
+    const testFiles = new Set(this.files.map(f => relative(this.ctx.config.root, f)))
 
     const files: File[] = []
 
@@ -117,7 +110,7 @@ export class Typechecker {
     const errorsMap = await getRawErrsMapFromTsCompile(output)
     const typesErrors = new Map<string, TypeCheckError[]>()
     errorsMap.forEach((errors, path) => {
-      const filepath = resolve(this.options.root, path)
+      const filepath = resolve(this.ctx.config.root, path)
       const suiteErrors = errors.map((info) => {
         const limit = Error.stackTraceLimit
         Error.stackTraceLimit = 0
@@ -144,13 +137,13 @@ export class Typechecker {
 
   public async start() {
     // check tsc or vue-tsc installed
-    const tmpConfigPath = await getTsconfigPath(this.options.root)
-    let cmd = `${this.options.checker} --noEmit --pretty false -p ${tmpConfigPath}`
-    if (this.options.watch)
+    const tmpConfigPath = await getTsconfigPath(this.ctx.config.root)
+    let cmd = `${this.ctx.config.typecheck.checker} --noEmit --pretty false -p ${tmpConfigPath}`
+    if (this.ctx.config.watch)
       cmd += ' --watch'
     let output = ''
     const stdout = execaCommand(cmd, {
-      cwd: this.options.root,
+      cwd: this.ctx.config.root,
       stdout: 'pipe',
       reject: false,
     })
@@ -158,7 +151,7 @@ export class Typechecker {
     let rerunTriggered = false
     stdout.stdout?.on('data', (chunk) => {
       output += chunk
-      if (!this.options.watch)
+      if (!this.ctx.config.watch)
         return
       if (output.includes('File change detected') && !rerunTriggered) {
         this._onWatcherRerun?.()
@@ -177,7 +170,7 @@ export class Typechecker {
         output = ''
       }
     })
-    if (!this.options.watch) {
+    if (!this.ctx.config.watch) {
       await stdout
       this._result = await this.prepareResults(output)
       await this._onParseEnd?.(this._result)

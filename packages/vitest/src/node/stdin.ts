@@ -36,6 +36,14 @@ export function registerConsoleShortcuts(ctx: Vitest) {
 
     const name = key?.name
 
+    // quit
+    if (name === 'q')
+      return ctx.exit(true)
+
+    // TODO typechecking doesn't shortcuts this yet
+    if (ctx.mode === 'typecheck')
+      return
+
     // help
     if (name === 'h')
       return printShortcutsHelp()
@@ -54,9 +62,6 @@ export function registerConsoleShortcuts(ctx: Vitest) {
     // change fileNamePattern
     if (name === 'p')
       return inputFilePattern()
-    // quit
-    if (name === 'q')
-      return ctx.exit(true)
   }
 
   async function keypressHandler(str: string, key: any) {

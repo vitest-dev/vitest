@@ -103,7 +103,10 @@ export abstract class BaseReporter implements Reporter {
     else
       this.ctx.logger.log(WAIT_FOR_CHANGE_PASS)
 
-    const hints = [HELP_HINT]
+    const hints = []
+    // TODO typecheck doesn't support these for now
+    if (this.mode !== 'typecheck')
+      hints.push(HELP_HINT)
     if (failedSnap)
       hints.unshift(HELP_UPDATE_SNAP)
     else

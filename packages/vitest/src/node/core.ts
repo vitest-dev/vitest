@@ -154,12 +154,7 @@ export class Vitest {
 
   async typecheck() {
     const testsFilesList = await this.globTestFiles()
-    const checker = new Typechecker({
-      root: this.config.root,
-      watch: this.config.watch,
-      files: testsFilesList,
-      checker: this.config.typecheck.checker,
-    })
+    const checker = new Typechecker(this, testsFilesList)
     checker.onParseEnd(async ({ files, sourceErrors }) => {
       await this.report('onFinished', files)
       if (sourceErrors.length) {

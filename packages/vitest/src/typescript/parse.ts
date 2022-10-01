@@ -1,7 +1,3 @@
-// tsc --noEmit --pretty false
-// include - show like regular errors
-// exclude - show like tsc errors
-
 import path from 'node:path'
 import url from 'node:url'
 import { writeFile } from 'node:fs/promises'
