@@ -1,46 +1,42 @@
 import { execaCommand } from 'execa'
-import mm from 'micromatch'
-import { resolve } from 'pathe'
-import type { Awaitable, ParsedStack, TscErrorInfo } from '../types'
+import { relative, resolve } from 'pathe'
+import type { Awaitable, File, ParsedStack, TypeCheck } from '../types'
 import { TYPECHECK_ERROR } from './constants'
 import { getRawErrsMapFromTsCompile, getTsconfigPath } from './parse'
 
 interface OutputOptions {
   watch: boolean
   root: string
-  include: string[]
-  checker: 'tsc' | 'vue-tsc'
+  checker: string
+  files: string[]
 }
-
-const originSymbol = Symbol('typechecker:origin')
 
 export class TypeCheckError extends Error {
-  [TYPECHECK_ERROR] = true;
-  [originSymbol] = 'test'
+  [TYPECHECK_ERROR] = true
   stacks: ParsedStack[] = []
+  name = 'TypeCheckError'
 
-  constructor(public message: string, origin: 'test' | 'source') {
+  constructor(public message: string) {
     super(message)
-    this[originSymbol] = origin
-  }
-
-  getOrigin() {
-    return this[originSymbol]
   }
 }
 
-interface SuiteError {
-  path: string
-  originalError: TscErrorInfo
-  error: TypeCheckError
+interface ErrorsCache {
+  files: File[]
+  sourceErrors: TypeCheckError[]
 }
 
-type Callback<Args extends Array<any> = []> = (...args: Args) => Awaitable<void> // TODO
+type Callback<Args extends Array<any> = []> = (...args: Args) => Awaitable<void>
 
 export class Typechecker {
   private _onParseStart?: Callback
-  private _onParseEnd?: Callback<[SuiteError[]]>
+  private _onParseEnd?: Callback<[ErrorsCache]>
   private _onWatcherRerun?: Callback
+
+  private _result: ErrorsCache = {
+    files: [],
+    sourceErrors: [],
+  }
 
   constructor(private options: OutputOptions) {}
 
@@ -48,7 +44,7 @@ export class Typechecker {
     this._onParseStart = fn
   }
 
-  public onParseEnd(fn: Callback<[SuiteError[]]>) {
+  public onParseEnd(fn: Callback<[ErrorsCache]>) {
     this._onParseEnd = fn
   }
 
@@ -56,19 +52,76 @@ export class Typechecker {
     this._onWatcherRerun = fn
   }
 
-  private async parse(output: string): Promise<SuiteError[]> {
-    // check tsc or vue-tsc installed
+  protected async prepareResults(output: string) {
+    const typeErrors = await this.parseTscLikeOutput(output)
+    const testFiles = new Set(this.options.files.map(f => relative(this.options.root, f)))
+
+    const files: File[] = []
+
+    testFiles.forEach((path) => { // TODO parse files to create tasks
+      const errors = typeErrors.get(path)
+      const suite: File = {
+        type: 'suite',
+        filepath: path,
+        tasks: [],
+        id: path,
+        name: path,
+        mode: 'run',
+      }
+      if (!errors) {
+        return files.push({
+          ...suite,
+          result: {
+            state: 'pass',
+          },
+        })
+      }
+      const tasks = errors.map((error, idx) => {
+        const task: TypeCheck = {
+          type: 'typecheck',
+          id: idx.toString(),
+          name: `error expect ${idx + 1}`,
+          mode: 'run',
+          file: suite,
+          suite,
+          result: {
+            state: 'fail',
+            error,
+          },
+        }
+        return task
+      })
+      suite.tasks = tasks
+      files.push({
+        ...suite,
+        result: {
+          state: 'fail',
+        },
+      })
+    })
+
+    const sourceErrors: TypeCheckError[] = []
+
+    typeErrors.forEach((errors, path) => {
+      if (!testFiles.has(path))
+        sourceErrors.push(...errors)
+    })
+
+    return {
+      files,
+      sourceErrors,
+    }
+  }
+
+  protected async parseTscLikeOutput(output: string) {
     const errorsMap = await getRawErrsMapFromTsCompile(output)
-    const errorsList: SuiteError[] = []
-    const pattern = ['**/*.test-d.ts']
-    const testFiles = new Set(mm([...errorsMap.keys()], pattern))
+    const typesErrors = new Map<string, TypeCheckError[]>()
     errorsMap.forEach((errors, path) => {
       const filepath = resolve(this.options.root, path)
       const suiteErrors = errors.map((info) => {
         const limit = Error.stackTraceLimit
         Error.stackTraceLimit = 0
-        const origin = testFiles.has(path) ? 'test' : 'source'
-        const error = new TypeCheckError(info.errMsg, origin)
+        const error = new TypeCheckError(info.errMsg)
         Error.stackTraceLimit = limit
         error.stacks = [
           {
@@ -82,18 +135,15 @@ export class Typechecker {
             },
           },
         ]
-        return {
-          error,
-          path,
-          originalError: info,
-        }
+        return error
       })
-      errorsList.push(...suiteErrors)
+      typesErrors.set(path, suiteErrors)
     })
-    return errorsList
+    return typesErrors
   }
 
   public async start() {
+    // check tsc or vue-tsc installed
     const tmpConfigPath = await getTsconfigPath(this.options.root)
     let cmd = `${this.options.checker} --noEmit --pretty false -p ${tmpConfigPath}`
     if (this.options.watch)
@@ -112,11 +162,16 @@ export class Typechecker {
         return
       if (output.includes('File change detected') && !rerunTriggered) {
         this._onWatcherRerun?.()
+        this._result = {
+          sourceErrors: [],
+          files: [],
+        }
         rerunTriggered = true
       }
-      if (/Found \w+ errors. Watching for/.test(output)) {
+      if (/Found \w+ errors*. Watching for/.test(output)) {
         rerunTriggered = false
-        this.parse(output).then((errors) => {
+        this.prepareResults(output).then((errors) => {
+          this._result = errors
           this._onParseEnd?.(errors)
         })
         output = ''
@@ -124,7 +179,12 @@ export class Typechecker {
     })
     if (!this.options.watch) {
       await stdout
-      await this._onParseEnd?.(await this.parse(output))
+      this._result = await this.prepareResults(output)
+      await this._onParseEnd?.(this._result)
     }
+  }
+
+  public getResult() {
+    return this._result
   }
 }

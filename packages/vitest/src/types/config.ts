@@ -450,6 +450,7 @@ export interface InlineConfig {
 export interface TypecheckConfig {
   checker: 'tsc' | 'vue-tsc'
   include: string[]
+  exclude: string[]
 }
 
 export interface UserConfig extends InlineConfig {

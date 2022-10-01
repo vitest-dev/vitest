@@ -36,9 +36,9 @@ export class DefaultReporter extends BaseReporter {
     await super.onFinished(files, errors)
   }
 
-  async onWatcherStart() {
+  async onWatcherStart(files = this.ctx.state.getFiles(), errors = this.ctx.state.getUnhandledErrors()) {
     await this.stopListRender()
-    await super.onWatcherStart()
+    await super.onWatcherStart(files, errors)
   }
 
   async stopListRender() {

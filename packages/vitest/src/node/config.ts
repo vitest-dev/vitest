@@ -234,5 +234,10 @@ export function resolveConfig(
     ...resolved.typecheck,
   }
 
+  if (mode === 'typecheck') {
+    resolved.include = resolved.typecheck.include
+    resolved.exclude = resolved.typecheck.exclude
+  }
+
   return resolved
 }

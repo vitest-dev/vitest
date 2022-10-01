@@ -93,11 +93,9 @@ export abstract class BaseReporter implements Reporter {
     }
   }
 
-  async onWatcherStart() {
+  async onWatcherStart(files = this.ctx.state.getFiles(), errors = this.ctx.state.getUnhandledErrors()) {
     this.resetLastRunLog()
 
-    const files = this.ctx.state.getFiles()
-    const errors = this.ctx.state.getUnhandledErrors()
     const failed = errors.length > 0 || hasFailed(files)
     const failedSnap = hasFailedSnapshot(files)
     if (failed)
