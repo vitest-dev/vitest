@@ -55,7 +55,7 @@ export abstract class BaseReporter implements Reporter {
     if (errors.length) {
       if (!this.ctx.config.dangerouslyIgnoreUnhandledErrors)
         process.exitCode = 1
-      this.ctx.logger.printUnhandledErrors(errors)
+      await this.ctx.logger.printUnhandledErrors(errors)
     }
   }
 
@@ -241,6 +241,8 @@ export abstract class BaseReporter implements Reporter {
     logger.log(padTitle('Start at'), formatTimeString(this._timeStart))
     if (this.watchFilters)
       logger.log(padTitle('Duration'), time(threadTime))
+    else if (this.mode === 'typecheck')
+      logger.log(padTitle('Duration'), time(executionTime))
     else
       logger.log(padTitle('Duration'), time(executionTime) + c.dim(` (transform ${time(transformTime)}, setup ${time(setupTime)}, collect ${time(collectTime)}, tests ${time(testsTime)})`))
 
@@ -284,6 +286,8 @@ export abstract class BaseReporter implements Reporter {
     logger.log(`\n${c.cyan(c.inverse(c.bold(' BENCH ')))} ${c.cyan('Summary')}\n`)
     for (const bench of topBenchs) {
       const group = bench.suite
+      if (!group)
+        continue
       const groupName = getFullName(group)
       logger.log(`  ${bench.name}${c.dim(` - ${groupName}`)}`)
       const siblings = group.tasks

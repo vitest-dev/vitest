@@ -7,10 +7,11 @@ import mm from 'micromatch'
 import c from 'picocolors'
 import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
-import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter, ResolvedConfig, UserConfig, VitestRunMode } from '../types'
+import type { ArgumentsType, CoverageProvider, File, OnServerRestartHandler, Reporter, ResolvedConfig, Task, UserConfig, VitestRunMode } from '../types'
 import { SnapshotManager } from '../integrations/snapshot/manager'
 import { clearTimeout, deepMerge, hasFailed, noop, setTimeout, slash, toArray } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
+import { Typechecker } from '../typescript/parser'
 import { createPool } from './pool'
 import type { WorkerPool } from './pool'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
@@ -151,7 +152,65 @@ export class Vitest {
     ) as ResolvedConfig
   }
 
+  async typecheck() {
+    const checker = new Typechecker({
+      root: this.config.root,
+      watch: this.config.watch,
+      ...this.config.typecheck,
+    })
+    checker.onParseEnd(async (errors) => {
+      const testErrors = errors.filter(({ error }) => error.getOrigin() === 'test')
+      const sourceErrors = errors.filter(({ error }) => error.getOrigin() === 'source')
+      const testFiles = testErrors.reduce((acc, { path, error }, idx) => {
+        if (!acc[path]) {
+          // TODO parse code to constuct actual suite,
+          // currently doesn't support describe and test
+          acc[path] = {
+            type: 'suite',
+            filepath: path,
+            tasks: [],
+            id: path,
+            name: path,
+            mode: 'run',
+            result: {
+              state: 'fail',
+            },
+          }
+        }
+        const task: Task = {
+          type: 'typecheck',
+          id: idx.toString(),
+          name: `error expect ${idx + 1}`,
+          mode: 'run',
+          file: acc[path],
+          result: {
+            state: 'fail',
+            error,
+          },
+        }
+        acc[path].tasks.push(task)
+        return acc
+      }, {} as Record<string, File>)
+      await this.report('onFinished', Object.values(testFiles)) // TODO optimize without map -> array -> obj -> array
+      if (sourceErrors.length) // TODO move on top of summary
+        await this.logger.printSourceTypeErrors(sourceErrors.map(({ error }) => error))
+    })
+    checker.onParseStart(async () => {
+      await this.report('onInit', this)
+      // TODO start spinner "Typechecking..."
+    })
+    // checker.onWatcherRerun(() => {
+    //   console.log('reruning watcher')
+    // })
+    await checker.start()
+  }
+
   async start(filters?: string[]) {
+    if (this.mode === 'typecheck') {
+      await this.typecheck()
+      return
+    }
+
     try {
       await this.initCoverageProvider()
       await this.coverageProvider?.clean(this.config.coverage.clean)

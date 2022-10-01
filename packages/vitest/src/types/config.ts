@@ -27,7 +27,7 @@ export interface EnvironmentOptions {
   [x: string]: unknown
 }
 
-export type VitestRunMode = 'test' | 'benchmark'
+export type VitestRunMode = 'test' | 'benchmark' | 'typecheck'
 
 export interface InlineConfig {
   /**
@@ -443,6 +443,13 @@ export interface InlineConfig {
    * Ignore any unhandled errors that occur
    */
   dangerouslyIgnoreUnhandledErrors?: boolean
+
+  typecheck?: Partial<TypecheckConfig>
+}
+
+export interface TypecheckConfig {
+  checker: 'tsc' | 'vue-tsc'
+  include: string[]
 }
 
 export interface UserConfig extends InlineConfig {
@@ -489,7 +496,7 @@ export interface UserConfig extends InlineConfig {
   shard?: string
 }
 
-export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence'> {
+export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck'> {
   mode: VitestRunMode
 
   base?: string
@@ -526,4 +533,6 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
     shuffle?: boolean
     seed?: number
   }
+
+  typecheck: TypecheckConfig
 }

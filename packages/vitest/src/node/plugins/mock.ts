@@ -125,7 +125,7 @@ function getIndexStatus(code: string, from: number) {
       }
     }
 
-    beforeChar = code[index]
+    beforeChar = char
     index++
   }
 

@@ -54,7 +54,11 @@ export interface Test<ExtraContext = {}> extends TaskBase {
   context: TestContext & ExtraContext
 }
 
-export type Task = Test | Suite | File | Benchmark
+export interface TypeCheck extends TaskBase {
+  type: 'typecheck'
+}
+
+export type Task = Test | Suite | File | Benchmark | TypeCheck
 
 export type DoneCallback = (error?: any) => void
 export type TestFunction<ExtraContext = {}> = (context: TestContext & ExtraContext) => Awaitable<any> | void

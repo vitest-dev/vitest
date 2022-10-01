@@ -229,5 +229,10 @@ export function resolveConfig(
       : BaseSequencer
   }
 
+  resolved.typecheck = {
+    ...configDefaults.typecheck,
+    ...resolved.typecheck,
+  }
+
   return resolved
 }

@@ -7,6 +7,7 @@ import type { ErrorWithDiff, ParsedStack, Position } from '../types'
 import { interpretSourcePos, lineSplitRE, parseStacktrace, posToNumber } from '../utils/source-map'
 import { F_POINTER } from '../utils/figures'
 import { stringify } from '../integrations/chai/jest-matcher-utils'
+import { TypeCheckError } from '../typescript/parser'
 import type { Vitest } from './core'
 import { type DiffOptions, unifiedDiff } from './diff'
 import { divider } from './reporters/renderers/utils'
@@ -47,10 +48,12 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
 
   await interpretSourcePos(stacks, ctx)
 
-  const nearest = stacks.find(stack =>
-    ctx.server.moduleGraph.getModuleById(stack.file)
+  const nearest = error instanceof TypeCheckError
+    ? error.stacks[0]
+    : stacks.find(stack =>
+      ctx.server.moduleGraph.getModuleById(stack.file)
       && existsSync(stack.file),
-  )
+    )
 
   const errorProperties = getErrorProperties(e)
 
@@ -63,7 +66,7 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
       const file = fileFromParsedStack(nearest)
       // could point to non-existing original file
       // for example, when there is a source map file, but no source in node_modules
-      if (existsSync(file)) {
+      if (nearest.file === file || existsSync(file)) {
         const sourceCode = readFileSync(file, 'utf-8')
         ctx.logger.log(c.yellow(generateCodeFrame(sourceCode, 4, pos)))
       }

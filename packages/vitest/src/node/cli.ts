@@ -66,6 +66,10 @@ cli
   .action(benchmark)
 
 cli
+  .command('typecheck')
+  .action(typecheck)
+
+cli
   .command('[...filters]')
   .action((filters, options) => start('test', filters, options))
 
@@ -90,6 +94,11 @@ async function run(cliFilters: string[], options: CliOptions): Promise<void> {
 async function benchmark(cliFilters: string[], options: CliOptions): Promise<void> {
   console.warn(c.yellow('Benchmarking is an experimental feature.\nBreaking changes might not follow semver, please pin Vitest\'s version when using it.'))
   await start('benchmark', cliFilters, options)
+}
+
+async function typecheck(cliFilters: string[] = [], options: CliOptions = {}) {
+  console.warn(c.yellow('TypeChecking with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow semver, please pin Vitest\'s version when using it.'))
+  await start('typecheck', cliFilters, options)
 }
 
 async function start(mode: VitestRunMode, cliFilters: string[], options: CliOptions): Promise<void> {

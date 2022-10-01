@@ -1,11 +1,11 @@
-import type { Arrayable, Benchmark, Suite, Task, Test } from '../types'
+import type { Arrayable, Benchmark, Suite, Task, Test, TypeCheck } from '../types'
 import { toArray } from './base'
 
-function isAtomTest(s: Task): s is Test | Benchmark {
-  return (s.type === 'test' || s.type === 'benchmark')
+function isAtomTest(s: Task): s is Test | Benchmark | TypeCheck {
+  return (s.type === 'test' || s.type === 'benchmark' || s.type === 'typecheck')
 }
 
-export function getTests(suite: Arrayable<Task>): (Test | Benchmark)[] {
+export function getTests(suite: Arrayable<Task>): (Test | Benchmark | TypeCheck)[] {
   return toArray(suite).flatMap(s => isAtomTest(s) ? [s] : s.tasks.flatMap(c => isAtomTest(c) ? [c] : getTests(c)))
 }
 

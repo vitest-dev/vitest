@@ -38,7 +38,7 @@ export async function startVitest(mode: VitestRunMode, cliFilters: string[], opt
 
   const ctx = await createVitest(mode, options, viteOverrides)
 
-  if (mode !== 'benchmark' && ctx.config.coverage.enabled) {
+  if (mode === 'test' && ctx.config.coverage.enabled) {
     const provider = ctx.config.coverage.provider || 'c8'
     if (typeof provider === 'string') {
       const requiredPackages = CoverageProviderMap[provider]

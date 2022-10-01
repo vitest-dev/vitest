@@ -88,6 +88,10 @@ const config = {
   fakeTimers: fakeTimersDefaults,
   maxConcurrency: 5,
   dangerouslyIgnoreUnhandledErrors: false,
+  typecheck: {
+    checker: 'tsc' as const,
+    include: ['**/*.test-d.ts'],
+  },
 }
 
 export const configDefaults: Required<Pick<UserConfig, keyof typeof config>> = Object.freeze(config)
