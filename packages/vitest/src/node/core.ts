@@ -11,7 +11,7 @@ import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter,
 import { SnapshotManager } from '../integrations/snapshot/manager'
 import { clearTimeout, deepMerge, hasFailed, noop, setTimeout, slash, toArray } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
-import { Typechecker } from '../typescript/parser'
+import { Typechecker } from '../typescript/typechecker'
 import { createPool } from './pool'
 import type { WorkerPool } from './pool'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
@@ -519,7 +519,7 @@ export class Vitest {
       this.closingPromise = Promise.allSettled([
         this.pool?.close(),
         this.server.close(),
-        this.typechecker?.clean(),
+        this.typechecker?.stop(),
       ].filter(Boolean)).then((results) => {
         results.filter(r => r.status === 'rejected').forEach((err) => {
           this.logger.error('error during close', (err as PromiseRejectedResult).reason)

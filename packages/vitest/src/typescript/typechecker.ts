@@ -1,4 +1,5 @@
 import { rm } from 'fs/promises'
+import type { ExecaChildProcess } from 'execa'
 import { execaCommand } from 'execa'
 import { resolve } from 'pathe'
 import { SourceMapConsumer } from 'source-map-js'
@@ -28,15 +29,14 @@ export class Typechecker {
   private _onParseStart?: Callback
   private _onParseEnd?: Callback<[ErrorsCache]>
   private _onWatcherRerun?: Callback
-
   private _result: ErrorsCache = {
     files: [],
     sourceErrors: [],
   }
 
   private _tests: Record<string, FileInformation> | null = {}
-
   private tmpConfigPath?: string
+  private process!: ExecaChildProcess
 
   constructor(protected ctx: Vitest, protected files: string[]) {}
 
@@ -168,9 +168,10 @@ export class Typechecker {
     return typesErrors
   }
 
-  public async clean() {
+  public async stop() {
     if (this.tmpConfigPath)
       await rm(this.tmpConfigPath)
+    this.process?.kill()
   }
 
   public async start() {
@@ -191,6 +192,7 @@ export class Typechecker {
       stdout: 'pipe',
       reject: false,
     })
+    this.process = stdout
     await this._onParseStart?.()
     let rerunTriggered = false
     stdout.stdout?.on('data', (chunk) => {
