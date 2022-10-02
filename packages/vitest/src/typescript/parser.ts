@@ -150,7 +150,7 @@ export class Typechecker {
             file: filepath,
             line: info.line,
             column: info.column,
-            method: '', // TODO, build error based on method
+            method: '',
             sourcePos: {
               line: info.line,
               column: info.column,
@@ -168,7 +168,6 @@ export class Typechecker {
     return typesErrors
   }
 
-  // TODO call before exiting process
   public async clean() {
     if (this.tmpConfigPath)
       await rm(this.tmpConfigPath)

@@ -104,7 +104,8 @@ export async function collectTests(ctx: Vitest, filepath: string): Promise<null 
       mode = latestSuite.mode
     const state = mode === 'run' ? 'pass' : mode
     // expectTypeOf and any type error is actually a "test" ("typecheck"),
-    // and all "test"s should be inside a "suite"
+    // and all "test"s should be inside a "suite", so semantics inside typecheck for "test" changes
+    // if we ever allow having multiple errors in a test, we can change type to "test"
     const task: ParsedSuite = {
       type: 'suite',
       id: idx.toString(),

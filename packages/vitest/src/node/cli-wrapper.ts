@@ -112,7 +112,7 @@ async function start(preArgs: string[], postArgs: string[]) {
     ],
     {
       reject: false,
-      stderr: 'inherit', // TODO
+      stderr: 'pipe',
       stdout: 'inherit',
       stdin: 'inherit',
       env: {

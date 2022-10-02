@@ -39,6 +39,7 @@ export const globalApis = [
   'assert',
   // typecheck
   'expectTypeOf',
+  'assertType',
   // utils
   'vitest',
   'vi',

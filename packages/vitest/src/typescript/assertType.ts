@@ -1,6 +1,6 @@
 const noop = () => {}
 
-interface AssertType {
+export interface AssertType {
   <T>(value: T): void
 }
 
