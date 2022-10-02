@@ -6,7 +6,7 @@ title: Debugging | Guide
 
 ## Terminal
 
-To debug a test file in your shell, add a `debugger` statement anywhere in your code, and then run `ndb`:
+To debug a test file without an IDE, you can use [`ndb`](https://github.com/GoogleChromeLabs/ndb). Just add a `debugger` statement anywhere in your code, and then run `ndb`:
 
 ```sh
 # install ndb globally
