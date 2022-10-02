@@ -1,7 +1,7 @@
 import { performance } from 'perf_hooks'
 import c from 'picocolors'
 import type { ErrorWithDiff, File, Reporter, Task, TaskResultPack, UserConsoleLog } from '../../types'
-import { clearInterval, getFullName, getSuites, getTests, hasFailed, hasFailedSnapshot, isNode, relativePath, setInterval } from '../../utils'
+import { clearInterval, getFullName, getSuites, getTests, getTypecheckTests, hasFailed, hasFailedSnapshot, isNode, relativePath, setInterval } from '../../utils'
 import type { Vitest } from '../../node'
 import { F_RIGHT } from '../../utils/figures'
 import { divider, formatTimeString, getStateString, getStateSymbol, pointer, renderSnapshotSummary } from './renderers/utils'
@@ -202,7 +202,7 @@ export abstract class BaseReporter implements Reporter {
   }
 
   async reportTestSummary(files: File[]) {
-    const tests = getTests(files)
+    const tests = this.mode === 'typecheck' ? getTypecheckTests(files) : getTests(files)
     const logger = this.ctx.logger
 
     const executionTime = this.end - this.start
@@ -212,7 +212,7 @@ export abstract class BaseReporter implements Reporter {
     const transformTime = Array.from(this.ctx.vitenode.fetchCache.values()).reduce((a, b) => a + (b?.duration || 0), 0)
     const threadTime = collectTime + testsTime + setupTime
 
-    const padTitle = (str: string) => c.dim(`${str.padStart(10)} `)
+    const padTitle = (str: string) => c.dim(`${str.padStart(11)} `)
     const time = (time: number) => {
       if (time > 1000)
         return `${(time / 1000).toFixed(2)}s`
@@ -239,6 +239,11 @@ export abstract class BaseReporter implements Reporter {
 
     logger.log(padTitle('Test Files'), getStateString(files))
     logger.log(padTitle('Tests'), getStateString(tests))
+    if (this.mode === 'typecheck') {
+      // has only failed types
+      const typechecks = getTests(tests).filter(t => t.type === 'typecheck')
+      logger.log(padTitle('Type Errors'), getStateString(typechecks, 'typechecks', false))
+    }
     logger.log(padTitle('Start at'), formatTimeString(this._timeStart))
     if (this.watchFilters)
       logger.log(padTitle('Duration'), time(threadTime))
@@ -270,7 +275,8 @@ export abstract class BaseReporter implements Reporter {
     }
 
     if (failedTests.length) {
-      logger.error(c.red(divider(c.bold(c.inverse(` Failed Tests ${failedTests.length} `)))))
+      const type = this.mode === 'typecheck' ? 'Typechecks' : 'Tests'
+      logger.error(c.red(divider(c.bold(c.inverse(` Failed ${type} ${failedTests.length} `)))))
       logger.error()
 
       await this.printTaskErrors(failedTests, errorDivider)

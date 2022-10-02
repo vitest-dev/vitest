@@ -157,7 +157,7 @@ export class Vitest {
     const checker = new Typechecker(this, testsFilesList)
     checker.onParseEnd(async ({ files, sourceErrors }) => {
       await this.report('onFinished', files)
-      if (sourceErrors.length) {
+      if (sourceErrors.length && !this.config.typecheck.ignoreSourceErrors) {
         process.exitCode = 1
         await this.logger.printSourceTypeErrors(sourceErrors)
       }

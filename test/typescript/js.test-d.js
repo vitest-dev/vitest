@@ -2,4 +2,4 @@
 
 import { expectTypeOf } from 'vitest'
 
-expectTypeOf(1).toBe('string')
+expectTypeOf(1).toBe(2)

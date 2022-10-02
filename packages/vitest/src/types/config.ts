@@ -444,14 +444,34 @@ export interface InlineConfig {
    */
   dangerouslyIgnoreUnhandledErrors?: boolean
 
+  /**
+   * Options for configuring typechecking test environment.
+   */
   typecheck?: Partial<TypecheckConfig>
 }
 
 export interface TypecheckConfig {
+  /**
+   * What tool to use for type checking.
+   */
   checker: 'tsc' | 'vue-tsc'
+  /**
+   * Pattern for files that should be treated as test files
+   */
   include: string[]
+  /**
+   * Pattern for files that should not be treated as test files
+   */
   exclude: string[]
+  /**
+   * Check JS files that have `@ts-check` comment.
+   * If you have it enabled in tsconfig, this will not overwrite it.
+   */
   allowJs?: boolean
+  /**
+   * Do not fail, if Vitest found errors not inside the test files.
+   */
+  ignoreSourceErrors?: boolean
 }
 
 export interface UserConfig extends InlineConfig {

@@ -1,4 +1,5 @@
 import type { Arrayable, Benchmark, Suite, Task, Test, TypeCheck } from '../types'
+import { TYPECHECK_SUITE } from '../typescript/constants'
 import { toArray } from './base'
 
 function isAtomTest(s: Task): s is Test | Benchmark | TypeCheck {
@@ -7,6 +8,14 @@ function isAtomTest(s: Task): s is Test | Benchmark | TypeCheck {
 
 export function getTests(suite: Arrayable<Task>): (Test | Benchmark | TypeCheck)[] {
   return toArray(suite).flatMap(s => isAtomTest(s) ? [s] : s.tasks.flatMap(c => isAtomTest(c) ? [c] : getTests(c)))
+}
+
+export function getTypecheckTests(suite: Arrayable<Task>): Suite[] {
+  return toArray(suite).flatMap((s) => {
+    if (s.type !== 'suite')
+      return []
+    return TYPECHECK_SUITE in s ? [s, ...getTypecheckTests(s.tasks)] : getTypecheckTests(s.tasks)
+  })
 }
 
 export function getTasks(tasks: Arrayable<Task> = []): Task[] {

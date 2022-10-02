@@ -91,7 +91,7 @@ export function renderSnapshotSummary(rootDir: string, snapshots: SnapshotSummar
   return summary
 }
 
-export function getStateString(tasks: Task[], name = 'tests') {
+export function getStateString(tasks: Task[], name = 'tests', showTotal = true) {
   if (tasks.length === 0)
     return c.dim(`no ${name}`)
 
@@ -105,7 +105,7 @@ export function getStateString(tasks: Task[], name = 'tests') {
     passed.length ? c.bold(c.green(`${passed.length} passed`)) : null,
     skipped.length ? c.yellow(`${skipped.length} skipped`) : null,
     todo.length ? c.gray(`${todo.length} todo`) : null,
-  ].filter(Boolean).join(c.dim(' | ')) + c.gray(` (${tasks.length})`)
+  ].filter(Boolean).join(c.dim(' | ')) + (showTotal ? c.gray(` (${tasks.length})`) : '')
 }
 
 export function getStateSymbol(task: Task) {
