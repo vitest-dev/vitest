@@ -10,6 +10,10 @@ export function getTests(suite: Arrayable<Task>): (Test | Benchmark | TypeCheck)
   return toArray(suite).flatMap(s => isAtomTest(s) ? [s] : s.tasks.flatMap(c => isAtomTest(c) ? [c] : getTests(c)))
 }
 
+export function isTypecheckTest(suite: Task): suite is Suite {
+  return TYPECHECK_SUITE in suite
+}
+
 export function getTypecheckTests(suite: Arrayable<Task>): Suite[] {
   return toArray(suite).flatMap((s) => {
     if (s.type !== 'suite')

@@ -1,5 +1,5 @@
 import c from 'picocolors'
-import type { UserConsoleLog } from '../../types'
+import type { File, UserConsoleLog } from '../../types'
 import { BaseReporter } from './base'
 import type { ListRendererOptions } from './renderers/listRenderer'
 import { createListRenderer } from './renderers/listRenderer'
@@ -18,11 +18,13 @@ export class DefaultReporter extends BaseReporter {
     super.onWatcherStart()
   }
 
-  onCollected() {
+  onCollected(files?: File[]) {
     if (this.isTTY) {
       this.rendererOptions.logger = this.ctx.logger
       this.rendererOptions.showHeap = this.ctx.config.logHeapUsage
-      const files = this.ctx.state.getFiles(this.watchFilters)
+      this.rendererOptions.mode = this.mode
+      if (!files)
+        files = this.ctx.state.getFiles(this.watchFilters)
       if (!this.renderer)
         this.renderer = createListRenderer(files, this.rendererOptions).start()
       else

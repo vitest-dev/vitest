@@ -1,8 +1,8 @@
 import c from 'picocolors'
 import cliTruncate from 'cli-truncate'
 import stripAnsi from 'strip-ansi'
-import type { Benchmark, BenchmarkResult, SuiteHooks, Task } from '../../../types'
-import { clearInterval, getTests, notNullish, setInterval } from '../../../utils'
+import type { Benchmark, BenchmarkResult, SuiteHooks, Task, VitestRunMode } from '../../../types'
+import { clearInterval, getTests, getTypecheckTests, isTypecheckTest, notNullish, setInterval } from '../../../utils'
 import { F_RIGHT } from '../../../utils/figures'
 import type { Logger } from '../../logger'
 import { getCols, getHookStateSymbol, getStateSymbol } from './utils'
@@ -11,6 +11,7 @@ export interface ListRendererOptions {
   renderSucceed?: boolean
   logger: Logger
   showHeap: boolean
+  mode: VitestRunMode
 }
 
 const DURATION_LONG = 300
@@ -95,8 +96,10 @@ export function renderTree(tasks: Task[], options: ListRendererOptions, level = 
     if (task.type === 'test' && task.result?.retryCount && task.result.retryCount > 1)
       suffix += c.yellow(` (retry x${task.result.retryCount})`)
 
-    if (task.type === 'suite')
-      suffix += c.dim(` (${getTests(task).length})`)
+    if (task.type === 'suite' && !isTypecheckTest(task)) {
+      const tests = options.mode === 'typecheck' ? getTypecheckTests(task) : getTests(task)
+      suffix += c.dim(` (${tests.length})`)
+    }
 
     if (task.mode === 'skip' || task.mode === 'todo')
       suffix += ` ${c.dim(c.gray('[skipped]'))}`

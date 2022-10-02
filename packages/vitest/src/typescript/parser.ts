@@ -34,6 +34,8 @@ export class Typechecker {
     sourceErrors: [],
   }
 
+  private _tests: Record<string, FileInformation> | null = {}
+
   private tmpConfigPath?: string
 
   constructor(protected ctx: Vitest, protected files: string[]) {}
@@ -50,28 +52,37 @@ export class Typechecker {
     this._onWatcherRerun = fn
   }
 
-  protected async collectTests(filepath: string): Promise<FileInformation | null> {
+  protected async collectFileTests(filepath: string): Promise<FileInformation | null> {
     return collectTests(this.ctx, filepath)
   }
 
-  protected async prepareResults(output: string) {
-    const typeErrors = await this.parseTscLikeOutput(output)
-    const testFiles = new Set(this.files)
-
-    const sourceDefinitions = (await Promise.all(
-      this.files.map(filepath => this.collectTests(filepath)),
+  public async collectTests() {
+    const tests = (await Promise.all(
+      this.files.map(filepath => this.collectFileTests(filepath)),
     )).reduce((acc, data) => {
       if (!data)
         return acc
       acc[data.filepath] = data
       return acc
     }, {} as Record<string, FileInformation>)
+    this._tests = tests
+    return tests
+  }
+
+  protected async prepareResults(output: string) {
+    const typeErrors = await this.parseTscLikeOutput(output)
+    const testFiles = new Set(this.files)
+
+    let tests = this._tests
+
+    if (!tests)
+      tests = await this.collectTests()
 
     const sourceErrors: TypeCheckError[] = []
     const files: File[] = []
 
     testFiles.forEach((path) => {
-      const { file, definitions, map, parsed } = sourceDefinitions[path]
+      const { file, definitions, map, parsed } = tests![path]
       const errors = typeErrors.get(path)
       files.push(file)
       if (!errors)
@@ -189,10 +200,9 @@ export class Typechecker {
         return
       if (output.includes('File change detected') && !rerunTriggered) {
         this._onWatcherRerun?.()
-        this._result = {
-          sourceErrors: [],
-          files: [],
-        }
+        this._result.sourceErrors = []
+        this._result.files = []
+        this._tests = null // test structure migh've changed
         rerunTriggered = true
       }
       if (/Found \w+ errors*. Watching for/.test(output)) {
@@ -213,5 +223,12 @@ export class Typechecker {
 
   public getResult() {
     return this._result
+  }
+
+  public getTestFiles() {
+    return Object.values(this._tests || {}).map(({ file }) => ({
+      ...file,
+      result: undefined,
+    }))
   }
 }
