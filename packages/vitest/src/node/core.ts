@@ -167,8 +167,9 @@ export class Vitest {
         process.exitCode = 1
         await this.logger.printSourceTypeErrors(sourceErrors)
       }
+      // if there are source errors, we are showing it, and then terminating process
       if (!files.length) {
-        const exitCode = this.config.passWithNoTests ? 0 : 1
+        const exitCode = this.config.passWithNoTests ? (process.exitCode ?? 0) : 1
         process.exit(exitCode)
       }
       if (this.config.watch) {
