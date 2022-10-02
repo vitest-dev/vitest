@@ -1,4 +1,4 @@
-// import { describe, expectTypeOf, test } from 'vitest'
+import { describe, expectTypeOf, test } from 'vitest'
 
 describe('test', () => {
   test('some-test', () => {
@@ -15,19 +15,4 @@ describe('test', () => {
   })
 })
 
-// interface Thor {
-//   'name.first': string
-//   'name.first.second.third': string
-// }
-
-// expectTypeOf(45)
-//   // test
-//   .toBe(45)
-
-// expectTypeOf<never>().toBeNever()
-expectTypeOf('hren').toBe(45)
-// expectTypeOf({ wolk: 'true' }).toHaveProperty('wol')
-// expectTypeOf({ wolk: 'true' }).not.toHaveProperty('wol')
-// expectTypeOf((v): v is boolean => true).asserts.toBe<boolean>()
-// expectTypeOf({ wlk: 'true' }).toMatch({ msg: '' })
-// expectTypeOf((tut: string) => tut).toBeCallableWith(45)
+expectTypeOf({ wolk: 'true' }).toHaveProperty('wolk')

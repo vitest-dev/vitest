@@ -66,7 +66,7 @@ cli
   .action(benchmark)
 
 cli
-  .command('typecheck')
+  .command('typecheck [...filters]')
   .action(typecheck)
 
 cli

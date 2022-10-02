@@ -153,8 +153,8 @@ export class Vitest {
     ) as ResolvedConfig
   }
 
-  async typecheck() {
-    const testsFilesList = await this.globTestFiles()
+  async typecheck(filters?: string[]) {
+    const testsFilesList = await this.globTestFiles(filters)
     const checker = new Typechecker(this, testsFilesList)
     this.typechecker = checker
     checker.onParseEnd(async ({ files, sourceErrors }) => {
@@ -197,7 +197,7 @@ export class Vitest {
 
   async start(filters?: string[]) {
     if (this.mode === 'typecheck') {
-      await this.typecheck()
+      await this.typecheck(filters)
       return
     }
 

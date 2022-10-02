@@ -2,6 +2,7 @@ import path from 'node:path'
 import url from 'node:url'
 import { writeFile } from 'node:fs/promises'
 import { getTsconfig } from 'get-tsconfig'
+import type { TypecheckConfig } from '../types'
 import type { RawErrsMap, TscErrorInfo } from './types'
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
@@ -56,11 +57,14 @@ export async function makeTscErrorInfo(
   ]
 }
 
-export async function getTsconfigPath(root: string) {
-  const tmpConfigPath = path.join(root, 'tsconfig.tmp.json') // TODO put into tmp dir
-  // TODO delete after use
+export async function getTsconfigPath(root: string, config: TypecheckConfig) {
+  const tmpConfigPath = path.join(root, 'tsconfig.tmp.json')
 
-  const tsconfig = getTsconfig(root)
+  const configName = config.tsconfig?.includes('jsconfig.json')
+    ? 'jsconfig.json'
+    : undefined
+
+  const tsconfig = getTsconfig(config.tsconfig || root, configName)
 
   if (!tsconfig)
     throw new Error('no tsconfig.json found')

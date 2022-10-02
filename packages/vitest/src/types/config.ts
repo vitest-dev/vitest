@@ -472,17 +472,17 @@ export interface TypecheckConfig {
    * Do not fail, if Vitest found errors not inside the test files.
    */
   ignoreSourceErrors?: boolean
+  /**
+   * Path to tsconfig, relative to the project root.
+   */
+  tsconfig?: string
 }
 
 export interface UserConfig extends InlineConfig {
   /**
    * Path to the config file.
    *
-   * Default resolving to one of:
-   * - `vitest.config.js`
-   * - `vitest.config.ts`
-   * - `vite.config.js`
-   * - `vite.config.ts`
+   * Default resolving to `vitest.config.*`, `vite.config.*`
    */
   config?: string | undefined
 

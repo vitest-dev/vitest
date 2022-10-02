@@ -179,7 +179,7 @@ export class Typechecker {
     const packageName = typecheck.checker === 'tsc' ? 'typescript' : 'vue-tsc'
     await ensurePackageInstalled(packageName, root)
 
-    this.tmpConfigPath = await getTsconfigPath(root)
+    this.tmpConfigPath = await getTsconfigPath(root, typecheck)
     let cmd = `${typecheck.checker} --noEmit --pretty false -p ${this.tmpConfigPath}`
     // use builtin watcher, because it's faster
     if (watch)
