@@ -4,10 +4,10 @@ export default defineConfig({
   test: {
     typecheck: {
       checker: 'vue-tsc',
-      include: [
-        '**/*.test-d.ts',
-        '**/*.test-d.js',
-      ],
+      // include: [
+      //   // '**/*.test-d.ts',
+      //   // '**/*.test-d.js',
+      // ],
       allowJs: true,
     },
   },

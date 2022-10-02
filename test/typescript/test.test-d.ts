@@ -1,4 +1,4 @@
-import { describe, expectTypeOf, test } from 'vitest'
+// import { describe, expectTypeOf, test } from 'vitest'
 
 describe('test', () => {
   test('some-test', () => {
@@ -10,7 +10,7 @@ describe('test', () => {
 
   describe('test2', () => {
     test('some-test 2', () => {
-      expectTypeOf(45).toBe('45')
+      expectTypeOf(45).toBe(45)
     })
   })
 })
@@ -25,7 +25,7 @@ describe('test', () => {
 //   .toBe(45)
 
 // expectTypeOf<never>().toBeNever()
-// expectTypeOf('hren').toBe(45)
+expectTypeOf('hren').toBe(45)
 // expectTypeOf({ wolk: 'true' }).toHaveProperty('wol')
 // expectTypeOf({ wolk: 'true' }).not.toHaveProperty('wol')
 // expectTypeOf((v): v is boolean => true).asserts.toBe<boolean>()

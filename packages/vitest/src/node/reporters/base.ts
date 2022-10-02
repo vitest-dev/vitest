@@ -240,9 +240,9 @@ export abstract class BaseReporter implements Reporter {
     logger.log(padTitle('Test Files'), getStateString(files))
     logger.log(padTitle('Tests'), getStateString(tests))
     if (this.mode === 'typecheck') {
-      // has only failed types
-      const typechecks = getTests(tests).filter(t => t.type === 'typecheck')
-      logger.log(padTitle('Type Errors'), getStateString(typechecks, 'typechecks', false))
+      // has only failed checks
+      const typechecks = getTests(files).filter(t => t.type === 'typecheck')
+      logger.log(padTitle('Type Errors'), getStateString(typechecks, 'errors', false))
     }
     logger.log(padTitle('Start at'), formatTimeString(this._timeStart))
     if (this.watchFilters)
