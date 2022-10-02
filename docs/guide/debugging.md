@@ -12,6 +12,9 @@ To debug a test file in your shell, add a `debugger` statement anywhere in your 
 # install ndb globally
 npm install -g ndb
 
+# alternatively, with yarn
+yarn global add ndb
+
 # run tests with debugger enabled
 ndb npm run test
 ```
