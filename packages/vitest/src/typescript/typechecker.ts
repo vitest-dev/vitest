@@ -73,16 +73,14 @@ export class Typechecker {
     const typeErrors = await this.parseTscLikeOutput(output)
     const testFiles = new Set(this.files)
 
-    let tests = this._tests
-
-    if (!tests)
-      tests = await this.collectTests()
+    if (!this._tests)
+      this._tests = await this.collectTests()
 
     const sourceErrors: TypeCheckError[] = []
     const files: File[] = []
 
     testFiles.forEach((path) => {
-      const { file, definitions, map, parsed } = tests![path]
+      const { file, definitions, map, parsed } = this._tests![path]
       const errors = typeErrors.get(path)
       files.push(file)
       if (!errors)

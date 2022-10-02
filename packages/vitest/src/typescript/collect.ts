@@ -64,6 +64,7 @@ export async function collectTests(ctx: Vitest, filepath: string): Promise<null 
       // direct call as `__vite_ssr__.test()`
       if (callee.object?.name?.startsWith('__vite_ssr_'))
         return getName(callee.property)
+      // call as `__vite_ssr__.test.skip()`
       return getName(callee.object?.property)
     }
     return null
