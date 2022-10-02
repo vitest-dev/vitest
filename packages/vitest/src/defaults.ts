@@ -90,7 +90,7 @@ const config = {
   dangerouslyIgnoreUnhandledErrors: false,
   typecheck: {
     checker: 'tsc' as const,
-    include: ['**/*.test-d.ts'],
+    include: ['**/*.{test,spec}-d.{ts,js}'],
     exclude: defaultExclude,
   },
 }

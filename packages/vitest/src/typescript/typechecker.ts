@@ -172,10 +172,16 @@ export class Typechecker {
     this.process?.kill()
   }
 
+  protected async ensurePackageInstalled(root: string, checker: string) {
+    if (checker !== 'tsc' && checker !== 'vue-tsc')
+      return
+    const packageName = checker === 'tsc' ? 'typescript' : 'vue-tsc'
+    await ensurePackageInstalled(packageName, root)
+  }
+
   public async start() {
     const { root, watch, typecheck } = this.ctx.config
-    const packageName = typecheck.checker === 'tsc' ? 'typescript' : 'vue-tsc'
-    await ensurePackageInstalled(packageName, root)
+    await this.ensurePackageInstalled(root, typecheck.checker)
 
     this.tmpConfigPath = await getTsconfigPath(root, typecheck)
     let cmd = `${typecheck.checker} --noEmit --pretty false -p ${this.tmpConfigPath}`

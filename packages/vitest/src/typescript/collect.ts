@@ -80,8 +80,8 @@ export async function collectTests(ctx: Vitest, filepath: string): Promise<null 
       const { arguments: [{ value: message }] } = node as any
       const property = callee?.property?.name
       const mode = !property || property === name ? 'run' : property
-      if (mode === 'each')
-        throw new Error(`${name}.each syntax is not supported when testing types`)
+      if (!['run', 'skip', 'todo', 'only'].includes(mode))
+        throw new Error(`${name}.${mode} syntax is not supported when testing types`)
       definitions.push({
         start: node.start,
         end: node.end,

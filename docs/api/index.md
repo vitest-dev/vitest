@@ -72,6 +72,10 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
   })
   ```
 
+::: warning
+You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+:::
+
 ### test.runIf
 
 - **Type:** `(condition: any) => Test`
@@ -88,6 +92,10 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
     // this test only runs in development
   })
   ```
+
+::: warning
+You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+:::
 
 ### test.only
 
@@ -152,6 +160,10 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
   })
   ```
 
+::: warning
+You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+:::
+
 ### test.todo
 
 - **Type:** `(name: string) => void`
@@ -178,6 +190,10 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
     await expect(myAsyncFunc()).rejects.toBe(1)
   })
   ```
+
+::: warning
+You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+:::
 
 ### test.each
 - **Type:** `(cases: ReadonlyArray<T>) => void`
@@ -210,7 +226,28 @@ In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If t
   // ✓ add(2, 1) -> 3
   ```
 
+  You can also access object properties with `$` prefix, if you are using objects as arguments:
+
+    ```ts
+    test.each([
+      { a: 1, b: 1, expected: 2 },
+      { a: 1, b: 2, expected: 3 },
+      { a: 2, b: 1, expected: 3 },
+    ])('add($a, $b) -> $expected', ({ a, b, expected }) => {
+      expect(a + b).toBe(expected)
+    })
+
+  // this will return
+  // ✓ add(1, 1) -> 2
+  // ✓ add(1, 2) -> 3
+  // ✓ add(2, 1) -> 3
+  ```
+
   If you want to have access to `TestContext`, use `describe.each` with a single test.
+
+::: warning
+You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+:::
 
 ## bench
 
@@ -472,6 +509,10 @@ When you use `test` or `bench` in the top level of file, they are collected as p
   describe.todo.concurrent(/* ... */) // or describe.concurrent.todo(/* ... */)
   ```
 
+::: warning
+You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+:::
+
 ### describe.shuffle
 
 - **Type:** `(name: string, fn: TestFunction, options?: number | TestOptions) => void`
@@ -488,6 +529,10 @@ When you use `test` or `bench` in the top level of file, they are collected as p
   ```
 
 `.skip`, `.only`, and `.todo` works with random suites.
+
+::: warning
+You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+:::
 
 ### describe.todo
 
@@ -526,6 +571,10 @@ When you use `test` or `bench` in the top level of file, they are collected as p
   })
   ```
 
+::: warning
+You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+:::
+
 ## expect
 
 - **Type:** `ExpectStatic & (actual: any) => Assertions`
@@ -546,6 +595,10 @@ When you use `test` or `bench` in the top level of file, they are collected as p
   Technically this example doesn't use [`test`](#test) function, so in the console you will see Nodejs error instead of Vitest output. To learn more about `test`, please read [next chapter](#test).
 
   Also, `expect` can be used statically to access matchers functions, described later, and more.
+
+::: warning
+`expect` has no effect on testing types, if expression doesn't have a type error. If you want to use Vitest as [type checker](/guide/testing-types), use [`expectTypeOf`](#expecttypeof) or [`assertType`](#asserttype).
+:::
 
 ### not
 
@@ -1778,7 +1831,7 @@ When you use `test` or `bench` in the top level of file, they are collected as p
 
 ## Setup and Teardown
 
-These functions allow you to hook into the life cycle of tests to avoid repeating setup and teardown code. They apply to the current context: the file if they are used at the top-level or the current suite if they are inside a `describe` block.
+These functions allow you to hook into the life cycle of tests to avoid repeating setup and teardown code. They apply to the current context: the file if they are used at the top-level or the current suite if they are inside a `describe` block. These hooks are not called, when you are running Vitest as type checker.
 
 ### beforeEach
 
@@ -1970,9 +2023,9 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 
 - **Type**: `(path: string, factory?: () => unknown) => void`
 
-  Makes all `imports` to passed module to be mocked. Inside a path you _can_ use configured Vite aliases.
+  Makes all `imports` to passed module to be mocked. Inside a path you _can_ use configured Vite aliases. The call to `vi.mock` is hoisted, so it doesn't matter where you call it. It will always be executed before all imports.
 
-  - If `factory` is defined, will return its result. Factory function can be asynchronous. You may call [`vi.importActual`](#vi-importactual) inside to get the original module. The call to `vi.mock` is hoisted to the top of the file, so you don't have access to variables declared in the global file scope!
+  - If `factory` is defined, will return its result. Factory function can be asynchronous. You may call [`vi.importActual`](#vi-importactual) inside to get the original module. Since the call to `vi.mock` is hoisted, you don't have access to variables declared in the global file scope!
   - If mocking a module with a default export, you'll need to provide a `default` key within the returned factory function object. This is an ES modules specific caveat, therefore `jest` documentation may differ as `jest` uses commonJS modules. *Example:*
 
   ```ts

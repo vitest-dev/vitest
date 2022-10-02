@@ -452,9 +452,9 @@ export interface InlineConfig {
 
 export interface TypecheckConfig {
   /**
-   * What tool to use for type checking.
+   * What tools to use for type checking.
    */
-  checker: 'tsc' | 'vue-tsc'
+  checker: 'tsc' | 'vue-tsc' | (string & Record<never, never>)
   /**
    * Pattern for files that should be treated as test files
    */
@@ -469,7 +469,7 @@ export interface TypecheckConfig {
    */
   allowJs?: boolean
   /**
-   * Do not fail, if Vitest found errors not inside the test files.
+   * Do not fail, if Vitest found errors outside the test files.
    */
   ignoreSourceErrors?: boolean
   /**
