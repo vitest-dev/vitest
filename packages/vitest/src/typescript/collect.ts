@@ -92,14 +92,14 @@ export async function collectTests(ctx: Vitest, filepath: string): Promise<null 
     },
   })
   let lastSuite: ParsedSuite = file
-  const getLatestSuite = (index: number) => {
+  const updateLatestSuite = (index: number) => {
     const suite = lastSuite
     while (lastSuite !== file && lastSuite.end < index)
       lastSuite = suite.suite as ParsedSuite
     return lastSuite
   }
   definitions.sort((a, b) => a.start - b.start).forEach((definition, idx) => {
-    const latestSuite = getLatestSuite(definition.start)
+    const latestSuite = updateLatestSuite(definition.start)
     let mode = definition.mode
     if (latestSuite.mode !== 'run') // inherit suite mode, if it's set
       mode = latestSuite.mode

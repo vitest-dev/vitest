@@ -275,8 +275,8 @@ export abstract class BaseReporter implements Reporter {
     }
 
     if (failedTests.length) {
-      const type = this.mode === 'typecheck' ? 'Typechecks' : 'Tests'
-      logger.error(c.red(divider(c.bold(c.inverse(` Failed ${type} ${failedTests.length} `)))))
+      const message = this.mode === 'typecheck' ? 'Type Errors' : 'Failed Tests'
+      logger.error(c.red(divider(c.bold(c.inverse(` ${message} ${failedTests.length} `)))))
       logger.error()
 
       await this.printTaskErrors(failedTests, errorDivider)

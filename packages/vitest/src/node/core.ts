@@ -181,16 +181,12 @@ export class Vitest {
     })
     checker.onParseStart(async () => {
       await this.report('onInit', this)
-      const files = checker.getTestFiles()
-      if (files)
-        await this.report('onCollected', checker.getTestFiles())
+      await this.report('onCollected', checker.getTestFiles())
     })
     checker.onWatcherRerun(async () => {
       await this.report('onWatcherRerun', testsFilesList, 'File change detected. Triggering rerun.')
       await checker.collectTests()
-      const files = checker.getTestFiles()
-      if (files)
-        await this.report('onCollected', checker.getTestFiles())
+      await this.report('onCollected', checker.getTestFiles())
     })
     await checker.collectTests()
     await checker.start()
