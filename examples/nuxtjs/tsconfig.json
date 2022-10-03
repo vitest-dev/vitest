@@ -1,6 +1,7 @@
 {
+  // Activate next line in a classical nuxt project, or you'll get an error on aliases (~, @, ...)
   // https://v3.nuxtjs.org/concepts/typescript
-  "extends": "./.nuxt/tsconfig.json",
+  // "extends": "./.nuxt/tsconfig.json",
   "compilerOptions": {
     "types": [
       "vitest/globals"

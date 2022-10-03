@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
-import HelloWorld from '~/components/HelloWorld.vue'
+import HelloWorld from '../components/HelloWorld.vue'
 
 // For more complete examples on Vue, have a look in vitest/example/vue directory.
 
