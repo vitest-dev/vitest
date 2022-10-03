@@ -1,0 +1,18 @@
+{
+  "name": "@vitest/example-nuxtjs",
+  "scripts": {
+    "dev": "nuxt dev",
+    "test": "vitest --run",
+    "test:watch": "vitest",
+    "test:verbose": "vitest --run --reporter verbose"
+  },
+  "devDependencies": {
+    "@nuxt/test-utils-edge": "^3.0.0-rc.12-27736489.2e080c2",
+    "@vue/test-utils": "^2.0.2",
+    "jsdom": "^20.0.0",
+    "nuxt": "3.0.0-rc.11",
+    "unplugin-auto-import": "^0.11.2",
+    "unplugin-vue-components": "^0.22.7",
+    "vitest": "^0.23.4"
+  }
+}
