@@ -2,7 +2,7 @@ import { performance } from 'perf_hooks'
 import limit from 'p-limit'
 import type { BenchTask, Benchmark, BenchmarkResult, File, HookCleanupCallback, HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from '../types'
 import { vi } from '../integrations/vi'
-import { clearTimeout, createDefer, getFullName, getWorkerState, hasFailed, hasTests, isBrowser, isNode, isRunningInBenchmark, partitionSuiteChildren, setTimeout, shuffle } from '../utils'
+import { assertTypes, clearTimeout, createDefer, getFullName, getWorkerState, hasFailed, hasTests, isBrowser, isNode, isRunningInBenchmark, partitionSuiteChildren, setTimeout, shuffle } from '../utils'
 import { getState, setState } from '../integrations/chai/jest-expect'
 import { GLOBAL_EXPECT } from '../integrations/chai/constants'
 import { takeCoverageInsideWorker } from '../integrations/coverage'
@@ -84,6 +84,15 @@ async function sendTasksUpdate() {
   }
 }
 
+const callCleanupHooks = async (cleanups: HookCleanupCallback[]) => {
+  await Promise.all(cleanups.map(async (fn) => {
+    if (!fn)
+      return
+    assertTypes(fn, 'hook teardown', ['function'])
+    await fn()
+  }))
+}
+
 export async function runTest(test: Test) {
   if (test.mode !== 'run') {
     const { getSnapshotClient } = await import('../integrations/snapshot/chai')
@@ -157,7 +166,7 @@ export async function runTest(test: Test) {
 
     try {
       await callSuiteHook(test.suite, test, 'afterEach', [test.context, test.suite])
-      await Promise.all(beforeEachCleanups.map(i => i?.()))
+      await callCleanupHooks(beforeEachCleanups)
     }
     catch (e) {
       test.result.state = 'fail'
@@ -264,7 +273,7 @@ export async function runSuite(suite: Suite) {
       }
 
       await callSuiteHook(suite, suite, 'afterAll', [suite])
-      await Promise.all(beforeAllCleanups.map(i => i?.()))
+      await callCleanupHooks(beforeAllCleanups)
     }
     catch (e) {
       suite.result.state = 'fail'
