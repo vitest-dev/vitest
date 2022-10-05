@@ -16,7 +16,7 @@
     "docs:https-no-prefetch": "pnpm -C docs run preview-https-no-prefetch",
     "docs:examples": "esno scripts/update-examples.ts",
     "docs:contributors": "esno scripts/update-contributors.ts",
-    "lint": "eslint .",
+    "lint": "eslint --cache .",
     "lint:fix": "nr lint --fix",
     "release": "bumpp package.json packages/*/package.json --commit --push --tag && pnpm -r publish --access public",
     "test": "vitest --api -r test/core",
@@ -85,7 +85,7 @@
   },
   "lint-staged": {
     "*.{js,ts,tsx,vue,md}": [
-      "eslint --fix"
+      "eslint --cache --fix"
     ]
   }
 }
