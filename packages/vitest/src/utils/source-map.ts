@@ -57,6 +57,9 @@ function extractLocation(urlLike: string) {
 }
 
 export function parseStacktrace(e: ErrorWithDiff, full = false): ParsedStack[] {
+  if (!e)
+    return []
+
   if (e.stacks)
     return e.stacks
 
