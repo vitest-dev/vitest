@@ -548,7 +548,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       )
     }
 
-    if ('asymmetricMatch' in expected && typeof (expected as any).asymmetricMatch === 'function') {
+    if (typeof expected === 'object' && 'asymmetricMatch' in expected && typeof (expected as any).asymmetricMatch === 'function') {
       const matcher = expected as any as AsymmetricMatcher<any>
       return this.assert(
         thrown && matcher.asymmetricMatch(thrown),
