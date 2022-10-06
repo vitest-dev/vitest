@@ -3,7 +3,7 @@ import { resolve } from 'pathe'
 import { expect, test } from 'vitest'
 
 test('istanbul html report', async () => {
-  const coveragePath = resolve('./coverage/coverage-test/src')
+  const coveragePath = resolve('./coverage')
   const files = fs.readdirSync(coveragePath)
 
   expect(files).toContain('index.html')
@@ -24,7 +24,7 @@ test('istanbul lcov report', async () => {
 })
 
 test('all includes untested files', () => {
-  const coveragePath = resolve('./coverage/coverage-test/src')
+  const coveragePath = resolve('./coverage')
   const files = fs.readdirSync(coveragePath)
 
   expect(files).toContain('untested-file.ts.html')
