@@ -78,8 +78,7 @@ export class IstanbulCoverageProvider implements CoverageProvider {
     if (!this.testExclude.shouldInstrument(id))
       return
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- ignoreRestSiblings should be enabled
-    const { sourcesContent, ...sourceMap } = pluginCtx.getCombinedSourcemap()
+    const sourceMap = pluginCtx.getCombinedSourcemap()
     const code = this.instrumenter.instrumentSync(sourceCode, id, sourceMap as any)
     const map = this.instrumenter.lastSourceMap() as any
 
@@ -203,10 +202,7 @@ export class IstanbulCoverageProvider implements CoverageProvider {
         this.instrumenter.instrumentSync(
           transformResult.code,
           filename,
-          {
-            ...sourceMap,
-            version: sourceMap.version.toString(),
-          },
+          sourceMap as any,
         )
 
         const lastCoverage = this.instrumenter.lastFileCoverage()

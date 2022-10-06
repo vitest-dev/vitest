@@ -655,7 +655,7 @@ importers:
       '@types/istanbul-lib-source-maps': ^4.0.1
       '@types/istanbul-reports': ^3.0.1
       istanbul-lib-coverage: ^3.2.0
-      istanbul-lib-instrument: ^5.2.0
+      istanbul-lib-instrument: ^5.2.1
       istanbul-lib-report: ^3.0.0
       istanbul-lib-source-maps: ^4.0.1
       istanbul-reports: ^3.1.5
@@ -664,7 +664,7 @@ importers:
       vitest: workspace:*
     dependencies:
       istanbul-lib-coverage: 3.2.0
-      istanbul-lib-instrument: 5.2.0
+      istanbul-lib-instrument: 5.2.1
       istanbul-lib-report: 3.0.0
       istanbul-lib-source-maps: 4.0.1
       istanbul-reports: 3.1.5
@@ -7723,7 +7723,7 @@ packages:
       '@babel/helper-plugin-utils': 7.18.9
       '@istanbuljs/load-nyc-config': 1.1.0
       '@istanbuljs/schema': 0.1.3
-      istanbul-lib-instrument: 5.2.0
+      istanbul-lib-instrument: 5.2.1
       test-exclude: 6.0.0
     transitivePeerDependencies:
       - supports-color
@@ -12862,8 +12862,8 @@ packages:
     resolution: {integrity: sha512-eOeJ5BHCmHYvQK7xt9GkdHuzuCGS1Y6g9Gvnx3Ym33fz/HpLRYxiS0wHNr+m/MBC8B647Xt608vCDEvhl9c6Mw==}
     engines: {node: '>=8'}
 
-  /istanbul-lib-instrument/5.2.0:
-    resolution: {integrity: sha512-6Lthe1hqXHBNsqvgDzGO6l03XNeu3CrG4RqQ1KM9+l5+jNGpEJfIELx1NS3SEHmJQA8np/u+E4EPRKRiu6m19A==}
+  /istanbul-lib-instrument/5.2.1:
+    resolution: {integrity: sha512-pzqtp31nLv/XFOzXGuvhCb8qhjmTVo5vjVk19XE4CRlSWz0KoeJ3bw9XsA7nOp9YBf4qHjwBxkDzKcME/J29Yg==}
     engines: {node: '>=8'}
     dependencies:
       '@babel/core': 7.18.13
@@ -12873,6 +12873,7 @@ packages:
       semver: 6.3.0
     transitivePeerDependencies:
       - supports-color
+    dev: false
 
   /istanbul-lib-report/3.0.0:
     resolution: {integrity: sha512-wcdi+uAKzfiGT2abPpKZ0hSU1rGQjUQnLvtY5MpQ7QCTahD3VODhcu4wcfY1YtkGaDD5yuydOLINXsfbus9ROw==}
