@@ -34,7 +34,7 @@ export async function saveInlineSnapshots(
   }))
 }
 
-const startObjectRegex = /(?:toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot)\s*\(\s*({)/m
+const startObjectRegex = /(?:toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot)\s*\(\s*(?:\/\*[\S\s]*\*\/\s*|\/\/.*\s+)*\s*({)/m
 
 function replaceObjectSnap(code: string, s: MagicString, index: number, newSnap: string) {
   code = code.slice(index)
@@ -71,7 +71,7 @@ function prepareSnapString(snap: string, source: string, index: number) {
     return `${quote}\n${lines.map(i => i ? indentNext + i : '').join('\n').replace(/`/g, '\\`').replace(/\${/g, '\\${')}\n${indent}${quote}`
 }
 
-const startRegex = /(?:toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot)\s*\(\s*[\w_$]*(['"`\)])/m
+const startRegex = /(?:toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot)\s*\(\s*(?:\/\*[\S\s]*\*\/\s*|\/\/.*\s+)*\s*[\w_$]*(['"`\)])/m
 export function replaceInlineSnap(code: string, s: MagicString, index: number, newSnap: string) {
   const startMatch = startRegex.exec(code.slice(index))
   if (!startMatch)
