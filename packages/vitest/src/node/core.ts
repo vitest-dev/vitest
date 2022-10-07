@@ -235,7 +235,7 @@ export class Vitest {
     if (!related.length)
       return []
 
-    const testDeps = await Promise.all(
+    const testGraphs = await Promise.all(
       tests.map(async (filepath) => {
         const deps = await this.getTestDependencies(filepath)
         return [filepath, deps] as const
@@ -244,9 +244,9 @@ export class Vitest {
 
     const runningTests = []
 
-    for (const [filepath, deps] of testDeps) {
+    for (const [filepath, deps] of testGraphs) {
       // if deps or the test itself were changed
-      if (deps.size && related.some(path => path === filepath || deps.has(path)))
+      if (related.some(path => path === filepath || deps.has(path)))
         runningTests.push(filepath)
     }
 

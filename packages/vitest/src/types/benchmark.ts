@@ -53,8 +53,8 @@ export interface BenchmarkResult extends TinybenchResult {
 
 export type BenchFunction = (this: BenchFactory) => Promise<void> | void
 export type BenchmarkAPI = ChainableFunction<
-'skip',
-[name: string, fn: BenchFunction, options?: BenchOptions],
+'skip' | 'only' | 'todo',
+[name: string, fn?: BenchFunction, options?: BenchOptions],
 void
 > & {
   skipIf(condition: any): BenchmarkAPI

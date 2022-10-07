@@ -14,6 +14,8 @@ const NODE_ARGS = [
   '--inspect',
   '--inspect-brk',
   '--trace-deprecation',
+  '--experimental-wasm-threads',
+  '--wasm-atomics-on-non-shared-memory',
 ]
 
 interface ErrorDef {

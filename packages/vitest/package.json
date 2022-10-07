@@ -1,7 +1,7 @@
 {
   "name": "vitest",
   "type": "module",
-  "version": "0.23.3",
+  "version": "0.23.4",
   "description": "A blazing fast unit test framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -109,14 +109,14 @@
     "chai": "^4.3.6",
     "debug": "^4.3.4",
     "local-pkg": "^0.4.2",
-    "strip-literal": "^0.4.1",
-    "tinybench": "^2.1.5",
+    "strip-literal": "^0.4.2",
+    "tinybench": "^2.2.1",
     "tinypool": "^0.3.0",
     "tinyspy": "^1.0.2",
     "vite": "^2.9.12 || ^3.0.0-0"
   },
   "devDependencies": {
-    "@antfu/install-pkg": "^0.1.0",
+    "@antfu/install-pkg": "^0.1.1",
     "@edge-runtime/vm": "1.1.0-beta.31",
     "@sinonjs/fake-timers": "^9.1.2",
     "@types/diff": "^5.0.2",
@@ -137,11 +137,11 @@
     "find-up": "^6.3.0",
     "flatted": "^3.2.7",
     "happy-dom": "^6.0.4",
-    "jsdom": "^20.0.0",
+    "jsdom": "^20.0.1",
     "log-update": "^5.0.1",
-    "magic-string": "^0.26.3",
+    "magic-string": "^0.26.5",
     "micromatch": "^4.0.5",
-    "mlly": "^0.5.14",
+    "mlly": "^0.5.16",
     "natural-compare": "^1.4.0",
     "p-limit": "^4.0.0",
     "pathe": "^0.2.0",
@@ -149,11 +149,11 @@
     "pkg-types": "^0.3.5",
     "pretty-format": "^27.5.1",
     "prompts": "^2.4.2",
-    "rollup": "^2.79.0",
+    "rollup": "^2.79.1",
     "source-map-js": "^1.0.2",
     "strip-ansi": "^7.0.1",
-    "typescript": "^4.8.3",
+    "typescript": "^4.8.4",
     "vite-node": "workspace:*",
-    "ws": "^8.8.1"
+    "ws": "^8.9.0"
   }
 }

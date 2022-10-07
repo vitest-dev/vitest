@@ -307,7 +307,7 @@ Vitest also exposes `builtinEnvironments` through `vitest/environments` entry, i
 - **Type:** `Record<'jsdom' | string, unknown>`
 - **Default:** `{}`
 
-These options are passed down to `setup` method of current [`environment`](/#environment). By default, you can configure only JSDOM options, if you are using it as your test environment.
+These options are passed down to `setup` method of current [`environment`](#environment). By default, you can configure only JSDOM options, if you are using it as your test environment.
 
 ### update
 
@@ -372,7 +372,7 @@ To provide object via CLI command, use the following syntax: `--outputFile.json=
 - **Type:** `boolean`
 - **Default:** `true`
 
-Enable multi-threading using [tinypool](https://github.com/Aslemammad/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina))
+Enable multi-threading using [tinypool](https://github.com/tinylibs/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina))
 
 :::warning
 This option is different from Jest's `--runInBand`. Vitest uses workers not only for running tests in parallel, but also to provide isolation. By disabling this option, your tests will run sequentially, but in the same global context, so you must provide isolation yourself.
@@ -525,6 +525,13 @@ Used when `provider: 'c8'` is set. Coverage options are passed to [`c8`](https:/
 #### CoverageIstanbulOptions
 
 Used when `provider: 'istanbul'` is set.
+
+##### include
+
+- **Type:** `string[]`
+- **Default:** `['**']`
+
+List of files included in coverage as glob patterns
 
 ##### exclude
 

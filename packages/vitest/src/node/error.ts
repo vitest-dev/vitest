@@ -35,6 +35,14 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
     } as any
   }
 
+  if (!e) {
+    const error = new Error('unknown error')
+    e = {
+      message: e ?? error.message,
+      stack: error.stack,
+    } as any
+  }
+
   const stacks = parseStacktrace(e, fullStack)
 
   await interpretSourcePos(stacks, ctx)

@@ -25,10 +25,12 @@ export async function interpretSourcePos(stackFrames: ParsedStack[], ctx: Vitest
   for (const frame of stackFrames) {
     if ('sourcePos' in frame)
       continue
-    const transformResult = ctx.server.moduleGraph.getModuleById(frame.file)?.ssrTransformResult
-    if (!transformResult)
+    const ssrTransformResult = ctx.server.moduleGraph.getModuleById(frame.file)?.ssrTransformResult
+    const fetchResult = ctx.vitenode?.fetchCache.get(frame.file)?.result
+    const map = fetchResult?.map || ssrTransformResult?.map
+    if (!map)
       continue
-    const sourcePos = await getOriginalPos(transformResult.map as any as RawSourceMap | undefined, frame)
+    const sourcePos = await getOriginalPos(map as any as RawSourceMap, frame)
     if (sourcePos)
       frame.sourcePos = sourcePos
   }
@@ -57,6 +59,9 @@ function extractLocation(urlLike: string) {
 }
 
 export function parseStacktrace(e: ErrorWithDiff, full = false): ParsedStack[] {
+  if (!e)
+    return []
+
   if (e.stacks)
     return e.stacks
 
