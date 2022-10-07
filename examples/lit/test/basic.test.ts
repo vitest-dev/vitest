@@ -9,10 +9,14 @@ describe('Button with increment', async () => {
 
   beforeEach(async () => {
     document.body.innerHTML = '<my-button name="World"></my-button>'
-    await new Promise<void>(resolve => setInterval(() => {
-      if (getInsideButton())
-        resolve()
-    }))
+    await new Promise<void>((resolve) => {
+      const interval = setInterval(() => {
+        if (getInsideButton()) {
+          clearInterval(interval)
+          resolve()
+        }
+      })
+    })
   })
 
   it('should increment the count on each click', () => {
