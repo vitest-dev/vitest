@@ -1070,6 +1070,14 @@ importers:
     dependencies:
       vitest: link:../../packages/vitest
 
+  test/stacktraces:
+    specifiers:
+      execa: ^6.1.0
+      vitest: workspace:*
+    devDependencies:
+      execa: 6.1.0
+      vitest: link:../../packages/vitest
+
   test/vite-config:
     specifiers:
       pathe: ^0.2.0
