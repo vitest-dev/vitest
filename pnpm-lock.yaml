@@ -185,7 +185,7 @@ importers:
   examples/lit:
     specifiers:
       '@vitest/ui': latest
-      happy-dom: latest
+      jsdom: latest
       lit: ^2.2.5
       vite: ^3.1.0
       vitest: workspace:*
@@ -193,7 +193,7 @@ importers:
       lit: 2.3.1
     devDependencies:
       '@vitest/ui': link:../../packages/ui
-      happy-dom: 7.3.0
+      jsdom: 20.0.1
       vite: 3.1.0
       vitest: link:../../packages/vitest
 

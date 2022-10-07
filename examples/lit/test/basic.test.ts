@@ -1,26 +1,23 @@
-import type { IWindow } from 'happy-dom'
-import { beforeEach, describe, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import '../src/my-button'
 
-declare global {
-  interface Window extends IWindow {}
-}
-
 describe('Button with increment', async () => {
-  beforeEach(async () => {
-    document.body.innerHTML = '<my-button name="World"></my-button>'
-    await window.happyDOM.whenAsyncComplete()
-    await new Promise(resolve => setTimeout(resolve, 0))
-  })
-
   function getInsideButton(): HTMLElement | null | undefined {
     return document.body.querySelector('my-button')?.shadowRoot?.querySelector('button')
   }
 
+  beforeEach(async () => {
+    document.body.innerHTML = '<my-button name="World"></my-button>'
+    await new Promise<void>(resolve => setInterval(() => {
+      if (getInsideButton())
+        resolve()
+    }))
+  })
+
   it('should increment the count on each click', () => {
     getInsideButton()?.click()
-    expect(getInsideButton()?.innerText).toContain('1')
+    expect(getInsideButton()?.textContent).toContain('1')
   })
 
   it('should show name props', () => {
