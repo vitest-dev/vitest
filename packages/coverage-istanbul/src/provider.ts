@@ -211,7 +211,7 @@ export class IstanbulCoverageProvider implements CoverageProvider {
 
         const lastCoverage = this.instrumenter.lastFileCoverage()
         if (lastCoverage)
-          coverageMap.data[lastCoverage.path] = lastCoverage
+          coverageMap.addFileCoverage(lastCoverage)
       }
     }
   }
