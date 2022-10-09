@@ -67,6 +67,7 @@
     "dist",
     "bin",
     "*.d.ts",
+    "*.d.cts",
     "*.mjs",
     "*.cjs"
   ],
