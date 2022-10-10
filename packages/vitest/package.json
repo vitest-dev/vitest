@@ -111,10 +111,10 @@
     "debug": "^4.3.4",
     "local-pkg": "^0.4.2",
     "strip-literal": "^0.4.2",
-    "tinybench": "^2.2.1",
+    "tinybench": "^2.3.0",
     "tinypool": "^0.3.0",
     "tinyspy": "^1.0.2",
-    "vite": "^3.0.0"
+    "vite": "^3.1.7"
   },
   "devDependencies": {
     "@antfu/install-pkg": "^0.1.1",
@@ -124,7 +124,7 @@
     "@types/jsdom": "^20.0.0",
     "@types/micromatch": "^4.0.2",
     "@types/natural-compare": "^1.4.1",
-    "@types/prompts": "^2.4.0",
+    "@types/prompts": "^2.4.1",
     "@types/sinonjs__fake-timers": "^8.1.2",
     "@vitest/ui": "workspace:*",
     "birpc": "^0.2.3",
@@ -140,7 +140,7 @@
     "happy-dom": "^6.0.4",
     "jsdom": "^20.0.1",
     "log-update": "^5.0.1",
-    "magic-string": "^0.26.5",
+    "magic-string": "^0.26.7",
     "micromatch": "^4.0.5",
     "mlly": "^0.5.16",
     "natural-compare": "^1.4.0",
