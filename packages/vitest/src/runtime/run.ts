@@ -369,13 +369,9 @@ async function runBenchmarkSuite(suite: Suite) {
         }
       })
       benchmark.task!.addEventListener('error', (e) => {
-        let causeError
         const task = e.task
         const _benchmark = benchmarkMap[task.name || '']
-        if (_benchmark)
-          causeError = task.result!.error
-
-        defer.reject(causeError || e)
+        defer.reject(_benchmark ? task.result!.error : e)
       })
     })
 
