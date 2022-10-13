@@ -12,6 +12,8 @@ withDefaults(defineProps<{ tail?: boolean }>(), { tail: false })
         <slot name="header" />
       </div>
     </div>
+<!--
     <div v-if="!tail" data-testid="tail" my-0 op50 w-2px bg-current origin-center rotate-0 translate-x-3 />
+-->
   </div>
 </template>
