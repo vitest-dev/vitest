@@ -14,11 +14,7 @@ export * from './tasks'
 export * from './base'
 export * from './global'
 export * from './timers'
-
-export { isNode, isBrowser } from './env'
-// export const isNode = typeof process < 'u' && typeof process.stdout < 'u' && !process.versions?.deno && !globalThis.window
-// export const isNode = typeof process !== 'undefined' && typeof process.platform !== 'undefined'
-// export const isBrowser = typeof window !== 'undefined'
+export * from './env'
 
 export const isWindows = isNode && process.platform === 'win32'
 export const getRunMode = () => getWorkerState().config.mode
