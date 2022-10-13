@@ -5,7 +5,7 @@ withDefaults(defineProps<{ tail?: boolean }>(), { tail: false })
 <template>
   <div p-2 text-center flex>
     <div>
-      <div text-4xl>
+      <div text-4xl min-w-2em>
         <slot name="body" />
       </div>
       <div text-md>
