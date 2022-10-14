@@ -38,7 +38,8 @@
   ],
   "scripts": {
     "build": "rimraf dist && rollup -c",
-    "dev": "rollup -c --watch --watch.include=src/**"
+    "dev": "rollup -c --watch --watch.include=src/**",
+    "prepublishOnly": "pnpm build"
   },
   "dependencies": {
     "istanbul-lib-coverage": "^3.2.0",
