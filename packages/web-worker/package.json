@@ -3,6 +3,11 @@
   "type": "module",
   "version": "0.24.3",
   "description": "Web Worker support for testing in Vitest",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vitest-dev/vitest.git",
+    "directory": "packages/web-worker"
+  },
   "exports": {
     ".": {
       "types": "./index.d.ts",

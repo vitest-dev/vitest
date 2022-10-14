@@ -9,7 +9,8 @@
   "homepage": "https://github.com/vitest-dev/vitest#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vitest-dev/vitest.git"
+    "url": "git+https://github.com/vitest-dev/vitest.git",
+    "directory": "packages/vitest"
   },
   "bugs": {
     "url": "https://github.com/vitest-dev/vitest/issues"
