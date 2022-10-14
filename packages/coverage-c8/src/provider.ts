@@ -102,6 +102,12 @@ export class C8CoverageProvider implements CoverageProvider {
 
     await report.run()
     await checkCoverages(this.options, report)
+
+    // Note that this will only clean up the V8 reports generated so far.
+    // There will still be a temp directory with some reports when vitest exists,
+    // but at least it will only contain reports of vitest's internal functions.
+    if (existsSync(this.options.tempDirectory))
+      await fs.rm(this.options.tempDirectory, { recursive: true, force: true })
   }
 }
 function resolveC8Options(options: CoverageC8Options, root: string) {
