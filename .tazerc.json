@@ -1,6 +1,6 @@
 {
   "exclude": [
-    "vite",
+    "vue",
     "puppeteer",
     "pretty-format",
     "pathe"

@@ -16,7 +16,7 @@
   },
   "devDependencies": {
     "@vitest/ui": "latest",
-    "happy-dom": "latest",
+    "jsdom": "latest",
     "vite": "latest",
     "vitest": "latest"
   },

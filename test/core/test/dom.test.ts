@@ -1,5 +1,6 @@
 /**
  * @vitest-environment jsdom
+ * @vitest-environment-options { "url": "https://example.com/" }
  */
 
 /* eslint-disable vars-on-top */
@@ -16,6 +17,7 @@ it('jsdom', () => {
   expect(top).toBeDefined()
   expect(parent).toBeDefined()
   expect(self).toBeDefined()
+  expect(location.href).toBe('https://example.com/')
 
   const dom = document.createElement('a')
   dom.href = 'https://vitest.dev'

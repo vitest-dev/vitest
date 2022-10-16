@@ -1,6 +1,7 @@
 {
   "name": "vitest",
-  "version": "0.23.4",
+  "type": "module",
+  "version": "0.24.3",
   "description": "A blazing fast unit test framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -8,7 +9,8 @@
   "homepage": "https://github.com/vitest-dev/vitest#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vitest-dev/vitest.git"
+    "url": "git+https://github.com/vitest-dev/vitest.git",
+    "directory": "packages/vitest"
   },
   "bugs": {
     "url": "https://github.com/vitest-dev/vitest/issues"
@@ -22,8 +24,14 @@
   ],
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs"
+      "require": {
+        "types": "./index.d.cts",
+        "default": "./index.cjs"
+      },
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
     },
     "./*": "./*",
     "./globals": {
@@ -34,24 +42,24 @@
     },
     "./node": {
       "types": "./dist/node.d.ts",
-      "import": "./dist/node.mjs"
+      "import": "./dist/node.js"
     },
     "./environments": {
       "types": "./dist/environments.d.ts",
-      "import": "./dist/environments.mjs"
+      "import": "./dist/environments.js"
     },
     "./browser": {
       "types": "./dist/browser.d.ts",
-      "import": "./dist/browser.mjs"
+      "import": "./dist/browser.js"
     },
     "./config": {
       "types": "./config.d.ts",
       "require": "./dist/config.cjs",
-      "import": "./dist/config.mjs"
+      "import": "./dist/config.js"
     }
   },
-  "main": "./dist/index.mjs",
-  "module": "./dist/index.mjs",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
     "vitest": "./vitest.mjs"
@@ -60,6 +68,7 @@
     "dist",
     "bin",
     "*.d.ts",
+    "*.d.cts",
     "*.mjs",
     "*.cjs"
   ],
@@ -69,7 +78,7 @@
   "scripts": {
     "build": "rimraf dist && rollup -c",
     "dev": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" rollup -c --watch -m inline",
-    "prepublishOnly": "nr build"
+    "prepublishOnly": "pnpm build"
   },
   "peerDependencies": {
     "@edge-runtime/vm": "*",
@@ -103,10 +112,10 @@
     "debug": "^4.3.4",
     "local-pkg": "^0.4.2",
     "strip-literal": "^0.4.2",
-    "tinybench": "^2.2.1",
+    "tinybench": "^2.3.0",
     "tinypool": "^0.3.0",
     "tinyspy": "^1.0.2",
-    "vite": "^2.9.12 || ^3.0.0-0"
+    "vite": "^3.0.0"
   },
   "devDependencies": {
     "@antfu/install-pkg": "^0.1.1",
@@ -116,7 +125,7 @@
     "@types/jsdom": "^20.0.0",
     "@types/micromatch": "^4.0.2",
     "@types/natural-compare": "^1.4.1",
-    "@types/prompts": "^2.4.0",
+    "@types/prompts": "^2.4.1",
     "@types/sinonjs__fake-timers": "^8.1.2",
     "@vitest/ui": "workspace:*",
     "birpc": "^0.2.3",
@@ -132,7 +141,7 @@
     "happy-dom": "^6.0.4",
     "jsdom": "^20.0.1",
     "log-update": "^5.0.1",
-    "magic-string": "^0.26.5",
+    "magic-string": "^0.26.7",
     "micromatch": "^4.0.5",
     "mlly": "^0.5.16",
     "natural-compare": "^1.4.0",

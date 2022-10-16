@@ -5,13 +5,15 @@ withDefaults(defineProps<{ tail?: boolean }>(), { tail: false })
 <template>
   <div p-2 text-center flex>
     <div>
-      <div text-4xl>
+      <div text-4xl min-w-2em>
         <slot name="body" />
       </div>
       <div text-md>
         <slot name="header" />
       </div>
     </div>
-    <div v-if="!tail" data-testid="tail" my-2 op50 w-1px bg-current origin-center rotate-15 translate-x-3 />
+    <!--
+    <div v-if="!tail" data-testid="tail" my-0 op50 w-2px bg-current origin-center rotate-0 translate-x-3 />
+-->
   </div>
 </template>

@@ -1,8 +1,9 @@
 import url from 'url'
 import { resolve } from 'pathe'
+import { isNode } from './utils/env'
 
-export const rootDir = resolve(url.fileURLToPath(import.meta.url), '../../')
-export const distDir = resolve(url.fileURLToPath(import.meta.url), '../../dist')
+export const rootDir = isNode ? resolve(url.fileURLToPath(import.meta.url), '../../') : import.meta.url
+export const distDir = isNode ? resolve(url.fileURLToPath(import.meta.url), '../../dist') : import.meta.url
 
 // if changed, update also jsdocs and docs
 export const defaultPort = 51204

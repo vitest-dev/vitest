@@ -205,11 +205,6 @@ export interface RuntimeContext {
 
 export interface TestContext {
   /**
-   * @deprecated Use promise instead
-   */
-  (error?: any): void
-
-  /**
    * Metadata of the current test
    */
   meta: Readonly<Test>

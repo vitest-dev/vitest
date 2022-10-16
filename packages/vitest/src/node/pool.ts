@@ -18,8 +18,8 @@ export interface WorkerPool {
   close: () => Promise<void>
 }
 
-const workerPath = _url.pathToFileURL(resolve(distDir, './worker.mjs')).href
-const loaderPath = _url.pathToFileURL(resolve(distDir, './loader.mjs')).href
+const workerPath = _url.pathToFileURL(resolve(distDir, './worker.js')).href
+const loaderPath = _url.pathToFileURL(resolve(distDir, './loader.js')).href
 
 const suppressLoaderWarningsPath = resolve(rootDir, './suppress-warnings.cjs')
 

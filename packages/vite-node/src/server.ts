@@ -5,7 +5,7 @@ import createDebug from 'debug'
 import type { DebuggerOptions, FetchResult, RawSourceMap, ViteNodeResolveId, ViteNodeServerOptions } from './types'
 import { shouldExternalize } from './externalize'
 import { toArray, toFilePath, withInlineSourcemap } from './utils'
-import type { Debugger } from './debug'
+import { Debugger } from './debug'
 
 export * from './externalize'
 
@@ -59,7 +59,7 @@ export class ViteNodeServer {
       }, options.debug ?? {})
     }
     if (options.debug)
-      import('./debug').then(r => this.debugger = new r.Debugger(server.config.root, options.debug!))
+      this.debugger = new Debugger(server.config.root, options.debug!)
   }
 
   shouldExternalize(id: string) {

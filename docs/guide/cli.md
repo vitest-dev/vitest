@@ -10,7 +10,7 @@ title: Command Line Interface | Guide
 
 Start Vitest in the current directory. Will enter the watch mode in development environment and run mode in CI automatically.
 
-You can pass a addition argument as the filter of the tests files to run. For example:
+You can pass an additional argument as the filter of the test files to run. For example:
 
 ```bash
 vitest foobar
@@ -24,7 +24,7 @@ Perform a single run without watch mode.
 
 ### `vitest watch`
 
-Run all test suites but watch for changes and rerun tests when they change. Same as calling `vitest` without a command. Will fallback to `vitest run` in CI.
+Run all test suites but watch for changes and rerun tests when they change. Same as calling `vitest` without an argument. Will fallback to `vitest run` in CI.
 
 ### `vitest dev`
 
