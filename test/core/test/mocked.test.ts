@@ -144,7 +144,7 @@ describe('mocked function which fails on toReturnWith', () => {
     catch (e) {
       const throwObj = e as AssertionError
       expect(throwObj.message).toMatchInlineSnapshot(`
-        "expected \\"spy\\" to be called with arguments: 2[90m
+        "expected \\"spy\\" to return with: 2 at least once[90m
 
         Received: 
         [39m[90m
@@ -164,7 +164,7 @@ describe('mocked function which fails on toReturnWith', () => {
     catch (e) {
       const throwObj = e as AssertionError
       expect(throwObj.message).toMatchInlineSnapshot(`
-        "expected \\"spy\\" to be called with arguments: 2[90m
+        "expected \\"spy\\" to return with: 2 at least once[90m
 
         Received: 
         [1m    1st spy call return:
@@ -190,7 +190,7 @@ describe('mocked function which fails on toReturnWith', () => {
     catch (e) {
       const throwObj = e as AssertionError
       expect(throwObj.message).toMatchInlineSnapshot(`
-        "expected \\"spy\\" to be called with arguments: 2[90m
+        "expected \\"spy\\" to return with: 2 at least once[90m
 
         Received: 
         [1m    1st spy call return:
@@ -227,7 +227,7 @@ describe('mocked function which fails on toReturnWith', () => {
     catch (e) {
       const throwObj = e as AssertionError
       expect(throwObj.message).toMatchInlineSnapshot(`
-        "expected \\"spy\\" to be called with arguments: { a: '4' }[90m
+        "expected \\"spy\\" to return with: { a: '4' } at least once[90m
 
         Received: 
         [1m    1st spy call return:

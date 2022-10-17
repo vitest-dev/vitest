@@ -609,8 +609,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       this,
       [
         pass,
-        `expected "${spyName}" to be called with arguments: #{exp}`,
-        `expected "${spyName}" to not be called with arguments: #{exp}`,
+        `expected "${spyName}" to return with: #{exp} at least once`,
+        `expected "${spyName}" to not return with: #{exp}`,
         value,
       ],
     )
