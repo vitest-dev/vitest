@@ -143,8 +143,15 @@ describe('mocked function which fails on toReturnWith', () => {
     }
     catch (e) {
       const throwObj = e as AssertionError
-      expect(throwObj.expected).toMatchInlineSnapshot('"executions have a successful return value: 2"')
-      expect(throwObj.actual).toMatchInlineSnapshot('"executions returns: []"')
+      expect(throwObj.message).toMatchInlineSnapshot(`
+        "expected \\"spy\\" to be called with arguments: 2[90m
+
+        Received: 
+        [39m[90m
+
+        Number of calls: [1m0[22m
+        [39m"
+      `)
     }
   })
 
@@ -156,9 +163,19 @@ describe('mocked function which fails on toReturnWith', () => {
     }
     catch (e) {
       const throwObj = e as AssertionError
-      expect(throwObj.message).toMatchInlineSnapshot('"expected \\"spy\\" to be successfully called having return 2 at least once"')
-      expect(throwObj.expected).toMatchInlineSnapshot('"executions have a successful return value: 2"')
-      expect(throwObj.actual).toMatchInlineSnapshot('"executions returns: [ 1 ]"')
+      expect(throwObj.message).toMatchInlineSnapshot(`
+        "expected \\"spy\\" to be called with arguments: 2[90m
+
+        Received: 
+        [1m    1st spy call return:
+
+        [22m  [32m2[90m
+          [31m1[90m
+        [39m[90m
+
+        Number of calls: [1m1[22m
+        [39m"
+      `)
     }
   })
 
@@ -172,9 +189,29 @@ describe('mocked function which fails on toReturnWith', () => {
     }
     catch (e) {
       const throwObj = e as AssertionError
-      expect(throwObj.message).toMatchInlineSnapshot('"expected \\"spy\\" to be successfully called having return 2 at least once"')
-      expect(throwObj.expected).toMatchInlineSnapshot('"executions have a successful return value: 2"')
-      expect(throwObj.actual).toMatchInlineSnapshot('"executions returns: [ 1, 1, 1 ]"')
+      expect(throwObj.message).toMatchInlineSnapshot(`
+        "expected \\"spy\\" to be called with arguments: 2[90m
+
+        Received: 
+        [1m    1st spy call return:
+
+        [22m  [32m2[90m
+          [31m1[90m
+
+        [1m    2nd spy call return:
+
+        [22m  [32m2[90m
+          [31m1[90m
+
+        [1m    3rd spy call return:
+
+        [22m  [32m2[90m
+          [31m1[90m
+        [39m[90m
+
+        Number of calls: [1m3[22m
+        [39m"
+      `)
     }
   })
 
@@ -189,9 +226,35 @@ describe('mocked function which fails on toReturnWith', () => {
     }
     catch (e) {
       const throwObj = e as AssertionError
-      expect(throwObj.message).toMatchInlineSnapshot('"expected \\"spy\\" to be successfully called having return { a: \'4\' } at least once"')
-      expect(throwObj.expected).toMatchInlineSnapshot('"executions have a successful return value: { a: \'4\' }"')
-      expect(throwObj.actual).toMatchInlineSnapshot('"executions returns: [ { a: \'1\' }, { a: \'1\' }, { a: \'1\' } ]"')
+      expect(throwObj.message).toMatchInlineSnapshot(`
+        "expected \\"spy\\" to be called with arguments: { a: '4' }[90m
+
+        Received: 
+        [1m    1st spy call return:
+
+        [22m    Object {
+          [32m-   \\"a\\": \\"4\\",[90m
+          [31m+   \\"a\\": \\"1\\",[90m
+            }
+
+        [1m    2nd spy call return:
+
+        [22m    Object {
+          [32m-   \\"a\\": \\"4\\",[90m
+          [31m+   \\"a\\": \\"1\\",[90m
+            }
+
+        [1m    3rd spy call return:
+
+        [22m    Object {
+          [32m-   \\"a\\": \\"4\\",[90m
+          [31m+   \\"a\\": \\"1\\",[90m
+            }
+        [39m[90m
+
+        Number of calls: [1m3[22m
+        [39m"
+      `)
     }
   })
 })
