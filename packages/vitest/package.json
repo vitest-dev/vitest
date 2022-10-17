@@ -1,7 +1,7 @@
 {
   "name": "vitest",
   "type": "module",
-  "version": "0.24.1",
+  "version": "0.24.3",
   "description": "A blazing fast unit test framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -9,7 +9,8 @@
   "homepage": "https://github.com/vitest-dev/vitest#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vitest-dev/vitest.git"
+    "url": "git+https://github.com/vitest-dev/vitest.git",
+    "directory": "packages/vitest"
   },
   "bugs": {
     "url": "https://github.com/vitest-dev/vitest/issues"
@@ -77,7 +78,7 @@
   "scripts": {
     "build": "rimraf dist && rollup -c",
     "dev": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" rollup -c --watch -m inline",
-    "prepublishOnly": "nr build"
+    "prepublishOnly": "pnpm build"
   },
   "peerDependencies": {
     "@edge-runtime/vm": "*",

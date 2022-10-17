@@ -1,7 +1,7 @@
 {
   "name": "@vitest/coverage-c8",
   "type": "module",
-  "version": "0.24.1",
+  "version": "0.24.3",
   "description": "C8 coverage provider for Vitest",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -38,7 +38,8 @@
   ],
   "scripts": {
     "build": "rimraf dist && rollup -c",
-    "dev": "rollup -c --watch --watch.include=src/**"
+    "dev": "rollup -c --watch --watch.include=src/**",
+    "prepublishOnly": "pnpm build"
   },
   "dependencies": {
     "c8": "^7.12.0",

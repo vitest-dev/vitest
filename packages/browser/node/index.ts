@@ -13,6 +13,7 @@ const stubs = [
   'module',
   'noop',
   'perf_hooks',
+  'console',
 ]
 
 const polyfills = [
