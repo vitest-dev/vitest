@@ -1,3 +1,4 @@
+import type { AssertionError } from 'assert'
 import { assert, describe, expect, test, vi, vitest } from 'vitest'
 // @ts-expect-error not typed module
 import { value as virtualValue } from 'virtual-module'
@@ -132,6 +133,63 @@ test('async functions should be mocked', () => {
   expect(vi.mocked(asyncFunc).mockResolvedValue).toBeDefined()
   vi.mocked(asyncFunc).mockResolvedValue('foo')
   expect(asyncFunc()).resolves.toBe('foo')
+})
+
+describe('mocked function which fails on toReturnWith', () => {
+  test('zero call', () => {
+    const mock = vi.fn(() => 1)
+    try {
+      expect(mock).toReturnWith(2)
+    }
+    catch (e) {
+      const throwObj = e as AssertionError
+      expect(throwObj.expected).toMatchInlineSnapshot('"executions have a successful return value: 2"')
+      expect(throwObj.actual).toMatchInlineSnapshot('"executions returns: []"')
+    }
+  })
+
+  test('just one call', () => {
+    const mock = vi.fn(() => 1)
+    mock()
+    try {
+      expect(mock).toReturnWith(2)
+    }
+    catch (e) {
+      const throwObj = e as AssertionError
+      expect(throwObj.expected).toMatchInlineSnapshot('"executions have a successful return value: 2"')
+      expect(throwObj.actual).toMatchInlineSnapshot('"executions returns: [1]"')
+    }
+  })
+
+  test('multi calls', () => {
+    const mock = vi.fn(() => 1)
+    mock()
+    mock()
+    mock()
+    try {
+      expect(mock).toReturnWith(2)
+    }
+    catch (e) {
+      const throwObj = e as AssertionError
+      expect(throwObj.expected).toMatchInlineSnapshot('"executions have a successful return value: 2"')
+      expect(throwObj.actual).toMatchInlineSnapshot('"executions returns: [1,1,1]"')
+    }
+  })
+
+  test('all execution returns too long', () => {
+    const mock = vi.fn(() => 'AAAAAAAAAAAAAAAAAAAA')
+    mock()
+    mock()
+    mock()
+    try {
+      expect(mock).toReturnWith(2)
+    }
+    catch (e) {
+      const throwObj = e as AssertionError
+      expect(throwObj.expected).toMatchInlineSnapshot('"executions have a successful return value: 2"')
+      expect(throwObj.actual).toMatchInlineSnapshot('"executions returns: [AAAAAAAAAAAAAAAAAAAA,AAAAAAAAA...]"')
+    }
+  })
 })
 
 // This is here because mocking streams previously caused some problems (#1671).

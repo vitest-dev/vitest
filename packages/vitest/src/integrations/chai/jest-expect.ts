@@ -589,11 +589,13 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const spy = getSpy(this)
     const spyName = spy.getMockName()
     const pass = spy.mock.results.some(({ type, value: result }) => type === 'return' && jestEquals(value, result))
+    const returns = spy.mock.results.filter(({ type }) => type === 'return').map(({ value: result }) => result).toString()
     this.assert(
       pass,
-      `expected "${spyName}" to be successfully called with #{exp}`,
-      `expected "${spyName}" to not be successfully called with #{exp}`,
-      value,
+      `expected "${spyName}" to be successfully called having return #{exp} at least once`,
+      `expected "${spyName}" to not be successfully called having return #{exp}`,
+      `executions have a successful return value: ${value}`,
+      `executions returns: [${truncateString(returns)}]`,
     )
   })
   def(['toHaveLastReturnedWith', 'lastReturnedWith'], function (value: any) {
@@ -712,4 +714,8 @@ function toString(value: any) {
   catch (_error) {
     return 'unknown'
   }
+}
+
+function truncateString(str: string, length = 30) {
+  return str.length > length ? `${str.substring(0, length)}...` : str
 }
