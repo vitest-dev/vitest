@@ -589,13 +589,13 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const spy = getSpy(this)
     const spyName = spy.getMockName()
     const pass = spy.mock.results.some(({ type, value: result }) => type === 'return' && jestEquals(value, result))
-    const returns = spy.mock.results.filter(({ type }) => type === 'return').map(({ value: result }) => result).toString()
+    const returns = utils.inspect(spy.mock.results.filter(({ type }) => type === 'return').map(({ value: result }) => result), true)
     this.assert(
       pass,
-      `expected "${spyName}" to be successfully called having return #{exp} at least once`,
-      `expected "${spyName}" to not be successfully called having return #{exp}`,
-      `executions have a successful return value: ${value}`,
-      `executions returns: [${truncateString(returns)}]`,
+      `expected "${spyName}" to be successfully called having return ${utils.inspect(value)} at least once`,
+      `expected "${spyName}" to not be successfully called having return ${utils.inspect(value)}`,
+      `executions have a successful return value: ${utils.inspect(value)}`,
+      `executions returns: ${returns}`,
     )
   })
   def(['toHaveLastReturnedWith', 'lastReturnedWith'], function (value: any) {
@@ -714,8 +714,4 @@ function toString(value: any) {
   catch (_error) {
     return 'unknown'
   }
-}
-
-function truncateString(str: string, length = 30) {
-  return str.length > length ? `${str.substring(0, length)}...` : str
 }

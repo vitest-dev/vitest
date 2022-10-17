@@ -156,8 +156,9 @@ describe('mocked function which fails on toReturnWith', () => {
     }
     catch (e) {
       const throwObj = e as AssertionError
+      expect(throwObj.message).toMatchInlineSnapshot('"expected \\"spy\\" to be successfully called having return 2 at least once"')
       expect(throwObj.expected).toMatchInlineSnapshot('"executions have a successful return value: 2"')
-      expect(throwObj.actual).toMatchInlineSnapshot('"executions returns: [1]"')
+      expect(throwObj.actual).toMatchInlineSnapshot('"executions returns: [ 1 ]"')
     }
   })
 
@@ -171,23 +172,26 @@ describe('mocked function which fails on toReturnWith', () => {
     }
     catch (e) {
       const throwObj = e as AssertionError
+      expect(throwObj.message).toMatchInlineSnapshot('"expected \\"spy\\" to be successfully called having return 2 at least once"')
       expect(throwObj.expected).toMatchInlineSnapshot('"executions have a successful return value: 2"')
-      expect(throwObj.actual).toMatchInlineSnapshot('"executions returns: [1,1,1]"')
+      expect(throwObj.actual).toMatchInlineSnapshot('"executions returns: [ 1, 1, 1 ]"')
     }
   })
 
-  test('all execution returns too long', () => {
-    const mock = vi.fn(() => 'AAAAAAAAAAAAAAAAAAAA')
+  test('oject type', () => {
+    const mock = vi.fn(() => { return { a: '1' } })
     mock()
     mock()
     mock()
+
     try {
-      expect(mock).toReturnWith(2)
+      expect(mock).toReturnWith({ a: '4' })
     }
     catch (e) {
       const throwObj = e as AssertionError
-      expect(throwObj.expected).toMatchInlineSnapshot('"executions have a successful return value: 2"')
-      expect(throwObj.actual).toMatchInlineSnapshot('"executions returns: [AAAAAAAAAAAAAAAAAAAA,AAAAAAAAA...]"')
+      expect(throwObj.message).toMatchInlineSnapshot('"expected \\"spy\\" to be successfully called having return { a: \'4\' } at least once"')
+      expect(throwObj.expected).toMatchInlineSnapshot('"executions have a successful return value: { a: \'4\' }"')
+      expect(throwObj.actual).toMatchInlineSnapshot('"executions returns: [ { a: \'1\' }, { a: \'1\' }, { a: \'1\' } ]"')
     }
   })
 })
