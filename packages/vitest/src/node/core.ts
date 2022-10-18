@@ -142,6 +142,10 @@ export class Vitest {
         ...this.config.sequence,
         sequencer: undefined!,
       },
+      benchmark: {
+        ...this.config.benchmark,
+        reporters: [],
+      } as ResolvedConfig['benchmark'],
     },
     this.configOverride || {} as any,
     ) as ResolvedConfig
