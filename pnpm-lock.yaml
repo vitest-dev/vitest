@@ -12,7 +12,7 @@ importers:
     specifiers:
       '@antfu/eslint-config': ^0.27.0
       '@antfu/ni': ^0.18.2
-      '@rollup/plugin-alias': ^3.1.9
+      '@rollup/plugin-alias': ^4.0.0
       '@rollup/plugin-commonjs': ^22.0.2
       '@rollup/plugin-json': ^4.1.0
       '@rollup/plugin-node-resolve': ^14.1.0
@@ -53,7 +53,7 @@ importers:
     devDependencies:
       '@antfu/eslint-config': 0.27.0_z4bbprzjrhnsfa24uvmcbu7f5q
       '@antfu/ni': 0.18.2
-      '@rollup/plugin-alias': 3.1.9_rollup@2.79.0
+      '@rollup/plugin-alias': 4.0.0_rollup@2.79.0
       '@rollup/plugin-commonjs': 22.0.2_rollup@2.79.0
       '@rollup/plugin-json': 4.1.0_rollup@2.79.0
       '@rollup/plugin-node-resolve': 14.1.0_rollup@2.79.0
@@ -3900,14 +3900,17 @@ packages:
     resolution: {integrity: sha512-50/17A98tWUfQ176raKiOGXuYpLyyVMkxxG6oylzL3BPOlA6ADGdK7EYunSa4I064xerltq9TGXs8HmOk5E+vw==}
     dev: false
 
-  /@rollup/plugin-alias/3.1.9_rollup@2.79.0:
-    resolution: {integrity: sha512-QI5fsEvm9bDzt32k39wpOwZhVzRcL5ydcffUHMyLVaVaLeC70I8TJZ17F1z1eMoLu4E/UOcH9BWVkKpIKdrfiw==}
-    engines: {node: '>=8.0.0'}
+  /@rollup/plugin-alias/4.0.0_rollup@2.79.0:
+    resolution: {integrity: sha512-fGRWzM2F6wXnzAqn4Db8SdB/2Ree0u2XOQaaTy9mhqA35NmUzJXevMBUcpZywPF2MIUUAw+SKfWogKxFSPh+Qw==}
+    engines: {node: '>=14.0.0'}
     peerDependencies:
-      rollup: ^1.20.0||^2.0.0
+      rollup: ^1.20.0||^2.0.0||^3.0.0
+    peerDependenciesMeta:
+      rollup:
+        optional: true
     dependencies:
       rollup: 2.79.0
-      slash: 3.0.0
+      slash: 4.0.0
     dev: true
 
   /@rollup/plugin-babel/5.3.1_qa5xd24o3tymwictiiptlhxtom:
@@ -16928,6 +16931,11 @@ packages:
   /slash/3.0.0:
     resolution: {integrity: sha512-g9Q1haeby36OSStwb4ntCGGGaKsaVSjQ68fBxoQcutl5fS1vuY18H3wSt3jFyFtrkx+Kz0V1G85A4MyAdDMi2Q==}
     engines: {node: '>=8'}
+    dev: true
+
+  /slash/4.0.0:
+    resolution: {integrity: sha512-3dOsAHXXUkQTpOYcoAxLIorMTp4gIQr5IW3iVb7A7lFIp0VHhnynm9izx6TssdrIcVIESAlVjtnO2K8bg+Coew==}
+    engines: {node: '>=12'}
     dev: true
 
   /slice-ansi/3.0.0:
