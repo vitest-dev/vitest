@@ -178,9 +178,9 @@ export abstract class BaseReporter implements Reporter {
   shouldLog(log: UserConsoleLog) {
     if (this.ctx.config.silent)
       return false
-    const shouldIgnore = this.ctx.config.onConsoleLog?.(log.content, log.type)
-    if (shouldIgnore === false)
-      return shouldIgnore
+    const shouldLog = this.ctx.config.onConsoleLog?.(log.content, log.type)
+    if (shouldLog === false)
+      return shouldLog
     return true
   }
 
