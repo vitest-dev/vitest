@@ -1,0 +1,79 @@
+// Vitest Snapshot v1
+
+exports[`mocked function which fails on toReturnWith > just one call 1`] = `
+"expected \\"spy\\" to return with: 2 at least once[90m
+
+Received: 
+[1m    1st spy call return:
+
+[22m  [32m2[90m
+  [31m1[90m
+[39m[90m
+
+Number of calls: [1m1[22m
+[39m"
+`;
+
+exports[`mocked function which fails on toReturnWith > multi calls 1`] = `
+"expected \\"spy\\" to return with: 2 at least once[90m
+
+Received: 
+[1m    1st spy call return:
+
+[22m  [32m2[90m
+  [31m1[90m
+
+[1m    2nd spy call return:
+
+[22m  [32m2[90m
+  [31m1[90m
+
+[1m    3rd spy call return:
+
+[22m  [32m2[90m
+  [31m1[90m
+[39m[90m
+
+Number of calls: [1m3[22m
+[39m"
+`;
+
+exports[`mocked function which fails on toReturnWith > oject type 1`] = `
+"expected \\"spy\\" to return with: { a: '4' } at least once[90m
+
+Received: 
+[1m    1st spy call return:
+
+[22m    Object {
+  [32m-   \\"a\\": \\"4\\",[90m
+  [31m+   \\"a\\": \\"1\\",[90m
+    }
+
+[1m    2nd spy call return:
+
+[22m    Object {
+  [32m-   \\"a\\": \\"4\\",[90m
+  [31m+   \\"a\\": \\"1\\",[90m
+    }
+
+[1m    3rd spy call return:
+
+[22m    Object {
+  [32m-   \\"a\\": \\"4\\",[90m
+  [31m+   \\"a\\": \\"1\\",[90m
+    }
+[39m[90m
+
+Number of calls: [1m3[22m
+[39m"
+`;
+
+exports[`mocked function which fails on toReturnWith > zero call 1`] = `
+"expected \\"spy\\" to return with: 2 at least once[90m
+
+Received: 
+[39m[90m
+
+Number of calls: [1m0[22m
+[39m"
+`;

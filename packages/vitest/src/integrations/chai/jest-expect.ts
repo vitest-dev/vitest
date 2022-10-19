@@ -394,6 +394,20 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     msg += c.gray(`\n\nNumber of calls: ${c.bold(spy.mock.calls.length)}\n`)
     return msg
   }
+  const formatReturns = (spy: EnhancedSpy, msg: string, actualReturn?: any) => {
+    msg += c.gray(`\n\nReceived: \n${spy.mock.results.map((callReturn, i) => {
+      let methodCall = c.bold(`    ${ordinalOf(i + 1)} ${spy.getMockName()} call return:\n\n`)
+      if (actualReturn)
+        methodCall += unifiedDiff(stringify(callReturn.value), stringify(actualReturn), { showLegend: false })
+      else
+        methodCall += stringify(callReturn).split('\n').map(line => `    ${line}`).join('\n')
+
+      methodCall += '\n'
+      return methodCall
+    }).join('\n')}`)
+    msg += c.gray(`\n\nNumber of calls: ${c.bold(spy.mock.calls.length)}\n`)
+    return msg
+  }
   def(['toHaveBeenCalledTimes', 'toBeCalledTimes'], function (number: number) {
     const spy = getSpy(this)
     const spyName = spy.getMockName()
@@ -589,12 +603,24 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const spy = getSpy(this)
     const spyName = spy.getMockName()
     const pass = spy.mock.results.some(({ type, value: result }) => type === 'return' && jestEquals(value, result))
-    this.assert(
-      pass,
-      `expected "${spyName}" to be successfully called with #{exp}`,
-      `expected "${spyName}" to not be successfully called with #{exp}`,
-      value,
+    const isNot = utils.flag(this, 'negate') as boolean
+
+    let msg = utils.getMessage(
+      this,
+      [
+        pass,
+        `expected "${spyName}" to return with: #{exp} at least once`,
+        `expected "${spyName}" to not return with: #{exp}`,
+        value,
+      ],
     )
+
+    if ((pass && isNot) || (!pass && !isNot)) {
+      msg = formatReturns(spy, msg, value)
+      const err = new Error(msg)
+      err.name = 'AssertionError'
+      throw err
+    }
   })
   def(['toHaveLastReturnedWith', 'lastReturnedWith'], function (value: any) {
     const spy = getSpy(this)
