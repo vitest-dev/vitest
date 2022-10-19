@@ -137,13 +137,33 @@ test('async functions should be mocked', () => {
 describe('mocked function which fails on toReturnWith', () => {
   test('zero call', () => {
     const mock = vi.fn(() => 1)
-    expect(() => expect(mock).toReturnWith(2)).toThrowErrorMatchingInlineSnapshot('"expected \\"spy\\" to be successfully called having return 2 at least once"')
+    expect(() => expect(mock).toReturnWith(2)).toThrowErrorMatchingInlineSnapshot(`
+      "expected \\"spy\\" to return with: 2 at least once[90m
+
+      Received: 
+      [39m[90m
+
+      Number of calls: [1m0[22m
+      [39m"
+    `)
   })
 
   test('just one call', () => {
     const mock = vi.fn(() => 1)
     mock()
-    expect(() => expect(mock).toReturnWith(2)).toThrowErrorMatchingInlineSnapshot('"expected \\"spy\\" to be successfully called having return 2 at least once"')
+    expect(() => expect(mock).toReturnWith(2)).toThrowErrorMatchingInlineSnapshot(`
+      "expected \\"spy\\" to return with: 2 at least once[90m
+
+      Received: 
+      [1m    1st spy call return:
+
+      [22m  [32m2[90m
+        [31m1[90m
+      [39m[90m
+
+      Number of calls: [1m1[22m
+      [39m"
+    `)
   })
 
   test('multi calls', () => {
@@ -151,7 +171,29 @@ describe('mocked function which fails on toReturnWith', () => {
     mock()
     mock()
     mock()
-    expect(() => expect(mock).toReturnWith(2)).toThrowErrorMatchingInlineSnapshot('"expected \\"spy\\" to be successfully called having return 2 at least once"')
+    expect(() => expect(mock).toReturnWith(2)).toThrowErrorMatchingInlineSnapshot(`
+      "expected \\"spy\\" to return with: 2 at least once[90m
+
+      Received: 
+      [1m    1st spy call return:
+
+      [22m  [32m2[90m
+        [31m1[90m
+
+      [1m    2nd spy call return:
+
+      [22m  [32m2[90m
+        [31m1[90m
+
+      [1m    3rd spy call return:
+
+      [22m  [32m2[90m
+        [31m1[90m
+      [39m[90m
+
+      Number of calls: [1m3[22m
+      [39m"
+    `)
   })
 
   test('oject type', () => {
@@ -159,7 +201,35 @@ describe('mocked function which fails on toReturnWith', () => {
     mock()
     mock()
     mock()
-    expect(() => expect(mock).toReturnWith({ a: '4' })).toThrowErrorMatchingInlineSnapshot('"expected \\"spy\\" to be successfully called having return { a: \'4\' } at least once"')
+    expect(() => expect(mock).toReturnWith({ a: '4' })).toThrowErrorMatchingInlineSnapshot(`
+      "expected \\"spy\\" to return with: { a: '4' } at least once[90m
+
+      Received: 
+      [1m    1st spy call return:
+
+      [22m    Object {
+        [32m-   \\"a\\": \\"4\\",[90m
+        [31m+   \\"a\\": \\"1\\",[90m
+          }
+
+      [1m    2nd spy call return:
+
+      [22m    Object {
+        [32m-   \\"a\\": \\"4\\",[90m
+        [31m+   \\"a\\": \\"1\\",[90m
+          }
+
+      [1m    3rd spy call return:
+
+      [22m    Object {
+        [32m-   \\"a\\": \\"4\\",[90m
+        [31m+   \\"a\\": \\"1\\",[90m
+          }
+      [39m[90m
+
+      Number of calls: [1m3[22m
+      [39m"
+    `)
   })
 })
 
