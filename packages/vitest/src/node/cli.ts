@@ -71,28 +71,28 @@ cli
 
 cli.parse()
 
-async function runRelated(relatedFiles: string[] | string, argv: CliOptions) {
+async function runRelated(relatedFiles: string[] | string, argv: CliOptions): Promise<void> {
   argv.related = relatedFiles
   argv.passWithNoTests ??= true
   await start('test', [], argv)
 }
 
-async function watch(cliFilters: string[], options: CliOptions) {
+async function watch(cliFilters: string[], options: CliOptions): Promise<void> {
   options.watch = true
   await start('test', cliFilters, options)
 }
 
-async function run(cliFilters: string[], options: CliOptions) {
+async function run(cliFilters: string[], options: CliOptions): Promise<void> {
   options.run = true
   await start('test', cliFilters, options)
 }
 
-async function benchmark(cliFilters: string[], options: CliOptions) {
+async function benchmark(cliFilters: string[], options: CliOptions): Promise<void> {
   console.warn(c.yellow('Benchmarking is an experimental feature.\nBreaking changes might not follow semver, please pin Vitest\'s version when using it.'))
   await start('benchmark', cliFilters, options)
 }
 
-async function start(mode: VitestRunMode, cliFilters: string[], options: CliOptions) {
+async function start(mode: VitestRunMode, cliFilters: string[], options: CliOptions): Promise<void> {
   try {
     if (await startVitest(mode, cliFilters, options) === false)
       process.exit()

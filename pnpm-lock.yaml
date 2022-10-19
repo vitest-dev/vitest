@@ -123,7 +123,7 @@ importers:
       unocss: 0.45.29_vite@3.1.0
       unplugin-vue-components: 0.22.8_vue@3.2.41
       vite: 3.1.0
-      vite-plugin-pwa: 0.13.1_zp7t6aa2r77waajuyr5zt63phe
+      vite-plugin-pwa: 0.13.1_vite@3.1.0
       vitepress: 1.0.0-alpha.21
       workbox-window: 6.5.4
 
@@ -290,7 +290,7 @@ importers:
       '@types/react-test-renderer': 17.0.2
       '@vitejs/plugin-react': 2.1.0_vite@3.1.0
       '@vitest/ui': link:../../packages/ui
-      happy-dom: 7.5.13
+      happy-dom: 7.5.14
       jsdom: 20.0.1
       react-test-renderer: 17.0.2_react@17.0.2
       vite: 3.1.0
@@ -958,7 +958,7 @@ importers:
     devDependencies:
       '@vitejs/plugin-vue': 3.1.2_vite@3.1.0+vue@3.2.41
       '@vue/test-utils': 2.1.0_vue@3.2.41
-      happy-dom: 7.5.13
+      happy-dom: 7.5.14
       vite: 3.1.0
       vitest: link:../../packages/vitest
       vue: 3.2.41
@@ -11820,8 +11820,8 @@ packages:
       - encoding
     dev: true
 
-  /happy-dom/7.5.13:
-    resolution: {integrity: sha512-J8OehFPl71FtmkifnxqUpFWHA9jJ5pIwnEAFdZvZnXexev6RIgtkB6H/pTEHhBp7qCGUPHhkjvF3gqKxlBTeLg==}
+  /happy-dom/7.5.14:
+    resolution: {integrity: sha512-/MXcRnAQSgahOGBQOXr77hJrEpzwEAh9F7P6o7COlUp4o1QwLD/7qQPb55Po3MDeMYQfsEnXfQPT2YXAbKmn2Q==}
     dependencies:
       css.escape: 1.5.1
       he: 1.2.0
@@ -18895,11 +18895,10 @@ packages:
       - supports-color
     dev: true
 
-  /vite-plugin-pwa/0.13.1_zp7t6aa2r77waajuyr5zt63phe:
+  /vite-plugin-pwa/0.13.1_vite@3.1.0:
     resolution: {integrity: sha512-NR3dIa+o2hzlzo4lF4Gu0cYvoMjSw2DdRc6Epw1yjmCqWaGuN86WK9JqZie4arNlE1ZuWT3CLiMdiX5wcmmUmg==}
     peerDependencies:
       vite: ^3.1.0
-      workbox-window: ^6.5.4
     dependencies:
       debug: 4.3.4
       fast-glob: 3.2.12
