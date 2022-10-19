@@ -30,7 +30,7 @@ pnpm add -D vitest
 ```
 
 :::tip
-Vitest requires Vite >=v2.7.10 and Node >=v14
+Vitest requires Vite >=v3.0.0 and Node >=v14
 :::
 
 ## Configuring Vitest

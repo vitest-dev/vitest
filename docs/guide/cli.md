@@ -76,6 +76,8 @@ vitest related /src/index.ts /src/hello-world.js
 | `--shard <shard>` | Execute tests in a specified shard |
 | `--sequence` | Define in what order to run tests. Use [cac's dot notation] to specify options (for example, use `--sequence.shuffle` to run tests in random order) |
 | `--no-color` | Removes colors from the console output |
+| `--inspect` | Enables Node.js inspector |
+| `--inspect-brk` | Enables Node.js inspector with break |
 | `-h, --help` | Display available CLI options |
 
 ### changed

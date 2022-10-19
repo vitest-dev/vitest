@@ -349,7 +349,7 @@ Custom reporters for output. Reporters can be [a Reporter instance](https://gith
 - **Default:** `80`
 
 Truncate output diff lines up to `80` number of characters. You may wish to tune this,
-depending on you terminal window width.
+depending on your terminal window width.
 
 ### outputDiffLines
 

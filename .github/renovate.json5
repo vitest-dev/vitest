@@ -45,6 +45,8 @@
     // TODO: breaking changes
     "pathe",
     // TODO: vite-plugin-pwa issue
-    "esno"
+    "esno",
+    // user can install any version
+    "vite"
   ]
 }

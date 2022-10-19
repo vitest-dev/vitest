@@ -45,7 +45,7 @@ A blazing fast unit test framework powered by Vite.
 - Out-of-box TypeScript / JSX support
 - Filtering, timeouts, concurrent for suite and tests
 
-> Vitest requires Vite >=v2.7.10 and Node >=v14
+> Vitest requires Vite >=v3.0.0 and Node >=v14
 
 
 ```ts

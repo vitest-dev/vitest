@@ -72,8 +72,7 @@ const config = {
   watchExclude: ['**/node_modules/**', '**/dist/**'],
   forceRerunTriggers: [
     '**/package.json/**',
-    '**/vitest.config.*/**',
-    '**/vite.config.*/**',
+    '**/{vitest,vite}.config.*/**',
   ],
   update: false,
   reporters: [],
