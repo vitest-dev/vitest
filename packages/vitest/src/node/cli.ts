@@ -1,3 +1,4 @@
+import { normalize } from 'pathe'
 import cac from 'cac'
 import c from 'picocolors'
 import { version } from '../../package.json'
@@ -79,22 +80,22 @@ async function runRelated(relatedFiles: string[] | string, argv: CliOptions): Pr
 
 async function watch(cliFilters: string[], options: CliOptions): Promise<void> {
   options.watch = true
-  await start('test', cliFilters, options)
+  await start('test', cliFilters.map(normalize), options)
 }
 
 async function run(cliFilters: string[], options: CliOptions): Promise<void> {
   options.run = true
-  await start('test', cliFilters, options)
+  await start('test', cliFilters.map(normalize), options)
 }
 
 async function benchmark(cliFilters: string[], options: CliOptions): Promise<void> {
   console.warn(c.yellow('Benchmarking is an experimental feature.\nBreaking changes might not follow semver, please pin Vitest\'s version when using it.'))
-  await start('benchmark', cliFilters, options)
+  await start('benchmark', cliFilters.map(normalize), options)
 }
 
 async function start(mode: VitestRunMode, cliFilters: string[], options: CliOptions): Promise<void> {
   try {
-    if (await startVitest(mode, cliFilters, options) === false)
+    if (await startVitest(mode, cliFilters.map(normalize), options) === false)
       process.exit()
   }
   catch (e) {
