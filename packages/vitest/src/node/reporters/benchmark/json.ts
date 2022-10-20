@@ -29,12 +29,16 @@ export class JsonReporter implements Reporter {
     for (const file of files) {
       const tests = getTests([file])
       for (const test of tests) {
-        const res = test.result?.benchmark
-        if (!res || test.mode === 'skip') // TODO mark as skipped
-          continue
+        let res = test.result?.benchmark
+        if (!res || test.mode === 'skip') {
+          res = {
+            name: test.name,
+          } as any
+        }
+
         if (!outputFile)
-          res.samples = 'ignore on terminal' as any
-        testResults[test.suite.name] = (testResults[test.suite.name] || []).concat(res)
+          res!.samples = 'ignore on terminal' as any
+        testResults[test.suite.name] = (testResults[test.suite.name] || []).concat(res!)
       }
 
       if (tests.some(t => t.result?.state === 'run')) {
