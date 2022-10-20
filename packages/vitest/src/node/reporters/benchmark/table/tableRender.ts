@@ -34,6 +34,21 @@ function formatNumber(number: number) {
     + (res[1] ? `.${res[1]}` : '')
 }
 
+const tableHead = ['name', 'hz', 'min', 'max', 'mean', 'p75', 'p99', 'p995', 'p999', 'rme', 'samples']
+
+function renderTableHead(tasks: Task[]) {
+  const benchs = tasks
+    .map(i => i.type === 'benchmark' ? i.result?.benchmark : undefined)
+    .filter(notNullish)
+  const allItems = benchs.map(renderBenchmarkItems).concat([tableHead])
+  return `${' '.repeat(3)}${tableHead.map((i, idx) => {
+    const width = Math.max(...allItems.map(i => i[idx].length))
+    return idx
+      ? i.padStart(width, ' ')
+      : i.padEnd(width, ' ') // name
+  }).map(c.bold).join('  ')}`
+}
+
 function renderBenchmarkItems(result: BenchmarkResult) {
   return [
     result.name,
@@ -45,15 +60,14 @@ function renderBenchmarkItems(result: BenchmarkResult) {
     formatNumber(result.p99 || 0),
     formatNumber(result.p995 || 0),
     formatNumber(result.p999 || 0),
-    `±${result.rme.toFixed(2)}%`,
+    `±${(result.rme || 0).toFixed(2)}%`,
     result.samples.length.toString(),
   ]
 }
-const tableHead = ['name', 'hz', 'min', 'max', 'mean', 'p75', 'p99', 'p995', 'p999', 'rme', 'samples']
-function renderBenchmark(task: Benchmark, tasks: Task[], idx: number, prefix: string): string {
+function renderBenchmark(task: Benchmark, tasks: Task[]): string {
   const result = task.result?.benchmark
   if (!result)
-    return prefix + task.name
+    return task.name
 
   const benchs = tasks
     .map(i => i.type === 'benchmark' ? i.result?.benchmark : undefined)
@@ -67,16 +81,7 @@ function renderBenchmark(task: Benchmark, tasks: Task[], idx: number, prefix: st
       : i.padEnd(width, ' ') // name
   })
 
-  let head = ''
-  if (idx === 0) {
-    head = `${' '.repeat(5)}${tableHead.map((i, idx) => {
-      const width = Math.max(...allItems.map(i => i[idx].length))
-      return idx
-        ? i.padStart(width, ' ')
-        : i.padEnd(width, ' ') // name
-    }).map(c.bold).join('  ')}\n`
-  }
-  return head + prefix + [
+  return [
     padded[0], // name
     c.blue(padded[1]), // hz
     c.cyan(padded[2]), // min
@@ -101,7 +106,12 @@ export function renderTree(tasks: Task[], options: ListRendererOptions, level = 
 
   let idx = 0
   for (const task of tasks) {
-    const prefix = ` ${getStateSymbol(task)} `
+    const padding = '  '.repeat(level ? 1 : 0)
+    let prefix = ''
+    if (idx === 0 && task.type === 'benchmark')
+      prefix += `${renderTableHead(tasks)}\n${padding}`
+
+    prefix += ` ${getStateSymbol(task)} `
 
     let suffix = ''
     if (task.type === 'suite')
@@ -122,12 +132,11 @@ export function renderTree(tasks: Task[], options: ListRendererOptions, level = 
     if (level === 0)
       name = formatFilepath(name)
 
-    const padding = '  '.repeat(level ? 1 : 0)
-    const content = task.type === 'benchmark'
-      ? renderBenchmark(task, tasks, idx, padding + prefix) + suffix
-      : padding + prefix + name + suffix
+    const body = task.type === 'benchmark'
+      ? renderBenchmark(task, tasks)
+      : name
 
-    output.push(content)
+    output.push(padding + prefix + body + suffix)
 
     if ((task.result?.state !== 'pass') && outputMap.get(task) != null) {
       let data: string | undefined = outputMap.get(task)
