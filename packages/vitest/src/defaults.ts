@@ -22,6 +22,7 @@ const defaultCoverageExcludes = [
   '**/__tests__/**',
   '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress}.config.{js,cjs,mjs,ts}',
   '**/.{eslint,mocha,prettier}rc.{js,cjs,yml}',
+  '{vite,vitest}.config.*',
 ]
 
 const coverageConfigDefaults = {
