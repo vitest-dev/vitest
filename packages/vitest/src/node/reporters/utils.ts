@@ -6,7 +6,7 @@ import type { BenchmarkBuiltinReporters, BuiltinReporters } from './index'
 async function loadCustomReporterModule<C extends Reporter>(path: string, runner: ViteNodeRunner): Promise<new () => C> {
   let customReporterModule: { default: new () => C }
   try {
-    customReporterModule = await runner.executeId(path)
+    customReporterModule = await runner.executeId(`/@fs/${path}`)
   }
   catch (customReporterModuleError) {
     throw new Error(`Failed to load custom Reporter from ${path}`, { cause: customReporterModuleError as Error })
