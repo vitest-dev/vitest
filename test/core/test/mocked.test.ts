@@ -134,6 +134,35 @@ test('async functions should be mocked', () => {
   expect(asyncFunc()).resolves.toBe('foo')
 })
 
+describe('mocked function which fails on toReturnWith', () => {
+  test('zero call', () => {
+    const mock = vi.fn(() => 1)
+    expect(() => expect(mock).toReturnWith(2)).toThrowErrorMatchingSnapshot()
+  })
+
+  test('just one call', () => {
+    const mock = vi.fn(() => 1)
+    mock()
+    expect(() => expect(mock).toReturnWith(2)).toThrowErrorMatchingSnapshot()
+  })
+
+  test('multi calls', () => {
+    const mock = vi.fn(() => 1)
+    mock()
+    mock()
+    mock()
+    expect(() => expect(mock).toReturnWith(2)).toThrowErrorMatchingSnapshot()
+  })
+
+  test('oject type', () => {
+    const mock = vi.fn(() => { return { a: '1' } })
+    mock()
+    mock()
+    mock()
+    expect(() => expect(mock).toReturnWith({ a: '4' })).toThrowErrorMatchingSnapshot()
+  })
+})
+
 // This is here because mocking streams previously caused some problems (#1671).
 test('streams', () => {
   expect(exportedStream).toBeDefined()
