@@ -84,6 +84,12 @@ async function run(files: string[], options: CliOptions = {}) {
   server.emitter?.on('message', (payload) => {
     handleMessage(runner, server.emitter, files, payload)
   })
+
+  if (options.watch) {
+    process.on('uncaughtException', (err) => {
+      console.log(c.red('[vite-node] Failed to execute file: \n'), err)
+    })
+  }
 }
 
 function parseServerOptions(serverOptions: ViteNodeServerOptionsCLI): ViteNodeServerOptions {
