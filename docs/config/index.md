@@ -81,7 +81,7 @@ Files to include in the test run, using glob pattern.
 ### exclude
 
 - **Type:** `string[]`
-- **Default:** `['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**']`
+- **Default:** `['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**', 'vite.config.*', 'vitest.config.*']`
 
 Files to exclude from the test run, using glob pattern.
 
