@@ -1,5 +1,4 @@
 import type { ViteNodeRunner } from 'vite-node/client'
-import { normalize } from 'pathe'
 import type { Reporter } from '../../types'
 import { BenchmarkReportsMap, ReportersMap } from './index'
 import type { BenchmarkBuiltinReporters, BuiltinReporters } from './index'
