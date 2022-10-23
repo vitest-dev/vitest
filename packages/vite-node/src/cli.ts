@@ -87,7 +87,7 @@ async function run(files: string[], options: CliOptions = {}) {
 
   if (options.watch) {
     process.on('uncaughtException', (err) => {
-      console.log(c.red('[vite-node] Failed to execute file: \n'), err)
+      console.error(c.red('[vite-node] Failed to execute file: \n'), err)
     })
   }
 }
