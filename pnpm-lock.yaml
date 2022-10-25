@@ -951,13 +951,15 @@ importers:
     specifiers:
       '@vitejs/plugin-vue': latest
       '@vue/test-utils': latest
+      execa: ^6.1.0
       happy-dom: latest
       vite: ^3.2.0
       vitest: workspace:*
       vue: latest
     devDependencies:
       '@vitejs/plugin-vue': 3.2.0_vite@3.2.1+vue@3.2.41
-      '@vue/test-utils': 2.2.1_vue@3.2.41
+      '@vue/test-utils': 2.2.0_vue@3.2.41
+      execa: 6.1.0
       happy-dom: 7.6.6
       vite: 3.2.1
       vitest: link:../../packages/vitest
