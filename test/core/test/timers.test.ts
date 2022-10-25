@@ -336,6 +336,112 @@ describe('FakeTimers', () => {
     })
   })
 
+  describe('runAllTimersAsync', () => {
+    it('runs all timers in order', async () => {
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout, Promise }
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
+
+      const runOrder = []
+      const mock1 = vi.fn(() => runOrder.push('mock1'))
+      const mock2 = vi.fn(() => runOrder.push('mock2'))
+      const mock3 = vi.fn(() => runOrder.push('mock3'))
+      const mock4 = vi.fn(() => runOrder.push('mock4'))
+      const mock5 = vi.fn(() => runOrder.push('mock5'))
+      const mock6 = vi.fn(() => runOrder.push('mock6'))
+
+      global.setTimeout(mock1, 100)
+      global.setTimeout(mock2, NaN)
+      global.setTimeout(mock3, 0)
+      const intervalHandler = global.setInterval(() => {
+        mock4()
+        global.clearInterval(intervalHandler)
+      }, 200)
+      global.setTimeout(mock5, Infinity)
+      global.setTimeout(mock6, -Infinity)
+
+      await timers.runAllTimersAsync()
+      expect(runOrder).toEqual([
+        'mock2',
+        'mock3',
+        'mock5',
+        'mock6',
+        'mock1',
+        'mock4',
+      ])
+    })
+
+    it('warns when trying to advance timers while real timers are used', async () => {
+      const timers = new FakeTimers({
+        config: {
+          rootDir: __dirname,
+        },
+        global,
+      })
+      await expect(timers.runAllTimersAsync()).rejects.toThrow(/Timers are not mocked/)
+    })
+
+    it('only runs a setTimeout callback once (ever)', async () => {
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout, Promise }
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
+
+      const fn = vi.fn()
+      global.setTimeout(fn, 0)
+      expect(fn).toHaveBeenCalledTimes(0)
+
+      await timers.runAllTimersAsync()
+      expect(fn).toHaveBeenCalledTimes(1)
+
+      await timers.runAllTimersAsync()
+      expect(fn).toHaveBeenCalledTimes(1)
+    })
+
+    it('runs callbacks with arguments after the interval', async () => {
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout, Promise }
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
+
+      const fn = vi.fn()
+      global.setTimeout(fn, 0, 'mockArg1', 'mockArg2')
+
+      await timers.runAllTimersAsync()
+      expect(fn).toHaveBeenCalledTimes(1)
+      expect(fn).toHaveBeenCalledWith('mockArg1', 'mockArg2')
+    })
+
+    it('throws before allowing infinite recursion', async () => {
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout, Promise }
+      const timers = new FakeTimers({ global, config: { loopLimit: 20 } })
+      timers.useFakeTimers()
+
+      global.setTimeout(function infinitelyRecursingCallback() {
+        global.setTimeout(infinitelyRecursingCallback, 0)
+      }, 0)
+
+      await expect(
+        timers.runAllTimersAsync(),
+      ).rejects.toThrow(
+        'Aborting after running 20 timers, assuming an infinite loop!',
+      )
+    })
+
+    it('also clears ticks', async () => {
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout, Promise }
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
+
+      const fn = vi.fn()
+      global.setTimeout(() => {
+        process.nextTick(fn)
+      }, 0)
+      expect(fn).toHaveBeenCalledTimes(0)
+
+      await timers.runAllTimersAsync()
+      expect(fn).toHaveBeenCalledTimes(1)
+    })
+  })
+
   describe('advanceTimersByTime', () => {
     it('runs timers in order', () => {
       const global = { Date: FakeDate, clearTimeout, process, setTimeout }

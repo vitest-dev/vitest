@@ -52,6 +52,11 @@ export class FakeTimers {
       this._clock.runAll()
   }
 
+  async runAllTimersAsync(): Promise<void> {
+    if (this._checkFakeTimers())
+      await this._clock.runAllAsync()
+  }
+
   runOnlyPendingTimers(): void {
     if (this._checkFakeTimers())
       this._clock.runToLast()
