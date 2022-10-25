@@ -13,7 +13,7 @@ importers:
       '@antfu/eslint-config': ^0.27.0
       '@antfu/ni': ^0.18.2
       '@rollup/plugin-alias': ^4.0.2
-      '@rollup/plugin-commonjs': ^22.0.2
+      '@rollup/plugin-commonjs': ^23.0.2
       '@rollup/plugin-json': ^4.1.0
       '@rollup/plugin-node-resolve': ^14.1.0
       '@types/fs-extra': ^9.0.13
@@ -54,7 +54,7 @@ importers:
       '@antfu/eslint-config': 0.27.0_wyqvi574yv7oiwfeinomdzmc3m
       '@antfu/ni': 0.18.2
       '@rollup/plugin-alias': 4.0.2_rollup@2.79.0
-      '@rollup/plugin-commonjs': 22.0.2_rollup@2.79.0
+      '@rollup/plugin-commonjs': 23.0.2_rollup@2.79.0
       '@rollup/plugin-json': 4.1.0_rollup@2.79.0
       '@rollup/plugin-node-resolve': 14.1.0_rollup@2.79.0
       '@types/fs-extra': 9.0.13
@@ -3938,19 +3938,21 @@ packages:
       rollup: 2.79.0
     dev: true
 
-  /@rollup/plugin-commonjs/22.0.2_rollup@2.79.0:
-    resolution: {integrity: sha512-//NdP6iIwPbMTcazYsiBMbJW7gfmpHom33u1beiIoHDEM0Q9clvtQB1T0efvMqHeKsGohiHo97BCPCkBXdscwg==}
-    engines: {node: '>= 12.0.0'}
+  /@rollup/plugin-commonjs/23.0.2_rollup@2.79.0:
+    resolution: {integrity: sha512-e9ThuiRf93YlVxc4qNIurvv+Hp9dnD+4PjOqQs5vAYfcZ3+AXSrcdzXnVjWxcGQOa6KGJFcRZyUI3ktWLavFjg==}
+    engines: {node: '>=14.0.0'}
     peerDependencies:
-      rollup: ^2.68.0
+      rollup: ^2.68.0||^3.0.0
+    peerDependenciesMeta:
+      rollup:
+        optional: true
     dependencies:
-      '@rollup/pluginutils': 3.1.0_rollup@2.79.0
+      '@rollup/pluginutils': 5.0.2_rollup@2.79.0
       commondir: 1.0.1
       estree-walker: 2.0.2
-      glob: 7.2.3
+      glob: 8.0.3
       is-reference: 1.2.1
-      magic-string: 0.25.9
-      resolve: 1.22.1
+      magic-string: 0.26.7
       rollup: 2.79.0
     dev: true
 

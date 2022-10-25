@@ -34,7 +34,7 @@
     "@antfu/eslint-config": "^0.27.0",
     "@antfu/ni": "^0.18.2",
     "@rollup/plugin-alias": "^4.0.2",
-    "@rollup/plugin-commonjs": "^22.0.2",
+    "@rollup/plugin-commonjs": "^23.0.2",
     "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^14.1.0",
     "@types/fs-extra": "^9.0.13",
