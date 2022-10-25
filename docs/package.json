@@ -16,16 +16,16 @@
   },
   "devDependencies": {
     "@iconify-json/carbon": "^1.1.9",
-    "@unocss/reset": "^0.45.29",
+    "@unocss/reset": "^0.46.0",
     "@vitejs/plugin-vue": "latest",
     "esno": "^0.16.3",
     "fast-glob": "^3.2.12",
     "https-localhost": "^4.7.1",
-    "unocss": "^0.45.29",
-    "unplugin-vue-components": "^0.22.8",
+    "unocss": "^0.46.0",
+    "unplugin-vue-components": "^0.22.9",
     "vite": "^3.1.8",
     "vite-plugin-pwa": "0.13.1",
-    "vitepress": "^1.0.0-alpha.21",
+    "vitepress": "^1.0.0-alpha.22",
     "workbox-window": "^6.5.4"
   }
 }
