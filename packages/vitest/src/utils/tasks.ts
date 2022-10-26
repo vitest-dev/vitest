@@ -1,5 +1,5 @@
 import type { Arrayable, Benchmark, Suite, Task, Test, TypeCheck } from '../types'
-import { TYPECHECK_SUITE } from '../typescript/constants'
+import { TYPECHECK_SUITE } from '../typecheck/constants'
 import { toArray } from './base'
 
 function isAtomTest(s: Task): s is Test | Benchmark | TypeCheck {

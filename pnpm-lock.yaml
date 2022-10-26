@@ -790,6 +790,7 @@ importers:
       diff: ^5.1.0
       event-target-polyfill: ^0.0.3
       execa: ^6.1.0
+      expect-type: ^0.15.0
       fast-glob: ^3.2.12
       find-up: ^6.3.0
       flatted: ^3.2.7
@@ -851,6 +852,7 @@ importers:
       diff: 5.1.0
       event-target-polyfill: 0.0.3
       execa: 6.1.0
+      expect-type: 0.15.0
       fast-glob: 3.2.12
       find-up: 6.3.0
       flatted: 3.2.7
@@ -10986,6 +10988,10 @@ packages:
       to-regex: 3.0.2
     transitivePeerDependencies:
       - supports-color
+    dev: true
+
+  /expect-type/0.15.0:
+    resolution: {integrity: sha512-yWnriYB4e8G54M5/fAFj7rCIBiKs1HAACaY13kCz6Ku0dezjS9aMcfcdVK2X8Tv2tEV1BPz/wKfQ7WA4S/d8aA==}
     dev: true
 
   /expect/29.0.1:

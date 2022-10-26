@@ -1,9 +1,9 @@
 import './vite'
 import './global'
 
-export { expectTypeOf, type ExpectTypeOf } from '../typescript/expectTypeOf'
-export { assertType, type AssertType } from '../typescript/assertType'
-export * from '../typescript/types'
+export { expectTypeOf, type ExpectTypeOf } from '../typecheck/expectTypeOf'
+export { assertType, type AssertType } from '../typecheck/assertType'
+export * from '../typecheck/types'
 export * from './config'
 export * from './tasks'
 export * from './reporter'

@@ -11,7 +11,7 @@ import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter,
 import { SnapshotManager } from '../integrations/snapshot/manager'
 import { clearTimeout, deepMerge, hasFailed, noop, setTimeout, slash, toArray } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
-import { Typechecker } from '../typescript/typechecker'
+import { Typechecker } from '../typecheck/typechecker'
 import { createPool } from './pool'
 import type { WorkerPool } from './pool'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
