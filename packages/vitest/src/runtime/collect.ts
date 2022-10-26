@@ -102,7 +102,7 @@ export async function collectTests(paths: string[], config: ResolvedConfig): Pro
 /**
  * If any tasks been marked as `only`, mark all other tasks as `skip`.
  */
-function interpretTaskModes(suite: Suite, namePattern?: string | RegExp, onlyMode?: boolean, parentIsOnly?: boolean, allowOnly?: boolean) {
+export function interpretTaskModes(suite: Suite, namePattern?: string | RegExp, onlyMode?: boolean, parentIsOnly?: boolean, allowOnly?: boolean) {
   const suiteIsOnly = parentIsOnly || suite.mode === 'only'
 
   suite.tasks.forEach((t) => {
@@ -145,7 +145,7 @@ function getTaskFullName(task: TaskBase): string {
   return `${task.suite ? `${getTaskFullName(task.suite)} ` : ''}${task.name}`
 }
 
-function someTasksAreOnly(suite: Suite): boolean {
+export function someTasksAreOnly(suite: Suite): boolean {
   return suite.tasks.some(t => t.mode === 'only' || (t.type === 'suite' && someTasksAreOnly(t)))
 }
 

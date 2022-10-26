@@ -4,6 +4,7 @@ import { ancestor as walkAst } from 'acorn-walk'
 import type { RawSourceMap } from 'vite-node'
 
 import type { File, Suite, Vitest } from '../types'
+import { interpretTaskModes, someTasksAreOnly } from '../runtime/collect'
 import { TYPECHECK_SUITE } from './constants'
 
 interface ParsedFile extends File {
@@ -129,20 +130,8 @@ export async function collectTests(ctx: Vitest, filepath: string): Promise<null 
       // to show correct amount of "tests" in summary, we mark this with a special symbol
       Object.defineProperty(task, TYPECHECK_SUITE, { value: true })
   })
-  const markSkippedTests = (suite: Suite) => {
-    const hasOnly = suite.tasks.some(task => task.mode === 'only')
-    suite.tasks.forEach((task) => {
-      if ((hasOnly && task.mode !== 'only') || suite.mode === 'skip') {
-        task.mode = 'skip'
-        task.result = {
-          state: 'skip',
-        }
-      }
-      if (task.type === 'suite')
-        markSkippedTests(task)
-    })
-  }
-  markSkippedTests(file)
+  const hasOnly = someTasksAreOnly(file)
+  interpretTaskModes(file, ctx.config.testNamePattern, hasOnly, false, ctx.config.allowOnly)
   return {
     file,
     parsed: request.code,
