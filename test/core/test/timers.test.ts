@@ -440,6 +440,30 @@ describe('FakeTimers', () => {
       await timers.runAllTimersAsync()
       expect(fn).toHaveBeenCalledTimes(1)
     })
+
+    it('all callbacks are called when setTimeout calls asynchronous method', async () => {
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout, Promise }
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
+
+      const runOrder = []
+      const mock2 = vi.fn(async () => {
+        runOrder.push('mock2')
+        return global.Promise.resolve(true)
+      })
+      const mock1 = vi.fn(async () => {
+        await mock2()
+        runOrder.push('mock1')
+      })
+
+      global.setTimeout(mock1, 100)
+      await timers.runAllTimersAsync()
+
+      expect(runOrder).toEqual([
+        'mock2',
+        'mock1',
+      ])
+    })
   })
 
   describe('advanceTimersByTime', () => {
