@@ -180,6 +180,9 @@ export async function runTest(test: Test) {
     updateTask(test)
   }
 
+  if (test.result.state === 'fail')
+    await Promise.all(test.onFailed?.map(fn => fn(test.result!)) || [])
+
   // if test is marked to be failed, flip the result
   if (test.fails) {
     if (test.result.state === 'pass') {

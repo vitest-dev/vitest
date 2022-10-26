@@ -52,6 +52,7 @@ export interface Test<ExtraContext = {}> extends TaskBase {
   result?: TaskResult
   fails?: boolean
   context: TestContext & ExtraContext
+  onFailed?: OnTestFailedHandler[]
 }
 
 export type Task = Test | Suite | File | Benchmark
@@ -213,4 +214,11 @@ export interface TestContext {
    * A expect instance bound to the test
    */
   expect: Vi.ExpectStatic
+
+  /**
+   * Extract hooks on test failed
+   */
+  onTestFailed: (fn: OnTestFailedHandler) => void
 }
+
+export type OnTestFailedHandler = (result: TaskResult) => Awaitable<void>
