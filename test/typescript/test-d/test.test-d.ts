@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { describe, expectTypeOf, test } from 'vitest'
 
 describe('test', () => {
@@ -20,6 +21,17 @@ describe('test', () => {
       expectTypeOf(Promise.resolve('string')).resolves.toEqualTypeOf<string>()
       expectTypeOf(45).toEqualTypeOf(45)
     })
+  })
+
+  test('ignored error', () => {
+    // eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error
+    // @ts-ignore
+    expectTypeOf(45).toEqualTypeOf<string>()
+  })
+
+  test('expected error', () => {
+    // @ts-expect-error
+    expectTypeOf(45).toEqualTypeOf<string>()
   })
 })
 
