@@ -4,7 +4,7 @@ import { ancestor as walkAst } from 'acorn-walk'
 import type { RawSourceMap } from 'vite-node'
 
 import type { File, Suite, Vitest } from '../types'
-import { interpretTaskModes, someTasksAreOnly } from '../runtime/collect'
+import { interpretTaskModes, someTasksAreOnly } from '../utils/collect'
 import { TYPECHECK_SUITE } from './constants'
 
 interface ParsedFile extends File {
