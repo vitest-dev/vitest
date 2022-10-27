@@ -227,6 +227,7 @@ export class Typechecker {
       await stdout
       this._result = await this.prepareResults(output)
       await this._onParseEnd?.(this._result)
+      await this.clear()
     }
   }
 
