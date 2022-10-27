@@ -195,15 +195,15 @@ export class Typechecker {
     if (typecheck.allowJs)
       cmd += ' --allowJs --checkJs'
     let output = ''
-    const stdout = execaCommand(cmd, {
+    const child = execaCommand(cmd, {
       cwd: root,
       stdout: 'pipe',
       reject: false,
     })
-    this.process = stdout
+    this.process = child
     await this._onParseStart?.()
     let rerunTriggered = false
-    stdout.stdout?.on('data', (chunk) => {
+    child.stdout?.on('data', (chunk) => {
       output += chunk
       if (!watch)
         return
@@ -224,7 +224,7 @@ export class Typechecker {
       }
     })
     if (!watch) {
-      await stdout
+      await child
       this._result = await this.prepareResults(output)
       await this._onParseEnd?.(this._result)
       await this.clear()
