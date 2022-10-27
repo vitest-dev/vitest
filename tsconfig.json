@@ -40,6 +40,7 @@
     "./packages/vitest/*.d.ts",
     "./packages/ui/client/**",
     "./examples/**/*.*",
-    "./bench/**"
+    "./bench/**",
+    "./test/typescript/**"
   ]
 }

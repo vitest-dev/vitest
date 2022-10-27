@@ -166,9 +166,13 @@ export class Typechecker {
     return typesErrors
   }
 
-  public async stop() {
+  public async clear() {
     if (this.tmpConfigPath)
       await rm(this.tmpConfigPath)
+  }
+
+  public async stop() {
+    await this.clear()
     this.process?.kill()
   }
 

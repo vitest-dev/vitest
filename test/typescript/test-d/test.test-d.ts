@@ -15,10 +15,9 @@ describe('test', () => {
       .toEqualTypeOf<CSSProperties>()
   })
 
-  expectTypeOf(Promise.resolve('string')).resolves.toEqualTypeOf<string>()
-
   describe('test2', () => {
     test('some-test 2', () => {
+      expectTypeOf(Promise.resolve('string')).resolves.toEqualTypeOf<string>()
       expectTypeOf(45).toEqualTypeOf(45)
     })
   })
