@@ -200,3 +200,20 @@ describe('sort', () => {
   })
 })
 ```
+
+## Type Testing <sup><code>experimental</code></sup>
+
+Since Vitest 0.25.0 you can [write tests](/guide/testing-types) to catch type regressions. Vitest comes with [`expect-type`](https://github.com/mmkal/expect-type) package to provide you with a similar and easy to understand API.
+
+```ts
+import { assertType, expectTypeOf } from 'vitest'
+import { mount } from './mount.js'
+
+test('my types work properly', () => {
+  expectTypeOf(mount).toBeFunction()
+  expectTypeOf(mount).parameter(0).toMatchTypeOf<{ name: string }>()
+
+  // @ts-expect-error name is a string
+  assertType(mount({ name: 42 }))
+})
+```
