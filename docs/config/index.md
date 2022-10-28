@@ -850,11 +850,11 @@ Vitest usually uses cache to sort tests, so long running tests start earlier - t
 
 Sets the randomization seed, if tests are running in random order.
 
-### typechecker
+### typecheck
 
 Options for configuring [typechecking](/guide/testing-types) test environment.
 
-#### typechecker.checker
+#### typecheck.checker
 
 - **Type**: `'tsc' | 'vue-tsc' | string`
 - **Default**: `tsc`
@@ -868,28 +868,28 @@ You need to have a package installed to use typecheker:
 
 You can also pass down a path to custom binary or command name that produces the same output as `tsc --noEmit --pretty false`.
 
-#### typechecker.include
+#### typecheck.include
 
 - **Type**: `string[]`
 - **Default**: `['**/*.{test,spec}-d.{ts,js}']`
 
 Glob pattern for files that should be treated as test files
 
-#### typechecker.exclude
+#### typecheck.exclude
 
 - **Type**: `string[]`
 - **Default**: `['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**']`
 
 Glob pattern for files that should not be treated as test files
 
-#### typechecker.allowJs
+#### typecheck.allowJs
 
 - **Type**: `boolean`
 - **Default**: `false`
 
 Check JS files that have `@ts-check` comment. If you have it enabled in tsconfig, this will not overwrite it.
 
-#### typechecker.ignoreSourceErrors
+#### typecheck.ignoreSourceErrors
 
 - **Type**: `boolean`
 - **Default**: `false`
@@ -898,7 +898,7 @@ Do not fail, if Vitest found errors outside the test files. This will not show y
 
 By default, if Vitest finds source error, it will fail test suite.
 
-#### typechecker.tsconfig
+#### typecheck.tsconfig
 
 - **Type**: `string`
 - **Default**: _tries to find closest tsconfig.json_
