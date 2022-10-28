@@ -6,17 +6,17 @@ describe('sort', () => {
     x.sort((a, b) => {
       return a - b
     })
-  })
+  }, { iterations: 5, time: 0 })
 
   bench('reverse', () => {
     const x = [1, 5, 4, 2, 3]
     x.reverse().sort((a, b) => {
       return a - b
     })
-  })
+  }, { iterations: 5, time: 0 })
 
   // TODO: move to failed tests
-  // should not be collect
+  // should not be collected
   // it('test', () => {
   //   expect(1 + 1).toBe(3)
   // })
