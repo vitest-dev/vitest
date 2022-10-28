@@ -39,4 +39,4 @@ test('Should show coverage', async () => {
   // For ts and js files
   expect(stdout).contain('math.ts')
   expect(stdout).contain('utils.js')
-})
+}, 10000)

@@ -9,6 +9,7 @@ export default defineConfig({
       './coverage-test/c8/**/*test.ts',
     ],
     coverage: {
+      reporter: ['html', 'text', 'lcov'],
       include: ['src/**'],
       extension: ['.ts', '.vue', '.js'],
     },
