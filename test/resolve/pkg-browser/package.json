@@ -1,0 +1,8 @@
+{
+  "type": "module",
+  "exports": {
+    "types": "./index.d.ts",
+    "browser": "./web.js",
+    "node": "./ssr.js"
+  }
+}
