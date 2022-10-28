@@ -47,14 +47,12 @@ export class Logger {
   }
 
   private _clearScreen() {
-    if (!this._clearScreenPending)
+    if (this._clearScreenPending == null)
       return
 
     const log = this._clearScreenPending
     this._clearScreenPending = undefined
-    // equivalent to ansi-escapes:
-    // stdout.write(ansiEscapes.cursorTo(0, 0) + ansiEscapes.eraseDown + log)
-    this.console.log(`\u001B[1;1H\u001B[J${log}`)
+    this.console.log(`\x1Bc${log}`)
   }
 
   printError(err: unknown, fullStack = false, type?: string) {
@@ -84,7 +82,7 @@ export class Logger {
   }
 
   printBanner() {
-    this.log()
+    this.clearScreen('', true)
 
     const versionTest = this.ctx.config.watch
       ? c.blue(`v${version}`)
