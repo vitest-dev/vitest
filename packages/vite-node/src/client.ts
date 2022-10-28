@@ -247,24 +247,21 @@ export class ViteNodeRunner {
         return Reflect.get(exports, p, receiver)
       },
       set(_, p, value) {
-        // Node also allows access of named exports via exports.default
-        // https://nodejs.org/api/esm.html#commonjs-namespaces
-        if (p !== 'default') {
-          if (!Reflect.has(exports, 'default'))
-            exports.default = {}
+        if (!Reflect.has(exports, 'default'))
+          exports.default = {}
 
-          // returns undefined, when accessing named exports, if default is not an object
-          // but is still present inside hasOwnKeys, this is Node behaviour for CJS
-          if (exports.default === null || typeof exports.default !== 'object') {
-            defineExport(exports, p, () => undefined)
-            return true
-          }
-
-          exports.default[p] = value
-          defineExport(exports, p, () => value)
+        // returns undefined, when accessing named exports, if default is not an object
+        // but is still present inside hasOwnKeys, this is Node behaviour for CJS
+        if (exports.default === null || typeof exports.default !== 'object') {
+          defineExport(exports, p, () => undefined)
           return true
         }
-        return Reflect.set(exports, p, value)
+
+        exports.default[p] = value
+        if (p !== 'default')
+          defineExport(exports, p, () => value)
+
+        return true
       },
     })
 
@@ -274,7 +271,7 @@ export class ViteNodeRunner {
     const moduleProxy = {
       set exports(value) {
         exportAll(cjsExports, value)
-        cjsExports.default = value
+        exports.default = value
       },
       get exports() {
         return cjsExports
