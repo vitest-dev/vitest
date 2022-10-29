@@ -79,6 +79,8 @@ export class IstanbulCoverageProvider implements CoverageProvider {
       return
 
     const sourceMap = pluginCtx.getCombinedSourcemap()
+    sourceMap.sources = sourceMap.sources.map(removeQueryParameters)
+
     const code = this.instrumenter.instrumentSync(sourceCode, id, sourceMap as any)
     const map = this.instrumenter.lastSourceMap() as any
 
@@ -226,4 +228,13 @@ function resolveIstanbulOptions(options: CoverageIstanbulOptions, root: string) 
   }
 
   return resolved as ResolvedCoverageOptions & { provider: 'istanbul' }
+}
+
+/**
+ * Remove possible query parameters from filenames
+ * - From `/src/components/Header.component.ts?vue&type=script&src=true&lang.ts`
+ * - To `/src/components/Header.component.ts`
+ */
+function removeQueryParameters(filename: string) {
+  return filename.split('?')[0]
 }
