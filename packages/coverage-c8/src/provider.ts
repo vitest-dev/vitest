@@ -58,7 +58,7 @@ export class C8CoverageProvider implements CoverageProvider {
         if (!map)
           return
 
-        const url = _url.pathToFileURL(file.replace(/\?(.*)/, '')).href
+        const url = _url.pathToFileURL(file.split('?')[0]).href
 
         let code: string | undefined
         try {

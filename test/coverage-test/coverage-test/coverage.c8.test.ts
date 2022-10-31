@@ -28,15 +28,15 @@ test('coverage c8', async () => {
 })
 
 test('Should show coverage', async () => {
-  const stdout = await run('--config', 'vitest.config-c8-coverage.ts', '--coverage')
+  const stdout = await run('--config', 'vitest.config-c8-internal-coverage.ts', '--coverage')
 
   // For Vue SFC and vue + ts files
-  expect(stdout).contain('not-SFC.ts')
-  expect(stdout).not.contain('not-SFC.ts?vue')
-  expect(stdout).contain('not-SFC.vue')
-  expect(stdout).contain('SFC.vue')
+  expect(stdout).toContain('not-SFC.ts')
+  expect(stdout).not.toContain('not-SFC.ts?vue')
+  expect(stdout).toContain('not-SFC.vue')
+  expect(stdout).toContain('SFC.vue')
 
   // For ts and js files
-  expect(stdout).contain('math.ts')
-  expect(stdout).contain('utils.js')
-}, 10000)
+  expect(stdout).toContain('math.ts')
+  expect(stdout).toContain('utils.js')
+}, 30000)
