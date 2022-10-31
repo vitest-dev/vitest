@@ -746,20 +746,24 @@ importers:
   packages/vite-node:
     specifiers:
       '@types/debug': ^4.1.7
+      '@types/source-map-support': ^0.5.6
       cac: ^6.7.14
       debug: ^4.3.4
       mlly: ^0.5.16
       pathe: ^0.2.0
       picocolors: ^1.0.0
       rollup: ^2.79.0
+      source-map-support: ^0.5.21
       vite: ^3.2.0
     dependencies:
       debug: 4.3.4
       mlly: 0.5.16
       pathe: 0.2.0
+      source-map-support: 0.5.21
       vite: 3.2.1
     devDependencies:
       '@types/debug': 4.1.7
+      '@types/source-map-support': 0.5.6
       cac: 6.7.14
       picocolors: 1.0.0
       rollup: 2.79.0
@@ -823,6 +827,7 @@ importers:
       chai: 4.3.6
       debug: 4.3.4
       local-pkg: 0.4.2
+      source-map-js: 1.0.2
       strip-literal: 0.4.2
       tinybench: 2.3.1
       tinypool: 0.3.0
@@ -863,7 +868,6 @@ importers:
       pretty-format: 27.5.1
       prompts: 2.4.2
       rollup: 2.79.0
-      source-map-js: 1.0.2
       strip-ansi: 7.0.1
       typescript: 4.8.4
       vite-node: link:../vite-node
@@ -7186,6 +7190,12 @@ packages:
     resolution: {integrity: sha512-K5K+yml8LTo9bWJI/rECfIPrGgxdpeNbj+d53lwN4QjW1MCwlkhUms+gtdzigTeUyBr09+u8BwOIY3MXvHdcsA==}
     dev: true
 
+  /@types/source-map-support/0.5.6:
+    resolution: {integrity: sha512-b2nJ9YyXmkhGaa2b8VLM0kJ04xxwNyijcq12/kDoomCt43qbHBeK2SLNJ9iJmETaAj+bKUT05PQUu3Q66GvLhQ==}
+    dependencies:
+      source-map: 0.6.1
+    dev: true
+
   /@types/stack-utils/2.0.1:
     resolution: {integrity: sha512-Hl219/BT5fLAaz6NDkSuhzasy49dwQS/DSdu4MdggFB8zcXv7vflBI3xp7FEmkmdDkBUI2bPUNeMttp2knYdxw==}
     dev: true
@@ -9474,7 +9484,6 @@ packages:
 
   /buffer-from/1.1.2:
     resolution: {integrity: sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ==}
-    dev: true
 
   /buffer-xor/1.0.3:
     resolution: {integrity: sha512-571s0T7nZWK6vB67HI5dyUF7wXiNcfaPPPTl6zYCNApANjIvYJTg7hlud/+cJpdAhS7dVzqMLmfhfHR3rAcOjQ==}
@@ -18480,7 +18489,6 @@ packages:
     dependencies:
       buffer-from: 1.1.2
       source-map: 0.6.1
-    dev: true
 
   /source-map-url/0.4.1:
     resolution: {integrity: sha512-cPiFOTLUKvJFIg4SKVScy4ilPPW6rFgMgfuZJPNoDuMs3nC1HbMUycBoJw77xFIp6z1UJQJOfx6C9GMH80DiTw==}

@@ -1,3 +1,4 @@
+import { installViteNodeSourcemaps } from 'vite-node/source-map'
 import { environments } from '../integrations/env'
 import type { Environment, ResolvedConfig } from '../types'
 import { clearTimeout, getWorkerState, isNode, setTimeout, toArray } from '../utils'
@@ -15,15 +16,30 @@ export async function setupGlobalEnv(config: ResolvedConfig) {
     enumerable: false,
   })
 
-  // it's useful to see the full stack trace in the console by default
-  Error.stackTraceLimit = 100
-
   // should be re-declared for each test
   // if run with "threads: false"
   setupDefines(config.defines)
 
   if (globalSetup)
     return
+
+  const state = getWorkerState()
+
+  installViteNodeSourcemaps({
+    getSourceMap(source) {
+      const fsPath = state.moduleCache.normalizePath(source)
+      const cache = state.moduleCache.get(fsPath)
+      if (cache.map)
+        return cache.map
+      const mapString = cache?.code?.match(/\/\/# sourceMappingURL=data:application\/json;charset=utf-8;base64,(.+)/)?.[1]
+      if (mapString) {
+        const map = JSON.parse(Buffer.from(mapString, 'base64').toString('utf-8'))
+        cache.map = map
+        return map
+      }
+      return null
+    },
+  })
 
   globalSetup = true
 

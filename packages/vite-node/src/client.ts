@@ -290,10 +290,6 @@ export class ViteNodeRunner {
       })
     }
 
-    // Be careful when changing this
-    // changing context will change amount of code added on line :114 (vm.runInThisContext)
-    // this messes up sourcemaps for coverage
-    // adjust `offset` variable in packages/vitest/src/integrations/coverage/c8.ts#86 if you do change this
     const context = this.prepareContext({
       // esm transformed by Vite
       __vite_ssr_import__: request,
@@ -318,9 +314,12 @@ export class ViteNodeRunner {
       transformed = transformed.replace(/^\#\!.*/, s => ' '.repeat(s.length))
 
     // add 'use strict' since ESM enables it by default
-    const fn = vm.runInThisContext(`'use strict';async (${Object.keys(context).join(',')})=>{{${transformed}\n}}`, {
+    const codeDefinition = `'use strict';async (${Object.keys(context).join(',')})=>{{`
+    const code = `${codeDefinition}${transformed}\n}}`
+    const fn = vm.runInThisContext(code, {
       filename: fsPath,
       lineOffset: 0,
+      columnOffset: -codeDefinition.length,
     })
 
     await fn(...Object.values(context))

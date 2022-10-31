@@ -45,6 +45,7 @@ export interface ModuleCache {
   promise?: Promise<any>
   exports?: any
   code?: string
+  map?: RawSourceMap
   /**
    * Module ids that imports this module
    */

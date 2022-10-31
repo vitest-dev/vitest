@@ -39,6 +39,11 @@
       "types": "./dist/hmr.d.ts",
       "require": "./dist/hmr.cjs",
       "import": "./dist/hmr.mjs"
+    },
+    "./source-map": {
+      "types": "./dist/source-map.d.ts",
+      "require": "./dist/source-map.cjs",
+      "import": "./dist/source-map.mjs"
     }
   },
   "main": "./dist/index.mjs",
@@ -73,10 +78,12 @@
     "debug": "^4.3.4",
     "mlly": "^0.5.16",
     "pathe": "^0.2.0",
+    "source-map-support": "^0.5.21",
     "vite": "^3.0.0"
   },
   "devDependencies": {
     "@types/debug": "^4.1.7",
+    "@types/source-map-support": "^0.5.6",
     "cac": "^6.7.14",
     "picocolors": "^1.0.0",
     "rollup": "^2.79.1"

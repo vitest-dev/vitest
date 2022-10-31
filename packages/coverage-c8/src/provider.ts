@@ -80,11 +80,6 @@ export class C8CoverageProvider implements CoverageProvider {
         }
       }))
 
-    // This is a magic number. It corresponds to the amount of code
-    // that we add in packages/vite-node/src/client.ts:114 (vm.runInThisContext)
-    // TODO: Include our transformations in sourcemaps
-    const offset = 224
-
     report._getSourceMap = (coverage: Profiler.ScriptCoverage) => {
       const path = _url.pathToFileURL(coverage.url.split('?')[0]).href
       const data = sourceMapMeta[path]
@@ -96,7 +91,7 @@ export class C8CoverageProvider implements CoverageProvider {
         sourceMap: {
           sourcemap: data.map,
         },
-        source: Array(offset).fill('.').join('') + data.source,
+        source: data.source,
       }
     }
 
