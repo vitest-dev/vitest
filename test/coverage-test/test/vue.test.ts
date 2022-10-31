@@ -6,6 +6,7 @@ import { expect, test } from 'vitest'
 import { mount } from '@vue/test-utils'
 import Hello from '../src/Hello.vue'
 import Defined from '../src/Defined.vue'
+import { CounterVue } from '../src/Counter'
 
 test('vue 3 coverage', async () => {
   expect(Hello).toBeTruthy()
@@ -34,4 +35,11 @@ test('define package in vm', () => {
   const wrapper = mount(Defined)
 
   expect(wrapper.text()).toContain(MY_CONSTANT)
+})
+
+test('vue non-SFC, uses query parameters in file imports', async () => {
+  const wrapper = mount(CounterVue)
+
+  await wrapper.find('button').trigger('click')
+  expect(wrapper.text()).contain(1)
 })
