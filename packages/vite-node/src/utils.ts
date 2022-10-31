@@ -58,21 +58,11 @@ export function pathFromRoot(root: string, filename: string) {
     return filename
 
   const relativePath = relative(root, filename)
-  // foo.js -> /foo.js
-  if (!relativePath.startsWith('/') && !relativePath.startsWith('.'))
-    return `/${relativePath}`
 
-  let index = 0
-  for (const char of relativePath) {
-    // ../../foo.js
-    //      ^ returns from here -> /foo.js
-    if (char !== '.' && char !== '/')
-      return relativePath.slice(index - 1)
+  const segments = relativePath.split('/')
+  const startIndex = segments.findIndex(segment => segment !== '..' && segment !== '.')
 
-    index++
-  }
-
-  return relativePath
+  return `/${segments.slice(startIndex).join('/')}`
 }
 
 export function toFilePath(id: string, root: string): string {
