@@ -5,7 +5,7 @@ export default defineConfig({
   plugins: [vue()],
   test: {
     include: [
-      './coverage-test/*.c8.test.ts',
+      './coverage-test/c8/**/*test.{ts,js}',
     ],
     coverage: {
       reporter: ['html', 'text', 'lcov'],

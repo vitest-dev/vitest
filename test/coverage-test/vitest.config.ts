@@ -14,7 +14,7 @@ export default defineConfig({
       'test/*.test.ts',
     ],
     exclude: [
-      'coverage-test/*.test.ts',
+      'coverage-test/**/*',
     ],
     coverage: {
       enabled: true,
