@@ -86,7 +86,7 @@ export class C8CoverageProvider implements CoverageProvider {
     const offset = 224
 
     report._getSourceMap = (coverage: Profiler.ScriptCoverage) => {
-      const path = _url.pathToFileURL(coverage.url.replace(/\?(.*)/, '')).href
+      const path = _url.pathToFileURL(coverage.url.split('?')[0]).href
       const data = sourceMapMeta[path]
 
       if (!data)
