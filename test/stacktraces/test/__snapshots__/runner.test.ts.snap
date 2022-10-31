@@ -1,11 +1,11 @@
 // Vitest Snapshot v1
 
 exports[`stacktraces should respect sourcemaps > add.test.ts > add.test.ts 1`] = `
-" ❯ add.test.ts:12:23
+" ❯ add.test.ts:12:24
      10| 
      11| it('add', () => {
      12|   expect(add(a.count)).toBe(100)
-       |                       ^
+       |                        ^
      13|   expect(add(1)).toBe(1)
      14|   return expect(add(1, 2, 3)).toBe(6)
 "
