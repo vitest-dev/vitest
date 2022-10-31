@@ -1,0 +1,6 @@
+{
+  "name": "@vitest/test-path-resolution-target",
+  "type": "module",
+  "private": true,
+  "main": "./dist/index.js"
+}
