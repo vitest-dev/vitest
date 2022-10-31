@@ -1056,9 +1056,11 @@ importers:
   test/reporters:
     specifiers:
       execa: ^6.1.0
+      pkg-reporter: ./reportPkg/
       vitest: workspace:*
     devDependencies:
       execa: 6.1.0
+      pkg-reporter: link:reportPkg
       vitest: link:../../packages/vitest
 
   test/resolve:
