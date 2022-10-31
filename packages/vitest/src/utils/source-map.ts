@@ -1,22 +1,7 @@
-import { SourceMapConsumer } from 'source-map-js'
-import type { RawSourceMap } from 'vite-node'
 import type { ErrorWithDiff, ParsedStack, Position } from '../types'
 import { notNullish, slash } from './base'
 
 export const lineSplitRE = /\r?\n/
-
-export function getOriginalPos(map: RawSourceMap | null | undefined, { line, column }: Position): Position | null {
-  if (!map)
-    return null
-
-  const consumer = new SourceMapConsumer(map)
-  const pos = consumer.originalPositionFor({ line, column })
-  if (pos.line != null && pos.column != null)
-    return pos as Position
-
-  else
-    return null
-}
 
 const stackIgnorePatterns = [
   'node:internal',

@@ -810,7 +810,6 @@ importers:
       pretty-format: ^27.5.1
       prompts: ^2.4.2
       rollup: ^2.79.0
-      source-map-js: ^1.0.2
       strip-ansi: ^7.0.1
       strip-literal: ^0.4.2
       tinybench: ^2.3.1
@@ -827,7 +826,6 @@ importers:
       chai: 4.3.6
       debug: 4.3.4
       local-pkg: 0.4.2
-      source-map-js: 1.0.2
       strip-literal: 0.4.2
       tinybench: 2.3.1
       tinypool: 0.3.0
