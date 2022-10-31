@@ -1,3 +1,4 @@
+import { normalize } from 'pathe'
 import cac from 'cac'
 import c from 'picocolors'
 import { version } from '../../package.json'
@@ -92,9 +93,16 @@ async function benchmark(cliFilters: string[], options: CliOptions): Promise<voi
   await start('benchmark', cliFilters, options)
 }
 
+function normalizeOptions(argv: CliOptions): CliOptions {
+  argv.root = argv.root && normalize(argv.root)
+  argv.config = argv.config && normalize(argv.config)
+  argv.dir = argv.dir && normalize(argv.dir)
+  return argv
+}
+
 async function start(mode: VitestRunMode, cliFilters: string[], options: CliOptions): Promise<void> {
   try {
-    if (await startVitest(mode, cliFilters, options) === false)
+    if (await startVitest(mode, cliFilters.map(normalize), normalizeOptions(options)) === false)
       process.exit()
   }
   catch (e) {
