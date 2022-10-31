@@ -61,6 +61,13 @@ async function main() {
     }
   }
 
+  // if not specified, don't run through spawn,
+  // because it prints stderr messages in the wrong order compared to stdout
+  if (retries <= 0) {
+    await import('./cli')
+    return
+  }
+
   const nodeArgs: string[] = []
   const vitestArgs: string[] = []
 
