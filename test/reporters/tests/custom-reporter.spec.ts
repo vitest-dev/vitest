@@ -45,6 +45,11 @@ describe.concurrent('custom reporters', () => {
     expect(stdout).includes('hello from custom reporter')
   }, 40000)
 
+  test('package.json dependencies reporter instances defined in configuration works', async () => {
+    const stdout = await runWithRetry('--config', 'deps-reporter.vitest.config.ts')
+    expect(stdout).includes('hello from package reporter')
+  }, 40000)
+
   test('a path to a custom reporter defined in configuration works', async () => {
     const stdout = await runWithRetry('--config', 'custom-reporter-path.vitest.config.ts', '--reporter', customJSReporterPath)
     expect(stdout).includes('hello from custom reporter')

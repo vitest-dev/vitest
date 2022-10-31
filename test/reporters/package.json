@@ -6,6 +6,7 @@
   },
   "devDependencies": {
     "execa": "^6.1.0",
-    "vitest": "workspace:*"
+    "vitest": "workspace:*",
+    "pkg-reporter": "./reportPkg/"
   }
 }
