@@ -74,9 +74,11 @@ export class ViteNodeServer {
   }
 
   getSourceMap(source: string) {
-    const ssrTransformResult = this.server.moduleGraph.getModuleById(source)?.ssrTransformResult
     const fetchResult = this.fetchCache.get(source)?.result
-    return (fetchResult?.map || ssrTransformResult?.map) as unknown as RawSourceMap | null
+    if (fetchResult?.map)
+      return fetchResult.map
+    const ssrTransformResult = this.server.moduleGraph.getModuleById(source)?.ssrTransformResult
+    return (ssrTransformResult?.map || null) as unknown as RawSourceMap | null
   }
 
   async fetchModule(id: string): Promise<FetchResult> {
