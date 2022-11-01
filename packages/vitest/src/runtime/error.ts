@@ -56,7 +56,7 @@ export function serializeError(val: any, seen = new WeakMap()): any {
         if (key in clone)
           return
         try {
-          clone[key] = serializeError(Reflect.get(obj, key, val), seen)
+          clone[key] = serializeError(val[key], seen)
         }
         catch (err) {
           // delete in case it has a setter from prototype that might throw
