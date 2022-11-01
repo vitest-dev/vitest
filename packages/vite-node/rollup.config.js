@@ -9,13 +9,14 @@ import { defineConfig } from 'rollup'
 import pkg from './package.json'
 
 const entries = {
-  index: 'src/index.ts',
-  server: 'src/server.ts',
-  types: 'src/types.ts',
-  client: 'src/client.ts',
-  utils: 'src/utils.ts',
-  cli: 'src/cli.ts',
-  hmr: 'src/hmr/index.ts',
+  'index': 'src/index.ts',
+  'server': 'src/server.ts',
+  'types': 'src/types.ts',
+  'client': 'src/client.ts',
+  'utils': 'src/utils.ts',
+  'cli': 'src/cli.ts',
+  'hmr': 'src/hmr/index.ts',
+  'source-map': 'src/source-map.ts',
 }
 
 const external = [

@@ -39,6 +39,11 @@
       "types": "./dist/hmr.d.ts",
       "require": "./dist/hmr.cjs",
       "import": "./dist/hmr.mjs"
+    },
+    "./source-map": {
+      "types": "./dist/source-map.d.ts",
+      "require": "./dist/source-map.cjs",
+      "import": "./dist/source-map.mjs"
     }
   },
   "main": "./dist/index.mjs",

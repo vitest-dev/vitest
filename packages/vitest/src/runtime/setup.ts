@@ -1,3 +1,4 @@
+import { installSourcemapsSupport } from 'vite-node/source-map'
 import { environments } from '../integrations/env'
 import type { Environment, ResolvedConfig } from '../types'
 import { clearTimeout, getWorkerState, isNode, setTimeout, toArray } from '../utils'
@@ -24,8 +25,15 @@ export async function setupGlobalEnv(config: ResolvedConfig) {
 
   globalSetup = true
 
-  if (isNode)
+  if (isNode) {
+    const state = getWorkerState()
+
+    installSourcemapsSupport({
+      getSourceMap: source => state.moduleCache.getSourceMap(source),
+    })
+
     await setupConsoleLogSpy()
+  }
 
   if (config.globals)
     (await import('../integrations/globals')).registerApiGlobally()

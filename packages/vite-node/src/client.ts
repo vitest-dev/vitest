@@ -110,6 +110,20 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
     }
     return invalidated
   }
+
+  getSourceMap(id: string) {
+    const fsPath = this.normalizePath(id)
+    const cache = this.get(fsPath)
+    if (cache.map)
+      return cache.map
+    const mapString = cache?.code?.match(/\/\/# sourceMappingURL=data:application\/json;charset=utf-8;base64,(.+)/)?.[1]
+    if (mapString) {
+      const map = JSON.parse(Buffer.from(mapString, 'base64').toString('utf-8'))
+      cache.map = map
+      return map
+    }
+    return null
+  }
 }
 
 export class ViteNodeRunner {
@@ -145,17 +159,7 @@ export class ViteNodeRunner {
   }
 
   getSourceMap(id: string) {
-    const fsPath = this.moduleCache.normalizePath(id)
-    const cache = this.moduleCache.get(fsPath)
-    if (cache.map)
-      return cache.map
-    const mapString = cache?.code?.match(/\/\/# sourceMappingURL=data:application\/json;charset=utf-8;base64,(.+)/)?.[1]
-    if (mapString) {
-      const map = JSON.parse(Buffer.from(mapString, 'base64').toString('utf-8'))
-      cache.map = map
-      return map
-    }
-    return null
+    return this.moduleCache.getSourceMap(id)
   }
 
   /** @internal */
