@@ -10,7 +10,7 @@ import TestReporter from '../src/custom-reporter'
 
 const customReporterPath = resolve(__dirname, '../src/custom-reporter.js')
 const fetchModule = {
-  executeFile: (id: string) => import(id),
+  executeId: (id: string) => import(id),
 } as ViteNodeRunner
 
 describe('Reporter Utils', () => {
