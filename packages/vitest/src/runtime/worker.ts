@@ -8,6 +8,7 @@ import { getWorkerState } from '../utils'
 import type { MockMap } from '../types/mocker'
 import { executeInViteNode } from './execute'
 import { rpc } from './rpc'
+import { processError } from './error'
 
 let _viteNode: {
   run: (files: string[], config: ResolvedConfig) => Promise<void>
@@ -32,7 +33,7 @@ async function startViteNode(ctx: WorkerContext) {
   }
 
   process.on('unhandledRejection', (err) => {
-    rpc().onUnhandledRejection(err)
+    rpc().onUnhandledRejection(processError(err))
   })
 
   const { config } = ctx

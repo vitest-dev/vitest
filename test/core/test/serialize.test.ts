@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+
 import { describe, expect, it } from 'vitest'
 import { serializeError } from '../../../packages/vitest/src/runtime/error'
 
@@ -123,6 +125,16 @@ describe('error serialize', () => {
       stack: expect.stringContaining('Error: test'),
       toString: 'Function<toString>',
       unserializable: '<unserializable>: I am unserializable',
+    })
+  })
+
+  it('can serialize DOMException', () => {
+    const err = new DOMException('You failed', 'InvalidStateError')
+    expect(serializeError(err)).toMatchObject({
+      NETWORK_ERR: 19,
+      name: 'InvalidStateError',
+      message: 'You failed',
+      stack: expect.stringContaining('InvalidStateError: You failed'),
     })
   })
 })
