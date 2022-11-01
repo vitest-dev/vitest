@@ -6,7 +6,6 @@ import { isNodeBuiltin } from 'mlly'
 import createDebug from 'debug'
 import { isPrimitive, mergeSlashes, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
 import type { HotContext, ModuleCache, ViteNodeRunnerOptions } from './types'
-import { installSourcemapsSupport } from './source-map'
 
 const debugExecute = createDebug('vite-node:client:execute')
 const debugNative = createDebug('vite-node:client:native')
@@ -111,6 +110,9 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
     return invalidated
   }
 
+  /**
+   * Return parsed source map based on inlined source map of the module
+   */
   getSourceMap(id: string) {
     const fsPath = this.normalizePath(id)
     const cache = this.get(fsPath)
@@ -141,13 +143,6 @@ export class ViteNodeRunner {
     this.root = options.root ?? process.cwd()
     this.moduleCache = options.moduleCache ?? new ModuleCacheMap()
     this.debug = options.debug ?? (typeof process !== 'undefined' ? !!process.env.VITE_NODE_DEBUG_RUNNER : false)
-    this.options.fixStackTrace ??= true
-
-    if (this.options.fixStackTrace) {
-      installSourcemapsSupport({
-        getSourceMap: this.options.getSourceMap ?? (id => this.getSourceMap(id)),
-      })
-    }
   }
 
   async executeFile(file: string) {

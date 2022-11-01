@@ -50,7 +50,6 @@ async function startViteNode(ctx: WorkerContext) {
     },
     moduleCache,
     mockMap,
-    fixStackTrace: false,
     interopDefault: config.deps.interopDefault ?? true,
     root: config.root,
     base: config.base,
