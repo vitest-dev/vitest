@@ -56,6 +56,7 @@ export interface ViteNodeRunnerOptions {
   root: string
   fetchModule: FetchFunction
   resolveId?: ResolveIdFunction
+  getSourceMap?: (id: string) => RawSourceMap | null | undefined
   createHotContext?: CreateHotContextFunction
   base?: string
   moduleCache?: ModuleCacheMap

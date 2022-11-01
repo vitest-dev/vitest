@@ -5,7 +5,7 @@ interface InstallSourceMapSupportOptions {
   getSourceMap: (source: string) => RawSourceMap | null | undefined
 }
 
-export function installViteNodeSourcemaps(options: InstallSourceMapSupportOptions) {
+export function installSourcemapsSupport(options: InstallSourceMapSupportOptions) {
   install({
     environment: 'node',
     handleUncaughtExceptions: false,

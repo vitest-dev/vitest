@@ -56,7 +56,6 @@ In Vite Node, the server and runner (client) are separated, so you can integrate
 import { createServer } from 'vite'
 import { ViteNodeServer } from 'vite-node/server'
 import { ViteNodeRunner } from 'vite-node/client'
-import { installViteNodeSourcemaps } from 'vite-node/source-map'
 
 // create vite server
 const server = await createServer({
@@ -71,11 +70,6 @@ await server.pluginContainer.buildStart({})
 // create vite-node server
 const node = new ViteNodeServer(server)
 
-// fixes stacktrace in Errors and console.trace calls
-installViteNodeSourcemaps({
-  getSourceMap: source => node.getSourceMap(source)
-})
-
 // create vite-node runner
 const runner = new ViteNodeRunner({
   root: server.config.root,
@@ -85,6 +79,11 @@ const runner = new ViteNodeRunner({
   // and pass to this function
   fetchModule(id) {
     return node.fetchModule(id)
+  },
+  // fixes stacktrace in Errors and console.trace calls
+  // has to be syncronouse
+  getSourceMap(source) {
+    return node.getSourceMap(source)
   },
   resolveId(id, importer) {
     return node.resolveId(id, importer)
