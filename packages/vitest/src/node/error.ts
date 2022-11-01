@@ -91,8 +91,6 @@ function printErrorType(type: string, ctx: Vitest) {
 }
 
 const skipErrorProperties = [
-  'message',
-  'name',
   'nameStr',
   'stack',
   'cause',
@@ -102,8 +100,8 @@ const skipErrorProperties = [
   'showDiff',
   'actual',
   'expected',
-  'constructor',
-  'toString',
+  ...Object.getOwnPropertyNames(Error.prototype),
+  ...Object.getOwnPropertyNames(Object.prototype),
 ]
 
 function getErrorProperties(e: ErrorWithDiff) {

@@ -53,10 +53,10 @@ export function serializeError(val: any, seen = new WeakMap()): any {
     let obj = val
     while (obj && obj !== OBJECT_PROTO) {
       Object.getOwnPropertyNames(obj).forEach((key) => {
-        if ((key in clone))
+        if (key in clone)
           return
         try {
-          clone[key] = serializeError(obj[key], seen)
+          clone[key] = serializeError(Reflect.get(obj, key, val), seen)
         }
         catch (err) {
           // delete in case it has a setter from prototype that might throw
