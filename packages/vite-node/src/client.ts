@@ -127,10 +127,11 @@ export class ViteNodeRunner {
     this.root = options.root ?? process.cwd()
     this.moduleCache = options.moduleCache ?? new ModuleCacheMap()
     this.debug = options.debug ?? (typeof process !== 'undefined' ? !!process.env.VITE_NODE_DEBUG_RUNNER : false)
+    this.options.fixStackTrace ??= true
 
-    if (options.getSourceMap) {
+    if (this.options.fixStackTrace) {
       installSourcemapsSupport({
-        getSourceMap: options.getSourceMap,
+        getSourceMap: this.options.getSourceMap ?? (id => this.getSourceMap(id)),
       })
     }
   }
@@ -141,6 +142,20 @@ export class ViteNodeRunner {
 
   async executeId(id: string) {
     return await this.cachedRequest(id, [])
+  }
+
+  getSourceMap(id: string) {
+    const fsPath = this.moduleCache.normalizePath(id)
+    const cache = this.moduleCache.get(fsPath)
+    if (cache.map)
+      return cache.map
+    const mapString = cache?.code?.match(/\/\/# sourceMappingURL=data:application\/json;charset=utf-8;base64,(.+)/)?.[1]
+    if (mapString) {
+      const map = JSON.parse(Buffer.from(mapString, 'base64').toString('utf-8'))
+      cache.map = map
+      return map
+    }
+    return null
   }
 
   /** @internal */

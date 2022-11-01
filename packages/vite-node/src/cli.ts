@@ -61,14 +61,12 @@ async function run(files: string[], options: CliOptions = {}) {
   const runner = new ViteNodeRunner({
     root: server.config.root,
     base: server.config.base,
+    fixStackTrace: true,
     fetchModule(id) {
       return node.fetchModule(id)
     },
     resolveId(id, importer) {
       return node.resolveId(id, importer)
-    },
-    getSourceMap(source) {
-      return node.getSourceMap(source)
     },
     createHotContext(runner, url) {
       return createHotContext(runner, server.emitter, files, url)

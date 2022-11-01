@@ -74,16 +74,12 @@ const node = new ViteNodeServer(server)
 const runner = new ViteNodeRunner({
   root: server.config.root,
   base: server.config.base,
+  fixStackTrace: true,
   // when having the server and runner in a different context,
   // you will need to handle the communication between them
   // and pass to this function
   fetchModule(id) {
     return node.fetchModule(id)
-  },
-  // fixes stacktrace in Errors and console.trace calls
-  // has to be syncronouse
-  getSourceMap(source) {
-    return node.getSourceMap(source)
   },
   resolveId(id, importer) {
     return node.resolveId(id, importer)
