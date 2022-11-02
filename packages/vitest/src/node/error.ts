@@ -56,19 +56,23 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
 
   if (type)
     printErrorType(type, ctx)
-
   printErrorMessage(e, ctx.logger)
-  printStack(ctx, stacks, nearest, errorProperties, (s, pos) => {
-    if (showCodeFrame && s === nearest && nearest) {
-      const file = fileFromParsedStack(nearest)
-      // could point to non-existing original file
-      // for example, when there is a source map file, but no source in node_modules
-      if (existsSync(file)) {
-        const sourceCode = readFileSync(file, 'utf-8')
-        ctx.logger.log(c.yellow(generateCodeFrame(sourceCode, 4, pos)))
+  if (e.frame) {
+    ctx.logger.log(c.yellow(e.frame))
+  }
+  else {
+    printStack(ctx, stacks, nearest, errorProperties, (s, pos) => {
+      if (showCodeFrame && s === nearest && nearest) {
+        const file = fileFromParsedStack(nearest)
+        // could point to non-existing original file
+        // for example, when there is a source map file, but no source in node_modules
+        if (existsSync(file)) {
+          const sourceCode = readFileSync(file, 'utf-8')
+          ctx.logger.log(c.yellow(generateCodeFrame(sourceCode, 4, pos)))
+        }
       }
-    }
-  })
+    })
+  }
 
   if (e.cause && 'name' in e.cause) {
     (e.cause as any).name = `Caused by: ${(e.cause as any).name}`
