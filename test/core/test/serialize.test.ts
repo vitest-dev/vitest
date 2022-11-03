@@ -14,6 +14,7 @@ describe('error serialize', () => {
       promise: new Promise(() => {}),
       fn: () => {},
       null: null,
+      symbol: Symbol('hi'),
       nested: {
         false: false,
         class: class {},
@@ -135,6 +136,36 @@ describe('error serialize', () => {
       name: 'InvalidStateError',
       message: 'You failed',
       stack: expect.stringContaining('InvalidStateError: You failed'),
+    })
+  })
+
+  it('correctly serialized immutables', () => {
+    const immutableList = {
+      '@@__IMMUTABLE_ITERABLE__@@': true,
+      toJSON() {
+        return ['foo']
+      },
+    }
+
+    const immutableRecord = {
+      '@@__IMMUTABLE_RECORD__@@': true,
+      toJSON() {
+        return { foo: 'bar' }
+      },
+    }
+
+    const error = new Error('test')
+    Object.assign(error, {
+      immutableList,
+      immutableRecord,
+    })
+
+    expect(serializeError(error)).toMatchObject({
+      stack: expect.stringContaining('Error: test'),
+      immutableList: ['foo'],
+      immutableRecord: { foo: 'bar' },
+      name: 'Error',
+      message: 'test',
     })
   })
 })
