@@ -4,7 +4,7 @@ export default defineConfig({
   plugins: [{
     name: 'vite-plugin-imba',
     transform(code, id) {
-      if (id === 'frame.spec.imba') {
+      if (id.endsWith('frame.spec.imba')) {
         // eslint-disable-next-line no-throw-literal
         throw {
           name: 'imba-parser error',

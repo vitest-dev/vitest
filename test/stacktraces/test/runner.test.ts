@@ -60,7 +60,7 @@ describe('stacktraces should pick error frame if present', async () => {
 
       expect(error).toBeTruthy()
       const lines = String(error).split(/\n/g)
-      const index = lines.findIndex(val => val.includes(`${file}:`))
+      const index = lines.findIndex(val => val.includes('(0 test)'))
       const msg = lines.slice(index, index + 8).join('\n')
       expect(msg).toMatchSnapshot(file)
     }, 30000)
