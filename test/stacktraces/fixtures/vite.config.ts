@@ -4,7 +4,7 @@ export default defineConfig({
   plugins: [{
     name: 'vite-plugin-imba',
     transform(code, id) {
-      if (id === 'frame.test.imba') {
+      if (id === 'frame.spec.imba') {
         // eslint-disable-next-line no-throw-literal
         throw {
           name: 'imba-parser error',
@@ -12,7 +12,7 @@ export default defineConfig({
           message: 'Unexpected \'CALL_END\'',
           code,
           frame:
-              '4 | test("1+1") do\n5 |  expect(1+1).toBe 2\n6 |  ciybt.\n  |        ^\n7 |\n',
+              '4 | test("1+1") do\n5 |  expect(1+1).toBe 2\n6 |  frame.\n  |        ^\n7 |\n',
           loc: {
             line: 3,
             column: 11,
