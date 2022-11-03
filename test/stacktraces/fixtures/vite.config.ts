@@ -4,6 +4,22 @@ export default defineConfig({
   plugins: [{
     name: 'vite-plugin-imba',
     transform(code, id) {
+      if (id === 'frame.test.imba') {
+        // eslint-disable-next-line no-throw-literal
+        throw {
+          name: 'imba-parser error',
+          id,
+          message: 'Unexpected \'CALL_END\'',
+          code,
+          frame:
+              '4 | test("1+1") do\n5 |  expect(1+1).toBe 2\n6 |  ciybt.\n  |        ^\n7 |\n',
+          loc: {
+            line: 3,
+            column: 11,
+            file: id,
+          },
+        }
+      }
       if (id.endsWith('.imba')) {
         return {
           code:
