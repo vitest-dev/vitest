@@ -38,4 +38,11 @@ describe('Button with increment', async () => {
 
     expect(spyClick).toHaveBeenCalled()
   })
+
+  it('should react to props change', async () => {
+    const el = document.body.querySelector('my-button') 
+    el.name = 'Vitest'
+    await el?.updateComplete
+    expect(document.body.querySelector('my-button')?.shadowRoot?.textContent).toContain('Vitest')
+  })
 })
