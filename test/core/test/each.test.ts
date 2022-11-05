@@ -9,10 +9,19 @@ test.each([
 })
 
 test.each([
+  [null],
+])('[null] is null when cases form a table', (value) => {
+  expect(value).toBe(null)
+})
+
+const expected = [null, [null]]
+let index = 0
+test.each([
   null,
   [null],
-])('null is null', (value) => {
-  expect(value).toBe(null)
+])('[null] is [null] then cases are not a table', (value) => {
+  expect(value).toStrictEqual(expected[index])
+  index++
 })
 
 test.each([

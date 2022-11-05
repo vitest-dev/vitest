@@ -232,9 +232,10 @@ function createTest(fn: (
   testFn.each = function<T>(this: { withContext: () => TestAPI }, cases: ReadonlyArray<T>) {
     const test = this.withContext()
 
+    const isTable = cases.every(Array.isArray)
     return (name: string, fn: (...args: T[]) => void, options?: number | TestOptions) => {
       cases.forEach((i, idx) => {
-        const items = Array.isArray(i) ? i : [i]
+        const items = isTable ? i as T[] : [i]
         test(formatTitle(name, items, idx), () => fn(...items), options)
       })
     }
