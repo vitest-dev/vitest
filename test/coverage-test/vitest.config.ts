@@ -20,7 +20,7 @@ export default defineConfig({
       enabled: true,
       clean: true,
       all: true,
-      reporter: ['html', 'text', 'lcov'],
+      reporter: ['html', 'text', 'lcov', 'json'],
     },
   },
 })
