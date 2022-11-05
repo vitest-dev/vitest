@@ -19,7 +19,7 @@ let index = 0
 test.each([
   null,
   [null],
-])('[null] is [null] then cases are not a table', (value) => {
+])('[null] is [null] when cases are not a table', (value) => {
   expect(value).toStrictEqual(expected[index])
   index++
 })
