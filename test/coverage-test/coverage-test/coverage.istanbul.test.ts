@@ -1,5 +1,5 @@
 import fs from 'fs'
-import { resolve } from 'pathe'
+import { normalize, resolve } from 'pathe'
 import { expect, test } from 'vitest'
 
 test('istanbul html report', async () => {
@@ -38,4 +38,15 @@ test('files should not contain query parameters', () => {
   expect(files).toContain('Counter.vue.html')
   expect(files).toContain('Counter.component.ts.html')
   expect(files).not.toContain('Counter.component.ts?vue&type=script&src=true&lang.ts.html')
+})
+
+test('implicit else is included in branch count', async () => {
+  // @ts-expect-error -- generated file
+  const { default: coverageMap } = await import('./coverage/coverage-final.json')
+
+  const filename = normalize(resolve('./src/implicitElse.ts'))
+  const fileCoverage = coverageMap[filename]
+
+  expect(fileCoverage.b).toHaveProperty('0')
+  expect(fileCoverage.b['0']).toHaveLength(2)
 })

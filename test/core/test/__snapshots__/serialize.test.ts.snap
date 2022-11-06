@@ -30,5 +30,6 @@ exports[`error serialize > works 1`] = `
   },
   "null": null,
   "promise": "Promise",
+  "symbol": "Symbol(hi)",
 }
 `;
