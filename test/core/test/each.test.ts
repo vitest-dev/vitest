@@ -142,10 +142,16 @@ describe('not all arguments are array describe.each', () => {
 })
 
 describe('not all arguments are array test.each', () => {
-  const results = [null, [null]]
+  const results = [
+    null,
+    [null],
+  ]
   let i = 0
 
-  test.each([null, [null]])('null is null', (value) => {
+  test.each([
+    null,
+    [null],
+  ])('matches results', (value) => {
     expect(value).toEqual(results[i++])
   })
 })
@@ -159,6 +165,7 @@ test.each([
 test.each([
   [null, null],
   [null, null],
-])('if all cases are arrays of equal length, treats array elements as arguments', (value) => {
-  expect(value).toBeNull()
+])('if all cases are arrays of equal length, treats array elements as arguments', (value1, value2) => {
+  expect(value1).toBeNull()
+  expect(value2).toBeNull()
 })
