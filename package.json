@@ -31,15 +31,15 @@
     "ui:test": "npm -C packages/ui run test:run"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^0.27.0",
-    "@antfu/ni": "^0.18.2",
+    "@antfu/eslint-config": "^0.29.4",
+    "@antfu/ni": "^0.18.3",
     "@rollup/plugin-alias": "^4.0.2",
     "@rollup/plugin-commonjs": "^23.0.2",
-    "@rollup/plugin-json": "^4.1.0",
-    "@rollup/plugin-node-resolve": "^14.1.0",
+    "@rollup/plugin-json": "^5.0.1",
+    "@rollup/plugin-node-resolve": "^15.0.1",
     "@types/fs-extra": "^9.0.13",
-    "@types/lodash": "^4.14.186",
-    "@types/node": "^18.11.5",
+    "@types/lodash": "^4.14.188",
+    "@types/node": "^18.11.9",
     "@types/ws": "^8.5.3",
     "@vitest/browser": "workspace:*",
     "@vitest/coverage-c8": "workspace:*",
@@ -48,8 +48,8 @@
     "bumpp": "^8.2.1",
     "c8": "^7.12.0",
     "cross-env": "^7.0.3",
-    "esbuild": "^0.15.12",
-    "eslint": "^8.26.0",
+    "esbuild": "^0.15.13",
+    "eslint": "^8.27.0",
     "esno": "^0.16.3",
     "fast-glob": "^3.2.12",
     "if-node-version": "^1.1.1",
@@ -57,9 +57,9 @@
     "magic-string": "^0.26.7",
     "node-fetch-native": "^0.1.8",
     "npm-run-all": "^4.1.5",
-    "ohmyfetch": "^0.4.20",
+    "ohmyfetch": "^0.4.21",
     "pathe": "^0.2.0",
-    "pnpm": "7.14.0",
+    "pnpm": "7.14.2",
     "rimraf": "^3.0.2",
     "rollup": "^2.79.1",
     "rollup-plugin-dts": "^4.2.3",
@@ -67,17 +67,17 @@
     "rollup-plugin-license": "^2.8.2",
     "simple-git-hooks": "^2.8.1",
     "ts-node": "^10.9.1",
-    "tsup": "^6.3.0",
+    "tsup": "^6.4.0",
     "typescript": "^4.8.4",
-    "vite": "^3.1.8",
+    "vite": "^3.2.3",
     "vitest": "workspace:*"
   },
   "pnpm": {
     "overrides": {
       "esbuild": "^0.14.47",
-      "vite": "^3.2.0",
+      "vite": "^3.2.3",
       "vitest": "workspace:*",
-      "rollup": "^2.79.0"
+      "rollup": "^2.79.1"
     }
   },
   "simple-git-hooks": {
