@@ -180,12 +180,15 @@ function createSuite() {
     return createSuiteCollector(name, factory, mode, this.concurrent, this.shuffle, options)
   }
 
-  suiteFn.each = function<T>(this: { withContext: () => SuiteAPI }, cases: ReadonlyArray<T>) {
+  suiteFn.each = function <T>(this: { withContext: () => SuiteAPI }, cases: ReadonlyArray<T>) {
     const suite = this.withContext()
     return (name: string, fn: (...args: T[]) => void, options?: number | TestOptions) => {
+      const arrayOnlyCases = cases.every(Array.isArray)
       cases.forEach((i, idx) => {
         const items = Array.isArray(i) ? i : [i]
-        suite(formatTitle(name, items, idx), () => fn(...items), options)
+        arrayOnlyCases
+          ? suite(formatTitle(name, items, idx), () => fn(...items), options)
+          : suite(formatTitle(name, items, idx), () => fn(i), options)
       })
     }
   }
@@ -213,9 +216,12 @@ function createTest(fn: (
     const test = this.withContext()
 
     return (name: string, fn: (...args: T[]) => void, options?: number | TestOptions) => {
+      const arrayOnlyCases = cases.every(Array.isArray)
       cases.forEach((i, idx) => {
         const items = Array.isArray(i) ? i : [i]
-        test(formatTitle(name, items, idx), () => fn(...items), options)
+        arrayOnlyCases
+          ? test(formatTitle(name, items, idx), () => fn(...items), options)
+          : test(formatTitle(name, items, idx), () => fn(i), options)
       })
     }
   }
