@@ -58,7 +58,7 @@ export async function makeTscErrorInfo(
 }
 
 export async function getTsconfigPath(root: string, config: TypecheckConfig) {
-  const tmpConfigPath = path.join(root, 'tsconfig.tmp.json')
+  const tempConfigPath = path.join(root, 'tsconfig.temp.json')
 
   const configName = config.tsconfig?.includes('jsconfig.json')
     ? 'jsconfig.json'
@@ -81,11 +81,11 @@ export async function getTsconfigPath(root: string, config: TypecheckConfig) {
     )
 
     const tsconfigFinalContent = JSON.stringify(tmpTsConfig, null, 2)
-    await writeFile(tmpConfigPath, tsconfigFinalContent)
-    return tmpConfigPath
+    await writeFile(tempConfigPath, tsconfigFinalContent)
+    return tempConfigPath
   }
   catch (err) {
-    throw new Error('failed to write tsconfig.tmp.json', { cause: err })
+    throw new Error('failed to write tsconfig.temp.json', { cause: err })
   }
 }
 

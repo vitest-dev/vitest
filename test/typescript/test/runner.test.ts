@@ -12,7 +12,7 @@ describe('should fails', async () => {
     if (process.platform === 'win32' && process.env.CI)
       return
 
-    const { stdout, stderr } = await execa('npx', [
+    const { stderr } = await execa('npx', [
       'vitest',
       'typecheck',
       '--dir',
@@ -30,16 +30,14 @@ describe('should fails', async () => {
     })
 
     expect(stderr).toBeTruthy()
-    const msg = String(stderr)
-      .split(/\n/g)
-      .reverse()
+    const lines = String(stderr).split(/\n/g)
+    const msg = lines
       .filter(i => i.includes('TypeCheckError: '))
+      .reverse()
       .join('\n')
-      ?.trim()
+      .trim()
       .replace(root, '<rootDir>')
     expect(msg).toMatchSnapshot()
-
-    const lines = stdout.split(/\n/g)
 
     files.forEach((file) => {
       const index = lines.findIndex(val => val.includes(`${file}:`))

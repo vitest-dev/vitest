@@ -65,7 +65,7 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
       // for example, when there is a source map file, but no source in node_modules
       if (nearest.file === file || existsSync(file)) {
         const sourceCode = readFileSync(file, 'utf-8')
-        ctx.logger.log(c.yellow(generateCodeFrame(sourceCode, 4, pos)))
+        ctx.logger.error(c.yellow(generateCodeFrame(sourceCode, 4, pos)))
       }
     }
   })
@@ -180,19 +180,19 @@ function printStack(
     const file = fileFromParsedStack(frame)
     const path = relative(ctx.config.root, file)
 
-    logger.log(color(` ${c.dim(F_POINTER)} ${[frame.method, c.dim(`${path}:${pos.line}:${pos.column}`)].filter(Boolean).join(' ')}`))
+    logger.error(color(` ${c.dim(F_POINTER)} ${[frame.method, c.dim(`${path}:${pos.line}:${pos.column}`)].filter(Boolean).join(' ')}`))
     onStack?.(frame, pos)
 
     // reached at test file, skip the follow stack
     if (frame.file in ctx.state.filesMap)
       break
   }
-  logger.log()
+  logger.error()
   const hasProperties = Object.keys(errorProperties).length > 0
   if (hasProperties) {
-    logger.log(c.red(c.dim(divider())))
+    logger.error(c.red(c.dim(divider())))
     const propertiesString = stringify(errorProperties, 10, { printBasicPrototype: false })
-    logger.log(c.red(c.bold('Serialized Error:')), c.gray(propertiesString))
+    logger.error(c.red(c.bold('Serialized Error:')), c.gray(propertiesString))
   }
 }
 

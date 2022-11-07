@@ -1,6 +1,6 @@
 import { rm } from 'fs/promises'
 import type { ExecaChildProcess } from 'execa'
-import { execaCommand } from 'execa'
+import { execa } from 'execa'
 import { resolve } from 'pathe'
 import { SourceMapConsumer } from 'source-map'
 import { ensurePackageInstalled } from '../utils'
@@ -35,7 +35,7 @@ export class Typechecker {
   }
 
   private _tests: Record<string, FileInformation> | null = {}
-  private tmpConfigPath?: string
+  private tempConfigPath?: string
   private process!: ExecaChildProcess
 
   constructor(protected ctx: Vitest, protected files: string[]) {}
@@ -167,8 +167,8 @@ export class Typechecker {
   }
 
   public async clear() {
-    if (this.tmpConfigPath)
-      await rm(this.tmpConfigPath)
+    if (this.tempConfigPath)
+      await rm(this.tempConfigPath, { force: true })
   }
 
   public async stop() {
@@ -187,15 +187,15 @@ export class Typechecker {
     const { root, watch, typecheck } = this.ctx.config
     await this.ensurePackageInstalled(root, typecheck.checker)
 
-    this.tmpConfigPath = await getTsconfigPath(root, typecheck)
-    let cmd = `${typecheck.checker} --noEmit --pretty false -p ${this.tmpConfigPath}`
+    this.tempConfigPath = await getTsconfigPath(root, typecheck)
+    const args = ['--noEmit', '--pretty', 'false', '-p', this.tempConfigPath]
     // use builtin watcher, because it's faster
     if (watch)
-      cmd += ' --watch'
+      args.push('--watch')
     if (typecheck.allowJs)
-      cmd += ' --allowJs --checkJs'
+      args.push('--allowJs', '--checkJs')
     let output = ''
-    const child = execaCommand(cmd, {
+    const child = execa(typecheck.checker, args, {
       cwd: root,
       stdout: 'pipe',
       reject: false,
