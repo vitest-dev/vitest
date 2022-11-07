@@ -40,34 +40,36 @@ describe.concurrent('custom reporters', () => {
   if ((process.platform === 'win32' || process.platform === 'darwin') && process.env.CI)
     return test.skip('skip on windows')
 
+  const TIMEOUT = 60_000
+
   test('custom reporter instances defined in configuration works', async () => {
     const stdout = await runWithRetry('--config', 'custom-reporter.vitest.config.ts')
     expect(stdout).includes('hello from custom reporter')
-  }, 40000)
+  }, TIMEOUT)
 
   test('load no base on root custom reporter instances defined in configuration works', async () => {
     const stdout = await runWithRetry('--config', './reportTest2/custom-reporter-path.vitest.config.ts')
     expect(stdout).includes('hello from custom reporter')
-  }, 50000)
+  }, TIMEOUT)
 
   test('package.json dependencies reporter instances defined in configuration works', async () => {
     const stdout = await runWithRetry('--config', 'deps-reporter.vitest.config.ts')
     expect(stdout).includes('hello from package reporter')
-  }, 50000)
+  }, TIMEOUT)
 
   test('a path to a custom reporter defined in configuration works', async () => {
     const stdout = await runWithRetry('--config', 'custom-reporter-path.vitest.config.ts', '--reporter', customJSReporterPath)
     expect(stdout).includes('hello from custom reporter')
-  }, 40000)
+  }, TIMEOUT)
 
   test('custom TS reporters using ESM given as a CLI argument works', async () => {
     const stdout = await runWithRetry('--config', 'without-custom-reporter.vitest.config.ts', '--reporter', customTsReporterPath)
     expect(stdout).includes('hello from custom reporter')
-  }, 40000)
+  }, TIMEOUT)
 
   test('custom JS reporters using CJS given as a CLI argument works', async () => {
     const stdout = await runWithRetry('--config', 'without-custom-reporter.vitest.config.ts', '--reporter', customJSReporterPath)
     expect(stdout).includes('hello from custom reporter')
-  }, 40000)
+  }, TIMEOUT)
 })
 
