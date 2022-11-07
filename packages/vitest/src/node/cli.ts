@@ -2,7 +2,7 @@ import { normalize } from 'pathe'
 import cac from 'cac'
 import c from 'picocolors'
 import { version } from '../../package.json'
-import type { VitestRunMode } from '../types'
+import type { Vitest, VitestRunMode } from '../types'
 import type { CliOptions } from './cli-api'
 import { startVitest } from './cli-api'
 import { divider } from './reporters/renderers/utils'
@@ -109,15 +109,17 @@ function normalizeOptions(argv: CliOptions): CliOptions {
   return argv
 }
 
-async function start(mode: VitestRunMode, cliFilters: string[], options: CliOptions): Promise<void> {
+async function start(mode: VitestRunMode, cliFilters: string[], options: CliOptions): Promise<Vitest | undefined> {
   try {
-    if (await startVitest(mode, cliFilters.map(normalize), normalizeOptions(options)) === false)
-      process.exit()
+    const ctx = await startVitest(mode, cliFilters.map(normalize), normalizeOptions(options))
+    if (!ctx?.config.watch)
+      await ctx?.exit()
+    return ctx
   }
   catch (e) {
-    process.exitCode = 1
     console.error(`\n${c.red(divider(c.bold(c.inverse(' Unhandled Error '))))}`)
     console.error(e)
     console.error('\n\n')
+    process.exit(1)
   }
 }

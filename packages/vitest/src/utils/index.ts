@@ -66,6 +66,14 @@ export function getFullName(task: Task) {
   return getNames(task).join(c.dim(' > '))
 }
 
+export function removeUndefinedValues<T extends Record<string, any>>(obj: T): T {
+  for (const key in Object.keys(obj)) {
+    if (obj[key] === undefined)
+      delete obj[key]
+  }
+  return obj
+}
+
 export async function ensurePackageInstalled(
   dependency: string,
   root: string,
