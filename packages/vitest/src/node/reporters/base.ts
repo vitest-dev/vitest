@@ -1,7 +1,7 @@
 import { performance } from 'perf_hooks'
 import c from 'picocolors'
 import type { ErrorWithDiff, File, Reporter, Task, TaskResultPack, UserConsoleLog } from '../../types'
-import { clearInterval, getFullName, getSuites, getTests, hasFailed, hasFailedSnapshot, isNode, relativePath, setInterval } from '../../utils'
+import { clearInterval, getFullName, getSuites, getTests, getTypecheckTests, hasFailed, hasFailedSnapshot, isNode, relativePath, setInterval } from '../../utils'
 import type { Vitest } from '../../node'
 import { F_RIGHT } from '../../utils/figures'
 import { divider, formatTimeString, getStateString, getStateSymbol, pointer, renderSnapshotSummary } from './renderers/utils'
@@ -55,7 +55,7 @@ export abstract class BaseReporter implements Reporter {
     if (errors.length) {
       if (!this.ctx.config.dangerouslyIgnoreUnhandledErrors)
         process.exitCode = 1
-      this.ctx.logger.printUnhandledErrors(errors)
+      await this.ctx.logger.printUnhandledErrors(errors)
     }
   }
 
@@ -93,11 +93,9 @@ export abstract class BaseReporter implements Reporter {
     }
   }
 
-  async onWatcherStart() {
+  async onWatcherStart(files = this.ctx.state.getFiles(), errors = this.ctx.state.getUnhandledErrors()) {
     this.resetLastRunLog()
 
-    const files = this.ctx.state.getFiles()
-    const errors = this.ctx.state.getUnhandledErrors()
     const failed = errors.length > 0 || hasFailed(files)
     const failedSnap = hasFailedSnapshot(files)
     if (failed)
@@ -105,7 +103,10 @@ export abstract class BaseReporter implements Reporter {
     else
       this.ctx.logger.log(WAIT_FOR_CHANGE_PASS)
 
-    const hints = [HELP_HINT]
+    const hints = []
+    // TODO typecheck doesn't support these for now
+    if (this.mode !== 'typecheck')
+      hints.push(HELP_HINT)
     if (failedSnap)
       hints.unshift(HELP_UPDATE_SNAP)
     else
@@ -201,7 +202,7 @@ export abstract class BaseReporter implements Reporter {
   }
 
   async reportTestSummary(files: File[]) {
-    const tests = getTests(files)
+    const tests = this.mode === 'typecheck' ? getTypecheckTests(files) : getTests(files)
     const logger = this.ctx.logger
 
     const executionTime = this.end - this.start
@@ -211,7 +212,7 @@ export abstract class BaseReporter implements Reporter {
     const transformTime = Array.from(this.ctx.vitenode.fetchCache.values()).reduce((a, b) => a + (b?.duration || 0), 0)
     const threadTime = collectTime + testsTime + setupTime
 
-    const padTitle = (str: string) => c.dim(`${str.padStart(10)} `)
+    const padTitle = (str: string) => c.dim(`${str.padStart(11)} `)
     const time = (time: number) => {
       if (time > 1000)
         return `${(time / 1000).toFixed(2)}s`
@@ -238,9 +239,16 @@ export abstract class BaseReporter implements Reporter {
 
     logger.log(padTitle('Test Files'), getStateString(files))
     logger.log(padTitle('Tests'), getStateString(tests))
+    if (this.mode === 'typecheck') {
+      // has only failed checks
+      const typechecks = getTests(files).filter(t => t.type === 'typecheck')
+      logger.log(padTitle('Type Errors'), getStateString(typechecks, 'errors', false))
+    }
     logger.log(padTitle('Start at'), formatTimeString(this._timeStart))
     if (this.watchFilters)
       logger.log(padTitle('Duration'), time(threadTime))
+    else if (this.mode === 'typecheck')
+      logger.log(padTitle('Duration'), time(executionTime))
     else
       logger.log(padTitle('Duration'), time(executionTime) + c.dim(` (transform ${time(transformTime)}, setup ${time(setupTime)}, collect ${time(collectTime)}, tests ${time(testsTime)})`))
 
@@ -267,7 +275,8 @@ export abstract class BaseReporter implements Reporter {
     }
 
     if (failedTests.length) {
-      logger.error(c.red(divider(c.bold(c.inverse(` Failed Tests ${failedTests.length} `)))))
+      const message = this.mode === 'typecheck' ? 'Type Errors' : 'Failed Tests'
+      logger.error(c.red(divider(c.bold(c.inverse(` ${message} ${failedTests.length} `)))))
       logger.error()
 
       await this.printTaskErrors(failedTests, errorDivider)
@@ -284,6 +293,8 @@ export abstract class BaseReporter implements Reporter {
     logger.log(`\n${c.cyan(c.inverse(c.bold(' BENCH ')))} ${c.cyan('Summary')}\n`)
     for (const bench of topBenchs) {
       const group = bench.suite
+      if (!group)
+        continue
       const groupName = getFullName(group)
       logger.log(`  ${bench.name}${c.dim(` - ${groupName}`)}`)
       const siblings = group.tasks

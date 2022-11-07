@@ -34,7 +34,7 @@ export class JsonReporter implements Reporter {
           continue
         if (!outputFile)
           res.samples = 'ignore on terminal' as any
-        testResults[test.suite.name] = (testResults[test.suite.name] || []).concat(res)
+        testResults[test.suite!.name] = (testResults[test.suite!.name] || []).concat(res)
       }
 
       if (tests.some(t => t.result?.state === 'run')) {

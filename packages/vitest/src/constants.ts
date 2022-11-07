@@ -37,6 +37,9 @@ export const globalApis = [
   'chai',
   'expect',
   'assert',
+  // typecheck
+  'expectTypeOf',
+  'assertType',
   // utils
   'vitest',
   'vi',

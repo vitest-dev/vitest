@@ -11,6 +11,7 @@ import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter,
 import { SnapshotManager } from '../integrations/snapshot/manager'
 import { clearTimeout, deepMerge, hasFailed, noop, setTimeout, slash, toArray } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
+import { Typechecker } from '../typecheck/typechecker'
 import { createPool } from './pool'
 import type { WorkerPool } from './pool'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
@@ -33,6 +34,7 @@ export class Vitest {
   coverageProvider: CoverageProvider | null | undefined
   logger: Logger
   pool: WorkerPool | undefined
+  typechecker: Typechecker | undefined
 
   vitenode: ViteNodeServer = undefined!
 
@@ -151,7 +153,51 @@ export class Vitest {
     ) as ResolvedConfig
   }
 
+  async typecheck(filters?: string[]) {
+    const testsFilesList = await this.globTestFiles(filters)
+    const checker = new Typechecker(this, testsFilesList)
+    this.typechecker = checker
+    checker.onParseEnd(async ({ files, sourceErrors }) => {
+      await this.report('onCollected', files)
+      if (!files.length)
+        this.logger.printNoTestFound()
+      else
+        await this.report('onFinished', files)
+      if (sourceErrors.length && !this.config.typecheck.ignoreSourceErrors) {
+        process.exitCode = 1
+        await this.logger.printSourceTypeErrors(sourceErrors)
+      }
+      // if there are source errors, we are showing it, and then terminating process
+      if (!files.length) {
+        const exitCode = this.config.passWithNoTests ? (process.exitCode ?? 0) : 1
+        process.exit(exitCode)
+      }
+      if (this.config.watch) {
+        await this.report('onWatcherStart', files, [
+          ...sourceErrors,
+          ...this.state.getUnhandledErrors(),
+        ])
+      }
+    })
+    checker.onParseStart(async () => {
+      await this.report('onInit', this)
+      await this.report('onCollected', checker.getTestFiles())
+    })
+    checker.onWatcherRerun(async () => {
+      await this.report('onWatcherRerun', testsFilesList, 'File change detected. Triggering rerun.')
+      await checker.collectTests()
+      await this.report('onCollected', checker.getTestFiles())
+    })
+    await checker.collectTests()
+    await checker.start()
+  }
+
   async start(filters?: string[]) {
+    if (this.mode === 'typecheck') {
+      await this.typecheck(filters)
+      return
+    }
+
     try {
       await this.initCoverageProvider()
       await this.coverageProvider?.clean(this.config.coverage.clean)
@@ -470,6 +516,7 @@ export class Vitest {
       this.closingPromise = Promise.allSettled([
         this.pool?.close(),
         this.server.close(),
+        this.typechecker?.stop(),
       ].filter(Boolean)).then((results) => {
         results.filter(r => r.status === 'rejected').forEach((err) => {
           this.logger.error('error during close', (err as PromiseRejectedResult).reason)

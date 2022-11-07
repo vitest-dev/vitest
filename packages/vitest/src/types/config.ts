@@ -27,7 +27,7 @@ export interface EnvironmentOptions {
   [x: string]: unknown
 }
 
-export type VitestRunMode = 'test' | 'benchmark'
+export type VitestRunMode = 'test' | 'benchmark' | 'typecheck'
 
 export interface InlineConfig {
   /**
@@ -443,17 +443,46 @@ export interface InlineConfig {
    * Ignore any unhandled errors that occur
    */
   dangerouslyIgnoreUnhandledErrors?: boolean
+
+  /**
+   * Options for configuring typechecking test environment.
+   */
+  typecheck?: Partial<TypecheckConfig>
+}
+
+export interface TypecheckConfig {
+  /**
+   * What tools to use for type checking.
+   */
+  checker: 'tsc' | 'vue-tsc' | (string & Record<never, never>)
+  /**
+   * Pattern for files that should be treated as test files
+   */
+  include: string[]
+  /**
+   * Pattern for files that should not be treated as test files
+   */
+  exclude: string[]
+  /**
+   * Check JS files that have `@ts-check` comment.
+   * If you have it enabled in tsconfig, this will not overwrite it.
+   */
+  allowJs?: boolean
+  /**
+   * Do not fail, if Vitest found errors outside the test files.
+   */
+  ignoreSourceErrors?: boolean
+  /**
+   * Path to tsconfig, relative to the project root.
+   */
+  tsconfig?: string
 }
 
 export interface UserConfig extends InlineConfig {
   /**
    * Path to the config file.
    *
-   * Default resolving to one of:
-   * - `vitest.config.js`
-   * - `vitest.config.ts`
-   * - `vite.config.js`
-   * - `vite.config.ts`
+   * Default resolving to `vitest.config.*`, `vite.config.*`
    */
   config?: string | undefined
 
@@ -489,7 +518,7 @@ export interface UserConfig extends InlineConfig {
   shard?: string
 }
 
-export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence'> {
+export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck'> {
   mode: VitestRunMode
 
   base?: string
@@ -526,4 +555,6 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
     shuffle?: boolean
     seed?: number
   }
+
+  typecheck: TypecheckConfig
 }

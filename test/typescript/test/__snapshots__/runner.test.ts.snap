@@ -1,0 +1,54 @@
+// Vitest Snapshot v1
+
+exports[`should fails > typecheck files > expect-error.test-d.ts 1`] = `
+" ❯ expect-error.test-d.ts:4:3
+      2| 
+      3| test('failing test with expect-error', () => {
+      4|   // @ts-expect-error expect nothing
+       |   ^
+      5|   expectTypeOf(1).toEqualTypeOf<number>()
+      6| })
+"
+`;
+
+exports[`should fails > typecheck files > fail.test-d.ts 1`] = `
+" ❯ fail.test-d.ts:4:19
+      2| 
+      3| test('failing test', () => {
+      4|   expectTypeOf(1).toEqualTypeOf<string>()
+       |                   ^
+      5| })
+      6| 
+"
+`;
+
+exports[`should fails > typecheck files > js-fail.test-d.js 1`] = `
+" ❯ js-fail.test-d.js:6:19
+      4| 
+      5| test('js test fails', () => {
+      6|   expectTypeOf(1).toBeArray()
+       |                   ^
+      7| })
+      8| 
+"
+`;
+
+exports[`should fails > typecheck files > only.test-d.ts 1`] = `
+" ❯ only.test-d.ts:4:19
+      2| 
+      3| test.only('failing test', () => {
+      4|   expectTypeOf(1).toEqualTypeOf<string>()
+       |                   ^
+      5| })
+      6| 
+"
+`;
+
+exports[`should fails > typecheck files 1`] = `
+"TypeCheckError: Expected 1 arguments, but got 0.
+TypeCheckError: Expected 1 arguments, but got 0.
+TypeCheckError: Expected 1 arguments, but got 0.
+TypeCheckError: Expected 1 arguments, but got 0.
+TypeCheckError: Expected 1 arguments, but got 0.
+TypeCheckError: Unused '@ts-expect-error' directive."
+`;

@@ -748,6 +748,7 @@ importers:
   packages/vite-node:
     specifiers:
       '@types/debug': ^4.1.7
+      '@types/source-map': ^0.5.7
       '@types/source-map-support': ^0.5.6
       cac: ^6.7.14
       debug: ^4.3.4
@@ -755,16 +756,19 @@ importers:
       pathe: ^0.2.0
       picocolors: ^1.0.0
       rollup: ^2.79.1
+      source-map: ^0.6.1
       source-map-support: ^0.5.21
       vite: ^3.2.3
     dependencies:
       debug: 4.3.4
       mlly: 0.5.16
       pathe: 0.2.0
+      source-map: 0.6.1
       source-map-support: 0.5.21
       vite: 3.2.3
     devDependencies:
       '@types/debug': 4.1.7
+      '@types/source-map': 0.5.7
       '@types/source-map-support': 0.5.6
       cac: 6.7.14
       picocolors: 1.0.0
@@ -785,6 +789,8 @@ importers:
       '@types/prompts': ^2.4.1
       '@types/sinonjs__fake-timers': ^8.1.2
       '@vitest/ui': workspace:*
+      acorn: ^8.8.0
+      acorn-walk: ^8.2.0
       birpc: ^0.2.3
       cac: ^6.7.14
       chai: ^4.3.6
@@ -794,9 +800,11 @@ importers:
       diff: ^5.1.0
       event-target-polyfill: ^0.0.3
       execa: ^6.1.0
+      expect-type: ^0.15.0
       fast-glob: ^3.2.12
       find-up: ^6.3.0
       flatted: ^3.2.7
+      get-tsconfig: ^4.2.0
       happy-dom: ^7.6.6
       jsdom: ^20.0.2
       local-pkg: ^0.4.2
@@ -812,6 +820,7 @@ importers:
       pretty-format: ^27.5.1
       prompts: ^2.4.2
       rollup: ^2.79.1
+      source-map: ^0.6.1
       strip-ansi: ^7.0.1
       strip-literal: ^0.4.2
       tinybench: ^2.3.1
@@ -825,9 +834,12 @@ importers:
       '@types/chai': 4.3.3
       '@types/chai-subset': 1.3.3
       '@types/node': 18.7.13
+      acorn: 8.8.0
+      acorn-walk: 8.2.0
       chai: 4.3.6
       debug: 4.3.4
       local-pkg: 0.4.2
+      source-map: 0.6.1
       strip-literal: 0.4.2
       tinybench: 2.3.1
       tinypool: 0.3.0
@@ -851,9 +863,11 @@ importers:
       diff: 5.1.0
       event-target-polyfill: 0.0.3
       execa: 6.1.0
+      expect-type: 0.15.0
       fast-glob: 3.2.12
       find-up: 6.3.0
       flatted: 3.2.7
+      get-tsconfig: 4.2.0
       happy-dom: 7.6.6
       jsdom: 20.0.2
       log-update: 5.0.1
@@ -1106,6 +1120,19 @@ importers:
     devDependencies:
       execa: 6.1.0
       vitest: link:../../packages/vitest
+
+  test/typescript:
+    specifiers:
+      execa: ^6.1.0
+      typescript: ^4.8.4
+      vitest: workspace:*
+      vue-tsc: ^0.40.13
+    dependencies:
+      vitest: link:../../packages/vitest
+    devDependencies:
+      execa: 6.1.0
+      typescript: 4.8.4
+      vue-tsc: 0.40.13_typescript@4.8.4
 
   test/vite-config:
     specifiers:
@@ -7203,6 +7230,13 @@ packages:
       source-map: 0.6.1
     dev: true
 
+  /@types/source-map/0.5.7:
+    resolution: {integrity: sha512-LrnsgZIfJaysFkv9rRJp4/uAyqw87oVed3s1hhF83nwbo9c7MG9g5DqR0seHP+lkX4ldmMrVolPjQSe2ZfD0yA==}
+    deprecated: This is a stub types definition for source-map (https://github.com/mozilla/source-map). source-map provides its own type definitions, so you don't need @types/source-map installed!
+    dependencies:
+      source-map: 0.7.4
+    dev: true
+
   /@types/stack-utils/2.0.1:
     resolution: {integrity: sha512-Hl219/BT5fLAaz6NDkSuhzasy49dwQS/DSdu4MdggFB8zcXv7vflBI3xp7FEmkmdDkBUI2bPUNeMttp2knYdxw==}
     dev: true
@@ -7836,6 +7870,44 @@ packages:
       vue: 2.7.10
     dev: true
 
+  /@volar/code-gen/0.40.13:
+    resolution: {integrity: sha512-4gShBWuMce868OVvgyA1cU5WxHbjfEme18Tw6uVMfweZCF5fB2KECG0iPrA9D54vHk3FeHarODNwgIaaFfUBlA==}
+    dependencies:
+      '@volar/source-map': 0.40.13
+    dev: true
+
+  /@volar/source-map/0.40.13:
+    resolution: {integrity: sha512-dbdkAB2Nxb0wLjAY5O64o3ywVWlAGONnBIoKAkXSf6qkGZM+nJxcizsoiI66K+RHQG0XqlyvjDizfnTxr+6PWg==}
+    dependencies:
+      '@vue/reactivity': 3.2.38
+    dev: true
+
+  /@volar/typescript-faster/0.40.13:
+    resolution: {integrity: sha512-uy+TlcFkKoNlKEnxA4x5acxdxLyVDIXGSc8cYDNXpPKjBKXrQaetzCzlO3kVBqu1VLMxKNGJMTKn35mo+ILQmw==}
+    dependencies:
+      semver: 7.3.8
+    dev: true
+
+  /@volar/vue-language-core/0.40.13:
+    resolution: {integrity: sha512-QkCb8msi2KUitTdM6Y4kAb7/ZlEvuLcbBFOC2PLBlFuoZwyxvSP7c/dBGmKGtJlEvMX0LdCyrg5V2aBYxD38/Q==}
+    dependencies:
+      '@volar/code-gen': 0.40.13
+      '@volar/source-map': 0.40.13
+      '@vue/compiler-core': 3.2.41
+      '@vue/compiler-dom': 3.2.41
+      '@vue/compiler-sfc': 3.2.41
+      '@vue/reactivity': 3.2.41
+      '@vue/shared': 3.2.41
+    dev: true
+
+  /@volar/vue-typescript/0.40.13:
+    resolution: {integrity: sha512-o7bNztwjs8JmbQjVkrnbZUOfm7q4B8ZYssETISN1tRaBdun6cfNqgpkvDYd+VUBh1O4CdksvN+5BUNnwAz4oCQ==}
+    dependencies:
+      '@volar/code-gen': 0.40.13
+      '@volar/typescript-faster': 0.40.13
+      '@volar/vue-language-core': 0.40.13
+    dev: true
+
   /@vue/babel-helper-vue-transform-on/1.0.2:
     resolution: {integrity: sha512-hz4R8tS5jMn8lDq6iD+yWL6XNB699pGIVLk7WSJnn1dbpjaazsjZQkieJoRX6gW5zpYSCFqQ7jUquPNY65tQYA==}
     dev: true
@@ -7954,6 +8026,12 @@ packages:
       estree-walker: 2.0.2
       magic-string: 0.25.9
 
+  /@vue/reactivity/3.2.38:
+    resolution: {integrity: sha512-6L4myYcH9HG2M25co7/BSo0skKFHpAN8PhkNPM4xRVkyGl1K5M3Jx4rp5bsYhvYze2K4+l+pioN4e6ZwFLUVtw==}
+    dependencies:
+      '@vue/shared': 3.2.38
+    dev: true
+
   /@vue/reactivity/3.2.39:
     resolution: {integrity: sha512-vlaYX2a3qMhIZfrw3Mtfd+BuU+TZmvDrPMa+6lpfzS9k/LnGxkSuf0fhkP0rMGfiOHPtyKoU9OJJJFGm92beVQ==}
     dependencies:
@@ -8007,6 +8085,10 @@ packages:
       '@vue/compiler-ssr': 3.2.41
       '@vue/shared': 3.2.41
       vue: 3.2.41
+
+  /@vue/shared/3.2.38:
+    resolution: {integrity: sha512-dTyhTIRmGXBjxJE+skC8tTWCGLCVc4wQgRRLt8+O9p5ewBAjoBwtCAkLPrtToSr1xltoe3st21Pv953aOZ7alg==}
+    dev: true
 
   /@vue/shared/3.2.39:
     resolution: {integrity: sha512-D3dl2ZB9qE6mTuWPk9RlhDeP1dgNRUKC3NJxji74A4yL8M2MwlhLKUC/49WHjrNzSPug58fWx/yFbaTzGAQSBw==}
@@ -8556,7 +8638,6 @@ packages:
   /acorn-walk/8.2.0:
     resolution: {integrity: sha512-k+iyHEuPgSw6SbuDpGQM+06HQUa04DZ3o+F6CSzXMvvI5KMvnaEqXe+YVe555R9nn6GPt404fos4wcgpw12SDA==}
     engines: {node: '>=0.4.0'}
-    dev: true
 
   /acorn/6.4.2:
     resolution: {integrity: sha512-XtGIhXwF8YM8bJhGxG5kXgjkEuNGLTkoYqVE+KMR+aspr4KGYmKYg7yUe3KghyQ9yheNwLnjmzh/7+gfDBmHCQ==}
@@ -12347,6 +12428,10 @@ packages:
       to-regex: 3.0.2
     transitivePeerDependencies:
       - supports-color
+    dev: true
+
+  /expect-type/0.15.0:
+    resolution: {integrity: sha512-yWnriYB4e8G54M5/fAFj7rCIBiKs1HAACaY13kCz6Ku0dezjS9aMcfcdVK2X8Tv2tEV1BPz/wKfQ7WA4S/d8aA==}
     dev: true
 
   /expect/29.0.1:
@@ -20740,6 +20825,17 @@ packages:
       de-indent: 1.0.2
       he: 1.2.0
       vue: 2.7.10
+    dev: true
+
+  /vue-tsc/0.40.13_typescript@4.8.4:
+    resolution: {integrity: sha512-xzuN3g5PnKfJcNrLv4+mAjteMd5wLm5fRhW0034OfNJZY4WhB07vhngea/XeGn7wNYt16r7syonzvW/54dcNiA==}
+    hasBin: true
+    peerDependencies:
+      typescript: '*'
+    dependencies:
+      '@volar/vue-language-core': 0.40.13
+      '@volar/vue-typescript': 0.40.13
+      typescript: 4.8.4
     dev: true
 
   /vue/2.7.10:

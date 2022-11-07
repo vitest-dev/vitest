@@ -1,5 +1,6 @@
-import type { File, ResolvedConfig, Suite, TaskBase } from '../types'
+import type { File, ResolvedConfig, Suite } from '../types'
 import { getWorkerState, isBrowser, relativePath } from '../utils'
+import { interpretTaskModes, someTasksAreOnly } from '../utils/collect'
 import { clearCollectorContext, defaultSuite } from './suite'
 import { getHooks, setHooks } from './map'
 import { processError } from './error'
@@ -97,75 +98,6 @@ export async function collectTests(paths: string[], config: ResolvedConfig): Pro
   }
 
   return files
-}
-
-/**
- * If any tasks been marked as `only`, mark all other tasks as `skip`.
- */
-function interpretTaskModes(suite: Suite, namePattern?: string | RegExp, onlyMode?: boolean, parentIsOnly?: boolean, allowOnly?: boolean) {
-  const suiteIsOnly = parentIsOnly || suite.mode === 'only'
-
-  suite.tasks.forEach((t) => {
-    // Check if either the parent suite or the task itself are marked as included
-    const includeTask = suiteIsOnly || t.mode === 'only'
-    if (onlyMode) {
-      if (t.type === 'suite' && (includeTask || someTasksAreOnly(t))) {
-        // Don't skip this suite
-        if (t.mode === 'only') {
-          checkAllowOnly(t, allowOnly)
-          t.mode = 'run'
-        }
-      }
-      else if (t.mode === 'run' && !includeTask) { t.mode = 'skip' }
-      else if (t.mode === 'only') {
-        checkAllowOnly(t, allowOnly)
-        t.mode = 'run'
-      }
-    }
-    if (t.type === 'test') {
-      if (namePattern && !getTaskFullName(t).match(namePattern))
-        t.mode = 'skip'
-    }
-    else if (t.type === 'suite') {
-      if (t.mode === 'skip')
-        skipAllTasks(t)
-      else
-        interpretTaskModes(t, namePattern, onlyMode, includeTask, allowOnly)
-    }
-  })
-
-  // if all subtasks are skipped, mark as skip
-  if (suite.mode === 'run') {
-    if (suite.tasks.length && suite.tasks.every(i => i.mode !== 'run'))
-      suite.mode = 'skip'
-  }
-}
-
-function getTaskFullName(task: TaskBase): string {
-  return `${task.suite ? `${getTaskFullName(task.suite)} ` : ''}${task.name}`
-}
-
-function someTasksAreOnly(suite: Suite): boolean {
-  return suite.tasks.some(t => t.mode === 'only' || (t.type === 'suite' && someTasksAreOnly(t)))
-}
-
-function skipAllTasks(suite: Suite) {
-  suite.tasks.forEach((t) => {
-    if (t.mode === 'run') {
-      t.mode = 'skip'
-      if (t.type === 'suite')
-        skipAllTasks(t)
-    }
-  })
-}
-
-function checkAllowOnly(task: TaskBase, allowOnly?: boolean) {
-  if (allowOnly)
-    return
-  task.result = {
-    state: 'fail',
-    error: processError(new Error('[Vitest] Unexpected .only modifier. Remove it or pass --allowOnly argument to bypass this error')),
-  }
 }
 
 function calculateHash(parent: Suite) {

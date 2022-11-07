@@ -10,7 +10,7 @@ export interface Reporter {
   onTaskUpdate?: (packs: TaskResultPack[]) => Awaitable<void>
 
   onTestRemoved?: (trigger?: string) => Awaitable<void>
-  onWatcherStart?: () => Awaitable<void>
+  onWatcherStart?: (files?: File[], errors?: unknown[]) => Awaitable<void>
   onWatcherRerun?: (files: string[], trigger?: string) => Awaitable<void>
 
   onServerRestart?: (reason?: string) => Awaitable<void>

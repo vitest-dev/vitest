@@ -1,0 +1,15 @@
+{
+  "scripts": {
+    "test": "vitest",
+    "types": "vitest typecheck --run",
+    "tsc": "tsc --watch --pretty false --noEmit"
+  },
+  "dependencies": {
+    "vitest": "workspace:*"
+  },
+  "devDependencies": {
+    "execa": "^6.1.0",
+    "typescript": "^4.8.4",
+    "vue-tsc": "^0.40.13"
+  }
+}
