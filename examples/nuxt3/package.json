@@ -1,5 +1,5 @@
 {
-  "name": "@vitest/example-nuxtjs",
+  "name": "@vitest/example-nuxt3",
   "scripts": {
     "dev": "nuxt dev",
     "test": "vitest --run",
@@ -8,11 +8,13 @@
   },
   "devDependencies": {
     "@nuxt/test-utils-edge": "^3.0.0-rc.12-27736489.2e080c2",
+    "@vitejs/plugin-vue": "^3.2.0",
     "@vue/test-utils": "^2.0.2",
     "jsdom": "^20.0.0",
     "nuxt": "3.0.0-rc.11",
     "unplugin-auto-import": "^0.11.2",
     "unplugin-vue-components": "^0.22.7",
-    "vitest": "^0.23.4"
+    "vitest": "^0.23.4",
+    "vue": "^3.2.41"
   }
 }
