@@ -1,5 +1,16 @@
 // Vitest Snapshot v1
 
+exports[`stacktraces should pick error frame if present > frame.spec.imba > frame.spec.imba 1`] = `
+" ❯ frame.spec.imba  (0 test)
+
+4 | test(\\"1+1\\") do
+5 |  expect(1+1).toBe 2
+6 |  frame.
+  |        ^
+7 |
+"
+`;
+
 exports[`stacktraces should respect sourcemaps > add.test.ts > add.test.ts 1`] = `
 " ❯ add.test.ts:12:24
      10| 
