@@ -66,6 +66,10 @@ export function createTestContext(test: Test): TestContext {
       return _expect != null
     },
   })
+  context.onTestFailed = (fn) => {
+    test.onFailed ||= []
+    test.onFailed.push(fn)
+  }
 
   return context
 }

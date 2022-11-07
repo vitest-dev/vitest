@@ -1,4 +1,3 @@
-import '@testing-library/jest-dom'
 import { render, screen, userEvent } from '../utils/test-utils'
 import { Input } from './Input'
 
@@ -19,7 +18,7 @@ describe('Input', async () => {
       name: /email address/i,
     })).toBeInTheDocument()
   })
-  it('should change input value', () => {
+  it('should change input value', async () => {
     render(
       <Input
         name="email"
@@ -37,7 +36,7 @@ describe('Input', async () => {
       name: /email address/i,
     })
     expect(input).toBeInTheDocument()
-    userEvent.type(input, '1337')
+    await userEvent.type(input, '1337')
     expect(input).toHaveValue('1337')
   })
   it('should render the input with error', () => {

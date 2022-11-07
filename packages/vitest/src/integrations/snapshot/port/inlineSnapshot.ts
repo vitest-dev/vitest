@@ -1,7 +1,6 @@
 import { promises as fs } from 'fs'
 import type MagicString from 'magic-string'
-import { rpc } from '../../../runtime/rpc'
-import { getOriginalPos, lineSplitRE, numberToPos, posToNumber } from '../../../utils/source-map'
+import { lineSplitRE, numberToPos, posToNumber } from '../../../utils/source-map'
 import { getCallLastIndex } from '../../../utils'
 
 export interface InlineSnapshot {
@@ -17,14 +16,12 @@ export async function saveInlineSnapshots(
   const MagicString = (await import('magic-string')).default
   const files = new Set(snapshots.map(i => i.file))
   await Promise.all(Array.from(files).map(async (file) => {
-    const map = await rpc().getSourceMap(file)
     const snaps = snapshots.filter(i => i.file === file)
     const code = await fs.readFile(file, 'utf8')
     const s = new MagicString(code)
 
     for (const snap of snaps) {
-      const pos = await getOriginalPos(map, snap)
-      const index = posToNumber(code, pos!)
+      const index = posToNumber(code, snap)
       replaceInlineSnap(code, s, index, snap.snapshot)
     }
 

@@ -4,7 +4,7 @@ import { join, normalize, relative } from 'pathe'
 import c from 'picocolors'
 import cliTruncate from 'cli-truncate'
 import type { ErrorWithDiff, ParsedStack, Position } from '../types'
-import { interpretSourcePos, lineSplitRE, parseStacktrace, posToNumber } from '../utils/source-map'
+import { lineSplitRE, parseStacktrace, posToNumber } from '../utils/source-map'
 import { F_POINTER } from '../utils/figures'
 import { stringify } from '../integrations/chai/jest-matcher-utils'
 import type { Vitest } from './core'
@@ -45,8 +45,6 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
 
   const stacks = parseStacktrace(e, fullStack)
 
-  await interpretSourcePos(stacks, ctx)
-
   const nearest = stacks.find(stack =>
     ctx.server.moduleGraph.getModuleById(stack.file)
       && existsSync(stack.file),
@@ -56,19 +54,23 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
 
   if (type)
     printErrorType(type, ctx)
-
   printErrorMessage(e, ctx.logger)
-  printStack(ctx, stacks, nearest, errorProperties, (s, pos) => {
-    if (showCodeFrame && s === nearest && nearest) {
-      const file = fileFromParsedStack(nearest)
-      // could point to non-existing original file
-      // for example, when there is a source map file, but no source in node_modules
-      if (existsSync(file)) {
-        const sourceCode = readFileSync(file, 'utf-8')
-        ctx.logger.log(c.yellow(generateCodeFrame(sourceCode, 4, pos)))
+  if (e.frame) {
+    ctx.logger.log(c.yellow(e.frame))
+  }
+  else {
+    printStack(ctx, stacks, nearest, errorProperties, (s, pos) => {
+      if (showCodeFrame && s === nearest && nearest) {
+        const file = fileFromParsedStack(nearest)
+        // could point to non-existing original file
+        // for example, when there is a source map file, but no source in node_modules
+        if (existsSync(file)) {
+          const sourceCode = readFileSync(file, 'utf-8')
+          ctx.logger.log(c.yellow(generateCodeFrame(sourceCode, 4, pos)))
+        }
       }
-    }
-  })
+    })
+  }
 
   if (e.cause && 'name' in e.cause) {
     (e.cause as any).name = `Caused by: ${(e.cause as any).name}`

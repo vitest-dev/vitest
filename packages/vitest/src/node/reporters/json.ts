@@ -4,7 +4,7 @@ import type { Vitest } from '../../node'
 import type { File, Reporter, Suite, Task, TaskState } from '../../types'
 import { getSuites, getTests } from '../../utils'
 import { getOutputFile } from '../../utils/config-helpers'
-import { interpretSourcePos, parseStacktrace } from '../../utils/source-map'
+import { parseStacktrace } from '../../utils/source-map'
 
 // for compatibility reasons, the reporter produces a JSON similar to the one produced by the Jest JSON reporter
 // the following types are extracted from the Jest repository (and simplified)
@@ -186,7 +186,6 @@ export class JsonReporter implements Reporter {
       return
 
     const stack = parseStacktrace(error)
-    await interpretSourcePos(stack, this.ctx)
     const frame = stack[stack.length - 1]
     if (!frame)
       return
