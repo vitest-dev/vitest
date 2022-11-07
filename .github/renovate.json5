@@ -56,6 +56,6 @@
     "@rollup/plugin-node-resolve",
     "rollup-plugin-dts",
     "rollup-plugin-esbuild",
-    "rollup-plugin-license",
+    "rollup-plugin-license"
   ]
 }
