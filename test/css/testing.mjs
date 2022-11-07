@@ -10,15 +10,15 @@ const configs = [
 
 async function runTests() {
   for (const [name, config] of configs) {
-    const success = await startVitest('test', [name], {
+    await startVitest('test', [name], {
       run: true,
       css: config,
       update: false,
       teardownTimeout: 1000_000_000,
     })
 
-    if (!success)
-      process.exit(1)
+    if (process.exitCode)
+      process.exit()
   }
 
   process.exit(0)
