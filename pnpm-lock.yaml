@@ -748,6 +748,7 @@ importers:
   packages/vite-node:
     specifiers:
       '@types/debug': ^4.1.7
+      '@types/source-map': ^0.5.7
       '@types/source-map-support': ^0.5.6
       cac: ^6.7.14
       debug: ^4.3.4
@@ -755,16 +756,19 @@ importers:
       pathe: ^0.2.0
       picocolors: ^1.0.0
       rollup: ^2.79.0
+      source-map: ^0.6.1
       source-map-support: ^0.5.21
       vite: ^3.2.0
     dependencies:
       debug: 4.3.4
       mlly: 0.5.16
       pathe: 0.2.0
+      source-map: 0.6.1
       source-map-support: 0.5.21
       vite: 3.2.2
     devDependencies:
       '@types/debug': 4.1.7
+      '@types/source-map': 0.5.7
       '@types/source-map-support': 0.5.6
       cac: 6.7.14
       picocolors: 1.0.0
@@ -816,6 +820,7 @@ importers:
       pretty-format: ^27.5.1
       prompts: ^2.4.2
       rollup: ^2.79.0
+      source-map: ^0.6.1
       strip-ansi: ^7.0.1
       strip-literal: ^0.4.2
       tinybench: ^2.3.1
@@ -834,6 +839,7 @@ importers:
       chai: 4.3.6
       debug: 4.3.4
       local-pkg: 0.4.2
+      source-map: 0.6.1
       strip-literal: 0.4.2
       tinybench: 2.3.1
       tinypool: 0.3.0
@@ -7212,6 +7218,13 @@ packages:
     resolution: {integrity: sha512-b2nJ9YyXmkhGaa2b8VLM0kJ04xxwNyijcq12/kDoomCt43qbHBeK2SLNJ9iJmETaAj+bKUT05PQUu3Q66GvLhQ==}
     dependencies:
       source-map: 0.6.1
+    dev: true
+
+  /@types/source-map/0.5.7:
+    resolution: {integrity: sha512-LrnsgZIfJaysFkv9rRJp4/uAyqw87oVed3s1hhF83nwbo9c7MG9g5DqR0seHP+lkX4ldmMrVolPjQSe2ZfD0yA==}
+    deprecated: This is a stub types definition for source-map (https://github.com/mozilla/source-map). source-map provides its own type definitions, so you don't need @types/source-map installed!
+    dependencies:
+      source-map: 0.7.4
     dev: true
 
   /@types/stack-utils/2.0.1:
