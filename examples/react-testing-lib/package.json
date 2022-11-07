@@ -10,19 +10,20 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2"
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^5.16.4",
-    "@testing-library/react": "^12.1.5",
-    "@testing-library/react-hooks": "^8.0.0",
-    "@testing-library/user-event": "^13.5.0",
-    "@types/react": "^17.0.45",
-    "@types/react-dom": "^17.0.17",
-    "@vitejs/plugin-react": "^1.3.2",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^14.4.3",
+    "@types/react": "^18.0.24",
+    "@types/react-dom": "^18.0.8",
+    "@vitejs/plugin-react": "^2.2.0",
+    "@vitest/coverage-c8": "^0.24.5",
     "@vitest/ui": "latest",
     "jsdom": "latest",
+    "typescript": "^4.8.4",
     "vite": "latest",
     "vitest": "latest"
   },

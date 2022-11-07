@@ -1,7 +1,8 @@
+import { normalize } from 'pathe'
 import cac from 'cac'
 import c from 'picocolors'
 import { version } from '../../package.json'
-import type { VitestRunMode } from '../types'
+import type { Vitest, VitestRunMode } from '../types'
 import type { CliOptions } from './cli-api'
 import { startVitest } from './cli-api'
 import { divider } from './reporters/renderers/utils'
@@ -71,30 +72,37 @@ cli
 
 cli.parse()
 
-async function runRelated(relatedFiles: string[] | string, argv: CliOptions) {
+async function runRelated(relatedFiles: string[] | string, argv: CliOptions): Promise<void> {
   argv.related = relatedFiles
   argv.passWithNoTests ??= true
   await start('test', [], argv)
 }
 
-async function watch(cliFilters: string[], options: CliOptions) {
+async function watch(cliFilters: string[], options: CliOptions): Promise<void> {
   options.watch = true
   await start('test', cliFilters, options)
 }
 
-async function run(cliFilters: string[], options: CliOptions) {
+async function run(cliFilters: string[], options: CliOptions): Promise<void> {
   options.run = true
   await start('test', cliFilters, options)
 }
 
-async function benchmark(cliFilters: string[], options: CliOptions) {
+async function benchmark(cliFilters: string[], options: CliOptions): Promise<void> {
   console.warn(c.yellow('Benchmarking is an experimental feature.\nBreaking changes might not follow semver, please pin Vitest\'s version when using it.'))
   await start('benchmark', cliFilters, options)
 }
 
-async function start(mode: VitestRunMode, cliFilters: string[], options: CliOptions) {
+function normalizeOptions(argv: CliOptions): CliOptions {
+  argv.root = argv.root && normalize(argv.root)
+  argv.config = argv.config && normalize(argv.config)
+  argv.dir = argv.dir && normalize(argv.dir)
+  return argv
+}
+
+async function start(mode: VitestRunMode, cliFilters: string[], options: CliOptions): Promise<Vitest | undefined> {
   try {
-    const ctx = await startVitest(mode, cliFilters, options)
+    const ctx = await startVitest(mode, cliFilters.map(normalize), normalizeOptions(options))
     if (!ctx?.config.watch)
       await ctx?.exit()
     return ctx

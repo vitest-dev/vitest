@@ -35,6 +35,15 @@ export class Logger {
     this.console.warn(...args)
   }
 
+  clearFullScreen(message: string) {
+    if (this.ctx.server.config.clearScreen === false) {
+      this.console.log(message)
+      return
+    }
+
+    this.console.log(`\x1Bc${message}`)
+  }
+
   clearScreen(message: string, force = false) {
     if (this.ctx.server.config.clearScreen === false) {
       this.console.log(message)
@@ -47,7 +56,7 @@ export class Logger {
   }
 
   private _clearScreen() {
-    if (!this._clearScreenPending)
+    if (this._clearScreenPending == null)
       return
 
     const log = this._clearScreenPending

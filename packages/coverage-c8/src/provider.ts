@@ -58,7 +58,7 @@ export class C8CoverageProvider implements CoverageProvider {
         if (!map)
           return
 
-        const url = _url.pathToFileURL(file).href
+        const url = _url.pathToFileURL(file.split('?')[0]).href
 
         let code: string | undefined
         try {
@@ -86,7 +86,7 @@ export class C8CoverageProvider implements CoverageProvider {
     const offset = 224
 
     report._getSourceMap = (coverage: Profiler.ScriptCoverage) => {
-      const path = _url.pathToFileURL(coverage.url).href
+      const path = _url.pathToFileURL(coverage.url.split('?')[0]).href
       const data = sourceMapMeta[path]
 
       if (!data)
@@ -102,6 +102,12 @@ export class C8CoverageProvider implements CoverageProvider {
 
     await report.run()
     await checkCoverages(this.options, report)
+
+    // Note that this will only clean up the V8 reports generated so far.
+    // There will still be a temp directory with some reports when vitest exists,
+    // but at least it will only contain reports of vitest's internal functions.
+    if (existsSync(this.options.tempDirectory))
+      await fs.rm(this.options.tempDirectory, { recursive: true, force: true })
   }
 }
 function resolveC8Options(options: CoverageC8Options, root: string) {

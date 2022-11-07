@@ -109,6 +109,23 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
     }
     return invalidated
   }
+
+  /**
+   * Return parsed source map based on inlined source map of the module
+   */
+  getSourceMap(id: string) {
+    const fsPath = this.normalizePath(id)
+    const cache = this.get(fsPath)
+    if (cache.map)
+      return cache.map
+    const mapString = cache?.code?.match(/\/\/# sourceMappingURL=data:application\/json;charset=utf-8;base64,(.+)/)?.[1]
+    if (mapString) {
+      const map = JSON.parse(Buffer.from(mapString, 'base64').toString('utf-8'))
+      cache.map = map
+      return map
+    }
+    return null
+  }
 }
 
 export class ViteNodeRunner {
@@ -134,6 +151,10 @@ export class ViteNodeRunner {
 
   async executeId(id: string) {
     return await this.cachedRequest(id, [])
+  }
+
+  getSourceMap(id: string) {
+    return this.moduleCache.getSourceMap(id)
   }
 
   /** @internal */
@@ -247,24 +268,21 @@ export class ViteNodeRunner {
         return Reflect.get(exports, p, receiver)
       },
       set(_, p, value) {
-        // Node also allows access of named exports via exports.default
-        // https://nodejs.org/api/esm.html#commonjs-namespaces
-        if (p !== 'default') {
-          if (!Reflect.has(exports, 'default'))
-            exports.default = {}
+        if (!Reflect.has(exports, 'default'))
+          exports.default = {}
 
-          // returns undefined, when accessing named exports, if default is not an object
-          // but is still present inside hasOwnKeys, this is Node behaviour for CJS
-          if (exports.default === null || typeof exports.default !== 'object') {
-            defineExport(exports, p, () => undefined)
-            return true
-          }
-
-          exports.default[p] = value
-          defineExport(exports, p, () => value)
+        // returns undefined, when accessing named exports, if default is not an object
+        // but is still present inside hasOwnKeys, this is Node behaviour for CJS
+        if (exports.default === null || typeof exports.default !== 'object') {
+          defineExport(exports, p, () => undefined)
           return true
         }
-        return Reflect.set(exports, p, value)
+
+        exports.default[p] = value
+        if (p !== 'default')
+          defineExport(exports, p, () => value)
+
+        return true
       },
     })
 
@@ -274,7 +292,7 @@ export class ViteNodeRunner {
     const moduleProxy = {
       set exports(value) {
         exportAll(cjsExports, value)
-        cjsExports.default = value
+        exports.default = value
       },
       get exports() {
         return cjsExports
@@ -296,7 +314,7 @@ export class ViteNodeRunner {
     // Be careful when changing this
     // changing context will change amount of code added on line :114 (vm.runInThisContext)
     // this messes up sourcemaps for coverage
-    // adjust `offset` variable in packages/vitest/src/integrations/coverage/c8.ts#86 if you do change this
+    // adjust `offset` variable in packages/coverage-c8/src/provider.ts#86 if you do change this
     const context = this.prepareContext({
       // esm transformed by Vite
       __vite_ssr_import__: request,
@@ -321,9 +339,12 @@ export class ViteNodeRunner {
       transformed = transformed.replace(/^\#\!.*/, s => ' '.repeat(s.length))
 
     // add 'use strict' since ESM enables it by default
-    const fn = vm.runInThisContext(`'use strict';async (${Object.keys(context).join(',')})=>{{${transformed}\n}}`, {
+    const codeDefinition = `'use strict';async (${Object.keys(context).join(',')})=>{{`
+    const code = `${codeDefinition}${transformed}\n}}`
+    const fn = vm.runInThisContext(code, {
       filename: fsPath,
       lineOffset: 0,
+      columnOffset: -codeDefinition.length,
     })
 
     await fn(...Object.values(context))

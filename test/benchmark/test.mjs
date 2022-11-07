@@ -13,6 +13,11 @@ await execa('npx', ['vitest', 'bench', 'base.bench', 'mode.bench', 'only.bench']
     error = e
   })
 
+if (error) {
+  console.error(error)
+  process.exit(1)
+}
+
 const benchResult = await readFile('./bench.json', 'utf-8')
 
 if (benchResult.includes('skip'))
@@ -25,10 +30,5 @@ if (skippedBenches.some(b => benchResult.includes(b)))
 const todoBenches = ['unimplemented suite', 'unimplemented test']
 if (todoBenches.some(b => benchResult.includes(b)))
   process.exit(1)
-
-if (error) {
-  console.error(error)
-  process.exit(1)
-}
 
 process.exit(0)

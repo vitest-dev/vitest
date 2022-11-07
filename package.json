@@ -1,9 +1,9 @@
 {
   "name": "@vitest/monorepo",
   "type": "module",
-  "version": "0.23.4",
+  "version": "0.24.5",
   "private": true,
-  "packageManager": "pnpm@7.12.0",
+  "packageManager": "pnpm@7.14.0",
   "description": "A blazing fast unit test framework powered by Vite",
   "scripts": {
     "ci": "ni && nr typecheck && nr lint && nr build && nr test:all",
@@ -16,7 +16,7 @@
     "docs:https-no-prefetch": "pnpm -C docs run preview-https-no-prefetch",
     "docs:examples": "esno scripts/update-examples.ts",
     "docs:contributors": "esno scripts/update-contributors.ts",
-    "lint": "eslint .",
+    "lint": "eslint --cache .",
     "lint:fix": "nr lint --fix",
     "release": "bumpp package.json packages/*/package.json --commit --push --tag && pnpm -r publish --access public",
     "test": "vitest --api -r test/core",
@@ -31,15 +31,15 @@
     "ui:test": "npm -C packages/ui run test:run"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^0.26.3",
-    "@antfu/ni": "^0.18.0",
-    "@rollup/plugin-alias": "^3.1.9",
-    "@rollup/plugin-commonjs": "^22.0.2",
+    "@antfu/eslint-config": "^0.27.0",
+    "@antfu/ni": "^0.18.2",
+    "@rollup/plugin-alias": "^4.0.2",
+    "@rollup/plugin-commonjs": "^23.0.2",
     "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^14.1.0",
     "@types/fs-extra": "^9.0.13",
-    "@types/lodash": "^4.14.185",
-    "@types/node": "^18.7.16",
+    "@types/lodash": "^4.14.186",
+    "@types/node": "^18.11.5",
     "@types/ws": "^8.5.3",
     "@vitest/browser": "workspace:*",
     "@vitest/coverage-c8": "workspace:*",
@@ -48,34 +48,34 @@
     "bumpp": "^8.2.1",
     "c8": "^7.12.0",
     "cross-env": "^7.0.3",
-    "esbuild": "^0.15.8",
-    "eslint": "^8.23.1",
+    "esbuild": "^0.15.12",
+    "eslint": "^8.26.0",
     "esno": "^0.16.3",
     "fast-glob": "^3.2.12",
     "if-node-version": "^1.1.1",
     "lint-staged": "^13.0.3",
-    "magic-string": "^0.26.3",
-    "node-fetch-native": "^0.1.4",
+    "magic-string": "^0.26.7",
+    "node-fetch-native": "^0.1.8",
     "npm-run-all": "^4.1.5",
-    "ohmyfetch": "^0.4.18",
+    "ohmyfetch": "^0.4.20",
     "pathe": "^0.2.0",
-    "pnpm": "7.12.0",
+    "pnpm": "7.14.0",
     "rimraf": "^3.0.2",
-    "rollup": "^2.79.0",
-    "rollup-plugin-dts": "^4.2.2",
+    "rollup": "^2.79.1",
+    "rollup-plugin-dts": "^4.2.3",
     "rollup-plugin-esbuild": "^4.10.1",
-    "rollup-plugin-license": "^2.8.1",
-    "simple-git-hooks": "^2.8.0",
+    "rollup-plugin-license": "^2.8.2",
+    "simple-git-hooks": "^2.8.1",
     "ts-node": "^10.9.1",
-    "tsup": "^6.2.3",
-    "typescript": "^4.8.3",
-    "vite": "^3.1.2",
+    "tsup": "^6.3.0",
+    "typescript": "^4.8.4",
+    "vite": "^3.1.8",
     "vitest": "workspace:*"
   },
   "pnpm": {
     "overrides": {
       "esbuild": "^0.14.47",
-      "vite": "^3.1.0",
+      "vite": "^3.2.0",
       "vitest": "workspace:*",
       "rollup": "^2.79.0"
     }
@@ -85,7 +85,7 @@
   },
   "lint-staged": {
     "*.{js,ts,tsx,vue,md}": [
-      "eslint --fix"
+      "eslint --cache --fix"
     ]
   }
 }

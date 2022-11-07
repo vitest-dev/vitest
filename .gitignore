@@ -19,5 +19,10 @@ bench/test/*/*/
 cypress/videos
 cypress/downloads
 cypress/screenshots
+packages/ui/cypress/videos
+packages/ui/cypress/downloads
+packages/ui/cypress/screenshots
 docs/public/user-avatars
 docs/public/sponsors
+.eslintcache
+

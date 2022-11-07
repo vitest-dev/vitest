@@ -81,7 +81,7 @@ Files to include in the test run, using glob pattern.
 ### exclude
 
 - **Type:** `string[]`
-- **Default:** `['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**']`
+- **Default:** `['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**', '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress}.config.*']`
 
 Files to exclude from the test run, using glob pattern.
 
@@ -349,7 +349,7 @@ Custom reporters for output. Reporters can be [a Reporter instance](https://gith
 - **Default:** `80`
 
 Truncate output diff lines up to `80` number of characters. You may wish to tune this,
-depending on you terminal window width.
+depending on your terminal window width.
 
 ### outputDiffLines
 
@@ -526,10 +526,17 @@ Used when `provider: 'c8'` is set. Coverage options are passed to [`c8`](https:/
 
 Used when `provider: 'istanbul'` is set.
 
+##### include
+
+- **Type:** `string[]`
+- **Default:** `['**']`
+
+List of files included in coverage as glob patterns
+
 ##### exclude
 
 - **Type:** `string[]`
-- **Default:** `[]`
+- **Default:** `['coverage/**', 'dist/**', 'packages/*/test{,s}/**', '**/*.d.ts', 'cypress/**', 'test{,s}/**', 'test{,-*}.{js,cjs,mjs,ts,tsx,jsx}', '**/*{.,-}test.{js,cjs,mjs,ts,tsx,jsx}', '**/*{.,-}spec.{js,cjs,mjs,ts,tsx,jsx}', '**/__tests__/**', '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress}.config.{js,cjs,mjs,ts}', '**/.{eslint,mocha,prettier}rc.{js,cjs,yml}']`
 
 List of files excluded from coverage as glob patterns.
 

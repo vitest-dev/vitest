@@ -1,5 +1,7 @@
 /* eslint-disable no-console */
-import type { ErrorPayload, FullReloadPayload, HMRPayload, PrunePayload, Update, UpdatePayload } from 'vite/types/hmrPayload'
+
+import type { HMRPayload, Update } from 'vite/types/hmrPayload'
+import type { CustomEventMap } from 'vite/types/customEvent'
 import c from 'picocolors'
 import createDebug from 'debug'
 import type { ViteNodeRunner } from '../client'
@@ -7,13 +9,6 @@ import type { HotContext } from '../types'
 import type { HMREmitter } from './emitter'
 
 const debugHmr = createDebug('vite-node:hmr')
-
-export interface CustomEventMap {
-  'vite:beforeUpdate': UpdatePayload
-  'vite:beforePrune': PrunePayload
-  'vite:beforeFullReload': FullReloadPayload
-  'vite:error': ErrorPayload
-}
 
 export type InferCustomEventPayload<T extends string> =
   T extends keyof CustomEventMap ? CustomEventMap[T] : any
@@ -200,9 +195,11 @@ export async function handleMessage(runner: ViteNodeRunner, emitter: HMREmitter,
       })
       break
     case 'full-reload':
+      notifyListeners(runner, 'vite:beforeFullReload', payload)
       reload(runner, files)
       break
     case 'prune':
+      notifyListeners(runner, 'vite:beforePrune', payload)
       payload.paths.forEach((path) => {
         const fn = maps.pruneMap.get(path)
         if (fn)
@@ -282,6 +279,7 @@ export function createHotContext(
     },
 
     invalidate() {
+      notifyListeners(runner, 'vite:invalidate', { path: ownerPath })
       return reload(runner, files)
     },
 

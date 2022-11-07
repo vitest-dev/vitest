@@ -18,8 +18,8 @@ export interface WorkerPool {
   close: () => Promise<void>
 }
 
-const workerPath = _url.pathToFileURL(resolve(distDir, './worker.mjs')).href
-const loaderPath = _url.pathToFileURL(resolve(distDir, './loader.mjs')).href
+const workerPath = _url.pathToFileURL(resolve(distDir, './worker.js')).href
+const loaderPath = _url.pathToFileURL(resolve(distDir, './loader.js')).href
 
 const suppressLoaderWarningsPath = resolve(rootDir, './suppress-warnings.cjs')
 
@@ -31,7 +31,7 @@ export function createPool(ctx: Vitest): WorkerPool {
   const maxThreads = ctx.config.maxThreads ?? threadsCount
   const minThreads = ctx.config.minThreads ?? threadsCount
 
-  const conditions = ctx.server.config.resolve.conditions?.flatMap(c => ['-C', c]) || []
+  const conditions = ctx.server.config.resolve.conditions?.flatMap(c => ['--conditions', c]) || []
 
   const options: TinypoolOptions = {
     filename: workerPath,

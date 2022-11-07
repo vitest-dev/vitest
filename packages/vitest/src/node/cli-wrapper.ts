@@ -7,7 +7,7 @@ import c from 'picocolors'
 import { execa } from 'execa'
 import { EXIT_CODE_RESTART } from '../constants'
 
-const ENTRY = new URL('./cli.mjs', import.meta.url)
+const ENTRY = new URL('./cli.js', import.meta.url)
 
 /** Arguments passed to Node before the script */
 const NODE_ARGS = [
@@ -59,6 +59,13 @@ async function main() {
         break
       }
     }
+  }
+
+  // if not specified, don't run through spawn,
+  // because it prints stderr messages in the wrong order compared to stdout
+  if (retries <= 0) {
+    await import('./cli')
+    return
   }
 
   const nodeArgs: string[] = []

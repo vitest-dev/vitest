@@ -14,13 +14,13 @@ export default defineConfig({
       'test/*.test.ts',
     ],
     exclude: [
-      'coverage-test/*.test.ts',
+      'coverage-test/**/*',
     ],
     coverage: {
       enabled: true,
       clean: true,
       all: true,
-      reporter: ['html', 'text', 'lcov'],
+      reporter: ['html', 'text', 'lcov', 'json'],
     },
   },
 })

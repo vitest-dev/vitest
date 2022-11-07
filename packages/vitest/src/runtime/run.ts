@@ -2,7 +2,7 @@ import { performance } from 'perf_hooks'
 import limit from 'p-limit'
 import type { BenchTask, Benchmark, BenchmarkResult, File, HookCleanupCallback, HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from '../types'
 import { vi } from '../integrations/vi'
-import { clearTimeout, createDefer, getFullName, getWorkerState, hasFailed, hasTests, isBrowser, isNode, isRunningInBenchmark, partitionSuiteChildren, setTimeout, shuffle } from '../utils'
+import { assertTypes, clearTimeout, createDefer, getFullName, getWorkerState, hasFailed, hasTests, isBrowser, isNode, isRunningInBenchmark, partitionSuiteChildren, setTimeout, shuffle } from '../utils'
 import { getState, setState } from '../integrations/chai/jest-expect'
 import { GLOBAL_EXPECT } from '../integrations/chai/constants'
 import { takeCoverageInsideWorker } from '../integrations/coverage'
@@ -10,6 +10,7 @@ import { getFn, getHooks } from './map'
 import { rpc } from './rpc'
 import { collectTests } from './collect'
 import { processError } from './error'
+import { setCurrentTest } from './test-state'
 
 async function importTinybench() {
   if (!globalThis.EventTarget)
@@ -84,6 +85,15 @@ async function sendTasksUpdate() {
   }
 }
 
+const callCleanupHooks = async (cleanups: HookCleanupCallback[]) => {
+  await Promise.all(cleanups.map(async (fn) => {
+    if (!fn)
+      return
+    assertTypes(fn, 'hook teardown', ['function'])
+    await fn()
+  }))
+}
+
 export async function runTest(test: Test) {
   if (test.mode !== 'run') {
     const { getSnapshotClient } = await import('../integrations/snapshot/chai')
@@ -105,6 +115,8 @@ export async function runTest(test: Test) {
   updateTask(test)
 
   clearModuleMocks()
+
+  setCurrentTest(test)
 
   if (isNode) {
     const { getSnapshotClient } = await import('../integrations/snapshot/chai')
@@ -157,7 +169,7 @@ export async function runTest(test: Test) {
 
     try {
       await callSuiteHook(test.suite, test, 'afterEach', [test.context, test.suite])
-      await Promise.all(beforeEachCleanups.map(i => i?.()))
+      await callCleanupHooks(beforeEachCleanups)
     }
     catch (e) {
       test.result.state = 'fail'
@@ -170,6 +182,9 @@ export async function runTest(test: Test) {
     // update retry info
     updateTask(test)
   }
+
+  if (test.result.state === 'fail')
+    await Promise.all(test.onFailed?.map(fn => fn(test.result!)) || [])
 
   // if test is marked to be failed, flip the result
   if (test.fails) {
@@ -185,6 +200,8 @@ export async function runTest(test: Test) {
 
   if (isBrowser && test.result.error)
     console.error(test.result.error.message, test.result.error.stackStr)
+
+  setCurrentTest(undefined)
 
   if (isNode) {
     const { getSnapshotClient } = await import('../integrations/snapshot/chai')
@@ -264,7 +281,7 @@ export async function runSuite(suite: Suite) {
       }
 
       await callSuiteHook(suite, suite, 'afterAll', [suite])
-      await Promise.all(beforeAllCleanups.map(i => i?.()))
+      await callCleanupHooks(beforeAllCleanups)
     }
     catch (e) {
       suite.result.state = 'fail'
@@ -360,7 +377,9 @@ async function runBenchmarkSuite(suite: Suite) {
         }
       })
       benchmark.task!.addEventListener('error', (e) => {
-        defer.reject(e)
+        const task = e.task
+        const _benchmark = benchmarkMap[task.name || '']
+        defer.reject(_benchmark ? task.result!.error : e)
       })
     })
 

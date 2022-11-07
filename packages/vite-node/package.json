@@ -1,6 +1,6 @@
 {
   "name": "vite-node",
-  "version": "0.23.4",
+  "version": "0.24.5",
   "description": "Vite as Node.js runtime",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -39,6 +39,11 @@
       "types": "./dist/hmr.d.ts",
       "require": "./dist/hmr.cjs",
       "import": "./dist/hmr.mjs"
+    },
+    "./source-map": {
+      "types": "./dist/source-map.d.ts",
+      "require": "./dist/source-map.cjs",
+      "import": "./dist/source-map.mjs"
     }
   },
   "main": "./dist/index.mjs",
@@ -66,19 +71,21 @@
   "scripts": {
     "build": "rimraf dist && rollup -c",
     "dev": "rollup -c --watch --watch.include=src/** -m inline",
-    "prepublishOnly": "nr build",
+    "prepublishOnly": "pnpm build",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "debug": "^4.3.4",
-    "mlly": "^0.5.14",
+    "mlly": "^0.5.16",
     "pathe": "^0.2.0",
-    "vite": "^2.9.12 || ^3.0.0-0"
+    "source-map-support": "^0.5.21",
+    "vite": "^3.0.0"
   },
   "devDependencies": {
     "@types/debug": "^4.1.7",
+    "@types/source-map-support": "^0.5.6",
     "cac": "^6.7.14",
     "picocolors": "^1.0.0",
-    "rollup": "^2.79.0"
+    "rollup": "^2.79.1"
   }
 }

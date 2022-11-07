@@ -7,6 +7,7 @@ import { ViteNodeRunner } from './client'
 import type { ViteNodeServerOptions } from './types'
 import { toArray } from './utils'
 import { createHotContext, handleMessage, viteNodeHmrPlugin } from './hmr'
+import { installSourcemapsSupport } from './source-map'
 
 const cli = cac('vite-node')
 
@@ -58,6 +59,10 @@ async function run(files: string[], options: CliOptions = {}) {
 
   const node = new ViteNodeServer(server, serverOptions)
 
+  installSourcemapsSupport({
+    getSourceMap: source => node.getSourceMap(source),
+  })
+
   const runner = new ViteNodeRunner({
     root: server.config.root,
     base: server.config.base,
@@ -84,6 +89,12 @@ async function run(files: string[], options: CliOptions = {}) {
   server.emitter?.on('message', (payload) => {
     handleMessage(runner, server.emitter, files, payload)
   })
+
+  if (options.watch) {
+    process.on('uncaughtException', (err) => {
+      console.error(c.red('[vite-node] Failed to execute file: \n'), err)
+    })
+  }
 }
 
 function parseServerOptions(serverOptions: ViteNodeServerOptionsCLI): ViteNodeServerOptions {

@@ -1,44 +1,12 @@
-import { SourceMapConsumer } from 'source-map-js'
-import type { RawSourceMap } from 'vite-node'
 import type { ErrorWithDiff, ParsedStack, Position } from '../types'
-import type { Vitest } from '../node'
 import { notNullish, slash } from './base'
 
 export const lineSplitRE = /\r?\n/
 
-export function getOriginalPos(map: RawSourceMap | null | undefined, { line, column }: Position): Promise<Position | null> {
-  return new Promise((resolve) => {
-    if (!map)
-      return resolve(null)
-
-    const consumer = new SourceMapConsumer(map)
-    const pos = consumer.originalPositionFor({ line, column })
-    if (pos.line != null && pos.column != null)
-      resolve(pos as Position)
-
-    else
-      resolve(null)
-  })
-}
-
-export async function interpretSourcePos(stackFrames: ParsedStack[], ctx: Vitest): Promise<ParsedStack[]> {
-  for (const frame of stackFrames) {
-    if ('sourcePos' in frame)
-      continue
-    const transformResult = ctx.server.moduleGraph.getModuleById(frame.file)?.ssrTransformResult
-    if (!transformResult)
-      continue
-    const sourcePos = await getOriginalPos(transformResult.map as any as RawSourceMap | undefined, frame)
-    if (sourcePos)
-      frame.sourcePos = sourcePos
-  }
-
-  return stackFrames
-}
-
 const stackIgnorePatterns = [
   'node:internal',
   '/vitest/dist/',
+  '/vitest/src/',
   '/node_modules/chai/',
   '/node_modules/tinypool/',
   '/node_modules/tinyspy/',
@@ -57,6 +25,9 @@ function extractLocation(urlLike: string) {
 }
 
 export function parseStacktrace(e: ErrorWithDiff, full = false): ParsedStack[] {
+  if (!e)
+    return []
+
   if (e.stacks)
     return e.stacks
 

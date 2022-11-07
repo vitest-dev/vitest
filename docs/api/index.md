@@ -393,7 +393,7 @@ When you use `test` or `bench` in the top level of file, they are collected as p
   describe('numberToCurrency', () => {
     describe('given an invalid number', () => {
       test('composed of non-numbers to throw error', () => {
-        expect(() => numberToCurrency('abc')).toThrow()
+        expect(() => numberToCurrency('abc')).toThrowError()
       })
     })
 
@@ -868,7 +868,7 @@ When you use `test` or `bench` in the top level of file, they are collected as p
   ```
 
   :::warning
-  A _deep equality_ will not be performed for `Error` objects. To test if something was thrown, use [`toThrow`](#tothrow) assertion.
+  A _deep equality_ will not be performed for `Error` objects. To test if something was thrown, use [`toThrowError`](#tothrowerror) assertion.
   :::
 
 ### toStrictEqual
@@ -2086,7 +2086,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
   setTimeout(() => console.log(++i))
   const interval = setInterval(() => {
     console.log(++i)
-    if (i === 2)
+    if (i === 3)
       clearInterval(interval)
 
   }, 50)

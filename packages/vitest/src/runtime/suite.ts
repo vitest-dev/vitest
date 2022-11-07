@@ -12,31 +12,11 @@ export const test = createTest(
     getCurrentSuite().test.fn.call(this, name, fn, options)
   },
 )
-
 export const bench = createBenchmark(
   function (name, fn: BenchFunction = noop, options: BenchOptions = {}) {
     getCurrentSuite().benchmark.fn.call(this, name, fn, options)
   },
 )
-
-function formatTitle(template: string, items: any[], idx: number) {
-  if (template.includes('%#')) {
-    // '%#' match index of the test case
-    template = template
-      .replace(/%%/g, '__vitest_escaped_%__')
-      .replace(/%#/g, `${idx}`)
-      .replace(/__vitest_escaped_%__/g, '%%')
-  }
-
-  const count = template.split('%').length - 1
-  let formatted = util.format(template, ...items.slice(0, count))
-  if (isObject(items[0])) {
-    formatted = formatted.replace(/\$([$\w_]+)/g, (_, key) => {
-      return items[0][key]
-    })
-  }
-  return formatted
-}
 
 // alias
 export const describe = suite
@@ -44,7 +24,6 @@ export const it = test
 
 const workerState = getWorkerState()
 
-// implementations
 export const defaultSuite = workerState.config.sequence.shuffle
   ? suite.shuffle('')
   : suite('')
@@ -68,6 +47,7 @@ export function createSuiteHooks() {
   }
 }
 
+// implementations
 function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, mode: RunMode, concurrent?: boolean, shuffle?: boolean, suiteOptions?: number | TestOptions) {
   const tasks: (Benchmark | Test | Suite | SuiteCollector)[] = []
   const factoryQueue: (Test | Suite | SuiteCollector)[] = []
@@ -200,12 +180,15 @@ function createSuite() {
     return createSuiteCollector(name, factory, mode, this.concurrent, this.shuffle, options)
   }
 
-  suiteFn.each = function<T>(this: { withContext: () => SuiteAPI }, cases: ReadonlyArray<T>) {
+  suiteFn.each = function <T>(this: { withContext: () => SuiteAPI }, cases: ReadonlyArray<T>) {
     const suite = this.withContext()
     return (name: string, fn: (...args: T[]) => void, options?: number | TestOptions) => {
+      const arrayOnlyCases = cases.every(Array.isArray)
       cases.forEach((i, idx) => {
         const items = Array.isArray(i) ? i : [i]
-        suite(formatTitle(name, items, idx), () => fn(...items), options)
+        arrayOnlyCases
+          ? suite(formatTitle(name, items, idx), () => fn(...items), options)
+          : suite(formatTitle(name, items, idx), () => fn(i), options)
       })
     }
   }
@@ -233,9 +216,12 @@ function createTest(fn: (
     const test = this.withContext()
 
     return (name: string, fn: (...args: T[]) => void, options?: number | TestOptions) => {
+      const arrayOnlyCases = cases.every(Array.isArray)
       cases.forEach((i, idx) => {
         const items = Array.isArray(i) ? i : [i]
-        test(formatTitle(name, items, idx), () => fn(...items), options)
+        arrayOnlyCases
+          ? test(formatTitle(name, items, idx), () => fn(...items), options)
+          : test(formatTitle(name, items, idx), () => fn(i), options)
       })
     }
   }
@@ -266,4 +252,23 @@ function createBenchmark(fn: (
   benchmark.runIf = (condition: any) => (condition ? benchmark : benchmark.skip) as BenchmarkAPI
 
   return benchmark as BenchmarkAPI
+}
+
+function formatTitle(template: string, items: any[], idx: number) {
+  if (template.includes('%#')) {
+    // '%#' match index of the test case
+    template = template
+      .replace(/%%/g, '__vitest_escaped_%__')
+      .replace(/%#/g, `${idx}`)
+      .replace(/__vitest_escaped_%__/g, '%%')
+  }
+
+  const count = template.split('%').length - 1
+  let formatted = util.format(template, ...items.slice(0, count))
+  if (isObject(items[0])) {
+    formatted = formatted.replace(/\$([$\w_]+)/g, (_, key) => {
+      return items[0][key]
+    })
+  }
+  return formatted
 }

@@ -10,7 +10,7 @@ title: Command Line Interface | Guide
 
 Start Vitest in the current directory. Will enter the watch mode in development environment and run mode in CI automatically.
 
-You can pass a addition argument as the filter of the tests files to run. For example:
+You can pass an additional argument as the filter of the test files to run. For example:
 
 ```bash
 vitest foobar
@@ -24,7 +24,7 @@ Perform a single run without watch mode.
 
 ### `vitest watch`
 
-Run all test suites but watch for changes and rerun tests when they change. Same as calling `vitest` without a command. Will fallback to `vitest run` in CI.
+Run all test suites but watch for changes and rerun tests when they change. Same as calling `vitest` without an argument. Will fallback to `vitest run` in CI.
 
 ### `vitest dev`
 
@@ -76,6 +76,8 @@ vitest related /src/index.ts /src/hello-world.js
 | `--shard <shard>` | Execute tests in a specified shard |
 | `--sequence` | Define in what order to run tests. Use [cac's dot notation] to specify options (for example, use `--sequence.shuffle` to run tests in random order) |
 | `--no-color` | Removes colors from the console output |
+| `--inspect` | Enables Node.js inspector |
+| `--inspect-brk` | Enables Node.js inspector with break |
 | `-h, --help` | Display available CLI options |
 
 ### changed
