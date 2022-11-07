@@ -2,7 +2,7 @@ import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import { relative } from 'pathe'
 import { configDefaults } from '../../defaults'
 import type { ResolvedConfig, UserConfig } from '../../types'
-import { deepMerge, ensurePackageInstalled, notNullish } from '../../utils'
+import { deepMerge, ensurePackageInstalled, notNullish, removeUndefinedValues } from '../../utils'
 import { resolveApiConfig } from '../config'
 import { Vitest } from '../core'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
@@ -11,14 +11,6 @@ import { GlobalSetupPlugin } from './globalSetup'
 import { MocksPlugin } from './mock'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { CoverageTransform } from './coverageTransform'
-
-function removeUndefinedValues(obj: Record<string, any>) {
-  for (const key in obj) {
-    if (obj[key] === undefined)
-      delete obj[key]
-  }
-  return obj
-}
 
 export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('test')): Promise<VitePlugin[]> {
   const getRoot = () => ctx.config?.root || options.root || process.cwd()
@@ -44,7 +36,12 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
         // preliminary merge of options to be able to create server options for vite
         // however to allow vitest plugins to modify vitest config values
         // this is repeated in configResolved where the config is final
-        const preOptions = deepMerge({}, configDefaults, options, removeUndefinedValues(viteConfig.test) ?? {})
+        const preOptions = deepMerge(
+          {},
+          configDefaults,
+          options,
+          removeUndefinedValues(viteConfig.test ?? {}),
+        )
         preOptions.api = resolveApiConfig(preOptions)
 
         if (viteConfig.define) {
