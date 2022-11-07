@@ -47,6 +47,15 @@
     // TODO: vite-plugin-pwa issue
     "esno",
     // user can install any version
-    "vite"
+    "vite",
+    // TODO: wait for Vite 4 to upgrade Rollup
+    "rollup",
+    "@rollup/plugin-alias",
+    "@rollup/plugin-commonjs",
+    "@rollup/plugin-json",
+    "@rollup/plugin-node-resolve",
+    "rollup-plugin-dts",
+    "rollup-plugin-esbuild",
+    "rollup-plugin-license"
   ]
 }
