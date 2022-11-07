@@ -1,7 +1,7 @@
 {
   "name": "@vitest/browser",
   "type": "module",
-  "version": "0.24.5",
+  "version": "0.25.0",
   "description": "Browser running for Vitest",
   "repository": {
     "type": "git",
