@@ -3,6 +3,11 @@ import { util as ChaiUtil } from 'chai'
 import { stringify } from '../integrations/chai/jest-matcher-utils'
 import { deepClone, getType } from '../utils'
 
+const IS_RECORD_SYMBOL = '@@__IMMUTABLE_RECORD__@@'
+const IS_COLLECTION_SYMBOL = '@@__IMMUTABLE_ITERABLE__@@'
+
+const isImmutable = (v: any) => v && (v[IS_COLLECTION_SYMBOL] || v[IS_RECORD_SYMBOL])
+
 const OBJECT_PROTO = Object.getPrototypeOf({})
 
 function getUnserializableMessage(err: unknown) {
@@ -19,8 +24,13 @@ export function serializeError(val: any, seen = new WeakMap()): any {
     return val
   if (typeof val === 'function')
     return `Function<${val.name}>`
+  if (typeof val === 'symbol')
+    return val.toString()
   if (typeof val !== 'object')
     return val
+  // cannot serialize immutables as immutables
+  if (isImmutable(val))
+    return serializeError(val.toJSON(), seen)
   if (val instanceof Promise || (val.constructor && val.constructor.prototype === 'AsyncFunction'))
     return 'Promise'
   if (typeof Element !== 'undefined' && val instanceof Element)
@@ -53,10 +63,10 @@ export function serializeError(val: any, seen = new WeakMap()): any {
     let obj = val
     while (obj && obj !== OBJECT_PROTO) {
       Object.getOwnPropertyNames(obj).forEach((key) => {
-        if ((key in clone))
+        if (key in clone)
           return
         try {
-          clone[key] = serializeError(obj[key], seen)
+          clone[key] = serializeError(val[key], seen)
         }
         catch (err) {
           // delete in case it has a setter from prototype that might throw

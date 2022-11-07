@@ -1,5 +1,8 @@
+import { existsSync } from 'fs'
 import { describe, expect, it, vi } from 'vitest'
 import { isWindows, slash, toFilePath } from '../../../packages/vite-node/src/utils'
+
+vi.mock('fs')
 
 describe('toFilePath', () => {
   // the following tests will work incorrectly on unix systems
@@ -37,8 +40,10 @@ describe('toFilePath', () => {
       const expected = '/path/to/project/node_modules/pkg/file.js'
 
       const processSpy = vi.spyOn(process, 'cwd').mockReturnValue(root)
+      const existsSpy = vi.mocked(existsSync).mockReturnValue(true)
       const filePath = toFilePath(id, root)
       processSpy.mockRestore()
+      existsSpy.mockRestore()
 
       expect(slash(filePath)).toEqual(expected)
     })
@@ -49,8 +54,11 @@ describe('toFilePath', () => {
       const expected = '/path/to/project/node_modules/pkg/file.js'
 
       const processSpy = vi.spyOn(process, 'cwd').mockReturnValue(root)
+      const existsSpy = vi.mocked(existsSync).mockReturnValue(true)
       const filePath = toFilePath(id, root)
       processSpy.mockRestore()
+      existsSpy.mockRestore()
+
       expect(slash(filePath)).toEqual(expected)
     })
 
@@ -60,8 +68,10 @@ describe('toFilePath', () => {
       const expected = '/root/node_modules/pkg/file.js'
 
       const processSpy = vi.spyOn(process, 'cwd').mockReturnValue(root)
+      const existsSpy = vi.mocked(existsSync).mockReturnValue(true)
       const filePath = toFilePath(id, root)
       processSpy.mockRestore()
+      existsSpy.mockRestore()
 
       expect(slash(filePath)).toEqual(expected)
     })
@@ -72,8 +82,10 @@ describe('toFilePath', () => {
       const expected = '/root/node_modules/pkg/file.js'
 
       const processSpy = vi.spyOn(process, 'cwd').mockReturnValue(root)
+      const existsSpy = vi.mocked(existsSync).mockReturnValue(true)
       const filePath = toFilePath(id, root)
       processSpy.mockRestore()
+      existsSpy.mockRestore()
 
       expect(slash(filePath)).toEqual(expected)
     })
@@ -84,10 +96,25 @@ describe('toFilePath', () => {
       const expected = '/root/path/to/file.js'
 
       const processSpy = vi.spyOn(process, 'cwd').mockReturnValue(root)
+      const existsSpy = vi.mocked(existsSync).mockReturnValue(true)
       const filePath = toFilePath(id, root)
       processSpy.mockRestore()
+      existsSpy.mockRestore()
 
       expect(slash(filePath)).toEqual(expected)
+    })
+
+    it('unix with sibling path', () => {
+      const root = '/path/to/first/package'
+      const id = '/path/to/second/package/file.js'
+
+      const processSpy = vi.spyOn(process, 'cwd').mockReturnValue(root)
+      const existsSpy = vi.mocked(existsSync).mockReturnValue(false)
+      const filePath = toFilePath(id, root)
+      processSpy.mockRestore()
+      existsSpy.mockRestore()
+
+      expect(slash(filePath)).toEqual(id)
     })
   }
 })

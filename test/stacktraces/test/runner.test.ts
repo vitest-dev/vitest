@@ -31,6 +31,6 @@ describe('stacktraces should respect sourcemaps', async () => {
       const index = lines.findIndex(val => val.includes(`${file}:`))
       const msg = lines.slice(index, index + 8).join('\n')
       expect(msg).toMatchSnapshot(file)
-    }, 10000)
+    }, 30000)
   }
 })

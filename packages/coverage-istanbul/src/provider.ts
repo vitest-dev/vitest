@@ -79,6 +79,8 @@ export class IstanbulCoverageProvider implements CoverageProvider {
       return
 
     const sourceMap = pluginCtx.getCombinedSourcemap()
+    sourceMap.sources = sourceMap.sources.map(removeQueryParameters)
+
     const code = this.instrumenter.instrumentSync(sourceCode, id, sourceMap as any)
     const map = this.instrumenter.lastSourceMap() as any
 
@@ -105,6 +107,8 @@ export class IstanbulCoverageProvider implements CoverageProvider {
 
     if (this.options.all)
       await this.includeUntestedFiles(mergedCoverage)
+
+    includeImplicitElseBranches(mergedCoverage)
 
     const sourceMapStore = libSourceMaps.createSourceMapStore()
     const coverageMap: CoverageMap = await sourceMapStore.transformCoverage(mergedCoverage)
@@ -226,4 +230,54 @@ function resolveIstanbulOptions(options: CoverageIstanbulOptions, root: string) 
   }
 
   return resolved as ResolvedCoverageOptions & { provider: 'istanbul' }
+}
+
+/**
+ * Remove possible query parameters from filenames
+ * - From `/src/components/Header.component.ts?vue&type=script&src=true&lang.ts`
+ * - To `/src/components/Header.component.ts`
+ */
+function removeQueryParameters(filename: string) {
+  return filename.split('?')[0]
+}
+
+/**
+ * Work-around for #1887 and #2239 while waiting for https://github.com/istanbuljs/istanbuljs/pull/706
+ *
+ * Goes through all files in the coverage map and checks if branchMap's have
+ * if-statements with implicit else. When finds one, copies source location of
+ * the if-statement into the else statement.
+ */
+function includeImplicitElseBranches(coverageMap: CoverageMap) {
+  for (const file of coverageMap.files()) {
+    const fileCoverage = coverageMap.fileCoverageFor(file)
+
+    for (const branchMap of Object.values(fileCoverage.branchMap)) {
+      if (branchMap.type === 'if') {
+        const lastIndex = branchMap.locations.length - 1
+
+        if (lastIndex > 0) {
+          const elseLocation = branchMap.locations[lastIndex]
+
+          if (elseLocation && isEmptyCoverageRange(elseLocation)) {
+            const ifLocation = branchMap.locations[0]
+
+            elseLocation.start = { ...ifLocation.start }
+            elseLocation.end = { ...ifLocation.end }
+          }
+        }
+      }
+    }
+  }
+}
+
+function isEmptyCoverageRange(range: libCoverage.Range) {
+  return (
+    range.start === undefined
+    || range.start.line === undefined
+    || range.start.column === undefined
+    || range.end === undefined
+    || range.end.line === undefined
+    || range.end.column === undefined
+  )
 }

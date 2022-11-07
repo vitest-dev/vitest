@@ -1,4 +1,5 @@
 import { fileURLToPath, pathToFileURL } from 'url'
+import { existsSync } from 'fs'
 import { relative, resolve } from 'pathe'
 import type { TransformResult } from 'vite'
 import { isNodeBuiltin } from 'mlly'
@@ -57,31 +58,26 @@ export function pathFromRoot(root: string, filename: string) {
     return filename
 
   const relativePath = relative(root, filename)
-  // foo.js -> /foo.js
-  if (!relativePath.startsWith('/') && !relativePath.startsWith('.'))
-    return `/${relativePath}`
 
-  let index = 0
-  for (const char of relativePath) {
-    // ../../foo.js
-    //      ^ returns from here -> /foo.js
-    if (char !== '.' && char !== '/')
-      return relativePath.slice(index - 1)
+  const segments = relativePath.split('/')
+  const startIndex = segments.findIndex(segment => segment !== '..' && segment !== '.')
 
-    index++
-  }
-
-  return relativePath
+  return `/${segments.slice(startIndex).join('/')}`
 }
 
 export function toFilePath(id: string, root: string): string {
-  let absolute = id.startsWith('/@fs/')
-    ? id.slice(4)
-    : id.startsWith(root)
-      ? id
-      : id.startsWith('/')
-        ? resolve(root, id.slice(1))
-        : id
+  let absolute = (() => {
+    if (id.startsWith('/@fs/'))
+      return id.slice(4)
+    if (!id.startsWith(root) && id.startsWith('/')) {
+      const resolved = resolve(root, id.slice(1))
+      // The resolved path can have query values. Remove them before checking
+      // the file path.
+      if (existsSync(resolved.replace(/\?.*$/, '')))
+        return resolved
+    }
+    return id
+  })()
 
   if (absolute.startsWith('//'))
     absolute = absolute.slice(1)

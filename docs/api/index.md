@@ -430,7 +430,7 @@ When you use `test` or `bench` in the top level of file, they are collected as p
   describe('numberToCurrency', () => {
     describe('given an invalid number', () => {
       test('composed of non-numbers to throw error', () => {
-        expect(() => numberToCurrency('abc')).toThrow()
+        expect(() => numberToCurrency('abc')).toThrowError()
       })
     })
 
@@ -921,7 +921,7 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
   ```
 
   :::warning
-  A _deep equality_ will not be performed for `Error` objects. To test if something was thrown, use [`toThrow`](#tothrow) assertion.
+  A _deep equality_ will not be performed for `Error` objects. To test if something was thrown, use [`toThrowError`](#tothrowerror) assertion.
   :::
 
 ### toStrictEqual
