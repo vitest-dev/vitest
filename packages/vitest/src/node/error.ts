@@ -46,8 +46,6 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
 
   const stacks = parseStacktrace(e, fullStack)
 
-  await interpretSourcePos(stacks, ctx)
-
   const nearest = error instanceof TypeCheckError
     ? error.stacks[0]
     : stacks.find(stack =>
