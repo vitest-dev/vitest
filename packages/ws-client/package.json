@@ -44,6 +44,6 @@
     "ws": "^8.11.0"
   },
   "devDependencies": {
-    "rollup": "^3.2.5"
+    "rollup": "^2.79.1"
   }
 }

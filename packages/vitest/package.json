@@ -115,7 +115,7 @@
     "tinybench": "^2.3.1",
     "tinypool": "^0.3.0",
     "tinyspy": "^1.0.2",
-    "vite": "^3.2.3"
+    "vite": "^3.0.0"
   },
   "devDependencies": {
     "@antfu/install-pkg": "^0.1.1",
@@ -151,7 +151,7 @@
     "pkg-types": "^0.3.6",
     "pretty-format": "^27.5.1",
     "prompts": "^2.4.2",
-    "rollup": "^3.2.5",
+    "rollup": "^2.79.1",
     "strip-ansi": "^7.0.1",
     "typescript": "^4.8.4",
     "vite-node": "workspace:*",

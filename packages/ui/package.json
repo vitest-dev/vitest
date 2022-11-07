@@ -58,7 +58,7 @@
     "flatted": "^3.2.7",
     "floating-vue": "^2.0.0-y.0",
     "picocolors": "^1.0.0",
-    "rollup": "^3.2.5",
+    "rollup": "^2.79.1",
     "splitpanes": "^3.1.5",
     "unocss": "^0.46.3",
     "unplugin-auto-import": "^0.11.4",
