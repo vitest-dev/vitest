@@ -9,13 +9,6 @@ test.each([
 })
 
 test.each([
-  null,
-  [null],
-])('null is null', (value) => {
-  expect(value).toBe(null)
-})
-
-test.each([
   ['string', true],
   ['string', false],
 ])('can be parsed', (a, b) => {
@@ -135,4 +128,44 @@ describe('context with each - concurrent', () => {
       expect(number1 + number2).toBe(number3)
     })
   })
+})
+
+describe('not all arguments are array describe.each', () => {
+  const results = [null, [null]]
+  let i = 0
+
+  describe.each([null, [null]])('null is null', (value) => {
+    test('null is null', () => {
+      expect(value).toEqual(results[i++])
+    })
+  })
+})
+
+describe('not all arguments are array test.each', () => {
+  const results = [
+    null,
+    [null],
+  ]
+  let i = 0
+
+  test.each([
+    null,
+    [null],
+  ])('matches results', (value) => {
+    expect(value).toEqual(results[i++])
+  })
+})
+
+test.each([
+  null,
+])('value is null', (value) => {
+  expect(value).toBeNull()
+})
+
+test.each([
+  [null, null],
+  [null, null],
+])('if all cases are arrays of equal length, treats array elements as arguments', (value1, value2) => {
+  expect(value1).toBeNull()
+  expect(value2).toBeNull()
 })

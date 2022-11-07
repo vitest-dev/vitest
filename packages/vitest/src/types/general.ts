@@ -72,6 +72,7 @@ export interface ErrorWithDiff extends Error {
   expected?: any
   operator?: string
   type?: string
+  frame?: string
 }
 
 export interface ModuleGraphData {

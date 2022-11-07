@@ -8,7 +8,6 @@ import type { ModuleNode } from 'vite'
 import { API_PATH } from '../constants'
 import type { Vitest } from '../node'
 import type { File, ModuleGraphData, Reporter, TaskResultPack, UserConsoleLog } from '../types'
-import { interpretSourcePos, parseStacktrace } from '../utils/source-map'
 import type { TransformResultWithSource, WebSocketEvents, WebSocketHandlers } from './types'
 
 export function setup(ctx: Vitest) {
@@ -153,11 +152,6 @@ class WebSocketReporter implements Reporter {
   async onTaskUpdate(packs: TaskResultPack[]) {
     if (this.clients.size === 0)
       return
-
-    await Promise.all(packs.map(async (i) => {
-      if (i[1]?.error)
-        await interpretSourcePos(parseStacktrace(i[1].error as any), this.ctx)
-    }))
 
     this.clients.forEach((client) => {
       client.onTaskUpdate?.(packs)

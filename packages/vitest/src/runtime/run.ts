@@ -10,6 +10,7 @@ import { getFn, getHooks } from './map'
 import { rpc } from './rpc'
 import { collectTests } from './collect'
 import { processError } from './error'
+import { setCurrentTest } from './test-state'
 
 async function importTinybench() {
   if (!globalThis.EventTarget)
@@ -115,6 +116,8 @@ export async function runTest(test: Test) {
 
   clearModuleMocks()
 
+  setCurrentTest(test)
+
   if (isNode) {
     const { getSnapshotClient } = await import('../integrations/snapshot/chai')
     await getSnapshotClient().setTest(test)
@@ -180,6 +183,9 @@ export async function runTest(test: Test) {
     updateTask(test)
   }
 
+  if (test.result.state === 'fail')
+    await Promise.all(test.onFailed?.map(fn => fn(test.result!)) || [])
+
   // if test is marked to be failed, flip the result
   if (test.fails) {
     if (test.result.state === 'pass') {
@@ -194,6 +200,8 @@ export async function runTest(test: Test) {
 
   if (isBrowser && test.result.error)
     console.error(test.result.error.message, test.result.error.stackStr)
+
+  setCurrentTest(undefined)
 
   if (isNode) {
     const { getSnapshotClient } = await import('../integrations/snapshot/chai')

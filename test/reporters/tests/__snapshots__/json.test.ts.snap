@@ -10,7 +10,7 @@ exports[`json reporter > generates correct report 1`] = `
   ],
   "fullName": " should fail",
   "location": {
-    "column": 12,
+    "column": 13,
     "line": 6,
   },
   "status": "failed",

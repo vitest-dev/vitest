@@ -66,3 +66,11 @@ bench.only(
   },
   { iterations: 1, time: 0 },
 )
+
+bench.only(
+  'visited2',
+  () => {
+    assert.deepEqual(run, [true, true, true, true, true])
+  },
+  { iterations: 1, time: 0 },
+)
