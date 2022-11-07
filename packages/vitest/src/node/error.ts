@@ -4,7 +4,7 @@ import { join, normalize, relative } from 'pathe'
 import c from 'picocolors'
 import cliTruncate from 'cli-truncate'
 import type { ErrorWithDiff, ParsedStack, Position } from '../types'
-import { interpretSourcePos, lineSplitRE, parseStacktrace, posToNumber } from '../utils/source-map'
+import { lineSplitRE, parseStacktrace, posToNumber } from '../utils/source-map'
 import { F_POINTER } from '../utils/figures'
 import { stringify } from '../integrations/chai/jest-matcher-utils'
 import type { Vitest } from './core'
@@ -44,8 +44,6 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
   }
 
   const stacks = parseStacktrace(e, fullStack)
-
-  await interpretSourcePos(stacks, ctx)
 
   const nearest = stacks.find(stack =>
     ctx.server.moduleGraph.getModuleById(stack.file)

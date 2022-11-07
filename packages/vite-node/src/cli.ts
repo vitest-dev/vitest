@@ -7,6 +7,7 @@ import { ViteNodeRunner } from './client'
 import type { ViteNodeServerOptions } from './types'
 import { toArray } from './utils'
 import { createHotContext, handleMessage, viteNodeHmrPlugin } from './hmr'
+import { installSourcemapsSupport } from './source-map'
 
 const cli = cac('vite-node')
 
@@ -57,6 +58,10 @@ async function run(files: string[], options: CliOptions = {}) {
   await server.pluginContainer.buildStart({})
 
   const node = new ViteNodeServer(server, serverOptions)
+
+  installSourcemapsSupport({
+    getSourceMap: source => node.getSourceMap(source),
+  })
 
   const runner = new ViteNodeRunner({
     root: server.config.root,

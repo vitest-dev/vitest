@@ -73,6 +73,14 @@ export class ViteNodeServer {
     return this.server.pluginContainer.resolveId(id, importer, { ssr: mode === 'ssr' })
   }
 
+  getSourceMap(source: string) {
+    const fetchResult = this.fetchCache.get(source)?.result
+    if (fetchResult?.map)
+      return fetchResult.map
+    const ssrTransformResult = this.server.moduleGraph.getModuleById(source)?.ssrTransformResult
+    return (ssrTransformResult?.map || null) as unknown as RawSourceMap | null
+  }
+
   async fetchModule(id: string): Promise<FetchResult> {
     // reuse transform for concurrent requests
     if (!this.fetchPromiseMap.has(id)) {
