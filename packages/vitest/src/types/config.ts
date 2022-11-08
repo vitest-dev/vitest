@@ -14,6 +14,7 @@ export type BuiltinEnvironment = 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime'
 // Record is used, so user can get intellisense for builtin environments, but still allow custom environments
 export type VitestEnvironment = BuiltinEnvironment | (string & Record<never, never>)
 export type CSSModuleScopeStrategy = 'stable' | 'scoped' | 'non-scoped'
+export type SequenceHooks = 'stack' | 'list' | 'parallel'
 
 export type ApiConfig = Pick<CommonServerOptions, 'port' | 'strictPort' | 'host'>
 
@@ -430,6 +431,14 @@ export interface InlineConfig {
      * @default Date.now()
      */
     seed?: number
+    /**
+     * Defines how hooks should be ordered
+     * - `stack` will order "after" hooks in reverse order, "before" hooks will run sequentially
+     * - `list` will order hooks in the order they are defined
+     * - `parallel` will run hooks in a single group in parallel
+     * @default 'parallel'
+     */
+    hooks?: SequenceHooks
   }
 
   /**
@@ -552,6 +561,7 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
 
   sequence: {
     sequencer: TestSequencerConstructor
+    hooks: SequenceHooks
     shuffle?: boolean
     seed?: number
   }
@@ -569,4 +579,4 @@ export type RuntimeConfig = Pick<
   | 'restoreMocks'
   | 'fakeTimers'
   | 'maxConcurrency'
->
+> & { sequence?: { hooks?: SequenceHooks } }
