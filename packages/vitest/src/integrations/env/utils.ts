@@ -1,15 +1,5 @@
 import { KEYS } from './jsdom-keys'
 
-const allowRewrite = [
-  'Event',
-  'EventTarget',
-  'MessageEvent',
-  // implemented in Node 18
-  'ArrayBuffer',
-  // implemented in Node 18
-  'Blob',
-]
-
 const skipKeys = [
   'window',
   'self',
@@ -23,7 +13,7 @@ export function getWindowKeys(global: any, win: any) {
       if (skipKeys.includes(k))
         return false
       if (k in global)
-        return allowRewrite.includes(k)
+        return KEYS.includes(k)
 
       return true
     }))
@@ -47,9 +37,7 @@ export function populateGlobal(global: any, win: any, options: PopulateOptions =
   const { bindFunctions = false } = options
   const keys = getWindowKeys(global, win)
 
-  const originals = new Map<string | symbol, any>(
-    allowRewrite.filter(key => key in global).map(key => [key, global[key]]),
-  )
+  const originals = new Map<string | symbol, any>()
 
   const overrideObject = new Map<string | symbol, any>()
   for (const key of keys) {
@@ -57,6 +45,9 @@ export function populateGlobal(global: any, win: any, options: PopulateOptions =
       && typeof win[key] === 'function'
       && !isClassLikeName(key)
       && win[key].bind(win)
+
+    if (KEYS.includes(key) && key in global)
+      originals.set(key, global[key])
 
     Object.defineProperty(global, key, {
       get() {
