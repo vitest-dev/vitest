@@ -158,7 +158,8 @@ export class Vitest {
     const checker = new Typechecker(this, testsFilesList)
     this.typechecker = checker
     checker.onParseEnd(async ({ files, sourceErrors }) => {
-      await this.report('onCollected', files)
+      this.state.collectFiles(checker.getTestFiles())
+      await this.report('onCollected')
       if (!files.length)
         this.logger.printNoTestFound()
       else
@@ -181,12 +182,14 @@ export class Vitest {
     })
     checker.onParseStart(async () => {
       await this.report('onInit', this)
-      await this.report('onCollected', checker.getTestFiles())
+      this.state.collectFiles(checker.getTestFiles())
+      await this.report('onCollected')
     })
     checker.onWatcherRerun(async () => {
       await this.report('onWatcherRerun', testsFilesList, 'File change detected. Triggering rerun.')
       await checker.collectTests()
-      await this.report('onCollected', checker.getTestFiles())
+      this.state.collectFiles(checker.getTestFiles())
+      await this.report('onCollected')
     })
     await checker.collectTests()
     await checker.start()

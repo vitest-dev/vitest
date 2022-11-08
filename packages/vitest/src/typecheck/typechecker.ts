@@ -4,7 +4,7 @@ import { execa } from 'execa'
 import { resolve } from 'pathe'
 import { SourceMapConsumer } from 'source-map'
 import { ensurePackageInstalled } from '../utils'
-import type { Awaitable, File, ParsedStack, Task, TscErrorInfo, Vitest } from '../types'
+import type { Awaitable, File, ParsedStack, Task, TaskState, TscErrorInfo, Vitest } from '../types'
 import { getRawErrsMapFromTsCompile, getTsconfigPath } from './parse'
 import { createIndexMap } from './utils'
 import type { FileInformation } from './collect'
@@ -105,7 +105,7 @@ export class Typechecker {
         const index = indexMap.get(`${originalPos.line}:${originalPos.column}`)
         const definition = (index != null && sortedDefinitions.find(def => def.start <= index && def.end >= index)) || file
         const suite = 'task' in definition ? definition.task : definition
-        const state = suite.mode === 'run' || suite.mode === 'only' ? 'fail' : suite.mode
+        const state: TaskState = suite.mode === 'run' || suite.mode === 'only' ? 'fail' : suite.mode
         const task: Task = {
           type: 'typecheck',
           id: idx.toString(),
@@ -236,9 +236,6 @@ export class Typechecker {
   }
 
   public getTestFiles() {
-    return Object.values(this._tests || {}).map(({ file }) => ({
-      ...file,
-      result: undefined,
-    }))
+    return Object.values(this._tests || {}).map(i => i.file)
   }
 }
