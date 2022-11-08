@@ -43,7 +43,6 @@ export interface Benchmark extends TaskBase {
   result?: TaskResult
   fails?: boolean
   task?: BenchTask
-  options: BenchOptions
 }
 
 export interface BenchmarkResult extends TinybenchResult {

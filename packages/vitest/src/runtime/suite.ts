@@ -3,7 +3,7 @@ import type { BenchFunction, BenchOptions, Benchmark, BenchmarkAPI, File, RunMod
 import { getWorkerState, isObject, isRunningInBenchmark, isRunningInTest, noop } from '../utils'
 import { createChainable } from './chain'
 import { collectTask, collectorContext, createTestContext, runWithSuite, withTimeout } from './context'
-import { getHooks, setFn, setHooks } from './map'
+import { getHooks, setBenchOptions, setFn, setHooks } from './map'
 
 // apis
 export const suite = createSuite()
@@ -106,11 +106,11 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       id: '',
       name,
       mode,
-      options,
       suite: undefined!,
     }
 
     setFn(benchmark, fn)
+    setBenchOptions(benchmark, options)
     tasks.push(benchmark)
   })
 
