@@ -558,3 +558,15 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
 
   typecheck: TypecheckConfig
 }
+
+export type RuntimeConfig = Pick<
+  UserConfig,
+  | 'allowOnly'
+  | 'testTimeout'
+  | 'hookTimeout'
+  | 'clearMocks'
+  | 'mockReset'
+  | 'restoreMocks'
+  | 'fakeTimers'
+  | 'maxConcurrency'
+> & { sequence?: { hooks?: SequenceHooks } }
