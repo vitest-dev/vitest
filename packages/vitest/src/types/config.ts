@@ -569,4 +569,4 @@ export type RuntimeConfig = Pick<
   | 'restoreMocks'
   | 'fakeTimers'
   | 'maxConcurrency'
-> & { sequence?: { hooks?: SequenceHooks } }
+>
