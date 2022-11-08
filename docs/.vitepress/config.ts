@@ -116,10 +116,6 @@ export default defineConfig({
               link: '/guide/features',
             },
             {
-              text: 'Testing Types',
-              link: '/guide/testing-types',
-            },
-            {
               text: 'CLI',
               link: '/guide/cli',
             },
@@ -138,6 +134,10 @@ export default defineConfig({
             {
               text: 'Mocking',
               link: '/guide/mocking',
+            },
+            {
+              text: 'Testing Types',
+              link: '/guide/testing-types',
             },
             {
               text: 'Vitest UI',
