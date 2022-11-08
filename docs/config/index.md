@@ -821,7 +821,7 @@ Path to cache directory.
 
 ### sequence
 
-- **Type**: `{ sequencer?, shuffle?, seed? }`
+- **Type**: `{ sequencer?, shuffle?, seed?, hooks? }`
 
 Options for how tests should be sorted.
 
@@ -849,6 +849,17 @@ Vitest usually uses cache to sort tests, so long running tests start earlier - t
 - **Default**: `Date.now()`
 
 Sets the randomization seed, if tests are running in random order.
+
+#### sequence.hooks
+
+- **Type**: `'stack' | 'list' | 'parallel'`
+- **Default**: `'parallel'`
+
+Changes the order in which hooks are executed.
+
+- `stack` will order "after" hooks in reverse order, "before" hooks will run in the order they were defined
+- `list` will order all hooks in the order they are defined
+- `parallel` will run hooks in a single group in parallel (hooks in parent suites will still run before the current suite's hooks)
 
 ### typecheck
 
