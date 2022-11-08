@@ -31,6 +31,13 @@ function timeout(time: number) {
 describe('timeout', () => {
   bench('timeout100', async () => {
     await timeout(100)
+  }, {
+    setup() {
+
+    },
+    teardown() {
+
+    },
   })
 
   bench('timeout75', async () => {

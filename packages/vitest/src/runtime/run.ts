@@ -6,7 +6,7 @@ import { clearTimeout, createDefer, getFullName, getWorkerState, hasFailed, hasT
 import { getState, setState } from '../integrations/chai/jest-expect'
 import { GLOBAL_EXPECT } from '../integrations/chai/constants'
 import { takeCoverageInsideWorker } from '../integrations/coverage'
-import { getFn, getHooks } from './map'
+import { getBenchOptions, getFn, getHooks } from './map'
 import { rpc } from './rpc'
 import { collectTests } from './collect'
 import { processError } from './error'
@@ -366,7 +366,8 @@ async function runBenchmarkSuite(suite: Suite) {
     }
     updateTask(suite)
     benchmarkGroup.forEach((benchmark, idx) => {
-      const benchmarkInstance = new Bench(benchmark.options)
+      const options = getBenchOptions(benchmark)
+      const benchmarkInstance = new Bench(options)
 
       const benchmarkFn = getFn(benchmark)
 

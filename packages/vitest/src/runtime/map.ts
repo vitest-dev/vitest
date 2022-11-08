@@ -1,8 +1,9 @@
-import type { Awaitable, BenchFunction, Benchmark, Suite, SuiteHooks, Test } from '../types'
+import type { Awaitable, BenchFunction, BenchOptions, Benchmark, Suite, SuiteHooks, Test } from '../types'
 
 // use WeakMap here to make the Test and Suite object serializable
 const fnMap = new WeakMap()
 const hooksMap = new WeakMap()
+const benchOptsMap = new WeakMap()
 
 export function setFn(key: Test | Benchmark, fn: (() => Awaitable<void>) | BenchFunction) {
   fnMap.set(key, fn)
@@ -22,4 +23,12 @@ export function getHooks(key: Suite): SuiteHooks {
 
 export function isTest(task: Test | Benchmark): task is Test {
   return task.type === 'test'
+}
+
+export function setBenchOptions(key: Benchmark, val: BenchOptions) {
+  benchOptsMap.set(key, val)
+}
+
+export function getBenchOptions(key: Benchmark): BenchOptions {
+  return benchOptsMap.get(key)
 }
