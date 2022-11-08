@@ -221,13 +221,14 @@ export function resolveConfig(
   if (resolved.cache)
     resolved.cache.dir = VitestCache.resolveCacheDir(resolved.root, resolved.cache.dir)
 
+  resolved.sequence ??= {} as any
   if (!resolved.sequence?.sequencer) {
-    resolved.sequence ??= {} as any
     // CLI flag has higher priority
     resolved.sequence.sequencer = resolved.sequence.shuffle
       ? RandomSequencer
       : BaseSequencer
   }
+  resolved.sequence.hooks ??= 'parallel'
 
   resolved.typecheck = {
     ...configDefaults.typecheck,

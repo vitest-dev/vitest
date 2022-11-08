@@ -1,8 +1,8 @@
 import { performance } from 'perf_hooks'
 import limit from 'p-limit'
-import type { BenchTask, Benchmark, BenchmarkResult, File, HookCleanupCallback, HookListener, ResolvedConfig, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from '../types'
+import type { BenchTask, Benchmark, BenchmarkResult, File, HookCleanupCallback, HookListener, ResolvedConfig, SequenceHooks, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from '../types'
 import { vi } from '../integrations/vi'
-import { assertTypes, clearTimeout, createDefer, getFullName, getWorkerState, hasFailed, hasTests, isBrowser, isNode, isRunningInBenchmark, partitionSuiteChildren, setTimeout, shuffle } from '../utils'
+import { clearTimeout, createDefer, getFullName, getWorkerState, hasFailed, hasTests, isBrowser, isNode, isRunningInBenchmark, partitionSuiteChildren, setTimeout, shuffle } from '../utils'
 import { getState, setState } from '../integrations/chai/jest-expect'
 import { GLOBAL_EXPECT } from '../integrations/chai/constants'
 import { takeCoverageInsideWorker } from '../integrations/coverage'
@@ -33,6 +33,13 @@ function updateSuiteHookState(suite: Task, name: keyof SuiteHooks, state: TaskSt
   }
 }
 
+function getSuiteHooks(suite: Suite, name: keyof SuiteHooks, sequence: SequenceHooks) {
+  const hooks = getHooks(suite)[name]
+  if (sequence === 'stack' && (name === 'afterAll' || name === 'afterEach'))
+    return hooks.slice().reverse()
+  return hooks
+}
+
 export async function callSuiteHook<T extends keyof SuiteHooks>(
   suite: Suite,
   currentTask: Task,
@@ -47,9 +54,20 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
   }
 
   updateSuiteHookState(currentTask, name, 'run')
-  callbacks.push(
-    ...await Promise.all(getHooks(suite)[name].map(fn => fn(...(args as any)))),
-  )
+
+  const state = getWorkerState()
+  const sequence = state.config.sequence.hooks
+
+  const hooks = getSuiteHooks(suite, name, sequence)
+
+  if (sequence === 'parallel') {
+    callbacks.push(...await Promise.all(hooks.map(fn => fn(...args as any))))
+  }
+  else {
+    for (const hook of hooks)
+      callbacks.push(await hook(...args as any))
+  }
+
   updateSuiteHookState(currentTask, name, 'pass')
 
   if (name === 'afterEach' && suite.suite) {
@@ -87,9 +105,8 @@ async function sendTasksUpdate() {
 
 const callCleanupHooks = async (cleanups: HookCleanupCallback[]) => {
   await Promise.all(cleanups.map(async (fn) => {
-    if (!fn)
+    if (typeof fn !== 'function')
       return
-    assertTypes(fn, 'hook teardown', ['function'])
     await fn()
   }))
 }
@@ -131,7 +148,6 @@ export async function runTest(test: Test) {
   for (let retryCount = 0; retryCount < retry; retryCount++) {
     let beforeEachCleanups: HookCleanupCallback[] = []
     try {
-      beforeEachCleanups = await callSuiteHook(test.suite, test, 'beforeEach', [test.context, test.suite])
       setState({
         assertionCalls: 0,
         isExpectingAssertions: false,
@@ -141,6 +157,8 @@ export async function runTest(test: Test) {
         testPath: test.suite.file?.filepath,
         currentTestName: getFullName(test),
       }, (globalThis as any)[GLOBAL_EXPECT])
+
+      beforeEachCleanups = await callSuiteHook(test.suite, test, 'beforeEach', [test.context, test.suite])
 
       test.result.retryCount = retryCount
 
