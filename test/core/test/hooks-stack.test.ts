@@ -16,32 +16,28 @@ function callHook(hook: 'beforeAll' | 'beforeEach' | 'afterAll' | 'afterEach', o
 
 describe('hooks are called sequentially', () => {
   callHook('beforeAll', 1)
-  callHook('beforeAll', 2)
-  callHook('beforeAll', 3)
-
   callHook('afterAll', 4)
+
+  callHook('beforeAll', 2)
   // will wait for it
   vitest.afterAll(async () => {
     await Promise.resolve()
     hookOrder.push(5)
   })
-  callHook('afterAll', 6)
 
   callHook('beforeEach', 7)
-  callHook('beforeEach', 8)
-  callHook('beforeEach', 9)
-
   callHook('afterEach', 10)
+
+  callHook('beforeEach', 8)
   callHook('afterEach', 11)
-  callHook('afterEach', 12)
 
   test('before hooks pushed in order', () => {
-    expect(hookOrder).toEqual([1, 2, 3, 7, 8, 9])
+    expect(hookOrder).toEqual([1, 2, 7, 8])
   })
 })
 
 describe('previous suite run all hooks', () => {
   test('after all hooks run in reverse order', () => {
-    expect(hookOrder).toEqual([1, 2, 3, 7, 8, 9, 12, 11, 10, 6, 5, 4])
+    expect(hookOrder).toEqual([1, 2, 7, 8, 11, 10, 5, 4])
   })
 })
