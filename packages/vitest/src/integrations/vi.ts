@@ -1,6 +1,7 @@
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import { parseStacktrace } from '../utils/source-map'
 import type { VitestMocker } from '../runtime/mocker'
+import type { ResolvedConfig, RuntimeConfig } from '../types'
 import { getWorkerState, resetModules, setTimeout } from '../utils'
 import { FakeTimers } from './mock/timers'
 import type { EnhancedSpy, MaybeMocked, MaybeMockedDeep, MaybePartiallyMocked, MaybePartiallyMockedDeep } from './spy'
@@ -259,6 +260,28 @@ class VitestUtils {
     // wait until the end of the loop, so `.then` on modules called,
     // like in import('./example').then(...)
     await new Promise(resolve => setTimeout(resolve, 1)).then(() => Promise.resolve())
+  }
+
+  private _config: null | ResolvedConfig = null
+
+  /**
+   * Updates runtime config. You can only change values that are used when executing tests.
+   */
+  public setConfig(config: RuntimeConfig) {
+    const state = getWorkerState()
+    if (!this._config)
+      this._config = { ...state.config }
+    Object.assign(state.config, config)
+  }
+
+  /**
+   * If config was changed with `vi.setConfig`, this will reset it to the original state.
+   */
+  public resetConfig() {
+    if (this._config) {
+      const state = getWorkerState()
+      state.config = { ...this._config }
+    }
   }
 }
 

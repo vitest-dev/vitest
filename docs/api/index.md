@@ -2598,6 +2598,12 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 
   Will call [`.mockReset()`](/api/#mockreset) on all spies. This will clear mock history and reset its implementation to an empty function (will return `undefined`).
 
+### vi.resetConfig
+
+- **Type**: `RuntimeConfig`
+
+  If [`vi.setConfig`](/api/#vi-setconfig) was called before, this will reset config to the original state.
+
 ### vi.resetModules
 
 - **Type**: `() => Vitest`
@@ -2690,6 +2696,12 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 
   vi.useRealTimers()
   ```
+
+### vi.setConfig
+
+- **Type**: `RuntimeConfig`
+
+  Updates config for the current test file. You can only affect values that are used, when executing tests.
 
 ### vi.spyOn
 
