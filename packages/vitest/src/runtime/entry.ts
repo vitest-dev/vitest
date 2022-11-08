@@ -1,6 +1,7 @@
 import { promises as fs } from 'fs'
 import type { EnvironmentOptions, ResolvedConfig, VitestEnvironment } from '../types'
 import { getWorkerState, resetModules } from '../utils'
+import { vi } from '../integrations/vi'
 import { envs } from '../integrations/env'
 import { setupGlobalEnv, withEnv } from './setup'
 import { startTests } from './run'
@@ -75,6 +76,9 @@ export async function run(files: string[], config: ResolvedConfig): Promise<void
           await startTests([file], config)
 
           workerState.filepath = undefined
+
+          // reset after tests, because user might call `vi.setConfig` in setupFile
+          vi.resetConfig()
         }
       })
     }
