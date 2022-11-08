@@ -27,7 +27,7 @@ interface LocalCallDefinition {
 }
 
 export interface FileInformation {
-  file: ParsedFile
+  file: File
   filepath: string
   parsed: string
   map: RawSourceMap | null
