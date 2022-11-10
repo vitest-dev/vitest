@@ -42,6 +42,10 @@ const external = [
   ...Object.keys(pkg.peerDependencies),
   'worker_threads',
   'inspector',
+  'vite-node/source-map',
+  'vite-node/client',
+  'vite-node/server',
+  'vite-node/utils',
 ]
 
 const plugins = [
