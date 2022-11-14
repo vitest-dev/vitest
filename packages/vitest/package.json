@@ -123,7 +123,7 @@
   "devDependencies": {
     "@antfu/install-pkg": "^0.1.1",
     "@edge-runtime/vm": "2.0.1",
-    "@sinonjs/fake-timers": "^9.1.2",
+    "@sinonjs/fake-timers": "^10.0.0",
     "@types/diff": "^5.0.2",
     "@types/jsdom": "^20.0.0",
     "@types/micromatch": "^4.0.2",
