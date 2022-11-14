@@ -35,6 +35,9 @@ describe('jest-expect', () => {
     expect([{ text: 'Bye' }]).not.toContainEqual({ text: 'Hello' })
     expect(1).toBeGreaterThan(0)
 
+    expect(new Date(0)).toEqual(new Date(0))
+    expect(new Date('inValId')).toEqual(new Date('inValId'))
+
     expect(BigInt(1)).toBeGreaterThan(BigInt(0))
     expect(1).toBeGreaterThan(BigInt(0))
     expect(BigInt(1)).toBeGreaterThan(0)
