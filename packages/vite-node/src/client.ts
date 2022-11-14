@@ -273,7 +273,7 @@ export class ViteNodeRunner {
 
         // returns undefined, when accessing named exports, if default is not an object
         // but is still present inside hasOwnKeys, this is Node behaviour for CJS
-        if (exports.default === null || typeof exports.default !== 'object') {
+        if (isPrimitive(exports.default)) {
           defineExport(exports, p, () => undefined)
           return true
         }
