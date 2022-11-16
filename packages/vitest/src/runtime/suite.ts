@@ -218,14 +218,13 @@ function createTest(fn: (
     // for template string
     if (Array.isArray(cases) && args.length) {
       const header = cases.join('').trim().replace(/ /g, '').split('\n').map(i => i.split('|'))[0]
-      const res = []
+      cases = []
       for (let i = 0; i < Math.floor((args.length) / header.length); i++) {
         const oneCase: Record<string, any> = {}
         for (let j = 0; j < header.length; j++)
           oneCase[header[j]] = args[i * header.length + j] as any
-        res.push(oneCase)
+        ;(cases as any).push(oneCase)
       }
-      cases = res as any
     }
 
     return (name: string, fn: (...args: T[]) => void, options?: number | TestOptions) => {
