@@ -130,9 +130,9 @@ interface TestEachFunction {
     fn: (...args: T[]) => Awaitable<void>,
     options?: number | TestOptions,
   ) => void
-  <T>(...cases: any[]): (
+  (...args: [TemplateStringsArray, ...any]): (
     name: string,
-    fn: (...args: T[]) => Awaitable<void>,
+    fn: (...args: any[]) => Awaitable<void>,
     options?: number | TestOptions,
   ) => void
 }
