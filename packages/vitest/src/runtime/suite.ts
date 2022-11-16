@@ -216,7 +216,7 @@ function createTest(fn: (
     const test = this.withContext()
 
     // for template string
-    if (Array.isArray(cases) && !Array.isArray(args?.[0]) && typeof args?.[0] !== 'undefined') {
+    if (Array.isArray(cases) && args.length) {
       const header = cases.join('').trim().replace(/ /g, '').split('\n').map(i => i.split('|'))[0]
       const res = []
       for (let i = 0; i < Math.floor((args.length) / header.length); i++) {
