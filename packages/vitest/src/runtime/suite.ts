@@ -212,8 +212,21 @@ function createTest(fn: (
 )) {
   const testFn = fn as any
 
-  testFn.each = function<T>(this: { withContext: () => TestAPI }, cases: ReadonlyArray<T>) {
+  testFn.each = function<T>(this: { withContext: () => TestAPI }, cases: ReadonlyArray<T>, ...args: any[]) {
     const test = this.withContext()
+
+    // for template string
+    if (Array.isArray(cases) && !Array.isArray(args?.[0]) && typeof args?.[0] !== 'undefined') {
+      const header = cases.join('').trim().replace(/ /g, '').split('\n').map(i => i.split('|'))[0]
+      const res = []
+      for (let i = 0; i < Math.floor((args.length) / header.length); i++) {
+        const oneCase: Record<string, any> = {}
+        for (let j = 0; j < header.length; j++)
+          oneCase[header[j]] = args[i * header.length + j] as any
+        res.push(oneCase)
+      }
+      cases = res as any
+    }
 
     return (name: string, fn: (...args: T[]) => void, options?: number | TestOptions) => {
       const arrayOnlyCases = cases.every(Array.isArray)

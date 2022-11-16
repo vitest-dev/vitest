@@ -130,6 +130,11 @@ interface TestEachFunction {
     fn: (...args: T[]) => Awaitable<void>,
     options?: number | TestOptions,
   ) => void
+  <T>(...cases: any[]): (
+    name: string,
+    fn: (...args: T[]) => Awaitable<void>,
+    options?: number | TestOptions,
+  ) => void
 }
 
 type ChainableTestAPI<ExtraContext = {}> = ChainableFunction<
