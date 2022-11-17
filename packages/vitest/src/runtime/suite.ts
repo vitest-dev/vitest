@@ -180,8 +180,12 @@ function createSuite() {
     return createSuiteCollector(name, factory, mode, this.concurrent, this.shuffle, options)
   }
 
-  suiteFn.each = function<T>(this: { withContext: () => SuiteAPI }, cases: ReadonlyArray<T>) {
+  suiteFn.each = function<T>(this: { withContext: () => SuiteAPI }, cases: ReadonlyArray<T>, ...args: any[]) {
     const suite = this.withContext()
+
+    if (Array.isArray(cases) && args.length)
+      cases = formatTemplateString(cases, args)
+
     return (name: string, fn: (...args: T[]) => void, options?: number | TestOptions) => {
       const arrayOnlyCases = cases.every(Array.isArray)
       cases.forEach((i, idx) => {
@@ -215,17 +219,8 @@ function createTest(fn: (
   testFn.each = function<T>(this: { withContext: () => TestAPI }, cases: ReadonlyArray<T>, ...args: any[]) {
     const test = this.withContext()
 
-    // for template string
-    if (Array.isArray(cases) && args.length) {
-      const header = cases.join('').trim().replace(/ /g, '').split('\n').map(i => i.split('|'))[0]
-      cases = []
-      for (let i = 0; i < Math.floor((args.length) / header.length); i++) {
-        const oneCase: Record<string, any> = {}
-        for (let j = 0; j < header.length; j++)
-          oneCase[header[j]] = args[i * header.length + j] as any
-        ;(cases as any).push(oneCase)
-      }
-    }
+    if (Array.isArray(cases) && args.length)
+      cases = formatTemplateString(cases, args)
 
     return (name: string, fn: (...args: T[]) => void, options?: number | TestOptions) => {
       const arrayOnlyCases = cases.every(Array.isArray)
@@ -283,4 +278,16 @@ function formatTitle(template: string, items: any[], idx: number) {
     })
   }
   return formatted
+}
+
+function formatTemplateString(cases: any[], args: any[]): any[] {
+  const header = cases.join('').trim().replace(/ /g, '').split('\n').map(i => i.split('|'))[0]
+  const res: any[] = []
+  for (let i = 0; i < Math.floor((args.length) / header.length); i++) {
+    const oneCase: Record<string, any> = {}
+    for (let j = 0; j < header.length; j++)
+      oneCase[header[j]] = args[i * header.length + j] as any
+    res.push(oneCase)
+  }
+  return res
 }
