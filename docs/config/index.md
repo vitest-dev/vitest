@@ -763,7 +763,7 @@ Show heap usage after each test. Useful for debugging memory leaks.
 
 ### css
 
-- **Type**: `boolean | { include?, exclude? }`
+- **Type**: `boolean | { include?, exclude?, modules? }`
 
 Configure if CSS should be processed. When excluded, CSS files will be replaced with empty strings to bypass the subsequent processing. CSS Modules will return a proxy to not affect runtime.
 
@@ -773,6 +773,10 @@ Configure if CSS should be processed. When excluded, CSS files will be replaced 
 - **Default**: `[]`
 
 RegExp pattern for files that should return actual CSS and will be processed by Vite pipeline.
+
+:::tip
+To process all CSS files, use `/.+/`.
+:::
 
 #### css.exclude
 
@@ -791,11 +795,15 @@ RegExp pattern for files that will return an empty CSS file.
 - **Type**: `'stable' | 'scoped' | 'non-scoped'`
 - **Default**: `'stable'`
 
-If you decide to process CSS files, you can configure if class names inside CSS modules should be scoped. By default, Vitest exports a proxy, bypassing CSS Modules processing. You can choose one of the options:
+If you decide to process CSS files, you can configure if class names inside CSS modules should be scoped. You can choose one of the options:
 
 - `stable`: class names will be generated as `_${name}_${hashedFilename}`, which means that generated class will stay the same, if CSS content is changed, but will change, if the name of the file is modified, or file is moved to another folder. This setting is useful, if you use snapshot feature.
-- `scoped`: class names will be generated as usual, respecting `css.modules.generateScopeName` method, if you have one. By default, filename will be generated as `_${name}_${hash}`, where hash includes filename and content of the file.
-- `non-scoped`: class names will stay as they are defined in CSS.
+- `scoped`: class names will be generated as usual, respecting `css.modules.generateScopeName` method, if you have one and CSS processing is enabled. By default, filename will be generated as `_${name}_${hash}`, where hash includes filename and content of the file.
+- `non-scoped`: class names will not be hashed.
+
+::: warning
+By default, Vitest exports a proxy, bypassing CSS Modules processing. If you rely on CSS properties on your classes, you have to enable CSS processing using `include` option.
+:::
 
 ### maxConcurrency
 
