@@ -8,7 +8,7 @@ export const EnvReplacerPlugin = (): Plugin => {
   return {
     name: 'vitest:env-replacer',
     enforce: 'pre',
-    transform(code) {
+    transform(code, id) {
       if (!/\bimport\.meta\.env\b/g.test(code))
         return null
 
@@ -27,7 +27,7 @@ export const EnvReplacerPlugin = (): Plugin => {
       if (s) {
         return {
           code: s.toString(),
-          map: s.generateMap({ hires: true }),
+          map: s.generateMap({ hires: true, source: id }),
         }
       }
     },
