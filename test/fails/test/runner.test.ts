@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 
 describe('should fails', async () => {
   const root = resolve(__dirname, '../fixtures')
-  const files = await fg('*.test.ts', { cwd: root })
+  const files = await fg('**/*.test.ts', { cwd: root, dot: true })
 
   for (const file of files) {
     it(file, async () => {
