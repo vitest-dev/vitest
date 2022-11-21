@@ -76,7 +76,7 @@
   },
   "dependencies": {
     "debug": "^4.3.4",
-    "mlly": "^0.5.16",
+    "mlly": "^1.0.0",
     "pathe": "^0.2.0",
     "source-map": "^0.6.1",
     "source-map-support": "^0.5.21",
