@@ -339,7 +339,7 @@ Custom reporters for output. Reporters can be [a Reporter instance](https://gith
   - `'default'` - collapse suites when they pass
   - `'verbose'` - keep the full task tree visible
   - `'dot'` -  show each task as a single dot
-  - `'junit'` - JUnit XML reporter
+  - `'junit'` - JUnit XML reporter (you can configure `testsuites` tag name with `VITEST_JUNIT_SUITE_NAME` environmental variable)
   - `'json'` -  give a simple JSON summary
   - path of a custom reporter (e.g. `'./path/to/reporter.ts'`, `'@scope/reporter'`)
 
