@@ -5,11 +5,12 @@ import {
   coverageVisible,
   currentModule,
   dashboardVisible,
+  disableCoverage,
   showCoverage,
   showDashboard,
 } from '../composables/navigation'
-import { client, config, findById } from '../composables/client'
-import type { Task } from '#types'
+import { client, findById } from '../composables/client'
+import type { File, Task } from '#types'
 import { isDark, toggleDark } from '~/composables'
 import { files, runAll } from '~/composables/client'
 import { activeFileId } from '~/composables/params'
@@ -22,11 +23,23 @@ function onItemClick(task: Task) {
   currentModule.value = findById(task.id)
   showDashboard(false)
 }
+async function onRunAll(files?: File[]) {
+  if (coverageEnabled.value) {
+    disableCoverage.value = true
+    await nextTick()
+
+    if (coverageEnabled.value) {
+      showDashboard(true)
+      await nextTick()
+    }
+  }
+  await runAll(files)
+}
 const toggleMode = computed(() => isDark.value ? 'light' : 'dark')
 </script>
 
 <template>
-  <TasksList border="r base" :tasks="files" :on-item-click="onItemClick" :group-by-type="true" @run="runAll">
+  <TasksList border="r base" :tasks="files" :on-item-click="onItemClick" :group-by-type="true" @run="onRunAll">
     <template #header="{ filteredTests }">
       <img w-6 h-6 src="/favicon.svg" alt="Vitest logo">
       <span font-light text-sm flex-1>Vitest</span>
@@ -44,6 +57,7 @@ const toggleMode = computed(() => isDark.value ? 'light' : 'dark')
           v-if="coverageEnabled"
           v-show="!coverageVisible"
           v-tooltip.bottom="'Coverage'"
+          :disabled="disableCoverage"
           title="Show coverage"
           class="!animate-100ms"
           animate-count-1
@@ -60,7 +74,7 @@ const toggleMode = computed(() => isDark.value ? 'light' : 'dark')
           v-tooltip.bottom="filteredTests ? (filteredTests.length === 0 ? 'No test to run (clear filter)' : 'Rerun filtered') : 'Rerun all'"
           :disabled="filteredTests?.length === 0"
           icon="i-carbon-play"
-          @click="runAll(filteredTests)"
+          @click="onRunAll(filteredTests)"
         />
         <IconButton
           v-tooltip.bottom="`Toggle to ${toggleMode} mode`"

@@ -1,10 +1,11 @@
-import { client, config, findById } from './client'
+import { client, config, findById, testRunState } from './client'
 import { activeFileId } from './params'
 import type { File } from '#types'
 
 export const currentModule = ref<File>()
 export const dashboardVisible = ref(true)
 export const coverageVisible = ref(false)
+export const disableCoverage = ref(true)
 export const coverage = computed(() => config.value?.coverage)
 export const coverageEnabled = computed(() => {
   if (!config.value?.api?.port)
@@ -22,6 +23,9 @@ export const coverageUrl = computed(() => {
 
   return undefined
 })
+watch(testRunState, (state) => {
+  disableCoverage.value = state === 'running'
+}, { immediate: true })
 
 export function initializeNavigation() {
   const file = activeFileId.value
