@@ -1,7 +1,14 @@
 <script setup lang="ts">
 import { hasFailedSnapshot } from '@vitest/ws-client'
-import { currentModule, dashboardVisible, showDashboard } from '../composables/navigation'
-import { client, findById } from '../composables/client'
+import {
+  coverageEnabled,
+  coverageVisible,
+  currentModule,
+  dashboardVisible,
+  showCoverage,
+  showDashboard,
+} from '../composables/navigation'
+import { client, config, findById } from '../composables/client'
 import type { Task } from '#types'
 import { isDark, toggleDark } from '~/composables'
 import { files, runAll } from '~/composables/client'
@@ -32,6 +39,16 @@ const toggleMode = computed(() => isDark.value ? 'light' : 'dark')
           animate-count-1
           icon="i-carbon-dashboard"
           @click="showDashboard(true)"
+        />
+        <IconButton
+          v-if="coverageEnabled"
+          v-show="!coverageVisible"
+          v-tooltip.bottom="'Coverage'"
+          title="Show coverage"
+          class="!animate-100ms"
+          animate-count-1
+          icon="i-carbon:folder-details-reference"
+          @click="showCoverage()"
         />
         <IconButton
           v-if="failedSnapshot"

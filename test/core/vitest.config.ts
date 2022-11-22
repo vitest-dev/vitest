@@ -43,6 +43,7 @@ export default defineConfig({
     ],
     testNamePattern: '^((?!does not include test that).)*$',
     coverage: {
+      enabled: true,
       provider: 'istanbul',
       reporter: ['text', 'html'],
     },
