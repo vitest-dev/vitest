@@ -19,7 +19,7 @@ export const coverageUrl = computed(() => {
     const idx = coverage.value!.reportsDirectory.lastIndexOf('/')
     return `${url}/${coverage.value!.reportsDirectory.slice(idx + 1)}/index.html`
   }
-  //
+
   return undefined
 })
 

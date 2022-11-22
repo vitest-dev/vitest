@@ -17,10 +17,13 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
 
   async function UIPlugin() {
     await ensurePackageInstalled('@vitest/ui', getRoot())
-    const coverageFolder = ctx.config?.api?.port && ctx.config?.coverage?.enabled && ctx.config.coverage.reporter.includes('html')
-      ? ctx.config.coverage.reportsDirectory
-      : undefined
-    return (await import('@vitest/ui')).default(options.uiBase, coverageFolder)
+    const resolveCoverageFolder = () => {
+      const uiOptions = options as ResolvedConfig
+      return uiOptions.api?.port && uiOptions.coverage?.enabled && uiOptions.coverage.reporter.includes('html')
+        ? uiOptions.coverage.reportsDirectory
+        : undefined
+    }
+    return (await import('@vitest/ui')).default(options.uiBase, resolveCoverageFolder)
   }
 
   async function BrowserPlugin() {
