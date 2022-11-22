@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { hasFailedSnapshot } from '@vitest/ws-client'
-import { coverageEnabled, disableCoverage, showDashboard } from '../composables/navigation'
+import { coverageEnabled, disableCoverage } from '../composables/navigation'
 import { client, current, runCurrent } from '~/composables/client'
 
 const name = computed(() => current.value?.name.split(/\//g).pop())
