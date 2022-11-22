@@ -249,12 +249,12 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
 
     ```ts
     test.each`
-    a    | b    | expected
-    ${1} | ${1} | ${2}
-    ${'a'} | ${'b'} | ${'ab'}
-    ${[]} | ${'b'} | ${'b'}
-    ${{}} | ${'b'} | ${'[object Object]b'}
-    ${{ asd: 1 }} | ${'b'} | ${'[object Object]b'}
+      a               | b      | expected
+      ${1}            | ${1}   | ${2}
+      ${'a'}          | ${'b'} | ${'ab'}
+      ${[]}           | ${'b'} | ${'b'}
+      ${{}}           | ${'b'} | ${'[object Object]b'}
+      ${{ asd: 1 }}   | ${'b'} | ${'[object Object]b'}
     `('returns $expected when $a is added $b', ({ a, b, expected }) => {
       expect(a + b).toBe(expected)
     })
@@ -594,12 +594,12 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
 
     ```ts
     describe.each`
-    a    | b    | expected
-    ${1} | ${1} | ${2}
-    ${'a'} | ${'b'} | ${'ab'}
-    ${[]} | ${'b'} | ${'b'}
-    ${{}} | ${'b'} | ${'[object Object]b'}
-    ${{ asd: 1 }} | ${'b'} | ${'[object Object]b'}
+      a               | b      | expected
+      ${1}            | ${1}   | ${2}
+      ${'a'}          | ${'b'} | ${'ab'}
+      ${[]}           | ${'b'} | ${'b'}
+      ${{}}           | ${'b'} | ${'[object Object]b'}
+      ${{ asd: 1 }}   | ${'b'} | ${'[object Object]b'}
     `('describe template string add($a, $b)', ({ a, b, expected }) => {
       test(`returns ${expected}`, () => {
         expect(a + b).toBe(expected)

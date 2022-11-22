@@ -171,11 +171,11 @@ test.each([
 })
 
 describe.each`
-a    | b    | expected
-${1} | ${1} | ${2}
-${'a'} | ${'b'} | ${'ab'}
-${[]} | ${'b'} | ${'b'}
-${{}} | ${'b'} | ${'[object Object]b'}
+a             | b      | expected
+${1}          | ${1}   | ${2}
+${'a'}        | ${'b'} | ${'ab'}
+${[]}         | ${'b'} | ${'b'}
+${{}}         | ${'b'} | ${'[object Object]b'}
 ${{ asd: 1 }} | ${'b'} | ${'[object Object]b'}
 `('describe template string add($a, $b)', ({ a, b, expected }) => {
   test(`returns ${expected}`, () => {
@@ -184,25 +184,25 @@ ${{ asd: 1 }} | ${'b'} | ${'[object Object]b'}
 })
 
 test.each`
-a    | b    | expected
-${1} | ${1} | ${2}
-${'a'} | ${'b'} | ${'ab'}
-${[]} | ${'b'} | ${'b'}
-${{}} | ${'b'} | ${'[object Object]b'}
-${{ asd: 1 }} | ${'b'} | ${'[object Object]b'}
+a               | b      | expected
+${1}            | ${1}   | ${2}
+${'a'}          | ${'b'} | ${'ab'}
+${[]}           | ${'b'} | ${'b'}
+${{}}           | ${'b'} | ${'[object Object]b'}
+${{ asd: 1 }}   | ${'b'} | ${'[object Object]b'}
 `('returns $expected when $a is added $b', ({ a, b, expected }) => {
   expect(a + b).toBe(expected)
 })
 
 test.each`
-a    | b    | expected
+a       | b       | expected
 ${true} | ${true} | ${true}
 `('($a && $b) -> $expected', ({ a, b, expected }) => {
   expect(a && b).toBe(expected)
 })
 
 test.each`
-a    | b    | expected
+a             | b              | expected
 ${{ val: 1 }} | ${{ val: 2 }}} | ${3}
 `('($a && $b) -> $expected', ({ a, b, expected }) => {
   expect(a.val + b.val).toBe(expected)
