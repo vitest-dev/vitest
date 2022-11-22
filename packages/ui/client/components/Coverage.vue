@@ -25,16 +25,16 @@ defineProps<{
         truncate
       >Coverage</span>
     </div>
-    <!--    <div class="scrolls" flex-auto py-1> -->
-    <iframe id="vitest-ui-coverage" :src="src" />
-    <!--    </div> -->
+    <div flex-auto py-1 bg-white>
+      <iframe id="vitest-ui-coverage" :src="src" />
+    </div>
   </div>
 </template>
 
 <style>
 #vitest-ui-coverage {
-  width: auto;
-  height: calc(100vh - 46px);
+  width: 100%;
+  height: calc(100vh - 42px);
   border: none;
 }
 </style>
