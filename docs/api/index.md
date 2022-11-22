@@ -196,6 +196,7 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
 :::
 
 ### test.each
+- **Version:** `v0.25.3`
 - **Type:** `(cases: ReadonlyArray<T>, ...args: any[]) => void`
 - **Alias:** `it.each`
 
@@ -564,6 +565,7 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
 
 ### describe.each
 
+- **Version:** `v0.25.3`
 - **Type:** `(cases: ReadonlyArray<T>, ...args: any[]): (name: string, fn: (...args: T[]) => void, options?: number | TestOptions) => void`
 
   Use `describe.each` if you have more than one test that depends on the same data.
