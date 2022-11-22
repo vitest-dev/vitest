@@ -6,7 +6,7 @@ export default defineConfig({
   },
   build: {
     minify: false,
-    outDir: './dist/client',
+    outDir: '../../dist/client',
     emptyOutDir: false,
   },
 })

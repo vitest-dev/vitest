@@ -131,7 +131,7 @@ importers:
       vite: ^3.2.3
       vitest: workspace:*
     devDependencies:
-      '@vitest/ui': link:../../packages/ui
+      '@vitest/ui': 0.25.3
       vite: 3.2.3
       vitest: link:../../packages/vitest
 
@@ -145,7 +145,7 @@ importers:
       vite: ^3.2.3
       vitest: workspace:*
     devDependencies:
-      '@vitest/ui': link:../../packages/ui
+      '@vitest/ui': 0.25.3
       axios: 0.26.1
       fastify: 4.5.3
       supertest: 6.2.4
@@ -164,7 +164,7 @@ importers:
       '@rollup/plugin-graphql': 1.1.0_graphql@16.6.0
       graphql: 16.6.0
     devDependencies:
-      '@vitest/ui': link:../../packages/ui
+      '@vitest/ui': 0.25.3
       vite: 3.2.3
       vitest: link:../../packages/vitest
 
@@ -175,7 +175,7 @@ importers:
       vite: ^3.2.3
       vitest: workspace:*
     devDependencies:
-      '@vitest/ui': link:../../packages/ui
+      '@vitest/ui': 0.25.3
       jest-image-snapshot: 4.5.1
       vite: 3.2.3
       vitest: link:../../packages/vitest
@@ -190,7 +190,7 @@ importers:
     dependencies:
       lit: 2.3.1
     devDependencies:
-      '@vitest/ui': link:../../packages/ui
+      '@vitest/ui': 0.25.3
       jsdom: 20.0.3
       vite: 3.2.3
       vitest: link:../../packages/vitest
@@ -211,7 +211,7 @@ importers:
       axios: 0.26.1
       tinyspy: 0.3.3
     devDependencies:
-      '@vitest/ui': link:../../packages/ui
+      '@vitest/ui': 0.25.3
       react: 18.2.0
       vite: 3.2.3
       vitest: link:../../packages/vitest
@@ -252,7 +252,7 @@ importers:
       vitest: workspace:*
     devDependencies:
       '@playwright/test': 1.25.1
-      '@vitest/ui': link:../../packages/ui
+      '@vitest/ui': 0.25.3
       playwright: 1.25.1
       vite: 3.2.3
       vitest: link:../../packages/vitest
@@ -264,7 +264,7 @@ importers:
       vite: ^3.2.3
       vitest: workspace:*
     devDependencies:
-      '@vitest/ui': link:../../packages/ui
+      '@vitest/ui': 0.25.3
       puppeteer: 13.7.0
       vite: 3.2.3
       vitest: link:../../packages/vitest
@@ -287,7 +287,7 @@ importers:
       '@types/react': 17.0.49
       '@types/react-test-renderer': 17.0.2
       '@vitejs/plugin-react': 2.2.0_vite@3.2.3
-      '@vitest/ui': link:../../packages/ui
+      '@vitest/ui': 0.25.3
       happy-dom: 7.7.0
       jsdom: 20.0.3
       react-test-renderer: 17.0.2_react@17.0.2
@@ -315,7 +315,7 @@ importers:
       '@types/react': 17.0.49
       '@types/react-dom': 17.0.17
       '@vitejs/plugin-react': 2.2.0_vite@3.2.3
-      '@vitest/ui': link:../../packages/ui
+      '@vitest/ui': 0.25.3
       '@wojtekmaj/enzyme-adapter-react-17': 0.6.7_7ltvq4e2railvf5uya4ffxpe2a
       enzyme: 3.11.0
       vite: 3.2.3
@@ -358,7 +358,7 @@ importers:
       '@testing-library/jest-dom': 5.16.5
       '@testing-library/react': 13.3.0_biqbaboplfbrettd7655fr4n2y
       '@testing-library/user-event': 14.4.3
-      '@vitest/ui': link:../../packages/ui
+      '@vitest/ui': 0.25.3
       date-fns: 2.29.2
       jsdom: 20.0.3
       vite: 3.2.3
@@ -410,7 +410,7 @@ importers:
       '@types/react': 17.0.49
       '@types/react-dom': 17.0.17
       '@vitejs/plugin-react': 1.3.2
-      '@vitest/ui': link:../../packages/ui
+      '@vitest/ui': 0.25.3
       babel-loader: 8.2.5_@babel+core@7.18.13
       jsdom: 20.0.3
       msw: 0.39.2
@@ -446,7 +446,7 @@ importers:
       '@types/react-dom': 18.0.8
       '@vitejs/plugin-react': 2.2.0_vite@3.2.3
       '@vitest/coverage-c8': 0.24.5
-      '@vitest/ui': link:../../packages/ui
+      '@vitest/ui': 0.25.3
       jsdom: 20.0.3
       typescript: 4.8.4
       vite: 3.2.3
@@ -478,7 +478,7 @@ importers:
       '@types/react': 17.0.49
       '@types/react-dom': 17.0.17
       '@vitejs/plugin-react': 1.3.2
-      '@vitest/ui': link:../../packages/ui
+      '@vitest/ui': 0.25.3
       cross-fetch: 3.1.5
       jsdom: 20.0.3
       msw: 0.39.2
@@ -530,7 +530,7 @@ importers:
     devDependencies:
       '@sveltejs/vite-plugin-svelte': 1.0.3_svelte@3.49.0+vite@3.2.3
       '@testing-library/svelte': 3.2.1_svelte@3.49.0
-      '@vitest/ui': link:../../packages/ui
+      '@vitest/ui': 0.25.3
       jsdom: 20.0.3
       svelte: 3.49.0
       vite: 3.2.3
@@ -6935,7 +6935,7 @@ packages:
     dev: true
 
   /@types/form-data/0.0.33:
-    resolution: {integrity: sha1-yayFsqX9GENbjIXZ7LUObWyJP/g=}
+    resolution: {integrity: sha512-8BSvG1kGm83cyJITQMZSulnl6QV8jqAGreJsc5tPu1Jq0vTSOiY/k24Wx82JRpWwZSqrala6sd5rWi6aNXvqcw==}
     dependencies:
       '@types/node': 18.11.9
     dev: true
@@ -7902,6 +7902,12 @@ packages:
       vitest: link:packages/vitest
     dev: true
 
+  /@vitest/ui/0.25.3:
+    resolution: {integrity: sha512-o0Bo/SPlcqopsuGaPUwIPhb0Jr3VSMO4hOOWBBNDtz2/a89HO2GHPP/tx8waWxF0bBc6Cjpcj/CRQAYy3KbLgg==}
+    dependencies:
+      sirv: 2.0.2
+    dev: true
+
   /@volar/code-gen/0.40.13:
     resolution: {integrity: sha512-4gShBWuMce868OVvgyA1cU5WxHbjfEme18Tw6uVMfweZCF5fB2KECG0iPrA9D54vHk3FeHarODNwgIaaFfUBlA==}
     dependencies:
@@ -7925,10 +7931,10 @@ packages:
     dependencies:
       '@volar/code-gen': 0.40.13
       '@volar/source-map': 0.40.13
-      '@vue/compiler-core': 3.2.41
+      '@vue/compiler-core': 3.2.45
       '@vue/compiler-dom': 3.2.45
       '@vue/compiler-sfc': 3.2.45
-      '@vue/reactivity': 3.2.41
+      '@vue/reactivity': 3.2.45
       '@vue/shared': 3.2.45
     dev: true
 
