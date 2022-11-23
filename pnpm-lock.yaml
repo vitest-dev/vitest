@@ -6935,7 +6935,7 @@ packages:
     dev: true
 
   /@types/form-data/0.0.33:
-    resolution: {integrity: sha1-yayFsqX9GENbjIXZ7LUObWyJP/g=}
+    resolution: {integrity: sha512-8BSvG1kGm83cyJITQMZSulnl6QV8jqAGreJsc5tPu1Jq0vTSOiY/k24Wx82JRpWwZSqrala6sd5rWi6aNXvqcw==}
     dependencies:
       '@types/node': 18.11.9
     dev: true
@@ -7925,10 +7925,10 @@ packages:
     dependencies:
       '@volar/code-gen': 0.40.13
       '@volar/source-map': 0.40.13
-      '@vue/compiler-core': 3.2.41
+      '@vue/compiler-core': 3.2.45
       '@vue/compiler-dom': 3.2.45
       '@vue/compiler-sfc': 3.2.45
-      '@vue/reactivity': 3.2.41
+      '@vue/reactivity': 3.2.45
       '@vue/shared': 3.2.45
     dev: true
 
