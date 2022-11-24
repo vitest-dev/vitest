@@ -23,10 +23,10 @@ describe('basic', async () => {
     })
   })
 
-  test('should have the correct title', async () => {
+  test('should change count when button clicked', async () => {
     await page.goto('http://localhost:3000')
-    const button = page.locator('#btn')
-    await expect(button).toBeDefined()
+    const button = page.getByRole('button', { name: /Clicked/ })
+    await expect(button).toBeVisible()
 
     await expect(button).toHaveText('Clicked 0 time(s)')
 
