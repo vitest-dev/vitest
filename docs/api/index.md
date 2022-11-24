@@ -2218,10 +2218,9 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
   ```ts
   import { expectTypeOf } from 'vitest'
 
-  expectTypeOf(42).not.toBeArray()
-  expectTypeOf([]).toBeArray()
-  expectTypeOf([1, 2]).toBeArray()
-  expectTypeOf<number[]>().toBeArray()
+  expectTypeOf(42).not.toBeString()
+  expectTypeOf('').toBeString()
+  expectTypeOf('a').toBeString()
   ```
 
 ### toBeBoolean
