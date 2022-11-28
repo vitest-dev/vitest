@@ -133,7 +133,7 @@ importers:
       vite: ^3.2.3
       vitest: workspace:*
     devDependencies:
-      '@vitest/ui': link:../../packages/ui
+      '@vitest/ui': 0.25.3
       vite: 3.2.3
       vitest: link:../../packages/vitest
 
@@ -147,7 +147,7 @@ importers:
       vite: ^3.2.3
       vitest: workspace:*
     devDependencies:
-      '@vitest/ui': link:../../packages/ui
+      '@vitest/ui': 0.25.3
       axios: 0.26.1
       fastify: 4.5.3
       supertest: 6.2.4
@@ -166,7 +166,7 @@ importers:
       '@rollup/plugin-graphql': 1.1.0_graphql@16.6.0
       graphql: 16.6.0
     devDependencies:
-      '@vitest/ui': link:../../packages/ui
+      '@vitest/ui': 0.25.3
       vite: 3.2.3
       vitest: link:../../packages/vitest
 
@@ -177,7 +177,7 @@ importers:
       vite: ^3.2.3
       vitest: workspace:*
     devDependencies:
-      '@vitest/ui': link:../../packages/ui
+      '@vitest/ui': 0.25.3
       jest-image-snapshot: 4.5.1
       vite: 3.2.3
       vitest: link:../../packages/vitest
@@ -192,8 +192,8 @@ importers:
     dependencies:
       lit: 2.3.1
     devDependencies:
-      '@vitest/ui': link:../../packages/ui
-      jsdom: 20.0.2
+      '@vitest/ui': 0.25.3
+      jsdom: 20.0.3
       vite: 3.2.3
       vitest: link:../../packages/vitest
 
@@ -213,7 +213,7 @@ importers:
       axios: 0.26.1
       tinyspy: 0.3.3
     devDependencies:
-      '@vitest/ui': link:../../packages/ui
+      '@vitest/ui': 0.25.3
       react: 18.2.0
       vite: 3.2.3
       vitest: link:../../packages/vitest
@@ -241,7 +241,7 @@ importers:
       '@types/node': 18.11.9
       '@types/react': 18.0.25
       '@vitejs/plugin-react': 2.2.0
-      jsdom: 20.0.2
+      jsdom: 20.0.3
       typescript: 4.8.4
       vitest: link:../../packages/vitest
 
@@ -254,7 +254,7 @@ importers:
       vitest: workspace:*
     devDependencies:
       '@playwright/test': 1.25.1
-      '@vitest/ui': link:../../packages/ui
+      '@vitest/ui': 0.25.3
       playwright: 1.25.1
       vite: 3.2.3
       vitest: link:../../packages/vitest
@@ -266,7 +266,7 @@ importers:
       vite: ^3.2.3
       vitest: workspace:*
     devDependencies:
-      '@vitest/ui': link:../../packages/ui
+      '@vitest/ui': 0.25.3
       puppeteer: 13.7.0
       vite: 3.2.3
       vitest: link:../../packages/vitest
@@ -289,9 +289,9 @@ importers:
       '@types/react': 17.0.49
       '@types/react-test-renderer': 17.0.2
       '@vitejs/plugin-react': 2.2.0_vite@3.2.3
-      '@vitest/ui': link:../../packages/ui
+      '@vitest/ui': 0.25.3
       happy-dom: 7.7.0
-      jsdom: 20.0.2
+      jsdom: 20.0.3
       react-test-renderer: 17.0.2_react@17.0.2
       vite: 3.2.3
       vitest: link:../../packages/vitest
@@ -317,9 +317,36 @@ importers:
       '@types/react': 17.0.49
       '@types/react-dom': 17.0.17
       '@vitejs/plugin-react': 2.2.0_vite@3.2.3
-      '@vitest/ui': link:../../packages/ui
+      '@vitest/ui': 0.25.3
       '@wojtekmaj/enzyme-adapter-react-17': 0.6.7_7ltvq4e2railvf5uya4ffxpe2a
       enzyme: 3.11.0
+      vite: 3.2.3
+      vitest: link:../../packages/vitest
+
+  examples/react-istanbul-coverage:
+    specifiers:
+      '@testing-library/react': ^13.4.0
+      '@types/react': ^18.0.24
+      '@types/react-dom': ^18.0.8
+      '@vitejs/plugin-react': ^2.2.0
+      '@vitest/coverage-istanbul': latest
+      '@vitest/ui': latest
+      jsdom: ^20.0.2
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      vite: ^3.2.3
+      vitest: workspace:*
+    dependencies:
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+    devDependencies:
+      '@testing-library/react': 13.4.0_biqbaboplfbrettd7655fr4n2y
+      '@types/react': 18.0.25
+      '@types/react-dom': 18.0.8
+      '@vitejs/plugin-react': 2.2.0_vite@3.2.3
+      '@vitest/coverage-istanbul': 0.25.3
+      '@vitest/ui': 0.25.3
+      jsdom: 20.0.3
       vite: 3.2.3
       vitest: link:../../packages/vitest
 
@@ -360,9 +387,9 @@ importers:
       '@testing-library/jest-dom': 5.16.5
       '@testing-library/react': 13.3.0_biqbaboplfbrettd7655fr4n2y
       '@testing-library/user-event': 14.4.3
-      '@vitest/ui': link:../../packages/ui
+      '@vitest/ui': 0.25.3
       date-fns: 2.29.2
-      jsdom: 20.0.2
+      jsdom: 20.0.3
       vite: 3.2.3
       vitest: link:../../packages/vitest
 
@@ -412,9 +439,9 @@ importers:
       '@types/react': 17.0.49
       '@types/react-dom': 17.0.17
       '@vitejs/plugin-react': 1.3.2
-      '@vitest/ui': link:../../packages/ui
+      '@vitest/ui': 0.25.3
       babel-loader: 8.2.5_@babel+core@7.18.13
-      jsdom: 20.0.2
+      jsdom: 20.0.3
       msw: 0.39.2
       msw-storybook-addon: 1.6.3_ssm5z5kjlefxgbmyszjdm3lzke
       typescript: 4.8.4
@@ -448,8 +475,8 @@ importers:
       '@types/react-dom': 18.0.8
       '@vitejs/plugin-react': 2.2.0_vite@3.2.3
       '@vitest/coverage-c8': 0.24.5
-      '@vitest/ui': link:../../packages/ui
-      jsdom: 20.0.2
+      '@vitest/ui': 0.25.3
+      jsdom: 20.0.3
       typescript: 4.8.4
       vite: 3.2.3
       vitest: link:../../packages/vitest
@@ -480,9 +507,9 @@ importers:
       '@types/react': 17.0.49
       '@types/react-dom': 17.0.17
       '@vitejs/plugin-react': 1.3.2
-      '@vitest/ui': link:../../packages/ui
+      '@vitest/ui': 0.25.3
       cross-fetch: 3.1.5
-      jsdom: 20.0.2
+      jsdom: 20.0.3
       msw: 0.39.2
       vite: 3.2.3
       vitest: link:../../packages/vitest
@@ -498,8 +525,8 @@ importers:
       vue: latest
     devDependencies:
       '@vitejs/plugin-vue': 3.2.0_vite@3.2.3+vue@3.2.45
-      '@vue/test-utils': 2.2.2_vue@3.2.45
-      jsdom: 20.0.2
+      '@vue/test-utils': 2.2.4_vue@3.2.45
+      jsdom: 20.0.3
       vite: 3.2.3
       vite-plugin-ruby: 3.1.2_vite@3.2.3
       vitest: link:../../packages/vitest
@@ -515,7 +542,7 @@ importers:
     dependencies:
       solid-js: 1.5.2
     devDependencies:
-      jsdom: 20.0.2
+      jsdom: 20.0.3
       solid-testing-library: 0.3.0_solid-js@1.5.2
       vite-plugin-solid: 2.3.0_solid-js@1.5.2
       vitest: link:../../packages/vitest
@@ -532,8 +559,8 @@ importers:
     devDependencies:
       '@sveltejs/vite-plugin-svelte': 1.0.3_svelte@3.49.0+vite@3.2.3
       '@testing-library/svelte': 3.2.1_svelte@3.49.0
-      '@vitest/ui': link:../../packages/ui
-      jsdom: 20.0.2
+      '@vitest/ui': 0.25.3
+      jsdom: 20.0.3
       svelte: 3.49.0
       vite: 3.2.3
       vitest: link:../../packages/vitest
@@ -553,7 +580,7 @@ importers:
     devDependencies:
       '@vitejs/plugin-vue': 3.2.0_vite@3.2.3+vue@3.2.45
       '@vue/test-utils': 2.0.2_vue@3.2.45
-      jsdom: 20.0.2
+      jsdom: 20.0.3
       unplugin-auto-import: 0.11.2_vite@3.2.3
       unplugin-vue-components: 0.22.4_vite@3.2.3+vue@3.2.45
       vite: 3.2.3
@@ -572,7 +599,7 @@ importers:
     devDependencies:
       '@vitejs/plugin-vue': 3.2.0_vite@3.2.3+vue@3.2.45
       '@vue/test-utils': 2.0.0_vue@3.2.45
-      jsdom: 20.0.2
+      jsdom: 20.0.3
       vite: 3.2.3
       vitest: link:../../packages/vitest
 
@@ -588,8 +615,8 @@ importers:
     devDependencies:
       '@vitejs/plugin-vue': 3.2.0_vite@3.2.3+vue@3.2.45
       '@vitejs/plugin-vue-jsx': 2.1.1_vite@3.2.3+vue@3.2.45
-      '@vue/test-utils': 2.2.2_vue@3.2.45
-      jsdom: 20.0.2
+      '@vue/test-utils': 2.2.4_vue@3.2.45
+      jsdom: 20.0.3
       vite: 3.2.3
       vitest: link:../../packages/vitest
       vue: 3.2.45
@@ -608,7 +635,7 @@ importers:
     devDependencies:
       '@vitejs/plugin-vue2': 1.1.2_vite@3.2.3+vue@2.7.10
       '@vue/test-utils': 1.3.0_42puyn3dcxirnpdjnosl7pbb6a
-      jsdom: 20.0.2
+      jsdom: 20.0.3
       vite: 3.2.3
       vitest: link:../../packages/vitest
       vue-template-compiler: 2.7.10
@@ -976,7 +1003,7 @@ importers:
       vue: latest
     devDependencies:
       '@vitejs/plugin-vue': 3.2.0_vite@3.2.3+vue@3.2.45
-      '@vue/test-utils': 2.2.2_vue@3.2.45
+      '@vue/test-utils': 2.2.4_vue@3.2.45
       execa: 6.1.0
       happy-dom: 7.7.0
       vite: 3.2.3
@@ -1486,6 +1513,7 @@ packages:
       semver: 6.3.0
     transitivePeerDependencies:
       - supports-color
+    dev: true
 
   /@babel/core/7.19.6:
     resolution: {integrity: sha512-D2Ue4KHpc6Ys2+AxpIx1BZ8+UegLLLE2p3KJEuJRKmokHOtl49jQ5ny1773KsGLZs8MQvBidAF6yWUJxRqtKtg==}
@@ -1508,7 +1536,6 @@ packages:
       semver: 6.3.0
     transitivePeerDependencies:
       - supports-color
-    dev: true
 
   /@babel/generator/7.18.13:
     resolution: {integrity: sha512-CkPg8ySSPuHTYPJYo7IRALdqyjM9HCbt/3uOBEFbzyGVP6Mn8bwFPB0jX6982JVNBlYzM1nnPkfjuXSOPtQeEQ==}
@@ -1517,6 +1544,7 @@ packages:
       '@babel/types': 7.20.0
       '@jridgewell/gen-mapping': 0.3.2
       jsesc: 2.5.2
+    dev: true
 
   /@babel/generator/7.20.0:
     resolution: {integrity: sha512-GUPcXxWibClgmYJuIwC2Bc2Lg+8b9VjaJ+HlNdACEVt+Wlr1eoU1OPZjZRm7Hzl0gaTsUZNQfeihvZJhG7oc3w==}
@@ -1552,6 +1580,7 @@ packages:
       '@babel/helper-validator-option': 7.18.6
       browserslist: 4.21.3
       semver: 6.3.0
+    dev: true
 
   /@babel/helper-compilation-targets/7.20.0_@babel+core@7.18.13:
     resolution: {integrity: sha512-0jp//vDGp9e8hZzBc6N/KwA5ZK3Wsm/pfm4CrY7vzegkVxc65SgSn6wYOnwHe9Js9HRQ1YTCKLGPzDtaS3RoLQ==}
@@ -1577,7 +1606,6 @@ packages:
       '@babel/helper-validator-option': 7.18.6
       browserslist: 4.21.3
       semver: 6.3.0
-    dev: true
 
   /@babel/helper-create-class-features-plugin/7.19.0_@babel+core@7.18.13:
     resolution: {integrity: sha512-NRz8DwF4jT3UfrmUoZjd0Uph9HQnP30t7Ash+weACcyNkiYTywpIjDBgReJMKgr+n86sn2nPVVmJ28Dm053Kqw==}
@@ -1745,6 +1773,7 @@ packages:
       '@babel/types': 7.20.0
     transitivePeerDependencies:
       - supports-color
+    dev: true
 
   /@babel/helper-module-transforms/7.19.6:
     resolution: {integrity: sha512-fCmcfQo/KYr/VXXDIyd3CBGZ6AFhPFy1TfSEJ+PilGVlQT6jcbqtHAM4C1EciRqMza7/TpOUZliuSH+U6HAhJw==}
@@ -1760,7 +1789,6 @@ packages:
       '@babel/types': 7.20.0
     transitivePeerDependencies:
       - supports-color
-    dev: true
 
   /@babel/helper-optimise-call-expression/7.18.6:
     resolution: {integrity: sha512-HP59oD9/fEHQkdcbgFCnbmgH5vIQTJbxh2yf+CdM89/glUNnuzr87Q8GIjGEnOktTROemO0Pe0iPAYbqZuOUiA==}
@@ -1872,6 +1900,7 @@ packages:
       '@babel/types': 7.20.0
     transitivePeerDependencies:
       - supports-color
+    dev: true
 
   /@babel/helpers/7.20.0:
     resolution: {integrity: sha512-aGMjYraN0zosCEthoGLdqot1oRsmxVTQRHadsUPz5QM44Zej2PYRz7XiDE7GqnkZnNtLbOuxqoZw42vkU7+XEQ==}
@@ -1882,7 +1911,6 @@ packages:
       '@babel/types': 7.20.0
     transitivePeerDependencies:
       - supports-color
-    dev: true
 
   /@babel/highlight/7.18.6:
     resolution: {integrity: sha512-u7stbOuYjaPezCuLj29hNW1v64M2Md2qupEKP1fHc7WdOA3DgLh37suiSrZYY7haUB7iBeQZ9P1uiRF359do3g==}
@@ -1898,6 +1926,7 @@ packages:
     hasBin: true
     dependencies:
       '@babel/types': 7.20.0
+    dev: true
 
   /@babel/parser/7.20.0:
     resolution: {integrity: sha512-G9VgAhEaICnz8iiJeGJQyVl6J2nTjbW0xeisva0PK6XcKsga7BIaqm4ZF8Rg1Wbaqmy6znspNqhPaPkyukujzg==}
@@ -3968,6 +3997,7 @@ packages:
       globals: 11.12.0
     transitivePeerDependencies:
       - supports-color
+    dev: true
 
   /@babel/traverse/7.20.0:
     resolution: {integrity: sha512-5+cAXQNARgjRUK0JWu2UBwja4JLSO/rBMPJzpsKb+oBF5xlUuCfljQepS4XypBQoiigL0VQjTZy6WiONtUdScQ==}
@@ -3993,6 +4023,7 @@ packages:
       '@babel/helper-string-parser': 7.19.4
       '@babel/helper-validator-identifier': 7.19.1
       to-fast-properties: 2.0.0
+    dev: true
 
   /@babel/types/7.20.0:
     resolution: {integrity: sha512-Jlgt3H0TajCW164wkTOTzHkZb075tMQMULzrLUoUeKmO7eFL96GgDxf7/Axhc5CAuKE3KFyVW1p6ysKsi2oXAg==}
@@ -6937,7 +6968,7 @@ packages:
     dev: true
 
   /@types/form-data/0.0.33:
-    resolution: {integrity: sha1-yayFsqX9GENbjIXZ7LUObWyJP/g=}
+    resolution: {integrity: sha512-8BSvG1kGm83cyJITQMZSulnl6QV8jqAGreJsc5tPu1Jq0vTSOiY/k24Wx82JRpWwZSqrala6sd5rWi6aNXvqcw==}
     dependencies:
       '@types/node': 18.11.9
     dev: true
@@ -7904,6 +7935,26 @@ packages:
       vitest: link:packages/vitest
     dev: true
 
+  /@vitest/coverage-istanbul/0.25.3:
+    resolution: {integrity: sha512-wNV+fgNTsD8hAD106fMYyGKgazlqgKmkjXOMEYGWM0qnfvBwD0NRcIDzD7M7+oFhYKlGdAGzxRglr6fp9yOgBQ==}
+    dependencies:
+      istanbul-lib-coverage: 3.2.0
+      istanbul-lib-instrument: 5.2.1
+      istanbul-lib-report: 3.0.0
+      istanbul-lib-source-maps: 4.0.1
+      istanbul-reports: 3.1.5
+      test-exclude: 6.0.0
+      vitest: link:packages/vitest
+    transitivePeerDependencies:
+      - supports-color
+    dev: true
+
+  /@vitest/ui/0.25.3:
+    resolution: {integrity: sha512-o0Bo/SPlcqopsuGaPUwIPhb0Jr3VSMO4hOOWBBNDtz2/a89HO2GHPP/tx8waWxF0bBc6Cjpcj/CRQAYy3KbLgg==}
+    dependencies:
+      sirv: 2.0.2
+    dev: true
+
   /@volar/code-gen/0.40.13:
     resolution: {integrity: sha512-4gShBWuMce868OVvgyA1cU5WxHbjfEme18Tw6uVMfweZCF5fB2KECG0iPrA9D54vHk3FeHarODNwgIaaFfUBlA==}
     dependencies:
@@ -8242,8 +8293,8 @@ packages:
       vue: 3.2.45
     dev: true
 
-  /@vue/test-utils/2.2.2_vue@3.2.45:
-    resolution: {integrity: sha512-Eof2ic+Erv7wx2mrYVxBwQtAmMdCU6nywajcFKre0T3d8j6flej1IAKlEzJTn+/6IHvYPxY2hYOsOfXRXI90Jg==}
+  /@vue/test-utils/2.2.4_vue@3.2.45:
+    resolution: {integrity: sha512-1JjLduJ84bFcuCt/1YLTNyktYeUHS/zA0u8iTmF6w6ul1K/nSvyKu/MC47YjdpZ4lI/hn7FH31B22kfz62e9wA==}
     peerDependencies:
       vue: ^3.0.1
     dependencies:
@@ -10451,7 +10502,7 @@ packages:
     dev: true
 
   /concat-map/0.0.1:
-    resolution: {integrity: sha1-2Klr13/Wjfd5OnMDajug1UBdR3s=}
+    resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
 
   /concat-stream/1.6.2:
     resolution: {integrity: sha512-27HBghJxjiZtIk3Ycvn/4kbJk/1uZuJFfuPEns6LaEvpvG1f0hTea8lilrouyo9mVc2GWdcEZ8OLoGmSADlrCw==}
@@ -10511,6 +10562,7 @@ packages:
     resolution: {integrity: sha512-+OQdjP49zViI/6i7nIJpA8rAl4sV/JdPfU9nZs3VqOwGIgizICvuN2ru6fMd+4llL0tar18UYJXfZ/TWtmhUjA==}
     dependencies:
       safe-buffer: 5.1.2
+    dev: true
 
   /convert-source-map/1.9.0:
     resolution: {integrity: sha512-ASFBup0Mz1uyiIjANan1jzLQami9z1PoYSZCiiYW2FczPbenXc45FZdBZLzOT+r6+iciuEModtmCti+hjaAk0A==}
@@ -11115,6 +11167,10 @@ packages:
 
   /decimal.js/10.4.1:
     resolution: {integrity: sha512-F29o+vci4DodHYT9UrR5IEbfBw9pE5eSapIJdTqXK5+6hq+t8VRxwQyKlW2i+KDKFkkJQRvFyI/QXD83h8LyQw==}
+    dev: true
+
+  /decimal.js/10.4.2:
+    resolution: {integrity: sha512-ic1yEvwT6GuvaYwBLLY6/aFFgjZdySKTE8en/fkU3QICTmRtgtSlFn0u0BXN06InZwtfCelR7j8LRiDI/02iGA==}
     dev: true
 
   /decode-uri-component/0.2.0:
@@ -14648,8 +14704,8 @@ packages:
     resolution: {integrity: sha512-pzqtp31nLv/XFOzXGuvhCb8qhjmTVo5vjVk19XE4CRlSWz0KoeJ3bw9XsA7nOp9YBf4qHjwBxkDzKcME/J29Yg==}
     engines: {node: '>=8'}
     dependencies:
-      '@babel/core': 7.18.13
-      '@babel/parser': 7.18.13
+      '@babel/core': 7.19.6
+      '@babel/parser': 7.20.0
       '@istanbuljs/schema': 0.1.3
       istanbul-lib-coverage: 3.2.0
       semver: 6.3.0
@@ -14673,7 +14729,6 @@ packages:
       source-map: 0.6.1
     transitivePeerDependencies:
       - supports-color
-    dev: false
 
   /istanbul-reports/3.1.5:
     resolution: {integrity: sha512-nUsEMa9pBt/NOHqbcbeJEgqIlY/K7rVWUX6Lql2orY5e9roQOthbR3vtY4zzf2orPELg80fnxxk9zUyPlgwD1w==}
@@ -14970,6 +15025,47 @@ packages:
       symbol-tree: 3.2.4
       tough-cookie: 4.1.2
       w3c-xmlserializer: 3.0.0
+      webidl-conversions: 7.0.0
+      whatwg-encoding: 2.0.0
+      whatwg-mimetype: 3.0.0
+      whatwg-url: 11.0.0
+      ws: 8.11.0
+      xml-name-validator: 4.0.0
+    transitivePeerDependencies:
+      - bufferutil
+      - supports-color
+      - utf-8-validate
+    dev: true
+
+  /jsdom/20.0.3:
+    resolution: {integrity: sha512-SYhBvTh89tTfCD/CRdSOm13mOBa42iTaTyfyEWBdKcGdPxPtLFBXuHR8XHb33YNYaP+lLbmSvBTsnoesCNJEsQ==}
+    engines: {node: '>=14'}
+    peerDependencies:
+      canvas: ^2.5.0
+    peerDependenciesMeta:
+      canvas:
+        optional: true
+    dependencies:
+      abab: 2.0.6
+      acorn: 8.8.1
+      acorn-globals: 7.0.1
+      cssom: 0.5.0
+      cssstyle: 2.3.0
+      data-urls: 3.0.2
+      decimal.js: 10.4.2
+      domexception: 4.0.0
+      escodegen: 2.0.0
+      form-data: 4.0.0
+      html-encoding-sniffer: 3.0.0
+      http-proxy-agent: 5.0.0
+      https-proxy-agent: 5.0.1
+      is-potential-custom-element-name: 1.0.1
+      nwsapi: 2.2.2
+      parse5: 7.1.1
+      saxes: 6.0.0
+      symbol-tree: 3.2.4
+      tough-cookie: 4.1.2
+      w3c-xmlserializer: 4.0.0
       webidl-conversions: 7.0.0
       whatwg-encoding: 2.0.0
       whatwg-mimetype: 3.0.0
@@ -18378,6 +18474,7 @@ packages:
 
   /safe-buffer/5.1.2:
     resolution: {integrity: sha512-Gd2UZBJDkXlY7GbJxfsE8/nvKkUEU1G38c1siN6QP6a9PT9MmHB8GnpscSmMJSoF8LOIrt8ud/wPtojys4G6+g==}
+    dev: true
 
   /safe-buffer/5.2.1:
     resolution: {integrity: sha512-rp3So07KcdmmKbGvgaNxQSJr7bGVSVk5S9Eq1F+ppbRo70+YeaDxkw5Dd8NPN+GD6bjnYm2VuPuCXmpuYvmCXQ==}
@@ -21038,6 +21135,13 @@ packages:
   /w3c-xmlserializer/3.0.0:
     resolution: {integrity: sha512-3WFqGEgSXIyGhOmAFtlicJNMjEps8b1MG31NCA0/vOF9+nKMUW1ckhi9cnNHmf88Rzw5V+dwIwsm2C7X8k9aQg==}
     engines: {node: '>=12'}
+    dependencies:
+      xml-name-validator: 4.0.0
+    dev: true
+
+  /w3c-xmlserializer/4.0.0:
+    resolution: {integrity: sha512-d+BFHzbiCx6zGfz0HyQ6Rg69w9k19nviJspaj4yNscGjrHu94sVP+aRm75yEbCh+r2/yR+7q6hux9LVtbuTGBw==}
+    engines: {node: '>=14'}
     dependencies:
       xml-name-validator: 4.0.0
     dev: true

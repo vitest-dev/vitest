@@ -105,6 +105,11 @@ export class IstanbulCoverageProvider implements CoverageProvider {
       return map
     }, {})
 
+    if (!this.ctx.isFirstRun && !this.ctx.config.coverage.watchAll && this.ctx.changedTests.size > 0) {
+      const changedTests = Array.from(this.ctx.changedTests)
+      mergedCoverage.filter(key => key === changedTests[0].replace('.test', ''))
+    }
+
     if (this.options.all)
       await this.includeUntestedFiles(mergedCoverage)
 

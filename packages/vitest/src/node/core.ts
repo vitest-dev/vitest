@@ -415,7 +415,6 @@ export class Vitest {
 
       this.snapshot.clear()
       const files = Array.from(this.changedTests)
-      this.changedTests.clear()
 
       if (this.coverageProvider && this.config.coverage.cleanOnRerun)
         await this.coverageProvider.clean()
@@ -425,6 +424,7 @@ export class Vitest {
       await this.runFiles(files)
 
       await this.coverageProvider?.reportCoverage()
+      this.changedTests.clear()
 
       if (!this.config.browser)
         await this.report('onWatcherStart')

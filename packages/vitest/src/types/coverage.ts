@@ -142,6 +142,12 @@ export interface BaseCoverageOptions {
    * Whether to include all files, including the untested ones into report
    */
   all?: boolean
+  /**
+   * Runs coverage for all files. If 'false', only for the changed file.
+   *
+   * @default true
+   */
+  watchAll?: boolean
 }
 
 export interface CoverageIstanbulOptions extends BaseCoverageOptions {
