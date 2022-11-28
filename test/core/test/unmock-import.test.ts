@@ -8,6 +8,7 @@ beforeEach(() => {
     },
   }))
 })
+
 afterEach(() => {
   vi.doUnmock('/data')
 })
@@ -23,4 +24,14 @@ test('second import should had been re-mock', async () => {
   // @ts-expect-error I know this
   const { data } = await import('/data')
   expect(data.state).toBe('STARTED')
+})
+
+test('unmock should clear modules replaced with imitation', async () => {
+  vi.doMock('./fixtures/mocked-dependency')
+  const { helloWorld } = await import('./fixtures/mocked-dependency')
+  expect(vi.isMockFunction(helloWorld)).toBe(true)
+
+  vi.doUnmock('./fixtures/mocked-dependency')
+  const { helloWorld: unmocked } = await import('./fixtures/mocked-dependency')
+  expect(vi.isMockFunction(unmocked)).toBe(false)
 })

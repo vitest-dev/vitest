@@ -1,7 +1,7 @@
 {
   "name": "vitest",
   "type": "module",
-  "version": "0.25.2",
+  "version": "0.25.3",
   "description": "A blazing fast unit test framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -77,7 +77,7 @@
   },
   "scripts": {
     "build": "rimraf dist && rollup -c",
-    "dev": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" rollup -c --watch -m inline",
+    "dev": "NODE_OPTIONS=\"--max-old-space-size=8192\" rollup -c --watch -m inline",
     "prepublishOnly": "pnpm build"
   },
   "peerDependencies": {
@@ -148,7 +148,7 @@
     "log-update": "^5.0.1",
     "magic-string": "^0.26.7",
     "micromatch": "^4.0.5",
-    "mlly": "^0.5.16",
+    "mlly": "^1.0.0",
     "natural-compare": "^1.4.0",
     "p-limit": "^4.0.0",
     "pathe": "^0.2.0",

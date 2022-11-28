@@ -160,10 +160,14 @@ export class Vitest {
     checker.onParseEnd(async ({ files, sourceErrors }) => {
       this.state.collectFiles(checker.getTestFiles())
       await this.report('onCollected')
-      if (!files.length)
+      if (!files.length) {
         this.logger.printNoTestFound()
-      else
+      }
+      else {
+        if (hasFailed(files))
+          process.exitCode = 1
         await this.report('onFinished', files)
+      }
       if (sourceErrors.length && !this.config.typecheck.ignoreSourceErrors) {
         process.exitCode = 1
         await this.logger.printSourceTypeErrors(sourceErrors)
@@ -553,8 +557,9 @@ export class Vitest {
   async globTestFiles(filters: string[] = []) {
     const { include, exclude, includeSource } = this.config
 
-    const globOptions = {
+    const globOptions: fg.Options = {
       absolute: true,
+      dot: true,
       cwd: this.config.dir || this.config.root,
       ignore: exclude,
     }

@@ -291,7 +291,7 @@ export class VitestMocker {
     const id = this.normalizePath(path)
 
     const mock = this.mockMap.get(suitefile)
-    if (mock?.[id])
+    if (mock && id in mock)
       delete mock[id]
 
     const mockId = this.getMockPath(id)

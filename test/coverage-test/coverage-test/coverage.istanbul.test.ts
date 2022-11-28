@@ -50,3 +50,10 @@ test('implicit else is included in branch count', async () => {
   expect(fileCoverage.b).toHaveProperty('0')
   expect(fileCoverage.b['0']).toHaveLength(2)
 })
+
+test('file using import.meta.env is included in report', async () => {
+  const coveragePath = resolve('./coverage/src')
+  const files = fs.readdirSync(coveragePath)
+
+  expect(files).toContain('importEnv.ts.html')
+})
