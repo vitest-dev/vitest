@@ -347,9 +347,12 @@ export class ViteNodeRunner {
       columnOffset: -codeDefinition.length,
     })
 
-    await fn(...Object.values(context))
-
-    mod.evaluated = true
+    try {
+      await fn(...Object.values(context))
+    }
+    finally {
+      mod.evaluated = true
+    }
 
     return exports
   }
