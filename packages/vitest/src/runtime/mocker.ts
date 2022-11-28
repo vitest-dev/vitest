@@ -3,6 +3,7 @@ import { isNodeBuiltin } from 'mlly'
 import { basename, dirname, extname, join, resolve } from 'pathe'
 import { normalizeRequestId, pathFromRoot, toFilePath } from 'vite-node/utils'
 import type { ModuleCacheMap } from 'vite-node/client'
+import c from 'picocolors'
 import { getAllMockableProperties, getType, getWorkerState, mergeSlashes, slash } from '../utils'
 import { distDir } from '../constants'
 import type { PendingSuiteMock } from '../types/mocker'
@@ -44,6 +45,7 @@ interface ViteRunnerRequest {
 export class VitestMocker {
   private static pendingIds: PendingSuiteMock[] = []
   private static spyModule?: typeof import('../integrations/spy')
+  private resolveCache = new Map<string, Record<string, string>>()
 
   constructor(
     public options: ExecuteOptions,
@@ -96,7 +98,7 @@ export class VitestMocker {
       if (mock.type === 'unmock')
         this.unmockPath(path)
       if (mock.type === 'mock')
-        this.mockPath(path, external, mock.factory)
+        this.mockPath(mock.id, path, external, mock.factory)
     }))
 
     VitestMocker.pendingIds = []
@@ -122,12 +124,11 @@ export class VitestMocker {
     if (exports === null || typeof exports !== 'object')
       throw new Error('[vitest] vi.mock(path: string, factory?: () => unknown) is not returning an object. Did you mean to return an object with a "default" key?')
 
-    this.moduleCache.set(dep, { exports })
-
     const filepath = dep.slice('mock:'.length)
+    const mockpath = this.resolveCache.get(this.getSuiteFilepath())?.[filepath] || filepath
 
-    const exportHandler = {
-      get(target: Record<string, any>, prop: any) {
+    const moduleExports = new Proxy(exports, {
+      get(target, prop) {
         const val = target[prop]
 
         // 'then' can exist on non-Promise objects, need nested instanceof check for logic to work
@@ -136,14 +137,27 @@ export class VitestMocker {
             return target.then.bind(target)
         }
         else if (!(prop in target)) {
-          throw new Error(`[vitest] No "${prop}" export is defined on the "${filepath}"`)
+          throw new Error(
+            `[vitest] No "${String(prop)}" export is defined on the "${mockpath}" mock. `
+            + 'Did you forget to return it from "vi.mock"?'
+            + '\nIf you need to partially mock a module, you can use "vi.importActual" inside:\n\n'
+            + `${c.green(`vi.mock("${mockpath}", async () => {
+  const actual = await vi.importActual("${mockpath}")
+  return {
+    ...actual,
+    // your mock
+  },
+})`)}\n`,
+          )
         }
 
         return val
       },
-    }
+    })
 
-    return new Proxy(exports, exportHandler)
+    this.moduleCache.set(dep, { exports: moduleExports })
+
+    return moduleExports
   }
 
   private getMockPath(dep: string) {
@@ -299,15 +313,18 @@ export class VitestMocker {
       this.moduleCache.delete(mockId)
   }
 
-  public mockPath(path: string, external: string | null, factory?: () => any) {
+  public mockPath(originalId: string, path: string, external: string | null, factory?: () => any) {
     const suitefile = this.getSuiteFilepath()
     const id = this.normalizePath(path)
 
     const mocks = this.mockMap.get(suitefile) || {}
+    const resolves = this.resolveCache.get(suitefile) || {}
 
     mocks[id] = factory || this.resolveMockPath(path, external)
+    resolves[id] = originalId
 
     this.mockMap.set(suitefile, mocks)
+    this.resolveCache.set(suitefile, resolves)
   }
 
   public async importActual<T>(id: string, importer: string): Promise<T> {
