@@ -286,7 +286,7 @@ export class ViteNodeRunner {
       },
     })
 
-    Object.assign(mod, { code: transformed, exports })
+    Object.assign(mod, { code: transformed, exports, evaluated: false })
 
     const __filename = fileURLToPath(url)
     const moduleProxy = {
@@ -348,6 +348,8 @@ export class ViteNodeRunner {
     })
 
     await fn(...Object.values(context))
+
+    mod.evaluated = true
 
     return exports
   }

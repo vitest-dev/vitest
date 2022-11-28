@@ -253,7 +253,7 @@ class VitestUtils {
     const state = getWorkerState()
     const promises: Promise<unknown>[] = []
     for (const mod of state.moduleCache.values()) {
-      if (mod.promise)
+      if (mod.promise && !mod.evaluated)
         promises.push(mod.promise)
     }
     if (!promises.length)
