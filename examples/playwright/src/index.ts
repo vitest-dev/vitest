@@ -1,6 +1,5 @@
 const root = document.createElement('div')
 const button = document.createElement('button')
-button.id = 'btn'
 
 let count = 0
 

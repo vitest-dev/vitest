@@ -1,7 +1,7 @@
 {
   "name": "@vitest/ui",
   "type": "module",
-  "version": "0.25.2",
+  "version": "0.25.3",
   "description": "UI for Vitest",
   "license": "MIT",
   "repository": {
@@ -28,7 +28,7 @@
     "build:client": "vite build",
     "build:node": "rollup -c",
     "dev:client": "vite",
-    "dev": "rollup -c --watch --watch.include=node/**",
+    "dev": "rollup -c --watch --watch.include=node",
     "dev:ui": "run-p dev dev:client",
     "test:run": "cypress run --component",
     "test:open": "cypress open --component",

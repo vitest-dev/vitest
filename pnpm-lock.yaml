@@ -26,7 +26,6 @@ importers:
       '@vitest/ui': workspace:*
       bumpp: ^8.2.1
       c8: ^7.12.0
-      cross-env: ^7.0.3
       esbuild: ^0.14.47
       eslint: ^8.27.0
       esno: ^0.16.3
@@ -67,7 +66,6 @@ importers:
       '@vitest/ui': link:packages/ui
       bumpp: 8.2.1
       c8: 7.12.0
-      cross-env: 7.0.3
       esbuild: 0.14.54
       eslint: 8.27.0
       esno: 0.16.3
@@ -192,7 +190,7 @@ importers:
     dependencies:
       lit: 2.3.1
     devDependencies:
-      '@vitest/ui': 0.25.3
+      '@vitest/ui': link:../../packages/ui
       jsdom: 20.0.3
       vite: 3.2.3
       vitest: link:../../packages/vitest
@@ -247,15 +245,15 @@ importers:
 
   examples/playwright:
     specifiers:
-      '@playwright/test': ^1.23.4
+      '@playwright/test': ^1.28.0
       '@vitest/ui': latest
-      playwright: ^1.23.4
+      playwright: ^1.28.0
       vite: ^3.2.3
       vitest: workspace:*
     devDependencies:
-      '@playwright/test': 1.25.1
-      '@vitest/ui': 0.25.3
-      playwright: 1.25.1
+      '@playwright/test': 1.28.0
+      '@vitest/ui': link:../../packages/ui
+      playwright: 1.28.0
       vite: 3.2.3
       vitest: link:../../packages/vitest
 
@@ -475,7 +473,7 @@ importers:
       '@types/react-dom': 18.0.8
       '@vitejs/plugin-react': 2.2.0_vite@3.2.3
       '@vitest/coverage-c8': 0.24.5
-      '@vitest/ui': 0.25.3
+      '@vitest/ui': link:../../packages/ui
       jsdom: 20.0.3
       typescript: 4.8.4
       vite: 3.2.3
@@ -559,7 +557,7 @@ importers:
     devDependencies:
       '@sveltejs/vite-plugin-svelte': 1.0.3_svelte@3.49.0+vite@3.2.3
       '@testing-library/svelte': 3.2.1_svelte@3.49.0
-      '@vitest/ui': 0.25.3
+      '@vitest/ui': link:../../packages/ui
       jsdom: 20.0.3
       svelte: 3.49.0
       vite: 3.2.3
@@ -645,7 +643,7 @@ importers:
       '@types/ws': ^8.5.3
       '@vitest/ws-client': workspace:*
       local-pkg: ^0.4.2
-      mlly: ^0.5.16
+      mlly: ^1.0.0
       modern-node-polyfills: 0.0.9
       picocolors: ^1.0.0
       rollup: ^2.79.1
@@ -654,7 +652,7 @@ importers:
       vitest: workspace:*
     dependencies:
       local-pkg: 0.4.2
-      mlly: 0.5.16
+      mlly: 1.0.0
       modern-node-polyfills: 0.0.9
       rollup-plugin-node-polyfills: 0.2.1
       sirv: 2.0.2
@@ -779,7 +777,7 @@ importers:
       '@types/source-map-support': ^0.5.6
       cac: ^6.7.14
       debug: ^4.3.4
-      mlly: ^0.5.16
+      mlly: ^1.0.0
       pathe: ^0.2.0
       picocolors: ^1.0.0
       rollup: ^2.79.1
@@ -788,7 +786,7 @@ importers:
       vite: ^3.2.3
     dependencies:
       debug: 4.3.4
-      mlly: 0.5.16
+      mlly: 1.0.0
       pathe: 0.2.0
       source-map: 0.6.1
       source-map-support: 0.5.21
@@ -838,7 +836,7 @@ importers:
       log-update: ^5.0.1
       magic-string: ^0.26.7
       micromatch: ^4.0.5
-      mlly: ^0.5.16
+      mlly: ^1.0.0
       natural-compare: ^1.4.0
       p-limit: ^4.0.0
       pathe: ^0.2.0
@@ -900,7 +898,7 @@ importers:
       log-update: 5.0.1
       magic-string: 0.26.7
       micromatch: 4.0.5
-      mlly: 0.5.16
+      mlly: 1.0.0
       natural-compare: 1.4.0
       p-limit: 4.0.0
       pathe: 0.2.0
@@ -5077,13 +5075,13 @@ packages:
     resolution: {integrity: sha512-Aq58f5HiWdyDlFffbbSjAlv596h/cOnt2DO1w3DOC7OJ5EHs0hd/nycJfiu9RJbT6Yk6F1knnRRXNSpxoIVZ9Q==}
     dev: true
 
-  /@playwright/test/1.25.1:
-    resolution: {integrity: sha512-IJ4X0yOakXtwkhbnNzKkaIgXe6df7u3H3FnuhI9Jqh+CdO0e/lYQlDLYiyI9cnXK8E7UAppAWP+VqAv6VX7HQg==}
+  /@playwright/test/1.28.0:
+    resolution: {integrity: sha512-vrHs5DFTPwYox5SGKq/7TDn/S4q6RA1zArd7uhO6EyP9hj3XgZBBM12ktMbnDQNxh/fL1IUKsTNLxihmsU38lQ==}
     engines: {node: '>=14'}
     hasBin: true
     dependencies:
       '@types/node': 18.11.9
-      playwright-core: 1.25.1
+      playwright-core: 1.28.0
     dev: true
 
   /@pmmmwh/react-refresh-webpack-plugin/0.5.7_metx475lqcp4j5c75za4zf7xbi:
@@ -7978,10 +7976,10 @@ packages:
     dependencies:
       '@volar/code-gen': 0.40.13
       '@volar/source-map': 0.40.13
-      '@vue/compiler-core': 3.2.41
+      '@vue/compiler-core': 3.2.45
       '@vue/compiler-dom': 3.2.45
       '@vue/compiler-sfc': 3.2.45
-      '@vue/reactivity': 3.2.41
+      '@vue/reactivity': 3.2.45
       '@vue/shared': 3.2.45
     dev: true
 
@@ -8849,7 +8847,6 @@ packages:
     resolution: {integrity: sha512-7zFpHzhnqYKrkYdUjF1HI1bzd0VygEGX8lFk4k5zVMqHEoES+P+7TKI+EvLO9WVMJ8eekdO0aDEK044xTXwPPA==}
     engines: {node: '>=0.4.0'}
     hasBin: true
-    dev: true
 
   /address/1.2.0:
     resolution: {integrity: sha512-tNEZYz5G/zYunxFm7sfhAxkXEuLj3K6BKwv6ZURlsF6yiUQ65z0Q2wZW9L5cPUl9ocofGvXOdFYbFHp0+6MOig==}
@@ -10712,14 +10709,6 @@ packages:
 
   /create-require/1.1.1:
     resolution: {integrity: sha512-dcKFX3jn0MpIaXjisoRvexIJVEKzaq7z2rZKxf+MSr9TkdmHmsU4m2lcLojrj/FHl8mk5VxMmYA+ftRkP/3oKQ==}
-    dev: true
-
-  /cross-env/7.0.3:
-    resolution: {integrity: sha512-+/HKd6EgcQCJGh2PSjZuUitQBQynKor4wrFbRg4DtAgS1aWO+gU52xpH7M9ScGgXSYmAVS9bIJ8EzuaGw0oNAw==}
-    engines: {node: '>=10.14', npm: '>=6', yarn: '>=1'}
-    hasBin: true
-    dependencies:
-      cross-spawn: 7.0.3
     dev: true
 
   /cross-fetch/3.1.5:
@@ -15980,10 +15969,19 @@ packages:
   /mlly/0.5.16:
     resolution: {integrity: sha512-LaJ8yuh4v0zEmge/g3c7jjFlhoCPfQn6RCjXgm9A0Qiuochq4BcuOxVfWmdnCoLTlg2MV+hqhOek+W2OhG0Lwg==}
     dependencies:
-      acorn: 8.8.0
+      acorn: 8.8.1
       pathe: 0.3.8
       pkg-types: 0.3.5
       ufo: 0.8.5
+    dev: true
+
+  /mlly/1.0.0:
+    resolution: {integrity: sha512-QL108Hwt+u9bXdWgOI0dhzZfACovn5Aen4Xvc8Jasd9ouRH4NjnrXEiyP3nVvJo91zPlYjVRckta0Nt2zfoR6g==}
+    dependencies:
+      acorn: 8.8.1
+      pathe: 1.0.0
+      pkg-types: 1.0.1
+      ufo: 1.0.0
 
   /modern-node-polyfills/0.0.9:
     resolution: {integrity: sha512-Z7sFaWAHCEAw44Ww1L0JEt4BaQ7/LVTbbqTtm3bNSfdWs0ZW7QwRN7Xy8RjSPOlZ9ZSkoXAa54neuvAC6KGRFg==}
@@ -16943,9 +16941,14 @@ packages:
 
   /pathe/0.3.8:
     resolution: {integrity: sha512-c71n61F1skhj/jzZe+fWE9XDoTYjWbUwIKVwFftZ5IOgiX44BVkTkD+/803YDgR50tqeO4eXWxLyVHBLWQAD1g==}
+    dev: true
 
   /pathe/0.3.9:
     resolution: {integrity: sha512-6Y6s0vT112P3jD8dGfuS6r+lpa0qqNrLyHPOwvXMnyNTQaYiwgau2DP3aNDsR13xqtGj7rrPo+jFUATpU6/s+g==}
+    dev: true
+
+  /pathe/1.0.0:
+    resolution: {integrity: sha512-nPdMG0Pd09HuSsr7QOKUXO2Jr9eqaDiZvDwdyIhNG5SHYujkQHYKDfGQkulBxvbDHz8oHLsTgKN86LSwYzSHAg==}
 
   /pathval/1.1.1:
     resolution: {integrity: sha512-Dp6zGqpTdETdR63lehJYPeIOqpiNBNtc7BpWSLrOje7UaIsE5aY92r/AunQA7rsXvet3lrJ3JnZX29UPTKXyKQ==}
@@ -17093,6 +17096,7 @@ packages:
       jsonc-parser: 3.2.0
       mlly: 0.5.16
       pathe: 0.3.9
+    dev: true
 
   /pkg-types/0.3.6:
     resolution: {integrity: sha512-uQZutkkh6axl1GxDm5/+8ivVdwuJ5pyDGqJeSiIWIUWIqYiK3p9QKozN/Rv6eVvFoeSWkN1uoYeSDBwwBJBtbg==}
@@ -17102,19 +17106,26 @@ packages:
       pathe: 0.3.9
     dev: true
 
-  /playwright-core/1.25.1:
-    resolution: {integrity: sha512-lSvPCmA2n7LawD2Hw7gSCLScZ+vYRkhU8xH0AapMyzwN+ojoDqhkH/KIEUxwNu2PjPoE/fcE0wLAksdOhJ2O5g==}
+  /pkg-types/1.0.1:
+    resolution: {integrity: sha512-jHv9HB+Ho7dj6ItwppRDDl0iZRYBD0jsakHXtFgoLr+cHSF6xC+QL54sJmWxyGxOLYSHm0afhXhXcQDQqH9z8g==}
+    dependencies:
+      jsonc-parser: 3.2.0
+      mlly: 1.0.0
+      pathe: 1.0.0
+
+  /playwright-core/1.28.0:
+    resolution: {integrity: sha512-nJLknd28kPBiCNTbqpu6Wmkrh63OEqJSFw9xOfL9qxfNwody7h6/L3O2dZoWQ6Oxcm0VOHjWmGiCUGkc0X3VZA==}
     engines: {node: '>=14'}
     hasBin: true
     dev: true
 
-  /playwright/1.25.1:
-    resolution: {integrity: sha512-kOlW7mllnQ70ALTwAor73q/FhdH9EEXLUqjdzqioYLcSVC4n4NBfDqeCikGuayFZrLECLkU6Hcbziy/szqTXSA==}
+  /playwright/1.28.0:
+    resolution: {integrity: sha512-kyOXGc5y1mgi+hgEcCIyE1P1+JumLrxS09nFHo5sdJNzrucxPRAGwM4A2X3u3SDOfdgJqx61yIoR6Av+5plJPg==}
     engines: {node: '>=14'}
     hasBin: true
     requiresBuild: true
     dependencies:
-      playwright-core: 1.25.1
+      playwright-core: 1.28.0
     dev: true
 
   /pluralize/8.0.0:
@@ -20141,10 +20152,14 @@ packages:
 
   /ufo/0.8.5:
     resolution: {integrity: sha512-e4+UtA5IRO+ha6hYklwj6r7BjiGMxS0O+UaSg9HbaTefg4kMkzj4tXzEBajRR+wkxf+golgAWKzLbytCUDMJAA==}
+    dev: true
 
   /ufo/0.8.6:
     resolution: {integrity: sha512-fk6CmUgwKCfX79EzcDQQpSCMxrHstvbLswFChHS0Vump+kFkw7nJBfTZoC1j0bOGoY9I7R3n2DGek5ajbcYnOw==}
     dev: true
+
+  /ufo/1.0.0:
+    resolution: {integrity: sha512-DRty0ZBNlJ2R59y4mEupJRKLbkLQsc4qtxjpQv78AwEDuBkaUogMc2LkeqW3HddFlw6NwnXYfdThEZOiNgkmmQ==}
 
   /uglify-js/3.17.0:
     resolution: {integrity: sha512-aTeNPVmgIMPpm1cxXr2Q/nEbvkmV8yq66F3om7X3P/cvOXQ0TMQ64Wk63iyT1gPlmdmGzjGpyLh1f3y8MZWXGg==}

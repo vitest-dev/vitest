@@ -159,7 +159,7 @@ export class JUnitReporter implements Reporter {
         await this.writeLogs(task, 'err')
 
         if (task.mode === 'skip' || task.mode === 'todo')
-          this.logger.log('<skipped/>')
+          await this.logger.log('<skipped/>')
 
         if (task.result?.state === 'fail') {
           const error = task.result.error
