@@ -81,20 +81,24 @@ Vitest doesn't support Jest's legacy timers.
 
 This is not a Jest-specific feature, but if you previously were using Jest with vue-cli preset, you will need to install [`jest-serializer-vue`](https://github.com/eddyerburgh/jest-serializer-vue) package, and use it inside [setupFiles](/config/#setupfiles):
 
+`vite.config.js`
+
 ```js
-// vite.config.js
-{
+import { defineConfig } from 'vite'
+
+export default defineConfig({
   test: {
     setupFiles: ['./tests/unit/setup.js']
   }
-}
+})
 ```
 
-```js
-// tests/unit/setup.js
-import vueSnapshotSerializer from 'jest-serializer-vue';
+`tests/unit/setup.js`
 
-expect.addSnapshotSerializer(vueSnapshotSerializer);
+```js
+import vueSnapshotSerializer from 'jest-serializer-vue'
+
+expect.addSnapshotSerializer(vueSnapshotSerializer)
 ```
 
 Otherwise your snapshots will have a lot of escaped `"` characters.
