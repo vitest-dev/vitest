@@ -457,6 +457,13 @@ export interface InlineConfig {
    * Options for configuring typechecking test environment.
    */
   typecheck?: Partial<TypecheckConfig>
+
+  /**
+   * The number of seconds after which a test is considered as slow and reported as such in the results.
+   *
+   * @default 300
+  */
+  slowTestThreshold?: number
 }
 
 export interface TypecheckConfig {
