@@ -88,3 +88,19 @@ export default defineConfig({
 ```
 
 Please refer to the type definition for more details.
+
+## Changing the default coverage folder location
+
+When running a coverage report, a temp folder is created in the root directory. If you want to move it to another location, use the `test.coverage.reportsDirectory` property in the `vite.config.js` file.
+
+```js
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  test: {
+    coverage: {
+      reportsDirectory: './tests/unit/coverage'
+    }
+  }
+})
+```
