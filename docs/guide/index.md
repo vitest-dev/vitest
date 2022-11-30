@@ -33,6 +33,21 @@ pnpm add -D vitest
 Vitest requires Vite >=v3.0.0 and Node >=v14
 :::
 
+if you want to run `vitest` globally, you should install it in global.
+
+With npm
+```bash
+npm install -g vitest
+```
+or with yarn
+```bash
+yarn add -g vitest
+```
+or with pnpm
+```bash
+pnpm add -g vitest
+```
+
 ## Configuring Vitest
 
 One of the main advantages of Vitest is its unified configuration with Vite. If present, `vitest` will read your root `vite.config.ts` to match with the plugins and setup as your Vite app. For example, your Vite [resolve.alias](https://vitejs.dev/config/shared-options.html#resolve-alias) and [plugins](https://vitejs.dev/guide/using-plugins.html) configuration will work out-of-the-box. If you want a different configuration during testing, you can:
