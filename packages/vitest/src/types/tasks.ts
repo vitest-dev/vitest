@@ -116,17 +116,17 @@ interface SuiteEachFunction {
 
 interface TestEachFunction {
   <T extends any[] | [any]>(cases: ReadonlyArray<T>): (
-    name: string | ((...args: T) => string),
+    name: string,
     fn: (...args: T) => Awaitable<void>,
     options?: number | TestOptions,
   ) => void
   <T extends ReadonlyArray<any>>(cases: ReadonlyArray<T>): (
-    name: string | ((...args: ExtractEachCallbackArgs<T>) => string),
+    name: string,
     fn: (...args: ExtractEachCallbackArgs<T>) => Awaitable<void>,
     options?: number | TestOptions,
   ) => void
   <T>(cases: ReadonlyArray<T>): (
-    name: string | ((...args: T[]) => string),
+    name: string,
     fn: (...args: T[]) => Awaitable<void>,
     options?: number | TestOptions,
   ) => void
