@@ -278,22 +278,6 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
   )
   ```
 
-  You can also custom title formatter.
-
-  ```ts
-  test.each`
-    a               | b      | expected
-    ${1}            | ${1}   | ${2}
-    ${'a'}          | ${'b'} | ${'ab'}
-    ${[]}           | ${'b'} | ${'b'}
-    ${{}}           | ${'b'} | ${'[object Object]b'}
-    ${{ asd: 1 }}   | ${'b'} | ${'[object Object]b'}
-    `(
-    (a, b, expected) => `fmt returns ${JSON.stringify(expected)} when ${JSON.stringify(a)} is added ${JSON.stringify(b)}`,
-    ({ a, b, expected }) => expect(a + b).toBe(expected),
-  )
-  ```
-
   If you want to have access to `TestContext`, use `describe.each` with a single test.
 
 ::: warning
