@@ -186,13 +186,18 @@ function createSuite() {
     if (Array.isArray(cases) && args.length)
       cases = formatTemplateString(cases, args)
 
-    return (name: string, fn: (...args: T[]) => void, options?: number | TestOptions) => {
+    return (name: string | ((...args: T[]) => string), fn: (...args: T[]) => void, options?: number | TestOptions) => {
       const arrayOnlyCases = cases.every(Array.isArray)
       cases.forEach((i, idx) => {
         const items = Array.isArray(i) ? i : [i]
+        let formatNamed!: string
+        if (typeof name === 'string')
+          formatNamed = formatTitle(name, items, idx)
+        else
+          formatNamed = arrayOnlyCases ? name(...items) : name(i)
         arrayOnlyCases
-          ? suite(formatTitle(name, items, idx), () => fn(...items), options)
-          : suite(formatTitle(name, items, idx), () => fn(i), options)
+          ? suite(formatNamed, () => fn(...items), options)
+          : suite(formatNamed, () => fn(i), options)
       })
     }
   }
@@ -222,13 +227,19 @@ function createTest(fn: (
     if (Array.isArray(cases) && args.length)
       cases = formatTemplateString(cases, args)
 
-    return (name: string, fn: (...args: T[]) => void, options?: number | TestOptions) => {
+    return (name: string | ((...args: T[]) => string), fn: (...args: T[]) => void, options?: number | TestOptions) => {
       const arrayOnlyCases = cases.every(Array.isArray)
       cases.forEach((i, idx) => {
         const items = Array.isArray(i) ? i : [i]
+        let formatNamed!: string
+        if (typeof name === 'string')
+          formatNamed = formatTitle(name, items, idx)
+        else
+          formatNamed = arrayOnlyCases ? name(...items) : name(i)
+
         arrayOnlyCases
-          ? test(formatTitle(name, items, idx), () => fn(...items), options)
-          : test(formatTitle(name, items, idx), () => fn(i), options)
+          ? test(formatNamed, () => fn(...items), options)
+          : test(formatNamed, () => fn(i), options)
       })
     }
   }
