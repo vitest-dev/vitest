@@ -193,8 +193,11 @@ function createSuite() {
         let formatNamed!: string
         if (typeof name === 'string')
           formatNamed = formatTitle(name, items, idx)
-        else
+        else if (Array.isArray(cases) && args.length)
           formatNamed = arrayOnlyCases ? name(...items) : name(i)
+        else
+          throw new Error('only apply with string template')
+
         arrayOnlyCases
           ? suite(formatNamed, () => fn(...items), options)
           : suite(formatNamed, () => fn(i), options)
@@ -234,8 +237,10 @@ function createTest(fn: (
         let formatNamed!: string
         if (typeof name === 'string')
           formatNamed = formatTitle(name, items, idx)
-        else
+        else if (Array.isArray(cases) && args.length)
           formatNamed = arrayOnlyCases ? name(...items) : name(i)
+        else
+          throw new Error('only apply with string template')
 
         arrayOnlyCases
           ? test(formatNamed, () => fn(...items), options)

@@ -244,40 +244,6 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
   // ✓ add(2, 1) -> 3
   ```
 
-  You can also access function to custom format the test title:
-
-  ```ts
-  test.each([
-    [1, 1, 2],
-    [1, 2, 3],
-    [2, 1, 3],
-  ])(
-    (a, b, expected) => `${a} + ${b} = ${expected}`,
-    (a, b, expected) => expect(a + b).toBe(expected),
-  )
-
-  // this will return
-  // ✓ 1 + 1 = 2
-  // ✓ 1 + 2 = 3
-  // ✓ 2 + 1 = 3
-  ```
-
-  ```ts
-  test.each([
-    { a: 1, b: 1, expected: 2 },
-    { a: 1, b: 2, expected: 3 },
-    { a: 2, b: 1, expected: 3 },
-  ])(
-    ({ a, b, expected }) => `${a} + ${b} = ${expected}`,
-    ({ a, b, expected }) => expect(a + b).toBe(expected),
-  )
-
-  // this will return
-  // ✓ 1 + 1 = 2
-  // ✓ 1 + 2 = 3
-  // ✓ 2 + 1 = 3
-  ```
-
   Starting from Vitest 0.25.3, you can also use template string table.
 
   * First row should be column names, separated by `|`;
@@ -297,6 +263,22 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
   ```
 
   You can also use custom format function to format the test title.
+
+  ```ts
+  test.each`
+    a               | b      | expected
+    ${1}            | ${1}   | ${2}
+    ${'a'}          | ${'b'} | ${'ab'}
+    ${[]}           | ${'b'} | ${'b'}
+    ${{}}           | ${'b'} | ${'[object Object]b'}
+    ${{ asd: 1 }}   | ${'b'} | ${'[object Object]b'}
+    `(
+    (a, b, expected) => `fmt returns ${JSON.stringify(expected)} when ${JSON.stringify(a)} is added ${JSON.stringify(b)}`,
+    ({ a, b, expected }) => expect(a + b).toBe(expected),
+  )
+  ```
+
+  You can also custom title formatter.
 
   ```ts
   test.each`
