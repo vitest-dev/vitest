@@ -244,6 +244,7 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
   // ✓ add(2, 1) -> 3
   ```
 
+
   Starting from Vitest 0.25.3, you can also use template string table.
 
   * First row should be column names, separated by `|`;
