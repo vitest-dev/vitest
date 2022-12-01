@@ -1,7 +1,7 @@
 import { existsSync, promises as fs } from 'fs'
 import type { ViteDevServer } from 'vite'
 import { normalizePath } from 'vite'
-import { relative, toNamespacedPath } from 'pathe'
+import { basename, relative, toNamespacedPath } from 'pathe'
 import fg from 'fast-glob'
 import mm from 'micromatch'
 import c from 'picocolors'
@@ -21,6 +21,13 @@ import { Logger } from './logger'
 import { VitestCache } from './cache'
 
 const WATCHER_DEBOUNCE = 100
+
+function isMatchTest(a: string, b: string, extra: boolean): boolean {
+  if (extra)
+    return basename(a) === b
+
+  return a.includes(b)
+}
 
 export class Vitest {
   config: ResolvedConfig = undefined!
@@ -199,7 +206,7 @@ export class Vitest {
     await checker.start()
   }
 
-  async start(filters?: string[]) {
+  async start(filters?: string[], extra = false) {
     if (this.mode === 'typecheck') {
       await this.typecheck(filters)
       return
@@ -217,7 +224,7 @@ export class Vitest {
     await this.report('onInit', this)
 
     const files = await this.filterTestsBySource(
-      await this.globTestFiles(filters),
+      await this.globTestFiles(filters, extra),
     )
 
     if (!files.length) {
@@ -554,7 +561,7 @@ export class Vitest {
     )))
   }
 
-  async globTestFiles(filters: string[] = []) {
+  async globTestFiles(filters: string[] = [], extra = false) {
     const { include, exclude, includeSource } = this.config
 
     const globOptions: fg.Options = {
@@ -563,19 +570,17 @@ export class Vitest {
       cwd: this.config.dir || this.config.root,
       ignore: exclude,
     }
-
     let testFiles = await fg(include, globOptions)
 
     if (filters.length && process.platform === 'win32')
       filters = filters.map(f => toNamespacedPath(f))
-
     if (filters.length)
-      testFiles = testFiles.filter(i => filters.some(f => i.includes(f)))
+      testFiles = testFiles.filter(i => filters.some(f => isMatchTest(i, f, extra)))
 
     if (includeSource) {
       let files = await fg(includeSource, globOptions)
       if (filters.length)
-        files = files.filter(i => filters.some(f => i.includes(f)))
+        files = files.filter(i => filters.some(f => isMatchTest(i, f, extra)))
 
       await Promise.all(files.map(async (file) => {
         try {

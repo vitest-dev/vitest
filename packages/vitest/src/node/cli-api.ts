@@ -13,6 +13,12 @@ export interface CliOptions extends UserConfig {
    * Override the watch mode
    */
   run?: boolean
+  /**
+   * extra match file to test
+   *
+   * @default false
+  */
+  extra?: boolean
 }
 
 /**
@@ -77,11 +83,11 @@ export async function startVitest(
     if (process.env.VITEST_CLI_WRAPPER)
       process.exit(EXIT_CODE_RESTART)
     else
-      ctx.start(cliFilters)
+      ctx.start(cliFilters, options.extra)
   })
 
   try {
-    await ctx.start(cliFilters)
+    await ctx.start(cliFilters, options.extra)
   }
   catch (e) {
     process.exitCode = 1

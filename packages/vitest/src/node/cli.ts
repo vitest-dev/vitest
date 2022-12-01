@@ -44,6 +44,7 @@ cli
   .option('--segfault-retry <times>', 'Return tests on segment fault (default: 0)', { default: 0 })
   .option('--inspect', 'Enable Node.js inspector')
   .option('--inspect-brk', 'Enable Node.js inspector with break')
+  .option('--extra', 'extra match file basename to test')
   .help()
 
 cli
