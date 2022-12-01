@@ -33,20 +33,7 @@ pnpm add -D vitest
 Vitest requires Vite >=v3.0.0 and Node >=v14
 :::
 
-if you want to run `vitest` globally, you should install it in global.
-
-With npm
-```bash
-npm install -g vitest
-```
-or with yarn
-```bash
-yarn add -g vitest
-```
-or with pnpm
-```bash
-pnpm add -g vitest
-```
+It is recommended that you install a copy of `vitest` in your `package.json`, using one of the methods listed above. However, if you would prefer to run `vitest` directly, you can use `npx vitest` (the `npx` command comes with npm and Node.js).
 
 ## Configuring Vitest
 
