@@ -425,7 +425,11 @@ function exportAll(exports: any, sourceModule: any) {
   if (exports === sourceModule)
     return
 
-  if (typeof sourceModule !== 'object' || Array.isArray(sourceModule) || !sourceModule)
+  // TODO: replace the check for `object` with something that will not iterate over strings
+  // Right now, modules that are functions do not work.
+  // Removing this line `typeof sourceModule !== 'object'` causes libraries (like openseadragon)
+  // to work (so long as they do not mutate their keys/exports dynamically).
+  if (Array.isArray(sourceModule) || !sourceModule)
     return
 
   for (const key in sourceModule) {
