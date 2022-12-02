@@ -923,3 +923,10 @@ By default, if Vitest finds source error, it will fail test suite.
 - **Default**: _tries to find closest tsconfig.json_
 
 Path to custom tsconfig, relative to the project root.
+
+### slowTestThreshold
+
+- **Type**: `number`
+- **Default**: `300`
+
+The number of milliseconds after which a test is considered slow and reported as such in the results.
