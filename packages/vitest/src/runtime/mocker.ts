@@ -1,7 +1,7 @@
 import { existsSync, readdirSync } from 'fs'
 import { isNodeBuiltin } from 'mlly'
 import { basename, dirname, extname, join, resolve } from 'pathe'
-import { normalizeRequestId, pathFromRoot, toFilePath } from 'vite-node/utils'
+import { normalizeRequestId, pathFromRoot } from 'vite-node/utils'
 import type { ModuleCacheMap } from 'vite-node/client'
 import { getAllMockableProperties, getType, getWorkerState, mergeSlashes, slash } from '../utils'
 import { distDir } from '../constants'
@@ -195,7 +195,7 @@ export class VitestMocker {
     return existsSync(fullPath) ? fullPath : null
   }
 
-  public mockObject(object: Record<string | symbol, any>) {
+  public mockObject(object: Record<Key, any>, mockExports: Record<Key, any> = {}) {
     if (!VitestMocker.spyModule) {
       throw new Error(
         'Error: Spy module is not defined. '
@@ -275,7 +275,7 @@ export class VitestMocker {
       }
     }
 
-    const mockedObject: Record<Key, any> = {}
+    const mockedObject: Record<Key, any> = mockExports
     mockPropertiesOf(object, mockedObject)
 
     // Plug together refs
@@ -360,10 +360,12 @@ export class VitestMocker {
       const cache = this.moduleCache.get(mockPath)
       if (cache?.exports)
         return cache.exports
-      const cacheKey = toFilePath(dep, this.root)
-      const mod = this.moduleCache.get(cacheKey)?.exports || await this.request(dep)
-      const exports = this.mockObject(mod)
+
+      const exports = {}
+      // Assign the empty exports object early to allow for cycles to work. The object will be filled by mockObject()
       this.moduleCache.set(mockPath, { exports })
+      const mod = await this.request(dep)
+      this.mockObject(mod, exports)
       return exports
     }
     if (typeof mock === 'function' && !callstack.includes(mockPath)) {
