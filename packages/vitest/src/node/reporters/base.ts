@@ -14,7 +14,6 @@ const HELP_QUITE = `${c.dim('press ')}${c.bold('q')}${c.dim(' to quit')}`
 const WAIT_FOR_CHANGE_PASS = `\n${c.bold(c.inverse(c.green(' PASS ')))}${c.green(' Waiting for file changes...')}`
 const WAIT_FOR_CHANGE_FAIL = `\n${c.bold(c.inverse(c.red(' FAIL ')))}${c.red(' Tests failed. Watching for file changes...')}`
 
-const DURATION_LONG = 300
 const LAST_RUN_LOG_TIMEOUT = 1_500
 
 export abstract class BaseReporter implements Reporter {
@@ -76,7 +75,7 @@ export abstract class BaseReporter implements Reporter {
           state += ` ${c.dim('|')} ${c.yellow(`${skipped.length} skipped`)}`
         let suffix = c.dim(' (') + state + c.dim(')')
         if (task.result.duration) {
-          const color = task.result.duration > DURATION_LONG ? c.yellow : c.gray
+          const color = task.result.duration > this.ctx.config.slowTestThreshold ? c.yellow : c.gray
           suffix += color(` ${Math.round(task.result.duration)}${c.dim('ms')}`)
         }
         if (this.ctx.config.logHeapUsage && task.result.heap != null)
