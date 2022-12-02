@@ -279,6 +279,10 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
   )
   ```
 
+  ::: tip
+  This syntax can only use in the string template `test.each` and `describe.each` format.
+  :::
+
   If you want to have access to `TestContext`, use `describe.each` with a single test.
 
 ::: warning
