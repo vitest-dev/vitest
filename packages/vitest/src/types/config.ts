@@ -459,7 +459,7 @@ export interface InlineConfig {
   typecheck?: Partial<TypecheckConfig>
 
   /**
-   * The number of seconds after which a test is considered as slow and reported as such in the results.
+   * The number of milliseconds after which a test is considered slow and reported as such in the results.
    *
    * @default 300
   */
