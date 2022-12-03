@@ -263,26 +263,6 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
   })
   ```
 
-  You can also use custom format function to format the test title.
-
-  ```ts
-  test.each`
-    a               | b      | expected
-    ${1}            | ${1}   | ${2}
-    ${'a'}          | ${'b'} | ${'ab'}
-    ${[]}           | ${'b'} | ${'b'}
-    ${{}}           | ${'b'} | ${'[object Object]b'}
-    ${{ asd: 1 }}   | ${'b'} | ${'[object Object]b'}
-    `(
-    (a, b, expected) => `fmt returns ${JSON.stringify(expected)} when ${JSON.stringify(a)} is added ${JSON.stringify(b)}`,
-    ({ a, b, expected }) => expect(a + b).toBe(expected),
-  )
-  ```
-
-  ::: tip
-  This syntax can only use in the string template `test.each` and `describe.each` format.
-  :::
-
   If you want to have access to `TestContext`, use `describe.each` with a single test.
 
 ::: warning

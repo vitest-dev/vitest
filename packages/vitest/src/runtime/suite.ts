@@ -186,21 +186,13 @@ function createSuite() {
     if (Array.isArray(cases) && args.length)
       cases = formatTemplateString(cases, args)
 
-    return (name: string | ((...args: T[]) => string), fn: (...args: T[]) => void, options?: number | TestOptions) => {
+    return (name: string, fn: (...args: T[]) => void, options?: number | TestOptions) => {
       const arrayOnlyCases = cases.every(Array.isArray)
       cases.forEach((i, idx) => {
         const items = Array.isArray(i) ? i : [i]
-        let formatNamed!: string
-        if (typeof name === 'string')
-          formatNamed = formatTitle(name, items, idx)
-        else if (Array.isArray(cases) && args.length)
-          formatNamed = arrayOnlyCases ? name(...items) : name(i)
-        else
-          throw new Error('only apply with string template')
-
         arrayOnlyCases
-          ? suite(formatNamed, () => fn(...items), options)
-          : suite(formatNamed, () => fn(i), options)
+          ? suite(formatTitle(name, items, idx), () => fn(...items), options)
+          : suite(formatTitle(name, items, idx), () => fn(i), options)
       })
     }
   }
@@ -230,21 +222,14 @@ function createTest(fn: (
     if (Array.isArray(cases) && args.length)
       cases = formatTemplateString(cases, args)
 
-    return (name: string | ((...args: T[]) => string), fn: (...args: T[]) => void, options?: number | TestOptions) => {
+    return (name: string, fn: (...args: T[]) => void, options?: number | TestOptions) => {
       const arrayOnlyCases = cases.every(Array.isArray)
       cases.forEach((i, idx) => {
         const items = Array.isArray(i) ? i : [i]
-        let formatNamed!: string
-        if (typeof name === 'string')
-          formatNamed = formatTitle(name, items, idx)
-        else if (Array.isArray(cases) && args.length)
-          formatNamed = arrayOnlyCases ? name(...items) : name(i)
-        else
-          throw new Error('only apply with string template')
 
         arrayOnlyCases
-          ? test(formatNamed, () => fn(...items), options)
-          : test(formatNamed, () => fn(i), options)
+          ? test(formatTitle(name, items, idx), () => fn(...items), options)
+          : test(formatTitle(name, items, idx), () => fn(i), options)
       })
     }
   }
@@ -285,7 +270,6 @@ function formatTitle(template: string, items: any[], idx: number) {
       .replace(/%#/g, `${idx}`)
       .replace(/__vitest_escaped_%__/g, '%%')
   }
-
   const count = template.split('%').length - 1
   let formatted = util.format(template, ...items.slice(0, count))
   if (isObject(items[0])) {

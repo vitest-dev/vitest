@@ -131,7 +131,7 @@ interface TestEachFunction {
     options?: number | TestOptions,
   ) => void
   (...args: [TemplateStringsArray, ...any]): (
-    name: string | ((...args: any[]) => string),
+    name: string,
     fn: (...args: any[]) => Awaitable<void>,
     options?: number | TestOptions,
   ) => void
