@@ -281,7 +281,7 @@ function formatTitle(template: string, items: any[], idx: number) {
   return formatted
 }
 
-function formatObject(value: unknown, maxDepth = 4) {
+function formatObject(value: unknown, maxDepth = 4): string {
   const formatFunctions = {
     test: (val: unknown) => typeof val === 'function',
     serialize: (val: Function) => val.toString(),
