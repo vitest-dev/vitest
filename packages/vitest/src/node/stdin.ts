@@ -30,6 +30,12 @@ export function registerConsoleShortcuts(ctx: Vitest) {
     if (str === '\x03' || str === '\x1B' || (key && key.ctrl && key.name === 'c'))
       return ctx.exit(true)
 
+    if (key && key.ctrl && key.name === 'z') {
+      process.kill(process.ppid, 'SIGTSTP')
+      process.kill(process.pid, 'SIGTSTP')
+      return
+    }
+
     // is running, ignore keypress
     if (ctx.runningPromise)
       return
