@@ -35,7 +35,7 @@ interface FormattedAssertionResult {
 interface FormattedTestResult {
   message: string
   name: string
-  status: 'failed' | 'passed'
+  status: Status
   startTime: number
   endTime: number
   assertionResults: Array<FormattedAssertionResult>
@@ -124,12 +124,7 @@ export class JsonReporter implements Reporter {
         assertionResults,
         startTime,
         endTime,
-        status: tests.every(t =>
-          t.result?.state === 'pass'
-           || t.result?.state === 'skip'
-            || t.result?.state === 'todo')
-          ? 'passed'
-          : 'failed',
+        status: StatusMap[file.result?.state || file.mode] || 'skipped',
         message: file.result?.error?.message ?? '',
         name: file.filepath,
       })
