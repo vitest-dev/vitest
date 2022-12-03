@@ -195,6 +195,15 @@ ${{ asd: 1 }}   | ${'b'} | ${'[object Object]b'}
 })
 
 test.each`
+a               | b      | expected
+${{ val: 1 }}   | ${'b'} | ${'1b'}
+${{ val: 2 }}   | ${'b'} | ${'2b'}
+${{ val: 3 }}   | ${'b'} | ${'3b'}
+`('returns $expected when $a.val is added $b', ({ a, b, expected }) => {
+  expect(a.val + b).toBe(expected)
+})
+
+test.each`
 a       | b       | expected
 ${true} | ${true} | ${true}
 `('($a && $b) -> $expected', ({ a, b, expected }) => {
