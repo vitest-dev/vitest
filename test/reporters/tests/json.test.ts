@@ -30,7 +30,7 @@ describe('json reporter', async () => {
 
   it.skipIf(skip).each([
     ['passed', 'all-passing-or-skipped'],
-    ['skipped', 'all-skipped'],
+    ['passed', 'all-skipped'],
     ['failed', 'some-failing'],
   ])('resolves to "%s" status for test file "%s"', async (expected, file) => {
     const { stdout } = await execa('npx', ['vitest', 'run', file, '--reporter=json'], {
