@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { assertTypes, deepClone, deepMerge, resetModules, toArray } from '../../../packages/vitest/src/utils'
+import { assertTypes, deepClone, deepMerge, objectAttr, resetModules, toArray } from '../../../packages/vitest/src/utils'
 import { deepMergeSnapshot } from '../../../packages/vitest/src/integrations/snapshot/port/utils'
 import type { ModuleCacheMap } from '../../../packages/vite-node/src/types'
 
@@ -180,5 +180,29 @@ describe('resetModules doesn\'t resets only user modules', () => {
     resetModules(moduleCache)
 
     expect(moduleCache.size).toBe(2)
+  })
+})
+
+describe('objectAttr', () => {
+  const arrow = (a: number) => a * 3
+  const func = function (a: number) {
+    return a * 3
+  }
+
+  test.each`
+    value                        | path             | expected
+    ${{ foo: 'bar' }}            | ${'foo'}         | ${'bar'}
+    ${{ foo: { bar: 'baz' } }}   | ${'foo'}         | ${{ bar: 'baz' }}
+    ${{ foo: { bar: 'baz' } }}   | ${'foo.bar'}     | ${'baz'}
+    ${{ foo: [{ bar: 'baz' }] }} | ${'foo.0.bar'}   | ${'baz'}
+    ${{ foo: [1, 2, ['a']] }}    | ${'foo'}         | ${[1, 2, ['a']]}
+    ${{ foo: [1, 2, ['a']] }}    | ${'foo.2'}       | ${['a']}
+    ${{ foo: [1, 2, ['a']] }}    | ${'foo.2.0'}     | ${'a'}
+    ${{ foo: [[[1]]] }}          | ${'foo.0.0.0'}   | ${1}
+    ${{ foo: [[[[1]]]] }}        | ${'foo.0.0.0.0'} | ${1}
+    ${{ foo: arrow }}            | ${'foo'}         | ${arrow}
+    ${{ foo: func }}             | ${'foo'}         | ${func}
+  `('objectAttr($value, $path) -> $expected', ({ value, path, expected }) => {
+    expect(objectAttr(value, path)).toEqual(expected)
   })
 })
