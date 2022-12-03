@@ -1,5 +1,4 @@
 import util from 'util'
-import { serialize } from 'v8'
 import { format as prettyFormat } from 'pretty-format'
 import type { BenchFunction, BenchOptions, Benchmark, BenchmarkAPI, File, RunMode, Suite, SuiteAPI, SuiteCollector, SuiteFactory, SuiteHooks, Task, Test, TestAPI, TestFunction, TestOptions } from '../types'
 import { getWorkerState, isObject, isRunningInBenchmark, isRunningInTest, noop, objectAttr } from '../utils'
