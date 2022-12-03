@@ -691,7 +691,7 @@ Shortcut for `--check-coverage --lines 100 --functions 100 --branches 100 --stat
 - **Available for providers:** `'istanbul'`
 
 Set to array of class method names to ignore for coverage.
-See [istanbul documentation](https://github.com/istanbuljs/nyc#high-and-low-watermarks) for more information.
+See [istanbul documentation](https://github.com/istanbuljs/nyc#ignoring-methods) for more information.
 
 #### watermarks
 
@@ -717,7 +717,9 @@ See [istanbul documentation](https://github.com/istanbuljs/nyc#high-and-low-wate
 }
 ```
 
-Watermarks for statements, lines, branches and functions.
+- **Available for providers:** `'istanbul'`
+
+Watermarks for statements, lines, branches and functions. See [istanbul documentation](https://github.com/istanbuljs/nyc#high-and-low-watermarks) for more information.
 
 ### testNamePattern
 
