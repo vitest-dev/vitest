@@ -195,18 +195,6 @@ ${{ asd: 1 }}   | ${'b'} | ${'[object Object]b'}
 })
 
 test.each`
-a               | b      | expected
-${1}            | ${1}   | ${2}
-${'a'}          | ${'b'} | ${'ab'}
-${[]}           | ${'b'} | ${'b'}
-${{}}           | ${'b'} | ${'[object Object]b'}
-${{ asd: 1 }}   | ${'b'} | ${'[object Object]b'}
-`(
-  (a, b, expected) => `fmt returns ${JSON.stringify(expected)} when ${JSON.stringify(a)} is added ${JSON.stringify(b)}`,
-  ({ a, b, expected }) => expect(a + b).toBe(expected),
-)
-
-test.each`
 a       | b       | expected
 ${true} | ${true} | ${true}
 `('($a && $b) -> $expected', ({ a, b, expected }) => {
