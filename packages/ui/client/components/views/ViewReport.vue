@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { unifiedDiff } from 'vitest/src/node/diff'
 import { openInEditor, shouldOpenInEditor } from '../../composables/error'
 import type { File, ParsedStack, Suite, Task } from '#types'
 import { config } from '~/composables/client'
@@ -94,6 +95,16 @@ function line(stack: ParsedStack) {
 function column(stack: ParsedStack) {
   return stack.sourcePos?.column ?? stack.column
 }
+
+function isDiffShowable(result: Task['result']) {
+  return result?.error?.expected && result?.error?.actual
+}
+
+function diff(result: Task['result']): string {
+  return unifiedDiff(result!.error!.expected, result!.error!.actual, {
+    outputTruncateLength: 80,
+  })
+}
 </script>
 
 <template>
@@ -125,6 +136,9 @@ function column(stack: ParsedStack) {
                 @click.passive="openInEditor(stack.file, line(stack), column(stack))"
               />
             </div>
+            <pre v-if="isDiffShowable(task.result)">
+              {{ `\n${diff(task.result)}` }}
+            </pre>
           </div>
         </div>
       </div>
