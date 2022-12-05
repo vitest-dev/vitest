@@ -92,6 +92,7 @@ const config = {
     include: ['**/*.{test,spec}-d.{ts,js}'],
     exclude: defaultExclude,
   },
+  slowTestThreshold: 300,
 }
 
 export const configDefaults: Required<Pick<UserConfig, keyof typeof config>> = Object.freeze(config)

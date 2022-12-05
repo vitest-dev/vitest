@@ -187,3 +187,15 @@ export function isMatchTest(a: string, b: string, extra: boolean): boolean {
 
   return a.includes(b)
 }
+
+export function objectAttr(source: any, path: string, defaultValue = undefined) {
+  // a[3].b -> a.3.b
+  const paths = path.replace(/\[(\d+)\]/g, '.$1').split('.')
+  let result = source
+  for (const p of paths) {
+    result = Object(result)[p]
+    if (result === undefined)
+      return defaultValue
+  }
+  return result
+}
