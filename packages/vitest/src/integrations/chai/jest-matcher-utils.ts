@@ -109,6 +109,7 @@ export function stringify(object: unknown, maxDepth = 10, options?: PrettyFormat
   try {
     result = prettyFormat(object, {
       maxDepth,
+      escapeString: false,
       // min: true,
       plugins: PLUGINS,
       ...options,
@@ -118,6 +119,7 @@ export function stringify(object: unknown, maxDepth = 10, options?: PrettyFormat
     result = prettyFormat(object, {
       callToJSON: false,
       maxDepth,
+      escapeString: false,
       // min: true,
       plugins: PLUGINS,
       ...options,
