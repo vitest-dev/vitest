@@ -11,7 +11,7 @@ SOURCEMAPPING_URL += 'ppingURL'
 
 const VITE_NODE_SOURCEMAPPING_URL = `${SOURCEMAPPING_URL}=data:application/json;charset=utf-8;source=vite-node`
 const VITE_NODE_SOURCEMAPPING_REGEXP = new RegExp(`//# ${VITE_NODE_SOURCEMAPPING_URL};base64,(.+)`)
-// const OTHER_SOURCE_MAP_REGEXP = new RegExp(`//# ${SOURCEMAPPING_URL}=data:application/json[^,]+base64,(.+)`)
+const OTHER_SOURCE_MAP_REGEXP = new RegExp(`//# ${SOURCEMAPPING_URL}=data:application/json[^,]+base64,(.+)`)
 
 export async function withInlineSourcemap(result: TransformResult) {
   const { code, map } = result
@@ -19,8 +19,8 @@ export async function withInlineSourcemap(result: TransformResult) {
   if (!map || code.includes(VITE_NODE_SOURCEMAPPING_URL))
     return result
 
-  // if (OTHER_SOURCE_MAP_REGEXP.test(code))
-  //   result.code = code.replace(OTHER_SOURCE_MAP_REGEXP, '')
+  if (OTHER_SOURCE_MAP_REGEXP.test(code))
+    result.code = code.replace(OTHER_SOURCE_MAP_REGEXP, '')
 
   result.code = `${code}\n\n//# ${VITE_NODE_SOURCEMAPPING_URL};base64,${Buffer.from(JSON.stringify(map), 'utf-8').toString('base64')}\n`
 
