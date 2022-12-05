@@ -54,7 +54,7 @@
     "if-node-version": "^1.1.1",
     "lint-staged": "^13.0.3",
     "magic-string": "^0.26.7",
-    "node-fetch-native": "^0.1.8",
+    "node-fetch-native": "^1.0.1",
     "npm-run-all": "^4.1.5",
     "ohmyfetch": "^0.4.21",
     "pathe": "^0.2.0",
