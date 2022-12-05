@@ -6,6 +6,7 @@ import { isNodeBuiltin } from 'mlly'
 import createDebug from 'debug'
 import { isPrimitive, mergeSlashes, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
 import type { HotContext, ModuleCache, ViteNodeRunnerOptions } from './types'
+import { extractSourceMap } from './source-map'
 
 const debugExecute = createDebug('vite-node:client:execute')
 const debugNative = createDebug('vite-node:client:native')
@@ -114,13 +115,11 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
    * Return parsed source map based on inlined source map of the module
    */
   getSourceMap(id: string) {
-    const fsPath = this.normalizePath(id)
-    const cache = this.get(fsPath)
+    const cache = this.get(id)
     if (cache.map)
       return cache.map
-    const mapString = cache?.code?.match(/\/\/# sourceMappingURL=data:application\/json;charset=utf-8;base64,(.+)/)?.[1]
-    if (mapString) {
-      const map = JSON.parse(Buffer.from(mapString, 'base64').toString('utf-8'))
+    const map = cache.code && extractSourceMap(cache.code)
+    if (map) {
       cache.map = map
       return map
     }

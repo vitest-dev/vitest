@@ -4,8 +4,9 @@ import type { TransformResult, ViteDevServer } from 'vite'
 import createDebug from 'debug'
 import type { DebuggerOptions, FetchResult, RawSourceMap, ViteNodeResolveId, ViteNodeServerOptions } from './types'
 import { shouldExternalize } from './externalize'
-import { toArray, toFilePath, withInlineSourcemap } from './utils'
+import { toArray, toFilePath } from './utils'
 import { Debugger } from './debug'
+import { withInlineSourcemap } from './source-map'
 
 export * from './externalize'
 
