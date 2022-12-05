@@ -2,6 +2,10 @@
 import { VitestRunner } from 'vitest/node'
 import type { WorkerGlobalState } from 'vitest'
 import ponyfillStructuredClone from '@ungap/structured-clone'
+import { toFilePath } from 'vite-node/utils'
+import createDebug from 'debug'
+
+const debug = createDebug('vitest:web-worker')
 
 function getWorkerState(): WorkerGlobalState {
   // @ts-expect-error untyped global
@@ -9,7 +13,6 @@ function getWorkerState(): WorkerGlobalState {
 }
 
 type Procedure = (...args: any[]) => void
-
 type CloneOption = 'native' | 'ponyfill' | 'none'
 
 interface DefineWorkerOptions {
@@ -54,13 +57,17 @@ function assertGlobalExists(name: string) {
 function createClonedMessageEvent(data: any, transferOrOptions: StructuredSerializeOptions | Transferable[] | undefined, clone: CloneOption) {
   const transfer = Array.isArray(transferOrOptions) ? transferOrOptions : transferOrOptions?.transfer
 
+  debug('clone worker message %o', data)
+
   if (typeof structuredClone === 'function' && clone === 'native') {
+    debug('create message event, using native structured clone')
     return new MessageEvent('message', {
       data: structuredClone(data, { transfer }),
       origin: window.location.origin,
     })
   }
   if (clone !== 'none') {
+    debug('create message event, using polifylled structured clone')
     transfer?.length && console.warn(
       '[@vitest/web-worker] `structuredClone` is not supported in this environment. '
       + 'Falling back to polyfill, your transferable options will be lost. '
@@ -72,6 +79,7 @@ function createClonedMessageEvent(data: any, transferOrOptions: StructuredSerial
       origin: window.location.origin,
     })
   }
+  debug('create message event without cloning an object')
   return new MessageEvent('message', {
     data,
     origin: window.location.origin,
@@ -83,9 +91,8 @@ function createMessageEvent(data: any, transferOrOptions: StructuredSerializeOpt
     return createClonedMessageEvent(data, transferOrOptions, clone)
   }
   catch (error) {
-    return new ErrorEvent('messageerror', {
-      error,
-      message: error instanceof Error ? error.message : undefined,
+    return new MessageEvent('messageerror', {
+      data: error,
     })
   }
 }
@@ -115,16 +122,16 @@ export function defineWebWorker(options?: DefineWorkerOptions) {
     base: config.base,
   }
 
-  const cloneType = (options?.clone ?? process.env.VITEST_WEB_WORKER_CLONE ?? 'native') as CloneOption
+  const cloneType = () => (options?.clone ?? process.env.VITEST_WEB_WORKER_CLONE ?? 'native') as CloneOption
 
   globalThis.Worker = class Worker extends EventTarget {
     static __VITEST_WEB_WORKER__ = true
 
-    private inside = new EventTarget()
-    private insideListeners = new Map<string, EventListenerOrEventListenerObject>()
-    private outsideListeners = new Map<string, EventListenerOrEventListenerObject>()
-
-    private messageQueue: any[] | null = []
+    private _vw_workerTarget = new EventTarget()
+    private _vw_insideListeners = new Map<string, EventListenerOrEventListenerObject>()
+    private _vw_outsideListeners = new Map<string, EventListenerOrEventListenerObject>()
+    private _vw_name: string
+    private _vw_messageQueue: any[] | null = []
 
     public onmessage: null | Procedure = null
     public onmessageerror: null | Procedure = null
@@ -133,25 +140,26 @@ export function defineWebWorker(options?: DefineWorkerOptions) {
     constructor(url: URL | string, options?: WorkerOptions) {
       super()
 
-      // should equal to DedicatedWorkerGlobalScope
+      // should be equal to DedicatedWorkerGlobalScope
       const context: InlineWorkerContext = {
         onmessage: null,
         name: options?.name,
         close: () => this.terminate(),
         dispatchEvent: (event: Event) => {
-          return this.inside.dispatchEvent(event)
+          return this._vw_workerTarget.dispatchEvent(event)
         },
         addEventListener: (...args) => {
           if (args[1])
-            this.insideListeners.set(args[0], args[1])
-          return this.inside.addEventListener(...args)
+            this._vw_insideListeners.set(args[0], args[1])
+          return this._vw_workerTarget.addEventListener(...args)
         },
-        removeEventListener: this.inside.removeEventListener,
+        removeEventListener: this._vw_workerTarget.removeEventListener,
         postMessage: (...args) => {
           if (!args.length)
             throw new SyntaxError('"postMessage" requires at least one argument.')
 
-          const event = createMessageEvent(args[0], args[1], cloneType)
+          debug('posting message %o from the worker %s to the main thread', args[0], this._vw_name)
+          const event = createMessageEvent(args[0], args[1], cloneType())
           this.dispatchEvent(event)
         },
         get self() {
@@ -162,7 +170,7 @@ export function defineWebWorker(options?: DefineWorkerOptions) {
         },
       }
 
-      this.inside.addEventListener('message', (e) => {
+      this._vw_workerTarget.addEventListener('message', (e) => {
         context.onmessage?.(e)
       })
 
@@ -186,7 +194,9 @@ export function defineWebWorker(options?: DefineWorkerOptions) {
           this.messageQueue = null
           if (q)
             q.forEach(([data, transfer]) => this.postMessage(data, transfer), this)
+          debug('worker %s successfully initialized', this._vw_name)
         }).catch((e) => {
+          debug('worker %s failed to initialize: %o', this._vw_name, e)
           const error = new ErrorEvent('error', {
             error: e,
             message: e.message,
@@ -200,7 +210,7 @@ export function defineWebWorker(options?: DefineWorkerOptions) {
 
     addEventListener(type: string, callback: EventListenerOrEventListenerObject | null, options?: boolean | AddEventListenerOptions): void {
       if (callback)
-        this.outsideListeners.set(type, callback)
+        this._vw_outsideListeners.set(type, callback)
       return super.addEventListener(type, callback, options)
     }
 
@@ -209,21 +219,28 @@ export function defineWebWorker(options?: DefineWorkerOptions) {
         throw new SyntaxError('"postMessage" requires at least one argument.')
 
       const [data, transferOrOptions] = args
-      if (this.messageQueue != null) {
-        this.messageQueue.push([data, transferOrOptions])
+      if (this._vw_messageQueue != null) {
+        debug('worker %s is not yet initialized, queue message %s', this._vw_name, data)
+        this._vw_messageQueue.push([data, transferOrOptions])
         return
       }
 
-      const event = createMessageEvent(data, transferOrOptions, cloneType)
-      this.inside.dispatchEvent(event)
+      debug('posting message %o from the main thread to the worker %s', data, this._vw_name)
+
+      const event = createMessageEvent(data, transferOrOptions, cloneType())
+      if (event.type === 'messageerror')
+        this.dispatchEvent(event)
+      else
+        this._vw_workerTarget.dispatchEvent(event)
     }
 
     terminate() {
-      this.outsideListeners.forEach((fn, type) => {
+      debug('terminating worker %s', this._vw_name)
+      this._vw_outsideListeners.forEach((fn, type) => {
         this.removeEventListener(type, fn)
       })
-      this.insideListeners.forEach((fn, type) => {
-        this.inside.removeEventListener(type, fn)
+      this._vw_insideListeners.forEach((fn, type) => {
+        this._vw_workerTarget.removeEventListener(type, fn)
       })
     }
   }

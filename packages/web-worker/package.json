@@ -37,9 +37,11 @@
     "vitest": "*"
   },
   "dependencies": {
+    "debug": "^4.3.4",
     "vite-node": "workspace:*"
   },
   "devDependencies": {
+    "@types/debug": "^4.1.7",
     "@types/ungap__structured-clone": "^0.3.0",
     "@ungap/structured-clone": "^1.0.1",
     "rollup": "^2.79.1"
