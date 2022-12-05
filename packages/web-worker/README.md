@@ -37,14 +37,16 @@ export default defineConfig({
 
 ```ts
 // worker.ts
-import '@vitest/web-worker'
-import MyWorker from '../worker?worker'
-
 self.onmessage = (e) => {
   self.postMessage(`${e.data} world`)
 }
+```
 
+```ts
 // worker.test.ts
+import '@vitest/web-worker'
+import MyWorker from '../worker?worker'
+
 let worker = new MyWorker()
 // new Worker is also supported
 worker = new Worker(new URL('../src/worker.ts', import.meta.url))
@@ -55,6 +57,9 @@ worker.onmessage = (e) => {
 }
 ```
 
-## Notice
+## Notes
 
 - Does not support `onmessage = () => {}`. Please, use `self.onmessage = () => {}`.
+- Transferring Buffer will not change its `byteLength`.
+- You have access to shared global space as your tests.
+- Requires Node 17, if you want to use native `structuredClone`. Otherwise, it fallbacks to [polyfill](https://github.com/ungap/structured-clone). You can configure this behavior by passing down `clone` option (`'native' | 'ponyfill' | 'none'`) to `defineWebWorker` or using `VITEST_WEB_WORKER_CLONE` environmental variable.

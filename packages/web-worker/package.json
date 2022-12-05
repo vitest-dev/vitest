@@ -40,6 +40,8 @@
     "vite-node": "workspace:*"
   },
   "devDependencies": {
+    "@types/ungap__structured-clone": "^0.3.0",
+    "@ungap/structured-clone": "^1.0.1",
     "rollup": "^2.79.1"
   }
 }

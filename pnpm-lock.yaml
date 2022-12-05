@@ -895,11 +895,15 @@ importers:
 
   packages/web-worker:
     specifiers:
+      '@types/ungap__structured-clone': ^0.3.0
+      '@ungap/structured-clone': ^1.0.1
       rollup: ^2.79.1
       vite-node: workspace:*
     dependencies:
       vite-node: link:../vite-node
     devDependencies:
+      '@types/ungap__structured-clone': 0.3.0
+      '@ungap/structured-clone': 1.0.1
       rollup: 2.79.1
 
   packages/ws-client:
@@ -7585,6 +7589,10 @@ packages:
       source-map: 0.6.1
     dev: true
 
+  /@types/ungap__structured-clone/0.3.0:
+    resolution: {integrity: sha512-eBWREUhVUGPze+bUW22AgUr05k8u+vETzuYdLYSvWqGTUe0KOf+zVnOB1qER5wMcw8V6D9Ar4DfJmVvD1yu0kQ==}
+    dev: true
+
   /@types/unist/2.0.6:
     resolution: {integrity: sha512-PBjIUxZHOuj0R15/xuwJYjFi+KZdNFrehocChv4g5hu6aFroHue8m0lBP0POdK2nKzbw0cgV1mws8+V/JAcEkQ==}
     dev: true
@@ -7778,8 +7786,12 @@ packages:
       eslint-visitor-keys: 3.3.0
     dev: true
 
-  /@unocss/astro/0.47.6_rollup@2.79.1+vite@4.0.0:
-    resolution: {integrity: sha512-8lR4KwuCeVxOTKk6g6hx6VUHhW1u+hki8oRsJaKEB0s5iUPmY6rCNtb/iaBJdceY11bZMMy5LZHJFTkod/T/zg==}
+  /@ungap/structured-clone/1.0.1:
+    resolution: {integrity: sha512-zKVyTt6rELvPXYwcVPTJcPFtY0AckN5A7xWuc7owBqR0FdtuDYhE9MZZUi6IY1kZUQFSXV1B3UOOIyLkVHYd2w==}
+    dev: true
+
+  /@unocss/astro/0.46.0_vite@3.2.3:
+    resolution: {integrity: sha512-IHUQ5JpNjc2szW4Y+Vau6QpoZLc+4109R6QMFwjOXwFa88GVmh510GKKmNTIP0f3V/knPdlhu5TWzORNhQUhMw==}
     dependencies:
       '@unocss/core': 0.47.6
       '@unocss/reset': 0.47.6
