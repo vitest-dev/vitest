@@ -48,11 +48,11 @@ vi.mock('../src/default.ts', () => null)
 
 describe('mocking with factory', () => {
   test('missing exports on mock', () => {
-    expect(() => example.default).toThrowError('[vitest] No "default" export is defined on the "/src/example.ts"')
-    expect(() => example.boolean).toThrowError('[vitest] No "boolean" export is defined on the "/src/example.ts"')
-    expect(() => example.object).toThrowError('[vitest] No "object" export is defined on the "/src/example.ts"')
-    expect(() => example.array).toThrowError('[vitest] No "array" export is defined on the "/src/example.ts"')
-    expect(() => example.someClasses).toThrowError('[vitest] No "someClasses" export is defined on the "/src/example.ts"')
+    expect(() => example.default).toThrowError('[vitest] No "default" export is defined on the "../src/example" mock')
+    expect(() => example.boolean).toThrowError('[vitest] No "boolean" export is defined on the "../src/example" mock')
+    expect(() => example.object).toThrowError('[vitest] No "object" export is defined on the "../src/example" mock')
+    expect(() => example.array).toThrowError('[vitest] No "array" export is defined on the "../src/example" mock')
+    expect(() => example.someClasses).toThrowError('[vitest] No "someClasses" export is defined on the "../src/example" mock')
   })
 
   it('non-object return on factory gives error', async () => {
