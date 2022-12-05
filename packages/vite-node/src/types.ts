@@ -44,6 +44,7 @@ export type CreateHotContextFunction = (runner: ViteNodeRunner, url: string) => 
 export interface ModuleCache {
   promise?: Promise<any>
   exports?: any
+  evaluated?: boolean
   code?: string
   map?: RawSourceMap
   /**

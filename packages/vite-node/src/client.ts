@@ -247,6 +247,7 @@ export class ViteNodeRunner {
       debugNative(externalize)
       const exports = await this.interopedImport(externalize)
       mod.exports = exports
+      mod.evaluated = true
       return exports
     }
 
@@ -286,7 +287,7 @@ export class ViteNodeRunner {
       },
     })
 
-    Object.assign(mod, { code: transformed, exports })
+    Object.assign(mod, { code: transformed, exports, evaluated: false })
 
     const __filename = fileURLToPath(url)
     const moduleProxy = {
@@ -347,7 +348,12 @@ export class ViteNodeRunner {
       columnOffset: -codeDefinition.length,
     })
 
-    await fn(...Object.values(context))
+    try {
+      await fn(...Object.values(context))
+    }
+    finally {
+      mod.evaluated = true
+    }
 
     return exports
   }
