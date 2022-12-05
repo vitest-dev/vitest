@@ -19,6 +19,7 @@ export async function withInlineSourcemap(result: TransformResult) {
   if (!map || code.includes(VITE_NODE_SOURCEMAPPING_URL))
     return result
 
+  // to reduce the payload size, we only inline vite node source map, because it's also the only one we use
   if (OTHER_SOURCE_MAP_REGEXP.test(code))
     result.code = code.replace(OTHER_SOURCE_MAP_REGEXP, '')
 
