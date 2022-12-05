@@ -91,6 +91,7 @@ function createMessageEvent(data: any, transferOrOptions: StructuredSerializeOpt
     return createClonedMessageEvent(data, transferOrOptions, clone)
   }
   catch (error) {
+    debug('failed to clone message, dispatch "messageerror" event: %o', error)
     return new MessageEvent('messageerror', {
       data: error,
     })
