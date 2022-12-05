@@ -1,5 +1,5 @@
 import util from 'util'
-import { format as prettyFormat } from 'pretty-format'
+import { util as chaiUtil } from 'chai'
 import type { BenchFunction, BenchOptions, Benchmark, BenchmarkAPI, File, RunMode, Suite, SuiteAPI, SuiteCollector, SuiteFactory, SuiteHooks, Task, Test, TestAPI, TestFunction, TestOptions } from '../types'
 import { getWorkerState, isObject, isRunningInBenchmark, isRunningInTest, noop, objectAttr } from '../utils'
 import { createChainable } from './chain'
@@ -275,25 +275,11 @@ function formatTitle(template: string, items: any[], idx: number) {
   let formatted = util.format(template, ...items.slice(0, count))
   if (isObject(items[0])) {
     formatted = formatted.replace(/\$([$\w_.]+)/g,
-      (_, key) => formatObject(objectAttr(items[0], key)),
+      (_, key) => chaiUtil.objDisplay(objectAttr(items[0], key)) as unknown as string,
+    // https://github.com/chaijs/chai/pull/1490
     )
   }
   return formatted
-}
-
-function formatObject(value: unknown, maxDepth = 3, maxWidth = 2): string {
-  const formatFunctions = {
-    test: (val: unknown) => typeof val === 'function',
-    serialize: (val: Function) => val.toString(),
-  }
-
-  return prettyFormat(value, {
-    plugins: [formatFunctions],
-    escapeRegex: true,
-    maxDepth,
-    maxWidth,
-    min: true,
-  })
 }
 
 function formatTemplateString(cases: any[], args: any[]): any[] {
