@@ -1,7 +1,7 @@
 import { existsSync, promises as fs } from 'fs'
 import type { ViteDevServer } from 'vite'
 import { normalizePath } from 'vite'
-import { basename, relative, toNamespacedPath } from 'pathe'
+import { relative, toNamespacedPath } from 'pathe'
 import fg from 'fast-glob'
 import mm from 'micromatch'
 import c from 'picocolors'
@@ -9,7 +9,7 @@ import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
 import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter, ResolvedConfig, UserConfig, VitestRunMode } from '../types'
 import { SnapshotManager } from '../integrations/snapshot/manager'
-import { clearTimeout, deepMerge, hasFailed, noop, setTimeout, slash, toArray } from '../utils'
+import { clearTimeout, deepMerge, hasFailed, isMatchTest, noop, setTimeout, slash, toArray } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
 import { Typechecker } from '../typecheck/typechecker'
 import { createPool } from './pool'
@@ -21,13 +21,6 @@ import { Logger } from './logger'
 import { VitestCache } from './cache'
 
 const WATCHER_DEBOUNCE = 100
-
-function isMatchTest(a: string, b: string, extra: boolean): boolean {
-  if (extra)
-    return basename(a) === b
-
-  return a.includes(b)
-}
 
 export class Vitest {
   config: ResolvedConfig = undefined!

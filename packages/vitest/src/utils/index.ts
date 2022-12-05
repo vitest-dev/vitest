@@ -2,7 +2,7 @@
 import { relative as relativeBrowser } from 'path'
 import c from 'picocolors'
 import { isPackageExists } from 'local-pkg'
-import { relative as relativeNode } from 'pathe'
+import { basename, relative as relativeNode } from 'pathe'
 import type { ModuleCacheMap } from 'vite-node'
 import type { Suite, Task } from '../types'
 import { EXIT_CODE_RESTART } from '../constants'
@@ -179,4 +179,11 @@ export function createDefer<T>(): DeferPromise<T> {
   p.resolve = resolve!
   p.reject = reject!
   return p
+}
+
+export function isMatchTest(a: string, b: string, extra: boolean): boolean {
+  if (extra)
+    return basename(a) === b
+
+  return a.includes(b)
 }
