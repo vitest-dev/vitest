@@ -247,6 +247,7 @@ export class ViteNodeRunner {
       debugNative(externalize)
       const exports = await this.interopedImport(externalize)
       mod.exports = exports
+      mod.evaluated = true
       return exports
     }
 
