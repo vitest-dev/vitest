@@ -18,7 +18,7 @@ export interface CliOptions extends UserConfig {
    *
    * @default false
   */
-  extraFilter?: boolean
+  exactFilter?: boolean
 }
 
 /**
@@ -83,11 +83,11 @@ export async function startVitest(
     if (process.env.VITEST_CLI_WRAPPER)
       process.exit(EXIT_CODE_RESTART)
     else
-      ctx.start(cliFilters, options.extraFilter)
+      ctx.start(cliFilters, options.exactFilter)
   })
 
   try {
-    await ctx.start(cliFilters, options.extraFilter)
+    await ctx.start(cliFilters, options.exactFilter)
   }
   catch (e) {
     process.exitCode = 1
