@@ -4,7 +4,7 @@
 import c from 'picocolors'
 import type { PrettyFormatOptions } from 'pretty-format'
 import { format as prettyFormat, plugins as prettyFormatPlugins } from 'pretty-format'
-import { unifiedDiff } from '../../node/diff'
+import { unifiedDiff } from '../../utils/diff'
 import type { DiffOptions, MatcherHintOptions } from '../../types/matcher-utils'
 
 export const EXPECTED_COLOR = c.green

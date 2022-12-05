@@ -697,6 +697,7 @@ importers:
       codemirror-theme-vars: ^0.1.1
       cypress: ^11.0.1
       d3-graph-controller: ^2.3.22
+      diff: ^5.1.0
       flatted: ^3.2.7
       floating-vue: ^2.0.0-y.0
       picocolors: ^1.0.0
@@ -730,6 +731,7 @@ importers:
       codemirror-theme-vars: 0.1.1
       cypress: 11.0.1
       d3-graph-controller: 2.3.22
+      diff: 5.1.0
       flatted: 3.2.7
       floating-vue: 2.0.0-y.0_vue@3.2.41
       picocolors: 1.0.0
