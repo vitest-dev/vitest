@@ -179,7 +179,11 @@ export class ViteNodeRunner {
       return mod.promise
 
     const promise = this.directRequest(id, fsPath, callstack)
-    Object.assign(mod, { promise })
+    Object.assign(mod, { promise, evaluated: false })
+
+    promise.finally(() => {
+      mod.evaluated = true
+    })
 
     return await promise
   }
@@ -247,7 +251,6 @@ export class ViteNodeRunner {
       debugNative(externalize)
       const exports = await this.interopedImport(externalize)
       mod.exports = exports
-      mod.evaluated = true
       return exports
     }
 
@@ -348,12 +351,7 @@ export class ViteNodeRunner {
       columnOffset: -codeDefinition.length,
     })
 
-    try {
-      await fn(...Object.values(context))
-    }
-    finally {
-      mod.evaluated = true
-    }
+    await fn(...Object.values(context))
 
     return exports
   }
