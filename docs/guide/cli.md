@@ -79,7 +79,7 @@ vitest related /src/index.ts /src/hello-world.js
 | `--inspect` | Enables Node.js inspector |
 | `--inspect-brk` | Enables Node.js inspector with break |
 | `-h, --help` | Display available CLI options |
-| `--extra-filter` | extra match file basename to test |
+| `--exact-filter` | exact match file basename to test |
 
 ### changed
 
