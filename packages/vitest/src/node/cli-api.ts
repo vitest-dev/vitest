@@ -14,7 +14,7 @@ export interface CliOptions extends UserConfig {
    */
   run?: boolean
   /**
-   * extra match file to test
+   * Will only run tests that match the filter exactly. You need to pass down full paths, including root
    *
    * @default false
   */
