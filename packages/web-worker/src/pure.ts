@@ -58,12 +58,13 @@ function createClonedMessageEvent(data: any, transferOrOptions: StructuredSerial
   const transfer = Array.isArray(transferOrOptions) ? transferOrOptions : transferOrOptions?.transfer
 
   debug('clone worker message %o', data)
+  const origin = typeof location === 'undefined' ? undefined : location.origin
 
   if (typeof structuredClone === 'function' && clone === 'native') {
     debug('create message event, using native structured clone')
     return new MessageEvent('message', {
       data: structuredClone(data, { transfer }),
-      origin: window.location.origin,
+      origin,
     })
   }
   if (clone !== 'none') {
@@ -76,13 +77,13 @@ function createClonedMessageEvent(data: any, transferOrOptions: StructuredSerial
     )
     return new MessageEvent('message', {
       data: ponyfillStructuredClone(data, { lossy: true }),
-      origin: window.location.origin,
+      origin,
     })
   }
   debug('create message event without cloning an object')
   return new MessageEvent('message', {
     data,
-    origin: window.location.origin,
+    origin,
   })
 }
 
@@ -102,10 +103,8 @@ export function defineWebWorker(options?: DefineWorkerOptions) {
   if (typeof Worker !== 'undefined' && '__VITEST_WEB_WORKER__' in globalThis.Worker)
     return
 
-  assertGlobalExists('window')
   assertGlobalExists('EventTarget')
   assertGlobalExists('MessageEvent')
-  assertGlobalExists('ErrorEvent')
 
   const { config, rpc, mockMap, moduleCache } = getWorkerState()
 
@@ -198,7 +197,8 @@ export function defineWebWorker(options?: DefineWorkerOptions) {
           debug('worker %s successfully initialized', this._vw_name)
         }).catch((e) => {
           debug('worker %s failed to initialize: %o', this._vw_name, e)
-          const error = new ErrorEvent('error', {
+          const EventConstructor = globalThis.ErrorEvent || globalThis.Event
+          const error = new EventConstructor('error', {
             error: e,
             message: e.message,
           })
