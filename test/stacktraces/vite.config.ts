@@ -5,6 +5,6 @@ export default defineConfig({
     sourcemap: 'both',
   },
   test: {
-    // include: ['test/*.test.ts'],
+    include: ['test/*.test.ts'],
   },
 })
