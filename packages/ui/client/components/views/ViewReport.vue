@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { unifiedDiff } from 'vitest/src/node/diff'
+import { unifiedDiff } from 'vitest/src/utils/diff'
 import { openInEditor, shouldOpenInEditor } from '../../composables/error'
 import type { ErrorWithDiff, File, ParsedStack, Suite, Task } from '#types'
 import { config } from '~/composables/client'
