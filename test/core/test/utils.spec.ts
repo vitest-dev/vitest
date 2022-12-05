@@ -190,18 +190,19 @@ describe('objectAttr', () => {
   }
 
   test.each`
-    value                        | path             | expected
-    ${{ foo: 'bar' }}            | ${'foo'}         | ${'bar'}
-    ${{ foo: { bar: 'baz' } }}   | ${'foo'}         | ${{ bar: 'baz' }}
-    ${{ foo: { bar: 'baz' } }}   | ${'foo.bar'}     | ${'baz'}
-    ${{ foo: [{ bar: 'baz' }] }} | ${'foo.0.bar'}   | ${'baz'}
-    ${{ foo: [1, 2, ['a']] }}    | ${'foo'}         | ${[1, 2, ['a']]}
-    ${{ foo: [1, 2, ['a']] }}    | ${'foo.2'}       | ${['a']}
-    ${{ foo: [1, 2, ['a']] }}    | ${'foo.2.0'}     | ${'a'}
-    ${{ foo: [[[1]]] }}          | ${'foo.0.0.0'}   | ${1}
-    ${{ foo: [[[[1]]]] }}        | ${'foo.0.0.0.0'} | ${1}
-    ${{ foo: arrow }}            | ${'foo'}         | ${arrow}
-    ${{ foo: func }}             | ${'foo'}         | ${func}
+    value                         | path            | expected
+    ${{ foo: 'bar' }}             | ${'foo'}        | ${'bar'}
+    ${{ foo: { bar: 'baz' } }}    | ${'foo'}        | ${{ bar: 'baz' }}
+    ${{ foo: { bar: 'baz' } }}    | ${'foo.bar'}    | ${'baz'}
+    ${{ foo: [{ bar: 'baz' }] }}  | ${'foo.0.bar'}  | ${'baz'}
+    ${{ foo: [1, 2, ['a']] }}     | ${'foo'}        | ${[1, 2, ['a']]}
+    ${{ foo: [1, 2, ['a']] }}     | ${'foo.2'}      | ${['a']}
+    ${{ foo: [1, 2, ['a']] }}     | ${'foo.2.0'}    | ${'a'}
+    ${{ foo: [[1]] }}             | ${'foo.0.0'}    | ${1}
+    ${{ deep: [[[1]]] }}          | ${'deep.0.0.0'} | ${1}
+    ${{ a: 1, b: 2, c: 3, d: 4 }} | ${'a'}          | ${1}
+    ${{ arrow }}                  | ${'arrow'}      | ${arrow}
+    ${{ func }}                   | ${'func'}       | ${func}
   `('objectAttr($value, $path) -> $expected', ({ value, path, expected }) => {
     expect(objectAttr(value, path)).toEqual(expected)
   })

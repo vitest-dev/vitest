@@ -281,7 +281,7 @@ function formatTitle(template: string, items: any[], idx: number) {
   return formatted
 }
 
-function formatObject(value: unknown, maxDepth = 4): string {
+function formatObject(value: unknown, maxDepth = 3, maxWidth = 2): string {
   const formatFunctions = {
     test: (val: unknown) => typeof val === 'function',
     serialize: (val: Function) => val.toString(),
@@ -291,6 +291,7 @@ function formatObject(value: unknown, maxDepth = 4): string {
     plugins: [formatFunctions],
     escapeRegex: true,
     maxDepth,
+    maxWidth,
     min: true,
   })
 }
