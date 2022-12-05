@@ -425,7 +425,7 @@ function exportAll(exports: any, sourceModule: any) {
   if (exports === sourceModule)
     return
 
-  if (isPrimitive(sourceModule))
+  if (isPrimitive(sourceModule) || Array.isArray(sourceModule))
     return
 
   for (const key in sourceModule) {
