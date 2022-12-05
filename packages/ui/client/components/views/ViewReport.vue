@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { unifiedDiff } from 'vitest/src/node/diff'
 import { openInEditor, shouldOpenInEditor } from '../../composables/error'
-import type { File, ParsedStack, Suite, Task } from '#types'
+import type { ErrorWithDiff, File, ParsedStack, Suite, Task } from '#types'
 import { config } from '~/composables/client'
 import { isDark } from '~/composables/dark'
 import { createAnsiToHtmlFilter } from '~/composables/error'
@@ -96,12 +96,14 @@ function column(stack: ParsedStack) {
   return stack.sourcePos?.column ?? stack.column
 }
 
-function isDiffShowable(result: Task['result']) {
-  return result?.error?.expected && result?.error?.actual
+interface Diff { error: NonNullable<Pick<ErrorWithDiff, 'expected' | 'actual'>> }
+type ResultWithDiff = Task['result'] & Diff
+function isDiffShowable(result?: Task['result']): result is ResultWithDiff {
+  return result && result?.error?.expected && result?.error?.actual
 }
 
-function diff(result: Task['result']): string {
-  return unifiedDiff(result!.error!.expected, result!.error!.actual, {
+function diff(result: ResultWithDiff): string {
+  return unifiedDiff(result.error.expected, result.error.actual, {
     outputTruncateLength: 80,
   })
 }
