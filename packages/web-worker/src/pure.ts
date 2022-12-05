@@ -36,7 +36,7 @@ class InlineWorkerRunner extends VitestRunner {
 
   prepareContext(context: Record<string, any>) {
     const ctx = super.prepareContext(context)
-    // not supported for now, need to be async
+    // not supported for now, we can't synchronously load modules
     const importScripts = () => {
       throw new Error('[vitest] `importScripts` is not supported in Vite workers. Please, consider using `import` instead.')
     }
@@ -48,7 +48,7 @@ class InlineWorkerRunner extends VitestRunner {
 
 function assertGlobalExists(name: string) {
   if (!(name in globalThis))
-    throw new Error(`[@vitest/web-worker] Cannot initiate a custom Web Worker. "${name}" is not supported in this environment. Please, consider using jsdom or happy-dom environment or upgrade your Node.js version.`)
+    throw new Error(`[@vitest/web-worker] Cannot initiate a custom Web Worker. "${name}" is not supported in this environment. Please, consider using jsdom or happy-dom environment.`)
 }
 
 function createClonedMessageEvent(data: any, transferOrOptions: StructuredSerializeOptions | Transferable[] | undefined, clone: CloneOption) {
@@ -64,7 +64,8 @@ function createClonedMessageEvent(data: any, transferOrOptions: StructuredSerial
     transfer?.length && console.warn(
       '[@vitest/web-worker] `structuredClone` is not supported in this environment. '
       + 'Falling back to polyfill, your transferable options will be lost. '
-      + 'Set `VITEST_WEB_WORKER_CLONE` environmental variable to "none", if you don\'t want to loose it.',
+      + 'Set `VITEST_WEB_WORKER_CLONE` environmental variable to "none", if you don\'t want to loose it,'
+      + 'or update to Node 17+.',
     )
     return new MessageEvent('message', {
       data: ponyfillStructuredClone(data, { lossy: true }),
@@ -96,6 +97,7 @@ export function defineWebWorker(options?: DefineWorkerOptions) {
   assertGlobalExists('window')
   assertGlobalExists('EventTarget')
   assertGlobalExists('MessageEvent')
+  assertGlobalExists('ErrorEvent')
 
   const { config, rpc, mockMap, moduleCache } = getWorkerState()
 
@@ -199,7 +201,7 @@ export function defineWebWorker(options?: DefineWorkerOptions) {
     addEventListener(type: string, callback: EventListenerOrEventListenerObject | null, options?: boolean | AddEventListenerOptions): void {
       if (callback)
         this.outsideListeners.set(type, callback)
-      return this.addEventListener(type, callback, options)
+      return super.addEventListener(type, callback, options)
     }
 
     postMessage(...args: [any, StructuredSerializeOptions | Transferable[] | undefined]): void {
