@@ -9,21 +9,24 @@ interface InstallSourceMapSupportOptions {
 let SOURCEMAPPING_URL = 'sourceMa'
 SOURCEMAPPING_URL += 'ppingURL'
 
-const VITE_NODE_SOURCEMAPPING_URL = `${SOURCEMAPPING_URL}=data:application/json;charset=utf-8;source=vite-node`
+const VITE_NODE_SOURCEMAPPING_SOURCE = '//# sourceMappingSource=vite-node'
+const VITE_NODE_SOURCEMAPPING_URL = `${SOURCEMAPPING_URL}=data:application/json;charset=utf-8`
 const VITE_NODE_SOURCEMAPPING_REGEXP = new RegExp(`//# ${VITE_NODE_SOURCEMAPPING_URL};base64,(.+)`)
-const OTHER_SOURCE_MAP_REGEXP = new RegExp(`//# ${SOURCEMAPPING_URL}=data:application/json[^,]+base64,(.+)`)
 
 export async function withInlineSourcemap(result: TransformResult) {
-  const { code, map } = result
+  const map = result.map
+  let code = result.code
 
-  if (!map || code.includes(VITE_NODE_SOURCEMAPPING_URL))
+  if (!map || code.includes(VITE_NODE_SOURCEMAPPING_SOURCE))
     return result
 
   // to reduce the payload size, we only inline vite node source map, because it's also the only one we use
-  if (OTHER_SOURCE_MAP_REGEXP.test(code))
-    result.code = code.replace(OTHER_SOURCE_MAP_REGEXP, '')
+  const OTHER_SOURCE_MAP_REGEXP = new RegExp(`//# ${SOURCEMAPPING_URL}=data:application/json[^,]+base64,(.+)`, 'g')
+  while (OTHER_SOURCE_MAP_REGEXP.test(code))
+    code = code.replace(OTHER_SOURCE_MAP_REGEXP, '')
 
-  result.code = `${code}\n\n//# ${VITE_NODE_SOURCEMAPPING_URL};base64,${Buffer.from(JSON.stringify(map), 'utf-8').toString('base64')}\n`
+  const sourceMap = Buffer.from(JSON.stringify(map), 'utf-8').toString('base64')
+  result.code = `${code.trimEnd()}\n\n${VITE_NODE_SOURCEMAPPING_SOURCE}\n//# ${VITE_NODE_SOURCEMAPPING_URL};base64,${sourceMap}\n`
 
   return result
 }
