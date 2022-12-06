@@ -1,5 +1,5 @@
 import { existsSync, promises as fs } from 'fs'
-import { dirname, resolve } from 'pathe'
+import { dirname, relative, resolve } from 'pathe'
 import fg from 'fast-glob'
 import { distDir } from '../../constants'
 import type { Vitest } from '../../node'
@@ -179,8 +179,19 @@ export class HTMLReporter implements Reporter {
     const ui = resolve(distDir, 'html-report')
     const files = fg.sync('**/*', { cwd: ui })
     await Promise.all(files.map(async (f) => {
-      await fs.copyFile(resolve(ui, f), resolve(outputDirectory, f))
+      if (f === 'index.html') {
+        const html = await fs.readFile(resolve(ui, f), 'utf-8')
+        const filePath = relative(outputDirectory, reportFile)
+        await fs.writeFile(
+          resolve(outputDirectory, f),
+          html.replace('<!-- !LOAD_METADATA! -->', `<script>window.METADATA_PATH="${filePath}"</script>`),
+        )
+      }
+      else {
+        await fs.copyFile(resolve(ui, f), resolve(outputDirectory, f))
+      }
     }))
+
     this.ctx.logger.log(`HTML report written to ${reportFile}`)
   }
 
