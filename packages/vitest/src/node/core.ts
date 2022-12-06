@@ -311,6 +311,8 @@ export class Vitest {
   }
 
   async runFiles(paths: string[]) {
+    paths = Array.from(new Set(paths))
+
     // previous run
     await this.runningPromise
     this.state.startCollectingPaths()
