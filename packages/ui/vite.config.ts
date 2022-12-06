@@ -18,6 +18,9 @@ export const config: UserConfig = {
       '@vitest/ws-client': `${resolve(__dirname, '../ws-client/src/index.ts')}`,
     },
   },
+  define: {
+    __REPORT__: false,
+  },
   plugins: [
     Vue(),
     Unocss({

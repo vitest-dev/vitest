@@ -697,6 +697,7 @@ importers:
       codemirror-theme-vars: ^0.1.1
       cypress: ^11.0.1
       d3-graph-controller: ^2.3.22
+      defu: ^6.1.1
       flatted: ^3.2.7
       floating-vue: ^2.0.0-y.0
       picocolors: ^1.0.0
@@ -730,6 +731,7 @@ importers:
       codemirror-theme-vars: 0.1.1
       cypress: 11.0.1
       d3-graph-controller: 2.3.22
+      defu: 6.1.1
       flatted: 3.2.7
       floating-vue: 2.0.0-y.0_vue@3.2.41
       picocolors: 1.0.0
@@ -11226,8 +11228,8 @@ packages:
       isobject: 3.0.1
     dev: true
 
-  /defu/6.1.0:
-    resolution: {integrity: sha512-pOFYRTIhoKujrmbTRhcW5lYQLBXw/dlTwfI8IguF1QCDJOcJzNH1w+YFjxqy6BAuJrClTy6MUE8q+oKJ2FLsIw==}
+  /defu/6.1.1:
+    resolution: {integrity: sha512-aA964RUCsBt0FGoNIlA3uFgo2hO+WWC0fiC6DBps/0SFzkKcYoM/3CzVLIa5xSsrFjdioMdYgAIbwo80qp2MoA==}
     dev: true
 
   /delayed-stream/1.0.0:
@@ -20160,7 +20162,7 @@ packages:
     resolution: {integrity: sha512-1589b7oGa8ILBYpta7TndM5mLHLzHUqBfhszeZxuUBrjO/RoQ52VGVWsS3w0C0GLNxO9RPmqkf6BmIvBApaRdA==}
     dependencies:
       '@antfu/utils': 0.5.2
-      defu: 6.1.0
+      defu: 6.1.1
       jiti: 1.16.0
     dev: true
 

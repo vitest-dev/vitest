@@ -5,7 +5,7 @@ import fg from 'fast-glob'
 
 const root = resolve(fileURLToPath(import.meta.url), '../../../../packages')
 
-const ui = resolve(root, 'ui/dist/client')
+const ui = resolve(root, 'ui/dist/report')
 const vitest = resolve(root, 'vitest/dist/html-report/')
 
 const files = fg.sync('**/*', { cwd: ui })
