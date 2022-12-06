@@ -4,7 +4,7 @@ import vm from 'vm'
 import { dirname, extname, isAbsolute, resolve } from 'pathe'
 import { isNodeBuiltin } from 'mlly'
 import createDebug from 'debug'
-import { cleanUrl, isPrimitive, mergeSlashes, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
+import { isPrimitive, mergeSlashes, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
 import type { HotContext, ModuleCache, ViteNodeRunnerOptions } from './types'
 import { extractSourceMap } from './source-map'
 
@@ -242,7 +242,8 @@ export class ViteNodeRunner {
 
     // in case we resolved fsPath incorrectly, Vite will return the correct file path
     // in that case we need to update cache, so we don't have the same module as different exports
-    if (file && cleanUrl(fsPath) !== file) {
+    // but we ignore fsPath that has custom query, because it might need to be different
+    if (file && !fsPath.includes('?') && fsPath !== file) {
       if (this.moduleCache.has(file)) {
         mod = this.moduleCache.get(file)
         this.moduleCache.set(fsPath, mod)
