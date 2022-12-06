@@ -129,11 +129,13 @@ export class ViteNodeServer {
 
     const module = this.server.moduleGraph.getModuleById(id)
     const timestamp = module ? module.lastHMRTimestamp : null
-    const time = Date.now()
     const cache = this.fetchCache.get(filePath)
+    if (cache?.result.id)
+      id = cache.result.id
     if (timestamp !== null && cache && cache.timestamp >= timestamp)
       return cache.result
 
+    const time = Date.now()
     const externalize = await this.shouldExternalize(filePath)
     let duration: number | undefined
     if (externalize) {
