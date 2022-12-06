@@ -222,11 +222,6 @@ export class ViteNodeRunner {
     Object.defineProperty(request, 'callstack', { get: () => callstack })
 
     const resolveId = async (dep: string, callstackPosition = 1) => {
-      // probably means it was passed as variable
-      // and wasn't transformed by Vite
-      // or some dependency name was passed
-      // runner.executeFile('@scope/name')
-      // runner.executeFile(myDynamicName)
       if (this.options.resolveId && this.shouldResolveId(dep)) {
         let importer = callstack[callstack.length - callstackPosition]
         if (importer && importer.startsWith('mock:'))
@@ -238,14 +233,12 @@ export class ViteNodeRunner {
       return dep
     }
 
-    id = await resolveId(id, 2)
-
     const requestStubs = this.options.requestStubs || DEFAULT_REQUEST_STUBS
     if (id in requestStubs)
       return requestStubs[id]
 
     // eslint-disable-next-line prefer-const
-    let { code: transformed, externalize } = await this.options.fetchModule(id)
+    let { code: transformed, externalize, file } = await this.options.fetchModule(id)
     if (externalize) {
       debugNative(externalize)
       const exports = await this.interopedImport(externalize)
@@ -345,7 +338,7 @@ export class ViteNodeRunner {
     const codeDefinition = `'use strict';async (${Object.keys(context).join(',')})=>{{`
     const code = `${codeDefinition}${transformed}\n}}`
     const fn = vm.runInThisContext(code, {
-      filename: fsPath,
+      filename: file,
       lineOffset: 0,
       columnOffset: -codeDefinition.length,
     })
