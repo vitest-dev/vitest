@@ -153,7 +153,7 @@
     "p-limit": "^4.0.0",
     "pathe": "^0.2.0",
     "picocolors": "^1.0.0",
-    "pkg-types": "^0.3.6",
+    "pkg-types": "^1.0.1",
     "pretty-format": "^27.5.1",
     "prompts": "^2.4.2",
     "rollup": "^2.79.1",

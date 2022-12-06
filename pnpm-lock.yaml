@@ -816,7 +816,7 @@ importers:
       p-limit: ^4.0.0
       pathe: ^0.2.0
       picocolors: ^1.0.0
-      pkg-types: ^0.3.6
+      pkg-types: ^1.0.1
       pretty-format: ^27.5.1
       prompts: ^2.4.2
       rollup: ^2.79.1
@@ -878,7 +878,7 @@ importers:
       p-limit: 4.0.0
       pathe: 0.2.0
       picocolors: 1.0.0
-      pkg-types: 0.3.6
+      pkg-types: 1.0.1
       pretty-format: 27.5.1
       prompts: 2.4.2
       rollup: 2.79.1
@@ -15934,7 +15934,7 @@ packages:
     dependencies:
       acorn: 8.8.1
       pathe: 0.3.8
-      pkg-types: 0.3.5
+      pkg-types: 0.3.6
       ufo: 0.8.5
     dev: true
 
@@ -17051,14 +17051,6 @@ packages:
     engines: {node: '>=10'}
     dependencies:
       find-up: 5.0.0
-    dev: true
-
-  /pkg-types/0.3.5:
-    resolution: {integrity: sha512-VkxCBFVgQhNHYk9subx+HOhZ4jzynH11ah63LZsprTKwPCWG9pfWBlkElWFbvkP9BVR0dP1jS9xPdhaHQNK74Q==}
-    dependencies:
-      jsonc-parser: 3.2.0
-      mlly: 0.5.16
-      pathe: 0.3.9
     dev: true
 
   /pkg-types/0.3.6:
