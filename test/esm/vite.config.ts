@@ -6,6 +6,5 @@ export default defineConfig({
       external: [/tslib/, /css-what/],
       registerNodeLoader: true,
     },
-    reporters: 'html',
   },
 })

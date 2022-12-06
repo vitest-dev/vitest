@@ -47,6 +47,7 @@ export default defineConfig({
       provider: 'istanbul',
       reporter: ['text', 'html'],
     },
+    reporters: 'html',
     env: {
       CUSTOM_ENV: 'foo',
     },
