@@ -38,7 +38,7 @@ export class HTMLReporter implements Reporter {
         result.moduleGraph[file.filepath] = await getModuleGraph(this.ctx, file.filepath)
       }),
     )
-    await this.writeReport(stringify(result, null, 2))
+    await this.writeReport(stringify(result))
   }
 
   /**
