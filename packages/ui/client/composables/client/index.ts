@@ -68,11 +68,15 @@ watch(
   (ws) => {
     status.value = 'CONNECTING'
 
-    ws.addEventListener('open', () => {
+    ws.addEventListener('open', async () => {
       status.value = 'OPEN'
       client.state.filesMap.clear()
-      client.rpc.getFiles().then(files => client.state.collectFiles(files))
-      client.rpc.getConfig().then(_config => config.value = _config)
+      const [files, _config] = await Promise.all([
+        client.rpc.getFiles(),
+        client.rpc.getConfig(),
+      ])
+      client.state.collectFiles(files)
+      config.value = _config
     })
 
     ws.addEventListener('close', () => {

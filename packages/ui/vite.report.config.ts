@@ -10,4 +10,12 @@ export default defineConfig(defu({
   define: {
     __REPORT__: true,
   },
+  plugins: [
+    {
+      name: 'debug-html-report',
+      transformIndexHtml(html) {
+        return html.replace('<!-- !LOAD_METADATA! -->', '<script>window.METADATA_PATH="/html.meta.json"</script>')
+      },
+    },
+  ],
 }, config))
