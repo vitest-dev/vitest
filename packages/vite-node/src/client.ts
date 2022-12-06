@@ -191,7 +191,7 @@ export class ViteNodeRunner {
   async directRequest(id: string, fsPath: string, _callstack: string[]) {
     const callstack = [..._callstack, fsPath]
 
-    const mod = this.moduleCache.get(fsPath)
+    let mod = this.moduleCache.get(fsPath)
 
     const request = async (dep: string) => {
       const depFsPath = toFilePath(normalizeRequestId(dep, this.options.base), this.root)
@@ -239,6 +239,23 @@ export class ViteNodeRunner {
 
     // eslint-disable-next-line prefer-const
     let { code: transformed, externalize, file } = await this.options.fetchModule(id)
+
+    // in case we resolved fsPath incorrectly, Vite will return the correct file path
+    // in that case we need to update cache, so we don't have the same module as different exports
+    if (file && fsPath !== file) {
+      if (this.moduleCache.has(file)) {
+        mod = this.moduleCache.get(file)
+        this.moduleCache.set(fsPath, mod)
+        if (mod.promise)
+          return mod.promise
+        if (mod.exports)
+          return mod.exports
+      }
+      else {
+        this.moduleCache.set(file, mod)
+      }
+    }
+
     if (externalize) {
       debugNative(externalize)
       const exports = await this.interopedImport(externalize)
@@ -250,9 +267,9 @@ export class ViteNodeRunner {
       throw new Error(`[vite-node] Failed to load ${id}`)
 
     // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
-    const url = pathToFileURL(fsPath).href
+    const url = pathToFileURL(file || fsPath).href
     const meta = { url }
-    const exports: any = Object.create(null)
+    const exports = Object.create(null)
     Object.defineProperty(exports, Symbol.toStringTag, {
       value: 'Module',
       enumerable: false,
@@ -260,9 +277,6 @@ export class ViteNodeRunner {
     })
     // this prosxy is triggered only on exports.name and module.exports access
     const cjsExports = new Proxy(exports, {
-      get(_, p, receiver) {
-        return Reflect.get(exports, p, receiver)
-      },
       set(_, p, value) {
         if (!Reflect.has(exports, 'default'))
           exports.default = {}
@@ -282,8 +296,7 @@ export class ViteNodeRunner {
       },
     })
 
-    Object.assign(mod, { code: transformed, exports, evaluated: false })
-
+    Object.assign(mod, { code: transformed, exports })
     const __filename = fileURLToPath(url)
     const moduleProxy = {
       set exports(value) {
@@ -338,7 +351,7 @@ export class ViteNodeRunner {
     const codeDefinition = `'use strict';async (${Object.keys(context).join(',')})=>{{`
     const code = `${codeDefinition}${transformed}\n}}`
     const fn = vm.runInThisContext(code, {
-      filename: file,
+      filename: __filename,
       lineOffset: 0,
       columnOffset: -codeDefinition.length,
     })
