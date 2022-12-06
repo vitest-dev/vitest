@@ -9,3 +9,7 @@ declare module '*.vue' {
 }
 
 const __REPORT__: boolean
+
+declare interface Window {
+  METADATA_PATH?: string
+}
