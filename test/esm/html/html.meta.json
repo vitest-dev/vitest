@@ -1,0 +1,33 @@
+{
+  "numTotalTestSuites": 1,
+  "numPassedTestSuites": 1,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 1,
+  "numPassedTests": 1,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "startTime": 1670304342003,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            ""
+          ],
+          "fullName": " imported libs have incorrect ESM, but still work",
+          "status": "skipped",
+          "title": "imported libs have incorrect ESM, but still work",
+          "failureMessages": []
+        }
+      ],
+      "startTime": 1670304342003,
+      "endTime": 1670304342003,
+      "status": "failed",
+      "message": "",
+      "name": "/Users/yohopo/code/git/vitest/test/esm/test/executes.spec.ts"
+    }
+  ]
+}

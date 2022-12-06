@@ -2,8 +2,8 @@ import { createClient, getTasks } from '@vitest/ws-client'
 import type { WebSocketStatus } from '@vueuse/core'
 import type { Ref } from 'vue'
 import { reactive } from 'vue'
-import type { RunState } from '../../types'
-import { activeFileId } from './params'
+import type { RunState } from '../../../types'
+import { activeFileId } from '../params'
 import type { File, ResolvedConfig } from '#types'
 
 export const PORT = import.meta.hot ? '51204' : location.port
