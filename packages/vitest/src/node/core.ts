@@ -115,9 +115,7 @@ export class Vitest {
     try {
       await this.cache.results.readFromCache()
     }
-    catch (err) {
-      this.logger.error(`[vitest] Error, while trying to parse cache in ${this.cache.results.getCachePath()}:`, err)
-    }
+    catch {}
   }
 
   async initCoverageProvider() {
