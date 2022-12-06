@@ -1,0 +1,191 @@
+[{
+  "paths": "1",
+  "files": "2",
+  "config": "3",
+  "moduleGraph": "4"
+},[],[
+  "5"
+],{
+  "allowOnly": true,
+  "watch": false,
+  "globals": false,
+  "environment": "6",
+  "threads": true,
+  "clearMocks": false,
+  "restoreMocks": false,
+  "mockReset": false,
+  "include": "7",
+  "exclude": "8",
+  "testTimeout": 5000,
+  "hookTimeout": 10000,
+  "teardownTimeout": 1000,
+  "isolate": true,
+  "watchExclude": "9",
+  "forceRerunTriggers": "10",
+  "update": false,
+  "reporters": "11",
+  "silent": false,
+  "ui": false,
+  "uiBase": "12",
+  "open": true,
+  "css": "13",
+  "coverage": "14",
+  "fakeTimers": "15",
+  "maxConcurrency": 5,
+  "dangerouslyIgnoreUnhandledErrors": false,
+  "typecheck": "16",
+  "slowTestThreshold": 300,
+  "deps": "17",
+  "--": "18",
+  "color": true,
+  "segfaultRetry": 0,
+  "run": true,
+  "defines": "19",
+  "root": "20",
+  "mode": "21",
+  "snapshotOptions": "22",
+  "setupFiles": "23",
+  "cache": "24",
+  "sequence": "25"
+},{
+  "/Users/yohopo/code/git/vitest/test/esm/test/executes.spec.ts": "26"
+},{
+  "id": "27",
+  "name": "28",
+  "type": "29",
+  "mode": "30",
+  "filepath": "31",
+  "tasks": "32",
+  "setupDuration": 0,
+  "collectDuration": 18,
+  "result": "33"
+},"node",[
+  "34"
+],[
+  "35",
+  "36",
+  "37",
+  "38",
+  "39"
+],[
+  "35",
+  "36"
+],[
+  "40",
+  "41"
+],[
+  "42"
+],"/__vitest__/",{
+  "include": "43",
+  "modules": "44"
+},{
+  "provider": "45",
+  "enabled": false,
+  "clean": true,
+  "cleanOnRerun": false,
+  "reportsDirectory": "46",
+  "excludeNodeModules": true,
+  "exclude": "47",
+  "reporter": "48",
+  "allowExternal": false,
+  "extension": "49"
+},{
+  "loopLimit": 10000,
+  "shouldClearNativeTimers": true,
+  "toFake": "50"
+},{
+  "checker": "51",
+  "include": "52",
+  "exclude": "8"
+},{
+  "external": "53",
+  "registerNodeLoader": true,
+  "inline": "54"
+},[],{},"/Users/yohopo/code/git/vitest/test/esm","test",{
+  "snapshotFormat": "55",
+  "updateSnapshot": "56"
+},[],{
+  "dir": "57"
+},{
+  "hooks": "58"
+},{
+  "graph": "59",
+  "externalized": "60",
+  "inlined": "61"
+},"-36248801","test/executes.spec.ts","suite","skip","/Users/yohopo/code/git/vitest/test/esm/test/executes.spec.ts",[
+  "62"
+],{
+  "state": "30",
+  "startTime": 1670340304786,
+  "duration": 0
+},"**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}","**/node_modules/**","**/dist/**","**/cypress/**","**/.{idea,git,cache,output,temp}/**","**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress}.config.*","**/package.json/**","**/{vitest,vite}.config.*/**","html",[],{
+  "classNameStrategy": "63"
+},"c8","./coverage",[
+  "64",
+  "65",
+  "66",
+  "67",
+  "68",
+  "69",
+  "70",
+  "71",
+  "72",
+  "73",
+  "39",
+  "74"
+],[
+  "75",
+  "42",
+  "76",
+  "77"
+],[
+  "78",
+  "79",
+  "80",
+  "81",
+  "82",
+  "83",
+  "84",
+  "85"
+],[
+  "86",
+  "87",
+  "88",
+  "89",
+  "90",
+  "91",
+  "92"
+],"tsc",[
+  "93"
+],[
+  "94",
+  "95"
+],[
+  "96",
+  "97",
+  "98",
+  "99",
+  "100",
+  "101",
+  "102"
+],{},"new","/Users/yohopo/code/git/vitest/test/esm/node_modules/.vitest","parallel",{
+  "/Users/yohopo/code/git/vitest/test/esm/test/executes.spec.ts": "103"
+},[],[
+  "31"
+],{
+  "id": "104",
+  "type": "21",
+  "name": "105",
+  "mode": "30",
+  "suite": "106",
+  "file": "5"
+},"stable","coverage/**","dist/**","packages/*/test{,s}/**","**/*.d.ts","cypress/**","test{,s}/**","test{,-*}.{js,cjs,mjs,ts,tsx,jsx}","**/*{.,-}test.{js,cjs,mjs,ts,tsx,jsx}","**/*{.,-}spec.{js,cjs,mjs,ts,tsx,jsx}","**/__tests__/**","**/.{eslint,mocha,prettier}rc.{js,cjs,yml}","text","clover","json",".js",".cjs",".mjs",".ts",".tsx",".jsx",".vue",".svelte","setTimeout","clearTimeout","setInterval","clearInterval","setImmediate","clearImmediate","Date","**/*.{test,spec}-d.{ts,js}",{},{},{},{},{},{},{},{},"@nuxt/test-utils",[],"-36248801_0","imported libs have incorrect ESM, but still work",{
+  "id": "107",
+  "type": "29",
+  "name": "107",
+  "mode": "108",
+  "tasks": "109",
+  "file": "5"
+},"","run",[
+  "62"
+]]

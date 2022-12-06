@@ -1,10 +1,15 @@
 import type { BirpcReturn } from 'birpc'
 import type { VitestClient } from '@vitest/ws-client'
 import type { WebSocketHandlers } from 'vitest/src/api/types'
+import { parse } from 'flatted'
+import type { File, ModuleGraphData, ResolvedConfig } from 'vitest/src/types'
 import { StateManager } from '../../../../vitest/src/node/state'
 
-interface VitestMetadata {
-  files: any
+interface HTMLReportMetadata {
+  paths: string[]
+  files: File[]
+  config: ResolvedConfig
+  moduleGraph: Record<string, ModuleGraphData>
 }
 
 const noop: any = () => {}
@@ -21,26 +26,29 @@ export function createStaticClient(): VitestClient {
   ctx.state.filesMap = reactive(ctx.state.filesMap)
   ctx.state.idMap = reactive(ctx.state.idMap)
 
-  let metadata!: VitestMetadata
+  let metadata!: HTMLReportMetadata
 
   const rpc = {
     getFiles: () => {
       return metadata.files
     },
     getPaths: async () => {
-      return metadata.files
+      return metadata.paths
     },
     getConfig: () => {
-      return metadata.files
+      return metadata.config
     },
-    getModuleGraph: async () => {
-      return metadata.files
+    getModuleGraph: async (id) => {
+      return metadata.moduleGraph[id]
     },
-    getTransformResult: async () => {
-      return metadata.files
+    getTransformResult: async (id) => {
+      return {
+        code: id,
+        source: '',
+      }
     },
-    readFile: async () => {
-      return metadata.files
+    readFile: async (id) => {
+      return Promise.resolve(id)
     },
     onWatcherStart: asyncNoop,
     onFinished: asyncNoop,
@@ -61,7 +69,7 @@ export function createStaticClient(): VitestClient {
 
   async function registerMetadata() {
     const res = await fetch(window.METADATA_PATH!)
-    metadata = await res.json() as VitestMetadata
+    metadata = parse(await res.text()) as HTMLReportMetadata
     const event = new Event('open')
     ctx.ws.dispatchEvent(event)
   }

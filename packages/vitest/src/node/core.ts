@@ -341,9 +341,11 @@ export class Vitest {
       this.cache.results.updateResults(files)
       await this.cache.results.writeToCache()
     })()
-      .finally(() => {
+      .finally(async () => {
         this.runningPromise = undefined
         this.state.finishCollectingPaths()
+        if (!this.config.browser)
+          await this.report('onFinally')
       })
 
     return await this.runningPromise
