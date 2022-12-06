@@ -31,6 +31,8 @@ export interface FetchResult {
   code?: string
   externalize?: string
   map?: RawSourceMap
+  id?: string
+  file?: string
 }
 
 export type HotContext = Omit<ViteHotContext, 'acceptDeps' | 'decline'>
