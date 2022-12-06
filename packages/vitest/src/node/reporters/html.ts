@@ -1,5 +1,7 @@
 import { existsSync, promises as fs } from 'fs'
 import { dirname, resolve } from 'pathe'
+import fg from 'fast-glob'
+import { distDir } from '../../constants'
 import type { Vitest } from '../../node'
 import type { File, Reporter, Suite, Task, TaskState } from '../../types'
 import { getSuites, getTests } from '../../utils'
@@ -169,9 +171,16 @@ export class HTMLReporter implements Reporter {
 
     const outputDirectory = dirname(reportFile)
     if (!existsSync(outputDirectory))
-      await fs.mkdir(outputDirectory, { recursive: true })
+      await fs.mkdir(resolve(outputDirectory, 'assets'), { recursive: true })
 
     await fs.writeFile(reportFile, report, 'utf-8')
+
+    // copy ui
+    const ui = resolve(distDir, 'html-report')
+    const files = fg.sync('**/*', { cwd: ui })
+    await Promise.all(files.map(async (f) => {
+      await fs.copyFile(resolve(ui, f), resolve(outputDirectory, f))
+    }))
     this.ctx.logger.log(`HTML report written to ${reportFile}`)
   }
 
