@@ -396,6 +396,9 @@ export class Vitest {
 
   private _rerunTimer: any
   private async scheduleRerun(triggerId: string) {
+    const mod = this.server.moduleGraph.getModuleById(triggerId)
+    if (mod)
+      mod.lastHMRTimestamp = Date.now()
     const currentCount = this.restartsCount
     clearTimeout(this._rerunTimer)
     await this.runningPromise
