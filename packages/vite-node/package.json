@@ -78,7 +78,7 @@
     "debug": "^4.3.4",
     "mlly": "^1.0.0",
     "pathe": "^0.2.0",
-    "source-map": "^0.6.1",
+    "source-map": "^0.7.4",
     "source-map-support": "^0.5.21",
     "vite": "^3.0.0"
   },

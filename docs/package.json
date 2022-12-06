@@ -10,22 +10,22 @@
     "prefetch": "esno .vitepress/scripts/fetch-avatars.ts"
   },
   "dependencies": {
-    "@vueuse/core": "^9.3.1",
+    "@vueuse/core": "^9.6.0",
     "jiti": "^1.16.0",
     "vue": "latest"
   },
   "devDependencies": {
-    "@iconify-json/carbon": "^1.1.9",
-    "@unocss/reset": "^0.46.0",
+    "@iconify-json/carbon": "^1.1.11",
+    "@unocss/reset": "^0.47.5",
     "@vitejs/plugin-vue": "latest",
     "esno": "^0.16.3",
     "fast-glob": "^3.2.12",
     "https-localhost": "^4.7.1",
-    "unocss": "^0.46.0",
-    "unplugin-vue-components": "^0.22.9",
+    "unocss": "^0.47.5",
+    "unplugin-vue-components": "^0.22.11",
     "vite": "^3.2.3",
-    "vite-plugin-pwa": "0.13.1",
-    "vitepress": "1.0.0-alpha.27",
+    "vite-plugin-pwa": "0.13.3",
+    "vitepress": "1.0.0-alpha.30",
     "workbox-window": "^6.5.4"
   }
 }
