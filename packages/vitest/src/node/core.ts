@@ -336,8 +336,6 @@ export class Vitest {
       if (hasFailed(files))
         process.exitCode = 1
 
-      if (!this.config.browser)
-        await this.report('onFinished', files, this.state.getUnhandledErrors())
       this.cache.results.updateResults(files)
       await this.cache.results.writeToCache()
     })()
@@ -345,7 +343,7 @@ export class Vitest {
         this.runningPromise = undefined
         this.state.finishCollectingPaths()
         if (!this.config.browser)
-          await this.report('onFinally')
+          await this.report('onFinished', this.state.getFiles(), this.state.getUnhandledErrors())
       })
 
     return await this.runningPromise

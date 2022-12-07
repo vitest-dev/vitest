@@ -7,7 +7,6 @@ export interface Reporter {
   onPathsCollected?: (paths?: string[]) => Awaitable<void>
   onCollected?: (files?: File[]) => Awaitable<void>
   onFinished?: (files?: File[], errors?: unknown[]) => Awaitable<void>
-  onFinally?: () => Awaitable<void>
   onTaskUpdate?: (packs: TaskResultPack[]) => Awaitable<void>
 
   onTestRemoved?: (trigger?: string) => Awaitable<void>
