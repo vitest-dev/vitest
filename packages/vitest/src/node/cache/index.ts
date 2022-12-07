@@ -1,6 +1,7 @@
 import fs from 'fs'
 import { findUp } from 'find-up'
 import { resolve } from 'pathe'
+import type { UserConfig } from 'vite'
 import { loadConfigFromFile } from 'vite'
 import { configFiles } from '../../constants'
 import type { CliOptions } from '../cli-api'
@@ -31,9 +32,13 @@ export class VitestCache {
       ? resolve(root, options.config)
       : await findUp(configFiles, { cwd: root } as any)
 
-    const config = await loadConfigFromFile({ command: 'serve', mode: 'test' }, configPath)
+    let jsonConfig!: UserConfig
+    if (configPath && configPath.endsWith('json'))
+      jsonConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'))
 
-    const cache = config?.config.test?.cache
+    const config = jsonConfig || (await loadConfigFromFile({ command: 'serve', mode: 'test' }, configPath))?.config
+
+    const cache = config?.test?.cache
 
     if (cache === false)
       throw new Error('Cache is disabled')

@@ -1,3 +1,4 @@
+import { readFileSync } from 'fs'
 import { resolve } from 'pathe'
 import { createServer, mergeConfig } from 'vite'
 import type { InlineConfig as ViteInlineConfig, UserConfig as ViteUserConfig } from 'vite'
@@ -11,9 +12,15 @@ export async function createVitest(mode: VitestRunMode, options: UserConfig, vit
   const ctx = new Vitest(mode)
   const root = resolve(options.root || process.cwd())
 
-  const configPath = options.config
+  let configPath = options.config
     ? resolve(root, options.config)
     : await findUp(configFiles, { cwd: root } as any)
+
+  let jsonConfig = {}
+  if (configPath && configPath.endsWith('json')) {
+    jsonConfig = JSON.parse(readFileSync(configPath, 'utf-8'))
+    configPath = undefined
+  }
 
   const config: ViteInlineConfig = {
     logLevel: 'error',
@@ -23,8 +30,7 @@ export async function createVitest(mode: VitestRunMode, options: UserConfig, vit
     plugins: await VitestPlugin(options, ctx),
   }
 
-  const server = await createServer(mergeConfig(config, mergeConfig(viteOverrides, { root: options.root })))
-
+  const server = await createServer(mergeConfig(config, mergeConfig(jsonConfig, mergeConfig(viteOverrides, { root: options.root }))))
   if (ctx.config.api?.port)
     await server.listen()
   else

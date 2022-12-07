@@ -19,6 +19,7 @@ export const configFiles = [
   'vitest.config.js',
   'vitest.config.mjs',
   'vitest.config.cjs',
+  'vitest.config.json',
   'vite.config.ts',
   'vite.config.mts',
   'vite.config.cts',

@@ -1,0 +1,8 @@
+{
+  "esbuild": {
+    "sourcemap": "both"
+  },
+  "test": {
+    "include": ["test/*.test.ts"]
+  }
+}
