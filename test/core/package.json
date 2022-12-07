@@ -3,7 +3,8 @@
   "private": true,
   "scripts": {
     "test": "vitest",
-    "coverage": "vitest run --coverage"
+    "coverage": "vitest run --coverage",
+    "report": "vite preview --outDir html"
   },
   "devDependencies": {
     "tinyspy": "^1.0.2",
