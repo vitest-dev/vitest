@@ -2,6 +2,7 @@
 import type { ResizeContext } from 'd3-graph-controller'
 import { GraphController, Markers, PositionInitializers, defineGraphConfig } from 'd3-graph-controller'
 import type { Selection } from 'd3-selection'
+import { isReport } from '~/composables/client'
 import type { ModuleGraph, ModuleGraphController, ModuleLink, ModuleNode, ModuleType } from '~/composables/module-graph'
 
 const props = defineProps<{
@@ -87,6 +88,8 @@ function resetGraphController() {
 }
 
 function bindOnClick(selection: Selection<SVGCircleElement, ModuleNode, SVGGElement, undefined>) {
+  if (isReport)
+    return
   // Only trigger on left-click and primary touch
   const isValidClick = (event: PointerEvent) => event.button === 0
 
