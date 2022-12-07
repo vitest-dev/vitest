@@ -340,10 +340,10 @@ export class Vitest {
       await this.cache.results.writeToCache()
     })()
       .finally(async () => {
-        this.runningPromise = undefined
         this.state.finishCollectingPaths()
         if (!this.config.browser)
           await this.report('onFinished', this.state.getFiles(), this.state.getUnhandledErrors())
+        this.runningPromise = undefined
       })
 
     return await this.runningPromise
