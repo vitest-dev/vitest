@@ -1,8 +1,7 @@
-import { defineConfig } from 'vite'
-import defu from 'defu'
+import { defineConfig, mergeConfig } from 'vite'
 import { config } from './vite.config'
 
-export default defineConfig(defu({
+export default defineConfig(mergeConfig(config, defineConfig({
   base: './',
   build: {
     outDir: 'dist/report',
@@ -18,4 +17,4 @@ export default defineConfig(defu({
       },
     },
   ],
-}, config))
+})))

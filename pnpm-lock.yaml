@@ -131,7 +131,7 @@ importers:
       vite: ^3.2.3
       vitest: workspace:*
     devDependencies:
-      '@vitest/ui': 0.25.4
+      '@vitest/ui': 0.25.5
       vite: 3.2.3
       vitest: link:../../packages/vitest
 
@@ -145,7 +145,7 @@ importers:
       vite: ^3.2.3
       vitest: workspace:*
     devDependencies:
-      '@vitest/ui': 0.25.4
+      '@vitest/ui': 0.25.5
       axios: 0.26.1
       fastify: 4.5.3
       supertest: 6.2.4
@@ -164,7 +164,7 @@ importers:
       '@rollup/plugin-graphql': 1.1.0_graphql@16.6.0
       graphql: 16.6.0
     devDependencies:
-      '@vitest/ui': 0.25.4
+      '@vitest/ui': 0.25.5
       vite: 3.2.3
       vitest: link:../../packages/vitest
 
@@ -175,7 +175,7 @@ importers:
       vite: ^3.2.3
       vitest: workspace:*
     devDependencies:
-      '@vitest/ui': 0.25.4
+      '@vitest/ui': 0.25.5
       jest-image-snapshot: 4.5.1
       vite: 3.2.3
       vitest: link:../../packages/vitest
@@ -190,7 +190,7 @@ importers:
     dependencies:
       lit: 2.3.1
     devDependencies:
-      '@vitest/ui': 0.25.4
+      '@vitest/ui': 0.25.5
       jsdom: 20.0.3
       vite: 3.2.3
       vitest: link:../../packages/vitest
@@ -211,7 +211,7 @@ importers:
       axios: 0.26.1
       tinyspy: 0.3.3
     devDependencies:
-      '@vitest/ui': 0.25.4
+      '@vitest/ui': 0.25.5
       react: 18.2.0
       vite: 3.2.3
       vitest: link:../../packages/vitest
@@ -252,7 +252,7 @@ importers:
       vitest: workspace:*
     devDependencies:
       '@playwright/test': 1.28.0
-      '@vitest/ui': 0.25.4
+      '@vitest/ui': 0.25.5
       playwright: 1.28.0
       vite: 3.2.3
       vitest: link:../../packages/vitest
@@ -264,7 +264,7 @@ importers:
       vite: ^3.2.3
       vitest: workspace:*
     devDependencies:
-      '@vitest/ui': 0.25.4
+      '@vitest/ui': 0.25.5
       puppeteer: 13.7.0
       vite: 3.2.3
       vitest: link:../../packages/vitest
@@ -287,7 +287,7 @@ importers:
       '@types/react': 17.0.49
       '@types/react-test-renderer': 17.0.2
       '@vitejs/plugin-react': 2.2.0_vite@3.2.3
-      '@vitest/ui': 0.25.4
+      '@vitest/ui': 0.25.5
       happy-dom: 7.7.2
       jsdom: 20.0.3
       react-test-renderer: 17.0.2_react@17.0.2
@@ -315,7 +315,7 @@ importers:
       '@types/react': 17.0.49
       '@types/react-dom': 17.0.17
       '@vitejs/plugin-react': 2.2.0_vite@3.2.3
-      '@vitest/ui': 0.25.4
+      '@vitest/ui': 0.25.5
       '@wojtekmaj/enzyme-adapter-react-17': 0.6.7_7ltvq4e2railvf5uya4ffxpe2a
       enzyme: 3.11.0
       vite: 3.2.3
@@ -358,7 +358,7 @@ importers:
       '@testing-library/jest-dom': 5.16.5
       '@testing-library/react': 13.3.0_biqbaboplfbrettd7655fr4n2y
       '@testing-library/user-event': 14.4.3
-      '@vitest/ui': 0.25.4
+      '@vitest/ui': 0.25.5
       date-fns: 2.29.2
       jsdom: 20.0.3
       vite: 3.2.3
@@ -410,7 +410,7 @@ importers:
       '@types/react': 17.0.49
       '@types/react-dom': 17.0.17
       '@vitejs/plugin-react': 1.3.2
-      '@vitest/ui': 0.25.4
+      '@vitest/ui': 0.25.5
       babel-loader: 8.2.5_@babel+core@7.18.13
       jsdom: 20.0.3
       msw: 0.39.2
@@ -446,7 +446,7 @@ importers:
       '@types/react-dom': 18.0.8
       '@vitejs/plugin-react': 2.2.0_vite@3.2.3
       '@vitest/coverage-c8': 0.24.5
-      '@vitest/ui': 0.25.4
+      '@vitest/ui': 0.25.5
       jsdom: 20.0.3
       typescript: 4.8.4
       vite: 3.2.3
@@ -478,7 +478,7 @@ importers:
       '@types/react': 17.0.49
       '@types/react-dom': 17.0.17
       '@vitejs/plugin-react': 1.3.2
-      '@vitest/ui': 0.25.4
+      '@vitest/ui': 0.25.5
       cross-fetch: 3.1.5
       jsdom: 20.0.3
       msw: 0.39.2
@@ -530,7 +530,7 @@ importers:
     devDependencies:
       '@sveltejs/vite-plugin-svelte': 1.0.3_svelte@3.49.0+vite@3.2.3
       '@testing-library/svelte': 3.2.1_svelte@3.49.0
-      '@vitest/ui': 0.25.4
+      '@vitest/ui': 0.25.5
       jsdom: 20.0.3
       svelte: 3.49.0
       vite: 3.2.3
@@ -697,7 +697,6 @@ importers:
       codemirror-theme-vars: ^0.1.1
       cypress: ^11.0.1
       d3-graph-controller: ^2.3.22
-      defu: ^6.1.1
       flatted: ^3.2.7
       floating-vue: ^2.0.0-y.0
       picocolors: ^1.0.0
@@ -731,7 +730,6 @@ importers:
       codemirror-theme-vars: 0.1.1
       cypress: 11.0.1
       d3-graph-controller: 2.3.22
-      defu: 6.1.1
       flatted: 3.2.7
       floating-vue: 2.0.0-y.0_vue@3.2.41
       picocolors: 1.0.0
@@ -7916,8 +7914,8 @@ packages:
       vitest: link:packages/vitest
     dev: true
 
-  /@vitest/ui/0.25.4:
-    resolution: {integrity: sha512-L4/lbiOLZCZODShgs1/QHPeJKOt+9Zy5tvJ8VGjpRScrhXYAlH8+VRX85I1mC1WNmBkMq378orO9q6xrkMAUiQ==}
+  /@vitest/ui/0.25.5:
+    resolution: {integrity: sha512-+t1UGlBlC5ZluTAxkuCss/XU2ZN3uojXJfAvIbvUEACz5ElmvAoZwJ9xHobNC8v4E3G0KE9xJ+dnntwJ4ZDyyg==}
     dependencies:
       sirv: 2.0.2
     dev: true

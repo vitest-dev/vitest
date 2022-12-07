@@ -69,7 +69,6 @@
     "vite": "^3.2.3",
     "vite-plugin-pages": "^0.27.1",
     "vue": "^3.2.41",
-    "vue-router": "^4.1.6",
-    "defu": "^6.1.1"
+    "vue-router": "^4.1.6"
   }
 }
