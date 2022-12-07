@@ -42,8 +42,7 @@ export class HTMLReporter implements Reporter {
   }
 
   /**
-   * Writes the report to an output file if specified in the config,
-   * or logs it to the console otherwise.
+   * Writes the report to an output file
    * @param report
    */
   async writeReport(report: string) {
