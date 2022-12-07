@@ -26,7 +26,7 @@ export class HTMLReporter implements Reporter {
     this.start = Date.now()
   }
 
-  async onFinally() {
+  async onFinished() {
     const result: HTMLReportData = {
       paths: await this.ctx.state.getPaths(),
       files: this.ctx.state.getFiles(),
