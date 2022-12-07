@@ -4,7 +4,7 @@ import { currentModule, dashboardVisible, showDashboard } from '../composables/n
 import { client, findById } from '../composables/client'
 import type { Task } from '#types'
 import { isDark, toggleDark } from '~/composables'
-import { files, runAll } from '~/composables/client'
+import { files, isReport, runAll } from '~/composables/client'
 import { activeFileId } from '~/composables/params'
 
 const failedSnapshot = computed(() => files.value && hasFailedSnapshot(files.value))
@@ -34,12 +34,13 @@ const toggleMode = computed(() => isDark.value ? 'light' : 'dark')
           @click="showDashboard(true)"
         />
         <IconButton
-          v-if="failedSnapshot"
+          v-if="(failedSnapshot && !isReport)"
           v-tooltip.bottom="'Update all failed snapshot(s)'"
           icon="i-carbon-result-old"
           @click="updateSnapshot()"
         />
         <IconButton
+          v-if="!isReport"
           v-tooltip.bottom="filteredTests ? (filteredTests.length === 0 ? 'No test to run (clear filter)' : 'Rerun filtered') : 'Rerun all'"
           :disabled="filteredTests?.length === 0"
           icon="i-carbon-play"

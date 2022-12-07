@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { client, current, currentLogs } from '~/composables/client'
+import { client, current, currentLogs, isReport } from '~/composables/client'
 import type { Params } from '~/composables/params'
 import { viewMode } from '~/composables/params'
 import type { ModuleGraph } from '~/composables/module-graph'
@@ -76,6 +76,7 @@ function onDraft(value: boolean) {
           Module Graph
         </button>
         <button
+          v-if="!isReport"
           tab-button
           :class="{ 'tab-button-active': viewMode === 'editor' }"
           @click="changeViewMode('editor')"
