@@ -52,6 +52,7 @@ function onDraft(value: boolean) {
         </div>
         <div class="flex text-lg">
           <IconButton
+            v-if="!isReport"
             v-tooltip.bottom="'Open in editor'"
             title="Open in editor"
             icon="i-carbon-launch"
