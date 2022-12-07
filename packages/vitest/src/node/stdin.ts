@@ -1,7 +1,7 @@
 import readline from 'readline'
 import c from 'picocolors'
 import prompt from 'prompts'
-import { stdout } from '../utils'
+import { isWindows, stdout } from '../utils'
 import type { Vitest } from './core'
 
 const keys = [
@@ -29,6 +29,13 @@ export function registerConsoleShortcuts(ctx: Vitest) {
     // ctrl-c or esc
     if (str === '\x03' || str === '\x1B' || (key && key.ctrl && key.name === 'c'))
       return ctx.exit(true)
+
+    // window not support suspend
+    if (!isWindows && key && key.ctrl && key.name === 'z') {
+      process.kill(process.ppid, 'SIGTSTP')
+      process.kill(process.pid, 'SIGTSTP')
+      return
+    }
 
     // is running, ignore keypress
     if (ctx.runningPromise)

@@ -1,7 +1,7 @@
 {
   "name": "@vitest/ws-client",
   "type": "module",
-  "version": "0.25.3",
+  "version": "0.25.5",
   "description": "WebSocket client wrapper for communicating with Vitest",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -34,7 +34,7 @@
   },
   "scripts": {
     "build": "rimraf dist && rollup -c",
-    "dev": "rollup -c --watch --watch.include=src",
+    "dev": "rollup -c --watch --watch.include 'src/**'",
     "prepublishOnly": "pnpm build",
     "typecheck": "tsc --noEmit"
   },

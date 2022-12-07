@@ -124,12 +124,10 @@ export class JsonReporter implements Reporter {
         assertionResults,
         startTime,
         endTime,
-        status: tests.every(t =>
-          t.result?.state === 'pass'
-           || t.result?.state === 'skip'
-            || t.result?.state === 'todo')
-          ? 'passed'
-          : 'failed',
+        status: tests.some(t =>
+          t.result?.state === 'fail')
+          ? 'failed'
+          : 'passed',
         message: file.result?.error?.message ?? '',
         name: file.filepath,
       })

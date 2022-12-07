@@ -31,6 +31,8 @@ export interface FetchResult {
   code?: string
   externalize?: string
   map?: RawSourceMap
+  id?: string
+  file?: string
 }
 
 export type HotContext = Omit<ViteHotContext, 'acceptDeps' | 'decline'>
@@ -44,6 +46,7 @@ export type CreateHotContextFunction = (runner: ViteNodeRunner, url: string) => 
 export interface ModuleCache {
   promise?: Promise<any>
   exports?: any
+  evaluated?: boolean
   code?: string
   map?: RawSourceMap
   /**

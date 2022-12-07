@@ -8,11 +8,11 @@ const runVitest = async (args: string[]) => {
 }
 
 const parsePaths = (stdout: string) => {
-  return stdout
+  return Array.from(new Set(stdout
     .split('\n')
     .filter(line => line && line.includes('.test.js'))
     .map(file => basename(file.trim().split(' ')[1]))
-    .sort()
+    .sort()))
 }
 
 test('--shard=1/1', async () => {

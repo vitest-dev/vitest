@@ -115,9 +115,7 @@ export class Vitest {
     try {
       await this.cache.results.readFromCache()
     }
-    catch (err) {
-      this.logger.error(`[vitest] Error, while trying to parse cache in ${this.cache.results.getCachePath()}:`, err)
-    }
+    catch {}
   }
 
   async initCoverageProvider() {
@@ -311,6 +309,8 @@ export class Vitest {
   }
 
   async runFiles(paths: string[]) {
+    paths = Array.from(new Set(paths))
+
     // previous run
     await this.runningPromise
     this.state.startCollectingPaths()
@@ -398,6 +398,9 @@ export class Vitest {
 
   private _rerunTimer: any
   private async scheduleRerun(triggerId: string) {
+    const mod = this.server.moduleGraph.getModuleById(triggerId)
+    if (mod)
+      mod.lastHMRTimestamp = Date.now()
     const currentCount = this.restartsCount
     clearTimeout(this._rerunTimer)
     await this.runningPromise

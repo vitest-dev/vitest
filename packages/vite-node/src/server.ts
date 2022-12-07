@@ -4,15 +4,13 @@ import type { TransformResult, ViteDevServer } from 'vite'
 import createDebug from 'debug'
 import type { DebuggerOptions, FetchResult, RawSourceMap, ViteNodeResolveId, ViteNodeServerOptions } from './types'
 import { shouldExternalize } from './externalize'
-import { toArray, toFilePath, withInlineSourcemap } from './utils'
+import { cleanUrl, normalizeModuleId, toArray, toFilePath } from './utils'
 import { Debugger } from './debug'
+import { withInlineSourcemap } from './source-map'
 
 export * from './externalize'
 
 const debugRequest = createDebug('vite-node:server:request')
-
-// store the original reference to avoid it been mocked
-const RealDate = Date
 
 export class ViteNodeServer {
   private fetchPromiseMap = new Map<string, Promise<FetchResult>>()
@@ -82,6 +80,7 @@ export class ViteNodeServer {
   }
 
   async fetchModule(id: string): Promise<FetchResult> {
+    id = normalizeModuleId(id)
     // reuse transform for concurrent requests
     if (!this.fetchPromiseMap.has(id)) {
       this.fetchPromiseMap.set(id,
@@ -129,11 +128,14 @@ export class ViteNodeServer {
     const filePath = toFilePath(id, this.server.config.root)
 
     const module = this.server.moduleGraph.getModuleById(id)
-    const timestamp = module?.lastHMRTimestamp || RealDate.now()
+    const timestamp = module ? module.lastHMRTimestamp : null
     const cache = this.fetchCache.get(filePath)
-    if (timestamp && cache && cache.timestamp >= timestamp)
+    if (cache?.result.id)
+      id = cache.result.id
+    if (timestamp !== null && cache && cache.timestamp >= timestamp)
       return cache.result
 
+    const time = Date.now()
     const externalize = await this.shouldExternalize(filePath)
     let duration: number | undefined
     if (externalize) {
@@ -141,15 +143,21 @@ export class ViteNodeServer {
       this.debugger?.recordExternalize(id, externalize)
     }
     else {
+      let file = module?.file
+      if (!file) {
+        const [, resolvedId] = await this.server.moduleGraph.resolveUrl(id, true)
+        id = resolvedId
+        file = cleanUrl(resolvedId)
+      }
       const start = performance.now()
       const r = await this._transformRequest(id)
       duration = performance.now() - start
-      result = { code: r?.code, map: r?.map as unknown as RawSourceMap }
+      result = { file, id, code: r?.code, map: r?.map as unknown as RawSourceMap }
     }
 
     this.fetchCache.set(filePath, {
       duration,
-      timestamp,
+      timestamp: time,
       result,
     })
 

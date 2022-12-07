@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import { unifiedDiff } from '../../composables/diff'
 import { openInEditor, shouldOpenInEditor } from '../../composables/error'
-import type { File, ParsedStack, Suite, Task } from '#types'
+import type { ErrorWithDiff, File, ParsedStack, Suite, Task } from '#types'
 import { config } from '~/composables/client'
 import { isDark } from '~/composables/dark'
 import { createAnsiToHtmlFilter } from '~/composables/error'
@@ -94,6 +95,18 @@ function line(stack: ParsedStack) {
 function column(stack: ParsedStack) {
   return stack.sourcePos?.column ?? stack.column
 }
+
+interface Diff { error: NonNullable<Pick<ErrorWithDiff, 'expected' | 'actual'>> }
+type ResultWithDiff = Task['result'] & Diff
+function isDiffShowable(result?: Task['result']): result is ResultWithDiff {
+  return result && result?.error?.expected && result?.error?.actual
+}
+
+function diff(result: ResultWithDiff): string {
+  return unifiedDiff(result.error.expected, result.error.actual, {
+    outputTruncateLength: 80,
+  })
+}
 </script>
 
 <template>
@@ -125,6 +138,9 @@ function column(stack: ParsedStack) {
                 @click.passive="openInEditor(stack.file, line(stack), column(stack))"
               />
             </div>
+            <pre v-if="isDiffShowable(task.result)">
+              {{ `\n${diff(task.result)}` }}
+            </pre>
           </div>
         </div>
       </div>

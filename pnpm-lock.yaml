@@ -33,7 +33,7 @@ importers:
       if-node-version: ^1.1.1
       lint-staged: ^13.0.3
       magic-string: ^0.26.7
-      node-fetch-native: ^0.1.8
+      node-fetch-native: ^1.0.1
       npm-run-all: ^4.1.5
       ohmyfetch: ^0.4.21
       pathe: ^0.2.0
@@ -73,7 +73,7 @@ importers:
       if-node-version: 1.1.1
       lint-staged: 13.0.3
       magic-string: 0.26.7
-      node-fetch-native: 0.1.8
+      node-fetch-native: 1.0.1
       npm-run-all: 4.1.5
       ohmyfetch: 0.4.21
       pathe: 0.2.0
@@ -697,6 +697,7 @@ importers:
       codemirror-theme-vars: ^0.1.1
       cypress: ^11.0.1
       d3-graph-controller: ^2.3.22
+      diff: ^5.1.0
       flatted: ^3.2.7
       floating-vue: ^2.0.0-y.0
       picocolors: ^1.0.0
@@ -730,6 +731,7 @@ importers:
       codemirror-theme-vars: 0.1.1
       cypress: 11.0.1
       d3-graph-controller: 2.3.22
+      diff: 5.1.0
       flatted: 3.2.7
       floating-vue: 2.0.0-y.0_vue@3.2.41
       picocolors: 1.0.0
@@ -814,7 +816,7 @@ importers:
       p-limit: ^4.0.0
       pathe: ^0.2.0
       picocolors: ^1.0.0
-      pkg-types: ^0.3.6
+      pkg-types: ^1.0.1
       pretty-format: ^27.5.1
       prompts: ^2.4.2
       rollup: ^2.79.1
@@ -876,7 +878,7 @@ importers:
       p-limit: 4.0.0
       pathe: 0.2.0
       picocolors: 1.0.0
-      pkg-types: 0.3.6
+      pkg-types: 1.0.1
       pretty-format: 27.5.1
       prompts: 2.4.2
       rollup: 2.79.1
@@ -15938,7 +15940,7 @@ packages:
     dependencies:
       acorn: 8.8.1
       pathe: 0.3.8
-      pkg-types: 0.3.5
+      pkg-types: 0.3.6
       ufo: 0.8.5
     dev: true
 
@@ -16183,6 +16185,10 @@ packages:
 
   /node-fetch-native/0.1.8:
     resolution: {integrity: sha512-ZNaury9r0NxaT2oL65GvdGDy+5PlSaHTovT6JV5tOW07k1TQmgC0olZETa4C9KZg0+6zBr99ctTYa3Utqj9P/Q==}
+    dev: true
+
+  /node-fetch-native/1.0.1:
+    resolution: {integrity: sha512-VzW+TAk2wE4X9maiKMlT+GsPU4OMmR1U9CrHSmd3DFLn2IcZ9VJ6M6BBugGfYUnPCLSYxXdZy17M0BEJyhUTwg==}
     dev: true
 
   /node-fetch/2.6.7:
@@ -17055,14 +17061,6 @@ packages:
     engines: {node: '>=10'}
     dependencies:
       find-up: 5.0.0
-    dev: true
-
-  /pkg-types/0.3.5:
-    resolution: {integrity: sha512-VkxCBFVgQhNHYk9subx+HOhZ4jzynH11ah63LZsprTKwPCWG9pfWBlkElWFbvkP9BVR0dP1jS9xPdhaHQNK74Q==}
-    dependencies:
-      jsonc-parser: 3.2.0
-      mlly: 0.5.16
-      pathe: 0.3.9
     dev: true
 
   /pkg-types/0.3.6:
@@ -18940,6 +18938,7 @@ packages:
 
   /sourcemap-codec/1.4.8:
     resolution: {integrity: sha512-9NykojV5Uih4lgo5So5dtw+f0JgJX30KCNI8gwhz2J9A15wD0Ml6tjHKwf6fTSa6fAdVBdZeNOs9eJ71qCk8vA==}
+    deprecated: Please use @jridgewell/sourcemap-codec instead
 
   /space-separated-tokens/1.1.5:
     resolution: {integrity: sha512-q/JSVd1Lptzhf5bkYm4ob4iWPjx0KiRe3sRFBNrVqbJkFaBm5vbbowy1mymoPNLRa52+oadOhJ+K49wsSeSjTA==}

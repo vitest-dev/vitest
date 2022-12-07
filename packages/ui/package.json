@@ -1,7 +1,7 @@
 {
   "name": "@vitest/ui",
   "type": "module",
-  "version": "0.25.3",
+  "version": "0.25.5",
   "description": "UI for Vitest",
   "license": "MIT",
   "repository": {
@@ -58,6 +58,7 @@
     "codemirror-theme-vars": "^0.1.1",
     "cypress": "^11.0.1",
     "d3-graph-controller": "^2.3.22",
+    "diff": "^5.1.0",
     "flatted": "^3.2.7",
     "floating-vue": "^2.0.0-y.0",
     "picocolors": "^1.0.0",
