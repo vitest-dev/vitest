@@ -40,6 +40,10 @@ export const hashRE = /#.*$/s
 export const cleanUrl = (url: string): string =>
   url.replace(hashRE, '').replace(queryRE, '')
 
+export const isInternalRequest = (id: string): boolean => {
+  return id.startsWith('/@vite/')
+}
+
 export function normalizeModuleId(id: string) {
   return id
     .replace(/\\/g, '/')

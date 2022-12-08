@@ -31,7 +31,7 @@ export class VitestRunner extends ViteNodeRunner {
     this.mocker = new VitestMocker(this)
   }
 
-  async resolveUrl(url: string, importee?: string): Promise<string> {
+  async resolveUrl(url: string, importee?: string) {
     if (importee && importee.startsWith('mock:'))
       importee = importee.slice(5)
     return super.resolveUrl(url, importee)
@@ -44,7 +44,7 @@ export class VitestRunner extends ViteNodeRunner {
       return super.dependencyRequest(id, mocked, callstack)
     if (mocked && typeof mocked === 'object')
       return mocked
-    return super.cachedRequest(id, url, callstack)
+    return super.dependencyRequest(id, url, callstack)
   }
 
   prepareContext(context: Record<string, any>) {

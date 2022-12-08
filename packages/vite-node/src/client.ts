@@ -4,7 +4,7 @@ import vm from 'vm'
 import { dirname, extname, isAbsolute, resolve } from 'pathe'
 import { isNodeBuiltin } from 'mlly'
 import createDebug from 'debug'
-import { cleanUrl, isPrimitive, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
+import { cleanUrl, isInternalRequest, isPrimitive, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
 import type { HotContext, ModuleCache, ViteNodeRunnerOptions } from './types'
 import { extractSourceMap } from './source-map'
 
@@ -189,7 +189,9 @@ export class ViteNodeRunner {
     }
   }
 
-  async resolveUrl(url: string, importee?: string) {
+  async resolveUrl(url: string, importee?: string): Promise<string> {
+    if (isInternalRequest(url))
+      return url
     url = normalizeRequestId(url, this.options.base)
     if (!this.options.resolveId)
       return toFilePath(url, this.root)
@@ -228,7 +230,8 @@ export class ViteNodeRunner {
 
   /** @internal */
   async directRequest(id: string, fsPath: string, _callstack: string[]) {
-    const callstack = [..._callstack, fsPath]
+    const moduleId = normalizeModuleId(fsPath)
+    const callstack = [..._callstack, moduleId]
 
     const mod = this.moduleCache.get(fsPath)
 
@@ -254,7 +257,7 @@ export class ViteNodeRunner {
     if (transformed == null)
       throw new Error(`[vite-node] Failed to load "${id}" imported from ${callstack[callstack.length - 2]}`)
 
-    const file = cleanUrl(normalizeModuleId(fsPath))
+    const file = cleanUrl(moduleId)
     // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
     const url = pathToFileURL(file).href
     const meta = { url }

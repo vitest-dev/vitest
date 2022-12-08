@@ -1,7 +1,7 @@
 import { existsSync, readdirSync } from 'fs'
 import { isNodeBuiltin } from 'mlly'
 import { basename, dirname, extname, isAbsolute, join, resolve } from 'pathe'
-import { normalizeRequestId } from 'vite-node/utils'
+import { normalizeModuleId, normalizeRequestId } from 'vite-node/utils'
 import c from 'picocolors'
 import { getAllMockableProperties, getType, getWorkerState, mergeSlashes } from '../utils'
 import { distDir } from '../constants'
@@ -166,7 +166,7 @@ export class VitestMocker {
   }
 
   public normalizePath(path: string) {
-    return path
+    return normalizeModuleId(path)
   }
 
   public getFsPath(path: string, external: string | null) {
