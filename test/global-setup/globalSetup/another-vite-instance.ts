@@ -7,9 +7,6 @@ export async function setup() {
     server: {
       port: 9988,
     },
-    optimizeDeps: {
-      disabled: true,
-    },
   })
 
   await server.listen(9988)

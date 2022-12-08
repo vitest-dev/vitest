@@ -4,9 +4,36 @@ import { isWindows, slash, toFilePath } from '../../../packages/vite-node/src/ut
 
 vi.mock('fs')
 
+describe('current url', () => {
+  it('__filename', () => {
+    expect(__filename.startsWith('file://')).toBe(false)
+    expect(__filename.endsWith('test/core/test/file-path.test.ts')).toBe(true)
+  })
+
+  it('__dirname', () => {
+    expect(__dirname.startsWith('file://')).toBe(false)
+    expect(__dirname.endsWith('test/core/test')).toBe(true)
+  })
+
+  it('import.meta.url', () => {
+    expect(import.meta.url.startsWith('file://')).toBe(true)
+    expect(import.meta.url.endsWith('test/core/test/file-path.test.ts')).toBe(true)
+  })
+
+  it.runIf(isWindows)('windows', () => {
+    const cwd = process.cwd()
+    const drive = `${cwd[0].toUpperCase()}:`
+    // has : in windows
+    expect(cwd.toUpperCase().startsWith(drive)).toBe(true)
+    expect(__filename.startsWith(drive)).toBe(true)
+    expect(__dirname.startsWith(drive)).toBe(true)
+    expect(import.meta.url.startsWith(`file:///${drive}`)).toBe(true)
+  })
+})
+
 describe('toFilePath', () => {
   // the following tests will work incorrectly on unix systems
-  if (isWindows) {
+  describe.runIf(isWindows)('windows', () => {
     it('windows', () => {
       const root = 'C:/path/to/project'
       const id = '/node_modules/pkg/file.js'
@@ -30,10 +57,10 @@ describe('toFilePath', () => {
 
       expect(slash(filePath)).toEqual(expected)
     })
-  }
+  })
 
   // the following tests will work incorrectly on windows systems
-  if (!isWindows) {
+  describe.runIf(isWindows)('unix', () => {
     it('unix', () => {
       const root = '/path/to/project'
       const id = '/node_modules/pkg/file.js'
@@ -116,5 +143,5 @@ describe('toFilePath', () => {
 
       expect(slash(filePath)).toEqual(id)
     })
-  }
+  })
 })

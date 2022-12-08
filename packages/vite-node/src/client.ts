@@ -254,7 +254,7 @@ export class ViteNodeRunner {
     if (transformed == null)
       throw new Error(`[vite-node] Failed to load "${id}" imported from ${callstack[callstack.length - 2]}`)
 
-    const file = cleanUrl(fsPath)
+    const file = cleanUrl(normalizeModuleId(fsPath))
     // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
     const url = pathToFileURL(file).href
     const meta = { url }

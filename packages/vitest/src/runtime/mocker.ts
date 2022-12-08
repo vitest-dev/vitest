@@ -38,6 +38,7 @@ function isSpecialProp(prop: Key, parentType: string) {
 
 export class VitestMocker {
   private static pendingIds: PendingSuiteMock[] = []
+  private static spyModulePath = resolve(distDir, 'spy.js')
   private static spyModule?: typeof import('../integrations/spy')
   private resolveCache = new Map<string, Record<string, string>>()
 
@@ -339,7 +340,7 @@ export class VitestMocker {
       mock = this.resolveMockPath(path, external)
 
     if (mock === null) {
-      await this.ensureSpy()
+      await this.initializeSpyModule()
       const mod = await this.runner.cachedRequest(id, path, [importee])
       return this.mockObject(mod)
     }
@@ -349,21 +350,15 @@ export class VitestMocker {
     return this.runner.dependencyRequest(id, mock, [importee])
   }
 
-  private async ensureSpy() {
+  public async initializeSpyModule() {
     if (VitestMocker.spyModule)
       return
-    const spyModulePath = resolve(distDir, 'spy.js')
-    VitestMocker.spyModule = await this.runner.executeFile(spyModulePath)
+    VitestMocker.spyModule = await this.runner.executeId(VitestMocker.spyModulePath)
   }
 
   public async requestWithMock(url: string, callstack: string[]) {
-    if (callstack.some(id => id.includes('spy.js')))
-      return url
-
-    await Promise.all([
-      this.ensureSpy(),
-      this.resolveMocks(),
-    ])
+    if (VitestMocker.pendingIds.length)
+      await this.resolveMocks()
 
     const id = this.normalizePath(url)
     const mock = this.getDependencyMock(id)
