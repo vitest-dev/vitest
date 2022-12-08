@@ -103,7 +103,7 @@ function isDiffShowable(result?: Task['result']): result is ResultWithDiff {
 }
 
 function diff(result: ResultWithDiff): string {
-  return unifiedDiff(result.error.expected, result.error.actual, {
+  return unifiedDiff(result.error.actual, result.error.expected, {
     outputTruncateLength: 80,
   })
 }
