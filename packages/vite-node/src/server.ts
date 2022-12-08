@@ -4,7 +4,7 @@ import type { TransformResult, ViteDevServer } from 'vite'
 import createDebug from 'debug'
 import type { DebuggerOptions, FetchResult, RawSourceMap, ViteNodeResolveId, ViteNodeServerOptions } from './types'
 import { shouldExternalize } from './externalize'
-import { cleanUrl, normalizeModuleId, toArray, toFilePath } from './utils'
+import { normalizeModuleId, toArray, toFilePath } from './utils'
 import { Debugger } from './debug'
 import { withInlineSourcemap } from './source-map'
 
@@ -130,8 +130,6 @@ export class ViteNodeServer {
     const module = this.server.moduleGraph.getModuleById(id)
     const timestamp = module ? module.lastHMRTimestamp : null
     const cache = this.fetchCache.get(filePath)
-    if (cache?.result.id)
-      id = cache.result.id
     if (timestamp !== null && cache && cache.timestamp >= timestamp)
       return cache.result
 
@@ -143,16 +141,10 @@ export class ViteNodeServer {
       this.debugger?.recordExternalize(id, externalize)
     }
     else {
-      let file = module?.file
-      if (!file) {
-        const [, resolvedId] = await this.server.moduleGraph.resolveUrl(id, true)
-        id = resolvedId
-        file = cleanUrl(resolvedId)
-      }
       const start = performance.now()
       const r = await this._transformRequest(id)
       duration = performance.now() - start
-      result = { file, id, code: r?.code, map: r?.map as unknown as RawSourceMap }
+      result = { code: r?.code, map: r?.map as unknown as RawSourceMap }
     }
 
     this.fetchCache.set(filePath, {
