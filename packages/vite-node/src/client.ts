@@ -1,7 +1,10 @@
 import { createRequire } from 'module'
+// we need native dirname, because windows __dirname has \\
+// eslint-disable-next-line no-restricted-imports
+import { dirname } from 'path'
 import { fileURLToPath, pathToFileURL } from 'url'
 import vm from 'vm'
-import { dirname, extname, isAbsolute, resolve } from 'pathe'
+import { extname, isAbsolute, resolve } from 'pathe'
 import { isNodeBuiltin } from 'mlly'
 import createDebug from 'debug'
 import { cleanUrl, isInternalRequest, isPrimitive, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'

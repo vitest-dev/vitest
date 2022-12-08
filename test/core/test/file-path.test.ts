@@ -5,30 +5,47 @@ import { isWindows, slash, toFilePath } from '../../../packages/vite-node/src/ut
 vi.mock('fs')
 
 describe('current url', () => {
-  it('__filename', () => {
-    expect(__filename.startsWith('file://')).toBe(false)
-    expect(__filename.endsWith('test/core/test/file-path.test.ts')).toBe(true)
+  describe.runIf(!isWindows)('unix', () => {
+    it('__filename', () => {
+      expect(__filename.startsWith('file://')).toBe(false)
+      expect(__filename.endsWith('test/core/test/file-path.test.ts')).toBe(true)
+    })
+
+    it('__dirname', () => {
+      expect(__dirname.startsWith('file://')).toBe(false)
+      expect(__dirname.endsWith('test/core/test')).toBe(true)
+    })
+
+    it('import.meta.url', () => {
+      expect(import.meta.url.startsWith('file://')).toBe(true)
+      expect(import.meta.url.endsWith('test/core/test/file-path.test.ts')).toBe(true)
+    })
   })
 
-  it('__dirname', () => {
-    expect(__dirname.startsWith('file://')).toBe(false)
-    expect(__dirname.endsWith('test/core/test')).toBe(true)
-  })
-
-  it('import.meta.url', () => {
-    expect(import.meta.url.startsWith('file://')).toBe(true)
-    expect(import.meta.url.endsWith('test/core/test/file-path.test.ts')).toBe(true)
-  })
-
-  it.runIf(isWindows)('windows', () => {
+  describe.runIf(isWindows)('windows', () => {
+    // consistently inconsistent with Node, CJS has \, ESM has /
     const cwd = process.cwd()
-    const drive = `${cwd[0].toUpperCase()}:/`
-    // has : in windows
-    expect(cwd.toUpperCase().startsWith(drive)).toBe(true)
-    expect(__filename.startsWith(drive + drive)).toBe(false)
-    expect(__filename.startsWith(drive)).toBe(true)
-    expect(__dirname.startsWith(drive)).toBe(true)
-    expect(import.meta.url.startsWith(`file:///${drive}`)).toBe(true)
+    const windowsDrive = `${cwd[0].toUpperCase()}:\\`
+    const drivePosix = `${cwd[0].toUpperCase()}:/`
+
+    it('__filename', () => {
+      expect(__filename.startsWith('file://')).toBe(false)
+      expect(__filename.startsWith(windowsDrive + windowsDrive)).toBe(false)
+      expect(__filename.startsWith(windowsDrive)).toBe(true)
+      expect(__filename.endsWith('\\test\\core\\test\\file-path.test.ts')).toBe(true)
+    })
+
+    it('__dirname', () => {
+      expect(__dirname.startsWith('file://')).toBe(false)
+      expect(__dirname.startsWith(windowsDrive + windowsDrive)).toBe(false)
+      expect(__dirname.startsWith(windowsDrive)).toBe(true)
+      expect(__dirname.endsWith('\\test\\core\\test')).toBe(true)
+    })
+
+    it('import.meta.url', () => {
+      expect(import.meta.url.startsWith(`file:///${drivePosix}`)).toBe(true)
+      expect(import.meta.url.endsWith('test/core/test/file-path.test.ts')).toBe(true)
+    })
   })
 })
 
@@ -61,7 +78,7 @@ describe('toFilePath', () => {
   })
 
   // the following tests will work incorrectly on windows systems
-  describe.runIf(isWindows)('unix', () => {
+  describe.runIf(!isWindows)('unix', () => {
     it('unix', () => {
       const root = '/path/to/project'
       const id = '/node_modules/pkg/file.js'
