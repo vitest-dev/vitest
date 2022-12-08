@@ -1076,10 +1076,12 @@ importers:
       execa: ^6.1.0
       pkg-reporter: ./reportPkg/
       vitest: workspace:*
+      vitest-sonar-reporter: ^0.3.3
     devDependencies:
       execa: 6.1.0
       pkg-reporter: link:reportPkg
       vitest: link:../../packages/vitest
+      vitest-sonar-reporter: 0.3.3_vitest@packages+vitest
 
   test/resolve:
     specifiers:
@@ -20961,6 +20963,16 @@ packages:
       - stylus
       - sugarss
       - terser
+    dev: true
+
+  /vitest-sonar-reporter/0.3.3_vitest@packages+vitest:
+    resolution: {integrity: sha512-OvH+AYMgDFk3SK7sohn5KUHUOhB42tWgSTW7YzB/v/dN3x+7bgXD2L0FZpDYjC1hvBMJJ4HFqOsiO9LsETmgxg==}
+    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
+    peerDependencies:
+      vitest: '>=0.18.0'
+    dependencies:
+      pathe: 0.3.9
+      vitest: link:packages/vitest
     dev: true
 
   /vm-browserify/1.1.2:
