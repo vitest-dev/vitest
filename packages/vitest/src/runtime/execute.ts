@@ -23,20 +23,31 @@ export async function executeInViteNode(options: ExecuteOptions & { files: strin
 }
 
 export class VitestRunner extends ViteNodeRunner {
+  public mocker: VitestMocker
+
   constructor(public options: ExecuteOptions) {
     super(options)
+
+    this.mocker = new VitestMocker(this)
+  }
+
+  async resolveUrl(url: string, importee?: string): Promise<string> {
+    if (importee && importee.startsWith('mock:'))
+      importee = importee.slice(5)
+    return super.resolveUrl(url, importee)
+  }
+
+  async dependencyRequest(id: string, url: string, callstack: string[]): Promise<any> {
+    const mocked = await this.mocker.requestWithMock(url, callstack)
+
+    if (typeof mocked === 'string')
+      return super.dependencyRequest(id, mocked, callstack)
+    if (mocked && typeof mocked === 'object')
+      return mocked
+    return super.cachedRequest(id, url, callstack)
   }
 
   prepareContext(context: Record<string, any>) {
-    const request = context.__vite_ssr_import__
-    const resolveId = context.__vitest_resolve_id__
-    const resolveUrl = async (dep: string) => {
-      const [id, resolvedId] = await resolveId(dep)
-      return resolvedId || id
-    }
-
-    const mocker = new VitestMocker(this.options, this.moduleCache, request)
-
     const workerState = getWorkerState()
 
     // support `import.meta.vitest` for test entry
@@ -46,9 +57,7 @@ export class VitestRunner extends ViteNodeRunner {
     }
 
     return Object.assign(context, {
-      __vite_ssr_import__: async (dep: string) => mocker.requestWithMock(await resolveUrl(dep)),
-      __vite_ssr_dynamic_import__: async (dep: string) => mocker.requestWithMock(await resolveUrl(dep)),
-      __vitest_mocker__: mocker,
+      __vitest_mocker__: this.mocker,
     })
   }
 }

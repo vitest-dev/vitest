@@ -14,6 +14,7 @@ export * from './tasks'
 export * from './base'
 export * from './global'
 export * from './timers'
+export * from './import'
 export * from './env'
 
 export const isWindows = isNode && process.platform === 'win32'

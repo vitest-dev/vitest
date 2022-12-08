@@ -1,13 +1,12 @@
 import { existsSync, readdirSync } from 'fs'
 import { isNodeBuiltin } from 'mlly'
 import { basename, dirname, extname, join, resolve } from 'pathe'
-import { normalizeRequestId, pathFromRoot } from 'vite-node/utils'
-import type { ModuleCacheMap } from 'vite-node/client'
+import { normalizeRequestId } from 'vite-node/utils'
 import c from 'picocolors'
-import { getAllMockableProperties, getType, getWorkerState, mergeSlashes, slash } from '../utils'
+import { getAllMockableProperties, getType, getWorkerState, mergeSlashes } from '../utils'
 import { distDir } from '../constants'
 import type { PendingSuiteMock } from '../types/mocker'
-import type { ExecuteOptions } from './execute'
+import type { VitestRunner } from './execute'
 
 class RefTracker {
   private idMap = new Map<any, number>()
@@ -37,32 +36,29 @@ function isSpecialProp(prop: Key, parentType: string) {
       && ['arguments', 'callee', 'caller', 'length', 'name'].includes(prop)
 }
 
-interface ViteRunnerRequest {
-  (dep: string): any
-  callstack: string[]
-}
-
 export class VitestMocker {
   private static pendingIds: PendingSuiteMock[] = []
   private static spyModule?: typeof import('../integrations/spy')
   private resolveCache = new Map<string, Record<string, string>>()
 
   constructor(
-    public options: ExecuteOptions,
-    private moduleCache: ModuleCacheMap,
-    private request: ViteRunnerRequest,
+    public runner: VitestRunner,
   ) {}
 
   private get root() {
-    return this.options.root
+    return this.runner.options.root
   }
 
   private get base() {
-    return this.options.base
+    return this.runner.options.base
   }
 
   private get mockMap() {
-    return this.options.mockMap
+    return this.runner.options.mockMap
+  }
+
+  private get moduleCache() {
+    return this.runner.moduleCache
   }
 
   public getSuiteFilepath(): string {
@@ -81,13 +77,13 @@ export class VitestMocker {
   }
 
   private async resolvePath(id: string, importer: string) {
-    const path = await this.options.resolveId!(id, importer)
+    const path = await this.runner.resolveUrl(id, importer)
     // external is node_module or unresolved module
     // for example, some people mock "vscode" and don't have it installed
-    const external = path == null || path.id.includes('/node_modules/') ? id : null
+    const external = path.includes('/node_modules/') ? id : null
 
     return {
-      path: normalizeRequestId(path?.id || id),
+      path: normalizeRequestId(path),
       external,
     }
   }
@@ -160,7 +156,7 @@ export class VitestMocker {
     return moduleExports
   }
 
-  private getMockPath(dep: string) {
+  public getMockPath(dep: string) {
     return `mock:${dep}`
   }
 
@@ -169,7 +165,7 @@ export class VitestMocker {
   }
 
   public normalizePath(path: string) {
-    return pathFromRoot(this.root, normalizeRequestId(path, this.base))
+    return path
   }
 
   public getFsPath(path: string, external: string | null) {
@@ -327,50 +323,51 @@ export class VitestMocker {
     this.resolveCache.set(suitefile, resolves)
   }
 
-  public async importActual<T>(id: string, importer: string): Promise<T> {
-    const { path, external } = await this.resolvePath(id, importer)
-    const fsPath = this.getFsPath(path, external)
-    const result = await this.request(fsPath)
+  public async importActual<T>(id: string, importee: string): Promise<T> {
+    const { path } = await this.resolvePath(id, importee)
+    const result = await this.runner.cachedRequest(id, path, [importee])
     return result as T
   }
 
-  public async importMock(id: string, importer: string): Promise<any> {
-    const { path, external } = await this.resolvePath(id, importer)
+  public async importMock(id: string, importee: string): Promise<any> {
+    const { path, external } = await this.resolvePath(id, importee)
 
-    const fsPath = this.getFsPath(path, external)
-    const normalizedId = this.normalizePath(fsPath)
+    const normalizedId = this.normalizePath(path)
     let mock = this.getDependencyMock(normalizedId)
 
     if (mock === undefined)
-      mock = this.resolveMockPath(fsPath, external)
+      mock = this.resolveMockPath(path, external)
 
     if (mock === null) {
       await this.ensureSpy()
-      const mod = await this.request(fsPath)
+      const mod = await this.runner.cachedRequest(id, path, [importee])
       return this.mockObject(mod)
     }
 
     if (typeof mock === 'function')
-      return this.callFunctionMock(fsPath, mock)
-    return this.requestWithMock(mock)
+      return this.callFunctionMock(path, mock)
+    return this.runner.dependencyRequest(id, mock, [importee])
   }
 
   private async ensureSpy() {
     if (VitestMocker.spyModule)
       return
-    VitestMocker.spyModule = await this.request(`/@fs/${slash(resolve(distDir, 'spy.js'))}`) as typeof import('../integrations/spy')
+    const spyModulePath = resolve(distDir, 'spy.js')
+    VitestMocker.spyModule = await this.runner.executeFile(spyModulePath)
   }
 
-  public async requestWithMock(dep: string) {
+  public async requestWithMock(url: string, callstack: string[]) {
+    if (callstack.some(id => id.includes('spy.js')))
+      return url
+
     await Promise.all([
       this.ensureSpy(),
       this.resolveMocks(),
     ])
 
-    const id = this.normalizePath(dep)
+    const id = this.normalizePath(url)
     const mock = this.getDependencyMock(id)
 
-    const callstack = this.request.callstack
     const mockPath = this.getMockPath(id)
 
     if (mock === null) {
@@ -381,7 +378,7 @@ export class VitestMocker {
       const exports = {}
       // Assign the empty exports object early to allow for cycles to work. The object will be filled by mockObject()
       this.moduleCache.set(mockPath, { exports })
-      const mod = await this.request(dep)
+      const mod = await this.runner.directRequest(url, url, [])
       this.mockObject(mod, exports)
       return exports
     }
@@ -393,8 +390,8 @@ export class VitestMocker {
       return result
     }
     if (typeof mock === 'string' && !callstack.includes(mock))
-      dep = mock
-    return this.request(dep)
+      url = mock
+    return url
   }
 
   public queueMock(id: string, importer: string, factory?: () => unknown) {

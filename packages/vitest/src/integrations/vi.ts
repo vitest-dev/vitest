@@ -2,7 +2,7 @@ import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import { parseStacktrace } from '../utils/source-map'
 import type { VitestMocker } from '../runtime/mocker'
 import type { ResolvedConfig, RuntimeConfig } from '../types'
-import { getWorkerState, resetModules, setTimeout } from '../utils'
+import { getWorkerState, resetModules, waitForImportsToResolve } from '../utils'
 import { FakeTimers } from './mock/timers'
 import type { EnhancedSpy, MaybeMocked, MaybeMockedDeep, MaybePartiallyMocked, MaybePartiallyMockedDeep } from './spy'
 import { fn, isMockFunction, spies, spyOn } from './spy'
@@ -245,26 +245,12 @@ class VitestUtils {
   }
 
   /**
-   * Wait for all imports to load.
-   * Useful, if you have a synchronous call that starts
-   * importing a module that you cannot wait otherwise.
+   * Wait for all imports to load. Useful, if you have a synchronous call that starts
+   * importing a module that you cannot await otherwise.
+   * Will also wait for new imports, started during the wait.
    */
   public async dynamicImportSettled() {
-    const state = getWorkerState()
-    const promises: Promise<unknown>[] = []
-    for (const mod of state.moduleCache.values()) {
-      if (mod.promise && !mod.evaluated)
-        promises.push(mod.promise)
-    }
-    if (!promises.length)
-      return
-    await Promise.allSettled(promises)
-    // wait until the end of the loop, so `.then` on modules is called,
-    // like in import('./example').then(...)
-    // also call dynamicImportSettled again in case new imports were added
-    await new Promise(resolve => setTimeout(resolve, 1))
-      .then(() => Promise.resolve())
-      .then(() => this.dynamicImportSettled())
+    return waitForImportsToResolve()
   }
 
   private _config: null | ResolvedConfig = null
