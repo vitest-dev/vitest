@@ -25,6 +25,7 @@ describe('current url', () => {
     const drive = `${cwd[0].toUpperCase()}:/`
     // has : in windows
     expect(cwd.toUpperCase().startsWith(drive)).toBe(true)
+    expect(__filename.startsWith(drive + drive)).toBe(false)
     expect(__filename.startsWith(drive)).toBe(true)
     expect(__dirname.startsWith(drive)).toBe(true)
     expect(import.meta.url.startsWith(`file:///${drive}`)).toBe(true)
