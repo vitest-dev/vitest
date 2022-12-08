@@ -7,5 +7,11 @@ export async function getProvider() {
 
 export function takeCoverage() {
   // @ts-expect-error -- untyped global
-  return globalThis[COVERAGE_STORE_KEY]
+  const coverage = globalThis[COVERAGE_STORE_KEY]
+
+  // Reset coverage map to prevent duplicate results if this is called twice in row
+  // @ts-expect-error -- untyped global
+  globalThis[COVERAGE_STORE_KEY] = {}
+
+  return coverage
 }
