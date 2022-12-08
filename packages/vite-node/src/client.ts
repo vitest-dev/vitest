@@ -232,14 +232,14 @@ export class ViteNodeRunner {
   }
 
   /** @internal */
-  async directRequest(id: string, fsPath: string, _callstack: string[]) {
-    const moduleId = normalizeModuleId(fsPath)
+  async directRequest(id: string, url: string, _callstack: string[]) {
+    const moduleId = normalizeModuleId(url)
     const callstack = [..._callstack, moduleId]
 
-    const mod = this.moduleCache.get(fsPath)
+    const mod = this.moduleCache.get(url)
 
     const request = async (dep: string) => {
-      const depFsPath = await this.resolveUrl(dep, fsPath)
+      const depFsPath = await this.resolveUrl(dep, url)
       return this.dependencyRequest(dep, depFsPath, callstack)
     }
 
@@ -248,7 +248,7 @@ export class ViteNodeRunner {
       return requestStubs[id]
 
     // eslint-disable-next-line prefer-const
-    let { code: transformed, externalize } = await this.options.fetchModule(fsPath)
+    let { code: transformed, externalize } = await this.options.fetchModule(url)
 
     if (externalize) {
       debugNative(externalize)
@@ -260,10 +260,10 @@ export class ViteNodeRunner {
     if (transformed == null)
       throw new Error(`[vite-node] Failed to load "${id}" imported from ${callstack[callstack.length - 2]}`)
 
-    const file = cleanUrl(moduleId)
+    const modulePath = cleanUrl(moduleId)
     // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
-    const url = pathToFileURL(file).href
-    const meta = { url }
+    const href = pathToFileURL(modulePath).href
+    const meta = { url: href }
     const exports = Object.create(null)
     Object.defineProperty(exports, Symbol.toStringTag, {
       value: 'Module',
@@ -292,7 +292,7 @@ export class ViteNodeRunner {
     })
 
     Object.assign(mod, { code: transformed, exports })
-    const __filename = fileURLToPath(url)
+    const __filename = fileURLToPath(href)
     const moduleProxy = {
       set exports(value) {
         exportAll(cjsExports, value)
@@ -309,7 +309,7 @@ export class ViteNodeRunner {
       Object.defineProperty(meta, 'hot', {
         enumerable: true,
         get: () => {
-          hotContext ||= this.options.createHotContext?.(this, `/@fs/${fsPath}`)
+          hotContext ||= this.options.createHotContext?.(this, `/@fs/${url}`)
           return hotContext
         },
       })
@@ -328,7 +328,7 @@ export class ViteNodeRunner {
       __vite_ssr_import_meta__: meta,
 
       // cjs compact
-      require: createRequire(url),
+      require: createRequire(href),
       exports: cjsExports,
       module: moduleProxy,
       __filename,
