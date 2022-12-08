@@ -1,6 +1,6 @@
 import { existsSync, readdirSync } from 'fs'
 import { isNodeBuiltin } from 'mlly'
-import { basename, dirname, extname, join, resolve } from 'pathe'
+import { basename, dirname, extname, isAbsolute, join, resolve } from 'pathe'
 import { normalizeRequestId } from 'vite-node/utils'
 import c from 'picocolors'
 import { getAllMockableProperties, getType, getWorkerState, mergeSlashes } from '../utils'
@@ -81,7 +81,7 @@ export class VitestMocker {
     const path = await this.runner.resolveUrl(id, importer)
     // external is node_module or unresolved module
     // for example, some people mock "vscode" and don't have it installed
-    const external = path.includes('/node_modules/') ? id : null
+    const external = !isAbsolute(path) || path.includes('/node_modules/') ? id : null
 
     return {
       path: normalizeRequestId(path),
