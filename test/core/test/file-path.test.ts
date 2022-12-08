@@ -22,7 +22,7 @@ describe('current url', () => {
 
   it.runIf(isWindows)('windows', () => {
     const cwd = process.cwd()
-    const drive = `${cwd[0].toUpperCase()}:`
+    const drive = `${cwd[0].toUpperCase()}:/`
     // has : in windows
     expect(cwd.toUpperCase().startsWith(drive)).toBe(true)
     expect(__filename.startsWith(drive)).toBe(true)
