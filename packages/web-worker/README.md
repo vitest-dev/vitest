@@ -2,7 +2,14 @@
 
 > Web Worker support for Vitest testing. Doesn't require JSDom.
 
-Simulates Web Worker, but in the same thread. Supports both `new Worker(url)` and `import from './worker?worker`.
+Simulates Web Worker, but in the same thread.
+
+Supported:
+
+- `new Worker(path)`
+- `new SharedWorker(path)`
+- `import MyWorker from './worker?worker'`
+- `import MySharedWorker from './worker?sharedworker'`
 
 ## Installing
 
@@ -33,6 +40,22 @@ export default defineConfig({
 })
 ```
 
+You can also import `defineWebWorkers` from `@vitest/web-worker/pure` to defined workers, whenever you need:
+
+```js
+import { defineWebWorkers } from '@vitest/web-worker/pure'
+
+if (process.env.SUPPORT_WORKERS)
+  defineWebWorkers({ clone: 'none' })
+```
+
+It accepts options:
+
+- `clone`: `'native' | 'ponyfill' | 'none'`. Defines how should `Worker` clone message, when transferring data. Applies only to `Worker` communication. `SharedWorker` uses `MessageChannel` from Node's `worker_threads` module, and is not configurable.
+
+> **Note**
+> Requires Node 17, if you want to use native `structuredClone`. Otherwise, it fallbacks to [polyfill](https://github.com/ungap/structured-clone), if not specified as `none`. You can also configure this option with `VITEST_WEB_WORKER_CLONE` environmental variable.
+
 ## Examples
 
 ```ts
@@ -59,8 +82,8 @@ worker.onmessage = (e) => {
 
 ## Notes
 
-- Does not support `onmessage = () => {}`. Please, use `self.onmessage = () => {}`.
+- Worker does not support `onmessage = () => {}`. Please, use `self.onmessage = () => {}`.
+- Shared worker does not support `onconnect = () => {}`. Please, use `self.onconnect = () => {}`.
 - Transferring Buffer will not change its `byteLength`.
 - You have access to shared global space as your tests.
-- Requires Node 17, if you want to use native `structuredClone`. Otherwise, it fallbacks to [polyfill](https://github.com/ungap/structured-clone). You can configure this behavior by passing down `clone` option (`'native' | 'ponyfill' | 'none'`) to `defineWebWorker` or using `VITEST_WEB_WORKER_CLONE` environmental variable.
-- If something is wrong, you can debug your worker, using `DEBUG=vitest:web-worker` environmental variable.
+- You can debug your worker, using `DEBUG=vitest:web-worker` environmental variable.

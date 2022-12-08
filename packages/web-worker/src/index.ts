@@ -1,3 +1,3 @@
-import { defineWebWorker } from './pure'
+import { defineWebWorkers } from './pure'
 
-defineWebWorker()
+defineWebWorkers()
