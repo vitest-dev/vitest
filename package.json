@@ -47,7 +47,7 @@
     "@vitest/ui": "workspace:*",
     "bumpp": "^8.2.1",
     "c8": "^7.12.0",
-    "esbuild": "^0.15.13",
+    "esbuild": "^0.16.3",
     "eslint": "^8.27.0",
     "esno": "^0.16.3",
     "fast-glob": "^3.2.12",
@@ -73,7 +73,7 @@
   },
   "pnpm": {
     "overrides": {
-      "esbuild": "^0.14.47",
+      "esbuild": "^0.16.3",
       "vite": "^4.0.0",
       "vitest": "workspace:*",
       "rollup": "^2.79.1"

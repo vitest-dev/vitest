@@ -9,9 +9,11 @@
     "solid-js": "^1.4.3"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^5.16.4",
     "jsdom": "latest",
-    "solid-testing-library": "0.3.0",
-    "vite-plugin-solid": "^2.2.6",
-    "vitest": "latest"
+    "solid-testing-library": "^0.5.0",
+    "vite-plugin-solid": "^2.5.0",
+    "vitest": "latest",
+    "vite": "latest"
   }
 }
