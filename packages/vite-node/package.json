@@ -80,7 +80,7 @@
     "pathe": "^0.2.0",
     "source-map": "^0.6.1",
     "source-map-support": "^0.5.21",
-    "vite": "^3.0.0"
+    "vite": "^3.0.0 || ^4.0.0"
   },
   "devDependencies": {
     "@types/debug": "^4.1.7",

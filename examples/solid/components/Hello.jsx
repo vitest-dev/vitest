@@ -1,4 +1,3 @@
-/* eslint-disable react/prop-types */
 import { createSignal } from 'solid-js'
 
 export const Hello = (props) => {
