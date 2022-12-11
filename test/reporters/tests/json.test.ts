@@ -27,4 +27,25 @@ describe('json reporter', async () => {
     delete result.duration
     expect(result).toMatchSnapshot()
   }, 40000)
+
+  it.skipIf(skip).each([
+    ['passed', 'all-passing-or-skipped'],
+    ['passed', 'all-skipped'],
+    ['failed', 'some-failing'],
+  ])('resolves to "%s" status for test file "%s"', async (expected, file) => {
+    const { stdout } = await execa('npx', ['vitest', 'run', file, '--reporter=json'], {
+      cwd: root,
+      env: {
+        ...process.env,
+        CI: 'true',
+        NO_COLOR: 'true',
+      },
+      stdio: 'pipe',
+    }).catch(e => e)
+
+    const data = JSON.parse(stdout)
+
+    expect(data.testResults).toHaveLength(1)
+    expect(data.testResults[0].status).toBe(expected)
+  }, 40000)
 })

@@ -247,19 +247,24 @@ class VitestUtils {
   /**
    * Wait for all imports to load.
    * Useful, if you have a synchronous call that starts
-   * importing a module, that you cannot wait otherwise.
+   * importing a module that you cannot wait otherwise.
    */
   public async dynamicImportSettled() {
     const state = getWorkerState()
     const promises: Promise<unknown>[] = []
     for (const mod of state.moduleCache.values()) {
-      if (mod.promise)
+      if (mod.promise && !mod.evaluated)
         promises.push(mod.promise)
     }
+    if (!promises.length)
+      return
     await Promise.allSettled(promises)
-    // wait until the end of the loop, so `.then` on modules called,
+    // wait until the end of the loop, so `.then` on modules is called,
     // like in import('./example').then(...)
-    await new Promise(resolve => setTimeout(resolve, 1)).then(() => Promise.resolve())
+    // also call dynamicImportSettled again in case new imports were added
+    await new Promise(resolve => setTimeout(resolve, 1))
+      .then(() => Promise.resolve())
+      .then(() => this.dynamicImportSettled())
   }
 
   private _config: null | ResolvedConfig = null

@@ -76,8 +76,10 @@ export async function startVitest(
     // if it's in a CLI wrapper, exit with a special code to request restart
     if (process.env.VITEST_CLI_WRAPPER)
       process.exit(EXIT_CODE_RESTART)
-    else
-      ctx.start(cliFilters)
+  })
+
+  ctx.onAfterSetServer(() => {
+    ctx.start(cliFilters)
   })
 
   try {

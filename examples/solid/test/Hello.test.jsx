@@ -9,7 +9,7 @@ describe('<Hello />', () => {
     unmount()
   })
 
-  test('updates', async() => {
+  test('updates', async () => {
     const { container, unmount, queryByText } = render(() => <Hello count={4} />)
     const button = queryByText('x1')
     const buttonClicked = new Promise((resolve) => {

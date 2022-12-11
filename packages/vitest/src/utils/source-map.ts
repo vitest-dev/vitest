@@ -6,6 +6,8 @@ export const lineSplitRE = /\r?\n/
 const stackIgnorePatterns = [
   'node:internal',
   '/vitest/dist/',
+  '/vite-node/dist',
+  '/vite-node/src',
   '/vitest/src/',
   '/node_modules/chai/',
   '/node_modules/tinypool/',

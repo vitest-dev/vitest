@@ -40,7 +40,7 @@ onMounted(async () => {
     ...props,
     ...attrs,
     mode: modeMap[props.mode || ''] || props.mode,
-    readOnly: props.readOnly ? 'nocursor' : undefined,
+    readOnly: props.readOnly ? true : undefined,
     extraKeys: {
       'Cmd-S': function (cm) {
         emit('save', cm.getValue())

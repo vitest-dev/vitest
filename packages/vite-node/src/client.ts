@@ -4,8 +4,9 @@ import vm from 'vm'
 import { dirname, extname, isAbsolute, resolve } from 'pathe'
 import { isNodeBuiltin } from 'mlly'
 import createDebug from 'debug'
-import { isPrimitive, mergeSlashes, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
+import { cleanUrl, isPrimitive, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
 import type { HotContext, ModuleCache, ViteNodeRunnerOptions } from './types'
+import { extractSourceMap } from './source-map'
 
 const debugExecute = createDebug('vite-node:client:execute')
 const debugNative = createDebug('vite-node:client:native')
@@ -114,13 +115,11 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
    * Return parsed source map based on inlined source map of the module
    */
   getSourceMap(id: string) {
-    const fsPath = this.normalizePath(id)
-    const cache = this.get(fsPath)
+    const cache = this.get(id)
     if (cache.map)
       return cache.map
-    const mapString = cache?.code?.match(/\/\/# sourceMappingURL=data:application\/json;charset=utf-8;base64,(.+)/)?.[1]
-    if (mapString) {
-      const map = JSON.parse(Buffer.from(mapString, 'base64').toString('utf-8'))
+    const map = cache.code && extractSourceMap(cache.code)
+    if (map) {
       cache.map = map
       return map
     }
@@ -179,7 +178,11 @@ export class ViteNodeRunner {
       return mod.promise
 
     const promise = this.directRequest(id, fsPath, callstack)
-    Object.assign(mod, { promise })
+    Object.assign(mod, { promise, evaluated: false })
+
+    promise.finally(() => {
+      mod.evaluated = true
+    })
 
     return await promise
   }
@@ -188,7 +191,7 @@ export class ViteNodeRunner {
   async directRequest(id: string, fsPath: string, _callstack: string[]) {
     const callstack = [..._callstack, fsPath]
 
-    const mod = this.moduleCache.get(fsPath)
+    let mod = this.moduleCache.get(fsPath)
 
     const request = async (dep: string) => {
       const depFsPath = toFilePath(normalizeRequestId(dep, this.options.base), this.root)
@@ -218,31 +221,46 @@ export class ViteNodeRunner {
 
     Object.defineProperty(request, 'callstack', { get: () => callstack })
 
-    const resolveId = async (dep: string, callstackPosition = 1) => {
-      // probably means it was passed as variable
-      // and wasn't transformed by Vite
-      // or some dependency name was passed
-      // runner.executeFile('@scope/name')
-      // runner.executeFile(myDynamicName)
+    const resolveId = async (dep: string, callstackPosition = 1): Promise<[dep: string, id: string | undefined]> => {
       if (this.options.resolveId && this.shouldResolveId(dep)) {
-        let importer = callstack[callstack.length - callstackPosition]
+        let importer: string | undefined = callstack[callstack.length - callstackPosition]
+        if (importer && !dep.startsWith('.'))
+          importer = undefined
         if (importer && importer.startsWith('mock:'))
           importer = importer.slice(5)
-        const { id } = await this.options.resolveId(dep, importer) || {}
-        dep = id && isAbsolute(id) ? mergeSlashes(`/@fs/${id}`) : id || dep
+        const resolved = await this.options.resolveId(normalizeRequestId(dep), importer)
+        return [dep, resolved?.id]
       }
 
-      return dep
+      return [dep, undefined]
     }
 
-    id = await resolveId(id, 2)
+    const [dep, resolvedId] = await resolveId(id, 2)
 
     const requestStubs = this.options.requestStubs || DEFAULT_REQUEST_STUBS
     if (id in requestStubs)
       return requestStubs[id]
 
     // eslint-disable-next-line prefer-const
-    let { code: transformed, externalize } = await this.options.fetchModule(id)
+    let { code: transformed, externalize } = await this.options.fetchModule(resolvedId || dep)
+
+    // in case we resolved fsPath incorrectly, Vite will return the correct file path
+    // in that case we need to update cache, so we don't have the same module as different exports
+    // but we ignore fsPath that has custom query, because it might need to be different
+    if (resolvedId && !fsPath.includes('?') && fsPath !== resolvedId) {
+      if (this.moduleCache.has(resolvedId)) {
+        mod = this.moduleCache.get(resolvedId)
+        this.moduleCache.set(fsPath, mod)
+        if (mod.promise)
+          return mod.promise
+        if (mod.exports)
+          return mod.exports
+      }
+      else {
+        this.moduleCache.set(resolvedId, mod)
+      }
+    }
+
     if (externalize) {
       debugNative(externalize)
       const exports = await this.interopedImport(externalize)
@@ -253,10 +271,12 @@ export class ViteNodeRunner {
     if (transformed == null)
       throw new Error(`[vite-node] Failed to load ${id}`)
 
+    const file = cleanUrl(resolvedId || fsPath)
+    // console.log('file', file)
     // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
-    const url = pathToFileURL(fsPath).href
+    const url = pathToFileURL(file).href
     const meta = { url }
-    const exports: any = Object.create(null)
+    const exports = Object.create(null)
     Object.defineProperty(exports, Symbol.toStringTag, {
       value: 'Module',
       enumerable: false,
@@ -264,9 +284,6 @@ export class ViteNodeRunner {
     })
     // this prosxy is triggered only on exports.name and module.exports access
     const cjsExports = new Proxy(exports, {
-      get(_, p, receiver) {
-        return Reflect.get(exports, p, receiver)
-      },
       set(_, p, value) {
         if (!Reflect.has(exports, 'default'))
           exports.default = {}
@@ -287,7 +304,6 @@ export class ViteNodeRunner {
     })
 
     Object.assign(mod, { code: transformed, exports })
-
     const __filename = fileURLToPath(url)
     const moduleProxy = {
       set exports(value) {
@@ -342,7 +358,7 @@ export class ViteNodeRunner {
     const codeDefinition = `'use strict';async (${Object.keys(context).join(',')})=>{{`
     const code = `${codeDefinition}${transformed}\n}}`
     const fn = vm.runInThisContext(code, {
-      filename: fsPath,
+      filename: __filename,
       lineOffset: 0,
       columnOffset: -codeDefinition.length,
     })
@@ -425,7 +441,7 @@ function exportAll(exports: any, sourceModule: any) {
   if (exports === sourceModule)
     return
 
-  if (typeof sourceModule !== 'object' || Array.isArray(sourceModule) || !sourceModule)
+  if (isPrimitive(sourceModule) || Array.isArray(sourceModule))
     return
 
   for (const key in sourceModule) {

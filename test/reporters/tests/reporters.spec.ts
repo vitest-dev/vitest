@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, rmSync, rmdirSync } from 'fs'
+import { existsSync, readFileSync, rmSync } from 'fs'
 import { afterEach, expect, test, vi } from 'vitest'
 import { normalize, resolve } from 'pathe'
 import { JsonReporter } from '../../../packages/vitest/src/node/reporters/json'
@@ -185,7 +185,7 @@ test('JUnit reporter with outputFile in non-existing directory', async () => {
   expect(readFileSync(outputFile, 'utf8')).toMatchSnapshot()
 
   // Cleanup
-  rmdirSync(rootDirectory, { recursive: true })
+  rmSync(rootDirectory, { recursive: true })
 })
 
 test('JUnit reporter with outputFile object in non-existing directory', async () => {
@@ -214,7 +214,7 @@ test('JUnit reporter with outputFile object in non-existing directory', async ()
   expect(readFileSync(outputFile, 'utf8')).toMatchSnapshot()
 
   // Cleanup
-  rmdirSync(rootDirectory, { recursive: true })
+  rmSync(rootDirectory, { recursive: true })
 })
 
 test('json reporter', async () => {
@@ -314,7 +314,7 @@ test('json reporter with outputFile in non-existing directory', async () => {
   expect(readFileSync(outputFile, 'utf8')).toMatchSnapshot()
 
   // Cleanup
-  rmdirSync(rootDirectory, { recursive: true })
+  rmSync(rootDirectory, { recursive: true })
 })
 
 test('json reporter with outputFile object in non-existing directory', async () => {
@@ -339,7 +339,7 @@ test('json reporter with outputFile object in non-existing directory', async () 
   expect(readFileSync(outputFile, 'utf8')).toMatchSnapshot()
 
   // Cleanup
-  rmdirSync(rootDirectory, { recursive: true })
+  rmSync(rootDirectory, { recursive: true })
 })
 
 /**

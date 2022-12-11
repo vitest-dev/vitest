@@ -1,7 +1,6 @@
 import { fileURLToPath, pathToFileURL } from 'url'
 import { existsSync } from 'fs'
 import { relative, resolve } from 'pathe'
-import type { TransformResult } from 'vite'
 import { isNodeBuiltin } from 'mlly'
 import type { Arrayable, Nullable } from './types'
 
@@ -34,6 +33,12 @@ export function normalizeRequestId(id: string, base?: string): string {
     .replace(/\?&/, '?') // replace ?& with just ?
     .replace(/\?+$/, '') // remove end query mark
 }
+
+export const queryRE = /\?.*$/s
+export const hashRE = /#.*$/s
+
+export const cleanUrl = (url: string): string =>
+  url.replace(hashRE, '').replace(queryRE, '')
 
 export function normalizeModuleId(id: string) {
   return id
@@ -86,20 +91,6 @@ export function toFilePath(id: string, root: string): string {
   return isWindows && absolute.startsWith('/')
     ? slash(fileURLToPath(pathToFileURL(absolute.slice(1)).href))
     : absolute
-}
-
-let SOURCEMAPPING_URL = 'sourceMa'
-SOURCEMAPPING_URL += 'ppingURL'
-
-export async function withInlineSourcemap(result: TransformResult) {
-  const { code, map } = result
-
-  if (code.includes(`${SOURCEMAPPING_URL}=`))
-    return result
-  if (map)
-    result.code = `${code}\n\n//# ${SOURCEMAPPING_URL}=data:application/json;charset=utf-8;base64,${Buffer.from(JSON.stringify(map), 'utf-8').toString('base64')}\n`
-
-  return result
 }
 
 /**

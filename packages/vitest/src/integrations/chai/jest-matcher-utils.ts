@@ -4,7 +4,7 @@
 import c from 'picocolors'
 import type { PrettyFormatOptions } from 'pretty-format'
 import { format as prettyFormat, plugins as prettyFormatPlugins } from 'pretty-format'
-import { unifiedDiff } from '../../node/diff'
+import { unifiedDiff } from '../../utils/diff'
 import type { DiffOptions, MatcherHintOptions } from '../../types/matcher-utils'
 
 export const EXPECTED_COLOR = c.green
@@ -109,6 +109,7 @@ export function stringify(object: unknown, maxDepth = 10, options?: PrettyFormat
   try {
     result = prettyFormat(object, {
       maxDepth,
+      escapeString: false,
       // min: true,
       plugins: PLUGINS,
       ...options,
@@ -118,6 +119,7 @@ export function stringify(object: unknown, maxDepth = 10, options?: PrettyFormat
     result = prettyFormat(object, {
       callToJSON: false,
       maxDepth,
+      escapeString: false,
       // min: true,
       plugins: PLUGINS,
       ...options,
