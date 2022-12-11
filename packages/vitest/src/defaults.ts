@@ -37,7 +37,6 @@ const coverageConfigDefaults = {
   // default extensions used by c8, plus '.vue' and '.svelte'
   // see https://github.com/istanbuljs/schema/blob/master/default-extension.js
   extension: ['.js', '.cjs', '.mjs', '.ts', '.tsx', '.jsx', '.vue', '.svelte'],
-  watchAll: true,
 } as ResolvedCoverageOptions
 
 export const fakeTimersDefaults = {
