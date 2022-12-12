@@ -4,7 +4,7 @@ import vm from 'vm'
 import { dirname, extname, isAbsolute, resolve } from 'pathe'
 import { isNodeBuiltin } from 'mlly'
 import createDebug from 'debug'
-import { isPrimitive, mergeSlashes, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
+import { cleanUrl, isPrimitive, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
 import type { HotContext, ModuleCache, ViteNodeRunnerOptions } from './types'
 import { extractSourceMap } from './source-map'
 
@@ -221,31 +221,35 @@ export class ViteNodeRunner {
 
     Object.defineProperty(request, 'callstack', { get: () => callstack })
 
-    const resolveId = async (dep: string, callstackPosition = 1) => {
+    const resolveId = async (dep: string, callstackPosition = 1): Promise<[dep: string, id: string | undefined]> => {
       if (this.options.resolveId && this.shouldResolveId(dep)) {
-        let importer = callstack[callstack.length - callstackPosition]
+        let importer: string | undefined = callstack[callstack.length - callstackPosition]
+        if (importer && !dep.startsWith('.'))
+          importer = undefined
         if (importer && importer.startsWith('mock:'))
           importer = importer.slice(5)
-        const { id } = await this.options.resolveId(dep, importer) || {}
-        dep = id && isAbsolute(id) ? mergeSlashes(`/@fs/${id}`) : id || dep
+        const resolved = await this.options.resolveId(normalizeRequestId(dep), importer)
+        return [dep, resolved?.id]
       }
 
-      return dep
+      return [dep, undefined]
     }
+
+    const [dep, resolvedId] = await resolveId(id, 2)
 
     const requestStubs = this.options.requestStubs || DEFAULT_REQUEST_STUBS
     if (id in requestStubs)
       return requestStubs[id]
 
     // eslint-disable-next-line prefer-const
-    let { code: transformed, externalize, file } = await this.options.fetchModule(id)
+    let { code: transformed, externalize } = await this.options.fetchModule(resolvedId || dep)
 
     // in case we resolved fsPath incorrectly, Vite will return the correct file path
     // in that case we need to update cache, so we don't have the same module as different exports
     // but we ignore fsPath that has custom query, because it might need to be different
-    if (file && !fsPath.includes('?') && fsPath !== file) {
-      if (this.moduleCache.has(file)) {
-        mod = this.moduleCache.get(file)
+    if (resolvedId && !fsPath.includes('?') && fsPath !== resolvedId) {
+      if (this.moduleCache.has(resolvedId)) {
+        mod = this.moduleCache.get(resolvedId)
         this.moduleCache.set(fsPath, mod)
         if (mod.promise)
           return mod.promise
@@ -253,7 +257,7 @@ export class ViteNodeRunner {
           return mod.exports
       }
       else {
-        this.moduleCache.set(file, mod)
+        this.moduleCache.set(resolvedId, mod)
       }
     }
 
@@ -267,8 +271,10 @@ export class ViteNodeRunner {
     if (transformed == null)
       throw new Error(`[vite-node] Failed to load ${id}`)
 
+    const file = cleanUrl(resolvedId || fsPath)
+    // console.log('file', file)
     // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
-    const url = pathToFileURL(file || fsPath).href
+    const url = pathToFileURL(file).href
     const meta = { url }
     const exports = Object.create(null)
     Object.defineProperty(exports, Symbol.toStringTag, {

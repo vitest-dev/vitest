@@ -1,7 +1,7 @@
 {
   "name": "@vitest/ui",
   "type": "module",
-  "version": "0.25.5",
+  "version": "0.25.7",
   "description": "UI for Vitest",
   "license": "MIT",
   "repository": {
@@ -39,14 +39,14 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^7.6.0",
-    "@testing-library/cypress": "^8.0.3",
+    "@testing-library/cypress": "^8.0.7",
     "@types/codemirror": "^5.60.5",
     "@types/d3-force": "^3.0.3",
     "@types/d3-selection": "^3.0.3",
     "@types/ws": "^8.5.3",
-    "@unocss/reset": "^0.46.3",
-    "@vitejs/plugin-vue": "^3.2.0",
-    "@vitejs/plugin-vue-jsx": "^2.1.1",
+    "@unocss/reset": "^0.47.5",
+    "@vitejs/plugin-vue": "^4.0.0",
+    "@vitejs/plugin-vue-jsx": "^3.0.0",
     "@vitest/ws-client": "workspace:*",
     "@vueuse/core": "^9.4.0",
     "ansi-to-html": "^0.7.2",
@@ -64,7 +64,7 @@
     "unocss": "^0.46.3",
     "unplugin-auto-import": "^0.11.4",
     "unplugin-vue-components": "^0.22.9",
-    "vite": "^3.2.3",
+    "vite": "^4.0.0",
     "vite-plugin-pages": "^0.27.1",
     "vue": "^3.2.41",
     "vue-router": "^4.1.6"
