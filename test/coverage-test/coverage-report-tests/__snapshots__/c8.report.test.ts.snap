@@ -1426,7 +1426,7 @@ exports[`c8 json report 1`] = `
       },
     },
   },
-  "<process-cwd>/src/index.ts": {
+  "<process-cwd>/src/index.mts": {
     "all": false,
     "b": {
       "0": [
@@ -1544,7 +1544,7 @@ exports[`c8 json report 1`] = `
         "name": "get",
       },
     },
-    "path": "<process-cwd>/src/index.ts",
+    "path": "<process-cwd>/src/index.mts",
     "s": {
       "0": 1,
       "1": 1,

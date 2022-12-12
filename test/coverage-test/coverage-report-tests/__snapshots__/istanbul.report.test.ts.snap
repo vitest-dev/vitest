@@ -413,7 +413,7 @@ exports[`istanbul json report 1`] = `
   "<process-cwd>/src/implicitElse.ts": {
     "b": {
       "0": [
-        1,
+        2,
         0,
       ],
     },
@@ -455,7 +455,7 @@ exports[`istanbul json report 1`] = `
       },
     },
     "f": {
-      "0": 1,
+      "0": 2,
     },
     "fnMap": {
       "0": {
@@ -484,10 +484,10 @@ exports[`istanbul json report 1`] = `
     },
     "path": "<process-cwd>/src/implicitElse.ts",
     "s": {
-      "0": 1,
-      "1": 1,
-      "2": 1,
-      "3": 1,
+      "0": 2,
+      "1": 2,
+      "2": 2,
+      "3": 2,
     },
     "statementMap": {
       "0": {
@@ -536,7 +536,7 @@ exports[`istanbul json report 1`] = `
     "b": {},
     "branchMap": {},
     "f": {
-      "0": 1,
+      "0": 2,
     },
     "fnMap": {
       "0": {
@@ -565,7 +565,7 @@ exports[`istanbul json report 1`] = `
     },
     "path": "<process-cwd>/src/importEnv.ts",
     "s": {
-      "0": 1,
+      "0": 2,
     },
     "statementMap": {
       "0": {
@@ -580,11 +580,11 @@ exports[`istanbul json report 1`] = `
       },
     },
   },
-  "<process-cwd>/src/index.ts": {
+  "<process-cwd>/src/index.mts": {
     "b": {},
     "branchMap": {},
     "f": {
-      "0": 1,
+      "0": 2,
     },
     "fnMap": {
       "0": {
@@ -611,9 +611,9 @@ exports[`istanbul json report 1`] = `
         "name": "pythagoras",
       },
     },
-    "path": "<process-cwd>/src/index.ts",
+    "path": "<process-cwd>/src/index.mts",
     "s": {
-      "0": 1,
+      "0": 2,
     },
     "statementMap": {
       "0": {
@@ -909,7 +909,7 @@ exports[`istanbul json report 1`] = `
     "b": {
       "0": [
         0,
-        1,
+        2,
       ],
     },
     "branchMap": {
@@ -950,10 +950,10 @@ exports[`istanbul json report 1`] = `
       },
     },
     "f": {
-      "0": 1,
-      "1": 2,
+      "0": 2,
+      "1": 4,
       "2": 0,
-      "3": 1,
+      "3": 2,
       "4": 0,
     },
     "fnMap": {
@@ -1075,12 +1075,12 @@ exports[`istanbul json report 1`] = `
     },
     "path": "<process-cwd>/src/utils.ts",
     "s": {
-      "0": 1,
-      "1": 2,
+      "0": 2,
+      "1": 4,
       "2": 0,
-      "3": 1,
+      "3": 2,
       "4": 0,
-      "5": 1,
+      "5": 2,
       "6": 0,
     },
     "statementMap": {
