@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { pythagoras } from '../src/index.mjs'
+import { pythagoras } from '../src/index.mts'
 import { implicitElse } from '../src/implicitElse'
 import { useImportEnv } from '../src/importEnv'
 
