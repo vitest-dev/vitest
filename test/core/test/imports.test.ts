@@ -53,3 +53,9 @@ test('dynamic import has null prototype', async () => {
 
   expect(Object.getPrototypeOf(stringTimeoutMod)).toBe(null)
 })
+
+test('dynamic imports throws an error', async () => {
+  const path = './some-unknown-path'
+  const imported = import(path)
+  await expect(imported).rejects.toThrowError(/Failed to load/)
+})
