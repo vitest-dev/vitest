@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import vue from '@vitejs/plugin-vue'
 
 export default defineConfig({
@@ -9,13 +9,7 @@ export default defineConfig({
     MY_CONSTANT: '"my constant"',
   },
   test: {
-    threads: !!process.env.THREAD,
-    include: [
-      'test/*.test.ts',
-    ],
-    exclude: [
-      'coverage-test/**/*',
-    ],
+    reporters: 'verbose',
     coverage: {
       enabled: true,
       clean: true,

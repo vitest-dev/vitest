@@ -2,7 +2,7 @@
 
 exports[`istanbul json report 1`] = `
 {
-  "<root>/src/Counter/Counter.component.ts": {
+  "<process-cwd>/src/Counter/Counter.component.ts": {
     "b": {},
     "branchMap": {},
     "f": {
@@ -81,7 +81,7 @@ exports[`istanbul json report 1`] = `
         "name": "(anonymous_2)",
       },
     },
-    "path": "<root>/src/Counter/Counter.component.ts",
+    "path": "<process-cwd>/src/Counter/Counter.component.ts",
     "s": {
       "0": 1,
       "1": 1,
@@ -131,7 +131,7 @@ exports[`istanbul json report 1`] = `
       },
     },
   },
-  "<root>/src/Counter/Counter.vue": {
+  "<process-cwd>/src/Counter/Counter.vue": {
     "b": {
       "0": [
         2,
@@ -203,7 +203,7 @@ exports[`istanbul json report 1`] = `
         "name": "(anonymous_1)",
       },
     },
-    "path": "<root>/src/Counter/Counter.vue",
+    "path": "<process-cwd>/src/Counter/Counter.vue",
     "s": {
       "0": 1,
     },
@@ -220,12 +220,12 @@ exports[`istanbul json report 1`] = `
       },
     },
   },
-  "<root>/src/Defined.vue": {
+  "<process-cwd>/src/Defined.vue": {
     "b": {},
     "branchMap": {},
     "f": {},
     "fnMap": {},
-    "path": "<root>/src/Defined.vue",
+    "path": "<process-cwd>/src/Defined.vue",
     "s": {
       "0": 1,
       "1": 1,
@@ -253,7 +253,7 @@ exports[`istanbul json report 1`] = `
       },
     },
   },
-  "<root>/src/Hello.vue": {
+  "<process-cwd>/src/Hello.vue": {
     "b": {
       "0": [
         3,
@@ -349,7 +349,7 @@ exports[`istanbul json report 1`] = `
         "name": "(anonymous_3)",
       },
     },
-    "path": "<root>/src/Hello.vue",
+    "path": "<process-cwd>/src/Hello.vue",
     "s": {
       "0": 1,
       "1": 1,
@@ -410,424 +410,7 @@ exports[`istanbul json report 1`] = `
       },
     },
   },
-  "<root>/src/coverage-report/SFC.vue": {
-    "b": {
-      "0": [
-        0,
-        0,
-      ],
-    },
-    "branchMap": {
-      "0": {
-        "loc": {
-          "end": {
-            "column": null,
-            "line": 14,
-          },
-          "start": {
-            "column": 16,
-            "line": 14,
-          },
-        },
-        "locations": [
-          {
-            "end": {
-              "column": 18,
-              "line": 14,
-            },
-            "start": {
-              "column": 16,
-              "line": 14,
-            },
-          },
-          {
-            "end": {
-              "column": null,
-              "line": 14,
-            },
-            "start": {
-              "column": 16,
-              "line": 14,
-            },
-          },
-        ],
-        "type": "binary-expr",
-      },
-    },
-    "f": {
-      "0": 0,
-      "1": 0,
-    },
-    "fnMap": {
-      "0": {
-        "decl": {
-          "end": {
-            "column": 10,
-            "line": 5,
-          },
-          "start": {
-            "column": 2,
-            "line": 5,
-          },
-        },
-        "loc": {
-          "end": {
-            "column": null,
-            "line": 9,
-          },
-          "start": {
-            "column": 10,
-            "line": 5,
-          },
-        },
-        "name": "(anonymous_0)",
-      },
-      "1": {
-        "decl": {
-          "end": {
-            "column": 18,
-            "line": 14,
-          },
-          "start": {
-            "column": 16,
-            "line": 14,
-          },
-        },
-        "loc": {
-          "end": {
-            "column": null,
-            "line": 14,
-          },
-          "start": {
-            "column": 18,
-            "line": 14,
-          },
-        },
-        "name": "(anonymous_2)",
-      },
-    },
-    "path": "<root>/src/coverage-report/SFC.vue",
-    "s": {
-      "0": 0,
-      "1": 0,
-      "2": 0,
-      "3": 0,
-      "4": 0,
-    },
-    "statementMap": {
-      "0": {
-        "end": {
-          "column": null,
-          "line": 10,
-        },
-        "start": {
-          "column": 18,
-          "line": 4,
-        },
-      },
-      "1": {
-        "end": {
-          "column": null,
-          "line": 6,
-        },
-        "start": {
-          "column": 18,
-          "line": 6,
-        },
-      },
-      "2": {
-        "end": {
-          "column": null,
-          "line": 8,
-        },
-        "start": {
-          "column": 4,
-          "line": 8,
-        },
-      },
-      "3": {
-        "end": {
-          "column": null,
-          "line": 15,
-        },
-        "start": {
-          "column": 2,
-          "line": 14,
-        },
-      },
-      "4": {
-        "end": {
-          "column": null,
-          "line": 14,
-        },
-        "start": {
-          "column": 18,
-          "line": 14,
-        },
-      },
-    },
-  },
-  "<root>/src/coverage-report/math.ts": {
-    "b": {},
-    "branchMap": {},
-    "f": {
-      "0": 0,
-      "1": 0,
-      "2": 0,
-      "3": 0,
-    },
-    "fnMap": {
-      "0": {
-        "decl": {
-          "end": {
-            "column": 20,
-            "line": 1,
-          },
-          "start": {
-            "column": 16,
-            "line": 1,
-          },
-        },
-        "loc": {
-          "end": {
-            "column": null,
-            "line": 3,
-          },
-          "start": {
-            "column": 42,
-            "line": 1,
-          },
-        },
-        "name": "add",
-      },
-      "1": {
-        "decl": {
-          "end": {
-            "column": 25,
-            "line": 5,
-          },
-          "start": {
-            "column": 16,
-            "line": 5,
-          },
-        },
-        "loc": {
-          "end": {
-            "column": null,
-            "line": 7,
-          },
-          "start": {
-            "column": 47,
-            "line": 5,
-          },
-        },
-        "name": "multiply",
-      },
-      "2": {
-        "decl": {
-          "end": {
-            "column": 27,
-            "line": 9,
-          },
-          "start": {
-            "column": 16,
-            "line": 9,
-          },
-        },
-        "loc": {
-          "end": {
-            "column": null,
-            "line": 11,
-          },
-          "start": {
-            "column": 49,
-            "line": 9,
-          },
-        },
-        "name": "untestedFn",
-      },
-      "3": {
-        "decl": {
-          "end": {
-            "column": 28,
-            "line": 13,
-          },
-          "start": {
-            "column": 16,
-            "line": 13,
-          },
-        },
-        "loc": {
-          "end": {
-            "column": null,
-            "line": 15,
-          },
-          "start": {
-            "column": 50,
-            "line": 13,
-          },
-        },
-        "name": "untestedFn2",
-      },
-    },
-    "path": "<root>/src/coverage-report/math.ts",
-    "s": {
-      "0": 0,
-      "1": 0,
-      "2": 0,
-      "3": 0,
-    },
-    "statementMap": {
-      "0": {
-        "end": {
-          "column": null,
-          "line": 2,
-        },
-        "start": {
-          "column": 2,
-          "line": 2,
-        },
-      },
-      "1": {
-        "end": {
-          "column": null,
-          "line": 6,
-        },
-        "start": {
-          "column": 2,
-          "line": 6,
-        },
-      },
-      "2": {
-        "end": {
-          "column": null,
-          "line": 10,
-        },
-        "start": {
-          "column": 2,
-          "line": 10,
-        },
-      },
-      "3": {
-        "end": {
-          "column": null,
-          "line": 14,
-        },
-        "start": {
-          "column": 2,
-          "line": 14,
-        },
-      },
-    },
-  },
-  "<root>/src/coverage-report/not-SFC/not-SFC.ts": {
-    "b": {},
-    "branchMap": {},
-    "f": {
-      "0": 0,
-    },
-    "fnMap": {
-      "0": {
-        "decl": {
-          "end": {
-            "column": 10,
-            "line": 4,
-          },
-          "start": {
-            "column": 2,
-            "line": 4,
-          },
-        },
-        "loc": {
-          "end": {
-            "column": null,
-            "line": 8,
-          },
-          "start": {
-            "column": 10,
-            "line": 4,
-          },
-        },
-        "name": "(anonymous_0)",
-      },
-    },
-    "path": "<root>/src/coverage-report/not-SFC/not-SFC.ts",
-    "s": {
-      "0": 0,
-      "1": 0,
-    },
-    "statementMap": {
-      "0": {
-        "end": {
-          "column": null,
-          "line": 5,
-        },
-        "start": {
-          "column": 18,
-          "line": 5,
-        },
-      },
-      "1": {
-        "end": {
-          "column": null,
-          "line": 7,
-        },
-        "start": {
-          "column": 4,
-          "line": 7,
-        },
-      },
-    },
-  },
-  "<root>/src/coverage-report/utils.js": {
-    "b": {},
-    "branchMap": {},
-    "f": {
-      "0": 0,
-    },
-    "fnMap": {
-      "0": {
-        "decl": {
-          "end": {
-            "column": 19,
-            "line": 1,
-          },
-          "start": {
-            "column": 16,
-            "line": 1,
-          },
-        },
-        "loc": {
-          "end": {
-            "column": 1,
-            "line": 3,
-          },
-          "start": {
-            "column": 26,
-            "line": 1,
-          },
-        },
-        "name": "add",
-      },
-    },
-    "path": "<root>/src/coverage-report/utils.js",
-    "s": {
-      "0": 0,
-    },
-    "statementMap": {
-      "0": {
-        "end": {
-          "column": 14,
-          "line": 2,
-        },
-        "start": {
-          "column": 2,
-          "line": 2,
-        },
-      },
-    },
-  },
-  "<root>/src/implicitElse.ts": {
+  "<process-cwd>/src/implicitElse.ts": {
     "b": {
       "0": [
         1,
@@ -899,7 +482,7 @@ exports[`istanbul json report 1`] = `
         "name": "implicitElse",
       },
     },
-    "path": "<root>/src/implicitElse.ts",
+    "path": "<process-cwd>/src/implicitElse.ts",
     "s": {
       "0": 1,
       "1": 1,
@@ -949,7 +532,7 @@ exports[`istanbul json report 1`] = `
       },
     },
   },
-  "<root>/src/importEnv.ts": {
+  "<process-cwd>/src/importEnv.ts": {
     "b": {},
     "branchMap": {},
     "f": {
@@ -980,7 +563,7 @@ exports[`istanbul json report 1`] = `
         "name": "useImportEnv",
       },
     },
-    "path": "<root>/src/importEnv.ts",
+    "path": "<process-cwd>/src/importEnv.ts",
     "s": {
       "0": 1,
     },
@@ -997,7 +580,7 @@ exports[`istanbul json report 1`] = `
       },
     },
   },
-  "<root>/src/index.ts": {
+  "<process-cwd>/src/index.ts": {
     "b": {},
     "branchMap": {},
     "f": {
@@ -1028,7 +611,7 @@ exports[`istanbul json report 1`] = `
         "name": "pythagoras",
       },
     },
-    "path": "<root>/src/index.ts",
+    "path": "<process-cwd>/src/index.ts",
     "s": {
       "0": 1,
     },
@@ -1045,7 +628,7 @@ exports[`istanbul json report 1`] = `
       },
     },
   },
-  "<root>/src/untested-file.ts": {
+  "<process-cwd>/src/untested-file.ts": {
     "b": {
       "0": [
         0,
@@ -1228,7 +811,7 @@ exports[`istanbul json report 1`] = `
         "name": "math",
       },
     },
-    "path": "<root>/src/untested-file.ts",
+    "path": "<process-cwd>/src/untested-file.ts",
     "s": {
       "0": 0,
       "1": 0,
@@ -1322,7 +905,7 @@ exports[`istanbul json report 1`] = `
       },
     },
   },
-  "<root>/src/utils.ts": {
+  "<process-cwd>/src/utils.ts": {
     "b": {
       "0": [
         0,
@@ -1490,7 +1073,7 @@ exports[`istanbul json report 1`] = `
         "name": "run",
       },
     },
-    "path": "<root>/src/utils.ts",
+    "path": "<process-cwd>/src/utils.ts",
     "s": {
       "0": 1,
       "1": 2,
