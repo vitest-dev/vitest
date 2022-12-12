@@ -21,3 +21,19 @@ test('implicit else is included in branch count', async () => {
   expect(fileCoverage.b).toHaveProperty('0')
   expect(fileCoverage.b['0']).toHaveLength(2)
 })
+
+test('ignored code is excluded from the report', async () => {
+  const functionName = 'ignoredFunction'
+  const filename = '<process-cwd>/src/utils.ts'
+
+  const coverageMap = await readCoverageJson()
+  const fileCoverage = coverageMap[filename]
+
+  // Function should not be included in report
+  const functionCoverage = Object.values(fileCoverage.fnMap).find(fn => fn.name === functionName)
+  expect(functionCoverage).toBe(undefined)
+
+  // Function should still be found from the actual sources
+  const utils = await import('../src/utils')
+  expect(utils[functionName]).toBeTypeOf('function')
+})
