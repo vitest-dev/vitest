@@ -25,6 +25,7 @@ const defaultCoverageExcludes = [
 ]
 
 const coverageConfigDefaults = {
+  all: false,
   provider: 'c8',
   enabled: false,
   clean: true,

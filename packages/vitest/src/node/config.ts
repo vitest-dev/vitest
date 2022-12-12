@@ -92,6 +92,11 @@ export function resolveConfig(
     mode,
   } as ResolvedConfig
 
+  if (resolved.watch) {
+    resolved.coverage.cleanOnRerun = true
+    resolved.coverage.all = false
+  }
+
   if (viteConfig.base !== '/')
     resolved.base = viteConfig.base
 

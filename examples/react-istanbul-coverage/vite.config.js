@@ -7,7 +7,6 @@ export default defineConfig({
   test: {
     coverage: {
       provider: 'istanbul',
-      watchAll: false,
     },
     environment: 'jsdom',
   },
