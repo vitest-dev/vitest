@@ -12,4 +12,3 @@
     {{ coveredMethod() }}
   </div>
 </template>
-

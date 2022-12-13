@@ -216,4 +216,3 @@ ${{ val: 1 }} | ${{ val: 2 }}} | ${3}
 `('($a && $b) -> $expected', ({ a, b, expected }) => {
   expect(a.val + b.val).toBe(expected)
 })
-

@@ -417,7 +417,7 @@ export class ViteNodeRunner {
 }
 
 function proxyMethod(name: 'get' | 'set' | 'has' | 'deleteProperty', tryDefault: boolean) {
-  return function (target: any, key: string | symbol, ...args: [any?, any?]) {
+  return function (target: any, key: string | symbol, ...args: [any?, any?]): any {
     const result = Reflect[name](target, key, ...args)
     if (isPrimitive(target.default))
       return result
