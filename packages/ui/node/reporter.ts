@@ -1,15 +1,11 @@
-import { existsSync, promises as fs } from 'fs'
+import { existsSync, promises as fs } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { dirname, relative, resolve } from 'pathe'
 import fg from 'fast-glob'
 import { stringify } from 'flatted'
-import { getPackageInfo } from 'local-pkg'
-import type { Vitest } from '../../node'
-import type { File, Reporter } from '../../types'
-import { getOutputFile } from '../../utils/config-helpers'
-import { getModuleGraph } from '../../api/setup'
-import { ensurePackageInstalled } from '../../utils'
-import type { ResolvedConfig } from './../../types/config'
-import type { ModuleGraphData } from './../../types/general'
+import { getOutputFile } from '../../vitest/src/utils/config-helpers'
+import { getModuleGraph } from '../../vitest/src/utils'
+import type { File, ModuleGraphData, Reporter, ResolvedConfig, Vitest } from '../../vitest/src/types'
 
 interface HTMLReportData {
   paths: string[]
@@ -17,6 +13,8 @@ interface HTMLReportData {
   config: ResolvedConfig
   moduleGraph: Record<string, ModuleGraphData>
 }
+
+const distDir = resolve(fileURLToPath(import.meta.url), '../../dist')
 
 export class HTMLReporter implements Reporter {
   start = 0
@@ -26,10 +24,6 @@ export class HTMLReporter implements Reporter {
   async onInit(ctx: Vitest) {
     this.ctx = ctx
     this.start = Date.now()
-    const getRoot = () => ctx.config?.root || process.cwd()
-    await ensurePackageInstalled('@vitest/ui', getRoot())
-    const pkgInfo = await getPackageInfo('@vitest/ui', { paths: [getRoot()] })
-    this.reportUIPath = resolve(pkgInfo!.rootPath, 'dist/report')
   }
 
   async onFinished() {
@@ -52,7 +46,7 @@ export class HTMLReporter implements Reporter {
    * @param report
    */
   async writeReport(report: string) {
-    const outputFile = getOutputFile(this.ctx.config, 'html') || 'html/html.meta.json'
+    const outputFile = getOutputFile(this.ctx.config, 'json') || 'html/html.meta.json'
 
     const reportFile = resolve(this.ctx.config.root, outputFile)
 
@@ -61,11 +55,12 @@ export class HTMLReporter implements Reporter {
       await fs.mkdir(resolve(outputDirectory, 'assets'), { recursive: true })
 
     await fs.writeFile(reportFile, report, 'utf-8')
+    const ui = resolve(distDir, 'report')
     // copy ui
-    const files = fg.sync('**/*', { cwd: this.reportUIPath })
+    const files = fg.sync('**/*', { cwd: ui })
     await Promise.all(files.map(async (f) => {
       if (f === 'index.html') {
-        const html = await fs.readFile(resolve(this.reportUIPath, f), 'utf-8')
+        const html = await fs.readFile(resolve(ui, f), 'utf-8')
         const filePath = relative(outputDirectory, reportFile)
         await fs.writeFile(
           resolve(outputDirectory, f),
@@ -73,7 +68,7 @@ export class HTMLReporter implements Reporter {
         )
       }
       else {
-        await fs.copyFile(resolve(this.reportUIPath, f), resolve(outputDirectory, f))
+        await fs.copyFile(resolve(ui, f), resolve(outputDirectory, f))
       }
     }))
 

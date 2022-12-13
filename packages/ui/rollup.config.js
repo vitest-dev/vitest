@@ -7,10 +7,6 @@ import json from '@rollup/plugin-json'
 import alias from '@rollup/plugin-alias'
 import pkg from './package.json'
 
-const entry = [
-  './node/index.ts',
-]
-
 const external = [
   ...builtinModules,
   ...Object.keys(pkg.dependencies),
@@ -19,8 +15,11 @@ const external = [
 ]
 
 export default () => [
+  'index',
+  'reporter',
+].map(entry => [
   {
-    input: entry,
+    input: `./node/${entry}.ts`,
     output: {
       dir: 'dist',
       format: 'esm',
@@ -44,9 +43,9 @@ export default () => [
     onwarn,
   },
   {
-    input: entry,
+    input: `./node/${entry}.ts`,
     output: {
-      file: 'dist/index.d.ts',
+      file: `dist/${entry}.d.ts`,
       format: 'esm',
     },
     external,
@@ -54,7 +53,7 @@ export default () => [
       dts(),
     ],
   },
-]
+]).flat()
 
 function onwarn(message) {
   if (['EMPTY_BUNDLE', 'CIRCULAR_DEPENDENCY'].includes(message.code))
