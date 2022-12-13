@@ -32,4 +32,3 @@ test('calc the duration used by junit', () => {
   result.duration = 12001
   expect(getDuration(task)).toBe('12.001')
 })
-

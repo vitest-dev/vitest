@@ -55,4 +55,3 @@ function createSuiteHavingFailedTestWithXmlInError(): File[] {
 }
 
 export { createSuiteHavingFailedTestWithXmlInError }
-
