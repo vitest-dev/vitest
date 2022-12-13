@@ -13,4 +13,3 @@ Object.entries(directives).forEach(([name, directive]) => {
 })
 
 app.mount('#app')
-

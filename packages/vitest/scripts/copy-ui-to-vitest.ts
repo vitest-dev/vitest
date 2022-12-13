@@ -21,4 +21,3 @@ if (!fs.existsSync(resolve(vitest, 'assets')))
 files.forEach((f) => {
   fs.copyFileSync(resolve(ui, f), resolve(vitest, f))
 })
-

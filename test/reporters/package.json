@@ -6,9 +6,9 @@
   },
   "devDependencies": {
     "execa": "^6.1.0",
+    "flatted": "^3.2.7",
     "pkg-reporter": "./reportPkg/",
     "vitest": "workspace:*",
-    "vitest-sonar-reporter": "0.3.3",
-    "flatted": "^3.2.7"
+    "vitest-sonar-reporter": "0.3.3"
   }
 }
