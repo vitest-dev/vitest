@@ -8,6 +8,7 @@
     "execa": "^6.1.0",
     "pkg-reporter": "./reportPkg/",
     "vitest": "workspace:*",
-    "vitest-sonar-reporter": "0.3.3"
+    "vitest-sonar-reporter": "0.3.3",
+    "flatted": "^3.2.7"
   }
 }

@@ -46,7 +46,7 @@ export class HTMLReporter implements Reporter {
    * @param report
    */
   async writeReport(report: string) {
-    const outputFile = getOutputFile(this.ctx.config, 'json') || 'html/html.meta.json'
+    const outputFile = getOutputFile(this.ctx.config, 'html') || 'html/html.meta.json'
 
     const reportFile = resolve(this.ctx.config.root, outputFile)
 

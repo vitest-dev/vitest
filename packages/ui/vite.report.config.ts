@@ -17,6 +17,7 @@ export default defineConfig(mergeConfig(config, defineConfig({
   plugins: [
     {
       name: 'debug-html-report',
+      apply: 'serve',
       transformIndexHtml(html) {
         return html.replace('<!-- !LOAD_METADATA! -->', `<script>window.METADATA_PATH="${debugLink}/html.meta.json"</script>`)
       },
