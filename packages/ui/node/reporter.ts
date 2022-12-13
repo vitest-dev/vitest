@@ -16,7 +16,7 @@ interface HTMLReportData {
 
 const distDir = resolve(fileURLToPath(import.meta.url), '../../dist')
 
-export class HTMLReporter implements Reporter {
+export default class HTMLReporter implements Reporter {
   start = 0
   ctx!: Vitest
   reportUIPath!: string
@@ -46,7 +46,7 @@ export class HTMLReporter implements Reporter {
    * @param report
    */
   async writeReport(report: string) {
-    const outputFile = getOutputFile(this.ctx.config, 'json') || 'html/html.meta.json'
+    const outputFile = getOutputFile(this.ctx.config, 'html') || 'html/html.meta.json'
 
     const reportFile = resolve(this.ctx.config.root, outputFile)
 

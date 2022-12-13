@@ -37,6 +37,7 @@ export default defineConfig({
     ],
   },
   test: {
+    reporters: 'html',
     slowTestThreshold: 1000,
     testTimeout: 2000,
     setupFiles: [

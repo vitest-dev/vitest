@@ -4,7 +4,7 @@ interface PotentialConfig {
   outputFile?: string | Partial<Record<string, string>>
 }
 
-export const getOutputFile = (config: PotentialConfig | undefined, reporter: BuiltinReporters | BenchmarkBuiltinReporters) => {
+export const getOutputFile = (config: PotentialConfig | undefined, reporter: BuiltinReporters | BenchmarkBuiltinReporters | 'html') => {
   if (!config?.outputFile)
     return
 
