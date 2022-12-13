@@ -760,14 +760,14 @@ importers:
       pathe: ^0.2.0
       picocolors: ^1.0.0
       rollup: ^2.79.1
-      source-map: ^0.7.4
+      source-map: ^0.6.1
       source-map-support: ^0.5.21
       vite: ^4.0.0
     dependencies:
       debug: 4.3.4
       mlly: 1.0.0
       pathe: 0.2.0
-      source-map: 0.7.4
+      source-map: 0.6.1
       source-map-support: 0.5.21
       vite: 4.0.0
     devDependencies:
@@ -824,7 +824,7 @@ importers:
       pretty-format: ^27.5.1
       prompts: ^2.4.2
       rollup: ^2.79.1
-      source-map: ^0.7.4
+      source-map: ^0.6.1
       strip-ansi: ^7.0.1
       strip-literal: ^1.0.0
       tinybench: ^2.3.1
@@ -843,7 +843,7 @@ importers:
       chai: 4.3.7
       debug: 4.3.4
       local-pkg: 0.4.2
-      source-map: 0.7.4
+      source-map: 0.6.1
       strip-literal: 1.0.0
       tinybench: 2.3.1
       tinypool: 0.3.0
@@ -18729,6 +18729,7 @@ packages:
   /source-map/0.7.4:
     resolution: {integrity: sha512-l3BikUxvPOcn5E74dZiq5BGsTb5yEwhaTSzccU6t4sDOH8NWJCstKO5QT2CvtFoK6F0saL7p9xHAqHOlCPJygA==}
     engines: {node: '>= 8'}
+    dev: true
 
   /source-map/0.8.0-beta.0:
     resolution: {integrity: sha512-2ymg6oRBpebeZi9UUNsgQ89bhx01TcTkmNTGnNO88imTmbSgy4nfujrgVEFKWpMTEGA11EDkTt7mqObTPdigIA==}
