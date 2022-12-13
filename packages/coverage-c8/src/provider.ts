@@ -58,7 +58,7 @@ export class C8CoverageProvider implements CoverageProvider {
         if (!map)
           return
 
-        const filepath = result.file || file.split('?')[0]
+        const filepath = file.split('?')[0]
 
         const url = _url.pathToFileURL(filepath).href
 

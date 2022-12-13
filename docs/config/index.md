@@ -212,7 +212,7 @@ To get TypeScript working with the global APIs, add `vitest/globals` to the `typ
 }
 ```
 
-If you are already using [`unplugin-auto-import`](https://github.com/antfu/unplugin-vue-components) in your project, you can also use it directly for auto importing those APIs.
+If you are already using [`unplugin-auto-import`](https://github.com/antfu/unplugin-auto-import) in your project, you can also use it directly for auto importing those APIs.
 
 ```ts
 // vite.config.ts
@@ -535,7 +535,7 @@ List of files included in coverage as glob patterns
 #### extension
 
 - **Type:** `string | string[]`
-- **Default:** `['.js', '.cjs', '.mjs', '.ts', '.tsx', '.jsx', '.vue', '.svelte']`
+- **Default:** `['.js', '.cjs', '.mjs', '.ts', '.mts', '.cts', '.tsx', '.jsx', '.vue', '.svelte']`
 - **Available for providers:** `'c8' | 'istanbul'`
 
 #### exclude

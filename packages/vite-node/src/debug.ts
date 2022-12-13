@@ -6,7 +6,10 @@ import c from 'picocolors'
 import type { DebuggerOptions } from './types'
 
 function hashCode(s: string) {
-  return s.split('').reduce((a, b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a }, 0)
+  return s.split('').reduce((a, b) => {
+    a = ((a << 5) - a) + b.charCodeAt(0)
+    return a & a
+  }, 0)
 }
 
 export class Debugger {

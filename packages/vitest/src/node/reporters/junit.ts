@@ -59,7 +59,7 @@ function escapeXML(value: any): string {
 }
 
 function executionTime(durationMS: number) {
-  return (durationMS / 1000).toLocaleString(undefined, { useGrouping: false, maximumFractionDigits: 10 })
+  return (durationMS / 1000).toLocaleString('en-US', { useGrouping: false, maximumFractionDigits: 10 })
 }
 
 export function getDuration(task: Task): string | undefined {

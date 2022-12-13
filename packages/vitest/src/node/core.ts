@@ -54,6 +54,7 @@ export class Vitest {
   }
 
   private _onRestartListeners: OnServerRestartHandler[] = []
+  private _onSetServer: OnServerRestartHandler[] = []
 
   async setServer(options: UserConfig, server: ViteDevServer) {
     this.unregisterWatcher?.()
@@ -116,6 +117,8 @@ export class Vitest {
       await this.cache.results.readFromCache()
     }
     catch {}
+
+    await Promise.all(this._onSetServer.map(fn => fn()))
   }
 
   async initCoverageProvider() {
@@ -614,5 +617,9 @@ export class Vitest {
 
   onServerRestart(fn: OnServerRestartHandler) {
     this._onRestartListeners.push(fn)
+  }
+
+  onAfterSetServer(fn: OnServerRestartHandler) {
+    this._onSetServer.push(fn)
   }
 }

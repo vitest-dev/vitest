@@ -177,4 +177,3 @@ suite.tasks = tasks
 const files = [file]
 
 export { files }
-
