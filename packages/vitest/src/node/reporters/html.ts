@@ -2,11 +2,12 @@ import { existsSync, promises as fs } from 'fs'
 import { dirname, relative, resolve } from 'pathe'
 import fg from 'fast-glob'
 import { stringify } from 'flatted'
-import { distDir } from '../../constants'
+import { getPackageInfo } from 'local-pkg'
 import type { Vitest } from '../../node'
 import type { File, Reporter } from '../../types'
 import { getOutputFile } from '../../utils/config-helpers'
 import { getModuleGraph } from '../../api/setup'
+import { ensurePackageInstalled } from '../../utils'
 import type { ResolvedConfig } from './../../types/config'
 import type { ModuleGraphData } from './../../types/general'
 
@@ -20,10 +21,15 @@ interface HTMLReportData {
 export class HTMLReporter implements Reporter {
   start = 0
   ctx!: Vitest
+  reportUIPath!: string
 
-  onInit(ctx: Vitest): void {
+  async onInit(ctx: Vitest) {
     this.ctx = ctx
     this.start = Date.now()
+    const getRoot = () => ctx.config?.root || process.cwd()
+    await ensurePackageInstalled('@vitest/ui', getRoot())
+    const pkgInfo = await getPackageInfo('@vitest/ui', { paths: [getRoot()] })
+    this.reportUIPath = resolve(pkgInfo!.rootPath, 'dist/report')
   }
 
   async onFinished() {
@@ -55,13 +61,11 @@ export class HTMLReporter implements Reporter {
       await fs.mkdir(resolve(outputDirectory, 'assets'), { recursive: true })
 
     await fs.writeFile(reportFile, report, 'utf-8')
-
     // copy ui
-    const ui = resolve(distDir, 'html-report')
-    const files = fg.sync('**/*', { cwd: ui })
+    const files = fg.sync('**/*', { cwd: this.reportUIPath })
     await Promise.all(files.map(async (f) => {
       if (f === 'index.html') {
-        const html = await fs.readFile(resolve(ui, f), 'utf-8')
+        const html = await fs.readFile(resolve(this.reportUIPath, f), 'utf-8')
         const filePath = relative(outputDirectory, reportFile)
         await fs.writeFile(
           resolve(outputDirectory, f),
@@ -69,7 +73,7 @@ export class HTMLReporter implements Reporter {
         )
       }
       else {
-        await fs.copyFile(resolve(ui, f), resolve(outputDirectory, f))
+        await fs.copyFile(resolve(this.reportUIPath, f), resolve(outputDirectory, f))
       }
     }))
 

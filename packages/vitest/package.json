@@ -76,10 +76,9 @@
     "node": ">=v14.16.0"
   },
   "scripts": {
-    "build": "rimraf dist && rollup -c && pnpm copy",
+    "build": "rimraf dist && rollup -c",
     "dev": "NODE_OPTIONS=\"--max-old-space-size=8192\" rollup -c --watch -m inline",
-    "prepublishOnly": "pnpm build",
-    "copy": "esno scripts/copy-ui-to-vitest.ts"
+    "prepublishOnly": "pnpm build"
   },
   "peerDependencies": {
     "@edge-runtime/vm": "*",
