@@ -180,11 +180,12 @@ export class ViteNodeRunner {
     const promise = this.directRequest(id, fsPath, callstack)
     Object.assign(mod, { promise, evaluated: false })
 
-    promise.finally(() => {
+    try {
+      return await promise
+    }
+    finally {
       mod.evaluated = true
-    })
-
-    return await promise
+    }
   }
 
   /** @internal */
@@ -272,7 +273,7 @@ export class ViteNodeRunner {
       throw new Error(`[vite-node] Failed to load ${id}`)
 
     const file = cleanUrl(resolvedId || fsPath)
-    // console.log('file', file)
+
     // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
     const url = pathToFileURL(file).href
     const meta = { url }
