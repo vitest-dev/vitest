@@ -42,9 +42,9 @@
     "prepublishOnly": "pnpm build"
   },
   "dependencies": {
-    "sirv": "^2.0.2",
     "fast-glob": "^3.2.12",
-    "flatted": "^3.2.7"
+    "flatted": "^3.2.7",
+    "sirv": "^2.0.2"
   },
   "devDependencies": {
     "@faker-js/faker": "^7.6.0",
