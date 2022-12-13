@@ -11,7 +11,7 @@ test('html report', async () => {
   const files = fs.readdirSync(coveragePath)
 
   expect(files).toContain('index.html')
-  expect(files).toContain('index.ts.html')
+  expect(files).toContain('index.mts.html')
   expect(files).toContain('Hello.vue.html')
 })
 

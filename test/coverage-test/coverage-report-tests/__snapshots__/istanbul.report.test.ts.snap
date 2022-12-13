@@ -580,7 +580,7 @@ exports[`istanbul json report 1`] = `
       },
     },
   },
-  "<process-cwd>/src/index.ts": {
+  "<process-cwd>/src/index.mts": {
     "b": {},
     "branchMap": {},
     "f": {
@@ -611,7 +611,7 @@ exports[`istanbul json report 1`] = `
         "name": "pythagoras",
       },
     },
-    "path": "<process-cwd>/src/index.ts",
+    "path": "<process-cwd>/src/index.mts",
     "s": {
       "0": 1,
     },
