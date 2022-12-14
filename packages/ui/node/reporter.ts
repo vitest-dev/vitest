@@ -72,6 +72,7 @@ export default class HTMLReporter implements Reporter {
       }
     }))
 
-    this.ctx.logger.log(`HTML report written to ${reportFile}`)
+    this.ctx.logger.log('HTML report is generate!')
+    this.ctx.logger.log(`You can open the ${resolve(outputDirectory, 'index.html')} to see the test result.`)
   }
 }
