@@ -23,7 +23,7 @@ function createReporters(reporterReferences: Array<string | Reporter | BuiltinRe
   const promisedReporters = reporterReferences.map(async (referenceOrInstance) => {
     if (typeof referenceOrInstance === 'string') {
       if (referenceOrInstance === 'html') {
-        await ensurePackageInstalled('@vitest/ui/reporter', runner.root)
+        await ensurePackageInstalled('@vitest/ui', runner.root)
         const CustomReporter = await loadCustomReporterModule('@vitest/ui/reporter', runner)
         return new CustomReporter()
       }
