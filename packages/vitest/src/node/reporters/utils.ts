@@ -1,5 +1,6 @@
 import type { ViteNodeRunner } from 'vite-node/client'
 import type { Reporter } from '../../types'
+import { ensurePackageInstalled } from '../../utils'
 import { BenchmarkReportsMap, ReportersMap } from './index'
 import type { BenchmarkBuiltinReporters, BuiltinReporters } from './index'
 
@@ -22,6 +23,7 @@ function createReporters(reporterReferences: Array<string | Reporter | BuiltinRe
   const promisedReporters = reporterReferences.map(async (referenceOrInstance) => {
     if (typeof referenceOrInstance === 'string') {
       if (referenceOrInstance === 'html') {
+        await ensurePackageInstalled('@vitest/ui/reporter', runner.root)
         const CustomReporter = await loadCustomReporterModule('@vitest/ui/reporter', runner)
         return new CustomReporter()
       }
