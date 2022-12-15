@@ -61,6 +61,8 @@ export async function run(files: string[], config: ResolvedConfig): Promise<void
       if (!files || !files.length)
         continue
 
+      workerState.config.environment = environment
+
       await withEnv(environment, files[0].envOptions || config.environmentOptions || {}, async () => {
         for (const { file } of files) {
         // it doesn't matter if running with --threads

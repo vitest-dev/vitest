@@ -51,4 +51,9 @@ export class VitestRunner extends ViteNodeRunner {
       __vitest_mocker__: mocker,
     })
   }
+
+  shouldInterop() {
+    const workerState = getWorkerState()
+    return this.options.interopDefault ?? workerState.config.environment !== 'node'
+  }
 }

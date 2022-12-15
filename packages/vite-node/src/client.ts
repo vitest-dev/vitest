@@ -283,9 +283,17 @@ export class ViteNodeRunner {
       enumerable: false,
       configurable: false,
     })
-    // this prosxy is triggered only on exports.name and module.exports access
+    // this prosxy is triggered only on exports.{name} and module.exports access
     const cjsExports = new Proxy(exports, {
-      set(_, p, value) {
+      set: (_, p, value) => {
+        // treat "module.exports =" the same as "exports.default =" to not have nested "default.default",
+        // so "exports.default" becomes the actual module
+        if (p === 'default' && this.shouldInterop(url, { default: value })) {
+          exportAll(cjsExports, value)
+          exports.default = value
+          return true
+        }
+
         if (!Reflect.has(exports, 'default'))
           exports.default = {}
 
@@ -396,35 +404,45 @@ export class ViteNodeRunner {
    * Import a module and interop it
    */
   async interopedImport(path: string) {
-    const mod = await import(path)
+    const importedModule = await import(path)
 
-    if (this.shouldInterop(path, mod)) {
-      const tryDefault = this.hasNestedDefault(mod)
-      return new Proxy(mod, {
-        get: proxyMethod('get', tryDefault),
-        set: proxyMethod('set', tryDefault),
-        has: proxyMethod('has', tryDefault),
-        deleteProperty: proxyMethod('deleteProperty', tryDefault),
-      })
-    }
+    if (!this.shouldInterop(path, importedModule))
+      return importedModule
 
-    return mod
-  }
+    const { mod, defaultExport } = interopModule(importedModule)
 
-  hasNestedDefault(target: any) {
-    return '__esModule' in target && target.__esModule && 'default' in target.default
+    return new Proxy(mod, {
+      get(mod, prop) {
+        if (prop === 'default')
+          return defaultExport
+        return mod[prop] ?? defaultExport?.[prop]
+      },
+      has(mod, prop) {
+        if (prop === 'default')
+          return defaultExport !== undefined
+        return prop in mod || (defaultExport && prop in defaultExport)
+      },
+    })
   }
 }
 
-function proxyMethod(name: 'get' | 'set' | 'has' | 'deleteProperty', tryDefault: boolean) {
-  return function (target: any, key: string | symbol, ...args: [any?, any?]): any {
-    const result = Reflect[name](target, key, ...args)
-    if (isPrimitive(target.default))
-      return result
-    if ((tryDefault && key === 'default') || typeof result === 'undefined')
-      return Reflect[name](target.default, key, ...args)
-    return result
+function interopModule(mod: any) {
+  if (isPrimitive(mod)) {
+    return {
+      mod: { default: mod },
+      defaultExport: mod,
+    }
   }
+
+  let defaultExport = 'default' in mod ? mod.default : mod
+
+  if (!isPrimitive(defaultExport) && '__esModule' in defaultExport) {
+    mod = defaultExport
+    if ('default' in defaultExport)
+      defaultExport = defaultExport.default
+  }
+
+  return { mod, defaultExport }
 }
 
 // keep consistency with Vite on how exports are defined
