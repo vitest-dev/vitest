@@ -14,13 +14,20 @@ export function mergeSlashes(str: string) {
   return str.replace(/\/\//g, '/')
 }
 
+export const VALID_ID_PREFIX = '/@id/'
+
+export function unwrapId(id: string) {
+  if (id.startsWith(VALID_ID_PREFIX))
+    return id.slice(5)
+  return id
+}
+
 export function normalizeRequestId(id: string, base?: string): string {
   if (base && id.startsWith(base))
     id = `/${id.slice(base.length)}`
 
   return id
     .replace(/^\/@id\/__x00__/, '\0') // virtual modules start with `\0`
-    .replace(/^\/@id\//, '')
     .replace(/^__vite-browser-external:/, '')
     .replace(/^(node|file):/, '')
     .replace(/^\/+/, '/') // remove duplicate leading slashes

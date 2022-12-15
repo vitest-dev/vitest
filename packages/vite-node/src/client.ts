@@ -4,7 +4,7 @@ import vm from 'vm'
 import { dirname, extname, isAbsolute, resolve } from 'pathe'
 import { isNodeBuiltin } from 'mlly'
 import createDebug from 'debug'
-import { cleanUrl, isPrimitive, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
+import { VALID_ID_PREFIX, cleanUrl, isPrimitive, normalizeModuleId, normalizeRequestId, slash, toFilePath, unwrapId } from './utils'
 import type { HotContext, ModuleCache, ViteNodeRunnerOptions } from './types'
 import { extractSourceMap } from './source-map'
 
@@ -159,7 +159,7 @@ export class ViteNodeRunner {
   /** @internal */
   async cachedRequest(rawId: string, callstack: string[]) {
     const id = normalizeRequestId(rawId, this.options.base)
-    const fsPath = toFilePath(id, this.root)
+    const fsPath = toFilePath(unwrapId(id), this.root)
 
     const mod = this.moduleCache.get(fsPath)
     const importee = callstack[callstack.length - 1]
@@ -225,11 +225,11 @@ export class ViteNodeRunner {
     const resolveId = async (dep: string, callstackPosition = 1): Promise<[dep: string, id: string | undefined]> => {
       if (this.options.resolveId && this.shouldResolveId(dep)) {
         let importer: string | undefined = callstack[callstack.length - callstackPosition]
-        if (importer && !dep.startsWith('.'))
+        if (importer && dep.startsWith(VALID_ID_PREFIX))
           importer = undefined
         if (importer && importer.startsWith('mock:'))
           importer = importer.slice(5)
-        const resolved = await this.options.resolveId(normalizeRequestId(dep), importer)
+        const resolved = await this.options.resolveId(normalizeRequestId(unwrapId(dep)), importer)
         return [dep, resolved?.id]
       }
 

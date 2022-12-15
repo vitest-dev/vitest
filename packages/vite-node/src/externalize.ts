@@ -14,9 +14,6 @@ const defaultInline = [
 const depsExternal = [
   /\.cjs\.js$/,
   /\.mjs$/,
-  // taken from Vite's bareImportRE
-  /^[\w@](?!.*:\/\/)/, // bare import without full path (deepmerge)
-  /^([^@][^/]*)\/|^(@[^/]+\/[^/]+)\//, // bare import with subpath (deepmerge/esm)
 ]
 
 export function guessCJSversion(id: string): string | undefined {

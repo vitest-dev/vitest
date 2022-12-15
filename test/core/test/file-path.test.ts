@@ -1,8 +1,26 @@
 import { existsSync } from 'fs'
 import { describe, expect, it, vi } from 'vitest'
 import { isWindows, slash, toFilePath } from '../../../packages/vite-node/src/utils'
+import { getPaths as getAbsoluteAliasedPaths } from '$/aliased-id'
+import { getPaths as getRelativeAliasedPath } from '@/aliased-id'
 
 vi.mock('fs')
+
+describe('test aliased paths', () => {
+  it('expect functions to be part of the same module', () => {
+    expect(getAbsoluteAliasedPaths).toBe(getRelativeAliasedPath)
+  })
+
+  it.each([
+    { getPaths: getAbsoluteAliasedPaths, type: 'doesn\'t have dir in alias' },
+    { getPaths: getRelativeAliasedPath, type: 'has dir in alias' },
+  ])('when alias $type', ({ getPaths }) => {
+    const paths = getPaths()
+    expect(paths.url).toMatch(/\/aliased-id.ts$/)
+    expect(paths.__filename).toMatch(/\/aliased-id.ts$/)
+    expect(paths.__dirname).toMatch(/\/core\/src$/)
+  })
+})
 
 describe('toFilePath', () => {
   // the following tests will work incorrectly on unix systems
