@@ -3,7 +3,6 @@
  */
 
 import { describe, expect, it } from 'vitest'
-import { getWorkerState } from 'vitest/src/utils'
 // @ts-expect-error is not typed with imports
 import * as nestedDefaultCjs from '../src/cjs/nested-default-cjs'
 // @ts-expect-error is not typed with imports
@@ -11,10 +10,7 @@ import * as nestedDefaultExternalCjs from '../src/external/nested-default-cjs'
 // @ts-expect-error is not typed with imports
 import * as moduleDefaultCjs from '../src/external/default-cjs'
 
-const config = getWorkerState().config
-
-// don't run with threads disabled, because we don't clean "external" cache
-describe.runIf(config.threads)('validating nested defaults in isolation', () => {
+describe('validating nested defaults in isolation', () => {
   it.each([
     nestedDefaultCjs,
     nestedDefaultExternalCjs,

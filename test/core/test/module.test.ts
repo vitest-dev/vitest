@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest'
-import { getWorkerState } from 'vitest/src/utils'
 // @ts-expect-error is not typed
 import cjs, { a, b } from '../src/cjs/module-cjs'
 // @ts-expect-error is not typed with imports
@@ -27,10 +26,7 @@ it('doesn\'t when extending module', () => {
   expect(() => Object.assign(globalThis, timeout)).not.toThrow()
 })
 
-const config = getWorkerState().config
-
-// don't run with threads disabled, because we don't clean "external" cache
-describe.runIf(config.threads)('validating nested defaults in isolation', () => {
+describe('validating nested defaults in isolation', () => {
   it.each([
     nestedDefaultCjs,
     nestedDefaultExternalCjs,

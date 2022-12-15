@@ -48,6 +48,7 @@ export function resetModules(modules: ModuleCacheMap, resetMocks = false) {
   const skipPaths = [
     // Vitest
     /\/vitest\/dist\//,
+    /\/vite-node\/dist\//,
     // yarn's .store folder
     /vitest-virtual-\w+\/dist/,
     // cnpm
