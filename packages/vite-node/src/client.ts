@@ -147,9 +147,8 @@ export class ViteNodeRunner {
   }
 
   async executeFile(file: string) {
-    const id = slash(resolve(file))
-    const url = `/@fs/${id}`
-    return await this.cachedRequest(id, url, [])
+    const url = `/@fs/${slash(resolve(file))}`
+    return await this.cachedRequest(url, url, [])
   }
 
   async executeId(rawId: string) {
