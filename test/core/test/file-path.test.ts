@@ -13,14 +13,18 @@ describe('test aliased paths', () => {
     expect(getAbsoluteAliasedPaths).toBe(getRelativeAliasedPath)
   })
 
-  it.each([
-    { getPaths: getAbsoluteAliasedPaths, type: 'doesn\'t have dir in alias' },
-    { getPaths: getRelativeAliasedPath, type: 'has dir in alias' },
-  ])('when alias $type', ({ getPaths }) => {
-    const paths = getPaths()
+  it.runIf(!isWindows)('paths on unix', () => {
+    const paths = getAbsoluteAliasedPaths()
     expect(paths.url).toMatch(/\/aliased-mod.ts$/)
     expect(paths.__filename).toMatch(/\/aliased-mod.ts$/)
     expect(paths.__dirname).toMatch(/\/core\/src$/)
+  })
+
+  it.runIf(isWindows)('paths on windows', () => {
+    const paths = getAbsoluteAliasedPaths()
+    expect(paths.url).toMatch(/\/aliased-mod.ts$/)
+    expect(paths.__filename).toMatch(/\\aliased-mod.ts$/)
+    expect(paths.__dirname).toMatch(/\\core\\src$/)
   })
 })
 
