@@ -53,7 +53,6 @@ export class VitestRunner extends ViteNodeRunner {
   }
 
   shouldInterop() {
-    const workerState = getWorkerState()
-    return this.options.interopDefault ?? workerState.config.environment !== 'node'
+    return this.options.interopDefault ?? getWorkerState().config.environment !== 'node'
   }
 }
