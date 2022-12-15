@@ -7,7 +7,7 @@ import vm from 'vm'
 import { extname, isAbsolute, resolve } from 'pathe'
 import { isNodeBuiltin } from 'mlly'
 import createDebug from 'debug'
-import { cleanUrl, isInternalRequest, isPrimitive, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
+import { VALID_ID_PREFIX, cleanUrl, isInternalRequest, isPrimitive, normalizeModuleId, normalizeRequestId, slash, toFilePath, unwrapId } from './utils'
 import type { HotContext, ModuleCache, ViteNodeRunnerOptions } from './types'
 import { extractSourceMap } from './source-map'
 
@@ -197,9 +197,10 @@ export class ViteNodeRunner {
       return url
     url = normalizeRequestId(url, this.options.base)
     if (!this.options.resolveId)
-      return toFilePath(url, this.root)
-    if (importee && url[0] !== '.')
+      return toFilePath(unwrapId(url), this.root)
+    if (importee && url.startsWith(VALID_ID_PREFIX))
       importee = undefined
+    url = unwrapId(url)
     const resolved = await this.options.resolveId(url, importee)
     const resolvedId = resolved?.id || url
     return normalizeRequestId(resolvedId, this.options.base)
