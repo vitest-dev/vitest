@@ -229,11 +229,12 @@ export class ViteNodeRunner {
           importer = undefined
         if (importer && importer.startsWith('mock:'))
           importer = importer.slice(5)
-        const resolved = await this.options.resolveId(normalizeRequestId(unwrapId(dep)), importer)
-        return [dep, resolved?.id]
+        const unwrapedId = unwrapId(dep)
+        const resolved = await this.options.resolveId(normalizeRequestId(unwrapedId), importer)
+        return [unwrapedId, resolved?.id]
       }
 
-      return [dep, undefined]
+      return [unwrapId(dep), undefined]
     }
 
     const [dep, resolvedId] = await resolveId(id, 2)
