@@ -124,20 +124,19 @@ export function defineWebWorker() {
 
       const id = (url instanceof URL ? url.toString() : url).replace(/^file:\/+/, '/')
 
-      runner.resolveUrl(id).then((fsPath) => {
-        runner.executeId(fsPath)
-          .then(() => {
-            // worker should be new every time, invalidate its sub dependency
-            moduleCache.invalidateSubDepTree([fsPath, runner.mocker.getMockPath(fsPath)])
-            const q = this.messageQueue
-            this.messageQueue = null
-            if (q)
-              q.forEach(this.postMessage, this)
-          }).catch((e) => {
-            this.outside.emit('error', e)
-            this.onerror?.(e)
-            console.error(e)
-          })
+      runner.resolveUrl(id).then(([, fsPath]) => {
+        runner.executeFile(fsPath).then(() => {
+          // worker should be new every time, invalidate its sub dependency
+          moduleCache.invalidateSubDepTree([fsPath, runner.mocker.getMockPath(fsPath)])
+          const q = this.messageQueue
+          this.messageQueue = null
+          if (q)
+            q.forEach(this.postMessage, this)
+        }).catch((e) => {
+          this.outside.emit('error', e)
+          this.onerror?.(e)
+          console.error(e)
+        })
       })
     }
 
