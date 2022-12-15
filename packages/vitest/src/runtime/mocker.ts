@@ -77,13 +77,14 @@ export class VitestMocker {
     }
   }
 
-  private async resolvePath(id: string, importer: string) {
-    const path = await this.runner.resolveUrl(id, importer)
+  private async resolvePath(rawId: string, importer: string) {
+    const [id, path] = await this.runner.resolveUrl(rawId, importer)
     // external is node_module or unresolved module
     // for example, some people mock "vscode" and don't have it installed
-    const external = !isAbsolute(path) || path.includes('/node_modules/') ? id : null
+    const external = !isAbsolute(path) || path.includes('/node_modules/') ? rawId : null
 
     return {
+      id,
       path: normalizeRequestId(path),
       external,
     }
@@ -324,14 +325,14 @@ export class VitestMocker {
     this.resolveCache.set(suitefile, resolves)
   }
 
-  public async importActual<T>(id: string, importee: string): Promise<T> {
-    const { path } = await this.resolvePath(id, importee)
+  public async importActual<T>(rawId: string, importee: string): Promise<T> {
+    const { id, path } = await this.resolvePath(rawId, importee)
     const result = await this.runner.cachedRequest(id, path, [importee])
     return result as T
   }
 
-  public async importMock(id: string, importee: string): Promise<any> {
-    const { path, external } = await this.resolvePath(id, importee)
+  public async importMock(rawId: string, importee: string): Promise<any> {
+    const { id, path, external } = await this.resolvePath(rawId, importee)
 
     const normalizedId = this.normalizePath(path)
     let mock = this.getDependencyMock(normalizedId)
@@ -346,7 +347,7 @@ export class VitestMocker {
 
     if (typeof mock === 'function')
       return this.callFunctionMock(path, mock)
-    return this.runner.dependencyRequest(id, mock, [importee])
+    return this.runner.dependencyRequest(mock, mock, [importee])
   }
 
   public async initializeSpyModule() {

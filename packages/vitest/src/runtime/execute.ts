@@ -41,7 +41,7 @@ export class VitestRunner extends ViteNodeRunner {
     const mocked = await this.mocker.requestWithMock(fsPath, callstack)
 
     if (typeof mocked === 'string')
-      return super.dependencyRequest(id, mocked, callstack)
+      return super.dependencyRequest(mocked, mocked, callstack)
     if (mocked && typeof mocked === 'object')
       return mocked
     return super.dependencyRequest(id, fsPath, callstack)

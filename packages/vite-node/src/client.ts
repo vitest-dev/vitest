@@ -4,8 +4,7 @@ import { createRequire } from 'module'
 import { dirname } from 'path'
 import { fileURLToPath, pathToFileURL } from 'url'
 import vm from 'vm'
-import { extname, isAbsolute, resolve } from 'pathe'
-import { isNodeBuiltin } from 'mlly'
+import { resolve } from 'pathe'
 import createDebug from 'debug'
 import { VALID_ID_PREFIX, cleanUrl, isInternalRequest, isPrimitive, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
 import type { HotContext, ModuleCache, ViteNodeRunnerOptions } from './types'
@@ -149,12 +148,12 @@ export class ViteNodeRunner {
 
   async executeFile(file: string) {
     const id = slash(resolve(file))
-    const url = `/@fs/${slash(resolve(file))}`
+    const url = `/@fs/${id}`
     return await this.cachedRequest(id, url, [])
   }
 
-  async executeId(id: string) {
-    const url = await this.resolveUrl(id)
+  async executeId(rawId: string) {
+    const [id, url] = await this.resolveUrl(rawId)
     return await this.cachedRequest(id, url, [])
   }
 
@@ -163,7 +162,7 @@ export class ViteNodeRunner {
   }
 
   /** @internal */
-  async cachedRequest(rawId: string, fsPath: string, callstack: string[]) {
+  async cachedRequest(id: string, fsPath: string, callstack: string[]) {
     const importee = callstack[callstack.length - 1]
 
     const mod = this.moduleCache.get(fsPath)
@@ -181,7 +180,7 @@ export class ViteNodeRunner {
     if (mod.promise)
       return mod.promise
 
-    const promise = this.directRequest(rawId, fsPath, callstack)
+    const promise = this.directRequest(id, fsPath, callstack)
     Object.assign(mod, { promise, evaluated: false })
 
     try {
@@ -192,23 +191,26 @@ export class ViteNodeRunner {
     }
   }
 
-  async resolveUrl(id: string, importee?: string): Promise<string> {
+  async resolveUrl(id: string, importee?: string): Promise<[url: string, fsPath: string]> {
     if (isInternalRequest(id))
-      return id
+      return [id, id]
     // we don't pass down importee here, because otherwise Vite doesn't resolve it correctly
     if (importee && id.startsWith(VALID_ID_PREFIX))
       importee = undefined
     id = normalizeRequestId(id, this.options.base)
     if (!this.options.resolveId)
-      return toFilePath(id, this.root)
+      return [id, toFilePath(id, this.root)]
     const resolved = await this.options.resolveId(id, importee)
-    return resolved
+    const resolvedId = resolved
       ? normalizeRequestId(resolved.id, this.options.base)
       : id
+    // to be compatible with dependencies that do not resolve id
+    const fsPath = resolved ? resolvedId : toFilePath(id, this.root)
+    return [resolvedId, fsPath]
   }
 
   /** @internal */
-  async dependencyRequest(rawId: string, fsPath: string, callstack: string[]) {
+  async dependencyRequest(id: string, fsPath: string, callstack: string[]) {
     const getStack = () => {
       return `stack:\n${[...callstack, fsPath].reverse().map(p => `- ${p}`).join('\n')}`
     }
@@ -225,7 +227,7 @@ export class ViteNodeRunner {
         throw new Error(`[vite-node] Failed to resolve circular dependency, ${getStack()}`)
       }
 
-      return await this.cachedRequest(rawId, fsPath, callstack)
+      return await this.cachedRequest(id, fsPath, callstack)
     }
     finally {
       if (debugTimer)
@@ -234,23 +236,23 @@ export class ViteNodeRunner {
   }
 
   /** @internal */
-  async directRequest(rawId: string, url: string, _callstack: string[]) {
-    const moduleId = normalizeModuleId(url)
+  async directRequest(id: string, fsPath: string, _callstack: string[]) {
+    const moduleId = normalizeModuleId(fsPath)
     const callstack = [..._callstack, moduleId]
 
-    const mod = this.moduleCache.get(url)
+    const mod = this.moduleCache.get(fsPath)
 
     const request = async (dep: string) => {
-      const depFsPath = await this.resolveUrl(dep, url)
-      return this.dependencyRequest(dep, depFsPath, callstack)
+      const [id, depFsPath] = await this.resolveUrl(dep, fsPath)
+      return this.dependencyRequest(id, depFsPath, callstack)
     }
 
     const requestStubs = this.options.requestStubs || DEFAULT_REQUEST_STUBS
-    if (rawId in requestStubs)
-      return requestStubs[rawId]
+    if (id in requestStubs)
+      return requestStubs[id]
 
     // eslint-disable-next-line prefer-const
-    let { code: transformed, externalize } = await this.options.fetchModule(url)
+    let { code: transformed, externalize } = await this.options.fetchModule(id)
 
     if (externalize) {
       debugNative(externalize)
@@ -260,7 +262,7 @@ export class ViteNodeRunner {
     }
 
     if (transformed == null)
-      throw new Error(`[vite-node] Failed to load "${rawId}" imported from ${callstack[callstack.length - 2]}`)
+      throw new Error(`[vite-node] Failed to load "${id}" imported from ${callstack[callstack.length - 2]}`)
 
     const modulePath = cleanUrl(moduleId)
     // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
@@ -311,7 +313,7 @@ export class ViteNodeRunner {
       Object.defineProperty(meta, 'hot', {
         enumerable: true,
         get: () => {
-          hotContext ||= this.options.createHotContext?.(this, `/@fs/${url}`)
+          hotContext ||= this.options.createHotContext?.(this, `/@fs/${fsPath}`)
           return hotContext
         },
       })
@@ -359,13 +361,6 @@ export class ViteNodeRunner {
 
   prepareContext(context: Record<string, any>) {
     return context
-  }
-
-  shouldResolveId(dep: string) {
-    if (isNodeBuiltin(dep) || dep in (this.options.requestStubs || DEFAULT_REQUEST_STUBS) || dep.startsWith('/@vite'))
-      return false
-
-    return !isAbsolute(dep) || !extname(dep)
   }
 
   /**
