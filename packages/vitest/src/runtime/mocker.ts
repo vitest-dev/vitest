@@ -340,7 +340,6 @@ export class VitestMocker {
       mock = this.resolveMockPath(path, external)
 
     if (mock === null) {
-      await this.initializeSpyModule()
       const mod = await this.runner.cachedRequest(id, path, [importee])
       return this.mockObject(mod)
     }
@@ -377,7 +376,7 @@ export class VitestMocker {
       this.mockObject(mod, exports)
       return exports
     }
-    if (typeof mock === 'function' && !callstack.includes(mockPath)) {
+    if (typeof mock === 'function' && !callstack.includes(mockPath) && !callstack.includes(url)) {
       callstack.push(mockPath)
       const result = await this.callFunctionMock(mockPath, mock)
       const indexMock = callstack.indexOf(mockPath)
