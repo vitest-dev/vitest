@@ -13,7 +13,6 @@ import * as moduleDefaultCjs from '../src/external/default-cjs'
 it.each([
   nestedDefaultCjs,
   nestedDefaultExternalCjs,
-  moduleDefaultCjs,
 ])('nested default should be resolved, because environment is not node', (mod) => {
   expect(mod).toHaveProperty('default')
   expect(mod.default).not.toHaveProperty('default')
@@ -21,4 +20,12 @@ it.each([
   expect(mod.default.b).toBe('b')
   expect(mod.a).toBe('a')
   expect(mod.b).toBe('b')
+})
+
+it('externalized "module.exports" CJS module interops default', () => {
+  expect(moduleDefaultCjs).toHaveProperty('default')
+  expect(moduleDefaultCjs.default).toHaveProperty('a')
+  expect(moduleDefaultCjs.default.a).toBe('a')
+  expect(moduleDefaultCjs).toHaveProperty('a')
+  expect(moduleDefaultCjs.a).toBe('a')
 })

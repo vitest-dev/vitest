@@ -16,6 +16,8 @@ import * as nestedDefaultCjs from '../src/cjs/nested-default-cjs'
 // @ts-expect-error is not typed with imports
 import * as nestedDefaultExternalCjs from '../src/external/nested-default-cjs'
 // @ts-expect-error is not typed with imports
+import * as moduleDefaultCjs from '../src/external/default-cjs'
+// @ts-expect-error is not typed with imports
 import * as internalEsm from '../src/esm/internal-esm.mjs'
 import c, { d } from '../src/module-esm'
 import * as timeout from '../src/timeout'
@@ -34,11 +36,10 @@ it.each([
   expect(mod.default.default.b).toBe('b')
 })
 
-it('nested external default should stay, because environment is node', () => {
-  expect(nestedDefaultExternalCjs).toHaveProperty('default')
-  expect(nestedDefaultExternalCjs.default).toHaveProperty('default')
-  expect(nestedDefaultExternalCjs.default.default.a).toBe('a')
-  expect(nestedDefaultExternalCjs.default.default.b).toBe('b')
+it('don\'t interop external module.exports, because environment is node', () => {
+  expect(moduleDefaultCjs).toHaveProperty('default')
+  expect(moduleDefaultCjs.default).toHaveProperty('a')
+  expect(moduleDefaultCjs).not.toHaveProperty('a')
 })
 
 it('should work when using module.exports cjs', () => {
