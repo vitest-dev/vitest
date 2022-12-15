@@ -50,7 +50,6 @@ async function startViteNode(ctx: WorkerContext) {
     },
     moduleCache,
     mockMap,
-    // do not interop default in Node environment
     interopDefault: config.deps.interopDefault,
     root: config.root,
     base: config.base,
