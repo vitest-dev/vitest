@@ -1,4 +1,5 @@
-import { expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
+import { getWorkerState } from 'vitest/src/utils'
 // @ts-expect-error is not typed
 import cjs, { a, b } from '../src/cjs/module-cjs'
 // @ts-expect-error is not typed with imports
@@ -26,20 +27,25 @@ it('doesn\'t when extending module', () => {
   expect(() => Object.assign(globalThis, timeout)).not.toThrow()
 })
 
-it.each([
-  nestedDefaultCjs,
-  nestedDefaultExternalCjs,
-])('nested default should stay, because environment is node', (mod) => {
-  expect(mod).toHaveProperty('default')
-  expect(mod.default).toHaveProperty('default')
-  expect(mod.default.default.a).toBe('a')
-  expect(mod.default.default.b).toBe('b')
-})
+const config = getWorkerState().config
 
-it('don\'t interop external module.exports, because environment is node', () => {
-  expect(moduleDefaultCjs).toHaveProperty('default')
-  expect(moduleDefaultCjs.default).toHaveProperty('a')
-  expect(moduleDefaultCjs).not.toHaveProperty('a')
+// don't run with threads disabled, because we don't clean "external" cache
+describe.runIf(config.threads)('validating nested defaults in isolation', () => {
+  it.each([
+    nestedDefaultCjs,
+    nestedDefaultExternalCjs,
+  ])('nested default should stay, because environment is node', (mod) => {
+    expect(mod).toHaveProperty('default')
+    expect(mod.default).toHaveProperty('default')
+    expect(mod.default.default.a).toBe('a')
+    expect(mod.default.default.b).toBe('b')
+  })
+
+  it('don\'t interop external module.exports, because environment is node', () => {
+    expect(moduleDefaultCjs).toHaveProperty('default')
+    expect(moduleDefaultCjs.default).toHaveProperty('a')
+    expect(moduleDefaultCjs).not.toHaveProperty('a')
+  })
 })
 
 it('should work when using module.exports cjs', () => {
