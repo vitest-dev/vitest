@@ -163,10 +163,10 @@ export class ViteNodeRunner {
   }
 
   /** @internal */
-  async cachedRequest(rawId: string, url: string, callstack: string[]) {
+  async cachedRequest(rawId: string, fsPath: string, callstack: string[]) {
     const importee = callstack[callstack.length - 1]
 
-    const mod = this.moduleCache.get(url)
+    const mod = this.moduleCache.get(fsPath)
 
     if (!mod.importers)
       mod.importers = new Set()
@@ -174,14 +174,14 @@ export class ViteNodeRunner {
       mod.importers.add(importee)
 
     // the callstack reference itself circularly
-    if (callstack.includes(url) && mod.exports)
+    if (callstack.includes(fsPath) && mod.exports)
       return mod.exports
 
     // cached module
     if (mod.promise)
       return mod.promise
 
-    const promise = this.directRequest(rawId, url, callstack)
+    const promise = this.directRequest(rawId, fsPath, callstack)
     Object.assign(mod, { promise, evaluated: false })
 
     try {
@@ -192,40 +192,40 @@ export class ViteNodeRunner {
     }
   }
 
-  async resolveUrl(url: string, importee?: string): Promise<string> {
-    if (isInternalRequest(url))
-      return url
+  async resolveUrl(id: string, importee?: string): Promise<string> {
+    if (isInternalRequest(id))
+      return id
     // we don't pass down importee here, because otherwise Vite doesn't resolve it correctly
-    if (importee && url.startsWith(VALID_ID_PREFIX))
+    if (importee && id.startsWith(VALID_ID_PREFIX))
       importee = undefined
-    url = normalizeRequestId(url, this.options.base)
+    id = normalizeRequestId(id, this.options.base)
     if (!this.options.resolveId)
-      return toFilePath(url, this.root)
-    const resolved = await this.options.resolveId(url, importee)
+      return toFilePath(id, this.root)
+    const resolved = await this.options.resolveId(id, importee)
     return resolved
       ? normalizeRequestId(resolved.id, this.options.base)
-      : url
+      : id
   }
 
   /** @internal */
-  async dependencyRequest(rawId: string, url: string, callstack: string[]) {
+  async dependencyRequest(rawId: string, fsPath: string, callstack: string[]) {
     const getStack = () => {
-      return `stack:\n${[...callstack, url].reverse().map(p => `- ${p}`).join('\n')}`
+      return `stack:\n${[...callstack, fsPath].reverse().map(p => `- ${p}`).join('\n')}`
     }
 
     let debugTimer: any
     if (this.debug)
-      debugTimer = setTimeout(() => console.warn(() => `module ${url} takes over 2s to load.\n${getStack()}`), 2000)
+      debugTimer = setTimeout(() => console.warn(() => `module ${fsPath} takes over 2s to load.\n${getStack()}`), 2000)
 
     try {
-      if (callstack.includes(url)) {
-        const depExports = this.moduleCache.get(url)?.exports
+      if (callstack.includes(fsPath)) {
+        const depExports = this.moduleCache.get(fsPath)?.exports
         if (depExports)
           return depExports
         throw new Error(`[vite-node] Failed to resolve circular dependency, ${getStack()}`)
       }
 
-      return await this.cachedRequest(rawId, url, callstack)
+      return await this.cachedRequest(rawId, fsPath, callstack)
     }
     finally {
       if (debugTimer)
@@ -346,11 +346,10 @@ export class ViteNodeRunner {
     // add 'use strict' since ESM enables it by default
     const codeDefinition = `'use strict';async (${Object.keys(context).join(',')})=>{{`
     const code = `${codeDefinition}${transformed}\n}}`
-    // console.log(codeDefinition.length)
     const fn = vm.runInThisContext(code, {
       filename: __filename,
       lineOffset: 0,
-      // columnOffset: -codeDefinition.length,
+      columnOffset: -codeDefinition.length,
     })
 
     await fn(...Object.values(context))
