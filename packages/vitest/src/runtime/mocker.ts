@@ -1,9 +1,8 @@
 import { existsSync, readdirSync } from 'fs'
 import { isNodeBuiltin } from 'mlly'
 import { basename, dirname, extname, isAbsolute, join, resolve } from 'pathe'
-import { normalizeModuleId, normalizeRequestId } from 'vite-node/utils'
 import c from 'picocolors'
-import { getAllMockableProperties, getType, getWorkerState, mergeSlashes } from '../utils'
+import { getAllMockableProperties, getType, getWorkerState } from '../utils'
 import { distDir } from '../constants'
 import type { PendingSuiteMock } from '../types/mocker'
 import type { VitestRunner } from './execute'
@@ -78,25 +77,25 @@ export class VitestMocker {
   }
 
   private async resolvePath(rawId: string, importer: string) {
-    const [id, path] = await this.runner.resolveUrl(rawId, importer)
+    const [id, fsPath] = await this.runner.resolveUrl(rawId, importer)
     // external is node_module or unresolved module
     // for example, some people mock "vscode" and don't have it installed
-    const external = !isAbsolute(path) || path.includes('/node_modules/') ? rawId : null
+    const external = !isAbsolute(fsPath) || fsPath.includes('/node_modules/') ? rawId : null
 
     return {
       id,
-      path: normalizeRequestId(path),
+      fsPath,
       external,
     }
   }
 
   private async resolveMocks() {
     await Promise.all(VitestMocker.pendingIds.map(async (mock) => {
-      const { path, external } = await this.resolvePath(mock.id, mock.importer)
+      const { fsPath, external } = await this.resolvePath(mock.id, mock.importer)
       if (mock.type === 'unmock')
-        this.unmockPath(path)
+        this.unmockPath(fsPath)
       if (mock.type === 'mock')
-        this.mockPath(mock.id, path, external, mock.factory)
+        this.mockPath(mock.id, fsPath, external, mock.factory)
     }))
 
     VitestMocker.pendingIds = []
@@ -113,17 +112,17 @@ export class VitestMocker {
     catch (err) {
       const vitestError = new Error(
         '[vitest] There was an error, when mocking a module. '
-      + 'If you are using vi.mock, make sure you are not using top level variables inside, since this call is hoisted. '
+      + 'If you are using "vi.mock" factory, make sure there are no top level variables inside, since this call is hoisted to top of the file. '
       + 'Read more: https://vitest.dev/api/#vi-mock')
       vitestError.cause = err
       throw vitestError
     }
 
-    if (exports === null || typeof exports !== 'object')
-      throw new Error('[vitest] vi.mock(path: string, factory?: () => unknown) is not returning an object. Did you mean to return an object with a "default" key?')
-
-    const filepath = dep.slice('mock:'.length)
+    const filepath = dep.slice(5)
     const mockpath = this.resolveCache.get(this.getSuiteFilepath())?.[filepath] || filepath
+
+    if (exports === null || typeof exports !== 'object')
+      throw new Error(`[vitest] vi.mock("${mockpath}", factory?: () => unknown) is not returning an object. Did you mean to return an object with a "default" key?`)
 
     const moduleExports = new Proxy(exports, {
       get(target, prop) {
@@ -143,7 +142,7 @@ export class VitestMocker {
   const actual = await vi.importActual("${mockpath}")
   return {
     ...actual,
-    // your mock
+    // your mocked methods
   },
 })`)}\n`,
           )
@@ -167,18 +166,11 @@ export class VitestMocker {
   }
 
   public normalizePath(path: string) {
-    return normalizeModuleId(path)
-  }
-
-  public getFsPath(path: string, external: string | null) {
-    if (external)
-      return mergeSlashes(`/@fs/${path}`)
-
-    return normalizeRequestId(path, this.base)
+    return this.moduleCache.normalizePath(path)
   }
 
   public resolveMockPath(mockPath: string, external: string | null) {
-    const path = normalizeRequestId(external || mockPath)
+    const path = external || mockPath
 
     // it's a node_module alias
     // all mocks should be inside <root>/__mocks__
@@ -326,27 +318,27 @@ export class VitestMocker {
   }
 
   public async importActual<T>(rawId: string, importee: string): Promise<T> {
-    const { id, path } = await this.resolvePath(rawId, importee)
-    const result = await this.runner.cachedRequest(id, path, [importee])
+    const { id, fsPath } = await this.resolvePath(rawId, importee)
+    const result = await this.runner.cachedRequest(id, fsPath, [importee])
     return result as T
   }
 
   public async importMock(rawId: string, importee: string): Promise<any> {
-    const { id, path, external } = await this.resolvePath(rawId, importee)
+    const { id, fsPath, external } = await this.resolvePath(rawId, importee)
 
-    const normalizedId = this.normalizePath(path)
+    const normalizedId = this.normalizePath(fsPath)
     let mock = this.getDependencyMock(normalizedId)
 
     if (mock === undefined)
-      mock = this.resolveMockPath(path, external)
+      mock = this.resolveMockPath(fsPath, external)
 
     if (mock === null) {
-      const mod = await this.runner.cachedRequest(id, path, [importee])
+      const mod = await this.runner.cachedRequest(id, fsPath, [importee])
       return this.mockObject(mod)
     }
 
     if (typeof mock === 'function')
-      return this.callFunctionMock(path, mock)
+      return this.callFunctionMock(fsPath, mock)
     return this.runner.dependencyRequest(mock, mock, [importee])
   }
 
