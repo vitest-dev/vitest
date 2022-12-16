@@ -33,7 +33,7 @@
     "build:report": "vite build -c vite.report.config.ts",
     "build:node": "rollup -c",
     "dev:client": "vite",
-    "dev:report": "vite  -c vite.report.config.ts",
+    "dev:report": "vite -c vite.report.config.ts",
     "dev": "rollup -c --watch --watch.include=node",
     "dev:ui": "run-p dev dev:client",
     "dev:ui-report": "run-p dev dev:report",

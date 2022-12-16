@@ -1,6 +1,7 @@
 import { existsSync, promises as fs } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { dirname, relative, resolve } from 'pathe'
+import { basename, dirname, relative, resolve } from 'pathe'
+import c from 'picocolors'
 import fg from 'fast-glob'
 import { stringify } from 'flatted'
 import { getOutputFile } from '../../vitest/src/utils/config-helpers'
@@ -41,38 +42,35 @@ export default class HTMLReporter implements Reporter {
     await this.writeReport(stringify(result))
   }
 
-  /**
-   * Writes the report to an output file
-   * @param report
-   */
   async writeReport(report: string) {
-    const outputFile = getOutputFile(this.ctx.config, 'html') || 'html/html.meta.json'
+    const htmlFile = getOutputFile(this.ctx.config, 'html') || 'html/index.html'
+    const htmlFileName = basename(htmlFile)
+    const htmlDir = resolve(this.ctx.config.root, dirname(htmlFile))
 
-    const reportFile = resolve(this.ctx.config.root, outputFile)
+    const metaFile = resolve(htmlDir, 'html.meta.json')
 
-    const outputDirectory = dirname(reportFile)
-    if (!existsSync(outputDirectory))
-      await fs.mkdir(resolve(outputDirectory, 'assets'), { recursive: true })
+    if (!existsSync(htmlDir))
+      await fs.mkdir(resolve(htmlDir, 'assets'), { recursive: true })
 
-    await fs.writeFile(reportFile, report, 'utf-8')
+    await fs.writeFile(metaFile, report, 'utf-8')
     const ui = resolve(distDir, 'report')
     // copy ui
     const files = fg.sync('**/*', { cwd: ui })
     await Promise.all(files.map(async (f) => {
       if (f === 'index.html') {
         const html = await fs.readFile(resolve(ui, f), 'utf-8')
-        const filePath = relative(outputDirectory, reportFile)
+        const filePath = relative(htmlDir, metaFile)
         await fs.writeFile(
-          resolve(outputDirectory, f),
+          resolve(htmlDir, htmlFileName),
           html.replace('<!-- !LOAD_METADATA! -->', `<script>window.METADATA_PATH="${filePath}"</script>`),
         )
       }
       else {
-        await fs.copyFile(resolve(ui, f), resolve(outputDirectory, f))
+        await fs.copyFile(resolve(ui, f), resolve(htmlDir, f))
       }
     }))
 
-    this.ctx.logger.log('HTML report is generate!')
-    this.ctx.logger.log(`You can open the ${resolve(outputDirectory, 'index.html')} to see the test result.`)
+    this.ctx.logger.log(`${c.bold(c.inverse(c.magenta(' HTML ')))} ${c.magenta('Report is generated')}`)
+    this.ctx.logger.log(`${c.dim('       You can run ')}${c.bold(`npx vite preview --outDir ${relative(this.ctx.config.root, htmlDir)}`)}${c.dim(' to see the test results.')}`)
   }
 }
