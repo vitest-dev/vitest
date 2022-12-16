@@ -77,7 +77,7 @@ export function createWorkerConstructor(options?: DefineWorkerOptions): typeof W
 
         runner.executeFile(fsPath).then(() => {
           // worker should be new every time, invalidate its sub dependency
-          runnerOptions.moduleCache.invalidateSubDepTree([fsPath, `mock:${fsPath}`])
+          runnerOptions.moduleCache.invalidateSubDepTree([fsPath, runner.mocker.getMockPath(fsPath)])
           const q = this._vw_messageQueue
           this._vw_messageQueue = null
           if (q)

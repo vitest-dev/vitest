@@ -112,7 +112,7 @@ export function createSharedWorkerConstructor(): typeof SharedWorker {
 
         runner.executeFile(fsPath).then(() => {
           // worker should be new every time, invalidate its sub dependency
-          runnerOptions.moduleCache.invalidateSubDepTree([fsPath, `mock:${fsPath}`])
+          runnerOptions.moduleCache.invalidateSubDepTree([fsPath, runner.mocker.getMockPath(fsPath)])
           this._vw_workerTarget.dispatchEvent(
             new MessageEvent('connect', {
               ports: [this._vw_workerPort],

@@ -40,7 +40,7 @@ export default defineConfig({
 })
 ```
 
-You can also import `defineWebWorkers` from `@vitest/web-worker/pure` to defined workers, whenever you need:
+You can also import `defineWebWorkers` from `@vitest/web-worker/pure` to define workers, whenever you need:
 
 ```js
 import { defineWebWorkers } from '@vitest/web-worker/pure'
