@@ -278,7 +278,7 @@ export class ViteNodeRunner {
       set: (_, p, value) => {
         // treat "module.exports =" the same as "exports.default =" to not have nested "default.default",
         // so "exports.default" becomes the actual module
-        if (p === 'default' && this.shouldInterop(url, { default: value })) {
+        if (p === 'default' && this.shouldInterop(modulePath, { default: value })) {
           exportAll(cjsExports, value)
           exports.default = value
           return true
