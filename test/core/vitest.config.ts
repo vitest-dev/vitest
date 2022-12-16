@@ -60,7 +60,7 @@ export default defineConfig({
       seed: 101,
     },
     deps: {
-      external: ['tinyspy'],
+      external: ['tinyspy', /src\/external/],
     },
     alias: [
       {

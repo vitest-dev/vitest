@@ -2,7 +2,7 @@ import { ViteNodeRunner } from 'vite-node/client'
 import type { ViteNodeRunnerOptions } from 'vite-node'
 import { normalizePath } from 'vite'
 import type { MockMap } from '../types/mocker'
-import { getWorkerState } from '../utils'
+import { getCurrentEnvironment, getWorkerState } from '../utils'
 import { VitestMocker } from './mocker'
 
 export interface ExecuteOptions extends ViteNodeRunnerOptions {
@@ -59,5 +59,9 @@ export class VitestRunner extends ViteNodeRunner {
     return Object.assign(context, {
       __vitest_mocker__: this.mocker,
     })
+  }
+
+  shouldInterop(path: string, mod: any) {
+    return this.options.interopDefault ?? (getCurrentEnvironment() !== 'node' && super.shouldInterop(path, mod))
   }
 }
