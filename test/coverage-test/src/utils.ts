@@ -22,3 +22,8 @@ export function run() {
   // this should not be covered
   divide(1, 1)
 }
+
+/* istanbul ignore next -- @preserve */
+export function ignoredFunction() {
+  return 'This function is excluded from istanbul coverage'
+}

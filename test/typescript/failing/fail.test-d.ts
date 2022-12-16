@@ -13,4 +13,3 @@ describe('nested suite', () => {
 
   expectTypeOf(1).toBeVoid()
 })
-

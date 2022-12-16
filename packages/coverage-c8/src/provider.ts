@@ -58,11 +58,13 @@ export class C8CoverageProvider implements CoverageProvider {
         if (!map)
           return
 
-        const url = _url.pathToFileURL(file.split('?')[0]).href
+        const filepath = file.split('?')[0]
+
+        const url = _url.pathToFileURL(filepath).href
 
         let code: string | undefined
         try {
-          code = (await fs.readFile(file)).toString()
+          code = (await fs.readFile(filepath)).toString()
         }
         catch { }
 
@@ -83,7 +85,7 @@ export class C8CoverageProvider implements CoverageProvider {
     // This is a magic number. It corresponds to the amount of code
     // that we add in packages/vite-node/src/client.ts:114 (vm.runInThisContext)
     // TODO: Include our transformations in sourcemaps
-    const offset = 224
+    const offset = 203
 
     report._getSourceMap = (coverage: Profiler.ScriptCoverage) => {
       const path = _url.pathToFileURL(coverage.url.split('?')[0]).href

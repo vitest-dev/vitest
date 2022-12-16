@@ -1,8 +1,6 @@
 import { fileURLToPath, pathToFileURL } from 'url'
 import { existsSync } from 'fs'
-import { relative, resolve } from 'pathe'
-import type { TransformResult } from 'vite'
-import { isNodeBuiltin } from 'mlly'
+import { resolve } from 'pathe'
 import type { Arrayable, Nullable } from './types'
 
 export const isWindows = process.platform === 'win32'
@@ -14,6 +12,8 @@ export function slash(str: string) {
 export function mergeSlashes(str: string) {
   return str.replace(/\/\//g, '/')
 }
+
+export const VALID_ID_PREFIX = '/@id/'
 
 export function normalizeRequestId(id: string, base?: string): string {
   if (base && id.startsWith(base))
@@ -35,34 +35,26 @@ export function normalizeRequestId(id: string, base?: string): string {
     .replace(/\?+$/, '') // remove end query mark
 }
 
+export const queryRE = /\?.*$/s
+export const hashRE = /#.*$/s
+
+export const cleanUrl = (url: string): string =>
+  url.replace(hashRE, '').replace(queryRE, '')
+
+export const isInternalRequest = (id: string): boolean => {
+  return id.startsWith('/@vite/')
+}
+
 export function normalizeModuleId(id: string) {
   return id
     .replace(/\\/g, '/')
-    .replace(/^\/@fs\//, '/')
+    .replace(/^\/@fs\//, isWindows ? '' : '/')
     .replace(/^file:\//, '/')
     .replace(/^\/+/, '/')
 }
 
 export function isPrimitive(v: any) {
   return v !== Object(v)
-}
-
-export function pathFromRoot(root: string, filename: string) {
-  if (isNodeBuiltin(filename))
-    return filename
-
-  // don't replace with "/" on windows, "/C:/foo" is not a valid path
-  filename = filename.replace(/^\/@fs\//, isWindows ? '' : '/')
-
-  if (!filename.startsWith(root))
-    return filename
-
-  const relativePath = relative(root, filename)
-
-  const segments = relativePath.split('/')
-  const startIndex = segments.findIndex(segment => segment !== '..' && segment !== '.')
-
-  return `/${segments.slice(startIndex).join('/')}`
 }
 
 export function toFilePath(id: string, root: string): string {
@@ -86,20 +78,6 @@ export function toFilePath(id: string, root: string): string {
   return isWindows && absolute.startsWith('/')
     ? slash(fileURLToPath(pathToFileURL(absolute.slice(1)).href))
     : absolute
-}
-
-let SOURCEMAPPING_URL = 'sourceMa'
-SOURCEMAPPING_URL += 'ppingURL'
-
-export async function withInlineSourcemap(result: TransformResult) {
-  const { code, map } = result
-
-  if (code.includes(`${SOURCEMAPPING_URL}=`))
-    return result
-  if (map)
-    result.code = `${code}\n\n//# ${SOURCEMAPPING_URL}=data:application/json;charset=utf-8;base64,${Buffer.from(JSON.stringify(map), 'utf-8').toString('base64')}\n`
-
-  return result
 }
 
 /**

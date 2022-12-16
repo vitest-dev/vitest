@@ -17,7 +17,9 @@ export function interpretTaskModes(suite: Suite, namePattern?: string | RegExp, 
           t.mode = 'run'
         }
       }
-      else if (t.mode === 'run' && !includeTask) { t.mode = 'skip' }
+      else if (t.mode === 'run' && !includeTask) {
+        t.mode = 'skip'
+      }
       else if (t.mode === 'only') {
         checkAllowOnly(t, allowOnly)
         t.mode = 'run'

@@ -58,9 +58,13 @@ function escapeXML(value: any): string {
     true)
 }
 
+function executionTime(durationMS: number) {
+  return (durationMS / 1000).toLocaleString('en-US', { useGrouping: false, maximumFractionDigits: 10 })
+}
+
 export function getDuration(task: Task): string | undefined {
   const duration = task.result?.duration ?? 0
-  return (duration / 1000).toLocaleString(undefined, { useGrouping: false, maximumFractionDigits: 10 })
+  return executionTime(duration)
 }
 
 export class JUnitReporter implements Reporter {
@@ -68,6 +72,7 @@ export class JUnitReporter implements Reporter {
   private reportFile?: string
   private baseLog!: (text: string) => Promise<void>
   private logger!: IndentedLogger<Promise<void>>
+  private _timeStart = new Date()
 
   async onInit(ctx: Vitest): Promise<void> {
     this.ctx = ctx
@@ -89,6 +94,7 @@ export class JUnitReporter implements Reporter {
       this.baseLog = async (text: string) => this.ctx.logger.log(text)
     }
 
+    this._timeStart = new Date()
     this.logger = new IndentedLogger(this.baseLog)
   }
 
@@ -159,7 +165,7 @@ export class JUnitReporter implements Reporter {
         await this.writeLogs(task, 'err')
 
         if (task.mode === 'skip' || task.mode === 'todo')
-          this.logger.log('<skipped/>')
+          await this.logger.log('<skipped/>')
 
         if (task.result?.state === 'fail') {
           const error = task.result.error
@@ -205,7 +211,19 @@ export class JUnitReporter implements Reporter {
         }
       })
 
-    await this.writeElement('testsuites', {}, async () => {
+    const stats = transformed.reduce((stats, file) => {
+      stats.tests += file.tasks.length
+      stats.failures += file.stats.failures
+      return stats
+    }, {
+      name: process.env.VITEST_JUNIT_SUITE_NAME || 'vitest tests',
+      tests: 0,
+      failures: 0,
+      errors: 0, // we cannot detect those
+      time: executionTime(new Date().getTime() - this._timeStart.getTime()),
+    })
+
+    await this.writeElement('testsuites', stats, async () => {
       for (const file of transformed) {
         await this.writeElement('testsuite', {
           name: file.name,

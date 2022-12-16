@@ -169,3 +169,50 @@ test.each([
   expect(value1).toBeNull()
   expect(value2).toBeNull()
 })
+
+describe.each`
+a             | b      | expected
+${1}          | ${1}   | ${2}
+${'a'}        | ${'b'} | ${'ab'}
+${[]}         | ${'b'} | ${'b'}
+${{}}         | ${'b'} | ${'[object Object]b'}
+${{ asd: 1 }} | ${'b'} | ${'[object Object]b'}
+`('describe template string add($a, $b)', ({ a, b, expected }) => {
+  test(`returns ${expected}`, () => {
+    expect(a + b).toBe(expected)
+  })
+})
+
+test.each`
+a               | b      | expected
+${1}            | ${1}   | ${2}
+${'a'}          | ${'b'} | ${'ab'}
+${[]}           | ${'b'} | ${'b'}
+${{}}           | ${'b'} | ${'[object Object]b'}
+${{ asd: 1 }}   | ${'b'} | ${'[object Object]b'}
+`('returns $expected when $a is added $b', ({ a, b, expected }) => {
+  expect(a + b).toBe(expected)
+})
+
+test.each`
+a               | b      | expected
+${{ val: 1 }}   | ${'b'} | ${'1b'}
+${{ val: 2 }}   | ${'b'} | ${'2b'}
+${{ val: 3 }}   | ${'b'} | ${'3b'}
+`('returns $expected when $a.val is added $b', ({ a, b, expected }) => {
+  expect(a.val + b).toBe(expected)
+})
+
+test.each`
+a       | b       | expected
+${true} | ${true} | ${true}
+`('($a && $b) -> $expected', ({ a, b, expected }) => {
+  expect(a && b).toBe(expected)
+})
+
+test.each`
+a             | b              | expected
+${{ val: 1 }} | ${{ val: 2 }}} | ${3}
+`('($a && $b) -> $expected', ({ a, b, expected }) => {
+  expect(a.val + b.val).toBe(expected)
+})

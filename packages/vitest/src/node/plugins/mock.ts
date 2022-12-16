@@ -2,7 +2,7 @@ import type { Plugin } from 'vite'
 import MagicString from 'magic-string'
 import { getCallLastIndex } from '../../utils'
 
-const hoistRegexp = /^ *\b((?:vitest|vi)\s*.\s*(mock|unmock)\(["`'\s]+(.*[@\w_-]+)["`'\s]+)[),]{1};?/gm
+const hoistRegexp = /^[ \t]*\b((?:vitest|vi)\s*.\s*(mock|unmock)\(["`'\s]+(.*[@\w_-]+)["`'\s]+)[),]{1};?/gm
 const vitestRegexp = /import {[^}]*}.*(?=["'`]vitest["`']).*/gm
 
 export function hoistMocks(code: string) {

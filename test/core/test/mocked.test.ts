@@ -155,7 +155,9 @@ describe('mocked function which fails on toReturnWith', () => {
   })
 
   test('oject type', () => {
-    const mock = vi.fn(() => { return { a: '1' } })
+    const mock = vi.fn(() => {
+      return { a: '1' }
+    })
     mock()
     mock()
     mock()

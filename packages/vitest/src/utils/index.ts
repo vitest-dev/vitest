@@ -14,6 +14,7 @@ export * from './tasks'
 export * from './base'
 export * from './global'
 export * from './timers'
+export * from './import'
 export * from './env'
 
 export const isWindows = isNode && process.platform === 'win32'
@@ -48,6 +49,7 @@ export function resetModules(modules: ModuleCacheMap, resetMocks = false) {
   const skipPaths = [
     // Vitest
     /\/vitest\/dist\//,
+    /\/vite-node\/dist\//,
     // yarn's .store folder
     /vitest-virtual-\w+\/dist/,
     // cnpm
@@ -179,4 +181,16 @@ export function createDefer<T>(): DeferPromise<T> {
   p.resolve = resolve!
   p.reject = reject!
   return p
+}
+
+export function objectAttr(source: any, path: string, defaultValue = undefined) {
+  // a[3].b -> a.3.b
+  const paths = path.replace(/\[(\d+)\]/g, '.$1').split('.')
+  let result = source
+  for (const p of paths) {
+    result = Object(result)[p]
+    if (result === undefined)
+      return defaultValue
+  }
+  return result
 }

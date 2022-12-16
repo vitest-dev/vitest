@@ -72,4 +72,3 @@ describe.concurrent('custom reporters', () => {
     expect(stdout).includes('hello from custom reporter')
   }, TIMEOUT)
 })
-

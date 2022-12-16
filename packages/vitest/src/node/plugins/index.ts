@@ -90,6 +90,12 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
           open = '/'
 
         const config: ViteConfig = {
+          esbuild: {
+            sourcemap: 'external',
+
+            // Enables using ignore hint for coverage providers with @preserve keyword
+            legalComments: 'inline',
+          },
           resolve: {
             // by default Vite resolves `module` field, which not always a native ESM module
             // setting this option can bypass that and fallback to cjs version

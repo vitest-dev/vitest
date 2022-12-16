@@ -5,7 +5,7 @@
     "test": "vitest",
     "coverage": "vitest run --coverage",
     "dev": "vite-node --watch ./src/*.ts",
-    "debug:dev": "cross-env DEBUG=vite-node:* node --inspect-brk ../../packages/vite-node/dist/cli.cjs --watch ./src/*",
+    "debug:dev": "DEBUG=vite-node:* node --inspect-brk ../../packages/vite-node/dist/cli.cjs --watch ./src/*",
     "debug": "node --inspect-brk ../../packages/vite-node/dist/cli.cjs"
   },
   "devDependencies": {

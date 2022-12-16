@@ -1,11 +1,14 @@
 import { createRequire } from 'module'
+// we need native dirname, because windows __dirname has \\
+// eslint-disable-next-line no-restricted-imports
+import { dirname } from 'path'
 import { fileURLToPath, pathToFileURL } from 'url'
 import vm from 'vm'
-import { dirname, extname, isAbsolute, resolve } from 'pathe'
-import { isNodeBuiltin } from 'mlly'
+import { resolve } from 'pathe'
 import createDebug from 'debug'
-import { isPrimitive, mergeSlashes, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
+import { VALID_ID_PREFIX, cleanUrl, isInternalRequest, isPrimitive, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
 import type { HotContext, ModuleCache, ViteNodeRunnerOptions } from './types'
+import { extractSourceMap } from './source-map'
 
 const debugExecute = createDebug('vite-node:client:execute')
 const debugNative = createDebug('vite-node:client:native')
@@ -114,13 +117,11 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
    * Return parsed source map based on inlined source map of the module
    */
   getSourceMap(id: string) {
-    const fsPath = this.normalizePath(id)
-    const cache = this.get(fsPath)
+    const cache = this.get(id)
     if (cache.map)
       return cache.map
-    const mapString = cache?.code?.match(/\/\/# sourceMappingURL=data:application\/json;charset=utf-8;base64,(.+)/)?.[1]
-    if (mapString) {
-      const map = JSON.parse(Buffer.from(mapString, 'base64').toString('utf-8'))
+    const map = cache.code && extractSourceMap(cache.code)
+    if (map) {
       cache.map = map
       return map
     }
@@ -146,11 +147,13 @@ export class ViteNodeRunner {
   }
 
   async executeFile(file: string) {
-    return await this.cachedRequest(`/@fs/${slash(resolve(file))}`, [])
+    const url = `/@fs/${slash(resolve(file))}`
+    return await this.cachedRequest(url, url, [])
   }
 
-  async executeId(id: string) {
-    return await this.cachedRequest(id, [])
+  async executeId(rawId: string) {
+    const [id, url] = await this.resolveUrl(rawId)
+    return await this.cachedRequest(id, url, [])
   }
 
   getSourceMap(id: string) {
@@ -158,12 +161,10 @@ export class ViteNodeRunner {
   }
 
   /** @internal */
-  async cachedRequest(rawId: string, callstack: string[]) {
-    const id = normalizeRequestId(rawId, this.options.base)
-    const fsPath = toFilePath(id, this.root)
+  async cachedRequest(id: string, fsPath: string, callstack: string[]) {
+    const importee = callstack[callstack.length - 1]
 
     const mod = this.moduleCache.get(fsPath)
-    const importee = callstack[callstack.length - 1]
 
     if (!mod.importers)
       mod.importers = new Set()
@@ -179,63 +180,71 @@ export class ViteNodeRunner {
       return mod.promise
 
     const promise = this.directRequest(id, fsPath, callstack)
-    Object.assign(mod, { promise })
+    Object.assign(mod, { promise, evaluated: false })
 
-    return await promise
+    try {
+      return await promise
+    }
+    finally {
+      mod.evaluated = true
+    }
+  }
+
+  async resolveUrl(id: string, importee?: string): Promise<[url: string, fsPath: string]> {
+    if (isInternalRequest(id))
+      return [id, id]
+    // we don't pass down importee here, because otherwise Vite doesn't resolve it correctly
+    if (importee && id.startsWith(VALID_ID_PREFIX))
+      importee = undefined
+    id = normalizeRequestId(id, this.options.base)
+    if (!this.options.resolveId)
+      return [id, toFilePath(id, this.root)]
+    const resolved = await this.options.resolveId(id, importee)
+    const resolvedId = resolved
+      ? normalizeRequestId(resolved.id, this.options.base)
+      : id
+    // to be compatible with dependencies that do not resolve id
+    const fsPath = resolved ? resolvedId : toFilePath(id, this.root)
+    return [resolvedId, fsPath]
+  }
+
+  /** @internal */
+  async dependencyRequest(id: string, fsPath: string, callstack: string[]) {
+    const getStack = () => {
+      return `stack:\n${[...callstack, fsPath].reverse().map(p => `- ${p}`).join('\n')}`
+    }
+
+    let debugTimer: any
+    if (this.debug)
+      debugTimer = setTimeout(() => console.warn(() => `module ${fsPath} takes over 2s to load.\n${getStack()}`), 2000)
+
+    try {
+      if (callstack.includes(fsPath)) {
+        const depExports = this.moduleCache.get(fsPath)?.exports
+        if (depExports)
+          return depExports
+        throw new Error(`[vite-node] Failed to resolve circular dependency, ${getStack()}`)
+      }
+
+      return await this.cachedRequest(id, fsPath, callstack)
+    }
+    finally {
+      if (debugTimer)
+        clearTimeout(debugTimer)
+    }
   }
 
   /** @internal */
   async directRequest(id: string, fsPath: string, _callstack: string[]) {
-    const callstack = [..._callstack, fsPath]
+    const moduleId = normalizeModuleId(fsPath)
+    const callstack = [..._callstack, moduleId]
 
     const mod = this.moduleCache.get(fsPath)
 
     const request = async (dep: string) => {
-      const depFsPath = toFilePath(normalizeRequestId(dep, this.options.base), this.root)
-      const getStack = () => {
-        return `stack:\n${[...callstack, depFsPath].reverse().map(p => `- ${p}`).join('\n')}`
-      }
-
-      let debugTimer: any
-      if (this.debug)
-        debugTimer = setTimeout(() => console.warn(() => `module ${depFsPath} takes over 2s to load.\n${getStack()}`), 2000)
-
-      try {
-        if (callstack.includes(depFsPath)) {
-          const depExports = this.moduleCache.get(depFsPath)?.exports
-          if (depExports)
-            return depExports
-          throw new Error(`[vite-node] Failed to resolve circular dependency, ${getStack()}`)
-        }
-
-        return await this.cachedRequest(dep, callstack)
-      }
-      finally {
-        if (debugTimer)
-          clearTimeout(debugTimer)
-      }
+      const [id, depFsPath] = await this.resolveUrl(dep, fsPath)
+      return this.dependencyRequest(id, depFsPath, callstack)
     }
-
-    Object.defineProperty(request, 'callstack', { get: () => callstack })
-
-    const resolveId = async (dep: string, callstackPosition = 1) => {
-      // probably means it was passed as variable
-      // and wasn't transformed by Vite
-      // or some dependency name was passed
-      // runner.executeFile('@scope/name')
-      // runner.executeFile(myDynamicName)
-      if (this.options.resolveId && this.shouldResolveId(dep)) {
-        let importer = callstack[callstack.length - callstackPosition]
-        if (importer && importer.startsWith('mock:'))
-          importer = importer.slice(5)
-        const { id } = await this.options.resolveId(dep, importer) || {}
-        dep = id && isAbsolute(id) ? mergeSlashes(`/@fs/${id}`) : id || dep
-      }
-
-      return dep
-    }
-
-    id = await resolveId(id, 2)
 
     const requestStubs = this.options.requestStubs || DEFAULT_REQUEST_STUBS
     if (id in requestStubs)
@@ -243,6 +252,7 @@ export class ViteNodeRunner {
 
     // eslint-disable-next-line prefer-const
     let { code: transformed, externalize } = await this.options.fetchModule(id)
+
     if (externalize) {
       debugNative(externalize)
       const exports = await this.interopedImport(externalize)
@@ -251,29 +261,35 @@ export class ViteNodeRunner {
     }
 
     if (transformed == null)
-      throw new Error(`[vite-node] Failed to load ${id}`)
+      throw new Error(`[vite-node] Failed to load "${id}" imported from ${callstack[callstack.length - 2]}`)
 
+    const modulePath = cleanUrl(moduleId)
     // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
-    const url = pathToFileURL(fsPath).href
-    const meta = { url }
-    const exports: any = Object.create(null)
+    const href = pathToFileURL(modulePath).href
+    const meta = { url: href }
+    const exports = Object.create(null)
     Object.defineProperty(exports, Symbol.toStringTag, {
       value: 'Module',
       enumerable: false,
       configurable: false,
     })
-    // this prosxy is triggered only on exports.name and module.exports access
+    // this prosxy is triggered only on exports.{name} and module.exports access
     const cjsExports = new Proxy(exports, {
-      get(_, p, receiver) {
-        return Reflect.get(exports, p, receiver)
-      },
-      set(_, p, value) {
+      set: (_, p, value) => {
+        // treat "module.exports =" the same as "exports.default =" to not have nested "default.default",
+        // so "exports.default" becomes the actual module
+        if (p === 'default' && this.shouldInterop(modulePath, { default: value })) {
+          exportAll(cjsExports, value)
+          exports.default = value
+          return true
+        }
+
         if (!Reflect.has(exports, 'default'))
           exports.default = {}
 
         // returns undefined, when accessing named exports, if default is not an object
         // but is still present inside hasOwnKeys, this is Node behaviour for CJS
-        if (exports.default === null || typeof exports.default !== 'object') {
+        if (isPrimitive(exports.default)) {
           defineExport(exports, p, () => undefined)
           return true
         }
@@ -287,8 +303,7 @@ export class ViteNodeRunner {
     })
 
     Object.assign(mod, { code: transformed, exports })
-
-    const __filename = fileURLToPath(url)
+    const __filename = fileURLToPath(href)
     const moduleProxy = {
       set exports(value) {
         exportAll(cjsExports, value)
@@ -322,10 +337,9 @@ export class ViteNodeRunner {
       __vite_ssr_exports__: exports,
       __vite_ssr_exportAll__: (obj: any) => exportAll(exports, obj),
       __vite_ssr_import_meta__: meta,
-      __vitest_resolve_id__: resolveId,
 
       // cjs compact
-      require: createRequire(url),
+      require: createRequire(href),
       exports: cjsExports,
       module: moduleProxy,
       __filename,
@@ -342,7 +356,7 @@ export class ViteNodeRunner {
     const codeDefinition = `'use strict';async (${Object.keys(context).join(',')})=>{{`
     const code = `${codeDefinition}${transformed}\n}}`
     const fn = vm.runInThisContext(code, {
-      filename: fsPath,
+      filename: __filename,
       lineOffset: 0,
       columnOffset: -codeDefinition.length,
     })
@@ -354,13 +368,6 @@ export class ViteNodeRunner {
 
   prepareContext(context: Record<string, any>) {
     return context
-  }
-
-  shouldResolveId(dep: string) {
-    if (isNodeBuiltin(dep) || dep in (this.options.requestStubs || DEFAULT_REQUEST_STUBS) || dep.startsWith('/@vite'))
-      return false
-
-    return !isAbsolute(dep) || !extname(dep)
   }
 
   /**
@@ -379,35 +386,45 @@ export class ViteNodeRunner {
    * Import a module and interop it
    */
   async interopedImport(path: string) {
-    const mod = await import(path)
+    const importedModule = await import(path)
 
-    if (this.shouldInterop(path, mod)) {
-      const tryDefault = this.hasNestedDefault(mod)
-      return new Proxy(mod, {
-        get: proxyMethod('get', tryDefault),
-        set: proxyMethod('set', tryDefault),
-        has: proxyMethod('has', tryDefault),
-        deleteProperty: proxyMethod('deleteProperty', tryDefault),
-      })
-    }
+    if (!this.shouldInterop(path, importedModule))
+      return importedModule
 
-    return mod
-  }
+    const { mod, defaultExport } = interopModule(importedModule)
 
-  hasNestedDefault(target: any) {
-    return '__esModule' in target && target.__esModule && 'default' in target.default
+    return new Proxy(mod, {
+      get(mod, prop) {
+        if (prop === 'default')
+          return defaultExport
+        return mod[prop] ?? defaultExport?.[prop]
+      },
+      has(mod, prop) {
+        if (prop === 'default')
+          return defaultExport !== undefined
+        return prop in mod || (defaultExport && prop in defaultExport)
+      },
+    })
   }
 }
 
-function proxyMethod(name: 'get' | 'set' | 'has' | 'deleteProperty', tryDefault: boolean) {
-  return function (target: any, key: string | symbol, ...args: [any?, any?]) {
-    const result = Reflect[name](target, key, ...args)
-    if (isPrimitive(target.default))
-      return result
-    if ((tryDefault && key === 'default') || typeof result === 'undefined')
-      return Reflect[name](target.default, key, ...args)
-    return result
+function interopModule(mod: any) {
+  if (isPrimitive(mod)) {
+    return {
+      mod: { default: mod },
+      defaultExport: mod,
+    }
   }
+
+  let defaultExport = 'default' in mod ? mod.default : mod
+
+  if (!isPrimitive(defaultExport) && '__esModule' in defaultExport) {
+    mod = defaultExport
+    if ('default' in defaultExport)
+      defaultExport = defaultExport.default
+  }
+
+  return { mod, defaultExport }
 }
 
 // keep consistency with Vite on how exports are defined
@@ -425,7 +442,7 @@ function exportAll(exports: any, sourceModule: any) {
   if (exports === sourceModule)
     return
 
-  if (typeof sourceModule !== 'object' || Array.isArray(sourceModule) || !sourceModule)
+  if (isPrimitive(sourceModule) || Array.isArray(sourceModule))
     return
 
   for (const key in sourceModule) {

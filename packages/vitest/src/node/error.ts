@@ -8,8 +8,8 @@ import { lineSplitRE, parseStacktrace, posToNumber } from '../utils/source-map'
 import { F_POINTER } from '../utils/figures'
 import { stringify } from '../integrations/chai/jest-matcher-utils'
 import { TypeCheckError } from '../typecheck/typechecker'
+import { type DiffOptions, unifiedDiff } from '../utils/diff'
 import type { Vitest } from './core'
-import { type DiffOptions, unifiedDiff } from './diff'
 import { divider } from './reporters/renderers/utils'
 import type { Logger } from './logger'
 
@@ -77,7 +77,7 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
     })
   }
 
-  if (e.cause && 'name' in e.cause) {
+  if (typeof e.cause === 'object' && e.cause && 'name' in e.cause) {
     (e.cause as any).name = `Caused by: ${(e.cause as any).name}`
     await printError(e.cause, ctx, { fullStack, showCodeFrame: false })
   }

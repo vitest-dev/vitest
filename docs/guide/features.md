@@ -7,6 +7,9 @@ outline: deep
 
 <FeaturesList class="!gap-1 text-lg" />
 
+<div h-2 />
+<CourseLink href="https://vueschool.io/lessons/your-first-test?friend=vueuse">Learn how to write your first test by Video</CourseLink>
+
 ## Shared config between test, dev and build
 
 Vite's config, transformers, resolvers, and plugins. Use the same setup from your app to run the tests.

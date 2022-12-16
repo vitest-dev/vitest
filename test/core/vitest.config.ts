@@ -34,9 +34,11 @@ export default defineConfig({
   resolve: {
     alias: [
       { find: '@', replacement: resolve(__dirname, 'src') },
+      { find: '$', replacement: 'src' },
     ],
   },
   test: {
+    slowTestThreshold: 1000,
     testTimeout: 2000,
     setupFiles: [
       './test/setup.ts',
@@ -58,7 +60,7 @@ export default defineConfig({
       seed: 101,
     },
     deps: {
-      external: ['tinyspy'],
+      external: ['tinyspy', /src\/external/],
     },
     alias: [
       {

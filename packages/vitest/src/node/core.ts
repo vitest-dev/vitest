@@ -54,6 +54,7 @@ export class Vitest {
   }
 
   private _onRestartListeners: OnServerRestartHandler[] = []
+  private _onSetServer: OnServerRestartHandler[] = []
 
   async setServer(options: UserConfig, server: ViteDevServer) {
     this.unregisterWatcher?.()
@@ -115,9 +116,9 @@ export class Vitest {
     try {
       await this.cache.results.readFromCache()
     }
-    catch (err) {
-      this.logger.error(`[vitest] Error, while trying to parse cache in ${this.cache.results.getCachePath()}:`, err)
-    }
+    catch {}
+
+    await Promise.all(this._onSetServer.map(fn => fn()))
   }
 
   async initCoverageProvider() {
@@ -160,10 +161,14 @@ export class Vitest {
     checker.onParseEnd(async ({ files, sourceErrors }) => {
       this.state.collectFiles(checker.getTestFiles())
       await this.report('onCollected')
-      if (!files.length)
+      if (!files.length) {
         this.logger.printNoTestFound()
-      else
+      }
+      else {
+        if (hasFailed(files))
+          process.exitCode = 1
         await this.report('onFinished', files)
+      }
       if (sourceErrors.length && !this.config.typecheck.ignoreSourceErrors) {
         process.exitCode = 1
         await this.logger.printSourceTypeErrors(sourceErrors)
@@ -307,6 +312,8 @@ export class Vitest {
   }
 
   async runFiles(paths: string[]) {
+    paths = Array.from(new Set(paths))
+
     // previous run
     await this.runningPromise
     this.state.startCollectingPaths()
@@ -392,6 +399,9 @@ export class Vitest {
 
   private _rerunTimer: any
   private async scheduleRerun(triggerId: string) {
+    const mod = this.server.moduleGraph.getModuleById(triggerId)
+    if (mod)
+      mod.lastHMRTimestamp = Date.now()
     const currentCount = this.restartsCount
     clearTimeout(this._rerunTimer)
     await this.runningPromise
@@ -553,8 +563,9 @@ export class Vitest {
   async globTestFiles(filters: string[] = []) {
     const { include, exclude, includeSource } = this.config
 
-    const globOptions = {
+    const globOptions: fg.Options = {
       absolute: true,
+      dot: true,
       cwd: this.config.dir || this.config.root,
       ignore: exclude,
     }
@@ -606,5 +617,9 @@ export class Vitest {
 
   onServerRestart(fn: OnServerRestartHandler) {
     this._onRestartListeners.push(fn)
+  }
+
+  onAfterSetServer(fn: OnServerRestartHandler) {
+    this._onSetServer.push(fn)
   }
 }

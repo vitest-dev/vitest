@@ -11,5 +11,9 @@ export default defineConfig({
         /packages\/web-worker/,
       ],
     },
+    onConsoleLog(log) {
+      if (log.includes('Failed to load'))
+        return false
+    },
   },
 })

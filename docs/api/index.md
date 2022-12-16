@@ -196,7 +196,8 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
 :::
 
 ### test.each
-- **Type:** `(cases: ReadonlyArray<T>) => void`
+
+- **Type:** `(cases: ReadonlyArray<T>, ...args: any[]) => void`
 - **Alias:** `it.each`
 
   Use `test.each` when you need to run the same test with different variables.
@@ -241,6 +242,43 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
   // ✓ add(1, 1) -> 2
   // ✓ add(1, 2) -> 3
   // ✓ add(2, 1) -> 3
+  ```
+
+  You can also access Object attributes with `.`, if you are using objects as arguments:
+
+    ```ts
+    test.each`
+    a               | b      | expected
+    ${{ val: 1 }}   | ${'b'} | ${'1b'}
+    ${{ val: 2 }}   | ${'b'} | ${'2b'}
+    ${{ val: 3 }}   | ${'b'} | ${'3b'}
+    `('add($a.val, $b) -> $expected', ({ a, b, expected }) => {
+      expect(a.val + b).toBe(expected)
+    })
+
+    // this will return
+    // ✓ add(1, b) -> 1b
+    // ✓ add(2, b) -> 2b
+    // ✓ add(3, b) -> 3b
+    ```
+
+
+  Starting from Vitest 0.25.3, you can also use template string table.
+
+  * First row should be column names, separated by `|`;
+  * One or more subsequent rows of data supplied as template literal expressions using `${value}` syntax.
+
+  ```ts
+  test.each`
+    a               | b      | expected
+    ${1}            | ${1}   | ${2}
+    ${'a'}          | ${'b'} | ${'ab'}
+    ${[]}           | ${'b'} | ${'b'}
+    ${{}}           | ${'b'} | ${'[object Object]b'}
+    ${{ asd: 1 }}   | ${'b'} | ${'[object Object]b'}
+  `('returns $expected when $a is added $b', ({ a, b, expected }) => {
+    expect(a + b).toBe(expected)
+  })
   ```
 
   If you want to have access to `TestContext`, use `describe.each` with a single test.
@@ -547,7 +585,7 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
 
 ### describe.each
 
-- **Type:** `(cases: ReadonlyArray<T>): (name: string, fn: (...args: T[]) => void, options?: number | TestOptions) => void`
+- **Type:** `(cases: ReadonlyArray<T>, ...args: any[]): (name: string, fn: (...args: T[]) => void, options?: number | TestOptions) => void`
 
   Use `describe.each` if you have more than one test that depends on the same data.
 
@@ -567,6 +605,26 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
 
     test(`returned value not be less than ${expected}`, () => {
       expect(a + b).not.toBeLessThan(expected)
+    })
+  })
+  ```
+
+  Starting from Vitest 0.25.3, you can also use template string table.
+
+  * First row should be column names, separated by `|`;
+  * One or more subsequent rows of data supplied as template literal expressions using `${value}` syntax.
+
+  ```ts
+  describe.each`
+    a               | b      | expected
+    ${1}            | ${1}   | ${2}
+    ${'a'}          | ${'b'} | ${'ab'}
+    ${[]}           | ${'b'} | ${'b'}
+    ${{}}           | ${'b'} | ${'[object Object]b'}
+    ${{ asd: 1 }}   | ${'b'} | ${'[object Object]b'}
+  `('describe template string add($a, $b)', ({ a, b, expected }) => {
+    test(`returns ${expected}`, () => {
+      expect(a + b).toBe(expected)
     })
   })
   ```
@@ -2178,10 +2236,9 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
   ```ts
   import { expectTypeOf } from 'vitest'
 
-  expectTypeOf(42).not.toBeArray()
-  expectTypeOf([]).toBeArray()
-  expectTypeOf([1, 2]).toBeArray()
-  expectTypeOf<number[]>().toBeArray()
+  expectTypeOf(42).not.toBeString()
+  expectTypeOf('').toBeString()
+  expectTypeOf('a').toBeString()
   ```
 
 ### toBeBoolean
@@ -2635,9 +2692,133 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 
 ### vi.restoreCurrentDate
 
-- **Type**: `() => void`
+- **Type:** `() => void`
 
   Restores `Date` back to its native implementation.
+
+### vi.stubEnv
+
+- **Type:** `(name: string, value: string) => Vitest`
+- **Version:** Since Vitest 0.26.0
+
+  Changes the value of environmental variable on `process.env` and `import.meta.env`. You can restore its value by calling `vi.unstubAllEnvs`.
+
+```ts
+import { vi } from 'vitest'
+
+// `process.env.NODE_ENV` and `import.meta.env.NODE_ENV`
+// are "development" before calling "vi.stubEnv"
+
+vi.stubEnv('NODE_ENV', 'production')
+
+process.env.NODE_ENV === 'production'
+import.meta.env.NODE_ENV === 'production'
+// doesn't change other envs
+import.meta.env.MODE === 'development'
+```
+
+:::tip
+You can also change the value by simply assigning it, but you won't be able to use `vi.unstubAllEnvs` to restore previous value:
+
+```ts
+import.meta.env.MODE = 'test'
+```
+:::
+
+:::warning
+Vitest transforms all `import.meta.env` calls into `process.env`, so they can be easily changed at runtime. Node.js only supports string values as env parameters, while Vite supports several built-in envs as boolean (namely, `SSR`, `DEV`, `PROD`). To mimic Vite, set "truthy" values as env: `''` instead of `false`, and `'1'` instead of `true`.
+
+But beware that you cannot rely on `import.meta.env.DEV === false` in this case. Use `!import.meta.env.DEV`. This also affects simple assigning, not just `vi.stubEnv` method.
+:::
+
+### vi.unstubAllEnvs
+
+- **Type:** `() => Vitest`
+- **Version:** Since Vitest 0.26.0
+
+  Restores all `import.meta.env` and `process.env` values that were changed with `vi.stubEnv`. When it's called for the first time, Vitest remembers the original value and will store it, until `unstubAllEnvs` is called again.
+
+```ts
+import { vi } from 'vitest'
+
+// `process.env.NODE_ENV` and `import.meta.env.NODE_ENV`
+// are "development" before calling stubEnv
+
+vi.stubEnv('NODE_ENV', 'production')
+
+process.env.NODE_ENV === 'production'
+import.meta.env.NODE_ENV === 'production'
+
+vi.stubEnv('NODE_ENV', 'staging')
+
+process.env.NODE_ENV === 'staging'
+import.meta.env.NODE_ENV === 'staging'
+
+vi.unstubAllEnvs()
+
+// restores to the value that were stored before the first "stubEnv" call
+process.env.NODE_ENV === 'development'
+import.meta.env.NODE_ENV === 'development'
+```
+
+### vi.stubGlobal
+
+- **Type:** `(name: stirng | number | symbol, value: uknown) => Vitest`
+
+  Changes the value of global variable. You can restore its original value by calling `vi.unstubAllGlobals`.
+
+```ts
+import { vi } from 'vitest'
+
+// `innerWidth` is "0" before callling stubGlobal
+
+vi.stubGlobal('innerWidth', 100)
+
+innerWidth === 100
+globalThis.innerWidth === 100
+// if you are using jsdom or happy-dom
+window.innerWidth === 100
+```
+
+:::tip
+You can also change the value by simply assigning it to `globalThis` or `window` (if you are using `jsdom` or `happy-dom` environment), but you won't be able to use `vi.unstubAllGlobals` to restore original value:
+
+```ts
+globalThis.innerWidth = 100
+// if you are using jsdom or happy-dom
+window.innerWidth = 100
+```
+:::
+
+### vi.unstubAllGlobals
+
+- **Type:** `() => Vitest`
+- **Version:** Since Vitest 0.26.0
+
+  Restores all global values on `globalThis`/`global` (and `window`/`top`/`self`/`parent`, if you are using `jsdom` or `happy-dom` environment) that were changed with `vi.stubGlobal`. When it's called for the first time, Vitest remembers the original value and will store it, until `unstubAllGlobals` is called again.
+
+```ts
+import { vi } from 'vitest'
+
+const Mock = vi.fn()
+
+// IntersectionObserver is "undefined" before calling "stubGlobal"
+
+vi.stubGlobal('IntersectionObserver', Mock)
+
+IntersectionObserver === Mock
+global.IntersectionObserver === Mock
+globalThis.IntersectionObserver === Mock
+// if you are using jsdom or happy-dom
+window.IntersectionObserver === Mock
+
+vi.unstubAllGlobals()
+
+globalThis.IntersectionObserver === undefined
+'IntersectionObserver' in globalThis === false
+// throws ReferenceError, because it's not defined
+IntersectionObserver === undefined
+```
 
 ### vi.runAllTicks
 

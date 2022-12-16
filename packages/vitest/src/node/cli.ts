@@ -103,9 +103,15 @@ async function typecheck(cliFilters: string[] = [], options: CliOptions = {}) {
 }
 
 function normalizeOptions(argv: CliOptions): CliOptions {
-  argv.root = argv.root && normalize(argv.root)
-  argv.config = argv.config && normalize(argv.config)
-  argv.dir = argv.dir && normalize(argv.dir)
+  if (argv.root)
+    argv.root = normalize(argv.root)
+
+  if (argv.config)
+    argv.config = normalize(argv.config)
+
+  if (argv.dir)
+    argv.dir = normalize(argv.dir)
+
   return argv
 }
 

@@ -50,7 +50,7 @@ async function startViteNode(ctx: WorkerContext) {
     },
     moduleCache,
     mockMap,
-    interopDefault: config.deps.interopDefault ?? true,
+    interopDefault: config.deps.interopDefault,
     root: config.root,
     base: config.base,
   }))[0]
@@ -70,6 +70,8 @@ function init(ctx: WorkerContext) {
   process.env.VITEST_WORKER_ID = String(workerId)
   process.env.VITEST_POOL_ID = String(poolId)
 
+  // @ts-expect-error untyped global
+  globalThis.__vitest_environment__ = config.environment
   // @ts-expect-error I know what I am doing :P
   globalThis.__vitest_worker__ = {
     ctx,

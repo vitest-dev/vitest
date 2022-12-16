@@ -77,39 +77,27 @@ Also, Vitest has `Args` type as a first argument instead of `Returns`, as you ca
 
 Vitest doesn't support Jest's legacy timers.
 
-**it.each**
-
-Vitest intentionally doesn't support template literals for `it.each`. You will need to rewrite it to either an array of arguments, or array of objects:
-
-Before:
-```ts
-it.each`
-a    | b    | expected
-${1} | ${3} | ${4}
-${2} | ${2} | ${4}
-`('adds $a to $b', ({ a, b, expected }) => {
-  expect(add(a, b)).toEqual(expected)
-})
-```
-
-After:
-```ts
-it.each([
-  [1, 3, 4],
-  [2, 2, 4],
-])('adds %d to %d', (a, b, expected) => {
-  expect(add(a, b)).toEqual(expected)
-})
-```
-
 **Vue Snapshots**
 
 This is not a Jest-specific feature, but if you previously were using Jest with vue-cli preset, you will need to install [`jest-serializer-vue`](https://github.com/eddyerburgh/jest-serializer-vue) package, and use it inside [setupFiles](/config/#setupfiles):
 
-```ts
+`vite.config.js`
+
+```js
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  test: {
+    setupFiles: ['./tests/unit/setup.js']
+  }
+})
+```
+
+`tests/unit/setup.js`
+
+```js
 import vueSnapshotSerializer from 'jest-serializer-vue'
 
-// Add Snapshot Serializer
 expect.addSnapshotSerializer(vueSnapshotSerializer)
 ```
 
