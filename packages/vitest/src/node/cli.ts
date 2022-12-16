@@ -33,6 +33,8 @@ cli
   .option('--globals', 'inject apis globally')
   .option('--dom', 'mock browser api with happy-dom')
   .option('--browser', 'run tests in browser')
+  .option('--puppeteer', 'use puppeteer as a browser')
+  .option('--headless', 'run puppeteer in a headless mode, useful for CI environment (default: process.env.CI)')
   .option('--environment <env>', 'runner environment (default: node)')
   .option('--passWithNoTests', 'pass when no tests found')
   .option('--allowOnly', 'Allow tests and suites that are marked as only (default: !process.env.CI)')

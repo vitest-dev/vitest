@@ -306,6 +306,20 @@ export interface InlineConfig {
   browser?: boolean
 
   /**
+   * Use puppeteer as a browser
+   * @experimental
+   */
+  puppeteer?: boolean
+
+  /**
+   * Use puppeteer as a browser
+   * @experimental
+   *
+   * @default process.env.CI
+   */
+  headless?: boolean
+
+  /**
    * Open UI automatically.
    *
    * @default true
