@@ -459,6 +459,10 @@ export async function runFiles(files: File[], config: ResolvedConfig) {
 
 async function startTestsBrowser(paths: string[], config: ResolvedConfig) {
   if (isNode) {
+    if (config.puppeteer) {
+      const { openUrl } = await import('../integrations/puppeteer')
+      await openUrl(`http://${config.api?.host || 'localhost'}:${config.api?.port}`, config)
+    }
     rpc().onPathsCollected(paths)
   }
   else {

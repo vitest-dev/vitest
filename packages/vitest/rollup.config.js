@@ -42,6 +42,7 @@ const external = [
   ...Object.keys(pkg.peerDependencies),
   'worker_threads',
   'inspector',
+  'puppeteer',
 ]
 
 const plugins = [

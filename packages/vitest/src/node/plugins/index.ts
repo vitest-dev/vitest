@@ -89,6 +89,9 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
         else if (preOptions.browser)
           open = '/'
 
+        if (preOptions.puppeteer)
+          open = false
+
         const config: ViteConfig = {
           esbuild: {
             sourcemap: 'external',
