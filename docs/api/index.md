@@ -2699,6 +2699,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 ### vi.stubEnv
 
 - **Type:** `(name: string, value: string) => Vitest`
+- **Version:** Since Vitest 0.26.0
 
   Changes the value of environmental variable on `process.env` and `import.meta.env`. You can restore its value by calling `vi.unstubAllEnvs`.
 
@@ -2733,6 +2734,7 @@ But beware that you cannot rely on `import.meta.env.DEV === false` in this case.
 ### vi.unstubAllEnvs
 
 - **Type:** `() => Vitest`
+- **Version:** Since Vitest 0.26.0
 
   Restores all `import.meta.env` and `process.env` values that were changed with `vi.stubEnv`. When it's called for the first time, Vitest remembers the original value and will store it, until `unstubAllEnvs` is called again.
 
@@ -2791,6 +2793,7 @@ window.innerWidth = 100
 ### vi.unstubAllGlobals
 
 - **Type:** `() => Vitest`
+- **Version:** Since Vitest 0.26.0
 
   Restores all global values on `globalThis`/`global` (and `window`/`top`/`self`/`parent`, if you are using `jsdom` or `happy-dom` environment) that were changed with `vi.stubGlobal`. When it's called for the first time, Vitest remembers the original value and will store it, until `unstubAllGlobals` is called again.
 

@@ -781,6 +781,7 @@ Will call [`.mockRestore()`](/api/#mockrestore) on all spies before each test. T
 
 - **Type:** `boolean`
 - **Default:** `false`
+- **Version:** Since Vitest 0.26.0
 
 Will call [`vi.unstubAllEnvs`](/api/#vi-unstuballenvs) before each test.
 
@@ -788,6 +789,7 @@ Will call [`vi.unstubAllEnvs`](/api/#vi-unstuballenvs) before each test.
 
 - **Type:** `boolean`
 - **Default:** `false`
+- **Version:** Since Vitest 0.26.0
 
 Will call [`vi.unstubAllGlobals`](/api/#vi-unstuballglobals) before each test.
 
