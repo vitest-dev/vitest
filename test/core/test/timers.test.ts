@@ -515,6 +515,55 @@ describe('FakeTimers', () => {
     })
   })
 
+  describe('advanceTimersByTimeAsync', () => {
+    it('runs timers in order', async () => {
+      const global = { Date: FakeDate, clearTimeout, clearInterval, process, setTimeout, setInterval, Promise }
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
+
+      const runOrder = []
+      const mock1 = vi.fn(() => runOrder.push('mock1'))
+      const mock2 = vi.fn(() => runOrder.push('mock2'))
+      const mock3 = vi.fn(() => runOrder.push('mock3'))
+      const mock4 = vi.fn(() => runOrder.push('mock4'))
+
+      global.setTimeout(mock1, 100)
+      global.setTimeout(mock2, 0)
+      global.setTimeout(mock3, 0)
+      global.setInterval(() => {
+        mock4()
+      }, 200)
+
+      // Move forward to t=50
+      await timers.advanceTimersByTimeAsync(50)
+      expect(runOrder).toEqual(['mock2', 'mock3'])
+
+      // Move forward to t=60
+      await timers.advanceTimersByTimeAsync(10)
+      expect(runOrder).toEqual(['mock2', 'mock3'])
+
+      // Move forward to t=100
+      await timers.advanceTimersByTimeAsync(40)
+      expect(runOrder).toEqual(['mock2', 'mock3', 'mock1'])
+
+      // Move forward to t=200
+      await timers.advanceTimersByTimeAsync(100)
+      expect(runOrder).toEqual(['mock2', 'mock3', 'mock1', 'mock4'])
+
+      // Move forward to t=400
+      await timers.advanceTimersByTimeAsync(200)
+      expect(runOrder).toEqual(['mock2', 'mock3', 'mock1', 'mock4', 'mock4'])
+    })
+
+    it('does nothing when no timers have been scheduled', async () => {
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout, Promise }
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
+
+      await timers.advanceTimersByTimeAsync(100)
+    })
+  })
+
   describe('advanceTimersToNextTimer', () => {
     it('runs timers in order', () => {
       const global = { Date: FakeDate, clearTimeout, process, setTimeout }
@@ -614,6 +663,108 @@ describe('FakeTimers', () => {
       timers.useFakeTimers()
 
       timers.advanceTimersToNextTimer()
+    })
+  })
+
+  describe('advanceTimersToNextTimerAsync', () => {
+    it('runs timers in order', async () => {
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout, Promise }
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
+
+      const runOrder: Array<string> = []
+      const mock1 = vi.fn(() => runOrder.push('mock1'))
+      const mock2 = vi.fn(() => runOrder.push('mock2'))
+      const mock3 = vi.fn(() => runOrder.push('mock3'))
+      const mock4 = vi.fn(() => runOrder.push('mock4'))
+
+      global.setTimeout(mock1, 100)
+      global.setTimeout(mock2, 0)
+      global.setTimeout(mock3, 0)
+      global.setInterval(() => {
+        mock4()
+      }, 200)
+
+      await timers.advanceTimersToNextTimer()
+      // Move forward to t=0
+      expect(runOrder).toEqual(['mock2', 'mock3'])
+
+      await timers.advanceTimersToNextTimer()
+      // Move forward to t=100
+      expect(runOrder).toEqual(['mock2', 'mock3', 'mock1'])
+
+      await timers.advanceTimersToNextTimer()
+      // Move forward to t=200
+      expect(runOrder).toEqual(['mock2', 'mock3', 'mock1', 'mock4'])
+
+      await timers.advanceTimersToNextTimer()
+      // Move forward to t=400
+      expect(runOrder).toEqual(['mock2', 'mock3', 'mock1', 'mock4', 'mock4'])
+    })
+
+    it('run correct amount of steps', async () => {
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout, Promise }
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
+
+      const runOrder: Array<string> = []
+      const mock1 = vi.fn(() => runOrder.push('mock1'))
+      const mock2 = vi.fn(() => runOrder.push('mock2'))
+      const mock3 = vi.fn(() => runOrder.push('mock3'))
+      const mock4 = vi.fn(() => runOrder.push('mock4'))
+
+      global.setTimeout(mock1, 100)
+      global.setTimeout(mock2, 0)
+      global.setTimeout(mock3, 0)
+      global.setInterval(() => {
+        mock4()
+      }, 200)
+
+      // Move forward to t=100
+      await timers.advanceTimersToNextTimer(2)
+      expect(runOrder).toEqual(['mock2', 'mock3', 'mock1'])
+
+      // Move forward to t=600
+      await timers.advanceTimersToNextTimer(3)
+      expect(runOrder).toEqual([
+        'mock2',
+        'mock3',
+        'mock1',
+        'mock4',
+        'mock4',
+        'mock4',
+      ])
+    })
+
+    it('setTimeout inside setTimeout', async () => {
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout, Promise }
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
+
+      const runOrder: Array<string> = []
+      const mock1 = vi.fn(() => runOrder.push('mock1'))
+      const mock2 = vi.fn(() => runOrder.push('mock2'))
+      const mock3 = vi.fn(() => runOrder.push('mock3'))
+      const mock4 = vi.fn(() => runOrder.push('mock4'))
+
+      global.setTimeout(mock1, 0)
+      global.setTimeout(() => {
+        mock2()
+        global.setTimeout(mock3, 50)
+      }, 25)
+      global.setTimeout(mock4, 100)
+
+      // Move forward to t=75
+      await timers.advanceTimersToNextTimer(3)
+      expect(runOrder).toEqual(['mock1', 'mock2', 'mock3'])
+    })
+
+    it('does nothing when no timers have been scheduled', async () => {
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout, Promise }
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
+
+      await timers.advanceTimersToNextTimer()
     })
   })
 
@@ -765,6 +916,113 @@ describe('FakeTimers', () => {
       }, 0)
 
       timers.runOnlyPendingTimers()
+      expect(fn).not.toBeCalled()
+    })
+  })
+
+  describe('runOnlyPendingTimersAsync', () => {
+    it('runs all existing timers', async () => {
+      const global = {
+        Date: FakeDate,
+        clearTimeout,
+        process,
+        setTimeout,
+        Promise,
+      }
+
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
+
+      const spies = [vi.fn(), vi.fn()]
+      global.setTimeout(spies[0], 10)
+      global.setTimeout(spies[1], 50)
+
+      await timers.runOnlyPendingTimersAsync()
+
+      expect(spies[0]).toBeCalled()
+      expect(spies[1]).toBeCalled()
+    })
+
+    it('runs all timers in order', async () => {
+      const global = {
+        Date: FakeDate,
+        clearTimeout,
+        process,
+        setImmediate,
+        setTimeout,
+        Promise,
+      }
+
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
+
+      const runOrder = []
+
+      global.setTimeout(function cb() {
+        runOrder.push('mock1')
+        global.setTimeout(cb, 100)
+      }, 100)
+
+      global.setTimeout(function cb() {
+        runOrder.push('mock2')
+        global.setTimeout(cb, 50)
+      }, 0)
+
+      global.setInterval(() => {
+        runOrder.push('mock3')
+      }, 200)
+
+      global.setImmediate(() => {
+        runOrder.push('mock4')
+      })
+
+      global.setImmediate(function cb() {
+        runOrder.push('mock5')
+        global.setTimeout(cb, 400)
+      })
+
+      await timers.runOnlyPendingTimersAsync()
+      const firsRunOrder = [
+        'mock4',
+        'mock5',
+        'mock2',
+        'mock2',
+        'mock1',
+        'mock2',
+        'mock2',
+        'mock3',
+        'mock1',
+        'mock2',
+      ]
+
+      expect(runOrder).toEqual(firsRunOrder)
+
+      await timers.runOnlyPendingTimersAsync()
+      expect(runOrder).toEqual([
+        ...firsRunOrder,
+        'mock2',
+        'mock1',
+        'mock2',
+        'mock2',
+        'mock3',
+        'mock5',
+        'mock1',
+        'mock2',
+      ])
+    })
+
+    it('does not run timers that were cleared in another timer', async () => {
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout, Promise }
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
+
+      const fn = vi.fn()
+      const timer = global.setTimeout(fn, 10)
+      global.setTimeout(() => {
+        global.clearTimeout(timer)
+      }, 0)
+
+      await timers.runOnlyPendingTimersAsync()
       expect(fn).not.toBeCalled()
     })
   })

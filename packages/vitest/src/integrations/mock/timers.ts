@@ -62,6 +62,11 @@ export class FakeTimers {
       this._clock.runToLast()
   }
 
+  async runOnlyPendingTimersAsync(): Promise<void> {
+    if (this._checkFakeTimers())
+      await this._clock.runToLastAsync()
+  }
+
   advanceTimersToNextTimer(steps = 1): void {
     if (this._checkFakeTimers()) {
       for (let i = steps; i > 0; i--) {
@@ -75,9 +80,27 @@ export class FakeTimers {
     }
   }
 
+  async advanceTimersToNextTimerAsync(steps = 1): Promise<void> {
+    if (this._checkFakeTimers()) {
+      for (let i = steps; i > 0; i--) {
+        await this._clock.nextAsync()
+        // Fire all timers at this point: https://github.com/sinonjs/fake-timers/issues/250
+        this._clock.tick(0)
+
+        if (this._clock.countTimers() === 0)
+          break
+      }
+    }
+  }
+
   advanceTimersByTime(msToRun: number): void {
     if (this._checkFakeTimers())
       this._clock.tick(msToRun)
+  }
+
+  async advanceTimersByTimeAsync(msToRun: number): Promise<void> {
+    if (this._checkFakeTimers())
+      await this._clock.tickAsync(msToRun)
   }
 
   runAllTicks(): void {

@@ -61,6 +61,11 @@ class VitestUtils {
     return this
   }
 
+  public async runOnlyPendingTimersAsync() {
+    await this._timers.runOnlyPendingTimersAsync()
+    return this
+  }
+
   public runAllTimers() {
     this._timers.runAllTimers()
     return this
@@ -81,8 +86,18 @@ class VitestUtils {
     return this
   }
 
+  public async advanceTimersByTimeAsync(ms: number) {
+    await this._timers.advanceTimersByTimeAsync(ms)
+    return this
+  }
+
   public advanceTimersToNextTimer() {
     this._timers.advanceTimersToNextTimer()
+    return this
+  }
+
+  public async advanceTimersToNextTimerAsync() {
+    await this._timers.advanceTimersToNextTimerAsync()
     return this
   }
 
