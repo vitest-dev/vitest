@@ -777,6 +777,20 @@ Will call [`.mockReset()`](/api/#mockreset) on all spies before each test. This 
 
 Will call [`.mockRestore()`](/api/#mockrestore) on all spies before each test. This will clear mock history and reset its implementation to the original one.
 
+### unstubEnvs
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Will call [`vi.unstubAllEnvs`](/api/#vi-unstuballenvs) before each test.
+
+### unstubGlobals
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Will call [`vi.unstubAllGlobals`](/api/#vi-unstuballglobals) before each test.
+
 ### transformMode
 
 - **Type:** `{ web?, ssr? }`
