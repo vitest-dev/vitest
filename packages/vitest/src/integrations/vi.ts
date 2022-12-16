@@ -248,7 +248,7 @@ class VitestUtils {
   }
 
   /**
-   * Reset the value to original value, that was available before last `vi.stubGlobal` was called.
+   * Reset the value to original value that was available before first `vi.stubGlobal` was called.
    */
   public unstubAllGlobals() {
     this._stubsGlobal.forEach((original, name) => {
@@ -262,7 +262,7 @@ class VitestUtils {
   }
 
   /**
-   * Reset enviromental variables to the ones, that were available before last `vi.stubEnv` was called.
+   * Reset enviromental variables to the ones that were available before first `vi.stubEnv` was called.
    */
   public unstubAllEnvs() {
     this._stubsEnv.forEach((original, name) => {
