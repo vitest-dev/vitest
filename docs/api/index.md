@@ -2773,13 +2773,17 @@ import { vi } from 'vitest'
 vi.stubGlobal('innerWidth', 100)
 
 innerWidth === 100
+globalThis.innerWidth === 100
+// if you are using jsdom or happy-dom
 window.innerWidth === 100
 ```
 
 :::tip
-You can also change the value by simply assigning it to `globalThis` or `window`, but you won't be able to use `vi.unstubAllGlobals` to restore previous value:
+You can also change the value by simply assigning it to `globalThis` or `window` (if you are using `jsdom` or `happy-dom` environment), but you won't be able to use `vi.unstubAllGlobals` to restore original value:
 
 ```ts
+globalThis.innerWidth = 100
+// if you are using jsdom or happy-dom
 window.innerWidth = 100
 ```
 :::
@@ -2788,7 +2792,7 @@ window.innerWidth = 100
 
 - **Type:** `() => Vitest`
 
-  Restores all global values on `globalThis`/`global`/`window` that were changed with `vi.stubGlobal`. When it's called for the first time, Vitest remembers the original value and will store it, until `unstubAllGlobals` is called again.
+  Restores all global values on `globalThis`/`global` (and `window`/`top`/`self`/`parent`, if you are using `jsdom` or `happy-dom` environment) that were changed with `vi.stubGlobal`. When it's called for the first time, Vitest remembers the original value and will store it, until `unstubAllGlobals` is called again.
 
 ```ts
 import { vi } from 'vitest'
@@ -2802,12 +2806,13 @@ vi.stubGlobal('IntersectionObserver', Mock)
 IntersectionObserver === Mock
 global.IntersectionObserver === Mock
 globalThis.IntersectionObserver === Mock
+// if you are using jsdom or happy-dom
 window.IntersectionObserver === Mock
 
 vi.unstubAllGlobals()
 
-window.IntersectionObserver === undefined
-'IntersectionObserver' in window === false
+globalThis.IntersectionObserver === undefined
+'IntersectionObserver' in globalThis === false
 // throws ReferenceError, because it's not defined
 IntersectionObserver === undefined
 ```
