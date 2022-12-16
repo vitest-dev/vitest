@@ -1,7 +1,6 @@
 /* eslint-disable no-restricted-imports */
 import { VitestRunner } from 'vitest/node'
 import type { WorkerGlobalState } from 'vitest'
-import { toFilePath } from 'vite-node/utils'
 
 function getWorkerState(): WorkerGlobalState {
   // @ts-expect-error untyped global
@@ -125,12 +124,10 @@ export function defineWebWorker() {
 
       const id = (url instanceof URL ? url.toString() : url).replace(/^file:\/+/, '/')
 
-      const fsPath = toFilePath(id, config.root)
-
-      runner.executeFile(fsPath)
-        .then(() => {
+      runner.resolveUrl(id).then(([, fsPath]) => {
+        runner.executeFile(fsPath).then(() => {
           // worker should be new every time, invalidate its sub dependency
-          moduleCache.invalidateSubDepTree([fsPath, `mock:${fsPath}`])
+          moduleCache.invalidateSubDepTree([fsPath, runner.mocker.getMockPath(fsPath)])
           const q = this.messageQueue
           this.messageQueue = null
           if (q)
@@ -140,6 +137,7 @@ export function defineWebWorker() {
           this.onerror?.(e)
           console.error(e)
         })
+      })
     }
 
     dispatchEvent(event: Event) {

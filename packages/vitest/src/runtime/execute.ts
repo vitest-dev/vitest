@@ -12,8 +12,8 @@ export interface ExecuteOptions extends ViteNodeRunnerOptions {
 export async function executeInViteNode(options: ExecuteOptions & { files: string[] }) {
   const runner = new VitestRunner(options)
 
-  // provide the vite define variable in this context
   await runner.executeId('/@vite/env')
+  await runner.mocker.initializeSpyModule()
 
   const result: any[] = []
   for (const file of options.files)
@@ -23,20 +23,31 @@ export async function executeInViteNode(options: ExecuteOptions & { files: strin
 }
 
 export class VitestRunner extends ViteNodeRunner {
+  public mocker: VitestMocker
+
   constructor(public options: ExecuteOptions) {
     super(options)
+
+    this.mocker = new VitestMocker(this)
+  }
+
+  async resolveUrl(id: string, importee?: string) {
+    if (importee && importee.startsWith('mock:'))
+      importee = importee.slice(5)
+    return super.resolveUrl(id, importee)
+  }
+
+  async dependencyRequest(id: string, fsPath: string, callstack: string[]): Promise<any> {
+    const mocked = await this.mocker.requestWithMock(fsPath, callstack)
+
+    if (typeof mocked === 'string')
+      return super.dependencyRequest(mocked, mocked, callstack)
+    if (mocked && typeof mocked === 'object')
+      return mocked
+    return super.dependencyRequest(id, fsPath, callstack)
   }
 
   prepareContext(context: Record<string, any>) {
-    const request = context.__vite_ssr_import__
-    const resolveId = context.__vitest_resolve_id__
-    const resolveUrl = async (dep: string) => {
-      const [id, resolvedId] = await resolveId(dep)
-      return resolvedId || id
-    }
-
-    const mocker = new VitestMocker(this.options, this.moduleCache, request)
-
     const workerState = getWorkerState()
 
     // support `import.meta.vitest` for test entry
@@ -46,9 +57,7 @@ export class VitestRunner extends ViteNodeRunner {
     }
 
     return Object.assign(context, {
-      __vite_ssr_import__: async (dep: string) => mocker.requestWithMock(await resolveUrl(dep)),
-      __vite_ssr_dynamic_import__: async (dep: string) => mocker.requestWithMock(await resolveUrl(dep)),
-      __vitest_mocker__: mocker,
+      __vitest_mocker__: this.mocker,
     })
   }
 }

@@ -386,7 +386,7 @@ exports[`c8 json report 1`] = `
         "line": 8,
         "loc": {
           "end": {
-            "column": 13,
+            "column": 25,
             "line": 8,
           },
           "start": {
@@ -397,7 +397,7 @@ exports[`c8 json report 1`] = `
         "locations": [
           {
             "end": {
-              "column": 13,
+              "column": 25,
               "line": 8,
             },
             "start": {
@@ -839,7 +839,7 @@ exports[`c8 json report 1`] = `
         "line": 7,
         "loc": {
           "end": {
-            "column": 56,
+            "column": 55,
             "line": 7,
           },
           "start": {
@@ -850,7 +850,7 @@ exports[`c8 json report 1`] = `
         "locations": [
           {
             "end": {
-              "column": 56,
+              "column": 55,
               "line": 7,
             },
             "start": {
@@ -2220,8 +2220,8 @@ exports[`c8 json report 1`] = `
         "line": 16,
         "loc": {
           "end": {
-            "column": 9,
-            "line": 18,
+            "column": 51,
+            "line": 16,
           },
           "start": {
             "column": 4,
@@ -2231,8 +2231,8 @@ exports[`c8 json report 1`] = `
         "locations": [
           {
             "end": {
-              "column": 9,
-              "line": 18,
+              "column": 51,
+              "line": 16,
             },
             "start": {
               "column": 4,
@@ -2583,7 +2583,7 @@ exports[`c8 json report 1`] = `
       "13": 1,
       "14": 1,
       "15": 1,
-      "16": 0,
+      "16": 1,
       "17": 1,
       "18": 1,
       "19": 1,

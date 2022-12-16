@@ -1,14 +1,15 @@
+import { resolve } from 'pathe'
 import type { ErrorWithDiff, ParsedStack, Position } from '../types'
-import { notNullish, slash } from './base'
+import { notNullish } from './base'
 
 export const lineSplitRE = /\r?\n/
 
 const stackIgnorePatterns = [
   'node:internal',
   '/vitest/dist/',
-  '/vite-node/dist',
-  '/vite-node/src',
   '/vitest/src/',
+  '/vite-node/dist/',
+  '/vite-node/src/',
   '/node_modules/chai/',
   '/node_modules/tinypool/',
   '/node_modules/tinyspy/',
@@ -71,12 +72,15 @@ export function parseStacktrace(e: ErrorWithDiff, full = false): ParsedStack[] {
       if (file.startsWith('file://'))
         file = file.slice(7)
 
+      // normalize Windows path (\ -> /)
+      file = resolve(file)
+
       if (!full && stackIgnorePatterns.some(p => file && file.includes(p)))
         return null
 
       return {
         method,
-        file: slash(file),
+        file,
         line: parseInt(lineNumber),
         column: parseInt(columnNumber),
       }
