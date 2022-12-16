@@ -1,7 +1,6 @@
 import type { ChainableFunction } from '../runtime/chain'
-import type { BenchFactory } from './benchmark'
-import type { Awaitable, ErrorWithDiff } from './general'
-import type { Benchmark, BenchmarkAPI, BenchmarkResult, UserConsoleLog } from '.'
+import type { BenchFactory, Benchmark, BenchmarkAPI, BenchmarkResult } from './benchmark'
+import type { Awaitable, ErrorWithDiff, UserConsoleLog } from './general'
 
 export type RunMode = 'run' | 'skip' | 'only' | 'todo'
 export type TaskState = RunMode | 'pass' | 'fail'
