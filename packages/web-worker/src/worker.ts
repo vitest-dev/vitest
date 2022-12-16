@@ -1,4 +1,3 @@
-import { toFilePath } from 'vite-node/utils'
 import type { CloneOption, DefineWorkerOptions, InlineWorkerContext, Procedure } from './types'
 import { InlineWorkerRunner } from './runner'
 import { createMessageEvent, debug, getRunnerOptions } from './utils'
@@ -69,14 +68,14 @@ export function createWorkerConstructor(options?: DefineWorkerOptions): typeof W
 
       const id = (url instanceof URL ? url.toString() : url).replace(/^file:\/+/, '/')
 
-      const fsPath = toFilePath(id, runnerOptions.root)
+      this._vw_name = id
 
-      this._vw_name = options?.name ?? fsPath
+      runner.resolveUrl(id).then(([, fsPath]) => {
+        this._vw_name = options?.name ?? fsPath
 
-      debug('initialize worker %s', this._vw_name)
+        debug('initialize worker %s', this._vw_name)
 
-      runner.executeFile(fsPath)
-        .then(() => {
+        runner.executeFile(fsPath).then(() => {
           // worker should be new every time, invalidate its sub dependency
           runnerOptions.moduleCache.invalidateSubDepTree([fsPath, `mock:${fsPath}`])
           const q = this._vw_messageQueue
@@ -95,6 +94,7 @@ export function createWorkerConstructor(options?: DefineWorkerOptions): typeof W
           this.onerror?.(error)
           console.error(e)
         })
+      })
     }
 
     addEventListener(type: string, callback: EventListenerOrEventListenerObject | null, options?: boolean | AddEventListenerOptions): void {

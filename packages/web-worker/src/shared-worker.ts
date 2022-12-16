@@ -1,5 +1,4 @@
 import { MessageChannel, type MessagePort as NodeMessagePort } from 'worker_threads'
-import { toFilePath } from 'vite-node/utils'
 import type { InlineWorkerContext, Procedure } from './types'
 import { InlineWorkerRunner } from './runner'
 import { debug, getRunnerOptions } from './utils'
@@ -104,14 +103,14 @@ export function createSharedWorkerConstructor(): typeof SharedWorker {
 
       const id = (url instanceof URL ? url.toString() : url).replace(/^file:\/+/, '/')
 
-      const fsPath = toFilePath(id, runnerOptions.root)
+      this._vw_name = id
 
-      this._vw_name = name ?? fsPath
+      runner.resolveUrl(id).then(([, fsPath]) => {
+        this._vw_name = name ?? fsPath
 
-      debug('initialize shared worker %s', this._vw_name)
+        debug('initialize shared worker %s', this._vw_name)
 
-      runner.executeFile(fsPath)
-        .then(() => {
+        runner.executeFile(fsPath).then(() => {
           // worker should be new every time, invalidate its sub dependency
           runnerOptions.moduleCache.invalidateSubDepTree([fsPath, `mock:${fsPath}`])
           this._vw_workerTarget.dispatchEvent(
@@ -131,6 +130,7 @@ export function createSharedWorkerConstructor(): typeof SharedWorker {
           this.onerror?.(error)
           console.error(e)
         })
+      })
     }
   }
 }
