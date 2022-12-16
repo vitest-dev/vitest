@@ -13,7 +13,7 @@ describe('html reporter', async () => {
     ['passing', 'all-passing-or-skipped', 'html/all-passing-or-skipped'],
     ['failing', 'json-fail', 'html/fail'],
   ])('resolves to "%s" status for test file "%s"', async (expected, file, basePath) => {
-    await execa('npx', ['vitest', 'run', file, '--reporter=html', `--outputFile=${basePath}/html-meta.json`], {
+    await execa('npx', ['vitest', 'run', file, '--reporter=html', `--outputFile=${basePath}/index.html`], {
       cwd: root,
       env: {
         ...process.env,
@@ -22,8 +22,9 @@ describe('html reporter', async () => {
       },
       stdio: 'inherit',
     }).catch(e => e)
-    const metaJson = fs.readFileSync(resolve(root, `${basePath}/html-meta.json`), { encoding: 'utf-8' })
+    const metaJson = fs.readFileSync(resolve(root, `${basePath}/html.meta.json`), { encoding: 'utf-8' })
     const indexHtml = fs.readFileSync(resolve(root, `${basePath}/index.html`), { encoding: 'utf-8' })
+    // TODO: fix timers
     expect(JSON.parse(metaJson.replace(new RegExp(vitestRoot, 'g'), '<rootDir>'))).toMatchSnapshot(`tests are ${expected}`)
     expect(indexHtml).toMatch('window.METADATA_PATH="html-meta.json"')
   }, 40000)
