@@ -57,7 +57,7 @@ describe('mocking with factory', () => {
 
   it('non-object return on factory gives error', async () => {
     await expect(() => import('../src/default').then(m => m.default)).rejects
-      .toThrowError('[vitest] vi.mock(path: string, factory?: () => unknown) is not returning an object. Did you mean to return an object with a "default" key?')
+      .toThrowError('[vitest] vi.mock("../src/default.ts", factory?: () => unknown) is not returning an object. Did you mean to return an object with a "default" key?')
   })
 
   test('defined exports on mock', async () => {

@@ -1,3 +1,8 @@
-declare function defineWebWorker(): void;
+type CloneOption = 'native' | 'ponyfill' | 'none';
+interface DefineWorkerOptions {
+    clone: CloneOption;
+}
 
-export { defineWebWorker };
+declare function defineWebWorkers(options?: DefineWorkerOptions): void;
+
+export { defineWebWorkers };

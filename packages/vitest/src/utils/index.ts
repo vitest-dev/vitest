@@ -15,6 +15,7 @@ export * from './tasks'
 export * from './base'
 export * from './global'
 export * from './timers'
+export * from './import'
 export * from './env'
 
 export const isWindows = isNode && process.platform === 'win32'
@@ -49,6 +50,7 @@ export function resetModules(modules: ModuleCacheMap, resetMocks = false) {
   const skipPaths = [
     // Vitest
     /\/vitest\/dist\//,
+    /\/vite-node\/dist\//,
     // yarn's .store folder
     /vitest-virtual-\w+\/dist/,
     // cnpm
