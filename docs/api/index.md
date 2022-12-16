@@ -2610,6 +2610,11 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
   - If `__mocks__` folder with file of the same name exist, all imports will return its exports. For example, `vi.mock('axios')` with `<root>/__mocks__/axios.ts` folder will return everything exported from `axios.ts`.
   - If there is no `__mocks__` folder or a file with the same name inside, will call original module and mock it. (For the rules applied, see [algorithm](/guide/mocking#automocking-algorithm).)
 
+<!-- TODO add more examples of what will not workr -->
+::: warning
+Don't forget that `vi.mock` call is hoisted to top of the file. **Do not** put `vi.mock` calls inside `beforeEach`, only one of these will actually mock a module.
+:::
+
 ### vi.mocked
 
 - **Type**: `<T>(obj: T, deep?: boolean) => MaybeMockedDeep<T>`
@@ -2692,9 +2697,125 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 
 ### vi.restoreCurrentDate
 
-- **Type**: `() => void`
+- **Type:** `() => void`
 
   Restores `Date` back to its native implementation.
+
+### vi.stubEnv
+
+- **Type:** `(name: string, value: string) => Vitest`
+
+  Changes the value of environmental variable on `process.env` and `import.meta.env`. You can restore its value by calling `vi.unstubAllEnvs`.
+
+```ts
+import { vi } from 'vitest'
+
+// `process.env.NODE_ENV` and `import.meta.env.NODE_ENV`
+// are "development" before calling "vi.stubEnv"
+
+vi.stubEnv('NODE_ENV', 'production')
+
+process.env.NODE_ENV === 'production'
+import.meta.env.NODE_ENV === 'production'
+// doesn't change other envs
+import.meta.env.MODE === 'development'
+```
+
+:::tip
+You can also change the value by simply assigning it, but you won't be able to use `vi.unstubAllEnvs` to restore previous value:
+
+```ts
+import.meta.env.MODE = 'test'
+```
+:::
+
+:::warning
+Vitest transforms all `import.meta.env` calls to `process.env`, so they can be easily changed in runtime. Node.js only supports string values as env parameters, while Vite supports several built-in envs as boolean (namely, `SSR`, `DEV`, `PROD`). To mimic Vite, set "truthy" values as env: `''` instead of `false`, and `'1'` instead of `true`.
+
+But beware that you cannot rely on `import.meta.env.DEV === false` in this case. Use `!import.meta.env.DEV`. This also affects simple assigning, not just `vi.stubEnv` method.
+:::
+
+### vi.unstubAllEnvs
+
+- **Type:** `() => Vitest`
+
+  Restores all `import.meta.env` and `process.env` values that were changed with `vi.stubEnv`. When it's called for the first time, Vitest remembers the original value and will store it, until `unstubAllEnvs` is called again.
+
+```ts
+import { vi } from 'vitest'
+
+// `process.env.NODE_ENV` and `import.meta.env.NODE_ENV`
+// are "development" before calling stubEnv
+
+vi.stubEnv('NODE_ENV', 'production')
+
+process.env.NODE_ENV === 'production'
+import.meta.env.NODE_ENV === 'production'
+
+vi.stubEnv('NODE_ENV', 'staging')
+
+process.env.NODE_ENV === 'staging'
+import.meta.env.NODE_ENV === 'staging'
+
+vi.unstubAllEnvs()
+
+// restores to the value that were stored before the first "stubEnv" call
+process.env.NODE_ENV === 'development'
+import.meta.env.NODE_ENV === 'development'
+```
+
+### vi.stubGlobal
+
+- **Type:** `(name: stirng | number | symbol, value: uknown) => Vitest`
+
+  Changes the value of global variable. You can restore its original value by calling `vi.unstubAllGlobals`.
+
+```ts
+import { vi } from 'vitest'
+
+// `innerWidth` is "0" before callling stubGlobal
+
+vi.stubGlobal('innerWidth', 100)
+
+innerWidth === 100
+window.innerWidth === 100
+```
+
+:::tip
+You can also change the value by simply assigning it to `globalThis` or `window`, but you won't be able to use `vi.unstubAllGlobals` to restore previous value:
+
+```ts
+window.innerWidth = 100
+```
+:::
+
+### vi.unstubAllGlobals
+
+- **Type:** `() => Vitest`
+
+  Restores all global values on `globalThis`/`global`/`window` that were changed with `vi.stubGlobal`. When it's called for the first time, Vitest remembers the original value and will store it, until `unstubAllGlobals` is called again.
+
+```ts
+import { vi } from 'vitest'
+
+const Mock = vi.fn()
+
+// IntersectionObserver is "undefined" before calling "stubGlobal"
+
+vi.stubGlobal('IntersectionObserver', Mock)
+
+IntersectionObserver === Mock
+global.IntersectionObserver === Mock
+globalThis.IntersectionObserver === Mock
+window.IntersectionObserver === Mock
+
+vi.unstubAllGlobals()
+
+window.IntersectionObserver === undefined
+'IntersectionObserver' in window === false
+// throws ReferenceError, because it's not defined
+IntersectionObserver === undefined
+```
 
 ### vi.runAllTicks
 

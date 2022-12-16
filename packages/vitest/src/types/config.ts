@@ -285,6 +285,18 @@ export interface InlineConfig {
   restoreMocks?: boolean
 
   /**
+   * Will restore all global stubs to their original values before each test
+   * @default false
+   */
+  unstubGlobals?: boolean
+
+  /**
+   * Will restore all env stubs to their original values before each test
+   * @default false
+   */
+  unstubEnvs?: boolean
+
+  /**
    * Serve API options.
    *
    * When set to true, the default port is 51204.
