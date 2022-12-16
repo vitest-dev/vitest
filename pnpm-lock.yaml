@@ -851,6 +851,7 @@ importers:
       tinypool: 0.3.0
       tinyspy: 1.0.2
       vite: 4.0.0_@types+node@18.7.13
+      vite-node: link:../vite-node
     devDependencies:
       '@antfu/install-pkg': 0.1.1
       '@edge-runtime/vm': 2.0.2
@@ -890,7 +891,6 @@ importers:
       rollup: 2.79.1
       strip-ansi: 7.0.1
       typescript: 4.9.4
-      vite-node: link:../vite-node
       ws: 8.11.0
 
   packages/web-worker:
@@ -15760,7 +15760,7 @@ packages:
       acorn: 8.8.1
       pathe: 0.3.9
       pkg-types: 0.3.6
-      ufo: 0.8.5
+      ufo: 0.8.6
     dev: true
 
   /mlly/1.0.0:
@@ -19909,10 +19909,6 @@ packages:
     hasBin: true
     dev: true
 
-  /ufo/0.8.5:
-    resolution: {integrity: sha512-e4+UtA5IRO+ha6hYklwj6r7BjiGMxS0O+UaSg9HbaTefg4kMkzj4tXzEBajRR+wkxf+golgAWKzLbytCUDMJAA==}
-    dev: true
-
   /ufo/0.8.6:
     resolution: {integrity: sha512-fk6CmUgwKCfX79EzcDQQpSCMxrHstvbLswFChHS0Vump+kFkw7nJBfTZoC1j0bOGoY9I7R3n2DGek5ajbcYnOw==}
     dev: true
@@ -20217,7 +20213,7 @@ packages:
       '@antfu/utils': 0.5.2
       '@rollup/pluginutils': 4.2.1
       local-pkg: 0.4.2
-      magic-string: 0.26.3
+      magic-string: 0.26.7
       unimport: 0.6.7_vite@4.0.0
       unplugin: 0.9.5_vite@4.0.0
     transitivePeerDependencies:
@@ -20608,7 +20604,7 @@ packages:
       vite: '>=2.5.0'
     dependencies:
       debug: 4.3.4
-      fast-glob: 3.2.11
+      fast-glob: 3.2.12
       vite: 4.0.0
     transitivePeerDependencies:
       - supports-color
