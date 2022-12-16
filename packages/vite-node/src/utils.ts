@@ -1,7 +1,6 @@
 import { fileURLToPath, pathToFileURL } from 'url'
 import { existsSync } from 'fs'
-import { relative, resolve } from 'pathe'
-import { isNodeBuiltin } from 'mlly'
+import { resolve } from 'pathe'
 import type { Arrayable, Nullable } from './types'
 
 export const isWindows = process.platform === 'win32'
@@ -13,6 +12,8 @@ export function slash(str: string) {
 export function mergeSlashes(str: string) {
   return str.replace(/\/\//g, '/')
 }
+
+export const VALID_ID_PREFIX = '/@id/'
 
 export function normalizeRequestId(id: string, base?: string): string {
   if (base && id.startsWith(base))
@@ -40,34 +41,20 @@ export const hashRE = /#.*$/s
 export const cleanUrl = (url: string): string =>
   url.replace(hashRE, '').replace(queryRE, '')
 
+export const isInternalRequest = (id: string): boolean => {
+  return id.startsWith('/@vite/')
+}
+
 export function normalizeModuleId(id: string) {
   return id
     .replace(/\\/g, '/')
-    .replace(/^\/@fs\//, '/')
+    .replace(/^\/@fs\//, isWindows ? '' : '/')
     .replace(/^file:\//, '/')
     .replace(/^\/+/, '/')
 }
 
 export function isPrimitive(v: any) {
   return v !== Object(v)
-}
-
-export function pathFromRoot(root: string, filename: string) {
-  if (isNodeBuiltin(filename))
-    return filename
-
-  // don't replace with "/" on windows, "/C:/foo" is not a valid path
-  filename = filename.replace(/^\/@fs\//, isWindows ? '' : '/')
-
-  if (!filename.startsWith(root))
-    return filename
-
-  const relativePath = relative(root, filename)
-
-  const segments = relativePath.split('/')
-  const startIndex = segments.findIndex(segment => segment !== '..' && segment !== '.')
-
-  return `/${segments.slice(startIndex).join('/')}`
 }
 
 export function toFilePath(id: string, root: string): string {

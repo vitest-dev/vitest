@@ -136,13 +136,13 @@ function isReplaceable(obj1: any, obj2: any) {
   return obj1Type === obj2Type && obj1Type === 'Object'
 }
 
-export function replaceAsymmetricMatcher(actual: any, expected: any, actualReplaced = new WeakMap(), expectedReplaced = new WeakMap()) {
+export function replaceAsymmetricMatcher(actual: any, expected: any, actualReplaced = new WeakSet(), expectedReplaced = new WeakSet()) {
   if (!isReplaceable(actual, expected))
     return { replacedActual: actual, replacedExpected: expected }
   if (actualReplaced.has(actual) || expectedReplaced.has(expected))
     return { replacedActual: actual, replacedExpected: expected }
-  actualReplaced.set(actual, true)
-  expectedReplaced.set(expected, true)
+  actualReplaced.add(actual)
+  expectedReplaced.add(expected)
   ChaiUtil.getOwnEnumerableProperties(expected).forEach((key) => {
     const expectedValue = expected[key]
     const actualValue = actual[key]
