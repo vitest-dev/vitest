@@ -39,26 +39,26 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
               "showDiff": true,
               "stack": "AssertionError: expected 2 to deeply equal 1
     at <rootDir>/test/reporters/fixtures/json-fail.test.ts:6:13
-    at <rootDir>/packages/vitest/src/runtime/chain.ts:2281:13
-    at <rootDir>/packages/vitest/src/runtime/chain.ts:2158:26
-    at runTest (<rootDir>/packages/vitest/src/runtime/setup.ts:369:24)
-    at runSuite (<rootDir>/packages/vitest/src/runtime/setup.ts:467:15)
-    at runFiles (<rootDir>/packages/vitest/src/runtime/setup.ts:602:5)
-    at startTestsNode (<rootDir>/packages/vitest/src/runtime/setup.ts:620:3)
-    at <rootDir>/packages/vitest/src/runtime/entry.ts:79:11
-    at Module.withEnv (<rootDir>/packages/vitest/src/runtime/setup.ts:157:5)
-    at run (<rootDir>/packages/vitest/src/runtime/entry.ts:67:13)",
+    at <rootDir>/packages/vitest/dist/chunk-runtime-chain.77dc8b67.js:2281:13
+    at <rootDir>/packages/vitest/dist/chunk-runtime-chain.77dc8b67.js:2158:26
+    at runTest (<rootDir>/packages/vitest/dist/chunk-runtime-setup.eb9df441.js:369:24)
+    at runSuite (<rootDir>/packages/vitest/dist/chunk-runtime-setup.eb9df441.js:467:15)
+    at runFiles (<rootDir>/packages/vitest/dist/chunk-runtime-setup.eb9df441.js:602:5)
+    at startTestsNode (<rootDir>/packages/vitest/dist/chunk-runtime-setup.eb9df441.js:620:3)
+    at <rootDir>/packages/vitest/dist/entry.js:75:11
+    at Module.withEnv (<rootDir>/packages/vitest/dist/chunk-runtime-setup.eb9df441.js:157:5)
+    at run (<rootDir>/packages/vitest/dist/entry.js:68:7)",
               "stackStr": "AssertionError: expected 2 to deeply equal 1
     at <rootDir>/test/reporters/fixtures/json-fail.test.ts:6:13
-    at <rootDir>/packages/vitest/src/runtime/chain.ts:2281:13
-    at <rootDir>/packages/vitest/src/runtime/chain.ts:2158:26
-    at runTest (<rootDir>/packages/vitest/src/runtime/setup.ts:369:24)
-    at runSuite (<rootDir>/packages/vitest/src/runtime/setup.ts:467:15)
-    at runFiles (<rootDir>/packages/vitest/src/runtime/setup.ts:602:5)
-    at startTestsNode (<rootDir>/packages/vitest/src/runtime/setup.ts:620:3)
-    at <rootDir>/packages/vitest/src/runtime/entry.ts:79:11
-    at Module.withEnv (<rootDir>/packages/vitest/src/runtime/setup.ts:157:5)
-    at run (<rootDir>/packages/vitest/src/runtime/entry.ts:67:13)",
+    at <rootDir>/packages/vitest/dist/chunk-runtime-chain.77dc8b67.js:2281:13
+    at <rootDir>/packages/vitest/dist/chunk-runtime-chain.77dc8b67.js:2158:26
+    at runTest (<rootDir>/packages/vitest/dist/chunk-runtime-setup.eb9df441.js:369:24)
+    at runSuite (<rootDir>/packages/vitest/dist/chunk-runtime-setup.eb9df441.js:467:15)
+    at runFiles (<rootDir>/packages/vitest/dist/chunk-runtime-setup.eb9df441.js:602:5)
+    at startTestsNode (<rootDir>/packages/vitest/dist/chunk-runtime-setup.eb9df441.js:620:3)
+    at <rootDir>/packages/vitest/dist/entry.js:75:11
+    at Module.withEnv (<rootDir>/packages/vitest/dist/chunk-runtime-setup.eb9df441.js:157:5)
+    at run (<rootDir>/packages/vitest/dist/entry.js:68:7)",
               "toJSON": "Function<>",
               "toString": "Function<toString>",
             },

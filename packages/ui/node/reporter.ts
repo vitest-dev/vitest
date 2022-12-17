@@ -5,7 +5,7 @@ import c from 'picocolors'
 import fg from 'fast-glob'
 import { stringify } from 'flatted'
 // eslint-disable-next-line no-restricted-imports
-import type { File, ModuleGraphData, Reporter, ResolvedConfig, Vitest } from 'vitest'
+import type { File, ModuleGraphData, Reporter, ResolvedConfig, UserConsoleLog, Vitest } from 'vitest'
 import { getModuleGraph } from '../../vitest/src/utils/graph'
 import { getOutputFile } from '../../vitest/src/utils/config-helpers'
 
@@ -26,6 +26,10 @@ export default class HTMLReporter implements Reporter {
   async onInit(ctx: Vitest) {
     this.ctx = ctx
     this.start = Date.now()
+  }
+
+  onUserConsoleLog(log: UserConsoleLog) {
+    this.ctx.state.updateUserLog(log)
   }
 
   async onFinished() {
