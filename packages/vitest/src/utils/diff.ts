@@ -7,6 +7,7 @@ export function formatLine(line: string, outputTruncateLength?: number) {
 }
 
 export interface DiffOptions {
+  outputDiffMaxLines?: number
   outputTruncateLength?: number
   outputDiffLines?: number
   showLegend?: boolean
@@ -25,10 +26,11 @@ export function unifiedDiff(actual: string, expected: string, options: DiffOptio
   if (actual === expected)
     return ''
 
-  const { outputTruncateLength, outputDiffLines, showLegend = true } = options
+  const { outputTruncateLength, outputDiffLines, outputDiffMaxLines, showLegend = true } = options
 
   const indent = '  '
   const diffLimit = outputDiffLines || 15
+  const diffMaxLines = outputDiffMaxLines || 50
 
   const counts = {
     '+': 0,
@@ -60,7 +62,18 @@ export function unifiedDiff(actual: string, expected: string, options: DiffOptio
   const lines = msg.split('\n').slice(5).map(preprocess).filter(Boolean) as string[]
   const isCompact = counts['+'] === 1 && counts['-'] === 1 && lines.length === 2
 
-  let formatted = lines.map((line: string) => {
+  const firstDiff = lines.findIndex(line => line[0] === '-' || line[0] === '+')
+  const linesToDisplay = lines.slice(firstDiff - 1, diffMaxLines)
+  const displayCounts = linesToDisplay.reduce((acc, line) => {
+    if (line[0] === '-')
+      acc['-']++
+    else if (line[0] === '+')
+      acc['+']++
+    return acc
+  }, { '+': 0, '-': 0 })
+  const lastDisplayedIndex = firstDiff - 1 + diffMaxLines
+
+  let formatted = linesToDisplay.map((line: string) => {
     line = line.replace(/\\"/g, '"')
     if (line[0] === '-') {
       line = formatLine(line.slice(1), outputTruncateLength)
@@ -78,6 +91,9 @@ export function unifiedDiff(actual: string, expected: string, options: DiffOptio
       return '--'
     return ` ${line}`
   })
+
+  if (lastDisplayedIndex < lines.length && (displayCounts['+'] < counts['+'] || displayCounts['-'] < counts['-']))
+    formatted.push(c.dim(`... ${lines.length - lastDisplayedIndex} more lines`))
 
   if (showLegend) {
     // Compact mode

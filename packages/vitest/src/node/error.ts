@@ -86,7 +86,9 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
 
   // Eg. AssertionError from assert does not set showDiff but has both actual and expected properties
   if (e.showDiff || (e.showDiff === undefined && e.actual && e.expected)) {
-    displayDiff(stringify(e.actual), stringify(e.expected), ctx.logger.console, {
+    const actual = typeof e.actual === 'string' ? e.actual : stringify(e.actual)
+    const expected = typeof e.expected === 'string' ? e.expected : stringify(e.expected)
+    displayDiff(actual, expected, ctx.logger.console, {
       outputTruncateLength: ctx.config.outputTruncateLength,
       outputDiffLines: ctx.config.outputDiffLines,
     })
@@ -161,7 +163,11 @@ function handleImportOutsideModuleError(stack: string, ctx: Vitest) {
 }
 
 function displayDiff(actual: string, expected: string, console: Console, options?: Omit<DiffOptions, 'showLegend'>) {
-  console.error(c.gray(unifiedDiff(actual, expected, options)) + '\n')
+  const diff = unifiedDiff(actual, expected, options)
+  if (diff)
+    console.error(diff + '\n')
+  else
+    console.error(c.dim('Could not display diff. It\'s possible objects are too large to compare.\nTry increasing ') + c.black('--outputDiffMaxSize') + c.dim(' option.\n'))
 }
 
 function printErrorMessage(error: ErrorWithDiff, logger: Logger) {

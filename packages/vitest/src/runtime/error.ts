@@ -1,7 +1,7 @@
 import util from 'util'
 import { util as ChaiUtil } from 'chai'
 import { stringify } from '../integrations/chai/jest-matcher-utils'
-import { deepClone, getType } from '../utils'
+import { deepClone, getType, getWorkerState } from '../utils'
 
 const IS_RECORD_SYMBOL = '@@__IMMUTABLE_RECORD__@@'
 const IS_COLLECTION_SYMBOL = '@@__IMMUTABLE_ITERABLE__@@'
@@ -102,10 +102,13 @@ export function processError(err: any) {
   err.actual = replacedActual
   err.expected = replacedExpected
 
+  const workerState = getWorkerState()
+  const maxDiffSize = workerState.config.outputDiffMaxSize
+
   if (typeof err.expected !== 'string')
-    err.expected = stringify(err.expected)
+    err.expected = stringify(err.expected, 10, { maxLength: maxDiffSize })
   if (typeof err.actual !== 'string')
-    err.actual = stringify(err.actual)
+    err.actual = stringify(err.actual, 10, { maxLength: maxDiffSize })
 
   // some Error implementations don't allow rewriting message
   try {
