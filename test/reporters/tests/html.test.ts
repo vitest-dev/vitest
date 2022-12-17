@@ -25,8 +25,16 @@ describe('html reporter', async () => {
     }).catch(e => e)
     const metaJson = fs.readFileSync(resolve(root, `${basePath}/html.meta.json`), { encoding: 'utf-8' })
     const indexHtml = fs.readFileSync(resolve(root, `${basePath}/index.html`), { encoding: 'utf-8' })
-    // TODO: fix timers
-    expect(parse(metaJson.replace(new RegExp(vitestRoot, 'g'), '<rootDir>'))).toMatchSnapshot(`tests are ${expected}`)
-    expect(indexHtml).toMatch('window.METADATA_PATH="html-meta.json"')
+    const resultJson = parse(metaJson.replace(new RegExp(vitestRoot, 'g'), '<rootDir>'))
+    resultJson.files[0].id = 0
+    resultJson.files[0].collectDuration = 0
+    resultJson.files[0].setupDuration = 0
+    resultJson.files[0].result.duration = 0
+    resultJson.files[0].result.startTime = 0
+    resultJson.files[0].tasks[0].id = 0
+    resultJson.files[0].tasks[0].result.duration = 0
+    resultJson.files[0].tasks[0].result.startTime = 0
+    expect(resultJson).toMatchSnapshot(`tests are ${expected}`)
+    expect(indexHtml).toMatch('window.METADATA_PATH="html.meta.json"')
   }, 40000)
 })

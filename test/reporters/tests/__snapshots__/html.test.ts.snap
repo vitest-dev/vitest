@@ -152,29 +152,29 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
   },
   "files": [
     {
-      "collectDuration": 13,
+      "collectDuration": 0,
       "filepath": "<rootDir>/test/reporters/fixtures/json-fail.test.ts",
-      "id": "997109584",
+      "id": 0,
       "mode": "run",
       "name": "json-fail.test.ts",
       "result": {
-        "duration": 73,
+        "duration": 0,
         "hooks": {
           "afterAll": "pass",
           "beforeAll": "pass",
         },
-        "startTime": 1671252396546,
+        "startTime": 0,
         "state": "fail",
       },
-      "setupDuration": 1,
+      "setupDuration": 0,
       "tasks": [
         {
           "file": [Circular],
-          "id": "997109584_0",
+          "id": 0,
           "mode": "run",
           "name": "should fail",
           "result": {
-            "duration": 73,
+            "duration": 0,
             "error": {
               "actual": "2",
               "constructor": "Function<AssertionError>",
@@ -186,26 +186,26 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
               "showDiff": true,
               "stack": "AssertionError: expected 2 to deeply equal 1
     at <rootDir>/test/reporters/fixtures/json-fail.test.ts:6:13
-    at <rootDir>/packages/vitest/dist/chunk-runtime-chain.77dc8b67.js:2281:13
-    at <rootDir>/packages/vitest/dist/chunk-runtime-chain.77dc8b67.js:2158:26
-    at runTest (<rootDir>/packages/vitest/dist/chunk-runtime-setup.eb9df441.js:369:24)
-    at runSuite (<rootDir>/packages/vitest/dist/chunk-runtime-setup.eb9df441.js:467:15)
-    at runFiles (<rootDir>/packages/vitest/dist/chunk-runtime-setup.eb9df441.js:602:5)
-    at startTestsNode (<rootDir>/packages/vitest/dist/chunk-runtime-setup.eb9df441.js:620:3)
-    at <rootDir>/packages/vitest/dist/entry.js:75:11
-    at Module.withEnv (<rootDir>/packages/vitest/dist/chunk-runtime-setup.eb9df441.js:157:5)
-    at run (<rootDir>/packages/vitest/dist/entry.js:68:7)",
+    at <rootDir>/packages/vitest/src/runtime/chain.ts:2281:13
+    at <rootDir>/packages/vitest/src/runtime/chain.ts:2158:26
+    at runTest (<rootDir>/packages/vitest/src/runtime/setup.ts:369:24)
+    at runSuite (<rootDir>/packages/vitest/src/runtime/setup.ts:467:15)
+    at runFiles (<rootDir>/packages/vitest/src/runtime/setup.ts:602:5)
+    at startTestsNode (<rootDir>/packages/vitest/src/runtime/setup.ts:620:3)
+    at <rootDir>/packages/vitest/src/runtime/entry.ts:79:11
+    at Module.withEnv (<rootDir>/packages/vitest/src/runtime/setup.ts:157:5)
+    at run (<rootDir>/packages/vitest/src/runtime/entry.ts:67:13)",
               "stackStr": "AssertionError: expected 2 to deeply equal 1
     at <rootDir>/test/reporters/fixtures/json-fail.test.ts:6:13
-    at <rootDir>/packages/vitest/dist/chunk-runtime-chain.77dc8b67.js:2281:13
-    at <rootDir>/packages/vitest/dist/chunk-runtime-chain.77dc8b67.js:2158:26
-    at runTest (<rootDir>/packages/vitest/dist/chunk-runtime-setup.eb9df441.js:369:24)
-    at runSuite (<rootDir>/packages/vitest/dist/chunk-runtime-setup.eb9df441.js:467:15)
-    at runFiles (<rootDir>/packages/vitest/dist/chunk-runtime-setup.eb9df441.js:602:5)
-    at startTestsNode (<rootDir>/packages/vitest/dist/chunk-runtime-setup.eb9df441.js:620:3)
-    at <rootDir>/packages/vitest/dist/entry.js:75:11
-    at Module.withEnv (<rootDir>/packages/vitest/dist/chunk-runtime-setup.eb9df441.js:157:5)
-    at run (<rootDir>/packages/vitest/dist/entry.js:68:7)",
+    at <rootDir>/packages/vitest/src/runtime/chain.ts:2281:13
+    at <rootDir>/packages/vitest/src/runtime/chain.ts:2158:26
+    at runTest (<rootDir>/packages/vitest/src/runtime/setup.ts:369:24)
+    at runSuite (<rootDir>/packages/vitest/src/runtime/setup.ts:467:15)
+    at runFiles (<rootDir>/packages/vitest/src/runtime/setup.ts:602:5)
+    at startTestsNode (<rootDir>/packages/vitest/src/runtime/setup.ts:620:3)
+    at <rootDir>/packages/vitest/src/runtime/entry.ts:79:11
+    at Module.withEnv (<rootDir>/packages/vitest/src/runtime/setup.ts:157:5)
+    at run (<rootDir>/packages/vitest/src/runtime/entry.ts:67:13)",
               "toJSON": "Function<>",
               "toString": "Function<toString>",
             },
@@ -214,7 +214,7 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
               "beforeEach": "pass",
             },
             "retryCount": 0,
-            "startTime": 1671252396546,
+            "startTime": 0,
             "state": "fail",
           },
           "suite": {
@@ -400,35 +400,35 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
   },
   "files": [
     {
-      "collectDuration": 14,
+      "collectDuration": 0,
       "filepath": "<rootDir>/test/reporters/fixtures/all-passing-or-skipped.test.ts",
-      "id": "1111755131",
+      "id": 0,
       "mode": "run",
       "name": "all-passing-or-skipped.test.ts",
       "result": {
-        "duration": 1,
+        "duration": 0,
         "hooks": {
           "afterAll": "pass",
           "beforeAll": "pass",
         },
-        "startTime": 1671252395282,
+        "startTime": 0,
         "state": "pass",
       },
       "setupDuration": 0,
       "tasks": [
         {
           "file": [Circular],
-          "id": "1111755131_0",
+          "id": 0,
           "mode": "run",
           "name": "2 + 3 = 5",
           "result": {
-            "duration": 1,
+            "duration": 0,
             "hooks": {
               "afterEach": "pass",
               "beforeEach": "pass",
             },
             "retryCount": 0,
-            "startTime": 1671252395282,
+            "startTime": 0,
             "state": "pass",
           },
           "suite": {
@@ -464,17 +464,17 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
             "tasks": [
               {
                 "file": [Circular],
-                "id": "1111755131_0",
+                "id": 0,
                 "mode": "run",
                 "name": "2 + 3 = 5",
                 "result": {
-                  "duration": 1,
+                  "duration": 0,
                   "hooks": {
                     "afterEach": "pass",
                     "beforeEach": "pass",
                   },
                   "retryCount": 0,
-                  "startTime": 1671252395282,
+                  "startTime": 0,
                   "state": "pass",
                 },
                 "suite": [Circular],
