@@ -14,6 +14,12 @@ test('displays an error for large objects', () => {
   `)
 })
 
+test('displays an error for large objects', () => {
+  const console = { log: vi.fn(), error: vi.fn() }
+  displayDiff(stringify('undefined'), stringify('undefined'), console as any, { noColor: true })
+  expect(console.error).not.toHaveBeenCalled()
+})
+
 test('displays diff', () => {
   const objectA = { a: 1, b: 2 }
   const objectB = { a: 1, b: 3 }
