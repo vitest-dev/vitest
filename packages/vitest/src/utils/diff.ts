@@ -7,6 +7,7 @@ export function formatLine(line: string, outputTruncateLength?: number) {
 }
 
 export interface DiffOptions {
+  noColor?: boolean
   outputDiffMaxLines?: number
   outputTruncateLength?: number
   outputDiffLines?: number
@@ -26,7 +27,7 @@ export function unifiedDiff(actual: string, expected: string, options: DiffOptio
   if (actual === expected)
     return ''
 
-  const { outputTruncateLength, outputDiffLines, outputDiffMaxLines, showLegend = true } = options
+  const { outputTruncateLength, outputDiffLines, outputDiffMaxLines, noColor, showLegend = true } = options
 
   const indent = '  '
   const diffLimit = outputDiffLines || 15
@@ -38,6 +39,11 @@ export function unifiedDiff(actual: string, expected: string, options: DiffOptio
   }
   let previousState: '-' | '+' | null = null
   let previousCount = 0
+
+  const str = (str: string) => str
+  const dim = noColor ? str : c.dim
+  const green = noColor ? str : c.green
+  const red = noColor ? str : c.red
   function preprocess(line: string) {
     if (!line || line.match(/\\ No newline/))
       return
@@ -51,7 +57,7 @@ export function unifiedDiff(actual: string, expected: string, options: DiffOptio
       previousCount++
       counts[char]++
       if (previousCount === diffLimit)
-        return c.dim(`${char} ...`)
+        return dim(`${char} ...`)
       else if (previousCount > diffLimit)
         return
     }
@@ -59,48 +65,47 @@ export function unifiedDiff(actual: string, expected: string, options: DiffOptio
   }
 
   const msg = diff.createPatch('string', expected, actual)
-  const lines = msg.split('\n').slice(5).map(preprocess).filter(Boolean) as string[]
+  let lines = msg.split('\n').slice(5).map(preprocess).filter(Boolean) as string[]
+  let moreLines = 0
   const isCompact = counts['+'] === 1 && counts['-'] === 1 && lines.length === 2
 
-  const firstDiff = lines.findIndex(line => line[0] === '-' || line[0] === '+')
-  const linesToDisplay = lines.slice(firstDiff - 1, diffMaxLines)
-  const displayCounts = linesToDisplay.reduce((acc, line) => {
-    if (line[0] === '-')
-      acc['-']++
-    else if (line[0] === '+')
-      acc['+']++
-    return acc
-  }, { '+': 0, '-': 0 })
-  const lastDisplayedIndex = firstDiff - 1 + diffMaxLines
+  if (lines.length > diffMaxLines) {
+    const firstDiff = lines.findIndex(line => line[0] === '-' || line[0] === '+')
+    const displayLines = lines.slice(firstDiff - 2, diffMaxLines)
+    const lastDisplayedIndex = firstDiff - 2 + diffMaxLines
+    if (lastDisplayedIndex < lines.length)
+      moreLines = lines.length - lastDisplayedIndex
+    lines = displayLines
+  }
 
-  let formatted = linesToDisplay.map((line: string) => {
+  let formatted = lines.map((line: string) => {
     line = line.replace(/\\"/g, '"')
     if (line[0] === '-') {
       line = formatLine(line.slice(1), outputTruncateLength)
       if (isCompact)
-        return c.green(line)
-      return c.green(`- ${formatLine(line, outputTruncateLength)}`)
+        return green(line)
+      return green(`- ${formatLine(line, outputTruncateLength)}`)
     }
     if (line[0] === '+') {
       line = formatLine(line.slice(1), outputTruncateLength)
       if (isCompact)
-        return c.red(line)
-      return c.red(`+ ${formatLine(line, outputTruncateLength)}`)
+        return red(line)
+      return red(`+ ${formatLine(line, outputTruncateLength)}`)
     }
     if (line.match(/@@/))
       return '--'
     return ` ${line}`
   })
 
-  if (lastDisplayedIndex < lines.length && (displayCounts['+'] < counts['+'] || displayCounts['-'] < counts['-']))
-    formatted.push(c.dim(`... ${lines.length - lastDisplayedIndex} more lines`))
+  if (moreLines)
+    formatted.push(dim(`... ${moreLines} more lines`))
 
   if (showLegend) {
     // Compact mode
     if (isCompact) {
       formatted = [
-        `${c.green('- Expected')}   ${formatted[0]}`,
-        `${c.red('+ Received')}   ${formatted[1]}`,
+        `${green('- Expected')}   ${formatted[0]}`,
+        `${red('+ Received')}   ${formatted[1]}`,
       ]
     }
     else {
@@ -112,12 +117,12 @@ export function unifiedDiff(actual: string, expected: string, options: DiffOptio
         formatted[last] = formatted[last].slice(0, formatted[last].length - 1)
 
       formatted.unshift(
-        c.green(`- Expected  - ${counts['-']}`),
-        c.red(`+ Received  + ${counts['+']}`),
+        green(`- Expected  - ${counts['-']}`),
+        red(`+ Received  + ${counts['+']}`),
         '',
       )
     }
   }
 
-  return formatted.map(i => indent + i).join('\n')
+  return formatted.map(i => i ? (indent + i) : i).join('\n')
 }

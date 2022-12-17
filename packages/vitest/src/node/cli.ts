@@ -37,6 +37,7 @@ cli
   .option('--browser', 'run tests in browser')
   .option('--environment <env>', 'runner environment (default: node)')
   .option('--passWithNoTests', 'pass when no tests found')
+  .option('--logHeapUsage', 'show the size of heap for each test')
   .option('--allowOnly', 'Allow tests and suites that are marked as only (default: !process.env.CI)')
   .option('--dangerouslyIgnoreUnhandledErrors', 'Ignore any unhandled errors that occur')
   .option('--shard <shard>', 'Test suite shard to execute in a format of <index>/<count>')
