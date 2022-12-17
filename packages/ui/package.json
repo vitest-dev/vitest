@@ -32,10 +32,8 @@
     "build:client": "vite build",
     "build:node": "rollup -c",
     "dev:client": "vite",
-    "dev:report": "vite -c vite.report.config.ts",
     "dev": "rollup -c --watch --watch.include=node",
     "dev:ui": "run-p dev dev:client",
-    "dev:ui-report": "run-p dev dev:report",
     "test:run": "cypress run --component",
     "test:open": "cypress open --component",
     "prepublishOnly": "pnpm build"
