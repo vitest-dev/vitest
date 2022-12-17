@@ -28,9 +28,8 @@
     "dist"
   ],
   "scripts": {
-    "build": "rimraf dist && pnpm build:node && pnpm build:client && pnpm build:report",
+    "build": "rimraf dist && pnpm build:node && pnpm build:client",
     "build:client": "vite build",
-    "build:report": "vite build -c vite.report.config.ts",
     "build:node": "rollup -c",
     "dev:client": "vite",
     "dev:report": "vite -c vite.report.config.ts",

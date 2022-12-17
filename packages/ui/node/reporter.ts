@@ -54,7 +54,7 @@ export default class HTMLReporter implements Reporter {
       await fs.mkdir(resolve(htmlDir, 'assets'), { recursive: true })
 
     await fs.writeFile(metaFile, report, 'utf-8')
-    const ui = resolve(distDir, 'report')
+    const ui = resolve(distDir, 'client')
     // copy ui
     const files = fg.sync('**/*', { cwd: ui })
     await Promise.all(files.map(async (f) => {
