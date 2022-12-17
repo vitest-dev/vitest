@@ -24,6 +24,16 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
         {
           "file": [Circular],
           "id": 0,
+          "logs": [
+            {
+              "content": "json-fail>should fail
+",
+              "size": 1,
+              "taskId": 0,
+              "time": 0,
+              "type": "stdout",
+            },
+          ],
           "mode": "run",
           "name": "should fail",
           "result": {
