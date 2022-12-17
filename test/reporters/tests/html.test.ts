@@ -26,6 +26,7 @@ describe('html reporter', async () => {
     const metaJson = fs.readFileSync(resolve(root, `${basePath}/html.meta.json`), { encoding: 'utf-8' })
     const indexHtml = fs.readFileSync(resolve(root, `${basePath}/index.html`), { encoding: 'utf-8' })
     const resultJson = parse(metaJson.replace(new RegExp(vitestRoot, 'g'), '<rootDir>'))
+    resultJson.config = {} // doesn't matter for a test
     resultJson.files[0].id = 0
     resultJson.files[0].collectDuration = 0
     resultJson.files[0].setupDuration = 0
