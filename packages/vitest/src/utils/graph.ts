@@ -1,6 +1,5 @@
 import type { ModuleNode } from 'vite'
-import type { Vitest } from 'vitest/node'
-import type { ModuleGraphData } from '../types'
+import type { ModuleGraphData, Vitest } from '../types'
 
 export async function getModuleGraph(ctx: Vitest, id: string): Promise<ModuleGraphData> {
   const graph: Record<string, string[]> = {}
