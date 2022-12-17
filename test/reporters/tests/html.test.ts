@@ -2,6 +2,7 @@ import fs from 'fs'
 import { resolve } from 'pathe'
 import { execa } from 'execa'
 import { describe, expect, it } from 'vitest'
+import { parse } from 'flatted'
 
 describe('html reporter', async () => {
   const vitestRoot = resolve(__dirname, '../../..')
@@ -25,7 +26,7 @@ describe('html reporter', async () => {
     const metaJson = fs.readFileSync(resolve(root, `${basePath}/html.meta.json`), { encoding: 'utf-8' })
     const indexHtml = fs.readFileSync(resolve(root, `${basePath}/index.html`), { encoding: 'utf-8' })
     // TODO: fix timers
-    expect(JSON.parse(metaJson.replace(new RegExp(vitestRoot, 'g'), '<rootDir>'))).toMatchSnapshot(`tests are ${expected}`)
+    expect(parse(metaJson.replace(new RegExp(vitestRoot, 'g'), '<rootDir>'))).toMatchSnapshot(`tests are ${expected}`)
     expect(indexHtml).toMatch('window.METADATA_PATH="html-meta.json"')
   }, 40000)
 })
