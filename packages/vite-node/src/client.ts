@@ -324,7 +324,7 @@ export class ViteNodeRunner {
           return hotContext
         },
         set: (value) => {
-          hotContext = value;
+          hotContext = value
         },
       })
     }
