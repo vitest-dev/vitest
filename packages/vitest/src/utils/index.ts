@@ -10,6 +10,7 @@ import { getWorkerState } from '../utils'
 import { getNames } from './tasks'
 import { isBrowser, isNode } from './env'
 
+export * from './graph'
 export * from './tasks'
 export * from './base'
 export * from './global'

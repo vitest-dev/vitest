@@ -23,7 +23,7 @@ export function serializeError(val: any, seen = new WeakMap()): any {
   if (!val || typeof val === 'string')
     return val
   if (typeof val === 'function')
-    return `Function<${val.name}>`
+    return `Function<${val.name || 'anonymous'}>`
   if (typeof val === 'symbol')
     return val.toString()
   if (typeof val !== 'object')
