@@ -323,6 +323,9 @@ export class ViteNodeRunner {
           hotContext ||= this.options.createHotContext?.(this, `/@fs/${fsPath}`)
           return hotContext
         },
+        set: (value) => {
+          hotContext = value
+        },
       })
     }
 
