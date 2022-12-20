@@ -1,6 +1,7 @@
 import { ViteNodeRunner } from 'vite-node/client'
 import type { ViteNodeRunnerOptions } from 'vite-node'
 import { normalizePath } from 'vite'
+import { isNodeBuiltin } from 'mlly'
 import type { MockMap } from '../types/mocker'
 import { getCurrentEnvironment, getWorkerState } from '../utils'
 import { VitestMocker } from './mocker'
@@ -29,6 +30,16 @@ export class VitestRunner extends ViteNodeRunner {
     super(options)
 
     this.mocker = new VitestMocker(this)
+  }
+
+  shouldResolveId(id: string, _importee?: string | undefined): boolean {
+    const shouldResolve = super.shouldResolveId(id, _importee)
+    if (!shouldResolve)
+      return false
+    const environment = getCurrentEnvironment()
+    // do not try and resolve node builtins in Node
+    // import('url') returns Node internal even, if 'url' package is installed
+    return environment === 'node' ? !isNodeBuiltin(id) : true
   }
 
   async resolveUrl(id: string, importee?: string) {

@@ -189,8 +189,12 @@ export class ViteNodeRunner {
     }
   }
 
+  shouldResolveId(id: string, _importee?: string) {
+    return !isInternalRequest(id)
+  }
+
   async resolveUrl(id: string, importee?: string): Promise<[url: string, fsPath: string]> {
-    if (isInternalRequest(id))
+    if (!this.shouldResolveId(id))
       return [id, id]
     // we don't pass down importee here, because otherwise Vite doesn't resolve it correctly
     if (importee && id.startsWith(VALID_ID_PREFIX))

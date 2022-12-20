@@ -7,6 +7,7 @@
   },
   "devDependencies": {
     "tinyspy": "^1.0.2",
+    "url": "^0.11.0",
     "vitest": "workspace:*"
   }
 }

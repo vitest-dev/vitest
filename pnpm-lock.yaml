@@ -927,10 +927,8 @@ importers:
 
   test/base:
     specifiers:
-      url: ^0.11.0
       vitest: workspace:*
     devDependencies:
-      url: 0.11.0
       vitest: link:../../packages/vitest
 
   test/benchmark:
@@ -978,9 +976,11 @@ importers:
   test/core:
     specifiers:
       tinyspy: ^1.0.2
+      url: ^0.11.0
       vitest: workspace:*
     devDependencies:
       tinyspy: 1.0.2
+      url: 0.11.0
       vitest: link:../../packages/vitest
 
   test/coverage-test:

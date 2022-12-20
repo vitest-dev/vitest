@@ -6,7 +6,6 @@
     "coverage": "vitest run --coverage"
   },
   "devDependencies": {
-    "url": "^0.11.0",
     "vitest": "workspace:*"
   }
 }
