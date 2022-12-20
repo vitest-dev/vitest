@@ -54,7 +54,7 @@
     "@vitejs/plugin-vue": "^4.0.0",
     "@vitejs/plugin-vue-jsx": "^3.0.0",
     "@vitest/ws-client": "workspace:*",
-    "@vueuse/core": "^9.6.0",
+    "@vueuse/core": "^9.7.0",
     "ansi-to-html": "^0.7.2",
     "birpc": "^0.2.3",
     "codemirror": "^5.65.10",
