@@ -4,7 +4,7 @@ import packageUrl from 'url'
 import nodeUrl from 'node:url'
 import { expect, it } from 'vitest'
 
-it('vitest resolves both url to internal URL module in Node environment', () => {
+it('vitest resolves both "url" and "node:url" to internal URL module in Node environment', () => {
   expect(packageUrl).toHaveProperty('URL')
   expect(packageUrl).toHaveProperty('URLSearchParams')
   expect(packageUrl).toHaveProperty('fileURLToPath')
