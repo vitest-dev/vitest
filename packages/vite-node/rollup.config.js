@@ -26,8 +26,8 @@ const external = [
   'pathe',
   'birpc',
   'vite',
-  'url',
-  'events',
+  'node:url',
+  'node:events',
 ]
 
 const plugins = [

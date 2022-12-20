@@ -927,8 +927,10 @@ importers:
 
   test/base:
     specifiers:
+      url: ^0.11.0
       vitest: workspace:*
     devDependencies:
+      url: 0.11.0
       vitest: link:../../packages/vitest
 
   test/benchmark:
