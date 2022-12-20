@@ -11,7 +11,7 @@
     "prefetch": "esno .vitepress/scripts/fetch-avatars.ts"
   },
   "dependencies": {
-    "@vueuse/core": "^9.6.0",
+    "@vueuse/core": "^9.7.0",
     "jiti": "^1.16.0",
     "vue": "latest"
   },
@@ -26,7 +26,7 @@
     "unplugin-vue-components": "^0.22.12",
     "vite": "^4.0.0",
     "vite-plugin-pwa": "0.14.0",
-    "vitepress": "1.0.0-alpha.31",
+    "vitepress": "1.0.0-alpha.32",
     "workbox-window": "^6.5.4"
   }
 }
