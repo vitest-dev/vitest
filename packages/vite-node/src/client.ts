@@ -1,9 +1,8 @@
-import { createRequire } from 'module'
+import { createRequire } from 'node:module'
 // we need native dirname, because windows __dirname has \\
-// eslint-disable-next-line no-restricted-imports
-import { dirname } from 'path'
-import { fileURLToPath, pathToFileURL } from 'url'
-import vm from 'vm'
+import { dirname } from 'node:path'
+import { fileURLToPath, pathToFileURL } from 'node:url'
+import vm from 'node:vm'
 import { resolve } from 'pathe'
 import createDebug from 'debug'
 import { VALID_ID_PREFIX, cleanUrl, isInternalRequest, isPrimitive, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'

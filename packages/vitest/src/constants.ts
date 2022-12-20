@@ -1,4 +1,4 @@
-import url from 'url'
+import url from 'node:url'
 import { resolve } from 'pathe'
 import { isNode } from './utils/env'
 

@@ -1,4 +1,4 @@
-import { performance } from 'perf_hooks'
+import { performance } from 'node:perf_hooks'
 import { resolve } from 'pathe'
 import type { TransformResult, ViteDevServer } from 'vite'
 import createDebug from 'debug'

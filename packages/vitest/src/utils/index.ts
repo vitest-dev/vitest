@@ -1,5 +1,4 @@
-// eslint-disable-next-line no-restricted-imports
-import { relative as relativeBrowser } from 'path'
+import { relative as relativeBrowser } from 'node:path'
 import c from 'picocolors'
 import { isPackageExists } from 'local-pkg'
 import { relative as relativeNode } from 'pathe'

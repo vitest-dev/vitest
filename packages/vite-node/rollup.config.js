@@ -31,11 +31,6 @@ const external = [
 ]
 
 const plugins = [
-  alias({
-    entries: [
-      { find: /^node:(.+)$/, replacement: '$1' },
-    ],
-  }),
   resolve({
     preferBuiltins: true,
   }),
@@ -68,7 +63,16 @@ export default defineConfig([
       chunkFileNames: 'chunk-[name].cjs',
     },
     external,
-    plugins,
+    plugins: [
+      alias({
+        entries: [
+          // cjs in Node 14 doesn't support node: prefix
+          // can be dropped, when we drop support for Node 14
+          { find: /^node:(.+)$/, replacement: '$1' },
+        ],
+      }),
+      ...plugins,
+    ],
     onwarn,
   },
   {
