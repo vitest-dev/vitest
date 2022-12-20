@@ -1,4 +1,4 @@
-import { existsSync, promises as fs } from 'fs'
+import { existsSync, promises as fs } from 'node:fs'
 import type { ViteDevServer } from 'vite'
 import { normalizePath } from 'vite'
 import { relative, toNamespacedPath } from 'pathe'

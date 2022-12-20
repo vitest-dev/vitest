@@ -40,6 +40,8 @@ const external = [
   ...Object.keys(pkg.dependencies),
   ...Object.keys(pkg.peerDependencies),
   'worker_threads',
+  'node:worker_threads',
+  'node:fs',
   'inspector',
   'vite-node/source-map',
   'vite-node/client',
