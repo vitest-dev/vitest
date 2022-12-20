@@ -58,6 +58,8 @@ vitest related /src/index.ts /src/hello-world.js
 | `--silent` | Silent console output from tests |
 | `--isolate` | Isolate environment for each test file (default: `true`) |
 | `--reporter <name>` | Select reporter: `default`, `verbose`, `dot`, `junit`, `json`, or a path to a custom reporter |
+| `--outputDiffMaxSize <length>` | Object diff output max size (default: 10000) |
+| `--outputDiffMaxLines <lines>` | Max lines in diff output window (default: 50) |
 | `--outputTruncateLength <length>` | Truncate output diff lines up to `<length>` number of characters. |
 | `--outputDiffLines <lines>` | Limit number of output diff lines up to `<lines>`. |
 | `--outputFile <filename/-s>` | Write test results to a file when the `--reporter=json` or `--reporter=junit` option is also specified <br /> Via [cac's dot notation] you can specify individual outputs for multiple reporters |
@@ -70,6 +72,7 @@ vitest related /src/index.ts /src/hello-world.js
 | `--browser` | Run tests in browser |
 | `--environment <env>` | Runner environment (default: `node`) |
 | `--passWithNoTests` | Pass when no tests found |
+| `--logHeapUsage` | Show the size of heap for each test |
 | `--allowOnly` | Allow tests and suites that are marked as `only` (default: false in CI, true otherwise) |
 | `--dangerouslyIgnoreUnhandledErrors` | Ignore any unhandled errors that occur |
 | `--changed [since]` | Run tests that are affected by the changed files (default: false). See [docs](#changed) |

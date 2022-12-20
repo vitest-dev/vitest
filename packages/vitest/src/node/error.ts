@@ -160,8 +160,14 @@ function handleImportOutsideModuleError(stack: string, ctx: Vitest) {
 }\n`)))
 }
 
-function displayDiff(actual: string, expected: string, console: Console, options?: Omit<DiffOptions, 'showLegend'>) {
-  console.error(c.gray(unifiedDiff(actual, expected, options)) + '\n')
+export function displayDiff(actual: string, expected: string, console: Console, options: Omit<DiffOptions, 'showLegend'> = {}) {
+  const diff = unifiedDiff(actual, expected, options)
+  const dim = options.noColor ? (s: string) => s : c.dim
+  const black = options.noColor ? (s: string) => s : c.black
+  if (diff)
+    console.error(diff + '\n')
+  else if (actual && expected && actual !== '"undefined"' && expected !== '"undefined"')
+    console.error(dim('Could not display diff. It\'s possible objects are too large to compare.\nTry increasing ') + black('--outputDiffMaxSize') + dim(' option.\n'))
 }
 
 function printErrorMessage(error: ErrorWithDiff, logger: Logger) {
