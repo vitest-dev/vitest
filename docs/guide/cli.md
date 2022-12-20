@@ -72,6 +72,7 @@ vitest related /src/index.ts /src/hello-world.js
 | `--browser` | Run tests in browser |
 | `--environment <env>` | Runner environment (default: `node`) |
 | `--passWithNoTests` | Pass when no tests found |
+| `--logHeapUsage` | Show the size of heap for each test |
 | `--allowOnly` | Allow tests and suites that are marked as `only` (default: false in CI, true otherwise) |
 | `--dangerouslyIgnoreUnhandledErrors` | Ignore any unhandled errors that occur |
 | `--changed [since]` | Run tests that are affected by the changed files (default: false). See [docs](#changed) |
