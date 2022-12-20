@@ -89,6 +89,7 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
     displayDiff(stringify(e.actual), stringify(e.expected), ctx.logger.console, {
       outputTruncateLength: ctx.config.outputTruncateLength,
       outputDiffLines: ctx.config.outputDiffLines,
+      outputDiffMaxLines: ctx.config.outputDiffMaxLines,
     })
   }
 }
