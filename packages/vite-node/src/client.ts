@@ -13,35 +13,38 @@ import { extractSourceMap } from './source-map'
 const debugExecute = createDebug('vite-node:client:execute')
 const debugNative = createDebug('vite-node:client:native')
 
-export const DEFAULT_REQUEST_STUBS = {
-  '/@vite/client': {
-    injectQuery: (id: string) => id,
-    createHotContext() {
-      return {
-        accept: () => {},
-        prune: () => {},
-        dispose: () => {},
-        decline: () => {},
-        invalidate: () => {},
-        on: () => {},
-      }
-    },
-    updateStyle(id: string, css: string) {
-      if (typeof document === 'undefined')
-        return
-
-      const element = document.getElementById(id)
-      if (element)
-        element.remove()
-
-      const head = document.querySelector('head')
-      const style = document.createElement('style')
-      style.setAttribute('type', 'text/css')
-      style.id = id
-      style.innerHTML = css
-      head?.appendChild(style)
-    },
+const clientStub = {
+  injectQuery: (id: string) => id,
+  createHotContext() {
+    return {
+      accept: () => {},
+      prune: () => {},
+      dispose: () => {},
+      decline: () => {},
+      invalidate: () => {},
+      on: () => {},
+    }
   },
+  updateStyle(id: string, css: string) {
+    if (typeof document === 'undefined')
+      return
+
+    const element = document.getElementById(id)
+    if (element)
+      element.remove()
+
+    const head = document.querySelector('head')
+    const style = document.createElement('style')
+    style.setAttribute('type', 'text/css')
+    style.id = id
+    style.innerHTML = css
+    head?.appendChild(style)
+  },
+}
+
+export const DEFAULT_REQUEST_STUBS = {
+  '/@vite/client': clientStub,
+  '@vite/client': clientStub,
 }
 
 export class ModuleCacheMap extends Map<string, ModuleCache> {

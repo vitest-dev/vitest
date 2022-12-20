@@ -61,3 +61,9 @@ test('dynamic import throws an error', async () => {
   // @ts-expect-error path does not exist
   await expect(() => import('./some-unknown-path')).rejects.toThrowError(/Failed to load/)
 })
+
+test('can import @vite/client', async () => {
+  const name = '@vite/client'
+  await expect(import(name)).resolves.not.toThrow()
+  await expect(import(`/${name}`)).resolves.not.toThrow()
+})

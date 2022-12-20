@@ -41,8 +41,15 @@ export const hashRE = /#.*$/s
 export const cleanUrl = (url: string): string =>
   url.replace(hashRE, '').replace(queryRE, '')
 
+const internalRequests = [
+  '@vite/client',
+  '@vite/env',
+]
+
+const internalRequestRegexp = new RegExp(`^/?(${internalRequests.join('|')})$`)
+
 export const isInternalRequest = (id: string): boolean => {
-  return id.startsWith('/@vite/')
+  return internalRequestRegexp.test(id)
 }
 
 export function normalizeModuleId(id: string) {
