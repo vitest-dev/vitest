@@ -1,5 +1,5 @@
-import { pathToFileURL } from 'url'
-import { readFile } from 'fs/promises'
+import { pathToFileURL } from 'node:url'
+import { readFile } from 'node:fs/promises'
 import { hasCJSSyntax, isNodeBuiltin } from 'mlly'
 import { normalizeModuleId } from 'vite-node/utils'
 import { getWorkerState } from '../utils'

@@ -1,4 +1,4 @@
-import { existsSync } from 'fs'
+import { existsSync } from 'node:fs'
 import { isNodeBuiltin, isValidNodeImport } from 'mlly'
 import type { DepsHandlingOptions } from './types'
 import { slash } from './utils'

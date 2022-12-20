@@ -1,4 +1,4 @@
-import fs from 'fs'
+import fs from 'node:fs'
 import { findUp } from 'find-up'
 import { resolve } from 'pathe'
 import { loadConfigFromFile } from 'vite'

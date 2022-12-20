@@ -1,4 +1,4 @@
-import { promises as fs } from 'fs'
+import { promises as fs } from 'node:fs'
 import type { BirpcReturn } from 'birpc'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'

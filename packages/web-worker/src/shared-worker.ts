@@ -1,4 +1,4 @@
-import { MessageChannel, type MessagePort as NodeMessagePort } from 'worker_threads'
+import { MessageChannel, type MessagePort as NodeMessagePort } from 'node:worker_threads'
 import type { InlineWorkerContext, Procedure } from './types'
 import { InlineWorkerRunner } from './runner'
 import { debug, getRunnerOptions } from './utils'

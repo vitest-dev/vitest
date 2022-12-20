@@ -10,6 +10,7 @@ const external = [
   ...Object.keys(pkg.dependencies),
   ...Object.keys(pkg.peerDependencies || {}),
   'worker_threads',
+  'node:worker_threads',
 ]
 
 const plugins = [

@@ -1,5 +1,5 @@
-import { fileURLToPath, pathToFileURL } from 'url'
-import { existsSync } from 'fs'
+import { fileURLToPath, pathToFileURL } from 'node:url'
+import { existsSync } from 'node:fs'
 import { resolve } from 'pathe'
 import type { Arrayable, Nullable } from './types'
 
@@ -23,7 +23,7 @@ export function normalizeRequestId(id: string, base?: string): string {
     .replace(/^\/@id\/__x00__/, '\0') // virtual modules start with `\0`
     .replace(/^\/@id\//, '')
     .replace(/^__vite-browser-external:/, '')
-    .replace(/^(node|file):/, '')
+    .replace(/^file:/, '')
     .replace(/^\/+/, '/') // remove duplicate leading slashes
     .replace(/\?v=\w+/, '?') // remove ?v= query
     .replace(/&v=\w+/, '') // remove &v= query
@@ -50,6 +50,7 @@ export function normalizeModuleId(id: string) {
     .replace(/\\/g, '/')
     .replace(/^\/@fs\//, isWindows ? '' : '/')
     .replace(/^file:\//, '/')
+    .replace(/^node:/, '')
     .replace(/^\/+/, '/')
 }
 

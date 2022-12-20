@@ -1,4 +1,4 @@
-import { promises as fs } from 'fs'
+import { promises as fs } from 'node:fs'
 import type { EnvironmentOptions, ResolvedConfig, VitestEnvironment } from '../types'
 import { getWorkerState, resetModules } from '../utils'
 import { vi } from '../integrations/vi'

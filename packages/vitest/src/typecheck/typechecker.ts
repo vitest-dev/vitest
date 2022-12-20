@@ -1,4 +1,4 @@
-import { rm } from 'fs/promises'
+import { rm } from 'node:fs/promises'
 import type { ExecaChildProcess } from 'execa'
 import { execa } from 'execa'
 import { resolve } from 'pathe'

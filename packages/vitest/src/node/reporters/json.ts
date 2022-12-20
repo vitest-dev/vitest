@@ -1,4 +1,4 @@
-import { existsSync, promises as fs } from 'fs'
+import { existsSync, promises as fs } from 'node:fs'
 import { dirname, resolve } from 'pathe'
 import type { Vitest } from '../../node'
 import type { File, Reporter, Suite, Task, TaskState } from '../../types'
