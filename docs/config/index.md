@@ -363,7 +363,7 @@ Truncate the size of diff line up to `stdout.columns` or `80` number of characte
 - **Default:** `15`
 - **CLI:** `--outputDiffLines <lines>`, `--output-diff-lines <lines>`
 
-Limit number of single output diff lines up to `15`. Vitest counts all `+-` lines, when determining when to stop. For example, you might see diff like this, if you set this property to `3`:
+Limit the number of single output diff lines up to `15`. Vitest counts all `+-` lines when determining when to stop. For example, you might see diff like this, if you set this property to `3`:
 
 ```diff
 - test: 1,
@@ -383,7 +383,7 @@ Limit number of single output diff lines up to `15`. Vitest counts all `+-` line
 - **CLI:** `--outputDiffMaxLines <lines>`, `--output-diff-max-lines <lines>`
 - **Version:** Since Vitest 0.26.0
 
-Maximum number of lines to display in diff window. Beware that if you have a large object with many small diffs, you might not see all of them at once.
+The maximum number of lines to display in diff window. Beware that if you have a large object with many small diffs, you might not see all of them at once.
 
 ### outputDiffMaxSize
 
@@ -392,7 +392,7 @@ Maximum number of lines to display in diff window. Beware that if you have a lar
 - **CLI:** `--outputDiffMaxSize <length>`, `--output-diff-max-size <length>`
 - **Version:** Since Vitest 0.26.0
 
-Maximum length of stringified object before diff happens. Vitest tries to stringify an object before doing a diff, but if the object is too large, it will reduce the depth of the object to fit within this limit. Because of this if object is too big or nested, you might not see the diff.
+The maximum length of the stringified object before the diff happens. Vitest tries to stringify an object before doing a diff, but if the object is too large, it will reduce the depth of the object to fit within this limit. Because of this, if the object is too big or nested, you might not see the diff.
 
 Increasing this limit can increase the duration of diffing.
 
