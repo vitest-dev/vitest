@@ -1,4 +1,5 @@
 import { ViteNodeRunner } from 'vite-node/client'
+import { isInternalRequest } from 'vite-node/utils'
 import type { ViteNodeRunnerOptions } from 'vite-node'
 import { normalizePath } from 'vite'
 import { isNodeBuiltin } from 'mlly'
@@ -33,12 +34,11 @@ export class VitestRunner extends ViteNodeRunner {
   }
 
   shouldResolveId(id: string, _importee?: string | undefined): boolean {
-    const shouldResolve = super.shouldResolveId(id, _importee)
-    if (!shouldResolve)
+    if (isInternalRequest(id))
       return false
     const environment = getCurrentEnvironment()
     // do not try and resolve node builtins in Node
-    // import('url') returns Node internal even, if 'url' package is installed
+    // import('url') returns Node internal even if 'url' package is installed
     return environment === 'node' ? !isNodeBuiltin(id) : true
   }
 

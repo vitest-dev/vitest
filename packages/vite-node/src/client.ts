@@ -3,6 +3,7 @@ import { createRequire } from 'node:module'
 import { dirname } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import vm from 'node:vm'
+import { isNodeBuiltin } from 'mlly'
 import { resolve } from 'pathe'
 import createDebug from 'debug'
 import { VALID_ID_PREFIX, cleanUrl, isInternalRequest, isPrimitive, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
@@ -190,7 +191,7 @@ export class ViteNodeRunner {
   }
 
   shouldResolveId(id: string, _importee?: string) {
-    return !isInternalRequest(id)
+    return !isInternalRequest(id) && !isNodeBuiltin(id)
   }
 
   async resolveUrl(id: string, importee?: string): Promise<[url: string, fsPath: string]> {
