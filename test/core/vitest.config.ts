@@ -38,6 +38,7 @@ export default defineConfig({
     ],
   },
   test: {
+    name: 'core',
     slowTestThreshold: 1000,
     testTimeout: 2000,
     setupFiles: [

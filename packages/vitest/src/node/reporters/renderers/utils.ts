@@ -195,3 +195,17 @@ export function duration(time: number, locale = 'en-us') {
 export function formatTimeString(date: Date) {
   return date.toTimeString().split(' ')[0]
 }
+
+export function formatProjectName(name: string | undefined, suffix = ' ') {
+  if (!name)
+    return ''
+  const index = name.split('').reduce((acc, v, idx) => acc + v.charCodeAt(0) + idx, 0)
+  const colors = [
+    c.blue,
+    c.yellow,
+    c.cyan,
+    c.green,
+    c.magenta,
+  ]
+  return colors[index % colors.length](`|${name}|`) + suffix
+}

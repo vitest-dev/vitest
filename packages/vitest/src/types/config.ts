@@ -32,6 +32,11 @@ export type VitestRunMode = 'test' | 'benchmark' | 'typecheck'
 
 export interface InlineConfig {
   /**
+   * Name of the project. Will be used to display in the reporter.
+   */
+  name?: string
+
+  /**
    * Benchmark options.
    *
    * @default {}

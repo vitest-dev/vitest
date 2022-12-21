@@ -37,6 +37,7 @@ export interface Suite extends TaskBase {
   tasks: Task[]
   filepath?: string
   benchmark?: BenchFactory
+  projectName?: string
 }
 
 export interface File extends Suite {

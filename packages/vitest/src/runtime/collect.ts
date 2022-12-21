@@ -43,6 +43,7 @@ export async function collectTests(paths: string[], config: ResolvedConfig): Pro
       mode: 'run',
       filepath,
       tasks: [],
+      projectName: config.name,
     }
 
     clearCollectorContext()
