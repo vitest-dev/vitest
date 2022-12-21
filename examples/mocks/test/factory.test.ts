@@ -1,6 +1,7 @@
 import axios from 'axios'
 import * as example from '../src/example'
 import * as moduleA from '../src/moduleA'
+import * as moduleB from '../src/moduleB'
 import logger from '../src/log'
 
 vi
@@ -22,6 +23,15 @@ vi.mock('../src/moduleA', async () => {
   return {
     B: 'B',
     ...actual,
+  }
+})
+
+vi.mock('../src/moduleB', async (importOriginal) => {
+  const actual = await importOriginal<any>()
+  return {
+    ...actual,
+    B: 'mockedB',
+    C: 'addedC',
   }
 })
 
@@ -71,6 +81,12 @@ describe('mocking with factory', () => {
   test('successfully with actual', () => {
     expect(moduleA.A).toBe('A')
     expect((moduleA as any).B).toBe('B')
+  })
+
+  test('successfully with factory helper', () => {
+    expect(moduleB.A).toBe('A')
+    expect(moduleB.B).toBe('mockedB')
+    expect((moduleB as any).C).toBe('addedC')
   })
 
   test('mocks node_modules', () => {

@@ -2594,11 +2594,36 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 
   Makes all `imports` to passed module to be mocked. Inside a path you _can_ use configured Vite aliases. The call to `vi.mock` is hoisted, so it doesn't matter where you call it. It will always be executed before all imports.
 
-  - If `factory` is defined, will return its result. Factory function can be asynchronous. You may call [`vi.importActual`](#vi-importactual) inside to get the original module. Since the call to `vi.mock` is hoisted, you don't have access to variables declared in the global file scope!
+  - If `factory` is defined, will return its result. The factory function can be asynchronous. A helper to import the original module is passed to the factory function, or you call [`vi.importActual`](#vi-importactual) inside to get other modules. Since the call to `vi.mock` is hoisted, you don't have access to variables declared in the global file scope!
+  
+  ```ts
+  vi.mock('./path/to/module', async (importOriginal) => {
+    const mod = await importOriginal()
+    return {
+      ...mod,
+      // replace some exports
+      namedExport: vi.fn(),
+    }
+  })
+  ```
+
+  or
+
+  ```ts
+  vi.mock('./path/to/module', async () => {
+    const mod = await vi.importActual('./path/to/module')
+    return {
+      ...mod,
+      // replace some exports
+      namedExport: vi.fn(),
+    }
+  })
+  ```
+
   - If mocking a module with a default export, you'll need to provide a `default` key within the returned factory function object. This is an ES modules specific caveat, therefore `jest` documentation may differ as `jest` uses commonJS modules. *Example:*
 
   ```ts
-  vi.mock('path', () => {
+  vi.mock('./path/to/module', () => {
     return {
       default: { myDefaultKey: vi.fn() },
       namedExport: vi.fn(),

@@ -4,7 +4,7 @@ import { basename, dirname, extname, isAbsolute, join, resolve } from 'pathe'
 import c from 'picocolors'
 import { getAllMockableProperties, getType, getWorkerState } from '../utils'
 import { distDir } from '../constants'
-import type { PendingSuiteMock } from '../types/mocker'
+import type { MockFactory, PendingSuiteMock } from '../types/mocker'
 import type { VitestRunner } from './execute'
 
 class RefTracker {
@@ -101,7 +101,7 @@ export class VitestMocker {
     VitestMocker.pendingIds = []
   }
 
-  private async callFunctionMock(dep: string, mock: () => any) {
+  private async callFunctionMock(dep: string, mock: MockFactory) {
     const cached = this.moduleCache.get(dep)?.exports
     if (cached)
       return cached
@@ -303,7 +303,7 @@ export class VitestMocker {
       this.moduleCache.delete(mockId)
   }
 
-  public mockPath(originalId: string, path: string, external: string | null, factory?: () => any) {
+  public mockPath(originalId: string, path: string, external: string | null, factory?: MockFactory) {
     const suitefile = this.getSuiteFilepath()
     const id = this.normalizePath(path)
 
@@ -381,7 +381,7 @@ export class VitestMocker {
     return url
   }
 
-  public queueMock(id: string, importer: string, factory?: () => unknown) {
+  public queueMock(id: string, importer: string, factory?: MockFactory) {
     VitestMocker.pendingIds.push({ type: 'mock', id, importer, factory })
   }
 
