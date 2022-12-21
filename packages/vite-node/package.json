@@ -1,6 +1,6 @@
 {
   "name": "vite-node",
-  "version": "0.26.1",
+  "version": "0.26.2",
   "description": "Vite as Node.js runtime",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
