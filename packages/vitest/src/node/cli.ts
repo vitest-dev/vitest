@@ -102,22 +102,28 @@ async function typecheck(cliFilters: string[] = [], options: CliOptions = {}) {
   await start('typecheck', cliFilters, options)
 }
 
-function normalizeOptions(argv: CliOptions): CliOptions {
+function normalizeCliOptions(argv: CliOptions): CliOptions {
   if (argv.root)
     argv.root = normalize(argv.root)
+  else
+    delete argv.root
 
   if (argv.config)
     argv.config = normalize(argv.config)
+  else
+    delete argv.config
 
   if (argv.dir)
     argv.dir = normalize(argv.dir)
+  else
+    delete argv.dir
 
   return argv
 }
 
 async function start(mode: VitestRunMode, cliFilters: string[], options: CliOptions): Promise<Vitest | undefined> {
   try {
-    const ctx = await startVitest(mode, cliFilters.map(normalize), normalizeOptions(options))
+    const ctx = await startVitest(mode, cliFilters.map(normalize), normalizeCliOptions(options))
     if (!ctx?.config.watch)
       await ctx?.exit()
     return ctx
