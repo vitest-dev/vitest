@@ -2595,12 +2595,12 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
   Substitutes all imported modules from provided `path` with another module. You can use configured Vite aliases inside a path. The call to `vi.mock` is hoisted, so it doesn't matter where you call it. It will always be executed before all imports.
 
   ::: warning
-  `vi.mock` works only for modules that were imported with `import` keyword. It doesn't work with `require`.
+  `vi.mock` works only for modules that were imported with the `import` keyword. It doesn't work with `require`.
 
   Vitest statically analyzes your files to hoist `vi.mock`. It means that you cannot use `vi` that was not imported directly from `vitest` package (for example, from some utility file). To fix this, always use `vi.mock` with `vi` imported from `vitest`, or enable [`globals`](/config/#globals) config option.
   :::
 
-  If `factory` is defined, all imports will return its result. Vitest calls factory only once and caches result for all subsequent imports, until [`vi.unmock`](#vi-unmock) or [`vi.doUnmock`](#vi-dounmock) is called.
+  If `factory` is defined, all imports will return its result. Vitest calls factory only once and caches result for all subsequent imports until [`vi.unmock`](#vi-unmock) or [`vi.doUnmock`](#vi-dounmock) is called.
 
   Unlike in `jest`, the factory can be asynchronous, so you can use [`vi.importActual`](#vi-importactual) or a helper, received as the first argument, inside to get the original module.
 
@@ -2616,15 +2616,15 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
   ```
 
   ::: warning
-  `vi.mock` is hoisted (in other words, _moved_) to **top of the file**. It means that whenever you wrote it (be it inside `beforeEach` or `test`), it will actually be called before that.
+  `vi.mock` is hoisted (in other words, _moved_) to **top of the file**. It means that whenever you write it (be it inside `beforeEach` or `test`), it will actually be called before that.
 
   This also means that you cannot use any variables inside the factory that are defined outside the factory.
 
-  If you need to use variables inside the factory, try [`vi.doMock`](#vi-domock). It works the same way, but isn't hoisted. Beware that it only mocks subsequent imports.
+  If you need to use variables inside the factory, try [`vi.doMock`](#vi-domock). It works the same way but isn't hoisted. Beware that it only mocks subsequent imports.
   :::
 
   ::: warning
-  If you are mocking a module with default export, you will need to provide a `default` key within the returned factory function object. This is an ES modules specific caveat, therefore `jest` documentation may differ as `jest` uses CommonJS modules. For example,
+  If you are mocking a module with default export, you will need to provide a `default` key within the returned factory function object. This is an ES modules-specific caveat, therefore `jest` documentation may differ as `jest` uses CommonJS modules. For example,
 
   ```ts
   vi.mock('./path/to/module.js', () => {
@@ -2637,7 +2637,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
   ```
   :::
 
-  If there is a `__mocks__` folder alongside a file that you are mocking, and the factory is not provided, Vitest will try to find a file with the same name in `__mocks__` subfolder and use it as an actual module. If you are mocking a dependency, Vitest will try to find a `__mocks__` folder in the [root](/config/#root) of the project (default is `process.cwd()`).
+  If there is a `__mocks__` folder alongside a file that you are mocking, and the factory is not provided, Vitest will try to find a file with the same name in the `__mocks__` subfolder and use it as an actual module. If you are mocking a dependency, Vitest will try to find a `__mocks__` folder in the [root](/config/#root) of the project (default is `process.cwd()`).
 
   For example, you have this file structure:
 
@@ -2652,7 +2652,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
     - increment.test.ts
   ```
 
-  If you call `vi.mock` in a test file without a factory provided, it will find file in `__mocks__` folder to use as a module:
+  If you call `vi.mock` in a test file without a factory provided, it will find a file in the `__mocks__` folder to use as a module:
 
   ```ts
   // increment.test.ts
@@ -2672,13 +2672,13 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
   Beware that if you don't call `vi.mock`, modules **are not** mocked automatically.
   :::
 
-  If there is no `__mocks__` folder or a factory provided, Vitest will import original module and automock all its exports. For the rules applied, see [algorithm](/guide/mocking#automocking-algorithm).
+  If there is no `__mocks__` folder or a factory provided, Vitest will import the original module and auto-mock all its exports. For the rules applied, see [algorithm](/guide/mocking#automocking-algorithm).
 
 ### vi.doMock
 
 - **Type**: `(path: string, factory?: () => unknown) => void`
 
-  The same as [`vi.mock`](#vi-mock), but is not hoisted to top of the file, so you can reference variables in the global file scope. The next import of the module will be mocked. This will not mock modules that were imported before this was called.
+  The same as [`vi.mock`](#vi-mock), but it's not hoisted at the top of the file, so you can reference variables in the global file scope. The next import of the module will be mocked. This will not mock modules that were imported before this was called.
 
 ```ts
 // ./increment.js
@@ -3019,13 +3019,13 @@ IntersectionObserver === undefined
 
 - **Type**: `(path: string) => void`
 
-  Removes module from mocked registry. All calls to import will return original module even if it was mocked before. This call is hoisted (moved) to top of the file, so it will only unmock modules that were defined in `setupFiles`, for exampl.
+  Removes module from the mocked registry. All calls to import will return the original module even if it was mocked before. This call is hoisted (moved) to the top of the file, so it will only unmock modules that were defined in `setupFiles`, for example.
 
 ### vi.doUnmock
 
 - **Type**: `(path: string) => void`
 
-  The same as [`vi.unmock`](#vi-unmock), but is not hoisted to top of the file. The next import of the module will import original module instead of the mock. This will not unmock previously imported modules.
+  The same as [`vi.unmock`](#vi-unmock), but is not hoisted to the top of the file. The next import of the module will import the original module instead of the mock. This will not unmock previously imported modules.
 
 ```ts
 // ./increment.js
