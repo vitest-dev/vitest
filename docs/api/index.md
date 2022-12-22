@@ -2611,7 +2611,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
   Unlike in `jest`, the factory can be asynchronous, so you can use [`vi.importActual`](#vi-importactual) or a helper, received as the first argument, inside to get the original module.
 
   ```ts
-  vi.mock('./path/to/module', async (importOriginal) => {
+  vi.mock('./path/to/module.js', async (importOriginal) => {
     const mod = await importOriginal()
     return {
       ...mod,
