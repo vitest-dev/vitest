@@ -1,0 +1,202 @@
+// Vitest Snapshot v1
+
+exports[`html reporter > resolves to "failing" status for test file "json-fail" > tests are failing 1`] = `
+{
+  "config": {},
+  "files": [
+    {
+      "collectDuration": 0,
+      "filepath": "<rootDir>/test/reporters/fixtures/json-fail.test.ts",
+      "id": 0,
+      "mode": "run",
+      "name": "json-fail.test.ts",
+      "result": {
+        "duration": 0,
+        "hooks": {
+          "afterAll": "pass",
+          "beforeAll": "pass",
+        },
+        "startTime": 0,
+        "state": "fail",
+      },
+      "setupDuration": 0,
+      "tasks": [
+        {
+          "file": [Circular],
+          "id": 0,
+          "logs": [
+            {
+              "content": "json-fail>should fail
+",
+              "size": 1,
+              "taskId": 0,
+              "time": 0,
+              "type": "stdout",
+            },
+          ],
+          "mode": "run",
+          "name": "should fail",
+          "result": {
+            "duration": 0,
+            "error": {
+              "actual": "2",
+              "constructor": "Function<AssertionError>",
+              "expected": "1",
+              "message": "expected 2 to deeply equal 1",
+              "name": "AssertionError",
+              "nameStr": "AssertionError",
+              "operator": "strictEqual",
+              "showDiff": true,
+              "stack": "AssertionError: expected 2 to deeply equal 1",
+              "stackStr": "AssertionError: expected 2 to deeply equal 1",
+              "toJSON": "Function<anonymous>",
+              "toString": "Function<toString>",
+            },
+            "hooks": {
+              "afterEach": "pass",
+              "beforeEach": "pass",
+            },
+            "retryCount": 0,
+            "startTime": 0,
+            "state": "fail",
+          },
+          "suite": {
+            "file": [Circular],
+            "id": "",
+            "mode": "run",
+            "name": "",
+            "tasks": [
+              [Circular],
+            ],
+            "type": "suite",
+          },
+          "type": "test",
+        },
+      ],
+      "type": "suite",
+    },
+  ],
+  "moduleGraph": {
+    "<rootDir>/test/reporters/fixtures/json-fail.test.ts": {
+      "externalized": [],
+      "graph": {
+        "<rootDir>/test/reporters/fixtures/json-fail.test.ts": [],
+      },
+      "inlined": [
+        "<rootDir>/test/reporters/fixtures/json-fail.test.ts",
+      ],
+    },
+  },
+  "paths": [],
+}
+`;
+
+exports[`html reporter > resolves to "passing" status for test file "all-passing-or-skipped" > tests are passing 1`] = `
+{
+  "config": {},
+  "files": [
+    {
+      "collectDuration": 0,
+      "filepath": "<rootDir>/test/reporters/fixtures/all-passing-or-skipped.test.ts",
+      "id": 0,
+      "mode": "run",
+      "name": "all-passing-or-skipped.test.ts",
+      "result": {
+        "duration": 0,
+        "hooks": {
+          "afterAll": "pass",
+          "beforeAll": "pass",
+        },
+        "startTime": 0,
+        "state": "pass",
+      },
+      "setupDuration": 0,
+      "tasks": [
+        {
+          "file": [Circular],
+          "id": 0,
+          "mode": "run",
+          "name": "2 + 3 = 5",
+          "result": {
+            "duration": 0,
+            "hooks": {
+              "afterEach": "pass",
+              "beforeEach": "pass",
+            },
+            "retryCount": 0,
+            "startTime": 0,
+            "state": "pass",
+          },
+          "suite": {
+            "file": [Circular],
+            "id": "",
+            "mode": "run",
+            "name": "",
+            "tasks": [
+              [Circular],
+              {
+                "file": [Circular],
+                "id": "1111755131_1",
+                "mode": "skip",
+                "name": "3 + 3 = 6",
+                "suite": [Circular],
+                "type": "test",
+              },
+            ],
+            "type": "suite",
+          },
+          "type": "test",
+        },
+        {
+          "file": [Circular],
+          "id": "1111755131_1",
+          "mode": "skip",
+          "name": "3 + 3 = 6",
+          "suite": {
+            "file": [Circular],
+            "id": "",
+            "mode": "run",
+            "name": "",
+            "tasks": [
+              {
+                "file": [Circular],
+                "id": 0,
+                "mode": "run",
+                "name": "2 + 3 = 5",
+                "result": {
+                  "duration": 0,
+                  "hooks": {
+                    "afterEach": "pass",
+                    "beforeEach": "pass",
+                  },
+                  "retryCount": 0,
+                  "startTime": 0,
+                  "state": "pass",
+                },
+                "suite": [Circular],
+                "type": "test",
+              },
+              [Circular],
+            ],
+            "type": "suite",
+          },
+          "type": "test",
+        },
+      ],
+      "type": "suite",
+    },
+  ],
+  "moduleGraph": {
+    "<rootDir>/test/reporters/fixtures/all-passing-or-skipped.test.ts": {
+      "externalized": [],
+      "graph": {
+        "<rootDir>/test/reporters/fixtures/all-passing-or-skipped.test.ts": [],
+      },
+      "inlined": [
+        "<rootDir>/test/reporters/fixtures/all-passing-or-skipped.test.ts",
+      ],
+    },
+  },
+  "paths": [],
+}
+`;

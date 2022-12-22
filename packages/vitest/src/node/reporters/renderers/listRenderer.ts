@@ -5,7 +5,7 @@ import type { Benchmark, BenchmarkResult, SuiteHooks, Task, VitestRunMode } from
 import { clearInterval, getTests, getTypecheckTests, isTypecheckTest, notNullish, setInterval } from '../../../utils'
 import { F_RIGHT } from '../../../utils/figures'
 import type { Logger } from '../../logger'
-import { getCols, getHookStateSymbol, getStateSymbol } from './utils'
+import { formatProjectName, getCols, getHookStateSymbol, getStateSymbol } from './utils'
 
 export interface ListRendererOptions {
   renderSucceed?: boolean
@@ -91,7 +91,10 @@ export function renderTree(tasks: Task[], options: ListRendererOptions, level = 
 
   for (const task of tasks) {
     let suffix = ''
-    const prefix = ` ${getStateSymbol(task)} `
+    let prefix = ` ${getStateSymbol(task)} `
+
+    if (level === 0 && task.type === 'suite' && task.projectName)
+      prefix += formatProjectName(task.projectName)
 
     if (task.type === 'test' && task.result?.retryCount && task.result.retryCount > 1)
       suffix += c.yellow(` (retry x${task.result.retryCount})`)

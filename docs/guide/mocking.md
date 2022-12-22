@@ -399,15 +399,19 @@ vi.spyOn(exports, 'getter', 'get').mockReturnValue('mocked')
 
 Example with `vi.mock`:
 ```ts
-// some-path.ts
+// ./some-path.ts
 export function method() {}
 ```
 ```ts
-import { method } from 'some-path'
-vi.mock('some-path', () => ({
+import { method } from './some-path.ts'
+vi.mock('./some-path.ts', () => ({
   method: vi.fn()
 }))
 ```
+
+::: warning
+Don't forget that `vi.mock` call is hoisted to top of the file. **Do not** put `vi.mock` calls inside `beforeEach`, only one of these will actually mock a module.
+:::
 
 Example with `vi.spyOn`:
 ```ts
@@ -511,16 +515,71 @@ mocked() // is a spy function
 
 - Mock current date
 
+To mock `Date`'s time, you can use `vi.setSystemTime` helper function. This value will **not** automatically reset between different tests.
+
+Beware that using `vi.useFakeTimers` also changes the `Date`'s time.
+
 ```ts
 const mockDate = new Date(2022, 0, 1)
 vi.setSystemTime(mockDate)
 const now = new Date()
 expect(now.valueOf()).toBe(mockDate.valueOf())
+// reset mocked time
+vi.useRealTimers()
 ```
 
 - Mock global variable
 
+You can set global variable by assigning a value to `globalThis` or using [`vi.stubGlobal`](/api/#vi-stubglobal) helper. When using `vi.stubGlobal`, it will **not** automatically reset between different tests, unless you enable [`unstubGlobals`](/config/#unstubglobals) config option or call [`vi.unstubAllGlobals`](/api/#vi-unstuballglobals).
+
 ```ts
 vi.stubGlobal('__VERSION__', '1.0.0')
 expect(__VERSION__).toBe('1.0.0')
+```
+
+- Mock `import.meta.env`
+
+To change environmental variable, you can just assign a new value to it. This value will **not** automatically reset between different tests.
+
+```ts
+import { beforeEach, expect, it } from 'vitest'
+
+// you can reset it in beforeEach hook manually
+const originalViteEnv = import.meta.env.VITE_ENV
+
+beforeEach(() => {
+  import.meta.env.VITE_ENV = originalViteEnv
+})
+
+it('changes value', () => {
+  import.meta.env.VITE_ENV = 'staging'
+  expect(import.meta.env.VITE_ENV).toBe('staging')
+})
+```
+
+If you want to automatically reset value, you can use `vi.stubEnv` helper with [`unstubEnvs`](/config/#unstubEnvs) config option enabled (or call [`vi.unstubAllEnvs`](/api/#vi-unstuballenvs) manually in `beforeEach` hook):
+
+```ts
+import { expect, it, vi } from 'vitest'
+
+// before running tests "VITE_ENV" is "test"
+import.meta.env.VITE_ENV === 'test'
+
+it('changes value', () => {
+  vi.stubEnv('VITE_ENV', 'staging')
+  expect(import.meta.env.VITE_ENV).toBe('staging')
+})
+
+it('the value is restored before running an other test', () => {
+  expect(import.meta.env.VITE_ENV).toBe('test')
+})
+```
+
+```ts
+// vitest.config.ts
+export default {
+  test: {
+    unstubAllEnvs: true,
+  }
+}
 ```

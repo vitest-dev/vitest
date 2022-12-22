@@ -6,7 +6,6 @@ import dts from 'rollup-plugin-dts'
 import nodeResolve from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
-import alias from '@rollup/plugin-alias'
 import license from 'rollup-plugin-license'
 import c from 'picocolors'
 import fg from 'fast-glob'
@@ -41,19 +40,17 @@ const external = [
   ...Object.keys(pkg.dependencies),
   ...Object.keys(pkg.peerDependencies),
   'worker_threads',
+  'node:worker_threads',
+  'node:fs',
   'inspector',
   'puppeteer',
+  'vite-node/source-map',
+  'vite-node/client',
+  'vite-node/server',
+  'vite-node/utils',
 ]
 
 const plugins = [
-  alias({
-    entries: [
-      { find: /^node:(.+)$/, replacement: '$1' },
-      { find: 'vite-node/server', replacement: resolve(__dirname, '../vite-node/src/server.ts') },
-      { find: 'vite-node/client', replacement: resolve(__dirname, '../vite-node/src/client.ts') },
-      { find: 'vite-node/utils', replacement: resolve(__dirname, '../vite-node/src/utils.ts') },
-    ],
-  }),
   nodeResolve({
     preferBuiltins: true,
   }),

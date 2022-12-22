@@ -72,7 +72,7 @@ export async function getTsconfigPath(root: string, config: TypecheckConfig) {
   try {
     const tmpTsConfig: Record<string, any> = { ...tsconfig.config }
 
-    tmpTsConfig.compilerOptions ??= {}
+    tmpTsConfig.compilerOptions = tmpTsConfig.compilerOptions || {}
     tmpTsConfig.compilerOptions.emitDeclarationOnly = false
     tmpTsConfig.compilerOptions.incremental = true
     tmpTsConfig.compilerOptions.tsBuildInfoFile = path.join(

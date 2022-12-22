@@ -1,4 +1,4 @@
-import { promises as fs } from 'fs'
+import { promises as fs } from 'node:fs'
 import type { EnvironmentOptions, ResolvedConfig, VitestEnvironment } from '../types'
 import { getWorkerState, resetModules } from '../utils'
 import { vi } from '../integrations/vi'
@@ -53,6 +53,9 @@ export async function run(files: string[], config: ResolvedConfig): Promise<void
     if (!files || !files.length)
       continue
 
+    // @ts-expect-error untyped global
+    globalThis.__vitest_environment__ = environment
+
     const filesByOptions = groupBy(files, ({ envOptions }) => JSON.stringify(envOptions))
 
     for (const options of Object.keys(filesByOptions)) {
@@ -63,9 +66,9 @@ export async function run(files: string[], config: ResolvedConfig): Promise<void
 
       await withEnv(environment, files[0].envOptions || config.environmentOptions || {}, async () => {
         for (const { file } of files) {
-        // it doesn't matter if running with --threads
-        // if running with --no-threads, we usually want to reset everything before running a test
-        // but we have --isolate option to disable this
+          // it doesn't matter if running with --threads
+          // if running with --no-threads, we usually want to reset everything before running a test
+          // but we have --isolate option to disable this
           if (config.isolate) {
             workerState.mockMap.clear()
             resetModules(workerState.moduleCache, true)

@@ -1,5 +1,4 @@
-// eslint-disable-next-line no-restricted-imports
-import { relative as relativeBrowser } from 'path'
+import { relative as relativeBrowser } from 'node:path'
 import c from 'picocolors'
 import { isPackageExists } from 'local-pkg'
 import { relative as relativeNode } from 'pathe'
@@ -10,10 +9,12 @@ import { getWorkerState } from '../utils'
 import { getNames } from './tasks'
 import { isBrowser, isNode } from './env'
 
+export * from './graph'
 export * from './tasks'
 export * from './base'
 export * from './global'
 export * from './timers'
+export * from './import'
 export * from './env'
 
 export const isWindows = isNode && process.platform === 'win32'
@@ -48,6 +49,7 @@ export function resetModules(modules: ModuleCacheMap, resetMocks = false) {
   const skipPaths = [
     // Vitest
     /\/vitest\/dist\//,
+    /\/vite-node\/dist\//,
     // yarn's .store folder
     /vitest-virtual-\w+\/dist/,
     // cnpm

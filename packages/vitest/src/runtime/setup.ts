@@ -50,8 +50,8 @@ export async function setupConsoleLogSpy() {
   const timers = new Map<string, { stdoutTime: number; stderrTime: number; timer: any }>()
   const unknownTestId = '__vitest__unknown_test__'
 
-  const { Writable } = await import('stream')
-  const { Console } = await import('console')
+  const { Writable } = await import('node:stream')
+  const { Console } = await import('node:console')
 
   // group sync console.log calls with macro task
   function schedule(taskId: string) {

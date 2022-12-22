@@ -1,5 +1,5 @@
-import fs from 'fs'
-import type { Stats } from 'fs'
+import fs from 'node:fs'
+import type { Stats } from 'node:fs'
 
 type FileStatsCache = Pick<Stats, 'size'>
 

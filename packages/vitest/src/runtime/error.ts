@@ -1,7 +1,7 @@
 import util from 'util'
 import { util as ChaiUtil } from 'chai'
 import { stringify } from '../integrations/chai/jest-matcher-utils'
-import { deepClone, getType } from '../utils'
+import { deepClone, getType, getWorkerState } from '../utils'
 
 const IS_RECORD_SYMBOL = '@@__IMMUTABLE_RECORD__@@'
 const IS_COLLECTION_SYMBOL = '@@__IMMUTABLE_ITERABLE__@@'
@@ -23,7 +23,7 @@ export function serializeError(val: any, seen = new WeakMap()): any {
   if (!val || typeof val === 'string')
     return val
   if (typeof val === 'function')
-    return `Function<${val.name}>`
+    return `Function<${val.name || 'anonymous'}>`
   if (typeof val === 'symbol')
     return val.toString()
   if (typeof val !== 'object')
@@ -102,10 +102,13 @@ export function processError(err: any) {
   err.actual = replacedActual
   err.expected = replacedExpected
 
+  const workerState = getWorkerState()
+  const maxDiffSize = workerState.config.outputDiffMaxSize
+
   if (typeof err.expected !== 'string')
-    err.expected = stringify(err.expected)
+    err.expected = stringify(err.expected, 10, { maxLength: maxDiffSize })
   if (typeof err.actual !== 'string')
-    err.actual = stringify(err.actual)
+    err.actual = stringify(err.actual, 10, { maxLength: maxDiffSize })
 
   // some Error implementations don't allow rewriting message
   try {
@@ -136,13 +139,13 @@ function isReplaceable(obj1: any, obj2: any) {
   return obj1Type === obj2Type && obj1Type === 'Object'
 }
 
-export function replaceAsymmetricMatcher(actual: any, expected: any, actualReplaced = new WeakMap(), expectedReplaced = new WeakMap()) {
+export function replaceAsymmetricMatcher(actual: any, expected: any, actualReplaced = new WeakSet(), expectedReplaced = new WeakSet()) {
   if (!isReplaceable(actual, expected))
     return { replacedActual: actual, replacedExpected: expected }
   if (actualReplaced.has(actual) || expectedReplaced.has(expected))
     return { replacedActual: actual, replacedExpected: expected }
-  actualReplaced.set(actual, true)
-  expectedReplaced.set(expected, true)
+  actualReplaced.add(actual)
+  expectedReplaced.add(expected)
   ChaiUtil.getOwnEnumerableProperties(expected).forEach((key) => {
     const expectedValue = expected[key]
     const actualValue = actual[key]

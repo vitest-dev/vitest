@@ -4,7 +4,7 @@ import type { ErrorWithDiff, File, Reporter, Task, TaskResultPack, UserConsoleLo
 import { clearInterval, getFullName, getSuites, getTests, getTypecheckTests, hasFailed, hasFailedSnapshot, isNode, relativePath, setInterval } from '../../utils'
 import type { Vitest } from '../../node'
 import { F_RIGHT } from '../../utils/figures'
-import { divider, formatTimeString, getStateString, getStateSymbol, pointer, renderSnapshotSummary } from './renderers/utils'
+import { divider, formatProjectName, formatTimeString, getStateString, getStateSymbol, pointer, renderSnapshotSummary } from './renderers/utils'
 
 const BADGE_PADDING = '       '
 const HELP_HINT = `${c.dim('press ')}${c.bold('h')}${c.dim(' to show help')}`
@@ -39,7 +39,6 @@ export abstract class BaseReporter implements Reporter {
 
   onInit(ctx: Vitest) {
     this.ctx = ctx
-
     ctx.logger.printBanner()
     this.start = performance.now()
   }
@@ -321,11 +320,12 @@ export abstract class BaseReporter implements Reporter {
     for (const [error, tasks] of errorsQueue) {
       for (const task of tasks) {
         const filepath = (task as File)?.filepath || ''
+        const projectName = (task as File)?.projectName || task.file?.projectName
         let name = getFullName(task)
         if (filepath)
           name = `${name} ${c.dim(`[ ${this.relative(filepath)} ]`)}`
 
-        this.ctx.logger.error(`${c.red(c.bold(c.inverse(' FAIL ')))} ${name}`)
+        this.ctx.logger.error(`${c.red(c.bold(c.inverse(' FAIL ')))} ${formatProjectName(projectName)}${name}`)
       }
       await this.ctx.logger.printError(error)
       errorDivider()

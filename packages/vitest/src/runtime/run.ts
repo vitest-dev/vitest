@@ -499,7 +499,7 @@ export async function startTests(paths: string[], config: ResolvedConfig) {
 }
 
 export function clearModuleMocks() {
-  const { clearMocks, mockReset, restoreMocks } = getWorkerState().config
+  const { clearMocks, mockReset, restoreMocks, unstubEnvs, unstubGlobals } = getWorkerState().config
 
   // since each function calls another, we can just call one
   if (restoreMocks)
@@ -508,4 +508,9 @@ export function clearModuleMocks() {
     vi.resetAllMocks()
   else if (clearMocks)
     vi.clearAllMocks()
+
+  if (unstubEnvs)
+    vi.unstubAllEnvs()
+  if (unstubGlobals)
+    vi.unstubAllGlobals()
 }

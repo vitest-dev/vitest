@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events'
+import { EventEmitter } from 'node:events'
 import type { HMRPayload, Plugin } from 'vite'
 
 export type EventType = string | symbol

@@ -1,5 +1,5 @@
-import { existsSync, promises as fs } from 'fs'
-import { hostname } from 'os'
+import { existsSync, promises as fs } from 'node:fs'
+import { hostname } from 'node:os'
 import { dirname, relative, resolve } from 'pathe'
 
 import type { Vitest } from '../../node'

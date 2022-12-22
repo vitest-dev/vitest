@@ -1,7 +1,6 @@
-import { fileURLToPath, pathToFileURL } from 'url'
-import { existsSync } from 'fs'
-import { relative, resolve } from 'pathe'
-import { isNodeBuiltin } from 'mlly'
+import { fileURLToPath, pathToFileURL } from 'node:url'
+import { existsSync } from 'node:fs'
+import { resolve } from 'pathe'
 import type { Arrayable, Nullable } from './types'
 
 export const isWindows = process.platform === 'win32'
@@ -14,6 +13,8 @@ export function mergeSlashes(str: string) {
   return str.replace(/\/\//g, '/')
 }
 
+export const VALID_ID_PREFIX = '/@id/'
+
 export function normalizeRequestId(id: string, base?: string): string {
   if (base && id.startsWith(base))
     id = `/${id.slice(base.length)}`
@@ -22,7 +23,7 @@ export function normalizeRequestId(id: string, base?: string): string {
     .replace(/^\/@id\/__x00__/, '\0') // virtual modules start with `\0`
     .replace(/^\/@id\//, '')
     .replace(/^__vite-browser-external:/, '')
-    .replace(/^(node|file):/, '')
+    .replace(/^file:/, '')
     .replace(/^\/+/, '/') // remove duplicate leading slashes
     .replace(/\?v=\w+/, '?') // remove ?v= query
     .replace(/&v=\w+/, '') // remove &v= query
@@ -40,34 +41,28 @@ export const hashRE = /#.*$/s
 export const cleanUrl = (url: string): string =>
   url.replace(hashRE, '').replace(queryRE, '')
 
+const internalRequests = [
+  '@vite/client',
+  '@vite/env',
+]
+
+const internalRequestRegexp = new RegExp(`^/?(${internalRequests.join('|')})$`)
+
+export const isInternalRequest = (id: string): boolean => {
+  return internalRequestRegexp.test(id)
+}
+
 export function normalizeModuleId(id: string) {
   return id
     .replace(/\\/g, '/')
-    .replace(/^\/@fs\//, '/')
+    .replace(/^\/@fs\//, isWindows ? '' : '/')
     .replace(/^file:\//, '/')
+    .replace(/^node:/, '')
     .replace(/^\/+/, '/')
 }
 
 export function isPrimitive(v: any) {
   return v !== Object(v)
-}
-
-export function pathFromRoot(root: string, filename: string) {
-  if (isNodeBuiltin(filename))
-    return filename
-
-  // don't replace with "/" on windows, "/C:/foo" is not a valid path
-  filename = filename.replace(/^\/@fs\//, isWindows ? '' : '/')
-
-  if (!filename.startsWith(root))
-    return filename
-
-  const relativePath = relative(root, filename)
-
-  const segments = relativePath.split('/')
-  const startIndex = segments.findIndex(segment => segment !== '..' && segment !== '.')
-
-  return `/${segments.slice(startIndex).join('/')}`
 }
 
 export function toFilePath(id: string, root: string): string {

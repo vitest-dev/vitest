@@ -1,7 +1,7 @@
 {
   "name": "@vitest/ui",
   "type": "module",
-  "version": "0.25.8",
+  "version": "0.26.2",
   "description": "UI for Vitest",
   "license": "MIT",
   "repository": {
@@ -14,6 +14,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./reporter": {
+      "types": "./dist/reporter.d.ts",
+      "import": "./dist/reporter.js"
     },
     "./*": "./*"
   },
@@ -35,6 +39,8 @@
     "prepublishOnly": "pnpm build"
   },
   "dependencies": {
+    "fast-glob": "^3.2.12",
+    "flatted": "^3.2.7",
     "sirv": "^2.0.2"
   },
   "devDependencies": {
@@ -48,15 +54,14 @@
     "@vitejs/plugin-vue": "^4.0.0",
     "@vitejs/plugin-vue-jsx": "^3.0.0",
     "@vitest/ws-client": "workspace:*",
-    "@vueuse/core": "^9.6.0",
+    "@vueuse/core": "^9.7.0",
     "ansi-to-html": "^0.7.2",
     "birpc": "^0.2.3",
-    "codemirror": "^5.65.10",
+    "codemirror": "^5.65.11",
     "codemirror-theme-vars": "^0.1.1",
     "cypress": "^11.2.0",
     "d3-graph-controller": "^2.4.0",
     "diff": "^5.1.0",
-    "flatted": "^3.2.7",
     "floating-vue": "^2.0.0-y.0",
     "picocolors": "^1.0.0",
     "rollup": "^2.79.1",

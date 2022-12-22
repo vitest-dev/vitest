@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 // @ts-expect-error is not typed
 import cjs, { a, b } from '../src/cjs/module-cjs'
 // @ts-expect-error is not typed with imports
@@ -12,12 +12,36 @@ import * as arrayCjs from '../src/cjs/array-cjs'
 // @ts-expect-error is not typed with imports
 import * as classCjs from '../src/cjs/class-cjs'
 // @ts-expect-error is not typed with imports
+import * as nestedDefaultCjs from '../src/cjs/nested-default-cjs'
+// @ts-expect-error is not typed with imports
+import * as nestedDefaultExternalCjs from '../src/external/nested-default-cjs'
+// @ts-expect-error is not typed with imports
+import * as moduleDefaultCjs from '../src/external/default-cjs'
+// @ts-expect-error is not typed with imports
 import * as internalEsm from '../src/esm/internal-esm.mjs'
 import c, { d } from '../src/module-esm'
 import * as timeout from '../src/timeout'
 
 it('doesn\'t when extending module', () => {
   expect(() => Object.assign(globalThis, timeout)).not.toThrow()
+})
+
+describe('validating nested defaults in isolation', () => {
+  it.each([
+    nestedDefaultCjs,
+    nestedDefaultExternalCjs,
+  ])('nested default should stay, because environment is node', (mod) => {
+    expect(mod).toHaveProperty('default')
+    expect(mod.default).toHaveProperty('default')
+    expect(mod.default.default.a).toBe('a')
+    expect(mod.default.default.b).toBe('b')
+  })
+
+  it('don\'t interop external module.exports, because environment is node', () => {
+    expect(moduleDefaultCjs).toHaveProperty('default')
+    expect(moduleDefaultCjs.default).toHaveProperty('a')
+    expect(moduleDefaultCjs).not.toHaveProperty('a')
+  })
 })
 
 it('should work when using module.exports cjs', () => {
