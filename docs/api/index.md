@@ -2542,6 +2542,12 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
     .advanceTimersToNextTimer() // log 3
   ```
 
+### vi.getTimerCount
+
+- **Type:** `() => number`
+
+  Get the number of waiting timers.
+
 ### vi.clearAllMocks
 
   Will call [`.mockClear()`](/api/#mockclear) on all spies. This will clear mock history, but not reset its implementation to the default one.
@@ -2643,27 +2649,27 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 
   ```
   - __mocks__
-    - axios.ts
+    - axios.js
   - src
     __mocks__
-      - increment.ts
-    - increment.ts
+      - increment.js
+    - increment.js
   - tests
-    - increment.test.ts
+    - increment.test.js
   ```
 
   If you call `vi.mock` in a test file without a factory provided, it will find a file in the `__mocks__` folder to use as a module:
 
   ```ts
-  // increment.test.ts
+  // increment.test.js
   import { vi } from 'vitest'
-  // axios is a default export from `__mocks__/axios.ts`
+  // axios is a default export from `__mocks__/axios.js`
   import axios from 'axios'
-  // increment is a named export from `src/__mocks__/increment.ts`
-  import { increment } from '../increment.ts'
+  // increment is a named export from `src/__mocks__/increment.js`
+  import { increment } from '../increment.js'
 
   vi.mock('axios')
-  vi.mock('../increment.ts')
+  vi.mock('../increment.js')
 
   axios.get(`/apples/${increment(1)}`)
   ```
@@ -2787,6 +2793,10 @@ test('importing the next module imports mocked one', () => {
     expect(mod.getlocalState()).toBe('old value')
   })
   ```
+
+::: warning
+Does not reset mocks registry. To clear mocks registry, use [`vi.unmock`](#vi-unmock) or [`vi.doUnmock`](#vi-dounmock).
+:::
 
 ### vi.restoreAllMocks
 
@@ -2926,7 +2936,7 @@ IntersectionObserver === undefined
 
 - **Type:** `() => Vitest`
 
-  Calls every microtask. These are usually queued by `proccess.nextTick`. This will also run all microtasks scheduled by themselves.
+  Calls every microtask that was queued by `proccess.nextTick`. This will also run all microtasks scheduled by themselves.
 
 ### vi.runAllTimers
 
@@ -3046,7 +3056,7 @@ increment(1) === 100
 increment(30) === 100
 
 // this is not hoisted, so other import will return unmocked module
-vi.doUnmock('./increment.ts')
+vi.doUnmock('./increment.js')
 
 // this STILL returns 100, because `vi.doUnmock` doesn't reevaluate a module
 increment(1) === 100
