@@ -3,6 +3,7 @@ import { parseStacktrace } from '../utils/source-map'
 import type { VitestMocker } from '../runtime/mocker'
 import type { ResolvedConfig, RuntimeConfig } from '../types'
 import { getWorkerState, resetModules, waitForImportsToResolve } from '../utils'
+import type { MockFactoryWithHelper } from '../types/mocker'
 import { FakeTimers } from './mock/timers'
 import type { EnhancedSpy, MaybeMocked, MaybeMockedDeep, MaybePartiallyMocked, MaybePartiallyMockedDeep } from './spy'
 import { fn, isMockFunction, spies, spyOn } from './spy'
@@ -125,8 +126,13 @@ class VitestUtils {
    * @param path Path to the module. Can be aliased, if your config supports it
    * @param factory Factory for the mocked module. Has the highest priority.
    */
-  public mock(path: string, factory?: () => any) {
-    this._mocker.queueMock(path, this.getImporter(), factory)
+  public mock(path: string, factory?: MockFactoryWithHelper) {
+    const importer = this.getImporter()
+    this._mocker.queueMock(
+      path,
+      importer,
+      factory ? () => factory(() => this._mocker.importActual(path, importer)) : undefined,
+    )
   }
 
   /**
@@ -158,7 +164,7 @@ class VitestUtils {
    * @param path Path to the module. Can be aliased, if your config supports it
    * @returns Actual module without spies
    */
-  public async importActual<T>(path: string): Promise<T> {
+  public async importActual<T = unknown>(path: string): Promise<T> {
     return this._mocker.importActual<T>(path, this.getImporter())
   }
 
