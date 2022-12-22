@@ -2542,6 +2542,12 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
     .advanceTimersToNextTimer() // log 3
   ```
 
+### vi.getTimerCount
+
+- **Type:** `() => number`
+
+  Get the number of waiting timers.
+
 ### vi.clearAllMocks
 
   Will call [`.mockClear()`](/api/#mockclear) on all spies. This will clear mock history, but not reset its implementation to the default one.
@@ -2558,7 +2564,7 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 
 - **Type:** `(fn?: Function) => CallableMockInstance`
 
-  Creates a spy on a function, though can be initiated without one. Every time a function is invoked, it stores its call arguments, returns and instances. Also, you can manipulate its behavior with [methods](#mockinstance-methods).
+  Creates a spy on a function, though can be initiated without one. Every time a function is invoked, it stores its call arguments, returns, and instances. Also, you can manipulate its behavior with [methods](#mockinstance-methods).
   If no function is given, mock will return `undefined`, when invoked.
 
   ```ts
@@ -2592,12 +2598,20 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
 
 - **Type**: `(path: string, factory?: () => unknown) => void`
 
-  Makes all `imports` to passed module to be mocked. Inside a path you _can_ use configured Vite aliases. The call to `vi.mock` is hoisted, so it doesn't matter where you call it. It will always be executed before all imports.
+  Substitutes all imported modules from provided `path` with another module. You can use configured Vite aliases inside a path. The call to `vi.mock` is hoisted, so it doesn't matter where you call it. It will always be executed before all imports.
 
-  - If `factory` is defined, will return its result. The factory function can be asynchronous. A helper to import the original module is passed to the factory function, or you call [`vi.importActual`](#vi-importactual) inside to get other modules. Since the call to `vi.mock` is hoisted, you don't have access to variables declared in the global file scope!
-  
+  ::: warning
+  `vi.mock` works only for modules that were imported with the `import` keyword. It doesn't work with `require`.
+
+  Vitest statically analyzes your files to hoist `vi.mock`. It means that you cannot use `vi` that was not imported directly from `vitest` package (for example, from some utility file). To fix this, always use `vi.mock` with `vi` imported from `vitest`, or enable [`globals`](/config/#globals) config option.
+  :::
+
+  If `factory` is defined, all imports will return its result. Vitest calls factory only once and caches result for all subsequent imports until [`vi.unmock`](#vi-unmock) or [`vi.doUnmock`](#vi-dounmock) is called.
+
+  Unlike in `jest`, the factory can be asynchronous, so you can use [`vi.importActual`](#vi-importactual) or a helper, received as the first argument, inside to get the original module.
+
   ```ts
-  vi.mock('./path/to/module', async (importOriginal) => {
+  vi.mock('./path/to/module.js', async (importOriginal) => {
     const mod = await importOriginal()
     return {
       ...mod,
@@ -2607,23 +2621,19 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
   })
   ```
 
-  or
+  ::: warning
+  `vi.mock` is hoisted (in other words, _moved_) to **top of the file**. It means that whenever you write it (be it inside `beforeEach` or `test`), it will actually be called before that.
+
+  This also means that you cannot use any variables inside the factory that are defined outside the factory.
+
+  If you need to use variables inside the factory, try [`vi.doMock`](#vi-domock). It works the same way but isn't hoisted. Beware that it only mocks subsequent imports.
+  :::
+
+  ::: warning
+  If you are mocking a module with default export, you will need to provide a `default` key within the returned factory function object. This is an ES modules-specific caveat, therefore `jest` documentation may differ as `jest` uses CommonJS modules. For example,
 
   ```ts
-  vi.mock('./path/to/module', async () => {
-    const mod = await vi.importActual('./path/to/module')
-    return {
-      ...mod,
-      // replace some exports
-      namedExport: vi.fn(),
-    }
-  })
-  ```
-
-  - If mocking a module with a default export, you'll need to provide a `default` key within the returned factory function object. This is an ES modules specific caveat, therefore `jest` documentation may differ as `jest` uses commonJS modules. *Example:*
-
-  ```ts
-  vi.mock('./path/to/module', () => {
+  vi.mock('./path/to/module.js', () => {
     return {
       default: { myDefaultKey: vi.fn() },
       namedExport: vi.fn(),
@@ -2631,9 +2641,82 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
     }
   })
   ```
+  :::
 
-  - If `__mocks__` folder with file of the same name exist, all imports will return its exports. For example, `vi.mock('axios')` with `<root>/__mocks__/axios.ts` folder will return everything exported from `axios.ts`.
-  - If there is no `__mocks__` folder or a file with the same name inside, will call original module and mock it. (For the rules applied, see [algorithm](/guide/mocking#automocking-algorithm).)
+  If there is a `__mocks__` folder alongside a file that you are mocking, and the factory is not provided, Vitest will try to find a file with the same name in the `__mocks__` subfolder and use it as an actual module. If you are mocking a dependency, Vitest will try to find a `__mocks__` folder in the [root](/config/#root) of the project (default is `process.cwd()`).
+
+  For example, you have this file structure:
+
+  ```
+  - __mocks__
+    - axios.js
+  - src
+    __mocks__
+      - increment.js
+    - increment.js
+  - tests
+    - increment.test.js
+  ```
+
+  If you call `vi.mock` in a test file without a factory provided, it will find a file in the `__mocks__` folder to use as a module:
+
+  ```ts
+  // increment.test.js
+  import { vi } from 'vitest'
+  // axios is a default export from `__mocks__/axios.js`
+  import axios from 'axios'
+  // increment is a named export from `src/__mocks__/increment.js`
+  import { increment } from '../increment.js'
+
+  vi.mock('axios')
+  vi.mock('../increment.js')
+
+  axios.get(`/apples/${increment(1)}`)
+  ```
+
+  ::: warning
+  Beware that if you don't call `vi.mock`, modules **are not** mocked automatically.
+  :::
+
+  If there is no `__mocks__` folder or a factory provided, Vitest will import the original module and auto-mock all its exports. For the rules applied, see [algorithm](/guide/mocking#automocking-algorithm).
+
+### vi.doMock
+
+- **Type**: `(path: string, factory?: () => unknown) => void`
+
+  The same as [`vi.mock`](#vi-mock), but it's not hoisted at the top of the file, so you can reference variables in the global file scope. The next import of the module will be mocked. This will not mock modules that were imported before this was called.
+
+```ts
+// ./increment.js
+export const increment = number => number + 1
+```
+
+```ts
+import { beforeEach, test } from 'vitest'
+import { increment } from './increment.js'
+
+// the module is not mocked, because vi.doMock is not called yet
+increment(1) === 2
+
+let mockedIncrement = 100
+
+beforeEach(() => {
+  // simple doMock doesn't clear the previous cache, so we need to clear it manually here
+  vi.doUnmock('./increment.js')
+  // you can access variables inside a factory
+  vi.doMock('./increment.js', () => ({ increment: () => mockedIncrement++ }))
+})
+
+test('importing the next module imports mocked one', () => {
+  // original import WAS NOT MOCKED, because vi.doMock is evaluated AFTER imports
+  expect(increment(1)).toBe(2)
+  const { increment: mockedIncrement } = await import('./increment.js')
+  // new import returns mocked module
+  expect(mockedIncrement(1)).toBe(101)
+  expect(mockedIncrement(1)).toBe(102)
+  expect(mockedIncrement(1)).toBe(103)
+})
+```
 
 ### vi.mocked
 
@@ -2710,6 +2793,10 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
     expect(mod.getlocalState()).toBe('old value')
   })
   ```
+
+::: warning
+Does not reset mocks registry. To clear mocks registry, use [`vi.unmock`](#vi-unmock) or [`vi.doUnmock`](#vi-dounmock).
+:::
 
 ### vi.restoreAllMocks
 
@@ -2849,7 +2936,7 @@ IntersectionObserver === undefined
 
 - **Type:** `() => Vitest`
 
-  Calls every microtask. These are usually queued by `proccess.nextTick`. This will also run all microtasks scheduled by themselves.
+  Calls every microtask that was queued by `proccess.nextTick`. This will also run all microtasks scheduled by themselves.
 
 ### vi.runAllTimers
 
@@ -2942,7 +3029,45 @@ IntersectionObserver === undefined
 
 - **Type**: `(path: string) => void`
 
-  Removes module from mocked registry. All subsequent calls to import will return original module even if it was mocked.
+  Removes module from the mocked registry. All calls to import will return the original module even if it was mocked before. This call is hoisted (moved) to the top of the file, so it will only unmock modules that were defined in `setupFiles`, for example.
+
+### vi.doUnmock
+
+- **Type**: `(path: string) => void`
+
+  The same as [`vi.unmock`](#vi-unmock), but is not hoisted to the top of the file. The next import of the module will import the original module instead of the mock. This will not unmock previously imported modules.
+
+```ts
+// ./increment.js
+export const increment = number => number + 1
+```
+
+```ts
+import { increment } from './increment.js'
+
+// increment is already mocked, because vi.mock is hoisted
+increment(1) === 100
+
+// this is hoisted, and factory is called before the import on line 1
+vi.mock('./increment.js', () => ({ increment: () => 100 }))
+
+// all calls are mocked, and `increment` always returns 100
+increment(1) === 100
+increment(30) === 100
+
+// this is not hoisted, so other import will return unmocked module
+vi.doUnmock('./increment.js')
+
+// this STILL returns 100, because `vi.doUnmock` doesn't reevaluate a module
+increment(1) === 100
+increment(30) === 100
+
+// the next import is unmocked, now `increment` is the original function that returns count + 1
+const { increment: unmockedIncrement } = await import('./increment.js')
+
+unmockedIncrement(1) === 2
+unmockedIncrement(30) === 31
+```
 
 ### vi.useFakeTimers
 
