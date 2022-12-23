@@ -45,6 +45,7 @@ export interface ModuleCache {
   promise?: Promise<any>
   exports?: any
   evaluated?: boolean
+  resolving?: boolean
   code?: string
   map?: RawSourceMap
   /**

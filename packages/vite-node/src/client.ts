@@ -197,7 +197,7 @@ export class ViteNodeRunner {
     return !isInternalRequest(id) && !isNodeBuiltin(id)
   }
 
-  async resolveUrl(id: string, importee?: string): Promise<[url: string, fsPath: string]> {
+  private async _resolveUrl(id: string, importee?: string): Promise<[url: string, fsPath: string]> {
     if (!this.shouldResolveId(id))
       return [id, id]
     // we don't pass down importee here, because otherwise Vite doesn't resolve it correctly
@@ -213,6 +213,18 @@ export class ViteNodeRunner {
     // to be compatible with dependencies that do not resolve id
     const fsPath = resolved ? resolvedId : toFilePath(id, this.root)
     return [resolvedId, fsPath]
+  }
+
+  async resolveUrl(id: string, importee?: string) {
+    const resolveKey = `resolve:${id}`
+    // put info about new import as soon as possible, so we can start tracking it
+    this.moduleCache.set(resolveKey, { resolving: true })
+    try {
+      return await this._resolveUrl(id, importee)
+    }
+    finally {
+      this.moduleCache.delete(resolveKey)
+    }
   }
 
   /** @internal */

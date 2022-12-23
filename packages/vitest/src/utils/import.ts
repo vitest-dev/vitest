@@ -1,21 +1,23 @@
 import { getWorkerState } from './global'
 import { setTimeout } from './timers'
 
-export async function waitForImportsToResolve(tries = 0) {
-  await new Promise(resolve => setTimeout(resolve, 0))
+function waitNextTick() {
+  return new Promise(resolve => setTimeout(resolve, 0))
+}
+
+export async function waitForImportsToResolve() {
+  await waitNextTick()
   const state = getWorkerState()
   const promises: Promise<unknown>[] = []
+  let resolvingCount = 0
   for (const mod of state.moduleCache.values()) {
     if (mod.promise && !mod.evaluated)
       promises.push(mod.promise)
+    if (mod.resolving)
+      resolvingCount++
   }
-  if (!promises.length && tries >= 3)
+  if (!promises.length && !resolvingCount)
     return
   await Promise.allSettled(promises)
-  // wait until the end of the loop, so `.then` on modules is called,
-  // like in import('./example').then(...)
-  // also call dynamicImportSettled again in case new imports were added
-  await new Promise(resolve => setTimeout(resolve, 1))
-    .then(() => Promise.resolve())
-    .then(() => waitForImportsToResolve(tries + 1))
+  await waitForImportsToResolve()
 }
