@@ -41,6 +41,9 @@ export default (base = '/'): Plugin[] => {
           return result
         }
 
+        if (id === 'node:path' || id === 'node:console')
+          id = id.slice(5)
+
         if (stubs.includes(id))
           return resolve(pkgRoot, 'stubs', id)
 

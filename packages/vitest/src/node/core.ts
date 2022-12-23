@@ -36,6 +36,8 @@ export class Vitest {
   pool: WorkerPool | undefined
   typechecker: Typechecker | undefined
 
+  runMode = false
+
   vitenode: ViteNodeServer = undefined!
 
   invalidates: Set<string> = new Set()
@@ -57,6 +59,7 @@ export class Vitest {
   private _onSetServer: OnServerRestartHandler[] = []
 
   async setServer(options: UserConfig, server: ViteDevServer) {
+    this.runMode = (options as any).run === true
     this.unregisterWatcher?.()
     clearTimeout(this._rerunTimer)
     this.restartsCount += 1

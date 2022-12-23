@@ -288,7 +288,7 @@ importers:
       '@types/react-test-renderer': 17.0.2
       '@vitejs/plugin-react': 3.0.0_vite@4.0.0
       '@vitest/ui': link:../../packages/ui
-      happy-dom: 8.1.0
+      happy-dom: 8.1.1
       jsdom: 20.0.3
       react-test-renderer: 17.0.2_react@17.0.2
       vite: 4.0.0
@@ -996,7 +996,7 @@ importers:
     devDependencies:
       '@vitejs/plugin-vue': 4.0.0_vite@4.0.0+vue@3.2.45
       '@vue/test-utils': 2.2.6_vue@3.2.45
-      happy-dom: 8.1.0
+      happy-dom: 8.1.1
       vite: 4.0.0
       vitest: link:../../packages/vitest
       vue: 3.2.45
@@ -4026,7 +4026,7 @@ packages:
     resolution: {integrity: sha512-lkqXDcvlFT5rvEjiu6+QYO+1GXrEHRo2LOtS7E4GtX5ESIZOgepqsZBVIj6Pv+a6zqsya9VCgiK1KAK4BvJDAw==}
     engines: {node: '>=6.9.0'}
     dependencies:
-      regenerator-runtime: 0.13.9
+      regenerator-runtime: 0.13.11
 
   /@babel/template/7.18.10:
     resolution: {integrity: sha512-TI+rCtooWHr3QJ27kJxfjutghu44DLnasDMwpDqCXVTal9RLp3RSYNh4NdBrRP2cQAoG9A8juOQl6P6oZG4JxA==}
@@ -5622,7 +5622,7 @@ packages:
       memoizerific: 1.11.3
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
-      regenerator-runtime: 0.13.9
+      regenerator-runtime: 0.13.11
       ts-dedent: 2.2.0
       util-deprecate: 1.0.2
     dev: true
@@ -5700,7 +5700,7 @@ packages:
       lodash: 4.17.21
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
-      regenerator-runtime: 0.13.9
+      regenerator-runtime: 0.13.11
       remark-external-links: 8.0.0
       remark-slug: 6.1.0
       ts-dedent: 2.2.0
@@ -5872,7 +5872,7 @@ packages:
       global: 4.4.0
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
-      regenerator-runtime: 0.13.9
+      regenerator-runtime: 0.13.11
       ts-dedent: 2.2.0
     dev: true
 
@@ -5895,7 +5895,7 @@ packages:
       core-js: 3.25.0
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
-      regenerator-runtime: 0.13.9
+      regenerator-runtime: 0.13.11
     dev: true
 
   /@storybook/addon-viewport/6.5.10_sfoxds7t5ydpegc3knd667wn6m:
@@ -5921,7 +5921,7 @@ packages:
       prop-types: 15.8.1
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
-      regenerator-runtime: 0.13.9
+      regenerator-runtime: 0.13.11
     dev: true
 
   /@storybook/addons/6.5.10_sfoxds7t5ydpegc3knd667wn6m:
@@ -5942,7 +5942,7 @@ packages:
       global: 4.4.0
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
-      regenerator-runtime: 0.13.9
+      regenerator-runtime: 0.13.11
     dev: true
 
   /@storybook/api/6.5.10_sfoxds7t5ydpegc3knd667wn6m:
@@ -5965,7 +5965,7 @@ packages:
       memoizerific: 1.11.3
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
-      regenerator-runtime: 0.13.9
+      regenerator-runtime: 0.13.11
       store2: 2.14.2
       telejson: 6.0.8
       ts-dedent: 2.2.0
@@ -6154,7 +6154,7 @@ packages:
       qs: 6.11.0
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
-      regenerator-runtime: 0.13.9
+      regenerator-runtime: 0.13.11
       util-deprecate: 1.0.2
     dev: true
 
@@ -6469,7 +6469,7 @@ packages:
       core-js: 3.25.0
       doctrine: 3.0.0
       lodash: 4.17.21
-      regenerator-runtime: 0.13.9
+      regenerator-runtime: 0.13.11
     transitivePeerDependencies:
       - react
       - react-dom
@@ -6768,7 +6768,7 @@ packages:
       qs: 6.11.0
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
-      regenerator-runtime: 0.13.9
+      regenerator-runtime: 0.13.11
     dev: true
 
   /@storybook/semver/7.3.2:
@@ -6817,7 +6817,7 @@ packages:
       memoizerific: 1.11.3
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
-      regenerator-runtime: 0.13.9
+      regenerator-runtime: 0.13.11
       slash: 3.0.0
       stable: 0.1.8
       synchronous-promise: 2.0.16
@@ -6891,7 +6891,7 @@ packages:
       memoizerific: 1.11.3
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
-      regenerator-runtime: 0.13.9
+      regenerator-runtime: 0.13.11
     dev: true
 
   /@storybook/ui/6.5.10_sfoxds7t5ydpegc3knd667wn6m:
@@ -7343,10 +7343,6 @@ packages:
 
   /@types/node/18.11.17:
     resolution: {integrity: sha512-HJSUJmni4BeDHhfzn6nF0sVmd1SMezP7/4F0Lq+aXzmp2xm9O7WXrUtHW/CHlYVtZUbByEvWidHqRtcJXGF2Ng==}
-    dev: true
-
-  /@types/node/18.11.15:
-    resolution: {integrity: sha512-VkhBbVo2+2oozlkdHXLrb3zjsRkpdnaU2bXmX8Wgle3PUi569eLRaHGlgETQHR7lLL1w7GiG3h9SnePhxNDecw==}
     dev: true
 
   /@types/node/18.7.13:
@@ -13385,8 +13381,8 @@ packages:
       - encoding
     dev: true
 
-  /happy-dom/8.1.0:
-    resolution: {integrity: sha512-R9NVb5815gpMFsldZF0wVSHw2uSobx6yitSkCdQPda1kwfAmVw4Ut8ZspxGHXkK6OA93SznldkcvrbhKFr6JcA==}
+  /happy-dom/8.1.1:
+    resolution: {integrity: sha512-uI8NneN2B0D+vwIhjQVKtIUYOSh/zymfj61bU/fxkoAw+Aktn0ewG6dYKyFPOvyBoFLPg3S8fsn2OqSoYCqJeQ==}
     dependencies:
       css.escape: 1.5.1
       he: 1.2.0
@@ -17862,10 +17858,10 @@ packages:
 
   /regenerator-runtime/0.13.11:
     resolution: {integrity: sha512-kY1AZVr2Ra+t+piVaJ4gxaFaReZVH40AKNo7UCX6W+dEwBo/2oZJzqfuN1qLq1oL45o56cPaTXELwrTh8Fpggg==}
-    dev: true
 
   /regenerator-runtime/0.13.9:
     resolution: {integrity: sha512-p3VT+cOEgxFsRRA9X4lkI1E+k2/CtnKtU4gcxyaCUreilL/vqI6CdZ3wxVUx3UOUg+gnUOQQcRI7BmSI656MYA==}
+    dev: true
 
   /regenerator-transform/0.15.0:
     resolution: {integrity: sha512-LsrGtPmbYg19bcPHwdtmXwbW+TqNvtY4riE3P83foeHRroMbH6/2ddFBfab3t7kbzc7v7p4wbkIecHImqt0QNg==}
@@ -20597,10 +20593,11 @@ packages:
       - supports-color
     dev: true
 
-  /vite-plugin-pwa/0.14.0_vite@4.0.0:
+  /vite-plugin-pwa/0.14.0_hsd7wmhtxdre4ds2vghqydhvau:
     resolution: {integrity: sha512-3wZx47PLWTckOQhc8Y6YZjAbNZ89Ovh4TdCT97MGhgl7aFd2LUekVnAmIgFwgMqyxzJ93nmkPF/ALpEW/i2qCg==}
     peerDependencies:
       vite: ^3.1.0 || ^4.0.0
+      workbox-window: ^6.5.4
     dependencies:
       '@rollup/plugin-replace': 5.0.1_rollup@2.79.1
       debug: 4.3.4
