@@ -22,7 +22,7 @@
     "test": "vitest --api -r test/core",
     "test:run": "vitest run -r test/core",
     "test:all": "CI=true pnpm -r --stream run test --allowOnly",
-    "test:ci": "CI=true pnpm -r --stream --filter !test-fails --filter !test-browser --filter !test-esm --filter !test-browser run test --allowOnly",
+    "test:ci": "CI=true pnpm -r --stream --filter !test-fails --filter !test-esm run test --allowOnly",
     "test:ci:single-thread": "CI=true pnpm -r --stream --filter !test-fails --filter !test-esm --filter !test-browser run test --allowOnly --no-threads",
     "typecheck": "tsc --noEmit",
     "typecheck:why": "tsc --noEmit --explainFiles > explainTypes.txt",
