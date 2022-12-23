@@ -87,9 +87,9 @@ Files to exclude from the test run, using glob pattern.
 
 ### deps
 
-- **Type:** `{ external?, inline? }`
+- **Type:** `{ external?, inline?, ... }`
 
-Handling for dependencies inlining or externalizing
+Handling for dependencies resolution.
 
 #### deps.external
 
@@ -121,16 +121,32 @@ This might potentially cause some misalignment if a package has different logic 
 - **Type:** `boolean`
 - **Default:** `false`
 
-Use [experimental Node loader](https://nodejs.org/api/esm.html#loaders) to resolve imports inside `node_modules`, using Vite resolve algorithm.
+Use [experimental Node loader](https://nodejs.org/api/esm.html#loaders) to resolve imports inside externalized files, using Vite resolve algorithm.
 
-If disabled, your `alias` and `<plugin>.resolveId` won't affect imports inside `node_modules` or `deps.external`.
+If disabled, your `alias` and `<plugin>.resolveId` won't affect imports inside externalized packages (by default, `node_modules`).
 
 #### deps.interopDefault
 
 - **Type:** `boolean`
-- **Default:** `true`
+- **Default:** `false` if `environment` is `node`, `true` otherwise
 
-Interpret CJS module's default as named exports.
+Interpret CJS module's default as named exports. Some dependencies only bundle CJS modules and don't use named exports that Node.js can statically analyze when a package is imported using `import` syntax instead of `require`. When importing such dependencies in Node environment using named exports, you will see this error:
+
+```
+import { read } from 'fs-jetpack';
+         ^^^^
+SyntaxError: Named export 'read' not found. The requested module 'fs-jetpack' is a CommonJS module, which may not support all module.exports as named exports.
+CommonJS modules can always be imported via the default export.
+```
+
+Vitest doesn't do static analysis, and cannot fail before your running code, so you will most likely see this error when running tests:
+
+```
+TypeError: createAsyncThunk is not a function
+TypeError: default is not a function
+```
+
+If you are using bundlers or transpilers that bypass this Node.js limitation, you can enable this option manually. By default, Vitest assumes you are using Node ESM syntax, when `environment` is `node`, and doesn't interpret named exports.
 
 ### benchmark
 
