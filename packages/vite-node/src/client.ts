@@ -423,6 +423,10 @@ export class ViteNodeRunner {
         return Array.from(new Set(allKeys))
       },
       getOwnPropertyDescriptor(mod, prop) {
+        if (prop in mod)
+          return Reflect.getOwnPropertyDescriptor(mod, prop)
+        if (!defaultExport || isPrimitive(defaultExport))
+          return undefined
         if (prop === 'default') {
           return {
             value: defaultExport,
@@ -430,10 +434,6 @@ export class ViteNodeRunner {
             configurable: true,
           }
         }
-        if (prop in mod)
-          return Reflect.getOwnPropertyDescriptor(mod, prop)
-        if (!defaultExport || isPrimitive(defaultExport))
-          return undefined
         return Reflect.getOwnPropertyDescriptor(defaultExport, prop)
       },
     })
