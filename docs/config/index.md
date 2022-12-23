@@ -130,7 +130,7 @@ If disabled, your `alias` and `<plugin>.resolveId` won't affect imports inside e
 - **Type:** `boolean`
 - **Default:** `false` if `environment` is `node`, `true` otherwise
 
-Interpret CJS module's default as named exports. Some dependencies only bundle CJS modules and don't use named exports that Node.js can statically analyze, when package is imported using `import` syntax instead of `require`. When importing such dependencies in Node environment using named exports, you will see this error:
+Interpret CJS module's default as named exports. Some dependencies only bundle CJS modules and don't use named exports that Node.js can statically analyze when a package is imported using `import` syntax instead of `require`. When importing such dependencies in Node environment using named exports, you will see this error:
 
 ```
 import { read } from 'fs-jetpack';
@@ -139,7 +139,7 @@ SyntaxError: Named export 'read' not found. The requested module 'fs-jetpack' is
 CommonJS modules can always be imported via the default export.
 ```
 
-Vitest doesn't do static analysis, and cannot fail before your running code, so you will most likely see this error, when running tests:
+Vitest doesn't do static analysis, and cannot fail before your running code, so you will most likely see this error when running tests:
 
 ```
 TypeError: createAsyncThunk is not a function
