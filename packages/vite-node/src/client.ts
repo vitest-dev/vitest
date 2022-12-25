@@ -64,21 +64,30 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
     return this
   }
 
+  setByModuleId(modulePath: string, mod: ModuleCache) {
+    return super.set(modulePath, mod)
+  }
+
   set(fsPath: string, mod: ModuleCache) {
-    fsPath = this.normalizePath(fsPath)
-    return super.set(fsPath, mod)
+    return this.setByModuleId(this.normalizePath(fsPath), mod)
+  }
+
+  getByModuleId(modulePath: string): ModuleCache {
+    if (!super.has(modulePath))
+      super.set(modulePath, {})
+    return super.get(modulePath)!
   }
 
   get(fsPath: string): ModuleCache {
-    fsPath = this.normalizePath(fsPath)
-    if (!super.has(fsPath))
-      super.set(fsPath, {})
-    return super.get(fsPath)!
+    return this.getByModuleId(this.normalizePath(fsPath))
+  }
+
+  deleteByModuleId(modulePath: string): boolean {
+    return super.delete(modulePath)
   }
 
   delete(fsPath: string) {
-    fsPath = this.normalizePath(fsPath)
-    return super.delete(fsPath)
+    return this.deleteByModuleId(this.normalizePath(fsPath))
   }
 
   /**
@@ -218,12 +227,12 @@ export class ViteNodeRunner {
   async resolveUrl(id: string, importee?: string) {
     const resolveKey = `resolve:${id}`
     // put info about new import as soon as possible, so we can start tracking it
-    this.moduleCache.set(resolveKey, { resolving: true })
+    this.moduleCache.setByModuleId(resolveKey, { resolving: true })
     try {
       return await this._resolveUrl(id, importee)
     }
     finally {
-      this.moduleCache.delete(resolveKey)
+      this.moduleCache.deleteByModuleId(resolveKey)
     }
   }
 
@@ -258,7 +267,7 @@ export class ViteNodeRunner {
     const moduleId = normalizeModuleId(fsPath)
     const callstack = [..._callstack, moduleId]
 
-    const mod = this.moduleCache.get(fsPath)
+    const mod = this.moduleCache.getByModuleId(moduleId)
 
     const request = async (dep: string) => {
       const [id, depFsPath] = await this.resolveUrl(dep, fsPath)
