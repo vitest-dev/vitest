@@ -1,4 +1,4 @@
-import '../src/external.mjs'
+import '../src/external/external.mjs'
 import { expect, test, vi } from 'vitest'
 import axios from 'axios'
 

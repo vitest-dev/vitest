@@ -414,6 +414,26 @@ export class ViteNodeRunner {
           return defaultExport !== undefined
         return prop in mod || (defaultExport && prop in defaultExport)
       },
+      // this is needed for mocker to know what is available to mock
+      ownKeys(mod) {
+        const keys = Reflect.ownKeys(mod)
+        if (!defaultExport || isPrimitive(defaultExport))
+          return keys
+        const allKeys = [...keys, 'default', ...Reflect.ownKeys(defaultExport)]
+        return Array.from(new Set(allKeys))
+      },
+      getOwnPropertyDescriptor(mod, prop) {
+        const descriptor = Reflect.getOwnPropertyDescriptor(mod, prop)
+        if (descriptor)
+          return descriptor
+        if (prop === 'default' && defaultExport !== undefined) {
+          return {
+            value: defaultExport,
+            enumerable: true,
+            configurable: true,
+          }
+        }
+      },
     })
   }
 }
