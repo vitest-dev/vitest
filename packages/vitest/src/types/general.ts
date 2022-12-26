@@ -47,12 +47,6 @@ export interface UserConsoleLog {
   size: number
 }
 
-export interface Position {
-  source?: string
-  line: number
-  column: number
-}
-
 export interface ParsedStack {
   method: string
   file: string

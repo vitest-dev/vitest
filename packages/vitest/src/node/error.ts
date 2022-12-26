@@ -3,8 +3,8 @@ import { existsSync, readFileSync } from 'fs'
 import { normalize, relative } from 'pathe'
 import c from 'picocolors'
 import cliTruncate from 'cli-truncate'
-import type { ErrorWithDiff, ParsedStack, Position } from '../types'
-import { lineSplitRE, parseStacktrace, posToNumber } from '../utils/source-map'
+import type { ErrorWithDiff, ParsedStack } from '../types'
+import { lineSplitRE, parseStacktrace, positionToOffset } from '../utils/source-map'
 import { F_POINTER } from '../utils/figures'
 import { stringify } from '../integrations/chai/jest-matcher-utils'
 import { TypeCheckError } from '../typecheck/typechecker'
@@ -61,7 +61,7 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
     printStack(ctx, stacks, nearest, errorProperties, (s) => {
       if (showCodeFrame && s === nearest && nearest) {
         const sourceCode = readFileSync(nearest.file, 'utf-8')
-        ctx.logger.error(c.yellow(generateCodeFrame(sourceCode, 4, s)))
+        ctx.logger.error(c.yellow(generateCodeFrame(sourceCode, 4, s.line, s.column)))
       }
     })
   }
@@ -200,10 +200,11 @@ function printStack(
 export function generateCodeFrame(
   source: string,
   indent = 0,
-  pos: Position,
+  lineNumber: number,
+  columnNumber: number,
   range = 2,
 ): string {
-  const start = posToNumber(source, pos)
+  const start = positionToOffset(source, lineNumber, columnNumber)
   const end = start
   const lines = source.split(lineSplitRE)
   let count = 0
