@@ -127,10 +127,9 @@ export class JUnitReporter implements Reporter {
 
     // TODO: This is same as printStack but without colors. Find a way to reuse code.
     for (const frame of stack) {
-      const pos = frame.sourcePos ?? frame
       const path = relative(this.ctx.config.root, frame.file)
 
-      await this.baseLog(` ${F_POINTER} ${[frame.method, `${path}:${pos.line}:${pos.column}`].filter(Boolean).join(' ')}`)
+      await this.baseLog(` ${F_POINTER} ${[frame.method, `${path}:${frame.line}:${frame.column}`].filter(Boolean).join(' ')}`)
 
       // reached at test file, skip the follow stack
       if (frame.file in this.ctx.state.filesMap)

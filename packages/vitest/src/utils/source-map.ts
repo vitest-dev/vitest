@@ -93,10 +93,8 @@ export function parseStacktrace(e: ErrorWithDiff, full = false): ParsedStack[] {
 
 export function posToNumber(
   source: string,
-  pos: number | Position,
+  pos: Position,
 ): number {
-  if (typeof pos === 'number')
-    return pos
   const lines = source.split(lineSplitRE)
   const { line, column } = pos
   let start = 0

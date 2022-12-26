@@ -58,7 +58,6 @@ export interface ParsedStack {
   file: string
   line: number
   column: number
-  sourcePos?: Position
 }
 
 export interface ErrorWithDiff extends Error {

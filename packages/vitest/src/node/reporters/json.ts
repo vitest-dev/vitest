@@ -188,7 +188,6 @@ export class JsonReporter implements Reporter {
     if (!frame)
       return
 
-    const pos = frame.sourcePos || frame
-    return { line: pos.line, column: pos.column }
+    return { line: frame.line, column: frame.column }
   }
 }

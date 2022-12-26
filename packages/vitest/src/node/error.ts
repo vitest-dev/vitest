@@ -1,6 +1,6 @@
 /* eslint-disable prefer-template */
 import { existsSync, readFileSync } from 'fs'
-import { join, normalize, relative } from 'pathe'
+import { normalize, relative } from 'pathe'
 import c from 'picocolors'
 import cliTruncate from 'cli-truncate'
 import type { ErrorWithDiff, ParsedStack, Position } from '../types'
@@ -12,12 +12,6 @@ import { type DiffOptions, unifiedDiff } from '../utils/diff'
 import type { Vitest } from './core'
 import { divider } from './reporters/renderers/utils'
 import type { Logger } from './logger'
-
-export function fileFromParsedStack(stack: ParsedStack) {
-  if (stack?.sourcePos?.source?.startsWith('..'))
-    return join(stack.file, '../', stack.sourcePos.source)
-  return stack.file
-}
 
 interface PrintErrorOptions {
   type?: string
@@ -64,15 +58,10 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
     ctx.logger.error(c.yellow(e.frame))
   }
   else {
-    printStack(ctx, stacks, nearest, errorProperties, (s, pos) => {
+    printStack(ctx, stacks, nearest, errorProperties, (s) => {
       if (showCodeFrame && s === nearest && nearest) {
-        const file = fileFromParsedStack(nearest)
-        // could point to non-existing original file
-        // for example, when there is a source map file, but no source in node_modules
-        if (nearest.file === file || existsSync(file)) {
-          const sourceCode = readFileSync(file, 'utf-8')
-          ctx.logger.error(c.yellow(generateCodeFrame(sourceCode, 4, pos)))
-        }
+        const sourceCode = readFileSync(nearest.file, 'utf-8')
+        ctx.logger.error(c.yellow(generateCodeFrame(sourceCode, 4, s)))
       }
     })
   }
@@ -181,7 +170,7 @@ function printStack(
   stack: ParsedStack[],
   highlight: ParsedStack | undefined,
   errorProperties: Record<string, unknown>,
-  onStack?: ((stack: ParsedStack, pos: Position) => void),
+  onStack?: ((stack: ParsedStack) => void),
 ) {
   if (!stack.length)
     return
@@ -189,13 +178,11 @@ function printStack(
   const logger = ctx.logger
 
   for (const frame of stack) {
-    const pos = frame.sourcePos || frame
     const color = frame === highlight ? c.yellow : c.gray
-    const file = fileFromParsedStack(frame)
-    const path = relative(ctx.config.root, file)
+    const path = relative(ctx.config.root, frame.file)
 
-    logger.error(color(` ${c.dim(F_POINTER)} ${[frame.method, c.dim(`${path}:${pos.line}:${pos.column}`)].filter(Boolean).join(' ')}`))
-    onStack?.(frame, pos)
+    logger.error(color(` ${c.dim(F_POINTER)} ${[frame.method, c.dim(`${path}:${frame.line}:${frame.column}`)].filter(Boolean).join(' ')}`))
+    onStack?.(frame)
 
     // reached at test file, skip the follow stack
     if (frame.file in ctx.state.filesMap)
@@ -213,12 +200,11 @@ function printStack(
 export function generateCodeFrame(
   source: string,
   indent = 0,
-  start: number | Position = 0,
-  end?: number,
+  pos: Position,
   range = 2,
 ): string {
-  start = posToNumber(source, start)
-  end = end || start
+  const start = posToNumber(source, pos)
+  const end = start
   const lines = source.split(lineSplitRE)
   let count = 0
   let res: string[] = []
