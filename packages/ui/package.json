@@ -59,7 +59,7 @@
     "birpc": "^0.2.3",
     "codemirror": "^5.65.11",
     "codemirror-theme-vars": "^0.1.1",
-    "cypress": "^11.2.0",
+    "cypress": "^12.2.0",
     "d3-graph-controller": "^2.4.0",
     "diff": "^5.1.0",
     "floating-vue": "^2.0.0-y.0",

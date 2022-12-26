@@ -288,7 +288,7 @@ importers:
       '@types/react-test-renderer': 17.0.2
       '@vitejs/plugin-react': 3.0.0_vite@4.0.0
       '@vitest/ui': link:../../packages/ui
-      happy-dom: 8.1.0
+      happy-dom: 8.1.1
       jsdom: 20.0.3
       react-test-renderer: 17.0.2_react@17.0.2
       vite: 4.0.0
@@ -701,7 +701,7 @@ importers:
       birpc: ^0.2.3
       codemirror: ^5.65.11
       codemirror-theme-vars: ^0.1.1
-      cypress: ^11.2.0
+      cypress: ^12.2.0
       d3-graph-controller: ^2.4.0
       diff: ^5.1.0
       fast-glob: ^3.2.12
@@ -724,7 +724,7 @@ importers:
       sirv: 2.0.2
     devDependencies:
       '@faker-js/faker': 7.6.0
-      '@testing-library/cypress': 8.0.7_cypress@11.2.0
+      '@testing-library/cypress': 8.0.7_cypress@12.2.0
       '@types/codemirror': 5.60.5
       '@types/d3-force': 3.0.3
       '@types/d3-selection': 3.0.3
@@ -738,7 +738,7 @@ importers:
       birpc: 0.2.3
       codemirror: 5.65.11
       codemirror-theme-vars: 0.1.1
-      cypress: 11.2.0
+      cypress: 12.2.0
       d3-graph-controller: 2.4.0
       diff: 5.1.0
       floating-vue: 2.0.0-y.0_vue@3.2.45
@@ -994,7 +994,7 @@ importers:
     devDependencies:
       '@vitejs/plugin-vue': 4.0.0_vite@4.0.0+vue@3.2.45
       '@vue/test-utils': 2.2.6_vue@3.2.45
-      happy-dom: 8.1.0
+      happy-dom: 8.1.1
       vite: 4.0.0
       vitest: link:../../packages/vitest
       vue: 3.2.45
@@ -6944,7 +6944,7 @@ packages:
       - supports-color
     dev: true
 
-  /@testing-library/cypress/8.0.7_cypress@11.2.0:
+  /@testing-library/cypress/8.0.7_cypress@12.2.0:
     resolution: {integrity: sha512-3HTV725rOS+YHve/gD9coZp/UcPK5xhr4H0GMnq/ni6USdtzVtSOG9WBFtd8rYnrXk8rrGD+0toRFYouJNIG0Q==}
     engines: {node: '>=12', npm: '>=6'}
     peerDependencies:
@@ -6952,7 +6952,7 @@ packages:
     dependencies:
       '@babel/runtime': 7.18.9
       '@testing-library/dom': 8.17.1
-      cypress: 11.2.0
+      cypress: 12.2.0
     dev: true
 
   /@testing-library/dom/8.17.1:
@@ -10828,9 +10828,9 @@ packages:
     resolution: {integrity: sha512-NJGVKPS81XejHcLhaLJS7plab0fK3slPh11mESeeDq2W4ZI5kUKK/LRRdVDvjJseojbPB7ZwjnyOybg3Igea/A==}
     dev: true
 
-  /cypress/11.2.0:
-    resolution: {integrity: sha512-u61UGwtu7lpsNWLUma/FKNOsrjcI6wleNmda/TyKHe0dOBcVjbCPlp1N6uwFZ0doXev7f/91YDpU9bqDCFeBLA==}
-    engines: {node: '>=12.0.0'}
+  /cypress/12.2.0:
+    resolution: {integrity: sha512-kvl95ri95KK8mAy++tEU/wUgzAOMiIciZSL97LQvnOinb532m7dGvwN0mDSIGbOd71RREtmT9o4h088RjK5pKw==}
+    engines: {node: ^14.0.0 || ^16.0.0 || >=18.0.0}
     hasBin: true
     requiresBuild: true
     dependencies:
@@ -13365,8 +13365,8 @@ packages:
       - encoding
     dev: true
 
-  /happy-dom/8.1.0:
-    resolution: {integrity: sha512-R9NVb5815gpMFsldZF0wVSHw2uSobx6yitSkCdQPda1kwfAmVw4Ut8ZspxGHXkK6OA93SznldkcvrbhKFr6JcA==}
+  /happy-dom/8.1.1:
+    resolution: {integrity: sha512-uI8NneN2B0D+vwIhjQVKtIUYOSh/zymfj61bU/fxkoAw+Aktn0ewG6dYKyFPOvyBoFLPg3S8fsn2OqSoYCqJeQ==}
     dependencies:
       css.escape: 1.5.1
       he: 1.2.0
@@ -15583,10 +15583,6 @@ packages:
       brace-expansion: 2.0.1
     dev: true
 
-  /minimist/1.2.6:
-    resolution: {integrity: sha512-Jsjnk4bw3YJqYzbdyBiNsPWHPfO++UGG749Cxs6peCu5Xg4nrena6OVxOYxrQTqww0Jmwt+Ref8rggumkTLz9Q==}
-    dev: true
-
   /minimist/1.2.7:
     resolution: {integrity: sha512-bzfL1YUZsP41gmu/qjrEk0Q6i2ix/cVeAhbCbqH9u3zYutS1cLg00qhrD0M2MVdCcx4Sc0UpP2eBWo9rotpq6g==}
     dev: true
@@ -15659,7 +15655,7 @@ packages:
     resolution: {integrity: sha512-FP+p8RB8OWpF3YZBCrP5gtADmtXApB5AMLn+vdyA+PyxCjrCs00mjyUozssO33cwDeT3wNGdLxJ5M//YqtHAJw==}
     hasBin: true
     dependencies:
-      minimist: 1.2.6
+      minimist: 1.2.7
     dev: true
 
   /mkdirp/1.0.4:
