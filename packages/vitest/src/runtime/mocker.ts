@@ -359,13 +359,13 @@ export class VitestMocker {
 
     if (mock === null) {
       const cache = this.moduleCache.get(mockPath)
-      if (cache?.exports)
+      if (cache.exports)
         return cache.exports
 
       const exports = {}
       // Assign the empty exports object early to allow for cycles to work. The object will be filled by mockObject()
       this.moduleCache.set(mockPath, { exports })
-      const mod = await this.runner.directRequest(url, url, [])
+      const mod = await this.runner.directRequest(url, url, callstack)
       this.mockObject(mod, exports)
       return exports
     }
