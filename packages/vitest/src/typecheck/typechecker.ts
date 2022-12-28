@@ -149,10 +149,6 @@ export class Typechecker {
             line: info.line,
             column: info.column,
             method: '',
-            sourcePos: {
-              line: info.line,
-              column: info.column,
-            },
           },
         ])
         Error.stackTraceLimit = limit

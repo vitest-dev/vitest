@@ -1,5 +1,5 @@
 import { resolve } from 'pathe'
-import type { ErrorWithDiff, ParsedStack, Position } from '../types'
+import type { ErrorWithDiff, ParsedStack } from '../types'
 import { notNullish } from './base'
 
 export const lineSplitRE = /\r?\n/
@@ -91,31 +91,27 @@ export function parseStacktrace(e: ErrorWithDiff, full = false): ParsedStack[] {
   return stackFrames
 }
 
-export function posToNumber(
+export function positionToOffset(
   source: string,
-  pos: number | Position,
+  lineNumber: number,
+  columnNumber: number,
 ): number {
-  if (typeof pos === 'number')
-    return pos
   const lines = source.split(lineSplitRE)
-  const { line, column } = pos
   let start = 0
 
-  if (line > lines.length)
+  if (lineNumber > lines.length)
     return source.length
 
-  for (let i = 0; i < line - 1; i++)
+  for (let i = 0; i < lineNumber - 1; i++)
     start += lines[i].length + 1
 
-  return start + column
+  return start + columnNumber
 }
 
-export function numberToPos(
+export function offsetToLineNumber(
   source: string,
-  offset: number | Position,
-): Position {
-  if (typeof offset !== 'number')
-    return offset
+  offset: number,
+): number {
   if (offset > source.length) {
     throw new Error(
       `offset is longer than source length! offset ${offset} > length ${source.length}`,
@@ -124,14 +120,12 @@ export function numberToPos(
   const lines = source.split(lineSplitRE)
   let counted = 0
   let line = 0
-  let column = 0
   for (; line < lines.length; line++) {
     const lineLength = lines[line].length + 1
-    if (counted + lineLength >= offset) {
-      column = offset - counted + 1
+    if (counted + lineLength >= offset)
       break
-    }
+
     counted += lineLength
   }
-  return { line: line + 1, column }
+  return line + 1
 }

@@ -1,4 +1,5 @@
 import { promises as fs } from 'node:fs'
+
 import type { BirpcReturn } from 'birpc'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
@@ -8,6 +9,7 @@ import { API_PATH } from '../constants'
 import type { Vitest } from '../node'
 import type { File, ModuleGraphData, Reporter, TaskResultPack, UserConsoleLog } from '../types'
 import { getModuleGraph } from '../utils'
+import { parseStacktrace } from '../utils/source-map'
 import type { TransformResultWithSource, WebSocketEvents, WebSocketHandlers } from './types'
 
 export function setup(ctx: Vitest) {
@@ -120,6 +122,11 @@ class WebSocketReporter implements Reporter {
   async onTaskUpdate(packs: TaskResultPack[]) {
     if (this.clients.size === 0)
       return
+
+    packs.forEach(([, result]) => {
+      if (result?.error)
+        result.error.stacks = parseStacktrace(result.error)
+    })
 
     this.clients.forEach((client) => {
       client.onTaskUpdate?.(packs)

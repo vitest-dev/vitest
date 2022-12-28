@@ -1,6 +1,6 @@
 import { promises as fs } from 'fs'
 import type MagicString from 'magic-string'
-import { lineSplitRE, numberToPos, posToNumber } from '../../../utils/source-map'
+import { lineSplitRE, offsetToLineNumber, positionToOffset } from '../../../utils/source-map'
 import { getCallLastIndex } from '../../../utils'
 
 export interface InlineSnapshot {
@@ -21,7 +21,7 @@ export async function saveInlineSnapshots(
     const s = new MagicString(code)
 
     for (const snap of snaps) {
-      const index = posToNumber(code, snap)
+      const index = positionToOffset(code, snap.line, snap.column)
       replaceInlineSnap(code, s, index, snap.snapshot)
     }
 
@@ -50,8 +50,8 @@ function replaceObjectSnap(code: string, s: MagicString, index: number, newSnap:
 }
 
 function prepareSnapString(snap: string, source: string, index: number) {
-  const lineIndex = numberToPos(source, index).line
-  const line = source.split(lineSplitRE)[lineIndex - 1]
+  const lineNumber = offsetToLineNumber(source, index)
+  const line = source.split(lineSplitRE)[lineNumber - 1]
   const indent = line.match(/^\s*/)![0] || ''
   const indentNext = indent.includes('\t') ? `${indent}\t` : `${indent}  `
 

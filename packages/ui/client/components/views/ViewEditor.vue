@@ -79,12 +79,12 @@ watch([cm, failed], ([cmValue]) => {
       const e = i.result?.error
       const stacks = (e?.stacks || []).filter(i => i.file && i.file === props.file?.filepath)
       if (stacks.length) {
-        const pos = stacks[0].sourcePos || stacks[0]
+        const stack = stacks[0]
         const div = document.createElement('div')
         div.className = 'op80 flex gap-x-2 items-center'
         const pre = document.createElement('pre')
         pre.className = 'c-red-600 dark:c-red-400'
-        pre.textContent = `${' '.repeat(pos.column)}^ ${e?.nameStr}: ${e?.message}`
+        pre.textContent = `${' '.repeat(stack.column)}^ ${e?.nameStr}: ${e?.message}`
         div.appendChild(pre)
         const span = document.createElement('span')
         span.className = 'i-carbon-launch c-red-600 dark:c-red-400 hover:cursor-pointer min-w-1em min-h-1em'
@@ -95,12 +95,12 @@ watch([cm, failed], ([cmValue]) => {
           placement: 'bottom',
         }, false)
         const el: EventListener = async () => {
-          await openInEditor(stacks[0].file, pos.line, pos.column)
+          await openInEditor(stacks[0].file, stack.line, stack.column)
         }
         div.appendChild(span)
         listeners.push([span, el, () => destroyTooltip(span)])
-        handles.push(cm.value!.addLineClass(pos.line - 1, 'wrap', 'bg-red-500/10'))
-        widgets.push(cm.value!.addLineWidget(pos.line - 1, div))
+        handles.push(cm.value!.addLineClass(stack.line - 1, 'wrap', 'bg-red-500/10'))
+        widgets.push(cm.value!.addLineWidget(stack.line - 1, div))
       }
     })
     if (!hasBeenEdited.value)
