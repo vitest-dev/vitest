@@ -16,7 +16,6 @@ importers:
       '@rollup/plugin-commonjs': ^23.0.2
       '@rollup/plugin-json': ^5.0.1
       '@rollup/plugin-node-resolve': ^15.0.1
-      '@types/diff': ^5.0.2
       '@types/fs-extra': ^9.0.13
       '@types/lodash': ^4.14.191
       '@types/node': ^18.11.17
@@ -57,7 +56,6 @@ importers:
       '@rollup/plugin-commonjs': 23.0.2_rollup@2.79.1
       '@rollup/plugin-json': 5.0.1_rollup@2.79.1
       '@rollup/plugin-node-resolve': 15.0.1_rollup@2.79.1
-      '@types/diff': 5.0.2
       '@types/fs-extra': 9.0.13
       '@types/lodash': 4.14.191
       '@types/node': 18.11.17
@@ -688,8 +686,8 @@ importers:
 
   packages/expect:
     specifiers:
-      '@vitest/spy': workspace:^0.26.2
-      '@vitest/utils': workspace:^0.26.2
+      '@vitest/spy': workspace:*
+      '@vitest/utils': workspace:*
       chai: ^4.3.7
       picocolors: ^1.0.0
     dependencies:
@@ -831,10 +829,10 @@ importers:
       '@types/node': '*'
       '@types/prompts': ^2.4.2
       '@types/sinonjs__fake-timers': ^8.1.2
-      '@vitest/expect': workspace:^0.26.2
-      '@vitest/spy': workspace:^0.26.2
+      '@vitest/expect': workspace:*
+      '@vitest/spy': workspace:*
       '@vitest/ui': workspace:*
-      '@vitest/utils': workspace:^0.26.2
+      '@vitest/utils': workspace:*
       acorn: ^8.8.1
       acorn-walk: ^8.2.0
       birpc: ^0.2.3
@@ -880,9 +878,6 @@ importers:
       '@types/chai': 4.3.4
       '@types/chai-subset': 1.3.3
       '@types/node': 18.7.13
-      '@vitest/expect': link:../expect
-      '@vitest/spy': link:../spy
-      '@vitest/utils': link:../utils
       acorn: 8.8.1
       acorn-walk: 8.2.0
       chai: 4.3.7
@@ -905,7 +900,10 @@ importers:
       '@types/natural-compare': 1.4.1
       '@types/prompts': 2.4.2
       '@types/sinonjs__fake-timers': 8.1.2
+      '@vitest/expect': link:../expect
+      '@vitest/spy': link:../spy
       '@vitest/ui': link:../ui
+      '@vitest/utils': link:../utils
       birpc: 0.2.3
       cac: 6.7.14
       chai-subset: 1.6.0
