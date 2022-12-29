@@ -226,6 +226,24 @@ Repository: https://github.com/sinonjs/fake-timers.git
 
 ---------------------------------------
 
+## @vitest/expect
+License: MIT
+Repository: git+https://github.com/vitest-dev/vitest.git
+
+---------------------------------------
+
+## @vitest/spy
+License: MIT
+Repository: git+https://github.com/vitest-dev/vitest.git
+
+---------------------------------------
+
+## @vitest/utils
+License: MIT
+Repository: git+https://github.com/vitest-dev/vitest.git
+
+---------------------------------------
+
 ## ansi-escapes
 License: MIT
 By: Sindre Sorhus
@@ -250,7 +268,7 @@ Repository: chalk/ansi-regex
 
 > MIT License
 > 
-> Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)
+> Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com)
 > 
 > Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 > 
@@ -267,7 +285,7 @@ Repository: chalk/ansi-styles
 
 > MIT License
 > 
-> Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)
+> Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com)
 > 
 > Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 > 
