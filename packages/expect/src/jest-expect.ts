@@ -1,44 +1,14 @@
 import c from 'picocolors'
 import { AssertionError } from 'chai'
-import type { EnhancedSpy } from '../spy'
-import { isMockFunction } from '../spy'
-import { addSerializer } from '../snapshot/port/plugins'
-import type { Constructable, Test } from '../../types'
-import { assertTypes } from '../../utils'
-import { unifiedDiff } from '../../utils/diff'
-import type { ChaiPlugin, MatcherState } from '../../types/chai'
+import { assertTypes, unifiedDiff } from '@vitest/utils'
+import type { Constructable } from '@vitest/utils'
+import type { EnhancedSpy } from '@vitest/spy'
+import { isMockFunction } from '@vitest/spy'
+import type { ChaiPlugin } from './types'
 import { arrayBufferEquality, generateToBeMessage, iterableEquality, equals as jestEquals, sparseArrayEquality, subsetEquality, typeEquality } from './jest-utils'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import { stringify } from './jest-matcher-utils'
-import { GLOBAL_EXPECT, JEST_MATCHERS_OBJECT, MATCHERS_OBJECT } from './constants'
-
-if (!Object.prototype.hasOwnProperty.call(globalThis, MATCHERS_OBJECT)) {
-  const globalState = new WeakMap<Vi.ExpectStatic, MatcherState>()
-  const matchers = Object.create(null)
-  Object.defineProperty(globalThis, MATCHERS_OBJECT, {
-    get: () => globalState,
-  })
-  Object.defineProperty(globalThis, JEST_MATCHERS_OBJECT, {
-    configurable: true,
-    get: () => ({
-      state: globalState.get((globalThis as any)[GLOBAL_EXPECT]),
-      matchers,
-    }),
-  })
-}
-
-export const getState = <State extends MatcherState = MatcherState>(expect: Vi.ExpectStatic): State =>
-  (globalThis as any)[MATCHERS_OBJECT].get(expect)
-
-export const setState = <State extends MatcherState = MatcherState>(
-  state: Partial<State>,
-  expect: Vi.ExpectStatic,
-): void => {
-  const map = (globalThis as any)[MATCHERS_OBJECT]
-  const current = map.get(expect) || {}
-  Object.assign(current, state)
-  map.set(expect, current)
-}
+import { JEST_MATCHERS_OBJECT } from './constants'
 
 // Jest Expect Compact
 export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
@@ -681,7 +651,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
               return result.call(this, ...args)
             },
             (err: any) => {
-              throw new Error(`promise rejected "${toString(err)}" instead of resolving`)
+              throw new Error(`promise rejected "${String(err)}" instead of resolving`)
             },
           )
         }
@@ -710,7 +680,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         return async (...args: any[]) => {
           return wrapper.then(
             (value: any) => {
-              throw new Error(`promise resolved "${toString(value)}" instead of rejecting`)
+              throw new Error(`promise resolved "${String(value)}" instead of rejecting`)
             },
             (err: any) => {
               utils.flag(this, 'object', err)
@@ -723,19 +693,4 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
 
     return proxy
   })
-
-  utils.addMethod(
-    chai.expect,
-    'addSnapshotSerializer',
-    addSerializer,
-  )
-}
-
-function toString(value: any) {
-  try {
-    return `${value}`
-  }
-  catch (_error) {
-    return 'unknown'
-  }
 }

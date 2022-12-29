@@ -1,0 +1,48 @@
+{
+  "name": "@vitest/utils",
+  "type": "module",
+  "version": "0.26.2",
+  "description": "Shared Vitest utility functions",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vitest-dev/vitest.git",
+    "directory": "packages/utils"
+  },
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./diff": {
+      "types": "./dist/diff.d.ts",
+      "import": "./dist/diff.js"
+    },
+    "./helpers": {
+      "types": "./dist/helpers.d.ts",
+      "import": "./dist/helpers.js"
+    },
+    "./*": "./*"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rimraf dist && rollup -c",
+    "dev": "rollup -c --watch",
+    "prepublishOnly": "pnpm build"
+  },
+  "dependencies": {
+    "cli-truncate": "^3.1.0",
+    "diff": "^5.1.0",
+    "picocolors": "^1.0.0",
+    "pretty-format": "^27.5.1"
+  },
+  "devDependencies": {
+    "@types/diff": "^5.0.2"
+  }
+}

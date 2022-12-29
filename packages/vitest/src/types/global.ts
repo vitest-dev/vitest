@@ -1,5 +1,6 @@
 import type { Plugin as PrettyFormatPlugin } from 'pretty-format'
-import type { MatcherState, MatchersObject } from './chai'
+import type { MatchersObject } from '@vitest/expect'
+import type { MatcherState } from './chai'
 import type { Constructable } from './general'
 
 type Promisify<O> = {

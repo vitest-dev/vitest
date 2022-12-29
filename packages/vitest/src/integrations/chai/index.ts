@@ -1,10 +1,9 @@
 import * as chai from 'chai'
 import './setup'
+import { GLOBAL_EXPECT, getState, setState } from '@vitest/expect'
+import type { MatcherState } from '../../types/chai'
 import type { Test } from '../../types'
 import { getCurrentEnvironment, getFullName } from '../../utils'
-import type { MatcherState } from '../../types/chai'
-import { getState, setState } from './jest-expect'
-import { GLOBAL_EXPECT } from './constants'
 
 export function createExpect(test?: Test) {
   const expect = ((value: any, message?: string): Vi.Assertion => {
@@ -22,7 +21,7 @@ export function createExpect(test?: Test) {
   expect.getState = () => getState(expect)
   expect.setState = state => setState(state as Partial<MatcherState>, expect)
 
-  setState({
+  setState<MatcherState>({
     assertionCalls: 0,
     isExpectingAssertions: false,
     isExpectingAssertionsError: null,
