@@ -5,6 +5,8 @@ import type { BenchTask, Benchmark, BenchmarkResult, File, HookCleanupCallback, 
 import { vi } from '../integrations/vi'
 import { clearTimeout, createDefer, getFullName, getWorkerState, hasFailed, hasTests, isBrowser, isNode, isRunningInBenchmark, partitionSuiteChildren, setTimeout, shuffle } from '../utils'
 import { takeCoverageInsideWorker } from '../integrations/coverage'
+import type { MatcherState } from '../types/chai'
+import { getSnapshotClient } from '../integrations/snapshot/chai'
 import { getBenchOptions, getFn, getHooks } from './map'
 import { rpc } from './rpc'
 import { collectTests } from './collect'
@@ -147,7 +149,7 @@ export async function runTest(test: Test) {
   for (let retryCount = 0; retryCount < retry; retryCount++) {
     let beforeEachCleanups: HookCleanupCallback[] = []
     try {
-      setState({
+      setState<MatcherState>({
         assertionCalls: 0,
         isExpectingAssertions: false,
         isExpectingAssertionsError: null,
@@ -155,6 +157,7 @@ export async function runTest(test: Test) {
         expectedAssertionsNumberErrorGen: null,
         testPath: test.suite.file?.filepath,
         currentTestName: getFullName(test),
+        snapshotState: getSnapshotClient().snapshotState,
       }, (globalThis as any)[GLOBAL_EXPECT])
 
       beforeEachCleanups = await callSuiteHook(test.suite, test, 'beforeEach', [test.context, test.suite])

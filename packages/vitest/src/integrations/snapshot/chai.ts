@@ -1,6 +1,7 @@
 import type { ChaiPlugin } from '@vitest/expect'
 import { SnapshotClient } from './client'
 import { stripSnapshotIndentation } from './port/inlineSnapshot'
+import { addSerializer } from './port/plugins'
 
 let _client: SnapshotClient
 
@@ -122,5 +123,10 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
         errorMessage,
       })
     },
+  )
+  utils.addMethod(
+    chai.expect,
+    'addSnapshotSerializer',
+    addSerializer,
   )
 }
