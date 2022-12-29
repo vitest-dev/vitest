@@ -236,7 +236,7 @@ importers:
       react-dom: 18.0.0_react@18.0.0
     devDependencies:
       '@testing-library/react': 13.3.0_zpnidt7m3osuk7shl3s4oenomq
-      '@types/node': 18.11.18
+      '@types/node': 18.11.17
       '@types/react': 18.0.26
       '@vitejs/plugin-react': 3.0.0
       jsdom: 20.0.3
@@ -7341,10 +7341,6 @@ packages:
 
   /@types/node/18.11.17:
     resolution: {integrity: sha512-HJSUJmni4BeDHhfzn6nF0sVmd1SMezP7/4F0Lq+aXzmp2xm9O7WXrUtHW/CHlYVtZUbByEvWidHqRtcJXGF2Ng==}
-    dev: true
-
-  /@types/node/18.11.18:
-    resolution: {integrity: sha512-DHQpWGjyQKSHj3ebjFI/wRKcqQcdR+MoFBygntYOZytCqNfkd2ZC4ARDJ2DQqhjH5p85Nnd3jhUJIXrszFX/JA==}
     dev: true
 
   /@types/node/18.7.13:
@@ -20735,7 +20731,7 @@ packages:
       vitest: '>=0.18.0'
     dependencies:
       pathe: 0.3.9
-      vitest: link:packages\vitest
+      vitest: link:packages/vitest
     dev: true
 
   /vm-browserify/1.1.2:
