@@ -190,6 +190,7 @@ export function resolveConfig(
         ?? resolve(resolved.root, file),
     ),
   )
+  resolved.coverage.exclude.push(...resolved.setupFiles.map(file => file.replace(`${resolved.root}/`, '')))
 
   // the server has been created, we don't need to override vite.server options
   resolved.api = resolveApiConfig(options)

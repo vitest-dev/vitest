@@ -77,6 +77,15 @@ describe('testing vi utils', () => {
     expect(state.config.clearMocks).toBe(false)
   })
 
+  test('coverage.exclude contains setupFiles in it', () => {
+    const state = getWorkerState()
+
+    if (typeof state.config.setupFiles === 'string')
+      expect(state.config.coverage.exclude).contains(state.config.setupFiles.replace(`${state.config.root}/`, ''))
+    else
+      state.config.setupFiles.forEach(file => expect(state.config.coverage.exclude).contains(file.replace(`${state.config.root}/`, '')))
+  })
+
   // TODO: it's unstable in CI, skip until resolved
   test.skip('loads unloaded module', async () => {
     let mod: any
