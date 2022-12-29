@@ -226,24 +226,6 @@ Repository: https://github.com/sinonjs/fake-timers.git
 
 ---------------------------------------
 
-## @vitest/expect
-License: MIT
-Repository: git+https://github.com/vitest-dev/vitest.git
-
----------------------------------------
-
-## @vitest/spy
-License: MIT
-Repository: git+https://github.com/vitest-dev/vitest.git
-
----------------------------------------
-
-## @vitest/utils
-License: MIT
-Repository: git+https://github.com/vitest-dev/vitest.git
-
----------------------------------------
-
 ## ansi-escapes
 License: MIT
 By: Sindre Sorhus
