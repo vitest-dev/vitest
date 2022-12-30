@@ -154,10 +154,10 @@ export function spyOn<T, G extends Properties<Required<T>>>(
   methodName: G,
   accessType: 'set',
 ): SpyInstance<[T[G]], void>
-export function spyOn<T, M extends (Methods<Required<T>> | Classes<Required<T>>)>(
+export function spyOn<T, M extends (Classes<Required<T>> | Methods<Required<T>>)>(
   obj: T,
   methodName: M,
-): Required<T>[M] extends (...args: infer A) => infer R | (new (...args: infer A) => infer R) ? SpyInstance<A, R> : never
+): Required<T>[M] extends ({ new (...args: infer A): infer R }) | ((...args: infer A) => infer R) ? SpyInstance<A, R> : never
 export function spyOn<T, K extends keyof T>(
   obj: T,
   method: K,
