@@ -94,7 +94,8 @@ Please refer to the type definition for more details.
 When running a coverage report, a `coverage` folder is created in the root directory of your project. If you want to move it to a different directory, use the `test.coverage.reportsDirectory` property in the `vite.config.js` file.
 
 ```js
-import { defineConfig } from 'vite'
+// vite.config.ts
+import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
@@ -125,3 +126,39 @@ if (condition) {
 ```
 
 Unfortunately this does not work for `c8` at the moment.
+
+## Coverage badges for README
+
+The results of both coverage providers can be shown in your project's README as badges. You can use [istanbul-badges-readme](https://www.npmjs.com/package/istanbul-badges-readme) package for this.
+
+| Statements                  | Branches                | Functions                 | Lines             |
+| --------------------------- | ----------------------- | ------------------------- | ----------------- |
+| ![Statements](https://img.shields.io/badge/statements-93.87%25-brightgreen.svg?style=flat) | ![Branches](https://img.shields.io/badge/branches-96.42%25-brightgreen.svg?style=flat) | ![Functions](https://img.shields.io/badge/functions-93.75%25-brightgreen.svg?style=flat) | ![Lines](https://img.shields.io/badge/lines-93.61%25-brightgreen.svg?style=flat) |
+
+1. Add `json-summary` reporter in your `coverage.reporter` array.
+
+```js
+// vite.config.ts
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    coverage: {
+      reporter: ['json-summary'],
+    }
+  }
+})
+```
+
+2. Add placeholders into your `README.md` for badges:
+
+```md
+| Statements                  | Branches                | Functions                 | Lines             |
+| --------------------------- | ----------------------- | ------------------------- | ----------------- |
+| ![Statements](#statements#) | ![Branches](#branches#) | ![Functions](#functions#) | ![Lines](#lines#) |
+```
+
+3. Run `istanbul-badges-readme` by adding it as project dependency, or directly with `npx`, e.g. `npx istanbul-badges-readme`.
+4. Placeholders in `README.md` should now be automatically updated with the latest coverage results.
+
+See [istanbul-badges-readme](https://www.npmjs.com/package/istanbul-badges-readme) documentation for more advanced usage.
