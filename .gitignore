@@ -24,5 +24,6 @@ packages/ui/cypress/downloads
 packages/ui/cypress/screenshots
 docs/public/user-avatars
 docs/public/sponsors
+docs/.vitepress/cache
 .eslintcache
 
