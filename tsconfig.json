@@ -41,6 +41,7 @@
     "**/dist/**",
     "./packages/vitest/dist/**",
     "./packages/vitest/*.d.ts",
+    "./packages/vitest/*.d.cts",
     "./packages/ui/client/**",
     "./examples/**/*.*",
     "./bench/**",

@@ -18,7 +18,7 @@ export function createExpect(test?: Test) {
   }) as Vi.ExpectStatic
   Object.assign(expect, chai.expect)
 
-  expect.getState = () => getState(expect)
+  expect.getState = () => getState<MatcherState>(expect)
   expect.setState = state => setState(state as Partial<MatcherState>, expect)
 
   setState<MatcherState>({
