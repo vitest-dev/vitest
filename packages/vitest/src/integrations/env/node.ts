@@ -1,4 +1,4 @@
-import { Console } from 'console'
+import { Console } from 'node:console'
 import type { Environment } from '../../types'
 
 export default <Environment>({

@@ -16,4 +16,3 @@ fs.mkdirSync(resolve(browser, 'assets'))
 files.forEach((f) => {
   fs.copyFileSync(resolve(ui, f), resolve(browser, f))
 })
-

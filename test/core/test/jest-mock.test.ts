@@ -170,7 +170,9 @@ describe('jest mock compat layer', () => {
   it('getter function spyOn', () => {
     const obj = {
       get getter() {
-        return function () { return 'original' }
+        return function () {
+          return 'original'
+        }
       },
     }
 

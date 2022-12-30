@@ -16,6 +16,8 @@ You can try Vitest online on [StackBlitz](https://vitest.new). It runs Vitest di
 
 ## Adding Vitest to your Project
 
+<CourseLink href="https://vueschool.io/lessons/how-to-install-vitest?friend=vueuse">Learn how to install by Video</CourseLink>
+
 With npm
 ```bash
 npm install -D vitest

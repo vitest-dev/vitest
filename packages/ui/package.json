@@ -1,7 +1,7 @@
 {
   "name": "@vitest/ui",
   "type": "module",
-  "version": "0.25.7",
+  "version": "0.26.2",
   "description": "UI for Vitest",
   "license": "MIT",
   "repository": {
@@ -14,6 +14,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./reporter": {
+      "types": "./dist/reporter.d.ts",
+      "import": "./dist/reporter.js"
     },
     "./*": "./*"
   },
@@ -35,6 +39,8 @@
     "prepublishOnly": "pnpm build"
   },
   "dependencies": {
+    "fast-glob": "^3.2.12",
+    "flatted": "^3.2.7",
     "sirv": "^2.0.2"
   },
   "devDependencies": {
@@ -44,29 +50,28 @@
     "@types/d3-force": "^3.0.3",
     "@types/d3-selection": "^3.0.3",
     "@types/ws": "^8.5.3",
-    "@unocss/reset": "^0.47.5",
+    "@unocss/reset": "^0.48.0",
     "@vitejs/plugin-vue": "^4.0.0",
     "@vitejs/plugin-vue-jsx": "^3.0.0",
     "@vitest/ws-client": "workspace:*",
-    "@vueuse/core": "^9.4.0",
+    "@vueuse/core": "^9.9.0",
     "ansi-to-html": "^0.7.2",
     "birpc": "^0.2.3",
-    "codemirror": "^5.65.9",
+    "codemirror": "^5.65.11",
     "codemirror-theme-vars": "^0.1.1",
-    "cypress": "^11.0.1",
-    "d3-graph-controller": "^2.3.22",
+    "cypress": "^12.2.0",
+    "d3-graph-controller": "^2.4.0",
     "diff": "^5.1.0",
-    "flatted": "^3.2.7",
     "floating-vue": "^2.0.0-y.0",
     "picocolors": "^1.0.0",
     "rollup": "^2.79.1",
     "splitpanes": "^3.1.5",
-    "unocss": "^0.46.3",
-    "unplugin-auto-import": "^0.11.4",
-    "unplugin-vue-components": "^0.22.9",
+    "unocss": "^0.48.0",
+    "unplugin-auto-import": "^0.12.1",
+    "unplugin-vue-components": "^0.22.12",
     "vite": "^4.0.0",
-    "vite-plugin-pages": "^0.27.1",
-    "vue": "^3.2.41",
+    "vite-plugin-pages": "^0.28.0",
+    "vue": "^3.2.45",
     "vue-router": "^4.1.6"
   }
 }

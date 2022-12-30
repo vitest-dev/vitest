@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import fs from 'fs'
+import fs from 'node:fs'
 import { dirname, join } from 'pathe'
 import naturalCompare from 'natural-compare'
 import type { OptionsReceived as PrettyFormatOptions } from 'pretty-format'

@@ -32,6 +32,11 @@ export type VitestRunMode = 'test' | 'benchmark' | 'typecheck'
 
 export interface InlineConfig {
   /**
+   * Name of the project. Will be used to display in the reporter.
+   */
+  name?: string
+
+  /**
    * Benchmark options.
    *
    * @default {}
@@ -156,19 +161,36 @@ export interface InlineConfig {
 
   /**
    * Custom reporter for output. Can contain one or more built-in report names, reporter instances,
-   * and/or paths to custom reporters
+   * and/or paths to custom reporters.
    */
-  reporters?: Arrayable<BuiltinReporters | Reporter | Omit<string, BuiltinReporters>>
+  reporters?: Arrayable<BuiltinReporters | 'html' | Reporter | Omit<string, BuiltinReporters>>
 
   /**
-   * diff output length
+   * Truncates lines in the output to the given length.
+   * @default stdout.columns || 80
    */
   outputTruncateLength?: number
 
   /**
-   * number of diff output lines
+   * Maximum number of line to show in a single diff.
+   * @default 15
    */
   outputDiffLines?: number
+
+  /**
+   * The maximum number of characters allowed in a single object before doing a diff.
+   * Vitest tries to stringify an object before doing a diff, but if the object is too large,
+   * it will reduce the depth of the object to fit within this limit.
+   * Because of this if object is too big or nested, you might not see the diff.
+   * @default 10000
+   */
+  outputDiffMaxSize?: number
+
+  /**
+   * Maximum number of lines in a diff overall.
+   * @default 50
+   */
+  outputDiffMaxLines?: number
 
   /**
    * Write test results to a file when the --reporter=json` or `--reporter=junit` option is also specified.
@@ -283,6 +305,18 @@ export interface InlineConfig {
    * @default false
    */
   restoreMocks?: boolean
+
+  /**
+   * Will restore all global stubs to their original values before each test
+   * @default false
+   */
+  unstubGlobals?: boolean
+
+  /**
+   * Will restore all env stubs to their original values before each test
+   * @default false
+   */
+  unstubEnvs?: boolean
 
   /**
    * Serve API options.

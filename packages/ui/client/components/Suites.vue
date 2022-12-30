@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { hasFailedSnapshot } from '@vitest/ws-client'
-import { client, current, runCurrent } from '~/composables/client'
+import { client, current, isReport, runCurrent } from '~/composables/client'
 
 const name = computed(() => current.value?.name.split(/\//g).pop())
 
@@ -16,12 +16,13 @@ const updateSnapshot = () => current.value && client.rpc.updateSnapshot(current.
         <span font-bold text-sm flex-auto ws-nowrap overflow-hidden truncate>{{ name }}</span>
         <div class="flex text-lg">
           <IconButton
-            v-if="failedSnapshot"
+            v-if="(failedSnapshot && !isReport)"
             v-tooltip.bottom="`Update failed snapshot(s) of ${current.name}`"
             icon="i-carbon-result-old"
             @click="updateSnapshot()"
           />
           <IconButton
+            v-if="!isReport"
             v-tooltip.bottom="'Rerun file'"
             icon="i-carbon-play"
             @click="runCurrent()"

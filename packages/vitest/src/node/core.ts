@@ -1,4 +1,4 @@
-import { existsSync, promises as fs } from 'fs'
+import { existsSync, promises as fs } from 'node:fs'
 import type { ViteDevServer } from 'vite'
 import { normalizePath } from 'vite'
 import { relative, toNamespacedPath } from 'pathe'
@@ -339,14 +339,14 @@ export class Vitest {
       if (hasFailed(files))
         process.exitCode = 1
 
-      if (!this.config.browser)
-        await this.report('onFinished', files, this.state.getUnhandledErrors())
       this.cache.results.updateResults(files)
       await this.cache.results.writeToCache()
     })()
-      .finally(() => {
-        this.runningPromise = undefined
+      .finally(async () => {
         this.state.finishCollectingPaths()
+        if (!this.config.browser)
+          await this.report('onFinished', this.state.getFiles(), this.state.getUnhandledErrors())
+        this.runningPromise = undefined
       })
 
     return await this.runningPromise

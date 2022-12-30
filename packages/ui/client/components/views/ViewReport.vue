@@ -88,14 +88,6 @@ function relative(p: string) {
   return p
 }
 
-function line(stack: ParsedStack) {
-  return stack.sourcePos?.line ?? stack.line
-}
-
-function column(stack: ParsedStack) {
-  return stack.sourcePos?.column ?? stack.column
-}
-
 interface Diff { error: NonNullable<Pick<ErrorWithDiff, 'expected' | 'actual'>> }
 type ResultWithDiff = Task['result'] & Diff
 function isDiffShowable(result?: Task['result']): result is ResultWithDiff {
@@ -128,14 +120,14 @@ function diff(result: ResultWithDiff): string {
           <div v-else-if="task.result?.error" class="scrolls scrolls-rounded task-error">
             <pre><b>{{ task.result.error.name || task.result.error.nameStr }}</b>: {{ task.result.error.message }}</pre>
             <div v-for="(stack, i) of task.result.error.stacks" :key="i" class="op80 flex gap-x-2 items-center" data-testid="stack">
-              <pre> - {{ relative(stack.file) }}:{{ line(stack) }}:{{ column(stack) }}</pre>
+              <pre> - {{ relative(stack.file) }}:{{ stack.line }}:{{ stack.column }}</pre>
               <div
                 v-if="shouldOpenInEditor(stack.file, props.file?.name)"
                 v-tooltip.bottom="'Open in Editor'"
                 class="i-carbon-launch c-red-600 dark:c-red-400 hover:cursor-pointer min-w-1em min-h-1em"
                 tabindex="0"
                 aria-label="Open in Editor"
-                @click.passive="openInEditor(stack.file, line(stack), column(stack))"
+                @click.passive="openInEditor(stack.file, stack.line, stack.column)"
               />
             </div>
             <pre v-if="isDiffShowable(task.result)">

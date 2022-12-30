@@ -2,7 +2,8 @@ import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import { parseStacktrace } from '../utils/source-map'
 import type { VitestMocker } from '../runtime/mocker'
 import type { ResolvedConfig, RuntimeConfig } from '../types'
-import { getWorkerState, resetModules, setTimeout } from '../utils'
+import { getWorkerState, resetModules, waitForImportsToResolve } from '../utils'
+import type { MockFactoryWithHelper } from '../types/mocker'
 import { FakeTimers } from './mock/timers'
 import type { EnhancedSpy, MaybeMocked, MaybeMockedDeep, MaybePartiallyMocked, MaybePartiallyMockedDeep } from './spy'
 import { fn, isMockFunction, spies, spyOn } from './spy'
@@ -125,8 +126,13 @@ class VitestUtils {
    * @param path Path to the module. Can be aliased, if your config supports it
    * @param factory Factory for the mocked module. Has the highest priority.
    */
-  public mock(path: string, factory?: () => any) {
-    this._mocker.queueMock(path, this.getImporter(), factory)
+  public mock(path: string, factory?: MockFactoryWithHelper) {
+    const importer = this.getImporter()
+    this._mocker.queueMock(
+      path,
+      importer,
+      factory ? () => factory(() => this._mocker.importActual(path, importer)) : undefined,
+    )
   }
 
   /**
@@ -158,7 +164,7 @@ class VitestUtils {
    * @param path Path to the module. Can be aliased, if your config supports it
    * @returns Actual module without spies
    */
-  public async importActual<T>(path: string): Promise<T> {
+  public async importActual<T = unknown>(path: string): Promise<T> {
     return this._mocker.importActual<T>(path, this.getImporter())
   }
 
@@ -220,21 +226,58 @@ class VitestUtils {
     return this
   }
 
+  private _stubsGlobal = new Map<string | symbol | number, PropertyDescriptor | undefined>()
+  private _stubsEnv = new Map()
+
   /**
-   * Will put a value on global scope. Useful, if you are
-   * using jsdom/happy-dom and want to mock global variables, like
-   * `IntersectionObserver`.
+   * Makes value available on global namespace.
+   * Useful, if you want to have global variables available, like `IntersectionObserver`.
+   * You can return it back to original value with `vi.unstubGlobals`, or by enabling `unstubGlobals` config option.
    */
   public stubGlobal(name: string | symbol | number, value: any) {
-    if (globalThis.window) {
-      // @ts-expect-error we can do anything!
-      globalThis.window[name] = value
-    }
-    else {
-      // @ts-expect-error we can do anything!
-      globalThis[name] = value
-    }
+    if (!this._stubsGlobal.has(name))
+      this._stubsGlobal.set(name, Object.getOwnPropertyDescriptor(globalThis, name))
+    // @ts-expect-error we can do anything!
+    globalThis[name] = value
+    return this
+  }
 
+  /**
+   * Changes the value of `import.meta.env` and `process.env`.
+   * You can return it back to original value with `vi.unstubEnvs`, or by enabling `unstubEnvs` config option.
+   */
+  public stubEnv(name: string, value: string) {
+    if (!this._stubsEnv.has(name))
+      this._stubsEnv.set(name, process.env[name])
+    process.env[name] = value
+    return this
+  }
+
+  /**
+   * Reset the value to original value that was available before first `vi.stubGlobal` was called.
+   */
+  public unstubAllGlobals() {
+    this._stubsGlobal.forEach((original, name) => {
+      if (!original)
+        Reflect.deleteProperty(globalThis, name)
+      else
+        Object.defineProperty(globalThis, name, original)
+    })
+    this._stubsGlobal.clear()
+    return this
+  }
+
+  /**
+   * Reset enviromental variables to the ones that were available before first `vi.stubEnv` was called.
+   */
+  public unstubAllEnvs() {
+    this._stubsEnv.forEach((original, name) => {
+      if (original === undefined)
+        delete process.env[name]
+      else
+        process.env[name] = original
+    })
+    this._stubsEnv.clear()
     return this
   }
 
@@ -245,26 +288,12 @@ class VitestUtils {
   }
 
   /**
-   * Wait for all imports to load.
-   * Useful, if you have a synchronous call that starts
-   * importing a module that you cannot wait otherwise.
+   * Wait for all imports to load. Useful, if you have a synchronous call that starts
+   * importing a module that you cannot await otherwise.
+   * Will also wait for new imports, started during the wait.
    */
   public async dynamicImportSettled() {
-    const state = getWorkerState()
-    const promises: Promise<unknown>[] = []
-    for (const mod of state.moduleCache.values()) {
-      if (mod.promise && !mod.evaluated)
-        promises.push(mod.promise)
-    }
-    if (!promises.length)
-      return
-    await Promise.allSettled(promises)
-    // wait until the end of the loop, so `.then` on modules is called,
-    // like in import('./example').then(...)
-    // also call dynamicImportSettled again in case new imports were added
-    await new Promise(resolve => setTimeout(resolve, 1))
-      .then(() => Promise.resolve())
-      .then(() => this.dynamicImportSettled())
+    return waitForImportsToResolve()
   }
 
   private _config: null | ResolvedConfig = null

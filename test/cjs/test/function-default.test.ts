@@ -8,6 +8,6 @@ describe('correctly puts default on default', () => {
 
   it('works on nested default function', () => {
     // @ts-expect-error types defined only default
-    expect(format.default()).toBe('')
+    expect(format.default).toBeUndefined()
   })
 })

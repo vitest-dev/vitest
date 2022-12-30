@@ -1,4 +1,4 @@
-import { rm } from 'fs/promises'
+import { rm } from 'node:fs/promises'
 import type { ExecaChildProcess } from 'execa'
 import { execa } from 'execa'
 import { resolve } from 'pathe'
@@ -149,10 +149,6 @@ export class Typechecker {
             line: info.line,
             column: info.column,
             method: '',
-            sourcePos: {
-              line: info.line,
-              column: info.column,
-            },
           },
         ])
         Error.stackTraceLimit = limit

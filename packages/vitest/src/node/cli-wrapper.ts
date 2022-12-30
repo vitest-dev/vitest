@@ -147,4 +147,3 @@ async function start(preArgs: string[], postArgs: string[]) {
   // no segmentfault found
   process.exit(child.exitCode!)
 }
-

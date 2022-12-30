@@ -2,27 +2,35 @@ import { createClient, getTasks } from '@vitest/ws-client'
 import type { WebSocketStatus } from '@vueuse/core'
 import type { Ref } from 'vue'
 import { reactive } from 'vue'
-import type { RunState } from '../../types'
-import { activeFileId } from './params'
+import type { RunState } from '../../../types'
+import { activeFileId } from '../params'
+import { createStaticClient } from './static'
 import type { File, ResolvedConfig } from '#types'
 
 export const PORT = import.meta.hot ? '51204' : location.port
 export const HOST = [location.hostname, PORT].filter(Boolean).join(':')
 export const ENTRY_URL = `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${HOST}/__vitest_api__`
-
+export const isReport = !!window.METADATA_PATH
 export const testRunState: Ref<RunState> = ref('idle')
 
-export const client = createClient(ENTRY_URL, {
-  reactive: reactive as any,
-  handlers: {
-    onTaskUpdate() {
-      testRunState.value = 'running'
-    },
-    onFinished() {
-      testRunState.value = 'idle'
-    },
-  },
-})
+export const client = (function createVitestClient() {
+  if (isReport) {
+    return createStaticClient()
+  }
+  else {
+    return createClient(ENTRY_URL, {
+      reactive: reactive as any,
+      handlers: {
+        onTaskUpdate() {
+          testRunState.value = 'running'
+        },
+        onFinished() {
+          testRunState.value = 'idle'
+        },
+      },
+    })
+  }
+})()
 
 export const config = shallowRef<ResolvedConfig>({} as any)
 export const status = ref<WebSocketStatus>('CONNECTING')
@@ -60,11 +68,15 @@ watch(
   (ws) => {
     status.value = 'CONNECTING'
 
-    ws.addEventListener('open', () => {
+    ws.addEventListener('open', async () => {
       status.value = 'OPEN'
       client.state.filesMap.clear()
-      client.rpc.getFiles().then(files => client.state.collectFiles(files))
-      client.rpc.getConfig().then(_config => config.value = _config)
+      const [files, _config] = await Promise.all([
+        client.rpc.getFiles(),
+        client.rpc.getConfig(),
+      ])
+      client.state.collectFiles(files)
+      config.value = _config
     })
 
     ws.addEventListener('close', () => {

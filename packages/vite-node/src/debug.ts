@@ -1,12 +1,15 @@
 /* eslint-disable no-console */
-import { existsSync, promises as fs } from 'fs'
+import { existsSync, promises as fs } from 'node:fs'
 import { join, resolve } from 'pathe'
 import type { TransformResult } from 'vite'
 import c from 'picocolors'
 import type { DebuggerOptions } from './types'
 
 function hashCode(s: string) {
-  return s.split('').reduce((a, b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a }, 0)
+  return s.split('').reduce((a, b) => {
+    a = ((a << 5) - a) + b.charCodeAt(0)
+    return a & a
+  }, 0)
 }
 
 export class Debugger {

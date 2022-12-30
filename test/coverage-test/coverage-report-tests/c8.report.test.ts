@@ -11,4 +11,3 @@ test('c8 json report', async () => {
   // If this fails, you can use "npx live-server@1.2.1 ./coverage" to see coverage report
   expect(jsonReport).toMatchSnapshot()
 })
-

@@ -386,7 +386,7 @@ exports[`c8 json report 1`] = `
         "line": 8,
         "loc": {
           "end": {
-            "column": 13,
+            "column": 25,
             "line": 8,
           },
           "start": {
@@ -397,7 +397,7 @@ exports[`c8 json report 1`] = `
         "locations": [
           {
             "end": {
-              "column": 13,
+              "column": 25,
               "line": 8,
             },
             "start": {
@@ -839,7 +839,7 @@ exports[`c8 json report 1`] = `
         "line": 7,
         "loc": {
           "end": {
-            "column": 56,
+            "column": 55,
             "line": 7,
           },
           "start": {
@@ -850,7 +850,7 @@ exports[`c8 json report 1`] = `
         "locations": [
           {
             "end": {
-              "column": 56,
+              "column": 55,
               "line": 7,
             },
             "start": {
@@ -1426,7 +1426,7 @@ exports[`c8 json report 1`] = `
       },
     },
   },
-  "<process-cwd>/src/index.ts": {
+  "<process-cwd>/src/index.mts": {
     "all": false,
     "b": {
       "0": [
@@ -1544,7 +1544,7 @@ exports[`c8 json report 1`] = `
         "name": "get",
       },
     },
-    "path": "<process-cwd>/src/index.ts",
+    "path": "<process-cwd>/src/index.mts",
     "s": {
       "0": 1,
       "1": 1,
@@ -2220,8 +2220,8 @@ exports[`c8 json report 1`] = `
         "line": 16,
         "loc": {
           "end": {
-            "column": 9,
-            "line": 18,
+            "column": 51,
+            "line": 16,
           },
           "start": {
             "column": 4,
@@ -2231,8 +2231,8 @@ exports[`c8 json report 1`] = `
         "locations": [
           {
             "end": {
-              "column": 9,
-              "line": 18,
+              "column": 51,
+              "line": 16,
             },
             "start": {
               "column": 4,
@@ -2272,6 +2272,8 @@ exports[`c8 json report 1`] = `
     "f": {
       "0": 1,
       "1": 1,
+      "10": 0,
+      "11": 0,
       "2": 2,
       "3": 2,
       "4": 0,
@@ -2326,6 +2328,54 @@ exports[`c8 json report 1`] = `
           "start": {
             "column": 0,
             "line": 3,
+          },
+        },
+        "name": "get",
+      },
+      "10": {
+        "decl": {
+          "end": {
+            "column": 1,
+            "line": 29,
+          },
+          "start": {
+            "column": 7,
+            "line": 27,
+          },
+        },
+        "line": 27,
+        "loc": {
+          "end": {
+            "column": 1,
+            "line": 29,
+          },
+          "start": {
+            "column": 7,
+            "line": 27,
+          },
+        },
+        "name": "ignoredFunction",
+      },
+      "11": {
+        "decl": {
+          "end": {
+            "column": 1,
+            "line": 29,
+          },
+          "start": {
+            "column": 0,
+            "line": 29,
+          },
+        },
+        "line": 29,
+        "loc": {
+          "end": {
+            "column": 1,
+            "line": 29,
+          },
+          "start": {
+            "column": 0,
+            "line": 29,
           },
         },
         "name": "get",
@@ -2533,7 +2583,7 @@ exports[`c8 json report 1`] = `
       "13": 1,
       "14": 1,
       "15": 1,
-      "16": 0,
+      "16": 1,
       "17": 1,
       "18": 1,
       "19": 1,
@@ -2542,6 +2592,11 @@ exports[`c8 json report 1`] = `
       "21": 0,
       "22": 0,
       "23": 0,
+      "24": 1,
+      "25": 1,
+      "26": 1,
+      "27": 0,
+      "28": 0,
       "3": 1,
       "4": 1,
       "5": 2,
@@ -2719,6 +2774,56 @@ exports[`c8 json report 1`] = `
         "start": {
           "column": 0,
           "line": 24,
+        },
+      },
+      "24": {
+        "end": {
+          "column": 0,
+          "line": 25,
+        },
+        "start": {
+          "column": 0,
+          "line": 25,
+        },
+      },
+      "25": {
+        "end": {
+          "column": 39,
+          "line": 26,
+        },
+        "start": {
+          "column": 0,
+          "line": 26,
+        },
+      },
+      "26": {
+        "end": {
+          "column": 35,
+          "line": 27,
+        },
+        "start": {
+          "column": 0,
+          "line": 27,
+        },
+      },
+      "27": {
+        "end": {
+          "column": 59,
+          "line": 28,
+        },
+        "start": {
+          "column": 0,
+          "line": 28,
+        },
+      },
+      "28": {
+        "end": {
+          "column": 1,
+          "line": 29,
+        },
+        "start": {
+          "column": 0,
+          "line": 29,
         },
       },
       "3": {

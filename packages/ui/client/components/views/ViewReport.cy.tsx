@@ -9,10 +9,6 @@ const stackRowSelector = '[data-testid=stack]'
 const makeTextStack = () => ({
   line: faker.datatype.number({ min: 0, max: 120 }),
   column: faker.datatype.number({ min: 0, max: 5000 }),
-  sourcePos: {
-    line: faker.datatype.number({ min: 121, max: 240 }),
-    column: faker.datatype.number({ min: 5001, max: 10000 }),
-  },
   // Absolute file paths
   file: faker.system.filePath(),
   method: faker.hacker.verb(),
@@ -49,9 +45,8 @@ describe('ViewReport', () => {
       cy.get(stackRowSelector).should('have.length', stacks.length)
         .get(stackRowSelector)
         .each(($stack, idx) => {
-          const { column, line, file: fileName, sourcePos } = stacks[idx]
-          expect($stack).not.to.contain.text(`${line}:${column}`)
-          expect($stack).to.contain.text(`${sourcePos.line}:${sourcePos.column}`)
+          const { column, line, file: fileName } = stacks[idx]
+          expect($stack).to.contain.text(`${line}:${column}`)
           expect($stack).to.contain.text(`- ${fileName}`)
         })
     })

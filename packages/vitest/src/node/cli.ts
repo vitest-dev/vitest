@@ -24,8 +24,10 @@ cli
   .option('--silent', 'silent console output from tests')
   .option('--isolate', 'isolate environment for each test file (default: true)')
   .option('--reporter <name>', 'reporter')
-  .option('--outputTruncateLength <length>', 'diff output length (default: 80)')
-  .option('--outputDiffLines <lines>', 'number of diff output lines (default: 15)')
+  .option('--outputDiffMaxSize <length>', 'object diff output max size (default: 10000)')
+  .option('--outputDiffMaxLines <length>', 'max lines in diff output window (default: 50)')
+  .option('--outputTruncateLength <length>', 'diff output line length (default: 80)')
+  .option('--outputDiffLines <lines>', 'number of lines in single diff (default: 15)')
   .option('--outputFile <filename/-s>', 'write test results to a file when the --reporter=json or --reporter=junit option is also specified, use cac\'s dot notation for individual outputs of multiple reporters')
   .option('--coverage', 'enable coverage report')
   .option('--run', 'do not watch')
@@ -35,6 +37,7 @@ cli
   .option('--browser', 'run tests in browser')
   .option('--environment <env>', 'runner environment (default: node)')
   .option('--passWithNoTests', 'pass when no tests found')
+  .option('--logHeapUsage', 'show the size of heap for each test')
   .option('--allowOnly', 'Allow tests and suites that are marked as only (default: !process.env.CI)')
   .option('--dangerouslyIgnoreUnhandledErrors', 'Ignore any unhandled errors that occur')
   .option('--shard <shard>', 'Test suite shard to execute in a format of <index>/<count>')
@@ -102,22 +105,28 @@ async function typecheck(cliFilters: string[] = [], options: CliOptions = {}) {
   await start('typecheck', cliFilters, options)
 }
 
-function normalizeOptions(argv: CliOptions): CliOptions {
+function normalizeCliOptions(argv: CliOptions): CliOptions {
   if (argv.root)
     argv.root = normalize(argv.root)
+  else
+    delete argv.root
 
   if (argv.config)
     argv.config = normalize(argv.config)
+  else
+    delete argv.config
 
   if (argv.dir)
     argv.dir = normalize(argv.dir)
+  else
+    delete argv.dir
 
   return argv
 }
 
 async function start(mode: VitestRunMode, cliFilters: string[], options: CliOptions): Promise<Vitest | undefined> {
   try {
-    const ctx = await startVitest(mode, cliFilters.map(normalize), normalizeOptions(options))
+    const ctx = await startVitest(mode, cliFilters.map(normalize), normalizeCliOptions(options))
     if (!ctx?.config.watch)
       await ctx?.exit()
     return ctx

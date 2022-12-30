@@ -1,4 +1,4 @@
-import type { MessagePort } from 'worker_threads'
+import type { MessagePort } from 'node:worker_threads'
 import type { FetchFunction, ModuleCacheMap, RawSourceMap, ViteNodeResolveId } from 'vite-node'
 import type { BirpcReturn } from 'birpc'
 import type { MockMap } from './mocker'

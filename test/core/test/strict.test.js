@@ -16,7 +16,11 @@ describe('vitest runs code in strict mode', () => {
   })
 
   test('cannot redefine getter', () => {
-    const obj2 = { get x() { return 17 } }
+    const obj2 = {
+      get x() {
+        return 17
+      },
+    }
     expect(() => {
       obj2.x = 5
     }).toThrowError(TypeError)

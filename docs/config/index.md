@@ -87,9 +87,9 @@ Files to exclude from the test run, using glob pattern.
 
 ### deps
 
-- **Type:** `{ external?, inline? }`
+- **Type:** `{ external?, inline?, ... }`
 
-Handling for dependencies inlining or externalizing
+Handling for dependencies resolution.
 
 #### deps.external
 
@@ -121,16 +121,32 @@ This might potentially cause some misalignment if a package has different logic 
 - **Type:** `boolean`
 - **Default:** `false`
 
-Use [experimental Node loader](https://nodejs.org/api/esm.html#loaders) to resolve imports inside `node_modules`, using Vite resolve algorithm.
+Use [experimental Node loader](https://nodejs.org/api/esm.html#loaders) to resolve imports inside externalized files, using Vite resolve algorithm.
 
-If disabled, your `alias` and `<plugin>.resolveId` won't affect imports inside `node_modules` or `deps.external`.
+If disabled, your `alias` and `<plugin>.resolveId` won't affect imports inside externalized packages (by default, `node_modules`).
 
 #### deps.interopDefault
 
 - **Type:** `boolean`
-- **Default:** `true`
+- **Default:** `false` if `environment` is `node`, `true` otherwise
 
-Interpret CJS module's default as named exports.
+Interpret CJS module's default as named exports. Some dependencies only bundle CJS modules and don't use named exports that Node.js can statically analyze when a package is imported using `import` syntax instead of `require`. When importing such dependencies in Node environment using named exports, you will see this error:
+
+```
+import { read } from 'fs-jetpack';
+         ^^^^
+SyntaxError: Named export 'read' not found. The requested module 'fs-jetpack' is a CommonJS module, which may not support all module.exports as named exports.
+CommonJS modules can always be imported via the default export.
+```
+
+Vitest doesn't do static analysis, and cannot fail before your running code, so you will most likely see this error when running tests:
+
+```
+TypeError: createAsyncThunk is not a function
+TypeError: default is not a function
+```
+
+If you are using bundlers or transpilers that bypass this Node.js limitation, you can enable this option manually. By default, Vitest assumes you are using Node ESM syntax, when `environment` is `node`, and doesn't interpret named exports.
 
 ### benchmark
 
@@ -341,22 +357,61 @@ Custom reporters for output. Reporters can be [a Reporter instance](https://gith
   - `'dot'` -  show each task as a single dot
   - `'junit'` - JUnit XML reporter (you can configure `testsuites` tag name with `VITEST_JUNIT_SUITE_NAME` environmental variable)
   - `'json'` -  give a simple JSON summary
+  - `'html'` -  outputs HTML report based on [`@vitest/ui`](/guide/ui)
   - path of a custom reporter (e.g. `'./path/to/reporter.ts'`, `'@scope/reporter'`)
 
 ### outputTruncateLength
 
 - **Type:** `number`
-- **Default:** `80`
+- **Default:** `stdout.columns || 80`
+- **CLI:** `--outputTruncateLength <length>`, `--output-truncate-length <length>`
 
-Truncate output diff lines up to `80` number of characters. You may wish to tune this,
-depending on your terminal window width.
+Truncate the size of diff line up to `stdout.columns` or `80` number of characters. You may wish to tune this, depending on your terminal window width. Vitest includes `+-` characters and spaces for this. For example, you might see this diff, if you set this to `6`:
+
+```diff
+// actual line: "Text that seems correct"
+- Text...
++ Test...
+```
 
 ### outputDiffLines
 
 - **Type:** `number`
 - **Default:** `15`
+- **CLI:** `--outputDiffLines <lines>`, `--output-diff-lines <lines>`
 
-Limit number of output diff lines up to `15`.
+Limit the number of single output diff lines up to `15`. Vitest counts all `+-` lines when determining when to stop. For example, you might see diff like this, if you set this property to `3`:
+
+```diff
+- test: 1,
++ test: 2,
+- obj: '1',
+...
+- test2: 1,
++ test2: 1,
+- obj2: '2',
+...
+```
+
+### outputDiffMaxLines
+
+- **Type:** `number`
+- **Default:** `50`
+- **CLI:** `--outputDiffMaxLines <lines>`, `--output-diff-max-lines <lines>`
+- **Version:** Since Vitest 0.26.0
+
+The maximum number of lines to display in diff window. Beware that if you have a large object with many small diffs, you might not see all of them at once.
+
+### outputDiffMaxSize
+
+- **Type:** `number`
+- **Default:** `10000`
+- **CLI:** `--outputDiffMaxSize <length>`, `--output-diff-max-size <length>`
+- **Version:** Since Vitest 0.26.0
+
+The maximum length of the stringified object before the diff happens. Vitest tries to stringify an object before doing a diff, but if the object is too large, it will reduce the depth of the object to fit within this limit. Because of this, if the object is too big or nested, you might not see the diff.
+
+Increasing this limit can increase the duration of diffing.
 
 ### outputFile
 
@@ -534,7 +589,7 @@ List of files included in coverage as glob patterns
 #### extension
 
 - **Type:** `string | string[]`
-- **Default:** `['.js', '.cjs', '.mjs', '.ts', '.tsx', '.jsx', '.vue', '.svelte']`
+- **Default:** `['.js', '.cjs', '.mjs', '.ts', '.mts', '.cts', '.tsx', '.jsx', '.vue', '.svelte']`
 - **Available for providers:** `'c8' | 'istanbul'`
 
 #### exclude
@@ -776,6 +831,22 @@ Will call [`.mockReset()`](/api/#mockreset) on all spies before each test. This 
 - **Default:** `false`
 
 Will call [`.mockRestore()`](/api/#mockrestore) on all spies before each test. This will clear mock history and reset its implementation to the original one.
+
+### unstubEnvs
+
+- **Type:** `boolean`
+- **Default:** `false`
+- **Version:** Since Vitest 0.26.0
+
+Will call [`vi.unstubAllEnvs`](/api/#vi-unstuballenvs) before each test.
+
+### unstubGlobals
+
+- **Type:** `boolean`
+- **Default:** `false`
+- **Version:** Since Vitest 0.26.0
+
+Will call [`vi.unstubAllGlobals`](/api/#vi-unstuballglobals) before each test.
 
 ### transformMode
 
