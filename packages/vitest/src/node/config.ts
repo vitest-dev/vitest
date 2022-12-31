@@ -1,5 +1,5 @@
 import { resolveModule } from 'local-pkg'
-import { normalize, resolve } from 'pathe'
+import { normalize, relative, resolve } from 'pathe'
 import c from 'picocolors'
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 
@@ -190,7 +190,7 @@ export function resolveConfig(
         ?? resolve(resolved.root, file),
     ),
   )
-  resolved.coverage.exclude.push(...resolved.setupFiles.map(file => file.replace(`${resolved.root}/`, '')))
+  resolved.coverage.exclude.push(...resolved.setupFiles.map(file => relative(resolved.root, file)))
 
   // the server has been created, we don't need to override vite.server options
   resolved.api = resolveApiConfig(options)
