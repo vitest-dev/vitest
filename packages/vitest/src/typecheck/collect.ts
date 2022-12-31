@@ -45,7 +45,7 @@ export async function collectTests(ctx: Vitest, filepath: string): Promise<null 
   const file: ParsedFile = {
     filepath,
     type: 'suite',
-    id: '-1',
+    id: filepath,
     name: relative(ctx.config.root, filepath),
     mode: 'run',
     tasks: [],

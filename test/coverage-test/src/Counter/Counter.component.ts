@@ -16,5 +16,9 @@ export default defineComponent({
     coveredMethod() {
       return 'This line should be covered'
     },
+
+    uncoveredMethodUsingImportMeta() {
+      return `Source maps tend to break when import meta is used: ${import.meta.env.BASE_URL}`
+    },
   },
 })

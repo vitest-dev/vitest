@@ -4,7 +4,7 @@ import { execa } from 'execa'
 import { resolve } from 'pathe'
 import { SourceMapConsumer } from 'source-map'
 import { ensurePackageInstalled } from '../utils'
-import type { Awaitable, File, ParsedStack, Task, TaskState, TscErrorInfo, Vitest } from '../types'
+import type { Awaitable, File, ParsedStack, Task, TaskResultPack, TaskState, TscErrorInfo, Vitest } from '../types'
 import { getRawErrsMapFromTsCompile, getTsconfigPath } from './parse'
 import { createIndexMap } from './utils'
 import type { FileInformation } from './collect'
@@ -108,7 +108,7 @@ export class Typechecker {
         const state: TaskState = suite.mode === 'run' || suite.mode === 'only' ? 'fail' : suite.mode
         const task: Task = {
           type: 'typecheck',
-          id: idx.toString(),
+          id: `${path}${idx.toString()}`,
           name: `error expect ${idx + 1}`, // TODO naming
           mode: suite.mode,
           file,
@@ -233,5 +233,9 @@ export class Typechecker {
 
   public getTestFiles() {
     return Object.values(this._tests || {}).map(i => i.file)
+  }
+
+  public getTestPacks() {
+    return Object.values(this._tests || {}).map(i => [i.file.id, undefined] as TaskResultPack)
   }
 }
