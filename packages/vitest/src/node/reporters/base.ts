@@ -85,7 +85,9 @@ export abstract class BaseReporter implements Reporter {
         // print short errors, full errors will be at the end in summary
         for (const test of failed) {
           logger.log(c.red(`   ${pointer} ${getFullName(test)}`))
-          logger.log(c.red(`     ${F_RIGHT} ${(test.result!.error as any)?.message}`))
+          test.result?.errors?.forEach((e) => {
+            logger.log(c.red(`     ${F_RIGHT} ${(e as any)?.message}`))
+          })
         }
       }
     }
@@ -258,7 +260,7 @@ export abstract class BaseReporter implements Reporter {
     const suites = getSuites(files)
     const tests = getTests(files)
 
-    const failedSuites = suites.filter(i => i.result?.error)
+    const failedSuites = suites.filter(i => i.result?.errors)
     const failedTests = tests.filter(i => i.result?.state === 'fail')
     const failedTotal = failedSuites.length + failedTests.length
 
@@ -310,12 +312,13 @@ export abstract class BaseReporter implements Reporter {
     const errorsQueue: [error: ErrorWithDiff | undefined, tests: Task[]][] = []
     for (const task of tasks) {
       // merge identical errors
-      const error = task.result?.error
-      const errorItem = error?.stackStr && errorsQueue.find(i => i[0]?.stackStr === error.stackStr)
-      if (errorItem)
-        errorItem[1].push(task)
-      else
-        errorsQueue.push([error, [task]])
+      task.result?.errors?.forEach((error) => {
+        const errorItem = error?.stackStr && errorsQueue.find(i => i[0]?.stackStr === error.stackStr)
+        if (errorItem)
+          errorItem[1].push(task)
+        else
+          errorsQueue.push([error, [task]])
+      })
     }
     for (const [error, tasks] of errorsQueue) {
       for (const task of tasks) {
