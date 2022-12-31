@@ -9,6 +9,7 @@ exports[`istanbul json report 1`] = `
       "0": 1,
       "1": 0,
       "2": 2,
+      "3": 0,
     },
     "fnMap": {
       "0": {
@@ -80,6 +81,29 @@ exports[`istanbul json report 1`] = `
         },
         "name": "(anonymous_2)",
       },
+      "3": {
+        "decl": {
+          "end": {
+            "column": 37,
+            "line": 20,
+          },
+          "start": {
+            "column": 4,
+            "line": 20,
+          },
+        },
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 22,
+          },
+          "start": {
+            "column": 37,
+            "line": 20,
+          },
+        },
+        "name": "(anonymous_3)",
+      },
     },
     "path": "<process-cwd>/src/Counter/Counter.component.ts",
     "s": {
@@ -87,6 +111,7 @@ exports[`istanbul json report 1`] = `
       "1": 1,
       "2": 0,
       "3": 2,
+      "4": 0,
     },
     "statementMap": {
       "0": {
@@ -127,6 +152,16 @@ exports[`istanbul json report 1`] = `
         "start": {
           "column": 6,
           "line": 17,
+        },
+      },
+      "4": {
+        "end": {
+          "column": null,
+          "line": 21,
+        },
+        "start": {
+          "column": 6,
+          "line": 21,
         },
       },
     },
