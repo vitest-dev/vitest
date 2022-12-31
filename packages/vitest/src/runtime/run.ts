@@ -458,10 +458,12 @@ async function runSuites(suites: Suite[]) {
 export async function runFiles(files: File[], config: ResolvedConfig) {
   for (const file of files) {
     if (!file.tasks.length && !config.passWithNoTests) {
-      if (!file.result?.error) {
+      if (!file.result?.errors?.length) {
+        const error = processError(new Error(`No test suite found in file ${file.filepath}`))
         file.result = {
           state: 'fail',
-          error: new Error(`No test suite found in file ${file.filepath}`),
+          error,
+          errors: [error],
         }
       }
     }
