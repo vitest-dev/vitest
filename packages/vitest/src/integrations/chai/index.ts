@@ -21,15 +21,20 @@ export function createExpect(test?: Test) {
   expect.getState = () => getState<MatcherState>(expect)
   expect.setState = state => setState(state as Partial<MatcherState>, expect)
 
+  // @ts-expect-error global is not typed
+  const globalState = getState(globalThis[GLOBAL_EXPECT]) || {}
+
   setState<MatcherState>({
+    // this should also add "snapshotState" that is added conditionally
+    ...globalState,
     assertionCalls: 0,
     isExpectingAssertions: false,
     isExpectingAssertionsError: null,
     expectedAssertionsNumber: null,
     expectedAssertionsNumberErrorGen: null,
     environment: getCurrentEnvironment(),
-    testPath: test?.suite.file?.filepath,
-    currentTestName: test ? getFullName(test) : undefined,
+    testPath: test ? test.suite.file?.filepath : globalState.testPath,
+    currentTestName: test ? getFullName(test) : globalState.currentTestName,
   }, expect)
 
   // @ts-expect-error untyped
