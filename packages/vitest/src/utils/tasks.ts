@@ -44,8 +44,7 @@ export function hasFailed(suite: Arrayable<Task>): boolean {
 
 export function hasFailedSnapshot(suite: Arrayable<Task>): boolean {
   return getTests(suite).some((s) => {
-    const message = s.result?.error?.message
-    return message?.match(/Snapshot .* mismatched/)
+    return s.result?.errors?.some(e => e.message.match(/Snapshot .* mismatched/))
   })
 }
 

@@ -181,8 +181,10 @@ export async function runTest(test: Test) {
       test.result.state = 'pass'
     }
     catch (e) {
+      const error = processError(e)
       test.result.state = 'fail'
-      test.result.error = processError(e)
+      test.result.error = error
+      test.result.errors = [error]
     }
 
     try {
@@ -190,8 +192,10 @@ export async function runTest(test: Test) {
       await callCleanupHooks(beforeEachCleanups)
     }
     catch (e) {
+      const error = processError(e)
       test.result.state = 'fail'
-      test.result.error = processError(e)
+      test.result.error = error
+      test.result.errors = [error]
     }
 
     if (test.result.state === 'pass')
@@ -207,12 +211,15 @@ export async function runTest(test: Test) {
   // if test is marked to be failed, flip the result
   if (test.fails) {
     if (test.result.state === 'pass') {
+      const error = processError(new Error('Expect test to fail'))
       test.result.state = 'fail'
-      test.result.error = processError(new Error('Expect test to fail'))
+      test.result.error = error
+      test.result.errors = [error]
     }
     else {
       test.result.state = 'pass'
       test.result.error = undefined
+      test.result.errors = undefined
     }
   }
 
@@ -302,8 +309,10 @@ export async function runSuite(suite: Suite) {
       await callCleanupHooks(beforeAllCleanups)
     }
     catch (e) {
+      const error = processError(e)
       suite.result.state = 'fail'
-      suite.result.error = processError(e)
+      suite.result.error = error
+      suite.result.errors = [error]
     }
   }
   suite.result.duration = now() - start
@@ -314,8 +323,11 @@ export async function runSuite(suite: Suite) {
   if (suite.mode === 'run') {
     if (!hasTests(suite)) {
       suite.result.state = 'fail'
-      if (!suite.result.error)
-        suite.result.error = new Error(`No test found in suite ${suite.name}`)
+      if (!suite.result.error) {
+        const error = processError(new Error(`No test found in suite ${suite.name}`))
+        suite.result.error = error
+        suite.result.errors = [error]
+      }
     }
     else if (hasFailed(suite)) {
       suite.result.state = 'fail'
@@ -446,10 +458,12 @@ async function runSuites(suites: Suite[]) {
 export async function runFiles(files: File[], config: ResolvedConfig) {
   for (const file of files) {
     if (!file.tasks.length && !config.passWithNoTests) {
-      if (!file.result?.error) {
+      if (!file.result?.errors?.length) {
+        const error = processError(new Error(`No test suite found in file ${file.filepath}`))
         file.result = {
           state: 'fail',
-          error: new Error(`No test suite found in file ${file.filepath}`),
+          error,
+          errors: [error],
         }
       }
     }

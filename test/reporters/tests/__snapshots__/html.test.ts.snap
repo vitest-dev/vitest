@@ -52,6 +52,22 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
               "toJSON": "Function<anonymous>",
               "toString": "Function<toString>",
             },
+            "errors": [
+              {
+                "actual": "2",
+                "constructor": "Function<AssertionError>",
+                "expected": "1",
+                "message": "expected 2 to deeply equal 1",
+                "name": "AssertionError",
+                "nameStr": "AssertionError",
+                "operator": "strictEqual",
+                "showDiff": true,
+                "stack": "AssertionError: expected 2 to deeply equal 1",
+                "stackStr": "AssertionError: expected 2 to deeply equal 1",
+                "toJSON": "Function<anonymous>",
+                "toString": "Function<toString>",
+              },
+            ],
             "hooks": {
               "afterEach": "pass",
               "beforeEach": "pass",
