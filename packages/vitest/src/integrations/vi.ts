@@ -110,11 +110,6 @@ class VitestUtils {
   spyOn = spyOn
   fn = fn
 
-  /**
-   * Get importer with the most performant way.
-   * - Create only 3 stack frames, because the last one is the importer.
-   * - Rewrite prepareStackTrace to bypass support-stack-trace (usually takes ~250ms).
-   */
   private getImporter() {
     const stackTrace = createSimpleStackTrace({ stackTraceLimit: 3 })
     const importerStack = stackTrace.split('\n')[3]

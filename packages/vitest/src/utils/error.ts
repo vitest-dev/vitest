@@ -3,6 +3,11 @@ interface ErrorOptions {
   stackTraceLimit?: number
 }
 
+/**
+ * Get original stacktrace without source map support the most performant way.
+ * - Create only 1 stack frame.
+ * - Rewrite prepareStackTrace to bypass "support-stack-trace" (usually takes ~250ms).
+ */
 export function createSimpleStackTrace(options?: ErrorOptions) {
   const { message = 'error', stackTraceLimit = 1 } = options || {}
   const limit = Error.stackTraceLimit
