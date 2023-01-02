@@ -48,39 +48,61 @@ export class C8CoverageProvider implements CoverageProvider {
     takeCoverage()
     const report = createReport(this.ctx.config.coverage)
 
+    interface MapAndSource { map: RawSourceMap; source: string | undefined }
+    type SourceMapMeta = { url: string; filepath: string } & MapAndSource
+
     // add source maps
-    const sourceMapMeta: Record<string, { map: RawSourceMap; source: string | undefined }> = {}
-    await Promise.all(Array
+    const sourceMapMeta: Record<SourceMapMeta['url'], MapAndSource> = {}
+
+    const entries = Array
       .from(this.ctx.vitenode.fetchCache.entries())
       .filter(i => !i[0].includes('/node_modules/'))
-      .map(async ([file, { result }]) => {
-        const map = result.map
-        if (!map)
-          return
+      .map(([file, { result }]) => {
+        if (!result.map)
+          return null
 
         const filepath = file.split('?')[0]
 
-        const url = _url.pathToFileURL(filepath).href
-
-        let code: string | undefined
-        try {
-          code = (await fs.readFile(filepath)).toString()
-        }
-        catch { }
-
-        // Vite does not report full path in sourcemap sources
-        // so use an actual file path
-        const sources = [url]
-
-        sourceMapMeta[url] = {
+        return {
+          filepath,
+          url: _url.pathToFileURL(filepath).href,
+          map: result.map,
           source: result.code,
-          map: {
-            sourcesContent: code ? [code] : undefined,
-            ...map,
-            sources,
-          },
         }
-      }))
+      })
+      .filter((entry) => {
+        if (!entry)
+          return false
+
+        // Mappings and sourcesContent are needed for C8 to work
+        return (
+          entry.map.mappings.length > 0
+          && entry.map.sourcesContent
+          && entry.map.sourcesContent.length > 0
+          && entry.map.sourcesContent[0].length > 0
+        )
+      }) as SourceMapMeta[]
+
+    await Promise.all(entries.map(async ({ url, source, map, filepath }) => {
+      let code: string | undefined
+      try {
+        code = (await fs.readFile(filepath)).toString()
+      }
+      catch { }
+
+      // Vite does not report full path in sourcemap sources
+      // so use an actual file path
+      const sources = [url]
+
+      sourceMapMeta[url] = {
+        source,
+        map: {
+          sourcesContent: code ? [code] : undefined,
+          ...map,
+          sources,
+        },
+      }
+    }))
 
     // This is a magic number. It corresponds to the amount of code
     // that we add in packages/vite-node/src/client.ts:114 (vm.runInThisContext)
