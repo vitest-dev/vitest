@@ -111,8 +111,8 @@ class VitestUtils {
   fn = fn
 
   private getImporter() {
-    const stackTrace = createSimpleStackTrace({ stackTraceLimit: 3 })
-    const importerStack = stackTrace.split('\n')[3]
+    const stackTrace = createSimpleStackTrace({ stackTraceLimit: 4 })
+    const importerStack = stackTrace.split('\n')[4]
     const stack = parseSingleStack(importerStack)
     return stack?.file || ''
   }
