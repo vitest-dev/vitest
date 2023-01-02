@@ -71,7 +71,7 @@ export class Vitest {
     this.cache = new VitestCache()
     this.snapshot = new SnapshotManager({ ...resolved.snapshotOptions })
 
-    if (this.config.watch)
+    if (this.config.watch && this.mode !== 'typecheck')
       this.registerWatcher()
 
     this.vitenode = new ViteNodeServer(server, this.config)
