@@ -4,6 +4,7 @@ import type { VitestMocker } from '../runtime/mocker'
 import type { ResolvedConfig, RuntimeConfig } from '../types'
 import { getWorkerState, resetModules, waitForImportsToResolve } from '../utils'
 import type { MockFactoryWithHelper } from '../types/mocker'
+import { createSimpleStackTrace } from '../utils/error'
 import { FakeTimers } from './mock/timers'
 import type { EnhancedSpy, MaybeMocked, MaybeMockedDeep, MaybePartiallyMocked, MaybePartiallyMockedDeep } from './spy'
 import { fn, isMockFunction, spies, spyOn } from './spy'
@@ -115,14 +116,7 @@ class VitestUtils {
    * - Rewrite prepareStackTrace to bypass support-stack-trace (usually takes ~250ms).
    */
   private getImporter() {
-    const limit = Error.stackTraceLimit
-    const prepareStackTrace = Error.prepareStackTrace
-    Error.stackTraceLimit = 3
-    Error.prepareStackTrace = e => e.stack
-    const err = new Error('mock')
-    const stackTrace = err.stack || ''
-    Error.prepareStackTrace = prepareStackTrace
-    Error.stackTraceLimit = limit
+    const stackTrace = createSimpleStackTrace({ stackTraceLimit: 3 })
     const importerStack = stackTrace.split('\n')[3]
     const stack = parseSingleStack(importerStack)
     return stack?.file || ''
