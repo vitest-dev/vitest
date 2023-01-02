@@ -424,6 +424,12 @@ export class ViteNodeRunner {
 
     const { mod, defaultExport } = interopModule(importedModule)
 
+    const reservedKeys = ['arguments', 'caller', 'prototype', 'name', 'length']
+    const modKeys = Reflect.ownKeys(mod)
+    const defaultKeys = defaultExport
+      ? Reflect.ownKeys(defaultExport).filter(n => typeof n === 'string' && !reservedKeys.includes(n))
+      : []
+
     return new Proxy(mod, {
       get(mod, prop) {
         if (prop === 'default')
@@ -436,11 +442,10 @@ export class ViteNodeRunner {
         return prop in mod || (defaultExport && prop in defaultExport)
       },
       // this is needed for mocker to know what is available to mock
-      ownKeys(mod) {
-        const keys = Reflect.ownKeys(mod)
+      ownKeys() {
         if (!defaultExport || isPrimitive(defaultExport))
-          return keys
-        const allKeys = [...keys, 'default', ...Reflect.ownKeys(defaultExport)]
+          return modKeys
+        const allKeys = [...modKeys, 'default', ...defaultKeys]
         return Array.from(new Set(allKeys))
       },
       getOwnPropertyDescriptor(mod, prop) {
