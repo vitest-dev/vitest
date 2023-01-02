@@ -1,6 +1,6 @@
-import type { File, ResolvedConfig, Suite } from '../types'
+import type { File, ResolvedConfig } from '../types'
 import { getWorkerState, isBrowser, relativePath } from '../utils'
-import { interpretTaskModes, someTasksAreOnly } from '../utils/collect'
+import { calculateSuiteHash, generateHash, interpretTaskModes, someTasksAreOnly } from '../utils/collect'
 import { clearCollectorContext, defaultSuite } from './suite'
 import { getHooks, setHooks } from './map'
 import { processError } from './error'
@@ -8,18 +8,6 @@ import { collectorContext } from './context'
 import { runSetupFiles } from './setup'
 
 const now = Date.now
-
-function hash(str: string): string {
-  let hash = 0
-  if (str.length === 0)
-    return `${hash}`
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i)
-    hash = (hash << 5) - hash + char
-    hash = hash & hash // Convert to 32bit integer
-  }
-  return `${hash}`
-}
 
 export async function collectTests(paths: string[], config: ResolvedConfig): Promise<File[]> {
   const files: File[] = []
@@ -37,7 +25,7 @@ export async function collectTests(paths: string[], config: ResolvedConfig): Pro
   for (const filepath of paths) {
     const path = relativePath(config.root, filepath)
     const file: File = {
-      id: hash(path),
+      id: generateHash(path),
       name: path,
       type: 'suite',
       mode: 'run',
@@ -92,7 +80,7 @@ export async function collectTests(paths: string[], config: ResolvedConfig): Pro
         console.error(e)
     }
 
-    calculateHash(file)
+    calculateSuiteHash(file)
 
     const hasOnlyTasks = someTasksAreOnly(file)
     interpretTaskModes(file, config.testNamePattern, hasOnlyTasks, false, config.allowOnly)
@@ -101,12 +89,4 @@ export async function collectTests(paths: string[], config: ResolvedConfig): Pro
   }
 
   return files
-}
-
-function calculateHash(parent: Suite) {
-  parent.tasks.forEach((t, idx) => {
-    t.id = `${parent.id}_${idx}`
-    if (t.type === 'suite')
-      calculateHash(t)
-  })
 }

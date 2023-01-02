@@ -1,7 +1,7 @@
 import { performance } from 'perf_hooks'
 import c from 'picocolors'
-import type { ErrorWithDiff, File, Reporter, Task, TaskResultPack, UserConsoleLog } from '../../types'
-import { clearInterval, getFullName, getSuites, getTests, getTypecheckTests, hasFailed, hasFailedSnapshot, isNode, relativePath, setInterval } from '../../utils'
+import type { ErrorWithDiff, File, Reporter, Task, TaskBase, TaskResultPack, UserConsoleLog } from '../../types'
+import { clearInterval, getFullName, getSuites, getTests, hasFailed, hasFailedSnapshot, isNode, relativePath, setInterval } from '../../utils'
 import type { Vitest } from '../../node'
 import { F_RIGHT } from '../../utils/figures'
 import { divider, formatProjectName, formatTimeString, getStateString, getStateSymbol, pointer, renderSnapshotSummary } from './renderers/utils'
@@ -202,7 +202,7 @@ export abstract class BaseReporter implements Reporter {
   }
 
   async reportTestSummary(files: File[]) {
-    const tests = this.mode === 'typecheck' ? getTypecheckTests(files) : getTests(files)
+    const tests = getTests(files)
     const logger = this.ctx.logger
 
     const executionTime = this.end - this.start
@@ -241,7 +241,7 @@ export abstract class BaseReporter implements Reporter {
     logger.log(padTitle('Tests'), getStateString(tests))
     if (this.mode === 'typecheck') {
       // has only failed checks
-      const typechecks = getTests(files).filter(t => t.type === 'typecheck')
+      const typechecks = tests.filter(t => t.meta.typecheck)
       logger.log(padTitle('Type Errors'), getStateString(typechecks, 'errors', false))
     }
     logger.log(padTitle('Start at'), formatTimeString(this._timeStart))
@@ -260,9 +260,11 @@ export abstract class BaseReporter implements Reporter {
     const suites = getSuites(files)
     const tests = getTests(files)
 
+    const totalErrors = (suites: TaskBase[]) => suites.reduce((count, i) => (i.result?.errors?.length || 0) + count, 0)
+
     const failedSuites = suites.filter(i => i.result?.errors)
     const failedTests = tests.filter(i => i.result?.state === 'fail')
-    const failedTotal = failedSuites.length + failedTests.length
+    const failedTotal = totalErrors(failedSuites) + totalErrors(failedTests)
 
     let current = 1
 
@@ -275,8 +277,7 @@ export abstract class BaseReporter implements Reporter {
     }
 
     if (failedTests.length) {
-      const message = this.mode === 'typecheck' ? 'Type Errors' : 'Failed Tests'
-      logger.error(c.red(divider(c.bold(c.inverse(` ${message} ${failedTests.length} `)))))
+      logger.error(c.red(divider(c.bold(c.inverse(` Failed Tests ${failedTests.length} `)))))
       logger.error()
 
       await this.printTaskErrors(failedTests, errorDivider)

@@ -70,3 +70,23 @@ function checkAllowOnly(task: TaskBase, allowOnly?: boolean) {
     error: new Error('[Vitest] Unexpected .only modifier. Remove it or pass --allowOnly argument to bypass this error'),
   }
 }
+
+export function generateHash(str: string): string {
+  let hash = 0
+  if (str.length === 0)
+    return `${hash}`
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i)
+    hash = (hash << 5) - hash + char
+    hash = hash & hash // Convert to 32bit integer
+  }
+  return `${hash}`
+}
+
+export function calculateSuiteHash(parent: Suite) {
+  parent.tasks.forEach((t, idx) => {
+    t.id = `${parent.id}_${idx}`
+    if (t.type === 'suite')
+      calculateSuiteHash(t)
+  })
+}
