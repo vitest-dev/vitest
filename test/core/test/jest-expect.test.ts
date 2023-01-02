@@ -1,7 +1,7 @@
 /* eslint-disable no-sparse-arrays */
 import { AssertionError } from 'assert'
 import { describe, expect, it, vi } from 'vitest'
-import { generateToBeMessage } from 'vitest/src/integrations/chai/jest-utils'
+import { generateToBeMessage } from '@vitest/expect'
 
 class TestError extends Error {}
 

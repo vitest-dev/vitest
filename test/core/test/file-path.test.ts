@@ -4,7 +4,7 @@ import { isWindows, slash, toFilePath } from '../../../packages/vite-node/src/ut
 // @ts-expect-error aliased to ../src/aliased-mod.ts
 import { getPaths as getAbsoluteAliasedPaths } from '$/aliased-mod'
 // @ts-expect-error aliased to ../src/aliased-mod.ts
-import { getPaths as getRelativeAliasedPath } from '@/aliased-mod'
+import { getPaths as getRelativeAliasedPath } from '#/aliased-mod'
 
 vi.mock('fs')
 
