@@ -1,5 +1,5 @@
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
-import { parseStacktrace } from '../utils/source-map'
+import { parseSingleStack } from '../utils/source-map'
 import type { VitestMocker } from '../runtime/mocker'
 import type { ResolvedConfig, RuntimeConfig } from '../types'
 import { getWorkerState, resetModules, waitForImportsToResolve } from '../utils'
@@ -109,10 +109,23 @@ class VitestUtils {
   spyOn = spyOn
   fn = fn
 
+  /**
+   * Get importer with the most performant way.
+   * - Create only 3 stack frames, because the last one is the importer.
+   * - Rewrite prepareStackTrace to bypass support-stack-trace (usually takes ~250ms).
+   */
   private getImporter() {
+    const limit = Error.stackTraceLimit
+    const prepareStackTrace = Error.prepareStackTrace
+    Error.stackTraceLimit = 3
+    Error.prepareStackTrace = e => e.stack
     const err = new Error('mock')
-    const [,, importer] = parseStacktrace(err, true)
-    return importer.file
+    const stackTrace = err.stack || ''
+    Error.prepareStackTrace = prepareStackTrace
+    Error.stackTraceLimit = limit
+    const importerStack = stackTrace.split('\n')[3]
+    const stack = parseSingleStack(importerStack)
+    return stack?.file || ''
   }
 
   /**
