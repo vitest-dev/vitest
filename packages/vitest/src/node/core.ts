@@ -453,6 +453,9 @@ export class Vitest {
     }
     const onUnlink = (id: string) => {
       id = slash(id)
+      const needsRerun = this.handleFileChanged(id)
+      if (needsRerun)
+        this.scheduleRerun(id)
       this.invalidates.add(id)
 
       if (this.state.filesMap.has(id)) {
