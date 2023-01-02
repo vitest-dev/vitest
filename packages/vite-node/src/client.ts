@@ -424,11 +424,13 @@ export class ViteNodeRunner {
 
     const { mod, defaultExport } = interopModule(importedModule)
 
-    const reservedKeys = ['arguments', 'caller', 'prototype', 'name', 'length']
     const modKeys = Reflect.ownKeys(mod)
-    const defaultKeys = defaultExport
-      ? Reflect.ownKeys(defaultExport).filter(n => typeof n === 'string' && !reservedKeys.includes(n))
-      : []
+    let defaultKeys = defaultExport ? Reflect.ownKeys(defaultExport) : []
+    // remove reserved keys from default keys
+    if (typeof mod !== 'function' && typeof defaultExport === 'function') {
+      const reservedKeys = ['arguments', 'caller', 'prototype', 'name', 'length']
+      defaultKeys = defaultKeys.filter(n => typeof n === 'string' && !reservedKeys.includes(n))
+    }
 
     return new Proxy(mod, {
       get(mod, prop) {
