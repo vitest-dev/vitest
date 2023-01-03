@@ -22,6 +22,7 @@
     "test",
     "jest"
   ],
+  "sideEffects": false,
   "exports": {
     ".": {
       "require": {
@@ -110,9 +111,11 @@
     "@types/node": "*",
     "acorn": "^8.8.1",
     "acorn-walk": "^8.2.0",
+    "cac": "^6.7.14",
     "chai": "^4.3.7",
     "debug": "^4.3.4",
     "local-pkg": "^0.4.2",
+    "picocolors": "^1.0.0",
     "source-map": "^0.6.1",
     "strip-literal": "^1.0.0",
     "tinybench": "^2.3.1",
@@ -131,9 +134,11 @@
     "@types/natural-compare": "^1.4.1",
     "@types/prompts": "^2.4.2",
     "@types/sinonjs__fake-timers": "^8.1.2",
+    "@vitest/expect": "workspace:*",
+    "@vitest/spy": "workspace:*",
     "@vitest/ui": "workspace:*",
+    "@vitest/utils": "workspace:*",
     "birpc": "^0.2.3",
-    "cac": "^6.7.14",
     "chai-subset": "^1.6.0",
     "cli-truncate": "^3.1.0",
     "diff": "^5.1.0",
@@ -153,7 +158,6 @@
     "natural-compare": "^1.4.0",
     "p-limit": "^4.0.0",
     "pathe": "^0.2.0",
-    "picocolors": "^1.0.0",
     "pkg-types": "^1.0.1",
     "pretty-format": "^27.5.1",
     "prompts": "^2.4.2",

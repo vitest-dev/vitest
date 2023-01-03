@@ -140,6 +140,7 @@ function licensePlugin() {
       }
       const licenses = new Set()
       const dependencyLicenseTexts = dependencies
+        .filter(({ name }) => !name.startsWith('@vitest/'))
         .sort(({ name: nameA }, { name: nameB }) =>
           nameA > nameB ? 1 : nameB > nameA ? -1 : 0,
         )
