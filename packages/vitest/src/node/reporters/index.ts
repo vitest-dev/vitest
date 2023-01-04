@@ -1,3 +1,4 @@
+import { BasicReporter } from './basic'
 import { DefaultReporter } from './default'
 import { DotReporter } from './dot'
 import { JsonReporter } from './json'
@@ -10,6 +11,7 @@ export { DefaultReporter }
 
 export const ReportersMap = {
   'default': DefaultReporter,
+  'basic': BasicReporter,
   'verbose': VerboseReporter,
   'dot': DotReporter,
   'json': JsonReporter,
