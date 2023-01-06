@@ -71,4 +71,10 @@ describe.concurrent('custom reporters', () => {
     const stdout = await runWithRetry('--config', 'without-custom-reporter.vitest.config.ts', '--reporter', customJSReporterPath)
     expect(stdout).includes('hello from custom reporter')
   }, TIMEOUT)
+
+  test('overrides reporters by given a CLI argument --reporter works', async () => {
+    const stdout = await runWithRetry('--config', 'deps-reporter.vitest.config.ts', '--reporter', customJSReporterPath)
+    expect(stdout).not.includes('hello from package reporter')
+    expect(stdout).includes('hello from custom reporter')
+  }, TIMEOUT)
 })

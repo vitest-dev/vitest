@@ -17,6 +17,12 @@ const makeTextStack = () => ({
 // 5 Stacks
 const textStacks = Array.from(new Array(5)).map(makeTextStack)
 
+const error = {
+  name: 'Do some test',
+  stacks: textStacks,
+  message: 'Error: Transform failed with 1 error:',
+}
+
 const fileWithTextStacks = {
   id: 'f-1',
   name: 'test/plain-stack-trace.ts',
@@ -25,11 +31,8 @@ const fileWithTextStacks = {
   filepath: 'test/plain-stack-trace.ts',
   result: {
     state: 'fail',
-    error: {
-      name: 'Do some test',
-      stacks: textStacks,
-      message: 'Error: Transform failed with 1 error:',
-    },
+    error,
+    errors: [error],
   },
   tasks: [],
 }
@@ -67,11 +70,11 @@ describe('ViewReport', () => {
       filepath: 'test/plain-stack-trace.ts',
       result: {
         state: 'fail',
-        error: {
+        errors: [{
           name: 'Do some test',
           stack: '\x1B[33mtest/plain-stack-trace.ts\x1B[0m',
           message: 'Error: Transform failed with 1 error:',
-        },
+        }],
       },
       tasks: [],
     }
@@ -104,11 +107,11 @@ describe('ViewReport', () => {
       filepath: 'test/plain-stack-trace.ts',
       result: {
         state: 'fail',
-        error: {
+        errors: [{
           name: 'Do some test',
           stack: '\x1B[33mtest/plain-stack-trace.ts\x1B[0m',
           message: '\x1B[44mError: Transform failed with 1 error:\x1B[0m',
-        },
+        }],
       },
       tasks: [],
     }

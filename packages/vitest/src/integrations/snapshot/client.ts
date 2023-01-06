@@ -1,8 +1,8 @@
 import { expect } from 'chai'
+import { equals, iterableEquality, subsetEquality } from '@vitest/expect'
 import type { Test } from '../../types'
 import { rpc } from '../../runtime/rpc'
 import { getNames, getWorkerState } from '../../utils'
-import { equals, iterableEquality, subsetEquality } from '../chai/jest-utils'
 import { deepMergeSnapshot } from './port/utils'
 import SnapshotState from './port/state'
 

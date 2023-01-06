@@ -1,6 +1,6 @@
 import util from 'util'
 import { util as ChaiUtil } from 'chai'
-import { stringify } from '../integrations/chai/jest-matcher-utils'
+import { stringify } from '@vitest/utils'
 import { deepClone, getType, getWorkerState } from '../utils'
 
 const IS_RECORD_SYMBOL = '@@__IMMUTABLE_RECORD__@@'
