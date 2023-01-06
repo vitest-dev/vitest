@@ -72,9 +72,9 @@ test('can import @vite/client', async () => {
 
 describe('importing special files from node_modules', async () => {
   const dir = resolve(__dirname, '../src/node_modules')
-  const wasm = resolve(__dirname, '../src/node_modules/file.wasm')
-  const css = resolve(__dirname, '../src/node_modules/file.css')
-  const mp3 = resolve(__dirname, '../src/node_modules/file.mp3')
+  const wasm = resolve(dir, 'file.wasm')
+  const css = resolve(dir, 'file.css')
+  const mp3 = resolve(dir, 'file.mp3')
   await mkdir(dir, { recursive: true })
   await Promise.all([
     writeFile(wasm, '(module)'),
