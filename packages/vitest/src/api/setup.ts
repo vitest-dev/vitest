@@ -124,8 +124,12 @@ class WebSocketReporter implements Reporter {
       return
 
     packs.forEach(([, result]) => {
+      // TODO remove after "error" deprecation is removed
       if (result?.error)
         result.error.stacks = parseStacktrace(result.error)
+      result?.errors?.forEach((error) => {
+        error.stacks = parseStacktrace(error)
+      })
     })
 
     this.clients.forEach((client) => {

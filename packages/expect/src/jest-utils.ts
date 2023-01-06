@@ -21,8 +21,9 @@ OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 */
-import { isObject } from '../../utils'
-import type { Tester } from '../../types/chai'
+
+import { isObject } from '@vitest/utils'
+import type { Tester } from './types'
 
 // Extracted out of jasmine 2.5.2
 export function equals(

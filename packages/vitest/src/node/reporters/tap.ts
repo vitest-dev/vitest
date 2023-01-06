@@ -66,27 +66,28 @@ export class TapReporter implements Reporter {
       else {
         this.logger.log(`${ok} ${id} - ${tapString(task.name)}${comment}`)
 
-        if (task.result?.state === 'fail' && task.result.error) {
+        if (task.result?.state === 'fail' && task.result.errors) {
           this.logger.indent()
 
-          const error = task.result.error
-          const stacks = parseStacktrace(error)
-          const stack = stacks[0]
+          task.result.errors.forEach((error) => {
+            const stacks = parseStacktrace(error)
+            const stack = stacks[0]
 
-          this.logger.log('---')
-          this.logger.log('error:')
+            this.logger.log('---')
+            this.logger.log('error:')
 
-          this.logger.indent()
-          this.logErrorDetails(error)
-          this.logger.unindent()
+            this.logger.indent()
+            this.logErrorDetails(error)
+            this.logger.unindent()
 
-          if (stack)
-            this.logger.log(`at: ${yamlString(`${stack.file}:${stack.line}:${stack.column}`)}`)
+            if (stack)
+              this.logger.log(`at: ${yamlString(`${stack.file}:${stack.line}:${stack.column}`)}`)
 
-          if (error.showDiff) {
-            this.logger.log(`actual: ${yamlString(error.actual)}`)
-            this.logger.log(`expected: ${yamlString(error.expected)}`)
-          }
+            if (error.showDiff) {
+              this.logger.log(`actual: ${yamlString(error.actual)}`)
+              this.logger.log(`expected: ${yamlString(error.expected)}`)
+            }
+          })
 
           this.logger.log('...')
           this.logger.unindent()

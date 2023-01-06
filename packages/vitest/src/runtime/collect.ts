@@ -82,9 +82,11 @@ export async function collectTests(paths: string[], config: ResolvedConfig): Pro
       file.collectDuration = now() - collectStart
     }
     catch (e) {
+      const error = processError(e)
       file.result = {
         state: 'fail',
-        error: processError(e),
+        error,
+        errors: [error],
       }
       if (config.browser)
         console.error(e)

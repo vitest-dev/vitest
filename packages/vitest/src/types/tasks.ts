@@ -23,7 +23,11 @@ export interface TaskResult {
   duration?: number
   startTime?: number
   heap?: number
+  /**
+   * @deprecated Use "errors" instead
+   */
   error?: ErrorWithDiff
+  errors?: ErrorWithDiff[]
   htmlError?: string
   hooks?: Partial<Record<keyof SuiteHooks, TaskState>>
   benchmark?: BenchmarkResult

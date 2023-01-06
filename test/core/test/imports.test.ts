@@ -20,7 +20,7 @@ test('Relative imports in imported modules work', async () => {
 test('dynamic aliased import works', async () => {
   const stringTimeoutMod = await import('./../src/timeout')
 
-  const timeoutPath = '@/timeout'
+  const timeoutPath = '#/timeout'
   const variableTimeoutMod = await import(timeoutPath)
 
   expect(stringTimeoutMod).toBe(variableTimeoutMod)
