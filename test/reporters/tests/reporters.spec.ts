@@ -185,7 +185,7 @@ test('JUnit reporter with outputFile in non-existing directory', async () => {
   expect(readFileSync(outputFile, 'utf8')).toMatchSnapshot()
 
   // Cleanup
-  rmSync(rootDirectory, { recursive: true })
+  rmSync(outputFile)
 })
 
 test('JUnit reporter with outputFile object in non-existing directory', async () => {
@@ -214,7 +214,7 @@ test('JUnit reporter with outputFile object in non-existing directory', async ()
   expect(readFileSync(outputFile, 'utf8')).toMatchSnapshot()
 
   // Cleanup
-  rmSync(rootDirectory, { recursive: true })
+  rmSync(outputFile)
 })
 
 test('json reporter', async () => {
