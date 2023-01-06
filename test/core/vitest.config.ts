@@ -43,7 +43,6 @@ export default defineConfig({
     testTimeout: 2000,
     setupFiles: [
       './test/setup.ts',
-      resolve(__dirname, './testSetup.ts'),
     ],
     testNamePattern: '^((?!does not include test that).)*$',
     coverage: {
