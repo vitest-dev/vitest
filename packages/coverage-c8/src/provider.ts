@@ -34,7 +34,7 @@ export class C8CoverageProvider implements CoverageProvider {
 
   async clean(clean = true) {
     if (clean && existsSync(this.options.reportsDirectory))
-      await fs.rm(this.options.reportsDirectory, { recursive: true, force: true })
+      await fs.rm(this.options.reportsDirectory, { recursive: true, force: true, maxRetries: 10 })
 
     if (!existsSync(this.options.tempDirectory))
       await fs.mkdir(this.options.tempDirectory, { recursive: true })
@@ -131,7 +131,7 @@ export class C8CoverageProvider implements CoverageProvider {
     // There will still be a temp directory with some reports when vitest exists,
     // but at least it will only contain reports of vitest's internal functions.
     if (existsSync(this.options.tempDirectory))
-      await fs.rm(this.options.tempDirectory, { recursive: true, force: true })
+      await fs.rm(this.options.tempDirectory, { recursive: true, force: true, maxRetries: 10 })
   }
 }
 function resolveC8Options(options: CoverageC8Options, root: string) {
