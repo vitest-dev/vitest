@@ -73,6 +73,8 @@ export class VitestRunner extends ViteNodeRunner {
   }
 
   shouldInterop(path: string, mod: any) {
-    return this.options.interopDefault ?? (getCurrentEnvironment() !== 'node' && super.shouldInterop(path, mod))
+    if (this.options.interopDefault === false)
+      return false
+    return (this.options.interopDefault || getCurrentEnvironment() !== 'node') && super.shouldInterop(path, mod)
   }
 }
