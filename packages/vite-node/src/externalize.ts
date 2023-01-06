@@ -1,6 +1,5 @@
 import { existsSync } from 'node:fs'
 import { isNodeBuiltin, isValidNodeImport } from 'mlly'
-import {} from 'vite'
 import type { DepsHandlingOptions } from './types'
 import { slash } from './utils'
 
