@@ -377,8 +377,7 @@ export class VitestMocker {
       return result
     }
     if (typeof mock === 'string' && !callstack.includes(mock))
-      url = mock
-    return url
+      return mock
   }
 
   public queueMock(id: string, importer: string, factory?: MockFactory) {

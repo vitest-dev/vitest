@@ -1,6 +1,6 @@
-import type { ChaiPlugin, MatcherState } from '../../types/chai'
+import type { ChaiPlugin, MatcherState } from './types'
 import { GLOBAL_EXPECT } from './constants'
-import { getState } from './jest-expect'
+import { getState } from './state'
 import * as matcherUtils from './jest-matcher-utils'
 
 import { equals, isA } from './jest-utils'

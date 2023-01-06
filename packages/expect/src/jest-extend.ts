@@ -4,11 +4,10 @@ import type {
   MatcherState,
   MatchersObject,
   SyncExpectationResult,
-} from '../../types/chai'
-import { getSnapshotClient } from '../snapshot/chai'
+} from './types'
 import { JEST_MATCHERS_OBJECT } from './constants'
 import { AsymmetricMatcher } from './jest-asymmetric-matchers'
-import { getState } from './jest-expect'
+import { getState } from './state'
 
 import * as matcherUtils from './jest-matcher-utils'
 
@@ -39,7 +38,6 @@ const getMatcherState = (assertion: Chai.AssertionStatic & Chai.Assertion, expec
     equals,
     // needed for built-in jest-snapshots, but we don't use it
     suppressedErrors: [],
-    snapshotState: getSnapshotClient().snapshotState!,
   }
 
   return {
