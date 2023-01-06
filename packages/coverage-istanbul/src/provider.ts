@@ -93,7 +93,7 @@ export class IstanbulCoverageProvider implements CoverageProvider {
 
   async clean(clean = true) {
     if (clean && existsSync(this.options.reportsDirectory))
-      await fs.rm(this.options.reportsDirectory, { recursive: true, force: true })
+      await fs.rm(this.options.reportsDirectory, { recursive: true, force: true, maxRetries: 10 })
 
     this.coverages = []
   }
