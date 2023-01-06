@@ -425,7 +425,7 @@ export class ViteNodeRunner {
     const { mod, defaultExport } = interopModule(importedModule)
 
     const modKeys = Reflect.ownKeys(mod)
-    let defaultKeys = defaultExport ? Reflect.ownKeys(defaultExport) : []
+    let defaultKeys = !isPrimitive(defaultExport) ? Reflect.ownKeys(defaultExport) : []
     // remove reserved keys from default keys
     if (typeof mod !== 'function' && typeof defaultExport === 'function') {
       const reservedKeys = ['arguments', 'caller', 'prototype', 'name', 'length']
