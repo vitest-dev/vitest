@@ -25,6 +25,7 @@ export default defineConfig({
     environment: 'node',
     deps: {
       external: [/src\/external/],
+      interopDefault: true,
     },
   },
 })
