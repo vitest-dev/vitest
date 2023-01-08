@@ -635,7 +635,7 @@ Clean coverage results before running tests
 #### cleanOnRerun
 
 - **Type:** `boolean`
-- **Default:** `false`
+- **Default:** `true`
 - **Available for providers:** `'c8' | 'istanbul'`
 
 Clean coverage report on watch rerun
