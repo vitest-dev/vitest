@@ -1,7 +1,7 @@
-import path from 'node:path'
 import url from 'node:url'
 import { writeFile } from 'node:fs/promises'
-import { getTsconfig } from 'get-tsconfig'
+import { join } from 'pathe'
+import { getTsconfig as getTsconfigContent } from 'get-tsconfig'
 import type { TypecheckConfig } from '../types'
 import type { RawErrsMap, TscErrorInfo } from './types'
 
@@ -57,14 +57,14 @@ export async function makeTscErrorInfo(
   ]
 }
 
-export async function getTsconfigPath(root: string, config: TypecheckConfig) {
-  const tempConfigPath = path.join(root, 'tsconfig.temp.json')
+export async function getTsconfig(root: string, config: TypecheckConfig) {
+  const tempConfigPath = join(root, 'tsconfig.temp.json')
 
   const configName = config.tsconfig?.includes('jsconfig.json')
     ? 'jsconfig.json'
     : undefined
 
-  const tsconfig = getTsconfig(config.tsconfig || root, configName)
+  const tsconfig = getTsconfigContent(config.tsconfig || root, configName)
 
   if (!tsconfig)
     throw new Error('no tsconfig.json found')
@@ -75,14 +75,14 @@ export async function getTsconfigPath(root: string, config: TypecheckConfig) {
     tmpTsConfig.compilerOptions = tmpTsConfig.compilerOptions || {}
     tmpTsConfig.compilerOptions.emitDeclarationOnly = false
     tmpTsConfig.compilerOptions.incremental = true
-    tmpTsConfig.compilerOptions.tsBuildInfoFile = path.join(
+    tmpTsConfig.compilerOptions.tsBuildInfoFile = join(
       __dirname,
       'tsconfig.tmp.tsbuildinfo',
     )
 
     const tsconfigFinalContent = JSON.stringify(tmpTsConfig, null, 2)
     await writeFile(tempConfigPath, tsconfigFinalContent)
-    return tempConfigPath
+    return { path: tempConfigPath, config: tmpTsConfig }
   }
   catch (err) {
     throw new Error('failed to write tsconfig.temp.json', { cause: err })

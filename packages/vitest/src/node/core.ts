@@ -71,7 +71,7 @@ export class Vitest {
     this.cache = new VitestCache()
     this.snapshot = new SnapshotManager({ ...resolved.snapshotOptions })
 
-    if (this.config.watch)
+    if (this.config.watch && this.mode !== 'typecheck')
       this.registerWatcher()
 
     this.vitenode = new ViteNodeServer(server, this.config)
@@ -154,8 +154,9 @@ export class Vitest {
     ) as ResolvedConfig
   }
 
-  async typecheck(filters?: string[]) {
-    const testsFilesList = await this.globTestFiles(filters)
+  async typecheck(filters: string[] = []) {
+    const { include, exclude } = this.config.typecheck
+    const testsFilesList = await this.globFiles(filters, include, exclude)
     const checker = new Typechecker(this, testsFilesList)
     this.typechecker = checker
     checker.onParseEnd(async ({ files, sourceErrors }) => {
@@ -198,6 +199,7 @@ export class Vitest {
       await this.report('onTaskUpdate', checker.getTestPacks())
       await this.report('onCollected')
     })
+    await checker.prepare()
     await checker.collectTests()
     await checker.start()
   }
@@ -562,9 +564,7 @@ export class Vitest {
     )))
   }
 
-  async globTestFiles(filters: string[] = []) {
-    const { include, exclude, includeSource } = this.config
-
+  async globFiles(filters: string[], include: string[], exclude: string[]) {
     const globOptions: fg.Options = {
       absolute: true,
       dot: true,
@@ -580,10 +580,16 @@ export class Vitest {
     if (filters.length)
       testFiles = testFiles.filter(i => filters.some(f => i.includes(f)))
 
+    return testFiles
+  }
+
+  async globTestFiles(filters: string[] = []) {
+    const { include, exclude, includeSource } = this.config
+
+    const testFiles = await this.globFiles(filters, include, exclude)
+
     if (includeSource) {
-      let files = await fg(includeSource, globOptions)
-      if (filters.length)
-        files = files.filter(i => filters.some(f => i.includes(f)))
+      const files = await this.globFiles(filters, includeSource, exclude)
 
       await Promise.all(files.map(async (file) => {
         try {
