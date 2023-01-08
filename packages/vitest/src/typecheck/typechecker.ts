@@ -187,7 +187,7 @@ export class Typechecker {
     const { config, path } = await getTsconfig(root, typecheck)
 
     this.tempConfigPath = path
-    this.allowJs = config.allowJs || typecheck.allowJs || false
+    this.allowJs = typecheck.allowJs || config.allowJs || false
   }
 
   public async start() {
