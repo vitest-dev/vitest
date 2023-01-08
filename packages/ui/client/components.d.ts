@@ -33,5 +33,6 @@ declare module '@vue/runtime-core' {
     ViewEditor: typeof import('./components/views/ViewEditor.vue')['default']
     ViewModuleGraph: typeof import('./components/views/ViewModuleGraph.vue')['default']
     ViewReport: typeof import('./components/views/ViewReport.vue')['default']
+    ViewReportError: typeof import('./components/views/ViewReportError.vue')['default']
   }
 }

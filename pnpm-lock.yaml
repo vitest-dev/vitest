@@ -624,7 +624,6 @@ importers:
       local-pkg: ^0.4.2
       mlly: ^1.0.0
       modern-node-polyfills: 0.0.9
-      picocolors: ^1.0.0
       rollup: ^2.79.1
       rollup-plugin-node-polyfills: ^0.2.1
       sirv: ^2.0.2
@@ -638,7 +637,6 @@ importers:
     devDependencies:
       '@types/ws': 8.5.3
       '@vitest/ws-client': link:../ws-client
-      picocolors: 1.0.0
       rollup: 2.79.1
       vitest: link:../vitest
 
@@ -801,9 +799,11 @@ importers:
       source-map-support: ^0.5.21
       vite: ^4.0.0
     dependencies:
+      cac: 6.7.14
       debug: 4.3.4
       mlly: 1.0.0
       pathe: 0.2.0
+      picocolors: 1.0.0
       source-map: 0.6.1
       source-map-support: 0.5.21
       vite: 4.0.0
@@ -811,8 +811,6 @@ importers:
       '@types/debug': 4.1.7
       '@types/source-map': 0.5.7
       '@types/source-map-support': 0.5.6
-      cac: 6.7.14
-      picocolors: 1.0.0
       rollup: 2.79.1
 
   packages/vitest:
@@ -880,9 +878,11 @@ importers:
       '@types/node': 18.7.13
       acorn: 8.8.1
       acorn-walk: 8.2.0
+      cac: 6.7.14
       chai: 4.3.7
       debug: 4.3.4
       local-pkg: 0.4.2
+      picocolors: 1.0.0
       source-map: 0.6.1
       strip-literal: 1.0.0
       tinybench: 2.3.1
@@ -905,7 +905,6 @@ importers:
       '@vitest/ui': link:../ui
       '@vitest/utils': link:../utils
       birpc: 0.2.3
-      cac: 6.7.14
       chai-subset: 1.6.0
       cli-truncate: 3.1.0
       diff: 5.1.0
@@ -925,7 +924,6 @@ importers:
       natural-compare: 1.4.0
       p-limit: 4.0.0
       pathe: 0.2.0
-      picocolors: 1.0.0
       pkg-types: 1.0.1
       pretty-format: 27.5.1
       prompts: 2.4.2
@@ -9928,7 +9926,6 @@ packages:
   /cac/6.7.14:
     resolution: {integrity: sha512-b6Ilus+c3RrdDk+JhLKUAQfzzgLEPy6wcXqS7f/xe1EETvsDP6GORG7SFuOs6cID5YkqchW/LXZbX5bc8j7ZcQ==}
     engines: {node: '>=8'}
-    dev: true
 
   /cacache/12.0.4:
     resolution: {integrity: sha512-a0tMB40oefvuInr4Cwb3GerbL9xTj1D5yg0T5xrjGCGyfvbxseIXX7BAO/u/hIXdafzOI5JC3wDwHyf24buOAQ==}
