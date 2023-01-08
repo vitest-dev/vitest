@@ -9,10 +9,6 @@ export function slash(str: string) {
   return str.replace(/\\/g, '/')
 }
 
-export function mergeSlashes(str: string) {
-  return str.replace(/\/\//g, '/')
-}
-
 export const VALID_ID_PREFIX = '/@id/'
 
 export function normalizeRequestId(id: string, base?: string): string {
