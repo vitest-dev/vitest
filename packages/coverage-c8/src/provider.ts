@@ -63,11 +63,13 @@ export class C8CoverageProvider implements CoverageProvider {
           return null
 
         const filepath = file.split('?')[0]
+        const url = _url.pathToFileURL(filepath).href
+        const extension = extname(file) || extname(url)
 
         return {
           filepath,
-          url: _url.pathToFileURL(filepath).href,
-          id: file,
+          url,
+          extension,
           map: result.map,
           source: result.code,
         }
@@ -76,9 +78,7 @@ export class C8CoverageProvider implements CoverageProvider {
         if (!entry)
           return false
 
-        const extension = extname(entry.id) || extname(entry.url)
-
-        if (!extensions.includes(extension))
+        if (!extensions.includes(entry.extension))
           return false
 
         // Mappings and sourcesContent are needed for C8 to work
