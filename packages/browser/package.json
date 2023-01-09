@@ -35,13 +35,13 @@
   },
   "dependencies": {
     "local-pkg": "^0.4.2",
-    "mlly": "^1.0.0",
+    "mlly": "^1.1.0",
     "modern-node-polyfills": "0.0.9",
     "rollup-plugin-node-polyfills": "^0.2.1",
     "sirv": "^2.0.2"
   },
   "devDependencies": {
-    "@types/ws": "^8.5.3",
+    "@types/ws": "^8.5.4",
     "@vitest/ws-client": "workspace:*",
     "rollup": "^2.79.1",
     "vitest": "workspace:*"

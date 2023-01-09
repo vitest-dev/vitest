@@ -148,13 +148,13 @@
     "fast-glob": "^3.2.12",
     "find-up": "^6.3.0",
     "flatted": "^3.2.7",
-    "get-tsconfig": "^4.2.0",
+    "get-tsconfig": "^4.3.0",
     "happy-dom": "^7.8.1",
     "jsdom": "^20.0.3",
     "log-update": "^5.0.1",
     "magic-string": "^0.27.0",
     "micromatch": "^4.0.5",
-    "mlly": "^1.0.0",
+    "mlly": "^1.1.0",
     "natural-compare": "^1.4.0",
     "p-limit": "^4.0.0",
     "pathe": "^0.2.0",
@@ -164,6 +164,6 @@
     "rollup": "^2.79.1",
     "strip-ansi": "^7.0.1",
     "typescript": "^4.9.4",
-    "ws": "^8.11.0"
+    "ws": "^8.12.0"
   }
 }
