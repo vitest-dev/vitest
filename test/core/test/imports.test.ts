@@ -1,4 +1,6 @@
-import { expect, test } from 'vitest'
+import { mkdir, writeFile } from 'node:fs/promises'
+import { resolve } from 'pathe'
+import { describe, expect, test } from 'vitest'
 import { dynamicRelativeImport } from '../src/relative-import'
 
 test('dynamic relative import works', async () => {
@@ -20,7 +22,7 @@ test('Relative imports in imported modules work', async () => {
 test('dynamic aliased import works', async () => {
   const stringTimeoutMod = await import('./../src/timeout')
 
-  const timeoutPath = '@/timeout'
+  const timeoutPath = '#/timeout'
   const variableTimeoutMod = await import(timeoutPath)
 
   expect(stringTimeoutMod).toBe(variableTimeoutMod)
@@ -66,4 +68,43 @@ test('can import @vite/client', async () => {
   const name = '@vite/client'
   await expect(import(name)).resolves.not.toThrow()
   await expect(import(`/${name}`)).resolves.not.toThrow()
+})
+
+describe('importing special files from node_modules', async () => {
+  const dir = resolve(__dirname, '../src/node_modules')
+  const wasm = resolve(dir, 'file.wasm')
+  const css = resolve(dir, 'file.css')
+  const mp3 = resolve(dir, 'file.mp3')
+  await mkdir(dir, { recursive: true })
+  await Promise.all([
+    writeFile(wasm, '(module)'),
+    writeFile(css, '.foo { color: red; }'),
+    writeFile(mp3, ''),
+  ])
+  const importModule = (path: string) => import(path)
+
+  test('importing wasm with ?url query', async () => {
+    const mod = await importModule('../src/node_modules/file.wasm?url')
+    expect(mod.default).toBe('/src/node_modules/file.wasm')
+  })
+
+  test('importing wasm with ?raw query', async () => {
+    const mod = await importModule('../src/node_modules/file.wasm?raw')
+    expect(mod.default).toBe('(module)')
+  })
+
+  test('importing wasm with ?init query', async () => {
+    const mod = await importModule('../src/node_modules/file.wasm?init')
+    expect(mod.default).toBeTypeOf('function')
+  })
+
+  test('importing css with ?inline query', async () => {
+    const mod = await importModule('../src/node_modules/file.css?inline')
+    expect(mod.default).toBeTypeOf('string')
+  })
+
+  test('importing asset returns a string', async () => {
+    const mod = await importModule('../src/node_modules/file.mp3')
+    expect(mod.default).toBe('/src/node_modules/file.mp3')
+  })
 })

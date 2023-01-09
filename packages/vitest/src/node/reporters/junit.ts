@@ -167,17 +167,18 @@ export class JUnitReporter implements Reporter {
           await this.logger.log('<skipped/>')
 
         if (task.result?.state === 'fail') {
-          const error = task.result.error
+          const promises = task.result.errors?.map(async (error) => {
+            await this.writeElement('failure', {
+              message: error?.message,
+              type: error?.name ?? error?.nameStr,
+            }, async () => {
+              if (!error)
+                return
 
-          await this.writeElement('failure', {
-            message: error?.message,
-            type: error?.name ?? error?.nameStr,
-          }, async () => {
-            if (!error)
-              return
-
-            await this.writeErrorDetails(error)
-          })
+              await this.writeErrorDetails(error)
+            })
+          }) || []
+          await Promise.all(promises)
         }
       })
     }

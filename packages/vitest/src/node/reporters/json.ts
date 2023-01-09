@@ -76,7 +76,7 @@ export class JsonReporter implements Reporter {
     const numTotalTestSuites = suites.length
     const tests = getTests(files)
     const numTotalTests = tests.length
-    const numFailedTestSuites = suites.filter(s => s.result?.error).length
+    const numFailedTestSuites = suites.filter(s => s.result?.errors).length
     const numPassedTestSuites = numTotalTestSuites - numFailedTestSuites
     const numPendingTestSuites = suites.filter(s => s.result?.state === 'run').length
     const numFailedTests = tests.filter(t => t.result?.state === 'fail').length
@@ -109,7 +109,7 @@ export class JsonReporter implements Reporter {
           status: StatusMap[t.result?.state || t.mode] || 'skipped',
           title: t.name,
           duration: t.result?.duration,
-          failureMessages: t.result?.error?.message == null ? [] : [t.result.error.message],
+          failureMessages: t.result?.errors?.map(e => e.message) || [],
           location: await this.getFailureLocation(t),
         } as FormattedAssertionResult
       }))
@@ -128,7 +128,7 @@ export class JsonReporter implements Reporter {
           t.result?.state === 'fail')
           ? 'failed'
           : 'passed',
-        message: file.result?.error?.message ?? '',
+        message: file.result?.errors?.[0]?.message ?? '',
         name: file.filepath,
       })
     }
@@ -179,7 +179,7 @@ export class JsonReporter implements Reporter {
   }
 
   protected async getFailureLocation(test: Task): Promise<Callsite | undefined> {
-    const error = test.result?.error
+    const error = test.result?.errors?.[0]
     if (!error)
       return
 

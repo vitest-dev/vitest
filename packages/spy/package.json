@@ -1,0 +1,34 @@
+{
+  "name": "@vitest/spy",
+  "type": "module",
+  "version": "0.27.0",
+  "description": "Lightweight Jest compatible spy implementation",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vitest-dev/vitest.git",
+    "directory": "packages/spy"
+  },
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./*": "./*"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rimraf dist && rollup -c",
+    "dev": "rollup -c --watch",
+    "prepublishOnly": "pnpm build"
+  },
+  "dependencies": {
+    "tinyspy": "^1.0.2"
+  }
+}

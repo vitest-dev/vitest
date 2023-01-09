@@ -1,6 +1,6 @@
 import { expect, test, vi } from 'vitest'
+import { stringify } from '@vitest/utils'
 import { displayDiff } from 'vitest/src/node/error'
-import { stringify } from 'vitest/src/integrations/chai/jest-matcher-utils'
 
 test('displays an error for large objects', () => {
   const objectA = new Array(1000).fill(0).map((_, i) => ({ i, long: 'a'.repeat(i) }))

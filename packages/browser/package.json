@@ -1,7 +1,7 @@
 {
   "name": "@vitest/browser",
   "type": "module",
-  "version": "0.26.2",
+  "version": "0.27.0",
   "description": "Browser running for Vitest",
   "repository": {
     "type": "git",
@@ -43,7 +43,6 @@
   "devDependencies": {
     "@types/ws": "^8.5.3",
     "@vitest/ws-client": "workspace:*",
-    "picocolors": "^1.0.0",
     "rollup": "^2.79.1",
     "vitest": "workspace:*"
   }

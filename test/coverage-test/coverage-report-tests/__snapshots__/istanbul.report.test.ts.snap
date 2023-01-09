@@ -9,6 +9,7 @@ exports[`istanbul json report 1`] = `
       "0": 1,
       "1": 0,
       "2": 2,
+      "3": 0,
     },
     "fnMap": {
       "0": {
@@ -80,6 +81,29 @@ exports[`istanbul json report 1`] = `
         },
         "name": "(anonymous_2)",
       },
+      "3": {
+        "decl": {
+          "end": {
+            "column": 37,
+            "line": 20,
+          },
+          "start": {
+            "column": 4,
+            "line": 20,
+          },
+        },
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 22,
+          },
+          "start": {
+            "column": 37,
+            "line": 20,
+          },
+        },
+        "name": "(anonymous_3)",
+      },
     },
     "path": "<process-cwd>/src/Counter/Counter.component.ts",
     "s": {
@@ -87,6 +111,7 @@ exports[`istanbul json report 1`] = `
       "1": 1,
       "2": 0,
       "3": 2,
+      "4": 0,
     },
     "statementMap": {
       "0": {
@@ -127,6 +152,16 @@ exports[`istanbul json report 1`] = `
         "start": {
           "column": 6,
           "line": 17,
+        },
+      },
+      "4": {
+        "end": {
+          "column": null,
+          "line": 21,
+        },
+        "start": {
+          "column": 6,
+          "line": 21,
         },
       },
     },
@@ -221,14 +256,58 @@ exports[`istanbul json report 1`] = `
     },
   },
   "<process-cwd>/src/Defined.vue": {
-    "b": {},
-    "branchMap": {},
+    "b": {
+      "0": [
+        1,
+        0,
+      ],
+    },
+    "branchMap": {
+      "0": {
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 8,
+          },
+          "start": {
+            "column": 0,
+            "line": 5,
+          },
+        },
+        "locations": [
+          {
+            "end": {
+              "column": null,
+              "line": 8,
+            },
+            "start": {
+              "column": 0,
+              "line": 5,
+            },
+          },
+          {
+            "end": {
+              "column": null,
+              "line": 8,
+            },
+            "start": {
+              "column": 2,
+              "line": 8,
+            },
+          },
+        ],
+        "type": "if",
+      },
+    },
     "f": {},
     "fnMap": {},
     "path": "<process-cwd>/src/Defined.vue",
     "s": {
       "0": 1,
       "1": 1,
+      "2": 1,
+      "3": 0,
+      "4": 1,
     },
     "statementMap": {
       "0": {
@@ -244,11 +323,41 @@ exports[`istanbul json report 1`] = `
       "1": {
         "end": {
           "column": null,
+          "line": 8,
+        },
+        "start": {
+          "column": 0,
+          "line": 5,
+        },
+      },
+      "2": {
+        "end": {
+          "column": null,
           "line": 6,
         },
         "start": {
-          "column": 5,
+          "column": 2,
           "line": 6,
+        },
+      },
+      "3": {
+        "end": {
+          "column": null,
+          "line": 8,
+        },
+        "start": {
+          "column": 2,
+          "line": 8,
+        },
+      },
+      "4": {
+        "end": {
+          "column": null,
+          "line": 12,
+        },
+        "start": {
+          "column": 5,
+          "line": 12,
         },
       },
     },

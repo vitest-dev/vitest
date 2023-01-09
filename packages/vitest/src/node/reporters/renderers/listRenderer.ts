@@ -2,7 +2,7 @@ import c from 'picocolors'
 import cliTruncate from 'cli-truncate'
 import stripAnsi from 'strip-ansi'
 import type { Benchmark, BenchmarkResult, SuiteHooks, Task, VitestRunMode } from '../../../types'
-import { clearInterval, getTests, getTypecheckTests, isTypecheckTest, notNullish, setInterval } from '../../../utils'
+import { clearInterval, getTests, notNullish, setInterval } from '../../../utils'
 import { F_RIGHT } from '../../../utils/figures'
 import type { Logger } from '../../logger'
 import { formatProjectName, getCols, getHookStateSymbol, getStateSymbol } from './utils'
@@ -99,8 +99,8 @@ export function renderTree(tasks: Task[], options: ListRendererOptions, level = 
     if (task.type === 'test' && task.result?.retryCount && task.result.retryCount > 1)
       suffix += c.yellow(` (retry x${task.result.retryCount})`)
 
-    if (task.type === 'suite' && !isTypecheckTest(task)) {
-      const tests = options.mode === 'typecheck' ? getTypecheckTests(task) : getTests(task)
+    if (task.type === 'suite' && !task.meta?.typecheck) {
+      const tests = getTests(task)
       suffix += c.dim(` (${tests.length})`)
     }
 

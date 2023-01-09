@@ -1,9 +1,7 @@
 import * as chai from 'chai'
 import Subset from 'chai-subset'
+import { JestAsymmetricMatchers, JestChaiExpect, JestExtend } from '@vitest/expect'
 import { SnapshotPlugin } from '../snapshot/chai'
-import { JestExtend } from './jest-extend'
-import { JestChaiExpect } from './jest-expect'
-import { JestAsymmetricMatchers } from './jest-asymmetric-matchers'
 
 chai.use(JestExtend)
 chai.use(JestChaiExpect)

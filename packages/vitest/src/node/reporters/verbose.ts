@@ -21,8 +21,11 @@ export class VerboseReporter extends DefaultReporter {
         if (this.ctx.config.logHeapUsage && task.result.heap != null)
           title += c.magenta(` ${Math.floor(task.result.heap / 1024 / 1024)} MB heap used`)
         this.ctx.logger.log(title)
-        if (task.result.state === 'fail')
-          this.ctx.logger.log(c.red(`   ${F_RIGHT} ${(task.result.error as any)?.message}`))
+        if (task.result.state === 'fail') {
+          task.result.errors?.forEach((error) => {
+            this.ctx.logger.log(c.red(`   ${F_RIGHT} ${error?.message}`))
+          })
+        }
       }
     }
   }

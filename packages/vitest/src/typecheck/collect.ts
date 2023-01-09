@@ -3,11 +3,15 @@ import { parse as parseAst } from 'acorn'
 import { ancestor as walkAst } from 'acorn-walk'
 import type { RawSourceMap } from 'vite-node'
 
-import type { File, Suite, Vitest } from '../types'
-import { interpretTaskModes, someTasksAreOnly } from '../utils/collect'
-import { TYPECHECK_SUITE } from './constants'
+import type { File, Suite, Test, Vitest } from '../types'
+import { calculateSuiteHash, generateHash, interpretTaskModes, someTasksAreOnly } from '../utils/collect'
 
 interface ParsedFile extends File {
+  start: number
+  end: number
+}
+
+interface ParsedTest extends Test {
   start: number
   end: number
 }
@@ -21,9 +25,9 @@ interface LocalCallDefinition {
   start: number
   end: number
   name: string
-  type: string
+  type: 'suite' | 'test'
   mode: 'run' | 'skip' | 'only' | 'todo'
-  task: ParsedSuite | ParsedFile
+  task: ParsedSuite | ParsedFile | ParsedTest
 }
 
 export interface FileInformation {
@@ -42,18 +46,16 @@ export async function collectTests(ctx: Vitest, filepath: string): Promise<null 
     ecmaVersion: 'latest',
     allowAwaitOutsideFunction: true,
   })
+  const testFilepath = relative(ctx.config.root, filepath)
   const file: ParsedFile = {
     filepath,
     type: 'suite',
-    id: '-1',
-    name: relative(ctx.config.root, filepath),
+    id: generateHash(testFilepath),
+    name: testFilepath,
     mode: 'run',
     tasks: [],
     start: ast.start,
     end: ast.end,
-    result: {
-      state: 'pass',
-    },
   }
   const definitions: LocalCallDefinition[] = []
   const getName = (callee: any): string | null => {
@@ -80,14 +82,17 @@ export async function collectTests(ctx: Vitest, filepath: string): Promise<null 
         return
       const { arguments: [{ value: message }] } = node as any
       const property = callee?.property?.name
-      const mode = !property || property === name ? 'run' : property
-      if (!['run', 'skip', 'todo', 'only'].includes(mode))
+      let mode = !property || property === name ? 'run' : property
+      if (!['run', 'skip', 'todo', 'only', 'skipIf', 'runIf'].includes(mode))
         throw new Error(`${name}.${mode} syntax is not supported when testing types`)
+      // cannot statically analyze, so we always skip it
+      if (mode === 'skipIf' || mode === 'runIf')
+        mode = 'skip'
       definitions.push({
         start: node.start,
         end: node.end,
         name: message,
-        type: name,
+        type: name === 'it' || name === 'test' ? 'test' : 'suite',
         mode,
       } as LocalCallDefinition)
     },
@@ -99,37 +104,49 @@ export async function collectTests(ctx: Vitest, filepath: string): Promise<null 
       lastSuite = suite.suite as ParsedSuite
     return lastSuite
   }
-  definitions.sort((a, b) => a.start - b.start).forEach((definition, idx) => {
+  definitions.sort((a, b) => a.start - b.start).forEach((definition) => {
     const latestSuite = updateLatestSuite(definition.start)
     let mode = definition.mode
     if (latestSuite.mode !== 'run') // inherit suite mode, if it's set
       mode = latestSuite.mode
-    const state = mode === 'run' ? 'pass' : mode
-    // expectTypeOf and any type error is actually a "test" ("typecheck"),
-    // and all "test"s should be inside a "suite", so semantics inside typecheck for "test" changes
-    // if we ever allow having multiple errors in a test, we can change type to "test"
-    const task: ParsedSuite = {
-      type: 'suite',
-      id: idx.toString(),
+    if (definition.type === 'suite') {
+      const task: ParsedSuite = {
+        type: definition.type,
+        id: '',
+        suite: latestSuite,
+        file,
+        tasks: [],
+        mode,
+        name: definition.name,
+        end: definition.end,
+        start: definition.start,
+        meta: {
+          typecheck: true,
+        },
+      }
+      definition.task = task
+      latestSuite.tasks.push(task)
+      lastSuite = task
+      return
+    }
+    const task: ParsedTest = {
+      type: definition.type,
+      id: '',
       suite: latestSuite,
       file,
-      tasks: [],
       mode,
+      context: {} as any, // not used in typecheck
       name: definition.name,
       end: definition.end,
       start: definition.start,
-      result: {
-        state,
+      meta: {
+        typecheck: true,
       },
     }
     definition.task = task
     latestSuite.tasks.push(task)
-    if (definition.type === 'describe' || definition.type === 'suite')
-      lastSuite = task
-    else
-      // to show correct amount of "tests" in summary, we mark this with a special symbol
-      Object.defineProperty(task, TYPECHECK_SUITE, { value: true })
   })
+  calculateSuiteHash(file)
   const hasOnly = someTasksAreOnly(file)
   interpretTaskModes(file, ctx.config.testNamePattern, hasOnly, false, ctx.config.allowOnly)
   return {

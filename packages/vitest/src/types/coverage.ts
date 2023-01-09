@@ -101,7 +101,7 @@ export interface BaseCoverageOptions {
   /**
    * Clean coverage report on watch rerun
    *
-   * @default false
+   * @default true
    */
   cleanOnRerun?: boolean
 

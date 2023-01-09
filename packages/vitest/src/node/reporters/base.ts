@@ -1,10 +1,10 @@
 import { performance } from 'perf_hooks'
 import c from 'picocolors'
 import type { ErrorWithDiff, File, Reporter, Task, TaskResultPack, UserConsoleLog } from '../../types'
-import { clearInterval, getFullName, getSuites, getTests, getTypecheckTests, hasFailed, hasFailedSnapshot, isNode, relativePath, setInterval } from '../../utils'
+import { clearInterval, getFullName, getSuites, getTests, hasFailed, hasFailedSnapshot, isNode, relativePath, setInterval } from '../../utils'
 import type { Vitest } from '../../node'
 import { F_RIGHT } from '../../utils/figures'
-import { divider, formatProjectName, formatTimeString, getStateString, getStateSymbol, pointer, renderSnapshotSummary } from './renderers/utils'
+import { countTestErrors, divider, formatProjectName, formatTimeString, getStateString, getStateSymbol, pointer, renderSnapshotSummary } from './renderers/utils'
 
 const BADGE_PADDING = '       '
 const HELP_HINT = `${c.dim('press ')}${c.bold('h')}${c.dim(' to show help')}`
@@ -85,7 +85,9 @@ export abstract class BaseReporter implements Reporter {
         // print short errors, full errors will be at the end in summary
         for (const test of failed) {
           logger.log(c.red(`   ${pointer} ${getFullName(test)}`))
-          logger.log(c.red(`     ${F_RIGHT} ${(test.result!.error as any)?.message}`))
+          test.result?.errors?.forEach((e) => {
+            logger.log(c.red(`     ${F_RIGHT} ${(e as any)?.message}`))
+          })
         }
       }
     }
@@ -200,7 +202,7 @@ export abstract class BaseReporter implements Reporter {
   }
 
   async reportTestSummary(files: File[]) {
-    const tests = this.mode === 'typecheck' ? getTypecheckTests(files) : getTests(files)
+    const tests = getTests(files)
     const logger = this.ctx.logger
 
     const executionTime = this.end - this.start
@@ -238,9 +240,8 @@ export abstract class BaseReporter implements Reporter {
     logger.log(padTitle('Test Files'), getStateString(files))
     logger.log(padTitle('Tests'), getStateString(tests))
     if (this.mode === 'typecheck') {
-      // has only failed checks
-      const typechecks = getTests(files).filter(t => t.type === 'typecheck')
-      logger.log(padTitle('Type Errors'), getStateString(typechecks, 'errors', false))
+      const failed = tests.filter(t => t.meta?.typecheck && t.result?.errors?.length)
+      logger.log(padTitle('Type Errors'), failed.length ? c.bold(c.red(`${failed} failed`)) : c.dim('no errors'))
     }
     logger.log(padTitle('Start at'), formatTimeString(this._timeStart))
     if (this.watchFilters)
@@ -258,9 +259,9 @@ export abstract class BaseReporter implements Reporter {
     const suites = getSuites(files)
     const tests = getTests(files)
 
-    const failedSuites = suites.filter(i => i.result?.error)
+    const failedSuites = suites.filter(i => i.result?.errors)
     const failedTests = tests.filter(i => i.result?.state === 'fail')
-    const failedTotal = failedSuites.length + failedTests.length
+    const failedTotal = countTestErrors(failedSuites) + countTestErrors(failedTests)
 
     let current = 1
 
@@ -273,8 +274,7 @@ export abstract class BaseReporter implements Reporter {
     }
 
     if (failedTests.length) {
-      const message = this.mode === 'typecheck' ? 'Type Errors' : 'Failed Tests'
-      logger.error(c.red(divider(c.bold(c.inverse(` ${message} ${failedTests.length} `)))))
+      logger.error(c.red(divider(c.bold(c.inverse(` Failed Tests ${failedTests.length} `)))))
       logger.error()
 
       await this.printTaskErrors(failedTests, errorDivider)
@@ -310,12 +310,13 @@ export abstract class BaseReporter implements Reporter {
     const errorsQueue: [error: ErrorWithDiff | undefined, tests: Task[]][] = []
     for (const task of tasks) {
       // merge identical errors
-      const error = task.result?.error
-      const errorItem = error?.stackStr && errorsQueue.find(i => i[0]?.stackStr === error.stackStr)
-      if (errorItem)
-        errorItem[1].push(task)
-      else
-        errorsQueue.push([error, [task]])
+      task.result?.errors?.forEach((error) => {
+        const errorItem = error?.stackStr && errorsQueue.find(i => i[0]?.stackStr === error.stackStr)
+        if (errorItem)
+          errorItem[1].push(task)
+        else
+          errorsQueue.push([error, [task]])
+      })
     }
     for (const [error, tasks] of errorsQueue) {
       for (const task of tasks) {

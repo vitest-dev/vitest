@@ -25,7 +25,14 @@ describe('local test context works with implicit type', () => {
   it('works with implicit type', (context: LocalTestContext) => {
     expect(context.bar).toBe('bar')
   })
-  it.only('is chainable with implicit type', (context: LocalTestContext) => {
+  it('is chainable with implicit type', (context: LocalTestContext) => {
     expect(context.bar).toBe('bar')
+  })
+})
+
+describe('context expect', () => {
+  it('has snapshotState', ({ expect: localExpect }) => {
+    expect(expect.getState().snapshotState).toBeDefined()
+    expect(localExpect.getState().snapshotState).toBeDefined()
   })
 })

@@ -1,11 +1,11 @@
 import { rm } from 'node:fs/promises'
 import type { ExecaChildProcess } from 'execa'
 import { execa } from 'execa'
-import { resolve } from 'pathe'
+import { extname, resolve } from 'pathe'
 import { SourceMapConsumer } from 'source-map'
 import { ensurePackageInstalled } from '../utils'
-import type { Awaitable, File, ParsedStack, Task, TaskState, TscErrorInfo, Vitest } from '../types'
-import { getRawErrsMapFromTsCompile, getTsconfigPath } from './parse'
+import type { Awaitable, File, ParsedStack, Task, TaskResultPack, TaskState, TscErrorInfo, Vitest } from '../types'
+import { getRawErrsMapFromTsCompile, getTsconfig } from './parse'
 import { createIndexMap } from './utils'
 import type { FileInformation } from './collect'
 import { collectTests } from './collect'
@@ -36,6 +36,7 @@ export class Typechecker {
 
   private _tests: Record<string, FileInformation> | null = {}
   private tempConfigPath?: string
+  private allowJs?: boolean
   private process!: ExecaChildProcess
 
   constructor(protected ctx: Vitest, protected files: string[]) {}
@@ -56,9 +57,16 @@ export class Typechecker {
     return collectTests(this.ctx, filepath)
   }
 
+  protected getFiles() {
+    return this.files.filter((filename) => {
+      const extension = extname(filename)
+      return extension !== '.js' || this.allowJs
+    })
+  }
+
   public async collectTests() {
     const tests = (await Promise.all(
-      this.files.map(filepath => this.collectFileTests(filepath)),
+      this.getFiles().map(filepath => this.collectFileTests(filepath)),
     )).reduce((acc, data) => {
       if (!data)
         return acc
@@ -71,7 +79,7 @@ export class Typechecker {
 
   protected async prepareResults(output: string) {
     const typeErrors = await this.parseTscLikeOutput(output)
-    const testFiles = new Set(this.files)
+    const testFiles = new Set(this.getFiles())
 
     if (!this._tests)
       this._tests = await this.collectTests()
@@ -96,31 +104,24 @@ export class Typechecker {
         if (task.suite)
           markFailed(task.suite)
       }
-      errors.forEach(({ error, originalError }, idx) => {
+      errors.forEach(({ error, originalError }) => {
         const originalPos = mapConsumer?.generatedPositionFor({
           line: originalError.line,
           column: originalError.column,
           source: path,
         }) || originalError
         const index = indexMap.get(`${originalPos.line}:${originalPos.column}`)
-        const definition = (index != null && sortedDefinitions.find(def => def.start <= index && def.end >= index)) || file
-        const suite = 'task' in definition ? definition.task : definition
+        const definition = (index != null && sortedDefinitions.find(def => def.start <= index && def.end >= index))
+        const suite = definition ? definition.task : file
         const state: TaskState = suite.mode === 'run' || suite.mode === 'only' ? 'fail' : suite.mode
-        const task: Task = {
-          type: 'typecheck',
-          id: idx.toString(),
-          name: `error expect ${idx + 1}`, // TODO naming
-          mode: suite.mode,
-          file,
-          suite,
-          result: {
-            state,
-            error: state === 'fail' ? error : undefined,
-          },
+        const errors = suite.result?.errors || []
+        suite.result = {
+          state,
+          errors,
         }
-        if (state === 'fail')
-          markFailed(suite)
-        suite.tasks.push(task)
+        errors.push(error)
+        if (state === 'fail' && suite.suite)
+          markFailed(suite.suite)
       })
     })
 
@@ -179,11 +180,22 @@ export class Typechecker {
     await ensurePackageInstalled(packageName, root)
   }
 
-  public async start() {
-    const { root, watch, typecheck } = this.ctx.config
+  public async prepare() {
+    const { root, typecheck } = this.ctx.config
     await this.ensurePackageInstalled(root, typecheck.checker)
 
-    this.tempConfigPath = await getTsconfigPath(root, typecheck)
+    const { config, path } = await getTsconfig(root, typecheck)
+
+    this.tempConfigPath = path
+    this.allowJs = typecheck.allowJs || config.allowJs || false
+  }
+
+  public async start() {
+    if (!this.tempConfigPath)
+      throw new Error('tsconfig was not initialized')
+
+    const { root, watch, typecheck } = this.ctx.config
+
     const args = ['--noEmit', '--pretty', 'false', '-p', this.tempConfigPath]
     // use builtin watcher, because it's faster
     if (watch)
@@ -223,7 +235,6 @@ export class Typechecker {
       await child
       this._result = await this.prepareResults(output)
       await this._onParseEnd?.(this._result)
-      await this.clear()
     }
   }
 
@@ -233,5 +244,9 @@ export class Typechecker {
 
   public getTestFiles() {
     return Object.values(this._tests || {}).map(i => i.file)
+  }
+
+  public getTestPacks() {
+    return Object.values(this._tests || {}).map(i => [i.file.id, undefined] as TaskResultPack)
   }
 }
