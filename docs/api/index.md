@@ -1181,6 +1181,8 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
 
 - **Type:** `(received: any) => Awaitable<void>`
 
+- **Alias:** `toThrow`
+
   `toThrowError` asserts if a function throws an error when it is called.
 
   For example, if we want to test that `getFruitStock('pineapples')` throws, we could write:
@@ -1215,6 +1217,10 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
     )
   })
   ```
+
+  :::tip
+    To test async functions, use in combination with [rejects](#rejects).
+  :::
 
 ### toMatchSnapshot
 
