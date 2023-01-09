@@ -2,7 +2,7 @@ import { existsSync, promises as fs } from 'fs'
 import _url from 'url'
 import type { Profiler } from 'inspector'
 import { takeCoverage } from 'v8'
-import { resolve } from 'pathe'
+import { extname, resolve } from 'pathe'
 import type { RawSourceMap } from 'vite-node'
 import { configDefaults } from 'vitest/config'
 // eslint-disable-next-line no-restricted-imports
@@ -53,6 +53,7 @@ export class C8CoverageProvider implements CoverageProvider {
 
     // add source maps
     const sourceMapMeta: Record<SourceMapMeta['url'], MapAndSource> = {}
+    const extensions = Array.isArray(this.options.extension) ? this.options.extension : [this.options.extension]
 
     const entries = Array
       .from(this.ctx.vitenode.fetchCache.entries())
@@ -62,16 +63,22 @@ export class C8CoverageProvider implements CoverageProvider {
           return null
 
         const filepath = file.split('?')[0]
+        const url = _url.pathToFileURL(filepath).href
+        const extension = extname(file) || extname(url)
 
         return {
           filepath,
-          url: _url.pathToFileURL(filepath).href,
+          url,
+          extension,
           map: result.map,
           source: result.code,
         }
       })
       .filter((entry) => {
         if (!entry)
+          return false
+
+        if (!extensions.includes(entry.extension))
           return false
 
         // Mappings and sourcesContent are needed for C8 to work
@@ -84,6 +91,9 @@ export class C8CoverageProvider implements CoverageProvider {
       }) as SourceMapMeta[]
 
     await Promise.all(entries.map(async ({ url, source, map, filepath }) => {
+      if (url in sourceMapMeta)
+        return
+
       let code: string | undefined
       try {
         code = (await fs.readFile(filepath)).toString()
