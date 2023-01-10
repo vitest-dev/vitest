@@ -90,6 +90,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
           open = '/'
 
         const config: ViteConfig = {
+          root: options.root,
           esbuild: {
             sourcemap: 'external',
 
