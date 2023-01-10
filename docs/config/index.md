@@ -203,6 +203,7 @@ Define custom aliases when running inside tests. They will be merged with aliase
 
 - **Type:** `boolean`
 - **Default:** `false`
+- **CLI:** `--globals`, `--globals=false`
 
 By default, `vitest` does not provide global APIs for explicitness. If you prefer to use the APIs globally like Jest, you can pass the `--globals` option to CLI or add `globals: true` in the config.
 
@@ -249,6 +250,7 @@ export default defineConfig({
 
 - **Type:** `'node' | 'jsdom' | 'happy-dom' | 'edge-runtime' | string`
 - **Default:** `'node'`
+- **CLI:** `--environment=<env>`
 
 The environment that will be used for testing. The default environment in Vitest
 is a Node.js environment. If you are building a web application, you can use
@@ -296,7 +298,7 @@ test('use jsdom in this test file', () => {
 })
 ```
 
-If you are running Vitest with [`--no-threads`](#threads) flag, your tests will be run in this order: `node`, `jsdom`, `happy-dom`, `edge-runtime`, `custom environments`. Meaning, that every test with the same environment is grouped together, but is still running sequentially.
+If you are running Vitest with [`--threads=false`](#threads) flag, your tests will be run in this order: `node`, `jsdom`, `happy-dom`, `edge-runtime`, `custom environments`. Meaning, that every test with the same environment is grouped together, but is still running sequentially.
 
 Starting from 0.23.0, you can also define custom environment. When non-builtin environment is used, Vitest will try to load package `vitest-environment-${name}`. That package should export an object with the shape of `Environment`:
 
@@ -329,6 +331,7 @@ These options are passed down to `setup` method of current [`environment`](#envi
 
 - **Type:** `boolean`
 - **Default:** `false`
+- **CLI:** `-u`, `--update`, `--update=false`
 
 Update snapshot files. This will update all changed snapshots and delete obsolete ones.
 
@@ -336,12 +339,14 @@ Update snapshot files. This will update all changed snapshots and delete obsolet
 
 - **Type:** `boolean`
 - **Default:** `true`
+- **CLI:** `-w`, `--watch`, `--watch=false`
 
 Enable watch mode
 
 ### root
 
 - **Type:** `string`
+- **CLI:** `-r <path>`, `--root=<path>`
 
 Project root
 
@@ -349,6 +354,7 @@ Project root
 
 - **Type:** `Reporter | Reporter[]`
 - **Default:** `'default'`
+- **CLI:** `--reporter=<name>`, `--reporter=<name1> --reporter=<name2>`
 
 Custom reporters for output. Reporters can be [a Reporter instance](https://github.com/vitest-dev/vitest/blob/main/packages/vitest/src/types/reporter.ts) or a string to select built in reporters:
 
@@ -364,7 +370,7 @@ Custom reporters for output. Reporters can be [a Reporter instance](https://gith
 
 - **Type:** `number`
 - **Default:** `stdout.columns || 80`
-- **CLI:** `--outputTruncateLength <length>`, `--output-truncate-length <length>`
+- **CLI:** `--outputTruncateLength=<length>`, `--output-truncate-length=<length>`
 
 Truncate the size of diff line up to `stdout.columns` or `80` number of characters. You may wish to tune this, depending on your terminal window width. Vitest includes `+-` characters and spaces for this. For example, you might see this diff, if you set this to `6`:
 
@@ -378,7 +384,7 @@ Truncate the size of diff line up to `stdout.columns` or `80` number of characte
 
 - **Type:** `number`
 - **Default:** `15`
-- **CLI:** `--outputDiffLines <lines>`, `--output-diff-lines <lines>`
+- **CLI:** `--outputDiffLines=<lines>`, `--output-diff-lines=<lines>`
 
 Limit the number of single output diff lines up to `15`. Vitest counts all `+-` lines when determining when to stop. For example, you might see diff like this, if you set this property to `3`:
 
@@ -397,7 +403,7 @@ Limit the number of single output diff lines up to `15`. Vitest counts all `+-` 
 
 - **Type:** `number`
 - **Default:** `50`
-- **CLI:** `--outputDiffMaxLines <lines>`, `--output-diff-max-lines <lines>`
+- **CLI:** `--outputDiffMaxLines=<lines>`, `--output-diff-max-lines=<lines>`
 - **Version:** Since Vitest 0.26.0
 
 The maximum number of lines to display in diff window. Beware that if you have a large object with many small diffs, you might not see all of them at once.
@@ -406,7 +412,7 @@ The maximum number of lines to display in diff window. Beware that if you have a
 
 - **Type:** `number`
 - **Default:** `10000`
-- **CLI:** `--outputDiffMaxSize <length>`, `--output-diff-max-size <length>`
+- **CLI:** `--outputDiffMaxSize=<length>`, `--output-diff-max-size=<length>`
 - **Version:** Since Vitest 0.26.0
 
 The maximum length of the stringified object before the diff happens. Vitest tries to stringify an object before doing a diff, but if the object is too large, it will reduce the depth of the object to fit within this limit. Because of this, if the object is too big or nested, you might not see the diff.
@@ -416,16 +422,16 @@ Increasing this limit can increase the duration of diffing.
 ### outputFile
 
 - **Type:** `string | Record<string, string>`
+- **CLI:** `--outputFile=<path>`, `--outputFile.json=./path`
 
-Write test results to a file when the `--reporter=json` or `--reporter=junit` option is also specified.
+Write test results to a file when the `--reporter=json`, `--reporter=html` or `--reporter=junit` option is also specified.
 By providing an object instead of a string you can define individual outputs when using multiple reporters.
-
-To provide object via CLI command, use the following syntax: `--outputFile.json=./path --outputFile.junit=./other-path`.
 
 ### threads
 
 - **Type:** `boolean`
 - **Default:** `true`
+- **CLI:** `--threads`, `--threads=false`
 
 Enable multi-threading using [tinypool](https://github.com/tinylibs/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina))
 
@@ -474,6 +480,7 @@ Default timeout to wait for close when Vitest shuts down, in milliseconds
 
 - **Type:** `boolean`
 - **Default:** `false`
+- **CLI:** `--silent`, `--silent=false`
 
 Silent console output from tests
 
@@ -486,7 +493,7 @@ Path to setup files. They will be run before each test file.
 You can use `process.env.VITEST_POOL_ID` (integer-like string) inside to distinguish between threads (will always be `'1'`, if run with `threads: false`).
 
 :::tip
-Note, that if you are running [`--no-threads`](#threads), this setup file will be run in the same global scope multiple times. Meaning, that you are accessing the same global object before each test, so make sure you are not doing the same thing more than you need.
+Note, that if you are running [`--threads=false`](#threads), this setup file will be run in the same global scope multiple times. Meaning, that you are accessing the same global object before each test, so make sure you are not doing the same thing more than you need.
 :::
 
 For example, you may rely on a global variable:
@@ -556,6 +563,7 @@ Make sure that your files are not excluded by `watchExclude`.
 
 - **Type:** `boolean`
 - **Default:** `true`
+- **CLI:** `--isolate`, `--isolate=false`
 
 Isolate environment for each test file. Does not work if you disable [`--threads`](#threads).
 
@@ -563,10 +571,21 @@ Isolate environment for each test file. Does not work if you disable [`--threads
 
 You can use [`c8`](https://github.com/bcoe/c8) or [`istanbul`](https://istanbul.js.org/) for coverage collection.
 
+You can provide coverage options to CLI with dot notation:
+
+```sh
+npx vitest --coverage.enabled --coverage.provider=istanbul --coverage.all
+```
+
+::: warning
+If you are using coverage options with dot notation, don't forget to specify `--coverage.enabled`. Do not provide a single `--coverage` option in that case.
+:::
+
 #### provider
 
 - **Type:** `'c8' | 'istanbul'`
 - **Default:** `'c8'`
+- **CLI:** `--coverage.provider=<provider>`
 
 Use `provider` to select the tool for coverage collection.
 
@@ -575,6 +594,7 @@ Use `provider` to select the tool for coverage collection.
 - **Type:** `boolean`
 - **Default:** `false`
 - **Available for providers:** `'c8' | 'istanbul'`
+- **CLI:** `--coverage.enabled`, `--coverage.enabled=false`
 
 Enables coverage collection. Can be overriden using `--coverage` CLI option.
 
@@ -583,6 +603,7 @@ Enables coverage collection. Can be overriden using `--coverage` CLI option.
 - **Type:** `string[]`
 - **Default:** `['**']`
 - **Available for providers:** `'c8' | 'istanbul'`
+- **CLI:** `--coverage.include=<path>`, `--coverage.include=<path1> --coverage.include=<path2>`
 
 List of files included in coverage as glob patterns
 
@@ -591,6 +612,7 @@ List of files included in coverage as glob patterns
 - **Type:** `string | string[]`
 - **Default:** `['.js', '.cjs', '.mjs', '.ts', '.mts', '.cts', '.tsx', '.jsx', '.vue', '.svelte']`
 - **Available for providers:** `'c8' | 'istanbul'`
+- **CLI:** `--coverage.extension=<extension>`, `--coverage.extension=<extension1> --coverage.extension=<extension2>`
 
 #### exclude
 
@@ -613,6 +635,7 @@ List of files included in coverage as glob patterns
 ]
 ```
 - **Available for providers:** `'c8' | 'istanbul'`
+- **CLI:** `--coverage.exclude=<path>`, `--coverage.exclude=<path1> --coverage.exclude=<path2>`
 
 List of files excluded from coverage as glob patterns.
 
@@ -621,6 +644,7 @@ List of files excluded from coverage as glob patterns.
 - **Type:** `boolean`
 - **Default:** `false`
 - **Available for providers:** `'c8' | 'istanbul'`
+- **CLI:** `--coverage.all`, --coverage.all=false`
 
 Whether to include all files, including the untested ones into report.
 
@@ -629,6 +653,7 @@ Whether to include all files, including the untested ones into report.
 - **Type:** `boolean`
 - **Default:** `true`
 - **Available for providers:** `'c8' | 'istanbul'`
+- **CLI:** `--coverage.clean`, `--coverage.clean=false`
 
 Clean coverage results before running tests
 
@@ -637,6 +662,7 @@ Clean coverage results before running tests
 - **Type:** `boolean`
 - **Default:** `true`
 - **Available for providers:** `'c8' | 'istanbul'`
+- **CLI:** `--coverage.cleanOnRerun`, `--coverage.cleanOnRerun=false`
 
 Clean coverage report on watch rerun
 
@@ -645,6 +671,7 @@ Clean coverage report on watch rerun
 - **Type:** `string`
 - **Default:** `'./coverage'`
 - **Available for providers:** `'c8' | 'istanbul'`
+- **CLI:** `--coverage.reportsDirectory=<path>`
 
 Directory to write coverage report to.
 When using `c8` provider a temporary `/tmp` directory is created for [V8 coverage results](https://nodejs.org/api/cli.html#coverage-output).
@@ -654,6 +681,7 @@ When using `c8` provider a temporary `/tmp` directory is created for [V8 coverag
 - **Type:** `string | string[]`
 - **Default:** `['text', 'html', 'clover', 'json']`
 - **Available for providers:** `'c8' | 'istanbul'`
+- **CLI:** `--coverage.reporter=<reporter>`, `--coverage.reporter=<reporter1> --coverage.reporter=<reporter2>`
 
 Coverage reporters to use. See [istanbul documentation](https://istanbul.js.org/docs/advanced/alternative-reporters/) for detailed list of all reporters.
 
@@ -663,6 +691,7 @@ Coverage reporters to use. See [istanbul documentation](https://istanbul.js.org/
 - **Type:** `boolean`
 - **Default:** `false`
 - **Available for providers:** `'c8' | 'istanbul'`
+- **CLI:** `--coverage.skipFull`, `--coverage.skipFull=false`
 
 Do not show files with 100% statement, branch, and function coverage.
 
@@ -671,6 +700,7 @@ Do not show files with 100% statement, branch, and function coverage.
 - **Type:** `boolean`
 - **Default:** `false`
 - **Available for providers:** `'c8' | 'istanbul'`
+- **CLI:** `--coverage.perFile`, `--coverage.perFile=false`
 
 Check thresholds per file.
 See `lines`, `functions`, `branches` and `statements` for the actual thresholds.
@@ -679,6 +709,7 @@ See `lines`, `functions`, `branches` and `statements` for the actual thresholds.
 
 - **Type:** `number`
 - **Available for providers:** `'c8' | 'istanbul'`
+- **CLI:** `--coverage.lines=<number>`
 
 Threshold for lines.
 See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-thresholds) for more information.
@@ -687,6 +718,7 @@ See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-threshol
 
 - **Type:** `number`
 - **Available for providers:** `'c8' | 'istanbul'`
+- **CLI:** `--coverage.functions=<number>`
 
 Threshold for functions.
 See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-thresholds) for more information.
@@ -695,6 +727,7 @@ See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-threshol
 
 - **Type:** `number`
 - **Available for providers:** `'c8' | 'istanbul'`
+- **CLI:** `--coverage.branches=<number>`
 
 Threshold for branches.
 See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-thresholds) for more information.
@@ -703,6 +736,7 @@ See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-threshol
 
 - **Type:** `number`
 - **Available for providers:** `'c8' | 'istanbul'`
+- **CLI:** `--coverage.statements=<number>`
 
 Threshold for statements.
 See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-thresholds) for more information.
@@ -712,6 +746,7 @@ See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-threshol
 - **Type:** `boolean`
 - **Default:** `false`
 - **Available for providers:** `'c8'`
+- **CLI:** `--coverage.allowExternal`, `--coverage.allowExternal=false`
 
 Allow files from outside of your cwd.
 
@@ -720,6 +755,7 @@ Allow files from outside of your cwd.
 - **Type:** `boolean`
 - **Default:** `true`
 - **Available for providers:** `'c8'`
+- **CLI:** `--coverage.excludeNodeModules`, `--coverage.excludeNodeModules=false`
 
 Exclude coverage under `/node_modules/`.
 
@@ -728,6 +764,7 @@ Exclude coverage under `/node_modules/`.
 - **Type:** `string[]`
 - **Default:** `process.cwd()`
 - **Available for providers:** `'c8'`
+- **CLI:** `--coverage.src=<path>`
 
 Specifies the directories that are used when `--all` is enabled.
 
@@ -736,6 +773,7 @@ Specifies the directories that are used when `--all` is enabled.
 - **Type:** `boolean`
 - **Default:** `false`
 - **Available for providers:** `'c8'`
+- **CLI:** `--coverage.100`, `--coverage.100=false`
 
 Shortcut for `--check-coverage --lines 100 --functions 100 --branches 100 --statements 100`.
 
@@ -744,6 +782,7 @@ Shortcut for `--check-coverage --lines 100 --functions 100 --branches 100 --stat
 - **Type:** `string[]`
 - **Default:** `[]`
 - **Available for providers:** `'istanbul'`
+- **CLI:** `--coverage.ignoreClassMethods=<method>`
 
 Set to array of class method names to ignore for coverage.
 See [istanbul documentation](https://github.com/istanbuljs/nyc#ignoring-methods) for more information.
@@ -779,6 +818,7 @@ Watermarks for statements, lines, branches and functions. See [istanbul document
 ### testNamePattern
 
 - **Type** `string | RegExp`
+- **CLI:** `-t <pattern>`, `--testNamePattern=<pattern>`, `--test-name-pattern=<pattern>`
 
 Run tests with full names matching the pattern.
 If you add `OnlyRunThis` to this property, tests not containing the word `OnlyRunThis` in the test name will be skipped.
@@ -801,6 +841,7 @@ test('doNotRun', () => {
 
 - **Type:** `boolean`
 - **Default:** `false`
+- **CLI:** `--open`, `--open=false`
 
 Open Vitest UI (WIP)
 
@@ -808,6 +849,7 @@ Open Vitest UI (WIP)
 
 - **Type:** `boolean | number`
 - **Default:** `false`
+- **CLI:** `--api`, `--api.port`, `--api.host`, `--api.strictPort`
 
 Listen to port and serve API. When set to true, the default port is 51204
 
@@ -911,6 +953,7 @@ export default defineConfig({
 
 - **Type**: `boolean`
 - **Default**: `false`
+- **CLI:** `--allowOnly`, `--allowOnly=false`
 
 Allow tests and suites that are marked as only.
 
@@ -918,6 +961,7 @@ Allow tests and suites that are marked as only.
 
 - **Type**: `boolean`
 - **Default**: `false`
+- **CLI:** `--dangerouslyIgnoreUnhandledErrors` `--dangerouslyIgnoreUnhandledErrors=false`
 
 Ignore any unhandled errors that occur.
 
@@ -925,6 +969,7 @@ Ignore any unhandled errors that occur.
 
 - **Type**: `boolean`
 - **Default**: `false`
+- **CLI:** `--passWithNoTests`, `--passWithNoTests=false`
 
 Vitest will not fail, if no tests will be found.
 
@@ -932,6 +977,7 @@ Vitest will not fail, if no tests will be found.
 
 - **Type**: `boolean`
 - **Default**: `false`
+- **CLI:** `--logHeapUsage`, `--logHeapUsage=false`
 
 Show heap usage after each test. Useful for debugging memory leaks.
 
@@ -1007,6 +1053,12 @@ Path to cache directory.
 
 Options for how tests should be sorted.
 
+You can provide sequence options to CLI with dot notation:
+
+```sh
+npx vitest --sequence.shuffle --sequence.seed=1000
+```
+
 #### sequence.sequencer
 
 - **Type**: `TestSequencerConstructor`
@@ -1020,6 +1072,7 @@ Sharding is happening before sorting, and only if `--shard` option is provided.
 
 - **Type**: `boolean`
 - **Default**: `false`
+- **CLI**: `--sequence.shuffle`, `--sequence.shuffle=false`
 
 If you want tests to run randomly, you can enable it with this option, or CLI argument [`--sequence.shuffle`](/guide/cli).
 
@@ -1029,6 +1082,7 @@ Vitest usually uses cache to sort tests, so long running tests start earlier - t
 
 - **Type**: `number`
 - **Default**: `Date.now()`
+- **CLI**: `--sequence.seed=1000`
 
 Sets the randomization seed, if tests are running in random order.
 
@@ -1036,6 +1090,7 @@ Sets the randomization seed, if tests are running in random order.
 
 - **Type**: `'stack' | 'list' | 'parallel'`
 - **Default**: `'parallel'`
+- **CLI**: `--sequence.hooks=<value>`
 
 Changes the order in which hooks are executed.
 

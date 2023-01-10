@@ -16,7 +16,7 @@ You can pass an additional argument as the filter of the test files to run. For 
 vitest foobar
 ```
 
-Will run only the test file that contains `foobar` in their paths.
+Will run only the test file that contains `foobar` in their paths. This filter only checks inclusion and doesn't support regexp or glob patterns (unless your terminal processes it before Vitest receives the filter).
 
 ### `vitest run`
 
@@ -82,6 +82,25 @@ vitest related /src/index.ts /src/hello-world.js
 | `--inspect` | Enables Node.js inspector |
 | `--inspect-brk` | Enables Node.js inspector with break |
 | `-h, --help` | Display available CLI options |
+
+::: tip
+Vitest supports both camel case and kebab case for CLI arguments. For example, `--passWithNoTests` and `--pass-with-no-tests` will both work (`--no-color` and `--inspect-brk` are the exceptions).
+
+Vitest also supports different ways of specifying the value: `--reporter dot` and `--reporter=dot` are both valid.
+
+If option supports an array of values, you need to pass the option multiple times:
+
+```
+vitest --reporter=dot --reporter=default
+```
+
+Boolean options can be negated with `no-` prefix. Specifying the value as `false` also works:
+
+```
+vitest --no-api
+vitest --api=false
+```
+:::
 
 ### changed
 
