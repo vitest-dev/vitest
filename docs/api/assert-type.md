@@ -2,7 +2,7 @@
 
   - **Type:** `<T>(value: T): void`
 
-  You can use this function as an alternative for [`expectTypeOf`](/api/expect-typeof) to easily assert that argument type is equal to provided generic.
+  You can use this function as an alternative for [`expectTypeOf`](/api/expect-typeof) to easily assert that the argument type is equal to the generic provided.
 
   ```ts
   import { assertType } from 'vitest'

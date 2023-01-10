@@ -12,7 +12,7 @@
 
   - **Type:** `<T>(expected: T) => void`
 
-  This matcher will check, if types are fully equal to each other. This matcher will not fail, if two objects have different values, but the same type. It will fail however, if object is missing a property.
+  This matcher will check if the types are fully equal to each other. This matcher will not fail if two objects have different values, but the same type. It will fail however if an object is missing a property.
 
   ```ts
   import { expectTypeOf } from 'vitest'
@@ -27,7 +27,7 @@
 
   - **Type:** `<T>(expected: T) => void`
 
-  This matcher checks if expect type extends provided type. It is different from `toEqual` and is more similar to [expect's](/api/expect) `toMatchObject()`. With this matcher you can check, if an object “matches” a type.
+  This matcher checks if expect type extends provided type. It is different from `toEqual` and is more similar to [expect's](/api/expect) `toMatchObject()`. With this matcher, you can check if an object “matches” a type.
 
   ```ts
   import { expectTypeOf } from 'vitest'
@@ -475,7 +475,7 @@
 
   - **Type:** `<K extends keyof T>(property: K) => ExpectTypeOf<T[K>`
 
-  This matcher checks if a property exists on provided object. If it exists, it also returns the same set of matchers for the type of this property, so you can chain assertions one after another.
+  This matcher checks if a property exists on the provided object. If it exists, it also returns the same set of matchers for the type of this property, so you can chain assertions one after another.
 
   ```ts
   import { expectTypeOf } from 'vitest'

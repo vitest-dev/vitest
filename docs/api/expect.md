@@ -8,7 +8,7 @@ type Awaitable<T> = T | PromiseLike<T>
 
   `expect` is used to create assertions. In this context `assertions` are functions that can be called to assert a statement. Vitest provides `chai` assertions by default and also `Jest` compatible assertions build on top of `chai`.
 
-  For example, this code asserts that an `input` value is equal to `2`. If it's not, assertion will throw an error, and the test will fail.
+  For example, this code asserts that an `input` value is equal to `2`. If it's not, the assertion will throw an error, and the test will fail.
 
   ```ts
   import { expect } from 'vitest'
@@ -24,12 +24,12 @@ type Awaitable<T> = T | PromiseLike<T>
   Also, `expect` can be used statically to access matchers functions, described later, and more.
 
 ::: warning
-`expect` has no effect on testing types, if expression doesn't have a type error. If you want to use Vitest as [type checker](/guide/testing-types), use [`expectTypeOf`](/api/expect-typeof) or [`assertType`](/api/assert-type).
+`expect` has no effect on testing types, if the expression doesn't have a type error. If you want to use Vitest as [type checker](/guide/testing-types), use [`expectTypeOf`](/api/expect-typeof) or [`assertType`](/api/assert-type).
 :::
 
 ## not
 
-  Using `not` will negate the assertion. For example, this code asserts that an `input` value is not equal to `2`. If it's equal, assertion will throw an error, and the test will fail.
+  Using `not` will negate the assertion. For example, this code asserts that an `input` value is not equal to `2`. If it's equal, the assertion will throw an error, and the test will fail.
 
   ```ts
   import { expect, test } from 'vitest'
@@ -44,7 +44,7 @@ type Awaitable<T> = T | PromiseLike<T>
 
 - **Type:** `(value: any) => Awaitable<void>`
 
-  `toBe` can be used to assert if primitives are equal or that objects share the same reference. It is equivalent of calling `expect(Object.is(3, 3)).toBe(true)`. If the objects are not the same, but you want check if their structures are identical, you can use [`toEqual`](#toequal).
+  `toBe` can be used to assert if primitives are equal or that objects share the same reference. It is equivalent of calling `expect(Object.is(3, 3)).toBe(true)`. If the objects are not the same, but you want to check if their structures are identical, you can use [`toEqual`](#toequal).
 
   For example, the code below checks if the trader has 13 apples.
 
@@ -130,9 +130,9 @@ type Awaitable<T> = T | PromiseLike<T>
 
 - **Type:** `() => Awaitable<void>`
 
-  `toBeTruthy` asserts that the value is true, when converted to boolean. Useful if you don't care for the value, but just want to know it can be converted to `true`.
+  `toBeTruthy` asserts that the value is true when converted to boolean. Useful if you don't care for the value, but just want to know it can be converted to `true`.
 
-  For example having this code you don't care for the return value of `stocks.getInfo` - it maybe complex object, a string or anything else. The code will still work.
+  For example, having this code you don't care for the return value of `stocks.getInfo` - it maybe a complex object, a string, or anything else. The code will still work.
 
   ```ts
   import { Stocks } from './stocks'
@@ -161,9 +161,9 @@ type Awaitable<T> = T | PromiseLike<T>
 
 - **Type:** `() => Awaitable<void>`
 
-  `toBeFalsy` asserts that the value is false, when converted to boolean. Useful if you don't care for the value, but just want to know it can be converted to `false`.
+  `toBeFalsy` asserts that the value is false when converted to boolean. Useful if you don't care for the value, but just want to know if it can be converted to `false`.
 
-  For example having this code you don't care for the return value of `stocks.stockFailed` - it may return any falsy value, but the code will still work.
+  For example, having this code you don't care for the return value of `stocks.stockFailed` - it may return any falsy value, but the code will still work.
 
   ```ts
   import { Stocks } from './stocks'
@@ -355,7 +355,7 @@ type Awaitable<T> = T | PromiseLike<T>
 
 - **Type:** `(received: any) => Awaitable<void>`
 
-  `toStrictEqual` asserts if actual value is equal to received one or has the same structure, if it is an object (compares them recursively), and of the same type.
+  `toStrictEqual` asserts if the actual value is equal to the received one or has the same structure if it is an object (compares them recursively), and of the same type.
 
   Differences from [`.toEqual`](#toequal):
 
@@ -382,7 +382,7 @@ type Awaitable<T> = T | PromiseLike<T>
 
 - **Type:** `(received: string) => Awaitable<void>`
 
-  `toContain` asserts if actual value is in an array. `toContain` can also check whether a string is a substring of another string.
+  `toContain` asserts if the actual value is in an array. `toContain` can also check whether a string is a substring of another string.
 
   ```ts
   import { expect, test } from 'vitest'
@@ -972,9 +972,9 @@ type Awaitable<T> = T | PromiseLike<T>
 
 - **Type:** `Promisify<Assertions>`
 
-  `rejects` is intended to remove boilerplate when asserting asynchronous code. Use it to unwrap reason why promise was rejected, and assert its value with usual assertions. If promise successfully resolves, the assertion will fail.
+  `rejects` is intended to remove boilerplate when asserting asynchronous code. Use it to unwrap reason why the promise was rejected, and assert its value with usual assertions. If the promise successfully resolves, the assertion will fail.
 
-  It returns the same `Assertions` object, but all matchers are now return `Promise`, so you would need to `await` it. Also works with `chai` assertions.
+  It returns the same `Assertions` object, but all matchers now return `Promise`, so you would need to `await` it. Also works with `chai` assertions.
 
   For example, if you have a function that fails when you call it, you may use this code to assert the reason:
 
@@ -1000,7 +1000,7 @@ type Awaitable<T> = T | PromiseLike<T>
 
 - **Type:** `(count: number) => void`
 
-  After the test has passed or failed verifies that certain number of assertions was called during a test. Useful case would be to check if an asynchronous code was called.
+  After the test has passed or failed verify that a certain number of assertions was called during a test. A useful case would be to check if an asynchronous code was called.
 
   For example, if we have a function that asynchronously calls two matchers, we can assert that they were actually called.
 
@@ -1030,9 +1030,9 @@ type Awaitable<T> = T | PromiseLike<T>
 
 - **Type:** `() => void`
 
-  After the test has passed or failed verifies that at least one assertion was called during a test. Useful case would be to check if an asynchronous code was called.
+  After the test has passed or failed verify that at least one assertion was called during a test. A useful case would be to check if an asynchronous code was called.
 
-  For example, if you have a code that calls a callback, we can make an assertion inside a callback, but the test will always pass, if we don't check if an assertion was called.
+  For example, if you have a code that calls a callback, we can make an assertion inside a callback, but the test will always pass if we don't check if an assertion was called.
 
   ```ts
   import { expect, test } from 'vitest'
@@ -1085,7 +1085,7 @@ type Awaitable<T> = T | PromiseLike<T>
 
 - **Type:** `(constructor: unknown) => any`
 
-  This asymmetric matcher, when used with equality check, will return `true` only if value is an instance of specified constructor. Useful, if you have a value that is generated each time, and you only want to know that it exist with a proper type.
+  This asymmetric matcher, when used with an equality check, will return `true` only if the value is an instance of a specified constructor. Useful, if you have a value that is generated each time, and you only want to know that it exists with a proper type.
 
   ```ts
   import { expect, test } from 'vitest'
@@ -1100,7 +1100,7 @@ type Awaitable<T> = T | PromiseLike<T>
 
 - **Type:** `<T>(expected: T[]) => any`
 
-  When used with equality check, this asymmetric matcher will return `true` if value is an array and contains specified items.
+  When used with an equality check, this asymmetric matcher will return `true` if the value is an array and contains specified items.
 
   ```ts
   import { expect, test } from 'vitest'
@@ -1129,7 +1129,7 @@ type Awaitable<T> = T | PromiseLike<T>
 
 - **Type:** `(expected: any) => any`
 
-  When used with equality check, this asymmetric matcher will return `true` if value has a similar shape.
+  When used with an equality check, this asymmetric matcher will return `true` if the value has a similar shape.
 
   ```ts
   import { expect, test } from 'vitest'
@@ -1159,7 +1159,7 @@ type Awaitable<T> = T | PromiseLike<T>
 
 - **Type:** `(expected: any) => any`
 
-  When used with equality check, this asymmetric matcher will return `true` if value is a string and contains specified substring.
+  When used with an equality check, this asymmetric matcher will return `true` if the value is a string and contains a specified substring.
 
   ```ts
   import { expect, test } from 'vitest'
@@ -1184,7 +1184,7 @@ type Awaitable<T> = T | PromiseLike<T>
 
 - **Type:** `(expected: any) => any`
 
-  When used with equality check, this asymmetric matcher will return `true` if value is a string and contains specified substring or the string matches regular expression.
+  When used with an equality check, this asymmetric matcher will return `true` if the value is a string and contains a specified substring or if the string matches a regular expression.
 
   ```ts
   import { expect, test } from 'vitest'
@@ -1209,7 +1209,7 @@ type Awaitable<T> = T | PromiseLike<T>
 
 - **Type:** `(plugin: PrettyFormatPlugin) => void`
 
-  This method adds custom serializers that are called when creating a snapshot. This is advanced feature - if you want to know more, please read a [guide on custom serializers](/guide/snapshot#custom-serializer).
+  This method adds custom serializers that are called when creating a snapshot. This is an advanced feature - if you want to know more, please read a [guide on custom serializers](/guide/snapshot#custom-serializer).
 
   If you are adding custom serializers, you should call this method inside [`setupFiles`](/config/#setupfiles). This will affect every snapshot.
 

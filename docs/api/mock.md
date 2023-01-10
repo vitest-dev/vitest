@@ -1,6 +1,6 @@
 # Mock Functions
 
-You can create a spy function (mock) to track its execution with `vi.fn` method. If you want to track a method on already created object, you can use `vi.spyOn` method:
+You can create a spy function (mock) to track its execution with `vi.fn` method. If you want to track a method on an already created object, you can use `vi.spyOn` method:
 
 ```js
 import { vi } from 'vitest'
@@ -123,7 +123,7 @@ You should use spy assertions (e.g., [`toHaveBeenCalled`](/api/expect#tohavebeen
 
 - **Type:** `() => MockInstance`
 
-  Does what `mockClear` does and makes inner implementation as an empty function (returning `undefined`, when invoked). This is useful when you want to completely reset a mock back to its initial state.
+  Does what `mockClear` does and makes inner implementation an empty function (returning `undefined`, when invoked). This is useful when you want to completely reset a mock back to its initial state.
 
   If you want this method to be called before each test automatically, you can enable [`mockReset`](/config/#mockreset) setting in config.
 
@@ -192,7 +192,7 @@ You should use spy assertions (e.g., [`toHaveBeenCalled`](/api/expect#tohavebeen
 
 - **Type:** `(value: any) => MockInstance`
 
-  Accepts a value that will be returned for one call to the mock function. If chained, every consecutive call will return passed value. When there are no more `mockReturnValueOnce` values to use, calls a function specified by `mockImplementation` or other `mockReturn*` methods.
+  Accepts a value that will be returned for one call to the mock function. If chained, every consecutive call will return the passed value. When there are no more `mockReturnValueOnce` values to use, call a function specified by `mockImplementation` or other `mockReturn*` methods.
 
   ```ts
   const myMockFn = vi
@@ -207,7 +207,7 @@ You should use spy assertions (e.g., [`toHaveBeenCalled`](/api/expect#tohavebeen
 
 ## mock.calls
 
-This is an array containing all arguments for each call. One item of the array is arguments of that call.
+This is an array containing all arguments for each call. One item of the array is the arguments of that call.
 
 If a function was invoked twice with the following arguments `fn(arg1, arg2)`, `fn(arg3, arg4)` in that order, then `mock.calls` will be:
 
@@ -224,7 +224,7 @@ This contains the arguments of the last call. If spy wasn't called, will return 
 
 ## mock.results
 
-This is an array containing all values, that were `returned` from function. One item of the array is an object with properties `type` and `value`. Available types are:
+This is an array containing all values, that were `returned` from the function. One item of the array is an object with properties `type` and `value`. Available types are:
 
 - `'return'` - function returned without throwing.
 - `'throw'` - function threw a value.
