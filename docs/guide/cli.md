@@ -16,7 +16,7 @@ You can pass an additional argument as the filter of the test files to run. For 
 vitest foobar
 ```
 
-Will run only the test file that contains `foobar` in their paths. This filter only checks inclusion, and doesn't support regexp or glob patterns (unless your terminal processes it before Vitest receives the filter).
+Will run only the test file that contains `foobar` in their paths. This filter only checks inclusion and doesn't support regexp or glob patterns (unless your terminal processes it before Vitest receives the filter).
 
 ### `vitest run`
 
