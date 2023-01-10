@@ -201,6 +201,7 @@ importers:
       '@vueuse/integrations': ^8.5.0
       axios: ^0.26.1
       react: ^18.0.0
+      sweetalert2: ^11.6.16
       tinyspy: ^0.3.2
       vite: ^4.0.0
       vitest: workspace:*
@@ -213,6 +214,7 @@ importers:
     devDependencies:
       '@vitest/ui': link:../../packages/ui
       react: 18.2.0
+      sweetalert2: 11.6.16
       vite: 4.0.0
       vitest: link:../../packages/vitest
       vue: 3.2.39
@@ -19471,6 +19473,10 @@ packages:
 
   /svg-tags/1.0.0:
     resolution: {integrity: sha512-ovssysQTa+luh7A5Weu3Rta6FJlFBBbInjOh722LIt6klpU2/HtdUbszju/G4devcvk8PGt7FCLv5wftu3THUA==}
+    dev: true
+
+  /sweetalert2/11.6.16:
+    resolution: {integrity: sha512-T2FO8LptErsjE4r0WMfiSk4YbeUvPadNaUZ/cADMEOnws000znrf8zFX9S5e/spvzJDyRI5En73WQyDZhGypxQ==}
     dev: true
 
   /swr/1.3.0_react@18.2.0:

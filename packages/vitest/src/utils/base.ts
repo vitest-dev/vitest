@@ -11,8 +11,8 @@ function collectOwnProperties(obj: any, collector: Set<string | symbol> | ((key:
   Object.getOwnPropertySymbols(obj).forEach(collect)
 }
 
-export function getAllMockableProperties(obj: any) {
-  const allProps = new Set<{ key: string | symbol; descriptor: PropertyDescriptor }>()
+export function getAllMockableProperties(obj: any, isModule: boolean) {
+  const allProps = new Map<string | symbol, { key: string | symbol; descriptor: PropertyDescriptor }>()
   let curr = obj
   do {
     // we don't need properties from these
@@ -22,11 +22,17 @@ export function getAllMockableProperties(obj: any) {
     collectOwnProperties(curr, (key) => {
       const descriptor = Object.getOwnPropertyDescriptor(curr, key)
       if (descriptor)
-        allProps.add({ key, descriptor })
+        allProps.set(key, { key, descriptor })
     })
     // eslint-disable-next-line no-cond-assign
   } while (curr = Object.getPrototypeOf(curr))
-  return Array.from(allProps)
+  // default is not specified in ownKeys, if module is interoped
+  if (isModule && !allProps.has('default') && 'default' in obj) {
+    const descriptor = Object.getOwnPropertyDescriptor(obj, 'default')
+    if (descriptor)
+      allProps.set('default', { key: 'default', descriptor })
+  }
+  return Array.from(allProps.values())
 }
 
 export function notNullish<T>(v: T | null | undefined): v is NonNullable<T> {
