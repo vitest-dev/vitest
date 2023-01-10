@@ -346,7 +346,7 @@ Enable watch mode
 ### root
 
 - **Type:** `string`
-- **CLI:** `-r <path>`, `--root <path>`
+- **CLI:** `-r <path>`, `--root=<path>`
 
 Project root
 
@@ -354,7 +354,7 @@ Project root
 
 - **Type:** `Reporter | Reporter[]`
 - **Default:** `'default'`
-- **CLI:** `--reporter <name>`, `--reporter <name1> --reporter <name2>`
+- **CLI:** `--reporter=<name>`, `--reporter=<name1> --reporter=<name2>`
 
 Custom reporters for output. Reporters can be [a Reporter instance](https://github.com/vitest-dev/vitest/blob/main/packages/vitest/src/types/reporter.ts) or a string to select built in reporters:
 
@@ -370,7 +370,7 @@ Custom reporters for output. Reporters can be [a Reporter instance](https://gith
 
 - **Type:** `number`
 - **Default:** `stdout.columns || 80`
-- **CLI:** `--outputTruncateLength <length>`, `--output-truncate-length <length>`
+- **CLI:** `--outputTruncateLength=<length>`, `--output-truncate-length=<length>`
 
 Truncate the size of diff line up to `stdout.columns` or `80` number of characters. You may wish to tune this, depending on your terminal window width. Vitest includes `+-` characters and spaces for this. For example, you might see this diff, if you set this to `6`:
 
@@ -384,7 +384,7 @@ Truncate the size of diff line up to `stdout.columns` or `80` number of characte
 
 - **Type:** `number`
 - **Default:** `15`
-- **CLI:** `--outputDiffLines <lines>`, `--output-diff-lines <lines>`
+- **CLI:** `--outputDiffLines=<lines>`, `--output-diff-lines=<lines>`
 
 Limit the number of single output diff lines up to `15`. Vitest counts all `+-` lines when determining when to stop. For example, you might see diff like this, if you set this property to `3`:
 
@@ -403,7 +403,7 @@ Limit the number of single output diff lines up to `15`. Vitest counts all `+-` 
 
 - **Type:** `number`
 - **Default:** `50`
-- **CLI:** `--outputDiffMaxLines <lines>`, `--output-diff-max-lines <lines>`
+- **CLI:** `--outputDiffMaxLines=<lines>`, `--output-diff-max-lines=<lines>`
 - **Version:** Since Vitest 0.26.0
 
 The maximum number of lines to display in diff window. Beware that if you have a large object with many small diffs, you might not see all of them at once.
@@ -412,7 +412,7 @@ The maximum number of lines to display in diff window. Beware that if you have a
 
 - **Type:** `number`
 - **Default:** `10000`
-- **CLI:** `--outputDiffMaxSize <length>`, `--output-diff-max-size <length>`
+- **CLI:** `--outputDiffMaxSize=<length>`, `--output-diff-max-size=<length>`
 - **Version:** Since Vitest 0.26.0
 
 The maximum length of the stringified object before the diff happens. Vitest tries to stringify an object before doing a diff, but if the object is too large, it will reduce the depth of the object to fit within this limit. Because of this, if the object is too big or nested, you might not see the diff.
@@ -422,7 +422,7 @@ Increasing this limit can increase the duration of diffing.
 ### outputFile
 
 - **Type:** `string | Record<string, string>`
-- **CLI:** `--outputFile <path>`, `--output-file <path>`, `--outputFile.json=./path`, `--output-file.json=./other-path`.
+- **CLI:** `--outputFile=<path>`, `--outputFile.json=./path`
 
 Write test results to a file when the `--reporter=json`, `--reporter=html` or `--reporter=junit` option is also specified.
 By providing an object instead of a string you can define individual outputs when using multiple reporters.
