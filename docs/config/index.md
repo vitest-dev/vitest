@@ -1056,7 +1056,7 @@ Options for how tests should be sorted.
 You can provide sequence options to CLI with dot notation:
 
 ```sh
-npx vitest --sequence.shuffle --sequence.seed 1000
+npx vitest --sequence.shuffle --sequence.seed=1000
 ```
 
 #### sequence.sequencer
@@ -1072,6 +1072,7 @@ Sharding is happening before sorting, and only if `--shard` option is provided.
 
 - **Type**: `boolean`
 - **Default**: `false`
+- **CLI**: `--sequence.shuffle`, `--sequence.shuffle=false`
 
 If you want tests to run randomly, you can enable it with this option, or CLI argument [`--sequence.shuffle`](/guide/cli).
 
@@ -1081,6 +1082,7 @@ Vitest usually uses cache to sort tests, so long running tests start earlier - t
 
 - **Type**: `number`
 - **Default**: `Date.now()`
+- **CLI**: `--sequence.seed=1000`
 
 Sets the randomization seed, if tests are running in random order.
 
@@ -1088,6 +1090,7 @@ Sets the randomization seed, if tests are running in random order.
 
 - **Type**: `'stack' | 'list' | 'parallel'`
 - **Default**: `'parallel'`
+- **CLI**: `--sequence.hooks=<value>`
 
 Changes the order in which hooks are executed.
 
