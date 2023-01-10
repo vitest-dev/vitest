@@ -122,7 +122,8 @@
     "tinypool": "^0.3.0",
     "tinyspy": "^1.0.2",
     "vite": "^3.0.0 || ^4.0.0",
-    "vite-node": "workspace:*"
+    "vite-node": "workspace:*",
+    "why-is-node-running": "^2.2.2"
   },
   "devDependencies": {
     "@antfu/install-pkg": "^0.1.1",

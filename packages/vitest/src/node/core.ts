@@ -13,6 +13,7 @@ import { clearTimeout, deepMerge, hasFailed, noop, setTimeout, slash, toArray } 
 import { getCoverageProvider } from '../integrations/coverage'
 import { Typechecker } from '../typecheck/typechecker'
 import { createPool } from './pool'
+import { logRunningProcesses } from './track-process'
 import type { WorkerPool } from './pool'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
 import { StateManager } from './state'
@@ -549,6 +550,7 @@ export class Vitest {
   async exit(force = false) {
     setTimeout(() => {
       console.warn(`close timed out after ${this.config.teardownTimeout}ms`)
+      logRunningProcesses()
       process.exit()
     }, this.config.teardownTimeout).unref()
 

@@ -566,6 +566,11 @@ export interface UserConfig extends InlineConfig {
    * @example --shard=2/3
    */
   shard?: string
+
+  /**
+   * Display running processes, if Vitest fails to exit
+   */
+  trackRunningProcesses?: boolean
 }
 
 export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck'> {

@@ -6,6 +6,7 @@ import type { Vitest, VitestRunMode } from '../types'
 import type { CliOptions } from './cli-api'
 import { startVitest } from './cli-api'
 import { divider } from './reporters/renderers/utils'
+import { startTrackingProcesses } from './track-process'
 
 const cli = cac('vitest')
 
@@ -36,6 +37,7 @@ cli
   .option('--dom', 'mock browser api with happy-dom')
   .option('--browser', 'run tests in browser')
   .option('--environment <env>', 'runner environment (default: node)')
+  .option('--trackRunningProcesses', 'display running processes, if Vitest fails to exit')
   .option('--passWithNoTests', 'pass when no tests found')
   .option('--logHeapUsage', 'show the size of heap for each test')
   .option('--allowOnly', 'Allow tests and suites that are marked as only (default: !process.env.CI)')
@@ -125,6 +127,9 @@ function normalizeCliOptions(argv: CliOptions): CliOptions {
 }
 
 async function start(mode: VitestRunMode, cliFilters: string[], options: CliOptions): Promise<Vitest | undefined> {
+  if (options.trackRunningProcesses)
+    startTrackingProcesses()
+
   try {
     const ctx = await startVitest(mode, cliFilters.map(normalize), normalizeCliOptions(options))
     if (!ctx?.config.watch)
