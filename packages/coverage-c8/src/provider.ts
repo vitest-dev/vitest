@@ -86,6 +86,7 @@ export class C8CoverageProvider implements CoverageProvider {
           entry.map.mappings.length > 0
           && entry.map.sourcesContent
           && entry.map.sourcesContent.length > 0
+          && entry.map.sourcesContent[0]
           && entry.map.sourcesContent[0].length > 0
         )
       }) as SourceMapMeta[]
