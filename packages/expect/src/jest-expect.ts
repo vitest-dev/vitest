@@ -418,7 +418,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       ],
     )
     if (called && isNot)
-      msg += formatCalls(spy, msg)
+      msg = formatCalls(spy, msg)
 
     if ((called && isNot) || (!called && !isNot)) {
       const err = new Error(msg)
@@ -443,7 +443,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     )
 
     if ((pass && isNot) || (!pass && !isNot)) {
-      msg += formatCalls(spy, msg, args)
+      msg = formatCalls(spy, msg, args)
       const err = new Error(msg)
       err.name = 'AssertionError'
       throw err

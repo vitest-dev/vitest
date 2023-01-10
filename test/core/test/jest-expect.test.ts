@@ -463,6 +463,32 @@ describe('toSatisfy()', () => {
   })
 })
 
+describe('toHaveBeenCalled', () => {
+  describe('negated', () => {
+    it('fails if called', () => {
+      const mock = vi.fn()
+      mock()
+
+      expect(() => {
+        expect(mock).not.toHaveBeenCalled()
+      }).toThrow(/^expected "spy" to not be called at all[^e]/)
+    })
+  })
+})
+
+describe('toHaveBeenCalledWith', () => {
+  describe('negated', () => {
+    it('fails if called', () => {
+      const mock = vi.fn()
+      mock(3)
+
+      expect(() => {
+        expect(mock).not.toHaveBeenCalledWith(3)
+      }).toThrow(/^expected "spy" to not be called with arguments: \[ 3 \][^e]/)
+    })
+  })
+})
+
 describe('async expect', () => {
   it('resolves', async () => {
     await expect((async () => 'true')()).resolves.toBe('true')
