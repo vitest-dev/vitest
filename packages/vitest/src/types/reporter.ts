@@ -16,6 +16,8 @@ export interface Reporter {
   onServerRestart?: (reason?: string) => Awaitable<void>
 
   onUserConsoleLog?: (log: UserConsoleLog) => Awaitable<void>
+
+  onProcessTimeout?: () => Awaitable<void>
 }
 
 export type { Vitest }

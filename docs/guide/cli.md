@@ -71,7 +71,6 @@ vitest related /src/index.ts /src/hello-world.js
 | `--dom` | Mock browser api with happy-dom |
 | `--browser` | Run tests in browser |
 | `--environment <env>` | Runner environment (default: `node`) |
-| `--trackRunningProcesses` | Display running processes, if Vitest fails to exit |
 | `--passWithNoTests` | Pass when no tests found |
 | `--logHeapUsage` | Show the size of heap for each test |
 | `--allowOnly` | Allow tests and suites that are marked as `only` (default: false in CI, true otherwise) |
