@@ -1,4 +1,3 @@
-import { expect, it } from 'vitest'
 import { ApolloProvider } from '@apollo/client'
 import { client } from './ApolloClient'
 import { render, screen, userEvent, waitForElementToBeRemoved } from './utils/test-utils'
