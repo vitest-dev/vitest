@@ -5,6 +5,7 @@ import { VerboseReporter } from './verbose'
 import { TapReporter } from './tap'
 import { JUnitReporter } from './junit'
 import { TapFlatReporter } from './tap-flat'
+import { HangingProcessReporter } from './hanging-process'
 
 export { DefaultReporter }
 
@@ -16,6 +17,7 @@ export const ReportersMap = {
   'tap': TapReporter,
   'tap-flat': TapFlatReporter,
   'junit': JUnitReporter,
+  'hanging-process': HangingProcessReporter,
 }
 
 export type BuiltinReporters = keyof typeof ReportersMap

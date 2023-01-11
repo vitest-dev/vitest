@@ -553,8 +553,10 @@ export class Vitest {
    */
   async exit(force = false) {
     setTimeout(() => {
-      console.warn(`close timed out after ${this.config.teardownTimeout}ms`)
-      process.exit()
+      this.report('onProcessTimeout').then(() => {
+        console.warn(`close timed out after ${this.config.teardownTimeout}ms`)
+        process.exit()
+      })
     }, this.config.teardownTimeout).unref()
 
     await this.close()
