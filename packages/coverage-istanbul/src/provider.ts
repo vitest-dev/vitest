@@ -66,7 +66,7 @@ export class IstanbulCoverageProvider implements CoverageProvider {
       include: typeof this.options.include === 'undefined' ? undefined : [...this.options.include],
       exclude: [...defaultExclude, ...defaultInclude, ...this.options.exclude],
       excludeNodeModules: true,
-      extension: configDefaults.coverage.extension,
+      extension: this.options.extension,
     })
   }
 
