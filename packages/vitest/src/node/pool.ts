@@ -140,7 +140,8 @@ function createChannel(ctx: Vitest) {
 
   createBirpc<{}, WorkerRPC>(
     {
-      onWorkerExit(code) {
+      async onWorkerExit(error, code) {
+        await ctx.logger.printError(error, false, 'Unexpected Exit')
         process.exit(code || 1)
       },
       snapshotSaved(snapshot) {

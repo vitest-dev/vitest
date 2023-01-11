@@ -23,12 +23,9 @@ async function startViteNode(ctx: WorkerContext) {
 
   const processExit = process.exit
 
-  process.on('beforeExit', (code) => {
-    rpc().onWorkerExit(code)
-  })
-
   process.exit = (code = process.exitCode || 0): never => {
-    rpc().onWorkerExit(code)
+    const error = new Error(`process.exit called with "${code}"`)
+    rpc().onWorkerExit(error, code)
     return processExit(code)
   }
 

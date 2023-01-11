@@ -27,7 +27,7 @@ export interface WorkerRPC {
   getSourceMap: (id: string, force?: boolean) => Promise<RawSourceMap | undefined>
 
   onFinished: (files: File[], errors?: unknown[]) => void
-  onWorkerExit: (code?: number) => void
+  onWorkerExit: (error: unknown, code?: number) => void
   onPathsCollected: (paths: string[]) => void
   onUserConsoleLog: (log: UserConsoleLog) => void
   onUnhandledRejection: (err: unknown) => void
