@@ -138,9 +138,6 @@ function createChannel(ctx: Vitest) {
 
   createBirpc<{}, WorkerRPC>(
     {
-      onWorkerExit(code) {
-        process.exit(code || 1)
-      },
       snapshotSaved(snapshot) {
         ctx.snapshot.add(snapshot)
       },
