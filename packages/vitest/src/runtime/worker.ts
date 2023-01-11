@@ -1,7 +1,8 @@
-import { resolve } from 'pathe'
+import { relative, resolve } from 'pathe'
 import { createBirpc } from 'birpc'
 import { workerId as poolId } from 'tinypool'
 import { ModuleCacheMap } from 'vite-node/client'
+import { isPrimitive } from 'vite-node/utils'
 import type { ResolvedConfig, WorkerContext, WorkerRPC } from '../types'
 import { distDir } from '../constants'
 import { getWorkerState } from '../utils'
@@ -21,6 +22,8 @@ async function startViteNode(ctx: WorkerContext) {
   if (_viteNode)
     return _viteNode
 
+  const { config } = ctx
+
   const processExit = process.exit
 
   process.exit = (code = process.exitCode || 0): never => {
@@ -30,10 +33,14 @@ async function startViteNode(ctx: WorkerContext) {
   }
 
   process.on('unhandledRejection', (err) => {
-    rpc().onUnhandledRejection(processError(err))
+    const worker = getWorkerState()
+    const error = processError(err)
+    if (worker.filepath && !isPrimitive(error)) {
+      error.VITEST_TEST_NAME = worker.current?.name
+      error.VITEST_TEST_PATH = relative(config.root, worker.filepath)
+    }
+    rpc().onUnhandledRejection(error)
   })
-
-  const { config } = ctx
 
   const { run } = (await executeInViteNode({
     files: [
