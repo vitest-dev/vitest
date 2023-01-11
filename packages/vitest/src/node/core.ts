@@ -403,9 +403,6 @@ export class Vitest {
 
   private _rerunTimer: any
   private async scheduleRerun(triggerId: string) {
-    const mod = this.server.moduleGraph.getModuleById(triggerId)
-    if (mod)
-      mod.lastHMRTimestamp = Date.now()
     const currentCount = this.restartsCount
     clearTimeout(this._rerunTimer)
     await this.runningPromise
@@ -447,8 +444,15 @@ export class Vitest {
 
   private unregisterWatcher = noop
   private registerWatcher() {
+    const updateLastChanged = (id: string) => {
+      const mod = this.server.moduleGraph.getModuleById(id)
+      if (mod)
+        mod.lastHMRTimestamp = Date.now()
+    }
+
     const onChange = (id: string) => {
       id = slash(id)
+      updateLastChanged(id)
       const needsRerun = this.handleFileChanged(id)
       if (needsRerun)
         this.scheduleRerun(id)
@@ -467,6 +471,7 @@ export class Vitest {
     }
     const onAdd = async (id: string) => {
       id = slash(id)
+      updateLastChanged(id)
       if (await this.isTargetFile(id)) {
         this.changedTests.add(id)
         await this.cache.stats.updateStats(id)
