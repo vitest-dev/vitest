@@ -19,6 +19,7 @@ export default defineConfig({
     },
     setupFiles: [
       resolve(__dirname, './setup.ts'),
+      './src/another-setup.ts',
     ],
   },
 })
