@@ -24,6 +24,8 @@ async function startViteNode(ctx: WorkerContext) {
 
   const { config } = ctx
 
+  const processExit = process.exit
+
   process.on('beforeExit', (code) => {
     rpc().onWorkerExit(code)
   })
