@@ -127,7 +127,9 @@ export function createPool(ctx: Vitest): WorkerPool {
 
   return {
     runTests: runWithFiles('run'),
-    close: async () => {}, // TODO: not sure why this will cause Node crash: pool.destroy(),
+    close: async () => {
+      await pool.destroy()
+    },
   }
 }
 
