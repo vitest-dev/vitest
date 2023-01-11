@@ -21,8 +21,12 @@ async function startViteNode(ctx: WorkerContext) {
   if (_viteNode)
     return _viteNode
 
+  const processExit = process.exit
+
   process.exit = (code = process.exitCode || 0): never => {
-    throw new Error(`process.exit called with "${code}"`)
+    const error = new Error(`process.exit called with "${code}"`)
+    rpc().onWorkerExit(error, code)
+    return processExit(code)
   }
 
   process.on('unhandledRejection', (err) => {
@@ -74,7 +78,7 @@ function init(ctx: WorkerContext) {
     rpc: createBirpc<WorkerRPC>(
       {},
       {
-        eventNames: ['onUserConsoleLog', 'onFinished', 'onCollected'],
+        eventNames: ['onUserConsoleLog', 'onFinished', 'onCollected', 'onWorkerExit'],
         post(v) { port.postMessage(v) },
         on(fn) { port.addListener('message', fn) },
       },

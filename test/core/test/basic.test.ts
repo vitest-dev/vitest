@@ -63,8 +63,3 @@ test('escaping', () => {
   expect(['\\123']).toEqual(['\\123'])
   expect('\\123').toEqual('\\123')
 })
-
-test('don\'t exit', () => {
-  expect(() => process.exit()).toThrowError('process.exit called with "0"')
-  expect(() => process.exit(1)).toThrowError('process.exit called with "1"')
-})
