@@ -128,7 +128,7 @@ export function createPool(ctx: Vitest): WorkerPool {
   return {
     runTests: runWithFiles('run'),
     close: async () => {
-      await pool.destroy()
+      await Promise.all(pool.threads.map(w => w.terminate()))
     },
   }
 }
