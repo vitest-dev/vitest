@@ -10,6 +10,9 @@ export class BasicReporter extends BaseReporter {
   onCollected() {
   }
 
+  async onWatcherRerun() {
+  }
+
   onUserConsoleLog(log: UserConsoleLog) {
     if (!this.shouldLog(log))
       return
