@@ -81,6 +81,14 @@ $ npx vitest
   </a>
 </p>
 
+### Vladimir Sponsors
+
+<p align="center">
+  <a href="https://cdn.jsdelivr.net/gh/sheremet-va/static/sponsors.svg">
+    <img src='https://cdn.jsdelivr.net/gh/sheremet-va/static/sponsors.svg'/>
+  </a>
+</p>
+
 ### Patak Sponsors
 
 <p align="center">
