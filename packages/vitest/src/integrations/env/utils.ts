@@ -72,6 +72,12 @@ export function populateGlobal(global: any, win: any, options: PopulateOptions =
   if (global.global)
     global.global = global
 
+  Object.defineProperty(global.document, 'defaultView', {
+    get: () => global,
+    enumerable: true,
+    configurable: true,
+  })
+
   skipKeys.forEach(k => keys.add(k))
 
   return {

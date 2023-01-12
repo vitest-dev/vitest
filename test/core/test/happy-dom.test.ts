@@ -102,8 +102,14 @@ it('can call global functions without window works as expected', async () => {
 })
 
 it('globals are the same', () => {
+  expect(window).toBe(globalThis)
+  expect(window).toBe(global)
   expect(window.globalThis).toBe(globalThis)
   expect(window.Blob).toBe(globalThis.Blob)
   expect(window.globalThis.Blob).toBe(globalThis.Blob)
   expect(Blob).toBe(globalThis.Blob)
+  expect(document.defaultView).toBe(window)
+  expect(document.defaultView).toBe(globalThis)
+  const el = document.createElement('div')
+  expect(el.ownerDocument.defaultView).toBe(globalThis)
 })
