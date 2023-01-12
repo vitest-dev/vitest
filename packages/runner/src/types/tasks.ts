@@ -2,7 +2,7 @@ import type { Awaitable } from '@vitest/utils'
 import type { ChainableFunction } from '../utils/chain'
 import type { ErrorWithDiff } from '../utils/error'
 
-export type RunMode = 'run' | 'skip' | 'only' | 'todo'
+export type RunMode = 'run' | 'skip' | 'only' | 'todo' | 'repeats'
 export type TaskState = RunMode | 'pass' | 'fail'
 
 export interface TaskBase {
@@ -140,7 +140,7 @@ interface TestEachFunction {
 }
 
 type ChainableTestAPI<ExtraContext = {}> = ChainableFunction<
-  'concurrent' | 'only' | 'skip' | 'todo' | 'fails',
+  'concurrent' | 'only' | 'skip' | 'todo' | 'fails' | 'repeats',
   [name: string, fn?: TestFunction<ExtraContext>, options?: number | TestOptions],
   void,
   {
@@ -161,6 +161,8 @@ export interface TestOptions {
    * @default 1
    */
   retry?: number
+
+  repeats?: number
 }
 
 export type TestAPI<ExtraContext = {}> = ChainableTestAPI<ExtraContext> & {

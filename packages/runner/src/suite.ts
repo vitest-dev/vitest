@@ -60,7 +60,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
   initSuite()
 
   const test = createTest(function (name: string, fn = noop, options = suiteOptions) {
-    const mode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run'
+    const mode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : this.repeats ? 'repeats' : 'run'
 
     if (typeof options === 'number')
       options = { timeout: options }
@@ -73,6 +73,8 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       suite: undefined!,
       fails: this.fails,
       retry: options?.retry,
+      // 5 repetitions by default
+      repeats: mode === 'repeats' && !options?.repeats ? 5 : options?.repeats,
     } as Omit<Test, 'context'> as Test
 
     if (this.concurrent || concurrent)
@@ -169,7 +171,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
 
 function createSuite() {
   function suiteFn(this: Record<string, boolean | undefined>, name: string, factory?: SuiteFactory, options?: number | TestOptions) {
-    const mode: RunMode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run'
+    const mode: RunMode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : this.repeats ? 'repeats' : 'run'
     return createSuiteCollector(name, factory, mode, this.concurrent, this.shuffle, options)
   }
 
@@ -194,14 +196,14 @@ function createSuite() {
   suiteFn.runIf = (condition: any) => (condition ? suite : suite.skip) as SuiteAPI
 
   return createChainable(
-    ['concurrent', 'shuffle', 'skip', 'only', 'todo'],
+    ['concurrent', 'shuffle', 'skip', 'only', 'todo', 'repeats'],
     suiteFn,
   ) as unknown as SuiteAPI
 }
 
 function createTest(fn: (
   (
-    this: Record<'concurrent' | 'skip' | 'only' | 'todo' | 'fails', boolean | undefined>,
+    this: Record<'concurrent' | 'skip' | 'only' | 'todo' | 'fails' | 'repeats', boolean | undefined>,
     title: string,
     fn?: TestFunction,
     options?: number | TestOptions
@@ -231,7 +233,7 @@ function createTest(fn: (
   testFn.runIf = (condition: any) => (condition ? test : test.skip) as TestAPI
 
   return createChainable(
-    ['concurrent', 'skip', 'only', 'todo', 'fails'],
+    ['concurrent', 'skip', 'only', 'todo', 'fails', 'repeats'],
     testFn,
   ) as TestAPI
 }

@@ -103,11 +103,13 @@ export function getStateString(tasks: Task[], name = 'tests', showTotal = true) 
   const failed = tasks.filter(i => i.result?.state === 'fail')
   const skipped = tasks.filter(i => i.mode === 'skip')
   const todo = tasks.filter(i => i.mode === 'todo')
+  const repeated = tasks.filter(i => i.mode === 'repeats')
 
   return [
     failed.length ? c.bold(c.red(`${failed.length} failed`)) : null,
     passed.length ? c.bold(c.green(`${passed.length} passed`)) : null,
     skipped.length ? c.yellow(`${skipped.length} skipped`) : null,
+    repeated.length ? c.yellow(`${repeated.length} repeated`) : null,
     todo.length ? c.gray(`${todo.length} todo`) : null,
   ].filter(Boolean).join(c.dim(' | ')) + (showTotal ? c.gray(` (${tasks.length})`) : '')
 }

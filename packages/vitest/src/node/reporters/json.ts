@@ -10,7 +10,7 @@ import { parseErrorStacktrace } from '../../utils/source-map'
 // the following types are extracted from the Jest repository (and simplified)
 // the commented-out fields are the missing ones
 
-type Status = 'passed' | 'failed' | 'skipped' | 'pending' | 'todo' | 'disabled'
+type Status = 'passed' | 'failed' | 'skipped' | 'pending' | 'todo' | 'disabled' | 'repeated'
 type Milliseconds = number
 interface Callsite { line: number; column: number }
 const StatusMap: Record<TaskState, Status> = {
@@ -20,6 +20,7 @@ const StatusMap: Record<TaskState, Status> = {
   run: 'pending',
   skip: 'skipped',
   todo: 'todo',
+  repeats: 'repeated',
 }
 
 interface FormattedAssertionResult {
