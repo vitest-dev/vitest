@@ -8,7 +8,7 @@ const provider = getArgument('--provider')
 const configs = [
   // Run test cases. Generates coverage report.
   ['test/', {
-    include: ['test/*.test.ts'],
+    include: ['test/*.test.*'],
     exclude: ['coverage-report-tests/**/*'],
   }],
 

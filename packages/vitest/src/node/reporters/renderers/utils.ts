@@ -91,6 +91,10 @@ export function renderSnapshotSummary(rootDir: string, snapshots: SnapshotSummar
   return summary
 }
 
+export function countTestErrors(tasks: Task[]) {
+  return tasks.reduce((c, i) => c + (i.result?.errors?.length || 0), 0)
+}
+
 export function getStateString(tasks: Task[], name = 'tests', showTotal = true) {
   if (tasks.length === 0)
     return c.dim(`no ${name}`)

@@ -224,7 +224,7 @@ export class VitestMocker {
     const mockPropertiesOf = (container: Record<Key, any>, newContainer: Record<Key, any>) => {
       const containerType = getType(container)
       const isModule = containerType === 'Module' || !!container.__esModule
-      for (const { key: property, descriptor } of getAllMockableProperties(container)) {
+      for (const { key: property, descriptor } of getAllMockableProperties(container, isModule)) {
         // Modules define their exports as getters. We want to process those.
         if (!isModule && descriptor.get) {
           try {

@@ -3,12 +3,51 @@ import { isNodeBuiltin, isValidNodeImport } from 'mlly'
 import type { DepsHandlingOptions } from './types'
 import { slash } from './utils'
 
+const KNOWN_ASSET_TYPES = [
+  // images
+  'png',
+  'jpe?g',
+  'jfif',
+  'pjpeg',
+  'pjp',
+  'gif',
+  'svg',
+  'ico',
+  'webp',
+  'avif',
+
+  // media
+  'mp4',
+  'webm',
+  'ogg',
+  'mp3',
+  'wav',
+  'flac',
+  'aac',
+
+  // fonts
+  'woff2?',
+  'eot',
+  'ttf',
+  'otf',
+
+  // other
+  'webmanifest',
+  'pdf',
+  'txt',
+]
+
 const ESM_EXT_RE = /\.(es|esm|esm-browser|esm-bundler|es6|module)\.js$/
 const ESM_FOLDER_RE = /\/(es|esm)\/(.*\.js)$/
 
 const defaultInline = [
   /virtual:/,
   /\.[mc]?ts$/,
+
+  // special Vite query strings
+  /[?&](init|raw|url|inline)\b/,
+  // Vite returns a string for assets imports, even if it's inside "node_modules"
+  new RegExp(`\\.(${KNOWN_ASSET_TYPES.join('|')})$`),
 ]
 
 const depsExternal = [

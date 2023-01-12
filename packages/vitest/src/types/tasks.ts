@@ -16,6 +16,7 @@ export interface TaskBase {
   result?: TaskResult
   retry?: number
   logs?: UserConsoleLog[]
+  meta?: any
 }
 
 export interface TaskResult {
@@ -59,11 +60,7 @@ export interface Test<ExtraContext = {}> extends TaskBase {
   onFailed?: OnTestFailedHandler[]
 }
 
-export interface TypeCheck extends TaskBase {
-  type: 'typecheck'
-}
-
-export type Task = Test | Suite | File | Benchmark | TypeCheck
+export type Task = Test | Suite | File | Benchmark
 
 export type DoneCallback = (error?: any) => void
 export type TestFunction<ExtraContext = {}> = (context: TestContext & ExtraContext) => Awaitable<any> | void

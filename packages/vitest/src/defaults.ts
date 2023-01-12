@@ -25,10 +25,11 @@ const defaultCoverageExcludes = [
 ]
 
 const coverageConfigDefaults = {
+  all: false,
   provider: 'c8',
   enabled: false,
   clean: true,
-  cleanOnRerun: false,
+  cleanOnRerun: true,
   reportsDirectory: './coverage',
   excludeNodeModules: true,
   exclude: defaultCoverageExcludes,

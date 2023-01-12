@@ -16,7 +16,7 @@ describe('should fails', async () => {
       'vitest',
       'typecheck',
       '--dir',
-      'failing',
+      resolve(__dirname, '..', './failing'),
       '--config',
       resolve(__dirname, './vitest.config.ts'),
     ], {
@@ -37,12 +37,18 @@ describe('should fails', async () => {
       .join('\n')
       .trim()
       .replace(root, '<rootDir>')
+    expect(stderr).not.toMatch('files found, exiting with code')
     expect(msg).toMatchSnapshot()
 
     files.forEach((file) => {
-      const index = lines.findIndex(val => val.includes(`${file}:`))
-      const msg = lines.slice(index, index + 8).join('\n')
-      expect(msg).toMatchSnapshot(file)
+      expect(String(stderr)).toMatch(`${file}:`)
+    })
+
+    lines.forEach((line, idx) => {
+      if (line.includes('TypeCheckError')) {
+        const msg = lines.slice(idx - 1, idx + 7).join('\n')
+        expect(msg).toMatchSnapshot()
+      }
     })
   }, 30_000)
 })
