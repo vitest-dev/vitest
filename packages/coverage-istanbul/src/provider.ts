@@ -123,9 +123,10 @@ export class IstanbulCoverageProvider implements CoverageProvider {
     })
 
     for (const reporter of this.options.reporter) {
-      reports.create(reporter, {
+      reports.create(reporter[0], {
         skipFull: this.options.skipFull,
         projectRoot: this.ctx.config.root,
+        ...reporter[1],
       }).execute(context)
     }
 
@@ -221,7 +222,6 @@ export class IstanbulCoverageProvider implements CoverageProvider {
 
 function resolveIstanbulOptions(options: CoverageIstanbulOptions, root: string): Options {
   const reportsDirectory = resolve(root, options.reportsDirectory || coverageConfigDefaults.reportsDirectory)
-  const reporter = options.reporter || coverageConfigDefaults.reporter
 
   const resolved: Options = {
     ...coverageConfigDefaults,
@@ -232,7 +232,7 @@ function resolveIstanbulOptions(options: CoverageIstanbulOptions, root: string):
     // Resolved fields
     provider: 'istanbul',
     reportsDirectory,
-    reporter: Array.isArray(reporter) ? reporter : [reporter],
+    reporter: resolveReporters(options.reporter || coverageConfigDefaults.reporter),
   }
 
   return resolved
@@ -286,4 +286,25 @@ function isEmptyCoverageRange(range: libCoverage.Range) {
     || range.end.line === undefined
     || range.end.column === undefined
   )
+}
+
+function resolveReporters(configReporters: NonNullable<CoverageIstanbulOptions['reporter']>): Options['reporter'] {
+  // E.g. { reporter: "html" }
+  if (!Array.isArray(configReporters))
+    return [[configReporters, {}]]
+
+  const resolvedReporters: Options['reporter'] = []
+
+  for (const reporter of configReporters) {
+    if (Array.isArray(reporter)) {
+      // E.g. { reporter: [ ["html", { skipEmpty: true }], ["lcov"], ["json", { file: "map.json" }] ]}
+      resolvedReporters.push([reporter[0], reporter[1] || {}])
+    }
+    else {
+      // E.g. { reporter: ["html", "json"]}
+      resolvedReporters.push([reporter, {}])
+    }
+  }
+
+  return resolvedReporters
 }

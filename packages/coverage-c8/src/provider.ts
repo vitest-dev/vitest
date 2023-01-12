@@ -51,6 +51,15 @@ export class C8CoverageProvider implements CoverageProvider {
     const options: ConstructorParameters<typeof Report>[0] = {
       ...this.options,
       all: this.options.all && allTestsRun,
+      reporter: this.options.reporter.map(([reporterName]) => reporterName),
+      reporterOptions: this.options.reporter.reduce((all, [name, options]) => ({
+        ...all,
+        [name]: {
+          skipFull: this.options.skipFull,
+          projectRoot: this.ctx.config.root,
+          ...options,
+        },
+      }), {}),
     }
 
     const report = createReport(options)
@@ -152,7 +161,6 @@ export class C8CoverageProvider implements CoverageProvider {
 
 function resolveC8Options(options: CoverageC8Options, root: string): Options {
   const reportsDirectory = resolve(root, options.reportsDirectory || coverageConfigDefaults.reportsDirectory)
-  const reporter = options.reporter || coverageConfigDefaults.reporter
 
   const resolved: Options = {
     ...coverageConfigDefaults,
@@ -166,7 +174,7 @@ function resolveC8Options(options: CoverageC8Options, root: string): Options {
 
     // Resolved fields
     provider: 'c8',
-    reporter: Array.isArray(reporter) ? reporter : [reporter],
+    reporter: resolveReporters(options.reporter || coverageConfigDefaults.reporter),
     reportsDirectory,
   }
 
@@ -178,4 +186,25 @@ function resolveC8Options(options: CoverageC8Options, root: string): Options {
   }
 
   return resolved
+}
+
+function resolveReporters(configReporters: NonNullable<CoverageC8Options['reporter']>): Options['reporter'] {
+  // E.g. { reporter: "html" }
+  if (!Array.isArray(configReporters))
+    return [[configReporters, {}]]
+
+  const resolvedReporters: Options['reporter'] = []
+
+  for (const reporter of configReporters) {
+    if (Array.isArray(reporter)) {
+      // E.g. { reporter: [ ["html", { skipEmpty: true }], ["lcov"], ["json", { file: "map.json" }] ]}
+      resolvedReporters.push([reporter[0], reporter[1] || {}])
+    }
+    else {
+      // E.g. { reporter: ["html", "json"]}
+      resolvedReporters.push([reporter, {}])
+    }
+  }
+
+  return resolvedReporters
 }

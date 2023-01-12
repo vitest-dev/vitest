@@ -1,4 +1,5 @@
 import type { TransformPluginContext, TransformResult } from 'rollup'
+import type { ReportOptions } from 'istanbul-reports'
 import type { Vitest } from '../node'
 import type { Arrayable } from './general'
 import type { AfterSuiteRunMeta } from './worker'
@@ -48,20 +49,14 @@ export interface CoverageProviderModule {
   stopCoverage?(): unknown | Promise<unknown>
 }
 
-export type CoverageReporter =
-  | 'clover'
-  | 'cobertura'
-  | 'html-spa'
-  | 'html'
-  | 'json-summary'
-  | 'json'
-  | 'lcov'
-  | 'lcovonly'
-  | 'none'
-  | 'teamcity'
-  | 'text-lcov'
-  | 'text-summary'
-  | 'text'
+export type CoverageReporter = keyof ReportOptions
+
+type CoverageReporterWithOptions<ReporterName extends CoverageReporter = CoverageReporter> =
+   ReporterName extends CoverageReporter
+     ? ReportOptions[ReporterName] extends never
+       ? [ReporterName, {}] // E.g. the "none" reporter
+       : [ReporterName, Partial<ReportOptions[ReporterName]>]
+     : never
 
 type Provider = 'c8' | 'istanbul' | 'custom' | undefined
 
@@ -79,14 +74,13 @@ type FieldsWithDefaultValues =
   | 'reportsDirectory'
   | 'exclude'
   | 'extension'
-  | 'reporter'
 
 export type ResolvedCoverageOptions<T extends Provider = Provider> =
   & CoverageOptions<T>
   & Required<Pick<CoverageOptions<T>, FieldsWithDefaultValues>>
   // Resolved fields which may have different typings as public configuration API has
   & {
-    reporter: CoverageReporter[]
+    reporter: CoverageReporterWithOptions[]
   }
 
 export interface BaseCoverageOptions {
@@ -148,7 +142,7 @@ export interface BaseCoverageOptions {
    *
    * @default ['text', 'html', 'clover', 'json']
    */
-  reporter?: Arrayable<CoverageReporter>
+  reporter?: Arrayable<CoverageReporter> | (CoverageReporter | [CoverageReporter] | CoverageReporterWithOptions)[]
 
   /**
    * Do not show files with 100% statement, branch, and function coverage
