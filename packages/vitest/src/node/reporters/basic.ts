@@ -1,7 +1,7 @@
-import { DefaultReporter } from './default'
+import { BaseReporter } from './base'
 import type { UserConsoleLog } from '#types'
 
-export class BasicReporter extends DefaultReporter {
+export class BasicReporter extends BaseReporter {
   isTTY = false as const
 
   async onTestRemoved() {
@@ -14,13 +14,10 @@ export class BasicReporter extends DefaultReporter {
     await super.onFinished(files, errors)
   }
 
-  async stopListRender() {
-    this.renderer = undefined
-  }
-
   onUserConsoleLog(log: UserConsoleLog) {
-    if (!this.shouldLog(log))
+    if (!this.shouldLog(log)) {
       return
+    }
 
     super.onUserConsoleLog(log)
   }
