@@ -501,7 +501,7 @@ When you use `test` or `bench` in the top level of file, they are collected as p
 
 - **Type:** `(condition: any) => void`
 
-  In some cases you might run suites multiple times with different environments, and some of the suites might be environment-specific. Instead of wrapping the suite with `if`, you can use `describe.skipIf` to skip the suite whenever the condition is truthy.
+  In some cases, you might run suites multiple times with different environments, and some of the suites might be environment-specific. Instead of wrapping the suite with `if`, you can use `describe.skipIf` to skip the suite whenever the condition is truthy.
 
   ```ts
   import { assert, test } from 'vitest'
@@ -514,7 +514,7 @@ When you use `test` or `bench` in the top level of file, they are collected as p
   ```
 
 ::: warning
-You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+You cannot use this syntax when using Vitest as [type checker](/guide/testing-types).
 :::
 
 ### describe.only
