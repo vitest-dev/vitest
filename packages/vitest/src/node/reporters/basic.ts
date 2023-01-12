@@ -4,12 +4,6 @@ import type { UserConsoleLog } from '#types'
 export class BasicReporter extends BaseReporter {
   isTTY = false as const
 
-  async onTestRemoved() {
-  }
-
-  onCollected() {
-  }
-
   async onWatcherRerun() {
   }
 
