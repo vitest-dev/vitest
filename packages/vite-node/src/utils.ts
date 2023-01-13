@@ -71,6 +71,9 @@ export function toFilePath(id: string, root: string): { path: string; exists: bo
       if (existsSync(cleanUrl(resolved)))
         return { absolute: resolved, exists: true }
     }
+    else if (id.startsWith(root) && existsSync(cleanUrl(id))) {
+      return { absolute: id, exists: true }
+    }
     return { absolute: id, exists: false }
   })()
 
