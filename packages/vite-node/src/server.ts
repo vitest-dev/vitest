@@ -1,5 +1,5 @@
 import { performance } from 'node:perf_hooks'
-import { resolve } from 'pathe'
+import { isAbsolute, join, resolve } from 'pathe'
 import type { TransformResult, ViteDevServer } from 'vite'
 import createDebug from 'debug'
 import type { DebuggerOptions, FetchResult, RawSourceMap, ViteNodeResolveId, ViteNodeServerOptions } from './types'
@@ -65,6 +65,18 @@ export class ViteNodeServer {
   }
 
   async resolveId(id: string, importer?: string): Promise<ViteNodeResolveId | null> {
+    if (id.startsWith('/@fs/'))
+      return { id: id.slice(4) }
+    if (isAbsolute(id)) {
+      const moduleMap = this.server.moduleGraph.idToModuleMap
+      const mod = moduleMap.get(id)
+      if (mod?.file)
+        return { id: mod.file }
+      const fsPath = join(this.server.config.root, id)
+      const fsMod = moduleMap.get(fsPath)
+      if (fsMod?.file)
+        return { id: fsMod.file }
+    }
     if (importer && !importer.startsWith(this.server.config.root))
       importer = resolve(this.server.config.root, importer)
     const mode = (importer && this.getTransformMode(importer)) || 'ssr'
