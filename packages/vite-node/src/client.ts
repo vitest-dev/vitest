@@ -213,14 +213,15 @@ export class ViteNodeRunner {
     if (importee && id.startsWith(VALID_ID_PREFIX))
       importee = undefined
     id = normalizeRequestId(id, this.options.base)
-    if (!this.options.resolveId)
-      return [id, toFilePath(id, this.root)]
+    const { path, exists } = toFilePath(id, this.root)
+    if (!this.options.resolveId || exists)
+      return [id, path]
     const resolved = await this.options.resolveId(id, importee)
     const resolvedId = resolved
       ? normalizeRequestId(resolved.id, this.options.base)
       : id
     // to be compatible with dependencies that do not resolve id
-    const fsPath = resolved ? resolvedId : toFilePath(id, this.root)
+    const fsPath = resolved ? resolvedId : path
     return [resolvedId, fsPath]
   }
 

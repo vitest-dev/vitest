@@ -61,27 +61,29 @@ export function isPrimitive(v: any) {
   return v !== Object(v)
 }
 
-export function toFilePath(id: string, root: string): string {
-  let absolute = (() => {
+export function toFilePath(id: string, root: string): { path: string; exists: boolean } {
+  let { absolute, exists } = (() => {
     if (id.startsWith('/@fs/'))
-      return id.slice(4)
+      return { absolute: id.slice(4), exists: true }
+    // check if /src/module.js -> <root>/src/module.js
     if (!id.startsWith(root) && id.startsWith('/')) {
       const resolved = resolve(root, id.slice(1))
-      // The resolved path can have query values. Remove them before checking
-      // the file path.
-      if (existsSync(resolved.replace(/\?.*$/, '')))
-        return resolved
+      if (existsSync(cleanUrl(resolved)))
+        return { absolute: resolved, exists: true }
     }
-    return id
+    return { absolute: id, exists: false }
   })()
 
   if (absolute.startsWith('//'))
     absolute = absolute.slice(1)
 
   // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
-  return isWindows && absolute.startsWith('/')
-    ? slash(fileURLToPath(pathToFileURL(absolute.slice(1)).href))
-    : absolute
+  return {
+    path: isWindows && absolute.startsWith('/')
+      ? slash(fileURLToPath(pathToFileURL(absolute.slice(1)).href))
+      : absolute,
+    exists,
+  }
 }
 
 /**

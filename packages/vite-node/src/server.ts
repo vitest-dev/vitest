@@ -1,10 +1,10 @@
 import { performance } from 'node:perf_hooks'
-import { isAbsolute, join, resolve } from 'pathe'
+import { resolve } from 'pathe'
 import type { TransformResult, ViteDevServer } from 'vite'
 import createDebug from 'debug'
 import type { DebuggerOptions, FetchResult, RawSourceMap, ViteNodeResolveId, ViteNodeServerOptions } from './types'
 import { shouldExternalize } from './externalize'
-import { isWindows, normalizeModuleId, slash, toArray, toFilePath } from './utils'
+import { normalizeModuleId, toArray, toFilePath } from './utils'
 import { Debugger } from './debug'
 import { withInlineSourcemap } from './source-map'
 
@@ -65,18 +65,6 @@ export class ViteNodeServer {
   }
 
   async resolveId(id: string, importer?: string): Promise<ViteNodeResolveId | null> {
-    if (id.startsWith('/@fs/')) {
-      const fsPath = slash(id.slice(4))
-      return { id: isWindows ? fsPath.slice(1) : fsPath }
-    }
-    if (isAbsolute(id)) {
-      const moduleMap = this.server.moduleGraph.idToModuleMap
-      if (moduleMap.has(id))
-        return { id }
-      const fsPath = join(this.server.config.root, id)
-      if (moduleMap.has(fsPath))
-        return { id: fsPath }
-    }
     if (importer && !importer.startsWith(this.server.config.root))
       importer = resolve(this.server.config.root, importer)
     const mode = (importer && this.getTransformMode(importer)) || 'ssr'
@@ -137,7 +125,7 @@ export class ViteNodeServer {
   private async _fetchModule(id: string): Promise<FetchResult> {
     let result: FetchResult
 
-    const filePath = toFilePath(id, this.server.config.root)
+    const { path: filePath } = toFilePath(id, this.server.config.root)
 
     const module = this.server.moduleGraph.getModuleById(id)
     const timestamp = module ? module.lastHMRTimestamp : null
