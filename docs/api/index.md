@@ -3017,15 +3017,11 @@ IntersectionObserver === undefined
 - **Type:** `() => Promise<Vitest>`
 
   This method will asynchronously invoke every initiated timer until the timers queue is empty. It means that every timer called during `runAllTimersAsync` will be fired even asynchronous timers. If you have an infinite interval,
-  it will throw after 10 000 tries. For example this will log `2, 1`:
+  it will throw after 10 000 tries. For example this will log `result`:
 
   ```ts
   setTimeout(async () => {
-    await setTimeout(() => {
-      console.log('2')
-      return Promise.resolve()
-    })
-    console.log('1')
+    console.log(await Promise.resolve('result'))
   }, 100)
 
   await vi.runAllTimersAsync()
