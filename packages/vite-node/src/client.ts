@@ -4,7 +4,7 @@ import { dirname } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import vm from 'node:vm'
 import { isNodeBuiltin } from 'mlly'
-import { resolve } from 'pathe'
+import { isAbsolute, resolve } from 'pathe'
 import createDebug from 'debug'
 import { VALID_ID_PREFIX, cleanUrl, isInternalRequest, isPrimitive, normalizeModuleId, normalizeRequestId, slash, toFilePath } from './utils'
 import type { HotContext, ModuleCache, ViteNodeRunnerOptions } from './types'
@@ -213,7 +213,8 @@ export class ViteNodeRunner {
     if (importee && id.startsWith(VALID_ID_PREFIX))
       importee = undefined
     id = normalizeRequestId(id, this.options.base)
-    if (!this.options.resolveId)
+    // absolute IDs are already resolved by Vite analyzer
+    if (!this.options.resolveId || isAbsolute(id))
       return [id, toFilePath(id, this.root)]
     const resolved = await this.options.resolveId(id, importee)
     const resolvedId = resolved
@@ -278,7 +279,6 @@ export class ViteNodeRunner {
     if (id in requestStubs)
       return requestStubs[id]
 
-    // eslint-disable-next-line prefer-const
     let { code: transformed, externalize } = await this.options.fetchModule(id)
 
     if (externalize) {
