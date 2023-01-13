@@ -213,7 +213,6 @@ export class ViteNodeRunner {
     if (importee && id.startsWith(VALID_ID_PREFIX))
       importee = undefined
     id = normalizeRequestId(id, this.options.base)
-    // absolute IDs are already resolved by Vite analyzer
     if (!this.options.resolveId)
       return [id, toFilePath(id, this.root)]
     const resolved = await this.options.resolveId(id, importee)
