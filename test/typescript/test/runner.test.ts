@@ -3,18 +3,15 @@ import fg from 'fast-glob'
 import { execa } from 'execa'
 import { describe, expect, it } from 'vitest'
 
-describe('should fails', async () => {
+describe('should fail', async () => {
   const root = resolve(__dirname, '../failing')
   const files = await fg('*.test-d.*', { cwd: root })
 
   it('typecheck files', async () => {
-    // in Windows child_process is very unstable, we skip testing it
-    if (process.platform === 'win32' && process.env.CI)
-      return
-
     const { stderr } = await execa('npx', [
       'vitest',
       'typecheck',
+      '--run',
       '--dir',
       resolve(__dirname, '..', './failing'),
       '--config',
