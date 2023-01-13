@@ -83,7 +83,7 @@ export function registerConsoleShortcuts(ctx: Vitest) {
       message: 'Input test name pattern (RegExp)',
       initial: ctx.config.testNamePattern?.source || '',
     }])
-    await ctx.changeNamePattern(filter, undefined, 'change pattern')
+    await ctx.changeNamePattern(filter.trim(), undefined, 'change pattern')
     on()
   }
 
@@ -95,8 +95,8 @@ export function registerConsoleShortcuts(ctx: Vitest) {
       message: 'Input filename pattern',
       initial: latestFilename,
     }])
-    latestFilename = filter
-    await ctx.changeFilenamePattern(filter)
+    latestFilename = filter.trim()
+    await ctx.changeFilenamePattern(filter.trim())
     on()
   }
 
