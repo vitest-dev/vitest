@@ -69,13 +69,11 @@ export class ViteNodeServer {
       return { id: id.slice(4) }
     if (isAbsolute(id)) {
       const moduleMap = this.server.moduleGraph.idToModuleMap
-      const mod = moduleMap.get(id)
-      if (mod?.file)
-        return { id: mod.file }
+      if (moduleMap.has(id))
+        return { id }
       const fsPath = join(this.server.config.root, id)
-      const fsMod = moduleMap.get(fsPath)
-      if (fsMod?.file)
-        return { id: fsMod.file }
+      if (moduleMap.has(fsPath))
+        return { id: fsPath }
     }
     if (importer && !importer.startsWith(this.server.config.root))
       importer = resolve(this.server.config.root, importer)
