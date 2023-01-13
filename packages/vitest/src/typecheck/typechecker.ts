@@ -3,7 +3,7 @@ import type { ExecaChildProcess } from 'execa'
 import { execa } from 'execa'
 import { extname, resolve } from 'pathe'
 import { SourceMapConsumer } from 'source-map'
-import { ensurePackageInstalled } from '../utils'
+import { ensurePackageInstalled, getTasks } from '../utils'
 import type { Awaitable, File, ParsedStack, Task, TaskResultPack, TaskState, TscErrorInfo, Vitest } from '../types'
 import { getRawErrsMapFromTsCompile, getTsconfig } from './parse'
 import { createIndexMap } from './utils'
@@ -77,6 +77,26 @@ export class Typechecker {
     return tests
   }
 
+  protected markPassed(file: File) {
+    if (!file.result?.state) {
+      file.result = {
+        state: 'pass',
+      }
+    }
+    const markTasks = (tasks: Task[]): void => {
+      for (const task of tasks) {
+        if ('tasks' in task)
+          markTasks(task.tasks)
+        if (!task.result?.state && task.mode === 'run') {
+          task.result = {
+            state: 'pass',
+          }
+        }
+      }
+    }
+    markTasks(file.tasks)
+  }
+
   protected async prepareResults(output: string) {
     const typeErrors = await this.parseTscLikeOutput(output)
     const testFiles = new Set(this.getFiles())
@@ -91,18 +111,20 @@ export class Typechecker {
       const { file, definitions, map, parsed } = this._tests![path]
       const errors = typeErrors.get(path)
       files.push(file)
-      if (!errors)
+      if (!errors) {
+        this.markPassed(file)
         return
+      }
       const sortedDefinitions = [...definitions.sort((a, b) => b.start - a.start)]
       // has no map for ".js" files that use // @ts-check
       const mapConsumer = map && new SourceMapConsumer(map)
       const indexMap = createIndexMap(parsed)
-      const markFailed = (task: Task) => {
+      const markState = (task: Task, state: TaskState) => {
         task.result = {
-          state: task.mode === 'run' || task.mode === 'only' ? 'fail' : task.mode,
+          state: task.mode === 'run' || task.mode === 'only' ? state : task.mode,
         }
         if (task.suite)
-          markFailed(task.suite)
+          markState(task.suite, state)
       }
       errors.forEach(({ error, originalError }) => {
         const originalPos = mapConsumer?.generatedPositionFor({
@@ -121,8 +143,10 @@ export class Typechecker {
         }
         errors.push(error)
         if (state === 'fail' && suite.suite)
-          markFailed(suite.suite)
+          markState(suite.suite, 'fail')
       })
+
+      this.markPassed(file)
     })
 
     typeErrors.forEach((errors, path) => {
@@ -247,6 +271,9 @@ export class Typechecker {
   }
 
   public getTestPacks() {
-    return Object.values(this._tests || {}).map(i => [i.file.id, undefined] as TaskResultPack)
+    return Object.values(this._tests || {})
+      .map(({ file }) => getTasks(file))
+      .flat()
+      .map(i => [i.id, undefined] as TaskResultPack)
   }
 }
