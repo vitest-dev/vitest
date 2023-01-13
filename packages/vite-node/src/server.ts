@@ -4,7 +4,7 @@ import type { TransformResult, ViteDevServer } from 'vite'
 import createDebug from 'debug'
 import type { DebuggerOptions, FetchResult, RawSourceMap, ViteNodeResolveId, ViteNodeServerOptions } from './types'
 import { shouldExternalize } from './externalize'
-import { normalizeModuleId, toArray, toFilePath } from './utils'
+import { isWindows, normalizeModuleId, toArray, toFilePath } from './utils'
 import { Debugger } from './debug'
 import { withInlineSourcemap } from './source-map'
 
@@ -66,7 +66,8 @@ export class ViteNodeServer {
 
   async resolveId(id: string, importer?: string): Promise<ViteNodeResolveId | null> {
     if (id.startsWith('/@fs/'))
-      return { id: id.slice(4) }
+      // remove "/" on windows, because the first letter should be drive
+      return { id: id.slice(isWindows ? 5 : 4) }
     if (isAbsolute(id)) {
       const moduleMap = this.server.moduleGraph.idToModuleMap
       if (moduleMap.has(id))
