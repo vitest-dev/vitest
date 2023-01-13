@@ -473,7 +473,7 @@ Default timeout of a hook in milliseconds
 ### teardownTimeout
 
 - **Type:** `number`
-- **Default:** `1000`
+- **Default:** `10000`
 
 Default timeout to wait for close when Vitest shuts down, in milliseconds
 
