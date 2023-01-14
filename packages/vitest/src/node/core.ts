@@ -354,8 +354,14 @@ export class Vitest {
   }
 
   async rerunFiles(files: string[] = this.state.getFilepaths(), trigger?: string) {
+    if (this.coverageProvider && this.config.coverage.cleanOnRerun)
+      await this.coverageProvider.clean()
+
     await this.report('onWatcherRerun', files, trigger)
     await this.runFiles(files)
+
+    await this.reportCoverage()
+
     if (!this.config.browser)
       await this.report('onWatcherStart')
   }
