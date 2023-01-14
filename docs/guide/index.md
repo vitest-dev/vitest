@@ -20,15 +20,15 @@ You can try Vitest online on [StackBlitz](https://vitest.new). It runs Vitest di
 
 With npm
 ```bash
-npm install -D vitest
+npm install -D vitest vite
 ```
 or with yarn
 ```bash
-yarn add -D vitest
+yarn add -D vitest vite
 ```
 or with pnpm
 ```bash
-pnpm add -D vitest
+pnpm add -D vitest vite
 ```
 
 :::tip

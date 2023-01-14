@@ -86,7 +86,8 @@
     "@vitest/browser": "*",
     "@vitest/ui": "*",
     "happy-dom": "*",
-    "jsdom": "*"
+    "jsdom": "*",
+    "vite": "^3.0.0 || ^4.0.0"
   },
   "peerDependenciesMeta": {
     "@vitest/ui": {
@@ -121,7 +122,6 @@
     "tinybench": "^2.3.1",
     "tinypool": "^0.3.0",
     "tinyspy": "^1.0.2",
-    "vite": "^3.0.0 || ^4.0.0",
     "vite-node": "workspace:*",
     "why-is-node-running": "^2.2.2"
   },
@@ -165,6 +165,7 @@
     "rollup": "^2.79.1",
     "strip-ansi": "^7.0.1",
     "typescript": "^4.9.4",
-    "ws": "^8.12.0"
+    "ws": "^8.12.0",
+    "vite": "^3.0.0 || ^4.0.0"
   }
 }
