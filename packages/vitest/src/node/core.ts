@@ -238,10 +238,7 @@ export class Vitest {
 
     await this.runFiles(files)
 
-    if (this.coverageProvider) {
-      this.logger.log(c.blue(' % ') + c.dim('Coverage report from ') + c.yellow(this.coverageProvider.name))
-      await this.coverageProvider.reportCoverage()
-    }
+    await this.reportCoverage()
 
     if (this.config.watch && !this.config.browser)
       await this.report('onWatcherStart')
@@ -435,7 +432,7 @@ export class Vitest {
 
       await this.runFiles(files)
 
-      await this.coverageProvider?.reportCoverage()
+      await this.reportCoverage()
 
       if (!this.config.browser)
         await this.report('onWatcherStart')
@@ -531,6 +528,13 @@ export class Vitest {
     })
 
     return rerun
+  }
+
+  private async reportCoverage() {
+    if (this.coverageProvider) {
+      this.logger.log(c.blue(' % ') + c.dim('Coverage report from ') + c.yellow(this.coverageProvider.name))
+      await this.coverageProvider.reportCoverage()
+    }
   }
 
   async close() {
