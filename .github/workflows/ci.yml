@@ -11,6 +11,9 @@ on:
 
 env:
   VITEST_SEGFAULT_RETRY: 3
+  PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/ms-playwright
+  CYPRESS_CACHE_FOLDER: ${{ github.workspace }}/.cache/Cypress
+  PUPPETEER_DOWNLOAD_PATH: ${{ github.workspace }}/.cache/Puppeteer
 
 jobs:
   lint:
@@ -18,13 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
-
-      - name: Set node
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18.x
+      - uses: ./.github/actions/setup-and-cache
 
       - name: Install
         run: pnpm i
@@ -37,13 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
-
-      - name: Set node
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18.x
+      - uses: ./.github/actions/setup-and-cache
 
       - name: Install
         run: pnpm i
@@ -73,11 +64,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
-
-      - name: Set node version to ${{ matrix.node_version }}
-        uses: actions/setup-node@v3
+      - uses: ./.github/actions/setup-and-cache
         with:
           node-version: ${{ matrix.node_version }}
 
@@ -101,11 +88,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
-
-      - name: Set node
-        uses: actions/setup-node@v3
+      - uses: ./.github/actions/setup-and-cache
         with:
           node-version: 16.16
 
