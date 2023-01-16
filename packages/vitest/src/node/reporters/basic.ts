@@ -3,6 +3,9 @@ import type { File } from '#types'
 
 export class BasicReporter extends BaseReporter {
   isTTY = false
+  
+  async onWatcherRerun() {
+  }
 
   reportSummary(files: File[]) {
     // non-tty mode doesn't add a new line
