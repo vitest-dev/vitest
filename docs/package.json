@@ -21,12 +21,13 @@
     "@vitejs/plugin-vue": "latest",
     "esno": "^0.16.3",
     "fast-glob": "^3.2.12",
+    "fs-extra": "^10.1.0",
     "https-localhost": "^4.7.1",
     "unocss": "^0.48.3",
     "unplugin-vue-components": "^0.22.12",
     "vite": "^4.0.0",
     "vite-plugin-pwa": "0.14.1",
-    "vitepress": "1.0.0-alpha.35",
+    "vitepress": "1.0.0-alpha.36",
     "workbox-window": "^6.5.4"
   }
 }

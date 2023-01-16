@@ -98,13 +98,14 @@ importers:
       '@vueuse/core': ^9.10.0
       esno: ^0.16.3
       fast-glob: ^3.2.12
+      fs-extra: ^10.1.0
       https-localhost: ^4.7.1
       jiti: ^1.16.1
       unocss: ^0.48.3
       unplugin-vue-components: ^0.22.12
       vite: ^4.0.0
       vite-plugin-pwa: 0.14.1
-      vitepress: 1.0.0-alpha.35
+      vitepress: 1.0.0-alpha.36
       vue: latest
       workbox-window: ^6.5.4
     dependencies:
@@ -117,12 +118,13 @@ importers:
       '@vitejs/plugin-vue': 4.0.0_vite@4.0.0+vue@3.2.45
       esno: 0.16.3
       fast-glob: 3.2.12
+      fs-extra: 10.1.0
       https-localhost: 4.7.1
       unocss: 0.48.3_vite@4.0.0
       unplugin-vue-components: 0.22.12_vue@3.2.45
       vite: 4.0.0
       vite-plugin-pwa: 0.14.1_hsd7wmhtxdre4ds2vghqydhvau
-      vitepress: 1.0.0-alpha.35
+      vitepress: 1.0.0-alpha.36
       workbox-window: 6.5.4
 
   examples/basic:
@@ -290,7 +292,7 @@ importers:
       '@types/react-test-renderer': 17.0.2
       '@vitejs/plugin-react': 3.0.1_vite@4.0.0
       '@vitest/ui': link:../../packages/ui
-      happy-dom: 8.1.3
+      happy-dom: 8.1.4
       jsdom: 21.0.0
       react-test-renderer: 17.0.2_react@17.0.2
       vite: 4.0.0
@@ -536,11 +538,11 @@ importers:
       vite: ^4.0.0
       vitest: workspace:*
     devDependencies:
-      '@sveltejs/vite-plugin-svelte': 2.0.0_svelte@3.55.0+vite@4.0.0
-      '@testing-library/svelte': 3.2.2_svelte@3.55.0
+      '@sveltejs/vite-plugin-svelte': 2.0.0_svelte@3.55.1+vite@4.0.0
+      '@testing-library/svelte': 3.2.2_svelte@3.55.1
       '@vitest/ui': link:../../packages/ui
       jsdom: 21.0.0
-      svelte: 3.55.0
+      svelte: 3.55.1
       vite: 4.0.0
       vitest: link:../../packages/vitest
 
@@ -1037,7 +1039,7 @@ importers:
     devDependencies:
       '@vitejs/plugin-vue': 4.0.0_vite@4.0.0+vue@3.2.45
       '@vue/test-utils': 2.2.7_vue@3.2.45
-      happy-dom: 8.1.3
+      happy-dom: 8.1.4
       vite: 4.0.0
       vitest: link:../../packages/vitest
       vue: 3.2.45
@@ -7105,7 +7107,7 @@ packages:
       string.prototype.matchall: 4.0.7
     dev: true
 
-  /@sveltejs/vite-plugin-svelte/2.0.0_svelte@3.55.0+vite@4.0.0:
+  /@sveltejs/vite-plugin-svelte/2.0.0_svelte@3.55.1+vite@4.0.0:
     resolution: {integrity: sha512-oUFrYQarRv4fppmxdrv00qw3wX8Ycdj0uv33MfpRZyR8K67dyxiOcHnqkB0zSy5sDJA8RC/2aNtYhXJ8NINVHQ==}
     engines: {node: ^14.18.0 || >= 16}
     peerDependencies:
@@ -7116,8 +7118,8 @@ packages:
       deepmerge: 4.2.2
       kleur: 4.1.5
       magic-string: 0.27.0
-      svelte: 3.55.0
-      svelte-hmr: 0.15.1_svelte@3.55.0
+      svelte: 3.55.1
+      svelte-hmr: 0.15.1_svelte@3.55.1
       vite: 4.0.0
       vitefu: 0.2.3_vite@4.0.0
     transitivePeerDependencies:
@@ -7234,14 +7236,14 @@ packages:
       react-dom: 18.2.0_react@18.2.0
     dev: true
 
-  /@testing-library/svelte/3.2.2_svelte@3.55.0:
+  /@testing-library/svelte/3.2.2_svelte@3.55.1:
     resolution: {integrity: sha512-IKwZgqbekC3LpoRhSwhd0JswRGxKdAGkf39UiDXTywK61YyLXbCYoR831e/UUC6EeNW4hiHPY+2WuovxOgI5sw==}
     engines: {node: '>= 10'}
     peerDependencies:
       svelte: 3.x
     dependencies:
       '@testing-library/dom': 8.17.1
-      svelte: 3.55.0
+      svelte: 3.55.1
     dev: true
 
   /@testing-library/user-event/13.5.0:
@@ -13575,8 +13577,8 @@ packages:
       - encoding
     dev: true
 
-  /happy-dom/8.1.3:
-    resolution: {integrity: sha512-XC0ZvAmMOfW56X7yw9IrBuVpHKRzVAMDbtoF4MmOHoe17r2zY6yTMhs+lrsz9KLGQUcFyDPianULPAOp1+OnVg==}
+  /happy-dom/8.1.4:
+    resolution: {integrity: sha512-mUCzXHhSO6fOQlZwKW6z2f/+rYavKNxNrgY4nJ4dp+r8gTGbTENgMZGfM6eJD0DJPRFF8DFyngXdBF93wF96UA==}
     dependencies:
       css.escape: 1.5.1
       he: 1.2.0
@@ -19456,17 +19458,17 @@ packages:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
 
-  /svelte-hmr/0.15.1_svelte@3.55.0:
+  /svelte-hmr/0.15.1_svelte@3.55.1:
     resolution: {integrity: sha512-BiKB4RZ8YSwRKCNVdNxK/GfY+r4Kjgp9jCLEy0DuqAKfmQtpL38cQK3afdpjw4sqSs4PLi3jIPJIFp259NkZtA==}
     engines: {node: ^12.20 || ^14.13.1 || >= 16}
     peerDependencies:
       svelte: '>=3.19.0'
     dependencies:
-      svelte: 3.55.0
+      svelte: 3.55.1
     dev: true
 
-  /svelte/3.55.0:
-    resolution: {integrity: sha512-uGu2FVMlOuey4JoKHKrpZFkoYyj0VLjJdz47zX5+gVK5odxHM40RVhar9/iK2YFRVxvfg9FkhfVlR0sjeIrOiA==}
+  /svelte/3.55.1:
+    resolution: {integrity: sha512-S+87/P0Ve67HxKkEV23iCdAh/SX1xiSfjF1HOglno/YTbSTW7RniICMCofWGdJJbdjw3S+0PfFb1JtGfTXE0oQ==}
     engines: {node: '>= 8'}
     dev: true
 
@@ -20957,8 +20959,8 @@ packages:
       vite: 4.0.0
     dev: true
 
-  /vitepress/1.0.0-alpha.35:
-    resolution: {integrity: sha512-tJQjJstq+Ryb4pKtlxV4tD8KhxId+DTbR1FRrtJBhA+Vv4nexFHra5M9EgK9jUmoMc3rkyNaw7P3Kkix0ArP1w==}
+  /vitepress/1.0.0-alpha.36:
+    resolution: {integrity: sha512-JH9NlBQpQrcIudF1HM8Sq3K6FbOiOTrD33PI0n+pmJQ7dOu4WAm3YnwevMInW8leNiEEWCAH+coIkOYcf3fhpQ==}
     hasBin: true
     dependencies:
       '@docsearch/css': 3.3.1

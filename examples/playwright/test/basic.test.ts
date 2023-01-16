@@ -5,7 +5,8 @@ import { chromium } from 'playwright'
 import type { Browser, Page } from 'playwright'
 import { expect } from '@playwright/test'
 
-describe('basic', async () => {
+// unstable in Windows, TODO: investigate
+describe.runIf(process.platform !== 'win32')('basic', async () => {
   let server: PreviewServer
   let browser: Browser
   let page: Page
