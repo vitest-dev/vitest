@@ -1,16 +1,12 @@
 import { BaseReporter } from './base'
-import type { UserConsoleLog } from '#types'
+import type { File } from '#types'
 
 export class BasicReporter extends BaseReporter {
-  isTTY = false as const
+  isTTY = false
 
-  async onWatcherRerun() {
-  }
-
-  onUserConsoleLog(log: UserConsoleLog) {
-    if (!this.shouldLog(log))
-      return
-
-    super.onUserConsoleLog(log)
+  reportSummary(files: File[]) {
+    // non-tty mode doesn't add a new line
+    this.ctx.logger.log()
+    return super.reportSummary(files)
   }
 }
