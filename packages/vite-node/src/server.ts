@@ -65,11 +65,6 @@ export class ViteNodeServer {
   }
 
   async resolveId(id: string, importer?: string): Promise<ViteNodeResolveId | null> {
-    // provide importer only for relative and absolute paths
-    // paths like "src/user" can be resolved with transformRequest,
-    // but they will be resolved relative to importer instead of root
-    if (!id.startsWith('/') && !id.startsWith('./') && !id.startsWith('../'))
-      importer = undefined
     if (importer && !importer.startsWith(this.server.config.root))
       importer = resolve(this.server.config.root, importer)
     const mode = (importer && this.getTransformMode(importer)) || 'ssr'

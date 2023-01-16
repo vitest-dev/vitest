@@ -39,7 +39,7 @@ export class VitestRunner extends ViteNodeRunner {
     const environment = getCurrentEnvironment()
     // do not try and resolve node builtins in Node
     // import('url') returns Node internal even if 'url' package is installed
-    return environment === 'node' ? !isNodeBuiltin(id) : true
+    return environment === 'node' ? !isNodeBuiltin(id) : !id.startsWith('node:')
   }
 
   async resolveUrl(id: string, importee?: string) {
