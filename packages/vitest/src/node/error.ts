@@ -66,6 +66,17 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
     })
   }
 
+  const testPath = (e as any).VITEST_TEST_PATH
+  const testName = (e as any).VITEST_TEST_NAME
+  // testName has testPath inside
+  if (testPath && !testName)
+    ctx.logger.error(c.red(`This error originated in "${c.bold(testPath)}" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.`))
+  if (testName) {
+    ctx.logger.error(c.red(`The latest test that migh've cause the error is "${c.bold(testName)}". It might mean one of the following:`
+    + '\n- The error was thrown, while Vitest was running this test.'
+    + '\n- This was the last recorder test before the error was thrown, if error originated after test finished its execution.'))
+  }
+
   if (typeof e.cause === 'object' && e.cause && 'name' in e.cause) {
     (e.cause as any).name = `Caused by: ${(e.cause as any).name}`
     await printError(e.cause, ctx, { fullStack, showCodeFrame: false })
@@ -97,6 +108,8 @@ const skipErrorProperties = new Set([
   'showDiff',
   'actual',
   'expected',
+  'VITEST_TEST_NAME',
+  'VITEST_TEST_PATH',
   ...Object.getOwnPropertyNames(Error.prototype),
   ...Object.getOwnPropertyNames(Object.prototype),
 ])
@@ -183,10 +196,6 @@ function printStack(
 
     logger.error(color(` ${c.dim(F_POINTER)} ${[frame.method, c.dim(`${path}:${frame.line}:${frame.column}`)].filter(Boolean).join(' ')}`))
     onStack?.(frame)
-
-    // reached at test file, skip the follow stack
-    if (frame.file in ctx.state.filesMap)
-      break
   }
   logger.error()
   const hasProperties = Object.keys(errorProperties).length > 0

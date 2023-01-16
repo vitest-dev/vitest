@@ -13,13 +13,18 @@ export interface CoverageProvider {
   onBeforeFilesRun?(): void | Promise<void>
   onAfterSuiteRun(meta: AfterSuiteRunMeta): void | Promise<void>
 
-  reportCoverage(): void | Promise<void>
+  reportCoverage(reportContext: ReportContext): void | Promise<void>
 
   onFileTransform?(
     sourceCode: string,
     id: string,
     pluginCtx: TransformPluginContext
   ): TransformResult | Promise<TransformResult>
+}
+
+export interface ReportContext {
+  /** Indicates whether all tests were run. False when only specific tests were run. */
+  allTestsRun?: boolean
 }
 
 export interface CoverageProviderModule {
@@ -101,7 +106,7 @@ export interface BaseCoverageOptions {
   /**
    * Clean coverage report on watch rerun
    *
-   * @default false
+   * @default true
    */
   cleanOnRerun?: boolean
 

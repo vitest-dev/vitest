@@ -71,7 +71,7 @@ export class Vitest {
     this.cache = new VitestCache()
     this.snapshot = new SnapshotManager({ ...resolved.snapshotOptions })
 
-    if (this.config.watch)
+    if (this.config.watch && this.mode !== 'typecheck')
       this.registerWatcher()
 
     this.vitenode = new ViteNodeServer(server, this.config)
@@ -154,8 +154,9 @@ export class Vitest {
     ) as ResolvedConfig
   }
 
-  async typecheck(filters?: string[]) {
-    const testsFilesList = await this.globTestFiles(filters)
+  async typecheck(filters: string[] = []) {
+    const { include, exclude } = this.config.typecheck
+    const testsFilesList = await this.globFiles(filters, include, exclude)
     const checker = new Typechecker(this, testsFilesList)
     this.typechecker = checker
     checker.onParseEnd(async ({ files, sourceErrors }) => {
@@ -198,6 +199,7 @@ export class Vitest {
       await this.report('onTaskUpdate', checker.getTestPacks())
       await this.report('onCollected')
     })
+    await checker.prepare()
     await checker.collectTests()
     await checker.start()
   }
@@ -236,10 +238,7 @@ export class Vitest {
 
     await this.runFiles(files)
 
-    if (this.coverageProvider) {
-      this.logger.log(c.blue(' % ') + c.dim('Coverage report from ') + c.yellow(this.coverageProvider.name))
-      await this.coverageProvider.reportCoverage()
-    }
+    await this.reportCoverage(true)
 
     if (this.config.watch && !this.config.browser)
       await this.report('onWatcherStart')
@@ -355,8 +354,14 @@ export class Vitest {
   }
 
   async rerunFiles(files: string[] = this.state.getFilepaths(), trigger?: string) {
+    if (this.coverageProvider && this.config.coverage.cleanOnRerun)
+      await this.coverageProvider.clean()
+
     await this.report('onWatcherRerun', files, trigger)
     await this.runFiles(files)
+
+    await this.reportCoverage(!trigger)
+
     if (!this.config.browser)
       await this.report('onWatcherStart')
   }
@@ -401,9 +406,6 @@ export class Vitest {
 
   private _rerunTimer: any
   private async scheduleRerun(triggerId: string) {
-    const mod = this.server.moduleGraph.getModuleById(triggerId)
-    if (mod)
-      mod.lastHMRTimestamp = Date.now()
     const currentCount = this.restartsCount
     clearTimeout(this._rerunTimer)
     await this.runningPromise
@@ -436,7 +438,7 @@ export class Vitest {
 
       await this.runFiles(files)
 
-      await this.coverageProvider?.reportCoverage()
+      await this.reportCoverage(false)
 
       if (!this.config.browser)
         await this.report('onWatcherStart')
@@ -445,8 +447,15 @@ export class Vitest {
 
   private unregisterWatcher = noop
   private registerWatcher() {
+    const updateLastChanged = (id: string) => {
+      const mod = this.server.moduleGraph.getModuleById(id)
+      if (mod)
+        mod.lastHMRTimestamp = Date.now()
+    }
+
     const onChange = (id: string) => {
       id = slash(id)
+      updateLastChanged(id)
       const needsRerun = this.handleFileChanged(id)
       if (needsRerun)
         this.scheduleRerun(id)
@@ -468,6 +477,7 @@ export class Vitest {
     }
     const onAdd = async (id: string) => {
       id = slash(id)
+      updateLastChanged(id)
       if (await this.isTargetFile(id)) {
         this.changedTests.add(id)
         await this.cache.stats.updateStats(id)
@@ -529,6 +539,13 @@ export class Vitest {
     return rerun
   }
 
+  private async reportCoverage(allTestsRun: boolean) {
+    if (this.coverageProvider) {
+      this.logger.log(c.blue(' % ') + c.dim('Coverage report from ') + c.yellow(this.coverageProvider.name))
+      await this.coverageProvider.reportCoverage({ allTestsRun })
+    }
+  }
+
   async close() {
     if (!this.closingPromise) {
       this.closingPromise = Promise.allSettled([
@@ -549,8 +566,10 @@ export class Vitest {
    */
   async exit(force = false) {
     setTimeout(() => {
-      console.warn(`close timed out after ${this.config.teardownTimeout}ms`)
-      process.exit()
+      this.report('onProcessTimeout').then(() => {
+        console.warn(`close timed out after ${this.config.teardownTimeout}ms`)
+        process.exit()
+      })
     }, this.config.teardownTimeout).unref()
 
     await this.close()
@@ -565,9 +584,7 @@ export class Vitest {
     )))
   }
 
-  async globTestFiles(filters: string[] = []) {
-    const { include, exclude, includeSource } = this.config
-
+  async globFiles(filters: string[], include: string[], exclude: string[]) {
     const globOptions: fg.Options = {
       absolute: true,
       dot: true,
@@ -583,10 +600,16 @@ export class Vitest {
     if (filters.length)
       testFiles = testFiles.filter(i => filters.some(f => i.includes(f)))
 
+    return testFiles
+  }
+
+  async globTestFiles(filters: string[] = []) {
+    const { include, exclude, includeSource } = this.config
+
+    const testFiles = await this.globFiles(filters, include, exclude)
+
     if (includeSource) {
-      let files = await fg(includeSource, globOptions)
-      if (filters.length)
-        files = files.filter(i => filters.some(f => i.includes(f)))
+      const files = await this.globFiles(filters, includeSource, exclude)
 
       await Promise.all(files.map(async (file) => {
         try {

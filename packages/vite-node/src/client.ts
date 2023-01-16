@@ -213,14 +213,15 @@ export class ViteNodeRunner {
     if (importee && id.startsWith(VALID_ID_PREFIX))
       importee = undefined
     id = normalizeRequestId(id, this.options.base)
-    if (!this.options.resolveId)
-      return [id, toFilePath(id, this.root)]
+    const { path, exists } = toFilePath(id, this.root)
+    if (!this.options.resolveId || exists)
+      return [id, path]
     const resolved = await this.options.resolveId(id, importee)
     const resolvedId = resolved
       ? normalizeRequestId(resolved.id, this.options.base)
       : id
     // to be compatible with dependencies that do not resolve id
-    const fsPath = resolved ? resolvedId : toFilePath(id, this.root)
+    const fsPath = resolved ? resolvedId : path
     return [resolvedId, fsPath]
   }
 
@@ -278,7 +279,6 @@ export class ViteNodeRunner {
     if (id in requestStubs)
       return requestStubs[id]
 
-    // eslint-disable-next-line prefer-const
     let { code: transformed, externalize } = await this.options.fetchModule(id)
 
     if (externalize) {
@@ -434,14 +434,6 @@ export class ViteNodeRunner {
         if (prop === 'default')
           return defaultExport !== undefined
         return prop in mod || (defaultExport && prop in defaultExport)
-      },
-      // this is needed for mocker to know what is available to mock
-      ownKeys(mod) {
-        const keys = Reflect.ownKeys(mod)
-        if (!defaultExport || isPrimitive(defaultExport))
-          return keys
-        const allKeys = [...keys, 'default', ...Reflect.ownKeys(defaultExport)]
-        return Array.from(new Set(allKeys))
       },
       getOwnPropertyDescriptor(mod, prop) {
         const descriptor = Reflect.getOwnPropertyDescriptor(mod, prop)

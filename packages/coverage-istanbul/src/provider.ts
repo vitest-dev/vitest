@@ -2,7 +2,7 @@
 import { existsSync, promises as fs } from 'fs'
 import { relative, resolve } from 'pathe'
 import type { TransformPluginContext } from 'rollup'
-import type { AfterSuiteRunMeta, CoverageIstanbulOptions, CoverageProvider, ResolvedCoverageOptions, Vitest } from 'vitest'
+import type { AfterSuiteRunMeta, CoverageIstanbulOptions, CoverageProvider, ReportContext, ResolvedCoverageOptions, Vitest } from 'vitest'
 import { configDefaults, defaultExclude, defaultInclude } from 'vitest/config'
 import libReport from 'istanbul-lib-report'
 import reports from 'istanbul-reports'
@@ -66,7 +66,7 @@ export class IstanbulCoverageProvider implements CoverageProvider {
       include: typeof this.options.include === 'undefined' ? undefined : [...this.options.include],
       exclude: [...defaultExclude, ...defaultInclude, ...this.options.exclude],
       excludeNodeModules: true,
-      extension: configDefaults.coverage.extension,
+      extension: this.options.extension,
     })
   }
 
@@ -93,19 +93,19 @@ export class IstanbulCoverageProvider implements CoverageProvider {
 
   async clean(clean = true) {
     if (clean && existsSync(this.options.reportsDirectory))
-      await fs.rm(this.options.reportsDirectory, { recursive: true, force: true })
+      await fs.rm(this.options.reportsDirectory, { recursive: true, force: true, maxRetries: 10 })
 
     this.coverages = []
   }
 
-  async reportCoverage() {
+  async reportCoverage({ allTestsRun }: ReportContext) {
     const mergedCoverage: CoverageMap = this.coverages.reduce((coverage, previousCoverageMap) => {
       const map = libCoverage.createCoverageMap(coverage)
       map.merge(previousCoverageMap)
       return map
     }, {})
 
-    if (this.options.all)
+    if (this.options.all && allTestsRun)
       await this.includeUntestedFiles(mergedCoverage)
 
     includeImplicitElseBranches(mergedCoverage)

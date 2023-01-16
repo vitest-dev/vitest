@@ -1,3 +1,5 @@
+/* eslint-disable n/no-deprecated-api */
+
 import { installSourcemapsSupport } from 'vite-node/source-map'
 import { environments } from '../integrations/env'
 import type { Environment, ResolvedConfig } from '../types'
@@ -22,6 +24,11 @@ export async function setupGlobalEnv(config: ResolvedConfig) {
 
   if (globalSetup)
     return
+
+  // always mock "required" `css` files, because we cannot process them
+  require.extensions['.css'] = () => ({})
+  require.extensions['.scss'] = () => ({})
+  require.extensions['.sass'] = () => ({})
 
   globalSetup = true
 

@@ -25,10 +25,11 @@ const defaultCoverageExcludes = [
 ]
 
 const coverageConfigDefaults = {
+  all: false,
   provider: 'c8',
   enabled: false,
   clean: true,
-  cleanOnRerun: false,
+  cleanOnRerun: true,
   reportsDirectory: './coverage',
   excludeNodeModules: true,
   exclude: defaultCoverageExcludes,
@@ -66,7 +67,7 @@ const config = {
   exclude: defaultExclude,
   testTimeout: 5000,
   hookTimeout: 10000,
-  teardownTimeout: 1000,
+  teardownTimeout: 10000,
   isolate: true,
   watchExclude: ['**/node_modules/**', '**/dist/**'],
   forceRerunTriggers: [

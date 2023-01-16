@@ -125,7 +125,7 @@ export class ViteNodeServer {
   private async _fetchModule(id: string): Promise<FetchResult> {
     let result: FetchResult
 
-    const filePath = toFilePath(id, this.server.config.root)
+    const { path: filePath } = toFilePath(id, this.server.config.root)
 
     const module = this.server.moduleGraph.getModuleById(id)
     const timestamp = module ? module.lastHMRTimestamp : null

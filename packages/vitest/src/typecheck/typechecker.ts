@@ -1,11 +1,11 @@
 import { rm } from 'node:fs/promises'
 import type { ExecaChildProcess } from 'execa'
 import { execa } from 'execa'
-import { resolve } from 'pathe'
+import { extname, resolve } from 'pathe'
 import { SourceMapConsumer } from 'source-map'
-import { ensurePackageInstalled } from '../utils'
+import { ensurePackageInstalled, getTasks } from '../utils'
 import type { Awaitable, File, ParsedStack, Task, TaskResultPack, TaskState, TscErrorInfo, Vitest } from '../types'
-import { getRawErrsMapFromTsCompile, getTsconfigPath } from './parse'
+import { getRawErrsMapFromTsCompile, getTsconfig } from './parse'
 import { createIndexMap } from './utils'
 import type { FileInformation } from './collect'
 import { collectTests } from './collect'
@@ -36,6 +36,7 @@ export class Typechecker {
 
   private _tests: Record<string, FileInformation> | null = {}
   private tempConfigPath?: string
+  private allowJs?: boolean
   private process!: ExecaChildProcess
 
   constructor(protected ctx: Vitest, protected files: string[]) {}
@@ -56,9 +57,16 @@ export class Typechecker {
     return collectTests(this.ctx, filepath)
   }
 
+  protected getFiles() {
+    return this.files.filter((filename) => {
+      const extension = extname(filename)
+      return extension !== '.js' || this.allowJs
+    })
+  }
+
   public async collectTests() {
     const tests = (await Promise.all(
-      this.files.map(filepath => this.collectFileTests(filepath)),
+      this.getFiles().map(filepath => this.collectFileTests(filepath)),
     )).reduce((acc, data) => {
       if (!data)
         return acc
@@ -69,9 +77,29 @@ export class Typechecker {
     return tests
   }
 
+  protected markPassed(file: File) {
+    if (!file.result?.state) {
+      file.result = {
+        state: 'pass',
+      }
+    }
+    const markTasks = (tasks: Task[]): void => {
+      for (const task of tasks) {
+        if ('tasks' in task)
+          markTasks(task.tasks)
+        if (!task.result?.state && task.mode === 'run') {
+          task.result = {
+            state: 'pass',
+          }
+        }
+      }
+    }
+    markTasks(file.tasks)
+  }
+
   protected async prepareResults(output: string) {
     const typeErrors = await this.parseTscLikeOutput(output)
-    const testFiles = new Set(this.files)
+    const testFiles = new Set(this.getFiles())
 
     if (!this._tests)
       this._tests = await this.collectTests()
@@ -83,45 +111,42 @@ export class Typechecker {
       const { file, definitions, map, parsed } = this._tests![path]
       const errors = typeErrors.get(path)
       files.push(file)
-      if (!errors)
+      if (!errors) {
+        this.markPassed(file)
         return
+      }
       const sortedDefinitions = [...definitions.sort((a, b) => b.start - a.start)]
       // has no map for ".js" files that use // @ts-check
       const mapConsumer = map && new SourceMapConsumer(map)
       const indexMap = createIndexMap(parsed)
-      const markFailed = (task: Task) => {
+      const markState = (task: Task, state: TaskState) => {
         task.result = {
-          state: task.mode === 'run' || task.mode === 'only' ? 'fail' : task.mode,
+          state: task.mode === 'run' || task.mode === 'only' ? state : task.mode,
         }
         if (task.suite)
-          markFailed(task.suite)
+          markState(task.suite, state)
       }
-      errors.forEach(({ error, originalError }, idx) => {
+      errors.forEach(({ error, originalError }) => {
         const originalPos = mapConsumer?.generatedPositionFor({
           line: originalError.line,
           column: originalError.column,
           source: path,
         }) || originalError
         const index = indexMap.get(`${originalPos.line}:${originalPos.column}`)
-        const definition = (index != null && sortedDefinitions.find(def => def.start <= index && def.end >= index)) || file
-        const suite = 'task' in definition ? definition.task : definition
+        const definition = (index != null && sortedDefinitions.find(def => def.start <= index && def.end >= index))
+        const suite = definition ? definition.task : file
         const state: TaskState = suite.mode === 'run' || suite.mode === 'only' ? 'fail' : suite.mode
-        const task: Task = {
-          type: 'typecheck',
-          id: `${path}${idx.toString()}`,
-          name: `error expect ${idx + 1}`, // TODO naming
-          mode: suite.mode,
-          file,
-          suite,
-          result: {
-            state,
-            error: state === 'fail' ? error : undefined,
-          },
+        const errors = suite.result?.errors || []
+        suite.result = {
+          state,
+          errors,
         }
-        if (state === 'fail')
-          markFailed(suite)
-        suite.tasks.push(task)
+        errors.push(error)
+        if (state === 'fail' && suite.suite)
+          markState(suite.suite, 'fail')
       })
+
+      this.markPassed(file)
     })
 
     typeErrors.forEach((errors, path) => {
@@ -179,11 +204,22 @@ export class Typechecker {
     await ensurePackageInstalled(packageName, root)
   }
 
-  public async start() {
-    const { root, watch, typecheck } = this.ctx.config
+  public async prepare() {
+    const { root, typecheck } = this.ctx.config
     await this.ensurePackageInstalled(root, typecheck.checker)
 
-    this.tempConfigPath = await getTsconfigPath(root, typecheck)
+    const { config, path } = await getTsconfig(root, typecheck)
+
+    this.tempConfigPath = path
+    this.allowJs = typecheck.allowJs || config.allowJs || false
+  }
+
+  public async start() {
+    if (!this.tempConfigPath)
+      throw new Error('tsconfig was not initialized')
+
+    const { root, watch, typecheck } = this.ctx.config
+
     const args = ['--noEmit', '--pretty', 'false', '-p', this.tempConfigPath]
     // use builtin watcher, because it's faster
     if (watch)
@@ -223,7 +259,6 @@ export class Typechecker {
       await child
       this._result = await this.prepareResults(output)
       await this._onParseEnd?.(this._result)
-      await this.clear()
     }
   }
 
@@ -236,6 +271,9 @@ export class Typechecker {
   }
 
   public getTestPacks() {
-    return Object.values(this._tests || {}).map(i => [i.file.id, undefined] as TaskResultPack)
+    return Object.values(this._tests || {})
+      .map(({ file }) => getTasks(file))
+      .flat()
+      .map(i => [i.id, undefined] as TaskResultPack)
   }
 }

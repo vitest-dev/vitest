@@ -127,7 +127,9 @@ export function createPool(ctx: Vitest): WorkerPool {
 
   return {
     runTests: runWithFiles('run'),
-    close: async () => {}, // TODO: not sure why this will cause Node crash: pool.destroy(),
+    close: async () => {
+      await Promise.all(pool.threads.map(w => w.terminate()))
+    },
   }
 }
 
@@ -138,7 +140,8 @@ function createChannel(ctx: Vitest) {
 
   createBirpc<{}, WorkerRPC>(
     {
-      onWorkerExit(code) {
+      async onWorkerExit(error, code) {
+        await ctx.logger.printError(error, false, 'Unexpected Exit')
         process.exit(code || 1)
       },
       snapshotSaved(snapshot) {

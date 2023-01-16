@@ -50,11 +50,11 @@ async function main() {
   }
   else {
     for (let i = 0; i < args.length; i++) {
-      if (args[i].startsWith('--segfault-retry=')) {
+      if (args[i].startsWith('--segfault-retry=') || args[i].startsWith('--segfaultRetry=')) {
         retries = +args[i].split('=')[1]
         break
       }
-      else if (args[i] === '--segfault-retry' && args[i + 1]?.match(/^\d+$/)) {
+      else if ((args[i] === '--segfault-retry' || args[i] === '--segfaultRetry') && args[i + 1]?.match(/^\d+$/)) {
         retries = +args[i + 1]
         break
       }

@@ -90,6 +90,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
           open = '/'
 
         const config: ViteConfig = {
+          root: viteConfig.test?.root || options.root,
           esbuild: {
             sourcemap: 'external',
 
@@ -171,6 +172,15 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
 
         for (const name in envs)
           process.env[name] ??= envs[name]
+
+        // don't watch files in run mode
+        if (!options.watch) {
+          viteConfig.server.watch = {
+            persistent: false,
+            depth: 0,
+            ignored: ['**/*'],
+          }
+        }
       },
       async configureServer(server) {
         try {
