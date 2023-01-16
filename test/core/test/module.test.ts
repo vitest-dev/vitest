@@ -30,7 +30,7 @@ describe('validating nested defaults in isolation', () => {
   it.each([
     nestedDefaultCjs,
     nestedDefaultExternalCjs,
-  ])('nested default should be resolved, because environment is not node', (mod) => {
+  ])('nested default should be resolved', (mod) => {
     expect(mod).toHaveProperty('default')
     expect(mod.default).not.toHaveProperty('default')
     expect(mod.default.a).toBe('a')
