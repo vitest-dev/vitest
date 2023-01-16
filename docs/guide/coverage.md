@@ -125,3 +125,7 @@ if (condition) {
 ```
 
 Unfortunately this does not work for `c8` at the moment.
+
+## Other Options
+
+To see all configurable options for coverage, see the [coverage Config Reference](https://vitest.dev/config/#coverage).
