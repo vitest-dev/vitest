@@ -94,7 +94,7 @@ importers:
     specifiers:
       '@iconify-json/carbon': ^1.1.13
       '@unocss/reset': ^0.48.3
-      '@vite-pwa/vitepress': 0.0.4
+      '@vite-pwa/vitepress': ^0.0.4
       '@vitejs/plugin-vue': latest
       '@vueuse/core': ^9.10.0
       esno: ^0.16.3
