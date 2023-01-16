@@ -1,0 +1,11 @@
+{
+  "name": "@vitest/test-setup",
+  "private": true,
+  "scripts": {
+    "test": "vitest"
+  },
+  "devDependencies": {
+    "execa": "^6.1.0",
+    "vitest": "workspace:*"
+  }
+}
