@@ -30,7 +30,7 @@ export interface WorkerRPC {
   onWorkerExit: (error: unknown, code?: number) => void
   onPathsCollected: (paths: string[]) => void
   onUserConsoleLog: (log: UserConsoleLog) => void
-  onUnhandledRejection: (err: unknown) => void
+  onUnhandledError: (err: unknown, type: string) => void
   onCollected: (files: File[]) => void
   onAfterSuiteRun: (meta: AfterSuiteRunMeta) => void
   onTaskUpdate: (pack: TaskResultPack[]) => void

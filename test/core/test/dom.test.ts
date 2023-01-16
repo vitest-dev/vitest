@@ -161,3 +161,13 @@ it('uses jsdom ArrayBuffer', async () => {
   expect(arraybuffer instanceof ArrayBuffer).toBeTruthy()
   expect(arraybuffer.constructor === ArrayBuffer).toBeTruthy()
 })
+
+it('doesn\'t throw, if listening for error', () => {
+  const spy = vi.fn((e: Event) => e.preventDefault())
+  window.addEventListener('error', spy)
+  addEventListener('custom', () => {
+    throw new Error('some error')
+  })
+  dispatchEvent(new Event('custom'))
+  expect(spy).toHaveBeenCalled()
+})

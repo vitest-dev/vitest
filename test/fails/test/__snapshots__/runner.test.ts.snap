@@ -17,3 +17,5 @@ exports[`should fails > nested-suite.test.ts > nested-suite.test.ts 1`] = `"Asse
 exports[`should fails > stall.test.ts > stall.test.ts 1`] = `"TypeError: failure"`;
 
 exports[`should fails > test-timeout.test.ts > test-timeout.test.ts 1`] = `"Error: Test timed out in 10ms."`;
+
+exports[`should fails > unhandled.test.ts > unhandled.test.ts 1`] = `"Error: some error"`;

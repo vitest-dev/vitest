@@ -74,7 +74,7 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
   if (testName) {
     ctx.logger.error(c.red(`The latest test that migh've cause the error is "${c.bold(testName)}". It might mean one of the following:`
     + '\n- The error was thrown, while Vitest was running this test.'
-    + '\n- This was the last recorder test before the error was thrown, if error originated after test finished its execution.'))
+    + '\n- This was the last recorded test before the error was thrown, if error originated after test finished its execution.'))
   }
 
   if (typeof e.cause === 'object' && e.cause && 'name' in e.cause) {

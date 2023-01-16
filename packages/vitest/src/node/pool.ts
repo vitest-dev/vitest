@@ -184,8 +184,8 @@ function createChannel(ctx: Vitest) {
         ctx.state.updateUserLog(log)
         ctx.report('onUserConsoleLog', log)
       },
-      onUnhandledRejection(err) {
-        ctx.state.catchError(err, 'Unhandled Rejection')
+      onUnhandledError(err, type) {
+        ctx.state.catchError(err, type)
       },
       onFinished(files) {
         ctx.report('onFinished', files, ctx.state.getUnhandledErrors())
