@@ -2553,6 +2553,19 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
   vi.advanceTimersByTime(150)
   ```
 
+### vi.advanceTimersByTimeAsync
+
+- **Type:** `(ms: number) => Promise<Vitest>`
+
+  Works just like `runAllTimersAsync`, but will end after passed milliseconds. This will include asynchronously set timers. For example this will log `1, 2, 3` and will not throw:
+
+  ```ts
+  let i = 0
+  setInterval(() => Promise.resolve().then(() => console.log(++i)), 50)
+
+  await vi.advanceTimersByTimeAsync(150)
+  ```
+
 ### vi.advanceTimersToNextTimer
 
 - **Type:** `() => Vitest`
@@ -2566,6 +2579,21 @@ Vitest provides utility functions to help you out through it's **vi** helper. Yo
   vi.advanceTimersToNextTimer() // log 1
     .advanceTimersToNextTimer() // log 2
     .advanceTimersToNextTimer() // log 3
+  ```
+
+### vi.advanceTimersToNextTimerAsync
+
+- **Type:** `() => Promise<Vitest>`
+
+  Will call next available timer even if it was set asynchronously. Useful to make assertions between each timer call. You can chain call it to manage timers by yourself.
+
+  ```ts
+  let i = 0
+  setInterval(() => Promise.resolve().then(() => console.log(++i)), 50)
+
+  vi.advanceTimersToNextTimerAsync() // log 1
+    .advanceTimersToNextTimerAsync() // log 2
+    .advanceTimersToNextTimerAsync() // log 3
   ```
 
 ### vi.getTimerCount
@@ -2984,6 +3012,21 @@ IntersectionObserver === undefined
   vi.runAllTimers()
   ```
 
+### vi.runAllTimersAsync
+
+- **Type:** `() => Promise<Vitest>`
+
+  This method will asynchronously invoke every initiated timer until the timers queue is empty. It means that every timer called during `runAllTimersAsync` will be fired even asynchronous timers. If you have an infinite interval,
+  it will throw after 10 000 tries. For example this will log `result`:
+
+  ```ts
+  setTimeout(async () => {
+    console.log(await Promise.resolve('result'))
+  }, 100)
+
+  await vi.runAllTimersAsync()
+  ```
+
 ### vi.runOnlyPendingTimers
 
 - **Type:** `() => Vitest`
@@ -2995,6 +3038,28 @@ IntersectionObserver === undefined
   setInterval(() => console.log(++i), 50)
 
   vi.runOnlyPendingTimers()
+  ```
+
+### vi.runOnlyPendingTimersAsync
+
+- **Type:** `() => Promise<Vitest>`
+
+  This method will asynchronously call every timer that was initiated after `vi.useFakeTimers()` call, even asynchronous ones. It will not fire any timer that was initiated during its call. For example this will log `2, 3, 3, 1`:
+
+  ```ts
+  setTimeout(() => {
+    console.log(1)
+  }, 100)
+  setTimeout(() => {
+    Promise.resolve().then(() => {
+      console.log(2)
+      setInterval(() => {
+        console.log(3)
+      }, 40)
+    })
+  }, 10)
+
+  await vi.runOnlyPendingTimersAsync()
   ```
 
 ### vi.setSystemTime
