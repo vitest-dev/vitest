@@ -23,6 +23,23 @@ expect.extend({
 })
 ```
 
+If you are using TypeScript, you can extend default Matchers interface with the code bellow:
+
+```ts
+interface CustomMatchers<R = unknown> {
+  toBeFoo(): R
+}
+
+declare global {
+  namespace Vi {
+    interface Assertion extends CustomMatchers {}
+    interface AsymmetricMatchersContaining extends CustomMatchers {}
+  }
+
+  // Note: augmenting jest.Matchers interface will also work.
+}
+```
+
 The return value of a matcher should be compatible with the following interface:
 
 ```ts

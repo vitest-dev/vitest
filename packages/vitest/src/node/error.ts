@@ -69,10 +69,10 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
   const testPath = (e as any).VITEST_TEST_PATH
   const testName = (e as any).VITEST_TEST_NAME
   // testName has testPath inside
-  if (testPath && !testName)
+  if (testPath)
     ctx.logger.error(c.red(`This error originated in "${c.bold(testPath)}" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.`))
   if (testName) {
-    ctx.logger.error(c.red(`The latest test that migh've cause the error is "${c.bold(testName)}". It might mean one of the following:`
+    ctx.logger.error(c.red(`The latest test that might've caused the error is "${c.bold(testName)}". It might mean one of the following:`
     + '\n- The error was thrown, while Vitest was running this test.'
     + '\n- This was the last recorder test before the error was thrown, if error originated after test finished its execution.'))
   }
@@ -84,7 +84,7 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
 
   handleImportOutsideModuleError(e.stack || e.stackStr || '', ctx)
 
-  // Eg. AssertionError from assert does not set showDiff but has both actual and expected properties
+  // E.g. AssertionError from assert does not set showDiff but has both actual and expected properties
   if (e.showDiff || (e.showDiff === undefined && e.actual && e.expected)) {
     displayDiff(stringify(e.actual), stringify(e.expected), ctx.logger.console, {
       outputTruncateLength: ctx.config.outputTruncateLength,
