@@ -8,7 +8,7 @@ declare module '*.vue' {
   export default component
 }
 
-const __REPORT__: boolean
+const __BASE_PATH__: string
 
 declare interface Window {
   METADATA_PATH?: string

@@ -15,7 +15,7 @@ const debugLink = 'http://127.0.0.1:4173'
 
 export const config: UserConfig = {
   root: __dirname,
-  base: '/__vitest__/',
+  base: './',
   resolve: {
     dedupe: ['vue'],
     alias: {
@@ -24,7 +24,7 @@ export const config: UserConfig = {
     },
   },
   define: {
-    __REPORT__: false,
+    __BASE_PATH__: '"/__vitest__/"',
   },
   plugins: [
     Vue(),
