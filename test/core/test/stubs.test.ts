@@ -5,12 +5,32 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 declare global {
   // eslint-disable-next-line no-var
   var __defined__: unknown
+  // eslint-disable-next-line no-var
+  var __setter__: unknown
 }
 
 describe('stubbing globals', () => {
   beforeEach(() => {
     delete globalThis.__defined__
+    if (globalThis.__setter__)
+      delete globalThis.__setter__
     vi.unstubAllGlobals()
+  })
+
+  it('overrites setter', () => {
+    const descriptor = {
+      get: () => 'getter',
+      set: () => {},
+      configurable: true,
+    }
+    Object.defineProperty(globalThis, '__setter__', descriptor)
+    expect(__setter__).toBe('getter')
+    vi.stubGlobal('__setter__', 'stubbed')
+    expect(__setter__).toBe('stubbed')
+    expect(globalThis.__setter__).toBe('stubbed')
+    expect(Object.getOwnPropertyDescriptor(globalThis, '__setter__')).not.toBe(descriptor)
+    vi.unstubAllGlobals()
+    expect(__setter__).toBe('getter')
   })
 
   it('stubs and restores already defined value', () => {

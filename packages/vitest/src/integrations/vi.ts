@@ -259,8 +259,12 @@ class VitestUtils {
   public stubGlobal(name: string | symbol | number, value: any) {
     if (!this._stubsGlobal.has(name))
       this._stubsGlobal.set(name, Object.getOwnPropertyDescriptor(globalThis, name))
-    // @ts-expect-error we can do anything!
-    globalThis[name] = value
+    Object.defineProperty(globalThis, name, {
+      value,
+      writable: true,
+      configurable: true,
+      enumerable: true,
+    })
     return this
   }
 
