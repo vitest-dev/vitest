@@ -8,7 +8,7 @@ describe('ui', () => {
 
   it('should load ui', async () => {
     const port = '9527'
-    const ui = execa('npx', ['vitest', '--ui', '--api.port', port], {
+    const ui = execa('npx', ['vitest', '--ui', '--api.port', port, '--open', 'false'], {
       cwd: root,
       env: {
         ...process.env,
