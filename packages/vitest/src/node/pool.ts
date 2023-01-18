@@ -33,6 +33,12 @@ export function createPool(ctx: Vitest): WorkerPool {
 
   const conditions = ctx.server.config.resolve.conditions?.flatMap(c => ['--conditions', c]) || []
 
+  // Instead of passing whole process.execArgv to the workers, pick allowed options.
+  // Some options may crash worker, e.g. --prof, --title. nodejs/node#41103
+  const execArgv = process.execArgv.filter(execArg =>
+    execArg.startsWith('--cpu-prof') || execArg.startsWith('--heap-prof'),
+  )
+
   const options: TinypoolOptions = {
     filename: workerPath,
     // TODO: investigate further
@@ -44,13 +50,17 @@ export function createPool(ctx: Vitest): WorkerPool {
 
     execArgv: ctx.config.deps.registerNodeLoader
       ? [
+          ...execArgv,
           '--require',
           suppressLoaderWarningsPath,
           '--experimental-loader',
           loaderPath,
           ...conditions,
         ]
-      : conditions,
+      : [
+          ...execArgv,
+          ...conditions,
+        ],
   }
 
   if (ctx.config.isolate) {
