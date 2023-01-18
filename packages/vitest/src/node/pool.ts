@@ -138,7 +138,10 @@ export function createPool(ctx: Vitest): WorkerPool {
   return {
     runTests: runWithFiles('run'),
     close: async () => {
-      await Promise.all(pool.threads.map(w => w.terminate()))
+      // node before 16.17 has a bug that causes FATAL ERROR because of the race condition
+      const nodeVersion = Number(process.version.match(/v(\d+)\.(\d+)/)?.[0].slice(1))
+      if (nodeVersion >= 16.17)
+        await Promise.all(pool.threads.map(w => w.terminate()))
     },
   }
 }
