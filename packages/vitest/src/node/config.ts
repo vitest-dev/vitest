@@ -6,7 +6,7 @@ import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 import type { ApiConfig, ResolvedConfig, UserConfig, VitestRunMode } from '../types'
 import { defaultPort } from '../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../defaults'
-import { toArray } from '../utils'
+import { isCI, toArray } from '../utils'
 import { VitestCache } from './cache'
 import { BaseSequencer } from './sequencers/BaseSequencer'
 import { RandomSequencer } from './sequencers/RandomSequencer'
@@ -139,11 +139,10 @@ export function resolveConfig(
       : new RegExp(resolved.testNamePattern)
     : undefined
 
-  const CI = !!process.env.CI
   const UPDATE_SNAPSHOT = resolved.update || process.env.UPDATE_SNAPSHOT
   resolved.snapshotOptions = {
     snapshotFormat: resolved.snapshotFormat || {},
-    updateSnapshot: CI && !UPDATE_SNAPSHOT
+    updateSnapshot: isCI && !UPDATE_SNAPSHOT
       ? 'none'
       : UPDATE_SNAPSHOT
         ? 'all'

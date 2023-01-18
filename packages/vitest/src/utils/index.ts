@@ -7,7 +7,7 @@ import type { Suite, Task } from '../types'
 import { EXIT_CODE_RESTART } from '../constants'
 import { getWorkerState } from '../utils'
 import { getNames } from './tasks'
-import { isBrowser, isNode } from './env'
+import { isBrowser, isCI, isNode } from './env'
 
 export * from './graph'
 export * from './tasks'
@@ -83,7 +83,7 @@ export async function ensurePackageInstalled(
   if (isPackageExists(dependency, { paths: [root] }))
     return true
 
-  const promptInstall = !process.env.CI && process.stdout.isTTY
+  const promptInstall = !isCI && process.stdout.isTTY
 
   process.stderr.write(c.red(`${c.inverse(c.red(' MISSING DEP '))} Can not find dependency '${dependency}'\n\n`))
 

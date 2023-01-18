@@ -1,7 +1,7 @@
 import { performance } from 'perf_hooks'
 import c from 'picocolors'
 import type { ErrorWithDiff, File, Reporter, Task, TaskResultPack, UserConsoleLog } from '../../types'
-import { clearInterval, getFullName, getSuites, getTests, hasFailed, hasFailedSnapshot, isNode, relativePath, setInterval } from '../../utils'
+import { clearInterval, getFullName, getSuites, getTests, hasFailed, hasFailedSnapshot, isCI, isNode, relativePath, setInterval } from '../../utils'
 import type { Vitest } from '../../node'
 import { F_RIGHT } from '../../utils/figures'
 import { countTestErrors, divider, formatProjectName, formatTimeString, getStateString, getStateSymbol, pointer, renderSnapshotSummary } from './renderers/utils'
@@ -20,7 +20,7 @@ export abstract class BaseReporter implements Reporter {
   start = 0
   end = 0
   watchFilters?: string[]
-  isTTY = isNode && process.stdout?.isTTY && !process.env.CI
+  isTTY = isNode && process.stdout?.isTTY && !isCI
   ctx: Vitest = undefined!
 
   private _filesInWatchMode = new Map<string, number>()
