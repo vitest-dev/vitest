@@ -36,3 +36,26 @@ beforeAll(async () => {
       await browser.close()
   }
 })
+
+export function timeout(time: number) {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(null)
+    }, time)
+  })
+}
+
+export async function withRetry(
+  func: () => Promise<void>,
+): Promise<void> {
+  const maxTries = process.env.CI ? 200 : 50
+  for (let tries = 0; tries < maxTries; tries++) {
+    try {
+      await func()
+      return
+    }
+    catch {}
+    await timeout(50)
+  }
+  await func()
+}

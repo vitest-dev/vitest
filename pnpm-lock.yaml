@@ -1252,10 +1252,12 @@ importers:
 
   test/ui:
     specifiers:
+      execa: ^6.1.0
       fs-extra: ^10.1.0
       playwright-chromium: ^1.27.0
       vitest: workspace:*
     devDependencies:
+      execa: 6.1.0
       fs-extra: 10.1.0
       playwright-chromium: 1.29.2
       vitest: link:../../packages/vitest
