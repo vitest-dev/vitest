@@ -1250,6 +1250,16 @@ importers:
       typescript: 4.8.4
       vue-tsc: 0.40.13_typescript@4.8.4
 
+  test/ui:
+    specifiers:
+      fs-extra: ^10.1.0
+      playwright-chromium: ^1.27.0
+      vitest: workspace:*
+    devDependencies:
+      fs-extra: 10.1.0
+      playwright-chromium: 1.29.2
+      vitest: link:../../packages/vitest
+
   test/vite-config:
     specifiers:
       pathe: ^1.1.0
@@ -17174,8 +17184,23 @@ packages:
       mlly: 1.1.0
       pathe: 1.1.0
 
+  /playwright-chromium/1.29.2:
+    resolution: {integrity: sha512-iylIZpI8pD2ukBY5fQhluCx530bi2w4oUUM0PAfsxBnAYKntdj4bkTlcHuvS23EvabUS++YYi6KCI5uC517nxQ==}
+    engines: {node: '>=14'}
+    hasBin: true
+    requiresBuild: true
+    dependencies:
+      playwright-core: 1.29.2
+    dev: true
+
   /playwright-core/1.28.0:
     resolution: {integrity: sha512-nJLknd28kPBiCNTbqpu6Wmkrh63OEqJSFw9xOfL9qxfNwody7h6/L3O2dZoWQ6Oxcm0VOHjWmGiCUGkc0X3VZA==}
+    engines: {node: '>=14'}
+    hasBin: true
+    dev: true
+
+  /playwright-core/1.29.2:
+    resolution: {integrity: sha512-94QXm4PMgFoHAhlCuoWyaBYKb92yOcGVHdQLoxQ7Wjlc7Flg4aC/jbFW7xMR52OfXMVkWicue4WXE7QEegbIRA==}
     engines: {node: '>=14'}
     hasBin: true
     dev: true
