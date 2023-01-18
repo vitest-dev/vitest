@@ -346,7 +346,7 @@ export class Vitest {
       .finally(async () => {
         this.state.finishCollectingPaths()
         if (!this.config.browser)
-          await this.report('onFinished', this.state.getFiles(), this.state.getUnhandledErrors())
+          await this.report('onFinished', this.state.getFiles(paths), this.state.getUnhandledErrors())
         this.runningPromise = undefined
       })
 
