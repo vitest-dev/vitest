@@ -1,5 +1,5 @@
 import { resolveModule } from 'local-pkg'
-import { normalize, resolve } from 'pathe'
+import { normalize, relative, resolve } from 'pathe'
 import c from 'picocolors'
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 
@@ -190,6 +190,7 @@ export function resolveConfig(
         ?? resolve(resolved.root, file),
     ),
   )
+  resolved.coverage.exclude.push(...resolved.setupFiles.map(file => relative(resolved.root, file)))
 
   resolved.forceRerunTriggers = [
     ...resolved.forceRerunTriggers,

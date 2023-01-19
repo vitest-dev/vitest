@@ -1,3 +1,4 @@
+import { resolve } from 'pathe'
 import { defineConfig } from 'vitest/config'
 import vue from '@vitejs/plugin-vue'
 
@@ -16,5 +17,9 @@ export default defineConfig({
       all: true,
       reporter: ['html', 'text', 'lcov', 'json'],
     },
+    setupFiles: [
+      resolve(__dirname, './setup.ts'),
+      './src/another-setup.ts',
+    ],
   },
 })
