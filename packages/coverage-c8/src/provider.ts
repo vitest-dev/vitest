@@ -4,20 +4,25 @@ import type { Profiler } from 'inspector'
 import { takeCoverage } from 'v8'
 import { extname, resolve } from 'pathe'
 import type { RawSourceMap } from 'vite-node'
-import { configDefaults } from 'vitest/config'
+import { coverageConfigDefaults } from 'vitest/config'
 // eslint-disable-next-line no-restricted-imports
 import type { CoverageC8Options, CoverageProvider, ReportContext, ResolvedCoverageOptions } from 'vitest'
 import type { Vitest } from 'vitest/node'
+import type { Report } from 'c8'
 // @ts-expect-error missing types
 import createReport from 'c8/lib/report.js'
 // @ts-expect-error missing types
 import { checkCoverages } from 'c8/lib/commands/check-coverage.js'
 
+type Options =
+  & ResolvedCoverageOptions<'c8'>
+  & { tempDirectory: string }
+
 export class C8CoverageProvider implements CoverageProvider {
   name = 'c8'
 
   ctx!: Vitest
-  options!: ResolvedCoverageOptions & { provider: 'c8' }
+  options!: Options
 
   initialize(ctx: Vitest) {
     this.ctx = ctx
@@ -47,7 +52,7 @@ export class C8CoverageProvider implements CoverageProvider {
   async reportCoverage({ allTestsRun }: ReportContext = {}) {
     takeCoverage()
 
-    const options = {
+    const options: ConstructorParameters<typeof Report>[0] = {
       ...this.options,
       all: this.options.all && allTestsRun,
     }
@@ -151,10 +156,26 @@ export class C8CoverageProvider implements CoverageProvider {
       await fs.rm(this.options.tempDirectory, { recursive: true, force: true, maxRetries: 10 })
   }
 }
-function resolveC8Options(options: CoverageC8Options, root: string) {
-  const resolved = {
-    ...configDefaults.coverage,
-    ...options as any,
+
+function resolveC8Options(options: CoverageC8Options, root: string): Options {
+  const reportsDirectory = resolve(root, options.reportsDirectory || coverageConfigDefaults.reportsDirectory)
+  const reporter = options.reporter || coverageConfigDefaults.reporter
+
+  const resolved: Options = {
+    ...coverageConfigDefaults,
+
+    // Provider specific defaults
+    excludeNodeModules: true,
+    allowExternal: false,
+
+    // User's options
+    ...options,
+
+    // Resolved fields
+    provider: 'c8',
+    tempDirectory: process.env.NODE_V8_COVERAGE || resolve(reportsDirectory, 'tmp'),
+    reporter: Array.isArray(reporter) ? reporter : [reporter],
+    reportsDirectory,
   }
 
   if (options['100']) {
@@ -163,11 +184,6 @@ function resolveC8Options(options: CoverageC8Options, root: string) {
     resolved.branches = 100
     resolved.statements = 100
   }
-
-  resolved.reporter = resolved.reporter || []
-  resolved.reporter = Array.isArray(resolved.reporter) ? resolved.reporter : [resolved.reporter]
-  resolved.reportsDirectory = resolve(root, resolved.reportsDirectory)
-  resolved.tempDirectory = process.env.NODE_V8_COVERAGE || resolve(resolved.reportsDirectory, 'tmp')
 
   return resolved
 }
