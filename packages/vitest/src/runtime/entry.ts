@@ -1,4 +1,5 @@
 import { promises as fs } from 'node:fs'
+import mm from 'micromatch'
 import type { EnvironmentOptions, ResolvedConfig, VitestEnvironment } from '../types'
 import { getWorkerState, resetModules } from '../utils'
 import { vi } from '../integrations/vi'
@@ -31,7 +32,21 @@ export async function run(files: string[], config: ResolvedConfig): Promise<void
   // if calling with no-threads, this will be the whole suite
   const filesWithEnv = await Promise.all(files.map(async (file) => {
     const code = await fs.readFile(file, 'utf-8')
-    const env = code.match(/@(?:vitest|jest)-environment\s+?([\w-]+)\b/)?.[1] || config.environment || 'node'
+
+    // 1. Check for control comments in the file
+    let env = code.match(/@(?:vitest|jest)-environment\s+?([\w-]+)\b/)?.[1]
+    // 2. Check for globals
+    if (!env) {
+      for (const [glob, target] of config.environmentMatchGlobs || []) {
+        if (mm.isMatch(file, glob)) {
+          env = target
+          break
+        }
+      }
+    }
+    // 3. Fallback to global env
+    env ||= config.environment || 'node'
+
     const envOptions = JSON.parse(code.match(/@(?:vitest|jest)-environment-options\s+?(.+)/)?.[1] || 'null')
     return {
       file,
