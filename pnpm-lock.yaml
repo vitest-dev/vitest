@@ -94,6 +94,7 @@ importers:
     specifiers:
       '@iconify-json/carbon': ^1.1.13
       '@unocss/reset': ^0.48.3
+      '@vite-pwa/vitepress': ^0.0.4
       '@vitejs/plugin-vue': latest
       '@vueuse/core': ^9.10.0
       esno: ^0.16.3
@@ -104,7 +105,7 @@ importers:
       unocss: ^0.48.3
       unplugin-vue-components: ^0.22.12
       vite: ^4.0.0
-      vite-plugin-pwa: 0.14.1
+      vite-plugin-pwa: ^0.14.1
       vitepress: 1.0.0-alpha.36
       vue: latest
       workbox-window: ^6.5.4
@@ -115,6 +116,7 @@ importers:
     devDependencies:
       '@iconify-json/carbon': 1.1.13
       '@unocss/reset': 0.48.3
+      '@vite-pwa/vitepress': 0.0.4_vite-plugin-pwa@0.14.1
       '@vitejs/plugin-vue': 4.0.0_vite@4.0.0+vue@3.2.45
       esno: 0.16.3
       fast-glob: 3.2.12
@@ -5650,8 +5652,8 @@ packages:
       rollup: 2.79.1
     dev: true
 
-  /@rollup/plugin-replace/5.0.1_rollup@2.79.1:
-    resolution: {integrity: sha512-Z3MfsJ4CK17BfGrZgvrcp/l6WXoKb0kokULO+zt/7bmcyayokDaQ2K3eDJcRLCTAlp5FPI4/gz9MHAsosz4Rag==}
+  /@rollup/plugin-replace/5.0.2_rollup@2.79.1:
+    resolution: {integrity: sha512-M9YXNekv/C/iHHK+cvORzfRYfPbq0RDD8r0G+bMiTXjNGKulPnCT9O3Ss46WfhI6ZOCgApOP7xAdmCQJ+U2LAA==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
       rollup: ^1.20.0||^2.0.0||^3.0.0
@@ -5660,7 +5662,7 @@ packages:
         optional: true
     dependencies:
       '@rollup/pluginutils': 5.0.2_rollup@2.79.1
-      magic-string: 0.26.7
+      magic-string: 0.27.0
       rollup: 2.79.1
     dev: true
 
@@ -8118,6 +8120,14 @@ packages:
       vite: 4.0.0
     transitivePeerDependencies:
       - rollup
+    dev: true
+
+  /@vite-pwa/vitepress/0.0.4_vite-plugin-pwa@0.14.1:
+    resolution: {integrity: sha512-+uMmxOe8G5X+9zbeP7htVINv0MVn8tuaKEE96jHXmV4dRb5HJX9U8WbgSJ4QD8ezoeYABjPjagGWOV3l0DMrtw==}
+    peerDependencies:
+      vite-plugin-pwa: ^0.14.0
+    dependencies:
+      vite-plugin-pwa: 0.14.1_hsd7wmhtxdre4ds2vghqydhvau
     dev: true
 
   /@vitejs/plugin-react/1.3.2:
@@ -13973,8 +13983,8 @@ packages:
       postcss: 7.0.39
     dev: true
 
-  /idb/7.0.2:
-    resolution: {integrity: sha512-jjKrT1EnyZewQ/gCBb/eyiYrhGzws2FeY92Yx8qT9S9GeQAmo4JFVIiWRIfKW/6Ob9A+UDAOW9j9jn58fy2HIg==}
+  /idb/7.1.1:
+    resolution: {integrity: sha512-gchesWBzyvGHRO9W8tzUWFDycow5gwjvFKfyV9FF32Y7F50yZMp7mP+T2mJIWFx49zicqyC4uefHM17o6xKIVQ==}
     dev: true
 
   /ieee754/1.2.1:
@@ -20787,7 +20797,7 @@ packages:
       vite: ^3.1.0 || ^4.0.0
       workbox-window: ^6.5.4
     dependencies:
-      '@rollup/plugin-replace': 5.0.1_rollup@2.79.1
+      '@rollup/plugin-replace': 5.0.2_rollup@2.79.1
       debug: 4.3.4
       fast-glob: 3.2.12
       pretty-bytes: 6.0.0
@@ -21449,7 +21459,7 @@ packages:
   /workbox-background-sync/6.5.4:
     resolution: {integrity: sha512-0r4INQZMyPky/lj4Ou98qxcThrETucOde+7mRGJl13MPJugQNKeZQOdIJe/1AchOP23cTqHcN/YVpD6r8E6I8g==}
     dependencies:
-      idb: 7.0.2
+      idb: 7.1.1
       workbox-core: 6.5.4
     dev: true
 
@@ -21518,7 +21528,7 @@ packages:
   /workbox-expiration/6.5.4:
     resolution: {integrity: sha512-jUP5qPOpH1nXtjGGh1fRBa1wJL2QlIb5mGpct3NzepjGG2uFFBn4iiEBiI9GUmfAFR2ApuRhDydjcRmYXddiEQ==}
     dependencies:
-      idb: 7.0.2
+      idb: 7.1.1
       workbox-core: 6.5.4
     dev: true
 
