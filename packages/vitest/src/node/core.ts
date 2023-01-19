@@ -238,10 +238,7 @@ export class Vitest {
 
     await this.runFiles(files)
 
-    if (this.coverageProvider) {
-      this.logger.log(c.blue(' % ') + c.dim('Coverage report from ') + c.yellow(this.coverageProvider.name))
-      await this.coverageProvider.reportCoverage()
-    }
+    await this.reportCoverage(true)
 
     if (this.config.watch && !this.config.browser)
       await this.report('onWatcherStart')
@@ -349,7 +346,7 @@ export class Vitest {
       .finally(async () => {
         this.state.finishCollectingPaths()
         if (!this.config.browser)
-          await this.report('onFinished', this.state.getFiles(), this.state.getUnhandledErrors())
+          await this.report('onFinished', this.state.getFiles(paths), this.state.getUnhandledErrors())
         this.runningPromise = undefined
       })
 
@@ -357,8 +354,14 @@ export class Vitest {
   }
 
   async rerunFiles(files: string[] = this.state.getFilepaths(), trigger?: string) {
+    if (this.coverageProvider && this.config.coverage.cleanOnRerun)
+      await this.coverageProvider.clean()
+
     await this.report('onWatcherRerun', files, trigger)
     await this.runFiles(files)
+
+    await this.reportCoverage(!trigger)
+
     if (!this.config.browser)
       await this.report('onWatcherStart')
   }
@@ -435,7 +438,7 @@ export class Vitest {
 
       await this.runFiles(files)
 
-      await this.coverageProvider?.reportCoverage()
+      await this.reportCoverage(false)
 
       if (!this.config.browser)
         await this.report('onWatcherStart')
@@ -531,6 +534,13 @@ export class Vitest {
     })
 
     return rerun
+  }
+
+  private async reportCoverage(allTestsRun: boolean) {
+    if (this.coverageProvider) {
+      this.logger.log(c.blue(' % ') + c.dim('Coverage report from ') + c.yellow(this.coverageProvider.name))
+      await this.coverageProvider.reportCoverage({ allTestsRun })
+    }
   }
 
   async close() {

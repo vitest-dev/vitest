@@ -181,8 +181,28 @@ export default defineConfig({
           text: 'API',
           items: [
             {
-              text: 'API Reference',
+              text: 'Test API Reference',
               link: '/api/',
+            },
+            {
+              text: 'Mock Functions',
+              link: '/api/mock',
+            },
+            {
+              text: 'Vi Utility',
+              link: '/api/vi',
+            },
+            {
+              text: 'Expect',
+              link: '/api/expect',
+            },
+            {
+              text: 'ExpectTypeOf',
+              link: '/api/expect-typeof',
+            },
+            {
+              text: 'assertType',
+              link: '/api/assert-type',
             },
           ],
         },

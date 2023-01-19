@@ -6,7 +6,7 @@ import { extname, resolve } from 'pathe'
 import type { RawSourceMap } from 'vite-node'
 import { configDefaults } from 'vitest/config'
 // eslint-disable-next-line no-restricted-imports
-import type { CoverageC8Options, CoverageProvider, ResolvedCoverageOptions } from 'vitest'
+import type { CoverageC8Options, CoverageProvider, ReportContext, ResolvedCoverageOptions } from 'vitest'
 import type { Vitest } from 'vitest/node'
 // @ts-expect-error missing types
 import createReport from 'c8/lib/report.js'
@@ -44,9 +44,15 @@ export class C8CoverageProvider implements CoverageProvider {
     takeCoverage()
   }
 
-  async reportCoverage() {
+  async reportCoverage({ allTestsRun }: ReportContext) {
     takeCoverage()
-    const report = createReport(this.ctx.config.coverage)
+
+    const options = {
+      ...this.options,
+      all: this.options.all && allTestsRun,
+    }
+
+    const report = createReport(options)
 
     interface MapAndSource { map: RawSourceMap; source: string | undefined }
     type SourceMapMeta = { url: string; filepath: string } & MapAndSource
@@ -136,7 +142,7 @@ export class C8CoverageProvider implements CoverageProvider {
     }
 
     await report.run()
-    await checkCoverages(this.options, report)
+    await checkCoverages(options, report)
 
     // Note that this will only clean up the V8 reports generated so far.
     // There will still be a temp directory with some reports when vitest exists,

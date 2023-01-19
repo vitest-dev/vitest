@@ -28,10 +28,19 @@ test('dynamic aliased import works', async () => {
   expect(stringTimeoutMod).toBe(variableTimeoutMod)
 })
 
-test('dynamic absolute import works', async () => {
+test('dynamic absolute from root import works', async () => {
   const stringTimeoutMod = await import('./../src/timeout')
 
   const timeoutPath = '/src/timeout'
+  const variableTimeoutMod = await import(timeoutPath)
+
+  expect(stringTimeoutMod).toBe(variableTimeoutMod)
+})
+
+test('dynamic absolute with extension mport works', async () => {
+  const stringTimeoutMod = await import('./../src/timeout')
+
+  const timeoutPath = '/src/timeout.ts'
   const variableTimeoutMod = await import(timeoutPath)
 
   expect(stringTimeoutMod).toBe(variableTimeoutMod)

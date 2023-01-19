@@ -61,8 +61,18 @@ class VitestUtils {
     return this
   }
 
+  public async runOnlyPendingTimersAsync() {
+    await this._timers.runOnlyPendingTimersAsync()
+    return this
+  }
+
   public runAllTimers() {
     this._timers.runAllTimers()
+    return this
+  }
+
+  public async runAllTimersAsync() {
+    await this._timers.runAllTimersAsync()
     return this
   }
 
@@ -76,8 +86,18 @@ class VitestUtils {
     return this
   }
 
+  public async advanceTimersByTimeAsync(ms: number) {
+    await this._timers.advanceTimersByTimeAsync(ms)
+    return this
+  }
+
   public advanceTimersToNextTimer() {
     this._timers.advanceTimersToNextTimer()
+    return this
+  }
+
+  public async advanceTimersToNextTimerAsync() {
+    await this._timers.advanceTimersToNextTimerAsync()
     return this
   }
 
@@ -239,8 +259,12 @@ class VitestUtils {
   public stubGlobal(name: string | symbol | number, value: any) {
     if (!this._stubsGlobal.has(name))
       this._stubsGlobal.set(name, Object.getOwnPropertyDescriptor(globalThis, name))
-    // @ts-expect-error we can do anything!
-    globalThis[name] = value
+    Object.defineProperty(globalThis, name, {
+      value,
+      writable: true,
+      configurable: true,
+      enumerable: true,
+    })
     return this
   }
 
