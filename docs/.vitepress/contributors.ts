@@ -100,7 +100,6 @@ const plainTeamMembers: CoreTeam[] = [
     name: 'Ivan Demchuk',
     github: 'Demivan',
     fosstodon: 'demivan',
-    twitter: 'IvanDemchuk',
     title: 'A tech lead, fullstack developer',
     desc: 'Author of fluent-vue',
   },
