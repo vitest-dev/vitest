@@ -1084,9 +1084,11 @@ importers:
   test/fails:
     specifiers:
       execa: ^6.1.0
+      jsdom: ^21.0.0
       vitest: workspace:*
     devDependencies:
       execa: 6.1.0
+      jsdom: 21.0.0
       vitest: link:../../packages/vitest
 
   test/global-setup:
