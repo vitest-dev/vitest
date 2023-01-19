@@ -139,6 +139,22 @@ export interface InlineConfig {
   environmentOptions?: EnvironmentOptions
 
   /**
+   * Automatically assign environment based on globs. The first match will be used.
+   * 
+   * Format: [glob, environment-name]
+   * 
+   * @default []
+   * @example [
+   *   // all tests in tests/dom will run in jsdom
+   *   ['tests/dom/**', 'jsdom'],
+   *   // all tests in tests/ with .edge.test.ts will run in edge-runtime
+   *   ['**\/*.edge.test.ts', 'edge-runtime'],
+   *   // ...
+   * ]
+   */
+  environmentMatchGlobs?: [string, BuiltinEnvironment | string][]
+
+  /**
    * Update snapshot
    *
    * @default false

@@ -239,6 +239,8 @@ export function resolveConfig(
     ...resolved.typecheck,
   }
 
+  resolved.environmentMatchGlobs = (resolved.environmentMatchGlobs || []).map(i => [resolve(resolved.root, i[0]), i[1]])
+
   if (mode === 'typecheck') {
     resolved.include = resolved.typecheck.include
     resolved.exclude = resolved.typecheck.exclude
