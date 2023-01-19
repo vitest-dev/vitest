@@ -152,7 +152,7 @@ export interface InlineConfig {
    *   // ...
    * ]
    */
-  environmentMatchGlobs?: [string, BuiltinEnvironment | string][]
+  environmentMatchGlobs?: [string, VitestEnvironment][]
 
   /**
    * Update snapshot
