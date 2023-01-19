@@ -6,26 +6,13 @@ export interface Contributor {
   avatar: string
 }
 
-export interface SocialEntry {
-  icon: string
-  link: string
-}
-
-export interface CoreTeam extends Partial<DefaultTheme.TeamMember> {
-  avatar: string
-  name: string
+export interface CoreTeam extends DefaultTheme.TeamMember {
   // required to download avatars from GitHub
   github: string
   twitter?: string
-  webtools?: string
-  fosstodon?: string
-  hachyderm?: string
+  mastodon?: string
   discord?: string
   youtube?: string
-  sponsor?: string
-  title?: string
-  org?: string
-  desc?: string
 }
 
 const contributorsAvatars: Record<string, string> = {}
@@ -39,14 +26,8 @@ export const contributors = (contributorNames as string[]).reduce((acc, name) =>
 }, [] as Contributor[])
 const createLinks = (tm: CoreTeam): CoreTeam => {
   tm.links = [{ icon: 'github', link: `https://github.com/${tm.github}` }]
-  if (tm.webtools)
-    tm.links.push({ icon: 'mastodon', link: `https://elk.zone/m.webtoo.ls/@${tm.webtools}` })
-
-  if (tm.fosstodon)
-    tm.links.push({ icon: 'mastodon', link: `https://elk.zone/fosstodon.org/@${tm.fosstodon}` })
-
-  if (tm.hachyderm)
-    tm.links.push({ icon: 'mastodon', link: `https://elk.zone/hachyderm.io/@${tm.hachyderm}` })
+  if (tm.mastodon)
+    tm.links.push({ icon: 'mastodon', link: tm.mastodon })
 
   if (tm.discord)
     tm.links.push({ icon: 'discord', link: tm.discord })
@@ -65,7 +46,7 @@ const plainTeamMembers: CoreTeam[] = [
     avatar: contributorsAvatars.antfu,
     name: 'Anthony Fu',
     github: 'antfu',
-    webtools: 'antfu',
+    mastodon: 'https://elk.zone/m.webtoo.ls/@antfu',
     twitter: 'antfu7',
     discord: 'https://chat.antfu.me',
     youtube: 'antfu',
@@ -88,7 +69,7 @@ const plainTeamMembers: CoreTeam[] = [
     avatar: contributorsAvatars['patak-dev'],
     name: 'Patak',
     github: 'patak-dev',
-    webtools: 'patak',
+    mastodon: 'https://elk.zone/m.webtoo.ls/@patak',
     twitter: 'patak_dev',
     sponsor: 'https://github.com/sponsors/patak-dev',
     title: 'A collaborative being, working',
@@ -100,7 +81,7 @@ const plainTeamMembers: CoreTeam[] = [
     avatar: contributorsAvatars.Aslemammad,
     name: 'Mohammad Bagher',
     github: 'Aslemammad',
-    webtools: 'aslemammad',
+    mastodon: 'https://elk.zone/m.webtoo.ls/@aslemammad',
     twitter: 'asleMammadam',
     title: 'An open source developer',
     desc: 'Team member of Poimandres & Vike',
@@ -109,7 +90,7 @@ const plainTeamMembers: CoreTeam[] = [
     avatar: contributorsAvatars.Demivan,
     name: 'Ivan Demchuk',
     github: 'Demivan',
-    fosstodon: 'demivan',
+    mastodon: 'https://elk.zone/fosstodon.org/@demivan',
     title: 'A tech lead, fullstack developer',
     desc: 'Author of fluent-vue',
   },
@@ -117,7 +98,7 @@ const plainTeamMembers: CoreTeam[] = [
     avatar: contributorsAvatars.userquin,
     name: 'Joaquín Sánchez',
     github: 'userquin',
-    webtools: 'userquin',
+    mastodon: 'https://elk.zone/m.webtoo.ls/@userquin',
     twitter: 'userquin',
     title: 'A fullstack and android developer',
     desc: 'Vite\'s fanatical follower',
@@ -126,7 +107,7 @@ const plainTeamMembers: CoreTeam[] = [
     avatar: contributorsAvatars.zxch3n,
     name: 'Zixuan Chen',
     github: 'zxch3n',
-    hachyderm: 'zx',
+    mastodon: 'https://elk.zone/hachyderm.io/@zx',
     twitter: 'zxch3n',
     title: 'A fullstack developer',
     desc: 'Creating tools for collaboration',
