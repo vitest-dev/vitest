@@ -140,9 +140,9 @@ export interface InlineConfig {
 
   /**
    * Automatically assign environment based on globs. The first match will be used.
-   * 
+   *
    * Format: [glob, environment-name]
-   * 
+   *
    * @default []
    * @example [
    *   // all tests in tests/dom will run in jsdom

@@ -4,7 +4,7 @@ export default defineConfig({
   test: {
     environmentMatchGlobs: [
       ['**/*.dom.test.ts', 'happy-dom'],
-      ['test/dom/**', 'jsdom']
-    ]
+      ['test/dom/**', 'jsdom'],
+    ],
   },
 })

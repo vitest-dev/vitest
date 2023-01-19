@@ -1,11 +1,11 @@
 import { promises as fs } from 'node:fs'
+import mm from 'micromatch'
 import type { EnvironmentOptions, ResolvedConfig, VitestEnvironment } from '../types'
 import { getWorkerState, resetModules } from '../utils'
 import { vi } from '../integrations/vi'
 import { envs } from '../integrations/env'
 import { setupGlobalEnv, withEnv } from './setup'
 import { startTests } from './run'
-import mm from 'micromatch'
 
 function groupBy<T, K extends string | number | symbol >(collection: T[], iteratee: (item: T) => K) {
   return collection.reduce((acc, item) => {
@@ -37,7 +37,7 @@ export async function run(files: string[], config: ResolvedConfig): Promise<void
     let env = code.match(/@(?:vitest|jest)-environment\s+?([\w-]+)\b/)?.[1]
     // 2. Check for globals
     if (!env) {
-      for (let [glob, target] of config.environmentMatchGlobs || []) {
+      for (const [glob, target] of config.environmentMatchGlobs || []) {
         if (mm.isMatch(file, glob)) {
           env = target
           break
@@ -67,7 +67,7 @@ export async function run(files: string[], config: ResolvedConfig): Promise<void
 
     if (!files || !files.length)
       continue
-  
+
     // @ts-expect-error untyped global
     globalThis.__vitest_environment__ = environment
 
