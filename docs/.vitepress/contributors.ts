@@ -103,6 +103,22 @@ const plainTeamMembers: CoreTeam[] = [
     title: 'A fullstack developer',
     desc: 'Creating tools for collaboration',
   },
+  {
+    avatar: contributorsAvatars.poyoho,
+    name: 'Yoho Po',
+    github: 'poyoho',
+    twitter: '@yoho_po',
+    title: 'It\'s no problem in my locall',
+    desc: 'Core team member of Vite & Vitest',
+  },
+  {
+    avatar: contributorsAvatars.AriPerkkio,
+    name: 'Ari Perkkiö',
+    github: 'AriPerkkio',
+    twitter: '@perkkio_ari',
+    title: 'Core team member of Vitest, working',
+    org: 'Cloudamite',
+  },
 ]
 
 const teamMembers = plainTeamMembers.map(tm => createLinks(tm))
