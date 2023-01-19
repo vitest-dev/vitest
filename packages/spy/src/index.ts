@@ -37,6 +37,7 @@ type Classes<T> = {
 }[keyof T] & (string | symbol)
 
 export interface SpyInstance<TArgs extends any[] = any[], TReturns = any> {
+  calls: TArgs[]
   getMockName(): string
   mockName(n: string): this
   mock: MockContext<TArgs, TReturns>
