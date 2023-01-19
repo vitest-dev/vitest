@@ -20,6 +20,8 @@ export interface CoreTeam extends Partial<DefaultTheme.TeamMember> {
   webtools?: string
   fosstodon?: string
   hachyderm?: string
+  discord?: string
+  youtube?: string
   sponsor?: string
   title?: string
   org?: string
@@ -46,6 +48,12 @@ const createLinks = (tm: CoreTeam): CoreTeam => {
   if (tm.hachyderm)
     tm.links.push({ icon: 'mastodon', link: `https://elk.zone/hachyderm.io/@${tm.hachyderm}` })
 
+  if (tm.discord)
+    tm.links.push({ icon: 'discord', link: tm.discord })
+
+  if (tm.youtube)
+    tm.links.push({ icon: 'youtube', link: `https://www.youtube.com/@${tm.youtube}` })
+
   if (tm.twitter)
     tm.links.push({ icon: 'twitter', link: `https://twitter.com/${tm.twitter}` })
 
@@ -59,6 +67,8 @@ const plainTeamMembers: CoreTeam[] = [
     github: 'antfu',
     webtools: 'antfu',
     twitter: 'antfu7',
+    discord: 'https://chat.antfu.me',
+    youtube: 'antfu',
     sponsor: 'https://github.com/sponsors/antfu',
     title: 'A fanatical open sourceror, working',
     org: 'NuxtLabs',
