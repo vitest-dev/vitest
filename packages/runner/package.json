@@ -1,0 +1,41 @@
+{
+  "name": "@vitest/runner",
+  "type": "module",
+  "version": "0.27.2",
+  "description": "Vitest test runner",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vitest-dev/vitest.git",
+    "directory": "packages/runner"
+  },
+  "sideEffects": true,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./utils": {
+      "types": "./dist/utils.d.ts",
+      "import": "./dist/utils.js"
+    },
+    "./*": "./*"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "*.d.ts"
+  ],
+  "scripts": {
+    "build": "rimraf dist && rollup -c",
+    "dev": "rollup -c --watch",
+    "prepublishOnly": "pnpm build"
+  },
+  "dependencies": {
+    "@vitest/utils": "workspace:*",
+    "chai": "^4.3.7",
+    "p-limit": "^4.0.0"
+  }
+}
