@@ -77,7 +77,7 @@ ws.addEventListener('open', async () => {
 
 async function runTests(paths: string[], config: any, client: VitestClient) {
   const name = '/__vitest_index__'
-  const { startTests, setupGlobalEnv } = (await import(name)) as unknown as typeof import('vitest/browser')
+  const { startTests, setupGlobalEnv } = (await import(name)) as unknown as typeof import('vitest')
 
   await setupGlobalEnv(config as any)
 

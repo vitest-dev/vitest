@@ -16,8 +16,8 @@ export function getBenchFn(key: TaskCustom): BenchFunction {
 }
 
 export const bench = createBenchmark(
-  (name, fn: BenchFunction = noop, options: BenchOptions = {}) => {
-    const task = getCurrentSuite().custom(name)
+  function (name, fn: BenchFunction = noop, options: BenchOptions = {}) {
+    const task = getCurrentSuite().custom.call(this, name)
     task.meta = {
       benchmark: true,
     }
