@@ -88,11 +88,11 @@ export const printExpected = (value: unknown): string =>
   EXPECTED_COLOR(replaceTrailingSpaces(stringify(value)))
 
 // TODO: do something with options
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function diff(a: any, b: any, options?: DiffOptions) {
   return unifiedDiff(stringify(b), stringify(a), {
     colorDim: c.dim,
     colorSuccess: c.green,
     colorError: c.red,
+    showLegend: options?.showLegend,
   })
 }

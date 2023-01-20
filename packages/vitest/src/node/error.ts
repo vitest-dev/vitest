@@ -90,6 +90,9 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
       outputTruncateLength: ctx.config.outputTruncateLength,
       outputDiffLines: ctx.config.outputDiffLines,
       outputDiffMaxLines: ctx.config.outputDiffMaxLines,
+      colorDim: c.dim,
+      colorError: c.red,
+      colorSuccess: c.green,
     })
   }
 }
@@ -165,7 +168,8 @@ function handleImportOutsideModuleError(stack: string, ctx: Vitest) {
 
 export function displayDiff(actual: string, expected: string, console: Console, options: Omit<DiffOptions, 'showLegend'> = {}) {
   const diff = unifiedDiff(actual, expected, options)
-  const dim = options.colorDim || c.dim
+  globalThis.console.log(options)
+  const dim = options.colorDim || ((str: string) => str)
   const black = options.colorDim ? c.black : (str: string) => str
   if (diff)
     console.error(diff + '\n')

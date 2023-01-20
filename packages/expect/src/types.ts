@@ -47,6 +47,7 @@ export interface DiffOptions {
   patchColor?: Formatter
   // pretty-format type
   compareKeys?: any
+  showLegend?: boolean
 }
 
 export interface MatcherState {
