@@ -1053,6 +1053,13 @@ Options to configure Vitest cache policy. At the moment Vitest stores cache for 
 
 Path to cache directory.
 
+### runner
+
+- **Type**: `VitestRunnerConstructor`
+- **Default**: `node`, when running tests, or `benchmark`, when running benchmarks
+
+Path to custom test runner.
+
 ### sequence
 
 - **Type**: `{ sequencer?, shuffle?, seed?, hooks? }`

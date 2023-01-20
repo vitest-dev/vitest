@@ -17,6 +17,10 @@ export interface VitestRunnerConfig {
   hookTimeout: number
 }
 
+export interface VitestRunnerConstructor {
+  new (config: VitestRunnerConfig): VitestRunner
+}
+
 export interface VitestRunner {
   onBeforeCollect?(): unknown
   onCollected?(files: File[]): unknown

@@ -1,5 +1,6 @@
 import { promises as fs } from 'node:fs'
 import mm from 'micromatch'
+import type { VitestRunnerConstructor } from '@vitest/runner'
 import { startTests } from '@vitest/runner'
 import type { EnvironmentOptions, ResolvedConfig, VitestEnvironment } from '../types'
 import { getWorkerState, resetModules } from '../utils'
@@ -18,16 +19,20 @@ function groupBy<T, K extends string | number | symbol>(collection: T[], iterate
   }, {} as Record<K, T[]>)
 }
 
+async function getTestRunner(config: ResolvedConfig): Promise<VitestRunnerConstructor> {
+  if (config.runner)
+    return await import(config.runner)
+  return (config.mode === 'test' ? NodeTestRunner : NodeBenchmarkRunner) as any as VitestRunnerConstructor
+}
+
 // browser shouldn't call this!
 export async function run(files: string[], config: ResolvedConfig): Promise<void> {
   await setupGlobalEnv(config)
 
   const workerState = getWorkerState()
 
-  // TODO: allow custom runners?
-  const testRunner = config.mode === 'test'
-    ? new NodeTestRunner(config)
-    : new NodeBenchmarkRunner(config)
+  const TestRunner = await getTestRunner(config)
+  const testRunner = new TestRunner(config)
 
   // if calling from a worker, there will always be one file
   // if calling with no-threads, this will be the whole suite

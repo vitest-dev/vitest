@@ -129,6 +129,11 @@ export function resolveConfig(
     }
   }
 
+  if (resolved.runner) {
+    resolved.runner = resolveModule(resolved.runner, { paths: [resolved.root] })
+      ?? resolve(resolved.root, resolved.runner)
+  }
+
   // disable loader for Yarn PnP until Node implements chain loader
   // https://github.com/nodejs/node/pull/43772
   resolved.deps.registerNodeLoader ??= false

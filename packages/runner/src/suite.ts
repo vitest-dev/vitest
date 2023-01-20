@@ -95,6 +95,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
     tasks.push(test)
   })
 
+  // TODO: document how it can be used to extend native runner
   const custom = function (name: string) {
     const task: TaskCustom = {
       id: '',
