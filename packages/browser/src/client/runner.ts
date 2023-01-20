@@ -1,4 +1,4 @@
-import type { VitestRunner } from '@vitest/runner'
+import type { TaskResult, VitestRunner } from '@vitest/runner'
 import type { VitestClient } from '@vitest/ws-client'
 import type { ResolvedConfig } from '#types'
 
@@ -11,10 +11,16 @@ interface BrowserRunnerOptions {
 export class BrowserTestRunner implements VitestRunner {
   public config: ResolvedConfig
   hasMap = new Map<string, string>()
+  client: VitestClient
 
   constructor(options: BrowserRunnerOptions) {
     this.config = options.config
     this.hasMap = options.browserHashMap
+    this.client = options.client
+  }
+
+  onTaskUpdate(task: [string, TaskResult | undefined][]): Promise<void> {
+    return this.client.rpc.onTaskUpdate(task)
   }
 
   async importFile(filepath: string) {

@@ -313,15 +313,17 @@ export class Vitest {
   }
 
   async runFiles(paths: string[]) {
-    // TODO: support browser
+    paths = Array.from(new Set(paths))
+
+    this.state.collectPaths(paths)
+
+    await this.report('onPathsCollected', paths)
+
     if (this.config.browser)
       return
 
-    paths = Array.from(new Set(paths))
-
     // previous run
     await this.runningPromise
-    this.state.startCollectingPaths()
 
     // schedule the new run
     this.runningPromise = (async () => {
@@ -348,7 +350,6 @@ export class Vitest {
       await this.cache.results.writeToCache()
     })()
       .finally(async () => {
-        this.state.finishCollectingPaths()
         if (!this.config.browser)
           await this.report('onFinished', this.state.getFiles(paths), this.state.getUnhandledErrors())
         this.runningPromise = undefined
