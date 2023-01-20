@@ -1,4 +1,4 @@
-import type { File, SequenceHooks, Suite, Test, TestContext } from './tasks'
+import type { File, SequenceHooks, Suite, TaskResult, Test, TestContext } from './tasks'
 
 export interface VitestRunnerConfig {
   root: string
@@ -28,6 +28,8 @@ export interface VitestRunner {
 
   onBeforeRunSuite?(suite: Suite): unknown
   onAfterRunSuite?(suite: Suite): unknown
+
+  onTaskUpdate?(task: [string, TaskResult | undefined][]): Promise<void>
 
   onAfterRun?(): unknown
   importFile(filepath: string): unknown

@@ -35,7 +35,6 @@
   },
   "dependencies": {
     "@vitest/utils": "workspace:*",
-    "chai": "^4.3.7",
     "p-limit": "^4.0.0"
   }
 }

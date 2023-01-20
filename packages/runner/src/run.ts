@@ -1,5 +1,5 @@
 import limit from 'p-limit'
-import { rpc, shuffle } from '@vitest/utils'
+import { shuffle } from '@vitest/utils'
 import type { VitestRunner } from './types/runner'
 import type { File, HookCleanupCallback, HookListener, SequenceHooks, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from './types'
 import { partitionSuiteChildren } from './utils/suite'
@@ -11,7 +11,7 @@ import { hasFailed, hasTests } from './utils/tasks'
 
 const now = Date.now
 
-function updateSuiteHookState(suite: Task, name: keyof SuiteHooks, state: TaskState) {
+function updateSuiteHookState(suite: Task, name: keyof SuiteHooks, state: TaskState, runner: VitestRunner) {
   if (!suite.result)
     suite.result = { state: 'run' }
   if (!suite.result?.hooks)
@@ -19,7 +19,7 @@ function updateSuiteHookState(suite: Task, name: keyof SuiteHooks, state: TaskSt
   const suiteHooks = suite.result.hooks
   if (suiteHooks) {
     suiteHooks[name] = state
-    updateTask(suite)
+    updateTask(suite, runner)
   }
 }
 
@@ -34,17 +34,19 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
   suite: Suite,
   currentTask: Task,
   name: T,
-  sequence: SequenceHooks,
+  runner: VitestRunner,
   args: SuiteHooks[T][0] extends HookListener<infer A, any> ? A : never,
 ): Promise<HookCleanupCallback[]> {
+  const sequence = runner.config.sequence.hooks
+
   const callbacks: HookCleanupCallback[] = []
   if (name === 'beforeEach' && suite.suite) {
     callbacks.push(
-      ...await callSuiteHook(suite.suite, currentTask, name, sequence, args),
+      ...await callSuiteHook(suite.suite, currentTask, name, runner, args),
     )
   }
 
-  updateSuiteHookState(currentTask, name, 'run')
+  updateSuiteHookState(currentTask, name, 'run', runner)
 
   const hooks = getSuiteHooks(suite, name, sequence)
 
@@ -56,11 +58,11 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
       callbacks.push(await hook(...args as any))
   }
 
-  updateSuiteHookState(currentTask, name, 'pass')
+  updateSuiteHookState(currentTask, name, 'pass', runner)
 
   if (name === 'afterEach' && suite.suite) {
     callbacks.push(
-      ...await callSuiteHook(suite.suite, currentTask, name, sequence, args),
+      ...await callSuiteHook(suite.suite, currentTask, name, runner, args),
     )
   }
 
@@ -71,21 +73,21 @@ const packs = new Map<string, TaskResult | undefined>()
 let updateTimer: any
 let previousUpdate: Promise<void> | undefined
 
-function updateTask(task: Task) {
+function updateTask(task: Task, runner: VitestRunner) {
   packs.set(task.id, task.result)
 
   clearTimeout(updateTimer)
   updateTimer = setTimeout(() => {
-    previousUpdate = sendTasksUpdate()
+    previousUpdate = sendTasksUpdate(runner)
   }, 10)
 }
 
-async function sendTasksUpdate() {
+async function sendTasksUpdate(runner: VitestRunner) {
   clearTimeout(updateTimer)
   await previousUpdate
 
   if (packs.size) {
-    const p = rpc().onTaskUpdate(Array.from(packs))
+    const p = runner.onTaskUpdate?.(Array.from(packs))
     packs.clear()
     return p
   }
@@ -110,7 +112,7 @@ export async function runTest(test: Test, runner: VitestRunner) {
   }
 
   if (test.result?.state === 'fail') {
-    updateTask(test)
+    updateTask(test, runner)
     return
   }
 
@@ -120,7 +122,7 @@ export async function runTest(test: Test, runner: VitestRunner) {
     state: 'run',
     startTime: start,
   }
-  updateTask(test)
+  updateTask(test, runner)
 
   // TODO: MOVE TO HOOK
   // clearModuleMocks()
@@ -135,8 +137,6 @@ export async function runTest(test: Test, runner: VitestRunner) {
   // const workerState = getWorkerState()
 
   // workerState.current = test
-
-  const hooksSequence = runner.config.sequence.hooks
 
   const retry = test.retry || 1
   for (let retryCount = 0; retryCount < retry; retryCount++) {
@@ -158,7 +158,7 @@ export async function runTest(test: Test, runner: VitestRunner) {
       // )
       await runner.onBeforeTryTest?.(test, retryCount)
 
-      beforeEachCleanups = await callSuiteHook(test.suite, test, 'beforeEach', hooksSequence, [test.context, test.suite])
+      beforeEachCleanups = await callSuiteHook(test.suite, test, 'beforeEach', runner, [test.context, test.suite])
 
       test.result.retryCount = retryCount
 
@@ -187,7 +187,7 @@ export async function runTest(test: Test, runner: VitestRunner) {
     }
 
     try {
-      await callSuiteHook(test.suite, test, 'afterEach', hooksSequence, [test.context, test.suite])
+      await callSuiteHook(test.suite, test, 'afterEach', runner, [test.context, test.suite])
       await callCleanupHooks(beforeEachCleanups)
     }
     catch (e) {
@@ -201,7 +201,7 @@ export async function runTest(test: Test, runner: VitestRunner) {
       break
 
     // update retry info
-    updateTask(test)
+    updateTask(test, runner)
   }
 
   if (test.result.state === 'fail')
@@ -238,16 +238,16 @@ export async function runTest(test: Test, runner: VitestRunner) {
 
   // workerState.current = undefined
 
-  updateTask(test)
+  updateTask(test, runner)
 }
 
-function markTasksAsSkipped(suite: Suite) {
+function markTasksAsSkipped(suite: Suite, runner: VitestRunner) {
   suite.tasks.forEach((t) => {
     t.mode = 'skip'
     t.result = { ...t.result, state: 'skip' }
-    updateTask(t)
+    updateTask(t, runner)
     if (t.type === 'suite')
-      markTasksAsSkipped(t)
+      markTasksAsSkipped(t, runner)
   })
 }
 
@@ -255,8 +255,8 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
   await runner.onBeforeRunSuite?.(suite)
 
   if (suite.result?.state === 'fail') {
-    markTasksAsSkipped(suite)
-    updateTask(suite)
+    markTasksAsSkipped(suite, runner)
+    updateTask(suite, runner)
     return
   }
 
@@ -267,9 +267,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
     startTime: start,
   }
 
-  updateTask(suite)
-
-  const hooksSequence = runner.config.sequence.hooks
+  updateTask(suite, runner)
 
   // const workerState = getWorkerState()
 
@@ -281,7 +279,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
   }
   else {
     try {
-      const beforeAllCleanups = await callSuiteHook(suite, suite, 'beforeAll', hooksSequence, [suite])
+      const beforeAllCleanups = await callSuiteHook(suite, suite, 'beforeAll', runner, [suite])
 
       for (let tasksGroup of partitionSuiteChildren(suite)) {
         if (tasksGroup[0].concurrent === true) {
@@ -302,7 +300,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
         }
       }
 
-      await callSuiteHook(suite, suite, 'afterAll', hooksSequence, [suite])
+      await callSuiteHook(suite, suite, 'afterAll', runner, [suite])
       await callCleanupHooks(beforeAllCleanups)
     }
     catch (e) {
@@ -336,7 +334,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
     }
   }
 
-  updateTask(suite)
+  updateTask(suite, runner)
 }
 
 async function runSuiteChild(c: Task, runner: VitestRunner) {
@@ -382,7 +380,7 @@ export async function startTests(paths: string[], runner: VitestRunner) {
 
   // await getSnapshotClient().saveCurrent()
 
-  await sendTasksUpdate()
+  await sendTasksUpdate(runner)
 
   return files
 }
