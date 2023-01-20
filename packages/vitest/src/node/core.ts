@@ -313,6 +313,10 @@ export class Vitest {
   }
 
   async runFiles(paths: string[]) {
+    // TODO: support browser
+    if (this.config.browser)
+      return
+
     paths = Array.from(new Set(paths))
 
     // previous run

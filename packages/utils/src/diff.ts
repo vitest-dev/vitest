@@ -1,4 +1,3 @@
-import c from 'picocolors'
 import * as diff from 'diff'
 import cliTruncate from 'cli-truncate'
 
@@ -6,12 +5,17 @@ export function formatLine(line: string, outputTruncateLength?: number) {
   return cliTruncate(line, (outputTruncateLength ?? (process.stdout?.columns || 80)) - 4)
 }
 
+type Color = (str: string) => string
+
 export interface DiffOptions {
-  noColor?: boolean
   outputDiffMaxLines?: number
   outputTruncateLength?: number
   outputDiffLines?: number
   showLegend?: boolean
+
+  colorSuccess?: Color
+  colorError?: Color
+  colorDim?: Color
 }
 
 /**
@@ -27,7 +31,7 @@ export function unifiedDiff(actual: string, expected: string, options: DiffOptio
   if (actual === expected)
     return ''
 
-  const { outputTruncateLength, outputDiffLines, outputDiffMaxLines, noColor, showLegend = true } = options
+  const { outputTruncateLength, outputDiffLines, outputDiffMaxLines, showLegend = true } = options
 
   const indent = '  '
   const diffLimit = outputDiffLines || 15
@@ -41,9 +45,9 @@ export function unifiedDiff(actual: string, expected: string, options: DiffOptio
   let previousCount = 0
 
   const str = (str: string) => str
-  const dim = noColor ? str : c.dim
-  const green = noColor ? str : c.green
-  const red = noColor ? str : c.red
+  const dim = options.colorDim || str
+  const green = options.colorSuccess || str
+  const red = options.colorError || str
   function preprocess(line: string) {
     if (!line || line.match(/\\ No newline/))
       return

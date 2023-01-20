@@ -626,6 +626,7 @@ importers:
   packages/browser:
     specifiers:
       '@types/ws': ^8.5.4
+      '@vitest/runner': workspace:^0.27.2
       '@vitest/ws-client': workspace:*
       local-pkg: ^0.4.2
       mlly: ^1.1.0
@@ -635,6 +636,7 @@ importers:
       sirv: ^2.0.2
       vitest: workspace:*
     dependencies:
+      '@vitest/runner': link:../runner
       local-pkg: 0.4.2
       mlly: 1.1.0
       modern-node-polyfills: 0.0.9
@@ -727,6 +729,7 @@ importers:
       '@unocss/reset': ^0.48.3
       '@vitejs/plugin-vue': ^4.0.0
       '@vitejs/plugin-vue-jsx': ^3.0.0
+      '@vitest/runner': workspace:^0.27.2
       '@vitest/ws-client': workspace:*
       '@vueuse/core': ^9.10.0
       ansi-to-html: ^0.7.2
@@ -764,6 +767,7 @@ importers:
       '@unocss/reset': 0.48.3
       '@vitejs/plugin-vue': 4.0.0_vite@4.0.0+vue@3.2.45
       '@vitejs/plugin-vue-jsx': 3.0.0_vite@4.0.0+vue@3.2.45
+      '@vitest/runner': link:../runner
       '@vitest/ws-client': link:../ws-client
       '@vueuse/core': 9.10.0_vue@3.2.45
       ansi-to-html: 0.7.2

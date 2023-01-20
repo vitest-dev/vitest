@@ -5,7 +5,6 @@ import { builtinModules } from 'module'
 import { polyfillPath } from 'modern-node-polyfills'
 import sirv from 'sirv'
 import type { Plugin } from 'vite'
-import { resolvePath } from 'mlly'
 
 const stubs = [
   'fs',
@@ -35,11 +34,6 @@ export default (base = '/'): Plugin[] => {
       async resolveId(id, _, ctx) {
         if (ctx.ssr)
           return
-
-        if (id === '/__vitest_index__') {
-          const result = await resolvePath('vitest/browser')
-          return result
-        }
 
         if (stubs.includes(id))
           return resolve(pkgRoot, 'stubs', id)

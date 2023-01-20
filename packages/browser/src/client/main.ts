@@ -2,6 +2,8 @@ import type { VitestClient } from '@vitest/ws-client'
 import { createClient } from '@vitest/ws-client'
 // eslint-disable-next-line no-restricted-imports
 import type { ResolvedConfig } from 'vitest'
+import type { VitestRunner } from '@vitest/runner'
+import { BrowserTestRunner } from './runner'
 
 // @ts-expect-error mocking some node apis
 globalThis.process = { env: {}, argv: [], stdout: { write: () => {} } }
@@ -14,6 +16,7 @@ export const ENTRY_URL = `${
 }//${HOST}/__vitest_api__`
 
 let config: ResolvedConfig | undefined
+let runner: VitestRunner | undefined
 const browserHashMap = new Map<string, string>()
 
 export const client = createClient(ENTRY_URL, {
@@ -76,12 +79,12 @@ ws.addEventListener('open', async () => {
 })
 
 async function runTests(paths: string[], config: any, client: VitestClient) {
-  const name = '/__vitest_index__'
-  const { startTests, setupGlobalEnv } = (await import(name)) as unknown as typeof import('vitest')
+  const { startTests } = await import('@vitest/runner')
 
-  await setupGlobalEnv(config as any)
+  if (!runner)
+    runner = new BrowserTestRunner({ config, client, browserHashMap })
 
-  await startTests(paths, config as any)
+  await startTests(paths, runner)
 
   await client.rpc.onFinished()
   await client.rpc.onWatcherStart()

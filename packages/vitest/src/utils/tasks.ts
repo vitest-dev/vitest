@@ -1,5 +1,4 @@
 import { getNames, getTests } from '@vitest/runner/utils'
-import c from 'picocolors'
 import type { Arrayable, Suite, Task } from '../types'
 import { toArray } from './base'
 
@@ -17,6 +16,6 @@ export function hasFailedSnapshot(suite: Arrayable<Task>): boolean {
   })
 }
 
-export function getFullName(task: Task) {
-  return getNames(task).join(c.dim(' > '))
+export function getFullName(task: Task, separator = ' > ') {
+  return getNames(task).join(separator)
 }

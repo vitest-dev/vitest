@@ -1,6 +1,7 @@
 import c from 'picocolors'
 import { AssertionError } from 'chai'
-import { assertTypes, unifiedDiff } from '@vitest/utils'
+import { assertTypes } from '@vitest/utils'
+import { unifiedDiff } from '@vitest/utils/diff'
 import type { Constructable } from '@vitest/utils'
 import type { EnhancedSpy } from '@vitest/spy'
 import { isMockFunction } from '@vitest/spy'

@@ -53,6 +53,7 @@
     "@unocss/reset": "^0.48.3",
     "@vitejs/plugin-vue": "^4.0.0",
     "@vitejs/plugin-vue-jsx": "^3.0.0",
+    "@vitest/runner": "workspace:*",
     "@vitest/ws-client": "workspace:*",
     "@vueuse/core": "^9.10.0",
     "ansi-to-html": "^0.7.2",

@@ -6,6 +6,8 @@ export const lineSplitRE = /\r?\n/
 
 const stackIgnorePatterns = [
   'node:internal',
+  /\/packages\/\w+\/dist\//,
+  /\/@vitest\/\w+\/dist\//,
   '/vitest/dist/',
   '/vitest/src/',
   '/vite-node/dist/',
@@ -86,7 +88,7 @@ export function parseStacktrace(e: ErrorWithDiff, full = false): ParsedStack[] {
     .map((raw): ParsedStack | null => {
       const stack = parseSingleStack(raw)
 
-      if (!stack || (!full && stackIgnorePatterns.some(p => stack.file.includes(p))))
+      if (!stack || (!full && stackIgnorePatterns.some(p => stack.file.match(p))))
         return null
 
       return stack

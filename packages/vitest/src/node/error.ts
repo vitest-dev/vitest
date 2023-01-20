@@ -3,12 +3,12 @@ import { existsSync, readFileSync } from 'fs'
 import { normalize, relative } from 'pathe'
 import c from 'picocolors'
 import cliTruncate from 'cli-truncate'
+import { type DiffOptions, unifiedDiff } from '@vitest/utils/diff'
 import { stringify } from '@vitest/utils'
 import type { ErrorWithDiff, ParsedStack } from '../types'
 import { lineSplitRE, parseStacktrace, positionToOffset } from '../utils/source-map'
 import { F_POINTER } from '../utils/figures'
 import { TypeCheckError } from '../typecheck/typechecker'
-import { type DiffOptions, unifiedDiff } from '../utils/diff'
 import type { Vitest } from './core'
 import { divider } from './reporters/renderers/utils'
 import type { Logger } from './logger'
@@ -165,8 +165,8 @@ function handleImportOutsideModuleError(stack: string, ctx: Vitest) {
 
 export function displayDiff(actual: string, expected: string, console: Console, options: Omit<DiffOptions, 'showLegend'> = {}) {
   const diff = unifiedDiff(actual, expected, options)
-  const dim = options.noColor ? (s: string) => s : c.dim
-  const black = options.noColor ? (s: string) => s : c.black
+  const dim = options.colorDim || c.dim
+  const black = options.colorDim ? c.black : (str: string) => str
   if (diff)
     console.error(diff + '\n')
   else if (actual && expected && actual !== '"undefined"' && expected !== '"undefined"')

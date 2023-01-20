@@ -1,5 +1,6 @@
 import c from 'picocolors'
-import { stringify, unifiedDiff } from '@vitest/utils'
+import { stringify } from '@vitest/utils'
+import { unifiedDiff } from '@vitest/utils/diff'
 import type { DiffOptions, MatcherHintOptions } from './types'
 
 export { stringify }
@@ -89,5 +90,9 @@ export const printExpected = (value: unknown): string =>
 // TODO: do something with options
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function diff(a: any, b: any, options?: DiffOptions) {
-  return unifiedDiff(stringify(b), stringify(a))
+  return unifiedDiff(stringify(b), stringify(a), {
+    colorDim: c.dim,
+    colorSuccess: c.green,
+    colorError: c.red,
+  })
 }
