@@ -11,7 +11,7 @@ export interface WebSocketHandlers {
   onCollected(files?: File[]): Promise<void>
   onTaskUpdate(packs: TaskResultPack[]): void
   getFiles(): File[]
-  getPaths(): Promise<string[]>
+  getPaths(): string[]
   getConfig(): ResolvedConfig
   getModuleGraph(id: string): Promise<ModuleGraphData>
   getTransformResult(id: string): Promise<TransformResultWithSource | undefined>
