@@ -1,4 +1,6 @@
 dist
+html
+bench.json
 node_modules
 *.svelte
 *.snap

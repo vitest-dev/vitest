@@ -41,8 +41,7 @@
     "diff": "^5.1.0",
     "loupe": "^2.3.6",
     "picocolors": "^1.0.0",
-    "pretty-format": "^27.5.1",
-    "util": "^0.12.5"
+    "pretty-format": "^27.5.1"
   },
   "devDependencies": {
     "@types/diff": "^5.0.2"
