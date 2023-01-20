@@ -25,6 +25,7 @@ interface AssertOptions {
 }
 
 export class SnapshotClient {
+  id = Date.now()
   test: Test | undefined
   snapshotState: SnapshotState | undefined
   snapshotStateMap = new Map<string, SnapshotState>()

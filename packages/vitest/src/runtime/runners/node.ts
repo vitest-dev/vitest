@@ -30,7 +30,7 @@ export class NodeTestRunner implements VitestRunner {
   async onAfterRun() {
     const coverage = await takeCoverageInsideWorker(this.config.coverage)
     rpc().onAfterSuiteRun({ coverage })
-    this.snapshotClient.saveCurrent()
+    await this.snapshotClient.saveCurrent()
   }
 
   onAfterRunSuite(suite: Suite) {
