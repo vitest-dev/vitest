@@ -23,7 +23,6 @@ importers:
       '@vitest/browser': workspace:*
       '@vitest/coverage-c8': workspace:*
       '@vitest/coverage-istanbul': workspace:*
-      '@vitest/runner': workspace:^0.27.2
       '@vitest/ui': workspace:*
       bumpp: ^8.2.1
       c8: ^7.12.0
@@ -64,7 +63,6 @@ importers:
       '@vitest/browser': link:packages/browser
       '@vitest/coverage-c8': link:packages/coverage-c8
       '@vitest/coverage-istanbul': link:packages/coverage-istanbul
-      '@vitest/runner': link:packages/runner
       '@vitest/ui': link:packages/ui
       bumpp: 8.2.1
       c8: 7.12.0
@@ -850,7 +848,7 @@ importers:
       '@types/prompts': ^2.4.2
       '@types/sinonjs__fake-timers': ^8.1.2
       '@vitest/expect': workspace:*
-      '@vitest/runner': workspace:^0.27.2
+      '@vitest/runner': workspace:*
       '@vitest/spy': workspace:*
       '@vitest/ui': workspace:*
       '@vitest/utils': workspace:*
