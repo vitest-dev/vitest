@@ -168,7 +168,6 @@ function handleImportOutsideModuleError(stack: string, ctx: Vitest) {
 
 export function displayDiff(actual: string, expected: string, console: Console, options: Omit<DiffOptions, 'showLegend'> = {}) {
   const diff = unifiedDiff(actual, expected, options)
-  globalThis.console.log(options)
   const dim = options.colorDim || ((str: string) => str)
   const black = options.colorDim ? c.black : (str: string) => str
   if (diff)
