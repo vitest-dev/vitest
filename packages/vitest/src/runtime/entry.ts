@@ -21,7 +21,8 @@ function groupBy<T, K extends string | number | symbol>(collection: T[], iterate
 
 async function getTestRunner(config: ResolvedConfig): Promise<VitestRunnerConstructor> {
   if (config.runner)
-    return await import(config.runner)
+    // TODO: validation
+    return (await import(config.runner)).default
   return (config.mode === 'test' ? NodeTestRunner : NodeBenchmarkRunner) as any as VitestRunnerConstructor
 }
 

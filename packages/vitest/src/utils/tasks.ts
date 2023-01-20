@@ -3,6 +3,8 @@ import c from 'picocolors'
 import type { Arrayable, Suite, Task } from '../types'
 import { toArray } from './base'
 
+export { getNames } from '@vitest/runner/utils'
+
 export { getTasks, getTests, getSuites, hasTests, hasFailed } from '@vitest/runner/utils'
 
 export function hasBenchmark(suite: Arrayable<Suite>): boolean {
