@@ -13,7 +13,7 @@ export interface CoverageProvider {
   onBeforeFilesRun?(): void | Promise<void>
   onAfterSuiteRun(meta: AfterSuiteRunMeta): void | Promise<void>
 
-  reportCoverage(reportContext: ReportContext): void | Promise<void>
+  reportCoverage(reportContext?: ReportContext): void | Promise<void>
 
   onFileTransform?(
     sourceCode: string,

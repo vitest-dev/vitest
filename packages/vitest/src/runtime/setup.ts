@@ -7,6 +7,7 @@ import { clearTimeout, getWorkerState, isNode, setTimeout, toArray } from '../ut
 import * as VitestIndex from '../index'
 import { resetRunOnceCounter } from '../integrations/run-once'
 import { RealDate } from '../integrations/mock/date'
+import { expect } from '../integrations/chai'
 import { rpc } from './rpc'
 
 let globalSetup = false
@@ -180,6 +181,11 @@ export async function withEnv(
   fn: () => Promise<void>,
 ) {
   const config: Environment = (environments as any)[name] || await loadEnvironment(name)
+  // @ts-expect-error untyped global
+  globalThis.__vitest_environment__ = config.name || name
+  expect.setState({
+    environment: config.name || name || 'node',
+  })
   const env = await config.setup(globalThis, options)
   try {
     await fn()

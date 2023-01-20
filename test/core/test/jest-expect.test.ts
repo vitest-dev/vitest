@@ -8,6 +8,9 @@ class TestError extends Error {}
 // For expect.extend
 interface CustomMatchers<R = unknown> {
   toBeDividedBy(divisor: number): R
+  toBeTestedAsync(): Promise<R>
+  toBeTestedSync(): R
+  toBeTestedPromise(): R
 }
 declare global {
   namespace Vi {
@@ -142,7 +145,7 @@ describe('jest-expect', () => {
     expect(['Bob', 'Eve']).toEqual(expect.not.arrayContaining(['Steve']))
   })
 
-  it('expect.extend', () => {
+  it('expect.extend', async () => {
     expect.extend({
       toBeDividedBy(received, divisor) {
         const pass = received % divisor === 0
@@ -161,6 +164,24 @@ describe('jest-expect', () => {
           }
         }
       },
+      async toBeTestedAsync() {
+        return {
+          pass: false,
+          message: () => 'toBeTestedAsync',
+        }
+      },
+      toBeTestedSync() {
+        return {
+          pass: false,
+          message: () => 'toBeTestedSync',
+        }
+      },
+      toBeTestedPromise() {
+        return Promise.resolve({
+          pass: false,
+          message: () => 'toBeTestedPromise',
+        })
+      },
     })
 
     expect(5).toBeDividedBy(5)
@@ -169,6 +190,11 @@ describe('jest-expect', () => {
       one: expect.toBeDividedBy(1),
       two: expect.not.toBeDividedBy(5),
     })
+    expect(() => expect(2).toBeDividedBy(5)).toThrowError()
+
+    expect(() => expect(null).toBeTestedSync()).toThrowError('toBeTestedSync')
+    await expect(async () => await expect(null).toBeTestedAsync()).rejects.toThrowError('toBeTestedAsync')
+    await expect(async () => await expect(null).toBeTestedPromise()).rejects.toThrowError('toBeTestedPromise')
   })
 
   it('object', () => {

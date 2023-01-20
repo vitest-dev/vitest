@@ -32,15 +32,18 @@ async function startViteNode(ctx: WorkerContext) {
     return processExit(code)
   }
 
-  process.on('unhandledRejection', (err) => {
+  function catchError(err: unknown, type: string) {
     const worker = getWorkerState()
     const error = processError(err)
     if (worker.filepath && !isPrimitive(error)) {
       error.VITEST_TEST_NAME = worker.current?.name
       error.VITEST_TEST_PATH = relative(config.root, worker.filepath)
     }
-    rpc().onUnhandledRejection(error)
-  })
+    rpc().onUnhandledError(error, type)
+  }
+
+  process.on('uncaughtException', e => catchError(e, 'Uncaught Exception'))
+  process.on('unhandledRejection', e => catchError(e, 'Unhandled Rejection'))
 
   const { run } = (await executeInViteNode({
     files: [

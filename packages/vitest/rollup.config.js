@@ -1,6 +1,6 @@
 import fs from 'fs'
 import { builtinModules } from 'module'
-import { dirname, join, relative, resolve } from 'pathe'
+import { dirname, join, normalize, relative, resolve } from 'pathe'
 import esbuild from 'rollup-plugin-esbuild'
 import dts from 'rollup-plugin-dts'
 import nodeResolve from '@rollup/plugin-node-resolve'
@@ -106,7 +106,7 @@ export default ({ watch }) => defineConfig([
     input: dtsEntries,
     output: {
       dir: 'dist',
-      entryFileNames: chunk => `${chunk.name.replace('src/', '')}.d.ts`,
+      entryFileNames: chunk => `${normalize(chunk.name).replace('src/', '')}.d.ts`,
       format: 'esm',
     },
     external,

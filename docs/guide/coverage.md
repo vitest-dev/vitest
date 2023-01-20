@@ -107,12 +107,12 @@ export default defineConfig({
 
 ## Ignoring code
 
-Both coverage providers have their own ways how to ignore code from coverage reports.
+Both coverage providers have their own ways how to ignore code from coverage reports:
 
-- `c8`: https://github.com/bcoe/c8#ignoring-uncovered-lines-functions-and-blocks
-- `ìstanbul` https://github.com/istanbuljs/nyc#parsing-hints-ignoring-lines
+- [`c8`](https://github.com/bcoe/c8#ignoring-uncovered-lines-functions-and-blocks)
+- [`ìstanbul`](https://github.com/istanbuljs/nyc#parsing-hints-ignoring-lines)
 
-When using Typescript the source codes are transpiled using `esbuild`, which strips all comments from the source codes ([esbuild#516](https://github.com/evanw/esbuild/issues/516)).
+When using TypeScript the source codes are transpiled using `esbuild`, which strips all comments from the source codes ([esbuild#516](https://github.com/evanw/esbuild/issues/516)).
 Comments which are considered as [legal comments](https://esbuild.github.io/api/#legal-comments) are preserved.
 
 For `istanbul` provider you can include a `@preserve` keyword in the ignore hint.

@@ -66,7 +66,7 @@ export function runCurrent() {
 watch(
   () => client.ws,
   (ws) => {
-    status.value = 'CONNECTING'
+    status.value = isReport ? 'OPEN' : 'CONNECTING'
 
     ws.addEventListener('open', async () => {
       status.value = 'OPEN'

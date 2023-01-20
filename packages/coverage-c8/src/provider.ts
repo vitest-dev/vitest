@@ -44,7 +44,7 @@ export class C8CoverageProvider implements CoverageProvider {
     takeCoverage()
   }
 
-  async reportCoverage({ allTestsRun }: ReportContext) {
+  async reportCoverage({ allTestsRun }: ReportContext = {}) {
     takeCoverage()
 
     const options = {

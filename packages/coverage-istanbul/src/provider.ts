@@ -98,7 +98,7 @@ export class IstanbulCoverageProvider implements CoverageProvider {
     this.coverages = []
   }
 
-  async reportCoverage({ allTestsRun }: ReportContext) {
+  async reportCoverage({ allTestsRun }: ReportContext = {}) {
     const mergedCoverage: CoverageMap = this.coverages.reduce((coverage, previousCoverageMap) => {
       const map = libCoverage.createCoverageMap(coverage)
       map.merge(previousCoverageMap)
