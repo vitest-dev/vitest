@@ -1,9 +1,9 @@
 import type { MessagePort } from 'node:worker_threads'
+import type { File, TaskResultPack, Test } from '@vitest/runner'
 import type { FetchFunction, ModuleCacheMap, RawSourceMap, ViteNodeResolveId } from 'vite-node'
 import type { BirpcReturn } from 'birpc'
 import type { MockMap } from './mocker'
 import type { ResolvedConfig } from './config'
-import type { File, TaskResultPack, Test } from './tasks'
 import type { SnapshotResult } from './snapshot'
 import type { UserConsoleLog } from './general'
 
@@ -46,6 +46,5 @@ export interface WorkerGlobalState {
   current?: Test
   filepath?: string
   moduleCache: ModuleCacheMap
-  browserHashMap?: Map<string, string>
   mockMap: MockMap
 }

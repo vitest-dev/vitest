@@ -1,11 +1,11 @@
 import { type Arrayable, toArray } from '@vitest/utils'
-import type { Suite, Task, Test } from '../types'
+import type { Suite, Task, TaskCustom, Test } from '../types'
 
-function isAtomTest(s: Task): s is Test {
-  return (s.type === 'test')
+function isAtomTest(s: Task): s is Test | TaskCustom {
+  return s.type === 'test' || s.type === 'custom'
 }
 
-export function getTests(suite: Arrayable<Task>): (Test)[] {
+export function getTests(suite: Arrayable<Task>): (Test | TaskCustom)[] {
   return toArray(suite).flatMap(s => isAtomTest(s) ? [s] : s.tasks.flatMap(c => isAtomTest(c) ? [c] : getTests(c)))
 }
 
@@ -23,12 +23,6 @@ export function hasTests(suite: Arrayable<Suite>): boolean {
 
 export function hasFailed(suite: Arrayable<Task>): boolean {
   return toArray(suite).some(s => s.result?.state === 'fail' || (s.type === 'suite' && hasFailed(s.tasks)))
-}
-
-export function hasFailedSnapshot(suite: Arrayable<Task>): boolean {
-  return getTests(suite).some((s) => {
-    return s.result?.errors?.some(e => e.message.match(/Snapshot .* mismatched/))
-  })
 }
 
 export function getNames(task: Task) {

@@ -1,10 +1,9 @@
-import { slash } from '@vitest/utils'
 import type { File } from './types'
 import type { VitestRunner } from './types/runner'
 import { calculateSuiteHash, generateHash, interpretTaskModes, someTasksAreOnly } from './utils/collect'
 import { clearCollectorContext, getDefaultSuite } from './suite'
 import { getHooks, setHooks } from './map'
-import { processError } from './error'
+import { processError } from './utils/error'
 import { collectorContext } from './context'
 import { runSetupFiles } from './setup'
 
@@ -12,24 +11,12 @@ const now = Date.now
 
 export async function collectTests(paths: string[], runner: VitestRunner): Promise<File[]> {
   const files: File[] = []
-  // TODO: move to if(browser)
-  // const browserHashMap = getWorkerState().browserHashMap!
-
-  // async function importFromBrowser(filepath: string) {
-  //   const match = filepath.match(/^(\w:\/)/)
-  //   const hash = browserHashMap.get(filepath)
-  //   if (match)
-  //     return await import(`/@fs/${filepath.slice(match[1].length)}?v=${hash}`)
-  //   else
-  //     return await import(`${filepath}?v=${hash}`)
-  // }
 
   const config = runner.config
 
   for (const filepath of paths) {
-    const url = new URL(filepath, `file://${config.root}`)
-    const isWindows = /^\w\:\//.test(config.root)
-    const path = slash(url.href.slice(isWindows ? 8 : 7))
+    // TODO /full/path/to/file.js -> /to/file
+    const path = filepath.slice(config.root.length + 1)
     const file: File = {
       id: generateHash(path),
       name: path,

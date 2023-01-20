@@ -1,7 +1,7 @@
 import { performance } from 'perf_hooks'
 import c from 'picocolors'
 import type { ErrorWithDiff, File, Reporter, Task, TaskResultPack, UserConsoleLog } from '../../types'
-import { clearInterval, getFullName, getSuites, getTests, hasFailed, hasFailedSnapshot, isCI, isNode, relativePath, setInterval } from '../../utils'
+import { getFullName, getSafeTimers, getSuites, getTests, hasFailed, hasFailedSnapshot, isCI, isNode, relativePath } from '../../utils'
 import type { Vitest } from '../../node'
 import { F_RIGHT } from '../../utils/figures'
 import { countTestErrors, divider, formatProjectName, formatTimeString, getStateString, getStateSymbol, pointer, renderSnapshotSummary } from './renderers/utils'
@@ -123,6 +123,7 @@ export abstract class BaseReporter implements Reporter {
       ]
       this.ctx.logger.logUpdate(BADGE_PADDING + LAST_RUN_TEXTS[0])
       this._lastRunTimeout = 0
+      const { setInterval } = getSafeTimers()
       this._lastRunTimer = setInterval(
         () => {
           this._lastRunTimeout += 1
@@ -137,6 +138,7 @@ export abstract class BaseReporter implements Reporter {
   }
 
   private resetLastRunLog() {
+    const { clearInterval } = getSafeTimers()
     clearInterval(this._lastRunTimer)
     this._lastRunTimer = undefined
     this.ctx.logger.logUpdate.clear()

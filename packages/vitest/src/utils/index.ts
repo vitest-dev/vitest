@@ -1,12 +1,11 @@
 import { relative as relativeBrowser } from 'node:path'
 import c from 'picocolors'
+import type { Suite, Task } from '@vitest/runner'
 import { isPackageExists } from 'local-pkg'
 import { relative as relativeNode } from 'pathe'
 import type { ModuleCacheMap } from 'vite-node'
-import type { Suite, Task } from '../types'
 import { EXIT_CODE_RESTART } from '../constants'
 import { getWorkerState } from '../utils'
-import { getNames } from './tasks'
 import { isBrowser, isCI, isNode } from './env'
 
 export * from './graph'
@@ -62,10 +61,6 @@ export function resetModules(modules: ModuleCacheMap, resetMocks = false) {
       return
     modules.delete(path)
   })
-}
-
-export function getFullName(task: Task) {
-  return getNames(task).join(c.dim(' > '))
 }
 
 export function removeUndefinedValues<T extends Record<string, any>>(obj: T): T {
@@ -163,25 +158,6 @@ class AggregateErrorPonyfill extends Error {
   }
 }
 export { AggregateErrorPonyfill as AggregateError }
-
-type DeferPromise<T> = Promise<T> & {
-  resolve: (value: T | PromiseLike<T>) => void
-  reject: (reason?: any) => void
-}
-
-export function createDefer<T>(): DeferPromise<T> {
-  let resolve: ((value: T | PromiseLike<T>) => void) | null = null
-  let reject: ((reason?: any) => void) | null = null
-
-  const p = new Promise<T>((_resolve, _reject) => {
-    resolve = _resolve
-    reject = _reject
-  }) as DeferPromise<T>
-
-  p.resolve = resolve!
-  p.reject = reject!
-  return p
-}
 
 export function objectAttr(source: any, path: string, defaultValue = undefined) {
   // a[3].b -> a.3.b

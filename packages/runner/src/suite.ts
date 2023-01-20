@@ -1,7 +1,7 @@
 import { format, isObject, noop, objDisplay, objectAttr } from '@vitest/utils'
-import type { File, RunMode, Suite, SuiteAPI, SuiteCollector, SuiteFactory, SuiteHooks, Task, Test, TestAPI, TestFunction, TestOptions } from './types'
+import type { File, RunMode, Suite, SuiteAPI, SuiteCollector, SuiteFactory, SuiteHooks, Task, TaskCustom, Test, TestAPI, TestFunction, TestOptions } from './types'
 import type { VitestRunner } from './types/runner'
-import { createChainable } from './chain'
+import { createChainable } from './utils/chain'
 import { collectTask, collectorContext, createTestContext, runWithSuite, withTimeout } from './context'
 import { getHooks, setFn, setHooks } from './map'
 
@@ -22,6 +22,10 @@ let defaultSuite: SuiteCollector
 
 export function getDefaultSuite() {
   return defaultSuite
+}
+
+export function getRunner() {
+  return runner
 }
 
 export function clearCollectorContext(currentRunner: VitestRunner) {
@@ -48,7 +52,7 @@ export function createSuiteHooks() {
 
 // implementations
 function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, mode: RunMode, concurrent?: boolean, shuffle?: boolean, suiteOptions?: number | TestOptions) {
-  const tasks: (Test | Suite | SuiteCollector)[] = []
+  const tasks: (Test | TaskCustom | Suite | SuiteCollector)[] = []
   const factoryQueue: (Test | Suite | SuiteCollector)[] = []
 
   let suite: Suite
@@ -91,6 +95,17 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
     tasks.push(test)
   })
 
+  const custom = function (name: string) {
+    const task: TaskCustom = {
+      id: '',
+      name,
+      type: 'custom',
+      mode: 'run',
+    }
+    tasks.push(task)
+    return task
+  }
+
   const collector: SuiteCollector = {
     type: 'collector',
     name,
@@ -98,6 +113,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
     test,
     tasks,
     collect,
+    custom,
     clear,
     on: addHook,
   }

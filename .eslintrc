@@ -27,10 +27,6 @@
       "rules": {
         "no-restricted-globals": [
           "error",
-          "setTimeout",
-          "clearTimeout",
-          "setInterval",
-          "clearInterval",
           "performance"
         ]
       }

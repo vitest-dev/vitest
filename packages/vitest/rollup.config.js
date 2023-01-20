@@ -15,7 +15,6 @@ import pkg from './package.json'
 
 const entries = [
   'src/index.ts',
-  'src/browser.ts',
   'src/node/cli.ts',
   'src/node/cli-wrapper.ts',
   'src/node.ts',
@@ -23,14 +22,12 @@ const entries = [
   'src/runtime/worker.ts',
   'src/runtime/loader.ts',
   'src/runtime/entry.ts',
-  'src/runtime/suite.ts',
   'src/integrations/spy.ts',
 ]
 
 const dtsEntries = [
   'src/index.ts',
   'src/node.ts',
-  'src/browser.ts',
   'src/environments.ts',
   'src/config.ts',
 ]

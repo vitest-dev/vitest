@@ -90,3 +90,22 @@ export function objectAttr(source: any, path: string, defaultValue = undefined) 
   }
   return result
 }
+
+type DeferPromise<T> = Promise<T> & {
+  resolve: (value: T | PromiseLike<T>) => void
+  reject: (reason?: any) => void
+}
+
+export function createDefer<T>(): DeferPromise<T> {
+  let resolve: ((value: T | PromiseLike<T>) => void) | null = null
+  let reject: ((reason?: any) => void) | null = null
+
+  const p = new Promise<T>((_resolve, _reject) => {
+    resolve = _resolve
+    reject = _reject
+  }) as DeferPromise<T>
+
+  p.resolve = resolve!
+  p.reject = reject!
+  return p
+}

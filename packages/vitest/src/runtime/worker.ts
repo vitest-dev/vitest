@@ -1,6 +1,7 @@
 import { relative, resolve } from 'pathe'
 import { createBirpc } from 'birpc'
 import { workerId as poolId } from 'tinypool'
+import { processError } from '@vitest/runner/utils'
 import { ModuleCacheMap } from 'vite-node/client'
 import { isPrimitive } from 'vite-node/utils'
 import type { ResolvedConfig, WorkerContext, WorkerRPC } from '../types'
@@ -9,7 +10,6 @@ import { getWorkerState } from '../utils'
 import type { MockMap } from '../types/mocker'
 import { executeInViteNode } from './execute'
 import { rpc } from './rpc'
-import { processError } from './error'
 
 let _viteNode: {
   run: (files: string[], config: ResolvedConfig) => Promise<void>

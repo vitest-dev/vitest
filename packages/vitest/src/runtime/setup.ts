@@ -1,9 +1,10 @@
 /* eslint-disable n/no-deprecated-api */
 
 import { installSourcemapsSupport } from 'vite-node/source-map'
+import { setSafeTimers } from '@vitest/utils'
 import { environments } from '../integrations/env'
 import type { Environment, ResolvedConfig } from '../types'
-import { clearTimeout, getWorkerState, isNode, setTimeout, toArray } from '../utils'
+import { getSafeTimers, getWorkerState, isNode } from '../utils'
 import * as VitestIndex from '../index'
 import { resetRunOnceCounter } from '../integrations/run-once'
 import { RealDate } from '../integrations/mock/date'
@@ -26,12 +27,13 @@ export async function setupGlobalEnv(config: ResolvedConfig) {
   if (globalSetup)
     return
 
+  setSafeTimers()
+  globalSetup = true
+
   // always mock "required" `css` files, because we cannot process them
   require.extensions['.css'] = () => ({})
   require.extensions['.scss'] = () => ({})
   require.extensions['.sass'] = () => ({})
-
-  globalSetup = true
 
   if (isNode) {
     const state = getWorkerState()
@@ -60,6 +62,7 @@ export async function setupConsoleLogSpy() {
 
   const { Writable } = await import('node:stream')
   const { Console } = await import('node:console')
+  const { setTimeout, clearTimeout } = getSafeTimers()
 
   // group sync console.log calls with macro task
   function schedule(taskId: string) {
@@ -193,14 +196,4 @@ export async function withEnv(
   finally {
     await env.teardown(globalThis)
   }
-}
-
-export async function runSetupFiles(config: ResolvedConfig) {
-  const files = toArray(config.setupFiles)
-  await Promise.all(
-    files.map(async (fsPath) => {
-      getWorkerState().moduleCache.delete(fsPath)
-      await import(fsPath)
-    }),
-  )
 }

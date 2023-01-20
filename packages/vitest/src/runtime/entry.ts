@@ -1,13 +1,15 @@
 import { promises as fs } from 'node:fs'
 import mm from 'micromatch'
+import { startTests } from '@vitest/runner'
 import type { EnvironmentOptions, ResolvedConfig, VitestEnvironment } from '../types'
 import { getWorkerState, resetModules } from '../utils'
 import { vi } from '../integrations/vi'
 import { envs } from '../integrations/env'
 import { setupGlobalEnv, withEnv } from './setup'
-import { startTests } from './run'
+import { NodeTestRunner } from './runners/node'
+import { NodeBenchmarkRunner } from './runners/benchmark'
 
-function groupBy<T, K extends string | number | symbol >(collection: T[], iteratee: (item: T) => K) {
+function groupBy<T, K extends string | number | symbol>(collection: T[], iteratee: (item: T) => K) {
   return collection.reduce((acc, item) => {
     const key = iteratee(item)
     acc[key] ||= []
@@ -16,17 +18,16 @@ function groupBy<T, K extends string | number | symbol >(collection: T[], iterat
   }, {} as Record<K, T[]>)
 }
 
+// browser shouldn't call this!
 export async function run(files: string[], config: ResolvedConfig): Promise<void> {
   await setupGlobalEnv(config)
 
   const workerState = getWorkerState()
 
-  // TODO @web-runner: we need to figure out how to do this on the browser
-  if (config.browser) {
-    workerState.mockMap.clear()
-    await startTests(files, config)
-    return
-  }
+  // TODO: allow custom runners?
+  const testRunner = config.mode === 'test'
+    ? new NodeTestRunner(config)
+    : new NodeBenchmarkRunner(config)
 
   // if calling from a worker, there will always be one file
   // if calling with no-threads, this will be the whole suite
@@ -91,7 +92,7 @@ export async function run(files: string[], config: ResolvedConfig): Promise<void
 
           workerState.filepath = file
 
-          await startTests([file], config)
+          await startTests([file], testRunner)
 
           workerState.filepath = undefined
 

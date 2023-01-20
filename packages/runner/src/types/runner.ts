@@ -5,11 +5,11 @@ export interface VitestRunnerConfig {
   setupFiles: string[] | string
   name: string
   passWithNoTests: boolean
-  testNamePattern?: string
+  testNamePattern?: RegExp
   allowOnly?: boolean
   sequence: {
-    shuffle: boolean
-    seed: number
+    shuffle?: boolean
+    seed?: number
     hooks: SequenceHooks
   }
   maxConcurrency: number
@@ -29,8 +29,12 @@ export interface VitestRunner {
   onBeforeRunSuite?(suite: Suite): unknown
   onAfterRunSuite?(suite: Suite): unknown
 
+  runSuite?(suite: Suite): Promise<void>
+  runTest?(test: Test): Promise<void>
+
   onTaskUpdate?(task: [string, TaskResult | undefined][]): Promise<void>
 
+  onBeforeRun?(): unknown
   onAfterRun?(): unknown
   importFile(filepath: string): unknown
   augmentTestContext?(context: TestContext): TestContext

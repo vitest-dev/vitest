@@ -1,6 +1,6 @@
 import type { Awaitable } from '@vitest/utils'
-import type { ChainableFunction } from '../chain'
-import type { ErrorWithDiff } from '../error'
+import type { ChainableFunction } from '../utils/chain'
+import type { ErrorWithDiff } from '../utils/error'
 
 export type RunMode = 'run' | 'skip' | 'only' | 'todo'
 export type TaskState = RunMode | 'pass' | 'fail'
@@ -15,9 +15,11 @@ export interface TaskBase {
   file?: File
   result?: TaskResult
   retry?: number
-  // TODO: Augment in "vitest"
-  // logs?: UserConsoleLog[]
   meta?: any
+}
+
+export interface TaskCustom extends TaskBase {
+  type: 'custom'
 }
 
 export interface TaskResult {
@@ -59,7 +61,7 @@ export interface Test<ExtraContext = {}> extends TaskBase {
   onFailed?: OnTestFailedHandler[]
 }
 
-export type Task = Test | Suite | File
+export type Task = Test | Suite | TaskCustom | File
 
 export type DoneCallback = (error?: any) => void
 export type TestFunction<ExtraContext = {}> = (context: TestContext & ExtraContext) => Awaitable<any> | void
@@ -199,7 +201,8 @@ export interface SuiteCollector<ExtraContext = {}> {
   readonly mode: RunMode
   type: 'collector'
   test: TestAPI<ExtraContext>
-  tasks: (Suite | Test | SuiteCollector<ExtraContext>)[]
+  tasks: (Suite | TaskCustom | Test | SuiteCollector<ExtraContext>)[]
+  custom: (name: string) => TaskCustom
   collect: (file?: File) => Promise<Suite>
   clear: () => void
   on: <T extends keyof SuiteHooks<ExtraContext>>(name: T, ...fn: SuiteHooks<ExtraContext>[T]) => void
@@ -217,12 +220,6 @@ export interface TestContext {
    * Metadata of the current test
    */
   meta: Readonly<Test>
-
-  // TODO: augment by "vitest"
-  /**
-   * A expect instance bound to the test
-   */
-  // expect: Vi.ExpectStatic
 
   /**
    * Extract hooks on test failed

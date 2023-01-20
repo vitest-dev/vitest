@@ -1,7 +1,9 @@
-import type { OnTestFailedHandler, SuiteHooks, Test } from '../types'
-import { getDefaultHookTimeout, withTimeout } from './context'
-import { getCurrentSuite } from './suite'
+import type { OnTestFailedHandler, SuiteHooks, Test } from './types'
+import { getCurrentSuite, getRunner } from './suite'
 import { getCurrentTest } from './test-state'
+import { withTimeout } from './context'
+
+const getDefaultHookTimeout = () => getRunner().config.hookTimeout
 
 // suite hooks
 export const beforeAll = (fn: SuiteHooks['beforeAll'][0], timeout?: number) => getCurrentSuite().on('beforeAll', withTimeout(fn, timeout ?? getDefaultHookTimeout(), true))

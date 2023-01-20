@@ -1,7 +1,6 @@
 import type { Awaitable } from '@vitest/utils'
-import { clearTimeout, setTimeout } from '@vitest/utils'
+import { getSafeTimers } from '@vitest/utils'
 import type { RuntimeContext, SuiteCollector, Test, TestContext } from './types'
-// import { getWorkerState } from '../utils'
 import type { VitestRunner } from './types/runner'
 
 export const collectorContext: RuntimeContext = {
@@ -28,6 +27,8 @@ export function withTimeout<T extends((...args: any[]) => any)>(
   if (timeout <= 0 || timeout === Infinity)
     return fn
 
+  const { setTimeout, clearTimeout } = getSafeTimers()
+
   return ((...args: (T extends ((...args: infer A) => any) ? A : never)) => {
     return Promise.race([fn(...args), new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
@@ -47,19 +48,6 @@ export function createTestContext(test: Test, runner: VitestRunner): TestContext
 
   context.meta = test
 
-  // let _expect: Vi.ExpectStatic | undefined
-  // Object.defineProperty(context, 'expect', {
-  //   get() {
-  //     if (!_expect)
-  //       _expect = createExpect(test)
-  //     return _expect
-  //   },
-  // })
-  // Object.defineProperty(context, '_local', {
-  //   get() {
-  //     return _expect != null
-  //   },
-  // })
   context.onTestFailed = (fn) => {
     test.onFailed ||= []
     test.onFailed.push(fn)

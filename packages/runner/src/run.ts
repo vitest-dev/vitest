@@ -1,11 +1,11 @@
 import limit from 'p-limit'
-import { shuffle } from '@vitest/utils'
+import { getSafeTimers, shuffle } from '@vitest/utils'
 import type { VitestRunner } from './types/runner'
 import type { File, HookCleanupCallback, HookListener, SequenceHooks, Suite, SuiteHooks, Task, TaskResult, TaskState, Test } from './types'
 import { partitionSuiteChildren } from './utils/suite'
 import { getFn, getHooks } from './map'
 import { collectTests } from './collect'
-import { processError } from './error'
+import { processError } from './utils/error'
 import { setCurrentTest } from './test-state'
 import { hasFailed, hasTests } from './utils/tasks'
 
@@ -73,8 +73,10 @@ const packs = new Map<string, TaskResult | undefined>()
 let updateTimer: any
 let previousUpdate: Promise<void> | undefined
 
-function updateTask(task: Task, runner: VitestRunner) {
+export function updateTask(task: Task, runner: VitestRunner) {
   packs.set(task.id, task.result)
+
+  const { clearTimeout, setTimeout } = getSafeTimers()
 
   clearTimeout(updateTimer)
   updateTimer = setTimeout(() => {
@@ -83,6 +85,7 @@ function updateTask(task: Task, runner: VitestRunner) {
 }
 
 async function sendTasksUpdate(runner: VitestRunner) {
+  const { clearTimeout } = getSafeTimers()
   clearTimeout(updateTimer)
   await previousUpdate
 
@@ -104,12 +107,8 @@ const callCleanupHooks = async (cleanups: HookCleanupCallback[]) => {
 export async function runTest(test: Test, runner: VitestRunner) {
   await runner.onBeforeRunTest?.(test)
 
-  if (test.mode !== 'run') {
-    // TODO: move to hook
-    // const { getSnapshotClient } = await import('../integrations/snapshot/chai')
-    // getSnapshotClient().skipTestSnapshots(test)
+  if (test.mode !== 'run')
     return
-  }
 
   if (test.result?.state === 'fail') {
     updateTask(test, runner)
@@ -124,58 +123,24 @@ export async function runTest(test: Test, runner: VitestRunner) {
   }
   updateTask(test, runner)
 
-  // TODO: MOVE TO HOOK
-  // clearModuleMocks()
-
   setCurrentTest(test)
-
-  // if (isNode) {
-  //   const { getSnapshotClient } = await import('../integrations/snapshot/chai')
-  //   await getSnapshotClient().setTest(test)
-  // }
-
-  // const workerState = getWorkerState()
-
-  // workerState.current = test
 
   const retry = test.retry || 1
   for (let retryCount = 0; retryCount < retry; retryCount++) {
     let beforeEachCleanups: HookCleanupCallback[] = []
     try {
-      // const state: Partial<MatcherState> = {
-      //   assertionCalls: 0,
-      //   isExpectingAssertions: false,
-      //   isExpectingAssertionsError: null,
-      //   expectedAssertionsNumber: null,
-      //   expectedAssertionsNumberErrorGen: null,
-      //   testPath: test.suite.file?.filepath,
-      //   currentTestName: getFullName(test),
-      //   // snapshotState: getSnapshotClient().snapshotState,
-      // }
-      // setState<MatcherState>(
-      //   runner.augmentExpectState?.(state) || state,
-      //   (globalThis as any)[GLOBAL_EXPECT],
-      // )
       await runner.onBeforeTryTest?.(test, retryCount)
 
       beforeEachCleanups = await callSuiteHook(test.suite, test, 'beforeEach', runner, [test.context, test.suite])
 
       test.result.retryCount = retryCount
 
-      await getFn(test)()
+      if (runner.runTest)
+        await runner.runTest(test)
+      else
+        await getFn(test)()
 
       await runner.onAfterTryTest?.(test, retryCount)
-      // const {
-      //   assertionCalls,
-      //   expectedAssertionsNumber,
-      //   expectedAssertionsNumberErrorGen,
-      //   isExpectingAssertions,
-      //   isExpectingAssertionsError,
-      // } = runner.receiveExpectState?.(test) || getState((globalThis as any)[GLOBAL_EXPECT])
-      // if (expectedAssertionsNumber !== null && assertionCalls !== expectedAssertionsNumber)
-      //   throw expectedAssertionsNumberErrorGen!()
-      // if (isExpectingAssertions === true && assertionCalls === 0)
-      //   throw isExpectingAssertionsError
 
       test.result.state = 'pass'
     }
@@ -228,16 +193,6 @@ export async function runTest(test: Test, runner: VitestRunner) {
 
   await runner.onAfterRunTest?.(test)
 
-  // if (isNode) {
-  //   const { getSnapshotClient } = await import('../integrations/snapshot/chai')
-  //   getSnapshotClient().clearTest()
-  // }
-
-  // if (workerState.config.logHeapUsage && isNode)
-  //   test.result.heap = process.memoryUsage().heapUsed
-
-  // workerState.current = undefined
-
   updateTask(test, runner)
 }
 
@@ -269,8 +224,6 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
 
   updateTask(suite, runner)
 
-  // const workerState = getWorkerState()
-
   if (suite.mode === 'skip') {
     suite.result.state = 'skip'
   }
@@ -281,22 +234,27 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
     try {
       const beforeAllCleanups = await callSuiteHook(suite, suite, 'beforeAll', runner, [suite])
 
-      for (let tasksGroup of partitionSuiteChildren(suite)) {
-        if (tasksGroup[0].concurrent === true) {
-          const mutex = limit(runner.config.maxConcurrency)
-          await Promise.all(tasksGroup.map(c => mutex(() => runSuiteChild(c, runner))))
-        }
-        else {
-          const { sequence } = runner.config
-          if (sequence.shuffle || suite.shuffle) {
-            // run describe block independently from tests
-            const suites = tasksGroup.filter(group => group.type === 'suite')
-            const tests = tasksGroup.filter(group => group.type === 'test')
-            const groups = shuffle([suites, tests], sequence.seed)
-            tasksGroup = groups.flatMap(group => shuffle(group, sequence.seed))
+      if (runner.runSuite) {
+        await runner.runSuite(suite)
+      }
+      else {
+        for (let tasksGroup of partitionSuiteChildren(suite)) {
+          if (tasksGroup[0].concurrent === true) {
+            const mutex = limit(runner.config.maxConcurrency)
+            await Promise.all(tasksGroup.map(c => mutex(() => runSuiteChild(c, runner))))
           }
-          for (const c of tasksGroup)
-            await runSuiteChild(c, runner)
+          else {
+            const { sequence } = runner.config
+            if (sequence.shuffle || suite.shuffle) {
+              // run describe block independently from tests
+              const suites = tasksGroup.filter(group => group.type === 'suite')
+              const tests = tasksGroup.filter(group => group.type === 'test')
+              const groups = shuffle([suites, tests], sequence.seed)
+              tasksGroup = groups.flatMap(group => shuffle(group, sequence.seed))
+            }
+            for (const c of tasksGroup)
+              await runSuiteChild(c, runner)
+          }
         }
       }
 
@@ -313,9 +271,6 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
   suite.result.duration = now() - start
 
   await runner.onAfterRunSuite?.(suite)
-
-  // if (workerState.config.logHeapUsage && isNode)
-  //   suite.result.heap = process.memoryUsage().heapUsed
 
   if (suite.mode === 'run') {
     if (!hasTests(suite)) {
@@ -367,37 +322,13 @@ export async function startTests(paths: string[], runner: VitestRunner) {
   const files = await collectTests(paths, runner)
 
   runner.onCollected?.(files)
-  // rpc().onCollected(files)
-
-  // const { getSnapshotClient } = await import('../integrations/snapshot/chai')
-  // getSnapshotClient().clear()
+  await runner.onBeforeRun?.()
 
   await runFiles(files, runner)
 
   await runner.onAfterRun?.()
-  // const coverage = await takeCoverageInsideWorker(config.coverage)
-  // rpc().onAfterSuiteRun({ coverage })
-
-  // await getSnapshotClient().saveCurrent()
 
   await sendTasksUpdate(runner)
 
   return files
 }
-
-// export function clearModuleMocks() {
-//   const { clearMocks, mockReset, restoreMocks, unstubEnvs, unstubGlobals } = getWorkerState().config
-
-//   // since each function calls another, we can just call one
-//   if (restoreMocks)
-//     vi.restoreAllMocks()
-//   else if (mockReset)
-//     vi.resetAllMocks()
-//   else if (clearMocks)
-//     vi.clearAllMocks()
-
-//   if (unstubEnvs)
-//     vi.unstubAllEnvs()
-//   if (unstubGlobals)
-//     vi.unstubAllGlobals()
-// }

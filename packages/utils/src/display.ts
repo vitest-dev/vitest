@@ -1,6 +1,8 @@
 import util from 'util'
 // @ts-expect-error doesn't have types
-import loupe from 'loupe'
+import loupeImport from 'loupe'
+
+const loupe = (typeof loupeImport.default === 'function' ? loupeImport.default : loupeImport)
 
 export function format(...args: any[]) {
   return util.format(...args)

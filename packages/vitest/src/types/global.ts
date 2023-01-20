@@ -1,7 +1,10 @@
 import type { Plugin as PrettyFormatPlugin } from 'pretty-format'
 import type { MatchersObject } from '@vitest/expect'
+import type SnapshotState from '../integrations/snapshot/port/state'
 import type { MatcherState } from './chai'
-import type { Constructable } from './general'
+import type { Constructable, UserConsoleLog } from './general'
+import type { VitestEnvironment } from './config'
+import type { BenchmarkResult } from './benchmark'
 
 type Promisify<O> = {
   [K in keyof O]: O[K] extends (...args: infer A) => infer R
@@ -9,6 +12,27 @@ type Promisify<O> = {
       ? Promisify<O[K]>
       : (...args: A) => Promise<R>
     : O[K]
+}
+
+declare module '@vitest/expect' {
+  interface MatcherState {
+    environment: VitestEnvironment
+    snapshotState: SnapshotState
+  }
+}
+
+declare module '@vitest/runner' {
+  interface TestContext {
+    expect: Vi.ExpectStatic
+  }
+
+  interface TaskBase {
+    logs?: UserConsoleLog[]
+  }
+
+  interface TaskResult {
+    benchmark?: BenchmarkResult
+  }
 }
 
 declare global {
