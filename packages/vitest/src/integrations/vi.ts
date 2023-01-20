@@ -340,7 +340,7 @@ class VitestUtils {
   public resetConfig() {
     if (this._config) {
       const state = getWorkerState()
-      state.config = { ...this._config }
+      Object.assign(state.config, this._config)
     }
   }
 }
