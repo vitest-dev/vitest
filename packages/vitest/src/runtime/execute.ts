@@ -31,6 +31,12 @@ export class VitestRunner extends ViteNodeRunner {
     super(options)
 
     this.mocker = new VitestMocker(this)
+
+    Object.defineProperty(globalThis, '__vitest_mocker__', {
+      value: this.mocker,
+      writable: true,
+      configurable: true,
+    })
   }
 
   shouldResolveId(id: string, _importee?: string | undefined): boolean {
@@ -67,9 +73,7 @@ export class VitestRunner extends ViteNodeRunner {
       Object.defineProperty(context.__vite_ssr_import_meta__, 'vitest', { get: () => globalThis.__vitest_index__ })
     }
 
-    return Object.assign(context, {
-      __vitest_mocker__: this.mocker,
-    })
+    return context
   }
 
   shouldInterop(path: string, mod: any) {
