@@ -626,7 +626,7 @@ importers:
   packages/browser:
     specifiers:
       '@types/ws': ^8.5.4
-      '@vitest/runner': workspace:^0.27.2
+      '@vitest/runner': workspace:*
       '@vitest/ws-client': workspace:*
       local-pkg: ^0.4.2
       mlly: ^1.1.0
@@ -729,7 +729,7 @@ importers:
       '@unocss/reset': ^0.48.3
       '@vitejs/plugin-vue': ^4.0.0
       '@vitejs/plugin-vue-jsx': ^3.0.0
-      '@vitest/runner': workspace:^0.27.2
+      '@vitest/runner': workspace:*
       '@vitest/ws-client': workspace:*
       '@vueuse/core': ^9.10.0
       ansi-to-html: ^0.7.2
@@ -981,7 +981,7 @@ importers:
 
   packages/ws-client:
     specifiers:
-      '@vitest/runner': workspace:^0.27.2
+      '@vitest/runner': workspace:*
       birpc: ^0.2.3
       flatted: ^3.2.7
       rollup: ^2.79.1
