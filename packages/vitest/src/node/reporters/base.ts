@@ -84,7 +84,7 @@ export abstract class BaseReporter implements Reporter {
 
         // print short errors, full errors will be at the end in summary
         for (const test of failed) {
-          logger.log(c.red(`   ${pointer} ${getFullName(test)}`))
+          logger.log(c.red(`   ${pointer} ${getFullName(test, c.dim(' > '))}`))
           test.result?.errors?.forEach((e) => {
             logger.log(c.red(`     ${F_RIGHT} ${(e as any)?.message}`))
           })
@@ -174,7 +174,7 @@ export abstract class BaseReporter implements Reporter {
     if (!this.shouldLog(log))
       return
     const task = log.taskId ? this.ctx.state.idMap.get(log.taskId) : undefined
-    this.ctx.logger.log(c.gray(log.type + c.dim(` | ${task ? getFullName(task) : 'unknown test'}`)))
+    this.ctx.logger.log(c.gray(log.type + c.dim(` | ${task ? getFullName(task, c.dim(' > ')) : 'unknown test'}`)))
     process[log.type].write(`${log.content}\n`)
   }
 
@@ -295,7 +295,7 @@ export abstract class BaseReporter implements Reporter {
       const group = bench.suite
       if (!group)
         continue
-      const groupName = getFullName(group)
+      const groupName = getFullName(group, c.dim(' > '))
       logger.log(`  ${bench.name}${c.dim(` - ${groupName}`)}`)
       const siblings = group.tasks
         .filter(i => i.result?.benchmark && i !== bench)
@@ -324,7 +324,7 @@ export abstract class BaseReporter implements Reporter {
       for (const task of tasks) {
         const filepath = (task as File)?.filepath || ''
         const projectName = (task as File)?.projectName || task.file?.projectName
-        let name = getFullName(task)
+        let name = getFullName(task, c.dim(' > '))
         if (filepath)
           name = `${name} ${c.dim(`[ ${this.relative(filepath)} ]`)}`
 

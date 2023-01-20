@@ -2,9 +2,7 @@ import { getNames, getTests } from '@vitest/runner/utils'
 import type { Arrayable, Suite, Task } from '../types'
 import { toArray } from './base'
 
-export { getNames } from '@vitest/runner/utils'
-
-export { getTasks, getTests, getSuites, hasTests, hasFailed } from '@vitest/runner/utils'
+export { getTasks, getTests, getSuites, hasTests, hasFailed, getNames } from '@vitest/runner/utils'
 
 export function hasBenchmark(suite: Arrayable<Suite>): boolean {
   return toArray(suite).some(s => s?.tasks?.some(c => c.meta?.benchmark || hasBenchmark(c as Suite)))
