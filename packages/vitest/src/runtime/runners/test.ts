@@ -4,7 +4,7 @@ import { getSnapshotClient } from '../../integrations/snapshot/chai'
 import { vi } from '../../integrations/vi'
 import { getFullName, getWorkerState } from '../../utils'
 import { createExpect } from '../../integrations/chai/index'
-import type { ResolvedConfig } from '#types'
+import type { ResolvedConfig } from '../../types/config'
 
 export class VitestTestRunner implements VitestRunner {
   private snapshotClient = getSnapshotClient()

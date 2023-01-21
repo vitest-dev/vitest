@@ -18,11 +18,11 @@ const extraInlineDeps = [
   // Vite client
   /vite\w*\/dist\/client\/env.mjs/,
   // Vitest
-  /\/vitest\/dist\/entry\.js/,
+  /\/vitest\/dist\/(runners-chunk|entry)\.js/,
   // yarn's .store folder
-  /vitest-virtual-\w+\/dist\/entry\.js/,
+  /vitest-virtual-\w+\/dist\/(runners-chunk|entry)\.js/,
   // cnpm
-  /@vitest\/dist\/entry\.js/,
+  /@vitest\/dist\/(runners-chunk|entry)\.js/,
   // Nuxt
   '@nuxt/test-utils',
 ]

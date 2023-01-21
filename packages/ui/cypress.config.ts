@@ -14,7 +14,8 @@ export default defineConfig({
         },
         resolve: {
           alias: {
-            '@vitest/runner/utils': resolve('../runner/src/utils/index.ts'),
+            '^@vitest/runner$': resolve('../runner/src/index.ts'),
+            '^@vitest/runner/utils$': resolve('../runner/src/utils/index.ts'),
           },
         },
         configFile: resolve('./cypress/vite.config.ts'),

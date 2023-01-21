@@ -48,6 +48,7 @@ const external = [
   'vite-node/client',
   'vite-node/server',
   'vite-node/utils',
+  '@vitest/runner/types',
 ]
 
 const plugins = [
@@ -68,8 +69,11 @@ export default ({ watch }) => defineConfig([
       dir: 'dist',
       format: 'esm',
       chunkFileNames: (chunkInfo) => {
-        const id = chunkInfo.facadeModuleId || Object.keys(chunkInfo.modules).find(i => !i.includes('node_modules') && i.includes('src/'))
+        let id = chunkInfo.facadeModuleId || Object.keys(chunkInfo.modules).find(i => !i.includes('node_modules') && i.includes('src/'))
         if (id) {
+          id = normalize(id)
+          if (id.includes(normalize('runtime/runners')))
+            return 'runners-chunk.js'
           const parts = Array.from(
             new Set(relative(process.cwd(), id).split(/\//g)
               .map(i => i.replace(/\..*$/, ''))

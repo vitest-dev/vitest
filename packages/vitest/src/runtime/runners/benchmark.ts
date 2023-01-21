@@ -3,7 +3,8 @@ import { updateTask as updateRunnerTask } from '@vitest/runner'
 import { createDefer, getSafeTimers } from '@vitest/utils'
 import { getBenchFn, getBenchOptions } from '../benchmark'
 import { getWorkerState } from '../../utils'
-import type { BenchTask, Benchmark, BenchmarkResult, ResolvedConfig } from '#types'
+import type { BenchTask, Benchmark, BenchmarkResult } from '../../types/benchmark'
+import type { ResolvedConfig } from '../../types/config'
 
 async function importTinybench() {
   if (!globalThis.EventTarget)

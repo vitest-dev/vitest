@@ -19,6 +19,10 @@
       "types": "./dist/utils.d.ts",
       "import": "./dist/utils.js"
     },
+    "./types": {
+      "types": "./dist/types.d.ts",
+      "import": "./dist/types.js"
+    },
     "./*": "./*"
   },
   "main": "./dist/index.js",

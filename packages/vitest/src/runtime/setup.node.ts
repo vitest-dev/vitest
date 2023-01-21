@@ -1,5 +1,4 @@
-/* eslint-disable n/no-deprecated-api */
-
+import { createRequire } from 'node:module'
 import p from 'picocolors'
 import { installSourcemapsSupport } from 'vite-node/source-map'
 import { setColors } from '@vitest/utils'
@@ -31,6 +30,7 @@ export async function setupGlobalEnv(config: ResolvedConfig) {
   setColors(p)
   globalSetup = true
 
+  const require = createRequire(import.meta.url)
   // always mock "required" `css` files, because we cannot process them
   require.extensions['.css'] = () => ({})
   require.extensions['.scss'] = () => ({})
