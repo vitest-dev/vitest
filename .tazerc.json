@@ -2,8 +2,7 @@
   "exclude": [
     "vue",
     "puppeteer",
-    "pretty-format",
-    "pathe"
+    "pretty-format"
   ],
   "packageMode": {
     "vue": "minor",

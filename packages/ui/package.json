@@ -41,7 +41,7 @@
   "dependencies": {
     "fast-glob": "^3.2.12",
     "flatted": "^3.2.7",
-    "pathe": "^1.0.0",
+    "pathe": "^1.1.0",
     "picocolors": "^1.0.0",
     "sirv": "^2.0.2"
   },

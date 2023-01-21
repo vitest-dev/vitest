@@ -42,8 +42,6 @@
     "@testing-library/user-event",
     // TODO: migrate
     "pretty-format",
-    // TODO: breaking changes
-    "pathe",
     // TODO: vite-plugin-pwa issue
     "esno",
     // user can install any version
