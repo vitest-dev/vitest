@@ -128,7 +128,7 @@ If disabled, your `alias` and `<plugin>.resolveId` won't affect imports inside e
 #### deps.interopDefault
 
 - **Type:** `boolean`
-- **Default:** `false` if `environment` is `node`, `true` otherwise
+- **Default:** `true`
 
 Interpret CJS module's default as named exports. Some dependencies only bundle CJS modules and don't use named exports that Node.js can statically analyze when a package is imported using `import` syntax instead of `require`. When importing such dependencies in Node environment using named exports, you will see this error:
 
@@ -139,14 +139,14 @@ SyntaxError: Named export 'read' not found. The requested module 'fs-jetpack' is
 CommonJS modules can always be imported via the default export.
 ```
 
-Vitest doesn't do static analysis, and cannot fail before your running code, so you will most likely see this error when running tests:
+Vitest doesn't do static analysis, and cannot fail before your running code, so you will most likely see this error when running tests, if this feature is disabled:
 
 ```
 TypeError: createAsyncThunk is not a function
 TypeError: default is not a function
 ```
 
-If you are using bundlers or transpilers that bypass this Node.js limitation, you can enable this option manually. By default, Vitest assumes you are using Node ESM syntax, when `environment` is `node`, and doesn't interpret named exports.
+By default, Vitest assumes you are using a bundler to bypass this and will not fail, but you can disable this behaviour manually, if you code is not processed.
 
 ### benchmark
 
