@@ -13,10 +13,10 @@ export default defineConfig({
           'process.env.NODE_DEBUG': '"false"',
         },
         resolve: {
-          alias: {
-            '^@vitest/runner$': resolve('../runner/src/index.ts'),
-            '^@vitest/runner/utils$': resolve('../runner/src/utils/index.ts'),
-          },
+          alias: [
+            { find: /^\@vitest\/utils/, replacement: resolve('../utils/src/') },
+            { find: /^\@vitest\/runner/, replacement: resolve('../runner/src/') },
+          ],
         },
         configFile: resolve('./cypress/vite.config.ts'),
       },
