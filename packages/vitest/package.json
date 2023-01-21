@@ -45,6 +45,10 @@
       "types": "./dist/node.d.ts",
       "import": "./dist/node.js"
     },
+    "./browser": {
+      "types": "./dist/browser.d.ts",
+      "import": "./dist/browser.js"
+    },
     "./environments": {
       "types": "./dist/environments.d.ts",
       "import": "./dist/environments.js"

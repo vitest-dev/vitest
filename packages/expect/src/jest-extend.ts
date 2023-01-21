@@ -9,7 +9,7 @@ import { JEST_MATCHERS_OBJECT } from './constants'
 import { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import { getState } from './state'
 
-import * as matcherUtils from './jest-matcher-utils'
+import { diff, getMatcherUtils, stringify } from './jest-matcher-utils'
 
 import {
   equals,
@@ -22,7 +22,9 @@ const getMatcherState = (assertion: Chai.AssertionStatic & Chai.Assertion, expec
   const isNot = util.flag(assertion, 'negate') as boolean
   const promise = util.flag(assertion, 'promise') || ''
   const jestUtils = {
-    ...matcherUtils,
+    ...getMatcherUtils(),
+    diff,
+    stringify,
     iterableEquality,
     subsetEquality,
   }

@@ -8,5 +8,8 @@ export default defineConfig({
     minify: false,
     outDir: '../../dist/client',
     emptyOutDir: false,
+    rollupOptions: {
+      external: ['/__vitest_index__'],
+    },
   },
 })

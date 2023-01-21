@@ -1,12 +1,8 @@
-import { relative as relativeBrowser } from 'node:path'
-import c from 'picocolors'
-import type { Suite, Task } from '@vitest/runner'
-import { isPackageExists } from 'local-pkg'
-import { relative as relativeNode } from 'pathe'
+// import { relative as relativeBrowser } from 'node:path'
+import { relative } from 'pathe'
 import type { ModuleCacheMap } from 'vite-node'
-import { EXIT_CODE_RESTART } from '../constants'
 import { getWorkerState } from '../utils'
-import { isBrowser, isCI, isNode } from './env'
+import { isNode } from './env'
 
 export * from './graph'
 export * from './tasks'
@@ -21,28 +17,8 @@ export const getRunMode = () => getWorkerState().config.mode
 export const isRunningInTest = () => getRunMode() === 'test'
 export const isRunningInBenchmark = () => getRunMode() === 'benchmark'
 
-export const relativePath = isBrowser ? relativeBrowser : relativeNode
-
-/**
- * Partition in tasks groups by consecutive concurrent
- */
-export function partitionSuiteChildren(suite: Suite) {
-  let tasksGroup: Task[] = []
-  const tasksGroups: Task[][] = []
-  for (const c of suite.tasks) {
-    if (tasksGroup.length === 0 || c.concurrent === tasksGroup[0].concurrent) {
-      tasksGroup.push(c)
-    }
-    else {
-      tasksGroups.push(tasksGroup)
-      tasksGroup = [c]
-    }
-  }
-  if (tasksGroup.length > 0)
-    tasksGroups.push(tasksGroup)
-
-  return tasksGroups
-}
+export const relativePath = relative
+export { resolve } from 'pathe'
 
 export function resetModules(modules: ModuleCacheMap, resetMocks = false) {
   const skipPaths = [
@@ -69,38 +45,6 @@ export function removeUndefinedValues<T extends Record<string, any>>(obj: T): T 
       delete obj[key]
   }
   return obj
-}
-
-export async function ensurePackageInstalled(
-  dependency: string,
-  root: string,
-) {
-  if (isPackageExists(dependency, { paths: [root] }))
-    return true
-
-  const promptInstall = !isCI && process.stdout.isTTY
-
-  process.stderr.write(c.red(`${c.inverse(c.red(' MISSING DEP '))} Can not find dependency '${dependency}'\n\n`))
-
-  if (!promptInstall)
-    return false
-
-  const prompts = await import('prompts')
-  const { install } = await prompts.prompt({
-    type: 'confirm',
-    name: 'install',
-    message: c.reset(`Do you want to install ${c.green(dependency)}?`),
-  })
-
-  if (install) {
-    await (await import('@antfu/install-pkg')).installPackage(dependency, { dev: true })
-    // TODO: somehow it fails to load the package after installation, remove this when it's fixed
-    process.stderr.write(c.yellow(`\nPackage ${dependency} installed, re-run the command to start.\n`))
-    process.exit(EXIT_CODE_RESTART)
-    return true
-  }
-
-  return false
 }
 
 /**
@@ -144,10 +88,6 @@ export function getCallLastIndex(code: string) {
   }
   return null
 }
-
-const resolve = isNode ? relativeNode : relativeBrowser
-
-export { resolve as resolvePath }
 
 // AggregateError is supported in Node.js 15.0.0+
 class AggregateErrorPonyfill extends Error {

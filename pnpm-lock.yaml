@@ -702,6 +702,7 @@ importers:
       '@vitest/spy': link:../spy
       '@vitest/utils': link:../utils
       chai: 4.3.7
+    devDependencies:
       picocolors: 1.0.0
 
   packages/runner:

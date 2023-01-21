@@ -19,22 +19,7 @@ let config: ResolvedConfig | undefined
 let runner: VitestRunner | undefined
 const browserHashMap = new Map<string, string>()
 
-export const client = createClient(ENTRY_URL, {
-  handlers: {
-    async onPathsCollected(paths) {
-      if (!paths)
-        return
-
-      // const config = __vitest_worker__.config
-      const now = `${new Date().getTime()}`
-      paths.forEach((i) => {
-        browserHashMap.set(i, now)
-      })
-
-      await runTests(paths, config, client)
-    },
-  },
-})
+export const client = createClient(ENTRY_URL)
 
 const ws = client.ws
 
@@ -79,7 +64,10 @@ ws.addEventListener('open', async () => {
 })
 
 async function runTests(paths: string[], config: any, client: VitestClient) {
-  const { startTests } = await import('@vitest/runner')
+  // we use dynamic import here, because this file is bundled with UI,
+  // but we need to resolve correct path at runtime
+  const path = '/__vitest_index__'
+  const { startTests } = await import(path) as typeof import('vitest/browser')
 
   if (!runner)
     runner = new BrowserTestRunner({ config, client, browserHashMap })

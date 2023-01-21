@@ -1,7 +1,8 @@
 /* eslint-disable n/no-deprecated-api */
 
+import p from 'picocolors'
 import { installSourcemapsSupport } from 'vite-node/source-map'
-import { setSafeTimers } from '@vitest/utils'
+import { setColors, setSafeTimers } from '@vitest/utils'
 import { environments } from '../integrations/env'
 import type { Environment, ResolvedConfig } from '../types'
 import { getSafeTimers, getWorkerState, isNode } from '../utils'
@@ -27,6 +28,7 @@ export async function setupGlobalEnv(config: ResolvedConfig) {
   if (globalSetup)
     return
 
+  setColors(p)
   setSafeTimers()
   globalSetup = true
 

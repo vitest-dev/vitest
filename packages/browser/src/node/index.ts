@@ -35,6 +35,9 @@ export default (base = '/'): Plugin[] => {
         if (ctx.ssr)
           return
 
+        if (id === '/__vitest_index__')
+          return this.resolve('vitest/browser')
+
         if (stubs.includes(id))
           return resolve(pkgRoot, 'stubs', id)
 

@@ -1,7 +1,7 @@
 import { existsSync, readdirSync } from 'node:fs'
 import { isNodeBuiltin } from 'mlly'
 import { basename, dirname, extname, isAbsolute, join, resolve } from 'pathe'
-import c from 'picocolors'
+import { getColors } from '@vitest/utils'
 import { getAllMockableProperties, getType, getWorkerState } from '../utils'
 import { distDir } from '../constants'
 import type { MockFactory, PendingSuiteMock } from '../types/mocker'
@@ -134,6 +134,7 @@ export class VitestMocker {
             return target.then.bind(target)
         }
         else if (!(prop in target)) {
+          const c = getColors()
           throw new Error(
             `[vitest] No "${String(prop)}" export is defined on the "${mockpath}" mock. `
             + 'Did you forget to return it from "vi.mock"?'
