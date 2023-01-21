@@ -53,14 +53,30 @@ export type CoverageReporter =
   | 'text-summary'
   | 'text'
 
-export type CoverageOptions =
-  | BaseCoverageOptions & { provider?: null | CoverageProviderModule }
-  | CoverageC8Options & { provider?: 'c8' }
-  | CoverageIstanbulOptions & { provider?: 'istanbul' }
+type Provider = 'c8' | 'istanbul' | CoverageProviderModule | undefined
 
-export type ResolvedCoverageOptions =
-  & { tempDirectory: string }
-  & Required<CoverageOptions>
+export type CoverageOptions<T extends Provider = Provider> =
+  T extends CoverageProviderModule ? ({ provider: T } & BaseCoverageOptions) :
+    T extends 'istanbul' ? ({ provider: T } & CoverageIstanbulOptions) :
+        ({ provider?: T } & CoverageC8Options)
+
+/** Fields that have default values. Internally these will always be defined. */
+type FieldsWithDefaultValues =
+  | 'enabled'
+  | 'clean'
+  | 'cleanOnRerun'
+  | 'reportsDirectory'
+  | 'exclude'
+  | 'extension'
+  | 'reporter'
+
+export type ResolvedCoverageOptions<T extends Provider = Provider> =
+  & CoverageOptions<T>
+  & Required<Pick<CoverageOptions<T>, FieldsWithDefaultValues>>
+  // Resolved fields which may have different typings as public configuration API has
+  & {
+    reporter: CoverageReporter[]
+  }
 
 export interface BaseCoverageOptions {
   /**

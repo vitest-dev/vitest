@@ -21,8 +21,16 @@ test('providers, custom', () => {
         return {
           name: 'custom-provider',
           initialize(_: Vitest) {},
-          resolveOptions() {
-            return {} as ResolvedCoverageOptions
+          resolveOptions(): ResolvedCoverageOptions {
+            return {
+              clean: true,
+              cleanOnRerun: true,
+              enabled: true,
+              exclude: ['string'],
+              extension: ['string'],
+              reporter: ['html', 'json'],
+              reportsDirectory: 'string',
+            }
           },
           clean(_: boolean) {},
           onBeforeFilesRun() {},
