@@ -207,12 +207,19 @@ export class ViteNodeRunner {
   }
 
   private async _resolveUrl(id: string, importee?: string): Promise<[url: string, fsPath: string]> {
-    if (!this.shouldResolveId(id))
-      return [id, id]
     // we don't pass down importee here, because otherwise Vite doesn't resolve it correctly
+    // should be checked before normalization, because it removes this prefix
     if (importee && id.startsWith(VALID_ID_PREFIX))
       importee = undefined
     id = normalizeRequestId(id, this.options.base)
+    // should be checked after normalization
+    // provide importer only for relative and absolute paths
+    // paths like "src/user" are valid for transformRequest, but they will be resolved incorrectly,
+    // if importer is provided - because they will be treated as relative to the importer instead of root
+    if (!id.startsWith('/') && !id.startsWith('./') && !id.startsWith('../'))
+      importee = undefined
+    if (!this.shouldResolveId(id))
+      return [id, id]
     const { path, exists } = toFilePath(id, this.root)
     if (!this.options.resolveId || exists)
       return [id, path]
