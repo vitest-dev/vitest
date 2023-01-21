@@ -1,4 +1,5 @@
 import type { BenchmarkUserOptions, ResolvedCoverageOptions, UserConfig } from './types'
+import { isCI } from './utils/env'
 
 export const defaultInclude = ['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']
 export const defaultExclude = ['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**', '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*']
@@ -53,8 +54,8 @@ export const fakeTimersDefaults = {
 } as NonNullable<UserConfig['fakeTimers']>
 
 const config = {
-  allowOnly: !process.env.CI,
-  watch: !process.env.CI,
+  allowOnly: !isCI,
+  watch: !isCI,
   globals: false,
   environment: 'node' as const,
   threads: true,

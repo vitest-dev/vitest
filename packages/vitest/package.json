@@ -117,6 +117,7 @@
     "local-pkg": "^0.4.2",
     "picocolors": "^1.0.0",
     "source-map": "^0.6.1",
+    "std-env": "^3.3.1",
     "strip-literal": "^1.0.0",
     "tinybench": "^2.3.1",
     "tinypool": "^0.3.0",
