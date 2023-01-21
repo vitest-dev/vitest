@@ -12,8 +12,10 @@ export default defineConfig({
         define: {
           'process.env.NODE_DEBUG': '"false"',
         },
-        alias: {
-          '@vitest/runner/utils': resolve('../runner/src/utils.ts'),
+        resolve: {
+          alias: {
+            '@vitest/runner/utils': resolve('../runner/src/utils.ts'),
+          },
         },
         configFile: resolve('./cypress/vite.config.ts'),
       },
