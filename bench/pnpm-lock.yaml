@@ -51,6 +51,7 @@ importers:
   ../packages/browser:
     specifiers:
       '@types/ws': ^8.5.4
+      '@vitest/runner': workspace:*
       '@vitest/ws-client': workspace:*
       local-pkg: ^0.4.2
       mlly: ^1.1.0
@@ -60,6 +61,7 @@ importers:
       sirv: ^2.0.2
       vitest: workspace:*
     dependencies:
+      '@vitest/runner': link:../runner
       local-pkg: 0.4.2
       mlly: 1.1.0
       modern-node-polyfills: 0.0.9
@@ -74,14 +76,14 @@ importers:
   ../packages/coverage-c8:
     specifiers:
       c8: ^7.12.0
-      pathe: ^0.2.0
+      pathe: ^1.1.0
       vite-node: workspace:*
       vitest: workspace:*
     dependencies:
       c8: 7.12.0
       vitest: link:../vitest
     devDependencies:
-      pathe: 0.2.0
+      pathe: 1.1.0
       vite-node: link:../vite-node
 
   ../packages/coverage-istanbul:
@@ -96,7 +98,7 @@ importers:
       istanbul-lib-report: ^3.0.0
       istanbul-lib-source-maps: ^4.0.1
       istanbul-reports: ^3.1.5
-      pathe: ^0.2.0
+      pathe: ^1.1.0
       test-exclude: ^6.0.0
       vitest: workspace:*
     dependencies:
@@ -113,7 +115,7 @@ importers:
       '@types/istanbul-lib-report': 3.0.0
       '@types/istanbul-lib-source-maps': 4.0.1
       '@types/istanbul-reports': 3.0.1
-      pathe: 0.2.0
+      pathe: 1.1.0
 
   ../packages/expect:
     specifiers:
@@ -125,7 +127,18 @@ importers:
       '@vitest/spy': link:../spy
       '@vitest/utils': link:../utils
       chai: 4.3.7
+    devDependencies:
       picocolors: 1.0.0
+
+  ../packages/runner:
+    specifiers:
+      '@vitest/utils': workspace:*
+      p-limit: ^4.0.0
+      pathe: ^1.1.0
+    dependencies:
+      '@vitest/utils': link:../utils
+      p-limit: 4.0.0
+      pathe: 1.1.0
 
   ../packages/spy:
     specifiers:
@@ -144,6 +157,7 @@ importers:
       '@unocss/reset': ^0.48.3
       '@vitejs/plugin-vue': ^4.0.0
       '@vitejs/plugin-vue-jsx': ^3.0.0
+      '@vitest/runner': workspace:*
       '@vitest/ws-client': workspace:*
       '@vueuse/core': ^9.10.0
       ansi-to-html: ^0.7.2
@@ -156,6 +170,7 @@ importers:
       fast-glob: ^3.2.12
       flatted: ^3.2.7
       floating-vue: ^2.0.0-y.0
+      pathe: ^1.1.0
       picocolors: ^1.0.0
       rollup: ^2.79.1
       sirv: ^2.0.2
@@ -170,6 +185,8 @@ importers:
     dependencies:
       fast-glob: 3.2.12
       flatted: 3.2.7
+      pathe: 1.1.0
+      picocolors: 1.0.0
       sirv: 2.0.2
     devDependencies:
       '@faker-js/faker': 7.6.0
@@ -181,6 +198,7 @@ importers:
       '@unocss/reset': 0.48.3
       '@vitejs/plugin-vue': 4.0.0_vite@4.0.0+vue@3.2.45
       '@vitejs/plugin-vue-jsx': 3.0.0_vite@4.0.0+vue@3.2.45
+      '@vitest/runner': link:../runner
       '@vitest/ws-client': link:../ws-client
       '@vueuse/core': 9.10.0_vue@3.2.45
       ansi-to-html: 0.7.2
@@ -191,7 +209,6 @@ importers:
       d3-graph-controller: 2.5.1
       diff: 5.1.0
       floating-vue: 2.0.0-y.0_vue@3.2.45
-      picocolors: 1.0.0
       rollup: 2.79.1
       splitpanes: 3.1.5
       unocss: 0.48.3_rollup@2.79.1+vite@4.0.0
@@ -207,11 +224,13 @@ importers:
       '@types/diff': ^5.0.2
       cli-truncate: ^3.1.0
       diff: ^5.1.0
+      loupe: ^2.3.6
       picocolors: ^1.0.0
       pretty-format: ^27.5.1
     dependencies:
       cli-truncate: 3.1.0
       diff: 5.1.0
+      loupe: 2.3.6
       picocolors: 1.0.0
       pretty-format: 27.5.1
     devDependencies:
@@ -225,7 +244,7 @@ importers:
       cac: ^6.7.14
       debug: ^4.3.4
       mlly: ^1.1.0
-      pathe: ^0.2.0
+      pathe: ^1.1.0
       picocolors: ^1.0.0
       rollup: ^2.79.1
       source-map: ^0.6.1
@@ -235,7 +254,7 @@ importers:
       cac: 6.7.14
       debug: 4.3.4
       mlly: 1.1.0
-      pathe: 0.2.0
+      pathe: 1.1.0
       picocolors: 1.0.0
       source-map: 0.6.1
       source-map-support: 0.5.21
@@ -262,6 +281,7 @@ importers:
       '@types/sinonjs__fake-timers': ^8.1.2
       '@vitest/browser': '*'
       '@vitest/expect': workspace:*
+      '@vitest/runner': workspace:*
       '@vitest/spy': workspace:*
       '@vitest/ui': workspace:*
       '@vitest/utils': workspace:*
@@ -290,13 +310,14 @@ importers:
       mlly: ^1.1.0
       natural-compare: ^1.4.0
       p-limit: ^4.0.0
-      pathe: ^0.2.0
+      pathe: ^1.1.0
       picocolors: ^1.0.0
       pkg-types: ^1.0.1
       pretty-format: ^27.5.1
       prompts: ^2.4.2
       rollup: ^2.79.1
       source-map: ^0.6.1
+      std-env: ^3.3.1
       strip-ansi: ^7.0.1
       strip-literal: ^1.0.0
       tinybench: ^2.3.1
@@ -305,26 +326,35 @@ importers:
       typescript: ^4.9.4
       vite: ^3.0.0 || ^4.0.0
       vite-node: workspace:*
+      why-is-node-running: ^2.2.2
       ws: ^8.12.0
     dependencies:
       '@types/chai': 4.3.4
       '@types/chai-subset': 1.3.3
       '@types/node': 17.0.35
       '@vitest/browser': link:../browser
+      '@vitest/expect': link:../expect
+      '@vitest/runner': link:../runner
+      '@vitest/spy': link:../spy
+      '@vitest/ui': link:../ui
+      '@vitest/utils': link:../utils
       acorn: 8.8.1
       acorn-walk: 8.2.0
       cac: 6.7.14
       chai: 4.3.7
       debug: 4.3.4
       local-pkg: 0.4.2
+      pathe: 1.1.0
       picocolors: 1.0.0
       source-map: 0.6.1
+      std-env: 3.3.1
       strip-literal: 1.0.0
       tinybench: 2.3.1
       tinypool: 0.3.0
       tinyspy: 1.0.2
       vite: 3.2.5_@types+node@17.0.35
       vite-node: link:../vite-node
+      why-is-node-running: 2.2.2
     devDependencies:
       '@antfu/install-pkg': 0.1.1
       '@edge-runtime/vm': 2.0.2
@@ -335,10 +365,6 @@ importers:
       '@types/natural-compare': 1.4.1
       '@types/prompts': 2.4.2
       '@types/sinonjs__fake-timers': 8.1.2
-      '@vitest/expect': link:../expect
-      '@vitest/spy': link:../spy
-      '@vitest/ui': link:../ui
-      '@vitest/utils': link:../utils
       birpc: 0.2.3
       chai-subset: 1.6.0
       cli-truncate: 3.1.0
@@ -358,7 +384,6 @@ importers:
       mlly: 1.1.0
       natural-compare: 1.4.0
       p-limit: 4.0.0
-      pathe: 0.2.0
       pkg-types: 1.0.1
       pretty-format: 27.5.1
       prompts: 2.4.2
@@ -388,6 +413,7 @@ importers:
 
   ../packages/ws-client:
     specifiers:
+      '@vitest/runner': workspace:*
       birpc: ^0.2.3
       flatted: ^3.2.7
       rollup: ^2.79.1
@@ -397,6 +423,7 @@ importers:
       flatted: 3.2.7
       ws: 8.12.0
     devDependencies:
+      '@vitest/runner': link:../runner
       rollup: 2.79.1
 
   test/vue:
@@ -641,6 +668,24 @@ packages:
       '@babel/core': ^7.0.0
     dependencies:
       '@babel/core': 7.18.2
+      '@babel/helper-annotate-as-pure': 7.16.7
+      '@babel/helper-environment-visitor': 7.18.9
+      '@babel/helper-function-name': 7.19.0
+      '@babel/helper-member-expression-to-functions': 7.17.7
+      '@babel/helper-optimise-call-expression': 7.16.7
+      '@babel/helper-replace-supers': 7.16.7
+      '@babel/helper-split-export-declaration': 7.18.6
+    transitivePeerDependencies:
+      - supports-color
+    dev: true
+
+  /@babel/helper-create-class-features-plugin/7.18.0_@babel+core@7.20.5:
+    resolution: {integrity: sha512-Kh8zTGR9de3J63e5nS0rQUdRs/kbtwoeQQ0sriS0lItjC96u8XXZN6lKpuyWd2coKSU13py/y+LTmThLuVX0Pg==}
+    engines: {node: '>=6.9.0'}
+    peerDependencies:
+      '@babel/core': ^7.0.0
+    dependencies:
+      '@babel/core': 7.20.5
       '@babel/helper-annotate-as-pure': 7.16.7
       '@babel/helper-environment-visitor': 7.18.9
       '@babel/helper-function-name': 7.19.0
@@ -1748,6 +1793,16 @@ packages:
       '@babel/helper-plugin-utils': 7.17.12
     dev: true
 
+  /@babel/plugin-syntax-typescript/7.17.12_@babel+core@7.20.5:
+    resolution: {integrity: sha512-TYY0SXFiO31YXtNg3HtFwNJHjLsAyIIhAhNWkQ5whPPS7HWUFlg9z0Ta4qAQNjQbP1wsSt/oKkmZ/4/WWdMUpw==}
+    engines: {node: '>=6.9.0'}
+    peerDependencies:
+      '@babel/core': ^7.0.0-0
+    dependencies:
+      '@babel/core': 7.20.5
+      '@babel/helper-plugin-utils': 7.17.12
+    dev: true
+
   /@babel/plugin-syntax-typescript/7.20.0_@babel+core@7.20.5:
     resolution: {integrity: sha512-rd9TkG+u1CExzS4SM1BlMEhMXwFLKVjOAFFCDx9PbX5ycJWDoWMcwdJH9RhkPu1dOgn5TrxLot/Gx6lWFuAUNQ==}
     engines: {node: '>=6.9.0'}
@@ -2115,6 +2170,21 @@ packages:
       - supports-color
     dev: true
 
+  /@babel/plugin-transform-modules-commonjs/7.17.7_@babel+core@7.20.5:
+    resolution: {integrity: sha512-ITPmR2V7MqioMJyrxUo2onHNC3e+MvfFiFIR0RP21d3PtlVb6sfzoxNKiphSZUOM9hEIdzCcZe83ieX3yoqjUA==}
+    engines: {node: '>=6.9.0'}
+    peerDependencies:
+      '@babel/core': ^7.0.0-0
+    dependencies:
+      '@babel/core': 7.20.5
+      '@babel/helper-module-transforms': 7.19.0
+      '@babel/helper-plugin-utils': 7.17.12
+      '@babel/helper-simple-access': 7.18.2
+      babel-plugin-dynamic-import-node: 2.3.3
+    transitivePeerDependencies:
+      - supports-color
+    dev: true
+
   /@babel/plugin-transform-modules-commonjs/7.18.2_@babel+core@7.18.2:
     resolution: {integrity: sha512-f5A865gFPAJAEE0K7F/+nm5CmAE3y8AWlMBG9unu5j9+tk50UQVK0QS8RNxSp7MJf0wh97uYyLWt3Zvu71zyOQ==}
     engines: {node: '>=6.9.0'}
@@ -2469,6 +2539,20 @@ packages:
       - supports-color
     dev: true
 
+  /@babel/plugin-transform-typescript/7.18.4_@babel+core@7.20.5:
+    resolution: {integrity: sha512-l4vHuSLUajptpHNEOUDEGsnpl9pfRLsN1XUoDQDD/YBuXTM+v37SHGS+c6n4jdcZy96QtuUuSvZYMLSSsjH8Mw==}
+    engines: {node: '>=6.9.0'}
+    peerDependencies:
+      '@babel/core': ^7.0.0-0
+    dependencies:
+      '@babel/core': 7.20.5
+      '@babel/helper-create-class-features-plugin': 7.18.0_@babel+core@7.20.5
+      '@babel/helper-plugin-utils': 7.17.12
+      '@babel/plugin-syntax-typescript': 7.17.12_@babel+core@7.20.5
+    transitivePeerDependencies:
+      - supports-color
+    dev: true
+
   /@babel/plugin-transform-typescript/7.20.2_@babel+core@7.20.5:
     resolution: {integrity: sha512-jvS+ngBfrnTUBfOQq8NfGnSbF9BrqlR6hjJ2yVxMkmO5nL/cdifNbI30EfjRlN4g5wYWNnMPyj5Sa6R1pbLeag==}
     engines: {node: '>=6.9.0'}
@@ -2744,9 +2828,9 @@ packages:
       '@babel/core': ^7.0.0-0
     dependencies:
       '@babel/core': 7.20.5
-      '@babel/helper-plugin-utils': 7.20.2
-      '@babel/helper-validator-option': 7.18.6
-      '@babel/plugin-transform-typescript': 7.20.2_@babel+core@7.20.5
+      '@babel/helper-plugin-utils': 7.17.12
+      '@babel/helper-validator-option': 7.16.7
+      '@babel/plugin-transform-typescript': 7.18.4_@babel+core@7.20.5
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -3901,7 +3985,7 @@ packages:
       consola: 2.15.3
       fast-glob: 3.2.12
       magic-string: 0.27.0
-      pathe: 1.0.0
+      pathe: 1.1.0
       perfect-debounce: 0.1.3
     transitivePeerDependencies:
       - rollup
@@ -4225,11 +4309,11 @@ packages:
         optional: true
     dependencies:
       '@babel/core': 7.20.5
-      '@babel/plugin-transform-modules-commonjs': 7.18.2_@babel+core@7.20.5
+      '@babel/plugin-transform-modules-commonjs': 7.17.7_@babel+core@7.20.5
       babel-jest: 27.5.1_@babel+core@7.20.5
       chalk: 2.4.2
       convert-source-map: 1.8.0
-      css-tree: 2.3.1
+      css-tree: 2.1.0
       jest: 27.5.1
       source-map: 0.5.6
       ts-jest: 27.1.5_lymxezh3rizc3sf4nv2timwyqu
@@ -7547,6 +7631,12 @@ packages:
       get-func-name: 2.0.0
     dev: false
 
+  /loupe/2.3.6:
+    resolution: {integrity: sha512-RaPMZKiMy8/JruncMU5Bt6na1eftNoo++R4Y+N2FrxkDVTrGvcyzFTsaGif4QTeKESheMGegbhw6iUAq+5A8zA==}
+    dependencies:
+      get-func-name: 2.0.0
+    dev: false
+
   /lru-cache/6.0.0:
     resolution: {integrity: sha512-Jo6dJ04CmSjuznwJSS3pUeWmd/H0ffTlkXXgwZi+eq1UCmqQwCh+eLsYOYCwY991i2Fah4h1BEMCx4qThGbsiA==}
     engines: {node: '>=10'}
@@ -7840,7 +7930,6 @@ packages:
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
     dependencies:
       yocto-queue: 1.0.0
-    dev: true
 
   /p-locate/4.1.0:
     resolution: {integrity: sha512-R79ZZ/0wAxKGu3oYMlz8jy/kbhsNrS7SKZ7PxEHBgJ5+F2mtFW2fK2cOtBh1cHYkQsbzFV7I+EoRKe6Yt0oK7A==}
@@ -7924,11 +8013,11 @@ packages:
   /path-parse/1.0.7:
     resolution: {integrity: sha512-LDJzPVEEEPR+y48z93A0Ed0yXb8pAByGWo/k5YYdYgpY2/2EsOsksJrq7lOHxryrVOn1ejG6oAp8ahvOIQD8sw==}
 
-  /pathe/0.2.0:
-    resolution: {integrity: sha512-sTitTPYnn23esFR3RlqYBWn4c45WGeLcsKzQiUpXJAyfcWkolvlYpV8FLo7JishK946oQwMFUCHXQ9AjGPKExw==}
-
   /pathe/1.0.0:
     resolution: {integrity: sha512-nPdMG0Pd09HuSsr7QOKUXO2Jr9eqaDiZvDwdyIhNG5SHYujkQHYKDfGQkulBxvbDHz8oHLsTgKN86LSwYzSHAg==}
+
+  /pathe/1.1.0:
+    resolution: {integrity: sha512-ODbEPR0KKHqECXW1GoxdDb+AZvULmXjVPy4rt+pGo2+TnjJTIPJQSVS6N63n8T2Ip+syHhbn52OewKicV0373w==}
 
   /pathval/1.1.1:
     resolution: {integrity: sha512-Dp6zGqpTdETdR63lehJYPeIOqpiNBNtc7BpWSLrOje7UaIsE5aY92r/AunQA7rsXvet3lrJ3JnZX29UPTKXyKQ==}
@@ -7975,7 +8064,7 @@ packages:
     dependencies:
       jsonc-parser: 3.2.0
       mlly: 1.1.0
-      pathe: 1.0.0
+      pathe: 1.1.0
 
   /platform/1.3.6:
     resolution: {integrity: sha512-fnWVljUchTro6RiCFvCXBbNhJc2NijN7oIQxbwsyL0buWJPG85v81ehlHI9fXrJsMNgTofEoWIQeClKpgxFLrg==}
@@ -8286,6 +8375,10 @@ packages:
       object-inspect: 1.12.0
     dev: true
 
+  /siginfo/2.0.0:
+    resolution: {integrity: sha512-ybx0WO1/8bSBLEWXZvEd7gMW3Sn3JFlW3TvX1nREbDLRNQNaeNN8WK0meBwPdAaOI7TtRRRJn/Es1zhrrCHu7g==}
+    dev: false
+
   /signal-exit/3.0.7:
     resolution: {integrity: sha512-wnD2ZE+l+SPC/uoS0vXeE9L1+0wuaMqKlfz9AMUo38JsyLSBWSFcHR1Rri62LZc12vLr1gb3jl7iwQhgwpAbGQ==}
 
@@ -8389,6 +8482,14 @@ packages:
     dependencies:
       escape-string-regexp: 2.0.0
     dev: true
+
+  /stackback/0.0.2:
+    resolution: {integrity: sha512-1XMJE5fQo1jGH6Y/7ebnwPOBEkIEnT4QF32d5R1+VXdXveM0IBMJt8zfaxX1P3QhVwrYe+576+jkANtSS2mBbw==}
+    dev: false
+
+  /std-env/3.3.1:
+    resolution: {integrity: sha512-3H20QlwQsSm2OvAxWIYhs+j01MzzqwMwGiiO1NQaJYZgJZFPuAbf95/DiKRBSTYIJ2FeGUc+B/6mPGcWP9dO3Q==}
+    dev: false
 
   /streamsearch/1.1.0:
     resolution: {integrity: sha512-Mcc5wHehp9aXz1ax6bZUyY5afg9u2rv5cqQI3mRrYkGC8rW2hM02jWuwjtL++LS5qinSyhj2QfLyNsuc+VsExg==}
@@ -8804,7 +8905,7 @@ packages:
       local-pkg: 0.4.2
       magic-string: 0.27.0
       mlly: 1.1.0
-      pathe: 1.0.0
+      pathe: 1.1.0
       pkg-types: 1.0.1
       scule: 1.0.0
       strip-literal: 1.0.0
@@ -9276,6 +9377,15 @@ packages:
     dependencies:
       isexe: 2.0.0
 
+  /why-is-node-running/2.2.2:
+    resolution: {integrity: sha512-6tSwToZxTOcotxHeA+qGCq1mVzKR3CwcJGmVcY+QE8SHy6TnpFnh8PAvPNHYr7EcuVeG0QSMxtYCuO1ta/G/oA==}
+    engines: {node: '>=8'}
+    hasBin: true
+    dependencies:
+      siginfo: 2.0.0
+      stackback: 0.0.2
+    dev: false
+
   /word-wrap/1.2.3:
     resolution: {integrity: sha512-Hz/mrNwitNRh/HUAtM/VT/5VH+ygD6DV7mYKZAtHOrbs8U7lvPS6xf7EJKMF0uW1KJCl0H701g3ZGus+muE5vQ==}
     engines: {node: '>=0.10.0'}
@@ -9400,4 +9510,3 @@ packages:
   /yocto-queue/1.0.0:
     resolution: {integrity: sha512-9bnSc/HEW2uRy67wc+T8UwauLuPJVn28jb+GtJY16iiKWyvmYJRXVT4UamsAEGQfPohgr2q4Tq0sQbQlxTfi1g==}
     engines: {node: '>=12.20'}
-    dev: true
