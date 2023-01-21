@@ -1,4 +1,4 @@
-import type { TaskResult, VitestRunner } from '@vitest/runner'
+import type { File, TaskResult, VitestRunner } from '@vitest/runner'
 import type { VitestClient } from '@vitest/ws-client'
 import type { ResolvedConfig } from '#types'
 
@@ -17,6 +17,10 @@ export class BrowserTestRunner implements VitestRunner {
     this.config = options.config
     this.hasMap = options.browserHashMap
     this.client = options.client
+  }
+
+  onCollected(files: File[]): unknown {
+    return this.client.rpc.onCollected(files)
   }
 
   onTaskUpdate(task: [string, TaskResult | undefined][]): Promise<void> {
