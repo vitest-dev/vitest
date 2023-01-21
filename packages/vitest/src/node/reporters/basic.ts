@@ -1,5 +1,5 @@
+import type { File } from '../../types/tasks'
 import { BaseReporter } from './base'
-import type { File } from '#types'
 
 export class BasicReporter extends BaseReporter {
   isTTY = false
