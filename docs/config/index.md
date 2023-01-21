@@ -148,6 +148,13 @@ TypeError: default is not a function
 
 If you are using bundlers or transpilers that bypass this Node.js limitation, you can enable this option manually. By default, Vitest assumes you are using Node ESM syntax, when `environment` is `node`, and doesn't interpret named exports.
 
+### runner
+
+- **Type**: `VitestRunnerConstructor`
+- **Default**: `node`, when running tests, or `benchmark`, when running benchmarks
+
+Path to a custom test runner. This is an advanced feature and should be used with custom library runners. You can read more about it in [the documentation](/advanced/runner).
+
 ### benchmark
 
 - **Type:** `{ include?, exclude?, ... }`
@@ -1052,13 +1059,6 @@ Options to configure Vitest cache policy. At the moment Vitest stores cache for 
 - **Default**: `node_modules/.vitest`
 
 Path to cache directory.
-
-### runner
-
-- **Type**: `VitestRunnerConstructor`
-- **Default**: `node`, when running tests, or `benchmark`, when running benchmarks
-
-Path to custom test runner.
 
 ### sequence
 
