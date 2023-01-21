@@ -1,3 +1,4 @@
+import { relative } from 'pathe'
 import type { File } from './types'
 import type { VitestRunner } from './types/runner'
 import { calculateSuiteHash, generateHash, interpretTaskModes, someTasksAreOnly } from './utils/collect'
@@ -15,8 +16,7 @@ export async function collectTests(paths: string[], runner: VitestRunner): Promi
   const config = runner.config
 
   for (const filepath of paths) {
-    // TODO /full/path/to/file.js -> /to/file
-    const path = filepath.slice(config.root.length + 1)
+    const path = relative(config.root, filepath)
     const file: File = {
       id: generateHash(path),
       name: path,

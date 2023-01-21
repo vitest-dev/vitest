@@ -39,6 +39,7 @@
   },
   "dependencies": {
     "@vitest/utils": "workspace:*",
-    "p-limit": "^4.0.0"
+    "p-limit": "^4.0.0",
+    "pathe": "^1.1.0"
   }
 }

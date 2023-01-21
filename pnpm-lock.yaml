@@ -709,9 +709,11 @@ importers:
     specifiers:
       '@vitest/utils': workspace:*
       p-limit: ^4.0.0
+      pathe: ^1.1.0
     dependencies:
       '@vitest/utils': link:../utils
       p-limit: 4.0.0
+      pathe: 1.1.0
 
   packages/spy:
     specifiers:
