@@ -90,5 +90,59 @@ When initiating this class, Vitest passes down Vitest config, - you should expos
 :::
 
 ::: tip
-Snapshot support, C8 coverage, and some other features depend on the runner. If you don't want to lose it, you can extend your runner from `VitestTestRunner` imported from `vitest/runners`. It also exposes `BenchmarkNodeRunner`, if you want to extend its functionality.
+Snapshot support and some other features depend on the runner. If you don't want to lose it, you can extend your runner from `VitestTestRunner` imported from `vitest/runners`. It also exposes `BenchmarkNodeRunner`, if you want to extend benchmark functionality.
+:::
+
+## Your task function
+
+You can extend Vitest task system with your tasks. A task is an object that is part of a suite. It is automatically added to the current suite with a `suite.custom` method:
+
+```js
+// ./utils/custom.js
+import { getCurrentSuite, setFn } from 'vitest/suite'
+export { describe, beforeAll, afterAll } from 'vitest'
+
+// this function will be called, when Vitest collects tasks
+export const myCustomTask = function (name, fn) {
+  const task = getCurrentSuite().custom(name)
+  task.meta = {
+    customPropertyToDifferentiateTask: true
+  }
+  setFn(task, fn || (() => {}))
+}
+```
+
+```js
+// ./garden/tasks.test.js
+import { afterAll, beforeAll, describe, myCustomTask } from '../utils/custom.js'
+import { gardener } from './gardener.js'
+
+deccribe('take care of the garden', () => {
+  beforeAll(() => {
+    gardener.putWorkingClothes()
+  })
+
+  myCustomTask('weed the grass', () => {
+    gardener.weedTheGrass()
+  })
+  myCustomTask('water flowers', () => {
+    gardener.waterFlowers()
+  })
+
+  afterAll(() => {
+    gardener.goHome()
+  })
+})
+```
+
+```bash
+vitest ./garder/tasks.test.js
+```
+
+::: warning
+If you don't have a custom runner or didn't define `runTest` method, Vitest will try to retrieve a task automatically. If you didn't add a function with `setFn`, it will fail.
+:::
+
+::: tip
+Custom task system supports hooks and contexts. If you want to support property chaining (like, `only`, `skip`, and your custom ones), you can import `createChainable` from `vitest/suite` and wrap your function with it. You will need to call `custom` as `custom.call(this)`, if you decide to do this.
 :::

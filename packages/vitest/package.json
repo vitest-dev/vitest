@@ -53,6 +53,10 @@
       "types": "./dist/runners.d.ts",
       "import": "./dist/runners.js"
     },
+    "./suite": {
+      "types": "./dist/suite.d.ts",
+      "import": "./dist/suite.js"
+    },
     "./environments": {
       "types": "./dist/environments.d.ts",
       "import": "./dist/environments.js"

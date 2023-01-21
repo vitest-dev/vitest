@@ -18,6 +18,7 @@ const entries = [
   'src/node/cli.ts',
   'src/node/cli-wrapper.ts',
   'src/node.ts',
+  'src/suite.ts',
   'src/browser.ts',
   'src/runners.ts',
   'src/environments.ts',
@@ -33,6 +34,7 @@ const dtsEntries = [
   'src/environments.ts',
   'src/browser.ts',
   'src/runners.ts',
+  'src/suite.ts',
   'src/config.ts',
 ]
 
@@ -48,6 +50,8 @@ const external = [
   'vite-node/client',
   'vite-node/server',
   'vite-node/utils',
+  '@vitest/utils/diff',
+  '@vitest/runner/utils',
   '@vitest/runner/types',
 ]
 

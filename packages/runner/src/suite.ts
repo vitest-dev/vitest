@@ -95,13 +95,13 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
     tasks.push(test)
   })
 
-  // TODO: document how it can be used to extend native runner
-  const custom = function (this: Record<string, boolean>, name: string) {
+  const custom = function (this: Record<string, boolean>, name = '') {
+    const self = this || {}
     const task: TaskCustom = {
       id: '',
       name,
       type: 'custom',
-      mode: this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run',
+      mode: self.only ? 'only' : self.skip ? 'skip' : self.todo ? 'todo' : 'run',
     }
     tasks.push(task)
     return task

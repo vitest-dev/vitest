@@ -135,10 +135,15 @@ export async function runTest(test: Test, runner: VitestRunner) {
 
       test.result.retryCount = retryCount
 
-      if (runner.runTest)
+      if (runner.runTest) {
         await runner.runTest(test)
-      else
-        await getFn(test)()
+      }
+      else {
+        const fn = getFn(test)
+        if (!fn)
+          throw new Error('Test function is not found. Did you add it using `setFn`?')
+        await fn()
+      }
 
       await runner.onAfterTryTest?.(test, retryCount)
 
