@@ -40,14 +40,16 @@ Useful to run with [`lint-staged`](https://github.com/okonet/lint-staged) or wit
 vitest related /src/index.ts /src/hello-world.js
 ```
 
-Please note that if you want to use it with `lint-staged`, you probably should also pass `--run` so that `lint-staged` command can exit normally.
+::: tip
+Don't forget that Vitest runs with enabled watch mode by default. If you are using tools like `lint-staged`, you  should also pass `--run` option, so that command can exit normally.
 
 ```js
 // .lintstagedrc.js
 export default {
   '*.{js,ts}': 'vitest related --run',
-};
+}
 ```
+:::
 
 ## Options
 
