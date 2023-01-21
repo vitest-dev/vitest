@@ -22,15 +22,23 @@ function groupBy<T, K extends string | number | symbol>(collection: T[], iterate
 }
 
 async function getTestRunnerConstructor(config: ResolvedConfig): Promise<VitestRunnerConstructor> {
-  if (config.runner)
-    // TODO: validation
-    return (await import(config.runner)).default
-  return (config.mode === 'test' ? VitestTestRunner : NodeBenchmarkRunner) as any as VitestRunnerConstructor
+  if (!config.runner)
+    return (config.mode === 'test' ? VitestTestRunner : NodeBenchmarkRunner) as any as VitestRunnerConstructor
+  const mod = await import(config.runner)
+  if (!mod.default && typeof mod.default !== 'function')
+    throw new Error(`Runner must export a default function, but got ${typeof mod.default} imported from ${config.runner}`)
+  return mod.default as VitestRunnerConstructor
 }
 
 async function getTestRunner(config: ResolvedConfig): Promise<VitestRunner> {
   const TestRunner = await getTestRunnerConstructor(config)
   const testRunner = new TestRunner(config)
+
+  if (!testRunner.config)
+    testRunner.config = config
+
+  if (!testRunner.importFile)
+    throw new Error('Runner must implement "importFile" method.')
 
   // patch some methods, so custom runners don't need to call RPC
   const originalOnTaskUpdate = testRunner.onTaskUpdate
@@ -62,7 +70,7 @@ export async function run(files: string[], config: ResolvedConfig): Promise<void
 
   const workerState = getWorkerState()
 
-  const testRunner = await getTestRunner(config)
+  const runner = await getTestRunner(config)
 
   // if calling from a worker, there will always be one file
   // if calling with no-threads, this will be the whole suite
@@ -127,7 +135,7 @@ export async function run(files: string[], config: ResolvedConfig): Promise<void
 
           workerState.filepath = file
 
-          await startTests([file], testRunner)
+          await startTests([file], runner)
 
           workerState.filepath = undefined
 
