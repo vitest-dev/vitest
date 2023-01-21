@@ -1,5 +1,7 @@
+import type { Task } from '@vitest/runner'
+import type { ParsedStack } from '@vitest/runner/utils'
 import type { Vitest } from '../../node'
-import type { ParsedStack, Reporter, Task } from '../../types'
+import type { Reporter } from '../../types/reporter'
 import { parseStacktrace } from '../../utils/source-map'
 import { IndentedLogger } from './renderers/indented-logger'
 
