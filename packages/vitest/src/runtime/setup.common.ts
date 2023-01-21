@@ -10,8 +10,8 @@ export async function setupCommonEnv(config: ResolvedConfig) {
   if (globalSetup)
     return
 
-  setSafeTimers()
   globalSetup = true
+  setSafeTimers()
 
   if (config.globals)
     (await import('../integrations/globals')).registerApiGlobally()

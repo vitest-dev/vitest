@@ -48,7 +48,7 @@ export default class SnapshotState {
   private _uncheckedKeys: Set<string>
   private _snapshotFormat: PrettyFormatOptions
   private _environment: SnapshotEnvironment
-  private _exists: boolean
+  private _fileExists: boolean
 
   added: number
   expand: boolean
@@ -66,7 +66,7 @@ export default class SnapshotState {
       snapshotContent,
       options,
     )
-    this._exists = snapshotContent != null // TODO: update on watch?
+    this._fileExists = snapshotContent != null // TODO: update on watch?
     this._initialData = data
     this._snapshotData = data
     this._dirty = dirty
@@ -167,17 +167,19 @@ export default class SnapshotState {
     }
 
     if ((this._dirty || this._uncheckedKeys.size) && !isEmpty) {
-      if (hasExternalSnapshots)
+      if (hasExternalSnapshots) {
         await saveSnapshotFile(this._snapshotData, this.snapshotPath)
+        this._fileExists = true
+      }
       if (hasInlineSnapshots)
         await saveInlineSnapshots(this._inlineSnapshots)
 
       status.saved = true
     }
-    else if (!hasExternalSnapshots && this._exists) {
+    else if (!hasExternalSnapshots && this._fileExists) {
       if (this._updateSnapshot === 'all') {
         await this._environment.removeSnapshotFile(this.snapshotPath)
-        this._exists = false
+        this._fileExists = false
       }
 
       status.deleted = true
@@ -227,7 +229,7 @@ export default class SnapshotState {
     const expectedTrimmed = prepareExpected(expected)
     const pass = expectedTrimmed === prepareExpected(receivedSerialized)
     const hasSnapshot = expected !== undefined
-    const snapshotIsPersisted = isInline || this._exists
+    const snapshotIsPersisted = isInline || this._fileExists
 
     if (pass && !isInline) {
       // Executing a snapshot file as JavaScript and writing the strings back

@@ -1,4 +1,3 @@
-// import { relative as relativeBrowser } from 'node:path'
 import { relative } from 'pathe'
 import type { ModuleCacheMap } from 'vite-node'
 import { getWorkerState } from '../utils'

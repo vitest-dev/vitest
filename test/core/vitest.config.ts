@@ -35,7 +35,6 @@ export default defineConfig({
     alias: [
       { find: '#', replacement: resolve(__dirname, 'src') },
       { find: '$', replacement: 'src' },
-      // { find: '@vitest', replacement: resolve(__dirname, '..', '..', 'packages') },
     ],
   },
   test: {

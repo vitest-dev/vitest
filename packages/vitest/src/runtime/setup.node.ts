@@ -26,9 +26,9 @@ export async function setupGlobalEnv(config: ResolvedConfig) {
   if (globalSetup)
     return
 
+  globalSetup = true
   setupSnapshotEnvironment(new NodeSnapshotEnvironment())
   setColors(p)
-  globalSetup = true
 
   const require = createRequire(import.meta.url)
   // always mock "required" `css` files, because we cannot process them
