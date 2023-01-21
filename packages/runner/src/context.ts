@@ -53,7 +53,7 @@ export function createTestContext(test: Test, runner: VitestRunner): TestContext
     test.onFailed.push(fn)
   }
 
-  return runner.augmentTestContext?.(context) || context
+  return runner.extendTestContext?.(context) || context
 }
 
 function makeTimeoutMsg(isHook: boolean, timeout: number) {

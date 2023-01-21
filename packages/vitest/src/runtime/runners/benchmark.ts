@@ -1,9 +1,9 @@
 import { performance } from 'node:perf_hooks'
-import type { File, Suite, Task, TaskResult, VitestRunner } from '@vitest/runner'
+import type { Suite, Task, VitestRunner, VitestRunnerImportSource } from '@vitest/runner'
 import { updateTask as updateRunnerTask } from '@vitest/runner'
 import { createDefer, getSafeTimers } from '@vitest/utils'
-import { rpc } from '../rpc'
 import { getBenchFn, getBenchOptions } from '../benchmark'
+import { getWorkerState } from '../../utils'
 import type { BenchTask, Benchmark, BenchmarkResult, ResolvedConfig } from '#types'
 
 async function importTinybench() {
@@ -121,23 +121,15 @@ async function runBenchmarkSuite(suite: Suite, runner: VitestRunner) {
 }
 
 export class NodeBenchmarkRunner implements VitestRunner {
-  private rpc = rpc()
-
   constructor(public config: ResolvedConfig) {}
 
-  importFile(filepath: string): unknown {
+  importFile(filepath: string, source: VitestRunnerImportSource): unknown {
+    if (source === 'setup')
+      getWorkerState().moduleCache.delete(filepath)
     return import(filepath)
-  }
-
-  onCollected(files: File[]) {
-    this.rpc.onCollected(files)
   }
 
   async runSuite(suite: Suite): Promise<void> {
     await runBenchmarkSuite(suite, this)
-  }
-
-  onTaskUpdate(task: [string, TaskResult | undefined][]): Promise<void> {
-    return this.rpc.onTaskUpdate(task)
   }
 }

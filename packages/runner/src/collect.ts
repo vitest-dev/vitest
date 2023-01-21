@@ -36,7 +36,7 @@ export async function collectTests(paths: string[], runner: VitestRunner): Promi
       const collectStart = now()
       file.setupDuration = collectStart - setupStart
 
-      await runner.importFile(filepath)
+      await runner.importFile(filepath, 'collect')
 
       const defaultTasks = await getDefaultSuite().collect(file)
 

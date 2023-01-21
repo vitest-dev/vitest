@@ -1,14 +1,16 @@
 import { promises as fs } from 'node:fs'
 import mm from 'micromatch'
-import type { VitestRunnerConstructor } from '@vitest/runner'
+import type { VitestRunner, VitestRunnerConstructor } from '@vitest/runner'
 import { startTests } from '@vitest/runner'
 import type { EnvironmentOptions, ResolvedConfig, VitestEnvironment } from '../types'
 import { getWorkerState, resetModules } from '../utils'
 import { vi } from '../integrations/vi'
 import { envs } from '../integrations/env'
+import { takeCoverageInsideWorker } from '../integrations/coverage'
 import { setupGlobalEnv, withEnv } from './setup'
 import { NodeTestRunner } from './runners/node'
 import { NodeBenchmarkRunner } from './runners/benchmark'
+import { rpc } from './rpc'
 
 function groupBy<T, K extends string | number | symbol>(collection: T[], iteratee: (item: T) => K) {
   return collection.reduce((acc, item) => {
@@ -19,11 +21,39 @@ function groupBy<T, K extends string | number | symbol>(collection: T[], iterate
   }, {} as Record<K, T[]>)
 }
 
-async function getTestRunner(config: ResolvedConfig): Promise<VitestRunnerConstructor> {
+async function getTestRunnerConstructor(config: ResolvedConfig): Promise<VitestRunnerConstructor> {
   if (config.runner)
     // TODO: validation
     return (await import(config.runner)).default
   return (config.mode === 'test' ? NodeTestRunner : NodeBenchmarkRunner) as any as VitestRunnerConstructor
+}
+
+async function getTestRunner(config: ResolvedConfig): Promise<VitestRunner> {
+  const TestRunner = await getTestRunnerConstructor(config)
+  const testRunner = new TestRunner(config)
+
+  // patch some methods, so custom runners don't need to call RPC
+  const originalOnTaskUpdate = testRunner.onTaskUpdate
+  testRunner.onTaskUpdate = async (task) => {
+    const p = rpc().onTaskUpdate(task)
+    await originalOnTaskUpdate?.call(testRunner, task)
+    return p
+  }
+
+  const originalOnCollected = testRunner.onCollected
+  testRunner.onCollected = async (files) => {
+    rpc().onCollected(files)
+    await originalOnCollected?.call(testRunner, files)
+  }
+
+  const originalOnAfterRun = testRunner.onAfterRun
+  testRunner.onAfterRun = async (files) => {
+    const coverage = await takeCoverageInsideWorker(config.coverage)
+    rpc().onAfterSuiteRun({ coverage })
+    await originalOnAfterRun?.call(testRunner, files)
+  }
+
+  return testRunner
 }
 
 // browser shouldn't call this!
@@ -32,8 +62,7 @@ export async function run(files: string[], config: ResolvedConfig): Promise<void
 
   const workerState = getWorkerState()
 
-  const TestRunner = await getTestRunner(config)
-  const testRunner = new TestRunner(config)
+  const testRunner = await getTestRunner(config)
 
   // if calling from a worker, there will always be one file
   // if calling with no-threads, this will be the whole suite

@@ -270,8 +270,6 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
   }
   suite.result.duration = now() - start
 
-  await runner.onAfterRunSuite?.(suite)
-
   if (suite.mode === 'run') {
     if (!hasTests(suite)) {
       suite.result.state = 'fail'
@@ -288,6 +286,8 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
       suite.result.state = 'pass'
     }
   }
+
+  await runner.onAfterRunSuite?.(suite)
 
   updateTask(suite, runner)
 }
@@ -317,16 +317,16 @@ export async function runFiles(files: File[], runner: VitestRunner) {
 }
 
 export async function startTests(paths: string[], runner: VitestRunner) {
-  await runner.onBeforeCollect?.()
+  await runner.onBeforeCollect?.(paths)
 
   const files = await collectTests(paths, runner)
 
   runner.onCollected?.(files)
-  await runner.onBeforeRun?.()
+  await runner.onBeforeRun?.(files)
 
   await runFiles(files, runner)
 
-  await runner.onAfterRun?.()
+  await runner.onAfterRun?.(files)
 
   await sendTasksUpdate(runner)
 

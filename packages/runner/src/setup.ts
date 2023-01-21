@@ -7,7 +7,7 @@ export async function runSetupFiles(config: VitestRunnerConfig, runner: VitestRu
     files.map(async (fsPath) => {
       // TODO: check if it's a setup file and remove
       // getWorkerState().moduleCache.delete(fsPath)
-      await runner.importFile(fsPath)
+      await runner.importFile(fsPath, 'setup')
     }),
   )
 }

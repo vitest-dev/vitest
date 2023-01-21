@@ -1,10 +1,8 @@
 import process from 'node:process'
-import type { File, Suite, TaskResult, Test, TestContext, VitestRunner } from '@vitest/runner'
+import type { Suite, Test, TestContext, VitestRunner, VitestRunnerImportSource } from '@vitest/runner'
 import { GLOBAL_EXPECT, getState, setState } from '@vitest/expect'
-import { rpc } from '../rpc'
 import { getSnapshotClient } from '../../integrations/snapshot/chai'
 import { vi } from '../../integrations/vi'
-import { takeCoverageInsideWorker } from '../../integrations/coverage'
 import { getFullName, getWorkerState } from '../../utils'
 import { createExpect } from '../../integrations/chai/index'
 import type { ResolvedConfig } from '#types'
@@ -15,12 +13,10 @@ export class NodeTestRunner implements VitestRunner {
 
   constructor(public config: ResolvedConfig) {}
 
-  importFile(filepath: string): unknown {
+  importFile(filepath: string, source: VitestRunnerImportSource): unknown {
+    if (source === 'setup')
+      this.workerState.moduleCache.delete(filepath)
     return import(filepath)
-  }
-
-  onCollected(files: File[]) {
-    rpc().onCollected(files)
   }
 
   onBeforeRun() {
@@ -28,8 +24,6 @@ export class NodeTestRunner implements VitestRunner {
   }
 
   async onAfterRun() {
-    const coverage = await takeCoverageInsideWorker(this.config.coverage)
-    rpc().onAfterSuiteRun({ coverage })
     await this.snapshotClient.saveCurrent()
   }
 
@@ -89,7 +83,7 @@ export class NodeTestRunner implements VitestRunner {
       throw isExpectingAssertionsError
   }
 
-  augmentTestContext(context: TestContext): TestContext {
+  extendTestContext(context: TestContext): TestContext {
     let _expect: Vi.ExpectStatic | undefined
     Object.defineProperty(context, 'expect', {
       get() {
@@ -104,10 +98,6 @@ export class NodeTestRunner implements VitestRunner {
       },
     })
     return context
-  }
-
-  onTaskUpdate(task: [string, TaskResult | undefined][]): Promise<void> {
-    return rpc().onTaskUpdate(task)
   }
 }
 
