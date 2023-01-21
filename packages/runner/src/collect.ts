@@ -46,6 +46,9 @@ export async function collectTests(paths: string[], runner: VitestRunner): Promi
         if (c.type === 'test') {
           file.tasks.push(c)
         }
+        else if (c.type === 'custom') {
+          file.tasks.push(c)
+        }
         else if (c.type === 'suite') {
           file.tasks.push(c)
         }
