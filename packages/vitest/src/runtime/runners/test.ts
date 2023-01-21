@@ -1,4 +1,3 @@
-import process from 'node:process'
 import type { Suite, Test, TestContext, VitestRunner, VitestRunnerImportSource } from '@vitest/runner'
 import { GLOBAL_EXPECT, getState, setState } from '@vitest/expect'
 import { getSnapshotClient } from '../../integrations/snapshot/chai'
@@ -7,7 +6,7 @@ import { getFullName, getWorkerState } from '../../utils'
 import { createExpect } from '../../integrations/chai/index'
 import type { ResolvedConfig } from '#types'
 
-export class NodeTestRunner implements VitestRunner {
+export class VitestTestRunner implements VitestRunner {
   private snapshotClient = getSnapshotClient()
   private workerState = getWorkerState()
 
@@ -28,14 +27,14 @@ export class NodeTestRunner implements VitestRunner {
   }
 
   onAfterRunSuite(suite: Suite) {
-    if (this.config.logHeapUsage)
+    if (this.config.logHeapUsage && typeof process !== 'undefined')
       suite.result!.heap = process.memoryUsage().heapUsed
   }
 
   onAfterRunTest(test: Test) {
     this.snapshotClient.clearTest()
 
-    if (this.config.logHeapUsage)
+    if (this.config.logHeapUsage && typeof process !== 'undefined')
       test.result!.heap = process.memoryUsage().heapUsed
 
     this.workerState.current = undefined

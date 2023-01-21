@@ -7,8 +7,8 @@ import { getWorkerState, resetModules } from '../utils'
 import { vi } from '../integrations/vi'
 import { envs } from '../integrations/env'
 import { takeCoverageInsideWorker } from '../integrations/coverage'
-import { setupGlobalEnv, withEnv } from './setup'
-import { NodeTestRunner } from './runners/node'
+import { setupGlobalEnv, withEnv } from './setup.node'
+import { VitestTestRunner } from './runners/test'
 import { NodeBenchmarkRunner } from './runners/benchmark'
 import { rpc } from './rpc'
 
@@ -25,7 +25,7 @@ async function getTestRunnerConstructor(config: ResolvedConfig): Promise<VitestR
   if (config.runner)
     // TODO: validation
     return (await import(config.runner)).default
-  return (config.mode === 'test' ? NodeTestRunner : NodeBenchmarkRunner) as any as VitestRunnerConstructor
+  return (config.mode === 'test' ? VitestTestRunner : NodeBenchmarkRunner) as any as VitestRunnerConstructor
 }
 
 async function getTestRunner(config: ResolvedConfig): Promise<VitestRunner> {

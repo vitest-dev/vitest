@@ -21,15 +21,6 @@
           }
         ]
       }
-    },
-    {
-      "files": "packages/vitest/**/*.*",
-      "rules": {
-        "no-restricted-globals": [
-          "error",
-          "performance"
-        ]
-      }
     }
   ]
 }

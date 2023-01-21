@@ -5,11 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import fs from 'node:fs'
 import type { OptionsReceived as PrettyFormatOptions } from 'pretty-format'
 import type { ParsedStack, SnapshotData, SnapshotMatchOptions, SnapshotResult, SnapshotStateOptions, SnapshotUpdateState } from '../../../types'
 import { slash } from '../../../utils'
 import { parseStacktrace } from '../../../utils/source-map'
+import type { SnapshotEnvironment } from '../env'
+import { getSnapshotEnironment } from '../env'
 import type { InlineSnapshot } from './inlineSnapshot'
 import { saveInlineSnapshots } from './inlineSnapshot'
 
@@ -46,6 +47,8 @@ export default class SnapshotState {
   private _inlineSnapshots: Array<InlineSnapshot>
   private _uncheckedKeys: Set<string>
   private _snapshotFormat: PrettyFormatOptions
+  private _environment: SnapshotEnvironment
+  private _exists: boolean
 
   added: number
   expand: boolean
@@ -53,15 +56,17 @@ export default class SnapshotState {
   unmatched: number
   updated: number
 
-  constructor(
+  private constructor(
     public testFilePath: string,
     public snapshotPath: string,
+    snapshotContent: string | null,
     options: SnapshotStateOptions,
   ) {
     const { data, dirty } = getSnapshotData(
-      this.snapshotPath,
-      options.updateSnapshot,
+      snapshotContent,
+      options,
     )
+    this._exists = snapshotContent != null // TODO: update on watch?
     this._initialData = data
     this._snapshotData = data
     this._dirty = dirty
@@ -78,6 +83,17 @@ export default class SnapshotState {
       printBasicPrototype: false,
       ...options.snapshotFormat,
     }
+    this._environment = getSnapshotEnironment()
+  }
+
+  static async create(
+    testFilePath: string,
+    options: SnapshotStateOptions,
+  ) {
+    const environment = getSnapshotEnironment()
+    const snapshotPath = await environment.resolvePath(testFilePath)
+    const content = await environment.readSnapshotFile(snapshotPath)
+    return new SnapshotState(testFilePath, snapshotPath, content, options)
   }
 
   markSnapshotsAsCheckedForTest(testName: string): void {
@@ -158,9 +174,11 @@ export default class SnapshotState {
 
       status.saved = true
     }
-    else if (!hasExternalSnapshots && fs.existsSync(this.snapshotPath)) {
-      if (this._updateSnapshot === 'all')
-        fs.unlinkSync(this.snapshotPath)
+    else if (!hasExternalSnapshots && this._exists) {
+      if (this._updateSnapshot === 'all') {
+        await this._environment.removeSnapshotFile(this.snapshotPath)
+        this._exists = false
+      }
 
       status.deleted = true
     }
@@ -209,7 +227,7 @@ export default class SnapshotState {
     const expectedTrimmed = prepareExpected(expected)
     const pass = expectedTrimmed === prepareExpected(receivedSerialized)
     const hasSnapshot = expected !== undefined
-    const snapshotIsPersisted = isInline || fs.existsSync(this.snapshotPath)
+    const snapshotIsPersisted = isInline || this._exists
 
     if (pass && !isInline) {
       // Executing a snapshot file as JavaScript and writing the strings back

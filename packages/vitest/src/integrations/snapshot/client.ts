@@ -25,7 +25,6 @@ interface AssertOptions {
 }
 
 export class SnapshotClient {
-  id = Date.now()
   test: Test | undefined
   snapshotState: SnapshotState | undefined
   snapshotStateMap = new Map<string, SnapshotState>()
@@ -40,9 +39,8 @@ export class SnapshotClient {
       if (!this.getSnapshotState(test)) {
         this.snapshotStateMap.set(
           filePath,
-          new SnapshotState(
+          await SnapshotState.create(
             filePath,
-            await rpc().resolveSnapshotPath(filePath),
             getWorkerState().config.snapshotOptions,
           ),
         )

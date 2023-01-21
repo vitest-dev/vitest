@@ -2,34 +2,33 @@
 
 import p from 'picocolors'
 import { installSourcemapsSupport } from 'vite-node/source-map'
-import { setColors, setSafeTimers } from '@vitest/utils'
+import { setColors } from '@vitest/utils'
 import { environments } from '../integrations/env'
 import type { Environment, ResolvedConfig } from '../types'
-import { getSafeTimers, getWorkerState, isNode } from '../utils'
+import { getSafeTimers, getWorkerState } from '../utils'
 import * as VitestIndex from '../index'
-import { resetRunOnceCounter } from '../integrations/run-once'
 import { RealDate } from '../integrations/mock/date'
 import { expect } from '../integrations/chai'
+import { setupSnapshotEnvironment } from '../integrations/snapshot/env'
+import { NodeSnapshotEnvironment } from '../integrations/snapshot/environments/node'
 import { rpc } from './rpc'
+import { setupCommonEnv } from './setup.common'
 
+// this should only be used in Node
 let globalSetup = false
 export async function setupGlobalEnv(config: ResolvedConfig) {
-  resetRunOnceCounter()
+  await setupCommonEnv(config)
 
   Object.defineProperty(globalThis, '__vitest_index__', {
     value: VitestIndex,
     enumerable: false,
   })
 
-  // should be re-declared for each test
-  // if run with "threads: false"
-  setupDefines(config.defines)
-
   if (globalSetup)
     return
 
+  setupSnapshotEnvironment(new NodeSnapshotEnvironment())
   setColors(p)
-  setSafeTimers()
   globalSetup = true
 
   // always mock "required" `css` files, because we cannot process them
@@ -37,23 +36,13 @@ export async function setupGlobalEnv(config: ResolvedConfig) {
   require.extensions['.scss'] = () => ({})
   require.extensions['.sass'] = () => ({})
 
-  if (isNode) {
-    const state = getWorkerState()
+  const state = getWorkerState()
 
-    installSourcemapsSupport({
-      getSourceMap: source => state.moduleCache.getSourceMap(source),
-    })
+  installSourcemapsSupport({
+    getSourceMap: source => state.moduleCache.getSourceMap(source),
+  })
 
-    await setupConsoleLogSpy()
-  }
-
-  if (config.globals)
-    (await import('../integrations/globals')).registerApiGlobally()
-}
-
-function setupDefines(defines: Record<string, any>) {
-  for (const key in defines)
-    (globalThis as any)[key] = defines[key]
+  await setupConsoleLogSpy()
 }
 
 export async function setupConsoleLogSpy() {

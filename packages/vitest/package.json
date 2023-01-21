@@ -49,6 +49,10 @@
       "types": "./dist/browser.d.ts",
       "import": "./dist/browser.js"
     },
+    "./runners": {
+      "types": "./dist/runners.d.ts",
+      "import": "./dist/runners.js"
+    },
     "./environments": {
       "types": "./dist/environments.d.ts",
       "import": "./dist/environments.js"

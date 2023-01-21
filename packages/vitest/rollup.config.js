@@ -19,6 +19,7 @@ const entries = [
   'src/node/cli-wrapper.ts',
   'src/node.ts',
   'src/browser.ts',
+  'src/runners.ts',
   'src/environments.ts',
   'src/runtime/worker.ts',
   'src/runtime/loader.ts',
@@ -31,6 +32,7 @@ const dtsEntries = [
   'src/node.ts',
   'src/environments.ts',
   'src/browser.ts',
+  'src/runners.ts',
   'src/config.ts',
 ]
 

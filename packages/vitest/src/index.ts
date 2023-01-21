@@ -15,6 +15,7 @@ export { runOnce, isFirstRun } from './integrations/run-once'
 export * from './integrations/chai'
 export * from './integrations/vi'
 export * from './integrations/utils'
+export type { SnapshotEnvironment } from './integrations/snapshot/env'
 
 export * from './types'
 export * from './api/types'
