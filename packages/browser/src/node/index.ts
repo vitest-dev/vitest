@@ -6,21 +6,8 @@ import { polyfillPath } from 'modern-node-polyfills'
 import sirv from 'sirv'
 import type { Plugin } from 'vite'
 
-const stubs = [
-  'fs',
-  'local-pkg',
-  'module',
-  'noop',
-  'perf_hooks',
-  'console',
-]
-
 const polyfills = [
   'util',
-  'tty',
-  'process',
-  'path',
-  'buffer',
 ]
 
 export default (base = '/'): Plugin[] => {
@@ -40,9 +27,6 @@ export default (base = '/'): Plugin[] => {
 
         if (id === '/__vitest_runners__')
           return this.resolve('vitest/runners')
-
-        if (stubs.includes(id))
-          return resolve(pkgRoot, 'stubs', id)
 
         if (polyfills.includes(id))
           return polyfillPath(normalizeId(id))
