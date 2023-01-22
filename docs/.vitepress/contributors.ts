@@ -109,9 +109,8 @@ const plainTeamMembers: CoreTeam[] = [
     github: 'zxch3n',
     mastodon: 'https://elk.zone/hachyderm.io/@zx',
     twitter: 'zxch3n',
-    title: 'A fullstack developer, working',
-    org: 'CRDTs & local-first software',
-    desc: 'Creating tools for collaboration',
+    title: 'A fullstack developer',
+    desc: 'Working on CRDTs & local-first software',
   },
   {
     avatar: contributorsAvatars.poyoho,
