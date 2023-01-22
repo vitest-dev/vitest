@@ -36,7 +36,7 @@ export interface WorkerRPC {
   onTaskUpdate: (pack: TaskResultPack[]) => void
 
   snapshotSaved: (snapshot: SnapshotResult) => void
-  resolveSnapshotPath: (testPath: string) => string
+  resolveSnapshotPath: (testPath: string, options: { context: any }) => string
 }
 
 export interface WorkerGlobalState {

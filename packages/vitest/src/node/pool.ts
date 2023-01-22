@@ -160,8 +160,8 @@ function createChannel(ctx: Vitest) {
       snapshotSaved(snapshot) {
         ctx.snapshot.add(snapshot)
       },
-      resolveSnapshotPath(testPath: string) {
-        return ctx.snapshot.resolvePath(testPath)
+      resolveSnapshotPath(testPath: string, options: { context: any }) {
+        return ctx.snapshot.resolvePath(testPath, options)
       },
       async getSourceMap(id, force) {
         if (force) {

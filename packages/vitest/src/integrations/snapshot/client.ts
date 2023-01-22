@@ -40,7 +40,7 @@ export class SnapshotClient {
           filePath,
           new SnapshotState(
             filePath,
-            await rpc().resolveSnapshotPath(filePath),
+            await rpc().resolveSnapshotPath(filePath, undefined, { context: this.test.context }),
             getWorkerState().config.snapshotOptions,
           ),
         )
