@@ -3,6 +3,8 @@ import _url from 'url'
 import type { Profiler } from 'inspector'
 import { takeCoverage } from 'v8'
 import { extname, resolve } from 'pathe'
+import c from 'picocolors'
+import { provider } from 'std-env'
 import type { RawSourceMap } from 'vite-node'
 import { coverageConfigDefaults } from 'vitest/config'
 // eslint-disable-next-line no-restricted-imports
@@ -51,6 +53,9 @@ export class C8CoverageProvider implements CoverageProvider {
 
   async reportCoverage({ allTestsRun }: ReportContext = {}) {
     takeCoverage()
+
+    if (provider === 'stackblitz')
+      this.ctx.logger.log(c.blue(' % ') + c.yellow('@vitest/coverage-c8 does not work on Stackblitz. Report will be empty.'))
 
     const options: ConstructorParameters<typeof Report>[0] = {
       ...this.options,
