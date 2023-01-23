@@ -9,6 +9,15 @@ export default defineConfig({
       framework: 'vue',
       bundler: 'vite',
       viteConfig: {
+        define: {
+          'process.env.NODE_DEBUG': '"false"',
+        },
+        resolve: {
+          alias: [
+            { find: /^\@vitest\/utils/, replacement: resolve('../utils/src/') },
+            { find: /^\@vitest\/runner/, replacement: resolve('../runner/src/') },
+          ],
+        },
         configFile: resolve('./cypress/vite.config.ts'),
       },
     },

@@ -148,6 +148,13 @@ TypeError: default is not a function
 
 By default, Vitest assumes you are using a bundler to bypass this and will not fail, but you can disable this behaviour manually, if you code is not processed.
 
+### runner
+
+- **Type**: `VitestRunnerConstructor`
+- **Default**: `node`, when running tests, or `benchmark`, when running benchmarks
+
+Path to a custom test runner. This is an advanced feature and should be used with custom library runners. You can read more about it in [the documentation](/advanced/runner).
+
 ### benchmark
 
 - **Type:** `{ include?, exclude?, ... }`

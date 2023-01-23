@@ -1,13 +1,18 @@
 import { promises as fs } from 'node:fs'
 import mm from 'micromatch'
+import type { VitestRunner, VitestRunnerConstructor } from '@vitest/runner'
+import { startTests } from '@vitest/runner'
 import type { EnvironmentOptions, ResolvedConfig, VitestEnvironment } from '../types'
 import { getWorkerState, resetModules } from '../utils'
 import { vi } from '../integrations/vi'
 import { envs } from '../integrations/env'
-import { setupGlobalEnv, withEnv } from './setup'
-import { startTests } from './run'
+import { takeCoverageInsideWorker } from '../integrations/coverage'
+import { setupGlobalEnv, withEnv } from './setup.node'
+import { VitestTestRunner } from './runners/test'
+import { NodeBenchmarkRunner } from './runners/benchmark'
+import { rpc } from './rpc'
 
-function groupBy<T, K extends string | number | symbol >(collection: T[], iteratee: (item: T) => K) {
+function groupBy<T, K extends string | number | symbol>(collection: T[], iteratee: (item: T) => K) {
   return collection.reduce((acc, item) => {
     const key = iteratee(item)
     acc[key] ||= []
@@ -16,17 +21,56 @@ function groupBy<T, K extends string | number | symbol >(collection: T[], iterat
   }, {} as Record<K, T[]>)
 }
 
+async function getTestRunnerConstructor(config: ResolvedConfig): Promise<VitestRunnerConstructor> {
+  if (!config.runner)
+    return (config.mode === 'test' ? VitestTestRunner : NodeBenchmarkRunner) as any as VitestRunnerConstructor
+  const mod = await import(config.runner)
+  if (!mod.default && typeof mod.default !== 'function')
+    throw new Error(`Runner must export a default function, but got ${typeof mod.default} imported from ${config.runner}`)
+  return mod.default as VitestRunnerConstructor
+}
+
+async function getTestRunner(config: ResolvedConfig): Promise<VitestRunner> {
+  const TestRunner = await getTestRunnerConstructor(config)
+  const testRunner = new TestRunner(config)
+
+  if (!testRunner.config)
+    testRunner.config = config
+
+  if (!testRunner.importFile)
+    throw new Error('Runner must implement "importFile" method.')
+
+  // patch some methods, so custom runners don't need to call RPC
+  const originalOnTaskUpdate = testRunner.onTaskUpdate
+  testRunner.onTaskUpdate = async (task) => {
+    const p = rpc().onTaskUpdate(task)
+    await originalOnTaskUpdate?.call(testRunner, task)
+    return p
+  }
+
+  const originalOnCollected = testRunner.onCollected
+  testRunner.onCollected = async (files) => {
+    rpc().onCollected(files)
+    await originalOnCollected?.call(testRunner, files)
+  }
+
+  const originalOnAfterRun = testRunner.onAfterRun
+  testRunner.onAfterRun = async (files) => {
+    const coverage = await takeCoverageInsideWorker(config.coverage)
+    rpc().onAfterSuiteRun({ coverage })
+    await originalOnAfterRun?.call(testRunner, files)
+  }
+
+  return testRunner
+}
+
+// browser shouldn't call this!
 export async function run(files: string[], config: ResolvedConfig): Promise<void> {
   await setupGlobalEnv(config)
 
   const workerState = getWorkerState()
 
-  // TODO @web-runner: we need to figure out how to do this on the browser
-  if (config.browser) {
-    workerState.mockMap.clear()
-    await startTests(files, config)
-    return
-  }
+  const runner = await getTestRunner(config)
 
   // if calling from a worker, there will always be one file
   // if calling with no-threads, this will be the whole suite
@@ -91,7 +135,7 @@ export async function run(files: string[], config: ResolvedConfig): Promise<void
 
           workerState.filepath = file
 
-          await startTests([file], config)
+          await startTests([file], runner)
 
           workerState.filepath = undefined
 

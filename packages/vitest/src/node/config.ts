@@ -18,11 +18,11 @@ const extraInlineDeps = [
   // Vite client
   /vite\w*\/dist\/client\/env.mjs/,
   // Vitest
-  /\/vitest\/dist\//,
+  /\/vitest\/dist\/(runners-chunk|entry)\.js/,
   // yarn's .store folder
-  /vitest-virtual-\w+\/dist/,
+  /vitest-virtual-\w+\/dist\/(runners-chunk|entry)\.js/,
   // cnpm
-  /@vitest\/dist/,
+  /@vitest\/dist\/(runners-chunk|entry)\.js/,
   // Nuxt
   '@nuxt/test-utils',
 ]
@@ -127,6 +127,11 @@ export function resolveConfig(
       resolved.deps.inline ??= []
       resolved.deps.inline.push(...extraInlineDeps)
     }
+  }
+
+  if (resolved.runner) {
+    resolved.runner = resolveModule(resolved.runner, { paths: [resolved.root] })
+      ?? resolve(resolved.root, resolved.runner)
   }
 
   // disable loader for Yarn PnP until Node implements chain loader

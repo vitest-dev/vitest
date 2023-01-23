@@ -1,5 +1,5 @@
 import c from 'picocolors'
-import type { UserConsoleLog } from '../../../../types'
+import type { UserConsoleLog } from '../../../../types/general'
 import { BaseReporter } from '../../base'
 import type { ListRendererOptions } from '../../renderers/listRenderer'
 import { createTableRenderer } from './tableRender'

@@ -10,6 +10,8 @@ import { VALID_ID_PREFIX, cleanUrl, isInternalRequest, isPrimitive, normalizeMod
 import type { HotContext, ModuleCache, ViteNodeRunnerOptions } from './types'
 import { extractSourceMap } from './source-map'
 
+const { setTimeout, clearTimeout } = globalThis
+
 const debugExecute = createDebug('vite-node:client:execute')
 const debugNative = createDebug('vite-node:client:native')
 

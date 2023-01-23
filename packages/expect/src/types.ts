@@ -9,7 +9,7 @@ import type { use as chaiUse } from 'chai'
  */
 
 import type { Formatter } from 'picocolors/types'
-import type * as jestMatcherUtils from './jest-matcher-utils'
+import type { diff, getMatcherUtils, stringify } from './jest-matcher-utils'
 
 export type FirstFunctionArgument<T> = T extends (arg: infer A) => unknown ? A : never
 export type ChaiPlugin = FirstFunctionArgument<typeof chaiUse>
@@ -47,6 +47,7 @@ export interface DiffOptions {
   patchColor?: Formatter
   // pretty-format type
   compareKeys?: any
+  showLegend?: boolean
 }
 
 export interface MatcherState {
@@ -71,7 +72,9 @@ export interface MatcherState {
   // snapshotState: SnapshotState
   suppressedErrors: Array<Error>
   testPath?: string
-  utils: typeof jestMatcherUtils & {
+  utils: ReturnType<typeof getMatcherUtils> & {
+    diff: typeof diff
+    stringify: typeof stringify
     iterableEquality: Tester
     subsetEquality: Tester
   }

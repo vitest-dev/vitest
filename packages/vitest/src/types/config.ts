@@ -514,6 +514,11 @@ export interface InlineConfig {
    * @default 300
   */
   slowTestThreshold?: number
+
+  /**
+   * Path to a custom test runner.
+   */
+  runner?: string
 }
 
 export interface TypecheckConfig {
@@ -584,7 +589,7 @@ export interface UserConfig extends InlineConfig {
   shard?: string
 }
 
-export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck'> {
+export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck' | 'runner'> {
   mode: VitestRunMode
 
   base?: string
@@ -624,6 +629,7 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
   }
 
   typecheck: TypecheckConfig
+  runner?: string
 }
 
 export type RuntimeConfig = Pick<

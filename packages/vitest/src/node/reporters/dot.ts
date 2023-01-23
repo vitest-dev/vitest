@@ -1,5 +1,4 @@
-import type { UserConsoleLog } from '../../types'
-import { setTimeout } from '../../utils'
+import type { UserConsoleLog } from '../../types/general'
 import { BaseReporter } from './base'
 import { createDotRenderer } from './renderers/dotRenderer'
 import type { createListRenderer } from './renderers/listRenderer'

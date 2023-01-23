@@ -85,6 +85,7 @@ export default withPwa(defineConfig({
       { text: 'Guide', link: '/guide/' },
       { text: 'API', link: '/api/' },
       { text: 'Config', link: '/config/' },
+      { text: 'Advanced', link: '/advanced/api' },
       {
         text: `v${version}`,
         items: [
@@ -102,6 +103,21 @@ export default withPwa(defineConfig({
 
     sidebar: {
       // TODO: bring sidebar of apis and config back
+      '/advanced': [
+        {
+          text: 'Advanced',
+          items: [
+            {
+              text: 'Vitest Node API',
+              link: '/advanced/api',
+            },
+            {
+              text: 'Runner API',
+              link: '/advanced/runner',
+            },
+          ],
+        },
+      ],
       '/': [
         {
           text: 'Guide',

@@ -2,6 +2,9 @@ import type { VitestClient } from '@vitest/ws-client'
 import { createClient } from '@vitest/ws-client'
 // eslint-disable-next-line no-restricted-imports
 import type { ResolvedConfig } from 'vitest'
+import type { VitestRunner } from '@vitest/runner'
+import { createBrowserRunner } from './runner'
+import { BrowserSnapshotEnvironment } from './snapshot'
 
 // @ts-expect-error mocking some node apis
 globalThis.process = { env: {}, argv: [], stdout: { write: () => {} } }
@@ -14,6 +17,7 @@ export const ENTRY_URL = `${
 }//${HOST}/__vitest_api__`
 
 let config: ResolvedConfig | undefined
+let runner: VitestRunner | undefined
 const browserHashMap = new Map<string, string>()
 
 export const client = createClient(ENTRY_URL, {
@@ -21,13 +25,11 @@ export const client = createClient(ENTRY_URL, {
     async onPathsCollected(paths) {
       if (!paths)
         return
-
       // const config = __vitest_worker__.config
       const now = `${new Date().getTime()}`
       paths.forEach((i) => {
         browserHashMap.set(i, now)
       })
-
       await runTests(paths, config, client)
     },
   },
@@ -75,13 +77,26 @@ ws.addEventListener('open', async () => {
   await runTests(paths, config, client)
 })
 
+let hasSnapshot = false
 async function runTests(paths: string[], config: any, client: VitestClient) {
-  const name = '/__vitest_index__'
-  const { startTests, setupGlobalEnv } = (await import(name)) as unknown as typeof import('vitest/browser')
+  // we use dynamic import here, because this file is bundled with UI,
+  // but we need to resolve correct path at runtime
+  const path = '/__vitest_index__'
+  const { startTests, setupCommonEnv, setupSnapshotEnvironment } = await import(path) as typeof import('vitest/browser')
 
-  await setupGlobalEnv(config as any)
+  if (!runner) {
+    const runnerPath = '/__vitest_runners__'
+    const { VitestTestRunner } = await import(runnerPath) as typeof import('vitest/runners')
+    const BrowserRunner = createBrowserRunner(VitestTestRunner)
+    runner = new BrowserRunner({ config, client, browserHashMap })
+  }
 
-  await startTests(paths, config as any)
+  if (!hasSnapshot) {
+    setupSnapshotEnvironment(new BrowserSnapshotEnvironment(client))
+    hasSnapshot = true
+  }
+  await setupCommonEnv(config)
+  await startTests(paths, runner)
 
   await client.rpc.onFinished()
   await client.rpc.onWatcherStart()

@@ -13,7 +13,7 @@ export function getContext(): Context {
   let output = ''
 
   const config: Partial<ResolvedConfig> = {
-    root: '/',
+    root: '/vitest',
   }
 
   const moduleGraph: Partial<ModuleGraph> = {

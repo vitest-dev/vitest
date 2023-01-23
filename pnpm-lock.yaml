@@ -36,7 +36,7 @@ importers:
       node-fetch-native: ^1.0.1
       npm-run-all: ^4.1.5
       ohmyfetch: ^0.4.21
-      pathe: ^0.2.0
+      pathe: ^1.1.0
       pnpm: 7.23.0
       rimraf: ^3.0.2
       rollup: ^2.79.1
@@ -76,7 +76,7 @@ importers:
       node-fetch-native: 1.0.1
       npm-run-all: 4.1.5
       ohmyfetch: 0.4.21
-      pathe: 0.2.0
+      pathe: 1.1.0
       pnpm: 7.23.0
       rimraf: 3.0.2
       rollup: 2.79.1
@@ -294,7 +294,7 @@ importers:
       '@types/react-test-renderer': 17.0.2
       '@vitejs/plugin-react': 3.0.1_vite@4.0.0
       '@vitest/ui': link:../../packages/ui
-      happy-dom: 8.1.4
+      happy-dom: 8.1.5
       jsdom: 21.0.0
       react-test-renderer: 17.0.2_react@17.0.2
       vite: 4.0.0
@@ -626,6 +626,7 @@ importers:
   packages/browser:
     specifiers:
       '@types/ws': ^8.5.4
+      '@vitest/runner': workspace:*
       '@vitest/ws-client': workspace:*
       local-pkg: ^0.4.2
       mlly: ^1.1.0
@@ -635,6 +636,7 @@ importers:
       sirv: ^2.0.2
       vitest: workspace:*
     dependencies:
+      '@vitest/runner': link:../runner
       local-pkg: 0.4.2
       mlly: 1.1.0
       modern-node-polyfills: 0.0.9
@@ -649,14 +651,14 @@ importers:
   packages/coverage-c8:
     specifiers:
       c8: ^7.12.0
-      pathe: ^0.2.0
+      pathe: ^1.1.0
       vite-node: workspace:*
       vitest: workspace:*
     dependencies:
       c8: 7.12.0
       vitest: link:../vitest
     devDependencies:
-      pathe: 0.2.0
+      pathe: 1.1.0
       vite-node: link:../vite-node
 
   packages/coverage-istanbul:
@@ -671,7 +673,7 @@ importers:
       istanbul-lib-report: ^3.0.0
       istanbul-lib-source-maps: ^4.0.1
       istanbul-reports: ^3.1.5
-      pathe: ^0.2.0
+      pathe: ^1.1.0
       test-exclude: ^6.0.0
       vitest: workspace:*
     dependencies:
@@ -688,7 +690,7 @@ importers:
       '@types/istanbul-lib-report': 3.0.0
       '@types/istanbul-lib-source-maps': 4.0.1
       '@types/istanbul-reports': 3.0.1
-      pathe: 0.2.0
+      pathe: 1.1.0
 
   packages/expect:
     specifiers:
@@ -700,7 +702,18 @@ importers:
       '@vitest/spy': link:../spy
       '@vitest/utils': link:../utils
       chai: 4.3.7
+    devDependencies:
       picocolors: 1.0.0
+
+  packages/runner:
+    specifiers:
+      '@vitest/utils': workspace:*
+      p-limit: ^4.0.0
+      pathe: ^1.1.0
+    dependencies:
+      '@vitest/utils': link:../utils
+      p-limit: 4.0.0
+      pathe: 1.1.0
 
   packages/spy:
     specifiers:
@@ -719,6 +732,7 @@ importers:
       '@unocss/reset': ^0.48.3
       '@vitejs/plugin-vue': ^4.0.0
       '@vitejs/plugin-vue-jsx': ^3.0.0
+      '@vitest/runner': workspace:*
       '@vitest/ws-client': workspace:*
       '@vueuse/core': ^9.10.0
       ansi-to-html: ^0.7.2
@@ -731,6 +745,7 @@ importers:
       fast-glob: ^3.2.12
       flatted: ^3.2.7
       floating-vue: ^2.0.0-y.0
+      pathe: ^1.1.0
       picocolors: ^1.0.0
       rollup: ^2.79.1
       sirv: ^2.0.2
@@ -745,6 +760,8 @@ importers:
     dependencies:
       fast-glob: 3.2.12
       flatted: 3.2.7
+      pathe: 1.1.0
+      picocolors: 1.0.0
       sirv: 2.0.2
     devDependencies:
       '@faker-js/faker': 7.6.0
@@ -756,6 +773,7 @@ importers:
       '@unocss/reset': 0.48.3
       '@vitejs/plugin-vue': 4.0.0_vite@4.0.0+vue@3.2.45
       '@vitejs/plugin-vue-jsx': 3.0.0_vite@4.0.0+vue@3.2.45
+      '@vitest/runner': link:../runner
       '@vitest/ws-client': link:../ws-client
       '@vueuse/core': 9.10.0_vue@3.2.45
       ansi-to-html: 0.7.2
@@ -766,7 +784,6 @@ importers:
       d3-graph-controller: 2.5.1
       diff: 5.1.0
       floating-vue: 2.0.0-y.0_vue@3.2.45
-      picocolors: 1.0.0
       rollup: 2.79.1
       splitpanes: 3.1.5
       unocss: 0.48.3_rollup@2.79.1+vite@4.0.0
@@ -782,11 +799,13 @@ importers:
       '@types/diff': ^5.0.2
       cli-truncate: ^3.1.0
       diff: ^5.1.0
+      loupe: ^2.3.6
       picocolors: ^1.0.0
       pretty-format: ^27.5.1
     dependencies:
       cli-truncate: 3.1.0
       diff: 5.1.0
+      loupe: 2.3.6
       picocolors: 1.0.0
       pretty-format: 27.5.1
     devDependencies:
@@ -800,7 +819,7 @@ importers:
       cac: ^6.7.14
       debug: ^4.3.4
       mlly: ^1.1.0
-      pathe: ^0.2.0
+      pathe: ^1.1.0
       picocolors: ^1.0.0
       rollup: ^2.79.1
       source-map: ^0.6.1
@@ -810,7 +829,7 @@ importers:
       cac: 6.7.14
       debug: 4.3.4
       mlly: 1.1.0
-      pathe: 0.2.0
+      pathe: 1.1.0
       picocolors: 1.0.0
       source-map: 0.6.1
       source-map-support: 0.5.21
@@ -836,6 +855,7 @@ importers:
       '@types/prompts': ^2.4.2
       '@types/sinonjs__fake-timers': ^8.1.2
       '@vitest/expect': workspace:*
+      '@vitest/runner': workspace:*
       '@vitest/spy': workspace:*
       '@vitest/ui': workspace:*
       '@vitest/utils': workspace:*
@@ -864,7 +884,7 @@ importers:
       mlly: ^1.1.0
       natural-compare: ^1.4.0
       p-limit: ^4.0.0
-      pathe: ^0.2.0
+      pathe: ^1.1.0
       picocolors: ^1.0.0
       pkg-types: ^1.0.1
       pretty-format: ^27.5.1
@@ -886,12 +906,18 @@ importers:
       '@types/chai': 4.3.4
       '@types/chai-subset': 1.3.3
       '@types/node': 18.7.13
+      '@vitest/expect': link:../expect
+      '@vitest/runner': link:../runner
+      '@vitest/spy': link:../spy
+      '@vitest/ui': link:../ui
+      '@vitest/utils': link:../utils
       acorn: 8.8.1
       acorn-walk: 8.2.0
       cac: 6.7.14
       chai: 4.3.7
       debug: 4.3.4
       local-pkg: 0.4.2
+      pathe: 1.1.0
       picocolors: 1.0.0
       source-map: 0.6.1
       std-env: 3.3.1
@@ -912,10 +938,6 @@ importers:
       '@types/natural-compare': 1.4.1
       '@types/prompts': 2.4.2
       '@types/sinonjs__fake-timers': 8.1.2
-      '@vitest/expect': link:../expect
-      '@vitest/spy': link:../spy
-      '@vitest/ui': link:../ui
-      '@vitest/utils': link:../utils
       birpc: 0.2.3
       chai-subset: 1.6.0
       cli-truncate: 3.1.0
@@ -935,7 +957,6 @@ importers:
       mlly: 1.1.0
       natural-compare: 1.4.0
       p-limit: 4.0.0
-      pathe: 0.2.0
       pkg-types: 1.0.1
       pretty-format: 27.5.1
       prompts: 2.4.2
@@ -963,6 +984,7 @@ importers:
 
   packages/ws-client:
     specifiers:
+      '@vitest/runner': workspace:*
       birpc: ^0.2.3
       flatted: ^3.2.7
       rollup: ^2.79.1
@@ -972,6 +994,7 @@ importers:
       flatted: 3.2.7
       ws: 8.12.0
     devDependencies:
+      '@vitest/runner': link:../runner
       rollup: 2.79.1
 
   test/base:
@@ -1024,10 +1047,16 @@ importers:
 
   test/core:
     specifiers:
+      '@vitest/expect': workspace:^0.27.2
+      '@vitest/runner': workspace:*
+      '@vitest/utils': workspace:*
       tinyspy: ^1.0.2
       url: ^0.11.0
       vitest: workspace:*
     devDependencies:
+      '@vitest/expect': link:../../packages/expect
+      '@vitest/runner': link:../../packages/runner
+      '@vitest/utils': link:../../packages/utils
       tinyspy: 1.0.2
       url: 0.11.0
       vitest: link:../../packages/vitest
@@ -1043,7 +1072,7 @@ importers:
     devDependencies:
       '@vitejs/plugin-vue': 4.0.0_vite@4.0.0+vue@3.2.45
       '@vue/test-utils': 2.2.7_vue@3.2.45
-      happy-dom: 8.1.4
+      happy-dom: 8.1.5
       vite: 4.0.0
       vitest: link:../../packages/vitest
       vue: 3.2.45
@@ -1221,10 +1250,10 @@ importers:
 
   test/vite-config:
     specifiers:
-      pathe: ^0.2.0
+      pathe: ^1.1.0
       vitest: workspace:*
     devDependencies:
-      pathe: 0.2.0
+      pathe: 1.1.0
       vitest: link:../../packages/vitest
 
   test/vite-node:
@@ -7948,7 +7977,7 @@ packages:
       consola: 2.15.3
       fast-glob: 3.2.12
       magic-string: 0.27.0
-      pathe: 1.0.0
+      pathe: 1.1.0
       perfect-debounce: 0.1.3
     transitivePeerDependencies:
       - rollup
@@ -7970,7 +7999,7 @@ packages:
       consola: 2.15.3
       fast-glob: 3.2.12
       magic-string: 0.27.0
-      pathe: 1.0.0
+      pathe: 1.1.0
       perfect-debounce: 0.1.3
     transitivePeerDependencies:
       - rollup
@@ -13571,8 +13600,8 @@ packages:
       - encoding
     dev: true
 
-  /happy-dom/8.1.4:
-    resolution: {integrity: sha512-mUCzXHhSO6fOQlZwKW6z2f/+rYavKNxNrgY4nJ4dp+r8gTGbTENgMZGfM6eJD0DJPRFF8DFyngXdBF93wF96UA==}
+  /happy-dom/8.1.5:
+    resolution: {integrity: sha512-/UXAJ2fHTs4H3vy7TS7c9PKFvPyaNialk2Er9NdXfpBKNaCITMOH03rkjHXp5jnJnSmRBa+av8E08PUAaIB1jQ==}
     dependencies:
       css.escape: 1.5.1
       he: 1.2.0
@@ -15456,6 +15485,12 @@ packages:
       get-func-name: 2.0.0
     dev: false
 
+  /loupe/2.3.6:
+    resolution: {integrity: sha512-RaPMZKiMy8/JruncMU5Bt6na1eftNoo++R4Y+N2FrxkDVTrGvcyzFTsaGif4QTeKESheMGegbhw6iUAq+5A8zA==}
+    dependencies:
+      get-func-name: 2.0.0
+    dev: false
+
   /lower-case/2.0.2:
     resolution: {integrity: sha512-7fm3l3NAF9WfN6W3JOmf5drwpVqX78JtoGJ3A6W0a6ZnldM41w2fV5D490psKFTpMds8TJse/eHLFFsNHHjHgg==}
     dependencies:
@@ -16666,7 +16701,6 @@ packages:
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
     dependencies:
       yocto-queue: 1.0.0
-    dev: true
 
   /p-locate/3.0.0:
     resolution: {integrity: sha512-x+12w/To+4GFfgJhBEpiDcLozRJGegY+Ei7/z0tSLkMmxGZNybVMSfWj9aJn8Z5Fc7dBUNJOOVgPv2H7IwulSQ==}
@@ -16927,15 +16961,15 @@ packages:
     resolution: {integrity: sha512-gDKb8aZMDeD/tZWs9P6+q0J9Mwkdl6xMV8TjnGP3qJVJ06bdMgkbBlLU8IdfOsIsFz2BW1rNVT3XuNEl8zPAvw==}
     engines: {node: '>=8'}
 
-  /pathe/0.2.0:
-    resolution: {integrity: sha512-sTitTPYnn23esFR3RlqYBWn4c45WGeLcsKzQiUpXJAyfcWkolvlYpV8FLo7JishK946oQwMFUCHXQ9AjGPKExw==}
-
   /pathe/0.3.9:
     resolution: {integrity: sha512-6Y6s0vT112P3jD8dGfuS6r+lpa0qqNrLyHPOwvXMnyNTQaYiwgau2DP3aNDsR13xqtGj7rrPo+jFUATpU6/s+g==}
     dev: true
 
   /pathe/1.0.0:
     resolution: {integrity: sha512-nPdMG0Pd09HuSsr7QOKUXO2Jr9eqaDiZvDwdyIhNG5SHYujkQHYKDfGQkulBxvbDHz8oHLsTgKN86LSwYzSHAg==}
+
+  /pathe/1.1.0:
+    resolution: {integrity: sha512-ODbEPR0KKHqECXW1GoxdDb+AZvULmXjVPy4rt+pGo2+TnjJTIPJQSVS6N63n8T2Ip+syHhbn52OewKicV0373w==}
 
   /pathval/1.1.1:
     resolution: {integrity: sha512-Dp6zGqpTdETdR63lehJYPeIOqpiNBNtc7BpWSLrOje7UaIsE5aY92r/AunQA7rsXvet3lrJ3JnZX29UPTKXyKQ==}
@@ -17090,7 +17124,7 @@ packages:
     dependencies:
       jsonc-parser: 3.2.0
       mlly: 1.1.0
-      pathe: 1.0.0
+      pathe: 1.1.0
 
   /playwright-core/1.28.0:
     resolution: {integrity: sha512-nJLknd28kPBiCNTbqpu6Wmkrh63OEqJSFw9xOfL9qxfNwody7h6/L3O2dZoWQ6Oxcm0VOHjWmGiCUGkc0X3VZA==}
@@ -20236,7 +20270,7 @@ packages:
       local-pkg: 0.4.2
       magic-string: 0.27.0
       mlly: 1.1.0
-      pathe: 1.0.0
+      pathe: 1.1.0
       pkg-types: 1.0.1
       scule: 1.0.0
       strip-literal: 1.0.0
@@ -21808,7 +21842,6 @@ packages:
   /yocto-queue/1.0.0:
     resolution: {integrity: sha512-9bnSc/HEW2uRy67wc+T8UwauLuPJVn28jb+GtJY16iiKWyvmYJRXVT4UamsAEGQfPohgr2q4Tq0sQbQlxTfi1g==}
     engines: {node: '>=12.20'}
-    dev: true
 
   /zen-observable-ts/1.2.5:
     resolution: {integrity: sha512-QZWQekv6iB72Naeake9hS1KxHlotfRpe+WGNbNx5/ta+R3DNjVO2bswf63gXlWDcs+EMd7XY8HfVQyP1X6T4Zg==}

@@ -18,7 +18,7 @@ function collectFailed(task: Task, level: number): LeveledTask[] {
   if (task.result?.state !== 'fail')
     return []
 
-  if (task.type === 'test' || task.type === 'benchmark' || task.type === 'typecheck')
+  if (task.type === 'test' || task.type === 'custom')
     return [{ ...task, level }]
   else
     return [{ ...task, level }, ...task.tasks.flatMap(t => collectFailed(t, level + 1))]

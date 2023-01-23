@@ -31,7 +31,9 @@
   "dependencies": {
     "@vitest/spy": "workspace:*",
     "@vitest/utils": "workspace:*",
-    "chai": "^4.3.7",
+    "chai": "^4.3.7"
+  },
+  "devDependencies": {
     "picocolors": "^1.0.0"
   }
 }
