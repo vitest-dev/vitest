@@ -76,12 +76,10 @@ export async function setupConsoleLogSpy() {
     if (!buffer)
       return
     const content = buffer.map(i => String(i)).join('')
-    if (!content.trim())
-      return
     const timer = timers.get(taskId)!
     rpc().onUserConsoleLog({
       type: 'stdout',
-      content,
+      content: content || '<empty line>',
       taskId,
       time: timer.stdoutTime || RealDate.now(),
       size: buffer.length,
@@ -94,12 +92,10 @@ export async function setupConsoleLogSpy() {
     if (!buffer)
       return
     const content = buffer.map(i => String(i)).join('')
-    if (!content.trim())
-      return
     const timer = timers.get(taskId)!
     rpc().onUserConsoleLog({
       type: 'stderr',
-      content,
+      content: content || '<empty line>',
       taskId,
       time: timer.stderrTime || RealDate.now(),
       size: buffer.length,

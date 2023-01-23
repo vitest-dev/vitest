@@ -174,8 +174,8 @@ export abstract class BaseReporter implements Reporter {
     if (!this.shouldLog(log))
       return
     const task = log.taskId ? this.ctx.state.idMap.get(log.taskId) : undefined
-    this.ctx.logger.log(c.gray(log.type + c.dim(` | ${task ? getFullName(task, c.dim(' > ')) : 'unknown test'}`)))
-    process[log.type].write(`${log.content}\n`)
+    const header = c.gray(log.type + c.dim(` | ${task ? getFullName(task, c.dim(' > ')) : 'unknown test'}`))
+    process[log.type].write(`${header}\n${log.content}\n`)
   }
 
   shouldLog(log: UserConsoleLog) {
