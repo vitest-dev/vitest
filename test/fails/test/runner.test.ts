@@ -30,9 +30,9 @@ describe('should fails', async () => {
       const msg = String(error)
         .split(/\n/g)
         .reverse()
-        .find(i => i.includes('Error: '))
-        ?.trim()
-        .replace(root, '<rootDir>')
+        .filter(i => i.includes('Error: ') && !i.includes('Command failed') && !i.includes('stackStr') && !i.includes('at runTest'))
+        .map(i => i.trim().replace(root, '<rootDir>'),
+        ).join('\n')
       expect(msg).toMatchSnapshot(file)
     }, 30_000)
   }
