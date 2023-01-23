@@ -60,6 +60,7 @@ const plainTeamMembers: CoreTeam[] = [
     avatar: contributorsAvatars['sheremet-va'],
     name: 'Vladimir',
     github: 'sheremet-va',
+    mastodon: 'https://elk.zone/m.webtoo.ls/@sheremet_va',
     twitter: 'sheremet_va',
     sponsor: 'https://github.com/sponsors/sheremet-va',
     title: 'An open source fullstack developer',
