@@ -27,7 +27,7 @@ test('my types work properly', () => {
 
 Any type error triggered inside a test file will be treated as a test error, so you can use any type trick you want to test types of your project.
 
-You can see a list of possible matchers in [API section](/api/#expecttypeof).
+You can see a list of possible matchers in [API section](/api/expect-typeof).
 
 ## Reading Errors
 

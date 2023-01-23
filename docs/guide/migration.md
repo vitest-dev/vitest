@@ -25,7 +25,7 @@ When mocking a module in Jest, the factory argument's return value is the defaul
 + })
 ```
 
-For more details please refer to the [vi.mock api](/api/#vi-mock)
+For more details please refer to the [`vi.mock` api section](/api/vi#vi-mock).
 
 **Auto-Mocking Behaviour**
 
