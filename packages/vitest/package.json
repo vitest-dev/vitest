@@ -120,7 +120,6 @@
     "@vitest/expect": "workspace:*",
     "@vitest/runner": "workspace:*",
     "@vitest/spy": "workspace:*",
-    "@vitest/ui": "workspace:*",
     "@vitest/utils": "workspace:*",
     "acorn": "^8.8.1",
     "acorn-walk": "^8.2.0",

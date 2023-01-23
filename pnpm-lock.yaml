@@ -195,7 +195,7 @@ importers:
       lit: 2.3.1
     devDependencies:
       '@vitest/ui': link:../../packages/ui
-      jsdom: 21.0.0
+      jsdom: 21.1.0
       vite: 4.0.0
       vitest: link:../../packages/vitest
 
@@ -245,7 +245,7 @@ importers:
       '@types/node': 18.11.18
       '@types/react': 18.0.27
       '@vitejs/plugin-react': 3.0.1
-      jsdom: 21.0.0
+      jsdom: 21.1.0
       typescript: 4.8.4
       vitest: link:../../packages/vitest
 
@@ -295,7 +295,7 @@ importers:
       '@vitejs/plugin-react': 3.0.1_vite@4.0.0
       '@vitest/ui': link:../../packages/ui
       happy-dom: 8.1.5
-      jsdom: 21.0.0
+      jsdom: 21.1.0
       react-test-renderer: 17.0.2_react@17.0.2
       vite: 4.0.0
       vitest: link:../../packages/vitest
@@ -368,7 +368,7 @@ importers:
       '@testing-library/user-event': 14.4.3
       '@vitest/ui': link:../../packages/ui
       date-fns: 2.29.2
-      jsdom: 21.0.0
+      jsdom: 21.1.0
       vite: 4.0.0
       vitest: link:../../packages/vitest
 
@@ -420,7 +420,7 @@ importers:
       '@vitejs/plugin-react': 1.3.2
       '@vitest/ui': link:../../packages/ui
       babel-loader: 8.2.5_@babel+core@7.18.13
-      jsdom: 21.0.0
+      jsdom: 21.1.0
       msw: 0.49.2_typescript@4.8.4
       msw-storybook-addon: 1.6.3_s5cxgiagrgvv4frx3sfmny2xh4
       typescript: 4.8.4
@@ -455,7 +455,7 @@ importers:
       '@vitejs/plugin-react': 2.2.0_vite@4.0.0
       '@vitest/coverage-c8': 0.24.5
       '@vitest/ui': link:../../packages/ui
-      jsdom: 21.0.0
+      jsdom: 21.1.0
       typescript: 4.8.4
       vite: 4.0.0
       vitest: link:../../packages/vitest
@@ -488,7 +488,7 @@ importers:
       '@vitejs/plugin-react': 1.3.2
       '@vitest/ui': link:../../packages/ui
       cross-fetch: 3.1.5
-      jsdom: 21.0.0
+      jsdom: 21.1.0
       msw: 0.49.2
       vite: 4.0.0
       vitest: link:../../packages/vitest
@@ -505,7 +505,7 @@ importers:
     devDependencies:
       '@vitejs/plugin-vue': 4.0.0_vite@4.0.0+vue@3.2.45
       '@vue/test-utils': 2.2.7_vue@3.2.45
-      jsdom: 21.0.0
+      jsdom: 21.1.0
       vite: 4.0.0
       vite-plugin-ruby: 3.1.2_vite@4.0.0
       vitest: link:../../packages/vitest
@@ -524,7 +524,7 @@ importers:
       solid-js: 1.5.2
     devDependencies:
       '@testing-library/jest-dom': 5.16.5
-      jsdom: 21.0.0
+      jsdom: 21.1.0
       solid-testing-library: 0.5.0_solid-js@1.5.2
       vite: 4.0.0
       vite-plugin-solid: 2.5.0_solid-js@1.5.2+vite@4.0.0
@@ -543,7 +543,7 @@ importers:
       '@sveltejs/vite-plugin-svelte': 2.0.0_svelte@3.55.1+vite@4.0.0
       '@testing-library/svelte': 3.2.2_svelte@3.55.1
       '@vitest/ui': link:../../packages/ui
-      jsdom: 21.0.0
+      jsdom: 21.1.0
       svelte: 3.55.1
       vite: 4.0.0
       vitest: link:../../packages/vitest
@@ -563,7 +563,7 @@ importers:
     devDependencies:
       '@vitejs/plugin-vue': 4.0.0_vite@4.0.0+vue@3.2.45
       '@vue/test-utils': 2.0.2_vue@3.2.45
-      jsdom: 21.0.0
+      jsdom: 21.1.0
       unplugin-auto-import: 0.11.2_vite@4.0.0
       unplugin-vue-components: 0.22.4_vite@4.0.0+vue@3.2.45
       vite: 4.0.0
@@ -582,7 +582,7 @@ importers:
     devDependencies:
       '@vitejs/plugin-vue': 4.0.0_vite@4.0.0+vue@3.2.45
       '@vue/test-utils': 2.0.0_vue@3.2.45
-      jsdom: 21.0.0
+      jsdom: 21.1.0
       vite: 4.0.0
       vitest: link:../../packages/vitest
 
@@ -599,7 +599,7 @@ importers:
       '@vitejs/plugin-vue': 4.0.0_vite@4.0.0+vue@3.2.45
       '@vitejs/plugin-vue-jsx': 3.0.0_vite@4.0.0+vue@3.2.45
       '@vue/test-utils': 2.2.7_vue@3.2.45
-      jsdom: 21.0.0
+      jsdom: 21.1.0
       vite: 4.0.0
       vitest: link:../../packages/vitest
       vue: 3.2.45
@@ -618,7 +618,7 @@ importers:
     devDependencies:
       '@vitejs/plugin-vue2': 1.1.2_vite@4.0.0+vue@2.7.10
       '@vue/test-utils': 1.3.0_42puyn3dcxirnpdjnosl7pbb6a
-      jsdom: 21.0.0
+      jsdom: 21.1.0
       vite: 4.0.0
       vitest: link:../../packages/vitest
       vue-template-compiler: 2.7.10
@@ -861,7 +861,6 @@ importers:
       '@vitest/expect': workspace:*
       '@vitest/runner': workspace:*
       '@vitest/spy': workspace:*
-      '@vitest/ui': workspace:*
       '@vitest/utils': workspace:*
       acorn: ^8.8.1
       acorn-walk: ^8.2.0
@@ -913,7 +912,6 @@ importers:
       '@vitest/expect': link:../expect
       '@vitest/runner': link:../runner
       '@vitest/spy': link:../spy
-      '@vitest/ui': link:../ui
       '@vitest/utils': link:../utils
       acorn: 8.8.1
       acorn-walk: 8.2.0
@@ -1051,7 +1049,7 @@ importers:
 
   test/core:
     specifiers:
-      '@vitest/expect': workspace:^0.27.2
+      '@vitest/expect': workspace:*
       '@vitest/runner': workspace:*
       '@vitest/utils': workspace:*
       tinyspy: ^1.0.2
@@ -14997,6 +14995,47 @@ packages:
 
   /jsdom/21.0.0:
     resolution: {integrity: sha512-AIw+3ZakSUtDYvhwPwWHiZsUi3zHugpMEKlNPaurviseYoBqo0zBd3zqoUi3LPCNtPFlEP8FiW9MqCZdjb2IYA==}
+    engines: {node: '>=14'}
+    peerDependencies:
+      canvas: ^2.5.0
+    peerDependenciesMeta:
+      canvas:
+        optional: true
+    dependencies:
+      abab: 2.0.6
+      acorn: 8.8.1
+      acorn-globals: 7.0.1
+      cssom: 0.5.0
+      cssstyle: 2.3.0
+      data-urls: 3.0.2
+      decimal.js: 10.4.2
+      domexception: 4.0.0
+      escodegen: 2.0.0
+      form-data: 4.0.0
+      html-encoding-sniffer: 3.0.0
+      http-proxy-agent: 5.0.0
+      https-proxy-agent: 5.0.1
+      is-potential-custom-element-name: 1.0.1
+      nwsapi: 2.2.2
+      parse5: 7.1.1
+      saxes: 6.0.0
+      symbol-tree: 3.2.4
+      tough-cookie: 4.1.2
+      w3c-xmlserializer: 4.0.0
+      webidl-conversions: 7.0.0
+      whatwg-encoding: 2.0.0
+      whatwg-mimetype: 3.0.0
+      whatwg-url: 11.0.0
+      ws: 8.12.0
+      xml-name-validator: 4.0.0
+    transitivePeerDependencies:
+      - bufferutil
+      - supports-color
+      - utf-8-validate
+    dev: true
+
+  /jsdom/21.1.0:
+    resolution: {integrity: sha512-m0lzlP7qOtthD918nenK3hdItSd2I+V3W9IrBcB36sqDwG+KnUs66IF5GY7laGWUnlM9vTsD0W1QwSEBYWWcJg==}
     engines: {node: '>=14'}
     peerDependencies:
       canvas: ^2.5.0
