@@ -2,8 +2,10 @@ import { existsSync, promises as fs } from 'node:fs'
 import { hostname } from 'node:os'
 import { dirname, relative, resolve } from 'pathe'
 
+import type { Task } from '@vitest/runner'
+import type { ErrorWithDiff } from '@vitest/runner/utils'
 import type { Vitest } from '../../node'
-import type { ErrorWithDiff, Reporter, Task } from '../../types'
+import type { Reporter } from '../../types/reporter'
 import { parseStacktrace } from '../../utils/source-map'
 import { F_POINTER } from '../../utils/figures'
 import { getOutputFile } from '../../utils/config-helpers'
@@ -99,7 +101,7 @@ export class JUnitReporter implements Reporter {
   }
 
   async writeElement(name: string, attrs: Record<string, any>, children: () => Promise<void>) {
-    const pairs = []
+    const pairs: string[] = []
     for (const key in attrs) {
       const attr = attrs[key]
       if (attr === undefined)

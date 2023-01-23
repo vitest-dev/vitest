@@ -1,4 +1,4 @@
-import { promises as fs } from 'node:fs'
+import { existsSync, promises as fs } from 'node:fs'
 
 import type { BirpcReturn } from 'birpc'
 import { createBirpc } from 'birpc'
@@ -51,11 +51,25 @@ export function setup(ctx: Vitest) {
         getFiles() {
           return ctx.state.getFiles()
         },
-        async getPaths() {
-          return await ctx.state.getPaths()
+        getPaths() {
+          return ctx.state.getPaths()
         },
-        readFile(id) {
+        resolveSnapshotPath(testPath) {
+          return ctx.snapshot.resolvePath(testPath)
+        },
+        removeFile(id) {
+          return fs.unlink(id)
+        },
+        createDirectory(id) {
+          return fs.mkdir(id, { recursive: true })
+        },
+        async readFile(id) {
+          if (!existsSync(id))
+            return null
           return fs.readFile(id, 'utf-8')
+        },
+        snapshotSaved(snapshot) {
+          ctx.snapshot.add(snapshot)
         },
         writeFile(id, content) {
           return fs.writeFile(id, content, 'utf-8')

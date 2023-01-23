@@ -6,8 +6,8 @@ exports[`mocked function which fails on toReturnWith > just one call 1`] = `
 Received: 
 [1m    1st spy call return:
 
-[22m  [32m2[90m
-  [31m1[90m
+[22m  [32m1[90m
+  [31m2[90m
 [39m[90m
 
 Number of calls: [1m1[22m
@@ -20,18 +20,18 @@ exports[`mocked function which fails on toReturnWith > multi calls 1`] = `
 Received: 
 [1m    1st spy call return:
 
-[22m  [32m2[90m
-  [31m1[90m
+[22m  [32m1[90m
+  [31m2[90m
 
 [1m    2nd spy call return:
 
-[22m  [32m2[90m
-  [31m1[90m
+[22m  [32m1[90m
+  [31m2[90m
 
 [1m    3rd spy call return:
 
-[22m  [32m2[90m
-  [31m1[90m
+[22m  [32m1[90m
+  [31m2[90m
 [39m[90m
 
 Number of calls: [1m3[22m
@@ -45,22 +45,22 @@ Received:
 [1m    1st spy call return:
 
 [22m    Object {
-  [32m-   \\"a\\": \\"4\\",[90m
-  [31m+   \\"a\\": \\"1\\",[90m
+  [32m-   \\"a\\": \\"1\\",[90m
+  [31m+   \\"a\\": \\"4\\",[90m
     }
 
 [1m    2nd spy call return:
 
 [22m    Object {
-  [32m-   \\"a\\": \\"4\\",[90m
-  [31m+   \\"a\\": \\"1\\",[90m
+  [32m-   \\"a\\": \\"1\\",[90m
+  [31m+   \\"a\\": \\"4\\",[90m
     }
 
 [1m    3rd spy call return:
 
 [22m    Object {
-  [32m-   \\"a\\": \\"4\\",[90m
-  [31m+   \\"a\\": \\"1\\",[90m
+  [32m-   \\"a\\": \\"1\\",[90m
+  [31m+   \\"a\\": \\"4\\",[90m
     }
 [39m[90m
 

@@ -44,7 +44,7 @@ export default () => [
     plugins,
   },
   {
-    input: entries,
+    input: 'src/pure.ts',
     output: {
       dir: process.cwd(),
       entryFileNames: '[name].d.ts',

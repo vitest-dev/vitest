@@ -3,8 +3,8 @@ import { parse as parseAst } from 'acorn'
 import { ancestor as walkAst } from 'acorn-walk'
 import type { RawSourceMap } from 'vite-node'
 
+import { calculateSuiteHash, generateHash, interpretTaskModes, someTasksAreOnly } from '@vitest/runner/utils'
 import type { File, Suite, Test, Vitest } from '../types'
-import { calculateSuiteHash, generateHash, interpretTaskModes, someTasksAreOnly } from '../utils/collect'
 
 interface ParsedFile extends File {
   start: number

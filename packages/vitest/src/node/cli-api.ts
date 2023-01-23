@@ -4,7 +4,7 @@ import { EXIT_CODE_RESTART } from '../constants'
 import { CoverageProviderMap } from '../integrations/coverage'
 import { getEnvPackageName } from '../integrations/env'
 import type { UserConfig, Vitest, VitestRunMode } from '../types'
-import { ensurePackageInstalled } from '../utils'
+import { ensurePackageInstalled } from './pkg'
 import { createVitest } from './create'
 import { registerConsoleShortcuts } from './stdin'
 

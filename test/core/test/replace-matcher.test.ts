@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { replaceAsymmetricMatcher } from '../../../packages/vitest/src/runtime/error'
+import { replaceAsymmetricMatcher } from '@vitest/runner/utils'
 
 describe('replace asymmetric matcher', () => {
   const expectReplaceAsymmetricMatcher = (actual: any, expected: any) => {

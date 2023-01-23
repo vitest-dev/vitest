@@ -2,7 +2,7 @@ import c from 'picocolors'
 import cliTruncate from 'cli-truncate'
 import stripAnsi from 'strip-ansi'
 import type { Benchmark, BenchmarkResult, Task } from '../../../../types'
-import { clearInterval, getTests, notNullish, setInterval } from '../../../../utils'
+import { getTests, notNullish } from '../../../../utils'
 import { F_RIGHT } from '../../../../utils/figures'
 import type { Logger } from '../../../logger'
 import { getCols, getStateSymbol } from '../../renderers/utils'
@@ -38,7 +38,7 @@ const tableHead = ['name', 'hz', 'min', 'max', 'mean', 'p75', 'p99', 'p995', 'p9
 
 function renderTableHead(tasks: Task[]) {
   const benchs = tasks
-    .map(i => i.type === 'benchmark' ? i.result?.benchmark : undefined)
+    .map(i => i.meta?.benchmark ? i.result?.benchmark : undefined)
     .filter(notNullish)
   const allItems = benchs.map(renderBenchmarkItems).concat([tableHead])
   return `${' '.repeat(3)}${tableHead.map((i, idx) => {
@@ -70,7 +70,7 @@ function renderBenchmark(task: Benchmark, tasks: Task[]): string {
     return task.name
 
   const benchs = tasks
-    .map(i => i.type === 'benchmark' ? i.result?.benchmark : undefined)
+    .map(i => i.meta?.benchmark ? i.result?.benchmark : undefined)
     .filter(notNullish)
   const allItems = benchs.map(renderBenchmarkItems).concat([tableHead])
   const items = renderBenchmarkItems(result)
@@ -108,7 +108,7 @@ export function renderTree(tasks: Task[], options: ListRendererOptions, level = 
   for (const task of tasks) {
     const padding = '  '.repeat(level ? 1 : 0)
     let prefix = ''
-    if (idx === 0 && task.type === 'benchmark')
+    if (idx === 0 && task.meta?.benchmark)
       prefix += `${renderTableHead(tasks)}\n${padding}`
 
     prefix += ` ${getStateSymbol(task)} `
@@ -132,8 +132,8 @@ export function renderTree(tasks: Task[], options: ListRendererOptions, level = 
     if (level === 0)
       name = formatFilepath(name)
 
-    const body = task.type === 'benchmark'
-      ? renderBenchmark(task, tasks)
+    const body = task.meta?.benchmark
+      ? renderBenchmark(task as Benchmark, tasks)
       : name
 
     output.push(padding + prefix + body + suffix)
