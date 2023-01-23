@@ -150,10 +150,7 @@ export async function runTest(test: Test, runner: VitestRunner) {
       test.result.state = 'pass'
     }
     catch (e) {
-      const error = processError(e)
-      test.result.state = 'fail'
-      test.result.error = error
-      test.result.errors = [error]
+      failTask(test.result, e)
     }
 
     try {
@@ -161,10 +158,7 @@ export async function runTest(test: Test, runner: VitestRunner) {
       await callCleanupHooks(beforeEachCleanups)
     }
     catch (e) {
-      const error = processError(e)
-      test.result.state = 'fail'
-      test.result.error = error
-      test.result.errors = [error]
+      failTask(test.result, e)
     }
 
     if (test.result.state === 'pass')
@@ -201,6 +195,14 @@ export async function runTest(test: Test, runner: VitestRunner) {
   updateTask(test, runner)
 }
 
+function failTask(result: TaskResult, err: unknown) {
+  result.state = 'fail'
+  const error = processError(err)
+  result.error = error
+  result.errors ??= []
+  result.errors.push(error)
+}
+
 function markTasksAsSkipped(suite: Suite, runner: VitestRunner) {
   suite.tasks.forEach((t) => {
     t.mode = 'skip'
@@ -229,6 +231,8 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
 
   updateTask(suite, runner)
 
+  let beforeAllCleanups: HookCleanupCallback[] = []
+
   if (suite.mode === 'skip') {
     suite.result.state = 'skip'
   }
@@ -237,7 +241,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
   }
   else {
     try {
-      const beforeAllCleanups = await callSuiteHook(suite, suite, 'beforeAll', runner, [suite])
+      beforeAllCleanups = await callSuiteHook(suite, suite, 'beforeAll', runner, [suite])
 
       if (runner.runSuite) {
         await runner.runSuite(suite)
@@ -262,17 +266,20 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
           }
         }
       }
-
-      await callSuiteHook(suite, suite, 'afterAll', runner, [suite])
-      await callCleanupHooks(beforeAllCleanups)
     }
     catch (e) {
-      const error = processError(e)
-      suite.result.state = 'fail'
-      suite.result.error = error
-      suite.result.errors = [error]
+      failTask(suite.result, e)
     }
   }
+
+  try {
+    await callSuiteHook(suite, suite, 'afterAll', runner, [suite])
+    await callCleanupHooks(beforeAllCleanups)
+  }
+  catch (e) {
+    failTask(suite.result, e)
+  }
+
   suite.result.duration = now() - start
 
   if (suite.mode === 'run') {
