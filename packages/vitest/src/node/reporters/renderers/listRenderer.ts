@@ -143,8 +143,15 @@ export function renderTree(tasks: Task[], options: ListRendererOptions, level = 
     output = output.concat(renderHookState(task, 'beforeAll', level + 1))
     output = output.concat(renderHookState(task, 'beforeEach', level + 1))
     if (task.type === 'suite' && task.tasks.length > 0) {
-      if ((task.result?.state === 'fail' || task.result?.state === 'run' || options.renderSucceed))
-        output = output.concat(renderTree(task.tasks, options, level + 1))
+      if ((task.result?.state === 'fail' || task.result?.state === 'run' || options.renderSucceed)) {
+        if (options.logger.ctx.config.silentSkip) {
+          const filteredTasks = task.tasks.filter(t => t.mode !== 'skip' && t.mode !== 'todo')
+          output = output.concat(renderTree(filteredTasks, options, level + 1))
+        }
+        else {
+          output = output.concat(renderTree(task.tasks, options, level + 1))
+        }
+      }
     }
     output = output.concat(renderHookState(task, 'afterAll', level + 1))
     output = output.concat(renderHookState(task, 'afterEach', level + 1))
@@ -161,7 +168,13 @@ export const createListRenderer = (_tasks: Task[], options: ListRendererOptions)
   const log = options.logger.logUpdate
 
   function update() {
-    log(renderTree(tasks, options))
+    if (options.logger.ctx.config.silentSkip) {
+      const filteredTasks = tasks.filter(t => t.mode !== 'skip' && t.mode !== 'todo')
+      log(renderTree(filteredTasks, options))
+    }
+    else {
+      log(renderTree(tasks, options))
+    }
   }
 
   return {
@@ -182,7 +195,13 @@ export const createListRenderer = (_tasks: Task[], options: ListRendererOptions)
         timer = undefined
       }
       log.clear()
-      options.logger.log(renderTree(tasks, options))
+      if (options.logger.ctx.config.silentSkip) {
+        const filteredTasks = tasks.filter(t => t.mode !== 'skip' && t.mode !== 'todo')
+        options.logger.log(renderTree(filteredTasks, options))
+      }
+      else {
+        options.logger.log(renderTree(tasks, options))
+      }
       return this
     },
     clear() {

@@ -8,7 +8,7 @@ test('Math.sqrt()', () => {
   expect(Math.sqrt(2)).toBe(Math.SQRT2)
 })
 
-test('JSON', () => {
+test.skip('JSON', () => {
   const input = {
     foo: 'hello',
     bar: 'world',

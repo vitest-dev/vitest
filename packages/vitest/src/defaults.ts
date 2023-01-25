@@ -77,6 +77,7 @@ const config = {
   update: false,
   reporters: [],
   silent: false,
+  silentSkip: false,
   api: false,
   ui: false,
   uiBase: '/__vitest__/',

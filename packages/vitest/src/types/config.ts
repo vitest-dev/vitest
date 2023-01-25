@@ -248,6 +248,13 @@ export interface InlineConfig {
   silent?: boolean
 
   /**
+   * Hide logs for skipped tests
+   *
+   * @default false
+   */
+  silentSkip?: boolean
+
+  /**
    * Path to setup files
    */
   setupFiles?: string | string[]
