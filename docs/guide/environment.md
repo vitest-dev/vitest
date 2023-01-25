@@ -11,7 +11,7 @@ By default, you can use these environments:
 
 ## Environments for specific files
 
-When setting `environment` option in your config, it will apply to all the test files in your project. To have more fine-grained control, you can use control comments to specify environment for specific files. Control comments are comments that start with `@vitest-environment` and followed by the environment name:
+When setting `environment` option in your config, it will apply to all the test files in your project. To have more fine-grained control, you can use control comments to specify environment for specific files. Control comments are comments that start with `@vitest-environment` and are followed by the environment name:
 
 ```ts
 // @vitest-environment jsdom
