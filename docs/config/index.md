@@ -334,6 +334,31 @@ Vitest also exposes `builtinEnvironments` through `vitest/environments` entry, i
 
 These options are passed down to `setup` method of current [`environment`](#environment). By default, you can configure only JSDOM options, if you are using it as your test environment.
 
+### environmentMatchGlobs
+
+- **Type:** `[string, EnvironmentName][]`
+- **Default:** `[]`
+
+Automatically assign environment based on globs. The first match will be used.
+
+For example:
+
+```ts
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    environmentMatchGlobs: [
+      // all tests in tests/dom will run in jsdom
+      ['tests/dom/**', 'jsdom'],
+      // all tests in tests/ with .edge.test.ts will run in edge-runtime
+      ['**\/*.edge.test.ts', 'edge-runtime'],
+      // ...
+    ]
+  }
+})
+```
+
 ### update
 
 - **Type:** `boolean`
