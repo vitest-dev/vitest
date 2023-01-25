@@ -130,7 +130,7 @@ export class ViteNodeServer {
     const module = this.server.moduleGraph.getModuleById(id)
     const timestamp = module ? module.lastHMRTimestamp : null
     const cache = this.fetchCache.get(filePath)
-    if (timestamp !== null && cache && cache.timestamp >= timestamp)
+    if (timestamp && cache && cache.timestamp >= timestamp)
       return cache.result
 
     const time = Date.now()
