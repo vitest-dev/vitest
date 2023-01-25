@@ -1,6 +1,6 @@
 import type { ViteNodeRunner } from 'vite-node/client'
 import type { Reporter } from '../../types'
-import { ensurePackageInstalled } from '../../utils'
+import { ensurePackageInstalled } from '../pkg'
 import { BenchmarkReportsMap, ReportersMap } from './index'
 import type { BenchmarkBuiltinReporters, BuiltinReporters } from './index'
 

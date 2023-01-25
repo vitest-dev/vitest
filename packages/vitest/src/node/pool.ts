@@ -33,6 +33,12 @@ export function createPool(ctx: Vitest): WorkerPool {
 
   const conditions = ctx.server.config.resolve.conditions?.flatMap(c => ['--conditions', c]) || []
 
+  // Instead of passing whole process.execArgv to the workers, pick allowed options.
+  // Some options may crash worker, e.g. --prof, --title. nodejs/node#41103
+  const execArgv = process.execArgv.filter(execArg =>
+    execArg.startsWith('--cpu-prof') || execArg.startsWith('--heap-prof'),
+  )
+
   const options: TinypoolOptions = {
     filename: workerPath,
     // TODO: investigate further
@@ -44,13 +50,17 @@ export function createPool(ctx: Vitest): WorkerPool {
 
     execArgv: ctx.config.deps.registerNodeLoader
       ? [
+          ...execArgv,
           '--require',
           suppressLoaderWarningsPath,
           '--experimental-loader',
           loaderPath,
           ...conditions,
         ]
-      : conditions,
+      : [
+          ...execArgv,
+          ...conditions,
+        ],
   }
 
   if (ctx.config.isolate) {
@@ -128,7 +138,10 @@ export function createPool(ctx: Vitest): WorkerPool {
   return {
     runTests: runWithFiles('run'),
     close: async () => {
-      await Promise.all(pool.threads.map(w => w.terminate()))
+      // node before 16.17 has a bug that causes FATAL ERROR because of the race condition
+      const nodeVersion = Number(process.version.match(/v(\d+)\.(\d+)/)?.[0].slice(1))
+      if (nodeVersion >= 16.17)
+        await Promise.all(pool.threads.map(w => w.terminate()))
     },
   }
 }
@@ -184,8 +197,8 @@ function createChannel(ctx: Vitest) {
         ctx.state.updateUserLog(log)
         ctx.report('onUserConsoleLog', log)
       },
-      onUnhandledRejection(err) {
-        ctx.state.catchError(err, 'Unhandled Rejection')
+      onUnhandledError(err, type) {
+        ctx.state.catchError(err, type)
       },
       onFinished(files) {
         ctx.report('onFinished', files, ctx.state.getUnhandledErrors())

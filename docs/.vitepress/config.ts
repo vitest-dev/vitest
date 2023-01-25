@@ -1,4 +1,5 @@
 import { defineConfig } from 'vitepress'
+import { withPwa } from '@vite-pwa/vitepress'
 import { version } from '../../package.json'
 import {
   contributing,
@@ -9,12 +10,13 @@ import {
   ogUrl,
   releases,
   twitter,
-  vitestDescription,
-  vitestName,
+  vitestDescription, vitestName,
 } from './meta'
+import { pwa } from './scripts/pwa'
+import { transformHead } from './scripts/transformHead'
 import { teamMembers } from './contributors'
 
-export default defineConfig({
+export default withPwa(defineConfig({
   lang: 'en-US',
   title: vitestName,
   description: vitestDescription,
@@ -32,7 +34,8 @@ export default defineConfig({
     ['meta', { name: 'twitter:description', content: vitestDescription }],
     ['meta', { name: 'twitter:image', content: ogImage }],
     ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
-    ['link', { href: font, rel: 'stylesheet' }],
+    ['link', { rel: 'preload', as: 'style', onload: 'this.onload=null;this.rel=\'stylesheet\'', href: font }],
+    ['noscript', {}, `<link rel="stylesheet" crossorigin="anonymous" href="${font}" />`],
     ['link', { rel: 'mask-icon', href: '/logo.svg', color: '#ffffff' }],
     ['link', { rel: 'apple-touch-icon', href: '/apple-touch-icon.png', sizes: '180x180' }],
   ],
@@ -82,6 +85,7 @@ export default defineConfig({
       { text: 'Guide', link: '/guide/' },
       { text: 'API', link: '/api/' },
       { text: 'Config', link: '/config/' },
+      { text: 'Advanced', link: '/advanced/api' },
       {
         text: `v${version}`,
         items: [
@@ -99,6 +103,21 @@ export default defineConfig({
 
     sidebar: {
       // TODO: bring sidebar of apis and config back
+      '/advanced': [
+        {
+          text: 'Advanced',
+          items: [
+            {
+              text: 'Vitest Node API',
+              link: '/advanced/api',
+            },
+            {
+              text: 'Runner API',
+              link: '/advanced/runner',
+            },
+          ],
+        },
+      ],
       '/': [
         {
           text: 'Guide',
@@ -218,4 +237,6 @@ export default defineConfig({
       ],
     },
   },
-})
+  pwa,
+  transformHead,
+}))

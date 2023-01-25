@@ -10,10 +10,25 @@ exports[`should fails > expect.test.ts > expect.test.ts 1`] = `"AssertionError: 
 
 exports[`should fails > hook-timeout.test.ts > hook-timeout.test.ts 1`] = `"Error: Hook timed out in 10ms."`;
 
+exports[`should fails > hooks-called.test.ts > hooks-called.test.ts 1`] = `
+"Error: after all
+Error: before all"
+`;
+
 exports[`should fails > mock-import-proxy-module.test.ts > mock-import-proxy-module.test.ts 1`] = `"Error: There are some problems in resolving the mocks API."`;
 
 exports[`should fails > nested-suite.test.ts > nested-suite.test.ts 1`] = `"AssertionError: expected true to be false // Object.is equality"`;
 
-exports[`should fails > stall.test.ts > stall.test.ts 1`] = `"TypeError: failure"`;
+exports[`should fails > stall.test.ts > stall.test.ts 1`] = `
+"TypeError: failure
+TypeError: failure
+TypeError: failure
+TypeError: failure"
+`;
 
 exports[`should fails > test-timeout.test.ts > test-timeout.test.ts 1`] = `"Error: Test timed out in 10ms."`;
+
+exports[`should fails > unhandled.test.ts > unhandled.test.ts 1`] = `
+"Error: some error
+Error: Uncaught [Error: some error]"
+`;

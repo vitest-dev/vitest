@@ -1,7 +1,9 @@
+import type { TaskCustom } from '@vitest/runner'
+import type { ChainableFunction } from '@vitest/runner/utils'
+import type { Arrayable } from '@vitest/utils'
 import type { Bench as BenchFactory, Options as BenchOptions, Task as BenchTask, TaskResult as BenchTaskResult, TaskResult as TinybenchResult } from 'tinybench'
 import type { BenchmarkBuiltinReporters } from '../node/reporters'
-import type { ChainableFunction } from '../runtime/chain'
-import type { Arrayable, Reporter, Suite, TaskBase, TaskResult } from '.'
+import type { Reporter } from './reporter'
 
 export interface BenchmarkUserOptions {
   /**
@@ -37,12 +39,12 @@ export interface BenchmarkUserOptions {
   outputFile?: string | (Partial<Record<BenchmarkBuiltinReporters, string>> & Record<string, string>)
 }
 
-export interface Benchmark extends TaskBase {
-  type: 'benchmark'
-  suite: Suite
-  result?: TaskResult
-  fails?: boolean
-  task?: BenchTask
+export interface Benchmark extends TaskCustom {
+  meta: {
+    benchmark: true
+    task?: BenchTask
+    result?: BenchTaskResult
+  }
 }
 
 export interface BenchmarkResult extends TinybenchResult {

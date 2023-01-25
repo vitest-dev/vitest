@@ -1,6 +1,6 @@
 import c from 'picocolors'
 import type { Task } from '../../../types'
-import { clearInterval, getTests, setInterval } from '../../../utils'
+import { getTests } from '../../../utils'
 import type { Logger } from '../../logger'
 
 export interface DotRendererOptions {

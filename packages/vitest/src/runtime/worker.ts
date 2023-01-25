@@ -1,6 +1,7 @@
 import { relative, resolve } from 'pathe'
 import { createBirpc } from 'birpc'
 import { workerId as poolId } from 'tinypool'
+import { processError } from '@vitest/runner/utils'
 import { ModuleCacheMap } from 'vite-node/client'
 import { isPrimitive } from 'vite-node/utils'
 import type { ResolvedConfig, WorkerContext, WorkerRPC } from '../types'
@@ -9,7 +10,6 @@ import { getWorkerState } from '../utils'
 import type { MockMap } from '../types/mocker'
 import { executeInViteNode } from './execute'
 import { rpc } from './rpc'
-import { processError } from './error'
 
 let _viteNode: {
   run: (files: string[], config: ResolvedConfig) => Promise<void>
@@ -32,15 +32,18 @@ async function startViteNode(ctx: WorkerContext) {
     return processExit(code)
   }
 
-  process.on('unhandledRejection', (err) => {
+  function catchError(err: unknown, type: string) {
     const worker = getWorkerState()
     const error = processError(err)
     if (worker.filepath && !isPrimitive(error)) {
       error.VITEST_TEST_NAME = worker.current?.name
       error.VITEST_TEST_PATH = relative(config.root, worker.filepath)
     }
-    rpc().onUnhandledRejection(error)
-  })
+    rpc().onUnhandledError(error, type)
+  }
+
+  process.on('uncaughtException', e => catchError(e, 'Uncaught Exception'))
+  process.on('unhandledRejection', e => catchError(e, 'Unhandled Rejection'))
 
   const { run } = (await executeInViteNode({
     files: [

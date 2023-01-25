@@ -1,6 +1,9 @@
 import { faker } from '@faker-js/faker'
 import ViewReport from './ViewReport.vue'
 import type { File } from '#types'
+import { config } from '~/composables/client'
+
+config.value.root = ''
 
 const taskErrorSelector = '.task-error'
 const viewReportSelector = '[data-testid=view-report]'

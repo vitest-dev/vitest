@@ -1,8 +1,11 @@
 dist
+html
+bench.json
 node_modules
 *.svelte
 *.snap
 *.d.ts
 coverage
 !.vitepress
+docs/.vitepress/cache/deps/*.*
 test/core/src/self

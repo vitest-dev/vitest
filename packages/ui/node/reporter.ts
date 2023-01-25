@@ -1,4 +1,4 @@
-import { existsSync, promises as fs } from 'node:fs'
+import { promises as fs } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { basename, dirname, relative, resolve } from 'pathe'
 import c from 'picocolors'
@@ -50,8 +50,7 @@ export default class HTMLReporter implements Reporter {
 
     const metaFile = resolve(htmlDir, 'html.meta.json')
 
-    if (!existsSync(htmlDir))
-      await fs.mkdir(resolve(htmlDir, 'assets'), { recursive: true })
+    await fs.mkdir(resolve(htmlDir, 'assets'), { recursive: true })
 
     await fs.writeFile(metaFile, report, 'utf-8')
     const ui = resolve(distDir, 'client')

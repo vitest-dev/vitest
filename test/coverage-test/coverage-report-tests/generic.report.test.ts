@@ -50,3 +50,16 @@ test('file using import.meta.env is included in report', async () => {
 
   expect(files).toContain('importEnv.ts.html')
 })
+
+test('files should not contain a setup file', () => {
+  const coveragePath = resolve('./coverage')
+  const files = fs.readdirSync(coveragePath)
+
+  expect(files).not.toContain('coverage-test')
+  expect(files).not.toContain('setup.ts.html')
+
+  const coverageSrcPath = resolve('./coverage/src')
+  const srcFiles = fs.readdirSync(coverageSrcPath)
+
+  expect(srcFiles).not.toContain('another-setup.ts.html')
+})

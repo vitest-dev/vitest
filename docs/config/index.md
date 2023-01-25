@@ -81,7 +81,7 @@ Files to include in the test run, using glob pattern.
 ### exclude
 
 - **Type:** `string[]`
-- **Default:** `['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**', '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress}.config.*']`
+- **Default:** `['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**', '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*']`
 
 Files to exclude from the test run, using glob pattern.
 
@@ -128,7 +128,7 @@ If disabled, your `alias` and `<plugin>.resolveId` won't affect imports inside e
 #### deps.interopDefault
 
 - **Type:** `boolean`
-- **Default:** `false` if `environment` is `node`, `true` otherwise
+- **Default:** `true`
 
 Interpret CJS module's default as named exports. Some dependencies only bundle CJS modules and don't use named exports that Node.js can statically analyze when a package is imported using `import` syntax instead of `require`. When importing such dependencies in Node environment using named exports, you will see this error:
 
@@ -139,14 +139,21 @@ SyntaxError: Named export 'read' not found. The requested module 'fs-jetpack' is
 CommonJS modules can always be imported via the default export.
 ```
 
-Vitest doesn't do static analysis, and cannot fail before your running code, so you will most likely see this error when running tests:
+Vitest doesn't do static analysis, and cannot fail before your running code, so you will most likely see this error when running tests, if this feature is disabled:
 
 ```
 TypeError: createAsyncThunk is not a function
 TypeError: default is not a function
 ```
 
-If you are using bundlers or transpilers that bypass this Node.js limitation, you can enable this option manually. By default, Vitest assumes you are using Node ESM syntax, when `environment` is `node`, and doesn't interpret named exports.
+By default, Vitest assumes you are using a bundler to bypass this and will not fail, but you can disable this behaviour manually, if you code is not processed.
+
+### runner
+
+- **Type**: `VitestRunnerConstructor`
+- **Default**: `node`, when running tests, or `benchmark`, when running benchmarks
+
+Path to a custom test runner. This is an advanced feature and should be used with custom library runners. You can read more about it in [the documentation](/advanced/runner).
 
 ### benchmark
 
@@ -359,6 +366,7 @@ Project root
 Custom reporters for output. Reporters can be [a Reporter instance](https://github.com/vitest-dev/vitest/blob/main/packages/vitest/src/types/reporter.ts) or a string to select built in reporters:
 
   - `'default'` - collapse suites when they pass
+  - `'basic'` - give a reporter like default reporter give in ci
   - `'verbose'` - keep the full task tree visible
   - `'dot'` -  show each task as a single dot
   - `'junit'` - JUnit XML reporter (you can configure `testsuites` tag name with `VITEST_JUNIT_SUITE_NAME` environmental variable)
@@ -635,7 +643,7 @@ List of files included in coverage as glob patterns
   '**/*{.,-}test.{js,cjs,mjs,ts,tsx,jsx}',
   '**/*{.,-}spec.{js,cjs,mjs,ts,tsx,jsx}',
   '**/__tests__/**',
-  '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress}.config.*',
+  '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*',
   '**/.{eslint,mocha,prettier}rc.{js,cjs,yml}',
 ]
 ```

@@ -31,6 +31,12 @@ export class VitestRunner extends ViteNodeRunner {
     super(options)
 
     this.mocker = new VitestMocker(this)
+
+    Object.defineProperty(globalThis, '__vitest_mocker__', {
+      value: this.mocker,
+      writable: true,
+      configurable: true,
+    })
   }
 
   shouldResolveId(id: string, _importee?: string | undefined): boolean {
@@ -39,7 +45,7 @@ export class VitestRunner extends ViteNodeRunner {
     const environment = getCurrentEnvironment()
     // do not try and resolve node builtins in Node
     // import('url') returns Node internal even if 'url' package is installed
-    return environment === 'node' ? !isNodeBuiltin(id) : true
+    return environment === 'node' ? !isNodeBuiltin(id) : !id.startsWith('node:')
   }
 
   async resolveUrl(id: string, importee?: string) {
@@ -67,14 +73,6 @@ export class VitestRunner extends ViteNodeRunner {
       Object.defineProperty(context.__vite_ssr_import_meta__, 'vitest', { get: () => globalThis.__vitest_index__ })
     }
 
-    return Object.assign(context, {
-      __vitest_mocker__: this.mocker,
-    })
-  }
-
-  shouldInterop(path: string, mod: any) {
-    if (this.options.interopDefault === false)
-      return false
-    return (this.options.interopDefault || getCurrentEnvironment() !== 'node') && super.shouldInterop(path, mod)
+    return context
   }
 }

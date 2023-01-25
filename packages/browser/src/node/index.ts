@@ -5,23 +5,9 @@ import { builtinModules } from 'module'
 import { polyfillPath } from 'modern-node-polyfills'
 import sirv from 'sirv'
 import type { Plugin } from 'vite'
-import { resolvePath } from 'mlly'
-
-const stubs = [
-  'fs',
-  'local-pkg',
-  'module',
-  'noop',
-  'perf_hooks',
-  'console',
-]
 
 const polyfills = [
   'util',
-  'tty',
-  'process',
-  'path',
-  'buffer',
 ]
 
 export default (base = '/'): Plugin[] => {
@@ -36,13 +22,11 @@ export default (base = '/'): Plugin[] => {
         if (ctx.ssr)
           return
 
-        if (id === '/__vitest_index__') {
-          const result = await resolvePath('vitest/browser')
-          return result
-        }
+        if (id === '/__vitest_index__')
+          return this.resolve('vitest/browser')
 
-        if (stubs.includes(id))
-          return resolve(pkgRoot, 'stubs', id)
+        if (id === '/__vitest_runners__')
+          return this.resolve('vitest/runners')
 
         if (polyfills.includes(id))
           return polyfillPath(normalizeId(id))

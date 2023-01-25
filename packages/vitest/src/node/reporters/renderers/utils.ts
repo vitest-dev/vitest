@@ -132,7 +132,7 @@ export function getStateSymbol(task: Task) {
   }
 
   if (task.result.state === 'pass') {
-    return task.type === 'benchmark'
+    return task.meta?.benchmark
       ? c.green(F_DOT)
       : c.green(F_CHECK)
   }
