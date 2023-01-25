@@ -554,8 +554,10 @@ export interface UserConfig extends InlineConfig {
    * Path to the config file.
    *
    * Default resolving to `vitest.config.*`, `vite.config.*`
+   *
+   * Setting to `false` will disable config resolving.
    */
-  config?: string | undefined
+  config?: string | false | undefined
 
   /**
    * Use happy-dom
