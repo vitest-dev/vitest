@@ -395,7 +395,7 @@ import.meta.env.NODE_ENV === 'development'
 
 ## vi.stubGlobal
 
-- **Type:** `(name: stirng | number | symbol, value: uknown) => Vitest`
+- **Type:** `(name: string | number | symbol, value: unknown) => Vitest`
 
   Changes the value of global variable. You can restore its original value by calling `vi.unstubAllGlobals`.
 
