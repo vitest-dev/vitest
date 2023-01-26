@@ -374,7 +374,7 @@ export class Vitest {
     await this.reportCoverage(!trigger)
 
     if (!this.config.browser)
-      await this.report('onWatcherStart')
+      await this.report('onWatcherStart', this.state.getFiles(files))
   }
 
   async changeNamePattern(pattern: string, files: string[] = this.state.getFilepaths(), trigger?: string) {
@@ -467,7 +467,7 @@ export class Vitest {
       await this.reportCoverage(false)
 
       if (!this.config.browser)
-        await this.report('onWatcherStart')
+        await this.report('onWatcherStart', this.state.getFiles(files))
     }, WATCHER_DEBOUNCE)
   }
 
