@@ -155,15 +155,17 @@ export abstract class BaseReporter implements Reporter {
 
     const BADGE = c.inverse(c.bold(c.blue(' RERUN ')))
     const TRIGGER = trigger ? c.dim(` ${this.relative(trigger)}`) : ''
+    const FILENAME_PATTERN = this.ctx.filenamePattern ? `${BADGE_PADDING} ${c.dim('Filename pattern: ')}${c.blue(this.ctx.filenamePattern)}\n` : ''
+
     if (files.length > 1) {
       // we need to figure out how to handle rerun all from stdin
-      this.ctx.logger.clearFullScreen(`\n${BADGE}${TRIGGER}\n`)
+      this.ctx.logger.clearFullScreen(`\n${BADGE}${TRIGGER}\n${FILENAME_PATTERN}`)
       this._lastRunCount = 0
     }
     else if (files.length === 1) {
       const rerun = this._filesInWatchMode.get(files[0]) ?? 1
       this._lastRunCount = rerun
-      this.ctx.logger.clearFullScreen(`\n${BADGE}${TRIGGER} ${c.blue(`x${rerun}`)}\n`)
+      this.ctx.logger.clearFullScreen(`\n${BADGE}${TRIGGER} ${c.blue(`x${rerun}`)}\n${FILENAME_PATTERN}`)
     }
 
     this._timeStart = new Date()
