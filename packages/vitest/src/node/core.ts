@@ -360,6 +360,11 @@ export class Vitest {
   }
 
   async rerunFiles(files: string[] = this.state.getFilepaths(), trigger?: string) {
+    if (this.filenamePattern) {
+      const filteredFiles = await this.globTestFiles([this.filenamePattern])
+      files = files.filter(file => filteredFiles.includes(file))
+    }
+
     if (this.coverageProvider && this.config.coverage.cleanOnRerun)
       await this.coverageProvider.clean()
 
@@ -385,10 +390,9 @@ export class Vitest {
     this.filenamePattern = pattern
 
     const files = this.state.getFilepaths()
-    if (!this.filenamePattern)
-      return await this.rerunFiles(files, 'reset filename pattern')
-    const filteredFiles = await this.globTestFiles([this.filenamePattern])
-    await this.rerunFiles(filteredFiles, 'change filename pattern')
+    const trigger = this.filenamePattern ? 'change filename pattern' : 'reset filename pattern'
+
+    await this.rerunFiles(files, trigger)
   }
 
   async rerunFailed() {
