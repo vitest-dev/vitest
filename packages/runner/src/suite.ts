@@ -126,6 +126,9 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
   }
 
   function initSuite() {
+    if (typeof suiteOptions === 'number')
+      suiteOptions = { timeout: suiteOptions }
+
     suite = {
       id: '',
       type: 'suite',
@@ -133,7 +136,9 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       mode,
       shuffle,
       tasks: [],
+      repeats: mode === 'repeats' && !suiteOptions?.repeats ? 5 : suiteOptions?.repeats,
     }
+
     setHooks(suite, createSuiteHooks())
   }
 
