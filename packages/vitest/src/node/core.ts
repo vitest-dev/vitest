@@ -40,6 +40,7 @@ export class Vitest {
 
   invalidates: Set<string> = new Set()
   changedTests: Set<string> = new Set()
+  filenamePattern?: string
   runningPromise?: Promise<void>
   closingPromise?: Promise<void>
 
@@ -372,15 +373,21 @@ export class Vitest {
   }
 
   async changeNamePattern(pattern: string, files: string[] = this.state.getFilepaths(), trigger?: string) {
+    // Empty test name pattern should reset filename pattern as well
+    if (pattern === '')
+      this.filenamePattern = undefined
+
     this.config.testNamePattern = pattern ? new RegExp(pattern) : undefined
     await this.rerunFiles(files, trigger)
   }
 
   async changeFilenamePattern(pattern: string) {
+    this.filenamePattern = pattern
+
     const files = this.state.getFilepaths()
-    if (!pattern)
+    if (!this.filenamePattern)
       return await this.rerunFiles(files, 'reset filename pattern')
-    const filteredFiles = await this.globTestFiles([pattern])
+    const filteredFiles = await this.globTestFiles([this.filenamePattern])
     await this.rerunFiles(filteredFiles, 'change filename pattern')
   }
 
@@ -433,7 +440,17 @@ export class Vitest {
       this.isFirstRun = false
 
       this.snapshot.clear()
-      const files = Array.from(this.changedTests)
+      let files = Array.from(this.changedTests)
+
+      if (this.filenamePattern) {
+        const filteredFiles = await this.globTestFiles([this.filenamePattern])
+        files = files.filter(file => filteredFiles.includes(file))
+
+        // A file that does not match the current filename pattern was changed
+        if (files.length === 0)
+          return
+      }
+
       this.changedTests.clear()
 
       if (this.coverageProvider && this.config.coverage.cleanOnRerun)
