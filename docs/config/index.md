@@ -489,6 +489,16 @@ Maximum number of threads. You can also use `VITEST_MAX_THREADS` environment var
 
 Minimum number of threads. You can also use `VITEST_MIN_THREADS` environment variable.
 
+### useAtomics
+
+- **Type:** `boolean`
+- **Default:** `false`
+- **Version:** Since Vitest 0.28.3
+
+Use Atomics to synchronize threads.
+
+This can improve performance in some cases, but might cause segfault in older Node versions.
+
 ### testTimeout
 
 - **Type:** `number`

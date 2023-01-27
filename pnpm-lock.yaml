@@ -504,7 +504,7 @@ importers:
       vue: latest
     devDependencies:
       '@vitejs/plugin-vue': 4.0.0_vite@4.0.0+vue@3.2.45
-      '@vue/test-utils': 2.2.7_vue@3.2.45
+      '@vue/test-utils': 2.2.8_vue@3.2.45
       jsdom: 21.1.0
       vite: 4.0.0
       vite-plugin-ruby: 3.1.2_vite@4.0.0
@@ -598,7 +598,7 @@ importers:
     devDependencies:
       '@vitejs/plugin-vue': 4.0.0_vite@4.0.0+vue@3.2.45
       '@vitejs/plugin-vue-jsx': 3.0.0_vite@4.0.0+vue@3.2.45
-      '@vue/test-utils': 2.2.7_vue@3.2.45
+      '@vue/test-utils': 2.2.8_vue@3.2.45
       jsdom: 21.1.0
       vite: 4.0.0
       vitest: link:../../packages/vitest
@@ -898,7 +898,7 @@ importers:
       strip-ansi: ^7.0.1
       strip-literal: ^1.0.0
       tinybench: ^2.3.1
-      tinypool: ^0.3.0
+      tinypool: ^0.3.1
       tinyspy: ^1.0.2
       typescript: ^4.9.4
       vite: ^4.0.0
@@ -925,7 +925,7 @@ importers:
       std-env: 3.3.1
       strip-literal: 1.0.0
       tinybench: 2.3.1
-      tinypool: 0.3.0
+      tinypool: 0.3.1
       tinyspy: 1.0.2
       vite: 4.0.0_@types+node@18.7.13
       vite-node: link:../vite-node
@@ -1073,7 +1073,7 @@ importers:
       vue: latest
     devDependencies:
       '@vitejs/plugin-vue': 4.0.0_vite@4.0.0+vue@3.2.45
-      '@vue/test-utils': 2.2.7_vue@3.2.45
+      '@vue/test-utils': 2.2.8_vue@3.2.45
       happy-dom: 8.1.5
       vite: 4.0.0
       vitest: link:../../packages/vitest
@@ -8528,11 +8528,13 @@ packages:
       vue: 3.2.45
     dev: true
 
-  /@vue/test-utils/2.2.7_vue@3.2.45:
-    resolution: {integrity: sha512-BMuoruUFTEqhLoOgsMcgNVMiByYbfHCKGr2C4CPdGtz/affUtDVX5zr1RnPuq0tYSiaqq+Enw5voUpG6JY8Q7g==}
+  /@vue/test-utils/2.2.8_vue@3.2.45:
+    resolution: {integrity: sha512-/R8DKzp41Ip/RqTt1jvOVi5gxby3EwNWiYHNYsG9FAjEvt0gzDvYN55lCKzX7IdnI5zVIOo5tHtts0SLT+JrWw==}
     peerDependencies:
+      '@vue/compiler-dom': ^3.0.1
       vue: ^3.0.1
     dependencies:
+      js-beautify: 1.14.6
       vue: 3.2.45
     dev: true
 
@@ -19813,8 +19815,8 @@ packages:
     resolution: {integrity: sha512-hGYWYBMPr7p4g5IarQE7XhlyWveh1EKhy4wUBS1LrHXCKYgvz+4/jCqgmJqZxxldesn05vccrtME2RLLZNW7iA==}
     dev: false
 
-  /tinypool/0.3.0:
-    resolution: {integrity: sha512-NX5KeqHOBZU6Bc0xj9Vr5Szbb1j8tUHIeD18s41aDJaPeC5QTdEhK0SpdpUrZlj2nv5cctNcSjaKNanXlfcVEQ==}
+  /tinypool/0.3.1:
+    resolution: {integrity: sha512-zLA1ZXlstbU2rlpA4CIeVaqvWq41MTWqLY3FfsAXgC8+f7Pk7zroaJQxDgxn1xNudKW6Kmj4808rPFShUlIRmQ==}
     engines: {node: '>=14.0.0'}
     dev: false
 
