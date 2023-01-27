@@ -236,6 +236,15 @@ export interface InlineConfig {
   minThreads?: number
 
   /**
+   * Use Atomics to synchronize threads
+   *
+   * This can improve performance in some cases, but might cause segfault in older Node versions.
+   *
+   * @default false
+   */
+  useAtomics?: boolean
+
+  /**
    * Default timeout of a test in milliseconds
    *
    * @default 5000
