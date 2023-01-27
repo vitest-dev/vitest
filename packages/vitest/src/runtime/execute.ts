@@ -4,7 +4,7 @@ import type { ViteNodeRunnerOptions } from 'vite-node'
 import { normalize } from 'pathe'
 import { isNodeBuiltin } from 'mlly'
 import type { MockMap } from '../types/mocker'
-import { getCurrentEnvironment, getWorkerState } from '../utils'
+import { getCurrentEnvironment, getWorkerState } from '../utils/global'
 import { VitestMocker } from './mocker'
 
 export interface ExecuteOptions extends ViteNodeRunnerOptions {
