@@ -1,7 +1,7 @@
 import { ViteNodeRunner } from 'vite-node/client'
 import { isInternalRequest } from 'vite-node/utils'
 import type { ViteNodeRunnerOptions } from 'vite-node'
-import { normalizePath } from 'vite'
+import { normalize } from 'pathe'
 import { isNodeBuiltin } from 'mlly'
 import type { MockMap } from '../types/mocker'
 import { getCurrentEnvironment, getWorkerState } from '../utils'
@@ -68,7 +68,7 @@ export class VitestRunner extends ViteNodeRunner {
     const workerState = getWorkerState()
 
     // support `import.meta.vitest` for test entry
-    if (workerState.filepath && normalizePath(workerState.filepath) === normalizePath(context.__filename)) {
+    if (workerState.filepath && normalize(workerState.filepath) === normalize(context.__filename)) {
       // @ts-expect-error injected untyped global
       Object.defineProperty(context.__vite_ssr_import_meta__, 'vitest', { get: () => globalThis.__vitest_index__ })
     }
