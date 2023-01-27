@@ -107,5 +107,5 @@ function init(ctx: WorkerContext) {
 export async function run(ctx: WorkerContext) {
   init(ctx)
   const { run } = await startViteNode(ctx)
-  await run(ctx.files, ctx.config)
+  return run(ctx.files, ctx.config)
 }
