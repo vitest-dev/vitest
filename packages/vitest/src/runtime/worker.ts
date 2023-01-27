@@ -1,7 +1,6 @@
-import { parentPort } from 'worker_threads'
 import { relative, resolve } from 'pathe'
 import { createBirpc } from 'birpc'
-// import { workerId as poolId } from 'tinypool'
+import { workerId as poolId } from 'tinypool'
 import { processError } from '@vitest/runner/utils'
 import { ModuleCacheMap } from 'vite-node/client'
 import { isPrimitive } from 'vite-node/utils'
@@ -76,7 +75,7 @@ function init(ctx: WorkerContext) {
   const { config, port, workerId } = ctx
 
   process.env.VITEST_WORKER_ID = String(workerId)
-  // process.env.VITEST_POOL_ID = String(poolId)
+  process.env.VITEST_POOL_ID = String(poolId)
 
   // @ts-expect-error untyped global
   globalThis.__vitest_environment__ = config.environment
@@ -106,14 +105,7 @@ function init(ctx: WorkerContext) {
 }
 
 export async function run(ctx: WorkerContext) {
-  // console.log('start', ctx.workerId, performance.now() - ctx.startTime)
   init(ctx)
   const { run } = await startViteNode(ctx)
   await run(ctx.files, ctx.config)
 }
-
-parentPort?.on('message', async (data) => {
-  await run(data as WorkerContext)
-  parentPort?.postMessage('done')
-  // process.exit()
-})
