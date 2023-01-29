@@ -2,7 +2,7 @@ import { resolve } from 'node:path'
 import { expect, it } from 'vitest'
 import kill from 'kill-port'
 import { execaCommand } from 'execa'
-import { browserErrors, killProcess, page, withRetry } from '../setup'
+import { browserErrors, killProcess, page, untilUpdated, withRetry } from '../setup'
 
 const root = resolve(__dirname, '../fixtures')
 const uiPort = 5173
@@ -24,7 +24,7 @@ it.each([
     await withRetry(async () => {
       await page.goto(url)
     })
-    expect(await page.textContent('.details-panel span')).not.toBe('')
+    await untilUpdated(async () => `${(await page.$$('.details-panel span')).length}`, '2')
     expect(browserErrors.length).toEqual(0)
   }
   finally {
