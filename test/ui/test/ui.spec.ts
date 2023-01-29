@@ -28,6 +28,7 @@ it('should load ui', async () => {
   }
   finally {
     ui.cancel()
+    process.kill(ui.pid!)
   }
 }, 60_000)
 
@@ -55,5 +56,6 @@ it('should load report', async () => {
   }
   finally {
     html.cancel()
+    process.kill(html.pid!)
   }
 }, 60_000)
