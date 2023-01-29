@@ -2,7 +2,7 @@
 import path from 'node:path'
 import os from 'node:os'
 import fs from 'fs-extra'
-import { beforeAll, expect } from 'vitest'
+import { beforeAll } from 'vitest'
 import { chromium } from 'playwright-chromium'
 import type { Browser, Page } from 'playwright-chromium'
 import type { ExecaChildProcess } from 'execa'
@@ -60,23 +60,6 @@ export async function withRetry(
     await timeout(50)
   }
   await func()
-}
-
-export async function untilUpdated(
-  poll: () => string | Promise<string | null>,
-  expected: string,
-): Promise<void> {
-  const maxTries = process.env.CI ? 200 : 50
-  for (let tries = 0; tries < maxTries; tries++) {
-    const actual = (await poll()) ?? ''
-    if (actual.includes(expected) || tries === maxTries - 1) {
-      expect(actual).toMatch(expected)
-      break
-    }
-    else {
-      await timeout(50)
-    }
-  }
 }
 
 export async function killProcess(

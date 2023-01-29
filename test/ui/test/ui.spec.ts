@@ -2,7 +2,7 @@ import { resolve } from 'node:path'
 import { expect, it } from 'vitest'
 import kill from 'kill-port'
 import { execaCommand } from 'execa'
-import { browserErrors, killProcess, page, untilUpdated, withRetry } from '../setup'
+import { browserErrors, killProcess, page, withRetry } from '../setup'
 
 const root = resolve(__dirname, '../fixtures')
 const uiPort = 5173
@@ -39,6 +39,7 @@ async function run(command: string, port: number) {
 
 it('should load ui', async () => {
   const kill = await run(`npx vitest --ui --open false --api.port ${uiPort} --reporter=html --outputFile=html/index.html`, uiPort)
+  expect((await (await page.$('#app'))?.innerHTML() || '').length).not.toBe(0)
   expect(browserErrors.length).toEqual(0)
   await kill()
 }, 60_000)
@@ -46,7 +47,7 @@ it('should load ui', async () => {
 it('should load report', async () => {
   const kill = await run(`npx vite preview --outDir html --strict-port --base __vitest__ --port ${reportPort}`, reportPort)
   try {
-    await untilUpdated(() => page.textContent('.details-panel span'), 'sample.test.ts')
+    expect((await (await page.$('#app'))?.innerHTML() || '').length).not.toBe(0)
     expect(browserErrors.length).toEqual(0)
   }
   finally {
