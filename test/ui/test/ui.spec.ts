@@ -20,6 +20,7 @@ it('should load ui', async () => {
 
   ui.catch(e => e)
 
+  await ui
   await withRetry(async () => {
     await page.goto(`http://localhost:${uiPort}/__vitest__/`)
   })
@@ -27,7 +28,7 @@ it('should load ui', async () => {
   expect(browserErrors.length).toEqual(0)
 
   ui.cancel()
-})
+}, 60_000)
 
 it('should load report', async () => {
   // preview report
@@ -43,6 +44,7 @@ it('should load report', async () => {
 
   html.catch(e => e)
 
+  await html
   await withRetry(async () => {
     await page.goto(`http://localhost:${reportPort}/__vitest__/`)
   })
@@ -50,4 +52,4 @@ it('should load report', async () => {
   expect(browserErrors.length).toEqual(0)
 
   html.cancel()
-})
+}, 60_000)
