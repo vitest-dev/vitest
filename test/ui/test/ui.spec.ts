@@ -44,7 +44,7 @@ it('should load ui', async () => {
   expect((await (await page.$('#app'))?.innerHTML() || '').length).not.toBe(0)
   expect(browserErrors.length).toEqual(0)
   await kill()
-}, 60_000)
+}, 50_000)
 
 it('should load report', async () => {
   const kill = await run(`npx vite preview --outDir html --strict-port --base __vitest__ --port ${reportPort}`, `http://localhost:${reportPort}/__vitest__/`, reportPort)
@@ -55,4 +55,4 @@ it('should load report', async () => {
   finally {
     await kill()
   }
-}, 60_000)
+}, 50_000)
