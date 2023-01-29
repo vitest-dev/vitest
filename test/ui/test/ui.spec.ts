@@ -22,7 +22,6 @@ async function run(command: string, url: string, port: number) {
 
   const killSubProcess = () => killProcess(subProcess)
 
-  subProcess.catch(e => e)
   await withLoadUrl(url)
   try {
     await page.goto(url)
