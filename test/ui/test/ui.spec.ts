@@ -5,8 +5,8 @@ import { execaCommand } from 'execa'
 import { browserErrors, killProcess, page, withLoadUrl } from '../setup'
 
 const root = resolve(__dirname, '../fixtures')
-const uiPort = 5173
-const reportPort = 5174
+const uiPort = 9000
+const reportPort = 9001
 
 async function run(command: string, url: string, port: number) {
   await kill(port)
@@ -47,7 +47,11 @@ it('should load ui', async () => {
 }, 60_000)
 
 it('should load report', async () => {
-  const kill = await run(`npx vite preview --outDir html --strict-port --base __vitest__ --port ${reportPort}`, `http://localhost:${reportPort}/__vitest__/`, reportPort)
+  const kill = await run(
+    `npx vite preview --outDir html --strict-port --base __vitest__ --port ${reportPort}`,
+     `http://localhost:${reportPort}/__vitest__/`,
+     reportPort,
+  )
   try {
     expect((await (await page.$('#app'))?.innerHTML() || '').length).not.toBe(0)
     expect(browserErrors.length).toEqual(0)
