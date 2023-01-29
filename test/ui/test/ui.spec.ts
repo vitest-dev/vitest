@@ -1,6 +1,6 @@
 import { resolve } from 'node:path'
 import { expect, it } from 'vitest'
-import { execa } from 'execa'
+import { execaCommand } from 'execa'
 import { browserErrors, killProcess, page, withLoad } from '../setup'
 
 const root = resolve(__dirname, '../fixtures')
@@ -8,14 +8,14 @@ const uiPort = '5173'
 const reportPort = '5174'
 
 it('should load ui', async () => {
-  const ui = execa('npx', ['vitest', '--ui', '--api.port', uiPort, '--open', 'false', '--reporter=html', '--outputFile=html/index.html'], {
+  const ui = execaCommand(`npx vitest --ui --api.port ${uiPort} --open false --reporter=html --outputFile=html/index.html`, {
     cwd: root,
     env: {
       ...process.env,
       CI: 'true',
       NO_COLOR: 'true',
     },
-    stdio: 'inherit',
+    stdio: 'pipe',
   })
 
   ui.catch(e => e)
@@ -33,14 +33,14 @@ it('should load ui', async () => {
 
 it('should load report', async () => {
   // preview report
-  const html = execa('npx', ['vite', 'preview', '--outDir', 'html', '--port', reportPort, '--strict-port', '--base', '__vitest__'], {
+  const html = execaCommand(`npx vite preview --outDir html --port ${reportPort} --strict-port --base __vitest__`, {
     cwd: root,
     env: {
       ...process.env,
       CI: 'true',
       NO_COLOR: 'true',
     },
-    stdio: 'inherit',
+    stdio: 'pipe',
   })
 
   html.catch(e => e)
