@@ -2,6 +2,7 @@
 import path from 'node:path'
 import os from 'node:os'
 import fs from 'fs-extra'
+import fetch from 'node-fetch-native'
 import { chromium } from 'playwright-chromium'
 import type { Browser, Page } from 'playwright-chromium'
 import { beforeAll } from 'vitest'
@@ -48,7 +49,7 @@ export function timeout(time: number) {
 export async function withRetry(
   func: () => Promise<void>,
 ): Promise<void> {
-  const maxTries = process.env.CI ? 200 : 50
+  const maxTries = process.env.CI ? 200 : 100
   for (let tries = 0; tries < maxTries; tries++) {
     try {
       await func()
@@ -58,4 +59,12 @@ export async function withRetry(
     await timeout(50)
   }
   await func()
+}
+
+export async function withLoad(url: string): Promise<void> {
+  return withRetry(async () => {
+    const res = await fetch(url)
+    if (!res.ok)
+      throw new Error('url not loaded')
+  })
 }
