@@ -63,7 +63,7 @@ export async function withRetry(
   await func()
 }
 
-export async function withLoad(url: string): Promise<void> {
+export async function withLoadUrl(url: string): Promise<void> {
   return withRetry(async () => {
     const res = await fetch(url)
     if (!res.ok)
