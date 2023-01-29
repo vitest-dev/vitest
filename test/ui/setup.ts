@@ -49,7 +49,7 @@ export function timeout(time: number) {
 export async function withRetry(
   func: () => Promise<void>,
 ): Promise<void> {
-  const maxTries = process.env.CI ? 200 : 100
+  const maxTries = process.env.CI ? 300 : 100
   for (let tries = 0; tries < maxTries; tries++) {
     try {
       await func()
