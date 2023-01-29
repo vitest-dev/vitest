@@ -1,7 +1,7 @@
 import { resolve } from 'node:path'
 import { expect, it } from 'vitest'
 import { execa } from 'execa'
-import { browserErrors, page, withLoad } from '../setup'
+import { browserErrors, killProcess, page, withLoad } from '../setup'
 
 const root = resolve(__dirname, '../fixtures')
 const uiPort = '5173'
@@ -27,9 +27,7 @@ it('should load ui', async () => {
     expect(browserErrors.length).toEqual(0)
   }
   finally {
-    ui.cancel()
-    ui.kill()
-    ui.unref()
+    killProcess(ui)
   }
 }, 60_000)
 
@@ -56,8 +54,6 @@ it('should load report', async () => {
     expect(browserErrors.length).toEqual(0)
   }
   finally {
-    html.cancel()
-    html.kill()
-    html.unref()
+    killProcess(html)
   }
 }, 60_000)
