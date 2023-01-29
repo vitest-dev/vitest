@@ -2,9 +2,10 @@
 import path from 'node:path'
 import os from 'node:os'
 import fs from 'fs-extra'
-import { beforeAll } from 'vitest'
+import fetch from 'node-fetch-native'
 import { chromium } from 'playwright-chromium'
 import type { Browser, Page } from 'playwright-chromium'
+import { beforeAll } from 'vitest'
 import type { ExecaChildProcess } from 'execa'
 
 export let page!: Page
@@ -60,6 +61,14 @@ export async function withRetry(
     await timeout(50)
   }
   await func()
+}
+
+export async function withLoadUrl(url: string): Promise<void> {
+  return withRetry(async () => {
+    const res = await fetch(url)
+    if (!res.ok)
+      throw new Error('url not loaded')
+  })
 }
 
 export async function killProcess(
