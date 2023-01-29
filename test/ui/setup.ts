@@ -51,7 +51,7 @@ export function timeout(time: number) {
 export async function withRetry(
   func: () => Promise<void>,
 ): Promise<void> {
-  const maxTries = 200
+  const maxTries = 300
   for (let tries = 0; tries < maxTries; tries++) {
     try {
       await func()
