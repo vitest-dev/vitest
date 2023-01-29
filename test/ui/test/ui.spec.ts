@@ -2,7 +2,7 @@ import { resolve } from 'node:path'
 import { expect, it } from 'vitest'
 import kill from 'kill-port'
 import { execaCommand } from 'execa'
-import { browserErrors, killProcess, page, withLoadUrl } from '../setup'
+import { browserErrors, killProcess, page, withRetry } from '../setup'
 
 const root = resolve(__dirname, '../fixtures')
 const uiPort = 5173
@@ -26,8 +26,9 @@ it.each([
   subProcess.catch(e => e)
   const url = `http://localhost:${port}/__vitest__/`
   try {
-    await withLoadUrl(url)
-    await page.goto(url)
+    await withRetry(async () => {
+      await page.goto(url)
+    })
     expect(await (await page.$('#app'))?.innerHTML()).not.toBe('')
     expect(browserErrors.length).toEqual(0)
   }
