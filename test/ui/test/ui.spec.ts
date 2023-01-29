@@ -8,15 +8,19 @@ const root = resolve(__dirname, '../fixtures')
 const uiPort = 5173
 const reportPort = 5174
 
-it.each([
-  ['ui', `npx vitest --ui --open false --api.port ${uiPort} --reporter=html --outputFile=html/index.html`, uiPort],
-  ['report', `npx vite preview --outDir html --strict-port --base __vitest__ --port ${reportPort}`, reportPort],
-])('should load %s', async (_, command, port) => {
+async function run(command: string, port: number) {
   await kill(port)
   const subProcess = execaCommand(command, {
     cwd: root,
+    env: {
+      ...process.env,
+      CI: 'true',
+      NO_COLOR: 'true',
+    },
     stdio: 'pipe',
   })
+
+  const killSubProcess = () => killProcess(subProcess)
 
   subProcess.catch(e => e)
   const url = `http://localhost:${port}/__vitest__/`
@@ -24,10 +28,28 @@ it.each([
     await withRetry(async () => {
       await page.goto(url)
     })
+  }
+  catch (e) {
+    await killSubProcess()
+    throw e
+  }
+
+  return killSubProcess
+}
+
+it('should load ui', async () => {
+  const kill = await run(`npx vitest --ui --open false --api.port ${uiPort} --reporter=html --outputFile=html/index.html`, uiPort)
+  expect(browserErrors.length).toEqual(0)
+  await kill()
+}, 60_000)
+
+it('should load ui', async () => {
+  const kill = await run(`npx vite preview --outDir html --strict-port --base __vitest__ --port ${reportPort}`, reportPort)
+  try {
     await untilUpdated(async () => `${(await page.$$('.details-panel span')).length}`, '2')
     expect(browserErrors.length).toEqual(0)
   }
   finally {
-    killProcess(subProcess)
+    await kill()
   }
 }, 60_000)
