@@ -43,10 +43,10 @@ it('should load ui', async () => {
   await kill()
 }, 60_000)
 
-it('should load ui', async () => {
+it('should load report', async () => {
   const kill = await run(`npx vite preview --outDir html --strict-port --base __vitest__ --port ${reportPort}`, reportPort)
   try {
-    await untilUpdated(async () => `${(await page.$$('.details-panel span')).length}`, '2')
+    await untilUpdated(() => page.textContent('.details-panel span'), 'sample.test.ts')
     expect(browserErrors.length).toEqual(0)
   }
   finally {
