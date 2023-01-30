@@ -124,8 +124,16 @@ export async function startServerCommand(root: string, command: string, port: nu
     throw e
   }
 
-  return () => {
-    killSubProcess()
-    exit()
+  return async () => {
+    try {
+      await killSubProcess()
+      await exit()
+    }
+    catch (e) {
+      console.error(
+        `error while killing process ${command}:`,
+        e,
+      )
+    }
   }
 }
