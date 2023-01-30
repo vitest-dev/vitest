@@ -106,7 +106,7 @@ importers:
       unplugin-vue-components: ^0.22.12
       vite: ^4.0.0
       vite-plugin-pwa: ^0.14.1
-      vitepress: 1.0.0-alpha.36
+      vitepress: 1.0.0-alpha.40
       vue: latest
       workbox-window: ^6.5.4
     dependencies:
@@ -126,7 +126,7 @@ importers:
       unplugin-vue-components: 0.22.12_vue@3.2.45
       vite: 4.0.0
       vite-plugin-pwa: 0.14.1_hsd7wmhtxdre4ds2vghqydhvau
-      vitepress: 1.0.0-alpha.36
+      vitepress: 1.0.0-alpha.40
       workbox-window: 6.5.4
 
   examples/basic:
@@ -1293,6 +1293,9 @@ packages:
     peerDependencies:
       '@algolia/client-search': '>= 4.9.1 < 6'
       algoliasearch: '>= 4.9.1 < 6'
+    peerDependenciesMeta:
+      '@algolia/client-search':
+        optional: true
     dependencies:
       '@algolia/autocomplete-shared': 1.7.2
       algoliasearch: 4.14.2
@@ -21036,8 +21039,8 @@ packages:
       vite: 4.0.0
     dev: true
 
-  /vitepress/1.0.0-alpha.36:
-    resolution: {integrity: sha512-JH9NlBQpQrcIudF1HM8Sq3K6FbOiOTrD33PI0n+pmJQ7dOu4WAm3YnwevMInW8leNiEEWCAH+coIkOYcf3fhpQ==}
+  /vitepress/1.0.0-alpha.40:
+    resolution: {integrity: sha512-axhLI/wq/V9RjzFQZ00Ur0WhvoZXG7E1H88NxnglZm6wU/FAePP4bGaWPzU2WZwy3Nzpb9cbf1oXC+1DNgv9cQ==}
     hasBin: true
     dependencies:
       '@docsearch/css': 3.3.1

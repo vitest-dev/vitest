@@ -1,3 +1,4 @@
+import type { VitePWAOptions } from 'vite-plugin-pwa'
 import {
   githubusercontentRegex,
   pwaFontStylesRegex,
@@ -7,7 +8,7 @@ import {
   vitestShortName,
 } from '../meta'
 
-export const pwa = {
+export const pwa: Partial<VitePWAOptions> = {
   outDir: '.vitepress/dist',
   registerType: 'autoUpdate',
   // include all static assets under public/
