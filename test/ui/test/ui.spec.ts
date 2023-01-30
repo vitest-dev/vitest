@@ -25,7 +25,11 @@ async function run(command: string, url: string, port: number) {
   })
 
   const killSubProcess = () => killProcess(subProcess)
-
+  subProcess.stdout?.on('data', (d) => {
+    // eslint-disable-next-line no-console
+    console.log(d.toString())
+    expect(d.toString).toMatchSnapshot()
+  })
   expect(error).not.toBeTruthy()
   try {
     await withLoadUrl(url)
