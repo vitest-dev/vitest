@@ -104,7 +104,11 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: ProcessOptions
 
   ctx.coverageProvider?.onBeforeFilesRun?.()
 
-  options.env = env
+  // in case onBeforeFilesRun() changes env
+  options.env = {
+    ...env,
+    ...process.env,
+  }
 
   const pool = new Tinypool(options)
 
@@ -171,6 +175,14 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env }: ProcessOp
   // isolation is disabled with --no-threads
   let child: ChildProcess
 
+  ctx.coverageProvider?.onBeforeFilesRun?.()
+
+  // in case onBeforeFilesRun changes env
+  const resolvedEnv = {
+    ...env,
+    ...process.env,
+  }
+
   function runWithFiles(files: string[], invalidates: string[] = []) {
     const data: ChildContext = {
       command: 'start',
@@ -180,7 +192,7 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env }: ProcessOp
     }
     child = fork(childPath, [], {
       execArgv,
-      env,
+      env: resolvedEnv,
     })
     setupChildProcessChannel(ctx, child)
 
