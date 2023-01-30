@@ -95,6 +95,12 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: ProcessOptions
     options.concurrentTasksPerWorker = 1
   }
 
+  if (ctx.config.singleThread) {
+    options.concurrentTasksPerWorker = 1
+    options.maxThreads = 1
+    options.minThreads = 1
+  }
+
   ctx.coverageProvider?.onBeforeFilesRun?.()
 
   options.env = env

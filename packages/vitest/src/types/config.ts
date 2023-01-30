@@ -304,6 +304,13 @@ export interface InlineConfig {
   isolate?: boolean
 
   /**
+   * Run tests inside a single thread.
+   *
+   * @default false
+   */
+  singleThread?: boolean
+
+  /**
    * Coverage options
    */
   coverage?: CoverageOptions
