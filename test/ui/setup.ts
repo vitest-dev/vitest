@@ -5,7 +5,7 @@ import fs from 'fs-extra'
 import fetch from 'node-fetch-native'
 import { chromium } from 'playwright-chromium'
 import type { Browser, Page } from 'playwright-chromium'
-import { beforeAll, expect } from 'vitest'
+import { expect } from 'vitest'
 import type { ExecaChildProcess } from 'execa'
 import { execaCommand } from 'execa'
 
@@ -15,31 +15,6 @@ export const browserErrors: Error[] = []
 
 const DIR = path.join(os.tmpdir(), 'vitest_playwright_global_setup')
 export const isWindows = process.platform === 'win32'
-
-beforeAll(async () => {
-  const wsEndpoint = fs.readFileSync(path.join(DIR, 'wsEndpoint'), 'utf-8')
-  if (!wsEndpoint)
-    throw new Error('wsEndpoint not found')
-
-  browser = await chromium.connect(wsEndpoint)
-  page = await browser.newPage()
-
-  try {
-    page.on('pageerror', (error) => {
-      browserErrors.push(error)
-    })
-  }
-  catch (e) {
-    await page.close()
-    throw e
-  }
-
-  return async () => {
-    await page?.close()
-    if (browser)
-      await browser.close()
-  }
-})
 
 export function timeout(time: number) {
   return new Promise((resolve) => {
@@ -89,8 +64,34 @@ export async function killProcess(
   }
 }
 
+export async function startChromium() {
+  const wsEndpoint = fs.readFileSync(path.join(DIR, 'wsEndpoint'), 'utf-8')
+  if (!wsEndpoint)
+    throw new Error('wsEndpoint not found')
+
+  browser = await chromium.connect(wsEndpoint)
+  page = await browser.newPage()
+
+  try {
+    page.on('pageerror', (error) => {
+      browserErrors.push(error)
+    })
+  }
+  catch (e) {
+    await page.close()
+    throw e
+  }
+
+  return async () => {
+    await page?.close()
+    if (browser)
+      await browser.close()
+  }
+}
+
 export async function startServerCommand(root: string, command: string, port: number) {
   let error: any
+  const exit = await startChromium()
   const subProcess = execaCommand(command, {
     cwd: root,
     env: {
@@ -125,5 +126,6 @@ export async function startServerCommand(root: string, command: string, port: nu
 
   return () => {
     killSubProcess()
+    exit()
   }
 }
