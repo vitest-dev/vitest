@@ -10,6 +10,7 @@ const reportPort = 9001
 
 async function run(command: string, url: string, port: number) {
   await kill(port)
+  let error: any
   const subProcess = execaCommand(command, {
     cwd: root,
     env: {
@@ -17,13 +18,17 @@ async function run(command: string, url: string, port: number) {
       CI: 'true',
       NO_COLOR: 'true',
     },
-    stdio: 'pipe',
+  })
+
+  subProcess.catch((e) => {
+    error = e
   })
 
   const killSubProcess = () => killProcess(subProcess)
 
-  await withLoadUrl(url)
+  expect(error).not.toBeTruthy()
   try {
+    await withLoadUrl(url)
     await page.goto(url)
   }
   catch (e) {
