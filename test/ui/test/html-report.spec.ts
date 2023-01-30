@@ -1,10 +1,10 @@
 import { resolve } from 'node:path'
 import { beforeAll, expect, it } from 'vitest'
 import { execaCommandSync } from 'execa'
-import { browserErrors, page, startServerCommand } from '../setup'
+import { browserErrors, page, ports, startServerCommand } from '../setup'
 
 const root = resolve(__dirname, '../fixtures')
-const reportPort = 9001
+const port = ports.report
 
 beforeAll(async () => {
   execaCommandSync('npx vitest run --reporter=html --outputFile=html/index.html', {
@@ -18,8 +18,8 @@ beforeAll(async () => {
 
   const exit = await startServerCommand(
     root,
-    `npx vite preview --outDir html --strict-port --base /__vitest__/ --port ${reportPort}`,
-    `http://localhost:${reportPort}/__vitest__/`,
+    `npx vite preview --outDir html --strict-port --base /__vitest__/ --port ${port}`,
+    `http://localhost:${port}/__vitest__/`,
   )
 
   return exit

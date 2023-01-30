@@ -12,6 +12,10 @@ import { execaCommand } from 'execa'
 export let page!: Page
 export let browser!: Browser
 export const browserErrors: Error[] = []
+export const ports = {
+  ui: 9000,
+  report: 9001,
+}
 
 const DIR = path.join(os.tmpdir(), 'vitest_playwright_global_setup')
 export const isWindows = process.platform === 'win32'
