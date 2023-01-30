@@ -5,8 +5,9 @@ import fs from 'fs-extra'
 import fetch from 'node-fetch-native'
 import { chromium } from 'playwright-chromium'
 import type { Browser, Page } from 'playwright-chromium'
-import { beforeAll } from 'vitest'
+import { beforeAll, expect } from 'vitest'
 import type { ExecaChildProcess } from 'execa'
+import { execaCommand } from 'execa'
 
 export let page!: Page
 export let browser!: Browser
@@ -85,5 +86,44 @@ export async function killProcess(
   }
   else {
     serverProcess.kill('SIGTERM', { forceKillAfterTimeout: 2000 })
+  }
+}
+
+export async function startServerCommand(root: string, command: string, port: number) {
+  let error: any
+  const subProcess = execaCommand(command, {
+    cwd: root,
+    env: {
+      ...process.env,
+      CI: 'true',
+      NO_COLOR: 'true',
+    },
+  })
+
+  subProcess.catch((e) => {
+    error = e
+  })
+
+  const killSubProcess = () => killProcess(subProcess)
+  const url = `http://localhost:${port}/__vitest__/`
+
+  subProcess.stdout?.on('data', (d) => {
+    // eslint-disable-next-line no-console
+    console.log(d.toString())
+  })
+
+  expect(error).not.toBeTruthy()
+
+  try {
+    await withLoadUrl(url)
+    await page.goto(url)
+  }
+  catch (e) {
+    await killSubProcess()
+    throw e
+  }
+
+  return () => {
+    killSubProcess()
   }
 }
