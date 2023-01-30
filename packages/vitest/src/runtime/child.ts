@@ -8,7 +8,8 @@ import type { ResolvedConfig } from '../types'
 import { distDir } from '../constants'
 import { getWorkerState } from '../utils/global'
 import type { MockMap } from '../types/mocker'
-import type { ContextRPC, RuntimeRPC } from '../types/rpc'
+import type { RuntimeRPC } from '../types/rpc'
+import type { ChildContext } from '../types/child'
 import { executeInViteNode } from './execute'
 import { rpc } from './rpc'
 
@@ -19,7 +20,7 @@ let _viteNode: {
 const moduleCache = new ModuleCacheMap()
 const mockMap: MockMap = new Map()
 
-async function startViteNode(ctx: ContextRPC) {
+async function startViteNode(ctx: ChildContext) {
   if (_viteNode)
     return _viteNode
 
@@ -68,7 +69,7 @@ async function startViteNode(ctx: ContextRPC) {
   return _viteNode
 }
 
-function init(ctx: ContextRPC) {
+function init(ctx: ChildContext) {
   const { config } = ctx
 
   process.env.VITEST_WORKER_ID = '1'
@@ -105,7 +106,7 @@ function init(ctx: ContextRPC) {
   ctx.files.forEach(i => moduleCache.delete(i))
 }
 
-export async function run(ctx: ContextRPC) {
+export async function run(ctx: ChildContext) {
   init(ctx)
   const { run } = await startViteNode(ctx)
   return run(ctx.files, ctx.config)
@@ -114,7 +115,7 @@ export async function run(ctx: ContextRPC) {
 const procesExit = process.exit
 
 process.on('message', async (message: any) => {
-  if (message.command === 'start') {
+  if (typeof message === 'object' && message.command === 'start') {
     try {
       await run(message)
     }

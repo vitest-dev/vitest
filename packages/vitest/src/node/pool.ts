@@ -12,6 +12,7 @@ import type { RawSourceMap } from 'vite-node'
 import type { ResolvedConfig, RuntimeRPC, WorkerContext } from '../types'
 import { distDir, rootDir } from '../constants'
 import { AggregateError } from '../utils'
+import type { ChildContext } from '../types/child'
 import type { Vitest } from './core'
 
 export type RunWithFiles = (files: string[], invalidates?: string[]) => Promise<void>
@@ -142,7 +143,7 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: ProcessOptions
       files = await sequencer.sort(files)
 
       if (ctx.config.singleThread) {
-        await runFiles(config, files, invalidates)
+        await runFiles(config, files)
       }
       else {
         const results = await Promise.allSettled(files
@@ -171,12 +172,11 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env }: ProcessOp
   let child: ChildProcess
 
   function runWithFiles(files: string[], invalidates: string[] = []) {
-    const data = {
+    const data: ChildContext = {
       command: 'start',
       config: ctx.getSerializableConfig(),
       files,
       invalidates,
-      workerId: 1,
     }
     child = fork(childPath, [], {
       execArgv,
