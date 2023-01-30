@@ -95,7 +95,7 @@ export async function startChromium() {
 
 export async function startServerCommand(root: string, command: string, url: string) {
   let error: any
-  const exit = await startChromium()
+  const exitChromium = await startChromium()
   const subProcess = execaCommand(command, {
     cwd: root,
     env: {
@@ -119,25 +119,27 @@ export async function startServerCommand(root: string, command: string, url: str
 
   expect(error).not.toBeTruthy()
 
+  async function exit() {
+    try {
+      await killSubProcess()
+      await exitChromium()
+    }
+    catch (e) {
+      console.error(
+          `error while killing process ${command}:`,
+          e,
+      )
+    }
+  }
+
   try {
     await withLoadUrl(url)
     await page.goto(url)
   }
   catch (e) {
-    await killSubProcess()
+    await exit()
     throw e
   }
 
-  return async () => {
-    try {
-      await killSubProcess()
-      await exit()
-    }
-    catch (e) {
-      console.error(
-        `error while killing process ${command}:`,
-        e,
-      )
-    }
-  }
+  return exit
 }
