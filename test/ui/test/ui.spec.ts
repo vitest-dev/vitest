@@ -1,6 +1,7 @@
 import { resolve } from 'node:path'
 import { expect, it } from 'vitest'
 import { execaCommand } from 'execa'
+import { preview } from 'vite'
 import { browserErrors, killProcess, page, withLoadUrl } from '../setup'
 
 const root = resolve(__dirname, '../fixtures')
@@ -50,15 +51,27 @@ it('should load ui', async () => {
 }, 60_000)
 
 it('should load report', async () => {
-  const kill = await run(
-    `npx vite preview --outDir html --strict-port --base __vitest__ --port ${port}`,
-     `http://localhost:${port}/__vitest__/`,
-  )
+  const server = await preview({
+    base: '/__vitest__/',
+    root,
+    preview: {
+      strictPort: true,
+      port,
+      open: false,
+    },
+    build: {
+      outDir: 'html',
+    },
+  })
+  server.printUrls()
+  await withLoadUrl(`http://localhost:${port}/__vitest__/`)
   try {
     expect((await (await page.$('#app'))?.innerHTML() || '').length).not.toBe(0)
     expect(browserErrors.length).toEqual(0)
   }
   finally {
-    await kill()
+    await new Promise<void>((resolve, reject) => {
+      server.httpServer.close(error => error ? reject(error) : resolve())
+    })
   }
 }, 60_000)
