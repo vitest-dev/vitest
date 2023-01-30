@@ -1,13 +1,14 @@
+import v8 from 'node:v8'
 import { relative, resolve } from 'pathe'
 import { createBirpc } from 'birpc'
-import { workerId as poolId } from 'tinypool'
 import { processError } from '@vitest/runner/utils'
 import { ModuleCacheMap } from 'vite-node/client'
 import { isPrimitive } from 'vite-node/utils'
-import type { ResolvedConfig, RuntimeRPC, WorkerContext } from '../types'
+import type { ResolvedConfig } from '../types'
 import { distDir } from '../constants'
 import { getWorkerState } from '../utils/global'
 import type { MockMap } from '../types/mocker'
+import type { ContextRPC, RuntimeRPC } from '../types/rpc'
 import { executeInViteNode } from './execute'
 import { rpc } from './rpc'
 
@@ -18,7 +19,7 @@ let _viteNode: {
 const moduleCache = new ModuleCacheMap()
 const mockMap: MockMap = new Map()
 
-async function startViteNode(ctx: WorkerContext) {
+async function startViteNode(ctx: ContextRPC) {
   if (_viteNode)
     return _viteNode
 
@@ -67,15 +68,11 @@ async function startViteNode(ctx: WorkerContext) {
   return _viteNode
 }
 
-function init(ctx: WorkerContext) {
-  // @ts-expect-error untyped global
-  if (typeof __vitest_worker__ !== 'undefined' && ctx.config.threads && ctx.config.isolate)
-    throw new Error(`worker for ${ctx.files.join(',')} already initialized by ${getWorkerState().ctx.files.join(',')}. This is probably an internal bug of Vitest.`)
+function init(ctx: ContextRPC) {
+  const { config } = ctx
 
-  const { config, port, workerId } = ctx
-
-  process.env.VITEST_WORKER_ID = String(workerId)
-  process.env.VITEST_POOL_ID = String(poolId)
+  process.env.VITEST_WORKER_ID = '1'
+  process.env.VITEST_POOL_ID = '1'
 
   // @ts-expect-error untyped global
   globalThis.__vitest_environment__ = config.environment
@@ -89,8 +86,12 @@ function init(ctx: WorkerContext) {
       {},
       {
         eventNames: ['onUserConsoleLog', 'onFinished', 'onCollected', 'onWorkerExit'],
-        post(v) { port.postMessage(v) },
-        on(fn) { port.addListener('message', fn) },
+        serialize: v8.serialize,
+        deserialize: v => v8.deserialize(Buffer.from(v)),
+        post(v) {
+          process.send?.(v)
+        },
+        on(fn) { process.on('message', fn) },
       },
     ),
   }
@@ -104,8 +105,21 @@ function init(ctx: WorkerContext) {
   ctx.files.forEach(i => moduleCache.delete(i))
 }
 
-export async function run(ctx: WorkerContext) {
+export async function run(ctx: ContextRPC) {
   init(ctx)
   const { run } = await startViteNode(ctx)
   return run(ctx.files, ctx.config)
 }
+
+const procesExit = process.exit
+
+process.on('message', async (message: any) => {
+  if (message.command === 'start') {
+    try {
+      await run(message)
+    }
+    finally {
+      procesExit()
+    }
+  }
+})

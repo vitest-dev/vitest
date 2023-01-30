@@ -23,6 +23,7 @@ const entries = [
   'src/runners.ts',
   'src/environments.ts',
   'src/runtime/worker.ts',
+  'src/runtime/child.ts',
   'src/runtime/loader.ts',
   'src/runtime/entry.ts',
   'src/integrations/spy.ts',
