@@ -312,6 +312,12 @@ export class ViteNodeRunner {
     })
     // this prosxy is triggered only on exports.{name} and module.exports access
     const cjsExports = new Proxy(exports, {
+      get: (_, p, receiver) => {
+        if (Reflect.has(exports, p))
+          return Reflect.get(exports, p, receiver)
+        return Reflect.get(Object.prototype, p, receiver)
+      },
+      getPrototypeOf: () => Object.prototype,
       set: (_, p, value) => {
         // treat "module.exports =" the same as "exports.default =" to not have nested "default.default",
         // so "exports.default" becomes the actual module
