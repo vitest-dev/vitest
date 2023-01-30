@@ -467,13 +467,21 @@ By providing an object instead of a string you can define individual outputs whe
 - **Default:** `true`
 - **CLI:** `--threads`, `--threads=false`
 
-Enable multi-threading using [tinypool](https://github.com/tinylibs/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina))
+Enable multi-threading using [tinypool](https://github.com/tinylibs/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina)). If disabled, uses `child_process` to spawn a process to run tests inside. Disabling this option also disables module isolation, meaning all tests run inside a single child process.
 
 :::warning
 This option is different from Jest's `--runInBand`. Vitest uses workers not only for running tests in parallel, but also to provide isolation. By disabling this option, your tests will run sequentially, but in the same global context, so you must provide isolation yourself.
 
 This might cause all sorts of issues, if you are relying on global state (frontend frameworks usually do) or your code relies on environment to be defined separately for each test. But can be a speed boost for your tests (up to 3 times faster), that don't necessarily rely on global state or can easily bypass that.
 :::
+
+### singleThread
+
+- **Type:** `boolean`
+- **Default:** `false`
+- **Version:** Since Vitest 0.29.0
+
+Run all tests inside a single worker thread. This will disable module isolation, but can improve test performance. Before Vitest 0.29.0 this was equivalent to using `--no-threads`.
 
 ### maxThreads
 

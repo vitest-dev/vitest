@@ -141,12 +141,17 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: ProcessOptions
 
       files = await sequencer.sort(files)
 
-      const results = await Promise.allSettled(files
-        .map(file => runFiles(config, [file], invalidates)))
+      if (ctx.config.singleThread) {
+        await runFiles(config, files, invalidates)
+      }
+      else {
+        const results = await Promise.allSettled(files
+          .map(file => runFiles(config, [file], invalidates)))
 
-      const errors = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected').map(r => r.reason)
-      if (errors.length > 0)
-        throw new AggregateError(errors, 'Errors occurred while running tests. For more information, see serialized error.')
+        const errors = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected').map(r => r.reason)
+        if (errors.length > 0)
+          throw new AggregateError(errors, 'Errors occurred while running tests. For more information, see serialized error.')
+      }
     }
   }
 
