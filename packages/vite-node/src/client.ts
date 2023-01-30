@@ -310,11 +310,12 @@ export class ViteNodeRunner {
       enumerable: false,
       configurable: false,
     })
-    // this prosxy is triggered only on exports.{name} and module.exports access
+    // this proxy is triggered only on exports.{name} and module.exports access
+    // inside the module itself. imported module is always "exports"
     const cjsExports = new Proxy(exports, {
-      get: (_, p, receiver) => {
-        if (Reflect.has(exports, p))
-          return Reflect.get(exports, p, receiver)
+      get: (target, p, receiver) => {
+        if (Reflect.has(target, p))
+          return Reflect.get(target, p, receiver)
         return Reflect.get(Object.prototype, p, receiver)
       },
       getPrototypeOf: () => Object.prototype,
