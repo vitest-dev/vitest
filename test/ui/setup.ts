@@ -103,6 +103,7 @@ export async function startServerCommand(root: string, command: string, url: str
       CI: 'true',
       NO_COLOR: 'true',
     },
+    stdio: 'pipe',
   })
 
   subProcess.catch((e) => {
