@@ -16,7 +16,11 @@ beforeAll(async () => {
     },
   })
 
-  const exit = await startServerCommand(root, `npx vite preview --outDir html --strict-port --base /__vitest__/ --port ${reportPort}`, reportPort)
+  const exit = await startServerCommand(
+    root,
+    `npx vite preview --outDir html --strict-port --base /__vitest__/ --port ${reportPort}`,
+    `http://localhost:${reportPort}/__vitest__/`,
+  )
 
   return exit
 })

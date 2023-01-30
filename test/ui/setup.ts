@@ -89,7 +89,7 @@ export async function startChromium() {
   }
 }
 
-export async function startServerCommand(root: string, command: string, port: number) {
+export async function startServerCommand(root: string, command: string, url: string) {
   let error: any
   const exit = await startChromium()
   const subProcess = execaCommand(command, {
@@ -106,7 +106,6 @@ export async function startServerCommand(root: string, command: string, port: nu
   })
 
   const killSubProcess = () => killProcess(subProcess)
-  const url = `http://localhost:${port}/__vitest__/`
 
   subProcess.stdout?.on('data', (d) => {
     // eslint-disable-next-line no-console

@@ -6,7 +6,11 @@ const root = resolve(__dirname, '../fixtures')
 const uiPort = 9000
 
 beforeAll(async () => {
-  const exit = await startServerCommand(root, `npx vitest --ui --open false --api.port ${uiPort}`, uiPort)
+  const exit = await startServerCommand(
+    root,
+    `npx vitest --ui --open false --api.port ${uiPort}`,
+    `http://localhost:${uiPort}/__vitest__/`,
+  )
 
   return exit
 })
