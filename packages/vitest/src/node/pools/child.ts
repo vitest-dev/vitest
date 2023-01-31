@@ -59,6 +59,7 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env }: PoolProce
   }
 
   function runWithFiles(files: string[], invalidates: string[] = []) {
+    ctx.state.clearFiles(files)
     const data: ChildContext = {
       command: 'start',
       config: getTestConfig(ctx),
