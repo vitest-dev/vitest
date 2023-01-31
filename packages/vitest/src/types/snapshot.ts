@@ -29,6 +29,7 @@ export interface SnapshotResult {
   uncheckedKeys: Array<string>
   unmatched: number
   updated: number
+  skipped: number
 }
 
 export interface UncheckedSnapshot {
@@ -51,4 +52,5 @@ export interface SnapshotSummary {
   uncheckedKeysByFile: Array<UncheckedSnapshot>
   unmatched: number
   updated: number
+  skipped: number
 }

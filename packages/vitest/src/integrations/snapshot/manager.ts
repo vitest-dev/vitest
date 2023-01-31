@@ -46,6 +46,7 @@ export function emptySummary(options: SnapshotStateOptions): SnapshotSummary {
     unmatched: 0,
     updated: 0,
     didUpdate: options.updateSnapshot === 'all',
+    skipped: 0,
   }
   return summary
 }
@@ -70,7 +71,8 @@ export function addSnapshotResult(summary: SnapshotSummary, result: SnapshotResu
     })
   }
 
+  summary.skipped += result.skipped
   summary.unmatched += result.unmatched
   summary.updated += result.updated
-  summary.total += result.added + result.matched + result.unmatched + result.updated
+  summary.total += result.added + result.matched + result.unmatched + result.updated + result.skipped
 }

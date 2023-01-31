@@ -55,6 +55,7 @@ export default class SnapshotState {
   matched: number
   unmatched: number
   updated: number
+  skipped: number
 
   private constructor(
     public testFilePath: string,
@@ -79,6 +80,7 @@ export default class SnapshotState {
     this.unmatched = 0
     this._updateSnapshot = options.updateSnapshot
     this.updated = 0
+    this.skipped = 0
     this._snapshotFormat = {
       printBasicPrototype: false,
       ...options.snapshotFormat,
@@ -100,6 +102,15 @@ export default class SnapshotState {
     this._uncheckedKeys.forEach((uncheckedKey) => {
       if (keyToTestName(uncheckedKey) === testName)
         this._uncheckedKeys.delete(uncheckedKey)
+    })
+  }
+
+  markSnapshotsAsSkippedForTest(testName: string): void {
+    this._uncheckedKeys.forEach((uncheckedKey) => {
+      if (keyToTestName(uncheckedKey).includes(testName)) {
+        this._uncheckedKeys.delete(uncheckedKey)
+        this.skipped++
+      }
     })
   }
 
@@ -153,6 +164,7 @@ export default class SnapshotState {
     this.matched = 0
     this.unmatched = 0
     this.updated = 0
+    this.skipped = 0
     this._dirty = false
   }
 
@@ -316,6 +328,7 @@ export default class SnapshotState {
       uncheckedKeys: [],
       unmatched: 0,
       updated: 0,
+      skipped: 0,
     }
     const uncheckedCount = this.getUncheckedCount()
     const uncheckedKeys = this.getUncheckedKeys()
@@ -330,6 +343,7 @@ export default class SnapshotState {
     snapshot.updated = this.updated
     snapshot.unchecked = !status.deleted ? uncheckedCount : 0
     snapshot.uncheckedKeys = Array.from(uncheckedKeys)
+    snapshot.skipped = this.skipped
 
     return snapshot
   }

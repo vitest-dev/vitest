@@ -27,6 +27,9 @@ export class VitestTestRunner implements VitestRunner {
   }
 
   onAfterRunSuite(suite: Suite) {
+    if (suite.mode === 'skip')
+      this.snapshotClient.skipSuiteSnapshots(suite)
+
     if (this.config.logHeapUsage && typeof process !== 'undefined')
       suite.result!.heap = process.memoryUsage().heapUsed
   }

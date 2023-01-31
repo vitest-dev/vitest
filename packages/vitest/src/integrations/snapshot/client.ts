@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { equals, iterableEquality, subsetEquality } from '@vitest/expect'
-import type { Test } from '@vitest/runner'
+import type { Suite, Test } from '@vitest/runner'
 import { getNames } from '@vitest/runner/utils'
 import { rpc } from '../../runtime/rpc'
 import { getWorkerState } from '../../utils'
@@ -59,6 +59,11 @@ export class SnapshotClient {
 
   skipTestSnapshots(test: Test) {
     this.snapshotState?.markSnapshotsAsCheckedForTest(test.name)
+  }
+
+  skipSuiteSnapshots(suite: Suite) {
+    if (suite.mode === 'skip')
+      this.snapshotState?.markSnapshotsAsSkippedForTest(suite.name)
   }
 
   assert(options: AssertOptions): void {
