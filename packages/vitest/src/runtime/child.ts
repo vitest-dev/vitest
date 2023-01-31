@@ -4,6 +4,7 @@ import { createBirpc } from 'birpc'
 import { processError } from '@vitest/runner/utils'
 import { ModuleCacheMap } from 'vite-node/client'
 import { isPrimitive } from 'vite-node/utils'
+import { parseRegexp } from '@vitest/utils'
 import type { ResolvedConfig } from '../types'
 import { distDir } from '../constants'
 import { getWorkerState } from '../utils/global'
@@ -106,6 +107,19 @@ function init(ctx: ChildContext) {
   ctx.files.forEach(i => moduleCache.delete(i))
 }
 
+function parsePossibleRegexp(str: string | RegExp) {
+  const prefix = '$$vitest:'
+  if (typeof str === 'string' && str.startsWith(prefix))
+    return parseRegexp(str.slice(prefix.length))
+  return str
+}
+
+function unwrapConfig(config: ResolvedConfig) {
+  if (config.testNamePattern)
+    config.testNamePattern = parsePossibleRegexp(config.testNamePattern) as RegExp
+  return config
+}
+
 export async function run(ctx: ChildContext) {
   init(ctx)
   const { run } = await startViteNode(ctx)
@@ -117,6 +131,7 @@ const procesExit = process.exit
 process.on('message', async (message: any) => {
   if (typeof message === 'object' && message.command === 'start') {
     try {
+      message.config = unwrapConfig(message.config)
       await run(message)
     }
     finally {

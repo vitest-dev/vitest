@@ -12,14 +12,13 @@ export interface ProcessPool {
   close: () => Promise<void>
 }
 
-const loaderPath = pathToFileURL(resolve(distDir, './loader.js')).href
-
-const suppressLoaderWarningsPath = resolve(rootDir, './suppress-warnings.cjs')
-
 export interface PoolProcessOptions {
   execArgv: string[]
   env: Record<string, string>
 }
+
+const loaderPath = pathToFileURL(resolve(distDir, './loader.js')).href
+const suppressLoaderWarningsPath = resolve(rootDir, './suppress-warnings.cjs')
 
 export function createPool(ctx: Vitest): ProcessPool {
   const conditions = ctx.server.config.resolve.conditions?.flatMap(c => ['--conditions', c]) || []

@@ -6,6 +6,8 @@ export function getSafeTimers() {
     setInterval: safeSetInterval,
     clearInterval: safeClearInterval,
     clearTimeout: safeClearTimeout,
+    setImmediate: safeSetImmediate,
+    clearImmediate: safeClearImmediate,
   } = (globalThis as any)[SAFE_TIMERS_SYMBOL] || globalThis
 
   return {
@@ -13,6 +15,8 @@ export function getSafeTimers() {
     setInterval: safeSetInterval,
     clearInterval: safeClearInterval,
     clearTimeout: safeClearTimeout,
+    setImmediate: safeSetImmediate,
+    clearImmediate: safeClearImmediate,
   }
 }
 
@@ -22,6 +26,8 @@ export function setSafeTimers() {
     setInterval: safeSetInterval,
     clearInterval: safeClearInterval,
     clearTimeout: safeClearTimeout,
+    setImmediate: safeSetImmediate,
+    clearImmediate: safeClearImmediate,
   } = globalThis
 
   const timers = {
@@ -29,6 +35,8 @@ export function setSafeTimers() {
     setInterval: safeSetInterval,
     clearInterval: safeClearInterval,
     clearTimeout: safeClearTimeout,
+    setImmediate: safeSetImmediate,
+    clearImmediate: safeClearImmediate,
   }
 
   ;(globalThis as any)[SAFE_TIMERS_SYMBOL] = timers

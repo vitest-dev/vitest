@@ -29,6 +29,23 @@ function setupChildProcessChannel(ctx: Vitest, fork: ChildProcess) {
   )
 }
 
+function stringifyRegex(input: RegExp | string): any {
+  if (typeof input === 'string')
+    return input
+  return `$$vitest:${input.toString()}`
+}
+
+function getTestConfig(ctx: Vitest) {
+  const config = ctx.getSerializableConfig()
+  // v8 serialize does not support regex
+  return {
+    ...config,
+    testNamePattern: config.testNamePattern
+      ? stringifyRegex(config.testNamePattern)
+      : undefined,
+  }
+}
+
 export function createChildProcessPool(ctx: Vitest, { execArgv, env }: PoolProcessOptions): ProcessPool {
   // isolation is disabled with --no-threads
   let child: ChildProcess
@@ -44,7 +61,7 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env }: PoolProce
   function runWithFiles(files: string[], invalidates: string[] = []) {
     const data: ChildContext = {
       command: 'start',
-      config: ctx.getSerializableConfig(),
+      config: getTestConfig(ctx),
       files,
       invalidates,
     }
