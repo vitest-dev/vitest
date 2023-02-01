@@ -116,6 +116,8 @@ test('provider module', () => {
       }
     },
     takeCoverage() {},
+    startCoverage() {},
+    stopCoverage() {},
   })
 })
 

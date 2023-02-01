@@ -7,8 +7,8 @@ import type { EnvironmentOptions, ResolvedConfig, VitestEnvironment } from '../t
 import { getWorkerState, resetModules } from '../utils'
 import { vi } from '../integrations/vi'
 import { envs } from '../integrations/env'
-import { takeCoverageInsideWorker } from '../integrations/coverage'
 import { distDir } from '../constants'
+import { startCoverageInsideWorker, stopCoverageInsideWorker, takeCoverageInsideWorker } from '../integrations/coverage'
 import { setupGlobalEnv, withEnv } from './setup.node'
 import { rpc } from './rpc'
 import type { VitestExecutor } from './execute'
@@ -79,6 +79,7 @@ async function getTestRunner(config: ResolvedConfig, executor: VitestExecutor): 
 // browser shouldn't call this!
 export async function run(files: string[], config: ResolvedConfig, executor: VitestExecutor): Promise<void> {
   await setupGlobalEnv(config)
+  await startCoverageInsideWorker(config.coverage, executor)
 
   const workerState = getWorkerState()
 
@@ -159,4 +160,6 @@ export async function run(files: string[], config: ResolvedConfig, executor: Vit
       })
     }
   }
+
+  await stopCoverageInsideWorker(config.coverage, executor)
 }

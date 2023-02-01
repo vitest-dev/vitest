@@ -722,7 +722,6 @@ Clean coverage report on watch rerun
 - **CLI:** `--coverage.reportsDirectory=<path>`
 
 Directory to write coverage report to.
-When using `c8` provider a temporary `/tmp` directory is created for [V8 coverage results](https://nodejs.org/api/cli.html#coverage-output).
 
 #### reporter
 
