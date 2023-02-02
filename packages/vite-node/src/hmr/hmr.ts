@@ -292,6 +292,9 @@ export function createHotContext(
     ): void {
       const addToMap = (map: Map<string, any[]>) => {
         const existing = map.get(event) || []
+        const existingCbIndex = existing.findIndex(_cb => _cb.toString() === cb.toString())
+        if (existingCbIndex > -1)
+          existing.splice(existingCbIndex, 1)
         existing.push(cb)
         map.set(event, existing)
       }
