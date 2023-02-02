@@ -42,6 +42,7 @@ export function installSourcemapsSupport(options: InstallSourceMapSupportOptions
   install({
     environment: 'node',
     handleUncaughtExceptions: false,
+    hookRequire: true,
     retrieveSourceMap(source) {
       const map = options.getSourceMap(source)
       if (map) {

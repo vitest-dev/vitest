@@ -135,13 +135,13 @@ export class C8CoverageProvider implements CoverageProvider {
     // that we add in packages/vite-node/src/client.ts:114 (vm.runInThisContext)
     // TODO: Include our transformations in sourcemaps
     const offset = 185
-
+    const originalGetSourceMap = report._getSourceMap;
     report._getSourceMap = (coverage: Profiler.ScriptCoverage) => {
       const path = _url.pathToFileURL(coverage.url.split('?')[0]).href
       const data = sourceMapMeta[path]
 
       if (!data)
-        return {}
+        return originalGetSourceMap.call(report, coverage)
 
       return {
         sourceMap: {
