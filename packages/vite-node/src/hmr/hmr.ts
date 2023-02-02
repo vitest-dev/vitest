@@ -196,6 +196,7 @@ export async function handleMessage(runner: ViteNodeRunner, emitter: HMREmitter,
       break
     case 'full-reload':
       notifyListeners(runner, 'vite:beforeFullReload', payload)
+      maps.customListenersMap.delete('vite:beforeFullReload')
       reload(runner, files)
       break
     case 'prune':
@@ -282,6 +283,7 @@ export function createHotContext(
     },
 
     invalidate() {
+      console.log('invalidated')
       notifyListeners(runner, 'vite:invalidate', { path: ownerPath, message: undefined })
       return reload(runner, files)
     },
@@ -292,9 +294,6 @@ export function createHotContext(
     ): void {
       const addToMap = (map: Map<string, any[]>) => {
         const existing = map.get(event) || []
-        const existingCbIndex = existing.findIndex(_cb => _cb.toString() === cb.toString())
-        if (existingCbIndex > -1)
-          existing.splice(existingCbIndex, 1)
         existing.push(cb)
         map.set(event, existing)
       }
