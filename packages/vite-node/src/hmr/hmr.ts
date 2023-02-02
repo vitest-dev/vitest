@@ -283,7 +283,6 @@ export function createHotContext(
     },
 
     invalidate() {
-      console.log('invalidated')
       notifyListeners(runner, 'vite:invalidate', { path: ownerPath, message: undefined })
       return reload(runner, files)
     },
