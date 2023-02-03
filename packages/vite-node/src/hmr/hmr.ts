@@ -196,6 +196,7 @@ export async function handleMessage(runner: ViteNodeRunner, emitter: HMREmitter,
       break
     case 'full-reload':
       notifyListeners(runner, 'vite:beforeFullReload', payload)
+      maps.customListenersMap.delete('vite:beforeFullReload')
       reload(runner, files)
       break
     case 'prune':
