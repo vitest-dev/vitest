@@ -183,7 +183,7 @@ export class Vitest {
       }
       if (this.config.watch) {
         await this.report('onWatcherStart', files, [
-          ...sourceErrors,
+          ...(this.config.typecheck.ignoreSourceErrors ? [] : sourceErrors),
           ...this.state.getUnhandledErrors(),
         ])
       }
