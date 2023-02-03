@@ -50,7 +50,7 @@ Note that for options supporting RegExps, strings passed to the CLI must start _
 
 ### Hashbang
 
-If you prefer to write scripts that doesn't need to be passed into tsx, you can declare it in the [hashbang](https://bash.cyberciti.biz/guide/Shebang).
+If you prefer to write scripts that doesn't need to be passed into Vite Node, you can declare it in the [hashbang](https://bash.cyberciti.biz/guide/Shebang).
 
 Simply add `#!/usr/bin/env vite-node --script` at the top of your file:
 
@@ -66,13 +66,13 @@ And make the file executable:
 chmod +x ./file.ts
 ```
 
-Now, you can run the file without passing it into vite-node:
+Now, you can run the file without passing it into Vite Node:
 ```sh
 $ ./file.ts hello
 argv: [ 'hello' ]
 ```
 
-Note that when using the `--script` option, `vite-node` forwards every arguments and options to the script to execute, even the one supported by `vite-node` itself.
+Note that when using the `--script` option, Vite Node forwards every arguments and options to the script to execute, even the one supported by Vite Node itself.
 
 ## Programmatic Usage
 
