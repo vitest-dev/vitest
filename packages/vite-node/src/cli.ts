@@ -16,8 +16,8 @@ cli
   .option('-r, --root <path>', 'Use specified root directory')
   .option('-c, --config <path>', 'Use specified config file')
   .option('-w, --watch', 'Restart on file changes, similar to "nodemon"')
+  .option('--script', 'Use vite-node as a script runner')
   .option('--options <options>', 'Use specified Vite server options')
-  .option('--script-mode', 'Use vite-node as a script runner')
   .help()
 
 cli
@@ -29,7 +29,7 @@ cli.parse()
 
 export interface CliOptions {
   root?: string
-  scriptMode?: string
+  script?: boolean
   config?: string
   watch?: boolean
   options?: ViteNodeServerOptionsCLI
@@ -37,20 +37,20 @@ export interface CliOptions {
 }
 
 async function run(files: string[], options: CliOptions = {}) {
-  if (options.scriptMode)
-    files = [options.scriptMode]
+  if (options.script) {
+    files = [files[0]]
+    options = {}
+    process.argv = [process.argv[0], files[0], ...process.argv.slice(2).filter(arg => arg !== '--script' && arg !== files[0])]
+  }
+  else {
+    process.argv = [...process.argv.slice(0, 2), ...(options['--'] || [])]
+  }
 
   if (!files.length) {
     console.error(c.red('No files specified.'))
     cli.outputHelp()
     process.exit(1)
   }
-
-  // forward argv
-  if (options.scriptMode)
-    process.argv = [process.argv[0], options.scriptMode, ...process.argv.slice(4)]
-  else
-    process.argv = [...process.argv.slice(0, 2), ...(options['--'] || [])]
 
   const serverOptions = options.options
     ? parseServerOptions(options.options)
