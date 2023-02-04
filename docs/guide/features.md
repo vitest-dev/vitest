@@ -44,7 +44,7 @@ Learn more about [Test Filtering](./filtering.md).
 
 ## Running tests concurrently
 
-Use `.concurrent` in consecutive tests to run them in parallel. Also, be sure to use `expect` from the [Test Context](/guide/test-context.md) to ensure the right test is being detected.
+Use `.concurrent` in consecutive tests to run them in parallel. 
 
 ```ts
 import { describe, it } from 'vitest'
@@ -71,6 +71,10 @@ describe.concurrent('suite', () => {
 ```
 
 You can also use `.skip`, `.only`, and `.todo` with concurrent suites and tests. Read more in the [API Reference](/api/#test-concurrent).
+
+::: warning
+When using Snapshots with async concurrent tests, you need to use `expect` from the [Test Context](/guide/test-context.md) and call `expect.assertions` to ensure the test will detect any failures.
+:::
 
 ## Snapshot
 
