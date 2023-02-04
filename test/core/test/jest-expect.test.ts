@@ -235,6 +235,10 @@ describe('jest-expect', () => {
     expect(complex).toHaveProperty('bar.arr.0')
     expect(complex).toHaveProperty(['bar', 'arr', '0'])
     expect(complex).toHaveProperty(['bar', 'arr', '0'], 'first')
+    // @ts-expect-error - passes number inside the array
+    expect(complex).toHaveProperty(['bar', 'arr', 0])
+    // @ts-expect-error - passes number inside the array
+    expect(complex).toHaveProperty(['bar', 'arr', 0], 'first')
     expect(complex).toHaveProperty('bar.arr.1.zoo', 'monkey')
     expect(complex).toHaveProperty(['bar', 'arr', '1', 'zoo'], 'monkey')
     expect(complex).toHaveProperty(['foo.bar[0]'], 'baz')
