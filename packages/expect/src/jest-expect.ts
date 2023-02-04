@@ -280,7 +280,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   // destructuring, because it checks `arguments` inside, and value is passing as `undefined`
   def('toHaveProperty', function (...args: [property: string | string[], value?: any]) {
     if (Array.isArray(args[0]))
-      args[0] = args[0].map(key => key.replace(/([.[\]])/g, '\\$1')).join('.')
+      args[0] = args[0].map(key => String(key).replace(/([.[\]])/g, '\\$1')).join('.')
 
     const actual = this._obj
     const [propertyName, expected] = args
