@@ -205,6 +205,7 @@ describe('jest-expect', () => {
 
     const foo = {}
     const complex = {
+      '0': 'zero',
       'foo': 1,
       'foo.bar[0]': 'baz',
       'a-b': true,
@@ -227,6 +228,12 @@ describe('jest-expect', () => {
 
     expect(complex).toHaveProperty('a-b')
     expect(complex).toHaveProperty('a-b-1.0.0')
+    expect(complex).toHaveProperty('0')
+    expect(complex).toHaveProperty('0', 'zero')
+    expect(complex).toHaveProperty(['0'])
+    expect(complex).toHaveProperty(['0'], 'zero')
+    expect(complex).toHaveProperty([0])
+    expect(complex).toHaveProperty([0], 'zero')
     expect(complex).toHaveProperty('foo')
     expect(complex).toHaveProperty('foo', 1)
     expect(complex).toHaveProperty('bar.foo', 'foo')
