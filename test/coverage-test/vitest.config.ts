@@ -2,6 +2,8 @@ import { resolve } from 'pathe'
 import { defineConfig } from 'vitest/config'
 import vue from '@vitejs/plugin-vue'
 
+const provider = process.argv[1 + process.argv.indexOf('--provider')]
+
 export default defineConfig({
   plugins: [
     vue(),
@@ -10,9 +12,10 @@ export default defineConfig({
     MY_CONSTANT: '"my constant"',
   },
   test: {
-    reporters: 'verbose',
+    watch: false,
     coverage: {
-      enabled: true,
+      provider: provider as any,
+      include: ['src/**'],
       clean: true,
       all: true,
       reporter: ['html', 'text', 'lcov', 'json'],
