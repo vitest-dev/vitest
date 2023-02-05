@@ -124,4 +124,10 @@ Beware that these ignore hints may now be included in final production build as 
 if (condition) {
 ```
 
-Unfortunately this does not work for `c8` at the moment.
+For `c8` this does not cause any issues. You can use `c8 ignore` comments with Typescript as usual:
+
+<!-- eslint-skip -->
+```ts
+/* c8 ignore next 3 */
+if (condition) {
+```

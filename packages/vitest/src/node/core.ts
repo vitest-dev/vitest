@@ -40,6 +40,7 @@ export class Vitest {
 
   invalidates: Set<string> = new Set()
   changedTests: Set<string> = new Set()
+  filenamePattern?: string
   runningPromise?: Promise<void>
   closingPromise?: Promise<void>
 
@@ -182,7 +183,7 @@ export class Vitest {
       }
       if (this.config.watch) {
         await this.report('onWatcherStart', files, [
-          ...sourceErrors,
+          ...(this.config.typecheck.ignoreSourceErrors ? [] : sourceErrors),
           ...this.state.getUnhandledErrors(),
         ])
       }
@@ -359,6 +360,11 @@ export class Vitest {
   }
 
   async rerunFiles(files: string[] = this.state.getFilepaths(), trigger?: string) {
+    if (this.filenamePattern) {
+      const filteredFiles = await this.globTestFiles([this.filenamePattern])
+      files = files.filter(file => filteredFiles.includes(file))
+    }
+
     if (this.coverageProvider && this.config.coverage.cleanOnRerun)
       await this.coverageProvider.clean()
 
@@ -368,20 +374,25 @@ export class Vitest {
     await this.reportCoverage(!trigger)
 
     if (!this.config.browser)
-      await this.report('onWatcherStart')
+      await this.report('onWatcherStart', this.state.getFiles(files))
   }
 
   async changeNamePattern(pattern: string, files: string[] = this.state.getFilepaths(), trigger?: string) {
+    // Empty test name pattern should reset filename pattern as well
+    if (pattern === '')
+      this.filenamePattern = undefined
+
     this.config.testNamePattern = pattern ? new RegExp(pattern) : undefined
     await this.rerunFiles(files, trigger)
   }
 
   async changeFilenamePattern(pattern: string) {
+    this.filenamePattern = pattern
+
     const files = this.state.getFilepaths()
-    if (!pattern)
-      return await this.rerunFiles(files, 'reset filename pattern')
-    const filteredFiles = await this.globTestFiles([pattern])
-    await this.rerunFiles(filteredFiles, 'change filename pattern')
+    const trigger = this.filenamePattern ? 'change filename pattern' : 'reset filename pattern'
+
+    await this.rerunFiles(files, trigger)
   }
 
   async rerunFailed() {
@@ -433,7 +444,17 @@ export class Vitest {
       this.isFirstRun = false
 
       this.snapshot.clear()
-      const files = Array.from(this.changedTests)
+      let files = Array.from(this.changedTests)
+
+      if (this.filenamePattern) {
+        const filteredFiles = await this.globTestFiles([this.filenamePattern])
+        files = files.filter(file => filteredFiles.includes(file))
+
+        // A file that does not match the current filename pattern was changed
+        if (files.length === 0)
+          return
+      }
+
       this.changedTests.clear()
 
       if (this.coverageProvider && this.config.coverage.cleanOnRerun)
@@ -446,7 +467,7 @@ export class Vitest {
       await this.reportCoverage(false)
 
       if (!this.config.browser)
-        await this.report('onWatcherStart')
+        await this.report('onWatcherStart', this.state.getFiles(files))
     }, WATCHER_DEBOUNCE)
   }
 

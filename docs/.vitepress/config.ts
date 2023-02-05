@@ -6,6 +6,7 @@ import {
   discord,
   font,
   github,
+  mastodon,
   ogImage,
   ogUrl,
   releases,
@@ -71,6 +72,7 @@ export default withPwa(defineConfig({
     },
 
     socialLinks: [
+      { icon: 'mastodon', link: mastodon },
       { icon: 'twitter', link: twitter },
       { icon: 'discord', link: discord },
       { icon: 'github', link: github },
