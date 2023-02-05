@@ -5,7 +5,7 @@ describe('suite name', () => {
     assert.equal(Math.sqrt(4), 2)
   })
 
-  it.only('bar', () => {
+  it('bar', () => {
     expect(1 + 1).eq(2)
   })
 

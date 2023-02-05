@@ -22,6 +22,7 @@ cli
   .option('--api [api]', 'Serve API, available options: --api.port <port>, --api.host [host] and --api.strictPort')
   .option('--threads', 'Enabled threads (default: true)')
   .option('--silent', 'Silent console output from tests')
+  .option('--hideSkippedTests', 'Hide logs for skipped tests')
   .option('--isolate', 'Isolate environment for each test file (default: true)')
   .option('--reporter <name>', 'Specify reporters')
   .option('--outputDiffMaxSize <length>', 'Object diff output max size (default: 10000)')

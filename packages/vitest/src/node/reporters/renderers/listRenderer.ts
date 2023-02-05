@@ -144,7 +144,7 @@ export function renderTree(tasks: Task[], options: ListRendererOptions, level = 
     output = output.concat(renderHookState(task, 'beforeEach', level + 1))
     if (task.type === 'suite' && task.tasks.length > 0) {
       if ((task.result?.state === 'fail' || task.result?.state === 'run' || options.renderSucceed)) {
-        if (options.logger.ctx.config.silentSkip) {
+        if (options.logger.ctx.config.hideSkippedTests) {
           const filteredTasks = task.tasks.filter(t => t.mode !== 'skip' && t.mode !== 'todo')
           output = output.concat(renderTree(filteredTasks, options, level + 1))
         }
@@ -168,7 +168,7 @@ export const createListRenderer = (_tasks: Task[], options: ListRendererOptions)
   const log = options.logger.logUpdate
 
   function update() {
-    if (options.logger.ctx.config.silentSkip) {
+    if (options.logger.ctx.config.hideSkippedTests) {
       const filteredTasks = tasks.filter(t => t.mode !== 'skip' && t.mode !== 'todo')
       log(renderTree(filteredTasks, options))
     }
@@ -195,7 +195,7 @@ export const createListRenderer = (_tasks: Task[], options: ListRendererOptions)
         timer = undefined
       }
       log.clear()
-      if (options.logger.ctx.config.silentSkip) {
+      if (options.logger.ctx.config.hideSkippedTests) {
         const filteredTasks = tasks.filter(t => t.mode !== 'skip' && t.mode !== 'todo')
         options.logger.log(renderTree(filteredTasks, options))
       }

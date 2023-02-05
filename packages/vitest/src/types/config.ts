@@ -268,7 +268,7 @@ export interface InlineConfig {
    *
    * @default false
    */
-  silentSkip?: boolean
+  hideSkippedTests?: boolean
 
   /**
    * Path to setup files
