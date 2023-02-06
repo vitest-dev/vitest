@@ -1,5 +1,5 @@
 import { AssertionError } from 'chai'
-import { assertTypes, createSimpleStackTrace, getColors } from '@vitest/utils'
+import { assertTypes, getColors } from '@vitest/utils'
 import type { Constructable } from '@vitest/utils'
 import type { EnhancedSpy } from '@vitest/spy'
 import { isMockFunction } from '@vitest/spy'
@@ -632,7 +632,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
 
   utils.addProperty(chai.Assertion.prototype, 'resolves', function __VITEST_RESOLVES__(this: any) {
     utils.flag(this, 'promise', 'resolves')
-    utils.flag(this, 'stack', createSimpleStackTrace({ stackTraceLimit: 5 }))
+    utils.flag(this, 'error', new Error('resolves'))
     const obj = utils.flag(this, 'object')
 
     if (typeof obj?.then !== 'function')
@@ -664,7 +664,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
 
   utils.addProperty(chai.Assertion.prototype, 'rejects', function __VITEST_REJECTS__(this: any) {
     utils.flag(this, 'promise', 'rejects')
-    utils.flag(this, 'error', createSimpleStackTrace({ stackTraceLimit: 5 }))
+    utils.flag(this, 'error', new Error('rejects'))
     const obj = utils.flag(this, 'object')
     const wrapper = typeof obj === 'function' ? obj() : obj // for jest compat
 

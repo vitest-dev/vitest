@@ -17,7 +17,7 @@ export interface SnapshotMatchOptions {
   key?: string
   inlineSnapshot?: string
   isInline: boolean
-  stacks?: string
+  error?: Error
 }
 
 export interface SnapshotResult {

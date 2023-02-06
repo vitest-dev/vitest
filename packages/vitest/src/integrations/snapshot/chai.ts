@@ -66,7 +66,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     'toMatchInlineSnapshot',
     function __VITEST_INLINE_SNAPSHOT__(this: Record<string, unknown>, properties?: object, inlineSnapshot?: string, message?: string) {
       const expected = utils.flag(this, 'object')
-      const stacks = utils.flag(this, 'stacks')
+      const error = utils.flag(this, 'error')
       const test = utils.flag(this, 'vitest-test')
       if (typeof properties === 'string') {
         message = inlineSnapshot
@@ -83,7 +83,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
         isInline: true,
         properties,
         inlineSnapshot,
-        stacks,
+        error,
         errorMessage,
       })
     },
@@ -109,7 +109,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     'toThrowErrorMatchingInlineSnapshot',
     function __VITEST_INLINE_SNAPSHOT__(this: Record<string, unknown>, inlineSnapshot: string, message: string) {
       const expected = utils.flag(this, 'object')
-      const stacks = utils.flag(this, 'stacks')
+      const error = utils.flag(this, 'error')
       const test = utils.flag(this, 'vitest-test')
       const promise = utils.flag(this, 'promise') as string | undefined
       const errorMessage = utils.flag(this, 'message')
@@ -119,7 +119,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
         message,
         inlineSnapshot,
         isInline: true,
-        stacks,
+        error,
         errorMessage,
       })
     },

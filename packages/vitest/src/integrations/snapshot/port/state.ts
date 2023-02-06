@@ -5,10 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { createSimpleStackTrace } from '@vitest/utils'
 import type { OptionsReceived as PrettyFormatOptions } from 'pretty-format'
 import type { ParsedStack, SnapshotData, SnapshotMatchOptions, SnapshotResult, SnapshotStateOptions, SnapshotUpdateState } from '../../../types'
-import { parseStacktrace } from '../../../utils/source-map'
+import { parseErrorStacktrace } from '../../../utils/source-map'
 import type { SnapshotEnvironment } from '../env'
 import { getSnapshotEnvironment } from '../env'
 import type { InlineSnapshot } from './inlineSnapshot'
@@ -112,17 +111,17 @@ export default class SnapshotState {
     // inline snapshot function is called __VITEST_INLINE_SNAPSHOT__
     // in integrations/snapshot/chai.ts
     const stackIndex = stacks.findIndex(i => i.method.includes('__VITEST_INLINE_SNAPSHOT__'))
-    return stackIndex !== -1 ? stacks[stackIndex + 2] : null
+    return stackIndex !== -1 ? stacks[stackIndex + 3] : null
   }
 
   private _addSnapshot(
     key: string,
     receivedSerialized: string,
-    options: { isInline: boolean; stacks?: string },
+    options: { isInline: boolean; error?: Error },
   ): void {
     this._dirty = true
     if (options.isInline) {
-      const stacks = parseStacktrace(options.stacks || createSimpleStackTrace({ stackTraceLimit: 5 }), true)
+      const stacks = parseErrorStacktrace(options.error || new Error('snapshot'), true)
       const stack = this._inferInlineSnapshotStack(stacks)
       if (!stack) {
         throw new Error(
@@ -208,7 +207,7 @@ export default class SnapshotState {
     key,
     inlineSnapshot,
     isInline,
-    stacks,
+    error,
   }: SnapshotMatchOptions): SnapshotReturnOptions {
     this._counters.set(testName, (this._counters.get(testName) || 0) + 1)
     const count = Number(this._counters.get(testName))
@@ -258,14 +257,14 @@ export default class SnapshotState {
           else
             this.added++
 
-          this._addSnapshot(key, receivedSerialized, { stacks, isInline })
+          this._addSnapshot(key, receivedSerialized, { error, isInline })
         }
         else {
           this.matched++
         }
       }
       else {
-        this._addSnapshot(key, receivedSerialized, { stacks, isInline })
+        this._addSnapshot(key, receivedSerialized, { error, isInline })
         this.added++
       }
 
