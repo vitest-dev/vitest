@@ -143,3 +143,23 @@ export async function startServerCommand(root: string, command: string, url: str
 
   return exit
 }
+
+/**
+ * Poll a getter until the value it returns includes the expected value.
+ */
+export async function untilUpdated(
+  poll: () => string | Promise<string | null> | null,
+  expected: string,
+): Promise<void> {
+  const maxTries = process.env.CI ? 200 : 50
+  for (let tries = 0; tries < maxTries; tries++) {
+    const actual = (await poll()) ?? ''
+    if (actual.includes(expected) || tries === maxTries - 1) {
+      expect(actual).toMatch(expected)
+      break
+    }
+    else {
+      await timeout(50)
+    }
+  }
+}

@@ -1,6 +1,6 @@
 import { resolve } from 'node:path'
 import { beforeAll, expect, it } from 'vitest'
-import { browserErrors, page, ports, startServerCommand } from '../setup'
+import { browserErrors, page, ports, startServerCommand, untilUpdated } from '../setup'
 
 const root = resolve(__dirname, '../fixtures')
 const port = ports.ui
@@ -16,7 +16,7 @@ beforeAll(async () => {
 })
 
 it('dashboard', async () => {
-  expect(await page.textContent('[aria-labelledby]')).toBe('1 Pass 0 Fail 1 Total ')
+  await untilUpdated(() => page.textContent('[aria-labelledby]'), '1 Pass 0 Fail 1 Total ')
 })
 
 it('file detail', async () => {
