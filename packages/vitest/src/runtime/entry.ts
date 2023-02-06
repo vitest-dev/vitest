@@ -126,7 +126,7 @@ export async function run(files: string[], config: ResolvedConfig, executor: Vit
       if (!files || !files.length)
         continue
 
-      await withEnv(environment, files[0].envOptions || config.environmentOptions || {}, async () => {
+      await withEnv(environment, files[0].envOptions || config.environmentOptions || {}, executor, async () => {
         for (const { file } of files) {
           // it doesn't matter if running with --threads
           // if running with --no-threads, we usually want to reset everything before running a test
