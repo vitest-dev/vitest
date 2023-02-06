@@ -1,7 +1,7 @@
 import type MagicString from 'magic-string'
 import { lineSplitRE, offsetToLineNumber, positionToOffset } from '../../../utils/source-map'
 import { getCallLastIndex } from '../../../utils'
-import { getSnapshotEnironment } from '../env'
+import { getSnapshotEnvironment } from '../env'
 
 export interface InlineSnapshot {
   snapshot: string
@@ -13,7 +13,7 @@ export interface InlineSnapshot {
 export async function saveInlineSnapshots(
   snapshots: Array<InlineSnapshot>,
 ) {
-  const environment = getSnapshotEnironment()
+  const environment = getSnapshotEnvironment()
   const MagicString = (await import('magic-string')).default
   const files = new Set(snapshots.map(i => i.file))
   await Promise.all(Array.from(files).map(async (file) => {

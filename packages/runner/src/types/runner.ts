@@ -93,7 +93,7 @@ export interface VitestRunner {
    */
   importFile(filepath: string, source: VitestRunnerImportSource): unknown
   /**
-   * Publically available configuration.
+   * Publicly available configuration.
    */
   config: VitestRunnerConfig
 }

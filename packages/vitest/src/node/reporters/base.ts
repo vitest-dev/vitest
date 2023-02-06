@@ -289,12 +289,12 @@ export abstract class BaseReporter implements Reporter {
 
   async reportBenchmarkSummary(files: File[]) {
     const logger = this.ctx.logger
-    const benchs = getTests(files)
+    const benches = getTests(files)
 
-    const topBenchs = benchs.filter(i => i.result?.benchmark?.rank === 1)
+    const topBenches = benches.filter(i => i.result?.benchmark?.rank === 1)
 
     logger.log(`\n${c.cyan(c.inverse(c.bold(' BENCH ')))} ${c.cyan('Summary')}\n`)
-    for (const bench of topBenchs) {
+    for (const bench of topBenches) {
       const group = bench.suite
       if (!group)
         continue

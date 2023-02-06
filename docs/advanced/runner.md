@@ -77,7 +77,7 @@ export interface VitestRunner {
    */
   importFile(filepath: string, source: VitestRunnerImportSource): unknown
   /**
-   * Publically available configuration.
+   * Publicly available configuration.
    */
   config: VitestRunnerConfig
 }
@@ -117,7 +117,7 @@ export const myCustomTask = function (name, fn) {
 import { afterAll, beforeAll, describe, myCustomTask } from '../utils/custom.js'
 import { gardener } from './gardener.js'
 
-deccribe('take care of the garden', () => {
+describe('take care of the garden', () => {
   beforeAll(() => {
     gardener.putWorkingClothes()
   })
@@ -136,7 +136,7 @@ deccribe('take care of the garden', () => {
 ```
 
 ```bash
-vitest ./garder/tasks.test.js
+vitest ./garden/tasks.test.js
 ```
 
 ::: warning

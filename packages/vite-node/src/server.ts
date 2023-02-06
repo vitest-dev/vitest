@@ -53,7 +53,7 @@ export class ViteNodeServer {
     if (process.env.VITE_NODE_DEBUG_DUMP) {
       options.debug = Object.assign(<DebuggerOptions>{
         dumpModules: !!process.env.VITE_NODE_DEBUG_DUMP,
-        loadDumppedModules: process.env.VITE_NODE_DEBUG_DUMP === 'load',
+        loaddumpedModules: process.env.VITE_NODE_DEBUG_DUMP === 'load',
       }, options.debug ?? {})
     }
     if (options.debug)
@@ -161,7 +161,7 @@ export class ViteNodeServer {
 
     let result: TransformResult | null = null
 
-    if (this.options.debug?.loadDumppedModules) {
+    if (this.options.debug?.loaddumpedModules) {
       result = await this.debugger?.loadDump(id) ?? null
       if (result)
         return result

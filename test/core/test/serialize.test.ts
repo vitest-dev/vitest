@@ -110,14 +110,14 @@ describe('error serialize', () => {
     Object.defineProperty(error, 'array', {
       value: [{
         get name() {
-          throw new Error('name cannnot be accessed')
+          throw new Error('name cannot be accessed')
         },
       }],
     })
     expect(serializeError(error)).toEqual({
       array: [
         {
-          name: '<unserializable>: name cannnot be accessed',
+          name: '<unserializable>: name cannot be accessed',
         },
       ],
       constructor: 'Function<Error>',
