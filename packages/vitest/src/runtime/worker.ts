@@ -1,3 +1,4 @@
+import { pathToFileURL } from 'node:url'
 import { relative, resolve } from 'pathe'
 import { createBirpc } from 'birpc'
 import { workerId as poolId } from 'tinypool'
@@ -61,7 +62,7 @@ async function startViteNode(ctx: WorkerContext) {
     base: config.base,
   })
 
-  const { run } = await import(resolve(distDir, 'entry.js'))
+  const { run } = await import(pathToFileURL(resolve(distDir, 'entry.js')).href)
 
   _viteNode = { run, executor }
 
