@@ -29,3 +29,21 @@ it('should load report', async () => {
   expect((await (await page.$('#app'))?.innerHTML() || '').length).not.toBe(0)
   expect(browserErrors.length).toEqual(0)
 }, 60_000)
+
+it('dashboard', async () => {
+  expect(await page.textContent('[aria-labelledby]')).toBe('1 Pass 0 Fail 1 Total ')
+})
+
+it('file detail', async () => {
+  await page.click('.details-panel span')
+
+  await page.click('[data-testid=btn-report]')
+  expect(await page.textContent('[data-testid=report]')).toMatch('All tests passed in this file')
+  expect(await page.textContent('[data-testid=filenames]')).toMatch('sample.test.ts')
+
+  await page.click('[data-testid=btn-graph]')
+  expect(await page.textContent('[data-testid=graph] text')).toMatch('sample.test.ts')
+
+  await page.click('[data-testid=btn-console]')
+  expect(await page.textContent('[data-testid=console] pre')).toMatch('log test')
+})
