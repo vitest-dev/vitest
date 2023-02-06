@@ -6,7 +6,7 @@ import { getWorkerState } from '../utils/global'
 import { getAllMockableProperties } from '../utils/base'
 import { distDir } from '../constants'
 import type { MockFactory, PendingSuiteMock } from '../types/mocker'
-import type { VitestRunner } from './execute'
+import type { VitestExecutor } from './execute'
 
 class RefTracker {
   private idMap = new Map<any, number>()
@@ -43,23 +43,23 @@ export class VitestMocker {
   private resolveCache = new Map<string, Record<string, string>>()
 
   constructor(
-    public runner: VitestRunner,
+    public executor: VitestExecutor,
   ) {}
 
   private get root() {
-    return this.runner.options.root
+    return this.executor.options.root
   }
 
   private get base() {
-    return this.runner.options.base
+    return this.executor.options.base
   }
 
   private get mockMap() {
-    return this.runner.options.mockMap
+    return this.executor.options.mockMap
   }
 
   private get moduleCache() {
-    return this.runner.moduleCache
+    return this.executor.moduleCache
   }
 
   public getSuiteFilepath(): string {
@@ -78,7 +78,7 @@ export class VitestMocker {
   }
 
   private async resolvePath(rawId: string, importer: string) {
-    const [id, fsPath] = await this.runner.resolveUrl(rawId, importer)
+    const [id, fsPath] = await this.executor.resolveUrl(rawId, importer)
     // external is node_module or unresolved module
     // for example, some people mock "vscode" and don't have it installed
     const external = !isAbsolute(fsPath) || fsPath.includes('/node_modules/') ? rawId : null
@@ -321,7 +321,7 @@ export class VitestMocker {
 
   public async importActual<T>(rawId: string, importee: string): Promise<T> {
     const { id, fsPath } = await this.resolvePath(rawId, importee)
-    const result = await this.runner.cachedRequest(id, fsPath, [importee])
+    const result = await this.executor.cachedRequest(id, fsPath, [importee])
     return result as T
   }
 
@@ -335,19 +335,19 @@ export class VitestMocker {
       mock = this.resolveMockPath(fsPath, external)
 
     if (mock === null) {
-      const mod = await this.runner.cachedRequest(id, fsPath, [importee])
+      const mod = await this.executor.cachedRequest(id, fsPath, [importee])
       return this.mockObject(mod)
     }
 
     if (typeof mock === 'function')
       return this.callFunctionMock(fsPath, mock)
-    return this.runner.dependencyRequest(mock, mock, [importee])
+    return this.executor.dependencyRequest(mock, mock, [importee])
   }
 
   public async initializeSpyModule() {
     if (VitestMocker.spyModule)
       return
-    VitestMocker.spyModule = await this.runner.executeId(VitestMocker.spyModulePath)
+    VitestMocker.spyModule = await this.executor.executeId(VitestMocker.spyModulePath)
   }
 
   public async requestWithMock(url: string, callstack: string[]) {
@@ -367,7 +367,7 @@ export class VitestMocker {
       const exports = {}
       // Assign the empty exports object early to allow for cycles to work. The object will be filled by mockObject()
       this.moduleCache.set(mockPath, { exports })
-      const mod = await this.runner.directRequest(url, url, callstack)
+      const mod = await this.executor.directRequest(url, url, callstack)
       this.mockObject(mod, exports)
       return exports
     }

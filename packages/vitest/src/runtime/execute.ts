@@ -11,20 +11,16 @@ export interface ExecuteOptions extends ViteNodeRunnerOptions {
   mockMap: MockMap
 }
 
-export async function executeInViteNode(options: ExecuteOptions & { files: string[] }) {
-  const runner = new VitestRunner(options)
+export async function createVitestExecutor(options: ExecuteOptions) {
+  const runner = new VitestExecutor(options)
 
   await runner.executeId('/@vite/env')
   await runner.mocker.initializeSpyModule()
 
-  const result: any[] = []
-  for (const file of options.files)
-    result.push(await runner.executeFile(file))
-
-  return result
+  return runner
 }
 
-export class VitestRunner extends ViteNodeRunner {
+export class VitestExecutor extends ViteNodeRunner {
   public mocker: VitestMocker
 
   constructor(public options: ExecuteOptions) {
