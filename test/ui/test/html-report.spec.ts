@@ -27,8 +27,7 @@ beforeAll(async () => {
 
 it('should load report', async () => {
   expect((await (await page.$('#app'))?.innerHTML() || '').length).not.toBe(0)
-  expect(browserErrors.length).toEqual(0)
-}, 60_000)
+})
 
 it('dashboard', async () => {
   expect(await page.textContent('[aria-labelledby]')).toBe('1 Pass 0 Fail 1 Total ')
@@ -46,4 +45,8 @@ it('file detail', async () => {
 
   await page.click('[data-testid=btn-console]')
   expect(await page.textContent('[data-testid=console] pre')).toMatch('log test')
+})
+
+it('no error happen', () => {
+  expect(browserErrors.length).toEqual(0)
 })

@@ -17,5 +17,8 @@ beforeAll(async () => {
 
 it('should load ui', async () => {
   expect((await (await page.$('#app'))?.innerHTML() || '').length).not.toBe(0)
+})
+
+it('no error happen', () => {
   expect(browserErrors.length).toEqual(0)
-}, 60_000)
+})
