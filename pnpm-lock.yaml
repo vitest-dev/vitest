@@ -8387,10 +8387,10 @@ packages:
       '@volar/code-gen': 0.40.13
       '@volar/source-map': 0.40.13
       '@vue/compiler-core': 3.2.45
-      '@vue/compiler-dom': 3.2.45
-      '@vue/compiler-sfc': 3.2.45
+      '@vue/compiler-dom': 3.2.47
+      '@vue/compiler-sfc': 3.2.47
       '@vue/reactivity': 3.2.45
-      '@vue/shared': 3.2.45
+      '@vue/shared': 3.2.47
     dev: true
 
   /@volar/vue-typescript/0.40.13:
@@ -8709,7 +8709,7 @@ packages:
       js-beautify: 1.14.6
       vue: 3.2.47
     optionalDependencies:
-      '@vue/compiler-dom': 3.2.45
+      '@vue/compiler-dom': 3.2.47
     dev: true
 
   /@vueuse/core/8.9.4_vue@3.2.39:
