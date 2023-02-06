@@ -8,7 +8,7 @@ const port = ports.ui
 beforeAll(async () => {
   const exit = await startServerCommand(
     root,
-    `npx vitest --ui --open false --api.port ${port} --watch`,
+    `npx vitest --ui --open false --api.port ${port} --watch --allowOnly`,
     `http://localhost:${port}/__vitest__/`,
   )
 
