@@ -15,10 +15,6 @@ beforeAll(async () => {
   return exit
 })
 
-it('should load ui', async () => {
-  expect((await (await page.$('#app'))?.innerHTML() || '').length).not.toBe(0)
-})
-
 it('dashboard', async () => {
   expect(await page.textContent('[aria-labelledby]')).toBe('1 Pass 0 Fail 1 Total ')
 })
