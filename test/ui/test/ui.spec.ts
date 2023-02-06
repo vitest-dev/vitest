@@ -15,6 +15,10 @@ beforeAll(async () => {
   return exit
 })
 
+it('should load ui', async () => {
+  expect((await (await page.$('#app'))?.innerHTML() || '').length).not.toBe(0)
+})
+
 it('dashboard', async () => {
   await untilUpdated(() => page.textContent('[aria-labelledby]'), '1 Pass 0 Fail 1 Total ')
 })
@@ -23,14 +27,14 @@ it('file detail', async () => {
   await page.click('.details-panel span')
 
   await page.click('[data-testid=btn-report]')
-  expect(await page.textContent('[data-testid=report]')).toMatch('All tests passed in this file')
-  expect(await page.textContent('[data-testid=filenames]')).toMatch('sample.test.ts')
+  await untilUpdated(() => page.textContent('[data-testid=report]'), 'All tests passed in this file')
+  await untilUpdated(() => page.textContent('[data-testid=filenames]'), 'sample.test.ts')
 
   await page.click('[data-testid=btn-graph]')
-  expect(await page.textContent('[data-testid=graph] text')).toMatch('sample.test.ts')
+  await untilUpdated(() => page.textContent('[data-testid=graph] text'), 'sample.test.ts')
 
   await page.click('[data-testid=btn-console]')
-  expect(await page.textContent('[data-testid=console] pre')).toMatch('log test')
+  await untilUpdated(() => page.textContent('[data-testid=console] pre'), 'log test')
 })
 
 it('no error happen', () => {
