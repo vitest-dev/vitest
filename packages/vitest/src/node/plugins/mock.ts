@@ -62,8 +62,8 @@ export const MocksPlugin = (): Plugin => {
 
         // if no vitest import found, check if the mock API is reachable after the hoisting
         if (!found) {
-          m.prepend('try { vi } catch (_) { try { vitest } catch (__)'
-           + `{ throw new Error(${JSON.stringify(API_NOT_FOUND_ERROR)}) } }\n`)
+          m.prepend('if (typeof vi === "undefined" && typeof vitest === "undefined") '
+          + `{ throw new Error(${JSON.stringify(API_NOT_FOUND_ERROR)}) }\n`)
         }
 
         return {

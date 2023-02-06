@@ -5,9 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { createSimpleStackTrace } from '@vitest/utils'
 import type { OptionsReceived as PrettyFormatOptions } from 'pretty-format'
 import type { ParsedStack, SnapshotData, SnapshotMatchOptions, SnapshotResult, SnapshotStateOptions, SnapshotUpdateState } from '../../../types'
-import { slash } from '../../../utils'
 import { parseStacktrace } from '../../../utils/source-map'
 import type { SnapshotEnvironment } from '../env'
 import { getSnapshotEnvironment } from '../env'
@@ -118,13 +118,11 @@ export default class SnapshotState {
   private _addSnapshot(
     key: string,
     receivedSerialized: string,
-    options: { isInline: boolean; error?: Error },
+    options: { isInline: boolean; stacks?: string },
   ): void {
     this._dirty = true
     if (options.isInline) {
-      const error = options.error || new Error('Unknown error')
-      const stacks = parseStacktrace(error, true)
-      stacks.forEach(i => i.file = slash(i.file))
+      const stacks = parseStacktrace(options.stacks || createSimpleStackTrace({ stackTraceLimit: 5 }), true)
       const stack = this._inferInlineSnapshotStack(stacks)
       if (!stack) {
         throw new Error(
@@ -210,7 +208,7 @@ export default class SnapshotState {
     key,
     inlineSnapshot,
     isInline,
-    error,
+    stacks,
   }: SnapshotMatchOptions): SnapshotReturnOptions {
     this._counters.set(testName, (this._counters.get(testName) || 0) + 1)
     const count = Number(this._counters.get(testName))
@@ -260,14 +258,14 @@ export default class SnapshotState {
           else
             this.added++
 
-          this._addSnapshot(key, receivedSerialized, { error, isInline })
+          this._addSnapshot(key, receivedSerialized, { stacks, isInline })
         }
         else {
           this.matched++
         }
       }
       else {
-        this._addSnapshot(key, receivedSerialized, { error, isInline })
+        this._addSnapshot(key, receivedSerialized, { stacks, isInline })
         this.added++
       }
 

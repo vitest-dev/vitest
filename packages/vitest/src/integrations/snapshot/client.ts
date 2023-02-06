@@ -20,7 +20,7 @@ interface AssertOptions {
   isInline?: boolean
   properties?: object
   inlineSnapshot?: string
-  error?: Error
+  stacks?: string
   errorMessage?: string
 }
 
@@ -68,7 +68,7 @@ export class SnapshotClient {
       isInline = false,
       properties,
       inlineSnapshot,
-      error,
+      stacks,
       errorMessage,
     } = options
     let { received } = options
@@ -104,7 +104,7 @@ export class SnapshotClient {
       testName,
       received,
       isInline,
-      error,
+      stacks,
       inlineSnapshot,
     })
 

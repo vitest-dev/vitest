@@ -6,7 +6,7 @@ import cliTruncate from 'cli-truncate'
 import { type DiffOptions, unifiedDiff } from '@vitest/utils/diff'
 import { stringify } from '@vitest/utils'
 import type { ErrorWithDiff, ParsedStack } from '../types'
-import { lineSplitRE, parseStacktrace, positionToOffset } from '../utils/source-map'
+import { lineSplitRE, parseErrorStacktrace, positionToOffset } from '../utils/source-map'
 import { F_POINTER } from '../utils/figures'
 import { TypeCheckError } from '../typecheck/typechecker'
 import type { Vitest } from './core'
@@ -38,7 +38,7 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
     } as any
   }
 
-  const stacks = parseStacktrace(e, fullStack)
+  const stacks = parseErrorStacktrace(e, fullStack)
 
   const nearest = error instanceof TypeCheckError
     ? error.stacks[0]

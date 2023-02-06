@@ -110,7 +110,7 @@ export class VitestMocker {
     }
     catch (err) {
       const vitestError = new Error(
-        '[vitest] There was an error, when mocking a module. '
+        '[vitest] There was an error when mocking a module. '
       + 'If you are using "vi.mock" factory, make sure there are no top level variables inside, since this call is hoisted to top of the file. '
       + 'Read more: https://vitest.dev/api/#vi-mock')
       vitestError.cause = err
@@ -133,6 +133,8 @@ export class VitestMocker {
             return target.then.bind(target)
         }
         else if (!(prop in target)) {
+          if (prop === '__esModule')
+            return undefined
           const c = getColors()
           throw new Error(
             `[vitest] No "${String(prop)}" export is defined on the "${mockpath}" mock. `
