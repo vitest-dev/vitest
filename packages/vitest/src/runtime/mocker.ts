@@ -4,7 +4,7 @@ import { basename, dirname, extname, isAbsolute, join, resolve } from 'pathe'
 import { getColors, getType } from '@vitest/utils'
 import { getWorkerState } from '../utils/global'
 import { getAllMockableProperties } from '../utils/base'
-import { distDir } from '../constants'
+import { spyOn } from '../integrations/spy'
 import type { MockFactory, PendingSuiteMock } from '../types/mocker'
 import type { VitestExecutor } from './execute'
 
@@ -38,8 +38,6 @@ function isSpecialProp(prop: Key, parentType: string) {
 
 export class VitestMocker {
   private static pendingIds: PendingSuiteMock[] = []
-  private static spyModulePath = resolve(distDir, 'spy.js')
-  private static spyModule?: typeof import('../integrations/spy')
   private resolveCache = new Map<string, Record<string, string>>()
 
   constructor(
@@ -202,14 +200,6 @@ export class VitestMocker {
   }
 
   public mockObject(object: Record<Key, any>, mockExports: Record<Key, any> = {}) {
-    if (!VitestMocker.spyModule) {
-      throw new Error(
-        'Error: Spy module is not defined. '
-        + 'This is likely an internal bug in Vitest. '
-        + 'Please report it to https://github.com/vitest-dev/vitest/issues')
-    }
-    const spyModule = VitestMocker.spyModule
-
     const finalizers = new Array<() => void>()
     const refs = new RefTracker()
 
@@ -271,7 +261,7 @@ export class VitestMocker {
           continue
 
         if (isFunction) {
-          spyModule.spyOn(newContainer, property).mockImplementation(() => undefined)
+          spyOn(newContainer, property).mockImplementation(() => undefined)
           // tinyspy retains length, but jest doesn't.
           Object.defineProperty(newContainer[property], 'length', { value: 0 })
         }
@@ -342,12 +332,6 @@ export class VitestMocker {
     if (typeof mock === 'function')
       return this.callFunctionMock(fsPath, mock)
     return this.executor.dependencyRequest(mock, mock, [importee])
-  }
-
-  public async initializeSpyModule() {
-    if (VitestMocker.spyModule)
-      return
-    VitestMocker.spyModule = await this.executor.executeId(VitestMocker.spyModulePath)
   }
 
   public async requestWithMock(url: string, callstack: string[]) {
