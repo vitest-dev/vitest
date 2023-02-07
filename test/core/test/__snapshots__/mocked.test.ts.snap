@@ -3,11 +3,11 @@
 exports[`mocked function which fails on toReturnWith > just one call 1`] = `
 "expected \\"spy\\" to return with: 2 at least once
 
-Received: 
+Received:
     1st spy call return:
 
-  1
-  2
+  - 1
+  + 2
 
 
 Number of calls: 1
@@ -17,21 +17,21 @@ Number of calls: 1
 exports[`mocked function which fails on toReturnWith > multi calls 1`] = `
 "expected \\"spy\\" to return with: 2 at least once
 
-Received: 
+Received:
     1st spy call return:
 
-  1
-  2
+  - 1
+  + 2
 
     2nd spy call return:
 
-  1
-  2
+  - 1
+  + 2
 
     3rd spy call return:
 
-  1
-  2
+  - 1
+  + 2
 
 
 Number of calls: 3
@@ -41,26 +41,26 @@ Number of calls: 3
 exports[`mocked function which fails on toReturnWith > oject type 1`] = `
 "expected \\"spy\\" to return with: { a: '4' } at least once
 
-Received: 
+Received:
     1st spy call return:
 
-    Object {
-  -   \\"a\\": \\"1\\",
-  +   \\"a\\": \\"4\\",
+    {
+  -   a: '1',
+  +   a: '4',
     }
 
     2nd spy call return:
 
-    Object {
-  -   \\"a\\": \\"1\\",
-  +   \\"a\\": \\"4\\",
+    {
+  -   a: '1',
+  +   a: '4',
     }
 
     3rd spy call return:
 
-    Object {
-  -   \\"a\\": \\"1\\",
-  +   \\"a\\": \\"4\\",
+    {
+  -   a: '1',
+  +   a: '4',
     }
 
 
@@ -71,7 +71,7 @@ Number of calls: 3
 exports[`mocked function which fails on toReturnWith > zero call 1`] = `
 "expected \\"spy\\" to return with: 2 at least once
 
-Received: 
+Received:
 
 
 Number of calls: 0

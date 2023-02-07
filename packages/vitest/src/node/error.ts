@@ -3,7 +3,6 @@ import { existsSync, readFileSync } from 'fs'
 import { normalize, relative } from 'pathe'
 import c from 'picocolors'
 import cliTruncate from 'cli-truncate'
-import { type DiffOptions, unifiedDiff } from '@vitest/utils/diff'
 import { stringify } from '@vitest/utils'
 import type { ErrorWithDiff, ParsedStack } from '../types'
 import { lineSplitRE, parseErrorStacktrace, positionToOffset } from '../utils/source-map'
@@ -95,16 +94,8 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
   handleImportOutsideModuleError(e.stack || e.stackStr || '', ctx)
 
   // E.g. AssertionError from assert does not set showDiff but has both actual and expected properties
-  if (e.showDiff || (e.showDiff === undefined && e.actual && e.expected)) {
-    displayDiff(stringify(e.actual), stringify(e.expected), ctx.logger.console, {
-      outputTruncateLength: ctx.config.outputTruncateLength,
-      outputDiffLines: ctx.config.outputDiffLines,
-      outputDiffMaxLines: ctx.config.outputDiffMaxLines,
-      colorDim: c.dim,
-      colorError: c.red,
-      colorSuccess: c.green,
-    })
-  }
+  if (e.diff)
+    displayDiff(e.diff, ctx.logger.console)
 }
 
 function printErrorType(type: string, ctx: Vitest) {
@@ -177,14 +168,8 @@ function handleImportOutsideModuleError(stack: string, ctx: Vitest) {
 }\n`)))
 }
 
-export function displayDiff(actual: string, expected: string, console: Console, options: Omit<DiffOptions, 'showLegend'> = {}) {
-  const diff = unifiedDiff(actual, expected, options)
-  const dim = options.colorDim || ((str: string) => str)
-  const black = options.colorDim ? c.black : (str: string) => str
-  if (diff)
-    console.error(diff + '\n')
-  else if (actual && expected && actual !== '"undefined"' && expected !== '"undefined"')
-    console.error(dim('Could not display diff. It\'s possible objects are too large to compare.\nTry increasing ') + black('--outputDiffMaxSize') + dim(' option.\n'))
+export function displayDiff(diff: string, console: Console) {
+  console.error(diff)
 }
 
 function printErrorMessage(error: ErrorWithDiff, logger: Logger) {
