@@ -617,7 +617,7 @@ Isolate environment for each test file. Does not work if you disable [`--threads
 
 ### coverage
 
-You can use [`c8`](https://github.com/bcoe/c8) or [`istanbul`](https://istanbul.js.org/) for coverage collection.
+You can use [`c8`](https://github.com/bcoe/c8), [`istanbul`](https://istanbul.js.org/)  or [a custom coverage solution](/guide/coverage#custom-coverage-provider) for coverage collection.
 
 You can provide coverage options to CLI with dot notation:
 
@@ -631,7 +631,7 @@ If you are using coverage options with dot notation, don't forget to specify `--
 
 #### provider
 
-- **Type:** `'c8' | 'istanbul'`
+- **Type:** `'c8' | 'istanbul' | 'custom'`
 - **Default:** `'c8'`
 - **CLI:** `--coverage.provider=<provider>`
 
@@ -862,6 +862,14 @@ See [istanbul documentation](https://github.com/istanbuljs/nyc#ignoring-methods)
 - **Available for providers:** `'istanbul'`
 
 Watermarks for statements, lines, branches and functions. See [istanbul documentation](https://github.com/istanbuljs/nyc#high-and-low-watermarks) for more information.
+
+#### customProviderModule
+
+- **Type:** `string`
+- **Available for providers:** `'custom'`
+- **CLI:** `--coverage.customProviderModule=<path or module name>`
+
+Specifies the module name or path for the custom coverage provider module. See [Guide - Custom Coverage Provider](/guide/coverage#custom-coverage-provider) for more information.
 
 ### testNamePattern
 

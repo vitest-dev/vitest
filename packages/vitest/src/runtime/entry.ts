@@ -59,7 +59,7 @@ async function getTestRunner(config: ResolvedConfig, executor: VitestExecutor): 
 
   const originalOnAfterRun = testRunner.onAfterRun
   testRunner.onAfterRun = async (files) => {
-    const coverage = await takeCoverageInsideWorker(config.coverage)
+    const coverage = await takeCoverageInsideWorker(config.coverage, executor)
     rpc().onAfterSuiteRun({ coverage })
     await originalOnAfterRun?.call(testRunner, files)
   }

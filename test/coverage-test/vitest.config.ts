@@ -15,6 +15,7 @@ export default defineConfig({
     watch: false,
     coverage: {
       provider: provider as any,
+      customProviderModule: provider === 'custom' ? 'custom-provider' : undefined,
       include: ['src/**'],
       clean: true,
       all: true,
