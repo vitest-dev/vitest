@@ -62,6 +62,7 @@ declare global {
       objectContaining(expected: any): any
       arrayContaining<T = unknown>(expected: Array<T>): any
       stringMatching(expected: string | RegExp): any
+      closeTo(expected: any, precision?: number): any
     }
 
     interface JestAssertion<T = any> extends jest.Matchers<void, T> {

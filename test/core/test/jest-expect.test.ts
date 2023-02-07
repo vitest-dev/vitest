@@ -133,7 +133,13 @@ describe('jest-expect', () => {
 
     expect('Mohammad').toEqual(expect.stringMatching(/Moh/))
     expect('Mohammad').not.toEqual(expect.stringMatching(/jack/))
-
+    expect({
+      title: '0.1 + 0.2',
+      sum: 0.1 + 0.2,
+    }).toEqual({
+      title: '0.1 + 0.2',
+      sum: expect.closeTo(0.3, 5),
+    })
     // TODO: support set
     // expect(new Set(['bar'])).not.toEqual(new Set([expect.stringContaining('zoo')]))
   })
