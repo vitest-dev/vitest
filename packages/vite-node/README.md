@@ -50,7 +50,7 @@ Note that for options supporting RegExps, strings passed to the CLI must start _
 
 ### Hashbang
 
-If you prefer to write scripts that doesn't need to be passed into Vite Node, you can declare it in the [hashbang](https://bash.cyberciti.biz/guide/Shebang).
+If you prefer to write scripts that don't need to be passed into Vite Node, you can declare it in the [hashbang](https://bash.cyberciti.biz/guide/Shebang).
 
 Simply add `#!/usr/bin/env vite-node --script` at the top of your file:
 
