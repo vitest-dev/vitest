@@ -15,10 +15,6 @@ beforeAll(async () => {
   return exit
 })
 
-it('should load ui', async () => {
-  expect((await (await page.$('#app'))?.innerHTML() || '').length).not.toBe(0)
-})
-
 it('dashboard', async () => {
   await untilUpdated(() => page.textContent('[aria-labelledby]'), '1 Pass 0 Fail 1 Total ')
 })
@@ -36,11 +32,13 @@ describe('file detail', async () => {
 
   it('graph', async () => {
     await page.click('[data-testid=btn-graph]')
+    expect(page.url()).toMatch('graph')
     await untilUpdated(() => page.textContent('[data-testid=graph] text'), 'sample.test.ts')
   })
 
   it('console', async () => {
     await page.click('[data-testid=btn-console]')
+    expect(page.url()).toMatch('console')
     await untilUpdated(() => page.textContent('[data-testid=console] pre'), 'log test')
   })
 })
