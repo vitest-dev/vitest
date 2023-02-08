@@ -169,3 +169,29 @@ describe('mocked function which fails on toReturnWith', () => {
 test('streams', () => {
   expect(exportedStream).toBeDefined()
 })
+
+describe('temporary mock implementation', () => {
+  test('temporary mock implementation works as expected', () => {
+    const mock = vi.fn(() => 1)
+
+    mock.withImplementation(() => 2, () => {
+      expect(mock()).toBe(2)
+      expect(mock()).toBe(2)
+    })
+
+    expect(mock()).toBe(1)
+  })
+
+  test('async temporary mock implementation works as expecetd', async () => {
+    const mock = vi.fn(() => 1)
+
+    await mock.withImplementation(() => 2, async () => {
+      await Promise.resolve()
+
+      expect(mock()).toBe(2)
+      expect(mock()).toBe(2)
+    })
+
+    expect(mock()).toBe(1)
+  })
+})

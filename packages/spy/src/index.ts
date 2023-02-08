@@ -46,6 +46,7 @@ export interface SpyInstance<TArgs extends any[] = any[], TReturns = any> {
   getMockImplementation(): ((...args: TArgs) => TReturns) | undefined
   mockImplementation(fn: ((...args: TArgs) => TReturns) | (() => Promise<TReturns>)): this
   mockImplementationOnce(fn: ((...args: TArgs) => TReturns) | (() => Promise<TReturns>)): this
+  withImplementation(fn: ((...args: TArgs) => TReturns), cb: () => void): this
   mockReturnThis(): this
   mockReturnValue(obj: TReturns): this
   mockReturnValueOnce(obj: TReturns): this
@@ -245,6 +246,24 @@ function enhanceSpy<TArgs extends any[], TReturns>(
 
   stub.mockImplementationOnce = (fn: (...args: TArgs) => TReturns) => {
     onceImplementations.push(fn)
+    return stub
+  }
+
+  stub.withImplementation = (fn, cb) => {
+    const originalImplementation = implementation!
+    stub.mockImplementation(fn)
+
+    if (cb.constructor.name === 'AsyncFunction') {
+      const asyncCb = cb as () => Promise<void>
+
+      asyncCb().then(() => {
+        stub.mockImplementation(originalImplementation)
+      })
+    }
+    else {
+      stub.mockImplementation(originalImplementation)
+    }
+
     return stub
   }
 
