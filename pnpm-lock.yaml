@@ -660,10 +660,10 @@ importers:
       c8: 7.12.0
       picocolors: 1.0.0
       std-env: 3.3.1
-      vitest: link:../vitest
     devDependencies:
       pathe: 1.1.0
       vite-node: link:../vite-node
+      vitest: link:../vitest
 
   packages/coverage-istanbul:
     specifiers:
@@ -687,7 +687,6 @@ importers:
       istanbul-lib-source-maps: 4.0.1
       istanbul-reports: 3.1.5
       test-exclude: 6.0.0
-      vitest: link:../vitest
     devDependencies:
       '@types/istanbul-lib-coverage': 2.0.4
       '@types/istanbul-lib-instrument': 1.7.4
@@ -695,6 +694,7 @@ importers:
       '@types/istanbul-lib-source-maps': 4.0.1
       '@types/istanbul-reports': 3.0.1
       pathe: 1.1.0
+      vitest: link:../vitest
 
   packages/expect:
     specifiers:
