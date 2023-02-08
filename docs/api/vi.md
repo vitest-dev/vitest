@@ -70,7 +70,7 @@ import { vi } from 'vitest'
 
 ## vi.clearAllMocks
 
-  Will call [`.mockClear()`](/api/#mockclear) on all spies. This will clear mock history, but not reset its implementation to the default one.
+  Will call [`.mockClear()`](/api/mock.html#mockclear) on all spies. This will clear mock history, but not reset its implementation to the default one.
 
 ## vi.clearAllTimers
 
@@ -281,13 +281,13 @@ test('importing the next module imports mocked one', () => {
 
 ## vi.resetAllMocks
 
-  Will call [`.mockReset()`](/api/#mockreset) on all spies. This will clear mock history and reset its implementation to an empty function (will return `undefined`).
+  Will call [`.mockReset()`](/api/mock.html#mockreset) on all spies. This will clear mock history and reset its implementation to an empty function (will return `undefined`).
 
 ## vi.resetConfig
 
 - **Type**: `RuntimeConfig`
 
-  If [`vi.setConfig`](/api/#vi-setconfig) was called before, this will reset config to the original state.
+  If [`vi.setConfig`](#vi-setconfig) was called before, this will reset config to the original state.
 
 ## vi.resetModules
 
@@ -320,7 +320,7 @@ Does not reset mocks registry. To clear mocks registry, use [`vi.unmock`](#vi-un
 
 ## vi.restoreAllMocks
 
-  Will call [`.mockRestore()`](/api/#mockrestore) on all spies. This will clear mock history and reset its implementation to the original one.
+  Will call [`.mockRestore()`](/api/mock.html#mockrestore) on all spies. This will clear mock history and reset its implementation to the original one.
 
 ## vi.restoreCurrentDate
 
