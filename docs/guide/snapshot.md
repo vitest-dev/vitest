@@ -147,7 +147,7 @@ This does not really affect the functionality but might affect your commit diff 
 
 #### 2. `printBasicPrototype` is default to `false`
 
-Both Jest and Vitest's snapshots are powered by [`pretty-format`](https://github.com/facebook/jest/blob/main/packages/pretty-format). In Vitest we set `printBasicPrototype` default to `false` to provide a cleaner snapshot output, while in Jest it's `true` by default.
+Both Jest and Vitest's snapshots are powered by [`pretty-format`](https://github.com/facebook/jest/blob/main/packages/pretty-format). In Vitest we set `printBasicPrototype` default to `false` to provide a cleaner snapshot output, while in Jest <29.0.0 it's `true` by default.
 
 ```ts
 import { expect, test } from 'vitest'
