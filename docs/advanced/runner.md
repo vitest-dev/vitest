@@ -117,7 +117,7 @@ export const myCustomTask = function (name, fn) {
 import { afterAll, beforeAll, describe, myCustomTask } from '../utils/custom.js'
 import { gardener } from './gardener.js'
 
-deccribe('take care of the garden', () => {
+describe('take care of the garden', () => {
   beforeAll(() => {
     gardener.putWorkingClothes()
   })
