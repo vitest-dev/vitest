@@ -303,7 +303,7 @@ test('importing the next module imports mocked one', () => {
   })
 
   test('change state', async () => {
-    const mod = await import('.asome/path')
+    const mod = await import('./some/path')
     mod.changeLocalState('new value')
     expect(mod.getlocalState()).toBe('new value')
   })
@@ -320,7 +320,7 @@ Does not reset mocks registry. To clear mocks registry, use [`vi.unmock`](#vi-un
 
 ## vi.restoreAllMocks
 
-  Will call [`.mockRestore()`](#mockrestore) on all spies. This will clear mock history and reset its implementation to the original one.
+  Will call [`.mockRestore()`](/api/mock.html#mockrestore) on all spies. This will clear mock history and reset its implementation to the original one.
 
 ## vi.restoreCurrentDate
 
