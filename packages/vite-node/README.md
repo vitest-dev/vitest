@@ -72,7 +72,7 @@ $ ./file.ts hello
 argv: [ 'hello' ]
 ```
 
-Note that when using the `--script` option, Vite Node forwards every arguments and options to the script to execute, even the one supported by Vite Node itself.
+Note that when using the `--script` option, Vite Node forwards every argument and option to the script to execute, even the one supported by Vite Node itself.
 
 ## Programmatic Usage
 
