@@ -305,12 +305,12 @@ test('importing the next module imports mocked one', () => {
   test('change state', async () => {
     const mod = await import('./some/path')
     mod.changeLocalState('new value')
-    expect(mod.getlocalState()).toBe('new value')
+    expect(mod.getLocalState()).toBe('new value')
   })
 
   test('module has old state', async () => {
     const mod = await import('./some/path')
-    expect(mod.getlocalState()).toBe('old value')
+    expect(mod.getLocalState()).toBe('old value')
   })
   ```
 
@@ -402,7 +402,7 @@ import.meta.env.NODE_ENV === 'development'
 ```ts
 import { vi } from 'vitest'
 
-// `innerWidth` is "0" before callling stubGlobal
+// `innerWidth` is "0" before calling stubGlobal
 
 vi.stubGlobal('innerWidth', 100)
 
@@ -456,7 +456,7 @@ IntersectionObserver === undefined
 
 - **Type:** `() => Vitest`
 
-  Calls every microtask that was queued by `proccess.nextTick`. This will also run all microtasks scheduled by themselves.
+  Calls every microtask that was queued by `process.nextTick`. This will also run all microtasks scheduled by themselves.
 
 ## vi.runAllTimers
 

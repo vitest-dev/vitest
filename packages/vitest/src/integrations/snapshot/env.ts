@@ -12,7 +12,7 @@ export function setupSnapshotEnvironment(environment: SnapshotEnvironment) {
   _snapshotEnvironment = environment
 }
 
-export function getSnapshotEnironment() {
+export function getSnapshotEnvironment() {
   if (!_snapshotEnvironment)
     throw new Error('Snapshot environment is not setup')
   return _snapshotEnvironment
