@@ -188,9 +188,6 @@ function printStack(
   errorProperties: Record<string, unknown>,
   onStack?: ((stack: ParsedStack) => void),
 ) {
-  if (!stack.length)
-    return
-
   const logger = ctx.logger
 
   for (const frame of stack) {
@@ -200,7 +197,8 @@ function printStack(
     logger.error(color(` ${c.dim(F_POINTER)} ${[frame.method, c.dim(`${path}:${frame.line}:${frame.column}`)].filter(Boolean).join(' ')}`))
     onStack?.(frame)
   }
-  logger.error()
+  if (stack.length)
+    logger.error()
   const hasProperties = Object.keys(errorProperties).length > 0
   if (hasProperties) {
     logger.error(c.red(c.dim(divider())))

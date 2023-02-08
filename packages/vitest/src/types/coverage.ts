@@ -80,7 +80,7 @@ export type ResolvedCoverageOptions<T extends Provider = Provider> =
 
 export interface BaseCoverageOptions {
   /**
-   * Enables coverage collection. Can be overriden using `--coverage` CLI option.
+   * Enables coverage collection. Can be overridden using `--coverage` CLI option.
    *
    * @default false
    */
