@@ -644,7 +644,7 @@ Use `provider` to select the tool for coverage collection.
 - **Available for providers:** `'c8' | 'istanbul'`
 - **CLI:** `--coverage.enabled`, `--coverage.enabled=false`
 
-Enables coverage collection. Can be overriden using `--coverage` CLI option.
+Enables coverage collection. Can be overridden using `--coverage` CLI option.
 
 #### include
 
@@ -1157,7 +1157,7 @@ Options for configuring [typechecking](/guide/testing-types) test environment.
 
 What tools to use for type checking. Vitest will spawn a process with certain parameters for easier parsing, depending on the type. Checker should implement the same output format as `tsc`.
 
-You need to have a package installed to use typecheker:
+You need to have a package installed to use typechecker:
 
 - `tsc` requires `typescript` package
 - `vue-tsc` requires `vue-tsc` package

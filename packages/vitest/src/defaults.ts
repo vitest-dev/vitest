@@ -25,7 +25,7 @@ const defaultCoverageExcludes = [
   '**/.{eslint,mocha,prettier}rc.{js,cjs,yml}',
 ]
 
-// These are the generic defaults for coverage. Providers may also set some provider speficic defaults.
+// These are the generic defaults for coverage. Providers may also set some provider specific defaults.
 export const coverageConfigDefaults: ResolvedCoverageOptions = {
   provider: 'c8',
   enabled: false,

@@ -17,7 +17,7 @@ describe('stubbing globals', () => {
     vi.unstubAllGlobals()
   })
 
-  it('overrites setter', () => {
+  it('overwrites setter', () => {
     const descriptor = {
       get: () => 'getter',
       set: () => {},
