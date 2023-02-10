@@ -174,6 +174,8 @@ describe('temporary mock implementation', () => {
   test('temporary mock implementation works as expected', () => {
     const mock = vi.fn(() => 1)
 
+    expect.assertions(3)
+
     mock.withImplementation(() => 2, () => {
       expect(mock()).toBe(2)
       expect(mock()).toBe(2)
@@ -182,8 +184,23 @@ describe('temporary mock implementation', () => {
     expect(mock()).toBe(1)
   })
 
-  test('async temporary mock implementation works as expecetd', async () => {
+  test('temporary mock implementation return value can be of different type than the original', async () => {
     const mock = vi.fn(() => 1)
+
+    expect.assertions(3)
+
+    mock.withImplementation(() => '2', () => {
+      expect(mock()).toBe('2')
+      expect(mock()).toBe('2')
+    })
+
+    expect(mock()).toBe(1)
+  })
+
+  test('temporary mock implementation with async callback works as expecetd', async () => {
+    const mock = vi.fn(() => 1)
+
+    expect.assertions(3)
 
     await mock.withImplementation(() => 2, async () => {
       await Promise.resolve()
@@ -193,5 +210,39 @@ describe('temporary mock implementation', () => {
     })
 
     expect(mock()).toBe(1)
+  })
+
+  test('temporary mock implementation can be async', async () => {
+    const mock = vi.fn(() => 1)
+
+    expect.assertions(3)
+
+    /* NOTE:
+    * If the callback has to be async, either because the mock implementation is async or because the callback body is async for some other reason:
+    * - The async/await syntax must be used inside the callback because the mock variable type doesn't change to async just because the mock implementation changed temporarily, so you can't use the `.then` method with mock variable.
+    * - The async/await syntax must be used with the call to `mock.withImplementation` because of the same reason.
+    *
+    * This is not very good, because at anytime, the variables type should represent its value, which is important in terms of API design.
+    */
+    await mock.withImplementation(async () => 2, async () => {
+      expect(await mock()).toBe(2)
+      expect(await mock()).toBe(2)
+    })
+
+    expect(mock()).toBe(1)
+  })
+
+  test('temporary mock implementation takes precedence over mockImplementationOnce', () => {
+    const mock = vi.fn(() => 1)
+
+    expect.assertions(3)
+
+    mock.mockImplementationOnce(() => 2)
+    mock.withImplementation(() => 3, () => {
+      expect(mock()).toBe(3)
+      expect(mock()).toBe(3)
+    })
+
+    expect(mock()).toBe(2)
   })
 })
