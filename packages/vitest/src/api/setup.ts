@@ -9,7 +9,7 @@ import { API_PATH } from '../constants'
 import type { Vitest } from '../node'
 import type { File, ModuleGraphData, Reporter, TaskResultPack, UserConsoleLog } from '../types'
 import { getModuleGraph } from '../utils'
-import { parseStacktrace } from '../utils/source-map'
+import { parseErrorStacktrace } from '../utils/source-map'
 import type { TransformResultWithSource, WebSocketEvents, WebSocketHandlers } from './types'
 
 export function setup(ctx: Vitest) {
@@ -140,9 +140,9 @@ class WebSocketReporter implements Reporter {
     packs.forEach(([, result]) => {
       // TODO remove after "error" deprecation is removed
       if (result?.error)
-        result.error.stacks = parseStacktrace(result.error)
+        result.error.stacks = parseErrorStacktrace(result.error)
       result?.errors?.forEach((error) => {
-        error.stacks = parseStacktrace(error)
+        error.stacks = parseErrorStacktrace(error)
       })
     })
 

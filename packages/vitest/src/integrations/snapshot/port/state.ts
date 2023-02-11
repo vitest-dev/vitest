@@ -7,8 +7,7 @@
 
 import type { OptionsReceived as PrettyFormatOptions } from 'pretty-format'
 import type { ParsedStack, SnapshotData, SnapshotMatchOptions, SnapshotResult, SnapshotStateOptions, SnapshotUpdateState } from '../../../types'
-import { slash } from '../../../utils'
-import { parseStacktrace } from '../../../utils/source-map'
+import { parseErrorStacktrace } from '../../../utils/source-map'
 import type { SnapshotEnvironment } from '../env'
 import { getSnapshotEnvironment } from '../env'
 import type { InlineSnapshot } from './inlineSnapshot'
@@ -122,9 +121,7 @@ export default class SnapshotState {
   ): void {
     this._dirty = true
     if (options.isInline) {
-      const error = options.error || new Error('Unknown error')
-      const stacks = parseStacktrace(error, true)
-      stacks.forEach(i => i.file = slash(i.file))
+      const stacks = parseErrorStacktrace(options.error || new Error('snapshot'), true)
       const stack = this._inferInlineSnapshotStack(stacks)
       if (!stack) {
         throw new Error(
