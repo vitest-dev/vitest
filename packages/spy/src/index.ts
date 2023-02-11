@@ -46,8 +46,7 @@ export interface SpyInstance<TArgs extends any[] = any[], TReturns = any> {
   getMockImplementation(): ((...args: TArgs) => TReturns) | undefined
   mockImplementation(fn: ((...args: TArgs) => TReturns) | (() => Promise<TReturns>)): this
   mockImplementationOnce(fn: ((...args: TArgs) => TReturns) | (() => Promise<TReturns>)): this
-  withImplementation<T>(fn: ((...args: TArgs) => T), cb: () => void): this
-  withImplementation<T>(fn: ((...args: TArgs) => T), cb: () => Promise<void>): Promise<this>
+  withImplementation<T>(fn: ((...args: TArgs) => TReturns), cb: () => T): T extends Promise<unknown> ? Promise<this> : this
   mockReturnThis(): this
   mockReturnValue(obj: TReturns): this
   mockReturnValueOnce(obj: TReturns): this
@@ -254,13 +253,13 @@ function enhanceSpy<TArgs extends any[], TReturns>(
   function withImplementation(fn: (...args: TArgs) => TReturns, cb: () => void): EnhancedSpy<TArgs, TReturns>
   function withImplementation(fn: (...args: TArgs) => TReturns, cb: () => Promise<void>): Promise<EnhancedSpy<TArgs, TReturns>>
   function withImplementation(fn: (...args: TArgs) => TReturns, cb: () => void | Promise<void>): EnhancedSpy<TArgs, TReturns> | Promise<EnhancedSpy<TArgs, TReturns>> {
-    const originalImplementation = implementation!
+    const originalImplementation = implementation
 
-    stub.mockImplementation(fn)
+    implementation = fn
     implementationChangedTemporarily = true
 
     const clean = () => {
-      stub.mockImplementation(originalImplementation)
+      implementation = originalImplementation
       implementationChangedTemporarily = false
     }
 
