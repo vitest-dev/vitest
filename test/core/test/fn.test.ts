@@ -60,7 +60,7 @@ describe('mock', () => {
     let i = 0
 
     const fn = vitest.fn(() => {
-      if (i === 1) {
+      if (i === 0) {
         ++i
         throw new Error('error')
       }
@@ -68,11 +68,15 @@ describe('mock', () => {
       return String(++i)
     })
 
-    fn()
     try {
       fn()
     }
     catch {}
+    expect(fn).not.toHaveReturned()
+
+    fn()
+    expect(fn).toHaveReturned()
+
     fn()
 
     try {
