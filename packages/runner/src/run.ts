@@ -270,14 +270,14 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
     catch (e) {
       failTask(suite.result, e)
     }
-  }
 
-  try {
-    await callSuiteHook(suite, suite, 'afterAll', runner, [suite])
-    await callCleanupHooks(beforeAllCleanups)
-  }
-  catch (e) {
-    failTask(suite.result, e)
+    try {
+      await callSuiteHook(suite, suite, 'afterAll', runner, [suite])
+      await callCleanupHooks(beforeAllCleanups)
+    }
+    catch (e) {
+      failTask(suite.result, e)
+    }
   }
 
   suite.result.duration = now() - start

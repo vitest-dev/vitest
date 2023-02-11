@@ -10,7 +10,7 @@ export function hasBenchmark(suite: Arrayable<Suite>): boolean {
 
 export function hasFailedSnapshot(suite: Arrayable<Task>): boolean {
   return getTests(suite).some((s) => {
-    return s.result?.errors?.some(e => e.message.match(/Snapshot .* mismatched/))
+    return s.result?.errors?.some(e => e && e.message && e.message.match(/Snapshot .* mismatched/))
   })
 }
 

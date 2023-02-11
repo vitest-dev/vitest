@@ -23,7 +23,8 @@ export function run() {
   divide(1, 1)
 }
 
+/* c8 ignore next 4 */
 /* istanbul ignore next -- @preserve */
 export function ignoredFunction() {
-  return 'This function is excluded from istanbul coverage'
+  throw new Error('Test files should not call this function!')
 }

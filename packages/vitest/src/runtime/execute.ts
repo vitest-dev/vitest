@@ -1,30 +1,25 @@
 import { ViteNodeRunner } from 'vite-node/client'
 import { isInternalRequest } from 'vite-node/utils'
 import type { ViteNodeRunnerOptions } from 'vite-node'
-import { normalizePath } from 'vite'
+import { normalize } from 'pathe'
 import { isNodeBuiltin } from 'mlly'
 import type { MockMap } from '../types/mocker'
-import { getCurrentEnvironment, getWorkerState } from '../utils'
+import { getCurrentEnvironment, getWorkerState } from '../utils/global'
 import { VitestMocker } from './mocker'
 
 export interface ExecuteOptions extends ViteNodeRunnerOptions {
   mockMap: MockMap
 }
 
-export async function executeInViteNode(options: ExecuteOptions & { files: string[] }) {
-  const runner = new VitestRunner(options)
+export async function createVitestExecutor(options: ExecuteOptions) {
+  const runner = new VitestExecutor(options)
 
   await runner.executeId('/@vite/env')
-  await runner.mocker.initializeSpyModule()
 
-  const result: any[] = []
-  for (const file of options.files)
-    result.push(await runner.executeFile(file))
-
-  return result
+  return runner
 }
 
-export class VitestRunner extends ViteNodeRunner {
+export class VitestExecutor extends ViteNodeRunner {
   public mocker: VitestMocker
 
   constructor(public options: ExecuteOptions) {
@@ -68,7 +63,7 @@ export class VitestRunner extends ViteNodeRunner {
     const workerState = getWorkerState()
 
     // support `import.meta.vitest` for test entry
-    if (workerState.filepath && normalizePath(workerState.filepath) === normalizePath(context.__filename)) {
+    if (workerState.filepath && normalize(workerState.filepath) === normalize(context.__filename)) {
       // @ts-expect-error injected untyped global
       Object.defineProperty(context.__vite_ssr_import_meta__, 'vitest', { get: () => globalThis.__vitest_index__ })
     }

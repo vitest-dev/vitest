@@ -334,6 +334,31 @@ Vitest also exposes `builtinEnvironments` through `vitest/environments` entry, i
 
 These options are passed down to `setup` method of current [`environment`](#environment). By default, you can configure only JSDOM options, if you are using it as your test environment.
 
+### environmentMatchGlobs
+
+- **Type:** `[string, EnvironmentName][]`
+- **Default:** `[]`
+
+Automatically assign environment based on globs. The first match will be used.
+
+For example:
+
+```ts
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    environmentMatchGlobs: [
+      // all tests in tests/dom will run in jsdom
+      ['tests/dom/**', 'jsdom'],
+      // all tests in tests/ with .edge.test.ts will run in edge-runtime
+      ['**\/*.edge.test.ts', 'edge-runtime'],
+      // ...
+    ]
+  }
+})
+```
+
 ### update
 
 - **Type:** `boolean`
@@ -366,7 +391,7 @@ Project root
 Custom reporters for output. Reporters can be [a Reporter instance](https://github.com/vitest-dev/vitest/blob/main/packages/vitest/src/types/reporter.ts) or a string to select built in reporters:
 
   - `'default'` - collapse suites when they pass
-  - `'basic'` - give a reporter like default reporter give in ci
+  - `'basic'` - give a reporter like default reporter in ci
   - `'verbose'` - keep the full task tree visible
   - `'dot'` -  show each task as a single dot
   - `'junit'` - JUnit XML reporter (you can configure `testsuites` tag name with `VITEST_JUNIT_SUITE_NAME` environmental variable)
@@ -463,6 +488,16 @@ Maximum number of threads. You can also use `VITEST_MAX_THREADS` environment var
 - **Default:** _available CPUs_
 
 Minimum number of threads. You can also use `VITEST_MIN_THREADS` environment variable.
+
+### useAtomics
+
+- **Type:** `boolean`
+- **Default:** `false`
+- **Version:** Since Vitest 0.28.3
+
+Use Atomics to synchronize threads.
+
+This can improve performance in some cases, but might cause segfault in older Node versions.
 
 ### testTimeout
 
@@ -609,7 +644,7 @@ Use `provider` to select the tool for coverage collection.
 - **Available for providers:** `'c8' | 'istanbul'`
 - **CLI:** `--coverage.enabled`, `--coverage.enabled=false`
 
-Enables coverage collection. Can be overriden using `--coverage` CLI option.
+Enables coverage collection. Can be overridden using `--coverage` CLI option.
 
 #### include
 
@@ -1122,7 +1157,7 @@ Options for configuring [typechecking](/guide/testing-types) test environment.
 
 What tools to use for type checking. Vitest will spawn a process with certain parameters for easier parsing, depending on the type. Checker should implement the same output format as `tsc`.
 
-You need to have a package installed to use typecheker:
+You need to have a package installed to use typechecker:
 
 - `tsc` requires `typescript` package
 - `vue-tsc` requires `vue-tsc` package

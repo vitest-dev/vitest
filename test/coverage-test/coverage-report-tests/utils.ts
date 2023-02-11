@@ -5,6 +5,7 @@ interface CoverageFinalJson {
     [filename: string]: {
       path: string
       b: Record<string, number[]>
+      f: Record<string, number>
       fnMap: Record<string, { name: string }>
       // ... and more unrelated keys
     }

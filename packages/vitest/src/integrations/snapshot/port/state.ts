@@ -10,7 +10,7 @@ import type { ParsedStack, SnapshotData, SnapshotMatchOptions, SnapshotResult, S
 import { slash } from '../../../utils'
 import { parseStacktrace } from '../../../utils/source-map'
 import type { SnapshotEnvironment } from '../env'
-import { getSnapshotEnironment } from '../env'
+import { getSnapshotEnvironment } from '../env'
 import type { InlineSnapshot } from './inlineSnapshot'
 import { saveInlineSnapshots } from './inlineSnapshot'
 
@@ -83,14 +83,14 @@ export default class SnapshotState {
       printBasicPrototype: false,
       ...options.snapshotFormat,
     }
-    this._environment = getSnapshotEnironment()
+    this._environment = getSnapshotEnvironment()
   }
 
   static async create(
     testFilePath: string,
     options: SnapshotStateOptions,
   ) {
-    const environment = getSnapshotEnironment()
+    const environment = getSnapshotEnvironment()
     const snapshotPath = await environment.resolvePath(testFilePath)
     const content = await environment.readSnapshotFile(snapshotPath)
     return new SnapshotState(testFilePath, snapshotPath, content, options)

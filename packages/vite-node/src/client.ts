@@ -214,12 +214,6 @@ export class ViteNodeRunner {
     if (importee && id.startsWith(VALID_ID_PREFIX))
       importee = undefined
     id = normalizeRequestId(id, this.options.base)
-    // should be checked after normalization
-    // provide importer only for relative and absolute paths
-    // paths like "src/user" are valid for transformRequest, but they will be resolved incorrectly,
-    // if importer is provided - because they will be treated as relative to the importer instead of root
-    if (!id.startsWith('/') && !id.startsWith('./') && !id.startsWith('../'))
-      importee = undefined
     if (!this.shouldResolveId(id))
       return [id, id]
     const { path, exists } = toFilePath(id, this.root)
@@ -310,8 +304,15 @@ export class ViteNodeRunner {
       enumerable: false,
       configurable: false,
     })
-    // this prosxy is triggered only on exports.{name} and module.exports access
+    // this proxy is triggered only on exports.{name} and module.exports access
+    // inside the module itself. imported module is always "exports"
     const cjsExports = new Proxy(exports, {
+      get: (target, p, receiver) => {
+        if (Reflect.has(target, p))
+          return Reflect.get(target, p, receiver)
+        return Reflect.get(Object.prototype, p, receiver)
+      },
+      getPrototypeOf: () => Object.prototype,
       set: (_, p, value) => {
         // treat "module.exports =" the same as "exports.default =" to not have nested "default.default",
         // so "exports.default" becomes the actual module

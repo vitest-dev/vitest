@@ -486,7 +486,7 @@ vi.mock('some-path', () => {
         method: vi.fn(),
       }
     }
-    // now everytime useObject() is called it will
+    // now every time that useObject() is called it will
     // return the same object reference
     return _cache
   }

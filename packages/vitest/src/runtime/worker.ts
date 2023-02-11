@@ -1,3 +1,4 @@
+import { pathToFileURL } from 'node:url'
 import { relative, resolve } from 'pathe'
 import { createBirpc } from 'birpc'
 import { workerId as poolId } from 'tinypool'
@@ -6,13 +7,15 @@ import { ModuleCacheMap } from 'vite-node/client'
 import { isPrimitive } from 'vite-node/utils'
 import type { ResolvedConfig, WorkerContext, WorkerRPC } from '../types'
 import { distDir } from '../constants'
-import { getWorkerState } from '../utils'
+import { getWorkerState } from '../utils/global'
 import type { MockMap } from '../types/mocker'
-import { executeInViteNode } from './execute'
+import type { VitestExecutor } from './execute'
+import { createVitestExecutor } from './execute'
 import { rpc } from './rpc'
 
 let _viteNode: {
-  run: (files: string[], config: ResolvedConfig) => Promise<void>
+  run: (files: string[], config: ResolvedConfig, executor: VitestExecutor) => Promise<void>
+  executor: VitestExecutor
 }
 
 const moduleCache = new ModuleCacheMap()
@@ -45,10 +48,7 @@ async function startViteNode(ctx: WorkerContext) {
   process.on('uncaughtException', e => catchError(e, 'Uncaught Exception'))
   process.on('unhandledRejection', e => catchError(e, 'Unhandled Rejection'))
 
-  const { run } = (await executeInViteNode({
-    files: [
-      resolve(distDir, 'entry.js'),
-    ],
+  const executor = await createVitestExecutor({
     fetchModule(id) {
       return rpc().fetch(id)
     },
@@ -60,9 +60,11 @@ async function startViteNode(ctx: WorkerContext) {
     interopDefault: config.deps.interopDefault,
     root: config.root,
     base: config.base,
-  }))[0]
+  })
 
-  _viteNode = { run }
+  const { run } = await import(pathToFileURL(resolve(distDir, 'entry.js')).href)
+
+  _viteNode = { run, executor }
 
   return _viteNode
 }
@@ -106,6 +108,6 @@ function init(ctx: WorkerContext) {
 
 export async function run(ctx: WorkerContext) {
   init(ctx)
-  const { run } = await startViteNode(ctx)
-  return run(ctx.files, ctx.config)
+  const { run, executor } = await startViteNode(ctx)
+  return run(ctx.files, ctx.config, executor)
 }

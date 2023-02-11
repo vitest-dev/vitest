@@ -105,7 +105,7 @@ export class IstanbulCoverageProvider implements CoverageProvider {
       const map = libCoverage.createCoverageMap(coverage)
       map.merge(previousCoverageMap)
       return map
-    }, {})
+    }, libCoverage.createCoverageMap({}))
 
     if (this.options.all && allTestsRun)
       await this.includeUntestedFiles(mergedCoverage)

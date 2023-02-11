@@ -294,7 +294,7 @@ class VitestUtils {
   }
 
   /**
-   * Reset enviromental variables to the ones that were available before first `vi.stubEnv` was called.
+   * Reset environmental variables to the ones that were available before first `vi.stubEnv` was called.
    */
   public unstubAllEnvs() {
     this._stubsEnv.forEach((original, name) => {

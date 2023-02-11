@@ -43,7 +43,7 @@ export function createPool(ctx: Vitest): WorkerPool {
     filename: workerPath,
     // TODO: investigate further
     // It seems atomics introduced V8 Fatal Error https://github.com/vitest-dev/vitest/issues/1191
-    useAtomics: false,
+    useAtomics: ctx.config.useAtomics ?? false,
 
     maxThreads,
     minThreads,
@@ -141,7 +141,7 @@ export function createPool(ctx: Vitest): WorkerPool {
       // node before 16.17 has a bug that causes FATAL ERROR because of the race condition
       const nodeVersion = Number(process.version.match(/v(\d+)\.(\d+)/)?.[0].slice(1))
       if (nodeVersion >= 16.17)
-        await Promise.all(pool.threads.map(w => w.terminate()))
+        await pool.destroy()
     },
   }
 }
