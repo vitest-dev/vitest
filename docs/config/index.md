@@ -644,7 +644,7 @@ Use `provider` to select the tool for coverage collection.
 - **Available for providers:** `'c8' | 'istanbul'`
 - **CLI:** `--coverage.enabled`, `--coverage.enabled=false`
 
-Enables coverage collection. Can be overriden using `--coverage` CLI option.
+Enables coverage collection. Can be overridden using `--coverage` CLI option.
 
 #### include
 
@@ -906,21 +906,21 @@ Listen to port and serve API. When set to true, the default port is 51204
 - **Type:** `boolean`
 - **Default:** `false`
 
-Will call [`.mockClear()`](/api/#mockclear) on all spies before each test. This will clear mock history, but not reset its implementation to the default one.
+Will call [`.mockClear()`](/api/mock#mockclear) on all spies before each test. This will clear mock history, but not reset its implementation to the default one.
 
 ### mockReset
 
 - **Type:** `boolean`
 - **Default:** `false`
 
-Will call [`.mockReset()`](/api/#mockreset) on all spies before each test. This will clear mock history and reset its implementation to an empty function (will return `undefined`).
+Will call [`.mockReset()`](/api/mock#mockreset) on all spies before each test. This will clear mock history and reset its implementation to an empty function (will return `undefined`).
 
 ### restoreMocks
 
 - **Type:** `boolean`
 - **Default:** `false`
 
-Will call [`.mockRestore()`](/api/#mockrestore) on all spies before each test. This will clear mock history and reset its implementation to the original one.
+Will call [`.mockRestore()`](/api/mock#mockrestore) on all spies before each test. This will clear mock history and reset its implementation to the original one.
 
 ### unstubEnvs
 
@@ -928,7 +928,7 @@ Will call [`.mockRestore()`](/api/#mockrestore) on all spies before each test. T
 - **Default:** `false`
 - **Version:** Since Vitest 0.26.0
 
-Will call [`vi.unstubAllEnvs`](/api/#vi-unstuballenvs) before each test.
+Will call [`vi.unstubAllEnvs`](/api/vi#vi-unstuballenvs) before each test.
 
 ### unstubGlobals
 
@@ -936,7 +936,7 @@ Will call [`vi.unstubAllEnvs`](/api/#vi-unstuballenvs) before each test.
 - **Default:** `false`
 - **Version:** Since Vitest 0.26.0
 
-Will call [`vi.unstubAllGlobals`](/api/#vi-unstuballglobals) before each test.
+Will call [`vi.unstubAllGlobals`](/api/vi#vi-unstuballglobals) before each test.
 
 ### transformMode
 
@@ -1157,7 +1157,7 @@ Options for configuring [typechecking](/guide/testing-types) test environment.
 
 What tools to use for type checking. Vitest will spawn a process with certain parameters for easier parsing, depending on the type. Checker should implement the same output format as `tsc`.
 
-You need to have a package installed to use typecheker:
+You need to have a package installed to use typechecker:
 
 - `tsc` requires `typescript` package
 - `vue-tsc` requires `vue-tsc` package

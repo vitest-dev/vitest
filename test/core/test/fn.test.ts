@@ -60,7 +60,7 @@ describe('mock', () => {
     let i = 0
 
     const fn = vitest.fn(() => {
-      if (i === 1) {
+      if (i === 0) {
         ++i
         throw new Error('error')
       }
@@ -68,21 +68,25 @@ describe('mock', () => {
       return String(++i)
     })
 
-    fn()
     try {
       fn()
     }
     catch {}
+    expect(fn).not.toHaveReturned()
+
+    fn()
+    expect(fn).toHaveReturned()
+
     fn()
 
     try {
-      expect(fn).toHaveNthReturnedWith(2, '2')
-      assert.fail('expect should throw, since 2nd call is thrown')
+      expect(fn).toHaveNthReturnedWith(1, '1')
+      assert.fail('expect should throw, since 1st call is thrown')
     }
     catch {}
 
     // not throws
-    expect(fn).not.toHaveNthReturnedWith(2, '2')
+    expect(fn).not.toHaveNthReturnedWith(1, '1')
 
     expect(fn).toHaveReturnedTimes(2)
     expect(fn).toHaveNthReturnedWith(3, '3')

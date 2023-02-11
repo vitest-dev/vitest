@@ -58,11 +58,11 @@ function renderBenchmark(task: Benchmark, tasks: Task[]): string {
   if (!result)
     return task.name
 
-  const benchs = tasks
+  const benches = tasks
     .map(i => i.meta?.benchmark ? i.result?.benchmark : undefined)
     .filter(notNullish)
 
-  const allItems = benchs.map(renderBenchmarkItems)
+  const allItems = benches.map(renderBenchmarkItems)
   const items = renderBenchmarkItems(result)
   const padded = items.map((i, idx) => {
     const width = Math.max(...allItems.map(i => i[idx].length))
@@ -80,7 +80,7 @@ function renderBenchmark(task: Benchmark, tasks: Task[]): string {
     c.dim(` (${padded[4]} samples)`),
     result.rank === 1
       ? c.bold(c.green(' fastest'))
-      : result.rank === benchs.length && benchs.length > 2
+      : result.rank === benches.length && benches.length > 2
         ? c.bold(c.gray(' slowest'))
         : '',
   ].join('')
