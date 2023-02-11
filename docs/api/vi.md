@@ -70,7 +70,7 @@ import { vi } from 'vitest'
 
 ## vi.clearAllMocks
 
-  Will call [`.mockClear()`](/api/mock.html#mockclear) on all spies. This will clear mock history, but not reset its implementation to the default one.
+  Will call [`.mockClear()`](/api/mock#mockclear) on all spies. This will clear mock history, but not reset its implementation to the default one.
 
 ## vi.clearAllTimers
 
@@ -84,7 +84,7 @@ import { vi } from 'vitest'
 
 - **Type:** `(fn?: Function) => CallableMockInstance`
 
-  Creates a spy on a function, though can be initiated without one. Every time a function is invoked, it stores its call arguments, returns, and instances. Also, you can manipulate its behavior with [methods](#mockinstance-methods).
+  Creates a spy on a function, though can be initiated without one. Every time a function is invoked, it stores its call arguments, returns, and instances. Also, you can manipulate its behavior with [methods](/api/mock).
   If no function is given, mock will return `undefined`, when invoked.
 
   ```ts
@@ -281,7 +281,7 @@ test('importing the next module imports mocked one', () => {
 
 ## vi.resetAllMocks
 
-  Will call [`.mockReset()`](/api/mock.html#mockreset) on all spies. This will clear mock history and reset its implementation to an empty function (will return `undefined`).
+  Will call [`.mockReset()`](/api/mock#mockreset) on all spies. This will clear mock history and reset its implementation to an empty function (will return `undefined`).
 
 ## vi.resetConfig
 
@@ -320,7 +320,7 @@ Does not reset mocks registry. To clear mocks registry, use [`vi.unmock`](#vi-un
 
 ## vi.restoreAllMocks
 
-  Will call [`.mockRestore()`](/api/mock.html#mockrestore) on all spies. This will clear mock history and reset its implementation to the original one.
+  Will call [`.mockRestore()`](/api/mock#mockrestore) on all spies. This will clear mock history and reset its implementation to the original one.
 
 ## vi.restoreCurrentDate
 
