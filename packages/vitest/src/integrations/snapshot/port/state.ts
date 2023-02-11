@@ -111,7 +111,7 @@ export default class SnapshotState {
     // inline snapshot function is called __VITEST_INLINE_SNAPSHOT__
     // in integrations/snapshot/chai.ts
     const stackIndex = stacks.findIndex(i => i.method.includes('__VITEST_INLINE_SNAPSHOT__'))
-    return stackIndex !== -1 ? stacks[stackIndex + 3] : null
+    return stackIndex !== -1 ? stacks[stackIndex + 2] : null
   }
 
   private _addSnapshot(
