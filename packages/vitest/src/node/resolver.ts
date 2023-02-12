@@ -37,9 +37,9 @@ export class VitestResolver {
     return this.fetchViteModule(id)
   }
 
-  resolveId(id: string, importer = this.server.config.root, strict = false) {
+  resolveId(id: string, importer?: string, strict = false) {
     if (strict)
-      return this.resolveNodeId(id, importer)
+      return this.resolveNodeId(id, importer ?? this.server.config.root)
     return this.resolveViteId(id, importer)
   }
 
@@ -64,6 +64,7 @@ export class VitestResolver {
     return { code: result?.code, format }
   }
 
+  // TODO: aliases support? tsconfig paths support?
   async resolveNodeId(path: string, importer: string) {
     path = normalizeModuleId(path)
     importer = normalizeModuleId(importer)
