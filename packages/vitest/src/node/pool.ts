@@ -172,11 +172,11 @@ function createChannel(ctx: Vitest) {
         const r = await ctx.vitenode.transformRequest(id)
         return r?.map as RawSourceMap | undefined
       },
-      fetch(id) {
-        return ctx.vitenode.fetchModule(id)
+      fetch(id, strict) {
+        return ctx.resolver.fetchModule(id, strict)
       },
-      resolveId(id, importer) {
-        return ctx.vitenode.resolveId(id, importer)
+      resolveId(id, importer, strict) {
+        return ctx.resolver.resolveId(id, importer, strict)
       },
       onPathsCollected(paths) {
         ctx.state.collectPaths(paths)

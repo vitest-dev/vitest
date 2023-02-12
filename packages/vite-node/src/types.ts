@@ -30,6 +30,7 @@ export interface RawSourceMap extends StartOfSourceMap {
 export interface FetchResult {
   code?: string
   externalize?: string
+  format?: 'esm' | 'cjs'
   map?: RawSourceMap
 }
 
@@ -44,6 +45,7 @@ export type CreateHotContextFunction = (runner: ViteNodeRunner, url: string) => 
 export interface ModuleCache {
   promise?: Promise<any>
   exports?: any
+  format?: 'esm' | 'cjs'
   evaluated?: boolean
   resolving?: boolean
   code?: string

@@ -282,7 +282,9 @@ export class ViteNodeRunner {
     if (id in requestStubs)
       return requestStubs[id]
 
-    let { code: transformed, externalize } = await this.options.fetchModule(id)
+    const { code: transformed, externalize, format } = await this.options.fetchModule(id)
+
+    mod.format = format
 
     if (externalize) {
       debugNative(externalize)
@@ -371,7 +373,7 @@ export class ViteNodeRunner {
     // changing context will change amount of code added on line :114 (vm.runInThisContext)
     // this messes up sourcemaps for coverage
     // adjust `offset` variable in packages/coverage-c8/src/provider.ts#86 if you do change this
-    const context = this.prepareContext({
+    const context = this.prepareContext(mod, {
       // esm transformed by Vite
       __vite_ssr_import__: request,
       __vite_ssr_dynamic_import__: request,
@@ -389,17 +391,10 @@ export class ViteNodeRunner {
 
     debugExecute(__filename)
 
-    // remove shebang
-    if (transformed[0] === '#')
-      transformed = transformed.replace(/^\#\!.*/, s => ' '.repeat(s.length))
-
-    // add 'use strict' since ESM enables it by default
-    const codeDefinition = `'use strict';async (${Object.keys(context).join(',')})=>{{`
-    const code = `${codeDefinition}${transformed}\n}}`
+    const code = this.prepareCode(mod, context, transformed)
     const fn = vm.runInThisContext(code, {
       filename: __filename,
       lineOffset: 0,
-      columnOffset: -codeDefinition.length,
     })
 
     await fn(...Object.values(context))
@@ -407,7 +402,19 @@ export class ViteNodeRunner {
     return exports
   }
 
-  prepareContext(context: Record<string, any>) {
+  prepareCode(module: ModuleCache, context: Record<string, any>, transformed: string) {
+    // remove shebang
+    if (transformed[0] === '#')
+      transformed = transformed.replace(/^\#\!.*/, s => ' '.repeat(s.length))
+
+    // add 'use strict' since ESM enables it by default
+    const codeDefinition = `'use strict';async (${Object.keys(context).join(',')})=>{{`
+    const code = `${codeDefinition}${transformed}\n}}`
+
+    return code
+  }
+
+  prepareContext(module: ModuleCache, context: Record<string, any>) {
     return context
   }
 

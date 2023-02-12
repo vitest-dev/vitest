@@ -879,6 +879,7 @@ importers:
       flatted: ^3.2.7
       get-tsconfig: ^4.3.0
       happy-dom: ^7.8.1
+      import-meta-resolve: ^2.2.1
       jsdom: ^20.0.3
       local-pkg: ^0.4.2
       log-update: ^5.0.1
@@ -918,6 +919,7 @@ importers:
       cac: 6.7.14
       chai: 4.3.7
       debug: 4.3.4
+      import-meta-resolve: 2.2.1
       local-pkg: 0.4.2
       pathe: 1.1.0
       picocolors: 1.0.0
@@ -14058,6 +14060,10 @@ packages:
     dependencies:
       parent-module: 1.0.1
       resolve-from: 4.0.0
+
+  /import-meta-resolve/2.2.1:
+    resolution: {integrity: sha512-C6lLL7EJPY44kBvA80gq4uMsVFw5x3oSKfuMl1cuZ2RkI5+UJqQXgn+6hlUew0y4ig7Ypt4CObAAIzU53Nfpuw==}
+    dev: false
 
   /imurmurhash/0.1.4:
     resolution: {integrity: sha512-JmXMZ6wuvDmLiHEml9ykzqO6lwFbof0GG4IkcGaENdCRDDmMVnny7s5HsIgHCbaq0w2MyPhDqkhTUgS2LU2PHA==}

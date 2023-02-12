@@ -48,18 +48,9 @@ async function startViteNode(ctx: WorkerContext) {
   process.on('uncaughtException', e => catchError(e, 'Uncaught Exception'))
   process.on('unhandledRejection', e => catchError(e, 'Unhandled Rejection'))
 
-  const executor = await createVitestExecutor({
-    fetchModule(id) {
-      return rpc().fetch(id)
-    },
-    resolveId(id, importer) {
-      return rpc().resolveId(id, importer)
-    },
+  const executor = await createVitestExecutor(config, {
     moduleCache,
     mockMap,
-    interopDefault: config.deps.interopDefault,
-    root: config.root,
-    base: config.base,
   })
 
   const { run } = await import(pathToFileURL(resolve(distDir, 'entry.js')).href)
@@ -109,5 +100,6 @@ function init(ctx: WorkerContext) {
 export async function run(ctx: WorkerContext) {
   init(ctx)
   const { run, executor } = await startViteNode(ctx)
+  // TODO: add wait for all pending promises from birpc otherwise it consumes some console.logs
   return run(ctx.files, ctx.config, executor)
 }

@@ -25,6 +25,10 @@ export interface EnvironmentOptions {
    * jsdom options.
    */
   jsdom?: JSDOMOptions
+  node?: {
+    // TODO: write documentation
+    strictESM?: boolean
+  }
   [x: string]: unknown
 }
 

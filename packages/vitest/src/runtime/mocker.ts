@@ -5,7 +5,7 @@ import { getColors, getType } from '@vitest/utils'
 import { getWorkerState } from '../utils/global'
 import { getAllMockableProperties } from '../utils/base'
 import { spyOn } from '../integrations/spy'
-import type { MockFactory, PendingSuiteMock } from '../types/mocker'
+import type { MockFactory, MockMap, PendingSuiteMock } from '../types/mocker'
 import type { VitestExecutor } from './execute'
 
 class RefTracker {
@@ -42,6 +42,7 @@ export class VitestMocker {
 
   constructor(
     public executor: VitestExecutor,
+    private mockMap: MockMap,
   ) {}
 
   private get root() {
@@ -50,10 +51,6 @@ export class VitestMocker {
 
   private get base() {
     return this.executor.options.base
-  }
-
-  private get mockMap() {
-    return this.executor.options.mockMap
   }
 
   private get moduleCache() {

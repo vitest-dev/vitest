@@ -18,6 +18,7 @@ import { StateManager } from './state'
 import { resolveConfig } from './config'
 import { Logger } from './logger'
 import { VitestCache } from './cache'
+import { VitestResolver } from './resolver'
 
 const WATCHER_DEBOUNCE = 100
 
@@ -35,6 +36,7 @@ export class Vitest {
   pool: WorkerPool | undefined
   typechecker: Typechecker | undefined
 
+  resolver: VitestResolver = undefined!
   vitenode: ViteNodeServer = undefined!
 
   invalidates: Set<string> = new Set()
@@ -75,15 +77,15 @@ export class Vitest {
       this.registerWatcher()
 
     this.vitenode = new ViteNodeServer(server, this.config)
-    const node = this.vitenode
+    this.resolver = new VitestResolver(this.vitenode)
     this.runner = new ViteNodeRunner({
       root: server.config.root,
       base: server.config.base,
-      fetchModule(id: string) {
-        return node.fetchModule(id)
+      fetchModule: (id: string) => {
+        return this.resolver.fetchModule(id)
       },
-      resolveId(id: string, importer?: string) {
-        return node.resolveId(id, importer)
+      resolveId: (id: string, importer?: string) => {
+        return this.resolver.resolveId(id, importer)
       },
     })
 
@@ -537,10 +539,6 @@ export class Vitest {
       return true
     }
 
-    const mod = this.server.moduleGraph.getModuleById(id)
-    if (!mod)
-      return false
-
     this.invalidates.add(id)
 
     if (this.state.filesMap.has(id)) {
@@ -548,12 +546,14 @@ export class Vitest {
       return true
     }
 
+    const importers = this.resolver.getImporters(id)
+
     let rerun = false
-    mod.importers.forEach((i) => {
-      if (!i.id)
+    importers.forEach((i) => {
+      if (!i)
         return
 
-      const heedsRerun = this.handleFileChanged(i.id)
+      const heedsRerun = this.handleFileChanged(i)
       if (heedsRerun)
         rerun = true
     })
