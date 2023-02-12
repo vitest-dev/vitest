@@ -73,7 +73,7 @@ describe.concurrent('suite', () => {
 You can also use `.skip`, `.only`, and `.todo` with concurrent suites and tests. Read more in the [API Reference](/api/#test-concurrent).
 
 ::: warning
-When using Snapshots with async concurrent tests, you need to use `expect` from the [Test Context](/guide/test-context.md) and call `expect.assertions` to ensure the test will detect any failures.
+When running concurrent tests, Snapshots and Assertions must use `expect` from the local [Test Context](/guide/test-context.md) to ensure the right test is detected.
 :::
 
 ## Snapshot
