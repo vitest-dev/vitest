@@ -258,7 +258,7 @@ function enhanceSpy<TArgs extends any[], TReturns>(
     implementation = fn
     implementationChangedTemporarily = true
 
-    const clean = () => {
+    const reset = () => {
       implementation = originalImplementation
       implementationChangedTemporarily = false
     }
@@ -267,12 +267,12 @@ function enhanceSpy<TArgs extends any[], TReturns>(
 
     if (result instanceof Promise) {
       return result.then(() => {
-        clean()
+        reset()
         return stub
       })
     }
 
-    clean()
+    reset()
 
     return stub
   }
