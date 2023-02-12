@@ -1,7 +1,7 @@
 {
   "name": "@vitest/ui",
   "type": "module",
-  "version": "0.27.2",
+  "version": "0.28.4",
   "description": "UI for Vitest",
   "license": "MIT",
   "repository": {
@@ -41,6 +41,8 @@
   "dependencies": {
     "fast-glob": "^3.2.12",
     "flatted": "^3.2.7",
+    "pathe": "^1.1.0",
+    "picocolors": "^1.0.0",
     "sirv": "^2.0.2"
   },
   "devDependencies": {
@@ -53,6 +55,7 @@
     "@unocss/reset": "^0.48.3",
     "@vitejs/plugin-vue": "^4.0.0",
     "@vitejs/plugin-vue-jsx": "^3.0.0",
+    "@vitest/runner": "workspace:*",
     "@vitest/ws-client": "workspace:*",
     "@vueuse/core": "^9.10.0",
     "ansi-to-html": "^0.7.2",
@@ -63,7 +66,6 @@
     "d3-graph-controller": "^2.5.1",
     "diff": "^5.1.0",
     "floating-vue": "^2.0.0-y.0",
-    "picocolors": "^1.0.0",
     "rollup": "^2.79.1",
     "splitpanes": "^3.1.5",
     "unocss": "^0.48.3",

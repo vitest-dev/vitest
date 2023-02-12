@@ -1,7 +1,7 @@
 {
   "name": "vitest",
   "type": "module",
-  "version": "0.27.2",
+  "version": "0.28.4",
   "description": "A blazing fast unit test framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -45,13 +45,21 @@
       "types": "./dist/node.d.ts",
       "import": "./dist/node.js"
     },
-    "./environments": {
-      "types": "./dist/environments.d.ts",
-      "import": "./dist/environments.js"
-    },
     "./browser": {
       "types": "./dist/browser.d.ts",
       "import": "./dist/browser.js"
+    },
+    "./runners": {
+      "types": "./dist/runners.d.ts",
+      "import": "./dist/runners.js"
+    },
+    "./suite": {
+      "types": "./dist/suite.d.ts",
+      "import": "./dist/suite.js"
+    },
+    "./environments": {
+      "types": "./dist/environments.d.ts",
+      "import": "./dist/environments.js"
     },
     "./config": {
       "types": "./config.d.ts",
@@ -109,17 +117,23 @@
     "@types/chai": "^4.3.4",
     "@types/chai-subset": "^1.3.3",
     "@types/node": "*",
+    "@vitest/expect": "workspace:*",
+    "@vitest/runner": "workspace:*",
+    "@vitest/spy": "workspace:*",
+    "@vitest/utils": "workspace:*",
     "acorn": "^8.8.1",
     "acorn-walk": "^8.2.0",
     "cac": "^6.7.14",
     "chai": "^4.3.7",
     "debug": "^4.3.4",
     "local-pkg": "^0.4.2",
+    "pathe": "^1.1.0",
     "picocolors": "^1.0.0",
     "source-map": "^0.6.1",
+    "std-env": "^3.3.1",
     "strip-literal": "^1.0.0",
     "tinybench": "^2.3.1",
-    "tinypool": "^0.3.0",
+    "tinypool": "^0.3.1",
     "tinyspy": "^1.0.2",
     "vite": "^3.0.0 || ^4.0.0",
     "vite-node": "workspace:*",
@@ -135,10 +149,6 @@
     "@types/natural-compare": "^1.4.1",
     "@types/prompts": "^2.4.2",
     "@types/sinonjs__fake-timers": "^8.1.2",
-    "@vitest/expect": "workspace:*",
-    "@vitest/spy": "workspace:*",
-    "@vitest/ui": "workspace:*",
-    "@vitest/utils": "workspace:*",
     "birpc": "^0.2.3",
     "chai-subset": "^1.6.0",
     "cli-truncate": "^3.1.0",
@@ -158,7 +168,6 @@
     "mlly": "^1.1.0",
     "natural-compare": "^1.4.0",
     "p-limit": "^4.0.0",
-    "pathe": "^0.2.0",
     "pkg-types": "^1.0.1",
     "pretty-format": "^27.5.1",
     "prompts": "^2.4.2",

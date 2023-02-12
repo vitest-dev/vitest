@@ -1,7 +1,7 @@
 {
   "name": "@vitest/expect",
   "type": "module",
-  "version": "0.27.2",
+  "version": "0.28.4",
   "description": "Jest's expect matchers as a Chai plugin",
   "license": "MIT",
   "repository": {
@@ -31,7 +31,9 @@
   "dependencies": {
     "@vitest/spy": "workspace:*",
     "@vitest/utils": "workspace:*",
-    "chai": "^4.3.7",
+    "chai": "^4.3.7"
+  },
+  "devDependencies": {
     "picocolors": "^1.0.0"
   }
 }

@@ -1,11 +1,12 @@
-import { getWorkerState } from '../utils'
 import {
-  setTimeout as safeSetTimeout,
-} from '../utils/timers'
+  getSafeTimers,
+} from '@vitest/utils'
+import { getWorkerState } from '../utils'
 
 const safeRandom = Math.random
 
 function withSafeTimers(fn: () => void) {
+  const { setTimeout: safeSetTimeout } = getSafeTimers()
   const currentSetTimeout = globalThis.setTimeout
   const currentRandom = globalThis.Math.random
 

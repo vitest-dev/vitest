@@ -301,7 +301,7 @@
 
   - **Type:** `() => void`
 
-  This matcher checks, if provided type is a `functon`.
+  This matcher checks, if provided type is a `function`.
 
   ```ts
   import { expectTypeOf } from 'vitest'

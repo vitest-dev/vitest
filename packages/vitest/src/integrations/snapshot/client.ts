@@ -1,8 +1,9 @@
 import { expect } from 'chai'
 import { equals, iterableEquality, subsetEquality } from '@vitest/expect'
-import type { Test } from '../../types'
+import type { Test } from '@vitest/runner'
+import { getNames } from '@vitest/runner/utils'
 import { rpc } from '../../runtime/rpc'
-import { getNames, getWorkerState } from '../../utils'
+import { getWorkerState } from '../../utils'
 import { deepMergeSnapshot } from './port/utils'
 import SnapshotState from './port/state'
 
@@ -38,9 +39,8 @@ export class SnapshotClient {
       if (!this.getSnapshotState(test)) {
         this.snapshotStateMap.set(
           filePath,
-          new SnapshotState(
+          await SnapshotState.create(
             filePath,
-            await rpc().resolveSnapshotPath(filePath),
             getWorkerState().config.snapshotOptions,
           ),
         )

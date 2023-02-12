@@ -3,7 +3,8 @@ import type { ExecaChildProcess } from 'execa'
 import { execa } from 'execa'
 import { extname, resolve } from 'pathe'
 import { SourceMapConsumer } from 'source-map'
-import { ensurePackageInstalled, getTasks } from '../utils'
+import { getTasks } from '../utils'
+import { ensurePackageInstalled } from '../node/pkg'
 import type { Awaitable, File, ParsedStack, Task, TaskResultPack, TaskState, TscErrorInfo, Vitest } from '../types'
 import { getRawErrsMapFromTsCompile, getTsconfig } from './parse'
 import { createIndexMap } from './utils'
@@ -243,7 +244,7 @@ export class Typechecker {
         this._onWatcherRerun?.()
         this._result.sourceErrors = []
         this._result.files = []
-        this._tests = null // test structure migh've changed
+        this._tests = null // test structure might've changed
         rerunTriggered = true
       }
       if (/Found \w+ errors*. Watching for/.test(output)) {

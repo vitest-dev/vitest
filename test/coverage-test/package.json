@@ -2,9 +2,10 @@
   "name": "@vitest/test-coverage",
   "private": true,
   "scripts": {
-    "test": "pnpm run test:c8 && pnpm run test:istanbul",
+    "test": "pnpm run test:c8 && pnpm run test:istanbul && pnpm run test:types",
     "test:c8": "node ./testing.mjs --provider c8",
-    "test:istanbul": "node ./testing.mjs --provider istanbul"
+    "test:istanbul": "node ./testing.mjs --provider istanbul",
+    "test:types": "vitest typecheck --run"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "latest",

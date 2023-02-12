@@ -81,7 +81,7 @@ Files to include in the test run, using glob pattern.
 ### exclude
 
 - **Type:** `string[]`
-- **Default:** `['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**', '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress}.config.*']`
+- **Default:** `['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**', '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*']`
 
 Files to exclude from the test run, using glob pattern.
 
@@ -128,7 +128,7 @@ If disabled, your `alias` and `<plugin>.resolveId` won't affect imports inside e
 #### deps.interopDefault
 
 - **Type:** `boolean`
-- **Default:** `false` if `environment` is `node`, `true` otherwise
+- **Default:** `true`
 
 Interpret CJS module's default as named exports. Some dependencies only bundle CJS modules and don't use named exports that Node.js can statically analyze when a package is imported using `import` syntax instead of `require`. When importing such dependencies in Node environment using named exports, you will see this error:
 
@@ -139,14 +139,21 @@ SyntaxError: Named export 'read' not found. The requested module 'fs-jetpack' is
 CommonJS modules can always be imported via the default export.
 ```
 
-Vitest doesn't do static analysis, and cannot fail before your running code, so you will most likely see this error when running tests:
+Vitest doesn't do static analysis, and cannot fail before your running code, so you will most likely see this error when running tests, if this feature is disabled:
 
 ```
 TypeError: createAsyncThunk is not a function
 TypeError: default is not a function
 ```
 
-If you are using bundlers or transpilers that bypass this Node.js limitation, you can enable this option manually. By default, Vitest assumes you are using Node ESM syntax, when `environment` is `node`, and doesn't interpret named exports.
+By default, Vitest assumes you are using a bundler to bypass this and will not fail, but you can disable this behaviour manually, if you code is not processed.
+
+### runner
+
+- **Type**: `VitestRunnerConstructor`
+- **Default**: `node`, when running tests, or `benchmark`, when running benchmarks
+
+Path to a custom test runner. This is an advanced feature and should be used with custom library runners. You can read more about it in [the documentation](/advanced/runner).
 
 ### benchmark
 
@@ -327,6 +334,31 @@ Vitest also exposes `builtinEnvironments` through `vitest/environments` entry, i
 
 These options are passed down to `setup` method of current [`environment`](#environment). By default, you can configure only JSDOM options, if you are using it as your test environment.
 
+### environmentMatchGlobs
+
+- **Type:** `[string, EnvironmentName][]`
+- **Default:** `[]`
+
+Automatically assign environment based on globs. The first match will be used.
+
+For example:
+
+```ts
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    environmentMatchGlobs: [
+      // all tests in tests/dom will run in jsdom
+      ['tests/dom/**', 'jsdom'],
+      // all tests in tests/ with .edge.test.ts will run in edge-runtime
+      ['**\/*.edge.test.ts', 'edge-runtime'],
+      // ...
+    ]
+  }
+})
+```
+
 ### update
 
 - **Type:** `boolean`
@@ -359,6 +391,7 @@ Project root
 Custom reporters for output. Reporters can be [a Reporter instance](https://github.com/vitest-dev/vitest/blob/main/packages/vitest/src/types/reporter.ts) or a string to select built in reporters:
 
   - `'default'` - collapse suites when they pass
+  - `'basic'` - give a reporter like default reporter in ci
   - `'verbose'` - keep the full task tree visible
   - `'dot'` -  show each task as a single dot
   - `'junit'` - JUnit XML reporter (you can configure `testsuites` tag name with `VITEST_JUNIT_SUITE_NAME` environmental variable)
@@ -455,6 +488,16 @@ Maximum number of threads. You can also use `VITEST_MAX_THREADS` environment var
 - **Default:** _available CPUs_
 
 Minimum number of threads. You can also use `VITEST_MIN_THREADS` environment variable.
+
+### useAtomics
+
+- **Type:** `boolean`
+- **Default:** `false`
+- **Version:** Since Vitest 0.28.3
+
+Use Atomics to synchronize threads.
+
+This can improve performance in some cases, but might cause segfault in older Node versions.
 
 ### testTimeout
 
@@ -601,7 +644,7 @@ Use `provider` to select the tool for coverage collection.
 - **Available for providers:** `'c8' | 'istanbul'`
 - **CLI:** `--coverage.enabled`, `--coverage.enabled=false`
 
-Enables coverage collection. Can be overriden using `--coverage` CLI option.
+Enables coverage collection. Can be overridden using `--coverage` CLI option.
 
 #### include
 
@@ -635,7 +678,7 @@ List of files included in coverage as glob patterns
   '**/*{.,-}test.{js,cjs,mjs,ts,tsx,jsx}',
   '**/*{.,-}spec.{js,cjs,mjs,ts,tsx,jsx}',
   '**/__tests__/**',
-  '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress}.config.*',
+  '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*',
   '**/.{eslint,mocha,prettier}rc.{js,cjs,yml}',
 ]
 ```
@@ -863,21 +906,21 @@ Listen to port and serve API. When set to true, the default port is 51204
 - **Type:** `boolean`
 - **Default:** `false`
 
-Will call [`.mockClear()`](/api/#mockclear) on all spies before each test. This will clear mock history, but not reset its implementation to the default one.
+Will call [`.mockClear()`](/api/mock#mockclear) on all spies before each test. This will clear mock history, but not reset its implementation to the default one.
 
 ### mockReset
 
 - **Type:** `boolean`
 - **Default:** `false`
 
-Will call [`.mockReset()`](/api/#mockreset) on all spies before each test. This will clear mock history and reset its implementation to an empty function (will return `undefined`).
+Will call [`.mockReset()`](/api/mock#mockreset) on all spies before each test. This will clear mock history and reset its implementation to an empty function (will return `undefined`).
 
 ### restoreMocks
 
 - **Type:** `boolean`
 - **Default:** `false`
 
-Will call [`.mockRestore()`](/api/#mockrestore) on all spies before each test. This will clear mock history and reset its implementation to the original one.
+Will call [`.mockRestore()`](/api/mock#mockrestore) on all spies before each test. This will clear mock history and reset its implementation to the original one.
 
 ### unstubEnvs
 
@@ -885,7 +928,7 @@ Will call [`.mockRestore()`](/api/#mockrestore) on all spies before each test. T
 - **Default:** `false`
 - **Version:** Since Vitest 0.26.0
 
-Will call [`vi.unstubAllEnvs`](/api/#vi-unstuballenvs) before each test.
+Will call [`vi.unstubAllEnvs`](/api/vi#vi-unstuballenvs) before each test.
 
 ### unstubGlobals
 
@@ -893,7 +936,7 @@ Will call [`vi.unstubAllEnvs`](/api/#vi-unstuballenvs) before each test.
 - **Default:** `false`
 - **Version:** Since Vitest 0.26.0
 
-Will call [`vi.unstubAllGlobals`](/api/#vi-unstuballglobals) before each test.
+Will call [`vi.unstubAllGlobals`](/api/vi#vi-unstuballglobals) before each test.
 
 ### transformMode
 
@@ -1114,7 +1157,7 @@ Options for configuring [typechecking](/guide/testing-types) test environment.
 
 What tools to use for type checking. Vitest will spawn a process with certain parameters for easier parsing, depending on the type. Checker should implement the same output format as `tsc`.
 
-You need to have a package installed to use typecheker:
+You need to have a package installed to use typechecker:
 
 - `tsc` requires `typescript` package
 - `vue-tsc` requires `vue-tsc` package

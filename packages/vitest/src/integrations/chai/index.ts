@@ -1,8 +1,8 @@
 import * as chai from 'chai'
 import './setup'
+import type { Test } from '@vitest/runner'
 import { GLOBAL_EXPECT, getState, setState } from '@vitest/expect'
 import type { MatcherState } from '../../types/chai'
-import type { Test } from '../../types'
 import { getCurrentEnvironment, getFullName } from '../../utils'
 
 export function createExpect(test?: Test) {

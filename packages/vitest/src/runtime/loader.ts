@@ -1,4 +1,4 @@
-import { pathToFileURL } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { readFile } from 'node:fs/promises'
 import { hasCJSSyntax, isNodeBuiltin } from 'mlly'
 import { normalizeModuleId } from 'vite-node/utils'
@@ -38,7 +38,7 @@ const detectESM = (url: string, source: string | null) => {
 }
 
 // apply transformations only to libraries
-// inline code proccessed by vite-node
+// inline code processed by vite-node
 // make Node pseudo ESM
 export const resolve: Resolver = async (url, context, next) => {
   const { parentURL } = context
@@ -64,7 +64,7 @@ export const resolve: Resolver = async (url, context, next) => {
   }
   else {
     const { url: resolvedUrl, format } = await next(url, context, next)
-    filepath = new URL(resolvedUrl).pathname
+    filepath = fileURLToPath(resolvedUrl)
     result = {
       url: resolvedUrl,
       format,

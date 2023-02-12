@@ -1,6 +1,6 @@
 import fs from 'fs'
 import { builtinModules } from 'module'
-import { dirname, join, relative, resolve } from 'pathe'
+import { dirname, join, normalize, relative, resolve } from 'pathe'
 import esbuild from 'rollup-plugin-esbuild'
 import dts from 'rollup-plugin-dts'
 import nodeResolve from '@rollup/plugin-node-resolve'
@@ -15,23 +15,26 @@ import pkg from './package.json'
 
 const entries = [
   'src/index.ts',
-  'src/browser.ts',
   'src/node/cli.ts',
   'src/node/cli-wrapper.ts',
   'src/node.ts',
+  'src/suite.ts',
+  'src/browser.ts',
+  'src/runners.ts',
   'src/environments.ts',
   'src/runtime/worker.ts',
   'src/runtime/loader.ts',
   'src/runtime/entry.ts',
-  'src/runtime/suite.ts',
   'src/integrations/spy.ts',
 ]
 
 const dtsEntries = [
   'src/index.ts',
   'src/node.ts',
-  'src/browser.ts',
   'src/environments.ts',
+  'src/browser.ts',
+  'src/runners.ts',
+  'src/suite.ts',
   'src/config.ts',
 ]
 
@@ -47,6 +50,9 @@ const external = [
   'vite-node/client',
   'vite-node/server',
   'vite-node/utils',
+  '@vitest/utils/diff',
+  '@vitest/runner/utils',
+  '@vitest/runner/types',
 ]
 
 const plugins = [
@@ -67,8 +73,9 @@ export default ({ watch }) => defineConfig([
       dir: 'dist',
       format: 'esm',
       chunkFileNames: (chunkInfo) => {
-        const id = chunkInfo.facadeModuleId || Object.keys(chunkInfo.modules).find(i => !i.includes('node_modules') && i.includes('src/'))
+        let id = chunkInfo.facadeModuleId || Object.keys(chunkInfo.modules).find(i => !i.includes('node_modules') && (i.includes('src/') || i.includes('src\\')))
         if (id) {
+          id = normalize(id)
           const parts = Array.from(
             new Set(relative(process.cwd(), id).split(/\//g)
               .map(i => i.replace(/\..*$/, ''))
@@ -106,7 +113,7 @@ export default ({ watch }) => defineConfig([
     input: dtsEntries,
     output: {
       dir: 'dist',
-      entryFileNames: chunk => `${chunk.name.replace('src/', '')}.d.ts`,
+      entryFileNames: chunk => `${normalize(chunk.name).replace('src/', '')}.d.ts`,
       format: 'esm',
     },
     external,

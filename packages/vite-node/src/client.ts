@@ -10,6 +10,8 @@ import { VALID_ID_PREFIX, cleanUrl, isInternalRequest, isPrimitive, normalizeMod
 import type { HotContext, ModuleCache, ViteNodeRunnerOptions } from './types'
 import { extractSourceMap } from './source-map'
 
+const { setTimeout, clearTimeout } = globalThis
+
 const debugExecute = createDebug('vite-node:client:execute')
 const debugNative = createDebug('vite-node:client:native')
 
@@ -207,12 +209,13 @@ export class ViteNodeRunner {
   }
 
   private async _resolveUrl(id: string, importee?: string): Promise<[url: string, fsPath: string]> {
-    if (!this.shouldResolveId(id))
-      return [id, id]
     // we don't pass down importee here, because otherwise Vite doesn't resolve it correctly
+    // should be checked before normalization, because it removes this prefix
     if (importee && id.startsWith(VALID_ID_PREFIX))
       importee = undefined
     id = normalizeRequestId(id, this.options.base)
+    if (!this.shouldResolveId(id))
+      return [id, id]
     const { path, exists } = toFilePath(id, this.root)
     if (!this.options.resolveId || exists)
       return [id, path]
@@ -301,8 +304,15 @@ export class ViteNodeRunner {
       enumerable: false,
       configurable: false,
     })
-    // this prosxy is triggered only on exports.{name} and module.exports access
+    // this proxy is triggered only on exports.{name} and module.exports access
+    // inside the module itself. imported module is always "exports"
     const cjsExports = new Proxy(exports, {
+      get: (target, p, receiver) => {
+        if (Reflect.has(target, p))
+          return Reflect.get(target, p, receiver)
+        return Reflect.get(Object.prototype, p, receiver)
+      },
+      getPrototypeOf: () => Object.prototype,
       set: (_, p, value) => {
         // treat "module.exports =" the same as "exports.default =" to not have nested "default.default",
         // so "exports.default" becomes the actual module

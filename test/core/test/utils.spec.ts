@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest'
-import { assertTypes, deepClone, deepMerge, objectAttr, resetModules, toArray } from '../../../packages/vitest/src/utils'
+import { assertTypes, deepClone, objectAttr, toArray } from '@vitest/utils'
+import { deepMerge, resetModules } from '../../../packages/vitest/src/utils'
 import { deepMergeSnapshot } from '../../../packages/vitest/src/integrations/snapshot/port/utils'
 import type { ModuleCacheMap } from '../../../packages/vite-node/src/types'
 

@@ -1,4 +1,4 @@
-import { promises as fs } from 'node:fs'
+import { existsSync, promises as fs } from 'node:fs'
 
 import type { BirpcReturn } from 'birpc'
 import { createBirpc } from 'birpc'
@@ -9,7 +9,7 @@ import { API_PATH } from '../constants'
 import type { Vitest } from '../node'
 import type { File, ModuleGraphData, Reporter, TaskResultPack, UserConsoleLog } from '../types'
 import { getModuleGraph } from '../utils'
-import { parseStacktrace } from '../utils/source-map'
+import { parseErrorStacktrace } from '../utils/source-map'
 import type { TransformResultWithSource, WebSocketEvents, WebSocketHandlers } from './types'
 
 export function setup(ctx: Vitest) {
@@ -51,11 +51,25 @@ export function setup(ctx: Vitest) {
         getFiles() {
           return ctx.state.getFiles()
         },
-        async getPaths() {
-          return await ctx.state.getPaths()
+        getPaths() {
+          return ctx.state.getPaths()
         },
-        readFile(id) {
+        resolveSnapshotPath(testPath) {
+          return ctx.snapshot.resolvePath(testPath)
+        },
+        removeFile(id) {
+          return fs.unlink(id)
+        },
+        createDirectory(id) {
+          return fs.mkdir(id, { recursive: true })
+        },
+        async readFile(id) {
+          if (!existsSync(id))
+            return null
           return fs.readFile(id, 'utf-8')
+        },
+        snapshotSaved(snapshot) {
+          ctx.snapshot.add(snapshot)
         },
         writeFile(id, content) {
           return fs.writeFile(id, content, 'utf-8')
@@ -126,9 +140,9 @@ class WebSocketReporter implements Reporter {
     packs.forEach(([, result]) => {
       // TODO remove after "error" deprecation is removed
       if (result?.error)
-        result.error.stacks = parseStacktrace(result.error)
+        result.error.stacks = parseErrorStacktrace(result.error)
       result?.errors?.forEach((error) => {
-        error.stacks = parseStacktrace(error)
+        error.stacks = parseErrorStacktrace(error)
       })
     })
 

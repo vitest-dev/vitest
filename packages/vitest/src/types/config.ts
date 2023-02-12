@@ -139,6 +139,22 @@ export interface InlineConfig {
   environmentOptions?: EnvironmentOptions
 
   /**
+   * Automatically assign environment based on globs. The first match will be used.
+   *
+   * Format: [glob, environment-name]
+   *
+   * @default []
+   * @example [
+   *   // all tests in tests/dom will run in jsdom
+   *   ['tests/dom/**', 'jsdom'],
+   *   // all tests in tests/ with .edge.test.ts will run in edge-runtime
+   *   ['**\/*.edge.test.ts', 'edge-runtime'],
+   *   // ...
+   * ]
+   */
+  environmentMatchGlobs?: [string, VitestEnvironment][]
+
+  /**
    * Update snapshot
    *
    * @default false
@@ -218,6 +234,15 @@ export interface InlineConfig {
    * @default available CPUs
    */
   minThreads?: number
+
+  /**
+   * Use Atomics to synchronize threads
+   *
+   * This can improve performance in some cases, but might cause segfault in older Node versions.
+   *
+   * @default false
+   */
+  useAtomics?: boolean
 
   /**
    * Default timeout of a test in milliseconds
@@ -498,6 +523,11 @@ export interface InlineConfig {
    * @default 300
   */
   slowTestThreshold?: number
+
+  /**
+   * Path to a custom test runner.
+   */
+  runner?: string
 }
 
 export interface TypecheckConfig {
@@ -533,8 +563,10 @@ export interface UserConfig extends InlineConfig {
    * Path to the config file.
    *
    * Default resolving to `vitest.config.*`, `vite.config.*`
+   *
+   * Setting to `false` will disable config resolving.
    */
-  config?: string | undefined
+  config?: string | false | undefined
 
   /**
    * Use happy-dom
@@ -568,7 +600,7 @@ export interface UserConfig extends InlineConfig {
   shard?: string
 }
 
-export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck'> {
+export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck' | 'runner'> {
   mode: VitestRunMode
 
   base?: string
@@ -608,6 +640,7 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
   }
 
   typecheck: TypecheckConfig
+  runner?: string
 }
 
 export type RuntimeConfig = Pick<

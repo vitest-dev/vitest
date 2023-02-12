@@ -3,12 +3,12 @@ import { existsSync, readFileSync } from 'fs'
 import { normalize, relative } from 'pathe'
 import c from 'picocolors'
 import cliTruncate from 'cli-truncate'
+import { type DiffOptions, unifiedDiff } from '@vitest/utils/diff'
 import { stringify } from '@vitest/utils'
 import type { ErrorWithDiff, ParsedStack } from '../types'
-import { lineSplitRE, parseStacktrace, positionToOffset } from '../utils/source-map'
+import { lineSplitRE, parseErrorStacktrace, positionToOffset } from '../utils/source-map'
 import { F_POINTER } from '../utils/figures'
 import { TypeCheckError } from '../typecheck/typechecker'
-import { type DiffOptions, unifiedDiff } from '../utils/diff'
 import type { Vitest } from './core'
 import { divider } from './reporters/renderers/utils'
 import type { Logger } from './logger'
@@ -38,7 +38,7 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
     } as any
   }
 
-  const stacks = parseStacktrace(e, fullStack)
+  const stacks = parseErrorStacktrace(e, fullStack)
 
   const nearest = error instanceof TypeCheckError
     ? error.stacks[0]
@@ -74,7 +74,7 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
   if (testName) {
     ctx.logger.error(c.red(`The latest test that might've caused the error is "${c.bold(testName)}". It might mean one of the following:`
     + '\n- The error was thrown, while Vitest was running this test.'
-    + '\n- This was the last recorder test before the error was thrown, if error originated after test finished its execution.'))
+    + '\n- This was the last recorded test before the error was thrown, if error originated after test finished its execution.'))
   }
 
   if (typeof e.cause === 'object' && e.cause && 'name' in e.cause) {
@@ -90,6 +90,9 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
       outputTruncateLength: ctx.config.outputTruncateLength,
       outputDiffLines: ctx.config.outputDiffLines,
       outputDiffMaxLines: ctx.config.outputDiffMaxLines,
+      colorDim: c.dim,
+      colorError: c.red,
+      colorSuccess: c.green,
     })
   }
 }
@@ -165,8 +168,8 @@ function handleImportOutsideModuleError(stack: string, ctx: Vitest) {
 
 export function displayDiff(actual: string, expected: string, console: Console, options: Omit<DiffOptions, 'showLegend'> = {}) {
   const diff = unifiedDiff(actual, expected, options)
-  const dim = options.noColor ? (s: string) => s : c.dim
-  const black = options.noColor ? (s: string) => s : c.black
+  const dim = options.colorDim || ((str: string) => str)
+  const black = options.colorDim ? c.black : (str: string) => str
   if (diff)
     console.error(diff + '\n')
   else if (actual && expected && actual !== '"undefined"' && expected !== '"undefined"')
@@ -185,9 +188,6 @@ function printStack(
   errorProperties: Record<string, unknown>,
   onStack?: ((stack: ParsedStack) => void),
 ) {
-  if (!stack.length)
-    return
-
   const logger = ctx.logger
 
   for (const frame of stack) {
@@ -197,7 +197,8 @@ function printStack(
     logger.error(color(` ${c.dim(F_POINTER)} ${[frame.method, c.dim(`${path}:${frame.line}:${frame.column}`)].filter(Boolean).join(' ')}`))
     onStack?.(frame)
   }
-  logger.error()
+  if (stack.length)
+    logger.error()
   const hasProperties = Object.keys(errorProperties).length > 0
   if (hasProperties) {
     logger.error(c.red(c.dim(divider())))

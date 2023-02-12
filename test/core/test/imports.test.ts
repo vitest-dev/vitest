@@ -37,7 +37,7 @@ test('dynamic absolute from root import works', async () => {
   expect(stringTimeoutMod).toBe(variableTimeoutMod)
 })
 
-test('dynamic absolute with extension mport works', async () => {
+test('dynamic absolute with extension import works', async () => {
   const stringTimeoutMod = await import('./../src/timeout')
 
   const timeoutPath = '/src/timeout.ts'

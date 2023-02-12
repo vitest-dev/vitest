@@ -39,21 +39,7 @@ export class StateManager {
     return Array.from(this.errorsSet.values())
   }
 
-  startCollectingPaths() {
-    let _resolve: CollectingPromise['resolve']
-    const promise = new Promise<void>((resolve) => {
-      _resolve = resolve
-    })
-    this.collectingPromise = { promise, resolve: _resolve! }
-  }
-
-  finishCollectingPaths() {
-    this.collectingPromise?.resolve()
-    this.collectingPromise = undefined
-  }
-
-  async getPaths() {
-    await this.collectingPromise?.promise
+  getPaths() {
     return Array.from(this.pathsSet)
   }
 

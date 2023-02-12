@@ -1,6 +1,8 @@
+import type { Task } from '@vitest/runner'
+import type { ParsedStack } from '@vitest/runner/utils'
 import type { Vitest } from '../../node'
-import type { ParsedStack, Reporter, Task } from '../../types'
-import { parseStacktrace } from '../../utils/source-map'
+import type { Reporter } from '../../types/reporter'
+import { parseErrorStacktrace } from '../../utils/source-map'
 import { IndentedLogger } from './renderers/indented-logger'
 
 function yamlString(str: string): string {
@@ -70,7 +72,7 @@ export class TapReporter implements Reporter {
           this.logger.indent()
 
           task.result.errors.forEach((error) => {
-            const stacks = parseStacktrace(error)
+            const stacks = parseErrorStacktrace(error)
             const stack = stacks[0]
 
             this.logger.log('---')

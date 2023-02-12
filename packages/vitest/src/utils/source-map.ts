@@ -6,6 +6,8 @@ export const lineSplitRE = /\r?\n/
 
 const stackIgnorePatterns = [
   'node:internal',
+  /\/packages\/\w+\/dist\//,
+  /\/@vitest\/\w+\/dist\//,
   '/vitest/dist/',
   '/vitest/src/',
   '/vite-node/dist/',
@@ -73,7 +75,23 @@ export function parseSingleStack(raw: string): ParsedStack | null {
   }
 }
 
-export function parseStacktrace(e: ErrorWithDiff, full = false): ParsedStack[] {
+export function parseStacktrace(stack: string, full = false): ParsedStack[] {
+  const stackFrames = stack
+    .split('\n')
+    .map((raw): ParsedStack | null => {
+      const stack = parseSingleStack(raw)
+
+      if (!stack || (!full && stackIgnorePatterns.some(p => stack.file.match(p))))
+        return null
+
+      return stack
+    })
+    .filter(notNullish)
+
+  return stackFrames
+}
+
+export function parseErrorStacktrace(e: ErrorWithDiff, full = false): ParsedStack[] {
   if (!e)
     return []
 
@@ -81,17 +99,7 @@ export function parseStacktrace(e: ErrorWithDiff, full = false): ParsedStack[] {
     return e.stacks
 
   const stackStr = e.stack || e.stackStr || ''
-  const stackFrames = stackStr
-    .split('\n')
-    .map((raw): ParsedStack | null => {
-      const stack = parseSingleStack(raw)
-
-      if (!stack || (!full && stackIgnorePatterns.some(p => stack.file.includes(p))))
-        return null
-
-      return stack
-    })
-    .filter(notNullish)
+  const stackFrames = parseStacktrace(stackStr, full)
 
   e.stacks = stackFrames
   return stackFrames

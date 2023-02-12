@@ -1,7 +1,7 @@
-import { promises as fs } from 'fs'
 import type MagicString from 'magic-string'
 import { lineSplitRE, offsetToLineNumber, positionToOffset } from '../../../utils/source-map'
 import { getCallLastIndex } from '../../../utils'
+import { getSnapshotEnvironment } from '../env'
 
 export interface InlineSnapshot {
   snapshot: string
@@ -13,11 +13,12 @@ export interface InlineSnapshot {
 export async function saveInlineSnapshots(
   snapshots: Array<InlineSnapshot>,
 ) {
+  const environment = getSnapshotEnvironment()
   const MagicString = (await import('magic-string')).default
   const files = new Set(snapshots.map(i => i.file))
   await Promise.all(Array.from(files).map(async (file) => {
     const snaps = snapshots.filter(i => i.file === file)
-    const code = await fs.readFile(file, 'utf8')
+    const code = await environment.readSnapshotFile(file) as string
     const s = new MagicString(code)
 
     for (const snap of snaps) {
@@ -27,7 +28,7 @@ export async function saveInlineSnapshots(
 
     const transformed = s.toString()
     if (transformed !== code)
-      await fs.writeFile(file, transformed, 'utf-8')
+      await environment.saveSnapshotFile(file, transformed)
   }))
 }
 

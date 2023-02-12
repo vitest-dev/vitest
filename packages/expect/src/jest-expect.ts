@@ -1,17 +1,18 @@
-import c from 'picocolors'
 import { AssertionError } from 'chai'
-import { assertTypes, unifiedDiff } from '@vitest/utils'
+import { assertTypes, getColors } from '@vitest/utils'
 import type { Constructable } from '@vitest/utils'
 import type { EnhancedSpy } from '@vitest/spy'
 import { isMockFunction } from '@vitest/spy'
 import type { ChaiPlugin } from './types'
 import { arrayBufferEquality, generateToBeMessage, iterableEquality, equals as jestEquals, sparseArrayEquality, subsetEquality, typeEquality } from './jest-utils'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
-import { stringify } from './jest-matcher-utils'
+import { diff, stringify } from './jest-matcher-utils'
 import { JEST_MATCHERS_OBJECT } from './constants'
 
 // Jest Expect Compact
 export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
+  const c = () => getColors()
+
   function def(name: keyof Vi.Assertion | (keyof Vi.Assertion)[], fn: ((this: Chai.AssertionStatic & Vi.Assertion, ...args: any[]) => any)) {
     const addMethod = (n: keyof Vi.Assertion) => {
       utils.addMethod(chai.Assertion.prototype, n, fn)
@@ -277,9 +278,9 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     return this.have.length(length)
   })
   // destructuring, because it checks `arguments` inside, and value is passing as `undefined`
-  def('toHaveProperty', function (...args: [property: string | string[], value?: any]) {
+  def('toHaveProperty', function (...args: [property: string | (string | number)[], value?: any]) {
     if (Array.isArray(args[0]))
-      args[0] = args[0].map(key => key.replace(/([.[\]])/g, '\\$1')).join('.')
+      args[0] = args[0].map(key => String(key).replace(/([.[\]])/g, '\\$1')).join('.')
 
     const actual = this._obj
     const [propertyName, expected] = args
@@ -351,31 +352,31 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     return `${i}th`
   }
   const formatCalls = (spy: EnhancedSpy, msg: string, actualCall?: any) => {
-    msg += c.gray(`\n\nReceived: \n${spy.mock.calls.map((callArg, i) => {
-      let methodCall = c.bold(`    ${ordinalOf(i + 1)} ${spy.getMockName()} call:\n\n`)
+    msg += c().gray(`\n\nReceived: \n${spy.mock.calls.map((callArg, i) => {
+      let methodCall = c().bold(`    ${ordinalOf(i + 1)} ${spy.getMockName()} call:\n\n`)
       if (actualCall)
-        methodCall += unifiedDiff(stringify(callArg), stringify(actualCall), { showLegend: false })
+        methodCall += diff(callArg, actualCall, { showLegend: false })
       else
         methodCall += stringify(callArg).split('\n').map(line => `    ${line}`).join('\n')
 
       methodCall += '\n'
       return methodCall
     }).join('\n')}`)
-    msg += c.gray(`\n\nNumber of calls: ${c.bold(spy.mock.calls.length)}\n`)
+    msg += c().gray(`\n\nNumber of calls: ${c().bold(spy.mock.calls.length)}\n`)
     return msg
   }
   const formatReturns = (spy: EnhancedSpy, msg: string, actualReturn?: any) => {
-    msg += c.gray(`\n\nReceived: \n${spy.mock.results.map((callReturn, i) => {
-      let methodCall = c.bold(`    ${ordinalOf(i + 1)} ${spy.getMockName()} call return:\n\n`)
+    msg += c().gray(`\n\nReceived: \n${spy.mock.results.map((callReturn, i) => {
+      let methodCall = c().bold(`    ${ordinalOf(i + 1)} ${spy.getMockName()} call return:\n\n`)
       if (actualReturn)
-        methodCall += unifiedDiff(stringify(callReturn.value), stringify(actualReturn), { showLegend: false })
+        methodCall += diff(callReturn.value, actualReturn, { showLegend: false })
       else
         methodCall += stringify(callReturn).split('\n').map(line => `    ${line}`).join('\n')
 
       methodCall += '\n'
       return methodCall
     }).join('\n')}`)
-    msg += c.gray(`\n\nNumber of calls: ${c.bold(spy.mock.calls.length)}\n`)
+    msg += c().gray(`\n\nNumber of calls: ${c().bold(spy.mock.calls.length)}\n`)
     return msg
   }
   def(['toHaveBeenCalledTimes', 'toBeCalledTimes'], function (number: number) {
@@ -548,7 +549,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   def(['toHaveReturned', 'toReturn'], function () {
     const spy = getSpy(this)
     const spyName = spy.getMockName()
-    const calledAndNotThrew = spy.mock.calls.length > 0 && !spy.mock.results.some(({ type }) => type === 'throw')
+    const calledAndNotThrew = spy.mock.calls.length > 0 && spy.mock.results.some(({ type }) => type !== 'throw')
     this.assert(
       calledAndNotThrew,
       `expected "${spyName}" to be successfully called at least once`,

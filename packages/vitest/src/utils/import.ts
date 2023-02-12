@@ -1,7 +1,8 @@
 import { getWorkerState } from './global'
-import { setTimeout } from './timers'
+import { getSafeTimers } from './timers'
 
 function waitNextTick() {
+  const { setTimeout } = getSafeTimers()
   return new Promise(resolve => setTimeout(resolve, 0))
 }
 

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { describe, expect, it } from 'vitest'
-import { serializeError } from '../../../packages/vitest/src/runtime/error'
+import { serializeError } from '@vitest/runner/utils'
 
 describe('error serialize', () => {
   it('works', () => {
@@ -110,14 +110,14 @@ describe('error serialize', () => {
     Object.defineProperty(error, 'array', {
       value: [{
         get name() {
-          throw new Error('name cannnot be accessed')
+          throw new Error('name cannot be accessed')
         },
       }],
     })
     expect(serializeError(error)).toEqual({
       array: [
         {
-          name: '<unserializable>: name cannnot be accessed',
+          name: '<unserializable>: name cannot be accessed',
         },
       ],
       constructor: 'Function<Error>',

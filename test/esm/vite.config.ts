@@ -3,7 +3,7 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   test: {
     deps: {
-      external: [/tslib/, /css-what/],
+      external: [/tslib/, /css-what/, /prototype\.mjs/],
       registerNodeLoader: true,
     },
   },

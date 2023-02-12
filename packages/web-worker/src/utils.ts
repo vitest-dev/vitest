@@ -30,7 +30,7 @@ function createClonedMessageEvent(data: any, transferOrOptions: StructuredSerial
     })
   }
   if (clone !== 'none') {
-    debug('create message event, using polifylled structured clone')
+    debug('create message event, using polyfilled structured clone')
     transfer?.length && console.warn(
       '[@vitest/web-worker] `structuredClone` is not supported in this environment. '
       + 'Falling back to polyfill, your transferable options will be lost. '

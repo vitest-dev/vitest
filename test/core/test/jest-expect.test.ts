@@ -8,6 +8,9 @@ class TestError extends Error {}
 // For expect.extend
 interface CustomMatchers<R = unknown> {
   toBeDividedBy(divisor: number): R
+  toBeTestedAsync(): Promise<R>
+  toBeTestedSync(): R
+  toBeTestedPromise(): R
 }
 declare global {
   namespace Vi {
@@ -142,7 +145,7 @@ describe('jest-expect', () => {
     expect(['Bob', 'Eve']).toEqual(expect.not.arrayContaining(['Steve']))
   })
 
-  it('expect.extend', () => {
+  it('expect.extend', async () => {
     expect.extend({
       toBeDividedBy(received, divisor) {
         const pass = received % divisor === 0
@@ -161,6 +164,24 @@ describe('jest-expect', () => {
           }
         }
       },
+      async toBeTestedAsync() {
+        return {
+          pass: false,
+          message: () => 'toBeTestedAsync',
+        }
+      },
+      toBeTestedSync() {
+        return {
+          pass: false,
+          message: () => 'toBeTestedSync',
+        }
+      },
+      toBeTestedPromise() {
+        return Promise.resolve({
+          pass: false,
+          message: () => 'toBeTestedPromise',
+        })
+      },
     })
 
     expect(5).toBeDividedBy(5)
@@ -169,6 +190,11 @@ describe('jest-expect', () => {
       one: expect.toBeDividedBy(1),
       two: expect.not.toBeDividedBy(5),
     })
+    expect(() => expect(2).toBeDividedBy(5)).toThrowError()
+
+    expect(() => expect(null).toBeTestedSync()).toThrowError('toBeTestedSync')
+    await expect(async () => await expect(null).toBeTestedAsync()).rejects.toThrowError('toBeTestedAsync')
+    await expect(async () => await expect(null).toBeTestedPromise()).rejects.toThrowError('toBeTestedPromise')
   })
 
   it('object', () => {
@@ -179,6 +205,7 @@ describe('jest-expect', () => {
 
     const foo = {}
     const complex = {
+      '0': 'zero',
       'foo': 1,
       'foo.bar[0]': 'baz',
       'a-b': true,
@@ -201,12 +228,22 @@ describe('jest-expect', () => {
 
     expect(complex).toHaveProperty('a-b')
     expect(complex).toHaveProperty('a-b-1.0.0')
+    expect(complex).toHaveProperty('0')
+    expect(complex).toHaveProperty('0', 'zero')
+    expect(complex).toHaveProperty(['0'])
+    expect(complex).toHaveProperty(['0'], 'zero')
+    expect(complex).toHaveProperty([0])
+    expect(complex).toHaveProperty([0], 'zero')
     expect(complex).toHaveProperty('foo')
     expect(complex).toHaveProperty('foo', 1)
     expect(complex).toHaveProperty('bar.foo', 'foo')
     expect(complex).toHaveProperty('bar.arr[0]')
     expect(complex).toHaveProperty('bar.arr[1].zoo', 'monkey')
     expect(complex).toHaveProperty('bar.arr.0')
+    expect(complex).toHaveProperty(['bar', 'arr', '0'])
+    expect(complex).toHaveProperty(['bar', 'arr', '0'], 'first')
+    expect(complex).toHaveProperty(['bar', 'arr', 0])
+    expect(complex).toHaveProperty(['bar', 'arr', 0], 'first')
     expect(complex).toHaveProperty('bar.arr.1.zoo', 'monkey')
     expect(complex).toHaveProperty(['bar', 'arr', '1', 'zoo'], 'monkey')
     expect(complex).toHaveProperty(['foo.bar[0]'], 'baz')
@@ -222,7 +259,7 @@ describe('jest-expect', () => {
 
     expect(() => {
       expect(complex).toHaveProperty('a-b', false)
-    }).toThrowErrorMatchingInlineSnapshot('"expected { foo: 1, \'foo.bar[0]\': \'baz\', …(3) } to have property \\"a-b\\" with value false"')
+    }).toThrowErrorMatchingInlineSnapshot('"expected { \'0\': \'zero\', foo: 1, …(4) } to have property \\"a-b\\" with value false"')
   })
 
   it('assertions', () => {
