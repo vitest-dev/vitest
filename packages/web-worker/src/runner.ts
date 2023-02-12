@@ -1,12 +1,12 @@
 import { VitestExecutor } from 'vitest/node'
 
 export class InlineWorkerRunner extends VitestExecutor {
-  constructor(options: any, private context: any) {
-    super(options)
+  constructor(config: any, options: any, private context: any) {
+    super(config, options)
   }
 
-  prepareContext(context: Record<string, any>) {
-    const ctx = super.prepareContext(context)
+  prepareContext(mod: any, context: Record<string, any>) {
+    const ctx = super.prepareContext(mod, context)
     // not supported for now, we can't synchronously load modules
     const importScripts = () => {
       throw new Error('[vitest] `importScripts` is not supported in Vite workers. Please, consider using `import` instead.')
