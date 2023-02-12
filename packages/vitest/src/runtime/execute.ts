@@ -1,7 +1,7 @@
 import { ViteNodeRunner } from 'vite-node/client'
 import { isInternalRequest } from 'vite-node/utils'
 import type { ModuleCache, ViteNodeRunnerOptions } from 'vite-node'
-import { normalize } from 'pathe'
+import { extname, normalize } from 'pathe'
 import { isNodeBuiltin } from 'mlly'
 import { resolve } from 'import-meta-resolve'
 import type { ResolvedConfig } from '../types'
@@ -128,12 +128,16 @@ export class VitestExecutor extends ViteNodeRunner {
       })
 
       if (mod.format === 'cjs') {
-        for (const [key, syntax, fix] of VitestExecutor.ESM_MODULE_API) {
-          Object.defineProperty(context, key, {
-            value: () => {
-              throw new Error(`"${syntax}" syntax is not available in CJS context. Use "${fix}" instead.${ESM_STRICT_HINT}`)
-            },
-          })
+        const ext = extname(context.__filename)
+        // ESM syntax is allowed in .ts files (it gets compiled), but we should remove it from CJS context in .js files
+        if (ext === '.js' || ext === '.mjs' || ext === '.cjs') {
+          for (const [key, syntax, fix] of VitestExecutor.ESM_MODULE_API) {
+            Object.defineProperty(context, key, {
+              value: () => {
+                throw new Error(`"${syntax}" syntax is not available in CJS context. Use "${fix}" instead.${ESM_STRICT_HINT}`)
+              },
+            })
+          }
         }
       }
       if (mod.format === 'esm') {

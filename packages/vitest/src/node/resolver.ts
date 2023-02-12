@@ -14,6 +14,7 @@ import { shouldExternalize } from 'vite-node/server'
 export class VitestResolver {
   private importerToIdMap = new Map<string, Set<string>>()
   private idToImporterMap = new Map<string, Set<string>>()
+  private idToFormatMap = new Map<string, 'esm' | 'cjs'>()
   private pkgCache = new Map<string, { version: string; type?: 'module' | 'commonjs' }>()
   private conditions: Set<string>
 
@@ -52,7 +53,11 @@ export class VitestResolver {
       return { code: result?.code }
     }
     id = normalizeModuleId(id)
-    // file should always exist, otherwise it would throw in resolveId
+    // we don't use Vite transformRequest here, because we don't want to go through the plugin chain,
+    // because it will resolve id even if it can't be resolved in Node.js ESM
+    // strictESM mode doesn't support aliases/virtual modules/plugins
+    // if user requires something like this, it should be resolved with the same mechanism it is resolved in their application
+    // this file should always exist, since it will throw in resolveNodeId otherwise
     const { code, map } = await transformWithEsbuild(await readFile(id, 'utf-8'), id)
     const result = await this.server.ssrTransform(code, map, id)
 
@@ -61,6 +66,7 @@ export class VitestResolver {
       withInlineSourcemap(result)
 
     const format = await this._getPackageFormat(id)
+    this.idToFormatMap.set(id, format)
     return { code: result?.code, format }
   }
 
@@ -70,20 +76,25 @@ export class VitestResolver {
     importer = normalizeModuleId(importer)
     const importerURL = pathToFileURL(importer)
     const originalPath = path
+    const preserveSymlinks = this.server.config.resolve.preserveSymlinks
+    // TODO:
+    // if ID is resolved in CJS via dynamic import, should follow ESM rules (import.meta.resolve)
+    // if ID is resolved in CJS via import, should follow CJS rules (require.resolve)
+    const resolver = (path: string) => {
+      return resolveImport(path, importerURL, this.conditions, preserveSymlinks).href
+    }
     // TS has a weird algorithm for resolving imports, and it requires js
     // but the file is probably .ts. if not, we try again with the original path
     path = path.replace(/\.(c|m)?js$/, '.$1ts')
-    const preserveSymlinks = this.server.config.resolve.preserveSymlinks
-    let url
+    let id: string
     try {
-      url = resolveImport(path, importerURL, this.conditions, preserveSymlinks)
+      id = resolver(path)
     }
     catch (err: any) {
-      if (err.code !== 'ERR_MODULE_NOT_FOUND')
+      if (err.code !== 'ERR_MODULE_NOT_FOUND' && err.code !== 'MODULE_NOT_FOUND')
         throw err
-      url = resolveImport(originalPath, importerURL, this.conditions, preserveSymlinks)
+      id = resolver(originalPath)
     }
-    let id = url.href
     if (id.startsWith('file://'))
       id = fileURLToPath(id)
     id = normalize(id)
@@ -122,6 +133,10 @@ export class VitestResolver {
   }
 
   private async _getPackageFormat(fsPath: string) {
+    // TODO: clear all cache on watcher package.json change
+    const cachedFormat = this.idToFormatMap.get(fsPath)
+    if (cachedFormat)
+      return cachedFormat
     switch (extname(fsPath)) {
       case '.cts':
       case '.cjs':
