@@ -1,6 +1,6 @@
 import { VitestExecutor } from 'vitest/node'
 
-export class InlineWorkerRunner extends VitestExecutor {
+export class InlineWorkerExecutor extends VitestExecutor {
   constructor(config: any, options: any, private context: any) {
     super(config, options)
   }

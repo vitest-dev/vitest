@@ -1,6 +1,6 @@
 import { MessageChannel, type MessagePort as NodeMessagePort } from 'node:worker_threads'
 import type { InlineWorkerContext, Procedure } from './types'
-import { InlineWorkerRunner } from './runner'
+import { InlineWorkerExecutor } from './executor'
 import { debug, getRunnerOptions } from './utils'
 
 interface SharedInlineWorkerContext extends Omit<InlineWorkerContext, 'onmessage' | 'postMessage' | 'self' | 'global'> {
@@ -99,20 +99,20 @@ export function createSharedWorkerConstructor(): typeof SharedWorker {
         context.onconnect?.(e)
       })
 
-      const runner = new InlineWorkerRunner(runnerOptions, context)
+      const executor = new InlineWorkerExecutor(runnerOptions.config, runnerOptions, context)
 
       const id = (url instanceof URL ? url.toString() : url).replace(/^file:\/+/, '/')
 
-      this._vw_name = id
+      this._vw_name = name ?? id
 
-      runner.resolveUrl(id).then(([, fsPath]) => {
+      executor.resolveUrl(id).then(([, fsPath]) => {
         this._vw_name = name ?? fsPath
 
         debug('initialize shared worker %s', this._vw_name)
 
-        runner.executeFile(fsPath).then(() => {
+        executor.executeFile(fsPath).then(() => {
           // worker should be new every time, invalidate its sub dependency
-          runnerOptions.moduleCache.invalidateSubDepTree([fsPath, runner.mocker.getMockPath(fsPath)])
+          runnerOptions.moduleCache.invalidateSubDepTree([fsPath, executor.mocker.getMockPath(fsPath)])
           this._vw_workerTarget.dispatchEvent(
             new MessageEvent('connect', {
               ports: [this._vw_workerPort],

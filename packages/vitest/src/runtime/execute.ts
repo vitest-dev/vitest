@@ -163,7 +163,11 @@ export class VitestExecutor extends ViteNodeRunner {
 
         if (importMetaResolveAvailable) {
           Object.defineProperty(context.__vite_ssr_import_meta__, 'resolve', {
-            value: resolve,
+            writable: false,
+            configurable: false,
+            value: (id: string, importer?: string) => {
+              return resolve(id, importer ?? context.__vite_ssr_import_meta__.url)
+            },
           })
         }
       }

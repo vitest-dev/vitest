@@ -1,5 +1,5 @@
 import type { CloneOption, DefineWorkerOptions, InlineWorkerContext, Procedure } from './types'
-import { InlineWorkerRunner } from './runner'
+import { InlineWorkerExecutor } from './executor'
 import { createMessageEvent, debug, getRunnerOptions } from './utils'
 
 export function createWorkerConstructor(options?: DefineWorkerOptions): typeof Worker {
@@ -64,20 +64,20 @@ export function createWorkerConstructor(options?: DefineWorkerOptions): typeof W
         this.onmessageerror?.(e)
       })
 
-      const runner = new InlineWorkerRunner(runnerOptions, context)
+      const executor = new InlineWorkerExecutor(runnerOptions.config, runnerOptions, context)
 
       const id = (url instanceof URL ? url.toString() : url).replace(/^file:\/+/, '/')
 
       this._vw_name = id
 
-      runner.resolveUrl(id).then(([, fsPath]) => {
+      executor.resolveUrl(id).then(([, fsPath]) => {
         this._vw_name = options?.name ?? fsPath
 
         debug('initialize worker %s', this._vw_name)
 
-        runner.executeFile(fsPath).then(() => {
+        executor.executeFile(fsPath).then(() => {
           // worker should be new every time, invalidate its sub dependency
-          runnerOptions.moduleCache.invalidateSubDepTree([fsPath, runner.mocker.getMockPath(fsPath)])
+          runnerOptions.moduleCache.invalidateSubDepTree([fsPath, executor.mocker.getMockPath(fsPath)])
           const q = this._vw_messageQueue
           this._vw_messageQueue = null
           if (q)

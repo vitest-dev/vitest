@@ -62,19 +62,11 @@ export function createMessageEvent(data: any, transferOrOptions: StructuredSeria
 }
 
 export function getRunnerOptions() {
-  const { config, rpc, mockMap, moduleCache } = getWorkerState()
+  const { config, mockMap, moduleCache } = getWorkerState()
 
   return {
-    fetchModule(id: string) {
-      return rpc.fetch(id)
-    },
-    resolveId(id: string, importer?: string) {
-      return rpc.resolveId(id, importer)
-    },
+    config,
     moduleCache,
     mockMap,
-    interopDefault: config.deps.interopDefault ?? true,
-    root: config.root,
-    base: config.base,
   }
 }
