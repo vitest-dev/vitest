@@ -149,7 +149,7 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
   test.todo.concurrent(/* ... */) // or test.concurrent.todo(/* ... */)
   ```
 
-  When using Snapshots with async concurrent tests,  `expect` from the local [Test Context](/guide/test-context.md) must be used to ensure the right test is being detected.
+  When running concurrent tests, Snapshots and Assertions must use `expect` from the local [Test Context](/guide/test-context.md) to ensure the right test is detected.
 
 
   ```ts
