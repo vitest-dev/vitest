@@ -140,6 +140,23 @@ describe('jest-expect', () => {
       title: '0.1 + 0.2',
       sum: expect.closeTo(0.3, 5),
     })
+
+    expect({
+      title: '0.1 + 0.2',
+      sum: 0.1 + 0.2,
+    }).not.toEqual({
+      title: '0.1 + 0.2',
+      sum: expect.closeTo(0.4, 5),
+    })
+
+    expect({
+      title: '0.1 + 0.2',
+      sum: 0.1 + 0.2,
+    }).toEqual({
+      title: '0.1 + 0.2',
+      sum: expect.not.closeTo(0.4, 5),
+    })
+
     // TODO: support set
     // expect(new Set(['bar'])).not.toEqual(new Set([expect.stringContaining('zoo')]))
   })
