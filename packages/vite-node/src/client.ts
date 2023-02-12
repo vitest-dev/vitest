@@ -344,7 +344,18 @@ export class ViteNodeRunner {
 
     Object.assign(mod, { code: transformed, exports })
     const __filename = fileURLToPath(href)
+    const __dirname = dirname(__filename)
+    const moduleRequire = createRequire(href)
     const moduleProxy = {
+      children: [],
+      paths: [],
+      id: __filename,
+      filename: __filename,
+      isPreloading: false,
+      loaded: false,
+      parent: null,
+      path: __dirname,
+      require: moduleRequire,
       set exports(value) {
         exportAll(cjsExports, value)
         exports.default = value
@@ -382,11 +393,11 @@ export class ViteNodeRunner {
       __vite_ssr_import_meta__: meta,
 
       // cjs compact
-      require: createRequire(href),
+      require: moduleRequire,
       exports: cjsExports,
       module: moduleProxy,
       __filename,
-      __dirname: dirname(__filename),
+      __dirname,
     })
 
     debugExecute(__filename)
