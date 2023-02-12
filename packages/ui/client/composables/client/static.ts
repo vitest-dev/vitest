@@ -32,7 +32,7 @@ export function createStaticClient(): VitestClient {
     getFiles: () => {
       return metadata.files
     },
-    getPaths: async () => {
+    getPaths: () => {
       return metadata.paths
     },
     getConfig: () => {

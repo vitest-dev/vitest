@@ -30,7 +30,7 @@ export default class HTMLReporter implements Reporter {
 
   async onFinished() {
     const result: HTMLReportData = {
-      paths: await this.ctx.state.getPaths(),
+      paths: this.ctx.state.getPaths(),
       files: this.ctx.state.getFiles(),
       config: this.ctx.config,
       moduleGraph: {},
