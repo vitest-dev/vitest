@@ -198,11 +198,11 @@ Vitest uses chevron `>` as a separator instead of colon `:` for readability, whe
 
 For the following example test code:
 ```js
-test("toThrowErrorMatchingSnapshot", () => {
+test('toThrowErrorMatchingSnapshot', () => {
   expect(() => {
-    throw new Error("error");
-  }).toThrowErrorMatchingSnapshot("hint");
-});
+    throw new Error('error')
+  }).toThrowErrorMatchingSnapshot('hint')
+})
 ```
 
 In Jest, the snapshot will be:
