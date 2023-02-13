@@ -192,9 +192,9 @@ export default defineConfig({
 })
 ```
 
-#### 3. Chevron `>` is used as a separator instead of colon `:` for hints
+#### 3. Chevron `>` is used as a separator instead of colon `:` for custom messages
 
-Vitest uses chevron `>` as a separator instead of colon `:` for readability.
+Vitest uses chevron `>` as a separator instead of colon `:` for readability, when a custom message is passed during creation of a snapshot file.
 
 For the following example test code:
 ```js
