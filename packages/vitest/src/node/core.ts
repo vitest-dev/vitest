@@ -1,7 +1,6 @@
 import { existsSync, promises as fs } from 'node:fs'
 import type { ViteDevServer } from 'vite'
-import { normalizePath } from 'vite'
-import { relative, toNamespacedPath } from 'pathe'
+import { normalize, relative, toNamespacedPath } from 'pathe'
 import fg from 'fast-glob'
 import mm from 'micromatch'
 import c from 'picocolors'
@@ -98,7 +97,7 @@ export class Vitest {
 
       // since we set `server.hmr: false`, Vite does not auto restart itself
       server.watcher.on('change', async (file) => {
-        file = normalizePath(file)
+        file = normalize(file)
         const isConfig = file === server.config.configFile
         if (isConfig) {
           await Promise.all(this._onRestartListeners.map(fn => fn('config')))
@@ -125,7 +124,7 @@ export class Vitest {
   async initCoverageProvider() {
     if (this.coverageProvider !== undefined)
       return
-    this.coverageProvider = await getCoverageProvider(this.config.coverage)
+    this.coverageProvider = await getCoverageProvider(this.config.coverage, this.runner)
     if (this.coverageProvider) {
       await this.coverageProvider.initialize(this)
       this.config.coverage = this.coverageProvider.resolveOptions()

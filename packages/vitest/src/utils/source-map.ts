@@ -75,15 +75,8 @@ export function parseSingleStack(raw: string): ParsedStack | null {
   }
 }
 
-export function parseStacktrace(e: ErrorWithDiff, full = false): ParsedStack[] {
-  if (!e)
-    return []
-
-  if (e.stacks)
-    return e.stacks
-
-  const stackStr = e.stack || e.stackStr || ''
-  const stackFrames = stackStr
+export function parseStacktrace(stack: string, full = false): ParsedStack[] {
+  const stackFrames = stack
     .split('\n')
     .map((raw): ParsedStack | null => {
       const stack = parseSingleStack(raw)
@@ -94,6 +87,19 @@ export function parseStacktrace(e: ErrorWithDiff, full = false): ParsedStack[] {
       return stack
     })
     .filter(notNullish)
+
+  return stackFrames
+}
+
+export function parseErrorStacktrace(e: ErrorWithDiff, full = false): ParsedStack[] {
+  if (!e)
+    return []
+
+  if (e.stacks)
+    return e.stacks
+
+  const stackStr = e.stack || e.stackStr || ''
+  const stackFrames = parseStacktrace(stackStr, full)
 
   e.stacks = stackFrames
   return stackFrames

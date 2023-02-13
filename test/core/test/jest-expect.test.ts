@@ -205,6 +205,7 @@ describe('jest-expect', () => {
 
     const foo = {}
     const complex = {
+      '0': 'zero',
       'foo': 1,
       'foo.bar[0]': 'baz',
       'a-b': true,
@@ -227,12 +228,22 @@ describe('jest-expect', () => {
 
     expect(complex).toHaveProperty('a-b')
     expect(complex).toHaveProperty('a-b-1.0.0')
+    expect(complex).toHaveProperty('0')
+    expect(complex).toHaveProperty('0', 'zero')
+    expect(complex).toHaveProperty(['0'])
+    expect(complex).toHaveProperty(['0'], 'zero')
+    expect(complex).toHaveProperty([0])
+    expect(complex).toHaveProperty([0], 'zero')
     expect(complex).toHaveProperty('foo')
     expect(complex).toHaveProperty('foo', 1)
     expect(complex).toHaveProperty('bar.foo', 'foo')
     expect(complex).toHaveProperty('bar.arr[0]')
     expect(complex).toHaveProperty('bar.arr[1].zoo', 'monkey')
     expect(complex).toHaveProperty('bar.arr.0')
+    expect(complex).toHaveProperty(['bar', 'arr', '0'])
+    expect(complex).toHaveProperty(['bar', 'arr', '0'], 'first')
+    expect(complex).toHaveProperty(['bar', 'arr', 0])
+    expect(complex).toHaveProperty(['bar', 'arr', 0], 'first')
     expect(complex).toHaveProperty('bar.arr.1.zoo', 'monkey')
     expect(complex).toHaveProperty(['bar', 'arr', '1', 'zoo'], 'monkey')
     expect(complex).toHaveProperty(['foo.bar[0]'], 'baz')
@@ -248,7 +259,7 @@ describe('jest-expect', () => {
 
     expect(() => {
       expect(complex).toHaveProperty('a-b', false)
-    }).toThrowErrorMatchingInlineSnapshot('"expected { foo: 1, \'foo.bar[0]\': \'baz\', …(3) } to have property \\"a-b\\" with value false"')
+    }).toThrowErrorMatchingInlineSnapshot('"expected { \'0\': \'zero\', foo: 1, …(4) } to have property \\"a-b\\" with value false"')
   })
 
   it('assertions', () => {
