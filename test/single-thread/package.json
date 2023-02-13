@@ -1,6 +1,7 @@
 {
   "name": "@vitest/test-single-thread",
   "private": true,
+  "type": "module",
   "scripts": {
     "test": "vitest",
     "coverage": "vitest run --coverage"
