@@ -23,12 +23,30 @@ function withSafeTimers(fn: () => void) {
   }
 }
 
+const promises = new Set<Promise<unknown>>()
+
+export const rpcDone = () => {
+  if (!promises.size)
+    return
+  const awaitable = Array.from(promises)
+  return Promise.all(awaitable)
+}
+
 export const rpc = () => {
   const { rpc } = getWorkerState()
   return new Proxy(rpc, {
     get(target, p, handler) {
       const sendCall = Reflect.get(target, p, handler)
-      const safeSendCall = (...args: any[]) => withSafeTimers(() => sendCall(...args))
+      const safeSendCall = (...args: any[]) => withSafeTimers(async () => {
+        const result = sendCall(...args)
+        promises.add(result)
+        try {
+          return await result
+        }
+        finally {
+          promises.delete(result)
+        }
+      })
       safeSendCall.asEvent = sendCall.asEvent
       return safeSendCall
     },
