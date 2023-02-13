@@ -8,7 +8,6 @@ const external = [
   ...builtinModules,
   ...Object.keys(pkg.dependencies || {}),
   ...Object.keys(pkg.peerDependencies || {}),
-  'vite-node/client',
 ]
 
 const entries = {

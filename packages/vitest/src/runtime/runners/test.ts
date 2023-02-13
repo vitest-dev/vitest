@@ -10,13 +10,14 @@ import type { VitestExecutor } from '../execute'
 export class VitestTestRunner implements VitestRunner {
   private snapshotClient = getSnapshotClient()
   private workerState = getWorkerState()
+  private __vitest_executor!: VitestExecutor
 
-  constructor(public config: ResolvedConfig, private executor: VitestExecutor) {}
+  constructor(public config: ResolvedConfig) {}
 
   importFile(filepath: string, source: VitestRunnerImportSource): unknown {
     if (source === 'setup')
       this.workerState.moduleCache.delete(filepath)
-    return this.executor.executeId(filepath)
+    return this.__vitest_executor.executeId(filepath)
   }
 
   onBeforeRun() {

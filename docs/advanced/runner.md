@@ -83,9 +83,11 @@ export interface VitestRunner {
 }
 ```
 
-When initiating this class, Vitest passes down Vitest config, - you should expose it as a `config` property, and test executor, which is an instance of `ViteNodeRunner`.
+When initiating this class, Vitest passes down Vitest config, - you should expose it as a `config` property.
 
 ::: warning
+Vitest also injects an instance of `ViteNodeRunner` as `__vitest_executor` property. You can use it to process files in `importFile` method (this is default behavior of `TestRunner`` and `BenchmarkRunner`).
+
 `ViteNodeRunner` exposes `executeId` method, which is used to import test files in a Vite-friendly environment. Meaning, it will resolve imports and transform file content at runtime so that Node can understand it.
 :::
 

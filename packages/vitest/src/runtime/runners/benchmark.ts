@@ -122,12 +122,14 @@ async function runBenchmarkSuite(suite: Suite, runner: VitestRunner) {
 }
 
 export class NodeBenchmarkRunner implements VitestRunner {
-  constructor(public config: ResolvedConfig, private executor: VitestExecutor) {}
+  private __vitest_executor!: VitestExecutor
+
+  constructor(public config: ResolvedConfig) {}
 
   importFile(filepath: string, source: VitestRunnerImportSource): unknown {
     if (source === 'setup')
       getWorkerState().moduleCache.delete(filepath)
-    return this.executor.executeId(filepath)
+    return this.__vitest_executor.executeId(filepath)
   }
 
   async runSuite(suite: Suite): Promise<void> {

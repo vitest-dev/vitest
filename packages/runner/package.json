@@ -37,9 +37,6 @@
     "dev": "rollup -c --watch",
     "prepublishOnly": "pnpm build"
   },
-  "peerDependencies": {
-    "vite-node": "*"
-  },
   "dependencies": {
     "@vitest/utils": "workspace:*",
     "p-limit": "^4.0.0",
