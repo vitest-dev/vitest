@@ -10,6 +10,15 @@ function collectOwnProperties(obj: any, collector: Set<string | symbol> | ((key:
   Object.getOwnPropertySymbols(obj).forEach(collect)
 }
 
+export function groupBy<T, K extends string | number | symbol>(collection: T[], iteratee: (item: T) => K) {
+  return collection.reduce((acc, item) => {
+    const key = iteratee(item)
+    acc[key] ||= []
+    acc[key].push(item)
+    return acc
+  }, {} as Record<K, T[]>)
+}
+
 export function getAllMockableProperties(obj: any, isModule: boolean) {
   const allProps = new Map<string | symbol, { key: string | symbol; descriptor: PropertyDescriptor }>()
   let curr = obj
