@@ -294,7 +294,7 @@ importers:
       '@types/react-test-renderer': 17.0.2
       '@vitejs/plugin-react': 3.1.0_vite@4.0.0
       '@vitest/ui': link:../../packages/ui
-      happy-dom: 8.2.6
+      happy-dom: 8.3.2
       jsdom: 21.1.0
       react-test-renderer: 17.0.2_react@17.0.2
       vite: 4.0.0
@@ -878,7 +878,7 @@ importers:
       find-up: ^6.3.0
       flatted: ^3.2.7
       get-tsconfig: ^4.3.0
-      happy-dom: ^7.8.1
+      happy-dom: ^8.3.2
       jsdom: ^20.0.3
       local-pkg: ^0.4.2
       log-update: ^5.0.1
@@ -951,7 +951,7 @@ importers:
       find-up: 6.3.0
       flatted: 3.2.7
       get-tsconfig: 4.3.0
-      happy-dom: 7.8.1
+      happy-dom: 8.3.2
       jsdom: 20.0.3
       log-update: 5.0.1
       magic-string: 0.27.0
@@ -1074,7 +1074,7 @@ importers:
     devDependencies:
       '@vitejs/plugin-vue': 4.0.0_vite@4.0.0+vue@3.2.47
       '@vue/test-utils': 2.2.10_vue@3.2.47
-      happy-dom: 8.2.6
+      happy-dom: 8.3.2
       vite: 4.0.0
       vitest: link:../../packages/vitest
       vue: 3.2.47
@@ -13788,21 +13788,8 @@ packages:
       uglify-js: 3.17.0
     dev: true
 
-  /happy-dom/7.8.1:
-    resolution: {integrity: sha512-lKpeGDtA0FqS/LpAEU+5N5kKkmW5TOjZCXZDnF7YtWuvKP9iwCqpeshG9gXA/H+gX0VQ/I/OToy73+umx1NQUw==}
-    dependencies:
-      css.escape: 1.5.1
-      he: 1.2.0
-      node-fetch: 2.6.7
-      webidl-conversions: 7.0.0
-      whatwg-encoding: 2.0.0
-      whatwg-mimetype: 3.0.0
-    transitivePeerDependencies:
-      - encoding
-    dev: true
-
-  /happy-dom/8.2.6:
-    resolution: {integrity: sha512-s53VwyMFpQPEZdN00M82i3tFTzz0T4kBVD4tu8b+im99s1NkLK6tfKGCCl2Jmf3ZWfFCRwS+DV2qkR7S1wmIhQ==}
+  /happy-dom/8.3.2:
+    resolution: {integrity: sha512-Z0RigOkogHBIkkG/G3WHh5mMVZEO5Q8zSNFKEJ/e19kq83dbrHjWJJKOIXsDLOu9KtqM8QKj9IinpZC/tRNIQA==}
     dependencies:
       css.escape: 1.5.1
       he: 1.2.0
