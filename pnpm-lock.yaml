@@ -38,7 +38,7 @@ importers:
       ohmyfetch: ^0.4.21
       pathe: ^1.1.0
       pnpm: 7.23.0
-      rimraf: ^3.0.2
+      rimraf: ^4.1.2
       rollup: ^2.79.1
       rollup-plugin-dts: ^4.2.3
       rollup-plugin-esbuild: ^4.10.1
@@ -78,7 +78,7 @@ importers:
       ohmyfetch: 0.4.21
       pathe: 1.1.0
       pnpm: 7.23.0
-      rimraf: 3.0.2
+      rimraf: 4.1.2
       rollup: 2.79.1
       rollup-plugin-dts: 4.2.3_ntuob3xud5wukob6phfmz2mbyy
       rollup-plugin-esbuild: 4.10.2_itddgjfly6okm3gulavqgvimcq
@@ -18542,6 +18542,12 @@ packages:
     hasBin: true
     dependencies:
       glob: 7.2.3
+
+  /rimraf/4.1.2:
+    resolution: {integrity: sha512-BlIbgFryTbw3Dz6hyoWFhKk+unCcHMSkZGrTFVAx2WmttdBSonsdtRlwiuTbDqTKr+UlXIUqJVS4QT5tUzGENQ==}
+    engines: {node: '>=14'}
+    hasBin: true
+    dev: true
 
   /ripemd160/2.0.2:
     resolution: {integrity: sha512-ii4iagi25WusVoiC4B4lq7pbXfAp3D9v5CwfkY33vffw2+pkDjY1D8GaN7spsxvCSx8dkPqOZCEZyfxcmJG2IA==}
