@@ -11,7 +11,7 @@ test('mount component', async () => {
   })
 
   expect(wrapper.text()).toContain('4 x 2 = 8')
-  expect(wrapper.html()).toMatchSnapshot()
+  expect(wrapper.element).toMatchSnapshot()
 
   await wrapper.get('button').trigger('click')
   await nextTick()
@@ -22,5 +22,5 @@ test('mount component', async () => {
   await wrapper.get('button').trigger('click')
 
   expect(wrapper.text()).toContain('4 x 5 = 20')
-  expect(wrapper.html()).toMatchSnapshot()
+  expect(wrapper.element).toMatchSnapshot()
 })

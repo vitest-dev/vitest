@@ -2,8 +2,8 @@
 import { existsSync, promises as fs } from 'fs'
 import { relative, resolve } from 'pathe'
 import type { TransformPluginContext } from 'rollup'
-import type { AfterSuiteRunMeta, CoverageIstanbulOptions, CoverageProvider, ResolvedCoverageOptions, Vitest } from 'vitest'
-import { configDefaults, defaultExclude, defaultInclude } from 'vitest/config'
+import type { AfterSuiteRunMeta, CoverageIstanbulOptions, CoverageProvider, ReportContext, ResolvedCoverageOptions, Vitest } from 'vitest'
+import { coverageConfigDefaults, defaultExclude, defaultInclude } from 'vitest/config'
 import libReport from 'istanbul-lib-report'
 import reports from 'istanbul-reports'
 import type { CoverageMap } from 'istanbul-lib-coverage'
@@ -13,6 +13,8 @@ import { type Instrumenter, createInstrumenter } from 'istanbul-lib-instrument'
 // @ts-expect-error missing types
 import _TestExclude from 'test-exclude'
 import { COVERAGE_STORE_KEY } from './constants'
+
+type Options = ResolvedCoverageOptions<'istanbul'>
 
 type Threshold = 'lines' | 'functions' | 'statements' | 'branches'
 
@@ -33,7 +35,7 @@ export class IstanbulCoverageProvider implements CoverageProvider {
   name = 'istanbul'
 
   ctx!: Vitest
-  options!: ResolvedCoverageOptions & CoverageIstanbulOptions & { provider: 'istanbul' }
+  options!: Options
   instrumenter!: Instrumenter
   testExclude!: InstanceType<TestExclude>
 
@@ -66,11 +68,11 @@ export class IstanbulCoverageProvider implements CoverageProvider {
       include: typeof this.options.include === 'undefined' ? undefined : [...this.options.include],
       exclude: [...defaultExclude, ...defaultInclude, ...this.options.exclude],
       excludeNodeModules: true,
-      extension: configDefaults.coverage.extension,
+      extension: this.options.extension,
     })
   }
 
-  resolveOptions(): ResolvedCoverageOptions {
+  resolveOptions() {
     return this.options
   }
 
@@ -93,20 +95,22 @@ export class IstanbulCoverageProvider implements CoverageProvider {
 
   async clean(clean = true) {
     if (clean && existsSync(this.options.reportsDirectory))
-      await fs.rm(this.options.reportsDirectory, { recursive: true, force: true })
+      await fs.rm(this.options.reportsDirectory, { recursive: true, force: true, maxRetries: 10 })
 
     this.coverages = []
   }
 
-  async reportCoverage() {
+  async reportCoverage({ allTestsRun }: ReportContext = {}) {
     const mergedCoverage: CoverageMap = this.coverages.reduce((coverage, previousCoverageMap) => {
       const map = libCoverage.createCoverageMap(coverage)
       map.merge(previousCoverageMap)
       return map
-    }, {})
+    }, libCoverage.createCoverageMap({}))
 
-    if (this.options.all)
+    if (this.options.all && allTestsRun)
       await this.includeUntestedFiles(mergedCoverage)
+
+    includeImplicitElseBranches(mergedCoverage)
 
     const sourceMapStore = libSourceMaps.createSourceMapStore()
     const coverageMap: CoverageMap = await sourceMapStore.transformCoverage(mergedCoverage)
@@ -119,7 +123,7 @@ export class IstanbulCoverageProvider implements CoverageProvider {
     })
 
     for (const reporter of this.options.reporter) {
-      reports.create(reporter as any, {
+      reports.create(reporter, {
         skipFull: this.options.skipFull,
         projectRoot: this.ctx.config.root,
       }).execute(context)
@@ -215,19 +219,23 @@ export class IstanbulCoverageProvider implements CoverageProvider {
   }
 }
 
-function resolveIstanbulOptions(options: CoverageIstanbulOptions, root: string) {
-  const reportsDirectory = resolve(root, options.reportsDirectory || configDefaults.coverage.reportsDirectory!)
+function resolveIstanbulOptions(options: CoverageIstanbulOptions, root: string): Options {
+  const reportsDirectory = resolve(root, options.reportsDirectory || coverageConfigDefaults.reportsDirectory)
+  const reporter = options.reporter || coverageConfigDefaults.reporter
 
-  const resolved = {
-    ...configDefaults.coverage,
+  const resolved: Options = {
+    ...coverageConfigDefaults,
+
+    // User's options
     ...options,
+
+    // Resolved fields
     provider: 'istanbul',
     reportsDirectory,
-    tempDirectory: resolve(reportsDirectory, 'tmp'),
-    reporter: Array.isArray(options.reporter) ? options.reporter : [options.reporter],
+    reporter: Array.isArray(reporter) ? reporter : [reporter],
   }
 
-  return resolved as ResolvedCoverageOptions & { provider: 'istanbul' }
+  return resolved
 }
 
 /**
@@ -237,4 +245,45 @@ function resolveIstanbulOptions(options: CoverageIstanbulOptions, root: string) 
  */
 function removeQueryParameters(filename: string) {
   return filename.split('?')[0]
+}
+
+/**
+ * Work-around for #1887 and #2239 while waiting for https://github.com/istanbuljs/istanbuljs/pull/706
+ *
+ * Goes through all files in the coverage map and checks if branchMap's have
+ * if-statements with implicit else. When finds one, copies source location of
+ * the if-statement into the else statement.
+ */
+function includeImplicitElseBranches(coverageMap: CoverageMap) {
+  for (const file of coverageMap.files()) {
+    const fileCoverage = coverageMap.fileCoverageFor(file)
+
+    for (const branchMap of Object.values(fileCoverage.branchMap)) {
+      if (branchMap.type === 'if') {
+        const lastIndex = branchMap.locations.length - 1
+
+        if (lastIndex > 0) {
+          const elseLocation = branchMap.locations[lastIndex]
+
+          if (elseLocation && isEmptyCoverageRange(elseLocation)) {
+            const ifLocation = branchMap.locations[0]
+
+            elseLocation.start = { ...ifLocation.start }
+            elseLocation.end = { ...ifLocation.end }
+          }
+        }
+      }
+    }
+  }
+}
+
+function isEmptyCoverageRange(range: libCoverage.Range) {
+  return (
+    range.start === undefined
+    || range.start.line === undefined
+    || range.start.column === undefined
+    || range.end === undefined
+    || range.end.line === undefined
+    || range.end.column === undefined
+  )
 }

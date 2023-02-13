@@ -2,7 +2,8 @@ import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import { relative } from 'pathe'
 import { configDefaults } from '../../defaults'
 import type { ResolvedConfig, UserConfig } from '../../types'
-import { deepMerge, ensurePackageInstalled, notNullish } from '../../utils'
+import { deepMerge, notNullish, removeUndefinedValues } from '../../utils'
+import { ensurePackageInstalled } from '../pkg'
 import { resolveApiConfig } from '../config'
 import { Vitest } from '../core'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
@@ -36,7 +37,12 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
         // preliminary merge of options to be able to create server options for vite
         // however to allow vitest plugins to modify vitest config values
         // this is repeated in configResolved where the config is final
-        const preOptions = deepMerge({}, configDefaults, options, viteConfig.test ?? {})
+        const preOptions = deepMerge(
+          {},
+          configDefaults,
+          options,
+          removeUndefinedValues(viteConfig.test ?? {}),
+        )
         preOptions.api = resolveApiConfig(preOptions)
 
         if (viteConfig.define) {
@@ -85,6 +91,13 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
           open = '/'
 
         const config: ViteConfig = {
+          root: viteConfig.test?.root || options.root,
+          esbuild: {
+            sourcemap: 'external',
+
+            // Enables using ignore hint for coverage providers with @preserve keyword
+            legalComments: 'inline',
+          },
           resolve: {
             // by default Vite resolves `module` field, which not always a native ESM module
             // setting this option can bypass that and fallback to cjs version
@@ -160,6 +173,15 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
 
         for (const name in envs)
           process.env[name] ??= envs[name]
+
+        // don't watch files in run mode
+        if (!options.watch) {
+          viteConfig.server.watch = {
+            persistent: false,
+            depth: 0,
+            ignored: ['**/*'],
+          }
+        }
       },
       async configureServer(server) {
         try {

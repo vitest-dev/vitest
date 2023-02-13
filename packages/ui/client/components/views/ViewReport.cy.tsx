@@ -1,6 +1,9 @@
 import { faker } from '@faker-js/faker'
 import ViewReport from './ViewReport.vue'
 import type { File } from '#types'
+import { config } from '~/composables/client'
+
+config.value.root = ''
 
 const taskErrorSelector = '.task-error'
 const viewReportSelector = '[data-testid=view-report]'
@@ -9,10 +12,6 @@ const stackRowSelector = '[data-testid=stack]'
 const makeTextStack = () => ({
   line: faker.datatype.number({ min: 0, max: 120 }),
   column: faker.datatype.number({ min: 0, max: 5000 }),
-  sourcePos: {
-    line: faker.datatype.number({ min: 121, max: 240 }),
-    column: faker.datatype.number({ min: 5001, max: 10000 }),
-  },
   // Absolute file paths
   file: faker.system.filePath(),
   method: faker.hacker.verb(),
@@ -20,6 +19,12 @@ const makeTextStack = () => ({
 
 // 5 Stacks
 const textStacks = Array.from(new Array(5)).map(makeTextStack)
+
+const error = {
+  name: 'Do some test',
+  stacks: textStacks,
+  message: 'Error: Transform failed with 1 error:',
+}
 
 const fileWithTextStacks = {
   id: 'f-1',
@@ -29,11 +34,8 @@ const fileWithTextStacks = {
   filepath: 'test/plain-stack-trace.ts',
   result: {
     state: 'fail',
-    error: {
-      name: 'Do some test',
-      stacks: textStacks,
-      message: 'Error: Transform failed with 1 error:',
-    },
+    error,
+    errors: [error],
   },
   tasks: [],
 }
@@ -49,9 +51,8 @@ describe('ViewReport', () => {
       cy.get(stackRowSelector).should('have.length', stacks.length)
         .get(stackRowSelector)
         .each(($stack, idx) => {
-          const { column, line, file: fileName, sourcePos } = stacks[idx]
-          expect($stack).not.to.contain.text(`${line}:${column}`)
-          expect($stack).to.contain.text(`${sourcePos.line}:${sourcePos.column}`)
+          const { column, line, file: fileName } = stacks[idx]
+          expect($stack).to.contain.text(`${line}:${column}`)
           expect($stack).to.contain.text(`- ${fileName}`)
         })
     })
@@ -72,11 +73,11 @@ describe('ViewReport', () => {
       filepath: 'test/plain-stack-trace.ts',
       result: {
         state: 'fail',
-        error: {
+        errors: [{
           name: 'Do some test',
           stack: '\x1B[33mtest/plain-stack-trace.ts\x1B[0m',
           message: 'Error: Transform failed with 1 error:',
-        },
+        }],
       },
       tasks: [],
     }
@@ -109,11 +110,11 @@ describe('ViewReport', () => {
       filepath: 'test/plain-stack-trace.ts',
       result: {
         state: 'fail',
-        error: {
+        errors: [{
           name: 'Do some test',
           stack: '\x1B[33mtest/plain-stack-trace.ts\x1B[0m',
           message: '\x1B[44mError: Transform failed with 1 error:\x1B[0m',
-        },
+        }],
       },
       tasks: [],
     }

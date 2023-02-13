@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { openInEditor, shouldOpenInEditor } from '../../composables/error'
-import type { File, ParsedStack, Suite, Task } from '#types'
-import { config } from '~/composables/client'
+import type Convert from 'ansi-to-html'
+import ViewReportError from './ViewReportError.vue'
+import type { ErrorWithDiff, File, Suite, Task } from '#types'
 import { isDark } from '~/composables/dark'
 import { createAnsiToHtmlFilter } from '~/composables/error'
+import { config } from '~/composables/client'
 
 const props = defineProps<{
   file?: File
@@ -17,7 +18,7 @@ function collectFailed(task: Task, level: number): LeveledTask[] {
   if (task.result?.state !== 'fail')
     return []
 
-  if (task.type === 'test' || task.type === 'benchmark')
+  if (task.type === 'test' || task.type === 'custom')
     return [{ ...task, level }]
   else
     return [{ ...task, level }, ...task.tasks.flatMap(t => collectFailed(t, level + 1))]
@@ -32,29 +33,36 @@ function escapeHtml(unsafe: string) {
     .replace(/'/g, '&#039;')
 }
 
+function createHtmlError(filter: Convert, error: ErrorWithDiff) {
+  let htmlError = ''
+  if (error.message.includes('\x1B'))
+    htmlError = `<b>${error.nameStr || error.name}</b>: ${filter.toHtml(escapeHtml(error.message))}`
+
+  const startStrWithX1B = error.stackStr?.includes('\x1B')
+  if (startStrWithX1B || error.stack?.includes('\x1B')) {
+    if (htmlError.length > 0)
+      htmlError += filter.toHtml(escapeHtml((startStrWithX1B ? error.stackStr : error.stack) as string))
+    else
+      htmlError = `<b>${error.nameStr || error.name}</b>: ${error.message}${filter.toHtml(escapeHtml((startStrWithX1B ? error.stackStr : error.stack) as string))}`
+  }
+
+  if (htmlError.length > 0)
+    return htmlError
+  return null
+}
+
 function mapLeveledTaskStacks(dark: boolean, tasks: LeveledTask[]) {
   const filter = createAnsiToHtmlFilter(dark)
   return tasks.map((t) => {
     const result = t.result
-    if (result) {
-      const error = result.error
-      if (error) {
-        let htmlError = ''
-        if (error.message.includes('\x1B'))
-          htmlError = `<b>${error.nameStr || error.name}</b>: ${filter.toHtml(escapeHtml(error.message))}`
-
-        const startStrWithX1B = error.stackStr?.includes('\x1B')
-        if (startStrWithX1B || error.stack?.includes('\x1B')) {
-          if (htmlError.length > 0)
-            htmlError += filter.toHtml(escapeHtml((startStrWithX1B ? error.stackStr : error.stack) as string))
-          else
-            htmlError = `<b>${error.nameStr || error.name}</b>: ${error.message}${filter.toHtml(escapeHtml((startStrWithX1B ? error.stackStr : error.stack) as string))}`
-        }
-
-        if (htmlError.length > 0)
-          result.htmlError = htmlError
-      }
-    }
+    if (!result)
+      return t
+    const errors = result.errors
+      ?.map(error => createHtmlError(filter, error))
+      .filter(error => error != null)
+      .join('<br><br>')
+    if (errors?.length)
+      result.htmlError = errors
     return t
   })
 }
@@ -63,7 +71,7 @@ const failed = computed(() => {
   const file = props.file
   const failedFlatMap = file?.tasks?.flatMap(t => collectFailed(t, 0)) ?? []
   const result = file?.result
-  const fileError = result?.error
+  const fileError = result?.errors?.[0]
   // we must check also if the test cannot compile
   if (fileError) {
     // create a dummy one
@@ -80,20 +88,6 @@ const failed = computed(() => {
   }
   return failedFlatMap.length > 0 ? mapLeveledTaskStacks(isDark.value, failedFlatMap) : failedFlatMap
 })
-
-function relative(p: string) {
-  if (p.startsWith(config.value.root))
-    return p.slice(config.value.root.length)
-  return p
-}
-
-function line(stack: ParsedStack) {
-  return stack.sourcePos?.line ?? stack.line
-}
-
-function column(stack: ParsedStack) {
-  return stack.sourcePos?.column ?? stack.column
-}
 </script>
 
 <template>
@@ -112,20 +106,15 @@ function column(stack: ParsedStack) {
           <div v-if="task.result?.htmlError" class="scrolls scrolls-rounded task-error">
             <pre v-html="task.result.htmlError" />
           </div>
-          <div v-else-if="task.result?.error" class="scrolls scrolls-rounded task-error">
-            <pre><b>{{ task.result.error.name || task.result.error.nameStr }}</b>: {{ task.result.error.message }}</pre>
-            <div v-for="(stack, i) of task.result.error.stacks" :key="i" class="op80 flex gap-x-2 items-center" data-testid="stack">
-              <pre> - {{ relative(stack.file) }}:{{ line(stack) }}:{{ column(stack) }}</pre>
-              <div
-                v-if="shouldOpenInEditor(stack.file, props.file?.name)"
-                v-tooltip.bottom="'Open in Editor'"
-                class="i-carbon-launch c-red-600 dark:c-red-400 hover:cursor-pointer min-w-1em min-h-1em"
-                tabindex="0"
-                aria-label="Open in Editor"
-                @click.passive="openInEditor(stack.file, line(stack), column(stack))"
-              />
-            </div>
-          </div>
+          <template v-else-if="task.result?.errors">
+            <ViewReportError
+              v-for="(error, idx) of task.result.errors"
+              :key="idx"
+              :error="error"
+              :filename="file?.name"
+              :root="config.root"
+            />
+          </template>
         </div>
       </div>
     </template>

@@ -3,8 +3,8 @@ import type { UserConfig as ViteUserConfig } from 'vite'
 import { EXIT_CODE_RESTART } from '../constants'
 import { CoverageProviderMap } from '../integrations/coverage'
 import { getEnvPackageName } from '../integrations/env'
-import type { UserConfig, VitestRunMode } from '../types'
-import { ensurePackageInstalled } from '../utils'
+import type { UserConfig, Vitest, VitestRunMode } from '../types'
+import { ensurePackageInstalled } from './pkg'
 import { createVitest } from './create'
 import { registerConsoleShortcuts } from './stdin'
 
@@ -15,7 +15,17 @@ export interface CliOptions extends UserConfig {
   run?: boolean
 }
 
-export async function startVitest(mode: VitestRunMode, cliFilters: string[], options: CliOptions, viteOverrides?: ViteUserConfig) {
+/**
+ * Start Vitest programmatically
+ *
+ * Returns a Vitest instance if initialized successfully.
+ */
+export async function startVitest(
+  mode: VitestRunMode,
+  cliFilters: string[],
+  options: CliOptions,
+  viteOverrides?: ViteUserConfig,
+): Promise<Vitest | undefined> {
   process.env.TEST = 'true'
   process.env.VITEST = 'true'
   process.env.NODE_ENV ??= options.mode || 'test'
@@ -30,7 +40,7 @@ export async function startVitest(mode: VitestRunMode, cliFilters: string[], opt
 
   if (!await ensurePackageInstalled('vite', root)) {
     process.exitCode = 1
-    return false
+    return
   }
 
   if (typeof options.coverage === 'boolean')
@@ -38,14 +48,14 @@ export async function startVitest(mode: VitestRunMode, cliFilters: string[], opt
 
   const ctx = await createVitest(mode, options, viteOverrides)
 
-  if (mode !== 'benchmark' && ctx.config.coverage.enabled) {
+  if (mode === 'test' && ctx.config.coverage.enabled) {
     const provider = ctx.config.coverage.provider || 'c8'
-    if (typeof provider === 'string') {
-      const requiredPackages = CoverageProviderMap[provider]
+    const requiredPackages = CoverageProviderMap[provider]
 
+    if (requiredPackages) {
       if (!await ensurePackageInstalled(requiredPackages, root)) {
         process.exitCode = 1
-        return false
+        return ctx
       }
     }
   }
@@ -54,7 +64,7 @@ export async function startVitest(mode: VitestRunMode, cliFilters: string[], opt
 
   if (environmentPackage && !await ensurePackageInstalled(environmentPackage, root)) {
     process.exitCode = 1
-    return false
+    return ctx
   }
 
   if (process.stdin.isTTY && ctx.config.watch)
@@ -63,10 +73,13 @@ export async function startVitest(mode: VitestRunMode, cliFilters: string[], opt
   ctx.onServerRestart((reason) => {
     ctx.report('onServerRestart', reason)
 
+    // if it's in a CLI wrapper, exit with a special code to request restart
     if (process.env.VITEST_CLI_WRAPPER)
       process.exit(EXIT_CODE_RESTART)
-    else
-      ctx.start(cliFilters)
+  })
+
+  ctx.onAfterSetServer(() => {
+    ctx.start(cliFilters)
   })
 
   try {
@@ -76,13 +89,12 @@ export async function startVitest(mode: VitestRunMode, cliFilters: string[], opt
     process.exitCode = 1
     await ctx.logger.printError(e, true, 'Unhandled Error')
     ctx.logger.error('\n\n')
-    return false
+    return ctx
   }
 
-  if (!ctx.config.watch) {
-    await ctx.exit()
-    return !process.exitCode
-  }
+  if (ctx.config.watch)
+    return ctx
 
-  return true
+  await ctx.close()
+  return ctx
 }

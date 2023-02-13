@@ -9,13 +9,6 @@ test.each([
 })
 
 test.each([
-  null,
-  [null],
-])('null is null', (value) => {
-  expect(value).toBe(null)
-})
-
-test.each([
   ['string', true],
   ['string', false],
 ])('can be parsed', (a, b) => {
@@ -135,4 +128,91 @@ describe('context with each - concurrent', () => {
       expect(number1 + number2).toBe(number3)
     })
   })
+})
+
+describe('not all arguments are array describe.each', () => {
+  const results = [null, [null]]
+  let i = 0
+
+  describe.each([null, [null]])('null is null', (value) => {
+    test('null is null', () => {
+      expect(value).toEqual(results[i++])
+    })
+  })
+})
+
+describe('not all arguments are array test.each', () => {
+  const results = [
+    null,
+    [null],
+  ]
+  let i = 0
+
+  test.each([
+    null,
+    [null],
+  ])('matches results', (value) => {
+    expect(value).toEqual(results[i++])
+  })
+})
+
+test.each([
+  null,
+])('value is null', (value) => {
+  expect(value).toBeNull()
+})
+
+test.each([
+  [null, null],
+  [null, null],
+])('if all cases are arrays of equal length, treats array elements as arguments', (value1, value2) => {
+  expect(value1).toBeNull()
+  expect(value2).toBeNull()
+})
+
+describe.each`
+a             | b      | expected
+${1}          | ${1}   | ${2}
+${'a'}        | ${'b'} | ${'ab'}
+${[]}         | ${'b'} | ${'b'}
+${{}}         | ${'b'} | ${'[object Object]b'}
+${{ asd: 1 }} | ${'b'} | ${'[object Object]b'}
+`('describe template string add($a, $b)', ({ a, b, expected }) => {
+  test(`returns ${expected}`, () => {
+    expect(a + b).toBe(expected)
+  })
+})
+
+test.each`
+a               | b      | expected
+${1}            | ${1}   | ${2}
+${'a'}          | ${'b'} | ${'ab'}
+${[]}           | ${'b'} | ${'b'}
+${{}}           | ${'b'} | ${'[object Object]b'}
+${{ asd: 1 }}   | ${'b'} | ${'[object Object]b'}
+`('returns $expected when $a is added $b', ({ a, b, expected }) => {
+  expect(a + b).toBe(expected)
+})
+
+test.each`
+a               | b      | expected
+${{ val: 1 }}   | ${'b'} | ${'1b'}
+${{ val: 2 }}   | ${'b'} | ${'2b'}
+${{ val: 3 }}   | ${'b'} | ${'3b'}
+`('returns $expected when $a.val is added $b', ({ a, b, expected }) => {
+  expect(a.val + b).toBe(expected)
+})
+
+test.each`
+a       | b       | expected
+${true} | ${true} | ${true}
+`('($a && $b) -> $expected', ({ a, b, expected }) => {
+  expect(a && b).toBe(expected)
+})
+
+test.each`
+a             | b              | expected
+${{ val: 1 }} | ${{ val: 2 }}} | ${3}
+`('($a && $b) -> $expected', ({ a, b, expected }) => {
+  expect(a.val + b.val).toBe(expected)
 })

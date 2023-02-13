@@ -1,6 +1,7 @@
 import esbuild from 'rollup-plugin-esbuild'
 import dts from 'rollup-plugin-dts'
 import commonjs from '@rollup/plugin-commonjs'
+import nodeResolve from '@rollup/plugin-node-resolve'
 import json from '@rollup/plugin-json'
 import alias from '@rollup/plugin-alias'
 import pkg from './package.json'
@@ -25,6 +26,7 @@ const plugins = [
     ],
   }),
   json(),
+  nodeResolve(),
   commonjs(),
   esbuild({
     target: 'node14',
@@ -42,7 +44,7 @@ export default () => [
     plugins,
   },
   {
-    input: entries,
+    input: 'src/pure.ts',
     output: {
       dir: process.cwd(),
       entryFileNames: '[name].d.ts',

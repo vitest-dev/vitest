@@ -1,7 +1,7 @@
 import readline from 'readline'
 import c from 'picocolors'
 import prompt from 'prompts'
-import { stdout } from '../utils'
+import { isWindows, stdout } from '../utils'
 import type { Vitest } from './core'
 
 const keys = [
@@ -30,11 +30,26 @@ export function registerConsoleShortcuts(ctx: Vitest) {
     if (str === '\x03' || str === '\x1B' || (key && key.ctrl && key.name === 'c'))
       return ctx.exit(true)
 
+    // window not support suspend
+    if (!isWindows && key && key.ctrl && key.name === 'z') {
+      process.kill(process.ppid, 'SIGTSTP')
+      process.kill(process.pid, 'SIGTSTP')
+      return
+    }
+
     // is running, ignore keypress
     if (ctx.runningPromise)
       return
 
     const name = key?.name
+
+    // quit
+    if (name === 'q')
+      return ctx.exit(true)
+
+    // TODO typechecking doesn't support shortcuts this yet
+    if (ctx.mode === 'typecheck')
+      return
 
     // help
     if (name === 'h')
@@ -54,9 +69,6 @@ export function registerConsoleShortcuts(ctx: Vitest) {
     // change fileNamePattern
     if (name === 'p')
       return inputFilePattern()
-    // quit
-    if (name === 'q')
-      return ctx.exit(true)
   }
 
   async function keypressHandler(str: string, key: any) {
@@ -71,7 +83,7 @@ export function registerConsoleShortcuts(ctx: Vitest) {
       message: 'Input test name pattern (RegExp)',
       initial: ctx.config.testNamePattern?.source || '',
     }])
-    await ctx.changeNamePattern(filter, undefined, 'change pattern')
+    await ctx.changeNamePattern(filter.trim(), undefined, 'change pattern')
     on()
   }
 
@@ -83,8 +95,8 @@ export function registerConsoleShortcuts(ctx: Vitest) {
       message: 'Input filename pattern',
       initial: latestFilename,
     }])
-    latestFilename = filter
-    await ctx.changeFilenamePattern(filter)
+    latestFilename = filter.trim()
+    await ctx.changeFilenamePattern(filter.trim())
     on()
   }
 

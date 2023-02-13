@@ -10,6 +10,9 @@ describe('server works correctly', async () => {
       config: {
         root: '/',
       },
+      moduleGraph: {
+        idToModuleMap: new Map(),
+      },
     } as any, {
       transformMode: {
         web: [/web/],

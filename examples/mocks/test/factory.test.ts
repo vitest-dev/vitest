@@ -1,6 +1,7 @@
 import axios from 'axios'
 import * as example from '../src/example'
 import * as moduleA from '../src/moduleA'
+import * as moduleB from '../src/moduleB'
 import logger from '../src/log'
 
 vi
@@ -22,6 +23,15 @@ vi.mock('../src/moduleA', async () => {
   return {
     B: 'B',
     ...actual,
+  }
+})
+
+vi.mock('../src/moduleB', async (importOriginal) => {
+  const actual = await importOriginal<any>()
+  return {
+    ...actual,
+    B: 'mockedB',
+    C: 'addedC',
   }
 })
 
@@ -48,16 +58,16 @@ vi.mock('../src/default.ts', () => null)
 
 describe('mocking with factory', () => {
   test('missing exports on mock', () => {
-    expect(() => example.default).toThrowError('[vitest] No "default" export is defined on the "/src/example.ts"')
-    expect(() => example.boolean).toThrowError('[vitest] No "boolean" export is defined on the "/src/example.ts"')
-    expect(() => example.object).toThrowError('[vitest] No "object" export is defined on the "/src/example.ts"')
-    expect(() => example.array).toThrowError('[vitest] No "array" export is defined on the "/src/example.ts"')
-    expect(() => example.someClasses).toThrowError('[vitest] No "someClasses" export is defined on the "/src/example.ts"')
+    expect(() => example.default).toThrowError('[vitest] No "default" export is defined on the "../src/example" mock')
+    expect(() => example.boolean).toThrowError('[vitest] No "boolean" export is defined on the "../src/example" mock')
+    expect(() => example.object).toThrowError('[vitest] No "object" export is defined on the "../src/example" mock')
+    expect(() => example.array).toThrowError('[vitest] No "array" export is defined on the "../src/example" mock')
+    expect(() => example.someClasses).toThrowError('[vitest] No "someClasses" export is defined on the "../src/example" mock')
   })
 
   it('non-object return on factory gives error', async () => {
     await expect(() => import('../src/default').then(m => m.default)).rejects
-      .toThrowError('[vitest] vi.mock(path: string, factory?: () => unknown) is not returning an object. Did you mean to return an object with a "default" key?')
+      .toThrowError('[vitest] vi.mock("../src/default.ts", factory?: () => unknown) is not returning an object. Did you mean to return an object with a "default" key?')
   })
 
   test('defined exports on mock', async () => {
@@ -71,6 +81,12 @@ describe('mocking with factory', () => {
   test('successfully with actual', () => {
     expect(moduleA.A).toBe('A')
     expect((moduleA as any).B).toBe('B')
+  })
+
+  test('successfully with factory helper', () => {
+    expect(moduleB.A).toBe('A')
+    expect(moduleB.B).toBe('mockedB')
+    expect((moduleB as any).C).toBe('addedC')
   })
 
   test('mocks node_modules', () => {

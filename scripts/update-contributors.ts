@@ -1,4 +1,4 @@
-import { promises as fs } from 'fs'
+import { promises as fs } from 'node:fs'
 import { $fetch } from 'ohmyfetch'
 
 interface Contributor {
@@ -21,7 +21,7 @@ async function fetchContributors(page = 1) {
 
 async function generate() {
   const collaborators = await fetchContributors()
-  await fs.writeFile('./docs/.vitepress/contributor-names.json', JSON.stringify(collaborators, null, 2), 'utf8')
+  await fs.writeFile('./docs/.vitepress/contributor-names.json', `${JSON.stringify(collaborators, null, 2)}\n`, 'utf8')
 }
 
 generate()

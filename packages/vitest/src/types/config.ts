@@ -14,6 +14,7 @@ export type BuiltinEnvironment = 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime'
 // Record is used, so user can get intellisense for builtin environments, but still allow custom environments
 export type VitestEnvironment = BuiltinEnvironment | (string & Record<never, never>)
 export type CSSModuleScopeStrategy = 'stable' | 'scoped' | 'non-scoped'
+export type SequenceHooks = 'stack' | 'list' | 'parallel'
 
 export type ApiConfig = Pick<CommonServerOptions, 'port' | 'strictPort' | 'host'>
 
@@ -27,9 +28,14 @@ export interface EnvironmentOptions {
   [x: string]: unknown
 }
 
-export type VitestRunMode = 'test' | 'benchmark'
+export type VitestRunMode = 'test' | 'benchmark' | 'typecheck'
 
 export interface InlineConfig {
+  /**
+   * Name of the project. Will be used to display in the reporter.
+   */
+  name?: string
+
   /**
    * Benchmark options.
    *
@@ -133,6 +139,22 @@ export interface InlineConfig {
   environmentOptions?: EnvironmentOptions
 
   /**
+   * Automatically assign environment based on globs. The first match will be used.
+   *
+   * Format: [glob, environment-name]
+   *
+   * @default []
+   * @example [
+   *   // all tests in tests/dom will run in jsdom
+   *   ['tests/dom/**', 'jsdom'],
+   *   // all tests in tests/ with .edge.test.ts will run in edge-runtime
+   *   ['**\/*.edge.test.ts', 'edge-runtime'],
+   *   // ...
+   * ]
+   */
+  environmentMatchGlobs?: [string, VitestEnvironment][]
+
+  /**
    * Update snapshot
    *
    * @default false
@@ -155,19 +177,36 @@ export interface InlineConfig {
 
   /**
    * Custom reporter for output. Can contain one or more built-in report names, reporter instances,
-   * and/or paths to custom reporters
+   * and/or paths to custom reporters.
    */
-  reporters?: Arrayable<BuiltinReporters | Reporter | Omit<string, BuiltinReporters>>
+  reporters?: Arrayable<BuiltinReporters | 'html' | Reporter | Omit<string, BuiltinReporters>>
 
   /**
-   * diff output length
+   * Truncates lines in the output to the given length.
+   * @default stdout.columns || 80
    */
   outputTruncateLength?: number
 
   /**
-   * number of diff output lines
+   * Maximum number of line to show in a single diff.
+   * @default 15
    */
   outputDiffLines?: number
+
+  /**
+   * The maximum number of characters allowed in a single object before doing a diff.
+   * Vitest tries to stringify an object before doing a diff, but if the object is too large,
+   * it will reduce the depth of the object to fit within this limit.
+   * Because of this if object is too big or nested, you might not see the diff.
+   * @default 10000
+   */
+  outputDiffMaxSize?: number
+
+  /**
+   * Maximum number of lines in a diff overall.
+   * @default 50
+   */
+  outputDiffMaxLines?: number
 
   /**
    * Write test results to a file when the --reporter=json` or `--reporter=junit` option is also specified.
@@ -195,6 +234,15 @@ export interface InlineConfig {
    * @default available CPUs
    */
   minThreads?: number
+
+  /**
+   * Use Atomics to synchronize threads
+   *
+   * This can improve performance in some cases, but might cause segfault in older Node versions.
+   *
+   * @default false
+   */
+  useAtomics?: boolean
 
   /**
    * Default timeout of a test in milliseconds
@@ -282,6 +330,18 @@ export interface InlineConfig {
    * @default false
    */
   restoreMocks?: boolean
+
+  /**
+   * Will restore all global stubs to their original values before each test
+   * @default false
+   */
+  unstubGlobals?: boolean
+
+  /**
+   * Will restore all env stubs to their original values before each test
+   * @default false
+   */
+  unstubEnvs?: boolean
 
   /**
    * Serve API options.
@@ -430,6 +490,14 @@ export interface InlineConfig {
      * @default Date.now()
      */
     seed?: number
+    /**
+     * Defines how hooks should be ordered
+     * - `stack` will order "after" hooks in reverse order, "before" hooks will run sequentially
+     * - `list` will order hooks in the order they are defined
+     * - `parallel` will run hooks in a single group in parallel
+     * @default 'parallel'
+     */
+    hooks?: SequenceHooks
   }
 
   /**
@@ -443,19 +511,62 @@ export interface InlineConfig {
    * Ignore any unhandled errors that occur
    */
   dangerouslyIgnoreUnhandledErrors?: boolean
+
+  /**
+   * Options for configuring typechecking test environment.
+   */
+  typecheck?: Partial<TypecheckConfig>
+
+  /**
+   * The number of milliseconds after which a test is considered slow and reported as such in the results.
+   *
+   * @default 300
+  */
+  slowTestThreshold?: number
+
+  /**
+   * Path to a custom test runner.
+   */
+  runner?: string
+}
+
+export interface TypecheckConfig {
+  /**
+   * What tools to use for type checking.
+   */
+  checker: 'tsc' | 'vue-tsc' | (string & Record<never, never>)
+  /**
+   * Pattern for files that should be treated as test files
+   */
+  include: string[]
+  /**
+   * Pattern for files that should not be treated as test files
+   */
+  exclude: string[]
+  /**
+   * Check JS files that have `@ts-check` comment.
+   * If you have it enabled in tsconfig, this will not overwrite it.
+   */
+  allowJs?: boolean
+  /**
+   * Do not fail, if Vitest found errors outside the test files.
+   */
+  ignoreSourceErrors?: boolean
+  /**
+   * Path to tsconfig, relative to the project root.
+   */
+  tsconfig?: string
 }
 
 export interface UserConfig extends InlineConfig {
   /**
    * Path to the config file.
    *
-   * Default resolving to one of:
-   * - `vitest.config.js`
-   * - `vitest.config.ts`
-   * - `vite.config.js`
-   * - `vite.config.ts`
+   * Default resolving to `vitest.config.*`, `vite.config.*`
+   *
+   * Setting to `false` will disable config resolving.
    */
-  config?: string | undefined
+  config?: string | false | undefined
 
   /**
    * Use happy-dom
@@ -489,7 +600,7 @@ export interface UserConfig extends InlineConfig {
   shard?: string
 }
 
-export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence'> {
+export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck' | 'runner'> {
   mode: VitestRunMode
 
   base?: string
@@ -523,7 +634,23 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
 
   sequence: {
     sequencer: TestSequencerConstructor
+    hooks: SequenceHooks
     shuffle?: boolean
     seed?: number
   }
+
+  typecheck: TypecheckConfig
+  runner?: string
 }
+
+export type RuntimeConfig = Pick<
+  UserConfig,
+  | 'allowOnly'
+  | 'testTimeout'
+  | 'hookTimeout'
+  | 'clearMocks'
+  | 'mockReset'
+  | 'restoreMocks'
+  | 'fakeTimers'
+  | 'maxConcurrency'
+> & { sequence?: { hooks?: SequenceHooks } }

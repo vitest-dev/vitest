@@ -9,8 +9,15 @@ on:
     branches:
       - main
 
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 env:
   VITEST_SEGFAULT_RETRY: 3
+  PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/ms-playwright
+  CYPRESS_CACHE_FOLDER: ${{ github.workspace }}/.cache/Cypress
+  PUPPETEER_DOWNLOAD_PATH: ${{ github.workspace }}/.cache/Puppeteer
 
 jobs:
   lint:
@@ -18,13 +25,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
-
-      - name: Set node
-        uses: actions/setup-node@v3
-        with:
-          node-version: 16.x
+      - uses: ./.github/actions/setup-and-cache
 
       - name: Install
         run: pnpm i
@@ -37,13 +38,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
-
-      - name: Set node
-        uses: actions/setup-node@v3
-        with:
-          node-version: 16.x
+      - uses: ./.github/actions/setup-and-cache
 
       - name: Install
         run: pnpm i
@@ -57,27 +52,23 @@ jobs:
   test:
     runs-on: ${{ matrix.os }}
 
-    timeout-minutes: 20
+    timeout-minutes: 30
 
     strategy:
       matrix:
         os: [ubuntu-latest]
-        node_version: [14, 16]
+        node_version: [16, 18]
         include:
           - os: macos-latest
-            node_version: 16
+            node_version: 18
           - os: windows-latest
-            node_version: 16
+            node_version: 18
       fail-fast: false
 
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
-
-      - name: Set node version to ${{ matrix.node_version }}
-        uses: actions/setup-node@v3
+      - uses: ./.github/actions/setup-and-cache
         with:
           node-version: ${{ matrix.node_version }}
 
@@ -101,11 +92,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
-
-      - name: Set node
-        uses: actions/setup-node@v3
+      - uses: ./.github/actions/setup-and-cache
         with:
           node-version: 16.16
 

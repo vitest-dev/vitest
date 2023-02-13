@@ -1,7 +1,10 @@
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
-import { parseStacktrace } from '../utils/source-map'
+import { createSimpleStackTrace } from '@vitest/utils'
+import { parseSingleStack } from '../utils/source-map'
 import type { VitestMocker } from '../runtime/mocker'
-import { getWorkerState, resetModules, setTimeout } from '../utils'
+import type { ResolvedConfig, RuntimeConfig } from '../types'
+import { getWorkerState, resetModules, waitForImportsToResolve } from '../utils'
+import type { MockFactoryWithHelper } from '../types/mocker'
 import { FakeTimers } from './mock/timers'
 import type { EnhancedSpy, MaybeMocked, MaybeMockedDeep, MaybePartiallyMocked, MaybePartiallyMockedDeep } from './spy'
 import { fn, isMockFunction, spies, spyOn } from './spy'
@@ -18,11 +21,8 @@ class VitestUtils {
 
     if (!this._mocker) {
       const errorMsg = 'Vitest was initialized with native Node instead of Vite Node.'
-      + '\n\nOne of the following is possible:'
-      + '\n- "vitest" is imported outside of your tests (in that case, use "vitest/node" or import.meta.vitest)'
-      + '\n- "vitest" is imported inside "globalSetup" (use "setupFiles", because "globalSetup" runs in a different context)'
-      + '\n- Your dependency inside "node_modules" imports "vitest" directly (in that case, inline that dependency, using "deps.inline" config)'
-      + '\n- Otherwise, it might be a Vitest bug. Please report it to https://github.com/vitest-dev/vitest/issues\n'
+      + '\n\nIt\'s possible that you are importing "vitest" directly inside "globalSetup". In that case, use "setupFiles" because "globalSetup" runs in a different context.'
+      + '\nOtherwise, it might be a Vitest bug. Please report it to https://github.com/vitest-dev/vitest/issues\n'
       throw new Error(errorMsg)
     }
 
@@ -58,8 +58,18 @@ class VitestUtils {
     return this
   }
 
+  public async runOnlyPendingTimersAsync() {
+    await this._timers.runOnlyPendingTimersAsync()
+    return this
+  }
+
   public runAllTimers() {
     this._timers.runAllTimers()
+    return this
+  }
+
+  public async runAllTimersAsync() {
+    await this._timers.runAllTimersAsync()
     return this
   }
 
@@ -73,8 +83,18 @@ class VitestUtils {
     return this
   }
 
+  public async advanceTimersByTimeAsync(ms: number) {
+    await this._timers.advanceTimersByTimeAsync(ms)
+    return this
+  }
+
   public advanceTimersToNextTimer() {
     this._timers.advanceTimersToNextTimer()
+    return this
+  }
+
+  public async advanceTimersToNextTimerAsync() {
+    await this._timers.advanceTimersToNextTimerAsync()
     return this
   }
 
@@ -108,9 +128,10 @@ class VitestUtils {
   fn = fn
 
   private getImporter() {
-    const err = new Error('mock')
-    const [,, importer] = parseStacktrace(err, true)
-    return importer.file
+    const stackTrace = createSimpleStackTrace({ stackTraceLimit: 4 })
+    const importerStack = stackTrace.split('\n')[4]
+    const stack = parseSingleStack(importerStack)
+    return stack?.file || ''
   }
 
   /**
@@ -124,8 +145,13 @@ class VitestUtils {
    * @param path Path to the module. Can be aliased, if your config supports it
    * @param factory Factory for the mocked module. Has the highest priority.
    */
-  public mock(path: string, factory?: () => any) {
-    this._mocker.queueMock(path, this.getImporter(), factory)
+  public mock(path: string, factory?: MockFactoryWithHelper) {
+    const importer = this.getImporter()
+    this._mocker.queueMock(
+      path,
+      importer,
+      factory ? () => factory(() => this._mocker.importActual(path, importer)) : undefined,
+    )
   }
 
   /**
@@ -157,7 +183,7 @@ class VitestUtils {
    * @param path Path to the module. Can be aliased, if your config supports it
    * @returns Actual module without spies
    */
-  public async importActual<T>(path: string): Promise<T> {
+  public async importActual<T = unknown>(path: string): Promise<T> {
     return this._mocker.importActual<T>(path, this.getImporter())
   }
 
@@ -219,21 +245,62 @@ class VitestUtils {
     return this
   }
 
+  private _stubsGlobal = new Map<string | symbol | number, PropertyDescriptor | undefined>()
+  private _stubsEnv = new Map()
+
   /**
-   * Will put a value on global scope. Useful, if you are
-   * using jsdom/happy-dom and want to mock global variables, like
-   * `IntersectionObserver`.
+   * Makes value available on global namespace.
+   * Useful, if you want to have global variables available, like `IntersectionObserver`.
+   * You can return it back to original value with `vi.unstubGlobals`, or by enabling `unstubGlobals` config option.
    */
   public stubGlobal(name: string | symbol | number, value: any) {
-    if (globalThis.window) {
-      // @ts-expect-error we can do anything!
-      globalThis.window[name] = value
-    }
-    else {
-      // @ts-expect-error we can do anything!
-      globalThis[name] = value
-    }
+    if (!this._stubsGlobal.has(name))
+      this._stubsGlobal.set(name, Object.getOwnPropertyDescriptor(globalThis, name))
+    Object.defineProperty(globalThis, name, {
+      value,
+      writable: true,
+      configurable: true,
+      enumerable: true,
+    })
+    return this
+  }
 
+  /**
+   * Changes the value of `import.meta.env` and `process.env`.
+   * You can return it back to original value with `vi.unstubEnvs`, or by enabling `unstubEnvs` config option.
+   */
+  public stubEnv(name: string, value: string) {
+    if (!this._stubsEnv.has(name))
+      this._stubsEnv.set(name, process.env[name])
+    process.env[name] = value
+    return this
+  }
+
+  /**
+   * Reset the value to original value that was available before first `vi.stubGlobal` was called.
+   */
+  public unstubAllGlobals() {
+    this._stubsGlobal.forEach((original, name) => {
+      if (!original)
+        Reflect.deleteProperty(globalThis, name)
+      else
+        Object.defineProperty(globalThis, name, original)
+    })
+    this._stubsGlobal.clear()
+    return this
+  }
+
+  /**
+   * Reset environmental variables to the ones that were available before first `vi.stubEnv` was called.
+   */
+  public unstubAllEnvs() {
+    this._stubsEnv.forEach((original, name) => {
+      if (original === undefined)
+        delete process.env[name]
+      else
+        process.env[name] = original
+    })
+    this._stubsEnv.clear()
     return this
   }
 
@@ -244,21 +311,34 @@ class VitestUtils {
   }
 
   /**
-   * Wait for all imports to load.
-   * Useful, if you have a synchronous call that starts
-   * importing a module, that you cannot wait otherwise.
+   * Wait for all imports to load. Useful, if you have a synchronous call that starts
+   * importing a module that you cannot await otherwise.
+   * Will also wait for new imports, started during the wait.
    */
   public async dynamicImportSettled() {
+    return waitForImportsToResolve()
+  }
+
+  private _config: null | ResolvedConfig = null
+
+  /**
+   * Updates runtime config. You can only change values that are used when executing tests.
+   */
+  public setConfig(config: RuntimeConfig) {
     const state = getWorkerState()
-    const promises: Promise<unknown>[] = []
-    for (const mod of state.moduleCache.values()) {
-      if (mod.promise)
-        promises.push(mod.promise)
+    if (!this._config)
+      this._config = { ...state.config }
+    Object.assign(state.config, config)
+  }
+
+  /**
+   * If config was changed with `vi.setConfig`, this will reset it to the original state.
+   */
+  public resetConfig() {
+    if (this._config) {
+      const state = getWorkerState()
+      Object.assign(state.config, this._config)
     }
-    await Promise.allSettled(promises)
-    // wait until the end of the loop, so `.then` on modules called,
-    // like in import('./example').then(...)
-    await new Promise(resolve => setTimeout(resolve, 1)).then(() => Promise.resolve())
   }
 }
 

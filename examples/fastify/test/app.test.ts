@@ -43,4 +43,3 @@ test('with axios', async () => {
 afterAll(async () => {
   await app.close()
 })
-

@@ -1,17 +1,21 @@
-import { resolve } from 'pathe'
+import { pathToFileURL } from 'node:url'
+import { relative, resolve } from 'pathe'
 import { createBirpc } from 'birpc'
 import { workerId as poolId } from 'tinypool'
+import { processError } from '@vitest/runner/utils'
 import { ModuleCacheMap } from 'vite-node/client'
+import { isPrimitive } from 'vite-node/utils'
 import type { ResolvedConfig, WorkerContext, WorkerRPC } from '../types'
 import { distDir } from '../constants'
-import { getWorkerState } from '../utils'
+import { getWorkerState } from '../utils/global'
 import type { MockMap } from '../types/mocker'
-import { executeInViteNode } from './execute'
+import type { VitestExecutor } from './execute'
+import { createVitestExecutor } from './execute'
 import { rpc } from './rpc'
-import { processError } from './error'
 
 let _viteNode: {
-  run: (files: string[], config: ResolvedConfig) => Promise<void>
+  run: (files: string[], config: ResolvedConfig, executor: VitestExecutor) => Promise<void>
+  executor: VitestExecutor
 }
 
 const moduleCache = new ModuleCacheMap()
@@ -21,27 +25,30 @@ async function startViteNode(ctx: WorkerContext) {
   if (_viteNode)
     return _viteNode
 
+  const { config } = ctx
+
   const processExit = process.exit
 
-  process.on('beforeExit', (code) => {
-    rpc().onWorkerExit(code)
-  })
-
   process.exit = (code = process.exitCode || 0): never => {
-    rpc().onWorkerExit(code)
+    const error = new Error(`process.exit called with "${code}"`)
+    rpc().onWorkerExit(error, code)
     return processExit(code)
   }
 
-  process.on('unhandledRejection', (err) => {
-    rpc().onUnhandledRejection(processError(err))
-  })
+  function catchError(err: unknown, type: string) {
+    const worker = getWorkerState()
+    const error = processError(err)
+    if (worker.filepath && !isPrimitive(error)) {
+      error.VITEST_TEST_NAME = worker.current?.name
+      error.VITEST_TEST_PATH = relative(config.root, worker.filepath)
+    }
+    rpc().onUnhandledError(error, type)
+  }
 
-  const { config } = ctx
+  process.on('uncaughtException', e => catchError(e, 'Uncaught Exception'))
+  process.on('unhandledRejection', e => catchError(e, 'Unhandled Rejection'))
 
-  const { run } = (await executeInViteNode({
-    files: [
-      resolve(distDir, 'entry.js'),
-    ],
+  const executor = await createVitestExecutor({
     fetchModule(id) {
       return rpc().fetch(id)
     },
@@ -50,12 +57,14 @@ async function startViteNode(ctx: WorkerContext) {
     },
     moduleCache,
     mockMap,
-    interopDefault: config.deps.interopDefault ?? true,
+    interopDefault: config.deps.interopDefault,
     root: config.root,
     base: config.base,
-  }))[0]
+  })
 
-  _viteNode = { run }
+  const { run } = await import(pathToFileURL(resolve(distDir, 'entry.js')).href)
+
+  _viteNode = { run, executor }
 
   return _viteNode
 }
@@ -70,6 +79,8 @@ function init(ctx: WorkerContext) {
   process.env.VITEST_WORKER_ID = String(workerId)
   process.env.VITEST_POOL_ID = String(poolId)
 
+  // @ts-expect-error untyped global
+  globalThis.__vitest_environment__ = config.environment
   // @ts-expect-error I know what I am doing :P
   globalThis.__vitest_worker__ = {
     ctx,
@@ -97,6 +108,6 @@ function init(ctx: WorkerContext) {
 
 export async function run(ctx: WorkerContext) {
   init(ctx)
-  const { run } = await startViteNode(ctx)
-  return run(ctx.files, ctx.config)
+  const { run, executor } = await startViteNode(ctx)
+  return run(ctx.files, ctx.config, executor)
 }

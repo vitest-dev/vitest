@@ -1,22 +1,17 @@
 /* eslint-disable prefer-template */
 import { existsSync, readFileSync } from 'fs'
-import { join, normalize, relative } from 'pathe'
+import { normalize, relative } from 'pathe'
 import c from 'picocolors'
 import cliTruncate from 'cli-truncate'
-import type { ErrorWithDiff, ParsedStack, Position } from '../types'
-import { interpretSourcePos, lineSplitRE, parseStacktrace, posToNumber } from '../utils/source-map'
+import { type DiffOptions, unifiedDiff } from '@vitest/utils/diff'
+import { stringify } from '@vitest/utils'
+import type { ErrorWithDiff, ParsedStack } from '../types'
+import { lineSplitRE, parseErrorStacktrace, positionToOffset } from '../utils/source-map'
 import { F_POINTER } from '../utils/figures'
-import { stringify } from '../integrations/chai/jest-matcher-utils'
+import { TypeCheckError } from '../typecheck/typechecker'
 import type { Vitest } from './core'
-import { type DiffOptions, unifiedDiff } from './diff'
 import { divider } from './reporters/renderers/utils'
 import type { Logger } from './logger'
-
-export function fileFromParsedStack(stack: ParsedStack) {
-  if (stack?.sourcePos?.source?.startsWith('..'))
-    return join(stack.file, '../', stack.sourcePos.source)
-  return stack.file
-}
 
 interface PrintErrorOptions {
   type?: string
@@ -43,45 +38,61 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
     } as any
   }
 
-  const stacks = parseStacktrace(e, fullStack)
+  const stacks = parseErrorStacktrace(e, fullStack)
 
-  await interpretSourcePos(stacks, ctx)
-
-  const nearest = stacks.find(stack =>
-    ctx.server.moduleGraph.getModuleById(stack.file)
+  const nearest = error instanceof TypeCheckError
+    ? error.stacks[0]
+    : stacks.find(stack =>
+      ctx.server.moduleGraph.getModuleById(stack.file)
       && existsSync(stack.file),
-  )
+    )
 
   const errorProperties = getErrorProperties(e)
 
   if (type)
     printErrorType(type, ctx)
-
   printErrorMessage(e, ctx.logger)
-  printStack(ctx, stacks, nearest, errorProperties, (s, pos) => {
-    if (showCodeFrame && s === nearest && nearest) {
-      const file = fileFromParsedStack(nearest)
-      // could point to non-existing original file
-      // for example, when there is a source map file, but no source in node_modules
-      if (existsSync(file)) {
-        const sourceCode = readFileSync(file, 'utf-8')
-        ctx.logger.log(c.yellow(generateCodeFrame(sourceCode, 4, pos)))
-      }
-    }
-  })
 
-  if (e.cause && 'name' in e.cause) {
+  // if the error provide the frame
+  if (e.frame) {
+    ctx.logger.error(c.yellow(e.frame))
+  }
+  else {
+    printStack(ctx, stacks, nearest, errorProperties, (s) => {
+      if (showCodeFrame && s === nearest && nearest) {
+        const sourceCode = readFileSync(nearest.file, 'utf-8')
+        ctx.logger.error(c.yellow(generateCodeFrame(sourceCode, 4, s.line, s.column)))
+      }
+    })
+  }
+
+  const testPath = (e as any).VITEST_TEST_PATH
+  const testName = (e as any).VITEST_TEST_NAME
+  // testName has testPath inside
+  if (testPath)
+    ctx.logger.error(c.red(`This error originated in "${c.bold(testPath)}" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.`))
+  if (testName) {
+    ctx.logger.error(c.red(`The latest test that might've caused the error is "${c.bold(testName)}". It might mean one of the following:`
+    + '\n- The error was thrown, while Vitest was running this test.'
+    + '\n- This was the last recorded test before the error was thrown, if error originated after test finished its execution.'))
+  }
+
+  if (typeof e.cause === 'object' && e.cause && 'name' in e.cause) {
     (e.cause as any).name = `Caused by: ${(e.cause as any).name}`
     await printError(e.cause, ctx, { fullStack, showCodeFrame: false })
   }
 
   handleImportOutsideModuleError(e.stack || e.stackStr || '', ctx)
 
-  // Eg. AssertionError from assert does not set showDiff but has both actual and expected properties
+  // E.g. AssertionError from assert does not set showDiff but has both actual and expected properties
   if (e.showDiff || (e.showDiff === undefined && e.actual && e.expected)) {
     displayDiff(stringify(e.actual), stringify(e.expected), ctx.logger.console, {
       outputTruncateLength: ctx.config.outputTruncateLength,
       outputDiffLines: ctx.config.outputDiffLines,
+      outputDiffMaxLines: ctx.config.outputDiffMaxLines,
+      colorDim: c.dim,
+      colorError: c.red,
+      colorSuccess: c.green,
     })
   }
 }
@@ -100,6 +111,8 @@ const skipErrorProperties = new Set([
   'showDiff',
   'actual',
   'expected',
+  'VITEST_TEST_NAME',
+  'VITEST_TEST_PATH',
   ...Object.getOwnPropertyNames(Error.prototype),
   ...Object.getOwnPropertyNames(Object.prototype),
 ])
@@ -153,8 +166,14 @@ function handleImportOutsideModuleError(stack: string, ctx: Vitest) {
 }\n`)))
 }
 
-function displayDiff(actual: string, expected: string, console: Console, options?: Omit<DiffOptions, 'showLegend'>) {
-  console.error(c.gray(unifiedDiff(actual, expected, options)) + '\n')
+export function displayDiff(actual: string, expected: string, console: Console, options: Omit<DiffOptions, 'showLegend'> = {}) {
+  const diff = unifiedDiff(actual, expected, options)
+  const dim = options.colorDim || ((str: string) => str)
+  const black = options.colorDim ? c.black : (str: string) => str
+  if (diff)
+    console.error(diff + '\n')
+  else if (actual && expected && actual !== '"undefined"' && expected !== '"undefined"')
+    console.error(dim('Could not display diff. It\'s possible objects are too large to compare.\nTry increasing ') + black('--outputDiffMaxSize') + dim(' option.\n'))
 }
 
 function printErrorMessage(error: ErrorWithDiff, logger: Logger) {
@@ -167,44 +186,36 @@ function printStack(
   stack: ParsedStack[],
   highlight: ParsedStack | undefined,
   errorProperties: Record<string, unknown>,
-  onStack?: ((stack: ParsedStack, pos: Position) => void),
+  onStack?: ((stack: ParsedStack) => void),
 ) {
-  if (!stack.length)
-    return
-
   const logger = ctx.logger
 
   for (const frame of stack) {
-    const pos = frame.sourcePos || frame
     const color = frame === highlight ? c.yellow : c.gray
-    const file = fileFromParsedStack(frame)
-    const path = relative(ctx.config.root, file)
+    const path = relative(ctx.config.root, frame.file)
 
-    logger.log(color(` ${c.dim(F_POINTER)} ${[frame.method, c.dim(`${path}:${pos.line}:${pos.column}`)].filter(Boolean).join(' ')}`))
-    onStack?.(frame, pos)
-
-    // reached at test file, skip the follow stack
-    if (frame.file in ctx.state.filesMap)
-      break
+    logger.error(color(` ${c.dim(F_POINTER)} ${[frame.method, c.dim(`${path}:${frame.line}:${frame.column}`)].filter(Boolean).join(' ')}`))
+    onStack?.(frame)
   }
-  logger.log()
+  if (stack.length)
+    logger.error()
   const hasProperties = Object.keys(errorProperties).length > 0
   if (hasProperties) {
-    logger.log(c.red(c.dim(divider())))
+    logger.error(c.red(c.dim(divider())))
     const propertiesString = stringify(errorProperties, 10, { printBasicPrototype: false })
-    logger.log(c.red(c.bold('Serialized Error:')), c.gray(propertiesString))
+    logger.error(c.red(c.bold('Serialized Error:')), c.gray(propertiesString))
   }
 }
 
 export function generateCodeFrame(
   source: string,
   indent = 0,
-  start: number | Position = 0,
-  end?: number,
+  lineNumber: number,
+  columnNumber: number,
   range = 2,
 ): string {
-  start = posToNumber(source, start)
-  end = end || start
+  const start = positionToOffset(source, lineNumber, columnNumber)
+  const end = start
   const lines = source.split(lineSplitRE)
   let count = 0
   let res: string[] = []

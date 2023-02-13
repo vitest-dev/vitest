@@ -3,7 +3,8 @@
   "private": true,
   "scripts": {
     "test": "node test.mjs",
-    "bench": "vitest bench --reporter=json",
+    "bench:json": "vitest bench --reporter=json",
+    "bench": "vitest bench",
     "coverage": "vitest run --coverage"
   },
   "devDependencies": {

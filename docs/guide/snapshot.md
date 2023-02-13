@@ -4,13 +4,15 @@ title: Snapshot | Guide
 
 # Snapshot
 
+<CourseLink href="https://vueschool.io/lessons/snapshots-in-vitest?friend=vueuse">Learn Snapshot by video from Vue School</CourseLink>
+
 Snapshot tests are a very useful tool whenever you want to make sure the output of your functions does not change unexpectedly.
 
 When using snapshot, Vitest will take a snapshot of the given value, then compares it to a reference snapshot file stored alongside the test. The test will fail if the two snapshots do not match: either the change is unexpected, or the reference snapshot needs to be updated to the new version of the result.
 
 ## Use Snapshots
 
-To snapshot a value, you can use the [`toMatchSnapshot()`](/api/#tomatchsnapshot) from `expect()` API:
+To snapshot a value, you can use the [`toMatchSnapshot()`](/api/expect#tomatchsnapshot) from `expect()` API:
 
 ```ts
 import { expect, it } from 'vitest'
@@ -33,7 +35,7 @@ The snapshot artifact should be committed alongside code changes, and reviewed a
 
 ## Inline Snapshots
 
-Similarly, you can use the [`toMatchInlineSnapshot()`](/api/#tomatchinlinesnapshot) to store the snapshot inline within the test file.
+Similarly, you can use the [`toMatchInlineSnapshot()`](/api/expect#tomatchinlinesnapshot) to store the snapshot inline within the test file.
 
 ```ts
 import { expect, it } from 'vitest'
@@ -145,7 +147,7 @@ This does not really affect the functionality but might affect your commit diff 
 
 #### 2. `printBasicPrototype` is default to `false`
 
-Both Jest and Vitest's snapshots are powered by [`pretty-format`](https://github.com/facebook/jest/blob/main/packages/pretty-format). In Vitest we set `printBasicPrototype` default to `false` to provide a cleaner snapshot output, while in Jest it's `true` by default.
+Both Jest and Vitest's snapshots are powered by [`pretty-format`](https://github.com/facebook/jest/blob/main/packages/pretty-format). In Vitest we set `printBasicPrototype` default to `false` to provide a cleaner snapshot output, while in Jest <29.0.0 it's `true` by default.
 
 ```ts
 import { expect, test } from 'vitest'

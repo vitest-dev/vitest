@@ -1,5 +1,8 @@
-import { defineConfig } from 'vite'
+import { resolve } from 'pathe'
+import { defineConfig } from 'vitest/config'
 import vue from '@vitejs/plugin-vue'
+
+const provider = process.argv[1 + process.argv.indexOf('--provider')]
 
 export default defineConfig({
   plugins: [
@@ -9,18 +12,18 @@ export default defineConfig({
     MY_CONSTANT: '"my constant"',
   },
   test: {
-    threads: !!process.env.THREAD,
-    include: [
-      'test/*.test.ts',
-    ],
-    exclude: [
-      'coverage-test/**/*',
-    ],
+    watch: false,
     coverage: {
-      enabled: true,
+      provider: provider as any,
+      customProviderModule: provider === 'custom' ? 'custom-provider' : undefined,
+      include: ['src/**'],
       clean: true,
       all: true,
-      reporter: ['html', 'text', 'lcov'],
+      reporter: ['html', 'text', 'lcov', 'json'],
     },
+    setupFiles: [
+      resolve(__dirname, './setup.ts'),
+      './src/another-setup.ts',
+    ],
   },
 })

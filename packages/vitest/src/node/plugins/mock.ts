@@ -2,7 +2,7 @@ import type { Plugin } from 'vite'
 import MagicString from 'magic-string'
 import { getCallLastIndex } from '../../utils'
 
-const hoistRegexp = /^ *\b((?:vitest|vi)\s*.\s*(mock|unmock)\(["`'\s]+(.*[@\w_-]+)["`'\s]+)[),]{1};?/gm
+const hoistRegexp = /^[ \t]*\b((?:vitest|vi)\s*.\s*(mock|unmock)\(["`'\s]+(.*[@\w_-]+)["`'\s]+)[),]{1};?/gm
 const vitestRegexp = /import {[^}]*}.*(?=["'`]vitest["`']).*/gm
 
 export function hoistMocks(code: string) {
@@ -62,8 +62,8 @@ export const MocksPlugin = (): Plugin => {
 
         // if no vitest import found, check if the mock API is reachable after the hoisting
         if (!found) {
-          m.prepend('try { vi } catch (_) { try { vitest } catch (__)'
-           + `{ throw new Error(${JSON.stringify(API_NOT_FOUND_ERROR)}) } }\n`)
+          m.prepend('if (typeof globalThis.vi === "undefined" && typeof globalThis.vitest === "undefined") '
+          + `{ throw new Error(${JSON.stringify(API_NOT_FOUND_ERROR)}) }\n`)
         }
 
         return {
@@ -125,7 +125,7 @@ function getIndexStatus(code: string, from: number) {
       }
     }
 
-    beforeChar = code[index]
+    beforeChar = char
     index++
   }
 

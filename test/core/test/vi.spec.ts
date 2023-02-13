@@ -4,6 +4,7 @@
 
 import type { MockedFunction, MockedObject } from 'vitest'
 import { describe, expect, test, vi } from 'vitest'
+import { getWorkerState } from 'vitest/src/utils'
 
 const expectType = <T>(obj: T) => obj
 
@@ -64,8 +65,19 @@ describe('testing vi utils', () => {
     })
   })
 
-  // TODO: it's unstable in CI, skip until resolved
-  test.skip('loads unloaded module', async () => {
+  test('can change config', () => {
+    const state = getWorkerState()
+    expect(state.config.hookTimeout).toBe(10000)
+    expect(state.config.clearMocks).toBe(false)
+    vi.setConfig({ hookTimeout: 6000, clearMocks: true })
+    expect(state.config.hookTimeout).toBe(6000)
+    expect(state.config.clearMocks).toBe(true)
+    vi.resetConfig()
+    expect(state.config.hookTimeout).toBe(10000)
+    expect(state.config.clearMocks).toBe(false)
+  })
+
+  test('loads unloaded module', async () => {
     let mod: any
     import('../src/timeout').then(m => mod = m)
 

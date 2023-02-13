@@ -19,7 +19,7 @@ export default defineConfig({
         onWatcherRerun: noop,
         onServerRestart: noop,
         onUserConsoleLog: noop,
-      }],
+      }, 'default'],
     },
   },
 })

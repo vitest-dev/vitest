@@ -1,12 +1,12 @@
 import { resolveModule } from 'local-pkg'
-import { normalize, resolve } from 'pathe'
+import { normalize, relative, resolve } from 'pathe'
 import c from 'picocolors'
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 
 import type { ApiConfig, ResolvedConfig, UserConfig, VitestRunMode } from '../types'
 import { defaultPort } from '../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../defaults'
-import { toArray } from '../utils'
+import { isCI, toArray } from '../utils'
 import { VitestCache } from './cache'
 import { BaseSequencer } from './sequencers/BaseSequencer'
 import { RandomSequencer } from './sequencers/RandomSequencer'
@@ -17,12 +17,6 @@ const extraInlineDeps = [
   /^(?!.*(?:node_modules)).*\.cjs\.js$/,
   // Vite client
   /vite\w*\/dist\/client\/env.mjs/,
-  // Vitest
-  /\/vitest\/dist\//,
-  // yarn's .store folder
-  /vitest-virtual-\w+\/dist/,
-  // cnpm
-  /@vitest\/dist/,
   // Nuxt
   '@nuxt/test-utils',
 ]
@@ -129,6 +123,11 @@ export function resolveConfig(
     }
   }
 
+  if (resolved.runner) {
+    resolved.runner = resolveModule(resolved.runner, { paths: [resolved.root] })
+      ?? resolve(resolved.root, resolved.runner)
+  }
+
   // disable loader for Yarn PnP until Node implements chain loader
   // https://github.com/nodejs/node/pull/43772
   resolved.deps.registerNodeLoader ??= false
@@ -139,11 +138,10 @@ export function resolveConfig(
       : new RegExp(resolved.testNamePattern)
     : undefined
 
-  const CI = !!process.env.CI
   const UPDATE_SNAPSHOT = resolved.update || process.env.UPDATE_SNAPSHOT
   resolved.snapshotOptions = {
     snapshotFormat: resolved.snapshotFormat || {},
-    updateSnapshot: CI && !UPDATE_SNAPSHOT
+    updateSnapshot: isCI && !UPDATE_SNAPSHOT
       ? 'none'
       : UPDATE_SNAPSHOT
         ? 'all'
@@ -190,6 +188,12 @@ export function resolveConfig(
         ?? resolve(resolved.root, file),
     ),
   )
+  resolved.coverage.exclude.push(...resolved.setupFiles.map(file => relative(resolved.root, file)))
+
+  resolved.forceRerunTriggers = [
+    ...resolved.forceRerunTriggers,
+    ...resolved.setupFiles,
+  ]
 
   // the server has been created, we don't need to override vite.server options
   resolved.api = resolveApiConfig(options)
@@ -198,11 +202,9 @@ export function resolveConfig(
     resolved.related = toArray(options.related).map(file => resolve(resolved.root, file))
 
   if (mode !== 'benchmark') {
-    resolved.reporters = Array.from(new Set([
-      ...toArray(resolved.reporters),
-      // @ts-expect-error from CLI
-      ...toArray(resolved.reporter),
-    ])).filter(Boolean)
+    // @ts-expect-error from CLI
+    const reporters = resolved.reporter ?? resolved.reporters
+    resolved.reporters = Array.from(new Set(toArray(reporters))).filter(Boolean)
   }
 
   if (!resolved.reporters.length)
@@ -221,12 +223,25 @@ export function resolveConfig(
   if (resolved.cache)
     resolved.cache.dir = VitestCache.resolveCacheDir(resolved.root, resolved.cache.dir)
 
+  resolved.sequence ??= {} as any
   if (!resolved.sequence?.sequencer) {
-    resolved.sequence ??= {} as any
     // CLI flag has higher priority
     resolved.sequence.sequencer = resolved.sequence.shuffle
       ? RandomSequencer
       : BaseSequencer
+  }
+  resolved.sequence.hooks ??= 'parallel'
+
+  resolved.typecheck = {
+    ...configDefaults.typecheck,
+    ...resolved.typecheck,
+  }
+
+  resolved.environmentMatchGlobs = (resolved.environmentMatchGlobs || []).map(i => [resolve(resolved.root, i[0]), i[1]])
+
+  if (mode === 'typecheck') {
+    resolved.include = resolved.typecheck.include
+    resolved.exclude = resolved.typecheck.exclude
   }
 
   return resolved

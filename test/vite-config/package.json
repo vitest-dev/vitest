@@ -6,7 +6,7 @@
     "coverage": "vitest run --coverage"
   },
   "devDependencies": {
-    "pathe": "^0.2.0",
+    "pathe": "^1.1.0",
     "vitest": "workspace:*"
   }
 }

@@ -16,7 +16,13 @@
     "paths": {
       "@vitest/ws-client": ["./packages/ws-client/src/index.ts"],
       "@vitest/ui": ["./packages/ui/node/index.ts"],
-      "@vitest/browser": ["./packages/browser/node/index.ts"],
+      "@vitest/utils": ["./packages/utils/src/index.ts"],
+      "@vitest/utils/*": ["./packages/utils/src/*"],
+      "@vitest/spy": ["./packages/spy/src/index.ts"],
+      "@vitest/expect": ["./packages/expect/src/index.ts"],
+      "@vitest/runner": ["./packages/runner/src/index.ts"],
+      "@vitest/runner/*": ["./packages/runner/src/*"],
+      "@vitest/browser": ["./packages/browser/src/node/index.ts"],
       "#types": ["./packages/vitest/src/index.ts"],
       "~/*": ["./packages/ui/client/*"],
       "vitest": ["./packages/vitest/src/index.ts"],
@@ -38,8 +44,10 @@
     "**/dist/**",
     "./packages/vitest/dist/**",
     "./packages/vitest/*.d.ts",
+    "./packages/vitest/*.d.cts",
     "./packages/ui/client/**",
     "./examples/**/*.*",
-    "./bench/**"
+    "./bench/**",
+    "./test/typescript/**"
   ]
 }

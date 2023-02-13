@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 test('mocked axios', async () => {
-  const { default: ax } = await vi.importMock('axios')
+  const { default: ax } = await vi.importMock<any>('axios')
 
   await ax.get('string')
 

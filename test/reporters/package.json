@@ -2,11 +2,13 @@
   "name": "@vitest/test-reporters",
   "private": true,
   "scripts": {
-    "test": "vitest"
+    "test": "vitest run"
   },
   "devDependencies": {
     "execa": "^6.1.0",
+    "flatted": "^3.2.7",
     "pkg-reporter": "./reportPkg/",
-    "vitest": "workspace:*"
+    "vitest": "workspace:*",
+    "vitest-sonar-reporter": "0.3.3"
   }
 }

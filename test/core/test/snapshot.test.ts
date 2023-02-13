@@ -112,4 +112,3 @@ test('renders inline mock snapshot', () => {
     }
   `)
 })
-

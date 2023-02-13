@@ -1,4 +1,4 @@
-import fs from 'fs'
+import fs from 'node:fs'
 import { dirname, resolve } from 'pathe'
 import type { File, ResolvedConfig } from '../../types'
 import { version } from '../../../package.json'

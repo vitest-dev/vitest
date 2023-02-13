@@ -196,6 +196,7 @@ export async function handleMessage(runner: ViteNodeRunner, emitter: HMREmitter,
       break
     case 'full-reload':
       notifyListeners(runner, 'vite:beforeFullReload', payload)
+      maps.customListenersMap.delete('vite:beforeFullReload')
       reload(runner, files)
       break
     case 'prune':
@@ -252,6 +253,10 @@ export function createHotContext(
       return maps.dataMap.get(ownerPath)
     },
 
+    acceptExports(_, callback?: any) {
+      acceptDeps([ownerPath], callback && (([mod]) => callback(mod)))
+    },
+
     accept(deps?: any, callback?: any) {
       if (typeof deps === 'function' || !deps) {
         // self-accept: hot.accept(() => {})
@@ -273,13 +278,12 @@ export function createHotContext(
       maps.disposeMap.set(ownerPath, cb)
     },
 
-    // @ts-expect-error untyped
     prune(cb: (data: any) => void) {
       maps.pruneMap.set(ownerPath, cb)
     },
 
     invalidate() {
-      notifyListeners(runner, 'vite:invalidate', { path: ownerPath })
+      notifyListeners(runner, 'vite:invalidate', { path: ownerPath, message: undefined })
       return reload(runner, files)
     },
 

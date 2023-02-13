@@ -63,6 +63,7 @@ const innerTasks: Task[] = [
     result: {
       state: 'fail',
       error,
+      errors: [error],
       duration: 1.4422860145568848,
     },
     context: null as any,
@@ -177,4 +178,3 @@ suite.tasks = tasks
 const files = [file]
 
 export { files }
-

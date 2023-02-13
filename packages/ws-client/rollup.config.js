@@ -13,6 +13,9 @@ const external = [
   'ws',
   'birpc',
   'worker_threads',
+  'node:worker_threads',
+  'fs',
+  'node:fs',
   'vitest',
   'inspector',
 ]

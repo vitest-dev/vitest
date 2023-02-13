@@ -1,6 +1,6 @@
-import { MessageChannel } from 'worker_threads'
-import _url from 'url'
-import { cpus } from 'os'
+import { MessageChannel } from 'node:worker_threads'
+import _url from 'node:url'
+import { cpus } from 'node:os'
 import { resolve } from 'pathe'
 import type { Options as TinypoolOptions } from 'tinypool'
 import { Tinypool } from 'tinypool'
@@ -33,24 +33,34 @@ export function createPool(ctx: Vitest): WorkerPool {
 
   const conditions = ctx.server.config.resolve.conditions?.flatMap(c => ['--conditions', c]) || []
 
+  // Instead of passing whole process.execArgv to the workers, pick allowed options.
+  // Some options may crash worker, e.g. --prof, --title. nodejs/node#41103
+  const execArgv = process.execArgv.filter(execArg =>
+    execArg.startsWith('--cpu-prof') || execArg.startsWith('--heap-prof'),
+  )
+
   const options: TinypoolOptions = {
     filename: workerPath,
     // TODO: investigate further
     // It seems atomics introduced V8 Fatal Error https://github.com/vitest-dev/vitest/issues/1191
-    useAtomics: false,
+    useAtomics: ctx.config.useAtomics ?? false,
 
     maxThreads,
     minThreads,
 
     execArgv: ctx.config.deps.registerNodeLoader
       ? [
+          ...execArgv,
           '--require',
           suppressLoaderWarningsPath,
           '--experimental-loader',
           loaderPath,
           ...conditions,
         ]
-      : conditions,
+      : [
+          ...execArgv,
+          ...conditions,
+        ],
   }
 
   if (ctx.config.isolate) {
@@ -127,7 +137,12 @@ export function createPool(ctx: Vitest): WorkerPool {
 
   return {
     runTests: runWithFiles('run'),
-    close: async () => {}, // TODO: not sure why this will cause Node crash: pool.destroy(),
+    close: async () => {
+      // node before 16.17 has a bug that causes FATAL ERROR because of the race condition
+      const nodeVersion = Number(process.version.match(/v(\d+)\.(\d+)/)?.[0].slice(1))
+      if (nodeVersion >= 16.17)
+        await pool.destroy()
+    },
   }
 }
 
@@ -138,7 +153,8 @@ function createChannel(ctx: Vitest) {
 
   createBirpc<{}, WorkerRPC>(
     {
-      onWorkerExit(code) {
+      async onWorkerExit(error, code) {
+        await ctx.logger.printError(error, false, 'Unexpected Exit')
         process.exit(code || 1)
       },
       snapshotSaved(snapshot) {
@@ -181,8 +197,8 @@ function createChannel(ctx: Vitest) {
         ctx.state.updateUserLog(log)
         ctx.report('onUserConsoleLog', log)
       },
-      onUnhandledRejection(err) {
-        ctx.state.catchError(err, 'Unhandled Rejection')
+      onUnhandledError(err, type) {
+        ctx.state.catchError(err, type)
       },
       onFinished(files) {
         ctx.report('onFinished', files, ctx.state.getUnhandledErrors())

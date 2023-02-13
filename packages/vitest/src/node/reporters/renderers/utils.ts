@@ -91,7 +91,11 @@ export function renderSnapshotSummary(rootDir: string, snapshots: SnapshotSummar
   return summary
 }
 
-export function getStateString(tasks: Task[], name = 'tests') {
+export function countTestErrors(tasks: Task[]) {
+  return tasks.reduce((c, i) => c + (i.result?.errors?.length || 0), 0)
+}
+
+export function getStateString(tasks: Task[], name = 'tests', showTotal = true) {
   if (tasks.length === 0)
     return c.dim(`no ${name}`)
 
@@ -105,7 +109,7 @@ export function getStateString(tasks: Task[], name = 'tests') {
     passed.length ? c.bold(c.green(`${passed.length} passed`)) : null,
     skipped.length ? c.yellow(`${skipped.length} skipped`) : null,
     todo.length ? c.gray(`${todo.length} todo`) : null,
-  ].filter(Boolean).join(c.dim(' | ')) + c.gray(` (${tasks.length})`)
+  ].filter(Boolean).join(c.dim(' | ')) + (showTotal ? c.gray(` (${tasks.length})`) : '')
 }
 
 export function getStateSymbol(task: Task) {
@@ -128,7 +132,7 @@ export function getStateSymbol(task: Task) {
   }
 
   if (task.result.state === 'pass') {
-    return task.type === 'benchmark'
+    return task.meta?.benchmark
       ? c.green(F_DOT)
       : c.green(F_CHECK)
   }
@@ -194,4 +198,18 @@ export function duration(time: number, locale = 'en-us') {
 
 export function formatTimeString(date: Date) {
   return date.toTimeString().split(' ')[0]
+}
+
+export function formatProjectName(name: string | undefined, suffix = ' ') {
+  if (!name)
+    return ''
+  const index = name.split('').reduce((acc, v, idx) => acc + v.charCodeAt(0) + idx, 0)
+  const colors = [
+    c.blue,
+    c.yellow,
+    c.cyan,
+    c.green,
+    c.magenta,
+  ]
+  return colors[index % colors.length](`|${name}|`) + suffix
 }

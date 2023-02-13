@@ -1,7 +1,6 @@
-import { existsSync, promises as fs } from 'fs'
+import { existsSync, promises as fs } from 'node:fs'
 import type { ViteDevServer } from 'vite'
-import { normalizePath } from 'vite'
-import { relative, toNamespacedPath } from 'pathe'
+import { normalize, relative, toNamespacedPath } from 'pathe'
 import fg from 'fast-glob'
 import mm from 'micromatch'
 import c from 'picocolors'
@@ -9,8 +8,9 @@ import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
 import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter, ResolvedConfig, UserConfig, VitestRunMode } from '../types'
 import { SnapshotManager } from '../integrations/snapshot/manager'
-import { clearTimeout, deepMerge, hasFailed, noop, setTimeout, slash, toArray } from '../utils'
+import { deepMerge, hasFailed, noop, slash, toArray } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
+import { Typechecker } from '../typecheck/typechecker'
 import { createPool } from './pool'
 import type { WorkerPool } from './pool'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
@@ -33,11 +33,13 @@ export class Vitest {
   coverageProvider: CoverageProvider | null | undefined
   logger: Logger
   pool: WorkerPool | undefined
+  typechecker: Typechecker | undefined
 
   vitenode: ViteNodeServer = undefined!
 
   invalidates: Set<string> = new Set()
   changedTests: Set<string> = new Set()
+  filenamePattern?: string
   runningPromise?: Promise<void>
   closingPromise?: Promise<void>
 
@@ -52,6 +54,7 @@ export class Vitest {
   }
 
   private _onRestartListeners: OnServerRestartHandler[] = []
+  private _onSetServer: OnServerRestartHandler[] = []
 
   async setServer(options: UserConfig, server: ViteDevServer) {
     this.unregisterWatcher?.()
@@ -68,7 +71,7 @@ export class Vitest {
     this.cache = new VitestCache()
     this.snapshot = new SnapshotManager({ ...resolved.snapshotOptions })
 
-    if (this.config.watch)
+    if (this.config.watch && this.mode !== 'typecheck')
       this.registerWatcher()
 
     this.vitenode = new ViteNodeServer(server, this.config)
@@ -94,7 +97,7 @@ export class Vitest {
 
       // since we set `server.hmr: false`, Vite does not auto restart itself
       server.watcher.on('change', async (file) => {
-        file = normalizePath(file)
+        file = normalize(file)
         const isConfig = file === server.config.configFile
         if (isConfig) {
           await Promise.all(this._onRestartListeners.map(fn => fn('config')))
@@ -113,15 +116,15 @@ export class Vitest {
     try {
       await this.cache.results.readFromCache()
     }
-    catch (err) {
-      this.logger.error(`[vitest] Error, while trying to parse cache in ${this.cache.results.getCachePath()}:`, err)
-    }
+    catch {}
+
+    await Promise.all(this._onSetServer.map(fn => fn()))
   }
 
   async initCoverageProvider() {
     if (this.coverageProvider !== undefined)
       return
-    this.coverageProvider = await getCoverageProvider(this.config.coverage)
+    this.coverageProvider = await getCoverageProvider(this.config.coverage, this.runner)
     if (this.coverageProvider) {
       await this.coverageProvider.initialize(this)
       this.config.coverage = this.coverageProvider.resolveOptions()
@@ -151,7 +154,62 @@ export class Vitest {
     ) as ResolvedConfig
   }
 
+  async typecheck(filters: string[] = []) {
+    const { include, exclude } = this.config.typecheck
+    const testsFilesList = await this.globFiles(filters, include, exclude)
+    const checker = new Typechecker(this, testsFilesList)
+    this.typechecker = checker
+    checker.onParseEnd(async ({ files, sourceErrors }) => {
+      this.state.collectFiles(checker.getTestFiles())
+      await this.report('onTaskUpdate', checker.getTestPacks())
+      await this.report('onCollected')
+      if (!files.length) {
+        this.logger.printNoTestFound()
+      }
+      else {
+        if (hasFailed(files))
+          process.exitCode = 1
+        await this.report('onFinished', files)
+      }
+      if (sourceErrors.length && !this.config.typecheck.ignoreSourceErrors) {
+        process.exitCode = 1
+        await this.logger.printSourceTypeErrors(sourceErrors)
+      }
+      // if there are source errors, we are showing it, and then terminating process
+      if (!files.length) {
+        const exitCode = this.config.passWithNoTests ? (process.exitCode ?? 0) : 1
+        process.exit(exitCode)
+      }
+      if (this.config.watch) {
+        await this.report('onWatcherStart', files, [
+          ...(this.config.typecheck.ignoreSourceErrors ? [] : sourceErrors),
+          ...this.state.getUnhandledErrors(),
+        ])
+      }
+    })
+    checker.onParseStart(async () => {
+      await this.report('onInit', this)
+      this.state.collectFiles(checker.getTestFiles())
+      await this.report('onCollected')
+    })
+    checker.onWatcherRerun(async () => {
+      await this.report('onWatcherRerun', testsFilesList, 'File change detected. Triggering rerun.')
+      await checker.collectTests()
+      this.state.collectFiles(checker.getTestFiles())
+      await this.report('onTaskUpdate', checker.getTestPacks())
+      await this.report('onCollected')
+    })
+    await checker.prepare()
+    await checker.collectTests()
+    await checker.start()
+  }
+
   async start(filters?: string[]) {
+    if (this.mode === 'typecheck') {
+      await this.typecheck(filters)
+      return
+    }
+
     try {
       await this.initCoverageProvider()
       await this.coverageProvider?.clean(this.config.coverage.clean)
@@ -180,10 +238,7 @@ export class Vitest {
 
     await this.runFiles(files)
 
-    if (this.coverageProvider) {
-      this.logger.log(c.blue(' % ') + c.dim('Coverage report from ') + c.yellow(this.coverageProvider.name))
-      await this.coverageProvider.reportCoverage()
-    }
+    await this.reportCoverage(true)
 
     if (this.config.watch && !this.config.browser)
       await this.report('onWatcherStart')
@@ -258,9 +313,17 @@ export class Vitest {
   }
 
   async runFiles(paths: string[]) {
+    paths = Array.from(new Set(paths))
+
+    this.state.collectPaths(paths)
+
+    await this.report('onPathsCollected', paths)
+
+    if (this.config.browser)
+      return
+
     // previous run
     await this.runningPromise
-    this.state.startCollectingPaths()
 
     // schedule the new run
     this.runningPromise = (async () => {
@@ -283,37 +346,52 @@ export class Vitest {
       if (hasFailed(files))
         process.exitCode = 1
 
-      if (!this.config.browser)
-        await this.report('onFinished', files, this.state.getUnhandledErrors())
       this.cache.results.updateResults(files)
       await this.cache.results.writeToCache()
     })()
-      .finally(() => {
+      .finally(async () => {
+        if (!this.config.browser)
+          await this.report('onFinished', this.state.getFiles(paths), this.state.getUnhandledErrors())
         this.runningPromise = undefined
-        this.state.finishCollectingPaths()
       })
 
     return await this.runningPromise
   }
 
   async rerunFiles(files: string[] = this.state.getFilepaths(), trigger?: string) {
+    if (this.filenamePattern) {
+      const filteredFiles = await this.globTestFiles([this.filenamePattern])
+      files = files.filter(file => filteredFiles.includes(file))
+    }
+
+    if (this.coverageProvider && this.config.coverage.cleanOnRerun)
+      await this.coverageProvider.clean()
+
     await this.report('onWatcherRerun', files, trigger)
     await this.runFiles(files)
+
+    await this.reportCoverage(!trigger)
+
     if (!this.config.browser)
-      await this.report('onWatcherStart')
+      await this.report('onWatcherStart', this.state.getFiles(files))
   }
 
   async changeNamePattern(pattern: string, files: string[] = this.state.getFilepaths(), trigger?: string) {
+    // Empty test name pattern should reset filename pattern as well
+    if (pattern === '')
+      this.filenamePattern = undefined
+
     this.config.testNamePattern = pattern ? new RegExp(pattern) : undefined
     await this.rerunFiles(files, trigger)
   }
 
   async changeFilenamePattern(pattern: string) {
+    this.filenamePattern = pattern
+
     const files = this.state.getFilepaths()
-    if (!pattern)
-      return await this.rerunFiles(files, 'reset filename pattern')
-    const filteredFiles = await this.globTestFiles([pattern])
-    await this.rerunFiles(filteredFiles, 'change filename pattern')
+    const trigger = this.filenamePattern ? 'change filename pattern' : 'reset filename pattern'
+
+    await this.rerunFiles(files, trigger)
   }
 
   async rerunFailed() {
@@ -365,7 +443,17 @@ export class Vitest {
       this.isFirstRun = false
 
       this.snapshot.clear()
-      const files = Array.from(this.changedTests)
+      let files = Array.from(this.changedTests)
+
+      if (this.filenamePattern) {
+        const filteredFiles = await this.globTestFiles([this.filenamePattern])
+        files = files.filter(file => filteredFiles.includes(file))
+
+        // A file that does not match the current filename pattern was changed
+        if (files.length === 0)
+          return
+      }
+
       this.changedTests.clear()
 
       if (this.coverageProvider && this.config.coverage.cleanOnRerun)
@@ -375,17 +463,24 @@ export class Vitest {
 
       await this.runFiles(files)
 
-      await this.coverageProvider?.reportCoverage()
+      await this.reportCoverage(false)
 
       if (!this.config.browser)
-        await this.report('onWatcherStart')
+        await this.report('onWatcherStart', this.state.getFiles(files))
     }, WATCHER_DEBOUNCE)
   }
 
   private unregisterWatcher = noop
   private registerWatcher() {
+    const updateLastChanged = (id: string) => {
+      const mod = this.server.moduleGraph.getModuleById(id)
+      if (mod)
+        mod.lastHMRTimestamp = Date.now()
+    }
+
     const onChange = (id: string) => {
       id = slash(id)
+      updateLastChanged(id)
       const needsRerun = this.handleFileChanged(id)
       if (needsRerun)
         this.scheduleRerun(id)
@@ -404,6 +499,7 @@ export class Vitest {
     }
     const onAdd = async (id: string) => {
       id = slash(id)
+      updateLastChanged(id)
       if (await this.isTargetFile(id)) {
         this.changedTests.add(id)
         await this.cache.stats.updateStats(id)
@@ -465,11 +561,19 @@ export class Vitest {
     return rerun
   }
 
+  private async reportCoverage(allTestsRun: boolean) {
+    if (this.coverageProvider) {
+      this.logger.log(c.blue(' % ') + c.dim('Coverage report from ') + c.yellow(this.coverageProvider.name))
+      await this.coverageProvider.reportCoverage({ allTestsRun })
+    }
+  }
+
   async close() {
     if (!this.closingPromise) {
       this.closingPromise = Promise.allSettled([
         this.pool?.close(),
         this.server.close(),
+        this.typechecker?.stop(),
       ].filter(Boolean)).then((results) => {
         results.filter(r => r.status === 'rejected').forEach((err) => {
           this.logger.error('error during close', (err as PromiseRejectedResult).reason)
@@ -479,10 +583,15 @@ export class Vitest {
     return this.closingPromise
   }
 
+  /**
+   * Close the thread pool and exit the process
+   */
   async exit(force = false) {
     setTimeout(() => {
-      console.warn(`close timed out after ${this.config.teardownTimeout}ms`)
-      process.exit()
+      this.report('onProcessTimeout').then(() => {
+        console.warn(`close timed out after ${this.config.teardownTimeout}ms`)
+        process.exit()
+      })
     }, this.config.teardownTimeout).unref()
 
     await this.close()
@@ -497,11 +606,10 @@ export class Vitest {
     )))
   }
 
-  async globTestFiles(filters: string[] = []) {
-    const { include, exclude, includeSource } = this.config
-
-    const globOptions = {
+  async globFiles(filters: string[], include: string[], exclude: string[]) {
+    const globOptions: fg.Options = {
       absolute: true,
+      dot: true,
       cwd: this.config.dir || this.config.root,
       ignore: exclude,
     }
@@ -514,10 +622,16 @@ export class Vitest {
     if (filters.length)
       testFiles = testFiles.filter(i => filters.some(f => i.includes(f)))
 
+    return testFiles
+  }
+
+  async globTestFiles(filters: string[] = []) {
+    const { include, exclude, includeSource } = this.config
+
+    const testFiles = await this.globFiles(filters, include, exclude)
+
     if (includeSource) {
-      let files = await fg(includeSource, globOptions)
-      if (filters.length)
-        files = files.filter(i => filters.some(f => i.includes(f)))
+      const files = await this.globFiles(filters, includeSource, exclude)
 
       await Promise.all(files.map(async (file) => {
         try {
@@ -553,5 +667,9 @@ export class Vitest {
 
   onServerRestart(fn: OnServerRestartHandler) {
     this._onRestartListeners.push(fn)
+  }
+
+  onAfterSetServer(fn: OnServerRestartHandler) {
+    this._onSetServer.push(fn)
   }
 }

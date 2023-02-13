@@ -2,12 +2,12 @@
 
 exports[`JUnit reporter (no outputFile entry) 1`] = `
 "<?xml version=\\"1.0\\" encoding=\\"UTF-8\\" ?>
-<testsuites>
+<testsuites name=\\"vitest tests\\" tests=\\"9\\" failures=\\"1\\" errors=\\"0\\" time=\\"0\\">
     <testsuite name=\\"test/core/test/basic.test.ts\\" timestamp=\\"2022-01-19T10:10:01.759Z\\" hostname=\\"hostname\\" tests=\\"9\\" failures=\\"1\\" errors=\\"0\\" skipped=\\"2\\" time=\\"0.145992842\\">
         <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; inner suite &gt; Math.sqrt()\\" time=\\"0.001442286\\">
             <failure message=\\"expected 2.23606797749979 to equal 2\\" type=\\"AssertionError\\">
 AssertionError: expected 2.23606797749979 to equal 2
- ❯ vitest/test/core/test/basic.test.ts:8:32
+ ❯ test/core/test/basic.test.ts:8:32
             </failure>
         </testcase>
         <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; JSON\\" time=\\"0.001023711\\">
@@ -38,12 +38,12 @@ AssertionError: expected 2.23606797749979 to equal 2
 
 exports[`JUnit reporter 1`] = `
 "<?xml version=\\"1.0\\" encoding=\\"UTF-8\\" ?>
-<testsuites>
+<testsuites name=\\"vitest tests\\" tests=\\"9\\" failures=\\"1\\" errors=\\"0\\" time=\\"0\\">
     <testsuite name=\\"test/core/test/basic.test.ts\\" timestamp=\\"2022-01-19T10:10:01.759Z\\" hostname=\\"hostname\\" tests=\\"9\\" failures=\\"1\\" errors=\\"0\\" skipped=\\"2\\" time=\\"0.145992842\\">
         <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; inner suite &gt; Math.sqrt()\\" time=\\"0.001442286\\">
             <failure message=\\"expected 2.23606797749979 to equal 2\\" type=\\"AssertionError\\">
 AssertionError: expected 2.23606797749979 to equal 2
- ❯ vitest/test/core/test/basic.test.ts:8:32
+ ❯ test/core/test/basic.test.ts:8:32
             </failure>
         </testcase>
         <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; JSON\\" time=\\"0.001023711\\">
@@ -79,12 +79,12 @@ exports[`JUnit reporter with outputFile 1`] = `
 
 exports[`JUnit reporter with outputFile 2`] = `
 "<?xml version=\\"1.0\\" encoding=\\"UTF-8\\" ?>
-<testsuites>
+<testsuites name=\\"vitest tests\\" tests=\\"9\\" failures=\\"1\\" errors=\\"0\\" time=\\"0\\">
     <testsuite name=\\"test/core/test/basic.test.ts\\" timestamp=\\"2022-01-19T10:10:01.759Z\\" hostname=\\"hostname\\" tests=\\"9\\" failures=\\"1\\" errors=\\"0\\" skipped=\\"2\\" time=\\"0.145992842\\">
         <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; inner suite &gt; Math.sqrt()\\" time=\\"0.001442286\\">
             <failure message=\\"expected 2.23606797749979 to equal 2\\" type=\\"AssertionError\\">
 AssertionError: expected 2.23606797749979 to equal 2
- ❯ vitest/test/core/test/basic.test.ts:8:32
+ ❯ test/core/test/basic.test.ts:8:32
             </failure>
         </testcase>
         <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; JSON\\" time=\\"0.001023711\\">
@@ -120,12 +120,12 @@ exports[`JUnit reporter with outputFile in non-existing directory 1`] = `
 
 exports[`JUnit reporter with outputFile in non-existing directory 2`] = `
 "<?xml version=\\"1.0\\" encoding=\\"UTF-8\\" ?>
-<testsuites>
+<testsuites name=\\"vitest tests\\" tests=\\"9\\" failures=\\"1\\" errors=\\"0\\" time=\\"0\\">
     <testsuite name=\\"test/core/test/basic.test.ts\\" timestamp=\\"2022-01-19T10:10:01.759Z\\" hostname=\\"hostname\\" tests=\\"9\\" failures=\\"1\\" errors=\\"0\\" skipped=\\"2\\" time=\\"0.145992842\\">
         <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; inner suite &gt; Math.sqrt()\\" time=\\"0.001442286\\">
             <failure message=\\"expected 2.23606797749979 to equal 2\\" type=\\"AssertionError\\">
 AssertionError: expected 2.23606797749979 to equal 2
- ❯ vitest/test/core/test/basic.test.ts:8:32
+ ❯ test/core/test/basic.test.ts:8:32
             </failure>
         </testcase>
         <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; JSON\\" time=\\"0.001023711\\">
@@ -161,12 +161,12 @@ exports[`JUnit reporter with outputFile object 1`] = `
 
 exports[`JUnit reporter with outputFile object 2`] = `
 "<?xml version=\\"1.0\\" encoding=\\"UTF-8\\" ?>
-<testsuites>
+<testsuites name=\\"vitest tests\\" tests=\\"9\\" failures=\\"1\\" errors=\\"0\\" time=\\"0\\">
     <testsuite name=\\"test/core/test/basic.test.ts\\" timestamp=\\"2022-01-19T10:10:01.759Z\\" hostname=\\"hostname\\" tests=\\"9\\" failures=\\"1\\" errors=\\"0\\" skipped=\\"2\\" time=\\"0.145992842\\">
         <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; inner suite &gt; Math.sqrt()\\" time=\\"0.001442286\\">
             <failure message=\\"expected 2.23606797749979 to equal 2\\" type=\\"AssertionError\\">
 AssertionError: expected 2.23606797749979 to equal 2
- ❯ vitest/test/core/test/basic.test.ts:8:32
+ ❯ test/core/test/basic.test.ts:8:32
             </failure>
         </testcase>
         <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; JSON\\" time=\\"0.001023711\\">
@@ -202,12 +202,12 @@ exports[`JUnit reporter with outputFile object in non-existing directory 1`] = `
 
 exports[`JUnit reporter with outputFile object in non-existing directory 2`] = `
 "<?xml version=\\"1.0\\" encoding=\\"UTF-8\\" ?>
-<testsuites>
+<testsuites name=\\"vitest tests\\" tests=\\"9\\" failures=\\"1\\" errors=\\"0\\" time=\\"0\\">
     <testsuite name=\\"test/core/test/basic.test.ts\\" timestamp=\\"2022-01-19T10:10:01.759Z\\" hostname=\\"hostname\\" tests=\\"9\\" failures=\\"1\\" errors=\\"0\\" skipped=\\"2\\" time=\\"0.145992842\\">
         <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; inner suite &gt; Math.sqrt()\\" time=\\"0.001442286\\">
             <failure message=\\"expected 2.23606797749979 to equal 2\\" type=\\"AssertionError\\">
 AssertionError: expected 2.23606797749979 to equal 2
- ❯ vitest/test/core/test/basic.test.ts:8:32
+ ❯ test/core/test/basic.test.ts:8:32
             </failure>
         </testcase>
         <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; JSON\\" time=\\"0.001023711\\">
@@ -243,12 +243,12 @@ exports[`JUnit reporter with outputFile with XML in error message 1`] = `
 
 exports[`JUnit reporter with outputFile with XML in error message 2`] = `
 "<?xml version=\\"1.0\\" encoding=\\"UTF-8\\" ?>
-<testsuites>
+<testsuites name=\\"vitest tests\\" tests=\\"1\\" failures=\\"1\\" errors=\\"0\\" time=\\"0\\">
     <testsuite name=\\"test/core/test/basic.test.ts\\" timestamp=\\"2022-01-19T10:10:01.759Z\\" hostname=\\"hostname\\" tests=\\"1\\" failures=\\"1\\" errors=\\"0\\" skipped=\\"0\\" time=\\"0.145992842\\">
         <testcase classname=\\"test/core/test/basic.test.ts\\" name=\\"suite &gt; test with xml in error\\" time=\\"0.0021231231\\">
             <failure message=\\"error message that has XML in it &lt;tag&gt;\\" type=\\"AssertionError\\">
 AssertionError: error message that has XML in it &lt;tag&gt;
- ❯ vitest/test/core/test/basic.test.ts:8:32
+ ❯ test/core/test/basic.test.ts:8:32
             </failure>
         </testcase>
     </testsuite>

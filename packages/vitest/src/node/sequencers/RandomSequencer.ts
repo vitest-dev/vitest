@@ -1,4 +1,4 @@
-import { shuffle } from '../../utils'
+import { shuffle } from '@vitest/utils'
 import { BaseSequencer } from './BaseSequencer'
 
 export class RandomSequencer extends BaseSequencer {

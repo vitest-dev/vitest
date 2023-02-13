@@ -1,13 +1,16 @@
 /* eslint-disable no-sparse-arrays */
 import { AssertionError } from 'assert'
 import { describe, expect, it, vi } from 'vitest'
-import { generateToBeMessage } from 'vitest/src/integrations/chai/jest-utils'
+import { generateToBeMessage } from '@vitest/expect'
 
 class TestError extends Error {}
 
 // For expect.extend
 interface CustomMatchers<R = unknown> {
   toBeDividedBy(divisor: number): R
+  toBeTestedAsync(): Promise<R>
+  toBeTestedSync(): R
+  toBeTestedPromise(): R
 }
 declare global {
   namespace Vi {
@@ -34,6 +37,9 @@ describe('jest-expect', () => {
     expect([{ text: 'Hello' }]).toContainEqual({ text: 'Hello' })
     expect([{ text: 'Bye' }]).not.toContainEqual({ text: 'Hello' })
     expect(1).toBeGreaterThan(0)
+
+    expect(new Date(0)).toEqual(new Date(0))
+    expect(new Date('inValId')).toEqual(new Date('inValId'))
 
     expect(BigInt(1)).toBeGreaterThan(BigInt(0))
     expect(1).toBeGreaterThan(BigInt(0))
@@ -139,7 +145,7 @@ describe('jest-expect', () => {
     expect(['Bob', 'Eve']).toEqual(expect.not.arrayContaining(['Steve']))
   })
 
-  it('expect.extend', () => {
+  it('expect.extend', async () => {
     expect.extend({
       toBeDividedBy(received, divisor) {
         const pass = received % divisor === 0
@@ -158,6 +164,24 @@ describe('jest-expect', () => {
           }
         }
       },
+      async toBeTestedAsync() {
+        return {
+          pass: false,
+          message: () => 'toBeTestedAsync',
+        }
+      },
+      toBeTestedSync() {
+        return {
+          pass: false,
+          message: () => 'toBeTestedSync',
+        }
+      },
+      toBeTestedPromise() {
+        return Promise.resolve({
+          pass: false,
+          message: () => 'toBeTestedPromise',
+        })
+      },
     })
 
     expect(5).toBeDividedBy(5)
@@ -166,6 +190,11 @@ describe('jest-expect', () => {
       one: expect.toBeDividedBy(1),
       two: expect.not.toBeDividedBy(5),
     })
+    expect(() => expect(2).toBeDividedBy(5)).toThrowError()
+
+    expect(() => expect(null).toBeTestedSync()).toThrowError('toBeTestedSync')
+    await expect(async () => await expect(null).toBeTestedAsync()).rejects.toThrowError('toBeTestedAsync')
+    await expect(async () => await expect(null).toBeTestedPromise()).rejects.toThrowError('toBeTestedPromise')
   })
 
   it('object', () => {
@@ -176,6 +205,7 @@ describe('jest-expect', () => {
 
     const foo = {}
     const complex = {
+      '0': 'zero',
       'foo': 1,
       'foo.bar[0]': 'baz',
       'a-b': true,
@@ -198,12 +228,22 @@ describe('jest-expect', () => {
 
     expect(complex).toHaveProperty('a-b')
     expect(complex).toHaveProperty('a-b-1.0.0')
+    expect(complex).toHaveProperty('0')
+    expect(complex).toHaveProperty('0', 'zero')
+    expect(complex).toHaveProperty(['0'])
+    expect(complex).toHaveProperty(['0'], 'zero')
+    expect(complex).toHaveProperty([0])
+    expect(complex).toHaveProperty([0], 'zero')
     expect(complex).toHaveProperty('foo')
     expect(complex).toHaveProperty('foo', 1)
     expect(complex).toHaveProperty('bar.foo', 'foo')
     expect(complex).toHaveProperty('bar.arr[0]')
     expect(complex).toHaveProperty('bar.arr[1].zoo', 'monkey')
     expect(complex).toHaveProperty('bar.arr.0')
+    expect(complex).toHaveProperty(['bar', 'arr', '0'])
+    expect(complex).toHaveProperty(['bar', 'arr', '0'], 'first')
+    expect(complex).toHaveProperty(['bar', 'arr', 0])
+    expect(complex).toHaveProperty(['bar', 'arr', 0], 'first')
     expect(complex).toHaveProperty('bar.arr.1.zoo', 'monkey')
     expect(complex).toHaveProperty(['bar', 'arr', '1', 'zoo'], 'monkey')
     expect(complex).toHaveProperty(['foo.bar[0]'], 'baz')
@@ -219,7 +259,7 @@ describe('jest-expect', () => {
 
     expect(() => {
       expect(complex).toHaveProperty('a-b', false)
-    }).toThrowErrorMatchingInlineSnapshot('"expected { foo: 1, \'foo.bar[0]\': \'baz\', …(3) } to have property \\"a-b\\" with value false"')
+    }).toThrowErrorMatchingInlineSnapshot('"expected { \'0\': \'zero\', foo: 1, …(4) } to have property \\"a-b\\" with value false"')
   })
 
   it('assertions', () => {
@@ -457,6 +497,32 @@ describe('toSatisfy()', () => {
     expect(isOddMock).not.toBeCalled()
     expect(1).toSatisfy(isOddMock)
     expect(isOddMock).toBeCalled()
+  })
+})
+
+describe('toHaveBeenCalled', () => {
+  describe('negated', () => {
+    it('fails if called', () => {
+      const mock = vi.fn()
+      mock()
+
+      expect(() => {
+        expect(mock).not.toHaveBeenCalled()
+      }).toThrow(/^expected "spy" to not be called at all[^e]/)
+    })
+  })
+})
+
+describe('toHaveBeenCalledWith', () => {
+  describe('negated', () => {
+    it('fails if called', () => {
+      const mock = vi.fn()
+      mock(3)
+
+      expect(() => {
+        expect(mock).not.toHaveBeenCalledWith(3)
+      }).toThrow(/^expected "spy" to not be called with arguments: \[ 3 \][^e]/)
+    })
   })
 })
 

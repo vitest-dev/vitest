@@ -9,13 +9,14 @@ import { defineConfig } from 'rollup'
 import pkg from './package.json'
 
 const entries = {
-  index: 'src/index.ts',
-  server: 'src/server.ts',
-  types: 'src/types.ts',
-  client: 'src/client.ts',
-  utils: 'src/utils.ts',
-  cli: 'src/cli.ts',
-  hmr: 'src/hmr/index.ts',
+  'index': 'src/index.ts',
+  'server': 'src/server.ts',
+  'types': 'src/types.ts',
+  'client': 'src/client.ts',
+  'utils': 'src/utils.ts',
+  'cli': 'src/cli.ts',
+  'hmr': 'src/hmr/index.ts',
+  'source-map': 'src/source-map.ts',
 }
 
 const external = [
@@ -25,16 +26,11 @@ const external = [
   'pathe',
   'birpc',
   'vite',
-  'url',
-  'events',
+  'node:url',
+  'node:events',
 ]
 
 const plugins = [
-  alias({
-    entries: [
-      { find: /^node:(.+)$/, replacement: '$1' },
-    ],
-  }),
   resolve({
     preferBuiltins: true,
   }),
@@ -67,7 +63,16 @@ export default defineConfig([
       chunkFileNames: 'chunk-[name].cjs',
     },
     external,
-    plugins,
+    plugins: [
+      alias({
+        entries: [
+          // cjs in Node 14 doesn't support node: prefix
+          // can be dropped, when we drop support for Node 14
+          { find: /^node:(.+)$/, replacement: '$1' },
+        ],
+      }),
+      ...plugins,
+    ],
     onwarn,
   },
   {

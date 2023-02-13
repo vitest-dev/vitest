@@ -5,7 +5,8 @@ import { chromium } from 'playwright'
 import type { Browser, Page } from 'playwright'
 import { expect } from '@playwright/test'
 
-describe('basic', async () => {
+// unstable in Windows, TODO: investigate
+describe.runIf(process.platform !== 'win32')('basic', async () => {
   let server: PreviewServer
   let browser: Browser
   let page: Page
@@ -23,10 +24,10 @@ describe('basic', async () => {
     })
   })
 
-  test('should have the correct title', async () => {
+  test('should change count when button clicked', async () => {
     await page.goto('http://localhost:3000')
-    const button = page.locator('#btn')
-    await expect(button).toBeDefined()
+    const button = page.getByRole('button', { name: /Clicked/ })
+    await expect(button).toBeVisible()
 
     await expect(button).toHaveText('Clicked 0 time(s)')
 

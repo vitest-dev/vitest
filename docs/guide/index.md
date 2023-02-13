@@ -16,6 +16,8 @@ You can try Vitest online on [StackBlitz](https://vitest.new). It runs Vitest di
 
 ## Adding Vitest to your Project
 
+<CourseLink href="https://vueschool.io/lessons/how-to-install-vitest?friend=vueuse">Learn how to install by Video</CourseLink>
+
 With npm
 ```bash
 npm install -D vitest
@@ -32,6 +34,10 @@ pnpm add -D vitest
 :::tip
 Vitest requires Vite >=v3.0.0 and Node >=v14
 :::
+
+It is recommended that you install a copy of `vitest` in your `package.json`, using one of the methods listed above. However, if you would prefer to run `vitest` directly, you can use `npx vitest` (the `npx` command comes with npm and Node.js).
+
+The `npx` command will execute the command either from a local `node_modules/.bin` installing any packages needed in order for the command to run. By default, npx will check whether command exists in $PATH, or in the local project binaries, and execute that. If command is not found, it will be installed prior to execution.
 
 ## Configuring Vitest
 

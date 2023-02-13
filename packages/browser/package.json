@@ -1,7 +1,7 @@
 {
   "name": "@vitest/browser",
   "type": "module",
-  "version": "0.24.5",
+  "version": "0.28.5",
   "description": "Browser running for Vitest",
   "repository": {
     "type": "git",
@@ -25,25 +25,25 @@
   ],
   "scripts": {
     "build": "rimraf dist && pnpm build:node && pnpm build:client && pnpm copy",
-    "build:client": "vite build",
+    "build:client": "vite build src/client",
     "build:node": "rollup -c",
-    "dev:client": "vite build --watch",
-    "dev:node": "rollup -c --watch --watch.include=node/**",
+    "dev:client": "vite build src/client --watch",
+    "dev:node": "rollup -c --watch --watch.include src/node/index.ts",
     "dev": "rimraf dist && run-p dev:node dev:client",
     "copy": "esno scripts/copy-ui-to-browser.ts",
     "prepublishOnly": "pnpm build"
   },
   "dependencies": {
+    "@vitest/runner": "workspace:*",
     "local-pkg": "^0.4.2",
-    "mlly": "^0.5.16",
+    "mlly": "^1.1.0",
     "modern-node-polyfills": "0.0.9",
     "rollup-plugin-node-polyfills": "^0.2.1",
     "sirv": "^2.0.2"
   },
   "devDependencies": {
-    "@types/ws": "^8.5.3",
+    "@types/ws": "^8.5.4",
     "@vitest/ws-client": "workspace:*",
-    "picocolors": "^1.0.0",
     "rollup": "^2.79.1",
     "vitest": "workspace:*"
   }

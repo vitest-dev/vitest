@@ -7,6 +7,9 @@ outline: deep
 
 <FeaturesList class="!gap-1 text-lg" />
 
+<div h-2 />
+<CourseLink href="https://vueschool.io/lessons/your-first-test?friend=vueuse">Learn how to write your first test by Video</CourseLink>
+
 ## Shared config between test, dev and build
 
 Vite's config, transformers, resolvers, and plugins. Use the same setup from your app to run the tests.
@@ -67,7 +70,7 @@ describe.concurrent('suite', () => {
 })
 ```
 
-You can also use `.skip`, `.only`, and `.todo` with concurrent suites and tests. Read more in the [API Reference](../api/#concurrent).
+You can also use `.skip`, `.only`, and `.todo` with concurrent suites and tests. Read more in the [API Reference](/api/#test-concurrent).
 
 ## Snapshot
 
@@ -198,5 +201,22 @@ describe('sort', () => {
       return a - b
     })
   })
+})
+```
+
+## Type Testing <sup><code>experimental</code></sup>
+
+Since Vitest 0.25.0 you can [write tests](/guide/testing-types) to catch type regressions. Vitest comes with [`expect-type`](https://github.com/mmkal/expect-type) package to provide you with a similar and easy to understand API.
+
+```ts
+import { assertType, expectTypeOf } from 'vitest'
+import { mount } from './mount.js'
+
+test('my types work properly', () => {
+  expectTypeOf(mount).toBeFunction()
+  expectTypeOf(mount).parameter(0).toMatchTypeOf<{ name: string }>()
+
+  // @ts-expect-error name is a string
+  assertType(mount({ name: 42 }))
 })
 ```

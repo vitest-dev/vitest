@@ -1,7 +1,8 @@
 import type { BenchmarkUserOptions, ResolvedCoverageOptions, UserConfig } from './types'
+import { isCI } from './utils/env'
 
 export const defaultInclude = ['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']
-export const defaultExclude = ['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**', '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress}.config.*']
+export const defaultExclude = ['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**', '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*']
 export const benchmarkConfigDefaults: Required<Omit<BenchmarkUserOptions, 'outputFile'>> = {
   include: ['**/*.{bench,benchmark}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
   exclude: defaultExclude,
@@ -20,24 +21,23 @@ const defaultCoverageExcludes = [
   '**/*{.,-}test.{js,cjs,mjs,ts,tsx,jsx}',
   '**/*{.,-}spec.{js,cjs,mjs,ts,tsx,jsx}',
   '**/__tests__/**',
-  '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress}.config.*',
+  '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*',
   '**/.{eslint,mocha,prettier}rc.{js,cjs,yml}',
 ]
 
-const coverageConfigDefaults = {
+// These are the generic defaults for coverage. Providers may also set some provider specific defaults.
+export const coverageConfigDefaults: ResolvedCoverageOptions = {
   provider: 'c8',
   enabled: false,
   clean: true,
-  cleanOnRerun: false,
+  cleanOnRerun: true,
   reportsDirectory: './coverage',
-  excludeNodeModules: true,
   exclude: defaultCoverageExcludes,
   reporter: ['text', 'html', 'clover', 'json'],
-  allowExternal: false,
   // default extensions used by c8, plus '.vue' and '.svelte'
   // see https://github.com/istanbuljs/schema/blob/master/default-extension.js
-  extension: ['.js', '.cjs', '.mjs', '.ts', '.tsx', '.jsx', '.vue', '.svelte'],
-} as ResolvedCoverageOptions
+  extension: ['.js', '.cjs', '.mjs', '.ts', '.mts', '.cts', '.tsx', '.jsx', '.vue', '.svelte'],
+}
 
 export const fakeTimersDefaults = {
   loopLimit: 10_000,
@@ -54,8 +54,8 @@ export const fakeTimersDefaults = {
 } as NonNullable<UserConfig['fakeTimers']>
 
 const config = {
-  allowOnly: !process.env.CI,
-  watch: !process.env.CI,
+  allowOnly: !isCI,
+  watch: !isCI,
   globals: false,
   environment: 'node' as const,
   threads: true,
@@ -66,7 +66,7 @@ const config = {
   exclude: defaultExclude,
   testTimeout: 5000,
   hookTimeout: 10000,
-  teardownTimeout: 1000,
+  teardownTimeout: 10000,
   isolate: true,
   watchExclude: ['**/node_modules/**', '**/dist/**'],
   forceRerunTriggers: [
@@ -87,6 +87,12 @@ const config = {
   fakeTimers: fakeTimersDefaults,
   maxConcurrency: 5,
   dangerouslyIgnoreUnhandledErrors: false,
+  typecheck: {
+    checker: 'tsc' as const,
+    include: ['**/*.{test,spec}-d.{ts,js}'],
+    exclude: defaultExclude,
+  },
+  slowTestThreshold: 300,
 }
 
 export const configDefaults: Required<Pick<UserConfig, keyof typeof config>> = Object.freeze(config)

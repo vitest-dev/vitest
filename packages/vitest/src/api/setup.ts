@@ -1,14 +1,15 @@
-import { promises as fs } from 'fs'
+import { existsSync, promises as fs } from 'node:fs'
+
 import type { BirpcReturn } from 'birpc'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
 import type { WebSocket } from 'ws'
 import { WebSocketServer } from 'ws'
-import type { ModuleNode } from 'vite'
 import { API_PATH } from '../constants'
 import type { Vitest } from '../node'
 import type { File, ModuleGraphData, Reporter, TaskResultPack, UserConsoleLog } from '../types'
-import { interpretSourcePos, parseStacktrace } from '../utils/source-map'
+import { getModuleGraph } from '../utils'
+import { parseErrorStacktrace } from '../utils/source-map'
 import type { TransformResultWithSource, WebSocketEvents, WebSocketHandlers } from './types'
 
 export function setup(ctx: Vitest) {
@@ -50,11 +51,25 @@ export function setup(ctx: Vitest) {
         getFiles() {
           return ctx.state.getFiles()
         },
-        async getPaths() {
-          return await ctx.state.getPaths()
+        getPaths() {
+          return ctx.state.getPaths()
         },
-        readFile(id) {
+        resolveSnapshotPath(testPath) {
+          return ctx.snapshot.resolvePath(testPath)
+        },
+        removeFile(id) {
+          return fs.unlink(id)
+        },
+        createDirectory(id) {
+          return fs.mkdir(id, { recursive: true })
+        },
+        async readFile(id) {
+          if (!existsSync(id))
+            return null
           return fs.readFile(id, 'utf-8')
+        },
+        snapshotSaved(snapshot) {
+          ctx.snapshot.add(snapshot)
         },
         writeFile(id, content) {
           return fs.writeFile(id, content, 'utf-8')
@@ -76,39 +91,7 @@ export function setup(ctx: Vitest) {
           }
         },
         async getModuleGraph(id: string): Promise<ModuleGraphData> {
-          const graph: Record<string, string[]> = {}
-          const externalized = new Set<string>()
-          const inlined = new Set<string>()
-
-          function clearId(id?: string | null) {
-            return id?.replace(/\?v=\w+$/, '') || ''
-          }
-          async function get(mod?: ModuleNode, seen = new Map<ModuleNode, string>()) {
-            if (!mod || !mod.id)
-              return
-            if (seen.has(mod))
-              return seen.get(mod)
-            let id = clearId(mod.id)
-            seen.set(mod, id)
-            const rewrote = await ctx.vitenode.shouldExternalize(id)
-            if (rewrote) {
-              id = rewrote
-              externalized.add(id)
-              seen.set(mod, id)
-            }
-            else {
-              inlined.add(id)
-            }
-            const mods = Array.from(mod.importedModules).filter(i => i.id && !i.id.includes('/vitest/dist/'))
-            graph[id] = (await Promise.all(mods.map(m => get(m, seen)))).filter(Boolean) as string[]
-            return id
-          }
-          await get(ctx.server.moduleGraph.getModuleById(id))
-          return {
-            graph,
-            externalized: Array.from(externalized),
-            inlined: Array.from(inlined),
-          }
+          return getModuleGraph(ctx, id)
         },
         updateSnapshot(file?: File) {
           if (!file)
@@ -154,10 +137,14 @@ class WebSocketReporter implements Reporter {
     if (this.clients.size === 0)
       return
 
-    await Promise.all(packs.map(async (i) => {
-      if (i[1]?.error)
-        await interpretSourcePos(parseStacktrace(i[1].error as any), this.ctx)
-    }))
+    packs.forEach(([, result]) => {
+      // TODO remove after "error" deprecation is removed
+      if (result?.error)
+        result.error.stacks = parseErrorStacktrace(result.error)
+      result?.errors?.forEach((error) => {
+        error.stacks = parseErrorStacktrace(error)
+      })
+    })
 
     this.clients.forEach((client) => {
       client.onTaskUpdate?.(packs)

@@ -1,12 +1,11 @@
 import fs from 'fs'
 import { builtinModules } from 'module'
-import { dirname, join, relative, resolve } from 'pathe'
+import { dirname, join, normalize, relative, resolve } from 'pathe'
 import esbuild from 'rollup-plugin-esbuild'
 import dts from 'rollup-plugin-dts'
 import nodeResolve from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
-import alias from '@rollup/plugin-alias'
 import license from 'rollup-plugin-license'
 import c from 'picocolors'
 import fg from 'fast-glob'
@@ -16,23 +15,26 @@ import pkg from './package.json'
 
 const entries = [
   'src/index.ts',
-  'src/browser.ts',
   'src/node/cli.ts',
   'src/node/cli-wrapper.ts',
   'src/node.ts',
+  'src/suite.ts',
+  'src/browser.ts',
+  'src/runners.ts',
   'src/environments.ts',
   'src/runtime/worker.ts',
   'src/runtime/loader.ts',
   'src/runtime/entry.ts',
-  'src/runtime/suite.ts',
   'src/integrations/spy.ts',
 ]
 
 const dtsEntries = [
   'src/index.ts',
   'src/node.ts',
-  'src/browser.ts',
   'src/environments.ts',
+  'src/browser.ts',
+  'src/runners.ts',
+  'src/suite.ts',
   'src/config.ts',
 ]
 
@@ -41,18 +43,19 @@ const external = [
   ...Object.keys(pkg.dependencies),
   ...Object.keys(pkg.peerDependencies),
   'worker_threads',
+  'node:worker_threads',
+  'node:fs',
   'inspector',
+  'vite-node/source-map',
+  'vite-node/client',
+  'vite-node/server',
+  'vite-node/utils',
+  '@vitest/utils/diff',
+  '@vitest/runner/utils',
+  '@vitest/runner/types',
 ]
 
 const plugins = [
-  alias({
-    entries: [
-      { find: /^node:(.+)$/, replacement: '$1' },
-      { find: 'vite-node/server', replacement: resolve(__dirname, '../vite-node/src/server.ts') },
-      { find: 'vite-node/client', replacement: resolve(__dirname, '../vite-node/src/client.ts') },
-      { find: 'vite-node/utils', replacement: resolve(__dirname, '../vite-node/src/utils.ts') },
-    ],
-  }),
   nodeResolve({
     preferBuiltins: true,
   }),
@@ -70,8 +73,9 @@ export default ({ watch }) => defineConfig([
       dir: 'dist',
       format: 'esm',
       chunkFileNames: (chunkInfo) => {
-        const id = chunkInfo.facadeModuleId || Object.keys(chunkInfo.modules).find(i => !i.includes('node_modules') && i.includes('src/'))
+        let id = chunkInfo.facadeModuleId || Object.keys(chunkInfo.modules).find(i => !i.includes('node_modules') && (i.includes('src/') || i.includes('src\\')))
         if (id) {
+          id = normalize(id)
           const parts = Array.from(
             new Set(relative(process.cwd(), id).split(/\//g)
               .map(i => i.replace(/\..*$/, ''))
@@ -109,7 +113,7 @@ export default ({ watch }) => defineConfig([
     input: dtsEntries,
     output: {
       dir: 'dist',
-      entryFileNames: chunk => `${chunk.name.replace('src/', '')}.d.ts`,
+      entryFileNames: chunk => `${normalize(chunk.name).replace('src/', '')}.d.ts`,
       format: 'esm',
     },
     external,
@@ -143,6 +147,7 @@ function licensePlugin() {
       }
       const licenses = new Set()
       const dependencyLicenseTexts = dependencies
+        .filter(({ name }) => !name.startsWith('@vitest/'))
         .sort(({ name: nameA }, { name: nameB }) =>
           nameA > nameB ? 1 : nameB > nameA ? -1 : 0,
         )

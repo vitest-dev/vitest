@@ -1,4 +1,4 @@
-import { existsSync, promises as fs } from 'fs'
+import { existsSync, promises as fs } from 'node:fs'
 import { dirname, resolve } from 'pathe'
 import type { Vitest } from '../../../node'
 import type { BenchTaskResult, File, Reporter } from '../../../types'
@@ -34,7 +34,7 @@ export class JsonReporter implements Reporter {
           continue
         if (!outputFile)
           res.samples = 'ignore on terminal' as any
-        testResults[test.suite.name] = (testResults[test.suite.name] || []).concat(res)
+        testResults[test.suite!.name] = (testResults[test.suite!.name] || []).concat(res)
       }
 
       if (tests.some(t => t.result?.state === 'run')) {

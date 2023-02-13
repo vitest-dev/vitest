@@ -1,0 +1,13 @@
+{
+  "name": "@vitest/test-ui",
+  "private": true,
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "execa": "^6.1.0",
+    "fs-extra": "^10.1.0",
+    "playwright-chromium": "^1.27.0",
+    "vitest": "workspace:*"
+  }
+}

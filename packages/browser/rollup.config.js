@@ -10,6 +10,7 @@ const external = [
   ...Object.keys(pkg.dependencies),
   ...Object.keys(pkg.peerDependencies || {}),
   'worker_threads',
+  'node:worker_threads',
 ]
 
 const plugins = [
@@ -29,7 +30,7 @@ const plugins = [
 export default () => [
   {
     input: [
-      './node/index.ts',
+      './src/node/index.ts',
     ],
     output: {
       dir: 'dist',
@@ -39,7 +40,7 @@ export default () => [
     plugins,
   },
   {
-    input: './node/index.ts',
+    input: './src/node/index.ts',
     output: {
       file: 'dist/index.d.ts',
       format: 'esm',

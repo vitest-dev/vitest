@@ -3,29 +3,32 @@
   "private": true,
   "scripts": {
     "dev": "vitepress --port 3333 --open",
-    "build": "nr prefetch && vitepress build && node .vitepress/scripts/build-pwa.mjs",
-    "build-no-prefetch": "vitepress build && node .vitepress/scripts/build-pwa.mjs",
+    "build": "nr prefetch && vitepress build",
+    "build-no-prefetch": "vitepress build",
     "serve": "vitepress serve",
     "preview-https": "pnpm run build && serve .vitepress/dist",
+    "preview-https-no-prefetch": "pnpm run build-no-prefetch && serve .vitepress/dist",
     "prefetch": "esno .vitepress/scripts/fetch-avatars.ts"
   },
   "dependencies": {
-    "@vueuse/core": "^9.3.1",
-    "jiti": "^1.16.0",
+    "@vueuse/core": "^9.10.0",
+    "jiti": "^1.16.1",
     "vue": "latest"
   },
   "devDependencies": {
-    "@iconify-json/carbon": "^1.1.9",
-    "@unocss/reset": "^0.46.0",
+    "@iconify-json/carbon": "^1.1.13",
+    "@unocss/reset": "^0.48.3",
+    "@vite-pwa/vitepress": "^0.0.4",
     "@vitejs/plugin-vue": "latest",
     "esno": "^0.16.3",
     "fast-glob": "^3.2.12",
+    "fs-extra": "^10.1.0",
     "https-localhost": "^4.7.1",
-    "unocss": "^0.46.0",
-    "unplugin-vue-components": "^0.22.9",
-    "vite": "^3.1.8",
-    "vite-plugin-pwa": "0.13.1",
-    "vitepress": "^1.0.0-alpha.26",
+    "unocss": "^0.48.3",
+    "unplugin-vue-components": "^0.22.12",
+    "vite": "^4.0.0",
+    "vite-plugin-pwa": "^0.14.1",
+    "vitepress": "1.0.0-alpha.40",
     "workbox-window": "^6.5.4"
   }
 }

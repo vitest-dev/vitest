@@ -8,6 +8,11 @@ import Unocss from 'unocss/vite'
 import Pages from 'vite-plugin-pages'
 import { presetAttributify, presetIcons, presetUno } from 'unocss'
 
+// for debug:
+// open a static file serve to share the report json
+// and ui using the link to load the report json data
+const debugLink = 'http://127.0.0.1:4173/__vitest__'
+
 export const config: UserConfig = {
   root: __dirname,
   base: '/__vitest__/',
@@ -17,6 +22,9 @@ export const config: UserConfig = {
       '~/': `${resolve(__dirname, 'client')}/`,
       '@vitest/ws-client': `${resolve(__dirname, '../ws-client/src/index.ts')}`,
     },
+  },
+  define: {
+    __REPORT__: false,
   },
   plugins: [
     Vue(),
@@ -53,6 +61,13 @@ export const config: UserConfig = {
         '@vueuse/core',
       ],
     }),
+    {
+      name: 'debug-html-report',
+      apply: 'serve',
+      transformIndexHtml(html) {
+        return html.replace('<!-- !LOAD_METADATA! -->', `<script>window.METADATA_PATH="${debugLink}/html.meta.json"</script>`)
+      },
+    },
   ],
   build: {
     outDir: './dist/client',

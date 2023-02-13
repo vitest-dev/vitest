@@ -1,18 +1,16 @@
-import { performance } from 'perf_hooks'
+import { performance } from 'node:perf_hooks'
 import { resolve } from 'pathe'
 import type { TransformResult, ViteDevServer } from 'vite'
 import createDebug from 'debug'
 import type { DebuggerOptions, FetchResult, RawSourceMap, ViteNodeResolveId, ViteNodeServerOptions } from './types'
 import { shouldExternalize } from './externalize'
-import { toArray, toFilePath, withInlineSourcemap } from './utils'
+import { normalizeModuleId, toArray, toFilePath } from './utils'
 import { Debugger } from './debug'
+import { withInlineSourcemap } from './source-map'
 
 export * from './externalize'
 
 const debugRequest = createDebug('vite-node:server:request')
-
-// store the original reference to avoid it been mocked
-const RealDate = Date
 
 export class ViteNodeServer {
   private fetchPromiseMap = new Map<string, Promise<FetchResult>>()
@@ -73,7 +71,16 @@ export class ViteNodeServer {
     return this.server.pluginContainer.resolveId(id, importer, { ssr: mode === 'ssr' })
   }
 
+  getSourceMap(source: string) {
+    const fetchResult = this.fetchCache.get(source)?.result
+    if (fetchResult?.map)
+      return fetchResult.map
+    const ssrTransformResult = this.server.moduleGraph.getModuleById(source)?.ssrTransformResult
+    return (ssrTransformResult?.map || null) as unknown as RawSourceMap | null
+  }
+
   async fetchModule(id: string): Promise<FetchResult> {
+    id = normalizeModuleId(id)
     // reuse transform for concurrent requests
     if (!this.fetchPromiseMap.has(id)) {
       this.fetchPromiseMap.set(id,
@@ -118,14 +125,15 @@ export class ViteNodeServer {
   private async _fetchModule(id: string): Promise<FetchResult> {
     let result: FetchResult
 
-    const filePath = toFilePath(id, this.server.config.root)
+    const { path: filePath } = toFilePath(id, this.server.config.root)
 
     const module = this.server.moduleGraph.getModuleById(id)
-    const timestamp = module?.lastHMRTimestamp || RealDate.now()
+    const timestamp = module ? module.lastHMRTimestamp : null
     const cache = this.fetchCache.get(filePath)
     if (timestamp && cache && cache.timestamp >= timestamp)
       return cache.result
 
+    const time = Date.now()
     const externalize = await this.shouldExternalize(filePath)
     let duration: number | undefined
     if (externalize) {
@@ -141,7 +149,7 @@ export class ViteNodeServer {
 
     this.fetchCache.set(filePath, {
       duration,
-      timestamp,
+      timestamp: time,
       result,
     })
 

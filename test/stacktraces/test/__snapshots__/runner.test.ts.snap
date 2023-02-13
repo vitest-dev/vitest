@@ -1,22 +1,33 @@
 // Vitest Snapshot v1
 
+exports[`stacktraces should pick error frame if present > frame.spec.imba > frame.spec.imba 1`] = `
+" FAIL  frame.spec.imba [ frame.spec.imba ]
+imba-parser error: Unexpected 'CALL_END'
+4 | test(\\"1+1\\") do
+5 |  expect(1+1).toBe 2
+6 |  frame.
+  |        ^
+7 |
+"
+`;
+
 exports[`stacktraces should respect sourcemaps > add.test.ts > add.test.ts 1`] = `
-" ❯ add.test.ts:12:23
+" ❯ add.test.ts:12:24
      10| 
      11| it('add', () => {
      12|   expect(add(a.count)).toBe(100)
-       |                       ^
+       |                        ^
      13|   expect(add(1)).toBe(1)
      14|   return expect(add(1, 2, 3)).toBe(6)
 "
 `;
 
 exports[`stacktraces should respect sourcemaps > add-in-imba.test.imba > add-in-imba.test.imba 1`] = `
-" ❯ add-in-imba.test.imba:8:16
+" ❯ add-in-imba.test.imba:8:17
       6| it \\"add\\", do
       7|  expect(add()).toBe 0
       8|  expect(add(1)).toBe 3
-       |                ^
+       |                 ^
       9|  expect(add(1, 2, 3)).toBe 6
      10| 
 "

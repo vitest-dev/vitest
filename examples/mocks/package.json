@@ -19,6 +19,7 @@
   "devDependencies": {
     "@vitest/ui": "latest",
     "react": "^18.0.0",
+    "sweetalert2": "^11.6.16",
     "vite": "latest",
     "vitest": "latest",
     "vue": "^3.2.39",

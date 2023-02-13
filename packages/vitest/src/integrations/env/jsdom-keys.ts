@@ -20,6 +20,7 @@ const LIVING_KEYS = [
   'Comment',
   'DocumentType',
   'NodeList',
+  'RadioNodeList',
   'HTMLCollection',
   'HTMLOptionsCollection',
   'DOMStringMap',
@@ -96,6 +97,7 @@ const LIVING_KEYS = [
   'HTMLVideoElement',
   'HTMLAudioElement',
   'HTMLTrackElement',
+  'HTMLFormControlsCollection',
   'SVGElement',
   'SVGGraphicsElement',
   'SVGSVGElement',
@@ -126,6 +128,7 @@ const LIVING_KEYS = [
   'Location',
   'History',
   'Screen',
+  'Crypto',
   'Performance',
   'Navigator',
   'PluginArray',
@@ -159,6 +162,7 @@ const LIVING_KEYS = [
   'Headers',
   'AbortController',
   'AbortSignal',
+  'ArrayBuffer',
 
   // not specified in docs, but is available
   'Image',

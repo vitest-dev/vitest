@@ -1,10 +1,12 @@
-import { existsSync, promises as fs } from 'fs'
-import { hostname } from 'os'
+import { existsSync, promises as fs } from 'node:fs'
+import { hostname } from 'node:os'
 import { dirname, relative, resolve } from 'pathe'
 
+import type { Task } from '@vitest/runner'
+import type { ErrorWithDiff } from '@vitest/runner/utils'
 import type { Vitest } from '../../node'
-import type { ErrorWithDiff, Reporter, Task } from '../../types'
-import { parseStacktrace } from '../../utils/source-map'
+import type { Reporter } from '../../types/reporter'
+import { parseErrorStacktrace } from '../../utils/source-map'
 import { F_POINTER } from '../../utils/figures'
 import { getOutputFile } from '../../utils/config-helpers'
 import { IndentedLogger } from './renderers/indented-logger'
@@ -58,9 +60,13 @@ function escapeXML(value: any): string {
     true)
 }
 
+function executionTime(durationMS: number) {
+  return (durationMS / 1000).toLocaleString('en-US', { useGrouping: false, maximumFractionDigits: 10 })
+}
+
 export function getDuration(task: Task): string | undefined {
   const duration = task.result?.duration ?? 0
-  return (duration / 1000).toLocaleString(undefined, { useGrouping: false, maximumFractionDigits: 10 })
+  return executionTime(duration)
 }
 
 export class JUnitReporter implements Reporter {
@@ -68,6 +74,7 @@ export class JUnitReporter implements Reporter {
   private reportFile?: string
   private baseLog!: (text: string) => Promise<void>
   private logger!: IndentedLogger<Promise<void>>
+  private _timeStart = new Date()
 
   async onInit(ctx: Vitest): Promise<void> {
     this.ctx = ctx
@@ -89,11 +96,12 @@ export class JUnitReporter implements Reporter {
       this.baseLog = async (text: string) => this.ctx.logger.log(text)
     }
 
+    this._timeStart = new Date()
     this.logger = new IndentedLogger(this.baseLog)
   }
 
   async writeElement(name: string, attrs: Record<string, any>, children: () => Promise<void>) {
-    const pairs = []
+    const pairs: string[] = []
     for (const key in attrs) {
       const attr = attrs[key]
       if (attr === undefined)
@@ -117,14 +125,13 @@ export class JUnitReporter implements Reporter {
     // Be sure to escape any XML in the error Details
     await this.baseLog(escapeXML(errorDetails))
 
-    const stack = parseStacktrace(error)
+    const stack = parseErrorStacktrace(error)
 
     // TODO: This is same as printStack but without colors. Find a way to reuse code.
     for (const frame of stack) {
-      const pos = frame.sourcePos ?? frame
       const path = relative(this.ctx.config.root, frame.file)
 
-      await this.baseLog(` ${F_POINTER} ${[frame.method, `${path}:${pos.line}:${pos.column}`].filter(Boolean).join(' ')}`)
+      await this.baseLog(` ${F_POINTER} ${[frame.method, `${path}:${frame.line}:${frame.column}`].filter(Boolean).join(' ')}`)
 
       // reached at test file, skip the follow stack
       if (frame.file in this.ctx.state.filesMap)
@@ -159,20 +166,21 @@ export class JUnitReporter implements Reporter {
         await this.writeLogs(task, 'err')
 
         if (task.mode === 'skip' || task.mode === 'todo')
-          this.logger.log('<skipped/>')
+          await this.logger.log('<skipped/>')
 
         if (task.result?.state === 'fail') {
-          const error = task.result.error
+          const errors = task.result.errors?.length ? task.result.errors : [task.result.error]
+          for (const error of errors) {
+            await this.writeElement('failure', {
+              message: error?.message,
+              type: error?.name ?? error?.nameStr,
+            }, async () => {
+              if (!error)
+                return
 
-          await this.writeElement('failure', {
-            message: error?.message,
-            type: error?.name ?? error?.nameStr,
-          }, async () => {
-            if (!error)
-              return
-
-            await this.writeErrorDetails(error)
-          })
+              await this.writeErrorDetails(error)
+            })
+          }
         }
       })
     }
@@ -205,7 +213,19 @@ export class JUnitReporter implements Reporter {
         }
       })
 
-    await this.writeElement('testsuites', {}, async () => {
+    const stats = transformed.reduce((stats, file) => {
+      stats.tests += file.tasks.length
+      stats.failures += file.stats.failures
+      return stats
+    }, {
+      name: process.env.VITEST_JUNIT_SUITE_NAME || 'vitest tests',
+      tests: 0,
+      failures: 0,
+      errors: 0, // we cannot detect those
+      time: executionTime(new Date().getTime() - this._timeStart.getTime()),
+    })
+
+    await this.writeElement('testsuites', stats, async () => {
       for (const file of transformed) {
         await this.writeElement('testsuite', {
           name: file.name,

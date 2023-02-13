@@ -70,7 +70,7 @@ export function CSSEnablerPlugin(ctx: Vitest): VitePlugin[] {
           return { code }
         }
 
-        return { code: '' }
+        return { code: 'export default ""' }
       },
     },
   ]

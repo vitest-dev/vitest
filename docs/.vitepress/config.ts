@@ -1,20 +1,23 @@
 import { defineConfig } from 'vitepress'
+import { withPwa } from '@vite-pwa/vitepress'
 import { version } from '../../package.json'
 import {
   contributing,
   discord,
   font,
   github,
+  mastodon,
   ogImage,
   ogUrl,
   releases,
   twitter,
-  vitestDescription,
-  vitestName,
+  vitestDescription, vitestName,
 } from './meta'
+import { pwa } from './scripts/pwa'
+import { transformHead } from './scripts/transformHead'
 import { teamMembers } from './contributors'
 
-export default defineConfig({
+export default withPwa(defineConfig({
   lang: 'en-US',
   title: vitestName,
   description: vitestDescription,
@@ -32,7 +35,8 @@ export default defineConfig({
     ['meta', { name: 'twitter:description', content: vitestDescription }],
     ['meta', { name: 'twitter:image', content: ogImage }],
     ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
-    ['link', { href: font, rel: 'stylesheet' }],
+    ['link', { rel: 'preload', as: 'style', onload: 'this.onload=null;this.rel=\'stylesheet\'', href: font }],
+    ['noscript', {}, `<link rel="stylesheet" crossorigin="anonymous" href="${font}" />`],
     ['link', { rel: 'mask-icon', href: '/logo.svg', color: '#ffffff' }],
     ['link', { rel: 'apple-touch-icon', href: '/apple-touch-icon.png', sizes: '180x180' }],
   ],
@@ -68,6 +72,7 @@ export default defineConfig({
     },
 
     socialLinks: [
+      { icon: 'mastodon', link: mastodon },
       { icon: 'twitter', link: twitter },
       { icon: 'discord', link: discord },
       { icon: 'github', link: github },
@@ -82,6 +87,7 @@ export default defineConfig({
       { text: 'Guide', link: '/guide/' },
       { text: 'API', link: '/api/' },
       { text: 'Config', link: '/config/' },
+      { text: 'Advanced', link: '/advanced/api' },
       {
         text: `v${version}`,
         items: [
@@ -99,6 +105,21 @@ export default defineConfig({
 
     sidebar: {
       // TODO: bring sidebar of apis and config back
+      '/advanced': [
+        {
+          text: 'Advanced',
+          items: [
+            {
+              text: 'Vitest Node API',
+              link: '/advanced/api',
+            },
+            {
+              text: 'Runner API',
+              link: '/advanced/runner',
+            },
+          ],
+        },
+      ],
       '/': [
         {
           text: 'Guide',
@@ -134,6 +155,10 @@ export default defineConfig({
             {
               text: 'Mocking',
               link: '/guide/mocking',
+            },
+            {
+              text: 'Testing Types',
+              link: '/guide/testing-types',
             },
             {
               text: 'Vitest UI',
@@ -177,8 +202,28 @@ export default defineConfig({
           text: 'API',
           items: [
             {
-              text: 'API Reference',
+              text: 'Test API Reference',
               link: '/api/',
+            },
+            {
+              text: 'Mock Functions',
+              link: '/api/mock',
+            },
+            {
+              text: 'Vi Utility',
+              link: '/api/vi',
+            },
+            {
+              text: 'Expect',
+              link: '/api/expect',
+            },
+            {
+              text: 'ExpectTypeOf',
+              link: '/api/expect-typeof',
+            },
+            {
+              text: 'assertType',
+              link: '/api/assert-type',
             },
           ],
         },
@@ -194,4 +239,6 @@ export default defineConfig({
       ],
     },
   },
-})
+  pwa,
+  transformHead,
+}))

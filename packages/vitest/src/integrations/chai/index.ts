@@ -1,12 +1,9 @@
 import * as chai from 'chai'
 import './setup'
-import type { Test } from '../../types'
-import { getFullName, getWorkerState } from '../../utils'
+import type { Test } from '@vitest/runner'
+import { GLOBAL_EXPECT, getState, setState } from '@vitest/expect'
 import type { MatcherState } from '../../types/chai'
-import { getState, setState } from './jest-expect'
-import { GLOBAL_EXPECT } from './constants'
-
-const workerState = getWorkerState()
+import { getCurrentEnvironment, getFullName } from '../../utils'
 
 export function createExpect(test?: Test) {
   const expect = ((value: any, message?: string): Vi.Assertion => {
@@ -21,18 +18,23 @@ export function createExpect(test?: Test) {
   }) as Vi.ExpectStatic
   Object.assign(expect, chai.expect)
 
-  expect.getState = () => getState(expect)
+  expect.getState = () => getState<MatcherState>(expect)
   expect.setState = state => setState(state as Partial<MatcherState>, expect)
 
-  setState({
+  // @ts-expect-error global is not typed
+  const globalState = getState(globalThis[GLOBAL_EXPECT]) || {}
+
+  setState<MatcherState>({
+    // this should also add "snapshotState" that is added conditionally
+    ...globalState,
     assertionCalls: 0,
     isExpectingAssertions: false,
     isExpectingAssertionsError: null,
     expectedAssertionsNumber: null,
     expectedAssertionsNumberErrorGen: null,
-    environment: workerState.config.environment,
-    testPath: test?.suite.file?.filepath,
-    currentTestName: test ? getFullName(test) : undefined,
+    environment: getCurrentEnvironment(),
+    testPath: test ? test.suite.file?.filepath : globalState.testPath,
+    currentTestName: test ? getFullName(test) : globalState.currentTestName,
   }, expect)
 
   // @ts-expect-error untyped

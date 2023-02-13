@@ -13,13 +13,18 @@ export interface CoverageProvider {
   onBeforeFilesRun?(): void | Promise<void>
   onAfterSuiteRun(meta: AfterSuiteRunMeta): void | Promise<void>
 
-  reportCoverage(): void | Promise<void>
+  reportCoverage(reportContext?: ReportContext): void | Promise<void>
 
   onFileTransform?(
     sourceCode: string,
     id: string,
     pluginCtx: TransformPluginContext
   ): TransformResult | Promise<TransformResult>
+}
+
+export interface ReportContext {
+  /** Indicates whether all tests were run. False when only specific tests were run. */
+  allTestsRun?: boolean
 }
 
 export interface CoverageProviderModule {
@@ -48,25 +53,68 @@ export type CoverageReporter =
   | 'text-summary'
   | 'text'
 
-export type CoverageOptions =
-  | BaseCoverageOptions & { provider?: null | CoverageProviderModule }
-  | CoverageC8Options & { provider?: 'c8' }
-  | CoverageIstanbulOptions & { provider?: 'istanbul' }
+type Provider = 'c8' | 'istanbul' | 'custom' | undefined
 
-export type ResolvedCoverageOptions =
-  & { tempDirectory: string }
-  & Required<CoverageOptions>
+export type CoverageOptions<T extends Provider = Provider> =
+  T extends 'istanbul' ? ({ provider: T } & CoverageIstanbulOptions) :
+    T extends 'c8' ? ({ provider: T } & CoverageC8Options) :
+      T extends 'custom' ? ({ provider: T } & CustomProviderOptions) :
+          ({ provider?: T } & (CoverageC8Options))
+
+/** Fields that have default values. Internally these will always be defined. */
+type FieldsWithDefaultValues =
+  | 'enabled'
+  | 'clean'
+  | 'cleanOnRerun'
+  | 'reportsDirectory'
+  | 'exclude'
+  | 'extension'
+  | 'reporter'
+
+export type ResolvedCoverageOptions<T extends Provider = Provider> =
+  & CoverageOptions<T>
+  & Required<Pick<CoverageOptions<T>, FieldsWithDefaultValues>>
+  // Resolved fields which may have different typings as public configuration API has
+  & {
+    reporter: CoverageReporter[]
+  }
 
 export interface BaseCoverageOptions {
   /**
-   * Enable coverage, pass `--coverage` to enable
+   * Enables coverage collection. Can be overridden using `--coverage` CLI option.
    *
    * @default false
    */
   enabled?: boolean
 
   /**
-   * Clean coverage before running tests
+   * List of files included in coverage as glob patterns
+   *
+   * @default ['**']
+   */
+  include?: string[]
+
+  /**
+    * Extensions for files to be included in coverage
+    *
+    * @default ['.js', '.cjs', '.mjs', '.ts', '.tsx', '.jsx', '.vue', '.svelte']
+    */
+  extension?: string | string[]
+
+  /**
+    * List of files excluded from coverage as glob patterns
+    */
+  exclude?: string[]
+
+  /**
+   * Whether to include all files, including the untested ones into report
+   *
+   * @default false
+   */
+  all?: boolean
+
+  /**
+   * Clean coverage results before running tests
    *
    * @default true
    */
@@ -75,7 +123,7 @@ export interface BaseCoverageOptions {
   /**
    * Clean coverage report on watch rerun
    *
-   * @default false
+   * @default true
    */
   cleanOnRerun?: boolean
 
@@ -85,29 +133,23 @@ export interface BaseCoverageOptions {
   reportsDirectory?: string
 
   /**
-   * Reporters
+   * Coverage reporters to use.
+   * See [istanbul documentation](https://istanbul.js.org/docs/advanced/alternative-reporters/) for detailed list of all reporters.
    *
-   * @default 'text'
+   * @default ['text', 'html', 'clover', 'json']
    */
   reporter?: Arrayable<CoverageReporter>
 
   /**
-   * List of files included in coverage as glob patterns
-   */
-  include?: string[]
-
-  /**
-   * List of files excluded from coverage as glob patterns
-   */
-  exclude?: string[]
-
-  /**
    * Do not show files with 100% statement, branch, and function coverage
+   *
+   * @default false
    */
   skipFull?: boolean
 
   /**
-   * Check thresholds per file
+   * Check thresholds per file.
+   * See `lines`, `functions`, `branches` and `statements` for the actual thresholds.
    *
    * @default false
    */
@@ -115,40 +157,46 @@ export interface BaseCoverageOptions {
 
   /**
    * Threshold for lines
+   *
+   * @default undefined
    */
   lines?: number
 
   /**
    * Threshold for functions
+   *
+   * @default undefined
    */
   functions?: number
 
   /**
    * Threshold for branches
+   *
+   * @default undefined
    */
   branches?: number
 
   /**
    * Threshold for statements
+   *
+   * @default undefined
    */
   statements?: number
-
-  /**
-   * Extensions for files to be included in coverage
-   */
-  extension?: string | string[]
-
-  /**
-   * Whether to include all files, including the untested ones into report
-   */
-  all?: boolean
 }
 
 export interface CoverageIstanbulOptions extends BaseCoverageOptions {
-  /* Set to array of class method names to ignore for coverage */
+  /**
+   * Set to array of class method names to ignore for coverage
+   *
+   * @default []
+   */
   ignoreClassMethods?: string[]
 
-  /* Watermarks for statements, lines, branches and functions */
+  /**
+   * Watermarks for statements, lines, branches and functions.
+   *
+   * Default value is `[50,80]` for each property.
+   */
   watermarks?: {
     statements?: [number, number]
     functions?: [number, number]
@@ -163,15 +211,31 @@ export interface CoverageC8Options extends BaseCoverageOptions {
    *
    * @default false
    */
-  allowExternal?: any
+  allowExternal?: boolean
+
   /**
-   * Exclude coverage under /node_modules/
+   * Exclude coverage under `/node_modules/`
    *
    * @default true
    */
   excludeNodeModules?: boolean
 
+  /**
+   * Specifies the directories that are used when `--all` is enabled.
+   *
+   * @default cwd
+  */
   src?: string[]
 
+  /**
+   * Shortcut for `--check-coverage --lines 100 --functions 100 --branches 100 --statements 100`
+   *
+   * @default false
+   */
   100?: boolean
+}
+
+export interface CustomProviderOptions extends Pick<BaseCoverageOptions, FieldsWithDefaultValues> {
+  /** Name of the module or path to a file to load the custom provider from */
+  customProviderModule: string
 }

@@ -1,0 +1,88 @@
+// Vitest Snapshot v1
+
+exports[`should fail > typecheck files 1`] = `
+"TypeCheckError: Expected 1 arguments, but got 0.
+TypeCheckError: Expected 1 arguments, but got 0.
+TypeCheckError: Expected 1 arguments, but got 0.
+TypeCheckError: Expected 1 arguments, but got 0.
+TypeCheckError: Expected 1 arguments, but got 0.
+TypeCheckError: Unused '@ts-expect-error' directive.
+TypeCheckError: Expected 1 arguments, but got 0."
+`;
+
+exports[`should fail > typecheck files 2`] = `
+" FAIL  fail.test-d.ts > nested suite
+TypeCheckError: Expected 1 arguments, but got 0.
+ ❯ fail.test-d.ts:15:19
+     13|   })
+     14| 
+     15|   expectTypeOf(1).toBeVoid()
+       |                   ^
+     16| })"
+`;
+
+exports[`should fail > typecheck files 3`] = `
+" FAIL  expect-error.test-d.ts > failing test with expect-error
+TypeCheckError: Unused '@ts-expect-error' directive.
+ ❯ expect-error.test-d.ts:4:3
+      2| 
+      3| test('failing test with expect-error', () => {
+      4|   // @ts-expect-error expect nothing
+       |   ^
+      5|   expectTypeOf(1).toEqualTypeOf<number>()"
+`;
+
+exports[`should fail > typecheck files 4`] = `
+" FAIL  fail.test-d.ts > failing test
+TypeCheckError: Expected 1 arguments, but got 0.
+ ❯ fail.test-d.ts:4:19
+      2| 
+      3| test('failing test', () => {
+      4|   expectTypeOf(1).toEqualTypeOf<string>()
+       |                   ^
+      5| })"
+`;
+
+exports[`should fail > typecheck files 5`] = `
+" FAIL  fail.test-d.ts > nested suite > nested 2 > failing test 2
+TypeCheckError: Expected 1 arguments, but got 0.
+ ❯ fail.test-d.ts:10:23
+      8|   describe('nested 2', () => {
+      9|     test('failing test 2', () => {
+     10|       expectTypeOf(1).toBeVoid()
+       |                       ^
+     11|       expectTypeOf(1).toBeUndefined()"
+`;
+
+exports[`should fail > typecheck files 6`] = `
+" FAIL  fail.test-d.ts > nested suite > nested 2 > failing test 2
+TypeCheckError: Expected 1 arguments, but got 0.
+ ❯ fail.test-d.ts:11:23
+      9|     test('failing test 2', () => {
+     10|       expectTypeOf(1).toBeVoid()
+     11|       expectTypeOf(1).toBeUndefined()
+       |                       ^
+     12|     })"
+`;
+
+exports[`should fail > typecheck files 7`] = `
+" FAIL  js-fail.test-d.js > js test fails
+TypeCheckError: Expected 1 arguments, but got 0.
+ ❯ js-fail.test-d.js:6:19
+      4| 
+      5| test('js test fails', () => {
+      6|   expectTypeOf(1).toBeArray()
+       |                   ^
+      7| })"
+`;
+
+exports[`should fail > typecheck files 8`] = `
+" FAIL  only.test-d.ts > failing test
+TypeCheckError: Expected 1 arguments, but got 0.
+ ❯ only.test-d.ts:4:19
+      2| 
+      3| test.only('failing test', () => {
+      4|   expectTypeOf(1).toEqualTypeOf<string>()
+       |                   ^
+      5| })"
+`;

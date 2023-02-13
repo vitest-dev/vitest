@@ -1,4 +1,4 @@
-import fs from 'fs'
+import fs from 'node:fs'
 import { findUp } from 'find-up'
 import { resolve } from 'pathe'
 import { loadConfigFromFile } from 'vite'
@@ -27,13 +27,17 @@ export class VitestCache {
   static async clearCache(options: CliOptions) {
     const root = resolve(options.root || process.cwd())
 
-    const configPath = options.config
-      ? resolve(root, options.config)
-      : await findUp(configFiles, { cwd: root } as any)
+    const configPath = options.config === false
+      ? false
+      : options.config
+        ? resolve(root, options.config)
+        : await findUp(configFiles, { cwd: root } as any)
 
-    const config = await loadConfigFromFile({ command: 'serve', mode: 'test' }, configPath)
+    const config = configPath
+      ? (await loadConfigFromFile({ command: 'serve', mode: 'test' }, configPath))?.config
+      : undefined
 
-    const cache = config?.config.test?.cache
+    const cache = config?.test?.cache
 
     if (cache === false)
       throw new Error('Cache is disabled')

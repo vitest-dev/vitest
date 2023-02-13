@@ -1,10 +1,10 @@
-import { existsSync, promises as fs } from 'fs'
+import { existsSync, promises as fs } from 'node:fs'
 import { dirname, resolve } from 'pathe'
 import type { Vitest } from '../../node'
 import type { File, Reporter, Suite, Task, TaskState } from '../../types'
 import { getSuites, getTests } from '../../utils'
 import { getOutputFile } from '../../utils/config-helpers'
-import { interpretSourcePos, parseStacktrace } from '../../utils/source-map'
+import { parseErrorStacktrace } from '../../utils/source-map'
 
 // for compatibility reasons, the reporter produces a JSON similar to the one produced by the Jest JSON reporter
 // the following types are extracted from the Jest repository (and simplified)
@@ -76,7 +76,7 @@ export class JsonReporter implements Reporter {
     const numTotalTestSuites = suites.length
     const tests = getTests(files)
     const numTotalTests = tests.length
-    const numFailedTestSuites = suites.filter(s => s.result?.error).length
+    const numFailedTestSuites = suites.filter(s => s.result?.errors).length
     const numPassedTestSuites = numTotalTestSuites - numFailedTestSuites
     const numPendingTestSuites = suites.filter(s => s.result?.state === 'run').length
     const numFailedTests = tests.filter(t => t.result?.state === 'fail').length
@@ -109,7 +109,7 @@ export class JsonReporter implements Reporter {
           status: StatusMap[t.result?.state || t.mode] || 'skipped',
           title: t.name,
           duration: t.result?.duration,
-          failureMessages: t.result?.error?.message == null ? [] : [t.result.error.message],
+          failureMessages: t.result?.errors?.map(e => e.message) || [],
           location: await this.getFailureLocation(t),
         } as FormattedAssertionResult
       }))
@@ -124,13 +124,11 @@ export class JsonReporter implements Reporter {
         assertionResults,
         startTime,
         endTime,
-        status: tests.every(t =>
-          t.result?.state === 'pass'
-           || t.result?.state === 'skip'
-            || t.result?.state === 'todo')
-          ? 'passed'
-          : 'failed',
-        message: file.result?.error?.message ?? '',
+        status: tests.some(t =>
+          t.result?.state === 'fail')
+          ? 'failed'
+          : 'passed',
+        message: file.result?.errors?.[0]?.message ?? '',
         name: file.filepath,
       })
     }
@@ -181,17 +179,15 @@ export class JsonReporter implements Reporter {
   }
 
   protected async getFailureLocation(test: Task): Promise<Callsite | undefined> {
-    const error = test.result?.error
+    const error = test.result?.errors?.[0]
     if (!error)
       return
 
-    const stack = parseStacktrace(error)
-    await interpretSourcePos(stack, this.ctx)
+    const stack = parseErrorStacktrace(error)
     const frame = stack[stack.length - 1]
     if (!frame)
       return
 
-    const pos = frame.sourcePos || frame
-    return { line: pos.line, column: pos.column }
+    return { line: frame.line, column: frame.column }
   }
 }

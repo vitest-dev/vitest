@@ -24,7 +24,8 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     deps: {
-      external: [/src\/external\.mjs/],
+      external: [/src\/external/],
+      interopDefault: true,
     },
   },
 })

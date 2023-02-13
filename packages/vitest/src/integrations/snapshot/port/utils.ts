@@ -5,15 +5,15 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import fs from 'fs'
 import { dirname, join } from 'pathe'
 import naturalCompare from 'natural-compare'
 import type { OptionsReceived as PrettyFormatOptions } from 'pretty-format'
 import {
   format as prettyFormat,
 } from 'pretty-format'
-import type { SnapshotData, SnapshotUpdateState } from '../../../types'
+import type { SnapshotData, SnapshotStateOptions } from '../../../types'
 import { isObject } from '../../../utils'
+import { getSnapshotEnvironment } from '../env'
 import { getSerializers } from './plugins'
 
 // TODO: rewrite and clean up
@@ -33,19 +33,20 @@ export const keyToTestName = (key: string): string => {
 }
 
 export const getSnapshotData = (
-  snapshotPath: string,
-  update: SnapshotUpdateState,
+  content: string | null,
+  options: SnapshotStateOptions,
 ): {
   data: SnapshotData
   dirty: boolean
 } => {
+  const update = options.updateSnapshot
   const data = Object.create(null)
   let snapshotContents = ''
   let dirty = false
 
-  if (fs.existsSync(snapshotPath)) {
+  if (content != null) {
     try {
-      snapshotContents = fs.readFileSync(snapshotPath, 'utf8')
+      snapshotContents = content
       // eslint-disable-next-line no-new-func
       const populate = new Function('exports', snapshotContents)
       populate(data)
@@ -130,9 +131,10 @@ function printBacktickString(str: string): string {
   return `\`${escapeBacktickString(str)}\``
 }
 
-export function ensureDirectoryExists(filePath: string): void {
+export async function ensureDirectoryExists(filePath: string) {
   try {
-    fs.mkdirSync(join(dirname(filePath)), { recursive: true })
+    const environment = getSnapshotEnvironment()
+    await environment.prepareDirectory(join(dirname(filePath)))
   }
   catch { }
 }
@@ -145,6 +147,7 @@ export async function saveSnapshotFile(
   snapshotData: SnapshotData,
   snapshotPath: string,
 ) {
+  const environment = getSnapshotEnvironment()
   const snapshots = Object.keys(snapshotData)
     .sort(naturalCompare)
     .map(
@@ -152,16 +155,16 @@ export async function saveSnapshotFile(
     )
 
   const content = `${writeSnapshotVersion()}\n\n${snapshots.join('\n\n')}\n`
-  const skipWriting = fs.existsSync(snapshotPath) && (await fs?.promises.readFile(snapshotPath, 'utf8')) === content
+  const oldContent = await environment.readSnapshotFile(snapshotPath)
+  const skipWriting = oldContent && oldContent === content
 
   if (skipWriting)
     return
 
-  ensureDirectoryExists(snapshotPath)
-  await fs?.promises.writeFile(
+  await ensureDirectoryExists(snapshotPath)
+  await environment.saveSnapshotFile(
     snapshotPath,
     content,
-    'utf-8',
   )
 }
 
