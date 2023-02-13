@@ -73,7 +73,7 @@ export interface VitestRunner {
    */
   extendTestContext?(context: TestContext): TestContext
   /**
-   * Called, when files are imported. Can be called in two situations: when collecting tests and when importing setup files.
+   * Called, when certain files are imported. Can be called in two situations: when collecting tests and when importing setup files.
    */
   importFile(filepath: string, source: VitestRunnerImportSource): unknown
   /**
@@ -83,10 +83,10 @@ export interface VitestRunner {
 }
 ```
 
-When initiating this class, Vitest passes down Vitest config, - you should expose it as a `config` property.
+When initiating this class, Vitest passes down Vitest config, - you should expose it as a `config` property, and test executor, which is an instance of `ViteNodeRunner`.
 
 ::: warning
-`importFile` method in your custom runner must be inlined in `deps.inline` config option, if you call Node `import` inside.
+`ViteNodeRunner` exposes `executeId` method, which is used to import test files in a Vite-friendly environment. Meaning, it will resolve imports and transform file content at runtime so that Node can understand it.
 :::
 
 ::: tip

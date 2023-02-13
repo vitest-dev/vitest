@@ -1,3 +1,4 @@
+import type { ViteNodeRunner } from 'vite-node/client'
 import type { File, SequenceHooks, Suite, TaskResult, Test, TestContext } from './tasks'
 
 export interface VitestRunnerConfig {
@@ -20,7 +21,7 @@ export interface VitestRunnerConfig {
 export type VitestRunnerImportSource = 'collect' | 'setup'
 
 export interface VitestRunnerConstructor {
-  new (config: VitestRunnerConfig): VitestRunner
+  new (config: VitestRunnerConfig, executor: ViteNodeRunner): VitestRunner
 }
 
 export interface VitestRunner {

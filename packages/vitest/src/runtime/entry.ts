@@ -35,7 +35,7 @@ async function getTestRunnerConstructor(config: ResolvedConfig, executor: Vitest
 
 async function getTestRunner(config: ResolvedConfig, executor: VitestExecutor): Promise<VitestRunner> {
   const TestRunner = await getTestRunnerConstructor(config, executor)
-  const testRunner = new TestRunner(config)
+  const testRunner = new TestRunner(config, executor)
 
   if (!testRunner.config)
     testRunner.config = config
