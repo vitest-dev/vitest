@@ -19,7 +19,7 @@
     "babel-jest": "^27.5.1",
     "benchmark": "^2.1.4",
     "esno": "^0.16.3",
-    "execa": "^6.1.0",
+    "execa": "^7.0.0",
     "fs-extra": "^11.1.0",
     "jest": "^27.5.1",
     "markdown-table": "^3.0.3",
