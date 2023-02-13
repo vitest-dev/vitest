@@ -13,6 +13,8 @@ import { setupGlobalEnv, withEnv } from './setup.node'
 import { rpc } from './rpc'
 import type { VitestExecutor } from './execute'
 
+const runnersFile = resolve(distDir, 'runners.js')
+
 function groupBy<T, K extends string | number | symbol>(collection: T[], iteratee: (item: T) => K) {
   return collection.reduce((acc, item) => {
     const key = iteratee(item)
@@ -24,7 +26,7 @@ function groupBy<T, K extends string | number | symbol>(collection: T[], iterate
 
 async function getTestRunnerConstructor(config: ResolvedConfig, executor: VitestExecutor): Promise<VitestRunnerConstructor> {
   if (!config.runner) {
-    const { VitestTestRunner, NodeBenchmarkRunner } = await executor.executeFile(resolve(distDir, 'runners.js'))
+    const { VitestTestRunner, NodeBenchmarkRunner } = await executor.executeFile(runnersFile)
     return (config.mode === 'test' ? VitestTestRunner : NodeBenchmarkRunner) as VitestRunnerConstructor
   }
   const mod = await executor.executeId(config.runner)
@@ -36,6 +38,13 @@ async function getTestRunnerConstructor(config: ResolvedConfig, executor: Vitest
 async function getTestRunner(config: ResolvedConfig, executor: VitestExecutor): Promise<VitestRunner> {
   const TestRunner = await getTestRunnerConstructor(config, executor)
   const testRunner = new TestRunner(config)
+
+  // inject private executor to every runner
+  Object.defineProperty(testRunner, '__vitest_executor', {
+    value: executor,
+    enumerable: false,
+    configurable: false,
+  })
 
   if (!testRunner.config)
     testRunner.config = config
