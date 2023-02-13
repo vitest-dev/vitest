@@ -191,3 +191,26 @@ export default defineConfig({
   }
 })
 ```
+
+#### 3. Chevron `>` is used as a separator instead of colon `:` for hints
+
+Vitest uses chevron `>` as a separator instead of colon `:` for readability.
+
+For the following example test code:
+```js
+test("toThrowErrorMatchingSnapshot", () => {
+  expect(() => {
+    throw new Error("error");
+  }).toThrowErrorMatchingSnapshot("hint");
+});
+```
+
+In Jest, the snapshot will be:
+```console
+exports[`toThrowErrorMatchingSnapshot: hint 1`] = `"error"`;
+```
+
+In Vitest, the equivalent snapshot will be:
+```console
+exports[`toThrowErrorMatchingSnapshot > hint 1`] = `"error"`;
+```
