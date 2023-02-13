@@ -1,5 +1,5 @@
 import { assertType, test } from 'vitest'
-import type { ResolvedCoverageOptions, Vitest } from 'vitest'
+import type { CoverageProviderModule, ResolvedCoverageOptions, Vitest } from 'vitest'
 import type { defineConfig } from 'vitest/config'
 
 type NarrowToTestConfig<T> = T extends { test?: any } ? NonNullable<T['test']> : never
@@ -10,39 +10,14 @@ test('providers, built-in', () => {
   assertType<Coverage>({ provider: 'c8' })
   assertType<Coverage>({ provider: 'istanbul' })
 
-  // @ts-expect-error -- String options must be known built-in's
-  assertType<Coverage>({ provider: 'unknown-reporter' })
+  // @ts-expect-error -- String options must be known ones only
+  assertType<Coverage>({ provider: 'unknown-provider' })
 })
 
 test('providers, custom', () => {
   assertType<Coverage>({
-    provider: {
-      getProvider() {
-        return {
-          name: 'custom-provider',
-          initialize(_: Vitest) {},
-          resolveOptions(): ResolvedCoverageOptions {
-            return {
-              clean: true,
-              cleanOnRerun: true,
-              enabled: true,
-              exclude: ['string'],
-              extension: ['string'],
-              reporter: ['html', 'json'],
-              reportsDirectory: 'string',
-            }
-          },
-          clean(_: boolean) {},
-          onBeforeFilesRun() {},
-          onAfterSuiteRun({ coverage: _coverage }) {},
-          reportCoverage() {},
-          onFileTransform(_code: string, _id: string, ctx) {
-            ctx.getCombinedSourcemap()
-          },
-        }
-      },
-      takeCoverage() {},
-    },
+    provider: 'custom',
+    customProviderModule: 'custom-provider-module.ts',
   })
 })
 
@@ -92,6 +67,55 @@ test('provider specific options, istanbul', () => {
     provider: 'istanbul',
     // @ts-expect-error -- C8-only option is not allowed
     src: ['string'],
+  })
+})
+
+test('provider specific options, custom', () => {
+  assertType<Coverage>({
+    provider: 'custom',
+    customProviderModule: 'custom-provider-module.ts',
+    enabled: true,
+  })
+
+  // @ts-expect-error --  customProviderModule is required
+  assertType<Coverage>({ provider: 'custom' })
+
+  assertType<Coverage>({
+    provider: 'custom',
+    customProviderModule: 'some-module',
+
+    // @ts-expect-error --  typings of BaseCoverageOptions still apply
+    enabled: 'not boolean',
+  })
+})
+
+test('provider module', () => {
+  assertType<CoverageProviderModule>({
+    getProvider() {
+      return {
+        name: 'custom-provider',
+        initialize(_: Vitest) {},
+        resolveOptions(): ResolvedCoverageOptions {
+          return {
+            clean: true,
+            cleanOnRerun: true,
+            enabled: true,
+            exclude: ['string'],
+            extension: ['string'],
+            reporter: ['html', 'json'],
+            reportsDirectory: 'string',
+          }
+        },
+        clean(_: boolean) {},
+        onBeforeFilesRun() {},
+        onAfterSuiteRun({ coverage: _coverage }) {},
+        reportCoverage() {},
+        onFileTransform(_code: string, _id: string, ctx) {
+          ctx.getCombinedSourcemap()
+        },
+      }
+    },
+    takeCoverage() {},
   })
 })
 

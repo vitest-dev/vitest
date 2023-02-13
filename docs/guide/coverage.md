@@ -71,20 +71,48 @@ export default defineConfig({
 
 ## Custom Coverage Provider
 
-It's also possible to provide your custom coverage provider by passing an object to the `test.coverage.provider`:
+It's also possible to provide your custom coverage provider by passing `'custom'` in `test.coverage.provider`:
 
 ```ts
 // vite.config.ts
 import { defineConfig } from 'vitest/config'
-import CustomCoverageProvider from 'my-custom-coverage-provider'
 
 export default defineConfig({
   test: {
     coverage: {
-      provider: CustomCoverageProvider()
+      provider: 'custom',
+      customProviderModule: 'my-custom-coverage-provider'
     },
   },
 })
+```
+
+The custom providers require a `customProviderModule` option which is a module name or path where to load the `CoverageProviderModule` from. It must export an object that implements `CoverageProviderModule` as default export:
+
+```ts
+// my-custom-coverage-provider.ts
+import type { CoverageProvider, CoverageProviderModule, ResolvedCoverageOptions, Vitest } from 'vitest'
+
+const CustomCoverageProviderModule: CoverageProviderModule = {
+  getProvider(): CoverageProvider {
+    return new CustomCoverageProvider()
+  },
+
+  // Implements rest of the CoverageProviderModule ...
+}
+
+class CustomCoverageProvider implements CoverageProvider {
+  name = 'custom-coverage-provider'
+  options!: ResolvedCoverageOptions
+
+  initialize(ctx: Vitest) {
+    this.options = ctx.config.coverage
+  }
+
+  // Implements rest of the CoverageProvider ...
+}
+
+export default CustomCoverageProviderModule
 ```
 
 Please refer to the type definition for more details.

@@ -50,9 +50,9 @@ export async function startVitest(
 
   if (mode === 'test' && ctx.config.coverage.enabled) {
     const provider = ctx.config.coverage.provider || 'c8'
-    if (typeof provider === 'string') {
-      const requiredPackages = CoverageProviderMap[provider]
+    const requiredPackages = CoverageProviderMap[provider]
 
+    if (requiredPackages) {
       if (!await ensurePackageInstalled(requiredPackages, root)) {
         process.exitCode = 1
         return ctx
