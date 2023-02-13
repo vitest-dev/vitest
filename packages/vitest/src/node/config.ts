@@ -15,6 +15,8 @@ import type { BenchmarkBuiltinReporters } from './reporters'
 const extraInlineDeps = [
   /^(?!.*(?:node_modules)).*\.mjs$/,
   /^(?!.*(?:node_modules)).*\.cjs\.js$/,
+  // Vite client
+  /vite\w*\/dist\/client\/env.mjs/,
   // Nuxt
   '@nuxt/test-utils',
 ]
