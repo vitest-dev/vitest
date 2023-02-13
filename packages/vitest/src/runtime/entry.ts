@@ -144,6 +144,8 @@ export async function run(files: string[], config: ResolvedConfig, executor: Vit
 
           // reset after tests, because user might call `vi.setConfig` in setupFile
           vi.resetConfig()
+          // mocks should not affect different files
+          vi.restoreAllMocks()
         }
       })
     }
