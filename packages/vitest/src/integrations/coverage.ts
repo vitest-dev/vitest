@@ -10,7 +10,10 @@ export const CoverageProviderMap: Record<string, string> = {
   istanbul: '@vitest/coverage-istanbul',
 }
 
-async function resolveCoverageProviderModule(options: CoverageOptions & Required<Pick<CoverageOptions, 'provider'>>, loader: Loader) {
+async function resolveCoverageProviderModule(options: CoverageOptions | undefined, loader: Loader) {
+  if (!options?.enabled || !options.provider)
+    return null
+
   const provider = options.provider
 
   if (provider === 'c8' || provider === 'istanbul')
@@ -31,17 +34,38 @@ async function resolveCoverageProviderModule(options: CoverageOptions & Required
   return customProviderModule.default
 }
 
-export async function getCoverageProvider(options: CoverageOptions, loader: Loader): Promise<CoverageProvider | null> {
-  if (options.enabled && options.provider) {
-    const { getProvider } = await resolveCoverageProviderModule(options, loader)
-    return await getProvider()
-  }
+export async function getCoverageProvider(options: CoverageOptions | undefined, loader: Loader): Promise<CoverageProvider | null> {
+  const coverageModule = await resolveCoverageProviderModule(options, loader)
+
+  if (coverageModule)
+    return coverageModule.getProvider()
+
   return null
 }
 
-export async function takeCoverageInsideWorker(options: CoverageOptions, loader: Loader) {
-  if (options.enabled && options.provider) {
-    const { takeCoverage } = await resolveCoverageProviderModule(options, loader)
-    return await takeCoverage?.()
-  }
+export async function startCoverageInsideWorker(options: CoverageOptions | undefined, loader: Loader) {
+  const coverageModule = await resolveCoverageProviderModule(options, loader)
+
+  if (coverageModule)
+    return coverageModule.startCoverage?.()
+
+  return null
+}
+
+export async function takeCoverageInsideWorker(options: CoverageOptions | undefined, loader: Loader) {
+  const coverageModule = await resolveCoverageProviderModule(options, loader)
+
+  if (coverageModule)
+    return coverageModule.takeCoverage?.()
+
+  return null
+}
+
+export async function stopCoverageInsideWorker(options: CoverageOptions | undefined, loader: Loader) {
+  const coverageModule = await resolveCoverageProviderModule(options, loader)
+
+  if (coverageModule)
+    return coverageModule.stopCoverage?.()
+
+  return null
 }

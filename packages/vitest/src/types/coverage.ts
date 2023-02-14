@@ -10,7 +10,6 @@ export interface CoverageProvider {
   resolveOptions(): ResolvedCoverageOptions
   clean(clean?: boolean): void | Promise<void>
 
-  onBeforeFilesRun?(): void | Promise<void>
   onAfterSuiteRun(meta: AfterSuiteRunMeta): void | Promise<void>
 
   reportCoverage(reportContext?: ReportContext): void | Promise<void>
@@ -32,10 +31,21 @@ export interface CoverageProviderModule {
    * Factory for creating a new coverage provider
    */
   getProvider(): CoverageProvider | Promise<CoverageProvider>
+
+  /**
+   * Executed before tests are run in the worker thread.
+   */
+  startCoverage?(): unknown | Promise<unknown>
+
   /**
    * Executed on after each run in the worker thread. Possible to return a payload passed to the provider
    */
   takeCoverage?(): unknown | Promise<unknown>
+
+  /**
+   * Executed after all tests have been run in the worker thread.
+   */
+  stopCoverage?(): unknown | Promise<unknown>
 }
 
 export type CoverageReporter =

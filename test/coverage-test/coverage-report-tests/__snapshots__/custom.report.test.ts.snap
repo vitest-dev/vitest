@@ -6,7 +6,6 @@ exports[`custom json report 1`] = `
     "initialized with context",
     "resolveOptions",
     "clean with force",
-    "onBeforeFilesRun",
     "onAfterSuiteRun with {\\"coverage\\":{\\"customCoverage\\":\\"Coverage report passed from workers to main thread\\"}}",
     "reportCoverage with {\\"allTestsRun\\":true}",
   ],
