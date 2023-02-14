@@ -4,21 +4,6 @@ title: Debugging | Guide
 
 # Debugging
 
-## Terminal
-
-To debug a test file without an IDE, you can use [`ndb`](https://github.com/GoogleChromeLabs/ndb). Just add a `debugger` statement anywhere in your code, and then run `ndb`:
-
-```sh
-# install ndb globally
-npm install -g ndb
-
-# alternatively, with yarn
-yarn global add ndb
-
-# run tests with debugger enabled
-ndb npm run test
-```
-
 ## VSCode
 
 Quick way to debug tests in VSCode is via `JavaScript Debug Terminal`. Open a new `JavaScript Debug Terminal` and run `npm run test` or `vitest` directly. *this works with any code ran in Node, so will work with most JS testing frameworks*
