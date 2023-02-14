@@ -1030,7 +1030,7 @@ type Awaitable<T> = T | PromiseLike<T>
   })
   ```
   ::: warning
-  When using `assertions` with async concurrent tests,  `expect` from the local [Test Context](/guide/test-context.md) must be used to ensure the right test is detected.
+  When using `assertions` with async concurrent tests, `expect` from the local [Test Context](/guide/test-context.md) must be used to ensure the right test is detected.
   :::
 
 
