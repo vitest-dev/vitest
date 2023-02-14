@@ -48,4 +48,4 @@ describe.skipIf(isWindows)('ui', () => {
   it('no error happen', () => {
     expect(browserErrors.length).toEqual(0)
   })
-}, 60_000)
+})

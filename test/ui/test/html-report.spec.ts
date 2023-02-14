@@ -58,4 +58,4 @@ describe.skipIf(isWindows)('html report', () => {
   it('no error happen', () => {
     expect(browserErrors.length).toEqual(0)
   })
-}, 60_000)
+})
