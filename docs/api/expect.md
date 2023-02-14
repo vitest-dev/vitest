@@ -1029,6 +1029,10 @@ type Awaitable<T> = T | PromiseLike<T>
     await doAsync(callback1, callback2)
   })
   ```
+  ::: warning
+  When using `assertions` with async concurrent tests, `expect` from the local [Test Context](/guide/test-context.md) must be used to ensure the right test is detected.
+  :::
+
 
 ## expect.hasAssertions
 

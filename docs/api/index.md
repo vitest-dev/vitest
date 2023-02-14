@@ -149,7 +149,8 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
   test.todo.concurrent(/* ... */) // or test.concurrent.todo(/* ... */)
   ```
 
-  When using Snapshots with async concurrent tests, due to the limitation of JavaScript, you need to use the `expect` from the [Test Context](/guide/test-context.md) to ensure the right test is being detected.
+  When running concurrent tests, Snapshots and Assertions must use `expect` from the local [Test Context](/guide/test-context.md) to ensure the right test is detected.
+
 
   ```ts
   test.concurrent('test 1', async ({ expect }) => {
@@ -567,6 +568,19 @@ You cannot use this syntax when using Vitest as [type checker](/guide/testing-ty
   describe.todo.concurrent(/* ... */) // or describe.concurrent.todo(/* ... */)
   ```
 
+When running concurrent tests, Snapshots and Assertions must use `expect` from the local [Test Context](/guide/test-context.md) to ensure the right test is detected.
+
+
+  ```ts
+  describe.concurrent('suite', () => {
+    test('concurrent test 1', async ({ expect }) => {
+      expect(foo).toMatchSnapshot()
+    })
+    test('concurrent test 2', async ({ expect }) => {
+      expect(foo).toMatchSnapshot()
+    })
+  })
+  ```
 ::: warning
 You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
 :::

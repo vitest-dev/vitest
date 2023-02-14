@@ -33,6 +33,10 @@ exports['toUpperCase 1'] = '"FOOBAR"'
 
 The snapshot artifact should be committed alongside code changes, and reviewed as part of your code review process. On subsequent test runs, Vitest will compare the rendered output with the previous snapshot. If they match, the test will pass. If they don't match, either the test runner found a bug in your code that should be fixed, or the implementation has changed and the snapshot needs to be updated.
 
+::: warning
+When using Snapshots with async concurrent tests, `expect` from the local [Test Context](/guide/test-context.md) must be used to ensure the right test is detected.
+:::
+
 ## Inline Snapshots
 
 Similarly, you can use the [`toMatchInlineSnapshot()`](/api/expect#tomatchinlinesnapshot) to store the snapshot inline within the test file.
@@ -58,6 +62,10 @@ it('toUpperCase', () => {
 ```
 
 This allows you to see the expected output directly without jumping across different files.
+
+::: warning
+When using Snapshots with async concurrent tests, `expect` from the local [Test Context](/guide/test-context.md) must be used to ensure the right test is detected.
+:::
 
 ## Updating Snapshots
 
