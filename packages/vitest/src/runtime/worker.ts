@@ -11,7 +11,7 @@ import { getWorkerState } from '../utils/global'
 import type { MockMap } from '../types/mocker'
 import type { VitestExecutor } from './execute'
 import { createVitestExecutor } from './execute'
-import { rpc } from './rpc'
+import { rpc, rpcDone } from './rpc'
 
 let _viteNode: {
   run: (files: string[], config: ResolvedConfig, executor: VitestExecutor) => Promise<void>
@@ -109,5 +109,6 @@ function init(ctx: WorkerContext) {
 export async function run(ctx: WorkerContext) {
   init(ctx)
   const { run, executor } = await startViteNode(ctx)
-  return run(ctx.files, ctx.config, executor)
+  await run(ctx.files, ctx.config, executor)
+  await rpcDone()
 }

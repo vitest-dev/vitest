@@ -53,12 +53,13 @@ export type CoverageReporter =
   | 'text-summary'
   | 'text'
 
-type Provider = 'c8' | 'istanbul' | CoverageProviderModule | undefined
+type Provider = 'c8' | 'istanbul' | 'custom' | undefined
 
 export type CoverageOptions<T extends Provider = Provider> =
-  T extends CoverageProviderModule ? ({ provider: T } & BaseCoverageOptions) :
-    T extends 'istanbul' ? ({ provider: T } & CoverageIstanbulOptions) :
-        ({ provider?: T } & CoverageC8Options)
+  T extends 'istanbul' ? ({ provider: T } & CoverageIstanbulOptions) :
+    T extends 'c8' ? ({ provider: T } & CoverageC8Options) :
+      T extends 'custom' ? ({ provider: T } & CustomProviderOptions) :
+          ({ provider?: T } & (CoverageC8Options))
 
 /** Fields that have default values. Internally these will always be defined. */
 type FieldsWithDefaultValues =
@@ -232,4 +233,9 @@ export interface CoverageC8Options extends BaseCoverageOptions {
    * @default false
    */
   100?: boolean
+}
+
+export interface CustomProviderOptions extends Pick<BaseCoverageOptions, FieldsWithDefaultValues> {
+  /** Name of the module or path to a file to load the custom provider from */
+  customProviderModule: string
 }

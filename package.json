@@ -1,7 +1,7 @@
 {
   "name": "@vitest/monorepo",
   "type": "module",
-  "version": "0.28.4",
+  "version": "0.28.5",
   "private": true,
   "packageManager": "pnpm@7.23.0",
   "description": "A blazing fast unit test framework powered by Vite",
@@ -59,7 +59,7 @@
     "ohmyfetch": "^0.4.21",
     "pathe": "^1.1.0",
     "pnpm": "7.23.0",
-    "rimraf": "^3.0.2",
+    "rimraf": "^4.1.2",
     "rollup": "^2.79.1",
     "rollup-plugin-dts": "^4.2.3",
     "rollup-plugin-esbuild": "^4.10.1",

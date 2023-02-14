@@ -1,7 +1,7 @@
 {
   "name": "@vitest/spy",
   "type": "module",
-  "version": "0.28.4",
+  "version": "0.28.5",
   "description": "Lightweight Jest compatible spy implementation",
   "license": "MIT",
   "repository": {
