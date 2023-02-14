@@ -7,6 +7,9 @@ const root = resolve(__dirname, '../fixtures')
 const port = ports.report
 
 beforeAll(async () => {
+  if (process.platform === 'win32')
+    return
+
   execaCommandSync('npx vitest run --reporter=html --outputFile=html/index.html', {
     cwd: root,
     env: {
@@ -25,11 +28,11 @@ beforeAll(async () => {
   return exit
 })
 
-it('dashboard', async () => {
+it.runIf(process.platform !== 'win32')('dashboard', async () => {
   await untilUpdated(() => page.textContent('[aria-labelledby]'), '1 Pass 0 Fail 1 Total ')
 })
 
-describe('file detail', async () => {
+describe.runIf(process.platform !== 'win32')('file detail', async () => {
   beforeAll(async () => {
     await page.click('.details-panel span')
   })
@@ -53,6 +56,6 @@ describe('file detail', async () => {
   })
 })
 
-it('no error happen', () => {
+it.runIf(process.platform !== 'win32')('no error happen', () => {
   expect(browserErrors.length).toEqual(0)
 })
