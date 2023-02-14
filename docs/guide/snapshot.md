@@ -191,3 +191,26 @@ export default defineConfig({
   }
 })
 ```
+
+#### 3. Chevron `>` is used as a separator instead of colon `:` for custom messages
+
+Vitest uses chevron `>` as a separator instead of colon `:` for readability, when a custom message is passed during creation of a snapshot file.
+
+For the following example test code:
+```js
+test('toThrowErrorMatchingSnapshot', () => {
+  expect(() => {
+    throw new Error('error')
+  }).toThrowErrorMatchingSnapshot('hint')
+})
+```
+
+In Jest, the snapshot will be:
+```console
+exports[`toThrowErrorMatchingSnapshot: hint 1`] = `"error"`;
+```
+
+In Vitest, the equivalent snapshot will be:
+```console
+exports[`toThrowErrorMatchingSnapshot > hint 1`] = `"error"`;
+```
