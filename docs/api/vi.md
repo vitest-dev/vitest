@@ -221,13 +221,11 @@ increment(1) === 2
 let mockedIncrement = 100
 
 beforeEach(() => {
-  // simple doMock doesn't clear the previous cache, so we need to clear it manually here
-  vi.doUnmock('./increment.js')
   // you can access variables inside a factory
-  vi.doMock('./increment.js', () => ({ increment: () => mockedIncrement++ }))
+  vi.doMock('./increment.js', () => ({ increment: () => ++mockedIncrement }))
 })
 
-test('importing the next module imports mocked one', () => {
+test('importing the next module imports mocked one', async () => {
   // original import WAS NOT MOCKED, because vi.doMock is evaluated AFTER imports
   expect(increment(1)).toBe(2)
   const { increment: mockedIncrement } = await import('./increment.js')
