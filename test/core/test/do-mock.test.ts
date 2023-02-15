@@ -13,7 +13,7 @@ test('doMock works', async () => {
   expect(incrementWith10(1)).toBe(11)
 })
 
-test('doMock can overrides last mocked result', async () => {
+test('the second doMock can override the first doMock', async () => {
   vi.doMock('./fixtures/increment', () => ({
     increment: (num: number) => num + 10,
   }))
