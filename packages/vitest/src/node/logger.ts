@@ -102,8 +102,11 @@ export class Logger {
     const mode = this.ctx.config.watch
       ? c.blue(' DEV ')
       : c.cyan(' RUN ')
+    const seedText = this.ctx.config.sequence.seed != null
+      ? c.dim(`seed ${this.ctx.config.sequence.seed}`)
+      : ''
 
-    this.log(`${c.inverse(c.bold(mode))} ${versionTest} ${c.gray(this.ctx.config.root)}`)
+    this.log(`${c.inverse(c.bold(mode))} ${versionTest} ${c.gray(this.ctx.config.root)} ${seedText}`.trim())
 
     if (this.ctx.config.browser)
       this.log(c.dim(c.green(`      Browser runner started at http://${this.ctx.config.api?.host || 'localhost'}:${c.bold(`${this.ctx.server.config.server.port}`)}`)))
