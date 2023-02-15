@@ -39,6 +39,8 @@ Jest exports various [`jasmine`](https://jasmine.github.io/) globals (such as `j
 
 Just like Jest, Vitest sets `NODE_ENV` to `test`, if it wasn't set before. Vitest also has a counterpart for `JEST_WORKER_ID` called `VITEST_POOL_ID` (always less than or equal to `maxThreads`), so if you rely on it, don't forget to rename it. Vitest also exposes `VITEST_WORKER_ID` which is a unique ID of a running worker - this number is not affected by `maxThreads`, and will increase with each created worker.
 
+If you want to modify the envs, you will use [replaceProperty API](https://jestjs.io/docs/jest-object#jestreplacepropertyobject-propertykey-value) in Jest, you can use [vi.stubEnv](https://vitest.dev/api/vi.html#vi-stubenv) to do it also in Vitest. 
+
 **Done Callback**
 
 From Vitest v0.10.0, the callback style of declaring tests is deprecated. You can rewrite them to use `async`/`await` functions, or use Promise to mimic the callback style.
