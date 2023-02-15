@@ -26,6 +26,16 @@ export class VitestTestRunner implements VitestRunner {
     await this.snapshotClient.saveCurrent()
   }
 
+  async onBeforeRunSuite(suite: Suite) {
+    if (suite.mode !== 'run') {
+      this.snapshotClient.skipSuiteSnapshots(suite)
+      return
+    }
+
+    clearModuleMocks(this.config)
+    await this.snapshotClient.setTaskBase({} as Test, suite)
+  }
+
   onAfterRunSuite(suite: Suite) {
     if (suite.mode === 'skip')
       this.snapshotClient.skipSuiteSnapshots(suite)
@@ -50,7 +60,7 @@ export class VitestTestRunner implements VitestRunner {
     }
 
     clearModuleMocks(this.config)
-    await this.snapshotClient.setTest(test)
+    await this.snapshotClient.setTaskBase(test)
 
     this.workerState.current = test
   }

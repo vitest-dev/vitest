@@ -26,31 +26,32 @@ interface AssertOptions {
 
 export class SnapshotClient {
   test: Test | undefined
+  suite: Suite | undefined
   snapshotState: SnapshotState | undefined
   snapshotStateMap = new Map<string, SnapshotState>()
 
-  async setTest(test: Test) {
-    this.test = test
+  async setTaskBase(test: Test, suite?: Suite) {
+    suite ? this.suite = suite : this.test = test
 
-    if (this.snapshotState?.testFilePath !== this.test.file!.filepath) {
+    if (this.snapshotState?.testFilePath !== (this.test?.file!.filepath || this.suite?.filepath || this.suite?.file?.filepath)) {
       this.saveCurrent()
 
-      const filePath = this.test!.file!.filepath
-      if (!this.getSnapshotState(test)) {
+      const filePath = this.test?.file?.filepath || this.suite?.filepath
+      if (!this.getSnapshotState(this.test ? this.test : undefined, this.suite ? this.suite : undefined)) {
         this.snapshotStateMap.set(
-          filePath,
+          filePath!,
           await SnapshotState.create(
-            filePath,
+            filePath!,
             getWorkerState().config.snapshotOptions,
           ),
         )
       }
-      this.snapshotState = this.getSnapshotState(test)
+      this.snapshotState = this.getSnapshotState(this.test ? this.test : undefined, this.suite ? this.suite : undefined)
     }
   }
 
-  getSnapshotState(test: Test) {
-    return this.snapshotStateMap.get(test.file!.filepath)!
+  getSnapshotState(test?: Test, suite?: Suite) {
+    return this.snapshotStateMap.get((test?.file?.filepath || suite?.filepath)!)!
   }
 
   clearTest() {
@@ -104,6 +105,11 @@ export class SnapshotClient {
     ].join(' > ')
 
     const snapshotState = this.getSnapshotState(test)
+
+    const skippedSnapshot = test.suite.tasks.find(t => t.mode === 'skip')
+
+    if (skippedSnapshot)
+      snapshotState.markSnapshotsAsSkippedForTest(skippedSnapshot.name)
 
     const { actual, expected, key, pass } = snapshotState.match({
       testName,

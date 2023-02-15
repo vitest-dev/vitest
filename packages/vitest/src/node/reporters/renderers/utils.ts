@@ -88,9 +88,6 @@ export function renderSnapshotSummary(rootDir: string, snapshots: SnapshotSummar
     })
   }
 
-  if (snapshots.skipped)
-    summary.push(c.bold(c.yellow(`${snapshots.skipped} skipped`)))
-
   return summary
 }
 
