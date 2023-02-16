@@ -102,9 +102,6 @@ export class Logger {
     const mode = this.ctx.config.watch
       ? c.blue(' DEV ')
       : c.cyan(' RUN ')
-    const seedText = this.ctx.config.sequence.seed != null
-      ? c.dim(`seed ${this.ctx.config.sequence.seed}`)
-      : ''
 
     this.log(`${c.inverse(c.bold(mode))} ${versionTest} ${c.gray(this.ctx.config.root)}`)
 
