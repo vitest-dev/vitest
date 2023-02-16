@@ -106,7 +106,10 @@ export class Logger {
       ? c.dim(`seed ${this.ctx.config.sequence.seed}`)
       : ''
 
-    this.log(`${c.inverse(c.bold(mode))} ${versionTest} ${c.gray(this.ctx.config.root)} ${seedText}`.trim())
+    this.log(`${c.inverse(c.bold(mode))} ${versionTest} ${c.gray(this.ctx.config.root)}`)
+
+    if (this.ctx.config.sequence.seed)
+      this.log(c.gray(`      Running tests with seed "${this.ctx.config.sequence.seed}"`))
 
     if (this.ctx.config.browser)
       this.log(c.dim(c.green(`      Browser runner started at http://${this.ctx.config.api?.host || 'localhost'}:${c.bold(`${this.ctx.server.config.server.port}`)}`)))
