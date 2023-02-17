@@ -4,6 +4,7 @@ import { version } from '../../../../package.json'
 import type { ErrorWithDiff } from '../types'
 import type { TypeCheckError } from '../typecheck/typechecker'
 import { divider } from './reporters/renderers/utils'
+import { RandomSequencer } from './sequencers/RandomSequencer'
 import type { Vitest } from './core'
 import { printError } from './error'
 
@@ -104,7 +105,9 @@ export class Logger {
       : c.cyan(' RUN ')
 
     this.log(`${c.inverse(c.bold(mode))} ${versionTest} ${c.gray(this.ctx.config.root)}`)
-    this.log(c.gray(`      Running tests with seed "${this.ctx.config.sequence.seed}"`))
+
+    if (this.ctx.config.sequence.sequencer === RandomSequencer)
+      this.log(c.gray(`      Running tests with seed "${this.ctx.config.sequence.seed}"`))
 
     if (this.ctx.config.browser)
       this.log(c.dim(c.green(`      Browser runner started at http://${this.ctx.config.api?.host || 'localhost'}:${c.bold(`${this.ctx.server.config.server.port}`)}`)))

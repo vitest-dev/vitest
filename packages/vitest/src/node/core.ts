@@ -143,6 +143,7 @@ export class Vitest {
       onConsoleLog: undefined!,
       sequence: {
         ...this.config.sequence,
+        seed: this.config.sequence.seed || Date.now(),
         sequencer: undefined!,
       },
       benchmark: {

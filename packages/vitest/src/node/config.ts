@@ -230,7 +230,6 @@ export function resolveConfig(
       ? RandomSequencer
       : BaseSequencer
   }
-  resolved.sequence.seed ??= Date.now()
   resolved.sequence.hooks ??= 'parallel'
 
   resolved.typecheck = {
