@@ -636,7 +636,7 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
     sequencer: TestSequencerConstructor
     hooks: SequenceHooks
     shuffle?: boolean
-    seed?: number
+    seed: number
   }
 
   typecheck: TypecheckConfig
