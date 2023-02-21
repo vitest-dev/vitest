@@ -5,7 +5,7 @@ import { workerId as poolId } from 'tinypool'
 import { processError } from '@vitest/runner/utils'
 import { ModuleCacheMap } from 'vite-node/client'
 import { isPrimitive } from 'vite-node/utils'
-import type { ResolvedConfig, WorkerContext, WorkerRPC } from '../types'
+import type { ResolvedConfig, WorkerContext, WorkerRPC, WorkerTestEnvironment } from '../types'
 import { distDir } from '../constants'
 import { getWorkerState } from '../utils/global'
 import type { MockMap } from '../types/mocker'
@@ -14,7 +14,7 @@ import { createVitestExecutor } from './execute'
 import { rpc, rpcDone } from './rpc'
 
 let _viteNode: {
-  run: (files: string[], config: ResolvedConfig, executor: VitestExecutor) => Promise<void>
+  run: (files: string[], config: ResolvedConfig, environment: WorkerTestEnvironment, executor: VitestExecutor) => Promise<void>
   executor: VitestExecutor
 }
 
@@ -109,6 +109,6 @@ function init(ctx: WorkerContext) {
 export async function run(ctx: WorkerContext) {
   init(ctx)
   const { run, executor } = await startViteNode(ctx)
-  await run(ctx.files, ctx.config, executor)
+  await run(ctx.files, ctx.config, ctx.environment, executor)
   await rpcDone()
 }
