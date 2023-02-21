@@ -231,6 +231,8 @@ export function resolveConfig(
       : BaseSequencer
   }
   resolved.sequence.hooks ??= 'parallel'
+  if (resolved.sequence.sequencer === RandomSequencer)
+    resolved.sequence.seed ??= Date.now()
 
   resolved.typecheck = {
     ...configDefaults.typecheck,
