@@ -14,17 +14,17 @@ title: IDE Integrations | Guide
 
 ![](https://i.ibb.co/bJCbCf2/202203292020.gif)
 
-## IntelliJ/WebStorm <sup><code>Community</code></sup>
+## JetBrains IDE
 
-Maintained by [@linux-china](https://github.com/linux-china).
+WebStorm, PhpStorm, IntelliJ IDEA Ultimate, and other JetBrains IDEs come with built-in support for Vitest.
 
 <p text-center>
-<img src="https://raw.githubusercontent.com/linux-china/vitest-jetbrains-plugin/main/banner.png" w-80>
+<img src="https://raw.githubusercontent.com/kricact/WS-info/main/banners/vitest-jb.png" w-60>
 </p>
 
-[GitHub](https://github.com/linux-china/vitest-jetbrains-plugin) | [JetBrains Plugin Marketplace](https://plugins.jetbrains.com/plugin/19220-vitest-runner)
+[WebStorm Help](https://www.jetbrains.com/help/webstorm/vitest.html) | [IntelliJ IDEA Ultimate Help](https://www.jetbrains.com/help/idea/vitest.html) | [PhpStorm Help](https://www.jetbrains.com/help/phpstorm/vitest.html)
 
-![Vitest WebStorm Screenshot](https://raw.githubusercontent.com/linux-china/vitest-jetbrains-plugin/main/screenshot.png)
+![Vitest WebStorm Demo](https://raw.githubusercontent.com/kricact/WS-info/main/gifs/vitest-run-all.gif)
 
 ## Wallaby.js <sup><code>Paid (free for OSS)</code></sup>
 
