@@ -1,74 +1,11 @@
 import v8 from 'node:v8'
-import { relative, resolve } from 'pathe'
 import { createBirpc } from 'birpc'
-import { processError } from '@vitest/runner/utils'
-import { ModuleCacheMap } from 'vite-node/client'
-import { isPrimitive } from 'vite-node/utils'
 import { parseRegexp } from '@vitest/utils'
 import type { ResolvedConfig } from '../types'
-import { distDir } from '../constants'
-import { getWorkerState } from '../utils/global'
-import type { MockMap } from '../types/mocker'
 import type { RuntimeRPC } from '../types/rpc'
 import type { ChildContext } from '../types/child'
-import { executeInViteNode } from './execute'
-import { rpc } from './rpc'
-
-let _viteNode: {
-  run: (files: string[], config: ResolvedConfig) => Promise<void>
-}
-
-const moduleCache = new ModuleCacheMap()
-const mockMap: MockMap = new Map()
-
-async function startViteNode(ctx: ChildContext) {
-  if (_viteNode)
-    return _viteNode
-
-  const { config } = ctx
-
-  const processExit = process.exit
-
-  process.exit = (code = process.exitCode || 0): never => {
-    const error = new Error(`process.exit called with "${code}"`)
-    rpc().onWorkerExit(error, code)
-    return processExit(code)
-  }
-
-  function catchError(err: unknown, type: string) {
-    const worker = getWorkerState()
-    const error = processError(err)
-    if (worker.filepath && !isPrimitive(error)) {
-      error.VITEST_TEST_NAME = worker.current?.name
-      error.VITEST_TEST_PATH = relative(config.root, worker.filepath)
-    }
-    rpc().onUnhandledError(error, type)
-  }
-
-  process.on('uncaughtException', e => catchError(e, 'Uncaught Exception'))
-  process.on('unhandledRejection', e => catchError(e, 'Unhandled Rejection'))
-
-  const { run } = (await executeInViteNode({
-    files: [
-      resolve(distDir, 'entry.js'),
-    ],
-    fetchModule(id) {
-      return rpc().fetch(id)
-    },
-    resolveId(id, importer) {
-      return rpc().resolveId(id, importer)
-    },
-    moduleCache,
-    mockMap,
-    interopDefault: config.deps.interopDefault,
-    root: config.root,
-    base: config.base,
-  }))[0]
-
-  _viteNode = { run }
-
-  return _viteNode
-}
+import { mockMap, moduleCache, startViteNode } from './execute'
+import { rpcDone } from './rpc'
 
 function init(ctx: ChildContext) {
   const { config } = ctx
@@ -122,8 +59,9 @@ function unwrapConfig(config: ResolvedConfig) {
 
 export async function run(ctx: ChildContext) {
   init(ctx)
-  const { run } = await startViteNode(ctx)
-  return run(ctx.files, ctx.config)
+  const { run, executor } = await startViteNode(ctx)
+  await run(ctx.files, ctx.config, ctx.environment, executor)
+  await rpcDone()
 }
 
 const procesExit = process.exit

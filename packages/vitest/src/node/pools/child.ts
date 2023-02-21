@@ -4,11 +4,13 @@ import { fork } from 'node:child_process'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { createBirpc } from 'birpc'
 import { resolve } from 'pathe'
-import type { RuntimeRPC } from '../../types'
+import type { ContextTestEnvironment, ResolvedConfig, RuntimeRPC } from '../../types'
 import type { Vitest } from '../core'
 import type { ChildContext } from '../../types/child'
 import type { PoolProcessOptions, ProcessPool } from '../pool'
 import { distDir } from '../../constants'
+import { groupBy } from '../../utils/base'
+import { envsOrder, groupFilesByEnv } from '../../utils/test-helpers'
 import { createMethodsRPC } from './rpc'
 
 const childPath = fileURLToPath(pathToFileURL(resolve(distDir, './child.js')).href)
@@ -47,29 +49,22 @@ function getTestConfig(ctx: Vitest) {
 }
 
 export function createChildProcessPool(ctx: Vitest, { execArgv, env }: PoolProcessOptions): ProcessPool {
-  // isolation is disabled with --no-threads
-  let child: ChildProcess
+  const children = new Set<ChildProcess>()
 
-  ctx.coverageProvider?.onBeforeFilesRun?.()
-
-  // in case onBeforeFilesRun changes env
-  const resolvedEnv = {
-    ...env,
-    ...process.env,
-  }
-
-  function runWithFiles(files: string[], invalidates: string[] = []) {
-    ctx.state.clearFiles(files)
+  function runFiles(config: ResolvedConfig, files: string[], environment: ContextTestEnvironment, invalidates: string[] = []) {
     const data: ChildContext = {
       command: 'start',
-      config: getTestConfig(ctx),
+      config,
       files,
       invalidates,
+      environment,
     }
-    child = fork(childPath, [], {
+
+    const child = fork(childPath, [], {
       execArgv,
-      env: resolvedEnv,
+      env,
     })
+    children.add(child)
     setupChildProcessChannel(ctx, child)
 
     return new Promise<void>((resolve, reject) => {
@@ -82,18 +77,48 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env }: PoolProce
           resolve()
         else
           reject(new Error(`Child process exited unexpectedly with code ${code}`))
+
+        children.delete(child)
       })
     })
+  }
+
+  async function runWithFiles(files: string[], invalidates: string[] = []) {
+    ctx.state.clearFiles(files)
+    const config = getTestConfig(ctx)
+
+    const filesByEnv = await groupFilesByEnv(files, config)
+    const envs = envsOrder.concat(
+      Object.keys(filesByEnv).filter(env => !envsOrder.includes(env)),
+    )
+
+    // always run environments isolated between each other
+    for (const env of envs) {
+      const files = filesByEnv[env]
+
+      if (!files?.length)
+        continue
+
+      const filesByOptions = groupBy(files, ({ environment }) => JSON.stringify(environment.options))
+
+      for (const option in filesByOptions) {
+        const files = filesByOptions[option]
+
+        if (files?.length) {
+          const filenames = files.map(f => f.file)
+          await runFiles(config, filenames, files[0].environment, invalidates)
+        }
+      }
+    }
   }
 
   return {
     runTests: runWithFiles,
     async close() {
-      if (!child)
-        return
-
-      if (!child.killed)
-        child.kill()
+      children.forEach((child) => {
+        if (!child.killed)
+          child.kill()
+      })
     },
   }
 }

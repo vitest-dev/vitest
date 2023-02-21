@@ -6,9 +6,11 @@ import { resolve } from 'pathe'
 import type { Options as TinypoolOptions } from 'tinypool'
 import Tinypool from 'tinypool'
 import { distDir } from '../../constants'
-import type { ResolvedConfig, RuntimeRPC, WorkerContext } from '../../types'
+import type { ContextTestEnvironment, ResolvedConfig, RuntimeRPC, WorkerContext } from '../../types'
 import type { Vitest } from '../core'
 import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
+import { envsOrder, groupFilesByEnv } from '../../utils/test-helpers'
+import { groupBy } from '../../utils/base'
 import { createMethodsRPC } from './rpc'
 
 const workerPath = pathToFileURL(resolve(distDir, './worker.js')).href
@@ -64,8 +66,6 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
     options.minThreads = 1
   }
 
-  ctx.coverageProvider?.onBeforeFilesRun?.()
-
   // in case onBeforeFilesRun() changes env
   options.env = {
     ...env,
@@ -77,7 +77,7 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
   const runWithFiles = (name: string): RunWithFiles => {
     let id = 0
 
-    async function runFiles(config: ResolvedConfig, files: string[], invalidates: string[] = []) {
+    async function runFiles(config: ResolvedConfig, files: string[], environment: ContextTestEnvironment, invalidates: string[] = []) {
       ctx.state.clearFiles(files)
       const { workerPort, port } = createWorkerChannel(ctx)
       const workerId = ++id
@@ -86,6 +86,7 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
         config,
         files,
         invalidates,
+        environment,
         workerId,
       }
       try {
@@ -108,12 +109,35 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
 
       files = await sequencer.sort(files)
 
+      const filesByEnv = await groupFilesByEnv(files, config)
+      const envs = envsOrder.concat(
+        Object.keys(filesByEnv).filter(env => !envsOrder.includes(env)),
+      )
+
       if (ctx.config.singleThread) {
-        await runFiles(config, files)
+        // always run environments isolated between each other
+        for (const env of envs) {
+          const files = filesByEnv[env]
+
+          if (!files?.length)
+            continue
+
+          const filesByOptions = groupBy(files, ({ environment }) => JSON.stringify(environment.options))
+
+          for (const option in filesByOptions) {
+            const files = filesByOptions[option]
+
+            if (files?.length) {
+              const filenames = files.map(f => f.file)
+              await runFiles(config, filenames, files[0].environment, invalidates)
+            }
+          }
+        }
       }
       else {
-        const results = await Promise.allSettled(files
-          .map(file => runFiles(config, [file], invalidates)))
+        const promises = Object.values(filesByEnv).flat()
+        const results = await Promise.allSettled(promises
+          .map(({ file, environment }) => runFiles(config, [file], environment, invalidates)))
 
         const errors = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected').map(r => r.reason)
         if (errors.length > 0)

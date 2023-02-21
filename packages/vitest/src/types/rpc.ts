@@ -1,6 +1,6 @@
 import type { RawSourceMap } from 'source-map'
 import type { FetchFunction } from 'vite-node'
-import type { ResolvedConfig } from './config'
+import type { EnvironmentOptions, ResolvedConfig, VitestEnvironment } from './config'
 import type { UserConsoleLog } from './general'
 import type { SnapshotResult } from './snapshot'
 import type { File, TaskResultPack } from './tasks'
@@ -24,8 +24,14 @@ export interface RuntimeRPC {
   resolveSnapshotPath: (testPath: string) => string
 }
 
+export interface ContextTestEnvironment {
+  name: VitestEnvironment
+  options: EnvironmentOptions | null
+}
+
 export interface ContextRPC {
   config: ResolvedConfig
   files: string[]
   invalidates?: string[]
+  environment: ContextTestEnvironment
 }
