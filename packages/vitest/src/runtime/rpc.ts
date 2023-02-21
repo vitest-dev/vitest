@@ -28,13 +28,13 @@ function withSafeTimers(fn: () => void) {
     return result
   }
   finally {
+    globalThis.setTimeout = currentSetTimeout
+    globalThis.clearTimeout = currentClearTimeout
+    globalThis.Math.random = currentRandom
+    globalThis.setImmediate = currentSetImmediate
+    globalThis.clearImmediate = currentClearImmediate
     nextTick(() => {
-      globalThis.setTimeout = currentSetTimeout
-      globalThis.clearTimeout = currentClearTimeout
-      globalThis.Math.random = currentRandom
       globalThis.process.nextTick = currentNextTick
-      globalThis.setImmediate = currentSetImmediate
-      globalThis.clearImmediate = currentClearImmediate
     })
   }
 }
