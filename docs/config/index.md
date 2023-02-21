@@ -725,13 +725,28 @@ Directory to write coverage report to.
 
 #### reporter
 
-- **Type:** `string | string[]`
+- **Type:** `string | string[] | [string, {}][]`
 - **Default:** `['text', 'html', 'clover', 'json']`
 - **Available for providers:** `'c8' | 'istanbul'`
 - **CLI:** `--coverage.reporter=<reporter>`, `--coverage.reporter=<reporter1> --coverage.reporter=<reporter2>`
 
-Coverage reporters to use. See [istanbul documentation](https://istanbul.js.org/docs/advanced/alternative-reporters/) for detailed list of all reporters.
+Coverage reporters to use. See [istanbul documentation](https://istanbul.js.org/docs/advanced/alternative-reporters/) for detailed list of all reporters. See [`@types/istanbul-reporter`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/276d95e4304b3670eaf6e8e5a7ea9e265a14e338/types/istanbul-reports/index.d.ts) for details about reporter specific options.
 
+The reporter has three different types:
+
+- A single reporter: `{ reporter: 'html' }`
+- Multiple reporters without options: `{ reporter: ['html', 'json'] }`
+- A single or multiple reporters with reporter options:
+  <!-- eslint-skip -->
+  ```ts
+  {
+    reporter: [
+      ['lcov', { 'projectRoot': './src' }],
+      ['json', { 'file': 'coverage.json' }],
+      ['text']
+    ]
+  }
+  ```
 
 #### skipFull
 

@@ -18,7 +18,7 @@ interface CoverageFinalJson {
  * Normalizes paths to keep contents consistent between OS's
  */
 export async function readCoverageJson() {
-  const jsonReport = JSON.parse(readFileSync('./coverage/coverage-final.json', 'utf8')) as CoverageFinalJson
+  const jsonReport = JSON.parse(readFileSync('./coverage/custom-json-report-name.json', 'utf8')) as CoverageFinalJson
 
   const normalizedReport: CoverageFinalJson['default'] = {}
 

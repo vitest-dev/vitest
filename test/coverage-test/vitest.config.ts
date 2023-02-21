@@ -19,7 +19,12 @@ export default defineConfig({
       include: ['src/**'],
       clean: true,
       all: true,
-      reporter: ['html', 'text', 'lcov', 'json'],
+      reporter: [
+        'text',
+        ['html'],
+        ['lcov', {}],
+        ['json', { file: 'custom-json-report-name.json' }],
+      ],
     },
     setupFiles: [
       resolve(__dirname, './setup.ts'),

@@ -46,7 +46,6 @@
     "@vitest/coverage-istanbul": "workspace:*",
     "@vitest/ui": "workspace:*",
     "bumpp": "^8.2.1",
-    "c8": "^7.12.0",
     "esbuild": "^0.16.16",
     "eslint": "^8.31.0",
     "esno": "^0.16.3",
