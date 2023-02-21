@@ -1,4 +1,5 @@
 import type { TransformPluginContext, TransformResult } from 'rollup'
+import type { ReportOptions } from 'istanbul-reports'
 import type { Vitest } from '../node'
 import type { Arrayable } from './general'
 import type { AfterSuiteRunMeta } from './worker'
@@ -10,7 +11,6 @@ export interface CoverageProvider {
   resolveOptions(): ResolvedCoverageOptions
   clean(clean?: boolean): void | Promise<void>
 
-  onBeforeFilesRun?(): void | Promise<void>
   onAfterSuiteRun(meta: AfterSuiteRunMeta): void | Promise<void>
 
   reportCoverage(reportContext?: ReportContext): void | Promise<void>
@@ -32,33 +32,39 @@ export interface CoverageProviderModule {
    * Factory for creating a new coverage provider
    */
   getProvider(): CoverageProvider | Promise<CoverageProvider>
+
+  /**
+   * Executed before tests are run in the worker thread.
+   */
+  startCoverage?(): unknown | Promise<unknown>
+
   /**
    * Executed on after each run in the worker thread. Possible to return a payload passed to the provider
    */
   takeCoverage?(): unknown | Promise<unknown>
+
+  /**
+   * Executed after all tests have been run in the worker thread.
+   */
+  stopCoverage?(): unknown | Promise<unknown>
 }
 
-export type CoverageReporter =
-  | 'clover'
-  | 'cobertura'
-  | 'html-spa'
-  | 'html'
-  | 'json-summary'
-  | 'json'
-  | 'lcov'
-  | 'lcovonly'
-  | 'none'
-  | 'teamcity'
-  | 'text-lcov'
-  | 'text-summary'
-  | 'text'
+export type CoverageReporter = keyof ReportOptions
 
-type Provider = 'c8' | 'istanbul' | CoverageProviderModule | undefined
+type CoverageReporterWithOptions<ReporterName extends CoverageReporter = CoverageReporter> =
+   ReporterName extends CoverageReporter
+     ? ReportOptions[ReporterName] extends never
+       ? [ReporterName, {}] // E.g. the "none" reporter
+       : [ReporterName, Partial<ReportOptions[ReporterName]>]
+     : never
+
+type Provider = 'c8' | 'istanbul' | 'custom' | undefined
 
 export type CoverageOptions<T extends Provider = Provider> =
-  T extends CoverageProviderModule ? ({ provider: T } & BaseCoverageOptions) :
-    T extends 'istanbul' ? ({ provider: T } & CoverageIstanbulOptions) :
-        ({ provider?: T } & CoverageC8Options)
+  T extends 'istanbul' ? ({ provider: T } & CoverageIstanbulOptions) :
+    T extends 'c8' ? ({ provider: T } & CoverageC8Options) :
+      T extends 'custom' ? ({ provider: T } & CustomProviderOptions) :
+          ({ provider?: T } & (CoverageC8Options))
 
 /** Fields that have default values. Internally these will always be defined. */
 type FieldsWithDefaultValues =
@@ -68,19 +74,18 @@ type FieldsWithDefaultValues =
   | 'reportsDirectory'
   | 'exclude'
   | 'extension'
-  | 'reporter'
 
 export type ResolvedCoverageOptions<T extends Provider = Provider> =
   & CoverageOptions<T>
   & Required<Pick<CoverageOptions<T>, FieldsWithDefaultValues>>
   // Resolved fields which may have different typings as public configuration API has
   & {
-    reporter: CoverageReporter[]
+    reporter: CoverageReporterWithOptions[]
   }
 
 export interface BaseCoverageOptions {
   /**
-   * Enables coverage collection. Can be overriden using `--coverage` CLI option.
+   * Enables coverage collection. Can be overridden using `--coverage` CLI option.
    *
    * @default false
    */
@@ -137,7 +142,7 @@ export interface BaseCoverageOptions {
    *
    * @default ['text', 'html', 'clover', 'json']
    */
-  reporter?: Arrayable<CoverageReporter>
+  reporter?: Arrayable<CoverageReporter> | (CoverageReporter | [CoverageReporter] | CoverageReporterWithOptions)[]
 
   /**
    * Do not show files with 100% statement, branch, and function coverage
@@ -232,4 +237,9 @@ export interface CoverageC8Options extends BaseCoverageOptions {
    * @default false
    */
   100?: boolean
+}
+
+export interface CustomProviderOptions extends Pick<BaseCoverageOptions, FieldsWithDefaultValues> {
+  /** Name of the module or path to a file to load the custom provider from */
+  customProviderModule: string
 }

@@ -64,7 +64,7 @@ interface PopulateOptions {
 interface PopulateResult {
   // a list of all keys that were copied, even if value doesn't exist on original object
   keys: Set<string>
-  // a map of original object that might have been overriden with keys
+  // a map of original object that might have been overridden with keys
   // you can return these values inside `teardown` function
   originals: Map<string | symbol, any>
 }

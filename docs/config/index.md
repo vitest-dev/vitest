@@ -391,7 +391,7 @@ Project root
 Custom reporters for output. Reporters can be [a Reporter instance](https://github.com/vitest-dev/vitest/blob/main/packages/vitest/src/types/reporter.ts) or a string to select built in reporters:
 
   - `'default'` - collapse suites when they pass
-  - `'basic'` - give a reporter like default reporter give in ci
+  - `'basic'` - give a reporter like default reporter in ci
   - `'verbose'` - keep the full task tree visible
   - `'dot'` -  show each task as a single dot
   - `'junit'` - JUnit XML reporter (you can configure `testsuites` tag name with `VITEST_JUNIT_SUITE_NAME` environmental variable)
@@ -625,7 +625,7 @@ Isolate environment for each test file. Does not work if you disable [`--threads
 
 ### coverage
 
-You can use [`c8`](https://github.com/bcoe/c8) or [`istanbul`](https://istanbul.js.org/) for coverage collection.
+You can use [`c8`](https://github.com/bcoe/c8), [`istanbul`](https://istanbul.js.org/)  or [a custom coverage solution](/guide/coverage#custom-coverage-provider) for coverage collection.
 
 You can provide coverage options to CLI with dot notation:
 
@@ -639,7 +639,7 @@ If you are using coverage options with dot notation, don't forget to specify `--
 
 #### provider
 
-- **Type:** `'c8' | 'istanbul'`
+- **Type:** `'c8' | 'istanbul' | 'custom'`
 - **Default:** `'c8'`
 - **CLI:** `--coverage.provider=<provider>`
 
@@ -652,7 +652,7 @@ Use `provider` to select the tool for coverage collection.
 - **Available for providers:** `'c8' | 'istanbul'`
 - **CLI:** `--coverage.enabled`, `--coverage.enabled=false`
 
-Enables coverage collection. Can be overriden using `--coverage` CLI option.
+Enables coverage collection. Can be overridden using `--coverage` CLI option.
 
 #### include
 
@@ -730,17 +730,31 @@ Clean coverage report on watch rerun
 - **CLI:** `--coverage.reportsDirectory=<path>`
 
 Directory to write coverage report to.
-When using `c8` provider a temporary `/tmp` directory is created for [V8 coverage results](https://nodejs.org/api/cli.html#coverage-output).
 
 #### reporter
 
-- **Type:** `string | string[]`
+- **Type:** `string | string[] | [string, {}][]`
 - **Default:** `['text', 'html', 'clover', 'json']`
 - **Available for providers:** `'c8' | 'istanbul'`
 - **CLI:** `--coverage.reporter=<reporter>`, `--coverage.reporter=<reporter1> --coverage.reporter=<reporter2>`
 
-Coverage reporters to use. See [istanbul documentation](https://istanbul.js.org/docs/advanced/alternative-reporters/) for detailed list of all reporters.
+Coverage reporters to use. See [istanbul documentation](https://istanbul.js.org/docs/advanced/alternative-reporters/) for detailed list of all reporters. See [`@types/istanbul-reporter`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/276d95e4304b3670eaf6e8e5a7ea9e265a14e338/types/istanbul-reports/index.d.ts) for details about reporter specific options.
 
+The reporter has three different types:
+
+- A single reporter: `{ reporter: 'html' }`
+- Multiple reporters without options: `{ reporter: ['html', 'json'] }`
+- A single or multiple reporters with reporter options:
+  <!-- eslint-skip -->
+  ```ts
+  {
+    reporter: [
+      ['lcov', { 'projectRoot': './src' }],
+      ['json', { 'file': 'coverage.json' }],
+      ['text']
+    ]
+  }
+  ```
 
 #### skipFull
 
@@ -871,6 +885,14 @@ See [istanbul documentation](https://github.com/istanbuljs/nyc#ignoring-methods)
 
 Watermarks for statements, lines, branches and functions. See [istanbul documentation](https://github.com/istanbuljs/nyc#high-and-low-watermarks) for more information.
 
+#### customProviderModule
+
+- **Type:** `string`
+- **Available for providers:** `'custom'`
+- **CLI:** `--coverage.customProviderModule=<path or module name>`
+
+Specifies the module name or path for the custom coverage provider module. See [Guide - Custom Coverage Provider](/guide/coverage#custom-coverage-provider) for more information.
+
 ### testNamePattern
 
 - **Type** `string | RegExp`
@@ -914,21 +936,21 @@ Listen to port and serve API. When set to true, the default port is 51204
 - **Type:** `boolean`
 - **Default:** `false`
 
-Will call [`.mockClear()`](/api/#mockclear) on all spies before each test. This will clear mock history, but not reset its implementation to the default one.
+Will call [`.mockClear()`](/api/mock#mockclear) on all spies before each test. This will clear mock history, but not reset its implementation to the default one.
 
 ### mockReset
 
 - **Type:** `boolean`
 - **Default:** `false`
 
-Will call [`.mockReset()`](/api/#mockreset) on all spies before each test. This will clear mock history and reset its implementation to an empty function (will return `undefined`).
+Will call [`.mockReset()`](/api/mock#mockreset) on all spies before each test. This will clear mock history and reset its implementation to an empty function (will return `undefined`).
 
 ### restoreMocks
 
 - **Type:** `boolean`
 - **Default:** `false`
 
-Will call [`.mockRestore()`](/api/#mockrestore) on all spies before each test. This will clear mock history and reset its implementation to the original one.
+Will call [`.mockRestore()`](/api/mock#mockrestore) on all spies before each test. This will clear mock history and reset its implementation to the original one.
 
 ### unstubEnvs
 
@@ -936,7 +958,7 @@ Will call [`.mockRestore()`](/api/#mockrestore) on all spies before each test. T
 - **Default:** `false`
 - **Version:** Since Vitest 0.26.0
 
-Will call [`vi.unstubAllEnvs`](/api/#vi-unstuballenvs) before each test.
+Will call [`vi.unstubAllEnvs`](/api/vi#vi-unstuballenvs) before each test.
 
 ### unstubGlobals
 
@@ -944,7 +966,7 @@ Will call [`vi.unstubAllEnvs`](/api/#vi-unstuballenvs) before each test.
 - **Default:** `false`
 - **Version:** Since Vitest 0.26.0
 
-Will call [`vi.unstubAllGlobals`](/api/#vi-unstuballglobals) before each test.
+Will call [`vi.unstubAllGlobals`](/api/vi#vi-unstuballglobals) before each test.
 
 ### transformMode
 
@@ -1165,7 +1187,7 @@ Options for configuring [typechecking](/guide/testing-types) test environment.
 
 What tools to use for type checking. Vitest will spawn a process with certain parameters for easier parsing, depending on the type. Checker should implement the same output format as `tsc`.
 
-You need to have a package installed to use typecheker:
+You need to have a package installed to use typechecker:
 
 - `tsc` requires `typescript` package
 - `vue-tsc` requires `vue-tsc` package

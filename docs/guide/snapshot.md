@@ -12,7 +12,7 @@ When using snapshot, Vitest will take a snapshot of the given value, then compar
 
 ## Use Snapshots
 
-To snapshot a value, you can use the [`toMatchSnapshot()`](/api/#tomatchsnapshot) from `expect()` API:
+To snapshot a value, you can use the [`toMatchSnapshot()`](/api/expect#tomatchsnapshot) from `expect()` API:
 
 ```ts
 import { expect, it } from 'vitest'
@@ -33,9 +33,13 @@ exports['toUpperCase 1'] = '"FOOBAR"'
 
 The snapshot artifact should be committed alongside code changes, and reviewed as part of your code review process. On subsequent test runs, Vitest will compare the rendered output with the previous snapshot. If they match, the test will pass. If they don't match, either the test runner found a bug in your code that should be fixed, or the implementation has changed and the snapshot needs to be updated.
 
+::: warning
+When using Snapshots with async concurrent tests, `expect` from the local [Test Context](/guide/test-context.md) must be used to ensure the right test is detected.
+:::
+
 ## Inline Snapshots
 
-Similarly, you can use the [`toMatchInlineSnapshot()`](/api/#tomatchinlinesnapshot) to store the snapshot inline within the test file.
+Similarly, you can use the [`toMatchInlineSnapshot()`](/api/expect#tomatchinlinesnapshot) to store the snapshot inline within the test file.
 
 ```ts
 import { expect, it } from 'vitest'
@@ -58,6 +62,10 @@ it('toUpperCase', () => {
 ```
 
 This allows you to see the expected output directly without jumping across different files.
+
+::: warning
+When using Snapshots with async concurrent tests, `expect` from the local [Test Context](/guide/test-context.md) must be used to ensure the right test is detected.
+:::
 
 ## Updating Snapshots
 
@@ -147,7 +155,7 @@ This does not really affect the functionality but might affect your commit diff 
 
 #### 2. `printBasicPrototype` is default to `false`
 
-Both Jest and Vitest's snapshots are powered by [`pretty-format`](https://github.com/facebook/jest/blob/main/packages/pretty-format). In Vitest we set `printBasicPrototype` default to `false` to provide a cleaner snapshot output, while in Jest it's `true` by default.
+Both Jest and Vitest's snapshots are powered by [`pretty-format`](https://github.com/facebook/jest/blob/main/packages/pretty-format). In Vitest we set `printBasicPrototype` default to `false` to provide a cleaner snapshot output, while in Jest <29.0.0 it's `true` by default.
 
 ```ts
 import { expect, test } from 'vitest'
@@ -190,4 +198,27 @@ export default defineConfig({
     }
   }
 })
+```
+
+#### 3. Chevron `>` is used as a separator instead of colon `:` for custom messages
+
+Vitest uses chevron `>` as a separator instead of colon `:` for readability, when a custom message is passed during creation of a snapshot file.
+
+For the following example test code:
+```js
+test('toThrowErrorMatchingSnapshot', () => {
+  expect(() => {
+    throw new Error('error')
+  }).toThrowErrorMatchingSnapshot('hint')
+})
+```
+
+In Jest, the snapshot will be:
+```console
+exports[`toThrowErrorMatchingSnapshot: hint 1`] = `"error"`;
+```
+
+In Vitest, the equivalent snapshot will be:
+```console
+exports[`toThrowErrorMatchingSnapshot > hint 1`] = `"error"`;
 ```

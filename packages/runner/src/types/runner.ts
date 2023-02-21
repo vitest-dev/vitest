@@ -9,7 +9,7 @@ export interface VitestRunnerConfig {
   allowOnly?: boolean
   sequence: {
     shuffle?: boolean
-    seed?: number
+    seed: number
     hooks: SequenceHooks
   }
   maxConcurrency: number
@@ -93,7 +93,7 @@ export interface VitestRunner {
    */
   importFile(filepath: string, source: VitestRunnerImportSource): unknown
   /**
-   * Publically available configuration.
+   * Publicly available configuration.
    */
   config: VitestRunnerConfig
 }

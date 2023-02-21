@@ -12,6 +12,7 @@ import { setupSnapshotEnvironment } from '../integrations/snapshot/env'
 import { NodeSnapshotEnvironment } from '../integrations/snapshot/environments/node'
 import { rpc } from './rpc'
 import { setupCommonEnv } from './setup.common'
+import type { VitestExecutor } from './execute'
 
 // this should only be used in Node
 let globalSetup = false
@@ -154,8 +155,8 @@ export async function setupConsoleLogSpy() {
   })
 }
 
-async function loadEnvironment(name: string) {
-  const pkg = await import(`vitest-environment-${name}`)
+async function loadEnvironment(name: string, executor: VitestExecutor) {
+  const pkg = await executor.executeId(`vitest-environment-${name}`)
   if (!pkg || !pkg.default || typeof pkg.default !== 'object' || typeof pkg.default.setup !== 'function') {
     throw new Error(
       `Environment "${name}" is not a valid environment. `
@@ -168,9 +169,10 @@ async function loadEnvironment(name: string) {
 export async function withEnv(
   name: ResolvedConfig['environment'],
   options: ResolvedConfig['environmentOptions'],
+  executor: VitestExecutor,
   fn: () => Promise<void>,
 ) {
-  const config: Environment = (environments as any)[name] || await loadEnvironment(name)
+  const config: Environment = (environments as any)[name] || await loadEnvironment(name, executor)
   // @ts-expect-error untyped global
   globalThis.__vitest_environment__ = config.name || name
   expect.setState({

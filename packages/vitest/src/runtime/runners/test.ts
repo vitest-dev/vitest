@@ -5,17 +5,19 @@ import { vi } from '../../integrations/vi'
 import { getFullName, getWorkerState } from '../../utils'
 import { createExpect } from '../../integrations/chai/index'
 import type { ResolvedConfig } from '../../types/config'
+import type { VitestExecutor } from '../execute'
 
 export class VitestTestRunner implements VitestRunner {
   private snapshotClient = getSnapshotClient()
   private workerState = getWorkerState()
+  private __vitest_executor!: VitestExecutor
 
   constructor(public config: ResolvedConfig) {}
 
   importFile(filepath: string, source: VitestRunnerImportSource): unknown {
     if (source === 'setup')
       this.workerState.moduleCache.delete(filepath)
-    return import(filepath)
+    return this.__vitest_executor.executeId(filepath)
   }
 
   onBeforeRun() {

@@ -77,8 +77,6 @@ export default ({ watch }) => defineConfig([
         let id = chunkInfo.facadeModuleId || Object.keys(chunkInfo.modules).find(i => !i.includes('node_modules') && (i.includes('src/') || i.includes('src\\')))
         if (id) {
           id = normalize(id)
-          if (id.includes('runtime/runners'))
-            return 'runners-chunk.js'
           const parts = Array.from(
             new Set(relative(process.cwd(), id).split(/\//g)
               .map(i => i.replace(/\..*$/, ''))

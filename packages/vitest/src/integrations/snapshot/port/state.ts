@@ -7,10 +7,9 @@
 
 import type { OptionsReceived as PrettyFormatOptions } from 'pretty-format'
 import type { ParsedStack, SnapshotData, SnapshotMatchOptions, SnapshotResult, SnapshotStateOptions, SnapshotUpdateState } from '../../../types'
-import { slash } from '../../../utils'
-import { parseStacktrace } from '../../../utils/source-map'
+import { parseErrorStacktrace } from '../../../utils/source-map'
 import type { SnapshotEnvironment } from '../env'
-import { getSnapshotEnironment } from '../env'
+import { getSnapshotEnvironment } from '../env'
 import type { InlineSnapshot } from './inlineSnapshot'
 import { saveInlineSnapshots } from './inlineSnapshot'
 
@@ -83,14 +82,14 @@ export default class SnapshotState {
       printBasicPrototype: false,
       ...options.snapshotFormat,
     }
-    this._environment = getSnapshotEnironment()
+    this._environment = getSnapshotEnvironment()
   }
 
   static async create(
     testFilePath: string,
     options: SnapshotStateOptions,
   ) {
-    const environment = getSnapshotEnironment()
+    const environment = getSnapshotEnvironment()
     const snapshotPath = await environment.resolvePath(testFilePath)
     const content = await environment.readSnapshotFile(snapshotPath)
     return new SnapshotState(testFilePath, snapshotPath, content, options)
@@ -122,9 +121,7 @@ export default class SnapshotState {
   ): void {
     this._dirty = true
     if (options.isInline) {
-      const error = options.error || new Error('Unknown error')
-      const stacks = parseStacktrace(error, true)
-      stacks.forEach(i => i.file = slash(i.file))
+      const stacks = parseErrorStacktrace(options.error || new Error('snapshot'), true)
       const stack = this._inferInlineSnapshotStack(stacks)
       if (!stack) {
         throw new Error(
