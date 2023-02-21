@@ -12,6 +12,7 @@ import { GlobalSetupPlugin } from './globalSetup'
 import { MocksPlugin } from './mock'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { CoverageTransform } from './coverageTransform'
+import { NodeStrictPlugin } from './nodeStrict'
 
 export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('test')): Promise<VitePlugin[]> {
   const getRoot = () => ctx.config?.root || options.root || process.cwd()
@@ -27,6 +28,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
   }
 
   return [
+    NodeStrictPlugin(ctx),
     <VitePlugin>{
       name: 'vitest',
       enforce: 'pre',
@@ -199,7 +201,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
           await server.watcher.close()
       },
     },
-    EnvReplacerPlugin(),
+    EnvReplacerPlugin(ctx),
     MocksPlugin(),
     GlobalSetupPlugin(ctx),
     ...(options.browser

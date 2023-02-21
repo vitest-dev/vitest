@@ -2,15 +2,16 @@ import MagicString from 'magic-string'
 import type { Plugin } from 'vite'
 import { stripLiteral } from 'strip-literal'
 import { cleanUrl } from 'vite-node/utils'
+import type { Vitest } from '../core'
 
 // so people can reassign envs at runtime
 // import.meta.env.VITE_NAME = 'app' -> process.env.VITE_NAME = 'app'
-export const EnvReplacerPlugin = (): Plugin => {
+export const EnvReplacerPlugin = (ctx: Vitest): Plugin => {
   return {
     name: 'vitest:env-replacer',
     enforce: 'pre',
     transform(code, id) {
-      if (!/\bimport\.meta\.env\b/g.test(code))
+      if (ctx.config.environment === 'node-strict' || !/\bimport\.meta\.env\b/g.test(code))
         return null
 
       let s: MagicString | null = null

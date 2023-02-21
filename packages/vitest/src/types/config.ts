@@ -10,7 +10,7 @@ import type { SnapshotStateOptions } from './snapshot'
 import type { Arrayable } from './general'
 import type { BenchmarkUserOptions } from './benchmark'
 
-export type BuiltinEnvironment = 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime'
+export type BuiltinEnvironment = 'node' | 'node-strict' | 'jsdom' | 'happy-dom' | 'edge-runtime'
 // Record is used, so user can get intellisense for builtin environments, but still allow custom environments
 export type VitestEnvironment = BuiltinEnvironment | (string & Record<never, never>)
 export type CSSModuleScopeStrategy = 'stable' | 'scoped' | 'non-scoped'
@@ -25,10 +25,6 @@ export interface EnvironmentOptions {
    * jsdom options.
    */
   jsdom?: JSDOMOptions
-  node?: {
-    // TODO: write documentation
-    strictESM?: boolean
-  }
   [x: string]: unknown
 }
 

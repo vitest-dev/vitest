@@ -1,8 +1,9 @@
 import { performance } from 'node:perf_hooks'
-import { resolve } from 'pathe'
+import { dirname, extname, resolve } from 'pathe'
 import type { TransformResult, ViteDevServer } from 'vite'
+import { getPackageInfo } from 'local-pkg'
 import createDebug from 'debug'
-import type { DebuggerOptions, FetchResult, RawSourceMap, ViteNodeResolveId, ViteNodeServerOptions } from './types'
+import type { DebuggerOptions, FetchOptions, FetchResult, RawSourceMap, ViteNodeResolveId, ViteNodeServerOptions } from './types'
 import { shouldExternalize } from './externalize'
 import { normalizeModuleId, toArray, toFilePath } from './utils'
 import { Debugger } from './debug'
@@ -15,6 +16,8 @@ const debugRequest = createDebug('vite-node:server:request')
 export class ViteNodeServer {
   private fetchPromiseMap = new Map<string, Promise<FetchResult>>()
   private transformPromiseMap = new Map<string, Promise<TransformResult | null | undefined>>()
+  private idToFormatMap = new Map<string, 'esm' | 'cjs'>()
+  private pkgCache = new Map<string, { version: string; type?: 'module' | 'commonjs' }>()
 
   fetchCache = new Map<string, {
     duration?: number
@@ -68,7 +71,7 @@ export class ViteNodeServer {
     if (importer && !importer.startsWith(this.server.config.root))
       importer = resolve(this.server.config.root, importer)
     const mode = (importer && this.getTransformMode(importer)) || 'ssr'
-    return this.server.pluginContainer.resolveId(id, importer, { ssr: mode === 'ssr' })
+    return await this.server.pluginContainer.resolveId(id, importer, { ssr: mode === 'ssr' })
   }
 
   getSourceMap(source: string) {
@@ -79,12 +82,12 @@ export class ViteNodeServer {
     return (ssrTransformResult?.map || null) as unknown as RawSourceMap | null
   }
 
-  async fetchModule(id: string): Promise<FetchResult> {
+  async fetchModule(id: string, options: FetchOptions = {}): Promise<FetchResult> {
     id = normalizeModuleId(id)
     // reuse transform for concurrent requests
     if (!this.fetchPromiseMap.has(id)) {
       this.fetchPromiseMap.set(id,
-        this._fetchModule(id)
+        this._fetchModule(id, options)
           .then((r) => {
             return this.options.sourcemap !== true ? { ...r, map: undefined } : r
           })
@@ -122,7 +125,7 @@ export class ViteNodeServer {
     return 'web'
   }
 
-  private async _fetchModule(id: string): Promise<FetchResult> {
+  private async _fetchModule(id: string, options: FetchOptions): Promise<FetchResult> {
     let result: FetchResult
 
     const { path: filePath } = toFilePath(id, this.server.config.root)
@@ -142,9 +145,14 @@ export class ViteNodeServer {
     }
     else {
       const start = performance.now()
-      const r = await this._transformRequest(id)
+      const [r, format] = await Promise.all([
+        this._transformRequest(id),
+        options.loadFormat ? this._getPackageFormat(id) : undefined,
+      ])
+      if (format)
+        this.idToFormatMap.set(id, format)
       duration = performance.now() - start
-      result = { code: r?.code, map: r?.map as unknown as RawSourceMap }
+      result = { format, code: r?.code, map: r?.map as unknown as RawSourceMap }
     }
 
     this.fetchCache.set(filePath, {
@@ -154,6 +162,49 @@ export class ViteNodeServer {
     })
 
     return result
+  }
+
+  private _getCachedPackageInfo(url: string) {
+    while (url) {
+      const dir = dirname(url)
+      if (url === dir)
+        return null
+      url = dir
+      const cached = this.pkgCache.get(url)
+      if (cached)
+        return cached
+    }
+    return null
+  }
+
+  private async _getPackageFormat(fsPath: string) {
+    // TODO: clear all cache on watcher package.json change
+    const cachedFormat = this.idToFormatMap.get(fsPath)
+    if (cachedFormat)
+      return cachedFormat
+    switch (extname(fsPath)) {
+      case '.cts':
+      case '.cjs':
+        return 'cjs'
+      case '.mts':
+      case '.mjs':
+        return 'esm'
+    }
+    const pkg = await this._getPackageInfo(fsPath)
+    return pkg?.type === 'module' ? 'esm' : 'cjs'
+  }
+
+  private async _getPackageInfo(url: string) {
+    // TODO: clear cache on watcher change
+    const info = this._getCachedPackageInfo(url)
+    if (info)
+      return info
+    const pkg = await getPackageInfo(url)
+    if (!pkg)
+      return null
+    const pkgPath = dirname(pkg.packageJsonPath)
+    this.pkgCache.set(pkgPath, pkg.packageJson)
+    return pkg.packageJson
   }
 
   private async _transformRequest(id: string) {

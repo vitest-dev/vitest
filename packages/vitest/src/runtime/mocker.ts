@@ -6,7 +6,7 @@ import { getWorkerState } from '../utils/global'
 import { getAllMockableProperties } from '../utils/base'
 import { spyOn } from '../integrations/spy'
 import type { MockFactory, MockMap, PendingSuiteMock } from '../types/mocker'
-import type { VitestExecutor } from './execute'
+import type { VitestExecutor } from './executors/vitest'
 
 class RefTracker {
   private idMap = new Map<any, number>()

@@ -9,7 +9,7 @@ import type { ResolvedConfig, WorkerContext, WorkerRPC } from '../types'
 import { distDir } from '../constants'
 import { getWorkerState } from '../utils/global'
 import type { MockMap } from '../types/mocker'
-import type { VitestExecutor } from './execute'
+import type { VitestExecutor } from './executors/vitest'
 import { createVitestExecutor } from './execute'
 import { rpc } from './rpc'
 

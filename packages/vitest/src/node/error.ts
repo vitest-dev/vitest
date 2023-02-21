@@ -43,7 +43,7 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
   const nearest = error instanceof TypeCheckError
     ? error.stacks[0]
     : stacks.find(stack =>
-      ctx.resolver.isSourceCode(stack.file)
+      ctx.server.moduleGraph.getModuleById(stack.file)
       && existsSync(stack.file),
     )
 

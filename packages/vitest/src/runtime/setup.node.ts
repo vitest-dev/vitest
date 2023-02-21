@@ -12,7 +12,7 @@ import { setupSnapshotEnvironment } from '../integrations/snapshot/env'
 import { NodeSnapshotEnvironment } from '../integrations/snapshot/environments/node'
 import { rpc } from './rpc'
 import { setupCommonEnv } from './setup.common'
-import type { VitestExecutor } from './execute'
+import type { VitestExecutor } from './executors/vitest'
 
 // this should only be used in Node
 let globalSetup = false

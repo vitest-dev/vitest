@@ -34,9 +34,13 @@ export interface FetchResult {
   map?: RawSourceMap
 }
 
+export interface FetchOptions {
+  loadFormat?: boolean
+}
+
 export type HotContext = Omit<ViteHotContext, 'acceptDeps' | 'decline'>
 
-export type FetchFunction = (id: string) => Promise<FetchResult>
+export type FetchFunction = (id: string, options?: FetchOptions) => Promise<FetchResult>
 
 export type ResolveIdFunction = (id: string, importer?: string) => Promise<ViteNodeResolveId | null>
 
