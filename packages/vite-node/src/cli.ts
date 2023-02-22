@@ -15,6 +15,7 @@ cli
   .version(version)
   .option('-r, --root <path>', 'Use specified root directory')
   .option('-c, --config <path>', 'Use specified config file')
+  .option('-m, --mode <mode>', 'Set env mode')
   .option('-w, --watch', 'Restart on file changes, similar to "nodemon"')
   .option('--script', 'Use vite-node as a script runner')
   .option('--options <options>', 'Use specified Vite server options')
@@ -31,6 +32,7 @@ export interface CliOptions {
   root?: string
   script?: boolean
   config?: string
+  mode?: string
   watch?: boolean
   options?: ViteNodeServerOptionsCLI
   '--'?: string[]
@@ -60,6 +62,7 @@ async function run(files: string[], options: CliOptions = {}) {
     logLevel: 'error',
     configFile: options.config,
     root: options.root,
+    mode: options.mode,
     plugins: [
       options.watch && viteNodeHmrPlugin(),
     ],
@@ -115,13 +118,13 @@ function parseServerOptions(serverOptions: ViteNodeServerOptionsCLI): ViteNodeSe
       ...serverOptions.deps,
       inline: inlineOptions !== true
         ? inlineOptions.map((dep) => {
-          return dep.startsWith('/') && dep.endsWith('/')
+          return (dep.startsWith('/') && dep.endsWith('/'))
             ? new RegExp(dep)
             : dep
         })
         : true,
       external: toArray(serverOptions.deps?.external).map((dep) => {
-        return dep.startsWith('/') && dep.endsWith('/')
+        return (dep.startsWith('/') && dep.endsWith('/'))
           ? new RegExp(dep)
           : dep
       }),
