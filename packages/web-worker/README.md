@@ -21,7 +21,7 @@ npm install -D @vitest/web-worker
 pnpm install -D @vitest/web-worker
 
 # with yarn
-yarn install -D @vitest/web-worker
+yarn add --dev @vitest/web-worker
 ```
 
 ## Usage
