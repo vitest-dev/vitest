@@ -1,4 +1,5 @@
 import type { ViteHotContext } from 'vite/types/hot'
+import type { EncodedSourceMap } from '@jridgewell/trace-mapping'
 import type { ModuleCacheMap, ViteNodeRunner } from './client'
 
 export type Nullable<T> = T | null | undefined
@@ -19,6 +20,8 @@ export interface StartOfSourceMap {
   sourceRoot?: string
 }
 
+export type { EncodedSourceMap, DecodedSourceMap } from '@jridgewell/trace-mapping'
+
 export interface RawSourceMap extends StartOfSourceMap {
   version: string
   sources: string[]
@@ -30,7 +33,7 @@ export interface RawSourceMap extends StartOfSourceMap {
 export interface FetchResult {
   code?: string
   externalize?: string
-  map?: RawSourceMap
+  map?: EncodedSourceMap | null
 }
 
 export type HotContext = Omit<ViteHotContext, 'acceptDeps' | 'decline'>
@@ -47,7 +50,7 @@ export interface ModuleCache {
   evaluated?: boolean
   resolving?: boolean
   code?: string
-  map?: RawSourceMap
+  map?: EncodedSourceMap
   /**
    * Module ids that imports this module
    */

@@ -2,7 +2,8 @@ import { performance } from 'node:perf_hooks'
 import { resolve } from 'pathe'
 import type { TransformResult, ViteDevServer } from 'vite'
 import createDebug from 'debug'
-import type { DebuggerOptions, FetchResult, RawSourceMap, ViteNodeResolveId, ViteNodeServerOptions } from './types'
+import type { EncodedSourceMap } from '@jridgewell/trace-mapping'
+import type { DebuggerOptions, FetchResult, ViteNodeResolveId, ViteNodeServerOptions } from './types'
 import { shouldExternalize } from './externalize'
 import { normalizeModuleId, toArray, toFilePath } from './utils'
 import { Debugger } from './debug'
@@ -76,7 +77,7 @@ export class ViteNodeServer {
     if (fetchResult?.map)
       return fetchResult.map
     const ssrTransformResult = this.server.moduleGraph.getModuleById(source)?.ssrTransformResult
-    return (ssrTransformResult?.map || null) as unknown as RawSourceMap | null
+    return (ssrTransformResult?.map || null) as unknown as EncodedSourceMap | null
   }
 
   async fetchModule(id: string): Promise<FetchResult> {
@@ -144,7 +145,7 @@ export class ViteNodeServer {
       const start = performance.now()
       const r = await this._transformRequest(id)
       duration = performance.now() - start
-      result = { code: r?.code, map: r?.map as unknown as RawSourceMap }
+      result = { code: r?.code, map: r?.map as any }
     }
 
     this.fetchCache.set(filePath, {
