@@ -170,10 +170,6 @@ export class ViteNodeRunner {
     return await this.cachedRequest(id, url, [])
   }
 
-  getSourceMap(id: string) {
-    return this.moduleCache.getSourceMap(id)
-  }
-
   /** @internal */
   async cachedRequest(id: string, fsPath: string, callstack: string[]) {
     const importee = callstack[callstack.length - 1]

@@ -4,7 +4,7 @@ import type { Profiler } from 'inspector'
 import { extname, resolve } from 'pathe'
 import c from 'picocolors'
 import { provider } from 'std-env'
-import type { RawSourceMap } from 'vite-node'
+import type { EncodedSourceMap } from 'vite-node'
 import { coverageConfigDefaults } from 'vitest/config'
 // eslint-disable-next-line no-restricted-imports
 import type { AfterSuiteRunMeta, CoverageC8Options, CoverageProvider, ReportContext, ResolvedCoverageOptions } from 'vitest'
@@ -67,7 +67,7 @@ export class C8CoverageProvider implements CoverageProvider {
     // Overwrite C8's loader as results are in memory instead of file system
     report._loadReports = () => this.coverages
 
-    interface MapAndSource { map: RawSourceMap; source: string | undefined }
+    interface MapAndSource { map: EncodedSourceMap; source: string | undefined }
     type SourceMapMeta = { url: string; filepath: string } & MapAndSource
 
     // add source maps
