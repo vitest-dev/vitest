@@ -154,6 +154,19 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
         statements: this.options.statements,
       })
     }
+
+    if (this.options.thresholdAutoUpdate && allTestsRun) {
+      this.updateThresholds({
+        coverageMap,
+        thresholds: {
+          branches: this.options.branches,
+          functions: this.options.functions,
+          lines: this.options.lines,
+          statements: this.options.statements,
+        },
+        configurationFile: this.ctx.server.config.configFile,
+      })
+    }
   }
 
   checkThresholds(coverageMap: CoverageMap, thresholds: Record<Threshold, number | undefined>) {

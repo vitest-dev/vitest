@@ -789,6 +789,16 @@ Do not show files with 100% statement, branch, and function coverage.
 Check thresholds per file.
 See `lines`, `functions`, `branches` and `statements` for the actual thresholds.
 
+#### thresholdAutoUpdate
+
+- **Type:** `boolean`
+- **Default:** `false`
+- **Available for providers:** `'c8' | 'istanbul'`
+- **CLI:** `--coverage.thresholdAutoUpdate=<boolean>`
+
+Update threshold values `lines`, `functions`, `branches` and `statements` to configuration file when current coverage is above the configured thresholds.
+This option helps to maintain thresholds when coverage is improved.
+
 #### lines
 
 - **Type:** `number`

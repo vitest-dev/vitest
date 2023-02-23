@@ -177,5 +177,18 @@ export class C8CoverageProvider extends BaseCoverageProvider implements Coverage
 
     await report.run()
     await checkCoverages(options, report)
+
+    if (this.options.thresholdAutoUpdate && allTestsRun) {
+      this.updateThresholds({
+        coverageMap: await report.getCoverageMapFromAllCoverageFiles(),
+        thresholds: {
+          branches: this.options.branches,
+          functions: this.options.functions,
+          lines: this.options.lines,
+          statements: this.options.statements,
+        },
+        configurationFile: this.ctx.server.config.configFile,
+      })
+    }
   }
 }
