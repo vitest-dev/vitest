@@ -17,7 +17,7 @@ cli
   .option('-w, --watch', 'Enable watch mode')
   .option('-t, --testNamePattern <pattern>', 'Run tests with full names matching the specified regexp pattern')
   .option('--dir <path>', 'Base directory to scan for the test files')
-  .option('--ui', 'Enable UI')
+  .option('--ui', 'Enable UI, you can use it in watch mode')
   .option('--open', 'Open UI automatically (default: !process.env.CI))')
   .option('--api [api]', 'Serve API, available options: --api.port <port>, --api.host [host] and --api.strictPort')
   .option('--threads', 'Enabled threads (default: true)')
