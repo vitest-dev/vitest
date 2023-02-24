@@ -9,7 +9,7 @@ export interface VitestRunnerConfig {
   allowOnly?: boolean
   sequence: {
     shuffle?: boolean
-    seed?: number
+    seed: number
     hooks: SequenceHooks
   }
   maxConcurrency: number
