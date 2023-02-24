@@ -50,7 +50,7 @@ export const resolve: Resolver = async (url, context, next) => {
 
   const id = normalizeModuleId(url)
   const importer = normalizeModuleId(parentURL)
-  const resolved = await resolver(id, importer)
+  const resolved = await resolver(id, importer, state.ctx.environment.name)
 
   let result: ResolveResult
   let filepath: string
