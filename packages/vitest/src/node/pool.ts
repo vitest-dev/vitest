@@ -195,8 +195,9 @@ function createChannel(ctx: Vitest) {
         const r = await ctx.vitenode.transformRequest(id)
         return r?.map as RawSourceMap | undefined
       },
-      fetch(id) {
-        return ctx.vitenode.fetchModule(id)
+      fetch(id, environment) {
+        const transformMode = environment === 'happy-dom' || environment === 'jsdom' ? 'web' : 'ssr'
+        return ctx.vitenode.fetchModule(id, ctx.config.deps?.experimentalOptimizer ? transformMode : undefined)
       },
       resolveId(id, importer) {
         return ctx.vitenode.resolveId(id, importer)

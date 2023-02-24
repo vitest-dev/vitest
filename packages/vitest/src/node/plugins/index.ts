@@ -131,15 +131,22 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
         }
 
         if (!options.browser) {
-          // disable deps optimization
-          Object.assign(config, {
-            cacheDir: undefined,
-            optimizeDeps: {
+          const optimizeConfig: Partial<ViteConfig> = {}
+          if (!preOptions.deps?.experimentalOptimizer) {
+            optimizeConfig.cacheDir = undefined
+            optimizeConfig.optimizeDeps = {
               // experimental in Vite >2.9.2, entries remains to help with older versions
               disabled: true,
               entries: [],
-            },
-          })
+            }
+          }
+          else {
+            optimizeConfig.optimizeDeps = {
+              disabled: false,
+              exclude: ['vitest'],
+            }
+          }
+          Object.assign(config, optimizeConfig)
         }
 
         return config

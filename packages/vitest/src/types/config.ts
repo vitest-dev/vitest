@@ -68,6 +68,10 @@ export interface InlineConfig {
    */
   deps?: {
     /**
+     * Enable dependency optimization. This can improve the performance of your tests.
+     */
+    experimentalOptimizer?: boolean
+    /**
      * Externalize means that Vite will bypass the package to native Node.
      *
      * Externalized dependencies will not be applied Vite's transformers and resolvers.

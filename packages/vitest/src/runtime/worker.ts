@@ -50,7 +50,7 @@ async function startViteNode(ctx: WorkerContext) {
 
   const executor = await createVitestExecutor({
     fetchModule(id) {
-      return rpc().fetch(id)
+      return rpc().fetch(id, ctx.environment.name)
     },
     resolveId(id, importer) {
       return rpc().resolveId(id, importer)
