@@ -17,7 +17,6 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
   const getRoot = () => ctx.config?.root || options.root || process.cwd()
 
   async function UIPlugin() {
-    console.log(options.watch)
     await ensurePackageInstalled('@vitest/ui', getRoot())
     return (await import('@vitest/ui')).default(options.uiBase)
   }
