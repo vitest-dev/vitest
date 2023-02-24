@@ -169,3 +169,88 @@ describe('mocked function which fails on toReturnWith', () => {
 test('streams', () => {
   expect(exportedStream).toBeDefined()
 })
+
+describe('temporary mock implementation', () => {
+  test('temporary mock implementation works as expected', () => {
+    const mock = vi.fn(() => 1)
+
+    expect.assertions(3)
+
+    mock.withImplementation(() => 2, () => {
+      expect(mock()).toBe(2)
+      expect(mock()).toBe(2)
+    })
+
+    expect(mock()).toBe(1)
+  })
+
+  test('original implementation restored as undefined, when there is none', () => {
+    const mock = vi.fn()
+
+    expect.assertions(5)
+
+    mock.withImplementation(() => 2, () => {
+      expect(mock.getMockImplementation()).toBeTypeOf('function')
+      expect(mock()).toBe(2)
+      expect(mock()).toBe(2)
+    })
+
+    expect(mock()).toBe(undefined)
+    expect(mock.getMockImplementation()).toBe(undefined)
+  })
+
+  test('temporary mock implementation return value can be of different type than the original', async () => {
+    const mock = vi.fn(() => 1)
+
+    expect.assertions(3)
+
+    mock.withImplementation(() => 2, () => {
+      expect(mock()).toBe(2)
+      expect(mock()).toBe(2)
+    })
+
+    expect(mock()).toBe(1)
+  })
+
+  test('temporary mock implementation with async callback works as expecetd', async () => {
+    const mock = vi.fn(() => 1)
+
+    expect.assertions(3)
+
+    await mock.withImplementation(() => 2, async () => {
+      await Promise.resolve()
+
+      expect(mock()).toBe(2)
+      expect(mock()).toBe(2)
+    })
+
+    expect(mock()).toBe(1)
+  })
+
+  test('temporary mock implementation can be async', async () => {
+    const mock = vi.fn(async () => 1)
+
+    expect.assertions(3)
+
+    await mock.withImplementation(async () => 2, async () => {
+      expect(await mock()).toBe(2)
+      expect(await mock()).toBe(2)
+    })
+
+    expect(await mock()).toBe(1)
+  })
+
+  test('temporary mock implementation takes precedence over mockImplementationOnce', () => {
+    const mock = vi.fn(() => 1)
+
+    expect.assertions(3)
+
+    mock.mockImplementationOnce(() => 2)
+    mock.withImplementation(() => 3, () => {
+      expect(mock()).toBe(3)
+      expect(mock()).toBe(3)
+    })
+
+    expect(mock()).toBe(2)
+  })
+})
