@@ -157,7 +157,7 @@ export class Vitest {
   async typecheck(filters: string[] = []) {
     const { dir, root } = this.config
     const { include, exclude } = this.config.typecheck
-    const testsFilesList = await this.globFiles(filters, include, exclude, dir || root)
+    const testsFilesList = this.filterFiles(await this.globFiles(include, exclude, dir || root), filters)
     const checker = new Typechecker(this, testsFilesList)
     this.typechecker = checker
     checker.onParseEnd(async ({ files, sourceErrors }) => {
@@ -607,7 +607,7 @@ export class Vitest {
     )))
   }
 
-  async globFiles(filters: string[], include: string[], exclude: string[], cwd: string) {
+  async globFiles(include: string[], exclude: string[], cwd: string) {
     const globOptions: fg.Options = {
       absolute: true,
       dot: true,
@@ -615,24 +615,18 @@ export class Vitest {
       ignore: exclude,
     }
 
-    let testFiles = await fg(include, globOptions)
-
-    if (filters.length && process.platform === 'win32')
-      filters = filters.map(f => toNamespacedPath(f))
-
-    if (filters.length)
-      testFiles = testFiles.filter(i => filters.some(f => i.includes(f)))
-
-    return testFiles
+    return fg(include, globOptions)
   }
 
-  async globTestFiles(filters: string[] = []) {
-    const { include, exclude, includeSource, dir, root } = this.config
+  private _allTestsCache: string[] | null = []
 
-    const testFiles = await this.globFiles(filters, include, exclude, dir || root)
+  async globAllTestFiles(config: ResolvedConfig, cwd: string) {
+    const { include, exclude, includeSource } = config
+
+    const testFiles = await this.globFiles(include, exclude, cwd)
 
     if (includeSource) {
-      const files = await this.globFiles(filters, includeSource, exclude, dir || root)
+      const files = await this.globFiles(includeSource, exclude, cwd)
 
       await Promise.all(files.map(async (file) => {
         try {
@@ -646,7 +640,29 @@ export class Vitest {
       }))
     }
 
+    this._allTestsCache = testFiles
+
     return testFiles
+  }
+
+  filterFiles(testFiles: string[], filters: string[] = []) {
+    if (filters.length && process.platform === 'win32')
+      filters = filters.map(f => toNamespacedPath(f))
+
+    if (filters.length)
+      return testFiles.filter(i => filters.some(f => i.includes(f)))
+
+    return testFiles
+  }
+
+  async globTestFiles(filters: string[] = []) {
+    const { dir, root } = this.config
+
+    const testFiles = this._allTestsCache ?? await this.globAllTestFiles(this.config, dir || root)
+
+    this._allTestsCache = null
+
+    return this.filterFiles(testFiles, filters)
   }
 
   async isTargetFile(id: string, source?: string): Promise<boolean> {

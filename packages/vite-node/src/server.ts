@@ -1,6 +1,6 @@
 import { performance } from 'node:perf_hooks'
 import { existsSync } from 'node:fs'
-import { join, resolve } from 'pathe'
+import { join, relative, resolve } from 'pathe'
 import type { TransformResult, ViteDevServer } from 'vite'
 import createDebug from 'debug'
 import type { DebuggerOptions, FetchResult, RawSourceMap, ViteNodeResolveId, ViteNodeServerOptions } from './types'
@@ -36,9 +36,12 @@ export class ViteNodeServer {
     // eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error
     // @ts-ignore ssr is not typed in Vite 2, but defined in Vite 3, so we can't use expect-error
     const ssrOptions = server.config.ssr
-    if (ssrOptions) {
-      options.deps ??= {}
 
+    options.deps ??= {}
+
+    options.deps.cacheDir = relative(server.config.root, server.config.cacheDir)
+
+    if (ssrOptions) {
       // we don't externalize ssr, because it has different semantics in Vite
       // if (ssrOptions.external) {
       //   options.deps.external ??= []
@@ -144,7 +147,9 @@ export class ViteNodeServer {
   private async _fetchModule(id: string, transformMode?: 'web' | 'ssr'): Promise<FetchResult> {
     let result: FetchResult
 
-    if (id.includes('.vite/deps') && !id.includes(this.server.config.root)) {
+    const cacheDir = this.options.deps?.cacheDir
+
+    if (cacheDir && id.includes(cacheDir) && !id.includes(this.server.config.root)) {
       id = join(this.server.config.root, id)
       const timeout = setTimeout(() => {
         throw new Error(`ViteNodeServer: ${id} not found. This is a bug, please report it.`)

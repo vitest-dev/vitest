@@ -142,19 +142,21 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
             }
           }
           else {
-            const entries = await ctx.globFiles([], preOptions.include || [], preOptions.exclude || [], preOptions.dir || getRoot())
+            const entries = await ctx.globTestFiles()
+            optimizeConfig.cacheDir = preOptions.cache?.dir ?? 'node_modules/.vitest'
             optimizeConfig.optimizeDeps = {
-              disabled: false,
+              ...viteConfig.optimizeDeps,
               ...optimizer,
-              entries: [...(optimizer.entries || []), ...entries],
-              exclude: ['vitest', ...(optimizer.exclude || [])],
-              include: (optimizer.include || []).filter((n: string) => n !== 'vitest'),
+              disabled: false,
+              entries: [...(optimizer.entries || viteConfig.optimizeDeps?.entries || []), ...entries],
+              exclude: ['vitest', ...(optimizer.exclude || viteConfig.optimizeDeps?.exclude || [])],
+              include: (optimizer.include || viteConfig.optimizeDeps?.include || []).filter((n: string) => n !== 'vitest'),
             }
             // Vite throws an error that it cannot rename "deps_temp", but optimization still works
             // let's not show this error to users
             const { error: logError } = console
             console.error = (...args) => {
-              if (typeof args[0] === 'string' && args[0].includes('.vite/deps_temp'))
+              if (typeof args[0] === 'string' && args[0].includes('/deps_temp'))
                 return
               return logError(...args)
             }

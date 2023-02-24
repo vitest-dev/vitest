@@ -97,7 +97,7 @@ Handling for dependencies resolution.
 - **Version:** Vitets 0.29.0
 - **See also:** [Dep Optimization Options](https://vitejs.dev/config/dep-optimization-options.html)
 
-Enable dependency optimization. This can improve the performance of your tests.
+Enable dependency optimization. If you have a lot of tests, this might improve their performance.
 
 For `jsdom` and `happy-dom` environments, when Vitest will encounter the external library, it will be bundled into a single file using esbuild and imported as a whole module. This is good for several reasons:
 
