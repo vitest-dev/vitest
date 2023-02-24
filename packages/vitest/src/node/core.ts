@@ -618,7 +618,7 @@ export class Vitest {
     return fg(include, globOptions)
   }
 
-  private _allTestsCache: string[] | null = []
+  private _allTestsCache: string[] | null = null
 
   async globAllTestFiles(config: ResolvedConfig, cwd: string) {
     const { include, exclude, includeSource } = config
