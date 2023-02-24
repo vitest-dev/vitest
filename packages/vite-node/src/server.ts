@@ -70,12 +70,13 @@ export class ViteNodeServer {
   private async ensureExists(id: string): Promise<boolean> {
     if (this.existingOptimizedDeps.has(id))
       return true
-    if (existsSync(id))
+    if (existsSync(id)) {
+      this.existingOptimizedDeps.add(id)
       return true
+    }
     return new Promise<boolean>((resolve) => {
       setTimeout(() => {
         this.ensureExists(id).then(() => {
-          this.existingOptimizedDeps.add(id)
           resolve(true)
         })
       })
@@ -83,15 +84,6 @@ export class ViteNodeServer {
   }
 
   async resolveId(id: string, importer?: string): Promise<ViteNodeResolveId | null> {
-    if (id.includes('.vite/deps')) {
-      id = join(this.server.config.root, id)
-      const timeout = setTimeout(() => {
-        throw new Error(`ViteNodeServer: ${id} not found. This is a bug, please report it.`)
-      }, 5000) // CI can be quite slow
-      await this.ensureExists(id)
-      clearTimeout(timeout)
-      return { id }
-    }
     if (importer && !importer.startsWith(this.server.config.root))
       importer = resolve(this.server.config.root, importer)
     const mode = (importer && this.getTransformMode(importer)) || 'ssr'
@@ -151,6 +143,15 @@ export class ViteNodeServer {
 
   private async _fetchModule(id: string, transformMode?: 'web' | 'ssr'): Promise<FetchResult> {
     let result: FetchResult
+
+    if (id.includes('.vite/deps') && !id.includes(this.server.config.root)) {
+      id = join(this.server.config.root, id)
+      const timeout = setTimeout(() => {
+        throw new Error(`ViteNodeServer: ${id} not found. This is a bug, please report it.`)
+      }, 5000) // CI can be quite slow
+      await this.ensureExists(id)
+      clearTimeout(timeout)
+    }
 
     const { path: filePath } = toFilePath(id, this.server.config.root)
 

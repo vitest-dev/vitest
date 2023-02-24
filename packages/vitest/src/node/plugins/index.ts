@@ -33,7 +33,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
       options() {
         this.meta.watchMode = false
       },
-      config(viteConfig: any) {
+      async config(viteConfig: any) {
         // preliminary merge of options to be able to create server options for vite
         // however to allow vitest plugins to modify vitest config values
         // this is repeated in configResolved where the config is final
@@ -132,7 +132,8 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
 
         if (!options.browser) {
           const optimizeConfig: Partial<ViteConfig> = {}
-          if (!preOptions.deps?.experimentalOptimizer) {
+          const optimizer = preOptions.deps?.experimentalOptimizer
+          if (!optimizer?.enabled) {
             optimizeConfig.cacheDir = undefined
             optimizeConfig.optimizeDeps = {
               // experimental in Vite >2.9.2, entries remains to help with older versions
@@ -141,9 +142,21 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
             }
           }
           else {
+            const entries = await ctx.globFiles([], preOptions.include || [], preOptions.exclude || [], preOptions.dir || getRoot())
             optimizeConfig.optimizeDeps = {
               disabled: false,
-              exclude: ['vitest'],
+              ...optimizer,
+              entries: [...(optimizer.entries || []), ...entries],
+              exclude: ['vitest', ...(optimizer.exclude || [])],
+              include: (optimizer.include || []).filter((n: string) => n !== 'vitest'),
+            }
+            // Vite throws an error that it cannot rename "deps_temp", but optimization still works
+            // let's not show this error to users
+            const { error: logError } = console
+            console.error = (...args) => {
+              if (typeof args[0] === 'string' && args[0].includes('.vite/deps_temp'))
+                return
+              return logError(...args)
             }
           }
           Object.assign(config, optimizeConfig)

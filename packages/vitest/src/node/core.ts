@@ -155,8 +155,9 @@ export class Vitest {
   }
 
   async typecheck(filters: string[] = []) {
+    const { dir, root } = this.config
     const { include, exclude } = this.config.typecheck
-    const testsFilesList = await this.globFiles(filters, include, exclude)
+    const testsFilesList = await this.globFiles(filters, include, exclude, dir || root)
     const checker = new Typechecker(this, testsFilesList)
     this.typechecker = checker
     checker.onParseEnd(async ({ files, sourceErrors }) => {
@@ -606,11 +607,11 @@ export class Vitest {
     )))
   }
 
-  async globFiles(filters: string[], include: string[], exclude: string[]) {
+  async globFiles(filters: string[], include: string[], exclude: string[], cwd: string) {
     const globOptions: fg.Options = {
       absolute: true,
       dot: true,
-      cwd: this.config.dir || this.config.root,
+      cwd,
       ignore: exclude,
     }
 
@@ -626,12 +627,12 @@ export class Vitest {
   }
 
   async globTestFiles(filters: string[] = []) {
-    const { include, exclude, includeSource } = this.config
+    const { include, exclude, includeSource, dir, root } = this.config
 
-    const testFiles = await this.globFiles(filters, include, exclude)
+    const testFiles = await this.globFiles(filters, include, exclude, dir || root)
 
     if (includeSource) {
-      const files = await this.globFiles(filters, includeSource, exclude)
+      const files = await this.globFiles(filters, includeSource, exclude, dir || root)
 
       await Promise.all(files.map(async (file) => {
         try {
