@@ -8,7 +8,7 @@ import { createBirpc } from 'birpc'
 import type { RawSourceMap } from 'vite-node'
 import type { ResolvedConfig, WorkerContext, WorkerRPC, WorkerTestEnvironment } from '../types'
 import { distDir, rootDir } from '../constants'
-import { AggregateError, groupBy } from '../utils'
+import { AggregateError, getEnvironmentTransformMode, groupBy } from '../utils'
 import { envsOrder, groupFilesByEnv } from '../utils/test-helpers'
 import type { Vitest } from './core'
 
@@ -196,12 +196,12 @@ function createChannel(ctx: Vitest) {
         return r?.map as RawSourceMap | undefined
       },
       fetch(id, environment) {
-        const transformMode = environment === 'happy-dom' || environment === 'jsdom' ? 'web' : 'ssr'
-        return ctx.vitenode.fetchModule(id, ctx.config.deps?.experimentalOptimizer ? transformMode : undefined)
+        const transformMode = getEnvironmentTransformMode(ctx.config, environment)
+        return ctx.vitenode.fetchModule(id, transformMode)
       },
       resolveId(id, importer, environment) {
-        const transformMode = environment === 'happy-dom' || environment === 'jsdom' ? 'web' : 'ssr'
-        return ctx.vitenode.resolveId(id, importer, ctx.config.deps?.experimentalOptimizer ? transformMode : undefined)
+        const transformMode = getEnvironmentTransformMode(ctx.config, environment)
+        return ctx.vitenode.resolveId(id, importer, transformMode)
       },
       onPathsCollected(paths) {
         ctx.state.collectPaths(paths)
