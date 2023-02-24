@@ -142,7 +142,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
             }
           }
           else {
-            const entries = await ctx.globTestFiles()
+            const entries = await ctx.globAllTestFiles(preOptions as ResolvedConfig, preOptions.dir || getRoot())
             optimizeConfig.cacheDir = preOptions.cache?.dir ?? 'node_modules/.vitest'
             optimizeConfig.optimizeDeps = {
               ...viteConfig.optimizeDeps,

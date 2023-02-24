@@ -199,8 +199,9 @@ function createChannel(ctx: Vitest) {
         const transformMode = environment === 'happy-dom' || environment === 'jsdom' ? 'web' : 'ssr'
         return ctx.vitenode.fetchModule(id, ctx.config.deps?.experimentalOptimizer ? transformMode : undefined)
       },
-      resolveId(id, importer) {
-        return ctx.vitenode.resolveId(id, importer)
+      resolveId(id, importer, environment) {
+        const transformMode = environment === 'happy-dom' || environment === 'jsdom' ? 'web' : 'ssr'
+        return ctx.vitenode.resolveId(id, importer, ctx.config.deps?.experimentalOptimizer ? transformMode : undefined)
       },
       onPathsCollected(paths) {
         ctx.state.collectPaths(paths)

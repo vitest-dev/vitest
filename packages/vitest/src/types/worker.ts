@@ -29,7 +29,7 @@ export interface AfterSuiteRunMeta {
 
 export interface WorkerRPC {
   fetch: (id: string, environment: VitestEnvironment) => Promise<FetchResult>
-  resolveId: ResolveIdFunction
+  resolveId: (id: string, importer: string | undefined, environment: VitestEnvironment) => Promise<ViteNodeResolveId | null>
   getSourceMap: (id: string, force?: boolean) => Promise<RawSourceMap | undefined>
 
   onFinished: (files: File[], errors?: unknown[]) => void

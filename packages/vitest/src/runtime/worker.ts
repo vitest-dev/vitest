@@ -53,7 +53,7 @@ async function startViteNode(ctx: WorkerContext) {
       return rpc().fetch(id, ctx.environment.name)
     },
     resolveId(id, importer) {
-      return rpc().resolveId(id, importer)
+      return rpc().resolveId(id, importer, ctx.environment.name)
     },
     moduleCache,
     mockMap,
