@@ -1,5 +1,6 @@
 import type { RawSourceMap } from 'vite-node'
 import type { RuntimeRPC } from '../../types'
+import { getEnvironmentTransformMode } from '../../utils/base'
 import type { Vitest } from '../core'
 
 export function createMethodsRPC(ctx: Vitest): RuntimeRPC {
@@ -23,11 +24,13 @@ export function createMethodsRPC(ctx: Vitest): RuntimeRPC {
       const r = await ctx.vitenode.transformRequest(id)
       return r?.map as RawSourceMap | undefined
     },
-    fetch(id) {
-      return ctx.vitenode.fetchModule(id)
+    fetch(id, environment) {
+      const transformMode = getEnvironmentTransformMode(ctx.config, environment)
+      return ctx.vitenode.fetchModule(id, transformMode)
     },
-    resolveId(id, importer) {
-      return ctx.vitenode.resolveId(id, importer)
+    resolveId(id, importer, environment) {
+      const transformMode = getEnvironmentTransformMode(ctx.config, environment)
+      return ctx.vitenode.resolveId(id, importer, transformMode)
     },
     onPathsCollected(paths) {
       ctx.state.collectPaths(paths)
