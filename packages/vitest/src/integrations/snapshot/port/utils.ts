@@ -20,7 +20,7 @@ import { getSerializers } from './plugins'
 
 export const SNAPSHOT_VERSION = '1'
 
-const writeSnapshotVersion = () => `// Vitest Snapshot v${SNAPSHOT_VERSION}`
+const writeSnapshotVersion = () => `// Vitest Snapshot v${SNAPSHOT_VERSION}, https://vitest.dev/guide/snapshot.html`
 
 export const testNameToKey = (testName: string, count: number): string =>
   `${testName} ${count}`
