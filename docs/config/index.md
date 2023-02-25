@@ -109,7 +109,7 @@ You can opt-out of this behavior for certain packages with `exclude` option. You
 
 This options also inherits your `optimizeDeps` configuration. If you redefine `include`/`exclude`/`entries` option in `deps.experimentalOptimizer` it will overwrite your `optimizeDeps` when running tests.
 
-:::note
+::: tip
 You will not be able to edit your `node_modules` code for debugging, since the code is actually located in your `cacheDir` or `test.cache.dir` directory. If you want to debug with `console.log` statements, edit it directly or force rebundling with `deps.experimentalOptimizer.force` option.
 :::
 
