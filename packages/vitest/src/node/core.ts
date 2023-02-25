@@ -62,6 +62,8 @@ export class Vitest {
     this.restartsCount += 1
     this.pool?.close()
     this.pool = undefined
+    this.coverageProvider = undefined
+    this.runningPromise = undefined
 
     const resolved = resolveConfig(this.mode, options, server.config)
 
@@ -109,8 +111,6 @@ export class Vitest {
     this.reporters = resolved.mode === 'benchmark'
       ? await createBenchmarkReporters(toArray(resolved.benchmark?.reporters), this.runner)
       : await createReporters(resolved.reporters, this.runner)
-
-    this.runningPromise = undefined
 
     this.cache.results.setConfig(resolved.root, resolved.cache)
     try {

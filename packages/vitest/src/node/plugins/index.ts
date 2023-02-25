@@ -14,6 +14,8 @@ import { CSSEnablerPlugin } from './cssEnabler'
 import { CoverageTransform } from './coverageTransform'
 
 export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('test')): Promise<VitePlugin[]> {
+  const userConfig = deepMerge({}, options) as UserConfig
+
   const getRoot = () => ctx.config?.root || options.root || process.cwd()
 
   async function UIPlugin() {
@@ -34,6 +36,12 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
         this.meta.watchMode = false
       },
       async config(viteConfig: any) {
+        if (options.watch) {
+          // Earlier runs have overwritten values of the `options`.
+          // Reset it back to initial user config before setting up the server again.
+          options = deepMerge({}, userConfig) as UserConfig
+        }
+
         // preliminary merge of options to be able to create server options for vite
         // however to allow vitest plugins to modify vitest config values
         // this is repeated in configResolved where the config is final
