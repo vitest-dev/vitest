@@ -9,7 +9,29 @@ const CustomCoverageProviderModule: CoverageProviderModule = {
   },
 
   takeCoverage() {
+    // @ts-expect-error -- untyped
+    globalThis.CUSTOM_PROVIDER_TAKE_COVERAGE = true
+
+    // @ts-expect-error -- untyped
+    if (!globalThis.CUSTOM_PROVIDER_START_COVERAGE)
+      throw new Error('takeCoverage was called before startCoverage!')
+
     return { customCoverage: 'Coverage report passed from workers to main thread' }
+  },
+
+  startCoverage() {
+    // @ts-expect-error -- untyped
+    globalThis.CUSTOM_PROVIDER_START_COVERAGE = true
+  },
+
+  stopCoverage() {
+    // @ts-expect-error -- untyped
+    if (!globalThis.CUSTOM_PROVIDER_START_COVERAGE)
+      throw new Error('stopCoverage was called before startCoverage!')
+
+    // @ts-expect-error -- untyped
+    if (!globalThis.CUSTOM_PROVIDER_TAKE_COVERAGE)
+      throw new Error('stopCoverage was called before takeCoverage!')
   },
 }
 
@@ -31,10 +53,6 @@ class CustomCoverageProvider implements CoverageProvider {
 
   clean(force: boolean) {
     this.calls.add(`clean ${force ? 'with' : 'without'} force`)
-  }
-
-  onBeforeFilesRun() {
-    this.calls.add('onBeforeFilesRun')
   }
 
   onAfterSuiteRun(meta: AfterSuiteRunMeta) {

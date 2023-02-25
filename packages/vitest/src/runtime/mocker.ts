@@ -60,6 +60,12 @@ export class VitestMocker {
     return this.executor.moduleCache
   }
 
+  private deleteCachedItem(id: string) {
+    const mockId = this.getMockPath(id)
+    if (this.moduleCache.has(mockId))
+      this.moduleCache.delete(mockId)
+  }
+
   public getSuiteFilepath(): string {
     return getWorkerState().filepath || 'global'
   }
@@ -292,9 +298,7 @@ export class VitestMocker {
     if (mock && id in mock)
       delete mock[id]
 
-    const mockId = this.getMockPath(id)
-    if (this.moduleCache.get(mockId))
-      this.moduleCache.delete(mockId)
+    this.deleteCachedItem(id)
   }
 
   public mockPath(originalId: string, path: string, external: string | null, factory?: MockFactory) {
@@ -309,6 +313,7 @@ export class VitestMocker {
 
     this.mockMap.set(suitefile, mocks)
     this.resolveCache.set(suitefile, resolves)
+    this.deleteCachedItem(id)
   }
 
   public async importActual<T>(rawId: string, importee: string): Promise<T> {

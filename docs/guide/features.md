@@ -44,7 +44,7 @@ Learn more about [Test Filtering](./filtering.md).
 
 ## Running tests concurrently
 
-Use `.concurrent` in consecutive tests to run them in parallel.
+Use `.concurrent` in consecutive tests to run them in parallel. 
 
 ```ts
 import { describe, it } from 'vitest'
@@ -52,8 +52,8 @@ import { describe, it } from 'vitest'
 // The two tests marked with concurrent will be run in parallel
 describe('suite', () => {
   it('serial test', async () => { /* ... */ })
-  it.concurrent('concurrent test 1', async () => { /* ... */ })
-  it.concurrent('concurrent test 2', async () => { /* ... */ })
+  it.concurrent('concurrent test 1', async ({ expect }) => { /* ... */ })
+  it.concurrent('concurrent test 2', async ({ expect }) => { /* ... */ })
 })
 ```
 
@@ -64,13 +64,17 @@ import { describe, it } from 'vitest'
 
 // All tests within this suite will be run in parallel
 describe.concurrent('suite', () => {
-  it('concurrent test 1', async () => { /* ... */ })
-  it('concurrent test 2', async () => { /* ... */ })
-  it.concurrent('concurrent test 3', async () => { /* ... */ })
+  it('concurrent test 1', async ({ expect }) => { /* ... */ })
+  it('concurrent test 2', async ({ expect }) => { /* ... */ })
+  it.concurrent('concurrent test 3', async ({ expect }) => { /* ... */ })
 })
 ```
 
 You can also use `.skip`, `.only`, and `.todo` with concurrent suites and tests. Read more in the [API Reference](/api/#test-concurrent).
+
+::: warning
+When running concurrent tests, Snapshots and Assertions must use `expect` from the local [Test Context](/guide/test-context.md) to ensure the right test is detected.
+:::
 
 ## Snapshot
 

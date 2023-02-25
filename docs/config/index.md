@@ -91,6 +91,28 @@ Files to exclude from the test run, using glob pattern.
 
 Handling for dependencies resolution.
 
+#### deps.experimentalOptimizer
+
+- **Type:** `DepOptimizationConfig & { enabled: boolean }`
+- **Version:** Vitets 0.29.0
+- **See also:** [Dep Optimization Options](https://vitejs.dev/config/dep-optimization-options.html)
+
+Enable dependency optimization. If you have a lot of tests, this might improve their performance.
+
+For `jsdom` and `happy-dom` environments, when Vitest will encounter the external library, it will be bundled into a single file using esbuild and imported as a whole module. This is good for several reasons:
+
+- Importing packages with a lot of imports is expensive. By bundling them into one file we can save a lot of time
+- Importing UI libraries is expensive because they are not meant to run inside Node.js
+- Your `alias` configuration is now respected inside bundled packages
+
+You can opt-out of this behavior for certain packages with `exclude` option. You can read more about available options in [Vite](https://vitejs.dev/config/dep-optimization-options.html) docs.
+
+This options also inherits your `optimizeDeps` configuration. If you redefine `include`/`exclude`/`entries` option in `deps.experimentalOptimizer` it will overwrite your `optimizeDeps` when running tests.
+
+:::note
+You will not be able to edit your `node_modules` code for debugging, since the code is actually located in your `cacheDir` or `test.cache.dir` directory. If you want to debug with `console.log` statements, edit it directly or force rebundling with `deps.experimentalOptimizer.force` option.
+:::
+
 #### deps.external
 
 - **Type:** `(string | RegExp)[]`
@@ -722,17 +744,31 @@ Clean coverage report on watch rerun
 - **CLI:** `--coverage.reportsDirectory=<path>`
 
 Directory to write coverage report to.
-When using `c8` provider a temporary `/tmp` directory is created for [V8 coverage results](https://nodejs.org/api/cli.html#coverage-output).
 
 #### reporter
 
-- **Type:** `string | string[]`
+- **Type:** `string | string[] | [string, {}][]`
 - **Default:** `['text', 'html', 'clover', 'json']`
 - **Available for providers:** `'c8' | 'istanbul'`
 - **CLI:** `--coverage.reporter=<reporter>`, `--coverage.reporter=<reporter1> --coverage.reporter=<reporter2>`
 
-Coverage reporters to use. See [istanbul documentation](https://istanbul.js.org/docs/advanced/alternative-reporters/) for detailed list of all reporters.
+Coverage reporters to use. See [istanbul documentation](https://istanbul.js.org/docs/advanced/alternative-reporters/) for detailed list of all reporters. See [`@types/istanbul-reporter`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/276d95e4304b3670eaf6e8e5a7ea9e265a14e338/types/istanbul-reports/index.d.ts) for details about reporter specific options.
 
+The reporter has three different types:
+
+- A single reporter: `{ reporter: 'html' }`
+- Multiple reporters without options: `{ reporter: ['html', 'json'] }`
+- A single or multiple reporters with reporter options:
+  <!-- eslint-skip -->
+  ```ts
+  {
+    reporter: [
+      ['lcov', { 'projectRoot': './src' }],
+      ['json', { 'file': 'coverage.json' }],
+      ['text']
+    ]
+  }
+  ```
 
 #### skipFull
 

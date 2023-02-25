@@ -43,10 +43,10 @@ export class VitestExecutor extends ViteNodeRunner {
     return environment === 'node' ? !isNodeBuiltin(id) : !id.startsWith('node:')
   }
 
-  async resolveUrl(id: string, importee?: string) {
-    if (importee && importee.startsWith('mock:'))
-      importee = importee.slice(5)
-    return super.resolveUrl(id, importee)
+  async resolveUrl(id: string, importer?: string) {
+    if (importer && importer.startsWith('mock:'))
+      importer = importer.slice(5)
+    return super.resolveUrl(id, importer)
   }
 
   async dependencyRequest(id: string, fsPath: string, callstack: string[]): Promise<any> {

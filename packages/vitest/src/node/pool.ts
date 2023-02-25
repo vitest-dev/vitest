@@ -6,9 +6,10 @@ import type { Options as TinypoolOptions } from 'tinypool'
 import { Tinypool } from 'tinypool'
 import { createBirpc } from 'birpc'
 import type { RawSourceMap } from 'vite-node'
-import type { ResolvedConfig, WorkerContext, WorkerRPC } from '../types'
+import type { ResolvedConfig, WorkerContext, WorkerRPC, WorkerTestEnvironment } from '../types'
 import { distDir, rootDir } from '../constants'
-import { AggregateError } from '../utils'
+import { AggregateError, getEnvironmentTransformMode, groupBy } from '../utils'
+import { envsOrder, groupFilesByEnv } from '../utils/test-helpers'
 import type { Vitest } from './core'
 
 export type RunWithFiles = (files: string[], invalidates?: string[]) => Promise<void>
@@ -74,8 +75,6 @@ export function createPool(ctx: Vitest): WorkerPool {
     options.minThreads = 1
   }
 
-  ctx.coverageProvider?.onBeforeFilesRun?.()
-
   options.env = {
     TEST: 'true',
     VITEST: 'true',
@@ -90,7 +89,7 @@ export function createPool(ctx: Vitest): WorkerPool {
   const runWithFiles = (name: string): RunWithFiles => {
     let id = 0
 
-    async function runFiles(config: ResolvedConfig, files: string[], invalidates: string[] = []) {
+    async function runFiles(config: ResolvedConfig, files: string[], environment: WorkerTestEnvironment, invalidates: string[] = []) {
       ctx.state.clearFiles(files)
       const { workerPort, port } = createChannel(ctx)
       const workerId = ++id
@@ -99,6 +98,7 @@ export function createPool(ctx: Vitest): WorkerPool {
         config,
         files,
         invalidates,
+        environment,
         workerId,
       }
       try {
@@ -121,12 +121,35 @@ export function createPool(ctx: Vitest): WorkerPool {
 
       files = await sequencer.sort(files)
 
+      const filesByEnv = await groupFilesByEnv(files, config)
+      const envs = envsOrder.concat(
+        Object.keys(filesByEnv).filter(env => !envsOrder.includes(env)),
+      )
+
       if (!ctx.config.threads) {
-        await runFiles(config, files)
+        // always run environments isolated between each other
+        for (const env of envs) {
+          const files = filesByEnv[env]
+
+          if (!files?.length)
+            continue
+
+          const filesByOptions = groupBy(files, ({ environment }) => JSON.stringify(environment.options))
+
+          for (const option in filesByOptions) {
+            const files = filesByOptions[option]
+
+            if (files?.length) {
+              const filenames = files.map(f => f.file)
+              await runFiles(config, filenames, files[0].environment, invalidates)
+            }
+          }
+        }
       }
       else {
-        const results = await Promise.allSettled(files
-          .map(file => runFiles(config, [file], invalidates)))
+        const promises = Object.values(filesByEnv).flat()
+        const results = await Promise.allSettled(promises
+          .map(({ file, environment }) => runFiles(config, [file], environment, invalidates)))
 
         const errors = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected').map(r => r.reason)
         if (errors.length > 0)
@@ -172,11 +195,13 @@ function createChannel(ctx: Vitest) {
         const r = await ctx.vitenode.transformRequest(id)
         return r?.map as RawSourceMap | undefined
       },
-      fetch(id) {
-        return ctx.vitenode.fetchModule(id)
+      fetch(id, environment) {
+        const transformMode = getEnvironmentTransformMode(ctx.config, environment)
+        return ctx.vitenode.fetchModule(id, transformMode)
       },
-      resolveId(id, importer) {
-        return ctx.vitenode.resolveId(id, importer)
+      resolveId(id, importer, environment) {
+        const transformMode = getEnvironmentTransformMode(ctx.config, environment)
+        return ctx.vitenode.resolveId(id, importer, transformMode)
       },
       onPathsCollected(paths) {
         ctx.state.collectPaths(paths)

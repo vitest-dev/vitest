@@ -102,7 +102,7 @@ test('provider module', () => {
             enabled: true,
             exclude: ['string'],
             extension: ['string'],
-            reporter: ['html', 'json'],
+            reporter: [['html', {}], ['json', { file: 'string' }]],
             reportsDirectory: 'string',
           }
         },
@@ -116,6 +116,8 @@ test('provider module', () => {
       }
     },
     takeCoverage() {},
+    startCoverage() {},
+    stopCoverage() {},
   })
 })
 
@@ -162,4 +164,56 @@ test('reporters, multiple', () => {
 
   // @ts-expect-error -- ... and all reporters must be known
   assertType<Coverage>({ reporter: ['html', 'json', 'unknown-reporter'] })
+})
+
+test('reporters, with options', () => {
+  assertType<Coverage>({
+    reporter: [
+      ['clover', { projectRoot: 'string', file: 'string' }],
+      ['cobertura', { projectRoot: 'string', file: 'string' }],
+      ['html-spa', { metricsToShow: ['branches', 'functions'], verbose: true, subdir: 'string' }],
+      ['html', { verbose: true, subdir: 'string' }],
+      ['json-summary', { file: 'string' }],
+      ['json', { file: 'string' }],
+      ['lcov', { projectRoot: 'string', file: 'string' }],
+      ['lcovonly', { projectRoot: 'string', file: 'string' }],
+      ['none'],
+      ['teamcity', { blockName: 'string' }],
+      ['text-lcov', { projectRoot: 'string' }],
+      ['text-summary', { file: 'string' }],
+      ['text', { skipEmpty: true, skipFull: true, maxCols: 1 }],
+    ],
+  })
+
+  assertType<Coverage>({
+    reporter: [
+      ['html', { subdir: 'string' }],
+      ['json'],
+      ['lcov', { projectRoot: 'string' }],
+    ],
+  })
+
+  assertType<Coverage>({
+    reporter: [
+      // @ts-expect-error -- teamcity report option on html reporter
+      ['html', { blockName: 'string' }],
+
+      // @ts-expect-error -- html-spa report option on json reporter
+      ['json', { metricsToShow: ['branches'] }],
+
+      // @ts-expect-error -- second value should be object even though TS intellisense prompts types of reporters
+      ['lcov', 'html-spa'],
+    ],
+  })
+})
+
+test('reporters, mixed variations', () => {
+  assertType<Coverage>({
+    reporter: [
+      'clover',
+      ['cobertura'],
+      ['html-spa', {}],
+      ['html', { verbose: true, subdir: 'string' }],
+    ],
+  })
 })
