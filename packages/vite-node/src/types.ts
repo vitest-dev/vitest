@@ -8,6 +8,7 @@ export type Arrayable<T> = T | Array<T>
 export interface DepsHandlingOptions {
   external?: (string | RegExp)[]
   inline?: (string | RegExp)[] | true
+  cacheDir?: string
   /**
    * Try to guess the CJS version of a package when it's invalid ESM
    * @default false

@@ -1,6 +1,6 @@
 import type { MessagePort } from 'node:worker_threads'
 import type { File, TaskResultPack, Test } from '@vitest/runner'
-import type { FetchFunction, ModuleCacheMap, RawSourceMap, ViteNodeResolveId } from 'vite-node'
+import type { FetchResult, ModuleCacheMap, RawSourceMap, ViteNodeResolveId } from 'vite-node'
 import type { BirpcReturn } from 'birpc'
 import type { MockMap } from './mocker'
 import type { EnvironmentOptions, ResolvedConfig, VitestEnvironment } from './config'
@@ -28,8 +28,8 @@ export interface AfterSuiteRunMeta {
 }
 
 export interface WorkerRPC {
-  fetch: FetchFunction
-  resolveId: ResolveIdFunction
+  fetch: (id: string, environment: VitestEnvironment) => Promise<FetchResult>
+  resolveId: (id: string, importer: string | undefined, environment: VitestEnvironment) => Promise<ViteNodeResolveId | null>
   getSourceMap: (id: string, force?: boolean) => Promise<RawSourceMap | undefined>
 
   onFinished: (files: File[], errors?: unknown[]) => void

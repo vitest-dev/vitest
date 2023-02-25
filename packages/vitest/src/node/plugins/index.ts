@@ -33,7 +33,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
       options() {
         this.meta.watchMode = false
       },
-      config(viteConfig: any) {
+      async config(viteConfig: any) {
         // preliminary merge of options to be able to create server options for vite
         // however to allow vitest plugins to modify vitest config values
         // this is repeated in configResolved where the config is final
@@ -131,15 +131,37 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
         }
 
         if (!options.browser) {
-          // disable deps optimization
-          Object.assign(config, {
-            cacheDir: undefined,
-            optimizeDeps: {
+          const optimizeConfig: Partial<ViteConfig> = {}
+          const optimizer = preOptions.deps?.experimentalOptimizer
+          if (!optimizer?.enabled) {
+            optimizeConfig.cacheDir = undefined
+            optimizeConfig.optimizeDeps = {
               // experimental in Vite >2.9.2, entries remains to help with older versions
               disabled: true,
               entries: [],
-            },
-          })
+            }
+          }
+          else {
+            const entries = await ctx.globAllTestFiles(preOptions as ResolvedConfig, preOptions.dir || getRoot())
+            optimizeConfig.cacheDir = preOptions.cache?.dir ?? 'node_modules/.vitest'
+            optimizeConfig.optimizeDeps = {
+              ...viteConfig.optimizeDeps,
+              ...optimizer,
+              disabled: false,
+              entries: [...(optimizer.entries || viteConfig.optimizeDeps?.entries || []), ...entries],
+              exclude: ['vitest', ...(optimizer.exclude || viteConfig.optimizeDeps?.exclude || [])],
+              include: (optimizer.include || viteConfig.optimizeDeps?.include || []).filter((n: string) => n !== 'vitest'),
+            }
+            // Vite throws an error that it cannot rename "deps_temp", but optimization still works
+            // let's not show this error to users
+            const { error: logError } = console
+            console.error = (...args) => {
+              if (typeof args[0] === 'string' && args[0].includes('/deps_temp'))
+                return
+              return logError(...args)
+            }
+          }
+          Object.assign(config, optimizeConfig)
         }
 
         return config
