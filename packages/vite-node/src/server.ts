@@ -150,8 +150,9 @@ export class ViteNodeServer {
 
     const cacheDir = this.options.deps?.cacheDir
 
-    if (cacheDir && id.includes(cacheDir) && !id.includes(this.server.config.root)) {
-      id = join(this.server.config.root, id)
+    if (cacheDir && id.includes(cacheDir)) {
+      if (!id.startsWith(this.server.config.root))
+        id = join(this.server.config.root, id)
       const timeout = setTimeout(() => {
         throw new Error(`ViteNodeServer: ${id} not found. This is a bug, please report it.`)
       }, 5000) // CI can be quite slow
