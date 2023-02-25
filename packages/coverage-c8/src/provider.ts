@@ -6,6 +6,7 @@ import c from 'picocolors'
 import { provider } from 'std-env'
 import type { EncodedSourceMap } from 'vite-node'
 import { coverageConfigDefaults } from 'vitest/config'
+import { BaseCoverageProvider } from 'vitest/coverage'
 // eslint-disable-next-line no-restricted-imports
 import type { AfterSuiteRunMeta, CoverageC8Options, CoverageProvider, ReportContext, ResolvedCoverageOptions } from 'vitest'
 import type { Vitest } from 'vitest/node'
@@ -17,7 +18,7 @@ import { checkCoverages } from 'c8/lib/commands/check-coverage.js'
 
 type Options = ResolvedCoverageOptions<'c8'>
 
-export class C8CoverageProvider implements CoverageProvider {
+export class C8CoverageProvider extends BaseCoverageProvider implements CoverageProvider {
   name = 'c8'
 
   ctx!: Vitest
@@ -25,8 +26,28 @@ export class C8CoverageProvider implements CoverageProvider {
   coverages: Profiler.TakePreciseCoverageReturnType[] = []
 
   initialize(ctx: Vitest) {
+    const config: CoverageC8Options = ctx.config.coverage
+
     this.ctx = ctx
-    this.options = resolveC8Options(ctx.config.coverage, ctx.config.root)
+    this.options = {
+      ...coverageConfigDefaults,
+
+      // Provider specific defaults
+      excludeNodeModules: true,
+      allowExternal: false,
+
+      // User's options
+      ...config,
+
+      // Resolved fields
+      provider: 'c8',
+      reporter: this.resolveReporters(config.reporter || coverageConfigDefaults.reporter),
+      reportsDirectory: resolve(ctx.config.root, config.reportsDirectory || coverageConfigDefaults.reportsDirectory),
+      lines: config['100'] ? 100 : config.lines,
+      functions: config['100'] ? 100 : config.functions,
+      branches: config['100'] ? 100 : config.branches,
+      statements: config['100'] ? 100 : config.statements,
+    }
   }
 
   resolveOptions() {
@@ -156,55 +177,18 @@ export class C8CoverageProvider implements CoverageProvider {
 
     await report.run()
     await checkCoverages(options, report)
-  }
-}
 
-function resolveC8Options(options: CoverageC8Options, root: string): Options {
-  const reportsDirectory = resolve(root, options.reportsDirectory || coverageConfigDefaults.reportsDirectory)
-
-  const resolved: Options = {
-    ...coverageConfigDefaults,
-
-    // Provider specific defaults
-    excludeNodeModules: true,
-    allowExternal: false,
-
-    // User's options
-    ...options,
-
-    // Resolved fields
-    provider: 'c8',
-    reporter: resolveReporters(options.reporter || coverageConfigDefaults.reporter),
-    reportsDirectory,
-  }
-
-  if (options['100']) {
-    resolved.lines = 100
-    resolved.functions = 100
-    resolved.branches = 100
-    resolved.statements = 100
-  }
-
-  return resolved
-}
-
-function resolveReporters(configReporters: NonNullable<CoverageC8Options['reporter']>): Options['reporter'] {
-  // E.g. { reporter: "html" }
-  if (!Array.isArray(configReporters))
-    return [[configReporters, {}]]
-
-  const resolvedReporters: Options['reporter'] = []
-
-  for (const reporter of configReporters) {
-    if (Array.isArray(reporter)) {
-      // E.g. { reporter: [ ["html", { skipEmpty: true }], ["lcov"], ["json", { file: "map.json" }] ]}
-      resolvedReporters.push([reporter[0], reporter[1] || {}])
-    }
-    else {
-      // E.g. { reporter: ["html", "json"]}
-      resolvedReporters.push([reporter, {}])
+    if (this.options.thresholdAutoUpdate && allTestsRun) {
+      this.updateThresholds({
+        coverageMap: await report.getCoverageMapFromAllCoverageFiles(),
+        thresholds: {
+          branches: this.options.branches,
+          functions: this.options.functions,
+          lines: this.options.lines,
+          statements: this.options.statements,
+        },
+        configurationFile: this.ctx.server.config.configFile,
+      })
     }
   }
-
-  return resolvedReporters
 }
