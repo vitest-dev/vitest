@@ -52,6 +52,7 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
     maxThreads,
     minThreads,
 
+    env,
     execArgv,
   }
 
@@ -64,12 +65,6 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
     options.concurrentTasksPerWorker = 1
     options.maxThreads = 1
     options.minThreads = 1
-  }
-
-  // in case onBeforeFilesRun() changes env
-  options.env = {
-    ...env,
-    ...process.env,
   }
 
   const pool = new Tinypool(options)
