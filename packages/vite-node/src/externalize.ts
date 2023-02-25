@@ -105,6 +105,10 @@ async function _shouldExternalize(
 
   id = patchWindowsImportPath(id)
 
+  // always externalize Vite deps, they are too big to inline
+  if (options?.cacheDir && id.includes(options.cacheDir))
+    return id
+
   if (matchExternalizePattern(id, options?.inline))
     return false
   if (matchExternalizePattern(id, options?.external))

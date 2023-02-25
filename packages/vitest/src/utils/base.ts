@@ -1,4 +1,4 @@
-import type { Arrayable, DeepMerge, Nullable } from '../types'
+import type { Arrayable, DeepMerge, Nullable, ResolvedConfig, VitestEnvironment } from '../types'
 
 function isFinalObj(obj: any) {
   return obj === Object.prototype || obj === Function.prototype || obj === RegExp.prototype
@@ -122,4 +122,10 @@ export function stdout(): NodeJS.WriteStream {
   // @ts-expect-error Node.js maps process.stdout to console._stdout
   // eslint-disable-next-line no-console
   return console._stdout || process.stdout
+}
+
+export function getEnvironmentTransformMode(config: ResolvedConfig, environment: VitestEnvironment) {
+  if (!config.deps?.experimentalOptimizer?.enabled)
+    return undefined
+  return environment === 'happy-dom' || environment === 'jsdom' ? 'web' : 'ssr'
 }
