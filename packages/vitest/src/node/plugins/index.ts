@@ -237,7 +237,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
       : []),
     ...CSSEnablerPlugin(ctx),
     CoverageTransform(ctx),
-    (options.ui && options.watch !== false)
+    options.ui
       ? await UIPlugin()
       : null,
   ]

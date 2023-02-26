@@ -62,7 +62,7 @@ export default {
 | `-w, --watch` | Smart & instant watch mode |
 | `-t, --testNamePattern <pattern>` | Run tests with full names matching the pattern |
 | `--dir <path>`| Base directory to scan for the test files |
-| `--ui` | Enable UI, you can use it in watch mode. |
+| `--ui` | Enable UI, the HTML reporter will be used run mode |
 | `--open` | Open the UI automatically if enabled (default: `true`) |
 | `--api [api]` | Serve API, available options: `--api.port <port>`, `--api.host [host]` and `--api.strictPort` |
 | `--threads` | Enable Threads (default: `true`) |
