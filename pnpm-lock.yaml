@@ -1260,9 +1260,11 @@ importers:
 
   test/vite-config:
     specifiers:
+      execa: ^6.1.0
       pathe: ^1.1.0
       vitest: workspace:*
     devDependencies:
+      execa: 6.1.0
       pathe: 1.1.0
       vitest: link:../../packages/vitest
 
