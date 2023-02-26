@@ -30,4 +30,5 @@ test('run mode with enable ui', async () => {
 
   expect(stdout).not.includes('UI started at')
   expect(stdout).includes('HTML  Report is generated')
+  expect(stdout).not.includes('API started at http')
 }, 60_000)

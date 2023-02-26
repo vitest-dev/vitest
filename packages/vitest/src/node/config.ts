@@ -26,7 +26,8 @@ export function resolveApiConfig<Options extends ApiConfig & UserConfig>(
 ): ApiConfig | undefined {
   let api: ApiConfig | undefined
 
-  if ((options.ui || options.browser) && !options.api)
+  const canUseUI = options.watch && options.ui
+  if ((canUseUI || options.browser) && !options.api)
     api = { port: defaultPort }
   else if (options.api === true)
     api = { port: defaultPort }
