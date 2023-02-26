@@ -210,6 +210,9 @@ export function resolveConfig(
   if (!resolved.reporters.length)
     resolved.reporters.push('default')
 
+  if (!options.watch && options.ui && !resolved.reporters.includes('html'))
+    resolved.reporters.push('html')
+
   if (resolved.changed)
     resolved.passWithNoTests ??= true
 
