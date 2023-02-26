@@ -111,7 +111,7 @@ export class Logger {
 
     if (this.ctx.config.browser)
       this.log(c.dim(c.green(`      Browser runner started at http://${this.ctx.config.api?.host || 'localhost'}:${c.bold(`${this.ctx.server.config.server.port}`)}`)))
-    else if (this.ctx.config.ui && this.ctx.config.watch)
+    else if (this.ctx.config.watch && this.ctx.config.ui)
       this.log(c.dim(c.green(`      UI started at http://${this.ctx.config.api?.host || 'localhost'}:${c.bold(`${this.ctx.server.config.server.port}`)}${this.ctx.config.uiBase}`)))
     else if (this.ctx.config.api)
       this.log(c.dim(c.green(`      API started at http://${this.ctx.config.api?.host || 'localhost'}:${c.bold(`${this.ctx.config.api.port}`)}`)))
