@@ -17,7 +17,7 @@ cli
   .option('-w, --watch', 'Enable watch mode')
   .option('-t, --testNamePattern <pattern>', 'Run tests with full names matching the specified regexp pattern')
   .option('--dir <path>', 'Base directory to scan for the test files')
-  .option('--ui', 'Enable UI, the HTML reporter will be used run mode')
+  .option('--ui', 'Enable UI, it will open in the browser in watch mode and use the default HTML reporter in run mode')
   .option('--open', 'Open UI automatically (default: !process.env.CI))')
   .option('--api [api]', 'Serve API, available options: --api.port <port>, --api.host [host] and --api.strictPort')
   .option('--threads', 'Enabled threads (default: true)')

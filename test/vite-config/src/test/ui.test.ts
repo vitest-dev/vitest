@@ -3,9 +3,9 @@ import { expect, test } from 'vitest'
 import { execa } from 'execa'
 
 const root = resolve(__dirname, '../../fixtures')
-
-test('run mode', async () => {
-  const { stdout } = await execa('npx', ['vitest', 'run'], {
+const skip = (process.platform === 'win32' || process.platform === 'darwin') && process.env.CI
+const runWithEnableUI = (isEnable: boolean) => {
+  return execa('npx', ['vitest', 'run', isEnable ? '--ui' : ''], {
     cwd: root,
     env: {
       ...process.env,
@@ -13,20 +13,17 @@ test('run mode', async () => {
       NO_COLOR: 'true',
     },
   })
+}
+
+test.skipIf(skip)('run mode', async () => {
+  const { stdout } = await runWithEnableUI(false)
 
   expect(stdout).not.includes('UI started at')
   expect(stdout).not.includes('HTML  Report is generated')
 }, 60_000)
 
-test('run mode with enable ui', async () => {
-  const { stdout } = await execa('npx', ['vitest', 'run', '--ui'], {
-    cwd: root,
-    env: {
-      ...process.env,
-      CI: 'true',
-      NO_COLOR: 'true',
-    },
-  })
+test.skipIf(skip)('run mode with enable ui', async () => {
+  const { stdout } = await runWithEnableUI(true)
 
   expect(stdout).not.includes('UI started at')
   expect(stdout).includes('HTML  Report is generated')
