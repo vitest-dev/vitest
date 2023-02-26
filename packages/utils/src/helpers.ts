@@ -11,6 +11,23 @@ export function slash(path: string) {
   return path.replace(/\\/g, '/')
 }
 
+// convert RegExp.toString to RegExp
+export function parseRegexp(input: string): RegExp {
+  // Parse input
+  const m = input.match(/(\/?)(.+)\1([a-z]*)/i)
+
+  // match nothing
+  if (!m)
+    return /$^/
+
+  // Invalid flags
+  if (m[3] && !/^(?!.*?(.).*?\1)[gmixXsuUAJ]+$/.test(m[3]))
+    return RegExp(input)
+
+  // Create the regular expression
+  return new RegExp(m[2], m[3])
+}
+
 export function toArray<T>(array?: Nullable<Arrayable<T>>): Array<T> {
   if (array === null || array === undefined)
     array = []

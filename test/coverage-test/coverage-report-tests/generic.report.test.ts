@@ -63,3 +63,20 @@ test('files should not contain a setup file', () => {
 
   expect(srcFiles).not.toContain('another-setup.ts.html')
 })
+
+test('thresholdAutoUpdate updates thresholds', async () => {
+  const configFilename = resolve('./vitest.config.ts')
+  const configContents = fs.readFileSync(configFilename, 'utf-8')
+
+  for (const threshold of ['functions', 'branches', 'lines', 'statements']) {
+    const match = configContents.match(new RegExp(`${threshold}: (?<coverage>[\\d|\\.]+)`))
+    const coverage = match?.groups?.coverage || '0'
+
+    // Configuration has fixed value of 1.01 set for each threshold
+    expect(parseInt(coverage)).toBeGreaterThan(1.01)
+  }
+
+  // Update thresholds back to fixed values
+  const updatedConfig = configContents.replace(/(branches|functions|lines|statements): ([\d|\.])+/g, '$1: 1.01')
+  fs.writeFileSync(configFilename, updatedConfig)
+})

@@ -21,6 +21,7 @@ cli
   .option('--open', 'Open UI automatically (default: !process.env.CI))')
   .option('--api [api]', 'Serve API, available options: --api.port <port>, --api.host [host] and --api.strictPort')
   .option('--threads', 'Enabled threads (default: true)')
+  .option('--single-thread', 'Run tests inside a single thread, requires --threads (default: false)')
   .option('--silent', 'Silent console output from tests')
   .option('--isolate', 'Isolate environment for each test file (default: true)')
   .option('--reporter <name>', 'Specify reporters')

@@ -186,6 +186,13 @@ export interface BaseCoverageOptions {
    * @default undefined
    */
   statements?: number
+
+  /**
+   * Update threshold values automatically when current coverage is higher than earlier thresholds
+   *
+   * @default false
+   */
+  thresholdAutoUpdate?: boolean
 }
 
 export interface CoverageIstanbulOptions extends BaseCoverageOptions {

@@ -25,6 +25,13 @@ export default defineConfig({
         ['lcov', {}],
         ['json', { file: 'custom-json-report-name.json' }],
       ],
+
+      // These will be updated by tests and reseted back by generic.report.test.ts
+      thresholdAutoUpdate: true,
+      functions: 1.01,
+      branches: 1.01,
+      lines: 1.01,
+      statements: 1.01,
     },
     setupFiles: [
       resolve(__dirname, './setup.ts'),

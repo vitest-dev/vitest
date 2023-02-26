@@ -1,9 +1,9 @@
-import { install } from 'source-map-support'
 import type { TransformResult } from 'vite'
-import type { RawSourceMap } from './types'
+import type { EncodedSourceMap } from '@jridgewell/trace-mapping'
+import { install } from './source-map-handler'
 
 interface InstallSourceMapSupportOptions {
-  getSourceMap: (source: string) => RawSourceMap | null | undefined
+  getSourceMap: (source: string) => EncodedSourceMap | null | undefined
 }
 
 let SOURCEMAPPING_URL = 'sourceMa'
@@ -31,7 +31,7 @@ export async function withInlineSourcemap(result: TransformResult) {
   return result
 }
 
-export function extractSourceMap(code: string): RawSourceMap | null {
+export function extractSourceMap(code: string): EncodedSourceMap | null {
   const mapString = code.match(VITE_NODE_SOURCEMAPPING_REGEXP)?.[1]
   if (mapString)
     return JSON.parse(Buffer.from(mapString, 'base64').toString('utf-8'))
@@ -40,8 +40,6 @@ export function extractSourceMap(code: string): RawSourceMap | null {
 
 export function installSourcemapsSupport(options: InstallSourceMapSupportOptions) {
   install({
-    environment: 'node',
-    handleUncaughtExceptions: false,
     retrieveSourceMap(source) {
       const map = options.getSourceMap(source)
       if (map) {

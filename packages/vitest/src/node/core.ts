@@ -12,7 +12,7 @@ import { deepMerge, hasFailed, noop, slash, toArray } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
 import { Typechecker } from '../typecheck/typechecker'
 import { createPool } from './pool'
-import type { WorkerPool } from './pool'
+import type { ProcessPool } from './pool'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
 import { StateManager } from './state'
 import { resolveConfig } from './config'
@@ -32,7 +32,7 @@ export class Vitest {
   reporters: Reporter[] = undefined!
   coverageProvider: CoverageProvider | null | undefined
   logger: Logger
-  pool: WorkerPool | undefined
+  pool: ProcessPool | undefined
   typechecker: Typechecker | undefined
 
   vitenode: ViteNodeServer = undefined!
@@ -62,6 +62,8 @@ export class Vitest {
     this.restartsCount += 1
     this.pool?.close()
     this.pool = undefined
+    this.coverageProvider = undefined
+    this.runningPromise = undefined
 
     const resolved = resolveConfig(this.mode, options, server.config)
 
@@ -110,8 +112,6 @@ export class Vitest {
       ? await createBenchmarkReporters(toArray(resolved.benchmark?.reporters), this.runner)
       : await createReporters(resolved.reporters, this.runner)
 
-    this.runningPromise = undefined
-
     this.cache.results.setConfig(resolved.root, resolved.cache)
     try {
       await this.cache.results.readFromCache()
@@ -155,8 +155,9 @@ export class Vitest {
   }
 
   async typecheck(filters: string[] = []) {
+    const { dir, root } = this.config
     const { include, exclude } = this.config.typecheck
-    const testsFilesList = await this.globFiles(filters, include, exclude)
+    const testsFilesList = this.filterFiles(await this.globFiles(include, exclude, dir || root), filters)
     const checker = new Typechecker(this, testsFilesList)
     this.typechecker = checker
     checker.onParseEnd(async ({ files, sourceErrors }) => {
@@ -606,32 +607,26 @@ export class Vitest {
     )))
   }
 
-  async globFiles(filters: string[], include: string[], exclude: string[]) {
+  async globFiles(include: string[], exclude: string[], cwd: string) {
     const globOptions: fg.Options = {
       absolute: true,
       dot: true,
-      cwd: this.config.dir || this.config.root,
+      cwd,
       ignore: exclude,
     }
 
-    let testFiles = await fg(include, globOptions)
-
-    if (filters.length && process.platform === 'win32')
-      filters = filters.map(f => toNamespacedPath(f))
-
-    if (filters.length)
-      testFiles = testFiles.filter(i => filters.some(f => i.includes(f)))
-
-    return testFiles
+    return fg(include, globOptions)
   }
 
-  async globTestFiles(filters: string[] = []) {
-    const { include, exclude, includeSource } = this.config
+  private _allTestsCache: string[] | null = null
 
-    const testFiles = await this.globFiles(filters, include, exclude)
+  async globAllTestFiles(config: ResolvedConfig, cwd: string) {
+    const { include, exclude, includeSource } = config
+
+    const testFiles = await this.globFiles(include, exclude, cwd)
 
     if (includeSource) {
-      const files = await this.globFiles(filters, includeSource, exclude)
+      const files = await this.globFiles(includeSource, exclude, cwd)
 
       await Promise.all(files.map(async (file) => {
         try {
@@ -645,7 +640,29 @@ export class Vitest {
       }))
     }
 
+    this._allTestsCache = testFiles
+
     return testFiles
+  }
+
+  filterFiles(testFiles: string[], filters: string[] = []) {
+    if (filters.length && process.platform === 'win32')
+      filters = filters.map(f => toNamespacedPath(f))
+
+    if (filters.length)
+      return testFiles.filter(i => filters.some(f => i.includes(f)))
+
+    return testFiles
+  }
+
+  async globTestFiles(filters: string[] = []) {
+    const { dir, root } = this.config
+
+    const testFiles = this._allTestsCache ?? await this.globAllTestFiles(this.config, dir || root)
+
+    this._allTestsCache = null
+
+    return this.filterFiles(testFiles, filters)
   }
 
   async isTargetFile(id: string, source?: string): Promise<boolean> {

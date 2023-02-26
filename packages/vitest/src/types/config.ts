@@ -1,4 +1,4 @@
-import type { AliasOptions, CommonServerOptions } from 'vite'
+import type { AliasOptions, CommonServerOptions, DepOptimizationConfig } from 'vite'
 import type { PrettyFormatOptions } from 'pretty-format'
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import type { BuiltinReporters } from '../node/reporters'
@@ -67,6 +67,12 @@ export interface InlineConfig {
    * Handling for dependencies inlining or externalizing
    */
   deps?: {
+    /**
+     * Enable dependency optimization. This can improve the performance of your tests.
+     */
+    experimentalOptimizer?: Omit<DepOptimizationConfig, 'disabled'> & {
+      enabled: boolean
+    }
     /**
      * Externalize means that Vite will bypass the package to native Node.
      *
@@ -302,6 +308,13 @@ export interface InlineConfig {
    * @default true
    */
   isolate?: boolean
+
+  /**
+   * Run tests inside a single thread.
+   *
+   * @default false
+   */
+  singleThread?: boolean
 
   /**
    * Coverage options
