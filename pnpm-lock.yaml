@@ -1276,6 +1276,18 @@ importers:
       vite-node: link:../../packages/vite-node
       vitest: link:../../packages/vitest
 
+  test/watch:
+    specifiers:
+      execa: ^7.0.0
+      strip-ansi: ^7.0.1
+      vite: ^4.0.0
+      vitest: workspace:*
+    devDependencies:
+      execa: 7.0.0
+      strip-ansi: 7.0.1
+      vite: 4.0.0
+      vitest: link:../../packages/vitest
+
   test/web-worker:
     specifiers:
       '@vitest/web-worker': workspace:*
