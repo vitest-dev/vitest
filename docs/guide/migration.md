@@ -31,6 +31,15 @@ For more details please refer to the [`vi.mock` api section](/api/vi#vi-mock).
 
 Unlike Jest, mocked modules in `<root>/__mocks__` are not loaded unless `vi.mock()` is called. If you need them to be mocked in every test, like in Jest, you can mock them inside [`setupFiles`](/config/#setupfiles).
 
+**Importing the original of a mocked package**
+
+If you are only partially mocking a package, you might have previously used Jest's function `requireActual`. In Vitest, you should replace these calls with `vi.importActual`.
+
+```diff
+- const { cloneDeep } = jest.requireActual('lodash/cloneDeep')
++ const { cloneDeep } = await vi.importActual('lodash/cloneDeep')
+```
+
 **Jasmine API**
 
 Jest exports various [`jasmine`](https://jasmine.github.io/) globals (such as `jasmine.any()`). Any such instances will need to be migrated to [their Vitest counterparts](/api/).
