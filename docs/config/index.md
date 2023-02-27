@@ -183,21 +183,21 @@ Path to a custom test runner. This is an advanced feature and should be used wit
 
 Options used when running `vitest bench`.
 
-### benchmark.include
+#### benchmark.include
 
 - **Type:** `string[]`
 - **Default:** `['**/*.{bench,benchmark}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']`
 
 Include globs for benchmark test files
 
-### benchmark.exclude
+#### benchmark.exclude
 
 - **Type:** `string[]`
 - **Default:** `['node_modules', 'dist', '.idea', '.git', '.cache']`
 
 Exclude globs for benchmark test files
 
-### benchmark.includeSource
+#### benchmark.includeSource
 
 - **Type:** `string[]`
 - **Default:** `[]`
@@ -206,14 +206,14 @@ Include globs for in-source benchmark test files. This option is similar to [`in
 
 When defined, Vitest will run all matched files with `import.meta.vitest` inside.
 
-### benchmark.reporters
+#### benchmark.reporters
 
 - **Type:** `Arrayable<BenchmarkBuiltinReporters | Reporter>`
 - **Default:** `'default'`
 
 Custom reporter for output. Can contain one or more built-in report names, reporter instances, and/or paths to custom reporters.
 
-### benchmark.outputFile
+#### benchmark.outputFile
 
 - **Type:** `string | Record<string, string>`
 
@@ -662,7 +662,7 @@ npx vitest --coverage.enabled --coverage.provider=istanbul --coverage.all
 If you are using coverage options with dot notation, don't forget to specify `--coverage.enabled`. Do not provide a single `--coverage` option in that case.
 :::
 
-#### provider
+#### coverage.provider
 
 - **Type:** `'c8' | 'istanbul' | 'custom'`
 - **Default:** `'c8'`
@@ -670,7 +670,7 @@ If you are using coverage options with dot notation, don't forget to specify `--
 
 Use `provider` to select the tool for coverage collection.
 
-#### enabled
+#### coverage.enabled
 
 - **Type:** `boolean`
 - **Default:** `false`
@@ -679,7 +679,7 @@ Use `provider` to select the tool for coverage collection.
 
 Enables coverage collection. Can be overridden using `--coverage` CLI option.
 
-#### include
+#### coverage.include
 
 - **Type:** `string[]`
 - **Default:** `['**']`
@@ -688,14 +688,14 @@ Enables coverage collection. Can be overridden using `--coverage` CLI option.
 
 List of files included in coverage as glob patterns
 
-#### extension
+#### coverage.extension
 
 - **Type:** `string | string[]`
 - **Default:** `['.js', '.cjs', '.mjs', '.ts', '.mts', '.cts', '.tsx', '.jsx', '.vue', '.svelte']`
 - **Available for providers:** `'c8' | 'istanbul'`
 - **CLI:** `--coverage.extension=<extension>`, `--coverage.extension=<extension1> --coverage.extension=<extension2>`
 
-#### exclude
+#### coverage.exclude
 
 - **Type:** `string[]`
 - **Default:**
@@ -720,7 +720,7 @@ List of files included in coverage as glob patterns
 
 List of files excluded from coverage as glob patterns.
 
-#### all
+#### coverage.all
 
 - **Type:** `boolean`
 - **Default:** `false`
@@ -729,7 +729,7 @@ List of files excluded from coverage as glob patterns.
 
 Whether to include all files, including the untested ones into report.
 
-#### clean
+#### coverage.clean
 
 - **Type:** `boolean`
 - **Default:** `true`
@@ -738,7 +738,7 @@ Whether to include all files, including the untested ones into report.
 
 Clean coverage results before running tests
 
-#### cleanOnRerun
+#### coverage.cleanOnRerun
 
 - **Type:** `boolean`
 - **Default:** `true`
@@ -747,7 +747,7 @@ Clean coverage results before running tests
 
 Clean coverage report on watch rerun
 
-#### reportsDirectory
+#### coverage.reportsDirectory
 
 - **Type:** `string`
 - **Default:** `'./coverage'`
@@ -756,7 +756,7 @@ Clean coverage report on watch rerun
 
 Directory to write coverage report to.
 
-#### reporter
+#### coverage.reporter
 
 - **Type:** `string | string[] | [string, {}][]`
 - **Default:** `['text', 'html', 'clover', 'json']`
@@ -781,7 +781,7 @@ The reporter has three different types:
   }
   ```
 
-#### skipFull
+#### coverage.skipFull
 
 - **Type:** `boolean`
 - **Default:** `false`
@@ -790,7 +790,7 @@ The reporter has three different types:
 
 Do not show files with 100% statement, branch, and function coverage.
 
-#### perFile
+#### coverage.perFile
 
 - **Type:** `boolean`
 - **Default:** `false`
@@ -800,7 +800,7 @@ Do not show files with 100% statement, branch, and function coverage.
 Check thresholds per file.
 See `lines`, `functions`, `branches` and `statements` for the actual thresholds.
 
-#### thresholdAutoUpdate
+#### coverage.thresholdAutoUpdate
 
 - **Type:** `boolean`
 - **Default:** `false`
@@ -810,7 +810,7 @@ See `lines`, `functions`, `branches` and `statements` for the actual thresholds.
 Update threshold values `lines`, `functions`, `branches` and `statements` to configuration file when current coverage is above the configured thresholds.
 This option helps to maintain thresholds when coverage is improved.
 
-#### lines
+#### coverage.lines
 
 - **Type:** `number`
 - **Available for providers:** `'c8' | 'istanbul'`
@@ -819,7 +819,7 @@ This option helps to maintain thresholds when coverage is improved.
 Threshold for lines.
 See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-thresholds) for more information.
 
-#### functions
+#### coverage.functions
 
 - **Type:** `number`
 - **Available for providers:** `'c8' | 'istanbul'`
@@ -828,7 +828,7 @@ See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-threshol
 Threshold for functions.
 See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-thresholds) for more information.
 
-#### branches
+#### coverage.branches
 
 - **Type:** `number`
 - **Available for providers:** `'c8' | 'istanbul'`
@@ -837,7 +837,7 @@ See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-threshol
 Threshold for branches.
 See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-thresholds) for more information.
 
-#### statements
+#### coverage.statements
 
 - **Type:** `number`
 - **Available for providers:** `'c8' | 'istanbul'`
@@ -846,7 +846,7 @@ See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-threshol
 Threshold for statements.
 See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-thresholds) for more information.
 
-#### allowExternal
+#### coverage.allowExternal
 
 - **Type:** `boolean`
 - **Default:** `false`
@@ -855,7 +855,7 @@ See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-threshol
 
 Allow files from outside of your cwd.
 
-#### excludeNodeModules
+#### coverage.excludeNodeModules
 
 - **Type:** `boolean`
 - **Default:** `true`
@@ -864,7 +864,7 @@ Allow files from outside of your cwd.
 
 Exclude coverage under `/node_modules/`.
 
-#### src
+#### coverage.src
 
 - **Type:** `string[]`
 - **Default:** `process.cwd()`
@@ -873,7 +873,7 @@ Exclude coverage under `/node_modules/`.
 
 Specifies the directories that are used when `--all` is enabled.
 
-#### 100
+#### coverage.100
 
 - **Type:** `boolean`
 - **Default:** `false`
@@ -882,7 +882,7 @@ Specifies the directories that are used when `--all` is enabled.
 
 Shortcut for `--check-coverage --lines 100 --functions 100 --branches 100 --statements 100`.
 
-#### ignoreClassMethods
+#### coverage.ignoreClassMethods
 
 - **Type:** `string[]`
 - **Default:** `[]`
@@ -892,7 +892,7 @@ Shortcut for `--check-coverage --lines 100 --functions 100 --branches 100 --stat
 Set to array of class method names to ignore for coverage.
 See [istanbul documentation](https://github.com/istanbuljs/nyc#ignoring-methods) for more information.
 
-#### watermarks
+#### coverage.watermarks
 
 - **Type:**
 <!-- eslint-skip -->
@@ -920,7 +920,7 @@ See [istanbul documentation](https://github.com/istanbuljs/nyc#ignoring-methods)
 
 Watermarks for statements, lines, branches and functions. See [istanbul documentation](https://github.com/istanbuljs/nyc#high-and-low-watermarks) for more information.
 
-#### customProviderModule
+#### coverage.customProviderModule
 
 - **Type:** `string`
 - **Available for providers:** `'custom'`
