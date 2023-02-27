@@ -103,7 +103,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       id: '',
       name,
       type: 'custom',
-      mode: self.only ? 'only' : self.skip ? 'skip' : self.todo ? 'todo' : 'run',
+      mode: self.only ? 'only' : self.skip ? 'skip' : self.todo ? 'todo' : self.repeats ? 'repeats' : 'run',
     }
     tasks.push(task)
     return task

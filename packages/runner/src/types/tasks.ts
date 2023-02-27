@@ -16,6 +16,7 @@ export interface TaskBase {
   result?: TaskResult
   retry?: number
   meta?: any
+  repeats?: number
 }
 
 export interface TaskCustom extends TaskBase {
@@ -35,6 +36,7 @@ export interface TaskResult {
   htmlError?: string
   hooks?: Partial<Record<keyof SuiteHooks, TaskState>>
   retryCount?: number
+  repeatCount?: number
 }
 
 export type TaskResultPack = [id: string, result: TaskResult | undefined]
@@ -161,7 +163,11 @@ export interface TestOptions {
    * @default 1
    */
   retry?: number
-
+  /**
+   * How many times the test will repeat.
+   *
+   * @default 5
+   */
   repeats?: number
 }
 
@@ -172,7 +178,7 @@ export type TestAPI<ExtraContext = {}> = ChainableTestAPI<ExtraContext> & {
 }
 
 type ChainableSuiteAPI<ExtraContext = {}> = ChainableFunction<
-  'concurrent' | 'only' | 'skip' | 'todo' | 'shuffle',
+  'concurrent' | 'only' | 'skip' | 'todo' | 'shuffle' | 'repeats',
   [name: string, factory?: SuiteFactory<ExtraContext>, options?: number | TestOptions],
   SuiteCollector<ExtraContext>,
   {

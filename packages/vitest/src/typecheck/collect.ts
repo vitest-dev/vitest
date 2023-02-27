@@ -83,7 +83,7 @@ export async function collectTests(ctx: Vitest, filepath: string): Promise<null 
       const { arguments: [{ value: message }] } = node as any
       const property = callee?.property?.name
       let mode = !property || property === name ? 'run' : property
-      if (!['run', 'skip', 'todo', 'only', 'skipIf', 'runIf'].includes(mode))
+      if (!['run', 'skip', 'todo', 'only', 'skipIf', 'runIf', 'repeats'].includes(mode))
         throw new Error(`${name}.${mode} syntax is not supported when testing types`)
       // cannot statically analyze, so we always skip it
       if (mode === 'skipIf' || mode === 'runIf')

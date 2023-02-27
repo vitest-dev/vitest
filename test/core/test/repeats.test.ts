@@ -2,7 +2,7 @@ import { afterAll, describe, expect, test } from 'vitest'
 
 const testNumbers: number[] = []
 
-describe('repeat tests', () => {
+describe('testing it/test', () => {
   const result = [1, 1, 1, 1, 1, 2, 2, 2]
   // repeats 5 times by default
   test.repeats('test 1', () => {
@@ -26,13 +26,13 @@ describe('repeat tests', () => {
 
 const describeNumbers: number[] = []
 
-describe.repeats('repeat tests', () => {
+describe.repeats('testing describe 1', () => {
   test('test 1', () => {
     describeNumbers.push(1)
   })
 })
 
-describe.repeats('repeat tests', () => {
+describe.repeats('testing describe 2', () => {
   test('test 2', () => {
     describeNumbers.push(2)
   })
