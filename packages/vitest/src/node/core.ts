@@ -136,6 +136,12 @@ export class Vitest {
     return deepMerge<ResolvedConfig>({
       ...this.config,
       reporters: [],
+      deps: {
+        ...this.config.deps,
+        experimentalOptimizer: {
+          enabled: this.config.deps?.experimentalOptimizer?.enabled ?? false,
+        },
+      },
       snapshotOptions: {
         ...this.config.snapshotOptions,
         resolveSnapshotPath: undefined,

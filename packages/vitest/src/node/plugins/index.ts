@@ -1,5 +1,8 @@
+import { builtinModules } from 'node:module'
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
-import { relative } from 'pathe'
+import { normalize, relative, resolve } from 'pathe'
+import { toArray } from '@vitest/utils'
+import { resolveModule } from 'local-pkg'
 import { configDefaults } from '../../defaults'
 import type { ResolvedConfig, UserConfig } from '../../types'
 import { deepMerge, notNullish, removeUndefinedValues } from '../../utils'
@@ -150,14 +153,24 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
             }
           }
           else {
-            const entries = await ctx.globAllTestFiles(preOptions as ResolvedConfig, preOptions.dir || getRoot())
+            const root = config.root || process.cwd()
+            const entries = await ctx.globAllTestFiles(preOptions as ResolvedConfig, preOptions.dir || root)
+            if (preOptions?.setupFiles) {
+              const setupFiles = toArray(preOptions.setupFiles).map((file: string) =>
+                normalize(
+                  resolveModule(file, { paths: [root] })
+                    ?? resolve(root, file),
+                ),
+              )
+              entries.push(...setupFiles)
+            }
             optimizeConfig.cacheDir = preOptions.cache?.dir ?? 'node_modules/.vitest'
             optimizeConfig.optimizeDeps = {
               ...viteConfig.optimizeDeps,
               ...optimizer,
               disabled: false,
               entries: [...(optimizer.entries || viteConfig.optimizeDeps?.entries || []), ...entries],
-              exclude: ['vitest', ...(optimizer.exclude || viteConfig.optimizeDeps?.exclude || [])],
+              exclude: ['vitest', ...builtinModules, ...(optimizer.exclude || viteConfig.optimizeDeps?.exclude || [])],
               include: (optimizer.include || viteConfig.optimizeDeps?.include || []).filter((n: string) => n !== 'vitest'),
             }
             // Vite throws an error that it cannot rename "deps_temp", but optimization still works
