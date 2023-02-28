@@ -33,6 +33,7 @@ export async function takeCoverage() {
 export function stopCoverage() {
   session.post('Profiler.stopPreciseCoverage')
   session.post('Profiler.disable')
+  session.disconnect()
 }
 
 function filterResult(coverage: Profiler.ScriptCoverage): boolean {

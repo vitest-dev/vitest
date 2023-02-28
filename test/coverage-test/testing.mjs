@@ -23,15 +23,19 @@ const configs = [
   }],
 ]
 
-for (const threads of [true, false]) {
-  for (const [directory, config] of configs) {
-    await startVitest('test', [directory], {
-      ...config,
-      update: UPDATE_SNAPSHOTS,
-      threads,
-    })
+for (const threads of [{ threads: true }, { threads: false }, { singleThread: true }]) {
+  for (const isolate of [true, false]) {
+    for (const [directory, config] of configs) {
+      await startVitest('test', [directory], {
+        name: `With settings: ${JSON.stringify({ ...threads, isolate, directory })}`,
+        ...config,
+        update: UPDATE_SNAPSHOTS,
+        ...threads,
+        isolate,
+      })
 
-    if (process.exitCode)
-      process.exit()
+      if (process.exitCode)
+        process.exit()
+    }
   }
 }
