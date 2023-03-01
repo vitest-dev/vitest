@@ -17,7 +17,7 @@ Both `c8` and `istanbul` support are optional. By default, `c8` will be used.
 You can select the coverage tool by setting `test.coverage.provider` to either `c8` or `istanbul`:
 
 ```ts
-// vite.config.ts
+// vitest.config.ts
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
