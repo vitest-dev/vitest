@@ -49,6 +49,10 @@ export default {
   '*.{js,ts}': 'vitest related --run',
 }
 ```
+
+### `vitest bench`
+
+Run only [benchmark](https://vitest.dev/guide/features.html#benchmarking-experimental) tests, which compare performance results.
 :::
 
 ## Options
