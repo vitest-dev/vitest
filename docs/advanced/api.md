@@ -44,7 +44,7 @@ const vitest = await createVitest('test', {
 
 You can merge Vitest config using [mergeConfig](https://vitejs.dev/guide/api-javascript.html#mergeconfig) function. It returns a new config object.
 
-```js
+```ts
 import { mergeConfig } from 'vitest/node'
 
 function mergeConfig(
