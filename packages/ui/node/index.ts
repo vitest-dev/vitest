@@ -1,4 +1,4 @@
-import { fileURLToPath } from 'url'
+import { fileURLToPath } from 'node:url'
 import { resolve } from 'pathe'
 import sirv from 'sirv'
 import type { Plugin } from 'vite'

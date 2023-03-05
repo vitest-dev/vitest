@@ -1,5 +1,5 @@
-import { fileURLToPath } from 'url'
-import fs from 'fs'
+import { fileURLToPath } from 'node:url'
+import fs from 'node:fs'
 import { resolve } from 'pathe'
 import fg from 'fast-glob'
 

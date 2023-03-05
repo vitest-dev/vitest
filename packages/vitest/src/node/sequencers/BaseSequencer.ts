@@ -1,4 +1,4 @@
-import { createHash } from 'crypto'
+import { createHash } from 'node:crypto'
 import { resolve } from 'pathe'
 import { slash } from 'vite-node/utils'
 import type { Vitest } from '../core'

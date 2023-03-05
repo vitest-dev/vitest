@@ -1,4 +1,4 @@
-import util from 'util'
+import util from 'node:util'
 // @ts-expect-error doesn't have types
 import loupeImport from 'loupe'
 

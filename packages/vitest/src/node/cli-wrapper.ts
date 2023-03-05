@@ -2,7 +2,7 @@
 /**
  * Wrapper of the CLI with child process to manage segfaults and retries.
  */
-import { fileURLToPath } from 'url'
+import { fileURLToPath } from 'node:url'
 import c from 'picocolors'
 import { execa } from 'execa'
 import { EXIT_CODE_RESTART } from '../constants'

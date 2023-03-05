@@ -1,5 +1,5 @@
-import { existsSync, promises as fs } from 'fs'
-import _url from 'url'
+import { existsSync, promises as fs } from 'node:fs'
+import _url from 'node:url'
 import type { Profiler } from 'inspector'
 import { extname, resolve } from 'pathe'
 import c from 'picocolors'
