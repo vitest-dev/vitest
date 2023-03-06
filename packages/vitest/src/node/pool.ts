@@ -37,7 +37,6 @@ export function createPool(ctx: Vitest): ProcessPool {
           suppressLoaderWarningsPath,
           '--experimental-loader',
           loaderPath,
-          ...execArgv,
         ]
       : [
           ...execArgv,
