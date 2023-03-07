@@ -1,5 +1,8 @@
+import { builtinModules } from 'node:module'
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
-import { relative } from 'pathe'
+import { normalize, relative, resolve } from 'pathe'
+import { toArray } from '@vitest/utils'
+import { resolveModule } from 'local-pkg'
 import { configDefaults } from '../../defaults'
 import type { ResolvedConfig, UserConfig } from '../../types'
 import { deepMerge, notNullish, removeUndefinedValues } from '../../utils'
@@ -14,6 +17,8 @@ import { CSSEnablerPlugin } from './cssEnabler'
 import { CoverageTransform } from './coverageTransform'
 
 export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('test')): Promise<VitePlugin[]> {
+  const userConfig = deepMerge({}, options) as UserConfig
+
   const getRoot = () => ctx.config?.root || options.root || process.cwd()
 
   async function UIPlugin() {
@@ -33,7 +38,13 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
       options() {
         this.meta.watchMode = false
       },
-      config(viteConfig: any) {
+      async config(viteConfig: any) {
+        if (options.watch) {
+          // Earlier runs have overwritten values of the `options`.
+          // Reset it back to initial user config before setting up the server again.
+          options = deepMerge({}, userConfig) as UserConfig
+        }
+
         // preliminary merge of options to be able to create server options for vite
         // however to allow vitest plugins to modify vitest config values
         // this is repeated in configResolved where the config is final
@@ -131,15 +142,47 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
         }
 
         if (!options.browser) {
-          // disable deps optimization
-          Object.assign(config, {
-            cacheDir: undefined,
-            optimizeDeps: {
+          const optimizeConfig: Partial<ViteConfig> = {}
+          const optimizer = preOptions.deps?.experimentalOptimizer
+          if (!optimizer?.enabled) {
+            optimizeConfig.cacheDir = undefined
+            optimizeConfig.optimizeDeps = {
               // experimental in Vite >2.9.2, entries remains to help with older versions
               disabled: true,
               entries: [],
-            },
-          })
+            }
+          }
+          else {
+            const root = config.root || process.cwd()
+            const entries = await ctx.globAllTestFiles(preOptions as ResolvedConfig, preOptions.dir || root)
+            if (preOptions?.setupFiles) {
+              const setupFiles = toArray(preOptions.setupFiles).map((file: string) =>
+                normalize(
+                  resolveModule(file, { paths: [root] })
+                    ?? resolve(root, file),
+                ),
+              )
+              entries.push(...setupFiles)
+            }
+            optimizeConfig.cacheDir = preOptions.cache?.dir ?? 'node_modules/.vitest'
+            optimizeConfig.optimizeDeps = {
+              ...viteConfig.optimizeDeps,
+              ...optimizer,
+              disabled: false,
+              entries: [...(optimizer.entries || viteConfig.optimizeDeps?.entries || []), ...entries],
+              exclude: ['vitest', ...builtinModules, ...(optimizer.exclude || viteConfig.optimizeDeps?.exclude || [])],
+              include: (optimizer.include || viteConfig.optimizeDeps?.include || []).filter((n: string) => n !== 'vitest'),
+            }
+            // Vite throws an error that it cannot rename "deps_temp", but optimization still works
+            // let's not show this error to users
+            const { error: logError } = console
+            console.error = (...args) => {
+              if (typeof args[0] === 'string' && args[0].includes('/deps_temp'))
+                return
+              return logError(...args)
+            }
+          }
+          Object.assign(config, optimizeConfig)
         }
 
         return config

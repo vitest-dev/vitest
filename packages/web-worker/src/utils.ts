@@ -30,7 +30,7 @@ function createClonedMessageEvent(data: any, transferOrOptions: StructuredSerial
     })
   }
   if (clone !== 'none') {
-    debug('create message event, using polifylled structured clone')
+    debug('create message event, using polyfilled structured clone')
     transfer?.length && console.warn(
       '[@vitest/web-worker] `structuredClone` is not supported in this environment. '
       + 'Falling back to polyfill, your transferable options will be lost. '
@@ -62,14 +62,14 @@ export function createMessageEvent(data: any, transferOrOptions: StructuredSeria
 }
 
 export function getRunnerOptions() {
-  const { config, rpc, mockMap, moduleCache } = getWorkerState()
+  const { config, ctx, rpc, mockMap, moduleCache } = getWorkerState()
 
   return {
     fetchModule(id: string) {
-      return rpc.fetch(id)
+      return rpc.fetch(id, ctx.environment.name)
     },
     resolveId(id: string, importer?: string) {
-      return rpc.resolveId(id, importer)
+      return rpc.resolveId(id, importer, ctx.environment.name)
     },
     moduleCache,
     mockMap,

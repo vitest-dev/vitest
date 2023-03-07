@@ -5,6 +5,7 @@ import { getBenchFn, getBenchOptions } from '../benchmark'
 import { getWorkerState } from '../../utils'
 import type { BenchTask, Benchmark, BenchmarkResult } from '../../types/benchmark'
 import type { ResolvedConfig } from '../../types/config'
+import type { VitestExecutor } from '../execute'
 
 async function importTinybench() {
   if (!globalThis.EventTarget)
@@ -121,12 +122,14 @@ async function runBenchmarkSuite(suite: Suite, runner: VitestRunner) {
 }
 
 export class NodeBenchmarkRunner implements VitestRunner {
+  private __vitest_executor!: VitestExecutor
+
   constructor(public config: ResolvedConfig) {}
 
   importFile(filepath: string, source: VitestRunnerImportSource): unknown {
     if (source === 'setup')
       getWorkerState().moduleCache.delete(filepath)
-    return import(filepath)
+    return this.__vitest_executor.executeId(filepath)
   }
 
   async runSuite(suite: Suite): Promise<void> {

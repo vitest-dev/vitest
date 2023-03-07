@@ -1,34 +1,71 @@
 import { importModule } from 'local-pkg'
 import type { CoverageOptions, CoverageProvider, CoverageProviderModule } from '../types'
 
-export const CoverageProviderMap = {
+interface Loader {
+  executeId: (id: string) => Promise<{ default: CoverageProviderModule }>
+}
+
+export const CoverageProviderMap: Record<string, string> = {
   c8: '@vitest/coverage-c8',
   istanbul: '@vitest/coverage-istanbul',
 }
 
-export async function resolveCoverageProvider(provider: NonNullable<CoverageOptions['provider']>) {
-  if (typeof provider === 'string') {
-    const pkg = CoverageProviderMap[provider]
-    if (!pkg)
-      throw new Error(`Unknown coverage provider: ${provider}`)
-    return await importModule<CoverageProviderModule>(pkg)
+async function resolveCoverageProviderModule(options: CoverageOptions | undefined, loader: Loader) {
+  if (!options?.enabled || !options.provider)
+    return null
+
+  const provider = options.provider
+
+  if (provider === 'c8' || provider === 'istanbul')
+    return await importModule<CoverageProviderModule>(CoverageProviderMap[provider])
+
+  let customProviderModule
+
+  try {
+    customProviderModule = await loader.executeId(options.customProviderModule)
   }
-  else {
-    return provider
+  catch (error) {
+    throw new Error(`Failed to load custom CoverageProviderModule from ${options.customProviderModule}`, { cause: error })
   }
+
+  if (customProviderModule.default == null)
+    throw new Error(`Custom CoverageProviderModule loaded from ${options.customProviderModule} was not the default export`)
+
+  return customProviderModule.default
 }
 
-export async function getCoverageProvider(options?: CoverageOptions): Promise<CoverageProvider | null> {
-  if (options?.enabled && options?.provider) {
-    const { getProvider } = await resolveCoverageProvider(options.provider)
-    return await getProvider()
-  }
+export async function getCoverageProvider(options: CoverageOptions | undefined, loader: Loader): Promise<CoverageProvider | null> {
+  const coverageModule = await resolveCoverageProviderModule(options, loader)
+
+  if (coverageModule)
+    return coverageModule.getProvider()
+
   return null
 }
 
-export async function takeCoverageInsideWorker(options: CoverageOptions) {
-  if (options.enabled && options.provider) {
-    const { takeCoverage } = await resolveCoverageProvider(options.provider)
-    return await takeCoverage?.()
-  }
+export async function startCoverageInsideWorker(options: CoverageOptions | undefined, loader: Loader) {
+  const coverageModule = await resolveCoverageProviderModule(options, loader)
+
+  if (coverageModule)
+    return coverageModule.startCoverage?.()
+
+  return null
+}
+
+export async function takeCoverageInsideWorker(options: CoverageOptions | undefined, loader: Loader) {
+  const coverageModule = await resolveCoverageProviderModule(options, loader)
+
+  if (coverageModule)
+    return coverageModule.takeCoverage?.()
+
+  return null
+}
+
+export async function stopCoverageInsideWorker(options: CoverageOptions | undefined, loader: Loader) {
+  const coverageModule = await resolveCoverageProviderModule(options, loader)
+
+  if (coverageModule)
+    return coverageModule.stopCoverage?.()
+
+  return null
 }

@@ -3,61 +3,39 @@ import { startVitest } from 'vitest/node'
 // Set this to true when intentionally updating the snapshots
 const UPDATE_SNAPSHOTS = false
 
-const provider = getArgument('--provider')
+const provider = process.argv[1 + process.argv.indexOf('--provider')]
 
 const configs = [
   // Run test cases. Generates coverage report.
   ['test/', {
     include: ['test/*.test.*'],
     exclude: ['coverage-report-tests/**/*'],
+    coverage: { enabled: true },
   }],
 
   // Run tests for checking coverage report contents.
   ['coverage-report-tests', {
     include: [
-      './coverage-report-tests/generic.report.test.ts',
+      ['c8', 'istanbul'].includes(provider) && './coverage-report-tests/generic.report.test.ts',
       `./coverage-report-tests/${provider}.report.test.ts`,
-    ],
+    ].filter(Boolean),
     coverage: { enabled: false, clean: false },
   }],
 ]
 
-runTests()
-
-async function runTests() {
-  for (const threads of [true, false]) {
+for (const threads of [{ threads: true }, { threads: false }, { singleThread: true }]) {
+  for (const isolate of [true, false]) {
     for (const [directory, config] of configs) {
       await startVitest('test', [directory], {
-        run: true,
-        update: UPDATE_SNAPSHOTS,
+        name: `With settings: ${JSON.stringify({ ...threads, isolate, directory })}`,
         ...config,
-        threads,
-        coverage: {
-          include: ['src/**'],
-          provider,
-          ...config.coverage,
-        },
+        update: UPDATE_SNAPSHOTS,
+        ...threads,
+        isolate,
       })
 
       if (process.exitCode)
         process.exit()
     }
   }
-
-  process.exit(0)
-}
-
-function getArgument(name) {
-  const args = process.argv
-  const index = args.indexOf(name)
-
-  if (index === -1)
-    throw new Error(`Missing argument ${name}, received ${args}`)
-
-  const value = args[index + 1]
-
-  if (!value)
-    throw new Error(`Missing value of ${name}, received ${args}`)
-
-  return value
 }

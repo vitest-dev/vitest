@@ -46,6 +46,7 @@ export interface SpyInstance<TArgs extends any[] = any[], TReturns = any> {
   getMockImplementation(): ((...args: TArgs) => TReturns) | undefined
   mockImplementation(fn: ((...args: TArgs) => TReturns) | (() => Promise<TReturns>)): this
   mockImplementationOnce(fn: ((...args: TArgs) => TReturns) | (() => Promise<TReturns>)): this
+  withImplementation<T>(fn: ((...args: TArgs) => TReturns), cb: () => T): T extends Promise<unknown> ? Promise<this> : this
   mockReturnThis(): this
   mockReturnValue(obj: TReturns): this
   mockReturnValueOnce(obj: TReturns): this
@@ -208,6 +209,7 @@ function enhanceSpy<TArgs extends any[], TReturns>(
   }
 
   let onceImplementations: ((...args: TArgs) => TReturns)[] = []
+  let implementationChangedTemporarily = false
 
   let name: string = (stub as any).name
 
@@ -248,6 +250,35 @@ function enhanceSpy<TArgs extends any[], TReturns>(
     return stub
   }
 
+  function withImplementation(fn: (...args: TArgs) => TReturns, cb: () => void): EnhancedSpy<TArgs, TReturns>
+  function withImplementation(fn: (...args: TArgs) => TReturns, cb: () => Promise<void>): Promise<EnhancedSpy<TArgs, TReturns>>
+  function withImplementation(fn: (...args: TArgs) => TReturns, cb: () => void | Promise<void>): EnhancedSpy<TArgs, TReturns> | Promise<EnhancedSpy<TArgs, TReturns>> {
+    const originalImplementation = implementation
+
+    implementation = fn
+    implementationChangedTemporarily = true
+
+    const reset = () => {
+      implementation = originalImplementation
+      implementationChangedTemporarily = false
+    }
+
+    const result = cb()
+
+    if (result instanceof Promise) {
+      return result.then(() => {
+        reset()
+        return stub
+      })
+    }
+
+    reset()
+
+    return stub
+  }
+
+  stub.withImplementation = withImplementation
+
   stub.mockReturnThis = () =>
     stub.mockImplementation(function (this: TReturns) {
       return this
@@ -275,7 +306,7 @@ function enhanceSpy<TArgs extends any[], TReturns>(
   stub.willCall(function (this: unknown, ...args) {
     instances.push(this)
     invocations.push(++callOrder)
-    const impl = onceImplementations.shift() || implementation || stub.getOriginal() || (() => {})
+    const impl = implementationChangedTemporarily ? implementation! : onceImplementations.shift() || implementation || stub.getOriginal() || (() => {})
     return impl.apply(this, args)
   })
 

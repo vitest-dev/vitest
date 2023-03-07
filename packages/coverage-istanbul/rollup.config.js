@@ -19,6 +19,7 @@ const external = [
   'vitest',
   'vitest/node',
   'vitest/config',
+  'vitest/coverage',
 ]
 
 const plugins = [

@@ -48,6 +48,32 @@ npx vite-node --options.deps.inline="module-name" --options.deps.external="/modu
 
 Note that for options supporting RegExps, strings passed to the CLI must start _and_ end with a `/`;
 
+### Hashbang
+
+If you prefer to write scripts that don't need to be passed into Vite Node, you can declare it in the [hashbang](https://bash.cyberciti.biz/guide/Shebang).
+
+Simply add `#!/usr/bin/env vite-node --script` at the top of your file:
+
+_file.ts_
+```ts
+#!/usr/bin/env vite-node --script
+
+console.log('argv:', process.argv.slice(2))
+```
+
+And make the file executable:
+```sh
+chmod +x ./file.ts
+```
+
+Now, you can run the file without passing it into Vite Node:
+```sh
+$ ./file.ts hello
+argv: [ 'hello' ]
+```
+
+Note that when using the `--script` option, Vite Node forwards every argument and option to the script to execute, even the one supported by Vite Node itself.
+
 ## Programmatic Usage
 
 In Vite Node, the server and runner (client) are separated, so you can integrate them in different contexts (workers, cross-process, or remote) if needed. The demo below shows a simple example of having both (server and runner) running in the same context

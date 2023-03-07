@@ -1,10 +1,10 @@
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
+import { createSimpleStackTrace } from '@vitest/utils'
 import { parseSingleStack } from '../utils/source-map'
 import type { VitestMocker } from '../runtime/mocker'
 import type { ResolvedConfig, RuntimeConfig } from '../types'
 import { getWorkerState, resetModules, waitForImportsToResolve } from '../utils'
 import type { MockFactoryWithHelper } from '../types/mocker'
-import { createSimpleStackTrace } from '../utils/error'
 import { FakeTimers } from './mock/timers'
 import type { EnhancedSpy, MaybeMocked, MaybeMockedDeep, MaybePartiallyMocked, MaybePartiallyMockedDeep } from './spy'
 import { fn, isMockFunction, spies, spyOn } from './spy'
@@ -21,11 +21,8 @@ class VitestUtils {
 
     if (!this._mocker) {
       const errorMsg = 'Vitest was initialized with native Node instead of Vite Node.'
-      + '\n\nOne of the following is possible:'
-      + '\n- "vitest" is imported outside of your tests (in that case, use "vitest/node" or import.meta.vitest)'
-      + '\n- "vitest" is imported inside "globalSetup" (use "setupFiles", because "globalSetup" runs in a different context)'
-      + '\n- Your dependency inside "node_modules" imports "vitest" directly (in that case, inline that dependency, using "deps.inline" config)'
-      + '\n- Otherwise, it might be a Vitest bug. Please report it to https://github.com/vitest-dev/vitest/issues\n'
+      + '\n\nIt\'s possible that you are importing "vitest" directly inside "globalSetup". In that case, use "setupFiles" because "globalSetup" runs in a different context.'
+      + '\nOtherwise, it might be a Vitest bug. Please report it to https://github.com/vitest-dev/vitest/issues\n'
       throw new Error(errorMsg)
     }
 
@@ -294,7 +291,7 @@ class VitestUtils {
   }
 
   /**
-   * Reset enviromental variables to the ones that were available before first `vi.stubEnv` was called.
+   * Reset environmental variables to the ones that were available before first `vi.stubEnv` was called.
    */
   public unstubAllEnvs() {
     this._stubsEnv.forEach((original, name) => {

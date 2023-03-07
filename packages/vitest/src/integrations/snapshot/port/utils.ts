@@ -13,14 +13,14 @@ import {
 } from 'pretty-format'
 import type { SnapshotData, SnapshotStateOptions } from '../../../types'
 import { isObject } from '../../../utils'
-import { getSnapshotEnironment } from '../env'
+import { getSnapshotEnvironment } from '../env'
 import { getSerializers } from './plugins'
 
 // TODO: rewrite and clean up
 
 export const SNAPSHOT_VERSION = '1'
 
-const writeSnapshotVersion = () => `// Vitest Snapshot v${SNAPSHOT_VERSION}`
+const writeSnapshotVersion = () => `// Vitest Snapshot v${SNAPSHOT_VERSION}, https://vitest.dev/guide/snapshot.html`
 
 export const testNameToKey = (testName: string, count: number): string =>
   `${testName} ${count}`
@@ -133,7 +133,7 @@ function printBacktickString(str: string): string {
 
 export async function ensureDirectoryExists(filePath: string) {
   try {
-    const environment = getSnapshotEnironment()
+    const environment = getSnapshotEnvironment()
     await environment.prepareDirectory(join(dirname(filePath)))
   }
   catch { }
@@ -147,7 +147,7 @@ export async function saveSnapshotFile(
   snapshotData: SnapshotData,
   snapshotPath: string,
 ) {
-  const environment = getSnapshotEnironment()
+  const environment = getSnapshotEnvironment()
   const snapshots = Object.keys(snapshotData)
     .sort(naturalCompare)
     .map(

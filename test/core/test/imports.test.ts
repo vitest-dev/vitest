@@ -37,20 +37,13 @@ test('dynamic absolute from root import works', async () => {
   expect(stringTimeoutMod).toBe(variableTimeoutMod)
 })
 
-test('dynamic absolute with extension mport works', async () => {
+test('dynamic absolute with extension import works', async () => {
   const stringTimeoutMod = await import('./../src/timeout')
 
   const timeoutPath = '/src/timeout.ts'
   const variableTimeoutMod = await import(timeoutPath)
 
   expect(stringTimeoutMod).toBe(variableTimeoutMod)
-})
-
-test('dynamic baseUrl import works', async () => {
-  const staticMod = await import('./../src/timeout')
-  // @ts-expect-error there is no tsconfig in test/core to handle baseUrl
-  const dynamicMod = await import('src/timeout')
-  expect(staticMod).toBe(dynamicMod)
 })
 
 test('data with dynamic import works', async () => {

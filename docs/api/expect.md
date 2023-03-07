@@ -474,6 +474,10 @@ type Awaitable<T> = T | PromiseLike<T>
     expect(invoice).toHaveProperty('items[0].type', 'apples')
     expect(invoice).toHaveProperty('items.0.type', 'apples') // dot notation also works
 
+    // Deep referencing using an array containing the keyPath
+    expect(invoice).toHaveProperty(['items', 0, 'type'], 'apples')
+    expect(invoice).toHaveProperty(['items', '0', 'type'], 'apples') // string notation also works
+
     // Wrap your key in an array to avoid the key from being parsed as a deep reference
     expect(invoice).toHaveProperty(['P.O'], '12345')
   })
@@ -1025,6 +1029,10 @@ type Awaitable<T> = T | PromiseLike<T>
     await doAsync(callback1, callback2)
   })
   ```
+  ::: warning
+  When using `assertions` with async concurrent tests, `expect` from the local [Test Context](/guide/test-context.md) must be used to ensure the right test is detected.
+  :::
+
 
 ## expect.hasAssertions
 

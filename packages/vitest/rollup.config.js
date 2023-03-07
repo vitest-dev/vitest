@@ -23,9 +23,11 @@ const entries = [
   'src/runners.ts',
   'src/environments.ts',
   'src/runtime/worker.ts',
+  'src/runtime/child.ts',
   'src/runtime/loader.ts',
   'src/runtime/entry.ts',
   'src/integrations/spy.ts',
+  'src/coverage.ts',
 ]
 
 const dtsEntries = [
@@ -36,6 +38,7 @@ const dtsEntries = [
   'src/runners.ts',
   'src/suite.ts',
   'src/config.ts',
+  'src/coverage.ts',
 ]
 
 const external = [
@@ -76,8 +79,6 @@ export default ({ watch }) => defineConfig([
         let id = chunkInfo.facadeModuleId || Object.keys(chunkInfo.modules).find(i => !i.includes('node_modules') && (i.includes('src/') || i.includes('src\\')))
         if (id) {
           id = normalize(id)
-          if (id.includes('runtime/runners'))
-            return 'runners-chunk.js'
           const parts = Array.from(
             new Set(relative(process.cwd(), id).split(/\//g)
               .map(i => i.replace(/\..*$/, ''))

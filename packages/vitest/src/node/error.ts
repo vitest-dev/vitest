@@ -6,7 +6,7 @@ import cliTruncate from 'cli-truncate'
 import { type DiffOptions, unifiedDiff } from '@vitest/utils/diff'
 import { stringify } from '@vitest/utils'
 import type { ErrorWithDiff, ParsedStack } from '../types'
-import { lineSplitRE, parseStacktrace, positionToOffset } from '../utils/source-map'
+import { lineSplitRE, parseErrorStacktrace, positionToOffset } from '../utils/source-map'
 import { F_POINTER } from '../utils/figures'
 import { TypeCheckError } from '../typecheck/typechecker'
 import type { Vitest } from './core'
@@ -38,7 +38,7 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
     } as any
   }
 
-  const stacks = parseStacktrace(e, fullStack)
+  const stacks = parseErrorStacktrace(e, fullStack)
 
   const nearest = error instanceof TypeCheckError
     ? error.stacks[0]
@@ -188,9 +188,6 @@ function printStack(
   errorProperties: Record<string, unknown>,
   onStack?: ((stack: ParsedStack) => void),
 ) {
-  if (!stack.length)
-    return
-
   const logger = ctx.logger
 
   for (const frame of stack) {
@@ -200,7 +197,8 @@ function printStack(
     logger.error(color(` ${c.dim(F_POINTER)} ${[frame.method, c.dim(`${path}:${frame.line}:${frame.column}`)].filter(Boolean).join(' ')}`))
     onStack?.(frame)
   }
-  logger.error()
+  if (stack.length)
+    logger.error()
   const hasProperties = Object.keys(errorProperties).length > 0
   if (hasProperties) {
     logger.error(c.red(c.dim(divider())))

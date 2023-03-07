@@ -6,7 +6,7 @@ import type { Task } from '@vitest/runner'
 import type { ErrorWithDiff } from '@vitest/runner/utils'
 import type { Vitest } from '../../node'
 import type { Reporter } from '../../types/reporter'
-import { parseStacktrace } from '../../utils/source-map'
+import { parseErrorStacktrace } from '../../utils/source-map'
 import { F_POINTER } from '../../utils/figures'
 import { getOutputFile } from '../../utils/config-helpers'
 import { IndentedLogger } from './renderers/indented-logger'
@@ -125,7 +125,7 @@ export class JUnitReporter implements Reporter {
     // Be sure to escape any XML in the error Details
     await this.baseLog(escapeXML(errorDetails))
 
-    const stack = parseStacktrace(error)
+    const stack = parseErrorStacktrace(error)
 
     // TODO: This is same as printStack but without colors. Find a way to reuse code.
     for (const frame of stack) {

@@ -244,7 +244,7 @@ export class Typechecker {
         this._onWatcherRerun?.()
         this._result.sourceErrors = []
         this._result.files = []
-        this._tests = null // test structure migh've changed
+        this._tests = null // test structure might've changed
         rerunTriggered = true
       }
       if (/Found \w+ errors*. Watching for/.test(output)) {
