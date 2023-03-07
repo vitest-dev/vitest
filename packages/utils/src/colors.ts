@@ -1,43 +1,52 @@
 import { SAFE_COLORS_SYMBOL } from './constants'
 
-type Colors = ReturnType<typeof createColors>
+const colorsMap = {
+  bold: ['\x1B[1m', '\x1B[22m', '\x1B[22m\x1B[1m'],
+  dim: ['\x1B[2m', '\x1B[22m', '\x1B[22m\x1B[2m'],
+  italic: ['\x1B[3m', '\x1B[23m'],
+  underline: ['\x1B[4m', '\x1B[24m'],
+  inverse: ['\x1B[7m', '\x1B[27m'],
+  hidden: ['\x1B[8m', '\x1B[28m'],
+  strikethrough: ['\x1B[9m', '\x1B[29m'],
+  black: ['\x1B[30m', '\x1B[39m'],
+  red: ['\x1B[31m', '\x1B[39m'],
+  green: ['\x1B[32m', '\x1B[39m'],
+  yellow: ['\x1B[33m', '\x1B[39m'],
+  blue: ['\x1B[34m', '\x1B[39m'],
+  magenta: ['\x1B[35m', '\x1B[39m'],
+  cyan: ['\x1B[36m', '\x1B[39m'],
+  white: ['\x1B[37m', '\x1B[39m'],
+  gray: ['\x1B[90m', '\x1B[39m'],
+  bgBlack: ['\x1B[40m', '\x1B[49m'],
+  bgRed: ['\x1B[41m', '\x1B[49m'],
+  bgGreen: ['\x1B[42m', '\x1B[49m'],
+  bgYellow: ['\x1B[43m', '\x1B[49m'],
+  bgBlue: ['\x1B[44m', '\x1B[49m'],
+  bgMagenta: ['\x1B[45m', '\x1B[49m'],
+  bgCyan: ['\x1B[46m', '\x1B[49m'],
+  bgWhite: ['\x1B[47m', '\x1B[49m'],
+} as const
 
-const colors = [
-  'reset',
-  'bold',
-  'dim',
-  'italic',
-  'underline',
-  'inverse',
-  'hidden',
-  'strikethrough',
-  'black',
-  'red',
-  'green',
-  'yellow',
-  'blue',
-  'magenta',
-  'cyan',
-  'white',
-  'gray',
-  'bgBlack',
-  'bgRed',
-  'bgGreen',
-  'bgYellow',
-  'bgBlue',
-  'bgMagenta',
-  'bgCyan',
-  'bgWhite',
-] as const
+type ColorName = keyof typeof colorsMap
+type ColorsMethods = {
+  [Key in ColorName]: (input: unknown) => string
+}
+
+type Colors = ColorsMethods & {
+  isColorSupported: boolean
+  reset: (input: unknown) => string
+}
+
+const colorsEntries = Object.entries(colorsMap)
 
 const string = (str: unknown) => String(str)
 string.open = ''
 string.close = ''
 
-const defaultColors = colors.reduce((acc, key) => {
-  acc[key] = string
+const defaultColors = colorsEntries.reduce((acc, [key]) => {
+  acc[key as ColorName] = string
   return acc
-}, {} as Colors)
+}, { isColorSupported: false } as Colors)
 
 export function getDefaultColors(): Colors {
   return { ...defaultColors }
@@ -47,7 +56,7 @@ export function getColors(): Colors {
   return (globalThis as any)[SAFE_COLORS_SYMBOL] || defaultColors
 }
 
-export function createColors(isTTY = false) {
+export function createColors(isTTY = false): Colors {
   const enabled = typeof process !== 'undefined'
     && !('NO_COLOR' in process.env || process.argv.includes('--no-color'))
     && !('GITHUB_ACTIONS' in process.env)
@@ -66,7 +75,7 @@ export function createColors(isTTY = false) {
 
   const formatter = (open: string, close: string, replace = open) => {
     const fn = (input: unknown) => {
-      const string = `${input}`
+      const string = String(input)
       const index = string.indexOf(close, open.length)
       return ~index
         ? open + replaceClose(string, close, replace, index) + close
@@ -78,34 +87,18 @@ export function createColors(isTTY = false) {
   }
 
   // based on "https://github.com/alexeyraspopov/picocolors", but browser-friendly
-  return {
+  const colorsObject = {
     isColorSupported: enabled,
     reset: enabled ? (s: string) => `\x1B[0m${s}\x1B[0m` : string,
-    bold: enabled ? formatter('\x1B[1m', '\x1B[22m', '\x1B[22m\x1B[1m') : string,
-    dim: enabled ? formatter('\x1B[2m', '\x1B[22m', '\x1B[22m\x1B[2m') : string,
-    italic: enabled ? formatter('\x1B[3m', '\x1B[23m') : string,
-    underline: enabled ? formatter('\x1B[4m', '\x1B[24m') : string,
-    inverse: enabled ? formatter('\x1B[7m', '\x1B[27m') : string,
-    hidden: enabled ? formatter('\x1B[8m', '\x1B[28m') : string,
-    strikethrough: enabled ? formatter('\x1B[9m', '\x1B[29m') : string,
-    black: enabled ? formatter('\x1B[30m', '\x1B[39m') : string,
-    red: enabled ? formatter('\x1B[31m', '\x1B[39m') : string,
-    green: enabled ? formatter('\x1B[32m', '\x1B[39m') : string,
-    yellow: enabled ? formatter('\x1B[33m', '\x1B[39m') : string,
-    blue: enabled ? formatter('\x1B[34m', '\x1B[39m') : string,
-    magenta: enabled ? formatter('\x1B[35m', '\x1B[39m') : string,
-    cyan: enabled ? formatter('\x1B[36m', '\x1B[39m') : string,
-    white: enabled ? formatter('\x1B[37m', '\x1B[39m') : string,
-    gray: enabled ? formatter('\x1B[90m', '\x1B[39m') : string,
-    bgBlack: enabled ? formatter('\x1B[40m', '\x1B[49m') : string,
-    bgRed: enabled ? formatter('\x1B[41m', '\x1B[49m') : string,
-    bgGreen: enabled ? formatter('\x1B[42m', '\x1B[49m') : string,
-    bgYellow: enabled ? formatter('\x1B[43m', '\x1B[49m') : string,
-    bgBlue: enabled ? formatter('\x1B[44m', '\x1B[49m') : string,
-    bgMagenta: enabled ? formatter('\x1B[45m', '\x1B[49m') : string,
-    bgCyan: enabled ? formatter('\x1B[46m', '\x1B[49m') : string,
-    bgWhite: enabled ? formatter('\x1B[47m', '\x1B[49m') : string,
+  } as Colors
+
+  for (const [name, formatterArgs] of colorsEntries) {
+    colorsObject[name as ColorName] = enabled
+      ? formatter(...formatterArgs as [string, string])
+      : string
   }
+
+  return colorsObject
 }
 
 export function setupColors(colors: Colors) {
