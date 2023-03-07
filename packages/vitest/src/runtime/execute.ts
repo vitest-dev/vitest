@@ -1,11 +1,16 @@
-import { ViteNodeRunner } from 'vite-node/client'
-import { isInternalRequest } from 'vite-node/utils'
+import { pathToFileURL } from 'node:url'
+import { ModuleCacheMap, ViteNodeRunner } from 'vite-node/client'
+import { isInternalRequest, isPrimitive } from 'vite-node/utils'
 import type { ViteNodeRunnerOptions } from 'vite-node'
-import { normalize } from 'pathe'
+import { normalize, relative, resolve } from 'pathe'
 import { isNodeBuiltin } from 'mlly'
+import { processError } from '@vitest/runner/utils'
 import type { MockMap } from '../types/mocker'
 import { getCurrentEnvironment, getWorkerState } from '../utils/global'
+import type { ContextRPC, ContextTestEnvironment, ResolvedConfig } from '../types'
+import { distDir } from '../constants'
 import { VitestMocker } from './mocker'
+import { rpc } from './rpc'
 
 export interface ExecuteOptions extends ViteNodeRunnerOptions {
   mockMap: MockMap
@@ -17,6 +22,62 @@ export async function createVitestExecutor(options: ExecuteOptions) {
   await runner.executeId('/@vite/env')
 
   return runner
+}
+
+let _viteNode: {
+  run: (files: string[], config: ResolvedConfig, environment: ContextTestEnvironment, executor: VitestExecutor) => Promise<void>
+  executor: VitestExecutor
+}
+
+export const moduleCache = new ModuleCacheMap()
+export const mockMap: MockMap = new Map()
+
+export async function startViteNode(ctx: ContextRPC) {
+  if (_viteNode)
+    return _viteNode
+
+  const { config } = ctx
+
+  const processExit = process.exit
+
+  process.exit = (code = process.exitCode || 0): never => {
+    const error = new Error(`process.exit called with "${code}"`)
+    rpc().onWorkerExit(error, code)
+    return processExit(code)
+  }
+
+  function catchError(err: unknown, type: string) {
+    const worker = getWorkerState()
+    const error = processError(err)
+    if (worker.filepath && !isPrimitive(error)) {
+      error.VITEST_TEST_NAME = worker.current?.name
+      error.VITEST_TEST_PATH = relative(config.root, worker.filepath)
+    }
+    rpc().onUnhandledError(error, type)
+  }
+
+  process.on('uncaughtException', e => catchError(e, 'Uncaught Exception'))
+  process.on('unhandledRejection', e => catchError(e, 'Unhandled Rejection'))
+
+  const executor = await createVitestExecutor({
+    fetchModule(id) {
+      return rpc().fetch(id, ctx.environment.name)
+    },
+    resolveId(id, importer) {
+      return rpc().resolveId(id, importer, ctx.environment.name)
+    },
+    moduleCache,
+    mockMap,
+    interopDefault: config.deps.interopDefault,
+    root: config.root,
+    base: config.base,
+  })
+
+  const { run } = await import(pathToFileURL(resolve(distDir, 'entry.js')).href)
+
+  _viteNode = { run, executor }
+
+  return _viteNode
 }
 
 export class VitestExecutor extends ViteNodeRunner {
@@ -43,10 +104,10 @@ export class VitestExecutor extends ViteNodeRunner {
     return environment === 'node' ? !isNodeBuiltin(id) : !id.startsWith('node:')
   }
 
-  async resolveUrl(id: string, importee?: string) {
-    if (importee && importee.startsWith('mock:'))
-      importee = importee.slice(5)
-    return super.resolveUrl(id, importee)
+  async resolveUrl(id: string, importer?: string) {
+    if (importer && importer.startsWith('mock:'))
+      importer = importer.slice(5)
+    return super.resolveUrl(id, importer)
   }
 
   async dependencyRequest(id: string, fsPath: string, callstack: string[]): Promise<any> {

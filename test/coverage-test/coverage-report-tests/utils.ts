@@ -1,3 +1,4 @@
+import { readFileSync } from 'fs'
 import { normalize } from 'pathe'
 
 interface CoverageFinalJson {
@@ -17,8 +18,7 @@ interface CoverageFinalJson {
  * Normalizes paths to keep contents consistent between OS's
  */
 export async function readCoverageJson() {
-  // @ts-expect-error -- generated file
-  const { default: jsonReport } = await import('./coverage/coverage-final.json') as CoverageFinalJson
+  const jsonReport = JSON.parse(readFileSync('./coverage/custom-json-report-name.json', 'utf8')) as CoverageFinalJson
 
   const normalizedReport: CoverageFinalJson['default'] = {}
 
@@ -30,6 +30,6 @@ export async function readCoverageJson() {
   return normalizedReport
 }
 
-function normalizeFilename(filename: string) {
+export function normalizeFilename(filename: string) {
   return normalize(filename).replace(normalize(process.cwd()), '<process-cwd>')
 }

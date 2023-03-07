@@ -60,6 +60,12 @@ export class VitestMocker {
     return this.executor.moduleCache
   }
 
+  private deleteCachedItem(id: string) {
+    const mockId = this.getMockPath(id)
+    if (this.moduleCache.has(mockId))
+      this.moduleCache.delete(mockId)
+  }
+
   public getSuiteFilepath(): string {
     return getWorkerState().filepath || 'global'
   }
@@ -110,7 +116,7 @@ export class VitestMocker {
     }
     catch (err) {
       const vitestError = new Error(
-        '[vitest] There was an error, when mocking a module. '
+        '[vitest] There was an error when mocking a module. '
       + 'If you are using "vi.mock" factory, make sure there are no top level variables inside, since this call is hoisted to top of the file. '
       + 'Read more: https://vitest.dev/api/#vi-mock')
       vitestError.cause = err
@@ -133,6 +139,8 @@ export class VitestMocker {
             return target.then.bind(target)
         }
         else if (!(prop in target)) {
+          if (prop === '__esModule')
+            return undefined
           const c = getColors()
           throw new Error(
             `[vitest] No "${String(prop)}" export is defined on the "${mockpath}" mock. `
@@ -290,9 +298,7 @@ export class VitestMocker {
     if (mock && id in mock)
       delete mock[id]
 
-    const mockId = this.getMockPath(id)
-    if (this.moduleCache.get(mockId))
-      this.moduleCache.delete(mockId)
+    this.deleteCachedItem(id)
   }
 
   public mockPath(originalId: string, path: string, external: string | null, factory?: MockFactory) {
@@ -307,6 +313,7 @@ export class VitestMocker {
 
     this.mockMap.set(suitefile, mocks)
     this.resolveCache.set(suitefile, resolves)
+    this.deleteCachedItem(id)
   }
 
   public async importActual<T>(rawId: string, importee: string): Promise<T> {

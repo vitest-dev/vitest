@@ -1,4 +1,4 @@
-import type { Arrayable, DeepMerge, Nullable } from '../types'
+import type { Arrayable, DeepMerge, Nullable, ResolvedConfig, VitestEnvironment } from '../types'
 
 function isFinalObj(obj: any) {
   return obj === Object.prototype || obj === Function.prototype || obj === RegExp.prototype
@@ -8,6 +8,15 @@ function collectOwnProperties(obj: any, collector: Set<string | symbol> | ((key:
   const collect = typeof collector === 'function' ? collector : (key: string | symbol) => collector.add(key)
   Object.getOwnPropertyNames(obj).forEach(collect)
   Object.getOwnPropertySymbols(obj).forEach(collect)
+}
+
+export function groupBy<T, K extends string | number | symbol>(collection: T[], iteratee: (item: T) => K) {
+  return collection.reduce((acc, item) => {
+    const key = iteratee(item)
+    acc[key] ||= []
+    acc[key].push(item)
+    return acc
+  }, {} as Record<K, T[]>)
 }
 
 export function getAllMockableProperties(obj: any, isModule: boolean) {
@@ -113,4 +122,10 @@ export function stdout(): NodeJS.WriteStream {
   // @ts-expect-error Node.js maps process.stdout to console._stdout
   // eslint-disable-next-line no-console
   return console._stdout || process.stdout
+}
+
+export function getEnvironmentTransformMode(config: ResolvedConfig, environment: VitestEnvironment) {
+  if (!config.deps?.experimentalOptimizer?.enabled)
+    return undefined
+  return environment === 'happy-dom' || environment === 'jsdom' ? 'web' : 'ssr'
 }

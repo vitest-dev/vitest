@@ -91,6 +91,28 @@ Files to exclude from the test run, using glob pattern.
 
 Handling for dependencies resolution.
 
+#### deps.experimentalOptimizer
+
+- **Type:** `DepOptimizationConfig & { enabled: boolean }`
+- **Version:** Vitets 0.29.0
+- **See also:** [Dep Optimization Options](https://vitejs.dev/config/dep-optimization-options.html)
+
+Enable dependency optimization. If you have a lot of tests, this might improve their performance.
+
+For `jsdom` and `happy-dom` environments, when Vitest will encounter the external library, it will be bundled into a single file using esbuild and imported as a whole module. This is good for several reasons:
+
+- Importing packages with a lot of imports is expensive. By bundling them into one file we can save a lot of time
+- Importing UI libraries is expensive because they are not meant to run inside Node.js
+- Your `alias` configuration is now respected inside bundled packages
+
+You can opt-out of this behavior for certain packages with `exclude` option. You can read more about available options in [Vite](https://vitejs.dev/config/dep-optimization-options.html) docs.
+
+This options also inherits your `optimizeDeps` configuration. If you redefine `include`/`exclude`/`entries` option in `deps.experimentalOptimizer` it will overwrite your `optimizeDeps` when running tests.
+
+::: tip
+You will not be able to edit your `node_modules` code for debugging, since the code is actually located in your `cacheDir` or `test.cache.dir` directory. If you want to debug with `console.log` statements, edit it directly or force rebundling with `deps.experimentalOptimizer.force` option.
+:::
+
 #### deps.external
 
 - **Type:** `(string | RegExp)[]`
@@ -161,21 +183,21 @@ Path to a custom test runner. This is an advanced feature and should be used wit
 
 Options used when running `vitest bench`.
 
-### benchmark.include
+#### benchmark.include
 
 - **Type:** `string[]`
 - **Default:** `['**/*.{bench,benchmark}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']`
 
 Include globs for benchmark test files
 
-### benchmark.exclude
+#### benchmark.exclude
 
 - **Type:** `string[]`
 - **Default:** `['node_modules', 'dist', '.idea', '.git', '.cache']`
 
 Exclude globs for benchmark test files
 
-### benchmark.includeSource
+#### benchmark.includeSource
 
 - **Type:** `string[]`
 - **Default:** `[]`
@@ -184,14 +206,14 @@ Include globs for in-source benchmark test files. This option is similar to [`in
 
 When defined, Vitest will run all matched files with `import.meta.vitest` inside.
 
-### benchmark.reporters
+#### benchmark.reporters
 
 - **Type:** `Arrayable<BenchmarkBuiltinReporters | Reporter>`
 - **Default:** `'default'`
 
 Custom reporter for output. Can contain one or more built-in report names, reporter instances, and/or paths to custom reporters.
 
-### benchmark.outputFile
+#### benchmark.outputFile
 
 - **Type:** `string | Record<string, string>`
 
@@ -467,10 +489,21 @@ By providing an object instead of a string you can define individual outputs whe
 - **Default:** `true`
 - **CLI:** `--threads`, `--threads=false`
 
-Enable multi-threading using [tinypool](https://github.com/tinylibs/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina))
+Enable multi-threading using [tinypool](https://github.com/tinylibs/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina)). Prior to Vitest 0.29.0, Vitest was still running tests inside worker thread, even if this option was disabled. Since 0.29.0, if this option is disabled, Vitest uses `child_process` to spawn a process to run tests inside, meaning you can use `process.chdir` and other API that was not available inside workers. If you want to revert to the previous behaviour, use `--single-thread` option instead.
+
+Disabling this option also disables module isolation, meaning all tests with the same environment are running inside a single child process.
+
+### singleThread
+
+- **Type:** `boolean`
+- **Default:** `false`
+- **Version:** Since Vitest 0.29.0
+
+Run all tests with the same environment inside a single worker thread. This will disable built-in module isolation (your source code or [inlined](#deps-inline) code will still be reevaluated for each test), but can improve test performance. Before Vitest 0.29.0 this was equivalent to using `--no-threads`.
+
 
 :::warning
-This option is different from Jest's `--runInBand`. Vitest uses workers not only for running tests in parallel, but also to provide isolation. By disabling this option, your tests will run sequentially, but in the same global context, so you must provide isolation yourself.
+Even though this option will force tests to run one after another, this option is different from Jest's `--runInBand`. Vitest uses workers not only for running tests in parallel, but also to provide isolation. By disabling this option, your tests will run sequentially, but in the same global context, so you must provide isolation yourself.
 
 This might cause all sorts of issues, if you are relying on global state (frontend frameworks usually do) or your code relies on environment to be defined separately for each test. But can be a speed boost for your tests (up to 3 times faster), that don't necessarily rely on global state or can easily bypass that.
 :::
@@ -617,7 +650,7 @@ Isolate environment for each test file. Does not work if you disable [`--threads
 
 ### coverage
 
-You can use [`c8`](https://github.com/bcoe/c8) or [`istanbul`](https://istanbul.js.org/) for coverage collection.
+You can use [`c8`](https://github.com/bcoe/c8), [`istanbul`](https://istanbul.js.org/)  or [a custom coverage solution](/guide/coverage#custom-coverage-provider) for coverage collection.
 
 You can provide coverage options to CLI with dot notation:
 
@@ -629,15 +662,15 @@ npx vitest --coverage.enabled --coverage.provider=istanbul --coverage.all
 If you are using coverage options with dot notation, don't forget to specify `--coverage.enabled`. Do not provide a single `--coverage` option in that case.
 :::
 
-#### provider
+#### coverage.provider
 
-- **Type:** `'c8' | 'istanbul'`
+- **Type:** `'c8' | 'istanbul' | 'custom'`
 - **Default:** `'c8'`
 - **CLI:** `--coverage.provider=<provider>`
 
 Use `provider` to select the tool for coverage collection.
 
-#### enabled
+#### coverage.enabled
 
 - **Type:** `boolean`
 - **Default:** `false`
@@ -646,7 +679,7 @@ Use `provider` to select the tool for coverage collection.
 
 Enables coverage collection. Can be overridden using `--coverage` CLI option.
 
-#### include
+#### coverage.include
 
 - **Type:** `string[]`
 - **Default:** `['**']`
@@ -655,14 +688,14 @@ Enables coverage collection. Can be overridden using `--coverage` CLI option.
 
 List of files included in coverage as glob patterns
 
-#### extension
+#### coverage.extension
 
 - **Type:** `string | string[]`
 - **Default:** `['.js', '.cjs', '.mjs', '.ts', '.mts', '.cts', '.tsx', '.jsx', '.vue', '.svelte']`
 - **Available for providers:** `'c8' | 'istanbul'`
 - **CLI:** `--coverage.extension=<extension>`, `--coverage.extension=<extension1> --coverage.extension=<extension2>`
 
-#### exclude
+#### coverage.exclude
 
 - **Type:** `string[]`
 - **Default:**
@@ -687,7 +720,7 @@ List of files included in coverage as glob patterns
 
 List of files excluded from coverage as glob patterns.
 
-#### all
+#### coverage.all
 
 - **Type:** `boolean`
 - **Default:** `false`
@@ -696,7 +729,7 @@ List of files excluded from coverage as glob patterns.
 
 Whether to include all files, including the untested ones into report.
 
-#### clean
+#### coverage.clean
 
 - **Type:** `boolean`
 - **Default:** `true`
@@ -705,7 +738,7 @@ Whether to include all files, including the untested ones into report.
 
 Clean coverage results before running tests
 
-#### cleanOnRerun
+#### coverage.cleanOnRerun
 
 - **Type:** `boolean`
 - **Default:** `true`
@@ -714,7 +747,7 @@ Clean coverage results before running tests
 
 Clean coverage report on watch rerun
 
-#### reportsDirectory
+#### coverage.reportsDirectory
 
 - **Type:** `string`
 - **Default:** `'./coverage'`
@@ -722,19 +755,33 @@ Clean coverage report on watch rerun
 - **CLI:** `--coverage.reportsDirectory=<path>`
 
 Directory to write coverage report to.
-When using `c8` provider a temporary `/tmp` directory is created for [V8 coverage results](https://nodejs.org/api/cli.html#coverage-output).
 
-#### reporter
+#### coverage.reporter
 
-- **Type:** `string | string[]`
+- **Type:** `string | string[] | [string, {}][]`
 - **Default:** `['text', 'html', 'clover', 'json']`
 - **Available for providers:** `'c8' | 'istanbul'`
 - **CLI:** `--coverage.reporter=<reporter>`, `--coverage.reporter=<reporter1> --coverage.reporter=<reporter2>`
 
-Coverage reporters to use. See [istanbul documentation](https://istanbul.js.org/docs/advanced/alternative-reporters/) for detailed list of all reporters.
+Coverage reporters to use. See [istanbul documentation](https://istanbul.js.org/docs/advanced/alternative-reporters/) for detailed list of all reporters. See [`@types/istanbul-reporter`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/276d95e4304b3670eaf6e8e5a7ea9e265a14e338/types/istanbul-reports/index.d.ts) for details about reporter specific options.
 
+The reporter has three different types:
 
-#### skipFull
+- A single reporter: `{ reporter: 'html' }`
+- Multiple reporters without options: `{ reporter: ['html', 'json'] }`
+- A single or multiple reporters with reporter options:
+  <!-- eslint-skip -->
+  ```ts
+  {
+    reporter: [
+      ['lcov', { 'projectRoot': './src' }],
+      ['json', { 'file': 'coverage.json' }],
+      ['text']
+    ]
+  }
+  ```
+
+#### coverage.skipFull
 
 - **Type:** `boolean`
 - **Default:** `false`
@@ -743,7 +790,7 @@ Coverage reporters to use. See [istanbul documentation](https://istanbul.js.org/
 
 Do not show files with 100% statement, branch, and function coverage.
 
-#### perFile
+#### coverage.perFile
 
 - **Type:** `boolean`
 - **Default:** `false`
@@ -753,7 +800,17 @@ Do not show files with 100% statement, branch, and function coverage.
 Check thresholds per file.
 See `lines`, `functions`, `branches` and `statements` for the actual thresholds.
 
-#### lines
+#### coverage.thresholdAutoUpdate
+
+- **Type:** `boolean`
+- **Default:** `false`
+- **Available for providers:** `'c8' | 'istanbul'`
+- **CLI:** `--coverage.thresholdAutoUpdate=<boolean>`
+
+Update threshold values `lines`, `functions`, `branches` and `statements` to configuration file when current coverage is above the configured thresholds.
+This option helps to maintain thresholds when coverage is improved.
+
+#### coverage.lines
 
 - **Type:** `number`
 - **Available for providers:** `'c8' | 'istanbul'`
@@ -762,7 +819,7 @@ See `lines`, `functions`, `branches` and `statements` for the actual thresholds.
 Threshold for lines.
 See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-thresholds) for more information.
 
-#### functions
+#### coverage.functions
 
 - **Type:** `number`
 - **Available for providers:** `'c8' | 'istanbul'`
@@ -771,7 +828,7 @@ See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-threshol
 Threshold for functions.
 See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-thresholds) for more information.
 
-#### branches
+#### coverage.branches
 
 - **Type:** `number`
 - **Available for providers:** `'c8' | 'istanbul'`
@@ -780,7 +837,7 @@ See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-threshol
 Threshold for branches.
 See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-thresholds) for more information.
 
-#### statements
+#### coverage.statements
 
 - **Type:** `number`
 - **Available for providers:** `'c8' | 'istanbul'`
@@ -789,7 +846,7 @@ See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-threshol
 Threshold for statements.
 See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-thresholds) for more information.
 
-#### allowExternal
+#### coverage.allowExternal
 
 - **Type:** `boolean`
 - **Default:** `false`
@@ -798,7 +855,7 @@ See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-threshol
 
 Allow files from outside of your cwd.
 
-#### excludeNodeModules
+#### coverage.excludeNodeModules
 
 - **Type:** `boolean`
 - **Default:** `true`
@@ -807,7 +864,7 @@ Allow files from outside of your cwd.
 
 Exclude coverage under `/node_modules/`.
 
-#### src
+#### coverage.src
 
 - **Type:** `string[]`
 - **Default:** `process.cwd()`
@@ -816,7 +873,7 @@ Exclude coverage under `/node_modules/`.
 
 Specifies the directories that are used when `--all` is enabled.
 
-#### 100
+#### coverage.100
 
 - **Type:** `boolean`
 - **Default:** `false`
@@ -825,7 +882,7 @@ Specifies the directories that are used when `--all` is enabled.
 
 Shortcut for `--check-coverage --lines 100 --functions 100 --branches 100 --statements 100`.
 
-#### ignoreClassMethods
+#### coverage.ignoreClassMethods
 
 - **Type:** `string[]`
 - **Default:** `[]`
@@ -835,7 +892,7 @@ Shortcut for `--check-coverage --lines 100 --functions 100 --branches 100 --stat
 Set to array of class method names to ignore for coverage.
 See [istanbul documentation](https://github.com/istanbuljs/nyc#ignoring-methods) for more information.
 
-#### watermarks
+#### coverage.watermarks
 
 - **Type:**
 <!-- eslint-skip -->
@@ -862,6 +919,14 @@ See [istanbul documentation](https://github.com/istanbuljs/nyc#ignoring-methods)
 - **Available for providers:** `'istanbul'`
 
 Watermarks for statements, lines, branches and functions. See [istanbul documentation](https://github.com/istanbuljs/nyc#high-and-low-watermarks) for more information.
+
+#### coverage.customProviderModule
+
+- **Type:** `string`
+- **Available for providers:** `'custom'`
+- **CLI:** `--coverage.customProviderModule=<path or module name>`
+
+Specifies the module name or path for the custom coverage provider module. See [Guide - Custom Coverage Provider](/guide/coverage#custom-coverage-provider) for more information.
 
 ### testNamePattern
 
@@ -906,21 +971,21 @@ Listen to port and serve API. When set to true, the default port is 51204
 - **Type:** `boolean`
 - **Default:** `false`
 
-Will call [`.mockClear()`](/api/#mockclear) on all spies before each test. This will clear mock history, but not reset its implementation to the default one.
+Will call [`.mockClear()`](/api/mock#mockclear) on all spies before each test. This will clear mock history, but not reset its implementation to the default one.
 
 ### mockReset
 
 - **Type:** `boolean`
 - **Default:** `false`
 
-Will call [`.mockReset()`](/api/#mockreset) on all spies before each test. This will clear mock history and reset its implementation to an empty function (will return `undefined`).
+Will call [`.mockReset()`](/api/mock#mockreset) on all spies before each test. This will clear mock history and reset its implementation to an empty function (will return `undefined`).
 
 ### restoreMocks
 
 - **Type:** `boolean`
 - **Default:** `false`
 
-Will call [`.mockRestore()`](/api/#mockrestore) on all spies before each test. This will clear mock history and reset its implementation to the original one.
+Will call [`.mockRestore()`](/api/mock#mockrestore) on all spies before each test. This will clear mock history and reset its implementation to the original one.
 
 ### unstubEnvs
 
@@ -928,7 +993,7 @@ Will call [`.mockRestore()`](/api/#mockrestore) on all spies before each test. T
 - **Default:** `false`
 - **Version:** Since Vitest 0.26.0
 
-Will call [`vi.unstubAllEnvs`](/api/#vi-unstuballenvs) before each test.
+Will call [`vi.unstubAllEnvs`](/api/vi#vi-unstuballenvs) before each test.
 
 ### unstubGlobals
 
@@ -936,7 +1001,7 @@ Will call [`vi.unstubAllEnvs`](/api/#vi-unstuballenvs) before each test.
 - **Default:** `false`
 - **Version:** Since Vitest 0.26.0
 
-Will call [`vi.unstubAllGlobals`](/api/#vi-unstuballglobals) before each test.
+Will call [`vi.unstubAllGlobals`](/api/vi#vi-unstuballglobals) before each test.
 
 ### transformMode
 
