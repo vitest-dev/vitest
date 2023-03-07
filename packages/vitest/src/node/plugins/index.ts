@@ -154,7 +154,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
           }
           else {
             const root = config.root || process.cwd()
-            const entries = await ctx.globAllTestFiles(preOptions as ResolvedConfig, preOptions.dir || root)
+            const [...entries] = await ctx.globAllTestFiles(preOptions as ResolvedConfig, preOptions.dir || root)
             if (preOptions?.setupFiles) {
               const setupFiles = toArray(preOptions.setupFiles).map((file: string) =>
                 normalize(
