@@ -42,10 +42,6 @@ function withSafeTimers(fn: () => void) {
 const promises = new Set<Promise<unknown>>()
 
 export const rpcDone = async () => {
-  // Run possible setTimeouts, e.g. the onces used by ConsoleLogSpy
-  const { setTimeout } = getSafeTimers()
-  await new Promise(resolve => setTimeout(resolve))
-
   if (!promises.size)
     return
   const awaitable = Array.from(promises)

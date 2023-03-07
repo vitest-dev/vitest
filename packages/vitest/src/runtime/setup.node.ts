@@ -183,6 +183,10 @@ export async function withEnv(
     await fn()
   }
   finally {
+    // Run possible setTimeouts, e.g. the onces used by ConsoleLogSpy
+    const { setTimeout } = getSafeTimers()
+    await new Promise(resolve => setTimeout(resolve))
+
     await env.teardown(globalThis)
   }
 }

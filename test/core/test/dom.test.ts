@@ -171,3 +171,19 @@ it('doesn\'t throw, if listening for error', () => {
   dispatchEvent(new Event('custom'))
   expect(spy).toHaveBeenCalled()
 })
+
+it('timers are not run after environment teardown', async () => {
+  setInterval(() => {
+    try {
+      window.document.createElement('div')
+    }
+    catch (err) {
+      if (/window is not defined/.test((err as any).message))
+        throw new Error('setInterval was called after environment teardown')
+
+      throw err
+    }
+  }, 1)
+
+  expect(window.document).toBeDefined()
+})
