@@ -206,6 +206,12 @@ export interface InlineConfig {
   reporters?: Arrayable<BuiltinReporters | 'html' | Reporter | Omit<string, BuiltinReporters>>
 
   /**
+   * Maximum number of line to show in a single diff.
+   * @default 15
+   */
+  outputDiffLines?: number
+
+  /**
    * Write test results to a file when the --reporter=json` or `--reporter=junit` option is also specified.
    * Also definable individually per reporter by using an object instead.
    */

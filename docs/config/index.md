@@ -447,6 +447,25 @@ Custom reporters for output. Reporters can be [a Reporter instance](https://gith
   - `'hanging-process'` - displays a list of hanging processes, if Vitest cannot exit process safely. This might be a heavy operation, enable it only if Vitest consistently cannot exit process
   - path of a custom reporter (e.g. `'./path/to/reporter.ts'`, `'@scope/reporter'`)
 
+ ### outputDiffLines
+
+ - **Type:** `number`
+ - **Default:** `15`
+ - **CLI:** `--outputDiffLines=<lines>`, `--output-diff-lines=<lines>`
+
+ Limit the number of single output diff lines up to `15`. Vitest counts all `+-` lines when determining when to stop. For example, you might see diff like this, if you set this property to `3`:
+
+ ```diff
+ - test: 1,
+ + test: 2,
+ - obj: '1',
+ ...
+ - test2: 1,
+ + test2: 1,
+ - obj2: '2',
+ ...
+ ```
+
 ### outputFile
 
 - **Type:** `string | Record<string, string>`

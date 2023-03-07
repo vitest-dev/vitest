@@ -1,4 +1,5 @@
 import { deepClone, format, getOwnProperties, getType } from '@vitest/utils'
+import type { DiffOptions } from '@vitest/utils/diff'
 import { unifiedDiff } from '@vitest/utils/diff'
 
 export interface ParsedStack {
@@ -104,7 +105,7 @@ function normalizeErrorMessage(message: string) {
   return message.replace(/__vite_ssr_import_\d+__\./g, '')
 }
 
-export function processError(err: any) {
+export function processError(err: any, options: DiffOptions = {}) {
   if (!err || typeof err !== 'object')
     return err
   // stack is not serialized in worker communication
@@ -120,7 +121,7 @@ export function processError(err: any) {
   const { replacedActual, replacedExpected } = replaceAsymmetricMatcher(clonedActual, clonedExpected)
 
   if (err.showDiff || (err.showDiff === undefined && err.expected !== undefined && err.actual !== undefined))
-    err.diff = unifiedDiff(replacedActual, replacedExpected)
+    err.diff = unifiedDiff(replacedActual, replacedExpected, options)
 
   // some Error implementations don't allow rewriting message
   try {
