@@ -107,7 +107,7 @@ export function renderTree(tasks: Task[], options: ListRendererOptions, level = 
     if (task.mode === 'skip' || task.mode === 'todo')
       suffix += ` ${c.dim(c.gray('[skipped]'))}`
 
-    if (task.mode === 'repeats')
+    if (task.type === 'suite' && task.tasks.find(t => t.mode === 'repeats'))
       suffix += ` ${c.dim(c.gray('[repeated]'))}`
 
     if (task.result?.duration != null) {

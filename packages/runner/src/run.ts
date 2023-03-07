@@ -246,11 +246,9 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
     suite.result.state = 'todo'
   }
   else {
-    let retry = suite.repeats
+    const retry = suite.mode === 'repeats' ? suite.repeats! : suite.retry || 1
 
-    for (let retryCount = 0; retryCount < retry!; retryCount++) {
-      if (suite.mode !== 'repeats')
-        retry = 1
+    for (let retryCount = 0; retryCount < retry; retryCount++) {
       try {
         beforeAllCleanups = await callSuiteHook(suite, suite, 'beforeAll', runner, [suite])
 
