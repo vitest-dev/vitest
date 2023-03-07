@@ -1,7 +1,7 @@
 import type { VitestRunner, VitestRunnerConstructor } from '@vitest/runner'
 import { startTests } from '@vitest/runner'
 import { resolve } from 'pathe'
-import type { ResolvedConfig, WorkerTestEnvironment } from '../types'
+import type { ContextTestEnvironment, ResolvedConfig } from '../types'
 import { getWorkerState, resetModules } from '../utils'
 import { vi } from '../integrations/vi'
 import { distDir } from '../constants'
@@ -65,7 +65,7 @@ async function getTestRunner(config: ResolvedConfig, executor: VitestExecutor): 
 }
 
 // browser shouldn't call this!
-export async function run(files: string[], config: ResolvedConfig, environment: WorkerTestEnvironment, executor: VitestExecutor): Promise<void> {
+export async function run(files: string[], config: ResolvedConfig, environment: ContextTestEnvironment, executor: VitestExecutor): Promise<void> {
   await setupGlobalEnv(config)
   await startCoverageInsideWorker(config.coverage, executor)
 

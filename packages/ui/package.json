@@ -1,7 +1,7 @@
 {
   "name": "@vitest/ui",
   "type": "module",
-  "version": "0.28.5",
+  "version": "0.29.2",
   "description": "UI for Vitest",
   "license": "MIT",
   "repository": {

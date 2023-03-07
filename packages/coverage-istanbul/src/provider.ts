@@ -4,6 +4,7 @@ import { relative, resolve } from 'pathe'
 import type { TransformPluginContext } from 'rollup'
 import type { AfterSuiteRunMeta, CoverageIstanbulOptions, CoverageProvider, ReportContext, ResolvedCoverageOptions, Vitest } from 'vitest'
 import { coverageConfigDefaults, defaultExclude, defaultInclude } from 'vitest/config'
+import { BaseCoverageProvider } from 'vitest/coverage'
 import libReport from 'istanbul-lib-report'
 import reports from 'istanbul-reports'
 import type { CoverageMap } from 'istanbul-lib-coverage'
@@ -31,7 +32,7 @@ interface TestExclude {
   }
 }
 
-export class IstanbulCoverageProvider implements CoverageProvider {
+export class IstanbulCoverageProvider extends BaseCoverageProvider implements CoverageProvider {
   name = 'istanbul'
 
   ctx!: Vitest
@@ -48,8 +49,20 @@ export class IstanbulCoverageProvider implements CoverageProvider {
   coverages: any[] = []
 
   initialize(ctx: Vitest) {
+    const config: CoverageIstanbulOptions = ctx.config.coverage
+
     this.ctx = ctx
-    this.options = resolveIstanbulOptions(ctx.config.coverage, ctx.config.root)
+    this.options = {
+      ...coverageConfigDefaults,
+
+      // User's options
+      ...config,
+
+      // Resolved fields
+      provider: 'istanbul',
+      reportsDirectory: resolve(ctx.config.root, config.reportsDirectory || coverageConfigDefaults.reportsDirectory),
+      reporter: this.resolveReporters(config.reporter || coverageConfigDefaults.reporter),
+    }
 
     this.instrumenter = createInstrumenter({
       produceSourceMap: true,
@@ -141,6 +154,19 @@ export class IstanbulCoverageProvider implements CoverageProvider {
         statements: this.options.statements,
       })
     }
+
+    if (this.options.thresholdAutoUpdate && allTestsRun) {
+      this.updateThresholds({
+        coverageMap,
+        thresholds: {
+          branches: this.options.branches,
+          functions: this.options.functions,
+          lines: this.options.lines,
+          statements: this.options.statements,
+        },
+        configurationFile: this.ctx.server.config.configFile,
+      })
+    }
   }
 
   checkThresholds(coverageMap: CoverageMap, thresholds: Record<Threshold, number | undefined>) {
@@ -220,24 +246,6 @@ export class IstanbulCoverageProvider implements CoverageProvider {
   }
 }
 
-function resolveIstanbulOptions(options: CoverageIstanbulOptions, root: string): Options {
-  const reportsDirectory = resolve(root, options.reportsDirectory || coverageConfigDefaults.reportsDirectory)
-
-  const resolved: Options = {
-    ...coverageConfigDefaults,
-
-    // User's options
-    ...options,
-
-    // Resolved fields
-    provider: 'istanbul',
-    reportsDirectory,
-    reporter: resolveReporters(options.reporter || coverageConfigDefaults.reporter),
-  }
-
-  return resolved
-}
-
 /**
  * Remove possible query parameters from filenames
  * - From `/src/components/Header.component.ts?vue&type=script&src=true&lang.ts`
@@ -286,25 +294,4 @@ function isEmptyCoverageRange(range: libCoverage.Range) {
     || range.end.line === undefined
     || range.end.column === undefined
   )
-}
-
-function resolveReporters(configReporters: NonNullable<CoverageIstanbulOptions['reporter']>): Options['reporter'] {
-  // E.g. { reporter: "html" }
-  if (!Array.isArray(configReporters))
-    return [[configReporters, {}]]
-
-  const resolvedReporters: Options['reporter'] = []
-
-  for (const reporter of configReporters) {
-    if (Array.isArray(reporter)) {
-      // E.g. { reporter: [ ["html", { skipEmpty: true }], ["lcov"], ["json", { file: "map.json" }] ]}
-      resolvedReporters.push([reporter[0], reporter[1] || {}])
-    }
-    else {
-      // E.g. { reporter: ["html", "json"]}
-      resolvedReporters.push([reporter, {}])
-    }
-  }
-
-  return resolvedReporters
 }

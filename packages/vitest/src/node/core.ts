@@ -12,7 +12,7 @@ import { deepMerge, hasFailed, noop, slash, toArray } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
 import { Typechecker } from '../typecheck/typechecker'
 import { createPool } from './pool'
-import type { WorkerPool } from './pool'
+import type { ProcessPool } from './pool'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
 import { StateManager } from './state'
 import { resolveConfig } from './config'
@@ -32,7 +32,7 @@ export class Vitest {
   reporters: Reporter[] = undefined!
   coverageProvider: CoverageProvider | null | undefined
   logger: Logger
-  pool: WorkerPool | undefined
+  pool: ProcessPool | undefined
   typechecker: Typechecker | undefined
 
   vitenode: ViteNodeServer = undefined!
@@ -62,6 +62,8 @@ export class Vitest {
     this.restartsCount += 1
     this.pool?.close()
     this.pool = undefined
+    this.coverageProvider = undefined
+    this.runningPromise = undefined
 
     const resolved = resolveConfig(this.mode, options, server.config)
 
@@ -110,8 +112,6 @@ export class Vitest {
       ? await createBenchmarkReporters(toArray(resolved.benchmark?.reporters), this.runner)
       : await createReporters(resolved.reporters, this.runner)
 
-    this.runningPromise = undefined
-
     this.cache.results.setConfig(resolved.root, resolved.cache)
     try {
       await this.cache.results.readFromCache()
@@ -136,6 +136,12 @@ export class Vitest {
     return deepMerge<ResolvedConfig>({
       ...this.config,
       reporters: [],
+      deps: {
+        ...this.config.deps,
+        experimentalOptimizer: {
+          enabled: this.config.deps?.experimentalOptimizer?.enabled ?? false,
+        },
+      },
       snapshotOptions: {
         ...this.config.snapshotOptions,
         resolveSnapshotPath: undefined,

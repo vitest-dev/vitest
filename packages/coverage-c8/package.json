@@ -1,7 +1,7 @@
 {
   "name": "@vitest/coverage-c8",
   "type": "module",
-  "version": "0.28.5",
+  "version": "0.29.2",
   "description": "C8 coverage provider for Vitest",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",

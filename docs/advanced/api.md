@@ -42,7 +42,7 @@ const vitest = await createVitest('test', {
 
 ## Vitest
 
-Vitest instance requires the current test mode. I can be either:
+Vitest instance requires the current test mode. It can be either:
 
 - `test` when running runtime tests
 - `benchmark` when running benchmarks

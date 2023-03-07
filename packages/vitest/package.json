@@ -1,7 +1,7 @@
 {
   "name": "vitest",
   "type": "module",
-  "version": "0.28.5",
+  "version": "0.29.2",
   "description": "A blazing fast unit test framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -65,6 +65,10 @@
       "types": "./config.d.ts",
       "require": "./dist/config.cjs",
       "import": "./dist/config.js"
+    },
+    "./coverage": {
+      "types": "./coverage.d.ts",
+      "import": "./dist/coverage.js"
     }
   },
   "main": "./dist/index.js",
@@ -144,6 +148,7 @@
     "@edge-runtime/vm": "2.0.2",
     "@sinonjs/fake-timers": "^10.0.2",
     "@types/diff": "^5.0.2",
+    "@types/istanbul-lib-coverage": "^2.0.4",
     "@types/istanbul-reports": "^3.0.1",
     "@types/jsdom": "^21.1.0",
     "@types/micromatch": "^4.0.2",

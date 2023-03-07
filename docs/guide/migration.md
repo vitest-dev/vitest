@@ -31,6 +31,15 @@ For more details please refer to the [`vi.mock` api section](/api/vi#vi-mock).
 
 Unlike Jest, mocked modules in `<root>/__mocks__` are not loaded unless `vi.mock()` is called. If you need them to be mocked in every test, like in Jest, you can mock them inside [`setupFiles`](/config/#setupfiles).
 
+**Importing the original of a mocked package**
+
+If you are only partially mocking a package, you might have previously used Jest's function `requireActual`. In Vitest, you should replace these calls with `vi.importActual`.
+
+```diff
+- const { cloneDeep } = jest.requireActual('lodash/cloneDeep')
++ const { cloneDeep } = await vi.importActual('lodash/cloneDeep')
+```
+
 **Jasmine API**
 
 Jest exports various [`jasmine`](https://jasmine.github.io/) globals (such as `jasmine.any()`). Any such instances will need to be migrated to [their Vitest counterparts](/api/).
@@ -38,6 +47,8 @@ Jest exports various [`jasmine`](https://jasmine.github.io/) globals (such as `j
 **Envs**
 
 Just like Jest, Vitest sets `NODE_ENV` to `test`, if it wasn't set before. Vitest also has a counterpart for `JEST_WORKER_ID` called `VITEST_POOL_ID` (always less than or equal to `maxThreads`), so if you rely on it, don't forget to rename it. Vitest also exposes `VITEST_WORKER_ID` which is a unique ID of a running worker - this number is not affected by `maxThreads`, and will increase with each created worker.
+
+If you want to modify the envs, you will use [replaceProperty API](https://jestjs.io/docs/jest-object#jestreplacepropertyobject-propertykey-value) in Jest, you can use [vi.stubEnv](https://vitest.dev/api/vi.html#vi-stubenv) to do it also in Vitest. 
 
 **Done Callback**
 

@@ -23,9 +23,11 @@ const entries = [
   'src/runners.ts',
   'src/environments.ts',
   'src/runtime/worker.ts',
+  'src/runtime/child.ts',
   'src/runtime/loader.ts',
   'src/runtime/entry.ts',
   'src/integrations/spy.ts',
+  'src/coverage.ts',
 ]
 
 const dtsEntries = [
@@ -36,6 +38,7 @@ const dtsEntries = [
   'src/runners.ts',
   'src/suite.ts',
   'src/config.ts',
+  'src/coverage.ts',
 ]
 
 const external = [
