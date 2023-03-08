@@ -73,8 +73,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       suite: undefined!,
       fails: this.fails,
       retry: options?.retry,
-      // 5 repetitions by default
-      repeats: mode === 'repeats' && !options?.repeats ? 5 : options?.repeats,
+      repeats: options?.repeats,
     } as Omit<Test, 'context'> as Test
 
     if (this.concurrent || concurrent)
@@ -136,7 +135,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       mode,
       shuffle,
       tasks: [],
-      repeats: mode === 'repeats' && !suiteOptions?.repeats ? 5 : suiteOptions?.repeats,
+      repeats: suiteOptions?.repeats,
     }
 
     setHooks(suite, createSuiteHooks())

@@ -293,19 +293,7 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
 - **Type:** `(name: string, fn: TestFunction, timeout?: number | TestOptions) => void`
 - **Alias:** `it.repeats`
 
-  If you want to run a test multiple times to see if it passes on all attempts, you can use `test.repeats` to do so.
-  
-  By default it will repeat 5 times:
-
-  ```ts
-  import { expect, test } from 'vitest'
-
-  test.repeats('repeated test', () => {
-    expect(true).toBe(true)
-  })
-  ```
-
-  To change the default `repeats` value:
+  If you want to run a test multiple times to see if it passes on all attempts, you can use `test.repeats` to do so. Without the `repeats` options it will only run once.
 
   ```ts
   import { expect, test } from 'vitest'
