@@ -49,6 +49,7 @@ const external = [
   'node:worker_threads',
   'node:fs',
   'inspector',
+  'webdriverio',
   'vite-node/source-map',
   'vite-node/client',
   'vite-node/server',

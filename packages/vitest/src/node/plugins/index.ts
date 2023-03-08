@@ -98,8 +98,11 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
 
         if (preOptions.ui && preOptions.open)
           open = preOptions.uiBase ?? '/__vitest__/'
-        else if (preOptions.browser)
+        else if (preOptions.browser && !(typeof preOptions.open === 'boolean'))
           open = '/'
+
+        if (typeof preOptions.browser === 'string')
+          open = false
 
         const config: ViteConfig = {
           root: viteConfig.test?.root || options.root,

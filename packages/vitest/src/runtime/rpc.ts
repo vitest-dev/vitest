@@ -33,7 +33,8 @@ function withSafeTimers(fn: () => void) {
     globalThis.Math.random = currentRandom
     globalThis.setImmediate = currentSetImmediate
     globalThis.clearImmediate = currentClearImmediate
-    nextTick(() => {
+    // nextTick is not defined in browser mode
+    ;(nextTick || setTimeout)(() => {
       globalThis.process.nextTick = currentNextTick
     })
   }

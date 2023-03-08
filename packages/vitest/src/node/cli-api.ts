@@ -43,6 +43,11 @@ export async function startVitest(
     return
   }
 
+  if (typeof options.browser === 'string' && !await ensurePackageInstalled('webdriverio', root)) {
+    process.exitCode = 1
+    return
+  }
+
   if (typeof options.coverage === 'boolean')
     options.coverage = { enabled: options.coverage }
 

@@ -326,8 +326,13 @@ export class Vitest {
 
     await this.report('onPathsCollected', paths)
 
-    if (this.config.browser)
+    if (this.config.browser) {
+      if (typeof this.config.browser === 'string') {
+        const { openUrl } = await import('../integrations/webdriver')
+        await openUrl(`http://${this.config.api?.host || 'localhost'}:${this.config.api?.port}`, this.config)
+      }
       return
+    }
 
     // previous run
     await this.runningPromise

@@ -390,10 +390,20 @@ export interface InlineConfig {
   ui?: boolean
 
   /**
-   * Use in browser environment
+   * test in a browser environment
    * @experimental
+   *
+   * @default false
    */
-  browser?: boolean
+  browser?: boolean | 'firefox' | 'chrome' | 'opera' | 'safari'
+
+  /**
+   * headless mode for the browser mode
+   * @experimental
+   *
+   * @default process.env.CI
+   */
+  headless?: boolean
 
   /**
    * Open UI automatically.
