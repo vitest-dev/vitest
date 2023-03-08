@@ -39,6 +39,8 @@ export function setup(ctx: Vitest) {
         },
         async onFinished() {
           await ctx.report('onFinished')
+          if (ctx.runMode && ctx.config.browser)
+            await ctx.exit()
         },
         async onCollected(files) {
           ctx.state.collectFiles(files)
