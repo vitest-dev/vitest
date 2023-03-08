@@ -67,7 +67,7 @@
     "*.mjs"
   ],
   "engines": {
-    "node": ">=v14.16.0"
+    "node": ">=v14.18.0"
   },
   "scripts": {
     "build": "rimraf dist && rollup -c",
