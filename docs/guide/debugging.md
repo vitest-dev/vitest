@@ -45,3 +45,19 @@ JavaScript file | ./node_modules/vitest/vitest.mjs
 Application parameters | run --threads false
 
 Then run this configuration in debug mode. The IDE will stop at JS/TS breakpoints set in the editor.
+
+## Node Inspector, e.g. Chrome DevTools
+
+Vitest also supports debugging tests without IDEs. However this requires that tests are not run parallel. Use one of the following commands to launch Vitest.
+
+```sh
+# To run in a single worker
+vitest --inspect-brk --single-thread
+
+# To run in a child process
+vitest --inspect-brk --no-threads
+```
+
+Once Vitest starts it will stop execution and waits for you to open developer tools that can connect to [NodeJS inspector](https://nodejs.org/en/docs/guides/debugging-getting-started/). You can use Chrome DevTools for this by opening `chrome://inspect` on browser.
+
+In watch mode you can keep the debugger open during test re-runs by using the `--single-thread --isolate false` options.
