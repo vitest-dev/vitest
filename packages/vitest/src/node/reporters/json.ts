@@ -20,7 +20,6 @@ const StatusMap: Record<TaskState, Status> = {
   run: 'pending',
   skip: 'skipped',
   todo: 'todo',
-  repeats: 'pending',
 }
 
 interface FormattedAssertionResult {

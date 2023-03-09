@@ -2,7 +2,7 @@ import type { Awaitable } from '@vitest/utils'
 import type { ChainableFunction } from '../utils/chain'
 import type { ErrorWithDiff } from '../utils/error'
 
-export type RunMode = 'run' | 'skip' | 'only' | 'todo' | 'repeats'
+export type RunMode = 'run' | 'skip' | 'only' | 'todo'
 export type TaskState = RunMode | 'pass' | 'fail'
 
 export interface TaskBase {

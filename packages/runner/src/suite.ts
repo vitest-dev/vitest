@@ -102,7 +102,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       id: '',
       name,
       type: 'custom',
-      mode: self.only ? 'only' : self.skip ? 'skip' : self.todo ? 'todo' : self.repeats ? 'repeats' : 'run',
+      mode: self.only ? 'only' : self.skip ? 'skip' : self.todo ? 'todo' : 'run',
     }
     tasks.push(task)
     return task
@@ -135,7 +135,6 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
       mode,
       shuffle,
       tasks: [],
-      repeats: suiteOptions?.repeats,
     }
 
     setHooks(suite, createSuiteHooks())
@@ -175,7 +174,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
 
 function createSuite() {
   function suiteFn(this: Record<string, boolean | undefined>, name: string, factory?: SuiteFactory, options?: number | TestOptions) {
-    const mode: RunMode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : this.repeats ? 'repeats' : 'run'
+    const mode: RunMode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run'
     return createSuiteCollector(name, factory, mode, this.concurrent, this.shuffle, options)
   }
 

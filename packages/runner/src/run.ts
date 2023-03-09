@@ -107,7 +107,7 @@ const callCleanupHooks = async (cleanups: HookCleanupCallback[]) => {
 export async function runTest(test: Test, runner: VitestRunner) {
   await runner.onBeforeRunTest?.(test)
 
-  if (test.mode !== 'run' && test.mode !== 'repeats')
+  if (test.mode !== 'run' && !test.repeats)
     return
 
   if (test.result?.state === 'fail') {
@@ -125,7 +125,7 @@ export async function runTest(test: Test, runner: VitestRunner) {
 
   setCurrentTest(test)
 
-  const repeats = test.mode === 'repeats' ? test.repeats || 1 : 1
+  const repeats = test.repeats ? test.repeats || 1 : 1
 
   for (let repeatCount = 0; repeatCount < repeats; repeatCount++) {
     const retry = test.retry || 1
@@ -138,6 +138,7 @@ export async function runTest(test: Test, runner: VitestRunner) {
         beforeEachCleanups = await callSuiteHook(test.suite, test, 'beforeEach', runner, [test.context, test.suite])
 
         test.result.retryCount = retryCount
+        test.result.repeatCount = repeatCount
 
         if (runner.runTest) {
           await runner.runTest(test)
@@ -151,9 +152,9 @@ export async function runTest(test: Test, runner: VitestRunner) {
 
         await runner.onAfterTryTest?.(test, retryCount)
 
-        if (test.mode === 'run')
+        if (!test.repeats)
           test.result.state = 'pass'
-        else if (test.mode === 'repeats' && retry === retryCount)
+        else if (test.repeats && retry === retryCount)
           test.result.state = 'pass'
       }
       catch (e) {
@@ -170,10 +171,6 @@ export async function runTest(test: Test, runner: VitestRunner) {
 
       if (test.result.state === 'pass')
         break
-
-      if (test.mode === 'repeats' && retry === retryCount && test.result.state === 'fail')
-        break
-
       // update retry info
       updateTask(test, runner)
     }
@@ -251,83 +248,73 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
     suite.result.state = 'todo'
   }
   else {
-    const repeats = suite.mode === 'repeats' ? suite.repeats || 1 : 1
+    const retry = suite.retry || 1
 
-    for (let repeatCount = 0; repeatCount < repeats; repeatCount++) {
-      const retry = suite.retry || 1
+    for (let retryCount = 0; retryCount < retry; retryCount++) {
+      try {
+        beforeAllCleanups = await callSuiteHook(suite, suite, 'beforeAll', runner, [suite])
 
-      for (let retryCount = 0; retryCount < retry; retryCount++) {
-        try {
-          beforeAllCleanups = await callSuiteHook(suite, suite, 'beforeAll', runner, [suite])
-
-          if (runner.runSuite) {
-            await runner.runSuite(suite)
-          }
-          else {
-            for (let tasksGroup of partitionSuiteChildren(suite)) {
-              if (tasksGroup[0].concurrent === true) {
-                const mutex = limit(runner.config.maxConcurrency)
-                await Promise.all(tasksGroup.map(c => mutex(() => runSuiteChild(c, runner))))
+        if (runner.runSuite) {
+          await runner.runSuite(suite)
+        }
+        else {
+          for (let tasksGroup of partitionSuiteChildren(suite)) {
+            if (tasksGroup[0].concurrent === true) {
+              const mutex = limit(runner.config.maxConcurrency)
+              await Promise.all(tasksGroup.map(c => mutex(() => runSuiteChild(c, runner))))
+            }
+            else {
+              const { sequence } = runner.config
+              if (sequence.shuffle || suite.shuffle) {
+                // run describe block independently from tests
+                const suites = tasksGroup.filter(group => group.type === 'suite')
+                const tests = tasksGroup.filter(group => group.type === 'test')
+                const groups = shuffle([suites, tests], sequence.seed)
+                tasksGroup = groups.flatMap(group => shuffle(group, sequence.seed))
               }
-              else {
-                const { sequence } = runner.config
-                if (sequence.shuffle || suite.shuffle) {
-                  // run describe block independently from tests
-                  const suites = tasksGroup.filter(group => group.type === 'suite')
-                  const tests = tasksGroup.filter(group => group.type === 'test')
-                  const groups = shuffle([suites, tests], sequence.seed)
-                  tasksGroup = groups.flatMap(group => shuffle(group, sequence.seed))
-                }
-                for (const c of tasksGroup)
-                  await runSuiteChild(c, runner)
-              }
+              for (const c of tasksGroup)
+                await runSuiteChild(c, runner)
             }
           }
         }
-        catch (e) {
-          failTask(suite.result, e)
-        }
-
-        try {
-          if (suite.mode !== 'repeats')
-            await callSuiteHook(suite, suite, 'afterAll', runner, [suite])
-          else if (suite.mode === 'repeats' && repeatCount - 1 === repeats && retry === retryCount)
-            await callSuiteHook(suite, suite, 'afterAll', runner, [suite])
-          await callCleanupHooks(beforeAllCleanups)
-        }
-        catch (e) {
-          failTask(suite.result, e)
-        }
-
-        if (suite.mode === 'run') {
-          if (!hasTests(suite)) {
-            suite.result.state = 'fail'
-            if (!suite.result.error) {
-              const error = processError(new Error(`No test found in suite ${suite.name}`))
-              suite.result.error = error
-              suite.result.errors = [error]
-            }
-          }
-          else if (hasFailed(suite)) {
-            suite.result.state = 'fail'
-          }
-          else {
-            suite.result.state = 'pass'
-          }
-        }
-
-        updateTask(suite, runner)
-
-        suite.result.duration = now() - start
-
-        await runner.onAfterRunSuite?.(suite)
-
-        if (suite.result.state === 'pass')
-          break
-
-        if (suite.mode === 'repeats' && suite.result.state === 'fail')
-          break
       }
+      catch (e) {
+        failTask(suite.result, e)
+      }
+
+      try {
+        await callSuiteHook(suite, suite, 'afterAll', runner, [suite])
+        await callCleanupHooks(beforeAllCleanups)
+      }
+      catch (e) {
+        failTask(suite.result, e)
+      }
+
+      if (suite.mode === 'run') {
+        if (!hasTests(suite)) {
+          suite.result.state = 'fail'
+          if (!suite.result.error) {
+            const error = processError(new Error(`No test found in suite ${suite.name}`))
+            suite.result.error = error
+            suite.result.errors = [error]
+          }
+        }
+        else if (hasFailed(suite)) {
+          suite.result.state = 'fail'
+        }
+        else {
+          suite.result.state = 'pass'
+        }
+      }
+
+      updateTask(suite, runner)
+
+      suite.result.duration = now() - start
+
+      await runner.onAfterRunSuite?.(suite)
+
+      if (suite.result.state === 'pass')
+        break
     }
   }
 }

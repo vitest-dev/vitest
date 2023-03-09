@@ -26,7 +26,7 @@ interface LocalCallDefinition {
   end: number
   name: string
   type: 'suite' | 'test'
-  mode: 'run' | 'skip' | 'only' | 'todo' | 'repeats'
+  mode: 'run' | 'skip' | 'only' | 'todo'
   task: ParsedSuite | ParsedFile | ParsedTest
 }
 

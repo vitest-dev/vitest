@@ -16,7 +16,7 @@ describe('testing it/test', () => {
   test.repeats.fails('test 3', () => {
     testNumbers.push(3)
     expect(testNumbers).toStrictEqual(result)
-  })
+  }, { repeats: 1 })
 
   afterAll(() => {
     result.push(3)
