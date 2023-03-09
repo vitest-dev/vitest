@@ -216,13 +216,7 @@ export function isA(typeName: string, value: unknown) {
 }
 
 function isDomNode(obj: any): boolean {
-  return (
-    obj !== null
-    && typeof obj === 'object'
-    && typeof obj.nodeType === 'number'
-    && typeof obj.nodeName === 'string'
-    && typeof obj.isEqualNode === 'function'
-  )
+  return obj instanceof Node
 }
 
 export function fnNameFor(func: Function) {
