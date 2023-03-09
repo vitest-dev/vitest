@@ -50,6 +50,7 @@ One of the main advantages of Vitest is its unified configuration with Vite. If 
 To configure `vitest` itself, add `test` property in your Vite config. You'll also need to add a reference to Vitest types using a [triple slash command](https://www.typescriptlang.org/docs/handbook/triple-slash-directives.html#-reference-types-) at the top of your config file, if you are importing `defineConfig` from `vite` itself.
 
 ```ts
+/// <reference types="vitest" />
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
