@@ -144,6 +144,7 @@
     "why-is-node-running": "^2.2.2"
   },
   "devDependencies": {
+    "@ampproject/remapping": "^2.2.0",
     "@antfu/install-pkg": "^0.1.1",
     "@edge-runtime/vm": "2.0.2",
     "@sinonjs/fake-timers": "^10.0.2",

@@ -13,7 +13,7 @@ const VITE_NODE_SOURCEMAPPING_SOURCE = '//# sourceMappingSource=vite-node'
 const VITE_NODE_SOURCEMAPPING_URL = `${SOURCEMAPPING_URL}=data:application/json;charset=utf-8`
 const VITE_NODE_SOURCEMAPPING_REGEXP = new RegExp(`//# ${VITE_NODE_SOURCEMAPPING_URL};base64,(.+)`)
 
-export async function withInlineSourcemap(result: TransformResult) {
+export function withInlineSourcemap(result: TransformResult) {
   const map = result.map
   let code = result.code
 
