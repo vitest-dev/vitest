@@ -53,6 +53,8 @@ export async function startViteNode(ctx: ContextRPC) {
       error.VITEST_TEST_NAME = worker.current?.name
       error.VITEST_TEST_PATH = relative(config.root, worker.filepath)
     }
+    error.VITEST_AFTER_ENV_TEARDOWN = worker.environmentTeardownRun
+
     rpc().onUnhandledError(error, type)
   }
 

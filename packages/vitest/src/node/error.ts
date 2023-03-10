@@ -72,6 +72,7 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
 
   const testPath = (e as any).VITEST_TEST_PATH
   const testName = (e as any).VITEST_TEST_NAME
+  const afterEnvTeardown = (e as any).VITEST_AFTER_ENV_TEARDOWN
   // testName has testPath inside
   if (testPath)
     ctx.logger.error(c.red(`This error originated in "${c.bold(testPath)}" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.`))
@@ -79,6 +80,11 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
     ctx.logger.error(c.red(`The latest test that might've caused the error is "${c.bold(testName)}". It might mean one of the following:`
     + '\n- The error was thrown, while Vitest was running this test.'
     + '\n- This was the last recorded test before the error was thrown, if error originated after test finished its execution.'))
+  }
+  if (afterEnvTeardown) {
+    ctx.logger.error(c.red('This error was caught after test environment was torn down. Make sure to cancel any running tasks before test finishes:'
+    + '\n- cancel timeouts using clearTimeout and clearInterval'
+    + '\n- wait for promises to resolve using the await keyword'))
   }
 
   if (typeof e.cause === 'object' && e.cause && 'name' in e.cause) {
@@ -117,6 +123,7 @@ const skipErrorProperties = new Set([
   'expected',
   'VITEST_TEST_NAME',
   'VITEST_TEST_PATH',
+  'VITEST_AFTER_ENV_TEARDOWN',
   ...Object.getOwnPropertyNames(Error.prototype),
   ...Object.getOwnPropertyNames(Object.prototype),
 ])
