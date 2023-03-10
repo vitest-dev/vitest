@@ -59,7 +59,7 @@ export class Vitest {
   private _onSetServer: OnServerRestartHandler[] = []
 
   async setServer(options: UserConfig, server: ViteDevServer) {
-    this.runMode = (options as any).run === true
+    this.runMode = !options.watch
     this.unregisterWatcher?.()
     clearTimeout(this._rerunTimer)
     this.restartsCount += 1

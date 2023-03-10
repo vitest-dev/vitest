@@ -9,6 +9,7 @@ export async function openBrowser(config: ResolvedConfig) {
     return cachedBrowser
 
   const browser = await remote({
+    logLevel: 'error',
     capabilities: {
       'browserName': config.browser as string,
       'wdio:devtoolsOptions': { headless: config.headless || !!process.env.CI },

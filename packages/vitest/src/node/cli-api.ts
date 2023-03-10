@@ -97,7 +97,7 @@ export async function startVitest(
     return ctx
   }
 
-  if (ctx.config.watch)
+  if (ctx.config.watch || ctx.config.browser)
     return ctx
 
   await ctx.close()
