@@ -60,7 +60,7 @@ function createSuiteCollector(name: string, factory: SuiteFactory = () => { }, m
   initSuite()
 
   const test = createTest(function (name: string, fn = noop, options = suiteOptions) {
-    const mode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : this.repeats ? 'repeats' : 'run'
+    const mode = this.only ? 'only' : this.skip ? 'skip' : this.todo ? 'todo' : 'run'
 
     if (typeof options === 'number')
       options = { timeout: options }

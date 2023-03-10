@@ -107,7 +107,7 @@ const callCleanupHooks = async (cleanups: HookCleanupCallback[]) => {
 export async function runTest(test: Test, runner: VitestRunner) {
   await runner.onBeforeRunTest?.(test)
 
-  if (test.mode !== 'run' && !test.repeats)
+  if (test.mode !== 'run')
     return
 
   if (test.result?.state === 'fail') {
