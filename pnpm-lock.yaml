@@ -1041,6 +1041,18 @@ importers:
       temp-dir: 2.0.0
       vitest: link:../../packages/vitest
 
+  test/config:
+    specifiers:
+      execa: ^7.0.0
+      strip-ansi: ^7.0.1
+      vite: ^4.0.0
+      vitest: workspace:*
+    devDependencies:
+      execa: 7.0.0
+      strip-ansi: 7.0.1
+      vite: 4.0.0
+      vitest: link:../../packages/vitest
+
   test/core:
     specifiers:
       '@vitest/expect': workspace:*

@@ -38,6 +38,10 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
     } as any
   }
 
+  // Error may have occured even before the configuration was resolved
+  if (!ctx.config)
+    return printErrorMessage(e, ctx.logger)
+
   const stacks = parseErrorStacktrace(e, fullStack)
 
   const nearest = error instanceof TypeCheckError
