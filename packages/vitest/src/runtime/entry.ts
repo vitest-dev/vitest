@@ -100,4 +100,6 @@ export async function run(files: string[], config: ResolvedConfig, environment: 
 
     await stopCoverageInsideWorker(config.coverage, executor)
   })
+
+  workerState.environmentTeardownRun = true
 }
