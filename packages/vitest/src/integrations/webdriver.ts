@@ -1,5 +1,6 @@
 import { remote } from 'webdriverio'
 import type { Browser } from 'webdriverio'
+import { isCI } from '../utils/env'
 import type { ResolvedConfig } from '../types'
 
 const cachedBrowser: Browser | null = null
@@ -12,7 +13,7 @@ export async function openBrowser(config: ResolvedConfig) {
     logLevel: 'error',
     capabilities: {
       'browserName': config.browser as string,
-      'wdio:devtoolsOptions': { headless: config.headless || !!process.env.CI },
+      'wdio:devtoolsOptions': { headless: config.headless || isCI },
     },
   })
 
