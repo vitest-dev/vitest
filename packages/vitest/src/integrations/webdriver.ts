@@ -13,7 +13,7 @@ export async function openBrowser(config: ResolvedConfig) {
     logLevel: 'error',
     capabilities: {
       'browserName': config.browser as string,
-      'wdio:devtoolsOptions': { headless: config.headless || isCI },
+      'wdio:devtoolsOptions': { headless: config.headless ?? isCI },
     },
   })
 
