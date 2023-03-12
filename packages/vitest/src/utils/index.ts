@@ -1,5 +1,6 @@
 import { relative } from 'pathe'
 import type { ModuleCacheMap } from 'vite-node'
+import type { ResolvedConfig } from '../types'
 import { getWorkerState } from '../utils'
 import { isNode } from './env'
 
@@ -108,4 +109,9 @@ export function objectAttr(source: any, path: string, defaultValue = undefined) 
       return defaultValue
   }
   return result
+}
+
+// The server needs to be running for communication
+export function shouldKeepServer(config?: ResolvedConfig) {
+  return config?.watch || config?.browser
 }

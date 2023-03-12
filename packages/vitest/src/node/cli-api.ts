@@ -4,6 +4,7 @@ import { EXIT_CODE_RESTART } from '../constants'
 import { CoverageProviderMap } from '../integrations/coverage'
 import { getEnvPackageName } from '../integrations/env'
 import type { UserConfig, Vitest, VitestRunMode } from '../types'
+import { shouldKeepServer } from '../utils'
 import { ensurePackageInstalled } from './pkg'
 import { createVitest } from './create'
 import { registerConsoleShortcuts } from './stdin'
@@ -97,7 +98,7 @@ export async function startVitest(
     return ctx
   }
 
-  if (ctx.config.watch || ctx.config.browser)
+  if (shouldKeepServer(ctx.config))
     return ctx
 
   await ctx.close()
