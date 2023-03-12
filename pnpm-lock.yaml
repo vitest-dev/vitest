@@ -628,7 +628,7 @@ importers:
       '@vitest/ws-client': workspace:*
       local-pkg: ^0.4.2
       mlly: ^1.1.0
-      modern-node-polyfills: 0.0.9
+      modern-node-polyfills: 0.1.0
       rollup: ^2.79.1
       rollup-plugin-node-polyfills: ^0.2.1
       sirv: ^2.0.2
@@ -637,7 +637,7 @@ importers:
       '@vitest/runner': link:../runner
       local-pkg: 0.4.2
       mlly: 1.1.0
-      modern-node-polyfills: 0.0.9
+      modern-node-polyfills: 0.1.0
       rollup-plugin-node-polyfills: 0.2.1
       sirv: 2.0.2
     devDependencies:
@@ -9325,6 +9325,7 @@ packages:
     resolution: {integrity: sha512-QOxyigPVrpZ2GXT+PFyZTl6TtOFc5egxHIP9IlQ+RbupQuX4RkT/Bee4/kQuC02Xkzg84JcT7oLYtDIQxp+v7w==}
     engines: {node: '>=0.4.0'}
     hasBin: true
+    dev: true
 
   /acorn/8.8.1:
     resolution: {integrity: sha512-7zFpHzhnqYKrkYdUjF1HI1bzd0VygEGX8lFk4k5zVMqHEoES+P+7TKI+EvLO9WVMJ8eekdO0aDEK044xTXwPPA==}
@@ -16730,12 +16731,12 @@ packages:
       pkg-types: 1.0.1
       ufo: 1.0.1
 
-  /modern-node-polyfills/0.0.9:
-    resolution: {integrity: sha512-Z7sFaWAHCEAw44Ww1L0JEt4BaQ7/LVTbbqTtm3bNSfdWs0ZW7QwRN7Xy8RjSPOlZ9ZSkoXAa54neuvAC6KGRFg==}
+  /modern-node-polyfills/0.1.0:
+    resolution: {integrity: sha512-/Z9mlC56KBxjLZvdNSLqSEFw9jSav43dsUxhLYLN3bZgcSX5VFdixat+QGjb/4NxaGCwW09ABJhZA5oHFj4W4A==}
     dependencies:
       '@jspm/core': 2.0.0-beta.24
       '@rollup/plugin-inject': 4.0.4_rollup@2.79.1
-      acorn: 8.8.0
+      acorn: 8.8.1
       esbuild: 0.16.3
       local-pkg: 0.4.2
       rollup: 2.79.1

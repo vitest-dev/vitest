@@ -28,7 +28,7 @@ export default (base = '/'): Plugin[] => {
         if (id === '/__vitest_runners__')
           return this.resolve('vitest/runners')
 
-        if (id === 'node:path' || id === 'node:console')
+        if (id.startsWith('node:'))
           id = id.slice(5)
 
         if (polyfills.includes(id))
