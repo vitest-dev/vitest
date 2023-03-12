@@ -24,7 +24,6 @@ export default withPwa(defineConfig({
   locales: {
     root: {
       label: 'English',
-      lang: 'en',
     },
     en: {
       label: '简体中文',
