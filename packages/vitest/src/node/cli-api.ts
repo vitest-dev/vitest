@@ -30,7 +30,7 @@ export async function startVitest(
   process.env.VITEST = 'true'
   process.env.NODE_ENV ??= options.mode || 'test'
 
-  if (options.run && !options.browser)
+  if (options.run)
     options.watch = false
   if (options.browser) // enabling threads in browser mode causes inconsistences
     options.threads = false
