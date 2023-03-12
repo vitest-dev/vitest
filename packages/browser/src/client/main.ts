@@ -7,7 +7,7 @@ import { createBrowserRunner } from './runner'
 import { BrowserSnapshotEnvironment } from './snapshot'
 
 // @ts-expect-error mocking some node apis
-globalThis.process = { env: {}, argv: [], stdout: { write: () => {} } }
+globalThis.process = { env: {}, argv: [], stdout: { write: () => {} }, nextTick: cb => cb() }
 globalThis.global = globalThis
 
 export const PORT = import.meta.hot ? '51204' : location.port
