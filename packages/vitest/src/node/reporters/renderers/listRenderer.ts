@@ -35,7 +35,7 @@ function formatNumber(number: number) {
     + (res[1] ? `.${res[1]}` : '')
 }
 
-function renderHookState(task: Task, hookName: keyof SuiteHooks, level = 0) {
+function renderHookState(task: Task, hookName: keyof SuiteHooks, level = 0): string {
   const state = task.result?.hooks?.[hookName]
   if (state && state === 'run')
     return `${'  '.repeat(level)} ${getHookStateSymbol(task, hookName)} ${c.dim(`[ ${hookName} ]`)}`
@@ -86,10 +86,14 @@ function renderBenchmark(task: Benchmark, tasks: Task[]): string {
   ].join('')
 }
 
-export function renderTree(tasks: Task[], options: ListRendererOptions, level = 0) {
-  let output: string[] = []
+export function renderTree(tasks: Task[], options: ListRendererOptions, level = 0, maxRows?: number): string {
+  const output: string[] = []
+  let currentRowCount = 0
 
-  for (const task of tasks) {
+  // Go through tasks in reverse order since maxRows is used to bail out early when limit is reached
+  for (const task of [...tasks].reverse()) {
+    const taskOutput = []
+
     let suffix = ''
     let prefix = ` ${getStateSymbol(task)} `
 
@@ -124,7 +128,7 @@ export function renderTree(tasks: Task[], options: ListRendererOptions, level = 
       ? renderBenchmark(task as Benchmark, tasks)
       : name
 
-    output.push(padding + prefix + body + suffix)
+    taskOutput.push(padding + prefix + body + suffix)
 
     if ((task.result?.state !== 'pass') && outputMap.get(task) != null) {
       let data: string | undefined = outputMap.get(task)
@@ -136,22 +140,29 @@ export function renderTree(tasks: Task[], options: ListRendererOptions, level = 
 
       if (data != null) {
         const out = `${'  '.repeat(level)}${F_RIGHT} ${data}`
-        output.push(`   ${c.gray(cliTruncate(out, getCols(-3)))}`)
+        taskOutput.push(`   ${c.gray(cliTruncate(out, getCols(-3)))}`)
       }
     }
 
-    output = output.concat(renderHookState(task, 'beforeAll', level + 1))
-    output = output.concat(renderHookState(task, 'beforeEach', level + 1))
+    taskOutput.push(renderHookState(task, 'beforeAll', level + 1))
+    taskOutput.push(renderHookState(task, 'beforeEach', level + 1))
     if (task.type === 'suite' && task.tasks.length > 0) {
       if ((task.result?.state === 'fail' || task.result?.state === 'run' || options.renderSucceed))
-        output = output.concat(renderTree(task.tasks, options, level + 1))
+        taskOutput.push(renderTree(task.tasks, options, level + 1, maxRows))
     }
-    output = output.concat(renderHookState(task, 'afterAll', level + 1))
-    output = output.concat(renderHookState(task, 'afterEach', level + 1))
+    taskOutput.push(renderHookState(task, 'afterAll', level + 1))
+    taskOutput.push(renderHookState(task, 'afterEach', level + 1))
+
+    const rows = taskOutput.filter(Boolean)
+    output.push(rows.join('\n'))
+    currentRowCount += rows.length
+
+    if (maxRows && currentRowCount >= maxRows)
+      break
   }
 
   // TODO: moving windows
-  return output.filter(Boolean).join('\n')
+  return output.reverse().join('\n')
 }
 
 export const createListRenderer = (_tasks: Task[], options: ListRendererOptions) => {
@@ -161,19 +172,25 @@ export const createListRenderer = (_tasks: Task[], options: ListRendererOptions)
   const log = options.logger.logUpdate
 
   function update() {
-    log(renderTree(tasks, options))
+    log(renderTree(
+      tasks,
+      options,
+      0,
+      // log-update already limits the amount of printed rows to fit the current terminal
+      // but we can optimize performance by doing it ourselves
+      process.stdout.rows,
+    ))
   }
 
   return {
     start() {
       if (timer)
         return this
-      timer = setInterval(update, 200)
+      timer = setInterval(update, 16)
       return this
     },
     update(_tasks: Task[]) {
       tasks = _tasks
-      update()
       return this
     },
     async stop() {
@@ -182,6 +199,8 @@ export const createListRenderer = (_tasks: Task[], options: ListRendererOptions)
         timer = undefined
       }
       log.clear()
+
+      // Note that at this point the renderTree should output all tasks
       options.logger.log(renderTree(tasks, options))
       return this
     },
