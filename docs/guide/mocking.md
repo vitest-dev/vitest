@@ -343,6 +343,11 @@ const mock = vi.fn(() => console.log('executed'))
 
 describe('delayed execution', () => {
   beforeEach(() => {
+    // Note: callng useFakeTimers can causes async function to hang
+    // Don't put this line if you only need to mock the date but not the timer,
+    // References:
+    // - https://github.com/vitest-dev/vitest/pull/639
+    // - https://github.com/vitest-dev/vitest/issues/621
     vi.useFakeTimers()
   })
   afterEach(() => {
