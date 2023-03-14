@@ -11,7 +11,7 @@ import type { SnapshotStateOptions } from './snapshot'
 import type { Arrayable } from './general'
 import type { BenchmarkUserOptions } from './benchmark'
 
-export { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
+export type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
 
 export type BuiltinEnvironment = 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime'
 // Record is used, so user can get intellisense for builtin environments, but still allow custom environments
