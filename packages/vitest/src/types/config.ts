@@ -1,6 +1,7 @@
 import type { AliasOptions, CommonServerOptions, DepOptimizationConfig } from 'vite'
 import type { PrettyFormatOptions } from 'pretty-format'
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
+import type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
 import type { BuiltinReporters } from '../node/reporters'
 import type { TestSequencerConstructor } from '../node/sequencers/types'
 import type { CoverageOptions, ResolvedCoverageOptions } from './coverage'
@@ -10,11 +11,12 @@ import type { SnapshotStateOptions } from './snapshot'
 import type { Arrayable } from './general'
 import type { BenchmarkUserOptions } from './benchmark'
 
+export { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
+
 export type BuiltinEnvironment = 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime'
 // Record is used, so user can get intellisense for builtin environments, but still allow custom environments
 export type VitestEnvironment = BuiltinEnvironment | (string & Record<never, never>)
 export type CSSModuleScopeStrategy = 'stable' | 'scoped' | 'non-scoped'
-export type SequenceHooks = 'stack' | 'list' | 'parallel'
 
 export type ApiConfig = Pick<CommonServerOptions, 'port' | 'strictPort' | 'host'>
 
@@ -499,6 +501,13 @@ export interface InlineConfig {
      */
     shuffle?: boolean
     /**
+     * Defines how setup files should be ordered
+     * - 'parallel' will run all setup files in parallel
+     * - 'list' will run all setup files in the order they are defined in the config file
+     * @default 'parallel'
+     */
+    setupFiles?: SequenceSetupFiles
+    /**
      * Seed for the random number generator.
      * @default Date.now()
      */
@@ -648,6 +657,7 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
   sequence: {
     sequencer: TestSequencerConstructor
     hooks: SequenceHooks
+    setupFiles: SequenceSetupFiles
     shuffle?: boolean
     seed: number
   }
