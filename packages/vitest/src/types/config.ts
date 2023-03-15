@@ -550,6 +550,20 @@ export interface InlineConfig {
    * Path to a custom test runner.
    */
   runner?: string
+
+  /**
+   * Debug tests by opening `node:inspector` in worker / child process.
+   * Provides similar experience as `--inspect` Node CLI argument.
+   * Requires `singleThread: true` OR `threads: false`.
+   */
+  inspect?: boolean
+
+  /**
+   * Debug tests by opening `node:inspector` in worker / child process and wait for debugger to connect.
+   * Provides similar experience as `--inspect-brk` Node CLI argument.
+   * Requires `singleThread: true` OR `threads: false`.
+   */
+  inspectBrk?: boolean
 }
 
 export interface TypecheckConfig {
