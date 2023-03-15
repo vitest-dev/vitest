@@ -94,7 +94,7 @@ Handling for dependencies resolution.
 #### deps.experimentalOptimizer
 
 - **Type:** `DepOptimizationConfig & { enabled: boolean }`
-- **Version:** Vitets 0.29.0
+- **Version:** Since Vitest 0.29.0
 - **See also:** [Dep Optimization Options](https://vitejs.dev/config/dep-optimization-options.html)
 
 Enable dependency optimization. If you have a lot of tests, this might improve their performance.
@@ -1216,7 +1216,7 @@ Changes the order in which hooks are executed.
 - **Type**: `'list' | 'parallel'`
 - **Default**: `'parallel'`
 - **CLI**: `--sequence.setupFiles=<value>`
-- **Version**: Vitest 0.29.3
+- **Version**: Since Vitest 0.29.3
 
 Changes the order in which setup files are executed.
 
