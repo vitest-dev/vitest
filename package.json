@@ -28,7 +28,8 @@
     "typecheck:why": "tsc --noEmit --explainFiles > explainTypes.txt",
     "ui:build": "vite build packages/ui",
     "ui:dev": "vite packages/ui",
-    "ui:test": "npm -C packages/ui run test:run"
+    "ui:test": "npm -C packages/ui run test:run",
+    "browser:test": "npm -C test/browser run test"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^0.34.1",
