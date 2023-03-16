@@ -126,6 +126,9 @@ jobs:
       - name: Install
         run: pnpm i
 
+      - name: Build
+        run: pnpm run build
+
       - name: Test Browser
         run: pnpm run browser:test
 
