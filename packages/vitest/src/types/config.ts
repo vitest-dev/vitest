@@ -395,7 +395,7 @@ export interface InlineConfig {
    *
    * @default false
    */
-  browser?: boolean | 'firefox' | 'chrome' | 'opera' | 'safari'
+  browser?: boolean | 'firefox' | 'chrome' | 'edge' | 'safari'
 
   /**
    * headless mode for the browser mode
