@@ -2,11 +2,12 @@
   "name": "@vitest/test-browser",
   "private": true,
   "scripts": {
-    "test": "vitest",
+    "test": "node test.mjs",
     "coverage": "vitest run --coverage"
   },
   "devDependencies": {
     "@vitest/browser": "workspace:*",
+    "execa": "^7.1.1",
     "vitest": "workspace:*"
   }
 }
