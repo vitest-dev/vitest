@@ -145,10 +145,6 @@ jobs:
         with:
           node-version: 18
 
-      - uses: browser-actions/setup-chrome@v1
-      - uses: browser-actions/setup-firefox@v1
-      - uses: browser-actions/setup-edge@v1
-
       - name: Install
         run: pnpm i
 
