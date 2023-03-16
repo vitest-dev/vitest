@@ -49,6 +49,11 @@ export async function startVitest(
     return
   }
 
+  if (options.browser === 'safari' && !await ensurePackageInstalled('safaridriver', root)) {
+    process.exitCode = 1
+    return
+  }
+
   if (typeof options.coverage === 'boolean')
     options.coverage = { enabled: options.coverage }
 

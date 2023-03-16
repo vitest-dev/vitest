@@ -1011,10 +1011,12 @@ importers:
     specifiers:
       '@vitest/browser': workspace:*
       execa: ^7.1.1
+      safaridriver: ^0.0.4
       vitest: workspace:*
     devDependencies:
       '@vitest/browser': link:../../packages/browser
       execa: 7.1.1
+      safaridriver: 0.0.4
       vitest: link:../../packages/vitest
 
   test/cache:
@@ -19400,6 +19402,10 @@ packages:
     resolution: {integrity: sha512-z9MzKh/UcOqB3i20H6rtrlaE/CgjLOvheWK/9ILrbhROGTweAi1BaFsTT9FbwZi5Trr1qNRs+MXkhmR06awzQA==}
     dependencies:
       tslib: 2.4.1
+    dev: true
+
+  /safaridriver/0.0.4:
+    resolution: {integrity: sha512-EgK9Vc2Bk4WaECq1E7ti9GyeQ6JKKQNs40vNOE/b5Ul5dDEt429G0Kj5Nzs4FRS5ZIVa7nBck1TyHuinOYdz2Q==}
     dev: true
 
   /safe-buffer/5.1.1:

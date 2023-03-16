@@ -8,6 +8,7 @@
   "devDependencies": {
     "@vitest/browser": "workspace:*",
     "execa": "^7.1.1",
+    "safaridriver": "^0.0.4",
     "vitest": "workspace:*"
   }
 }

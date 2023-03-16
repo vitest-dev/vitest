@@ -2,9 +2,10 @@ import assert from 'node:assert'
 import { readFile } from 'node:fs/promises'
 import { execa } from 'execa'
 
-console.log(process.env.BROWSER)
+const browser = process.env.BROWSER || 'chrome'
+
 let error
-await execa('npx', ['vitest', '--browser=chrome'], {
+await execa('npx', ['vitest', `--browser=${browser}`], {
   env: {
     ...process.env,
     CI: 'true',
