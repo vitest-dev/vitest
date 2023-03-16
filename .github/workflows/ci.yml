@@ -151,10 +151,5 @@ jobs:
       - name: Build
         run: pnpm run build
 
-      - name: Enable
-      - run: |
-          sudo safaridriver --enable
-          safaridriver -p 0 &
-
       - name: Test Browser
         run: pnpm run browser:test

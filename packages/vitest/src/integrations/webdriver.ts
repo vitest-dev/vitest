@@ -9,6 +9,15 @@ export async function openBrowser(config: ResolvedConfig) {
   if (cachedBrowser)
     return cachedBrowser
 
+  if (config.browser === 'safari') {
+    const safaridriver = await import('safaridriver')
+    safaridriver.start()
+
+    process.on('beforeExit', () => {
+      safaridriver.stop()
+    })
+  }
+
   const browser = await remote({
     logLevel: 'error',
     capabilities: {
