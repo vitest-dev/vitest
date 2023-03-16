@@ -102,11 +102,11 @@ jobs:
       - name: Test UI
         run: pnpm run ui:test
 
-  test-browser-chrome-firefox-edge:
+  test-browser:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        browser: [ 'chrome', 'firefox', 'edge']
+        browser: [ 'chrome', 'firefox', 'edge' ]
 
     timeout-minutes: 10
 
@@ -117,7 +117,7 @@ jobs:
 
       - uses: ./.github/actions/setup-and-cache
         with:
-          node-version: 16.16
+          node-version: 18
 
       - uses: browser-actions/setup-chrome@v1
       - uses: browser-actions/setup-firefox@v1
@@ -126,5 +126,28 @@ jobs:
       - name: Install
         run: pnpm i
 
-      - name: Test UI
-        run: pnpm run ui:test
+      - name: Test Browser
+        run: pnpm run browser:test
+
+  test-browser-safari:
+    runs-on: macos-latest
+    timeout-minutes: 10
+
+    env:
+      BROWSER: 'safari'
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: ./.github/actions/setup-and-cache
+        with:
+          node-version: 18
+
+      - uses: browser-actions/setup-chrome@v1
+      - uses: browser-actions/setup-firefox@v1
+      - uses: browser-actions/setup-edge@v1
+
+      - name: Install
+        run: pnpm i
+
+      - name: Test Browser
+        run: pnpm run browser:test

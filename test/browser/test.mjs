@@ -2,6 +2,7 @@ import assert from 'node:assert'
 import { readFile } from 'node:fs/promises'
 import { execa } from 'execa'
 
+console.log(process.env.BROWSER)
 let error
 await execa('npx', ['vitest', '--browser=chrome'], {
   env: {
