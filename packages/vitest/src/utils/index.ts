@@ -120,3 +120,11 @@ export function shouldKeepServer(config?: ResolvedConfig) {
 export function isForSafari(config?: ResolvedConfig | CliOptions) {
   return config?.browser === 'safari'
 }
+
+/**
+ * if browser === true then the user will handle joining the link in the target
+ * browser, otherwise, we should handle starting our own browser using webdriverio
+ */
+export function shouldStartBrowser(config: ResolvedConfig) {
+  return typeof config.browser === 'string'
+}
