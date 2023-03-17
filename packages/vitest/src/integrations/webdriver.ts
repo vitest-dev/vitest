@@ -11,7 +11,7 @@ export async function openBrowser(config: ResolvedConfig) {
 
   if (config.browser === 'safari') {
     const safaridriver = await import('safaridriver')
-    safaridriver.start()
+    safaridriver.start({ diagnose: true })
 
     process.on('beforeExit', () => {
       safaridriver.stop()

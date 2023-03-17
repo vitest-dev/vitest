@@ -11,6 +11,8 @@ await execa('npx', ['vitest', `--browser=${browser}`], {
     CI: 'true',
     NO_COLOR: 'true',
   },
+  stdout: 'inherit',
+  stderr: 'inherit'
 })
   .catch((e) => {
     error = e
