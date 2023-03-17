@@ -74,7 +74,7 @@ You can also set headless mode using the `--headless` flag in the CLI, like this
 vitest --browser=chrome --headless
 ```
 
-In this case, vitest will run in headless mode using the chrome browser.
+In this case, vitest will run in headless mode using the Chrome browser.
 
 ## Open
 
