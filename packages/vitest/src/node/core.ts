@@ -690,8 +690,8 @@ export class Vitest {
   }
 
   // The server needs to be running for communication
-  shouldKeepServer(config?: ResolvedConfig) {
-    return config?.watch || config?.browser
+  shouldKeepServer() {
+    return !!(this.config?.watch || this.config?.browser)
   }
 
   isInSourceTestFile(code: string) {
