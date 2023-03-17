@@ -39,7 +39,7 @@ export default defineConfig({
 ## Cross-browser Testing:
 
 When you specify a browser name in the browser option, vitest will try to run
-the specified browser using WebdriverIO, and then run the tests there. This
+the specified browser using [WebdriverIO](https://webdriver.io/), and then run the tests there. This
 feature makes cross-browser testing easy to use and configure in environments
 like CI.
 
