@@ -5,7 +5,7 @@ import { BaseBrowserProvider } from '../utils/browser'
 import type { CliOptions } from '../node/cli-api'
 
 class WebdriverBrowserProvider extends BaseBrowserProvider implements BrowserProvider {
-  browser: string
+  browser?: string | boolean
   headless: boolean
   cachedBrowser: Browser | null = null
 

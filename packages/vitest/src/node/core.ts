@@ -329,7 +329,7 @@ export class Vitest {
 
     if (this.config.browser) {
       const webdriver = getWebdriver()
-      if (webdriver.shouldStart(this.config))
+      if (webdriver.shouldStart())
         await webdriver.start(`http://${this.config.api?.host || 'localhost'}:${this.config.api?.port}`)
 
       return

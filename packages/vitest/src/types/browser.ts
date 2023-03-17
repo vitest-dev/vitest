@@ -1,5 +1,5 @@
 export interface BrowserProvider {
-  browser: string
+  browser?: string | boolean
   headless: boolean
 
   is(_browserName: string): boolean

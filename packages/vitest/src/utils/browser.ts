@@ -1,7 +1,5 @@
-import type { ResolvedConfig } from '../types'
-
 export class BaseBrowserProvider {
-  browser!: string
+  browser?: string | boolean
 
   is(_browserName: string) {
     return this.browser === _browserName
@@ -11,7 +9,7 @@ export class BaseBrowserProvider {
   * if browser === true then the user will handle joining the link in the target
   * browser, otherwise, we should handle starting our own browser using webdriverio
   */
-  shouldStart(config: ResolvedConfig) {
-    return typeof config.browser === 'string'
+  shouldStart() {
+    return typeof this.browser === 'string'
   }
 }
