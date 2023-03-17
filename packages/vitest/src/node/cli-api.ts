@@ -4,7 +4,7 @@ import { EXIT_CODE_RESTART } from '../constants'
 import { CoverageProviderMap } from '../integrations/coverage'
 import { getEnvPackageName } from '../integrations/env'
 import type { UserConfig, Vitest, VitestRunMode } from '../types'
-import { isForSafari } from '../utils'
+import { initializeWebdriver } from '../integrations/webdriver'
 import { ensurePackageInstalled } from './pkg'
 import { createVitest } from './create'
 import { registerConsoleShortcuts } from './stdin'
@@ -44,14 +44,17 @@ export async function startVitest(
     return
   }
 
-  if (typeof options.browser === 'string' && !await ensurePackageInstalled('webdriverio', root)) {
-    process.exitCode = 1
-    return
-  }
+  if (typeof options.browser === 'string') {
+    if (!await ensurePackageInstalled('webdriverio', root)) {
+      process.exitCode = 1
+      return
+    }
 
-  if (isForSafari(options) && !await ensurePackageInstalled('safaridriver', root)) {
-    process.exitCode = 1
-    return
+    const webdriver = initializeWebdriver(options)
+    if (webdriver.is('safari') && !await ensurePackageInstalled('safaridriver', root)) {
+      process.exitCode = 1
+      return
+    }
   }
 
   if (typeof options.coverage === 'boolean')

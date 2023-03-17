@@ -8,7 +8,8 @@ import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
 import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter, ResolvedConfig, UserConfig, VitestRunMode } from '../types'
 import { SnapshotManager } from '../integrations/snapshot/manager'
-import { deepMerge, hasFailed, noop, shouldStartBrowser, slash, toArray } from '../utils'
+import { getWebdriver } from '../integrations/webdriver'
+import { deepMerge, hasFailed, noop, slash, toArray } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
 import { Typechecker } from '../typecheck/typechecker'
 import { createPool } from './pool'
@@ -327,10 +328,10 @@ export class Vitest {
     await this.report('onPathsCollected', paths)
 
     if (this.config.browser) {
-      if (shouldStartBrowser(this.config)) {
-        const { openUrl } = await import('../integrations/webdriver')
-        await openUrl(`http://${this.config.api?.host || 'localhost'}:${this.config.api?.port}`, this.config)
-      }
+      const webdriver = getWebdriver()
+      if (webdriver.shouldStart(this.config))
+        await webdriver.start(`http://${this.config.api?.host || 'localhost'}:${this.config.api?.port}`)
+
       return
     }
 

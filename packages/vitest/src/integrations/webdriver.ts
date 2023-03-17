@@ -1,36 +1,61 @@
-import { remote } from 'webdriverio'
 import type { Browser } from 'webdriverio'
-import { isCI, isForSafari } from '../utils'
-import type { ResolvedConfig } from '../types'
+import { isCI } from '../utils'
+import type { BrowserProvider } from '../types/browser'
+import { BaseBrowserProvider } from '../utils/browser'
+import type { CliOptions } from '../node/cli-api'
 
-const cachedBrowser: Browser | null = null
+class WebdriverBrowserProvider extends BaseBrowserProvider implements BrowserProvider {
+  browser: string
+  headless: boolean
+  cachedBrowser: Browser | null = null
 
-export async function openBrowser(config: ResolvedConfig) {
-  if (cachedBrowser)
-    return cachedBrowser
-
-  if (isForSafari(config)) {
-    const safaridriver = await import('safaridriver')
-    safaridriver.start({ diagnose: true })
-
-    process.on('beforeExit', () => {
-      safaridriver.stop()
-    })
+  constructor(options: CliOptions) {
+    super()
+    this.browser = options.browser as string
+    this.headless = options.headless ?? isCI
   }
 
-  const browser = await remote({
-    logLevel: 'error',
-    capabilities: {
-      'browserName': config.browser as string,
-      'wdio:devtoolsOptions': { headless: config.headless ?? isCI },
-    },
-  })
+  async openBrowser() {
+    if (this.cachedBrowser)
+      return this.cachedBrowser
 
-  return browser
+    if (this.is('safari')) {
+      const safaridriver = await import('safaridriver')
+      safaridriver.start({ diagnose: true })
+
+      process.on('beforeExit', () => {
+        safaridriver.stop()
+      })
+    }
+    const { remote } = await import('webdriverio')
+
+    const browserInstance = await remote({
+      logLevel: 'error',
+      capabilities: {
+        'browserName': this.browser as string,
+        'wdio:devtoolsOptions': { headless: this.headless ?? isCI },
+      },
+    })
+
+    return browserInstance
+  }
+
+  async start(url: string) {
+    const browserInstance = await this.openBrowser()
+
+    await browserInstance.url(url)
+  }
 }
 
-export async function openUrl(url: string, config: ResolvedConfig) {
-  const browser = await openBrowser(config)
+let provider: WebdriverBrowserProvider | null = null
 
-  await browser.url(url)
+export function initializeWebdriver(options: CliOptions) {
+  return provider = new WebdriverBrowserProvider(options)
+}
+
+export function getWebdriver() {
+  if (!provider)
+    throw new Error('BrowserProvider has not been initialized yet')
+
+  return provider
 }

@@ -1,7 +1,5 @@
 import { relative } from 'pathe'
 import type { ModuleCacheMap } from 'vite-node'
-import type { CliOptions } from '../node/cli-api'
-import type { ResolvedConfig } from '../types'
 import { getWorkerState } from '../utils'
 import { isNode } from './env'
 
@@ -110,16 +108,4 @@ export function objectAttr(source: any, path: string, defaultValue = undefined) 
       return defaultValue
   }
   return result
-}
-
-export function isForSafari(config?: ResolvedConfig | CliOptions) {
-  return config?.browser === 'safari'
-}
-
-/**
- * if browser === true then the user will handle joining the link in the target
- * browser, otherwise, we should handle starting our own browser using webdriverio
- */
-export function shouldStartBrowser(config: ResolvedConfig) {
-  return typeof config.browser === 'string'
 }
