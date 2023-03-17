@@ -689,6 +689,11 @@ export class Vitest {
     return false
   }
 
+  // The server needs to be running for communication
+  shouldKeepServer(config?: ResolvedConfig) {
+    return config?.watch || config?.browser
+  }
+
   isInSourceTestFile(code: string) {
     return code.includes('import.meta.vitest')
   }

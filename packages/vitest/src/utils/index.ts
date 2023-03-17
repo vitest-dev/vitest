@@ -112,11 +112,6 @@ export function objectAttr(source: any, path: string, defaultValue = undefined) 
   return result
 }
 
-// The server needs to be running for communication
-export function shouldKeepServer(config?: ResolvedConfig) {
-  return config?.watch || config?.browser
-}
-
 export function isForSafari(config?: ResolvedConfig | CliOptions) {
   return config?.browser === 'safari'
 }

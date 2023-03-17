@@ -3,7 +3,6 @@ import cac from 'cac'
 import c from 'picocolors'
 import { version } from '../../package.json'
 import type { Vitest, VitestRunMode } from '../types'
-import { shouldKeepServer } from '../utils'
 import type { CliOptions } from './cli-api'
 import { startVitest } from './cli-api'
 import { divider } from './reporters/renderers/utils'
@@ -131,7 +130,7 @@ function normalizeCliOptions(argv: CliOptions): CliOptions {
 async function start(mode: VitestRunMode, cliFilters: string[], options: CliOptions): Promise<Vitest | undefined> {
   try {
     const ctx = await startVitest(mode, cliFilters.map(normalize), normalizeCliOptions(options))
-    if (!shouldKeepServer(ctx?.config))
+    if (!ctx?.shouldKeepServer())
       await ctx?.exit()
     return ctx
   }
