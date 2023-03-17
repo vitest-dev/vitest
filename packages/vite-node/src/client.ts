@@ -92,6 +92,14 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
     return this.deleteByModuleId(this.normalizePath(fsPath))
   }
 
+  invalidateModule(mod: ModuleCache) {
+    delete mod.evaluated
+    delete mod.resolving
+    delete mod.promise
+    delete mod.exports
+    return true
+  }
+
   /**
    * Invalidate modules that dependent on the given modules, up to the main entry
    */
