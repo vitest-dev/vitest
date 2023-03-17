@@ -151,8 +151,8 @@ jobs:
       - name: Build
         run: pnpm run build
 
-      - name: Enable
-        run: safaridriver --enable
+      # - name: Enable
+      #   run: safaridriver --enable
 
       - name: Test Browser
         run: pnpm run browser:test
