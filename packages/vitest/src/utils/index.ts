@@ -1,5 +1,6 @@
 import { relative } from 'pathe'
 import type { ModuleCacheMap } from 'vite-node'
+import type { CliOptions } from '../node/cli-api'
 import type { ResolvedConfig } from '../types'
 import { getWorkerState } from '../utils'
 import { isNode } from './env'
@@ -114,4 +115,8 @@ export function objectAttr(source: any, path: string, defaultValue = undefined) 
 // The server needs to be running for communication
 export function shouldKeepServer(config?: ResolvedConfig) {
   return config?.watch || config?.browser
+}
+
+export function isForSafari(config?: ResolvedConfig | CliOptions) {
+  return config?.browser === 'safari'
 }

@@ -1,6 +1,6 @@
 import { remote } from 'webdriverio'
 import type { Browser } from 'webdriverio'
-import { isCI } from '../utils/env'
+import { isCI, isForSafari } from '../utils'
 import type { ResolvedConfig } from '../types'
 
 const cachedBrowser: Browser | null = null
@@ -9,7 +9,7 @@ export async function openBrowser(config: ResolvedConfig) {
   if (cachedBrowser)
     return cachedBrowser
 
-  if (config.browser === 'safari') {
+  if (isForSafari(config)) {
     const safaridriver = await import('safaridriver')
     safaridriver.start({ diagnose: true })
 
