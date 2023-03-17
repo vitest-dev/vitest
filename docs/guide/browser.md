@@ -78,7 +78,7 @@ In this case, vitest will run in headless mode using the Chrome browser.
 
 ## Open
 
-Another option available in the browser mode is the `open` option, which automatically opens your default browser when the browser option is set to true. This can be useful for quickly viewing your tests in the browser.
+Another option available in the browser mode is the `open` option, which automatically opens your default browser when the browser option is set to `true`. This can be useful for quickly viewing your tests in the browser.
 
 Here's an example configuration enabling the open option:
 
