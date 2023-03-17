@@ -151,5 +151,8 @@ jobs:
       - name: Build
         run: pnpm run build
 
+      - name: check
+        run: ls /usr/bin/safaridriver
+
       - name: Test Browser
         run: pnpm run browser:test
