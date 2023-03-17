@@ -51,7 +51,8 @@ vitest --browser=chrome
 
 
 > Note: When using the Safari browser option, the Safaridriver needs to be
-> activated by running `sudo safaridriver --enable` on your device. Additionally, when running vitest, it will attempt to install some drivers for compatibility with safaridriver.
+> activated by running `sudo safaridriver --enable` on your device.
+> Additionally, when running your tests, vitest will attempt to install some drivers for compatibility with safaridriver.
 
 Headless mode is another option available in the browser mode. In headless mode, the browser runs in the background without a user interface, which makes it useful for running automated tests. The headless option in vitest can be set to a boolean value to enable or disable headless mode.
 
