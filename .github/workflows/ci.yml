@@ -158,4 +158,4 @@ jobs:
         run: sudo safaridriver --enable
 
       - name: Test Browser
-        run: pnpm run browser:test
+        run:  sudo safaridriver --enable && pnpm run browser:test
