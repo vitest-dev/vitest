@@ -10,13 +10,12 @@ This document provides information about the experimental browser mode feature i
 
 To activate browser mode in your vitest configuration, you can use the `--browser` flag or set the browser field to true in your vitest configuration file. Here is an example configuration using browser field:
 
-```
+```ts
 export default defineConfig({
   test: {
     browser: true,
   }
 })
-
 ```
 Browser Option Types:
 
@@ -26,6 +25,7 @@ set to `true`, the users can navigate to the provided link by vitest. You can al
 - `chrome`
 - `edge`
 - `safari`
+
 Here's an example configuration setting chrome as the browser option:
 
 ```ts
@@ -48,6 +48,7 @@ To specify a browser using the CLI, use the `--browser` flag followed by the bro
 ```sh
 vitest --browser=chrome
 ```
+
 
 > Note: When using the safari browser option, the safaridriver needs to be
 > activated by running `sudo safaridriver --enable` on your device. Additionally, when running vitest, it will attempt to install some drivers for compatibility with safaridriver.
