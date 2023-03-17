@@ -48,6 +48,7 @@ cli
   .option('--no-color', 'Removes colors from the console output')
   .option('--inspect', 'Enable Node.js inspector')
   .option('--inspect-brk', 'Enable Node.js inspector with break')
+  .option('--test-timeout <time>', 'Default timeout of a test in milliseconds (default: 5000)')
   .help()
 
 cli
