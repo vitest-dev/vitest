@@ -381,7 +381,7 @@ export default defineConfig({
 })
 ```
 
-### environmentMatchGlobs
+### poolMatchGlobs
 
 - **Type:** `[string, 'threads' | 'child_process'][]`
 - **Default:** `[]`
