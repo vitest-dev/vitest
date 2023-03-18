@@ -260,7 +260,7 @@ export class Vitest {
 
     await this.reportCoverage(true)
 
-    if (this.config.watch && !this.config.browser)
+    if (this.config.watch && this.config.browser !== true)
       await this.report('onWatcherStart')
   }
 
@@ -332,6 +332,12 @@ export class Vitest {
     return runningTests
   }
 
+  private createPool() {
+    if (this.browserProvider?.createPool)
+      return this.browserProvider.createPool()
+    return createPool(this)
+  }
+
   async runFiles(paths: string[]) {
     paths = Array.from(new Set(paths))
 
@@ -339,12 +345,13 @@ export class Vitest {
 
     await this.report('onPathsCollected', paths)
 
-    if (this.config.browser) {
-      const browser = await this.resolveBrowserProvider()
-      if (browser.canStart())
-        await browser.start(`http://${this.config.api?.host || 'localhost'}:${this.config.api?.port}`)
-
+    if (this.config.browser === true) {
       return
+    }
+    else if (typeof this.config.browser === 'string') {
+      const browser = await this.resolveBrowserProvider()
+      if (!browser.createPool)
+        return
     }
 
     // previous run
@@ -353,7 +360,7 @@ export class Vitest {
     // schedule the new run
     this.runningPromise = (async () => {
       if (!this.pool)
-        this.pool = createPool(this)
+        this.pool = this.createPool()
 
       const invalidates = Array.from(this.invalidates)
       this.invalidates.clear()
@@ -375,7 +382,7 @@ export class Vitest {
       await this.cache.results.writeToCache()
     })()
       .finally(async () => {
-        if (!this.config.browser)
+        if (!this.browserProvider || this.browserProvider.createPool)
           await this.report('onFinished', this.state.getFiles(paths), this.state.getUnhandledErrors())
         this.runningPromise = undefined
       })
@@ -397,7 +404,7 @@ export class Vitest {
 
     await this.reportCoverage(!trigger)
 
-    if (!this.config.browser)
+    if (this.config.browser !== true)
       await this.report('onWatcherStart', this.state.getFiles(files))
   }
 
@@ -490,7 +497,7 @@ export class Vitest {
 
       await this.reportCoverage(false)
 
-      if (!this.config.browser)
+      if (this.config.browser !== true)
         await this.report('onWatcherStart', this.state.getFiles(files))
     }, WATCHER_DEBOUNCE)
   }
@@ -704,7 +711,7 @@ export class Vitest {
 
   // The server needs to be running for communication
   shouldKeepServer() {
-    return !!(this.config?.watch || this.config?.browser)
+    return !!(this.config?.watch || this.config?.browser === true)
   }
 
   isInSourceTestFile(code: string) {

@@ -20,10 +20,20 @@ let config: ResolvedConfig | undefined
 let runner: VitestRunner | undefined
 const browserHashMap = new Map<string, string>()
 
+const url = new URL(location.href)
+const testId = url.searchParams.get('id')
+
+const getQueryPaths = () => {
+  if (!url.searchParams.has('path'))
+    return null
+
+  return url.searchParams.getAll('path')
+}
+
 export const client = createClient(ENTRY_URL, {
   handlers: {
     async onPathsCollected(paths) {
-      if (!paths)
+      if (!paths || testId)
         return
       // const config = __vitest_worker__.config
       const now = `${new Date().getTime()}`
@@ -66,7 +76,7 @@ ws.addEventListener('open', async () => {
 
   // @ts-expect-error mocking vitest apis
   globalThis.__vitest_mocker__ = {}
-  const paths = await client.rpc.getPaths()
+  const paths = getQueryPaths() || await client.rpc.getPaths()
 
   const now = `${new Date().getTime()}`
   paths.forEach(i => browserHashMap.set(i, now))
@@ -98,6 +108,12 @@ async function runTests(paths: string[], config: any, client: VitestClient) {
   await setupCommonEnv(config)
   await startTests(paths, runner)
 
-  await client.rpc.onFinished()
-  await client.rpc.onWatcherStart()
+  // TODO: should be removed, and always use onDone instead
+  if (!testId) {
+    await client.rpc.onFinished()
+    await client.rpc.onWatcherStart()
+  }
+  else {
+    await client.rpc.onDone(testId)
+  }
 }

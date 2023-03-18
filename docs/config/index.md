@@ -1031,8 +1031,11 @@ Path to a provider that will be used when running browser tests. Provider should
 ```ts
 export interface BrowserProvider {
   initialize?(ctx: Vitest): Awaitable<void>
-  start(url: string): Awaitable<void>
-  canStart(): boolean
+  createPool?(): {
+    runTests: (files: string[], invalidated: string[]) => void
+    close: () => Awaited<void>
+  }
+  testFinished?(testId: string): Awaitable<void>
 }
 ```
 

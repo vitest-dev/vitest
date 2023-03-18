@@ -10,6 +10,7 @@ export interface WebSocketHandlers {
   onFinished(files?: File[]): Promise<void>
   onCollected(files?: File[]): Promise<void>
   onTaskUpdate(packs: TaskResultPack[]): void
+  onDone(name: string): void
   getFiles(): File[]
   getPaths(): string[]
   getConfig(): ResolvedConfig

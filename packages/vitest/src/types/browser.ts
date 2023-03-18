@@ -1,10 +1,11 @@
 import type { Awaitable } from '@vitest/utils'
 import type { Vitest } from '../node'
+import type { ProcessPool } from '../node/pool'
 
 export interface BrowserProvider {
   initialize?(ctx: Vitest): Awaitable<void>
-  start(url: string): Awaitable<void>
-  canStart(): boolean
+  createPool?(): ProcessPool
+  testFinished?(testId: string): Awaitable<void>
 }
 
 export interface BrowserProviderModule {

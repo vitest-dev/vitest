@@ -26,7 +26,7 @@ if (error) {
 const browserResult = await readFile('./browser.json', 'utf-8')
 const browserResultJson = JSON.parse(browserResult)
 
-assert.ok(browserResultJson.testResults.length === 3, 'Not all the tests have been run')
+assert.ok(browserResultJson.testResults.length === 4, 'Not all the tests have been run')
 
 for (const result of browserResultJson.testResults)
   assert.ok(result.status === 'passed')
