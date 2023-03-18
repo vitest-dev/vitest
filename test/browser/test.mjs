@@ -12,7 +12,7 @@ await execa('npx', ['vitest', `--browser=${browser}`], {
     NO_COLOR: 'true',
   },
   stdout: 'inherit',
-  stderr: 'inherit'
+  stderr: 'inherit',
 })
   .catch((e) => {
     error = e
@@ -28,6 +28,5 @@ const browserResultJson = JSON.parse(browserResult)
 
 assert.ok(browserResultJson.testResults.length === 3, 'Not all the tests have been run')
 
-for (let result of browserResultJson.testResults) {
+for (const result of browserResultJson.testResults)
   assert.ok(result.status === 'passed')
-}

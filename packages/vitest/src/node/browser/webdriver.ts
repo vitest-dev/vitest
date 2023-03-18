@@ -1,8 +1,8 @@
 import type { Browser } from 'webdriverio'
-import type { Vitest } from 'vitest/node'
 import { isCI } from '../../utils'
 import type { BrowserProvider } from '../../types/browser'
 import { ensurePackageInstalled } from '../pkg'
+import type { Vitest } from '../core'
 
 export class WebdriverBrowserProvider implements BrowserProvider {
   private _cachedBrowser: Browser | null = null

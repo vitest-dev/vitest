@@ -1,5 +1,5 @@
 import type { Awaitable } from '@vitest/utils'
-import type { Vitest } from 'vitest/node'
+import type { Vitest } from '../node'
 
 export interface BrowserProvider {
   initialize?(ctx: Vitest): Awaitable<void>

@@ -253,5 +253,8 @@ export function resolveConfig(
     resolved.exclude = resolved.typecheck.exclude
   }
 
+  if (!resolved.browserOptions)
+    resolved.browserOptions = {}
+
   return resolved
 }
