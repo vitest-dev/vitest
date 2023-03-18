@@ -4,6 +4,10 @@ title: Debugging | Guide
 
 # Debugging
 
+:::tip
+When debugging tests you might want to use `--test-timeout` CLI argument to prevent tests from timing out when stopping at breakpoints.
+:::
+
 ## VSCode
 
 Quick way to debug tests in VSCode is via `JavaScript Debug Terminal`. Open a new `JavaScript Debug Terminal` and run `npm run test` or `vitest` directly. *this works with any code ran in Node, so will work with most JS testing frameworks*
