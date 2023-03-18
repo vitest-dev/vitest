@@ -149,6 +149,41 @@ describe('deepClone', () => {
     objD.ref = objD
     expect(deepClone(objD)).toEqual(objD)
   })
+
+  test('can clone classes with proxied enumerable getters', () => {
+    const obj = Symbol.for('aClass')
+    class A {
+      [obj]: { a: number; b: string }
+      constructor(data: { a: number; b: string }) {
+        this[obj] = data
+        return new Proxy(this, {
+          ownKeys() {
+            return Reflect.ownKeys(data)
+          },
+          getOwnPropertyDescriptor(target, p) {
+            return {
+              ...Reflect.getOwnPropertyDescriptor(data, p),
+              enumerable: true,
+              writable: false,
+            }
+          },
+        })
+      }
+
+      get a() {
+        return this[obj].a
+      }
+
+      get b() {
+        return this[obj].b
+      }
+    }
+    const aClass = new A({ a: 1, b: 'B' })
+    expect(aClass.a).toEqual(1)
+    expect(aClass.b).toEqual('B')
+    expect(Object.keys(aClass)).toEqual(['a', 'b'])
+    expect(deepClone({ aClass })).toEqual({ aClass: new A({ a: 1, b: 'B' }) })
+  })
 })
 
 describe('resetModules doesn\'t resets only user modules', () => {
