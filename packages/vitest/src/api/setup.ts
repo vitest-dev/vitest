@@ -39,7 +39,7 @@ export function setup(ctx: Vitest) {
         },
         async onFinished() {
           await ctx.report('onFinished')
-          if (!ctx.config.watch && ctx.config.browser)
+          if (!ctx.shouldKeepServer())
             await ctx.exit(true)
         },
         async onCollected(files) {

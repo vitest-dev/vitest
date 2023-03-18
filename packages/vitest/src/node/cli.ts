@@ -36,7 +36,7 @@ cli
   .option('--globals', 'Inject apis globally')
   .option('--dom', 'Mock browser api with happy-dom')
   .option('--browser [browserName]', 'Run tests in browser with the provided browser using webdriver')
-  .option('--headless', 'headless mode for the browser mode, useful for CI environments (default: process.env.CI)')
+  .option('--headless', 'Headless mode for the browser mode, useful for CI environments (default: process.env.CI)')
   .option('--environment <env>', 'Specify runner environment (default: node)')
   .option('--passWithNoTests', 'Pass when no tests found')
   .option('--logHeapUsage', 'Show the size of heap for each test')
@@ -123,6 +123,12 @@ function normalizeCliOptions(argv: CliOptions): CliOptions {
     argv.dir = normalize(argv.dir)
   else
     delete argv.dir
+
+  if ('headless' in argv) {
+    argv.browserOptions ??= {}
+    argv.browserOptions.headless = argv.headless
+    delete argv.headless
+  }
 
   return argv
 }

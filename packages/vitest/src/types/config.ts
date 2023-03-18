@@ -10,6 +10,7 @@ import type { Reporter } from './reporter'
 import type { SnapshotStateOptions } from './snapshot'
 import type { Arrayable } from './general'
 import type { BenchmarkUserOptions } from './benchmark'
+import type { BrowserConfigOptions } from './browser'
 
 export type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
 
@@ -398,12 +399,10 @@ export interface InlineConfig {
   browser?: boolean | 'firefox' | 'chrome' | 'edge' | 'safari'
 
   /**
-   * headless mode for the browser mode
+   * options for browser environment
    * @experimental
-   *
-   * @default process.env.CI
    */
-  headless?: boolean
+  browserOptions?: BrowserConfigOptions
 
   /**
    * Open UI automatically.

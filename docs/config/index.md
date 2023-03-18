@@ -992,6 +992,62 @@ Open Vitest UI (WIP)
 
 Listen to port and serve API. When set to true, the default port is 51204
 
+### browser
+
+- **Type:** `boolean | 'firefox' | 'chrome' | 'edge' | 'safari'`
+- **Default:** `false`
+- **CLI:** `--browser`, `--browser=<name>`
+
+Run Vitest in a browser. If browser name is specified, Vitest will run tests using `webdriverio`, otherwise it will open your default browser.
+
+::: tip NOTE
+Read more about testing in a real browser in the [guide page](/guide/browser).
+:::
+
+::: warning
+This is experimental feature. Breaking changes might not follow semver, please pin Vitest's version when using it.
+:::
+
+### browserOptions
+
+- **Type:** `{ provider?, headless? }`
+- **Default:** `false`
+- **Version:** Since Vitest 0.30.0
+- **CLI:** `--browser`, `--browser=<name>`
+
+Options to change behaviour of browser.
+
+::: warning
+This is experimental feature. Breaking changes might not follow semver, please pin Vitest's version when using it.
+:::
+
+#### browserOptions.provider
+
+- **Type:** `string`
+- **Default:** `'webdriver'`
+
+Path to a provider that will be used when running browser tests. Provider should be exported using `default` export and have this shape:
+
+```ts
+export interface BrowserProvider {
+  initialize?(ctx: Vitest): Awaitable<void>
+  start(url: string): Awaitable<void>
+  canStart(): boolean
+}
+```
+
+::: warning
+This is an advanced API for library authors. If you just need to run tests in a browser, use [browser](/#browser) option.
+:::
+
+#### browserOptions.headless
+
+- **Type:** `boolean`
+- **Default:** `process.env.CI`
+- **CLI:** `--headless`
+
+Run browser in a `headless` mode. If you are running Vitest in CI, it will be enabled by default.
+
 ### clearMocks
 
 - **Type:** `boolean`

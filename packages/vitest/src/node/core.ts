@@ -8,10 +8,11 @@ import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
 import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter, ResolvedConfig, UserConfig, VitestRunMode } from '../types'
 import { SnapshotManager } from '../integrations/snapshot/manager'
-import { getWebdriver } from '../integrations/webdriver'
 import { deepMerge, hasFailed, noop, slash, toArray } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
 import { Typechecker } from '../typecheck/typechecker'
+import type { BrowserProvider } from '../types/browser'
+import { getBrowserProvider } from '../integrations/browser'
 import { createPool } from './pool'
 import type { ProcessPool } from './pool'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
@@ -32,6 +33,7 @@ export class Vitest {
   cache: VitestCache = undefined!
   reporters: Reporter[] = undefined!
   coverageProvider: CoverageProvider | null | undefined
+  browserProvider: BrowserProvider | undefined
   logger: Logger
   pool: ProcessPool | undefined
   typechecker: Typechecker | undefined
@@ -131,6 +133,16 @@ export class Vitest {
       this.config.coverage = this.coverageProvider.resolveOptions()
     }
     return this.coverageProvider
+  }
+
+  async resolveBrowserProvider() {
+    if (this.browserProvider)
+      return this.browserProvider
+    const Provider = await getBrowserProvider(this.config.browserOptions, this.runner)
+    this.browserProvider = new Provider()
+    if (this.browserProvider)
+      await this.browserProvider.initialize?.(this)
+    return this.browserProvider
   }
 
   getSerializableConfig() {
@@ -328,9 +340,9 @@ export class Vitest {
     await this.report('onPathsCollected', paths)
 
     if (this.config.browser) {
-      const webdriver = getWebdriver()
-      if (webdriver.shouldStart())
-        await webdriver.start(`http://${this.config.api?.host || 'localhost'}:${this.config.api?.port}`)
+      const browser = await this.resolveBrowserProvider()
+      if (browser.canStart())
+        await browser.start(`http://${this.config.api?.host || 'localhost'}:${this.config.api?.port}`)
 
       return
     }
