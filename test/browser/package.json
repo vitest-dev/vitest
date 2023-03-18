@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "test": "node test.mjs",
+    "vi": "vitest --browser=edge",
     "coverage": "vitest run --coverage"
   },
   "devDependencies": {

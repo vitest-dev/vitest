@@ -7,7 +7,7 @@ import { createBrowserRunner } from './runner'
 import { BrowserSnapshotEnvironment } from './snapshot'
 
 // @ts-expect-error mocking some node apis
-globalThis.process = { env: {}, argv: [], stdout: { write: () => {} }, nextTick: cb => cb() }
+globalThis.process = { env: {}, argv: [], cwd: () => '/', stdout: { write: () => {} }, nextTick: cb => cb() }
 globalThis.global = globalThis
 
 export const PORT = import.meta.hot ? '51204' : location.port
@@ -21,29 +21,13 @@ let runner: VitestRunner | undefined
 const browserHashMap = new Map<string, string>()
 
 const url = new URL(location.href)
-const testId = url.searchParams.get('id')
+const testId = url.searchParams.get('id') || 'unknown'
 
 const getQueryPaths = () => {
-  if (!url.searchParams.has('path'))
-    return null
-
   return url.searchParams.getAll('path')
 }
 
-export const client = createClient(ENTRY_URL, {
-  handlers: {
-    async onPathsCollected(paths) {
-      if (!paths || testId)
-        return
-      // const config = __vitest_worker__.config
-      const now = `${new Date().getTime()}`
-      paths.forEach((i) => {
-        browserHashMap.set(i, now)
-      })
-      await runTests(paths, config, client)
-    },
-  },
-})
+export const client = createClient(ENTRY_URL)
 
 const ws = client.ws
 
@@ -76,7 +60,7 @@ ws.addEventListener('open', async () => {
 
   // @ts-expect-error mocking vitest apis
   globalThis.__vitest_mocker__ = {}
-  const paths = getQueryPaths() || await client.rpc.getPaths()
+  const paths = getQueryPaths()
 
   const now = `${new Date().getTime()}`
   paths.forEach(i => browserHashMap.set(i, now))
@@ -105,15 +89,15 @@ async function runTests(paths: string[], config: any, client: VitestClient) {
     setupSnapshotEnvironment(new BrowserSnapshotEnvironment(client))
     hasSnapshot = true
   }
-  await setupCommonEnv(config)
-  await startTests(paths, runner)
 
-  // TODO: should be removed, and always use onDone instead
-  if (!testId) {
-    await client.rpc.onFinished()
-    await client.rpc.onWatcherStart()
+  try {
+    await setupCommonEnv(config)
+    const files = paths.map((path) => {
+      return (`${config.root}/${path}`).replace(/\/+/g, '/')
+    })
+    await startTests(files, runner)
   }
-  else {
+  finally {
     await client.rpc.onDone(testId)
   }
 }

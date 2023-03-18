@@ -3,8 +3,8 @@ import type { Vitest } from '../node'
 import type { ProcessPool } from '../node/pool'
 
 export interface BrowserProvider {
-  initialize?(ctx: Vitest): Awaitable<void>
-  createPool?(): ProcessPool
+  initialize(ctx: Vitest): Awaitable<void>
+  createPool(): ProcessPool
   testFinished?(testId: string): Awaitable<void>
 }
 

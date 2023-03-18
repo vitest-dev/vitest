@@ -1,6 +1,10 @@
+import { promisify } from 'util'
 import type { Browser } from 'webdriverio'
 import type { Awaitable } from '@vitest/utils'
+// @ts-expect-error doesn't have types
+import detectBrowser from 'x-default-browser'
 import { createDefer } from '@vitest/utils'
+import { relative } from 'pathe'
 import { isCI } from '../../utils'
 import type { BrowserProvider } from '../../types/browser'
 import { ensurePackageInstalled } from '../pkg'
@@ -11,6 +15,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
   private testDefers = new Map<string, ReturnType<typeof createDefer>>()
   private stopSafari: () => void = () => {}
   private host = ''
+  private browser = 'unknown'
   private ctx!: Vitest
 
   async initialize(ctx: Vitest) {
@@ -18,21 +23,34 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     this.host = `http://${ctx.config.api?.host || 'localhost'}:${ctx.config.api?.port}`
 
     const root = this.ctx.config.root
+    const browser = await this.getBrowserName()
+
+    this.browser = browser
+
+    if (browser === 'unknown' || !browser)
+      throw new Error('Cannot detect browser. Please specify it in the config file.')
+
     if (!await ensurePackageInstalled('webdriverio', root))
       throw new Error('Cannot find "webdriverio" package. Please install it manually.')
 
-    if (this.ctx.config.browser === 'safari' && !await ensurePackageInstalled('safaridriver', root))
+    if (browser === 'safari' && !await ensurePackageInstalled('safaridriver', root))
       throw new Error('Cannot find "safaridriver" package. Please install it manually.')
+  }
+
+  async getBrowserName(): Promise<string> {
+    if (typeof this.ctx.config.browser === 'string')
+      return this.ctx.config.browser
+    const browser = await promisify(detectBrowser)()
+    return browser.browserName
   }
 
   async openBrowser() {
     if (this.cachedBrowser)
       return this.cachedBrowser
 
-    const browser = this.ctx.config.browser as string
     const options = this.ctx.config.browserOptions
 
-    if (browser === 'safari') {
+    if (this.browser === 'safari') {
       const safaridriver = await import('safaridriver')
       safaridriver.start({ diagnose: true })
       this.stopSafari = () => safaridriver.stop()
@@ -48,7 +66,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     this.cachedBrowser = await remote({
       logLevel: 'error',
       capabilities: {
-        'browserName': browser,
+        'browserName': this.browser,
         'wdio:devtoolsOptions': { headless: options?.headless ?? isCI },
       },
     })
@@ -72,22 +90,23 @@ export class WebdriverBrowserProvider implements BrowserProvider {
 
   createPool() {
     const runTests = async (files: string[]) => {
+      const paths = files.map(file => relative(this.ctx.config.root, file))
       const browserInstance = await this.openBrowser()
 
       const isolate = this.ctx.config.isolate
       if (isolate) {
-        for (const file of files) {
+        for (const path of paths) {
           const url = new URL(this.host)
-          url.searchParams.append('path', file)
-          url.searchParams.set('id', file)
+          url.searchParams.append('path', path)
+          url.searchParams.set('id', path)
           await browserInstance.url(url.toString())
-          await this.waitForTest(file)
+          await this.waitForTest(path)
         }
       }
       else {
         const url = new URL(this.host)
         url.searchParams.set('id', 'no-isolate')
-        files.forEach(file => url.searchParams.append('path', file))
+        paths.forEach(path => url.searchParams.append('path', path))
         await browserInstance.url(url.toString())
         await this.waitForTest('no-isolate')
       }

@@ -137,7 +137,7 @@ export class Vitest {
     return this.coverageProvider
   }
 
-  async resolveBrowserProvider() {
+  async initBrowserProvider() {
     if (this.browserProvider)
       return this.browserProvider
     const Provider = await getBrowserProvider(this.config.browserOptions, this.runner)
@@ -235,6 +235,9 @@ export class Vitest {
     try {
       await this.initCoverageProvider()
       await this.coverageProvider?.clean(this.config.coverage.clean)
+
+      if (this.config.browser)
+        await this.initBrowserProvider()
     }
     catch (e) {
       this.logger.error(e)
@@ -347,15 +350,6 @@ export class Vitest {
 
     await this.report('onPathsCollected', paths)
 
-    if (this.config.browser === true) {
-      return
-    }
-    else if (typeof this.config.browser === 'string') {
-      const browser = await this.resolveBrowserProvider()
-      if (!browser.createPool)
-        return
-    }
-
     // previous run
     await this.runningPromise
 
@@ -384,8 +378,7 @@ export class Vitest {
       await this.cache.results.writeToCache()
     })()
       .finally(async () => {
-        if (!this.browserProvider || this.browserProvider.createPool)
-          await this.report('onFinished', this.state.getFiles(paths), this.state.getUnhandledErrors())
+        await this.report('onFinished', this.state.getFiles(paths), this.state.getUnhandledErrors())
         this.runningPromise = undefined
       })
 
@@ -713,7 +706,7 @@ export class Vitest {
 
   // The server needs to be running for communication
   shouldKeepServer() {
-    return !!(this.config?.watch || this.config?.browser === true)
+    return !!this.config?.watch
   }
 
   isInSourceTestFile(code: string) {

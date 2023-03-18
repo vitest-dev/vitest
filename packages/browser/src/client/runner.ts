@@ -1,4 +1,4 @@
-import type { File, TaskResult } from '@vitest/runner'
+import type { File, TaskResult, Test } from '@vitest/runner'
 import type { VitestClient } from '@vitest/ws-client'
 import type { ResolvedConfig } from '#types'
 
@@ -19,6 +19,13 @@ export function createBrowserRunner(original: any) {
       this.config = options.config
       this.hasMap = options.browserHashMap
       this.client = options.client
+    }
+
+    async onAfterRunTest(task: Test) {
+      await super.onAfterRunTest?.()
+      task.result?.errors?.forEach((error) => {
+        console.error(error.message)
+      })
     }
 
     onCollected(files: File[]): unknown {
