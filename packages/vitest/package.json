@@ -137,7 +137,7 @@
     "std-env": "^3.3.1",
     "strip-literal": "^1.0.0",
     "tinybench": "^2.3.1",
-    "tinypool": "^0.3.1",
+    "tinypool": "^0.4.0",
     "tinyspy": "^1.0.2",
     "vite": "^3.0.0 || ^4.0.0",
     "vite-node": "workspace:*",

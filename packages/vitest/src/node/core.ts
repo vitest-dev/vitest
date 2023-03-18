@@ -597,6 +597,7 @@ export class Vitest {
     setTimeout(() => {
       this.report('onProcessTimeout').then(() => {
         console.warn(`close timed out after ${this.config.teardownTimeout}ms`)
+        this.state.getProcessTimeoutCauses().forEach(cause => console.warn(cause))
         process.exit()
       })
     }, this.config.teardownTimeout).unref()

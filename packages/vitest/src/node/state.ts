@@ -22,6 +22,7 @@ export class StateManager {
   idMap = new Map<string, Task>()
   taskFileMap = new WeakMap<Task, File>()
   errorsSet = new Set<unknown>()
+  processTimeoutCauses = new Set<string>()
 
   catchError(err: unknown, type: string): void {
     if (isAggregateError(err))
@@ -37,6 +38,14 @@ export class StateManager {
 
   getUnhandledErrors() {
     return Array.from(this.errorsSet.values())
+  }
+
+  addProcessTimeoutCause(cause: string) {
+    this.processTimeoutCauses.add(cause)
+  }
+
+  getProcessTimeoutCauses() {
+    return Array.from(this.processTimeoutCauses.values())
   }
 
   getPaths() {
