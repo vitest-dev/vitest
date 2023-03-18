@@ -142,8 +142,7 @@ export class Vitest {
       return this.browserProvider
     const Provider = await getBrowserProvider(this.config.browserOptions, this.runner)
     this.browserProvider = new Provider()
-    if (this.browserProvider)
-      await this.browserProvider.initialize?.(this)
+    await this.browserProvider.initialize(this)
     return this.browserProvider
   }
 
@@ -337,12 +336,6 @@ export class Vitest {
     return runningTests
   }
 
-  private createPool() {
-    if (this.browserProvider?.createPool)
-      return this.browserProvider.createPool()
-    return createPool(this)
-  }
-
   async runFiles(paths: string[]) {
     paths = Array.from(new Set(paths))
 
@@ -356,7 +349,7 @@ export class Vitest {
     // schedule the new run
     this.runningPromise = (async () => {
       if (!this.pool)
-        this.pool = this.createPool()
+        this.pool = createPool(this)
 
       const invalidates = Array.from(this.invalidates)
       this.invalidates.clear()
