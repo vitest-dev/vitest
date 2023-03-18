@@ -35,7 +35,7 @@ cli
   .option('--mode <name>', 'Override Vite mode (default: test)')
   .option('--globals', 'Inject apis globally')
   .option('--dom', 'Mock browser api with happy-dom')
-  .option('--browser [browserName]', 'Run tests in browser with the provided browser using webdriver')
+  .option('--browser [browserName]', 'Run tests in browser with the provided browser using webdriver (default: false)')
   .option('--headless', 'Headless mode for the browser mode, useful for CI environments (default: process.env.CI)')
   .option('--environment <env>', 'Specify runner environment (default: node)')
   .option('--passWithNoTests', 'Pass when no tests found')
