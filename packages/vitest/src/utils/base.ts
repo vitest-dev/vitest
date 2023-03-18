@@ -88,6 +88,8 @@ export function isObject(item: unknown): boolean {
  * Deep merge :P
  *
  * Will merge objects only if they are plain
+ *
+ * Do not merge types - it is very expensive and usually it's better to case a type here
  */
 export function deepMerge<T extends object = object>(target: T, ...sources: any[]): T {
   if (!sources.length)
