@@ -4,6 +4,7 @@ import { normalize, relative, toNamespacedPath } from 'pathe'
 import fg from 'fast-glob'
 import mm from 'micromatch'
 import c from 'picocolors'
+import { normalizeRequestId } from 'vite-node/utils'
 import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
 import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter, ResolvedConfig, UserConfig, VitestRunMode } from '../types'
@@ -556,8 +557,21 @@ export class Vitest {
     }
 
     const mod = this.server.moduleGraph.getModuleById(id)
-    if (!mod)
-      return false
+    if (!mod) {
+      // files with `?v=` query from the browser
+      const mods = this.server.moduleGraph.getModulesByFile(id)
+      if (!mods?.size)
+        return false
+      let rerun = false
+      mods.forEach((m) => {
+        if (m.id && this.handleFileChanged(m.id))
+          rerun = true
+      })
+      return rerun
+    }
+
+    // remove queries from id
+    id = normalizeRequestId(id, this.server.config.base)
 
     this.invalidates.add(id)
 

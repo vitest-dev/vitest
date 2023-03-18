@@ -62,9 +62,6 @@ ws.addEventListener('open', async () => {
   globalThis.__vitest_mocker__ = {}
   const paths = getQueryPaths()
 
-  const now = `${new Date().getTime()}`
-  paths.forEach(i => browserHashMap.set(i, now))
-
   const iFrame = document.getElementById('vitest-ui') as HTMLIFrameElement
   iFrame.setAttribute('src', '/__vitest__/')
 
@@ -95,6 +92,10 @@ async function runTests(paths: string[], config: any, client: VitestClient) {
     const files = paths.map((path) => {
       return (`${config.root}/${path}`).replace(/\/+/g, '/')
     })
+
+    const now = `${new Date().getTime()}`
+    files.forEach(i => browserHashMap.set(i, now))
+
     await startTests(files, runner)
   }
   finally {
