@@ -25,7 +25,7 @@ export async function groupFilesByEnv(files: string[], config: ResolvedConfig) {
     // 2. Check for globals
     if (!env) {
       for (const [glob, target] of config.environmentMatchGlobs || []) {
-        if (mm.isMatch(file, glob)) {
+        if (mm.isMatch(file, glob, { cwd: config.root })) {
           env = target
           break
         }
