@@ -998,14 +998,14 @@ Listen to port and serve API. When set to true, the default port is 51204
 - **Default:** `false`
 - **CLI:** `--browser`, `--browser=<name>`
 
-Run Vitest in a browser. If browser name is specified, Vitest will run tests using `webdriverio`, otherwise it will open your default browser.
+Run Vitest in a browser. If the browser name is specified, Vitest will run tests using `webdriverio`, otherwise, it will open your default browser.
 
 ::: tip NOTE
 Read more about testing in a real browser in the [guide page](/guide/browser).
 :::
 
 ::: warning
-This is experimental feature. Breaking changes might not follow semver, please pin Vitest's version when using it.
+This is an experimental feature. Breaking changes might not follow semver, please pin Vitest's version when using it.
 :::
 
 ### browserOptions
@@ -1015,10 +1015,10 @@ This is experimental feature. Breaking changes might not follow semver, please p
 - **Version:** Since Vitest 0.30.0
 - **CLI:** `--browser`, `--browser=<name>`
 
-Options to change behaviour of browser.
+Options to change behaviour of the browser.
 
 ::: warning
-This is experimental feature. Breaking changes might not follow semver, please pin Vitest's version when using it.
+This is an experimental feature. Breaking changes might not follow semver, please pin Vitest's version when using it.
 :::
 
 #### browserOptions.provider
@@ -1040,7 +1040,7 @@ export interface BrowserProvider {
 ```
 
 ::: warning
-This is an advanced API for library authors. If you just need to run tests in a browser, use [browser](/#browser) option.
+This is an advanced API for library authors. If you just need to run tests in a browser, use the [browser](/#browser) option.
 :::
 
 #### browserOptions.headless
@@ -1049,7 +1049,7 @@ This is an advanced API for library authors. If you just need to run tests in a 
 - **Default:** `process.env.CI`
 - **CLI:** `--headless`
 
-Run browser in a `headless` mode. If you are running Vitest in CI, it will be enabled by default.
+Run the browser in a `headless` mode. If you are running Vitest in CI, it will be enabled by default.
 
 ### clearMocks
 

@@ -8,7 +8,7 @@ This page provides information about the experimental browser mode feature in th
 
 ## Configuration
 
-To activate browser mode in your Vitest configuration, you can use the `--browser` flag or set the browser field to `true` in your Vitest configuration file. Here is an example configuration using browser field:
+To activate browser mode in your Vitest configuration, you can use the `--browser` flag or set the browser field to `true` in your Vitest configuration file. Here is an example configuration using the browser field:
 
 ```ts
 export default defineConfig({
@@ -38,7 +38,7 @@ export default defineConfig({
 
 ## Cross-browser Testing:
 
-When you specify a browser name in the browser option, Vitest will try to run the specified browser using [WebdriverIO](https://webdriver.io/) by default, and then run the tests there. This feature makes cross-browser testing easy to use and configure in environments like a CI. You can configure browser provider by using `browserOptions.provider` option.
+When you specify a browser name in the browser option, Vitest will try to run the specified browser using [WebdriverIO](https://webdriver.io/) by default, and then run the tests there. This feature makes cross-browser testing easy to use and configure in environments like a CI. You can configure the browser provider by using `browserOptions.provider` option.
 
 To specify a browser using the CLI, use the `--browser` flag followed by the browser name, like this:
 
