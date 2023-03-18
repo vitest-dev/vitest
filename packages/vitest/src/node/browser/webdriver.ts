@@ -118,7 +118,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
         this.testDefers.clear()
         await Promise.all([
           this.stopSafari(),
-          this.cachedBrowser?.deleteSession?.(),
+          this.cachedBrowser?.sessionId ? this.cachedBrowser?.deleteSession?.() : null,
         ])
         // TODO: right now process can only exit with timeout, if we use browser
         // needs investigating

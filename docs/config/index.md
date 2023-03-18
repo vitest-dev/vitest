@@ -998,7 +998,7 @@ Listen to port and serve API. When set to true, the default port is 51204
 - **Default:** `false`
 - **CLI:** `--browser`, `--browser=<name>`
 
-Run Vitest in a browser. If the browser name is specified, Vitest will run tests using `webdriverio`, otherwise, it will open your default browser.
+Run Vitest tests in a browser. If the browser name is not specified, Vitest will try to determine your default browser automatically. We use `webdriverio` for running tests by default, but it can be configured with [browserOptions.provider](/config/#browseroptions-provider) option.
 
 ::: tip NOTE
 Read more about testing in a real browser in the [guide page](/guide/browser).
@@ -1013,7 +1013,6 @@ This is an experimental feature. Breaking changes might not follow semver, pleas
 - **Type:** `{ provider?, headless? }`
 - **Default:** `false`
 - **Version:** Since Vitest 0.30.0
-- **CLI:** `--browser`, `--browser=<name>`
 
 Options to change behaviour of the browser.
 
@@ -1030,24 +1029,25 @@ Path to a provider that will be used when running browser tests. Provider should
 
 ```ts
 export interface BrowserProvider {
-  initialize?(ctx: Vitest): Awaitable<void>
-  createPool?(): {
+  initialize(ctx: Vitest): Awaitable<void>
+  createPool(): {
     runTests: (files: string[], invalidated: string[]) => void
     close: () => Awaited<void>
   }
+  // signals that test file stopped running, if it was opened with `id=` query
   testFinished?(testId: string): Awaitable<void>
 }
 ```
 
 ::: warning
-This is an advanced API for library authors. If you just need to run tests in a browser, use the [browser](/#browser) option.
+This is an advanced API for library authors. If you just need to run tests in a browser, use the [browser](/config/#browser) option.
 :::
 
 #### browserOptions.headless
 
 - **Type:** `boolean`
 - **Default:** `process.env.CI`
-- **CLI:** `--headless`
+- **CLI:** `--headless`, `--no-headless`
 
 Run the browser in a `headless` mode. If you are running Vitest in CI, it will be enabled by default.
 
