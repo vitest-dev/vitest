@@ -50,6 +50,8 @@ export class Vitest {
   restartsCount = 0
   runner: ViteNodeRunner = undefined!
 
+  _browserUiInitialized = false
+
   constructor(
     public readonly mode: VitestRunMode,
   ) {
