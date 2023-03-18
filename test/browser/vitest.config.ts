@@ -6,7 +6,9 @@ export default defineConfig({
   test: {
     browser: 'chrome',
     open: false,
-    headless: true,
+    browserOptions: {
+      headless: true,
+    },
     outputFile: './browser.json',
     reporters: ['json', {
       onInit: noop,
