@@ -1,4 +1,4 @@
-import type { Arrayable, DeepMerge, Nullable, ResolvedConfig, VitestEnvironment } from '../types'
+import type { Arrayable, Nullable, ResolvedConfig, VitestEnvironment } from '../types'
 
 function isFinalObj(obj: any) {
   return obj === Object.prototype || obj === Function.prototype || obj === RegExp.prototype
@@ -89,7 +89,7 @@ export function isObject(item: unknown): boolean {
  *
  * Will merge objects only if they are plain
  */
-export function deepMerge<T extends object = object, S extends object = T>(target: T, ...sources: S[]): DeepMerge<T, S> {
+export function deepMerge<T extends object = object>(target: T, ...sources: any[]): T {
   if (!sources.length)
     return target as any
 
@@ -98,7 +98,7 @@ export function deepMerge<T extends object = object, S extends object = T>(targe
     return target as any
 
   if (isMergeableObject(target) && isMergeableObject(source)) {
-    (Object.keys(source) as (keyof S & keyof T)[]).forEach((key) => {
+    (Object.keys(source) as (keyof T)[]).forEach((key) => {
       if (isMergeableObject(source[key])) {
         if (!target[key])
           target[key] = {} as any
