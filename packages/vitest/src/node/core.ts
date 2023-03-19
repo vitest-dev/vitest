@@ -6,8 +6,8 @@ import mm from 'micromatch'
 import c from 'picocolors'
 import { normalizeRequestId } from 'vite-node/utils'
 import { ViteNodeRunner } from 'vite-node/client'
+import { SnapshotManager } from '@vitest/snapshot/manager'
 import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter, ResolvedConfig, UserConfig, VitestRunMode } from '../types'
-import { SnapshotManager } from '../integrations/snapshot/manager'
 import { deepMerge, hasFailed, noop, slash, toArray } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
 import { Typechecker } from '../typecheck/typechecker'
@@ -442,6 +442,8 @@ export class Vitest {
     this.configOverride = {
       snapshotOptions: {
         updateSnapshot: 'all',
+        // environment is resolved inside a worker thread
+        snapshotEnvironment: null as any,
       },
     }
 

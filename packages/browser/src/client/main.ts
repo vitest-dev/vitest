@@ -3,7 +3,6 @@ import { createClient } from '@vitest/ws-client'
 import type { ResolvedConfig } from 'vitest'
 import type { VitestRunner } from '@vitest/runner'
 import { createBrowserRunner } from './runner'
-import { BrowserSnapshotEnvironment } from './snapshot'
 import { importId } from './utils'
 import { setupConsoleLogSpy } from './logger'
 import { createSafeRpc, rpc, rpcDone } from './rpc'
@@ -78,7 +77,6 @@ ws.addEventListener('open', async () => {
   await runTests(paths, config)
 })
 
-let hasSnapshot = false
 async function runTests(paths: string[], config: any) {
   // need to import it before any other import, otherwise Vite optimizer will hang
   const viteClientPath = '/@vite/client'
@@ -87,7 +85,6 @@ async function runTests(paths: string[], config: any) {
   const {
     startTests,
     setupCommonEnv,
-    setupSnapshotEnvironment,
     takeCoverageInsideWorker,
   } = await importId('vitest/browser') as typeof import('vitest/browser')
 
@@ -99,11 +96,6 @@ async function runTests(paths: string[], config: any) {
     const { VitestTestRunner } = await importId('vitest/runners') as typeof import('vitest/runners')
     const BrowserRunner = createBrowserRunner(VitestTestRunner, { takeCoverage: () => takeCoverageInsideWorker(config.coverage, executor) })
     runner = new BrowserRunner({ config, browserHashMap })
-  }
-
-  if (!hasSnapshot) {
-    setupSnapshotEnvironment(new BrowserSnapshotEnvironment())
-    hasSnapshot = true
   }
 
   try {

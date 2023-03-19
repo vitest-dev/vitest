@@ -11,16 +11,12 @@ import type { OptionsReceived as PrettyFormatOptions } from 'pretty-format'
 import {
   format as prettyFormat,
 } from 'pretty-format'
-import type { SnapshotData, SnapshotStateOptions } from '../../../types'
-import { isObject } from '../../../utils'
-import { getSnapshotEnvironment } from '../env'
+import { isObject } from '@vitest/utils'
+import type { SnapshotData, SnapshotStateOptions } from '../types'
+import type { SnapshotEnvironment } from '../types/environment'
 import { getSerializers } from './plugins'
 
 // TODO: rewrite and clean up
-
-export const SNAPSHOT_VERSION = '1'
-
-const writeSnapshotVersion = () => `// Vitest Snapshot v${SNAPSHOT_VERSION}, https://vitest.dev/guide/snapshot.html`
 
 export const testNameToKey = (testName: string, count: number): string =>
   `${testName} ${count}`
@@ -131,9 +127,8 @@ function printBacktickString(str: string): string {
   return `\`${escapeBacktickString(str)}\``
 }
 
-export async function ensureDirectoryExists(filePath: string) {
+export async function ensureDirectoryExists(environment: SnapshotEnvironment, filePath: string) {
   try {
-    const environment = getSnapshotEnvironment()
     await environment.prepareDirectory(join(dirname(filePath)))
   }
   catch { }
@@ -144,24 +139,24 @@ function normalizeNewlines(string: string) {
 }
 
 export async function saveSnapshotFile(
+  environment: SnapshotEnvironment,
   snapshotData: SnapshotData,
   snapshotPath: string,
 ) {
-  const environment = getSnapshotEnvironment()
   const snapshots = Object.keys(snapshotData)
     .sort(naturalCompare)
     .map(
       key => `exports[${printBacktickString(key)}] = ${printBacktickString(normalizeNewlines(snapshotData[key]))};`,
     )
 
-  const content = `${writeSnapshotVersion()}\n\n${snapshots.join('\n\n')}\n`
+  const content = `${environment.getHeader()}\n\n${snapshots.join('\n\n')}\n`
   const oldContent = await environment.readSnapshotFile(snapshotPath)
   const skipWriting = oldContent && oldContent === content
 
   if (skipWriting)
     return
 
-  await ensureDirectoryExists(snapshotPath)
+  await ensureDirectoryExists(environment, snapshotPath)
   await environment.saveSnapshotFile(
     snapshotPath,
     content,

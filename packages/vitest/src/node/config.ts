@@ -157,6 +157,8 @@ export function resolveConfig(
         ? 'all'
         : 'new',
     resolveSnapshotPath: options.resolveSnapshotPath,
+    // resolved inside the worker
+    snapshotEnvironment: null as any,
   }
 
   if (options.resolveSnapshotPath)

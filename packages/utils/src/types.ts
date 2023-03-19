@@ -23,3 +23,24 @@ export type MutableArray<T extends readonly any[]> = { -readonly [k in keyof T]:
 export interface Constructable {
   new (...args: any[]): any
 }
+
+export interface ParsedStack {
+  method: string
+  file: string
+  line: number
+  column: number
+}
+
+export interface ErrorWithDiff extends Error {
+  name: string
+  nameStr?: string
+  stack?: string
+  stackStr?: string
+  stacks?: ParsedStack[]
+  showDiff?: boolean
+  actual?: any
+  expected?: any
+  operator?: string
+  type?: string
+  frame?: string
+}

@@ -1,10 +1,18 @@
 import type { Arrayable, Nullable } from './types'
 
+export function notNullish<T>(v: T | null | undefined): v is NonNullable<T> {
+  return v != null
+}
+
 export function assertTypes(value: unknown, name: string, types: string[]): void {
   const receivedType = typeof value
   const pass = types.includes(receivedType)
   if (!pass)
     throw new TypeError(`${name} value must be ${types.join(' or ')}, received "${receivedType}"`)
+}
+
+export function isPrimitive(value: unknown) {
+  return value === null || (typeof value !== 'function' && typeof value !== 'object')
 }
 
 export function slash(path: string) {
@@ -143,4 +151,46 @@ export function createDefer<T>(): DeferPromise<T> {
   p.resolve = resolve!
   p.reject = reject!
   return p
+}
+
+/**
+ * If code starts with a function call, will return its last index, respecting arguments.
+ * This will return 25 - last ending character of toMatch ")"
+ * Also works with callbacks
+ * ```
+ * toMatch({ test: '123' });
+ * toBeAliased('123')
+ * ```
+ */
+export function getCallLastIndex(code: string) {
+  let charIndex = -1
+  let inString: string | null = null
+  let startedBracers = 0
+  let endedBracers = 0
+  let beforeChar: string | null = null
+  while (charIndex <= code.length) {
+    beforeChar = code[charIndex]
+    charIndex++
+    const char = code[charIndex]
+
+    const isCharString = char === '"' || char === '\'' || char === '`'
+
+    if (isCharString && beforeChar !== '\\') {
+      if (inString === char)
+        inString = null
+      else if (!inString)
+        inString = char
+    }
+
+    if (!inString) {
+      if (char === '(')
+        startedBracers++
+      if (char === ')')
+        endedBracers++
+    }
+
+    if (startedBracers && endedBracers && startedBracers === endedBracers)
+      return charIndex
+  }
+  return null
 }
