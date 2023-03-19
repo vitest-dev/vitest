@@ -176,7 +176,7 @@ export default withPwa(defineConfig({
               link: '/guide/ui',
             },
             {
-              text: 'Browser mode',
+              text: 'Browser Mode',
               link: '/guide/browser',
             },
             {

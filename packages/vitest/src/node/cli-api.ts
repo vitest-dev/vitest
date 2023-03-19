@@ -13,11 +13,6 @@ export interface CliOptions extends UserConfig {
    * Override the watch mode
    */
   run?: boolean
-
-  /**
-   * Configure headless mode. Requires `browser` to be set.
-   */
-  headless?: boolean
 }
 
 /**

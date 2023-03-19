@@ -242,7 +242,7 @@ export class Vitest {
       await this.initCoverageProvider()
       await this.coverageProvider?.clean(this.config.coverage.clean)
 
-      if (this.config.browser.enabled)
+      if (this.isBrowserEnabled())
         await this.initBrowserProvider()
     }
     catch (e) {

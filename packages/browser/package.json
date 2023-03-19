@@ -23,9 +23,6 @@
     "dist",
     "stubs"
   ],
-  "peerDependencies": {
-    "vitest": ">=0.30.0"
-  },
   "scripts": {
     "build": "rimraf dist && pnpm build:node && pnpm build:client",
     "build:client": "vite build src/client",
@@ -35,6 +32,9 @@
     "dev": "rimraf dist && run-p dev:node dev:client",
     "copy": "esno scripts/copy-ui-to-browser.ts",
     "prepublishOnly": "pnpm build"
+  },
+  "peerDependencies": {
+    "vitest": ">=0.30.0"
   },
   "dependencies": {
     "@vitest/runner": "workspace:*",

@@ -98,7 +98,6 @@ export function createPool(ctx: Vitest): ProcessPool {
       if (!files.length)
         return null
 
-      // TODO: always initialize browser pool if its enabled or in matchGlob
       if (ctx.browserProvider && pool === 'browser') {
         pools.browser ??= ctx.browserProvider?.createPool()
         return pools.browser.runTests(files, invalidate)
