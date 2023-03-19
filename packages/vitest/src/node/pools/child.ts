@@ -15,7 +15,7 @@ import { createMethodsRPC } from './rpc'
 
 const childPath = fileURLToPath(pathToFileURL(resolve(distDir, './child.js')).href)
 
-function setupChildProcessChannel(ctx: Vitest, fork: ChildProcess) {
+function setupChildProcessChannel(ctx: Vitest, fork: ChildProcess): void {
   createBirpc<{}, RuntimeRPC>(
     createMethodsRPC(ctx),
     {
@@ -31,16 +31,16 @@ function setupChildProcessChannel(ctx: Vitest, fork: ChildProcess) {
   )
 }
 
-function stringifyRegex(input: RegExp | string): any {
+function stringifyRegex(input: RegExp | string): string {
   if (typeof input === 'string')
     return input
   return `$$vitest:${input.toString()}`
 }
 
-function getTestConfig(ctx: Vitest) {
+function getTestConfig(ctx: Vitest): ResolvedConfig {
   const config = ctx.getSerializableConfig()
   // v8 serialize does not support regex
-  return {
+  return <ResolvedConfig>{
     ...config,
     testNamePattern: config.testNamePattern
       ? stringifyRegex(config.testNamePattern)
@@ -83,7 +83,7 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env }: PoolProce
     })
   }
 
-  async function runWithFiles(files: string[], invalidates: string[] = []) {
+  async function runWithFiles(files: string[], invalidates: string[] = []): Promise<void> {
     ctx.state.clearFiles(files)
     const config = getTestConfig(ctx)
 
@@ -119,6 +119,7 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env }: PoolProce
         if (!child.killed)
           child.kill()
       })
+      children.clear()
     },
   }
 }

@@ -16,6 +16,7 @@ export type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
 export type BuiltinEnvironment = 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime'
 // Record is used, so user can get intellisense for builtin environments, but still allow custom environments
 export type VitestEnvironment = BuiltinEnvironment | (string & Record<never, never>)
+export type VitestPool = 'threads' | 'child_process'
 export type CSSModuleScopeStrategy = 'stable' | 'scoped' | 'non-scoped'
 
 export type ApiConfig = Pick<CommonServerOptions, 'port' | 'strictPort' | 'host'>
@@ -161,6 +162,21 @@ export interface InlineConfig {
    * ]
    */
   environmentMatchGlobs?: [string, VitestEnvironment][]
+
+  /**
+   * Automatically assign pool based on globs. The first match will be used.
+   *
+   * Format: [glob, pool-name]
+   *
+   * @default []
+   * @example [
+   *   // all tests in "browser" directory will run in an actual browser
+   *   ['tests/browser/**', 'browser'],
+   *   // all other tests will run based on "threads" option, if you didn't specify other globs
+   *   // ...
+   * ]
+   */
+  poolMatchGlobs?: [string, VitestPool][]
 
   /**
    * Update snapshot
