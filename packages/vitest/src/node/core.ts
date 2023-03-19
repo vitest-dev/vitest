@@ -133,7 +133,7 @@ export class Vitest {
   }
 
   getSerializableConfig() {
-    return deepMerge<ResolvedConfig>({
+    return deepMerge({
       ...this.config,
       reporters: [],
       deps: {
@@ -154,7 +154,7 @@ export class Vitest {
       benchmark: {
         ...this.config.benchmark,
         reporters: [],
-      } as ResolvedConfig['benchmark'],
+      },
     },
     this.configOverride || {} as any,
     ) as ResolvedConfig
