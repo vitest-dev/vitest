@@ -149,6 +149,7 @@
     "concordance": "^5.0.4",
     "debug": "^4.3.4",
     "local-pkg": "^0.4.2",
+    "magic-string": "^0.27.0",
     "pathe": "^1.1.0",
     "picocolors": "^1.0.0",
     "source-map": "^0.6.1",

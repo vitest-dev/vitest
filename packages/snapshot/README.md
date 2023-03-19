@@ -53,8 +53,9 @@ const options = {
 
 await client.setTest(getCurrentFilepath(), getCurrentTestName(), options)
 
-wrapper('text 1').toMatchInlineSnapshot('text 1')
-wrapper('text 2').toMatchInlineSnapshot('text 2')
+// uses pretty-format, so it requires quotes
+wrapper('text 1').toMatchInlineSnapshot('"text 1"')
+wrapper('text 2').toMatchInlineSnapshot('"text 2"')
 
 const result = await client.resetCurrent() // returns SnapshotResult
 
@@ -65,5 +66,5 @@ manager.add(result)
 // do something
 // and then read the summary
 
-manager.summary
+console.log(manager.summary)
 ```
