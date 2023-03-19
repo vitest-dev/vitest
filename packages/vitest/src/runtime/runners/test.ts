@@ -6,6 +6,7 @@ import { getFullName, getNames, getWorkerState } from '../../utils'
 import { createExpect } from '../../integrations/chai/index'
 import type { ResolvedConfig } from '../../types/config'
 import type { VitestExecutor } from '../execute'
+import { rpc } from '../rpc'
 
 export class VitestTestRunner implements VitestRunner {
   private snapshotClient = getSnapshotClient()
@@ -27,7 +28,7 @@ export class VitestTestRunner implements VitestRunner {
   async onAfterRun() {
     const result = await this.snapshotClient.resetCurrent()
     if (result)
-      await this.workerState.rpc.snapshotSaved(result)
+      await rpc().snapshotSaved(result)
   }
 
   onAfterRunSuite(suite: Suite) {

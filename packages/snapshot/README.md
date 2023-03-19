@@ -54,10 +54,11 @@ const options = {
 await client.setTest(getCurrentFilepath(), getCurrentTestName(), options)
 
 // uses pretty-format, so it requires quotes
+// also naming is hard coded when parsing test files
 wrapper('text 1').toMatchInlineSnapshot('"text 1"')
 wrapper('text 2').toMatchInlineSnapshot('"text 2"')
 
-const result = await client.resetCurrent() // returns SnapshotResult
+const result = await client.resetCurrent() // this saves files and returns SnapshotResult
 
 // you can use manager to manage several clients
 const manager = new SnapshotManager(options)
