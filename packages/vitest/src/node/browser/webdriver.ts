@@ -38,7 +38,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
 
   private async resolveBrowserName(): Promise<string> {
     const browser = await promisify(detectBrowser)()
-    return browser.browserName
+    return browser.commonName
   }
 
   async getBrowserName(): Promise<string> {

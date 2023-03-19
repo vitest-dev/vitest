@@ -18,10 +18,7 @@ export default (base = '/'): Plugin[] => {
     {
       enforce: 'pre',
       name: 'vitest:browser',
-      async resolveId(id, _, { ssr }) {
-        if (ssr)
-          return
-
+      async resolveId(id) {
         if (id === '/__vitest_index__')
           return this.resolve('vitest/browser')
 
@@ -48,8 +45,8 @@ export default (base = '/'): Plugin[] => {
     },
     {
       name: 'modern-node-polyfills',
-      async resolveId(id, _, { ssr }) {
-        if (ssr || !builtinModules.includes(id))
+      async resolveId(id) {
+        if (!builtinModules.includes(id))
           return
 
         id = normalizeId(id)
