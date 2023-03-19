@@ -111,13 +111,14 @@ export function positionToOffset(
   columnNumber: number,
 ): number {
   const lines = source.split(lineSplitRE)
+  const nl = /\r\n/.test(source) ? 2 : 1
   let start = 0
 
   if (lineNumber > lines.length)
     return source.length
 
   for (let i = 0; i < lineNumber - 1; i++)
-    start += lines[i].length + 1
+    start += lines[i].length + nl
 
   return start + columnNumber
 }
@@ -132,10 +133,11 @@ export function offsetToLineNumber(
     )
   }
   const lines = source.split(lineSplitRE)
+  const nl = /\r\n/.test(source) ? 2 : 1
   let counted = 0
   let line = 0
   for (; line < lines.length; line++) {
-    const lineLength = lines[line].length + 1
+    const lineLength = lines[line].length + nl
     if (counted + lineLength >= offset)
       break
 
