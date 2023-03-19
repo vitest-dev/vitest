@@ -34,15 +34,24 @@ export async function createBrowserServer(ctx: Vitest, options: UserConfig) {
       {
         enforce: 'post',
         name: 'vitest:browser:config',
-        config(config) {
+        async config(config) {
           const server = resolveApiServerConfig(config.test?.browser || {}) || {
             port: 63315,
           }
 
           config.server = server
-          config.test ??= {}
-          config.test.browser ??= {}
-          config.test.browser.api = server
+
+          config.optimizeDeps ??= {}
+          config.optimizeDeps.entries ??= []
+
+          const root = config.root || process.cwd()
+          const [...entries] = await ctx.globAllTestFiles(ctx.config, ctx.config.dir || root)
+          entries.push(...ctx.config.setupFiles)
+
+          if (typeof config.optimizeDeps.entries === 'string')
+            config.optimizeDeps.entries = [config.optimizeDeps.entries]
+
+          config.optimizeDeps.entries.push(...entries)
         },
       },
     ],
