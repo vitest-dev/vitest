@@ -65,6 +65,7 @@ export class Vitest {
   async initBrowserServer(options: UserConfig) {
     if (!this.isBrowserEnabled())
       return
+    await this.browser?.close()
     this.browser = await createBrowserServer(this, options)
   }
 
