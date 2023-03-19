@@ -139,7 +139,7 @@
     "@types/node": "*",
     "@vitest/expect": "workspace:*",
     "@vitest/runner": "workspace:*",
-    "@vitest/snapshot": "workspace:^0.29.3",
+    "@vitest/snapshot": "workspace:*",
     "@vitest/spy": "workspace:*",
     "@vitest/utils": "workspace:*",
     "acorn": "^8.8.1",
