@@ -498,7 +498,7 @@ export class Vitest {
   private unregisterWatcher = noop
   private registerWatcher() {
     const updateLastChanged = (id: string) => {
-      const mod = this.server.moduleGraph.getModuleById(id) || this.browser.moduleGraph.getModuleById(id)
+      const mod = this.server.moduleGraph.getModuleById(id) || this.browser?.moduleGraph.getModuleById(id)
       if (mod)
         mod.lastHMRTimestamp = Date.now()
     }
@@ -562,10 +562,10 @@ export class Vitest {
       return true
     }
 
-    const mod = this.server.moduleGraph.getModuleById(id) || this.browser.moduleGraph.getModuleById(id)
+    const mod = this.server.moduleGraph.getModuleById(id) || this.browser?.moduleGraph.getModuleById(id)
     if (!mod) {
       // files with `?v=` query from the browser
-      const mods = this.browser.moduleGraph.getModulesByFile(id)
+      const mods = this.browser?.moduleGraph.getModulesByFile(id)
       if (!mods?.size)
         return false
       let rerun = false

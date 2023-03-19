@@ -55,6 +55,7 @@ ws.addEventListener('open', async () => {
   globalThis.__vitest_worker__ = {
     config,
     browserHashMap,
+    moduleCache: new Map(),
     rpc: client.rpc,
   }
 

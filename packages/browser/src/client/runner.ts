@@ -11,13 +11,13 @@ interface BrowserRunnerOptions {
 export function createBrowserRunner(original: any) {
   return class BrowserTestRunner extends original {
     public config: ResolvedConfig
-    hasMap = new Map<string, string>()
+    hashMap = new Map<string, string>()
     client: VitestClient
 
     constructor(options: BrowserRunnerOptions) {
       super(options.config)
       this.config = options.config
-      this.hasMap = options.browserHashMap
+      this.hashMap = options.browserHashMap
       this.client = options.client
     }
 
@@ -38,7 +38,11 @@ export function createBrowserRunner(original: any) {
 
     async importFile(filepath: string) {
       const match = filepath.match(/^(\w:\/)/)
-      const hash = this.hasMap.get(filepath)
+      let hash = this.hashMap.get(filepath)
+      if (!hash) {
+        hash = Date.now().toString()
+        this.hashMap.set(filepath, hash)
+      }
       const importpath = match
         ? `/@fs/${filepath.slice(match[1].length)}?v=${hash}`
         : `${filepath}?v=${hash}`

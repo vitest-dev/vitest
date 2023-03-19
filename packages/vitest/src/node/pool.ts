@@ -1,7 +1,7 @@
 import { pathToFileURL } from 'node:url'
 import mm from 'micromatch'
 import { resolve } from 'pathe'
-import { distDir, rootDir } from '../constants'
+import { distDir, rootDir } from '../paths'
 import type { VitestPool } from '../types'
 import type { Vitest } from './core'
 import { createChildProcessPool } from './pools/child'
