@@ -1,12 +1,12 @@
 import { WebdriverBrowserProvider } from '../node/browser/webdriver'
-import type { BrowserConfigOptions, BrowserProviderModule } from '../types/browser'
+import type { BrowserProviderModule, ResolvedBrowserOptions } from '../types/browser'
 
 interface Loader {
   executeId: (id: string) => Promise<{ default: BrowserProviderModule }>
 }
 
-export async function getBrowserProvider(options: BrowserConfigOptions, loader: Loader): Promise<BrowserProviderModule> {
-  if (!options.provider)
+export async function getBrowserProvider(options: ResolvedBrowserOptions, loader: Loader): Promise<BrowserProviderModule> {
+  if (!options.provider || options.provider === 'webdriverio')
     return WebdriverBrowserProvider
 
   let customProviderModule

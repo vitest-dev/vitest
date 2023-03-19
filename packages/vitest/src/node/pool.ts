@@ -30,7 +30,7 @@ export function createPool(ctx: Vitest): ProcessPool {
   }
 
   function getDefaultPoolName() {
-    if (ctx.config.browser)
+    if (ctx.config.browser.enabled)
       return 'browser'
     if (ctx.config.threads)
       return 'threads'

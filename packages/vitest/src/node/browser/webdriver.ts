@@ -5,7 +5,6 @@ import type { Awaitable } from '@vitest/utils'
 import detectBrowser from 'x-default-browser'
 import { createDefer } from '@vitest/utils'
 import { relative } from 'pathe'
-import { isCI } from '../../utils'
 import type { BrowserProvider } from '../../types/browser'
 import { ensurePackageInstalled } from '../pkg'
 import type { Vitest } from '../core'
@@ -20,7 +19,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
 
   async initialize(ctx: Vitest) {
     this.ctx = ctx
-    this.host = `http://${ctx.config.api?.host || 'localhost'}:${ctx.config.api?.port}`
+    this.host = `http://${ctx.config.browser.api?.host || 'localhost'}:${ctx.browser.config.server.port}`
 
     const root = this.ctx.config.root
     const browser = await this.getBrowserName()
@@ -37,18 +36,20 @@ export class WebdriverBrowserProvider implements BrowserProvider {
       throw new Error('Cannot find "safaridriver" package. Please install it manually.')
   }
 
-  async getBrowserName(): Promise<string> {
-    if (typeof this.ctx.config.browser === 'string')
-      return this.ctx.config.browser
+  private async resolveBrowserName(): Promise<string> {
     const browser = await promisify(detectBrowser)()
     return browser.browserName
+  }
+
+  async getBrowserName(): Promise<string> {
+    return this.ctx.config.browser.name ?? await this.resolveBrowserName()
   }
 
   async openBrowser() {
     if (this.cachedBrowser)
       return this.cachedBrowser
 
-    const options = this.ctx.config.browserOptions
+    const options = this.ctx.config.browser
 
     if (this.browser === 'safari') {
       const safaridriver = await import('safaridriver')
@@ -67,15 +68,11 @@ export class WebdriverBrowserProvider implements BrowserProvider {
       logLevel: 'error',
       capabilities: {
         'browserName': this.browser,
-        'wdio:devtoolsOptions': { headless: options?.headless ?? isCI },
+        'wdio:devtoolsOptions': { headless: options.headless },
       },
     })
 
     return this.cachedBrowser
-  }
-
-  canStart() {
-    return typeof this.ctx.config.browser === 'string'
   }
 
   testFinished(id: string): Awaitable<void> {

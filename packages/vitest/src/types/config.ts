@@ -10,7 +10,7 @@ import type { Reporter } from './reporter'
 import type { SnapshotStateOptions } from './snapshot'
 import type { Arrayable } from './general'
 import type { BenchmarkUserOptions } from './benchmark'
-import type { BrowserConfigOptions } from './browser'
+import type { BrowserConfigOptions, ResolvedBrowserOptions } from './browser'
 
 export type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
 
@@ -391,18 +391,12 @@ export interface InlineConfig {
   ui?: boolean
 
   /**
-   * test in a browser environment
+   * options for test in a browser environment
    * @experimental
    *
    * @default false
    */
-  browser?: boolean | 'firefox' | 'chrome' | 'edge' | 'safari'
-
-  /**
-   * options for browser environment
-   * @experimental
-   */
-  browserOptions?: BrowserConfigOptions
+  browser?: BrowserConfigOptions
 
   /**
    * Open UI automatically.
@@ -661,7 +655,7 @@ export interface UserConfig extends InlineConfig {
   shard?: string
 }
 
-export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck' | 'runner'> {
+export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'browser' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck' | 'runner'> {
   mode: VitestRunMode
 
   base?: string
@@ -673,6 +667,8 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
 
   coverage: ResolvedCoverageOptions
   snapshotOptions: SnapshotStateOptions
+
+  browser: ResolvedBrowserOptions
 
   reporters: (Reporter | BuiltinReporters)[]
 

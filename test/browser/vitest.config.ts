@@ -4,12 +4,13 @@ const noop = () => {}
 
 export default defineConfig({
   test: {
-    browser: 'chrome',
+    browser: {
+      enabled: true,
+      name: 'chrome',
+      headless: false,
+    },
     open: false,
     isolate: false,
-    browserOptions: {
-      headless: true,
-    },
     outputFile: './browser.json',
     reporters: ['json', {
       onInit: noop,

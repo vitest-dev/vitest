@@ -5,6 +5,7 @@ import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
 import type { WebSocket } from 'ws'
 import { WebSocketServer } from 'ws'
+import type { ViteDevServer } from 'vite'
 import { API_PATH } from '../constants'
 import type { Vitest } from '../node'
 import type { File, ModuleGraphData, Reporter, TaskResultPack, UserConsoleLog } from '../types'
@@ -12,12 +13,12 @@ import { getModuleGraph } from '../utils'
 import { parseErrorStacktrace } from '../utils/source-map'
 import type { TransformResultWithSource, WebSocketEvents, WebSocketHandlers } from './types'
 
-export function setup(ctx: Vitest) {
+export function setup(ctx: Vitest, server?: ViteDevServer) {
   const wss = new WebSocketServer({ noServer: true })
 
   const clients = new Map<WebSocket, BirpcReturn<WebSocketEvents>>()
 
-  ctx.server.httpServer?.on('upgrade', (request, socket, head) => {
+  ;(server || ctx.server).httpServer?.on('upgrade', (request, socket, head) => {
     if (!request.url)
       return
 
@@ -34,12 +35,6 @@ export function setup(ctx: Vitest) {
   function setupClient(ws: WebSocket) {
     const rpc = createBirpc<WebSocketEvents, WebSocketHandlers>(
       {
-        async onWatcherStart() {
-          await ctx.report('onWatcherStart')
-        },
-        async onFinished() {
-          await ctx.report('onFinished')
-        },
         async onDone(testId) {
           await ctx.browserProvider?.testFinished?.(testId)
         },

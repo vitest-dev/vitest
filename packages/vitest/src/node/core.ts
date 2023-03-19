@@ -14,6 +14,7 @@ import { getCoverageProvider } from '../integrations/coverage'
 import { Typechecker } from '../typecheck/typechecker'
 import type { BrowserProvider } from '../types/browser'
 import { getBrowserProvider } from '../integrations/browser'
+import { createBrowserServer } from '../integrations/browser/server'
 import { createPool } from './pool'
 import type { ProcessPool } from './pool'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
@@ -28,6 +29,7 @@ export class Vitest {
   config: ResolvedConfig = undefined!
   configOverride: Partial<ResolvedConfig> | undefined
 
+  browser: ViteDevServer = undefined!
   server: ViteDevServer = undefined!
   state: StateManager = undefined!
   snapshot: SnapshotManager = undefined!
@@ -51,8 +53,6 @@ export class Vitest {
   restartsCount = 0
   runner: ViteNodeRunner = undefined!
 
-  _browserUiInitialized = false
-
   constructor(
     public readonly mode: VitestRunMode,
   ) {
@@ -61,6 +61,12 @@ export class Vitest {
 
   private _onRestartListeners: OnServerRestartHandler[] = []
   private _onSetServer: OnServerRestartHandler[] = []
+
+  async initBrowserServer(options: UserConfig) {
+    if (!this.isBrowserEnabled())
+      return
+    this.browser = await createBrowserServer(this, options)
+  }
 
   async setServer(options: UserConfig, server: ViteDevServer) {
     this.unregisterWatcher?.()
@@ -141,9 +147,9 @@ export class Vitest {
   async initBrowserProvider() {
     if (this.browserProvider)
       return this.browserProvider
-    const Provider = await getBrowserProvider(this.config.browserOptions, this.runner)
+    const Provider = await getBrowserProvider(this.config.browser, this.runner)
     this.browserProvider = new Provider()
-    await this.browserProvider.initialize(this)
+    await this.browserProvider.initialize(this as any)
     return this.browserProvider
   }
 
@@ -236,7 +242,7 @@ export class Vitest {
       await this.initCoverageProvider()
       await this.coverageProvider?.clean(this.config.coverage.clean)
 
-      if (this.config.browser)
+      if (this.config.browser.enabled)
         await this.initBrowserProvider()
     }
     catch (e) {
@@ -604,6 +610,7 @@ export class Vitest {
     if (!this.closingPromise) {
       this.closingPromise = Promise.allSettled([
         this.pool?.close(),
+        this.browser?.close(),
         this.server.close(),
         this.typechecker?.stop(),
       ].filter(Boolean)).then((results) => {
@@ -707,6 +714,12 @@ export class Vitest {
       return this.isInSourceTestFile(source)
     }
     return false
+  }
+
+  isBrowserEnabled() {
+    if (this.config.browser.enabled)
+      return true
+    return (this.config.poolMatchGlobs || []).some(([, pool]) => pool === 'browser')
   }
 
   // The server needs to be running for communication

@@ -23,6 +23,9 @@
     "dist",
     "stubs"
   ],
+  "peerDependencies": {
+    "vitest": ">=0.30.0"
+  },
   "scripts": {
     "build": "rimraf dist && pnpm build:node && pnpm build:client",
     "build:client": "vite build src/client",
