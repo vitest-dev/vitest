@@ -43,6 +43,8 @@ export class SnapshotClient {
   snapshotState: SnapshotState | undefined
   snapshotStateMap = new Map<string, SnapshotState>()
 
+  constructor(private Service = SnapshotState) {}
+
   async setTest(filepath: string, name: string, options: SnapshotStateOptions) {
     this.filepath = filepath
     this.name = name
@@ -53,7 +55,7 @@ export class SnapshotClient {
       if (!this.getSnapshotState(filepath)) {
         this.snapshotStateMap.set(
           filepath,
-          await SnapshotState.create(
+          await this.Service.create(
             filepath,
             options,
           ),
