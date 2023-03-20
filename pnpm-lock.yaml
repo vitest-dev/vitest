@@ -730,12 +730,12 @@ importers:
       pathe: ^1.1.0
       pretty-format: ^27.5.1
     dependencies:
-      '@vitest/utils': link:../utils
       magic-string: 0.27.0
       pathe: 1.1.0
       pretty-format: 27.5.1
     devDependencies:
       '@types/natural-compare': 1.4.1
+      '@vitest/utils': link:../utils
       natural-compare: 1.4.0
 
   packages/spy:
