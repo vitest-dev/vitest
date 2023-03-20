@@ -166,6 +166,8 @@
     "flatted": "^3.2.7",
     "get-tsconfig": "^4.3.0",
     "happy-dom": "^8.3.2",
+    "@types/istanbul-lib-coverage": "^2.0.4",
+    "@types/istanbul-reports": "^3.0.1",
     "jsdom": "^21.1.0",
     "log-update": "^5.0.1",
     "magic-string": "^0.27.0",
