@@ -39,6 +39,11 @@ export const coverageConfigDefaults: ResolvedCoverageOptions = {
   extension: ['.js', '.cjs', '.mjs', '.ts', '.mts', '.cts', '.tsx', '.jsx', '.vue', '.svelte'],
 }
 
+export const browserConfigDefaults = {
+  enabled: false,
+  headless: isCI,
+} as const
+
 export const fakeTimersDefaults = {
   loopLimit: 10_000,
   shouldClearNativeTimers: true,
@@ -68,6 +73,7 @@ const config = {
   hookTimeout: 10000,
   teardownTimeout: 10000,
   isolate: true,
+  browser: browserConfigDefaults,
   watchExclude: ['**/node_modules/**', '**/dist/**'],
   forceRerunTriggers: [
     '**/package.json/**',

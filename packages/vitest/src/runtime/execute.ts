@@ -8,7 +8,7 @@ import { processError } from '@vitest/runner/utils'
 import type { MockMap } from '../types/mocker'
 import { getCurrentEnvironment, getWorkerState } from '../utils/global'
 import type { ContextRPC, ContextTestEnvironment, ResolvedConfig } from '../types'
-import { distDir } from '../constants'
+import { distDir } from '../paths'
 import { VitestMocker } from './mocker'
 import { rpc } from './rpc'
 

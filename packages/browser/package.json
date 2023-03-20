@@ -24,7 +24,7 @@
     "stubs"
   ],
   "scripts": {
-    "build": "rimraf dist && pnpm build:node && pnpm build:client && pnpm copy",
+    "build": "rimraf dist && pnpm build:node && pnpm build:client",
     "build:client": "vite build src/client",
     "build:node": "rollup -c",
     "dev:client": "vite build src/client --watch",
@@ -33,11 +33,14 @@
     "copy": "esno scripts/copy-ui-to-browser.ts",
     "prepublishOnly": "pnpm build"
   },
+  "peerDependencies": {
+    "vitest": ">=0.30.0"
+  },
   "dependencies": {
     "@vitest/runner": "workspace:*",
     "local-pkg": "^0.4.2",
     "mlly": "^1.1.0",
-    "modern-node-polyfills": "0.0.9",
+    "modern-node-polyfills": "0.1.0",
     "rollup-plugin-node-polyfills": "^0.2.1",
     "sirv": "^2.0.2"
   },

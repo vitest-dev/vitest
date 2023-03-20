@@ -176,6 +176,10 @@ export default withPwa(defineConfig({
               link: '/guide/ui',
             },
             {
+              text: 'Browser Mode',
+              link: '/guide/browser',
+            },
+            {
               text: 'In-source Testing',
               link: '/guide/in-source',
             },

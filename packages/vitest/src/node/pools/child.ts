@@ -8,7 +8,7 @@ import type { ContextTestEnvironment, ResolvedConfig, RuntimeRPC } from '../../t
 import type { Vitest } from '../core'
 import type { ChildContext } from '../../types/child'
 import type { PoolProcessOptions, ProcessPool } from '../pool'
-import { distDir } from '../../constants'
+import { distDir } from '../../paths'
 import { groupBy } from '../../utils/base'
 import { envsOrder, groupFilesByEnv } from '../../utils/test-helpers'
 import { createMethodsRPC } from './rpc'

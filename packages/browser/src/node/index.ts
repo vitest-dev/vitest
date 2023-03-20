@@ -18,15 +18,15 @@ export default (base = '/'): Plugin[] => {
     {
       enforce: 'pre',
       name: 'vitest:browser',
-      async resolveId(id, _, ctx) {
-        if (ctx.ssr)
-          return
-
+      async resolveId(id) {
         if (id === '/__vitest_index__')
           return this.resolve('vitest/browser')
 
         if (id === '/__vitest_runners__')
           return this.resolve('vitest/runners')
+
+        if (id.startsWith('node:'))
+          id = id.slice(5)
 
         if (polyfills.includes(id))
           return polyfillPath(normalizeId(id))
@@ -45,8 +45,8 @@ export default (base = '/'): Plugin[] => {
     },
     {
       name: 'modern-node-polyfills',
-      async resolveId(id, _, ctx) {
-        if (ctx.ssr || !builtinModules.includes(id))
+      async resolveId(id) {
+        if (!builtinModules.includes(id))
           return
 
         id = normalizeId(id)

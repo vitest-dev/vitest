@@ -4,12 +4,16 @@ import { normalize, relative, toNamespacedPath } from 'pathe'
 import fg from 'fast-glob'
 import mm from 'micromatch'
 import c from 'picocolors'
+import { normalizeRequestId } from 'vite-node/utils'
 import { ViteNodeRunner } from 'vite-node/client'
 import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter, ResolvedConfig, UserConfig, VitestRunMode } from '../types'
 import { SnapshotManager } from '../integrations/snapshot/manager'
 import { deepMerge, hasFailed, noop, slash, toArray } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
 import { Typechecker } from '../typecheck/typechecker'
+import type { BrowserProvider } from '../types/browser'
+import { getBrowserProvider } from '../integrations/browser'
+import { createBrowserServer } from '../integrations/browser/server'
 import { createPool } from './pool'
 import type { ProcessPool } from './pool'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
@@ -25,12 +29,14 @@ export class Vitest {
   config: ResolvedConfig = undefined!
   configOverride: Partial<ResolvedConfig> | undefined
 
+  browser: ViteDevServer = undefined!
   server: ViteDevServer = undefined!
   state: StateManager = undefined!
   snapshot: SnapshotManager = undefined!
   cache: VitestCache = undefined!
   reporters: Reporter[] = undefined!
   coverageProvider: CoverageProvider | null | undefined
+  browserProvider: BrowserProvider | undefined
   logger: Logger
   pool: ProcessPool | undefined
   typechecker: Typechecker | undefined
@@ -55,6 +61,13 @@ export class Vitest {
 
   private _onRestartListeners: OnServerRestartHandler[] = []
   private _onSetServer: OnServerRestartHandler[] = []
+
+  async initBrowserServer(options: UserConfig) {
+    if (!this.isBrowserEnabled())
+      return
+    await this.browser?.close()
+    this.browser = await createBrowserServer(this, options)
+  }
 
   async setServer(options: UserConfig, server: ViteDevServer) {
     this.unregisterWatcher?.()
@@ -130,6 +143,15 @@ export class Vitest {
       this.config.coverage = this.coverageProvider.resolveOptions()
     }
     return this.coverageProvider
+  }
+
+  async initBrowserProvider() {
+    if (this.browserProvider)
+      return this.browserProvider
+    const Provider = await getBrowserProvider(this.config.browser, this.runner)
+    this.browserProvider = new Provider()
+    await this.browserProvider.initialize(this as any)
+    return this.browserProvider
   }
 
   getSerializableConfig() {
@@ -220,6 +242,9 @@ export class Vitest {
     try {
       await this.initCoverageProvider()
       await this.coverageProvider?.clean(this.config.coverage.clean)
+
+      if (this.isBrowserEnabled())
+        await this.initBrowserProvider()
     }
     catch (e) {
       this.logger.error(e)
@@ -247,7 +272,7 @@ export class Vitest {
 
     await this.reportCoverage(true)
 
-    if (this.config.watch && !this.config.browser)
+    if (this.config.watch)
       await this.report('onWatcherStart')
   }
 
@@ -326,9 +351,6 @@ export class Vitest {
 
     await this.report('onPathsCollected', paths)
 
-    if (this.config.browser)
-      return
-
     // previous run
     await this.runningPromise
 
@@ -357,8 +379,7 @@ export class Vitest {
       await this.cache.results.writeToCache()
     })()
       .finally(async () => {
-        if (!this.config.browser)
-          await this.report('onFinished', this.state.getFiles(paths), this.state.getUnhandledErrors())
+        await this.report('onFinished', this.state.getFiles(paths), this.state.getUnhandledErrors())
         this.runningPromise = undefined
       })
 
@@ -379,8 +400,7 @@ export class Vitest {
 
     await this.reportCoverage(!trigger)
 
-    if (!this.config.browser)
-      await this.report('onWatcherStart', this.state.getFiles(files))
+    await this.report('onWatcherStart', this.state.getFiles(files))
   }
 
   async changeNamePattern(pattern: string, files: string[] = this.state.getFilepaths(), trigger?: string) {
@@ -472,15 +492,14 @@ export class Vitest {
 
       await this.reportCoverage(false)
 
-      if (!this.config.browser)
-        await this.report('onWatcherStart', this.state.getFiles(files))
+      await this.report('onWatcherStart', this.state.getFiles(files))
     }, WATCHER_DEBOUNCE)
   }
 
   private unregisterWatcher = noop
   private registerWatcher() {
     const updateLastChanged = (id: string) => {
-      const mod = this.server.moduleGraph.getModuleById(id)
+      const mod = this.server.moduleGraph.getModuleById(id) || this.browser?.moduleGraph.getModuleById(id)
       if (mod)
         mod.lastHMRTimestamp = Date.now()
     }
@@ -544,9 +563,22 @@ export class Vitest {
       return true
     }
 
-    const mod = this.server.moduleGraph.getModuleById(id)
-    if (!mod)
-      return false
+    const mod = this.server.moduleGraph.getModuleById(id) || this.browser?.moduleGraph.getModuleById(id)
+    if (!mod) {
+      // files with `?v=` query from the browser
+      const mods = this.browser?.moduleGraph.getModulesByFile(id)
+      if (!mods?.size)
+        return false
+      let rerun = false
+      mods.forEach((m) => {
+        if (m.id && this.handleFileChanged(m.id))
+          rerun = true
+      })
+      return rerun
+    }
+
+    // remove queries from id
+    id = normalizeRequestId(id, this.server.config.base)
 
     this.invalidates.add(id)
 
@@ -579,6 +611,7 @@ export class Vitest {
     if (!this.closingPromise) {
       this.closingPromise = Promise.allSettled([
         this.pool?.close(),
+        this.browser?.close(),
         this.server.close(),
         this.typechecker?.stop(),
       ].filter(Boolean)).then((results) => {
@@ -683,6 +716,17 @@ export class Vitest {
       return this.isInSourceTestFile(source)
     }
     return false
+  }
+
+  isBrowserEnabled() {
+    if (this.config.browser.enabled)
+      return true
+    return (this.config.poolMatchGlobs || []).some(([, pool]) => pool === 'browser')
+  }
+
+  // The server needs to be running for communication
+  shouldKeepServer() {
+    return !!this.config?.watch
   }
 
   isInSourceTestFile(code: string) {

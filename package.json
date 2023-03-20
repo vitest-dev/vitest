@@ -7,7 +7,7 @@
   "description": "A blazing fast unit test framework powered by Vite",
   "scripts": {
     "ci": "ni && nr typecheck && nr lint && nr build && nr test:all",
-    "build": "pnpm -r --filter='./packages/**' run build",
+    "build": "pnpm -r --filter='./packages/**' run build && pnpm -C ./packages/browser run copy",
     "dev": "NODE_OPTIONS=\"--max-old-space-size=8192\" pnpm -r --parallel --filter='./packages/**' run dev",
     "docs": "pnpm -C docs run dev",
     "docs:build": "pnpm -C docs run build",
@@ -28,7 +28,8 @@
     "typecheck:why": "tsc --noEmit --explainFiles > explainTypes.txt",
     "ui:build": "vite build packages/ui",
     "ui:dev": "vite packages/ui",
-    "ui:test": "npm -C packages/ui run test:run"
+    "ui:test": "npm -C packages/ui run test:run",
+    "browser:test": "npm -C test/browser run test"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^0.34.1",

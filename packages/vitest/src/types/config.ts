@@ -10,13 +10,14 @@ import type { Reporter } from './reporter'
 import type { SnapshotStateOptions } from './snapshot'
 import type { Arrayable } from './general'
 import type { BenchmarkUserOptions } from './benchmark'
+import type { BrowserConfigOptions, ResolvedBrowserOptions } from './browser'
 
 export type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
 
 export type BuiltinEnvironment = 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime'
 // Record is used, so user can get intellisense for builtin environments, but still allow custom environments
 export type VitestEnvironment = BuiltinEnvironment | (string & Record<never, never>)
-export type VitestPool = 'threads' | 'child_process'
+export type VitestPool = 'browser' | 'threads' | 'child_process'
 export type CSSModuleScopeStrategy = 'stable' | 'scoped' | 'non-scoped'
 
 export type ApiConfig = Pick<CommonServerOptions, 'port' | 'strictPort' | 'host'>
@@ -390,10 +391,12 @@ export interface InlineConfig {
   ui?: boolean
 
   /**
-   * Use in browser environment
+   * options for test in a browser environment
    * @experimental
+   *
+   * @default false
    */
-  browser?: boolean
+  browser?: BrowserConfigOptions
 
   /**
    * Open UI automatically.
@@ -652,7 +655,7 @@ export interface UserConfig extends InlineConfig {
   shard?: string
 }
 
-export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck' | 'runner'> {
+export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'browser' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck' | 'runner'> {
   mode: VitestRunMode
 
   base?: string
@@ -664,6 +667,8 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
 
   coverage: ResolvedCoverageOptions
   snapshotOptions: SnapshotStateOptions
+
+  browser: ResolvedBrowserOptions
 
   reporters: (Reporter | BuiltinReporters)[]
 

@@ -35,8 +35,8 @@ cli
   .option('--mode <name>', 'Override Vite mode (default: test)')
   .option('--globals', 'Inject apis globally')
   .option('--dom', 'Mock browser api with happy-dom')
-  .option('--browser', 'Run tests in browser')
-  .option('--environment <env>', 'Specify runner environment (default: node)')
+  .option('--browser [options]', 'Run tests in the browser (default: false)')
+  .option('--environment <env>', 'Specify runner environment, if not running in the browser (default: node)')
   .option('--passWithNoTests', 'Pass when no tests found')
   .option('--logHeapUsage', 'Show the size of heap for each test')
   .option('--allowOnly', 'Allow tests and suites that are marked as only (default: !process.env.CI)')
@@ -129,7 +129,7 @@ function normalizeCliOptions(argv: CliOptions): CliOptions {
 async function start(mode: VitestRunMode, cliFilters: string[], options: CliOptions): Promise<Vitest | undefined> {
   try {
     const ctx = await startVitest(mode, cliFilters.map(normalize), normalizeCliOptions(options))
-    if (!ctx?.config.watch)
+    if (!ctx?.shouldKeepServer())
       await ctx?.exit()
     return ctx
   }

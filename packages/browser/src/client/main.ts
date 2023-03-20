@@ -7,7 +7,7 @@ import { createBrowserRunner } from './runner'
 import { BrowserSnapshotEnvironment } from './snapshot'
 
 // @ts-expect-error mocking some node apis
-globalThis.process = { env: {}, argv: [], stdout: { write: () => {} } }
+globalThis.process = { env: {}, argv: [], cwd: () => '/', stdout: { write: () => {} }, nextTick: cb => cb() }
 globalThis.global = globalThis
 
 export const PORT = import.meta.hot ? '51204' : location.port
@@ -20,20 +20,14 @@ let config: ResolvedConfig | undefined
 let runner: VitestRunner | undefined
 const browserHashMap = new Map<string, string>()
 
-export const client = createClient(ENTRY_URL, {
-  handlers: {
-    async onPathsCollected(paths) {
-      if (!paths)
-        return
-      // const config = __vitest_worker__.config
-      const now = `${new Date().getTime()}`
-      paths.forEach((i) => {
-        browserHashMap.set(i, now)
-      })
-      await runTests(paths, config, client)
-    },
-  },
-})
+const url = new URL(location.href)
+const testId = url.searchParams.get('id') || 'unknown'
+
+const getQueryPaths = () => {
+  return url.searchParams.getAll('path')
+}
+
+export const client = createClient(ENTRY_URL)
 
 const ws = client.ws
 
@@ -61,15 +55,13 @@ ws.addEventListener('open', async () => {
   globalThis.__vitest_worker__ = {
     config,
     browserHashMap,
+    moduleCache: new Map(),
     rpc: client.rpc,
   }
 
   // @ts-expect-error mocking vitest apis
   globalThis.__vitest_mocker__ = {}
-  const paths = await client.rpc.getPaths()
-
-  const now = `${new Date().getTime()}`
-  paths.forEach(i => browserHashMap.set(i, now))
+  const paths = getQueryPaths()
 
   const iFrame = document.getElementById('vitest-ui') as HTMLIFrameElement
   iFrame.setAttribute('src', '/__vitest__/')
@@ -95,9 +87,19 @@ async function runTests(paths: string[], config: any, client: VitestClient) {
     setupSnapshotEnvironment(new BrowserSnapshotEnvironment(client))
     hasSnapshot = true
   }
-  await setupCommonEnv(config)
-  await startTests(paths, runner)
 
-  await client.rpc.onFinished()
-  await client.rpc.onWatcherStart()
+  try {
+    await setupCommonEnv(config)
+    const files = paths.map((path) => {
+      return (`${config.root}/${path}`).replace(/\/+/g, '/')
+    })
+
+    const now = `${new Date().getTime()}`
+    files.forEach(i => browserHashMap.set(i, now))
+
+    await startTests(files, runner)
+  }
+  finally {
+    await client.rpc.onDone(testId)
+  }
 }

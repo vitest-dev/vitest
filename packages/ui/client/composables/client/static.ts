@@ -50,13 +50,16 @@ export function createStaticClient(): VitestClient {
     readFile: async (id) => {
       return Promise.resolve(id)
     },
-    onWatcherStart: asyncNoop,
-    onFinished: asyncNoop,
+    onDone: noop,
     onCollected: asyncNoop,
     onTaskUpdate: noop,
     writeFile: asyncNoop,
     rerun: asyncNoop,
     updateSnapshot: asyncNoop,
+    removeFile: asyncNoop,
+    createDirectory: asyncNoop,
+    resolveSnapshotPath: asyncNoop,
+    snapshotSaved: asyncNoop,
   } as WebSocketHandlers
 
   ctx.rpc = rpc as any as BirpcReturn<WebSocketHandlers>

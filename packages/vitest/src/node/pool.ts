@@ -1,7 +1,7 @@
 import { pathToFileURL } from 'node:url'
 import mm from 'micromatch'
 import { resolve } from 'pathe'
-import { distDir, rootDir } from '../constants'
+import { distDir, rootDir } from '../paths'
 import type { VitestPool } from '../types'
 import type { Vitest } from './core'
 import { createChildProcessPool } from './pools/child'
@@ -26,9 +26,12 @@ export function createPool(ctx: Vitest): ProcessPool {
   const pools: Record<VitestPool, ProcessPool | null> = {
     child_process: null,
     threads: null,
+    browser: null,
   }
 
   function getDefaultPoolName() {
+    if (ctx.config.browser.enabled)
+      return 'browser'
     if (ctx.config.threads)
       return 'threads'
     return 'child_process'
@@ -94,6 +97,11 @@ export function createPool(ctx: Vitest): ProcessPool {
     await Promise.all(Object.entries(filesByPool).map(([pool, files]) => {
       if (!files.length)
         return null
+
+      if (ctx.browserProvider && pool === 'browser') {
+        pools.browser ??= ctx.browserProvider.createPool()
+        return pools.browser.runTests(files, invalidate)
+      }
 
       if (pool === 'threads') {
         pools.threads ??= createThreadsPool(ctx, options)
