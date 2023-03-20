@@ -68,6 +68,7 @@ export function createStaticClient(): VitestClient {
   }
 
   async function registerMetadata() {
+    // @ts-expect-error metadata path is not defined globally
     const res = await fetch(window.METADATA_PATH!)
     metadata = parse(await res.text()) as HTMLReportMetadata
     const event = new Event('open')

@@ -3,14 +3,13 @@ import type { WebSocketStatus } from '@vueuse/core'
 import type { Ref } from 'vue'
 import { reactive } from 'vue'
 import type { RunState } from '../../../types'
+import { ENTRY_URL, isReport } from '../../constants'
 import { activeFileId } from '../params'
 import { createStaticClient } from './static'
 import type { File, ResolvedConfig } from '#types'
 
-export const PORT = import.meta.hot ? '51204' : location.port
-export const HOST = [location.hostname, PORT].filter(Boolean).join(':')
-export const ENTRY_URL = `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${HOST}/__vitest_api__`
-export const isReport = !!window.METADATA_PATH
+export { ENTRY_URL, PORT, HOST } from '../../constants'
+
 export const testRunState: Ref<RunState> = ref('idle')
 
 export const client = (function createVitestClient() {
