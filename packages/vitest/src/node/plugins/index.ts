@@ -12,7 +12,6 @@ import { Vitest } from '../core'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
 import { EnvReplacerPlugin } from './envReplacer'
 import { GlobalSetupPlugin } from './globalSetup'
-import { MocksPlugin } from './mock'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { CoverageTransform } from './coverageTransform'
 
@@ -38,7 +37,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
       options() {
         this.meta.watchMode = false
       },
-      async config(viteConfig: any) {
+      async config(viteConfig) {
         if (options.watch) {
           // Earlier runs have overwritten values of the `options`.
           // Reset it back to initial user config before setting up the server again.
@@ -49,7 +48,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
         // however to allow vitest plugins to modify vitest config values
         // this is repeated in configResolved where the config is final
         const preOptions = deepMerge(
-          {},
+          {} as UserConfig,
           configDefaults,
           options,
           removeUndefinedValues(viteConfig.test ?? {}),
@@ -130,7 +129,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
           },
         }
 
-        const classNameStrategy = preOptions.css && preOptions.css?.modules?.classNameStrategy
+        const classNameStrategy = (typeof preOptions.css !== 'boolean' && preOptions.css?.modules?.classNameStrategy) || 'stable'
 
         if (classNameStrategy !== 'scoped') {
           config.css ??= {}
@@ -154,7 +153,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
           }
           else {
             const root = config.root || process.cwd()
-            const entries = await ctx.globAllTestFiles(preOptions as ResolvedConfig, preOptions.dir || root)
+            const [...entries] = await ctx.globAllTestFiles(preOptions as ResolvedConfig, preOptions.dir || root)
             if (preOptions?.setupFiles) {
               const setupFiles = toArray(preOptions.setupFiles).map((file: string) =>
                 normalize(
@@ -164,12 +163,13 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
               )
               entries.push(...setupFiles)
             }
-            optimizeConfig.cacheDir = preOptions.cache?.dir ?? 'node_modules/.vitest'
+            const cacheDir = preOptions.cache !== false ? preOptions.cache?.dir : null
+            optimizeConfig.cacheDir = cacheDir ?? 'node_modules/.vitest'
             optimizeConfig.optimizeDeps = {
               ...viteConfig.optimizeDeps,
               ...optimizer,
               disabled: false,
-              entries: [...(optimizer.entries || viteConfig.optimizeDeps?.entries || []), ...entries],
+              entries: [...(viteConfig.optimizeDeps?.entries || []), ...entries],
               exclude: ['vitest', ...builtinModules, ...(optimizer.exclude || viteConfig.optimizeDeps?.exclude || [])],
               include: (optimizer.include || viteConfig.optimizeDeps?.include || []).filter((n: string) => n !== 'vitest'),
             }
@@ -233,7 +233,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
             (await import('../../api/setup')).setup(ctx)
         }
         catch (err) {
-          ctx.logger.printError(err, true)
+          await ctx.logger.printError(err, true)
           process.exit(1)
         }
 
@@ -243,7 +243,6 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
       },
     },
     EnvReplacerPlugin(),
-    MocksPlugin(),
     GlobalSetupPlugin(ctx),
     ...(options.browser
       ? await BrowserPlugin()

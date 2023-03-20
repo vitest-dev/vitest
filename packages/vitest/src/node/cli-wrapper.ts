@@ -11,8 +11,6 @@ const ENTRY = new URL('./cli.js', import.meta.url)
 
 /** Arguments passed to Node before the script */
 const NODE_ARGS = [
-  '--inspect',
-  '--inspect-brk',
   '--trace-deprecation',
   '--experimental-wasm-threads',
   '--wasm-atomics-on-non-shared-memory',

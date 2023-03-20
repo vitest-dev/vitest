@@ -1,79 +1,79 @@
-// Vitest Snapshot v1
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`mocked function which fails on toReturnWith > just one call 1`] = `
-"expected \\"spy\\" to return with: 2 at least once[90m
+"expected \\"spy\\" to return with: 2 at least once
 
 Received: 
-[1m    1st spy call return:
+    1st spy call return:
 
-[22m  [32m1[90m
-  [31m2[90m
-[39m[90m
+  1
+  2
 
-Number of calls: [1m1[22m
-[39m"
+
+Number of calls: 1
+"
 `;
 
 exports[`mocked function which fails on toReturnWith > multi calls 1`] = `
-"expected \\"spy\\" to return with: 2 at least once[90m
+"expected \\"spy\\" to return with: 2 at least once
 
 Received: 
-[1m    1st spy call return:
+    1st spy call return:
 
-[22m  [32m1[90m
-  [31m2[90m
+  1
+  2
 
-[1m    2nd spy call return:
+    2nd spy call return:
 
-[22m  [32m1[90m
-  [31m2[90m
+  1
+  2
 
-[1m    3rd spy call return:
+    3rd spy call return:
 
-[22m  [32m1[90m
-  [31m2[90m
-[39m[90m
+  1
+  2
 
-Number of calls: [1m3[22m
-[39m"
+
+Number of calls: 3
+"
 `;
 
 exports[`mocked function which fails on toReturnWith > oject type 1`] = `
-"expected \\"spy\\" to return with: { a: '4' } at least once[90m
+"expected \\"spy\\" to return with: { a: '4' } at least once
 
 Received: 
-[1m    1st spy call return:
+    1st spy call return:
 
-[22m    Object {
-  [32m-   \\"a\\": \\"1\\",[90m
-  [31m+   \\"a\\": \\"4\\",[90m
+    Object {
+  -   \\"a\\": \\"1\\",
+  +   \\"a\\": \\"4\\",
     }
 
-[1m    2nd spy call return:
+    2nd spy call return:
 
-[22m    Object {
-  [32m-   \\"a\\": \\"1\\",[90m
-  [31m+   \\"a\\": \\"4\\",[90m
+    Object {
+  -   \\"a\\": \\"1\\",
+  +   \\"a\\": \\"4\\",
     }
 
-[1m    3rd spy call return:
+    3rd spy call return:
 
-[22m    Object {
-  [32m-   \\"a\\": \\"1\\",[90m
-  [31m+   \\"a\\": \\"4\\",[90m
+    Object {
+  -   \\"a\\": \\"1\\",
+  +   \\"a\\": \\"4\\",
     }
-[39m[90m
 
-Number of calls: [1m3[22m
-[39m"
+
+Number of calls: 3
+"
 `;
 
 exports[`mocked function which fails on toReturnWith > zero call 1`] = `
-"expected \\"spy\\" to return with: 2 at least once[90m
+"expected \\"spy\\" to return with: 2 at least once
 
 Received: 
-[39m[90m
 
-Number of calls: [1m0[22m
-[39m"
+
+Number of calls: 0
+"
 `;

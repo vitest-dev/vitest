@@ -94,7 +94,7 @@ Handling for dependencies resolution.
 #### deps.experimentalOptimizer
 
 - **Type:** `DepOptimizationConfig & { enabled: boolean }`
-- **Version:** Vitets 0.29.0
+- **Version:** Since Vitest 0.29.0
 - **See also:** [Dep Optimization Options](https://vitejs.dev/config/dep-optimization-options.html)
 
 Enable dependency optimization. If you have a lot of tests, this might improve their performance.
@@ -381,6 +381,31 @@ export default defineConfig({
 })
 ```
 
+### poolMatchGlobs
+
+- **Type:** `[string, 'threads' | 'child_process'][]`
+- **Default:** `[]`
+- **Version:** Since Vitest 0.29.4
+
+Automatically assign pool in which tests will run based on globs. The first match will be used.
+
+For example:
+
+```ts
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    poolMatchGlobs: [
+      // all tests in "worker-specific" directory will run inside a worker as if you enabled `--threads` for them,
+      ['**/tests/worker-specific/**', 'threads'],
+      // all other tests will run based on "threads" option, if you didn't specify other globs
+      // ...
+    ]
+  }
+})
+```
+
 ### update
 
 - **Type:** `boolean`
@@ -536,6 +561,7 @@ This can improve performance in some cases, but might cause segfault in older No
 
 - **Type:** `number`
 - **Default:** `5000`
+- **CLI:** `--test-timeout=5000`
 
 Default timeout of a test in milliseconds
 
@@ -1162,7 +1188,7 @@ Path to cache directory.
 
 ### sequence
 
-- **Type**: `{ sequencer?, shuffle?, seed?, hooks? }`
+- **Type**: `{ sequencer?, shuffle?, seed?, hooks?, setupFiles? }`
 
 Options for how tests should be sorted.
 
@@ -1210,6 +1236,18 @@ Changes the order in which hooks are executed.
 - `stack` will order "after" hooks in reverse order, "before" hooks will run in the order they were defined
 - `list` will order all hooks in the order they are defined
 - `parallel` will run hooks in a single group in parallel (hooks in parent suites will still run before the current suite's hooks)
+
+#### sequence.setupFiles
+
+- **Type**: `'list' | 'parallel'`
+- **Default**: `'parallel'`
+- **CLI**: `--sequence.setupFiles=<value>`
+- **Version**: Since Vitest 0.29.3
+
+Changes the order in which setup files are executed.
+
+- `list` will run setup files in the order they are defined
+- `parallel` will run setup files in parallel
 
 ### typecheck
 

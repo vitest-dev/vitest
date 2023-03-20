@@ -230,3 +230,4 @@ export interface TestContext {
 export type OnTestFailedHandler = (result: TaskResult) => Awaitable<void>
 
 export type SequenceHooks = 'stack' | 'list' | 'parallel'
+export type SequenceSetupFiles = 'list' | 'parallel'

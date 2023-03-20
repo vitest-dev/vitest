@@ -101,8 +101,8 @@ function renderBenchmark(task: Benchmark, tasks: Task[]): string {
   ].join('  ')
 }
 
-export function renderTree(tasks: Task[], options: ListRendererOptions, level = 0) {
-  let output: string[] = []
+export function renderTree(tasks: Task[], options: ListRendererOptions, level = 0): string {
+  const output: string[] = []
 
   let idx = 0
   for (const task of tasks) {
@@ -154,7 +154,7 @@ export function renderTree(tasks: Task[], options: ListRendererOptions, level = 
 
     if (task.type === 'suite' && task.tasks.length > 0) {
       if (task.result?.state)
-        output = output.concat(renderTree(task.tasks, options, level + 1))
+        output.push(renderTree(task.tasks, options, level + 1))
     }
     idx++
   }

@@ -106,6 +106,13 @@ export function resolveConfig(
     resolved.shard = { index, count }
   }
 
+  if (resolved.inspect || resolved.inspectBrk) {
+    if (resolved.threads !== false && resolved.singleThread !== true) {
+      const inspectOption = `--inspect${resolved.inspectBrk ? '-brk' : ''}`
+      throw new Error(`You cannot use ${inspectOption} without "threads: false" or "singleThread: true"`)
+    }
+  }
+
   resolved.deps = resolved.deps || {}
   // vitenode will try to import such file with native node,
   // but then our mocker will not work properly

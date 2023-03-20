@@ -1,7 +1,7 @@
 {
   "name": "@vitest/utils",
   "type": "module",
-  "version": "0.29.2",
+  "version": "0.29.3",
   "description": "Shared Vitest utility functions",
   "license": "MIT",
   "repository": {
@@ -40,7 +40,6 @@
     "cli-truncate": "^3.1.0",
     "diff": "^5.1.0",
     "loupe": "^2.3.6",
-    "picocolors": "^1.0.0",
     "pretty-format": "^27.5.1"
   },
   "devDependencies": {

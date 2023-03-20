@@ -31,10 +31,10 @@ export function resetModules(modules: ModuleCacheMap, resetMocks = false) {
     // don't clear mocks
     ...(!resetMocks ? [/^mock:/] : []),
   ]
-  modules.forEach((_, path) => {
+  modules.forEach((mod, path) => {
     if (skipPaths.some(re => re.test(path)))
       return
-    modules.delete(path)
+    modules.invalidateModule(mod)
   })
 }
 
