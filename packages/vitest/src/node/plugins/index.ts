@@ -12,7 +12,6 @@ import { Vitest } from '../core'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
 import { EnvReplacerPlugin } from './envReplacer'
 import { GlobalSetupPlugin } from './globalSetup'
-import { MocksPlugin } from './mock'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { CoverageTransform } from './coverageTransform'
 
@@ -244,7 +243,6 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
       },
     },
     EnvReplacerPlugin(),
-    MocksPlugin(),
     GlobalSetupPlugin(ctx),
     ...(options.browser
       ? await BrowserPlugin()

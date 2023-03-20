@@ -5,7 +5,6 @@ import fg from 'fast-glob'
 import mm from 'micromatch'
 import c from 'picocolors'
 import { ViteNodeRunner } from 'vite-node/client'
-import { ViteNodeServer } from 'vite-node/server'
 import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter, ResolvedConfig, UserConfig, VitestRunMode } from '../types'
 import { SnapshotManager } from '../integrations/snapshot/manager'
 import { deepMerge, hasFailed, noop, slash, toArray } from '../utils'
@@ -18,6 +17,7 @@ import { StateManager } from './state'
 import { resolveConfig } from './config'
 import { Logger } from './logger'
 import { VitestCache } from './cache'
+import { VitestServer } from './server'
 
 const WATCHER_DEBOUNCE = 100
 
@@ -35,7 +35,7 @@ export class Vitest {
   pool: ProcessPool | undefined
   typechecker: Typechecker | undefined
 
-  vitenode: ViteNodeServer = undefined!
+  vitenode: VitestServer = undefined!
 
   invalidates: Set<string> = new Set()
   changedTests: Set<string> = new Set()
@@ -76,7 +76,7 @@ export class Vitest {
     if (this.config.watch && this.mode !== 'typecheck')
       this.registerWatcher()
 
-    this.vitenode = new ViteNodeServer(server, this.config)
+    this.vitenode = new VitestServer(server, this.config)
     const node = this.vitenode
     this.runner = new ViteNodeRunner({
       root: server.config.root,

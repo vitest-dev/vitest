@@ -191,6 +191,10 @@ export class ViteNodeServer {
     return result
   }
 
+  protected async processTransformResult(result: TransformResult) {
+    return withInlineSourcemap(result)
+  }
+
   private async _transformRequest(id: string, customTransformMode?: 'web' | 'ssr') {
     debugRequest(id)
 
@@ -217,7 +221,7 @@ export class ViteNodeServer {
 
     const sourcemap = this.options.sourcemap ?? 'inline'
     if (sourcemap === 'inline' && result && !id.includes('node_modules'))
-      withInlineSourcemap(result)
+      result = await this.processTransformResult(result)
 
     if (this.options.debug?.dumpModules)
       await this.debugger?.dumpFile(id, result)

@@ -44,6 +44,39 @@ exports[`stacktraces should respect sourcemaps > add-in-js.test.js > add-in-js.t
 "
 `;
 
+exports[`stacktraces should respect sourcemaps > mocked-global.test.js > mocked-global.test.js 1`] = `
+" ❯ mocked-global.test.js:6:13
+      4| 
+      5| test('failed', () => {
+      6|   expect(1).toBe(2)
+       |             ^
+      7| })
+      8| 
+"
+`;
+
+exports[`stacktraces should respect sourcemaps > mocked-imported.test.js > mocked-imported.test.js 1`] = `
+" ❯ mocked-imported.test.js:6:13
+      4| 
+      5| test('failed', () => {
+      6|   expect(1).toBe(2)
+       |             ^
+      7| })
+      8| 
+"
+`;
+
+exports[`stacktraces should respect sourcemaps > mocked-imported.test.ts > mocked-imported.test.ts 1`] = `
+" ❯ mocked-imported.test.ts:6:13
+      4| 
+      5| test('failed', () => {
+      6|   expect(1).toBe(2)
+       |             ^
+      7| })
+      8| 
+"
+`;
+
 exports[`stacktraces should respect sourcemaps > reset-modules.test.ts > reset-modules.test.ts 1`] = `
 " ❯ reset-modules.test.ts:16:26
      14|     expect(2 + 1).eq(3)
