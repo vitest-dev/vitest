@@ -27,9 +27,15 @@ const colorsMap = {
   bgWhite: ['\x1B[47m', '\x1B[49m'],
 } as const
 
+interface ColorFn {
+  (input: unknown): string
+  open: string
+  close: string
+}
+
 type ColorName = keyof typeof colorsMap
 type ColorsMethods = {
-  [Key in ColorName]: (input: unknown) => string
+  [Key in ColorName]: ColorFn
 }
 
 type Colors = ColorsMethods & {
