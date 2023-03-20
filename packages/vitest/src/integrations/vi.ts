@@ -358,9 +358,6 @@ function createVitest(): VitestUtils {
       return this
     },
 
-    /**
-   * Reset environmental variables to the ones that were available before first `vi.stubEnv` was called.
-   */
     unstubAllEnvs() {
       _stubsEnv.forEach((original, name) => {
         if (original === undefined)
@@ -378,18 +375,10 @@ function createVitest(): VitestUtils {
       return this
     },
 
-    /**
-   * Wait for all imports to load. Useful, if you have a synchronous call that starts
-   * importing a module that you cannot await otherwise.
-   * Will also wait for new imports, started during the wait.
-   */
     async dynamicImportSettled() {
       return waitForImportsToResolve()
     },
 
-    /**
-   * Updates runtime config. You can only change values that are used when executing tests.
-   */
     setConfig(config: RuntimeConfig) {
       const state = getWorkerState()
       if (!_config)
@@ -397,9 +386,6 @@ function createVitest(): VitestUtils {
       Object.assign(state.config, config)
     },
 
-    /**
-   * If config was changed with `vi.setConfig`, this will reset it to the original state.
-   */
     resetConfig() {
       if (_config) {
         const state = getWorkerState()
