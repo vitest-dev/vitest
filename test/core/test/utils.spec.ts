@@ -152,9 +152,10 @@ describe('deepClone', () => {
 
   test('can clone classes with proxied enumerable getters', () => {
     const obj = Symbol.for('aClass')
+    interface TestShape { a: number; b: string }
     class A {
-      [obj]: { a: number; b: string }
-      constructor(data: { a: number; b: string }) {
+      [obj]: TestShape
+      constructor(data: TestShape) {
         this[obj] = data
         return new Proxy(this, {
           ownKeys() {
@@ -164,7 +165,6 @@ describe('deepClone', () => {
             return {
               ...Reflect.getOwnPropertyDescriptor(data, p),
               enumerable: true,
-              writable: false,
             }
           },
         })
@@ -178,7 +178,13 @@ describe('deepClone', () => {
         return this[obj].b
       }
     }
-    const aClass = new A({ a: 1, b: 'B' })
+    const shape = { a: 1 } as TestShape
+    Object.defineProperty(shape, 'b', {
+      configurable: true,
+      enumerable: true,
+      get: () => 'B',
+    })
+    const aClass = new A(shape)
     expect(aClass.a).toEqual(1)
     expect(aClass.b).toEqual('B')
     expect(Object.keys(aClass)).toEqual(['a', 'b'])

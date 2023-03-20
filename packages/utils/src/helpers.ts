@@ -88,7 +88,7 @@ export function clone<T>(val: T, seen: WeakMap<any, any>): T {
     const props = getOwnProperties(val)
     for (const k of props) {
       Object.defineProperty(out, k, {
-        ...Object.getOwnPropertyDescriptor(val, k),
+        enumerable: true,
         value: clone((val as any)[k], seen),
       })
     }
