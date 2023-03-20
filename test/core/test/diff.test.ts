@@ -13,7 +13,7 @@ test('displays object diff', () => {
     "  - Expected  - 1
       + Received  + 1
 
-        {
+      ... 1 more line
           a: 1,
       -   b: 3,
       +   b: 2,
@@ -45,9 +45,9 @@ test('display multiline line string diff', () => {
     "  - Expected  - 2
       + Received  + 2
 
-      + string1␊
-        \`string2␊
-      - string2␊
+      + string1
+        \`string2
+      - string2
       - string1\`
       + string3\`"
   `)
