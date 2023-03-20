@@ -54,6 +54,8 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
 
     env,
     execArgv,
+
+    terminateTimeout: ctx.config.teardownTimeout,
   }
 
   if (ctx.config.isolate) {
@@ -86,6 +88,13 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
       }
       try {
         await pool.run(data, { transferList: [workerPort], name })
+      }
+      catch (error) {
+        // Worker got stuck and won't terminate - this may cause process to hang
+        if (error instanceof Error && /Failed to terminate worker/.test(error.message))
+          ctx.state.addProcessTimeoutCause(`Failed to terminate worker while running ${files.join(', ')}.`)
+        else
+          throw error
       }
       finally {
         port.close()

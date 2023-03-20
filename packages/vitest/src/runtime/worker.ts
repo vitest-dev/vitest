@@ -3,6 +3,7 @@ import { workerId as poolId } from 'tinypool'
 import type { RuntimeRPC, WorkerContext } from '../types'
 import { getWorkerState } from '../utils/global'
 import { mockMap, moduleCache, startViteNode } from './execute'
+import { setupInspect } from './inspector'
 import { rpcDone } from './rpc'
 
 function init(ctx: WorkerContext) {
@@ -43,8 +44,15 @@ function init(ctx: WorkerContext) {
 }
 
 export async function run(ctx: WorkerContext) {
-  init(ctx)
-  const { run, executor } = await startViteNode(ctx)
-  await run(ctx.files, ctx.config, ctx.environment, executor)
-  await rpcDone()
+  const inspectorCleanup = setupInspect(ctx.config)
+
+  try {
+    init(ctx)
+    const { run, executor } = await startViteNode(ctx)
+    await run(ctx.files, ctx.config, ctx.environment, executor)
+    await rpcDone()
+  }
+  finally {
+    inspectorCleanup()
+  }
 }

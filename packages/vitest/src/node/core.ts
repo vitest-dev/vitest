@@ -133,7 +133,7 @@ export class Vitest {
   }
 
   getSerializableConfig() {
-    return deepMerge<ResolvedConfig>({
+    return deepMerge({
       ...this.config,
       reporters: [],
       deps: {
@@ -154,7 +154,7 @@ export class Vitest {
       benchmark: {
         ...this.config.benchmark,
         reporters: [],
-      } as ResolvedConfig['benchmark'],
+      },
     },
     this.configOverride || {} as any,
     ) as ResolvedConfig
@@ -597,6 +597,7 @@ export class Vitest {
     setTimeout(() => {
       this.report('onProcessTimeout').then(() => {
         console.warn(`close timed out after ${this.config.teardownTimeout}ms`)
+        this.state.getProcessTimeoutCauses().forEach(cause => console.warn(cause))
         process.exit()
       })
     }, this.config.teardownTimeout).unref()

@@ -1,8 +1,9 @@
-import { describe, expect, test } from 'vitest'
+import { beforeAll, describe, expect, test } from 'vitest'
 import { assertTypes, deepClone, objectAttr, toArray } from '@vitest/utils'
 import { deepMerge, resetModules } from '../../../packages/vitest/src/utils'
 import { deepMergeSnapshot } from '../../../packages/vitest/src/integrations/snapshot/port/utils'
-import type { ModuleCacheMap } from '../../../packages/vite-node/src/types'
+import type { EncodedSourceMap } from '../../../packages/vite-node/src/types'
+import { ModuleCacheMap } from '../../../packages/vite-node/dist/client'
 
 describe('assertTypes', () => {
   test('the type of value should be number', () => {
@@ -151,36 +152,44 @@ describe('deepClone', () => {
 })
 
 describe('resetModules doesn\'t resets only user modules', () => {
-  test('resets user modules', () => {
-    const moduleCache = new Map() as ModuleCacheMap
-    moduleCache.set('/some-module.ts', {})
-    moduleCache.set('/@fs/some-path.ts', {})
+  const mod = () => ({ evaluated: true, promise: Promise.resolve({}), resolving: false, exports: {}, map: {} as EncodedSourceMap })
 
+  const moduleCache = new ModuleCacheMap()
+  const modules = [
+    ['/some-module.ts', true],
+    ['/@fs/some-path.ts', true],
+    ['/node_modules/vitest/dist/index.js', false],
+    ['/node_modules/vitest-virtual-da9876a/dist/index.js', false],
+    ['/node_modules/some-module@vitest/dist/index.js', false],
+    ['/packages/vitest/dist/index.js', false],
+    ['mock:/some-module.ts', false],
+    ['mock:/@fs/some-path.ts', false],
+  ] as const
+
+  beforeAll(() => {
+    modules.forEach(([path]) => {
+      moduleCache.set(path, mod())
+    })
     resetModules(moduleCache)
-
-    expect(moduleCache.size).toBe(0)
   })
 
-  test('doesn\'t reset vitest modules', () => {
-    const moduleCache = new Map() as ModuleCacheMap
-    moduleCache.set('/node_modules/vitest/dist/index.js', {})
-    moduleCache.set('/node_modules/vitest-virtual-da9876a/dist/index.js', {})
-    moduleCache.set('/node_modules/some-module@vitest/dist/index.js', {})
-    moduleCache.set('/packages/vitest/dist/index.js', {})
+  test.each(modules)('Cashe for %s is reseted (%s)', (path, reset) => {
+    const cached = moduleCache.get(path)
 
-    resetModules(moduleCache)
+    if (reset) {
+      expect(cached).not.toHaveProperty('evaluated')
+      expect(cached).not.toHaveProperty('resolving')
+      expect(cached).not.toHaveProperty('exports')
+      expect(cached).not.toHaveProperty('promise')
+    }
+    else {
+      expect(cached).toHaveProperty('evaluated')
+      expect(cached).toHaveProperty('resolving')
+      expect(cached).toHaveProperty('exports')
+      expect(cached).toHaveProperty('promise')
+    }
 
-    expect(moduleCache.size).toBe(4)
-  })
-
-  test('doesn\'t reset mocks', () => {
-    const moduleCache = new Map() as ModuleCacheMap
-    moduleCache.set('mock:/some-module.ts', {})
-    moduleCache.set('mock:/@fs/some-path.ts', {})
-
-    resetModules(moduleCache)
-
-    expect(moduleCache.size).toBe(2)
+    expect(cached).toHaveProperty('map')
   })
 })
 
