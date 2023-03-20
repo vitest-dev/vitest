@@ -1,4 +1,4 @@
-// Vitest Snapshot v1
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`JUnit reporter (no outputFile entry) 1`] = `
 "<?xml version=\\"1.0\\" encoding=\\"UTF-8\\" ?>
