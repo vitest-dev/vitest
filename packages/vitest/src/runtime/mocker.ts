@@ -8,7 +8,7 @@ import { spyOn } from '../integrations/spy'
 import type { MockFactory, PendingSuiteMock } from '../types/mocker'
 import type { VitestExecutor } from './execute'
 
-const filterPublicKeys = ['__esModule', Symbol.iterator]
+const filterPublicKeys = ['__esModule', Symbol.asyncIterator, Symbol.hasInstance, Symbol.isConcatSpreadable, Symbol.iterator, Symbol.match, Symbol.matchAll, Symbol.replace, Symbol.search, Symbol.split, Symbol.species, Symbol.toPrimitive, Symbol.toStringTag, Symbol.unscopables]
 
 class RefTracker {
   private idMap = new Map<any, number>()
