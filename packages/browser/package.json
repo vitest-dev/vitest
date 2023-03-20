@@ -24,7 +24,7 @@
     "stubs"
   ],
   "scripts": {
-    "build": "rimraf dist && pnpm build:node && pnpm build:client",
+    "build": "rimraf dist && pnpm build:node && pnpm build:client && pnpm copy",
     "build:client": "vite build src/client",
     "build:node": "rollup -c",
     "dev:client": "vite build src/client --watch",
