@@ -998,7 +998,7 @@ Listen to port and serve API. When set to true, the default port is 51204
 
 - **Type:** `{ enabled?, name?, provider?, headless?, api? }`
 - **Default:** `{ enabled: false, headless: process.env.CI, api: 63315 }`
-- **Version:** Since Vitest 0.30.0
+- **Version:** Since Vitest 0.29.4
 - **CLI:** `--browser`, `--browser=<name>`, `--browser.name=chrome --browser.headless`
 
 Run Vitest tests in a browser. If the browser name is not specified, Vitest will try to determine your default browser automatically. We use [WebdriverIO](https://webdriver.io/) for running tests by default, but it can be configured with [browser.provider](/config/#browser-provider) option.
