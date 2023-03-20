@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import type { VitestClient } from '@vitest/ws-client'
 import { createClient } from '@vitest/ws-client'
 // eslint-disable-next-line no-restricted-imports
@@ -48,6 +49,41 @@ async function loadConfig() {
   throw new Error('cannot load configuration after 5 retries')
 }
 
+const { Date } = globalThis
+
+const interceptLog = (client: VitestClient) => {
+  // TODO: add support for more console methods
+  const { log, info, error } = console
+  const processLog = (args: unknown[]) => {
+    // TODO: make better log, use concordance(?)
+    return args.map(String).join(' ')
+  }
+  const sendLog = (type: 'stdout' | 'stderr', args: unknown[]) => {
+    const content = processLog(args)
+    const unknownTestId = '__vitest__unknown_test__'
+    // @ts-expect-error untyped global
+    const taskId = globalThis.__vitest_worker__?.current?.id ?? unknownTestId
+    client.rpc.sendLog({
+      content,
+      time: Date.now(),
+      taskId,
+      type,
+      size: content.length,
+    })
+  }
+  const stdout = (base: (...args: unknown[]) => void) => (...args: unknown[]) => {
+    sendLog('stdout', args)
+    return base(...args)
+  }
+  console.log = stdout(log)
+  console.info = stdout(info)
+
+  console.error = (...args) => {
+    sendLog('stderr', args)
+    return error(...args)
+  }
+}
+
 ws.addEventListener('open', async () => {
   await loadConfig()
 
@@ -66,6 +102,7 @@ ws.addEventListener('open', async () => {
   const iFrame = document.getElementById('vitest-ui') as HTMLIFrameElement
   iFrame.setAttribute('src', '/__vitest__/')
 
+  interceptLog(client)
   await runTests(paths, config, client)
 })
 
