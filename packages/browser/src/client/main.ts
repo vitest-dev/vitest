@@ -59,8 +59,6 @@ ws.addEventListener('open', async () => {
     rpc: client.rpc,
   }
 
-  // @ts-expect-error mocking vitest apis
-  globalThis.__vitest_mocker__ = {}
   const paths = getQueryPaths()
 
   const iFrame = document.getElementById('vitest-ui') as HTMLIFrameElement
