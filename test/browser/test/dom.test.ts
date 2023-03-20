@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest'
 import { createNode } from '../src/createNode'
 
-test('render div', async () => {
+test('renders div', () => {
   const div = createNode()
   expect(div.textContent).toBe('Hello World')
 })
