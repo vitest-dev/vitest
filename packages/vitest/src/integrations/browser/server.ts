@@ -6,6 +6,7 @@ import type { Vitest } from '../../node'
 import type { UserConfig } from '../../types/config'
 import { ensurePackageInstalled } from '../../node/pkg'
 import { resolveApiServerConfig } from '../../node/config'
+import { CoverageTransform } from '../../node/plugins/coverageTransform'
 
 export async function createBrowserServer(ctx: Vitest, options: UserConfig) {
   const root = ctx.config.root
@@ -31,6 +32,7 @@ export async function createBrowserServer(ctx: Vitest, options: UserConfig) {
     },
     plugins: [
       (await import('@vitest/browser')).default('/'),
+      CoverageTransform(ctx),
       {
         enforce: 'post',
         name: 'vitest:browser:config',

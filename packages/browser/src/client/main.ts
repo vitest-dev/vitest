@@ -26,6 +26,11 @@ const browserHashMap = new Map<string, string>()
 const url = new URL(location.href)
 const testId = url.searchParams.get('id') || 'unknown'
 
+const plainImport = (id: string) => {
+  const name = `/@plain/${id}`
+  return import(name)
+}
+
 const getQueryPaths = () => {
   return url.searchParams.getAll('path')
 }
@@ -82,13 +87,26 @@ async function runTests(paths: string[], config: any) {
   const viteClientPath = '/@vite/client'
   await import(viteClientPath)
 
-  const { startTests, setupCommonEnv, setupSnapshotEnvironment } = await importId('vitest/browser') as typeof import('vitest/browser')
+  const {
+    startTests,
+    setupCommonEnv,
+    setupSnapshotEnvironment,
+    takeCoverageInsideWorker,
+    stopCoverageInsideWorker,
+    startCoverageInsideWorker,
+  } = await plainImport('vitest/browser') as typeof import('vitest/browser')
+
+  const executor = {
+    executeId: (id: string) => plainImport(id),
+  }
 
   if (!runner) {
-    const { VitestTestRunner } = await importId('vitest/runners') as typeof import('vitest/runners')
-    const BrowserRunner = createBrowserRunner(VitestTestRunner)
+    const { VitestTestRunner } = await plainImport('vitest/runners') as typeof import('vitest/runners')
+    const BrowserRunner = createBrowserRunner(VitestTestRunner, { takeCoverage: () => takeCoverageInsideWorker(config.coverage, executor) })
     runner = new BrowserRunner({ config, browserHashMap })
   }
+
+  await startCoverageInsideWorker(config.coverage, executor)
 
   if (!hasSnapshot) {
     setupSnapshotEnvironment(new BrowserSnapshotEnvironment())
@@ -108,6 +126,7 @@ async function runTests(paths: string[], config: any) {
   }
   finally {
     await rpcDone()
+    await stopCoverageInsideWorker(config.coverage, executor)
     await rpc().onDone(testId)
   }
 }
