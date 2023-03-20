@@ -8,7 +8,7 @@ import { activeFileId } from '../params'
 import { createStaticClient } from './static'
 import type { File, ResolvedConfig } from '#types'
 
-export { ENTRY_URL, PORT, HOST } from '../../constants'
+export { ENTRY_URL, PORT, HOST, isReport } from '../../constants'
 
 export const testRunState: Ref<RunState> = ref('idle')
 
