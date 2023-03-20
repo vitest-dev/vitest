@@ -20,8 +20,8 @@ describe.skipIf(isWindows)('html report', () => {
 
     const exit = await startServerCommand(
       root,
-    `npx vite preview --outDir html --strict-port --base /__vitest__/ --port ${port}`,
-    `http://localhost:${port}/__vitest__/`,
+      `npx vite preview --outDir html --strict-port --port ${port}`,
+      `http://localhost:${port}/`,
     )
 
     return exit
