@@ -625,6 +625,7 @@ importers:
     specifiers:
       '@types/ws': ^8.5.4
       '@vitest/runner': workspace:*
+      '@vitest/ui': workspace:*
       '@vitest/ws-client': workspace:*
       local-pkg: ^0.4.2
       mlly: ^1.1.0
@@ -642,6 +643,7 @@ importers:
       sirv: 2.0.2
     devDependencies:
       '@types/ws': 8.5.4
+      '@vitest/ui': link:../ui
       '@vitest/ws-client': link:../ws-client
       rollup: 2.79.1
       vitest: link:../vitest
