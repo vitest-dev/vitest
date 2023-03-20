@@ -159,7 +159,7 @@ function createVitest(): VitestUtils {
     : new Proxy({}, {
       get(name) {
         throw new Error(
-          'Vitest mocker was not initialized in this environment.'
+          'Vitest mocker was not initialized in this environment. '
           + `vi.${name}() is forbidden.`,
         )
       },
