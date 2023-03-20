@@ -8,6 +8,8 @@ import { spyOn } from '../integrations/spy'
 import type { MockFactory, PendingSuiteMock } from '../types/mocker'
 import type { VitestExecutor } from './execute'
 
+const filterPublicKeys = ['__esModule', Symbol.iterator]
+
 class RefTracker {
   private idMap = new Map<any, number>()
   private mockedValueMap = new Map<number, any>()
@@ -139,7 +141,7 @@ export class VitestMocker {
             return target.then.bind(target)
         }
         else if (!(prop in target)) {
-          if (prop === '__esModule')
+          if (filterPublicKeys.includes(prop))
             return undefined
           const c = getColors()
           throw new Error(
