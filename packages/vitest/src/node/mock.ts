@@ -20,7 +20,7 @@ export function hoistModuleMocks(mod: TransformResult, vitestPath: string): Tran
   const m = hoistCodeMocks(mod.code)
 
   if (m) {
-    const vitestRegexp = new RegExp(`const __vite_ssr_import_\\d+__ = await __vite_ssr_import__\\("(?:\/@fs\/?)?${vitestPath}"\\);`, 'gm')
+    const vitestRegexp = new RegExp(`const __vite_ssr_import_\\d+__ = await __vite_ssr_import__\\("(?:\/@fs\/?)?(?:${vitestPath}|vitest)"\\);`, 'gm')
     // hoist vitest imports in case it was used inside vi.mock factory #425
     const vitestImports = mod.code.matchAll(vitestRegexp)
     let found = false
