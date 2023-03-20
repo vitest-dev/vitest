@@ -43,8 +43,8 @@
     "pretty-format": "^27.5.1"
   },
   "devDependencies": {
-    "@vitest/utils": "workspace:*",
     "@types/natural-compare": "^1.4.1",
+    "@vitest/utils": "workspace:*",
     "natural-compare": "^1.4.0"
   }
 }
