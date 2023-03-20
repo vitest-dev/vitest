@@ -1,15 +1,15 @@
-import  { expect, test, vi } from 'vitest'
+import { expect, test, vi } from 'vitest'
 import { dynamicImport } from '../src/dynamic-import'
 
 vi.mock('test', () => {
   return {
-    foo: 'foo'
-  };
+    foo: 'foo',
+  }
 })
 
-test('testing toMatchObject for mocking module', async() => {
-  const result = await dynamicImport('test');
+test('testing toMatchObject for mocking module', async () => {
+  const result = await dynamicImport('test')
   expect(result).toMatchObject({
-    foo: 'foo'
-  });
+    foo: 'foo',
+  })
 })
