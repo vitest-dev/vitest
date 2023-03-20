@@ -997,7 +997,7 @@ Listen to port and serve API. When set to true, the default port is 51204
 ### browser
 
 - **Type:** `{ enabled?, name?, provider?, headless?, api? }`
-- **Default:** `{ enabled: false, headless: process.env.CI }`
+- **Default:** `{ enabled: false, headless: process.env.CI, api: 63315 }`
 - **Version:** Since Vitest 0.30.0
 - **CLI:** `--browser`, `--browser=<name>`, `--browser.name=chrome --browser.headless`
 
