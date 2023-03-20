@@ -71,6 +71,10 @@ ws.addEventListener('open', async () => {
 
 let hasSnapshot = false
 async function runTests(paths: string[], config: any, client: VitestClient) {
+  // need to import it before any other import, otherwise Vite optimizer will hang
+  const viteClientPath = '/@vite/client'
+  await import(viteClientPath)
+
   // we use dynamic import here, because this file is bundled with UI,
   // but we need to resolve correct path at runtime
   const path = '/__vitest_index__'
