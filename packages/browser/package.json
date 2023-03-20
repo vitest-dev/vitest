@@ -34,7 +34,7 @@
     "prepublishOnly": "pnpm build"
   },
   "peerDependencies": {
-    "vitest": ">=0.30.0"
+    "vitest": ">=0.29.4"
   },
   "dependencies": {
     "@vitest/runner": "workspace:*",
