@@ -1,4 +1,4 @@
-import { deepClone, format, getOwnProperties, getType } from '@vitest/utils'
+import { deepClone, format, getOwnProperties, getType, stringify } from '@vitest/utils'
 import type { DiffOptions } from '@vitest/utils/diff'
 import { unifiedDiff } from '@vitest/utils/diff'
 
@@ -122,6 +122,11 @@ export function processError(err: any, options: DiffOptions = {}) {
 
   if (err.showDiff || (err.showDiff === undefined && err.expected !== undefined && err.actual !== undefined))
     err.diff = unifiedDiff(replacedActual, replacedExpected, options)
+
+  if (typeof err.expected !== 'string')
+    err.expected = stringify(err.expected, 10)
+  if (typeof err.actual !== 'string')
+    err.actual = stringify(err.actual, 10)
 
   // some Error implementations don't allow rewriting message
   try {
