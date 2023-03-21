@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import type { VitestClient } from '@vitest/ws-client'
 import { createClient } from '@vitest/ws-client'
 // eslint-disable-next-line no-restricted-imports
@@ -6,6 +5,8 @@ import type { ResolvedConfig } from 'vitest'
 import type { VitestRunner } from '@vitest/runner'
 import { createBrowserRunner } from './runner'
 import { BrowserSnapshotEnvironment } from './snapshot'
+import { importId } from './utils'
+import { interceptLog } from './logger'
 
 // @ts-expect-error mocking some node apis
 globalThis.process = { env: {}, argv: [], cwd: () => '/', stdout: { write: () => {} }, nextTick: cb => cb() }
@@ -23,11 +24,6 @@ const browserHashMap = new Map<string, string>()
 
 const url = new URL(location.href)
 const testId = url.searchParams.get('id') || 'unknown'
-
-const importId = (id: string) => {
-  const name = `/@id/${id}`
-  return import(name)
-}
 
 const getQueryPaths = () => {
   return url.searchParams.getAll('path')
@@ -52,43 +48,6 @@ async function loadConfig() {
   while (--retries > 0)
 
   throw new Error('cannot load configuration after 5 retries')
-}
-
-const { Date } = globalThis
-
-const interceptLog = async (client: VitestClient) => {
-  const { stringify, format } = await importId('vitest/utils') as typeof import('vitest/utils')
-  // TODO: add support for more console methods
-  const { log, info, error } = console
-  const processLog = (args: unknown[]) => args.map((a) => {
-    if (a instanceof Element)
-      return stringify(a)
-    return format(a)
-  }).join(' ')
-  const sendLog = (type: 'stdout' | 'stderr', args: unknown[]) => {
-    const content = processLog(args)
-    const unknownTestId = '__vitest__unknown_test__'
-    // @ts-expect-error untyped global
-    const taskId = globalThis.__vitest_worker__?.current?.id ?? unknownTestId
-    client.rpc.sendLog({
-      content,
-      time: Date.now(),
-      taskId,
-      type,
-      size: content.length,
-    })
-  }
-  const stdout = (base: (...args: unknown[]) => void) => (...args: unknown[]) => {
-    sendLog('stdout', args)
-    return base(...args)
-  }
-  console.log = stdout(log)
-  console.info = stdout(info)
-
-  console.error = (...args) => {
-    sendLog('stderr', args)
-    return error(...args)
-  }
 }
 
 ws.addEventListener('open', async () => {
