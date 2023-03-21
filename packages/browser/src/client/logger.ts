@@ -1,9 +1,7 @@
-/* eslint-disable no-console */
-
 import type { VitestClient } from '@vitest/ws-client'
 import { importId } from './utils'
 
-const { Date } = globalThis
+const { Date, console } = globalThis
 
 export const setupConsoleLogSpy = async (client: VitestClient) => {
   const { stringify, format, utilInspect } = await importId('vitest/utils') as typeof import('vitest/utils')
