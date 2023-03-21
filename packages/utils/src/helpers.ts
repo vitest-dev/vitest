@@ -87,10 +87,24 @@ export function clone<T>(val: T, seen: WeakMap<any, any>): T {
     // we don't need properties from prototype
     const props = getOwnProperties(val)
     for (const k of props) {
-      Object.defineProperty(out, k, {
-        enumerable: true,
-        value: clone((val as any)[k], seen),
-      })
+      const descriptor = Object.getOwnPropertyDescriptor(val, k)
+      if (!descriptor)
+        continue
+      const cloned = clone((val as any)[k], seen)
+      if ('get' in descriptor) {
+        Object.defineProperty(out, k, {
+          ...descriptor,
+          get() {
+            return cloned
+          },
+        })
+      }
+      else {
+        Object.defineProperty(out, k, {
+          ...descriptor,
+          value: cloned,
+        })
+      }
     }
     return out
   }
