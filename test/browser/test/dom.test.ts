@@ -6,7 +6,7 @@ test('render div', async () => {
   document.body.appendChild(div)
   // TODO: test console
   // eslint-disable-next-line no-console
-  console.log('hello world')
+  console.log('hello world', div)
   console.error('error world')
   expect(div.textContent).toBe('Hello World')
 })

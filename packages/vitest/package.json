@@ -61,6 +61,10 @@
       "types": "./dist/environments.d.ts",
       "import": "./dist/environments.js"
     },
+    "./utils": {
+      "types": "./dist/utils.d.ts",
+      "import": "./dist/utils.js"
+    },
     "./config": {
       "types": "./config.d.ts",
       "require": "./dist/config.cjs",

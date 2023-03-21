@@ -24,6 +24,11 @@ const browserHashMap = new Map<string, string>()
 const url = new URL(location.href)
 const testId = url.searchParams.get('id') || 'unknown'
 
+const importId = (id: string) => {
+  const name = `/@id/${id}`
+  return import(name)
+}
+
 const getQueryPaths = () => {
   return url.searchParams.getAll('path')
 }
@@ -51,13 +56,15 @@ async function loadConfig() {
 
 const { Date } = globalThis
 
-const interceptLog = (client: VitestClient) => {
+const interceptLog = async (client: VitestClient) => {
+  const { stringify, format } = await importId('vitest/utils') as typeof import('vitest/utils')
   // TODO: add support for more console methods
   const { log, info, error } = console
-  const processLog = (args: unknown[]) => {
-    // TODO: make better log, use concordance(?)
-    return args.map(String).join(' ')
-  }
+  const processLog = (args: unknown[]) => args.map((a) => {
+    if (a instanceof Element)
+      return stringify(a)
+    return format(a)
+  }).join(' ')
   const sendLog = (type: 'stdout' | 'stderr', args: unknown[]) => {
     const content = processLog(args)
     const unknownTestId = '__vitest__unknown_test__'
@@ -102,7 +109,7 @@ ws.addEventListener('open', async () => {
   const iFrame = document.getElementById('vitest-ui') as HTMLIFrameElement
   iFrame.setAttribute('src', '/__vitest__/')
 
-  interceptLog(client)
+  await interceptLog(client)
   await runTests(paths, config, client)
 })
 
@@ -112,14 +119,10 @@ async function runTests(paths: string[], config: any, client: VitestClient) {
   const viteClientPath = '/@vite/client'
   await import(viteClientPath)
 
-  // we use dynamic import here, because this file is bundled with UI,
-  // but we need to resolve correct path at runtime
-  const path = '/__vitest_index__'
-  const { startTests, setupCommonEnv, setupSnapshotEnvironment } = await import(path) as typeof import('vitest/browser')
+  const { startTests, setupCommonEnv, setupSnapshotEnvironment } = await importId('vitest/browser') as typeof import('vitest/browser')
 
   if (!runner) {
-    const runnerPath = '/__vitest_runners__'
-    const { VitestTestRunner } = await import(runnerPath) as typeof import('vitest/runners')
+    const { VitestTestRunner } = await importId('vitest/runners') as typeof import('vitest/runners')
     const BrowserRunner = createBrowserRunner(VitestTestRunner)
     runner = new BrowserRunner({ config, client, browserHashMap })
   }
