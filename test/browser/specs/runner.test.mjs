@@ -5,7 +5,7 @@ import { execa } from 'execa'
 
 const browser = process.env.BROWSER || 'chrome'
 
-const { stderr, stdout } = await execa('npx', ['vitest', `--browser=${browser}`], {
+const { stderr, stdout } = await execa('npx', ['vitest', `--browser=${browser}`, '--browser.headless'], {
   env: {
     ...process.env,
     CI: 'true',

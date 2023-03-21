@@ -26,8 +26,8 @@ const browserHashMap = new Map<string, string>()
 const url = new URL(location.href)
 const testId = url.searchParams.get('id') || 'unknown'
 
-const plainImport = (id: string) => {
-  const name = `/@plain/${id}`
+const importId = (id: string) => {
+  const name = `/@id/${id}`
   return import(name)
 }
 
@@ -94,14 +94,14 @@ async function runTests(paths: string[], config: any) {
     takeCoverageInsideWorker,
     stopCoverageInsideWorker,
     startCoverageInsideWorker,
-  } = await plainImport('vitest/browser') as typeof import('vitest/browser')
+  } = await importId('vitest/browser') as typeof import('vitest/browser')
 
   const executor = {
-    executeId: (id: string) => plainImport(id),
+    executeId: (id: string) => importId(id),
   }
 
   if (!runner) {
-    const { VitestTestRunner } = await plainImport('vitest/runners') as typeof import('vitest/runners')
+    const { VitestTestRunner } = await importId('vitest/runners') as typeof import('vitest/runners')
     const BrowserRunner = createBrowserRunner(VitestTestRunner, { takeCoverage: () => takeCoverageInsideWorker(config.coverage, executor) })
     runner = new BrowserRunner({ config, browserHashMap })
   }
