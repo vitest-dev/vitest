@@ -138,5 +138,3 @@ Then go to the project where you are using Vitest and run `pnpm link --global vi
 ## Community
 
 If you have questions or need help, reach out to the community at [Discord](https://chat.vitest.dev) and [GitHub Discussions](https://github.com/vitest-dev/vitest/discussions).
-
-[cac's dot notation]: https://github.com/cacjs/cac#dot-nested-options
