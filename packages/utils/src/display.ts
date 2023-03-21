@@ -8,8 +8,12 @@ export function format(...args: any[]) {
   return util.format(...args)
 }
 
+export function utilInspect(item: unknown, options?: util.InspectOptions) {
+  return util.inspect(item, options)
+}
+
 // chai utils
-export function inspect(obj: unknown): string {
+export function loupeInspect(obj: unknown): string {
   return loupe(obj, {
     depth: 2,
     truncate: 40,
@@ -18,7 +22,7 @@ export function inspect(obj: unknown): string {
 
 export function objDisplay(obj: unknown) {
   const truncateThreshold = 40
-  const str = inspect(obj)
+  const str = loupeInspect(obj)
   const type = Object.prototype.toString.call(obj)
 
   if (str.length >= truncateThreshold) {

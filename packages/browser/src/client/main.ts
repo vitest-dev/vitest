@@ -6,7 +6,7 @@ import type { VitestRunner } from '@vitest/runner'
 import { createBrowserRunner } from './runner'
 import { BrowserSnapshotEnvironment } from './snapshot'
 import { importId } from './utils'
-import { interceptLog } from './logger'
+import { setupConsoleLogSpy } from './logger'
 
 // @ts-expect-error mocking some node apis
 globalThis.process = { env: {}, argv: [], cwd: () => '/', stdout: { write: () => {} }, nextTick: cb => cb() }
@@ -68,7 +68,7 @@ ws.addEventListener('open', async () => {
   const iFrame = document.getElementById('vitest-ui') as HTMLIFrameElement
   iFrame.setAttribute('src', '/__vitest__/')
 
-  await interceptLog(client)
+  await setupConsoleLogSpy(client)
   await runTests(paths, config, client)
 })
 
