@@ -122,7 +122,8 @@ async function runTests(paths: string[], config: any) {
     const now = `${new Date().getTime()}`
     files.forEach(i => browserHashMap.set(i, now))
 
-    await startTests(files, runner)
+    for (const file of files)
+      await startTests([file], runner)
   }
   finally {
     await rpcDone()
