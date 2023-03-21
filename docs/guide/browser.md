@@ -51,7 +51,7 @@ To specify a browser using the CLI, use the `--browser` flag followed by the bro
 npx vitest --browser=chrome
 ```
 
-Or if you pass down several options, you dot-syntax:
+Or you can provide browser options to CLI with dot notation:
 
 ```sh
 npx vitest --browser.name=chrome --browser.headless
