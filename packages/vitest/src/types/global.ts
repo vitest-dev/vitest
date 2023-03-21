@@ -59,7 +59,7 @@ declare global {
 
     interface AsymmetricMatchersContaining {
       stringContaining(expected: string): any
-      objectContaining(expected: any): any
+      objectContaining<T = any>(expected: T): any
       arrayContaining<T = unknown>(expected: Array<T>): any
       stringMatching(expected: string | RegExp): any
     }
