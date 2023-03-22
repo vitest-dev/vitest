@@ -295,20 +295,20 @@ test('importing the next module imports mocked one', async () => {
 
   ```ts
   import { vi } from 'vitest'
-  import { data } from './data'  // Will not get reevaluated beforeEach test
+  import { data } from './data' // Will not get reevaluated beforeEach test
 
   beforeEach(() => {
     vi.resetModules()
   })
 
   test('change state', async () => {
-    const mod = await import('./some/path')   // Will get reevaluated
+    const mod = await import('./some/path') // Will get reevaluated
     mod.changeLocalState('new value')
     expect(mod.getLocalState()).toBe('new value')
   })
 
   test('module has old state', async () => {
-    const mod = await import('./some/path')  // Will get reevaluated
+    const mod = await import('./some/path') // Will get reevaluated
     expect(mod.getLocalState()).toBe('old value')
   })
   ```
