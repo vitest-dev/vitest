@@ -28,18 +28,20 @@ const entries = [
   'src/runtime/entry.ts',
   'src/integrations/spy.ts',
   'src/coverage.ts',
+  'src/public/utils.ts',
 ]
 
-const dtsEntries = [
-  'src/index.ts',
-  'src/node.ts',
-  'src/environments.ts',
-  'src/browser.ts',
-  'src/runners.ts',
-  'src/suite.ts',
-  'src/config.ts',
-  'src/coverage.ts',
-]
+const dtsEntries = {
+  index: 'src/index.ts',
+  node: 'src/node.ts',
+  environments: 'src/environments.ts',
+  browser: 'src/browser.ts',
+  runners: 'src/runners.ts',
+  suite: 'src/suite.ts',
+  config: 'src/config.ts',
+  coverage: 'src/coverage.ts',
+  utils: 'src/public/utils.ts',
+}
 
 const external = [
   ...builtinModules,

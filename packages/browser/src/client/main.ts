@@ -1,10 +1,12 @@
-import type { VitestClient } from '@vitest/ws-client'
 import { createClient } from '@vitest/ws-client'
 // eslint-disable-next-line no-restricted-imports
 import type { ResolvedConfig } from 'vitest'
 import type { VitestRunner } from '@vitest/runner'
 import { createBrowserRunner } from './runner'
 import { BrowserSnapshotEnvironment } from './snapshot'
+import { importId } from './utils'
+import { setupConsoleLogSpy } from './logger'
+import { createSafeRpc, rpc, rpcDone } from './rpc'
 
 // @ts-expect-error mocking some node apis
 globalThis.process = { env: {}, argv: [], cwd: () => '/', stdout: { write: () => {} }, nextTick: cb => cb() }
@@ -51,12 +53,16 @@ async function loadConfig() {
 ws.addEventListener('open', async () => {
   await loadConfig()
 
+  const { getSafeTimers } = await importId('vitest/utils') as typeof import('vitest/utils')
+  const safeRpc = createSafeRpc(client, getSafeTimers)
+
   // @ts-expect-error mocking vitest apis
   globalThis.__vitest_worker__ = {
     config,
     browserHashMap,
     moduleCache: new Map(),
     rpc: client.rpc,
+    safeRpc,
   }
 
   const paths = getQueryPaths()
@@ -64,29 +70,26 @@ ws.addEventListener('open', async () => {
   const iFrame = document.getElementById('vitest-ui') as HTMLIFrameElement
   iFrame.setAttribute('src', '/__vitest__/')
 
-  await runTests(paths, config, client)
+  await setupConsoleLogSpy()
+  await runTests(paths, config)
 })
 
 let hasSnapshot = false
-async function runTests(paths: string[], config: any, client: VitestClient) {
+async function runTests(paths: string[], config: any) {
   // need to import it before any other import, otherwise Vite optimizer will hang
   const viteClientPath = '/@vite/client'
   await import(viteClientPath)
 
-  // we use dynamic import here, because this file is bundled with UI,
-  // but we need to resolve correct path at runtime
-  const path = '/__vitest_index__'
-  const { startTests, setupCommonEnv, setupSnapshotEnvironment } = await import(path) as typeof import('vitest/browser')
+  const { startTests, setupCommonEnv, setupSnapshotEnvironment } = await importId('vitest/browser') as typeof import('vitest/browser')
 
   if (!runner) {
-    const runnerPath = '/__vitest_runners__'
-    const { VitestTestRunner } = await import(runnerPath) as typeof import('vitest/runners')
+    const { VitestTestRunner } = await importId('vitest/runners') as typeof import('vitest/runners')
     const BrowserRunner = createBrowserRunner(VitestTestRunner)
-    runner = new BrowserRunner({ config, client, browserHashMap })
+    runner = new BrowserRunner({ config, browserHashMap })
   }
 
   if (!hasSnapshot) {
-    setupSnapshotEnvironment(new BrowserSnapshotEnvironment(client))
+    setupSnapshotEnvironment(new BrowserSnapshotEnvironment())
     hasSnapshot = true
   }
 
@@ -102,6 +105,7 @@ async function runTests(paths: string[], config: any, client: VitestClient) {
     await startTests(files, runner)
   }
   finally {
-    await client.rpc.onDone(testId)
+    await rpcDone()
+    await rpc().onDone(testId)
   }
 }

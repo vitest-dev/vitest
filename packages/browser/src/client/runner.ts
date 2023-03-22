@@ -1,10 +1,9 @@
 import type { File, TaskResult, Test } from '@vitest/runner'
-import type { VitestClient } from '@vitest/ws-client'
+import { rpc } from './rpc'
 import type { ResolvedConfig } from '#types'
 
 interface BrowserRunnerOptions {
   config: ResolvedConfig
-  client: VitestClient
   browserHashMap: Map<string, string>
 }
 
@@ -12,13 +11,11 @@ export function createBrowserRunner(original: any) {
   return class BrowserTestRunner extends original {
     public config: ResolvedConfig
     hashMap = new Map<string, string>()
-    client: VitestClient
 
     constructor(options: BrowserRunnerOptions) {
       super(options.config)
       this.config = options.config
       this.hashMap = options.browserHashMap
-      this.client = options.client
     }
 
     async onAfterRunTest(task: Test) {
@@ -29,11 +26,11 @@ export function createBrowserRunner(original: any) {
     }
 
     onCollected(files: File[]): unknown {
-      return this.client.rpc.onCollected(files)
+      return rpc().onCollected(files)
     }
 
     onTaskUpdate(task: [string, TaskResult | undefined][]): Promise<void> {
-      return this.client.rpc.onTaskUpdate(task)
+      return rpc().onTaskUpdate(task)
     }
 
     async importFile(filepath: string) {

@@ -52,6 +52,9 @@ export function setup(ctx: Vitest, server?: ViteDevServer) {
         getPaths() {
           return ctx.state.getPaths()
         },
+        sendLog(log) {
+          return ctx.report('onUserConsoleLog', log)
+        },
         resolveSnapshotPath(testPath) {
           return ctx.snapshot.resolvePath(testPath)
         },

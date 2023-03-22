@@ -4,6 +4,7 @@ const noop = () => {}
 
 export default defineConfig({
   test: {
+    include: ['test/**.test.{ts,js}'],
     browser: {
       enabled: true,
       name: 'chrome',
