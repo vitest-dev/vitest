@@ -11,9 +11,6 @@ export default defineConfig({
       headless: false,
       provider: process.env.PROVIDER || 'webdriverio',
     },
-    coverage: {
-      provider: 'istanbul',
-    },
     open: false,
     isolate: false,
     outputFile: './browser.json',
