@@ -26,11 +26,6 @@ const browserHashMap = new Map<string, string>()
 const url = new URL(location.href)
 const testId = url.searchParams.get('id') || 'unknown'
 
-const importId = (id: string) => {
-  const name = `/@id/${id}`
-  return import(name)
-}
-
 const getQueryPaths = () => {
   return url.searchParams.getAll('path')
 }
@@ -126,8 +121,8 @@ async function runTests(paths: string[], config: any) {
       await startTests([file], runner)
   }
   finally {
-    await rpcDone()
     await stopCoverageInsideWorker(config.coverage, executor)
+    await rpcDone()
     await rpc().onDone(testId)
   }
 }

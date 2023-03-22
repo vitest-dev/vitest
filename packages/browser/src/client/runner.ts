@@ -32,7 +32,7 @@ export function createBrowserRunner(original: any, coverageModule: CoverageHandl
     async onAfterRunSuite() {
       await super.onAfterRunSuite?.()
       const coverage = await coverageModule?.takeCoverage?.()
-      await this.client.rpc.onAfterSuiteRun({ coverage })
+      await rpc().onAfterSuiteRun({ coverage })
     }
 
     onCollected(files: File[]): unknown {
