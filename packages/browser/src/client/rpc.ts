@@ -1,7 +1,7 @@
 import {
   getSafeTimers,
 } from '@vitest/utils'
-import { getWorkerState } from '../utils/global'
+import type { VitestClient } from '@vitest/ws-client'
 
 const { get } = Reflect
 const safeRandom = Math.random
@@ -48,8 +48,9 @@ export const rpcDone = async () => {
   return Promise.all(awaitable)
 }
 
-export const rpc = () => {
-  const { rpc } = getWorkerState()
+export const rpc = (): VitestClient['rpc'] => {
+  // @ts-expect-error not typed global
+  const { rpc } = globalThis.__vitest_worker__
   return new Proxy(rpc, {
     get(target, p, handler) {
       const sendCall = get(target, p, handler)

@@ -1,9 +1,9 @@
-import type { VitestClient } from '@vitest/ws-client'
+import { rpc } from './rpc'
 import { importId } from './utils'
 
 const { Date, console } = globalThis
 
-export const setupConsoleLogSpy = async (client: VitestClient) => {
+export const setupConsoleLogSpy = async () => {
   const { stringify, format, utilInspect } = await importId('vitest/utils') as typeof import('vitest/utils')
   const { log, info, error, dir, dirxml, trace, time, timeEnd, timeLog, warn, debug, count, countReset } = console
   const formatInput = (input: unknown) => {
@@ -18,7 +18,7 @@ export const setupConsoleLogSpy = async (client: VitestClient) => {
     const unknownTestId = '__vitest__unknown_test__'
     // @ts-expect-error untyped global
     const taskId = globalThis.__vitest_worker__?.current?.id ?? unknownTestId
-    client.rpc.sendLog({
+    rpc().sendLog({
       content,
       time: Date.now(),
       taskId,

@@ -1,5 +1,6 @@
 import type { File, TaskResult, Test } from '@vitest/runner'
 import type { VitestClient } from '@vitest/ws-client'
+import { rpc } from './rpc'
 import type { ResolvedConfig } from '#types'
 
 interface BrowserRunnerOptions {
@@ -29,11 +30,11 @@ export function createBrowserRunner(original: any) {
     }
 
     onCollected(files: File[]): unknown {
-      return this.client.rpc.onCollected(files)
+      return rpc().onCollected(files)
     }
 
     onTaskUpdate(task: [string, TaskResult | undefined][]): Promise<void> {
-      return this.client.rpc.onTaskUpdate(task)
+      return rpc().onTaskUpdate(task)
     }
 
     async importFile(filepath: string) {

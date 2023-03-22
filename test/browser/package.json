@@ -1,8 +1,9 @@
 {
   "name": "@vitest/test-browser",
   "private": true,
+  "module": "true",
   "scripts": {
-    "test": "node test.mjs",
+    "test": "node --test specs/",
     "coverage": "vitest run --coverage"
   },
   "devDependencies": {

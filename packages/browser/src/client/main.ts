@@ -7,6 +7,7 @@ import { createBrowserRunner } from './runner'
 import { BrowserSnapshotEnvironment } from './snapshot'
 import { importId } from './utils'
 import { setupConsoleLogSpy } from './logger'
+import { rpc, rpcDone } from './rpc'
 
 // @ts-expect-error mocking some node apis
 globalThis.process = { env: {}, argv: [], cwd: () => '/', stdout: { write: () => {} }, nextTick: cb => cb() }
@@ -68,7 +69,7 @@ ws.addEventListener('open', async () => {
   const iFrame = document.getElementById('vitest-ui') as HTMLIFrameElement
   iFrame.setAttribute('src', '/__vitest__/')
 
-  await setupConsoleLogSpy(client)
+  await setupConsoleLogSpy()
   await runTests(paths, config, client)
 })
 
@@ -103,6 +104,7 @@ async function runTests(paths: string[], config: any, client: VitestClient) {
     await startTests(files, runner)
   }
   finally {
-    await client.rpc.onDone(testId)
+    await rpcDone()
+    await rpc().onDone(testId)
   }
 }
