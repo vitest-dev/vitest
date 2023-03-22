@@ -1,4 +1,4 @@
-import {
+import type {
   getSafeTimers,
 } from '@vitest/utils'
 import type { VitestClient } from '@vitest/ws-client'
@@ -6,8 +6,8 @@ import type { VitestClient } from '@vitest/ws-client'
 const { get } = Reflect
 const safeRandom = Math.random
 
-function withSafeTimers(fn: () => void) {
-  const { setTimeout, clearTimeout, nextTick, setImmediate, clearImmediate } = getSafeTimers()
+function withSafeTimers(getTimers: typeof getSafeTimers, fn: () => void) {
+  const { setTimeout, clearTimeout, nextTick, setImmediate, clearImmediate } = getTimers()
 
   const currentSetTimeout = globalThis.setTimeout
   const currentClearTimeout = globalThis.clearTimeout
@@ -48,13 +48,11 @@ export const rpcDone = async () => {
   return Promise.all(awaitable)
 }
 
-export const rpc = (): VitestClient['rpc'] => {
-  // @ts-expect-error not typed global
-  const { rpc } = globalThis.__vitest_worker__
-  return new Proxy(rpc, {
+export const createSafeRpc = (client: VitestClient, getTimers: () => any): VitestClient['rpc'] => {
+  return new Proxy(client.rpc, {
     get(target, p, handler) {
       const sendCall = get(target, p, handler)
-      const safeSendCall = (...args: any[]) => withSafeTimers(async () => {
+      const safeSendCall = (...args: any[]) => withSafeTimers(getTimers, async () => {
         const result = sendCall(...args)
         promises.add(result)
         try {
@@ -68,4 +66,9 @@ export const rpc = (): VitestClient['rpc'] => {
       return safeSendCall
     },
   })
+}
+
+export const rpc = (): VitestClient['rpc'] => {
+  // @ts-expect-error not typed global
+  return globalThis.__vitest_worker__.safeRpc
 }

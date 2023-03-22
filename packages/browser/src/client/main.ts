@@ -1,4 +1,3 @@
-import type { VitestClient } from '@vitest/ws-client'
 import { createClient } from '@vitest/ws-client'
 // eslint-disable-next-line no-restricted-imports
 import type { ResolvedConfig } from 'vitest'
@@ -7,7 +6,7 @@ import { createBrowserRunner } from './runner'
 import { BrowserSnapshotEnvironment } from './snapshot'
 import { importId } from './utils'
 import { setupConsoleLogSpy } from './logger'
-import { rpc, rpcDone } from './rpc'
+import { createSafeRpc, rpc, rpcDone } from './rpc'
 
 // @ts-expect-error mocking some node apis
 globalThis.process = { env: {}, argv: [], cwd: () => '/', stdout: { write: () => {} }, nextTick: cb => cb() }
@@ -54,12 +53,16 @@ async function loadConfig() {
 ws.addEventListener('open', async () => {
   await loadConfig()
 
+  const { getSafeTimers } = await importId('vitest/utils') as typeof import('vitest/utils')
+  const safeRpc = createSafeRpc(client, getSafeTimers)
+
   // @ts-expect-error mocking vitest apis
   globalThis.__vitest_worker__ = {
     config,
     browserHashMap,
     moduleCache: new Map(),
     rpc: client.rpc,
+    safeRpc,
   }
 
   // @ts-expect-error mocking vitest apis
@@ -70,11 +73,11 @@ ws.addEventListener('open', async () => {
   iFrame.setAttribute('src', '/__vitest__/')
 
   await setupConsoleLogSpy()
-  await runTests(paths, config, client)
+  await runTests(paths, config)
 })
 
 let hasSnapshot = false
-async function runTests(paths: string[], config: any, client: VitestClient) {
+async function runTests(paths: string[], config: any) {
   // need to import it before any other import, otherwise Vite optimizer will hang
   const viteClientPath = '/@vite/client'
   await import(viteClientPath)
@@ -84,11 +87,11 @@ async function runTests(paths: string[], config: any, client: VitestClient) {
   if (!runner) {
     const { VitestTestRunner } = await importId('vitest/runners') as typeof import('vitest/runners')
     const BrowserRunner = createBrowserRunner(VitestTestRunner)
-    runner = new BrowserRunner({ config, client, browserHashMap })
+    runner = new BrowserRunner({ config, browserHashMap })
   }
 
   if (!hasSnapshot) {
-    setupSnapshotEnvironment(new BrowserSnapshotEnvironment(client))
+    setupSnapshotEnvironment(new BrowserSnapshotEnvironment())
     hasSnapshot = true
   }
 

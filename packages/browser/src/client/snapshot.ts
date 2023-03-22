@@ -1,10 +1,7 @@
-import type { VitestClient } from '@vitest/ws-client'
 import { rpc } from './rpc'
 import type { SnapshotEnvironment } from '#types'
 
 export class BrowserSnapshotEnvironment implements SnapshotEnvironment {
-  constructor(private client: VitestClient) {}
-
   readSnapshotFile(filepath: string): Promise<string | null> {
     return rpc().readFile(filepath)
   }
