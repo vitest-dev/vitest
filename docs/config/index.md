@@ -1386,3 +1386,45 @@ Path to custom tsconfig, relative to the project root.
 - **Default**: `300`
 
 The number of milliseconds after which a test is considered slow and reported as such in the results.
+
+### chaiConfig
+
+- **Type:** `{ includeStack?, showDiff?, truncateThreshold?, useProxy?, proxyExcludedKeys? }`
+- **Default:** `{ includeStack: false, showDiff: true, truncateThreshold: 40, useProxy: true, proxyExcludedKeys: ['then', 'catch', 'inspect', 'toJSON'] }`
+
+Equivalent to [chai config](https://github.com/chaijs/chai/blob/4.x.x/lib/chai/config.js). You can override it in your `vitest.config.ts` file.
+
+#### chaiConfig.includeStack
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Influences whether stack trace is included in Assertion error message. Default of false suppresses stack trace in the error message.
+
+#### chaiConfig.showDiff
+
+- **Type:** `boolean`
+- **Default:** `true`
+
+influences whether or not the `showDiff` flag should be included in the thrown AssertionErrors. `false` will always be `false`; `true` will be true when the assertion has requested a diff be shown.
+
+#### chaiConfig.truncateThreshold
+
+- **Type:** `number`
+- **Default:** `40`
+
+Sets length threshold for actual and expected values in assertion errors. If this threshold is exceeded, for example for large data structures, the value is replaced with something like `[ Array(3) ]` or `{ Object (prop1, prop2) }`. Set it to `0` if you want to disable truncating altogether.
+
+#### chaiConfig.useProxy
+
+- **Type:** `boolean`
+- **Default:** `true`
+
+Defines if chai will use a Proxy to throw an error when a non-existent property is read, which protects users from typos when using property-based assertions.
+
+#### chaiConfig.proxyExcludedKeys
+
+- **Type:** `string[]`
+- **Default:** `['then', 'catch', 'inspect', 'toJSON']`
+
+Defines which properties should be ignored instead of throwing an error if they do not exist on the assertion. This is only applied if the environment Chai is running in supports proxies and if the `useProxy` configuration setting is enabled. By default, `then` and `inspect` will not throw an error if they do not exist on the assertion object because the `.inspect` property is read by `util.inspect` (for example, when using `console.log` on the assertion object) and `.then` is necessary for promise type-checking.

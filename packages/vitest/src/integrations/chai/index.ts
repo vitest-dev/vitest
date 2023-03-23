@@ -78,3 +78,7 @@ Object.defineProperty(globalThis, GLOBAL_EXPECT, {
 
 export { assert, should } from 'chai'
 export { chai, globalExpect as expect }
+export const setupConfig = (config: chaiConfig) => {
+  Object.assign(chai.config, config)
+}
+export type chaiConfig = Partial<typeof chai.config>

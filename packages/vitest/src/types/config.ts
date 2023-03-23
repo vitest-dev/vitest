@@ -4,6 +4,7 @@ import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
 import type { BuiltinReporters } from '../node/reporters'
 import type { TestSequencerConstructor } from '../node/sequencers/types'
+import type { chaiConfig } from '../integrations/chai'
 import type { CoverageOptions, ResolvedCoverageOptions } from './coverage'
 import type { JSDOMOptions } from './jsdom-options'
 import type { Reporter } from './reporter'
@@ -583,6 +584,12 @@ export interface InlineConfig {
    * Requires `singleThread: true` OR `threads: false`.
    */
   inspectBrk?: boolean
+
+  /**
+   * chai config
+   * https://github.com/chaijs/chai/blob/4.x.x/lib/chai/config.js
+  */
+  chaiConfig?: chaiConfig
 }
 
 export interface TypecheckConfig {
