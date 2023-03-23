@@ -26,7 +26,7 @@ it('toUpperCase', () => {
 The first time this test is run, Vitest creates a snapshot file that looks like this:
 
 ```js
-// Vitest Snapshot v1
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports['toUpperCase 1'] = '"FOOBAR"'
 ```
@@ -147,8 +147,8 @@ Vitest provides an almost compatible Snapshot feature with [Jest's](https://jest
 #### 1. Comment header in the snapshot file is different
 
 ```diff
-- // Jest Snapshot v1
-+ // Vitest Snapshot v1
+- // Jest Snapshot v1, https://goo.gl/fbAQLP
++ // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 ```
 
 This does not really affect the functionality but might affect your commit diff when migrating from Jest.
