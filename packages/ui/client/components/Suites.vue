@@ -1,11 +1,20 @@
 <script setup lang="ts">
 import { hasFailedSnapshot } from '@vitest/ws-client'
+import { coverageEnabled, disableCoverage } from '../composables/navigation'
 import { client, current, isReport, runCurrent } from '~/composables/client'
 
 const name = computed(() => current.value?.name.split(/\//g).pop())
 
 const failedSnapshot = computed(() => current.value?.tasks && hasFailedSnapshot(current.value?.tasks))
 const updateSnapshot = () => current.value && client.rpc.updateSnapshot(current.value)
+
+async function onRunCurrent() {
+  if (coverageEnabled.value) {
+    disableCoverage.value = true
+    await nextTick()
+  }
+  await runCurrent()
+}
 </script>
 
 <template>
@@ -25,7 +34,7 @@ const updateSnapshot = () => current.value && client.rpc.updateSnapshot(current.
             v-if="!isReport"
             v-tooltip.bottom="'Rerun file'"
             icon="i-carbon-play"
-            @click="runCurrent()"
+            @click="onRunCurrent()"
           />
         </div>
       </template>

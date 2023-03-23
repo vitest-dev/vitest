@@ -3,7 +3,7 @@ import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import { normalize, relative, resolve } from 'pathe'
 import { toArray } from '@vitest/utils'
 import { resolveModule } from 'local-pkg'
-import { configDefaults } from '../../defaults'
+import { configDefaults, coverageConfigDefaults } from '../../defaults'
 import type { ResolvedConfig, UserConfig } from '../../types'
 import { deepMerge, notNullish, removeUndefinedValues } from '../../utils'
 import { ensurePackageInstalled } from '../pkg'
@@ -23,7 +23,23 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
 
   async function UIPlugin() {
     await ensurePackageInstalled('@vitest/ui', getRoot())
-    return (await import('@vitest/ui')).default(options.uiBase)
+    const resolveCoverageFolder = () => {
+      const uiOptions = options as ResolvedConfig
+      const enabled = uiOptions.api?.port
+        && uiOptions.coverage?.enabled
+        && uiOptions.coverage.reporter.some((reporter) => {
+          if (typeof reporter === 'string')
+            return reporter === 'html'
+
+          return reporter.length && reporter.includes('html')
+        })
+
+      // reportsDirectory not resolved yet
+      return enabled
+        ? resolve(getRoot(), uiOptions.coverage.reportsDirectory || coverageConfigDefaults.reportsDirectory)
+        : undefined
+    }
+    return (await import('@vitest/ui')).default(options.uiBase, resolveCoverageFolder)
   }
 
   async function BrowserPlugin() {
