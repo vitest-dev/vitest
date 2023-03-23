@@ -87,8 +87,6 @@ async function runTests(paths: string[], config: any) {
     setupCommonEnv,
     setupSnapshotEnvironment,
     takeCoverageInsideWorker,
-    stopCoverageInsideWorker,
-    startCoverageInsideWorker,
   } = await importId('vitest/browser') as typeof import('vitest/browser')
 
   const executor = {
@@ -100,8 +98,6 @@ async function runTests(paths: string[], config: any) {
     const BrowserRunner = createBrowserRunner(VitestTestRunner, { takeCoverage: () => takeCoverageInsideWorker(config.coverage, executor) })
     runner = new BrowserRunner({ config, browserHashMap })
   }
-
-  await startCoverageInsideWorker(config.coverage, executor)
 
   if (!hasSnapshot) {
     setupSnapshotEnvironment(new BrowserSnapshotEnvironment())
@@ -121,7 +117,6 @@ async function runTests(paths: string[], config: any) {
       await startTests([file], runner)
   }
   finally {
-    await stopCoverageInsideWorker(config.coverage, executor)
     await rpcDone()
     await rpc().onDone(testId)
   }
