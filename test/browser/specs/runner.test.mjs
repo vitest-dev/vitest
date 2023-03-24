@@ -17,7 +17,7 @@ test('tests are actually running', async () => {
   const browserResult = await readFile('./browser.json', 'utf-8')
   const browserResultJson = JSON.parse(browserResult)
 
-  assert.ok(browserResultJson.testResults.length === 5, 'Not all the tests have been run')
+  assert.ok(browserResultJson.testResults.length === 6, 'Not all the tests have been run')
 
   for (const result of browserResultJson.testResults)
     assert.ok(result.status === 'passed', `${result.name} has failed`)
@@ -48,4 +48,10 @@ test('logs are redirected to stderr', async () => {
   assert.match(stderr, /hello from console.warn/, 'prints console.info')
   assert.match(stderr, /Timer "invalid timeLog" does not exist/, 'prints errored timeLog')
   assert.match(stderr, /Timer "invalid timeEnd" does not exist/, 'prints errored timeEnd')
+})
+
+test('popup apis should log a warning', () => {
+  assert.ok(stderr.includes('Vitest encountered a \`alert\`'), 'prints warning for alert')
+  assert.ok(stderr.includes('Vitest encountered a \`confirm\`'), 'prints warning for confirm')
+  assert.ok(stderr.includes('Vitest encountered a \`prompt\`'), 'prints warning for prompt')
 })

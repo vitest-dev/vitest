@@ -7,6 +7,7 @@ import { BrowserSnapshotEnvironment } from './snapshot'
 import { importId } from './utils'
 import { setupConsoleLogSpy } from './logger'
 import { createSafeRpc, rpc, rpcDone } from './rpc'
+import { setupPopupSpy } from './popup'
 
 // @ts-expect-error mocking some node apis
 globalThis.process = { env: {}, argv: [], cwd: () => '/', stdout: { write: () => {} }, nextTick: cb => cb() }
@@ -71,6 +72,7 @@ ws.addEventListener('open', async () => {
   iFrame.setAttribute('src', '/__vitest__/')
 
   await setupConsoleLogSpy()
+  setupPopupSpy()
   await runTests(paths, config)
 })
 
