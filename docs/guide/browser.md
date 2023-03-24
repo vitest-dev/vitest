@@ -87,3 +87,13 @@ npx vitest --browser.name=chrome --browser.headless
 ```
 
 In this case, Vitest will run in headless mode using the Chrome browser.
+
+## Limitations
+### Popup
+
+When using Vitest Browser, it's important to note that synchronous popup web
+APIs like `alert` or `confirm` cannot be used natively. This is because they block the web page, which means Vitest cannot continue communicating with the page, causing the execution to hang.
+In such situations, Vitest provides default mocks with default return values for
+these APIs. This ensures that if the user accidentally uses synchronous popup
+web APIs, the execution would not hang. However, it's still
+recommended for the user to mock these web APIs for better experience. [Read more](/guide/mocking).

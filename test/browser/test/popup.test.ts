@@ -9,5 +9,5 @@ it('prompt', async () => {
 })
 
 it('confirm', async () => {
-  expect(confirm('test')).toBeNull()
+  expect(confirm('test')).toBe(false)
 })

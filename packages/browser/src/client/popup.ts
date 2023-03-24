@@ -1,22 +1,21 @@
-const showPopupWarning = (name: string) => (...params: any[]) => {
+const showPopupWarning = <T>(name: string, value: T) => (...params: any[]) => {
   const formatedParams = params.map(p => JSON.stringify(p)).join(', ')
 
-  console.warn(`Vitest encountered a \`${name}\` call with parameters: ${
-      formatedParams}. Vitest cannot handle \`${
-      name}\` by default in the browser, so it returned null. If you need to handle this case, you can mock the \`${
-      name}\` call yourself like this:
+  console.warn(`Vitest encountered a \`${name}\` call with parameters (${formatedParams}) that it can't handle by default in the browser, so it returned \`${value}\`. Read more in https://vitest.dev/guide/browser.html#popup.
+If needed, mock the \`${name}\` call manually like:
 
 \`\`\`
+import { vi } from 'vitest'
+
 vi.spyOn(window, '${name}').mockReturnValue('your value')
 ${name}(${formatedParams})
 expect(${name}).toHaveBeenCalled()
 \`\`\``)
-  return null
+  return value
 }
 
 export const setupPopupSpy = () => {
-  globalThis.alert = showPopupWarning('alert')
-  // @ts-expect-error mocking native popup apis
-  globalThis.confirm = showPopupWarning('confirm')
-  globalThis.prompt = showPopupWarning('prompt')
+  globalThis.alert = showPopupWarning('alert', null)
+  globalThis.confirm = showPopupWarning('confirm', false)
+  globalThis.prompt = showPopupWarning('prompt', null)
 }
