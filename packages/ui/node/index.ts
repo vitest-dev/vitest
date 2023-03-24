@@ -2,20 +2,21 @@ import { fileURLToPath } from 'url'
 import { basename, resolve } from 'pathe'
 import sirv from 'sirv'
 import type { Plugin } from 'vite'
+import { coverageConfigDefaults } from 'vitest/config'
+import type { ResolvedConfig, Vitest } from '#types'
 
-export default (base = '/__vitest__/', resolveCoverageFolder?: () => string | undefined) => {
-  let coveragePath: string | undefined
-  let coverageFolder: string | undefined
+export default (ctx: Vitest) => {
   return <Plugin>{
     name: 'vitest:ui',
     apply: 'serve',
-    configResolved() {
-      coverageFolder = resolveCoverageFolder?.() ?? undefined
-      coveragePath = coverageFolder ? `/${basename(coverageFolder)}/` : undefined
+    configureServer(server) {
+      const uiOptions: ResolvedConfig = ctx.config
+      const base = uiOptions.uiBase
+      const coverageFolder = resolveCoverageFolder(ctx)
+      const coveragePath = coverageFolder ? `/${basename(coverageFolder)}/` : undefined
       if (coveragePath && base === coveragePath)
-        throw new Error(`The base path and the coverage path cannot be the same: ${base}`)
-    },
-    async configureServer(server) {
+        throw new Error(`The ui base path and the coverage path cannot be the same: ${base}, change coverage.reportsDirectory`)
+
       coverageFolder && server.middlewares.use(coveragePath!, sirv(coverageFolder, {
         single: true,
         dev: true,
@@ -27,4 +28,24 @@ export default (base = '/__vitest__/', resolveCoverageFolder?: () => string | un
       }))
     },
   }
+}
+
+function resolveCoverageFolder(ctx: Vitest) {
+  const options: ResolvedConfig = ctx.config
+  const enabled = options.api?.port
+    && options.coverage?.enabled
+    && options.coverage.reporter.some((reporter) => {
+      if (typeof reporter === 'string')
+        return reporter === 'html'
+
+      return reporter.length && reporter.includes('html')
+    })
+
+  // reportsDirectory not resolved yet
+  return enabled
+    ? resolve(
+      ctx.config?.root || options.root || process.cwd(),
+      options.coverage.reportsDirectory || coverageConfigDefaults.reportsDirectory,
+    )
+    : undefined
 }
