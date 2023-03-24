@@ -1088,18 +1088,22 @@ importers:
   test/coverage-test:
     specifiers:
       '@vitejs/plugin-vue': latest
+      '@vitest/browser': workspace:*
       '@vue/test-utils': latest
       happy-dom: latest
       vite: ^4.0.0
       vitest: workspace:*
       vue: latest
+      webdriverio: latest
     devDependencies:
       '@vitejs/plugin-vue': 4.1.0_vite@4.0.0+vue@3.2.47
+      '@vitest/browser': link:../../packages/browser
       '@vue/test-utils': 2.3.2_vue@3.2.47
       happy-dom: 8.9.0
       vite: 4.0.0
       vitest: link:../../packages/vitest
       vue: 3.2.47
+      webdriverio: 8.6.3
 
   test/css:
     specifiers:
@@ -11964,6 +11968,32 @@ packages:
     resolution: {integrity: sha512-0cuGS8+jhR67Fy7qG3i3Pc7Aw494sb9yG9QgpG97SFVWwolgYjlhJg7n+UaHxOQT30d1TYu/EYe9k01ivLErIg==}
     dev: true
 
+  /devtools/8.6.2:
+    resolution: {integrity: sha512-dqR5SUsqpJBkY+SpzSPyRwAdwn3PdoCFjgaRqO2jkF0IXgvBkKsXSepAN2QV4/nbcFXB6mokJZ0rlHSzVl7GkQ==}
+    engines: {node: ^16.13 || >=18}
+    dependencies:
+      '@types/node': 18.15.3
+      '@wdio/config': 8.6.2
+      '@wdio/logger': 8.1.0
+      '@wdio/protocols': 8.5.7
+      '@wdio/types': 8.4.0
+      '@wdio/utils': 8.6.1
+      chrome-launcher: 0.15.1
+      edge-paths: 3.0.5
+      import-meta-resolve: 2.2.2
+      puppeteer-core: 19.7.4_typescript@4.9.4
+      query-selector-shadow-dom: 1.0.1
+      ua-parser-js: 1.0.34
+      uuid: 9.0.0
+      which: 3.0.0
+    transitivePeerDependencies:
+      - bufferutil
+      - encoding
+      - supports-color
+      - typescript
+      - utf-8-validate
+    dev: true
+
   /devtools/8.6.2_typescript@4.9.4:
     resolution: {integrity: sha512-dqR5SUsqpJBkY+SpzSPyRwAdwn3PdoCFjgaRqO2jkF0IXgvBkKsXSepAN2QV4/nbcFXB6mokJZ0rlHSzVl7GkQ==}
     engines: {node: ^16.13 || >=18}
@@ -18370,6 +18400,35 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
+  /puppeteer-core/19.7.4:
+    resolution: {integrity: sha512-E8nVhqGF0ZM7s9pb5849gzKFG7282WYZaeGXo/eYDkpUpcPUgmkj7QrAoa8SpFXXyqHHilHJZPbfVBb4foDazQ==}
+    engines: {node: '>=14.14.0'}
+    peerDependencies:
+      typescript: '>= 4.7.4'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+    dependencies:
+      chromium-bidi: 0.4.4_6o5gdkn34s2j2m26x63ssheuqa
+      cross-fetch: 3.1.5
+      debug: 4.3.4
+      devtools-protocol: 0.0.1094867
+      extract-zip: 2.0.1
+      https-proxy-agent: 5.0.1
+      proxy-from-env: 1.1.0
+      rimraf: 4.4.0
+      tar-fs: 2.1.1
+      typescript: 4.9.4
+      unbzip2-stream: 1.4.3
+      ws: 8.12.1
+    transitivePeerDependencies:
+      - bufferutil
+      - encoding
+      - supports-color
+      - utf-8-validate
+    dev: true
+
+
   /puppeteer-core/19.7.4_typescript@4.9.4:
     resolution: {integrity: sha512-E8nVhqGF0ZM7s9pb5849gzKFG7282WYZaeGXo/eYDkpUpcPUgmkj7QrAoa8SpFXXyqHHilHJZPbfVBb4foDazQ==}
     engines: {node: '>=14.14.0'}
@@ -22241,6 +22300,43 @@ packages:
       ws: 8.13.0
     transitivePeerDependencies:
       - bufferutil
+      - utf-8-validate
+    dev: true
+
+  /webdriverio/8.6.3:
+    resolution: {integrity: sha512-XhS6lydSyCLnJcOBhLbSK6J0MQdfnSXaFcSvSEL10TMBnWcmETCfYIj7OX41weDI8F4YAasYyMH+mJUkWwC1Ww==}
+    engines: {node: ^16.13 || >=18}
+    dependencies:
+      '@types/node': 18.15.3
+      '@wdio/config': 8.6.2
+      '@wdio/logger': 8.1.0
+      '@wdio/protocols': 8.5.7
+      '@wdio/repl': 8.1.0
+      '@wdio/types': 8.4.0
+      '@wdio/utils': 8.6.1
+      archiver: 5.3.1
+      aria-query: 5.0.2
+      css-shorthand-properties: 1.1.1
+      css-value: 0.0.1
+      devtools: 8.6.2
+      devtools-protocol: 0.0.1116775
+      grapheme-splitter: 1.0.4
+      import-meta-resolve: 2.2.2
+      is-plain-obj: 4.1.0
+      lodash.clonedeep: 4.5.0
+      lodash.zip: 4.2.0
+      minimatch: 7.4.2
+      puppeteer-core: 19.7.4
+      query-selector-shadow-dom: 1.0.1
+      resq: 1.11.0
+      rgb2hex: 0.2.5
+      serialize-error: 8.1.0
+      webdriver: 8.6.2
+    transitivePeerDependencies:
+      - bufferutil
+      - encoding
+      - supports-color
+      - typescript
       - utf-8-validate
     dev: true
 

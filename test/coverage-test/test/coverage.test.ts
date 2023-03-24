@@ -1,7 +1,10 @@
 import { expect, test } from 'vitest'
-import { pythagoras } from '../src/index.mjs'
 import { implicitElse } from '../src/implicitElse'
 import { useImportEnv } from '../src/importEnv'
+
+// TODO Fix: Browser fails to load if extensions ".mjs" is used
+// @ts-expect-error -- extension
+import { pythagoras } from '../src/index'
 
 test('Math.sqrt()', async () => {
   expect(pythagoras(3, 4)).toBe(5)
