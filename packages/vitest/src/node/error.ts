@@ -9,6 +9,7 @@ import type { ErrorWithDiff, ParsedStack } from '../types'
 import { lineSplitRE, parseErrorStacktrace, positionToOffset } from '../utils/source-map'
 import { F_POINTER } from '../utils/figures'
 import { TypeCheckError } from '../typecheck/typechecker'
+import { isPrimitive } from '../utils'
 import type { Vitest } from './core'
 import { divider } from './reporters/renderers/utils'
 import type { Logger } from './logger'
@@ -23,10 +24,10 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
   const { showCodeFrame = true, fullStack = false, type } = options
   let e = error as ErrorWithDiff
 
-  if (typeof error === 'string') {
+  if (isPrimitive(e)) {
     e = {
-      message: error.split(/\n/g)[0],
-      stack: error,
+      message: String(error).split(/\n/g)[0],
+      stack: String(error),
     } as any
   }
 

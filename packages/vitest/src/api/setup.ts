@@ -9,7 +9,7 @@ import type { ViteDevServer } from 'vite'
 import { API_PATH } from '../constants'
 import type { Vitest } from '../node'
 import type { File, ModuleGraphData, Reporter, TaskResultPack, UserConsoleLog } from '../types'
-import { getModuleGraph } from '../utils'
+import { getModuleGraph, isPrimitive } from '../utils'
 import { parseErrorStacktrace } from '../utils/source-map'
 import type { TransformResultWithSource, WebSocketEvents, WebSocketHandlers } from './types'
 
@@ -140,10 +140,11 @@ class WebSocketReporter implements Reporter {
 
     packs.forEach(([, result]) => {
       // TODO remove after "error" deprecation is removed
-      if (result?.error)
+      if (result?.error && !isPrimitive(result.error))
         result.error.stacks = parseErrorStacktrace(result.error)
       result?.errors?.forEach((error) => {
-        error.stacks = parseErrorStacktrace(error)
+        if (!isPrimitive(error))
+          error.stacks = parseErrorStacktrace(error)
       })
     })
 

@@ -721,7 +721,7 @@ export class Vitest {
   isBrowserEnabled() {
     if (this.config.browser.enabled)
       return true
-    return (this.config.poolMatchGlobs || []).some(([, pool]) => pool === 'browser')
+    return this.config.poolMatchGlobs?.length && this.config.poolMatchGlobs.some(([, pool]) => pool === 'browser')
   }
 
   // The server needs to be running for communication

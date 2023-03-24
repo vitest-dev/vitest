@@ -19,6 +19,10 @@ export function groupBy<T, K extends string | number | symbol>(collection: T[], 
   }, {} as Record<K, T[]>)
 }
 
+export function isPrimitive(value: unknown) {
+  return value === null || (typeof value !== 'function' && typeof value !== 'object')
+}
+
 export function getAllMockableProperties(obj: any, isModule: boolean) {
   const allProps = new Map<string | symbol, { key: string | symbol; descriptor: PropertyDescriptor }>()
   let curr = obj
