@@ -8,7 +8,7 @@ import { processError } from '@vitest/runner/utils'
 import type { MockMap } from '../types/mocker'
 import { getCurrentEnvironment, getWorkerState } from '../utils/global'
 import type { ContextRPC, ContextTestEnvironment, ResolvedConfig } from '../types'
-import { distDir } from '../constants'
+import { distDir } from '../paths'
 import { VitestMocker } from './mocker'
 import { rpc } from './rpc'
 
@@ -53,6 +53,8 @@ export async function startViteNode(ctx: ContextRPC) {
       error.VITEST_TEST_NAME = worker.current?.name
       error.VITEST_TEST_PATH = relative(config.root, worker.filepath)
     }
+    error.VITEST_AFTER_ENV_TEARDOWN = worker.environmentTeardownRun
+
     rpc().onUnhandledError(error, type)
   }
 

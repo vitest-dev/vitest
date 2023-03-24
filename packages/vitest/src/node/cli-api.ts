@@ -32,8 +32,6 @@ export async function startVitest(
 
   if (options.run)
     options.watch = false
-  if (options.browser) // enabling threads in browser mode causes inconsistences
-    options.threads = false
 
   // this shouldn't affect _application root_ that can be changed inside config
   const root = resolve(options.root || process.cwd())
@@ -45,6 +43,18 @@ export async function startVitest(
 
   if (typeof options.coverage === 'boolean')
     options.coverage = { enabled: options.coverage }
+
+  // running "vitest --browser"
+  if (typeof options.browser === 'boolean')
+    options.browser = { enabled: options.browser }
+
+  // running "vitest --browser=chrome"
+  if (typeof options.browser === 'string')
+    options.browser = { enabled: true, name: options.browser }
+
+  // running "vitest --browser.headless"
+  if (typeof options.browser === 'object' && !('enabled' in options.browser))
+    options.browser.enabled = true
 
   const ctx = await createVitest(mode, options, viteOverrides)
 
@@ -92,7 +102,7 @@ export async function startVitest(
     return ctx
   }
 
-  if (ctx.config.watch)
+  if (ctx.shouldKeepServer())
     return ctx
 
   await ctx.close()

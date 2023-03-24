@@ -9,6 +9,7 @@ import type { ErrorWithDiff, ParsedStack } from '../types'
 import { lineSplitRE, parseErrorStacktrace, positionToOffset } from '../utils/source-map'
 import { F_POINTER } from '../utils/figures'
 import { TypeCheckError } from '../typecheck/typechecker'
+import { isPrimitive } from '../utils'
 import type { Vitest } from './core'
 import { divider } from './reporters/renderers/utils'
 import type { Logger } from './logger'
@@ -23,10 +24,10 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
   const { showCodeFrame = true, fullStack = false, type } = options
   let e = error as ErrorWithDiff
 
-  if (typeof error === 'string') {
+  if (isPrimitive(e)) {
     e = {
-      message: error.split(/\n/g)[0],
-      stack: error,
+      message: String(error).split(/\n/g)[0],
+      stack: String(error),
     } as any
   }
 
@@ -37,6 +38,10 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
       stack: error.stack,
     } as any
   }
+
+  // Error may have occured even before the configuration was resolved
+  if (!ctx.config)
+    return printErrorMessage(e, ctx.logger)
 
   const stacks = parseErrorStacktrace(e, fullStack)
 
@@ -68,6 +73,7 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
 
   const testPath = (e as any).VITEST_TEST_PATH
   const testName = (e as any).VITEST_TEST_NAME
+  const afterEnvTeardown = (e as any).VITEST_AFTER_ENV_TEARDOWN
   // testName has testPath inside
   if (testPath)
     ctx.logger.error(c.red(`This error originated in "${c.bold(testPath)}" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.`))
@@ -75,6 +81,11 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
     ctx.logger.error(c.red(`The latest test that might've caused the error is "${c.bold(testName)}". It might mean one of the following:`
     + '\n- The error was thrown, while Vitest was running this test.'
     + '\n- This was the last recorded test before the error was thrown, if error originated after test finished its execution.'))
+  }
+  if (afterEnvTeardown) {
+    ctx.logger.error(c.red('This error was caught after test environment was torn down. Make sure to cancel any running tasks before test finishes:'
+    + '\n- cancel timeouts using clearTimeout and clearInterval'
+    + '\n- wait for promises to resolve using the await keyword'))
   }
 
   if (typeof e.cause === 'object' && e.cause && 'name' in e.cause) {
@@ -113,6 +124,7 @@ const skipErrorProperties = new Set([
   'expected',
   'VITEST_TEST_NAME',
   'VITEST_TEST_PATH',
+  'VITEST_AFTER_ENV_TEARDOWN',
   ...Object.getOwnPropertyNames(Error.prototype),
   ...Object.getOwnPropertyNames(Object.prototype),
 ])

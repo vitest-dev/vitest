@@ -29,7 +29,7 @@ export async function getModuleGraph(ctx: Vitest, id: string): Promise<ModuleGra
     graph[id] = (await Promise.all(mods.map(m => get(m, seen)))).filter(Boolean) as string[]
     return id
   }
-  await get(ctx.server.moduleGraph.getModuleById(id))
+  await get(ctx.server.moduleGraph.getModuleById(id) || ctx.browser?.moduleGraph.getModuleById(id))
   return {
     graph,
     externalized: Array.from(externalized),

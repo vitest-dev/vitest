@@ -315,7 +315,7 @@ function enhanceSpy<TArgs extends any[], TReturns>(
   return stub as any
 }
 
-export function fn<TArgs extends any[] = any[], R = any>(): Mock<TArgs, R>
+export function fn<TArgs extends any[] = any, R = any>(): Mock<TArgs, R>
 export function fn<TArgs extends any[] = any[], R = any>(
   implementation: (...args: TArgs) => R
 ): Mock<TArgs, R>

@@ -1,6 +1,6 @@
 import { resolve } from 'pathe'
 import type { ErrorWithDiff, ParsedStack } from '../types'
-import { notNullish } from './base'
+import { isPrimitive, notNullish } from './base'
 
 export const lineSplitRE = /\r?\n/
 
@@ -92,7 +92,7 @@ export function parseStacktrace(stack: string, full = false): ParsedStack[] {
 }
 
 export function parseErrorStacktrace(e: ErrorWithDiff, full = false): ParsedStack[] {
-  if (!e)
+  if (!e || isPrimitive(e))
     return []
 
   if (e.stacks)

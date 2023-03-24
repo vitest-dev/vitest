@@ -11,6 +11,7 @@ import 'codemirror-theme-vars/base.css'
 import './styles/main.css'
 import 'floating-vue/dist/style.css'
 import 'uno.css'
+import { BASE_PATH } from './constants'
 
 export const directives = {
   tooltip: VTooltip,
@@ -20,7 +21,7 @@ FloatingVue.options.instantMove = true
 FloatingVue.options.distance = 10
 
 export const createRouter = () => _createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHistory(BASE_PATH),
   routes,
 })
 

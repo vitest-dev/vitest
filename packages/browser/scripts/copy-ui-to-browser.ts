@@ -10,6 +10,9 @@ const browser = resolve(root, 'browser/dist/client/__vitest__/')
 
 const files = fg.sync('**/*', { cwd: ui })
 
+if (fs.existsSync(browser))
+  fs.rmSync(browser, { recursive: true })
+
 fs.mkdirSync(browser)
 fs.mkdirSync(resolve(browser, 'assets'))
 

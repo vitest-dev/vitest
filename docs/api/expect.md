@@ -574,7 +574,7 @@ type Awaitable<T> = T | PromiseLike<T>
 
   function getFruitStock(type) {
     if (type === 'pineapples')
-      throw new DiabetesError('Pineapples is not good for people with diabetes')
+      throw new DiabetesError('Pineapples are not good for people with diabetes')
 
     // Do some other stuff
   }
@@ -586,7 +586,7 @@ type Awaitable<T> = T | PromiseLike<T>
 
     // Test the exact error message
     expect(() => getFruitStock('pineapples')).toThrowError(
-      /^Pineapples is not good for people with diabetes$/,
+      /^Pineapples are not good for people with diabetes$/,
     )
   })
   ```

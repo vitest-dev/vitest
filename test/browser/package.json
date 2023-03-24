@@ -1,12 +1,15 @@
 {
   "name": "@vitest/test-browser",
   "private": true,
+  "module": "true",
   "scripts": {
-    "test": "vitest --browser --open",
+    "test": "node --test specs/",
     "coverage": "vitest run --coverage"
   },
   "devDependencies": {
     "@vitest/browser": "workspace:*",
+    "execa": "^7.1.1",
+    "safaridriver": "^0.0.4",
     "vitest": "workspace:*"
   }
 }

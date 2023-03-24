@@ -21,12 +21,12 @@ const extraInlineDeps = [
   '@nuxt/test-utils',
 ]
 
-export function resolveApiConfig<Options extends ApiConfig & UserConfig>(
+export function resolveApiServerConfig<Options extends ApiConfig & UserConfig>(
   options: Options,
 ): ApiConfig | undefined {
   let api: ApiConfig | undefined
 
-  if ((options.ui || options.browser) && !options.api)
+  if (options.ui && !options.api)
     api = { port: defaultPort }
   else if (options.api === true)
     api = { port: defaultPort }
@@ -104,6 +104,13 @@ export function resolveConfig(
       throw new Error('--shard <index> must be a positive number less then <count>')
 
     resolved.shard = { index, count }
+  }
+
+  if (resolved.inspect || resolved.inspectBrk) {
+    if (resolved.threads !== false && resolved.singleThread !== true) {
+      const inspectOption = `--inspect${resolved.inspectBrk ? '-brk' : ''}`
+      throw new Error(`You cannot use ${inspectOption} without "threads: false" or "singleThread: true"`)
+    }
   }
 
   resolved.deps = resolved.deps || {}
@@ -196,7 +203,7 @@ export function resolveConfig(
   ]
 
   // the server has been created, we don't need to override vite.server options
-  resolved.api = resolveApiConfig(options)
+  resolved.api = resolveApiServerConfig(options)
 
   if (options.related)
     resolved.related = toArray(options.related).map(file => resolve(resolved.root, file))
@@ -244,6 +251,13 @@ export function resolveConfig(
   if (mode === 'typecheck') {
     resolved.include = resolved.typecheck.include
     resolved.exclude = resolved.typecheck.exclude
+  }
+
+  resolved.browser.enabled ??= false
+  resolved.browser.headless ??= isCI
+
+  resolved.browser.api = resolveApiServerConfig(resolved.browser) || {
+    port: 63315,
   }
 
   return resolved

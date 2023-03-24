@@ -18,21 +18,6 @@ export default (base = '/'): Plugin[] => {
     {
       enforce: 'pre',
       name: 'vitest:browser',
-      async resolveId(id, _, ctx) {
-        if (ctx.ssr)
-          return
-
-        if (id === '/__vitest_index__')
-          return this.resolve('vitest/browser')
-
-        if (id === '/__vitest_runners__')
-          return this.resolve('vitest/runners')
-
-        if (polyfills.includes(id))
-          return polyfillPath(normalizeId(id))
-
-        return null
-      },
       async configureServer(server) {
         server.middlewares.use(
           base,
@@ -45,8 +30,16 @@ export default (base = '/'): Plugin[] => {
     },
     {
       name: 'modern-node-polyfills',
-      async resolveId(id, _, ctx) {
-        if (ctx.ssr || !builtinModules.includes(id))
+      enforce: 'pre',
+      config() {
+        return {
+          optimizeDeps: {
+            exclude: [...polyfills, ...builtinModules],
+          },
+        }
+      },
+      async resolveId(id) {
+        if (!builtinModules.includes(id) && !polyfills.includes(id) && !id.startsWith('node:'))
           return
 
         id = normalizeId(id)

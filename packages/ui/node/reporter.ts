@@ -30,7 +30,7 @@ export default class HTMLReporter implements Reporter {
 
   async onFinished() {
     const result: HTMLReportData = {
-      paths: await this.ctx.state.getPaths(),
+      paths: this.ctx.state.getPaths(),
       files: this.ctx.state.getFiles(),
       config: this.ctx.config,
       moduleGraph: {},
@@ -71,6 +71,6 @@ export default class HTMLReporter implements Reporter {
     }))
 
     this.ctx.logger.log(`${c.bold(c.inverse(c.magenta(' HTML ')))} ${c.magenta('Report is generated')}`)
-    this.ctx.logger.log(`${c.dim('       You can run ')}${c.bold(`npx vite preview --base __vitest__ --outDir ${relative(this.ctx.config.root, htmlDir)}`)}${c.dim(' to see the test results.')}`)
+    this.ctx.logger.log(`${c.dim('       You can run ')}${c.bold(`npx vite preview --outDir ${relative(this.ctx.config.root, htmlDir)}`)}${c.dim(' to see the test results.')}`)
   }
 }

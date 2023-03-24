@@ -1,4 +1,4 @@
-// Vitest Snapshot v1
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`JUnit reporter (no outputFile entry) 1`] = `
 "<?xml version=\\"1.0\\" encoding=\\"UTF-8\\" ?>
@@ -249,6 +249,7 @@ exports[`JUnit reporter with outputFile with XML in error message 2`] = `
             <failure message=\\"error message that has XML in it &lt;tag&gt;\\" type=\\"AssertionError\\">
 AssertionError: error message that has XML in it &lt;tag&gt;
  ❯ test/core/test/basic.test.ts:8:32
+ ❯ test/core/test/&lt;bracket-name&gt;.ts:3:11
             </failure>
         </testcase>
     </testsuite>

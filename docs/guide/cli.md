@@ -51,6 +51,10 @@ export default {
 ```
 :::
 
+### `vitest bench`
+
+Run only [benchmark](https://vitest.dev/guide/features.html#benchmarking-experimental) tests, which compare performance results.
+
 ## Options
 
 | Options       |               |
@@ -80,7 +84,7 @@ export default {
 | `--mode <name>` | Override Vite mode (default: `test`) |
 | `--globals` | Inject APIs globally |
 | `--dom` | Mock browser api with happy-dom |
-| `--browser` | Run tests in browser |
+| `--browser [options]` | Run tests in [the browser](/guide/browser) (default: `false`) |
 | `--environment <env>` | Runner environment (default: `node`) |
 | `--passWithNoTests` | Pass when no tests found |
 | `--logHeapUsage` | Show the size of heap for each test |
@@ -145,3 +149,5 @@ vitest --api=false
 :::warning
 You cannot use this option with `--watch` enabled (enabled in dev by default).
 :::
+
+[cac's dot notation]: https://github.com/cacjs/cac#dot-nested-options

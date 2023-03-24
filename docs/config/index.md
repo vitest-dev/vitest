@@ -94,7 +94,7 @@ Handling for dependencies resolution.
 #### deps.experimentalOptimizer
 
 - **Type:** `DepOptimizationConfig & { enabled: boolean }`
-- **Version:** Vitets 0.29.0
+- **Version:** Since Vitest 0.29.0
 - **See also:** [Dep Optimization Options](https://vitejs.dev/config/dep-optimization-options.html)
 
 Enable dependency optimization. If you have a lot of tests, this might improve their performance.
@@ -381,6 +381,33 @@ export default defineConfig({
 })
 ```
 
+### poolMatchGlobs
+
+- **Type:** `[string, 'browser' | 'threads' | 'child_process'][]`
+- **Default:** `[]`
+- **Version:** Since Vitest 0.29.4
+
+Automatically assign pool in which tests will run based on globs. The first match will be used.
+
+For example:
+
+```ts
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    poolMatchGlobs: [
+      // all tests in "worker-specific" directory will run inside a worker as if you enabled `--threads` for them,
+      ['**/tests/worker-specific/**', 'threads'],
+      // run all tests in "browser" directory in an actual browser
+      ['**/tests/browser/**', 'browser'],
+      // all other tests will run based on "browser.enabled" and "threads" options, if you didn't specify other globs
+      // ...
+    ]
+  }
+})
+```
+
 ### update
 
 - **Type:** `boolean`
@@ -536,6 +563,7 @@ This can improve performance in some cases, but might cause segfault in older No
 
 - **Type:** `number`
 - **Default:** `5000`
+- **CLI:** `--test-timeout=5000`
 
 Default timeout of a test in milliseconds
 
@@ -966,6 +994,80 @@ Open Vitest UI (WIP)
 
 Listen to port and serve API. When set to true, the default port is 51204
 
+### browser
+
+- **Type:** `{ enabled?, name?, provider?, headless?, api? }`
+- **Default:** `{ enabled: false, headless: process.env.CI, api: 63315 }`
+- **Version:** Since Vitest 0.29.4
+- **CLI:** `--browser`, `--browser=<name>`, `--browser.name=chrome --browser.headless`
+
+Run Vitest tests in a browser. If the browser name is not specified, Vitest will try to determine your default browser automatically. We use [WebdriverIO](https://webdriver.io/) for running tests by default, but it can be configured with [browser.provider](/config/#browser-provider) option.
+
+::: tip NOTE
+Read more about testing in a real browser in the [guide page](/guide/browser).
+:::
+
+::: warning
+This is an experimental feature. Breaking changes might not follow semver, please pin Vitest's version when using it.
+:::
+
+#### browser.enabled
+
+- **Type:** `boolean`
+- **Default:** `false`
+- **CLI:** `--browser`, `--browser.enabled=false`
+
+Run all tests inside a browser by default. Can be overriden with [`poolMatchGlobs`](/config/#poolmatchglobs) option.
+
+#### browser&#46;name
+
+- **Type:** `string`
+- **Default:** _tries to find default browser automatically_
+- **CLI:** `--browser=safari`
+
+Run all tests in a specific browser. If not specified, tries to find a browser automatically.
+
+
+#### browser.headless
+
+- **Type:** `boolean`
+- **Default:** `process.env.CI`
+- **CLI:** `--browser.headless`, `--brower.headless=false`
+
+Run the browser in a `headless` mode. If you are running Vitest in CI, it will be enabled by default.
+
+#### browser.api
+
+- **Type:** `number | { port?, strictPort?, host? }`
+- **Default:** `63315`
+- **CLI:** `--browser.api=63315`, `--browser.api.port=1234, --browser.api.host=example.com`
+
+Configure options for Vite server that serves code in the browser. Does not affect [`test.api`](/config/#api) option.
+
+#### browser.provider
+
+- **Type:** `string`
+- **Default:** `'webdriverio'`
+- **CLI:** `--browser.provider=./custom-provider.ts`
+
+Path to a provider that will be used when running browser tests. Provider should be exported using `default` export and have this shape:
+
+```ts
+export interface BrowserProvider {
+  initialize(ctx: Vitest): Awaitable<void>
+  createPool(): {
+    runTests: (files: string[], invalidated: string[]) => void
+    close: () => Awaited<void>
+  }
+  // signals that test file stopped running, if it was opened with `id=` query
+  testFinished?(testId: string): Awaitable<void>
+}
+```
+
+::: warning
+This is an advanced API for library authors. If you just need to run tests in a browser, use the [browser](/config/#browser) option.
+:::
+
 ### clearMocks
 
 - **Type:** `boolean`
@@ -1162,7 +1264,7 @@ Path to cache directory.
 
 ### sequence
 
-- **Type**: `{ sequencer?, shuffle?, seed?, hooks? }`
+- **Type**: `{ sequencer?, shuffle?, seed?, hooks?, setupFiles? }`
 
 Options for how tests should be sorted.
 
@@ -1210,6 +1312,18 @@ Changes the order in which hooks are executed.
 - `stack` will order "after" hooks in reverse order, "before" hooks will run in the order they were defined
 - `list` will order all hooks in the order they are defined
 - `parallel` will run hooks in a single group in parallel (hooks in parent suites will still run before the current suite's hooks)
+
+#### sequence.setupFiles
+
+- **Type**: `'list' | 'parallel'`
+- **Default**: `'parallel'`
+- **CLI**: `--sequence.setupFiles=<value>`
+- **Version**: Since Vitest 0.29.3
+
+Changes the order in which setup files are executed.
+
+- `list` will run setup files in the order they are defined
+- `parallel` will run setup files in parallel
 
 ### typecheck
 
