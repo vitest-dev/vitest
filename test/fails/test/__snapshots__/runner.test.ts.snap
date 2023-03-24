@@ -19,6 +19,8 @@ exports[`should fails > mock-import-proxy-module.test.ts > mock-import-proxy-mod
 
 exports[`should fails > nested-suite.test.ts > nested-suite.test.ts 1`] = `"AssertionError: expected true to be false // Object.is equality"`;
 
+exports[`should fails > primitive-error.test.ts > primitive-error.test.ts 1`] = `"Unknown Error: 42"`;
+
 exports[`should fails > stall.test.ts > stall.test.ts 1`] = `
 "TypeError: failure
 TypeError: failure
