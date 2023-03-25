@@ -1,3 +1,5 @@
+/* eslint-disable no-alert */
+
 import { expect, it } from 'vitest'
 
 it('alert', async () => {
