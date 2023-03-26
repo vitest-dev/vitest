@@ -136,7 +136,6 @@ jobs:
         run: pnpm run browser:playwright:test
         env:
           BROWSER: ${{ matrix.browser[1] }}
-          PLAYWRIGHT: true
 
   test-browser-safari:
     runs-on: macos-latest
@@ -167,7 +166,4 @@ jobs:
         run: sudo pnpm run browser:test
 
       - name: Test Browser (playwright)
-        run: sudo pnpm run browser:playwright:test
-        env:
-          BROWSER: webkit
-          PLAYWRIGHT: true
+        run: sudo BROWSER=webkit pnpm run browser:playwright:test
