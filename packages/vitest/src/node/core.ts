@@ -18,7 +18,7 @@ import { createPool } from './pool'
 import type { ProcessPool } from './pool'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
 import { StateManager } from './state'
-import { resolveConfig } from './config'
+import { isBrowserEnabled, resolveConfig } from './config'
 import { Logger } from './logger'
 import { VitestCache } from './cache'
 import { VitestServer } from './server'
@@ -725,9 +725,7 @@ export class Vitest {
   }
 
   isBrowserEnabled() {
-    if (this.config.browser.enabled)
-      return true
-    return this.config.poolMatchGlobs?.length && this.config.poolMatchGlobs.some(([, pool]) => pool === 'browser')
+    return isBrowserEnabled(this.config)
   }
 
   // The server needs to be running for communication
