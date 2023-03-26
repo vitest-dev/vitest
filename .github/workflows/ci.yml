@@ -111,7 +111,7 @@ jobs:
     timeout-minutes: 10
 
     env:
-      BROWSER: ${{ matrix.browser.0 }}
+      BROWSER: ${{ matrix.browser[0] }}
     steps:
       - uses: actions/checkout@v3
 
@@ -135,7 +135,7 @@ jobs:
       - name: Test Browser (playwright)
         run: pnpm run browser:playwright:test
         env:
-          BROWSER: ${{ matrix.browser.1 }}
+          BROWSER: ${{ matrix.browser[1] }}
           PLAYWRIGHT: true
 
   test-browser-safari:
