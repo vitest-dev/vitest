@@ -141,8 +141,6 @@ jobs:
     runs-on: macos-latest
     timeout-minutes: 10
 
-    env:
-      BROWSER: safari
     steps:
       - uses: actions/checkout@v3
 
@@ -154,16 +152,16 @@ jobs:
         run: system_profiler SPSoftwareDataType
 
       - name: Install
-        run: pnpm i
+        run: sudo pnpm i
 
       - name: Build
-        run: pnpm run build
+        run: sudo pnpm run build
 
       - name: Enable
         run: sudo safaridriver --enable
 
       - name: Test Browser
-        run: sudo pnpm run browser:test
+        run: sudo BROWSER=safari pnpm run browser:test
 
       - name: Test Browser (playwright)
         run: sudo BROWSER=webkit pnpm run browser:playwright:test
