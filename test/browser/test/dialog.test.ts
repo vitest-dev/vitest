@@ -3,7 +3,7 @@
 import { expect, it } from 'vitest'
 
 it('alert', async () => {
-  expect(alert('test')).toBeNull()
+  expect(alert('test')).toBeUndefined()
 })
 
 it('prompt', async () => {

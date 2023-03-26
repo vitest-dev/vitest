@@ -51,7 +51,7 @@ test('logs are redirected to stderr', async () => {
 })
 
 test('popup apis should log a warning', () => {
-  assert.ok(stderr.includes('Vitest encountered a \`alert\`'), 'prints warning for alert')
-  assert.ok(stderr.includes('Vitest encountered a \`confirm\`'), 'prints warning for confirm')
-  assert.ok(stderr.includes('Vitest encountered a \`prompt\`'), 'prints warning for prompt')
+  assert.ok(stderr.includes('Vitest encountered a \`alert\("test"\)\`'), 'prints warning for alert')
+  assert.ok(stderr.includes('Vitest encountered a \`confirm\("test"\)\`'), 'prints warning for confirm')
+  assert.ok(stderr.includes('Vitest encountered a \`prompt\("test"\)\`'), 'prints warning for prompt')
 })
