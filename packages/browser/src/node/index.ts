@@ -19,9 +19,10 @@ export default (base = '/'): Plugin[] => {
       enforce: 'pre',
       name: 'vitest:browser',
       async resolveId(id, importer, options) {
-        if (id.includes('?'))
-          // Work-around for vite:resolve. The "import('./file.mjs?v=123')" fails to load "./file.mts" and throws error.
-          return this.resolve(id.split('?')[0], importer, options)
+        if (id.includes('?vitest='))
+          // Work-around for vite:resolve. The "import('./file.mjs?vitest=123')" fails to load "./file.mts" and throws error.
+          // This is fixed in Vite 4.3.0
+          return this.resolve(id.split('?vitest=')[0], importer, options)
       },
       async config(viteConfig) {
         // Enables using ignore hint for coverage providers with @preserve keyword

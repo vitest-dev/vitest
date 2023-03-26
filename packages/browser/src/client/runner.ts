@@ -51,8 +51,8 @@ export function createBrowserRunner(original: any, coverageModule: CoverageHandl
         this.hashMap.set(filepath, hash)
       }
       const importpath = match
-        ? `/@fs/${filepath.slice(match[1].length)}?v=${hash}`
-        : `${filepath}?v=${hash}`
+        ? `/@fs/${filepath.slice(match[1].length)}?vitest=${hash}`
+        : `${filepath}?vitest=${hash}`
       await import(importpath)
     }
   }
