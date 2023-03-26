@@ -26,14 +26,14 @@ export interface BrowserConfigOptions {
    *
    * @default tries to find the first available browser
    */
-  name?: 'firefox' | 'chrome' | 'edge' | 'safari'
+  name?: 'firefox' | 'chrome' | 'edge' | 'safari' | 'webkit' | 'chromium' | (string & {})
 
   /**
    * browser provider
    *
-   * @default 'webdriver'
+   * @default 'webdriverio'
    */
-  provider?: string
+  provider?: 'webdriverio' | 'playwright' | (string & {})
 
   /**
    * enable headless mode

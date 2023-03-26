@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitest/config'
 
 const noop = () => {}
+const isPlaywright = !!process.env.PLAYWRIGHT
 
 export default defineConfig({
   test: {
@@ -9,6 +10,7 @@ export default defineConfig({
       enabled: true,
       name: 'chrome',
       headless: true,
+      provider: isPlaywright ? 'playwright' : 'webdriverio',
     },
     open: false,
     isolate: false,

@@ -1025,8 +1025,12 @@ Run all tests inside a browser by default. Can be overriden with [`poolMatchGlob
 - **Default:** _tries to find default browser automatically_
 - **CLI:** `--browser=safari`
 
-Run all tests in a specific browser. If not specified, tries to find a browser automatically.
+Run all tests in a specific browser. If not specified, tries to find a browser
+automatically. Possible options in different providers:
 
+- `webdriverio`: `firefox`, `chrome`, `edge`, `safari`
+- `playwright`: `firefox`, `webkit`, `chromium`
+- custom: any string value
 
 #### browser.headless
 
@@ -1050,7 +1054,8 @@ Configure options for Vite server that serves code in the browser. Does not affe
 - **Default:** `'webdriverio'`
 - **CLI:** `--browser.provider=./custom-provider.ts`
 
-Path to a provider that will be used when running browser tests. Provider should be exported using `default` export and have this shape:
+Path to a provider that will be used when running browser tests. Vitest provides
+two providers which are `webdriverio` (default) and `playwright`. Provider should be exported using `default` export and have this shape:
 
 ```ts
 export interface BrowserProvider {

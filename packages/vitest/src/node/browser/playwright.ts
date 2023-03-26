@@ -1,5 +1,5 @@
 import { promisify } from 'util'
-import type { Browser } from 'webdriverio'
+import type { Page } from 'playwright'
 import type { Awaitable } from '@vitest/utils'
 // @ts-expect-error doesn't have types
 import detectBrowser from 'x-default-browser'
@@ -9,11 +9,10 @@ import type { BrowserProvider } from '../../types/browser'
 import { ensurePackageInstalled } from '../pkg'
 import type { Vitest } from '../core'
 
-export class WebdriverBrowserProvider implements BrowserProvider {
-  private supportedBrowsers = ['firefox', 'chrome', 'edge', 'safari'] as const
-  private cachedBrowser: Browser | null = null
+export class PlaywrightBrowserProvider implements BrowserProvider {
+  private supportedBrowsers = ['firefox', 'webkit', 'chromium'] as const
+  private cachedBrowser: Page | null = null
   private testDefers = new Map<string, ReturnType<typeof createDefer>>()
-  private stopSafari: () => void = () => {}
   private host = ''
   private browser!: typeof this.supportedBrowsers[number]
   private ctx!: Vitest
@@ -31,13 +30,10 @@ export class WebdriverBrowserProvider implements BrowserProvider {
       throw new Error('Cannot detect browser. Please specify it in the config file.')
 
     if (!this.supportedBrowsers.includes(this.browser))
-      throw new Error(`Webdriver provider does not support this browser, and only supports these browsers: ${this.supportedBrowsers.join(', ')}`)
+      throw new Error(`Playwright provider does not support this browser, and only supports these browsers: ${this.supportedBrowsers.join(', ')}`)
 
-    if (!await ensurePackageInstalled('webdriverio', root))
+    if (!await ensurePackageInstalled('playwright', root))
       throw new Error('Cannot find "webdriverio" package. Please install it manually.')
-
-    if (browser === 'safari' && !await ensurePackageInstalled('safaridriver', root))
-      throw new Error('Cannot find "safaridriver" package. Please install it manually.')
   }
 
   private async resolveBrowserName(): Promise<string> {
@@ -55,25 +51,13 @@ export class WebdriverBrowserProvider implements BrowserProvider {
 
     const options = this.ctx.config.browser
 
-    if (this.browser === 'safari') {
-      const safaridriver = await import('safaridriver')
-      safaridriver.start({ diagnose: true })
-      this.stopSafari = () => safaridriver.stop()
+    const playwright = await import('playwright')
 
-      process.on('beforeExit', () => {
-        safaridriver.stop()
-      })
-    }
+    const playwrightInstance = await playwright[this.browser].launch({ headless: options.headless })
+    this.cachedBrowser = await playwrightInstance.newPage()
 
-    const { remote } = await import('webdriverio')
-
-    // TODO: close everything, if browser is closed from the outside
-    this.cachedBrowser = await remote({
-      logLevel: 'error',
-      capabilities: {
-        'browserName': this.browser,
-        'wdio:devtoolsOptions': { headless: options.headless },
-      },
+    this.cachedBrowser.on('close', () => {
+      playwrightInstance.close()
     })
 
     return this.cachedBrowser
@@ -90,6 +74,16 @@ export class WebdriverBrowserProvider implements BrowserProvider {
   }
 
   createPool() {
+    const close = async () => {
+      this.testDefers.clear()
+      await Promise.all([
+        this.cachedBrowser?.close(),
+      ])
+      // TODO: right now process can only exit with timeout, if we use browser
+      // needs investigating
+      process.exit()
+    }
+
     const runTests = async (files: string[]) => {
       const paths = files.map(file => relative(this.ctx.config.root, file))
       const browserInstance = await this.openBrowser()
@@ -100,7 +94,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
           const url = new URL(this.host)
           url.searchParams.append('path', path)
           url.searchParams.set('id', path)
-          await browserInstance.url(url.toString())
+          await browserInstance.goto(url.toString())
           await this.waitForTest(path)
         }
       }
@@ -108,23 +102,18 @@ export class WebdriverBrowserProvider implements BrowserProvider {
         const url = new URL(this.host)
         url.searchParams.set('id', 'no-isolate')
         paths.forEach(path => url.searchParams.append('path', path))
-        await browserInstance.url(url.toString())
+        await browserInstance.goto(url.toString())
         await this.waitForTest('no-isolate')
       }
+      browserInstance.on('close', () => {
+        // if the user closes the browser, then close vitest too
+        close()
+      })
     }
 
     return {
       runTests,
-      close: async () => {
-        this.testDefers.clear()
-        await Promise.all([
-          this.stopSafari(),
-          this.cachedBrowser?.sessionId ? this.cachedBrowser?.deleteSession?.() : null,
-        ])
-        // TODO: right now process can only exit with timeout, if we use browser
-        // needs investigating
-        process.exit()
-      },
+      close,
     }
   }
 }

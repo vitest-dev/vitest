@@ -106,12 +106,12 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        browser: [chrome, firefox, edge]
+        browser: [[chrome, chromium], [firefox, firefox], [edge, chromium]]
 
     timeout-minutes: 10
 
     env:
-      BROWSER: ${{ matrix.browser }}
+      BROWSER: ${{ matrix.browser.0 }}
     steps:
       - uses: actions/checkout@v3
 
@@ -131,6 +131,12 @@ jobs:
 
       - name: Test Browser
         run: pnpm run browser:test
+
+      - name: Test Browser (playwright)
+        run: pnpm run browser:playwright:test
+        env:
+          BROWSER: ${{ matrix.browser.1 }}
+          PLAYWRIGHT: true
 
   test-browser-safari:
     runs-on: macos-latest
@@ -159,3 +165,9 @@ jobs:
 
       - name: Test Browser
         run: sudo pnpm run browser:test
+
+      - name: Test Browser (playwright)
+        run: sudo pnpm run browser:playwright:test
+        env:
+          BROWSER: webkit
+          PLAYWRIGHT: true
