@@ -4,6 +4,7 @@
   "module": "true",
   "scripts": {
     "test": "node --test specs/",
+    "test:playwright": "PLAYWRIGHT=true node --test specs/",
     "coverage": "vitest run --coverage"
   },
   "devDependencies": {
