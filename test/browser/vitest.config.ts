@@ -1,7 +1,7 @@
 import { defineConfig } from 'vitest/config'
 
 const noop = () => {}
-const isPlaywright = !!process.env.PLAYWRIGHT
+const isPlaywright = process.env.PROVIDER === 'playwright'
 
 export default defineConfig({
   test: {
