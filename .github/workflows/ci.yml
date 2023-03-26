@@ -106,7 +106,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        browser: [[chrome, chromium], [firefox, firefox], [edge, chromium]]
+        browser: [[chrome, chromium], [firefox, firefox], [edge, webkit]]
 
     timeout-minutes: 10
 
