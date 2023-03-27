@@ -127,7 +127,7 @@ jobs:
         run: pnpm i
 
       - name: Install Playwright Dependencies
-        run: pnpm playwright install-deps
+        run: pnpx playwright install-deps
 
       - name: Build
         run: pnpm run build
