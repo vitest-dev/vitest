@@ -127,7 +127,7 @@ jobs:
         run: pnpm i
 
       - name: Install Playwright Dependencies
-        run: sudo pnpm playwright install-deps
+        run: sudo pnpx playwright install-deps
 
       - name: Build
         run: pnpm run build
@@ -150,9 +150,6 @@ jobs:
       - uses: ./.github/actions/setup-and-cache
         with:
           node-version: 18
-
-      - name: Info
-        run: system_profiler SPSoftwareDataType
 
       - name: Install
         run: sudo pnpm i
