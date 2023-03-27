@@ -50,7 +50,7 @@ export async function startVitest(
 
   // running "vitest --browser=chrome"
   if (typeof options.browser === 'string')
-    options.browser = { enabled: true, provider: 'webdriverio', name: options.browser }
+    options.browser = { enabled: true, name: options.browser }
 
   // running "vitest --browser.headless"
   if (typeof options.browser === 'object' && !('enabled' in options.browser))
