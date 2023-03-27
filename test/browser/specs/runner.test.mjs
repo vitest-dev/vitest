@@ -30,7 +30,8 @@ test('logs are redirected to stdout', async () => {
   assert.match(stdout, /hello from console.debug/, 'prints console.debug')
   assert.match(stdout, /{ hello: 'from dir' }/, 'prints console.dir')
   assert.match(stdout, /{ hello: 'from dirxml' }/, 'prints console.dixml')
-  assert.match(stdout, /hello from console.trace\s+\w+/, 'prints console.trace')
+  // safari logs the stack files with @https://...
+  assert.match(stdout, /hello from console.trace\s+(\w+|@)/, 'prints console.trace')
   assert.match(stdout, /dom <div \/>/, 'prints dom')
   assert.match(stdout, /default: 1/, 'prints first default count')
   assert.match(stdout, /default: 2/, 'prints second default count')

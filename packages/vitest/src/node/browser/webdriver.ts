@@ -1,48 +1,38 @@
-import { promisify } from 'util'
 import type { Browser } from 'webdriverio'
-import type { Awaitable } from '@vitest/utils'
-// @ts-expect-error doesn't have types
-import detectBrowser from 'x-default-browser'
-import { createDefer } from '@vitest/utils'
-import { relative } from 'pathe'
-import type { BrowserProvider } from '../../types/browser'
+import type { BrowserProvider, BrowserProviderOptions } from '../../types/browser'
 import { ensurePackageInstalled } from '../pkg'
 import type { Vitest } from '../core'
 
+export const webdriverBrowsers = ['firefox', 'chrome', 'edge', 'safari'] as const
+export type WebdriverBrowser = typeof webdriverBrowsers[number]
+
+export interface WebdriverProviderOptions extends BrowserProviderOptions {
+  browser: WebdriverBrowser
+}
+
 export class WebdriverBrowserProvider implements BrowserProvider {
+  public name = 'webdriverio'
+
   private cachedBrowser: Browser | null = null
-  private testDefers = new Map<string, ReturnType<typeof createDefer>>()
   private stopSafari: () => void = () => {}
-  private host = ''
-  private browser = 'unknown'
+  private browser!: WebdriverBrowser
   private ctx!: Vitest
 
-  async initialize(ctx: Vitest) {
+  getSupportedBrowsers() {
+    return webdriverBrowsers
+  }
+
+  async initialize(ctx: Vitest, { browser }: WebdriverProviderOptions) {
     this.ctx = ctx
-    this.host = `http://${ctx.config.browser.api?.host || 'localhost'}:${ctx.browser.config.server.port}`
-
-    const root = this.ctx.config.root
-    const browser = await this.getBrowserName()
-
     this.browser = browser
 
-    if (browser === 'unknown' || !browser)
-      throw new Error('Cannot detect browser. Please specify it in the config file.')
+    const root = this.ctx.config.root
 
     if (!await ensurePackageInstalled('webdriverio', root))
       throw new Error('Cannot find "webdriverio" package. Please install it manually.')
 
     if (browser === 'safari' && !await ensurePackageInstalled('safaridriver', root))
       throw new Error('Cannot find "safaridriver" package. Please install it manually.')
-  }
-
-  private async resolveBrowserName(): Promise<string> {
-    const browser = await promisify(detectBrowser)()
-    return browser.commonName
-  }
-
-  async getBrowserName(): Promise<string> {
-    return this.ctx.config.browser.name ?? await this.resolveBrowserName()
   }
 
   async openBrowser() {
@@ -75,52 +65,18 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     return this.cachedBrowser
   }
 
-  testFinished(id: string): Awaitable<void> {
-    this.testDefers.get(id)?.resolve(true)
+  async openPage(url: string) {
+    const browserInstance = await this.openBrowser()
+    await browserInstance.url(url)
   }
 
-  private waitForTest(id: string) {
-    const defer = createDefer()
-    this.testDefers.set(id, defer)
-    return defer
-  }
-
-  createPool() {
-    const runTests = async (files: string[]) => {
-      const paths = files.map(file => relative(this.ctx.config.root, file))
-      const browserInstance = await this.openBrowser()
-
-      const isolate = this.ctx.config.isolate
-      if (isolate) {
-        for (const path of paths) {
-          const url = new URL(this.host)
-          url.searchParams.append('path', path)
-          url.searchParams.set('id', path)
-          await browserInstance.url(url.toString())
-          await this.waitForTest(path)
-        }
-      }
-      else {
-        const url = new URL(this.host)
-        url.searchParams.set('id', 'no-isolate')
-        paths.forEach(path => url.searchParams.append('path', path))
-        await browserInstance.url(url.toString())
-        await this.waitForTest('no-isolate')
-      }
-    }
-
-    return {
-      runTests,
-      close: async () => {
-        this.testDefers.clear()
-        await Promise.all([
-          this.stopSafari(),
-          this.cachedBrowser?.sessionId ? this.cachedBrowser?.deleteSession?.() : null,
-        ])
-        // TODO: right now process can only exit with timeout, if we use browser
-        // needs investigating
-        process.exit()
-      },
-    }
+  async close() {
+    await Promise.all([
+      this.stopSafari(),
+      this.cachedBrowser?.sessionId ? this.cachedBrowser?.deleteSession?.() : null,
+    ])
+    // TODO: right now process can only exit with timeout, if we use browser
+    // needs investigating
+    process.exit()
   }
 }

@@ -253,6 +253,7 @@ export function resolveConfig(
     resolved.exclude = resolved.typecheck.exclude
   }
 
+  resolved.browser ??= {} as any
   resolved.browser.enabled ??= false
   resolved.browser.headless ??= isCI
 

@@ -7,8 +7,9 @@ export default defineConfig({
     include: ['test/**.test.{ts,js}'],
     browser: {
       enabled: true,
-      name: 'chrome',
       headless: true,
+      name: 'chrome',
+      provider: process.env.PROVIDER || 'webdriverio',
     },
     open: false,
     isolate: false,

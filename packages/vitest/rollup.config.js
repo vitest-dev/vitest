@@ -53,6 +53,7 @@ const external = [
   'inspector',
   'webdriverio',
   'safaridriver',
+  'playwright',
   'vite-node/source-map',
   'vite-node/client',
   'vite-node/server',

@@ -885,6 +885,7 @@ importers:
       pathe: ^1.1.0
       picocolors: ^1.0.0
       pkg-types: ^1.0.1
+      playwright: ^1.28.0
       pretty-format: ^27.5.1
       prompts: ^2.4.2
       rollup: ^2.79.1
@@ -961,6 +962,7 @@ importers:
       natural-compare: 1.4.0
       p-limit: 4.0.0
       pkg-types: 1.0.1
+      playwright: 1.28.0
       pretty-format: 27.5.1
       prompts: 2.4.2
       rollup: 2.79.1

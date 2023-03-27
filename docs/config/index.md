@@ -1001,7 +1001,7 @@ Listen to port and serve API. When set to true, the default port is 51204
 - **Version:** Since Vitest 0.29.4
 - **CLI:** `--browser`, `--browser=<name>`, `--browser.name=chrome --browser.headless`
 
-Run Vitest tests in a browser. If the browser name is not specified, Vitest will try to determine your default browser automatically. We use [WebdriverIO](https://webdriver.io/) for running tests by default, but it can be configured with [browser.provider](/config/#browser-provider) option.
+Run Vitest tests in a browser. We use [WebdriverIO](https://webdriver.io/) for running tests by default, but it can be configured with [browser.provider](/config/#browser-provider) option.
 
 ::: tip NOTE
 Read more about testing in a real browser in the [guide page](/guide/browser).
@@ -1022,11 +1022,13 @@ Run all tests inside a browser by default. Can be overriden with [`poolMatchGlob
 #### browser&#46;name
 
 - **Type:** `string`
-- **Default:** _tries to find default browser automatically_
 - **CLI:** `--browser=safari`
 
-Run all tests in a specific browser. If not specified, tries to find a browser automatically.
+Run all tests in a specific browser. Possible options in different providers:
 
+- `webdriverio`: `firefox`, `chrome`, `edge`, `safari`
+- `playwright`: `firefox`, `webkit`, `chromium`
+- custom: any string that will be passed to the provider
 
 #### browser.headless
 
@@ -1046,21 +1048,19 @@ Configure options for Vite server that serves code in the browser. Does not affe
 
 #### browser.provider
 
-- **Type:** `string`
+- **Type:** `'webdriverio' | 'playwright' | string`
 - **Default:** `'webdriverio'`
-- **CLI:** `--browser.provider=./custom-provider.ts`
+- **CLI:** `--browser.provider=playwright`
 
-Path to a provider that will be used when running browser tests. Provider should be exported using `default` export and have this shape:
+Path to a provider that will be used when running browser tests. Vitest provides two providers which are `webdriverio` (default) and `playwright`. Custom providers should be exported using `default` export and have this shape:
 
 ```ts
 export interface BrowserProvider {
-  initialize(ctx: Vitest): Awaitable<void>
-  createPool(): {
-    runTests: (files: string[], invalidated: string[]) => void
-    close: () => Awaited<void>
-  }
-  // signals that test file stopped running, if it was opened with `id=` query
-  testFinished?(testId: string): Awaitable<void>
+  name: string
+  getSupportedBrowsers(): readonly string[]
+  initialize(ctx: Vitest, options: { browser: string }): Awaitable<void>
+  openPage(url: string): Awaitable<void>
+  close(): Awaitable<void>
 }
 ```
 
