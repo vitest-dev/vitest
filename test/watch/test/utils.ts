@@ -2,8 +2,8 @@ import { afterEach, expect } from 'vitest'
 import { execa } from 'execa'
 import stripAnsi from 'strip-ansi'
 
-export async function startWatchMode() {
-  const subprocess = execa('vitest', ['--root', 'fixtures'])
+export async function startWatchMode(...args: string[]) {
+  const subprocess = execa('vitest', ['--root', 'fixtures', ...args])
 
   let setDone: (value?: unknown) => void
   const isDone = new Promise(resolve => (setDone = resolve))

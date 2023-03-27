@@ -1314,15 +1314,19 @@ importers:
 
   test/watch:
     specifiers:
+      '@vitest/browser': workspace:*
       execa: ^7.0.0
       strip-ansi: ^7.0.1
       vite: ^4.0.0
       vitest: workspace:*
+      webdriverio: latest
     devDependencies:
+      '@vitest/browser': link:../../packages/browser
       execa: 7.0.0
       strip-ansi: 7.0.1
       vite: 4.0.0
       vitest: link:../../packages/vitest
+      webdriverio: 8.6.8
 
   test/web-worker:
     specifiers:
