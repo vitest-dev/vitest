@@ -33,7 +33,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       throw new Error('Cannot find "webdriverio" package. Please install it manually.')
   }
 
-  getBrowserName(): string {
+  getBrowserName() {
     return this.ctx.config.browser.name
   }
 

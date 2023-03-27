@@ -37,7 +37,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
       throw new Error('Cannot find "safaridriver" package. Please install it manually.')
   }
 
-  getBrowserName(): string {
+  getBrowserName() {
     return this.ctx.config.browser.name
   }
 
