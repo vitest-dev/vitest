@@ -46,7 +46,7 @@ export async function startVitest(
 
   // running "vitest --browser"
   if (typeof options.browser === 'boolean')
-    options.browser = { enabled: options.browser }
+    options.browser = { enabled: options.browser, name: '' }
 
   // running "vitest --browser=chrome"
   if (typeof options.browser === 'string')
