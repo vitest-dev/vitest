@@ -1,8 +1,5 @@
-import { promisify } from 'util'
 import type { Browser } from 'webdriverio'
 import type { Awaitable } from '@vitest/utils'
-// @ts-expect-error doesn't have types
-import detectBrowser from 'x-default-browser'
 import { createDefer } from '@vitest/utils'
 import { relative } from 'pathe'
 import type { BrowserProvider } from '../../types/browser'
@@ -40,13 +37,8 @@ export class WebdriverBrowserProvider implements BrowserProvider {
       throw new Error('Cannot find "safaridriver" package. Please install it manually.')
   }
 
-  private async resolveBrowserName(): Promise<string> {
-    const browser = await promisify(detectBrowser)()
-    return browser.commonName
-  }
-
   async getBrowserName(): Promise<string> {
-    return this.ctx.config.browser.name ?? await this.resolveBrowserName()
+    return this.ctx.config.browser.name
   }
 
   async openBrowser() {

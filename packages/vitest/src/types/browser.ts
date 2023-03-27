@@ -23,10 +23,8 @@ export interface BrowserConfigOptions {
 
   /**
    * Name of the browser
-   *
-   * @default tries to find the first available browser
    */
-  name?: 'firefox' | 'chrome' | 'edge' | 'safari' | 'webkit' | 'chromium' | (string & {})
+  name: string
 
   /**
    * browser provider

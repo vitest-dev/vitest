@@ -103,9 +103,9 @@
     "@vitest/ui": "*",
     "happy-dom": "*",
     "jsdom": "*",
-    "webdriverio": "*",
+    "playwright": "*",
     "safaridriver": "*",
-    "playwright": "*"
+    "webdriverio": "*"
   },
   "peerDependenciesMeta": {
     "@vitest/ui": {
