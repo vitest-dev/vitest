@@ -28,7 +28,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     const root = this.ctx.config.root
 
     if (!await ensurePackageInstalled('playwright', root))
-      throw new Error('Cannot find "webdriverio" package. Please install it manually.')
+      throw new Error('Cannot find "playwright" package. Please install it manually.')
   }
 
   async openBrowser() {
