@@ -57,6 +57,8 @@ ws.addEventListener('open', async () => {
   const { getSafeTimers } = await importId('vitest/utils') as typeof import('vitest/utils')
   const safeRpc = createSafeRpc(client, getSafeTimers)
 
+  // @ts-expect-error untyped global for internal use
+  globalThis.__vitest_browser__ = true
   // @ts-expect-error mocking vitest apis
   globalThis.__vitest_worker__ = {
     config,
