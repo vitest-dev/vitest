@@ -19,6 +19,7 @@ export class StateManager {
   filesMap = new Map<string, File>()
   pathsSet: Set<string> = new Set()
   collectingPromise: CollectingPromise | undefined = undefined
+  browserTestPromises = new Map<string, { resolve: (v: unknown) => void; reject: (v: unknown) => void }>()
   idMap = new Map<string, Task>()
   taskFileMap = new WeakMap<Task, File>()
   errorsSet = new Set<unknown>()

@@ -1,16 +1,15 @@
 import { defineConfig } from 'vitest/config'
 
 const noop = () => {}
-const isPlaywright = process.env.PROVIDER === 'playwright'
 
 export default defineConfig({
   test: {
     include: ['test/**.test.{ts,js}'],
     browser: {
       enabled: true,
-      name: 'chrome',
       headless: true,
-      provider: isPlaywright ? 'playwright' : 'webdriverio',
+      name: 'chrome',
+      provider: process.env.PROVIDER || 'webdriverio',
     },
     open: false,
     isolate: false,

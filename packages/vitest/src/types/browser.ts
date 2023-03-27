@@ -1,12 +1,17 @@
 import type { Awaitable } from '@vitest/utils'
 import type { Vitest } from '../node'
-import type { ProcessPool } from '../node/pool'
 import type { ApiConfig } from './config'
 
+export interface BrowserProviderOptions {
+  browser: string
+}
+
 export interface BrowserProvider {
-  initialize(ctx: Vitest): Awaitable<void>
-  createPool(): ProcessPool
-  testFinished?(testId: string): Awaitable<void>
+  name: string
+  getSupportedBrowsers(): readonly string[]
+  initialize(ctx: Vitest, options: BrowserProviderOptions): Awaitable<void>
+  openPage(url: string): Awaitable<void>
+  close(): Awaitable<void>
 }
 
 export interface BrowserProviderModule {
@@ -24,7 +29,7 @@ export interface BrowserConfigOptions {
   /**
    * Name of the browser
    */
-  name?: string
+  name: string
 
   /**
    * browser provider

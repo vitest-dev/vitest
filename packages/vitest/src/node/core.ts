@@ -150,7 +150,13 @@ export class Vitest {
       return this.browserProvider
     const Provider = await getBrowserProvider(this.config.browser, this.runner)
     this.browserProvider = new Provider()
-    await this.browserProvider.initialize(this as any)
+    const browser = this.config.browser.name
+    const supportedBrowsers = this.browserProvider.getSupportedBrowsers()
+    if (!browser)
+      throw new Error('Browser name is required. Please, set `test.browser.name` option manually.')
+    if (!supportedBrowsers.includes(browser))
+      throw new Error(`Browser "${browser}" is not supported by the browser provider "${this.browserProvider.name}". Supported browsers: ${supportedBrowsers.join(', ')}.`)
+    await this.browserProvider.initialize(this, { browser })
     return this.browserProvider
   }
 

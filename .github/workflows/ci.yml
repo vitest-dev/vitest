@@ -132,11 +132,11 @@ jobs:
       - name: Build
         run: pnpm run build
 
-      - name: Test Browser
-        run: pnpm run browser:test
+      - name: Test Browser (webdriverio)
+        run: pnpm run test:browser:webdriverio
 
       - name: Test Browser (playwright)
-        run: pnpm run browser:playwright:test
+        run: pnpm run test:browser:playwright
         env:
           BROWSER: ${{ matrix.browser[1] }}
 
@@ -160,8 +160,8 @@ jobs:
       - name: Enable
         run: sudo safaridriver --enable
 
-      - name: Test Browser
-        run: sudo BROWSER=safari pnpm run browser:test
+      - name: Test Browser (webdriverio)
+        run: sudo BROWSER=safari pnpm run test:browser:webdriverio
 
       - name: Test Browser (playwright)
-        run: sudo BROWSER=webkit pnpm run browser:playwright:test
+        run: sudo BROWSER=webkit pnpm run test:browser:playwright

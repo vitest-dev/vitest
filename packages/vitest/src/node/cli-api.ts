@@ -44,13 +44,13 @@ export async function startVitest(
   if (typeof options.coverage === 'boolean')
     options.coverage = { enabled: options.coverage }
 
-  // running "vitest --browser"
+  // running "vitest --browser", assumes browser name is set in the config
   if (typeof options.browser === 'boolean')
-    options.browser = { enabled: options.browser, name: '' }
+    options.browser = { enabled: options.browser } as any
 
   // running "vitest --browser=chrome"
   if (typeof options.browser === 'string')
-    options.browser = { enabled: true, name: options.browser }
+    options.browser = { enabled: true, provider: 'webdriverio', name: options.browser }
 
   // running "vitest --browser.headless"
   if (typeof options.browser === 'object' && !('enabled' in options.browser))
