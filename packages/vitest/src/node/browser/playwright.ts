@@ -1,8 +1,5 @@
-import { promisify } from 'util'
 import type { Page } from 'playwright'
 import type { Awaitable } from '@vitest/utils'
-// @ts-expect-error doesn't have types
-import detectBrowser from 'x-default-browser'
 import { createDefer } from '@vitest/utils'
 import { relative } from 'pathe'
 import type { BrowserProvider } from '../../types/browser'
@@ -22,12 +19,12 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     this.host = `http://${ctx.config.browser.api?.host || 'localhost'}:${ctx.browser.config.server.port}`
 
     const root = this.ctx.config.root
-    const browser = await this.getBrowserName()
+    const browser = this.getBrowserName()
 
     this.browser = browser as any
 
-    if (browser === 'unknown' || !browser)
-      throw new Error('Cannot detect browser. Please specify it in the config file.')
+    if (!browser)
+      throw new Error('Cannot detect browser. Please specify browser.name in the config file.')
 
     if (!this.supportedBrowsers.includes(this.browser))
       throw new Error(`Playwright provider does not support this browser, and only supports these browsers: ${this.supportedBrowsers.join(', ')}`)
@@ -36,13 +33,8 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       throw new Error('Cannot find "webdriverio" package. Please install it manually.')
   }
 
-  private async resolveBrowserName(): Promise<string> {
-    const browser = await promisify(detectBrowser)()
-    return browser.commonName
-  }
-
-  async getBrowserName(): Promise<string> {
-    return this.ctx.config.browser.name ?? await this.resolveBrowserName()
+  getBrowserName(): string {
+    return this.ctx.config.browser.name
   }
 
   async openBrowser() {

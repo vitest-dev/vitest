@@ -20,12 +20,12 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     this.host = `http://${ctx.config.browser.api?.host || 'localhost'}:${ctx.browser.config.server.port}`
 
     const root = this.ctx.config.root
-    const browser = await this.getBrowserName()
+    const browser = this.getBrowserName()
 
     this.browser = browser as any
 
-    if (browser === 'unknown' || !browser)
-      throw new Error('Cannot detect browser. Please specify it in the config file.')
+    if (!browser)
+      throw new Error('Cannot detect browser. Please specify browser.name in the config file.')
 
     if (!this.supportedBrowsers.includes(this.browser))
       throw new Error(`Webdriver provider does not support this browser, and only supports these browsers: ${this.supportedBrowsers.join(', ')}`)
@@ -37,7 +37,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
       throw new Error('Cannot find "safaridriver" package. Please install it manually.')
   }
 
-  async getBrowserName(): Promise<string> {
+  getBrowserName(): string {
     return this.ctx.config.browser.name
   }
 
