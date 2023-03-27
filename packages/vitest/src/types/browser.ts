@@ -24,7 +24,7 @@ export interface BrowserConfigOptions {
   /**
    * Name of the browser
    */
-  name: string
+  name?: string
 
   /**
    * browser provider

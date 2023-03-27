@@ -42,8 +42,6 @@ export const coverageConfigDefaults: ResolvedCoverageOptions = {
 export const browserConfigDefaults = {
   enabled: false,
   headless: isCI,
-  provider: 'webdriverio',
-  name: 'chrome',
 } as const
 
 export const fakeTimersDefaults = {
