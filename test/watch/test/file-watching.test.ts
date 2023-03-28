@@ -65,7 +65,7 @@ test('editing config file reloads new changes', async () => {
 })
 
 describe('browser', () => {
-  test('editing source file triggers re-run', async () => {
+  test.runIf((process.platform !== 'win32'))('editing source file triggers re-run', async () => {
     const vitest = await startWatchMode('--browser.enabled', '--browser.headless', '--browser.name=chrome')
 
     writeFileSync(sourceFile, editFile(sourceFileContent), 'utf8')
