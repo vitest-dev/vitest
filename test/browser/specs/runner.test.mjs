@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises'
 import test from 'node:test'
 import { execa } from 'execa'
 
-const browser = process.env.BROWSER || 'chrome'
+const browser = process.env.BROWSER || (process.env.PROVIDER === 'playwright' ? 'chromium' : 'chrome')
 
 const { stderr, stdout } = await execa('npx', ['vitest', `--browser.name=${browser}`, '--browser.headless'], {
   env: {
