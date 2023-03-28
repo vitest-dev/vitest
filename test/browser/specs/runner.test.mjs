@@ -3,9 +3,9 @@ import { readFile } from 'node:fs/promises'
 import test from 'node:test'
 import { execa } from 'execa'
 
-const browser = process.env.BROWSER || 'chrome'
+const browser = process.env.BROWSER || (process.env.PROVIDER === 'playwright' ? 'chromium' : 'chrome')
 
-const { stderr, stdout } = await execa('npx', ['vitest', `--browser=${browser}`], {
+const { stderr, stdout } = await execa('npx', ['vitest', '--run', `--browser.name=${browser}`, '--browser.headless'], {
   env: {
     ...process.env,
     CI: 'true',
@@ -13,7 +13,7 @@ const { stderr, stdout } = await execa('npx', ['vitest', `--browser=${browser}`]
   },
 })
 
-test('tests are actually running', async () => {
+await test('tests are actually running', async () => {
   const browserResult = await readFile('./browser.json', 'utf-8')
   const browserResultJson = JSON.parse(browserResult)
 
@@ -23,7 +23,7 @@ test('tests are actually running', async () => {
     assert.ok(result.status === 'passed', `${result.name} has failed`)
 })
 
-test('logs are redirected to stdout', async () => {
+await test('logs are redirected to stdout', async () => {
   assert.match(stdout, /stdout | test\/logs.test.ts > logging to stdout/)
   assert.match(stdout, /hello from console.log/, 'prints console.log')
   assert.match(stdout, /hello from console.info/, 'prints console.info')
@@ -43,7 +43,7 @@ test('logs are redirected to stdout', async () => {
   assert.match(stdout, /time: [\d.]+ ms/, 'prints custom time')
 })
 
-test('logs are redirected to stderr', async () => {
+await test('logs are redirected to stderr', async () => {
   assert.match(stderr, /stderr | test\/logs.test.ts > logging to stderr/)
   assert.match(stderr, /hello from console.error/, 'prints console.log')
   assert.match(stderr, /hello from console.warn/, 'prints console.info')
@@ -51,7 +51,7 @@ test('logs are redirected to stderr', async () => {
   assert.match(stderr, /Timer "invalid timeEnd" does not exist/, 'prints errored timeEnd')
 })
 
-test('popup apis should log a warning', () => {
+await test('popup apis should log a warning', () => {
   assert.ok(stderr.includes('Vitest encountered a \`alert\("test"\)\`'), 'prints warning for alert')
   assert.ok(stderr.includes('Vitest encountered a \`confirm\("test"\)\`'), 'prints warning for confirm')
   assert.ok(stderr.includes('Vitest encountered a \`prompt\("test"\)\`'), 'prints warning for prompt')

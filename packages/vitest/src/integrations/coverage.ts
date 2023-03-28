@@ -1,4 +1,3 @@
-import { importModule } from 'local-pkg'
 import type { CoverageOptions, CoverageProvider, CoverageProviderModule } from '../types'
 
 interface Loader {
@@ -16,8 +15,10 @@ async function resolveCoverageProviderModule(options: CoverageOptions | undefine
 
   const provider = options.provider
 
-  if (provider === 'c8' || provider === 'istanbul')
-    return await importModule<CoverageProviderModule>(CoverageProviderMap[provider])
+  if (provider === 'c8' || provider === 'istanbul') {
+    const { default: coverageModule } = await loader.executeId(CoverageProviderMap[provider])
+    return coverageModule
+  }
 
   let customProviderModule
 

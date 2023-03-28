@@ -1,7 +1,15 @@
 import { expect, test } from 'vitest'
-import { pythagoras } from '../src/index.mjs'
 import { implicitElse } from '../src/implicitElse'
 import { useImportEnv } from '../src/importEnv'
+
+const { pythagoras } = await (() => {
+  if ('__vitest_browser__' in globalThis)
+    // TODO: remove workaround after vite 4.3.2
+    // @ts-expect-error extension is not specified
+    return import('../src/index')
+  const dynamicImport = '../src/index.mjs'
+  return import(dynamicImport)
+})()
 
 test('Math.sqrt()', async () => {
   expect(pythagoras(3, 4)).toBe(5)

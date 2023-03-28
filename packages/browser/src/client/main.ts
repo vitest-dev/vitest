@@ -57,6 +57,8 @@ ws.addEventListener('open', async () => {
   const { getSafeTimers } = await importId('vitest/utils') as typeof import('vitest/utils')
   const safeRpc = createSafeRpc(client, getSafeTimers)
 
+  // @ts-expect-error untyped global for internal use
+  globalThis.__vitest_browser__ = true
   // @ts-expect-error mocking vitest apis
   globalThis.__vitest_worker__ = {
     config,
@@ -82,11 +84,20 @@ async function runTests(paths: string[], config: any) {
   const viteClientPath = '/@vite/client'
   await import(viteClientPath)
 
-  const { startTests, setupCommonEnv, setupSnapshotEnvironment } = await importId('vitest/browser') as typeof import('vitest/browser')
+  const {
+    startTests,
+    setupCommonEnv,
+    setupSnapshotEnvironment,
+    takeCoverageInsideWorker,
+  } = await importId('vitest/browser') as typeof import('vitest/browser')
+
+  const executor = {
+    executeId: (id: string) => importId(id),
+  }
 
   if (!runner) {
     const { VitestTestRunner } = await importId('vitest/runners') as typeof import('vitest/runners')
-    const BrowserRunner = createBrowserRunner(VitestTestRunner)
+    const BrowserRunner = createBrowserRunner(VitestTestRunner, { takeCoverage: () => takeCoverageInsideWorker(config.coverage, executor) })
     runner = new BrowserRunner({ config, browserHashMap })
   }
 
@@ -104,7 +115,8 @@ async function runTests(paths: string[], config: any) {
     const now = `${new Date().getTime()}`
     files.forEach(i => browserHashMap.set(i, now))
 
-    await startTests(files, runner)
+    for (const file of files)
+      await startTests([file], runner)
   }
   finally {
     await rpcDone()

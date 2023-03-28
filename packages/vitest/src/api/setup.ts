@@ -46,6 +46,9 @@ export function setup(ctx: Vitest, server?: ViteDevServer) {
           ctx.state.updateTasks(packs)
           await ctx.report('onTaskUpdate', packs)
         },
+        onAfterSuiteRun(meta) {
+          ctx.coverageProvider?.onAfterSuiteRun(meta)
+        },
         getFiles() {
           return ctx.state.getFiles()
         },

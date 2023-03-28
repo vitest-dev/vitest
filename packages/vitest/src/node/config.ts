@@ -113,6 +113,9 @@ export function resolveConfig(
     }
   }
 
+  if (resolved.coverage.provider === 'c8' && resolved.coverage.enabled && isBrowserEnabled(resolved))
+    throw new Error('@vitest/coverage-c8 does not work with --browser. Use @vitest/coverage-istanbul instead')
+
   resolved.deps = resolved.deps || {}
   // vitenode will try to import such file with native node,
   // but then our mocker will not work properly
@@ -262,4 +265,11 @@ export function resolveConfig(
   }
 
   return resolved
+}
+
+export function isBrowserEnabled(config: ResolvedConfig) {
+  if (config.browser.enabled)
+    return true
+
+  return config.poolMatchGlobs?.length && config.poolMatchGlobs.some(([, pool]) => pool === 'browser')
 }

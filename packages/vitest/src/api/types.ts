@@ -1,5 +1,5 @@
 import type { TransformResult } from 'vite'
-import type { File, ModuleGraphData, Reporter, ResolvedConfig, SnapshotResult, TaskResultPack, UserConsoleLog } from '../types'
+import type { AfterSuiteRunMeta, File, ModuleGraphData, Reporter, ResolvedConfig, SnapshotResult, TaskResultPack, UserConsoleLog } from '../types'
 
 export interface TransformResultWithSource extends TransformResult {
   source?: string
@@ -8,6 +8,7 @@ export interface TransformResultWithSource extends TransformResult {
 export interface WebSocketHandlers {
   onCollected(files?: File[]): Promise<void>
   onTaskUpdate(packs: TaskResultPack[]): void
+  onAfterSuiteRun(meta: AfterSuiteRunMeta): void
   onDone(name: string): void
   sendLog(log: UserConsoleLog): void
   getFiles(): File[]

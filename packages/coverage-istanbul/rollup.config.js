@@ -10,6 +10,7 @@ import pkg from './package.json'
 
 const entries = {
   index: 'src/index.ts',
+  provider: 'src/provider.ts',
 }
 
 const external = [
