@@ -266,6 +266,7 @@ export class Vitest {
     if (!files.length) {
       const exitCode = this.config.passWithNoTests ? 0 : 1
 
+      await this.reportCoverage(true)
       this.logger.printNoTestFound(filters)
 
       process.exit(exitCode)

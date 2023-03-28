@@ -44,8 +44,10 @@ for (const threads of [{ threads: true }, { threads: false }, { singleThread: tr
         isolate,
       })
 
-      if (process.exitCode)
+      if (process.exitCode) {
+        console.error(`process.exitCode was set to ${process.exitCode}, exiting.`)
         exit()
+      }
     }
   }
 }

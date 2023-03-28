@@ -268,7 +268,7 @@ export function resolveConfig(
 }
 
 export function isBrowserEnabled(config: ResolvedConfig) {
-  if (config.browser.enabled)
+  if (config.browser?.enabled)
     return true
 
   return config.poolMatchGlobs?.length && config.poolMatchGlobs.some(([, pool]) => pool === 'browser')
