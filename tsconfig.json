@@ -51,6 +51,7 @@
     "./packages/ui/cypress/**",
     "./examples/**/*.*",
     "./bench/**",
-    "./test/typescript/**"
+    "./test/typescript/**",
+    "./test/browser/**"
   ]
 }
