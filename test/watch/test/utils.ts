@@ -1,4 +1,4 @@
-import { afterEach, expect } from 'vitest'
+import { afterEach } from 'vitest'
 import { execa } from 'execa'
 import stripAnsi from 'strip-ansi'
 
@@ -10,13 +10,32 @@ export async function startWatchMode(...args: string[]) {
 
   const vitest = {
     output: '',
+    listeners: [] as (() => void)[],
     isDone,
     write(text: string) {
       this.resetOutput()
       subprocess.stdin!.write(text)
     },
-    getOutput() {
-      return this.output
+    waitForOutput(expected: string) {
+      return new Promise<void>((resolve, reject) => {
+        if (this.output.includes(expected))
+          return resolve()
+
+        const timeout = setTimeout(() => {
+          reject(new Error(`Timeout when waiting for output "${expected}".\nReceived:\n${this.output}`))
+        }, 20_000)
+
+        const listener = () => {
+          if (this.output.includes(expected)) {
+            if (timeout)
+              clearTimeout(timeout)
+
+            resolve()
+          }
+        }
+
+        this.listeners.push(listener)
+      })
     },
     resetOutput() {
       this.output = ''
@@ -25,6 +44,7 @@ export async function startWatchMode(...args: string[]) {
 
   subprocess.stdout!.on('data', (data) => {
     vitest.output += stripAnsi(data.toString())
+    vitest.listeners.forEach(fn => fn())
   })
 
   subprocess.on('exit', () => setDone())
@@ -38,25 +58,8 @@ export async function startWatchMode(...args: string[]) {
   })
 
   // Wait for initial test run to complete
-  await waitFor(() => {
-    expect(vitest.getOutput()).toMatch('Waiting for file changes')
-  })
+  await vitest.waitForOutput('Waiting for file changes')
   vitest.resetOutput()
 
   return vitest
-}
-
-export async function waitFor(method: () => unknown, retries = 100): Promise<void> {
-  try {
-    method()
-  }
-  catch (error) {
-    if (retries === 0) {
-      console.error(error)
-      throw error
-    }
-
-    await new Promise(resolve => setTimeout(resolve, 250))
-    return waitFor(method, retries - 1)
-  }
 }

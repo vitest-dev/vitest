@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from 'fs'
-import { afterEach, describe, expect, test } from 'vitest'
+import { afterEach, describe, test } from 'vitest'
 
-import { startWatchMode, waitFor } from './utils'
+import { startWatchMode } from './utils'
 
 const sourceFile = 'fixtures/math.ts'
 const sourceFileContent = readFileSync(sourceFile, 'utf-8')
@@ -30,11 +30,9 @@ test('editing source file triggers re-run', async () => {
 
   writeFileSync(sourceFile, editFile(sourceFileContent), 'utf8')
 
-  await waitFor(() => {
-    expect(vitest.getOutput()).toContain('New code running')
-    expect(vitest.getOutput()).toContain('RERUN  math.ts')
-    expect(vitest.getOutput()).toContain('1 passed')
-  })
+  await vitest.waitForOutput('New code running')
+  await vitest.waitForOutput('RERUN  math.ts')
+  await vitest.waitForOutput('1 passed')
 })
 
 test('editing test file triggers re-run', async () => {
@@ -42,11 +40,9 @@ test('editing test file triggers re-run', async () => {
 
   writeFileSync(testFile, editFile(testFileContent), 'utf8')
 
-  await waitFor(() => {
-    expect(vitest.getOutput()).toContain('New code running')
-    expect(vitest.getOutput()).toMatch('RERUN  math.test.ts')
-    expect(vitest.getOutput()).toMatch('1 passed')
-  })
+  await vitest.waitForOutput('New code running')
+  await vitest.waitForOutput('RERUN  math.test.ts')
+  await vitest.waitForOutput('1 passed')
 })
 
 test('editing config file triggers re-run', async () => {
@@ -54,11 +50,9 @@ test('editing config file triggers re-run', async () => {
 
   writeFileSync(configFile, editFile(configFileContent), 'utf8')
 
-  await waitFor(() => {
-    expect(vitest.getOutput()).toContain('New code running')
-    expect(vitest.getOutput()).toMatch('Restarting due to config changes')
-    expect(vitest.getOutput()).toMatch('2 passed')
-  })
+  await vitest.waitForOutput('New code running')
+  await vitest.waitForOutput('Restarting due to config changes')
+  await vitest.waitForOutput('2 passed')
 })
 
 test('editing config file reloads new changes', async () => {
@@ -66,10 +60,8 @@ test('editing config file reloads new changes', async () => {
 
   writeFileSync(configFile, configFileContent.replace('reporters: \'verbose\'', 'reporters: \'tap\''), 'utf8')
 
-  await waitFor(() => {
-    expect(vitest.getOutput()).toMatch('TAP version')
-    expect(vitest.getOutput()).toMatch('ok 2')
-  })
+  await vitest.waitForOutput('TAP version')
+  await vitest.waitForOutput('ok 2')
 })
 
 describe('browser', () => {
@@ -78,11 +70,9 @@ describe('browser', () => {
 
     writeFileSync(sourceFile, editFile(sourceFileContent), 'utf8')
 
-    await waitFor(() => {
-      expect(vitest.getOutput()).toContain('New code running')
-      expect(vitest.getOutput()).toContain('RERUN  math.ts')
-      expect(vitest.getOutput()).toContain('1 passed')
-    })
+    await vitest.waitForOutput('New code running')
+    await vitest.waitForOutput('RERUN  math.ts')
+    await vitest.waitForOutput('1 passed')
 
     vitest.write('q')
   })

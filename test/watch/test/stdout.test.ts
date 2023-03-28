@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from 'fs'
-import { afterEach, expect, test } from 'vitest'
+import { afterEach, test } from 'vitest'
 
-import { startWatchMode, waitFor } from './utils'
+import { startWatchMode } from './utils'
 
 const testFile = 'fixtures/math.test.ts'
 const testFileContent = readFileSync(testFile, 'utf-8')
@@ -23,10 +23,8 @@ test('test with logging', () => {
 
   writeFileSync(testFile, `${testFileContent}${testCase}`, 'utf8')
 
-  await waitFor(() => {
-    expect(vitest.getOutput()).toMatch('stdout | math.test.ts > test with logging')
-    expect(vitest.getOutput()).toMatch('First')
-    expect(vitest.getOutput()).toMatch('Second')
-    expect(vitest.getOutput()).toMatch('Third')
-  })
+  await vitest.waitForOutput('stdout | math.test.ts > test with logging')
+  await vitest.waitForOutput('First')
+  await vitest.waitForOutput('Second')
+  await vitest.waitForOutput('Third')
 })
