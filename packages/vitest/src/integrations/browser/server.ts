@@ -53,6 +53,12 @@ export async function createBrowserServer(ctx: Vitest, options: UserConfig) {
             config.optimizeDeps.entries = [config.optimizeDeps.entries]
 
           config.optimizeDeps.entries.push(...entries)
+
+          return {
+            resolve: {
+              alias: config.test?.alias,
+            },
+          }
         },
       },
     ],
