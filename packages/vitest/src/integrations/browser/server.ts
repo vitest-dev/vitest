@@ -46,7 +46,6 @@ export async function createBrowserServer(ctx: Vitest, options: UserConfig) {
           config.optimizeDeps ??= {}
           config.optimizeDeps.entries ??= []
 
-          const root = config.root || process.cwd()
           const [...entries] = await ctx.globAllTestFiles(ctx.config, ctx.config.dir || root)
           entries.push(...ctx.config.setupFiles)
 
