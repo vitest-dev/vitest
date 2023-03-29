@@ -175,7 +175,16 @@ export class Vitest {
       walkedWorkspaces.push(workspacePath)
     }
 
-    const workspaces = resolvedWorkspacesPaths.map((workspacePath) => {
+    const workspaces = resolvedWorkspacesPaths.map(async (workspacePath) => {
+      // don't start a new server, but reuse existing one
+      if (dirname(workspacePath) === this.config.root) {
+        const coreWorkspace = new VitestWorkspace(this.config.root, this)
+        await coreWorkspace.setServer(options, this.server, {
+          runner: this.runner,
+          server: this.vitenode,
+        })
+        return coreWorkspace
+      }
       return initializeWorkspace(workspacePath, this)
     })
 

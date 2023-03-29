@@ -209,6 +209,7 @@ export class VitestWorkspace {
   getSerializableConfig() {
     return deepMerge({
       ...this.config,
+      coverage: this.ctx.config.coverage,
       reporters: [],
       deps: {
         ...this.config.deps,
@@ -217,12 +218,12 @@ export class VitestWorkspace {
         },
       },
       snapshotOptions: {
-        ...this.config.snapshotOptions,
+        ...this.ctx.config.snapshotOptions,
         resolveSnapshotPath: undefined,
       },
       onConsoleLog: undefined!,
       sequence: {
-        ...this.config.sequence,
+        ...this.ctx.config.sequence,
         sequencer: undefined!,
       },
       benchmark: {
@@ -230,7 +231,7 @@ export class VitestWorkspace {
         reporters: [],
       },
     },
-    this.configOverride || {} as any,
+    this.ctx.configOverride || {} as any,
     ) as ResolvedConfig
   }
 
