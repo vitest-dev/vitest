@@ -7,6 +7,7 @@ import { importId } from './utils'
 import { setupConsoleLogSpy } from './logger'
 import { createSafeRpc, rpc, rpcDone } from './rpc'
 import { setupDialogsSpy } from './dialog'
+import { BrowserSnapshotEnvironment } from './snapshot'
 
 // @ts-expect-error mocking some node apis
 globalThis.process = { env: {}, argv: [], cwd: () => '/', stdout: { write: () => {} }, nextTick: cb => cb() }
@@ -74,10 +75,10 @@ ws.addEventListener('open', async () => {
 
   await setupConsoleLogSpy()
   setupDialogsSpy()
-  await runTests(paths, config)
+  await runTests(paths, config!)
 })
 
-async function runTests(paths: string[], config: any) {
+async function runTests(paths: string[], config: ResolvedConfig) {
   // need to import it before any other import, otherwise Vite optimizer will hang
   const viteClientPath = '/@vite/client'
   await import(viteClientPath)
@@ -97,6 +98,9 @@ async function runTests(paths: string[], config: any) {
     const BrowserRunner = createBrowserRunner(VitestTestRunner, { takeCoverage: () => takeCoverageInsideWorker(config.coverage, executor) })
     runner = new BrowserRunner({ config, browserHashMap })
   }
+
+  if (!config.snapshotOptions.snapshotEnvironment)
+    config.snapshotOptions.snapshotEnvironment = new BrowserSnapshotEnvironment()
 
   try {
     await setupCommonEnv(config)
