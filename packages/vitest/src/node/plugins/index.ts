@@ -118,7 +118,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
             },
             open,
             hmr: false,
-            // preTransformRequests: false,
+            preTransformRequests: false,
           },
         }
 
