@@ -1,4 +1,6 @@
 import { deepClone, format, getOwnProperties, getType, stringify } from '@vitest/utils'
+import type { DiffOptions } from '@vitest/utils/diff'
+import { unifiedDiff } from '@vitest/utils/diff'
 
 export interface ParsedStack {
   method: string
@@ -14,6 +16,7 @@ export interface ErrorWithDiff extends Error {
   stackStr?: string
   stacks?: ParsedStack[]
   showDiff?: boolean
+  diff?: string
   actual?: any
   expected?: any
   operator?: string
@@ -102,11 +105,7 @@ function normalizeErrorMessage(message: string) {
   return message.replace(/__vite_ssr_import_\d+__\./g, '')
 }
 
-interface ProcessErrorOptions {
-  outputDiffMaxSize?: number
-}
-
-export function processError(err: any, options: ProcessErrorOptions = {}) {
+export function processError(err: any, options: DiffOptions = {}) {
   if (!err || typeof err !== 'object')
     return err
   // stack is not serialized in worker communication
@@ -121,15 +120,13 @@ export function processError(err: any, options: ProcessErrorOptions = {}) {
 
   const { replacedActual, replacedExpected } = replaceAsymmetricMatcher(clonedActual, clonedExpected)
 
-  err.actual = replacedActual
-  err.expected = replacedExpected
-
-  const maxDiffSize = options.outputDiffMaxSize ?? 10000
+  if (err.showDiff || (err.showDiff === undefined && err.expected !== undefined && err.actual !== undefined))
+    err.diff = unifiedDiff(replacedActual, replacedExpected, options)
 
   if (typeof err.expected !== 'string')
-    err.expected = stringify(err.expected, 10, { maxLength: maxDiffSize })
+    err.expected = stringify(err.expected, 10)
   if (typeof err.actual !== 'string')
-    err.actual = stringify(err.actual, 10, { maxLength: maxDiffSize })
+    err.actual = stringify(err.actual, 10)
 
   // some Error implementations don't allow rewriting message
   try {

@@ -150,7 +150,7 @@ export async function runTest(test: Test, runner: VitestRunner) {
       test.result.state = 'pass'
     }
     catch (e) {
-      failTask(test.result, e)
+      failTask(test.result, e, runner)
     }
 
     try {
@@ -158,7 +158,7 @@ export async function runTest(test: Test, runner: VitestRunner) {
       await callCleanupHooks(beforeEachCleanups)
     }
     catch (e) {
-      failTask(test.result, e)
+      failTask(test.result, e, runner)
     }
 
     if (test.result.state === 'pass')
@@ -195,9 +195,9 @@ export async function runTest(test: Test, runner: VitestRunner) {
   updateTask(test, runner)
 }
 
-function failTask(result: TaskResult, err: unknown) {
+function failTask(result: TaskResult, err: unknown, runner: VitestRunner) {
   result.state = 'fail'
-  const error = processError(err)
+  const error = processError(err, runner.config)
   result.error = error
   result.errors ??= []
   result.errors.push(error)
@@ -268,7 +268,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
       }
     }
     catch (e) {
-      failTask(suite.result, e)
+      failTask(suite.result, e, runner)
     }
 
     try {
@@ -276,7 +276,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
       await callCleanupHooks(beforeAllCleanups)
     }
     catch (e) {
-      failTask(suite.result, e)
+      failTask(suite.result, e, runner)
     }
   }
 

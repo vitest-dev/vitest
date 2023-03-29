@@ -37,12 +37,8 @@
     "prepublishOnly": "pnpm build"
   },
   "dependencies": {
-    "cli-truncate": "^3.1.0",
-    "diff": "^5.1.0",
+    "concordance": "^5.0.4",
     "loupe": "^2.3.6",
     "pretty-format": "^27.5.1"
-  },
-  "devDependencies": {
-    "@types/diff": "^5.0.2"
   }
 }

@@ -29,7 +29,11 @@ const colorsMap = {
 
 type ColorName = keyof typeof colorsMap
 type ColorsMethods = {
-  [Key in ColorName]: (input: unknown) => string
+  [Key in ColorName]: {
+    (input: unknown): string
+    open: string
+    close: string
+  }
 }
 
 type Colors = ColorsMethods & {
