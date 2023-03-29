@@ -216,7 +216,7 @@ export function resolveConfig(
     // it is passed down as "vitest --reporter ../reporter.js"
     const cliReporters = toArray(resolved.reporter || []).map((reporter: string) => {
       // ./reporter.js || ../reporter.js, but not .reporters/reporter.js
-      if (reporter[0] === '.' && (reporter[1] === '/' || reporter[2] === '/'))
+      if (/^\.\.?\//.test(reporter))
         return resolve(process.cwd(), reporter)
       return reporter
     })
