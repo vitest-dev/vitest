@@ -103,9 +103,10 @@ jobs:
         run: pnpm run ui:test
 
   test-browser:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ubuntu-latest, windows-latest]
         browser: [[chrome, chromium], [firefox, firefox], [edge, webkit]]
 
     timeout-minutes: 10
