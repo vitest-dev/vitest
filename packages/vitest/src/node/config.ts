@@ -212,9 +212,16 @@ export function resolveConfig(
     resolved.related = toArray(options.related).map(file => resolve(resolved.root, file))
 
   if (mode !== 'benchmark') {
-    // @ts-expect-error from CLI
-    const reporters = resolved.reporter ?? resolved.reporters
-    resolved.reporters = Array.from(new Set(toArray(reporters))).filter(Boolean)
+    // @ts-expect-error "reporter" is from CLI, should be absolute to the running directory
+    // it is passed down as "vitest --reporter ../reporter.js"
+    const cliReporters = toArray(resolved.reporter || []).map((reporter: string) => {
+      // ./reporter.js || ../reporter.js, but not .reporters/reporter.js
+      if (/^\.\.?\//.test(reporter))
+        return resolve(process.cwd(), reporter)
+      return reporter
+    })
+    const reporters = cliReporters.length ? cliReporters : resolved.reporters
+    resolved.reporters = Array.from(new Set(toArray(reporters as 'json'[]))).filter(Boolean)
   }
 
   if (!resolved.reporters.length)
