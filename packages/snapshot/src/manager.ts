@@ -1,11 +1,11 @@
 import { basename, dirname, join } from 'pathe'
-import type { SnapshotResult, SnapshotStateOptions, SnapshotSummary } from '../../types'
+import type { SnapshotResult, SnapshotStateOptions, SnapshotSummary } from './types'
 
 export class SnapshotManager {
   summary: SnapshotSummary = undefined!
   extension = '.snap'
 
-  constructor(public options: SnapshotStateOptions) {
+  constructor(public options: Omit<SnapshotStateOptions, 'snapshotEnvironment'>) {
     this.clear()
   }
 
@@ -30,7 +30,7 @@ export class SnapshotManager {
   }
 }
 
-export function emptySummary(options: SnapshotStateOptions): SnapshotSummary {
+export function emptySummary(options: Omit<SnapshotStateOptions, 'snapshotEnvironment'>): SnapshotSummary {
   const summary = {
     added: 0,
     failure: false,

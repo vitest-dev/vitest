@@ -47,7 +47,7 @@ const string = (str: unknown) => String(str)
 string.open = ''
 string.close = ''
 
-const defaultColors = colorsEntries.reduce((acc, [key]) => {
+const defaultColors = /* #__PURE__ */ colorsEntries.reduce((acc, [key]) => {
   acc[key as ColorName] = string
   return acc
 }, { isColorSupported: false } as Colors)

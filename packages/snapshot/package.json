@@ -1,0 +1,50 @@
+{
+  "name": "@vitest/snapshot",
+  "type": "module",
+  "version": "0.29.3",
+  "description": "Vitest Snapshot Resolver",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vitest-dev/vitest.git",
+    "directory": "packages/snapshot"
+  },
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./environment": {
+      "types": "./dist/environment.d.ts",
+      "import": "./dist/environment.js"
+    },
+    "./manager": {
+      "types": "./dist/manager.d.ts",
+      "import": "./dist/manager.js"
+    },
+    "./*": "./*"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "*.d.ts"
+  ],
+  "scripts": {
+    "build": "rimraf dist && rollup -c",
+    "dev": "rollup -c --watch",
+    "prepublishOnly": "pnpm build"
+  },
+  "dependencies": {
+    "magic-string": "^0.27.0",
+    "pathe": "^1.1.0",
+    "pretty-format": "^27.5.1"
+  },
+  "devDependencies": {
+    "@types/natural-compare": "^1.4.1",
+    "@vitest/utils": "workspace:*",
+    "natural-compare": "^1.4.0"
+  }
+}

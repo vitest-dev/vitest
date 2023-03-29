@@ -42,7 +42,7 @@ export async function printError(error: unknown, ctx: Vitest, options: PrintErro
   if (!ctx.config)
     return printErrorMessage(e, ctx.logger)
 
-  const stacks = parseErrorStacktrace(e, fullStack)
+  const stacks = parseErrorStacktrace(e, fullStack ? [] : undefined)
 
   const nearest = error instanceof TypeCheckError
     ? error.stacks[0]

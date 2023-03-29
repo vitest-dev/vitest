@@ -721,6 +721,23 @@ importers:
       p-limit: 4.0.0
       pathe: 1.1.0
 
+  packages/snapshot:
+    specifiers:
+      '@types/natural-compare': ^1.4.1
+      '@vitest/utils': workspace:*
+      magic-string: ^0.27.0
+      natural-compare: ^1.4.0
+      pathe: ^1.1.0
+      pretty-format: ^27.5.1
+    dependencies:
+      magic-string: 0.27.0
+      pathe: 1.1.0
+      pretty-format: 27.5.1
+    devDependencies:
+      '@types/natural-compare': 1.4.1
+      '@vitest/utils': link:../utils
+      natural-compare: 1.4.0
+
   packages/spy:
     specifiers:
       tinyspy: ^2.1.0
@@ -846,12 +863,12 @@ importers:
       '@types/istanbul-reports': ^3.0.1
       '@types/jsdom': ^20.0.1
       '@types/micromatch': ^4.0.2
-      '@types/natural-compare': ^1.4.1
       '@types/node': '*'
       '@types/prompts': ^2.4.2
       '@types/sinonjs__fake-timers': ^8.1.2
       '@vitest/expect': workspace:*
       '@vitest/runner': workspace:*
+      '@vitest/snapshot': workspace:*
       '@vitest/spy': workspace:*
       '@vitest/utils': workspace:*
       acorn: ^8.8.1
@@ -877,7 +894,6 @@ importers:
       magic-string: ^0.27.0
       micromatch: ^4.0.5
       mlly: ^1.1.0
-      natural-compare: ^1.4.0
       p-limit: ^4.0.0
       pathe: ^1.1.0
       picocolors: ^1.0.0
@@ -906,6 +922,7 @@ importers:
       '@types/node': 18.7.13
       '@vitest/expect': link:../expect
       '@vitest/runner': link:../runner
+      '@vitest/snapshot': link:../snapshot
       '@vitest/spy': link:../spy
       '@vitest/utils': link:../utils
       acorn: 8.8.1
@@ -915,6 +932,7 @@ importers:
       concordance: 5.0.4
       debug: 4.3.4
       local-pkg: 0.4.2
+      magic-string: 0.27.0
       pathe: 1.1.0
       picocolors: 1.0.0
       source-map: 0.6.1
@@ -935,7 +953,6 @@ importers:
       '@types/istanbul-reports': 3.0.1
       '@types/jsdom': 20.0.1
       '@types/micromatch': 4.0.2
-      '@types/natural-compare': 1.4.1
       '@types/prompts': 2.4.2
       '@types/sinonjs__fake-timers': 8.1.2
       birpc: 0.2.3
@@ -951,10 +968,8 @@ importers:
       happy-dom: 8.3.2
       jsdom: 21.1.0
       log-update: 5.0.1
-      magic-string: 0.27.0
       micromatch: 4.0.5
       mlly: 1.1.0
-      natural-compare: 1.4.0
       p-limit: 4.0.0
       pkg-types: 1.0.1
       playwright: 1.28.0
@@ -16436,7 +16451,6 @@ packages:
     engines: {node: '>=12'}
     dependencies:
       '@jridgewell/sourcemap-codec': 1.4.14
-    dev: true
 
   /make-dir/2.1.0:
     resolution: {integrity: sha512-LS9X+dc8KLxXCb8dni79fLIIUA5VyZoyjSMCwTluaXA0o27cCK0bhXkpgw+sTXVpPy/lSO57ilRixqk0vDmtRA==}

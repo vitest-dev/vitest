@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, test } from 'vitest'
 import { assertTypes, deepClone, objectAttr, toArray } from '@vitest/utils'
 import { deepMerge, resetModules } from '../../../packages/vitest/src/utils'
-import { deepMergeSnapshot } from '../../../packages/vitest/src/integrations/snapshot/port/utils'
+import { deepMergeSnapshot } from '../../../packages/snapshot/src/port/utils'
 import type { EncodedSourceMap } from '../../../packages/vite-node/src/types'
 import { ModuleCacheMap } from '../../../packages/vite-node/dist/client'
 

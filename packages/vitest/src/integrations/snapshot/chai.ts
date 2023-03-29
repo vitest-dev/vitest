@@ -1,13 +1,15 @@
 import type { ChaiPlugin } from '@vitest/expect'
-import { SnapshotClient } from './client'
-import { stripSnapshotIndentation } from './port/inlineSnapshot'
-import { addSerializer } from './port/plugins'
+import type { Test } from '@vitest/runner'
+import { getNames } from '@vitest/runner/utils'
+import type { SnapshotClient } from '@vitest/snapshot'
+import { addSerializer, stripSnapshotIndentation } from '@vitest/snapshot'
+import { VitestSnapshotClient } from './client'
 
 let _client: SnapshotClient
 
 export function getSnapshotClient(): SnapshotClient {
   if (!_client)
-    _client = new SnapshotClient()
+    _client = new VitestSnapshotClient()
   return _client
 }
 
@@ -38,6 +40,15 @@ const getErrorString = (expected: () => void | Error, promise: string | undefine
 }
 
 export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
+  const getTestNames = (test?: Test) => {
+    if (!test)
+      return {}
+    return {
+      filepath: test.file?.filepath,
+      name: getNames(test).slice(1).join(' > '),
+    }
+  }
+
   for (const key of ['matchSnapshot', 'toMatchSnapshot']) {
     utils.addMethod(
       chai.Assertion.prototype,
@@ -52,11 +63,11 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
         const errorMessage = utils.flag(this, 'message')
         getSnapshotClient().assert({
           received: expected,
-          test,
           message,
           isInline: false,
           properties,
           errorMessage,
+          ...getTestNames(test),
         })
       },
     )
@@ -64,7 +75,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
   utils.addMethod(
     chai.Assertion.prototype,
     'toMatchInlineSnapshot',
-    function __VITEST_INLINE_SNAPSHOT__(this: Record<string, unknown>, properties?: object, inlineSnapshot?: string, message?: string) {
+    function __INLINE_SNAPSHOT__(this: Record<string, unknown>, properties?: object, inlineSnapshot?: string, message?: string) {
       const expected = utils.flag(this, 'object')
       const error = utils.flag(this, 'error')
       const test = utils.flag(this, 'vitest-test')
@@ -78,13 +89,13 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       const errorMessage = utils.flag(this, 'message')
       getSnapshotClient().assert({
         received: expected,
-        test,
         message,
         isInline: true,
         properties,
         inlineSnapshot,
         error,
         errorMessage,
+        ...getTestNames(test),
       })
     },
   )
@@ -98,16 +109,16 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       const errorMessage = utils.flag(this, 'message')
       getSnapshotClient().assert({
         received: getErrorString(expected, promise),
-        test,
         message,
         errorMessage,
+        ...getTestNames(test),
       })
     },
   )
   utils.addMethod(
     chai.Assertion.prototype,
     'toThrowErrorMatchingInlineSnapshot',
-    function __VITEST_INLINE_SNAPSHOT__(this: Record<string, unknown>, inlineSnapshot: string, message: string) {
+    function __INLINE_SNAPSHOT__(this: Record<string, unknown>, inlineSnapshot: string, message: string) {
       const expected = utils.flag(this, 'object')
       const error = utils.flag(this, 'error')
       const test = utils.flag(this, 'vitest-test')
@@ -115,12 +126,12 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       const errorMessage = utils.flag(this, 'message')
       getSnapshotClient().assert({
         received: getErrorString(expected, promise),
-        test,
         message,
         inlineSnapshot,
         isInline: true,
         error,
         errorMessage,
+        ...getTestNames(test),
       })
     },
   )

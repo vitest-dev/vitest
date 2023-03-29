@@ -2,6 +2,14 @@ import { rpc } from './rpc'
 import type { SnapshotEnvironment } from '#types'
 
 export class BrowserSnapshotEnvironment implements SnapshotEnvironment {
+  getVersion(): string {
+    return '1'
+  }
+
+  getHeader(): string {
+    return `// Vitest Snapshot v${this.getVersion()}, https://vitest.dev/guide/snapshot.html`
+  }
+
   readSnapshotFile(filepath: string): Promise<string | null> {
     return rpc().readFile(filepath)
   }

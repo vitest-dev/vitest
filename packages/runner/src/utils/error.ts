@@ -2,27 +2,7 @@ import { deepClone, format, getOwnProperties, getType, stringify } from '@vitest
 import type { DiffOptions } from '@vitest/utils/diff'
 import { unifiedDiff } from '@vitest/utils/diff'
 
-export interface ParsedStack {
-  method: string
-  file: string
-  line: number
-  column: number
-}
-
-export interface ErrorWithDiff extends Error {
-  name: string
-  nameStr?: string
-  stack?: string
-  stackStr?: string
-  stacks?: ParsedStack[]
-  showDiff?: boolean
-  diff?: string
-  actual?: any
-  expected?: any
-  operator?: string
-  type?: string
-  frame?: string
-}
+export type { ParsedStack, ErrorWithDiff } from '@vitest/utils'
 
 const IS_RECORD_SYMBOL = '@@__IMMUTABLE_RECORD__@@'
 const IS_COLLECTION_SYMBOL = '@@__IMMUTABLE_ITERABLE__@@'
