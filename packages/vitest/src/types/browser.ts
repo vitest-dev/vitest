@@ -1,12 +1,17 @@
 import type { Awaitable } from '@vitest/utils'
 import type { Vitest } from '../node'
-import type { ProcessPool } from '../node/pool'
 import type { ApiConfig } from './config'
 
+export interface BrowserProviderOptions {
+  browser: string
+}
+
 export interface BrowserProvider {
-  initialize(ctx: Vitest): Awaitable<void>
-  createPool(): ProcessPool
-  testFinished?(testId: string): Awaitable<void>
+  name: string
+  getSupportedBrowsers(): readonly string[]
+  initialize(ctx: Vitest, options: BrowserProviderOptions): Awaitable<void>
+  openPage(url: string): Awaitable<void>
+  close(): Awaitable<void>
 }
 
 export interface BrowserProviderModule {
@@ -23,17 +28,15 @@ export interface BrowserConfigOptions {
 
   /**
    * Name of the browser
-   *
-   * @default tries to find the first available browser
    */
-  name?: 'firefox' | 'chrome' | 'edge' | 'safari'
+  name: string
 
   /**
    * browser provider
    *
-   * @default 'webdriver'
+   * @default 'webdriverio'
    */
-  provider?: string
+  provider?: 'webdriverio' | 'playwright' | (string & {})
 
   /**
    * enable headless mode

@@ -5,11 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import type { ParsedStack } from '@vitest/utils'
+import { parseErrorStacktrace } from '@vitest/utils'
 import type { OptionsReceived as PrettyFormatOptions } from 'pretty-format'
-import type { ParsedStack, SnapshotData, SnapshotMatchOptions, SnapshotResult, SnapshotStateOptions, SnapshotUpdateState } from '../../../types'
-import { parseErrorStacktrace } from '../../../utils/source-map'
-import type { SnapshotEnvironment } from '../env'
-import { getSnapshotEnvironment } from '../env'
+import type { SnapshotData, SnapshotEnvironment, SnapshotMatchOptions, SnapshotResult, SnapshotStateOptions, SnapshotUpdateState } from '../types'
 import type { InlineSnapshot } from './inlineSnapshot'
 import { saveInlineSnapshots } from './inlineSnapshot'
 
@@ -82,16 +81,15 @@ export default class SnapshotState {
       printBasicPrototype: false,
       ...options.snapshotFormat,
     }
-    this._environment = getSnapshotEnvironment()
+    this._environment = options.snapshotEnvironment
   }
 
   static async create(
     testFilePath: string,
     options: SnapshotStateOptions,
   ) {
-    const environment = getSnapshotEnvironment()
-    const snapshotPath = await environment.resolvePath(testFilePath)
-    const content = await environment.readSnapshotFile(snapshotPath)
+    const snapshotPath = await options.snapshotEnvironment.resolvePath(testFilePath)
+    const content = await options.snapshotEnvironment.readSnapshotFile(snapshotPath)
     return new SnapshotState(testFilePath, snapshotPath, content, options)
   }
 
@@ -102,15 +100,15 @@ export default class SnapshotState {
     })
   }
 
-  private _inferInlineSnapshotStack(stacks: ParsedStack[]) {
+  protected _inferInlineSnapshotStack(stacks: ParsedStack[]) {
     // if called inside resolves/rejects, stacktrace is different
     const promiseIndex = stacks.findIndex(i => i.method.match(/__VITEST_(RESOLVES|REJECTS)__/))
     if (promiseIndex !== -1)
       return stacks[promiseIndex + 3]
 
-    // inline snapshot function is called __VITEST_INLINE_SNAPSHOT__
+    // inline snapshot function is called __INLINE_SNAPSHOT__
     // in integrations/snapshot/chai.ts
-    const stackIndex = stacks.findIndex(i => i.method.includes('__VITEST_INLINE_SNAPSHOT__'))
+    const stackIndex = stacks.findIndex(i => i.method.includes('__INLINE_SNAPSHOT__'))
     return stackIndex !== -1 ? stacks[stackIndex + 2] : null
   }
 
@@ -121,11 +119,11 @@ export default class SnapshotState {
   ): void {
     this._dirty = true
     if (options.isInline) {
-      const stacks = parseErrorStacktrace(options.error || new Error('snapshot'), true)
+      const stacks = parseErrorStacktrace(options.error || new Error('snapshot'), [])
       const stack = this._inferInlineSnapshotStack(stacks)
       if (!stack) {
         throw new Error(
-          `Vitest: Couldn't infer stack frame for inline snapshot.\n${JSON.stringify(stacks)}`,
+          `@vitest/snapshot: Couldn't infer stack frame for inline snapshot.\n${JSON.stringify(stacks)}`,
         )
       }
       // removing 1 column, because source map points to the wrong
@@ -165,11 +163,11 @@ export default class SnapshotState {
 
     if ((this._dirty || this._uncheckedKeys.size) && !isEmpty) {
       if (hasExternalSnapshots) {
-        await saveSnapshotFile(this._snapshotData, this.snapshotPath)
+        await saveSnapshotFile(this._environment, this._snapshotData, this.snapshotPath)
         this._fileExists = true
       }
       if (hasInlineSnapshots)
-        await saveInlineSnapshots(this._inlineSnapshots)
+        await saveInlineSnapshots(this._environment, this._inlineSnapshots)
 
       status.saved = true
     }

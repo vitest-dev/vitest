@@ -37,3 +37,9 @@ test('inspect-brk cannot be used with threads', async () => {
 
   expect(error).toMatch('Error: You cannot use --inspect-brk without "threads: false" or "singleThread: true"')
 })
+
+test('c8 coverage provider cannot be used with browser', async () => {
+  const { error } = await runVitest('run', ['--coverage.enabled', '--browser'])
+
+  expect(error).toMatch('Error: @vitest/coverage-c8 does not work with --browser. Use @vitest/coverage-istanbul instead')
+})

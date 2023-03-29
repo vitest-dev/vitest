@@ -1,3 +1,4 @@
+import { PlaywrightBrowserProvider } from '../node/browser/playwright'
 import { WebdriverBrowserProvider } from '../node/browser/webdriver'
 import type { BrowserProviderModule, ResolvedBrowserOptions } from '../types/browser'
 
@@ -6,8 +7,17 @@ interface Loader {
 }
 
 export async function getBrowserProvider(options: ResolvedBrowserOptions, loader: Loader): Promise<BrowserProviderModule> {
-  if (!options.provider || options.provider === 'webdriverio')
-    return WebdriverBrowserProvider
+  switch (options.provider) {
+    case undefined:
+    case 'webdriverio':
+      return WebdriverBrowserProvider
+
+    case 'playwright':
+      return PlaywrightBrowserProvider
+
+    default:
+      break
+  }
 
   let customProviderModule
 

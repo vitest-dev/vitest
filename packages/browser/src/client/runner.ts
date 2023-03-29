@@ -7,7 +7,11 @@ interface BrowserRunnerOptions {
   browserHashMap: Map<string, string>
 }
 
-export function createBrowserRunner(original: any) {
+interface CoverageHandler {
+  takeCoverage: () => Promise<unknown>
+}
+
+export function createBrowserRunner(original: any, coverageModule: CoverageHandler | null) {
   return class BrowserTestRunner extends original {
     public config: ResolvedConfig
     hashMap = new Map<string, string>()
@@ -23,6 +27,12 @@ export function createBrowserRunner(original: any) {
       task.result?.errors?.forEach((error) => {
         console.error(error.message)
       })
+    }
+
+    async onAfterRunSuite() {
+      await super.onAfterRunSuite?.()
+      const coverage = await coverageModule?.takeCoverage?.()
+      await rpc().onAfterSuiteRun({ coverage })
     }
 
     onCollected(files: File[]): unknown {

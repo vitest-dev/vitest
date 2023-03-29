@@ -106,12 +106,12 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        browser: [chrome, firefox, edge]
+        browser: [[chrome, chromium], [firefox, firefox], [edge, webkit]]
 
     timeout-minutes: 10
 
     env:
-      BROWSER: ${{ matrix.browser }}
+      BROWSER: ${{ matrix.browser[0] }}
     steps:
       - uses: actions/checkout@v3
 
@@ -126,18 +126,24 @@ jobs:
       - name: Install
         run: pnpm i
 
+      - name: Install Playwright Dependencies
+        run: pnpx playwright install-deps
+
       - name: Build
         run: pnpm run build
 
-      - name: Test Browser
-        run: pnpm run browser:test
+      - name: Test Browser (webdriverio)
+        run: pnpm run test:browser:webdriverio
+
+      - name: Test Browser (playwright)
+        run: pnpm run test:browser:playwright
+        env:
+          BROWSER: ${{ matrix.browser[1] }}
 
   test-browser-safari:
     runs-on: macos-latest
     timeout-minutes: 10
 
-    env:
-      BROWSER: safari
     steps:
       - uses: actions/checkout@v3
 
@@ -145,17 +151,17 @@ jobs:
         with:
           node-version: 18
 
-      - name: Info
-        run: system_profiler SPSoftwareDataType
-
       - name: Install
-        run: pnpm i
+        run: sudo pnpm i
 
       - name: Build
-        run: pnpm run build
+        run: sudo pnpm run build
 
       - name: Enable
         run: sudo safaridriver --enable
 
-      - name: Test Browser
-        run: sudo pnpm run browser:test
+      - name: Test Browser (webdriverio)
+        run: sudo BROWSER=safari pnpm run test:browser:webdriverio
+
+      - name: Test Browser (playwright)
+        run: sudo BROWSER=webkit pnpm run test:browser:playwright

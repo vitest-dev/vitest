@@ -13,6 +13,7 @@ export interface VitestRunnerConfig {
     hooks: SequenceHooks
     setupFiles: SequenceSetupFiles
   }
+  outputDiffLines?: number
   maxConcurrency: number
   testTimeout: number
   hookTimeout: number

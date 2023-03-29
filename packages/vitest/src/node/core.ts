@@ -6,8 +6,8 @@ import mm from 'micromatch'
 import c from 'picocolors'
 import { normalizeRequestId } from 'vite-node/utils'
 import { ViteNodeRunner } from 'vite-node/client'
+import { SnapshotManager } from '@vitest/snapshot/manager'
 import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter, ResolvedConfig, UserConfig, VitestRunMode } from '../types'
-import { SnapshotManager } from '../integrations/snapshot/manager'
 import { deepMerge, hasFailed, noop, slash, toArray } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
 import { Typechecker } from '../typecheck/typechecker'
@@ -18,7 +18,7 @@ import { createPool } from './pool'
 import type { ProcessPool } from './pool'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
 import { StateManager } from './state'
-import { resolveConfig } from './config'
+import { isBrowserEnabled, resolveConfig } from './config'
 import { Logger } from './logger'
 import { VitestCache } from './cache'
 import { VitestServer } from './server'
@@ -150,7 +150,13 @@ export class Vitest {
       return this.browserProvider
     const Provider = await getBrowserProvider(this.config.browser, this.runner)
     this.browserProvider = new Provider()
-    await this.browserProvider.initialize(this as any)
+    const browser = this.config.browser.name
+    const supportedBrowsers = this.browserProvider.getSupportedBrowsers()
+    if (!browser)
+      throw new Error('Browser name is required. Please, set `test.browser.name` option manually.')
+    if (!supportedBrowsers.includes(browser))
+      throw new Error(`Browser "${browser}" is not supported by the browser provider "${this.browserProvider.name}". Supported browsers: ${supportedBrowsers.join(', ')}.`)
+    await this.browserProvider.initialize(this, { browser })
     return this.browserProvider
   }
 
@@ -260,6 +266,7 @@ export class Vitest {
     if (!files.length) {
       const exitCode = this.config.passWithNoTests ? 0 : 1
 
+      await this.reportCoverage(true)
       this.logger.printNoTestFound(filters)
 
       process.exit(exitCode)
@@ -435,6 +442,8 @@ export class Vitest {
     this.configOverride = {
       snapshotOptions: {
         updateSnapshot: 'all',
+        // environment is resolved inside a worker thread
+        snapshotEnvironment: null as any,
       },
     }
 
@@ -719,9 +728,7 @@ export class Vitest {
   }
 
   isBrowserEnabled() {
-    if (this.config.browser.enabled)
-      return true
-    return this.config.poolMatchGlobs?.length && this.config.poolMatchGlobs.some(([, pool]) => pool === 'browser')
+    return isBrowserEnabled(this.config)
   }
 
   // The server needs to be running for communication

@@ -6,6 +6,7 @@ import type { Vitest } from '../../node'
 import type { UserConfig } from '../../types/config'
 import { ensurePackageInstalled } from '../../node/pkg'
 import { resolveApiServerConfig } from '../../node/config'
+import { CoverageTransform } from '../../node/plugins/coverageTransform'
 
 export async function createBrowserServer(ctx: Vitest, options: UserConfig) {
   const root = ctx.config.root
@@ -31,6 +32,7 @@ export async function createBrowserServer(ctx: Vitest, options: UserConfig) {
     },
     plugins: [
       (await import('@vitest/browser')).default('/'),
+      CoverageTransform(ctx),
       {
         enforce: 'post',
         name: 'vitest:browser:config',
@@ -44,7 +46,6 @@ export async function createBrowserServer(ctx: Vitest, options: UserConfig) {
           config.optimizeDeps ??= {}
           config.optimizeDeps.entries ??= []
 
-          const root = config.root || process.cwd()
           const [...entries] = await ctx.globAllTestFiles(ctx.config, ctx.config.dir || root)
           entries.push(...ctx.config.setupFiles)
 
@@ -52,6 +53,12 @@ export async function createBrowserServer(ctx: Vitest, options: UserConfig) {
             config.optimizeDeps.entries = [config.optimizeDeps.entries]
 
           config.optimizeDeps.entries.push(...entries)
+
+          return {
+            resolve: {
+              alias: config.test?.alias,
+            },
+          }
         },
       },
     ],

@@ -1,6 +1,6 @@
 import type { Plugin as PrettyFormatPlugin } from 'pretty-format'
 import type { MatchersObject } from '@vitest/expect'
-import type SnapshotState from '../integrations/snapshot/port/state'
+import type { SnapshotState } from '@vitest/snapshot'
 import type { MatcherState } from './chai'
 import type { Constructable, UserConsoleLog } from './general'
 import type { VitestEnvironment } from './config'

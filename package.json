@@ -1,7 +1,7 @@
 {
   "name": "@vitest/monorepo",
   "type": "module",
-  "version": "0.29.7",
+  "version": "0.29.8",
   "private": true,
   "packageManager": "pnpm@7.23.0",
   "description": "A blazing fast unit test framework powered by Vite",
@@ -23,13 +23,14 @@
     "test:run": "vitest run -r test/core",
     "test:all": "CI=true pnpm -r --stream run test --allowOnly",
     "test:ci": "CI=true pnpm -r --stream --filter !test-fails --filter !test-browser --filter !test-esm --filter !test-browser run test --allowOnly",
-    "test:ci:single-thread": "CI=true pnpm -r --stream --filter !test-fails --filter !test-esm --filter !test-browser run test --allowOnly --no-threads",
+    "test:ci:single-thread": "CI=true pnpm -r --stream --filter !test-fails --filter !test-coverage --filter !test-watch --filter !test-esm --filter !test-browser run test --allowOnly --no-threads",
     "typecheck": "tsc --noEmit",
     "typecheck:why": "tsc --noEmit --explainFiles > explainTypes.txt",
     "ui:build": "vite build packages/ui",
     "ui:dev": "vite packages/ui",
     "ui:test": "npm -C packages/ui run test:run",
-    "browser:test": "npm -C test/browser run test"
+    "test:browser:webdriverio": "npm -C test/browser run test:webdriverio",
+    "test:browser:playwright": "npm -C test/browser run test:playwright"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^0.34.1",

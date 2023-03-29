@@ -46,48 +46,6 @@ export function removeUndefinedValues<T extends Record<string, any>>(obj: T): T 
   return obj
 }
 
-/**
- * If code starts with a function call, will return its last index, respecting arguments.
- * This will return 25 - last ending character of toMatch ")"
- * Also works with callbacks
- * ```
- * toMatch({ test: '123' });
- * toBeAliased('123')
- * ```
- */
-export function getCallLastIndex(code: string) {
-  let charIndex = -1
-  let inString: string | null = null
-  let startedBracers = 0
-  let endedBracers = 0
-  let beforeChar: string | null = null
-  while (charIndex <= code.length) {
-    beforeChar = code[charIndex]
-    charIndex++
-    const char = code[charIndex]
-
-    const isCharString = char === '"' || char === '\'' || char === '`'
-
-    if (isCharString && beforeChar !== '\\') {
-      if (inString === char)
-        inString = null
-      else if (!inString)
-        inString = char
-    }
-
-    if (!inString) {
-      if (char === '(')
-        startedBracers++
-      if (char === ')')
-        endedBracers++
-    }
-
-    if (startedBracers && endedBracers && startedBracers === endedBracers)
-      return charIndex
-  }
-  return null
-}
-
 // AggregateError is supported in Node.js 15.0.0+
 class AggregateErrorPonyfill extends Error {
   errors: unknown[]

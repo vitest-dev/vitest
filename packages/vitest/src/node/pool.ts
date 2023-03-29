@@ -6,6 +6,7 @@ import type { VitestPool } from '../types'
 import type { Vitest } from './core'
 import { createChildProcessPool } from './pools/child'
 import { createThreadsPool } from './pools/threads'
+import { createBrowserPool } from './pools/browser'
 
 export type RunWithFiles = (files: string[], invalidates?: string[]) => Promise<void>
 
@@ -99,7 +100,7 @@ export function createPool(ctx: Vitest): ProcessPool {
         return null
 
       if (ctx.browserProvider && pool === 'browser') {
-        pools.browser ??= ctx.browserProvider.createPool()
+        pools.browser ??= createBrowserPool(ctx)
         return pools.browser.runTests(files, invalidate)
       }
 

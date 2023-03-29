@@ -14,7 +14,8 @@ To activate browser mode in your Vitest configuration, you can use the `--browse
 export default defineConfig({
   test: {
     browser: {
-      enabled: true
+      enabled: true,
+      name: 'chrome', // browser name is required
     },
   }
 })
@@ -22,24 +23,17 @@ export default defineConfig({
 
 ## Browser Option Types:
 
-The browser option in Vitest can be set to either a boolean or a string type. If set to `true`, Vitest will try to automatically find your default browser. You can also specify a browser by providing its name as a `string`. The available browser options are:
-- `firefox`
-- `chrome`
-- `edge`
-- `safari`
+The browser option in Vitest depends on the provider. Vitest will fail, if you pass `--browser` and don't specify its name in the config file. Available options:
 
-Here's an example configuration setting chrome as the browser option:
-
-```ts
-export default defineConfig({
-  test: {
-    browser: {
-      enabled: true,
-      name: 'chrome',
-    },
-  }
-})
-```
+- `webdriverio` (default) supports these browsers:
+  - `firefox`
+  - `chrome`
+  - `edge`
+  - `safari`
+- `playwright` supports these browsers:
+  - `firefox`
+  - `webkit`
+  - `chromium`
 
 ## Cross-browser Testing:
 
@@ -58,7 +52,7 @@ npx vitest --browser.name=chrome --browser.headless
 ```
 
 ::: tip NOTE
-When using the Safari browser option, the `safaridriver` needs to be activated by running `sudo safaridriver --enable` on your device.
+When using the Safari browser option with WebdriverIO, the `safaridriver` needs to be activated by running `sudo safaridriver --enable` on your device.
 
 Additionally, when running your tests, Vitest will attempt to install some drivers for compatibility with `safaridriver`.
 :::

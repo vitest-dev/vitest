@@ -44,9 +44,9 @@ export async function startVitest(
   if (typeof options.coverage === 'boolean')
     options.coverage = { enabled: options.coverage }
 
-  // running "vitest --browser"
+  // running "vitest --browser", assumes browser name is set in the config
   if (typeof options.browser === 'boolean')
-    options.browser = { enabled: options.browser }
+    options.browser = { enabled: options.browser } as any
 
   // running "vitest --browser=chrome"
   if (typeof options.browser === 'string')

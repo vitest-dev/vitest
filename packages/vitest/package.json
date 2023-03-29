@@ -1,7 +1,7 @@
 {
   "name": "vitest",
   "type": "module",
-  "version": "0.29.7",
+  "version": "0.29.8",
   "description": "A blazing fast unit test framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -90,7 +90,7 @@
     "*.cjs"
   ],
   "engines": {
-    "node": ">=v14.16.0"
+    "node": ">=v14.18.0"
   },
   "scripts": {
     "build": "rimraf dist && rollup -c",
@@ -102,7 +102,10 @@
     "@vitest/browser": "*",
     "@vitest/ui": "*",
     "happy-dom": "*",
-    "jsdom": "*"
+    "jsdom": "*",
+    "playwright": "*",
+    "safaridriver": "*",
+    "webdriverio": "*"
   },
   "peerDependenciesMeta": {
     "@vitest/ui": {
@@ -123,6 +126,9 @@
     "safaridriver": {
       "optional": true
     },
+    "playwright": {
+      "optional": true
+    },
     "@edge-runtime/vm": {
       "optional": true
     }
@@ -133,14 +139,17 @@
     "@types/node": "*",
     "@vitest/expect": "workspace:*",
     "@vitest/runner": "workspace:*",
+    "@vitest/snapshot": "workspace:*",
     "@vitest/spy": "workspace:*",
     "@vitest/utils": "workspace:*",
     "acorn": "^8.8.1",
     "acorn-walk": "^8.2.0",
     "cac": "^6.7.14",
     "chai": "^4.3.7",
+    "concordance": "^5.0.4",
     "debug": "^4.3.4",
     "local-pkg": "^0.4.2",
+    "magic-string": "^0.27.0",
     "pathe": "^1.1.0",
     "picocolors": "^1.0.0",
     "source-map": "^0.6.1",
@@ -148,7 +157,6 @@
     "strip-literal": "^1.0.0",
     "tinybench": "^2.3.1",
     "tinypool": "^0.4.0",
-    "tinyspy": "^1.0.2",
     "vite": "^3.0.0 || ^4.0.0",
     "vite-node": "workspace:*",
     "why-is-node-running": "^2.2.2"
@@ -161,15 +169,13 @@
     "@types/diff": "^5.0.2",
     "@types/istanbul-lib-coverage": "^2.0.4",
     "@types/istanbul-reports": "^3.0.1",
-    "@types/jsdom": "^21.1.0",
+    "@types/jsdom": "^20.0.1",
     "@types/micromatch": "^4.0.2",
-    "@types/natural-compare": "^1.4.1",
     "@types/prompts": "^2.4.2",
     "@types/sinonjs__fake-timers": "^8.1.2",
     "birpc": "^0.2.3",
     "chai-subset": "^1.6.0",
     "cli-truncate": "^3.1.0",
-    "diff": "^5.1.0",
     "event-target-polyfill": "^0.0.3",
     "execa": "^7.0.0",
     "expect-type": "^0.15.0",
@@ -180,12 +186,11 @@
     "happy-dom": "^8.3.2",
     "jsdom": "^21.1.0",
     "log-update": "^5.0.1",
-    "magic-string": "^0.27.0",
     "micromatch": "^4.0.5",
     "mlly": "^1.1.0",
-    "natural-compare": "^1.4.0",
     "p-limit": "^4.0.0",
     "pkg-types": "^1.0.1",
+    "playwright": "^1.28.0",
     "pretty-format": "^27.5.1",
     "prompts": "^2.4.2",
     "rollup": "^2.79.1",

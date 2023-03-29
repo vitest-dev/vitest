@@ -53,6 +53,7 @@ const external = [
   'inspector',
   'webdriverio',
   'safaridriver',
+  'playwright',
   'vite-node/source-map',
   'vite-node/client',
   'vite-node/server',
@@ -60,6 +61,8 @@ const external = [
   '@vitest/utils/diff',
   '@vitest/runner/utils',
   '@vitest/runner/types',
+  '@vitest/snapshot/environment',
+  '@vitest/snapshot/manager',
 ]
 
 const plugins = [

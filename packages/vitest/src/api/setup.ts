@@ -36,7 +36,7 @@ export function setup(ctx: Vitest, server?: ViteDevServer) {
     const rpc = createBirpc<WebSocketEvents, WebSocketHandlers>(
       {
         async onDone(testId) {
-          await ctx.browserProvider?.testFinished?.(testId)
+          return ctx.state.browserTestPromises.get(testId)?.resolve(true)
         },
         async onCollected(files) {
           ctx.state.collectFiles(files)
@@ -45,6 +45,9 @@ export function setup(ctx: Vitest, server?: ViteDevServer) {
         async onTaskUpdate(packs) {
           ctx.state.updateTasks(packs)
           await ctx.report('onTaskUpdate', packs)
+        },
+        onAfterSuiteRun(meta) {
+          ctx.coverageProvider?.onAfterSuiteRun(meta)
         },
         getFiles() {
           return ctx.state.getFiles()

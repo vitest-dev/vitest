@@ -19,6 +19,8 @@
       "@vitest/utils": ["./packages/utils/src/index.ts"],
       "@vitest/utils/*": ["./packages/utils/src/*"],
       "@vitest/spy": ["./packages/spy/src/index.ts"],
+      "@vitest/snapshot": ["./packages/snapshot/src/index.ts"],
+      "@vitest/snapshot/*": ["./packages/snapshot/src/*"],
       "@vitest/expect": ["./packages/expect/src/index.ts"],
       "@vitest/runner": ["./packages/runner/src/index.ts"],
       "@vitest/runner/*": ["./packages/runner/src/*"],
@@ -51,6 +53,7 @@
     "./packages/ui/cypress/**",
     "./examples/**/*.*",
     "./bench/**",
-    "./test/typescript/**"
+    "./test/typescript/**",
+    "./test/browser/**"
   ]
 }

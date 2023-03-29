@@ -1,5 +1,7 @@
 import type { Arrayable, Nullable, ResolvedConfig, VitestEnvironment } from '../types'
 
+export { notNullish, getCallLastIndex } from '@vitest/utils'
+
 function isFinalObj(obj: any) {
   return obj === Object.prototype || obj === Function.prototype || obj === RegExp.prototype
 }
@@ -45,10 +47,6 @@ export function getAllMockableProperties(obj: any, isModule: boolean) {
       allProps.set('default', { key: 'default', descriptor })
   }
   return Array.from(allProps.values())
-}
-
-export function notNullish<T>(v: T | null | undefined): v is NonNullable<T> {
-  return v != null
 }
 
 export function slash(str: string) {

@@ -466,7 +466,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   def(['toHaveBeenLastCalledWith', 'lastCalledWith'], function (...args: any[]) {
     const spy = getSpy(this)
     const spyName = spy.getMockName()
-    const lastCall = spy.mock.calls[spy.calls.length - 1]
+    const lastCall = spy.mock.calls[spy.mock.calls.length - 1]
 
     this.assert(
       jestEquals(lastCall, args, [iterableEquality]),
@@ -596,7 +596,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   def(['toHaveLastReturnedWith', 'lastReturnedWith'], function (value: any) {
     const spy = getSpy(this)
     const spyName = spy.getMockName()
-    const { value: lastResult } = spy.mock.results[spy.returns.length - 1]
+    const { value: lastResult } = spy.mock.results[spy.mock.results.length - 1]
     const pass = jestEquals(lastResult, value)
     this.assert(
       pass,

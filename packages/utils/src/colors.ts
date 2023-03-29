@@ -29,7 +29,11 @@ const colorsMap = {
 
 type ColorName = keyof typeof colorsMap
 type ColorsMethods = {
-  [Key in ColorName]: (input: unknown) => string
+  [Key in ColorName]: {
+    (input: unknown): string
+    open: string
+    close: string
+  }
 }
 
 type Colors = ColorsMethods & {
@@ -43,7 +47,7 @@ const string = (str: unknown) => String(str)
 string.open = ''
 string.close = ''
 
-const defaultColors = colorsEntries.reduce((acc, [key]) => {
+const defaultColors = /* #__PURE__ */ colorsEntries.reduce((acc, [key]) => {
   acc[key as ColorName] = string
   return acc
 }, { isColorSupported: false } as Colors)
