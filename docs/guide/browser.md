@@ -6,6 +6,20 @@ title: Browser Mode | Guide
 
 This page provides information about the experimental browser mode feature in the Vitest API, which allows you to run your tests in the browser natively, providing access to browser globals like window and document. This feature is currently under development, and APIs may change in the future.
 
+## Motivation
+
+We developed the Vitest browser mode feature to help improve testing workflows and achieve more accurate and reliable test results. This experimental addition to our testing API allows developers to run tests in a native browser environment. In this section, we'll explore the motivations behind this feature and its benefits for testing.
+
+### Different ways of Testing
+
+There are different ways to test JavaScript code, and each testing approach has its own advantages and disadvantages. Some testing frameworks simulate browser environments in Node.js, while others run tests in real browsers. In this context, jsdom is an example of a testing library that simulates a browser environment, while Cypress is an end-to-end testing tool that allows developers to test their applications in a real browser. 
+
+### The Main caveat
+
+Testing in simulated environments like jsdom or happy-dom have made it easier to test JavaScript programs and provide some level of confidence in test results, making them suitable for many projects. However, it's important to remember that these tools are only simulating a browser environment, so we are not testing in an actual browser. This means that there may still be some discrepancies between the simulated environment and the real environment, potentially leading to false positives or negatives in test results.
+
+To achieve the highest level of confidence in our tests, it's crucial to test in a real browser environment. This is why we developed the browser mode feature in Vitest, allowing developers to run tests natively in a browser and gain more accurate and reliable test results. With browser-level testing, developers can be more confident that their application will work as intended in a real-world scenario.
+
 ## Configuration
 
 To activate browser mode in your Vitest configuration, you can use the `--browser` flag or set the `browser.enabled` field to `true` in your Vitest configuration file. Here is an example configuration using the browser field:
