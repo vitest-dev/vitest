@@ -6,22 +6,22 @@ import { resolve } from 'pathe'
 import type { Options as TinypoolOptions } from 'tinypool'
 import Tinypool from 'tinypool'
 import { distDir } from '../../paths'
-import type { ContextTestEnvironment, ResolvedConfig, RuntimeRPC, WorkerContext } from '../../types'
-import type { Vitest } from '../core'
+import type { ContextTestEnvironment, RuntimeRPC, Vitest, WorkerContext } from '../../types'
 import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
 import { envsOrder, groupFilesByEnv } from '../../utils/test-helpers'
 import { groupBy } from '../../utils/base'
+import type { VitestWorkspace } from '../workspace'
 import { createMethodsRPC } from './rpc'
 
 const workerPath = pathToFileURL(resolve(distDir, './worker.js')).href
 
-function createWorkerChannel(ctx: Vitest) {
+function createWorkerChannel(workspace: VitestWorkspace) {
   const channel = new MessageChannel()
   const port = channel.port2
   const workerPort = channel.port1
 
   createBirpc<{}, RuntimeRPC>(
-    createMethodsRPC(ctx),
+    createMethodsRPC(workspace),
     {
       post(v) {
         port.postMessage(v)
@@ -74,13 +74,13 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
   const runWithFiles = (name: string): RunWithFiles => {
     let id = 0
 
-    async function runFiles(config: ResolvedConfig, files: string[], environment: ContextTestEnvironment, invalidates: string[] = []) {
+    async function runFiles(workspace: VitestWorkspace, files: string[], environment: ContextTestEnvironment, invalidates: string[] = []) {
       ctx.state.clearFiles(files)
-      const { workerPort, port } = createWorkerChannel(ctx)
+      const { workerPort, port } = createWorkerChannel(workspace)
       const workerId = ++id
       const data: WorkerContext = {
         port: workerPort,
-        config,
+        config: workspace.getSerializableConfig(),
         files,
         invalidates,
         environment,
@@ -105,20 +105,30 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
     const Sequencer = ctx.config.sequence.sequencer
     const sequencer = new Sequencer(ctx)
 
-    return async (files, invalidates) => {
-      const config = ctx.getSerializableConfig()
+    return async (specs, invalidates) => {
+      const workspaceMap = new Map<string, VitestWorkspace>()
+      for (const [workspace, file] of specs)
+        workspaceMap.set(file, workspace)
 
-      if (config.shard)
+      let files = specs.flatMap(([, files]) => files)
+      const { shard } = ctx.config
+
+      if (shard)
         files = await sequencer.shard(files)
 
       files = await sequencer.sort(files)
 
-      const filesByEnv = await groupFilesByEnv(files, config)
-      const envs = envsOrder.concat(
-        Object.keys(filesByEnv).filter(env => !envsOrder.includes(env)),
-      )
+      const workspaceFiles = files.map(file => [workspaceMap.get(file)!, file] as const)
 
-      if (ctx.config.singleThread) {
+      const singleThreads = workspaceFiles.filter(([workspace]) => workspace.config.singleThread)
+      const multipleThreads = workspaceFiles.filter(([workspace]) => !workspace.config.singleThread)
+
+      if (singleThreads.length) {
+        const filesByEnv = await groupFilesByEnv(singleThreads)
+        const envs = envsOrder.concat(
+          Object.keys(filesByEnv).filter(env => !envsOrder.includes(env)),
+        )
+
         // always run environments isolated between each other
         for (const env of envs) {
           const files = filesByEnv[env]
@@ -130,18 +140,25 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
 
           for (const option in filesByOptions) {
             const files = filesByOptions[option]
+            const filesByWorkspace = groupBy(files, ({ workspace }) => workspace.getName())
 
-            if (files?.length) {
-              const filenames = files.map(f => f.file)
-              await runFiles(config, filenames, files[0].environment, invalidates)
+            for (const workspace in filesByWorkspace) {
+              const files = filesByWorkspace[workspace]
+
+              if (files?.length) {
+                const filenames = files.map(f => f.file)
+                await runFiles(files[0].workspace, filenames, files[0].environment, invalidates)
+              }
             }
           }
         }
       }
-      else {
+
+      if (multipleThreads.length) {
+        const filesByEnv = await groupFilesByEnv(multipleThreads)
         const promises = Object.values(filesByEnv).flat()
         const results = await Promise.allSettled(promises
-          .map(({ file, environment }) => runFiles(config, [file], environment, invalidates)))
+          .map(({ file, environment, workspace }) => runFiles(workspace, [file], environment, invalidates)))
 
         const errors = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected').map(r => r.reason)
         if (errors.length > 0)

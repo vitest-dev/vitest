@@ -633,6 +633,12 @@ export interface UserConfig extends InlineConfig {
    * @example --shard=2/3
    */
   shard?: string
+
+  /**
+   * Define different test configurations.
+   * // TODO
+   */
+  workspaces?: string[]
 }
 
 export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'browser' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck' | 'runner'> {

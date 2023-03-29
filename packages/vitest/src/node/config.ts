@@ -277,6 +277,8 @@ export function resolveConfig(
     port: 63315,
   }
 
+  resolved.workspaces ||= []
+
   return resolved
 }
 

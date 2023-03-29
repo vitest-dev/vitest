@@ -118,7 +118,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
             },
             open,
             hmr: false,
-            preTransformRequests: false,
+            // preTransformRequests: false,
           },
         }
 
@@ -147,7 +147,9 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
         }
         else {
           const root = config.root || process.cwd()
-          const [...entries] = await ctx.globAllTestFiles(preOptions as ResolvedConfig, preOptions.dir || root)
+          // TODO: add support for experimental optimizer
+          const entries = []
+          // const [...entries] = await ctx.globAllTestFiles(preOptions as ResolvedConfig, preOptions.dir || root)
           if (preOptions?.setupFiles) {
             const setupFiles = toArray(preOptions.setupFiles).map((file: string) =>
               normalize(
@@ -222,7 +224,6 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
       async configureServer(server) {
         try {
           await ctx.setServer(options, server)
-          await ctx.initBrowserServer(options)
           if (options.api && options.watch)
             (await import('../../api/setup')).setup(ctx)
         }

@@ -4,20 +4,20 @@ import { fork } from 'node:child_process'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { createBirpc } from 'birpc'
 import { resolve } from 'pathe'
-import type { ContextTestEnvironment, ResolvedConfig, RuntimeRPC } from '../../types'
-import type { Vitest } from '../core'
+import type { ContextTestEnvironment, ResolvedConfig, RuntimeRPC, Vitest } from '../../types'
 import type { ChildContext } from '../../types/child'
 import type { PoolProcessOptions, ProcessPool } from '../pool'
 import { distDir } from '../../paths'
 import { groupBy } from '../../utils/base'
 import { envsOrder, groupFilesByEnv } from '../../utils/test-helpers'
+import type { VitestWorkspace } from '../workspace'
 import { createMethodsRPC } from './rpc'
 
 const childPath = fileURLToPath(pathToFileURL(resolve(distDir, './child.js')).href)
 
-function setupChildProcessChannel(ctx: Vitest, fork: ChildProcess): void {
+function setupChildProcessChannel(workspace: VitestWorkspace, fork: ChildProcess): void {
   createBirpc<{}, RuntimeRPC>(
-    createMethodsRPC(ctx),
+    createMethodsRPC(workspace),
     {
       serialize: v8.serialize,
       deserialize: v => v8.deserialize(Buffer.from(v)),
@@ -37,7 +37,7 @@ function stringifyRegex(input: RegExp | string): string {
   return `$$vitest:${input.toString()}`
 }
 
-function getTestConfig(ctx: Vitest): ResolvedConfig {
+function getTestConfig(ctx: VitestWorkspace): ResolvedConfig {
   const config = ctx.getSerializableConfig()
   // v8 serialize does not support regex
   return <ResolvedConfig>{
@@ -51,7 +51,7 @@ function getTestConfig(ctx: Vitest): ResolvedConfig {
 export function createChildProcessPool(ctx: Vitest, { execArgv, env }: PoolProcessOptions): ProcessPool {
   const children = new Set<ChildProcess>()
 
-  function runFiles(config: ResolvedConfig, files: string[], environment: ContextTestEnvironment, invalidates: string[] = []) {
+  function runFiles(workspace: VitestWorkspace, config: ResolvedConfig, files: string[], environment: ContextTestEnvironment, invalidates: string[] = []) {
     const data: ChildContext = {
       command: 'start',
       config,
@@ -65,7 +65,7 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env }: PoolProce
       env,
     })
     children.add(child)
-    setupChildProcessChannel(ctx, child)
+    setupChildProcessChannel(workspace, child)
 
     return new Promise<void>((resolve, reject) => {
       child.send(data, (err) => {
@@ -83,11 +83,11 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env }: PoolProce
     })
   }
 
-  async function runWithFiles(files: string[], invalidates: string[] = []): Promise<void> {
+  async function runWithFiles(workspace: VitestWorkspace, files: string[], invalidates: string[] = []): Promise<void> {
     ctx.state.clearFiles(files)
-    const config = getTestConfig(ctx)
+    const config = getTestConfig(workspace)
 
-    const filesByEnv = await groupFilesByEnv(files, config)
+    const filesByEnv = await groupFilesByEnv(files.map(file => [workspace, file]))
     const envs = envsOrder.concat(
       Object.keys(filesByEnv).filter(env => !envsOrder.includes(env)),
     )
@@ -106,14 +106,19 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env }: PoolProce
 
         if (files?.length) {
           const filenames = files.map(f => f.file)
-          await runFiles(config, filenames, files[0].environment, invalidates)
+          await runFiles(workspace, config, filenames, files[0].environment, invalidates)
         }
       }
     }
   }
 
+  async function runWorkspaceFiles(specs: [VitestWorkspace, string[]][], invalidates?: string[]) {
+    for (const [workspace, files] of specs)
+      await runWithFiles(workspace, files, invalidates)
+  }
+
   return {
-    runTests: runWithFiles,
+    runTests: runWorkspaceFiles,
     async close() {
       children.forEach((child) => {
         if (!child.killed)

@@ -1,9 +1,8 @@
 import { relative } from 'pathe'
 import type { Plugin as VitePlugin } from 'vite'
 import { generateCssFilenameHash } from '../../integrations/css/css-modules'
-import type { CSSModuleScopeStrategy } from '../../types'
+import type { CSSModuleScopeStrategy, ResolvedConfig } from '../../types'
 import { toArray } from '../../utils'
-import type { Vitest } from '../core'
 
 const cssLangs = '\\.(css|less|sass|scss|styl|stylus|pcss|postcss)($|\\?)'
 const cssLangRE = new RegExp(cssLangs)
@@ -24,7 +23,7 @@ function getCSSModuleProxyReturn(strategy: CSSModuleScopeStrategy, filename: str
   return `\`_\${style}_${hash}\``
 }
 
-export function CSSEnablerPlugin(ctx: Vitest): VitePlugin[] {
+export function CSSEnablerPlugin(ctx: { config: ResolvedConfig }): VitePlugin[] {
   const shouldProcessCSS = (id: string) => {
     const { css } = ctx.config
     if (typeof css === 'boolean')
