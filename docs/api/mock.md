@@ -100,7 +100,7 @@ You should use spy assertions (e.g., [`toHaveBeenCalled`](/api/expect#tohavebeen
 
   ```js
   const myMockFn = vi.fn(() => 'original')
-  
+
   myMockFn.withImplementation(() => 'temp', () => {
     myMockFn() // 'temp'
   })
@@ -113,7 +113,7 @@ You should use spy assertions (e.g., [`toHaveBeenCalled`](/api/expect#tohavebeen
   ```ts
   test('async callback', () => {
     const myMockFn = vi.fn(() => 'original')
-  
+
     // We await this call since the callback is async
     await myMockFn.withImplementation(
       () => 'temp',
@@ -121,7 +121,7 @@ You should use spy assertions (e.g., [`toHaveBeenCalled`](/api/expect#tohavebeen
         myMockFn() // 'temp'
       },
     )
-  
+
     myMockFn() // 'original'
   })
   ```
@@ -246,12 +246,15 @@ You should use spy assertions (e.g., [`toHaveBeenCalled`](/api/expect#tohavebeen
 
 This is an array containing all arguments for each call. One item of the array is the arguments of that call.
 
-If a function was invoked twice with the following arguments `fn(arg1, arg2)`, `fn(arg3, arg4)` in that order, then `mock.calls` will be:
-
 ```js
-[
-  ['arg1', 'arg2'],
-  ['arg3', 'arg4'],
+const fn = vi.fn()
+
+fn('arg1', 'arg2')
+fn('arg3', 'arg4')
+
+fn.mock.calls === [
+  ['arg1', 'arg2'], // first call
+  ['arg3', 'arg4'], // second call
 ]
 ```
 
@@ -268,14 +271,23 @@ This is an array containing all values, that were `returned` from the function. 
 
 The `value` property contains returned value or thrown error.
 
-If function returned `result`, then threw an error, then `mock.results` will be:
-
 ```js
-[
+const fn = vi.fn()
+
+const result = fn() // returned 'result'
+
+try {
+  fn() // threw Error
+}
+catch {}
+
+fn.mock.results === [
+  // first result
   {
     type: 'return',
     value: 'result',
   },
+  // last result
   {
     type: 'throw',
     value: Error,
