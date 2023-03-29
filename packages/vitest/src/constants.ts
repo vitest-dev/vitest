@@ -5,6 +5,8 @@ export const EXIT_CODE_RESTART = 43
 
 export const API_PATH = '/__vitest_api__'
 
+export const CONFIG_NAME_START_REGEXP = /^(vitest|vite).config/
+
 export const configFiles = [
   'vitest.config.ts',
   'vitest.config.mts',

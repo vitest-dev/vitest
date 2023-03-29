@@ -112,8 +112,15 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env }: PoolProce
     }
   }
 
-  async function runWorkspaceFiles(specs: [VitestWorkspace, string[]][], invalidates?: string[]) {
-    for (const [workspace, files] of specs)
+  async function runWorkspaceFiles(specs: [VitestWorkspace, string][], invalidates?: string[]) {
+    const groupedFiles = new Map<VitestWorkspace, string[]>()
+    for (const [workspace, file] of specs) {
+      const files = groupedFiles.get(workspace) || []
+      files.push(file)
+      groupedFiles.set(workspace, files)
+    }
+
+    for (const [workspace, files] of groupedFiles.entries())
       await runWithFiles(workspace, files, invalidates)
   }
 

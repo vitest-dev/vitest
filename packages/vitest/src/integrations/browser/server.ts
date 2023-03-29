@@ -44,16 +44,17 @@ export async function createBrowserServer(ctx: Vitest, options: UserConfig) {
           config.server = server
           config.server.fs = { strict: false }
 
-          config.optimizeDeps ??= {}
-          config.optimizeDeps.entries ??= []
+          // TODO: support experimental optimizer
+          // config.optimizeDeps ??= {}
+          // config.optimizeDeps.entries ??= []
 
-          const [...entries] = await ctx.globAllTestFiles(ctx.config, ctx.config.dir || root)
-          entries.push(...ctx.config.setupFiles)
+          // const [...entries] = await ctx.globAllTestFiles(ctx.config, ctx.config.dir || root)
+          // entries.push(...ctx.config.setupFiles)
 
-          if (typeof config.optimizeDeps.entries === 'string')
-            config.optimizeDeps.entries = [config.optimizeDeps.entries]
+          // if (typeof config.optimizeDeps.entries === 'string')
+          //   config.optimizeDeps.entries = [config.optimizeDeps.entries]
 
-          config.optimizeDeps.entries.push(...entries)
+          // config.optimizeDeps.entries.push(...entries)
 
           return {
             resolve: {

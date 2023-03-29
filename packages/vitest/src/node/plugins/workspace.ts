@@ -1,6 +1,8 @@
 import { relative } from 'pathe'
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
+import { configDefaults } from '../../defaults'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
+import { deepMerge } from '../../utils/base'
 import type { VitestWorkspace } from '../workspace'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
@@ -75,6 +77,7 @@ export function WorkspaceVitestPlugin(workspace: VitestWorkspace) {
             },
             open: false,
             hmr: false,
+            preTransformRequests: false,
           },
           test: {
             env,
@@ -95,7 +98,7 @@ export function WorkspaceVitestPlugin(workspace: VitestWorkspace) {
       },
       async configureServer(server) {
         try {
-          await workspace.setServer(server.config.test || {}, server)
+          await workspace.setServer(deepMerge({}, configDefaults, server.config.test || {}), server)
         }
         catch (err) {
           await workspace.ctx.logger.printError(err, true)

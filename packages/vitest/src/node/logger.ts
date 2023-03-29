@@ -109,9 +109,15 @@ export class Logger {
     if (this.ctx.config.sequence.sequencer === RandomSequencer)
       this.log(c.gray(`      Running tests with seed "${this.ctx.config.sequence.seed}"`))
 
-    // TODO: show all opened browsers for each workspace
-    // if (this.ctx.config.browser.enabled)
-    //   this.log(c.dim(c.green(`      Browser runner started at http://${this.ctx.config.browser.api?.host || 'localhost'}:${c.bold(`${this.ctx.browser.config.server.port}`)}`)))
+    this.ctx.workspaces.forEach((workspace) => {
+      if (!workspace.browser)
+        return
+      const name = workspace.getName()
+      const output = name === this.ctx.config.root || name === this.ctx.config.name ? '' : ` [${name}]`
+
+      this.log(c.dim(c.green(`     ${output} Browser runner started at http://${workspace.config.browser.api?.host || 'localhost'}:${c.bold(`${workspace.browser.config.server.port}`)}`)))
+    })
+
     if (this.ctx.config.ui)
       this.log(c.dim(c.green(`      UI started at http://${this.ctx.config.api?.host || 'localhost'}:${c.bold(`${this.ctx.server.config.server.port}`)}${this.ctx.config.uiBase}`)))
     else if (this.ctx.config.api)

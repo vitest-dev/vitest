@@ -6,7 +6,6 @@ import type { VitestWorkspace } from '../workspace'
 
 export function createBrowserPool(ctx: Vitest): ProcessPool {
   const provider = ctx.browserProvider!
-  const origin = `http://${ctx.config.browser.api?.host || 'localhost'}:${ctx.browser.config.server.port}`
 
   const waitForTest = (id: string) => {
     const defer = createDefer()
@@ -15,6 +14,7 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
   }
 
   const runTests = async (workspace: VitestWorkspace, files: string[]) => {
+    const origin = `http://${ctx.config.browser.api?.host || 'localhost'}:${workspace.browser.config.server.port}`
     const paths = files.map(file => relative(workspace.config.root, file))
 
     const isolate = workspace.config.isolate
@@ -36,8 +36,15 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
     }
   }
 
-  const runWorkspaceTests = async (specs: [VitestWorkspace, string[]][]) => {
-    for (const [workspace, files] of specs)
+  const runWorkspaceTests = async (specs: [VitestWorkspace, string][]) => {
+    const groupedFiles = new Map<VitestWorkspace, string[]>()
+    for (const [workspace, file] of specs) {
+      const files = groupedFiles.get(workspace) || []
+      files.push(file)
+      groupedFiles.set(workspace, files)
+    }
+
+    for (const [workspace, files] of groupedFiles.entries())
       await runTests(workspace, files)
   }
 

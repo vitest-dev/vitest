@@ -6,7 +6,7 @@ import { resolve } from 'pathe'
 import type { Options as TinypoolOptions } from 'tinypool'
 import Tinypool from 'tinypool'
 import { distDir } from '../../paths'
-import type { ContextTestEnvironment, RuntimeRPC, Vitest, WorkerContext } from '../../types'
+import type { ContextTestEnvironment, ResolvedConfig, RuntimeRPC, Vitest, WorkerContext } from '../../types'
 import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
 import { envsOrder, groupFilesByEnv } from '../../utils/test-helpers'
 import { groupBy } from '../../utils/base'
@@ -74,13 +74,13 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
   const runWithFiles = (name: string): RunWithFiles => {
     let id = 0
 
-    async function runFiles(workspace: VitestWorkspace, files: string[], environment: ContextTestEnvironment, invalidates: string[] = []) {
+    async function runFiles(workspace: VitestWorkspace, config: ResolvedConfig, files: string[], environment: ContextTestEnvironment, invalidates: string[] = []) {
       ctx.state.clearFiles(files)
       const { workerPort, port } = createWorkerChannel(workspace)
       const workerId = ++id
       const data: WorkerContext = {
         port: workerPort,
-        config: workspace.getSerializableConfig(),
+        config,
         files,
         invalidates,
         environment,
@@ -106,6 +106,16 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
     const sequencer = new Sequencer(ctx)
 
     return async (specs, invalidates) => {
+      const configs = new Map<VitestWorkspace, ResolvedConfig>()
+      const getConfig = (workspace: VitestWorkspace) => {
+        if (configs.has(workspace))
+          return configs.get(workspace)!
+
+        const config = workspace.getSerializableConfig()
+        configs.set(workspace, config)
+        return config
+      }
+
       const workspaceMap = new Map<string, VitestWorkspace>()
       for (const [workspace, file] of specs)
         workspaceMap.set(file, workspace)
@@ -122,6 +132,17 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
 
       const singleThreads = workspaceFiles.filter(([workspace]) => workspace.config.singleThread)
       const multipleThreads = workspaceFiles.filter(([workspace]) => !workspace.config.singleThread)
+
+      if (multipleThreads.length) {
+        const filesByEnv = await groupFilesByEnv(multipleThreads)
+        const promises = Object.values(filesByEnv).flat()
+        const results = await Promise.allSettled(promises
+          .map(({ file, environment, workspace }) => runFiles(workspace, getConfig(workspace), [file], environment, invalidates)))
+
+        const errors = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected').map(r => r.reason)
+        if (errors.length > 0)
+          throw new AggregateError(errors, 'Errors occurred while running tests. For more information, see serialized error.')
+      }
 
       if (singleThreads.length) {
         const filesByEnv = await groupFilesByEnv(singleThreads)
@@ -147,22 +168,11 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
 
               if (files?.length) {
                 const filenames = files.map(f => f.file)
-                await runFiles(files[0].workspace, filenames, files[0].environment, invalidates)
+                await runFiles(files[0].workspace, getConfig(files[0].workspace), filenames, files[0].environment, invalidates)
               }
             }
           }
         }
-      }
-
-      if (multipleThreads.length) {
-        const filesByEnv = await groupFilesByEnv(multipleThreads)
-        const promises = Object.values(filesByEnv).flat()
-        const results = await Promise.allSettled(promises
-          .map(({ file, environment, workspace }) => runFiles(workspace, [file], environment, invalidates)))
-
-        const errors = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected').map(r => r.reason)
-        if (errors.length > 0)
-          throw new AggregateError(errors, 'Errors occurred while running tests. For more information, see serialized error.')
       }
     }
   }

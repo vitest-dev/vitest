@@ -1,6 +1,6 @@
 import { existsSync, promises as fs } from 'node:fs'
 import type { ViteDevServer } from 'vite'
-import { dirname, normalize, relative } from 'pathe'
+import { basename, dirname, normalize, relative } from 'pathe'
 import fg from 'fast-glob'
 import mm from 'micromatch'
 import c from 'picocolors'
@@ -12,6 +12,7 @@ import { deepMerge, hasFailed, noop, slash, toArray } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
 import type { BrowserProvider } from '../types/browser'
 import { getBrowserProvider } from '../integrations/browser'
+import { CONFIG_NAME_START_REGEXP, configFiles } from '../constants'
 import { createPool } from './pool'
 import type { ProcessPool, WorkspaceSpec } from './pool'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
@@ -144,7 +145,7 @@ export class Vitest {
     }
 
     const workspacesFs = await fg(workspacesGlobMatches, globOptions)
-    const resolvedWorkspacesPaths = workspacesFs.filter((file) => {
+    const resolvedWorkspacesPaths = await Promise.all(workspacesFs.filter((file) => {
       if (file.endsWith('/')) {
         // if it's a directory, check that we don't already have a workspace with a config inside
         const hasWorkspaceWithConfig = workspacesFs.some((file2) => {
@@ -152,19 +153,39 @@ export class Vitest {
         })
         return !hasWorkspaceWithConfig
       }
-      return true
-    })
+      return basename(file).match(CONFIG_NAME_START_REGEXP)
+    }).map(async (filepath) => {
+      if (filepath.endsWith('/')) {
+        const filesInside = await fs.readdir(filepath)
+        const configFile = configFiles.find(config => filesInside.includes(config))
+        return configFile || filepath
+      }
+      return filepath
+    }))
+
+    const walkedWorkspaces: string[] = []
+    // check if there are duplicate workspaces
+    for (const workspacePath of resolvedWorkspacesPaths) {
+      if (walkedWorkspaces.includes(workspacePath)) {
+        const relativePath = relative(this.config.root, workspacePath)
+        let message = `Found a duplicate workspace path: ${relativePath}.`
+        message += '\n\nThis probably means you did not specify a unique config file in the workspace directory or have a duplicate "projects" glob pattern.'
+        throw new Error(message)
+      }
+      walkedWorkspaces.push(workspacePath)
+    }
+
     const workspaces = resolvedWorkspacesPaths.map((workspacePath) => {
       return initializeWorkspace(workspacePath, this)
     })
 
     if (!workspaces.length) {
-      const mainWorkspace = new VitestWorkspace(this.config.root, this)
-      await mainWorkspace.setServer(options, this.server, {
+      const coreWorkspace = new VitestWorkspace(this.config.root, this)
+      await coreWorkspace.setServer(options, this.server, {
         runner: this.runner,
         server: this.vitenode,
       })
-      return [mainWorkspace]
+      return [coreWorkspace]
     }
 
     return Promise.all(workspaces)
@@ -341,12 +362,6 @@ export class Vitest {
   }
 
   async runFiles(paths: WorkspaceSpec[]) {
-    paths = Array.from(new Set(paths))
-
-    // this.state.collectPaths(paths)
-
-    // await this.report('onPathsCollected', paths)
-
     // previous run
     await this.runningPromise
 
@@ -494,7 +509,7 @@ export class Vitest {
     }, WATCHER_DEBOUNCE)
   }
 
-  private getModuleWorkspace(id: string) {
+  public getModuleWorkspace(id: string) {
     return this.workspaces.find((workspace) => {
       return workspace.server.moduleGraph.getModuleById(id)
         || workspace.browser?.moduleGraph.getModuleById(id)
@@ -508,7 +523,7 @@ export class Vitest {
       const workspace = this.getModuleWorkspace(id)
       const mod = workspace?.server.moduleGraph.getModuleById(id) || workspace?.browser?.moduleGraph.getModuleById(id)
       if (mod)
-        mod.lastHMRTimestamp = Date.now()
+        this.server.moduleGraph.invalidateModule(mod)
     }
 
     const onChange = (id: string) => {

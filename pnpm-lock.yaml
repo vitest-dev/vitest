@@ -1326,6 +1326,14 @@ importers:
       '@vitest/web-worker': link:../../packages/web-worker
       vitest: link:../../packages/vitest
 
+  test/workspaces:
+    specifiers:
+      jsdom: latest
+      vitest: workspace:*
+    devDependencies:
+      jsdom: 21.1.1
+      vitest: link:../../packages/vitest
+
 packages:
 
   /@adobe/css-tools/4.0.1:

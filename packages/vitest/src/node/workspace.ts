@@ -1,11 +1,9 @@
 import { promises as fs } from 'node:fs'
-import { findUp } from 'find-up'
 import fg from 'fast-glob'
 import { dirname, toNamespacedPath } from 'pathe'
 import { createServer } from 'vite'
 import type { ViteDevServer, InlineConfig as ViteInlineConfig } from 'vite'
 import { ViteNodeRunner } from 'vite-node/client'
-import { configFiles } from '../constants'
 import { createBrowserServer } from '../integrations/browser/server'
 import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig, Vitest } from '../types'
 import { deepMerge, hasFailed } from '../utils'
@@ -23,7 +21,7 @@ export async function initializeWorkspace(workspacePath: string, ctx: Vitest) {
   const workspace = new VitestWorkspace(workspacePath, ctx)
 
   const configPath = workspacePath.endsWith('/')
-    ? await findUp(configFiles, { cwd: workspacePath } as any)
+    ? false
     : workspacePath
 
   const config: ViteInlineConfig = {
