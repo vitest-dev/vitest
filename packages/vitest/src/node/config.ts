@@ -214,13 +214,14 @@ export function resolveConfig(
   if (mode !== 'benchmark') {
     // @ts-expect-error "reporter" is from CLI, should be absolute to the running directory
     // it is passed down as "vitest --reporter ../reporter.js"
-    const reporters = toArray(resolved.reporter || []).map((reporter: string) => {
+    const cliReporters = toArray(resolved.reporter || []).map((reporter: string) => {
       // ./reporter.js || ../reporter.js, but not .reporters/reporter.js
       if (reporter[0] === '.' && (reporter[1] === '/' || reporter[2] === '/'))
         return resolve(process.cwd(), reporter)
       return reporter
-    }) ?? resolved.reporters
-    resolved.reporters = Array.from(new Set(toArray(reporters))).filter(Boolean) as 'json'[]
+    })
+    const reporters = cliReporters.length ? cliReporters : resolved.reporters
+    resolved.reporters = Array.from(new Set(toArray(reporters as 'json'[]))).filter(Boolean)
   }
 
   if (!resolved.reporters.length)
