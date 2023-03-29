@@ -1,6 +1,8 @@
 import { getColors } from './colors'
 import { diffDescriptors, getConcordanceTheme } from './descriptors'
 
+export * from './descriptors'
+
 export interface DiffOptions {
   showLegend?: boolean
   outputDiffLines?: number
