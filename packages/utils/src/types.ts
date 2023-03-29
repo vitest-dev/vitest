@@ -43,4 +43,5 @@ export interface ErrorWithDiff extends Error {
   operator?: string
   type?: string
   frame?: string
+  diff?: string
 }
