@@ -103,10 +103,9 @@ jobs:
         run: pnpm run ui:test
 
   test-browser:
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
         browser: [[chrome, chromium], [firefox, firefox], [edge, webkit]]
 
     timeout-minutes: 10
@@ -122,6 +121,43 @@ jobs:
 
       - uses: browser-actions/setup-chrome@v1
       - uses: browser-actions/setup-firefox@v1
+      - uses: browser-actions/setup-edge@v1
+
+      - name: Install
+        run: pnpm i
+
+      - name: Install Playwright Dependencies
+        run: pnpx playwright install-deps
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Test Browser (webdriverio)
+        run: pnpm run test:browser:webdriverio
+
+      - name: Test Browser (playwright)
+        run: pnpm run test:browser:playwright
+        env:
+          BROWSER: ${{ matrix.browser[1] }}
+
+  test-browser-windows:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        browser: [[chrome, chromium], [edge, webkit]]
+
+    timeout-minutes: 10
+
+    env:
+      BROWSER: ${{ matrix.browser[0] }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: ./.github/actions/setup-and-cache
+        with:
+          node-version: 18
+
+      - uses: browser-actions/setup-chrome@v1
       - uses: browser-actions/setup-edge@v1
 
       - name: Install
