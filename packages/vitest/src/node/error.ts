@@ -111,6 +111,7 @@ const skipErrorProperties = new Set([
   'stackStr',
   'type',
   'showDiff',
+  'diff',
   'actual',
   'expected',
   'VITEST_TEST_NAME',
