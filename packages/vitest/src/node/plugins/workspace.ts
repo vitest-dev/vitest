@@ -7,6 +7,7 @@ import type { VitestWorkspace } from '../workspace'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { EnvReplacerPlugin } from './envReplacer'
+import { GlobalSetupPlugin } from './globalSetup'
 
 export function WorkspaceVitestPlugin(workspace: VitestWorkspace) {
   return <VitePlugin[]>[
@@ -111,5 +112,6 @@ export function WorkspaceVitestPlugin(workspace: VitestWorkspace) {
     EnvReplacerPlugin(),
     ...CSSEnablerPlugin(workspace),
     CoverageTransform(workspace.ctx),
+    GlobalSetupPlugin(workspace, workspace.ctx.logger),
   ]
 }

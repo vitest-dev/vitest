@@ -51,6 +51,9 @@ function getTestConfig(ctx: VitestWorkspace): ResolvedConfig {
 export function createChildProcessPool(ctx: Vitest, { execArgv, env }: PoolProcessOptions): ProcessPool {
   const children = new Set<ChildProcess>()
 
+  const Sequencer = ctx.config.sequence.sequencer
+  const sequencer = new Sequencer(ctx)
+
   function runFiles(workspace: VitestWorkspace, config: ResolvedConfig, files: string[], environment: ContextTestEnvironment, invalidates: string[] = []) {
     const data: ChildContext = {
       command: 'start',
@@ -84,6 +87,13 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env }: PoolProce
   }
 
   async function runWithFiles(workspace: VitestWorkspace, files: string[], invalidates: string[] = []): Promise<void> {
+    const { shard } = ctx.config
+
+    if (shard)
+      files = await sequencer.shard(files)
+
+    files = await sequencer.sort(files)
+
     ctx.state.clearFiles(files)
     const config = getTestConfig(workspace)
 

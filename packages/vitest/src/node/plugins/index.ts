@@ -238,7 +238,7 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
       },
     },
     EnvReplacerPlugin(),
-    GlobalSetupPlugin(ctx),
+    GlobalSetupPlugin(ctx, ctx.logger),
     ...CSSEnablerPlugin(ctx),
     CoverageTransform(ctx),
     options.ui

@@ -1,6 +1,6 @@
-import { defineConfig } from 'vitest/config'
+import { defineWorkspace } from 'vitest/config'
 
-export default defineConfig({
+export default defineWorkspace({
   test: {
     name: 'space_1',
     environment: 'jsdom',

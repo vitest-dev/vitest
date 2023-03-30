@@ -204,15 +204,9 @@ export class VitestWorkspace {
   }
 
   getSerializableConfig() {
-    // don't allow changing the coverage provider
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { provider, ...coverage } = this.config.coverage
     return deepMerge({
       ...this.config,
-      coverage: {
-        ...this.ctx.config.coverage,
-        ...coverage,
-      },
+      coverage: this.ctx.config.coverage,
       reporters: [],
       deps: {
         ...this.config.deps,
@@ -233,6 +227,8 @@ export class VitestWorkspace {
         ...this.config.benchmark,
         reporters: [],
       },
+      inspect: this.ctx.config.inspect,
+      inspectBrk: this.ctx.config.inspectBrk,
     },
     this.ctx.configOverride || {} as any,
     ) as ResolvedConfig
