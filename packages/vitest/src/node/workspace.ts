@@ -62,7 +62,7 @@ export class VitestWorkspace {
   ) {}
 
   getName() {
-    return this.config.name || this.path
+    return this.config.name || dirname(this.path)
   }
 
   get reporters() {
