@@ -44,9 +44,6 @@ export async function initializeWorkspace(workspacePath: string, ctx: Vitest) {
   return workspace
 }
 
-// notes:
-// 1. Vitest considers only top-level reportes and coverage reporters
-// 2. Vitest disables watcher in workspaces, only top-level watcher is used
 export class VitestWorkspace {
   configOverride: Partial<ResolvedConfig> | undefined
 
@@ -207,9 +204,15 @@ export class VitestWorkspace {
   }
 
   getSerializableConfig() {
+    // don't allow changing the coverage provider
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { provider, ...coverage } = this.config.coverage
     return deepMerge({
       ...this.config,
-      coverage: this.ctx.config.coverage,
+      coverage: {
+        ...this.ctx.config.coverage,
+        ...coverage,
+      },
       reporters: [],
       deps: {
         ...this.config.deps,

@@ -8,7 +8,7 @@ import { normalizeRequestId } from 'vite-node/utils'
 import { ViteNodeRunner } from 'vite-node/client'
 import { SnapshotManager } from '@vitest/snapshot/manager'
 import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter, ResolvedConfig, UserConfig, VitestRunMode } from '../types'
-import { deepMerge, hasFailed, noop, slash, toArray } from '../utils'
+import { hasFailed, noop, slash, toArray } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
 import type { BrowserProvider } from '../types/browser'
 import { getBrowserProvider } from '../integrations/browser'
@@ -226,34 +226,6 @@ export class Vitest {
     return this.browserProvider
   }
 
-  getSerializableConfig() {
-    return deepMerge({
-      ...this.config,
-      reporters: [],
-      deps: {
-        ...this.config.deps,
-        experimentalOptimizer: {
-          enabled: this.config.deps?.experimentalOptimizer?.enabled ?? false,
-        },
-      },
-      snapshotOptions: {
-        ...this.config.snapshotOptions,
-        resolveSnapshotPath: undefined,
-      },
-      onConsoleLog: undefined!,
-      sequence: {
-        ...this.config.sequence,
-        sequencer: undefined!,
-      },
-      benchmark: {
-        ...this.config.benchmark,
-        reporters: [],
-      },
-    },
-    this.configOverride || {} as any,
-    ) as ResolvedConfig
-  }
-
   typecheck(filters?: string[]) {
     return Promise.all(this.workspaces.map(workspace => workspace.typecheck(filters)))
   }
@@ -371,6 +343,12 @@ export class Vitest {
   }
 
   async runFiles(paths: WorkspaceSpec[]) {
+    const filepaths = paths.map(([, file]) => file)
+
+    this.state.collectPaths(filepaths)
+
+    await this.report('onPathsCollected', filepaths)
+
     // previous run
     await this.runningPromise
 
@@ -518,8 +496,8 @@ export class Vitest {
     }, WATCHER_DEBOUNCE)
   }
 
-  public getModuleWorkspace(id: string) {
-    return this.workspaces.find((workspace) => {
+  public getModuleWorkspaces(id: string) {
+    return this.workspaces.filter((workspace) => {
       return workspace.server.moduleGraph.getModuleById(id)
         || workspace.browser?.moduleGraph.getModuleById(id)
         || workspace.browser?.moduleGraph.getModulesByFile(id)?.size
@@ -529,10 +507,12 @@ export class Vitest {
   private unregisterWatcher = noop
   private registerWatcher() {
     const updateLastChanged = (id: string) => {
-      const workspace = this.getModuleWorkspace(id)
-      const mod = workspace?.server.moduleGraph.getModuleById(id) || workspace?.browser?.moduleGraph.getModuleById(id)
-      if (mod)
-        this.server.moduleGraph.invalidateModule(mod)
+      const workspaces = this.getModuleWorkspaces(id)
+      workspaces.forEach(({ server, browser }) => {
+        const mod = server.moduleGraph.getModuleById(id) || browser?.moduleGraph.getModuleById(id)
+        if (mod)
+          server.moduleGraph.invalidateModule(mod)
+      })
     }
 
     const onChange = (id: string) => {
@@ -594,44 +574,50 @@ export class Vitest {
       return true
     }
 
-    const workspace = this.getModuleWorkspace(id)
-    if (!workspace)
+    const workspaces = this.getModuleWorkspaces(id)
+    if (!workspaces.length)
       return false
-    const mod = workspace.server.moduleGraph.getModuleById(id) || workspace.browser?.moduleGraph.getModuleById(id)
-    if (!mod) {
-      // files with `?v=` query from the browser
-      const mods = workspace.browser?.moduleGraph.getModulesByFile(id)
-      if (!mods?.size)
-        return false
+
+    for (const { server, browser } of workspaces) {
+      const mod = server.moduleGraph.getModuleById(id) || browser?.moduleGraph.getModuleById(id)
+      if (!mod) {
+        // files with `?v=` query from the browser
+        const mods = browser?.moduleGraph.getModulesByFile(id)
+        if (!mods?.size)
+          return false
+        let rerun = false
+        mods.forEach((m) => {
+          if (m.id && this.handleFileChanged(m.id))
+            rerun = true
+        })
+        return rerun
+      }
+
+      // remove queries from id
+      id = normalizeRequestId(id, this.server.config.base)
+
+      this.invalidates.add(id)
+
+      if (this.state.filesMap.has(id)) {
+        this.changedTests.add(id)
+        return true
+      }
+
       let rerun = false
-      mods.forEach((m) => {
-        if (m.id && this.handleFileChanged(m.id))
+      mod.importers.forEach((i) => {
+        if (!i.id)
+          return
+
+        const heedsRerun = this.handleFileChanged(i.id)
+        if (heedsRerun)
           rerun = true
       })
-      return rerun
+
+      if (rerun)
+        return rerun
     }
 
-    // remove queries from id
-    id = normalizeRequestId(id, this.server.config.base)
-
-    this.invalidates.add(id)
-
-    if (this.state.filesMap.has(id)) {
-      this.changedTests.add(id)
-      return true
-    }
-
-    let rerun = false
-    mod.importers.forEach((i) => {
-      if (!i.id)
-        return
-
-      const heedsRerun = this.handleFileChanged(i.id)
-      if (heedsRerun)
-        rerun = true
-    })
-
-    return rerun
+    return false
   }
 
   private async reportCoverage(allTestsRun: boolean) {
