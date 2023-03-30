@@ -115,8 +115,6 @@ export class Vitest {
       })
     }
 
-    this.workspaces = await this.resolveWorkspaces(options)
-
     this.reporters = resolved.mode === 'benchmark'
       ? await createBenchmarkReporters(toArray(resolved.benchmark?.reporters), this.runner)
       : await createReporters(resolved.reporters, this.runner)
@@ -128,6 +126,8 @@ export class Vitest {
     catch {}
 
     await Promise.all(this._onSetServer.map(fn => fn()))
+
+    this.workspaces = await this.resolveWorkspaces(options)
   }
 
   async resolveWorkspaces(options: UserConfig) {

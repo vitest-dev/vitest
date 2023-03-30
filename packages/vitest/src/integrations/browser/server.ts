@@ -2,14 +2,14 @@ import { createServer } from 'vite'
 import { resolve } from 'pathe'
 import { findUp } from 'find-up'
 import { configFiles } from '../../constants'
-import type { Vitest } from '../../node'
 import type { UserConfig } from '../../types/config'
 import { ensurePackageInstalled } from '../../node/pkg'
 import { resolveApiServerConfig } from '../../node/config'
 import { CoverageTransform } from '../../node/plugins/coverageTransform'
+import type { VitestWorkspace } from '../../node/workspace'
 
-export async function createBrowserServer(ctx: Vitest, options: UserConfig) {
-  const root = ctx.config.root
+export async function createBrowserServer(workspace: VitestWorkspace, options: UserConfig) {
+  const root = workspace.config.root
 
   await ensurePackageInstalled('@vitest/browser', root)
 
@@ -21,7 +21,7 @@ export async function createBrowserServer(ctx: Vitest, options: UserConfig) {
 
   const server = await createServer({
     logLevel: 'error',
-    mode: ctx.config.mode,
+    mode: workspace.config.mode,
     configFile: configPath,
     // watch is handled by Vitest
     server: {
@@ -32,7 +32,7 @@ export async function createBrowserServer(ctx: Vitest, options: UserConfig) {
     },
     plugins: [
       (await import('@vitest/browser')).default('/'),
-      CoverageTransform(ctx),
+      CoverageTransform(workspace.ctx),
       {
         enforce: 'post',
         name: 'vitest:browser:config',
@@ -69,7 +69,7 @@ export async function createBrowserServer(ctx: Vitest, options: UserConfig) {
   await server.listen()
   await server.watcher.close()
 
-  ;(await import('../../api/setup')).setup(ctx, server)
+  ;(await import('../../api/setup')).setup(workspace, server)
 
   return server
 }

@@ -65,6 +65,10 @@ export class VitestWorkspace {
     return this.config.name || this.path
   }
 
+  get reporters() {
+    return this.ctx.reporters
+  }
+
   async globTestFiles(filters: string[] = []) {
     const { dir, root } = this.config
 
@@ -121,7 +125,7 @@ export class VitestWorkspace {
     if (!this.isBrowserEnabled())
       return
     await this.browser?.close()
-    this.browser = await createBrowserServer(this.ctx, options)
+    this.browser = await createBrowserServer(this, options)
   }
 
   async setServer(options: UserConfig, server: ViteDevServer, params: InitializeOptions = {}) {
