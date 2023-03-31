@@ -41,6 +41,7 @@
   "dependencies": {
     "@vitest/utils": "workspace:*",
     "fast-glob": "^3.2.12",
+    "fflate": "^0.7.4",
     "flatted": "^3.2.7",
     "pathe": "^1.1.0",
     "picocolors": "^1.0.0",

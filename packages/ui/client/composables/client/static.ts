@@ -2,6 +2,7 @@ import type { BirpcReturn } from 'birpc'
 import type { VitestClient } from '@vitest/ws-client'
 import type { WebSocketHandlers } from 'vitest/src/api/types'
 import { parse } from 'flatted'
+import { decompressSync, strFromU8 } from 'fflate'
 import type { File, ModuleGraphData, ResolvedConfig } from 'vitest/src/types'
 import { StateManager } from '../../../../vitest/src/node/state'
 
@@ -72,7 +73,9 @@ export function createStaticClient(): VitestClient {
 
   async function registerMetadata() {
     const res = await fetch(window.METADATA_PATH!)
-    metadata = parse(await res.text()) as HTMLReportMetadata
+    const compressedData = new Uint8Array(await res.arrayBuffer())
+    const decompressed = strFromU8(decompressSync(compressedData))
+    metadata = parse(decompressed) as HTMLReportMetadata
     const event = new Event('open')
     ctx.ws.dispatchEvent(event)
   }
