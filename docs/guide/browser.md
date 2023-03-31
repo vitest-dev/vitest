@@ -104,5 +104,4 @@ When using Vitest Browser, it's important to note that thread blocking dialogs l
 In such situations, Vitest provides default mocks with default returned values for these APIs. This ensures that if the user accidentally uses synchronous popup web APIs, the execution would not hang. However, it's still recommended for the user to mock these web APIs for better experience. Read more in [Mocking](/guide/mocking).
 
 ### Mocking
-Mocking modules is not currently supported in the browser mode, but we are
-trying our best to deliver this feature and bring the support.
+Mocking modules is not currently supported in the browser mode, but we are trying our best to deliver this feature and bring the support.
