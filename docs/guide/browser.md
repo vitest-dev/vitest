@@ -22,7 +22,7 @@ To achieve the highest level of confidence in our tests, it's crucial to test in
 
 ## Drawbacks
 
-When using Vitest browser as a testing tool, it is important to consider the following drawbacks:
+When using Vitest browser, it is important to consider the following drawbacks:
 
 ### Early Development
 
