@@ -12,13 +12,25 @@ We developed the Vitest browser mode feature to help improve testing workflows a
 
 ### Different ways of Testing
 
-There are different ways to test JavaScript code, and each testing approach has its own advantages and disadvantages. Some testing frameworks simulate browser environments in Node.js, while others run tests in real browsers. In this context, jsdom is an example of a testing library that simulates a browser environment, while Cypress is an end-to-end testing tool that allows developers to test their applications in a real browser. 
+There are different ways to test JavaScript code. Some testing frameworks simulate browser environments in Node.js, while others run tests in real browsers. In this context, jsdom is an example of a spec implementation that simulates a browser environment by being used with a test runner like Jest or Vitest, while Cypress is an end-to-end testing tool that allows developers to test their applications in a real browser.
 
-### The Main caveat
+### The Simulation caveat
 
-Testing in simulated environments like jsdom or happy-dom have made it easier to test JavaScript programs and provide some level of confidence in test results, making them suitable for many projects. However, it's important to remember that these tools are only simulating a browser environment, so we are not testing in an actual browser. This means that there may still be some discrepancies between the simulated environment and the real environment, potentially leading to false positives or negatives in test results.
+Testing JavaScript programs in simulated environments such as jsdom or happy-dom has simplified the test setup and provided an easy-to-use API, making them suitable for many projects and increasing confidence in test results. However, it is crucial to keep in mind that these tools only simulate a browser environment and not an actual browser, which may result in some discrepancies between the simulated environment and the real environment. Therefore, false positives or negatives in test results may occur.
 
 To achieve the highest level of confidence in our tests, it's crucial to test in a real browser environment. This is why we developed the browser mode feature in Vitest, allowing developers to run tests natively in a browser and gain more accurate and reliable test results. With browser-level testing, developers can be more confident that their application will work as intended in a real-world scenario.
+
+## Drawbacks
+
+When using Vitest browser as a testing tool, it is important to consider the following drawbacks:
+
+### Early Development
+
+The browser mode feature of Vitest is still in its early stages of development. As such, it may not yet be fully optimized, and there may be some bugs or issues that have not yet been ironed out. It is recommended that users augment their Vitest browser experience with a standalone browser-side test runner like Cypress.
+
+### Longer Initialization
+
+Vitest browser requires spinning up the provider and the browser during the initialization process, which can take some time. This can result in longer initialization times compared to other testing patterns.
 
 ## Configuration
 
