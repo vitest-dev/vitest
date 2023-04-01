@@ -72,6 +72,28 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       },
     )
   }
+
+  utils.addMethod(
+    chai.Assertion.prototype,
+    'toMatchFileSnapshot',
+    async function (this: Record<string, unknown>, file: string, message?: string) {
+      const expected = utils.flag(this, 'object')
+      const test = utils.flag(this, 'vitest-test')
+      const errorMessage = utils.flag(this, 'message')
+
+      await getSnapshotClient().assertRaw({
+        received: expected,
+        message,
+        isInline: false,
+        rawSnapshot: {
+          file,
+        },
+        errorMessage,
+        ...getTestNames(test),
+      })
+    },
+  )
+
   utils.addMethod(
     chai.Assertion.prototype,
     'toMatchInlineSnapshot',

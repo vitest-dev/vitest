@@ -1,4 +1,5 @@
 import type { OptionsReceived as PrettyFormatOptions } from 'pretty-format'
+import type { RawSnapshotInfo } from '../port/rawSnapshot'
 import type { SnapshotEnvironment } from './environment'
 
 export type { SnapshotEnvironment }
@@ -21,6 +22,7 @@ export interface SnapshotMatchOptions {
   inlineSnapshot?: string
   isInline: boolean
   error?: Error
+  rawSnapshot?: RawSnapshotInfo
 }
 
 export interface SnapshotResult {
