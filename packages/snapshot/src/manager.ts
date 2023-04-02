@@ -1,4 +1,4 @@
-import { basename, dirname, join } from 'pathe'
+import { basename, dirname, isAbsolute, join, resolve } from 'pathe'
 import type { SnapshotResult, SnapshotStateOptions, SnapshotSummary } from './types'
 
 export class SnapshotManager {
@@ -27,6 +27,12 @@ export class SnapshotManager {
     })
 
     return resolver(testPath, this.extension)
+  }
+
+  resolveRawPath(testPath: string, rawPath: string) {
+    return isAbsolute(rawPath)
+      ? rawPath
+      : resolve(dirname(testPath), rawPath)
   }
 }
 

@@ -22,6 +22,10 @@ export class BrowserSnapshotEnvironment implements SnapshotEnvironment {
     return rpc().resolveSnapshotPath(filepath)
   }
 
+  resolveRawPath(testPath: string, rawPath: string): Promise<string> {
+    return rpc().resolveSnapshotRawPath(testPath, rawPath)
+  }
+
   removeSnapshotFile(filepath: string): Promise<void> {
     return rpc().removeFile(filepath)
   }
