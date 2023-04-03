@@ -633,6 +633,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   utils.addProperty(chai.Assertion.prototype, 'resolves', function __VITEST_RESOLVES__(this: any) {
     utils.flag(this, 'promise', 'resolves')
     utils.flag(this, 'error', new Error('resolves'))
+    const test = utils.flag(this, 'vitest-test')
     const obj = utils.flag(this, 'object')
 
     if (typeof obj?.then !== 'function')
@@ -645,8 +646,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         if (typeof result !== 'function')
           return result instanceof chai.Assertion ? proxy : result
 
-        return async (...args: any[]) => {
-          return obj.then(
+        return (...args: any[]) => {
+          const promise = obj.then(
             (value: any) => {
               utils.flag(this, 'object', value)
               return result.call(this, ...args)
@@ -655,6 +656,15 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
               throw new Error(`promise rejected "${String(err)}" instead of resolving`)
             },
           )
+
+          // record promise for test, that resolves before test ends
+          if (test) {
+            if (!test.promises)
+              test.promises = []
+            test.promises.push(promise)
+          }
+
+          return promise
         }
       },
     })
@@ -665,6 +675,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   utils.addProperty(chai.Assertion.prototype, 'rejects', function __VITEST_REJECTS__(this: any) {
     utils.flag(this, 'promise', 'rejects')
     utils.flag(this, 'error', new Error('rejects'))
+    const test = utils.flag(this, 'vitest-test')
     const obj = utils.flag(this, 'object')
     const wrapper = typeof obj === 'function' ? obj() : obj // for jest compat
 
@@ -678,8 +689,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         if (typeof result !== 'function')
           return result instanceof chai.Assertion ? proxy : result
 
-        return async (...args: any[]) => {
-          return wrapper.then(
+        return (...args: any[]) => {
+          const promise = wrapper.then(
             (value: any) => {
               throw new Error(`promise resolved "${String(value)}" instead of rejecting`)
             },
@@ -688,6 +699,15 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
               return result.call(this, ...args)
             },
           )
+
+          // record promise for test, that resolves before test ends
+          if (test) {
+            if (!test.promises)
+              test.promises = []
+            test.promises.push(promise)
+          }
+
+          return promise
         }
       },
     })

@@ -1,6 +1,7 @@
 import * as chai from 'chai'
 import './setup'
 import type { Test } from '@vitest/runner'
+import { getCurrentTest } from '@vitest/runner'
 import { GLOBAL_EXPECT, getState, setState } from '@vitest/expect'
 import type { MatcherState } from '../../types/chai'
 import { getCurrentEnvironment, getFullName } from '../../utils'
@@ -10,9 +11,10 @@ export function createExpect(test?: Test) {
     const { assertionCalls } = getState(expect)
     setState({ assertionCalls: assertionCalls + 1 }, expect)
     const assert = chai.expect(value, message) as unknown as Vi.Assertion
-    if (test)
+    const _test = test || getCurrentTest()
+    if (_test)
       // @ts-expect-error internal
-      return assert.withTest(test) as Vi.Assertion
+      return assert.withTest(_test) as Vi.Assertion
     else
       return assert
   }) as Vi.ExpectStatic

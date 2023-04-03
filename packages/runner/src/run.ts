@@ -145,6 +145,10 @@ export async function runTest(test: Test, runner: VitestRunner) {
         await fn()
       }
 
+      // some async expect will be added to this array, in case user forget to await theme
+      if (test.promises)
+        await Promise.allSettled(test.promises)
+
       await runner.onAfterTryTest?.(test, retryCount)
 
       test.result.state = 'pass'
