@@ -4,12 +4,13 @@
   "module": "true",
   "scripts": {
     "test": "pnpm run test:webdriverio && pnpm run test:playwright",
-    "test:webdriverio": "PROVIDER=webdriverio node --test specs/",
-    "test:playwright": "PROVIDER=playwright node --test specs/",
+    "test:webdriverio": "cross-env PROVIDER=webdriverio node --test specs/",
+    "test:playwright": "cross-env PROVIDER=playwright node --test specs/",
     "coverage": "vitest --coverage.enabled --coverage.provider=istanbul"
   },
   "devDependencies": {
     "@vitest/browser": "workspace:*",
+    "cross-env": "^7.0.3",
     "execa": "^7.1.1",
     "safaridriver": "^0.0.4",
     "vitest": "workspace:*"

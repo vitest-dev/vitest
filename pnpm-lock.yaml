@@ -1015,11 +1015,13 @@ importers:
   test/browser:
     specifiers:
       '@vitest/browser': workspace:*
+      cross-env: ^7.0.3
       execa: ^7.1.1
       safaridriver: ^0.0.4
       vitest: workspace:*
     devDependencies:
       '@vitest/browser': link:../../packages/browser
+      cross-env: 7.0.3
       execa: 7.1.1
       safaridriver: 0.0.4
       vitest: link:../../packages/vitest
@@ -11368,6 +11370,14 @@ packages:
 
   /create-require/1.1.1:
     resolution: {integrity: sha512-dcKFX3jn0MpIaXjisoRvexIJVEKzaq7z2rZKxf+MSr9TkdmHmsU4m2lcLojrj/FHl8mk5VxMmYA+ftRkP/3oKQ==}
+    dev: true
+
+  /cross-env/7.0.3:
+    resolution: {integrity: sha512-+/HKd6EgcQCJGh2PSjZuUitQBQynKor4wrFbRg4DtAgS1aWO+gU52xpH7M9ScGgXSYmAVS9bIJ8EzuaGw0oNAw==}
+    engines: {node: '>=10.14', npm: '>=6', yarn: '>=1'}
+    hasBin: true
+    dependencies:
+      cross-spawn: 7.0.3
     dev: true
 
   /cross-fetch/3.1.5:
