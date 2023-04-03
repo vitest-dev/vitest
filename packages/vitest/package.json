@@ -169,7 +169,7 @@
     "@types/diff": "^5.0.2",
     "@types/istanbul-lib-coverage": "^2.0.4",
     "@types/istanbul-reports": "^3.0.1",
-    "@types/jsdom": "^20.0.1",
+    "@types/jsdom": "^21.1.1",
     "@types/micromatch": "^4.0.2",
     "@types/prompts": "^2.4.2",
     "@types/sinonjs__fake-timers": "^8.1.2",
