@@ -8,6 +8,7 @@ import { arrayBufferEquality, generateToBeMessage, iterableEquality, equals as j
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import { diff, stringify } from './jest-matcher-utils'
 import { JEST_MATCHERS_OBJECT } from './constants'
+import { recordAsyncExpect } from './utils'
 
 // Jest Expect Compact
 export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
@@ -657,14 +658,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
             },
           )
 
-          // record promise for test, that resolves before test ends
-          if (test) {
-            if (!test.promises)
-              test.promises = []
-            test.promises.push(promise)
-          }
-
-          return promise
+          return recordAsyncExpect(test, promise)
         }
       },
     })
@@ -700,14 +694,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
             },
           )
 
-          // record promise for test, that resolves before test ends
-          if (test) {
-            if (!test.promises)
-              test.promises = []
-            test.promises.push(promise)
-          }
-
-          return promise
+          return recordAsyncExpect(test, promise)
         }
       },
     })

@@ -3,6 +3,7 @@ import type { Test } from '@vitest/runner'
 import { getNames } from '@vitest/runner/utils'
 import type { SnapshotClient } from '@vitest/snapshot'
 import { addSerializer, stripSnapshotIndentation } from '@vitest/snapshot'
+import { recordAsyncExpect } from '../../../../expect/src/utils'
 import { VitestSnapshotClient } from './client'
 
 let _client: SnapshotClient
@@ -92,13 +93,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
         ...getTestNames(test),
       })
 
-      if (test) {
-        if (!test.promises)
-          test.promises = []
-        test.promises.push(promise)
-      }
-
-      return promise
+      return recordAsyncExpect(test, promise)
     },
   )
 
