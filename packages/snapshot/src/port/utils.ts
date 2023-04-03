@@ -163,6 +163,24 @@ export async function saveSnapshotFile(
   )
 }
 
+export async function saveSnapshotFileRaw(
+  environment: SnapshotEnvironment,
+  content: string,
+  snapshotPath: string,
+) {
+  const oldContent = await environment.readSnapshotFile(snapshotPath)
+  const skipWriting = oldContent && oldContent === content
+
+  if (skipWriting)
+    return
+
+  await ensureDirectoryExists(environment, snapshotPath)
+  await environment.saveSnapshotFile(
+    snapshotPath,
+    content,
+  )
+}
+
 export function prepareExpected(expected?: string) {
   function findStartIndent() {
     // Attempts to find indentation for objects.

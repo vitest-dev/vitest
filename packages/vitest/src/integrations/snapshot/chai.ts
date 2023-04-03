@@ -3,6 +3,7 @@ import type { Test } from '@vitest/runner'
 import { getNames } from '@vitest/runner/utils'
 import type { SnapshotClient } from '@vitest/snapshot'
 import { addSerializer, stripSnapshotIndentation } from '@vitest/snapshot'
+import { recordAsyncExpect } from '../../../../expect/src/utils'
 import { VitestSnapshotClient } from './client'
 
 let _client: SnapshotClient
@@ -72,6 +73,30 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       },
     )
   }
+
+  utils.addMethod(
+    chai.Assertion.prototype,
+    'toMatchFileSnapshot',
+    function (this: Record<string, unknown>, file: string, message?: string) {
+      const expected = utils.flag(this, 'object')
+      const test = utils.flag(this, 'vitest-test') as Test
+      const errorMessage = utils.flag(this, 'message')
+
+      const promise = getSnapshotClient().assertRaw({
+        received: expected,
+        message,
+        isInline: false,
+        rawSnapshot: {
+          file,
+        },
+        errorMessage,
+        ...getTestNames(test),
+      })
+
+      return recordAsyncExpect(test, promise)
+    },
+  )
+
   utils.addMethod(
     chai.Assertion.prototype,
     'toMatchInlineSnapshot',

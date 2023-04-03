@@ -59,6 +59,10 @@ export interface Test<ExtraContext = {}> extends TaskBase {
   fails?: boolean
   context: TestContext & ExtraContext
   onFailed?: OnTestFailedHandler[]
+  /**
+   * Store promises (from async expects) to wait for them before finishing the test
+   */
+  promises?: Promise<any>[]
 }
 
 export type Task = Test | Suite | TaskCustom | File

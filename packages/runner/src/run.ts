@@ -145,6 +145,14 @@ export async function runTest(test: Test, runner: VitestRunner) {
         await fn()
       }
 
+      // some async expect will be added to this array, in case user forget to await theme
+      if (test.promises) {
+        const result = await Promise.allSettled(test.promises)
+        const errors = result.map(r => r.status === 'rejected' ? r.reason : undefined).filter(Boolean)
+        if (errors.length)
+          throw errors
+      }
+
       await runner.onAfterTryTest?.(test, retryCount)
 
       test.result.state = 'pass'
@@ -197,10 +205,15 @@ export async function runTest(test: Test, runner: VitestRunner) {
 
 function failTask(result: TaskResult, err: unknown, runner: VitestRunner) {
   result.state = 'fail'
-  const error = processError(err, runner.config)
-  result.error = error
-  result.errors ??= []
-  result.errors.push(error)
+  const errors = Array.isArray(err)
+    ? err
+    : [err]
+  for (const e of errors) {
+    const error = processError(e, runner.config)
+    result.error ??= error
+    result.errors ??= []
+    result.errors.push(error)
+  }
 }
 
 function markTasksAsSkipped(suite: Suite, runner: VitestRunner) {

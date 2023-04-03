@@ -678,6 +678,22 @@ type Awaitable<T> = T | PromiseLike<T>
   })
   ```
 
+## toMatchFileSnapshot
+
+- **Type:** `<T>(filepath: string, message?: string) => Promise<void>`
+
+  Compare or update the snapshot with the content of a file explicitly specified (instead of the `.snap` file).
+
+  ```ts
+  import { expect, it } from 'vitest'
+
+  it('render basic', async () => {
+    const result = renderHTML(h('div', { class: 'foo' }))
+    await expect(result).toMatchFileSnapshot('./test/basic.output.html')
+  })
+  ```
+
+  Note that since file system operation is async, you need to use `await` with `toMatchFileSnapshot()`.
 
 ## toThrowErrorMatchingSnapshot
 

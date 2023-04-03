@@ -61,6 +61,9 @@ export function setup(ctx: Vitest, server?: ViteDevServer) {
         resolveSnapshotPath(testPath) {
           return ctx.snapshot.resolvePath(testPath)
         },
+        resolveSnapshotRawPath(testPath, rawPath) {
+          return ctx.snapshot.resolveRawPath(testPath, rawPath)
+        },
         removeFile(id) {
           return fs.unlink(id)
         },
