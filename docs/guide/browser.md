@@ -12,7 +12,7 @@ We developed the Vitest browser mode feature to help improve testing workflows a
 
 ### Different ways of Testing
 
-There are different ways to test JavaScript code. Some testing frameworks simulate browser environments in Node.js, while others run tests in real browsers. In this context, jsdom is an example of a spec implementation that simulates a browser environment by being used with a test runner like Jest or Vitest, while Cypress is an end-to-end testing tool that allows developers to test their applications in a real browser.
+There are different ways to test JavaScript code. Some testing frameworks simulate browser environments in Node.js, while others run tests in real browsers. In this context, [jsdom](https://www.npmjs.com/package/jsdom) is an example of a spec implementation that simulates a browser environment by being used with a test runner like Jest or Vitest, while other testing tools such as [WebdriverIO](https://webdriver.io/) or [Cypress](https://www.cypress.io/) allow developers to test their applications in a real browser or in case of [Playwright](https://playwright.dev/) provide you a browser engine.
 
 ### The Simulation caveat
 
@@ -26,7 +26,7 @@ When using Vitest browser, it is important to consider the following drawbacks:
 
 ### Early Development
 
-The browser mode feature of Vitest is still in its early stages of development. As such, it may not yet be fully optimized, and there may be some bugs or issues that have not yet been ironed out. It is recommended that users augment their Vitest browser experience with a standalone browser-side test runner like Cypress.
+The browser mode feature of Vitest is still in its early stages of development. As such, it may not yet be fully optimized, and there may be some bugs or issues that have not yet been ironed out. It is recommended that users augment their Vitest browser experience with a standalone browser-side test runner like WebdriverIO, Cypress or Playwright.
 
 ### Longer Initialization
 
