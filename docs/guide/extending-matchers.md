@@ -23,18 +23,16 @@ expect.extend({
 })
 ```
 
-If you are using TypeScript, you can extend default Matchers interface with the code bellow:
+If you are using TypeScript, you can extend default Matchers interface in an ambient declaration file (e.g: `vitest.d.ts`) with the code below:
 
 ```ts
 interface CustomMatchers<R = unknown> {
   toBeFoo(): R
 }
 
-declare global {
-  namespace Vi {
-    interface Assertion extends CustomMatchers {}
-    interface AsymmetricMatchersContaining extends CustomMatchers {}
-  }
+declare namespace Vi {
+  interface Assertion extends CustomMatchers {}
+  interface AsymmetricMatchersContaining extends CustomMatchers {}
 
   // Note: augmenting jest.Matchers interface will also work.
 }
