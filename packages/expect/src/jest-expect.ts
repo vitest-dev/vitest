@@ -646,7 +646,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         if (typeof result !== 'function')
           return result instanceof chai.Assertion ? proxy : result
 
-        return (...args: any[]) => {
+        return async (...args: any[]) => {
           const promise = obj.then(
             (value: any) => {
               utils.flag(this, 'object', value)
@@ -689,7 +689,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         if (typeof result !== 'function')
           return result instanceof chai.Assertion ? proxy : result
 
-        return (...args: any[]) => {
+        return async (...args: any[]) => {
           const promise = wrapper.then(
             (value: any) => {
               throw new Error(`promise resolved "${String(value)}" instead of rejecting`)
