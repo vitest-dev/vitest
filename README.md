@@ -29,7 +29,7 @@ A blazing fast unit test framework powered by Vite.
 <br>
 <br>
 
-## Features
+## Features.
 
 - [Vite](https://vitejs.dev/)'s config, transformers, resolvers, and plugins. Use the same setup from your app!
 - [Jest Snapshot](https://jestjs.io/docs/snapshot-testing)
