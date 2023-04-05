@@ -627,22 +627,16 @@ importers:
       '@vitest/runner': workspace:*
       '@vitest/ui': workspace:*
       '@vitest/ws-client': workspace:*
-      local-pkg: ^0.4.2
-      mlly: ^1.1.0
       modern-node-polyfills: 0.1.0
       rollup: ^2.79.1
-      rollup-plugin-node-polyfills: ^0.2.1
       sirv: ^2.0.2
       vitest: workspace:*
     dependencies:
-      '@vitest/runner': link:../runner
-      local-pkg: 0.4.2
-      mlly: 1.1.0
       modern-node-polyfills: 0.1.0
-      rollup-plugin-node-polyfills: 0.2.1
       sirv: 2.0.2
     devDependencies:
       '@types/ws': 8.5.4
+      '@vitest/runner': link:../runner
       '@vitest/ui': link:../ui
       '@vitest/ws-client': link:../ws-client
       rollup: 2.79.1
@@ -13116,10 +13110,6 @@ packages:
       - supports-color
     dev: true
 
-  /estree-walker/0.6.1:
-    resolution: {integrity: sha512-SqmZANLWS0mnatqbSfRP5g8OXZC12Fgg1IwNtLsyHDzJizORW4khDfjPqJZsemPWBB2uqykUah5YpQ6epsqC/w==}
-    dev: false
-
   /estree-walker/1.0.1:
     resolution: {integrity: sha512-1fMXF3YP4pZZVozF8j/ZLfvnR8NSIljt56UhbZ5PeeDmmGHpgpdwQt7ITlGvYaQukCvuBRMLEiKiYC+oeIg4cg==}
 
@@ -19508,15 +19498,6 @@ packages:
       - supports-color
     dev: true
 
-  /rollup-plugin-inject/3.0.2:
-    resolution: {integrity: sha512-ptg9PQwzs3orn4jkgXJ74bfs5vYz1NCZlSQMBUA0wKcGp5i5pA1AO3fOUEte8enhGUC+iapTCzEWw2jEFFUO/w==}
-    deprecated: This package has been deprecated and is no longer maintained. Please use @rollup/plugin-inject.
-    dependencies:
-      estree-walker: 0.6.1
-      magic-string: 0.25.9
-      rollup-pluginutils: 2.8.2
-    dev: false
-
   /rollup-plugin-license/2.9.1_rollup@2.79.1:
     resolution: {integrity: sha512-C26f/bFXR52tzpBMllDnf5m2ETqRuyrrj3m8i3YY4imDwbXtunop+Lj1mO9mn/sZF8gKknOycN1Sm+kMGBd6RA==}
     engines: {node: '>=10.0.0'}
@@ -19535,12 +19516,6 @@ packages:
       spdx-satisfies: 5.0.1
     dev: true
 
-  /rollup-plugin-node-polyfills/0.2.1:
-    resolution: {integrity: sha512-4kCrKPTJ6sK4/gLL/U5QzVT8cxJcofO0OU74tnB19F40cmuAKSzH5/siithxlofFEjwvw1YAhPmbvGNA6jEroA==}
-    dependencies:
-      rollup-plugin-inject: 3.0.2
-    dev: false
-
   /rollup-plugin-terser/7.0.2_rollup@2.79.1:
     resolution: {integrity: sha512-w3iIaU4OxcF52UUXiZNsNeuXIMDvFrr+ZXK6bFZ0Q60qyVfq4uLptoS4bbq3paG3x216eQllFZX7zt6TIImguQ==}
     deprecated: This package has been deprecated and is no longer maintained. Please use @rollup/plugin-terser
@@ -19553,12 +19528,6 @@ packages:
       serialize-javascript: 4.0.0
       terser: 5.15.0
     dev: true
-
-  /rollup-pluginutils/2.8.2:
-    resolution: {integrity: sha512-EEp9NhnUkwY8aif6bxgovPHMoMoNr2FulJziTndpt5H9RdwC47GSGuII9XxpSdzVGM0GWrNPHV6ie1LTNJPaLQ==}
-    dependencies:
-      estree-walker: 0.6.1
-    dev: false
 
   /rollup/2.79.1:
     resolution: {integrity: sha512-uKxbd0IhMZOhjAiD5oAFp7BqvkA4Dv47qpOCtaNvng4HBwdbWtdOh8f5nZNuk2rp51PMGk3bzfWu5oayNEuYnw==}

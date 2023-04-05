@@ -36,15 +36,12 @@
     "vitest": ">=0.29.4"
   },
   "dependencies": {
-    "@vitest/runner": "workspace:*",
-    "local-pkg": "^0.4.2",
-    "mlly": "^1.1.0",
     "modern-node-polyfills": "0.1.0",
-    "rollup-plugin-node-polyfills": "^0.2.1",
     "sirv": "^2.0.2"
   },
   "devDependencies": {
     "@types/ws": "^8.5.4",
+    "@vitest/runner": "workspace:*",
     "@vitest/ui": "workspace:*",
     "@vitest/ws-client": "workspace:*",
     "rollup": "^2.79.1",
