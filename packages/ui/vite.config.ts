@@ -65,7 +65,7 @@ export const config: UserConfig = {
       name: 'debug-html-report',
       apply: 'serve',
       transformIndexHtml(html) {
-        return html.replace('<!-- !LOAD_METADATA! -->', `<script>window.METADATA_PATH="${debugLink}/html.meta.json"</script>`)
+        return html.replace('<!-- !LOAD_METADATA! -->', `<script>window.METADATA_PATH="${debugLink}/html.meta.json.gz"</script>`)
       },
     },
   ],

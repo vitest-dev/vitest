@@ -1,4 +1,5 @@
 import fs from 'fs'
+import zlib from 'zlib'
 import { resolve } from 'pathe'
 import { execa } from 'execa'
 import { describe, expect, it } from 'vitest'
@@ -21,7 +22,8 @@ describe.skipIf(skip)('html reporter', async () => {
       },
       stdio: 'inherit',
     }).catch(e => e)
-    const metaJson = fs.readFileSync(resolve(root, `${basePath}/html.meta.json`), { encoding: 'utf-8' })
+    const metaJsonGzipeed = fs.readFileSync(resolve(root, `${basePath}/html.meta.json.gz`))
+    const metaJson = zlib.gunzipSync(metaJsonGzipeed).toString('utf-8')
     const indexHtml = fs.readFileSync(resolve(root, `${basePath}/index.html`), { encoding: 'utf-8' })
     const resultJson = parse(metaJson.replace(new RegExp(vitestRoot, 'g'), '<rootDir>'))
     resultJson.config = {} // doesn't matter for a test
@@ -38,7 +40,7 @@ describe.skipIf(skip)('html reporter', async () => {
     expect(task.result.error).not.toBeDefined()
     expect(task.result.logs).not.toBeDefined()
     expect(resultJson).toMatchSnapshot(`tests are ${expected}`)
-    expect(indexHtml).toMatch('window.METADATA_PATH="html.meta.json"')
+    expect(indexHtml).toMatch('window.METADATA_PATH="html.meta.json.gz"')
   }, 120000)
 
   it('resolves to "failing" status for test file "json-fail"', async () => {
@@ -52,7 +54,8 @@ describe.skipIf(skip)('html reporter', async () => {
       },
       stdio: 'inherit',
     }).catch(e => e)
-    const metaJson = fs.readFileSync(resolve(root, `${basePath}/html.meta.json`), { encoding: 'utf-8' })
+    const metaJsonGzipped = fs.readFileSync(resolve(root, `${basePath}/html.meta.json.gz`))
+    const metaJson = zlib.gunzipSync(metaJsonGzipped).toString('utf-8')
     const indexHtml = fs.readFileSync(resolve(root, `${basePath}/index.html`), { encoding: 'utf-8' })
     const resultJson = parse(metaJson.replace(new RegExp(vitestRoot, 'g'), '<rootDir>'))
     resultJson.config = {} // doesn't matter for a test
@@ -77,6 +80,6 @@ describe.skipIf(skip)('html reporter', async () => {
     task.logs[0].taskId = 0
     task.logs[0].time = 0
     expect(resultJson).toMatchSnapshot(`tests are ${expected}`)
-    expect(indexHtml).toMatch('window.METADATA_PATH="html.meta.json"')
+    expect(indexHtml).toMatch('window.METADATA_PATH="html.meta.json.gz"')
   }, 120000)
 })

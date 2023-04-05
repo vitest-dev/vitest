@@ -760,6 +760,7 @@ importers:
       cypress: ^12.3.0
       d3-graph-controller: ^2.5.1
       fast-glob: ^3.2.12
+      fflate: ^0.7.4
       flatted: ^3.2.7
       floating-vue: ^2.0.0-y.0
       pathe: ^1.1.0
@@ -777,6 +778,7 @@ importers:
     dependencies:
       '@vitest/utils': link:../utils
       fast-glob: 3.2.12
+      fflate: 0.7.4
       flatted: 3.2.7
       pathe: 1.1.0
       picocolors: 1.0.0
@@ -13544,6 +13546,10 @@ packages:
   /fetch-retry/5.0.3:
     resolution: {integrity: sha512-uJQyMrX5IJZkhoEUBQ3EjxkeiZkppBd5jS/fMTJmfZxLSiaQjv2zD0kTvuvkSH89uFvgSlB6ueGpjD3HWN7Bxw==}
     dev: true
+
+  /fflate/0.7.4:
+    resolution: {integrity: sha512-5u2V/CDW15QM1XbbgS+0DfPxVB+jUKhWEKuuFuHncbk3tEEqzmoXL+2KyOFuKGqOnmdIy0/davWF1CkuwtibCw==}
+    dev: false
 
   /figgy-pudding/3.5.2:
     resolution: {integrity: sha512-0btnI/H8f2pavGMN8w40mlSKOfTK2SVJmBfBeVIj3kNw0swwgzyRq0d5TJVOwodFmtvpPeWPN/MCcfuWF0Ezbw==}
