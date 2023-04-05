@@ -47,7 +47,7 @@
   "dependencies": {
     "c8": "^7.13.0",
     "picocolors": "^1.0.0",
-    "std-env": "^3.3.1"
+    "std-env": "^3.3.2"
   },
   "devDependencies": {
     "pathe": "^1.1.0",
