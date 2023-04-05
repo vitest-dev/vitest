@@ -681,6 +681,7 @@ type Awaitable<T> = T | PromiseLike<T>
 ## toMatchFileSnapshot
 
 - **Type:** `<T>(filepath: string, message?: string) => Promise<void>`
+- **Version:** Vitest 0.30.0
 
   Compare or update the snapshot with the content of a file explicitly specified (instead of the `.snap` file).
 
