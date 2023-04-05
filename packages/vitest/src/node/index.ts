@@ -1,4 +1,5 @@
 export type { Vitest } from './core'
+export type { VitestWorkspace } from './workspace'
 export { createVitest } from './create'
 export { VitestPlugin } from './plugins'
 export { startVitest } from './cli-api'
