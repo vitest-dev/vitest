@@ -86,6 +86,10 @@ export function resolveConfig(
     mode,
   } as ResolvedConfig
 
+  resolved.inspect = Boolean(resolved.inspect)
+  resolved.inspectBrk = Boolean(resolved.inspectBrk)
+  resolved.singleThread = Boolean(resolved.singleThread)
+
   if (viteConfig.base !== '/')
     resolved.base = viteConfig.base
 
