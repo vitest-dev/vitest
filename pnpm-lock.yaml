@@ -863,7 +863,7 @@ importers:
       '@vitest/utils': workspace:*
       acorn: ^8.8.2
       acorn-walk: ^8.2.0
-      birpc: ^0.2.10
+      birpc: ^0.2.3
       cac: ^6.7.14
       chai: ^4.3.7
       chai-subset: ^1.6.0
