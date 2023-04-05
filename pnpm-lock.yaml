@@ -241,7 +241,7 @@ importers:
     devDependencies:
       '@testing-library/react': 13.3.0_zpnidt7m3osuk7shl3s4oenomq
       '@types/node': 18.15.11
-      '@types/react': 18.0.31
+      '@types/react': 18.0.32
       '@vitejs/plugin-react': 3.1.0
       jsdom: 21.1.1
       typescript: 4.8.4
@@ -292,7 +292,7 @@ importers:
       '@types/react-test-renderer': 17.0.2
       '@vitejs/plugin-react': 3.1.0_vite@4.0.0
       '@vitest/ui': link:../../packages/ui
-      happy-dom: 8.9.0
+      happy-dom: 9.1.0
       jsdom: 21.1.1
       react-test-renderer: 17.0.2_react@17.0.2
       vite: 4.0.0
@@ -538,11 +538,11 @@ importers:
       vite: ^4.0.0
       vitest: workspace:*
     devDependencies:
-      '@sveltejs/vite-plugin-svelte': 2.0.0_svelte@3.57.0+vite@4.0.0
-      '@testing-library/svelte': 3.2.2_svelte@3.57.0
+      '@sveltejs/vite-plugin-svelte': 2.0.0_svelte@3.58.0+vite@4.0.0
+      '@testing-library/svelte': 3.2.2_svelte@3.58.0
       '@vitest/ui': link:../../packages/ui
       jsdom: 21.1.1
-      svelte: 3.57.0
+      svelte: 3.58.0
       vite: 4.0.0
       vitest: link:../../packages/vitest
 
@@ -855,7 +855,7 @@ importers:
       '@types/diff': ^5.0.2
       '@types/istanbul-lib-coverage': ^2.0.4
       '@types/istanbul-reports': ^3.0.1
-      '@types/jsdom': ^20.0.1
+      '@types/jsdom': ^21.1.1
       '@types/micromatch': ^4.0.2
       '@types/node': '*'
       '@types/prompts': ^2.4.2
@@ -944,7 +944,7 @@ importers:
       '@types/diff': 5.0.2
       '@types/istanbul-lib-coverage': 2.0.4
       '@types/istanbul-reports': 3.0.1
-      '@types/jsdom': 20.0.1
+      '@types/jsdom': 21.1.1
       '@types/micromatch': 4.0.2
       '@types/prompts': 2.4.2
       '@types/sinonjs__fake-timers': 8.1.2
@@ -1101,7 +1101,7 @@ importers:
       '@vitejs/plugin-vue': 4.1.0_vite@4.0.0+vue@3.2.47
       '@vitest/browser': link:../../packages/browser
       '@vue/test-utils': 2.3.2_vue@3.2.47
-      happy-dom: 8.9.0
+      happy-dom: 9.1.0
       vite: 4.0.0
       vitest: link:../../packages/vitest
       vue: 3.2.47
@@ -7211,7 +7211,7 @@ packages:
       string.prototype.matchall: 4.0.7
     dev: true
 
-  /@sveltejs/vite-plugin-svelte/2.0.0_svelte@3.57.0+vite@4.0.0:
+  /@sveltejs/vite-plugin-svelte/2.0.0_svelte@3.58.0+vite@4.0.0:
     resolution: {integrity: sha512-oUFrYQarRv4fppmxdrv00qw3wX8Ycdj0uv33MfpRZyR8K67dyxiOcHnqkB0zSy5sDJA8RC/2aNtYhXJ8NINVHQ==}
     engines: {node: ^14.18.0 || >= 16}
     peerDependencies:
@@ -7222,8 +7222,8 @@ packages:
       deepmerge: 4.2.2
       kleur: 4.1.5
       magic-string: 0.27.0
-      svelte: 3.57.0
-      svelte-hmr: 0.15.1_svelte@3.57.0
+      svelte: 3.58.0
+      svelte-hmr: 0.15.1_svelte@3.58.0
       vite: 4.0.0
       vitefu: 0.2.3_vite@4.0.0
     transitivePeerDependencies:
@@ -7347,14 +7347,14 @@ packages:
       react-dom: 18.2.0_react@18.2.0
     dev: true
 
-  /@testing-library/svelte/3.2.2_svelte@3.57.0:
+  /@testing-library/svelte/3.2.2_svelte@3.58.0:
     resolution: {integrity: sha512-IKwZgqbekC3LpoRhSwhd0JswRGxKdAGkf39UiDXTywK61YyLXbCYoR831e/UUC6EeNW4hiHPY+2WuovxOgI5sw==}
     engines: {node: '>= 10'}
     peerDependencies:
       svelte: 3.x
     dependencies:
       '@testing-library/dom': 8.17.1
-      svelte: 3.57.0
+      svelte: 3.58.0
     dev: true
 
   /@testing-library/user-event/13.5.0:
@@ -7464,7 +7464,7 @@ packages:
     resolution: {integrity: sha512-xryQlOEIe1TduDWAOphR0ihfebKFSWOXpIsk+70JskCfRfW+xALdnJ0r1ZOTo85F9Qsjk6vtlU7edTYHbls9tA==}
     dependencies:
       '@types/cheerio': 0.22.31
-      '@types/react': 18.0.31
+      '@types/react': 18.0.32
     dev: true
 
   /@types/eslint-scope/3.7.4:
@@ -7584,8 +7584,8 @@ packages:
     resolution: {integrity: sha512-qC4bCqYGy1y/NP7dDVr7KJarn+PbX1nSpwA7JXdu0HxT3QYjO8MJ+cntENtHFVy2dRAyBV23OZ6MxsW1AM1L8g==}
     dev: true
 
-  /@types/jsdom/20.0.1:
-    resolution: {integrity: sha512-d0r18sZPmMQr1eG35u12FZfhIXNrnsPU/g5wvRKCUf/tOGilKKwYMYGqh33BNR6ba+2gkHw1EUiHoN3mn7E5IQ==}
+  /@types/jsdom/21.1.1:
+    resolution: {integrity: sha512-cZFuoVLtzKP3gmq9eNosUL1R50U+USkbLtUQ1bYVgl/lKp0FZM7Cq4aIHAL8oIvQ17uSHi7jXPtfDOdjPwBE7A==}
     dependencies:
       '@types/node': 18.15.11
       '@types/tough-cookie': 4.0.2
@@ -7707,19 +7707,19 @@ packages:
   /@types/react-dom/18.0.6:
     resolution: {integrity: sha512-/5OFZgfIPSwy+YuIBP/FgJnQnsxhZhjjrnxudMddeblOouIodEQ75X14Rr4wGSG/bknL+Omy9iWlLo1u/9GzAA==}
     dependencies:
-      '@types/react': 18.0.31
+      '@types/react': 18.0.32
     dev: true
 
   /@types/react-dom/18.0.8:
     resolution: {integrity: sha512-C3GYO0HLaOkk9dDAz3Dl4sbe4AKUGTCfFIZsz3n/82dPNN8Du533HzKatDxeUYWu24wJgMP1xICqkWk1YOLOIw==}
     dependencies:
-      '@types/react': 18.0.31
+      '@types/react': 18.0.32
     dev: true
 
   /@types/react-is/17.0.3:
     resolution: {integrity: sha512-aBTIWg1emtu95bLTLx0cpkxwGW3ueZv71nE2YFBpL8k/z5czEW8yYpOo8Dp+UUAFAtKwNaOsh/ioSeQnWlZcfw==}
     dependencies:
-      '@types/react': 18.0.31
+      '@types/react': 18.0.32
     dev: false
 
   /@types/react-test-renderer/17.0.2:
@@ -7731,7 +7731,7 @@ packages:
   /@types/react-transition-group/4.4.5:
     resolution: {integrity: sha512-juKD/eiSM3/xZYzjuzH6ZwpP+/lejltmiS3QEzV/vmb/Q8+HfDmxu+Baga8UEMGBqV88Nbg4l2hY/K2DkyaLLA==}
     dependencies:
-      '@types/react': 18.0.31
+      '@types/react': 18.0.32
     dev: false
 
   /@types/react/17.0.49:
@@ -7750,8 +7750,8 @@ packages:
       csstype: 3.1.0
     dev: true
 
-  /@types/react/18.0.31:
-    resolution: {integrity: sha512-EEG67of7DsvRDU6BLLI0p+k1GojDLz9+lZsnCpCRTa/lOokvyPBvp8S5x+A24hME3yyQuIipcP70KJ6H7Qupww==}
+  /@types/react/18.0.32:
+    resolution: {integrity: sha512-gYGXdtPQ9Cj0w2Fwqg5/ak6BcK3Z15YgjSqtyDizWUfx7mQ8drs0NBUzRRsAdoFVTO8kJ8L2TL8Skm7OFPnLUw==}
     dependencies:
       '@types/prop-types': 15.7.5
       '@types/scheduler': 0.16.2
@@ -14289,18 +14289,15 @@ packages:
       - encoding
     dev: true
 
-  /happy-dom/8.9.0:
-    resolution: {integrity: sha512-JZwJuGdR7ko8L61136YzmrLv7LgTh5b8XaEM3P709mLjyQuXJ3zHTDXvUtBBahRjGlcYW0zGjIiEWizoTUGKfA==}
+  /happy-dom/9.1.0:
+    resolution: {integrity: sha512-Z/oOcAJsZjHFOQ/VK8n0CnZBjWucZNeZwFdlDK234vIBW9IVYGWjSUR9ujK6nwsSzJ6vNdYuSZoiag72AzlD0A==}
     dependencies:
       css.escape: 1.5.1
       he: 1.2.0
       iconv-lite: 0.6.3
-      node-fetch: 2.6.7
       webidl-conversions: 7.0.0
       whatwg-encoding: 2.0.0
       whatwg-mimetype: 3.0.0
-    transitivePeerDependencies:
-      - encoding
     dev: true
 
   /has-ansi/2.0.0:
@@ -20582,17 +20579,17 @@ packages:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
 
-  /svelte-hmr/0.15.1_svelte@3.57.0:
+  /svelte-hmr/0.15.1_svelte@3.58.0:
     resolution: {integrity: sha512-BiKB4RZ8YSwRKCNVdNxK/GfY+r4Kjgp9jCLEy0DuqAKfmQtpL38cQK3afdpjw4sqSs4PLi3jIPJIFp259NkZtA==}
     engines: {node: ^12.20 || ^14.13.1 || >= 16}
     peerDependencies:
       svelte: '>=3.19.0'
     dependencies:
-      svelte: 3.57.0
+      svelte: 3.58.0
     dev: true
 
-  /svelte/3.57.0:
-    resolution: {integrity: sha512-WMXEvF+RtAaclw0t3bPDTUe19pplMlfyKDsixbHQYgCWi9+O9VN0kXU1OppzrB9gPAvz4NALuoca2LfW2bOjTQ==}
+  /svelte/3.58.0:
+    resolution: {integrity: sha512-brIBNNB76mXFmU/Kerm4wFnkskBbluBDCjx/8TcpYRb298Yh2dztS2kQ6bhtjMcvUhd5ynClfwpz5h2gnzdQ1A==}
     engines: {node: '>= 8'}
     dev: true
 
