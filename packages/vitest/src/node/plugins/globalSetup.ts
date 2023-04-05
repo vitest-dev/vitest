@@ -42,7 +42,7 @@ async function loadGlobalSetupFile(file: string, runner: ViteNodeRunner): Promis
   }
 }
 
-export const GlobalSetupPlugin = (ctx: Vitest): Plugin => {
+export function GlobalSetupPlugin(ctx: Vitest): Plugin {
   let globalSetupFiles: GlobalSetupFile[]
   return {
     name: 'vitest:global-setup-plugin',

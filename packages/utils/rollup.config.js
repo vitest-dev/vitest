@@ -1,4 +1,4 @@
-import { builtinModules } from 'module'
+import { builtinModules } from 'node:module'
 import { defineConfig } from 'rollup'
 import esbuild from 'rollup-plugin-esbuild'
 import dts from 'rollup-plugin-dts'

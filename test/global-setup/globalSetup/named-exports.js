@@ -1,4 +1,6 @@
-const sleep = async n => new Promise(resolve => setTimeout(resolve, n))
+async function sleep(n) {
+  return new Promise(resolve => setTimeout(resolve, n))
+}
 
 // let start
 

@@ -23,10 +23,14 @@ const client = new CustomSnapshotClient()
 // by default uses fs module, but you can provide your own implementation depending on the environment
 const environment = new NodeSnapshotEnvironment()
 
-const getCurrentFilepath = () => '/file.spec.ts'
-const getCurrentTestName = () => 'test1'
+function getCurrentFilepath() {
+  return '/file.spec.ts'
+}
+function getCurrentTestName() {
+  return 'test1'
+}
 
-const wrapper = (received) => {
+function wrapper(received) {
   function __INLINE_SNAPSHOT__(inlineSnapshot, message) {
     client.assert({
       received,

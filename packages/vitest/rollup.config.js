@@ -1,5 +1,5 @@
-import fs from 'fs'
-import { builtinModules } from 'module'
+import fs from 'node:fs'
+import { builtinModules } from 'node:module'
 import { dirname, join, normalize, relative, resolve } from 'pathe'
 import esbuild from 'rollup-plugin-esbuild'
 import dts from 'rollup-plugin-dts'

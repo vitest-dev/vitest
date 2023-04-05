@@ -20,9 +20,11 @@ export const directives = {
 FloatingVue.options.instantMove = true
 FloatingVue.options.distance = 10
 
-export const createRouter = () => _createRouter({
-  history: createWebHistory(BASE_PATH),
-  routes,
-})
+export function createRouter() {
+  return _createRouter({
+    history: createWebHistory(BASE_PATH),
+    routes,
+  })
+}
 
 export const plugins = [createRouter]

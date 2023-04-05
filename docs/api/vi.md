@@ -212,7 +212,9 @@ import { vi } from 'vitest'
 
 ```ts
 // ./increment.js
-export const increment = number => number + 1
+export function increment(number) {
+  return number + 1
+}
 ```
 
 ```ts
@@ -250,6 +252,7 @@ test('importing the next module imports mocked one', async () => {
   When `partial` is `true` it will expect a `Partial<T>` as a return value.
   ```ts
   import example from './example'
+  
   vi.mock('./example')
 
   test('1+1 equals 2', async () => {
@@ -599,7 +602,9 @@ IntersectionObserver === undefined
 
 ```ts
 // ./increment.js
-export const increment = number => number + 1
+export function increment(number) {
+  return number + 1
+}
 ```
 
 ```ts

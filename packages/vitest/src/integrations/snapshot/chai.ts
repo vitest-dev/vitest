@@ -14,14 +14,14 @@ export function getSnapshotClient(): SnapshotClient {
   return _client
 }
 
-const getErrorMessage = (err: unknown) => {
+function getErrorMessage(err: unknown) {
   if (err instanceof Error)
     return err.message
 
   return err
 }
 
-const getErrorString = (expected: () => void | Error, promise: string | undefined) => {
+function getErrorString(expected: () => void | Error, promise: string | undefined) {
   if (typeof expected !== 'function') {
     if (!promise)
       throw new Error(`expected must be a function, received ${typeof expected}`)

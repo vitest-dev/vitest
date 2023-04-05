@@ -1,5 +1,5 @@
 import zustand from 'zustand'
 
-export const magic = () => {
+export function magic() {
   return zustand()
 }

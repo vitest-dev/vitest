@@ -1,5 +1,5 @@
 /* eslint-disable no-restricted-imports */
-import { existsSync, promises as fs } from 'fs'
+import { existsSync, promises as fs } from 'node:fs'
 import { relative, resolve } from 'pathe'
 import type { TransformPluginContext } from 'rollup'
 import type { AfterSuiteRunMeta, CoverageIstanbulOptions, CoverageProvider, ReportContext, ResolvedCoverageOptions, Vitest } from 'vitest'

@@ -1,4 +1,4 @@
-import { createHash } from 'crypto'
+import { createHash } from 'node:crypto'
 import { resolve } from 'pathe'
 import { slash } from 'vite-node/utils'
 import type { Vitest } from '../core'
@@ -47,7 +47,7 @@ export class BaseSequencer implements TestSequencer {
 
         // run unknown first
         if (!statsA || !statsB)
-          return !statsA && statsB ? -1 : !statsB && statsA ? 1 : 0
+          return (!statsA && statsB) ? -1 : (!statsB && statsA) ? 1 : 0
 
         // run larger files first
         return statsB.size - statsA.size

@@ -1,3 +1,5 @@
 import { foo } from '.'
 
-export const b = () => `B${foo()}`
+export function b() {
+  return `B${foo()}`
+}

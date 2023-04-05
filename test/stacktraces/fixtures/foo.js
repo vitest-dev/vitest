@@ -1,2 +1,4 @@
-// eslint-disable-next-line no-undef
-export const add = () => bar()
+export function add() {
+  // eslint-disable-next-line no-undef
+  return bar()
+}

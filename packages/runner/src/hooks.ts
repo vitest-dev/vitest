@@ -3,13 +3,23 @@ import { getCurrentSuite, getRunner } from './suite'
 import { getCurrentTest } from './test-state'
 import { withTimeout } from './context'
 
-const getDefaultHookTimeout = () => getRunner().config.hookTimeout
+function getDefaultHookTimeout() {
+  return getRunner().config.hookTimeout
+}
 
 // suite hooks
-export const beforeAll = (fn: SuiteHooks['beforeAll'][0], timeout?: number) => getCurrentSuite().on('beforeAll', withTimeout(fn, timeout ?? getDefaultHookTimeout(), true))
-export const afterAll = (fn: SuiteHooks['afterAll'][0], timeout?: number) => getCurrentSuite().on('afterAll', withTimeout(fn, timeout ?? getDefaultHookTimeout(), true))
-export const beforeEach = <ExtraContext = {}>(fn: SuiteHooks<ExtraContext>['beforeEach'][0], timeout?: number) => getCurrentSuite<ExtraContext>().on('beforeEach', withTimeout(fn, timeout ?? getDefaultHookTimeout(), true))
-export const afterEach = <ExtraContext = {}>(fn: SuiteHooks<ExtraContext>['afterEach'][0], timeout?: number) => getCurrentSuite<ExtraContext>().on('afterEach', withTimeout(fn, timeout ?? getDefaultHookTimeout(), true))
+export function beforeAll(fn: SuiteHooks['beforeAll'][0], timeout?: number) {
+  return getCurrentSuite().on('beforeAll', withTimeout(fn, timeout ?? getDefaultHookTimeout(), true))
+}
+export function afterAll(fn: SuiteHooks['afterAll'][0], timeout?: number) {
+  return getCurrentSuite().on('afterAll', withTimeout(fn, timeout ?? getDefaultHookTimeout(), true))
+}
+export function beforeEach<ExtraContext = {}>(fn: SuiteHooks<ExtraContext>['beforeEach'][0], timeout?: number) {
+  return getCurrentSuite<ExtraContext>().on('beforeEach', withTimeout(fn, timeout ?? getDefaultHookTimeout(), true))
+}
+export function afterEach<ExtraContext = {}>(fn: SuiteHooks<ExtraContext>['afterEach'][0], timeout?: number) {
+  return getCurrentSuite<ExtraContext>().on('afterEach', withTimeout(fn, timeout ?? getDefaultHookTimeout(), true))
+}
 
 export const onTestFailed = createTestHook<OnTestFailedHandler>('onTestFailed', (test, handler) => {
   test.onFailed ||= []

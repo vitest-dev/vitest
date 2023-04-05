@@ -1,4 +1,4 @@
-import fs from 'fs'
+import fs from 'node:fs'
 import zlib from 'zlib'
 import { resolve } from 'pathe'
 import { execa } from 'execa'

@@ -41,14 +41,14 @@ function withSafeTimers(fn: () => void) {
 
 const promises = new Set<Promise<unknown>>()
 
-export const rpcDone = async () => {
+export async function rpcDone() {
   if (!promises.size)
     return
   const awaitable = Array.from(promises)
   return Promise.all(awaitable)
 }
 
-export const rpc = () => {
+export function rpc() {
   const { rpc } = getWorkerState()
   return new Proxy(rpc, {
     get(target, p, handler) {

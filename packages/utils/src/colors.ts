@@ -43,7 +43,9 @@ type Colors = ColorsMethods & {
 
 const colorsEntries = Object.entries(colorsMap)
 
-const string = (str: unknown) => String(str)
+function string(str: unknown) {
+  return String(str)
+}
 string.open = ''
 string.close = ''
 

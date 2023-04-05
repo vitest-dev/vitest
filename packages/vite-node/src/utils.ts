@@ -34,8 +34,9 @@ export function normalizeRequestId(id: string, base?: string): string {
 export const queryRE = /\?.*$/s
 export const hashRE = /#.*$/s
 
-export const cleanUrl = (url: string): string =>
-  url.replace(hashRE, '').replace(queryRE, '')
+export function cleanUrl(url: string): string {
+  return url.replace(hashRE, '').replace(queryRE, '')
+}
 
 const internalRequests = [
   '@vite/client',
@@ -44,7 +45,7 @@ const internalRequests = [
 
 const internalRequestRegexp = new RegExp(`^/?(${internalRequests.join('|')})$`)
 
-export const isInternalRequest = (id: string): boolean => {
+export function isInternalRequest(id: string): boolean {
   return internalRequestRegexp.test(id)
 }
 
@@ -82,7 +83,7 @@ export function toFilePath(id: string, root: string): { path: string; exists: bo
 
   // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
   return {
-    path: isWindows && absolute.startsWith('/')
+    path: (isWindows && absolute.startsWith('/'))
       ? slash(fileURLToPath(pathToFileURL(absolute.slice(1)).href))
       : absolute,
     exists,

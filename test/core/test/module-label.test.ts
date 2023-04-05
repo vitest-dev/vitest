@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest'
 import { calcExternalLabels, createModuleLabelItem } from '../../../packages/ui/client/composables/module-graph'
 
-const getExternalLabelsObj = (modules: string[]) => {
+function getExternalLabelsObj(modules: string[]) {
   const labels = modules.map(module => createModuleLabelItem(module))
   return Object.fromEntries(calcExternalLabels(labels))
 }

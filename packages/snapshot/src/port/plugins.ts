@@ -34,8 +34,10 @@ let PLUGINS: PrettyFormatPlugins = [
   MockSerializer,
 ]
 
-export const addSerializer = (plugin: PrettyFormatPlugin): void => {
+export function addSerializer(plugin: PrettyFormatPlugin): void {
   PLUGINS = [plugin].concat(PLUGINS)
 }
 
-export const getSerializers = (): PrettyFormatPlugins => PLUGINS
+export function getSerializers(): PrettyFormatPlugins {
+  return PLUGINS
+}

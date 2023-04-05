@@ -1,4 +1,4 @@
-import { builtinModules } from 'module'
+import { builtinModules } from 'node:module'
 import esbuild from 'rollup-plugin-esbuild'
 import nodeResolve from '@rollup/plugin-node-resolve'
 import dts from 'rollup-plugin-dts'

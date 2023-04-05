@@ -67,7 +67,7 @@ function render(tasks: Task[]): string {
   return output.join('')
 }
 
-export const createDotRenderer = (_tasks: Task[], options: DotRendererOptions) => {
+export function createDotRenderer(_tasks: Task[], options: DotRendererOptions) {
   let tasks = _tasks
   let timer: any
 

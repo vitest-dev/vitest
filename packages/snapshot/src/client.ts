@@ -3,7 +3,7 @@ import SnapshotState from './port/state'
 import type { SnapshotStateOptions } from './types'
 import type { RawSnapshotInfo } from './port/rawSnapshot'
 
-const createMismatchError = (message: string, actual: unknown, expected: unknown) => {
+function createMismatchError(message: string, actual: unknown, expected: unknown) {
   const error = new Error(message)
   Object.defineProperty(error, 'actual', {
     value: actual,

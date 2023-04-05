@@ -1,4 +1,4 @@
-import http from 'http'
+import http from 'node:http'
 
 export async function startServer(host: string, port: number): Promise<http.Server> {
   return new Promise((resolve) => {

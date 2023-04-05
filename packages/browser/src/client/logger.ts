@@ -3,7 +3,7 @@ import { importId } from './utils'
 
 const { Date, console } = globalThis
 
-export const setupConsoleLogSpy = async () => {
+export async function setupConsoleLogSpy() {
   const { stringify, format, utilInspect } = await importId('vitest/utils') as typeof import('vitest/utils')
   const { log, info, error, dir, dirxml, trace, time, timeEnd, timeLog, warn, debug, count, countReset } = console
   const formatInput = (input: unknown) => {

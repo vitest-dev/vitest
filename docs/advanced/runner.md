@@ -102,6 +102,7 @@ You can extend Vitest task system with your tasks. A task is an object that is p
 ```js
 // ./utils/custom.js
 import { getCurrentSuite, setFn } from 'vitest/suite'
+
 export { describe, beforeAll, afterAll } from 'vitest'
 
 // this function will be called, when Vitest collects tasks

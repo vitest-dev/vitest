@@ -1,7 +1,8 @@
-const showPopupWarning = <T>(name: string, value: T, defaultValue?: T) => (...params: any[]) => {
-  const formatedParams = params.map(p => JSON.stringify(p)).join(', ')
+function showPopupWarning<T>(name: string, value: T, defaultValue?: T) {
+  return (...params: any[]) => {
+    const formatedParams = params.map(p => JSON.stringify(p)).join(', ')
 
-  console.warn(`Vitest encountered a \`${name}(${formatedParams})\` call that it cannot handle by default, so it returned \`${value}\`. Read more in https://vitest.dev/guide/browser#thread-blocking-dialogs.
+    console.warn(`Vitest encountered a \`${name}(${formatedParams})\` call that it cannot handle by default, so it returned \`${value}\`. Read more in https://vitest.dev/guide/browser#thread-blocking-dialogs.
 If needed, mock the \`${name}\` call manually like:
 
 \`\`\`
@@ -11,10 +12,11 @@ vi.spyOn(window, "${name}")${defaultValue ? `.mockReturnValue(${JSON.stringify(d
 ${name}(${formatedParams})
 expect(${name}).toHaveBeenCalledWith(${formatedParams})
 \`\`\``)
-  return value
+    return value
+  }
 }
 
-export const setupDialogsSpy = () => {
+export function setupDialogsSpy() {
   globalThis.alert = showPopupWarning('alert', undefined)
   globalThis.confirm = showPopupWarning('confirm', false, true)
   globalThis.prompt = showPopupWarning('prompt', null, 'your value')

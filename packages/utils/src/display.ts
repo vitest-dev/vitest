@@ -1,4 +1,4 @@
-import util from 'util'
+import util from 'node:util'
 // @ts-expect-error doesn't have types
 import loupeImport from 'loupe'
 
@@ -28,7 +28,7 @@ export function objDisplay(obj: unknown) {
   if (str.length >= truncateThreshold) {
     if (type === '[object Function]') {
       const fn = obj as () => void
-      return !fn.name || fn.name === ''
+      return (!fn.name || fn.name === '')
         ? '[Function]'
         : `[Function: ${fn.name}]`
     }

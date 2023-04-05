@@ -7,7 +7,7 @@ interface CollectingPromise {
   resolve: () => void
 }
 
-export const isAggregateError = (err: unknown): err is AggregateErrorPonyfill => {
+export function isAggregateError(err: unknown): err is AggregateErrorPonyfill {
   if (typeof AggregateError !== 'undefined' && err instanceof AggregateError)
     return true
 

@@ -1,4 +1,4 @@
-import { AssertionError } from 'assert'
+import { AssertionError } from 'node:assert'
 import type { ErrorWithDiff, File, Suite, Task } from 'vitest'
 
 const file: File = {

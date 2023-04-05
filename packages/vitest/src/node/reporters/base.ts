@@ -1,4 +1,4 @@
-import { performance } from 'perf_hooks'
+import { performance } from 'node:perf_hooks'
 import c from 'picocolors'
 import type { ErrorWithDiff, File, Reporter, Task, TaskResultPack, UserConsoleLog } from '../../types'
 import { getFullName, getSafeTimers, getSuites, getTests, hasFailed, hasFailedSnapshot, isCI, isNode, relativePath } from '../../utils'
