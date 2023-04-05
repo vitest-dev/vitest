@@ -7,7 +7,6 @@ import { configFiles } from '../constants'
 import { Vitest } from './core'
 import { VitestPlugin } from './plugins'
 
-export { mergeConfig }
 export async function createVitest(mode: VitestRunMode, options: UserConfig, viteOverrides: ViteUserConfig = {}) {
   const ctx = new Vitest(mode)
   const root = resolve(options.root || process.cwd())

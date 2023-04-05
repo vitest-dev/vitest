@@ -40,20 +40,6 @@ const vitest = await createVitest('test', {
 })
 ```
 
-## mergeConfig
-
-You can merge Vitest config using [mergeConfig](https://vitejs.dev/guide/api-javascript.html#mergeconfig) function. It returns a new config object.
-
-```ts
-import { mergeConfig } from 'vitest/node'
-
-function mergeConfig(
-  defaults: Record<string, any>,
-  overrides: Record<string, any>,
-  isRoot = true,
-): Record<string, any>
-```
-
 ## Vitest
 
 Vitest instance requires the current test mode. It can be either:
