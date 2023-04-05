@@ -127,7 +127,7 @@ import { vi } from 'vitest'
   :::
 
   ::: warning
-	Mocking modules is not currently supported in the browser mode, but we are trying our best to deliver this feature and bring the support.
+	Mocking modules is not currently supported in the [browser mode](/guide/browser). You can track this feature in the GitHub <a href="https://github.com/vitest-dev/vitest/issues/3046">issue</a>.
   :::
 
   If `factory` is defined, all imports will return its result. Vitest calls factory only once and caches result for all subsequent imports until [`vi.unmock`](#vi-unmock) or [`vi.doUnmock`](#vi-dounmock) is called.
