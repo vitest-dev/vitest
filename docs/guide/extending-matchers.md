@@ -38,6 +38,10 @@ declare namespace Vi {
 }
 ```
 
+::: warning
+Don't forget to include the ambient declaration file in your `tsconfig.json`.
+:::
+
 The return value of a matcher should be compatible with the following interface:
 
 ```ts
