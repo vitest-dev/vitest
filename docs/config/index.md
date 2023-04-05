@@ -64,6 +64,10 @@ export default mergeConfig(viteConfig, defineConfig({
 }))
 ```
 
+::: warning
+`mergeConfig` helper is availabe in Vitest since v0.30.0. You can import it from `vite` directly, if you use lower version.
+:::
+
 ## Options
 
 :::tip
