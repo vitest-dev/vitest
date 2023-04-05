@@ -11,7 +11,6 @@ import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter,
 import { hasFailed, noop, slash, toArray } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
 import type { BrowserProvider } from '../types/browser'
-import { getBrowserProvider } from '../integrations/browser'
 import { CONFIG_NAME_START_REGEXP, configFiles } from '../constants'
 import { createPool } from './pool'
 import type { ProcessPool, WorkspaceSpec } from './pool'
@@ -211,19 +210,8 @@ export class Vitest {
     return this.coverageProvider
   }
 
-  async initBrowserProvider() {
-    if (this.browserProvider)
-      return this.browserProvider
-    const Provider = await getBrowserProvider(this.config.browser, this.runner)
-    this.browserProvider = new Provider()
-    const browser = this.config.browser.name
-    const supportedBrowsers = this.browserProvider.getSupportedBrowsers()
-    if (!browser)
-      throw new Error('Browser name is required. Please, set `test.browser.name` option manually.')
-    if (!supportedBrowsers.includes(browser))
-      throw new Error(`Browser "${browser}" is not supported by the browser provider "${this.browserProvider.name}". Supported browsers: ${supportedBrowsers.join(', ')}.`)
-    await this.browserProvider.initialize(this, { browser })
-    return this.browserProvider
+  async initBrowserProviders() {
+    return Promise.all(this.workspaces.map(w => w.initBrowserProvider()))
   }
 
   typecheck(filters?: string[]) {
@@ -239,9 +227,7 @@ export class Vitest {
     try {
       await this.initCoverageProvider()
       await this.coverageProvider?.clean(this.config.coverage.clean)
-
-      if (this.isBrowserEnabled())
-        await this.initBrowserProvider()
+      await this.initBrowserProviders()
     }
     catch (e) {
       this.logger.error(e)

@@ -8,6 +8,8 @@ import { createBrowserServer } from '../integrations/browser/server'
 import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig, Vitest } from '../types'
 import { deepMerge, hasFailed } from '../utils'
 import { Typechecker } from '../typecheck/typechecker'
+import type { BrowserProvider } from '../types/browser'
+import { getBrowserProvider } from '../integrations/browser'
 import { isBrowserEnabled, resolveConfig } from './config'
 import { WorkspaceVitestPlugin } from './plugins/workspace'
 import { VitestServer } from './server'
@@ -20,14 +22,14 @@ interface InitializeOptions {
 export async function initializeWorkspace(workspacePath: string, ctx: Vitest) {
   const workspace = new VitestWorkspace(workspacePath, ctx)
 
-  const configPath = workspacePath.endsWith('/')
+  const configFile = workspacePath.endsWith('/')
     ? false
     : workspacePath
 
   const config: ViteInlineConfig = {
     root: dirname(workspacePath),
     logLevel: 'error',
-    configFile: configPath,
+    configFile,
     // this will make "mode" = "test" inside defineConfig
     mode: ctx.config.mode || process.env.NODE_ENV,
     plugins: WorkspaceVitestPlugin(workspace),
@@ -36,7 +38,7 @@ export async function initializeWorkspace(workspacePath: string, ctx: Vitest) {
   const server = await createServer(config)
 
   // optimizer needs .listen() to be called
-  if (ctx.config.api?.port || ctx.config.deps?.experimentalOptimizer?.enabled)
+  if (ctx.config.api?.port || workspace.config.deps?.experimentalOptimizer?.enabled)
     await server.listen()
   else
     await server.pluginContainer.buildStart({})
@@ -55,6 +57,7 @@ export class VitestWorkspace {
   typechecker?: Typechecker
 
   closingPromise: Promise<unknown> | undefined
+  browserProvider: BrowserProvider | undefined
 
   constructor(
     public path: string,
@@ -247,5 +250,21 @@ export class VitestWorkspace {
       ].filter(Boolean))
     }
     return this.closingPromise
+  }
+
+  async initBrowserProvider() {
+    if (!this.isBrowserEnabled())
+      return
+    if (this.browserProvider)
+      return
+    const Provider = await getBrowserProvider(this.config.browser, this.runner)
+    this.browserProvider = new Provider()
+    const browser = this.config.browser.name
+    const supportedBrowsers = this.browserProvider.getSupportedBrowsers()
+    if (!browser)
+      throw new Error(`[${this.getName()}] Browser name is required. Please, set \`test.browser.name\` option manually.`)
+    if (!supportedBrowsers.includes(browser))
+      throw new Error(`[${this.getName()}] Browser "${browser}" is not supported by the browser provider "${this.browserProvider.name}". Supported browsers: ${supportedBrowsers.join(', ')}.`)
+    await this.browserProvider.initialize(this, { browser })
   }
 }

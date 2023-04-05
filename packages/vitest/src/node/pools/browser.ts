@@ -3,9 +3,10 @@ import { relative } from 'pathe'
 import type { Vitest } from '../core'
 import type { ProcessPool } from '../pool'
 import type { VitestWorkspace } from '../workspace'
+import type { BrowserProvider } from '../../types/browser'
 
 export function createBrowserPool(ctx: Vitest): ProcessPool {
-  const provider = ctx.browserProvider!
+  const providers = new Set<BrowserProvider>()
 
   const waitForTest = (id: string) => {
     const defer = createDefer()
@@ -14,6 +15,9 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
   }
 
   const runTests = async (workspace: VitestWorkspace, files: string[]) => {
+    const provider = workspace.browserProvider!
+    providers.add(provider)
+
     const origin = `http://${ctx.config.browser.api?.host || 'localhost'}:${workspace.browser.config.server.port}`
     const paths = files.map(file => relative(workspace.config.root, file))
 
@@ -51,7 +55,7 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
   return {
     async close() {
       ctx.state.browserTestPromises.clear()
-      await provider.close()
+      await Promise.all([...providers].map(provider => provider.close()))
     },
     runTests: runWorkspaceTests,
   }
