@@ -127,9 +127,11 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
         if (classNameStrategy !== 'scoped') {
           config.css ??= {}
           config.css.modules ??= {}
-          config.css.modules.generateScopedName = (name: string, filename: string) => {
-            const root = getRoot()
-            return generateScopedClassName(classNameStrategy, name, relative(root, filename))!
+          if (config.css.modules) {
+            config.css.modules.generateScopedName = (name: string, filename: string) => {
+              const root = getRoot()
+              return generateScopedClassName(classNameStrategy, name, relative(root, filename))!
+            }
           }
         }
 
