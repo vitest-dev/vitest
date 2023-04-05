@@ -1275,22 +1275,24 @@ type Awaitable<T> = T | PromiseLike<T>
 
   This function is compatible with Jest's `expect.extend`, so any library that uses it to create custom matchers will work with Vitest.
 
-  If you are using TypeScript, you can extend default Matchers interface with the code bellow:
+  If you are using TypeScript, you can extend default `Matchers` interface in an ambient declaration file (e.g: `vitest.d.ts`) with the code below:
 
   ```ts
   interface CustomMatchers<R = unknown> {
     toBeFoo(): R
   }
 
-  declare global {
-    namespace Vi {
-      interface Assertion extends CustomMatchers {}
-      interface AsymmetricMatchersContaining extends CustomMatchers {}
-    }
+  declare namespace Vi {
+    interface Assertion extends CustomMatchers {}
+    interface AsymmetricMatchersContaining extends CustomMatchers {}
 
     // Note: augmenting jest.Matchers interface will also work.
   }
   ```
+
+  ::: warning
+  Don't forget to include the ambient declaration file in your `tsconfig.json`.
+  :::
 
   :::tip
   If you want to know more, checkout [guide on extending matchers](/guide/extending-matchers).
