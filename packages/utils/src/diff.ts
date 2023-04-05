@@ -66,7 +66,7 @@ export function unifiedDiff(actual: unknown, expected: unknown, options: DiffOpt
     const linesBefore = start ? `  ${c.gray(`... ${start} more line${start > 1 ? 's' : ''}\n`)}` : ''
     const linesAfter = linesAfterCount ? `\n  ${c.gray(`... ${linesAfterCount} more line${linesAfterCount > 1 ? 's' : ''}\n`)}` : ''
     const diffOutput = lines.slice(start, end).map(line => line.replace(/␊\s*$/, '')).join('\n')
-    const helperBunner = linesAfter && (counts['+'] + counts['-'] > outputDiffLines) ? `\n  Use ${c.gray('test.outputDiffLines')} to increase the number of lines shown.` : ''
+    const helperBunner = (linesAfter && (counts['+'] + counts['-'] > outputDiffLines)) ? `\n  Use ${c.gray('test.outputDiffLines')} to increase the number of lines shown.` : ''
 
     return legend + linesBefore + diffOutput + linesAfter + helperBunner
   }

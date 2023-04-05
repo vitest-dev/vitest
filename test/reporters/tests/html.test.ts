@@ -1,5 +1,5 @@
 import fs from 'node:fs'
-import zlib from 'zlib'
+import zlib from 'node:zlib'
 import { resolve } from 'pathe'
 import { execa } from 'execa'
 import { describe, expect, it } from 'vitest'

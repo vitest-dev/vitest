@@ -122,7 +122,7 @@ export class Typechecker {
       const indexMap = createIndexMap(parsed)
       const markState = (task: Task, state: TaskState) => {
         task.result = {
-          state: task.mode === 'run' || task.mode === 'only' ? state : task.mode,
+          state: (task.mode === 'run' || task.mode === 'only') ? state : task.mode,
         }
         if (task.suite)
           markState(task.suite, state)
@@ -136,7 +136,7 @@ export class Typechecker {
         const index = indexMap.get(`${originalPos.line}:${originalPos.column}`)
         const definition = (index != null && sortedDefinitions.find(def => def.start <= index && def.end >= index))
         const suite = definition ? definition.task : file
-        const state: TaskState = suite.mode === 'run' || suite.mode === 'only' ? 'fail' : suite.mode
+        const state: TaskState = (suite.mode === 'run' || suite.mode === 'only') ? 'fail' : suite.mode
         const errors = suite.result?.errors || []
         suite.result = {
           state,
