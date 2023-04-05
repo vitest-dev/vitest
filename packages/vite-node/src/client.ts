@@ -44,7 +44,7 @@ const clientStub = {
   },
 }
 
-export const DEFAULT_REQUEST_STUBS = {
+export const DEFAULT_REQUEST_STUBS: Record<string, unknown> = {
   '/@vite/client': clientStub,
   '@vite/client': clientStub,
 }
