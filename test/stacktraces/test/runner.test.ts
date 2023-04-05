@@ -62,3 +62,27 @@ describe('stacktraces should pick error frame if present', async () => {
     }, 30000)
   }
 })
+
+describe('stacktrace should print error frame source file correctly', async () => {
+  const root = resolve(__dirname, '../fixtures')
+  const testFile = resolve(root, './error-in-deps.test.js')
+  it('error-in-deps', async () => {
+    // in Windows child_process is very unstable, we skip testing it
+    if (process.platform === 'win32' && process.env.CI)
+      return
+
+    const { stderr } = await execa('npx', ['vitest', 'run', testFile], {
+      cwd: root,
+      reject: false,
+      stdio: 'pipe',
+      env: {
+        ...process.env,
+        CI: 'true',
+        NO_COLOR: 'true',
+      },
+    })
+
+    // expect to print framestack of foo.js
+    expect(stderr).toMatchSnapshot('error-in-deps')
+  }, 30000)
+})
