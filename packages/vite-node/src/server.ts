@@ -192,7 +192,9 @@ export class ViteNodeServer {
   }
 
   protected async processTransformResult(result: TransformResult) {
-    return withInlineSourcemap(result)
+    return withInlineSourcemap(result, {
+      root: this.server.config.root,
+    })
   }
 
   private async _transformRequest(id: string, customTransformMode?: 'web' | 'ssr') {
