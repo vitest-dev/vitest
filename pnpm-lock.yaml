@@ -750,7 +750,7 @@ importers:
       '@vitest/ws-client': workspace:*
       '@vueuse/core': ^9.13.0
       ansi-to-html: ^0.7.2
-      birpc: ^0.2.10
+      birpc: 0.2.3
       codemirror: ^5.65.12
       codemirror-theme-vars: ^0.1.2
       cypress: ^12.9.0
@@ -792,7 +792,7 @@ importers:
       '@vitest/ws-client': link:../ws-client
       '@vueuse/core': 9.13.0_vue@3.2.47
       ansi-to-html: 0.7.2
-      birpc: 0.2.10
+      birpc: 0.2.3
       codemirror: 5.65.12
       codemirror-theme-vars: 0.1.2
       cypress: 12.9.0
@@ -863,7 +863,7 @@ importers:
       '@vitest/utils': workspace:*
       acorn: ^8.8.2
       acorn-walk: ^8.2.0
-      birpc: ^0.2.3
+      birpc: 0.2.3
       cac: ^6.7.14
       chai: ^4.3.7
       chai-subset: ^1.6.0
@@ -942,7 +942,7 @@ importers:
       '@types/micromatch': 4.0.2
       '@types/prompts': 2.4.4
       '@types/sinonjs__fake-timers': 8.1.2
-      birpc: 0.2.10
+      birpc: 0.2.3
       chai-subset: 1.6.0
       cli-truncate: 3.1.0
       event-target-polyfill: 0.0.3
@@ -983,12 +983,12 @@ importers:
   packages/ws-client:
     specifiers:
       '@vitest/runner': workspace:*
-      birpc: ^0.2.10
+      birpc: 0.2.3
       flatted: ^3.2.7
       rollup: ^2.79.1
       ws: ^8.13.0
     dependencies:
-      birpc: 0.2.10
+      birpc: 0.2.3
       flatted: 3.2.7
       ws: 8.13.0
     devDependencies:
@@ -10024,8 +10024,8 @@ packages:
     dev: true
     optional: true
 
-  /birpc/0.2.10:
-    resolution: {integrity: sha512-dECjfiLLuCWAlatyFOOCqjXsAbZl9A10Ix0TZh7FFs0Ho6b4zhumEtsXtADH2dMTWfJi320WdWjt3UAwEx0NFw==}
+  /birpc/0.2.3:
+    resolution: {integrity: sha512-mG7m06C2JkfuHSaLRHhtHtMEvyT1P1nUyyuk5W/7LMT2p7YYX/tfzJzD2ynZZHem3JTi6yJve0nHPdrs/gpXYg==}
 
   /bl/4.1.0:
     resolution: {integrity: sha512-1W07cM9gS6DcLperZfFSj+bWLtaPGSOHWhPiGzXmvVJbRLdG82sH/Kn8EtW1VqWVA54AKf2h5k5BbnIbwF3h6w==}
