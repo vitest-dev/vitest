@@ -171,7 +171,7 @@ The following principles apply
 ```js
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Client } from 'pg'
-import { failure, success } from './handlers'
+import { failure, success } from './handlers.js'
 
 // handlers
 export function success(data) {}
@@ -385,13 +385,13 @@ vi.spyOn(instance, 'method')
 ```
 
 - Mock exported variables
-```ts
-// some-path.ts
+```js
+// some-path.js
 export const getter = 'variable'
 ```
 ```ts
 // some-path.test.ts
-import * as exports from 'some-path'
+import * as exports from './some-path.js'
 vi.spyOn(exports, 'getter', 'get').mockReturnValue('mocked')
 ```
 
@@ -399,12 +399,12 @@ vi.spyOn(exports, 'getter', 'get').mockReturnValue('mocked')
 
 Example with `vi.mock`:
 ```ts
-// ./some-path.ts
+// ./some-path.js
 export function method() {}
 ```
 ```ts
-import { method } from './some-path.ts'
-vi.mock('./some-path.ts', () => ({
+import { method } from './some-path.js'
+vi.mock('./some-path.js', () => ({
   method: vi.fn()
 }))
 ```
@@ -415,7 +415,7 @@ Don't forget that `vi.mock` call is hoisted to top of the file. **Do not** put `
 
 Example with `vi.spyOn`:
 ```ts
-import * as exports from 'some-path'
+import * as exports from './some-path.js'
 vi.spyOn(exports, 'method').mockImplementation(() => {})
 ```
 
@@ -427,8 +427,8 @@ Example with `vi.mock` and prototype:
 export class SomeClass {}
 ```
 ```ts
-import { SomeClass } from 'some-path'
-vi.mock('some-path', () => {
+import { SomeClass } from './some-path.js'
+vi.mock('./some-path.js', () => {
   const SomeClass = vi.fn()
   SomeClass.prototype.someMethod = vi.fn()
   return { SomeClass }
@@ -438,8 +438,8 @@ vi.mock('some-path', () => {
 
 Example with `vi.mock` and return value:
 ```ts
-import { SomeClass } from 'some-path'
-vi.mock('some-path', () => {
+import { SomeClass } from './some-path.js'
+vi.mock('./some-path.js', () => {
   const SomeClass = vi.fn(() => ({
     someMethod: vi.fn()
   }))
@@ -451,7 +451,7 @@ vi.mock('some-path', () => {
 Example with `vi.spyOn`:
 
 ```ts
-import * as exports from 'some-path'
+import * as exports from './some-path.js'
 vi.spyOn(exports, 'SomeClass').mockImplementation(() => {
   // whatever suites you from first two examples
 })
@@ -470,15 +470,15 @@ export function useObject() {
 
 ```ts
 // useObject.js
-import { useObject } from 'some-path'
+import { useObject } from './some-path.js'
 const obj = useObject()
 obj.method()
 ```
 
 ```ts
 // useObject.test.js
-import { useObject } from 'some-path'
-vi.mock('some-path', () => {
+import { useObject } from './some-path.js'
+vi.mock('./some-path.js', () => {
   let _cache
   const useObject = () => {
     if (!_cache) {
@@ -501,9 +501,9 @@ expect(obj.method).toHaveBeenCalled()
 - Mock part of a module
 
 ```ts
-import { mocked, original } from 'some-path'
-vi.mock('some-path', async () => {
-  const mod = await vi.importActual<typeof import('some-path')>('some-path')
+import { mocked, original } from './some-path.js'
+vi.mock('./some-path.js', async () => {
+  const mod = await vi.importActual<typeof import('./some-path.js')>('./some-path.js')
   return {
     ...mod,
     mocked: vi.fn()
