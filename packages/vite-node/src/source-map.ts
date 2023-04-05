@@ -25,9 +25,11 @@ export function withInlineSourcemap(result: TransformResult, options: {
 
   // sources path from `ViteDevServer` may be not a valid filesystem path (eg. /src/main.js),
   // so we try to convert them to valid filesystem path
-  map.sources = map.sources.map((one) => {
-    const { exists, path } = toFilePath(one, options.root)
-    return exists ? path : one
+  map.sources = map.sources.map((source) => {
+    if (!source)
+      return source
+    const { exists, path } = toFilePath(source, options.root)
+    return exists ? path : source
   })
 
   // to reduce the payload size, we only inline vite node source map, because it's also the only one we use
