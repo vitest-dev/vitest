@@ -193,10 +193,8 @@
     "playwright": "^1.32.2",
     "pretty-format": "^27.5.1",
     "prompts": "^2.4.2",
-    "rollup": "^2.79.1",
     "safaridriver": "^0.0.4",
     "strip-ansi": "^7.0.1",
-    "typescript": "^5.0.3",
     "webdriverio": "^8.6.9",
     "ws": "^8.13.0"
   }

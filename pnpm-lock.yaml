@@ -37,9 +37,9 @@ importers:
       pnpm: 7.31.0
       rimraf: ^4.4.1
       rollup: ^3.20.2
-      rollup-plugin-dts: ^4.2.3
-      rollup-plugin-esbuild: ^4.10.1
-      rollup-plugin-license: ^2.8.2
+      rollup-plugin-dts: ^5.3.0
+      rollup-plugin-esbuild: ^5.0.0
+      rollup-plugin-license: ^3.0.1
       simple-git-hooks: ^2.8.1
       ts-node: ^10.9.1
       tsup: ^6.7.0
@@ -76,9 +76,9 @@ importers:
       pnpm: 7.31.0
       rimraf: 4.4.1
       rollup: 3.20.2
-      rollup-plugin-dts: 4.2.3_veck7oukgpukn72f5inxoyux7q
-      rollup-plugin-esbuild: 4.10.2_5zw4jabzuz2ebdah44cz4bpddu
-      rollup-plugin-license: 2.9.1_rollup@3.20.2
+      rollup-plugin-dts: 5.3.0_veck7oukgpukn72f5inxoyux7q
+      rollup-plugin-esbuild: 5.0.0_5zw4jabzuz2ebdah44cz4bpddu
+      rollup-plugin-license: 3.0.1_rollup@3.20.2
       simple-git-hooks: 2.8.1
       ts-node: 10.9.1_pj3xut33gta66wns5w7rs6cilm
       tsup: 6.7.0_5o75j5ygh43aewe2xahjobrg7m
@@ -626,7 +626,6 @@ importers:
       '@vitest/ui': workspace:*
       '@vitest/ws-client': workspace:*
       modern-node-polyfills: 0.1.0
-      rollup: ^2.79.1
       sirv: ^2.0.2
       vitest: workspace:*
     dependencies:
@@ -637,7 +636,6 @@ importers:
       '@vitest/runner': link:../runner
       '@vitest/ui': link:../ui
       '@vitest/ws-client': link:../ws-client
-      rollup: 2.79.1
       vitest: link:../vitest
 
   packages/coverage-c8:
@@ -763,7 +761,6 @@ importers:
       floating-vue: ^2.0.0-y.0
       pathe: ^1.1.0
       picocolors: ^1.0.0
-      rollup: ^2.79.1
       sirv: ^2.0.2
       splitpanes: ^3.1.5
       unocss: ^0.50.6
@@ -801,11 +798,10 @@ importers:
       cypress: 12.9.0
       d3-graph-controller: 2.5.2
       floating-vue: 2.0.0-y.0_vue@3.2.47
-      rollup: 2.79.1
       splitpanes: 3.1.5
-      unocss: 0.50.6_rollup@2.79.1+vite@4.2.1
-      unplugin-auto-import: 0.15.2_ckdhaf4icsozyri4wogbgokpny
-      unplugin-vue-components: 0.24.1_rollup@2.79.1+vue@3.2.47
+      unocss: 0.50.6_vite@4.2.1
+      unplugin-auto-import: 0.15.2_@vueuse+core@9.13.0
+      unplugin-vue-components: 0.24.1_vue@3.2.47
       vite: 4.2.1
       vite-plugin-pages: 0.29.0_vite@4.2.1
       vue: 3.2.47
@@ -895,7 +891,6 @@ importers:
       playwright: ^1.32.2
       pretty-format: ^27.5.1
       prompts: ^2.4.2
-      rollup: ^2.79.1
       safaridriver: ^0.0.4
       source-map: ^0.6.1
       std-env: ^3.3.2
@@ -903,7 +898,6 @@ importers:
       strip-literal: ^1.0.1
       tinybench: ^2.4.0
       tinypool: ^0.4.0
-      typescript: ^5.0.3
       vite: ^4.2.0
       vite-node: workspace:*
       webdriverio: ^8.6.9
@@ -968,11 +962,9 @@ importers:
       playwright: 1.32.2
       pretty-format: 27.5.1
       prompts: 2.4.2
-      rollup: 2.79.1
       safaridriver: 0.0.4
       strip-ansi: 7.0.1
-      typescript: 5.0.3
-      webdriverio: 8.6.9_typescript@5.0.3
+      webdriverio: 8.6.9
       ws: 8.13.0
 
   packages/web-worker:
@@ -981,16 +973,12 @@ importers:
       '@types/ungap__structured-clone': ^0.3.0
       '@ungap/structured-clone': ^1.0.2
       debug: ^4.3.4
-      rollup: ^2.79.1
-      vite-node: workspace:*
     dependencies:
       debug: 4.3.4
-      vite-node: link:../vite-node
     devDependencies:
       '@types/debug': 4.1.7
       '@types/ungap__structured-clone': 0.3.0
       '@ungap/structured-clone': 1.0.2
-      rollup: 2.79.1
 
   packages/ws-client:
     specifiers:
@@ -5858,21 +5846,6 @@ packages:
       picomatch: 2.3.1
     dev: true
 
-  /@rollup/pluginutils/5.0.2_rollup@2.79.1:
-    resolution: {integrity: sha512-pTd9rIsP92h+B6wWwFbW8RkZv4hiR/xKsqre4SIuAOaOEQRxi0lqLke9k2/7WegC85GgUs9pjmOjCUi3In4vwA==}
-    engines: {node: '>=14.0.0'}
-    peerDependencies:
-      rollup: ^1.20.0||^2.0.0||^3.0.0
-    peerDependenciesMeta:
-      rollup:
-        optional: true
-    dependencies:
-      '@types/estree': 1.0.0
-      estree-walker: 2.0.2
-      picomatch: 2.3.1
-      rollup: 2.79.1
-    dev: true
-
   /@rollup/pluginutils/5.0.2_rollup@3.20.2:
     resolution: {integrity: sha512-pTd9rIsP92h+B6wWwFbW8RkZv4hiR/xKsqre4SIuAOaOEQRxi0lqLke9k2/7WegC85GgUs9pjmOjCUi3In4vwA==}
     engines: {node: '>=14.0.0'}
@@ -8091,17 +8064,6 @@ packages:
     resolution: {integrity: sha512-06PHwE0K24Wi8FBmC8MuMi/+nQ3DTpcXYL3y/IaZz2ScY2GOJXOe8fyMykVXyLOKxpL2Y0frAnJZmm65OxzMLQ==}
     dev: true
 
-  /@unocss/astro/0.50.6_rollup@2.79.1+vite@4.2.1:
-    resolution: {integrity: sha512-gSGQIh+hBCor7KbAylu4wBQaMZp3AkT8dW9E6jrecpluVxzGGdar93a79Wqs76OlWiu7hr8zOyRbSDgfkwDung==}
-    dependencies:
-      '@unocss/core': 0.50.6
-      '@unocss/reset': 0.50.6
-      '@unocss/vite': 0.50.6_rollup@2.79.1+vite@4.2.1
-    transitivePeerDependencies:
-      - rollup
-      - vite
-    dev: true
-
   /@unocss/astro/0.50.6_vite@4.2.1:
     resolution: {integrity: sha512-gSGQIh+hBCor7KbAylu4wBQaMZp3AkT8dW9E6jrecpluVxzGGdar93a79Wqs76OlWiu7hr8zOyRbSDgfkwDung==}
     dependencies:
@@ -8120,28 +8082,6 @@ packages:
     dependencies:
       '@ampproject/remapping': 2.2.0
       '@rollup/pluginutils': 5.0.2
-      '@unocss/config': 0.50.6
-      '@unocss/core': 0.50.6
-      '@unocss/preset-uno': 0.50.6
-      cac: 6.7.14
-      chokidar: 3.5.3
-      colorette: 2.0.19
-      consola: 2.15.3
-      fast-glob: 3.2.12
-      magic-string: 0.30.0
-      pathe: 1.1.0
-      perfect-debounce: 0.1.3
-    transitivePeerDependencies:
-      - rollup
-    dev: true
-
-  /@unocss/cli/0.50.6_rollup@2.79.1:
-    resolution: {integrity: sha512-La/KeZCpI7WxuqiUj37K7k/mh08oIGm15u8pkHUs2z+XtFWLemjWPeu84NK3cLgyUGlO2nwpDm2Awye4G1GgCg==}
-    engines: {node: '>=14'}
-    hasBin: true
-    dependencies:
-      '@ampproject/remapping': 2.2.0
-      '@rollup/pluginutils': 5.0.2_rollup@2.79.1
       '@unocss/config': 0.50.6
       '@unocss/core': 0.50.6
       '@unocss/preset-uno': 0.50.6
@@ -8276,26 +8216,6 @@ packages:
     resolution: {integrity: sha512-eAbJ2Ho1lYaFvpKexqUqixh2TvzcE/DNSIHncr/9Ezo9s06kkHxw4KeIxw//TF26zYP7IJx8l5F58HoSjdKwbQ==}
     dependencies:
       '@unocss/core': 0.50.6
-    dev: true
-
-  /@unocss/vite/0.50.6_rollup@2.79.1+vite@4.2.1:
-    resolution: {integrity: sha512-BBfNHWRTD69ToNX4NlYdORFG6uH51HCjX+vZ8HAVgYHpSeVWziG3srnGYOk5IS0pKPzQGoLBlz8rstMsGhrAjA==}
-    peerDependencies:
-      vite: ^2.9.0 || ^3.0.0-0 || ^4.0.0
-    dependencies:
-      '@ampproject/remapping': 2.2.0
-      '@rollup/pluginutils': 5.0.2_rollup@2.79.1
-      '@unocss/config': 0.50.6
-      '@unocss/core': 0.50.6
-      '@unocss/inspector': 0.50.6
-      '@unocss/scope': 0.50.6
-      '@unocss/transformer-directives': 0.50.6
-      chokidar: 3.5.3
-      fast-glob: 3.2.12
-      magic-string: 0.30.0
-      vite: 4.2.1
-    transitivePeerDependencies:
-      - rollup
     dev: true
 
   /@unocss/vite/0.50.6_vite@4.2.1:
@@ -11996,7 +11916,7 @@ packages:
     resolution: {integrity: sha512-0cuGS8+jhR67Fy7qG3i3Pc7Aw494sb9yG9QgpG97SFVWwolgYjlhJg7n+UaHxOQT30d1TYu/EYe9k01ivLErIg==}
     dev: true
 
-  /devtools/8.6.9_typescript@5.0.3:
+  /devtools/8.6.9:
     resolution: {integrity: sha512-Xv7NA5nUPU2ma/VMcAYRIMLX4+YrsEOXMG6ZGPVuU5tC9zylb5L7fkBCqjqYJ/kkVWibbIn3l63hMpnZ63AS5w==}
     engines: {node: ^16.13 || >=18}
     dependencies:
@@ -12009,7 +11929,7 @@ packages:
       chrome-launcher: 0.15.1
       edge-paths: 3.0.5
       import-meta-resolve: 2.2.2
-      puppeteer-core: 19.8.0_typescript@5.0.3
+      puppeteer-core: 19.8.0
       query-selector-shadow-dom: 1.0.1
       ua-parser-js: 1.0.34
       uuid: 9.0.0
@@ -18943,7 +18863,7 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
-  /puppeteer-core/19.8.0_typescript@5.0.3:
+  /puppeteer-core/19.8.0:
     resolution: {integrity: sha512-5gBkLR9nae7chWDhI3mpj5QA+hPmjEOW29qw5ap5g51Uo5Lxe5Yip1uyQwZSjg5Wn/eyE9grh2Lyx3m8rPK90A==}
     engines: {node: '>=14.14.0'}
     peerDependencies:
@@ -18960,7 +18880,6 @@ packages:
       https-proxy-agent: 5.0.1
       proxy-from-env: 1.1.0
       tar-fs: 2.1.1
-      typescript: 5.0.3
       unbzip2-stream: 1.4.3
       ws: 8.13.0
     transitivePeerDependencies:
@@ -19898,22 +19817,22 @@ packages:
       inherits: 2.0.4
     dev: true
 
-  /rollup-plugin-dts/4.2.3_veck7oukgpukn72f5inxoyux7q:
-    resolution: {integrity: sha512-jlcpItqM2efqfIiKzDB/IKOS9E9fDvbkJSGw5GtK/PqPGS9eC3R3JKyw2VvpTktZA+TNgJRMu1NTv244aTUzzQ==}
-    engines: {node: '>=v12.22.12'}
+  /rollup-plugin-dts/5.3.0_veck7oukgpukn72f5inxoyux7q:
+    resolution: {integrity: sha512-8FXp0ZkyZj1iU5klkIJYLjIq/YZSwBoERu33QBDxm/1yw5UU4txrEtcmMkrq+ZiKu3Q4qvPCNqc3ovX6rjqzbQ==}
+    engines: {node: '>=v14'}
     peerDependencies:
-      rollup: ^2.55
-      typescript: ^4.1
+      rollup: ^3.0.0
+      typescript: ^4.1 || ^5.0
     dependencies:
-      magic-string: 0.26.7
+      magic-string: 0.30.0
       rollup: 3.20.2
       typescript: 5.0.3
     optionalDependencies:
       '@babel/code-frame': 7.18.6
     dev: true
 
-  /rollup-plugin-esbuild/4.10.2_5zw4jabzuz2ebdah44cz4bpddu:
-    resolution: {integrity: sha512-OPrBgdN1ZC2zQvq/rm5Zvzpb0Rez7zbbVJ+1b5Az//kLlfhwR1mqOP3wAhkg9sn5nF7p+97p55TORE0RNXzNcw==}
+  /rollup-plugin-esbuild/5.0.0_5zw4jabzuz2ebdah44cz4bpddu:
+    resolution: {integrity: sha512-1cRIOHAPh8WQgdQQyyvFdeOdxuiyk+zB5zJ5+YOwrZP4cJ0MT3Fs48pQxrZeyZHcn+klFherytILVfE4aYrneg==}
     engines: {node: '>=14.18.0', npm: '>=8.0.0'}
     peerDependencies:
       esbuild: '>=0.10.1'
@@ -19930,11 +19849,11 @@ packages:
       - supports-color
     dev: true
 
-  /rollup-plugin-license/2.9.1_rollup@3.20.2:
-    resolution: {integrity: sha512-C26f/bFXR52tzpBMllDnf5m2ETqRuyrrj3m8i3YY4imDwbXtunop+Lj1mO9mn/sZF8gKknOycN1Sm+kMGBd6RA==}
-    engines: {node: '>=10.0.0'}
+  /rollup-plugin-license/3.0.1_rollup@3.20.2:
+    resolution: {integrity: sha512-/lec6Y94Y3wMfTDeYTO/jSXII0GQ/XkDZCiqkMKxyU5D5nGPaxr/2JNYvAgYsoCYuOLGOanKDPjCCQiTT96p7A==}
+    engines: {node: '>=14.0.0'}
     peerDependencies:
-      rollup: ^1.0.0 || ^2.0.0
+      rollup: ^1.0.0 || ^2.0.0 || ^3.0.0
     dependencies:
       commenting: 1.1.0
       glob: 7.2.3
@@ -21834,10 +21753,10 @@ packages:
       - webpack
     dev: true
 
-  /unimport/3.0.5_rollup@2.79.1:
+  /unimport/3.0.5:
     resolution: {integrity: sha512-enRW0sVcTBxUZY6R2iumWMUsPbGC5GW9jM89VtF0pFUz9vDPrvEmOAklbSE/a4fqhjW/7dMWBvfLw/IDlBaPdQ==}
     dependencies:
-      '@rollup/pluginutils': 5.0.2_rollup@2.79.1
+      '@rollup/pluginutils': 5.0.2
       escape-string-regexp: 5.0.0
       fast-glob: 3.2.12
       local-pkg: 0.4.3
@@ -21947,39 +21866,6 @@ packages:
       detect-node: 2.1.0
     dev: false
 
-  /unocss/0.50.6_rollup@2.79.1+vite@4.2.1:
-    resolution: {integrity: sha512-7cKiIB/ssAPvCDUcFMs0jm0FzIyQKfgIjUzBYZ5dVFthOvN5dcFh7bCZE9dIM862n7oW8FjbkTxwdTbRqqJQVQ==}
-    engines: {node: '>=14'}
-    peerDependencies:
-      '@unocss/webpack': 0.50.6
-    peerDependenciesMeta:
-      '@unocss/webpack':
-        optional: true
-    dependencies:
-      '@unocss/astro': 0.50.6_rollup@2.79.1+vite@4.2.1
-      '@unocss/cli': 0.50.6_rollup@2.79.1
-      '@unocss/core': 0.50.6
-      '@unocss/postcss': 0.50.6
-      '@unocss/preset-attributify': 0.50.6
-      '@unocss/preset-icons': 0.50.6
-      '@unocss/preset-mini': 0.50.6
-      '@unocss/preset-tagify': 0.50.6
-      '@unocss/preset-typography': 0.50.6
-      '@unocss/preset-uno': 0.50.6
-      '@unocss/preset-web-fonts': 0.50.6
-      '@unocss/preset-wind': 0.50.6
-      '@unocss/reset': 0.50.6
-      '@unocss/transformer-attributify-jsx': 0.50.6
-      '@unocss/transformer-compile-class': 0.50.6
-      '@unocss/transformer-directives': 0.50.6
-      '@unocss/transformer-variant-group': 0.50.6
-      '@unocss/vite': 0.50.6_rollup@2.79.1+vite@4.2.1
-    transitivePeerDependencies:
-      - rollup
-      - supports-color
-      - vite
-    dev: true
-
   /unocss/0.50.6_vite@4.2.1:
     resolution: {integrity: sha512-7cKiIB/ssAPvCDUcFMs0jm0FzIyQKfgIjUzBYZ5dVFthOvN5dcFh7bCZE9dIM862n7oW8FjbkTxwdTbRqqJQVQ==}
     engines: {node: '>=14'}
@@ -22040,7 +21926,7 @@ packages:
       - webpack
     dev: true
 
-  /unplugin-auto-import/0.15.2_ckdhaf4icsozyri4wogbgokpny:
+  /unplugin-auto-import/0.15.2_@vueuse+core@9.13.0:
     resolution: {integrity: sha512-Wivfu+xccgvEZG8QtZcIvt6napfX9wyOFqM//7FHOtev8+k+dp3ykiqsEl6TODgHmqTTBeQX4Ah1JvRgUNjlkg==}
     engines: {node: '>=14'}
     peerDependencies:
@@ -22053,12 +21939,12 @@ packages:
         optional: true
     dependencies:
       '@antfu/utils': 0.7.2
-      '@rollup/pluginutils': 5.0.2_rollup@2.79.1
+      '@rollup/pluginutils': 5.0.2
       '@vueuse/core': 9.13.0_vue@3.2.47
       local-pkg: 0.4.3
       magic-string: 0.30.0
       minimatch: 7.4.5
-      unimport: 3.0.5_rollup@2.79.1
+      unimport: 3.0.5
       unplugin: 1.3.1
     transitivePeerDependencies:
       - rollup
@@ -22091,35 +21977,6 @@ packages:
       - supports-color
       - vite
       - webpack
-    dev: true
-
-  /unplugin-vue-components/0.24.1_rollup@2.79.1+vue@3.2.47:
-    resolution: {integrity: sha512-T3A8HkZoIE1Cja95xNqolwza0yD5IVlgZZ1PVAGvVCx8xthmjsv38xWRCtHtwl+rvZyL9uif42SRkDGw9aCfMA==}
-    engines: {node: '>=14'}
-    peerDependencies:
-      '@babel/parser': ^7.15.8
-      '@nuxt/kit': ^3.2.2
-      vue: 2 || 3
-    peerDependenciesMeta:
-      '@babel/parser':
-        optional: true
-      '@nuxt/kit':
-        optional: true
-    dependencies:
-      '@antfu/utils': 0.7.2
-      '@rollup/pluginutils': 5.0.2_rollup@2.79.1
-      chokidar: 3.5.3
-      debug: 4.3.4
-      fast-glob: 3.2.12
-      local-pkg: 0.4.3
-      magic-string: 0.30.0
-      minimatch: 7.4.2
-      resolve: 1.22.1
-      unplugin: 1.3.1
-      vue: 3.2.47
-    transitivePeerDependencies:
-      - rollup
-      - supports-color
     dev: true
 
   /unplugin-vue-components/0.24.1_vue@3.2.47:
@@ -22857,7 +22714,7 @@ packages:
       - utf-8-validate
     dev: true
 
-  /webdriverio/8.6.9_typescript@5.0.3:
+  /webdriverio/8.6.9:
     resolution: {integrity: sha512-fyRdDc7vUBje5II0NdpjTTGh9BeTRtva+pDO52dmHiou1lF5Zths7/RlYpRb8xqYeWnCsAaSb7NTkskDvZxbow==}
     engines: {node: ^16.13 || >=18}
     dependencies:
@@ -22872,7 +22729,7 @@ packages:
       aria-query: 5.0.2
       css-shorthand-properties: 1.1.1
       css-value: 0.0.1
-      devtools: 8.6.9_typescript@5.0.3
+      devtools: 8.6.9
       devtools-protocol: 0.0.1122063
       grapheme-splitter: 1.0.4
       import-meta-resolve: 2.2.2
@@ -22880,7 +22737,7 @@ packages:
       lodash.clonedeep: 4.5.0
       lodash.zip: 4.2.0
       minimatch: 7.4.5
-      puppeteer-core: 19.8.0_typescript@5.0.3
+      puppeteer-core: 19.8.0
       query-selector-shadow-dom: 1.0.1
       resq: 1.11.0
       rgb2hex: 0.2.5

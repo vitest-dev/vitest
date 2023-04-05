@@ -1,4 +1,5 @@
-import util from 'node:util'
+// eslint-disable-next-line unicorn/prefer-node-protocol
+import util from 'util'
 // @ts-expect-error doesn't have types
 import loupeImport from 'loupe'
 

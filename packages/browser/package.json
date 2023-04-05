@@ -44,7 +44,6 @@
     "@vitest/runner": "workspace:*",
     "@vitest/ui": "workspace:*",
     "@vitest/ws-client": "workspace:*",
-    "rollup": "^2.79.1",
     "vitest": "workspace:*"
   }
 }

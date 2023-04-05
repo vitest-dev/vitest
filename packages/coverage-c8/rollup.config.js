@@ -6,7 +6,7 @@ import json from '@rollup/plugin-json'
 import alias from '@rollup/plugin-alias'
 import nodeResolve from '@rollup/plugin-node-resolve'
 import { join } from 'pathe'
-import pkg from './package.json'
+import pkg from './package.json' assert { type: 'json' }
 
 const entries = {
   index: 'src/index.ts',
