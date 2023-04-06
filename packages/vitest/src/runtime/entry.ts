@@ -6,7 +6,7 @@ import { getWorkerState, resetModules } from '../utils'
 import { vi } from '../integrations/vi'
 import { distDir } from '../paths'
 import { startCoverageInsideWorker, stopCoverageInsideWorker, takeCoverageInsideWorker } from '../integrations/coverage'
-import { setupConfig } from '../integrations/chai'
+import { setupChaiConfig } from '../integrations/chai'
 import { setupGlobalEnv, withEnv } from './setup.node'
 import { rpc } from './rpc'
 import type { VitestExecutor } from './execute'
@@ -73,7 +73,7 @@ export async function run(files: string[], config: ResolvedConfig, environment: 
   const workerState = getWorkerState()
 
   if (config.chaiConfig)
-    setupConfig(config.chaiConfig)
+    setupChaiConfig(config.chaiConfig)
 
   const runner = await getTestRunner(config, executor)
 

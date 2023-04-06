@@ -78,7 +78,7 @@ Object.defineProperty(globalThis, GLOBAL_EXPECT, {
 
 export { assert, should } from 'chai'
 export { chai, globalExpect as expect }
-export const setupConfig = (config: chaiConfig) => {
+export const setupChaiConfig = (config: ChaiConfig) => {
   Object.assign(chai.config, config)
 }
-export type chaiConfig = Partial<typeof chai.config>
+export type ChaiConfig = Omit<Partial<typeof chai.config>, 'useProxy' | 'proxyExcludedKeys'>
