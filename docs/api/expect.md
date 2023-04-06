@@ -498,6 +498,10 @@ type Awaitable<T> = T | PromiseLike<T>
   })
   ```
 
+::: tip
+If the value in the error message is too truncated, you can increase [chaiConfig.truncateThreshold](/config/#chaiconfig-truncatethreshold) in your config file.
+:::
+
 ## toMatchObject
 
 - **Type:** `(received: object | array) => Awaitable<void>`
