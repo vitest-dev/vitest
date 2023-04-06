@@ -4,8 +4,8 @@
   "module": "true",
   "scripts": {
     "test": "pnpm run test:webdriverio && pnpm run test:playwright",
-    "test:webdriverio": "cross-env PROVIDER=webdriverio node --test specs/",
-    "test:playwright": "cross-env PROVIDER=playwright node --test specs/",
+    "test:webdriverio": "PROVIDER=webdriverio node --test specs/",
+    "test:playwright": "PROVIDER=playwright node --test specs/",
     "coverage": "vitest --coverage.enabled --coverage.provider=istanbul"
   },
   "devDependencies": {
