@@ -30,8 +30,13 @@ export function withInlineSourcemap(result: TransformResult, options: {
   map.sources = map.sources?.map((source) => {
     if (!source)
       return source
-    // just a filename
-    if (source === basename(source) && source === basename(options.filepath))
+    // make source absolute again, it might not be relative to the root, but to the "source root"
+    // https://github.com/bmeurer/vite/blob/172c3e36226ec4bdf2c9d5f8fa84310bde3fec54/packages/vite/src/node/server/transformRequest.ts#L281
+    if (
+      source === basename(source)
+      && source === basename(options.filepath)
+      && options.filepath.startsWith(options.root)
+    )
       return options.filepath
     const { exists, path } = toFilePath(source, options.root)
     return exists ? path : source
