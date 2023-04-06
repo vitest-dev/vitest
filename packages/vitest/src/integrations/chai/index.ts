@@ -1,3 +1,5 @@
+// CI failes only for this file, but it works locally
+
 import * as chai from 'chai'
 import './setup'
 import type { Test } from '@vitest/runner'
