@@ -1341,8 +1341,9 @@ The number of milliseconds after which a test is considered slow and reported as
 
 - **Type:** `{ includeStack?, showDiff?, truncateThreshold? }`
 - **Default:** `{ includeStack: false, showDiff: true, truncateThreshold: 40 }`
+- **Version:** Vitest 0.30.0
 
-Equivalent to [Chai config](https://github.com/chaijs/chai/blob/4.x.x/lib/chai/config.js). 
+Equivalent to [Chai config](https://github.com/chaijs/chai/blob/4.x.x/lib/chai/config.js).
 
 #### chaiConfig.includeStack
 
