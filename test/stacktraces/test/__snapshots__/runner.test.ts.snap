@@ -5,11 +5,13 @@ exports[`stacktrace should print error frame source file correctly > error-in-de
 
  FAIL  error-in-deps.test.js > error in deps
 ReferenceError: bar is not defined
- ❯ Module.add foo.js:2:26
-      1| // eslint-disable-next-line no-undef
-      2| export const add = () => bar()
-       |                          ^
-      3| 
+ ❯ Module.add foo.js:3:3
+      1| export function add() {
+      2|   // eslint-disable-next-line no-undef
+      3|   return bar()
+       |   ^
+      4| }
+      5| 
  ❯ error-in-deps.test.js:5:3
 
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯

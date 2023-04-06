@@ -1,8 +1,7 @@
 import type { TransformResult } from 'vite'
-import { basename } from 'pathe'
+import { dirname, isAbsolute, join, resolve } from 'pathe'
 import type { EncodedSourceMap } from '@jridgewell/trace-mapping'
 import { install } from './source-map-handler'
-import { toFilePath } from './utils'
 
 interface InstallSourceMapSupportOptions {
   getSourceMap: (source: string) => EncodedSourceMap | null | undefined
@@ -32,14 +31,11 @@ export function withInlineSourcemap(result: TransformResult, options: {
       return source
     // make source absolute again, it might not be relative to the root, but to the "source root"
     // https://github.com/bmeurer/vite/blob/172c3e36226ec4bdf2c9d5f8fa84310bde3fec54/packages/vite/src/node/server/transformRequest.ts#L281
-    if (
-      source === basename(source)
-      && source === basename(options.filepath)
-      && options.filepath.startsWith(options.root)
-    )
-      return options.filepath
-    const { exists, path } = toFilePath(source, options.root)
-    return exists ? path : source
+    if (!isAbsolute(source))
+      return resolve(dirname(options.filepath), source)
+    if (!source.startsWith(options.root))
+      return join(options.root, source)
+    return source
   })
 
   // to reduce the payload size, we only inline vite node source map, because it's also the only one we use

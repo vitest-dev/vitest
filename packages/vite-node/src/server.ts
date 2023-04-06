@@ -177,7 +177,7 @@ export class ViteNodeServer {
     }
     else {
       const start = performance.now()
-      const r = await this._transformRequest(id, transformMode)
+      const r = await this._transformRequest(id, filePath, transformMode)
       duration = performance.now() - start
       result = { code: r?.code, map: r?.map as any }
     }
@@ -198,7 +198,7 @@ export class ViteNodeServer {
     })
   }
 
-  private async _transformRequest(id: string, customTransformMode?: 'web' | 'ssr') {
+  private async _transformRequest(id: string, filePath?: string, customTransformMode?: 'web' | 'ssr') {
     debugRequest(id)
 
     let result: TransformResult | null = null
@@ -224,7 +224,7 @@ export class ViteNodeServer {
 
     const sourcemap = this.options.sourcemap ?? 'inline'
     if (sourcemap === 'inline' && result && !id.includes('node_modules'))
-      result = await this.processTransformResult(id, result)
+      result = await this.processTransformResult(filePath || id, result)
 
     if (this.options.debug?.dumpModules)
       await this.debugger?.dumpFile(id, result)
