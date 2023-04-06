@@ -498,6 +498,9 @@ type Awaitable<T> = T | PromiseLike<T>
   })
   ```
 
+::: tip NOTE
+You can set [chaiConfig](/config/#chaiconfig-truncatethreshold) configuration value to truncate the error assertion message.
+:::
 ## toMatchObject
 
 - **Type:** `(received: object | array) => Awaitable<void>`

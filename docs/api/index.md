@@ -284,6 +284,10 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
 
   If you want to have access to `TestContext`, use `describe.each` with a single test.
 
+::: tip NOTE
+You can set [chaiConfig](/config/#chaiconfig-truncatethreshold) configuration value to truncate `test.each` title and error assertion message.
+:::
+
 ::: warning
 You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
 :::
