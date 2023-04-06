@@ -213,8 +213,7 @@ function mapEvalOrigin(origin: string): string {
       line: +match[3],
       column: +match[4] - 1,
     })
-    return `eval at ${match[1]} (${position.source}:${
-      position.line}:${position.column + 1})`
+    return `eval at ${match[1]} (${position.source}:${position.line}:${position.column + 1})`
   }
 
   // Parse nested eval() calls using recursion
