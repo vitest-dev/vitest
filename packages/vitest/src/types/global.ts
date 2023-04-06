@@ -38,8 +38,8 @@ declare module '@vitest/runner' {
 declare global {
   // support augmenting jest.Matchers by other libraries
   namespace jest {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    interface Matchers<R, T = {}> {}
+
+    interface Matchers<_R, _T = {}> {}
   }
 
   namespace Vi {

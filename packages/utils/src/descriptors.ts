@@ -1,7 +1,7 @@
 import concordance, { type DisplayOptions } from 'concordance'
 import { getColors } from './colors'
 
-export const getConcordanceTheme = () => {
+export function getConcordanceTheme() {
   const c = getColors()
 
   // this theme is taken from ava: https://github.com/avajs/ava/blob/main/lib/concordance-options.js

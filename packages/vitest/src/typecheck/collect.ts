@@ -56,6 +56,7 @@ export async function collectTests(ctx: Vitest, filepath: string): Promise<null 
     tasks: [],
     start: ast.start,
     end: ast.end,
+    meta: { typecheck: true },
   }
   const definitions: LocalCallDefinition[] = []
   const getName = (callee: any): string | null => {
@@ -82,7 +83,7 @@ export async function collectTests(ctx: Vitest, filepath: string): Promise<null 
         return
       const { arguments: [{ value: message }] } = node as any
       const property = callee?.property?.name
-      let mode = !property || property === name ? 'run' : property
+      let mode = (!property || property === name) ? 'run' : property
       if (!['run', 'skip', 'todo', 'only', 'skipIf', 'runIf'].includes(mode))
         throw new Error(`${name}.${mode} syntax is not supported when testing types`)
       // cannot statically analyze, so we always skip it
@@ -92,7 +93,7 @@ export async function collectTests(ctx: Vitest, filepath: string): Promise<null 
         start: node.start,
         end: node.end,
         name: message,
-        type: name === 'it' || name === 'test' ? 'test' : 'suite',
+        type: (name === 'it' || name === 'test') ? 'test' : 'suite',
         mode,
       } as LocalCallDefinition)
     },

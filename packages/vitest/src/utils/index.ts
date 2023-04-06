@@ -12,9 +12,15 @@ export * from './import'
 export * from './env'
 
 export const isWindows = isNode && process.platform === 'win32'
-export const getRunMode = () => getWorkerState().config.mode
-export const isRunningInTest = () => getRunMode() === 'test'
-export const isRunningInBenchmark = () => getRunMode() === 'benchmark'
+export function getRunMode() {
+  return getWorkerState().config.mode
+}
+export function isRunningInTest() {
+  return getRunMode() === 'test'
+}
+export function isRunningInBenchmark() {
+  return getRunMode() === 'benchmark'
+}
 
 export const relativePath = relative
 export { resolve } from 'pathe'

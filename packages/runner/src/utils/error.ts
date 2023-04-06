@@ -7,7 +7,9 @@ export type { ParsedStack, ErrorWithDiff } from '@vitest/utils'
 const IS_RECORD_SYMBOL = '@@__IMMUTABLE_RECORD__@@'
 const IS_COLLECTION_SYMBOL = '@@__IMMUTABLE_ITERABLE__@@'
 
-const isImmutable = (v: any) => v && (v[IS_COLLECTION_SYMBOL] || v[IS_RECORD_SYMBOL])
+function isImmutable(v: any) {
+  return v && (v[IS_COLLECTION_SYMBOL] || v[IS_RECORD_SYMBOL])
+}
 
 const OBJECT_PROTO = Object.getPrototypeOf({})
 

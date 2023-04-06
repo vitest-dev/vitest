@@ -237,7 +237,7 @@ export default class SnapshotState {
     if (!(isInline && this._snapshotData[key] !== undefined))
       this._uncheckedKeys.delete(key)
 
-    let receivedSerialized = rawSnapshot && typeof received === 'string'
+    let receivedSerialized = (rawSnapshot && typeof received === 'string')
       ? received as string
       : serialize(received, undefined, this._snapshotFormat)
 

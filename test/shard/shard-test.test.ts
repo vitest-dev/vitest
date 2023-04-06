@@ -2,12 +2,12 @@ import { expect, test } from 'vitest'
 import { basename } from 'pathe'
 import { execa } from 'execa'
 
-const runVitest = async (args: string[]) => {
+async function runVitest(args: string[]) {
   const { stdout } = await execa('vitest', ['--run', '--dir', './test', ...args])
   return stdout
 }
 
-const parsePaths = (stdout: string) => {
+function parsePaths(stdout: string) {
   return Array.from(new Set(stdout
     .split('\n')
     .filter(line => line && line.includes('.test.js'))

@@ -39,7 +39,7 @@ describe('stacktraces should pick error frame if present', async () => {
 
   for (const file of files) {
     it(file, async () => {
-    // in Windows child_process is very unstable, we skip testing it
+      // in Windows child_process is very unstable, we skip testing it
       if (process.platform === 'win32' && process.env.CI)
         return
 

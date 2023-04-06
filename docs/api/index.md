@@ -186,7 +186,10 @@ You cannot use this syntax, when using Vitest as [type checker](/guide/testing-t
 
   ```ts
   import { expect, test } from 'vitest'
-  const myAsyncFunc = () => new Promise(resolve => resolve(1))
+
+  function myAsyncFunc() {
+    return new Promise(resolve => resolve(1))
+  }
   test.fails('fail test', async () => {
     await expect(myAsyncFunc()).rejects.toBe(1)
   })
@@ -463,7 +466,7 @@ When you use `test` or `bench` in the top level of file, they are collected as p
   ```ts
   import { describe, expect, test } from 'vitest'
 
-  const numberToCurrency = (value) => {
+  function numberToCurrency(value) {
     if (typeof value !== 'number')
       throw new Error('Value must be a number')
 

@@ -26,7 +26,7 @@ const browserHashMap = new Map<string, string>()
 const url = new URL(location.href)
 const testId = url.searchParams.get('id') || 'unknown'
 
-const getQueryPaths = () => {
+function getQueryPaths() {
   return url.searchParams.getAll('path')
 }
 

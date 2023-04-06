@@ -1,4 +1,6 @@
-const sleep = async n => new Promise(resolve => setTimeout(resolve, n))
+async function sleep(n) {
+  return new Promise(resolve => setTimeout(resolve, n))
+}
 
 export default async function () {
   // setup something eg start a server, db or whatever

@@ -80,9 +80,9 @@ function renderBenchmark(task: Benchmark, tasks: Task[]): string {
     c.dim(` (${padded[4]} samples)`),
     result.rank === 1
       ? c.bold(c.green(' fastest'))
-      : result.rank === benches.length && benches.length > 2
-        ? c.bold(c.gray(' slowest'))
-        : '',
+      : (result.rank === benches.length && benches.length > 2)
+          ? c.bold(c.gray(' slowest'))
+          : '',
   ].join('')
 }
 
@@ -165,7 +165,7 @@ export function renderTree(tasks: Task[], options: ListRendererOptions, level = 
   return output.reverse().join('\n')
 }
 
-export const createListRenderer = (_tasks: Task[], options: ListRendererOptions) => {
+export function createListRenderer(_tasks: Task[], options: ListRendererOptions) {
   let tasks = _tasks
   let timer: any
 

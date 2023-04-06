@@ -1,4 +1,4 @@
-import readline from 'readline'
+import readline from 'node:readline'
 import c from 'picocolors'
 import prompt from 'prompts'
 import { isWindows, stdout } from '../utils'

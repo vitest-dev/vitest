@@ -4,7 +4,7 @@ type InputProps = {
   error?: string | undefined
 } & React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>
 
-export const Input = ({ label, name, error, ...props }: InputProps) => {
+export function Input({ label, name, error, ...props }: InputProps) {
   return (
     <>
       <label htmlFor={name}>{label}</label>

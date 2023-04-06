@@ -13,8 +13,8 @@ export class VitestServer extends ViteNodeServer {
     return this._vitestPath
   }
 
-  protected async processTransformResult(result: TransformResult): Promise<TransformResult> {
+  protected async processTransformResult(id: string, result: TransformResult): Promise<TransformResult> {
     const vitestId = await this.getVitestPath()
-    return super.processTransformResult(hoistModuleMocks(result, vitestId))
+    return super.processTransformResult(id, hoistModuleMocks(result, vitestId))
   }
 }

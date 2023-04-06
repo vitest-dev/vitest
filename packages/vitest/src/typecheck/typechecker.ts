@@ -40,7 +40,7 @@ export class Typechecker {
   private allowJs?: boolean
   private process!: ExecaChildProcess
 
-  constructor(protected ctx: Vitest, protected files: string[]) {}
+  constructor(protected ctx: Vitest, protected files: string[]) { }
 
   public onParseStart(fn: Callback) {
     this._onParseStart = fn
@@ -122,21 +122,23 @@ export class Typechecker {
       const indexMap = createIndexMap(parsed)
       const markState = (task: Task, state: TaskState) => {
         task.result = {
-          state: task.mode === 'run' || task.mode === 'only' ? state : task.mode,
+          state: (task.mode === 'run' || task.mode === 'only') ? state : task.mode,
         }
         if (task.suite)
           markState(task.suite, state)
       }
       errors.forEach(({ error, originalError }) => {
-        const originalPos = mapConsumer?.generatedPositionFor({
+        const processedPos = mapConsumer?.generatedPositionFor({
           line: originalError.line,
           column: originalError.column,
           source: path,
         }) || originalError
-        const index = indexMap.get(`${originalPos.line}:${originalPos.column}`)
+        const line = processedPos.line ?? originalError.line
+        const column = processedPos.column ?? originalError.column
+        const index = indexMap.get(`${line}:${column}`)
         const definition = (index != null && sortedDefinitions.find(def => def.start <= index && def.end >= index))
         const suite = definition ? definition.task : file
-        const state: TaskState = suite.mode === 'run' || suite.mode === 'only' ? 'fail' : suite.mode
+        const state: TaskState = (suite.mode === 'run' || suite.mode === 'only') ? 'fail' : suite.mode
         const errors = suite.result?.errors || []
         suite.result = {
           state,

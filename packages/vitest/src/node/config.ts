@@ -155,7 +155,7 @@ export function resolveConfig(
   const UPDATE_SNAPSHOT = resolved.update || process.env.UPDATE_SNAPSHOT
   resolved.snapshotOptions = {
     snapshotFormat: resolved.snapshotFormat || {},
-    updateSnapshot: isCI && !UPDATE_SNAPSHOT
+    updateSnapshot: (isCI && !UPDATE_SNAPSHOT)
       ? 'none'
       : UPDATE_SNAPSHOT
         ? 'all'

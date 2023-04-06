@@ -13,7 +13,6 @@ export interface VitestRunnerConfig {
     hooks: SequenceHooks
     setupFiles: SequenceSetupFiles
   }
-  outputDiffLines?: number
   maxConcurrency: number
   testTimeout: number
   hookTimeout: number
@@ -22,7 +21,7 @@ export interface VitestRunnerConfig {
 export type VitestRunnerImportSource = 'collect' | 'setup'
 
 export interface VitestRunnerConstructor {
-  new (config: VitestRunnerConfig): VitestRunner
+  new(config: VitestRunnerConfig): VitestRunner
 }
 
 export interface VitestRunner {

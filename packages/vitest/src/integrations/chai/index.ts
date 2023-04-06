@@ -1,3 +1,5 @@
+// CI failes only for this file, but it works locally
+
 import * as chai from 'chai'
 import './setup'
 import type { Test } from '@vitest/runner'
@@ -80,7 +82,9 @@ Object.defineProperty(globalThis, GLOBAL_EXPECT, {
 
 export { assert, should } from 'chai'
 export { chai, globalExpect as expect }
-export const setupChaiConfig = (config: ChaiConfig) => {
+
+export function setupChaiConfig(config: ChaiConfig) {
   Object.assign(chai.config, config)
 }
+
 export type ChaiConfig = Omit<Partial<typeof chai.config>, 'useProxy' | 'proxyExcludedKeys'>

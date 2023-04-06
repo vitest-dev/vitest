@@ -308,7 +308,7 @@ function enhanceSpy<TArgs extends any[], TReturns>(
   state.willCall(function (this: unknown, ...args) {
     instances.push(this)
     invocations.push(++callOrder)
-    const impl = implementationChangedTemporarily ? implementation! : onceImplementations.shift() || implementation || state.getOriginal() || (() => {})
+    const impl = implementationChangedTemporarily ? implementation! : (onceImplementations.shift() || implementation || state.getOriginal() || (() => {}))
     return impl.apply(this, args)
   })
 

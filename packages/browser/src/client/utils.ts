@@ -1,4 +1,4 @@
-export const importId = (id: string) => {
+export function importId(id: string) {
   const name = `/@id/${id}`
   return import(name)
 }

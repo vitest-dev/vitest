@@ -3,7 +3,7 @@ import { describe, expect, test, vi } from 'vitest'
 import { RandomSequencer } from 'vitest/src/node/sequencers/RandomSequencer'
 import { BaseSequencer } from 'vitest/src/node/sequencers/BaseSequencer'
 
-const buildCtx = () => {
+function buildCtx() {
   return {
     config: {
       sequence: {},

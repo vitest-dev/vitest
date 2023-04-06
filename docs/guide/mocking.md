@@ -23,7 +23,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const businessHours = [9, 17]
 
-const purchase = () => {
+function purchase() {
   const currentHour = new Date().getHours()
   const [open, close] = businessHours
 
@@ -79,7 +79,9 @@ We use [Tinyspy](https://github.com/tinylibs/tinyspy) as a base for mocking func
 ```js
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-const getLatest = (index = messages.items.length - 1) => messages.items[index]
+function getLatest(index = messages.items.length - 1) {
+  return messages.items[index]
+}
 
 const messages = {
   items: [
@@ -178,7 +180,7 @@ export function success(data) {}
 export function failure(data) {}
 
 // get todos
-export const getTodos = async (event, context) => {
+export async function getTodos(event, context) {
   const client = new Client({
     // ...clientOptions
   })
@@ -331,11 +333,11 @@ See the [`vi.useFakeTimers` api section](/api/vi#vi-usefaketimers) for a more in
 ```js
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-const executeAfterTwoHours = (func) => {
+function executeAfterTwoHours(func) {
   setTimeout(func, 1000 * 60 * 60 * 2) // 2 hours
 }
 
-const executeEveryMinute = (func) => {
+function executeEveryMinute(func) {
   setInterval(func, 1000 * 60) // 1 minute
 }
 
@@ -392,6 +394,7 @@ export const getter = 'variable'
 ```ts
 // some-path.test.ts
 import * as exports from './some-path.js'
+
 vi.spyOn(exports, 'getter', 'get').mockReturnValue('mocked')
 ```
 
@@ -404,6 +407,7 @@ export function method() {}
 ```
 ```ts
 import { method } from './some-path.js'
+
 vi.mock('./some-path.js', () => ({
   method: vi.fn()
 }))
@@ -416,6 +420,7 @@ Don't forget that `vi.mock` call is hoisted to top of the file. **Do not** put `
 Example with `vi.spyOn`:
 ```ts
 import * as exports from './some-path.js'
+
 vi.spyOn(exports, 'method').mockImplementation(() => {})
 ```
 
@@ -428,6 +433,7 @@ export class SomeClass {}
 ```
 ```ts
 import { SomeClass } from './some-path.js'
+
 vi.mock('./some-path.js', () => {
   const SomeClass = vi.fn()
   SomeClass.prototype.someMethod = vi.fn()
@@ -439,6 +445,7 @@ vi.mock('./some-path.js', () => {
 Example with `vi.mock` and return value:
 ```ts
 import { SomeClass } from './some-path.js'
+
 vi.mock('./some-path.js', () => {
   const SomeClass = vi.fn(() => ({
     someMethod: vi.fn()
@@ -452,6 +459,7 @@ Example with `vi.spyOn`:
 
 ```ts
 import * as exports from './some-path.js'
+
 vi.spyOn(exports, 'SomeClass').mockImplementation(() => {
   // whatever suites you from first two examples
 })
@@ -471,6 +479,7 @@ export function useObject() {
 ```ts
 // useObject.js
 import { useObject } from './some-path.js'
+
 const obj = useObject()
 obj.method()
 ```
@@ -478,6 +487,7 @@ obj.method()
 ```ts
 // useObject.test.js
 import { useObject } from './some-path.js'
+
 vi.mock('./some-path.js', () => {
   let _cache
   const useObject = () => {
@@ -502,6 +512,7 @@ expect(obj.method).toHaveBeenCalled()
 
 ```ts
 import { mocked, original } from './some-path.js'
+
 vi.mock('./some-path.js', async () => {
   const mod = await vi.importActual<typeof import('./some-path.js')>('./some-path.js')
   return {

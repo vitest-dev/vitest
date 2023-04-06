@@ -100,7 +100,9 @@ type Awaitable<T> = T | PromiseLike<T>
   ```ts
   import { expect, test } from 'vitest'
 
-  const getApples = () => 3
+  function getApples() {
+    return 3
+  }
 
   test('function returned something', () => {
     expect(getApples()).toBeDefined()
@@ -136,6 +138,7 @@ type Awaitable<T> = T | PromiseLike<T>
 
   ```ts
   import { Stocks } from './stocks.js'
+  
   const stocks = new Stocks()
   stocks.sync('Bill')
   if (stocks.getInfo('Bill'))
@@ -147,6 +150,7 @@ type Awaitable<T> = T | PromiseLike<T>
   ```ts
   import { expect, test } from 'vitest'
   import { Stocks } from './stocks.js'
+  
   const stocks = new Stocks()
 
   test('if we know Bill stock, sell apples to him', () => {
@@ -167,6 +171,7 @@ type Awaitable<T> = T | PromiseLike<T>
 
   ```ts
   import { Stocks } from './stocks.js'
+  
   const stocks = new Stocks()
   stocks.sync('Bill')
   if (!stocks.stockFailed('Bill'))
@@ -178,6 +183,7 @@ type Awaitable<T> = T | PromiseLike<T>
   ```ts
   import { expect, test } from 'vitest'
   import { Stocks } from './stocks.js'
+  
   const stocks = new Stocks()
 
   test('if Bill stock hasn\'t failed, sell apples to him', () => {
@@ -236,6 +242,7 @@ type Awaitable<T> = T | PromiseLike<T>
 
   ```ts
   import { expect, test } from 'vitest'
+  
   const actual = 'stock'
 
   test('stock is type of string', () => {
@@ -252,6 +259,7 @@ type Awaitable<T> = T | PromiseLike<T>
   ```ts
   import { expect, test } from 'vitest'
   import { Stocks } from './stocks.js'
+  
   const stocks = new Stocks()
 
   test('stocks are instance of Stocks', () => {
@@ -599,7 +607,9 @@ If the value in the error message is too truncated, you can increase [chaiConfig
   To test async functions, use in combination with [rejects](#rejects).
 
   ```js
-  const getAsyncFruitStock = () => Promise.reject(new Error('empty'))
+  function getAsyncFruitStock() {
+    return Promise.reject(new Error('empty'))
+  }
 
   test('throws on pineapples', async () => {
     await expect(() => getAsyncFruitStock()).rejects.toThrowError('empty')
@@ -855,7 +865,7 @@ If the value in the error message is too truncated, you can increase [chaiConfig
   ```ts
   import { expect, test, vi } from 'vitest'
 
-  const getApplesPrice = (amount: number) => {
+  function getApplesPrice(amount: number) {
     const PRICE = 10
     return amount * PRICE
   }

@@ -1,7 +1,11 @@
 import { expect, test } from 'vitest'
 
-const resolve = () => Promise.resolve('foo')
-const reject = () => Promise.reject(new Error('foo'))
+function resolve() {
+  return Promise.resolve('foo')
+}
+function reject() {
+  return Promise.reject(new Error('foo'))
+}
 
 test('resolved inline', async () => {
   await expect(resolve()).resolves.toMatchInlineSnapshot('"foo"')
