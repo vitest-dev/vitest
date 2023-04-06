@@ -46,5 +46,5 @@ export function unifiedDiff(actual: unknown, expected: unknown, options: DiffOpt
 `
   }
 
-  return legend + diff
+  return legend + diff.replace(/␊\s*$/mg, '')
 }

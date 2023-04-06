@@ -13,7 +13,7 @@ test('displays object diff', () => {
     "  - Expected  - 1
       + Received  + 1
 
-      ... 1 more line
+        {
           a: 1,
       -   b: 3,
       +   b: 2,
@@ -28,7 +28,8 @@ test('display one line string diff', () => {
   setupColors(getDefaultColors())
   displayDiff(unifiedDiff(string1, string2), console as any)
   expect(console.error.mock.calls[0][0]).toMatchInlineSnapshot(`
-    "  Difference:
+    "  - Expected  - 1
+      + Received  + 1
 
       - 'string2'
       + 'string1'"
