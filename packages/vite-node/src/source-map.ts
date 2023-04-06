@@ -1,4 +1,5 @@
 import type { TransformResult } from 'vite'
+import { basename } from 'pathe'
 import type { EncodedSourceMap } from '@jridgewell/trace-mapping'
 import { install } from './source-map-handler'
 import { toFilePath } from './utils'
@@ -16,6 +17,7 @@ const VITE_NODE_SOURCEMAPPING_REGEXP = new RegExp(`//# ${VITE_NODE_SOURCEMAPPING
 
 export function withInlineSourcemap(result: TransformResult, options: {
   root: string // project root path of this resource
+  filepath: string
 }) {
   const map = result.map
   let code = result.code
@@ -25,9 +27,12 @@ export function withInlineSourcemap(result: TransformResult, options: {
 
   // sources path from `ViteDevServer` may be not a valid filesystem path (eg. /src/main.js),
   // so we try to convert them to valid filesystem path
-  map.sources = map.sources.map((source) => {
+  map.sources = map.sources?.map((source) => {
     if (!source)
       return source
+    // just a filename
+    if (source === basename(source) && source === basename(options.filepath))
+      return options.filepath
     const { exists, path } = toFilePath(source, options.root)
     return exists ? path : source
   })

@@ -56,6 +56,7 @@ export async function collectTests(ctx: Vitest, filepath: string): Promise<null 
     tasks: [],
     start: ast.start,
     end: ast.end,
+    meta: { typecheck: true },
   }
   const definitions: LocalCallDefinition[] = []
   const getName = (callee: any): string | null => {

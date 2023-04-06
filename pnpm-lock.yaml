@@ -1,7 +1,7 @@
 lockfileVersion: 5.4
 
 overrides:
-  vite: ^4.2.0
+  vite: ^4.2.1
   vitest: workspace:*
 
 importers:
@@ -44,7 +44,7 @@ importers:
       ts-node: ^10.9.1
       tsup: ^6.7.0
       typescript: ^5.0.3
-      vite: ^4.2.0
+      vite: ^4.2.1
       vitest: workspace:*
     devDependencies:
       '@antfu/eslint-config': 0.38.4_vwh6htx42aidho2qgfca5u5rwm
@@ -100,7 +100,7 @@ importers:
       jiti: ^1.18.2
       unocss: ^0.50.6
       unplugin-vue-components: ^0.24.1
-      vite: ^4.2.0
+      vite: ^4.2.1
       vite-plugin-pwa: ^0.14.7
       vitepress: 1.0.0-alpha.65
       vue: latest
@@ -128,7 +128,7 @@ importers:
   examples/basic:
     specifiers:
       '@vitest/ui': latest
-      vite: ^4.2.0
+      vite: ^4.2.1
       vitest: workspace:*
     devDependencies:
       '@vitest/ui': link:../../packages/ui
@@ -142,7 +142,7 @@ importers:
       fastify: 4.5.3
       supertest: 6.2.4
       tsx: ^3.9.0
-      vite: ^4.2.0
+      vite: ^4.2.1
       vitest: workspace:*
     devDependencies:
       '@vitest/ui': link:../../packages/ui
@@ -158,7 +158,7 @@ importers:
       '@rollup/plugin-graphql': ^1.1.0
       '@vitest/ui': latest
       graphql: ^16.5.0
-      vite: ^4.2.0
+      vite: ^4.2.1
       vitest: workspace:*
     dependencies:
       '@rollup/plugin-graphql': 1.1.0_graphql@16.6.0
@@ -172,7 +172,7 @@ importers:
     specifiers:
       '@vitest/ui': latest
       jest-image-snapshot: ^4.5.1
-      vite: ^4.2.0
+      vite: ^4.2.1
       vitest: workspace:*
     devDependencies:
       '@vitest/ui': link:../../packages/ui
@@ -185,7 +185,7 @@ importers:
       '@vitest/ui': latest
       jsdom: latest
       lit: ^2.2.5
-      vite: ^4.2.0
+      vite: ^4.2.1
       vitest: workspace:*
     dependencies:
       lit: 2.3.1
@@ -203,7 +203,7 @@ importers:
       react: ^18.0.0
       sweetalert2: ^11.6.16
       tinyspy: ^0.3.2
-      vite: ^4.2.0
+      vite: ^4.2.1
       vitest: workspace:*
       vue: ^3.2.39
       zustand: ^4.1.1
@@ -250,7 +250,7 @@ importers:
       '@playwright/test': ^1.28.0
       '@vitest/ui': latest
       playwright: ^1.28.0
-      vite: ^4.2.0
+      vite: ^4.2.1
       vitest: workspace:*
     devDependencies:
       '@playwright/test': 1.28.0
@@ -263,7 +263,7 @@ importers:
     specifiers:
       '@vitest/ui': latest
       puppeteer: ^13.6.0
-      vite: ^4.2.0
+      vite: ^4.2.1
       vitest: workspace:*
     devDependencies:
       '@vitest/ui': link:../../packages/ui
@@ -281,7 +281,7 @@ importers:
       jsdom: latest
       react: ^17.0.2
       react-test-renderer: 17.0.2
-      vite: ^4.2.0
+      vite: ^4.2.1
       vitest: workspace:*
     dependencies:
       react: 17.0.2
@@ -308,7 +308,7 @@ importers:
       jsdom: ^20.0.3
       react: ^17.0.2
       react-dom: ^17.0.2
-      vite: ^4.2.0
+      vite: ^4.2.1
       vitest: workspace:*
     dependencies:
       react: 17.0.2
@@ -344,7 +344,7 @@ importers:
       react-router-dom: ^6.3.0
       recharts: ^2.1.12
       swr: ^1.3.0
-      vite: ^4.2.0
+      vite: ^4.2.1
       vitest: workspace:*
     dependencies:
       '@emotion/react': 11.10.4_react@18.2.0
@@ -393,7 +393,7 @@ importers:
       react-dom: ^17.0.2
       react-query: ^3.39.0
       typescript: ^4.8.4
-      vite: ^4.2.0
+      vite: ^4.2.1
       vitest: workspace:*
     dependencies:
       cross-fetch: 3.1.5
@@ -437,7 +437,7 @@ importers:
       react: ^18.2.0
       react-dom: ^18.2.0
       typescript: ^4.8.4
-      vite: ^4.2.0
+      vite: ^4.2.1
       vitest: workspace:*
     dependencies:
       react: 18.2.0
@@ -470,7 +470,7 @@ importers:
       msw: ^0.49.2
       react: ^17.0.2
       react-dom: ^17.0.2
-      vite: ^4.2.0
+      vite: ^4.2.1
       vitest: workspace:*
     dependencies:
       '@apollo/client': 3.6.9_react@17.0.2
@@ -494,7 +494,7 @@ importers:
       '@vitejs/plugin-vue': latest
       '@vue/test-utils': latest
       jsdom: latest
-      vite: ^4.2.0
+      vite: ^4.2.1
       vite-plugin-ruby: ^3.0.12
       vitest: workspace:*
       vue: latest
@@ -513,7 +513,7 @@ importers:
       jsdom: latest
       solid-js: ^1.4.3
       solid-testing-library: ^0.5.0
-      vite: ^4.2.0
+      vite: ^4.2.1
       vite-plugin-solid: ^2.5.0
       vitest: workspace:*
     dependencies:
@@ -533,7 +533,7 @@ importers:
       '@vitest/ui': latest
       jsdom: latest
       svelte: latest
-      vite: ^4.2.0
+      vite: ^4.2.1
       vitest: workspace:*
     devDependencies:
       '@sveltejs/vite-plugin-svelte': 2.0.0_svelte@3.58.0+vite@4.2.1
@@ -551,7 +551,7 @@ importers:
       jsdom: latest
       unplugin-auto-import: ^0.11.1
       unplugin-vue-components: ^0.22.4
-      vite: ^4.2.0
+      vite: ^4.2.1
       vitest: workspace:*
       vue: latest
     dependencies:
@@ -570,7 +570,7 @@ importers:
       '@vitejs/plugin-vue': latest
       '@vue/test-utils': ^2.0.0
       jsdom: latest
-      vite: ^4.2.0
+      vite: ^4.2.1
       vitest: workspace:*
       vue: latest
     dependencies:
@@ -588,7 +588,7 @@ importers:
       '@vitejs/plugin-vue-jsx': latest
       '@vue/test-utils': latest
       jsdom: latest
-      vite: ^4.2.0
+      vite: ^4.2.1
       vitest: workspace:*
       vue: latest
     devDependencies:
@@ -605,7 +605,7 @@ importers:
       '@vitejs/plugin-vue2': ^1.1.2
       '@vue/test-utils': ^1.3.0
       jsdom: latest
-      vite: ^4.2.0
+      vite: ^4.2.1
       vitest: workspace:*
       vue: ^2.7.2
       vue-template-compiler: ^2.7.2
@@ -766,7 +766,7 @@ importers:
       unocss: ^0.50.6
       unplugin-auto-import: ^0.15.2
       unplugin-vue-components: ^0.24.1
-      vite: ^4.2.0
+      vite: ^4.2.1
       vite-plugin-pages: ^0.29.0
       vue: ^3.2.47
       vue-router: ^4.1.6
@@ -827,7 +827,7 @@ importers:
       pathe: ^1.1.0
       picocolors: ^1.0.0
       rollup: ^2.79.1
-      vite: ^4.2.0
+      vite: ^4.2.1
     dependencies:
       cac: 6.7.14
       debug: 4.3.4
@@ -898,7 +898,7 @@ importers:
       strip-literal: ^1.0.1
       tinybench: ^2.4.0
       tinypool: ^0.4.0
-      vite: ^4.2.0
+      vite: ^4.2.1
       vite-node: workspace:*
       webdriverio: ^8.6.9
       why-is-node-running: ^2.2.2
@@ -1051,7 +1051,7 @@ importers:
     specifiers:
       execa: ^7.0.0
       strip-ansi: ^7.0.1
-      vite: ^4.2.0
+      vite: ^4.2.1
       vitest: workspace:*
     devDependencies:
       execa: 7.0.0
@@ -1081,7 +1081,7 @@ importers:
       '@vitest/browser': workspace:*
       '@vue/test-utils': latest
       happy-dom: latest
-      vite: ^4.2.0
+      vite: ^4.2.1
       vitest: workspace:*
       vue: latest
       webdriverio: latest
@@ -1307,7 +1307,7 @@ importers:
       '@vitest/browser': workspace:*
       execa: ^7.0.0
       strip-ansi: ^7.0.1
-      vite: ^4.2.0
+      vite: ^4.2.1
       vitest: workspace:*
       webdriverio: latest
     devDependencies:
