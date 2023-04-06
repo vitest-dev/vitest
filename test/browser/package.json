@@ -10,7 +10,6 @@
   },
   "devDependencies": {
     "@vitest/browser": "workspace:*",
-    "cross-env": "^7.0.3",
     "execa": "^7.1.1",
     "safaridriver": "^0.0.4",
     "vitest": "workspace:*"
