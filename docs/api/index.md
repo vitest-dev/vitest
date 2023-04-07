@@ -8,7 +8,7 @@ The following types are used in the type signatures below
 
 ```ts
 type Awaitable<T> = T | PromiseLike<T>
-type TestFunction = () => Awaitable<void>
+type TestFunction = () => Awaitable<unknown>
 
 interface TestOptions {
   timeout?: number
@@ -680,7 +680,7 @@ These functions allow you to hook into the life cycle of tests to avoid repeatin
 
 ### beforeEach
 
-- **Type:** `beforeEach(fn: () => Awaitable<void>, timeout?: number)`
+- **Type:** `beforeEach(fn: () => Awaitable<unknown>, timeout?: number)`
 
   Register a callback to be called before each of the tests in the current context runs.
   If the function returns a promise, Vitest waits until the promise resolve before running the test.
@@ -717,7 +717,7 @@ These functions allow you to hook into the life cycle of tests to avoid repeatin
 
 ### afterEach
 
-- **Type:** `afterEach(fn: () => Awaitable<void>, timeout?: number)`
+- **Type:** `afterEach(fn: () => Awaitable<unknown>, timeout?: number)`
 
   Register a callback to be called after each one of the tests in the current context completes.
   If the function returns a promise, Vitest waits until the promise resolve before continuing.
@@ -735,7 +735,7 @@ These functions allow you to hook into the life cycle of tests to avoid repeatin
 
 ### beforeAll
 
-- **Type:** `beforeAll(fn: () => Awaitable<void>, timeout?: number)`
+- **Type:** `beforeAll(fn: () => Awaitable<unknown>, timeout?: number)`
 
   Register a callback to be called once before starting to run all tests in the current context.
   If the function returns a promise, Vitest waits until the promise resolve before running tests.
@@ -770,7 +770,7 @@ These functions allow you to hook into the life cycle of tests to avoid repeatin
 
 ### afterAll
 
-- **Type:** `afterAll(fn: () => Awaitable<void>, timeout?: number)`
+- **Type:** `afterAll(fn: () => Awaitable<unknown>, timeout?: number)`
 
   Register a callback to be called once after all tests have run in the current context.
   If the function returns a promise, Vitest waits until the promise resolve before continuing.

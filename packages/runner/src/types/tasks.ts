@@ -108,37 +108,37 @@ type ExtractEachCallbackArgs<T extends ReadonlyArray<any>> = {
 interface SuiteEachFunction {
   <T extends any[] | [any]>(cases: ReadonlyArray<T>): (
     name: string,
-    fn: (...args: T) => Awaitable<void>,
+    fn: (...args: T) => Awaitable<unknown>,
   ) => void
   <T extends ReadonlyArray<any>>(cases: ReadonlyArray<T>): (
     name: string,
-    fn: (...args: ExtractEachCallbackArgs<T>) => Awaitable<void>,
+    fn: (...args: ExtractEachCallbackArgs<T>) => Awaitable<unknown>,
   ) => void
   <T>(cases: ReadonlyArray<T>): (
     name: string,
-    fn: (...args: T[]) => Awaitable<void>,
+    fn: (...args: T[]) => Awaitable<unknown>,
   ) => void
 }
 
 interface TestEachFunction {
   <T extends any[] | [any]>(cases: ReadonlyArray<T>): (
     name: string,
-    fn: (...args: T) => Awaitable<void>,
+    fn: (...args: T) => Awaitable<unknown>,
     options?: number | TestOptions,
   ) => void
   <T extends ReadonlyArray<any>>(cases: ReadonlyArray<T>): (
     name: string,
-    fn: (...args: ExtractEachCallbackArgs<T>) => Awaitable<void>,
+    fn: (...args: ExtractEachCallbackArgs<T>) => Awaitable<unknown>,
     options?: number | TestOptions,
   ) => void
   <T>(cases: ReadonlyArray<T>): (
     name: string,
-    fn: (...args: T[]) => Awaitable<void>,
+    fn: (...args: T[]) => Awaitable<unknown>,
     options?: number | TestOptions,
   ) => void
   (...args: [TemplateStringsArray, ...any]): (
     name: string,
-    fn: (...args: any[]) => Awaitable<void>,
+    fn: (...args: any[]) => Awaitable<unknown>,
     options?: number | TestOptions,
   ) => void
 }
@@ -189,9 +189,9 @@ export type SuiteAPI<ExtraContext = {}> = ChainableSuiteAPI<ExtraContext> & {
   runIf(condition: any): ChainableSuiteAPI<ExtraContext>
 }
 
-export type HookListener<T extends any[], Return = void> = (...args: T) => Awaitable<Return>
+export type HookListener<T extends any[], Return = unknown> = (...args: T) => Awaitable<Return>
 
-export type HookCleanupCallback = (() => Awaitable<unknown>) | void
+export type HookCleanupCallback = (() => Awaitable<unknown>) | unknown
 
 export interface SuiteHooks<ExtraContext = {}> {
   beforeAll: HookListener<[Suite | File], HookCleanupCallback>[]
