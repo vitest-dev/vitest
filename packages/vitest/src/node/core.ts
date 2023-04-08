@@ -50,7 +50,7 @@ export class Vitest {
   restartsCount = 0
   runner: ViteNodeRunner = undefined!
 
-  private workspaces: VitestWorkspace[] = []
+  public workspaces: VitestWorkspace[] = []
   private workspacesTestFiles = new Map<string, Set<VitestWorkspace>>()
 
   constructor(
