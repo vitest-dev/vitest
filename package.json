@@ -29,8 +29,8 @@
     "ui:build": "vite build packages/ui",
     "ui:dev": "vite packages/ui",
     "ui:test": "npm -C packages/ui run test:run",
-    "test:browser:webdriverio": "npm -C test/browser run test:webdriverio",
-    "test:browser:playwright": "npm -C test/browser run test:playwright"
+    "test:browser:webdriverio": "pnpm -C test/browser run test:webdriverio",
+    "test:browser:playwright": "pnpm -C test/browser run test:playwright"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^0.38.4",

@@ -42,6 +42,7 @@ export async function createBrowserServer(ctx: Vitest, options: UserConfig) {
           }
 
           config.server = server
+          config.server.fs = { strict: false }
 
           config.optimizeDeps ??= {}
           config.optimizeDeps.entries ??= []
