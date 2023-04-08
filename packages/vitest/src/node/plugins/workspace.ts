@@ -1,4 +1,4 @@
-import { relative } from 'pathe'
+import { dirname, relative } from 'pathe'
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import { configDefaults } from '../../defaults'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
@@ -11,6 +11,7 @@ import { GlobalSetupPlugin } from './globalSetup'
 
 interface WorkspaceOptions {
   root: string
+  workspacePath: string
 }
 
 export function WorkspaceVitestPlugin(workspace: VitestWorkspace, options: WorkspaceOptions) {
@@ -89,6 +90,7 @@ export function WorkspaceVitestPlugin(workspace: VitestWorkspace, options: Works
           },
           test: {
             env,
+            name: testConfig.name || dirname(options.workspacePath).split('/').pop(),
           },
         }
 

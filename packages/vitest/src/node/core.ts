@@ -50,6 +50,8 @@ export class Vitest {
   restartsCount = 0
   runner: ViteNodeRunner = undefined!
 
+  private coreWorkspace!: VitestWorkspace
+
   public workspaces: VitestWorkspace[] = []
   private workspacesTestFiles = new Map<string, Set<VitestWorkspace>>()
 
@@ -138,7 +140,14 @@ export class Vitest {
       runner: this.runner,
       server: this.vitenode,
     })
+    this.coreWorkspace = coreWorkspace
     return coreWorkspace
+  }
+
+  public getCoreWorkspace() {
+    if (!this.coreWorkspace)
+      throw new Error('Core workspace not initialized')
+    return this.coreWorkspace
   }
 
   private async resolveWorkspaces(options: UserConfig) {

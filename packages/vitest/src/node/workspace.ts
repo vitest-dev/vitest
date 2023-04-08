@@ -29,12 +29,12 @@ export async function initializeWorkspace(workspacePath: string, ctx: Vitest) {
   const root = dirname(workspacePath)
 
   const config: ViteInlineConfig = {
-    root: dirname(workspacePath),
+    root,
     logLevel: 'error',
     configFile,
     // this will make "mode" = "test" inside defineConfig
     mode: ctx.config.mode || process.env.NODE_ENV,
-    plugins: WorkspaceVitestPlugin(workspace, { root }),
+    plugins: WorkspaceVitestPlugin(workspace, { root, workspacePath }),
   }
 
   const server = await createServer(config)
@@ -67,7 +67,11 @@ export class VitestWorkspace {
   ) { }
 
   getName() {
-    return this.config.name || dirname(this.path)
+    return this.config.name
+  }
+
+  isCore() {
+    return this.ctx.getCoreWorkspace() === this
   }
 
   get reporters() {
