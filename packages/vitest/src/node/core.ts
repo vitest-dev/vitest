@@ -420,19 +420,17 @@ export class Vitest {
       ...this.snapshot.summary.uncheckedKeysByFile.map(s => s.filePath),
     ]
 
-    this.configOverride = {
-      snapshotOptions: {
-        updateSnapshot: 'all',
-        // environment is resolved inside a worker thread
-        snapshotEnvironment: null as any,
-      },
+    this.configOverride.snapshotOptions = {
+      updateSnapshot: 'all',
+      // environment is resolved inside a worker thread
+      snapshotEnvironment: null as any,
     }
 
     try {
       await this.rerunFiles(files, 'update snapshot')
     }
     finally {
-      this.configOverride = {}
+      delete this.configOverride.snapshotOptions
     }
   }
 

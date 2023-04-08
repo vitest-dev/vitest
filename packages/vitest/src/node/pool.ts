@@ -95,7 +95,7 @@ export function createPool(ctx: Vitest): ProcessPool {
       if (!files.length)
         return null
 
-      if (ctx.browserProvider && pool === 'browser') {
+      if (pool === 'browser') {
         pools.browser ??= createBrowserPool(ctx)
         return pools.browser.runTests(files, invalidate)
       }
