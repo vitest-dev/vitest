@@ -11,5 +11,8 @@ export default defineConfig({
     coverage: {
       all: true,
     },
+    reporters: ['default', 'json'],
+    outputFile: './results.json',
+    globalSetup: './globalTest.ts',
   },
 })
