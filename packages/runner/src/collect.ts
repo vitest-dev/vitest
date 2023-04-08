@@ -18,7 +18,7 @@ export async function collectTests(paths: string[], runner: VitestRunner): Promi
   for (const filepath of paths) {
     const path = relative(config.root, filepath)
     const file: File = {
-      id: generateHash(`${path}${config.name}`),
+      id: generateHash(`${path}${config.name || ''}`),
       name: path,
       type: 'suite',
       mode: 'run',
