@@ -23,7 +23,7 @@ export async function startWatchMode(...args: string[]) {
 
         const timeout = setTimeout(() => {
           reject(new Error(`Timeout when waiting for output "${expected}".\nReceived:\n${this.output}`))
-        }, 20_000)
+        }, process.env.CI ? 20_000 : 4_000)
 
         const listener = () => {
           if (this.output.includes(expected)) {

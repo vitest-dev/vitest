@@ -26,7 +26,7 @@ const WATCHER_DEBOUNCE = 100
 
 export class Vitest {
   config: ResolvedConfig = undefined!
-  configOverride: Partial<ResolvedConfig> | undefined
+  configOverride: Partial<ResolvedConfig> = {}
 
   server: ViteDevServer = undefined!
   state: StateManager = undefined!
@@ -59,6 +59,7 @@ export class Vitest {
     this.logger = new Logger(this)
   }
 
+  // TODO: behaves weirdly with workspaces, doesn't clean the terminal
   private _onRestartListeners: OnServerRestartHandler[] = []
   private _onSetServer: OnServerRestartHandler[] = []
 
@@ -122,11 +123,14 @@ export class Vitest {
     try {
       await this.cache.results.readFromCache()
     }
-    catch {}
+    catch { }
 
     await Promise.all(this._onSetServer.map(fn => fn()))
 
     this.workspaces = await this.resolveWorkspaces(options)
+
+    if (this.config.testNamePattern)
+      this.configOverride.testNamePattern = this.config.testNamePattern
   }
 
   async resolveWorkspaces(options: UserConfig) {
@@ -392,7 +396,7 @@ export class Vitest {
     if (pattern === '')
       this.filenamePattern = undefined
 
-    this.config.testNamePattern = pattern ? new RegExp(pattern) : undefined
+    this.configOverride.testNamePattern = pattern ? new RegExp(pattern) : undefined
     await this.rerunFiles(files, trigger)
   }
 
@@ -428,7 +432,7 @@ export class Vitest {
       await this.rerunFiles(files, 'update snapshot')
     }
     finally {
-      this.configOverride = undefined
+      this.configOverride = {}
     }
   }
 
@@ -580,7 +584,7 @@ export class Vitest {
       }
 
       // remove queries from id
-      id = normalizeRequestId(id, this.server.config.base)
+      id = normalizeRequestId(id, server.config.base)
 
       this.invalidates.add(id)
 
