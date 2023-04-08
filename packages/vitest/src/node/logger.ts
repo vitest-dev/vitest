@@ -113,7 +113,7 @@ export class Logger {
       if (!workspace.browser)
         return
       const name = workspace.getName()
-      const output = name === this.ctx.config.root || name === this.ctx.config.name ? '' : ` [${name}]`
+      const output = (name === this.ctx.config.root || name === this.ctx.config.name) ? '' : ` [${name}]`
 
       this.log(c.dim(c.green(`     ${output} Browser runner started at http://${workspace.config.browser.api?.host || 'localhost'}:${c.bold(`${workspace.browser.config.server.port}`)}`)))
     })

@@ -27,3 +27,7 @@ export function defineConfig(config: UserConfigExport) {
 export function defineWorkspace(config: UserWorkspaceConfigExport) {
   return config
 }
+
+export function defineWorkspaces(config: (string | UserWorkspaceConfigExport)[]) {
+  return config
+}

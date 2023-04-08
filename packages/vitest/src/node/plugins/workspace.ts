@@ -9,7 +9,11 @@ import { CSSEnablerPlugin } from './cssEnabler'
 import { EnvReplacerPlugin } from './envReplacer'
 import { GlobalSetupPlugin } from './globalSetup'
 
-export function WorkspaceVitestPlugin(workspace: VitestWorkspace) {
+interface WorkspaceOptions {
+  root: string
+}
+
+export function WorkspaceVitestPlugin(workspace: VitestWorkspace, options: WorkspaceOptions) {
   return <VitePlugin[]>[
     {
       name: 'vitest:workspace',
@@ -49,14 +53,17 @@ export function WorkspaceVitestPlugin(workspace: VitestWorkspace) {
           }
         }
 
-        const options = workspace.ctx.config
+        const testConfig = viteConfig.test || {}
+
+        const root = testConfig.root || viteConfig.root || options.root
 
         const config: ViteConfig = {
+          root,
           resolve: {
             // by default Vite resolves `module` field, which not always a native ESM module
             // setting this option can bypass that and fallback to cjs version
             mainFields: [],
-            alias: workspace.ctx.config.alias,
+            alias: testConfig.alias,
             conditions: ['node'],
             // eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error
             // @ts-ignore we support Vite ^3.0, but browserField is available in Vite ^3.2
@@ -85,13 +92,15 @@ export function WorkspaceVitestPlugin(workspace: VitestWorkspace) {
           },
         }
 
-        const classNameStrategy = (typeof options.css !== 'boolean' && options.css?.modules?.classNameStrategy) || 'stable'
+        const classNameStrategy = (typeof testConfig.css !== 'boolean' && testConfig.css?.modules?.classNameStrategy) || 'stable'
 
         if (classNameStrategy !== 'scoped') {
           config.css ??= {}
           config.css.modules ??= {}
-          config.css.modules.generateScopedName = (name: string, filename: string) => {
-            return generateScopedClassName(classNameStrategy, name, relative(options.root, filename))!
+          if (config.css.modules) {
+            config.css.modules.generateScopedName = (name: string, filename: string) => {
+              return generateScopedClassName(classNameStrategy, name, relative(root, filename))!
+            }
           }
         }
 
@@ -99,7 +108,12 @@ export function WorkspaceVitestPlugin(workspace: VitestWorkspace) {
       },
       async configureServer(server) {
         try {
-          await workspace.setServer(deepMerge({}, configDefaults, server.config.test || {}), server)
+          const options = deepMerge(
+            {},
+            configDefaults,
+            server.config.test || {},
+          )
+          await workspace.setServer(options, server)
         }
         catch (err) {
           await workspace.ctx.logger.printError(err, true)

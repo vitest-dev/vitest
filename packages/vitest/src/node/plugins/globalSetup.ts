@@ -45,7 +45,7 @@ async function loadGlobalSetupFile(file: string, runner: ViteNodeRunner): Promis
   }
 }
 
-export const GlobalSetupPlugin = (workspace: SetupInstance, logger: Logger): Plugin => {
+export function GlobalSetupPlugin(workspace: SetupInstance, logger: Logger): Plugin {
   let globalSetupFiles: GlobalSetupFile[]
   return {
     name: 'vitest:global-setup-plugin',
