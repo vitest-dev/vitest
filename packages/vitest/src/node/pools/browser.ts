@@ -56,6 +56,7 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
     async close() {
       ctx.state.browserTestPromises.clear()
       await Promise.all([...providers].map(provider => provider.close()))
+      providers.clear()
     },
     runTests: runWorkspaceTests,
   }

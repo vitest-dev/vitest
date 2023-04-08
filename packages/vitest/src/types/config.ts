@@ -567,12 +567,6 @@ export interface InlineConfig {
    * https://github.com/chaijs/chai/blob/4.x.x/lib/chai/config.js
   */
   chaiConfig?: ChaiConfig
-
-  /**
-   * Define different test configurations.
-   * // TODO
-   */
-  workspaces?: string[]
 }
 
 export interface TypecheckConfig {

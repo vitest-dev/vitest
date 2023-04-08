@@ -11,12 +11,12 @@ import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter,
 import { hasFailed, noop, slash, toArray } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
 import type { BrowserProvider } from '../types/browser'
-import { CONFIG_NAME_START_REGEXP, configFiles } from '../constants'
+import { CONFIG_NAMES, configFiles, workspacesFiles } from '../constants'
 import { createPool } from './pool'
 import type { ProcessPool, WorkspaceSpec } from './pool'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
 import { StateManager } from './state'
-import { isBrowserEnabled, resolveConfig } from './config'
+import { resolveConfig } from './config'
 import { Logger } from './logger'
 import { VitestCache } from './cache'
 import { VitestWorkspace, initializeWorkspace } from './workspace'
@@ -50,8 +50,8 @@ export class Vitest {
   restartsCount = 0
   runner: ViteNodeRunner = undefined!
 
-  workspaces: VitestWorkspace[] = []
-  workspaceSpecs = new Map<string, VitestWorkspace>()
+  private workspaces: VitestWorkspace[] = []
+  private workspacesTestFiles = new Map<string, Set<VitestWorkspace>>()
 
   constructor(
     public readonly mode: VitestRunMode,
@@ -59,7 +59,6 @@ export class Vitest {
     this.logger = new Logger(this)
   }
 
-  // TODO: behaves weirdly with workspaces, doesn't clean the terminal
   private _onRestartListeners: OnServerRestartHandler[] = []
   private _onSetServer: OnServerRestartHandler[] = []
 
@@ -133,8 +132,32 @@ export class Vitest {
       this.configOverride.testNamePattern = this.config.testNamePattern
   }
 
-  async resolveWorkspaces(options: UserConfig) {
-    const workspacesGlobMatches = this.config.workspaces.map((workspacePath) => {
+  private async createCoreWorkspace(options: UserConfig) {
+    const coreWorkspace = new VitestWorkspace(this.config.root, this)
+    await coreWorkspace.setServer(options, this.server, {
+      runner: this.runner,
+      server: this.vitenode,
+    })
+    return coreWorkspace
+  }
+
+  private async resolveWorkspaces(options: UserConfig) {
+    const rootFiles = await fs.readdir(this.config.root)
+    const workspacesConfigPath = workspacesFiles.find((configFile) => {
+      return rootFiles.includes(configFile)
+    })
+
+    if (!workspacesConfigPath)
+      return [await this.createCoreWorkspace(options)]
+
+    const workspacesModule = await this.runner.executeFile(workspacesConfigPath) as {
+      default: string[]
+    }
+
+    if (!workspacesModule.default || !Array.isArray(workspacesModule.default))
+      throw new Error(`Workspaces config file ${workspacesConfigPath} must export a default array of workspace paths`)
+
+    const workspacesGlobMatches = workspacesModule.default.map((workspacePath) => {
       return workspacePath.replace('<rootDir>', this.config.root)
     })
 
@@ -156,7 +179,8 @@ export class Vitest {
         })
         return !hasWorkspaceWithConfig
       }
-      return basename(file).match(CONFIG_NAME_START_REGEXP)
+      const filename = basename(file)
+      return CONFIG_NAMES.some(configName => filename.startsWith(configName))
     }).map(async (filepath) => {
       if (filepath.endsWith('/')) {
         const filesInside = await fs.readdir(filepath)
@@ -166,44 +190,22 @@ export class Vitest {
       return filepath
     }))
 
-    const walkedWorkspaces: string[] = []
-    // check if there are duplicate workspaces
-    for (const workspacePath of resolvedWorkspacesPaths) {
-      if (walkedWorkspaces.includes(workspacePath)) {
-        const relativePath = relative(this.config.root, workspacePath)
-        let message = `Found a duplicate workspace path: ${relativePath}.`
-        message += '\n\nThis probably means you did not specify a unique config file in the workspace directory or have a duplicate "projects" glob pattern.'
-        throw new Error(message)
-      }
-      walkedWorkspaces.push(workspacePath)
-    }
-
     const workspaces = resolvedWorkspacesPaths.map(async (workspacePath) => {
       // don't start a new server, but reuse existing one
-      if (dirname(workspacePath) === this.config.root) {
-        const coreWorkspace = new VitestWorkspace(this.config.root, this)
-        await coreWorkspace.setServer(options, this.server, {
-          runner: this.runner,
-          server: this.vitenode,
-        })
-        return coreWorkspace
-      }
+      if (
+        this.server.config.configFile === workspacePath
+      )
+        return this.createCoreWorkspace(options)
       return initializeWorkspace(workspacePath, this)
     })
 
-    if (!workspaces.length) {
-      const coreWorkspace = new VitestWorkspace(this.config.root, this)
-      await coreWorkspace.setServer(options, this.server, {
-        runner: this.runner,
-        server: this.vitenode,
-      })
-      return [coreWorkspace]
-    }
+    if (!workspaces.length)
+      return [await this.createCoreWorkspace(options)]
 
     return Promise.all(workspaces)
   }
 
-  async initCoverageProvider() {
+  private async initCoverageProvider() {
     if (this.coverageProvider !== undefined)
       return
     this.coverageProvider = await getCoverageProvider(this.config.coverage, this.runner)
@@ -214,7 +216,7 @@ export class Vitest {
     return this.coverageProvider
   }
 
-  async initBrowserProviders() {
+  private async initBrowserProviders() {
     return Promise.all(this.workspaces.map(w => w.initBrowserProvider()))
   }
 
@@ -288,7 +290,7 @@ export class Vitest {
     return deps
   }
 
-  async filterTestsBySource(specs: WorkspaceSpec[]) {
+  private async filterTestsBySource(specs: WorkspaceSpec[]) {
     if (this.config.changed && !this.config.related) {
       const { VitestGit } = await import('./git')
       const vitestGit = new VitestGit(this.config.root)
@@ -330,6 +332,13 @@ export class Vitest {
     }
 
     return runningTests
+  }
+
+  getWorkspacesByTestFile(file: string) {
+    const workspaces = this.workspacesTestFiles.get(file)
+    if (!workspaces)
+      return []
+    return Array.from(workspaces).map(workspace => [workspace, file] as WorkspaceSpec)
   }
 
   async runFiles(paths: WorkspaceSpec[]) {
@@ -384,7 +393,7 @@ export class Vitest {
       await this.coverageProvider.clean()
 
     await this.report('onWatcherRerun', files, trigger)
-    await this.runFiles(files.map(file => [this.workspaceSpecs.get(file)!, file]))
+    await this.runFiles(files.flatMap(file => this.getWorkspacesByTestFile(file)))
 
     await this.reportCoverage(!trigger)
 
@@ -476,7 +485,7 @@ export class Vitest {
 
       await this.report('onWatcherRerun', files, triggerId)
 
-      await this.runFiles(files.map(file => [this.workspaceSpecs.get(file)!, file]))
+      await this.runFiles(files.flatMap(file => this.getWorkspacesByTestFile(file)))
 
       await this.reportCoverage(false)
 
@@ -654,19 +663,21 @@ export class Vitest {
     )))
   }
 
-  async globTestFiles(filters: string[] = []) {
+  private async globTestFiles(filters: string[] = []) {
     const files: WorkspaceSpec[] = []
     await Promise.all(this.workspaces.map(async (workspace) => {
       const specs = await workspace.globTestFiles(filters)
       specs.forEach((file) => {
         files.push([workspace, file])
-        this.workspaceSpecs.set(file, workspace)
+        const workspaces = this.workspacesTestFiles.get(file) || new Set()
+        workspaces.add(workspace)
+        this.workspacesTestFiles.set(file, workspaces)
       })
     }))
     return files
   }
 
-  async isTargetFile(id: string, source?: string): Promise<boolean> {
+  private async isTargetFile(id: string, source?: string): Promise<boolean> {
     const relativeId = relative(this.config.dir || this.config.root, id)
     if (mm.isMatch(relativeId, this.config.exclude))
       return false
@@ -677,10 +688,6 @@ export class Vitest {
       return this.isInSourceTestFile(source)
     }
     return false
-  }
-
-  isBrowserEnabled() {
-    return isBrowserEnabled(this.config)
   }
 
   // The server needs to be running for communication

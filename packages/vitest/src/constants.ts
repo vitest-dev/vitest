@@ -5,22 +5,34 @@ export const EXIT_CODE_RESTART = 43
 
 export const API_PATH = '/__vitest_api__'
 
-export const CONFIG_NAME_START_REGEXP = /^(vitest|vite).config/
-
-export const configFiles = [
-  'vitest.config.ts',
-  'vitest.config.mts',
-  'vitest.config.cts',
-  'vitest.config.js',
-  'vitest.config.mjs',
-  'vitest.config.cjs',
-  'vite.config.ts',
-  'vite.config.mts',
-  'vite.config.cts',
-  'vite.config.js',
-  'vite.config.mjs',
-  'vite.config.cjs',
+export const CONFIG_NAMES = [
+  'vitest.config',
+  'vite.config',
 ]
+
+const WORKSPACES_NAMES = [
+  'vitest.workspaces',
+  'vitest.projects',
+  'vite.workspaces',
+  'vite.projects',
+]
+
+const CONFIG_EXTENSIONS = [
+  '.ts',
+  '.mts',
+  '.cts',
+  '.js',
+  '.mjs',
+  '.cjs',
+]
+
+export const configFiles = CONFIG_NAMES.flatMap(name =>
+  CONFIG_EXTENSIONS.map(ext => name + ext),
+)
+
+export const workspacesFiles = WORKSPACES_NAMES.flatMap(name =>
+  CONFIG_EXTENSIONS.map(ext => name + ext),
+)
 
 export const globalApis = [
   // suite
