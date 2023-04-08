@@ -71,11 +71,7 @@ export class VitestWorkspace {
   ) { }
 
   getName(): string {
-    if (this.config.name)
-      return this.config.name
-    if (typeof this.path === 'number')
-      return this.path.toString()
-    return dirname(this.path).split('/').pop() || ''
+    return this.config.name || ''
   }
 
   isCore() {

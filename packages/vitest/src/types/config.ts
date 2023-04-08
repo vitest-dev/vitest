@@ -708,7 +708,6 @@ export type WorkspaceConfig = Omit<
   | 'resolveSnapshotPath'
   | 'passWithNoTests'
   | 'onConsoleLog'
-  | 'sequence'
   | 'dangerouslyIgnoreUnhandledErrors'
   | 'slowTestThreshold'
   | 'inspect'
@@ -717,7 +716,6 @@ export type WorkspaceConfig = Omit<
   | 'deps'
   | 'coverage'
 > & {
-  sequence?: Omit<SequenceOptions, 'sequencer' | 'seed'>
   deps?: Omit<DepsOptions, 'registerNodeLoader'>
 }
 

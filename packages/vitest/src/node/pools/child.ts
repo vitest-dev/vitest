@@ -6,7 +6,7 @@ import { createBirpc } from 'birpc'
 import { resolve } from 'pathe'
 import type { ContextTestEnvironment, ResolvedConfig, RuntimeRPC, Vitest } from '../../types'
 import type { ChildContext } from '../../types/child'
-import type { PoolProcessOptions, ProcessPool } from '../pool'
+import type { PoolProcessOptions, ProcessPool, WorkspaceSpec } from '../pool'
 import { distDir } from '../../paths'
 import { groupBy } from '../../utils/base'
 import { envsOrder, groupFilesByEnv } from '../../utils/test-helpers'
@@ -88,16 +88,17 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env }: PoolProce
 
   async function runWithFiles(workspace: VitestWorkspace, files: string[], invalidates: string[] = []): Promise<void> {
     const { shard } = ctx.config
+    let specs = files.map(file => [workspace, file] as WorkspaceSpec)
 
     if (shard)
-      files = await sequencer.shard(files)
+      specs = await sequencer.shard(specs)
 
-    files = await sequencer.sort(files)
+    specs = await sequencer.sort(specs)
 
     ctx.state.clearFiles(workspace, files)
     const config = getTestConfig(workspace)
 
-    const filesByEnv = await groupFilesByEnv(files.map(file => [workspace, file]))
+    const filesByEnv = await groupFilesByEnv(specs)
     const envs = envsOrder.concat(
       Object.keys(filesByEnv).filter(env => !envsOrder.includes(env)),
     )

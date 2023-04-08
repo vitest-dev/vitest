@@ -1,5 +1,5 @@
 import fs from 'node:fs'
-import { dirname, resolve } from 'pathe'
+import { dirname, relative, resolve } from 'pathe'
 import type { File, ResolvedConfig } from '../../types'
 import { version } from '../../../package.json'
 
@@ -25,8 +25,8 @@ export class ResultsCache {
       this.cachePath = resolve(config.dir, 'results.json')
   }
 
-  getResults(fsPath: string) {
-    return this.cache.get(fsPath?.slice(this.root.length))
+  getResults(key: string) {
+    return this.cache.get(key)
   }
 
   async readFromCache() {
@@ -58,8 +58,8 @@ export class ResultsCache {
         return
       const duration = result.duration || 0
       // store as relative, so cache would be the same in CI and locally
-      const relativePath = file.filepath?.slice(this.root.length)
-      this.cache.set(`${file.projectName || 'core'}:${relativePath}`, {
+      const relativePath = relative(this.root, file.filepath)
+      this.cache.set(`${file.projectName || ''}:${relativePath}`, {
         duration: duration >= 0 ? duration : 0,
         failed: result.state === 'fail',
       })
@@ -67,7 +67,10 @@ export class ResultsCache {
   }
 
   removeFromCache(filepath: string) {
-    this.cache.delete(filepath)
+    this.cache.forEach((_, key) => {
+      if (key.endsWith(filepath))
+        this.cache.delete(key)
+    })
   }
 
   async writeToCache() {

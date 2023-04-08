@@ -124,21 +124,15 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
       }
 
       // it's possible that workspace defines a file that is also defined by another workspace
-      let files = Array.from(new Set(specs.flatMap(([, files]) => files)))
       const { shard } = ctx.config
 
       if (shard)
-        files = await sequencer.shard(files)
+        specs = await sequencer.shard(specs)
 
-      files = await sequencer.sort(files)
+      specs = await sequencer.sort(specs)
 
-      const workspaceFiles = files.flatMap((file) => {
-        const workspaces = workspaceMap.get(file)!
-        return workspaces.map(workspace => [workspace, file] as const)
-      })
-
-      const singleThreads = workspaceFiles.filter(([workspace]) => workspace.config.singleThread)
-      const multipleThreads = workspaceFiles.filter(([workspace]) => !workspace.config.singleThread)
+      const singleThreads = specs.filter(([workspace]) => workspace.config.singleThread)
+      const multipleThreads = specs.filter(([workspace]) => !workspace.config.singleThread)
 
       if (multipleThreads.length) {
         const filesByEnv = await groupFilesByEnv(multipleThreads)
@@ -166,14 +160,12 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
 
           const filesByOptions = groupBy(files, ({ environment }) => JSON.stringify(environment.options))
 
-          for (const option in filesByOptions) {
-            const files = filesByOptions[option]
+          const promises = Object.values(filesByOptions).map(async (files) => {
+            const filenames = files.map(f => f.file)
+            await runFiles(files[0].workspace, getConfig(files[0].workspace), filenames, files[0].environment, invalidates)
+          })
 
-            if (files?.length) {
-              const filenames = files.map(f => f.file)
-              await runFiles(files[0].workspace, getConfig(files[0].workspace), filenames, files[0].environment, invalidates)
-            }
-          }
+          await Promise.all(promises)
         }
       }
     }

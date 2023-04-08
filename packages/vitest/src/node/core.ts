@@ -287,7 +287,7 @@ export class Vitest {
     }
 
     // populate once, update cache on watch
-    await Promise.all(files.map(([, file]) => this.cache.stats.updateStats(file)))
+    await this.cache.stats.populateStats(this.config.root, files)
 
     await this.runFiles(files)
 
@@ -571,7 +571,6 @@ export class Vitest {
       updateLastChanged(id)
       if (await this.isTargetFile(id)) {
         this.changedTests.add(id)
-        await this.cache.stats.updateStats(id)
         this.scheduleRerun([id])
       }
     }
