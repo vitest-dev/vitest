@@ -66,8 +66,8 @@ export class VitestWorkspace {
     public ctx: Vitest,
   ) { }
 
-  getName() {
-    return this.config.name
+  getName(): string {
+    return this.config.name || dirname(this.path).split('/').pop() || ''
   }
 
   isCore() {
@@ -228,7 +228,7 @@ export class VitestWorkspace {
         },
       },
       snapshotOptions: {
-        ...this.ctx.config.snapshotOptions,
+        ...this.config.snapshotOptions,
         resolveSnapshotPath: undefined,
       },
       onConsoleLog: undefined!,

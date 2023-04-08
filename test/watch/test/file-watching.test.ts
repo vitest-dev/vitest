@@ -31,7 +31,7 @@ test('editing source file triggers re-run', async () => {
   writeFileSync(sourceFile, editFile(sourceFileContent), 'utf8')
 
   await vitest.waitForOutput('New code running')
-  await vitest.waitForOutput('RERUN  math.ts')
+  await vitest.waitForOutput('RERUN  ../math.ts')
   await vitest.waitForOutput('1 passed')
 })
 
@@ -41,7 +41,7 @@ test('editing test file triggers re-run', async () => {
   writeFileSync(testFile, editFile(testFileContent), 'utf8')
 
   await vitest.waitForOutput('New code running')
-  await vitest.waitForOutput('RERUN  math.test.ts')
+  await vitest.waitForOutput('RERUN  ../math.test.ts')
   await vitest.waitForOutput('1 passed')
 })
 
@@ -71,7 +71,7 @@ describe('browser', () => {
     writeFileSync(sourceFile, editFile(sourceFileContent), 'utf8')
 
     await vitest.waitForOutput('New code running')
-    await vitest.waitForOutput('RERUN  math.ts')
+    await vitest.waitForOutput('RERUN  ../math.ts')
     await vitest.waitForOutput('1 passed')
 
     vitest.write('q')

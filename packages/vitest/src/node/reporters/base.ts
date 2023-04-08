@@ -80,7 +80,11 @@ export abstract class BaseReporter implements Reporter {
         if (this.ctx.config.logHeapUsage && task.result.heap != null)
           suffix += c.magenta(` ${Math.floor(task.result.heap / 1024 / 1024)} MB heap used`)
 
-        logger.log(` ${getStateSymbol(task)} ${task.name} ${suffix}`)
+        let title = ` ${getStateSymbol(task)} `
+        if (task.projectName)
+          title += formatProjectName(task.projectName)
+        title += `${task.name} ${suffix}`
+        logger.log(title)
 
         // print short errors, full errors will be at the end in summary
         for (const test of failed) {

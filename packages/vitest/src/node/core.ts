@@ -1,6 +1,6 @@
 import { existsSync, promises as fs } from 'node:fs'
 import type { ViteDevServer } from 'vite'
-import { basename, dirname, normalize, relative } from 'pathe'
+import { basename, dirname, join, normalize, relative } from 'pathe'
 import fg from 'fast-glob'
 import mm from 'micromatch'
 import c from 'picocolors'
@@ -151,20 +151,23 @@ export class Vitest {
   }
 
   private async resolveWorkspaces(options: UserConfig) {
-    const rootFiles = await fs.readdir(this.config.root)
-    const workspacesConfigPath = workspacesFiles.find((configFile) => {
+    const configDir = dirname(this.server.config.configFile || this.config.root)
+    const rootFiles = await fs.readdir(configDir)
+    const workspacesConfigName = workspacesFiles.find((configFile) => {
       return rootFiles.includes(configFile)
     })
 
-    if (!workspacesConfigPath)
+    if (!workspacesConfigName)
       return [await this.createCoreWorkspace(options)]
 
-    const workspacesModule = await this.runner.executeFile(workspacesConfigPath) as {
+    const workspacesConcigPath = join(configDir, workspacesConfigName)
+
+    const workspacesModule = await this.runner.executeFile(workspacesConcigPath) as {
       default: string[]
     }
 
     if (!workspacesModule.default || !Array.isArray(workspacesModule.default))
-      throw new Error(`Workspaces config file ${workspacesConfigPath} must export a default array of workspace paths`)
+      throw new Error(`Workspaces config file ${workspacesConcigPath} must export a default array of workspace paths`)
 
     const workspacesGlobMatches = workspacesModule.default.map((workspacePath) => {
       return workspacePath.replace('<rootDir>', this.config.root)
@@ -453,7 +456,7 @@ export class Vitest {
   }
 
   private _rerunTimer: any
-  private async scheduleRerun(triggerId: string) {
+  private async scheduleRerun(triggerId: string[]) {
     const currentCount = this.restartsCount
     clearTimeout(this._rerunTimer)
     await this.runningPromise
@@ -492,7 +495,9 @@ export class Vitest {
       if (this.coverageProvider && this.config.coverage.cleanOnRerun)
         await this.coverageProvider.clean()
 
-      await this.report('onWatcherRerun', files, triggerId)
+      const triggerIds = new Set(triggerId.map(id => relative(this.config.root, id)))
+      const triggerLabel = Array.from(triggerIds).join(', ')
+      await this.report('onWatcherRerun', files, triggerLabel)
 
       await this.runFiles(files.flatMap(file => this.getWorkspacesByTestFile(file)))
 
@@ -525,8 +530,8 @@ export class Vitest {
       id = slash(id)
       updateLastChanged(id)
       const needsRerun = this.handleFileChanged(id)
-      if (needsRerun)
-        this.scheduleRerun(id)
+      if (needsRerun.length)
+        this.scheduleRerun(needsRerun)
     }
     const onUnlink = (id: string) => {
       id = slash(id)
@@ -546,7 +551,7 @@ export class Vitest {
       if (await this.isTargetFile(id)) {
         this.changedTests.add(id)
         await this.cache.stats.updateStats(id)
-        this.scheduleRerun(id)
+        this.scheduleRerun([id])
       }
     }
     const watcher = this.server.watcher
@@ -571,18 +576,20 @@ export class Vitest {
   /**
    * @returns A value indicating whether rerun is needed (changedTests was mutated)
    */
-  private handleFileChanged(id: string): boolean {
+  private handleFileChanged(id: string): string[] {
     if (this.changedTests.has(id) || this.invalidates.has(id))
-      return false
+      return []
 
     if (mm.isMatch(id, this.config.forceRerunTriggers)) {
       this.state.getFilepaths().forEach(file => this.changedTests.add(file))
-      return true
+      return []
     }
 
     const workspaces = this.getModuleWorkspaces(id)
     if (!workspaces.length)
-      return false
+      return []
+
+    const files: string[] = []
 
     for (const { server, browser } of workspaces) {
       const mod = server.moduleGraph.getModuleById(id) || browser?.moduleGraph.getModuleById(id)
@@ -590,13 +597,15 @@ export class Vitest {
         // files with `?v=` query from the browser
         const mods = browser?.moduleGraph.getModulesByFile(id)
         if (!mods?.size)
-          return false
+          return []
         let rerun = false
         mods.forEach((m) => {
           if (m.id && this.handleFileChanged(m.id))
             rerun = true
         })
-        return rerun
+        if (rerun)
+          files.push(id)
+        continue
       }
 
       // remove queries from id
@@ -606,7 +615,8 @@ export class Vitest {
 
       if (this.state.filesMap.has(id)) {
         this.changedTests.add(id)
-        return true
+        files.push(id)
+        continue
       }
 
       let rerun = false
@@ -620,10 +630,10 @@ export class Vitest {
       })
 
       if (rerun)
-        return rerun
+        files.push(id)
     }
 
-    return false
+    return files
   }
 
   private async reportCoverage(allTestsRun: boolean) {
