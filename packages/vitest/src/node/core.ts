@@ -7,7 +7,7 @@ import c from 'picocolors'
 import { normalizeRequestId } from 'vite-node/utils'
 import { ViteNodeRunner } from 'vite-node/client'
 import { SnapshotManager } from '@vitest/snapshot/manager'
-import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter, ResolvedConfig, UserConfig, VitestRunMode } from '../types'
+import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter, ResolvedConfig, UserConfig, UserWorkspaceConfig, VitestRunMode } from '../types'
 import { hasFailed, noop, slash, toArray } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
 import type { BrowserProvider } from '../types/browser'
@@ -163,15 +163,21 @@ export class Vitest {
     const workspacesConcigPath = join(configDir, workspacesConfigName)
 
     const workspacesModule = await this.runner.executeFile(workspacesConcigPath) as {
-      default: string[]
+      default: (string | UserWorkspaceConfig)[]
     }
 
     if (!workspacesModule.default || !Array.isArray(workspacesModule.default))
       throw new Error(`Workspaces config file ${workspacesConcigPath} must export a default array of workspace paths`)
 
-    const workspacesGlobMatches = workspacesModule.default.map((workspacePath) => {
-      return workspacePath.replace('<rootDir>', this.config.root)
-    })
+    const workspacesGlobMatches: string[] = []
+    const workspacesOptions: UserWorkspaceConfig[] = []
+
+    for (const workspace of workspacesModule.default) {
+      if (typeof workspace === 'string')
+        workspacesGlobMatches.push(workspace.replace('<rootDir>', this.config.root))
+      else
+        workspacesOptions.push(workspace)
+    }
 
     const globOptions: fg.Options = {
       absolute: true,
@@ -211,8 +217,14 @@ export class Vitest {
       return initializeWorkspace(workspacePath, this)
     })
 
+    workspacesOptions.forEach((options, index) => {
+      workspaces.push(initializeWorkspace(index, this, options))
+    })
+
     if (!workspaces.length)
       return [await this.createCoreWorkspace(options)]
+
+    // TODO: check all workspaces have unique names
 
     return Promise.all(workspaces)
   }
@@ -388,7 +400,9 @@ export class Vitest {
       await this.cache.results.writeToCache()
     })()
       .finally(async () => {
-        await this.report('onFinished', this.state.getFiles(paths.map(([, p]) => p)), this.state.getUnhandledErrors())
+        // can be duplicate files if different workspaces are using the same file
+        const specs = Array.from(new Set(paths.map(([, p]) => p)))
+        await this.report('onFinished', this.state.getFiles(specs), this.state.getUnhandledErrors())
         this.runningPromise = undefined
       })
 

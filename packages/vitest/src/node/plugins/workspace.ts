@@ -4,14 +4,15 @@ import { configDefaults } from '../../defaults'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
 import { deepMerge } from '../../utils/base'
 import type { VitestWorkspace } from '../workspace'
+import type { UserWorkspaceConfig } from '../../types'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { EnvReplacerPlugin } from './envReplacer'
 import { GlobalSetupPlugin } from './globalSetup'
 
-interface WorkspaceOptions {
-  root: string
-  workspacePath: string
+interface WorkspaceOptions extends UserWorkspaceConfig {
+  root?: string
+  workspacePath: string | number
 }
 
 export function WorkspaceVitestPlugin(workspace: VitestWorkspace, options: WorkspaceOptions) {
@@ -57,6 +58,13 @@ export function WorkspaceVitestPlugin(workspace: VitestWorkspace, options: Works
         const testConfig = viteConfig.test || {}
 
         const root = testConfig.root || viteConfig.root || options.root
+        let name = testConfig.name
+        if (!name) {
+          if (typeof options.workspacePath === 'string')
+            name = dirname(options.workspacePath).split('/').pop()
+          else
+            name = options.workspacePath.toString()
+        }
 
         const config: ViteConfig = {
           root,
@@ -90,7 +98,7 @@ export function WorkspaceVitestPlugin(workspace: VitestWorkspace, options: Works
           },
           test: {
             env,
-            name: testConfig.name || dirname(options.workspacePath).split('/').pop(),
+            name,
           },
         }
 
@@ -101,6 +109,7 @@ export function WorkspaceVitestPlugin(workspace: VitestWorkspace, options: Works
           config.css.modules ??= {}
           if (config.css.modules) {
             config.css.modules.generateScopedName = (name: string, filename: string) => {
+              const root = workspace.config.root
               return generateScopedClassName(classNameStrategy, name, relative(root, filename))!
             }
           }

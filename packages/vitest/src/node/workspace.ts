@@ -5,7 +5,7 @@ import { createServer } from 'vite'
 import type { ViteDevServer, InlineConfig as ViteInlineConfig } from 'vite'
 import { ViteNodeRunner } from 'vite-node/client'
 import { createBrowserServer } from '../integrations/browser/server'
-import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig, Vitest } from '../types'
+import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig, UserWorkspaceConfig, Vitest } from '../types'
 import { deepMerge, hasFailed } from '../utils'
 import { Typechecker } from '../typecheck/typechecker'
 import type { BrowserProvider } from '../types/browser'
@@ -19,22 +19,26 @@ interface InitializeOptions {
   runner?: ViteNodeRunner
 }
 
-export async function initializeWorkspace(workspacePath: string, ctx: Vitest) {
+export async function initializeWorkspace(workspacePath: string | number, ctx: Vitest, options: UserWorkspaceConfig = {}) {
   const workspace = new VitestWorkspace(workspacePath, ctx)
 
-  const configFile = workspacePath.endsWith('/')
+  const configFile = (typeof workspacePath === 'number' || workspacePath.endsWith('/'))
     ? false
     : workspacePath
 
-  const root = dirname(workspacePath)
+  const root = options.root || (typeof workspacePath === 'number' ? undefined : dirname(workspacePath))
 
   const config: ViteInlineConfig = {
+    ...options,
     root,
     logLevel: 'error',
     configFile,
     // this will make "mode" = "test" inside defineConfig
-    mode: ctx.config.mode || process.env.NODE_ENV,
-    plugins: WorkspaceVitestPlugin(workspace, { root, workspacePath }),
+    mode: options.mode || ctx.config.mode || process.env.NODE_ENV,
+    plugins: [
+      ...options.plugins || [],
+      WorkspaceVitestPlugin(workspace, { ...options, root, workspacePath }),
+    ],
   }
 
   const server = await createServer(config)
@@ -62,12 +66,16 @@ export class VitestWorkspace {
   browserProvider: BrowserProvider | undefined
 
   constructor(
-    public path: string,
+    public path: string | number,
     public ctx: Vitest,
   ) { }
 
   getName(): string {
-    return this.config.name || dirname(this.path).split('/').pop() || ''
+    if (this.config.name)
+      return this.config.name
+    if (typeof this.path === 'number')
+      return this.path.toString()
+    return dirname(this.path).split('/').pop() || ''
   }
 
   isCore() {

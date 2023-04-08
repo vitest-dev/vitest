@@ -42,7 +42,7 @@ export function createPool(ctx: Vitest): ProcessPool {
 
   function getPoolName([workspace, file]: WorkspaceSpec) {
     for (const [glob, pool] of workspace.config.poolMatchGlobs || []) {
-      if (mm.isMatch(file, glob, { cwd: ctx.server.config.root }))
+      if (mm.isMatch(file, glob, { cwd: workspace.config.root }))
         return pool
     }
     return getDefaultPoolName(workspace)

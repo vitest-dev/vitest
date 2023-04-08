@@ -75,7 +75,7 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
     let id = 0
 
     async function runFiles(workspace: VitestWorkspace, config: ResolvedConfig, files: string[], environment: ContextTestEnvironment, invalidates: string[] = []) {
-      ctx.state.clearFiles(files)
+      ctx.state.clearFiles(workspace, files)
       const { workerPort, port } = createWorkerChannel(workspace)
       const workerId = ++id
       const data: WorkerContext = {
@@ -107,7 +107,7 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
 
     return async (specs, invalidates) => {
       const configs = new Map<VitestWorkspace, ResolvedConfig>()
-      const getConfig = (workspace: VitestWorkspace) => {
+      const getConfig = (workspace: VitestWorkspace): ResolvedConfig => {
         if (configs.has(workspace))
           return configs.get(workspace)!
 
@@ -116,11 +116,15 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
         return config
       }
 
-      const workspaceMap = new Map<string, VitestWorkspace>()
-      for (const [workspace, file] of specs)
-        workspaceMap.set(file, workspace)
+      const workspaceMap = new Map<string, VitestWorkspace[]>()
+      for (const [workspace, file] of specs) {
+        const workspaceFiles = workspaceMap.get(file) ?? []
+        workspaceFiles.push(workspace)
+        workspaceMap.set(file, workspaceFiles)
+      }
 
-      let files = specs.flatMap(([, files]) => files)
+      // it's possible that workspace defines a file that is also defined by another workspace
+      let files = Array.from(new Set(specs.flatMap(([, files]) => files)))
       const { shard } = ctx.config
 
       if (shard)
@@ -128,7 +132,10 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
 
       files = await sequencer.sort(files)
 
-      const workspaceFiles = files.map(file => [workspaceMap.get(file)!, file] as const)
+      const workspaceFiles = files.flatMap((file) => {
+        const workspaces = workspaceMap.get(file)!
+        return workspaces.map(workspace => [workspace, file] as const)
+      })
 
       const singleThreads = workspaceFiles.filter(([workspace]) => workspace.config.singleThread)
       const multipleThreads = workspaceFiles.filter(([workspace]) => !workspace.config.singleThread)

@@ -46,6 +46,7 @@ export class ResultsCache {
       if (!result)
         return
       const duration = result.duration || 0
+      // TODO: use project name for a key
       // store as relative, so cache would be the same in CI and locally
       const relativePath = file.filepath?.slice(this.root.length)
       this.cache.set(relativePath, {

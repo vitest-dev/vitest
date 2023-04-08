@@ -94,7 +94,7 @@ export function createChildProcessPool(ctx: Vitest, { execArgv, env }: PoolProce
 
     files = await sequencer.sort(files)
 
-    ctx.state.clearFiles(files)
+    ctx.state.clearFiles(workspace, files)
     const config = getTestConfig(workspace)
 
     const filesByEnv = await groupFilesByEnv(files.map(file => [workspace, file]))

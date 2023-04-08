@@ -51,7 +51,7 @@ export async function collectTests(ctx: VitestWorkspace, filepath: string): Prom
   const file: ParsedFile = {
     filepath,
     type: 'suite',
-    id: generateHash(testFilepath),
+    id: generateHash(`${testFilepath}${ctx.config.name}`),
     name: testFilepath,
     mode: 'run',
     tasks: [],

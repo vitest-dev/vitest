@@ -732,3 +732,5 @@ export type RuntimeConfig = Pick<
   | 'fakeTimers'
   | 'maxConcurrency'
 > & { sequence?: { hooks?: SequenceHooks } }
+
+export type { UserWorkspaceConfig } from '../config'

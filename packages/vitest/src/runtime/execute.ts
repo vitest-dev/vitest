@@ -48,12 +48,12 @@ export async function startViteNode(ctx: ContextRPC) {
   function catchError(err: unknown, type: string) {
     const worker = getWorkerState()
     const error = processError(err)
-    if (worker.filepath && !isPrimitive(error)) {
+    if (!isPrimitive(error)) {
       error.VITEST_TEST_NAME = worker.current?.name
-      error.VITEST_TEST_PATH = relative(config.root, worker.filepath)
+      if (worker.filepath)
+        error.VITEST_TEST_PATH = relative(config.root, worker.filepath)
+      error.VITEST_AFTER_ENV_TEARDOWN = worker.environmentTeardownRun
     }
-    error.VITEST_AFTER_ENV_TEARDOWN = worker.environmentTeardownRun
-
     rpc().onUnhandledError(error, type)
   }
 
