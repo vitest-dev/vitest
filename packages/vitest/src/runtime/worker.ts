@@ -24,6 +24,10 @@ function init(ctx: WorkerContext) {
     moduleCache,
     config,
     mockMap,
+    durations: {
+      environment: 0,
+      prepare: performance.now(),
+    },
     rpc: createBirpc<RuntimeRPC>(
       {},
       {

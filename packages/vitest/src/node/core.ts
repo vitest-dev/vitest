@@ -224,9 +224,16 @@ export class Vitest {
     if (!workspaces.length)
       return [await this.createCoreWorkspace(options)]
 
-    // TODO: check all workspaces have unique names
+    const resolvedWorkspaces = await Promise.all(workspaces)
+    const names = new Set<string>()
 
-    return Promise.all(workspaces)
+    for (const workspace of resolvedWorkspaces) {
+      if (names.has(workspace.getName()))
+        throw new Error(`Workspace name "${workspace.getName()}" is not unique. All workspaces should have unique names.`)
+      names.add(workspace.getName())
+    }
+
+    return resolvedWorkspaces
   }
 
   private async initCoverageProvider() {
@@ -314,7 +321,7 @@ export class Vitest {
     return deps
   }
 
-  private async filterTestsBySource(specs: WorkspaceSpec[]) {
+  async filterTestsBySource(specs: WorkspaceSpec[]) {
     if (this.config.changed && !this.config.related) {
       const { VitestGit } = await import('./git')
       const vitestGit = new VitestGit(this.config.root)
@@ -696,7 +703,7 @@ export class Vitest {
     )))
   }
 
-  private async globTestFiles(filters: string[] = []) {
+  public async globTestFiles(filters: string[] = []) {
     const files: WorkspaceSpec[] = []
     await Promise.all(this.workspaces.map(async (workspace) => {
       const specs = await workspace.globTestFiles(filters)

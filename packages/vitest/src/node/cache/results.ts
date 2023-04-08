@@ -10,6 +10,7 @@ export interface SuiteResultCache {
 
 export class ResultsCache {
   private cache = new Map<string, SuiteResultCache>()
+  private workspacesKeyMap = new Map<string, string[]>()
   private cachePath: string | null = null
   private version: string = version
   private root = '/'
@@ -32,11 +33,21 @@ export class ResultsCache {
     if (!this.cachePath)
       return
 
-    if (fs.existsSync(this.cachePath)) {
-      const resultsCache = await fs.promises.readFile(this.cachePath, 'utf8')
-      const { results, version } = JSON.parse(resultsCache)
+    if (!fs.existsSync(this.cachePath))
+      return
+
+    const resultsCache = await fs.promises.readFile(this.cachePath, 'utf8')
+    const { results, version } = JSON.parse(resultsCache || '[]')
+    // handling changed in 0.30.0
+    if (Number(version.split('.')[1]) >= 30) {
       this.cache = new Map(results)
       this.version = version
+      results.forEach(([spec]: [string]) => {
+        const [projectName, relativePath] = spec.split(':')
+        const keyMap = this.workspacesKeyMap.get(relativePath) || []
+        keyMap.push(projectName)
+        this.workspacesKeyMap.set(relativePath, keyMap)
+      })
     }
   }
 
@@ -46,10 +57,9 @@ export class ResultsCache {
       if (!result)
         return
       const duration = result.duration || 0
-      // TODO: use project name for a key
       // store as relative, so cache would be the same in CI and locally
       const relativePath = file.filepath?.slice(this.root.length)
-      this.cache.set(relativePath, {
+      this.cache.set(`${file.projectName || 'core'}:${relativePath}`, {
         duration: duration >= 0 ? duration : 0,
         failed: result.state === 'fail',
       })

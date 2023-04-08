@@ -168,15 +168,10 @@ export function createThreadsPool(ctx: Vitest, { execArgv, env }: PoolProcessOpt
 
           for (const option in filesByOptions) {
             const files = filesByOptions[option]
-            const filesByWorkspace = groupBy(files, ({ workspace }) => workspace.getName())
 
-            for (const workspace in filesByWorkspace) {
-              const files = filesByWorkspace[workspace]
-
-              if (files?.length) {
-                const filenames = files.map(f => f.file)
-                await runFiles(files[0].workspace, getConfig(files[0].workspace), filenames, files[0].environment, invalidates)
-              }
+            if (files?.length) {
+              const filenames = files.map(f => f.file)
+              await runFiles(files[0].workspace, getConfig(files[0].workspace), filenames, files[0].environment, invalidates)
             }
           }
         }

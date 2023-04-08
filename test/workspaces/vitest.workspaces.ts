@@ -5,9 +5,9 @@ export default defineWorkspaces([
   './space_*/*.config.ts',
   {
     test: {
-      name: 'jsdom',
+      name: 'happy-dom',
       root: './space_shared',
-      environment: 'jsdom',
+      environment: 'happy-dom',
       setupFiles: ['./setup.jsdom.ts'],
     },
   },
