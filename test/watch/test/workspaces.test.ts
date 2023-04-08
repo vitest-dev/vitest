@@ -22,6 +22,7 @@ function startVitest() {
     root,
     '--config',
     config,
+    '--watch',
     '--no-coverage',
   )
 }
