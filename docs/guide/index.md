@@ -63,7 +63,7 @@ See the list of config options in the [Config Reference](../config/)
 
 ## Workspaces Support
 
-Run different project configurations inside the same project with [Vitest Workspaces](/guide/workspace). You can define a list of files and folders that define you workspace in `vitest.workspace` file. The file supports `js`/`ts`/`json` extensions. This feature works great with monorepo setups.
+Run different project configurations inside the same project with [Vitest Workspaces](/guide/workspace). You can define a list of files and folders that define your workspace in `vitest.workspace` file. The file supports `js`/`ts`/`json` extensions. This feature works great with monorepo setups.
 
 ```ts
 import { defineWorkspace } from 'vitest/config'
