@@ -1,6 +1,6 @@
-import { defineWorkspace } from 'vitest/config'
+import { defineProject } from 'vitest/config'
 
-export default defineWorkspace({
+export default defineProject({
   test: {
     include: ['**/*.space-test.ts'],
     name: 'space_3',
