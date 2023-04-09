@@ -74,6 +74,10 @@ export default mergeConfig(viteConfig, defineConfig({
 In addition to the following options, you can also use any configuration option from [Vite](https://vitejs.dev/config/). For example, `define` to define global variables, or `resolve.alias` to define aliases.
 :::
 
+::: tip
+All configuration options that are not supported inside a [workspace](/guide/workspace) project config have <NonProjectOption /> sign next them.
+:::
+
 ### include
 
 - **Type:** `string[]`
