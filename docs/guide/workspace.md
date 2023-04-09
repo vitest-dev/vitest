@@ -103,7 +103,8 @@ export default defineProject({
 
 None of the configuration options are inherited from the root-level config file. You can create a shared config file and merge it with the project config yourself:
 
-```ts
+:::code-group
+```ts [packages/a/vitest.config.ts]
 import { defineProject, mergeConfig } from 'vitest/config'
 import configShared from '../vitest.shared.js'
 
@@ -116,6 +117,7 @@ export default mergeConfig(
   })
 )
 ```
+:::
 
 Also some of the configuration options are not allowed in a project config. Most notably:
 
