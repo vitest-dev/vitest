@@ -25,11 +25,12 @@ export class NodeSnapshotEnvironment implements SnapshotEnvironment {
     )
   }
 
-  async prepareDirectory(filepath: string): Promise<void> {
-    await fs.mkdir(filepath, { recursive: true })
+  async prepareDirectory(dirPath: string): Promise<void> {
+    await fs.mkdir(dirPath, { recursive: true })
   }
 
   async saveSnapshotFile(filepath: string, snapshot: string): Promise<void> {
+    await fs.mkdir(dirname(filepath), { recursive: true })
     await fs.writeFile(filepath, snapshot, 'utf-8')
   }
 
