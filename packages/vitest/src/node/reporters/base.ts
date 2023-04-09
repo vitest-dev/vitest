@@ -80,7 +80,11 @@ export abstract class BaseReporter implements Reporter {
         if (this.ctx.config.logHeapUsage && task.result.heap != null)
           suffix += c.magenta(` ${Math.floor(task.result.heap / 1024 / 1024)} MB heap used`)
 
-        logger.log(` ${getStateSymbol(task)} ${task.name} ${suffix}`)
+        let title = ` ${getStateSymbol(task)} `
+        if (task.projectName)
+          title += formatProjectName(task.projectName)
+        title += `${task.name} ${suffix}`
+        logger.log(title)
 
         // print short errors, full errors will be at the end in summary
         for (const test of failed) {
@@ -156,7 +160,7 @@ export abstract class BaseReporter implements Reporter {
     const BADGE = c.inverse(c.bold(c.blue(' RERUN ')))
     const TRIGGER = trigger ? c.dim(` ${this.relative(trigger)}`) : ''
     const FILENAME_PATTERN = this.ctx.filenamePattern ? `${BADGE_PADDING} ${c.dim('Filename pattern: ')}${c.blue(this.ctx.filenamePattern)}\n` : ''
-    const TESTNAME_PATTERN = this.ctx.config.testNamePattern ? `${BADGE_PADDING} ${c.dim('Test name pattern: ')}${c.blue(String(this.ctx.config.testNamePattern))}\n` : ''
+    const TESTNAME_PATTERN = this.ctx.configOverride.testNamePattern ? `${BADGE_PADDING} ${c.dim('Test name pattern: ')}${c.blue(String(this.ctx.configOverride.testNamePattern))}\n` : ''
 
     if (files.length > 1) {
       // we need to figure out how to handle rerun all from stdin
@@ -214,7 +218,11 @@ export abstract class BaseReporter implements Reporter {
     const collectTime = files.reduce((acc, test) => acc + Math.max(0, test.collectDuration || 0), 0)
     const setupTime = files.reduce((acc, test) => acc + Math.max(0, test.setupDuration || 0), 0)
     const testsTime = files.reduce((acc, test) => acc + Math.max(0, test.result?.duration || 0), 0)
-    const transformTime = Array.from(this.ctx.vitenode.fetchCache.values()).reduce((a, b) => a + (b?.duration || 0), 0)
+    const transformTime = this.ctx.projects
+      .flatMap(w => Array.from(w.vitenode.fetchCache.values()).map(i => i.duration || 0))
+      .reduce((a, b) => a + b, 0)
+    const environmentTime = files.reduce((acc, file) => acc + Math.max(0, file.environmentLoad || 0), 0)
+    const prepareTime = files.reduce((acc, file) => acc + Math.max(0, file.prepareDuration || 0), 0)
     const threadTime = collectTime + testsTime + setupTime
 
     const padTitle = (str: string) => c.dim(`${str.padStart(11)} `)
@@ -254,7 +262,7 @@ export abstract class BaseReporter implements Reporter {
     else if (this.mode === 'typecheck')
       logger.log(padTitle('Duration'), time(executionTime))
     else
-      logger.log(padTitle('Duration'), time(executionTime) + c.dim(` (transform ${time(transformTime)}, setup ${time(setupTime)}, collect ${time(collectTime)}, tests ${time(testsTime)})`))
+      logger.log(padTitle('Duration'), time(executionTime) + c.dim(` (transform ${time(transformTime)}, setup ${time(setupTime)}, collect ${time(collectTime)}, tests ${time(testsTime)}, environment ${time(environmentTime)}, prepare ${time(prepareTime)})`))
 
     logger.log()
   }

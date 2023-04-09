@@ -1,7 +1,8 @@
 import { createHash } from 'node:crypto'
-import { resolve } from 'pathe'
+import { relative, resolve } from 'pathe'
 import { slash } from 'vite-node/utils'
 import type { Vitest } from '../core'
+import type { WorkspaceSpec } from '../pool'
 import type { TestSequencer } from './types'
 
 export class BaseSequencer implements TestSequencer {
@@ -12,18 +13,18 @@ export class BaseSequencer implements TestSequencer {
   }
 
   // async so it can be extended by other sequelizers
-  public async shard(files: string[]): Promise<string[]> {
+  public async shard(files: WorkspaceSpec[]): Promise<WorkspaceSpec[]> {
     const { config } = this.ctx
     const { index, count } = config.shard!
     const shardSize = Math.ceil(files.length / count)
     const shardStart = shardSize * (index - 1)
     const shardEnd = shardSize * index
     return [...files]
-      .map((file) => {
-        const fullPath = resolve(slash(config.root), slash(file))
+      .map((spec) => {
+        const fullPath = resolve(slash(config.root), slash(spec[1]))
         const specPath = fullPath?.slice(config.root.length)
         return {
-          file,
+          spec,
           hash: createHash('sha1')
             .update(specPath)
             .digest('hex'),
@@ -31,19 +32,22 @@ export class BaseSequencer implements TestSequencer {
       })
       .sort((a, b) => (a.hash < b.hash ? -1 : a.hash > b.hash ? 1 : 0))
       .slice(shardStart, shardEnd)
-      .map(({ file }) => file)
+      .map(({ spec }) => spec)
   }
 
   // async so it can be extended by other sequelizers
-  public async sort(files: string[]): Promise<string[]> {
+  public async sort(files: WorkspaceSpec[]): Promise<WorkspaceSpec[]> {
     const cache = this.ctx.cache
     return [...files].sort((a, b) => {
-      const aState = cache.getFileTestResults(a)
-      const bState = cache.getFileTestResults(b)
+      const keyA = `${a[0].getName()}:${relative(this.ctx.config.root, a[1])}`
+      const keyB = `${b[0].getName()}:${relative(this.ctx.config.root, b[1])}`
+
+      const aState = cache.getFileTestResults(keyA)
+      const bState = cache.getFileTestResults(keyB)
 
       if (!aState || !bState) {
-        const statsA = cache.getFileStats(a)
-        const statsB = cache.getFileStats(b)
+        const statsA = cache.getFileStats(keyA)
+        const statsB = cache.getFileStats(keyB)
 
         // run unknown first
         if (!statsA || !statsB)

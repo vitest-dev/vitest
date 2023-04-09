@@ -6,10 +6,12 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
   "files": [
     {
       "collectDuration": 0,
+      "environmentLoad": 0,
       "filepath": "<rootDir>/test/reporters/fixtures/json-fail.test.ts",
       "id": 0,
       "mode": "run",
       "name": "json-fail.test.ts",
+      "prepareDuration": 0,
       "result": {
         "duration": 0,
         "hooks": {
@@ -125,10 +127,12 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
   "files": [
     {
       "collectDuration": 0,
+      "environmentLoad": 0,
       "filepath": "<rootDir>/test/reporters/fixtures/all-passing-or-skipped.test.ts",
       "id": 0,
       "mode": "run",
       "name": "all-passing-or-skipped.test.ts",
+      "prepareDuration": 0,
       "result": {
         "duration": 0,
         "hooks": {

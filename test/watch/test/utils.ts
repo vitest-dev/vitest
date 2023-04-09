@@ -1,9 +1,12 @@
 import { afterEach } from 'vitest'
-import { execa } from 'execa'
+import { type Options, execa } from 'execa'
 import stripAnsi from 'strip-ansi'
 
-export async function startWatchMode(...args: string[]) {
-  const subprocess = execa('vitest', ['--root', 'fixtures', ...args])
+export async function startWatchMode(options?: Options | string, ...args: string[]) {
+  if (typeof options === 'string')
+    args.unshift(options)
+  const argsWithRoot = args.includes('--root') ? args : ['--root', 'fixtures', ...args]
+  const subprocess = execa('vitest', argsWithRoot, typeof options === 'string' ? undefined : options)
 
   let setDone: (value?: unknown) => void
   const isDone = new Promise(resolve => (setDone = resolve))
@@ -23,7 +26,7 @@ export async function startWatchMode(...args: string[]) {
 
         const timeout = setTimeout(() => {
           reject(new Error(`Timeout when waiting for output "${expected}".\nReceived:\n${this.output}`))
-        }, 20_000)
+        }, process.env.CI ? 20_000 : 4_000)
 
         const listener = () => {
           if (this.output.includes(expected)) {

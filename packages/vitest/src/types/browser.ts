@@ -1,5 +1,5 @@
 import type { Awaitable } from '@vitest/utils'
-import type { Vitest } from '../node'
+import type { WorkspaceProject } from '../node/workspace'
 import type { ApiConfig } from './config'
 
 export interface BrowserProviderOptions {
@@ -9,7 +9,7 @@ export interface BrowserProviderOptions {
 export interface BrowserProvider {
   name: string
   getSupportedBrowsers(): readonly string[]
-  initialize(ctx: Vitest, options: BrowserProviderOptions): Awaitable<void>
+  initialize(ctx: WorkspaceProject, options: BrowserProviderOptions): Awaitable<void>
   openPage(url: string): Awaitable<void>
   close(): Awaitable<void>
 }

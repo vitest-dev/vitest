@@ -1,6 +1,7 @@
 import type { ErrorWithDiff, File, Task, TaskResultPack, UserConsoleLog } from '../types'
 // can't import actual functions from utils, because it's incompatible with @vitest/browsers
 import type { AggregateError as AggregateErrorPonyfill } from '../utils'
+import type { WorkspaceProject } from './workspace'
 
 interface CollectingPromise {
   promise: Promise<void>
@@ -16,7 +17,7 @@ export function isAggregateError(err: unknown): err is AggregateErrorPonyfill {
 
 // Note this file is shared for both node and browser, be aware to avoid node specific logic
 export class StateManager {
-  filesMap = new Map<string, File>()
+  filesMap = new Map<string, File[]>()
   pathsSet: Set<string> = new Set()
   collectingPromise: CollectingPromise | undefined = undefined
   browserTestPromises = new Map<string, { resolve: (v: unknown) => void; reject: (v: unknown) => void }>()
@@ -55,8 +56,8 @@ export class StateManager {
 
   getFiles(keys?: string[]): File[] {
     if (keys)
-      return keys.map(key => this.filesMap.get(key)!).filter(Boolean)
-    return Array.from(this.filesMap.values())
+      return keys.map(key => this.filesMap.get(key)!).filter(Boolean).flat()
+    return Array.from(this.filesMap.values()).flat()
   }
 
   getFilepaths(): string[] {
@@ -77,14 +78,24 @@ export class StateManager {
 
   collectFiles(files: File[] = []) {
     files.forEach((file) => {
-      this.filesMap.set(file.filepath, file)
+      const existing = (this.filesMap.get(file.filepath) || [])
+      const otherProject = existing.filter(i => i.projectName !== file.projectName)
+      otherProject.push(file)
+      this.filesMap.set(file.filepath, otherProject)
       this.updateId(file)
     })
   }
 
-  clearFiles(paths: string[] = []) {
+  clearFiles(project: WorkspaceProject, paths: string[] = []) {
     paths.forEach((path) => {
-      this.filesMap.delete(path)
+      const files = this.filesMap.get(path)
+      if (!files)
+        return
+      const filtered = files.filter(file => file.projectName !== project.config.name)
+      if (!filtered.length)
+        this.filesMap.delete(path)
+      else
+        this.filesMap.set(path, filtered)
     })
   }
 

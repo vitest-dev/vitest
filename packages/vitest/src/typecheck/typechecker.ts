@@ -5,7 +5,8 @@ import { extname, resolve } from 'pathe'
 import { SourceMapConsumer } from 'source-map'
 import { getTasks } from '../utils'
 import { ensurePackageInstalled } from '../node/pkg'
-import type { Awaitable, File, ParsedStack, Task, TaskResultPack, TaskState, TscErrorInfo, Vitest } from '../types'
+import type { Awaitable, File, ParsedStack, Task, TaskResultPack, TaskState, TscErrorInfo } from '../types'
+import type { WorkspaceProject } from '../node/workspace'
 import { getRawErrsMapFromTsCompile, getTsconfig } from './parse'
 import { createIndexMap } from './utils'
 import type { FileInformation } from './collect'
@@ -40,7 +41,7 @@ export class Typechecker {
   private allowJs?: boolean
   private process!: ExecaChildProcess
 
-  constructor(protected ctx: Vitest, protected files: string[]) { }
+  constructor(protected ctx: WorkspaceProject, protected files: string[]) { }
 
   public onParseStart(fn: Callback) {
     this._onParseStart = fn

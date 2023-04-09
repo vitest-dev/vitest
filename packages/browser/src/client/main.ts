@@ -66,6 +66,10 @@ ws.addEventListener('open', async () => {
     moduleCache: new Map(),
     rpc: client.rpc,
     safeRpc,
+    durations: {
+      environment: 0,
+      prepare: 0,
+    },
   }
 
   const paths = getQueryPaths()

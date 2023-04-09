@@ -7,8 +7,10 @@ import type { Vitest } from './core'
 import { createChildProcessPool } from './pools/child'
 import { createThreadsPool } from './pools/threads'
 import { createBrowserPool } from './pools/browser'
+import type { WorkspaceProject } from './workspace'
 
-export type RunWithFiles = (files: string[], invalidates?: string[]) => Promise<void>
+export type WorkspaceSpec = [project: WorkspaceProject, testFile: string]
+export type RunWithFiles = (files: WorkspaceSpec[], invalidates?: string[]) => Promise<void>
 
 export interface ProcessPool {
   runTests: RunWithFiles
@@ -30,23 +32,23 @@ export function createPool(ctx: Vitest): ProcessPool {
     browser: null,
   }
 
-  function getDefaultPoolName() {
-    if (ctx.config.browser.enabled)
+  function getDefaultPoolName(project: WorkspaceProject) {
+    if (project.config.browser.enabled)
       return 'browser'
-    if (ctx.config.threads)
+    if (project.config.threads)
       return 'threads'
     return 'child_process'
   }
 
-  function getPoolName(file: string) {
-    for (const [glob, pool] of ctx.config.poolMatchGlobs || []) {
-      if (mm.isMatch(file, glob, { cwd: ctx.server.config.root }))
+  function getPoolName([project, file]: WorkspaceSpec) {
+    for (const [glob, pool] of project.config.poolMatchGlobs || []) {
+      if (mm.isMatch(file, glob, { cwd: project.config.root }))
         return pool
     }
-    return getDefaultPoolName()
+    return getDefaultPoolName(project)
   }
 
-  async function runTests(files: string[], invalidate?: string[]) {
+  async function runTests(files: WorkspaceSpec[], invalidate?: string[]) {
     const conditions = ctx.server.config.resolve.conditions?.flatMap(c => ['--conditions', c]) || []
 
     // Instead of passing whole process.execArgv to the workers, pick allowed options.
@@ -79,27 +81,21 @@ export function createPool(ctx: Vitest): ProcessPool {
     }
 
     const filesByPool = {
-      child_process: [] as string[],
-      threads: [] as string[],
-      browser: [] as string[],
+      child_process: [] as WorkspaceSpec[],
+      threads: [] as WorkspaceSpec[],
+      browser: [] as WorkspaceSpec[],
     }
 
-    if (!ctx.config.poolMatchGlobs) {
-      const name = getDefaultPoolName()
-      filesByPool[name] = files
-    }
-    else {
-      for (const file of files) {
-        const pool = getPoolName(file)
-        filesByPool[pool].push(file)
-      }
+    for (const spec of files) {
+      const pool = getPoolName(spec)
+      filesByPool[pool].push(spec)
     }
 
     await Promise.all(Object.entries(filesByPool).map(([pool, files]) => {
       if (!files.length)
         return null
 
-      if (ctx.browserProvider && pool === 'browser') {
+      if (pool === 'browser') {
         pools.browser ??= createBrowserPool(ctx)
         return pools.browser.runTests(files, invalidate)
       }

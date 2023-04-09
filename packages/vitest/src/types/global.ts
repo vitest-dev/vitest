@@ -26,6 +26,11 @@ declare module '@vitest/runner' {
     expect: Vi.ExpectStatic
   }
 
+  interface File {
+    prepareDuration?: number
+    environmentLoad?: number
+  }
+
   interface TaskBase {
     logs?: UserConsoleLog[]
   }

@@ -81,7 +81,7 @@ export function registerConsoleShortcuts(ctx: Vitest) {
       name: 'filter',
       type: 'text',
       message: 'Input test name pattern (RegExp)',
-      initial: ctx.config.testNamePattern?.source || '',
+      initial: ctx.configOverride.testNamePattern?.source || '',
     }])
     await ctx.changeNamePattern(filter.trim(), undefined, 'change pattern')
     on()

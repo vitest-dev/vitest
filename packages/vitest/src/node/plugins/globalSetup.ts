@@ -1,9 +1,10 @@
 import type { Plugin } from 'vite'
 import type { ViteNodeRunner } from 'vite-node/client'
 import c from 'picocolors'
-import type { Vitest } from '../core'
 import { toArray } from '../../utils'
 import { divider } from '../reporters/renderers/utils'
+import type { Vitest } from '../core'
+import type { Logger } from '../logger'
 
 interface GlobalSetupFile {
   file: string
@@ -11,9 +12,11 @@ interface GlobalSetupFile {
   teardown?: Function
 }
 
-async function loadGlobalSetupFiles(ctx: Vitest): Promise<GlobalSetupFile[]> {
-  const server = ctx.server
-  const runner = ctx.runner
+type SetupInstance = Pick<Vitest, 'runner' | 'server'>
+
+async function loadGlobalSetupFiles(project: SetupInstance): Promise<GlobalSetupFile[]> {
+  const server = project.server
+  const runner = project.runner
   const globalSetupFiles = toArray(server.config.test?.globalSetup)
   return Promise.all(globalSetupFiles.map(file => loadGlobalSetupFile(file, runner)))
 }
@@ -42,17 +45,17 @@ async function loadGlobalSetupFile(file: string, runner: ViteNodeRunner): Promis
   }
 }
 
-export function GlobalSetupPlugin(ctx: Vitest): Plugin {
+export function GlobalSetupPlugin(project: SetupInstance, logger: Logger): Plugin {
   let globalSetupFiles: GlobalSetupFile[]
   return {
     name: 'vitest:global-setup-plugin',
     enforce: 'pre',
 
     async buildStart() {
-      if (!ctx.server.config.test?.globalSetup)
+      if (!project.server.config.test?.globalSetup)
         return
 
-      globalSetupFiles = await loadGlobalSetupFiles(ctx)
+      globalSetupFiles = await loadGlobalSetupFiles(project)
 
       try {
         for (const globalSetupFile of globalSetupFiles) {
@@ -65,8 +68,8 @@ export function GlobalSetupPlugin(ctx: Vitest): Plugin {
         }
       }
       catch (e) {
-        ctx.logger.error(`\n${c.red(divider(c.bold(c.inverse(' Error during global setup '))))}`)
-        await ctx.logger.printError(e)
+        logger.error(`\n${c.red(divider(c.bold(c.inverse(' Error during global setup '))))}`)
+        await logger.printError(e)
         process.exit(1)
       }
     },
@@ -78,7 +81,7 @@ export function GlobalSetupPlugin(ctx: Vitest): Plugin {
             await globalSetupFile.teardown?.()
           }
           catch (error) {
-            ctx.logger.error(`error during global teardown of ${globalSetupFile.file}`, error)
+            logger.error(`error during global teardown of ${globalSetupFile.file}`, error)
           }
         }
       }

@@ -216,7 +216,7 @@ vi.mock('pg', () => {
   return { Client }
 })
 
-vi.mock('./handlers', () => {
+vi.mock('./handlers.js', () => {
   return {
     success: vi.fn(),
     failure: vi.fn(),

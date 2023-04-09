@@ -2,10 +2,11 @@ import { createDefer } from '@vitest/utils'
 import { relative } from 'pathe'
 import type { Vitest } from '../core'
 import type { ProcessPool } from '../pool'
+import type { WorkspaceProject } from '../workspace'
+import type { BrowserProvider } from '../../types/browser'
 
 export function createBrowserPool(ctx: Vitest): ProcessPool {
-  const provider = ctx.browserProvider!
-  const origin = `http://${ctx.config.browser.api?.host || 'localhost'}:${ctx.browser.config.server.port}`
+  const providers = new Set<BrowserProvider>()
 
   const waitForTest = (id: string) => {
     const defer = createDefer()
@@ -13,10 +14,14 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
     return defer
   }
 
-  const runTests = async (files: string[]) => {
-    const paths = files.map(file => relative(ctx.config.root, file))
+  const runTests = async (project: WorkspaceProject, files: string[]) => {
+    const provider = project.browserProvider!
+    providers.add(provider)
 
-    const isolate = ctx.config.isolate
+    const origin = `http://${ctx.config.browser.api?.host || 'localhost'}:${project.browser.config.server.port}`
+    const paths = files.map(file => relative(project.config.root, file))
+
+    const isolate = project.config.isolate
     if (isolate) {
       for (const path of paths) {
         const url = new URL('/', origin)
@@ -35,11 +40,24 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
     }
   }
 
+  const runWorkspaceTests = async (specs: [WorkspaceProject, string][]) => {
+    const groupedFiles = new Map<WorkspaceProject, string[]>()
+    for (const [project, file] of specs) {
+      const files = groupedFiles.get(project) || []
+      files.push(file)
+      groupedFiles.set(project, files)
+    }
+
+    for (const [project, files] of groupedFiles.entries())
+      await runTests(project, files)
+  }
+
   return {
     async close() {
       ctx.state.browserTestPromises.clear()
-      await provider.close()
+      await Promise.all([...providers].map(provider => provider.close()))
+      providers.clear()
     },
-    runTests,
+    runTests: runWorkspaceTests,
   }
 }
