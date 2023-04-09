@@ -125,7 +125,7 @@ Also some of the configuration options are not allowed in a project config. Most
 - all other options that don't affect test runners
 
 ::: tip
-All configuration options that are not supported inside a project config have <NonProjectOption /> sign next them in ["Config"](/config) page.
+All configuration options that are not supported inside a project config have <NonProjectOption /> sign next them in ["Config"](/config/) page.
 :::
 
 ## Coverage
