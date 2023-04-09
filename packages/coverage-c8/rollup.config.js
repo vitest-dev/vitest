@@ -17,6 +17,7 @@ const external = [
   ...builtinModules,
   ...Object.keys(pkg.dependencies || {}),
   ...Object.keys(pkg.peerDependencies || {}),
+  'node:inspector',
   'c8/lib/report.js',
   'c8/lib/commands/check-coverage.js',
   'vitest',
