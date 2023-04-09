@@ -41,11 +41,12 @@ A blazing fast unit test framework powered by Vite.
 - Components testing ([Vue](./examples/vue), [React](./examples/react), [Svelte](./examples/svelte), [Lit](./examples/lit), [Vitesse](./examples/vitesse))
 - Workers multi-threading via [Tinypool](https://github.com/tinylibs/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina))
 - Benchmarking support with [Tinybench](https://github.com/tinylibs/tinybench)
+- Workspaces support
 - ESM first, top level await
 - Out-of-box TypeScript / JSX support
 - Filtering, timeouts, concurrent for suite and tests
 
-> Vitest requires Vite >=v3.0.0 and Node >=v14
+> Vitest requires Vite >=v3.0.0 and Node >=v14.18
 
 
 ```ts
